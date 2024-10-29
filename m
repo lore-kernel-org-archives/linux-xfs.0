@@ -1,226 +1,120 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1956F206060;
-	Tue, 29 Oct 2024 09:56:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AEF8206510
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2024 14:21:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730195768; cv=none; b=dilsaDtvBTJjujqlYvZ6npH1YDU//sAKe5B4unqfGuPKBJJumuh96NJSi0CIBaB6sB/+1/4mqpCbWMiWdJWxxDmVnzsxi7tiilmjxoVjxKk7Joe3VCc25iPuteMjRtqnsIIMY2RpRaOO6cxYepWz0Mz5rUG07BbSB2+1ASxBS94=
+	t=1730211694; cv=none; b=P0OXQISpXB2c+Ytp3wW5jxSgcrIbYWn9Dxn60xQq0nT1LXGPywiTqdPG1c9MBaR+Jf3sypzvpJrboyuQdO40r2RUTTxdoUFksDY442FtUnjnsZeaNcw/wbSgnWliZ69Sw4o3t0USbnmUBqlCPMvh+EtBiwAOUyaSuM02OX5dYQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730195768; c=relaxed/simple;
-	bh=0qDi2xdK9Bl+aoU7bwhI+pp2VgVckudI2/bhOQR1Sac=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=Ds3nL4B+6AD8cwVCzLxQjuTzDW/0LxC3v8ZaVmGu7gkBiAPDZWK9P87dHyr+oA5EyhceDYbwC44ig2TqLiGsgrZnDYnPNbFHOSeX277GtwXnDTMIZRxmf4bRvuCAAiJhWXjrMfmE5jy/oi3rFY/QIQUSVzaz26BCbBmt1gHe1P0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IVZyy4lp; arc=none smtp.client-ip=209.85.215.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730211694; c=relaxed/simple;
+	bh=SdcHRwGprqGcLb4RZ8FusnGnRiQaHIl6q44DHO6BADg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tkUruOZ0WiCG3Y84nKB6c9iszo2p7HpyDA30y/VxfNdKfATCrPKPBs2wiuapvWc1IHD0d11pkF2aHEmF52zBWC5xuZASMQFMrTFV+qBYupljTd389V2L12Z17IMj6SUR0p3CHsr5SwGzCVamj8yOrl0VBkzwC01mQfgFi48Tibo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cG4fXkGx; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IVZyy4lp"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-7ea12e0dc7aso3690573a12.3;
-        Tue, 29 Oct 2024 02:56:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730195764; x=1730800564; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=DiWvjOpVYfndALHTKNu3Vi9x1DoeaRp1k+8XzRgyG6s=;
-        b=IVZyy4lpVpUX7bCSiaVHuwm/n19xRvPjUeAyzkOvjbGRHS6LetNQq8dd80KNMN7BS3
-         Qj4aCVDdgi+mdGZkxhv5UhTSbMjDtmm+VgJcNIjNWw2C8cEMSiE/ndgeN8U2taMMr6Mv
-         p+B11w0hdFNmsKWnH0tiQ1rHWOl4ns7qHR0roQdHcs24+ipxGPEABnjocU/qKLBSx5Lt
-         3c46sIjQG/Bd9QVPCy2BxHE7696GOy7cf1M9ZM7aa4XzXv3PG/U3SyZ3eHgda/72MzMh
-         bVRCnS6JRvcwJq+hMcn9RiQvJDhTA58j8Tar0HjMBOBAAnwijvV0iMN0EAywa0t+WWEz
-         kqQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730195764; x=1730800564;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DiWvjOpVYfndALHTKNu3Vi9x1DoeaRp1k+8XzRgyG6s=;
-        b=YcnSLGSaj74vQolUCbkB80GLw9wz2p+ERpFIwQp1j6cfuHr51vUWh69xPyt2YliJul
-         173IsVbVXshRoMDPkubKTg6anOhmqGb0P9zy8uq+OXIzrNizzDU6O4zNoDlYuGCr0Os8
-         GdPTMKtsGbSt8p359XX3PY1p3IbxuaLKTFfziH/VseXHJzmWgNQP4B3gCLUGYD2b7Spu
-         dZpHiI1m05lT1/W0nwZ5526p1l0b9/e40wuoM05z7rgtP4zNrOWfU9gBzktEIBihRzi5
-         gKvlqrYknWp8nie21uR0XsVTvCRn7RaxDfHmNiXBQgVFGjqUTnI7YDCl2t08wqf9jPeE
-         NxZg==
-X-Forwarded-Encrypted: i=1; AJvYcCUT3Ndkdz1Wb6jCzfs2xzbfljG0o3ciMchLYFnCh/6/nUWT6okyEBaslNCSBPUArduqbnOYmWYy4kwk@vger.kernel.org, AJvYcCUZRz6rTGgPSHEu7vImpdC/NPkLDjhxsV9eqLg6vCnC6t0Ztq/SiXQi/JibMYTCchewpxe3qCA3dn/QmRrF@vger.kernel.org, AJvYcCVsZSsT5vNxB+W6zAqnRGeUdEEJmF/ap/vwbuVH43Bc8oBFHaD15GzdHsJ9IiUJ4kGArU6KdUBEwyTuNP1ikw==@vger.kernel.org, AJvYcCXqdBE/xVWLEwFz99NYjxCCDW6P/6bIxIUGfHotp/P7XfGlpFIQLDVRA/zeY4c0TSPCnG9YF0+EaFkH@vger.kernel.org
-X-Gm-Message-State: AOJu0YwZgIGthbgxZFrbxtfJUzit1pO8OOXwNu27KUCgEpO8eVuLrjvp
-	J3p6Kve2Hr6IixQEIAKuoQyGACiX3RvnPSX8WlV5LSM+ReKcX4LNulHrvA==
-X-Google-Smtp-Source: AGHT+IF8wKjEF16g/Z6wnKqiitoXbAGxywqBQXr4GKxI/5sWH6101yQQQlpr1QM+yR5VjSo4hSAKDw==
-X-Received: by 2002:a17:90b:378c:b0:2e3:b168:70f5 with SMTP id 98e67ed59e1d1-2e8f1080170mr11955324a91.21.1730195764237;
-        Tue, 29 Oct 2024 02:56:04 -0700 (PDT)
-Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e77e48e4a2sm11155474a91.2.2024.10.29.02.55.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Oct 2024 02:56:03 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, linux-ext4@vger.kernel.org
-Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <djwong@kernel.org>, Christoph Hellwig <hch@infradead.org>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] ext4: Add statx support for atomic writes
-In-Reply-To: <39b6d2b2-77fd-4087-a495-c36d33b8c9d0@oracle.com>
-Date: Tue, 29 Oct 2024 14:59:58 +0530
-Message-ID: <874j4vmf3d.fsf@gmail.com>
-References: <cover.1729944406.git.ritesh.list@gmail.com> <b61c4a50b4e3b97c4261eb45ea3a24057f54d61a.1729944406.git.ritesh.list@gmail.com> <39b6d2b2-77fd-4087-a495-c36d33b8c9d0@oracle.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cG4fXkGx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1730211691;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=93d2hCKZZySB63PUST/gb63AdUGB6oA9cuw4ExQOcO8=;
+	b=cG4fXkGxou3YWprye9jEGOR678qmCFg/LW/HclWjRhSQEUJjsUfDJx+m+8EkcX/UGGy9lu
+	9wtm6Wnn2MYUy1vBBMgpikjXZAybFyb8X08fGlOk3Dd7XwUA7jhLsn3fNKE+/CwOEhkf38
+	6yWCjqT/VtNUdQLRWM1aO4spYlOwZXY=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-675-oo--S0ShMh2XG9quhId2jw-1; Tue,
+ 29 Oct 2024 10:21:27 -0400
+X-MC-Unique: oo--S0ShMh2XG9quhId2jw-1
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6F39A19560B2;
+	Tue, 29 Oct 2024 14:21:26 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.135])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1BD191955F39;
+	Tue, 29 Oct 2024 14:21:24 +0000 (UTC)
+Date: Tue, 29 Oct 2024 10:22:52 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, djwong@kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH 1/2] xfs: online grow vs. log recovery stress test
+Message-ID: <ZyDvvN5CGHaEOyaW@bfoster>
+References: <20241017163405.173062-1-bfoster@redhat.com>
+ <20241017163405.173062-2-bfoster@redhat.com>
+ <20241025173242.clzuckwfotkdkpwq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241025173242.clzuckwfotkdkpwq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
+On Sat, Oct 26, 2024 at 01:32:42AM +0800, Zorro Lang wrote:
+> On Thu, Oct 17, 2024 at 12:34:04PM -0400, Brian Foster wrote:
+> > fstests includes decent functional tests for online growfs and
+> > shrink, and decent stress tests for crash and log recovery, but no
+> > combination of the two. This test combines bits from a typical
+> > growfs stress test like xfs/104 with crash recovery cycles from a
+> > test like generic/388. As a result, this reproduces at least a
+> > couple recently fixed issues related to log recovery of online
+> > growfs operations.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> 
+> Hi Brian,
+> 
+> Thanks for this new test case! Some tiny review points below :)
+> 
+> >  tests/xfs/609     | 69 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/609.out |  7 +++++
+> >  2 files changed, 76 insertions(+)
+> >  create mode 100755 tests/xfs/609
+> >  create mode 100644 tests/xfs/609.out
+> > 
+...
+> > diff --git a/tests/xfs/609.out b/tests/xfs/609.out
+> > new file mode 100644
+> > index 00000000..1853cc65
+> > --- /dev/null
+> > +++ b/tests/xfs/609.out
+> > @@ -0,0 +1,7 @@
+> > +QA output created by 609
+> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
+> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
+> > +         = sunit=XXX swidth=XXX, unwritten=X
+> > +naming   =VERN bsize=XXX
+> > +log      =LDEV bsize=XXX blocks=XXX
+> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+> 
+> So what's this output in .out file for? How about "Silence is golden"?
+> 
 
-Hi John,
+No particular reason.. this was mostly a mash and cleanup of a couple
+preexisting tests around growfs and crash recovery, so probably just
+leftover from that. All of these suggestions sound good to me. I'll
+apply them and post a v2. Thanks for the review!
 
-John Garry <john.g.garry@oracle.com> writes:
+Brian
 
-> On 27/10/2024 18:17, Ritesh Harjani (IBM) wrote:
->> This patch adds base support for atomic writes via statx getattr.
->> On bs < ps systems, we can create FS with say bs of 16k. That means
->> both atomic write min and max unit can be set to 16k for supporting
->> atomic writes.
->> 
->> Co-developed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
->> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
->> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
->> ---
->>   fs/ext4/ext4.h  |  9 +++++++++
->>   fs/ext4/inode.c | 14 ++++++++++++++
->>   fs/ext4/super.c | 31 +++++++++++++++++++++++++++++++
->>   3 files changed, 54 insertions(+)
->> 
->> diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
->> index 44b0d418143c..6ee49aaacd2b 100644
->> --- a/fs/ext4/ext4.h
->> +++ b/fs/ext4/ext4.h
->> @@ -1729,6 +1729,10 @@ struct ext4_sb_info {
->>   	 */
->>   	struct work_struct s_sb_upd_work;
->>   
->> +	/* Atomic write unit values in bytes */
->> +	unsigned int s_awu_min;
->> +	unsigned int s_awu_max;
->> +
->>   	/* Ext4 fast commit sub transaction ID */
->>   	atomic_t s_fc_subtid;
->>   
->> @@ -3855,6 +3859,11 @@ static inline int ext4_buffer_uptodate(struct buffer_head *bh)
->>   	return buffer_uptodate(bh);
->>   }
->>   
->> +static inline bool ext4_can_atomic_write(struct super_block *sb)
->> +{
->> +	return EXT4_SB(sb)->s_awu_min > 0;
->> +}
->> +
->>   extern int ext4_block_write_begin(handle_t *handle, struct folio *folio,
->>   				  loff_t pos, unsigned len,
->>   				  get_block_t *get_block);
->> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
->> index 54bdd4884fe6..fcdee27b9aa2 100644
->> --- a/fs/ext4/inode.c
->> +++ b/fs/ext4/inode.c
->> @@ -5578,6 +5578,20 @@ int ext4_getattr(struct mnt_idmap *idmap, const struct path *path,
->>   		}
->>   	}
->>   
->> +	if (S_ISREG(inode->i_mode) && (request_mask & STATX_WRITE_ATOMIC)) {
->> +		struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
->> +		unsigned int awu_min, awu_max;
->> +
->> +		if (ext4_can_atomic_write(inode->i_sb)) {
->> +			awu_min = sbi->s_awu_min;
->> +			awu_max = sbi->s_awu_max;
->> +		} else {
->> +			awu_min = awu_max = 0;
->> +		}
->> +
->> +		generic_fill_statx_atomic_writes(stat, awu_min, awu_max);
->> +	}
->> +
->>   	flags = ei->i_flags & EXT4_FL_USER_VISIBLE;
->>   	if (flags & EXT4_APPEND_FL)
->>   		stat->attributes |= STATX_ATTR_APPEND;
->> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
->> index 16a4ce704460..d6e3201a48be 100644
->> --- a/fs/ext4/super.c
->> +++ b/fs/ext4/super.c
->> @@ -4425,6 +4425,36 @@ static int ext4_handle_clustersize(struct super_block *sb)
->>   	return 0;
->>   }
->>   
->> +/*
->> + * ext4_atomic_write_init: Initializes filesystem min & max atomic write units.
->> + * @sb: super block
->> + * TODO: Later add support for bigalloc
->> + */
->> +static void ext4_atomic_write_init(struct super_block *sb)
->> +{
->> +	struct ext4_sb_info *sbi = EXT4_SB(sb);
->> +	struct block_device *bdev = sb->s_bdev;
->> +
->> +	if (!bdev_can_atomic_write(bdev))
->
-> this check is duplicated, since bdev_atomic_write_unit_{min, 
-> max}_bytes() has this check
->
+> Thanks,
+> Zorro
+> 
+> > -- 
+> > 2.46.2
+> > 
+> > 
+> 
 
-Right, yes. I can mention a comment and remove this check perhaps. 
-Looks like XFS also got it duplicated then.
-
-
->> +		return;
->> +
->> +	if (!ext4_has_feature_extents(sb))
->> +		return;
->> +
->> +	sbi->s_awu_min = max(sb->s_blocksize,
->> +			      bdev_atomic_write_unit_min_bytes(bdev));
->> +	sbi->s_awu_max = min(sb->s_blocksize,
->> +			      bdev_atomic_write_unit_max_bytes(bdev));
->> +	if (sbi->s_awu_min && sbi->s_awu_max &&
->> +	    sbi->s_awu_min <= sbi->s_awu_max) {
->
-> This looks a bit complicated. I would just follow the XFS example and 
-> ensure bdev_atomic_write_unit_min_bytes() <=  sb->s_blocksize <= 
-> bdev_atomic_write_unit_max_bytes() [which you are doing, but in a 
-> complicated way]
->
-
-In here we are checking for min and max supported units against fs
-blocksize at one place during mount time itself and then caching the
-supported atomic write unit. The supported atomic write unit can change
-when bigalloc gets introduced. 
-
-XFS caches the blockdevice min, max units and then defers these checks
-against fs blocksize during file open time using xfs_inode_can_atomicwrite(). 
-
-I just preferrd the 1st aproach in case of EXT4 here because it will be simpler
-this way for when bigalloc also gets introduced.
-
-BTW none of these are ondisk changes, so whenever extsize gets
-introduced, we might still have to add something like
-ext4_inode_can_atomic_write() (similar to XFS) based on inode extsize
-value. But for now it was not needed in EXT4. 
-
-I hope the reasoning is clear and make sense.
-
-
->> +		ext4_msg(sb, KERN_NOTICE, "Supports atomic writes awu_min: %u, awu_max: %u",
->> +			 sbi->s_awu_min, sbi->s_awu_max);
-
-BTW - I was wondering if we should add "experimental" in above msg.
-
--ritesh
-
->> +	} else {
->> +		sbi->s_awu_min = 0;
->> +		sbi->s_awu_max = 0;
->> +	}
->> +}
->> +
->>   static void ext4_fast_commit_init(struct super_block *sb)
->>   {
->>   	struct ext4_sb_info *sbi = EXT4_SB(sb);
->> @@ -5336,6 +5366,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
->>   
->>   	spin_lock_init(&sbi->s_bdev_wb_lock);
->>   
->> +	ext4_atomic_write_init(sb);
->>   	ext4_fast_commit_init(sb);
->>   
->>   	sb->s_root = NULL;
