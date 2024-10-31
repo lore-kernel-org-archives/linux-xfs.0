@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B3519F430
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:10:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A811719F430
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:10:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730416200; cv=none; b=Vs6lfsqtlo6vvqIIS/3x7AkSCFbZ7wC01s4NxwoP59lovx+0bq6cLa4EUwAtiYlBC20+9PY41AiTxdxqVlp07ShSS7fClgkoeizulUpm8m/yoQbnJHaLJfS16Mu94hIyCdV4rsTHQmgGKIYVuxzIp91tYf49cYpmcxizaJwtni8=
+	t=1730416216; cv=none; b=mMEGi8YnCJUqK1b6vLPZoRYR2GWLyi6Rqdou3Gw6YDk1KMLlPla/8HGpZ4EfcQpWuhFzDxFdwO5SaN3pPj4Nt9/2AUW5hdSF2qV9Dsk2a5tJ84SJnBARnvHT1BrVv6e2yDmOVcWFbpS6FZbUingI7fLCa8uqxdPgPi1hcjGSD/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730416200; c=relaxed/simple;
-	bh=lzVoYZzuy3JOoP9rud6PBrHJYBfHfKzj9rizo7qWaHU=;
+	s=arc-20240116; t=1730416216; c=relaxed/simple;
+	bh=mtDnYIlDEa0PDjO4XIepg+t8AOQUSBrP/Y9TrPiaYNs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=U1XkqDXBOIp/DqGQblP1j/MPEaad9tXd+Y3siqNMrNoyM9kJgYQpuKVckw8SlzcFeyAkYNQpuIXrmTtvGwC7n7OolUFy2wLWC4Yy3rwR7UNDe9E5OeFiM5JI4qTJPRSAlDSmEdRUuSvhYkgTFssngcrao0RxnoAmZxA22t8qXrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkOU/8ou; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CYVz2Y8ygj0/WN5Ccd/XzxpeyilY3dHAPrHLRNAvNymyuE9myTrfp64imK5FvjBz21qeDCZ1NaYxqMBrUOab4VjwGtgNZcRGtzgctSBgJHSDk23EY3PRsWcpPtPMfmIA/LVgfd33cWpnnm5uBI5KkgIpYBI0RO73TC16yZHq5B4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nnazq27Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkOU/8ou"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F44AC4CEC3;
-	Thu, 31 Oct 2024 23:10:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nnazq27Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DB6EC4CECF;
+	Thu, 31 Oct 2024 23:10:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730416200;
-	bh=lzVoYZzuy3JOoP9rud6PBrHJYBfHfKzj9rizo7qWaHU=;
+	s=k20201202; t=1730416216;
+	bh=mtDnYIlDEa0PDjO4XIepg+t8AOQUSBrP/Y9TrPiaYNs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YkOU/8ouoSKmxqOHEK/0oW/1lK8kB4PwvhSLB5GBLSCCuVLLEaeYulUh+gyGyzEuZ
-	 92N3TVDZrCrSRhicXxGCaEffM30pRPZiW215tI3CP5ZZfQxQEjx9Dv8WhiYFGcDVbN
-	 BKMDISd6bZakgBH6106Kc0isyZgyTqMmHeXTq9kCQp8dmQCOul0g3ckSeDk9sQ2w+F
-	 HPoPtSMKDZOHS4R2sCQtnl+fcrKR67+3Kmj5F6iT25poUzhJ+HH6vEmsTRkNBkOIkk
-	 3rkRYjXlsdNkMnCYKzBxDgXNuPk9uH3AMGIT9MMuJ/gTKO017oklS6p1tfVhnA0fEJ
-	 Mu4Dkbn3XUazg==
-Date: Thu, 31 Oct 2024 16:10:00 -0700
-Subject: [PATCH 05/41] xfs: introduce new file range commit ioctls
+	b=nnazq27Q0FY6XcQGNOP4Xx4c+zJrlLKwV601G0GuEarOMFC/kvIeKpyXyH8V5zuTJ
+	 pmYlXDSdMpaE6/S71O3ZrUgbn1ghtO2ndpYSUGgHwhdbpxIVfZGqZnkCZ0xSaOLeNr
+	 jGi+FZZ64TL1+TmHSsfcfGwkllUxZVHEjvVdSAeBcNhHUWueXtPbuaKosdmZf374LF
+	 92cWYDyS55ACgwpZLri8I4GAYuxVDxCeko6Yagl1Ds/oP9y5IXh9XHM0WOOZz9h5ko
+	 KIyaJCcBwVS4cOlxlwNXjjsm5ko2W4Q3PeLDthDIkIycfMAroAp8WqeiR68FeOudRv
+	 s0nuYzXTrvnFQ==
+Date: Thu, 31 Oct 2024 16:10:15 -0700
+Subject: [PATCH 06/41] xfs: pass the icreate args object to xfs_dialloc
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173041565996.962545.14170969491883990692.stgit@frogsfrogsfrogs>
+Message-ID: <173041566011.962545.7956432226389299300.stgit@frogsfrogsfrogs>
 In-Reply-To: <173041565874.962545.15559186670255081566.stgit@frogsfrogsfrogs>
 References: <173041565874.962545.15559186670255081566.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,74 +45,116 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 398597c3ef7fb1d8fa31491c8f4f3996cff45701
+Source kernel commit: 390b4775d6787706b1846f15623a68e576ec900c
 
-This patch introduces two more new ioctls to manage atomic updates to
-file contents -- XFS_IOC_START_COMMIT and XFS_IOC_COMMIT_RANGE.  The
-does, but with the additional requirement that file2 cannot have changed
-since some sampling point.  The start-commit ioctl performs the sampling
-of file attributes.
-
-Note: This patch currently samples i_ctime during START_COMMIT and
-checks that it hasn't changed during COMMIT_RANGE.  This isn't entirely
-safe in kernels prior to 6.12 because ctime only had coarse grained
-granularity and very fast updates could collide with a COMMIT_RANGE.
-With the multi-granularity ctime introduced by Jeff Layton, it's now
-possible to update ctime such that this does not happen.
-
-It is critical, then, that this patch must not be backported to any
-kernel that does not support fine-grained file change timestamps.
+Pass the xfs_icreate_args object to xfs_dialloc since we can extract the
+relevant mode (really just the file type) and parent inumber from there.
+This simplifies the calling convention in preparation for the next
+patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Acked-by: Jeff Layton <jlayton@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ db/iunlink.c        |    2 +-
+ libxfs/xfs_ialloc.c |    5 +++--
+ libxfs/xfs_ialloc.h |    4 +++-
+ mkfs/proto.c        |    5 ++---
+ repair/phase6.c     |    2 +-
+ 5 files changed, 10 insertions(+), 8 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 184ccbfe708218..860284064c5aa9 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -826,6 +826,30 @@ struct xfs_exchange_range {
- 	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
- };
+diff --git a/db/iunlink.c b/db/iunlink.c
+index 0dc68b7240c1a3..55ba5af5a3c563 100644
+--- a/db/iunlink.c
++++ b/db/iunlink.c
+@@ -223,7 +223,7 @@ create_unlinked(
+ 		return error;
+ 	}
  
-+/*
-+ * Using the same definition of file2 as struct xfs_exchange_range, commit the
-+ * contents of file1 into file2 if file2 has the same inode number, mtime, and
-+ * ctime as the arguments provided to the call.  The old contents of file2 will
-+ * be moved to file1.
-+ *
-+ * Returns -EBUSY if there isn't an exact match for the file2 fields.
-+ *
-+ * Filesystems must be able to restart and complete the operation even after
-+ * the system goes down.
-+ */
-+struct xfs_commit_range {
-+	__s32		file1_fd;
-+	__u32		pad;		/* must be zeroes */
-+	__u64		file1_offset;	/* file1 offset, bytes */
-+	__u64		file2_offset;	/* file2 offset, bytes */
-+	__u64		length;		/* bytes to exchange */
-+
-+	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
-+
-+	/* opaque file2 metadata for freshness checks */
-+	__u64		file2_freshness[6];
-+};
+-	error = -libxfs_dialloc(&tp, 0, args.mode, &ino);
++	error = -libxfs_dialloc(&tp, &args, &ino);
+ 	if (error) {
+ 		dbprintf(_("alloc inode: %s\n"), strerror(error));
+ 		goto out_cancel;
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index c526f677e072b4..83e3d7d7c5a1b3 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1850,11 +1850,12 @@ xfs_dialloc_try_ag(
+ int
+ xfs_dialloc(
+ 	struct xfs_trans	**tpp,
+-	xfs_ino_t		parent,
+-	umode_t			mode,
++	const struct xfs_icreate_args *args,
+ 	xfs_ino_t		*new_ino)
+ {
+ 	struct xfs_mount	*mp = (*tpp)->t_mountp;
++	xfs_ino_t		parent = args->pip ? args->pip->i_ino : 0;
++	umode_t			mode = args->mode & S_IFMT;
+ 	xfs_agnumber_t		agno;
+ 	int			error = 0;
+ 	xfs_agnumber_t		start_agno;
+diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
+index b549627e3a6150..3a1323155a455a 100644
+--- a/libxfs/xfs_ialloc.h
++++ b/libxfs/xfs_ialloc.h
+@@ -33,11 +33,13 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
+ 	return xfs_buf_offset(b, o << (mp)->m_sb.sb_inodelog);
+ }
+ 
++struct xfs_icreate_args;
 +
  /*
-  * Exchange file data all the way to the ends of both files, and then exchange
-  * the file sizes.  This flag can be used to replace a file's contents with a
-@@ -998,6 +1022,8 @@ struct xfs_getparents_by_handle {
- #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
- #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
- #define XFS_IOC_EXCHANGE_RANGE	     _IOW ('X', 129, struct xfs_exchange_range)
-+#define XFS_IOC_START_COMMIT	     _IOR ('X', 130, struct xfs_commit_range)
-+#define XFS_IOC_COMMIT_RANGE	     _IOW ('X', 131, struct xfs_commit_range)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+  * Allocate an inode on disk.  Mode is used to tell whether the new inode will
+  * need space, and whether it is a directory.
+  */
+-int xfs_dialloc(struct xfs_trans **tpp, xfs_ino_t parent, umode_t mode,
++int xfs_dialloc(struct xfs_trans **tpp, const struct xfs_icreate_args *args,
+ 		xfs_ino_t *new_ino);
  
+ int xfs_difree(struct xfs_trans *tp, struct xfs_perag *pag,
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 8a51bfb264cedf..42ac3e10929b52 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -428,7 +428,6 @@ creatproto(
+ 	};
+ 	struct xfs_inode	*ip;
+ 	struct inode		*inode;
+-	xfs_ino_t		parent_ino = dp ? dp->i_ino : 0;
+ 	xfs_ino_t		ino;
+ 	int			error;
  
+@@ -440,7 +439,7 @@ creatproto(
+ 	 * Call the space management code to pick the on-disk inode to be
+ 	 * allocated.
+ 	 */
+-	error = -libxfs_dialloc(tpp, parent_ino, mode, &ino);
++	error = -libxfs_dialloc(tpp, &args, &ino);
+ 	if (error)
+ 		return error;
+ 
+@@ -769,7 +768,7 @@ create_sb_metadata_file(
+ 	if (error)
+ 		res_failed(error);
+ 
+-	error = -libxfs_dialloc(&tp, 0, args.mode, &ino);
++	error = -libxfs_dialloc(&tp, &args, &ino);
+ 	if (error)
+ 		goto fail;
+ 
+diff --git a/repair/phase6.c b/repair/phase6.c
+index ba28edaa41c24c..b48f18b06a5c81 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -873,7 +873,7 @@ mk_orphanage(
+ 	if (i)
+ 		res_failed(i);
+ 
+-	error = -libxfs_dialloc(&tp, mp->m_sb.sb_rootino, args.mode, &ino);
++	error = -libxfs_dialloc(&tp, &args, &ino);
+ 	if (error)
+ 		do_error(_("%s inode allocation failed %d\n"),
+ 			ORPHANAGE, error);
 
