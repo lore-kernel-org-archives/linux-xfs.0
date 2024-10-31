@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E9A19CC1D
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:23:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9881F1E7C09
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:24:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730417029; cv=none; b=toPEHA86YiJkUL/xMar65m0MTVPWmqLPXmgGrUDmhQodXfjmhMzZEe2rYwvx08m+NrSNzvwe5G0lVZh5Iq8PsMsbwRqsAm1VJmWBR9OOHjh7uGKVOpMOFH8XMcvHcTLWN2WbbdKVt186M2ionfgWFy4sVpW+t050LmO+8MoZtgU=
+	t=1730417044; cv=none; b=fAF89SlC7e6FVXDBZZkp+Nhp3CC4hcZZj/4UPz2LjfdPXD40eAY26INCLai1GYx5mtupbZlSKlPchRKPbcnPUYLhqzO02I9DA/k6QsLPhuTc+uxOzLDyymsdiilEzkZfvlFqALWuxxFwG+WATLvm40FOb5eIxK/oB1b0moMYEkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730417029; c=relaxed/simple;
-	bh=idrqojhoP60nDOAyoYJpaUDyEzoQaF0oO5p8QFUOKeI=;
+	s=arc-20240116; t=1730417044; c=relaxed/simple;
+	bh=0AHzcXLas3a4rW2ud5bbDx/k7BW2dyPEEK3v9dcfxdo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K7KEfa5ZeV02kZ33QYK641YeMiOUwSM6Yw6i1DiON5qbIKXAVy1pIGFd1r34nVMXLAOkgi1eOfcf2uqEzlf48DDZ8DjY3e7K56qgZ62EkT2obw6YMbzT+SRcpNsupxiBr2n03gNr5X1tdZcq9xxifXO+i6usvfcZwk/XPPpMNxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PLujU/hT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EdNIUM9jYEAXFt51p3f/O1oJOCAce6St+SwvNi0gzU242FG3oQYs2vRXcOkiBdbyhNYEm+By11W2UDn7tSqlM95XrL4COvBwyzMTMDC8VyKwH8k5sRdIanZKpSI8EbEpDdPBrsWXHgjlwWNPOe6OnECoHn0hJ3DHRn6rFsAzjRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ye97DvyQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PLujU/hT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4A8CC4CEC3;
-	Thu, 31 Oct 2024 23:23:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ye97DvyQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 629BFC4CED7;
+	Thu, 31 Oct 2024 23:24:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730417028;
-	bh=idrqojhoP60nDOAyoYJpaUDyEzoQaF0oO5p8QFUOKeI=;
+	s=k20201202; t=1730417044;
+	bh=0AHzcXLas3a4rW2ud5bbDx/k7BW2dyPEEK3v9dcfxdo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PLujU/hT3KdWOiKdrAlbF9/1xjS0mR8EtSuYU+7wS5Zsvlp8zIdp0cUTk2jPAJnKg
-	 2oyTYT1Ooerob3H7XAYtFAaqEuWVGQcJlfl/agXWXeYYcyatyOc50N8j1yE118x/HC
-	 Pl4cM06KsJcm/lyeA6e/xtrHsD+TaypazQ6hoNagCW30McP2unb58YlH9ai0o63+7T
-	 zD3sucRstM/Xoj/TZrcv2tjcUAMOzzCnc8hgjEEm1wqB0+SX5QstzkNwB9JJRIpBrG
-	 xgyF4acvpyv/1aYMqDRFOkxsAOLd5I1IpE0oVb8lYBubJJ1qJWqunbltw66SFuK1jL
-	 8ufwpCfCQHHow==
-Date: Thu, 31 Oct 2024 16:23:48 -0700
-Subject: [PATCH 1/6] xfs_repair: checking rt free space metadata must happen
- during phase 4
+	b=Ye97DvyQLW8qEX+fjQkSzRHjZ0hOfikgOL4DKf+lrBudfjyaTenGfPpDlWCB/65EN
+	 vGJPN//5lgl6Z1L5GHfuyjqU+fuNTeN5eFGGE1kv1OWCXT804mi8JcWE9LhmtQSc73
+	 N2IpUgkzVB2nmmB2MogP1JjUJCxJKPSHTjl8SBKXXF/Vw8a/x4UTj0FGjwAAsm5Ae/
+	 LZ7gxvMcWjJD8OD0U5Ypomr2QJY2rB5DDJ6/1cHCao05vDcEGcViktxnGVmpYcdZ2d
+	 bO1gJZ2eB8/dK0eDbxvW/XRYC3iM4VQs5b6itZWA4H8PeHVvzoM3zhgTRKBwtddTE8
+	 3f2kofRRqZpyw==
+Date: Thu, 31 Oct 2024 16:24:03 -0700
+Subject: [PATCH 2/6] xfs_repair: use xfs_validate_rt_geometry
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173041568118.964620.7418836022913791251.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <173041568133.964620.17517771729333469028.stgit@frogsfrogsfrogs>
 In-Reply-To: <173041568097.964620.17809679042644398581.stgit@frogsfrogsfrogs>
 References: <173041568097.964620.17809679042644398581.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,79 +43,80 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Back in the really old days, xfs_repair would generate the new free
-space information for the realtime section during phase 5, and write the
-contents to the rtbitmap and summary files during phase 6.  This was ok
-because the incore information isn't used until phase 6.
+Use shared libxfs code with the kernel instead of reimplementing it.
 
-Then I changed the behavior to check the generated information against
-what was on disk and complain about the discrepancies.  Unfortunately,
-there was a subtle flaw here -- for a non -n run, we'll have regenerated
-the AG metadata before we actually check the rt free space information.
-If the AG btree regeneration should clobber one of the old rtbitmap or
-summary blocks, this will be reported as a corruption even though
-nothing's wrong.
-
-Move check_rtmetadata to the end of phase 4 so that this doesn't happen.
-
-Cc: <linux-xfs@vger.kernel.org> # v5.19.0
-Fixes: f2e388616d7491 ("xfs_repair: check free rt extent count")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/phase4.c     |    7 +++++++
- repair/phase5.c     |    6 ------
- repair/xfs_repair.c |    3 ---
- 3 files changed, 7 insertions(+), 9 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/sb.c              |   40 ++--------------------------------------
+ 2 files changed, 3 insertions(+), 38 deletions(-)
 
 
-diff --git a/repair/phase4.c b/repair/phase4.c
-index 5e5d8c3c7d9b96..071f20ed736e4b 100644
---- a/repair/phase4.c
-+++ b/repair/phase4.c
-@@ -401,4 +401,11 @@ phase4(xfs_mount_t *mp)
- 	 */
- 	quotino_check(mp);
- 	quota_sb_check(mp);
-+
-+	/* Check the rt metadata before we rebuild */
-+	if (mp->m_sb.sb_rblocks)  {
-+		do_log(
-+		_("        - generate realtime summary info and bitmap...\n"));
-+		check_rtmetadata(mp);
-+	}
- }
-diff --git a/repair/phase5.c b/repair/phase5.c
-index d18ec095b0524b..9207da7172c05b 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -694,12 +694,6 @@ phase5(xfs_mount_t *mp)
- 	free(sb_ifree_ag);
- 	free(sb_fdblocks_ag);
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index b9986a00681c1e..a4e8fd08a90541 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -309,6 +309,7 @@
  
--	if (mp->m_sb.sb_rblocks)  {
--		do_log(
--		_("        - generate realtime summary info and bitmap...\n"));
--		check_rtmetadata(mp);
--	}
+ #define xfs_update_secondary_sbs	libxfs_update_secondary_sbs
+ 
++#define xfs_validate_rt_geometry	libxfs_validate_rt_geometry
+ #define xfs_validate_stripe_geometry	libxfs_validate_stripe_geometry
+ #define xfs_verify_agbno		libxfs_verify_agbno
+ #define xfs_verify_agbext		libxfs_verify_agbext
+diff --git a/repair/sb.c b/repair/sb.c
+index 4b49c1b33c6c83..1320929caee590 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -447,44 +447,8 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
+ 			return(XR_BAD_SECT_SIZE_DATA);
+ 	}
+ 
+-	/*
+-	 * real-time extent size is always set
+-	 */
+-	if (sb->sb_rextsize * sb->sb_blocksize > XFS_MAX_RTEXTSIZE)
+-		return(XR_BAD_RT_GEO_DATA);
 -
- 	do_log(_("        - reset superblock...\n"));
+-	if (sb->sb_rextsize * sb->sb_blocksize < XFS_MIN_RTEXTSIZE)
+-			return(XR_BAD_RT_GEO_DATA);
+-
+-	if (sb->sb_rblocks == 0)  {
+-		if (sb->sb_rextents != 0)
+-			return(XR_BAD_RT_GEO_DATA);
+-
+-		if (sb->sb_rbmblocks != 0)
+-			return(XR_BAD_RT_GEO_DATA);
+-
+-		if (sb->sb_rextslog != 0)
+-			return(XR_BAD_RT_GEO_DATA);
+-
+-		if (sb->sb_frextents != 0)
+-			return(XR_BAD_RT_GEO_DATA);
+-	} else  {
+-		/*
+-		 * if we have a real-time partition, sanity-check geometry
+-		 */
+-		if (sb->sb_rblocks / sb->sb_rextsize != sb->sb_rextents)
+-			return(XR_BAD_RT_GEO_DATA);
+-
+-		if (sb->sb_rextents == 0)
+-			return XR_BAD_RT_GEO_DATA;
+-
+-		if (sb->sb_rextslog != libxfs_compute_rextslog(sb->sb_rextents))
+-			return(XR_BAD_RT_GEO_DATA);
+-
+-		if (sb->sb_rbmblocks != (xfs_extlen_t) howmany(sb->sb_rextents,
+-						NBBY * sb->sb_blocksize))
+-			return(XR_BAD_RT_GEO_DATA);
+-	}
++	if (!libxfs_validate_rt_geometry(sb))
++		return XR_BAD_RT_GEO_DATA;
  
  	/*
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index e325d61f10367e..3ade85bbcbb7fd 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -1318,9 +1318,6 @@ main(int argc, char **argv)
- 
- 	if (no_modify) {
- 		printf(_("No modify flag set, skipping phase 5\n"));
--
--		if (mp->m_sb.sb_rblocks > 0)
--			check_rtmetadata(mp);
- 	} else {
- 		phase5(mp);
- 	}
+ 	 * verify correctness of inode alignment if it's there
 
