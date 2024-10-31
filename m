@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27DA1946BC
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:43:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9607A1946BC
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:43:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730418209; cv=none; b=b/ou7pt8yERmhj1bDazkwyBLWyOl7Cn7BJzuSEzTZVXYZ7q+wAPJucr1HEQvKzla8npaGCOrpt9xdW6ShQGvmfTS7BNfqMFgFyttIunPs65JbdAT5U65qhKunocTGJ0qLr26PcSvh71vZ5uQTVLAOt2u1FEhvoM305N4jrydD1g=
+	t=1730418223; cv=none; b=S9uoTcPpXIbkpn+WNuB/KeIhjm5BumOovo9TVFCGPNLNLHhbfTrVCyl+jdasutmZVyPQYvmVKY/IFHhCWbunevHpmCt5V5FifnN25CObXoE5qENZsycpuSXBYVELylVbVF92D4e74RUm2xh9fPET4TbVsQ1UyyiAAt3j3pflIp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730418209; c=relaxed/simple;
-	bh=uY3xj2F/n52NJC3T8pHCRBb4pcAvqlWPEab59fhlIVw=;
+	s=arc-20240116; t=1730418223; c=relaxed/simple;
+	bh=A5aofJxnrax0Ii6fLXfC7R7Ix+3uGBiv+ca1JcyfCiI=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=BTJIcJARW0dsrGuQGIWTunPkJw0r4BqdueWu5ty83zF7+J114dNy2kchHG7epXYPfHhxh5ol2j0x6GpfgUKGaGYUML6jIrrQfI2naCKCKyPDa7KV5t8FSGX3E82Wzkiq2vI2k+jDn9G1695XB/BuQT8OcvwmBbKIWwxu7HfcLjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uf78nbJ6; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=j2WJmhAPNLvL7XL5mdIhiTpgbbKtpRtXwHqfogyHaSkdtrPkNmJ9IW3V37Vx0oNmIn/A8VhN1dNvp8h9YGVHp3IKSkUZri8lRIjWkj6QXQcOrspwpVcbQy+jTFh/pjsRYpLj6ZSHUlZP67Js/AxLnthoaoWdtxUka4ZB/M0ehhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=evgA6Pxx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uf78nbJ6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CC0EC4CEC3;
-	Thu, 31 Oct 2024 23:43:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="evgA6Pxx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17CC9C4CEC3;
+	Thu, 31 Oct 2024 23:43:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730418207;
-	bh=uY3xj2F/n52NJC3T8pHCRBb4pcAvqlWPEab59fhlIVw=;
+	s=k20201202; t=1730418223;
+	bh=A5aofJxnrax0Ii6fLXfC7R7Ix+3uGBiv+ca1JcyfCiI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Uf78nbJ6ZC0UxOR0p3XCthSvGRrB2QrhlKftB876cx6Jkr2BgTGkl4YhnpHubrAku
-	 66bYI4VFUXHlf+IDUNY3YsdOdGaVh5qUrxEjryRAUTbG523YBGFeBIS/GT38Y/uFBm
-	 2ndSo2JYPg7tWXYo3BtmJLOM10dqAs/zhI1w+gjNtRRNCRhredlaJNJ2+1SbKhC8Ev
-	 cbfnh3NFJ5bJqgWA+Fikf9Xt3aJ9f2O+DwGuesFHhSl30fzOnpGGX2NtQHAbEbbOCG
-	 6e+Erl4c3AMlW8w9Wyy4X5PeBbmX4/6a9tACiqCOS7LlR3+6BJ2S7zgyIkrmLJ6T85
-	 49vyxN2G+KGWA==
-Date: Thu, 31 Oct 2024 16:43:26 -0700
-Subject: [GIT PULL 4/7] xfs_metadump: support external devices
+	b=evgA6PxxrGulQnKKqE+ECHUFzSc6YUiy6ENYFCcv3k1tZM1uPMohY4VybE5pmXNpQ
+	 0b+pDxymEYqKDek+PJDaelMevQOiFvx8HulXym7xWmtcIKZC7sSFEDBzFyQJbooasu
+	 HL2SHEC1V5g/At7z6f2FlFsP6VKkN/5n8KScTEz3JtXWPy0uHzRFH5P95R60h8NBeo
+	 9vQA5FvCCfe5Qj1n5FupPN0VDMrAtEKXvigpbTL0X5+/Rbx8rKYquOM8B7z8qvNr4W
+	 yUwK4csn18YyTI/KSL+CRb9a34OZXBOpzkdNRR2skNq5AFWmonYZA33QSTRPPKPeCj
+	 xc/qDHICC6t0Q==
+Date: Thu, 31 Oct 2024 16:43:42 -0700
+Subject: [GIT PULL 5/7] mkfs/repair: use new rtbitmap helpers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173041764673.994242.698115173572630517.stg-ugh@frogsfrogsfrogs>
+Cc: <linux-xfs@vger.kernel.org> # v5.19.0, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173041764757.994242.5921950807905351688.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,38 +51,43 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 5f10590bae67d7698191a1392b6b1d3ce4d11a0c:
-
-xfs_db: convert rtsummary geometry (2024-10-31 15:45:05 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/metadump-external-devices-6.12_2024-10-31
-
-for you to fetch changes up to 5e8139658b798d931079404660273840432bcd9f:
+The following changes since commit 5e8139658b798d931079404660273840432bcd9f:
 
 xfs_db: allow setting current address to log blocks (2024-10-31 15:45:05 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/misc-use-rtbitmap-helpers-6.12_2024-10-31
+
+for you to fetch changes up to 07c09d46665cfac48256f6faf829897554ec74bf:
+
+xfs_repair: stop preallocating blocks in mk_rbmino and mk_rsumino (2024-10-31 15:45:05 -0700)
+
 ----------------------------------------------------------------
-xfs_metadump: support external devices [v5.3 4/7]
+mkfs/repair: use new rtbitmap helpers [v5.3 5/7]
 
-This series augments the xfs_metadump and xfs_mdrestore utilities to
-capture the contents of an external log in a metadump, and restore it on
-the other end.  This will enable better debugging analysis of broken
-filesystems, since it will now be possible to capture external log data.
-This is a prequisite for the rt groups feature, since we'll also need to
-capture the rt superblocks written to the rt device.
-
-This also means we can capture the contents of external logs for better
-analysis by support staff.
+Use the new rtfile helpers to create the rt bitmap and summary files instead of
+duplicating the logic that the in-kernel growfs already had.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (1):
-xfs_db: allow setting current address to log blocks
+Christoph Hellwig (5):
+xfs_repair: use xfs_validate_rt_geometry
+mkfs: remove a pointless rtfreesp_init forward declaration
+mkfs: use xfs_rtfile_initialize_blocks
+xfs_repair: use libxfs_rtfile_initialize_blocks
+xfs_repair: stop preallocating blocks in mk_rbmino and mk_rsumino
 
-db/block.c        | 103 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
-man/man8/xfs_db.8 |  17 +++++++++
-2 files changed, 119 insertions(+), 1 deletion(-)
+Darrick J. Wong (1):
+xfs_repair: checking rt free space metadata must happen during phase 4
+
+libxfs/libxfs_api_defs.h |   2 +
+mkfs/proto.c             | 107 +++---------------
+repair/phase4.c          |   7 ++
+repair/phase5.c          |   6 -
+repair/phase6.c          | 284 ++++++++---------------------------------------
+repair/sb.c              |  40 +------
+repair/xfs_repair.c      |   3 -
+7 files changed, 73 insertions(+), 376 deletions(-)
 
