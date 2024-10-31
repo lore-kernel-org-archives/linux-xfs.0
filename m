@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2C911DFD81
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:23:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A94E1C2DA4
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:23:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730416998; cv=none; b=EIkr5BeD2bbnmnnTZAhd7K8/7tLAuNEIzZm7YhxaBzNfhXGtKlIcGZuZj+yNRv3zEmy1WGg8LepXw5COCq8GiiySyV9WVACWCIp9teZc/r7wJDvFZbqOKjwLeGjOThocS2nusNqL6kq+RIy0tM49S+2i5QJiZkuNOiFyactPJh4=
+	t=1730417013; cv=none; b=UoqRPL++90FzQm6E5aFve0vsUqzziAjqdTlYuciVfZpaTuTsHmFF9RZFSF7fMoNB7+65j7KwrPX3mU3fTFOaihrnBpFVHTVS9gu96IE1kagZhB9BVIZYHQgaALiNiLaumcKUi3C9RnG56nyARvwJxeKx4G35Kka8T46/4mdhaqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730416998; c=relaxed/simple;
-	bh=To2WTMOlLMOxIpwhvGmWidF/ZbPMofBP3P/EWYt95ng=;
+	s=arc-20240116; t=1730417013; c=relaxed/simple;
+	bh=YBjtjRd/2OpGEyqikaKzT+On7XFds6AhpRWGYmguWro=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hRSXSeuItqEpHexpWus9PF+BqFCC4eh3bpmsSY8TloUp0tpdYCS90wa07cmuSvYX8ZYQyyoFMV6Z8a80hpxEsSHWoEgVTYw8cRaPM2VQaE9WUTiEPLD5x+t0ZPCJJxY8ht3pXLqmi6ihj7IWoNfoy2PYVNdbuxx3pWKikOTjbUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ha32qtA2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XOzx9Gyafs889wkWFSP5H6PDi8VQ4z1wh0UPkCIylPVKd57rTBRYQOcRvZ+NvV97f2pAEn6hURPsvl+ArlGJQcxDjmR1sepMe9m5gU1XI9dJIlgBsRrOGErrDUIkx6w/HsjJIqfvLsMwHMCKViOLRHqI71+jdP2W2tyRr/D+gjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YZpb1SrI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ha32qtA2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8448DC4CEC3;
-	Thu, 31 Oct 2024 23:23:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YZpb1SrI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 267ACC4CEC3;
+	Thu, 31 Oct 2024 23:23:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730416997;
-	bh=To2WTMOlLMOxIpwhvGmWidF/ZbPMofBP3P/EWYt95ng=;
+	s=k20201202; t=1730417013;
+	bh=YBjtjRd/2OpGEyqikaKzT+On7XFds6AhpRWGYmguWro=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ha32qtA2i6WzBfkFZjfVrmCv9a6DlDEIQQfvOkH0dHA5tJ1kB3BybAC2oxTEqRyMl
-	 M/vryFkYT3XhqPPymboeFsArzunbfxAr4hWhPT8Qx5QeF5fA8KvPdp/LibMVho9roo
-	 iXZVTMrtU2rSCRviv/KwT9JDC2xygDBPZh57MUa21mT9dIEEG17Pvp9Xfsscp1jz1p
-	 zuLrVSLPyJRvbSqmWG2MAOwUcBJo3/m+O2kRknGUgKVavHITQKbOiSKfxSW64VHc5l
-	 t/KVO9zevTrZB0o77gPbVHkqMQbMv/nK8+HwrtSp+vKlVi2H+sI5tWNBxcQ0F8MGTL
-	 dfrOBAoflO3Vg==
-Date: Thu, 31 Oct 2024 16:23:17 -0700
-Subject: [PATCH 8/8] xfs_db: convert rtsummary geometry
+	b=YZpb1SrIWHi6ji1q+0LB78+H9bc5x1Auf4eCN4tXN2KFwE4UWeeJbpK3JL6Bjcm11
+	 HNnTU7OZqMP1/HYlqCsgzOrWB9Ogic/hnrD8YE6xN0pydsmQlshX1V70kwK8azqlfE
+	 H325Fd63dQ8KY2WWsLtelZ8m4prxlEI6PatVz1//T8Z7WGwE19mWKOoD/f+F0raY6F
+	 0KyC0IofYW8SDix4Rmbdxep/2s6fv8rQnv9jIyLpYmCQXx3/ZY+249j6k4RhTNNGBd
+	 X8URXF+DUFOooRglO3YVv1HaBjtEPnmKlafShSc3Dmhxemw9iEV+nwCYRGHaYIW7aG
+	 zu7sc0bknZAtQ==
+Date: Thu, 31 Oct 2024 16:23:32 -0700
+Subject: [PATCH 1/1] xfs_db: allow setting current address to log blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173041567460.964205.16459457764430821254.stgit@frogsfrogsfrogs>
-In-Reply-To: <173041567330.964205.623580785256778088.stgit@frogsfrogsfrogs>
-References: <173041567330.964205.623580785256778088.stgit@frogsfrogsfrogs>
+Message-ID: <173041567781.964525.1829023710047203991.stgit@frogsfrogsfrogs>
+In-Reply-To: <173041567766.964525.18174530428305698304.stgit@frogsfrogsfrogs>
+References: <173041567766.964525.18174530428305698304.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,326 +45,216 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach the rtconvert command to be able to convert realtime blocks and
-extents to locations within the rt summary.
+Add commands so that users can target blocks on an external log device.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/convert.c      |  161 ++++++++++++++++++++++++++++++++++++++++++++++++++---
- man/man8/xfs_db.8 |   29 ++++++++++
- 2 files changed, 182 insertions(+), 8 deletions(-)
+ db/block.c        |  103 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ man/man8/xfs_db.8 |   17 +++++++++
+ 2 files changed, 119 insertions(+), 1 deletion(-)
 
 
-diff --git a/db/convert.c b/db/convert.c
-index 7c10690f574f7a..3014367e7d7652 100644
---- a/db/convert.c
-+++ b/db/convert.c
-@@ -53,6 +53,9 @@ typedef enum {
- 	CT_RTX,			/* realtime extent */
- 	CT_RBMBLOCK,		/* block within rt bitmap */
- 	CT_RBMWORD,		/* word within rt bitmap */
-+	CT_RSUMBLOCK,		/* block within rt summary */
-+	CT_RSUMLOG,		/* log level for rtsummary computations */
-+	CT_RSUMINFO,		/* info word within rt summary */
- 	NCTS
- } ctype_t;
+diff --git a/db/block.c b/db/block.c
+index 79ae0ea5802a83..b50b2c16060ac7 100644
+--- a/db/block.c
++++ b/db/block.c
+@@ -29,6 +29,8 @@ static int	rtblock_f(int argc, char **argv);
+ static void	rtblock_help(void);
+ static int	rtextent_f(int argc, char **argv);
+ static void	rtextent_help(void);
++static int	logblock_f(int argc, char **argv);
++static void	logblock_help(void);
+ static void	print_rawdata(void *data, int len);
  
-@@ -77,6 +80,7 @@ typedef union {
- 	xfs_rtblock_t	rtx;
- 	xfs_fileoff_t	rbmblock;
- 	unsigned int	rbmword;
-+	xfs_fileoff_t	rsumblock;
- } cval_t;
+ static const cmdinfo_t	ablock_cmd =
+@@ -49,6 +51,9 @@ static const cmdinfo_t	rtblock_cmd =
+ static const cmdinfo_t	rtextent_cmd =
+ 	{ "rtextent", "rtx", rtextent_f, 0, 1, 1, N_("[rtxno]"),
+ 	  N_("set address to rtextent value"), rtextent_help };
++static const cmdinfo_t	logblock_cmd =
++	{ "logblock", "lsb", logblock_f, 0, 1, 1, N_("[logbno]"),
++	  N_("set address to logblock value"), logblock_help };
  
- static uint64_t		bytevalue(ctype_t ctype, cval_t *val);
-@@ -105,6 +109,12 @@ static const char	*rtblock_names[] = { "rtblock", "rtb", "rtbno", NULL };
- static const char	*rtx_names[] = { "rtx", "rtextent", NULL };
- static const char	*rbmblock_names[] = { "rbmblock", "rbmb", NULL };
- static const char	*rbmword_names[] = { "rbmword", "rbmw", NULL };
-+static const char	*rsumblock_names[] = { "rsumblock", "rsmb", NULL };
-+static const char	*rsumlog_names[] = { "rsumlog", "rsml", NULL };
-+static const char	*rsumword_names[] = { "rsuminfo", "rsmi", NULL };
-+
-+static int		rsuminfo;
-+static int		rsumlog;
+ static void
+ ablock_help(void)
+@@ -116,6 +121,7 @@ block_init(void)
+ 	add_command(&fsblock_cmd);
+ 	add_command(&rtblock_cmd);
+ 	add_command(&rtextent_cmd);
++	add_command(&logblock_cmd);
+ }
  
- static const ctydesc_t	ctydescs[NCTS] = {
- 	[CT_AGBLOCK] = {
-@@ -181,39 +191,60 @@ static const ctydesc_t	ctydescs[NCTS] = {
- static const ctydesc_t	ctydescs_rt[NCTS] = {
- 	[CT_BBOFF] = {
- 		.allowed = M(DADDR) |
--			   M(RTBLOCK),
-+			   M(RTBLOCK) |
-+			   M(RSUMLOG),
- 		.names   = bboff_names,
- 	},
- 	[CT_BLKOFF] = {
--		.allowed = M(RTBLOCK),
-+		.allowed = M(RTBLOCK) |
-+			   M(RSUMLOG),
- 		.names   = rtblkoff_names,
- 	},
- 	[CT_BYTE] = {
--		.allowed = 0,
-+		.allowed = M(RSUMLOG),
- 		.names   = byte_names,
- 	},
- 	[CT_DADDR] = {
--		.allowed = M(BBOFF),
-+		.allowed = M(BBOFF) |
-+			   M(RSUMLOG),
- 		.names   = daddr_names,
- 	},
- 	[CT_RTBLOCK] = {
- 		.allowed = M(BBOFF) |
--			   M(BLKOFF),
-+			   M(BLKOFF) |
-+			   M(RSUMLOG),
- 		.names   = rtblock_names,
- 	},
- 	[CT_RTX] = {
- 		.allowed = M(BBOFF) |
--			   M(BLKOFF),
-+			   M(BLKOFF) |
-+			   M(RSUMLOG),
- 		.names   = rtx_names,
- 	},
- 	[CT_RBMBLOCK] = {
--		.allowed = M(RBMWORD),
-+		.allowed = M(RBMWORD) |
-+			   M(RSUMLOG),
- 		.names   = rbmblock_names,
- 	},
- 	[CT_RBMWORD] = {
--		.allowed = M(RBMBLOCK),
-+		.allowed = M(RBMBLOCK) |
-+			   M(RSUMLOG),
- 		.names   = rbmword_names,
- 	},
-+	/* must be specified in order rsumlog -> rsuminfo -> rsumblock */
-+	[CT_RSUMBLOCK] = {
-+		.allowed = 0,
-+		.names   = rsumblock_names,
-+	},
-+	[CT_RSUMLOG] = {
-+		.allowed = M(RSUMINFO) |
-+			   M(RSUMBLOCK),
-+		.names   = rsumlog_names,
-+	},
-+	[CT_RSUMINFO] = {
-+		.allowed = M(RSUMBLOCK),
-+		.names   = rsumword_names,
-+	},
+ static void
+@@ -132,6 +138,7 @@ daddr_help(void)
+ enum daddr_target {
+ 	DT_DATA,
+ 	DT_RT,
++	DT_LOG,
  };
  
- static const cmdinfo_t	convert_cmd =
-@@ -224,6 +255,39 @@ static const cmdinfo_t	rtconvert_cmd =
- 	{ "rtconvert", NULL, rtconvert_f, 3, 9, 0, "type num [type num]... type",
- 	  "convert from one realtime address form to another", NULL };
+ static int
+@@ -146,18 +153,27 @@ daddr_f(
+ 	int		c;
+ 	enum daddr_target tgt = DT_DATA;
  
-+static inline uint64_t
-+rsumblock_to_bytes(
-+	xfs_fileoff_t	rsumblock)
-+{
-+	/*
-+	 * We compute the rt summary file block with this formula:
-+	 *   sumoffs = (log2len * sb_rbmblocks) + rbmblock;
-+	 *   sumblock = sumoffs / blockwsize;
-+	 *
-+	 * Hence the return value is the inverse of this:
-+	 *   sumoffs = (rsumblock * blockwsize) + rsuminfo;
-+	 *   rbmblock = sumoffs % (log2len * sb_rbmblocks);
-+	 */
-+	xfs_rtsumoff_t	sumoff;
-+	xfs_fileoff_t	rbmblock;
-+
-+	if (rsumlog < 0) {
-+		dbprintf(_("need to set rsumlog\n"));
-+		return 0;
-+	}
-+	if (rsuminfo < 0) {
-+		dbprintf(_("need to set rsuminfo\n"));
+-	while ((c = getopt(argc, argv, "r")) != -1) {
++	while ((c = getopt(argc, argv, "rl")) != -1) {
+ 		switch (c) {
+ 		case 'r':
+ 			tgt = DT_RT;
+ 			max_daddrs = mp->m_sb.sb_rblocks;
+ 			break;
++		case 'l':
++			tgt = DT_LOG;
++			max_daddrs = mp->m_sb.sb_logblocks;
++			break;
+ 		default:
+ 			daddr_help();
+ 			return 0;
+ 		}
+ 	}
+ 
++	if (tgt == DT_LOG && mp->m_sb.sb_logstart > 0) {
++		dbprintf(_("filesystem has internal log\n"));
 +		return 0;
 +	}
 +
-+	sumoff = rsuminfo + (rsumblock * mp->m_blockwsize);
-+	if (rsumlog)
-+		rbmblock = sumoff % (rsumlog * mp->m_sb.sb_rbmblocks);
-+	else
-+		rbmblock = sumoff;
-+	return rbmblock_to_bytes(rbmblock);
-+}
-+
- static uint64_t
- bytevalue(ctype_t ctype, cval_t *val)
- {
-@@ -258,6 +322,16 @@ bytevalue(ctype_t ctype, cval_t *val)
- 		return rbmblock_to_bytes(val->rbmblock);
- 	case CT_RBMWORD:
- 		return rbmword_to_bytes(val->rbmword);
-+	case CT_RSUMBLOCK:
-+		return rsumblock_to_bytes(val->rbmblock);
-+	case CT_RSUMLOG:
-+	case CT_RSUMINFO:
-+		/*
-+		 * These have to specified before rsumblock, and are stored in
-+		 * global variables.  Hence they do not adjust the disk address
-+		 * value.
-+		 */
-+		return 0;
- 	case CT_NONE:
- 	case NCTS:
+ 	if (optind == argc) {
+ 		xfs_daddr_t	daddr = iocur_top->off >> BBSHIFT;
+ 
+@@ -192,6 +208,9 @@ daddr_f(
+ 	case DT_RT:
+ 		set_rt_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
  		break;
-@@ -361,6 +435,9 @@ convert_f(int argc, char **argv)
- 	case CT_RTX:
- 	case CT_RBMBLOCK:
- 	case CT_RBMWORD:
-+	case CT_RSUMBLOCK:
-+	case CT_RSUMLOG:
-+	case CT_RSUMINFO:
- 		/* shouldn't get here */
- 		ASSERT(0);
- 		break;
-@@ -373,6 +450,52 @@ convert_f(int argc, char **argv)
++	case DT_LOG:
++		set_log_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
++		break;
+ 	}
+ 	return 0;
+ }
+@@ -411,6 +430,88 @@ rtextent_f(
  	return 0;
  }
  
-+static inline uint64_t
-+rt_daddr_to_rsumblock(
-+	struct xfs_mount	*mp,
-+	uint64_t		input)
++static void
++logblock_help(void)
 +{
-+	xfs_rtblock_t		rtbno;
-+	xfs_rtxnum_t		rtx;
-+	xfs_fileoff_t		rbmblock;
-+	xfs_rtsumoff_t		rsumoff;
++	dbprintf(_(
++"\n Example:\n"
++"\n"
++" 'logblock 1023' - sets the file position to the 1023rd log block.\n"
++" The external log device or the block offset within the internal log will be\n"
++" chosen as appropriate.\n"
++));
++}
 +
-+	if (rsumlog < 0) {
-+		dbprintf(_("need to set rsumlog\n"));
++static int
++logblock_f(
++	int		argc,
++	char		**argv)
++{
++	xfs_fsblock_t	logblock;
++	char		*p;
++
++	if (argc == 1) {
++		if (mp->m_sb.sb_logstart > 0 && iocur_is_ddev(iocur_top)) {
++			logblock = XFS_DADDR_TO_FSB(mp,
++						iocur_top->off >> BBSHIFT);
++
++			if (logblock < mp->m_sb.sb_logstart ||
++			    logblock >= mp->m_sb.sb_logstart +
++					mp->m_sb.sb_logblocks) {
++				dbprintf(
++ _("current address not within internal log\n"));
++				return 0;
++			}
++
++			dbprintf(_("current logblock is %lld\n"),
++					logblock - mp->m_sb.sb_logstart);
++			return 0;
++		}
++
++		if (mp->m_sb.sb_logstart == 0 &&
++		    iocur_is_extlogdev(iocur_top)) {
++			logblock = XFS_BB_TO_FSB(mp,
++						iocur_top->off >> BBSHIFT);
++
++			if (logblock >= mp->m_sb.sb_logblocks) {
++				dbprintf(
++ _("current address not within external log\n"));
++				return 0;
++			}
++
++			dbprintf(_("current logblock is %lld\n"), logblock);
++			return 0;
++		}
++
++		dbprintf(_("current address does not point to log\n"));
 +		return 0;
 +	}
 +
-+	rtbno = xfs_daddr_to_rtb(mp, input >> BBSHIFT);
-+	rtx = xfs_rtb_to_rtx(mp, rtbno);
-+	rbmblock = xfs_rtx_to_rbmblock(mp, rtx);
-+	rsumoff = xfs_rtsumoffs(mp, rsumlog, rbmblock);
-+
-+	return xfs_rtsumoffs_to_block(mp, rsumoff);
-+}
-+
-+static inline uint64_t
-+rt_daddr_to_rsuminfo(
-+	struct xfs_mount	*mp,
-+	uint64_t		input)
-+{
-+	xfs_rtblock_t		rtbno;
-+	xfs_rtxnum_t		rtx;
-+	xfs_fileoff_t		rbmblock;
-+	xfs_rtsumoff_t		rsumoff;
-+
-+	if (rsumlog < 0) {
-+		dbprintf(_("need to set rsumlog\n"));
++	logblock = strtoull(argv[1], &p, 0);
++	if (*p != '\0') {
++		dbprintf(_("bad logblock %s\n"), argv[1]);
 +		return 0;
 +	}
 +
-+	rtbno = xfs_daddr_to_rtb(mp, input >> BBSHIFT);
-+	rtx = xfs_rtb_to_rtx(mp, rtbno);
-+	rbmblock = xfs_rtx_to_rbmblock(mp, rtx);
-+	rsumoff = xfs_rtsumoffs(mp, rsumlog, rbmblock);
++	if (logblock >= mp->m_sb.sb_logblocks) {
++		dbprintf(_("bad logblock %s\n"), argv[1]);
++		return 0;
++	}
 +
-+	return xfs_rtsumoffs_to_infoword(mp, rsumoff);
++	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
++
++	if (mp->m_sb.sb_logstart) {
++		logblock += mp->m_sb.sb_logstart;
++		set_cur(&typtab[TYP_DATA], XFS_FSB_TO_DADDR(mp, logblock),
++				blkbb, DB_RING_ADD, NULL);
++	} else {
++		set_log_cur(&typtab[TYP_DATA], XFS_FSB_TO_BB(mp, logblock),
++				blkbb, DB_RING_ADD, NULL);
++	}
++
++	return 0;
 +}
 +
- static int
- rtconvert_f(int argc, char **argv)
- {
-@@ -384,6 +507,9 @@ rtconvert_f(int argc, char **argv)
- 	uint64_t	v;
- 	ctype_t		wtype;
- 
-+	rsumlog = -1;
-+	rsuminfo = -1;
-+
- 	/* move past the "rtconvert" command */
- 	argc--;
- 	argv++;
-@@ -452,6 +578,16 @@ rtconvert_f(int argc, char **argv)
- 				xfs_rtb_to_rtx(mp,
- 					xfs_daddr_to_rtb(mp, v >> BBSHIFT)));
- 		break;
-+	case CT_RSUMBLOCK:
-+		v = rt_daddr_to_rsumblock(mp, v);
-+		break;
-+	case CT_RSUMLOG:
-+		dbprintf(_("cannot convert to rsumlog\n"));
-+		return 0;
-+		break;
-+	case CT_RSUMINFO:
-+		v = rt_daddr_to_rsuminfo(mp, v);
-+		break;
- 	case CT_AGBLOCK:
- 	case CT_AGINO:
- 	case CT_AGNUMBER:
-@@ -535,6 +671,15 @@ getvalue(char *s, ctype_t ctype, cval_t *val)
- 	case CT_RBMWORD:
- 		val->rbmword = (unsigned int)v;
- 		break;
-+	case CT_RSUMBLOCK:
-+		val->rsumblock = (xfs_fileoff_t)v;
-+		break;
-+	case CT_RSUMLOG:
-+		rsumlog = (unsigned int)v;
-+		break;
-+	case CT_RSUMINFO:
-+		rsuminfo = (unsigned int)v;
-+		break;
- 	case CT_NONE:
- 	case NCTS:
- 		/* NOTREACHED */
+ void
+ print_block(
+ 	const field_t	*fields,
 diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 12fc4f3b51016b..ffa04879ce76c8 100644
+index ffa04879ce76c8..998553684586c7 100644
 --- a/man/man8/xfs_db.8
 +++ b/man/man8/xfs_db.8
-@@ -1183,10 +1183,39 @@ .SH COMMANDS
- or
- .B rbmw
- (32-bit word within a realtime bitmap block)
-+.HP
-+.B rsumblock
-+or
-+.B rsmb
-+(realtime summary file block)
-+.HP
-+.B rsuminfo
-+or
-+.B rsmi
-+(32-bit counter within a realtime summary block)
-+.HP
-+.B rsumlog
-+or
-+.B rsml
-+(log2len parameter used for summary file offset computations)
- .PD
- .RE
- .IP
- Only conversions that "make sense" are allowed.
-+
-+Realtime summary file location conversions have the following rules:
-+Each info word in the rt summary file counts the number of free extents of a
-+given log2(length) that start in a given rt bitmap block.
-+
-+To compute summary file location information for a given rt bitmap block, a
-+log2(extent length) must be specified as the last type/number pair before the
-+conversion type, and the type must be
-+.BR rsumlog .
-+
-+To compute the rt bitmap block from summary file location, the type/number pairs
-+must be specified exactly in the order
-+.BR rsumlog ", " rsuminfo ", " rsumblock .
-+
+@@ -681,6 +681,9 @@ .SH COMMANDS
+ .B data
+ (uninterpreted).
+ 
++If an address and the
++.B \-l
++option are specified, the current address is set to the external log device.
+ If an address and the
+ .B \-r
+ option are specified, the current address is set to the realtime device.
+@@ -1009,6 +1012,20 @@ .SH COMMANDS
+ .IR filename ,
+ stop logging, or print the current logging status.
  .TP
- .BI "sb [" agno ]
- Set current address to SB header in allocation group
++.BI "logblock [" logbno ]
++Set current address to the log block value given by
++.IR logbno .
++If no value for
++.I logbno
++is given the current address is printed, expressed as an fsb.
++The type is set to
++.B data
++(uninterpreted).
++If the filesystem has an external log, then the address will be within the log
++device.
++If the filesystem has an internal log, then the address will be within the
++internal log.
++.TP
+ .BI "logformat [\-c " cycle "] [\-s " sunit "]"
+ Reformats the log to the specified log cycle and log stripe unit.
+ This has the effect of clearing the log destructively.
 
