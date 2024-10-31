@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1E47197A87
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:07:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F6D19F430
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:08:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730416076; cv=none; b=JcBP5Os8gLssKGbPC2bG7sCRJ2CJQ4ggTa2SVH8C5wM/TYHYJjCJX3P391SsHjXsnb0FScEvsDhD0Gp8XNN/Ia+6ZtK0i7yz5Clk674j+IOfB0JeeVL4KP4U78Eqg1iKSpOV8kYCiqcxiogUmYSRNC9NnYZvnO9rjrT0s5W9Y44=
+	t=1730416091; cv=none; b=PFqItQctRwtRH5pfK2tz42n/3gkyM/bBQ4hl9GRqDGTXTMMI4F755a1ntRSm8KNVIZbPyuUaBPaKgGEw6tjG1fhGymsc0ZJLJgVySMD7m2NEb3dNgYCwvBEQ3vb5YTsaE2/a8PCP3nBEYPADUtU9uC8H3d5YpGonIQIAY77o4bg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730416076; c=relaxed/simple;
-	bh=3c8idNWl98g7ejLZ75yWlayva0mI92f2JclB4OnUHQI=;
+	s=arc-20240116; t=1730416091; c=relaxed/simple;
+	bh=YTo2kdChCQnFL/U/ZjpM4l7hlMeNjjtALT4X9M9Z1gs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IJDFYNmDCtXu3NanOPX2IpGyjY5QSwDiaXGLykEOqlxzSUqRelgDmX9/SEamvr1eS80lC9rd8OztgkxBnss6HdkwoQTGVCiGEZxxaHDyyxuRAteym0Rq8ctq5ZCEE0gAHJkuHNEC8vu5USwzidlUfZ6a7i0EOqDYI6ueGfPMaeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fc0PvKeE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WQqC+cLM9DWpDufE0MP2bAFYD2SC4SudGswEt6T6QaR9KZfUUoOZmgvNpidb4oVBz+i+XCpkSBevp3STNnMDfhCO3b83SRfJmLpd59pXzgUZKNovKZzFm+jI+8iop3q9yfrqLwj0yT7NQY1+0sqAxYrazUw86FyVIOYsJzi4lqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D/NGRBNY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fc0PvKeE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 620B6C4CEC3;
-	Thu, 31 Oct 2024 23:07:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D/NGRBNY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D92DC4CECF;
+	Thu, 31 Oct 2024 23:08:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730416075;
-	bh=3c8idNWl98g7ejLZ75yWlayva0mI92f2JclB4OnUHQI=;
+	s=k20201202; t=1730416091;
+	bh=YTo2kdChCQnFL/U/ZjpM4l7hlMeNjjtALT4X9M9Z1gs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fc0PvKeEgCbaD2zCOiQngUZEQLAh82/jPrthn/3qjSpRJpPQgE2cMUuLG7luWCyIA
-	 ew6pbd3RC2TMM3N8vCc3grLUBTT2zadKyvz4lb6BPTl8fjr9M1lkCqpfeFHlKM0g5/
-	 A43qkEsdo1ch2LHY4NpAE/laGfcREYEeoJaNANOiCMMu0aT7FLSHaGfgMix7aGKcPO
-	 5p+EEvanbWptgebUhevVFEXZBaejKwrndK/tSb+LYOopTNUG0aOEQCfUpNXEWKydBX
-	 YdOcZs3fcXcWlHQBis2wga52RkKfTaaSTcCx/q40HqS8dhBv7/QUwY1A1PNgg6U/7o
-	 2IjZsJdFMBdmw==
-Date: Thu, 31 Oct 2024 16:07:54 -0700
-Subject: [PATCHSET v5.3 4/7] xfs_metadump: support external devices
+	b=D/NGRBNYJI5R6go2kSJyCQZ446eUbzUBvlpPZogJ/Ht0Sa7ROshWYbaF8zFZHP3sZ
+	 bqZvYxMeMPT3hqavV5cEF4cWK7607BzDHQeVWMgKG0WgYFSVXmz/mFEw7aWqwSUmIw
+	 REdJNqQXFwoz6YsJvm04DvixWCqKj8DBImwSXFxEYqkLeCzEFyyikD01QbFJDw5vBD
+	 KUKGJn4Zf91nOF4/hFedfPSLTt7ePHHjnUPOgCWBgZBpDrEYGLL6zTP1YRrB3gq3rD
+	 LAkjBt88absU5PIoAHAinZmsPTxeyVd0GouR0HdTS7aMeOpCMpTy3SgN/l0uek+lqX
+	 irnqM/S1LaZfw==
+Date: Thu, 31 Oct 2024 16:08:10 -0700
+Subject: [PATCHSET v5.3 5/7] mkfs/repair: use new rtbitmap helpers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <173041567766.964525.18174530428305698304.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173041568097.964620.17809679042644398581.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241031225721.GC2386201@frogsfrogsfrogs>
 References: <20241031225721.GC2386201@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,15 +45,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series augments the xfs_metadump and xfs_mdrestore utilities to
-capture the contents of an external log in a metadump, and restore it on
-the other end.  This will enable better debugging analysis of broken
-filesystems, since it will now be possible to capture external log data.
-This is a prequisite for the rt groups feature, since we'll also need to
-capture the rt superblocks written to the rt device.
-
-This also means we can capture the contents of external logs for better
-analysis by support staff.
+Use the new rtfile helpers to create the rt bitmap and summary files instead of
+duplicating the logic that the in-kernel growfs already had.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -61,12 +54,22 @@ from my git trees, which are linked below.
 Comments and questions are, as always, welcome.
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadump-external-devices-6.12
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=misc-use-rtbitmap-helpers-6.12
 ---
 Commits in this patchset:
- * xfs_db: allow setting current address to log blocks
+ * xfs_repair: checking rt free space metadata must happen during phase 4
+ * xfs_repair: use xfs_validate_rt_geometry
+ * mkfs: remove a pointless rtfreesp_init forward declaration
+ * mkfs: use xfs_rtfile_initialize_blocks
+ * xfs_repair: use libxfs_rtfile_initialize_blocks
+ * xfs_repair: stop preallocating blocks in mk_rbmino and mk_rsumino
 ---
- db/block.c        |  103 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- man/man8/xfs_db.8 |   17 +++++++++
- 2 files changed, 119 insertions(+), 1 deletion(-)
+ libxfs/libxfs_api_defs.h |    2 
+ mkfs/proto.c             |  107 +++--------------
+ repair/phase4.c          |    7 +
+ repair/phase5.c          |    6 -
+ repair/phase6.c          |  284 +++++++---------------------------------------
+ repair/sb.c              |   40 ------
+ repair/xfs_repair.c      |    3 
+ 7 files changed, 73 insertions(+), 376 deletions(-)
 
