@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39AFB1946BC
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:43:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B93721CF29C
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:44:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730418239; cv=none; b=m7/bSTJeiv7rX1SP9Lk5Kf0XzvBrhXXM9UkJwvB7cMgc2y8+YJKyjKiNtOxmvQ103pQtbLIrQO/rOChMVVFXkZnXBbWJ47wwLtAo1sorhnWHLLXKtIvMJNE2EOm1hSReNHjwSst70BEX6in6DWjrugcrkqBO15j0K0r0o0M5aSI=
+	t=1730418254; cv=none; b=u5A0WBbkzJGuMK+c776O6rbHUALRym2PIrcL1eq/eJm5ybw6Qpz0YUXlcDPpGExmR8AaV2P5xOd4k9oJZ3Uk4837Q3Y5cMobmC6i1l794f1BDhwFkRiCwLqkRFvFts1kRzu5e5oKWLnp83sW/tk06m7Om9fByZu4iAFPZNQDo40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730418239; c=relaxed/simple;
-	bh=1xUKDGoHNvdzUbFshIJj2M9PARWC24W0xplKsIkvlCw=;
+	s=arc-20240116; t=1730418254; c=relaxed/simple;
+	bh=TCCbty4V+E/8XIi8NisO3V2tVqw2qiFQrX0FzQ22JI8=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=XE7GTgpqKIskHkwleeDRxGqA0v8AbiHgkd0egA+ZokUy1lyIeAb0wHE585KPVIRcwJHtOwk7wFiqQtvtXXyGuylc4vKKc5Vo0SUaIxZr1Ui2QEGv5j1daRP+swO4wqAScFFkCibi1ZbWlUl8b0fULs60X/q6P9YIEcob+/XM+pQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RS70/gY9; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=nIrciKbhGgn0/GjBh7mTmCwm8/Q2p1lT/dkhTiiNoNslLnZuaO7VfoRW/GsUL7/vA+C99cvxEXdlFLcInYsBp6OnEme7H9CENTUYjpRsOxfvChcU4GYTZfu+oLxjkoHSq3lmuzqTquULWORCYdji63ciUT8ifNE8wvVMF4pLQBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mb26wLFx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RS70/gY9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4EEEC4CEC3;
-	Thu, 31 Oct 2024 23:43:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mb26wLFx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44440C4CEC3;
+	Thu, 31 Oct 2024 23:44:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730418238;
-	bh=1xUKDGoHNvdzUbFshIJj2M9PARWC24W0xplKsIkvlCw=;
+	s=k20201202; t=1730418254;
+	bh=TCCbty4V+E/8XIi8NisO3V2tVqw2qiFQrX0FzQ22JI8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RS70/gY9wIRu4pmaR7J5Zkw4ZUumgP6DnHQlb3Hj88Yy19YSB6pUudkJLJM91bX+b
-	 LgKJI7VMRISUTk+uMOpCL4fqaztg1RjzAkv2KtIObOnmmo7C1rxFs86NoujnNa2Rin
-	 0tQkdPVzDvMgb1FDvHguzefJojljBQ7mC+S4ZrJsKOT0kJZBGJqWoVZIJ8gki/aT//
-	 vVi00VlMrNE2cPxL28c+l9V3oa5k/1ufB7/VJXEVFoXee25v99rHUg9Ec2kc9jsNGv
-	 t74DNzucLiAg0kRtILU4HCnwFOYd2wwK1k0wnFbCcY1iRbox0Sc6fqRD3Cdf6Eodqf
-	 35qUC28DoF52g==
-Date: Thu, 31 Oct 2024 16:43:58 -0700
-Subject: [GIT PULL 6/7] xfs_scrub_all: bug fix for 6.12
+	b=mb26wLFx4BeP7HsfbmNOl+JjDBFJLzr2+AT8A243204kd9ZHSY0uswRlBVRLd+CqM
+	 eKD+uD/mZWB6sckS0SvBcOueqEDH9SmTQ7mWKYLEDGnZFegeBsjz9h3LnemHkGb50I
+	 iM+HbhKmtNt1clz0t6tLj2KARplr7IGHJ3sQHZXwfdf3JoRKB4hgQYt1O6sJQcvEmN
+	 7bgX1bbmA5nLgmldVYzz59hivUZYAt8GSExfQT9EaY0wmwNervb945q4st4cZaVNtD
+	 dbPCLkzKlvrMFxYrkSS66hl8HXaHY+OtKKPsbCPhjtrR4WySlWmlIefxaKYqnhdByx
+	 8uXkYRqVXbSCw==
+Date: Thu, 31 Oct 2024 16:44:13 -0700
+Subject: [GIT PULL 7/7] mkfs: new config file for 6.12 LTS
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: <linux-xfs@vger.kernel.org> # v6.10.0, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173041764842.994242.13161959286165075663.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173041764926.994242.16998301667196193579.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,30 +51,31 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 07c09d46665cfac48256f6faf829897554ec74bf:
-
-xfs_repair: stop preallocating blocks in mk_rbmino and mk_rsumino (2024-10-31 15:45:05 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-fixes-6.12_2024-10-31
-
-for you to fetch changes up to 024f91c02f22a6f1f1256a5b09323bc3b104f839:
+The following changes since commit 024f91c02f22a6f1f1256a5b09323bc3b104f839:
 
 xfs_scrub_all: wait for services to start activating (2024-10-31 15:45:05 -0700)
 
-----------------------------------------------------------------
-xfs_scrub_all: bug fix for 6.12 [v31.3 6/7]
+are available in the Git repository at:
 
-Fix a problem with xfs_scrub_all mistakenly thinking that a service finished
-before it really did.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/mkfs-configs-6.12_2024-10-31
+
+for you to fetch changes up to d19c5581b03e236de3737a35e53c99529ac8e912:
+
+mkfs: add a config file for 6.12 LTS kernels (2024-10-31 15:45:05 -0700)
+
+----------------------------------------------------------------
+mkfs: new config file for 6.12 LTS [7/7]
+
+New mkfs config file for 6.12 LTS.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
 Darrick J. Wong (1):
-xfs_scrub_all: wait for services to start activating
+mkfs: add a config file for 6.12 LTS kernels
 
-scrub/xfs_scrub_all.in | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++
-1 file changed, 52 insertions(+)
+mkfs/Makefile      |  3 ++-
+mkfs/lts_6.12.conf | 19 +++++++++++++++++++
+2 files changed, 21 insertions(+), 1 deletion(-)
+create mode 100644 mkfs/lts_6.12.conf
 
