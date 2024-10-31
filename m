@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A6F419F430
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:08:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 343531D0E0D
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:09:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730416138; cv=none; b=EthiYWh8T1KUKnbRzPcLrt01KbwC2CvkhveNMPQ8Kmwnr44niz+V+1uj7SjGxC0zSMt6B9jUm1D+Mk9LD6ylPEnUfshHWgyYQupWcbMzU3vGeAg+Df/h62X3WCrmCLF9forfpaG+zBhSUAKwxbIR5U+dhgXEjCNdFcBdA0Kqz1w=
+	t=1730416155; cv=none; b=XDjy9/x3fbvkOC0/VAqCRtKKXkk1CAHcxLIDL/bcL7ldRZM3Xu+rPrrDFlT+kvhKPBBcSHCrQiGnV3bAyYUNucrvjjDKTY8qS9eplVWvNVK/VtJmQ2j9bVQ8NGBxqvFoJltUYsiUTml/x6OK3Kk8dsD34gFRy3SOf0ZFve5qzbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730416138; c=relaxed/simple;
-	bh=TZ7PdVmUBavRMaqPeLY+6pWGngpv4zjn3ds1Oja8kNQ=;
+	s=arc-20240116; t=1730416155; c=relaxed/simple;
+	bh=KlNPHhwgk8I1JVpcTWdsy5uOdM0lsRQukjXvme2UCMs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=akUlaMoMFjDLM59xrUg1opnnpays7I2HjpkDM6Dc5G6WEP4l/gUlOHNmRDD+FLCD+z1r1NZBtHx80UJsueZbbpvvs1E41GHJ+3sa5EtyWjNNMRhe5rmU79V52efsgNIrqMBnnifWiM0Ah8YS9Dlgh5GQwPCNp5rBRxkYOqnzuNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dVlJSzGi; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SIo+MVPrTGLHf8cJ6J7M+eteBfZ7jVP47hzxXGpb42KwpqkZiPq1ZwSZZms+ONZaFB54yjOQ+NQH2qd4gHpEFLQc8fJGm0YC82UGiZ8v+pOl79xm4jO3uTSPxgGu6/UDzsSAI6cQ2Jbbp4a3Ea/AT/GHSnCDA4cpf5hh8CFOmME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IapS62Dv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dVlJSzGi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1E6BC4CED1;
-	Thu, 31 Oct 2024 23:08:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IapS62Dv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1FBFC4CEC3;
+	Thu, 31 Oct 2024 23:09:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730416138;
-	bh=TZ7PdVmUBavRMaqPeLY+6pWGngpv4zjn3ds1Oja8kNQ=;
+	s=k20201202; t=1730416153;
+	bh=KlNPHhwgk8I1JVpcTWdsy5uOdM0lsRQukjXvme2UCMs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dVlJSzGiempHL2jT1wRxk9YkMYulUJ/ChK5rIsApdo+XPNyD0AIgjZt4wgDvTic2j
-	 2H5HEew5d4XRD74D/CL/g+NjIyCFHd2Kci6wO8bGptROLrYI/xqbTy/KXS5beWqo4R
-	 Hf5jzBtogxCmzbhCLdpBa32mrlLIdmu+ayZCWqspoLwqW/CT2dow9gRA8zt6OWSvnm
-	 M1SCwcfRhpVY057fYBKoL75bOeCqJO1u5SaVjQs/DbI7kaclpa2mX6noCU3NGWP8hA
-	 YqZ0Esp1fC4KDMvzVNzVA624qem4nPPn12uyC/LCMsjBuNHbNVaMJAa8QJ9AJW2tIH
-	 3O6FyNwaB9JJQ==
-Date: Thu, 31 Oct 2024 16:08:57 -0700
-Subject: [PATCH 01/41] libxfs: require -std=gnu11 for compilation by default
+	b=IapS62DvF3hfa2j1OXlr0vXtm/oRqpj2LC1MOvl3HH3184YG/zWyFCVBtlcrSWvV0
+	 5Na3YTslJnUVqNgJ8BbeqcNurcq7fvMTAGFrcEg4SlC54wJl6j9RoPJHndQpSi0kXh
+	 jsDZBsklpjtsFVMaff48ZLtcg0F6RGw8GMKbnXXy38uLSCZ1u5WhFT8nh6h7BXLC+7
+	 EGRnITJOMcHdWk7qL8TtAOoL4v+8Hexu2NuV+KupcmOzNSprv7k2Y8ogm4hKhIth05
+	 8R2ycH/dry1Kji9S5w98uN0qxI4wsbgeLHDNwhkzn9yDu3PZVL2TAZHTTKE7cVKRE8
+	 ENY/ZesqTW/Zw==
+Date: Thu, 31 Oct 2024 16:09:13 -0700
+Subject: [PATCH 02/41] libxfs: test compiling public headers with a C++
+ compiler
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173041565936.962545.8816035398454923868.stgit@frogsfrogsfrogs>
+Message-ID: <173041565951.962545.8838198084463603108.stgit@frogsfrogsfrogs>
 In-Reply-To: <173041565874.962545.15559186670255081566.stgit@frogsfrogsfrogs>
 References: <173041565874.962545.15559186670255081566.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,40 +46,190 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The kernel now builds with -std=gnu11, so let's make xfsprogs do that by
-default too.  Distributions can still override the parameters by passing
-CFLAGS= and BUILD_CFLAGS= to configure, just as they always have.
+Apparently C++ compilers don't like the implicit void* casts that go on
+in the system headers.  Compile a dummy program with the C++ compiler to
+make sure this works.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Tested-by: Sam James <sam@gentoo.org>
+Reviewed-by: Sam James <sam@gentoo.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- configure.ac |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ configure.ac               |    6 ++++++
+ include/builddefs.in       |    8 ++++++++
+ libxfs/Makefile            |   31 ++++++++++++++++++++++++++++++-
+ libxfs/ioctl_c_dummy.c     |   11 +++++++++++
+ libxfs/ioctl_cxx_dummy.cpp |   13 +++++++++++++
+ m4/package_utilies.m4      |    5 +++++
+ 6 files changed, 73 insertions(+), 1 deletion(-)
+ create mode 100644 libxfs/ioctl_c_dummy.c
+ create mode 100644 libxfs/ioctl_cxx_dummy.cpp
 
 
 diff --git a/configure.ac b/configure.ac
-index 901208a8d273eb..b75f7d9e7563b2 100644
+index b75f7d9e7563b2..dc587f39b80533 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -5,6 +5,11 @@ AC_CONFIG_MACRO_DIR([m4])
- AC_CONFIG_SRCDIR([include/libxfs.h])
- AC_PREFIX_DEFAULT(/usr)
- 
-+# Default CFLAGS if nobody specifies anything else
-+if test "${CFLAGS+set}" != "set"; then
-+	CFLAGS="-g -O2 -std=gnu11"
+@@ -9,6 +9,9 @@ AC_PREFIX_DEFAULT(/usr)
+ if test "${CFLAGS+set}" != "set"; then
+ 	CFLAGS="-g -O2 -std=gnu11"
+ fi
++if test "${CXXFLAGS+set}" != "set"; then
++	CXXFLAGS="-g -O2 -std=gnu++11"
 +fi
-+
+ 
  AC_PROG_INSTALL
  LT_INIT
- 
-@@ -22,7 +27,7 @@ if test "${BUILD_CFLAGS+set}" != "set"; then
-   if test $cross_compiling = no; then
-     BUILD_CFLAGS="$CFLAGS"
-   else
--    BUILD_CFLAGS="-g -O2"
-+    BUILD_CFLAGS="-g -O2 -std=gnu11"
+@@ -31,6 +34,9 @@ if test "${BUILD_CFLAGS+set}" != "set"; then
    fi
  fi
  
++AC_PROG_CXX
++# no C++ build tools yet
++
+ AC_ARG_ENABLE(shared,
+ [  --enable-shared=[yes/no]  Enable use of shared libraries [default=yes]],,
+ 	enable_shared=yes)
+diff --git a/include/builddefs.in b/include/builddefs.in
+index c8c7de7fd2fd38..1cbace071108dd 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -14,6 +14,7 @@ MALLOCLIB = @malloc_lib@
+ LOADERFLAGS = @LDFLAGS@
+ LTLDFLAGS = @LDFLAGS@
+ CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64 -Wno-address-of-packed-member
++CXXFLAGS = @CXXFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64 -Wno-address-of-packed-member
+ BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+ 
+ # make sure we don't pick up whacky LDFLAGS from the make environment and
+@@ -63,6 +64,7 @@ XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP=$(PKG_STATE_DIR)/xfs_scrub_all_media.stamp
+ 
+ CC		= @cc@
+ BUILD_CC	= @BUILD_CC@
++CXX		= @cxx@
+ AWK		= @awk@
+ SED		= @sed@
+ TAR		= @tar@
+@@ -161,9 +163,15 @@ ifeq ($(ENABLE_GETTEXT),yes)
+ GCFLAGS += -DENABLE_GETTEXT
+ endif
+ 
++# Override these if C++ needs other options
++SANITIZER_CXXFLAGS = $(SANITIZER_CFLAGS)
++GCXXFLAGS = $(GCFLAGS)
++PCXXFLAGS = $(PCFLAGS)
++
+ BUILD_CFLAGS += $(GCFLAGS) $(PCFLAGS)
+ # First, Sanitizer, Global, Platform, Local CFLAGS
+ CFLAGS += $(FCFLAGS) $(SANITIZER_CFLAGS) $(OPTIMIZER) $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
++CXXFLAGS += $(FCXXFLAGS) $(SANITIZER_CXXFLAGS) $(OPTIMIZER) $(GCXXFLAGS) $(PCXXFLAGS) $(LCXXFLAGS)
+ 
+ include $(TOPDIR)/include/buildmacros
+ 
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 72e287b8b7957a..aca28440adac08 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -125,6 +125,18 @@ CFILES = buf_mem.c \
+ 	xfs_trans_space.c \
+ 	xfs_types.c
+ 
++EXTRA_CFILES=\
++	ioctl_c_dummy.c
++
++EXTRA_CXXFILES=\
++	ioctl_cxx_dummy.cpp
++
++EXTRA_OBJECTS=\
++	$(patsubst %.c,%.o,$(EXTRA_CFILES)) \
++	$(patsubst %.cpp,%.o,$(EXTRA_CXXFILES))
++
++LDIRT += $(EXTRA_OBJECTS)
++
+ #
+ # Tracing flags:
+ # -DMEM_DEBUG		all zone memory use
+@@ -148,7 +160,23 @@ LTLIBS = $(LIBPTHREAD) $(LIBRT)
+ # don't try linking xfs_repair with a debug libxfs.
+ DEBUG = -DNDEBUG
+ 
+-default: ltdepend $(LTLIBRARY)
++default: ltdepend $(LTLIBRARY) $(EXTRA_OBJECTS)
++
++%dummy.o: %dummy.cpp
++	@echo "    [CXXD]   $@"
++	$(Q)$(CXX) $(CXXFLAGS) -c $<
++
++%dummy.o: %dummy.c
++	@echo "    [CCD]    $@"
++	$(Q)$(CC) $(CFLAGS) -c $<
++
++MAKECXXDEP := $(MAKEDEPEND) $(CXXFLAGS)
++
++.PHONY: .extradep
++
++.extradep: $(EXTRA_CFILES) $(EXTRA_CXXFILES) $(HFILES)
++	$(Q)$(MAKEDEP) $(EXTRA_CFILES) > .extradep
++	$(Q)$(MAKECXXDEP) $(EXTRA_CXXFILES) >> .extradep
+ 
+ # set up include/xfs header directory
+ include $(BUILDRULES)
+@@ -172,4 +200,5 @@ install-dev: install
+ # running the install-headers target.
+ ifndef NODEP
+ -include .ltdep
++-include .extradep
+ endif
+diff --git a/libxfs/ioctl_c_dummy.c b/libxfs/ioctl_c_dummy.c
+new file mode 100644
+index 00000000000000..e417332c3cf9f6
+--- /dev/null
++++ b/libxfs/ioctl_c_dummy.c
+@@ -0,0 +1,11 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++
++/* Dummy program to test C compilation of user-exported xfs headers */
++
++#include "include/xfs.h"
++#include "include/handle.h"
++#include "include/jdm.h"
+diff --git a/libxfs/ioctl_cxx_dummy.cpp b/libxfs/ioctl_cxx_dummy.cpp
+new file mode 100644
+index 00000000000000..b95babff0b0aee
+--- /dev/null
++++ b/libxfs/ioctl_cxx_dummy.cpp
+@@ -0,0 +1,13 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++
++/* Dummy program to test C++ compilation of user-exported xfs headers */
++
++extern "C" {
++#include "include/xfs.h"
++#include "include/handle.h"
++#include "include/jdm.h"
++};
+diff --git a/m4/package_utilies.m4 b/m4/package_utilies.m4
+index 49f4dfbbd2d168..56ee0b266130bf 100644
+--- a/m4/package_utilies.m4
++++ b/m4/package_utilies.m4
+@@ -42,6 +42,11 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
+     AC_SUBST(cc)
+     AC_PACKAGE_NEED_UTILITY($1, "$cc", cc, [C compiler])
+ 
++    AC_PROG_CXX
++    cxx="$CXX"
++    AC_SUBST(cxx)
++    AC_PACKAGE_NEED_UTILITY($1, "$cxx", cxx, [C++ compiler])
++
+     if test -z "$MAKE"; then
+         AC_PATH_PROG(MAKE, gmake,, $PATH)
+     fi
 
