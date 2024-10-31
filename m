@@ -1,267 +1,174 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 001AA8C0B
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 19:43:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85511411EE
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 20:45:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730403807; cv=none; b=QIR4qDh/30u3+/nYUMEATBZ6StOLtVAs00oPDUrEX1KjYqU1V2VoKiGIvvxVujO8Z5VQ8qucqrv+yU3OUNMi8+zS98OAusysFh4Vd2QpHjzYTY0OdizkMR6e9UWQUKa8UEw7LvETaNU59CtwwOd6RMbhJTcVu37wCDkFKlJH+xs=
+	t=1730407535; cv=none; b=dUmfe2//1eXzwSQp95lACt9QH78YPEWvXHSsC00xnjf4ppgwej2s92hn7anEcGvRuEnFo2uauTFPdhyNw1qqdA3NwHr9PHeDwOzxoc0YzQ6gT/aF1+apJ46gsVC1H+W2OD40BJ4GK2wLU3O1eTlEUyAVyShUDrcteD/dkR8ckLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730403807; c=relaxed/simple;
-	bh=fd4UVJ3GFSmn28l8wpj8xt+4oeeCti+eGwIH4w7jBbc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VmcD3GVAlS5uN8oTjtmSus0Y6OevyzsyrteanDkgsmMvoCEVXuY9ESTejnj3wwOCoDSSk2wnWKxNkqYvzgtHTVPMpYI51bUlIqWzZoeEhCEOZkHh+bvC28+WQcGTDEwtRKjo859A47FKpZquuoJVTyEfhtz00yNe0YiQowATD+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BYUStvH6; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1730407535; c=relaxed/simple;
+	bh=iJtORRUM9QRHXn8Uc3uROlqx/GJcHyn7pzyblXTnSms=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GSDa3y3bOedOKEG4x3fJoabuaLdJ+6p5GLr1Droky/uTHWz4kboOzdCXfbdLVPtVbfu/kvkG8pZNk7BJhJVLT6PYjML2AvUjWszByzCYq7rsB0GHanE+r5Ykp209EOV6wZuvm7O6ZfGcNzkmgXyin6aj1eEkMdbgCL8xhDcnGxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=FWNz1ApG; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=YGlKV9Dy; arc=none smtp.client-ip=103.168.172.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BYUStvH6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730403804;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=UFklJBEH98MJ10sOML5S+M+l/1wubPg5JPuWW9rrgzg=;
-	b=BYUStvH6nnR/GK4HUV9VJlwrIMsvPQC1c81Ay0Hrs9WTf5Hlc6n9Ln2WIKBcyal3DEJXUi
-	eLqhPMqzPSpamYADLaQTv9sVxoOeSJCbLe9DaNMToIUlO3g/aU/RGsdHR07PCKHt1r5eW9
-	88UXHZmT0AWWduHW6SneSPutoSZneZ0=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-118-g3uMkx6dOUuCspQpYTrmgA-1; Thu, 31 Oct 2024 15:43:22 -0400
-X-MC-Unique: g3uMkx6dOUuCspQpYTrmgA-1
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-71e479829c8so1904494b3a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 12:43:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730403801; x=1731008601;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UFklJBEH98MJ10sOML5S+M+l/1wubPg5JPuWW9rrgzg=;
-        b=vJyTMOrfzvNepn8rctw3ukVnEr4GE0b9tHreP/WDdEG4n+vH5efZGRLbGWKns62zHj
-         ZjZK+51huWXrZibBCwOR2ETkVo21c5IpJhxI2CW08jPs1pQt+YUeca14oRUiy2H4dEiD
-         oStZO/hK+JCc0lyEuJL+7Q0udpDG7b1qJrL3/Ioes7RAhPOhPwi6ZzWPwY0fq7PSXuMf
-         cEGgzJdezGnLlDzxqO7rjo6eXFUwfzhTH8ZIadxpRuXJB6x3do6Z5AOLRosZk0AF3Sip
-         IqVYPQrMjGEPCOYwqJVmnpLIka3KeUHq3+nbdUxPmrQZWIvL0GntZUARh+AA0DT78MaA
-         qxbQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUV1AtCY/DDFy4iC8iwjZUsOk7DNF2A7wXXSs3VE43+lzz4SKOr3voHGJBWiOm7agNspMau/svY2Ks=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy6AxzqsochElXpzHfWppHQ53CIP2HwvVfar0ni14h16GI2WBFq
-	H2SbkxDKnFciSELTUoXLE2Pb7Uj49tvM08KjjJRXE+S68RsgIQisGhwOJwN8ZMJwloaaoAdYtPi
-	z7PLu0fSUNbAdMqoZ4pLBW/RQ6Oa36ybNby7+gFH3urmuuX809J53V6/8jmVAKosjW0RL
-X-Received: by 2002:a05:6a00:1809:b0:71e:6bf1:158f with SMTP id d2e1a72fcca58-720ab492bf1mr11135061b3a.21.1730403801300;
-        Thu, 31 Oct 2024 12:43:21 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFf2WT7ozOJEDTTDFT38iu+oKLwguzz4mrUMna4vdBe+HZDeyTsawxUD7K6Ua8pK85xogVrFQ==
-X-Received: by 2002:a05:6a00:1809:b0:71e:6bf1:158f with SMTP id d2e1a72fcca58-720ab492bf1mr11135040b3a.21.1730403800852;
-        Thu, 31 Oct 2024 12:43:20 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc1b8936sm1505388b3a.5.2024.10.31.12.43.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Oct 2024 12:43:20 -0700 (PDT)
-Date: Fri, 1 Nov 2024 03:43:17 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Brian Foster <bfoster@redhat.com>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH v2 2/2] xfs: online grow vs. log recovery stress test
- (realtime version)
-Message-ID: <20241031194317.zbfzgna644x4eqfj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20241029172135.329428-1-bfoster@redhat.com>
- <20241029172135.329428-3-bfoster@redhat.com>
- <20241030195456.3busw2tbqqzinkm4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZyOEMYid4ybKu3_E@bfoster>
- <20241031163524.GY2386201@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="FWNz1ApG";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="YGlKV9Dy"
+Received: from phl-compute-03.internal (phl-compute-03.phl.internal [10.202.2.43])
+	by mailfout.phl.internal (Postfix) with ESMTP id C7E1B138022B;
+	Thu, 31 Oct 2024 16:45:30 -0400 (EDT)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-03.internal (MEProxy); Thu, 31 Oct 2024 16:45:30 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1730407530;
+	 x=1730493930; bh=jGVlEg8puAQuIBzbFz1te2M9a2vxi4MAKubodaLRLzw=; b=
+	FWNz1ApGmjhi3zXSXgpcGVBX6vg7L/rvlcNRgt5uyeNoLQn/70zBd2PfpNoXdnUd
+	ot0/dVeOEj3ruvPXCyCW4wSwzEi6ToDFAr0xROi2iMKzrIVOjSDuKHi1cP9T3lhc
+	wX12m7+LFJFcjlIYKheEd1qXdOm/GPqE+P87BcC8bBkDGHNPyBYgIFWXPdadP3FY
+	GapnCrm0/d9jXrK5A74jD0FC+aueq6jPbcmrayIVUlD4E5TCt1kk8IVDdlPD+QbM
+	YzpQHpxS/IJ+nB9idVRX1iJ3RTO1p6V3ekaGg2Q4+Zv782E81ys4zF5uAkiwauQZ
+	CTrDg0R3v3oPUIvYsYckmg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1730407530; x=
+	1730493930; bh=jGVlEg8puAQuIBzbFz1te2M9a2vxi4MAKubodaLRLzw=; b=Y
+	GlKV9DyS1SQvd5psiWHuULSQl5WZdScQG2e1kcxzKfRODjPrkq/j81Q2r8s+zYBM
+	/zlx/59+i8lFl5E7yXxy5Y9n7/sWIPx0cs6nuDaXcFsrU5siqRg6zigpijW4GXBV
+	bNMPmEJm8Pq9jYA8pmCpvCpz9M+z33g0fJ+O+TdbMPy9ju7CWXCCvHTM8Lc2kW8G
+	fZ1U9QEfERndhmLkxgeKJzdjkZXm9RFU8lrzb22nc+wNeE0Dkk5+epzZxBiZQaw6
+	a+oLG8TExOLfnKSUOsKC84y8RFUuGZXW9xJa4W/SxvSGnBUXcBKhvstpMt4LtuBI
+	o4qQNs21YPt/hiogU8H7g==
+X-ME-Sender: <xms:auwjZ6qZmHkl8M4iyQ1gQ6g_h__Io5_RJnHICQDW_Si0J7Z1Bava6w>
+    <xme:auwjZ4pFtjy_caGvkIog30P4ljdkMxpaZb-jIAVZQU2akTqVe5SH69HW-FJTgXbIF
+    hmko5iPGNDlBQWl6oI>
+X-ME-Received: <xmr:auwjZ_PvrVqam6bWUScSADFzZIbpkYg6ThzNz2qSMBPlDBRnNDyNQdxRhc61AA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrvdekjedggeehucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggvpdfu
+    rfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkffggfg
+    fuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomhepgfhrihgtucfurghnuggvvghn
+    uceoshgrnhguvggvnhesshgrnhguvggvnhdrnhgvtheqnecuggftrfgrthhtvghrnhepve
+    eikeeuteefueejtdehfeefvdegffeivdejjeelfffhgeegjeeutdejueelhfdvnecuvehl
+    uhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrnhguvggvnh
+    esshgrnhguvggvnhdrnhgvthdpnhgspghrtghpthhtohepfedpmhhouggvpehsmhhtphho
+    uhhtpdhrtghpthhtoheptggvmheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggrvh
+    hiugesfhhrohhmohhrsghithdrtghomhdprhgtphhtthhopehlihhnuhigqdigfhhssehv
+    ghgvrhdrkhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:auwjZ57oihTDDXFrZtJWhRsi4Vv6K2S3pofpPxSgNtIc8TO55vnYHw>
+    <xmx:auwjZ57DDj5oQeD9Y-JZH4PnVlnf53uOKAgVxSmUxwhWqy0cwdeOwg>
+    <xmx:auwjZ5jal4qqrkod5K52VBit8rmPpeRG6FYKkwUTl3g32Jjth28W_w>
+    <xmx:auwjZz40yjeWCka_4QXOvU4uG4kghva8ni8y4PdJmfJJhF-wkiV40w>
+    <xmx:auwjZzn79xMT_Ocl8En36BPTtiUclIhnmP1HgnIZIIys2IRdWiCBmAAb>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 31 Oct 2024 16:45:30 -0400 (EDT)
+Message-ID: <6a609643-5bd1-4a5a-bb40-79cd87075fc2@sandeen.net>
+Date: Thu, 31 Oct 2024 15:45:29 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241031163524.GY2386201@frogsfrogsfrogs>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] xfs: sparse inodes overlap end of filesystem
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+References: <20241024025142.4082218-1-david@fromorbit.com>
+ <4da62d9a-0509-46e7-9021-d0bc771f86d9@sandeen.net>
+ <pdaherlfgonztg2woct5w5o4jukxvq2ealhq7mxbnkzm5rtuhq@vvevvao2aua3>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <pdaherlfgonztg2woct5w5o4jukxvq2ealhq7mxbnkzm5rtuhq@vvevvao2aua3>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 31, 2024 at 09:35:24AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 31, 2024 at 09:20:49AM -0400, Brian Foster wrote:
-> > On Thu, Oct 31, 2024 at 03:54:56AM +0800, Zorro Lang wrote:
-> > > On Tue, Oct 29, 2024 at 01:21:35PM -0400, Brian Foster wrote:
-> > > > This is fundamentally the same as the previous growfs vs. log
-> > > > recovery test, with tweaks to support growing the XFS realtime
-> > > > volume on such configurations. Changes include using the appropriate
-> > > > mkfs params, growfs params, and enabling realtime inheritance on the
-> > > > scratch fs.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > 
-> > > 
-> > > 
-> > > >  tests/xfs/610     | 83 +++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  tests/xfs/610.out |  2 ++
-> > > >  2 files changed, 85 insertions(+)
-> > > >  create mode 100755 tests/xfs/610
-> > > >  create mode 100644 tests/xfs/610.out
-> > > > 
-> > > > diff --git a/tests/xfs/610 b/tests/xfs/610
-> > > > new file mode 100755
-> > > > index 00000000..6d3a526f
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/610
-> > > > @@ -0,0 +1,83 @@
-> > > > +#! /bin/bash
-> > > > +# SPDX-License-Identifier: GPL-2.0
-> > > > +# Copyright (c) 2024 Red Hat, Inc.  All Rights Reserved.
-> > > > +#
-> > > > +# FS QA Test No. 610
-> > > > +#
-> > > > +# Test XFS online growfs log recovery.
-> > > > +#
-> > > > +. ./common/preamble
-> > > > +_begin_fstest auto growfs stress shutdown log recoveryloop
-> > > > +
-> > > > +# Import common functions.
-> > > > +. ./common/filter
-> > > > +
-> > > > +_stress_scratch()
-> > > > +{
-> > > > +	procs=4
-> > > > +	nops=999999
-> > > > +	# -w ensures that the only ops are ones which cause write I/O
-> > > > +	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs \
-> > > > +	    -n $nops $FSSTRESS_AVOID`
-> > > > +	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1 &
-> > > > +}
-> > > > +
-> > > > +_require_scratch
-> > > > +_require_realtime
-> > > > +_require_command "$XFS_GROWFS_PROG" xfs_growfs
-> > > > +_require_command "$KILLALL_PROG" killall
-> > > > +
-> > > > +_cleanup()
-> > > > +{
-> > > > +	$KILLALL_ALL fsstress > /dev/null 2>&1
-> > > > +	wait
-> > > > +	cd /
-> > > > +	rm -f $tmp.*
-> > > > +}
-> > > > +
-> > > > +_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-> > > > +. $tmp.mkfs	# extract blocksize and data size for scratch device
-> > > > +
-> > > > +endsize=`expr 550 \* 1048576`	# stop after growing this big
-> > > > +[ `expr $endsize / $dbsize` -lt $dblocks ] || _notrun "Scratch device too small"
-> > > > +
-> > > > +nags=4
-> > > > +size=`expr 125 \* 1048576`	# 120 megabytes initially
-> > > > +sizeb=`expr $size / $dbsize`	# in data blocks
-> > > > +logblks=$(_scratch_find_xfs_min_logblocks -rsize=${size} -dagcount=${nags})
-> > > > +
-> > > > +_scratch_mkfs_xfs -lsize=${logblks}b -rsize=${size} -dagcount=${nags} \
-> > > > +	>> $seqres.full || _fail "mkfs failed"
-> > > 
-> > > Ahah, not sure why this case didn't hit the failure of xfs/609, do you think
-> > > we should filter out the mkfs warning too?
+On 10/31/24 6:44 AM, Carlos Maiolino wrote:
+> On Tue, Oct 29, 2024 at 11:14:18AM -0500, Eric Sandeen wrote:
+>> On 10/23/24 9:51 PM, Dave Chinner wrote:
+>>> There is one question that needs to be resolved in this patchset: if
+>>> we take patch 2 to allow sparse inodes at the end of the AG, why
+>>> would we need the change in patch 1? Indeed, at this point I have to
+>>> ask why we even need the min/max agbno guidelines to the inode chunk
+>>> allocation as we end up allowing any aligned location in the AG to
+>>> be used by sparse inodes. i.e. if we take patch 2, then patch 1 is
+>>> unnecessary and now we can remove a bunch of code (min/max_agbno
+>>> constraints) from the allocator paths...
+>>>
+>>> I'd prefer that we take the latter path: ignore the first patch.
+>>> This results in more flexible behaviour, allows existing filesystems
+>>> with this issue to work without needing xfs_repair to fix them, and
+>>> we get to remove complexity from the code.
+>>>
+>>> Thoughts?
+>>
+>> For some reason I'm struggling to grasp some of the details here, so
+>> maybe I can just throw out a "what I think should happen" type response.
+>>
+>> A concern is that older xfs_repair binaries will continue to see
+>> inodes in this region as corrupt, and throw them away, IIUC - even
+>> if the kernel is updated to handle them properly.
+>>
+>> Older xfs_repair could be encountered on rescue CDs/images, maybe
+>> even in initramfs environments, by virt hosts managing guest filesystems,
+>> etc.
+>>
+>> So it seems to me that it would be worth it to prevent any new inode
+>> allocations in this region going forward, even if we *can* make it work,
+>> so that we won't continue to generate what looks like corruption to older
+>> userspace.
+>>
+>> That might not be the most "pure" upstream approach, but as a practical
+>> matter I think it might be a better outcome for users and support
+>> orgs... even if distros update kernels & userspace together, that does
+>> not necessarily prevent older userspace from encountering a filesystem
+>> with inodes in this range and trashing them.
+>>
 > 
-> It won't-- the warning you got with 609 was about ignoring stripe
-> geometry on a small data volume.  This mkfs invocation creates a
-> filesystem with a normal size data volume and a small rt volume, and
-> mkfs doesn't complain about small rt volumes.
+> I'm inclined to agree with Eric here as preventing the sparse inodes to be
+> allocated at the edge of the runt AG sounds the most reasonable approach to me.
+> 
+> It just seems to me yet another corner case to deal with for very little benefit,
+> i.e to enable a few extra inodes, on a FS that seems to be in life support
+> regarding space for new inodes, whether it's a distro kernel or upstream kernel.
+> 
+> It kind of seem risky to me, to allow users to run a new kernel, allocate inodes
+> there, fill those inodes with data, just to run a not yet ready xfs_repair, and
+> discard everything there. Just seems like a possible data loss vector.
+> 
+> Unless - and I'm not sure how reasonable it is -, we first release a new
+> xfsprogs, preventing xfs_repair to rip off those inodes, and later update the
+> kernel. But this will end up on users hitting a -EFSCORRUPTED every attempt to
+> allocate inodes from the FS edge.
+> 
+> How feasible would be to first prevent inodes to be allocated at the runt AG's
+> edge, let it sink for a while, and once we have a fixed xfs_repair for some
+> time, we then enable inode allocation on the edge, giving enough time for users
+> to have a newer xfs_repair?
+> 
+> Again, I'm not sure it it does make sense at all, hopefully it does.
 
-Oh, good to know that, thanks Darick :)
+I think Dave agrees with all this too, and I may have simply misunderstood
+the proposal.
 
-> 
-> --D
-> 
-> > My experience with this test is that it didn't reproduce any problems on
-> > current master, but Darrick had originally customized it from xfs/609
-> > and found it useful to identify some issues in outstanding development
-> > work around rt.
-> > 
-> > I've been trying to keep the two tests consistent outside of enabling
-> > the appropriate rt bits, so I'd suggest we apply the same changes here
-> > as for 609 around the mkfs thing (whichever way that goes).
-> > 
-> > > SECTION       -- default
-> > > FSTYP         -- xfs (non-debug)
-> > > PLATFORM      -- Linux/x86_64 dell-per750-41 6.12.0-0.rc5.44.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Oct 28 14:12:55 UTC 2024
-> > > MKFS_OPTIONS  -- -f -rrtdev=/dev/mapper/testvg-rtdev /dev/sda6
-> > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 -ortdev=/dev/mapper/testvg-rtdev /dev/sda6 /mnt/scratch
-> > > 
-> > > xfs/610        39s
-> > > Ran: xfs/610
-> > > Passed all 1 tests
-> > > 
-> > > > +_scratch_mount
-> > > > +_xfs_force_bdev realtime $SCRATCH_MNT &> /dev/null
-> > > > +
-> > > > +# Grow the filesystem in random sized chunks while stressing and performing
-> > > > +# shutdown and recovery. The randomization is intended to create a mix of sub-ag
-> > > > +# and multi-ag grows.
-> > > > +while [ $size -le $endsize ]; do
-> > > > +	echo "*** stressing a ${sizeb} block filesystem" >> $seqres.full
-> > > > +	_stress_scratch
-> > > > +	incsize=$((RANDOM % 40 * 1048576))
-> > > > +	size=`expr $size + $incsize`
-> > > > +	sizeb=`expr $size / $dbsize`	# in data blocks
-> > > > +	echo "*** growing to a ${sizeb} block filesystem" >> $seqres.full
-> > > > +	$XFS_GROWFS_PROG -R ${sizeb} $SCRATCH_MNT >> $seqres.full
-> > > > +
-> > > > +	sleep $((RANDOM % 3))
-> > > > +	_scratch_shutdown
-> > > > +	ps -e | grep fsstress > /dev/null 2>&1
-> > > > +	while [ $? -eq 0 ]; do
-> > > > +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> > > > +		wait > /dev/null 2>&1
-> > > > +		ps -e | grep fsstress > /dev/null 2>&1
-> > > > +	done
-> > > > +	_scratch_cycle_mount || _fail "cycle mount failed"
-> > > 
-> > > _scratch_cycle_mount does _fail if it fails, I'll help to remove the "|| _fail ..."
-> > > 
-> > 
-> > Ok.
-> > 
-> > > > +done > /dev/null 2>&1
-> > > > +wait	# stop for any remaining stress processes
-> > > > +
-> > > > +_scratch_unmount
-> > > 
-> > > If this ^^ isn't a necessary step of bug reproduce, then we don't need to do this
-> > > manually, each test case does that at the end. I can help to remove it when I
-> > > merge this patch.
-> > > 
-> > 
-> > Hm I don't think so. That might also just be copy/paste leftover. Feel
-> > free to drop it.
-> > 
-> > > Others looks good to me,
-> > > 
-> > > Reviewed-by: Zorro Lang <zlang@redaht.com>
-> > > 
-> > 
-> > Thanks!
-> > 
-> > Brian
-> > 
-> > > 
-> > > > +
-> > > > +echo Silence is golden.
-> > > > +
-> > > > +status=0
-> > > > +exit
-> > > > diff --git a/tests/xfs/610.out b/tests/xfs/610.out
-> > > > new file mode 100644
-> > > > index 00000000..c42a1cf8
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/610.out
-> > > > @@ -0,0 +1,2 @@
-> > > > +QA output created by 610
-> > > > +Silence is golden.
-> > > > -- 
-> > > > 2.46.2
-> > > > 
-> > > > 
-> > > 
-> > 
-> > 
-> 
+paraphrasing a side convo w/ Dave, it seems to make sense to have 3 steps for
+the fix:
 
+1) Stop allowing inode allocations in these blocks (kernel)
+2) Treat already-allocated inodes in these blocks as valid (kernel+userspace)
+3) Re-enable inode allocations to these blocks (kernel)
+
+Distros can pick up 1) and 2), and skip 3) if desired to avoid problems with
+older userspace if that seems prudent.
+
+I guess I still worry a little about upstream/non-distro use after applying 3)
+but it's the technically correct path forward.
+
+-Eric
