@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FD6E1E2007
-	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:17:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B231E1A37
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 23:18:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730416669; cv=none; b=Db4keQCw4ma4l6X0QoPcbfgxXJWx1WmrtetH13iHAhNDMdSRGLy+kwqj3VR2w8ZFaGwNwi/PZQY6xF200EI6kzFinioF6Z7fP+gi4Ww8mdH9L7Fp+K6VYvQaQrZTpPJdGUXu2ucbfHKazRp6Kb7B21bfImhYaOAp8GOLrXecsx8=
+	t=1730416685; cv=none; b=Ki4Cuz6Xv2RMzOT8LydNoiUDCUoh4vIcIcZpW0aOoHU9cJEuGlryt0XlkMLN8LCoU5d3sO0/Ploj6l/dZb+G9zCjrpF+LV1ADlxyEyW6gkAWiYWSeiJcOD8qhtrJvnVdBgOlUmWSW9VkrqWcilnAFUVQcf2dGrrgKmd0Dt/9444=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730416669; c=relaxed/simple;
-	bh=boiVlnQxhES0BwY8QAKEQCXjPoKUQWcAkStRUX+XxmE=;
+	s=arc-20240116; t=1730416685; c=relaxed/simple;
+	bh=gljjXFH81UV8Kku1UmvWTGlfcPv4duH1tPlozJDvJC4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LX4jT2mLn175TSb8AwrnF7g0GCfC8g5kk6OuNe+SaVYmx2BbYvvSTXRObPe1fqw5tFtv6IeR4gSCtcajDU2nk6FGynwxhSLKSAUkzdVpdWTKBjjaKT+FGnlHT1DD+q13K3RGuz3Ug8wOBrmDHuFkr5ML3k3Dlhi2Q0kVCHF7zJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WL+Pqo2x; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kzhoDYYK007+GXnqKmWYTahQMKaIK3f1rWNcquXblDmtsMotRX0Kwoswj0MjuXobcokIA56Tg99i0fD540LMqe6AokelugQZB0yWA60hJ5vs12wYNYVOGUNjo6PcalW6FRROIcA41axCQCcYcdzMzBgCl/euzlRNg9jjdqtWMWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ciDgH8UK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WL+Pqo2x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68009C4CEC3;
-	Thu, 31 Oct 2024 23:17:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ciDgH8UK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C19BC4CEC3;
+	Thu, 31 Oct 2024 23:18:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730416669;
-	bh=boiVlnQxhES0BwY8QAKEQCXjPoKUQWcAkStRUX+XxmE=;
+	s=k20201202; t=1730416685;
+	bh=gljjXFH81UV8Kku1UmvWTGlfcPv4duH1tPlozJDvJC4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WL+Pqo2x0gQwmSFVk4G+goXjTPms83W2asgk62+2POV7BNKZDWu4pr0yWUEHXxuLG
-	 QzUWdYOZ+3nS8al1bjYY4xTvBeQTNL6RaAL7onZIpRXKSHOBbmGMzr+X4332w8RU0Z
-	 aBD3zZtNTyZRioSeh/+9YZNpPTun/sI4ePHiwkDkMW1b/ZFKaXGDDylfMm0YZ2t9aL
-	 Ox1W6ozXtT9qvqJJvXYdj/kK9NwSm8xt5Hzy4xBYhACcxHhz/ph1dTXpD7zlL0fmdo
-	 M20y+AMgmnxQWLL7LjR8X8LCQxjejpqSUDwFAKUU9kHFg1bE+1vP/7CgD4fyZuhrBQ
-	 D/1X6c9rwGIbw==
-Date: Thu, 31 Oct 2024 16:17:48 -0700
-Subject: [PATCH 35/41] xfs: don't ifdef around the exact minlen allocations
+	b=ciDgH8UKDJ6Qgp0Vl5psVvIXFoP0ozJX1hYZRhlqMinlOy+2Vg8TB/g6YHe2sYtVy
+	 bzcK97uDz4fwdhWAM2l8cC9INqEGo8SWjKtwgXLAzZgRaE9EgtvBWxbPuUJUXaxdfe
+	 EqXES/3EqNQia7Sn2O9JZGWhpqdJfi/6bhYGx79ULl6i9l0GIC7y0W0Iqer4WbWck4
+	 o9K6eYL3qPt03udhSlJhjCH7ccGPEAXTaWy9ro4JB/zwCa2S8guqiq/+8IKfmrVQOk
+	 pMDyNOxBgLsS3BugQuuQjs4QUGx+WDvMyON4uRipwlhSKXztbjUQNpM51WNGwGuZIx
+	 2sxWWaLSc9NpA==
+Date: Thu, 31 Oct 2024 16:18:04 -0700
+Subject: [PATCH 36/41] xfs: call xfs_bmap_exact_minlen_extent_alloc from
+ xfs_bmap_btalloc
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173041566451.962545.2404664233498981452.stgit@frogsfrogsfrogs>
+Message-ID: <173041566467.962545.14625825074524844035.stgit@frogsfrogsfrogs>
 In-Reply-To: <173041565874.962545.15559186670255081566.stgit@frogsfrogsfrogs>
 References: <173041565874.962545.15559186670255081566.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,105 +46,117 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: b611fddc0435738e64453bbf1dadd4b12a801858
+Source kernel commit: 405ee87c6938f67e6ab62a3f8f85b3c60a093886
 
-Exact minlen allocations only exist as an error injection tool for debug
-builds.  Currently this is implemented using ifdefs, which means the code
-isn't even compiled for non-XFS_DEBUG builds.  Enhance the compile test
-coverage by always building the code and use the compilers' dead code
-elimination to remove it from the generated binary instead.
-
-The only downside is that the alloc_minlen_only field is unconditionally
-added to struct xfs_alloc_args now, but by moving it around and packing
-it tightly this doesn't actually increase the size of the structure.
+xfs_bmap_exact_minlen_extent_alloc duplicates the args setup in
+xfs_bmap_btalloc.  Switch to call it from xfs_bmap_btalloc after
+doing the basic setup.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_alloc.c |    7 ++-----
- libxfs/xfs_alloc.h |    4 +---
- libxfs/xfs_bmap.c  |    6 ------
- 3 files changed, 3 insertions(+), 14 deletions(-)
+ libxfs/xfs_bmap.c |   61 +++++++++++------------------------------------------
+ 1 file changed, 13 insertions(+), 48 deletions(-)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 3806a6bc0835a7..61453709ae515c 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -2762,7 +2762,6 @@ xfs_alloc_commit_autoreap(
- 		xfs_defer_item_unpause(tp, aarp->dfp);
- }
- 
--#ifdef DEBUG
- /*
-  * Check if an AGF has a free extent record whose length is equal to
-  * args->minlen.
-@@ -2802,7 +2801,6 @@ xfs_exact_minlen_extent_available(
- 
- 	return error;
- }
--#endif
- 
- /*
-  * Decide whether to use this allocation group for this allocation.
-@@ -2876,15 +2874,14 @@ xfs_alloc_fix_freelist(
- 	if (!xfs_alloc_space_available(args, need, alloc_flags))
- 		goto out_agbp_relse;
- 
--#ifdef DEBUG
--	if (args->alloc_minlen_only) {
-+	if (IS_ENABLED(CONFIG_XFS_DEBUG) && args->alloc_minlen_only) {
- 		int stat;
- 
- 		error = xfs_exact_minlen_extent_available(args, agbp, &stat);
- 		if (error || !stat)
- 			goto out_agbp_relse;
- 	}
--#endif
-+
- 	/*
- 	 * Make the freelist shorter if it's too long.
- 	 *
-diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index fae170825be064..0165452e7cd055 100644
---- a/libxfs/xfs_alloc.h
-+++ b/libxfs/xfs_alloc.h
-@@ -53,11 +53,9 @@ typedef struct xfs_alloc_arg {
- 	int		datatype;	/* mask defining data type treatment */
- 	char		wasdel;		/* set if allocation was prev delayed */
- 	char		wasfromfl;	/* set if allocation is from freelist */
-+	bool		alloc_minlen_only; /* allocate exact minlen extent */
- 	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
- 	enum xfs_ag_resv_type	resv;	/* block reservation to use */
--#ifdef DEBUG
--	bool		alloc_minlen_only; /* allocate exact minlen extent */
--#endif
- } xfs_alloc_arg_t;
- 
- /*
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index af493836ecc7ea..3c4922424f3fd0 100644
+index 3c4922424f3fd0..02f26854c53cfe 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -3471,7 +3471,6 @@ xfs_bmap_process_allocated_extent(
- 	xfs_bmap_alloc_account(ap);
- }
+@@ -3473,28 +3473,17 @@ xfs_bmap_process_allocated_extent(
  
--#ifdef DEBUG
  static int
  xfs_bmap_exact_minlen_extent_alloc(
- 	struct xfs_bmalloca	*ap)
-@@ -3533,11 +3532,6 @@ xfs_bmap_exact_minlen_extent_alloc(
+-	struct xfs_bmalloca	*ap)
++	struct xfs_bmalloca	*ap,
++	struct xfs_alloc_arg	*args)
+ {
+-	struct xfs_mount	*mp = ap->ip->i_mount;
+-	struct xfs_alloc_arg	args = { .tp = ap->tp, .mp = mp };
+-	xfs_fileoff_t		orig_offset;
+-	xfs_extlen_t		orig_length;
+-	int			error;
+-
+-	ASSERT(ap->length);
+-
+ 	if (ap->minlen != 1) {
+-		ap->blkno = NULLFSBLOCK;
+-		ap->length = 0;
++		args->fsbno = NULLFSBLOCK;
+ 		return 0;
+ 	}
  
- 	return 0;
+-	orig_offset = ap->offset;
+-	orig_length = ap->length;
+-
+-	args.alloc_minlen_only = 1;
+-
+-	xfs_bmap_compute_alignments(ap, &args);
++	args->alloc_minlen_only = 1;
++	args->minlen = args->maxlen = ap->minlen;
++	args->total = ap->total;
+ 
+ 	/*
+ 	 * Unlike the longest extent available in an AG, we don't track
+@@ -3504,33 +3493,9 @@ xfs_bmap_exact_minlen_extent_alloc(
+ 	 * we need not be concerned about a drop in performance in
+ 	 * "debug only" code paths.
+ 	 */
+-	ap->blkno = XFS_AGB_TO_FSB(mp, 0, 0);
++	ap->blkno = XFS_AGB_TO_FSB(ap->ip->i_mount, 0, 0);
+ 
+-	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+-	args.minlen = args.maxlen = ap->minlen;
+-	args.total = ap->total;
+-
+-	args.alignment = 1;
+-	args.minalignslop = 0;
+-
+-	args.minleft = ap->minleft;
+-	args.wasdel = ap->wasdel;
+-	args.resv = XFS_AG_RESV_NONE;
+-	args.datatype = ap->datatype;
+-
+-	error = xfs_alloc_vextent_first_ag(&args, ap->blkno);
+-	if (error)
+-		return error;
+-
+-	if (args.fsbno != NULLFSBLOCK) {
+-		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
+-			orig_length);
+-	} else {
+-		ap->blkno = NULLFSBLOCK;
+-		ap->length = 0;
+-	}
+-
+-	return 0;
++	return xfs_alloc_vextent_first_ag(args, ap->blkno);
  }
--#else
--
--#define xfs_bmap_exact_minlen_extent_alloc(bma) (-EFSCORRUPTED)
--
--#endif
  
  /*
-  * If we are not low on available data blocks and we are allocating at
+@@ -3789,8 +3754,11 @@ xfs_bmap_btalloc(
+ 	/* Trim the allocation back to the maximum an AG can fit. */
+ 	args.maxlen = min(ap->length, mp->m_ag_max_usable);
+ 
+-	if ((ap->datatype & XFS_ALLOC_USERDATA) &&
+-	    xfs_inode_is_filestream(ap->ip))
++	if (unlikely(XFS_TEST_ERROR(false, mp,
++			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
++		error = xfs_bmap_exact_minlen_extent_alloc(ap, &args);
++	else if ((ap->datatype & XFS_ALLOC_USERDATA) &&
++			xfs_inode_is_filestream(ap->ip))
+ 		error = xfs_bmap_btalloc_filestreams(ap, &args, stripe_align);
+ 	else
+ 		error = xfs_bmap_btalloc_best_length(ap, &args, stripe_align);
+@@ -4205,9 +4173,6 @@ xfs_bmapi_allocate(
+ 	if ((bma->datatype & XFS_ALLOC_USERDATA) &&
+ 	    XFS_IS_REALTIME_INODE(bma->ip))
+ 		error = xfs_bmap_rtalloc(bma);
+-	else if (unlikely(XFS_TEST_ERROR(false, mp,
+-			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
+-		error = xfs_bmap_exact_minlen_extent_alloc(bma);
+ 	else
+ 		error = xfs_bmap_btalloc(bma);
+ 	if (error)
 
