@@ -1,251 +1,254 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C25F3FF1;
-	Fri,  1 Nov 2024 03:33:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730432011; cv=none; b=EkdvD4IgFuEDtgdrz9IJCoKn3tuOkq2aGGdXc+C8X/dzFD5osnvDzbREYUotF+qDMSAINMZDtD00vm2b+U5ZXiUt9EYjbejYheo70eMMXO9IVGuXqc9b0r2ZsHitzVlIm1glcYLOw6IagDSWspvTvmZ4kWak0G5bR2kbzKlaHHY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730432011; c=relaxed/simple;
-	bh=neyokfw9ReJ8nD29TZJGBTmHGKCql/FyKj6TpaBD6Mg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NzUQdlNKcnkVmuFIBfbnb+mOecVfBit8eUBGjFFbbcWD5yxrt2WojBqbNYKLhKbXVCjfFQABzYzdyeWDymBAdhCTROfKssUqUF2ZJpLfTw1CM4i3RbwexBKXkDx8obEZGexSVKphAMYd/tUv8ZB3HLlQhFtpvp/F4mzgWVMFzoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=esi/ot+O; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84DF33FF1;
+	Fri,  1 Nov 2024 03:36:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1730432193; cv=fail; b=kPSNMPrZ0HGa6nfSbbN1nnzE/bpgxTXMOFxxyYegmDdvGAKPZHfZwpOPxdcF9wyo2+9s4dnRVBDIqCzmu5/X4qRCPJfEb0xKumKfiPXSMibjTlo5GD5MnrdDULDKYM3vs8WWNe6HKfISoazsxdnRKuyvYz39nJCLMZigfb238M8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1730432193; c=relaxed/simple;
+	bh=af24CVm7HfeuyDfjzEMKuBvBzEB8ZD8kOb9a584CT08=;
+	h=Date:From:To:CC:Subject:Message-ID:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=KNbGKbFvB3V7jSOaKzVBGCpNLEDKntl3xrNhQLzcHIN1fR74T1jtkdomLBovPv8puugktgmQG3sQVdbi24XiRqc8r0pXVq+CIJF2KhaLaGqFPJSU928t7H8Hxorx+11GIIMjVs9uUpKmMGHqUtCpx+0cXXyQhUEhffeFsZTYud0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=T5/QfEgq; arc=fail smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="esi/ot+O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC186C4CECD;
-	Fri,  1 Nov 2024 03:33:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730432010;
-	bh=neyokfw9ReJ8nD29TZJGBTmHGKCql/FyKj6TpaBD6Mg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=esi/ot+OiPBktTYiERfpmQ6AtgsP8TlK121d0b8148srjp+oUfyPrOMH/ErdiGchV
-	 eqv20JV4zDpEExgdBvP4hgtWSf724eeDJ3lWIt1mXiTk+F+Lgb/1T3YBRrTv7kYk6G
-	 3Yu4yrM7njMtat3JBuZLgQ9cizPRZSwpH9MG/SwnatBZ3fbclPGPydi4sBl+Nq3wd/
-	 dg2C9kYSjJOKuvFhYsJrqtO8Eo9e9PC0UhbLOpm12fIRtJoXzwq101jxI/3teqOCXY
-	 FXNyusYhOLeqp6asaaouDyWwEkrX2ZGcGcm5aBKYe+JwSMz3ZhZk3JB7Reaz5m5pJA
-	 mUWKNa7Zun9jw==
-Date: Thu, 31 Oct 2024 20:33:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: John Garry <john.g.garry@oracle.com>, linux-ext4@vger.kernel.org,
-	Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-	Christoph Hellwig <hch@infradead.org>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 1/4] ext4: Add statx support for atomic writes
-Message-ID: <20241101033330.GE2386201@frogsfrogsfrogs>
-References: <cover.1730286164.git.ritesh.list@gmail.com>
- <3338514d98370498d49ebc297a9b6d48a55282b8.1730286164.git.ritesh.list@gmail.com>
- <20241031214204.GC21832@frogsfrogsfrogs>
- <875xp7znw4.fsf@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="T5/QfEgq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1730432191; x=1761968191;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   mime-version;
+  bh=af24CVm7HfeuyDfjzEMKuBvBzEB8ZD8kOb9a584CT08=;
+  b=T5/QfEgqXFbGcyXxQc/lRz3aN4Ki5vWxBmhGkvS47MHN7ZeLn1+YWawo
+   kdw+b3b51qIm+JcH7fdRD2c/+8mO0DfTfQOMnoPaV+JLiKY8TQmoHSt4T
+   tIPB9Zzs+9PiLGqTifEJfXbf8scrAVlP8JVngGQcEg7jqQ3z0m7e1Ov5W
+   t6/p+RpeU5F5uJYK7dFOGvaBZSaBlpEQSw3zJ+5NUCZgeaxqEHgQWvJJO
+   8keJEmEqqwsGt6aX8fcg5qynPzbcZI02Ky/seQPBJfgQyv2MkGPuuodN1
+   TGn1Rn0tma0SAFk256P8UW+MHXdabxvql4WDFew5nFwR+P+Ig58yzuXvH
+   Q==;
+X-CSE-ConnectionGUID: +FmQ3MS6Tz+k1Gff2disjA==
+X-CSE-MsgGUID: ZdGXgRjqSL2tg7qmHpu17g==
+X-IronPort-AV: E=McAfee;i="6700,10204,11242"; a="29627892"
+X-IronPort-AV: E=Sophos;i="6.11,248,1725346800"; 
+   d="scan'208";a="29627892"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2024 20:36:30 -0700
+X-CSE-ConnectionGUID: GOL1SUaxSg2doZYHmP0vlQ==
+X-CSE-MsgGUID: hgydH+2aQEuFafsB5v4t9Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,248,1725346800"; 
+   d="scan'208";a="113632797"
+Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
+  by orviesa002.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 31 Oct 2024 20:36:30 -0700
+Received: from fmsmsx603.amr.corp.intel.com (10.18.126.83) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Thu, 31 Oct 2024 20:36:30 -0700
+Received: from fmsedg601.ED.cps.intel.com (10.1.192.135) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39 via Frontend Transport; Thu, 31 Oct 2024 20:36:30 -0700
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.49) by
+ edgegateway.intel.com (192.55.55.70) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Thu, 31 Oct 2024 20:36:29 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=xLswFKhZNT2GIiLumuajVOpKB/oMzII2nyhbCRkEQylzQPevYDHVSkOV0oNvtlGDei9ToOmPFWIMOc/NVwkzXcEVh+USBPbjmWUKy1Ty0SjQWtp9xESLPjN2Q6mI+q325hwOfSuoMXvTaNRujfcAHgdtecPLgtxYzQM4GZizePmbzcL8RsQyef8zAA8q5N2w2wUk/sM5LqW8kRSOZHFzv0AoBBhqaajsRGL2CFrrlCZIe1AWJsZYLWd0fP2VxXSueUG6ZvI2sCOxMifhS9eAernO5f3+ttAye/aEMtHBcUhYXlBxxgfm3zQL9OU1MHsCr7w0n5h1h+G9BUgn7X+N4Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5gmrycYUMatq66F2FIOKohILiuBINn7mN8EwBYfi/Wg=;
+ b=kAFMx1VBwimlDMF2vWvovFnMKT78f8zY7YQipE0NiprY3T6vPbH+6xg0Rt56rJc0vHFYpc5cOLD3IV66FrKmw4aiKNtZyIaghNFWJDvNnQ7biGyPoY5ycPnp8R+i5tfKS7XCGxmWAT/+yW/tGrRtJpGLdVfmmVMeKqadnTrKcG94VZ3K5JLDFfcHjm8XPpN7uNbItG2H9JXkrdM/VZXVjT2srIPQ063miZUPcKq5RTpUrJeEYsrotthdi+WXRpkfQC1AQ0ue/AOOfOSJyngJuBVrLEe7zpI39ITOpeFUevsCSMAlE/5GnGzQqnuDIG5QndFGJM2Fk2D7pfuvbA+ZBg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from SJ2PR11MB8587.namprd11.prod.outlook.com (2603:10b6:a03:568::21)
+ by DM6PR11MB4596.namprd11.prod.outlook.com (2603:10b6:5:2a6::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8114.25; Fri, 1 Nov
+ 2024 03:36:21 +0000
+Received: from SJ2PR11MB8587.namprd11.prod.outlook.com
+ ([fe80::4050:8bc7:b7c9:c125]) by SJ2PR11MB8587.namprd11.prod.outlook.com
+ ([fe80::4050:8bc7:b7c9:c125%4]) with mapi id 15.20.8093.024; Fri, 1 Nov 2024
+ 03:36:21 +0000
+Date: Fri, 1 Nov 2024 11:36:12 +0800
+From: kernel test robot <oliver.sang@intel.com>
+To: MottiKumar Babu <mottikumarbabu@gmail.com>
+CC: <oe-lkp@lists.linux.dev>, <lkp@intel.com>, <linux-xfs@vger.kernel.org>,
+	<cem@kernel.org>, <djwong@kernel.org>, <chandanbabu@kernel.org>,
+	<dchinner@redhat.com>, <zhangjiachen.jaycee@bytedance.com>,
+	<linux-kernel@vger.kernel.org>, <linux-kernel-mentees@lists.linux.dev>,
+	<anupnewsmail@gmail.com>, <skhan@linuxfoundation.org>,
+	<oliver.sang@intel.com>
+Subject: Re: [PATCH] Fix out-of-bounds access in xfs_bmapi_allocate by
+ validating whichfork
+Message-ID: <202411011120.8d4b756-oliver.sang@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20241027193541.14212-1-mottikumarbabu@gmail.com>
+X-ClientProxiedBy: SI2P153CA0002.APCP153.PROD.OUTLOOK.COM
+ (2603:1096:4:140::16) To SJ2PR11MB8587.namprd11.prod.outlook.com
+ (2603:10b6:a03:568::21)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <875xp7znw4.fsf@gmail.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ2PR11MB8587:EE_|DM6PR11MB4596:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5b501408-faca-4de8-ade5-08dcfa265a7c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?1bw4lh4HX0bufgwP3fuiFfJMTLw8BDOBXNAV6ZX57TRMPHTKaT3PNy2cFulL?=
+ =?us-ascii?Q?1F6PkUHBW4uFVhdj9ge+nh0l2iKI4umE3lrQECIfKhO6KaCXU4heMrFVdz6d?=
+ =?us-ascii?Q?nKMVSQSr7E9MIwgtx/fUIg7OYmLPfAXyqCIpFzq3DEBPkAnp9jY9icOkXV3P?=
+ =?us-ascii?Q?SF9fwlQTySlI0oH5C0OiwJFIbGpp53ou/7NOmRsWBspUFNBbLGAlqn562Bgq?=
+ =?us-ascii?Q?O1HRKQBDC5swzkkqRevvlkPaLBIs7LoiJoyxxOkaabXkJohJ+zz+1X5/0fGS?=
+ =?us-ascii?Q?SFYUTwYS+3VduDyT1wuocSOZChRvquq3lb4+DD78/SYRGuTFRTxyNi8Qktyk?=
+ =?us-ascii?Q?fTXrCHS0B55o5yR9BPmj05gbBh5vtgS87NUZSuaJj90gwNBipqvGi6KDx2li?=
+ =?us-ascii?Q?85EJtH7EAKDAX9dKsHtRToTe97r8pQRkFaojqk/PVaB8w2b/SCgQAJL2gB3Y?=
+ =?us-ascii?Q?aXTFQo3D0vY7x6AH1z7U7nhV5RGsRqJ2exdwWB242mISvL+4Q7lZzlPlZ1LH?=
+ =?us-ascii?Q?ZS6TL9g0CWgsRsR4PEY1lwEHYRA3FAfc+eIFhO0It3Os+ZH2vAyw51ZKzFSZ?=
+ =?us-ascii?Q?2/0AmAt/n9hHXEhwsUsBaDQNIdQcEbdSLEsBrcifDO2gYRhrX9GTT1P50xlB?=
+ =?us-ascii?Q?XOw8NL+2JdXYhzrcKgibsXn1QJnPfBHvcUkVX7y0AEq9+bjdS/9S64X6pfxI?=
+ =?us-ascii?Q?uzXPtbPH7iDdQLSf7G633VQPxi9eCW7c4rpWbiAyUePiqOSttLuBauPP7Sh/?=
+ =?us-ascii?Q?/NhnORu/nH8+lEDynW9N+f9ekIdGYNlK1dQThR6izXe7Gz9IX9UjN6i1C3jx?=
+ =?us-ascii?Q?7sIInulzW5A8jrIvbZuWB9ZYo3i07OsOMcou83WZjVk8VKelTgejx0jIXUkH?=
+ =?us-ascii?Q?CemtVAsaR4vdkhOcNkJAq1F0Yx7mL5Q3HeG5FmUdB/UBwXQTVvpDP6Bn0WDP?=
+ =?us-ascii?Q?3InJvJQzZ8jXVy0D/pkESIytuTq7P6kWBPLh6yhcDEzE7EvYWYURiFcYUPLL?=
+ =?us-ascii?Q?Aw4bW/3VzezFbsXI0+0Cj+wNOTQXwDJmVPK6YHk7XUMS80MYmVmvybUuKEQK?=
+ =?us-ascii?Q?0ZoRYxcsiGDp7VnanfYIWNaGDfxNV5eaGmvy95HnbfcgRJFSO831oZQAjDxg?=
+ =?us-ascii?Q?ZytvcoMcC+ErsHxgBZOGC394eSvkW9jlMNfcMncZQIGmOdwovMhRbJB2r3I7?=
+ =?us-ascii?Q?N3Zp7jhiwmM8+RS6sdK57v6dyzODxjUkXsBHVixCFCGBvvHLkUNndvepnXLa?=
+ =?us-ascii?Q?D/1Dwaz4/NFbxFkgZXJGC6HH5ZG6H2S/ocEsjTszbA=3D=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB8587.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?PiMDW97A9EeE+upBh8BspLhpPtkDilshasQvQoLt8+NK7D8x24IfLgDMcMqe?=
+ =?us-ascii?Q?AfW6H6KsH1B3J6cIPCAHKJ6C9BYZHortULWaXzzHPySN0o6b3IciG4eSfbRz?=
+ =?us-ascii?Q?Lsi3i3Or3Yaza2jYQO/cdUvjiCLAzG03f9yvy0khvUu1TstQbVU9auLqWnCA?=
+ =?us-ascii?Q?kBlEscXI27dmcY1JzexIe24T1cJAErB5p8fkQKu2g5dobU9wzyyTlfMbKTzx?=
+ =?us-ascii?Q?TYyPPxkyWqDOWcMjfLWM7NCEzYvnpi/lIPjD91g7jVg7wCpaxesP2+/YMS3J?=
+ =?us-ascii?Q?Dj/AmwF/reXJYdvfdh9z8UI42YFi3OUCrp8Q1+Hq9FXbN+5lYUGguSJsaTo6?=
+ =?us-ascii?Q?urI+6ZYi8c4ZUu4XiPL79rOZrIoqtBZuyqqNqOZAOamAZjtvKr2/0A6I9cDK?=
+ =?us-ascii?Q?Dn9DuAm6ty1e9Rp3O2IgEEBTsZUnTE7RTJ+hpBmLRGXae2S4e98yqAzk7g9f?=
+ =?us-ascii?Q?JG5mE/+NML8V+Ow9wO3yFS4gDpjrnq8o4Xk2CTBD8OBshKZnsOvlZpvNNLf4?=
+ =?us-ascii?Q?NUkMA6k04kgmCm5V3gwt/BCmNggXrnDCRn9XTTwQeFtvxdvkYWF4p/mycm/F?=
+ =?us-ascii?Q?8jfoj4cUZu7WWg/RK9LRvxYKxPn7lvYYK3n1voBqSXuhYHsfgBUzgRLSzmxt?=
+ =?us-ascii?Q?yFrD+nzGSEkuwzODwTXvlSuliJNry5EaR/Vaafhu/oiJm5KBEjrwUm8UrU01?=
+ =?us-ascii?Q?t/ZN0P0y2E2qe0cSDTKcZKFtqCNRTqCspIRsMhmdJdKaGgOPW8EBZZBBgkFY?=
+ =?us-ascii?Q?IfGpdVZrHzL/y8PRKXYk1M4Jno3M/PXNLRGZIok5sKAHNY1whK0WSofsv4Zv?=
+ =?us-ascii?Q?upefO7t0//eB6hHzK9vpiuXokg9h5wzMrgsdJwuai81sC3ex1PJioAvEa2fH?=
+ =?us-ascii?Q?wtVtzVitkrmHkQdugle7emVJyIRD2sLsclE7ba+6mHbDHM4hRvOBU+CUKEE2?=
+ =?us-ascii?Q?d1ZOuHRM99MLI4YA2dPGUqxNsQmqhp7Lflhu4lkCkpuEI7HdZXDVAaSbVBk5?=
+ =?us-ascii?Q?tiZJwb1Xc6a7IOBRBpQUxmg+beKp6ZIUPpCDUNKxoYW+MWfxRXqbVlzQ+gct?=
+ =?us-ascii?Q?OE8TsCbWTMAzrVaQ6YrYuRz82HaUTBMIHPR9yj6BA3fKBPJ58Tlhf48aHnbw?=
+ =?us-ascii?Q?qiC1WQYSG/Yxhe6z7XlphIqEuodnWGJH8obDP8a5Ll5RW6zlVStMWR4PktfL?=
+ =?us-ascii?Q?QzuzwGObF1M+J7gx4q5MNn6IeJd8c0YJU1FWvu/mbt1qBZoz+U7WCdZPW4GK?=
+ =?us-ascii?Q?wsvN6qnviUzL87MXUHzI/nGRgKli//F/75nnPtDefs0vURhuPMWcBO5oaz0E?=
+ =?us-ascii?Q?GZPcv8J0FC9rCzKp3H7btWO6fbDKdlzIfHe+n66E36iRisbZHuddc9ONFBxi?=
+ =?us-ascii?Q?BMgk/QQo5/cVoofrPBFIFSKAYOELbrXE13keMrquiG79152HcsZW+spcWNDA?=
+ =?us-ascii?Q?5sWhAQa616Oqqyxn0kWPAjWI8OyphIco3HYFmdAP++gDxLBXs4umV5rcga3O?=
+ =?us-ascii?Q?vfZje5qif99p1T9d28y96zaibwWwmyISuvr37nGk7Z8W8o7OlVQ/sAvCO/sW?=
+ =?us-ascii?Q?kTc+KgMbVV7tupipEYBvU1BMRaKIRnOFpAxIPuMm1ND8tcRQhgU9jBLFpqeN?=
+ =?us-ascii?Q?xQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5b501408-faca-4de8-ade5-08dcfa265a7c
+X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB8587.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Nov 2024 03:36:21.6518
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: N7/M0gOrtPn1p888Q+e+fJBv8MzqLkJ/IJMHGQuTEptbQQ9Ap6CrIu5IP1t5OlbNabKygERn4gyz9qyEpyCnfw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB4596
+X-OriginatorOrg: intel.com
 
-On Fri, Nov 01, 2024 at 08:00:35AM +0530, Ritesh Harjani wrote:
-> 
-> Hi John & Darrick,
-> 
-> "Darrick J. Wong" <djwong@kernel.org> writes:
-> 
-> > On Wed, Oct 30, 2024 at 09:27:38PM +0530, Ritesh Harjani (IBM) wrote:
-> >> This patch adds base support for atomic writes via statx getattr.
-> >> On bs < ps systems, we can create FS with say bs of 16k. That means
-> >> both atomic write min and max unit can be set to 16k for supporting
-> >> atomic writes.
-> >> 
-> >> Co-developed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> >> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> >> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> >> ---
-> >>  fs/ext4/ext4.h  |  9 +++++++++
-> >>  fs/ext4/inode.c | 14 ++++++++++++++
-> >>  fs/ext4/super.c | 31 +++++++++++++++++++++++++++++++
-> >>  3 files changed, 54 insertions(+)
-> >> 
-> >> diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-> >> index 44b0d418143c..6ee49aaacd2b 100644
-> >> --- a/fs/ext4/ext4.h
-> >> +++ b/fs/ext4/ext4.h
-> >> @@ -1729,6 +1729,10 @@ struct ext4_sb_info {
-> >>  	 */
-> >>  	struct work_struct s_sb_upd_work;
-> >>  
-> >> +	/* Atomic write unit values in bytes */
-> >> +	unsigned int s_awu_min;
-> >> +	unsigned int s_awu_max;
-> >> +
-> >>  	/* Ext4 fast commit sub transaction ID */
-> >>  	atomic_t s_fc_subtid;
-> >>  
-> >> @@ -3855,6 +3859,11 @@ static inline int ext4_buffer_uptodate(struct buffer_head *bh)
-> >>  	return buffer_uptodate(bh);
-> >>  }
-> >>  
-> >> +static inline bool ext4_can_atomic_write(struct super_block *sb)
-> >> +{
-> >> +	return EXT4_SB(sb)->s_awu_min > 0;
-> >
-> > Huh, I was expecting you to stick to passing in the struct inode,
-> > and then you end up with:
-> >
-> > static inline bool ext4_can_atomic_write(struct inode *inode)
-> > {
-> > 	return S_ISREG(inode->i_mode) &&
-> > 	       EXT4_SB(inode->i_sb)->s_awu_min > 0);
-> > }
-> >
-> 
-> Ok. John also had commented on the same thing before. 
-> We may only need this, when ext4 get extsize hint support. But for now
-> we mainly only need to check that EXT4 SB supports atomic write or not.
-> i.e. s_awu_min should be greater than 0. 
-> 
-> But sure I can make above suggested change to keep it consistent with XFS, along
-> with below discussed change (Please have a look)...
-> 
-> >> +}
-> >> +
-> >>  extern int ext4_block_write_begin(handle_t *handle, struct folio *folio,
-> >>  				  loff_t pos, unsigned len,
-> >>  				  get_block_t *get_block);
-> >> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> >> index 54bdd4884fe6..fcdee27b9aa2 100644
-> >> --- a/fs/ext4/inode.c
-> >> +++ b/fs/ext4/inode.c
-> >> @@ -5578,6 +5578,20 @@ int ext4_getattr(struct mnt_idmap *idmap, const struct path *path,
-> >>  		}
-> >>  	}
-> >>  
-> >> +	if (S_ISREG(inode->i_mode) && (request_mask & STATX_WRITE_ATOMIC)) {
-> >
-> > ...and then the callsites become:
-> >
-> > 	if (request_mask & STATX_WRITE_ATOMIC) {
-> > 		unsigned int awu_min = 0, awu_max = 0;
-> >
-> > 		if (ext4_can_atomic_write(inode)) {
-> > 			awu_min = sbi->s_awu_min;
-> > 			awu_max = sbi->s_awu_max;
-> > 		}
-> >
-> > 		generic_fill_statx_atomic_writes(stat, awu_min, awu_max);
-> > 	}
-> >
-> > (I forget, is it bad if statx to a directory returns STATX_WRITE_ATOMIC
-> > even with awu_{min,max} set to zero?)
-> 
-> I mainly kept it consistent with XFS. But it's not a bad idea to do that. 
-> That will help applications check for atomic write support on the root
-> directory mount point rather than creating a regular file just for
-> verification. Because of below result_mask, which we only set within generic_fill_statx_atomic_writes() 
-> 
-> 	stat->result_mask |= STATX_WRITE_ATOMIC;
-> 
-> If we make this change to ext4, XFS will have to fix it too, to keep
-> the behavior consistent for both.
-> Shall I go ahead and make the change in v4 for EXT4?
 
-Hmmm, that's a good question -- if a program asks for STATX_WRITE_ATOMIC
-on a directory, should we set the ATOMIC flag in statx.stx_mask but
-leave the values as zeroes if the underlying block device/fs supports
-atomic writes at all?  For XFS I guess the "underlying bdev" is
-determined by the directory's RTINHERIT bit && xfs_has_realtime().
 
-Thoughts?
+Hello,
 
-But maybe that doesn't make sense since (a) fundamentally you can't do a
-directio write to a directory and (b) it's not that hard to create a
-file, set the REALTIME bit on it as desired (on xfs) and then query the
-untorn write geometry.  So maybe that check should be:
+kernel test robot noticed "xfstests.xfs.221.fail" on:
 
-if (request_mask & STATX_WRITE_ATOMIC && S_ISREG(inode->i_mode))
+commit: fc3ce21bdce1661bf1b4af5579a7c72c483b0856 ("[PATCH] Fix out-of-bounds access in xfs_bmapi_allocate by validating whichfork")
+url: https://github.com/intel-lab-lkp/linux/commits/MottiKumar-Babu/Fix-out-of-bounds-access-in-xfs_bmapi_allocate-by-validating-whichfork/20241028-033645
+base: https://git.kernel.org/cgit/fs/xfs/xfs-linux.git for-next
+patch link: https://lore.kernel.org/all/20241027193541.14212-1-mottikumarbabu@gmail.com/
+patch subject: [PATCH] Fix out-of-bounds access in xfs_bmapi_allocate by validating whichfork
 
---D
+in testcase: xfstests
+version: xfstests-x86_64-891f4995-1_20241028
+with following parameters:
 
-> -ritesh
-> 
-> >
-> > Other than that nit, this looks good to me.
-> >
-> > --D
-> >
-> >> +		struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
-> >> +		unsigned int awu_min, awu_max;
-> >> +
-> >> +		if (ext4_can_atomic_write(inode->i_sb)) {
-> >> +			awu_min = sbi->s_awu_min;
-> >> +			awu_max = sbi->s_awu_max;
-> >> +		} else {
-> >> +			awu_min = awu_max = 0;
-> >> +		}
-> >> +
-> >> +		generic_fill_statx_atomic_writes(stat, awu_min, awu_max);
-> >> +	}
-> >> +
-> >>  	flags = ei->i_flags & EXT4_FL_USER_VISIBLE;
-> >>  	if (flags & EXT4_APPEND_FL)
-> >>  		stat->attributes |= STATX_ATTR_APPEND;
-> >> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> >> index 16a4ce704460..ebe1660bd840 100644
-> >> --- a/fs/ext4/super.c
-> >> +++ b/fs/ext4/super.c
-> >> @@ -4425,6 +4425,36 @@ static int ext4_handle_clustersize(struct super_block *sb)
-> >>  	return 0;
-> >>  }
-> >>  
-> >> +/*
-> >> + * ext4_atomic_write_init: Initializes filesystem min & max atomic write units.
-> >> + * @sb: super block
-> >> + * TODO: Later add support for bigalloc
-> >> + */
-> >> +static void ext4_atomic_write_init(struct super_block *sb)
-> >> +{
-> >> +	struct ext4_sb_info *sbi = EXT4_SB(sb);
-> >> +	struct block_device *bdev = sb->s_bdev;
-> >> +
-> >> +	if (!bdev_can_atomic_write(bdev))
-> >> +		return;
-> >> +
-> >> +	if (!ext4_has_feature_extents(sb))
-> >> +		return;
-> >> +
-> >> +	sbi->s_awu_min = max(sb->s_blocksize,
-> >> +			      bdev_atomic_write_unit_min_bytes(bdev));
-> >> +	sbi->s_awu_max = min(sb->s_blocksize,
-> >> +			      bdev_atomic_write_unit_max_bytes(bdev));
-> >> +	if (sbi->s_awu_min && sbi->s_awu_max &&
-> >> +	    sbi->s_awu_min <= sbi->s_awu_max) {
-> >> +		ext4_msg(sb, KERN_NOTICE, "Supports (experimental) DIO atomic writes awu_min: %u, awu_max: %u",
-> >> +			 sbi->s_awu_min, sbi->s_awu_max);
-> >> +	} else {
-> >> +		sbi->s_awu_min = 0;
-> >> +		sbi->s_awu_max = 0;
-> >> +	}
-> >> +}
-> >> +
-> >>  static void ext4_fast_commit_init(struct super_block *sb)
-> >>  {
-> >>  	struct ext4_sb_info *sbi = EXT4_SB(sb);
-> >> @@ -5336,6 +5366,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
-> >>  
-> >>  	spin_lock_init(&sbi->s_bdev_wb_lock);
-> >>  
-> >> +	ext4_atomic_write_init(sb);
-> >>  	ext4_fast_commit_init(sb);
-> >>  
-> >>  	sb->s_root = NULL;
-> >> -- 
-> >> 2.46.0
-> >> 
-> >> 
-> 
+	disk: 4HDD
+	fs: xfs
+	test: xfs-221
+
+
+
+config: x86_64-rhel-8.3-func
+compiler: gcc-12
+test machine: 4 threads Intel(R) Xeon(R) CPU E3-1225 v5 @ 3.30GHz (Skylake) with 16G memory
+
+(please refer to attached dmesg/kmsg for entire log/backtrace)
+
+
+
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <oliver.sang@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202411011120.8d4b756-oliver.sang@intel.com
+
+2024-10-31 14:35:22 export TEST_DIR=/fs/sda1
+2024-10-31 14:35:22 export TEST_DEV=/dev/sda1
+2024-10-31 14:35:22 export FSTYP=xfs
+2024-10-31 14:35:22 export SCRATCH_MNT=/fs/scratch
+2024-10-31 14:35:22 mkdir /fs/scratch -p
+2024-10-31 14:35:22 export SCRATCH_DEV=/dev/sda4
+2024-10-31 14:35:22 export SCRATCH_LOGDEV=/dev/sda2
+2024-10-31 14:35:22 export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
+2024-10-31 14:35:22 export SCRATCH_XFS_LIST_FUZZ_VERBS=random
+2024-10-31 14:35:22 export MKFS_OPTIONS="-mreflink=1 "
+2024-10-31 14:35:22 echo xfs/221
+2024-10-31 14:35:22 ./check xfs/221
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 lkp-skl-d06 6.12.0-rc2-00034-gfc3ce21bdce1 #1 SMP PREEMPT_DYNAMIC Mon Oct 28 04:16:50 CST 2024
+MKFS_OPTIONS  -- -f -mreflink=1 /dev/sda4
+MOUNT_OPTIONS -- /dev/sda4 /fs/scratch
+
+xfs/221       - output mismatch (see /lkp/benchmarks/xfstests/results//xfs/221.out.bad)
+    --- tests/xfs/221.out	2024-10-28 16:28:46.000000000 +0000
+    +++ /lkp/benchmarks/xfstests/results//xfs/221.out.bad	2024-10-31 14:35:30.136173763 +0000
+    @@ -8,6 +8,6 @@
+     CoW across the transition
+     Compare files
+     bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-221/file1
+    -09101629908f9bdd5d178e7ce20bb1bb  SCRATCH_MNT/test-221/file3
+    +fa50dba51826899c372464a153cb2117  SCRATCH_MNT/test-221/file3
+     09101629908f9bdd5d178e7ce20bb1bb  SCRATCH_MNT/test-221/file3.chk
+     Check extent counts
+    ...
+    (Run 'diff -u /lkp/benchmarks/xfstests/tests/xfs/221.out /lkp/benchmarks/xfstests/results//xfs/221.out.bad'  to see the entire diff)
+Ran: xfs/221
+Failures: xfs/221
+Failed 1 of 1 tests
+
+
+
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20241101/202411011120.8d4b756-oliver.sang@intel.com
+
+
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
