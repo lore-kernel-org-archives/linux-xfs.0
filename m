@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 437D91BDC3
-	for <linux-xfs@vger.kernel.org>; Fri,  1 Nov 2024 22:18:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E434C1BDC3
+	for <linux-xfs@vger.kernel.org>; Fri,  1 Nov 2024 22:18:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730499515; cv=none; b=MeJdygvQto8+cyXW8wRLFsy29l44w4FbDcAmiJpGY/3bn92ySNEV27hoSJKO2V3TKphVspCk0tRwx/4AZMBjqWJektQThyHxkrNLcMyaEatEPnc9p3rStDu1tCYlna1CuhnhQCxGwxkZ/kPGljYbCXyiYl80mtzuS4tA5pHL+qg=
+	t=1730499531; cv=none; b=YNMPsfe3Ls6T5d/D5uixjl/yj7mVACMthCRPQTPdo49LJmT7gty43OeNkUkljOEOM7tbgGOBEtll3a7nikyekEiOkfz0irObDR29a2a+DJSHJTGQ8yNZNgIoNgOneqQPVY11oR1svBQ8HJV01i6r1VKX16oxx2rn74wGYA3noe4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730499515; c=relaxed/simple;
-	bh=mlpJkcrdO9fDwYScAWjKt18Kc1D8sxv2LoF1BOxGL1E=;
+	s=arc-20240116; t=1730499531; c=relaxed/simple;
+	bh=UlyhZBDWikgi6BGYEBgoFMtK8gmn8aG367ZyVH1ZY0w=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s3T+vmG+NQBrsSS71yh5nNfGscEDRABfN92Pm6TonSF3G28h1kYA+UKZESVH9AV96WtMyfc6SsOlmsih+RxwLzVul6+iE4j9A69GjZSQ34918qom9JmP5gUmA9Agp2BxpwE7XZZTUJkP6GrCkwRRhmcLQHA9LPdPTuXLbmfmU7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u4FDeDEM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=i5qkdLbpplXdfSa9UNzMiITMwqNZzUG95CY8iMq9ZqE2sdv4BW732PRTcTHiWKo3oju0/ujK2mcF7IM0hDvhoW5RAzkmYa7C6SUuYldiq3fPyvPp3p5dqd0ig8d1HPHL2Ewnkv7HgE1+Nodsc5+o6+dQ0kW+YZUwz6a+7zh0DBM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUuvLIiW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u4FDeDEM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAD6CC4CECD;
-	Fri,  1 Nov 2024 22:18:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUuvLIiW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7794FC4CECD;
+	Fri,  1 Nov 2024 22:18:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730499514;
-	bh=mlpJkcrdO9fDwYScAWjKt18Kc1D8sxv2LoF1BOxGL1E=;
+	s=k20201202; t=1730499530;
+	bh=UlyhZBDWikgi6BGYEBgoFMtK8gmn8aG367ZyVH1ZY0w=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=u4FDeDEMgP810+oOkxJTk3aIbJQxr0I5EizXBEZjfiFAggTlfj2rM4qNfwv6kWrix
-	 +fLGcft2ZHdTtm5fgElQNl1ZDHftIu3nugRnZwVCzLZQ26h5OA3dF4uYZd1BMKUj1d
-	 wLu20NI5jE40zmGEYIueuWM8CSthS9M1ByOE/9D9rLB2bpL8208b5Ghxgs7R3849xu
-	 0xHQ8r0Ey+3fd6s1DX8d+GvdHGvWRXYJ2zC1OiyNHigLUtuk543nsfiuWYZRKWYXxc
-	 b9xkJ4n2ndSydI60nCWfGmLVoFA1m+kH5xUfmRR3vszKubyWr2AVFPcVgZMM81S1iN
-	 3/6m7bDw0EVnw==
-Date: Fri, 01 Nov 2024 15:18:34 -0700
-Subject: [PATCH 1/3] xfs: convert struct typedefs in xfs_ondisk.h
+	b=XUuvLIiWEMI8j84bOMcEP+prJ/kInKur2aAqrZmZgn2ENzGCOvdJ9IOIEnHWAYu4Y
+	 cXBFgJB+JQF+2498RHyFrrrMn+OnmmQWok26PExWsfXzZ32/XVeJOs4gJbqnriHSXm
+	 gylEOOA1WL5Vo9wWu3d50fKxk5h04PQKmli8AQjxGoVzNC9MHMfCQWJaw3/Nnl4zFG
+	 07k9PJVhkIz/3e5JVNnD6/tI/6Zl+SdWWIT/oBWeTvM+hwtAa5TZPD4v78z924BGs1
+	 loJ+hcyEZfuZLWeEGKBLITlIz7ssj5Wuz13TJsxuM4ycss554w1fu5wb2+Y1sqQ79f
+	 Z3/mwdolhpEaw==
+Date: Fri, 01 Nov 2024 15:18:50 -0700
+Subject: [PATCH 2/3] xfs: separate space btree structures in xfs_ondisk.h
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de, david@fromorbit.com
-Message-ID: <173049942768.1909552.16910486013106825236.stgit@frogsfrogsfrogs>
+Message-ID: <173049942785.1909552.1399958870612921080.stgit@frogsfrogsfrogs>
 In-Reply-To: <173049942744.1909552.870447088364319361.stgit@frogsfrogsfrogs>
 References: <173049942744.1909552.870447088364319361.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,124 +45,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Replace xfs_foo_t with struct xfs_foo where appropriate.  The next patch
-will import more checks from xfs/122, and it's easier to automate
-deduplication if we don't have to reason about typedefs.
+Create a separate section for space management btrees so that they're
+not mixed in with file structures.  Ignore the dsb stuff sprinkled
+around for now, because we'll deal with that in a subsequent patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ondisk.h |   74 ++++++++++++++++++++++----------------------
- 1 file changed, 37 insertions(+), 37 deletions(-)
+ fs/xfs/libxfs/xfs_ondisk.h |   24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
-index 99eae7f67e961b..98208c8a0d9ed0 100644
+index 98208c8a0d9ed0..7b7c3d6d0d62d9 100644
 --- a/fs/xfs/libxfs/xfs_ondisk.h
 +++ b/fs/xfs/libxfs/xfs_ondisk.h
-@@ -49,7 +49,7 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_legacy_timestamp,	8);
+@@ -22,38 +22,39 @@
+ static inline void __init
+ xfs_check_ondisk_structs(void)
+ {
+-	/* ag/file structures */
++	/* file structures */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			344);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_shdr,	48);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_lhdr,	64);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			288);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
++	XFS_CHECK_STRUCT_SIZE(xfs_timestamp_t,			8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_legacy_timestamp,	8);
++
++	/* space btrees */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			344);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_alloc_rec,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_lhdr,	64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_shdr,	48);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_key,		4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_rec,		12);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_key,		20);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_rec,		24);
+-	XFS_CHECK_STRUCT_SIZE(xfs_timestamp_t,			8);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_legacy_timestamp,	8);
  	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
  	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
--	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_alloc_rec,		8);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_alloc_rec,		8);
  	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
  	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
  	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
-@@ -68,10 +68,10 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
--	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_entry_t,		8);
--	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_hdr_t,		32);
--	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_map_t,		4);
--	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_local_t,	4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_entry,		8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_hdr,		32);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_map,		4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_local,	4);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_rtsb,			56);
+ 
+ 	/* dir/attr trees */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
+@@ -74,6 +75,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_local,	4);
  
  	/* realtime structures */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_rtsb,			56);
  	XFS_CHECK_STRUCT_SIZE(union xfs_rtword_raw,		4);
-@@ -79,23 +79,23 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(union xfs_suminfo_raw,		4);
  	XFS_CHECK_STRUCT_SIZE(struct xfs_rtbuf_blkinfo,		48);
- 
- 	/*
--	 * m68k has problems with xfs_attr_leaf_name_remote_t, but we pad it to
--	 * 4 bytes anyway so it's not obviously a problem.  Hence for the moment
--	 * we don't check this structure. This can be re-instated when the attr
--	 * definitions are updated to use c99 VLA definitions.
-+	 * m68k has problems with struct xfs_attr_leaf_name_remote, but we pad
-+	 * it to 4 bytes anyway so it's not obviously a problem.  Hence for the
-+	 * moment we don't check this structure. This can be re-instated when
-+	 * the attr definitions are updated to use c99 VLA definitions.
- 	 *
--	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_remote,	12);
- 	 */
- 
- 	XFS_CHECK_OFFSET(struct xfs_dsb, sb_crc,		224);
--	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
--	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
--	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
--	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
--	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
--	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
--	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
--	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		32);
-+	XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_local, valuelen,	0);
-+	XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_local, namelen,	2);
-+	XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_local, nameval,	3);
-+	XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, valueblk,	0);
-+	XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, valuelen,	4);
-+	XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, namelen,	8);
-+	XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, name,	9);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leafblock,		32);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_sf_hdr,		4);
- 	XFS_CHECK_OFFSET(struct xfs_attr_sf_hdr, totsize,	0);
- 	XFS_CHECK_OFFSET(struct xfs_attr_sf_hdr, count,		2);
-@@ -103,25 +103,25 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_OFFSET(struct xfs_attr_sf_entry, valuelen,	1);
- 	XFS_CHECK_OFFSET(struct xfs_attr_sf_entry, flags,	2);
- 	XFS_CHECK_OFFSET(struct xfs_attr_sf_entry, nameval,	3);
--	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
--	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
--	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
--	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
--	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
--	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_entry_t,		8);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_hdr_t,		16);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
--	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
--	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
--	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_da_blkinfo,		12);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_da_intnode,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_entry,		8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_hdr,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,		4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_hdr,		16);
-+	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, freetag,	0);
-+	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, length,	2);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free_hdr,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_entry,	8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_hdr,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_tail,	4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_entry,		3);
-+	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, namelen,	0);
-+	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, offset,	1);
-+	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, name,	3);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_hdr,		10);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_rec,		12);
- 
- 	/* log structures */
 
