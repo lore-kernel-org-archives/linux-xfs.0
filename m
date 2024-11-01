@@ -1,188 +1,162 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86DA6142623
-	for <linux-xfs@vger.kernel.org>; Fri,  1 Nov 2024 05:48:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4C41BDC3;
+	Fri,  1 Nov 2024 06:51:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730440101; cv=none; b=gG985o7KJI4N1hEOIeEvuD370jEspqNJQF6IquO+eVtg3BZEeyuuPPevGnfH9TbMt8Yap30fdQNcOcrMh9MVYyHR/5F4c2AWoCRJPEvb7HcpVyGxBD9BhuF1CmaTkFbwoBvo1Wua+NXFKhsvmySnLUuePxk9GFUoeHhR1PHwMu0=
+	t=1730443877; cv=none; b=eCoI/dV1zyf5HgU3eYGWLn1tss/6qRI/E65dV6o3rjqaF8Xsb95CE3LaULJTf6hQrXKjvw9No7A2rsZDAhoPy0d/hW6I6AYsUxIYLxcsdx7tXfpYRK7ISDdKm7S5YyZp3CZpXIO6V7FCc8Wwpu3HGliUh3rDbE/6tDMK9tIlcoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730440101; c=relaxed/simple;
-	bh=l4Jf412+kHWCxyNzTYcMaXRBT+VkrgaDC4jQy7sq84A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K6JNh95m6kYVMZPpJZo3dbjOtCiw3EzRLRLRcteB48XEEvl4uWTJPE+tm9dS/zL+h+ZpHUnM6w3dM2LXobXAuWpyT4eT6u236oIVDiN7cuuJzF7XIKk3M1oQcQGuFLLYjkdkIf8XVZ1fvGED0AGjdYIJornQwBHOIz5Kd4yGfx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AyLs3c3j; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1730443877; c=relaxed/simple;
+	bh=QNz5WFt57Q2JiA4J2xNBEKefwJr3EU+Z8Yrk14NQHi8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cikg3arbYqmsfL+ZYrorSISSvvRdQsDygpofb7fcNwbiS7JBoPryZ+gSug55nhrWUkreQats59u1PJ3Ir5vjWEcerlskxptcvvd+IyYLaHPPhHYQB1Hn89cFQtFxr/6vVXoIJ57XlF0ckDiIYfCLutOglwd37FEVssimRzG3igI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Fz2Ny/3n; arc=none smtp.client-ip=209.85.210.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AyLs3c3j"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730440097;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sr70nr/cEn3VuMWhSDNCFFANoox2dWav/Nn0mL42AK8=;
-	b=AyLs3c3jGtFdXmNWftERvIbJnV46YyEm2xZdfrXsjieDWeCXb6DlP6DBYxpD2jtf1lxnWQ
-	/H9xiqXfh8VAN2BfsyL8AO+Kj4b9ANDeWgE0cxZSYd4ZyQ6fxUry+oNJfd1oChDc8E1k/s
-	HXyjMZF3HKN4CR43J0txzgmU1CVWhVs=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-494-MrnZhVdXN4CvFNRbgCse2A-1; Fri, 01 Nov 2024 01:48:15 -0400
-X-MC-Unique: MrnZhVdXN4CvFNRbgCse2A-1
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-2e2fb583e4cso2038418a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2024 22:48:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fz2Ny/3n"
+Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-71811707775so922321a34.3;
+        Thu, 31 Oct 2024 23:51:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1730443873; x=1731048673; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=dfQW7OHDgisTT2TJavaNFXyqFSOJrJGPZrVk+jhG0fc=;
+        b=Fz2Ny/3ng9QR/NMpI5YEZ5RIZMZ83/9T5N0RW4nx1/0s0e6wzmz2RNlFjljg8L/bEe
+         /GP1gssu8SHbuUR/UxsWFTAk+0R/i4f4zYs7tHuXqld58p5ehfPDmb8CpAun21NVA1Bp
+         zcibXCbkZgx8p/6orRGaNUss2aV7G0++H2xL5cCHmuOUnoxOvN6i6EYL4EOi2w0mPwF7
+         1pBjvUwcMNOlWIC5zblD+KU7ytwkj7FLs99knOwW3O3dEaeKy814ShdmjTzfabu+RNen
+         kNZy1uKsR2G+IjV6N5Ab8Niq2chVb0PNSO2m+S6NEU4jT797a9h+oP4q+OCDxj/OP5DE
+         etVA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730440095; x=1731044895;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sr70nr/cEn3VuMWhSDNCFFANoox2dWav/Nn0mL42AK8=;
-        b=Fs8yxsK/mb1t73V72IqH4fdk1Vdo8RBBU6gDlWSjQbWYQ3iQNbb0FmNbUqeGchjNPU
-         kHlZLWm8L9X0921y/AhNz+cWRt9HD5NOy4wXsuWOdWnTMpLR6YXHLAqfB4G+v6NmIphp
-         5JJ8hpZu3kSInv8fSgNpz1D2t5DToTnKETML0hzjymHTAPG4x1I6nU6pn5cJKsa4NDJ3
-         LmUV/ya/0yN1BnMzVVUTLNA0u8Uf1CLDJuJHVo9UxOAjz1uML4fMwwzfSRE6amLI0vwg
-         QO9spp0V2XOuIjh8EBd3SAed09aVb7+cPRIgyBqU3gzCe1bCtkO3OVECwred7Ozo16cj
-         L5rQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUzqodN9i9ThkBitoGpoDqRBuz2HSrV0OGcEF+UnhMW2bcx6HiEyAhI4fgaayF0BM5TWAMEOrScsMU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwLKV9zK9NTQU1VRdJS6OA0M5D6mY9dEwKT1ebeHKhICVEoIHoe
-	3p2DnO2e8z9M7j+DqNn5s/0l7/Yx1vjGa7dtToIqE3u2ygWcdsCkScRm56GaAe8ruWftKqtfrrk
-	YheHI2ZYYUQcD1g6+Hw2ZThFuJxRDbtTvH8SDTCBSDyXelGKV3TVm5ebyuQ==
-X-Received: by 2002:a17:90a:4e0a:b0:2e2:c6b9:fd4a with SMTP id 98e67ed59e1d1-2e8f1072087mr24713599a91.18.1730440094732;
-        Thu, 31 Oct 2024 22:48:14 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEVJByF/lHIUmW9LhohJRCmWJ7MdBrnnXXkyT+x8dAuHMjL5WnsJqPnnxgJj9Nug9z3toThvA==
-X-Received: by 2002:a17:90a:4e0a:b0:2e2:c6b9:fd4a with SMTP id 98e67ed59e1d1-2e8f1072087mr24713581a91.18.1730440094171;
-        Thu, 31 Oct 2024 22:48:14 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211056eedcdsm16533855ad.45.2024.10.31.22.48.12
+        d=1e100.net; s=20230601; t=1730443873; x=1731048673;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=dfQW7OHDgisTT2TJavaNFXyqFSOJrJGPZrVk+jhG0fc=;
+        b=lIt3BKRBAkvd7Gt7hhncXk7OjVQ/QakOvT0CO+YhK5R2w7ZgINvNfK3KxjKUO3S8ZY
+         hypCbg1ECpJKCRHatXLBLB/jBme1JOR9Q1xq1LrTv+KD/8k87iCvTPpAT+2eeF2jkEyO
+         oXVq2md5Jli0RpeABSjEP5vxvKDintoiEIQzljwMlNs2x7THCRsX1dsuqM9TaglI12Gi
+         DhDW686XsC/jxk6C005gK+5vFk5txB1pMynlhcx7d9NMdp5kFZJIJergwo3iYaGS+0Di
+         +ILBFvZDn5ko5rAYTcXhT2Yd6Oj6u8aMM2KniE9GnFhjMPXNAKfrR06qAX0AO28Qy91x
+         X6eg==
+X-Forwarded-Encrypted: i=1; AJvYcCUPdo9Q7LkbfSgi+TO7m7v/Flq8+Ewgk7wVfXFtxvwI2de5DklwyNkmiLoEe2U5ggnc2xuKkKd3wNa4NROz@vger.kernel.org, AJvYcCVMHMQPjADhQOdVQUBUJmvefv5uImuQ8DzTBIFE/byiAlLX/DansD1dLP7R+0V3b2X7oCwIUtAXHe/rP3DK@vger.kernel.org, AJvYcCWtQQ2nBd/ETgW3245Nz+zsgjhuCcSrxFaNljFDP8w41pX0+E0GwALgrYFGMyowD2ObTKVccGBCjY5y@vger.kernel.org
+X-Gm-Message-State: AOJu0YwrixpthhTTGRKEuNSwXmBFFmwFNJx1gbLH2rAnhL9+JFU2GPwi
+	DdLymttjOVLn9bKM07iRYf+pYAxkDd2PI8bCrT0P7f3UB0uwuzLfrE8XEQ==
+X-Google-Smtp-Source: AGHT+IFvBXXEwRZVLBxrBILRwzW4fyBoCgYJK/vQhrznmNSVK3x7a6+l9bayJAPsY5OOgiCyy59l0g==
+X-Received: by 2002:a05:6870:b493:b0:288:461d:e1da with SMTP id 586e51a60fabf-2949f0b2876mr2125524fac.41.1730443873513;
+        Thu, 31 Oct 2024 23:51:13 -0700 (PDT)
+Received: from dw-tp.ibmuc.com ([203.81.243.23])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc1b8971sm2196209b3a.12.2024.10.31.23.51.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Oct 2024 22:48:13 -0700 (PDT)
-Date: Fri, 1 Nov 2024 13:48:10 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs/157: mkfs does not need a specific fssize
-Message-ID: <20241101054810.cu6zsjrxgfzdrnia@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20241031193552.1171855-1-zlang@kernel.org>
- <20241031220821.GA2386201@frogsfrogsfrogs>
+        Thu, 31 Oct 2024 23:51:12 -0700 (PDT)
+From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+To: linux-ext4@vger.kernel.org
+Cc: Theodore Ts'o <tytso@mit.edu>,
+	Jan Kara <jack@suse.cz>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+	Dave Chinner <david@fromorbit.com>,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Subject: [PATCH v4 0/4] ext4: Add atomic writes support for DIO
+Date: Fri,  1 Nov 2024 12:20:50 +0530
+Message-ID: <cover.1730437365.git.ritesh.list@gmail.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241031220821.GA2386201@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Oct 31, 2024 at 03:08:21PM -0700, Darrick J. Wong wrote:
-> On Fri, Nov 01, 2024 at 03:35:52AM +0800, Zorro Lang wrote:
-> > The xfs/157 doesn't need to do a "sized" mkfs, the image file is
-> > 500MiB, don't need to do _scratch_mkfs_sized with a 500MiB fssize
-> > argument, a general _scratch_mkfs is good enough.
-> > 
-> > Besides that, if we do:
-> > 
-> >   MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size
-> > 
-> > the _scratch_mkfs_sized trys to keep the $fs_size, when mkfs fails
-> > with incompatible $MKFS_OPTIONS options, likes this:
-> > 
-> >   ** mkfs failed with extra mkfs options added to "-L oldlabel -m rmapbt=1" by test 157 **
-> >   ** attempting to mkfs using only test 157 options: -d size=524288000 -b size=4096 **
-> > 
-> > But if we do:
-> > 
-> >   _scratch_mkfs -L oldlabel
-> > 
-> > the _scratch_mkfs trys to keep the "-L oldlabel", when mkfs fails
-> > with incompatible $MKFS_OPTIONS options, likes this:
-> > 
-> >   ** mkfs failed with extra mkfs options added to "-m rmapbt=1" by test 157 **
-> >   ** attempting to mkfs using only test 157 options: -L oldlabel **
-> > 
-> > that's actually what we need.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@kernel.org>
-> > ---
-> > 
-> > This test started to fail since 2f7e1b8a6f09 ("xfs/157,xfs/547,xfs/548: switch to
-> > using _scratch_mkfs_sized") was merged.
-> > 
-> >   FSTYP         -- xfs (non-debug)
-> >   PLATFORM      -- Linux/x86_64
-> >   MKFS_OPTIONS  -- -f -m rmapbt=1 /dev/sda3
-> >   MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda3 /mnt/scratch
-> > 
-> >   xfs/157 7s ... - output mismatch (see /root/git/xfstests/results//xfs/157.out.bad)
-> >       --- tests/xfs/157.out       2024-11-01 01:05:03.664543576 +0800
-> >       +++ /root/git/xfstests/results//xfs/157.out.bad     2024-11-01 02:56:47.994007900 +0800
-> >       @@ -6,10 +6,10 @@
-> >        label = "oldlabel"
-> >        label = "newlabel"
-> >        S3: Check that setting with rtdev works
-> >       -label = "oldlabel"
-> >       +label = ""
-> >        label = "newlabel"
-> >        S4: Check that setting with rtdev + logdev works
-> >       ...
-> >       (Run 'diff -u /root/git/xfstests/tests/xfs/157.out /root/git/xfstests/results//xfs/157.out.bad'  to see the entire diff)
-> >   Ran: xfs/157
-> >   Failures: xfs/157
-> >   Failed 1 of 1 tests
-> > 
-> > Before that change, the _scratch_mkfs can drop "rmapbt=1" option from $MKFS_OPTIONS,
-> > only keep the "-L label" option. That's why this test never failed before.
-> > 
-> > Now it fails on xfs, if MKFS_OPTIONS contains "-m rmapbt=1", the reason as I
-> > explained above.
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> >  tests/xfs/157 | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > 
-> > diff --git a/tests/xfs/157 b/tests/xfs/157
-> > index 9b5badbae..459c6de7c 100755
-> > --- a/tests/xfs/157
-> > +++ b/tests/xfs/157
-> > @@ -66,8 +66,7 @@ scenario() {
-> >  }
-> >  
-> >  check_label() {
-> > -	MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size \
-> > -		>> $seqres.full
-> > +	_scratch_mkfs -L oldlabel >> $seqres.full 2>&1
-> 
-> Hans Holmberg discovered that this mkfs fails if the SCRATCH_RTDEV is
-> very large and SCRATCH_DEV is set to the 500M fake_datafile because the
-> rtbitmap is larger than the datadev.
-> 
-> I wonder if there's a way to pass the -L argument through in the
-> "attempting to mkfs using only" case?
+v3 -> v4:
+=========
+1. Patch-1 changes the helper function from ext4_can_atomic_write() to
+   ext4_inode_can_atomic_write() based on suggestions from Darrick and John.
+   Patch-3 then goes and uses it.
+2. Patch-4 adds an inline helper ext4_want_directio_fallback() which simplifies
+   the logic checks and inherently fixes condition on when to return -ENOTBLK
+   which otherwise was always returning true for any write or directio in
+   ext4_iomap_end(). It was ok since ext4 only supports direct-io via iomap.
+[v3]: https://lore.kernel.org/linux-xfs/cover.1730286164.git.ritesh.list@gmail.com/
 
-As I know mkfs.xfs can disable rmapbt automatically if "-r rtdevt=xxx" is
-used.
+(Note as mentioned below as well this is built on top of John XFS atomic series [2])
+[2]: https://lore.kernel.org/linux-xfs/20241019125113.369994-1-john.g.garry@oracle.com/
 
-How about unset the MKFS_OPTIONS for this test? As it already tests rtdev
-and logdev by itself. Or call _notrun if MKFS_OPTIONS has "rmapbt=1"?
 
-Any better idea?
+v2 -> v3:
+==========
+1. Patch-1 adds an "experimental" string in dmesg log during mount when EXT4
+   detects that it is capable of doing DIO atomic writes on a given device
+   with min and max unit details.
+2. Patch-4 has been updated to avoid returning -ENOTBLK (in ext4_iomap_end)
+   if the request belongs to atomic write. This patch also adds a WARN_ON_ONCE()
+   if atomic write ever fallback to buffered-io (to catch any unwanted bugs in the future).
+   More details in the commit log of patch-4.
+3. Collected RBs tag from John for Patch 2 & 3.
 
-Thanks,
-Zorro
+[v2]: https://lore.kernel.org/linux-ext4/cover.1729944406.git.ritesh.list@gmail.com/
 
-> 
-> --D
-> 
-> >  	_scratch_xfs_db -c label
-> >  	_scratch_xfs_admin -L newlabel "$@" >> $seqres.full
-> >  	_scratch_xfs_db -c label
-> > -- 
-> > 2.45.2
-> > 
-> > 
-> 
+Previous cover letter log:
+
+In v2, we had split the series and this one only takes care of
+atomic writes for single fsblock.
+That means for now this gets only enabled on bs < ps systems on ext4.
+Enablement of atomic writes for bigalloc (multi-fsblock support) is still
+under discussion and may require general consensus within the filesystem
+community [1].
+
+This series adds the base feature support to enable atomic writes in
+direct-io path for ext4. We advertise the minimum and the maximum atomic
+write unit sizes via statx on a regular file.
+
+This series allows users to utilize atomic write support using -
+1. on bs < ps systems via - mkfs.ext4 -F -b 16384 /dev/sda
+
+This can then be utilized using -
+	xfs_io -fdc "pwrite -V 1 -A -b16k 0 16k" /mnt/f1
+
+This is built on top of John's DIO atomic write series for XFS [2].
+The VFS and block layer enablement for atomic writes were merged already.
+
+
+[1]: https://lore.kernel.org/linux-ext4/87jzdvmqfz.fsf@gmail.com
+[2]: https://lore.kernel.org/linux-xfs/20241019125113.369994-1-john.g.garry@oracle.com/
+
+
+Changelogs:
+===========
+PATCH -> PATCH v2:
+- addressed review comments from John and Darrick.
+- renamed ext4_sb_info variables names: fs_awu* -> s_awu*
+- [PATCH]: https://lore.kernel.org/linux-ext4/cover.1729825985.git.ritesh.list@gmail.com/
+
+RFC -> PATCH:
+- Dropped RFC tag
+- Last RFC was posted a while ago but back then a lot of VFS and block layer
+  interfaces were still not merged. Those are now merged, thanks to John and
+  everyone else.
+- [RFC] - https://lore.kernel.org/linux-ext4/cover.1709356594.git.ritesh.list@gmail.com/
+
+
+Ritesh Harjani (IBM) (4):
+  ext4: Add statx support for atomic writes
+  ext4: Check for atomic writes support in write iter
+  ext4: Support setting FMODE_CAN_ATOMIC_WRITE
+  ext4: Do not fallback to buffered-io for DIO atomic write
+
+ fs/ext4/ext4.h  | 10 ++++++++++
+ fs/ext4/file.c  | 24 ++++++++++++++++++++++++
+ fs/ext4/inode.c | 39 ++++++++++++++++++++++++++++++++++-----
+ fs/ext4/super.c | 31 +++++++++++++++++++++++++++++++
+ 4 files changed, 99 insertions(+), 5 deletions(-)
+
+--
+2.46.0
 
