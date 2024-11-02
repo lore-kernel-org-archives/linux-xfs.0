@@ -1,95 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65C4945016;
-	Sat,  2 Nov 2024 07:37:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BD372B9A4;
+	Sat,  2 Nov 2024 07:41:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730533068; cv=none; b=gJn0MqrNa+2NnKuyWfqMI4zrh233tQRNo5OxeZWvmv//yWAETnW9Ycw7mObAcCeXWwhE/QvlqftIaVyA42nIFuZkkdy3ht1envqax60kGQZmU2/xOCW2A5dNLC4sOCwrQweB/uFnvYqZAc5h2BXIAenSy8MCfzb5m/vwzBn4RKo=
+	t=1730533260; cv=none; b=a8cOsVdlbbloqTioClTMjPFI+/YDRpEQlMuoTA17Ud8805ciYSqmGL7hGqA51u6deFMuwAqg/44z7CFXQ41y2faRaU/9fgroD4W1CvquTv31NXq6U9oafmMMemRv4m1zcqnFF5ChTNMgq27J1Q7QsZW/Od14nz7WiUQS4vedEO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730533068; c=relaxed/simple;
-	bh=fdJx1ZcRekZyXkxIsiin10FBlx2tYxNRlS2b5X6v70I=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=IihzYydgCRzl9RNpO6Z643bH7XmFJNN8ICruutnnN43k8XuXoUr9+4KbRofMxvvMgcExa/ResSYerE88FYt7vUGxokK/xbDLWcG4YlXjmQA2AzCvd+dpFXmlFfjBD/3404XntTrMkCar689ZEo9eYX95lCRtNH55YGvu79Zw0jU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ayt4Yf/r; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730533260; c=relaxed/simple;
+	bh=zXNGygLQS++y+maclnsYpMlqOvOTWbUKkRrKgxpyRMk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=KegzNGSmzRZfPac5UJcZzIqhkqCvKSXx4/pxELfHB0e0MF+igIDUtAwfmvX+Ju/+IfGznsn+XZlJik7WzsseBVBr7E0eoECUrFwaXT3hGJipSf07FSomd7R4kTWdff55VwfH33JLVEvM0Orm1IM0Y8+9wCQfzCBKbD6tl+VLnwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jUW1aEB4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ayt4Yf/r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CB84C4CEC3;
-	Sat,  2 Nov 2024 07:37:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jUW1aEB4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F060C4CEC3;
+	Sat,  2 Nov 2024 07:40:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730533067;
-	bh=fdJx1ZcRekZyXkxIsiin10FBlx2tYxNRlS2b5X6v70I=;
-	h=Date:From:To:Cc:Subject:From;
-	b=ayt4Yf/rzowUDR/BCNzVZ/Q5O9engB1wy46bHTXIkyc4N5VvnnAs08jWMp0b992JG
-	 cKA/trZl2XDrLTraHDBB33pCST3rmk5HdPZ3KNnOcN7RVGrapb1++r7N9e1xjoU83D
-	 uAYuy88CgHrkuU6OgO+vXgkZPBWjFCb+a9DknFUTlM3iXB21i6JBaTMV3hMzT1OPQ3
-	 kl7ZILQrgagto1PDezyFbvQ+cxLU9pdqyuuYzG/gh14EC1BOg3gjaeSGlIG/e7CvP4
-	 0J/pGoPSNWacdrZqDOvATKyAiMfP0IGvk/sFiEvg6M6pPBH7zbJVusg1+VEDMd3SFR
-	 xg4Iy25QH8pvg==
-Date: Sat, 2 Nov 2024 08:37:43 +0100
+	s=k20201202; t=1730533260;
+	bh=zXNGygLQS++y+maclnsYpMlqOvOTWbUKkRrKgxpyRMk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=jUW1aEB4h3jUI5Ylk/CAlWyeCuD6JS9+qc2YIpsnNSZEB1o5SGH1Tu5UTZxUE71OW
+	 4P/KkH21+iqwRhk3WBXjt1rf/3oedca4H7rfTCcvxo8O8itcUa+gXIbNv89pU3wb0f
+	 SBdJVJO3rNu6PAmv0jJzjwOULsC4sC347XZzuy7cjRxmF1l4d5xKNH9fCh1Kt3uoFy
+	 3lzjTXS7RpKEiON8erIhCsEfIBBkznHRQQfuwE9ICCnQn07dxhBG0KgRJwhcRk8mQl
+	 ojhenK4iIGqEVi1JVUpKix6EEZPJC8aTSUT4S7i/84A4PeopHSjY7zTMtxWUexbY+w
+	 aa3Uene+ZRXrg==
 From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [GIT PULL] xfs: fixes for 6.12-rc6
-Message-ID: <p6nyyqtmlqnkmfkikvughdqbgusnvf2gaohrmkmhbm7x6zccts@vfcbxfefbtzf>
+To: linux-xfs@vger.kernel.org, Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org, 
+ "Darrick J . Wong" <djwong@kernel.org>, dchinner@redhat.com, 
+ Christoph Hellwig <hch@lst.de>, nirjhar@linux.ibm.com, 
+ John Garry <john.g.garry@oracle.com>
+In-Reply-To: <20241015094509.678082-1-ojaswin@linux.ibm.com>
+References: <20241015094509.678082-1-ojaswin@linux.ibm.com>
+Subject: Re: [PATCH v4] xfs: Check for delayed allocations before setting
+ extsize
+Message-Id: <173053325678.1933492.6809218664596169694.b4-ty@kernel.org>
+Date: Sat, 02 Nov 2024 08:40:56 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Hi Linus,
+On Tue, 15 Oct 2024 15:15:09 +0530, Ojaswin Mujoo wrote:
+> Extsize should only be allowed to be set on files with no data in it.
+> For this, we check if the files have extents but miss to check if
+> delayed extents are present. This patch adds that check.
+> 
+> While we are at it, also refactor this check into a helper since
+> it's used in some other places as well like xfs_inactive() or
+> xfs_ioctl_setattr_xflags()
+> 
+> [...]
 
-could you please pull the patches below?
+Applied to for-next, thanks!
 
-I just did a quick merge attempt against your ToT and no merge conflicts have
-been found.
-As usual, these patches are already if linux-next for a few days.
+[1/1] xfs: Check for delayed allocations before setting extsize
+      commit: 2a492ff66673c38a77d0815d67b9a8cce2ef57f8
 
-Thanks,
-Carlos
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-
-The following changes since commit 4a201dcfa1ff0dcfe4348c40f3ad8bd68b97eb6c:
-
-  xfs: update the pag for the last AG at recovery time (2024-10-22 13:37:19 +0200)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.12-fixes-6
-
-for you to fetch changes up to 81a1e1c32ef474c20ccb9f730afe1ac25b1c62a4:
-
-  xfs: streamline xfs_filestream_pick_ag (2024-10-30 11:27:18 +0100)
-
-----------------------------------------------------------------
-XFS bug fies for 6.12-rc6
-
-* fix a sysbot reported crash on filestreams
-* Reduce cpu time spent searching for extents in
-  a very fragmented FS
-* Check for delayed allocations before setting extsize
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Chi Zhiling (1):
-      xfs: Reduce unnecessary searches when searching for the best extents
-
-Christoph Hellwig (2):
-      xfs: fix finding a last resort AG in xfs_filestream_pick_ag
-      xfs: streamline xfs_filestream_pick_ag
-
-Ojaswin Mujoo (1):
-      xfs: Check for delayed allocations before setting extsize
-
- fs/xfs/libxfs/xfs_alloc.c |  2 +-
- fs/xfs/xfs_filestream.c   | 99 +++++++++++++++++++++++------------------------
- fs/xfs/xfs_inode.c        |  2 +-
- fs/xfs/xfs_inode.h        |  5 +++
- fs/xfs/xfs_ioctl.c        |  4 +-
- fs/xfs/xfs_trace.h        | 15 +++----
- 6 files changed, 62 insertions(+), 65 deletions(-)
