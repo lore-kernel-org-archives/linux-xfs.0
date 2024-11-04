@@ -1,348 +1,385 @@
-Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com [209.85.219.172])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 631CE6FC5;
-	Mon,  4 Nov 2024 09:26:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B51F11B1D65
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Nov 2024 12:15:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730712378; cv=none; b=IVxnGhV1gvxi56MP5LE7JBz2pm6b7FVEMpURXpC5aOzWqIImcA5EGp11K5rWyiX41Ki3sHT+MGLYMS56/AnMRgPFzfsqyP1L/6AP/YzIODUyJPZGYwO1FHgLwMpIHBjQQ0vRPqmCX3ljBx5esVHePNNIi5JNEBH7xc1vVMxtvjk=
+	t=1730722554; cv=none; b=RT3CIv+qhn9C6QdxAq444k8SDDyva+VeW1A1G44KXZLcf7kxMqpOmSGDeBcHrTl8UMxTwA/LWJmzkXl6AAMmiqyz+N4piEVl9GlUHIkWHQMeMEAL8Yi/xKRsUtgQIwOOxcKhpWKDSZrNGGUVabK9RJ3qux/BdIuMnMFUVgPjtsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730712378; c=relaxed/simple;
-	bh=piRew1AhcQwYdlRW/QsetcSFfIG6NMcbOg1kKJARfpE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HHGwDkhInzkbg5qlP2eOIGvLl8OvAVywBmWY+jit8+CoPHMOUEt9JA4JdOB789u71QsHbG4wIry/H0BH+qSBGe9tvI/baH7HLJCim570R9ZG2MKqbjT2W3hdcIIlv1R/uJrMrHFNYngGxZEdlhTpjfzIsKzpFBo2iiUCW8+p2hI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=foEDZVni; arc=none smtp.client-ip=209.85.219.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730722554; c=relaxed/simple;
+	bh=w2x6ovKDK+RaRKbTdn4vmFFYuzNswsz+kI0ClUZaYDM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mCbUvf/MLiNYiJhyFQJSy4uuAobDHMBNMHL+DtaZLI+5z01qpoM1mdChaF7KXaZbsbDCtJulQhB5qcKIDfjW87vk4RNIUs726oowEakFqoH5GpRPl3EIFU/fHCjSE883wMjNn7zabUlqXnBeSKbBOpwE1D5RNYuEDTmB867XyaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HQUCRxCE; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="foEDZVni"
-Received: by mail-yb1-f172.google.com with SMTP id 3f1490d57ef6-e2bd7d8aaf8so3441181276.3;
-        Mon, 04 Nov 2024 01:26:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HQUCRxCE"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-20c805a0753so35933365ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Nov 2024 04:15:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730712375; x=1731317175; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OpxBpxFtN14yehocdqlq7UgiX88PpHAp1pWICIoh6+k=;
-        b=foEDZVni45nH92uf0ZDS4ogldHxCzbBX4eY/awmGuzQX0+vbxhJHENAtvfWBfk8K/e
-         y50Y6SoaXt5uHu4+/roC9oj3ruv4Vee+Dv7GlJ/BfcLwTEuiVNPhKgrp5tkkJj9h/81L
-         UbyvQf83FQ+4Ue8blHxN5oXZ03gZE9TnFyrrRiwZjOxEBOg1ObxIEU5gwEIXR6okADX6
-         xqFz6cLnLX3fOGxObDlR1zOin47QsEvU7qnrNp6J0EuGJmChDdRnz8LmN5A92ZMY4MEB
-         urfbM9qzTdbGjulGNRedeDyflWUcdPHuBliKETmMuN2+qezk8jQa+n0kxMDbOa94j6W8
-         3UOQ==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730722552; x=1731327352; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=W7AQtQwh5XwBf5DE/8aulvDQwybobvqaigExgcMas5c=;
+        b=HQUCRxCED8YEzLspTSpjUxF6IhwtwFU/vKnl67ZiDw4VPpKj3yaPpb6L+WmqokvPTv
+         66iTk5NU5qd8RXtXtCFUSgtEBNeFWI1MiNUThGrGD+PSAInPPj+Mruk0JIuPUD6i/nBp
+         4BY8DTbeviOszluXY0Oi8BB4oWi9ISot74OMyHsxEse/C6LCe8sQj7JT9BPEYo9Y6gqg
+         cIMj/+t8oXVLtzCgk5EHEoPQZzWvhLpDrB7XakHqKWve7mw4rh5BRqZE9EKiOOoqZn4h
+         q2gnPnC+aHigOPnhv/SOwjCyAz3+bAp7v/Yc2MZ3OsE1x+S5f4QNx4rJBVmPGqXjCFy3
+         hEKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730712375; x=1731317175;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OpxBpxFtN14yehocdqlq7UgiX88PpHAp1pWICIoh6+k=;
-        b=PVNiDUAH3ijPqb3aV0unoW3Ldlii2qiWQFB+WGJLU6L0pheGnfUanOJ+CbeUyRBKWU
-         TWdkj34gS+/HxzQDOuOi+4LuUFvv7YSOwhNlrhjVIjRHZQgqBUtDl5DqnLKnNHLGBn0h
-         I8VrkuJopDGXlDXxtL8Nzw+8Kv8vpokC0MZonLHPcsXBs7ysGS8ChbP38pQc9hDV/IAb
-         gQii5ZVtqoOj7XwSixKSWS23rwohuqvszGkNf53/8lo2xLZSKJaH1sFTWm0aR9xYGZOV
-         x5BkAbGOLjxrrmuUnLI3JjvuCSnA1uNEJUHokK/HDjpmfcMSVxS0JgWr+7MxbS2dUyvl
-         rEKw==
-X-Forwarded-Encrypted: i=1; AJvYcCW5MZlDarKjMb2xp8BLYsp1dx0CAgDuj8mrbLsQMzmSqWWHh3Ww8qVu5XOXV+lVd+hc9Eb8WKKJo6C5@vger.kernel.org, AJvYcCXkJ3mDMiWr7YYbS4r/HAHFRzohM73kRSckiMhSwRC1qbKHWy16xYuo5OKT77+fD6gklTs+pvPvpVUj5SQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw15ZoHnTg2WC1w8w6NeH7NER6ZHCoHdEe0oCT8Jd/YkjD+zQ6V
-	wOqnBZ0EqyYBoaZAxryLjovidSaYORKFiLdtipcsPQLoYklilBjls7weCRBh9ZRv1uNgx6gIQ7x
-	IU5jyAsI/q/yXL8PDCd9AOfRFihg=
-X-Google-Smtp-Source: AGHT+IEIBjxBr4NOJqC4khLJ3IqA6cwWzB7jIUxAiiH/2Axcx86AjcOYGkjrLu/r0vKnCXDadNhbuo3sxlnBrxb+yNU=
-X-Received: by 2002:a05:6902:154b:b0:e30:dc1e:d81f with SMTP id
- 3f1490d57ef6-e30e5a663b3mr13611915276.21.1730712375251; Mon, 04 Nov 2024
- 01:26:15 -0800 (PST)
+        d=1e100.net; s=20230601; t=1730722552; x=1731327352;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=W7AQtQwh5XwBf5DE/8aulvDQwybobvqaigExgcMas5c=;
+        b=eQK0DVDThU8Agn46QgqHwPzDx/yfHv3NuS0XesXyzKqJJEs/C/q1jXa/JQ+gz88zLS
+         3QIXSeQ72KBiQDBqQCAA7yB1bcEWIfLLYHGE1C0ieT+rbibpo5U7DtoR/Ugky51K6MxD
+         a/9t1Ke8z91Tu7yFK4H3Uwk4GKuGvR1kaYV6bJ3rImUTsbY9pHI4fBS4ychoawXyAWBd
+         9T00Yj0nZvX+02sQOPCAepHG38eS+Rexd5U5D1AAPO4oj/oIuvyFuawJeBuIarmkhh8P
+         azRwelAG99TfPVnvWoVRPJALM8WW8ylogWcXIb2oY3I+Q/3mGGXwiATLnTcLaoKWvDcH
+         d7Yg==
+X-Forwarded-Encrypted: i=1; AJvYcCVw1g+Ht+b6NzW/iJN11EuObmalTYXsB48xnmbN/n+UH964/vB4DOom48yRzKURPWCjVZ86/7qyxC4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyf0+kRPepSPRFGRHD23a6IpLA09ySkjxu/34gLfj31ETx4Pk72
+	HyXWOz0YKvc0qOd+f4O4FQZBVvlXV3l3VUl6wDYOAvAJOQdHZSOcAw8+WurnWpg=
+X-Google-Smtp-Source: AGHT+IFx7/6RECjaK46hKWx2etOjpv6VJ7ml11BpX8/5iacM2hZgso5bznO8FcClEIKx+2J9+6i6AQ==
+X-Received: by 2002:a17:902:f546:b0:20b:9f8c:e9de with SMTP id d9443c01a7336-210c68995ccmr434877625ad.13.1730722551874;
+        Mon, 04 Nov 2024 04:15:51 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211057a2b2esm60061345ad.172.2024.11.04.04.15.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Nov 2024 04:15:51 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t7vzn-00A2SF-37;
+	Mon, 04 Nov 2024 23:15:47 +1100
+Date: Mon, 4 Nov 2024 23:15:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Stephen Zhang <starzhangzsd@gmail.com>
+Cc: djwong@kernel.org, dchinner@redhat.com, leo.lilong@huawei.com,
+	wozizhi@huawei.com, osandov@fb.com, xiang@kernel.org,
+	zhangjiachen.jaycee@bytedance.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, zhangshida@kylinos.cn
+Subject: Re: [PATCH 0/5] *** Introduce new space allocation algorithm ***
+Message-ID: <Zyi683yYTcnKz+Y7@dread.disaster.area>
+References: <20241104014439.3786609-1-zhangshida@kylinos.cn>
+ <ZyhAOEkrjZzOQ4kJ@dread.disaster.area>
+ <CANubcdVbimowVMdoH+Tzk6AZuU7miwf4PrvTv2Dh0R+eSuJ1CQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241104014439.3786609-1-zhangshida@kylinos.cn> <ZyhAOEkrjZzOQ4kJ@dread.disaster.area>
-In-Reply-To: <ZyhAOEkrjZzOQ4kJ@dread.disaster.area>
-From: Stephen Zhang <starzhangzsd@gmail.com>
-Date: Mon, 4 Nov 2024 17:25:38 +0800
-Message-ID: <CANubcdVbimowVMdoH+Tzk6AZuU7miwf4PrvTv2Dh0R+eSuJ1CQ@mail.gmail.com>
-Subject: Re: [PATCH 0/5] *** Introduce new space allocation algorithm ***
-To: Dave Chinner <david@fromorbit.com>
-Cc: djwong@kernel.org, dchinner@redhat.com, leo.lilong@huawei.com, 
-	wozizhi@huawei.com, osandov@fb.com, xiang@kernel.org, 
-	zhangjiachen.jaycee@bytedance.com, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, zhangshida@kylinos.cn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANubcdVbimowVMdoH+Tzk6AZuU7miwf4PrvTv2Dh0R+eSuJ1CQ@mail.gmail.com>
 
-Dave Chinner <david@fromorbit.com> =E4=BA=8E2024=E5=B9=B411=E6=9C=884=E6=97=
-=A5=E5=91=A8=E4=B8=80 11:32=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Mon, Nov 04, 2024 at 09:44:34AM +0800, zhangshida wrote:
-> > From: Shida Zhang <zhangshida@kylinos.cn>
+On Mon, Nov 04, 2024 at 05:25:38PM +0800, Stephen Zhang wrote:
+> Dave Chinner <david@fromorbit.com> 于2024年11月4日周一 11:32写道：
 > >
-> > Hi all,
+> > On Mon, Nov 04, 2024 at 09:44:34AM +0800, zhangshida wrote:
+> > > From: Shida Zhang <zhangshida@kylinos.cn>
+> > >
+> > > Hi all,
+> > >
+> > > Recently, we've been encounter xfs problems from our two
+> > > major users continuously.
+> > > They are all manifested as the same phonomenon: a xfs
+> > > filesystem can't touch new file when there are nearly
+> > > half of the available space even with sparse inode enabled.
 > >
-> > Recently, we've been encounter xfs problems from our two
-> > major users continuously.
-> > They are all manifested as the same phonomenon: a xfs
-> > filesystem can't touch new file when there are nearly
-> > half of the available space even with sparse inode enabled.
->
-> What application is causing this, and does using extent size hints
-> make the problem go away?
->
-
-Both are database-like applications, like mysql. Their source code
-isn't available to us. And I doubt if they have the ability to modify the
-database source code...
-
-> Also, xfs_info and xfs_spaceman free space histograms would be
-> useful information.
->
-
-There are two such cases.
-In one case:
-$ xfs_info disk.img
-meta-data=3Ddisk.img               isize=3D512    agcount=3D344, agsize=3D1=
-638400 blks
-         =3D                       sectsz=3D4096  attr=3D2, projid32bit=3D1
-         =3D                       crc=3D1        finobt=3D1, sparse=3D1, r=
-mapbt=3D0
-         =3D                       reflink=3D1
-data     =3D                       bsize=3D4096   blocks=3D563085312, imaxp=
-ct=3D25
-         =3D                       sunit=3D64     swidth=3D64 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
-log      =3Dinternal log           bsize=3D4096   blocks=3D12800, version=
-=3D2
-         =3D                       sectsz=3D4096  sunit=3D1 blks, lazy-coun=
-t=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
-
-$ xfs_db -c freesp disk.img
-   from      to extents  blocks    pct
-      1       1 43375262 43375262  22.32
-      2       3 64068226 150899026  77.66
-      4       7       1       5   0.00
-     32      63       3     133   0.00
-    256     511       1     315   0.00
-   1024    2047       1    1917   0.00
-   8192   16383       2   20477   0.01
-
-
-Another was mentioned already by one of my teammates. See:
-https://lore.kernel.org/linux-xfs/173053338963.1934091.14116776076321174850=
-.b4-ty@kernel.org/T/#t
-
-[root@localhost ~]# xfs_db -c freesp /dev/vdb
-   from      to extents  blocks    pct
-      1       1     215     215   0.01
-      2       3  994476 1988952  99.99
-
-
-> > It turns out that the filesystem is too fragmented to have
-> > enough continuous free space to create a new file.
->
-> > Life still has to goes on.
-> > But from our users' perspective, worse than the situation
-> > that xfs is hard to use is that xfs is non-able to use,
-> > since even one single file can't be created now.
+> > What application is causing this, and does using extent size hints
+> > make the problem go away?
 > >
-> > So we try to introduce a new space allocation algorithm to
-> > solve this.
+> 
+> Both are database-like applications, like mysql. Their source code
+> isn't available to us. And I doubt if they have the ability to modify the
+> database source code...
+
+Ok, so I did a bit of research. It's the MySQL transparent page
+compression algorithm that is the problem here. Essentially what
+this does is this:
+
+Write : Page -> Transform -> Write transformed page to disk -> Punch hole
+
+Read  : Page from disk -> Transform -> Original Page
+
+Essentially, every page is still indexed at the expected offset,
+but the data is compressed and the space that is saved by the
+compression is then punched out of the filesystem. Basically it
+makes every database page region on disk sparse, and it does it via
+brute force.
+
+This is -awful- for most filesystems. We use a similar technique in
+fstests to generate worst case file and free space fragmentation
+('punch_alternating') for exercising this sort of behaviour, and it
+really does screw up performance and functionality on all the major
+Linux filesysetms. XFS is the canary because of the way it
+dynamically allocates inodes.
+
+It's also awful for performance. There can be no concurrency in
+database IO when it is doing hole punching like this. Hole punching
+completely serialises all operations on that file, so it cannot be
+doing read(), write() or even IO whilst the hole punch is being
+done. 
+
+IOWs, page compression allows the database to store more data in the
+filesystem, but it does so at a cost. The cost is that it degrades
+the filesystem free space badly over time. Hence as the FS fills up,
+stuff really starts to slow down and, in some cases, stop working...
+
+As the old saying goes: TANSTAAFL.
+
+(There Ain't No Such Thing As A Free Lunch)
+
+If you can't turn off page compression via a database configuration
+flag, you could always shim the fallocate() syscall to always return
+-EOPNOTSUPP to fallocate(FALLOC_FL_PUNCH_HOLE)....
+
+> > Also, xfs_info and xfs_spaceman free space histograms would be
+> > useful information.
 > >
-> > To achieve that, we try to propose a new concept:
-> >    Allocation Fields, where its name is borrowed from the
-> > mathmatical concepts(Groups,Rings,Fields), will be
->
-> I have no idea what this means. We don't have rings or fields,
-> and an allocation group is simply a linear address space range.
-> Please explain this concept (pointers to definitions and algorithms
-> appreciated!)
->
->
-> > abbrivated as AF in the rest of the article.
+> 
+> There are two such cases.
+> In one case:
+> $ xfs_info disk.img
+> meta-data=disk.img               isize=512    agcount=344, agsize=1638400 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=1
+> data     =                       bsize=4096   blocks=563085312, imaxpct=25
+>          =                       sunit=64     swidth=64 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=12800, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+This filesystem has 344 6GB AGs. That is .... not good. This will
+make the free space fragmentation problems worse than having
+4-16AGs (default for a fs of that size) because the free space is
+already fragmented into lots of small disjoint regions even when the
+filesytem is empty.
+
+> $ xfs_db -c freesp disk.img
+>    from      to extents  blocks    pct
+>       1       1 43375262 43375262  22.32
+>       2       3 64068226 150899026  77.66
+>       4       7       1       5   0.00
+>      32      63       3     133   0.00
+>     256     511       1     315   0.00
+>    1024    2047       1    1917   0.00
+>    8192   16383       2   20477   0.01
+
+Yeah, 100 million free space extents, 600GB of space indexed in
+them, and there's *nothing* the filesystem can do about it because
+that's what exactly happens when you have a 16kB database page size
+and every 16kB page write involves a 1-3 block hole punch in the
+16kB region of the file.
+
+> > > It turns out that the filesystem is too fragmented to have
+> > > enough continuous free space to create a new file.
 > >
-> > what is a AF?
-> > An one-pic-to-say-it-all version of explaination:
+> > > Life still has to goes on.
+> > > But from our users' perspective, worse than the situation
+> > > that xfs is hard to use is that xfs is non-able to use,
+> > > since even one single file can't be created now.
+> > >
+> > > So we try to introduce a new space allocation algorithm to
+> > > solve this.
+> > >
+> > > To achieve that, we try to propose a new concept:
+> > >    Allocation Fields, where its name is borrowed from the
+> > > mathmatical concepts(Groups,Rings,Fields), will be
 > >
-> > |<--------+ af 0 +-------->|<--+ af 1 +-->| af 2|
-> > |------------------------------------------------+
-> > | ag 0 | ag 1 | ag 2 | ag 3| ag 4 | ag 5 | ag 6 |
-> > +------------------------------------------------+
+> > I have no idea what this means. We don't have rings or fields,
+> > and an allocation group is simply a linear address space range.
+> > Please explain this concept (pointers to definitions and algorithms
+> > appreciated!)
 > >
-> > A text-based definition of AF:
-> > 1.An AF is a incore-only concept comparing with the on-disk
-> >   AG concept.
-> > 2.An AF is consisted of a continuous series of AGs.
-> > 3.Lower AFs will NEVER go to higher AFs for allocation if
-> >   it can complete it in the current AF.
 > >
-> > Rule 3 can serve as a barrier between the AF to slow down
-> > the over-speed extending of fragmented pieces.
->
-> To a point, yes. But it's not really a reliable solution, because
-> directories are rotored across all AGs. Hence if the workload is
-> running across multiple AGs, then all of the AFs can be being
-> fragmented at the same time.
->
-
-You mean the inode of the directory is expected to be distributed
-evenly over the entire system, and the file extent of that directory will b=
-e
-distributed in the same way?
-
-The ideal layout of af to be constructed is to limit the higher af
-in the small part of the entire [0, agcount). Like:
-
-|<-----+ af 0 +----->|<af 1>|
-|----------------------------
-| ag 0 | ag 1 | ag 2 | ag 3 |
-+----------------------------
-
-So for much of the ags(0, 1, 2) in af 0, that will not be a problem.
-And for the ag in the small part, like ag 3.
-if there is inode in ag3, and there comes the space allocation of the
-inode, it will not find space in ag 3 first. It will still search from the
-af0 to af1, whose logic is reflected in the patch:
-
-[PATCH 4/5] xfs: add infrastructure to support AF allocation algorithm
-
-it says:
-
-+ /* if start_agno is not in current AF range, make it be. */
-+ if ((start_agno < start_af) || (start_agno > end_af))
-+       start_agno =3D start_af;
-
-which means, the start_agno will not be used to comply with locality
-principle.
-
-In general, the evenly distributed layout is slightly broken, but only for
-the last small AG, if you choose the AF layout properly.
-
-> Given that I don't know how an application controls what AF it's
-> files are located in, I can't really say much more than that.
->
-> > With these patches applied, the code logic will be exactly
-> > the same as the original code logic, unless you run with the
-> > extra mount opiton. For example:
-> >    mount -o af1=3D1 $dev $mnt
+> > > abbrivated as AF in the rest of the article.
+> > >
+> > > what is a AF?
+> > > An one-pic-to-say-it-all version of explaination:
+> > >
+> > > |<--------+ af 0 +-------->|<--+ af 1 +-->| af 2|
+> > > |------------------------------------------------+
+> > > | ag 0 | ag 1 | ag 2 | ag 3| ag 4 | ag 5 | ag 6 |
+> > > +------------------------------------------------+
+> > >
+> > > A text-based definition of AF:
+> > > 1.An AF is a incore-only concept comparing with the on-disk
+> > >   AG concept.
+> > > 2.An AF is consisted of a continuous series of AGs.
+> > > 3.Lower AFs will NEVER go to higher AFs for allocation if
+> > >   it can complete it in the current AF.
+> > >
+> > > Rule 3 can serve as a barrier between the AF to slow down
+> > > the over-speed extending of fragmented pieces.
 > >
-> > That will change the default AF layout:
+> > To a point, yes. But it's not really a reliable solution, because
+> > directories are rotored across all AGs. Hence if the workload is
+> > running across multiple AGs, then all of the AFs can be being
+> > fragmented at the same time.
 > >
-> > |<--------+ af 0 +--------->|
-> > |----------------------------
-> > | ag 0 | ag 1 | ag 2 | ag 3 |
-> > +----------------------------
-> >
-> > to :
-> >
-> > |<-----+ af 0 +----->|<af 1>|
-> > |----------------------------
-> > | ag 0 | ag 1 | ag 2 | ag 3 |
-> > +----------------------------
-> >
-> > So the 'af1=3D1' here means the start agno is one ag away from
-> > the m_sb.agcount.
+> 
+> You mean the inode of the directory is expected to be distributed
+> evenly over the entire system, and the file extent of that directory will be
+> distributed in the same way?
+
+The directory -structure- is distributed across all AGs. Each newly
+created directly is placed in a different AG to it's parent inode.
+Each file created in a directory is located in the same AG as the
+parent directory inode. Inodes then try to alllocate data as close
+to the inode as possible (i.e. allocation targets the same AG). This
+keeps related data and metadata close together (i.e. preserved
+locality of reference) and allows for delayed allocation
+optimisations like multi-file write clustering....
+
+This means that when you have something like a kernel source tree,
+it will be distributed across every AG in the filesystem because
+it's a complex directory tree with many files in it.
+
+Of course, this all changes when you mount with "inode32". Inodes
+are all located in the <1TB region, and the initial data allocation
+target for each inode is distributed across AGs in the >1TG region.
+There is no locality between the inode and it's data, and the
+behaviour of the filesystem from an IO perspective is completely
+different.
+
+> The ideal layout of af to be constructed is to limit the higher af
+> in the small part of the entire [0, agcount). Like:
+> 
+> |<-----+ af 0 +----->|<af 1>|
+> |----------------------------
+> | ag 0 | ag 1 | ag 2 | ag 3 |
+> +----------------------------
+> 
+> So for much of the ags(0, 1, 2) in af 0, that will not be a problem.
+> And for the ag in the small part, like ag 3.
+> if there is inode in ag3, and there comes the space allocation of the
+> inode, it will not find space in ag 3 first. It will still search from the
+> af0 to af1, whose logic is reflected in the patch:
+
+That was not clear from your description. I'm not about to try to
+reverse engineer your proposed allocation algorithm from the code
+you have presented. Looking at the implementation doesn't inform me
+about the design and intent of the allocation policy.
+
+> [PATCH 4/5] xfs: add infrastructure to support AF allocation algorithm
+> 
+> it says:
+> 
+> + /* if start_agno is not in current AF range, make it be. */
+> + if ((start_agno < start_af) || (start_agno > end_af))
+> +       start_agno = start_af;
+> which means, the start_agno will not be used to comply with locality
+> principle.
+
+Which is basically the inode32 algorithm done backwards.
+
+> > > 3.Lower AFs will NEVER go to higher AFs for allocation if
+> > >   it can complete it in the current AF.
+> 
+> From that rule, we can infer that,
+>      For any specific af, if len1 > len2, then,
+>      P(len1) <= P(len2)
+> 
+> where P(len) represents the probability of the success allocation for an
+> exact *len* length of extent.
 >
-> Yup, so kinda what we did back in 2006 in a proprietary SGI NAS
-> product with "concat groups" to create aggregations of allocation
-> groups that all sat on the same physical RAID5 luns in a linear
-> concat volume. They were fixed size, because the (dozens of) luns
-> were all the same size. This construct was heavily tailored to
-> maximising the performance provided by the underlying storage
-> hardware architecture, so wasn't really a general policy solution.
+> To prove that, Imagine we have to allocate two extent at len 1 and 4 in af 0,
+> if we can allocate len 4 in af 0, then we can allocate len 1 in af 0.
+> but,
+> if we can allocate len 1 in af 1, we may not allocate len 4 in af 0.
 >
-> To make it work, we also had to change how various other allocation
-> distribution algorithms worked (e.g. directory rotoring) so that
-> the load was distributed more evenly across the physical hardware
-> backing the filesystem address space.
->
-> I don't see anything like that in this patch set - there's no actual
-> control mechanism to select what AF an inode lands in.  how does an
-> applicaiton or user actually use this reliably to prevent all the
-> AFs being fragmented by the workload that is running?
->
+> So, P(len1) <= P(len2).
+> 
+> That means it will naturally form a layer of different len. like:
+> 
+>        +------------------------+
+>        |            8           |
+> af 2   |    1   8     8  1      |
+>        |       1   1            |
+>        +------------------------+
+>        |                        |
+>        |    4                   |
+>        |          4             |
+> af 1   |        4     1         |
+>        |    1       4           |
+>        |                  4     |
+>        +------------------------+
+>        |                        |
+>        |  1     1     1         |
+>        |                        |
+>        |           1            |
+>        |  1  1 4       1        |
+> af 0   |           1            |
+>        |      1                 |
+>        |                  1     |
+>        |          1             |
+>        |                        |
+>        +------------------------+
+> 
+> So there is no need so provide extra preference control info for
+> an allocation. It will naturally find where it should go.
 
-> > 3.Lower AFs will NEVER go to higher AFs for allocation if
-> >   it can complete it in the current AF.
+This appears to be a "first fit from index zero" selection routine.
+It optimises for discontiguous, small IO hole filling over
+locality preserving large contiguous allocation, concurrency and IO
+load distribution. XFS optimises for the latter, not the former.
 
-From that rule, we can infer that,
-     For any specific af, if len1 > len2, then,
-     P(len1) <=3D P(len2)
+First fit allocation generally results in performance hotspots in
+large storage arrays. e.g. with a linear concat of two luns, a
+first-fit from zero algorithm will not direct any IO to the second
+lun until the first lun is almost entirely full. IOWs, half the
+performance of the storage hardware is not being used with such an
+algorithm. The larger the storage array gets, the worse this
+under-utilisation becomes, and hence we have never needed to
+optimise for such an inefficient IO pattern as the innodb page
+compression algorithm uses.
 
-where P(len) represents the probability of the success allocation for an
-exact *len* length of extent.
+FWIW, as this appears to be a first-fit algorithm, why is there
+a need for special "AF"s to control behaviour? I may be missing
+something else, but if we treat each AG as an AF, then we
+effectively get the same result, right?
 
-To prove that, Imagine we have to allocate two extent at len 1 and 4 in af =
-0,
-if we can allocate len 4 in af 0, then we can allocate len 1 in af 0.
-but,
-if we can allocate len 1 in af 1, we may not allocate len 4 in af 0.
+The only issue would be AG contention would result in allocations in
+higher AGs before the lower AGs are completely full, but the
+filesystem would still always fill from one end to the other as this
+AF construct is attempting to do. That leaves space for inodes to be
+allocated right up until the last AG in the fs becomes too
+fragmented to allocate inodes.
 
-So, P(len1) <=3D P(len2).
+AFAICT, this "reserve AG space for inodes" behaviour that you are
+trying to acheive is effectively what the inode32 allocator already
+implements. By forcing inode allocation into the AGs below 1TB and
+preventing data from being allocated in those AGs until allocation
+in all the AGs above start failing, it effectively provides the same
+functionality but without the constraints of a global first fit
+allocation policy.
 
-That means it will naturally form a layer of different len. like:
+We can do this with any AG by setting it up to prefer metadata,
+but given we already have the inode32 allocator we can run some
+tests to see if setting the metadata-preferred flag makes the
+existing allocation policies do what is needed.
 
-       +------------------------+
-       |            8           |
-af 2   |    1   8     8  1      |
-       |       1   1            |
-       +------------------------+
-       |                        |
-       |    4                   |
-       |          4             |
-af 1   |        4     1         |
-       |    1       4           |
-       |                  4     |
-       +------------------------+
-       |                        |
-       |  1     1     1         |
-       |                        |
-       |           1            |
-       |  1  1 4       1        |
-af 0   |           1            |
-       |      1                 |
-       |                  1     |
-       |          1             |
-       |                        |
-       +------------------------+
+That is, mkfs a new 2TB filesystem with the same 344AG geometry as
+above, mount it with -o inode32 and run the workload that fragments
+all the free space. What we should see is that AGs in the upper TB
+of the filesystem should fill almost to full before any significant
+amount of allocation occurs in the AGs in the first TB of space.
 
-So there is no need so provide extra preference control info for
-an allocation. It will naturally find where it should go.
+If that's the observed behaviour, then I think this problem can be
+solved by adding a mechanism to control which AGs in the filesystem
+are metadata preferred...
 
-So without the extra need of changing the application source code.
-
-
-
-
-> > We did some tests verify it. You can verify it yourself
-> > by running the following the command:
-> >
-> > 1. Create an 1g sized img file and formated it as xfs:
-> >   dd if=3D/dev/zero of=3Dtest.img bs=3D1M count=3D1024
-> >   mkfs.xfs -f test.img
-> >   sync
-> > 2. Make a mount directory:
-> >   mkdir mnt
-> > 3. Run the auto_frag.sh script, which will call another scripts
-> >   frag.sh. These scripts will be attached in the mail.
-> >   To enable the AF, run:
-> >     ./auto_frag.sh 1
-> >   To disable the AF, run:
-> >     ./auto_frag.sh 0
-> >
-> > Please feel free to communicate with us if you have any thoughts
-> > about these problems.
->
-> We already have inode/metadata preferred allocation groups that
-> are avoided for data allocation if at all possible. This is how we
-> keep space free below 1TB for inodes when the inode32 allocator has
-> been selected. See xfs_perag_prefers_metadata().
->
-> Perhaps being able to control this preference from userspace (e.g.
-> via xfs_spaceman commands through ioctls and/or sysfs knobs) would
-> acheive the same results with a minimum of code and/or policy
-> changes. i.e. if AG0 is preferred for metadata rather than data,
-> we won't allocate data in it until all higher AGs are largely full.
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
