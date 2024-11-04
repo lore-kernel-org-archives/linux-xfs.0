@@ -1,256 +1,180 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D5163214;
-	Mon,  4 Nov 2024 01:50:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4789C14E2F5
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Nov 2024 01:52:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730685011; cv=none; b=RjChc1198nAx+c60IU59xnuYg5Cs60Tt0br0Gp2uf0cU4npZign/VLoeBiK8cDQqq+vlJ41Ix9SmlC9ZWFaGFbNK/Ol5a3YrF5vFCbM2T/LEafeVxOSmdbbXn/urz/u/KFYoBaTMQ3e1Lf8S+TkrLCH3PKPlMGk4N5ryQtIxkME=
+	t=1730685168; cv=none; b=JE/N0ZeusqDDp42NECiqf9mOnJw3GAWPI/i7iTCRgrz2wtVGasORBPqzqb/j/JyB6LUYswcZDWmGb7SMBp8+mh0sOO05ApvMTw0IF/CdY3TXluw+QzEkP5/aR4t4/2DcZJh4+r9Xms7o1egOqX34KNQQWGzQ48HUSSoQa5C9LM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730685011; c=relaxed/simple;
-	bh=rSZg9dkgH3TInoIPgDQV+QRUjhKNkNHlMHg6SywoLlo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZbHqweTse3IuRWI5w/W4fn2ZACxHGVoslV4l1LQ7BLP/qcPDr2QH15SUdPXHxK+O0gYIBrFRoBxb8/kiLAHdTNLSh3v3Cq+Yd0LEsvRBytMvy9YSs2QCnlgw0f/8tzUphU4rElwf4njwl3LdESY7nVUPo70/DNNwAm8i48ZZQU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X5hjPvEr; arc=none smtp.client-ip=209.85.160.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730685168; c=relaxed/simple;
+	bh=4ER/EiUCkm4Hjda9LTk/1TdU9pkW80CjEHKAFrE8eD0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uVJW/G14FX+aFgwxrRJdUUqMFv/UTZdm0hZlC99pvjjspxcGtfnocx+1GcenLQNI2yji6QaAfnqINiUicrrlF2Yd42LobstBkeFYKrmgyltiXK8o/p7K3EbubfSYlBu9JZLJ8HWcS5JeE5FSQ+rx2yXs/RBCQzjtqBfi4iFgrlU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=WK2nQ19i; arc=none smtp.client-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X5hjPvEr"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-462d8b29c14so2259181cf.1;
-        Sun, 03 Nov 2024 17:50:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="WK2nQ19i"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-7e9e38dd5f1so2904483a12.0
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Nov 2024 17:52:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730685009; x=1731289809; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=sQLKsivBO2u0kBUtRSOY/FkwvE9/gfQy9B+xNfqoJNo=;
-        b=X5hjPvEraaEzDMFqrnDK4AK8jEngMwrThCGzC1CqIBBd9LdeYUkStHghUty8w/IJxR
-         LYmc/RpchC96BbTXbfff0eHftsl3UtTrnPC8eGv/TXwMTETfH4c2n4h+lssvjGR6nCDk
-         xR1I98rR0D3pcJhbhOfM6ZlZm6qgbux7j3ZJ21YEz9S+DnWbLfMaWOlkiNXoEO1IpGgn
-         z2zjRFVQgS4JM9qpHRc3+xXXYqgB5KyIUp3XrdtSWGpacvcB6sEiLf9XyvKJ5I1lXD+E
-         NKmABBKesFoAfZbPE0XxZ9dNWqyZvOGVGsww9xTcD1MJbc9S5uRFaDlY9U34wfURYTtN
-         Meqw==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730685165; x=1731289965; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=D1gO7nE6k1d3RjOM7nVXHvrivHG7QQDb7RYI/vhsl1g=;
+        b=WK2nQ19iurnnXZh/H138SBIHp3WiDagYGsLzW8Q2WSuM2PMUzKJj/GfR7k0AYmeKos
+         hJn4GArnVZ4VEgxn7oZQy40khQpgPj7onWuH2Phl+7mmvdKuI37jBAHaDDPTsl5nb4Fz
+         GdHbpXvzmCUvx3GQVcjZo3x5ojFrvAMzfz2Em6whCBa4W+CZ7v3EERd5opZz2RKoBb81
+         EEqdAGGTVP1cqLjmU86d+PzgfVPvRq/9rGlVkHr9HWpW+8C1C42gfYNoimoMsqqagNqK
+         iplPld4ChHpTcexP21UpEfo0BTYpe48qtj5N0rWNKy8fNMtiD/pGzmffBubX3nfkTSod
+         NN4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730685009; x=1731289809;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=sQLKsivBO2u0kBUtRSOY/FkwvE9/gfQy9B+xNfqoJNo=;
-        b=ksalrppfVdQRnWUZb/WjiSKBPkEaGVjXWHtUfQHn+D2f7s4frw9N6JXdvi5K8nU+r8
-         it52vfhR/NFv9S9kbMVDAP8Ir8xYP9dzOeKU1Eq6n9LWCy8BIIlWVFLpipyNoZJLE+OM
-         43qmSHk7NYcit21fIQ2SEOjWKxWogWHvJsEmGbj/vkqIO92clPkvzX2YitQ8tn3CgNcF
-         Idts28BMmnkmzd43KZMOyU1UC6AOvoDIXcusAJSaqD4u2htm4KSHE9zzM3WBmfBT4js1
-         X0LtnT0bai1Y5tYUzqqcsF8oiK+RFIrlLWYFBhhihGORHp+Kxdyi1N8H9uX8f+IS4ZFT
-         2Lbw==
-X-Forwarded-Encrypted: i=1; AJvYcCXqTO+QJa5kTx0t1aSy9DH1/ox42j871yjRxVK9uGKWMBhqNcOJFQSxu5C9ZlOcmlE0mqnCxkOJV3DhEe4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy6lkbj93QjQvrlj3CfmANd/WKGBLPjKsCfRET+xRo3m7fpF/8M
-	tFqUyI4amBLDY1bZmuuRHTvYiE/aaDwE4syGsADDmDMsDZtzx3q4pLi2phSqoyTQDGMg6titk4j
-	YlSpEdAe4Bdzz2y5NTCMvLJ/WzKA=
-X-Google-Smtp-Source: AGHT+IEfjubMmQCVgs6Lp5rqq2lQko5F6bNJW74s5oTdrFsfFqF6mYaEC+9xMDGv+C1aCuHaAToKrJPvhK19Z6FmbpI=
-X-Received: by 2002:a05:622a:15d6:b0:462:67f0:596e with SMTP id
- d75a77b69052e-46267f05d63mr235248791cf.1.1730685009005; Sun, 03 Nov 2024
- 17:50:09 -0800 (PST)
+        d=1e100.net; s=20230601; t=1730685165; x=1731289965;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=D1gO7nE6k1d3RjOM7nVXHvrivHG7QQDb7RYI/vhsl1g=;
+        b=An3NMVjbekdZHgx1lU4nXHyG30G4VI9zvehAKPon7hBIuUEXSWXN9U3zx7pUlut0EO
+         Zdf/O+bv4mF0kVEy7JojYO+bBtY9sCGsTgy6Mx0MkA9mG5PEVbCsEKKPCgHVP3MfnsgI
+         qHXj61TN5eckbE/ULFXL5iBLvsnDi1oucrcm7hwFjFwfmq9NbaIWdkpgQBosJSdazTaF
+         sZZ4yqlaRfN8qRMuY7T8b9XPy3aytHxLZSzGYNGAi+8ICCa9cj9/n3r7vmoiLAGcZ3b6
+         OkCSmhIlbj9+l7eHLFdtWb8LWo6ZCFGbHLchamZW0ris8i3a7Wzqoxj+1a2vvFp71a9I
+         aRfA==
+X-Forwarded-Encrypted: i=1; AJvYcCX1mompEu6sY5mh6xgeG1G1tSn/4IY0ApWTq9bA+abhJPb74R9yki4PSqrmuRyqVjhIHXr2gDK5Se8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxezXPzpX+DQGAK6QXgfXzR+Wrjb0t2JHkW3ibpiyvcGPnOgsUZ
+	RI4fxC9KGwEPqNLuU82a32W4HzpPfFGUO7QL/dAyGTCHdgkQo+bmynVvxXqaghPzc71rmN+DzQ6
+	W
+X-Google-Smtp-Source: AGHT+IHU0t6TXjLqTaEyMJ+80xaQseYHEZhGQPcykH54yPn7f5EMEawKPcrdWfzxP/RT/N77cHYxWA==
+X-Received: by 2002:a05:6a20:d8b:b0:1cf:3d14:6921 with SMTP id adf61e73a8af0-1d9a84d168emr47042468637.35.1730685165442;
+        Sun, 03 Nov 2024 17:52:45 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc318824sm6235825b3a.212.2024.11.03.17.52.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 Nov 2024 17:52:44 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1t7mGo-009qSI-0n;
+	Mon, 04 Nov 2024 12:52:42 +1100
+Date: Mon, 4 Nov 2024 12:52:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, Theodore Ts'o <tytso@mit.edu>,
+	John Garry <john.g.garry@oracle.com>, linux-ext4@vger.kernel.org,
+	Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 5/6] iomap: Lift blocksize restriction on atomic writes
+Message-ID: <Zygo6nqOJMoJxYrm@dread.disaster.area>
+References: <87v7xgmpwo.fsf@gmail.com>
+ <7e322989-c6e0-424a-94bd-3ad6ce5ffee9@oracle.com>
+ <87ttd0mnuo.fsf@gmail.com>
+ <7aea00d4-3914-414d-a18f-586a303868c1@oracle.com>
+ <87r084mkat.fsf@gmail.com>
+ <509180f3-4cc1-4cc2-9d43-5a1e728fb718@oracle.com>
+ <87plnomfsy.fsf@gmail.com>
+ <20241025182858.GM2386201@frogsfrogsfrogs>
+ <87jzdvmqfz.fsf@gmail.com>
+ <20241031213640.GB21832@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241104014439.3786609-1-zhangshida@kylinos.cn>
-In-Reply-To: <20241104014439.3786609-1-zhangshida@kylinos.cn>
-From: Stephen Zhang <starzhangzsd@gmail.com>
-Date: Mon, 4 Nov 2024 09:49:32 +0800
-Message-ID: <CANubcdWwg3OB_YV4CteC7ZZBaQXOuvFG1oS7uN+TpabS=Z=Z2Q@mail.gmail.com>
-Subject: Re: [PATCH 0/5] *** Introduce new space allocation algorithm ***
-To: djwong@kernel.org, dchinner@redhat.com, leo.lilong@huawei.com, 
-	wozizhi@huawei.com, osandov@fb.com, xiang@kernel.org, 
-	zhangjiachen.jaycee@bytedance.com
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	zhangshida@kylinos.cn
-Content-Type: multipart/mixed; boundary="0000000000002e608206260c8135"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241031213640.GB21832@frogsfrogsfrogs>
 
---0000000000002e608206260c8135
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Thu, Oct 31, 2024 at 02:36:40PM -0700, Darrick J. Wong wrote:
+> On Sat, Oct 26, 2024 at 10:05:44AM +0530, Ritesh Harjani wrote:
+> > > This gets me to the third and much less general solution -- only allow
+> > > untorn writes if we know that the ioend only ever has to run a single
+> > > transaction.  That's why untorn writes are limited to a single fsblock
+> > > for now -- it's a simple solution so that we can get our downstream
+> > > customers to kick the tires and start on the next iteration instead of
+> > > spending years on waterfalling.
+> > >
+> > > Did you notice that in all of these cases, the capabilities of the
+> > > filesystem's ioend processing determines the restrictions on the number
+> > > and type of mappings that ->iomap_begin can give to iomap?
+> > >
+> > > Now that we have a second system trying to hook up to the iomap support,
+> > > it's clear to me that the restrictions on mappings are specific to each
+> > > filesystem.  Therefore, the iomap directio code should not impose
+> > > restrictions on the mappings it receives unless they would prevent the
+> > > creation of the single aligned bio.
+> > >
+> > > Instead, xfs_direct_write_iomap_begin and ext4_iomap_begin should return
+> > > EINVAL or something if they look at the file mappings and discover that
+> > > they cannot perform the ioend without risking torn mapping updates.  In
+> > > the long run, ->iomap_begin is where this iomap->len <= iter->len check
+> > > really belongs, but hold that thought.
+> > >
+> > > For the multi fsblock case, the ->iomap_begin functions would have to
+> > > check that only one metadata update would be necessary in the ioend.
+> > > That's where things get murky, since ext4/xfs drop their mapping locks
+> > > between calls to ->iomap_begin.  So you'd have to check all the mappings
+> > > for unsupported mixed state every time.  Yuck.
+> > >
+> > 
+> > Thanks Darrick for taking time summarizing what all has been done
+> > and your thoughts here.
+> > 
+> > > It might be less gross to retain the restriction that iomap accepts only
+> > > one mapping for the entire file range, like Ritesh has here.
+> > 
+> > less gross :) sure. 
+> > 
+> > I would like to think of this as, being less restrictive (compared to
+> > only allowing a single fsblock) by adding a constraint on the atomic
+> > write I/O request i.e.  
+> > 
+> > "Atomic write I/O request to a region in a file is only allowed if that
+> > region has no partially allocated extents. Otherwise, the file system
+> > can fail the I/O operation by returning -EINVAL."
+> > 
+> > Essentially by adding this constraint to the I/O request, we are
+> > helping the user to prevent atomic writes from accidentally getting
+> > torned and also allowing multi-fsblock writes. So I still think that
+> > might be the right thing to do here or at least a better start. FS can
+> > later work on adding such support where we don't even need above
+> > such constraint on a given atomic write I/O request.
+> 
+> On today's ext4 call, Ted and Ritesh and I realized that there's a bit
+> more to it than this -- it's not possible to support untorn writes to a
+> mix of written/(cow,unwritten) mappings even if they all point to the
+> same physical space.  If the system fails after the storage device
+> commits the write but before any of the ioend processing is scheduled, a
+> subsequent read of the previously written blocks will produce the new
+> data, but reads to the other areas will produce the old contents (or
+> zeroes, or whatever).  That's a torn write.
 
-Hi all,
+I'm *really* surprised that people are only realising that IO
+completion processing for atomic writes *must be atomic*.
 
-I just send the scripts to test these series here.
+This was the foundational constraint that the forced alignment
+proposal for XFS was intended to address. i.e. to prevent fs
+operations from violating atomic write IO constraints (e.g. punching
+sub-atomic write size holes in the file) so that the physical IO can
+be done without tearing and the IO completion processing that
+exposes the new data can be done atomically.
 
-Cheers,
-Shida
+> Therefore, iomap ought to stick to requiring that ->iomap_begin returns
+> a single iomap to cover the entire file range for the untorn write.  For
+> an unwritten extent, the post-recovery read will see either zeroes or
+> the new contents; for a single-mapping COW it'll see old or new contents
+> but not both.
 
-zhangshida <starzhangzsd@gmail.com> =E4=BA=8E2024=E5=B9=B411=E6=9C=884=E6=
-=97=A5=E5=91=A8=E4=B8=80 09:44=E5=86=99=E9=81=93=EF=BC=9A
->
-> From: Shida Zhang <zhangshida@kylinos.cn>
->
-> Hi all,
->
-> Recently, we've been encounter xfs problems from our two
-> major users continuously.
-> They are all manifested as the same phonomenon: a xfs
-> filesystem can't touch new file when there are nearly
-> half of the available space even with sparse inode enabled.
->
-> It turns out that the filesystem is too fragmented to have
-> enough continuous free space to create a new file.
->
-> Life still has to goes on.
-> But from our users' perspective, worse than the situation
-> that xfs is hard to use is that xfs is non-able to use,
-> since even one single file can't be created now.
->
-> So we try to introduce a new space allocation algorithm to
-> solve this.
->
-> To achieve that, we try to propose a new concept:
->    Allocation Fields, where its name is borrowed from the
-> mathmatical concepts(Groups,Rings,Fields), will be
-> abbrivated as AF in the rest of the article.
->
-> what is a AF?
-> An one-pic-to-say-it-all version of explaination:
->
-> |<--------+ af 0 +-------->|<--+ af 1 +-->| af 2|
-> |------------------------------------------------+
-> | ag 0 | ag 1 | ag 2 | ag 3| ag 4 | ag 5 | ag 6 |
-> +------------------------------------------------+
->
-> A text-based definition of AF:
-> 1.An AF is a incore-only concept comparing with the on-disk
->   AG concept.
-> 2.An AF is consisted of a continuous series of AGs.
-> 3.Lower AFs will NEVER go to higher AFs for allocation if
->   it can complete it in the current AF.
->
-> Rule 3 can serve as a barrier between the AF to slow down
-> the over-speed extending of fragmented pieces.
->
-> With these patches applied, the code logic will be exactly
-> the same as the original code logic, unless you run with the
-> extra mount opiton. For example:
->    mount -o af1=3D1 $dev $mnt
->
-> That will change the default AF layout:
->
-> |<--------+ af 0 +--------->|
-> |----------------------------
-> | ag 0 | ag 1 | ag 2 | ag 3 |
-> +----------------------------
->
-> to :
->
-> |<-----+ af 0 +----->|<af 1>|
-> |----------------------------
-> | ag 0 | ag 1 | ag 2 | ag 3 |
-> +----------------------------
->
-> So the 'af1=3D1' here means the start agno is one ag away from
-> the m_sb.agcount.
->
-> We did some tests verify it. You can verify it yourself
-> by running the following the command:
->
-> 1. Create an 1g sized img file and formated it as xfs:
->   dd if=3D/dev/zero of=3Dtest.img bs=3D1M count=3D1024
->   mkfs.xfs -f test.img
->   sync
-> 2. Make a mount directory:
->   mkdir mnt
-> 3. Run the auto_frag.sh script, which will call another scripts
->   frag.sh. These scripts will be attached in the mail.
->   To enable the AF, run:
->     ./auto_frag.sh 1
->   To disable the AF, run:
->     ./auto_frag.sh 0
->
-> Please feel free to communicate with us if you have any thoughts
-> about these problems.
->
-> Cheers,
-> Shida
->
->
-> Shida Zhang (5):
->   xfs: add two wrappers for iterating ags in a AF
->   xfs: add two mp member to record the alloction field layout
->   xfs: add mount options as a way to change the AF layout
->   xfs: add infrastructure to support AF allocation algorithm
->   xfs: modify the logic to comply with AF rules
->
->  fs/xfs/libxfs/xfs_ag.h         | 17 ++++++++++++
->  fs/xfs/libxfs/xfs_alloc.c      | 20 ++++++++++++++-
->  fs/xfs/libxfs/xfs_alloc.h      |  2 ++
->  fs/xfs/libxfs/xfs_bmap.c       | 47 ++++++++++++++++++++++++++++++++--
->  fs/xfs/libxfs/xfs_bmap_btree.c |  2 ++
->  fs/xfs/xfs_mount.h             |  3 +++
->  fs/xfs/xfs_super.c             | 12 ++++++++-
->  7 files changed, 99 insertions(+), 4 deletions(-)
->
-> --
-> 2.33.0
->
+I'm pretty sure we enforced that in the XFS mapping implemention for
+atomic writes using forced alignment. i.e.  we have to return a
+correctly aligned, contiguous mapping to iomap or we have to return
+-EINVAL to indicate atomic write mapping failed.
 
---0000000000002e608206260c8135
-Content-Type: application/x-shellscript; name="auto_frag.sh"
-Content-Disposition: attachment; filename="auto_frag.sh"
-Content-Transfer-Encoding: base64
-Content-ID: <f_m32d4b240>
-X-Attachment-Id: f_m32d4b240
+Yes, we can check this in iomap, but it's really the filesystem that
+has to implement and enforce it...
 
-IyEvYmluL2Jhc2gKCmNsZWFudXAoKSB7CgllY2hvICJDdHJsK0MgZGV0ZWN0ZWQuIEtpbGxpbmcg
-Y2hpbGQgcHJvY2Vzc2VzLi4uIiA+JjIKCXBraWxsIC1QICQkICMgS2lsbCBhbGwgY2hpbGQgcHJv
-Y2Vzc2VzCglleGl0IDEKfQp0cmFwIGNsZWFudXAgU0lHSU5UIFNJR1RFUk0KCi4vZnJhZy5zaCB0
-ZXN0LmltZyBtbnQvICAkKCg1MDAqMTAyNCkpIGZyYWcJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1u
-dC8gICQoKDIwMCoxMDI0KSkgZnJhZzIJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEw
-MCoxMDI0KSkgZnJhZzMJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkg
-ZnJhZzQJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzUJJDEK
-Li9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzYJJDEKLi9mcmFnLnNo
-IHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzcJJDEKLi9mcmFnLnNoIHRlc3QuaW1n
-IG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzgJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQo
-KDEwMCoxMDI0KSkgZnJhZzkJJDEKIAo=
---0000000000002e608206260c8135
-Content-Type: application/x-shellscript; name="frag.sh"
-Content-Disposition: attachment; filename="frag.sh"
-Content-Transfer-Encoding: base64
-Content-ID: <f_m32d4ibw1>
-X-Attachment-Id: f_m32d4ibw1
-
-I3VzYWdlOiAuL2ZyYWcuc2ggJGRldiAkZGlyICRzaXplX2sgJGZpbGVuYW1lIAojIS9iaW4vYmFz
-aAoKY2xlYW51cCgpIHsKCWVjaG8gIkN0cmwrQyBkZXRlY3RlZC4gS2lsbGluZyBjaGlsZCBwcm9j
-ZXNzZXMuLi4iID4mMgoJcGtpbGwgLVAgJCQgIyBLaWxsIGFsbCBjaGlsZCBwcm9jZXNzZXMKCWVj
-aG8gImV4aXQuLi51bW91bnQgJHt0ZXN0X2Rldn0iID4mMgoJdW1vdW50ICR7dGVzdF9kZXZ9Cgll
-eGl0IDEKfQp0cmFwIGNsZWFudXAgU0lHSU5UIFNJR1RFUk0KCnRlc3RfZGV2PSQxCmlmIFsgLXog
-JHRlc3RfZGV2IF07IHRoZW4KCWVjaG8gInRlc3RfZGV2IGNhbnQgYmUgbnVsbCIKCWVjaG8gInVz
-YWdlOiAuL2NyZWF0ZV9maWxlLnNoIFt0ZXN0X2Rldl0gW3Rlc3RfZGlyXSBbZmlsZV9zaXplX2td
-IgoJZXhpdCAxCmZpCnRlc3RfbW50PSQyCmlmIFsgLXogJHRlc3RfbW50IF07IHRoZW4KCWVjaG8g
-InRlc3RfbW50IGNhbnQgYmUgbnVsbCIKCWVjaG8gInVzYWdlOiAuL2NyZWF0ZV9maWxlLnNoIFt0
-ZXN0X2Rldl0gW3Rlc3RfZGlyXSBbZmlsZV9zaXplX2tdIgoJZXhpdCAxCmZpCmZpbGVfc2l6ZV9r
-PSQzCmlmIFsgLXogJHtmaWxlX3NpemVfa30gXTsgdGhlbgoJZWNobyAiZmlsZV9zaXplX2sgY2Fu
-dCBiZSBudWxsIgoJZWNobyAidXNhZ2U6IC4vY3JlYXRlX2ZpbGUuc2ggW3Rlc3RfZGV2XSBbdGVz
-dF9kaXJdIFtmaWxlX3NpemVfa10iCglleGl0IDEKZmkKZWNobyAidGVzdF9kZXY6JHt0ZXN0X2Rl
-dn0gdGVzdF9tbnQ6JHt0ZXN0X21udH0gZml6ZV9zaXplOiR7ZmlsZV9zaXplX2t9S0IiCgojbWtm
-cy54ZnMgLWYgJHt0ZXN0X2Rldn0KCmlmIFsgJDUgLWVxIDAgXTsgdGhlbgoJZWNobyAibW91bnQg
-JHt0ZXN0X2Rldn0gJHt0ZXN0X21udH0iCgltb3VudCAkdGVzdF9kZXYgJHRlc3RfbW50CmVsc2UK
-CWVjaG8gIm1vdW50IC1vIGFmMT0xICR7dGVzdF9kZXZ9ICR7dGVzdF9tbnR9IgoJbW91bnQgLW8g
-YWYxPTEgJHRlc3RfZGV2ICR0ZXN0X21udApmaQoKCgojIFBhcmFtZXRlcnMKCkZJTEU9JHt0ZXN0
-X21udH0vIiQ0IiAgICMgRmlsZSBuYW1lCmVjaG8gIiRGSUxFIgppZiBbIC16ICR7RklMRX0gXTsg
-dGhlbgoJRklMRT0ke3Rlc3RfbW50fS8iZnJhZ21lbnRlZF9maWxlIiAgICMgRmlsZSBuYW1lCmZp
-ClRPVEFMX1NJWkU9JHtmaWxlX3NpemVfa30JIyBUb3RhbCBzaXplIGluIEtCCkNIVU5LX1NJWkU9
-NCAgICAgICAgICAgICAjIFNpemUgb2YgZWFjaCBwdW5jaCBvcGVyYXRpb24gaW4gS0IKCgojIENy
-ZWF0ZSBhIGJpZyBmaWxlIHdpdGggYWxsb2NhdGVkIHNwYWNlCnhmc19pbyAtZiAtYyAiZmFsbG9j
-IDAgJCgoVE9UQUxfU0laRSkpayIgJEZJTEUKCiMgQ2FsY3VsYXRlIHRvdGFsIG51bWJlciBvZiBw
-dW5jaGVzIG5lZWRlZApOVU1fUFVOQ0hFUz0kKCggVE9UQUxfU0laRSAvIChDSFVOS19TSVpFICog
-MikgKSkKCmxhc3RfcGVyY2VudGFnZT0tMQojIFB1bmNoIGhvbGVzIGFsdGVybmF0ZWx5IHRvIGNy
-ZWF0ZSBmcmFnbWVudGF0aW9uCmZvciAoKGk9MDsgaTxOVU1fUFVOQ0hFUzsgaSsrKSk7IGRvCiAg
-ICBPRkZTRVQ9JCgoIGkgKiBDSFVOS19TSVpFICogMiAqIDEwMjQgKSkKICAgIHhmc19pbyAtYyAi
-ZnB1bmNoICRPRkZTRVQgJHtDSFVOS19TSVpFfWsiICRGSUxFCiAgICAKICAgICMgQ2FsY3VsYXRl
-IGN1cnJlbnQgcGVyY2VudGFnZSBhbmQgcHJpbnQgaWYgY2hhbmdlZAogICAgUEVSQ0VOVEFHRT0k
-KCggKGkgKyAxKSAqIDEwMCAvIE5VTV9QVU5DSEVTICkpCiAgICBpZiBbICIkUEVSQ0VOVEFHRSIg
-LW5lICIkbGFzdF9wZXJjZW50YWdlIiBdOyB0aGVuCiAgICAgICAgI2VjaG8gIlByb2Nlc3Npbmcu
-Li4ke1BFUkNFTlRBR0V9JSIKICAgICAgICBsYXN0X3BlcmNlbnRhZ2U9JFBFUkNFTlRBR0UKICAg
-IGZpCmRvbmUKCiMgVmVyaWZ5IHRoZSBleHRlbnQgbGlzdCAodG8gc2VlIGZyYWdtZW50YXRpb24p
-CiMgZWNobyAiRXh0ZW50IGxpc3QgZm9yIHRoZSBmaWxlOiIKIyB4ZnNfYm1hcCAtdiAkRklMRQpk
-ZiAtVGggJHt0ZXN0X21udH0KCmVjaG8gInVtb3VudCAke3Rlc3RfZGV2fSIKdW1vdW50ICR0ZXN0
-X2RldgoKeGZzX2RiIC1jICdmcmVlc3AnICR0ZXN0X2Rldgo=
---0000000000002e608206260c8135--
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
