@@ -1,57 +1,57 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1355817DFE0;
-	Mon,  4 Nov 2024 01:45:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E5918732B;
+	Mon,  4 Nov 2024 01:45:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730684708; cv=none; b=h2aXuV13mGPzkle/sIEjESWo5bdPde+nkAW5G8fBKrXq3iDoDMz/NYjFZcadPGEz4XVxx1Wxhc5tFKE/XuzzPwkLTToj7icFAXixMOTPG4SP6xeyo2Y/xopIztAUnRe6SHiNxXsWfntWHZobuRvVbbBHEQPw8QoTP2Lha7YqyO0=
+	t=1730684715; cv=none; b=Nup6PKD5Ko1IIqajs82cM5sLCf8bSu9vnXjoxLDbYt6RYCWhKJjjU0QxV+EzALfU51UNB9JdCsujYYRYoYcePqXCNz4gZeYEnRYE1BN9ImX4wL8ojxmcPrzEFhD99oPUTz3RjT2pxmCRpzBNoW9T3aWi0FM7SfhKR/2dJ/TGQJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730684708; c=relaxed/simple;
-	bh=arn1OCDxZaEgplRAT40oLAkueks9sPLIJ/HqWldOUNU=;
+	s=arc-20240116; t=1730684715; c=relaxed/simple;
+	bh=4HN9YTUUVd5m+kQvD8mswBgKP6nmdptFwI0vtuu5NSg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UxAv20pAC2QvptNaC9QfhngPQPx0hImErXBaMLl/PUw8Jc9VQUJSnwaEQkRrs2PzvMXQeAW7ZOsx6dbhRhwAo9TFl8vdPTGoVqvAVM41NXnaOiCUN8dd3ZirllUwOXBChR0y8i/IFnyd/8noWlQG2CF7bH40wlB7bfG6qnDL+L4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M0a8enp1; arc=none smtp.client-ip=209.85.210.171
+	 MIME-Version; b=XEHIwjCUlwUqIfaKeEcvyPkfHw+dOcf5BpWCkB3V+KuLmqwgpdhLUDYNLiKh4VzHZIyg5DwXWYGTCl+rmKFV/yjJUcFjVbydFePdtNZCCxJGMz7HLYE4g/zOBWFJYG8FqMOn9b/E7l9Jy74GS58aMFa6RkMcvQztSK7zLUf023k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Azr0JTsj; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M0a8enp1"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-720c2db824eso3356068b3a.0;
-        Sun, 03 Nov 2024 17:45:06 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Azr0JTsj"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-720be27db74so2283338b3a.1;
+        Sun, 03 Nov 2024 17:45:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730684706; x=1731289506; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1730684713; x=1731289513; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fbk9rhQrosmAxwMrd6YDiXdQG9wegdoaNo70H/pX0VM=;
-        b=M0a8enp1Jdh27FUwPssytq4iTENGPqitKsTwOeT3yfmBw5d+OyUgi5CnsRIn6q7J7G
-         5UljHZj4+wet47kbEdeN8FPLM38fFe3ued7/0VCCMauRjabuFCtA6pBgxTzujcSEMbHy
-         OFm0ywyol4wBsRzin4lNDTopvKDwcx/xrLbO1D+5AFYivqOusCvAnsartAJBGX+MOxoE
-         k/vo6SUuIe9NcJqE8rQZJyFGz7azqafUa7SeN5k1kmP96GCUf7DwVQxUVfBFR7njlnQY
-         GsFbbf8LJTONYBat1MT+90rgqpy/JntxF6JjlgVPs2Z6AeaiE6qxuJw8zHo/esh2giMx
-         lqMg==
+        bh=1rDXLhuXjk2jLJN5NRJ96tHaE2wkNSlsldVHym5Q/eo=;
+        b=Azr0JTsjTx1RXwOD4c+xhOKq/nc+osCNN2r0OUgIlTsnosdAtCvrR810MMU+wFzk4q
+         DGtF/sgN13wFL+IXYpTEU9JoI7tbdf0rVnP+0H8iHUr8GqjSBNj78lUXo9SSYvTFXTwZ
+         fkmzkegxw0KepAAjcCRMgur521IdjjUgtBK8o72Fep8AxRWGX8mDFKsrsfzBeAEFEC5J
+         A2EzErUGm9F+JHKN4zICP0YaoJsqYTIFHEAvZ9Te2ThCC6olxCqDUjCtXHA+pgFiiloo
+         o3CPeVH3HiEyPFEDAGvd5AmF73uFp5QOP/E0O9o3kTpP1jHi2zcMQOjoDsuuC4sa9Chg
+         D6YA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730684706; x=1731289506;
+        d=1e100.net; s=20230601; t=1730684713; x=1731289513;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fbk9rhQrosmAxwMrd6YDiXdQG9wegdoaNo70H/pX0VM=;
-        b=GEZiAHuk8wLKaLItp5MAtRqxcMfqTAt7JjROMdxYAN03mHji8W8/jGo1I4q7Eqdyss
-         EcSePtSlbyK8Sq0oiJP2LZ9k/1XsOWkF+ZbEdN4FtRLa1Bw4xZI8q8jcEnyFzyV8f+Ns
-         5DpnL6Rg2ElJSl0Y91CcE2Nblj57tuTQd7KrLE9wgSatq7nfe3ws+8ImijU2KZrrrvIU
-         gmmXGtvnDV0ozvHQYKi1GZN+0jQFyZMWZF99kLe1NPpejqYQTfGs1mk722CxZ833hfVe
-         bYXmRDTZbZkb+Xts5LdSykcd7FvTGJMqhB1HEepsW8ZXQfBUz8OuIJ98gXGNM0f+3a0S
-         PvvA==
-X-Forwarded-Encrypted: i=1; AJvYcCVSo1G0wJV/cta+OgKuk2QP1I967JlJnqIkRCsftPDC0K9XkK5FygpbxfmYpiy2qfTTN2LOUEiBG+OOlE4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzzZt++h53MlUJ/8mLJnalBKFGMoMRm1FSWP/z7SpThnT5UbFRo
-	EQ5dE9m9MutUWXu0+YG0fOj6NdxIawhVjddAUJDD6shIW1JRO0aa
-X-Google-Smtp-Source: AGHT+IEsZPdU8GM1kum7/zaUzEVw6XvTIJrad8b4SerZbO73UnRoT/b4kMshT+eS7mAR2Kt1EenPhA==
-X-Received: by 2002:a05:6a00:4616:b0:71e:41b3:a57a with SMTP id d2e1a72fcca58-72063093466mr40197264b3a.24.1730684706294;
-        Sun, 03 Nov 2024 17:45:06 -0800 (PST)
+        bh=1rDXLhuXjk2jLJN5NRJ96tHaE2wkNSlsldVHym5Q/eo=;
+        b=snK9DVhSfw8o9knygvPwXcU0LowXjkQYNamxJuN+ZYjvV95mz+un6muL+ghzmh0yP2
+         BEQnv+aSNq+BVMTO+48ihA0rMSRvylSJzHtXPK1mt5XdBLiPMn+JPBAqFjMzqH/kHE8X
+         069bWxy9a2g1C5Ue4OICA9fNX77G43f7jSraQUz/2jI65vXmvCdRDu9JeieTOObpf3Vb
+         JPI2Syd6x1S6Tk4YHkZMIljYgmFHsvzCcjKzHkIKEXjDCJEnqL8Q9cxRgRBasB7x0gGn
+         rERUDEc+FDCmHQzQJoPMl2XPNkyT8iK6dFxA9azIV1/RQQ7EUOAix73NKHssTYeoaRRx
+         Z/7Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVm8ue0EI0/DcCIPWCbLKjMYZMOIcbw1CWQD4HKY7C94CMi6gPt9kKUxcTj7IYxU8lZWBA/aSkdNf0mA80=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzGbA3Tq5Eej1yWLGID0+NfvHkhQKirYNBd4IsnH965OgIabJ/N
+	vgdFrIMCdTxUXX2gTQDBaO+V2CJRPbI0b62zEDNIDoy9qGHDUe3XUX2cgowvgaE=
+X-Google-Smtp-Source: AGHT+IFposWJFsNCfOvvnQK72vOWX6qOEnNRu3Qw1p2EcyFypfIgeTWSrCxQDtjQGZoLJrAj3J6H6Q==
+X-Received: by 2002:a05:6a00:4615:b0:71e:5573:8dcd with SMTP id d2e1a72fcca58-720bcaf1e8emr19062503b3a.2.1730684712999;
+        Sun, 03 Nov 2024 17:45:12 -0800 (PST)
 Received: from localhost.localdomain ([2607:f130:0:105:216:3cff:fef7:9bc7])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc1eb3a7sm6360030b3a.81.2024.11.03.17.45.00
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc1eb3a7sm6360030b3a.81.2024.11.03.17.45.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Nov 2024 17:45:05 -0800 (PST)
+        Sun, 03 Nov 2024 17:45:12 -0800 (PST)
 From: zhangshida <starzhangzsd@gmail.com>
 X-Google-Original-From: zhangshida <zhangshida@kylinos.cn>
 To: djwong@kernel.org,
@@ -65,9 +65,9 @@ Cc: linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	zhangshida@kylinos.cn,
 	starzhangzsd@gmail.com
-Subject: [PATCH 2/5] xfs: add two mp member to record the alloction field layout
-Date: Mon,  4 Nov 2024 09:44:36 +0800
-Message-Id: <20241104014439.3786609-3-zhangshida@kylinos.cn>
+Subject: [PATCH 3/5] xfs: add mount options as a way to change the AF layout
+Date: Mon,  4 Nov 2024 09:44:37 +0800
+Message-Id: <20241104014439.3786609-4-zhangshida@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20241104014439.3786609-1-zhangshida@kylinos.cn>
 References: <20241104014439.3786609-1-zhangshida@kylinos.cn>
@@ -81,56 +81,49 @@ Content-Transfer-Encoding: 8bit
 
 From: Shida Zhang <zhangshida@kylinos.cn>
 
-Add two member to support the AF(alloction field) for each *mp*,
-which means now we can have 3 AFs at most:
-    [ 0, AF[0] )
-    [ AF[0], AF[1] )
-    [ AF[1], m_sb.agcount )
-
-where AF[N],
-    start agno of the AF[N] = mp->m_sb.agcount - mp->m_af[N]
-
-On default,
-    [ 0,  m_sb.agcount)
-    [ m_sb.agcount, m_sb.agcount )
-    [ m_sb.agcount, m_sb.agcount )
-
-That means the entire filesystem can be deemed as a AF 0 extending
-from 0 to m_sb.agcount.
+Except for mount options, maybe there are other ways like ioctl()
+to pass the layout from user to the filesystem.
 
 Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
 ---
- fs/xfs/xfs_mount.h | 3 +++
- fs/xfs/xfs_super.c | 2 ++
- 2 files changed, 5 insertions(+)
+ fs/xfs/xfs_super.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 96496f39f551..38dff08b467d 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -260,6 +260,9 @@ typedef struct xfs_mount {
- 
- 	/* Hook to feed dirent updates to an active online repair. */
- 	struct xfs_hooks	m_dir_update_hooks;
-+
-+	/* Relative start agno of the AFs */
-+	xfs_agnumber_t		m_af[2];
- } xfs_mount_t;
- 
- #define M_IGEO(mp)		(&(mp)->m_ino_geo)
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fbb3a1594c0d..0975ad55557e 100644
+index 0975ad55557e..09dc44480d16 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -2040,6 +2040,8 @@ static int xfs_init_fs_context(
- 	mp->m_logbufs = -1;
- 	mp->m_logbsize = -1;
- 	mp->m_allocsize_log = 16; /* 64k */
-+	mp->m_af[0] = 0;
-+	mp->m_af[1] = 0;
+@@ -105,7 +105,7 @@ enum {
+ 	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
+ 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
++	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum, Opt_af1, Opt_af2,
+ };
  
- 	xfs_hooks_init(&mp->m_dir_update_hooks);
+ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+@@ -150,6 +150,8 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+ 	fsparam_flag("nodiscard",	Opt_nodiscard),
+ 	fsparam_flag("dax",		Opt_dax),
+ 	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
++	fsparam_u32("af1",		Opt_af1),
++	fsparam_u32("af2",		Opt_af2),
+ 	{}
+ };
  
+@@ -1396,6 +1398,12 @@ xfs_fs_parse_param(
+ 		xfs_fs_warn_deprecated(fc, param, XFS_FEAT_NOATTR2, true);
+ 		parsing_mp->m_features |= XFS_FEAT_NOATTR2;
+ 		return 0;
++	case Opt_af1:
++		parsing_mp->m_af[0] = result.uint_32;
++		return 0;
++	case Opt_af2:
++		parsing_mp->m_af[1] = result.uint_32;
++		return 0;
+ 	default:
+ 		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
+ 		return -EINVAL;
 -- 
 2.33.0
 
