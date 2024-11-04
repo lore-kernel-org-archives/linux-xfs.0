@@ -1,95 +1,80 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C464118562F;
-	Mon,  4 Nov 2024 06:55:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208E2171E70;
+	Mon,  4 Nov 2024 07:50:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730703361; cv=none; b=ZEUKe2Xrq7nbw49sDnVXB7DUTDKm1zvJxTEEpc962SmiUTP1tIDr/guxKeOvKKDLELVVFkJCmtkoXbH6ChiYgYxY2Ij/rDp7tYgvfrATCj1sA271kq+6qPU+fwENuozyZrKuOcRIIOIpdBhwGjtZS67KcNT9slB04L5sghSdAoA=
+	t=1730706634; cv=none; b=W3Toekh0njnG5FHbEAHVmsrsUiRRLqXWixyMok3eeizM0vpUQRoLAlEzvxBLnHTDKPp49m3H0rIrgdciAfCGf6CvGNBn+4u099WZgmEO5L8TG59TffTAvkjq6Idr53V2l3rqo8jLv9UxAGh+L6gYekedm6zJqYpXEuKR53Sf5fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730703361; c=relaxed/simple;
-	bh=KnTOP1y0mwLLmktmDUuLS9+1x78AkvSs2dKxz3+1fZc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uiUELYOVrUdLpAgwIhrthG4F2bmTNWqQYE/iUh5l/Ij9uBmRS9DexTMm7VBnHZ6IGM01eYAF5aAt5jFDsVcqVHvwJKrai5k5CHe0i0ItA5NOXs8VoJEpXbBOdGeyfNuiRUS3sjk70prk5oceHOXRLKZ7aK97PPWiMsqLtkjwU6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=F+uqmhDn; arc=none smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730706634; c=relaxed/simple;
+	bh=kC8fSeEU7iFjwglI2lmOfhtVgecEEefTKASCDugRghs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=l58WEGgJnFv7hNv2TUfwxF+mGcRLD/Ro5q0Jvw5QXnBqUcTggWdlJnoHSokGAbH/UNXoC3bk9fp7sD0WWXkcNHhA9+lpWZjM3CzvZPv5dtUzDIT7njQzNypmm46bKTRtETLUue7Yfg4cZg5rhFoyeVALV7JO3yjhMpS8+jPw7LM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=13sRbPjX; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F+uqmhDn"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-460b2e4c50fso28992141cf.0;
-        Sun, 03 Nov 2024 22:55:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730703358; x=1731308158; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KnTOP1y0mwLLmktmDUuLS9+1x78AkvSs2dKxz3+1fZc=;
-        b=F+uqmhDnnzHJqYG3EC2NuDpgEae0OLAbyYy0291mlMeHowC54EV5W8a7mKxYQSMBIW
-         LpZ+dsQrdHqnpOWdo2pIgxLdcEBxls1SPTDX56OamnPYMEMU1r6I0uhKrGgwHA3LPY/9
-         s96QF6Y/lBxaFnp/LR8zt7x59ncHDFFkGgr44uN0aRj4Ai3dtHV3vVA/ciBLe4J21kxG
-         wRhOTEBbF2pxEJRX5M/ea5V/+/D4Z62N9FGHYCIvO2/GapSixOu7tHtRDtC9jxZANaFI
-         U1Cug83OxqBYPx8Q46rvDS+thLuPQaAlQhrE0h5aHgOg6MBi/ibUpTAvvCMu0XUEJz4P
-         yaSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730703358; x=1731308158;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KnTOP1y0mwLLmktmDUuLS9+1x78AkvSs2dKxz3+1fZc=;
-        b=LpqjUg18JG7XNNhtwnvtBR2qLqIuu5CMUph7Qxtzm9vhUW44r7m1JQeAhF8ngh4p8H
-         crYE4z6ZDHfFLfSXBqhr+aJ85loVwrl6DM53jgSb3jHH3kvG3GwsmiUOzv0gy+Bi6Wzf
-         dSV1jQAhShU5eZsSKjRiU3cctXWnO4vB0LapkGCbtBfI3VLyVEUPy+AxvZe+AsHZfb9z
-         3n6uVgetgKRAPMsHAE77bC7j+AZ/nThFYeXTReRKqFlOni9eBJjKgTpdy1BjXdj9rQ3c
-         4fVRAjS+ksv29L2ekdqXzjdE8MyfQJd2yi3i5xhnBRS/tx5df3IHf1cpB7Wp3WT9r60+
-         dUGg==
-X-Forwarded-Encrypted: i=1; AJvYcCUADFFLcdwxGYE+mElXLSz4qPz8WEo07V9Cede3CtP/byAfa/oEO+Gc/mvYwLTxQc6yiXcEbQ0us1uD@vger.kernel.org, AJvYcCVWN5r8fzZV9JBmh2IKDi4LV+mtQYM86wjL16D8+wKIIUAE5f79PUiVgpXT0911h1li9mohJFSUgHVgTIQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzkqFJ+DkPludxu3ksKc6wEBX9goT9+uAOgZHOU4NN+0rXhdnbg
-	Ft1k6Hb25ucEJ/oXTk00XVeD+R6rQu1Q/KW2J6+vR8nmk5h1b/Y3Jyh87nqygP5/sQ1VF5kZWrm
-	PGO/sj7bHo2AdY96H2Lntml+y7F8=
-X-Google-Smtp-Source: AGHT+IF97gXJ5LGCjJTks8AH4z0TUnSkkLJFAHat/Lf228B3dkZvcLaj9nfLYuwamNsr5k6g30A15LrUWlBnUOv+79c=
-X-Received: by 2002:a05:622a:609:b0:462:a7b3:985b with SMTP id
- d75a77b69052e-462a7b3a2d7mr277828281cf.59.1730703358632; Sun, 03 Nov 2024
- 22:55:58 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="13sRbPjX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=EcmsWKoCofQclEFUrm7xCKoG2Zv0XvEJ0ny3OiXz82I=; b=13sRbPjXdBN2mVU8xiHBfW4SCn
+	3VnF3RGu8vj7V38BcDBv/21OEPWzv75bcqkGa6RWa+1mivoehj1BZvb1aTuyRpDjLajDbwguxnd4M
+	v+GNU5WzRX6d62GTnlfxUTZF+vNFskpUvOkyEnfvCUJ+JxFnoOPHH7+pP7MZe4mTqkAmBG0JJ0kBq
+	2Q+9WtTCBbm4x2+aYsp2bUJIDUbjl2rZ7CMEwi8kmwqrnJBhynUxulpzGXb1oBkCdsk3o1oeVkewK
+	Zsnt57VL9EwW9VH2jlW3HfrAxs9vmubnE0eziwLjdJcQnNRKeL3I4+X+IQJmF+rlh5tF7qBHd+4jf
+	ONDPwUEw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1t7rr6-0000000CtaS-3MAm;
+	Mon, 04 Nov 2024 07:50:32 +0000
+Date: Sun, 3 Nov 2024 23:50:32 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zorro Lang <zlang@redhat.com>, Zorro Lang <zlang@kernel.org>,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs/157: mkfs does not need a specific fssize
+Message-ID: <Zyh8yP-FJUHKt2fK@infradead.org>
+References: <20241031193552.1171855-1-zlang@kernel.org>
+ <20241031220821.GA2386201@frogsfrogsfrogs>
+ <20241101054810.cu6zsjrxgfzdrnia@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241101214926.GW2578692@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241104014439.3786609-1-zhangshida@kylinos.cn>
- <CANubcdWwg3OB_YV4CteC7ZZBaQXOuvFG1oS7uN+TpabS=Z=Z2Q@mail.gmail.com> <ZyhAyrateNQPz3Hw@dread.disaster.area>
-In-Reply-To: <ZyhAyrateNQPz3Hw@dread.disaster.area>
-From: Stephen Zhang <starzhangzsd@gmail.com>
-Date: Mon, 4 Nov 2024 14:55:22 +0800
-Message-ID: <CANubcdWdk+STqOYPO=24f4MSXe1sBvLmk5hJZS_KX+qk1bTpgg@mail.gmail.com>
-Subject: Re: [PATCH 0/5] *** Introduce new space allocation algorithm ***
-To: Dave Chinner <david@fromorbit.com>
-Cc: djwong@kernel.org, dchinner@redhat.com, leo.lilong@huawei.com, 
-	wozizhi@huawei.com, osandov@fb.com, xiang@kernel.org, 
-	zhangjiachen.jaycee@bytedance.com, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, zhangshida@kylinos.cn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241101214926.GW2578692@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Dave Chinner <david@fromorbit.com> =E4=BA=8E2024=E5=B9=B411=E6=9C=884=E6=97=
-=A5=E5=91=A8=E4=B8=80 11:34=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Mon, Nov 04, 2024 at 09:49:32AM +0800, Stephen Zhang wrote:
-> > Hi all,
-> >
-> > I just send the scripts to test these series here.
->
+On Fri, Nov 01, 2024 at 02:49:26PM -0700, Darrick J. Wong wrote:
+> > How about unset the MKFS_OPTIONS for this test? As it already tests rtdev
+> > and logdev by itself. Or call _notrun if MKFS_OPTIONS has "rmapbt=1"?
+> 
+> That will exclude quite a few configurations.  Also, how many people
+> actually turn on rmapbt explicitly now?
+> 
+> > Any better idea?
+> 
+> I'm afraid not.  Maybe I should restructure the test to force the rt
+> device to be 500MB even when we're not using the fake rtdev?
 
-Okay, I've resend them in these series.
+All of this is really just bandaids or the fundamental problem that:
 
-Cheers,
-Shida
+ - we try to abitrarily mix config and test provided options without
+   checking that they are compatible in general, and with what the test
+   is trying to specifically
+ - some combination of options and devices (size, block size, sequential
+   required zoned) fundamentally can't work
 
-> Please include the scripts as in line text like is done for patches
-> - base64 encoded attachments are not quotable nor readable in
-> archives.
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+I haven't really found an easy solution for them.  In the long run I
+suspect we need to split tests between those that just take the options
+from the config and are supposed to work with all options (maybe a few
+notruns that fundamentally can't work).  And those that want to test
+specific mkfs/mount options and hard code them but don't take options
+from the input.
+
