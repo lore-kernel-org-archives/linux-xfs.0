@@ -1,71 +1,75 @@
-Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91E711B0F2B
-	for <linux-xfs@vger.kernel.org>; Mon,  4 Nov 2024 12:22:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09C71B85D0
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Nov 2024 13:04:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730722925; cv=none; b=kAPS+SUVtkoQJjTa6sa1pcwGnw9NKVG6/eW+53u+RqinuaV4mvD5oHQGA21Rx+dnLSKZ9MEsFrx6Pc5HRjxUFApEGnAzbFDD2sauuQca0Kd2tE1hHdnkxwvsPIkNBIBELMQD1SEZDBdlxsxaWXFjUv5qAWwmO+GVBmNaMWMJpoc=
+	t=1730725486; cv=none; b=XSD6PSvic+cnn0I52MXHfSwGu4F79xBWtQq74TdepjTBTsp0kV9ToppPkFz4HIu9Mm56z7ikEOfT6OULQVEGxFeeOYwyyJy1cWAOUsct4qgjrhcgUW+5vUaQ01H9hIPY3SVlNFFdGTJ0X4IqIYvkjYSkzxGnrS66eNzvr9vcRaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730722925; c=relaxed/simple;
-	bh=I1ndr0aWA7myGho8sWTP+cYroslurz7V+mkmqrNkB/g=;
+	s=arc-20240116; t=1730725486; c=relaxed/simple;
+	bh=JIVJerlRTlFpljSApZVHeEHrB07LV3HDpmzwjykp3CU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tlu1d0kVgdCh+TobP1aik+rkrma5VRkE7g2apUF4D9N2tV5uLDwMQEdGeDyB/GANxha+DA1+s2xMHkShEAlXfT29njOzwF1PuMPNHTiiG8WBrtItvFqvccWUl23SMjoDsmepu9zcopzTFaRKqWWLSdeY/urVE8nSGMV3NJxCwrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=nsv4zbg5; arc=none smtp.client-ip=209.85.167.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=iYB7uiANjBzl+R2gm2ff6asP5u7cZu0gmscZ5F6VJLtIMnCT6gg2JnnsnY23/bSKg3eubiqR9ni81vpo8pCxjtwaKpSycs0Kfmbu8Gz4fzfl0LVAfPTMxnkmPSzZLg2PgnFoGZq0qGNIvD9no1h6RNY1seqn0JYUF23wEOfU0Ss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=J2/wjfKd; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="nsv4zbg5"
-Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-3e6048bc23cso2257787b6e.3
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Nov 2024 04:22:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730722922; x=1731327722; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/sZu1hahYDVwARP6c7VfSbT+R7Hv7ndqTcVFryowN4w=;
-        b=nsv4zbg5DqEWFtWFksWA5LIv29X1XWFlec7PyBLdv4DJGoObLZvT7rUiVJqrk3ifGP
-         Oty1F2MZqFgrl+Qt3jaiQfrsyt7RaucFxKCL3iTd5+uOanHyDa2J27jo7PDET3do6vlV
-         MzXT3lX0l5m9dkWdXWrexSYO2AiDzQAzWYsm5oLGiOHeivfUEjOTegyqvQ1P+CBJRgu1
-         Z5/NXlQStcF6YTro8UzHVc2rxgk2yu98UvdzXIjspbPKN3fRhPZyOH/KEm5gAqtuNstH
-         T9ekl0OlOKSpFYWdeJ5DD7sJqUTs98PLBSjmwydX4rHdQA6Q5tRbK7jSyOa7itb0CD80
-         WNFw==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J2/wjfKd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1730725483;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=69MZgo53xdQTUuf4KildLTNyR8uOmDtjJkAS/qyAx6o=;
+	b=J2/wjfKdZ4DkEFNvN51VAgWJYuvc/nE/m0iqMIl/7JzrFiTdRKGAbbF9qnOla7vdFxNNxm
+	ez8Vuhso77NdVEvor7fRcPsBC1XFAVYQtMIO/U8GRlyVKB7eDcZmGSCWlmZZ1rVaBZQ2Fs
+	iv+l20NSP7GyCd+ssw7LCK6fk8H4jLs=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-371-IPnZSHaJOsu1Ylz1BvDy-Q-1; Mon, 04 Nov 2024 08:04:42 -0500
+X-MC-Unique: IPnZSHaJOsu1Ylz1BvDy-Q-1
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-20c9673e815so46368675ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Nov 2024 05:04:42 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730722922; x=1731327722;
+        d=1e100.net; s=20230601; t=1730725481; x=1731330281;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/sZu1hahYDVwARP6c7VfSbT+R7Hv7ndqTcVFryowN4w=;
-        b=TbGml3SC6vcYG+T7+qGwBCkVkOwoHcErPd0y3fqETDN3HJ1lrBhnN1cMm7g2Yi9P63
-         2vKultjdlzNr/ZePz9Br9zBpH9uEgqtRovwDwK+CrbLoBPXsT3i4NglT6ks0gaWF/uo6
-         h0sOim5Y77ds01ytOE54WkNbbH6JWg/ST9gaJTESrhm6qWTIBIsRH7A6JKJORq1OEvpq
-         drt1Fpvoubtl0/4RZxWF0pHjH1NubwHjBTeSbpS1jZIAK9AWiTll4YjbtQLBQqDcfelR
-         CNoTYtnXsKqpofs5LLcYW2PS1zFpCK33kKYnT7pCy1hGcW6VjPaU0ZR04wJ4UPVKL8Pe
-         pu3Q==
-X-Forwarded-Encrypted: i=1; AJvYcCW+WbfHgllJ33o9Jbh1MeG01p/AjHYMLu6Q/qp1ZBLEn/alzdgMytYgEvX+xXcv9Wf0AD5OBpqc8WY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxh+uPeUZjrT4n+6jyFZisg4ZDm5AgxdZ4jAYCpcGaHmTyIq+2P
-	XFovetyhty8uv+Uj+XeaBHbAVDXA8U/U64Rh3LOPF0cEJ7QSgf9fdoUsnQzn7Wk=
-X-Google-Smtp-Source: AGHT+IHmBO35x++W6+rQSfmrJpm5WkO7NNilpxfIHFw5XDrx+96pTQ0tI5dpbL/LGhdQU+y+ppWc3Q==
-X-Received: by 2002:a05:6808:3c44:b0:3e6:61f0:4797 with SMTP id 5614622812f47-3e661f049ccmr10206679b6e.40.1730722922622;
-        Mon, 04 Nov 2024 04:22:02 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7ee459f9288sm6831460a12.65.2024.11.04.04.22.02
+        bh=69MZgo53xdQTUuf4KildLTNyR8uOmDtjJkAS/qyAx6o=;
+        b=RGfMK6xfFyvpn3Fco2quL4DdY1oSkbFB67DQs1pxSc7ltOU95+4502/yOVrzDJigqG
+         nwEIcNISJMtlzzq8n2ndZfhUtRf0xgfPWoQefJxUPJZf1eCOEqHRsXZMCFxcHyHsiI7E
+         U+XenZxfPSrvmmD2A5UJECAMvuXp7tIodHOX9ZQhnEgLzCnRjrzZ6RQ/jQ3HaL6QgG8Y
+         NtXHBZoGKbjBsOezQqMsGQ7R7Z+1MrrSf4jv67UH4ZlDzpfjqd177Ez/b9DEdtLP/koZ
+         XO4d8E8uooIkwY9yeLxSK2/mt8VcmcEI87q/eJ3QqsU/ixjIAm9OAzPKnyfBxBr1FOOm
+         0g1w==
+X-Forwarded-Encrypted: i=1; AJvYcCXqOTsUOZGQNmlAVzU+W2XITka2iOzgG97WYohTycygKdM3ou8z9XH2suZicRIQ/jTLxIXlTVTTxk4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzIYjFoGy7sUveWKcH2QmDU6SO4MPlgdbOf/PMozUN+N4R/5m9Z
+	Uc0HDCGphLp/u7ZWCFaJ4kV2hhzQ0gO+PzvBB9GIdxuSJgb0FIEfPT2pgLPgAzjQIO6xgBjA2il
+	VSqrncuHcQ7TEcB/dmGxGbI0PHtHZoKt0m5cKVQTa6HwYacWV10XyCPA/VQ==
+X-Received: by 2002:a17:902:d2c8:b0:20c:a055:9f07 with SMTP id d9443c01a7336-21103b1a5cfmr231305655ad.26.1730725481504;
+        Mon, 04 Nov 2024 05:04:41 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH1zB7hshLmK3bdT9vv7eF/CePpsM2Sm9znYFsEIhEEn0Uu66xnZ1JLP4KUhI4jAsGI5ThCFw==
+X-Received: by 2002:a17:902:d2c8:b0:20c:a055:9f07 with SMTP id d9443c01a7336-21103b1a5cfmr231305335ad.26.1730725481125;
+        Mon, 04 Nov 2024 05:04:41 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211057c728asm60164885ad.231.2024.11.04.05.04.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Nov 2024 04:22:02 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1t7w5n-00A2Wg-1W;
-	Mon, 04 Nov 2024 23:21:59 +1100
-Date: Mon, 4 Nov 2024 23:21:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: zhangshida <starzhangzsd@gmail.com>
-Cc: dchinner@redhat.com, djwong@kernel.org, leo.lilong@huawei.com,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	osandov@fb.com, wozizhi@huawei.com, xiang@kernel.org,
-	zhangjiachen.jaycee@bytedance.com, zhangshida@kylinos.cn
-Subject: Re: frag.sh
-Message-ID: <Zyi8Z7upAZf1sbMN@dread.disaster.area>
-References: <20241104014046.3783425-1-zhangshida@kylinos.cn>
- <20241104065214.3831364-1-zhangshida@kylinos.cn>
+        Mon, 04 Nov 2024 05:04:40 -0800 (PST)
+Date: Mon, 4 Nov 2024 21:04:37 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs/157: mkfs does not need a specific fssize
+Message-ID: <20241104130437.mutcy5mqzcqrbqf2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20241031193552.1171855-1-zlang@kernel.org>
+ <20241031220821.GA2386201@frogsfrogsfrogs>
+ <20241101054810.cu6zsjrxgfzdrnia@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241101214926.GW2578692@frogsfrogsfrogs>
+ <Zyh8yP-FJUHKt2fK@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,42 +78,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241104065214.3831364-1-zhangshida@kylinos.cn>
+In-Reply-To: <Zyh8yP-FJUHKt2fK@infradead.org>
 
-On Mon, Nov 04, 2024 at 02:52:14PM +0800, zhangshida wrote:
-> From: Shida Zhang <zhangshida@kylinos.cn>
+On Sun, Nov 03, 2024 at 11:50:32PM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 01, 2024 at 02:49:26PM -0700, Darrick J. Wong wrote:
+> > > How about unset the MKFS_OPTIONS for this test? As it already tests rtdev
+> > > and logdev by itself. Or call _notrun if MKFS_OPTIONS has "rmapbt=1"?
+> > 
+> > That will exclude quite a few configurations.  Also, how many people
+> > actually turn on rmapbt explicitly now?
+> > 
+> > > Any better idea?
+> > 
+> > I'm afraid not.  Maybe I should restructure the test to force the rt
+> > device to be 500MB even when we're not using the fake rtdev?
 > 
-> #usage: ./frag.sh $dev $dir $size_k $filename 
-> #!/bin/bash
-.....
-> # Create a big file with allocated space
-> xfs_io -f -c "falloc 0 $((TOTAL_SIZE))k" $FILE
+> All of this is really just bandaids or the fundamental problem that:
 > 
-> # Calculate total number of punches needed
-> NUM_PUNCHES=$(( TOTAL_SIZE / (CHUNK_SIZE * 2) ))
+>  - we try to abitrarily mix config and test provided options without
+>    checking that they are compatible in general, and with what the test
+>    is trying to specifically
+>  - some combination of options and devices (size, block size, sequential
+>    required zoned) fundamentally can't work
 > 
-> last_percentage=-1
-> # Punch holes alternately to create fragmentation
-> for ((i=0; i<NUM_PUNCHES; i++)); do
->     OFFSET=$(( i * CHUNK_SIZE * 2 * 1024 ))
->     xfs_io -c "fpunch $OFFSET ${CHUNK_SIZE}k" $FILE
->     
->     # Calculate current percentage and print if changed
->     PERCENTAGE=$(( (i + 1) * 100 / NUM_PUNCHES ))
->     if [ "$PERCENTAGE" -ne "$last_percentage" ]; then
->         #echo "Processing...${PERCENTAGE}%"
->         last_percentage=$PERCENTAGE
->     fi
-> done
+> I haven't really found an easy solution for them.  In the long run I
+> suspect we need to split tests between those that just take the options
+> from the config and are supposed to work with all options (maybe a few
+> notruns that fundamentally can't work).  And those that want to test
+> specific mkfs/mount options and hard code them but don't take options
+> from the input.
 
-Yup, that re-invents fstests::src/punch-alternating.c pretty much
-exactly.
+So how about unset extra MKFS_OPTIONS in this case ? This test has its own
+mkfs options (-L label and logdev and rtdev and fssize).
 
-The fact that there is a production workload that is generating this
-exact operational pattern and running it to ENOSPC repeatedly is
-horrifying....
+Thanks,
+Zorro
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> 
+
