@@ -1,174 +1,256 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA64166310;
-	Mon,  4 Nov 2024 01:45:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D5163214;
+	Mon,  4 Nov 2024 01:50:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730684730; cv=none; b=bN5atV5gpb6/1Lam6BAttRmYILlIomv+dQaCky/elSKhT5QmcjnXBDmUTgp9CuPlRCCm90g2UuDOyudXwXbdiyIYMjZ2LwUYQu0TZOAJwHxXAZ77oo8Vze2tfRv+7Mz8gB0LFvACiXefnNQu02H0iCsuXONsgCqOqjGS5WN9XPs=
+	t=1730685011; cv=none; b=RjChc1198nAx+c60IU59xnuYg5Cs60Tt0br0Gp2uf0cU4npZign/VLoeBiK8cDQqq+vlJ41Ix9SmlC9ZWFaGFbNK/Ol5a3YrF5vFCbM2T/LEafeVxOSmdbbXn/urz/u/KFYoBaTMQ3e1Lf8S+TkrLCH3PKPlMGk4N5ryQtIxkME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730684730; c=relaxed/simple;
-	bh=v7M4rAfw0syNlkg6nlA1/MAlQXSJDeKSY6G4D/mkxRE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LO7XDZBnPMUCNHujbiggltLPNiAH/dnz3TDjmH+zeq4Elqz+IvktHc7fp+olrE6Ombdox+mSumP4vdEqjmf7Yt20sXvmpLMbgZJf9fH5yIz4Vivn9Lim03Db0aU0q5ihDX0segWM4nT9FiUjlUeSQe0oshPH1751A1EcPpV5Exs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hUK+RsC4; arc=none smtp.client-ip=209.85.210.180
+	s=arc-20240116; t=1730685011; c=relaxed/simple;
+	bh=rSZg9dkgH3TInoIPgDQV+QRUjhKNkNHlMHg6SywoLlo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ZbHqweTse3IuRWI5w/W4fn2ZACxHGVoslV4l1LQ7BLP/qcPDr2QH15SUdPXHxK+O0gYIBrFRoBxb8/kiLAHdTNLSh3v3Cq+Yd0LEsvRBytMvy9YSs2QCnlgw0f/8tzUphU4rElwf4njwl3LdESY7nVUPo70/DNNwAm8i48ZZQU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X5hjPvEr; arc=none smtp.client-ip=209.85.160.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hUK+RsC4"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-720d5ada03cso2339292b3a.1;
-        Sun, 03 Nov 2024 17:45:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X5hjPvEr"
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-462d8b29c14so2259181cf.1;
+        Sun, 03 Nov 2024 17:50:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730684727; x=1731289527; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+fYSOcf5BwbqG/V0bjEjjkcwk/JSzZFYqZyDOf0lnd4=;
-        b=hUK+RsC4kMd7ISy30tkozr4L+yEnwrCsu2Ab1mqghLjAkQ5202w8ArJBWKSPtNtXW2
-         16ojpIu7l9zHVBh7weqlSjyuKoudB9mvSQCuVO89mDVPAo/D+buPxb0snHY4x1JSdqKQ
-         cWkSWjNaqxsPh0QyeDp18RiKJZPkV/PB0NUCEQVHnCRiFpAPUa+5UcqPEKFeGTo76xlT
-         iizAgtZY6/zvbV6xKIOSeKmI4AFFTrvvcyPSeEwfI3luEV7EAoJSuxss9FLpldjAyFen
-         5r+p5R7QCa3aIGy6czqowh+Wjn7YPgNpvCAUsJDZJai4ug5eKqlvkA2ruX97P4IaYuRz
-         ZDYQ==
+        d=gmail.com; s=20230601; t=1730685009; x=1731289809; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=sQLKsivBO2u0kBUtRSOY/FkwvE9/gfQy9B+xNfqoJNo=;
+        b=X5hjPvEraaEzDMFqrnDK4AK8jEngMwrThCGzC1CqIBBd9LdeYUkStHghUty8w/IJxR
+         LYmc/RpchC96BbTXbfff0eHftsl3UtTrnPC8eGv/TXwMTETfH4c2n4h+lssvjGR6nCDk
+         xR1I98rR0D3pcJhbhOfM6ZlZm6qgbux7j3ZJ21YEz9S+DnWbLfMaWOlkiNXoEO1IpGgn
+         z2zjRFVQgS4JM9qpHRc3+xXXYqgB5KyIUp3XrdtSWGpacvcB6sEiLf9XyvKJ5I1lXD+E
+         NKmABBKesFoAfZbPE0XxZ9dNWqyZvOGVGsww9xTcD1MJbc9S5uRFaDlY9U34wfURYTtN
+         Meqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730684727; x=1731289527;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+fYSOcf5BwbqG/V0bjEjjkcwk/JSzZFYqZyDOf0lnd4=;
-        b=kRap482dzNuMyxZx6Q0dMsmVBQKg/JH4yL3pPjJVzT1XPH+s2/LVvorsxI67KrF4iN
-         mkkswamvOqA25YPAPW2GJWJXpgwG3rk4UQ+fyZw5LNW3pA9e/MbiUMGoUrcSJvWjanTi
-         WvFTX5lICIVHfBWG3i3CBaJUoArgRbX5JuPqi0QH2JFQM9HO5+d43zsXi2pqWs5A4D6P
-         SQY7R8pbNp54GOfTuQMC7MC5JxnFWGYnlqfrpoh6SMYf/Djejslh/BMm9mQe4930xyjG
-         ZtxD46aAdzt4e573aEo7UAVdaFXHORjMcbqOEJCa0phzK0xhl1lDQGLK/pEH79g9EE90
-         +k6w==
-X-Forwarded-Encrypted: i=1; AJvYcCWcskjFFAYDlqVfFZz17W3xw/4w9FbBxiAXAQKZr2YPMn7SOwhLsFREqy6iXR9tD9XpsEnpjC3t5C5FDt8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmkhHEyb5W4HTTMqQTMBA3DCWhtqY7Rr1SGEZ+VrXpaw0bVBh9
-	xYYRjxH5ZoGuFPK0XXzwptorgLCRmQBa5NsvFbdSAVYqO21P/sIo
-X-Google-Smtp-Source: AGHT+IFqqG3AVIwR2dvdYVWcOll8SFyzb+cFp7t3eJHk6OOIVzIApobg17OnJsaXXd1cvm1AaGX/Sw==
-X-Received: by 2002:a05:6a21:2d8b:b0:1d9:28f8:f27d with SMTP id adf61e73a8af0-1db91e533camr21757137637.38.1730684726824;
-        Sun, 03 Nov 2024 17:45:26 -0800 (PST)
-Received: from localhost.localdomain ([2607:f130:0:105:216:3cff:fef7:9bc7])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc1eb3a7sm6360030b3a.81.2024.11.03.17.45.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Nov 2024 17:45:26 -0800 (PST)
-From: zhangshida <starzhangzsd@gmail.com>
-X-Google-Original-From: zhangshida <zhangshida@kylinos.cn>
-To: djwong@kernel.org,
-	dchinner@redhat.com,
-	leo.lilong@huawei.com,
-	wozizhi@huawei.com,
-	osandov@fb.com,
-	xiang@kernel.org,
-	zhangjiachen.jaycee@bytedance.com
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	zhangshida@kylinos.cn,
-	starzhangzsd@gmail.com
-Subject: [PATCH 5/5] xfs: modify the logic to comply with AF rules
-Date: Mon,  4 Nov 2024 09:44:39 +0800
-Message-Id: <20241104014439.3786609-6-zhangshida@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20241104014439.3786609-1-zhangshida@kylinos.cn>
-References: <20241104014439.3786609-1-zhangshida@kylinos.cn>
+        d=1e100.net; s=20230601; t=1730685009; x=1731289809;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=sQLKsivBO2u0kBUtRSOY/FkwvE9/gfQy9B+xNfqoJNo=;
+        b=ksalrppfVdQRnWUZb/WjiSKBPkEaGVjXWHtUfQHn+D2f7s4frw9N6JXdvi5K8nU+r8
+         it52vfhR/NFv9S9kbMVDAP8Ir8xYP9dzOeKU1Eq6n9LWCy8BIIlWVFLpipyNoZJLE+OM
+         43qmSHk7NYcit21fIQ2SEOjWKxWogWHvJsEmGbj/vkqIO92clPkvzX2YitQ8tn3CgNcF
+         Idts28BMmnkmzd43KZMOyU1UC6AOvoDIXcusAJSaqD4u2htm4KSHE9zzM3WBmfBT4js1
+         X0LtnT0bai1Y5tYUzqqcsF8oiK+RFIrlLWYFBhhihGORHp+Kxdyi1N8H9uX8f+IS4ZFT
+         2Lbw==
+X-Forwarded-Encrypted: i=1; AJvYcCXqTO+QJa5kTx0t1aSy9DH1/ox42j871yjRxVK9uGKWMBhqNcOJFQSxu5C9ZlOcmlE0mqnCxkOJV3DhEe4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy6lkbj93QjQvrlj3CfmANd/WKGBLPjKsCfRET+xRo3m7fpF/8M
+	tFqUyI4amBLDY1bZmuuRHTvYiE/aaDwE4syGsADDmDMsDZtzx3q4pLi2phSqoyTQDGMg6titk4j
+	YlSpEdAe4Bdzz2y5NTCMvLJ/WzKA=
+X-Google-Smtp-Source: AGHT+IEfjubMmQCVgs6Lp5rqq2lQko5F6bNJW74s5oTdrFsfFqF6mYaEC+9xMDGv+C1aCuHaAToKrJPvhK19Z6FmbpI=
+X-Received: by 2002:a05:622a:15d6:b0:462:67f0:596e with SMTP id
+ d75a77b69052e-46267f05d63mr235248791cf.1.1730685009005; Sun, 03 Nov 2024
+ 17:50:09 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20241104014439.3786609-1-zhangshida@kylinos.cn>
+In-Reply-To: <20241104014439.3786609-1-zhangshida@kylinos.cn>
+From: Stephen Zhang <starzhangzsd@gmail.com>
+Date: Mon, 4 Nov 2024 09:49:32 +0800
+Message-ID: <CANubcdWwg3OB_YV4CteC7ZZBaQXOuvFG1oS7uN+TpabS=Z=Z2Q@mail.gmail.com>
+Subject: Re: [PATCH 0/5] *** Introduce new space allocation algorithm ***
+To: djwong@kernel.org, dchinner@redhat.com, leo.lilong@huawei.com, 
+	wozizhi@huawei.com, osandov@fb.com, xiang@kernel.org, 
+	zhangjiachen.jaycee@bytedance.com
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	zhangshida@kylinos.cn
+Content-Type: multipart/mixed; boundary="0000000000002e608206260c8135"
 
-From: Shida Zhang <zhangshida@kylinos.cn>
+--0000000000002e608206260c8135
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-AF rules:
-Lower AF will never go to higher AF for its alloction if they
-have other choices.
+Hi all,
 
-So unlike previous iterating over the entire [0, agcount),
-now iterate one AF, i.e. [curr_af, next_af), at a time.
+I just send the scripts to test these series here.
 
-Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
----
- fs/xfs/libxfs/xfs_alloc.c | 20 +++++++++++++++++++-
- fs/xfs/libxfs/xfs_bmap.c  | 13 +++++++++++--
- 2 files changed, 30 insertions(+), 3 deletions(-)
+Cheers,
+Shida
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 04f64cf9777e..c3321f24a4f9 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3707,12 +3707,30 @@ xfs_alloc_vextent_iterate_ags(
- 	xfs_agnumber_t		restart_agno = minimum_agno;
- 	xfs_agnumber_t		agno;
- 	int			error = 0;
-+	xfs_agnumber_t		start_af = args->curr_af;
-+	xfs_agnumber_t		end_af = args->next_af - 1;
-+
- 
- 	if (alloc_flags & XFS_ALLOC_FLAG_TRYLOCK)
- 		restart_agno = 0;
- restart:
-+	/* if start_agno is not in current AF range, make it be. */
-+	if ((start_agno < start_af) || (start_agno > end_af))
-+		start_agno = start_af;
-+
-+	/* Only iterate the cross region between current allocation field and
-+	 * [restart_agno, start_agno].
-+	 */
-+	restart_agno = max(start_af, restart_agno);
-+	start_agno = min(end_af, start_agno);
-+
-+	WARN_ON_ONCE((args->next_af <= 0) || (args->next_af > mp->m_sb.sb_agcount));
-+	WARN_ON_ONCE((args->curr_af < 0) || (args->curr_af >= mp->m_sb.sb_agcount));
-+	WARN_ON_ONCE(restart_agno > start_agno);
-+	WARN_ON_ONCE(restart_agno < start_af);
-+	WARN_ON_ONCE(start_agno > end_af);
- 	for_each_perag_wrap_range(mp, start_agno, restart_agno,
--			mp->m_sb.sb_agcount, agno, args->pag) {
-+			args->next_af, agno, args->pag) {
- 		args->agno = agno;
- 		error = xfs_alloc_vextent_prepare_ag(args, alloc_flags);
- 		if (error)
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b55b8670730c..799cd75cd150 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3326,6 +3326,8 @@ xfs_bmap_btalloc_select_lengths(
- 	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno, startag;
- 	int			error = 0;
-+	xfs_agnumber_t		start_af = args->curr_af;
-+	xfs_agnumber_t		end_af = args->next_af - 1;
- 
- 	if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
- 		args->total = ap->minlen;
-@@ -3338,8 +3340,14 @@ xfs_bmap_btalloc_select_lengths(
- 	if (startag == NULLAGNUMBER)
- 		startag = 0;
- 
-+	/* if startag is not in current AF range, make it be. */
-+	if ((startag < start_af) || (startag > end_af))
-+		startag = start_af;
-+
- 	*blen = 0;
--	for_each_perag_wrap(mp, startag, agno, pag) {
-+	WARN_ON_ONCE((args->next_af <= 0) || (args->next_af > mp->m_sb.sb_agcount));
-+	WARN_ON_ONCE((args->curr_af < 0) || (args->curr_af >= mp->m_sb.sb_agcount));
-+	for_each_perag_af_wrap(mp, startag, agno, pag, start_af, args->next_af) {
- 		error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
- 		if (error && error != -EAGAIN)
- 			break;
-@@ -3807,7 +3815,8 @@ xfs_bmap_btalloc(
- 			xfs_inode_is_filestream(ap->ip))
- 		error = xfs_bmap_btalloc_filestreams(ap, &args, stripe_align);
- 	else
--		error = xfs_bmap_btalloc_best_length(ap, &args, stripe_align);
-+		error = xfs_bmap_btalloc_best_length_iterate_afs(ap, &args,
-+							 stripe_align);
- 	if (error)
- 		return error;
- 
--- 
-2.33.0
+zhangshida <starzhangzsd@gmail.com> =E4=BA=8E2024=E5=B9=B411=E6=9C=884=E6=
+=97=A5=E5=91=A8=E4=B8=80 09:44=E5=86=99=E9=81=93=EF=BC=9A
+>
+> From: Shida Zhang <zhangshida@kylinos.cn>
+>
+> Hi all,
+>
+> Recently, we've been encounter xfs problems from our two
+> major users continuously.
+> They are all manifested as the same phonomenon: a xfs
+> filesystem can't touch new file when there are nearly
+> half of the available space even with sparse inode enabled.
+>
+> It turns out that the filesystem is too fragmented to have
+> enough continuous free space to create a new file.
+>
+> Life still has to goes on.
+> But from our users' perspective, worse than the situation
+> that xfs is hard to use is that xfs is non-able to use,
+> since even one single file can't be created now.
+>
+> So we try to introduce a new space allocation algorithm to
+> solve this.
+>
+> To achieve that, we try to propose a new concept:
+>    Allocation Fields, where its name is borrowed from the
+> mathmatical concepts(Groups,Rings,Fields), will be
+> abbrivated as AF in the rest of the article.
+>
+> what is a AF?
+> An one-pic-to-say-it-all version of explaination:
+>
+> |<--------+ af 0 +-------->|<--+ af 1 +-->| af 2|
+> |------------------------------------------------+
+> | ag 0 | ag 1 | ag 2 | ag 3| ag 4 | ag 5 | ag 6 |
+> +------------------------------------------------+
+>
+> A text-based definition of AF:
+> 1.An AF is a incore-only concept comparing with the on-disk
+>   AG concept.
+> 2.An AF is consisted of a continuous series of AGs.
+> 3.Lower AFs will NEVER go to higher AFs for allocation if
+>   it can complete it in the current AF.
+>
+> Rule 3 can serve as a barrier between the AF to slow down
+> the over-speed extending of fragmented pieces.
+>
+> With these patches applied, the code logic will be exactly
+> the same as the original code logic, unless you run with the
+> extra mount opiton. For example:
+>    mount -o af1=3D1 $dev $mnt
+>
+> That will change the default AF layout:
+>
+> |<--------+ af 0 +--------->|
+> |----------------------------
+> | ag 0 | ag 1 | ag 2 | ag 3 |
+> +----------------------------
+>
+> to :
+>
+> |<-----+ af 0 +----->|<af 1>|
+> |----------------------------
+> | ag 0 | ag 1 | ag 2 | ag 3 |
+> +----------------------------
+>
+> So the 'af1=3D1' here means the start agno is one ag away from
+> the m_sb.agcount.
+>
+> We did some tests verify it. You can verify it yourself
+> by running the following the command:
+>
+> 1. Create an 1g sized img file and formated it as xfs:
+>   dd if=3D/dev/zero of=3Dtest.img bs=3D1M count=3D1024
+>   mkfs.xfs -f test.img
+>   sync
+> 2. Make a mount directory:
+>   mkdir mnt
+> 3. Run the auto_frag.sh script, which will call another scripts
+>   frag.sh. These scripts will be attached in the mail.
+>   To enable the AF, run:
+>     ./auto_frag.sh 1
+>   To disable the AF, run:
+>     ./auto_frag.sh 0
+>
+> Please feel free to communicate with us if you have any thoughts
+> about these problems.
+>
+> Cheers,
+> Shida
+>
+>
+> Shida Zhang (5):
+>   xfs: add two wrappers for iterating ags in a AF
+>   xfs: add two mp member to record the alloction field layout
+>   xfs: add mount options as a way to change the AF layout
+>   xfs: add infrastructure to support AF allocation algorithm
+>   xfs: modify the logic to comply with AF rules
+>
+>  fs/xfs/libxfs/xfs_ag.h         | 17 ++++++++++++
+>  fs/xfs/libxfs/xfs_alloc.c      | 20 ++++++++++++++-
+>  fs/xfs/libxfs/xfs_alloc.h      |  2 ++
+>  fs/xfs/libxfs/xfs_bmap.c       | 47 ++++++++++++++++++++++++++++++++--
+>  fs/xfs/libxfs/xfs_bmap_btree.c |  2 ++
+>  fs/xfs/xfs_mount.h             |  3 +++
+>  fs/xfs/xfs_super.c             | 12 ++++++++-
+>  7 files changed, 99 insertions(+), 4 deletions(-)
+>
+> --
+> 2.33.0
+>
 
+--0000000000002e608206260c8135
+Content-Type: application/x-shellscript; name="auto_frag.sh"
+Content-Disposition: attachment; filename="auto_frag.sh"
+Content-Transfer-Encoding: base64
+Content-ID: <f_m32d4b240>
+X-Attachment-Id: f_m32d4b240
+
+IyEvYmluL2Jhc2gKCmNsZWFudXAoKSB7CgllY2hvICJDdHJsK0MgZGV0ZWN0ZWQuIEtpbGxpbmcg
+Y2hpbGQgcHJvY2Vzc2VzLi4uIiA+JjIKCXBraWxsIC1QICQkICMgS2lsbCBhbGwgY2hpbGQgcHJv
+Y2Vzc2VzCglleGl0IDEKfQp0cmFwIGNsZWFudXAgU0lHSU5UIFNJR1RFUk0KCi4vZnJhZy5zaCB0
+ZXN0LmltZyBtbnQvICAkKCg1MDAqMTAyNCkpIGZyYWcJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1u
+dC8gICQoKDIwMCoxMDI0KSkgZnJhZzIJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEw
+MCoxMDI0KSkgZnJhZzMJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkg
+ZnJhZzQJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzUJJDEK
+Li9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzYJJDEKLi9mcmFnLnNo
+IHRlc3QuaW1nIG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzcJJDEKLi9mcmFnLnNoIHRlc3QuaW1n
+IG1udC8gICQoKDEwMCoxMDI0KSkgZnJhZzgJJDEKLi9mcmFnLnNoIHRlc3QuaW1nIG1udC8gICQo
+KDEwMCoxMDI0KSkgZnJhZzkJJDEKIAo=
+--0000000000002e608206260c8135
+Content-Type: application/x-shellscript; name="frag.sh"
+Content-Disposition: attachment; filename="frag.sh"
+Content-Transfer-Encoding: base64
+Content-ID: <f_m32d4ibw1>
+X-Attachment-Id: f_m32d4ibw1
+
+I3VzYWdlOiAuL2ZyYWcuc2ggJGRldiAkZGlyICRzaXplX2sgJGZpbGVuYW1lIAojIS9iaW4vYmFz
+aAoKY2xlYW51cCgpIHsKCWVjaG8gIkN0cmwrQyBkZXRlY3RlZC4gS2lsbGluZyBjaGlsZCBwcm9j
+ZXNzZXMuLi4iID4mMgoJcGtpbGwgLVAgJCQgIyBLaWxsIGFsbCBjaGlsZCBwcm9jZXNzZXMKCWVj
+aG8gImV4aXQuLi51bW91bnQgJHt0ZXN0X2Rldn0iID4mMgoJdW1vdW50ICR7dGVzdF9kZXZ9Cgll
+eGl0IDEKfQp0cmFwIGNsZWFudXAgU0lHSU5UIFNJR1RFUk0KCnRlc3RfZGV2PSQxCmlmIFsgLXog
+JHRlc3RfZGV2IF07IHRoZW4KCWVjaG8gInRlc3RfZGV2IGNhbnQgYmUgbnVsbCIKCWVjaG8gInVz
+YWdlOiAuL2NyZWF0ZV9maWxlLnNoIFt0ZXN0X2Rldl0gW3Rlc3RfZGlyXSBbZmlsZV9zaXplX2td
+IgoJZXhpdCAxCmZpCnRlc3RfbW50PSQyCmlmIFsgLXogJHRlc3RfbW50IF07IHRoZW4KCWVjaG8g
+InRlc3RfbW50IGNhbnQgYmUgbnVsbCIKCWVjaG8gInVzYWdlOiAuL2NyZWF0ZV9maWxlLnNoIFt0
+ZXN0X2Rldl0gW3Rlc3RfZGlyXSBbZmlsZV9zaXplX2tdIgoJZXhpdCAxCmZpCmZpbGVfc2l6ZV9r
+PSQzCmlmIFsgLXogJHtmaWxlX3NpemVfa30gXTsgdGhlbgoJZWNobyAiZmlsZV9zaXplX2sgY2Fu
+dCBiZSBudWxsIgoJZWNobyAidXNhZ2U6IC4vY3JlYXRlX2ZpbGUuc2ggW3Rlc3RfZGV2XSBbdGVz
+dF9kaXJdIFtmaWxlX3NpemVfa10iCglleGl0IDEKZmkKZWNobyAidGVzdF9kZXY6JHt0ZXN0X2Rl
+dn0gdGVzdF9tbnQ6JHt0ZXN0X21udH0gZml6ZV9zaXplOiR7ZmlsZV9zaXplX2t9S0IiCgojbWtm
+cy54ZnMgLWYgJHt0ZXN0X2Rldn0KCmlmIFsgJDUgLWVxIDAgXTsgdGhlbgoJZWNobyAibW91bnQg
+JHt0ZXN0X2Rldn0gJHt0ZXN0X21udH0iCgltb3VudCAkdGVzdF9kZXYgJHRlc3RfbW50CmVsc2UK
+CWVjaG8gIm1vdW50IC1vIGFmMT0xICR7dGVzdF9kZXZ9ICR7dGVzdF9tbnR9IgoJbW91bnQgLW8g
+YWYxPTEgJHRlc3RfZGV2ICR0ZXN0X21udApmaQoKCgojIFBhcmFtZXRlcnMKCkZJTEU9JHt0ZXN0
+X21udH0vIiQ0IiAgICMgRmlsZSBuYW1lCmVjaG8gIiRGSUxFIgppZiBbIC16ICR7RklMRX0gXTsg
+dGhlbgoJRklMRT0ke3Rlc3RfbW50fS8iZnJhZ21lbnRlZF9maWxlIiAgICMgRmlsZSBuYW1lCmZp
+ClRPVEFMX1NJWkU9JHtmaWxlX3NpemVfa30JIyBUb3RhbCBzaXplIGluIEtCCkNIVU5LX1NJWkU9
+NCAgICAgICAgICAgICAjIFNpemUgb2YgZWFjaCBwdW5jaCBvcGVyYXRpb24gaW4gS0IKCgojIENy
+ZWF0ZSBhIGJpZyBmaWxlIHdpdGggYWxsb2NhdGVkIHNwYWNlCnhmc19pbyAtZiAtYyAiZmFsbG9j
+IDAgJCgoVE9UQUxfU0laRSkpayIgJEZJTEUKCiMgQ2FsY3VsYXRlIHRvdGFsIG51bWJlciBvZiBw
+dW5jaGVzIG5lZWRlZApOVU1fUFVOQ0hFUz0kKCggVE9UQUxfU0laRSAvIChDSFVOS19TSVpFICog
+MikgKSkKCmxhc3RfcGVyY2VudGFnZT0tMQojIFB1bmNoIGhvbGVzIGFsdGVybmF0ZWx5IHRvIGNy
+ZWF0ZSBmcmFnbWVudGF0aW9uCmZvciAoKGk9MDsgaTxOVU1fUFVOQ0hFUzsgaSsrKSk7IGRvCiAg
+ICBPRkZTRVQ9JCgoIGkgKiBDSFVOS19TSVpFICogMiAqIDEwMjQgKSkKICAgIHhmc19pbyAtYyAi
+ZnB1bmNoICRPRkZTRVQgJHtDSFVOS19TSVpFfWsiICRGSUxFCiAgICAKICAgICMgQ2FsY3VsYXRl
+IGN1cnJlbnQgcGVyY2VudGFnZSBhbmQgcHJpbnQgaWYgY2hhbmdlZAogICAgUEVSQ0VOVEFHRT0k
+KCggKGkgKyAxKSAqIDEwMCAvIE5VTV9QVU5DSEVTICkpCiAgICBpZiBbICIkUEVSQ0VOVEFHRSIg
+LW5lICIkbGFzdF9wZXJjZW50YWdlIiBdOyB0aGVuCiAgICAgICAgI2VjaG8gIlByb2Nlc3Npbmcu
+Li4ke1BFUkNFTlRBR0V9JSIKICAgICAgICBsYXN0X3BlcmNlbnRhZ2U9JFBFUkNFTlRBR0UKICAg
+IGZpCmRvbmUKCiMgVmVyaWZ5IHRoZSBleHRlbnQgbGlzdCAodG8gc2VlIGZyYWdtZW50YXRpb24p
+CiMgZWNobyAiRXh0ZW50IGxpc3QgZm9yIHRoZSBmaWxlOiIKIyB4ZnNfYm1hcCAtdiAkRklMRQpk
+ZiAtVGggJHt0ZXN0X21udH0KCmVjaG8gInVtb3VudCAke3Rlc3RfZGV2fSIKdW1vdW50ICR0ZXN0
+X2RldgoKeGZzX2RiIC1jICdmcmVlc3AnICR0ZXN0X2Rldgo=
+--0000000000002e608206260c8135--
