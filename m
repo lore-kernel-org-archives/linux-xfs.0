@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AE18216203
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:26:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B1CE21218D
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:26:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845592; cv=none; b=i362oHCQh66qC5ZnuwJ2izSWlEBqtmvJQ81eSsSm4pYRgjD8o8UaFDsp5nWgLvXRbljgG4DpuHH5G7CWBf56a79+2TjI+hFwstT7dGeQ2l+K6vbubXYeBY0IpfJ0xfIzBAC4tufwH6BSWyOlH9tkB0ioERC6aT1No43sDKWEKJw=
+	t=1730845607; cv=none; b=E9dw3QPJ1ZVAiMbySvL4fjmjX5YYwYVqFxa0W7sSARXKSY+VPLEv0RvMv7NDw1GG3gCZgfMwv5IzauOH1HZCFecRKiGhFk7pzbIW/Y0mzKJt6kHX4vEbZp5jc3PahNGY7HlbAqB/dQOX+1PrS2DeJLNbHw1VECgLA6WZX0eBpIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845592; c=relaxed/simple;
-	bh=cPy+w3P3xrZU4SgfMIyiW/yBXoFfRtlNApIeoaG+FTo=;
+	s=arc-20240116; t=1730845607; c=relaxed/simple;
+	bh=3JRSGfVV53/C9sNl+QGy6CYhZEkBGmN6RrooilKnwAQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ObdIiEw/c3RU6C1pRK+syGafG2COEySHUa8t0tizzSO4zXeecb+2PQtAqzaRlyoU2MccwgpZZDR+p1H0gZFNW0YZZJH/nAQdlS90owePAIWw2BEaubU80kmPWB/kgKEjVW70cbY3mEaCVfAD6hABgD2VI5EG/c6Mi+Dr9mgjN4k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LYfHoePn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WV/a6FTLde+i/3iD4MOXRjwvNX+MrU/oJ8UOiR+p4yaDM5jzpGxbd4u/QR847DOjDAauPB5ZM/bMXjNByzPyM7RVAzu4sKW4LBIwCDjRe3coHl0cebH1QG51iTY5hphOBbQHC2+XP5wRpUCOhTPkGiaM9OSI40KzRJdbLEIPemk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LunsW4oq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LYfHoePn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA7D5C4CECF;
-	Tue,  5 Nov 2024 22:26:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LunsW4oq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A6E8C4CECF;
+	Tue,  5 Nov 2024 22:26:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845591;
-	bh=cPy+w3P3xrZU4SgfMIyiW/yBXoFfRtlNApIeoaG+FTo=;
+	s=k20201202; t=1730845607;
+	bh=3JRSGfVV53/C9sNl+QGy6CYhZEkBGmN6RrooilKnwAQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LYfHoePnUsl+LDyzBwhZELh5DAx1zuB3/ySaGCkRA6cx909G7bwQPo/qF/htWGuSH
-	 ahvSE+skdMWL6e9eJeMs5Wa1nYlHjjZT44Q7Kfs+EyOytBNH0a6hq/7HB6t/EiWr0W
-	 YqcEJukLU5tF/acznUlxVUGyGxx5H8xg2x5n9N0S8GNfq42obvPxpdaOzkONPAOfXZ
-	 4LJj+hmC1DNhzyLXc3jIFRtfnMpQ2J2Eu3iRymdTXhYLRTMvwhPwsYGOwydI2CtMQi
-	 bFaf3U4wbYjmRhHyvWY4+9G5vbTb4OSY4ROQdIOMwOGuwgN11H7tD2t67tix5hJymV
-	 34ND4uZ+I+QIA==
-Date: Tue, 05 Nov 2024 14:26:31 -0800
-Subject: [PATCH 10/21] xfs: cleanup xfs_getfsmap_rtdev_rtbitmap
+	b=LunsW4oqEv2nkanDDPjhiv/t/HBnCqehHTAJzfT7k/CdxjLDL+dWypk70gQJyQkUb
+	 +hvaPUX1fa2mQYSHPyRQA/TP3Zsowg19m06LLfSV83fMTwWrUSCRxaH/OfGNFON0HO
+	 9IVurMTpdQ38jpInxyRQ/Bpyu+HgGtKRinWaamsMSNukGN05W4qzlqBGeCzffI4kDL
+	 0GUX1yz2ALwMPYwIVXn/6xA5yeXSMcOmAKXk6OQY//FNwhgupo9VlJ6eS1EVsg7IYW
+	 rbI5Edg6zZ9ls/1a3Z9OhVtZwnuER5Ob9TK7I3U0vVDYKu7z2ORjjEHEvw6/qYJLEh
+	 QNTS6AczTHyGw==
+Date: Tue, 05 Nov 2024 14:26:47 -0800
+Subject: [PATCH 11/21] xfs: split xfs_trim_rtdev_extents
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084397110.1871025.1269463296339855423.stgit@frogsfrogsfrogs>
+Message-ID: <173084397126.1871025.14378866736472306798.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
 References: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,74 +45,113 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Use mp->m_sb.sb_rblocks to calculate the end instead of sb_rextents that
-needs a conversion, use consistent names to xfs_rtblock_t types, and
-only calculated them by the time they are needed.  Remove the pointless
-"high" local variable that only has a single user.
+Split xfs_trim_rtdev_extents into two parts to prepare for reusing the
+main validation also for RT group aware file systems.
+
+Use the fully features xfs_daddr_to_rtb helper to convert from a daddr
+to a xfs_rtblock_t to prepare for segmented addressing in RT groups.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_fsmap.c |   25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_discard.c |   57 ++++++++++++++++++++++++++++----------------------
+ 1 file changed, 32 insertions(+), 25 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 40beb8d75f26b1..3d42153b4bdb29 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -754,30 +754,29 @@ xfs_getfsmap_rtdev_rtbitmap(
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 019371c865d22a..412e3045561f13 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -21,6 +21,7 @@
+ #include "xfs_ag.h"
+ #include "xfs_health.h"
+ #include "xfs_rtbitmap.h"
++#include "xfs_rtgroup.h"
  
- 	struct xfs_rtalloc_rec		ahigh = { 0 };
- 	struct xfs_mount		*mp = tp->t_mountp;
--	xfs_rtblock_t			start_rtb;
--	xfs_rtblock_t			end_rtb;
--	xfs_rtxnum_t			high;
-+	xfs_rtblock_t			start_rtbno, end_rtbno;
- 	uint64_t			eofs;
- 	int				error;
+ /*
+  * Notes on an efficient, low latency fstrim algorithm
+@@ -548,44 +549,23 @@ xfs_trim_gather_rtextent(
+ }
  
--	eofs = XFS_FSB_TO_BB(mp, xfs_rtx_to_rtb(mp, mp->m_sb.sb_rextents));
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
- 	if (keys[0].fmr_physical >= eofs)
- 		return 0;
--	start_rtb = XFS_BB_TO_FSBT(mp,
--				keys[0].fmr_physical + keys[0].fmr_length);
--	end_rtb = XFS_BB_TO_FSB(mp, min(eofs - 1, keys[1].fmr_physical));
+ static int
+-xfs_trim_rtdev_extents(
++xfs_trim_rtextents(
+ 	struct xfs_mount	*mp,
+-	xfs_daddr_t		start,
+-	xfs_daddr_t		end,
++	xfs_rtxnum_t		low,
++	xfs_rtxnum_t		high,
+ 	xfs_daddr_t		minlen)
+ {
+ 	struct xfs_trim_rtdev	tr = {
+ 		.minlen_fsb	= XFS_BB_TO_FSB(mp, minlen),
++		.extent_list	= LIST_HEAD_INIT(tr.extent_list),
+ 	};
+-	xfs_rtxnum_t		low, high;
+ 	struct xfs_trans	*tp;
+-	xfs_daddr_t		rtdev_daddr;
+ 	int			error;
  
- 	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
- 
- 	/* Adjust the low key if we are continuing from where we left off. */
-+	start_rtbno = xfs_daddr_to_rtb(mp,
-+			keys[0].fmr_physical + keys[0].fmr_length);
- 	if (keys[0].fmr_length > 0) {
--		info->low_daddr = xfs_rtb_to_daddr(mp, start_rtb);
-+		info->low_daddr = xfs_rtb_to_daddr(mp, start_rtbno);
- 		if (info->low_daddr >= eofs)
- 			return 0;
- 	}
- 
--	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_rtb);
--	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_rtb);
-+	end_rtbno = xfs_daddr_to_rtb(mp, min(eofs - 1, keys[1].fmr_physical));
-+
-+	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_rtbno);
-+	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_rtbno);
- 
- 	xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
- 
-@@ -785,9 +784,9 @@ xfs_getfsmap_rtdev_rtbitmap(
- 	 * Set up query parameters to return free rtextents covering the range
- 	 * we want.
- 	 */
--	high = xfs_rtb_to_rtxup(mp, end_rtb);
--	error = xfs_rtalloc_query_range(mp, tp, xfs_rtb_to_rtx(mp, start_rtb),
--			high, xfs_getfsmap_rtdev_rtbitmap_helper, info);
-+	error = xfs_rtalloc_query_range(mp, tp, xfs_rtb_to_rtx(mp, start_rtbno),
-+			xfs_rtb_to_rtxup(mp, end_rtbno),
-+			xfs_getfsmap_rtdev_rtbitmap_helper, info);
+-	INIT_LIST_HEAD(&tr.extent_list);
+-
+-	/* Shift the start and end downwards to match the rt device. */
+-	rtdev_daddr = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+-	if (start > rtdev_daddr)
+-		start -= rtdev_daddr;
+-	else
+-		start = 0;
+-
+-	if (end <= rtdev_daddr)
+-		return 0;
+-	end -= rtdev_daddr;
+-
+ 	error = xfs_trans_alloc_empty(mp, &tp);
  	if (error)
- 		goto err;
+ 		return error;
  
+-	end = min_t(xfs_daddr_t, end,
+-			XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks) - 1);
+-
+-	/* Convert the rt blocks to rt extents */
+-	low = xfs_rtb_to_rtxup(mp, XFS_BB_TO_FSB(mp, start));
+-	high = xfs_rtb_to_rtx(mp, XFS_BB_TO_FSBT(mp, end));
+-
+ 	/*
+ 	 * Walk the free ranges between low and high.  The query_range function
+ 	 * trims the extents returned.
+@@ -620,6 +600,33 @@ xfs_trim_rtdev_extents(
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
++
++static int
++xfs_trim_rtdev_extents(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		start,
++	xfs_daddr_t		end,
++	xfs_daddr_t		minlen)
++{
++	xfs_rtblock_t		start_rtbno, end_rtbno;
++	xfs_rtxnum_t		start_rtx, end_rtx;
++
++	/* Shift the start and end downwards to match the rt device. */
++	start_rtbno = xfs_daddr_to_rtb(mp, start);
++	if (start_rtbno > mp->m_sb.sb_dblocks)
++		start_rtbno -= mp->m_sb.sb_dblocks;
++	else
++		start_rtbno = 0;
++	start_rtx = xfs_rtb_to_rtx(mp, start_rtbno);
++
++	end_rtbno = xfs_daddr_to_rtb(mp, end);
++	if (end_rtbno <= mp->m_sb.sb_dblocks)
++		return 0;
++	end_rtbno -= mp->m_sb.sb_dblocks;
++	end_rtx = xfs_rtb_to_rtx(mp, end_rtbno + mp->m_sb.sb_rextsize - 1);
++
++	return xfs_trim_rtextents(mp, start_rtx, end_rtx, minlen);
++}
+ #else
+ # define xfs_trim_rtdev_extents(...)	(-EOPNOTSUPP)
+ #endif /* CONFIG_XFS_RT */
 
