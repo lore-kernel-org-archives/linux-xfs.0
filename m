@@ -1,44 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E28D51ABEBA;
-	Mon,  4 Nov 2024 23:34:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61627A95C;
+	Tue,  5 Nov 2024 00:09:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730763268; cv=none; b=DezzcTXzf7q7+wfBkvVG2C7fNk+tf2QTBZ6emjor2OQ2vXgw4uJyCplpocqcgFReUU41ihC6PhKA1c7zJ2W/5Jz6yDA4S0PbgA5U5sliuYg/oKu8PO7guGrbote807UvW7UmFGyUsBCOXP5mG3c+S3I3cBkTZL8WNV/Ame2cTnI=
+	t=1730765397; cv=none; b=nr93RficSJe+5EtsWOobVK8jY90xOndOUqQsU5dSB8T7kRXjKY3G057p7u7pzzmnO4LWIaB6NzylS84W+dfbkyfWM0sNqGrs2s4mGNHo2lReYvDz/gwuv+tppVAjbzLM88uu/2D/3X4GzS4fnm+9xtqY+VyVslWaUFwYUUEDoFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730763268; c=relaxed/simple;
-	bh=VJ3HsOUL6NtbeU26c0/6S0Ayai7dOCbHdRQQp56UG4c=;
+	s=arc-20240116; t=1730765397; c=relaxed/simple;
+	bh=5SMbRoqtUQVxiBaWYqe7JPubf3gdBEC5Rp9xzsEkQBQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UMhDMX5ts5H62TVLtSSbjGh9bc1WJpiFBcuOQJu0jvMMlCPmhu4KG796ad6NaADknBYVbzA/BoofoRSrFuOtcWzKx0Y33Denckf3SyQFvwZolLkpp5cAkoMoR9EUvPWN0sWmoSRYm8EJsl9DylmLe9b/Td0aL2NDWHp9LRyPysI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h9iFy6E3; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rnImv3Wged7YhpqdbH9RRVwKdBLo/CpJK3zMBLztUEncU/RYBitJg8Y11+iSIc8HVto0+1+YcaG0P66u7jB/fpaB5H4yp8w8+hyEc8SeRRfXBWtB0H7C/ninNRMljNdSgE/9DfqKKeUlxQr2VAs/EaRRtqyf66fC4hoXk7f0Omc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhJE3Fnl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h9iFy6E3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 887C0C4CECE;
-	Mon,  4 Nov 2024 23:34:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhJE3Fnl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DADFEC4CECE;
+	Tue,  5 Nov 2024 00:09:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730763267;
-	bh=VJ3HsOUL6NtbeU26c0/6S0Ayai7dOCbHdRQQp56UG4c=;
+	s=k20201202; t=1730765396;
+	bh=5SMbRoqtUQVxiBaWYqe7JPubf3gdBEC5Rp9xzsEkQBQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=h9iFy6E3dzy/+smu2uPGxrOvcOxPyalYp5jJ4XbGqa3GJ4Ixrca5HqDEkPlaUhVox
-	 HDGiOROB04LySPFgID3m+Q9ccbrOoU1olBRDbpbGzBNasU7YNCFODgfVB00EiTTZIL
-	 J1XwrBDDWXSSV4br3uJE3X76FAvEoATSovlYzG37Lo0PeYxHdwuJV3RZXQLZbyTpV4
-	 wDLCX627D1mvNtKzGqPywB0v5PuZgWxpAYPHJtlGtTHBeKrW9xkyUEFdJlBShmlFq7
-	 gK7tPVrkjfjXXr6BdLpDmiwdB0GXcd3wv+Ecb7yF0ibcwu0w+a3SlBySqNG3leHdOE
-	 Yqa/oE4m/Rw4w==
-Date: Mon, 4 Nov 2024 15:34:26 -0800
+	b=fhJE3FnlD42iycAX4PXmPBOthNKuOIhE7JsPDqNnV149eJ2o8kmL5mI+vOCmThMw7
+	 T75bO1lKqxjXSYa14GiUdZp/kSa9ElnCjBUvpviNk0AxgoJ0QmAqu/Mi45Zhf+k6Qw
+	 7TOvDZbWBxA8FZ6fdkWpQOLKJswph/2ryE+XEx0A5Yj3f2Yq+qecBM3S7KXXFnj4xB
+	 QwXmEQvuqQorkVOIFAfQOgVkMCKDUWUuWoN0/CG8gy1Nh3gObOR4x88R9VepSEGv1S
+	 reGacUWpNmOlPj8DdnZxwdZ/ydnwAs0JKw54N7HA4pzJZa9BAF6foTpvuWZH4L+hSC
+	 6E5B0j5RTIw4Q==
+Date: Mon, 4 Nov 2024 16:09:56 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Zorro Lang <zlang@kernel.org>,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs/157: mkfs does not need a specific fssize
-Message-ID: <20241104233426.GW21840@frogsfrogsfrogs>
-References: <20241031193552.1171855-1-zlang@kernel.org>
- <20241031220821.GA2386201@frogsfrogsfrogs>
- <20241101054810.cu6zsjrxgfzdrnia@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241101214926.GW2578692@frogsfrogsfrogs>
- <Zyh8yP-FJUHKt2fK@infradead.org>
- <20241104130437.mutcy5mqzcqrbqf2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, Theodore Ts'o <tytso@mit.edu>,
+	John Garry <john.g.garry@oracle.com>, linux-ext4@vger.kernel.org,
+	Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 5/6] iomap: Lift blocksize restriction on atomic writes
+Message-ID: <20241105000956.GJ21832@frogsfrogsfrogs>
+References: <7e322989-c6e0-424a-94bd-3ad6ce5ffee9@oracle.com>
+ <87ttd0mnuo.fsf@gmail.com>
+ <7aea00d4-3914-414d-a18f-586a303868c1@oracle.com>
+ <87r084mkat.fsf@gmail.com>
+ <509180f3-4cc1-4cc2-9d43-5a1e728fb718@oracle.com>
+ <87plnomfsy.fsf@gmail.com>
+ <20241025182858.GM2386201@frogsfrogsfrogs>
+ <87jzdvmqfz.fsf@gmail.com>
+ <20241031213640.GB21832@frogsfrogsfrogs>
+ <Zygo6nqOJMoJxYrm@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,93 +54,121 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241104130437.mutcy5mqzcqrbqf2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <Zygo6nqOJMoJxYrm@dread.disaster.area>
 
-On Mon, Nov 04, 2024 at 09:04:37PM +0800, Zorro Lang wrote:
-> On Sun, Nov 03, 2024 at 11:50:32PM -0800, Christoph Hellwig wrote:
-> > On Fri, Nov 01, 2024 at 02:49:26PM -0700, Darrick J. Wong wrote:
-> > > > How about unset the MKFS_OPTIONS for this test? As it already tests rtdev
-> > > > and logdev by itself. Or call _notrun if MKFS_OPTIONS has "rmapbt=1"?
+On Mon, Nov 04, 2024 at 12:52:42PM +1100, Dave Chinner wrote:
+> On Thu, Oct 31, 2024 at 02:36:40PM -0700, Darrick J. Wong wrote:
+> > On Sat, Oct 26, 2024 at 10:05:44AM +0530, Ritesh Harjani wrote:
+> > > > This gets me to the third and much less general solution -- only allow
+> > > > untorn writes if we know that the ioend only ever has to run a single
+> > > > transaction.  That's why untorn writes are limited to a single fsblock
+> > > > for now -- it's a simple solution so that we can get our downstream
+> > > > customers to kick the tires and start on the next iteration instead of
+> > > > spending years on waterfalling.
+> > > >
+> > > > Did you notice that in all of these cases, the capabilities of the
+> > > > filesystem's ioend processing determines the restrictions on the number
+> > > > and type of mappings that ->iomap_begin can give to iomap?
+> > > >
+> > > > Now that we have a second system trying to hook up to the iomap support,
+> > > > it's clear to me that the restrictions on mappings are specific to each
+> > > > filesystem.  Therefore, the iomap directio code should not impose
+> > > > restrictions on the mappings it receives unless they would prevent the
+> > > > creation of the single aligned bio.
+> > > >
+> > > > Instead, xfs_direct_write_iomap_begin and ext4_iomap_begin should return
+> > > > EINVAL or something if they look at the file mappings and discover that
+> > > > they cannot perform the ioend without risking torn mapping updates.  In
+> > > > the long run, ->iomap_begin is where this iomap->len <= iter->len check
+> > > > really belongs, but hold that thought.
+> > > >
+> > > > For the multi fsblock case, the ->iomap_begin functions would have to
+> > > > check that only one metadata update would be necessary in the ioend.
+> > > > That's where things get murky, since ext4/xfs drop their mapping locks
+> > > > between calls to ->iomap_begin.  So you'd have to check all the mappings
+> > > > for unsupported mixed state every time.  Yuck.
+> > > >
 > > > 
-> > > That will exclude quite a few configurations.  Also, how many people
-> > > actually turn on rmapbt explicitly now?
+> > > Thanks Darrick for taking time summarizing what all has been done
+> > > and your thoughts here.
 > > > 
-> > > > Any better idea?
+> > > > It might be less gross to retain the restriction that iomap accepts only
+> > > > one mapping for the entire file range, like Ritesh has here.
 > > > 
-> > > I'm afraid not.  Maybe I should restructure the test to force the rt
-> > > device to be 500MB even when we're not using the fake rtdev?
+> > > less gross :) sure. 
+> > > 
+> > > I would like to think of this as, being less restrictive (compared to
+> > > only allowing a single fsblock) by adding a constraint on the atomic
+> > > write I/O request i.e.  
+> > > 
+> > > "Atomic write I/O request to a region in a file is only allowed if that
+> > > region has no partially allocated extents. Otherwise, the file system
+> > > can fail the I/O operation by returning -EINVAL."
+> > > 
+> > > Essentially by adding this constraint to the I/O request, we are
+> > > helping the user to prevent atomic writes from accidentally getting
+> > > torned and also allowing multi-fsblock writes. So I still think that
+> > > might be the right thing to do here or at least a better start. FS can
+> > > later work on adding such support where we don't even need above
+> > > such constraint on a given atomic write I/O request.
 > > 
-> > All of this is really just bandaids or the fundamental problem that:
-> > 
-> >  - we try to abitrarily mix config and test provided options without
-> >    checking that they are compatible in general, and with what the test
-> >    is trying to specifically
-> >  - some combination of options and devices (size, block size, sequential
-> >    required zoned) fundamentally can't work
-> > 
-> > I haven't really found an easy solution for them.  In the long run I
-> > suspect we need to split tests between those that just take the options
-> > from the config and are supposed to work with all options (maybe a few
-> > notruns that fundamentally can't work).  And those that want to test
-> > specific mkfs/mount options and hard code them but don't take options
-> > from the input.
+> > On today's ext4 call, Ted and Ritesh and I realized that there's a bit
+> > more to it than this -- it's not possible to support untorn writes to a
+> > mix of written/(cow,unwritten) mappings even if they all point to the
+> > same physical space.  If the system fails after the storage device
+> > commits the write but before any of the ioend processing is scheduled, a
+> > subsequent read of the previously written blocks will produce the new
+> > data, but reads to the other areas will produce the old contents (or
+> > zeroes, or whatever).  That's a torn write.
 > 
-> So how about unset extra MKFS_OPTIONS in this case ? This test has its own
-> mkfs options (-L label and logdev and rtdev and fssize).
+> I'm *really* surprised that people are only realising that IO
+> completion processing for atomic writes *must be atomic*.
 
-The trouble with clearing MKFS_OPTIONS is that you then have to adjust
-the other _scratch_* calls in check_label(), and then all you're doing
-is reducing fs configuration test coverage.  If (say) there was a bug
-when changing the fs label on a rtgroups filesystem with a rt section,
-you'd never see it.
+I've been saying for a while; it's just that I didn't realize until last
+week that there were more rules than "can't do an untorn write if you
+need to do more than 1 mapping update":
 
-Hang on ... is this a general complaint about _scratch_mkfs_xfs dropping
-MKFS_OPTIONS in favor of the specific arguments passed to it by the
-test?  Or a specific complaint about xfs/157 barfing when the test
-runner puts "-L foo" in the MKFS_OPTIONS that it passes to ./check?
+Untorn writes are not possible if:
+1. More than 1 mapping update is needed
+2. 1 mapping update is needed but there's a written block
 
-If it's the second, then let's do this:
+(1) can be worked around with a log intent item for ioend processing,
+but I don't think (2) can at all.  That's why I went back to saying that
+untorn writes require that there can only be one mapping.
 
-extract_mkfs_label() {
-	set -- $MKFS_OPTIONS
-	local in_l
+> This was the foundational constraint that the forced alignment
+> proposal for XFS was intended to address. i.e. to prevent fs
+> operations from violating atomic write IO constraints (e.g. punching
+> sub-atomic write size holes in the file) so that the physical IO can
+> be done without tearing and the IO completion processing that
+> exposes the new data can be done atomically.
+> 
+> > Therefore, iomap ought to stick to requiring that ->iomap_begin returns
+> > a single iomap to cover the entire file range for the untorn write.  For
+> > an unwritten extent, the post-recovery read will see either zeroes or
+> > the new contents; for a single-mapping COW it'll see old or new contents
+> > but not both.
+> 
+> I'm pretty sure we enforced that in the XFS mapping implemention for
+> atomic writes using forced alignment. i.e.  we have to return a
+> correctly aligned, contiguous mapping to iomap or we have to return
+> -EINVAL to indicate atomic write mapping failed.
 
-	for arg in "$@"; do
-		if [ "$in_l" = "1" ]; then
-			echo "$arg"
-			return 0
-		elif [ "$arg" = "-L" ]; then
-			in_l=1
-		fi
-	done
-	return 1
-}
+I think you guys did, it's just the ext4 bigalloc thing that started
+this back up again. :/
 
-check_label() {
-	local existing_label
-	local filter
+> Yes, we can check this in iomap, but it's really the filesystem that
+> has to implement and enforce it...
 
-	# Handle -L somelabel being set in MKFS_OPTIONS
-	if existing_label="$(extract_mkfs_label)"; then
-		filter=(sed -e "s|$existing_label|oldlabel|g")
-		_scratch_mkfs_sized $fs_size >> $seqres.full
-	else
-		filter=(cat)
-		MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" \
-			_scratch_mkfs_sized $fs_size >> $seqres.full
-	fi
-	_scratch_xfs_db -c label | ${filter[@]}
-	_scratch_xfs_admin -L newlabel "$@" >> $seqres.full
-	_scratch_xfs_db -c label
-	_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-}
+I think we ought to keep the "1 mapping per untorn write" check in iomap
+until someone decides that it's worth the trouble to make a filesystem
+handle mixed states correctly.  Mostly as a guard against the
+implementations.
 
 --D
 
-> Thanks,
-> Zorro
-> 
-> > 
-> > 
-> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
