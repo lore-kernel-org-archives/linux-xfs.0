@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019CC1DD0D2
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:19:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72F11DD0D2
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:19:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845155; cv=none; b=LAtnCb+XpbeYsbYjIHx89sgufz94wloAqpSp6RuXwyknf8i+uEe+qaoGPL1a14lBqz7nr2Iu27Zuk8AVuc9AjKG5FsCtWFiraH+buZ2DOWB6b/NU1nFJLT96/sH27fDg5VAS1eypwXoPNBT1ztVCsUnxoUYbEwRj86IpqnACC0w=
+	t=1730845171; cv=none; b=J1SFwuvdkC1Ia/oY6v8wAXpV5B9fSg6ke7PPPoqbKUqkr2dF6W2U8iJX8XRhyiKIoxxPyOK1ZizOIYgPkW1yWow38Sk3uwtJO9zUR1KULxk4fMscZhSEOLgWLnusroh9oa+ULLl51WFHtnnw14meNMYt7y5pHOFDg3NFUM9X7PU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845155; c=relaxed/simple;
-	bh=J6FlkJMLJx8EH2C0ymhJg2f3XEpocxCn6q1Focl/ij0=;
+	s=arc-20240116; t=1730845171; c=relaxed/simple;
+	bh=0PxynT7fZiEIvVqhx1ukZH748KLMZyS1Uk9zyzZB8wg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N0DJeRJEtMgkacxSLNHfIJyEn640EIbeIjRoCQ2T+CoawWg25wxIWAE87uQcmAGiRCgfxHa0k6VFuaPKaGdRToqVIBINSxHXZuDtUolSrB6zeJmtKXXAMWUdPIbp1gXy0mrjgVZdc5hJSsIYlEDl1eOrYB/z+yNUfMo7SRRDYT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JJvzugU4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uWCEVkLsGg87/FT0XV9soLN5QGzf0kblYRqH/mS4RmIiwo07SHpvdkFtoAwLXfFL/u0fBKfp9B8aspwQoDLnBQAhwGfFLPKySbHf+fn3cczdtYhzkDRNNi81H5qZ3GpLsOfsK01ezqqqzEP8zigWk/UGx977HycnCklNm8xsAkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IV++sWzK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JJvzugU4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEE23C4CECF;
-	Tue,  5 Nov 2024 22:19:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IV++sWzK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7149AC4CECF;
+	Tue,  5 Nov 2024 22:19:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845154;
-	bh=J6FlkJMLJx8EH2C0ymhJg2f3XEpocxCn6q1Focl/ij0=;
+	s=k20201202; t=1730845170;
+	bh=0PxynT7fZiEIvVqhx1ukZH748KLMZyS1Uk9zyzZB8wg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=JJvzugU4DPc+TFVgr/cFSzk5NRUO9j0cFi7Tb6Z4SK4VXsHAG31ILjJ3h6usHjcjW
-	 gpkofGgwiJdukoWKkfOUn+DGUQvrb1w9JvygO2wqZ+lZjRDHh0WC6h8OtNQcpJQK7/
-	 EJ3lPDatMn3Qkf9OY1weR+cDIxmdymoEBcqtAN3pwf9Z6dVLrSO/tHWgfMl2vjDs+C
-	 /R7g43brtYoAcWjlZRPHf3fQeYJ2pcrDwWd1UXTFAVdy5ZrW6Uk51KSS4g/yZKWnAI
-	 xDR27mnEdeiLHItOhFvdyZh1ibDVSS6ppAqnwXGhhcP3OBBYQKAtV74yCcCxPgG8iG
-	 mtS1WgEol6g+w==
-Date: Tue, 05 Nov 2024 14:19:14 -0800
-Subject: [PATCH 10/28] xfs: disable the agi rotor for metadata inodes
+	b=IV++sWzKEKNRIC5Un5Hza/5ruGygPSKKNIVNZxiWHeVhe87OMU7cjl5kp6YhP8qz3
+	 HVRsLq5EQX1oWPE34yiSJgHwGVnk+iE4W0wK+ymukE2j04s8nH2amk0jCGqhG1i7Ff
+	 0Op2aFhZNWMD4R7hIOkmyUTrri+pWMUpqsY1ahLF3ZrZsCw8b6M09OGHFeiR9V6Fz/
+	 aP+WoN2ScOUwTEkh87eCmgA6aOW7sJKzuEIvt4AEA0GEKBGWoQKZwZv+Rmqfjd/qlB
+	 AbJGDUzsmT/2r/6m708AZLqv+d9bEvbchhvrYADlRTZvpHJPgW++zo+kbDDKxOHmBS
+	 YNNBV4GUO3t2w==
+Date: Tue, 05 Nov 2024 14:19:30 -0800
+Subject: [PATCH 11/28] xfs: hide metadata inodes from everyone because they
+ are special
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084396192.1870066.10174390188176542718.stgit@frogsfrogsfrogs>
+Message-ID: <173084396209.1870066.7408723354973665738.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 References: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,100 +46,76 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Ideally, we'd put all the metadata inodes in one place if we could, so
-that the metadata all stay reasonably close together instead of
-spreading out over the disk.  Furthermore, if the log is internal we'd
-probably prefer to keep the metadata near the log.  Therefore, disable
-AGI rotoring for metadata inode allocations.
+Metadata inodes are private files and therefore cannot be exposed to
+userspace.  This means no bulkstat, no open-by-handle, no linking them
+into the directory tree, and no feeding them to LSMs.  As such, we mark
+them S_PRIVATE, which stops all that.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_ialloc.c |   58 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 40 insertions(+), 18 deletions(-)
+ fs/xfs/scrub/tempfile.c |    8 ++++++++
+ fs/xfs/xfs_iops.c       |   15 ++++++++++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index f0261c4d91061c..8b84e2cf711b19 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1841,6 +1841,40 @@ xfs_dialloc_try_ag(
- 	return error;
- }
- 
-+/*
-+ * Pick an AG for the new inode.
-+ *
-+ * Directories, symlinks, and regular files frequently allocate at least one
-+ * block, so factor that potential expansion when we examine whether an AG has
-+ * enough space for file creation.  Try to keep metadata files all in the same
-+ * AG.
-+ */
-+static inline xfs_agnumber_t
-+xfs_dialloc_pick_ag(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*dp,
-+	umode_t			mode)
-+{
-+	xfs_agnumber_t		start_agno;
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 177f922acfaf1b..3c5a1d77fefae9 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -844,6 +844,14 @@ xrep_is_tempfile(
+ 	const struct xfs_inode	*ip)
+ {
+ 	const struct inode	*inode = &ip->i_vnode;
++	struct xfs_mount	*mp = ip->i_mount;
 +
-+	if (!dp)
-+		return 0;
-+	if (xfs_is_metadir_inode(dp)) {
-+		if (mp->m_sb.sb_logstart)
-+			return XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart);
-+		return 0;
++	/*
++	 * Files in the metadata directory tree also have S_PRIVATE set and
++	 * IOP_XATTR unset, so we must distinguish them separately.
++	 */
++	if (xfs_has_metadir(mp) && (ip->i_diflags2 & XFS_DIFLAG2_METADATA))
++		return false;
+ 
+ 	if (IS_PRIVATE(inode) && !(inode->i_opflags & IOP_XATTR))
+ 		return true;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index ee79cf161312ca..66a726a5fbbba2 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -42,7 +42,9 @@
+  * held. For regular files, the lock order is the other way around - the
+  * mmap_lock is taken during the page fault, and then we lock the ilock to do
+  * block mapping. Hence we need a different class for the directory ilock so
+- * that lockdep can tell them apart.
++ * that lockdep can tell them apart.  Directories in the metadata directory
++ * tree get a separate class so that lockdep reports will warn us if someone
++ * ever tries to lock regular directories after locking metadata directories.
+  */
+ static struct lock_class_key xfs_nondir_ilock_class;
+ static struct lock_class_key xfs_dir_ilock_class;
+@@ -1289,6 +1291,7 @@ xfs_setup_inode(
+ {
+ 	struct inode		*inode = &ip->i_vnode;
+ 	gfp_t			gfp_mask;
++	bool			is_meta = xfs_is_internal_inode(ip);
+ 
+ 	inode->i_ino = ip->i_ino;
+ 	inode->i_state |= I_NEW;
+@@ -1300,6 +1303,16 @@ xfs_setup_inode(
+ 	i_size_write(inode, ip->i_disk_size);
+ 	xfs_diflags_to_iflags(ip, true);
+ 
++	/*
++	 * Mark our metadata files as private so that LSMs and the ACL code
++	 * don't try to add their own metadata or reason about these files,
++	 * and users cannot ever obtain file handles to them.
++	 */
++	if (is_meta) {
++		inode->i_flags |= S_PRIVATE;
++		inode->i_opflags &= ~IOP_XATTR;
 +	}
 +
-+	if (S_ISDIR(mode))
-+		return (atomic_inc_return(&mp->m_agirotor) - 1) % mp->m_maxagi;
-+
-+	start_agno = XFS_INO_TO_AGNO(mp, dp->i_ino);
-+	if (start_agno >= mp->m_maxagi)
-+		start_agno = 0;
-+
-+	return start_agno;
-+}
-+
- /*
-  * Allocate an on-disk inode.
-  *
-@@ -1856,31 +1890,19 @@ xfs_dialloc(
- 	xfs_ino_t		*new_ino)
- {
- 	struct xfs_mount	*mp = (*tpp)->t_mountp;
-+	struct xfs_perag	*pag;
-+	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-+	xfs_ino_t		ino = NULLFSINO;
- 	xfs_ino_t		parent = args->pip ? args->pip->i_ino : 0;
--	umode_t			mode = args->mode & S_IFMT;
- 	xfs_agnumber_t		agno;
--	int			error = 0;
- 	xfs_agnumber_t		start_agno;
--	struct xfs_perag	*pag;
--	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-+	umode_t			mode = args->mode & S_IFMT;
- 	bool			ok_alloc = true;
- 	bool			low_space = false;
- 	int			flags;
--	xfs_ino_t		ino = NULLFSINO;
-+	int			error = 0;
- 
--	/*
--	 * Directories, symlinks, and regular files frequently allocate at least
--	 * one block, so factor that potential expansion when we examine whether
--	 * an AG has enough space for file creation.
--	 */
--	if (S_ISDIR(mode))
--		start_agno = (atomic_inc_return(&mp->m_agirotor) - 1) %
--				mp->m_maxagi;
--	else {
--		start_agno = XFS_INO_TO_AGNO(mp, parent);
--		if (start_agno >= mp->m_maxagi)
--			start_agno = 0;
--	}
-+	start_agno = xfs_dialloc_pick_ag(mp, args->pip, mode);
- 
- 	/*
- 	 * If we have already hit the ceiling of inode blocks then clear
+ 	if (S_ISDIR(inode->i_mode)) {
+ 		/*
+ 		 * We set the i_rwsem class here to avoid potential races with
 
