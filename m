@@ -1,134 +1,125 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from gmmr-4.centrum.cz (gmmr-4.centrum.cz [46.255.227.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E48501CEADD
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 08:56:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393371D040B;
+	Tue,  5 Nov 2024 09:27:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.255.227.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730797014; cv=none; b=nDy2qLH9syHMrTfZ86m6WTLXKBjnNxflpaFoOGmYHQcjd4NsujwEaRaB4GCHmwecRwJpl0zu+wYpnUxKzjEbafaUxvCoAYZ8QjUV0pacQXj69NsXylagtrrR+q6COWZpz38jIxN+3khomm27AhiATTKJ7eLJBM91Y1NSwcfD8fc=
+	t=1730798860; cv=none; b=oeSVQYf4cbKu/Frp97HUtAOGPwrF/SEKBOMp+tFauT4RHT1HvoruopcFYKuSfE2WM2CCImu9WAlI5neyqi+pLYh26POcOmCQm8Y7R52XRf8WdnZpOngxzmXO3RYVh08PNmhzSyBOje1CxudBwY4m5/A5weGOKMsUfZ8Eg+lv5/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730797014; c=relaxed/simple;
-	bh=whM9GHfph6mVAmx3sUCUNxmfxly4iAyY5a7saMaZIU0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PAmkXFm466DP7SQINlXkyRvh51VyxzAWURjtBd3S1Ej6M5/VotUp3nMnzqMTOo877hhxLgAF6yLzxmJEjtYCSnMeRvKwc/yHjscnfs9ZwZhn7EkqUXqRsAsv7ABg/rP69IKEM22CpmSni58klRs5IdpYyXJFcd1UazkVe4wPKnY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IzmlQtFi; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1730798860; c=relaxed/simple;
+	bh=JSHFHZSGnbrGaCOZClJ9s38M76+XA809XKv7+1kWT8Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=q5YtbXs1csmNf4bYz4nPDjvJ4uPRU50yd8HpG0pi9cWabBQSWx7LA6m9W+gkV3a9/UHv8nJ2dxK16mM9b3Jgz5KRjj4XItq0WEoqSfgBPResSLjn9iJk9GELfFIAFxnU6wR7/O6+ciHl2gLC64kSJ2a+1b8XiHWJyqUr1Ndx+mQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=atlas.cz; spf=pass smtp.mailfrom=atlas.cz; dkim=pass (1024-bit key) header.d=atlas.cz header.i=@atlas.cz header.b=cAeumkLW; arc=none smtp.client-ip=46.255.227.205
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=atlas.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atlas.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IzmlQtFi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730797012;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=oI/RD+qbJilGmZQ0OyHECrO1kP9vrPDTW6pPLpVgj7Y=;
-	b=IzmlQtFiyMHnLDgmj1hY+Q6yH52DoPInbKNQUIr996KrqPf3ZqOgf7GUcE0RVTOZ3s3a56
-	kSnSS+oYAeMhW+T6WfChNiRaZ1yQv90yTSn2kc7WzOSZxOeNF+eCZ4hZt6c335tM7YDHUV
-	nMDhU1ZjDzQdb1iYve5RPrBtryuwH6g=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-590-dT4dcfVZM1C2G604622dkg-1; Tue, 05 Nov 2024 03:56:50 -0500
-X-MC-Unique: dT4dcfVZM1C2G604622dkg-1
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-37d52ca258eso2496101f8f.3
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Nov 2024 00:56:50 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730797009; x=1731401809;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:from:references:cc:to:subject:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=oI/RD+qbJilGmZQ0OyHECrO1kP9vrPDTW6pPLpVgj7Y=;
-        b=VPgsQm1pMlssWrvQ3af+9nqQ6bUTheheyU+rFGuPAYmi4oJpUOTOv8fXVMWRCsUBlD
-         LLmz/VaO7bpYW/oMcQmvPlp3BgS9vafN2Y3CrEGSjcmwVqzlo2kNkhJLZcVqkQYZJFbd
-         gnRSzcUMH86A3FERqihzrADmx0dQaFeF03wD0vQA1CmrCPl1okN3U94BpQ4ljCNXIyz0
-         v+uEdzF+aGkEx9ExplHM0oND/fPuQjlm/0vSjkARMZ2qJPW6ThPZf+dgNK/vo0cLVuNO
-         rgHgcnd4f22KewHxvTtX8kFYZ2AdTmxgtH2MrvVEANLJpRDsi/UPzZ6G24MTqoogPWSF
-         K2cw==
-X-Forwarded-Encrypted: i=1; AJvYcCVWXsC3JWnbNZLOsq8fRWBQrPMjGt32eX+HcT0I4P16OMkU+qktycMbmIBZj4Vm+ZysxgOGWGBtO80=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzjAPuTK3knOuJ/1uN2lLkHuKAa/sA24rQ3fBUy4COm8PSRboca
-	WDgWpZiT+9n2mKH/g86QPLq/zqeAciXP12sWI+7c6Vb2UJ3YOzhXVWfQHeN3yU44vj86whKc5HB
-	NeFhkllUlg5uGdGJZlzQq86IH2Qrk5ATwcPCBLZp5VRNI+WwrUcGH9u1SAQ==
-X-Received: by 2002:a5d:554f:0:b0:37c:cf3a:42dc with SMTP id ffacd0b85a97d-381b70f080dmr15436453f8f.37.1730797009535;
-        Tue, 05 Nov 2024 00:56:49 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHvDfDJcUJ5KLl/0KyWaHgjAevnISRf625sgDSVlbIQ8suHJxyyUaA0BdTBGgc5oIQsg5TQwQ==
-X-Received: by 2002:a5d:554f:0:b0:37c:cf3a:42dc with SMTP id ffacd0b85a97d-381b70f080dmr15436441f8f.37.1730797009141;
-        Tue, 05 Nov 2024 00:56:49 -0800 (PST)
-Received: from ?IPV6:2003:cb:c73b:db00:b0d7:66ca:e3e9:6528? (p200300cbc73bdb00b0d766cae3e96528.dip0.t-ipconnect.de. [2003:cb:c73b:db00:b0d7:66ca:e3e9:6528])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-381c10e7280sm15443596f8f.59.2024.11.05.00.56.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Nov 2024 00:56:48 -0800 (PST)
-Message-ID: <ba06e9e2-c0d4-45be-99bd-17a3eb3c15d5@redhat.com>
-Date: Tue, 5 Nov 2024 09:56:46 +0100
+	dkim=pass (1024-bit key) header.d=atlas.cz header.i=@atlas.cz header.b="cAeumkLW"
+Received: from gmmr-4.centrum.cz (localhost [127.0.0.1])
+	by gmmr-4.centrum.cz (Postfix) with ESMTP id 8906E4B34;
+	Tue,  5 Nov 2024 10:27:34 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=atlas.cz; s=mail;
+	t=1730798854; bh=Zh5NaP9DoUAhSs5KOhgU1QXVHVMBkSsfoS+iLptkMUk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cAeumkLWJNN2xnyCMI3fuCnZXaw/z+Isi1jdg0vPVh6NkFBF+9mvWJU7bcdfwGoKY
+	 panaRAC86pBHp9AZvD9tACbICcBCkUSwagWRqrUqlAcT8jZMWkVOJO8lsjEijMEF1n
+	 bBrUTSVbL3C860EcUkHL3PpD5oHecrz/I4g57+3A=
+Received: from antispam29.centrum.cz (antispam29.cent [10.30.208.29])
+	by gmmr-4.centrum.cz (Postfix) with ESMTP id 79979200D91C;
+	Tue,  5 Nov 2024 10:27:34 +0100 (CET)
+X-CSE-ConnectionGUID: 9CUH/m/PTzabEO9Low0X8w==
+X-CSE-MsgGUID: CPKpUBMGT0Gw1yU3vMcUVA==
+X-ThreatScanner-Verdict: Negative
+X-IPAS-Result: =?us-ascii?q?A2EVAwB75Cln/0vj/y5aHgEBCxIMQAmBPwuJe5Fxi3WGN?=
+ =?us-ascii?q?YEghACGS4F+DwEBAQEBAQEBAQlEBAEBhH0KAoo1JzUIDgECBAEBAQEDAgMBA?=
+ =?us-ascii?q?QEBAQEBAQENAQEGAgEBAQEGBgECgR2FNVOCYgGEAAEFIw8BRhALDQsCAiYCA?=
+ =?us-ascii?q?lYGgxSCMAE0rxyBMhoCZdxvAoEjYYEqgRouiEwBhWgBhHdCgg2EPz6BBQGHG?=
+ =?us-ascii?q?IJpBIJHhR8liRWXY1J7HANZIAERAVUTFwsHBYEpJCwDglJ/gTmBUQGDH0qDP?=
+ =?us-ascii?q?YFeBTcKP4JKaU06Ag0CNoIkfYJQhR2BCwODYoRsfR1AAwttPTUUGwajCYN3x?=
+ =?us-ascii?q?jODHIEIhE2KH5JtM4NxE5NlA5JhmHepIoFoAYIUMyIwgyNRGY5Hx3SBMgIHA?=
+ =?us-ascii?q?QoBAQMJgjuNS4FDCAEB?=
+IronPort-PHdr: A9a23:+r+RbhTRI3T7tFeVS5DQsKr7tNpsotCZAWYlg6HPa5pwe6iut67vI
+ FbYra00ygOSBcOBuqIP07GempujcFJDyK7JiGoFfp1IWk1NouQttCtkLei7TGbWF7rUVRE8B
+ 9lIT1R//nu2YgB/Ecf6YEDO8DXptWZBUhrwOhBoKevrB4Xck9q41/yo+53Ufg5EmCexbal9I
+ Ri4sQndrNcajI9hJ6o+1hfErGZDdvhLy29vOV+ckBHw69uq8pV+6SpQofUh98BBUaX+Yas1S
+ KFTASolPW4o+sDlrAHPQwSX6HQTS2kbjBVGDRXd4B71Qpn+vC36tvFg2CaBJs35Uao0WTW54
+ Kh1ThLjlToKOCQ48GHTjcxwkb5brRe8rBFx34LYfIeYP+dlc6jDYd0VW3ZOXsdJVyxAHIy8a
+ ZcPD/EcNupctoXxukcCoQe7CQSqGejhyCJHhmXu0KM00+ovDx/L0hEjEdIAv3vbsMj6OqgQX
+ u2u0KnFzi/OY+9K1Tvh6oXFdA0qr/GWXbJ3dMrc0VMhGB3ZjlWKtIfqMCma1uITtmiY8uFtU
+ vigi3Qkqw5rpzig3N0sh5LTiYIJzlDL7z55zJwpKty5UUN2Z8OvH5RMuS+ALYR2Xt8iTH9yu
+ CY80rALpZG2cScFxpopwxPSaPyJfoaH7B79VOucLit1iG94dLyxmRu+70itx+ziWsWo0FtHr
+ DZJnsXPu30Q1xLe98iJR/1g9UmiwTaCzw/e5+BeLUwqlafWK4QtzqAumpcRq0jOHC/7lF3og
+ KOLeEgo4Pak5/r7brn8uJOROJN4hhv6P6kvnMG0HP42PRIUX2eB/OSxzLjj/UrkT7pUlvA2i
+ azZsIzCJcQcu665HxdZ0oY95Ba7CDeryNsYnXweIFJefRKHk5DpN0zTLPziEfiwnVKskCtxx
+ /DbO73tGInCL3nbnLfge7Zy9VJcxRI8wN1e/Z5YFLEMLfLpVkPvqtDVDAU1Pg60zur/DdVyz
+ IIeWWaBAq+DN6PStEeF6fg1I+mPfoAVvSzyK+I+6vH0kX85nUUSfbKz0ZQLaXG0Bu5mLFmBY
+ XrwntcBFn8HsRA4TOP3kl2NTzBSa2yuUKI74TE7EJypDZ3NS422nLOB3Tu7HodXZmFJEFyDD
+ XDod4CcV/cWdC2SOtNhkiADVbW5RY4h1BWutAv6yrd8L+rU/CMYtYj529do+eLcjww9+SZzD
+ 8SH3GGBV3t0kX8QRz8qwKB/plRwyliZ0admjPxYFtxT6uhNUgc7M57c0uN7C971WgLceNeGV
+ UypQsmnATE2SNI92dgOY1xyG9m6lBDMwzKqA6MJl7yMHJE777jT32bwJ8lg0HvGzrcugEQmQ
+ sRVKW2qnLJw9w/WB4LRiUWWi76qdbgA3C7K7GqDyWuOvEdFUA9/SKnFXm4QZlHQrdvn4kPPV
+ KGuCbs5PQtb08KCKbVFasfvjVpYQPfvItPeY3i+m2uoHxaH2quMbJb2e2UaxCjdDEkEkwYO/
+ XeJLAQ/CSmho3nFATxwGlLgfVns/fN9qHylVE80yR+Fb0l727qy4B4ViuSQS/UI0b0coicut
+ y10HEqh39LRE9eNphJtc7hfYdM85VdKzXrXuQNzMZK+M65vmlgQIExLuBbH0RltB5oIus8tt
+ H4whF57L66C3UwHfDSfxZ3qYZXcK3Xo/QDpYKnTjALwytGTr58C9O5wlVzlHwLhQkM48Hxi2
+ sN92meY746MBxhEAsG5aVo+6xUv/+KSWSI6/Y6BkCQ0acGJ
+IronPort-Data: A9a23:byanXK8b1j6pxdWFNzyYDrUDSX+TJUtcMsCJ2f8bNWPcYEJGY0x3m
+ mEYWzqGa/reajCkKNp1bIjn808D68CEm4AxGgI+qy9EQiMRo6IpJ/zCdxutYHnCRiHgZB89s
+ 59OOoGowOQcFCK0SsKFa+C5xZVE/fjVAOe6UaicZ30ZqTZMEE8JkQhkl/MynrlmiN24BxLlk
+ d7pqqUzAnf8s9JPGjxSsvvrRC9H5qyo5GpB5gFmP5ingXeH/5UrJMNCTU2OBySgKmVkNrbSb
+ /rOyri/4lTY838FYvu5kqz2e1E9WbXbOw6DkBJ+A8BOVTAfzsCa+v9T2Ms0MS+7uR3Q9zxC4
+ IklWaiLdOscFvakdNI1CEAETn4kbcWqz5ecSZS3mZT7I0Qr6BIAyd02ZK09FdVwFuqanQiiX
+ BHXQdwARknrug64/F60YrhHu+RkKY7TAJEWsFxHnBXeEq4WEY+WFs0m5fcAtNsxrs9LWO3be
+ 9JAMHxkYRLceQBKfFwFYH48tLv2wCOiLnsC8g3T+vdfD2v7lWSd1JDkKtncf9WQbcxJmk+D4
+ GnUl4j8KktEZYXGkGrbohpAgMfkpQDjZag3O4Hg2eEzkWDI2EkYNSM/AA7TTf6RzxTWt8hkA
+ 0US9jAjsu4580uzQ8Omdxa5vGSFrlgXXN84O/I77AWc4qvS7RyQCmUNQnhGctNOnMAsSDMp1
+ neNntX0FTJorbuZQG6c8bHSqim9UQAZJHEDaQceQAcF6sWlq4Y25jrLT9B+AOu2g8fzFDXY3
+ T+Htm49iq8VgMpN0L+0lXjDgjSxtt3ZQBUd+AraRCSm4xl/aYrjYJangWU39t4ccsDDEwTH5
+ iJb3ZfDhAwTMayweOW2aL1lNNmUCzytbGWB0DaDw7FJG+yRxkOe
+IronPort-HdrOrdr: A9a23:R8wVVqNkvOoAssBcTsyjsMiBIKoaSvp037Dk7S9MoDhuA6mlfq
+ eV7ZAmPH7P+VQssR4b8+xoVJPsfZqYz+8T3WBzB8bAYOCFggqVxehZhOOI/9SjIU3DH4Vmu5
+ uIHZITNOHN
+X-Talos-CUID: =?us-ascii?q?9a23=3A+KkLnGtn7iZf0aSUHV1Wo4236It0WUD9i3KXG3O?=
+ =?us-ascii?q?qAGxEb+yxTkDIyPN7xp8=3D?=
+X-Talos-MUID: =?us-ascii?q?9a23=3AH2v6dA8g+DOGfu1Hi4xnmpeQf+xQwLyTImUirc0?=
+ =?us-ascii?q?ppJCVCHduHjygsh3iFw=3D=3D?=
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-AV: E=Sophos;i="6.11,259,1725314400"; 
+   d="scan'208";a="269111868"
+Received: from unknown (HELO gm-smtp11.centrum.cz) ([46.255.227.75])
+  by antispam29.centrum.cz with ESMTP; 05 Nov 2024 10:16:05 +0100
+Received: from arkam (ip-213-220-240-96.bb.vodafone.cz [213.220.240.96])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by gm-smtp11.centrum.cz (Postfix) with ESMTPSA id EB4491015BC69;
+	Tue,  5 Nov 2024 10:16:04 +0100 (CET)
+Date: Tue, 5 Nov 2024 10:16:03 +0100
+From: Petr =?utf-8?B?VmFuxJtr?= <arkamar@atlas.cz>
+To: Andrew Cooper <andrew.cooper3@citrix.com>
+Cc: david@redhat.com, gregkh@linuxfoundation.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	willy@infradead.org
+Subject: Re: xfs: Xen/HPT related regression in v6.6
+Message-ID: <20241159163-ZyniUyCdoAYdWpG2-arkamar@atlas.cz>
+References: <202411584429-Zyna7RpVesXAiTBM-arkamar@atlas.cz>
+ <df10f269-0494-46d9-be8f-7e5dc9cd3745@citrix.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: xfs: Xen/HPT related regression in v6.6
-To: Andrew Cooper <andrew.cooper3@citrix.com>, arkamar@atlas.cz
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, willy@infradead.org
-References: <202411584429-Zyna7RpVesXAiTBM-arkamar@atlas.cz>
- <df10f269-0494-46d9-be8f-7e5dc9cd3745@citrix.com>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- WNyWQQ==
-Organization: Red Hat
-In-Reply-To: <df10f269-0494-46d9-be8f-7e5dc9cd3745@citrix.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <df10f269-0494-46d9-be8f-7e5dc9cd3745@citrix.com>
 
-On 05.11.24 09:55, Andrew Cooper wrote:
->>> At least years ago, this feature was not available in XEN PV guests [1].
->> Yes, as I understand it, the hugepages are not available in my Xen
->> guest.
+On Tue, Nov 05, 2024 at 08:55:17AM +0000, Andrew Cooper wrote:
+> >> At least years ago, this feature was not available in XEN PV guests [1]. 
+> > Yes, as I understand it, the hugepages are not available in my Xen
+> > guest.
 > 
 > Xen PV guests are strictly 4k-only.
 > 
@@ -137,13 +128,10 @@ On 05.11.24 09:55, Andrew Cooper wrote:
 > 
 > But lucky to find this thread.  We've had several reports and no luck
 > isolating what changed.
-> 
-> ~Andrew (Xen maintainer)
 
-Thanks for that information, Andrew!
+I am happy to hear that :) It was partially my intention to inform
+others because I spent some time isolating it.
 
--- 
 Cheers,
-
-David / dhildenb
+Petr
 
