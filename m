@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88AE216A30
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:24:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 358011E5022
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:24:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845451; cv=none; b=CL8QadvIpcGLyK1O+8Ae08ELmVDkchDnl+T8rabx3PcNtXOCs81vTtrXuCR7xSY7Sl8DXveFKYKPfBu8B0zDn94L1gLvgmIwrstGMJfz9b06TbABxoGpqsZq4RGUkWjGz0Lpdv3zSdv+0k24fPvYf6h/cY0qXsJUqPz+C/TyFnk=
+	t=1730845467; cv=none; b=ZmIUggRBlCN84AMs94IV4IxseOh3WnnytOwa0wPjTe8R9UnaM61l0F9+lKdRGVGxsnKKMuu/7Yy8G9atjnxndLqneTHGomFdFZLZDvyPknYiBouA8euVAf72c3UHp4bLFWczTP+P9NzB0INkbUpg3UTENJWIlZCnLnbKPDRIgwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845451; c=relaxed/simple;
-	bh=PKZC3v2WTr0R/n4728nzPeccUKqU4HU5spGtdEPAaCs=;
+	s=arc-20240116; t=1730845467; c=relaxed/simple;
+	bh=526NVH7GyAqERGH1Gfj+SISBrs7t8zp/xhe0CJI/A6E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OM7SWtkrDCAYYvY1BgEPd+f60/sbdRZjEYD05S0oKqR2CPFNfo/z8lDzkoTApoOnHOgV4KYlXGIWa/snRVookaiBFmg+3obh75Vkfi3ianFfBzJi6OFpLAPh1O6NMFITMjp+cTqjQExeAr5+t7nTlKmTUU4Gsy2gW5fR4Gzjk34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCP5/Sn+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QXb3eh9AbDXxAYZ8IY8qHizDB29xls4FPLIttpvSjZlz/vdZA350OPsi3UvyUPJBO8ao8eafPYFUxYcdITBaMyFdWwq7ZHhYHYQhsNIug2UhMwAkuxUKJvZo4fwpUPNzlvPJqKDlht7ntFBIdj2dgHvVzuVT04ZY1fY7LFvqGEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=moigju37; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCP5/Sn+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67A3EC4CED4;
-	Tue,  5 Nov 2024 22:24:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="moigju37"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11392C4CECF;
+	Tue,  5 Nov 2024 22:24:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845451;
-	bh=PKZC3v2WTr0R/n4728nzPeccUKqU4HU5spGtdEPAaCs=;
+	s=k20201202; t=1730845467;
+	bh=526NVH7GyAqERGH1Gfj+SISBrs7t8zp/xhe0CJI/A6E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hCP5/Sn+lgDEWlBX5xVYRWMKEcbfZgjLJ+8Ea2Dddx8qbdbjBG6KsgUEXdgykW+VJ
-	 tGxkEQCKB0wMIj6sh0qWJaBfP4agi2bQbOA+eQXCAB6I/D90CmHe+uQSx9b9FOLtZ+
-	 NnTOrXJtiX77SWcsGNGh5mJ4z8BwA7Rv4H7cTgfbW4ZDvvvLgpiPHbaN2RX+d4gv6v
-	 tIUni1IzIFJVI9oDhfh01cBVU/GNnRh/eLbbHd7zIa1gQ1duUBjd0ajmufp1+zF2la
-	 psCYwjrvTXRyZHBTWp9iTFlVFL6f/us87VMZjiQk+7IxUazYT7/8YRjDDuIJmNMItl
-	 mvbqdosLewiuQ==
-Date: Tue, 05 Nov 2024 14:24:10 -0800
-Subject: [PATCH 01/21] xfs: clean up xfs_getfsmap_helper arguments
+	b=moigju37wif+4kcLydc51RXVIIKCWFRbbA0tmoS/WQ3UwfP/scjj8q8jiyGv5CFiS
+	 2SfS4z8GntAvo/AiXbE9CWCQoKeXKBFg5YmbcQd9f/g8MYuXrxB91F5UHykvQ3v2Ai
+	 7Q/FjnbYBndkGqQ56QVSgw3BDBIltm6WWvbkYbi/4fTJ9g0VX8sPYI6JFNx3q/MOME
+	 YF5Bx3XoB16hcGy32//Xw78A5UR17fco0czCLmPxqPszyz2vwdbyPfpnvbyCAFZB9o
+	 5AMcpp1pxNCRrhzumExtnmhG9ybCK0vl5xBPITGIma9i3QiFCKGaHBynH1ApKjmZR+
+	 xzk1aYzprznuA==
+Date: Tue, 05 Nov 2024 14:24:26 -0800
+Subject: [PATCH 02/21] xfs: create incore realtime group structures
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084396955.1871025.18156568347365549855.stgit@frogsfrogsfrogs>
+Message-ID: <173084396972.1871025.1072909621633581351.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
 References: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,601 +43,775 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-The calling conventions for xfs_getfsmap_helper are confusing -- callers
-pass in an rmap record, but they must also supply startblock and
-blockcount in daddr units.  This was bolted onto the original fsmap
-implementation so that we could report *something* for realtime
-volumes, which do not support rmap and hence can draw only from the rt
-free space bitmap.  Free space on the rt volume can be more than 2^32
-fsblocks long, which means that we can't use the rmap startblock or
-blockcount fields.
-
-This is confusing for callers, because they must supplying redundant
-data, but not all of it is used.  Streamline this by creating a separate
-fsmap irec structure that contains exactly the data we need, once.
-
-Note that we actually do need rm_startblock for rmap key comparisons
-when we're actually querying an rmap btree, so leave that field but
-document why it's there.
+Create an incore object that will contain information about a realtime
+allocation group.  This will eventually enable us to shard the realtime
+section in a similar manner to how we shard the data section, but for
+now just a single object for the entire RT subvolume is created.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_fsmap.c |  225 +++++++++++++++++++++++++++-------------------------
- fs/xfs/xfs_fsmap.h |   15 +++
- fs/xfs/xfs_trace.h |   73 ++++++++++++-----
- 3 files changed, 187 insertions(+), 126 deletions(-)
+ fs/xfs/Makefile               |    1 
+ fs/xfs/libxfs/xfs_format.h    |    3 +
+ fs/xfs/libxfs/xfs_rtgroup.c   |  151 +++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rtgroup.h   |  217 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_sb.c        |   13 ++
+ fs/xfs/libxfs/xfs_types.h     |    8 +-
+ fs/xfs/xfs_bmap_util.c        |    3 -
+ fs/xfs/xfs_buf_item_recover.c |   25 +++++
+ fs/xfs/xfs_fsmap.c            |    5 +
+ fs/xfs/xfs_mount.c            |   13 ++
+ fs/xfs/xfs_mount.h            |   13 ++
+ fs/xfs/xfs_rtalloc.c          |    5 +
+ fs/xfs/xfs_trace.c            |    1 
+ fs/xfs/xfs_trace.h            |    1 
+ 14 files changed, 454 insertions(+), 5 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_rtgroup.c
+ create mode 100644 fs/xfs/libxfs/xfs_rtgroup.h
 
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index a91677ac54e7e3..6cf4f00636a2d6 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -110,18 +110,18 @@ xfs_fsmap_owner_to_rmap(
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index d80c2817eb4892..6814debac29929 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -61,6 +61,7 @@ xfs-y				+= $(addprefix libxfs/, \
+ # xfs_rtbitmap is shared with libxfs
+ xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
+ 				   xfs_rtbitmap.o \
++				   xfs_rtgroup.o \
+ 				   )
  
- /* Convert an rmapbt owner into an fsmap owner. */
- static int
--xfs_fsmap_owner_from_rmap(
-+xfs_fsmap_owner_from_frec(
- 	struct xfs_fsmap		*dest,
--	const struct xfs_rmap_irec	*src)
-+	const struct xfs_fsmap_irec	*frec)
- {
- 	dest->fmr_flags = 0;
--	if (!XFS_RMAP_NON_INODE_OWNER(src->rm_owner)) {
--		dest->fmr_owner = src->rm_owner;
-+	if (!XFS_RMAP_NON_INODE_OWNER(frec->owner)) {
-+		dest->fmr_owner = frec->owner;
- 		return 0;
- 	}
- 	dest->fmr_flags |= FMR_OF_SPECIAL_OWNER;
+ # highlevel code
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 616f81045921b7..867060d60e8583 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -176,6 +176,9 @@ typedef struct xfs_sb {
  
--	switch (src->rm_owner) {
-+	switch (frec->owner) {
- 	case XFS_RMAP_OWN_FS:
- 		dest->fmr_owner = XFS_FMR_OWN_FS;
- 		break;
-@@ -203,7 +203,7 @@ STATIC int
- xfs_getfsmap_is_shared(
- 	struct xfs_trans		*tp,
- 	struct xfs_getfsmap_info	*info,
--	const struct xfs_rmap_irec	*rec,
-+	const struct xfs_fsmap_irec	*frec,
- 	bool				*stat)
- {
- 	struct xfs_mount		*mp = tp->t_mountp;
-@@ -224,8 +224,9 @@ xfs_getfsmap_is_shared(
- 	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
- 			to_perag(info->group));
+ 	xfs_ino_t	sb_metadirino;	/* metadata directory tree root */
  
--	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
--			rec->rm_blockcount, &fbno, &flen, false);
-+	error = xfs_refcount_find_shared(cur, frec->rec_key,
-+			XFS_BB_TO_FSBT(mp, frec->len_daddr), &fbno, &flen,
-+			false);
- 
- 	xfs_btree_del_cursor(cur, error);
- 	if (error)
-@@ -250,15 +251,22 @@ xfs_getfsmap_format(
- }
- 
- static inline bool
--xfs_getfsmap_rec_before_start(
-+xfs_getfsmap_frec_before_start(
- 	struct xfs_getfsmap_info	*info,
--	const struct xfs_rmap_irec	*rec,
--	xfs_daddr_t			rec_daddr)
-+	const struct xfs_fsmap_irec	*frec)
- {
- 	if (info->low_daddr != XFS_BUF_DADDR_NULL)
--		return rec_daddr < info->low_daddr;
--	if (info->low.rm_blockcount)
--		return xfs_rmap_compare(rec, &info->low) < 0;
-+		return frec->start_daddr < info->low_daddr;
-+	if (info->low.rm_blockcount) {
-+		struct xfs_rmap_irec	rec = {
-+			.rm_startblock	= frec->rec_key,
-+			.rm_owner	= frec->owner,
-+			.rm_flags	= frec->rm_flags,
-+		};
++	xfs_rgnumber_t	sb_rgcount;	/* number of realtime groups */
++	xfs_rtxlen_t	sb_rgextents;	/* size of a realtime group in rtx */
 +
-+		return xfs_rmap_compare(&rec, &info->low) < 0;
+ 	/* must be padded to 64 bit alignment */
+ } xfs_sb_t;
+ 
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+new file mode 100644
+index 00000000000000..9d3842e83c9366
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_rtgroup.c
+@@ -0,0 +1,151 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_bit.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_btree.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_rmap_btree.h"
++#include "xfs_alloc.h"
++#include "xfs_ialloc.h"
++#include "xfs_rmap.h"
++#include "xfs_ag.h"
++#include "xfs_ag_resv.h"
++#include "xfs_health.h"
++#include "xfs_error.h"
++#include "xfs_bmap.h"
++#include "xfs_defer.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_trace.h"
++#include "xfs_inode.h"
++#include "xfs_icache.h"
++#include "xfs_rtgroup.h"
++#include "xfs_rtbitmap.h"
++
++int
++xfs_rtgroup_alloc(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno,
++	xfs_rgnumber_t		rgcount,
++	xfs_rtbxlen_t		rextents)
++{
++	struct xfs_rtgroup	*rtg;
++	int			error;
++
++	rtg = kzalloc(sizeof(struct xfs_rtgroup), GFP_KERNEL);
++	if (!rtg)
++		return -ENOMEM;
++
++	error = xfs_group_insert(mp, rtg_group(rtg), rgno, XG_TYPE_RTG);
++	if (error)
++		goto out_free_rtg;
++	return 0;
++
++out_free_rtg:
++	kfree(rtg);
++	return error;
++}
++
++void
++xfs_rtgroup_free(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno)
++{
++	xfs_group_free(mp, rgno, XG_TYPE_RTG, NULL);
++}
++
++/* Free a range of incore rtgroup objects. */
++void
++xfs_free_rtgroups(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		first_rgno,
++	xfs_rgnumber_t		end_rgno)
++{
++	xfs_rgnumber_t		rgno;
++
++	for (rgno = first_rgno; rgno < end_rgno; rgno++)
++		xfs_rtgroup_free(mp, rgno);
++}
++
++/* Initialize some range of incore rtgroup objects. */
++int
++xfs_initialize_rtgroups(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		first_rgno,
++	xfs_rgnumber_t		end_rgno,
++	xfs_rtbxlen_t		rextents)
++{
++	xfs_rgnumber_t		index;
++	int			error;
++
++	if (first_rgno >= end_rgno)
++		return 0;
++
++	for (index = first_rgno; index < end_rgno; index++) {
++		error = xfs_rtgroup_alloc(mp, index, end_rgno, rextents);
++		if (error)
++			goto out_unwind_new_rtgs;
 +	}
 +
- 	return false;
++	return 0;
++
++out_unwind_new_rtgs:
++	xfs_free_rtgroups(mp, first_rgno, index);
++	return error;
++}
++
++/* Compute the number of rt extents in this realtime group. */
++xfs_rtxnum_t
++__xfs_rtgroup_extents(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno,
++	xfs_rgnumber_t		rgcount,
++	xfs_rtbxlen_t		rextents)
++{
++	ASSERT(rgno < rgcount);
++	if (rgno == rgcount - 1)
++		return rextents - ((xfs_rtxnum_t)rgno * mp->m_sb.sb_rgextents);
++
++	ASSERT(xfs_has_rtgroups(mp));
++	return mp->m_sb.sb_rgextents;
++}
++
++xfs_rtxnum_t
++xfs_rtgroup_extents(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno)
++{
++	return __xfs_rtgroup_extents(mp, rgno, mp->m_sb.sb_rgcount,
++			mp->m_sb.sb_rextents);
++}
++
++/*
++ * Update the rt extent count of the previous tail rtgroup if it changed during
++ * recovery (i.e. recovery of a growfs).
++ */
++int
++xfs_update_last_rtgroup_size(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		prev_rgcount)
++{
++	struct xfs_rtgroup	*rtg;
++
++	ASSERT(prev_rgcount > 0);
++
++	rtg = xfs_rtgroup_grab(mp, prev_rgcount - 1);
++	if (!rtg)
++		return -EFSCORRUPTED;
++	rtg->rtg_extents = __xfs_rtgroup_extents(mp, prev_rgcount - 1,
++			mp->m_sb.sb_rgcount, mp->m_sb.sb_rextents);
++	xfs_rtgroup_rele(rtg);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+new file mode 100644
+index 00000000000000..8872c27a9585fd
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -0,0 +1,217 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __LIBXFS_RTGROUP_H
++#define __LIBXFS_RTGROUP_H 1
++
++#include "xfs_group.h"
++
++struct xfs_mount;
++struct xfs_trans;
++
++/*
++ * Realtime group incore structure, similar to the per-AG structure.
++ */
++struct xfs_rtgroup {
++	struct xfs_group	rtg_group;
++
++	/* Number of blocks in this group */
++	xfs_rtxnum_t		rtg_extents;
++};
++
++static inline struct xfs_rtgroup *to_rtg(struct xfs_group *xg)
++{
++	return container_of(xg, struct xfs_rtgroup, rtg_group);
++}
++
++static inline struct xfs_group *rtg_group(struct xfs_rtgroup *rtg)
++{
++	return &rtg->rtg_group;
++}
++
++static inline struct xfs_mount *rtg_mount(const struct xfs_rtgroup *rtg)
++{
++	return rtg->rtg_group.xg_mount;
++}
++
++static inline xfs_rgnumber_t rtg_rgno(const struct xfs_rtgroup *rtg)
++{
++	return rtg->rtg_group.xg_gno;
++}
++
++/* Passive rtgroup references */
++static inline struct xfs_rtgroup *
++xfs_rtgroup_get(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno)
++{
++	return to_rtg(xfs_group_get(mp, rgno, XG_TYPE_RTG));
++}
++
++static inline struct xfs_rtgroup *
++xfs_rtgroup_hold(
++	struct xfs_rtgroup	*rtg)
++{
++	return to_rtg(xfs_group_hold(rtg_group(rtg)));
++}
++
++static inline void
++xfs_rtgroup_put(
++	struct xfs_rtgroup	*rtg)
++{
++	xfs_group_put(rtg_group(rtg));
++}
++
++/* Active rtgroup references */
++static inline struct xfs_rtgroup *
++xfs_rtgroup_grab(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno)
++{
++	return to_rtg(xfs_group_grab(mp, rgno, XG_TYPE_RTG));
++}
++
++static inline void
++xfs_rtgroup_rele(
++	struct xfs_rtgroup	*rtg)
++{
++	xfs_group_rele(rtg_group(rtg));
++}
++
++static inline struct xfs_rtgroup *
++xfs_rtgroup_next_range(
++	struct xfs_mount	*mp,
++	struct xfs_rtgroup	*rtg,
++	xfs_rgnumber_t		start_rgno,
++	xfs_rgnumber_t		end_rgno)
++{
++	return to_rtg(xfs_group_next_range(mp, rtg ? rtg_group(rtg) : NULL,
++			start_rgno, end_rgno, XG_TYPE_RTG));
++}
++
++static inline struct xfs_rtgroup *
++xfs_rtgroup_next(
++	struct xfs_mount	*mp,
++	struct xfs_rtgroup	*rtg)
++{
++	return xfs_rtgroup_next_range(mp, rtg, 0, mp->m_sb.sb_rgcount - 1);
++}
++
++static inline xfs_rtblock_t
++xfs_rgno_start_rtb(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno)
++{
++	if (mp->m_rgblklog >= 0)
++		return ((xfs_rtblock_t)rgno << mp->m_rgblklog);
++	return ((xfs_rtblock_t)rgno * mp->m_rgblocks);
++}
++
++static inline xfs_rtblock_t
++__xfs_rgbno_to_rtb(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno,
++	xfs_rgblock_t		rgbno)
++{
++	return xfs_rgno_start_rtb(mp, rgno) + rgbno;
++}
++
++static inline xfs_rtblock_t
++xfs_rgbno_to_rtb(
++	struct xfs_rtgroup	*rtg,
++	xfs_rgblock_t		rgbno)
++{
++	return __xfs_rgbno_to_rtb(rtg_mount(rtg), rtg_rgno(rtg), rgbno);
++}
++
++static inline xfs_rgnumber_t
++xfs_rtb_to_rgno(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	if (!xfs_has_rtgroups(mp))
++		return 0;
++
++	if (mp->m_rgblklog >= 0)
++		return rtbno >> mp->m_rgblklog;
++
++	return div_u64(rtbno, mp->m_rgblocks);
++}
++
++static inline uint64_t
++__xfs_rtb_to_rgbno(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	uint32_t		rem;
++
++	if (!xfs_has_rtgroups(mp))
++		return rtbno;
++
++	if (mp->m_rgblklog >= 0)
++		return rtbno & mp->m_rgblkmask;
++
++	div_u64_rem(rtbno, mp->m_rgblocks, &rem);
++	return rem;
++}
++
++static inline xfs_rgblock_t
++xfs_rtb_to_rgbno(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	return __xfs_rtb_to_rgbno(mp, rtbno);
++}
++
++static inline xfs_daddr_t
++xfs_rtb_to_daddr(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	return rtbno << mp->m_blkbb_log;
++}
++
++static inline xfs_rtblock_t
++xfs_daddr_to_rtb(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
++{
++	return daddr >> mp->m_blkbb_log;
++}
++
++#ifdef CONFIG_XFS_RT
++int xfs_rtgroup_alloc(struct xfs_mount *mp, xfs_rgnumber_t rgno,
++		xfs_rgnumber_t rgcount, xfs_rtbxlen_t rextents);
++void xfs_rtgroup_free(struct xfs_mount *mp, xfs_rgnumber_t rgno);
++
++void xfs_free_rtgroups(struct xfs_mount *mp, xfs_rgnumber_t first_rgno,
++		xfs_rgnumber_t end_rgno);
++int xfs_initialize_rtgroups(struct xfs_mount *mp, xfs_rgnumber_t first_rgno,
++		xfs_rgnumber_t end_rgno, xfs_rtbxlen_t rextents);
++
++xfs_rtxnum_t __xfs_rtgroup_extents(struct xfs_mount *mp, xfs_rgnumber_t rgno,
++		xfs_rgnumber_t rgcount, xfs_rtbxlen_t rextents);
++xfs_rtxnum_t xfs_rtgroup_extents(struct xfs_mount *mp, xfs_rgnumber_t rgno);
++
++int xfs_update_last_rtgroup_size(struct xfs_mount *mp,
++		xfs_rgnumber_t prev_rgcount);
++#else
++static inline void xfs_free_rtgroups(struct xfs_mount *mp,
++		xfs_rgnumber_t first_rgno, xfs_rgnumber_t end_rgno)
++{
++}
++
++static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
++		xfs_rgnumber_t first_rgno, xfs_rgnumber_t end_rgno,
++		xfs_rtbxlen_t rextents)
++{
++	return 0;
++}
++
++# define xfs_rtgroup_extents(mp, rgno)		(0)
++# define xfs_update_last_rtgroup_size(mp, rgno)	(-EOPNOTSUPP)
++#endif /* CONFIG_XFS_RT */
++
++#endif /* __LIBXFS_RTGROUP_H */
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 4516824e3b9994..21891aa10ada02 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -696,6 +696,9 @@ __xfs_sb_from_disk(
+ 		to->sb_metadirino = be64_to_cpu(from->sb_metadirino);
+ 	else
+ 		to->sb_metadirino = NULLFSINO;
++
++	to->sb_rgcount = 1;
++	to->sb_rgextents = 0;
  }
  
-@@ -271,61 +279,36 @@ STATIC int
- xfs_getfsmap_helper(
- 	struct xfs_trans		*tp,
- 	struct xfs_getfsmap_info	*info,
--	const struct xfs_rmap_irec	*rec,
--	xfs_daddr_t			rec_daddr,
--	xfs_daddr_t			len_daddr)
-+	const struct xfs_fsmap_irec	*frec)
+ void
+@@ -980,8 +983,18 @@ xfs_mount_sb_set_rextsize(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_sb		*sbp)
  {
- 	struct xfs_fsmap		fmr;
- 	struct xfs_mount		*mp = tp->t_mountp;
- 	bool				shared;
--	int				error;
-+	int				error = 0;
++	struct xfs_groups	*rgs = &mp->m_groups[XG_TYPE_RTG];
++
+ 	mp->m_rtxblklog = log2_if_power2(sbp->sb_rextsize);
+ 	mp->m_rtxblkmask = mask64_if_power2(sbp->sb_rextsize);
++
++	mp->m_rgblocks = 0;
++	mp->m_rgblklog = 0;
++	mp->m_rgblkmask = (uint64_t)-1;
++
++	rgs->blocks = 0;
++	rgs->blklog = 0;
++	rgs->blkmask = (uint64_t)-1;
+ }
  
- 	if (fatal_signal_pending(current))
- 		return -EINTR;
+ /*
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 25053a66c225ed..bf33c2b1e43e5f 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -9,10 +9,12 @@
+ typedef uint32_t	prid_t;		/* project ID */
  
--	if (len_daddr == 0)
--		len_daddr = XFS_FSB_TO_BB(mp, rec->rm_blockcount);
--
- 	/*
- 	 * Filter out records that start before our startpoint, if the
- 	 * caller requested that.
- 	 */
--	if (xfs_getfsmap_rec_before_start(info, rec, rec_daddr)) {
--		rec_daddr += len_daddr;
--		if (info->next_daddr < rec_daddr)
--			info->next_daddr = rec_daddr;
--		return 0;
--	}
--
--	/*
--	 * For an info->last query, we're looking for a gap between the last
--	 * mapping emitted and the high key specified by userspace.  If the
--	 * user's query spans less than 1 fsblock, then info->high and
--	 * info->low will have the same rm_startblock, which causes rec_daddr
--	 * and next_daddr to be the same.  Therefore, use the end_daddr that
--	 * we calculated from userspace's high key to synthesize the record.
--	 * Note that if the btree query found a mapping, there won't be a gap.
--	 */
--	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL)
--		rec_daddr = info->end_daddr;
-+	if (xfs_getfsmap_frec_before_start(info, frec))
-+		goto out;
+ typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
++typedef uint32_t	xfs_rgblock_t;	/* blockno in realtime group */
+ typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+ typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
+ typedef uint32_t	xfs_rtxlen_t;	/* file extent length in rtextents */
+ typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
++typedef uint32_t	xfs_rgnumber_t;	/* realtime group number */
+ typedef uint64_t	xfs_extnum_t;	/* # of extents in a file */
+ typedef uint32_t	xfs_aextnum_t;	/* # extents in an attribute fork */
+ typedef int64_t		xfs_fsize_t;	/* bytes in a file */
+@@ -53,7 +55,9 @@ typedef void *		xfs_failaddr_t;
+ #define	NULLFILEOFF	((xfs_fileoff_t)-1)
  
- 	/* Are we just counting mappings? */
- 	if (info->head->fmh_count == 0) {
- 		if (info->head->fmh_entries == UINT_MAX)
- 			return -ECANCELED;
+ #define	NULLAGBLOCK	((xfs_agblock_t)-1)
++#define NULLRGBLOCK	((xfs_rgblock_t)-1)
+ #define	NULLAGNUMBER	((xfs_agnumber_t)-1)
++#define	NULLRGNUMBER	((xfs_rgnumber_t)-1)
  
--		if (rec_daddr > info->next_daddr)
-+		if (frec->start_daddr > info->next_daddr)
- 			info->head->fmh_entries++;
+ #define NULLCOMMITLSN	((xfs_lsn_t)-1)
  
- 		if (info->last)
- 			return 0;
+@@ -214,11 +218,13 @@ enum xbtree_recpacking {
  
- 		info->head->fmh_entries++;
--
--		rec_daddr += len_daddr;
--		if (info->next_daddr < rec_daddr)
--			info->next_daddr = rec_daddr;
--		return 0;
-+		goto out;
+ enum xfs_group_type {
+ 	XG_TYPE_AG,
++	XG_TYPE_RTG,
+ 	XG_TYPE_MAX,
+ } __packed;
+ 
+ #define XG_TYPE_STRINGS \
+-	{ XG_TYPE_AG,	"ag" }
++	{ XG_TYPE_AG,	"ag" }, \
++	{ XG_TYPE_RTG,	"rtg" }
+ 
+ /*
+  * Type verifier functions
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index edaf193dbd5ccc..1ac0b0facb7fd3 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -29,6 +29,7 @@
+ #include "xfs_iomap.h"
+ #include "xfs_reflink.h"
+ #include "xfs_rtbitmap.h"
++#include "xfs_rtgroup.h"
+ 
+ /* Kernel only BMAP related definitions and functions */
+ 
+@@ -41,7 +42,7 @@ xfs_daddr_t
+ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+ {
+ 	if (XFS_IS_REALTIME_INODE(ip))
+-		return XFS_FSB_TO_BB(ip->i_mount, fsb);
++		return xfs_rtb_to_daddr(ip->i_mount, fsb);
+ 	return XFS_FSB_TO_DADDR(ip->i_mount, fsb);
+ }
+ 
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index c627ad3a3bbbfd..c8259ee482fd86 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -25,6 +25,7 @@
+ #include "xfs_alloc.h"
+ #include "xfs_ag.h"
+ #include "xfs_sb.h"
++#include "xfs_rtgroup.h"
+ 
+ /*
+  * This is the number of entries in the l_buf_cancel_table used during
+@@ -704,6 +705,7 @@ xlog_recover_do_primary_sb_buffer(
+ {
+ 	struct xfs_dsb			*dsb = bp->b_addr;
+ 	xfs_agnumber_t			orig_agcount = mp->m_sb.sb_agcount;
++	xfs_rgnumber_t			orig_rgcount = mp->m_sb.sb_rgcount;
+ 	int				error;
+ 
+ 	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+@@ -722,6 +724,11 @@ xlog_recover_do_primary_sb_buffer(
+ 		xfs_alert(mp, "Shrinking AG count in log recovery not supported");
+ 		return -EFSCORRUPTED;
  	}
++	if (mp->m_sb.sb_rgcount < orig_rgcount) {
++		xfs_warn(mp,
++ "Shrinking rtgroup count in log recovery not supported");
++		return -EFSCORRUPTED;
++	}
  
  	/*
-@@ -333,7 +316,7 @@ xfs_getfsmap_helper(
- 	 * then we've found a gap.  Report the gap as being owned by
- 	 * whatever the caller specified is the missing owner.
- 	 */
--	if (rec_daddr > info->next_daddr) {
-+	if (frec->start_daddr > info->next_daddr) {
- 		if (info->head->fmh_entries >= info->head->fmh_count)
- 			return -ECANCELED;
- 
-@@ -341,7 +324,7 @@ xfs_getfsmap_helper(
- 		fmr.fmr_physical = info->next_daddr;
- 		fmr.fmr_owner = info->missing_owner;
- 		fmr.fmr_offset = 0;
--		fmr.fmr_length = rec_daddr - info->next_daddr;
-+		fmr.fmr_length = frec->start_daddr - info->next_daddr;
- 		fmr.fmr_flags = FMR_OF_SPECIAL_OWNER;
- 		xfs_getfsmap_format(mp, &fmr, info);
- 	}
-@@ -355,23 +338,23 @@ xfs_getfsmap_helper(
- 
- 	trace_xfs_fsmap_mapping(mp, info->dev,
- 			info->group ? info->group->xg_gno : NULLAGNUMBER,
--			rec);
-+			frec);
- 
- 	fmr.fmr_device = info->dev;
--	fmr.fmr_physical = rec_daddr;
--	error = xfs_fsmap_owner_from_rmap(&fmr, rec);
-+	fmr.fmr_physical = frec->start_daddr;
-+	error = xfs_fsmap_owner_from_frec(&fmr, frec);
+ 	 * If the last AG was grown or shrunk, we also need to update the
+@@ -731,6 +738,17 @@ xlog_recover_do_primary_sb_buffer(
  	if (error)
  		return error;
--	fmr.fmr_offset = XFS_FSB_TO_BB(mp, rec->rm_offset);
--	fmr.fmr_length = len_daddr;
--	if (rec->rm_flags & XFS_RMAP_UNWRITTEN)
-+	fmr.fmr_offset = XFS_FSB_TO_BB(mp, frec->offset);
-+	fmr.fmr_length = frec->len_daddr;
-+	if (frec->rm_flags & XFS_RMAP_UNWRITTEN)
- 		fmr.fmr_flags |= FMR_OF_PREALLOC;
--	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
-+	if (frec->rm_flags & XFS_RMAP_ATTR_FORK)
- 		fmr.fmr_flags |= FMR_OF_ATTR_FORK;
--	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+	if (frec->rm_flags & XFS_RMAP_BMBT_BLOCK)
- 		fmr.fmr_flags |= FMR_OF_EXTENT_MAP;
- 	if (fmr.fmr_flags == 0) {
--		error = xfs_getfsmap_is_shared(tp, info, rec, &shared);
-+		error = xfs_getfsmap_is_shared(tp, info, frec, &shared);
- 		if (error)
- 			return error;
- 		if (shared)
-@@ -380,25 +363,55 @@ xfs_getfsmap_helper(
  
- 	xfs_getfsmap_format(mp, &fmr, info);
- out:
--	rec_daddr += len_daddr;
--	if (info->next_daddr < rec_daddr)
--		info->next_daddr = rec_daddr;
-+	info->next_daddr = max(info->next_daddr,
-+			       frec->start_daddr + frec->len_daddr);
++	/*
++	 * If the last rtgroup was grown or shrunk, we also need to update the
++	 * length in the in-core rtgroup structure and values depending on it.
++	 * Ignore this on any filesystem with zero rtgroups.
++	 */
++	if (orig_rgcount > 0) {
++		error = xfs_update_last_rtgroup_size(mp, orig_rgcount);
++		if (error)
++			return error;
++	}
++
+ 	/*
+ 	 * Initialize the new perags, and also update various block and inode
+ 	 * allocator setting based off the number of AGs or total blocks.
+@@ -744,6 +762,13 @@ xlog_recover_do_primary_sb_buffer(
+ 		return error;
+ 	}
+ 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
++
++	error = xfs_initialize_rtgroups(mp, orig_rgcount, mp->m_sb.sb_rgcount,
++			mp->m_sb.sb_rextents);
++	if (error) {
++		xfs_warn(mp, "Failed recovery rtgroup init: %d", error);
++		return error;
++	}
  	return 0;
  }
  
-+static inline int
-+xfs_getfsmap_group_helper(
-+	struct xfs_getfsmap_info	*info,
-+	struct xfs_trans		*tp,
-+	struct xfs_group		*xg,
-+	xfs_agblock_t			startblock,
-+	xfs_extlen_t			blockcount,
-+	struct xfs_fsmap_irec		*frec)
-+{
-+	/*
-+	 * For an info->last query, we're looking for a gap between the last
-+	 * mapping emitted and the high key specified by userspace.  If the
-+	 * user's query spans less than 1 fsblock, then info->high and
-+	 * info->low will have the same rm_startblock, which causes rec_daddr
-+	 * and next_daddr to be the same.  Therefore, use the end_daddr that
-+	 * we calculated from userspace's high key to synthesize the record.
-+	 * Note that if the btree query found a mapping, there won't be a gap.
-+	 */
-+	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL)
-+		frec->start_daddr = info->end_daddr;
-+	else
-+		frec->start_daddr = xfs_gbno_to_daddr(xg, startblock);
-+
-+	frec->len_daddr = XFS_FSB_TO_BB(xg->xg_mount, blockcount);
-+	return xfs_getfsmap_helper(tp, info, frec);
-+}
-+
- /* Transform a rmapbt irec into a fsmap */
- STATIC int
--xfs_getfsmap_datadev_helper(
-+xfs_getfsmap_rmapbt_helper(
- 	struct xfs_btree_cur		*cur,
- 	const struct xfs_rmap_irec	*rec,
- 	void				*priv)
- {
-+	struct xfs_fsmap_irec		frec = {
-+		.owner			= rec->rm_owner,
-+		.offset			= rec->rm_offset,
-+		.rm_flags		= rec->rm_flags,
-+		.rec_key		= rec->rm_startblock,
-+	};
- 	struct xfs_getfsmap_info	*info = priv;
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 6cf4f00636a2d6..40beb8d75f26b1 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -25,6 +25,7 @@
+ #include "xfs_alloc_btree.h"
+ #include "xfs_rtbitmap.h"
+ #include "xfs_ag.h"
++#include "xfs_rtgroup.h"
  
--	return xfs_getfsmap_helper(cur->bc_tp, info, rec,
--			xfs_agbno_to_daddr(to_perag(cur->bc_group),
--				rec->rm_startblock),
--			0);
-+	return xfs_getfsmap_group_helper(info, cur->bc_tp, cur->bc_group,
-+			rec->rm_startblock, rec->rm_blockcount, &frec);
- }
- 
- /* Transform a bnobt irec into a fsmap */
-@@ -408,19 +421,14 @@ xfs_getfsmap_datadev_bnobt_helper(
- 	const struct xfs_alloc_rec_incore *rec,
- 	void				*priv)
- {
-+	struct xfs_fsmap_irec		frec = {
-+		.owner			= XFS_RMAP_OWN_NULL, /* "free" */
-+		.rec_key		= rec->ar_startblock,
-+	};
- 	struct xfs_getfsmap_info	*info = priv;
--	struct xfs_rmap_irec		irec;
- 
--	irec.rm_startblock = rec->ar_startblock;
--	irec.rm_blockcount = rec->ar_blockcount;
--	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
--	irec.rm_offset = 0;
--	irec.rm_flags = 0;
--
--	return xfs_getfsmap_helper(cur->bc_tp, info, &irec,
--			xfs_agbno_to_daddr(to_perag(cur->bc_group),
--				rec->ar_startblock),
--			0);
-+	return xfs_getfsmap_group_helper(info, cur->bc_tp, cur->bc_group,
-+			rec->ar_startblock, rec->ar_blockcount, &frec);
- }
- 
- /* Set rmap flags based on the getfsmap flags */
-@@ -544,9 +552,9 @@ __xfs_getfsmap_datadev(
- 		if (error)
- 			break;
- 
--		trace_xfs_fsmap_low_key(mp, info->dev, pag_agno(pag),
-+		trace_xfs_fsmap_low_group_key(mp, info->dev, pag_agno(pag),
- 				&info->low);
--		trace_xfs_fsmap_high_key(mp, info->dev, pag_agno(pag),
-+		trace_xfs_fsmap_high_group_key(mp, info->dev, pag_agno(pag),
- 				&info->high);
- 
- 		error = query_fn(tp, info, &bt_cur, priv);
-@@ -602,13 +610,13 @@ xfs_getfsmap_datadev_rmapbt_query(
- {
- 	/* Report any gap at the end of the last AG. */
- 	if (info->last)
--		return xfs_getfsmap_datadev_helper(*curpp, &info->high, info);
-+		return xfs_getfsmap_rmapbt_helper(*curpp, &info->high, info);
- 
- 	/* Allocate cursor for this AG and query_range it. */
- 	*curpp = xfs_rmapbt_init_cursor(tp->t_mountp, tp, info->agf_bp,
- 			to_perag(info->group));
- 	return xfs_rmap_query_range(*curpp, &info->low, &info->high,
--			xfs_getfsmap_datadev_helper, info);
-+			xfs_getfsmap_rmapbt_helper, info);
- }
- 
- /* Execute a getfsmap query against the regular data device rmapbt. */
-@@ -668,9 +676,12 @@ xfs_getfsmap_logdev(
- 	const struct xfs_fsmap		*keys,
- 	struct xfs_getfsmap_info	*info)
- {
-+	struct xfs_fsmap_irec		frec = {
-+		.start_daddr		= 0,
-+		.rec_key		= 0,
-+		.owner			= XFS_RMAP_OWN_LOG,
-+	};
- 	struct xfs_mount		*mp = tp->t_mountp;
--	struct xfs_rmap_irec		rmap;
--	xfs_daddr_t			rec_daddr, len_daddr;
- 	xfs_fsblock_t			start_fsb, end_fsb;
- 	uint64_t			eofs;
- 
-@@ -685,22 +696,15 @@ xfs_getfsmap_logdev(
- 	if (keys[0].fmr_length > 0)
- 		info->low_daddr = XFS_FSB_TO_BB(mp, start_fsb);
- 
--	trace_xfs_fsmap_low_key_linear(mp, info->dev, start_fsb);
--	trace_xfs_fsmap_high_key_linear(mp, info->dev, end_fsb);
-+	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_fsb);
-+	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_fsb);
- 
- 	if (start_fsb > 0)
- 		return 0;
- 
- 	/* Fabricate an rmap entry for the external log device. */
--	rmap.rm_startblock = 0;
--	rmap.rm_blockcount = mp->m_sb.sb_logblocks;
--	rmap.rm_owner = XFS_RMAP_OWN_LOG;
--	rmap.rm_offset = 0;
--	rmap.rm_flags = 0;
--
--	rec_daddr = XFS_FSB_TO_BB(mp, rmap.rm_startblock);
--	len_daddr = XFS_FSB_TO_BB(mp, rmap.rm_blockcount);
--	return xfs_getfsmap_helper(tp, info, &rmap, rec_daddr, len_daddr);
-+	frec.len_daddr = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
-+	return xfs_getfsmap_helper(tp, info, &frec);
- }
- 
- #ifdef CONFIG_XFS_RT
-@@ -712,24 +716,31 @@ xfs_getfsmap_rtdev_rtbitmap_helper(
- 	const struct xfs_rtalloc_rec	*rec,
- 	void				*priv)
- {
-+	struct xfs_fsmap_irec		frec = {
-+		.owner			= XFS_RMAP_OWN_NULL, /* "free" */
-+	};
- 	struct xfs_getfsmap_info	*info = priv;
--	struct xfs_rmap_irec		irec;
- 	xfs_rtblock_t			rtbno;
--	xfs_daddr_t			rec_daddr, len_daddr;
- 
--	rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
--	rec_daddr = XFS_FSB_TO_BB(mp, rtbno);
--	irec.rm_startblock = rtbno;
-+	/*
-+	 * For an info->last query, we're looking for a gap between the last
-+	 * mapping emitted and the high key specified by userspace.  If the
-+	 * user's query spans less than 1 fsblock, then info->high and
-+	 * info->low will have the same rm_startblock, which causes rec_daddr
-+	 * and next_daddr to be the same.  Therefore, use the end_daddr that
-+	 * we calculated from userspace's high key to synthesize the record.
-+	 * Note that if the btree query found a mapping, there won't be a gap.
-+	 */
-+	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL) {
-+		frec.start_daddr = info->end_daddr;
-+	} else {
-+		rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
-+		frec.start_daddr = XFS_FSB_TO_BB(mp, rtbno);
-+	}
- 
- 	rtbno = xfs_rtx_to_rtb(mp, rec->ar_extcount);
--	len_daddr = XFS_FSB_TO_BB(mp, rtbno);
--	irec.rm_blockcount = rtbno;
--
--	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
--	irec.rm_offset = 0;
--	irec.rm_flags = 0;
--
--	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr, len_daddr);
-+	frec.len_daddr = XFS_FSB_TO_BB(mp, rtbno);
-+	return xfs_getfsmap_helper(tp, info, &frec);
- }
- 
- /* Execute a getfsmap query against the realtime device rtbitmap. */
-@@ -764,8 +775,8 @@ xfs_getfsmap_rtdev_rtbitmap(
- 			return 0;
+ /* Convert an xfs_fsmap to an fsmap. */
+ static void
+@@ -735,7 +736,7 @@ xfs_getfsmap_rtdev_rtbitmap_helper(
+ 		frec.start_daddr = info->end_daddr;
+ 	} else {
+ 		rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
+-		frec.start_daddr = XFS_FSB_TO_BB(mp, rtbno);
++		frec.start_daddr = xfs_rtb_to_daddr(mp, rtbno);
  	}
  
--	trace_xfs_fsmap_low_key_linear(mp, info->dev, start_rtb);
--	trace_xfs_fsmap_high_key_linear(mp, info->dev, end_rtb);
-+	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_rtb);
-+	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_rtb);
+ 	rtbno = xfs_rtx_to_rtb(mp, rec->ar_extcount);
+@@ -770,7 +771,7 @@ xfs_getfsmap_rtdev_rtbitmap(
  
- 	xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
+ 	/* Adjust the low key if we are continuing from where we left off. */
+ 	if (keys[0].fmr_length > 0) {
+-		info->low_daddr = XFS_FSB_TO_BB(mp, start_rtb);
++		info->low_daddr = xfs_rtb_to_daddr(mp, start_rtb);
+ 		if (info->low_daddr >= eofs)
+ 			return 0;
+ 	}
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 2dd2606fc7e3e4..9464eddf9212e9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -36,6 +36,7 @@
+ #include "xfs_ag.h"
+ #include "xfs_rtbitmap.h"
+ #include "xfs_metafile.h"
++#include "xfs_rtgroup.h"
+ #include "scrub/stats.h"
  
-diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
-index a0bcc38486a569..06e492fd479de6 100644
---- a/fs/xfs/xfs_fsmap.h
-+++ b/fs/xfs/xfs_fsmap.h
-@@ -28,6 +28,21 @@ struct xfs_fsmap_head {
- 	struct xfs_fsmap fmh_keys[2];	/* low and high keys */
- };
+ static DEFINE_MUTEX(xfs_uuid_table_mutex);
+@@ -834,10 +835,17 @@ xfs_mountfs(
+ 		goto out_free_dir;
+ 	}
  
-+/* internal fsmap record format */
-+struct xfs_fsmap_irec {
-+	xfs_daddr_t	start_daddr;
-+	xfs_daddr_t	len_daddr;
-+	uint64_t	owner;		/* extent owner */
-+	uint64_t	offset;		/* offset within the owner */
-+	unsigned int	rm_flags;	/* rmap state flags */
++	error = xfs_initialize_rtgroups(mp, 0, sbp->sb_rgcount,
++			mp->m_sb.sb_rextents);
++	if (error) {
++		xfs_warn(mp, "Failed rtgroup init: %d", error);
++		goto out_free_perag;
++	}
 +
-+	/*
-+	 * rmapbt startblock corresponding to start_daddr, if the record came
-+	 * from an rmap btree.
-+	 */
-+	xfs_agblock_t	rec_key;
-+};
-+
- int xfs_ioc_getfsmap(struct xfs_inode *ip, struct fsmap_head __user *arg);
+ 	if (XFS_IS_CORRUPT(mp, !sbp->sb_logblocks)) {
+ 		xfs_warn(mp, "no log defined");
+ 		error = -EFSCORRUPTED;
+-		goto out_free_perag;
++		goto out_free_rtgroup;
+ 	}
  
- #endif /* __XFS_FSMAP_H__ */
+ 	error = xfs_inodegc_register_shrinker(mp);
+@@ -1072,6 +1080,8 @@ xfs_mountfs(
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+ 		xfs_buftarg_drain(mp->m_logdev_targp);
+ 	xfs_buftarg_drain(mp->m_ddev_targp);
++ out_free_rtgroup:
++	xfs_free_rtgroups(mp, 0, mp->m_sb.sb_rgcount);
+  out_free_perag:
+ 	xfs_free_perag_range(mp, 0, mp->m_sb.sb_agcount);
+  out_free_dir:
+@@ -1156,6 +1166,7 @@ xfs_unmountfs(
+ 	xfs_errortag_clearall(mp);
+ #endif
+ 	shrinker_free(mp->m_inodegc_shrinker);
++	xfs_free_rtgroups(mp, 0, mp->m_sb.sb_rgcount);
+ 	xfs_free_perag_range(mp, 0, mp->m_sb.sb_agcount);
+ 	xfs_errortag_del(mp);
+ 	xfs_error_sysfs_del(mp);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 71ed04ddd737de..d491e31d33aac3 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -155,6 +155,7 @@ typedef struct xfs_mount {
+ 	uint8_t			m_agno_log;	/* log #ag's */
+ 	uint8_t			m_sectbb_log;	/* sectlog - BBSHIFT */
+ 	int8_t			m_rtxblklog;	/* log2 of rextsize, if possible */
++	int8_t			m_rgblklog;	/* log2 of rt group sz if possible */
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+ 	uint			m_blockwmask;	/* blockwsize-1 */
+@@ -183,12 +184,14 @@ typedef struct xfs_mount {
+ 	int			m_logbsize;	/* size of each log buffer */
+ 	uint			m_rsumlevels;	/* rt summary levels */
+ 	xfs_filblks_t		m_rsumblocks;	/* size of rt summary, FSBs */
++	uint32_t		m_rgblocks;	/* size of rtgroup in rtblocks */
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_qflags;	/* quota status flags */
+ 	uint64_t		m_features;	/* active filesystem features */
+ 	uint64_t		m_low_space[XFS_LOWSP_MAX];
+ 	uint64_t		m_low_rtexts[XFS_LOWSP_MAX];
+ 	uint64_t		m_rtxblkmask;	/* rt extent block mask */
++	uint64_t		m_rgblkmask;	/* rt group block mask */
+ 	struct xfs_ino_geometry	m_ino_geo;	/* inode geometry */
+ 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
+ 						/* low free space thresholds */
+@@ -391,6 +394,16 @@ __XFS_HAS_FEAT(large_extent_counts, NREXT64)
+ __XFS_HAS_FEAT(exchange_range, EXCHANGE_RANGE)
+ __XFS_HAS_FEAT(metadir, METADIR)
+ 
++static inline bool xfs_has_rtgroups(struct xfs_mount *mp)
++{
++	return false;
++}
++
++static inline bool xfs_has_rtsb(struct xfs_mount *mp)
++{
++	return false;
++}
++
+ /*
+  * Some features are always on for v5 file systems, allow the compiler to
+  * eliminiate dead code when building without v4 support.
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 46a920b192d191..917c1a5e8f3180 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -27,6 +27,7 @@
+ #include "xfs_health.h"
+ #include "xfs_da_format.h"
+ #include "xfs_metafile.h"
++#include "xfs_rtgroup.h"
+ 
+ /*
+  * Return whether there are any free extents in the size range given
+@@ -1136,6 +1137,7 @@ xfs_rtmount_inodes(
+ {
+ 	struct xfs_trans	*tp;
+ 	struct xfs_sb		*sbp = &mp->m_sb;
++	struct xfs_rtgroup	*rtg = NULL;
+ 	int			error;
+ 
+ 	error = xfs_trans_alloc_empty(mp, &tp);
+@@ -1166,6 +1168,9 @@ xfs_rtmount_inodes(
+ 	if (error)
+ 		goto out_rele_summary;
+ 
++	while ((rtg = xfs_rtgroup_next(mp, rtg)))
++		rtg->rtg_extents = xfs_rtgroup_extents(mp, rtg_rgno(rtg));
++
+ 	error = xfs_alloc_rsum_cache(mp, sbp->sb_rbmblocks);
+ 	if (error)
+ 		goto out_rele_summary;
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index 1b9d75a54c5ea2..8f530e69c18ae7 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -48,6 +48,7 @@
+ #include "xfs_refcount.h"
+ #include "xfs_metafile.h"
+ #include "xfs_metadir.h"
++#include "xfs_rtgroup.h"
+ 
+ /*
+  * We include this last to have the helpers above available for the trace
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e2db13ed08b59c..0f3704f3c2e4e3 100644
+index 0f3704f3c2e4e3..f66e5b590d7597 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -72,6 +72,7 @@ struct xfs_btree_cur;
- struct xfs_defer_op_type;
- struct xfs_refcount_irec;
- struct xfs_fsmap;
-+struct xfs_fsmap_irec;
- struct xfs_group;
- struct xfs_rmap_irec;
- struct xfs_icreate_log;
-@@ -3877,7 +3878,45 @@ DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap_piece);
- DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_rmap_error);
+@@ -219,6 +219,7 @@ DEFINE_PERAG_REF_EVENT(xfs_perag_clear_inode_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_reclaim_inodes_count);
  
- /* fsmap traces */
--DECLARE_EVENT_CLASS(xfs_fsmap_class,
-+TRACE_EVENT(xfs_fsmap_mapping,
-+	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno,
-+		 const struct xfs_fsmap_irec *frec),
-+	TP_ARGS(mp, keydev, agno, frec),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(dev_t, keydev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_daddr_t, start_daddr)
-+		__field(xfs_daddr_t, len_daddr)
-+		__field(uint64_t, owner)
-+		__field(uint64_t, offset)
-+		__field(unsigned int, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->keydev = new_decode_dev(keydev);
-+		__entry->agno = agno;
-+		__entry->agbno = frec->rec_key;
-+		__entry->start_daddr = frec->start_daddr;
-+		__entry->len_daddr = frec->len_daddr;
-+		__entry->owner = frec->owner;
-+		__entry->offset = frec->offset;
-+		__entry->flags = frec->rm_flags;
-+	),
-+	TP_printk("dev %d:%d keydev %d:%d agno 0x%x rmapbno 0x%x start_daddr 0x%llx len_daddr 0x%llx owner 0x%llx fileoff 0x%llx flags 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->start_daddr,
-+		  __entry->len_daddr,
-+		  __entry->owner,
-+		  __entry->offset,
-+		  __entry->flags)
-+);
-+
-+DECLARE_EVENT_CLASS(xfs_fsmap_group_key_class,
- 	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno,
- 		 const struct xfs_rmap_irec *rmap),
- 	TP_ARGS(mp, keydev, agno, rmap),
-@@ -3885,8 +3924,7 @@ DECLARE_EVENT_CLASS(xfs_fsmap_class,
- 		__field(dev_t, dev)
- 		__field(dev_t, keydev)
- 		__field(xfs_agnumber_t, agno)
--		__field(xfs_fsblock_t, bno)
--		__field(xfs_filblks_t, len)
-+		__field(xfs_agblock_t, agbno)
- 		__field(uint64_t, owner)
- 		__field(uint64_t, offset)
- 		__field(unsigned int, flags)
-@@ -3895,33 +3933,30 @@ DECLARE_EVENT_CLASS(xfs_fsmap_class,
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->keydev = new_decode_dev(keydev);
- 		__entry->agno = agno;
--		__entry->bno = rmap->rm_startblock;
--		__entry->len = rmap->rm_blockcount;
-+		__entry->agbno = rmap->rm_startblock;
- 		__entry->owner = rmap->rm_owner;
- 		__entry->offset = rmap->rm_offset;
- 		__entry->flags = rmap->rm_flags;
- 	),
--	TP_printk("dev %d:%d keydev %d:%d agno 0x%x startblock 0x%llx fsbcount 0x%llx owner 0x%llx fileoff 0x%llx flags 0x%x",
-+	TP_printk("dev %d:%d keydev %d:%d agno 0x%x startblock 0x%x owner 0x%llx fileoff 0x%llx flags 0x%x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
- 		  __entry->agno,
--		  __entry->bno,
--		  __entry->len,
-+		  __entry->agbno,
- 		  __entry->owner,
- 		  __entry->offset,
- 		  __entry->flags)
- )
--#define DEFINE_FSMAP_EVENT(name) \
--DEFINE_EVENT(xfs_fsmap_class, name, \
-+#define DEFINE_FSMAP_GROUP_KEY_EVENT(name) \
-+DEFINE_EVENT(xfs_fsmap_group_key_class, name, \
- 	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno, \
- 		 const struct xfs_rmap_irec *rmap), \
- 	TP_ARGS(mp, keydev, agno, rmap))
--DEFINE_FSMAP_EVENT(xfs_fsmap_low_key);
--DEFINE_FSMAP_EVENT(xfs_fsmap_high_key);
--DEFINE_FSMAP_EVENT(xfs_fsmap_mapping);
-+DEFINE_FSMAP_GROUP_KEY_EVENT(xfs_fsmap_low_group_key);
-+DEFINE_FSMAP_GROUP_KEY_EVENT(xfs_fsmap_high_group_key);
+ TRACE_DEFINE_ENUM(XG_TYPE_AG);
++TRACE_DEFINE_ENUM(XG_TYPE_RTG);
  
--DECLARE_EVENT_CLASS(xfs_fsmap_linear_class,
--	TP_PROTO(struct xfs_mount *mp, u32 keydev, uint64_t bno),
-+DECLARE_EVENT_CLASS(xfs_fsmap_linear_key_class,
-+	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_fsblock_t bno),
- 	TP_ARGS(mp, keydev, bno),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
-@@ -3938,12 +3973,12 @@ DECLARE_EVENT_CLASS(xfs_fsmap_linear_class,
- 		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
- 		  __entry->bno)
- )
--#define DEFINE_FSMAP_LINEAR_EVENT(name) \
--DEFINE_EVENT(xfs_fsmap_linear_class, name, \
-+#define DEFINE_FSMAP_LINEAR_KEY_EVENT(name) \
-+DEFINE_EVENT(xfs_fsmap_linear_key_class, name, \
- 	TP_PROTO(struct xfs_mount *mp, u32 keydev, uint64_t bno), \
- 	TP_ARGS(mp, keydev, bno))
--DEFINE_FSMAP_LINEAR_EVENT(xfs_fsmap_low_key_linear);
--DEFINE_FSMAP_LINEAR_EVENT(xfs_fsmap_high_key_linear);
-+DEFINE_FSMAP_LINEAR_KEY_EVENT(xfs_fsmap_low_linear_key);
-+DEFINE_FSMAP_LINEAR_KEY_EVENT(xfs_fsmap_high_linear_key);
- 
- DECLARE_EVENT_CLASS(xfs_getfsmap_class,
- 	TP_PROTO(struct xfs_mount *mp, struct xfs_fsmap *fsmap),
+ DECLARE_EVENT_CLASS(xfs_group_class,
+ 	TP_PROTO(struct xfs_group *xg, unsigned long caller_ip),
 
