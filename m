@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EECA91DD0D2
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:20:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F1F01DD0D2
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:20:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845233; cv=none; b=uyT3BsolSByw3JvljSEnEhhmLo/Veg61QBdavqQM4+WCAjDPPB+SoXpT7+8mcBjJriDOk2jESCYLlI/whNujVKbWez8zPG3DpBUz8XoH4L7M4YDIVs8UB9FVs0T3yvTDkfiasZpMexwl2eIs1VexCQjn3iBFvQPJsvRvgwxSel8=
+	t=1730845248; cv=none; b=UBYrPxES14dNJ92b7VJ/w7r5qd5dcRWLOsgxkaidRsE17XRf/KxQ9OZggDBVlyaPe1K86jVyfe+w7mk/papwcmRd2q5rSShfbLDZ+KPIvln5uvoiL55+ai/r79wD6NpQqn+osSVVudbycyvqaoDAhAHLlXb82GenqHiwMly5KhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845233; c=relaxed/simple;
-	bh=wCcqib4BZHcOY+pFwj4bKL8jYHfIgqr20aFnyroDLoA=;
+	s=arc-20240116; t=1730845248; c=relaxed/simple;
+	bh=7QiAUR5fanCqJUwhR92ZY9GSx4XPnomlIwlg76OPJ9M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JHyXkllPlMsyEr4V2WNqiZRGC0e2Mdfp7sK+RC6+aUHnDpLtRvppE0LydfMUjE7gnKR87GpfzoutxLxaT1ge9uIFdD48gSYhIpt+7XuKatdYNOl1m+vvhV1Lme4MGJRA3COVhbk8U2wa6dsmAsrBi6o/angpc6opzIObJrfAdYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fcWHxwUG; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lkER0kBsFS5CKuwyaS1VcFc0BLkbe0EPDuUlCBniaI4w1p9lQfIqjex3A2acpQxQlvpD36CLi4OseapYeDcYKbnlWArJbJ3fCg6RElECGxKHTmmJdmXqBw1pSp9eKdkV/ueTKVFzGuPU7Q6a1ExZlFadJnRo+iWRfXlviE89c4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUjWXiyG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fcWHxwUG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDDC9C4CECF;
-	Tue,  5 Nov 2024 22:20:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUjWXiyG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 672E0C4CECF;
+	Tue,  5 Nov 2024 22:20:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845232;
-	bh=wCcqib4BZHcOY+pFwj4bKL8jYHfIgqr20aFnyroDLoA=;
+	s=k20201202; t=1730845248;
+	bh=7QiAUR5fanCqJUwhR92ZY9GSx4XPnomlIwlg76OPJ9M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fcWHxwUGSTf8gPIm22OpfAuyiYxhI7gtI0VKRLBYvqIhzp82bLs2C3dMAHCvSNzMO
-	 ixae5gc03Q22VgevJVjhuLTldvw+q8UMPb5gNuI5fKC0LQXxym0QLJpyeVxNYbYyQ5
-	 UisKxFWDg24jbucZqPmikqI4P3rYHfna1GHitJgNwVnxq96kdflmY+2bH5HFvalDZL
-	 SrLfbUvz2xASVgZVm5zOYMeKz7G5P2KgERFHgdbArSCR8pIYvBEEpHUTvBsdaHb4Xg
-	 66xKe0Cj9aCn75WjLkS0eW8GZYygOtjFZQzB8aSr1Zt/CRveHJ1Vy+kLo8NcSnjAj4
-	 0QHdFfGuR3W5g==
-Date: Tue, 05 Nov 2024 14:20:32 -0800
-Subject: [PATCH 15/28] xfs: mark quota inodes as metadata files
+	b=XUjWXiyGU3zKICka9aU/EpFv92IIecEae7oGz9VaJHbZ7ARgyHlXnouUqtSWQ8bjN
+	 X74d6z5NN/Qd2dGGREH7wGXkSvyDJiGQo+ZFHjFbe9YqJUYGflbyCSDc1r0oktlYpD
+	 K5Lag7s3BiopMluD3/ngrnM/fkoBuOc5+Dj0SQnbjhW+xm7fCtJBgPc6kgP7eYe6hR
+	 3UDrDE/CjynoEKEErcmKvieB0OINOJUn14rGKpADhgTP4GEokKLEpVqA5+Vejt0oov
+	 iHmY8owTVNZ6VPL3pOhktGyEjAiUYJAQAS+xSpimdPWX62E12hrl4szQuaBJUWJ3Lk
+	 AQGfJd4FBjgpg==
+Date: Tue, 05 Nov 2024 14:20:47 -0800
+Subject: [PATCH 16/28] xfs: adjust xfs_bmap_add_attrfork for metadir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084396277.1870066.7525248802720413889.stgit@frogsfrogsfrogs>
+Message-ID: <173084396294.1870066.16913348261899248162.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 References: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,27 +45,50 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're creating quota files at mount time, make sure to mark them as
-metadir inodes if appropriate.
+Online repair might use the xfs_bmap_add_attrfork to repair a file in
+the metadata directory tree if (say) the metadata file lacks the correct
+parent pointers.  In that case, it is not correct to check that the file
+is dqattached -- metadata files must be not have /any/ dquot attached at
+all.  Adjust the assertions appropriately.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_qm.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/libxfs/xfs_attr.c |    5 ++++-
+ fs/xfs/libxfs/xfs_bmap.c |    5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ec983cca9adaed..b94d6f192e7258 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -824,6 +824,8 @@ xfs_qm_qino_alloc(
- 			xfs_trans_cancel(tp);
- 			return error;
- 		}
-+		if (xfs_has_metadir(mp))
-+			xfs_metafile_set_iflag(tp, *ipp, metafile_type);
- 	}
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index c63da14eee0432..17875ad865f5d6 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1004,7 +1004,10 @@ xfs_attr_add_fork(
+ 	unsigned int		blks;		/* space reservation */
+ 	int			error;		/* error return value */
  
- 	/*
+-	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
++	if (xfs_is_metadir_inode(ip))
++		ASSERT(XFS_IS_DQDETACHED(ip));
++	else
++		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 
+ 	blks = XFS_ADDAFORK_SPACE_RES(mp);
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5eda036cf9bfa5..7805a36e98c491 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1042,7 +1042,10 @@ xfs_bmap_add_attrfork(
+ 	int			error;		/* error return value */
+ 
+ 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+-	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
++	if (xfs_is_metadir_inode(ip))
++		ASSERT(XFS_IS_DQDETACHED(ip));
++	else
++		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 	ASSERT(!xfs_inode_has_attr_fork(ip));
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
