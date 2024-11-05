@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C9121219E
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:09:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7854021219E
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:09:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730844545; cv=none; b=HMplk2ZQP+/FAHCq6OCKMfODhk69ISRTbBEaGUnWRZkPkjRgF5dBLuosk+jZb8rAPN0hdRWmaEoUhh6WXtE/9pytznZcKe9YPR7JtMfpiJTSh3pYnGAZVXDipZswnI2k0m+LrvFECRUvXMAJnA7mATOGE2HE+LmM0JvBv+ZVeh4=
+	t=1730844561; cv=none; b=mgyyotQ0VaOnEFVaHc4R9JLkmkhZatwEiLeiWTDw+EY/5LhZShcy9JmrwcNkjDrMZEbdFfwTdPY014KLUuSNHJl7LQx2PNOIoJu3iSdTCTQuCQ18FVFVEYYzvjbs3AS2iSv1vrQ8aRTHD6/6tB3EGqRqQyOZ2uH8SalFcZUmYnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730844545; c=relaxed/simple;
-	bh=zVjXzrBoB+v+Ly71o3jpegDafoehVrmff5I4IZBIyEk=;
+	s=arc-20240116; t=1730844561; c=relaxed/simple;
+	bh=sNydzTANHNQSl6G87FPHe0ErqUCrWLtQjC3Ejbo3cIU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jyz5EebYZ+ziGFmx3pTHoZAUmQfLc/1GeqXz7mm/Qt4Y/U8NAxO4N7ZULeU2ZExBAsUTJF5xOTGOj+/zhNsUZ6VPbHy46eZipnLYtbA0JyZWBNEf5KX04t98z65fw70rq8vplrAptuUPRv5FZmDXhuhSH5bs9AqWflU26Hwkfrg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C7WbG3bS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WGCXJ2PhJBCcpHyNUWqu7wua0nQ5C8+bSHrNrMOHEs4X0ICEE53Uslpai9K6hOQwNebfd9snXRyfB6+iacW80keER+aX/FbrdX0KNkunqWnbzySZCqJOJBxFqrGyVrhN3UeALbpHg+wtfp342YVPzixJ2Bf/KO5VMNtM755xNNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TX5bmPjB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C7WbG3bS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8154C4CECF;
-	Tue,  5 Nov 2024 22:09:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TX5bmPjB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57E86C4CECF;
+	Tue,  5 Nov 2024 22:09:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730844545;
-	bh=zVjXzrBoB+v+Ly71o3jpegDafoehVrmff5I4IZBIyEk=;
+	s=k20201202; t=1730844561;
+	bh=sNydzTANHNQSl6G87FPHe0ErqUCrWLtQjC3Ejbo3cIU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=C7WbG3bSJbL6qm+jldCdFhM2/xp3lrb7eD/f9tBF4jQfXQPatkN2WeOFK0GTH+pI5
-	 +LLja2ySNr1VboHlue/17OX6hRX2UkbzJiRgr3p+Bkr0lGhryXzZ3Vij5QosfSzCn/
-	 TvEPJs0rO+DhP+NyWbk3injJ42VkYAYLb1QYo5YRbsLbgfJPZQysHG+utoAJ1Jn/o5
-	 xM+a90b/nUKRqt4VkODqid4+Q0z555FVq+YT7nqyCFAC9WT8xQtXD9g1KO2cEWqJ9j
-	 GduIxBaK8d3dj41BMFUDkGOi6VwZbYZZWsVzci6j5GAonHIdO70oZdmommkiGFtNq6
-	 9cZOuuc7XgHaw==
-Date: Tue, 05 Nov 2024 14:09:05 -0800
-Subject: [PATCH 10/23] xfs: keep a reference to the pag for busy extents
+	b=TX5bmPjBXOLJsCOvH1aeDKxkzVovoU8mBvDAMuNX1lK9ThTvcoFAzEgRo1MMhVUcI
+	 2wnBcn2KAlbnda/lIBYb1j5B2dHjXJszJoboZTASW+JHzH5d4dKsZ5gdVQWb7JuRR1
+	 ZQVGdDaCQJG6zYtwniqxA2EM8t47hB3ZiOzQwFea2hfCNaKFJ+diIkxHSow5EKS73n
+	 oOs/Rufa5jfAFEWQUMAGsOkGLmHgfFvSAL/Ai489bezOarPsErY6DuOEYWaJJsDtpg
+	 Eb8ID3HdcwYYtrEspaK+JgnRFeS02AsPocvP2Ul4qPaM7H1TZD8I/fs7PHPue9z56H
+	 bgOJizyatbQOg==
+Date: Tue, 05 Nov 2024 14:09:20 -0800
+Subject: [PATCH 11/23] xfs: remove the mount field from struct
+ xfs_busy_extents
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084394623.1868694.14794920802145881465.stgit@frogsfrogsfrogs>
+Message-ID: <173084394640.1868694.1471949155726848235.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
 References: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,108 +46,117 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Processing of busy extents requires the perag structure, so keep the
-reference while they are in flight.
+The mount field is only passed to xfs_extent_busy_clear, which never uses
+it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_discard.c     |    4 ++--
- fs/xfs/xfs_extent_busy.c |   15 ++++++++-------
- fs/xfs/xfs_extent_busy.h |    2 +-
- 3 files changed, 11 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_discard.c     |    5 ++---
+ fs/xfs/xfs_extent_busy.c |    1 -
+ fs/xfs/xfs_extent_busy.h |    4 +---
+ fs/xfs/xfs_log_cil.c     |    3 +--
+ fs/xfs/xfs_trans.c       |    2 +-
+ 5 files changed, 5 insertions(+), 10 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 1a91e97d25ffba..5c00904e439305 100644
+index 5c00904e439305..e1b4a8c59d0cc8 100644
 --- a/fs/xfs/xfs_discard.c
 +++ b/fs/xfs/xfs_discard.c
-@@ -117,11 +117,11 @@ xfs_discard_extents(
+@@ -81,7 +81,7 @@ xfs_discard_endio_work(
+ 	struct xfs_busy_extents	*extents =
+ 		container_of(work, struct xfs_busy_extents, endio_work);
  
- 	blk_start_plug(&plug);
- 	list_for_each_entry(busyp, &extents->extent_list, list) {
--		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
-+		trace_xfs_discard_extent(mp, busyp->pag->pag_agno, busyp->bno,
- 					 busyp->length);
+-	xfs_extent_busy_clear(extents->mount, &extents->extent_list, false);
++	xfs_extent_busy_clear(&extents->extent_list, false);
+ 	kfree(extents->owner);
+ }
  
- 		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
--				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
-+				xfs_agbno_to_daddr(busyp->pag, busyp->bno),
- 				XFS_FSB_TO_BB(mp, busyp->length),
- 				GFP_KERNEL, &bio);
- 		if (error && error != -EOPNOTSUPP) {
+@@ -301,7 +301,7 @@ xfs_trim_gather_extents(
+ 	 * we aren't going to issue a discard on them any more.
+ 	 */
+ 	if (error)
+-		xfs_extent_busy_clear(mp, &extents->extent_list, false);
++		xfs_extent_busy_clear(&extents->extent_list, false);
+ out_del_cursor:
+ 	xfs_btree_del_cursor(cur, error);
+ out_trans_cancel:
+@@ -347,7 +347,6 @@ xfs_trim_perag_extents(
+ 			break;
+ 		}
+ 
+-		extents->mount = pag->pag_mount;
+ 		extents->owner = extents;
+ 		INIT_LIST_HEAD(&extents->extent_list);
+ 
 diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 22c16fa56bcc44..7c0595db29857f 100644
+index 7c0595db29857f..7353f9844684b0 100644
 --- a/fs/xfs/xfs_extent_busy.c
 +++ b/fs/xfs/xfs_extent_busy.c
-@@ -34,7 +34,7 @@ xfs_extent_busy_insert_list(
- 
- 	new = kzalloc(sizeof(struct xfs_extent_busy),
- 			GFP_KERNEL | __GFP_NOFAIL);
--	new->agno = pag->pag_agno;
-+	new->pag = xfs_perag_hold(pag);
- 	new->bno = bno;
- 	new->length = len;
- 	INIT_LIST_HEAD(&new->list);
-@@ -526,12 +526,14 @@ xfs_extent_busy_clear_one(
- 			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
- 			return false;
- 		}
--		trace_xfs_extent_busy_clear(pag->pag_mount, busyp->agno,
--				busyp->bno, busyp->length);
-+		trace_xfs_extent_busy_clear(pag->pag_mount,
-+				busyp->pag->pag_agno, busyp->bno,
-+				busyp->length);
- 		rb_erase(&busyp->rb_node, &pag->pagb_tree);
- 	}
- 
- 	list_del_init(&busyp->list);
-+	xfs_perag_put(busyp->pag);
- 	kfree(busyp);
- 	return true;
- }
-@@ -554,10 +556,9 @@ xfs_extent_busy_clear(
- 		return;
- 
- 	do {
-+		struct xfs_perag	*pag = xfs_perag_hold(busyp->pag);
- 		bool			wakeup = false;
--		struct xfs_perag	*pag;
- 
--		pag = xfs_perag_get(mp, busyp->agno);
- 		spin_lock(&pag->pagb_lock);
- 		do {
- 			next = list_next_entry(busyp, list);
-@@ -565,7 +566,7 @@ xfs_extent_busy_clear(
- 				wakeup = true;
- 			busyp = next;
- 		} while (!list_entry_is_head(busyp, list, list) &&
--			 busyp->agno == pag->pag_agno);
-+			 busyp->pag == pag);
- 
- 		if (wakeup) {
- 			pag->pagb_gen++;
-@@ -662,7 +663,7 @@ xfs_extent_busy_ag_cmp(
- 		container_of(l2, struct xfs_extent_busy, list);
- 	s32 diff;
- 
--	diff = b1->agno - b2->agno;
-+	diff = b1->pag->pag_agno - b2->pag->pag_agno;
- 	if (!diff)
- 		diff = b1->bno - b2->bno;
- 	return diff;
+@@ -545,7 +545,6 @@ xfs_extent_busy_clear_one(
+  */
+ void
+ xfs_extent_busy_clear(
+-	struct xfs_mount	*mp,
+ 	struct list_head	*list,
+ 	bool			do_discard)
+ {
 diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-index 847c904a19386c..72be61912c005f 100644
+index 72be61912c005f..7241035ce4ef9d 100644
 --- a/fs/xfs/xfs_extent_busy.h
 +++ b/fs/xfs/xfs_extent_busy.h
-@@ -20,7 +20,7 @@ struct xfs_alloc_arg;
- struct xfs_extent_busy {
- 	struct rb_node	rb_node;	/* ag by-bno indexed search tree */
- 	struct list_head list;		/* transaction busy extent list */
--	xfs_agnumber_t	agno;
-+	struct xfs_perag *pag;
- 	xfs_agblock_t	bno;
- 	xfs_extlen_t	length;
- 	unsigned int	flags;
+@@ -33,7 +33,6 @@ struct xfs_extent_busy {
+  * to discard completion.
+  */
+ struct xfs_busy_extents {
+-	struct xfs_mount	*mount;
+ 	struct list_head	extent_list;
+ 	struct work_struct	endio_work;
+ 
+@@ -54,8 +53,7 @@ xfs_extent_busy_insert_discard(struct xfs_perag *pag, xfs_agblock_t bno,
+ 	xfs_extlen_t len, struct list_head *busy_list);
+ 
+ void
+-xfs_extent_busy_clear(struct xfs_mount *mp, struct list_head *list,
+-	bool do_discard);
++xfs_extent_busy_clear(struct list_head *list, bool do_discard);
+ 
+ int
+ xfs_extent_busy_search(struct xfs_perag *pag, xfs_agblock_t bno,
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 80da0cf87d7a45..2e9157b650e647 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -907,7 +907,7 @@ xlog_cil_committed(
+ 	xlog_cil_ail_insert(ctx, abort);
+ 
+ 	xfs_extent_busy_sort(&ctx->busy_extents.extent_list);
+-	xfs_extent_busy_clear(mp, &ctx->busy_extents.extent_list,
++	xfs_extent_busy_clear(&ctx->busy_extents.extent_list,
+ 			      xfs_has_discard(mp) && !abort);
+ 
+ 	spin_lock(&ctx->cil->xc_push_lock);
+@@ -917,7 +917,6 @@ xlog_cil_committed(
+ 	xlog_cil_free_logvec(&ctx->lv_chain);
+ 
+ 	if (!list_empty(&ctx->busy_extents.extent_list)) {
+-		ctx->busy_extents.mount = mp;
+ 		ctx->busy_extents.owner = ctx;
+ 		xfs_discard_extents(mp, &ctx->busy_extents);
+ 		return;
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index bdf3704dc30118..cee7f0564409bd 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -67,7 +67,7 @@ xfs_trans_free(
+ 	struct xfs_trans	*tp)
+ {
+ 	xfs_extent_busy_sort(&tp->t_busy);
+-	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
++	xfs_extent_busy_clear(&tp->t_busy, false);
+ 
+ 	trace_xfs_trans_free(tp, _RET_IP_);
+ 	xfs_trans_clear_context(tp);
 
