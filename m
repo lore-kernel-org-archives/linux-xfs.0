@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A3D1FBCA3
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:12:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 621E41FBCA3
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:12:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730844748; cv=none; b=iNhrnuiV3NaynJOO7l36o/2scAusNVWDeKQM1SrcTOnxOXc8CkOOOMsWsq/QeCyOOw5gm5nVdyrPGYGYFQ13l4eMJFb7l95hnFCnp1+lHrdUE/3XfZ8wKrKlTsQrmKPYl7h4hTKl2Ur6H1R4okjTCA7e8A7r5iyK05olqAVNrU8=
+	t=1730844764; cv=none; b=KS/FDD2lWdE7psGPhjqcK/t1W5E833Xu6SmljkGQMlyXkQrLGzMtCpiBPV31QACzPZf2bUOfCcCKb3KOaYkXyVU0lGGZGP1XF1VYPNlwuahvkdFnDrhs9xQz/z4ZjMTCqTvTgc27BFG1nWS9cY5gTHIhn+Lomt5SeSbc+8Z5AIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730844748; c=relaxed/simple;
-	bh=01iyvUGaxsyVwi4IqbmzmaWtaWXIeAYrfQrNHqgBCG8=;
+	s=arc-20240116; t=1730844764; c=relaxed/simple;
+	bh=TCipWp8oevBqM3OjhqXhsRLCe93xcev0+jNV4uMKeMs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UnjzLN2UPMCw050zrLKNOqt/nkPi/2p1jK7EGhiy9C9wtufr4gyIJGUVg34+/xXjgZRpbErFVoS+ZQOaG2iAyvWMT+QnbIZjIlN49mtsWzptfu8VfEjq4bC1E5yoivdGxgJL0RnQewB9L0svPy/tG6g2zI+GobhXIPZv3672lzM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EMMD0PFs; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CeGVbKKPkrSWBpx9P5P65UGG1zR5b9D/wGrIdYNh7nyBVDEJwNlIF8CUaEyWfVAG8WMc2FL67ulfS8053x/DnfzHfpPaChY6++dmnTwesrTEmiFhWFLV9s663NJ2Ec+pHqSIR7VTWsCEko+bGUR7c2NsvZ68XFsmR8iogRkd0Lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sLqUA+LX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EMMD0PFs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A08B5C4CECF;
-	Tue,  5 Nov 2024 22:12:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sLqUA+LX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BE4CC4CECF;
+	Tue,  5 Nov 2024 22:12:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730844748;
-	bh=01iyvUGaxsyVwi4IqbmzmaWtaWXIeAYrfQrNHqgBCG8=;
+	s=k20201202; t=1730844764;
+	bh=TCipWp8oevBqM3OjhqXhsRLCe93xcev0+jNV4uMKeMs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EMMD0PFs0AVNpMvuFD5X2JmvWFKyVNL137N4Tv5UlsIir9AG3bH/EOUtavhLh8nwm
-	 HYA3fktGU+ike4KnzXzHYnwHQr/sTGYvye0XbYSjHKqwT99V8w+Ng4zYwOt5P2XKMg
-	 BDOg6Wbjsj2hBOGZpXIl14s3mK5TZ9griyKcCIl8Hzgq0n5GblEkEvuTQ/UNWnR+H4
-	 ujO2IIrIWd+XhOYk/FytGG83qDoucUdGVLpZQTxa2RhCU8nRX0KafTQKl/PHfpvws0
-	 oErJhQYQaBV7YZyj9b+RaiT3rFCRzO+dWWNs16nyMnJ1NlHrYko1u/33jCH6j1U0P3
-	 GJ3hJ+vn9ziZw==
-Date: Tue, 05 Nov 2024 14:12:28 -0800
-Subject: [PATCH 23/23] xfs: insert the pag structures into the xarray later
+	b=sLqUA+LXtJ8vIInm8BKP/cD4D4URLI4citHVI5nlwdQQzVjLeDFZlw1DO90JHLXc1
+	 W53ZkcISmk2Nw5zyWejdhuVuzn0jUpXkHxdE6DButn3SQZ0ma5gadqYg23yCyjquop
+	 9ZVBz2HTQzMy3ZaLcV/7xqhl59LsOiD4l5zbtLI9HR33PVofScQI8A6E4V5EeNABc9
+	 IGWBIcCChl4+rOdGeS+grnBcJeh0jo+XbELzmkvAd7Bj+G0IEUN+LElzViE7R+Ov6K
+	 ywEXWagdl35JLpHKfOH3T0EmYnrBo1nnXlWoNMNOAuDvUWJj2No/VOdvyNm3vzMlfw
+	 l5mUOHgEjH0AQ==
+Date: Tue, 05 Nov 2024 14:12:43 -0800
+Subject: [PATCH 01/16] xfs: factor out a xfs_iwalk_args helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084394846.1868694.12433133272337323443.stgit@frogsfrogsfrogs>
-In-Reply-To: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
-References: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
+Message-ID: <173084395281.1869491.10407906599387519773.stgit@frogsfrogsfrogs>
+In-Reply-To: <173084395220.1869491.11426383276644234025.stgit@frogsfrogsfrogs>
+References: <173084395220.1869491.11426383276644234025.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,74 +45,156 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Cleaning up is much easier if a structure can't be looked up yet, so only
-insert the pag once it is fully set up.
+Add a helper to share more code between xfs_iwalk and xfs_inobt_walk,
+and at the same time do away with the extra flags indirect so that
+everyone use the same names for the same flags when using the common
+iwalk code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.c |   31 +++++++++++++++----------------
- 1 file changed, 15 insertions(+), 16 deletions(-)
+ fs/xfs/xfs_iwalk.c |   83 ++++++++++++++++++++--------------------------------
+ fs/xfs/xfs_iwalk.h |    7 +---
+ 2 files changed, 33 insertions(+), 57 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 3e232b3d4c4262..d51e88a4e7e283 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -307,15 +307,6 @@ xfs_perag_alloc(
- 	if (!pag)
- 		return -ENOMEM;
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index d4ef7485e8f740..a89ae2aef7c445 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -534,6 +534,35 @@ xfs_iwalk_prefetch(
+ 	return max(inobt_records, 2U);
+ }
  
--	pag->pag_agno = index;
--	pag->pag_mount = mp;
--
--	error = xa_insert(&mp->m_perags, index, pag, GFP_KERNEL);
--	if (error) {
--		WARN_ON_ONCE(error == -EBUSY);
--		goto out_free_pag;
--	}
--
- #ifdef __KERNEL__
- 	/* Place kernel structure only init below this point. */
- 	spin_lock_init(&pag->pag_ici_lock);
-@@ -331,10 +322,7 @@ xfs_perag_alloc(
- 
- 	error = xfs_buf_cache_init(&pag->pag_bcache);
- 	if (error)
--		goto out_remove_pag;
--
--	/* Active ref owned by mount indicates AG is online. */
--	atomic_set(&pag->pag_active_ref, 1);
-+		goto out_defer_drain_free;
- 
- 	/*
- 	 * Pre-calculated geometry
-@@ -344,12 +332,23 @@ xfs_perag_alloc(
- 	__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
- 			&pag->agino_max);
- 
-+	pag->pag_agno = index;
-+	pag->pag_mount = mp;
-+	/* Active ref owned by mount indicates AG is online. */
-+	atomic_set(&pag->pag_active_ref, 1);
++static int
++xfs_iwalk_args(
++	struct xfs_iwalk_ag	*iwag,
++	unsigned int		flags)
++{
++	struct xfs_mount	*mp = iwag->mp;
++	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, iwag->startino);
++	int			error;
 +
-+	error = xa_insert(&mp->m_perags, index, pag, GFP_KERNEL);
-+	if (error) {
-+		WARN_ON_ONCE(error == -EBUSY);
-+		goto out_buf_cache_destroy;
++	ASSERT(agno < mp->m_sb.sb_agcount);
++	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
++
++	error = xfs_iwalk_alloc(iwag);
++	if (error)
++		return error;
++
++	for_each_perag_from(mp, agno, iwag->pag) {
++		error = xfs_iwalk_ag(iwag);
++		if (error || (flags & XFS_IWALK_SAME_AG)) {
++			xfs_perag_rele(iwag->pag);
++			break;
++		}
++		iwag->startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
 +	}
 +
- 	return 0;
++	xfs_iwalk_free(iwag);
++	return error;
++}
++
+ /*
+  * Walk all inodes in the filesystem starting from @startino.  The @iwalk_fn
+  * will be called for each allocated inode, being passed the inode's number and
+@@ -562,32 +591,8 @@ xfs_iwalk(
+ 		.pwork		= XFS_PWORK_SINGLE_THREADED,
+ 		.lastino	= NULLFSINO,
+ 	};
+-	struct xfs_perag	*pag;
+-	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+-	int			error;
  
--out_remove_pag:
-+out_buf_cache_destroy:
-+	xfs_buf_cache_destroy(&pag->pag_bcache);
-+out_defer_drain_free:
- 	xfs_defer_drain_free(&pag->pag_intents_drain);
--	pag = xa_erase(&mp->m_perags, index);
--out_free_pag:
- 	kfree(pag);
- 	return error;
+-	ASSERT(agno < mp->m_sb.sb_agcount);
+-	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
+-
+-	error = xfs_iwalk_alloc(&iwag);
+-	if (error)
+-		return error;
+-
+-	for_each_perag_from(mp, agno, pag) {
+-		iwag.pag = pag;
+-		error = xfs_iwalk_ag(&iwag);
+-		if (error)
+-			break;
+-		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
+-		if (flags & XFS_INOBT_WALK_SAME_AG)
+-			break;
+-		iwag.pag = NULL;
+-	}
+-
+-	if (iwag.pag)
+-		xfs_perag_rele(pag);
+-	xfs_iwalk_free(&iwag);
+-	return error;
++	return xfs_iwalk_args(&iwag, flags);
  }
+ 
+ /* Run per-thread iwalk work. */
+@@ -673,7 +678,7 @@ xfs_iwalk_threaded(
+ 		iwag->lastino = NULLFSINO;
+ 		xfs_pwork_queue(&pctl, &iwag->pwork);
+ 		startino = XFS_AGINO_TO_INO(mp, pag->pag_agno + 1, 0);
+-		if (flags & XFS_INOBT_WALK_SAME_AG)
++		if (flags & XFS_IWALK_SAME_AG)
+ 			break;
+ 	}
+ 	if (pag)
+@@ -747,30 +752,6 @@ xfs_inobt_walk(
+ 		.pwork		= XFS_PWORK_SINGLE_THREADED,
+ 		.lastino	= NULLFSINO,
+ 	};
+-	struct xfs_perag	*pag;
+-	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+-	int			error;
+ 
+-	ASSERT(agno < mp->m_sb.sb_agcount);
+-	ASSERT(!(flags & ~XFS_INOBT_WALK_FLAGS_ALL));
+-
+-	error = xfs_iwalk_alloc(&iwag);
+-	if (error)
+-		return error;
+-
+-	for_each_perag_from(mp, agno, pag) {
+-		iwag.pag = pag;
+-		error = xfs_iwalk_ag(&iwag);
+-		if (error)
+-			break;
+-		iwag.startino = XFS_AGINO_TO_INO(mp, pag->pag_agno + 1, 0);
+-		if (flags & XFS_INOBT_WALK_SAME_AG)
+-			break;
+-		iwag.pag = NULL;
+-	}
+-
+-	if (iwag.pag)
+-		xfs_perag_rele(pag);
+-	xfs_iwalk_free(&iwag);
+-	return error;
++	return xfs_iwalk_args(&iwag, flags);
+ }
+diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
+index 83699089755ebb..17a5a2c6debb15 100644
+--- a/fs/xfs/xfs_iwalk.h
++++ b/fs/xfs/xfs_iwalk.h
+@@ -25,7 +25,7 @@ int xfs_iwalk_threaded(struct xfs_mount *mp, xfs_ino_t startino,
+ 		unsigned int flags, xfs_iwalk_fn iwalk_fn,
+ 		unsigned int inode_records, bool poll, void *data);
+ 
+-/* Only iterate inodes within the same AG as @startino. */
++/* Only iterate within the same AG as @startino. */
+ #define XFS_IWALK_SAME_AG	(1U << 0)
+ 
+ #define XFS_IWALK_FLAGS_ALL	(XFS_IWALK_SAME_AG)
+@@ -41,9 +41,4 @@ int xfs_inobt_walk(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		xfs_inobt_walk_fn inobt_walk_fn, unsigned int inobt_records,
+ 		void *data);
+ 
+-/* Only iterate inobt records within the same AG as @startino. */
+-#define XFS_INOBT_WALK_SAME_AG	(XFS_IWALK_SAME_AG)
+-
+-#define XFS_INOBT_WALK_FLAGS_ALL (XFS_INOBT_WALK_SAME_AG)
+-
+ #endif /* __XFS_IWALK_H__ */
 
