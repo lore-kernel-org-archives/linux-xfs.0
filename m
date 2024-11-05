@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8406216443
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:27:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEB531E47B6
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:27:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845638; cv=none; b=PHg27KoeyzL+F4xB5Cl9CCN864QdbjrwWr0xrd3CIuRCIlBewF9/wZuCxdCMCq+8MAFrNPv3eFbF/LnnP8K7xZMh7pBdFjFCRzjRFbJjM64M2h0jaRo2cD6BVLf6W3yFoQvWbcvBqKH2kW0f9SnteVTfSUwvLLTzwHm7iJGdMes=
+	t=1730845654; cv=none; b=doHnlTbrtpYp36SjT3KexktmPD/I9XzhmD/XQv7DQbHfVB0KcaScgW399i8nL8vn71boW/wzXEL38Y8jXIFXNUNs83ksrj5hqouamIRdWO60XvzFofq/5H5b2Oo2wwNk3Cs3UdGr2n8G4bi57ynuF9j9sC9iF7GphD8QeSzDX6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845638; c=relaxed/simple;
-	bh=wjn3ZqSs4ppzr/TDIyf9FEOUVbZwOMh95CVbTnTfjTE=;
+	s=arc-20240116; t=1730845654; c=relaxed/simple;
+	bh=vFlLFhu15VCuXUottgFz5pEpNMhz/iSUJlSU9aYwJZI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NfoyBe8mpy/qgHq12++4uwc5oX43BmfpFkAG1DBHoirIO6ZquY4XAbG5NPHey4hpGaRHD7UvrJsxi5HmKe0iJwzjgCVXqwPmSh3BKu228+falAx1PYdwDD6EzZqvND4TS19wwDrZ01Z62URiYEKg6aGWHDJCWyenRJEHpTyt+jw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oDpajgR/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nW4Vxv8EfS4inaElclyysG5WNPAIaoZJVVBuNXpY91ZKi6xZmcEBzSGEVdY+9W6LGH7DVlWi2w/kAPhxOA0R8pZc06zjdsvTwGPNjuZ+LBZN8GgXkVoBAXtIHZONoIRGOwrK+9AQg/HdKQW3lSVw1g47gw9NRB+KhRZh9eHfu18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XObcoGiE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oDpajgR/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8CDFC4CECF;
-	Tue,  5 Nov 2024 22:27:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XObcoGiE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 494D4C4CECF;
+	Tue,  5 Nov 2024 22:27:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845638;
-	bh=wjn3ZqSs4ppzr/TDIyf9FEOUVbZwOMh95CVbTnTfjTE=;
+	s=k20201202; t=1730845654;
+	bh=vFlLFhu15VCuXUottgFz5pEpNMhz/iSUJlSU9aYwJZI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=oDpajgR/Sg00XmcGXLLbpotf+hzECuTLoDAyfnlpE+G61uG2zLe0zGbbY6dounarD
-	 ZHKUOBVvW62BeB2cUDDaDkL0NwldETOYd77Rfp6zK405JcAhx53CfwBdiYlAPgtEss
-	 v/bO7kgwJ9JBBk4yBBSYbPj8bnqa9E8Ik/ken2gEyqghbtnB+3+T+Vko8yjqxUmoCU
-	 dBdc3Q8s1/A94wTZORwPvHtepP4+P8RlnpmbbXFAajIKcwhB1jEjx/bNXsJS9upoq4
-	 +V5C6ZVzeB0nHHj6ShXfFNojJCpE+CCEBgCqGxA0RbNG4mqvs2FH952XfVQ3rgosDV
-	 +MMLRozg9rYCg==
-Date: Tue, 05 Nov 2024 14:27:18 -0800
-Subject: [PATCH 13/21] xfs: support creating per-RTG files in growfs
+	b=XObcoGiEOL3G0EoWj0em1jmEC4ZSEw9mcOsUgsON4uTKHgrAUApf1jFIFNESjCPCn
+	 VXxHfR+LI4Z252NlK+GCDNozEFXJCebUJNCEfs315/i3irrNTkt42z/83yq/7dbcXY
+	 1Kq6L4KY1SdO1/0v0qvMpiWjYvUQs+mXsqDgauJsjJXHxzkizUNHHAuwXndtPAR3/N
+	 TgZHbKE+eATd+SvZF8pUQBt9N4EVEhMfeSUgDrfmxyb3BpMktNZ5AzQRseN+iYB0aN
+	 I5oYnBUa/0hEUVRQEDt071bfrlhgNBvbs8H4NH1tKg6lhwmAITKF1J10RFU1M0n9ux
+	 3JgwxKiP9shqA==
+Date: Tue, 05 Nov 2024 14:27:33 -0800
+Subject: [PATCH 14/21] xfs: remove XFS_ILOCK_RT*
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084397162.1871025.13206282430772209039.stgit@frogsfrogsfrogs>
+Message-ID: <173084397179.1871025.1113797498039642594.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
 References: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,243 +43,109 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-To support adding new RT groups in growfs, we need to be able to create
-the per-RT group files.  Add a new xfs_rtginode_create helper to create
-a given per-RTG file.  Most of the code for that is shared, but the
-details of the actual file are abstracted out using a new create method
-in struct xfs_rtginode_ops.
+Now that we've centralized the realtime metadata locking routines, get
+rid of the ILOCK subclasses since we now use explicit lockdep classes.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   32 +++++++++++++++++++
- fs/xfs/libxfs/xfs_rtbitmap.h |    4 ++
- fs/xfs/libxfs/xfs_rtgroup.c  |   69 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtgroup.h  |    2 +
- fs/xfs/xfs_rtalloc.c         |   30 ++++++++++++++++++
- 5 files changed, 137 insertions(+)
+ fs/xfs/xfs_inode.c   |    3 +--
+ fs/xfs/xfs_inode.h   |   13 ++++---------
+ fs/xfs/xfs_rtalloc.c |    9 ++++-----
+ 3 files changed, 9 insertions(+), 16 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index c54ac160b90994..6c3354c8efdafa 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1297,3 +1297,35 @@ xfs_rtfile_initialize_blocks(
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 103cf8b2af24d0..c8ad2606f928b2 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -342,8 +342,7 @@ xfs_lock_inumorder(
+ {
+ 	uint	class = 0;
  
- 	return 0;
- }
-+
-+int
-+xfs_rtbitmap_create(
-+	struct xfs_rtgroup	*rtg,
-+	struct xfs_inode	*ip,
-+	struct xfs_trans	*tp,
-+	bool			init)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+
-+	ip->i_disk_size = mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize;
-+	if (init && !xfs_has_rtgroups(mp)) {
-+		ip->i_diflags |= XFS_DIFLAG_NEWRTBM;
-+		inode_set_atime(VFS_I(ip), 0, 0);
-+	}
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-+
-+int
-+xfs_rtsummary_create(
-+	struct xfs_rtgroup	*rtg,
-+	struct xfs_inode	*ip,
-+	struct xfs_trans	*tp,
-+	bool			init)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+
-+	ip->i_disk_size = mp->m_rsumblocks * mp->m_sb.sb_blocksize;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index b3cbc56aa255ed..e4994a3e461d33 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.h
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -315,6 +315,10 @@ xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
- int xfs_rtfile_initialize_blocks(struct xfs_rtgroup *rtg,
- 		enum xfs_rtg_inodes type, xfs_fileoff_t offset_fsb,
- 		xfs_fileoff_t end_fsb, void *data);
-+int xfs_rtbitmap_create(struct xfs_rtgroup *rtg, struct xfs_inode *ip,
-+		struct xfs_trans *tp, bool init);
-+int xfs_rtsummary_create(struct xfs_rtgroup *rtg, struct xfs_inode *ip,
-+		struct xfs_trans *tp, bool init);
+-	ASSERT(!(lock_mode & (XFS_ILOCK_PARENT | XFS_ILOCK_RTBITMAP |
+-			      XFS_ILOCK_RTSUM)));
++	ASSERT(!(lock_mode & XFS_ILOCK_PARENT));
+ 	ASSERT(xfs_lockdep_subclass_ok(subclass));
  
- #else /* CONFIG_XFS_RT */
- # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
-index 22901ecc2cbe22..da29f41e51f1e1 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.c
-+++ b/fs/xfs/libxfs/xfs_rtgroup.c
-@@ -272,16 +272,24 @@ struct xfs_rtginode_ops {
+ 	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)) {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index b6e959563547fd..2a4485fb990846 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -448,9 +448,8 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+  * However, MAX_LOCKDEP_SUBCLASSES == 8, which means we are greatly
+  * limited to the subclasses we can represent via nesting. We need at least
+  * 5 inodes nest depth for the ILOCK through rename, and we also have to support
+- * XFS_ILOCK_PARENT, which gives 6 subclasses. Then we have XFS_ILOCK_RTBITMAP
+- * and XFS_ILOCK_RTSUM, which are another 2 unique subclasses, so that's all
+- * 8 subclasses supported by lockdep.
++ * XFS_ILOCK_PARENT, which gives 6 subclasses.  That's 6 of the 8 subclasses
++ * supported by lockdep.
+  *
+  * This also means we have to number the sub-classes in the lowest bits of
+  * the mask we keep, and we have to ensure we never exceed 3 bits of lockdep
+@@ -476,8 +475,8 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+  * ILOCK values
+  * 0-4		subclass values
+  * 5		PARENT subclass (not nestable)
+- * 6		RTBITMAP subclass (not nestable)
+- * 7		RTSUM subclass (not nestable)
++ * 6		unused
++ * 7		unused
+  * 
+  */
+ #define XFS_IOLOCK_SHIFT		16
+@@ -492,12 +491,8 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+ #define XFS_ILOCK_SHIFT			24
+ #define XFS_ILOCK_PARENT_VAL		5u
+ #define XFS_ILOCK_MAX_SUBCLASS		(XFS_ILOCK_PARENT_VAL - 1)
+-#define XFS_ILOCK_RTBITMAP_VAL		6u
+-#define XFS_ILOCK_RTSUM_VAL		7u
+ #define XFS_ILOCK_DEP_MASK		0xff000000u
+ #define	XFS_ILOCK_PARENT		(XFS_ILOCK_PARENT_VAL << XFS_ILOCK_SHIFT)
+-#define	XFS_ILOCK_RTBITMAP		(XFS_ILOCK_RTBITMAP_VAL << XFS_ILOCK_SHIFT)
+-#define	XFS_ILOCK_RTSUM			(XFS_ILOCK_RTSUM_VAL << XFS_ILOCK_SHIFT)
  
- 	/* Does the fs have this feature? */
- 	bool			(*enabled)(struct xfs_mount *mp);
-+
-+	/* Create this rtgroup metadata inode and initialize it. */
-+	int			(*create)(struct xfs_rtgroup *rtg,
-+					  struct xfs_inode *ip,
-+					  struct xfs_trans *tp,
-+					  bool init);
- };
- 
- static const struct xfs_rtginode_ops xfs_rtginode_ops[XFS_RTGI_MAX] = {
- 	[XFS_RTGI_BITMAP] = {
- 		.name		= "bitmap",
- 		.metafile_type	= XFS_METAFILE_RTBITMAP,
-+		.create		= xfs_rtbitmap_create,
- 	},
- 	[XFS_RTGI_SUMMARY] = {
- 		.name		= "summary",
- 		.metafile_type	= XFS_METAFILE_RTSUMMARY,
-+		.create		= xfs_rtsummary_create,
- 	},
- };
- 
-@@ -389,6 +397,67 @@ xfs_rtginode_irele(
- 	*ipp = NULL;
- }
- 
-+/* Add a metadata inode for a realtime rmap btree. */
-+int
-+xfs_rtginode_create(
-+	struct xfs_rtgroup		*rtg,
-+	enum xfs_rtg_inodes		type,
-+	bool				init)
-+{
-+	const struct xfs_rtginode_ops	*ops = &xfs_rtginode_ops[type];
-+	struct xfs_mount		*mp = rtg_mount(rtg);
-+	struct xfs_metadir_update	upd = {
-+		.dp			= mp->m_rtdirip,
-+		.metafile_type		= ops->metafile_type,
-+	};
-+	int				error;
-+
-+	if (!xfs_rtginode_enabled(rtg, type))
-+		return 0;
-+
-+	if (!mp->m_rtdirip)
-+		return -EFSCORRUPTED;
-+
-+	upd.path = xfs_rtginode_path(rtg_rgno(rtg), type);
-+	if (!upd.path)
-+		return -ENOMEM;
-+
-+	error = xfs_metadir_start_create(&upd);
-+	if (error)
-+		goto out_path;
-+
-+	error = xfs_metadir_create(&upd, S_IFREG);
-+	if (error)
-+		return error;
-+
-+	xfs_rtginode_lockdep_setup(upd.ip, rtg_rgno(rtg), type);
-+
-+	upd.ip->i_projid = rtg_rgno(rtg);
-+	error = ops->create(rtg, upd.ip, upd.tp, init);
-+	if (error)
-+		goto out_cancel;
-+
-+	error = xfs_metadir_commit(&upd);
-+	if (error)
-+		goto out_path;
-+
-+	kfree(upd.path);
-+	xfs_finish_inode_setup(upd.ip);
-+	rtg->rtg_inodes[type] = upd.ip;
-+	return 0;
-+
-+out_cancel:
-+	xfs_metadir_cancel(&upd, error);
-+	/* Have to finish setting up the inode to ensure it's deleted. */
-+	if (upd.ip) {
-+		xfs_finish_inode_setup(upd.ip);
-+		xfs_irele(upd.ip);
-+	}
-+out_path:
-+	kfree(upd.path);
-+	return error;
-+}
-+
- /* Create the parent directory for all rtgroup inodes and load it. */
- int
- xfs_rtginode_mkdir_parent(
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index 3732f65ba8a1f6..6ccf31bb6bc7a7 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -242,6 +242,8 @@ enum xfs_metafile_type xfs_rtginode_metafile_type(enum xfs_rtg_inodes type);
- bool xfs_rtginode_enabled(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type);
- int xfs_rtginode_load(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
- 		struct xfs_trans *tp);
-+int xfs_rtginode_create(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
-+		bool init);
- void xfs_rtginode_irele(struct xfs_inode **ipp);
- 
- static inline const char *xfs_rtginode_path(xfs_rgnumber_t rgno,
+ #define XFS_LOCK_SUBCLASS_MASK	(XFS_IOLOCK_DEP_MASK | \
+ 				 XFS_MMAPLOCK_DEP_MASK | \
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 3b3ce971a19758..5c1df67b63d6d1 100644
+index 5c1df67b63d6d1..7f3b5e24458bf3 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -711,6 +711,29 @@ xfs_growfs_rt_fixup_extsize(
+@@ -1189,12 +1189,11 @@ xfs_rtalloc_reinit_frextents(
+ static inline int
+ xfs_rtmount_iread_extents(
+ 	struct xfs_trans	*tp,
+-	struct xfs_inode	*ip,
+-	unsigned int		lock_class)
++	struct xfs_inode	*ip)
+ {
+ 	int			error;
+ 
+-	xfs_ilock(ip, XFS_ILOCK_EXCL | lock_class);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+ 	error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+ 	if (error)
+@@ -1207,7 +1206,7 @@ xfs_rtmount_iread_extents(
+ 	}
+ 
+ out_unlock:
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL | lock_class);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
  	return error;
  }
  
-+/* Ensure that the rtgroup metadata inode is loaded, creating it if neeeded. */
-+static int
-+xfs_rtginode_ensure(
-+	struct xfs_rtgroup	*rtg,
-+	enum xfs_rtg_inodes	type)
-+{
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	if (rtg->rtg_inodes[type])
-+		return 0;
-+
-+	error = xfs_trans_alloc_empty(rtg_mount(rtg), &tp);
-+	if (error)
-+		return error;
-+	error = xfs_rtginode_load(rtg, type, tp);
-+	xfs_trans_cancel(tp);
-+
-+	if (error != -ENOENT)
-+		return 0;
-+	return xfs_rtginode_create(rtg, type, true);
-+}
-+
- static int
- xfs_growfs_rt_bmblock(
- 	struct xfs_rtgroup	*rtg,
-@@ -927,12 +950,19 @@ xfs_growfs_rtg(
- 	xfs_extlen_t		bmblocks;
- 	xfs_fileoff_t		bmbno;
- 	struct xfs_rtgroup	*rtg;
-+	unsigned int		i;
- 	int			error;
+@@ -1228,7 +1227,7 @@ xfs_rtmount_rtg(
  
- 	rtg = xfs_rtgroup_grab(mp, 0);
- 	if (!rtg)
- 		return -EINVAL;
- 
-+	for (i = 0; i < XFS_RTGI_MAX; i++) {
-+		error = xfs_rtginode_ensure(rtg, i);
-+		if (error)
-+			goto out_rele;
-+	}
-+
- 	error = xfs_growfs_rt_alloc_blocks(rtg, nrblocks, rextsize, &bmblocks);
- 	if (error)
- 		goto out_rele;
+ 		if (rtg->rtg_inodes[i]) {
+ 			error = xfs_rtmount_iread_extents(tp,
+-					rtg->rtg_inodes[i], 0);
++					rtg->rtg_inodes[i]);
+ 			if (error)
+ 				return error;
+ 		}
 
