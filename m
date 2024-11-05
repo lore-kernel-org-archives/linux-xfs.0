@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C008D1DD0D2
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:17:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 745EE1DD0D2
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:17:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845045; cv=none; b=ODcIjLNlLVQjAfjmu4i7TbXTf5L7ABbMLndP7xUlO74pSn0pcqPzKT1OD1QwBlrXIOnj+Kwx0imeSsSdrdDOi2NYiyy46U9A7xhVRVN1CPnTa5N1yy0IipeD+1my3KpfxJe0wUK4g/beXrKlPdmPWaKDxxXL4ThBpIEARLLfAb8=
+	t=1730845062; cv=none; b=q11bBa2s7aY3upJoZxBPY8XNUX+AEzcUZdiW1Ou4xNXtw7zY8kNeGx/lGZKE0dsS4GIyRTidpsix2m93loo8LnccVkuge+G65XWi6EfsSKS7CeV0SVBNVhp8bJr0UVHBkJHqMI1LghJ0LV8SHBC627saKaYkXi8CSSUURZd7Ges=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845045; c=relaxed/simple;
-	bh=1EkNh4Z1vY63jP9lt1T0dA4fdm6V5tW2ZMs35mhyelE=;
+	s=arc-20240116; t=1730845062; c=relaxed/simple;
+	bh=UD/5G6EQ4Z0pw/glHoRiBsukXgLWftTqJqkhWWM8U0M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=srQZgVU+ylyGNOcMbeTYWgUO2loOw1UqbTUKvTqr0AJgi5ur2dKyxvSZXbrrqotBIoGWfUKQjHd1Zfdu23E/3RQrjRiB7Oh/adAJMN/AKV+rM/hswxkqhC5kNg1L9bnsGzYESxM+/R0Z18cjOOjUXhMUcTHOZ+u+MY3XGR3ZTT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2AWnT6T; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kh9KjFJXNq0quJfd+9i9NCOCXe/bMZaHdgnOpzXZ8IlIH0aHZarF1BuZ9AQtIJIhrPzepcgoo/qpInEM4VIe9ho4ewdBCdyA+RzikH+Rj+rst8hnKNATbaC61SniRWPYhmw+mLHRvyU0Ax1hbTstBb2Ngb/CUFsRAMD2oX7/DY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sA1o3tBk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2AWnT6T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54063C4CED1;
-	Tue,  5 Nov 2024 22:17:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sA1o3tBk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBD7DC4CED1;
+	Tue,  5 Nov 2024 22:17:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845045;
-	bh=1EkNh4Z1vY63jP9lt1T0dA4fdm6V5tW2ZMs35mhyelE=;
+	s=k20201202; t=1730845061;
+	bh=UD/5G6EQ4Z0pw/glHoRiBsukXgLWftTqJqkhWWM8U0M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=D2AWnT6Tgn7/I+aFnOsvxy8X6/TPMh3MXuIG/9LoisC6iPav8Jp3NdzMinuLdq33C
-	 DO+37EbkdInjyoTPdaxpVXPZDN40pdTTUb4LcKDm64CYjAvl8v2oD0tHTUBoY08OSM
-	 9vayLxOw+jrqEPj+2tTyU7xFwA4HsbHPQmTycO0LL6To5owqF5noK1wmSV7khHdjzJ
-	 35mV8FoZDGpv5WiZjNfB9yebQl1Fm4F84sGnaCkSyXAInpqFhms/y2sXYsrMY0dZkA
-	 b/CGv0lQ6tIrPEja1nVM3KMMEJTeRAdx13mmYEGv8T9Kqy66Nj23ctopPdmWUDcDwY
-	 TJ4iyiZgtUHVQ==
-Date: Tue, 05 Nov 2024 14:17:24 -0800
-Subject: [PATCH 03/28] xfs: rename metadata inode predicates
+	b=sA1o3tBka0rJiw9/CfAVq6cj7DdtUz5JV9ktYR0mQluH+iNhdsvNM7szvzshN8zgb
+	 cPA1kt+feb2cKRJ+SSYbug8QFkfi0Iei4TcAfwngzsD7YauHzVOBaL8W/5bSwrFZwc
+	 PFFa8K82UMW/G/hFt57K8xRlVa9rPxjhKvOcrcqZNVHeIQX2bhw3bAL5HQhQu++7e/
+	 jd9zhNu7/dW42pJ9gPfUOHGQ1PreZFbIEVMVAAEmEas5s8/Fd6DmgtaZkYaDz373Y3
+	 j1as/DNMpIkkIU0vD8yhpXM3hsX6WzThENcGvGi2Ql6nWAaAT2aRbepgy8KG7vjiVe
+	 kB+I9AI4f3Cug==
+Date: Tue, 05 Nov 2024 14:17:40 -0800
+Subject: [PATCH 04/28] xfs: standardize EXPERIMENTAL warning generation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084396069.1870066.2955419799237106193.stgit@frogsfrogsfrogs>
+Message-ID: <173084396087.1870066.217115820255608818.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 References: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,191 +45,235 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The predicate xfs_internal_inum tells us if an inumber refers to one of
-the inodes rooted in the superblock.  Soon we're going to have internal
-inodes in a metadata directory tree, so this helper should be renamed
-to capture its limited scope.
-
-Ondisk inodes will soon have a flag to indicate that they're metadata
-inodes.  Head off some confusion by renaming the xfs_is_metadata_inode
-predicate to xfs_is_internal_inode.
+Refactor the open-coded warnings about EXPERIMENTAL feature use into a
+standard helper before we go adding more experimental features.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_types.c      |    4 ++--
- fs/xfs/libxfs/xfs_types.h      |    2 +-
- fs/xfs/scrub/common.c          |    2 +-
- fs/xfs/scrub/inode.c           |    2 +-
- fs/xfs/scrub/inode_repair.c    |    2 +-
- fs/xfs/scrub/orphanage.c       |    2 +-
- fs/xfs/scrub/parent.c          |    2 +-
- fs/xfs/scrub/refcount_repair.c |    2 +-
- fs/xfs/xfs_inode.c             |    4 ++--
- fs/xfs/xfs_inode.h             |    2 +-
- fs/xfs/xfs_itable.c            |    2 +-
- 11 files changed, 13 insertions(+), 13 deletions(-)
+ fs/xfs/scrub/scrub.c |    3 +--
+ fs/xfs/xfs_fsops.c   |    4 +---
+ fs/xfs/xfs_message.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_message.h |   19 +++++++++++++------
+ fs/xfs/xfs_mount.h   |   20 ++++++++++++++------
+ fs/xfs/xfs_pnfs.c    |    3 +--
+ fs/xfs/xfs_super.c   |   10 +++-------
+ fs/xfs/xfs_xattr.c   |    3 +--
+ 8 files changed, 81 insertions(+), 28 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index c91db4f5140743..1cbfe57e971d5c 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -111,7 +111,7 @@ xfs_verify_ino(
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 4cbcf7a86dbec5..8a5c3af4cfda38 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -605,8 +605,7 @@ xfs_scrub_metadata(
+ 	if (error)
+ 		goto out;
  
- /* Is this an internal inode number? */
- inline bool
--xfs_internal_inum(
-+xfs_is_sb_inum(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		ino)
- {
-@@ -129,7 +129,7 @@ xfs_verify_dir_ino(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		ino)
- {
--	if (xfs_internal_inum(mp, ino))
-+	if (xfs_is_sb_inum(mp, ino))
- 		return false;
- 	return xfs_verify_ino(mp, ino);
+-	xfs_warn_mount(mp, XFS_OPSTATE_WARNED_SCRUB,
+- "EXPERIMENTAL online scrub feature in use. Use at your own risk!");
++	xfs_warn_experimental(mp, XFS_EXPERIMENTAL_SCRUB);
+ 
+ 	sc = kzalloc(sizeof(struct xfs_scrub), XCHK_GFP_FLAGS);
+ 	if (!sc) {
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 82812a458cf10f..28dde215c89953 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -162,9 +162,7 @@ xfs_growfs_data_private(
+ 		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
+ 				delta, last_pag, &lastag_extended);
+ 	} else {
+-		xfs_warn_mount(mp, XFS_OPSTATE_WARNED_SHRINK,
+-	"EXPERIMENTAL online shrink feature in use. Use at your own risk!");
+-
++		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_SHRINK);
+ 		error = xfs_ag_shrink_space(last_pag, &tp, -delta);
+ 	}
+ 	xfs_perag_put(last_pag);
+diff --git a/fs/xfs/xfs_message.c b/fs/xfs/xfs_message.c
+index 8f495cc23903b2..c7aa16af6f0996 100644
+--- a/fs/xfs/xfs_message.c
++++ b/fs/xfs/xfs_message.c
+@@ -131,3 +131,50 @@ xfs_buf_alert_ratelimited(
+ 	__xfs_printk(KERN_ALERT, mp, &vaf);
+ 	va_end(args);
  }
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index d3cb6ff3b91301..25053a66c225ed 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -230,7 +230,7 @@ bool xfs_verify_fsbext(struct xfs_mount *mp, xfs_fsblock_t fsbno,
- 		xfs_fsblock_t len);
++
++void
++xfs_warn_experimental(
++	struct xfs_mount		*mp,
++	enum xfs_experimental_feat	feat)
++{
++	static const struct {
++		const char		*name;
++		long			opstate;
++	} features[] = {
++		[XFS_EXPERIMENTAL_PNFS] = {
++			.opstate	= XFS_OPSTATE_WARNED_PNFS,
++			.name		= "pNFS",
++		},
++		[XFS_EXPERIMENTAL_SCRUB] = {
++			.opstate	= XFS_OPSTATE_WARNED_SCRUB,
++			.name		= "online scrub",
++		},
++		[XFS_EXPERIMENTAL_SHRINK] = {
++			.opstate	= XFS_OPSTATE_WARNED_SHRINK,
++			.name		= "online shrink",
++		},
++		[XFS_EXPERIMENTAL_LARP] = {
++			.opstate	= XFS_OPSTATE_WARNED_LARP,
++			.name		= "logged extended attributes",
++		},
++		[XFS_EXPERIMENTAL_LBS] = {
++			.opstate	= XFS_OPSTATE_WARNED_LBS,
++			.name		= "large block size",
++		},
++		[XFS_EXPERIMENTAL_EXCHRANGE] = {
++			.opstate	= XFS_OPSTATE_WARNED_EXCHRANGE,
++			.name		= "exchange range",
++		},
++		[XFS_EXPERIMENTAL_PPTR] = {
++			.opstate	= XFS_OPSTATE_WARNED_PPTR,
++			.name		= "parent pointer",
++		},
++	};
++	ASSERT(feat >= 0 && feat < XFS_EXPERIMENTAL_MAX);
++	BUILD_BUG_ON(ARRAY_SIZE(features) != XFS_EXPERIMENTAL_MAX);
++
++	if (xfs_should_warn(mp, features[feat].opstate))
++		xfs_warn(mp,
++ "EXPERIMENTAL %s feature enabled.  Use at your own risk!",
++				features[feat].name);
++}
+diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+index cc323775a12c31..5be8be72f225a6 100644
+--- a/fs/xfs/xfs_message.h
++++ b/fs/xfs/xfs_message.h
+@@ -75,12 +75,6 @@ do {									\
+ #define xfs_debug_ratelimited(dev, fmt, ...)				\
+ 	xfs_printk_ratelimited(xfs_debug, dev, fmt, ##__VA_ARGS__)
  
- bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
--bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
-+bool xfs_is_sb_inum(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- bool xfs_verify_rtbext(struct xfs_mount *mp, xfs_rtblock_t rtbno,
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index e8b5e73bab60d3..777959f8ec724b 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -948,7 +948,7 @@ xchk_iget_for_scrubbing(
- 		return xchk_install_live_inode(sc, ip_in);
+-#define xfs_warn_mount(mp, warntag, fmt, ...)				\
+-do {									\
+-	if (xfs_should_warn((mp), (warntag)))				\
+-		xfs_warn((mp), (fmt), ##__VA_ARGS__);			\
+-} while (0)
+-
+ #define xfs_warn_once(dev, fmt, ...)				\
+ 	xfs_printk_once(xfs_warn, dev, fmt, ##__VA_ARGS__)
+ #define xfs_notice_once(dev, fmt, ...)				\
+@@ -96,4 +90,17 @@ extern void xfs_hex_dump(const void *p, int length);
+ void xfs_buf_alert_ratelimited(struct xfs_buf *bp, const char *rlmsg,
+ 			       const char *fmt, ...);
  
- 	/* Reject internal metadata files and obviously bad inode numbers. */
--	if (xfs_internal_inum(mp, sc->sm->sm_ino))
-+	if (xfs_is_sb_inum(mp, sc->sm->sm_ino))
- 		return -ENOENT;
- 	if (!xfs_verify_ino(sc->mp, sc->sm->sm_ino))
- 		return -ENOENT;
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index d32716fb2fecf7..4a8637afb0e29b 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -95,7 +95,7 @@ xchk_setup_inode(
++enum xfs_experimental_feat {
++	XFS_EXPERIMENTAL_PNFS,
++	XFS_EXPERIMENTAL_SCRUB,
++	XFS_EXPERIMENTAL_SHRINK,
++	XFS_EXPERIMENTAL_LARP,
++	XFS_EXPERIMENTAL_LBS,
++	XFS_EXPERIMENTAL_EXCHRANGE,
++	XFS_EXPERIMENTAL_PPTR,
++
++	XFS_EXPERIMENTAL_MAX,
++};
++void xfs_warn_experimental(struct xfs_mount *mp, enum xfs_experimental_feat f);
++
+ #endif	/* __XFS_MESSAGE_H */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 1b698878f40cb1..b82977f654a5e5 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -467,18 +467,26 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
+  */
+ #define XFS_OPSTATE_BLOCKGC_ENABLED	6
+ 
++/* Kernel has logged a warning about pNFS being used on this fs. */
++#define XFS_OPSTATE_WARNED_PNFS		7
+ /* Kernel has logged a warning about online fsck being used on this fs. */
+-#define XFS_OPSTATE_WARNED_SCRUB	7
++#define XFS_OPSTATE_WARNED_SCRUB	8
+ /* Kernel has logged a warning about shrink being used on this fs. */
+-#define XFS_OPSTATE_WARNED_SHRINK	8
++#define XFS_OPSTATE_WARNED_SHRINK	9
+ /* Kernel has logged a warning about logged xattr updates being used. */
+-#define XFS_OPSTATE_WARNED_LARP		9
++#define XFS_OPSTATE_WARNED_LARP		10
+ /* Mount time quotacheck is running */
+-#define XFS_OPSTATE_QUOTACHECK_RUNNING	10
++#define XFS_OPSTATE_QUOTACHECK_RUNNING	11
+ /* Do we want to clear log incompat flags? */
+-#define XFS_OPSTATE_UNSET_LOG_INCOMPAT	11
++#define XFS_OPSTATE_UNSET_LOG_INCOMPAT	12
+ /* Filesystem can use logged extended attributes */
+-#define XFS_OPSTATE_USE_LARP		12
++#define XFS_OPSTATE_USE_LARP		13
++/* Kernel has logged a warning about blocksize > pagesize on this fs. */
++#define XFS_OPSTATE_WARNED_LBS		14
++/* Kernel has logged a warning about exchange-range being used on this fs. */
++#define XFS_OPSTATE_WARNED_EXCHRANGE	15
++/* Kernel has logged a warning about parent pointers being used on this fs. */
++#define XFS_OPSTATE_WARNED_PPTR		16
+ 
+ #define __XFS_IS_OPSTATE(name, NAME) \
+ static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 23d16186e1a34a..6f4479deac6d68 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -58,8 +58,7 @@ xfs_fs_get_uuid(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+-	xfs_notice_once(mp,
+-"Using experimental pNFS feature, use at your own risk!");
++	xfs_warn_experimental(mp, XFS_EXPERIMENTAL_PNFS);
+ 
+ 	if (*len < sizeof(uuid_t))
+ 		return -EINVAL;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 457c2d70968d9a..b7091728791bf5 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1657,9 +1657,7 @@ xfs_fs_fill_super(
+ 			goto out_free_sb;
+ 		}
+ 
+-		xfs_warn(mp,
+-"EXPERIMENTAL: V5 Filesystem with Large Block Size (%d bytes) enabled.",
+-			mp->m_sb.sb_blocksize);
++		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_LBS);
  	}
  
- 	/* Reject internal metadata files and obviously bad inode numbers. */
--	if (xfs_internal_inum(mp, sc->sm->sm_ino))
-+	if (xfs_is_sb_inum(mp, sc->sm->sm_ino))
- 		return -ENOENT;
- 	if (!xfs_verify_ino(sc->mp, sc->sm->sm_ino))
- 		return -ENOENT;
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 5da9e1a387a8bb..9085d6d11aebcd 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -1762,7 +1762,7 @@ xrep_inode_pptr(
- 	 * Metadata inodes are rooted in the superblock and do not have any
- 	 * parents.
- 	 */
--	if (xfs_is_metadata_inode(ip))
-+	if (xfs_is_internal_inode(ip))
- 		return 0;
+ 	/* Ensure this filesystem fits in the page cache limits */
+@@ -1755,12 +1753,10 @@ xfs_fs_fill_super(
+ 	}
  
- 	/* Inode already has an attr fork; no further work possible here. */
-diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
-index 7148d8362db833..5f0d4239260862 100644
---- a/fs/xfs/scrub/orphanage.c
-+++ b/fs/xfs/scrub/orphanage.c
-@@ -295,7 +295,7 @@ xrep_orphanage_can_adopt(
- 		return false;
- 	if (sc->ip == sc->orphanage)
- 		return false;
--	if (xfs_internal_inum(sc->mp, sc->ip->i_ino))
-+	if (xfs_is_sb_inum(sc->mp, sc->ip->i_ino))
- 		return false;
- 	return true;
+ 	if (xfs_has_exchange_range(mp))
+-		xfs_warn(mp,
+-	"EXPERIMENTAL exchange-range feature enabled. Use at your own risk!");
++		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_EXCHRANGE);
+ 
+ 	if (xfs_has_parent(mp))
+-		xfs_warn(mp,
+-	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
++		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_PPTR);
+ 
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index eaf849260bd672..0f641a9091ecbf 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -51,8 +51,7 @@ xfs_attr_grab_log_assist(
+ 		return error;
+ 	xfs_set_using_logged_xattrs(mp);
+ 
+-	xfs_warn_mount(mp, XFS_OPSTATE_WARNED_LARP,
+- "EXPERIMENTAL logged extended attributes feature in use. Use at your own risk!");
++	xfs_warn_experimental(mp, XFS_EXPERIMENTAL_LARP);
+ 
+ 	return 0;
  }
-diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index 91e7b51ce0680b..20711a68a87482 100644
---- a/fs/xfs/scrub/parent.c
-+++ b/fs/xfs/scrub/parent.c
-@@ -910,7 +910,7 @@ xchk_pptr_looks_zapped(
- 	 * any parents.  Hence the attr fork will not be initialized, but
- 	 * there are no parent pointers that might have been zapped.
- 	 */
--	if (xfs_is_metadata_inode(ip))
-+	if (xfs_is_internal_inode(ip))
- 		return false;
- 
- 	/*
-diff --git a/fs/xfs/scrub/refcount_repair.c b/fs/xfs/scrub/refcount_repair.c
-index 4240fff459cb1d..4e572b81c98669 100644
---- a/fs/xfs/scrub/refcount_repair.c
-+++ b/fs/xfs/scrub/refcount_repair.c
-@@ -215,7 +215,7 @@ xrep_refc_rmap_shareable(
- 		return false;
- 
- 	/* Metadata in files are never shareable */
--	if (xfs_internal_inum(mp, rmap->rm_owner))
-+	if (xfs_is_sb_inum(mp, rmap->rm_owner))
- 		return false;
- 
- 	/* Metadata and unwritten file blocks are not shareable. */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index a8430f30d6df29..0465546010554a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1295,7 +1295,7 @@ xfs_inode_needs_inactive(
- 		return false;
- 
- 	/* Metadata inodes require explicit resource cleanup. */
--	if (xfs_is_metadata_inode(ip))
-+	if (xfs_is_internal_inode(ip))
- 		return false;
- 
- 	/* Want to clean out the cow blocks if there are any. */
-@@ -1388,7 +1388,7 @@ xfs_inactive(
- 		goto out;
- 
- 	/* Metadata inodes require explicit resource cleanup. */
--	if (xfs_is_metadata_inode(ip))
-+	if (xfs_is_internal_inode(ip))
- 		goto out;
- 
- 	/* Try to clean out the cow blocks if there are any. */
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 41444a557576c1..df7262f4674f78 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -276,7 +276,7 @@ static inline bool xfs_is_reflink_inode(const struct xfs_inode *ip)
- 	return ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
- }
- 
--static inline bool xfs_is_metadata_inode(const struct xfs_inode *ip)
-+static inline bool xfs_is_internal_inode(const struct xfs_inode *ip)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index c0757ab994957b..37c2b50d877e42 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -69,7 +69,7 @@ xfs_bulkstat_one_int(
- 	vfsuid_t		vfsuid;
- 	vfsgid_t		vfsgid;
- 
--	if (xfs_internal_inum(mp, ino))
-+	if (xfs_is_sb_inum(mp, ino))
- 		goto out_advance;
- 
- 	error = xfs_iget(mp, tp, ino,
 
