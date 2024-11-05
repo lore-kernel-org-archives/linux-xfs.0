@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 695C021219E
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:09:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BED0121219E
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:09:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730844577; cv=none; b=bd49+W8fK4FcTv7Af6wJKHnaFOu+y28D6aJCSLbUkhZhOTeMKRqy1jS05xmWsPiZT5ywbyhu04B7nepzfyFUXr7RwmDODyHS5b1INE2vsfmPJST79M/6kVacxxjMxRK3Tdap5wEbz7/1yn+LSd6VxK14dxC3jBu3B0/2U0e6GNY=
+	t=1730844592; cv=none; b=oyefwS+rxKvjHG9om3R8oQTjW3jphSUMbtmdtM23rZ8LrypWXEft0EDKAvVnTK/XmvzTeHRf9YaVbQSGNypXuzYF9uleSz39z3liLYgDT4B/zR1Umle9qkuhhpMZudIGfOyoEh5dfRgiZdsXh6fbO5//ORiQ7xG+iAKB8CR3UZg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730844577; c=relaxed/simple;
-	bh=A1yr2AA0YmsL1xnmGErgOCy2HX11K2oeKHKBCcnIWMk=;
+	s=arc-20240116; t=1730844592; c=relaxed/simple;
+	bh=3o2OzYz4z6NdmYM5pKR+q3PpKSxN0KvhKLO+Jkwf3CE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sotHjCPDjYwWMFFroErOz+DxX7XGBC2DWctBXVF/cqTrhJSTOnyuvc/3Sr9wo/wPJarInZEOpqjOBYhArAwLVpl2XNJh5uUzFah0jcIcT4+iv/7SFIYzm53PDi1OKPR8pf4ELtPv6yiFqx/Ir9BDPYzg7iTr1AbOwO97vMTYghc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UxYYgbBu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EI3zcB9bd7Aj+Zx8bR5YL0xY3SXIXpI75eqnmrd4WpgXa/5CS1a+mhMNItQxSYqZ7KPTHLKgeF40LXB3M8CPAVtAJ4dDaJOSvWyIFDscT+ZQFc2rLbKSGIiHildvG+rrXmc5qvxeJIUSLRsmrnH9uO/RJnB8Uly90eVu7b638v0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JZiY/MRn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UxYYgbBu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3755C4CECF;
-	Tue,  5 Nov 2024 22:09:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JZiY/MRn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DABEC4CECF;
+	Tue,  5 Nov 2024 22:09:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730844577;
-	bh=A1yr2AA0YmsL1xnmGErgOCy2HX11K2oeKHKBCcnIWMk=;
+	s=k20201202; t=1730844592;
+	bh=3o2OzYz4z6NdmYM5pKR+q3PpKSxN0KvhKLO+Jkwf3CE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UxYYgbBuxovmJv/BVYE2ljLXFr4/hYzTCIjGlpLrIqJJupox5lJawrKDlpcH2NsMU
-	 zOUynmMDb5icMiki2c3rYSUV4T6QqqlZlS03zuDNVKvunLFeKnHrbybvxgDw+qy5qc
-	 /ebui50ELgeNrCQF6I26YhHWAJT5r2HyRI9mA5oXW0esTs4fe8lO8PqZ62HX77Evg2
-	 s8ENS14pNTdYRXQie+IYDJU4Lljj45AVVxSdasZu2N90aXpC11m9C1R7QQSmkJRruF
-	 FrXwusf0t6pfIeakg2COlmzOmlGI93DaLlyF3XrRM8g2tnjpjUNw2joD2zqJ18XM0L
-	 6nNe+DhqgFPww==
-Date: Tue, 05 Nov 2024 14:09:36 -0800
-Subject: [PATCH 12/23] xfs: remove the unused trace_xfs_iwalk_ag trace point
+	b=JZiY/MRnfn3QcioLxJsPs7fn3q4ywVvkGbmmWW3Zt7mqHP3NsG9m2IZdSPxip2Pkz
+	 OQDXTMq0EpP8IHqn5EDYb66fNyaYCtqZBWQwMnff6BnY/ctEJQeOpcWYREGlz7uPKA
+	 to4C+PXpiJajLrzYmd4Wr8uzUkQbKqcvrQuP8cPcRmG7JhA2y8x+tkUg/KSMfiBs+q
+	 Vsyn171XHTRIuInBc1rk7tpefNtXKi0HTHdThFtPuwC/2ZljJ2h796zK5/jzxZl9a7
+	 DxnZ8xFQmoQFFopSQGV26mQYizJIQRH+/c6Fw7Qk43CxHwy7Bq63AMQEWh1Zml4KKm
+	 MB1UdLBWtMGLw==
+Date: Tue, 05 Nov 2024 14:09:52 -0800
+Subject: [PATCH 13/23] xfs: remove the unused xrep_bmap_walk_rmap trace point
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084394657.1868694.14448352472864463318.stgit@frogsfrogsfrogs>
+Message-ID: <173084394674.1868694.8440529560511480436.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
 References: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -49,38 +49,20 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_trace.h |   19 -------------------
- 1 file changed, 19 deletions(-)
+ fs/xfs/scrub/trace.h |    1 -
+ 1 file changed, 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index b9baafba031b25..35b07af3b71d51 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -4237,25 +4237,6 @@ DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_corrupt);
- DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
- DEFINE_INODE_CORRUPT_EVENT(xfs_inode_unfixed_corruption);
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index c886d5d0eb021a..5eff6186724d4a 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -2020,7 +2020,6 @@ DEFINE_EVENT(xrep_rmap_class, name, \
+ 		 uint64_t owner, uint64_t offset, unsigned int flags), \
+ 	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
+ DEFINE_REPAIR_RMAP_EVENT(xrep_ibt_walk_rmap);
+-DEFINE_REPAIR_RMAP_EVENT(xrep_bmap_walk_rmap);
  
--TRACE_EVENT(xfs_iwalk_ag,
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
--		 xfs_agino_t startino),
--	TP_ARGS(mp, agno, startino),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_agnumber_t, agno)
--		__field(xfs_agino_t, startino)
--	),
--	TP_fast_assign(
--		__entry->dev = mp->m_super->s_dev;
--		__entry->agno = agno;
--		__entry->startino = startino;
--	),
--	TP_printk("dev %d:%d agno 0x%x startino 0x%x",
--		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
--		  __entry->startino)
--)
--
- TRACE_EVENT(xfs_iwalk_ag_rec,
+ TRACE_EVENT(xrep_abt_found,
  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		 struct xfs_inobt_rec_incore *irec),
 
