@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B33661F667B
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:14:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556B0216209
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:14:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730844873; cv=none; b=qMkoL0nehdlcnVekgA1zugJiQ+LQ3dnjBGP02WPMFTUuROg/m/ehD3zQ3GgkgSrAMy05a80TUsW4tWf0SoS2tYDxaRBIGdjQuaQyMH+WQzP2FB86h71ryTfHT45U23Qqz3ab0MXRTO2yIA4ir4oGbooiQOu+2y1k2DGPwH4gAlA=
+	t=1730844889; cv=none; b=m8nHEYsIHKFZ5QvNP/e0p3A5YAmXBPwGH6djRx9+WvxIcXdqRwLyg/luDQFaqJ0WNKg5AyftStyfrXVzGCOwl1hwFrf2NspYHnG9YBkw/6IfFlugXQW34HDXpkEaSG6MfyYhA9KPmjr36usfl5UY2ijN/a4ti2PxY/JhqRYkzlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730844873; c=relaxed/simple;
-	bh=my1wQOYy9qJmjip6zjHKpjyKCj1UZ30TFtEdehsIE4w=;
+	s=arc-20240116; t=1730844889; c=relaxed/simple;
+	bh=2Nq70ziXD1UW7b3CyWHft1Typiy8Iy6IfUmyc5cz00I=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=atyFjY3e2cRq/pnPo5fHj6BkqNS4rj3Zkyfho5Yy8SKinT/FEManx2bIBRarSaZi4uwCyJ+GIPQ7pa2BaSXVv2bStXf9JOuoQhCYaQRElPU0L8JPmCw3B1xT9MvKO6l/66OTpzl/xesoY+f4iPzYmWEtxz6SU6+/z/apvhx0a5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MyOLyg1+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=LOyDha0r/OyEHSjt1I0+FTkTuOXX3OnrNaw4XbFfnsGp/Pmn6hxQ/PkepVvZe2HoCwF3FuwalY0G1ezyr8RetedayuLFiac5m5woTUWpa6Aof0hFgh3ulbsuydFuID2wJ7UW/jM2EILsDXtb37fAXcahqjzZxyzoRyk/TzITntI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rm/Wq4U8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MyOLyg1+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89515C4CECF;
-	Tue,  5 Nov 2024 22:14:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rm/Wq4U8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CDD1C4CECF;
+	Tue,  5 Nov 2024 22:14:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730844873;
-	bh=my1wQOYy9qJmjip6zjHKpjyKCj1UZ30TFtEdehsIE4w=;
+	s=k20201202; t=1730844889;
+	bh=2Nq70ziXD1UW7b3CyWHft1Typiy8Iy6IfUmyc5cz00I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MyOLyg1++SuXbNH8eSg2ar4ZkVmJgQ9fDQ3IxVCkDtr3HeJe+eMc3n+Aap8rpxjIr
-	 1OttA6JSew3P7UJ/be8S36x086+vwFvXQixXOa6nbYvsDQ91UZVrUAtG4nG/RS02ra
-	 QrSkpDZUeBSavSp3WLWo1IpAq3P4RLFmCkzW02Jik3t88G8Dx2oW4IRSN7wlRRrRl8
-	 PLscRffHb9PTow1K9gobXh7n+MHslYIpxDdbH+H9MAuFwuSzdjAoPernZHA7xrPB2x
-	 7O79LlF9PHAwOOSas5eVMe4wDI7YpJKBZJsRSt5Kfc3Wz7KIkoe5wNx08i97qJl2iP
-	 LBXBajXoS1k1Q==
-Date: Tue, 05 Nov 2024 14:14:33 -0800
-Subject: [PATCH 08/16] xfs: move the online repair rmap hooks to the generic
- group structure
+	b=rm/Wq4U80I5nf/FxcE2tgObXykd29D7seCnEHz7Fga9Nppb3CvtfQ1Lz+HNrPiiDV
+	 Jiy3OLmqCzyZ4ZtyGeJAtwX/9lxnV/r9FuI+G3taO05oi5qMI5dyE7CGLQzfmyrVJj
+	 k2AvnZ0zm+3AolEUurwxJoODtTfcNu8hZu6mPzEe5c/n2A81cTRGaOKBDDZdy7/+P1
+	 TOuqFqxF4K7m2vofTcHtonBgIfYf+HbE9TAF4HA4gAti+sWdmmOgE7hPBERK7x9RdQ
+	 h3ZEwJpX3saghDy4YFGyfqaMf2u+PMpn1DcljzkQKoS5bjIENeUfmtRi0zFg9EMDae
+	 88Vt96peaKa+A==
+Date: Tue, 05 Nov 2024 14:14:48 -0800
+Subject: [PATCH 09/16] xfs: return the busy generation from
+ xfs_extent_busy_list_empty
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084395407.1869491.17920277207031054678.stgit@frogsfrogsfrogs>
+Message-ID: <173084395424.1869491.2480576942197321919.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084395220.1869491.11426383276644234025.stgit@frogsfrogsfrogs>
 References: <173084395220.1869491.11426383276644234025.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,190 +46,88 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Prepare for the upcoming realtime groups feature by moving the online
-repair rmap hooks to based to the generic xfs_group structure.
+This avoid having to poke into the internals of the busy tracking in
+xrep_setup_ag_allocbt.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.c     |    1 -
- fs/xfs/libxfs/xfs_ag.h     |    3 ---
- fs/xfs/libxfs/xfs_group.c  |    1 +
- fs/xfs/libxfs/xfs_group.h  |    5 +++++
- fs/xfs/libxfs/xfs_rmap.c   |   24 +++++++++++++-----------
- fs/xfs/libxfs/xfs_rmap.h   |    4 ++--
- fs/xfs/scrub/rmap_repair.c |    4 ++--
- 7 files changed, 23 insertions(+), 19 deletions(-)
+ fs/xfs/scrub/alloc_repair.c |    9 +++------
+ fs/xfs/xfs_extent_busy.c    |    4 +++-
+ fs/xfs/xfs_extent_busy.h    |    2 +-
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index c2f1f830d299d3..e60469fee87514 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -235,7 +235,6 @@ xfs_perag_alloc(
- 	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- 	init_waitqueue_head(&pag->pagb_wait);
- 	pag->pagb_tree = RB_ROOT;
--	xfs_hooks_init(&pag->pag_rmap_update_hooks);
- #endif /* __KERNEL__ */
- 
- 	error = xfs_buf_cache_init(&pag->pag_bcache);
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 45f8de06cdbc8a..042ee0913fb9b9 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -96,9 +96,6 @@ struct xfs_perag {
- 
- 	/* background prealloc block trimming */
- 	struct delayed_work	pag_blockgc_work;
+diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+index ab0084c4249657..f07cd93012c675 100644
+--- a/fs/xfs/scrub/alloc_repair.c
++++ b/fs/xfs/scrub/alloc_repair.c
+@@ -132,16 +132,12 @@ int
+ xrep_setup_ag_allocbt(
+ 	struct xfs_scrub	*sc)
+ {
+-	unsigned int		busy_gen;
 -
--	/* Hook to feed rmapbt updates to an active online repair. */
--	struct xfs_hooks	pag_rmap_update_hooks;
- #endif /* __KERNEL__ */
- };
- 
-diff --git a/fs/xfs/libxfs/xfs_group.c b/fs/xfs/libxfs/xfs_group.c
-index 6737f009dd38ca..8532dc2f8628c5 100644
---- a/fs/xfs/libxfs/xfs_group.c
-+++ b/fs/xfs/libxfs/xfs_group.c
-@@ -186,6 +186,7 @@ xfs_group_insert(
- 
- #ifdef __KERNEL__
- 	spin_lock_init(&xg->xg_state_lock);
-+	xfs_hooks_init(&xg->xg_rmap_update_hooks);
- #endif
- 	xfs_defer_drain_init(&xg->xg_intents_drain);
- 
-diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
-index ebefbba7d98cc2..a87b9b80ef7516 100644
---- a/fs/xfs/libxfs/xfs_group.h
-+++ b/fs/xfs/libxfs/xfs_group.h
-@@ -31,6 +31,11 @@ struct xfs_group {
- 	 * inconsistencies.
+ 	/*
+ 	 * Make sure the busy extent list is clear because we can't put extents
+ 	 * on there twice.
  	 */
- 	struct xfs_defer_drain	xg_intents_drain;
-+
-+	/*
-+	 * Hook to feed rmapbt updates to an active online repair.
-+	 */
-+	struct xfs_hooks	xg_rmap_update_hooks;
- #endif /* __KERNEL__ */
- };
+-	busy_gen = READ_ONCE(sc->sa.pag->pagb_gen);
+-	if (xfs_extent_busy_list_empty(sc->sa.pag))
++	if (xfs_extent_busy_list_empty(sc->sa.pag, &busy_gen))
+ 		return 0;
+-
+ 	return xfs_extent_busy_flush(sc->tp, sc->sa.pag, busy_gen, 0);
+ }
  
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index b6764d6b3ab891..984120b128fb9c 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -835,7 +835,7 @@ xfs_rmap_hook_enable(void)
- static inline void
- xfs_rmap_update_hook(
- 	struct xfs_trans		*tp,
--	struct xfs_perag		*pag,
-+	struct xfs_group		*xg,
- 	enum xfs_rmap_intent_type	op,
- 	xfs_agblock_t			startblock,
- 	xfs_extlen_t			blockcount,
-@@ -850,27 +850,27 @@ xfs_rmap_update_hook(
- 			.oinfo		= *oinfo, /* struct copy */
- 		};
+@@ -849,6 +845,7 @@ xrep_allocbt(
+ {
+ 	struct xrep_abt		*ra;
+ 	struct xfs_mount	*mp = sc->mp;
++	unsigned int		busy_gen;
+ 	char			*descr;
+ 	int			error;
  
--		if (pag)
--			xfs_hooks_call(&pag->pag_rmap_update_hooks, op, &p);
-+		if (xg)
-+			xfs_hooks_call(&xg->xg_rmap_update_hooks, op, &p);
+@@ -869,7 +866,7 @@ xrep_allocbt(
+ 	 * on there twice.  In theory we cleared this before we started, but
+ 	 * let's not risk the filesystem.
+ 	 */
+-	if (!xfs_extent_busy_list_empty(sc->sa.pag)) {
++	if (!xfs_extent_busy_list_empty(sc->sa.pag, &busy_gen)) {
+ 		error = -EDEADLOCK;
+ 		goto out_ra;
  	}
- }
- 
- /* Call the specified function during a reverse mapping update. */
- int
- xfs_rmap_hook_add(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	struct xfs_rmap_hook	*hook)
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index 3d5a57d7ac5e14..2806fc6ab4800d 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -667,12 +667,14 @@ xfs_extent_busy_ag_cmp(
+ /* Are there any busy extents in this AG? */
+ bool
+ xfs_extent_busy_list_empty(
+-	struct xfs_perag	*pag)
++	struct xfs_perag	*pag,
++	unsigned		*busy_gen)
  {
--	return xfs_hooks_add(&pag->pag_rmap_update_hooks, &hook->rmap_hook);
-+	return xfs_hooks_add(&xg->xg_rmap_update_hooks, &hook->rmap_hook);
+ 	bool			res;
+ 
+ 	spin_lock(&pag->pagb_lock);
+ 	res = RB_EMPTY_ROOT(&pag->pagb_tree);
++	*busy_gen = READ_ONCE(pag->pagb_gen);
+ 	spin_unlock(&pag->pagb_lock);
+ 	return res;
+ }
+diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
+index 7241035ce4ef9d..c803dcd124a628 100644
+--- a/fs/xfs/xfs_extent_busy.h
++++ b/fs/xfs/xfs_extent_busy.h
+@@ -83,6 +83,6 @@ static inline void xfs_extent_busy_sort(struct list_head *list)
+ 	list_sort(NULL, list, xfs_extent_busy_ag_cmp);
  }
  
- /* Stop calling the specified function during a reverse mapping update. */
- void
- xfs_rmap_hook_del(
--	struct xfs_perag	*pag,
-+	struct xfs_group	*xg,
- 	struct xfs_rmap_hook	*hook)
- {
--	xfs_hooks_del(&pag->pag_rmap_update_hooks, &hook->rmap_hook);
-+	xfs_hooks_del(&xg->xg_rmap_update_hooks, &hook->rmap_hook);
- }
+-bool xfs_extent_busy_list_empty(struct xfs_perag *pag);
++bool xfs_extent_busy_list_empty(struct xfs_perag *pag, unsigned int *busy_gen);
  
- /* Configure rmap update hook functions. */
-@@ -905,7 +905,8 @@ xfs_rmap_free(
- 		return 0;
- 
- 	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, pag);
--	xfs_rmap_update_hook(tp, pag, XFS_RMAP_UNMAP, bno, len, false, oinfo);
-+	xfs_rmap_update_hook(tp, pag_group(pag), XFS_RMAP_UNMAP, bno, len,
-+			false, oinfo);
- 	error = xfs_rmap_unmap(cur, bno, len, false, oinfo);
- 
- 	xfs_btree_del_cursor(cur, error);
-@@ -1149,7 +1150,8 @@ xfs_rmap_alloc(
- 		return 0;
- 
- 	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, pag);
--	xfs_rmap_update_hook(tp, pag, XFS_RMAP_MAP, bno, len, false, oinfo);
-+	xfs_rmap_update_hook(tp, pag_group(pag), XFS_RMAP_MAP, bno, len, false,
-+			oinfo);
- 	error = xfs_rmap_map(cur, bno, len, false, oinfo);
- 
- 	xfs_btree_del_cursor(cur, error);
-@@ -2620,8 +2622,8 @@ xfs_rmap_finish_one(
- 	if (error)
- 		return error;
- 
--	xfs_rmap_update_hook(tp, ri->ri_pag, ri->ri_type, bno,
--			ri->ri_bmap.br_blockcount, unwritten, &oinfo);
-+	xfs_rmap_update_hook(tp, pag_group(ri->ri_pag), ri->ri_type, bno,
-+			     ri->ri_bmap.br_blockcount, unwritten, &oinfo);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index b783dd4dd95d1a..d409b463bc6662 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -264,8 +264,8 @@ struct xfs_rmap_hook {
- void xfs_rmap_hook_disable(void);
- void xfs_rmap_hook_enable(void);
- 
--int xfs_rmap_hook_add(struct xfs_perag *pag, struct xfs_rmap_hook *hook);
--void xfs_rmap_hook_del(struct xfs_perag *pag, struct xfs_rmap_hook *hook);
-+int xfs_rmap_hook_add(struct xfs_group *xg, struct xfs_rmap_hook *hook);
-+void xfs_rmap_hook_del(struct xfs_group *xg, struct xfs_rmap_hook *hook);
- void xfs_rmap_hook_setup(struct xfs_rmap_hook *hook, notifier_fn_t mod_fn);
- #endif
- 
-diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
-index f88f58db909867..6c420ec7dacd1b 100644
---- a/fs/xfs/scrub/rmap_repair.c
-+++ b/fs/xfs/scrub/rmap_repair.c
-@@ -1611,7 +1611,7 @@ xrep_rmap_setup_scan(
- 	 */
- 	ASSERT(sc->flags & XCHK_FSGATES_RMAP);
- 	xfs_rmap_hook_setup(&rr->rhook, xrep_rmapbt_live_update);
--	error = xfs_rmap_hook_add(sc->sa.pag, &rr->rhook);
-+	error = xfs_rmap_hook_add(pag_group(sc->sa.pag), &rr->rhook);
- 	if (error)
- 		goto out_iscan;
- 	return 0;
-@@ -1632,7 +1632,7 @@ xrep_rmap_teardown(
- 	struct xfs_scrub	*sc = rr->sc;
- 
- 	xchk_iscan_abort(&rr->iscan);
--	xfs_rmap_hook_del(sc->sa.pag, &rr->rhook);
-+	xfs_rmap_hook_del(pag_group(sc->sa.pag), &rr->rhook);
- 	xchk_iscan_teardown(&rr->iscan);
- 	xfbtree_destroy(&rr->rmap_btree);
- 	mutex_destroy(&rr->lock);
+ #endif /* __XFS_EXTENT_BUSY_H__ */
 
