@@ -1,140 +1,112 @@
-Received: from mail-io1-f54.google.com (mail-io1-f54.google.com [209.85.166.54])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A7C414A611
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 15:54:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EA0C166F1A;
+	Tue,  5 Nov 2024 16:44:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730822084; cv=none; b=UUFqkMCSdTwtx0ENF+JzDBtDSGARqCsrnckuuA947YLaNGnEegG6qRq6z2rib95ax9lCA0miSwClIIBzk3fvX+IwKjyXF66aQJqCc2HV6rnkGBA9ZGGJbt2eRpNamoDd3zRempJeF6mNA5GN4egScNGq3AAshpEulLAxQSXulQY=
+	t=1730825070; cv=none; b=S4DNuQGYfVuSRzjKvyTeZ3+7wy9bUTKuEcDu2bZMwMwHS3fg3ti0nbaX+2cMUxxlgcmyT+EVM546bs5Dn8gOCvKBDrdYugNZ3yDCaKueIFAIj+j/FeK6RPsNNamvNqI1ab9gRAi7THyuSfxdvYK+oxInsmY/wAMv4QWbnjNhfws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730822084; c=relaxed/simple;
-	bh=GmDcH9fH5CQZbjDIsLa9zbmwEVBfpSGCcfdtLHzHg2k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=THDD5GV6TIksXEPenOk1QGZNvAnoi3JgiFm3kc38qsW8XZfOi1oQHovrbspCApxXq9l9i4f/I8WS9uQxnu5EGE3L62ERuK2ElI6mbFNsCTzdrO3vU9xzaUKr/5qdr61K9lJP5RrSWsOW5BNgAKYBq/c+ra9q7KiwPuctrnxGxCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=0izHAbJR; arc=none smtp.client-ip=209.85.166.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1730825070; c=relaxed/simple;
+	bh=xoo0q5V8wjvE7q4lC7VQmHKa9nUZeAijOvblSEeRZm4=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=uwgAl7TaApjTRjjSyGPXEdkTWsUrGSatIHrO8OuCsy77KwuAUAEjP3EdZAifnWbqrHQVAtZBdRaRLDqnsDatGyVgkJcE3IZKYvjkEjTJZCTH9zM5ZftszTLNv4qSNqBdyCMaO7ZXcF5EKQ5O69zFzNaWh/c4Yfcj4si4NhJV2s8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=at77DxNn; arc=none smtp.client-ip=209.85.210.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="0izHAbJR"
-Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-83ab21c26f1so224336039f.2
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Nov 2024 07:54:42 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="at77DxNn"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-71e52582cf8so4907458b3a.2;
+        Tue, 05 Nov 2024 08:44:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1730822082; x=1731426882; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=UMblOGMbazjLmtJYQwpwJ6Rzx7y2x3BU21hGqMAlPmE=;
-        b=0izHAbJRVwll4z5mbE1BJzWzmBuFDr0o06EdNjUl2w1IfJVIfdpoMcLOaKuyvGyAFb
-         RqaY3jIURqOVA8rBSG+Ib+GFBtydW7P0JKTt9Xyl3EVPByCKgwdypKq+uD2BQzsKx7Kj
-         SHLO/zgtcNpdtlleYHDv3SwRybnon2a1Wb2l5F040/G3oKxXRX8A1SJV9kUGiRLpjS8/
-         QfCls6vEa3aF3YctnQjHS3Xsw5nx4ukOKcoCESWaijGy4Zc2jg7DqpPd86i/Edbkd2Rs
-         vyGSwzaYG25kzp9EyVWpqSoyHUQOv1cXHosWs772iAnCtq/10hgnBDspGPx7XiqvaUYn
-         rO5g==
+        d=gmail.com; s=20230601; t=1730825068; x=1731429868; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=3rhwRI9JuhsZtMEiJ0JD5YM4F04aW09mvO+gxbR/BxI=;
+        b=at77DxNnUCxbQ9cfuKwfPifgxOpb83UMSNzKbDVc5puFqhu5ZWy8GdWuC7ejCIbLyE
+         Ww/baMcPVcHd3WlNNzxKTPNlIoCPLgtGZ9VFj6Sr3S0mTbS3J6cc1uGsxilA7Pq9Hh1Y
+         32Y2iw9bfpvAU5mhXRDzAldxbT1bbeexNkw4NgID4/2+mM4hG0p9La3/IyHG1bhhIiJW
+         CyaeRkWBhijSlP0k2L9cU64FrrPoLFt2hK3mHoEom0rGhisMTNALBEif1nRMyID2rrT4
+         f4+sSlB5UqSLYZI+xxg+rixiCeWVMHihutuqhNP+y6gt7oezBQzL8NziG9JQv8i2Tf5g
+         IEIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730822082; x=1731426882;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1730825068; x=1731429868;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UMblOGMbazjLmtJYQwpwJ6Rzx7y2x3BU21hGqMAlPmE=;
-        b=rmqTvj5yVd0K4cBvwIiYtbTdpU9zKmC+iy7T11tVcKbzjapfmS2HTiwBtW2pBfPGUB
-         q2/ILsm3HNb8WZBSOXmb3oQJTqgNAX4VCob9R7rWUFUsEJ3NFhPDLFoOWfsMslhxttuy
-         Rz3C0nILbX14wh4U6dcek76qrpBHeEsfsRh+qytBrkBts8unltLEEp8CE2wReebijV0B
-         Cz3ZbumYMbPGK71xlbJBDaUcZNdBL2iOERu5Eu6ZWYrqGD52gDreNdKiQMtOYR2tyA68
-         YWUEm8SpxNtWZl+6JoSv3IEKKwls0bb7Urru0LQWboLVxUl0OCqWnh7dWsJUxbj/Ey6Z
-         AUhQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU3npXi+dXUIbAh+80F+C4XYhpjPeprvdUf/1M20sXAUGmQ4o2tX4+Q2GxQnRIM6PM8cI6lMUFZKKM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzuTISB/+bmhmRJSXAVOrEIOtjJGiJzXBINDW92JlZt+Brn/XNe
-	In0kpQpqQO4HRYr7uSyLn6YGMs8gWCMK6ZU8aSmXEpKUpfjQe1xFUg1IfYSB3jA=
-X-Google-Smtp-Source: AGHT+IHx4XYVdOEQB1fuv7KmfyxWz/fsEeyxbyhyP0PnEBcHFIT24et7k1hv3V2APh3M3l0s92OUBw==
-X-Received: by 2002:a05:6602:2cc8:b0:83a:f447:f0b9 with SMTP id ca18e2360f4ac-83b56712446mr2807793039f.9.1730822082167;
-        Tue, 05 Nov 2024 07:54:42 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-83b67aeacfdsm271817939f.9.2024.11.05.07.54.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Nov 2024 07:54:41 -0800 (PST)
-Message-ID: <00618fda-985d-4d6b-ada1-2d93a5380492@kernel.dk>
-Date: Tue, 5 Nov 2024 08:54:40 -0700
+        bh=3rhwRI9JuhsZtMEiJ0JD5YM4F04aW09mvO+gxbR/BxI=;
+        b=ZIF4qmJKo7X3vef2CMyPcM+Ap3C+NGcI27YK4NucVjBJbzt77JrgEy09FBReUA7Tgo
+         Xk5DKLFi/KqCmQgBdgDOKjCU8RllE8pdGmtpIwwl1pt8sdLzLrYI4PZLkv1zENG7Qtb/
+         3fTv0kPSyJ7OZiwoXQuUZ1hQvhkTNkBzG2rdDn92ZNvF9XV2s5PrdCFKrUqbUxM8084k
+         0VlxFuFKZj0tzudJZN0GnKt9rFuiM1Ifx6X+4oSgVHSuWpSY7cg6ILSODwM9S68i0g32
+         eIdauYEXqZTMRexZfknnWM+5wK5x3Lcy+ceqghCdnF6qRpUsm9PzvondoBC+Bwr9dw4r
+         2fzg==
+X-Forwarded-Encrypted: i=1; AJvYcCV4vbPPcpnBqTayBhFieG1Gqd7SSRY31Iqnzzt/7mgw5L/f+OPc3L1s+pZbtnWi7Kq1wjADFXaU4e5PPv+8DA==@vger.kernel.org, AJvYcCVPiFUi9HO/1dhHwNYupNbGlULRQYuxE5irBO1O7BIs8qdIhdxHTUBwwcFn3CHP9NXd0tLwKtTQ040H/Wmm@vger.kernel.org, AJvYcCWkEdDlAsrst4pZc+bh8L53mdDfbRZuyCy/tOf/EqjMHYcwLEBuFXzFSVHHCgYGTNCm8Si7V/JM7jH3sA==@vger.kernel.org, AJvYcCXVnjlR5hCE2Rvl6JDuFsMjfTsm0vvR7LU1L9/HMyffbyIl6QdfQYTFVXwQ5K7rX0Xy4LewpVUHbMbu@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz2BF4oYAIHyiq0lX2zTF06FHJPFWQQMvdi3Rv0SlSawciZMYfv
+	00vppsddv4DOToFVBvYp8lW1cMbfrQg72EKEETZQMP8zXEQ66gS4bStqHT6q
+X-Google-Smtp-Source: AGHT+IE+msBBk5xTD+37yuN0TqDTIzB8QG+0iDim6ovw09YJxH9+iCpRyCjKlpFHLHdMZJSNAaLlBQ==
+X-Received: by 2002:a05:6a00:2d89:b0:71e:21:d2d8 with SMTP id d2e1a72fcca58-720c98d32c6mr23148208b3a.7.1730825067732;
+        Tue, 05 Nov 2024 08:44:27 -0800 (PST)
+Received: from dw-tp ([49.36.182.29])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc2eb586sm10159932b3a.149.2024.11.05.08.44.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Nov 2024 08:44:27 -0800 (PST)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>, John Garry <john.g.garry@oracle.com>, brauner@kernel.org, Catherine Hoang <catherine.hoang@oracle.com>
+Cc: linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-block@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [ANNOUNCE] work tree for untorn filesystem writes
+In-Reply-To: <20241105004341.GO21836@frogsfrogsfrogs>
+Date: Tue, 05 Nov 2024 21:56:45 +0530
+Message-ID: <87pln9sl2y.fsf@gmail.com>
+References: <20241105004341.GO21836@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [ANNOUNCE] work tree for untorn filesystem writes
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, Carlos Maiolino <cem@kernel.org>,
- "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
- John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
- Catherine Hoang <catherine.hoang@oracle.com>, linux-ext4@vger.kernel.org,
- Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
- Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-block@vger.kernel.org,
- Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20241105004341.GO21836@frogsfrogsfrogs>
- <fegazz7mxxhrpn456xek54vtpc7p4eec3pv37f2qznpeexyrvn@iubpqvjzl36k>
- <72515c41-4313-4287-97cc-040ec143b3c5@kernel.dk>
- <20241105150812.GA227621@mit.edu>
- <5557bb8e-0ab8-4346-907e-a6cfea1dabf8@kernel.dk>
- <20241105154044.GD2578692@frogsfrogsfrogs>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20241105154044.GD2578692@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 11/5/24 8:40 AM, Darrick J. Wong wrote:
-> On Tue, Nov 05, 2024 at 08:11:52AM -0700, Jens Axboe wrote:
->> On 11/5/24 8:08 AM, Theodore Ts'o wrote:
->>> On Tue, Nov 05, 2024 at 05:52:05AM -0700, Jens Axboe wrote:
->>>>
->>>> Why is this so difficult to grasp? It's a pretty common method for
->>>> cross subsystem work - it avoids introducing conflicts when later
->>>> work goes into each subsystem, and freedom of either side to send a
->>>> PR before the other.
->>>>
->>>> So please don't start committing the patches again, it'll just cause
->>>> duplicate (and empty) commits in Linus's tree.
->>>
->>> Jens, what's going on is that in order to test untorn (aka "atomic"
->>> although that's a bit of a misnomer) writes, changes are needed in the
->>> block, vfs, and ext4 or xfs git trees.  So we are aware that you had
->>> taken the block-related patches into the block tree.  What Darrick has
->>> done is to apply the the vfs patches on top of the block commits, and
->>> then applied the ext4 and xfs patches on top of that.
->>
->> And what I'm saying is that is _wrong_. Darrick should be pulling the
->> branch that you cut from my email:
->>
->> for-6.13/block-atomic
->>
->> rather than re-applying patches. At least if the intent is to send that
->> branch to Linus. But even if it's just for testing, pretty silly to have
->> branches with duplicate commits out there when the originally applied
->> patches can just be pulled in.
-> 
-> I *did* start my branch at the end of your block-atomic branch.
-> 
-> Notice how the commits I added yesterday have a parent commitid of
-> 1eadb157947163ca72ba8963b915fdc099ce6cca, which is the head of your
-> for-6.13/block-atomic branch?
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-Ah that's my bad, I didn't see a merge commit, so assumed it was just
-applied on top. Checking now, yeah it does look like it's done right!
-Would've been nicer on top of current -rc and with a proper merge
-commit, but that's really more of a style preference. Though -rc1 is
-pretty early...
+> Hi everyone,
+>
+> Nobody else has stepped up to do this, so I've created a work branch for
+> the fs side of untorn writes:
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fs-atomic_2024-11-04
+>
+> Can you all check this to make sure that I merged it correctly?
 
-> But, it's my fault for not explicitly stating that I did that.  One of
-> the lessons I apparently keep needing to learn is that senior developers
-> here don't actually pull and examine the branches I link to in my emails
-> before hitting Reply All to scold.  You obviously didn't.
+Sorry, I couldn't reply earlier(I am currently on travel). Yes, the ext4
+merge looks correct to me. You have taken the latest v4 of the ext4
+atomic write series [1]. 
 
-I did click the link, in my defense it was on the phone this morning.
-And this wasn't meant as a scolding, nor do I think my wording really
-implies any scolding. My frustration was that I had explained this
-previously, and this seemed like another time to do the exact same. So
-my apologies if it came off like that, was not the intent.
+[1]: https://lore.kernel.org/linux-ext4/cover.1730437365.git.ritesh.list@gmail.com/
 
--- 
-Jens Axboe
+> And maybe go test this on your storage hardware? :)
+
+Due to limited connectivity during my travel, I don't have the access to
+the hardware. But as I mentioned the merge looks correct to me and I had
+tested those patches earlier on Power and x86.
+But I will in general re-test the mentioned fs branch for both XFS and
+ext4 once I reach back but I don't think we need to wait for that as the
+merge looks good to me.
+
+Also, I noticed that we might have missed to add a Tested-by from
+Ojaswin for XFS series here [2]. Although Ojaswin mentioned that he
+might also re-test the mentioned FS atomic write branch for both XFS and
+EXT4.
+
+[2]: https://lore.kernel.org/linux-xfs/Zxnp8bma2KrMDg5m@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com/
+
+
+-ritesh
+
+> If all goes well then I think the next step is to ask brauner very
+> nicely if he'd consider adding this to the vfs trees for 6.13.  If not
+> then I guess we can submit it ourselves, though we probably ought to ask
+> rothwell to add the branch to for-next asap.
+>
+> PS: We're now past -rc6 so please reply quickly so that this doesn't
+> slip yet another cycle.
+>
+> Catherine: John's on vacation all week, could you please send me the
+> latest versions of the xfs_io pwrite-atomic patch and the fstest for it?
+>
+> --D
