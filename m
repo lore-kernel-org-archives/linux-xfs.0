@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C44A920D51E
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:41:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D03761D172A
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:41:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730846481; cv=none; b=qhcAPMEHDh+IUVB9D57s/ITudjl1/il+OjgftmjQsRGRJfE2TxMI8Jwrol6Pb4C7r7+nEymW8LLwm8mofBDL9k4yI4c4npDAoG0gznpmu58YwEQvOmmZluT8S6fGGuIMYuYGF3o5AxlEd5CiIdgtwU7hGLWZ9Q3X01g6T7Hg1eY=
+	t=1730846497; cv=none; b=BTZamM/J8MGbTx6UB6XXREsoZY14MAjmQI1Q8zTinv57O5V91I24fSF+bUVMykqZfjdW27oyAwCe4Wu9HB+GvsLKdqOSzZqlDImN6ofWUr6nN1Z9nWwbHX8GPhk3TtMd45a2Jt4SekYaM4senFRIW1hmrYwSD8ezoMwV4lr7PpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730846481; c=relaxed/simple;
-	bh=Y75ctLb6UH431sT2pn2oip6YtVvXhcwrRAD7PhAI1fU=;
+	s=arc-20240116; t=1730846497; c=relaxed/simple;
+	bh=zgHGnTpLBnOuvxD5VvyzvhO+reRxOFKI9udb4kZVTwM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q6TY2+WBj9OfmaTT1B8crUjPcalOVfrtJ3kYVMUmpauPC/KPlp8rgldoarPruO5JS8dMiecpWQw83PeJ/iTSylBbAlFswHA91mALzjjtzPBIP9Giwq9j2W234X540OLAT2D4FhFY3s4Adk/TLXTWrTVaBahotE4hLAfwM6Wh5l8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TTF/lCmW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lPFN7SUnzo056wqcIuGEIvopzHMGbSnUikpo4aWrSTljkwkmWF0sBDQ0Q7KMF18mMoA4xhuHJ0+9N73IFWRfPcsKHyfBK7z5WU2RtPHatl4dIdO8dV/2i8Hb7q5o0gAvpvwZh1hA95NiL6k08t8Q3esSk+jcbcDqs/wlrmSLbKg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PtrHZ0+Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TTF/lCmW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EF0BC4CECF;
-	Tue,  5 Nov 2024 22:41:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PtrHZ0+Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 497F5C4CECF;
+	Tue,  5 Nov 2024 22:41:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730846481;
-	bh=Y75ctLb6UH431sT2pn2oip6YtVvXhcwrRAD7PhAI1fU=;
+	s=k20201202; t=1730846497;
+	bh=zgHGnTpLBnOuvxD5VvyzvhO+reRxOFKI9udb4kZVTwM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TTF/lCmWFF/L4BGRNrKkOCBVbkOm3Rpw2zWqKofUL13oBTegkpUZ3NUZee6hF8VQt
-	 2YD4HyPeci+N5AQ9s4gWbkd8A/P7XVsHNRPHhxAvb8/OE+0gDh94+aPFQqI2ckZfxb
-	 O6FOXbqjSlKSA47f+nAMJm3Ybj99R5ujeeSoXZ1I2ysgZEmZzAXT3dHEcvcMIt2ATh
-	 2pqLpD3i4ev6DuzBHaNo61yJAF9nVrbfiV3aovhVGvd0+eQegUe4s48ZzZH9rw1gIE
-	 cKDtLViytL+jOL/K8RG1ZBVXHGyhqUrukB3+uIhZWzpiER2Hx64C6afjuMHFTxcmB2
-	 4d394AJstxLgA==
-Date: Tue, 05 Nov 2024 14:41:21 -0800
-Subject: [PATCH 6/6] xfs: enable realtime quota again
+	b=PtrHZ0+QYd64ThtYf0sYntSau6DfLx5iBimsCW8RGEbjDI/RlhUO6hBQuzCZVmTE3
+	 Rd0RaUziRWUaiD6+qZtK4xm+Ntfp4Cdyy1jCy5YGTs9VlAHheO8CGpDMdTaMRAKtwK
+	 dpivxvv/8YsnmYe/q/AKUoaJzkwRWa3AUZflJuwN4KR/pcHecQVbOAtoElUwgAGwHT
+	 kErQY4FMnNujW6rcFjkXp9pbNtdg0jNxJCsC9K0Zp/RbSMh02hDuXEHoZqfCXsS5SM
+	 qIEqdPTjsIOtjfjR7MZrvCmyDstnG3nvpV2tf3BH9U7NqdmzwscIanyh/BpkEIw0fG
+	 2YSdwZYFvkW9w==
+Date: Tue, 05 Nov 2024 14:41:36 -0800
+Subject: [PATCH 1/2] xfs: update sb field checks when metadir is turned on
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084399664.1873230.9165782253353224379.stgit@frogsfrogsfrogs>
-In-Reply-To: <173084399548.1873230.14221538780736772304.stgit@frogsfrogsfrogs>
-References: <173084399548.1873230.14221538780736772304.stgit@frogsfrogsfrogs>
+Message-ID: <173084400030.1873485.16503742350279644656.stgit@frogsfrogsfrogs>
+In-Reply-To: <173084400008.1873485.5807628318264601379.stgit@frogsfrogsfrogs>
+References: <173084400008.1873485.5807628318264601379.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,48 +45,85 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable quotas for the realtime device.
+When metadir is enabled, we want to check the two new rtgroups fields,
+and we don't want to check the old inumbers that are now in the metadir.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_qm.c      |    7 ++++---
- fs/xfs/xfs_rtalloc.c |    4 +++-
- 2 files changed, 7 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/agheader.c |   36 ++++++++++++++++++++++++------------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 90d45aae5cb891..b928b036990bc3 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1663,10 +1663,11 @@ xfs_qm_mount_quotas(
- 	uint			sbf;
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index d037de6dd821d2..61f80a6410c738 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -147,14 +147,14 @@ xchk_superblock(
+ 	if (xfs_has_metadir(sc->mp)) {
+ 		if (sb->sb_metadirino != cpu_to_be64(mp->m_sb.sb_metadirino))
+ 			xchk_block_set_preen(sc, bp);
++	} else {
++		if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
++			xchk_block_set_preen(sc, bp);
++
++		if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
++			xchk_block_set_preen(sc, bp);
+ 	}
+ 
+-	if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
+-		xchk_block_set_preen(sc, bp);
+-
+-	if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
+-		xchk_block_set_preen(sc, bp);
+-
+ 	if (sb->sb_rextsize != cpu_to_be32(mp->m_sb.sb_rextsize))
+ 		xchk_block_set_corrupt(sc, bp);
+ 
+@@ -229,11 +229,13 @@ xchk_superblock(
+ 	 * sb_icount, sb_ifree, sb_fdblocks, sb_frexents
+ 	 */
+ 
+-	if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
+-		xchk_block_set_preen(sc, bp);
++	if (!xfs_has_metadir(mp)) {
++		if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
++			xchk_block_set_preen(sc, bp);
+ 
+-	if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
+-		xchk_block_set_preen(sc, bp);
++		if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
++			xchk_block_set_preen(sc, bp);
++	}
  
  	/*
--	 * If quotas on realtime volumes is not supported, we disable
--	 * quotas immediately.
-+	 * If quotas on realtime volumes is not supported, disable quotas
-+	 * immediately.  We only support rtquota if rtgroups are enabled to
-+	 * avoid problems with older kernels.
- 	 */
--	if (mp->m_sb.sb_rextents) {
-+	if (mp->m_sb.sb_rextents && !xfs_has_rtgroups(mp)) {
- 		xfs_notice(mp, "Cannot turn on quotas for realtime filesystem");
- 		mp->m_qflags = 0;
- 		goto write_changes;
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 7ecea7623a151a..0cb534d71119a5 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1265,7 +1265,9 @@ xfs_growfs_rt(
+ 	 * Skip the quota flags since repair will force quotacheck.
+@@ -349,8 +351,10 @@ xchk_superblock(
+ 		if (sb->sb_spino_align != cpu_to_be32(mp->m_sb.sb_spino_align))
+ 			xchk_block_set_corrupt(sc, bp);
  
- 	/* Unsupported realtime features. */
- 	error = -EOPNOTSUPP;
--	if (xfs_has_rmapbt(mp) || xfs_has_reflink(mp) || xfs_has_quota(mp))
-+	if (xfs_has_quota(mp) && !xfs_has_rtgroups(mp))
-+		goto out_unlock;
-+	if (xfs_has_rmapbt(mp) || xfs_has_reflink(mp))
- 		goto out_unlock;
+-		if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
+-			xchk_block_set_preen(sc, bp);
++		if (!xfs_has_metadir(mp)) {
++			if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
++				xchk_block_set_preen(sc, bp);
++		}
  
- 	error = xfs_sb_validate_fsb_count(&mp->m_sb, in->newblocks);
+ 		/* Don't care about sb_lsn */
+ 	}
+@@ -361,6 +365,14 @@ xchk_superblock(
+ 			xchk_block_set_corrupt(sc, bp);
+ 	}
+ 
++	if (xfs_has_metadir(mp)) {
++		if (sb->sb_rgcount != cpu_to_be32(mp->m_sb.sb_rgcount))
++			xchk_block_set_corrupt(sc, bp);
++
++		if (sb->sb_rgextents != cpu_to_be32(mp->m_sb.sb_rgextents))
++			xchk_block_set_corrupt(sc, bp);
++	}
++
+ 	/* Everything else must be zero. */
+ 	if (memchr_inv(sb + 1, 0,
+ 			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
 
