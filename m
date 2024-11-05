@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D5B418E023
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:35:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC2E18E023
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:35:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730846107; cv=none; b=uKRBrw8ANZyZjxFLFeV+JfF1eSeoA82+qbZwPRKY0Ihj77b4MyEHYzJ9+WHY/gvFWpy+mok09w3DgzWOcsAF9wDRUlOS53L4YsGDG23IlMvkggO54MS3qQexHSyfydN/t0P+sTi4zb1fmLdfimFnWKfkaihKuqcnuMBYAQHSvfw=
+	t=1730846123; cv=none; b=UM6ZZQ6Ix4U/m3hZVY5McvZvkST2siSclQ0pKvJTfVup3th9wulxoNRwAVR8h0/Hw49kn7IZ32ZGRMqhp4eLObgbJ3FX8nCneIatzG4jOldC2VxMsntOeWpDGt3DcPITk0HAU0rfNn+oLPt7cYZDLNXc6WkrlNacdzvtRerAqpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730846107; c=relaxed/simple;
-	bh=mAcWkr9F+5ZjQr2iMBCu2VK7c5ehyPXNsk65q9o0HL0=;
+	s=arc-20240116; t=1730846123; c=relaxed/simple;
+	bh=/qHBdNys8BfqUUM4z55R2mxH1YoQOattGi9wIxAsJic=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QWjpsuleQqH1VraA/iqqi5WX9c3t+plpm/NBQm1TMnPjtKZFpw58Q2I+JTbU3eZr99ZIn7DVc0zRYcesnjVFu8fn8vF4JOsQXZrtCmshMJb0tkjmCEl5+Q68B0JZdBH8ZYjfFyGyFbolVyXCQDqiXHZ4ytPUHUbhhHmR+V86Fh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rUvSMpRC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kTLD5OQTw0hx352MA3LW+TD3kHhhwMYV7c6dGVH6wpEXDSeCCeZX3vEaSz+vkP/CzM7lsKLeKJ93muk44u0ax6sG7hGN9GHjGr7Nfscp1auqTUvPU0H2oQJ50PfM1dDS7FaYnro9WyC08pfTbYERRatS0vp0AayM0kjuWRXHuGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=chxzRq2f; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rUvSMpRC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2335BC4CECF;
-	Tue,  5 Nov 2024 22:35:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="chxzRq2f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB237C4CECF;
+	Tue,  5 Nov 2024 22:35:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730846107;
-	bh=mAcWkr9F+5ZjQr2iMBCu2VK7c5ehyPXNsk65q9o0HL0=;
+	s=k20201202; t=1730846122;
+	bh=/qHBdNys8BfqUUM4z55R2mxH1YoQOattGi9wIxAsJic=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rUvSMpRCm3cXAjYmnXbieWkBmsENrB/3iXv+AF9SoV8WFt9EbYBzhiDXaWRRcX/js
-	 R6G6aRKHxsVV1KeP4wpa/S9zSLobDd6Ob64wTRjgBqMQhnIf0bLwuovuvBznw5BF8k
-	 FnSOeVVyElXO1EaFr4dscU3ca0ooOSe9yi2Nceuc0G5RE7u/YE5ROQzY0YB2ue6NSg
-	 KrxydQyE92+MN9w9W9ZPI8Uvcl5uRnHYZt6u7XxI7sI+HKWvJU7CABHINxvKqqN0MF
-	 MwnjLTWRFGwhRkKYrsE9f/TYv9c0EFhzY4pCVTHveCjv4poxREqAbRSrYOGTsfBIk1
-	 wU3/usD8fKItA==
-Date: Tue, 05 Nov 2024 14:35:06 -0800
-Subject: [PATCH 20/34] xfs: don't merge ioends across RTGs
+	b=chxzRq2fzvEDKDAQvTu27Xrbbuz9VoBJoVz0mposHXm2RvpouA/mPoCKIrBUWEeNq
+	 VXOAicN5DQQifUOraHF8pSWFDCmJ6cdNGhsPj/wAEaF4y0ZqLQaAXEwZOR0E46rsrO
+	 lKRhT7fUtWnAUYd4bZ+ZxlhMqnRQL6K186l08ClW8NCQhC3+W6n7U5uoCIqBFTu/9o
+	 rjpnXCeqnAe/x8I8sajjuWpoqjgr20lnitFymL5szUpdp4y08TaXBNSmJNEmi0hfs9
+	 eLxkOCsACiG6SZaTRyMKj5r5MrsibJvAzEpB1saV7toywNGDJLCBr3GqIKhM+MtMVR
+	 HGepPoGYzbaVA==
+Date: Tue, 05 Nov 2024 14:35:22 -0800
+Subject: [PATCH 21/34] xfs: make the RT allocator rtgroup aware
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084398526.1871887.9291302908796048091.stgit@frogsfrogsfrogs>
+Message-ID: <173084398543.1871887.8767096560682916710.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084398097.1871887.5832278892963229059.stgit@frogsfrogsfrogs>
 References: <173084398097.1871887.5832278892963229059.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,79 +43,230 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Unlike AGs, RTGs don't always have metadata in their first blocks, and
-thus we don't get automatic protection from merging I/O completions
-across RTG boundaries.  Add code to set the IOMAP_F_BOUNDARY flag for
-ioends that start at the first block of a RTG so that they never get
-merged into the previous ioend.
+Make the allocator rtgroup aware by either picking a specific group if
+there is a hint, or loop over all groups otherwise.  A simple rotor is
+provided to pick the placement for initial allocations.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtgroup.h |    9 +++++++++
- fs/xfs/xfs_iomap.c          |   13 ++++++++++++-
- 2 files changed, 21 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_bmap.c     |   13 +++++-
+ fs/xfs/libxfs/xfs_rtbitmap.c |    6 ++-
+ fs/xfs/xfs_mount.h           |    1 
+ fs/xfs/xfs_rtalloc.c         |   98 ++++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 105 insertions(+), 13 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index 026f34f984b32f..2ddfac9a0182f9 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -188,6 +188,15 @@ xfs_rtb_to_rgbno(
- 	return __xfs_rtb_to_rgbno(mp, rtbno);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index b15a43c18b0a57..3498d7b4fbc54e 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3151,8 +3151,17 @@ xfs_bmap_adjacent_valid(
+ 	struct xfs_mount	*mp = ap->ip->i_mount;
+ 
+ 	if (XFS_IS_REALTIME_INODE(ap->ip) &&
+-	    (ap->datatype & XFS_ALLOC_USERDATA))
+-		return x < mp->m_sb.sb_rblocks;
++	    (ap->datatype & XFS_ALLOC_USERDATA)) {
++		if (x >= mp->m_sb.sb_rblocks)
++			return false;
++		if (!xfs_has_rtgroups(mp))
++			return true;
++
++		return xfs_rtb_to_rgno(mp, x) == xfs_rtb_to_rgno(mp, y) &&
++			xfs_rtb_to_rgno(mp, x) < mp->m_sb.sb_rgcount &&
++			xfs_rtb_to_rtx(mp, x) < mp->m_sb.sb_rgextents;
++
++	}
+ 
+ 	return XFS_FSB_TO_AGNO(mp, x) == XFS_FSB_TO_AGNO(mp, y) &&
+ 		XFS_FSB_TO_AGNO(mp, x) < mp->m_sb.sb_agcount &&
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index c73826aa4425af..5abfd84852ce3b 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1084,11 +1084,13 @@ xfs_rtfree_extent(
+ 	 * Mark more blocks free in the superblock.
+ 	 */
+ 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_FREXTENTS, (long)len);
++
+ 	/*
+ 	 * If we've now freed all the blocks, reset the file sequence
+-	 * number to 0.
++	 * number to 0 for pre-RTG file systems.
+ 	 */
+-	if (tp->t_frextents_delta + mp->m_sb.sb_frextents ==
++	if (!xfs_has_rtgroups(mp) &&
++	    tp->t_frextents_delta + mp->m_sb.sb_frextents ==
+ 	    mp->m_sb.sb_rextents) {
+ 		if (!(rbmip->i_diflags & XFS_DIFLAG_NEWRTBM))
+ 			rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 1f228047639587..62c251b3a385d4 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -255,6 +255,7 @@ typedef struct xfs_mount {
+ #endif
+ 	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
+ 	atomic_t		m_agirotor;	/* last ag dir inode alloced */
++	atomic_t		m_rtgrotor;	/* last rtgroup rtpicked */
+ 
+ 	/* Memory shrinker to throttle and reprioritize inodegc */
+ 	struct shrinker		*m_inodegc_shrinker;
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 1f53d5e07a91a0..b27d23bcc06418 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1662,8 +1662,9 @@ xfs_rtalloc_align_minmax(
  }
  
-+/* Is rtbno the start of a RT group? */
-+static inline bool
-+xfs_rtbno_is_group_start(
-+	struct xfs_mount	*mp,
-+	xfs_rtblock_t		rtbno)
+ static int
+-xfs_rtallocate(
++xfs_rtallocate_rtg(
+ 	struct xfs_trans	*tp,
++	xfs_rgnumber_t		rgno,
+ 	xfs_rtblock_t		bno_hint,
+ 	xfs_rtxlen_t		minlen,
+ 	xfs_rtxlen_t		maxlen,
+@@ -1683,16 +1684,33 @@ xfs_rtallocate(
+ 	xfs_rtxlen_t		len = 0;
+ 	int			error = 0;
+ 
+-	args.rtg = xfs_rtgroup_grab(args.mp, 0);
++	args.rtg = xfs_rtgroup_grab(args.mp, rgno);
+ 	if (!args.rtg)
+ 		return -ENOSPC;
+ 
+ 	/*
+-	 * Lock out modifications to both the RT bitmap and summary inodes.
++	 * We need to lock out modifications to both the RT bitmap and summary
++	 * inodes for finding free space in xfs_rtallocate_extent_{near,size}
++	 * and join the bitmap and summary inodes for the actual allocation
++	 * down in xfs_rtallocate_range.
++	 *
++	 * For RTG-enabled file system we don't want to join the inodes to the
++	 * transaction until we are committed to allocate to allocate from this
++	 * RTG so that only one inode of each type is locked at a time.
++	 *
++	 * But for pre-RTG file systems we need to already to join the bitmap
++	 * inode to the transaction for xfs_rtpick_extent, which bumps the
++	 * sequence number in it, so we'll have to join the inode to the
++	 * transaction early here.
++	 *
++	 * This is all a bit messy, but at least the mess is contained in
++	 * this function.
+ 	 */
+ 	if (!*rtlocked) {
+ 		xfs_rtgroup_lock(args.rtg, XFS_RTGLOCK_BITMAP);
+-		xfs_rtgroup_trans_join(tp, args.rtg, XFS_RTGLOCK_BITMAP);
++		if (!xfs_has_rtgroups(args.mp))
++			xfs_rtgroup_trans_join(tp, args.rtg,
++					XFS_RTGLOCK_BITMAP);
+ 		*rtlocked = true;
+ 	}
+ 
+@@ -1702,7 +1720,7 @@ xfs_rtallocate(
+ 	 */
+ 	if (bno_hint)
+ 		start = xfs_rtb_to_rtx(args.mp, bno_hint);
+-	else if (initial_user_data)
++	else if (!xfs_has_rtgroups(args.mp) && initial_user_data)
+ 		start = xfs_rtpick_extent(args.rtg, tp, maxlen);
+ 
+ 	if (start) {
+@@ -1723,8 +1741,16 @@ xfs_rtallocate(
+ 				prod, &rtx);
+ 	}
+ 
+-	if (error)
++	if (error) {
++		if (xfs_has_rtgroups(args.mp)) {
++			xfs_rtgroup_unlock(args.rtg, XFS_RTGLOCK_BITMAP);
++			*rtlocked = false;
++		}
+ 		goto out_release;
++	}
++
++	if (xfs_has_rtgroups(args.mp))
++		xfs_rtgroup_trans_join(tp, args.rtg, XFS_RTGLOCK_BITMAP);
+ 
+ 	error = xfs_rtallocate_range(&args, rtx, len);
+ 	if (error)
+@@ -1742,6 +1768,53 @@ xfs_rtallocate(
+ 	return error;
+ }
+ 
++static int
++xfs_rtallocate_rtgs(
++	struct xfs_trans	*tp,
++	xfs_fsblock_t		bno_hint,
++	xfs_rtxlen_t		minlen,
++	xfs_rtxlen_t		maxlen,
++	xfs_rtxlen_t		prod,
++	bool			wasdel,
++	bool			initial_user_data,
++	xfs_rtblock_t		*bno,
++	xfs_extlen_t		*blen)
 +{
-+	return (rtbno & mp->m_rgblkmask) == 0;
++	struct xfs_mount	*mp = tp->t_mountp;
++	xfs_rgnumber_t		start_rgno, rgno;
++	int			error;
++
++	/*
++	 * For now this just blindly iterates over the RTGs for an initial
++	 * allocation.  We could try to keep an in-memory rtg_longest member
++	 * to avoid the locking when just looking for big enough free space,
++	 * but for now this keeps things simple.
++	 */
++	if (bno_hint != NULLFSBLOCK)
++		start_rgno = xfs_rtb_to_rgno(mp, bno_hint);
++	else
++		start_rgno = (atomic_inc_return(&mp->m_rtgrotor) - 1) %
++				mp->m_sb.sb_rgcount;
++
++	rgno = start_rgno;
++	do {
++		bool		rtlocked = false;
++
++		error = xfs_rtallocate_rtg(tp, rgno, bno_hint, minlen, maxlen,
++				prod, wasdel, initial_user_data, &rtlocked,
++				bno, blen);
++		if (error != -ENOSPC)
++			return error;
++		ASSERT(!rtlocked);
++
++		if (++rgno == mp->m_sb.sb_rgcount)
++			rgno = 0;
++		bno_hint = NULLFSBLOCK;
++	} while (rgno != start_rgno);
++
++	return -ENOSPC;
 +}
 +
- static inline xfs_daddr_t
- xfs_rtb_to_daddr(
- 	struct xfs_mount	*mp,
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e810e901cd3576..17e5c273e28c45 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -24,6 +24,7 @@
- #include "xfs_iomap.h"
- #include "xfs_trace.h"
- #include "xfs_quota.h"
-+#include "xfs_rtgroup.h"
- #include "xfs_dquot_item.h"
- #include "xfs_dquot.h"
- #include "xfs_reflink.h"
-@@ -115,7 +116,9 @@ xfs_bmbt_to_iomap(
- 		iomap->addr = IOMAP_NULL_ADDR;
- 		iomap->type = IOMAP_DELALLOC;
- 	} else {
--		iomap->addr = BBTOB(xfs_fsb_to_db(ip, imap->br_startblock));
-+		xfs_daddr_t	daddr = xfs_fsb_to_db(ip, imap->br_startblock);
+ static int
+ xfs_rtallocate_align(
+ 	struct xfs_bmalloca	*ap,
+@@ -1836,9 +1909,16 @@ xfs_bmap_rtalloc(
+ 	if (xfs_bmap_adjacent(ap))
+ 		bno_hint = ap->blkno;
+ 
+-	error = xfs_rtallocate(ap->tp, bno_hint, raminlen, ralen, prod,
+-			ap->wasdel, initial_user_data, &rtlocked,
+-			&ap->blkno, &ap->length);
++	if (xfs_has_rtgroups(ap->ip->i_mount)) {
++		error = xfs_rtallocate_rtgs(ap->tp, bno_hint, raminlen, ralen,
++				prod, ap->wasdel, initial_user_data,
++				&ap->blkno, &ap->length);
++	} else {
++		error = xfs_rtallocate_rtg(ap->tp, 0, bno_hint, raminlen, ralen,
++				prod, ap->wasdel, initial_user_data,
++				&rtlocked, &ap->blkno, &ap->length);
++	}
 +
-+		iomap->addr = BBTOB(daddr);
- 		if (mapping_flags & IOMAP_DAX)
- 			iomap->addr += target->bt_dax_part_off;
- 
-@@ -124,6 +127,14 @@ xfs_bmbt_to_iomap(
- 		else
- 			iomap->type = IOMAP_MAPPED;
- 
-+		/*
-+		 * Mark iomaps starting at the first sector of a RTG as merge
-+		 * boundary so that each I/O completions is contained to a
-+		 * single RTG.
-+		 */
-+		if (XFS_IS_REALTIME_INODE(ip) && xfs_has_rtgroups(mp) &&
-+		    xfs_rtbno_is_group_start(mp, imap->br_startblock))
-+			iomap->flags |= IOMAP_F_BOUNDARY;
- 	}
- 	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
- 	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
+ 	if (error == -ENOSPC) {
+ 		if (!noalign) {
+ 			/*
 
