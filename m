@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C3F71DD0D2
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:21:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04DA61DD0D2
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:21:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845295; cv=none; b=srIhXYj1DUXt0Pnh93cOuP0tYDuQJtZVx2whM5+eSSro06Xr47+oyVmjZNiJqvNdFmRW5g5MuyJFHgM7q3ztwUzH+yLUDrpUNbDBmXasRuj4C17/+SUQN0KGSrZo+cMfPnTZlBynjgc+g10PXnrQ4wTIR0ldJT3PXuaKJ98KQOM=
+	t=1730845311; cv=none; b=JE0ynPLbv/fWVXKsE22SNEyIiV7BSsgO/KpWc6J2NixoXmB56mdb+FUGs14iErNiQChKmmsDv3Ma987s8epgW6/hlKnYPnpNDRXzcARXVFcLvisveCWxIWLBIObxZt6Mx8Hvl6qJNWb1cNbFSFTeussv+y2mVq1ovG7bJrQ4Dbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845295; c=relaxed/simple;
-	bh=rfaEJDW7NCAX9gEtorsZS0hjtrv4YAqTIE+H9l92W+Y=;
+	s=arc-20240116; t=1730845311; c=relaxed/simple;
+	bh=DbiN880+Zr/u0e15Y/a8g9aFVb4Xp1G/AOJe8cI1Fsc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Bl9bXs1pVfsWqeZgo1TCr1/yz0UMfOfjbaDG8WYMs4NoHXVziNmuObfjGPCzelfQTkggwQHL0N/i8R0TV2EocLziwVzC9xPilb8qa7eTvs/+dwJU+Y284ZNZmQfJwrrmZBxDA0Ai2PEGMWHM43fY16V+kl4JCEctZSct91FNpjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SNhNJya2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ZF6+ArOvzFPFZh2t9mf8T718CFz3m8tZKHNrgLs1z7G5qZlf3w8aruoB4lCtNoXUYnSbXXD3xd0KzwIjqEKu6dmHY7Ld3Q9rgRQNTmct5gRYzSUBaTx0isjLrPw9eRrgLYzgOE7LJDPzP60Dm1vsTsKIs5ax1mmFJP3RfspsFzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pA6P2jM7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SNhNJya2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3692AC4CECF;
-	Tue,  5 Nov 2024 22:21:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pA6P2jM7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D18A0C4CECF;
+	Tue,  5 Nov 2024 22:21:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845295;
-	bh=rfaEJDW7NCAX9gEtorsZS0hjtrv4YAqTIE+H9l92W+Y=;
+	s=k20201202; t=1730845310;
+	bh=DbiN880+Zr/u0e15Y/a8g9aFVb4Xp1G/AOJe8cI1Fsc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SNhNJya2hsM0bavsjKUSkwK2JxJV9HWA36rgMRXzl57JMa06kIvgqW8Si0/7WlBI+
-	 XxvxmWKPSIaPE+tAe4dTRiN4hFj/1OtSxRcx468jhdpj7FcXczjVrWag+6z+5UIZZE
-	 CSJAEVkgGukh3htceZYWu1cgXqWIeq6aO2JWHVkXynKgBxWtwo4qpVhUo/ELQmFv0P
-	 bKLyQmldGrNb++2ZBMH40K1KvZdK6QNUdi2XH2TyfBQ+rs+Y7RKZfHGNtDe5DbeixF
-	 d5sz1mSt2Zy54FkHVX9Ozcq9vJ6cPdeuwC5gUXuj4LiawGastvMoQN+q+NQw6r3ZaU
-	 VARFj4G9eetaA==
-Date: Tue, 05 Nov 2024 14:21:34 -0800
-Subject: [PATCH 19/28] xfs: do not count metadata directory files when doing
- online quotacheck
+	b=pA6P2jM7BZA/chO1eCeHURR0Nvb0VO4M1g5YvdfktMWOWulyQEHTmVwNJzgaCw3LR
+	 qMSLqIj09ni7utTL31BwGNCWEi/t4YSsUov2MzJnMQApaM6LxoBMqDB11e50szWCVA
+	 masWi/jBWV1Cyz30EEW3lrYj0r9IAUUvquuHK7dbxRlcdHBmpC7HyHGWjmEL7hoHda
+	 8Vlzu+tTabpvg2/DmVmNWMk3WZO4s560w1GBtSQHxKyv0m5TyrO29eqKdhc5AFS5GN
+	 322PZJHePxt6HPrLAZogqbwOHabqAcjoZNZdRVEmLkeGq4vP6qE1hPZaZvaiNJgzvn
+	 CTPoAebU5wdew==
+Date: Tue, 05 Nov 2024 14:21:50 -0800
+Subject: [PATCH 20/28] xfs: metadata files can have xattrs if metadir is
+ enabled
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084396346.1870066.8264990662471768720.stgit@frogsfrogsfrogs>
+Message-ID: <173084396363.1870066.10870331189093226468.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 References: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,35 +46,88 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Previously, we stated that files in the metadata directory tree are not
-counted in the dquot information.  Fix the online quotacheck code to
-reflect this.
+If parent pointers are enabled, then metadata files will store parent
+pointers in xattrs, just like files in the user visible directory tree.
+Therefore, scrub and repair need to handle attr forks for metadata files
+on metadir filesystems.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/quotacheck.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/common.c |   21 +++++++++++++++------
+ fs/xfs/scrub/repair.c |   14 +++++++++++---
+ 2 files changed, 26 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/quotacheck.c b/fs/xfs/scrub/quotacheck.c
-index c77eb2de8df71f..dc4033b91e440b 100644
---- a/fs/xfs/scrub/quotacheck.c
-+++ b/fs/xfs/scrub/quotacheck.c
-@@ -398,10 +398,13 @@ xqcheck_collect_inode(
- 	bool			isreg = S_ISREG(VFS_I(ip)->i_mode);
- 	int			error = 0;
- 
--	if (xfs_is_quota_inode(&tp->t_mountp->m_sb, ip->i_ino)) {
-+	if (xfs_is_metadir_inode(ip) ||
-+	    xfs_is_quota_inode(&tp->t_mountp->m_sb, ip->i_ino)) {
- 		/*
- 		 * Quota files are never counted towards quota, so we do not
--		 * need to take the lock.
-+		 * need to take the lock.  Files do not switch between the
-+		 * metadata and regular directory trees without a reallocation,
-+		 * so we do not need to ILOCK them either.
- 		 */
- 		xchk_iscan_mark_visited(&xqc->iscan, ip);
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 3ca3173c5a5498..6d955580f608a4 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -1245,12 +1245,6 @@ xchk_metadata_inode_forks(
  		return 0;
+ 	}
+ 
+-	/* They also should never have extended attributes. */
+-	if (xfs_inode_hasattr(sc->ip)) {
+-		xchk_ino_set_corrupt(sc, sc->ip->i_ino);
+-		return 0;
+-	}
+-
+ 	/* Invoke the data fork scrubber. */
+ 	error = xchk_metadata_inode_subtype(sc, XFS_SCRUB_TYPE_BMBTD);
+ 	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+@@ -1267,6 +1261,21 @@ xchk_metadata_inode_forks(
+ 			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
+ 	}
+ 
++	/*
++	 * Metadata files can only have extended attributes on metadir
++	 * filesystems, either for parent pointers or for actual xattr data.
++	 */
++	if (xfs_inode_hasattr(sc->ip)) {
++		if (!xfs_has_metadir(sc->mp)) {
++			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
++			return 0;
++		}
++
++		error = xchk_metadata_inode_subtype(sc, XFS_SCRUB_TYPE_BMBTA);
++		if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
++			return error;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 646ac8ade88d0b..f80000d7755242 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -1082,7 +1082,12 @@ xrep_metadata_inode_forks(
+ 	if (error)
+ 		return error;
+ 
+-	/* Make sure the attr fork looks ok before we delete it. */
++	/*
++	 * Metadata files can only have extended attributes on metadir
++	 * filesystems, either for parent pointers or for actual xattr data.
++	 * For a non-metadir filesystem, make sure the attr fork looks ok
++	 * before we delete it.
++	 */
+ 	if (xfs_inode_hasattr(sc->ip)) {
+ 		error = xrep_metadata_inode_subtype(sc, XFS_SCRUB_TYPE_BMBTA);
+ 		if (error)
+@@ -1098,8 +1103,11 @@ xrep_metadata_inode_forks(
+ 			return error;
+ 	}
+ 
+-	/* Clear the attr forks since metadata shouldn't have that. */
+-	if (xfs_inode_hasattr(sc->ip)) {
++	/*
++	 * Metadata files on non-metadir filesystems cannot have attr forks,
++	 * so clear them now.
++	 */
++	if (xfs_inode_hasattr(sc->ip) && !xfs_has_metadir(sc->mp)) {
+ 		if (!dirty) {
+ 			dirty = true;
+ 			xfs_trans_ijoin(sc->tp, sc->ip, 0);
 
