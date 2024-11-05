@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2364521219E
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:07:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD151FF7AF
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:07:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730844421; cv=none; b=R1wJTFu3lx1V9NZfkx9aHT2NLkQ4xPn8y6xqmKbQhiycTbcHKjOFPbVwrw5ffWtUYgCgasLlg3hH+q4hemVPWrVHczVzl2r1jzBToFUwuhZatRR718URyZ7JtsSyltXAaw5qHBp6YelBt+iZFk1kNJjCwEBxJOcetOYnsElNbEM=
+	t=1730844436; cv=none; b=nmgVSrGexARK9J6MvA6P2nKHBEuOiR6n9bSX5B7qpJTZcpRR4mCKTuoC5Ysrelbr3qCF8fI7pYaVFPefIMGEyU1Pp43Z7ugL0OWsahjeCw62gyR6QUKp1F9CK0Hbd7WqVPdNWtErgecPJh5f2hJZQ8b24jHseaDpMCmg+5S9JLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730844421; c=relaxed/simple;
-	bh=+5fdu8qdFmVeFNAafbi/xcOTSlv9WIAZG9bIXIFrS9s=;
+	s=arc-20240116; t=1730844436; c=relaxed/simple;
+	bh=lqsvEh3gX1AHWkkGajR/SKcCYap7fsP4IaGc7lC6mZQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BoIXbzwPbklfugiJF0J5G37cyKedxmpiOv6J67UuBj29GgFWd6pb8Ilvuqk3cq+eyr24atSY8HFHfUuSmixWGLXVipMTia5n4tzuiCttHM0Q/pKJpG7Gm2ecWIDMb6Uk7Du9PaAyxy9DfeKgLiCny6ap58t+jccYlchDRDLVTvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZFfh1ADU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MmCQPEUPcyleeb9RpgNu9SGy4lFGzwSdCvPNJTWyLGDc3j2Td3B1bHDDy0psJSGiKcXBqt85H+WxE4Y/6Kx7ZM++txPXS2KEoRAUSCI8HenRn/gMQYwX9xj3zrjjs1XIyndT48D/GgSvlNTvMco6y/iLDjZN1FmxglA/bVnYNrE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j6S07zKS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZFfh1ADU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE63AC4CECF;
-	Tue,  5 Nov 2024 22:07:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j6S07zKS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53089C4CECF;
+	Tue,  5 Nov 2024 22:07:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730844420;
-	bh=+5fdu8qdFmVeFNAafbi/xcOTSlv9WIAZG9bIXIFrS9s=;
+	s=k20201202; t=1730844436;
+	bh=lqsvEh3gX1AHWkkGajR/SKcCYap7fsP4IaGc7lC6mZQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZFfh1ADUG3uWzpIzQqx0+O+96NX/JWxA1rcYEvS9UR53m6q+yTMh9rh6eIhuGGqs9
-	 cxHdcv5fl1cK6rDU3H2h4Zr1avdjyvIDpDYEC0vg3FowXvu5dd0OghxGh3lhMispLY
-	 1FspK3zGCvqgTN4I+rFpq3D+ou9IIv3Cc4RjO/LR5YRc7IqhB3qeh9k4BFHQ7wHRdJ
-	 EWuG6JxwZfKsQmfOjUr11QLLJKAudZkeIvQi+EpkkMS4xc/tVOKCIV4moQn+ISSljV
-	 P+OogGk8T2cnscsOCObjk7E/fvFivBVk0thNjnnig0Uw6Luxpe+y+37F2CsuIoE9Hi
-	 hx89maBcNgRnw==
-Date: Tue, 05 Nov 2024 14:07:00 -0800
-Subject: [PATCH 02/23] xfs: fix superfluous clearing of info->low in
- __xfs_getfsmap_datadev
+	b=j6S07zKSRFY220IxIUZj1fpYKBCYtuMVPaliHpCPsuTsLVE3/mt1o6hhwJlWXngdh
+	 q4Sj0KdnTD04nW3OZXhCiNgq2odKH4phxdUPrte+I5O3gtWGpDwP/Zrx31nmFu67Fo
+	 BZQesnGHbrjc4DdpuBC1svY+4u0JuPxLhuxtNRQxEjV9q5gZLAMY/CR79zH1YGVm/b
+	 fzHYQMcc9dbAYjN181LUaiNHGjBjaZI5kDes064sHV9bd51bPGysT41xYwP47/9Z4R
+	 ZtRqYvCp/EBh/KXkmVZlX+9VNuUpUFGUG7HXZz1jk7FwZF2YcR2UV4Fd8c3XNKlMZe
+	 7dGT+ce4TqGMA==
+Date: Tue, 05 Nov 2024 14:07:15 -0800
+Subject: [PATCH 03/23] xfs: remove the unused pagb_count field in struct
+ xfs_perag
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084394483.1868694.2010985926775335728.stgit@frogsfrogsfrogs>
+Message-ID: <173084394500.1868694.147133543877406507.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
 References: <173084394391.1868694.10289808022146677978.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,42 +46,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-The for_each_perag helpers update the agno passed in for each iteration,
-and thus the "if (pag->pag_agno == start_ag)" check will always be true.
-
-Add another variable for the loop iterator so that the field is only
-cleared after the first iteration.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_fsmap.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c |    1 -
+ fs/xfs/libxfs/xfs_ag.h |    1 -
+ 2 files changed, 2 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index ae18ab86e608b5..67140ef8c3232c 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -471,8 +471,7 @@ __xfs_getfsmap_datadev(
- 	struct xfs_btree_cur		*bt_cur = NULL;
- 	xfs_fsblock_t			start_fsb;
- 	xfs_fsblock_t			end_fsb;
--	xfs_agnumber_t			start_ag;
--	xfs_agnumber_t			end_ag;
-+	xfs_agnumber_t			start_ag, end_ag, ag;
- 	uint64_t			eofs;
- 	int				error = 0;
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 5ca8d01068273d..1b6027ad9ce5f6 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -327,7 +327,6 @@ xfs_initialize_perag(
+ 		xfs_defer_drain_init(&pag->pag_intents_drain);
+ 		init_waitqueue_head(&pag->pagb_wait);
+ 		init_waitqueue_head(&pag->pag_active_wq);
+-		pag->pagb_count = 0;
+ 		pag->pagb_tree = RB_ROOT;
+ 		xfs_hooks_init(&pag->pag_rmap_update_hooks);
+ #endif /* __KERNEL__ */
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 9edfe0e9643964..79149a5ec44e9a 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -55,7 +55,6 @@ struct xfs_perag {
+ 	xfs_agino_t	pagl_leftrec;
+ 	xfs_agino_t	pagl_rightrec;
  
-@@ -520,7 +519,8 @@ __xfs_getfsmap_datadev(
- 	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
- 	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
+-	int		pagb_count;	/* pagb slots in use */
+ 	uint8_t		pagf_refcount_level; /* recount btree height */
  
--	for_each_perag_range(mp, start_ag, end_ag, pag) {
-+	ag = start_ag;
-+	for_each_perag_range(mp, ag, end_ag, pag) {
- 		/*
- 		 * Set the AG high key from the fsmap high key if this
- 		 * is the last AG that we're querying.
+ 	/* Blocks reserved for all kinds of metadata. */
 
