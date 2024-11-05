@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72F11DD0D2
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:19:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BDBF1DD0D2
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:19:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845171; cv=none; b=J1SFwuvdkC1Ia/oY6v8wAXpV5B9fSg6ke7PPPoqbKUqkr2dF6W2U8iJX8XRhyiKIoxxPyOK1ZizOIYgPkW1yWow38Sk3uwtJO9zUR1KULxk4fMscZhSEOLgWLnusroh9oa+ULLl51WFHtnnw14meNMYt7y5pHOFDg3NFUM9X7PU=
+	t=1730845186; cv=none; b=FGZrCdgqI0jxZUmNdHCW5gDfqYllanlyvi6sRcLLvPe+8NKm82W5jyb+qO5K+0Zg1JjwrHqtTcwhzEJrqjU99ekhwqhW50F8YcT8CcuuURrpl6tsxCCWdnVrj6g9dTT+7iaN74HYjcH0Ct2zqdfBY1EG0j6qaMpzGvsCXFaqbg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845171; c=relaxed/simple;
-	bh=0PxynT7fZiEIvVqhx1ukZH748KLMZyS1Uk9zyzZB8wg=;
+	s=arc-20240116; t=1730845186; c=relaxed/simple;
+	bh=i82DjwBy5wpzgDm79r27NZwe37NgTKHcyFQ9oWcOwVw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uWCEVkLsGg87/FT0XV9soLN5QGzf0kblYRqH/mS4RmIiwo07SHpvdkFtoAwLXfFL/u0fBKfp9B8aspwQoDLnBQAhwGfFLPKySbHf+fn3cczdtYhzkDRNNi81H5qZ3GpLsOfsK01ezqqqzEP8zigWk/UGx977HycnCklNm8xsAkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IV++sWzK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Z/a/R4xQNuNyh/1p5q70HkipEeKe3Ky2zkX44Xk5xkNtEa3uEXk9OvOvppTG+vVpncwfD5zlfbm4KSJvXrzT7laLIFAojtOLO7pp9vN6tJ6a6mjoY9iUo79zKO4DRjwv5l1Q3MamgaHwBn/hXCd3XA4r5Dxm8Q9PwbrYwDL/T8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LEVnvklm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IV++sWzK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7149AC4CECF;
-	Tue,  5 Nov 2024 22:19:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LEVnvklm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 134F9C4CECF;
+	Tue,  5 Nov 2024 22:19:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845170;
-	bh=0PxynT7fZiEIvVqhx1ukZH748KLMZyS1Uk9zyzZB8wg=;
+	s=k20201202; t=1730845186;
+	bh=i82DjwBy5wpzgDm79r27NZwe37NgTKHcyFQ9oWcOwVw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IV++sWzKEKNRIC5Un5Hza/5ruGygPSKKNIVNZxiWHeVhe87OMU7cjl5kp6YhP8qz3
-	 HVRsLq5EQX1oWPE34yiSJgHwGVnk+iE4W0wK+ymukE2j04s8nH2amk0jCGqhG1i7Ff
-	 0Op2aFhZNWMD4R7hIOkmyUTrri+pWMUpqsY1ahLF3ZrZsCw8b6M09OGHFeiR9V6Fz/
-	 aP+WoN2ScOUwTEkh87eCmgA6aOW7sJKzuEIvt4AEA0GEKBGWoQKZwZv+Rmqfjd/qlB
-	 AbJGDUzsmT/2r/6m708AZLqv+d9bEvbchhvrYADlRTZvpHJPgW++zo+kbDDKxOHmBS
-	 YNNBV4GUO3t2w==
-Date: Tue, 05 Nov 2024 14:19:30 -0800
-Subject: [PATCH 11/28] xfs: hide metadata inodes from everyone because they
- are special
+	b=LEVnvklmNPMkg0c5huj2F0Brh2qOPG4Zxh0pwmZMd7hBugKzLl/v8uv478f7GV89c
+	 EJBwevwAuY8POPk7MUNORJvvGPfc4IGl485PnHVIeAaPVCZ6EjbWEeAnuJqW48buxm
+	 /D//4koI53+2fBqioCLa7KeRieOCm136LGOtjb9ih2tkLFJsrmKewCcYI5xgfSW1Tm
+	 1IXmjKSpv9mG62y3GPZa+Xq3n61AXSfQlo3Ay5sDmu80l6nUZ1ikA7P5557mpKls1K
+	 EfN2m4eH8q+MYCYQZy1a/KIR5X8aHVl3wKQ1i4cfbeVtCRwxnn8oPNEr2F/oIFs5Nt
+	 RR0lTwEzmzvGA==
+Date: Tue, 05 Nov 2024 14:19:45 -0800
+Subject: [PATCH 12/28] xfs: advertise metadata directory feature
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084396209.1870066.7408723354973665738.stgit@frogsfrogsfrogs>
+Message-ID: <173084396226.1870066.767109488382898420.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 References: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,76 +45,40 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Metadata inodes are private files and therefore cannot be exposed to
-userspace.  This means no bulkstat, no open-by-handle, no linking them
-into the directory tree, and no feeding them to LSMs.  As such, we mark
-them S_PRIVATE, which stops all that.
+Advertise the existence of the metadata directory feature; this will be
+used by scrub to decide if it needs to scan the metadir too.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/tempfile.c |    8 ++++++++
- fs/xfs/xfs_iops.c       |   15 ++++++++++++++-
- 2 files changed, 22 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_fs.h |    1 +
+ fs/xfs/libxfs/xfs_sb.c |    2 ++
+ 2 files changed, 3 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
-index 177f922acfaf1b..3c5a1d77fefae9 100644
---- a/fs/xfs/scrub/tempfile.c
-+++ b/fs/xfs/scrub/tempfile.c
-@@ -844,6 +844,14 @@ xrep_is_tempfile(
- 	const struct xfs_inode	*ip)
- {
- 	const struct inode	*inode = &ip->i_vnode;
-+	struct xfs_mount	*mp = ip->i_mount;
-+
-+	/*
-+	 * Files in the metadata directory tree also have S_PRIVATE set and
-+	 * IOP_XATTR unset, so we must distinguish them separately.
-+	 */
-+	if (xfs_has_metadir(mp) && (ip->i_diflags2 & XFS_DIFLAG2_METADATA))
-+		return false;
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 860284064c5aa9..a42c1a33691c0f 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -242,6 +242,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* large extent counters */
+ #define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE (1 << 24) /* exchange range */
+ #define XFS_FSOP_GEOM_FLAGS_PARENT	(1 << 25) /* linux parent pointers */
++#define XFS_FSOP_GEOM_FLAGS_METADIR	(1 << 26) /* metadata directories */
  
- 	if (IS_PRIVATE(inode) && !(inode->i_opflags & IOP_XATTR))
- 		return true;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ee79cf161312ca..66a726a5fbbba2 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -42,7 +42,9 @@
-  * held. For regular files, the lock order is the other way around - the
-  * mmap_lock is taken during the page fault, and then we lock the ilock to do
-  * block mapping. Hence we need a different class for the directory ilock so
-- * that lockdep can tell them apart.
-+ * that lockdep can tell them apart.  Directories in the metadata directory
-+ * tree get a separate class so that lockdep reports will warn us if someone
-+ * ever tries to lock regular directories after locking metadata directories.
-  */
- static struct lock_class_key xfs_nondir_ilock_class;
- static struct lock_class_key xfs_dir_ilock_class;
-@@ -1289,6 +1291,7 @@ xfs_setup_inode(
- {
- 	struct inode		*inode = &ip->i_vnode;
- 	gfp_t			gfp_mask;
-+	bool			is_meta = xfs_is_internal_inode(ip);
+ /*
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 19fa999b4032c8..4516824e3b9994 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1295,6 +1295,8 @@ xfs_fs_geometry(
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
+ 	if (xfs_has_exchange_range(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE;
++	if (xfs_has_metadir(mp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_METADIR;
+ 	geo->rtsectsize = sbp->sb_blocksize;
+ 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
  
- 	inode->i_ino = ip->i_ino;
- 	inode->i_state |= I_NEW;
-@@ -1300,6 +1303,16 @@ xfs_setup_inode(
- 	i_size_write(inode, ip->i_disk_size);
- 	xfs_diflags_to_iflags(ip, true);
- 
-+	/*
-+	 * Mark our metadata files as private so that LSMs and the ACL code
-+	 * don't try to add their own metadata or reason about these files,
-+	 * and users cannot ever obtain file handles to them.
-+	 */
-+	if (is_meta) {
-+		inode->i_flags |= S_PRIVATE;
-+		inode->i_opflags &= ~IOP_XATTR;
-+	}
-+
- 	if (S_ISDIR(inode->i_mode)) {
- 		/*
- 		 * We set the i_rwsem class here to avoid potential races with
 
