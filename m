@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E904A1E5022
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:23:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88AE216A30
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:24:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845436; cv=none; b=gK+TXy4nbAxYHAwCpGW/FW3Wi3/tji80ZCLEzKc5m60R9zYOomTTstDl1vC1SfS6ORP3K1/xcjcJXz+H03C6gEfn3qFmk+3RgnYi+eeh8OZWTDO7uCLHkdkw8QJeCeNJzvIopQxj5+lHmCdSCItfn1fEnhJ0zAZEX7+wLoYgiK0=
+	t=1730845451; cv=none; b=CL8QadvIpcGLyK1O+8Ae08ELmVDkchDnl+T8rabx3PcNtXOCs81vTtrXuCR7xSY7Sl8DXveFKYKPfBu8B0zDn94L1gLvgmIwrstGMJfz9b06TbABxoGpqsZq4RGUkWjGz0Lpdv3zSdv+0k24fPvYf6h/cY0qXsJUqPz+C/TyFnk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845436; c=relaxed/simple;
-	bh=Vps6MP3J4CGQVgDv1gXn6VSS3qrfCGJFzUVbXY9ZgrI=;
+	s=arc-20240116; t=1730845451; c=relaxed/simple;
+	bh=PKZC3v2WTr0R/n4728nzPeccUKqU4HU5spGtdEPAaCs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ikACmAJccjJsR2Za0x/BSktXvHuzj1flcovNh+jxR18Llw4KJKXVNoKS2kDkhlgLReYGv8vqH5KAQD/umgiO7745JOZdLGhOq+pbxeD2R/2vd3n1s6PPl6oSJ9IfTTbLnkdI16rGC2QjWw1YBh6euIuM8nWOwmgSrOUhkqmKeOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cNm0TAjC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=OM7SWtkrDCAYYvY1BgEPd+f60/sbdRZjEYD05S0oKqR2CPFNfo/z8lDzkoTApoOnHOgV4KYlXGIWa/snRVookaiBFmg+3obh75Vkfi3ianFfBzJi6OFpLAPh1O6NMFITMjp+cTqjQExeAr5+t7nTlKmTUU4Gsy2gW5fR4Gzjk34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCP5/Sn+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cNm0TAjC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2913C4CECF;
-	Tue,  5 Nov 2024 22:23:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCP5/Sn+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67A3EC4CED4;
+	Tue,  5 Nov 2024 22:24:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845435;
-	bh=Vps6MP3J4CGQVgDv1gXn6VSS3qrfCGJFzUVbXY9ZgrI=;
+	s=k20201202; t=1730845451;
+	bh=PKZC3v2WTr0R/n4728nzPeccUKqU4HU5spGtdEPAaCs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cNm0TAjCd29OiFpNltMR8AfDY/EXvhrTPsbrH1mZk7s5TKCmK7910wT2WRz6MHL1J
-	 8xriNTMWULggUtI+uvSBr1OZsx+jENMJCYv7IEfUiBJbtuLpfp5+Cmf+ss0ybwrtFv
-	 0NTLy1TBrtKh/0SbxXTxZz+4Y3/PYp0Zg3/a+jeSL524J/nZpmOmRkz4vJ0L5XIICl
-	 B+ov6hrtD3z1auqPokoUICXrH6aJqTmYJB1WVLS4n4O9VaodfIRdO548lERqydVjar
-	 dDIigULxqc5IJsvgEIMuGQRyiAFjQ8Yu6hNwXDsO1u9rov+w+I2wxc5SoHJBfa1Iem
-	 5aqUCCwxNnMmQ==
-Date: Tue, 05 Nov 2024 14:23:55 -0800
-Subject: [PATCH 28/28] xfs: repair metadata directory file path connectivity
+	b=hCP5/Sn+lgDEWlBX5xVYRWMKEcbfZgjLJ+8Ea2Dddx8qbdbjBG6KsgUEXdgykW+VJ
+	 tGxkEQCKB0wMIj6sh0qWJaBfP4agi2bQbOA+eQXCAB6I/D90CmHe+uQSx9b9FOLtZ+
+	 NnTOrXJtiX77SWcsGNGh5mJ4z8BwA7Rv4H7cTgfbW4ZDvvvLgpiPHbaN2RX+d4gv6v
+	 tIUni1IzIFJVI9oDhfh01cBVU/GNnRh/eLbbHd7zIa1gQ1duUBjd0ajmufp1+zF2la
+	 psCYwjrvTXRyZHBTWp9iTFlVFL6f/us87VMZjiQk+7IxUazYT7/8YRjDDuIJmNMItl
+	 mvbqdosLewiuQ==
+Date: Tue, 05 Nov 2024 14:24:10 -0800
+Subject: [PATCH 01/21] xfs: clean up xfs_getfsmap_helper arguments
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084396499.1870066.8323864781712997259.stgit@frogsfrogsfrogs>
-In-Reply-To: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
-References: <173084395946.1870066.5846370267426919612.stgit@frogsfrogsfrogs>
+Message-ID: <173084396955.1871025.18156568347365549855.stgit@frogsfrogsfrogs>
+In-Reply-To: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
+References: <173084396885.1871025.10467232711863188560.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,459 +43,601 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Fix disconnected or incorrect metadata directory paths.
+The calling conventions for xfs_getfsmap_helper are confusing -- callers
+pass in an rmap record, but they must also supply startblock and
+blockcount in daddr units.  This was bolted onto the original fsmap
+implementation so that we could report *something* for realtime
+volumes, which do not support rmap and hence can draw only from the rt
+free space bitmap.  Free space on the rt volume can be more than 2^32
+fsblocks long, which means that we can't use the rmap startblock or
+blockcount fields.
+
+This is confusing for callers, because they must supplying redundant
+data, but not all of it is used.  Streamline this by creating a separate
+fsmap irec structure that contains exactly the data we need, once.
+
+Note that we actually do need rm_startblock for rmap key comparisons
+when we're actually querying an rmap btree, so leave that field but
+document why it's there.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/metapath.c |  351 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h   |    3 
- fs/xfs/scrub/scrub.c    |    2 
- fs/xfs/scrub/trace.h    |    5 +
- 4 files changed, 358 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_fsmap.c |  225 +++++++++++++++++++++++++++-------------------------
+ fs/xfs/xfs_fsmap.h |   15 +++
+ fs/xfs/xfs_trace.h |   73 ++++++++++++-----
+ 3 files changed, 187 insertions(+), 126 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index b7bd86df9877cd..edc1a395c4015a 100644
---- a/fs/xfs/scrub/metapath.c
-+++ b/fs/xfs/scrub/metapath.c
-@@ -16,10 +16,15 @@
- #include "xfs_quota.h"
- #include "xfs_qm.h"
- #include "xfs_dir2.h"
-+#include "xfs_parent.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_trans_space.h"
-+#include "xfs_attr.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
- #include "scrub/readdir.h"
-+#include "scrub/repair.h"
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index a91677ac54e7e3..6cf4f00636a2d6 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -110,18 +110,18 @@ xfs_fsmap_owner_to_rmap(
  
- /*
-  * Metadata Directory Tree Paths
-@@ -38,15 +43,28 @@ struct xchk_metapath {
- 	/* Name for lookup */
- 	struct xfs_name			xname;
+ /* Convert an rmapbt owner into an fsmap owner. */
+ static int
+-xfs_fsmap_owner_from_rmap(
++xfs_fsmap_owner_from_frec(
+ 	struct xfs_fsmap		*dest,
+-	const struct xfs_rmap_irec	*src)
++	const struct xfs_fsmap_irec	*frec)
+ {
+ 	dest->fmr_flags = 0;
+-	if (!XFS_RMAP_NON_INODE_OWNER(src->rm_owner)) {
+-		dest->fmr_owner = src->rm_owner;
++	if (!XFS_RMAP_NON_INODE_OWNER(frec->owner)) {
++		dest->fmr_owner = frec->owner;
+ 		return 0;
+ 	}
+ 	dest->fmr_flags |= FMR_OF_SPECIAL_OWNER;
  
--	/* Path for this metadata file and the parent directory */
-+	/* Directory update for repairs */
-+	struct xfs_dir_update		du;
-+
-+	/* Path down to this metadata file from the parent directory */
- 	const char			*path;
--	const char			*parent_path;
+-	switch (src->rm_owner) {
++	switch (frec->owner) {
+ 	case XFS_RMAP_OWN_FS:
+ 		dest->fmr_owner = XFS_FMR_OWN_FS;
+ 		break;
+@@ -203,7 +203,7 @@ STATIC int
+ xfs_getfsmap_is_shared(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_getfsmap_info	*info,
+-	const struct xfs_rmap_irec	*rec,
++	const struct xfs_fsmap_irec	*frec,
+ 	bool				*stat)
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
+@@ -224,8 +224,9 @@ xfs_getfsmap_is_shared(
+ 	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
+ 			to_perag(info->group));
  
- 	/* Directory parent of the metadata file. */
- 	struct xfs_inode		*dp;
+-	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
+-			rec->rm_blockcount, &fbno, &flen, false);
++	error = xfs_refcount_find_shared(cur, frec->rec_key,
++			XFS_BB_TO_FSBT(mp, frec->len_daddr), &fbno, &flen,
++			false);
  
- 	/* Locks held on dp */
- 	unsigned int			dp_ilock_flags;
-+
-+	/* Transaction block reservations */
-+	unsigned int			link_resblks;
-+	unsigned int			unlink_resblks;
-+
-+	/* Parent pointer updates */
-+	struct xfs_parent_args		link_ppargs;
-+	struct xfs_parent_args		unlink_ppargs;
-+
-+	/* Scratchpads for removing links */
-+	struct xfs_da_args		pptr_args;
- };
- 
- /* Release resources tracked in the buffer. */
-@@ -172,3 +190,332 @@ xchk_metapath(
- 	xchk_trans_cancel(sc);
- 	return error;
+ 	xfs_btree_del_cursor(cur, error);
+ 	if (error)
+@@ -250,15 +251,22 @@ xfs_getfsmap_format(
  }
+ 
+ static inline bool
+-xfs_getfsmap_rec_before_start(
++xfs_getfsmap_frec_before_start(
+ 	struct xfs_getfsmap_info	*info,
+-	const struct xfs_rmap_irec	*rec,
+-	xfs_daddr_t			rec_daddr)
++	const struct xfs_fsmap_irec	*frec)
+ {
+ 	if (info->low_daddr != XFS_BUF_DADDR_NULL)
+-		return rec_daddr < info->low_daddr;
+-	if (info->low.rm_blockcount)
+-		return xfs_rmap_compare(rec, &info->low) < 0;
++		return frec->start_daddr < info->low_daddr;
++	if (info->low.rm_blockcount) {
++		struct xfs_rmap_irec	rec = {
++			.rm_startblock	= frec->rec_key,
++			.rm_owner	= frec->owner,
++			.rm_flags	= frec->rm_flags,
++		};
 +
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+/* Create the dirent represented by the final component of the path. */
-+STATIC int
-+xrep_metapath_link(
-+	struct xchk_metapath	*mpath)
++		return xfs_rmap_compare(&rec, &info->low) < 0;
++	}
++
+ 	return false;
+ }
+ 
+@@ -271,61 +279,36 @@ STATIC int
+ xfs_getfsmap_helper(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_getfsmap_info	*info,
+-	const struct xfs_rmap_irec	*rec,
+-	xfs_daddr_t			rec_daddr,
+-	xfs_daddr_t			len_daddr)
++	const struct xfs_fsmap_irec	*frec)
+ {
+ 	struct xfs_fsmap		fmr;
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 	bool				shared;
+-	int				error;
++	int				error = 0;
+ 
+ 	if (fatal_signal_pending(current))
+ 		return -EINTR;
+ 
+-	if (len_daddr == 0)
+-		len_daddr = XFS_FSB_TO_BB(mp, rec->rm_blockcount);
+-
+ 	/*
+ 	 * Filter out records that start before our startpoint, if the
+ 	 * caller requested that.
+ 	 */
+-	if (xfs_getfsmap_rec_before_start(info, rec, rec_daddr)) {
+-		rec_daddr += len_daddr;
+-		if (info->next_daddr < rec_daddr)
+-			info->next_daddr = rec_daddr;
+-		return 0;
+-	}
+-
+-	/*
+-	 * For an info->last query, we're looking for a gap between the last
+-	 * mapping emitted and the high key specified by userspace.  If the
+-	 * user's query spans less than 1 fsblock, then info->high and
+-	 * info->low will have the same rm_startblock, which causes rec_daddr
+-	 * and next_daddr to be the same.  Therefore, use the end_daddr that
+-	 * we calculated from userspace's high key to synthesize the record.
+-	 * Note that if the btree query found a mapping, there won't be a gap.
+-	 */
+-	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL)
+-		rec_daddr = info->end_daddr;
++	if (xfs_getfsmap_frec_before_start(info, frec))
++		goto out;
+ 
+ 	/* Are we just counting mappings? */
+ 	if (info->head->fmh_count == 0) {
+ 		if (info->head->fmh_entries == UINT_MAX)
+ 			return -ECANCELED;
+ 
+-		if (rec_daddr > info->next_daddr)
++		if (frec->start_daddr > info->next_daddr)
+ 			info->head->fmh_entries++;
+ 
+ 		if (info->last)
+ 			return 0;
+ 
+ 		info->head->fmh_entries++;
+-
+-		rec_daddr += len_daddr;
+-		if (info->next_daddr < rec_daddr)
+-			info->next_daddr = rec_daddr;
+-		return 0;
++		goto out;
+ 	}
+ 
+ 	/*
+@@ -333,7 +316,7 @@ xfs_getfsmap_helper(
+ 	 * then we've found a gap.  Report the gap as being owned by
+ 	 * whatever the caller specified is the missing owner.
+ 	 */
+-	if (rec_daddr > info->next_daddr) {
++	if (frec->start_daddr > info->next_daddr) {
+ 		if (info->head->fmh_entries >= info->head->fmh_count)
+ 			return -ECANCELED;
+ 
+@@ -341,7 +324,7 @@ xfs_getfsmap_helper(
+ 		fmr.fmr_physical = info->next_daddr;
+ 		fmr.fmr_owner = info->missing_owner;
+ 		fmr.fmr_offset = 0;
+-		fmr.fmr_length = rec_daddr - info->next_daddr;
++		fmr.fmr_length = frec->start_daddr - info->next_daddr;
+ 		fmr.fmr_flags = FMR_OF_SPECIAL_OWNER;
+ 		xfs_getfsmap_format(mp, &fmr, info);
+ 	}
+@@ -355,23 +338,23 @@ xfs_getfsmap_helper(
+ 
+ 	trace_xfs_fsmap_mapping(mp, info->dev,
+ 			info->group ? info->group->xg_gno : NULLAGNUMBER,
+-			rec);
++			frec);
+ 
+ 	fmr.fmr_device = info->dev;
+-	fmr.fmr_physical = rec_daddr;
+-	error = xfs_fsmap_owner_from_rmap(&fmr, rec);
++	fmr.fmr_physical = frec->start_daddr;
++	error = xfs_fsmap_owner_from_frec(&fmr, frec);
+ 	if (error)
+ 		return error;
+-	fmr.fmr_offset = XFS_FSB_TO_BB(mp, rec->rm_offset);
+-	fmr.fmr_length = len_daddr;
+-	if (rec->rm_flags & XFS_RMAP_UNWRITTEN)
++	fmr.fmr_offset = XFS_FSB_TO_BB(mp, frec->offset);
++	fmr.fmr_length = frec->len_daddr;
++	if (frec->rm_flags & XFS_RMAP_UNWRITTEN)
+ 		fmr.fmr_flags |= FMR_OF_PREALLOC;
+-	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
++	if (frec->rm_flags & XFS_RMAP_ATTR_FORK)
+ 		fmr.fmr_flags |= FMR_OF_ATTR_FORK;
+-	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
++	if (frec->rm_flags & XFS_RMAP_BMBT_BLOCK)
+ 		fmr.fmr_flags |= FMR_OF_EXTENT_MAP;
+ 	if (fmr.fmr_flags == 0) {
+-		error = xfs_getfsmap_is_shared(tp, info, rec, &shared);
++		error = xfs_getfsmap_is_shared(tp, info, frec, &shared);
+ 		if (error)
+ 			return error;
+ 		if (shared)
+@@ -380,25 +363,55 @@ xfs_getfsmap_helper(
+ 
+ 	xfs_getfsmap_format(mp, &fmr, info);
+ out:
+-	rec_daddr += len_daddr;
+-	if (info->next_daddr < rec_daddr)
+-		info->next_daddr = rec_daddr;
++	info->next_daddr = max(info->next_daddr,
++			       frec->start_daddr + frec->len_daddr);
+ 	return 0;
+ }
+ 
++static inline int
++xfs_getfsmap_group_helper(
++	struct xfs_getfsmap_info	*info,
++	struct xfs_trans		*tp,
++	struct xfs_group		*xg,
++	xfs_agblock_t			startblock,
++	xfs_extlen_t			blockcount,
++	struct xfs_fsmap_irec		*frec)
 +{
-+	struct xfs_scrub	*sc = mpath->sc;
-+
-+	mpath->du.dp = mpath->dp;
-+	mpath->du.name = &mpath->xname;
-+	mpath->du.ip = sc->ip;
-+
-+	if (xfs_has_parent(sc->mp))
-+		mpath->du.ppargs = &mpath->link_ppargs;
++	/*
++	 * For an info->last query, we're looking for a gap between the last
++	 * mapping emitted and the high key specified by userspace.  If the
++	 * user's query spans less than 1 fsblock, then info->high and
++	 * info->low will have the same rm_startblock, which causes rec_daddr
++	 * and next_daddr to be the same.  Therefore, use the end_daddr that
++	 * we calculated from userspace's high key to synthesize the record.
++	 * Note that if the btree query found a mapping, there won't be a gap.
++	 */
++	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL)
++		frec->start_daddr = info->end_daddr;
 +	else
-+		mpath->du.ppargs = NULL;
++		frec->start_daddr = xfs_gbno_to_daddr(xg, startblock);
 +
-+	trace_xrep_metapath_link(sc, mpath->path, mpath->dp, sc->ip->i_ino);
-+
-+	return xfs_dir_add_child(sc->tp, mpath->link_resblks, &mpath->du);
++	frec->len_daddr = XFS_FSB_TO_BB(xg->xg_mount, blockcount);
++	return xfs_getfsmap_helper(tp, info, frec);
 +}
 +
-+/* Remove the dirent at the final component of the path. */
-+STATIC int
-+xrep_metapath_unlink(
-+	struct xchk_metapath	*mpath,
-+	xfs_ino_t		ino,
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_parent_rec	rec;
-+	struct xfs_scrub	*sc = mpath->sc;
-+	struct xfs_mount	*mp = sc->mp;
-+	int			error;
-+
-+	trace_xrep_metapath_unlink(sc, mpath->path, mpath->dp, ino);
-+
-+	if (!ip) {
-+		/* The child inode isn't allocated.  Junk the dirent. */
-+		xfs_trans_log_inode(sc->tp, mpath->dp, XFS_ILOG_CORE);
-+		return xfs_dir_removename(sc->tp, mpath->dp, &mpath->xname,
-+				ino, mpath->unlink_resblks);
-+	}
-+
-+	mpath->du.dp = mpath->dp;
-+	mpath->du.name = &mpath->xname;
-+	mpath->du.ip = ip;
-+	mpath->du.ppargs = NULL;
-+
-+	/* Figure out if we're removing a parent pointer too. */
-+	if (xfs_has_parent(mp)) {
-+		xfs_inode_to_parent_rec(&rec, ip);
-+		error = xfs_parent_lookup(sc->tp, ip, &mpath->xname, &rec,
-+				&mpath->pptr_args);
-+		switch (error) {
-+		case -ENOATTR:
-+			break;
-+		case 0:
-+			mpath->du.ppargs = &mpath->unlink_ppargs;
-+			break;
-+		default:
-+			return error;
-+		}
-+	}
-+
-+	return xfs_dir_remove_child(sc->tp, mpath->unlink_resblks, &mpath->du);
-+}
-+
-+/*
-+ * Try to create a dirent in @mpath->dp with the name @mpath->xname that points
-+ * to @sc->ip.  Returns:
-+ *
-+ * -EEXIST and an @alleged_child if the dirent that points to the wrong inode;
-+ * 0 if there is now a dirent pointing to @sc->ip; or
-+ * A negative errno on error.
-+ */
-+STATIC int
-+xrep_metapath_try_link(
-+	struct xchk_metapath	*mpath,
-+	xfs_ino_t		*alleged_child)
-+{
-+	struct xfs_scrub	*sc = mpath->sc;
-+	xfs_ino_t		ino;
-+	int			error;
-+
-+	/* Allocate transaction, lock inodes, join to transaction. */
-+	error = xchk_trans_alloc(sc, mpath->link_resblks);
-+	if (error)
-+		return error;
-+
-+	error = xchk_metapath_ilock_both(mpath);
-+	if (error) {
-+		xchk_trans_cancel(sc);
-+		return error;
-+	}
-+	xfs_trans_ijoin(sc->tp, mpath->dp, 0);
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+
-+	error = xchk_dir_lookup(sc, mpath->dp, &mpath->xname, &ino);
-+	trace_xrep_metapath_lookup(sc, mpath->path, mpath->dp, ino);
-+	if (error == -ENOENT) {
-+		/*
-+		 * There is no dirent in the directory.  Create an entry
-+		 * pointing to @sc->ip.
-+		 */
-+		error = xrep_metapath_link(mpath);
-+		if (error)
-+			goto out_cancel;
-+
-+		error = xrep_trans_commit(sc);
-+		xchk_metapath_iunlock(mpath);
-+		return error;
-+	}
-+	if (error)
-+		goto out_cancel;
-+
-+	if (ino == sc->ip->i_ino) {
-+		/* The dirent already points to @sc->ip; we're done. */
-+		error = 0;
-+		goto out_cancel;
-+	}
-+
-+	/*
-+	 * The dirent points elsewhere; pass that back so that the caller
-+	 * can try to remove the dirent.
-+	 */
-+	*alleged_child = ino;
-+	error = -EEXIST;
-+
-+out_cancel:
-+	xchk_trans_cancel(sc);
-+	xchk_metapath_iunlock(mpath);
-+	return error;
-+}
-+
-+/*
-+ * Take the ILOCK on the metadata directory parent and a bad child, if one is
-+ * supplied.  We do not know that the metadata directory is not corrupt, so we
-+ * lock the parent and try to lock the child.  Returns 0 if successful, or
-+ * -EINTR to abort the repair.  The lock state of @dp is not recorded in @mpath.
-+ */
-+STATIC int
-+xchk_metapath_ilock_parent_and_child(
-+	struct xchk_metapath	*mpath,
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_scrub	*sc = mpath->sc;
-+	int			error = 0;
-+
-+	while (true) {
-+		xfs_ilock(mpath->dp, XFS_ILOCK_EXCL);
-+		if (!ip || xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-+			return 0;
-+		xfs_iunlock(mpath->dp, XFS_ILOCK_EXCL);
-+
-+		if (xchk_should_terminate(sc, &error))
-+			return error;
-+
-+		delay(1);
-+	}
-+
-+	ASSERT(0);
-+	return -EINTR;
-+}
-+
-+/*
-+ * Try to remove a dirent in @mpath->dp with the name @mpath->xname that points
-+ * to @alleged_child.  Returns:
-+ *
-+ * 0 if there is no longer a dirent;
-+ * -EEXIST if the dirent points to @sc->ip;
-+ * -EAGAIN and an updated @alleged_child if the dirent points elsewhere; or
-+ * A negative errno for any other error.
-+ */
-+STATIC int
-+xrep_metapath_try_unlink(
-+	struct xchk_metapath	*mpath,
-+	xfs_ino_t		*alleged_child)
-+{
-+	struct xfs_scrub	*sc = mpath->sc;
-+	struct xfs_inode	*ip = NULL;
-+	xfs_ino_t		ino;
-+	int			error;
-+
-+	ASSERT(*alleged_child != sc->ip->i_ino);
-+
-+	trace_xrep_metapath_try_unlink(sc, mpath->path, mpath->dp,
-+			*alleged_child);
-+
-+	/*
-+	 * Allocate transaction, grab the alleged child inode, lock inodes,
-+	 * join to transaction.
-+	 */
-+	error = xchk_trans_alloc(sc, mpath->unlink_resblks);
-+	if (error)
-+		return error;
-+
-+	error = xchk_iget(sc, *alleged_child, &ip);
-+	if (error == -EINVAL || error == -ENOENT) {
-+		/* inode number is bogus, junk the dirent */
-+		error = 0;
-+	}
-+	if (error) {
-+		xchk_trans_cancel(sc);
-+		return error;
-+	}
-+
-+	error = xchk_metapath_ilock_parent_and_child(mpath, ip);
-+	if (error) {
-+		xchk_trans_cancel(sc);
-+		return error;
-+	}
-+	xfs_trans_ijoin(sc->tp, mpath->dp, 0);
-+	if (ip)
-+		xfs_trans_ijoin(sc->tp, ip, 0);
-+
-+	error = xchk_dir_lookup(sc, mpath->dp, &mpath->xname, &ino);
-+	trace_xrep_metapath_lookup(sc, mpath->path, mpath->dp, ino);
-+	if (error == -ENOENT) {
-+		/*
-+		 * There is no dirent in the directory anymore.  We're ready to
-+		 * try the link operation again.
-+		 */
-+		error = 0;
-+		goto out_cancel;
-+	}
-+	if (error)
-+		goto out_cancel;
-+
-+	if (ino == sc->ip->i_ino) {
-+		/* The dirent already points to @sc->ip; we're done. */
-+		error = -EEXIST;
-+		goto out_cancel;
-+	}
-+
-+	/*
-+	 * The dirent does not point to the alleged child.  Update the caller
-+	 * and signal that we want to be called again.
-+	 */
-+	if (ino != *alleged_child) {
-+		*alleged_child = ino;
-+		error = -EAGAIN;
-+		goto out_cancel;
-+	}
-+
-+	/* Remove the link to the child. */
-+	error = xrep_metapath_unlink(mpath, ino, ip);
-+	if (error)
-+		goto out_cancel;
-+
-+	error = xrep_trans_commit(sc);
-+	goto out_unlock;
-+
-+out_cancel:
-+	xchk_trans_cancel(sc);
-+out_unlock:
-+	xfs_iunlock(mpath->dp, XFS_ILOCK_EXCL);
-+	if (ip) {
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		xchk_irele(sc, ip);
-+	}
-+	return error;
-+}
-+
-+/*
-+ * Make sure the metadata directory path points to the child being examined.
-+ *
-+ * Repair needs to be able to create a directory structure, create its own
-+ * transactions, and take ILOCKs.  This function /must/ be called after all
-+ * other repairs have completed.
-+ */
-+int
-+xrep_metapath(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xchk_metapath	*mpath = sc->buf;
-+	struct xfs_mount	*mp = sc->mp;
-+	int			error = 0;
-+
-+	/* Just probing, nothing to repair. */
-+	if (sc->sm->sm_ino == XFS_SCRUB_METAPATH_PROBE)
-+		return 0;
-+
-+	/* Parent required to do anything else. */
-+	if (mpath->dp == NULL)
-+		return -EFSCORRUPTED;
-+
-+	/*
-+	 * Make sure the child file actually has an attr fork to receive a new
-+	 * parent pointer if the fs has parent pointers.
-+	 */
-+	if (xfs_has_parent(mp)) {
-+		error = xfs_attr_add_fork(sc->ip,
-+				sizeof(struct xfs_attr_sf_hdr), 1);
-+		if (error)
-+			return error;
-+	}
-+
-+	/* Compute block reservation required to unlink and link a file. */
-+	mpath->unlink_resblks = xfs_remove_space_res(mp, MAXNAMELEN);
-+	mpath->link_resblks = xfs_link_space_res(mp, MAXNAMELEN);
-+
-+	do {
-+		xfs_ino_t	alleged_child;
-+
-+		/* Re-establish the link, or tell us which inode to remove. */
-+		error = xrep_metapath_try_link(mpath, &alleged_child);
-+		if (!error)
-+			return 0;
-+		if (error != -EEXIST)
-+			return error;
-+
-+		/*
-+		 * Remove an incorrect link to an alleged child, or tell us
-+		 * which inode to remove.
-+		 */
-+		do {
-+			error = xrep_metapath_try_unlink(mpath, &alleged_child);
-+		} while (error == -EAGAIN);
-+		if (error == -EEXIST) {
-+			/* Link established; we're done. */
-+			error = 0;
-+			break;
-+		}
-+	} while (!error);
-+
-+	return error;
-+}
-+#endif /* CONFIG_XFS_ONLINE_REPAIR */
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 0e0dc2bf985c21..90f9cb3b5ad8ba 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -134,6 +134,7 @@ int xrep_directory(struct xfs_scrub *sc);
- int xrep_parent(struct xfs_scrub *sc);
- int xrep_symlink(struct xfs_scrub *sc);
- int xrep_dirtree(struct xfs_scrub *sc);
-+int xrep_metapath(struct xfs_scrub *sc);
+ /* Transform a rmapbt irec into a fsmap */
+ STATIC int
+-xfs_getfsmap_datadev_helper(
++xfs_getfsmap_rmapbt_helper(
+ 	struct xfs_btree_cur		*cur,
+ 	const struct xfs_rmap_irec	*rec,
+ 	void				*priv)
+ {
++	struct xfs_fsmap_irec		frec = {
++		.owner			= rec->rm_owner,
++		.offset			= rec->rm_offset,
++		.rm_flags		= rec->rm_flags,
++		.rec_key		= rec->rm_startblock,
++	};
+ 	struct xfs_getfsmap_info	*info = priv;
+ 
+-	return xfs_getfsmap_helper(cur->bc_tp, info, rec,
+-			xfs_agbno_to_daddr(to_perag(cur->bc_group),
+-				rec->rm_startblock),
+-			0);
++	return xfs_getfsmap_group_helper(info, cur->bc_tp, cur->bc_group,
++			rec->rm_startblock, rec->rm_blockcount, &frec);
+ }
+ 
+ /* Transform a bnobt irec into a fsmap */
+@@ -408,19 +421,14 @@ xfs_getfsmap_datadev_bnobt_helper(
+ 	const struct xfs_alloc_rec_incore *rec,
+ 	void				*priv)
+ {
++	struct xfs_fsmap_irec		frec = {
++		.owner			= XFS_RMAP_OWN_NULL, /* "free" */
++		.rec_key		= rec->ar_startblock,
++	};
+ 	struct xfs_getfsmap_info	*info = priv;
+-	struct xfs_rmap_irec		irec;
+ 
+-	irec.rm_startblock = rec->ar_startblock;
+-	irec.rm_blockcount = rec->ar_blockcount;
+-	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+-	irec.rm_offset = 0;
+-	irec.rm_flags = 0;
+-
+-	return xfs_getfsmap_helper(cur->bc_tp, info, &irec,
+-			xfs_agbno_to_daddr(to_perag(cur->bc_group),
+-				rec->ar_startblock),
+-			0);
++	return xfs_getfsmap_group_helper(info, cur->bc_tp, cur->bc_group,
++			rec->ar_startblock, rec->ar_blockcount, &frec);
+ }
+ 
+ /* Set rmap flags based on the getfsmap flags */
+@@ -544,9 +552,9 @@ __xfs_getfsmap_datadev(
+ 		if (error)
+ 			break;
+ 
+-		trace_xfs_fsmap_low_key(mp, info->dev, pag_agno(pag),
++		trace_xfs_fsmap_low_group_key(mp, info->dev, pag_agno(pag),
+ 				&info->low);
+-		trace_xfs_fsmap_high_key(mp, info->dev, pag_agno(pag),
++		trace_xfs_fsmap_high_group_key(mp, info->dev, pag_agno(pag),
+ 				&info->high);
+ 
+ 		error = query_fn(tp, info, &bt_cur, priv);
+@@ -602,13 +610,13 @@ xfs_getfsmap_datadev_rmapbt_query(
+ {
+ 	/* Report any gap at the end of the last AG. */
+ 	if (info->last)
+-		return xfs_getfsmap_datadev_helper(*curpp, &info->high, info);
++		return xfs_getfsmap_rmapbt_helper(*curpp, &info->high, info);
+ 
+ 	/* Allocate cursor for this AG and query_range it. */
+ 	*curpp = xfs_rmapbt_init_cursor(tp->t_mountp, tp, info->agf_bp,
+ 			to_perag(info->group));
+ 	return xfs_rmap_query_range(*curpp, &info->low, &info->high,
+-			xfs_getfsmap_datadev_helper, info);
++			xfs_getfsmap_rmapbt_helper, info);
+ }
+ 
+ /* Execute a getfsmap query against the regular data device rmapbt. */
+@@ -668,9 +676,12 @@ xfs_getfsmap_logdev(
+ 	const struct xfs_fsmap		*keys,
+ 	struct xfs_getfsmap_info	*info)
+ {
++	struct xfs_fsmap_irec		frec = {
++		.start_daddr		= 0,
++		.rec_key		= 0,
++		.owner			= XFS_RMAP_OWN_LOG,
++	};
+ 	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_rmap_irec		rmap;
+-	xfs_daddr_t			rec_daddr, len_daddr;
+ 	xfs_fsblock_t			start_fsb, end_fsb;
+ 	uint64_t			eofs;
+ 
+@@ -685,22 +696,15 @@ xfs_getfsmap_logdev(
+ 	if (keys[0].fmr_length > 0)
+ 		info->low_daddr = XFS_FSB_TO_BB(mp, start_fsb);
+ 
+-	trace_xfs_fsmap_low_key_linear(mp, info->dev, start_fsb);
+-	trace_xfs_fsmap_high_key_linear(mp, info->dev, end_fsb);
++	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_fsb);
++	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_fsb);
+ 
+ 	if (start_fsb > 0)
+ 		return 0;
+ 
+ 	/* Fabricate an rmap entry for the external log device. */
+-	rmap.rm_startblock = 0;
+-	rmap.rm_blockcount = mp->m_sb.sb_logblocks;
+-	rmap.rm_owner = XFS_RMAP_OWN_LOG;
+-	rmap.rm_offset = 0;
+-	rmap.rm_flags = 0;
+-
+-	rec_daddr = XFS_FSB_TO_BB(mp, rmap.rm_startblock);
+-	len_daddr = XFS_FSB_TO_BB(mp, rmap.rm_blockcount);
+-	return xfs_getfsmap_helper(tp, info, &rmap, rec_daddr, len_daddr);
++	frec.len_daddr = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
++	return xfs_getfsmap_helper(tp, info, &frec);
+ }
  
  #ifdef CONFIG_XFS_RT
- int xrep_rtbitmap(struct xfs_scrub *sc);
-@@ -208,6 +209,7 @@ xrep_setup_nothing(
- #define xrep_setup_parent		xrep_setup_nothing
- #define xrep_setup_nlinks		xrep_setup_nothing
- #define xrep_setup_dirtree		xrep_setup_nothing
-+#define xrep_setup_metapath		xrep_setup_nothing
+@@ -712,24 +716,31 @@ xfs_getfsmap_rtdev_rtbitmap_helper(
+ 	const struct xfs_rtalloc_rec	*rec,
+ 	void				*priv)
+ {
++	struct xfs_fsmap_irec		frec = {
++		.owner			= XFS_RMAP_OWN_NULL, /* "free" */
++	};
+ 	struct xfs_getfsmap_info	*info = priv;
+-	struct xfs_rmap_irec		irec;
+ 	xfs_rtblock_t			rtbno;
+-	xfs_daddr_t			rec_daddr, len_daddr;
  
- #define xrep_setup_inode(sc, imap)	((void)0)
+-	rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
+-	rec_daddr = XFS_FSB_TO_BB(mp, rtbno);
+-	irec.rm_startblock = rtbno;
++	/*
++	 * For an info->last query, we're looking for a gap between the last
++	 * mapping emitted and the high key specified by userspace.  If the
++	 * user's query spans less than 1 fsblock, then info->high and
++	 * info->low will have the same rm_startblock, which causes rec_daddr
++	 * and next_daddr to be the same.  Therefore, use the end_daddr that
++	 * we calculated from userspace's high key to synthesize the record.
++	 * Note that if the btree query found a mapping, there won't be a gap.
++	 */
++	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL) {
++		frec.start_daddr = info->end_daddr;
++	} else {
++		rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
++		frec.start_daddr = XFS_FSB_TO_BB(mp, rtbno);
++	}
  
-@@ -243,6 +245,7 @@ static inline int xrep_setup_symlink(struct xfs_scrub *sc, unsigned int *x)
- #define xrep_parent			xrep_notsupported
- #define xrep_symlink			xrep_notsupported
- #define xrep_dirtree			xrep_notsupported
-+#define xrep_metapath			xrep_notsupported
+ 	rtbno = xfs_rtx_to_rtb(mp, rec->ar_extcount);
+-	len_daddr = XFS_FSB_TO_BB(mp, rtbno);
+-	irec.rm_blockcount = rtbno;
+-
+-	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+-	irec.rm_offset = 0;
+-	irec.rm_flags = 0;
+-
+-	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr, len_daddr);
++	frec.len_daddr = XFS_FSB_TO_BB(mp, rtbno);
++	return xfs_getfsmap_helper(tp, info, &frec);
+ }
  
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ /* Execute a getfsmap query against the realtime device rtbitmap. */
+@@ -764,8 +775,8 @@ xfs_getfsmap_rtdev_rtbitmap(
+ 			return 0;
+ 	}
  
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index a30ed3d0dcaf79..1ac33bea6f0a72 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -447,7 +447,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.setup	= xchk_setup_metapath,
- 		.scrub	= xchk_metapath,
- 		.has	= xfs_has_metadir,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_metapath,
- 	},
+-	trace_xfs_fsmap_low_key_linear(mp, info->dev, start_rtb);
+-	trace_xfs_fsmap_high_key_linear(mp, info->dev, end_rtb);
++	trace_xfs_fsmap_low_linear_key(mp, info->dev, start_rtb);
++	trace_xfs_fsmap_high_linear_key(mp, info->dev, end_rtb);
+ 
+ 	xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
+ 
+diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
+index a0bcc38486a569..06e492fd479de6 100644
+--- a/fs/xfs/xfs_fsmap.h
++++ b/fs/xfs/xfs_fsmap.h
+@@ -28,6 +28,21 @@ struct xfs_fsmap_head {
+ 	struct xfs_fsmap fmh_keys[2];	/* low and high keys */
  };
  
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index bb52baaa2fa726..b6c8d0944fa453 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -3598,6 +3598,11 @@ DEFINE_XCHK_DIRTREE_EVENT(xrep_dirtree_delete_path);
- DEFINE_XCHK_DIRTREE_EVENT(xrep_dirtree_create_adoption);
- DEFINE_XCHK_DIRTREE_EVALUATE_EVENT(xrep_dirtree_decided_fate);
- 
-+DEFINE_XCHK_METAPATH_EVENT(xrep_metapath_lookup);
-+DEFINE_XCHK_METAPATH_EVENT(xrep_metapath_try_unlink);
-+DEFINE_XCHK_METAPATH_EVENT(xrep_metapath_unlink);
-+DEFINE_XCHK_METAPATH_EVENT(xrep_metapath_link);
++/* internal fsmap record format */
++struct xfs_fsmap_irec {
++	xfs_daddr_t	start_daddr;
++	xfs_daddr_t	len_daddr;
++	uint64_t	owner;		/* extent owner */
++	uint64_t	offset;		/* offset within the owner */
++	unsigned int	rm_flags;	/* rmap state flags */
 +
- #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
++	/*
++	 * rmapbt startblock corresponding to start_daddr, if the record came
++	 * from an rmap btree.
++	 */
++	xfs_agblock_t	rec_key;
++};
++
+ int xfs_ioc_getfsmap(struct xfs_inode *ip, struct fsmap_head __user *arg);
  
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
+ #endif /* __XFS_FSMAP_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index e2db13ed08b59c..0f3704f3c2e4e3 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -72,6 +72,7 @@ struct xfs_btree_cur;
+ struct xfs_defer_op_type;
+ struct xfs_refcount_irec;
+ struct xfs_fsmap;
++struct xfs_fsmap_irec;
+ struct xfs_group;
+ struct xfs_rmap_irec;
+ struct xfs_icreate_log;
+@@ -3877,7 +3878,45 @@ DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap_piece);
+ DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_rmap_error);
+ 
+ /* fsmap traces */
+-DECLARE_EVENT_CLASS(xfs_fsmap_class,
++TRACE_EVENT(xfs_fsmap_mapping,
++	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno,
++		 const struct xfs_fsmap_irec *frec),
++	TP_ARGS(mp, keydev, agno, frec),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(dev_t, keydev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_daddr_t, start_daddr)
++		__field(xfs_daddr_t, len_daddr)
++		__field(uint64_t, owner)
++		__field(uint64_t, offset)
++		__field(unsigned int, flags)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->keydev = new_decode_dev(keydev);
++		__entry->agno = agno;
++		__entry->agbno = frec->rec_key;
++		__entry->start_daddr = frec->start_daddr;
++		__entry->len_daddr = frec->len_daddr;
++		__entry->owner = frec->owner;
++		__entry->offset = frec->offset;
++		__entry->flags = frec->rm_flags;
++	),
++	TP_printk("dev %d:%d keydev %d:%d agno 0x%x rmapbno 0x%x start_daddr 0x%llx len_daddr 0x%llx owner 0x%llx fileoff 0x%llx flags 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->start_daddr,
++		  __entry->len_daddr,
++		  __entry->owner,
++		  __entry->offset,
++		  __entry->flags)
++);
++
++DECLARE_EVENT_CLASS(xfs_fsmap_group_key_class,
+ 	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno,
+ 		 const struct xfs_rmap_irec *rmap),
+ 	TP_ARGS(mp, keydev, agno, rmap),
+@@ -3885,8 +3924,7 @@ DECLARE_EVENT_CLASS(xfs_fsmap_class,
+ 		__field(dev_t, dev)
+ 		__field(dev_t, keydev)
+ 		__field(xfs_agnumber_t, agno)
+-		__field(xfs_fsblock_t, bno)
+-		__field(xfs_filblks_t, len)
++		__field(xfs_agblock_t, agbno)
+ 		__field(uint64_t, owner)
+ 		__field(uint64_t, offset)
+ 		__field(unsigned int, flags)
+@@ -3895,33 +3933,30 @@ DECLARE_EVENT_CLASS(xfs_fsmap_class,
+ 		__entry->dev = mp->m_super->s_dev;
+ 		__entry->keydev = new_decode_dev(keydev);
+ 		__entry->agno = agno;
+-		__entry->bno = rmap->rm_startblock;
+-		__entry->len = rmap->rm_blockcount;
++		__entry->agbno = rmap->rm_startblock;
+ 		__entry->owner = rmap->rm_owner;
+ 		__entry->offset = rmap->rm_offset;
+ 		__entry->flags = rmap->rm_flags;
+ 	),
+-	TP_printk("dev %d:%d keydev %d:%d agno 0x%x startblock 0x%llx fsbcount 0x%llx owner 0x%llx fileoff 0x%llx flags 0x%x",
++	TP_printk("dev %d:%d keydev %d:%d agno 0x%x startblock 0x%x owner 0x%llx fileoff 0x%llx flags 0x%x",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
+ 		  __entry->agno,
+-		  __entry->bno,
+-		  __entry->len,
++		  __entry->agbno,
+ 		  __entry->owner,
+ 		  __entry->offset,
+ 		  __entry->flags)
+ )
+-#define DEFINE_FSMAP_EVENT(name) \
+-DEFINE_EVENT(xfs_fsmap_class, name, \
++#define DEFINE_FSMAP_GROUP_KEY_EVENT(name) \
++DEFINE_EVENT(xfs_fsmap_group_key_class, name, \
+ 	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno, \
+ 		 const struct xfs_rmap_irec *rmap), \
+ 	TP_ARGS(mp, keydev, agno, rmap))
+-DEFINE_FSMAP_EVENT(xfs_fsmap_low_key);
+-DEFINE_FSMAP_EVENT(xfs_fsmap_high_key);
+-DEFINE_FSMAP_EVENT(xfs_fsmap_mapping);
++DEFINE_FSMAP_GROUP_KEY_EVENT(xfs_fsmap_low_group_key);
++DEFINE_FSMAP_GROUP_KEY_EVENT(xfs_fsmap_high_group_key);
+ 
+-DECLARE_EVENT_CLASS(xfs_fsmap_linear_class,
+-	TP_PROTO(struct xfs_mount *mp, u32 keydev, uint64_t bno),
++DECLARE_EVENT_CLASS(xfs_fsmap_linear_key_class,
++	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_fsblock_t bno),
+ 	TP_ARGS(mp, keydev, bno),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+@@ -3938,12 +3973,12 @@ DECLARE_EVENT_CLASS(xfs_fsmap_linear_class,
+ 		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
+ 		  __entry->bno)
+ )
+-#define DEFINE_FSMAP_LINEAR_EVENT(name) \
+-DEFINE_EVENT(xfs_fsmap_linear_class, name, \
++#define DEFINE_FSMAP_LINEAR_KEY_EVENT(name) \
++DEFINE_EVENT(xfs_fsmap_linear_key_class, name, \
+ 	TP_PROTO(struct xfs_mount *mp, u32 keydev, uint64_t bno), \
+ 	TP_ARGS(mp, keydev, bno))
+-DEFINE_FSMAP_LINEAR_EVENT(xfs_fsmap_low_key_linear);
+-DEFINE_FSMAP_LINEAR_EVENT(xfs_fsmap_high_key_linear);
++DEFINE_FSMAP_LINEAR_KEY_EVENT(xfs_fsmap_low_linear_key);
++DEFINE_FSMAP_LINEAR_KEY_EVENT(xfs_fsmap_high_linear_key);
+ 
+ DECLARE_EVENT_CLASS(xfs_getfsmap_class,
+ 	TP_PROTO(struct xfs_mount *mp, struct xfs_fsmap *fsmap),
 
