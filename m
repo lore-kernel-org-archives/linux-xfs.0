@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8F0149C53
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 23:50:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2662B149C53
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 23:50:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730850633; cv=none; b=qHSm/W/WbFDqqQ/P363yT4vm8PASPxeyvT9rb2O2oZg2V0rQLglnQL0zlZdInYBbd8y27qXUe90+Hy4ra/asE68FGcpIkEpDJVLEDJ1XPJXUg3xkBGJye//PoM7+Lbz9h9L/eZmETxM9kp37J6EBGJFM07wHRwb5GGYYu0y7SiY=
+	t=1730850650; cv=none; b=oOhkiWZKSDYS6+pbMPKT7UTv/8qU8y1cDS38htwgUyd8YWAcxyOBFums8QFv4zTCLYlkxK/daX3DQBnUSQ7WBIrt/3D9QM+c5eTx1XKJVN0fydF3HZjWz0u9oaMMhZb01VJXWLZMhBkJus4VV8ZbLh62Ppz6eg8d1ZBmQgAT76k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730850633; c=relaxed/simple;
-	bh=JUxYLAJx0lVV8OwCUBEmjOgly9d363m8FLS6UnCXPkg=;
+	s=arc-20240116; t=1730850650; c=relaxed/simple;
+	bh=rHheNqPXCR5brOXzlRLIMrlXOyKDv+RlajZT2wlXDXM=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=DSRHzzre4qEVXa/NBEoYv5lxY9mPMbIiV4NZuv84WeIdy6twQYVk7djHl5EH1fDj3cfqCuYleTpcX3JDwMimva6aIzaRn0jWMbbonYnzmjF4sCd/GQY239HnaZp3QtlMAuC/TsnMgG19XiFXzprhEFovWKGIEY2/ZwK3GBhgRtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UHhrZesJ; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=Aa9LAHisWFpXsogJC1/H3Dq835lFWrAH2UwCNgyrccbJtseRsvkGLHe/gjgZGq4PB4OtIcUViCNxo08Lwsd19cBxBeVzfwupHIUfKFvINlsyWo48cf3+BOdTm1qQvRO4Mm/u4tNmdobMnYhkfCCZcdvh1rV7oB8PMMlmJeIDe6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hBL55Mit; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UHhrZesJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CA45C4CECF;
-	Tue,  5 Nov 2024 23:50:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hBL55Mit"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBE15C4CECF;
+	Tue,  5 Nov 2024 23:50:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730850633;
-	bh=JUxYLAJx0lVV8OwCUBEmjOgly9d363m8FLS6UnCXPkg=;
+	s=k20201202; t=1730850650;
+	bh=rHheNqPXCR5brOXzlRLIMrlXOyKDv+RlajZT2wlXDXM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UHhrZesJFRMSl6FbW2VKcIZBmcoUCqRboy4z56BT6b2trRxDkoyJ0Bc4cvOYLxSOU
-	 NBG5DSbljSO05iEv/6tm2S2zJhERHF7de2igifxe5P1OABW2ha44tlKJK2VqbNwj1F
-	 akBskbV5J6XBmrpY5g6O+QHv4k4fVEqVY8iQh4B60OkQGPRErM4u88K3hjK0ZtHyMb
-	 /k8qQiEnfbadu0nYVFNYedIb/857NwtTkbF2zZQuOVUKT0VZVu/fxVrACd4Xe/Y+08
-	 NTGJdZN98moSJL6QxkqR6NuQmR7udz7uAJU70x+99rrQPysapjruqxxbowcZZhIbeR
-	 JapkvLZn1AHAQ==
-Date: Tue, 05 Nov 2024 15:50:33 -0800
-Subject: [GIT PULL 02/10] xfs: create a generic allocation group structure
+	b=hBL55MitXjB/eX05L+NadzMkx847Nwqkla1xeoUGIZcZMT7zNgo6frv7tFachBoVk
+	 oKb2/64LBdTWZTuK0tcZVfyGe9L39M/YEGDWVcphKjUOVlkXI4kUE8OEoo0PWhPEDe
+	 hBDrt3ncXOuNWYnA6tDyYnlVtmgfN4uIIELKCHX53VjYIbkHCpSFEdpqjVFi1G8Jpf
+	 p8Eq+nDqIBdidvqAAYwZT8+O9ZLspeovjTWDqKUwZAPxqcubB+ui0LlZJRSayRI+MH
+	 sJzPBO520UWN7SI39MJmI3LdSQ1wB35yrnNmGsZF7z9QC/i07cpTJlOmnUiRqRBUlF
+	 HbCuEB1KKQQJQ==
+Date: Tue, 05 Nov 2024 15:50:48 -0800
+Subject: [GIT PULL 03/10] xfs: metadata inode directory trees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173085053989.1980968.5150082829166393141.stg-ugh@frogsfrogsfrogs>
+Message-ID: <173085054092.1980968.4671578441138510827.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,121 +53,146 @@ encounter any problems.
 
 --D
 
-The following changes since commit d66496578b2a099ea453f56782f1cd2bf63a8029:
-
-xfs: insert the pag structures into the xarray later (2024-11-05 13:38:27 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/generic-groups-6.13_2024-11-05
-
-for you to fetch changes up to e5e5cae05b71aa5b5e291c0e74b4e4d98a0b05d4:
+The following changes since commit e5e5cae05b71aa5b5e291c0e74b4e4d98a0b05d4:
 
 xfs: store a generic group structure in the intents (2024-11-05 13:38:30 -0800)
 
-----------------------------------------------------------------
-xfs: create a generic allocation group structure [v5.5 02/10]
+are available in the Git repository at:
 
-Soon we'll be sharding the realtime volume into separate allocation
-groups.  These rt groups will /mostly/ behave the same as the ones on
-the data device, but since rt groups don't have quite the same set of
-struct fields as perags, let's hoist the parts that will be shared by
-both into a common xfs_group object.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/metadata-directory-tree-6.13_2024-11-05
+
+for you to fetch changes up to 0d2c636e489c115add86bd66952880f92b5edab7:
+
+xfs: repair metadata directory file path connectivity (2024-11-05 13:38:35 -0800)
+
+----------------------------------------------------------------
+xfs: metadata inode directory trees [v5.5 03/10]
+
+This series delivers a new feature -- metadata inode directories.  This
+is a separate directory tree (rooted in the superblock) that contains
+only inodes that contain filesystem metadata.  Different metadata
+objects can be looked up with regular paths.
+
+Start by creating xfs_imeta{dir,file}* functions to mediate access to
+the metadata directory tree.  By the end of this mega series, all
+existing metadata inodes (rt+quota) will use this directory tree instead
+of the superblock.
+
+Next, define the metadir on-disk format, which consists of marking
+inodes with a new iflag that says they're metadata.  This prevents
+bulkstat and friends from ever getting their hands on fs metadata files.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Christoph Hellwig (16):
-xfs: factor out a xfs_iwalk_args helper
-xfs: factor out a generic xfs_group structure
-xfs: add a xfs_group_next_range helper
-xfs: switch perag iteration from the for_each macros to a while based iterator
-xfs: move metadata health tracking to the generic group structure
-xfs: mark xfs_perag_intent_{hold,rele} static
-xfs: move draining of deferred operations to the generic group structure
-xfs: move the online repair rmap hooks to the generic group structure
-xfs: return the busy generation from xfs_extent_busy_list_empty
-xfs: convert extent busy tracepoints to the generic group structure
-xfs: convert busy extent tracking to the generic group structure
-xfs: add a generic group pointer to the btree cursor
-xfs: store a generic xfs_group pointer in xfs_getfsmap_info
-xfs: add group based bno conversion helpers
-xfs: remove xfs_group_intent_hold and xfs_group_intent_rele
-xfs: store a generic group structure in the intents
+Darrick J. Wong (28):
+xfs: constify the xfs_sb predicates
+xfs: constify the xfs_inode predicates
+xfs: rename metadata inode predicates
+xfs: standardize EXPERIMENTAL warning generation
+xfs: define the on-disk format for the metadir feature
+xfs: iget for metadata inodes
+xfs: load metadata directory root at mount time
+xfs: enforce metadata inode flag
+xfs: read and write metadata inode directory tree
+xfs: disable the agi rotor for metadata inodes
+xfs: hide metadata inodes from everyone because they are special
+xfs: advertise metadata directory feature
+xfs: allow bulkstat to return metadata directories
+xfs: don't count metadata directory files to quota
+xfs: mark quota inodes as metadata files
+xfs: adjust xfs_bmap_add_attrfork for metadir
+xfs: record health problems with the metadata directory
+xfs: refactor directory tree root predicates
+xfs: do not count metadata directory files when doing online quotacheck
+xfs: metadata files can have xattrs if metadir is enabled
+xfs: adjust parent pointer scrubber for sb-rooted metadata files
+xfs: fix di_metatype field of inodes that won't load
+xfs: scrub metadata directories
+xfs: check the metadata directory inumber in superblocks
+xfs: move repair temporary files to the metadata directory tree
+xfs: check metadata directory file path connectivity
+xfs: confirm dotdot target before replacing it during a repair
+xfs: repair metadata directory file path connectivity
 
-fs/xfs/Makefile                    |   1 +
-fs/xfs/libxfs/xfs_ag.c             | 149 +++++------------------
-fs/xfs/libxfs/xfs_ag.h             | 165 +++++++++++++------------
-fs/xfs/libxfs/xfs_ag_resv.c        |  19 +--
-fs/xfs/libxfs/xfs_alloc.c          |  74 ++++++------
-fs/xfs/libxfs/xfs_alloc.h          |   2 +-
-fs/xfs/libxfs/xfs_alloc_btree.c    |  30 ++---
-fs/xfs/libxfs/xfs_bmap.c           |   2 +-
-fs/xfs/libxfs/xfs_bmap.h           |   2 +-
-fs/xfs/libxfs/xfs_btree.c          |  37 ++----
-fs/xfs/libxfs/xfs_btree.h          |   3 +-
-fs/xfs/libxfs/xfs_btree_mem.c      |   6 +-
-fs/xfs/libxfs/xfs_group.c          | 225 +++++++++++++++++++++++++++++++++++
-fs/xfs/libxfs/xfs_group.h          | 131 ++++++++++++++++++++
-fs/xfs/libxfs/xfs_health.h         |  45 +++----
-fs/xfs/libxfs/xfs_ialloc.c         |  50 ++++----
-fs/xfs/libxfs/xfs_ialloc_btree.c   |  27 +++--
-fs/xfs/libxfs/xfs_refcount.c       |  26 ++--
-fs/xfs/libxfs/xfs_refcount.h       |   2 +-
-fs/xfs/libxfs/xfs_refcount_btree.c |  14 +--
-fs/xfs/libxfs/xfs_rmap.c           |  42 +++----
-fs/xfs/libxfs/xfs_rmap.h           |   6 +-
-fs/xfs/libxfs/xfs_rmap_btree.c     |  28 ++---
-fs/xfs/libxfs/xfs_sb.c             |  28 +++--
-fs/xfs/libxfs/xfs_types.c          |   5 +-
-fs/xfs/libxfs/xfs_types.h          |   8 ++
-fs/xfs/scrub/agheader_repair.c     |  22 ++--
-fs/xfs/scrub/alloc.c               |   2 +-
-fs/xfs/scrub/alloc_repair.c        |  12 +-
-fs/xfs/scrub/bmap.c                |   8 +-
-fs/xfs/scrub/bmap_repair.c         |   9 +-
-fs/xfs/scrub/common.c              |   4 +-
-fs/xfs/scrub/common.h              |   3 +-
-fs/xfs/scrub/cow_repair.c          |   9 +-
-fs/xfs/scrub/fscounters.c          |  10 +-
-fs/xfs/scrub/health.c              |  21 ++--
-fs/xfs/scrub/ialloc.c              |  14 +--
-fs/xfs/scrub/ialloc_repair.c       |   2 +-
-fs/xfs/scrub/inode_repair.c        |   5 +-
-fs/xfs/scrub/iscan.c               |   4 +-
-fs/xfs/scrub/newbt.c               |   8 +-
-fs/xfs/scrub/reap.c                |   2 +-
-fs/xfs/scrub/refcount.c            |   3 +-
-fs/xfs/scrub/repair.c              |   4 +-
-fs/xfs/scrub/rmap.c                |   4 +-
-fs/xfs/scrub/rmap_repair.c         |  16 +--
-fs/xfs/scrub/trace.h               |  82 ++++++-------
-fs/xfs/xfs_bmap_item.c             |   5 +-
-fs/xfs/xfs_discard.c               |  20 ++--
-fs/xfs/xfs_drain.c                 |  78 +++++-------
-fs/xfs/xfs_drain.h                 |  22 ++--
-fs/xfs/xfs_extent_busy.c           | 201 +++++++++++++++++++------------
-fs/xfs/xfs_extent_busy.h           |  59 ++++-----
-fs/xfs/xfs_extfree_item.c          |  14 ++-
-fs/xfs/xfs_filestream.c            |   8 +-
-fs/xfs/xfs_fsmap.c                 |  49 ++++----
-fs/xfs/xfs_fsops.c                 |  10 +-
-fs/xfs/xfs_health.c                |  99 +++++++--------
-fs/xfs/xfs_icache.c                |  60 ++++------
-fs/xfs/xfs_inode.c                 |   6 +-
-fs/xfs/xfs_iwalk.c                 |  99 +++++++--------
-fs/xfs/xfs_iwalk.h                 |   7 +-
-fs/xfs/xfs_log_recover.c           |  11 +-
-fs/xfs/xfs_mount.h                 |  36 +++++-
-fs/xfs/xfs_refcount_item.c         |   9 +-
-fs/xfs/xfs_reflink.c               |   7 +-
-fs/xfs/xfs_rmap_item.c             |   9 +-
-fs/xfs/xfs_super.c                 |  11 +-
-fs/xfs/xfs_trace.c                 |   1 +
-fs/xfs/xfs_trace.h                 | 238 ++++++++++++++++++++++---------------
-70 files changed, 1380 insertions(+), 1050 deletions(-)
-create mode 100644 fs/xfs/libxfs/xfs_group.c
-create mode 100644 fs/xfs/libxfs/xfs_group.h
+fs/xfs/Makefile                 |   5 +-
+fs/xfs/libxfs/xfs_attr.c        |   5 +-
+fs/xfs/libxfs/xfs_bmap.c        |   5 +-
+fs/xfs/libxfs/xfs_format.h      | 121 ++++++++--
+fs/xfs/libxfs/xfs_fs.h          |  25 +-
+fs/xfs/libxfs/xfs_health.h      |   6 +-
+fs/xfs/libxfs/xfs_ialloc.c      |  58 +++--
+fs/xfs/libxfs/xfs_inode_buf.c   |  90 ++++++-
+fs/xfs/libxfs/xfs_inode_buf.h   |   3 +
+fs/xfs/libxfs/xfs_inode_util.c  |   2 +
+fs/xfs/libxfs/xfs_log_format.h  |   2 +-
+fs/xfs/libxfs/xfs_metadir.c     | 481 +++++++++++++++++++++++++++++++++++++
+fs/xfs/libxfs/xfs_metadir.h     |  47 ++++
+fs/xfs/libxfs/xfs_metafile.c    |  52 ++++
+fs/xfs/libxfs/xfs_metafile.h    |  31 +++
+fs/xfs/libxfs/xfs_ondisk.h      |   2 +-
+fs/xfs/libxfs/xfs_sb.c          |  12 +
+fs/xfs/libxfs/xfs_types.c       |   4 +-
+fs/xfs/libxfs/xfs_types.h       |   2 +-
+fs/xfs/scrub/agheader.c         |   5 +
+fs/xfs/scrub/common.c           |  65 ++++-
+fs/xfs/scrub/common.h           |   5 +
+fs/xfs/scrub/dir.c              |  10 +-
+fs/xfs/scrub/dir_repair.c       |  20 +-
+fs/xfs/scrub/dirtree.c          |  32 ++-
+fs/xfs/scrub/dirtree.h          |  12 +-
+fs/xfs/scrub/findparent.c       |  28 ++-
+fs/xfs/scrub/health.c           |   1 +
+fs/xfs/scrub/inode.c            |  35 ++-
+fs/xfs/scrub/inode_repair.c     |  34 ++-
+fs/xfs/scrub/metapath.c         | 521 ++++++++++++++++++++++++++++++++++++++++
+fs/xfs/scrub/nlinks.c           |   4 +-
+fs/xfs/scrub/nlinks_repair.c    |   4 +-
+fs/xfs/scrub/orphanage.c        |   4 +-
+fs/xfs/scrub/parent.c           |  39 ++-
+fs/xfs/scrub/parent_repair.c    |  37 ++-
+fs/xfs/scrub/quotacheck.c       |   7 +-
+fs/xfs/scrub/refcount_repair.c  |   2 +-
+fs/xfs/scrub/repair.c           |  14 +-
+fs/xfs/scrub/repair.h           |   3 +
+fs/xfs/scrub/scrub.c            |  12 +-
+fs/xfs/scrub/scrub.h            |   2 +
+fs/xfs/scrub/stats.c            |   1 +
+fs/xfs/scrub/tempfile.c         | 105 ++++++++
+fs/xfs/scrub/tempfile.h         |   3 +
+fs/xfs/scrub/trace.c            |   1 +
+fs/xfs/scrub/trace.h            |  42 +++-
+fs/xfs/xfs_dquot.c              |   1 +
+fs/xfs/xfs_fsops.c              |   4 +-
+fs/xfs/xfs_health.c             |   2 +
+fs/xfs/xfs_icache.c             |  74 ++++++
+fs/xfs/xfs_inode.c              |  19 +-
+fs/xfs/xfs_inode.h              |  36 ++-
+fs/xfs/xfs_inode_item.c         |   7 +-
+fs/xfs/xfs_inode_item_recover.c |   2 +-
+fs/xfs/xfs_ioctl.c              |   7 +
+fs/xfs/xfs_iops.c               |  15 +-
+fs/xfs/xfs_itable.c             |  33 ++-
+fs/xfs/xfs_itable.h             |   3 +
+fs/xfs/xfs_message.c            |  51 ++++
+fs/xfs/xfs_message.h            |  20 +-
+fs/xfs/xfs_mount.c              |  31 ++-
+fs/xfs/xfs_mount.h              |  25 +-
+fs/xfs/xfs_pnfs.c               |   3 +-
+fs/xfs/xfs_qm.c                 |  36 ++-
+fs/xfs/xfs_quota.h              |   5 +
+fs/xfs/xfs_rtalloc.c            |  38 +--
+fs/xfs/xfs_super.c              |  13 +-
+fs/xfs/xfs_trace.c              |   2 +
+fs/xfs/xfs_trace.h              | 102 ++++++++
+fs/xfs/xfs_trans_dquot.c        |   6 +
+fs/xfs/xfs_xattr.c              |   3 +-
+72 files changed, 2333 insertions(+), 206 deletions(-)
+create mode 100644 fs/xfs/libxfs/xfs_metadir.c
+create mode 100644 fs/xfs/libxfs/xfs_metadir.h
+create mode 100644 fs/xfs/libxfs/xfs_metafile.c
+create mode 100644 fs/xfs/libxfs/xfs_metafile.h
+create mode 100644 fs/xfs/scrub/metapath.c
 
