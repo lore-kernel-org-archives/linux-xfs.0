@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C726418E023
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:31:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95D7018E023
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:31:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845888; cv=none; b=lDRDmE7Z7EfSBWGFnieHkcJv4vJyfQUrHFFFSK51+NeWuXcW6m8KxtOtohWO0aVAwrEECYMcrUJ1iY+KiW3qZEadonTTtfqK+PoIko9orD4eNLRFDERQ6ElxK3VxHibk6IprEppjSjmnXOZvNU8jk3oVvx1TnF2v4/o09ggdB0k=
+	t=1730845904; cv=none; b=iixBfHx2OAUpTp/DODlKHmDJvMFzAf/JpUOryvyjG+lI3yix8y855jNSiA1O8+kww1+r4Of4b5mdEpMT9zkW1mMQ98QFvueWFT6uJNnbHfRZ5wxfjtxY8yHFZp+l4b0gS7MLq7YQdqeX8FmD8lEyvp60if/1Z0Qg2zuIvTvBpsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845888; c=relaxed/simple;
-	bh=CGzLs+wLBxbCVotl/MPY8RAwxOm2ol+utwrM6SlqLYw=;
+	s=arc-20240116; t=1730845904; c=relaxed/simple;
+	bh=Kf4OGCBwEryZinaVODl+gy8LCKsEetfQ/nDiw2Jr15M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gUH87JulhX7Ceo5nKMyqxRNpV5m2uBdZJWT0/JHlvj26JugC8BXpVjp3oLOjNWaZ4HarbfRAm4lnNy9UixM1IEHcscAp7XauSmue8dEQuCvotw30ZSQT76ug6zcoPodc1kdwqz/tt/o3LsunxzTgcB3o6I3FjjVKYBG9KsiQsG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=buILWMiC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=qEQ8VqCD+4bpA07+mVls9UdRCjxYL+45TjYoYaGKeRuh5VBZ4r0hdIBilVxHtFzUBIfpwf0cf6Mqf+QACEL2Uoz7dph6ZJbHSx6yqoTOrCxx+07oRPdZdDGaZfqp4rzOrtizHBV6IkpqqSe3kFmDORxC/iKM4RwdpO6Igpakijw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VloWqvEE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="buILWMiC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B8D0C4CECF;
-	Tue,  5 Nov 2024 22:31:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VloWqvEE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 371EFC4CECF;
+	Tue,  5 Nov 2024 22:31:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845888;
-	bh=CGzLs+wLBxbCVotl/MPY8RAwxOm2ol+utwrM6SlqLYw=;
+	s=k20201202; t=1730845904;
+	bh=Kf4OGCBwEryZinaVODl+gy8LCKsEetfQ/nDiw2Jr15M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=buILWMiCRMvk+dJiI/5lbSvHp2wnCWElFPxAxuvHCnWcdic5cEe9/jkXOwAVmLCmp
-	 FOMJbKjxCyJrsVs9FsboXAQCy32ggH8d3i+iyC1O9sbQuL/Qb7L8bdfdLxDMJ/i3m9
-	 ZjDqneKYwRQ1jFV7Kou/sQQMjogL0n4V4/ynCAp5hUBvvuQmYdJa2qqMOUQ/9H7ppr
-	 IT+vK0GhXSY+qW9NBx8xEZssnvx+l42lyc1+XvLlki82Yh7dH6tsdnoYXGA2ytfBs7
-	 mkhahO5SSMudhAdKi43syUbSjLe6jTDkYzACYBbdAzhOvfrnrQv6EZ76zWVG9QANvd
-	 HNpdvGmH1FIBQ==
-Date: Tue, 05 Nov 2024 14:31:28 -0800
-Subject: [PATCH 06/34] xfs: add a helper to prevent bmap merges across rtgroup
- boundaries
+	b=VloWqvEExPa8lfNrZE1vuS22QDUDn7Th8xRJMiCpgq0a8fflPnvnqK9GiES3dlVmS
+	 /AO9IX2rSd6tM650DVTbPNI0PoYCecdOZVw6d2YRcjfCCL8YHBGAJ/im0xxHlkJxiQ
+	 BUoesYhkSIB7ma/co9ru40iD1G78oI4nZ1+14dsQ5dooXiMkF9/QQa+ZSYAHjS3jWi
+	 Ib2GLXj8D9w2HCl8lSil7zvpcxkiJbfb+fz96R420Fb2n4Fe8ryscN0T7yUC6Zzh3I
+	 X+hBbSrzSYwXm0FyH8TL5+wDFuY0RaaY640myBFSVfHB1bxPpBF+xGiu5Xnc3628rw
+	 y+Pm91FRfWaIw==
+Date: Tue, 05 Nov 2024 14:31:43 -0800
+Subject: [PATCH 07/34] xfs: add frextents to the lazysbcounters when rtgroups
+ enabled
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084398286.1871887.15900612458328223023.stgit@frogsfrogsfrogs>
+Message-ID: <173084398303.1871887.13091326256570162049.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084398097.1871887.5832278892963229059.stgit@frogsfrogsfrogs>
 References: <173084398097.1871887.5832278892963229059.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,185 +44,156 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Except for the rt superblock, realtime groups do not store any metadata
-at the start (or end) of the group.  There is nothing to prevent the
-bmap code from merging allocations from multiple groups into a single
-bmap record.  Add a helper to check for this case.
+Make the free rt extent count a part of the lazy sb counters when the
+realtime groups feature is enabled.  This is possible because the patch
+to recompute frextents from the rtbitmap during log recovery predates
+the code adding rtgroup support, hence we know that the value will
+always be correct during runtime.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: massage the commit message after pulling this into rtgroups]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   56 ++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 44 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c           |   15 ++++++++++-----
+ fs/xfs/scrub/fscounters_repair.c |    9 +++++----
+ fs/xfs/xfs_trans.c               |   33 +++++++++++++++++++--------------
+ 3 files changed, 34 insertions(+), 23 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9bfa8247854d41..482b4c0cd6b193 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -40,6 +40,7 @@
- #include "xfs_bmap_item.h"
- #include "xfs_symlink_remote.h"
- #include "xfs_inode_util.h"
-+#include "xfs_rtgroup.h"
- 
- struct kmem_cache		*xfs_bmap_intent_cache;
- 
-@@ -1426,6 +1427,24 @@ xfs_bmap_last_offset(
-  * Extent tree manipulation functions used during allocation.
-  */
- 
-+static inline bool
-+xfs_bmap_same_rtgroup(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	struct xfs_bmbt_irec	*left,
-+	struct xfs_bmbt_irec	*right)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+
-+	if (xfs_ifork_is_realtime(ip, whichfork) && xfs_has_rtgroups(mp)) {
-+		if (xfs_rtb_to_rgno(mp, left->br_startblock) !=
-+		    xfs_rtb_to_rgno(mp, right->br_startblock))
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
- /*
-  * Convert a delayed allocation to a real allocation.
-  */
-@@ -1495,7 +1514,8 @@ xfs_bmap_add_extent_delay_real(
- 	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
- 	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
- 	    LEFT.br_state == new->br_state &&
--	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
-+	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
-+	    xfs_bmap_same_rtgroup(bma->ip, whichfork, &LEFT, new))
- 		state |= BMAP_LEFT_CONTIG;
- 
- 	/*
-@@ -1519,7 +1539,8 @@ xfs_bmap_add_extent_delay_real(
- 		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
- 		       BMAP_RIGHT_FILLING) ||
- 	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
--			<= XFS_MAX_BMBT_EXTLEN))
-+			<= XFS_MAX_BMBT_EXTLEN) &&
-+	    xfs_bmap_same_rtgroup(bma->ip, whichfork, new, &RIGHT))
- 		state |= BMAP_RIGHT_CONTIG;
- 
- 	error = 0;
-@@ -2064,7 +2085,8 @@ xfs_bmap_add_extent_unwritten_real(
- 	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
- 	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
- 	    LEFT.br_state == new->br_state &&
--	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
-+	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
-+	    xfs_bmap_same_rtgroup(ip, whichfork, &LEFT, new))
- 		state |= BMAP_LEFT_CONTIG;
- 
- 	/*
-@@ -2088,7 +2110,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
- 		       BMAP_RIGHT_FILLING) ||
- 	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
--			<= XFS_MAX_BMBT_EXTLEN))
-+			<= XFS_MAX_BMBT_EXTLEN) &&
-+	    xfs_bmap_same_rtgroup(ip, whichfork, new, &RIGHT))
- 		state |= BMAP_RIGHT_CONTIG;
- 
- 	/*
-@@ -2597,7 +2620,8 @@ xfs_bmap_add_extent_hole_delay(
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index b1e12c7e7dbe23..d5bf886e18ab9e 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1152,11 +1152,6 @@ xfs_log_sb(
+ 	 * reservations that have been taken out percpu counters. If we have an
+ 	 * unclean shutdown, this will be corrected by log recovery rebuilding
+ 	 * the counters from the AGF block counts.
+-	 *
+-	 * Do not update sb_frextents here because it is not part of the lazy
+-	 * sb counters, despite having a percpu counter. It is always kept
+-	 * consistent with the ondisk rtbitmap by xfs_trans_apply_sb_deltas()
+-	 * and hence we don't need have to update it here.
  	 */
- 	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
- 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
--	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
-+	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
-+	    xfs_bmap_same_rtgroup(ip, whichfork, &left, new))
- 		state |= BMAP_LEFT_CONTIG;
- 
- 	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
-@@ -2605,7 +2629,8 @@ xfs_bmap_add_extent_hole_delay(
- 	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
- 	    (!(state & BMAP_LEFT_CONTIG) ||
- 	     (left.br_blockcount + new->br_blockcount +
--	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
-+	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)) &&
-+	    xfs_bmap_same_rtgroup(ip, whichfork, new, &right))
- 		state |= BMAP_RIGHT_CONTIG;
- 
- 	/*
-@@ -2748,7 +2773,8 @@ xfs_bmap_add_extent_hole_real(
- 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
- 	    left.br_startblock + left.br_blockcount == new->br_startblock &&
- 	    left.br_state == new->br_state &&
--	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
-+	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
-+	    xfs_bmap_same_rtgroup(ip, whichfork, &left, new))
- 		state |= BMAP_LEFT_CONTIG;
- 
- 	if ((state & BMAP_RIGHT_VALID) && !(state & BMAP_RIGHT_DELAY) &&
-@@ -2758,7 +2784,8 @@ xfs_bmap_add_extent_hole_real(
- 	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
- 	    (!(state & BMAP_LEFT_CONTIG) ||
- 	     left.br_blockcount + new->br_blockcount +
--	     right.br_blockcount <= XFS_MAX_BMBT_EXTLEN))
-+	     right.br_blockcount <= XFS_MAX_BMBT_EXTLEN) &&
-+	    xfs_bmap_same_rtgroup(ip, whichfork, new, &right))
- 		state |= BMAP_RIGHT_CONTIG;
- 
- 	error = 0;
-@@ -5715,6 +5742,8 @@ xfs_bunmapi(
-  */
- STATIC bool
- xfs_bmse_can_merge(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
- 	struct xfs_bmbt_irec	*left,	/* preceding extent */
- 	struct xfs_bmbt_irec	*got,	/* current extent to shift */
- 	xfs_fileoff_t		shift)	/* shift fsb */
-@@ -5730,7 +5759,8 @@ xfs_bmse_can_merge(
- 	if ((left->br_startoff + left->br_blockcount != startoff) ||
- 	    (left->br_startblock + left->br_blockcount != got->br_startblock) ||
- 	    (left->br_state != got->br_state) ||
--	    (left->br_blockcount + got->br_blockcount > XFS_MAX_BMBT_EXTLEN))
-+	    (left->br_blockcount + got->br_blockcount > XFS_MAX_BMBT_EXTLEN) ||
-+	    !xfs_bmap_same_rtgroup(ip, whichfork, left, got))
- 		return false;
- 
- 	return true;
-@@ -5766,7 +5796,7 @@ xfs_bmse_merge(
- 	blockcount = left->br_blockcount + got->br_blockcount;
- 
- 	xfs_assert_ilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
--	ASSERT(xfs_bmse_can_merge(left, got, shift));
-+	ASSERT(xfs_bmse_can_merge(ip, whichfork, left, got, shift));
- 
- 	new = *left;
- 	new.br_blockcount = blockcount;
-@@ -5928,7 +5958,8 @@ xfs_bmap_collapse_extents(
- 			goto del_cursor;
- 		}
- 
--		if (xfs_bmse_can_merge(&prev, &got, offset_shift_fsb)) {
-+		if (xfs_bmse_can_merge(ip, whichfork, &prev, &got,
-+				offset_shift_fsb)) {
- 			error = xfs_bmse_merge(tp, ip, whichfork,
- 					offset_shift_fsb, &icur, &got, &prev,
- 					cur, &logflags);
-@@ -6064,7 +6095,8 @@ xfs_bmap_insert_extents(
- 		 * never find mergeable extents in this scenario.  Check anyways
- 		 * and warn if we encounter two extents that could be one.
- 		 */
--		if (xfs_bmse_can_merge(&got, &next, offset_shift_fsb))
-+		if (xfs_bmse_can_merge(ip, whichfork, &got, &next,
-+				offset_shift_fsb))
- 			WARN_ON_ONCE(1);
+ 	if (xfs_has_lazysbcount(mp)) {
+ 		mp->m_sb.sb_icount = percpu_counter_sum_positive(&mp->m_icount);
+@@ -1167,6 +1162,16 @@ xfs_log_sb(
+ 				percpu_counter_sum_positive(&mp->m_fdblocks);
  	}
  
++	/*
++	 * sb_frextents was added to the lazy sb counters when the rt groups
++	 * feature was introduced.  This counter can go negative due to the way
++	 * we handle nearly-lockless reservations, so we must use the _positive
++	 * variant here to avoid writing out nonsense frextents.
++	 */
++	if (xfs_has_rtgroups(mp))
++		mp->m_sb.sb_frextents =
++				percpu_counter_sum_positive(&mp->m_frextents);
++
+ 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+ 	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
+diff --git a/fs/xfs/scrub/fscounters_repair.c b/fs/xfs/scrub/fscounters_repair.c
+index 469bf645dbea52..cda13447a373e1 100644
+--- a/fs/xfs/scrub/fscounters_repair.c
++++ b/fs/xfs/scrub/fscounters_repair.c
+@@ -68,15 +68,16 @@ xrep_fscounters(
+ 
+ 	/*
+ 	 * Online repair is only supported on v5 file systems, which require
+-	 * lazy sb counters and thus no update of sb_fdblocks here.  But as of
+-	 * now we don't support lazy counting sb_frextents yet, and thus need
+-	 * to also update it directly here.  And for that we need to keep
++	 * lazy sb counters and thus no update of sb_fdblocks here.  But
++	 * sb_frextents only uses a lazy counter with rtgroups, and thus needs
++	 * to be updated directly here otherwise.  And for that we need to keep
+ 	 * track of the delalloc reservations separately, as they are are
+ 	 * subtracted from m_frextents, but not included in sb_frextents.
+ 	 */
+ 	percpu_counter_set(&mp->m_frextents,
+ 		fsc->frextents - fsc->frextents_delayed);
+-	mp->m_sb.sb_frextents = fsc->frextents;
++	if (!xfs_has_rtgroups(mp))
++		mp->m_sb.sb_frextents = fsc->frextents;
+ 
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 118d31e11127be..01b5f5b32af467 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -421,6 +421,8 @@ xfs_trans_mod_sb(
+ 			ASSERT(tp->t_rtx_res_used <= tp->t_rtx_res);
+ 		}
+ 		tp->t_frextents_delta += delta;
++		if (xfs_has_rtgroups(mp))
++			flags &= ~XFS_TRANS_SB_DIRTY;
+ 		break;
+ 	case XFS_TRANS_SB_RES_FREXTENTS:
+ 		/*
+@@ -430,6 +432,8 @@ xfs_trans_mod_sb(
+ 		 */
+ 		ASSERT(delta < 0);
+ 		tp->t_res_frextents_delta += delta;
++		if (xfs_has_rtgroups(mp))
++			flags &= ~XFS_TRANS_SB_DIRTY;
+ 		break;
+ 	case XFS_TRANS_SB_DBLOCKS:
+ 		tp->t_dblocks_delta += delta;
+@@ -498,20 +502,22 @@ xfs_trans_apply_sb_deltas(
+ 	}
+ 
+ 	/*
+-	 * Updating frextents requires careful handling because it does not
+-	 * behave like the lazysb counters because we cannot rely on log
+-	 * recovery in older kenels to recompute the value from the rtbitmap.
+-	 * This means that the ondisk frextents must be consistent with the
+-	 * rtbitmap.
++	 * sb_frextents was added to the lazy sb counters when the rt groups
++	 * feature was introduced.  This is possible because we know that all
++	 * kernels supporting rtgroups will also recompute frextents from the
++	 * realtime bitmap.
++	 *
++	 * For older file systems, updating frextents requires careful handling
++	 * because we cannot rely on log recovery in older kernels to recompute
++	 * the value from the rtbitmap.  This means that the ondisk frextents
++	 * must be consistent with the rtbitmap.
+ 	 *
+ 	 * Therefore, log the frextents change to the ondisk superblock and
+ 	 * update the incore superblock so that future calls to xfs_log_sb
+ 	 * write the correct value ondisk.
+-	 *
+-	 * Don't touch m_frextents because it includes incore reservations,
+-	 * and those are handled by the unreserve function.
+ 	 */
+-	if (tp->t_frextents_delta || tp->t_res_frextents_delta) {
++	if ((tp->t_frextents_delta || tp->t_res_frextents_delta) &&
++	    !xfs_has_rtgroups(tp->t_mountp)) {
+ 		struct xfs_mount	*mp = tp->t_mountp;
+ 		int64_t			rtxdelta;
+ 
+@@ -619,7 +625,7 @@ xfs_trans_unreserve_and_mod_sb(
+ 	}
+ 
+ 	ASSERT(tp->t_rtx_res || tp->t_frextents_delta >= 0);
+-	if (tp->t_flags & XFS_TRANS_SB_DIRTY) {
++	if (xfs_has_rtgroups(mp) || (tp->t_flags & XFS_TRANS_SB_DIRTY)) {
+ 		rtxdelta += tp->t_frextents_delta;
+ 		ASSERT(rtxdelta >= 0);
+ 	}
+@@ -652,10 +658,9 @@ xfs_trans_unreserve_and_mod_sb(
+ 	mp->m_sb.sb_icount += idelta;
+ 	mp->m_sb.sb_ifree += ifreedelta;
+ 	/*
+-	 * Do not touch sb_frextents here because we are dealing with incore
+-	 * reservation.  sb_frextents is not part of the lazy sb counters so it
+-	 * must be consistent with the ondisk rtbitmap and must never include
+-	 * incore reservations.
++	 * Do not touch sb_frextents here because it is handled in
++	 * xfs_trans_apply_sb_deltas for file systems where it isn't a lazy
++	 * counter anyway.
+ 	 */
+ 	mp->m_sb.sb_dblocks += tp->t_dblocks_delta;
+ 	mp->m_sb.sb_agcount += tp->t_agcount_delta;
 
