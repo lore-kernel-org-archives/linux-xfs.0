@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5754149C53
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 23:52:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3154D149C53
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 23:52:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730850745; cv=none; b=ts+ofTv+J0sG1HeyvNdFgOSofIHS84bM/SUc/PMU35GJGWETkAEaU6Ibt5v4pYXVxxUR2h5IvYHvY7JSs8L0JE0Qr5RdoTzjGU/esjXylNYIzXsQ9GhPhw/FjyxsLxKOs11fo44ZHGC9FxXswG7tyFpia6VNfhS7A3AWeUwsGs0=
+	t=1730850760; cv=none; b=ndpDnRLruWTOSHhB7aTYIZ5b84VG196fSByPz37C7rpSVu9cZPE5YXOZjYbpivQlDsazbM4JEGplxO4j3AJ9QqtyekX1WagRKsaHRRiY2Ndoo2eKZ1R8pCLHxruWX7q4nBMiOjHmG2XdVPi7yKOE556CJDciygAtD9ximAIkAwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730850745; c=relaxed/simple;
-	bh=+OtOQiDV5O9nySeMJuygQhU6AsSqdXZbwR9LBK9wblg=;
+	s=arc-20240116; t=1730850760; c=relaxed/simple;
+	bh=jRJGOf31T9uPOodbPxdI+udSSMjLARlP372KnmVg7Ts=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=GJTWRPflT5Cc5adKUmGr2IDC3u4ABYeIZ7ynaQBsdeFH4Pkegn08umzq4fFT/bLQkB2ZYan+5bXMEByORt3uPJF/Z8M1uwV4NQmWfbTQ8TTYquLxHFIU1nfr2YvdBa8tcQeM/0Gulr8JYw8jHn0Ya5izRUlTcN0qXVj4DI19lAU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EjVVk5TU; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=fR52jaJrIdtL40yZL1CMhbC5xPmu9m2r3M58GJc3UX1cPIjhpitFS7xxga5UHt4er4H8VoqWAUpjnIoaslef6cCcP10l8KIYRIaBhBC4+Qby8Dni2j5GgW2OYBSG3/G7Ole3MS2YvVnp6TTlSIwPVfnigPRQ+z+UoM5dSg7Lba8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=payvT1qM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EjVVk5TU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61BCFC4CECF;
-	Tue,  5 Nov 2024 23:52:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="payvT1qM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09E82C4CECF;
+	Tue,  5 Nov 2024 23:52:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730850744;
-	bh=+OtOQiDV5O9nySeMJuygQhU6AsSqdXZbwR9LBK9wblg=;
+	s=k20201202; t=1730850760;
+	bh=jRJGOf31T9uPOodbPxdI+udSSMjLARlP372KnmVg7Ts=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EjVVk5TUXEzncRRUucKv3RTY77F12lTYAGN3RoEUsvrLSai7vG54MWBE3yIiXNvzS
-	 GAJDN+Wr7v0EgELb1DMoVT1jvHzPJaQeBM1YdkjOgExfirpT3p6hyGHTD9d12QoT1q
-	 w+y25ULf/hKMR49pt5T09eDkTDcrgaYmxQrMZ8KKSAA5hhZlj8F5Mr7mazyxJhbvez
-	 Rl6KLZU2F59ptgAUboTFYfBo4iABnzohEdQ9J9kHngtIT0H2cBj2koG4a39nTXTr8A
-	 Xf+crdHRgbiO12NDgpu5rw/uWw4wiaihoEZ4KICvg4zkZ8y9zjVyUar9DuyRZz6LHv
-	 +Et+eMgrvIq2w==
-Date: Tue, 05 Nov 2024 15:52:23 -0800
-Subject: [GIT PULL 09/10] xfs: enable metadir
+	b=payvT1qMijczo3iSH5FHNRjP+J2LiL2EUtYOmSoOtFepdYZmgmrRb9xX3VwL94Ca1
+	 05HfugjX61H+tJBMXBcAijiynyt/zgMyytM26kVaYuTSBGW/mGb91EKRMy2TZ6ybQt
+	 2Q6nZhAuxccjo6fskRRm39W/CnxXVW5gdXvLwht7z70kDru1nW0PN+ddZzazASCAVi
+	 vHcanuLlP0+pJrjNTqXOCwiabyjyWC1jUwjYuYXinh10EC8hpODvvuLDPYkkV3bSC1
+	 sjzCHoQ8w9O9/Da5DQv2NNm1cHFF3RCu+2XkB/Q5D2iAtYfCNNIxwRShLJoGZ51OXU
+	 KyMPHR/GpKw8A==
+Date: Tue, 05 Nov 2024 15:52:39 -0800
+Subject: [GIT PULL 10/10] xfs: improve ondisk structure checks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173085054684.1980968.3118969438406362583.stg-ugh@frogsfrogsfrogs>
+Message-ID: <173085054782.1980968.5008642841097262386.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,35 +53,35 @@ encounter any problems.
 
 --D
 
-The following changes since commit edc038f7f3860911d4fc2574e63cedfe56603f1b:
-
-xfs: enable realtime quota again (2024-11-05 13:38:46 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/metadir-6.13_2024-11-05
-
-for you to fetch changes up to ea079efd365e60aa26efea24b57ced4c64640e75:
+The following changes since commit ea079efd365e60aa26efea24b57ced4c64640e75:
 
 xfs: enable metadata directory feature (2024-11-05 13:38:46 -0800)
 
-----------------------------------------------------------------
-xfs: enable metadir [v5.5 09/10]
+are available in the Git repository at:
 
-Actually enable this very large feature, which adds metadata directory
-trees, allocation groups on the realtime volume, persistent quota
-options, and quota for realtime files.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/better-ondisk-6.13_2024-11-05
+
+for you to fetch changes up to 13877bc79d81354c53e91f3c86ac0f7bafe3ba7b:
+
+xfs: port ondisk structure checks from xfs/122 to the kernel (2024-11-05 13:38:47 -0800)
+
+----------------------------------------------------------------
+xfs: improve ondisk structure checks [v5.5 10/10]
+
+Reorganize xfs_ondisk.h to group the build checks by type, then add a
+bunch of missing checks that were in xfs/122 but not the build system.
+With this, we can get rid of xfs/122.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (2):
-xfs: update sb field checks when metadir is turned on
-xfs: enable metadata directory feature
+Darrick J. Wong (3):
+xfs: convert struct typedefs in xfs_ondisk.h
+xfs: separate space btree structures in xfs_ondisk.h
+xfs: port ondisk structure checks from xfs/122 to the kernel
 
-fs/xfs/libxfs/xfs_format.h |  3 ++-
-fs/xfs/scrub/agheader.c    | 36 ++++++++++++++++++++++++------------
-2 files changed, 26 insertions(+), 13 deletions(-)
+fs/xfs/libxfs/xfs_ondisk.h | 186 +++++++++++++++++++++++++++++++++------------
+1 file changed, 137 insertions(+), 49 deletions(-)
 
