@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 512B41F667B
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:13:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A3C01F667B
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:13:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730844811; cv=none; b=LsiTCO0OVj5SAsTfeQ9L3arT6Jx0WMM3/ykhFVQtsJfo4K49mrmDq4AyD4igb28pYn4k6U5cAOQInaSxAi283fKd4yhaYhboN62wQ08Ca9+uZaxjarlVxJ8SM2XNI2O0WbgwsjfyUWt6LhBvjBeSy5n3OCODQPXXIZS2WJ+kYpQ=
+	t=1730844827; cv=none; b=tTaG5hsYew1MoG2CC46zuyEouRD5GdzmKRPzXVQ1xcvk+Q9TZx4DgHA/DpGt5loy/8gE8UMwCf1U+mAaCLBudqtN2F/zkLDCYEeiYCs+DgFQZ1QVgv0VvwOh6Zmgz/D00IjDAHhQqbWFY3ViApT00mzwBISxD0++kNG6JXAz088=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730844811; c=relaxed/simple;
-	bh=mmRwGe50xGwgJAmcVmaMoxcpqnoLS3LcEYPYYvoXzQQ=;
+	s=arc-20240116; t=1730844827; c=relaxed/simple;
+	bh=v8ChzMYg1JFCEMzpJx+9c20M70FomBXzKsNleFygSmM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Zy495HV3/HKTfog/4z+xaoWPXVifPI7G1TU/9h81m104tHN1T+TD5Zhdlql1RrPHE4ZZjRQGb2YPplFLogooqfoWPOyIbM3Kdo2ZHWkipEMEXnJZJUIoblbQm3esD31JeLlWAYkaK/tUXWeEqTm6F9p3oeJdJam9rJRmJcr9kwc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wp44JjG6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=r77bCJL5xe7ySpCuoJ96MV3DULKZ4hyIsWjKDZ7i6+nw1byazXgBbyLKp+lh+AhdzvW12+QSasHz+5++1lZ12+uRpDjNCYM0S5V55gUnbQp/5XtBgocYtfW1rfaWekQgrKb3TUM4reK3r66NRVAaycFfpia/+IdwuQxGL5xLRY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nMlFFyDm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wp44JjG6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F597C4CECF;
-	Tue,  5 Nov 2024 22:13:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nMlFFyDm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5894C4CECF;
+	Tue,  5 Nov 2024 22:13:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730844811;
-	bh=mmRwGe50xGwgJAmcVmaMoxcpqnoLS3LcEYPYYvoXzQQ=;
+	s=k20201202; t=1730844826;
+	bh=v8ChzMYg1JFCEMzpJx+9c20M70FomBXzKsNleFygSmM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Wp44JjG6/hIHpbMXmgePHLH2LjpPAkGa4HS9qg6o1Ys7AiJ0VFTahtobwtTqeKTyk
-	 dKdyQFQ2ZgCsnJRfToLL49cKumykHGB9M+qGnevOX5oVheK4EEF1EUkiiLsL9cU44I
-	 W8D+W0UqKE16CcXPJ2k11HubY/HKM8pJdQCjuO2J75XuXN45i4/bWaEOmMNc6z6AHh
-	 ZY46og/eh3Gv0vMoVNvaUEcCdTfBjh1y+FVbuB1VYsgHkpOb5ntYnQZpG5Wsv302Q6
-	 yWBxpDTMCLcJLEuppps6asf+9zdznI3vks/jw4dSHeAxIjuAceZqGF100vvVDGppMp
-	 0lDzd0x7899Kw==
-Date: Tue, 05 Nov 2024 14:13:30 -0800
-Subject: [PATCH 04/16] xfs: switch perag iteration from the for_each macros to
- a while based iterator
+	b=nMlFFyDmFxUziZEXl6/2l96TIqmRLqTd4JyYDxIcebOldVjXhBSdcEFjiS9PHecKZ
+	 f44Lw5EmU3xaAjeB+vOpJiFa9UZyq60CXTY1OTw8r33cBGLHBrV2s2e3xShvBAE6yR
+	 CDJS69jP3neX6MitzfAr9BNk3271nvjpUtX+XsWt3LSr0HsCSzWiuSJAb1m3g/BzIs
+	 Ttyq4a2TDBt/DqS8cFfMfw4KlPKlp8zzyihh7cmdsEnm4b53JpZvQ68mSuYIDy+WiR
+	 jq3pfch3GJP+grAroKuB0VX9jBuSYUbZ0o3irp1VS+pfU0siYbfOH1vTouTxKAa8p1
+	 jFMgjBT/fLCcA==
+Date: Tue, 05 Nov 2024 14:13:46 -0800
+Subject: [PATCH 05/16] xfs: move metadata health tracking to the generic group
+ structure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084395337.1869491.13164219999576618112.stgit@frogsfrogsfrogs>
+Message-ID: <173084395355.1869491.14328715471299546203.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084395220.1869491.11426383276644234025.stgit@frogsfrogsfrogs>
 References: <173084395220.1869491.11426383276644234025.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,567 +46,392 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-The current for_each_perag* macros are a bit annoying in that they
-require the caller to both provide an object and an index iterator, and
-also somewhat obsfucate the underlying control flow mechanism.
-
-Switch to open coded while loops using new xfs_perag_next{,_from,_range}
-helpers that return the next pag structure to iterate on based on the
-previous one or NULL for the loop start.
+Prepare for also tracking the health status of the upcoming realtime
+groups by moving the health tracking code to the generic xfs_group
+structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.h      |   62 +++++++++++++++++++------------------------
- fs/xfs/libxfs/xfs_sb.c      |   15 +++-------
- fs/xfs/libxfs/xfs_types.c   |    5 +--
- fs/xfs/scrub/bmap.c         |    5 +--
- fs/xfs/scrub/bmap_repair.c  |    5 +--
- fs/xfs/scrub/fscounters.c   |   10 +++----
- fs/xfs/scrub/health.c       |   11 +++-----
- fs/xfs/scrub/inode_repair.c |    5 +--
- fs/xfs/xfs_discard.c        |    6 ++--
- fs/xfs/xfs_extent_busy.c    |    5 +--
- fs/xfs/xfs_fsmap.c          |    7 ++---
- fs/xfs/xfs_fsops.c          |   10 +++----
- fs/xfs/xfs_health.c         |    5 +--
- fs/xfs/xfs_icache.c         |    5 +--
- fs/xfs/xfs_iwalk.c          |   18 +++++++-----
- fs/xfs/xfs_log_recover.c    |    5 +--
- fs/xfs/xfs_reflink.c        |    5 +--
- 17 files changed, 79 insertions(+), 105 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c     |    1 -
+ fs/xfs/libxfs/xfs_ag.h     |    9 ------
+ fs/xfs/libxfs/xfs_group.c  |    4 ++
+ fs/xfs/libxfs/xfs_group.h  |   12 +++++++
+ fs/xfs/libxfs/xfs_health.h |   45 +++++++++++-----------------
+ fs/xfs/scrub/health.c      |    8 ++---
+ fs/xfs/xfs_health.c        |   71 ++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_trace.h         |   35 ++++++++++++----------
+ 8 files changed, 94 insertions(+), 91 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 9ea20e9cf0d4e5..84bd3831297e07 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -232,7 +232,6 @@ xfs_perag_alloc(
+ 	/* Place kernel structure only init below this point. */
+ 	spin_lock_init(&pag->pag_ici_lock);
+ 	spin_lock_init(&pag->pagb_lock);
+-	spin_lock_init(&pag->pag_state_lock);
+ 	INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
+ 	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ 	xfs_defer_drain_init(&pag->pag_intents_drain);
 diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 69b934ad2c4aad..80969682dc4746 100644
+index 80969682dc4746..8271cb72c88387 100644
 --- a/fs/xfs/libxfs/xfs_ag.h
 +++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -208,6 +208,34 @@ xfs_perag_rele(
- 	xfs_group_rele(pag_group(pag));
- }
+@@ -69,13 +69,6 @@ struct xfs_perag {
+ #ifdef __KERNEL__
+ 	/* -- kernel only structures below this line -- */
  
-+static inline struct xfs_perag *
-+xfs_perag_next_range(
-+	struct xfs_mount	*mp,
-+	struct xfs_perag	*pag,
-+	xfs_agnumber_t		start_agno,
-+	xfs_agnumber_t		end_agno)
-+{
-+	return to_perag(xfs_group_next_range(mp, pag ? pag_group(pag) : NULL,
-+			start_agno, end_agno, XG_TYPE_AG));
-+}
+-	/*
+-	 * Bitsets of per-ag metadata that have been checked and/or are sick.
+-	 * Callers should hold pag_state_lock before accessing this field.
+-	 */
+-	uint16_t	pag_checked;
+-	uint16_t	pag_sick;
+-
+ #ifdef CONFIG_XFS_ONLINE_REPAIR
+ 	/*
+ 	 * Alternate btree heights so that online repair won't trip the write
+@@ -87,8 +80,6 @@ struct xfs_perag {
+ 	uint8_t		pagf_repair_rmap_level;
+ #endif
+ 
+-	spinlock_t	pag_state_lock;
+-
+ 	spinlock_t	pagb_lock;	/* lock for pagb_tree */
+ 	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
+ 	unsigned int	pagb_gen;	/* generation count for pagb_tree */
+diff --git a/fs/xfs/libxfs/xfs_group.c b/fs/xfs/libxfs/xfs_group.c
+index 59e08cfaf9bffd..927e72c0882b88 100644
+--- a/fs/xfs/libxfs/xfs_group.c
++++ b/fs/xfs/libxfs/xfs_group.c
+@@ -182,6 +182,10 @@ xfs_group_insert(
+ 	xg->xg_gno = index;
+ 	xg->xg_type = type;
+ 
++#ifdef __KERNEL__
++	spin_lock_init(&xg->xg_state_lock);
++#endif
 +
-+static inline struct xfs_perag *
-+xfs_perag_next_from(
-+	struct xfs_mount	*mp,
-+	struct xfs_perag	*pag,
-+	xfs_agnumber_t		start_agno)
-+{
-+	return xfs_perag_next_range(mp, pag, start_agno, mp->m_sb.sb_agcount - 1);
-+}
+ 	/* Active ref owned by mount indicates group is online. */
+ 	atomic_set(&xg->xg_active_ref, 1);
+ 
+diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
+index dd7da90443054b..d2c61dd1f43e44 100644
+--- a/fs/xfs/libxfs/xfs_group.h
++++ b/fs/xfs/libxfs/xfs_group.h
+@@ -11,6 +11,18 @@ struct xfs_group {
+ 	enum xfs_group_type	xg_type;
+ 	atomic_t		xg_ref;		/* passive reference count */
+ 	atomic_t		xg_active_ref;	/* active reference count */
 +
-+static inline struct xfs_perag *
-+xfs_perag_next(
-+	struct xfs_mount	*mp,
-+	struct xfs_perag	*pag)
-+{
-+	return xfs_perag_next_from(mp, pag, 0);
-+}
++#ifdef __KERNEL__
++	/* -- kernel only structures below this line -- */
++
++	/*
++	 * Bitsets of per-ag metadata that have been checked and/or are sick.
++	 * Callers should hold xg_state_lock before accessing this field.
++	 */
++	uint16_t		xg_checked;
++	uint16_t		xg_sick;
++	spinlock_t		xg_state_lock;
++#endif /* __KERNEL__ */
+ };
+ 
+ struct xfs_group *xfs_group_get(struct xfs_mount *mp, uint32_t index,
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index b0edb4288e5929..13301420a2f670 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -6,6 +6,8 @@
+ #ifndef __XFS_HEALTH_H__
+ #define __XFS_HEALTH_H__
+ 
++struct xfs_group;
 +
  /*
-  * Per-ag geometry infomation and validation
-  */
-@@ -273,40 +301,6 @@ xfs_ag_contains_log(struct xfs_mount *mp, xfs_agnumber_t agno)
- 	       agno == XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart);
+  * In-Core Filesystem Health Assessments
+  * =====================================
+@@ -197,10 +199,12 @@ void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
+ 
+ void xfs_agno_mark_sick(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		unsigned int mask);
+-void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask);
+-void xfs_ag_mark_corrupt(struct xfs_perag *pag, unsigned int mask);
+-void xfs_ag_mark_healthy(struct xfs_perag *pag, unsigned int mask);
+-void xfs_ag_measure_sickness(struct xfs_perag *pag, unsigned int *sick,
++void xfs_group_mark_sick(struct xfs_group *xg, unsigned int mask);
++#define xfs_ag_mark_sick(pag, mask) \
++	xfs_group_mark_sick(pag_group(pag), (mask))
++void xfs_group_mark_corrupt(struct xfs_group *xg, unsigned int mask);
++void xfs_group_mark_healthy(struct xfs_group *xg, unsigned int mask);
++void xfs_group_measure_sickness(struct xfs_group *xg, unsigned int *sick,
+ 		unsigned int *checked);
+ 
+ void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask);
+@@ -227,22 +231,19 @@ xfs_fs_has_sickness(struct xfs_mount *mp, unsigned int mask)
  }
  
--/*
-- * Perag iteration APIs
-- */
--static inline struct xfs_perag *
--xfs_perag_next(
--	struct xfs_perag	*pag,
--	xfs_agnumber_t		*agno,
--	xfs_agnumber_t		end_agno)
--{
--	struct xfs_mount	*mp = pag_mount(pag);
--
--	*agno = pag_agno(pag) + 1;
--	xfs_perag_rele(pag);
--	while (*agno <= end_agno) {
--		pag = xfs_perag_grab(mp, *agno);
--		if (pag)
--			return pag;
--		(*agno)++;
--	}
--	return NULL;
+ static inline bool
+-xfs_rt_has_sickness(struct xfs_mount *mp, unsigned int mask)
++xfs_group_has_sickness(
++	struct xfs_group	*xg,
++	unsigned int		mask)
+ {
+-	unsigned int	sick, checked;
++	unsigned int		sick, checked;
+ 
+-	xfs_rt_measure_sickness(mp, &sick, &checked);
+-	return sick & mask;
 -}
 -
--#define for_each_perag_range(mp, agno, end_agno, pag) \
--	for ((pag) = xfs_perag_grab((mp), (agno)); \
--		(pag) != NULL; \
--		(pag) = xfs_perag_next((pag), &(agno), (end_agno)))
+-static inline bool
+-xfs_ag_has_sickness(struct xfs_perag *pag, unsigned int mask)
+-{
+-	unsigned int	sick, checked;
 -
--#define for_each_perag_from(mp, agno, pag) \
--	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
--
--#define for_each_perag(mp, agno, pag) \
--	(agno) = 0; \
--	for_each_perag_from((mp), (agno), (pag))
--
- static inline struct xfs_perag *
- xfs_perag_next_wrap(
- 	struct xfs_perag	*pag,
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index d2012fbf07aa65..061c8c961d5bc9 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1109,14 +1109,13 @@ int
- xfs_update_secondary_sbs(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno = 1;
-+	struct xfs_perag	*pag = NULL;
- 	int			saved_error = 0;
- 	int			error = 0;
- 	LIST_HEAD		(buffer_list);
+-	xfs_ag_measure_sickness(pag, &sick, &checked);
++	xfs_group_measure_sickness(xg, &sick, &checked);
+ 	return sick & mask;
+ }
++#define xfs_ag_has_sickness(pag, mask) \
++	xfs_group_has_sickness(pag_group(pag), (mask))
++#define xfs_ag_is_healthy(pag) \
++	(!xfs_ag_has_sickness((pag), UINT_MAX))
  
- 	/* update secondary superblocks. */
--	for_each_perag_from(mp, agno, pag) {
-+	while ((pag = xfs_perag_next_from(mp, pag, 1))) {
- 		struct xfs_buf		*bp;
- 
- 		error = xfs_buf_get(mp->m_ddev_targp,
-@@ -1146,7 +1145,7 @@ xfs_update_secondary_sbs(
- 		xfs_buf_relse(bp);
- 
- 		/* don't hold too many buffers at once */
--		if (agno % 16)
-+		if (pag_agno(pag) % 16)
- 			continue;
- 
- 		error = xfs_buf_delwri_submit(&buffer_list);
-@@ -1160,12 +1159,8 @@ xfs_update_secondary_sbs(
- 		}
- 	}
- 	error = xfs_buf_delwri_submit(&buffer_list);
--	if (error) {
--		xfs_warn(mp,
--		"write error %d updating a secondary superblock near ag %d",
--			error, agno);
--	}
--
-+	if (error)
-+		xfs_warn(mp, "error %d writing secondary superblocks", error);
- 	return saved_error ? saved_error : error;
+ static inline bool
+ xfs_inode_has_sickness(struct xfs_inode *ip, unsigned int mask)
+@@ -259,18 +260,6 @@ xfs_fs_is_healthy(struct xfs_mount *mp)
+ 	return !xfs_fs_has_sickness(mp, -1U);
  }
  
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index c299b16c9365fa..c91db4f5140743 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -170,13 +170,12 @@ xfs_icount_range(
- 	unsigned long long	*max)
+-static inline bool
+-xfs_rt_is_healthy(struct xfs_mount *mp)
+-{
+-	return !xfs_rt_has_sickness(mp, -1U);
+-}
+-
+-static inline bool
+-xfs_ag_is_healthy(struct xfs_perag *pag)
+-{
+-	return !xfs_ag_has_sickness(pag, -1U);
+-}
+-
+ static inline bool
+ xfs_inode_is_healthy(struct xfs_inode *ip)
  {
- 	unsigned long long	nr_inos = 0;
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 
- 	/* root, rtbitmap, rtsum all live in the first chunk */
- 	*min = XFS_INODES_PER_CHUNK;
- 
--	for_each_perag(mp, agno, pag)
-+	while ((pag = xfs_perag_next(mp, pag)))
- 		nr_inos += pag->agino_max - pag->agino_min + 1;
- 	*max = nr_inos;
- }
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index a43912227dd478..fb022b403716b1 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -760,11 +760,10 @@ xchk_bmap_check_rmaps(
- 	struct xfs_scrub	*sc,
- 	int			whichfork)
- {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 	int			error;
- 
--	for_each_perag(sc->mp, agno, pag) {
-+	while ((pag = xfs_perag_next(sc->mp, pag))) {
- 		error = xchk_bmap_check_ag_rmaps(sc, whichfork, pag);
- 		if (error ||
- 		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
-diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
-index dc8fdd2da174ed..be408e50484b54 100644
---- a/fs/xfs/scrub/bmap_repair.c
-+++ b/fs/xfs/scrub/bmap_repair.c
-@@ -407,12 +407,11 @@ xrep_bmap_find_mappings(
- 	struct xrep_bmap	*rb)
- {
- 	struct xfs_scrub	*sc = rb->sc;
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 	int			error = 0;
- 
- 	/* Iterate the rmaps for extents. */
--	for_each_perag(sc->mp, agno, pag) {
-+	while ((pag = xfs_perag_next(sc->mp, pag))) {
- 		error = xrep_bmap_scan_ag(rb, pag);
- 		if (error) {
- 			xfs_perag_rele(pag);
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index 1d3e98346933e1..28db0c83819c20 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -74,10 +74,9 @@ xchk_fscount_warmup(
- 	struct xfs_buf		*agi_bp = NULL;
- 	struct xfs_buf		*agf_bp = NULL;
- 	struct xfs_perag	*pag = NULL;
--	xfs_agnumber_t		agno;
- 	int			error = 0;
- 
--	for_each_perag(mp, agno, pag) {
-+	while ((pag = xfs_perag_next(mp, pag))) {
- 		if (xchk_should_terminate(sc, &error))
- 			break;
- 		if (xfs_perag_initialised_agi(pag) &&
-@@ -295,9 +294,8 @@ xchk_fscount_aggregate_agcounts(
- 	struct xchk_fscounters	*fsc)
- {
- 	struct xfs_mount	*mp = sc->mp;
--	struct xfs_perag	*pag;
-+	struct xfs_perag	*pag = NULL;
- 	uint64_t		delayed;
--	xfs_agnumber_t		agno;
- 	int			tries = 8;
- 	int			error = 0;
- 
-@@ -306,7 +304,7 @@ xchk_fscount_aggregate_agcounts(
- 	fsc->ifree = 0;
- 	fsc->fdblocks = 0;
- 
--	for_each_perag(mp, agno, pag) {
-+	while ((pag = xfs_perag_next(mp, pag))) {
- 		if (xchk_should_terminate(sc, &error))
- 			break;
- 
-@@ -327,7 +325,7 @@ xchk_fscount_aggregate_agcounts(
- 		if (xfs_has_lazysbcount(sc->mp)) {
- 			fsc->fdblocks += pag->pagf_btreeblks;
- 		} else {
--			error = xchk_fscount_btreeblks(sc, fsc, agno);
-+			error = xchk_fscount_btreeblks(sc, fsc, pag_agno(pag));
- 			if (error)
- 				break;
- 		}
 diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-index b712a8bd34f543..112dd05e5551d3 100644
+index 112dd05e5551d3..fce04444c37c2a 100644
 --- a/fs/xfs/scrub/health.c
 +++ b/fs/xfs/scrub/health.c
-@@ -160,12 +160,11 @@ STATIC void
- xchk_mark_all_healthy(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 
+@@ -165,7 +165,7 @@ xchk_mark_all_healthy(
  	xfs_fs_mark_healthy(mp, XFS_SICK_FS_INDIRECT);
  	xfs_rt_mark_healthy(mp, XFS_SICK_RT_INDIRECT);
--	for_each_perag(mp, agno, pag)
-+	while ((pag = xfs_perag_next(mp, pag)))
- 		xfs_ag_mark_healthy(pag, XFS_SICK_AG_INDIRECT);
+ 	while ((pag = xfs_perag_next(mp, pag)))
+-		xfs_ag_mark_healthy(pag, XFS_SICK_AG_INDIRECT);
++		xfs_group_mark_healthy(pag_group(pag), XFS_SICK_AG_INDIRECT);
  }
  
-@@ -294,9 +293,7 @@ xchk_health_record(
- 	struct xfs_scrub	*sc)
- {
- 	struct xfs_mount	*mp = sc->mp;
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
--
-+	struct xfs_perag	*pag = NULL;
- 	unsigned int		sick;
- 	unsigned int		checked;
- 
-@@ -308,7 +305,7 @@ xchk_health_record(
- 	if (sick & XFS_SICK_RT_PRIMARY)
+ /*
+@@ -206,9 +206,9 @@ xchk_update_health(
+ 	case XHG_AG:
+ 		pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
+ 		if (bad)
+-			xfs_ag_mark_corrupt(pag, sc->sick_mask);
++			xfs_group_mark_corrupt(pag_group(pag), sc->sick_mask);
+ 		else
+-			xfs_ag_mark_healthy(pag, sc->sick_mask);
++			xfs_group_mark_healthy(pag_group(pag), sc->sick_mask);
+ 		xfs_perag_put(pag);
+ 		break;
+ 	case XHG_INO:
+@@ -306,7 +306,7 @@ xchk_health_record(
  		xchk_set_corrupt(sc);
  
--	for_each_perag(mp, agno, pag) {
-+	while ((pag = xfs_perag_next(mp, pag))) {
- 		xfs_ag_measure_sickness(pag, &sick, &checked);
+ 	while ((pag = xfs_perag_next(mp, pag))) {
+-		xfs_ag_measure_sickness(pag, &sick, &checked);
++		xfs_group_measure_sickness(pag_group(pag), &sick, &checked);
  		if (sick & XFS_SICK_AG_PRIMARY)
  			xchk_set_corrupt(sc);
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 3e45b9b72312ab..5da9e1a387a8bb 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -761,14 +761,13 @@ STATIC int
- xrep_dinode_count_rmaps(
- 	struct xrep_inode	*ri)
- {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 	int			error;
- 
- 	if (!xfs_has_rmapbt(ri->sc->mp) || xfs_has_realtime(ri->sc->mp))
- 		return -EOPNOTSUPP;
- 
--	for_each_perag(ri->sc->mp, agno, pag) {
-+	while ((pag = xfs_perag_next(ri->sc->mp, pag))) {
- 		error = xrep_dinode_count_ag_rmaps(ri, pag);
- 		if (error) {
- 			xfs_perag_rele(pag);
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index dfd6edcebb6ea4..739ec69c44281c 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -387,8 +387,8 @@ xfs_trim_datadev_extents(
- {
- 	xfs_agnumber_t		start_agno, end_agno;
- 	xfs_agblock_t		start_agbno, end_agbno;
-+	struct xfs_perag	*pag = NULL;
- 	xfs_daddr_t		ddev_end;
--	struct xfs_perag	*pag;
- 	int			last_error = 0, error;
- 
- 	ddev_end = min_t(xfs_daddr_t, end,
-@@ -399,10 +399,10 @@ xfs_trim_datadev_extents(
- 	end_agno = xfs_daddr_to_agno(mp, ddev_end);
- 	end_agbno = xfs_daddr_to_agbno(mp, ddev_end);
- 
--	for_each_perag_range(mp, start_agno, end_agno, pag) {
-+	while ((pag = xfs_perag_next_range(mp, pag, start_agno, end_agno))) {
- 		xfs_agblock_t	agend = pag->block_count;
- 
--		if (start_agno == end_agno)
-+		if (pag_agno(pag) == end_agno)
- 			agend = end_agbno;
- 		error = xfs_trim_perag_extents(pag, start_agbno, agend, minlen);
- 		if (error)
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 79b0f833c511e3..3d5a57d7ac5e14 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -629,11 +629,10 @@ void
- xfs_extent_busy_wait_all(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_perag	*pag;
-+	struct xfs_perag	*pag = NULL;
- 	DEFINE_WAIT		(wait);
--	xfs_agnumber_t		agno;
- 
--	for_each_perag(mp, agno, pag) {
-+	while ((pag = xfs_perag_next(mp, pag))) {
- 		do {
- 			prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
- 			if  (RB_EMPTY_ROOT(&pag->pagb_tree))
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 918e1c38a15592..a26fb054346b68 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -460,11 +460,11 @@ __xfs_getfsmap_datadev(
- 	void				*priv)
- {
- 	struct xfs_mount		*mp = tp->t_mountp;
--	struct xfs_perag		*pag;
-+	struct xfs_perag		*pag = NULL;
- 	struct xfs_btree_cur		*bt_cur = NULL;
- 	xfs_fsblock_t			start_fsb;
- 	xfs_fsblock_t			end_fsb;
--	xfs_agnumber_t			start_ag, end_ag, ag;
-+	xfs_agnumber_t			start_ag, end_ag;
- 	uint64_t			eofs;
- 	int				error = 0;
- 
-@@ -512,8 +512,7 @@ __xfs_getfsmap_datadev(
- 	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
- 	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
- 
--	ag = start_ag;
--	for_each_perag_range(mp, ag, end_ag, pag) {
-+	while ((pag = xfs_perag_next_range(mp, pag, start_ag, end_ag))) {
- 		/*
- 		 * Set the AG high key from the fsmap high key if this
- 		 * is the last AG that we're querying.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index b247d895c276d2..82812a458cf10f 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -528,13 +528,12 @@ int
- xfs_fs_reserve_ag_blocks(
- 	struct xfs_mount	*mp)
- {
--	xfs_agnumber_t		agno;
--	struct xfs_perag	*pag;
-+	struct xfs_perag	*pag = NULL;
- 	int			error = 0;
- 	int			err2;
- 
- 	mp->m_finobt_nores = false;
--	for_each_perag(mp, agno, pag) {
-+	while ((pag = xfs_perag_next(mp, pag))) {
- 		err2 = xfs_ag_resv_init(pag, NULL);
- 		if (err2 && !error)
- 			error = err2;
-@@ -556,9 +555,8 @@ void
- xfs_fs_unreserve_ag_blocks(
- 	struct xfs_mount	*mp)
- {
--	xfs_agnumber_t		agno;
--	struct xfs_perag	*pag;
-+	struct xfs_perag	*pag = NULL;
- 
--	for_each_perag(mp, agno, pag)
-+	while ((pag = xfs_perag_next(mp, pag)))
- 		xfs_ag_resv_free(pag);
- }
+ 	}
 diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index d6492128582a3e..ff5aca875ab0d0 100644
+index ff5aca875ab0d0..732246f46680d5 100644
 --- a/fs/xfs/xfs_health.c
 +++ b/fs/xfs/xfs_health.c
-@@ -28,8 +28,7 @@ void
- xfs_health_unmount(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 	unsigned int		sick = 0;
- 	unsigned int		checked = 0;
- 	bool			warn = false;
-@@ -38,7 +37,7 @@ xfs_health_unmount(
- 		return;
+@@ -38,9 +38,10 @@ xfs_health_unmount(
  
  	/* Measure AG corruption levels. */
--	for_each_perag(mp, agno, pag) {
-+	while ((pag = xfs_perag_next(mp, pag))) {
- 		xfs_ag_measure_sickness(pag, &sick, &checked);
+ 	while ((pag = xfs_perag_next(mp, pag))) {
+-		xfs_ag_measure_sickness(pag, &sick, &checked);
++		xfs_group_measure_sickness(pag_group(pag), &sick, &checked);
  		if (sick) {
- 			trace_xfs_ag_unfixed_corruption(pag, sick);
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0a930fc116f575..383c245482027b 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1383,13 +1383,12 @@ void
- xfs_blockgc_stop(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 
- 	if (!xfs_clear_blockgc_enabled(mp))
- 		return;
- 
--	for_each_perag(mp, agno, pag)
-+	while ((pag = xfs_perag_next(mp, pag)))
- 		cancel_delayed_work_sync(&pag->pag_blockgc_work);
- 	trace_xfs_blockgc_stop(mp, __return_address);
- }
-diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index ec2d56f1840fc6..7db3ece370b100 100644
---- a/fs/xfs/xfs_iwalk.c
-+++ b/fs/xfs/xfs_iwalk.c
-@@ -540,23 +540,25 @@ xfs_iwalk_args(
- 	unsigned int		flags)
- {
- 	struct xfs_mount	*mp = iwag->mp;
--	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, iwag->startino);
-+	xfs_agnumber_t		start_agno;
- 	int			error;
- 
--	ASSERT(agno < mp->m_sb.sb_agcount);
-+	start_agno = XFS_INO_TO_AGNO(iwag->mp, iwag->startino);
-+	ASSERT(start_agno < iwag->mp->m_sb.sb_agcount);
- 	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
- 
- 	error = xfs_iwalk_alloc(iwag);
- 	if (error)
- 		return error;
- 
--	for_each_perag_from(mp, agno, iwag->pag) {
-+	while ((iwag->pag = xfs_perag_next_from(mp, iwag->pag, start_agno))) {
- 		error = xfs_iwalk_ag(iwag);
- 		if (error || (flags & XFS_IWALK_SAME_AG)) {
- 			xfs_perag_rele(iwag->pag);
- 			break;
+-			trace_xfs_ag_unfixed_corruption(pag, sick);
++			trace_xfs_group_unfixed_corruption(pag_group(pag),
++					sick);
+ 			warn = true;
  		}
--		iwag->startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
-+		iwag->startino =
-+			XFS_AGINO_TO_INO(mp, pag_agno(iwag->pag) + 1, 0);
  	}
+@@ -227,61 +228,65 @@ xfs_agno_mark_sick(
  
- 	xfs_iwalk_free(iwag);
-@@ -644,19 +646,19 @@ xfs_iwalk_threaded(
- 	bool			polled,
- 	void			*data)
+ /* Mark unhealthy per-ag metadata. */
+ void
+-xfs_ag_mark_sick(
+-	struct xfs_perag	*pag,
++xfs_group_mark_sick(
++	struct xfs_group	*xg,
+ 	unsigned int		mask)
  {
-+	xfs_agnumber_t		start_agno = XFS_INO_TO_AGNO(mp, startino);
- 	struct xfs_pwork_ctl	pctl;
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
-+	struct xfs_perag	*pag = NULL;
- 	int			error;
+ 	ASSERT(!(mask & ~XFS_SICK_AG_ALL));
+-	trace_xfs_ag_mark_sick(pag, mask);
++	trace_xfs_group_mark_sick(xg, mask);
  
--	ASSERT(agno < mp->m_sb.sb_agcount);
-+	ASSERT(start_agno < mp->m_sb.sb_agcount);
- 	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
- 
- 	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk");
- 	if (error)
- 		return error;
- 
--	for_each_perag_from(mp, agno, pag) {
-+	while ((pag = xfs_perag_next_from(mp, pag, start_agno))) {
- 		struct xfs_iwalk_ag	*iwag;
- 
- 		if (xfs_pwork_ctl_want_abort(&pctl))
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index a285d2d1f68c15..55e412a821483e 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2845,10 +2845,9 @@ static void
- xlog_recover_process_iunlinks(
- 	struct xlog	*log)
- {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 
--	for_each_perag(log->l_mp, agno, pag)
-+	while ((pag = xfs_perag_next(log->l_mp, pag)))
- 		xlog_recover_iunlink_ag(pag);
+-	spin_lock(&pag->pag_state_lock);
+-	pag->pag_sick |= mask;
+-	spin_unlock(&pag->pag_state_lock);
++	spin_lock(&xg->xg_state_lock);
++	xg->xg_sick |= mask;
++	spin_unlock(&xg->xg_state_lock);
  }
  
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 2e82b5b6ed52d2..b11769c009effc 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -894,14 +894,13 @@ int
- xfs_reflink_recover_cow(
- 	struct xfs_mount	*mp)
+-/* Mark per-ag metadata as having been checked and found unhealthy by fsck. */
++/*
++ * Mark per-group metadata as having been checked and found unhealthy by fsck.
++ */
+ void
+-xfs_ag_mark_corrupt(
+-	struct xfs_perag	*pag,
++xfs_group_mark_corrupt(
++	struct xfs_group	*xg,
+ 	unsigned int		mask)
  {
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag = NULL;
- 	int			error = 0;
+ 	ASSERT(!(mask & ~XFS_SICK_AG_ALL));
+-	trace_xfs_ag_mark_corrupt(pag, mask);
++	trace_xfs_group_mark_corrupt(xg, mask);
  
- 	if (!xfs_has_reflink(mp))
- 		return 0;
+-	spin_lock(&pag->pag_state_lock);
+-	pag->pag_sick |= mask;
+-	pag->pag_checked |= mask;
+-	spin_unlock(&pag->pag_state_lock);
++	spin_lock(&xg->xg_state_lock);
++	xg->xg_sick |= mask;
++	xg->xg_checked |= mask;
++	spin_unlock(&xg->xg_state_lock);
+ }
  
--	for_each_perag(mp, agno, pag) {
-+	while ((pag = xfs_perag_next(mp, pag))) {
- 		error = xfs_refcount_recover_cow_leftovers(mp, pag);
- 		if (error) {
- 			xfs_perag_rele(pag);
+-/* Mark per-ag metadata ok. */
++/*
++ * Mark per-group metadata ok.
++ */
+ void
+-xfs_ag_mark_healthy(
+-	struct xfs_perag	*pag,
++xfs_group_mark_healthy(
++	struct xfs_group	*xg,
+ 	unsigned int		mask)
+ {
+ 	ASSERT(!(mask & ~XFS_SICK_AG_ALL));
+-	trace_xfs_ag_mark_healthy(pag, mask);
++	trace_xfs_group_mark_healthy(xg, mask);
+ 
+-	spin_lock(&pag->pag_state_lock);
+-	pag->pag_sick &= ~mask;
+-	if (!(pag->pag_sick & XFS_SICK_AG_PRIMARY))
+-		pag->pag_sick &= ~XFS_SICK_AG_SECONDARY;
+-	pag->pag_checked |= mask;
+-	spin_unlock(&pag->pag_state_lock);
++	spin_lock(&xg->xg_state_lock);
++	xg->xg_sick &= ~mask;
++	if (!(xg->xg_sick & XFS_SICK_AG_PRIMARY))
++		xg->xg_sick &= ~XFS_SICK_AG_SECONDARY;
++	xg->xg_checked |= mask;
++	spin_unlock(&xg->xg_state_lock);
+ }
+ 
+ /* Sample which per-ag metadata are unhealthy. */
+ void
+-xfs_ag_measure_sickness(
+-	struct xfs_perag	*pag,
++xfs_group_measure_sickness(
++	struct xfs_group	*xg,
+ 	unsigned int		*sick,
+ 	unsigned int		*checked)
+ {
+-	spin_lock(&pag->pag_state_lock);
+-	*sick = pag->pag_sick;
+-	*checked = pag->pag_checked;
+-	spin_unlock(&pag->pag_state_lock);
++	spin_lock(&xg->xg_state_lock);
++	*sick = xg->xg_sick;
++	*checked = xg->xg_checked;
++	spin_unlock(&xg->xg_state_lock);
+ }
+ 
+ /* Mark the unhealthy parts of an inode. */
+@@ -447,7 +452,7 @@ xfs_ag_geom_health(
+ 	ageo->ag_sick = 0;
+ 	ageo->ag_checked = 0;
+ 
+-	xfs_ag_measure_sickness(pag, &sick, &checked);
++	xfs_group_measure_sickness(pag_group(pag), &sick, &checked);
+ 	for (m = ag_map; m->sick_mask; m++) {
+ 		if (checked & m->sick_mask)
+ 			ageo->ag_checked |= m->ioctl_mask;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 14e7f6a26a2300..fd597a410b0298 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -4215,31 +4215,34 @@ DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_corrupt);
+ DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
+ DEFINE_FS_CORRUPT_EVENT(xfs_rt_unfixed_corruption);
+ 
+-DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
+-	TP_PROTO(const struct xfs_perag *pag, unsigned int flags),
+-	TP_ARGS(pag, flags),
++DECLARE_EVENT_CLASS(xfs_group_corrupt_class,
++	TP_PROTO(const struct xfs_group *xg, unsigned int flags),
++	TP_ARGS(xg, flags),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(xfs_agnumber_t, agno)
++		__field(enum xfs_group_type, type)
++		__field(uint32_t, index)
+ 		__field(unsigned int, flags)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = pag_mount(pag)->m_super->s_dev;
+-		__entry->agno = pag_agno(pag);
++		__entry->dev = xg->xg_mount->m_super->s_dev;
++		__entry->type = xg->xg_type;
++		__entry->index = xg->xg_gno;
+ 		__entry->flags = flags;
+ 	),
+-	TP_printk("dev %d:%d agno 0x%x flags 0x%x",
++	TP_printk("dev %d:%d %sno 0x%x flags 0x%x",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->agno, __entry->flags)
++		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
++		  __entry->index, __entry->flags)
+ );
+-#define DEFINE_AG_CORRUPT_EVENT(name)	\
+-DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
+-	TP_PROTO(const struct xfs_perag *pag, unsigned int flags), \
+-	TP_ARGS(pag, flags))
+-DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
+-DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_corrupt);
+-DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
+-DEFINE_AG_CORRUPT_EVENT(xfs_ag_unfixed_corruption);
++#define DEFINE_GROUP_CORRUPT_EVENT(name)	\
++DEFINE_EVENT(xfs_group_corrupt_class, name,	\
++	TP_PROTO(const struct xfs_group *xg, unsigned int flags), \
++	TP_ARGS(xg, flags))
++DEFINE_GROUP_CORRUPT_EVENT(xfs_group_mark_sick);
++DEFINE_GROUP_CORRUPT_EVENT(xfs_group_mark_corrupt);
++DEFINE_GROUP_CORRUPT_EVENT(xfs_group_mark_healthy);
++DEFINE_GROUP_CORRUPT_EVENT(xfs_group_unfixed_corruption);
+ 
+ DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
 
