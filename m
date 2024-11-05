@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95D7018E023
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:31:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECDD918E023
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 22:31:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730845904; cv=none; b=iixBfHx2OAUpTp/DODlKHmDJvMFzAf/JpUOryvyjG+lI3yix8y855jNSiA1O8+kww1+r4Of4b5mdEpMT9zkW1mMQ98QFvueWFT6uJNnbHfRZ5wxfjtxY8yHFZp+l4b0gS7MLq7YQdqeX8FmD8lEyvp60if/1Z0Qg2zuIvTvBpsc=
+	t=1730845920; cv=none; b=LfeWA5k8spLV/HFl2GSE1gamvgl41Hy/HiU+390vjdBSr2d9PqznrUNhGVQI3c/pyXTAVxJahwiVtuAihPvphjxdgBlA5Oo4AzrPLHJx2gTRdzDGyeOQNCDaKAgh8lyu2WBBBqoRSGEWXSbaBXXwk2nZU2wV7ssO+KQBaNvx3wo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730845904; c=relaxed/simple;
-	bh=Kf4OGCBwEryZinaVODl+gy8LCKsEetfQ/nDiw2Jr15M=;
+	s=arc-20240116; t=1730845920; c=relaxed/simple;
+	bh=6gPCd9Jmuq8gyKFLwPLZN9HRZN0IGiOcoQGeu4VcV9Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qEQ8VqCD+4bpA07+mVls9UdRCjxYL+45TjYoYaGKeRuh5VBZ4r0hdIBilVxHtFzUBIfpwf0cf6Mqf+QACEL2Uoz7dph6ZJbHSx6yqoTOrCxx+07oRPdZdDGaZfqp4rzOrtizHBV6IkpqqSe3kFmDORxC/iKM4RwdpO6Igpakijw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VloWqvEE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=T6m5BnnpukMJtEq2pKxxvMXpqUdr9ifuPYFwHSyQ/NHosruQUOmiiVss9XkYWD3/zqvA1IxSen+UxdevrYxv/nXk15+BTWozUkDclxVLLWUyVg29EUM0+osYttGj+vJJLHU9TBLFTU11l8W5QiEl3wPjfUGSm2nuyS/Ge24Xq2s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+etNa9M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VloWqvEE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 371EFC4CECF;
-	Tue,  5 Nov 2024 22:31:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+etNa9M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C71E7C4CECF;
+	Tue,  5 Nov 2024 22:31:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730845904;
-	bh=Kf4OGCBwEryZinaVODl+gy8LCKsEetfQ/nDiw2Jr15M=;
+	s=k20201202; t=1730845919;
+	bh=6gPCd9Jmuq8gyKFLwPLZN9HRZN0IGiOcoQGeu4VcV9Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VloWqvEExPa8lfNrZE1vuS22QDUDn7Th8xRJMiCpgq0a8fflPnvnqK9GiES3dlVmS
-	 /AO9IX2rSd6tM650DVTbPNI0PoYCecdOZVw6d2YRcjfCCL8YHBGAJ/im0xxHlkJxiQ
-	 BUoesYhkSIB7ma/co9ru40iD1G78oI4nZ1+14dsQ5dooXiMkF9/QQa+ZSYAHjS3jWi
-	 Ib2GLXj8D9w2HCl8lSil7zvpcxkiJbfb+fz96R420Fb2n4Fe8ryscN0T7yUC6Zzh3I
-	 X+hBbSrzSYwXm0FyH8TL5+wDFuY0RaaY640myBFSVfHB1bxPpBF+xGiu5Xnc3628rw
-	 y+Pm91FRfWaIw==
-Date: Tue, 05 Nov 2024 14:31:43 -0800
-Subject: [PATCH 07/34] xfs: add frextents to the lazysbcounters when rtgroups
- enabled
+	b=a+etNa9M1iZ6Df2D+OVQ4soZmnNab5c/TmlERKWq1C031k6WO9kiEtqOMAe3hFcZM
+	 bFSqtoKII4EKA5gIe6qH/9NKkpj7BwWjYbey1N3AoFlU6FrCQAVZpv//ZACu4YttUm
+	 eVMOp6Y44w6m9Fll8VCLRd1dLx4zdR2k0AkA3vhzUMAi9XDJdwpFGUnvyPuKQjEQQW
+	 nPoS9irVgrPKIbaon6CxD7JPHaLV8rzIpzqc0mPEfwt906tizdOt/iFq9taRDD79Qp
+	 7w4TO3X9/NbhpFrnfwm0SHGCh355bcvnmkBsu3dAZxe3QO2YLOqz/8sSZ/7xeKcIIU
+	 J3rSZSZWSDCqg==
+Date: Tue, 05 Nov 2024 14:31:59 -0800
+Subject: [PATCH 08/34] xfs: convert sick_map loops to use ARRAY_SIZE
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173084398303.1871887.13091326256570162049.stgit@frogsfrogsfrogs>
+Message-ID: <173084398320.1871887.14264737585437670359.stgit@frogsfrogsfrogs>
 In-Reply-To: <173084398097.1871887.5832278892963229059.stgit@frogsfrogsfrogs>
 References: <173084398097.1871887.5832278892963229059.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,154 +45,91 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the free rt extent count a part of the lazy sb counters when the
-realtime groups feature is enabled.  This is possible because the patch
-to recompute frextents from the rtbitmap during log recovery predates
-the code adding rtgroup support, hence we know that the value will
-always be correct during runtime.
+Convert these arrays to use ARRAY_SIZE insteead of requiring an empty
+sentinel array element at the end.  This saves memory and would have
+avoided a bug that worked its way into the next patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_sb.c           |   15 ++++++++++-----
- fs/xfs/scrub/fscounters_repair.c |    9 +++++----
- fs/xfs/xfs_trans.c               |   33 +++++++++++++++++++--------------
- 3 files changed, 34 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_health.c |   15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index b1e12c7e7dbe23..d5bf886e18ab9e 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1152,11 +1152,6 @@ xfs_log_sb(
- 	 * reservations that have been taken out percpu counters. If we have an
- 	 * unclean shutdown, this will be corrected by log recovery rebuilding
- 	 * the counters from the AGF block counts.
--	 *
--	 * Do not update sb_frextents here because it is not part of the lazy
--	 * sb counters, despite having a percpu counter. It is always kept
--	 * consistent with the ondisk rtbitmap by xfs_trans_apply_sb_deltas()
--	 * and hence we don't need have to update it here.
- 	 */
- 	if (xfs_has_lazysbcount(mp)) {
- 		mp->m_sb.sb_icount = percpu_counter_sum_positive(&mp->m_icount);
-@@ -1167,6 +1162,16 @@ xfs_log_sb(
- 				percpu_counter_sum_positive(&mp->m_fdblocks);
- 	}
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index e5663e2ac9b853..b0d0c6bd9fa29c 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -373,6 +373,9 @@ struct ioctl_sick_map {
+ 	unsigned int		ioctl_mask;
+ };
  
-+	/*
-+	 * sb_frextents was added to the lazy sb counters when the rt groups
-+	 * feature was introduced.  This counter can go negative due to the way
-+	 * we handle nearly-lockless reservations, so we must use the _positive
-+	 * variant here to avoid writing out nonsense frextents.
-+	 */
-+	if (xfs_has_rtgroups(mp))
-+		mp->m_sb.sb_frextents =
-+				percpu_counter_sum_positive(&mp->m_frextents);
++#define for_each_sick_map(map, m) \
++	for ((m) = (map); (m) < (map) + ARRAY_SIZE(map); (m)++)
 +
- 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
- 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
- 	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
-diff --git a/fs/xfs/scrub/fscounters_repair.c b/fs/xfs/scrub/fscounters_repair.c
-index 469bf645dbea52..cda13447a373e1 100644
---- a/fs/xfs/scrub/fscounters_repair.c
-+++ b/fs/xfs/scrub/fscounters_repair.c
-@@ -68,15 +68,16 @@ xrep_fscounters(
+ static const struct ioctl_sick_map fs_map[] = {
+ 	{ XFS_SICK_FS_COUNTERS,	XFS_FSOP_GEOM_SICK_COUNTERS},
+ 	{ XFS_SICK_FS_UQUOTA,	XFS_FSOP_GEOM_SICK_UQUOTA },
+@@ -382,13 +385,11 @@ static const struct ioctl_sick_map fs_map[] = {
+ 	{ XFS_SICK_FS_NLINKS,	XFS_FSOP_GEOM_SICK_NLINKS },
+ 	{ XFS_SICK_FS_METADIR,	XFS_FSOP_GEOM_SICK_METADIR },
+ 	{ XFS_SICK_FS_METAPATH,	XFS_FSOP_GEOM_SICK_METAPATH },
+-	{ 0, 0 },
+ };
  
- 	/*
- 	 * Online repair is only supported on v5 file systems, which require
--	 * lazy sb counters and thus no update of sb_fdblocks here.  But as of
--	 * now we don't support lazy counting sb_frextents yet, and thus need
--	 * to also update it directly here.  And for that we need to keep
-+	 * lazy sb counters and thus no update of sb_fdblocks here.  But
-+	 * sb_frextents only uses a lazy counter with rtgroups, and thus needs
-+	 * to be updated directly here otherwise.  And for that we need to keep
- 	 * track of the delalloc reservations separately, as they are are
- 	 * subtracted from m_frextents, but not included in sb_frextents.
- 	 */
- 	percpu_counter_set(&mp->m_frextents,
- 		fsc->frextents - fsc->frextents_delayed);
--	mp->m_sb.sb_frextents = fsc->frextents;
-+	if (!xfs_has_rtgroups(mp))
-+		mp->m_sb.sb_frextents = fsc->frextents;
+ static const struct ioctl_sick_map rt_map[] = {
+ 	{ XFS_SICK_RT_BITMAP,	XFS_FSOP_GEOM_SICK_RT_BITMAP },
+ 	{ XFS_SICK_RT_SUMMARY,	XFS_FSOP_GEOM_SICK_RT_SUMMARY },
+-	{ 0, 0 },
+ };
  
- 	return 0;
+ static inline void
+@@ -418,11 +419,11 @@ xfs_fsop_geom_health(
+ 	geo->checked = 0;
+ 
+ 	xfs_fs_measure_sickness(mp, &sick, &checked);
+-	for (m = fs_map; m->sick_mask; m++)
++	for_each_sick_map(fs_map, m)
+ 		xfgeo_health_tick(geo, sick, checked, m);
+ 
+ 	xfs_rt_measure_sickness(mp, &sick, &checked);
+-	for (m = rt_map; m->sick_mask; m++)
++	for_each_sick_map(rt_map, m)
+ 		xfgeo_health_tick(geo, sick, checked, m);
  }
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 118d31e11127be..01b5f5b32af467 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -421,6 +421,8 @@ xfs_trans_mod_sb(
- 			ASSERT(tp->t_rtx_res_used <= tp->t_rtx_res);
- 		}
- 		tp->t_frextents_delta += delta;
-+		if (xfs_has_rtgroups(mp))
-+			flags &= ~XFS_TRANS_SB_DIRTY;
- 		break;
- 	case XFS_TRANS_SB_RES_FREXTENTS:
- 		/*
-@@ -430,6 +432,8 @@ xfs_trans_mod_sb(
- 		 */
- 		ASSERT(delta < 0);
- 		tp->t_res_frextents_delta += delta;
-+		if (xfs_has_rtgroups(mp))
-+			flags &= ~XFS_TRANS_SB_DIRTY;
- 		break;
- 	case XFS_TRANS_SB_DBLOCKS:
- 		tp->t_dblocks_delta += delta;
-@@ -498,20 +502,22 @@ xfs_trans_apply_sb_deltas(
- 	}
  
- 	/*
--	 * Updating frextents requires careful handling because it does not
--	 * behave like the lazysb counters because we cannot rely on log
--	 * recovery in older kenels to recompute the value from the rtbitmap.
--	 * This means that the ondisk frextents must be consistent with the
--	 * rtbitmap.
-+	 * sb_frextents was added to the lazy sb counters when the rt groups
-+	 * feature was introduced.  This is possible because we know that all
-+	 * kernels supporting rtgroups will also recompute frextents from the
-+	 * realtime bitmap.
-+	 *
-+	 * For older file systems, updating frextents requires careful handling
-+	 * because we cannot rely on log recovery in older kernels to recompute
-+	 * the value from the rtbitmap.  This means that the ondisk frextents
-+	 * must be consistent with the rtbitmap.
- 	 *
- 	 * Therefore, log the frextents change to the ondisk superblock and
- 	 * update the incore superblock so that future calls to xfs_log_sb
- 	 * write the correct value ondisk.
--	 *
--	 * Don't touch m_frextents because it includes incore reservations,
--	 * and those are handled by the unreserve function.
- 	 */
--	if (tp->t_frextents_delta || tp->t_res_frextents_delta) {
-+	if ((tp->t_frextents_delta || tp->t_res_frextents_delta) &&
-+	    !xfs_has_rtgroups(tp->t_mountp)) {
- 		struct xfs_mount	*mp = tp->t_mountp;
- 		int64_t			rtxdelta;
+@@ -438,7 +439,6 @@ static const struct ioctl_sick_map ag_map[] = {
+ 	{ XFS_SICK_AG_RMAPBT,	XFS_AG_GEOM_SICK_RMAPBT },
+ 	{ XFS_SICK_AG_REFCNTBT,	XFS_AG_GEOM_SICK_REFCNTBT },
+ 	{ XFS_SICK_AG_INODES,	XFS_AG_GEOM_SICK_INODES },
+-	{ 0, 0 },
+ };
  
-@@ -619,7 +625,7 @@ xfs_trans_unreserve_and_mod_sb(
- 	}
+ /* Fill out ag geometry health info. */
+@@ -455,7 +455,7 @@ xfs_ag_geom_health(
+ 	ageo->ag_checked = 0;
  
- 	ASSERT(tp->t_rtx_res || tp->t_frextents_delta >= 0);
--	if (tp->t_flags & XFS_TRANS_SB_DIRTY) {
-+	if (xfs_has_rtgroups(mp) || (tp->t_flags & XFS_TRANS_SB_DIRTY)) {
- 		rtxdelta += tp->t_frextents_delta;
- 		ASSERT(rtxdelta >= 0);
- 	}
-@@ -652,10 +658,9 @@ xfs_trans_unreserve_and_mod_sb(
- 	mp->m_sb.sb_icount += idelta;
- 	mp->m_sb.sb_ifree += ifreedelta;
- 	/*
--	 * Do not touch sb_frextents here because we are dealing with incore
--	 * reservation.  sb_frextents is not part of the lazy sb counters so it
--	 * must be consistent with the ondisk rtbitmap and must never include
--	 * incore reservations.
-+	 * Do not touch sb_frextents here because it is handled in
-+	 * xfs_trans_apply_sb_deltas for file systems where it isn't a lazy
-+	 * counter anyway.
- 	 */
- 	mp->m_sb.sb_dblocks += tp->t_dblocks_delta;
- 	mp->m_sb.sb_agcount += tp->t_agcount_delta;
+ 	xfs_group_measure_sickness(pag_group(pag), &sick, &checked);
+-	for (m = ag_map; m->sick_mask; m++) {
++	for_each_sick_map(ag_map, m) {
+ 		if (checked & m->sick_mask)
+ 			ageo->ag_checked |= m->ioctl_mask;
+ 		if (sick & m->sick_mask)
+@@ -477,7 +477,6 @@ static const struct ioctl_sick_map ino_map[] = {
+ 	{ XFS_SICK_INO_DIR_ZAPPED,	XFS_BS_SICK_DIR },
+ 	{ XFS_SICK_INO_SYMLINK_ZAPPED,	XFS_BS_SICK_SYMLINK },
+ 	{ XFS_SICK_INO_DIRTREE,	XFS_BS_SICK_DIRTREE },
+-	{ 0, 0 },
+ };
+ 
+ /* Fill out bulkstat health info. */
+@@ -494,7 +493,7 @@ xfs_bulkstat_health(
+ 	bs->bs_checked = 0;
+ 
+ 	xfs_inode_measure_sickness(ip, &sick, &checked);
+-	for (m = ino_map; m->sick_mask; m++) {
++	for_each_sick_map(ino_map, m) {
+ 		if (checked & m->sick_mask)
+ 			bs->bs_checked |= m->ioctl_mask;
+ 		if (sick & m->sick_mask)
 
