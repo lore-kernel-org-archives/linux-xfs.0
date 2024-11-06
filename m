@@ -1,87 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3154D149C53
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Nov 2024 23:52:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E05E2D613;
+	Wed,  6 Nov 2024 00:57:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730850760; cv=none; b=ndpDnRLruWTOSHhB7aTYIZ5b84VG196fSByPz37C7rpSVu9cZPE5YXOZjYbpivQlDsazbM4JEGplxO4j3AJ9QqtyekX1WagRKsaHRRiY2Ndoo2eKZ1R8pCLHxruWX7q4nBMiOjHmG2XdVPi7yKOE556CJDciygAtD9ximAIkAwI=
+	t=1730854662; cv=none; b=eJBPvOeenoUD0FTUHi6xTfQTRIfWUxypzfcqArBAJ+xiNkdhQqdKNV6XU2UtLUz589jq5YF7ccPiET5Gw7voWnOU0YDpa11MAOTa6FoYeaXIskMN8e5+dDfEEwkPOA3SOYDdtSHhMCcAAZn0HcgvW3bdHZgYgGqmapVFu4Cuoa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730850760; c=relaxed/simple;
-	bh=jRJGOf31T9uPOodbPxdI+udSSMjLARlP372KnmVg7Ts=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=fR52jaJrIdtL40yZL1CMhbC5xPmu9m2r3M58GJc3UX1cPIjhpitFS7xxga5UHt4er4H8VoqWAUpjnIoaslef6cCcP10l8KIYRIaBhBC4+Qby8Dni2j5GgW2OYBSG3/G7Ole3MS2YvVnp6TTlSIwPVfnigPRQ+z+UoM5dSg7Lba8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=payvT1qM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730854662; c=relaxed/simple;
+	bh=goa/cIX22Cl5f7cGc755k5BLCpVCIYhtzQep8rQrGi0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=hm6Yf36QRTQl5eKrPsngiMZ4KT8PsfEfDO8rZHuTjYELQSDmK3eWSbLxkqOvxMQApxwFUnMEYuTuNE2z5kAWTZf4LAYclLNmIiovTSmGlJxK7OGf35VOIGgbBlyiYKDL8LABcsuDY7xf5MmzbeBQ2/a5ULFVO0y5ns2Fari1dGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GU1x2eZA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="payvT1qM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09E82C4CECF;
-	Tue,  5 Nov 2024 23:52:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GU1x2eZA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A296CC4CECF;
+	Wed,  6 Nov 2024 00:57:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730850760;
-	bh=jRJGOf31T9uPOodbPxdI+udSSMjLARlP372KnmVg7Ts=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=payvT1qMijczo3iSH5FHNRjP+J2LiL2EUtYOmSoOtFepdYZmgmrRb9xX3VwL94Ca1
-	 05HfugjX61H+tJBMXBcAijiynyt/zgMyytM26kVaYuTSBGW/mGb91EKRMy2TZ6ybQt
-	 2Q6nZhAuxccjo6fskRRm39W/CnxXVW5gdXvLwht7z70kDru1nW0PN+ddZzazASCAVi
-	 vHcanuLlP0+pJrjNTqXOCwiabyjyWC1jUwjYuYXinh10EC8hpODvvuLDPYkkV3bSC1
-	 sjzCHoQ8w9O9/Da5DQv2NNm1cHFF3RCu+2XkB/Q5D2iAtYfCNNIxwRShLJoGZ51OXU
-	 KyMPHR/GpKw8A==
-Date: Tue, 05 Nov 2024 15:52:39 -0800
-Subject: [GIT PULL 10/10] xfs: improve ondisk structure checks
+	s=k20201202; t=1730854661;
+	bh=goa/cIX22Cl5f7cGc755k5BLCpVCIYhtzQep8rQrGi0=;
+	h=Date:From:To:Cc:Subject:From;
+	b=GU1x2eZA9XHMIO4M9v9jE9MleHLUATw50umb4dKqqzAEKt47KLmAA6I8BlfHVpUuI
+	 4cszwID984YUqCVHKuybA9ufRga2t32Vw7E76eUX8x34o0iYOoWzJsQV10izZAZi3M
+	 CfqQLlG5mYjIm8f9shAsfW2P1tIrmcssBxDEZTe1x9Z0ejacqlQi4nIBd/TDxTdxdY
+	 6zBaiD3ZB3yme3ZLRWjwYH15wJPbeYu+qs/MCHGeLiinSkjAYfV7rDk1ih+fYysaOa
+	 3lpINihHVT5hRJGRDSSYKmK1OJy59oN4Ajqdtrg0gP0tWrV/nyeZoqZW0uYjnDWiXF
+	 +AYpsq2O36OjQ==
+Date: Tue, 5 Nov 2024 16:57:40 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173085054782.1980968.5008642841097262386.stg-ugh@frogsfrogsfrogs>
+To: brauner@kernel.org
+Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Catherine Hoang <catherine.hoang@oracle.com>,
+	linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+	Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-block@vger.kernel.org,
+	Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [ANNOUNCE v2] work tree for untorn filesystem writes
+Message-ID: <20241106005740.GM2386201@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241105234839.GL2386201@frogsfrogsfrogs>
-References: <20241105234839.GL2386201@frogsfrogsfrogs>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Hi Carlos,
+Hi everyone,
 
-Please pull this branch with changes for xfs for 6.13-rc1.
+Here's a slightly updated working branch for the filesystem side of
+atomic write changes for 6.13:
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fs-atomic_2024-11-05
+
+This branch is, like yesterday's, based off of axboe's
+for-6.13/block-atomic branch:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/log/?h=for-6.13/block-atomic
+
+The only difference is that I added Ojaswin's Tested-by: tags to the end
+of the xfs series.  I have done basic testing with the shell script at
+the end of this email and am satisfied that it at least seems to do the
+(limited) things that I think we're targeting for 6.13.
+
+Christian: Could you pull this fs-atomic branch into your vfs.git work
+for 6.13, please?  Or would you rather I ask rothwell to include this
+branch into for-next/fs-next and send the PR to Linus myself?
+
+(Actually I might just ask rothwell to do that tomorrow regardless...)
 
 --D
 
-The following changes since commit ea079efd365e60aa26efea24b57ced4c64640e75:
+#!/bin/bash -x
 
-xfs: enable metadata directory feature (2024-11-05 13:38:46 -0800)
+# Mess around with atomic writes via scsi_debug
 
-are available in the Git repository at:
+mnt=/opt
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/better-ondisk-6.13_2024-11-05
+true "${FSTYP:=xfs}"
+true "${MIN_ATOMIC:=32768}"
+true "${SECTOR_SIZE:=512}"
+true "${FSBLOCK_SIZE:=4096}"
 
-for you to fetch changes up to 13877bc79d81354c53e91f3c86ac0f7bafe3ba7b:
+umount $mnt
+rmmod "$FSTYP"
 
-xfs: port ondisk structure checks from xfs/122 to the kernel (2024-11-05 13:38:47 -0800)
+rmmod scsi_debug
+modprobe scsi_debug atomic_wr=1 dev_size_mb=300 \
+	SECTOR_SIZE=$SECTOR_SIZE \
+	atomic_wr_align=$((MIN_ATOMIC / SECTOR_SIZE)) \
+	atomic_wr_gran=$((MIN_ATOMIC / SECTOR_SIZE))
 
-----------------------------------------------------------------
-xfs: improve ondisk structure checks [v5.5 10/10]
+sleep 1
+dev="$(readlink -m /dev/disk/by-id/wwn-0x3333333000*)"
+sysfs=/sys/block/$(basename "$dev")
 
-Reorganize xfs_ondisk.h to group the build checks by type, then add a
-bunch of missing checks that were in xfs/122 but not the build system.
-With this, we can get rid of xfs/122.
+sysfs-dump $sysfs/queue/atomic_write_*
 
-With a bit of luck, this should all go splendidly.
+for ((i = 9; i < 20; i++)); do
+	xfs_io -d -c "pwrite -b 1m -V 1 -AD $((2 ** i)) $((2 ** i))" $dev
+done
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+case "$FSTYP" in
+"xfs")
+	mkfs.xfs -f $dev -b size=$MIN_ATOMIC
+	;;
+"ext4")
+	mkfs.ext4 -F $dev -b $FSBLOCK_SIZE -C $MIN_ATOMIC -O bigalloc
+	;;
+*)
+	echo "$FSTYP: not recognized"
+	exit 1
+	;;
+esac
+mount $dev $mnt
 
-----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs: convert struct typedefs in xfs_ondisk.h
-xfs: separate space btree structures in xfs_ondisk.h
-xfs: port ondisk structure checks from xfs/122 to the kernel
+xfs_io -f -c 'falloc 0 1m' -c fsync $mnt/a
+filefrag -v $mnt/a
 
-fs/xfs/libxfs/xfs_ondisk.h | 186 +++++++++++++++++++++++++++++++++------------
-1 file changed, 137 insertions(+), 49 deletions(-)
+for ((i = 9; i < 20; i++)); do
+	xfs_io -d -c "pwrite -b 1m -V 1 -AD $((2 ** i)) $((2 ** i))" $mnt/a
+done
 
+# does not support buffered io
+xfs_io -c "pwrite -b 1m -V 1 -AD 0 $MIN_ATOMIC" $mnt/a
+# does not support unaligned directio
+xfs_io -c "pwrite -b 1m -V 1 -AD $SECTOR_SIZE $MIN_ATOMIC" $mnt/a
