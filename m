@@ -1,46 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CBFE190075;
-	Wed,  6 Nov 2024 16:15:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 585802010EC
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Nov 2024 19:16:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730909742; cv=none; b=NYeYpJK+ULEdePgXHvG8d9A4k3tGztEty6Q7DBQsP85n0LNVf4Lm5jE7NveBe689FI0eapr1gVpDYSQlWSv/1qs3L9/slUnLm9AFM33VHHhZfCcY0doYQlQ26W3YsSitlMSfsIuDiol2dmL7L957rxtumCFOr65gQbVtYodekJw=
+	t=1730920563; cv=none; b=jNEg/LwHSNOEjBXhHKBeVKPExVWvRdKtLioypGAV0alnX1ORVTE2q6mUECG0tT316NA2yD65kdqLdTMtfemOimbUQvme4+hz2qMkHqBO54850qNRlKDZtbtnyfRhMIFzZ4mq4IEWQ2kz+xajlbc+V1c8IgEYVZLshll0mjD+zFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730909742; c=relaxed/simple;
-	bh=17VRjsdzd47xFESl41GTeJh5UTraVVQjFsJBtlc+9wE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cC1ubDOLK0kMdYQKPzWdpirLmHNjTytwunudJ1NUs0E8XTeOF4dqBKD8iXZkJJiy45T6RyNcPOuEBT93pYk2iue0zw/Q58bLcgIFe2YqASJVXbI82u4XVpyysgSgy0/Q2wR5oeKwf7kKIMQrs5yilgfdwgfncFRhOnF7Mjc/CyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IUsq4+fr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730920563; c=relaxed/simple;
+	bh=gQAGbyiWmgfsc4lnyfD+a5CssGXZAlBxB3+4I/elrdQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=smlUDR0IfRQGFxJfiVjWPz7suIHRVn41aySCVICO1/8MUwLGfAYJ3nS7hhxS7ntHk/aYNQyCZ5kGoh1xnJnG04BdGhR2uc/gsgExNmfdRsW/CeyppNys7TMphyycPDFCE3pvY+woiUuBGA5r0KCNuFB8GNQEfw9zYQ+gWcfbsRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GbwRoRub; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IUsq4+fr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBC42C4CEC6;
-	Wed,  6 Nov 2024 16:15:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GbwRoRub"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21AA2C4CEC6;
+	Wed,  6 Nov 2024 19:16:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730909741;
-	bh=17VRjsdzd47xFESl41GTeJh5UTraVVQjFsJBtlc+9wE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IUsq4+frJsYBp5OQPhW3XeBK/ACbbWa61SPYtNMrj6pDxNeU24RtUdcaIZmOKQveg
-	 71LZVH3udyt6foSZ1GiqbQfVDMseCJH+xQfEDj0iICj+2/RyLBqip65ew1J3GczXC4
-	 OnMmqMnYGPjMRpuezgGvTX7/TdMNv+A8xpFnyzWpTjkpxm3aZf9TsvVEMkqOneKXi6
-	 fSERs2h3WglAVV0X1RloDRRza8jHydoTN4ZJ1zt1MvaYbECTBL2WXcEvX/+KHDXXV8
-	 XxPt6i3wqj3sFsfQMbwziXgFCaG7VLXX/5udDbSunw7grWY6OuZsfvgEhrNQonGwAD
-	 q/BXzZ04dcxhg==
-Date: Wed, 6 Nov 2024 08:15:41 -0800
+	s=k20201202; t=1730920563;
+	bh=gQAGbyiWmgfsc4lnyfD+a5CssGXZAlBxB3+4I/elrdQ=;
+	h=Date:From:To:Cc:Subject:From;
+	b=GbwRoRubr4x2xO6kbIQBXKOO8C5kTbjdUGB8NF4i8BxMvI0/ThIEdZKi7gD5yxwQk
+	 sk5hQSvfaCkdm+P7t3bYeMOKf1ThvmfVxOv/YMoEP8lnHKzWgcRC2BzTzrihg+GMg6
+	 XVwDSgxE9InfWtNzt3rP0QU4c+Dla3faJS664ZOqMHUFtQUuljQApbbK4U6ETQ8vZm
+	 ESTUByQdNG71I4e+3RfQW0IibVNsgXuJQEwNXGuHO6thYUcZUegMroLivAej6lp9JK
+	 ArKzzR43kTx2RPvkoEZi1nbvB+GQTeCkjT8RI3zxNFEaRP74WPCZYrbZeRClr6mfS7
+	 Jcov4BwfOjkWA==
+Date: Wed, 6 Nov 2024 11:16:02 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Catherine Hoang <catherine.hoang@oracle.com>,
-	linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
-	Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-block@vger.kernel.org,
-	Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [ANNOUNCE v2] work tree for untorn filesystem writes
-Message-ID: <20241106161541.GN2386201@frogsfrogsfrogs>
-References: <20241106005740.GM2386201@frogsfrogsfrogs>
- <20241106-zerkleinern-verzweifeln-7ec8173c56ad@brauner>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCHBOMB 6.13 v5.5] xfs-docs: metadata directories and realtime
+ groups
+Message-ID: <20241106191602.GO2386201@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,35 +41,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241106-zerkleinern-verzweifeln-7ec8173c56ad@brauner>
 
-On Wed, Nov 06, 2024 at 10:50:21AM +0100, Christian Brauner wrote:
-> On Tue, Nov 05, 2024 at 04:57:40PM -0800, Darrick J. Wong wrote:
-> > Hi everyone,
-> > 
-> > Here's a slightly updated working branch for the filesystem side of
-> > atomic write changes for 6.13:
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fs-atomic_2024-11-05
-> > 
-> > This branch is, like yesterday's, based off of axboe's
-> > for-6.13/block-atomic branch:
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/log/?h=for-6.13/block-atomic
-> > 
-> > The only difference is that I added Ojaswin's Tested-by: tags to the end
-> > of the xfs series.  I have done basic testing with the shell script at
-> > the end of this email and am satisfied that it at least seems to do the
-> > (limited) things that I think we're targeting for 6.13.
-> > 
-> > Christian: Could you pull this fs-atomic branch into your vfs.git work
-> > for 6.13, please?
-> 
-> Of course!
-> 
-> I did git pull fs-atomic_2024-11-05 from your tree. It should show up in
-> -next tomorrow.
+Hi everyone,
 
-Yay, thank you!!
+Now that I've sent off the metadir PR, here are the relevant changes to
+the ondisk format documentation for the last few bits of online fsck and
+the metadata directory tree / realtime allocation groups feature.
+
+vNobody likes asciidoc, so if you want an easy to read version, try
+either:
+http://djwong.org/docs/xfs_filesystem_structure.pdf
+http://djwong.org/docs/xfs_filesystem_structure.html
+
+Please have a look at the git tree links for code changes:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-groups_2024-11-06
 
 --D
