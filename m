@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3FB7209F30
-	for <linux-xfs@vger.kernel.org>; Wed,  6 Nov 2024 19:19:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39FE9208204
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Nov 2024 19:19:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730920768; cv=none; b=q9JmIP8vHqvbscMlSGr7siA7E8b7Lpn+4AMdXQxoqJ+48bRextFl7btPDjKYCDxO9rG++jijyyP1QQuX/vuCt1IMarck58E0Yb26rhVJC+pSqN5+JtjctKqJRpLhQs+49siXxGuTiJ8FYXMSQUBZfuHtiSDWF61kfGCZXF2wnvk=
+	t=1730920782; cv=none; b=RqcCP50aJfCzsR4fPbDNwEy+3+ufthUOmQJdY7S/62+u0t3apTJ3Re8v0o7z6c7z8vIn/EgZp7JvYKkw5dD6A+/JNdNOWY2L7uX7f3HHTkXd3X6qGVzYRbyWQUD3j8eV9tlW6LwNjoSaUHCY4bTaQhXPKa4seoOvsL33Q5CtF4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730920768; c=relaxed/simple;
-	bh=9kfW7BfX3FdAXkVGFEXR5iCW8wddquKx2RWw/VzvHL0=;
+	s=arc-20240116; t=1730920782; c=relaxed/simple;
+	bh=ilJDkyzt0wvocyOQ1Ctp21j3SclhLFUP3KAWAitX674=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jXuUsgiUbBFaE66XUqUOeZOhAu3ltXedLtoI4ByvM77Rm7VpZSFmKYi4qzhP14GQyZZn0VweWpb02ah/V1UGFzmzpQdo66K/rIl/fS5RiZADpWrBRs6xZh6CMMpiWHmZJj8WZQSaO9F0RlMv335rwFHBQTNDh/t5q9F1BUjNWIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O0gUYqM8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=LygPRfp7vBwx4oPfOaWYQrOUXua4OKiY1OmlZTabXGUDlHNVQm7pRDMlv76vUEIPKZh+5hV0JUnPAich7bSseTT2Kz4f4MX/eCDs53DmWVjp490Unaa4dJ68eKAvmGEFUFdEy29dImf5SysmBgH3A3CYk3z0eRJkDsKvApGkqEA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pJR0uXSA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O0gUYqM8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34884C4CEC6;
-	Wed,  6 Nov 2024 19:19:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pJR0uXSA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4F04C4CEC6;
+	Wed,  6 Nov 2024 19:19:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730920766;
-	bh=9kfW7BfX3FdAXkVGFEXR5iCW8wddquKx2RWw/VzvHL0=;
+	s=k20201202; t=1730920781;
+	bh=ilJDkyzt0wvocyOQ1Ctp21j3SclhLFUP3KAWAitX674=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=O0gUYqM8MQgA9gKPIxvB9gewT+VuGWtMh+8KiSZEyGqghWw7aXCkd3tgUsf+FWolR
-	 rcoqqjbIDHGQvL5J8dkDKpFZAXO21NIcF0lCNmqXWQ2jxfjCbA+EYZz0J3WGRXnsUu
-	 vGEIHS3fFUQL7VYZaB3/OmwFSOK1XC3QUFr+8wLYjD1wWWEbd0tVq5efUlYl3tx5tS
-	 iIhP9IifHm+lv/GPCC6+/RzzPOREAywiKW8V9ZnXhJWRH5vfTsN/memcFPMRlbRXj9
-	 1b0A+XjJvtL1p1NseD5S778s1oLTLaUGEfmJT7T25vrzhiK5pbPPUMeQadvswmwKY0
-	 YAYH3mCDJFedg==
-Date: Wed, 06 Nov 2024 11:19:25 -0800
-Subject: [PATCH 3/4] design: document metadata directory tree quota changes
+	b=pJR0uXSASYgAYSRqiMNKs7sJtP5uOZuFC2E6qcYTR+6iUt852CaNAgLBOgY6ztBO7
+	 GOWJEbTziIwCwO8s+BeQJ2k3G7WkwjFqKNioUdx5cHUkJ3bmXJ2/DvPFU+mUXNM3kk
+	 8LF7Euj1d8rYf01mkXsvDENAbVFs4Oewa7ULt+gpuBXg0FQYb3vZHDgTPv0IJm8A+J
+	 2McXNQ3KKoSg2pZ9FmxqxdYnfHWXXlPlTQ9oIlkE+3ZTO73igSGwa5rtY8iDOolBN8
+	 AYk39axmTrKlhdcqL0U30pK8cbZBEsYcQflenaijB2b2apGhOJ96Q96URGGJebLXl/
+	 DDvnbR35Use4w==
+Date: Wed, 06 Nov 2024 11:19:41 -0800
+Subject: [PATCH 4/4] design: update metadump v2 format to reflect rt dumps
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173092059744.2883258.7281058243421376662.stgit@frogsfrogsfrogs>
+Message-ID: <173092059759.2883258.10101323739690762194.stgit@frogsfrogsfrogs>
 In-Reply-To: <173092059696.2883258.7093773656482973762.stgit@frogsfrogsfrogs>
 References: <173092059696.2883258.7093773656482973762.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,57 +45,43 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Document the changes to the ondisk quota metadata that came in with
-metadata directory trees.
+Update the metadump v2 format documentation to add realtime device
+dumps.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .../allocation_groups.asciidoc                     |    3 +++
- .../internal_inodes.asciidoc                       |    3 +++
- .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |    3 +++
- 3 files changed, 9 insertions(+)
+ design/XFS_Filesystem_Structure/metadump.asciidoc |   12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index 9f92be49a7a095..86daf9cdd30a0c 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -293,6 +293,9 @@ Quota flags. It can be a combination of the following flags:
- | +XFS_PQUOTA_CHKD+		| Project quotas have been checked.
+diff --git a/design/XFS_Filesystem_Structure/metadump.asciidoc b/design/XFS_Filesystem_Structure/metadump.asciidoc
+index a32d6423ea6e75..226622c0d2f20e 100644
+--- a/design/XFS_Filesystem_Structure/metadump.asciidoc
++++ b/design/XFS_Filesystem_Structure/metadump.asciidoc
+@@ -119,7 +119,16 @@ Dump contains external log contents.
  |=====
  
-+If the +XFS_SB_FEAT_INCOMPAT_METADIR+ feature is enabled, the +sb_qflags+ field
-+will persist across mounts if no quota mount options are provided.
+ *xmh_incompat_flags*::
+-Must be zero.
++A combination of the following flags:
 +
- *sb_flags*::
- Miscellaneous flags.
++.Metadump v2 incompat flags
++[options="header"]
++|=====
++| Flag				| Description
++| +XFS_MD2_INCOMPAT_RTDEVICE+	|
++Dump contains realtime device contents.
++
++|=====
  
-diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-index 5f4d62201cbd67..40eb57233ce7c0 100644
---- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-+++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-@@ -21,6 +21,9 @@ of those inodes have been deallocated and may be reused by future features.
- [options="header"]
+ *xmh_reserved*::
+ Must be zero.
+@@ -143,6 +152,7 @@ Bits 55-56 determine the device from which the metadata dump data was extracted.
+ | Value		| Description
+ | 0		| Data device
+ | 1		| External log
++| 2		| Realtime device
  |=====
- | Metadata File                                  | Location
-+| xref:Quota_Inodes[User Quota]                  | /quota/user
-+| xref:Quota_Inodes[Group Quota]                 | /quota/group
-+| xref:Quota_Inodes[Project Quota]               | /quota/project
- | xref:Real-Time_Bitmap_Inode[Realtime Bitmap]   | /rtgroups/*.bitmap
- | xref:Real-Time_Summary_Inode[Realtime Summary] | /rtgroups/*.summary
- |=====
-diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-index e28929907147b7..6e52e5fd3d6c1e 100644
---- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-+++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-@@ -199,6 +199,9 @@ directory tree.
- [source, c]
- ----
- enum xfs_metafile_type {
-+     XFS_METAFILE_USRQUOTA,
-+     XFS_METAFILE_GRPQUOTA,
-+     XFS_METAFILE_PRJQUOTA,
-      XFS_METAFILE_RTBITMAP,
-      XFS_METAFILE_RTSUMMARY,
- };
+ 
+ The lower 54 bits determine the device address from which the dump data was
 
