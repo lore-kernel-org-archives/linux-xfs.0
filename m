@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3C10218D94
-	for <linux-xfs@vger.kernel.org>; Thu,  7 Nov 2024 23:26:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 526502194A0
+	for <linux-xfs@vger.kernel.org>; Thu,  7 Nov 2024 23:26:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731021962; cv=none; b=IGXTjxXSl+HExt3m7rZfTsWCY1I00nd1X/sjmRCbsR3q94D1Ne1lq4CnoWT2w+MJUklAoIb32F63ljoLPRB8Cjdiac9BhmlU4JqMjQ3ioeDsgXQ96zgI6Jc1eHeQIvF/aevQcKq0uZRpd3ajCFfK8tqVwyTp3KGbr47HNRR3Ev4=
+	t=1731021978; cv=none; b=PSF5dOZNx+gm4knKw1QVa/WUGdgWSjc/SK4rGgXut4ShAqyco+GvefOJM9G0552WLTm5N5UFcrCUEigYurefXkEHL+aOnZM6VtBtUiJJXTQE5/rIZ5SJ13N/uBzgnbspXhEiVQQVpzayw88ywmGKssSR3a3am0fJXu7L3y1PUQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731021962; c=relaxed/simple;
-	bh=4QMLy8jvBiAI+fxLXOf9Eo59XkO0n2tdIrPZoN4WRzQ=;
+	s=arc-20240116; t=1731021978; c=relaxed/simple;
+	bh=IhHD8XpoV3kzwDjfIC15/3ygPjs3+1t+wmvv/TBXTxw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b37pHKPwbTaFS3vbs46Nm5hjBrpANs2oepk94lVG4JFonURS9X04ZcBjmX82en4hMAdBWHQPyQJUIq1DC01l5aE0vQ+ITInUAxuLQUWOGG0cyXWgyzu5erssn/EiYJxF2jQEyb1NVHeUfdlFqP6RD3bgrzqKz7QVcmnSW4ZPX60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A31BcDhv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Nzzgv7vTvoqEcBMErlJtMChW5STxDhoPZMzKSI91DIzvmL9lCHJzAqEhFU5BU9NqCYyX/BElIhW5H22ntNU42kl6oqf7khgxQG4eBPKjkcmtLU0OmudDLI1Q2gQ5aZlepQZg5Uc2P79mpRjlWxIdkyG1Au7LTXwjzjuVd7jGKNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KMyxTS5h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A31BcDhv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83736C4CECC;
-	Thu,  7 Nov 2024 23:26:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KMyxTS5h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E7FEC4CECC;
+	Thu,  7 Nov 2024 23:26:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731021962;
-	bh=4QMLy8jvBiAI+fxLXOf9Eo59XkO0n2tdIrPZoN4WRzQ=;
+	s=k20201202; t=1731021978;
+	bh=IhHD8XpoV3kzwDjfIC15/3ygPjs3+1t+wmvv/TBXTxw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=A31BcDhvhTdGcnQHsbOjrsZDMB3FMvlEozG6Q+jJQrzcZCuUoUMzHAKMzKTj+CXJv
-	 ccqls3pTVyvWBRyWdiQIiW7yzBn4byYrau0/xFhOFH1jmzp/dm32c8JXBEbtiAqmgo
-	 yr5lUxSLRnKm0nIKi5QIPvtQPJno0sPBhZF3mZ6316a4b/dSJ3oxUXC8FOV3cuNcdh
-	 xpQmA2L5FmB1gh/BZWqv/cE5teDjIm/SwKisidMKNBkinZ7KQFDT6t0p9zucUrJRma
-	 C+QLtrR1LE+fiaiM9GPzxzMX5NprHYMNi0ylTeSq8ylMc/sBKu/Jptwp7Sjw1jL6N1
-	 dv02LzFI8mthw==
-Date: Thu, 07 Nov 2024 15:26:02 -0800
-Subject: [PATCH 3/3] design: document the changes required to handle metadata
- directories
+	b=KMyxTS5h/vGMiAgqYgg21SZGZZ2nLIY1uL6S3gv8nSWSLVWT969CfXArzif7A7WaR
+	 OPs2/a5+xouCmqLjLKVJvZsP2rdaFfm0yOhTEOC5SpbjHe6q6+qmYm2PbnYq5gteg4
+	 Q5QN04aH9YhNk+5i4/FHljWl+DiCRYqaYGkgLoRqk3pvTtniNf8j9FknPl+nRyQ0tm
+	 aVMmlFe0oG6e/NGJyoJDXTrGLQfMIfTDIbA6IAzF4deWqNrY8hrPgljOT2lFqbi1sA
+	 NjydqHzoxSk3h2iO0p6OUUwW2NObRt0++2FEIb0KRhX2ITaNK6EcXoLVmJvbNQngGq
+	 FrnMoC0QRiCog==
+Date: Thu, 07 Nov 2024 15:26:17 -0800
+Subject: [PATCH 1/4] design: move discussion of realtime volumes to a separate
+ section
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173102187514.4143835.16274405797841231807.stgit@frogsfrogsfrogs>
-In-Reply-To: <173102187468.4143835.2187727613598371946.stgit@frogsfrogsfrogs>
-References: <173102187468.4143835.2187727613598371946.stgit@frogsfrogsfrogs>
+Message-ID: <173102187889.4143993.4479616197994788584.stgit@frogsfrogsfrogs>
+In-Reply-To: <173102187871.4143993.7808162081973053540.stgit@frogsfrogsfrogs>
+References: <173102187871.4143993.7808162081973053540.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,229 +42,169 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Document the ondisk format changes for metadata directories.
+In preparation for documenting the realtime modernization project, move
+the discussions of the realtime-realted ondisk metadata to a separate
+file.  Since realtime reverse mapping btrees haven't been added to the
+filesystem yet, stop including them in the final output.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- .../internal_inodes.asciidoc                       |  113 ++++++++++++++++++++
- .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |   22 ++++
- .../XFS_Filesystem_Structure/superblock.asciidoc   |   14 +-
- 3 files changed, 142 insertions(+), 7 deletions(-)
+ .../allocation_groups.asciidoc                     |   20 --------
+ .../internal_inodes.asciidoc                       |   36 +-------------
+ design/XFS_Filesystem_Structure/realtime.asciidoc  |   50 ++++++++++++++++++++
+ .../xfs_filesystem_structure.asciidoc              |    2 +
+ 4 files changed, 54 insertions(+), 54 deletions(-)
+ create mode 100644 design/XFS_Filesystem_Structure/realtime.asciidoc
 
 
+diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+index e2cdaab5e03d3f..c746a92ca47dd6 100644
+--- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
++++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+@@ -772,23 +772,3 @@ core.magic = 0x494e
+ 
+ The chunk record also indicates that this chunk has 32 inodes, and that the
+ missing inodes are also ``free''.
+-
+-[[Real-time_Devices]]
+-== Real-time Devices
+-
+-The performance of the standard XFS allocator varies depending on the internal
+-state of the various metadata indices enabled on the filesystem.  For
+-applications which need to minimize the jitter of allocation latency, XFS
+-supports the notion of a ``real-time device''.  This is a special device
+-separate from the regular filesystem where extent allocations are tracked with
+-a bitmap and free space is indexed with a two-dimensional array.  If an inode
+-is flagged with +XFS_DIFLAG_REALTIME+, its data will live on the real time
+-device.  The metadata for real time devices is discussed in the section about
+-xref:Real-time_Inodes[real time inodes].
+-
+-By placing the real time device (and the journal) on separate high-performance
+-storage devices, it is possible to reduce most of the unpredictability in I/O
+-response times that come from metadata operations.
+-
+-None of the XFS per-AG B+trees are involved with real time files.  It is not
+-possible for real time files to share data blocks.
 diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-index 84e4cb969ce392..eaa0a50aa848f3 100644
+index eaa0a50aa848f3..68c86d30ff8206 100644
 --- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
 +++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-@@ -5,6 +5,119 @@ XFS allocates several inodes when a filesystem is created. These are internal
- and not accessible from the standard directory structure. These inodes are only
- accessible from the superblock.
+@@ -287,41 +287,9 @@ Log sequence number of the last DQ block write.
+ *dd_crc*::
+ Checksum of the DQ block.
  
-+[[Metadata_Directories]]
-+== Metadata Directory Tree
-+
-+If the +XFS_SB_FEAT_INCOMPAT_METADIR+ feature is enabled, the +sb_metadirino+
-+field in the superblock points to the root of a directory tree containing
-+metadata files.  This directory tree is completely internal to the filesystem
-+and must not be exposed to user programs.
-+
-+When this feature is enabled, metadata files should be found by walking the
-+metadata directory tree.  The superblock fields that formerly pointed to (some)
-+of those inodes have been deallocated and may be reused by future features.
-+
-+.Metadata Directory Paths
-+[options="header"]
-+|=====
-+| Metadata File                                  | Location
-+|=====
-+
-+Metadata files are flagged by the +XFS_DIFLAG2_METADATA+ flag in the
-++di_flags2+ field.  Metadata files must have the following properties:
-+
-+* Must be either a directory or a regular file.
-+* chmod 0000
-+* User and group IDs set to zero.
-+* The +XFS_DIFLAG_IMMUTABLE+, +XFS_DIFLAG_SYNC+, +XFS_DIFLAG_NOATIME+, +XFS_DIFLAG_NODUMP+, and +XFS_DIFLAG_NODEFRAG+ flags must all be set in +di_flags+.
-+* For a directory, the +XFS_DIFLAG_NOSYMLINKS+ flag must also be set.
-+* The +XFS_DIFLAG2_METADATA+ flag must be set in +di_flags2+.
-+* The +XFS_DIFLAG2_DAX+ flag must not be set.
-+
-+=== Metadata Directory Example
-+
-+This example shows a metadta directory from a freshly formatted root
-+filesystem:
-+
-+----
-+xfs_db> sb 0
-+xfs_db> p
-+magicnum = 0x58465342
-+blocksize = 4096
-+dblocks = 5192704
-+rblocks = 0
-+rextents = 0
-+uuid = cbf2ceef-658e-46b0-8f96-785661c37976
-+logstart = 4194311
-+rootino = 128
-+rbmino = 130
-+rsumino = 131
-+...
-+meta_uuid = 00000000-0000-0000-0000-000000000000
-+metadirino = 129
-+...
-+----
-+
-+Notice how the listing includes the root of the metadata directory tree
-+(+metadirino+).
-+
-+----
-+xfs_db> path -m /
-+xfs_db> ls
-+8          129                directory      0x0000002e   1 . (good)
-+10         129                directory      0x0000172e   2 .. (good)
-+12         33685632           directory      0x2d18ab4c   8 rtgroups (good)
-+----
-+
-+Here we use the +path+ and +ls+ commands to display the root directory of
-+the metadata directory.  We can navigate the directory the old way, too:
-+
-+----
-+xfs_db> p
-+core.magic = 0x494e
-+core.mode = 040000
-+core.version = 3
-+core.format = 1 (local)
-+core.onlink = 0
-+core.uid = 0
-+core.gid = 0
-+...
-+v3.flags2 = 0x8000000000000018
-+v3.cowextsize = 0
-+v3.crtime.sec = Wed Aug  7 10:22:36 2024
-+v3.crtime.nsec = 273744000
-+v3.inumber = 129
-+v3.uuid = 7e55b909-8728-4d69-a1fa-891427314eea
-+v3.reflink = 0
-+v3.cowextsz = 0
-+v3.dax = 0
-+v3.bigtime = 1
-+v3.nrext64 = 1
-+v3.metadata = 1
-+u3.sfdir3.hdr.count = 1
-+u3.sfdir3.hdr.i8count = 0
-+u3.sfdir3.hdr.parent.i4 = 129
-+u3.sfdir3.list[0].namelen = 8
-+u3.sfdir3.list[0].offset = 0x60
-+u3.sfdir3.list[0].name = "rtgroups"
-+u3.sfdir3.list[0].inumber.i4 = 33685632
-+u3.sfdir3.list[0].filetype = 2
-+----
-+
-+The root of the metadata directory is a short format directory, and looks just
-+like any other directory.  The only difference is that the metadata flag is
-+set, and the directory can only be viewed in the XFS debugger.
-+
-+----
-+xfs_db> path -m /rtgroups/0.rmap
-+btdump
-+u3.rtrmapbt.recs[1] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
-+1:[0,1,-3,0,0,0,0]
-+----
-+
-+Observe that we can use the xfs_db +path+ command to navigate the metadata
-+directory tree to the user quota file and display its contents.
-+
- [[Quota_Inodes]]
- == Quota Inodes
+-
+ [[Real-time_Inodes]]
+ == Real-time Inodes
  
-diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-index 34c064871cb255..02ec0d12bb57e5 100644
---- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-+++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-@@ -78,7 +78,10 @@ struct xfs_dinode_core {
-      __uint16_t                di_mode;
-      __int8_t                  di_version;
-      __int8_t                  di_format;
--     __uint16_t                di_onlink;
-+     union {
-+          __uint16_t           di_onlink;
-+          __uint16_t           di_metatype;
-+     };
-      __uint32_t                di_uid;
-      __uint32_t                di_gid;
-      __uint32_t                di_nlink;
-@@ -188,6 +191,17 @@ In v1 inodes, this specifies the number of links to the inode from directories.
- When the number exceeds 65535, the inode is converted to v2 and the link count
- is stored in +di_nlink+.
- 
-+*di_metatype*::
-+If the +XFS_SB_FEAT_INCOMPAT_METADIR+ feature is enabled, the +di_onlink+ field
-+is redefined to declare the intended contents of files in the metadata
-+directory tree.
+ There are two inodes allocated to managing the real-time device's space, the
+-Bitmap Inode and the Summary Inode.
+-
+-[[Real-Time_Bitmap_Inode]]
+-=== Real-Time Bitmap Inode
+-
+-The real time bitmap inode, +sb_rbmino+, tracks the used/free space in the
+-real-time device using an old-style bitmap. One bit is allocated per real-time
+-extent. The size of an extent is specified by the superblock's +sb_rextsize+
+-value.
+-
+-The number of blocks used by the bitmap inode is equal to the number of
+-real-time extents (+sb_rextents+) divided by the block size (+sb_blocksize+)
+-and bits per byte. This value is stored in +sb_rbmblocks+. The nblocks and
+-extent array for the inode should match this.  Each real time block gets its
+-own bit in the bitmap.
+-
+-[[Real-Time_Summary_Inode]]
+-=== Real-Time Summary Inode
+-
+-The real time summary inode, +sb_rsumino+, tracks the used and free space
+-accounting information for the real-time device.  This file indexes the
+-approximate location of each free extent on the real-time device first by
+-log2(extent size) and then by the real-time bitmap block number.  The size of
+-the summary inode file is equal to +sb_rbmblocks+ × log2(realtime device size)
+-× sizeof(+xfs_suminfo_t+).  The entry for a given log2(extent size) and
+-rtbitmap block number is 0 if there is no free extents of that size at that
+-rtbitmap location, and positive if there are any.
+-
+-This data structure is not particularly space efficient, however it is a very
+-fast way to provide the same data as the two free space B+trees for regular
+-files since the space is preallocated and metadata maintenance is minimal.
+-
+-include::rtrmapbt.asciidoc[]
++xref:Real-Time_Bitmap_Inode[Bitmap Inode] and the
++xref:Real-Time_Summary_Inode[Summary Inode].
+diff --git a/design/XFS_Filesystem_Structure/realtime.asciidoc b/design/XFS_Filesystem_Structure/realtime.asciidoc
+new file mode 100644
+index 00000000000000..11426e8fdb632d
+--- /dev/null
++++ b/design/XFS_Filesystem_Structure/realtime.asciidoc
+@@ -0,0 +1,50 @@
++[[Real-time_Devices]]
++= Real-time Devices
 +
-+[source, c]
-+----
-+enum xfs_metafile_type {
-+};
-+----
++The performance of the standard XFS allocator varies depending on the internal
++state of the various metadata indices enabled on the filesystem.  For
++applications which need to minimize the jitter of allocation latency, XFS
++supports the notion of a ``real-time device''.  This is a special device
++separate from the regular filesystem where extent allocations are tracked with
++a bitmap and free space is indexed with a two-dimensional array.  If an inode
++is flagged with +XFS_DIFLAG_REALTIME+, its data will live on the real time
++device.
 +
- *di_uid*::
- Specifies the owner's UID of the inode.
- 
-@@ -383,6 +397,12 @@ will be copied to all newly created files and directories.
- Files with this flag set may have up to (2^48^ - 1) extents mapped to the data
- fork and up to (2^32^ - 1) extents mapped to the attribute fork.  This flag
- requires the +XFS_SB_FEAT_INCOMPAT_NREXT64+ feature to be enabled.
-+| +XFS_DIFLAG2_METADATA+	|
-+This file contains filesystem metadata.  This feature requires the
-++XFS_SB_FEAT_INCOMPAT_METADIR+ feature to be enabled.  See the section about
-+xref:Metadata_Directories[metadata directories] for more information on
-+metadata inode properties.  Only directories and regular files can have this
-+flag set.
- |=====
- 
- *di_cowextsize*::
-diff --git a/design/XFS_Filesystem_Structure/superblock.asciidoc b/design/XFS_Filesystem_Structure/superblock.asciidoc
-index 79e8c30dc93e79..56877615ae81bf 100644
---- a/design/XFS_Filesystem_Structure/superblock.asciidoc
-+++ b/design/XFS_Filesystem_Structure/superblock.asciidoc
-@@ -69,7 +69,7 @@ struct xfs_dsb {
- 	__be64		sb_pquotino;
- 	__be64		sb_lsn;
- 	uuid_t		sb_meta_uuid;
--	__be64		sb_rrmapino;
-+	__be64		sb_metadirino;
- 
- 	/* must be padded to 64 bit alignment */
- };
-@@ -438,6 +438,10 @@ information.
- Directory parent pointers.  See the section about xref:Parent_Pointers[parent
- pointers] for more information.
- 
-+| +XFS_SB_FEAT_INCOMPAT_METADIR+ |
-+Metadata directory tree.  See the section about the xref:Metadata_Directories[
-+metadata directory tree] for more information.
++By placing the real time device (and the journal) on separate high-performance
++storage devices, it is possible to reduce most of the unpredictability in I/O
++response times that come from metadata operations.
 +
- |=====
++None of the XFS per-AG B+trees are involved with real time files.  It is not
++possible for real time files to share data blocks.
++
++[[Real-Time_Bitmap_Inode]]
++== Free Space Bitmap Inode
++
++The real time bitmap inode, +sb_rbmino+, tracks the used/free space in the
++real-time device using an old-style bitmap. One bit is allocated per real-time
++extent. The size of an extent is specified by the superblock's +sb_rextsize+
++value.
++
++The number of blocks used by the bitmap inode is equal to the number of
++real-time extents (+sb_rextents+) divided by the block size (+sb_blocksize+)
++and bits per byte. This value is stored in +sb_rbmblocks+. The nblocks and
++extent array for the inode should match this.  Each real time block gets its
++own bit in the bitmap.
++
++[[Real-Time_Summary_Inode]]
++== Free Space Summary Inode
++
++The real time summary inode, +sb_rsumino+, tracks the used and free space
++accounting information for the real-time device.  This file indexes the
++approximate location of each free extent on the real-time device first by
++log2(extent size) and then by the real-time bitmap block number.  The size of
++the summary inode file is equal to +sb_rbmblocks+ × log2(realtime device size)
++× sizeof(+xfs_suminfo_t+).  The entry for a given log2(extent size) and
++rtbitmap block number is 0 if there is no free extents of that size at that
++rtbitmap location, and positive if there are any.
++
++This data structure is not particularly space efficient, however it is a very
++fast way to provide the same data as the two free space B+trees for regular
++files since the space is preallocated and metadata maintenance is minimal.
++
++include::rtrmapbt.asciidoc[]
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index 689e2a874c13e9..a643d18add6094 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -84,6 +84,8 @@ include::journaling_log.asciidoc[]
  
- *sb_features_log_incompat*::
-@@ -471,11 +475,9 @@ If the +XFS_SB_FEAT_INCOMPAT_META_UUID+ feature is set, then the UUID field in
- all metadata blocks must match this UUID.  If not, the block header UUID field
- must match +sb_uuid+.
+ include::internal_inodes.asciidoc[]
  
--*sb_rrmapino*::
--If the +XFS_SB_FEAT_RO_COMPAT_RMAPBT+ feature is set and a real-time
--device is present (+sb_rblocks+ > 0), this field points to an inode
--that contains the root to the
--xref:Real_time_Reverse_Mapping_Btree[Real-Time Reverse Mapping B+tree].
-+*sb_metadirino*::
-+If the +XFS_SB_FEAT_RO_INCOMPAT_METADIR+ feature is set, this field points to
-+the inode of the root directory of the metadata directory tree.
- This field is zero otherwise.
++include::realtime.asciidoc[]
++
+ include::fs_properties.asciidoc[]
  
- === xfs_db Superblock Example
+ :leveloffset: 0
 
