@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAD0A19B5B1
-	for <linux-xfs@vger.kernel.org>; Thu,  7 Nov 2024 23:24:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EBA919B5B1
+	for <linux-xfs@vger.kernel.org>; Thu,  7 Nov 2024 23:24:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731021864; cv=none; b=t3VmJwenhZRSFyXsHPEV20j+L40acu1KFyWn/vCVC6r1esVSaCFeJmw9Cyf+UamASWPdN1BNWl1bjy8rv2zdUexuhH+WW4QBfFXGdjFYc+FQhR2JFIG/9REAvljct6O/PSAW0ATapc55CGa0q9nGqi13GIqIM1YtNKY/qhUtuI0=
+	t=1731021900; cv=none; b=jjq3L+m6gNEJV9TYGb88VgTeN5uPSWbJJcF5LdVTorOVaaH6JhXRgD1bBs+ARchF79gk/GJdwL3JMZYX6wTdigL2tNT+qSedKFUaq1HCfQ8a/jUQ7EGuKX3NDCZstY/M6b9RvMKTv8lrQrNQqRMty+xLUSzndnYXzfUEEGsP5xg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731021864; c=relaxed/simple;
-	bh=po+AVMlIUGakje2K2kxlRcxIsVXZZb+wVPkBN6dCO0E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FRZvI5+Q5LNswnzqHYJA/3uu+2RpZmOSTD7EDhgA1o948070THAdEDEK55t8B8DwJnVZzCiByx3rWefwinGmXww/Nj8Bm6x7+vfBur8ibcdS1gGXkjWjJOC5qWfXxCBp7K1HEjb8sAFAglbU2AW6ho0OVuW15zjq2TwHQQBudBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D3Q01lY2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731021900; c=relaxed/simple;
+	bh=IaCgT7p15cqHUOFgWUudOoTTGxAh+mXu+VcvFRjAZ9g=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=gKYUxl0cDPCvRmR67DMgAS8CQ0oRDJFB3bLaHxvyNuVNcHyxw5EQek4JIz0kzcB7nQ9gHMqMCOyCAuIcdIDwOq5n91I6denokOvfuvf7QwqGx7LiRJytG1X+3SIfB6xGgOSD3Kd5g9W/QpeKfOivRSR86XIIWiILlJUphW+W4z0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zu1GejRS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D3Q01lY2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7444AC4CECC;
-	Thu,  7 Nov 2024 23:24:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zu1GejRS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8B5BC4CECC;
+	Thu,  7 Nov 2024 23:24:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731021864;
-	bh=po+AVMlIUGakje2K2kxlRcxIsVXZZb+wVPkBN6dCO0E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=D3Q01lY22mtDIg7v1TTkkeIKOSzoU74RniRL2p4VKaTzmz9MQ0aRHtHIuAhzSNkA+
-	 Ageq2GtUtHhmIcvun1v3cP0vIY4LRy2gQSYjDZN/puBTeFmogeCQNcLAMgf65iItv0
-	 VCLlHDNPfigNfH3akSYdxjwsUqjvLcAhgtcDpiLGknad4WCHNDbDCLfoixHUNpxrKD
-	 8U9Qz/tblQDG0BauT91GrOmp1RC16D32fFUw8jV14Tn1YnkBdGYfl+RCfO9QON18cn
-	 67JgaSuADeOR2TKo2g216vJUugRAbajLMX0w8FfJ8IHurLHlp5spCgPaeRyqcNc1nA
-	 KEZ/ZM8SlvWpQ==
-Date: Thu, 7 Nov 2024 15:24:23 -0800
+	s=k20201202; t=1731021899;
+	bh=IaCgT7p15cqHUOFgWUudOoTTGxAh+mXu+VcvFRjAZ9g=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=Zu1GejRStZAd98VUCftIPRfDM+s/4p1KetaCd81YvNTHPoQgFTPDGzMaAgqPBvoHZ
+	 JRjwcG8yiqljNBe/D51qj72efLwnqKmEMR+A5sZ0Bq6Fpqca4ZM9s3XDm5AGQDLc6u
+	 FfkWMMgGgkNEJO5AXV4PVTdFqmGEGvPLvS9sIUNm5se6i6xL58rs3XtCAh59UrWTXm
+	 DQOiPItDBARyS8z2P0nDA6YS7AHNTrIb9kK8Vutr3DXuaFnwqWqRM6Pejs96us+HFt
+	 q+M7oUar/+nqDklln8du/ymbpXU9YBXrfUnc6nBXJEeCZkvmZh4LsdS2NOfxQa3v54
+	 pWOzRbw8Mtopw==
+Date: Thu, 07 Nov 2024 15:24:59 -0800
+Subject: [PATCHSET v5.6 1/2] xfs-documentation: document metadata directories
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCHBOMB 6.13 v5.6] xfs-docs: metadata directories and
- realtime groups
-Message-ID: <20241107232423.GT2386201@frogsfrogsfrogs>
+To: djwong@kernel.org
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173102187468.4143835.2187727613598371946.stgit@frogsfrogsfrogs>
+In-Reply-To: <20241107232131.GS2386201@frogsfrogsfrogs>
 References: <20241107232131.GS2386201@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -40,33 +40,39 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241107232131.GS2386201@frogsfrogsfrogs>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Thu, Nov 07, 2024 at 03:21:31PM -0800, Darrick J. Wong wrote:
-> Hi everyone,
-> 
-> Here's a minor revision to yesterday's metadir/rtgroups ondisk format
-> documentation updates to move the superblock docs to a separate file,
-> and to remove a few feature flag bits that were removed before the final
-> release.  The last bits of online fsck haven't changed, so I've left
-> them out for brevity.
-> 
-> Nobody likes asciidoc, so if you want an easy to read version of the
-> ondisk documentation, try either:
-> http://djwong.org/docs/xfs_filesystem_structure.pdf
-> http://djwong.org/docs/xfs_filesystem_structure.html
-> 
-> Please have a look at the git tree links for code changes:
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-groups_2024-11-07
+Hi all,
 
-Forgot to mention that these are the unreviewed patches:
+This patch documents the metadata directory tree feature.
 
-[PATCHSET v5.6 1/2] xfs-documentation: document metadata directories
-  [PATCH 1/3] design: move superblock documentation to a separate file
-  [PATCH 2/3] design: document the actual ondisk superblock
-[PATCHSET v5.6 2/2] xfs-documentation: shard the realtime section
-  [PATCH 2/4] design: document realtime groups
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
---D
+Comments and questions are, as always, welcome.
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=metadir
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadir
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=metadir
+
+xfsdocs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=metadir
+---
+Commits in this patchset:
+ * design: move superblock documentation to a separate file
+ * design: document the actual ondisk superblock
+ * design: document the changes required to handle metadata directories
+---
+ .../allocation_groups.asciidoc                     |  550 --------------------
+ .../internal_inodes.asciidoc                       |  113 ++++
+ .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |   22 +
+ .../XFS_Filesystem_Structure/superblock.asciidoc   |  549 ++++++++++++++++++++
+ 4 files changed, 684 insertions(+), 550 deletions(-)
+ create mode 100644 design/XFS_Filesystem_Structure/superblock.asciidoc
+
