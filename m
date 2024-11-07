@@ -1,116 +1,117 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 575731D63F1;
-	Thu,  7 Nov 2024 08:46:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0748192B73;
+	Thu,  7 Nov 2024 09:21:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730969167; cv=none; b=Vq3GE3unP3gXiIOBDhOlKrRQJLVq5TmuKx28oWGm2pzKXRmyiDXgv2fpo7gXAKxyJzLH8vrqwgWncvoetsXzD/avFsNSgaqyGl4KQF+ueY+VLThz9C/eK0sgspQRgQLtVjlffTCG7kxdT/1uTojiIj5Vgp419QvdzVEVZS3D2p8=
+	t=1730971323; cv=none; b=nErA+MgFb3Z3JbJ4tHShO0i88m+PzflDKWvUn6/xyWHXHaYqA0CLOZfnlJqQyzYUtHWBSNyc3a/U0g0O3VPkccTdV+YLB0v0QSBNZ+1DgcaknJlzwxNBPG1rzLh+ONYvRJw5n+lPBr/jAN6Y15h9jrDhKB4FRwUPNhLzdwmCzFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730969167; c=relaxed/simple;
-	bh=XVpC0vL4dSyCmv2UW97S7ZmNuXpcUPzT4PIDs5lfG8U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GtF2y0EBLdKer10QccwBNKSssKkRoeM6ZfvCdREdcqB/dbWz6gw5XOR8t6ocYIwrIHpJ9zmAr7DbV+jKH18W93uVrmJ8Q2KIuDUgnUfHesV2u3PAk5S+EkpoDA1RIHxHKcKpVx9Wqh44m+FI2+xJ7ehZYKq12acae9cJFlFUAjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IH2mq9Gv; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IH2mq9Gv"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-21145812538so6671105ad.0;
-        Thu, 07 Nov 2024 00:46:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730969165; x=1731573965; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=87ab9pEUneStoi9BaOdzV5RSJLTcxraQ1crI3Oaa3hQ=;
-        b=IH2mq9GvscLKdOQhH62pH1q1oTlMWAd50oc4ByDSSXZP5dY8qHoeFkVajnVJ5POxE5
-         OhfuG7tsbA+ZHtwN2y+pVMkoVO7kH+oT3+J404XhD6ZtLZUTrphf+dHMwhRl5tWJiGIt
-         4ip5GkKPtvXR2NMKI94shZCelEOKlGTHJQadEdOoMpwQgRN98CSK8mDdU9IyjCPa7D+t
-         PPP4KN2xANoS80sKCkWpXQ1lRQhNzLu8dKjB6CZSNyzHJ7UAgGDmTm0ElRxrXTv1tzaz
-         WU63+NnquIqDi0RER858BuC3YF1NkaMoHRgbe6Q4gk2bLn3pSESvZoGjF8rK1ucmvQrs
-         NayQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730969165; x=1731573965;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=87ab9pEUneStoi9BaOdzV5RSJLTcxraQ1crI3Oaa3hQ=;
-        b=uF4l7TlxagIloHyMliGyxIpTHHxspsbXs+XgrkeoXCtfdouIXJCe1ZVQ0bea6UxIge
-         6CmEnD4FMtEzNr9o16H4WWZG9s+7wu3nbl3+4momAy5mL1EQcYW7UX7x6p5d6wdJQU/f
-         E/GBoNtrjP0u8Nuph0FH12YcrCAyb6yVGwIkcKzG7CcYlhHaHmR6lHZanQdKmFsXFXOC
-         eZ8sZx+1aecE9D+WJoewaPWznHsLVMOrq0et30O5T6DX+tuz7qCM2DLQNwhY8M3ubi4m
-         hpF/NFFmoXcqdPOR9uk0FjGbkLsbhok50x2mF47EiY0v646Pv1Ndxpuq0i47i7qQ+OpO
-         grIQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVUlg4YayVgkquaWxQ4m5IDWCwjEnKo9bUINymUgq1g9S304BpbcewBowk075iVLnhpymHc6y+LUBR3RWU=@vger.kernel.org, AJvYcCX76uEzQ/VegDWXIv539vRI7YRQaLfJnixHhkJqmTP3ZMzYMkJCr32gbXT01u6wZ4QaSs4vEjzSpMmC@vger.kernel.org
-X-Gm-Message-State: AOJu0YxLFaw8q7s7ZC14iyBHWAMuAJn6vAYehe/1kCmWGDiWroBJ1Xnd
-	ew8tL1lY2e48vEzrVFNRMqU5PHDW7SlNf7DJvqhsz6bn+glgIYay
-X-Google-Smtp-Source: AGHT+IFz4+e7Z2dki2CDZSqJI+sHIwVnHGysxySVe4iL7eIJ99BC/qHJhwQYwiRrf8nHppSz5sSqpQ==
-X-Received: by 2002:a17:903:189:b0:20f:c225:f28c with SMTP id d9443c01a7336-210c6c9417amr578558895ad.52.1730969165604;
-        Thu, 07 Nov 2024 00:46:05 -0800 (PST)
-Received: from localhost.localdomain ([119.28.17.178])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177e6b656sm7299435ad.254.2024.11.07.00.46.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Nov 2024 00:46:05 -0800 (PST)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: alexjlzheng@gmail.com
-Cc: alexjlzheng@tencent.com,
-	chandanbabu@kernel.org,
-	dchinner@redhat.com,
-	djwong@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix extent length after xfs_alloc_compute_diff()
-Date: Thu,  7 Nov 2024 16:46:02 +0800
-Message-ID: <20241107084602.185986-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.41.1
-In-Reply-To: <20241107070300.13535-1-alexjlzheng@tencent.com>
-References: <20241107070300.13535-1-alexjlzheng@tencent.com>
+	s=arc-20240116; t=1730971323; c=relaxed/simple;
+	bh=LsslkvjZfX6CE/ZrarIfhb3LVXQYS/MBsLg4+1MVRt4=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
+	 In-Reply-To:Content-Type; b=FXLDiGj9OomUiLCVv9WEXwbC4ZIcTxgECJ6zJFTjqwcKYXxoR8DFNQ+v5VPW2Wm92OcS73MGb9w9RC170dv0FI6rfkNS8kvOeQC2YeXF9Y0ohz0yeWZO9tWTIYXbNz+TY/OdeOwKw+X+i38ce3xd9ZoxooHACJ7jeRUvK1myQV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Xkc3s0f9Vz10V9n;
+	Thu,  7 Nov 2024 17:20:09 +0800 (CST)
+Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
+	by mail.maildlp.com (Postfix) with ESMTPS id C2D271401F3;
+	Thu,  7 Nov 2024 17:21:56 +0800 (CST)
+Received: from [10.174.176.88] (10.174.176.88) by
+ kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 7 Nov 2024 17:21:55 +0800
+Message-ID: <725e972f-2014-405b-a056-611c13e95f20@huawei.com>
+Date: Thu, 7 Nov 2024 17:21:55 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/2] Some boundary error bugfix related to XFS fsmap.
+From: Zizhi Wo <wozizhi@huawei.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <chandan.babu@oracle.com>, <dchinner@redhat.com>, <osandov@fb.com>,
+	<john.g.garry@oracle.com>, <linux-xfs@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>
+References: <20240826031005.2493150-1-wozizhi@huawei.com>
+ <9337ebda-8e27-4754-bc57-748e44f3b5e0@huawei.com>
+ <20240902190828.GA6224@frogsfrogsfrogs>
+ <9ab7ee3d-cf97-47b0-91dd-c5451911b455@huawei.com>
+In-Reply-To: <9ab7ee3d-cf97-47b0-91dd-c5451911b455@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemf100017.china.huawei.com (7.202.181.16)
 
-On Thu,  7 Nov 2024 15:03:00 +0800, alexjlzheng@gmail.com wrote:
-> After xfs_alloc_compute_diff(), the length of the candidate extent
-> may change, so make necessary corrections to args->len.
+
+
+在 2024/10/9 21:01, Zizhi Wo 写道:
+> Hi!
 > 
-> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> Here are two patches that address fsmap statistics errors. I sent out
+> this version in August, and I hope someone can take some time to review
+> them. So friendly ping. Thanks in advance!
+
+friendly ping again（￣。。￣）
+
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 22bdbb3e9980..6a5e6cc7a259 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -1069,6 +1069,10 @@ xfs_alloc_cur_check(
->  	if (bnew == NULLAGBLOCK)
->  		goto out;
->  
-> +	args->len = XFS_EXTLEN_MIN(bnoa + lena - bnew, args->maxlen);
-> +	if (args->len < acur->len)
-> +		goto out;
-> +
->  	/*
->  	 * Deactivate a bnobt cursor with worse locality than the current best.
->  	 */
-> -- 
-> 2.41.1
-
-Sorry, I must have misunderstood the intent of the code when sending this
-patch. In fact, args->len should not be changed.
-
-But my starting point is I was wondering what will happen if
-xfs_alloc_compute_diff()'s changes to bnew cause the extent's remaining
-length to be less than args->len? So I have send a new patch:
-https://lore.kernel.org/linux-xfs/20241107084044.182463-1-alexjlzheng@tencent.com/T/#u
-
-Also, am I missing some key code to ensure that the above situation does
-not occur?
-
-Jinliang Zheng :)
+> 
+> 在 2024/9/3 3:08, Darrick J. Wong 写道:
+>> On Thu, Aug 29, 2024 at 07:24:55PM +0800, Zizhi Wo wrote:
+>>> friendly ping
+>>
+>> Sorry, I'm not going to get to this until late September.
+>>
+>> --D
+>>
+>>> 在 2024/8/26 11:10, Zizhi Wo 写道:
+>>>> Prior to this, I had already sent out a patchset related to xfs fsmap
+>>>> bugfix, which mainly introduced "info->end_daddr" to fix omitted 
+>>>> extents[1]
+>>>> and Darrick had already sent out a patchbomb for merging into 
+>>>> stable[2],
+>>>> which included my previous patches.
+>>>>
+>>>> However, I recently discovered two new fsmap problems...What follows 
+>>>> is a
+>>>> brief description of them:
+>>>>
+>>>> Patch 1: In this scenario, fsmap lost one block count. The root 
+>>>> cause is
+>>>> that during the calculation of highkey, the calculation of 
+>>>> start_block is
+>>>> missing an increment by one, which leads to the last query missing one
+>>>> This problem is resolved by adding a sentinel node.
+>>>>
+>>>> Patch 2: In this scenario, the fsmap query for realtime deivce may 
+>>>> display
+>>>> extra intervals. This is due to an extra increase in "end_rtb". The 
+>>>> issue
+>>>> is resolved by adjusting the relevant calculations. And this patch 
+>>>> depends
+>>>> on the previous patch that introduced "info->end_daddr".
+>>>>
+>>>> [1] 
+>>>> https://lore.kernel.org/all/20240819005320.304211-1-wozizhi@huawei.com/
+>>>> [2] 
+>>>> https://lore.kernel.org/all/172437083728.56860.10056307551249098606.stgit@frogsfrogsfrogs/
+>>>>
+>>>> Zizhi Wo (2):
+>>>>     xfs: Fix missing block calculations in xfs datadev fsmap
+>>>>     xfs: Fix incorrect parameter calculation in rt fsmap
+>>>>
+>>>>    fs/xfs/libxfs/xfs_rtbitmap.c |  4 +---
+>>>>    fs/xfs/xfs_fsmap.c           | 39 
+>>>> +++++++++++++++++++++++++++++++-----
+>>>>    2 files changed, 35 insertions(+), 8 deletions(-)
+>>>>
+>>>
+>>
+> 
+> 
