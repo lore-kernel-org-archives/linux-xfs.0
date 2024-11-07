@@ -1,112 +1,98 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04FB510F9
-	for <linux-xfs@vger.kernel.org>; Thu,  7 Nov 2024 05:40:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D099192590;
+	Thu,  7 Nov 2024 07:03:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730958040; cv=none; b=Zw/wPqH6iJaz/DiEyIPm74B29x+tHshYiFOugejtSDDuXAyxvkibn5iufg3b174w8BmDcH+QXumjj7ke2ko2gdHXlIQ960Ib8ZUABBuk+6aK8e081ELJM2XFz+VjkSxjq+jxSsNhCc+0f7rDB8LLbdTn1wcaDmNDO6ZOcHiZEjY=
+	t=1730963003; cv=none; b=DMLUK+h7A0mObC0b9MYGtKXvkdFf+MhrazpR/e/IZYDfmX8Hu+rphFq3UGmuM9jrObDqnmf+Gkx3kT4HzK0W+g8o4MTlkBo9wAiUVmjKJSmX1UOsuWiNtdZ931CQZA+bknNSWwZuaXXGV1vkaoNmovYrcAql7m/EZnIWsqtDcu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730958040; c=relaxed/simple;
-	bh=OUG92BgId/jeFaQtWKpDw1h4BVF8COXmT+YiCgvWRZM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=urdVt4N1tVjj+6y5TwNXTt8n4BwUC29LJmmxAEv3uP4QaHoKlh95F7Crpjd0SHiAlcGxnf4hF3GsD3WC5gMoMmV/Hnn3Gy63jW4yhhZr5ePjk2IVJYnSpUgwu7G9dxW41Lhtj391uxCu2+qNvMQzDLKZgRrQRUDFHG5tehUvk1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=gAkAI8gr; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1730963003; c=relaxed/simple;
+	bh=QSnARRy14JiYr+ZU6QB/x2aKO3py6LrsAndtrC2tucY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VZ+UKRa56LhDn929/VMACNfEzqiSchF00TgjKBawzkfNmroQvMPuX1uuhEoAIAQh5GQgRcdEpqFiehA0y6wOp7w5W78ZX35jLraqvTHKU03CDdMDZscXp5hKG/QJgSlHf4WnMhCUyU9eP9AV9y2cHIIsGeyaU0ZgkbAw0AL/Gq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SKimkn0K; arc=none smtp.client-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="gAkAI8gr"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-7ea16c7759cso398705a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Nov 2024 21:40:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SKimkn0K"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7ea7e2ff5ceso501440a12.2;
+        Wed, 06 Nov 2024 23:03:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1730958038; x=1731562838; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=enXt8+1EaBKT8bXQIbFGDf4ztusypEGRe9kf0bX/Yxo=;
-        b=gAkAI8grVO/CaWHO5GIaAmNPRA95S+aHEO1gkZsfsSCZKw3J6o8q3IlUGPwQiws5UK
-         +qiPFPR9DEyMJpgvzdP+XB2HHo6xMnd0izwmjppW3wfqRGDas1w4bUue8BcRCbi3rn4E
-         TIl4AERPZLGOpDxJ+dG/hMPJzaDRb1qVcSeImZ1YKCbFAl8z/cxgk0OftaNwo3Q+V7an
-         0VWnGf0vpFPcGX4XyUbg6POHpgGaQEg9uzrcm5C+lKZpShl76VzhzdH92SYRC1To3v4z
-         OFqrETDxGUtI4oEWT6ZTEQbVMjduh9LSaFtJcz7nk9NRHHkjVZUNRRF2Smbjv3h7zeCV
-         TBxA==
+        d=gmail.com; s=20230601; t=1730963002; x=1731567802; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=yKXk7y7+DWGhXnWzs2Nf+nojqizRex6j2FV42fWmgGM=;
+        b=SKimkn0KgG+m5OQGwfRxGG8vNqrLxMsib4nnrvyyqiOjiswcXNoA52PGltQ+l4FaE5
+         QVASDSF8nH0sRZ4fwgZtTSHjEEiRHJm9KHAUs3fc46bV0BxEK11tb//FuHjTYKfXvtfB
+         rPemVnuFZwq0TUJ5IVhVr4OdltShGWHdvKgGU8nerzMSPk61GVxBzxMuSLx1rOnfUwrv
+         T61naVqVRgKp6K6KPAFZ+YWsVyyIK9HyNNJIl/RcpcSm5EuJ7RGyPQEjLJ+0P3AHjhhp
+         I02W62t7VC5W1TB231JZEQiZM3OUdTwxs8xmLv2OG/XsQ9ur2+tzCszPeC7JzdNpVrPh
+         D5SQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730958038; x=1731562838;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=enXt8+1EaBKT8bXQIbFGDf4ztusypEGRe9kf0bX/Yxo=;
-        b=FDfSVZv8fjfTrwvEVwSSI4AH1Pk29mWG3ZCHHRLLitG4OATk6QkCx8ZtByK1tCp/GL
-         vLVTNyws9K/XrpfCU45WRyleFSkcKwUMunIXclV9f65bWkv2rcfbRfAdpiN8I9D8oMx5
-         1Ha7YN6DnvXjZ3WFkDVTv5bz5waRS3zxXe3zhzx0RaHErbt/S2vEzUBzhKeb4b02aY/D
-         L237Zm5FDKP59bS1eh8e1Y/6XbrEPQbJ1i34AWNvJpfqulb/slep7Ll0u4hPokVEOSFD
-         PxizmfoY8fVJipsm+HoeHOf+T5vvj/IZ9vQFinBTZEptJmf0r2tcMqmTLLShJOsc3+X2
-         xmSw==
-X-Forwarded-Encrypted: i=1; AJvYcCVU8+FuMM2E4wQMmvwQ++obY5PU4aHdcYTAHRGIuLJjxyf6paMua7r1WvW0zCEuAD8Rlsz6CbtLnDo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxx/b7HaNyGk8igeRkWIWQVYNd4XYkJcSRhmAG65fpM8GUx48Tt
-	9VQqgu4OY5KdAdQA1EPnNIFRQ07avtt5SfJGJ3RrlWKeBE2NbtRqle2gz21yf6Q=
-X-Google-Smtp-Source: AGHT+IGn+B/wSPpND0jR/YeR/6zOfJvoIgxlHcXuQEhHO5E8iZF1hjG7NfxeMqYPKuTjjGHFS9rmlQ==
-X-Received: by 2002:a05:6a20:4310:b0:1db:dedd:fcb0 with SMTP id adf61e73a8af0-1dc1296a02amr1108387637.41.1730958038379;
-        Wed, 06 Nov 2024 21:40:38 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7240799baf7sm589947b3a.121.2024.11.06.21.40.37
+        d=1e100.net; s=20230601; t=1730963002; x=1731567802;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=yKXk7y7+DWGhXnWzs2Nf+nojqizRex6j2FV42fWmgGM=;
+        b=dUUy65wgL0Gf6OPkHGlXsDa6jRVbVWiyyFxT5VFeWZ6cu4VksL6FGPkx3VlLwgwci4
+         w9YkFhais3zGOZccBUvsdOLVjQQqfJX2qr8Df1SJBWtru4SAvnqJnFII41xvpx5wp0mM
+         UNcOvU9fhzA+chXY7dcxMzomac2UABDfY7itYHv2UgxBaa5oqd1mIAX5TwD7HjginNc0
+         RmbR/AjP1iauuOdeh8uVKN6CJuiPcKFMT0HxnabCeWI0DPquwWgGGLXgU+eSHZ7h2EOF
+         ca6UTp0N11dQ9cVnFMvM+zqfwDU4eKfiLvNJrN8ShMbGve2Fob9YkeDdxG1xuyMQGAv7
+         BTwg==
+X-Forwarded-Encrypted: i=1; AJvYcCUNQxB0CqyCR0hsdoJJhIZ2WMv0BlhnluATF3XyFgPNQ4GqSzxp5QbrInaBzJvuV1HA/tX1eHrj3kfUer4=@vger.kernel.org, AJvYcCVtu7O1xst/5bd+RBNvf7XMSZelisDSKl5tdwvHtEVt+6pYxJpT0ZpPnfb5LfK//AIFmyT7xCL5TZeF@vger.kernel.org
+X-Gm-Message-State: AOJu0YytpKRDE4DEzYiSU1RWs7MBjOTLdVRt3iiqN8pWmSq8VMWWtF10
+	tpxQDcvYKoovV3a3Tcbf6AiWL3k9AcBUVdurL78BJjEObvi1n7qN/74+ew==
+X-Google-Smtp-Source: AGHT+IG4fAUttPAezJ2jsgnVG9JTTBQ7TTzRipjFB9v7xddpodiwBjsWVMjWTVLtoqSO17li7akQOA==
+X-Received: by 2002:a05:6a20:3d8a:b0:1db:ff57:562b with SMTP id adf61e73a8af0-1dc17b2b62dmr149615637.31.1730963001607;
+        Wed, 06 Nov 2024 23:03:21 -0800 (PST)
+Received: from localhost.localdomain ([119.28.17.178])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e9a5f5ffb7sm804730a91.13.2024.11.06.23.03.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Nov 2024 21:40:37 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1t8vFy-00BGTP-2r;
-	Thu, 07 Nov 2024 16:40:34 +1100
-Date: Thu, 7 Nov 2024 16:40:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Zorro Lang <zlang@redhat.com>,
-	Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs/157: mkfs does not need a specific fssize
-Message-ID: <ZyxS0k6UWaHpooAo@dread.disaster.area>
-References: <20241031193552.1171855-1-zlang@kernel.org>
- <20241031220821.GA2386201@frogsfrogsfrogs>
- <20241101054810.cu6zsjrxgfzdrnia@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241101214926.GW2578692@frogsfrogsfrogs>
- <Zyh8yP-FJUHKt2fK@infradead.org>
- <20241104130437.mutcy5mqzcqrbqf2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241104233426.GW21840@frogsfrogsfrogs>
- <ZynB+0hF1Bo6p0Df@dread.disaster.area>
- <Zyozgri3aa5DoAEN@infradead.org>
- <20241105154712.GJ2386201@frogsfrogsfrogs>
+        Wed, 06 Nov 2024 23:03:21 -0800 (PST)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: dchinner@redhat.com
+Cc: djwong@kernel.org,
+	chandanbabu@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: [PATCH] xfs: fix extent length after xfs_alloc_compute_diff()
+Date: Thu,  7 Nov 2024 15:03:00 +0800
+Message-ID: <20241107070300.13535-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.41.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241105154712.GJ2386201@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 05, 2024 at 07:47:12AM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 05, 2024 at 07:02:26AM -0800, Christoph Hellwig wrote:
-> > On Tue, Nov 05, 2024 at 05:58:03PM +1100, Dave Chinner wrote:
-> > > When the two conflict, _scratch_mkfs drops the global MKFS_OPTIONS
-> > > and uses only the local parameters so the filesystem is set up with
-> > > the configuration the test expects.
-> > > 
-> > > In this case, MKFS_OPTIONS="-m rmapbt=1" which conflicts with the
-> > > local RTDEV/USE_EXTERNAL test setup. Because the test icurrently
-> > > overloads the global MKFS_OPTIONS with local test options, the local
-> > > test parameters are dropped along with the global paramters when
-> > > there is a conflict. Hence the mkfs_scratch call fails to set the
-> > > filesystem up the way the test expects.
-> > 
-> > But the rmapbt can be default on, in which case it does not get
-> > removed.  And then without the _sized we'll run into the problem that
-> > Hans' patches fixed once again.
-> 
-> Well we /could/ make _scratch_mkfs_sized pass options through to the
-> underlying _scratch_mkfs.
+After xfs_alloc_compute_diff(), the length of the candidate extent
+may change, so make necessary corrections to args->len.
 
-That seems like the right thing to do to me.
+Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
--Dave.
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 22bdbb3e9980..6a5e6cc7a259 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1069,6 +1069,10 @@ xfs_alloc_cur_check(
+ 	if (bnew == NULLAGBLOCK)
+ 		goto out;
+ 
++	args->len = XFS_EXTLEN_MIN(bnoa + lena - bnew, args->maxlen);
++	if (args->len < acur->len)
++		goto out;
++
+ 	/*
+ 	 * Deactivate a bnobt cursor with worse locality than the current best.
+ 	 */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.41.1
+
