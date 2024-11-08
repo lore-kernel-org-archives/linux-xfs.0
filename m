@@ -1,242 +1,158 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A7881DFD1;
-	Fri,  8 Nov 2024 17:30:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C68B1AA1F5
+	for <linux-xfs@vger.kernel.org>; Fri,  8 Nov 2024 17:39:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731087007; cv=none; b=fT0p5zCDkJkCnnrQgRsjsLOS0UTD/anOmyv1ayqMYx+x70U8UE0gnUo/zo4afbMlVUS4G6gfnUo+hfoOxOH4y46Ra6ws7fi37veB6MT2EYqpin4BZg5GQuAkZRohQhD2Jh21LyQK3KXkM3yOlymYtVZO3b8awtM9Aeuvdo588s8=
+	t=1731087548; cv=none; b=ZunfR+5gJmtYsTt0xmpabUiDZxoh+hDJSCmNavBs5VmG+r5Inet8z/9VB2roXW6sI4K3zfaYFASJt+k76Sz6nnmmspZNye09B/boPw2Vkd+kBWEjwK91YCTIRsBKxr0BOrHtdJJsAe0roFIXFs2cDaiuieGRYxTy+NrsnM1/o1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731087007; c=relaxed/simple;
-	bh=29DVLAh2HCtcArmnuxwpYrI5cfTUdqXRDhp9CcKrP+w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ts7tEV4zBZSJP+j8wHshdXH/+RhJHxM0iYLvOYcf42Go95hsorPre7QAUr0/XNj+Si3UJ/oxMBKfIKYi5wxKFOsOq6zv+G6dcoswwvSNU3X3t/+mpPbfIT1eiv8biiEFjl24A/mVhWxM73Y7TXaEtVCFGVmaXQtQ5kuqxYAk3KU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j8hLLCBf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731087548; c=relaxed/simple;
+	bh=+pkYNl3ZV/R4lVTLl6fN4+/58bl6wtzodUoxWOLPqXk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=cIg8TPCZSS7D9XuckZysu5ZZ9dw6Xqu2TUAMe01XdKkoBiC0G8YQPCAloP9oX37xoaIy4UWrGMssjvbwy1FQh7wZJSL9vlo6kFSDTPH2XC62N5kg8Yp45bDepwez9B2aqdkyRuGe1xI7SATI3fDr8fM+g3qoGtRVc5KB0BEaxCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Aq+JJf0Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j8hLLCBf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF1FDC4CECD;
-	Fri,  8 Nov 2024 17:30:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Aq+JJf0Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA041C4CECD;
+	Fri,  8 Nov 2024 17:39:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731087006;
-	bh=29DVLAh2HCtcArmnuxwpYrI5cfTUdqXRDhp9CcKrP+w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j8hLLCBf8x6iuGLD5Z8eLntiO0L9tkSM8Ek1amA+tY/UUWKy7gYVe+u1bWnMCvUrz
-	 w3k6cKEWgGMvWJO9lFeEfbxYYn5p8aP1VupU/aBRy5zu8yU4k4UKzNELMa7HvkIVMs
-	 gvb/toW4F0aaAVeeP+vUX7v4urTAlTLLoglHttOz0tGy1mrsRN8kOLBBK0hvLqvgFS
-	 NpeMmsqptwsPbmCwswzuB61M0KDfVC1j8d+vHFx24nHInBcYgbd3UbHRnYT9d5ljEV
-	 Anl0oyQcQaNSSm0WhDAL+XjTuhFxdP0solLdkmAaivWOzWwEQMW/F3Fyt0ycL/8hBT
-	 1VTjwKIOWcGYg==
-Date: Fri, 8 Nov 2024 09:30:06 -0800
+	s=k20201202; t=1731087547;
+	bh=+pkYNl3ZV/R4lVTLl6fN4+/58bl6wtzodUoxWOLPqXk=;
+	h=Date:From:To:Cc:Subject:From;
+	b=Aq+JJf0QS89lPLCAB1jl1FE1sBlJ3nkhwhwa9omdU3fKH6q2iQWIp9RQkUhhOTwZw
+	 mTo+rBxFR2eBpB9/LzGBUhUKkkx2Yr837YgX3V/KIgpkiniUY9eJCanlDMDtg4axkg
+	 KP81q6GUIWcovlcgW/gBPF2I26wFc7EYcrC17MxWGSrQWe1WVLKcZPNCY0g/fb6v+D
+	 jhlnJno+OKoAa38LefWA6d25xiCfdSpma+5/9jU1VkHYo8K6OY67Lwr/dkp33fNVm5
+	 sjm60+r6y8jJ9KBAtAUMdwqoF4Uulz+jUMpUn49lLnWK8EmtQJbNUh9FRTXhQFKuA+
+	 ktaJ9qwTGwM4A==
+Date: Fri, 8 Nov 2024 09:39:07 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Zizhi Wo <wozizhi@huawei.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, osandov@fb.com,
-	john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, yangerkun@huawei.com
-Subject: Re: [PATCH 1/2] xfs: Fix missing block calculations in xfs datadev
- fsmap
-Message-ID: <20241108173006.GA168069@frogsfrogsfrogs>
-References: <20240826031005.2493150-1-wozizhi@huawei.com>
- <20240826031005.2493150-2-wozizhi@huawei.com>
- <20241107234352.GU2386201@frogsfrogsfrogs>
- <1549f04a-8431-405d-adfc-23e5988abe51@huawei.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
+Subject: [PATCH] xfs: fix off-by-one error in fsmap's end_daddr usage
+Message-ID: <20241108173907.GB168069@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1549f04a-8431-405d-adfc-23e5988abe51@huawei.com>
 
-On Fri, Nov 08, 2024 at 10:29:08AM +0800, Zizhi Wo wrote:
-> 
-> 
-> 在 2024/11/8 7:43, Darrick J. Wong 写道:
-> > On Mon, Aug 26, 2024 at 11:10:04AM +0800, Zizhi Wo wrote:
-> > > In xfs datadev fsmap query, I noticed a missing block calculation problem:
-> > > [root@fedora ~]# xfs_db -r -c "sb 0" -c "p" /dev/vdb
-> > > magicnum = 0x58465342
-> > > blocksize = 4096
-> > > dblocks = 5242880
-> > > ......
-> > > [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
-> > > ...
-> > > 30: 253:16 [31457384..41943031]: free space            3  (104..10485751)    10485648
-> > > 
-> > > (41943031 + 1) / 8 = 5242879 != 5242880
-> > > We missed one block in our fsmap calculation!
-> > 
-> > Eek.
-> > 
-> > > The root cause of the problem lies in __xfs_getfsmap_datadev(), where the
-> > > calculation of "end_fsb" requires a classification discussion. If "end_fsb"
-> > > is calculated based on "eofs", we need to add an extra sentinel node for
-> > > subsequent length calculations. Otherwise, one block will be missed. If
-> > > "end_fsb" is calculated based on "keys[1]", then there is no need to add an
-> > > extra node. Because "keys[1]" itself is unreachable, it cancels out one of
-> > > the additions. The diagram below illustrates this:
-> > > 
-> > > |0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|-----eofs
-> > > |---------------|---------------------|
-> > > a       n       b         n+1         c
-> > > 
-> > > Assume that eofs is 16, the start address of the previous query is block n,
-> > > sector 0, and the length is 1, so the "info->next" is at point b, sector 8.
-> > > In the last query, suppose the "rm_startblock" calculated based on
-> > > "eofs - 1" is the last block n+1 at point b. All we get is the starting
-> > > address of the block, not the end. Therefore, an additional sentinel node
-> > > needs to be added to move it to point c. After that, subtracting one from
-> > > the other will yield the remaining 1.
-> > > 
-> > > Although we can now calculate the exact last query using "info->end_daddr",
-> > > we will still get an incorrect value if the device at this point is not the
-> > > boundary device specified by "keys[1]", as "end_daddr" is still the initial
-> > > value. Therefore, the eofs situation here needs to be corrected. The issue
-> > > is resolved by adding a sentinel node.
-> > 
-> > Why don't we set end_daddr unconditionally, then?
-> > 
-> > Hmm, looking at the end_daddr usage in fsmap.c, I think it's wrong.  If
-> > end_daddr is set at all, it's set either to the last sector for which
-> > the user wants a mapping; or it's set to the last sector for the device.
-> > But then look at how we use it:
-> > 
-> > 	if (info->last...)
-> > 		frec->start_daddr = info->end_daddr;
-> > 
-> > 	...
-> > 
-> > 	/* "report the gap..."
-> > 	if (frec->start_daddr > info->next_daddr) {
-> > 		fmr.fmr_length = frec->start_daddr - info->next_daddr;
-> > 	}
-> > 
-> > This is wrong -- we're using start_daddr to compute the distance from
-> > the last mapping that we output up to the end of the range that we want.
-> > The "end of the range" is modeled with a phony rmap record that starts
-> > at the first fsblock after that range.
-> > 
-> 
-> In the current code, we set "rec_daddr = end_daddr" only when
-> (info->last && info->end_daddr != NULL), which should ensure that this
-> is the last query?
+From: Darrick J. Wong <djwong@kernel.org>
 
-Right.
+In commit ca6448aed4f10a, we created an "end_daddr" variable to fix
+fsmap reporting when the end of the range requested falls in the middle
+of an unknown (aka free on the rmapbt) region.  Unfortunately, I didn't
+notice that the the code sets end_daddr to the last sector of the device
+but then uses that quantity to compute the length of the synthesized
+mapping.
 
-> Because end_daddr is set to the last device, and
-> info->last is set to the last query. Therefore, assigning it to
-> start_daddr should not cause issues in the next query?
+Zizhi Wo later observed that when end_daddr isn't set, we still don't
+report the last fsblock on a device because in that case (aka when
+info->last is true), the info->high mapping that we pass to
+xfs_getfsmap_group_helper has a startblock that points to the last
+fsblock.  This is also wrong because the code uses startblock to
+compute the length of the synthesized mapping.
 
-Right, the code currently sets end_daddr only for the last device, so
-there won't be any issues with the next query.
+Fix the second problem by setting end_daddr unconditionally, and fix the
+first problem by setting start_daddr to one past the end of the range to
+query.
 
-That said, we reset the xfs_getfsmap_info state between each device, so
-it's safe to set end_daddr for every device, not just the last time
-through that loop.
+Cc: <stable@vger.kernel.org> # v6.11
+Fixes: ca6448aed4f10a ("xfs: Fix missing interval for missing_owner in xfs fsmap")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reported-by: Zizhi Wo <wozizhi@huawei.com>
+---
+ fs/xfs/xfs_fsmap.c |   35 +++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
 
-> Did I misunderstand something? Or is it because the latest code
-> constantly updates end_daddr, which is why this issue arises?
-
-The 6.13 metadir/rtgroups patches didn't change when end_daddr gets set,
-but my fixpatch *does* make it set end_daddr for all devices.  Will send
-a patch + fstests update shortly to demonstrate. :)
-
-> > IOWs, that assignment should have been
-> > frec->start_daddr = info->end_daddr + 1.
-> > 
-> > Granted in August the codebase was less clear about the difference
-> > between rec_daddr and rmap->rm_startblock.  For 6.13, hch cleaned all
-> > that up -- rec_daddr is now called start_daddr and the fsmap code passes
-> > rmap records with space numbers in units of daddrs via a new struct
-> > xfs_fsmap_rec.  Unfortunately, that's all buried in the giant pile of
-> > pull requests I sent a couple of days ago which hasn't shown up on
-> > for-next yet.
-> > 
-> > https://lore.kernel.org/linux-xfs/173084396955.1871025.18156568347365549855.stgit@frogsfrogsfrogs/
-> > 
-> > So I think I know how to fix this against the 6.13 codebase, but I'm
-> > going to take a slightly different approach than yours...
-> > 
-> > > Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
-> > > Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
-> > > ---
-> > >   fs/xfs/xfs_fsmap.c | 19 +++++++++++++++++--
-> > >   1 file changed, 17 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> > > index 85dbb46452ca..8a2dfe96dae7 100644
-> > > --- a/fs/xfs/xfs_fsmap.c
-> > > +++ b/fs/xfs/xfs_fsmap.c
-> > > @@ -596,12 +596,27 @@ __xfs_getfsmap_datadev(
-> > >   	xfs_agnumber_t			end_ag;
-> > >   	uint64_t			eofs;
-> > >   	int				error = 0;
-> > > +	int				sentinel = 0;
-> > >   	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-> > >   	if (keys[0].fmr_physical >= eofs)
-> > >   		return 0;
-> > >   	start_fsb = XFS_DADDR_TO_FSB(mp, keys[0].fmr_physical);
-> > > -	end_fsb = XFS_DADDR_TO_FSB(mp, min(eofs - 1, keys[1].fmr_physical));
-> > > +	/*
-> > > +	 * For the case of eofs, we need to add a sentinel node;
-> > > +	 * otherwise, one block will be missed when calculating the length
-> > > +	 * in the last query.
-> > > +	 * For the case of key[1], there is no need to add a sentinel node
-> > > +	 * because it already represents a value that cannot be reached.
-> > > +	 * For the case where key[1] after shifting is within the same
-> > > +	 * block as the starting address, it is resolved using end_daddr.
-> > > +	 */
-> > > +	if (keys[1].fmr_physical > eofs - 1) {
-> > > +		sentinel = 1;
-> > > +		end_fsb = XFS_DADDR_TO_FSB(mp, eofs - 1);
-> > > +	} else {
-> > > +		end_fsb = XFS_DADDR_TO_FSB(mp, keys[1].fmr_physical);
-> > > +	}
-> > 
-> > ...because running against djwong-wtf, I actually see the same symptoms
-> > for the realtime device.  So I think a better solution is to change
-> > xfs_getfsmap to set end_daddr always, and then fix the off by one error.
-> > 
-> 
-> Yes, my second patch looks at this rt problem...
-> Thank you for your reply
-
-<nod>
-
---D
-
-> Thanks,
-> Zizhi Wo
-> 
-> 
-> > I also don't really like "sentinel" values because they're not
-> > intuitive.
-> > 
-> > I will also go update xfs/273 to check that there are no gaps in the
-> > mappings returned, and that they go to where the filesystem thinks is
-> > the end of the device.  Thanks for reporting this, sorry I was too busy
-> > trying to get metadir/rtgroups done to look at this until now. :(
-> > 
-> > --D
-> > 
-> 
-> 
-> 
-> > >   	/*
-> > >   	 * Convert the fsmap low/high keys to AG based keys.  Initialize
-> > > @@ -649,7 +664,7 @@ __xfs_getfsmap_datadev(
-> > >   		info->pag = pag;
-> > >   		if (pag->pag_agno == end_ag) {
-> > >   			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
-> > > -					end_fsb);
-> > > +					end_fsb) + sentinel;
-> > >   			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
-> > >   					keys[1].fmr_offset);
-> > >   			error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
-> > > -- 
-> > > 2.39.2
-> > > 
-> > > 
-> 
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index f6d20da34aba1d..0202b705dd5eb2 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -165,7 +165,8 @@ struct xfs_getfsmap_info {
+ 	xfs_daddr_t		next_daddr;	/* next daddr we expect */
+ 	/* daddr of low fsmap key when we're using the rtbitmap */
+ 	xfs_daddr_t		low_daddr;
+-	xfs_daddr_t		end_daddr;	/* daddr of high fsmap key */
++	/* daddr of high fsmap key, or the last daddr on the device */
++	xfs_daddr_t		end_daddr;
+ 	u64			missing_owner;	/* owner of holes */
+ 	u32			dev;		/* device id */
+ 	/*
+@@ -388,8 +389,8 @@ xfs_getfsmap_group_helper(
+ 	 * we calculated from userspace's high key to synthesize the record.
+ 	 * Note that if the btree query found a mapping, there won't be a gap.
+ 	 */
+-	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL)
+-		frec->start_daddr = info->end_daddr;
++	if (info->last)
++		frec->start_daddr = info->end_daddr + 1;
+ 	else
+ 		frec->start_daddr = xfs_gbno_to_daddr(xg, startblock);
+ 
+@@ -737,8 +738,8 @@ xfs_getfsmap_rtdev_rtbitmap_helper(
+ 	 * we calculated from userspace's high key to synthesize the record.
+ 	 * Note that if the btree query found a mapping, there won't be a gap.
+ 	 */
+-	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL) {
+-		frec.start_daddr = info->end_daddr;
++	if (info->last) {
++		frec.start_daddr = info->end_daddr + 1;
+ 	} else {
+ 		frec.start_daddr = xfs_rtb_to_daddr(mp, start_rtb);
+ 	}
+@@ -1108,7 +1109,10 @@ xfs_getfsmap(
+ 	struct xfs_trans		*tp = NULL;
+ 	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
+ 	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
+-	struct xfs_getfsmap_info	info = { NULL };
++	struct xfs_getfsmap_info	info = {
++		.fsmap_recs		= fsmap_recs,
++		.head			= head,
++	};
+ 	bool				use_rmap;
+ 	int				i;
+ 	int				error = 0;
+@@ -1176,9 +1180,6 @@ xfs_getfsmap(
+ 
+ 	info.next_daddr = head->fmh_keys[0].fmr_physical +
+ 			  head->fmh_keys[0].fmr_length;
+-	info.end_daddr = XFS_BUF_DADDR_NULL;
+-	info.fsmap_recs = fsmap_recs;
+-	info.head = head;
+ 
+ 	/* For each device we support... */
+ 	for (i = 0; i < XFS_GETFSMAP_DEVS; i++) {
+@@ -1191,17 +1192,23 @@ xfs_getfsmap(
+ 			break;
+ 
+ 		/*
+-		 * If this device number matches the high key, we have
+-		 * to pass the high key to the handler to limit the
+-		 * query results.  If the device number exceeds the
+-		 * low key, zero out the low key so that we get
+-		 * everything from the beginning.
++		 * If this device number matches the high key, we have to pass
++		 * the high key to the handler to limit the query results, and
++		 * set the end_daddr so that we can synthesize records at the
++		 * end of the query range or device.
+ 		 */
+ 		if (handlers[i].dev == head->fmh_keys[1].fmr_device) {
+ 			dkeys[1] = head->fmh_keys[1];
+ 			info.end_daddr = min(handlers[i].nr_sectors - 1,
+ 					     dkeys[1].fmr_physical);
++		} else {
++			info.end_daddr = handlers[i].nr_sectors - 1;
+ 		}
++
++		/*
++		 * If the device number exceeds the low key, zero out the low
++		 * key so that we get everything from the beginning.
++		 */
+ 		if (handlers[i].dev > head->fmh_keys[0].fmr_device)
+ 			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
+ 
