@@ -1,394 +1,253 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA359233D80
-	for <linux-xfs@vger.kernel.org>; Fri,  8 Nov 2024 19:03:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731092607; cv=fail; b=g5YMeeUpQrDWjSATwkMX0OVeOJAOdpCo5ox9w94Rhon0gqpUiP69OQr2oON7KRQtzdOGW9DPiP+nDANPQsrv2P7YG9iSK1cbYRe39iZ2z3P22yANXrQGpbYN7YkdC0aGcdV1m/aCoBhSH47Cai99rFyEZ9XHFPt3SZEnBnfaQo8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731092607; c=relaxed/simple;
-	bh=nOgx1ea8WTi9YxbpoKHZ7ZAkWCH1/XIvFrKT14qAT34=;
-	h=From:To:Subject:Date:Message-Id:Content-Type:MIME-Version; b=jR/AwtS4j9KXLVzSPE3WTCC9T8IbU/GquDQK582gHzq6yBTiWp9BUTY8WXYUP3CV8upDrjuFlMGTtiYszZQGPZbMKRSzz9rJwt2k7aTZ5Y7FqBtb4DF/1prkhzsD8rM6REE5q6mhDw4AxuFTW/w2pjiNIUufhFzOAu9+3F0hblk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=cCg6an1X; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=dya2jx7J; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cCg6an1X";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="dya2jx7J"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4A8Ftj4E001747
-	for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2024 19:03:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2023-11-20; bh=aCkYdjVHY0IUzQy2
-	olYaGR16f1lQ0OAdJc0fJihvnNI=; b=cCg6an1XIuMXIeBMLG3GTGAxI0co8w6F
-	nnPRSljTVBgCe1wtujvXrHRopqOwfTqDiXT8jdAvsdGo4qYuJegMVb7uMTaqXiVI
-	akcTBtG9evSSbxGF3MStx2NXJkmJ2fqELVHvrhXhtQLNqhsxrQ8rR2ZzjqWKSTqf
-	HO6xk96PwlJ0FtgL0ZEy/CMT9CzRtmL8MF7EGccR18Scm1vKx3w6s0hle86rXxT7
-	ILV1ng2NDIazb+6CCYlMNYJZg5Ra8YzED4kNVHBp+1BGCU+H7FovYtQZZWF0m0yc
-	0gRTSqabclsIoSclgU1xbG7hB3BjXaGSFRGIEmUw/mQbXg8Yni6J7A==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42s6gkj85e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2024 19:03:18 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4A8Inexc003505
-	for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2024 19:03:17 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2175.outbound.protection.outlook.com [104.47.73.175])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 42p87f6dsk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2024 19:03:17 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ko16E8xjdNSYsIbYh7ExSnQ3PmleZhTyW1+PNZCKI7QjiVmy8vCc9oTM9ydjwfjvj0mzJkrRL6pEEAKodBI3qd8Qbu6r0Q39Kbc59qwlgyZ0O2nmDylj+eh/LTXZCzLOSV85fOYwdFei9wm0n914xYEpgIDP9RvxBDisB0OE0p8LWM9PwIp3F5SnOL8kvh0VdcfyduhvMuHx8zpvn39fCMQ5cA7Cgmr1or9W6/LzjmN5LMH9H/b96/N7JKQlsMWMJWpFZkHR3hkPvCsDYn9G0ANZAgvHT8fQzQVH6+c3wnznVvXv4CHpHV3cZiIaR+JLkEkY3ffL1ehCwObaymIwgQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aCkYdjVHY0IUzQy2olYaGR16f1lQ0OAdJc0fJihvnNI=;
- b=I+xGkjNpdB/v3xOEXi80VX3oVka1BfjdvZJKcIgaaPhvpdu3B9PoKXFgZnAox+i0es+xnCnndlBtDeP9Ii5LOWhcZY90XTUkMd3D3V/+nak3kzXJVhH/H5d9V4EN6mT80yvsY00Yecl99YYqnkOefCaEV04b3DBekiDgTrhD/SW3vgoZqd6BkLn0Zozgs7ZN8dy1D2UQJXyYpDrHNinTKo8FmeU+i1OIj6kVTkojMVzKQk+dUpZUxn4xwgfU6XBMdskb3SCFzVYQKE8RHhCT3T9SMk15Ki9mPpdIpOdE/0pGLhFh5hGFwcG/GVEPLv0d7ZvKKs0ENHLDzIGzEqHrBA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aCkYdjVHY0IUzQy2olYaGR16f1lQ0OAdJc0fJihvnNI=;
- b=dya2jx7Jt9WLhFPWXvjo7NfSK4rnK8xG6qi+5vCAesUo75CCavxRrp3qqtTsGpuoqdn7hKyQSyK8nWMImIp9D+6GQfMemQUmjXoUSNsLVTn4jbRErei+eAjww03tbkz74XweQYSxaJ0HPS+j7HD2IeiiWHfksdVGQ4sCLJgAYDs=
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
- by CH2PR10MB4248.namprd10.prod.outlook.com (2603:10b6:610:7e::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8137.22; Fri, 8 Nov
- 2024 19:03:14 +0000
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::a63b:c94b:7ed8:4142]) by BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::a63b:c94b:7ed8:4142%3]) with mapi id 15.20.8137.019; Fri, 8 Nov 2024
- 19:03:14 +0000
-From: Catherine Hoang <catherine.hoang@oracle.com>
-To: linux-xfs@vger.kernel.org
-Subject: [PATCH v1] xfs_io: add support for atomic write statx fields
-Date: Fri,  8 Nov 2024 11:03:13 -0800
-Message-Id: <20241108190313.40173-1-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.39.3 (Apple Git-146)
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR13CA0109.namprd13.prod.outlook.com
- (2603:10b6:a03:2c5::24) To BLAPR10MB5316.namprd10.prod.outlook.com
- (2603:10b6:208:326::6)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9DD12110E;
+	Sat,  9 Nov 2024 02:34:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1731119681; cv=none; b=dTN/DzSY15/H2R/h/8zVYHBwxenglj0KrZv+n3bOxjx1P0guyeNYH+EvIQpXLo12sjyxFMFbqiEQWKIdbRb6Em8runEcNSI/akDqu3MitJol6H1WfBcxTDWDK4RbvKJSRUXhU7y/6snHB1TJ7OPaOqF2ohguAuTuvgWPbLQGweE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1731119681; c=relaxed/simple;
+	bh=uswVlEUZr7uvxmbURgkMM3gl0th0qLi2chpHnjse7FU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ilVzqdKDcejzOFCTPXleR1F8BGYv+NM0ENjpH9PkXed25wfcy9VQDdJIUPvNHw7e6wjoDnOsNVYn/B5oe6ut1vIgh3iv9YDStSAnIPBWWFaowYk2XNL/RjOlxq7rChstgPcNBog+cJgfA4WnEk7lnPfNwC70cZioENWMtUF+hIA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4XlfwC2Yzlz10Qp4;
+	Sat,  9 Nov 2024 10:32:11 +0800 (CST)
+Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
+	by mail.maildlp.com (Postfix) with ESMTPS id 175EC180106;
+	Sat,  9 Nov 2024 10:34:35 +0800 (CST)
+Received: from [10.174.176.88] (10.174.176.88) by
+ kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Sat, 9 Nov 2024 10:34:34 +0800
+Message-ID: <d22fcc83-9290-4561-acf8-be5741ab94f7@huawei.com>
+Date: Sat, 9 Nov 2024 10:34:33 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|CH2PR10MB4248:EE_
-X-MS-Office365-Filtering-Correlation-Id: ac9eff0a-6f9a-4efb-41d9-08dd0027ff7a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024|10070799003;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?CbnU6/PyE9c9oFphXaeJBtOY7/KYp3YhAU5HAKjFjhlrE4U/VtIEeke3hD+N?=
- =?us-ascii?Q?+T3CJj56pTmwvnkBsZyWEPNNBsyC4LOwWXXkxGvQ+bbFoqXSRZBEq/IBN4QT?=
- =?us-ascii?Q?L8yHSXai2aiI1BYRJpfQ75W9fOtHHyEU76JwjbwhWVwFJgTvVbLFTYrtq1zj?=
- =?us-ascii?Q?CUaOuOD3bDYwpBfl+Bi/HhPI+Ju7mPQMlL9OhR5wLmVE+XCHiJbWrCAnkzeP?=
- =?us-ascii?Q?yIjmfZqslsL6j3PnKwA8kZK1q4IVuUCz7Ih9Ck/4NOZRuncNy0DSXrKA9Cw4?=
- =?us-ascii?Q?G3V2c9la61pxtbOG2bJlfv9zFEr79/BvVEce4vcIqE+cH2RnGpwDmo3a15UB?=
- =?us-ascii?Q?5cEIJOM3aEyM1DAcnTStw4yHldj8Tmk+oBGcy1BOkgbL2jSlfbS6fV/oeTwA?=
- =?us-ascii?Q?YRvPm2bCfM3VwCHegOBrYSv5zsyHmdQ8LYLV/m2DB7g+jwxig2Ci9aMpCFZ7?=
- =?us-ascii?Q?nBgrOqDylrBN2cJwc8xkyC/6jnhur1MuSbCpSg8qm6but82t4QIBsPuWA9Zl?=
- =?us-ascii?Q?n7JPMDsIaDIKxem1q3z9pHL9FfThBF5xpk0oipwNsftj7QfGp/XkInpP8ims?=
- =?us-ascii?Q?BqB1cVXuVTwRyWoSEDoBKd4GoImIQ3RMSMAETYAJQ5hB7Km9KvPsquhSAlDx?=
- =?us-ascii?Q?mKkPv/lwm1dSexSk+4kCKK7gACgFe5hTEL7eXfe9BRn+qcHfIMCUlMgpTX0U?=
- =?us-ascii?Q?IJL6iZjIFjj7+qJVQ4G2OCiC4NsWH5QEA7agIcDZ02ir8p65uvgQ1i0C/o4G?=
- =?us-ascii?Q?/9i+hzPMOn0L1KEWbEqmwLuFeQqZ0RLSsJ9C1dDo1OJT9oPOg1olwzvMP7AG?=
- =?us-ascii?Q?/26M51x5v3TeMgvlCCm0a1APqOdF+akfT4v6iVaV/dup9lpIbSPVezgfVbc3?=
- =?us-ascii?Q?mOtn4fVL9CxeLvO9zoMouUgY/CUOOcmRqqfTwLb77C5CS2hKUsBYsuBFlIPY?=
- =?us-ascii?Q?q4RhO1PMytcVNno8l46Jz8HF9f/tCZUANwJ1Fq+B12FlNeotg9A4xHR0Kxo0?=
- =?us-ascii?Q?xCK25M4oAfFNudwC4FRnMtelqIXQCpBiwZ/NVivuYg1teeki5ZJrLRJ1ele+?=
- =?us-ascii?Q?DdEUzbyUjvXBPicQzZXBUC82djdoMrPvBJQM7tchUTiAd1/DFx+WvHcwql1m?=
- =?us-ascii?Q?DT1wJqylwXa9omeuviaX0RPdU7zvGhgJpqyZSX4nLnP79fMcRaW5W3/Cz8uw?=
- =?us-ascii?Q?aJHW02lV3KmGW4cFpZF5KmQBqNWxBQz5jbDABwJMQc4JqC+beJqvmZiQirt/?=
- =?us-ascii?Q?moqge1tOBp5bvOd0ThzwG4IQotKtWDuYLNbDffA7nzm//d73PkOoYMEITzKJ?=
- =?us-ascii?Q?FhgpPjDwteTwa8QOwK46SwGq?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(10070799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?fB2LTRZL3QtixTUg6P4UNYLVufcLSt7lLHCmPyGhVZSpHuqHrwzIzMkZWa8P?=
- =?us-ascii?Q?0enGR7k+BDLbOk2TpqSA9FXnBx7bssOWmZb1kRR/9kB3pDxxNAiDondydLRB?=
- =?us-ascii?Q?Gn7gAzQ0GL3WEoDiSSVNlPRdo6JYvn042owL6EDQqvk8ICfIzdJjzTXRBlLw?=
- =?us-ascii?Q?0bCpdUCvvTm2dWBu542tMBSagbCYDbuCG/7k8y43/B++YAOfD0oj9VVQ2csj?=
- =?us-ascii?Q?eR4nuayqd4thOkKEsp+E4oNwWw4EXc4fyxvRwrdIwCsehw1qfsN0OF4bLnmy?=
- =?us-ascii?Q?JzU7nn1OGultnQMF+W3MA4Y8mbs14eNIxnJBX9QvBH0mGlx2hRk9tYaPsSOc?=
- =?us-ascii?Q?WTKV43FT6yiKbPdSNPQvRvCISzlmVJZrWnmgTFzj3rni+NzCOGnoPwtLgt8L?=
- =?us-ascii?Q?pG1LXTvfshkvSKRWj690E33Pxr+99GEWU5JO1oBYvPZF5Vo6gVtXAXwxe7Z/?=
- =?us-ascii?Q?hfWGj59wEpHThbV0uyGJ9x0nE0bcBrOn3nmEow1a4u9KiVdrWS+bZ4gxNbxS?=
- =?us-ascii?Q?/GWB+9km1N+OlhcTsS9FBB09nzUnAyT9rN0MPzdAtG+t1HsbgP0DdHFuMN6S?=
- =?us-ascii?Q?D/6Zo4MEQCavdceyjCgdA6r/VCKBkR13USJCILMWkltbpy3l6P1tlubZcFFi?=
- =?us-ascii?Q?Uf2Z/ezyNP2aD7H3A22/6e4dQVWA6tRt8LKc0gcF9oj5bV2aLhTksurQ9ssy?=
- =?us-ascii?Q?xjtijcrsNl0rj5d/PyjL6V+l+0/Nt5ou+4lGNt8MH2U9LgL7Mslz9mmDWufF?=
- =?us-ascii?Q?uhBwCQ2Qu0YD46cUtK+drGVzX5GX63UZRl9Lsb6dqo5xxDg2FtZ9p4WAC5u7?=
- =?us-ascii?Q?sXilNF4Ao21LiOo9yrLUIQ9/w3CuukfKq3NiT6jljsBTbPoy8X1bXucfdrsE?=
- =?us-ascii?Q?q6wbh572pGHTrbOHBQuoeMNCPJsiloqErK0MJH5i65jyfFZrZ8EIeZ1lBIX9?=
- =?us-ascii?Q?9Lb20xXkbqY9/WDHixiPy4007/zSoWlrOsjeIP6J8avJzqtyPtVxNbgvCJel?=
- =?us-ascii?Q?7HCkebwqdfesROMCHQLOHoQwOyxnZPf7zYc82nKxWbC/6KfKEokW2pjC/qSG?=
- =?us-ascii?Q?Xa3TWBFIqYo8TOVSn0oDLkVnIf/hjFmYfO7a+NPEyidFAwj75NTPVPhBFOT/?=
- =?us-ascii?Q?HnayqJbRxMIcJFmQMoETwVsI8ePbbpQ0TYfX5StWRiTRn/+1n6MxqgQD1evS?=
- =?us-ascii?Q?Z9yNFLgZt2s/en14OliEhnHtEj2eE/tCCevBnoheNrjM1oWjrjJzSaegfxJN?=
- =?us-ascii?Q?rJ8fc/ULhFLnS9Ho9JypivF32IzX5ZvH6xrHRd5wtQ+Dw6Ja/vPG+2ln8LHn?=
- =?us-ascii?Q?0wTS8CQWKVf2QEI+3H3G/DbGF1GRP4+ahVkZ0JVMtgcixIqCUGjYvUhpOZqI?=
- =?us-ascii?Q?hmEJnhrLaZzIOznmshBg1BF++6iGSdsUuGe04aDDTMjS5VF/Iu2vqcINHqQl?=
- =?us-ascii?Q?Fgjiw4vztSB0JV7dEdLtIUonlBC4jiDIKPb1aWCcrdg5XSZgsKHrMj5aE5SC?=
- =?us-ascii?Q?VXtyu10RzSnjssgzy+ha5z09PTF1XW+1a8FuPD26cUS/Bkcv/HRDZCbegdHb?=
- =?us-ascii?Q?+UOd+hHt3lxL7RiinIFMAn1008MrJRuWlxQaRilMeMNSxBaPgWUZhWgAcBS/?=
- =?us-ascii?Q?JVQcbg/Bax2hg6upxqnq7r0Zy5lPzdiYfyVpcamPTkniN3i7PuUtanf9RTVs?=
- =?us-ascii?Q?ag4EQw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	9MyDHkNADN21SbexCrC92RbK+yUv8hfyMVIs24ZFNyIGGnUzDDjHgi1jWw/AI5rLhnzlIjqA88cjoEJ6YmLccWiPpcitrv5hbrHID9O5p3a+SiJtKZUYmGlJ1ANaEhVo4t+aSVtHhryutotKtGLqJA8sNoFfra1zdcmGnk6Gqhy66hFDrLkv4Q0gVAvMN0x2G/G21t/oKUSUh+33y9NW5yv/x1aXqESez2qM9Z0s8QLdwdQE1Yzw7dIxuBM5qY5hdhBl+ovtAUPrsWgmHjx06BzisJ33HHrFxObK+DJ8GJZkJblAbVmqqKRIatSUJ4y8GAuEbS+t5Q8/TiMUXbQ9S/u1dVgWas93HurilKPTw2akeWoGuJ52BVpriYwUEpFLmByQtApg54AOV3xntPgHX3JGylFss/iSUwAQ57EVz9+ryLbCOdRnXvHx3AdLcpdb5DV6aZRugJ8sc0QVwafuvpoBNG10SHeA9IRkD6+1gjeIwQD6jrCh9J9O9nSZYTJQ8TuIMH/RQxH/HfZFN73oIUTS0bbPQit9U2x26RU9tLG6Y49f+H8Snu0d2HfBL7RwBsxP4Rj7kKuX2/KAx+Y3CmUM/HlzpbU14GEcN4m5TeY=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac9eff0a-6f9a-4efb-41d9-08dd0027ff7a
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Nov 2024 19:03:14.8286
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1LWL9KCnH/vdFwkEsQm5FtYmrFvAQcjkkOs1b2wHrUWKZI8UaUoIvNatAcFBf/rYrLNTvNdIHdSXc++zJwQKETp7vyAIUr/qeMlSJQvnpAs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4248
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-11-08_16,2024-11-08_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 spamscore=0
- mlxlogscore=999 phishscore=0 malwarescore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2409260000
- definitions=main-2411080157
-X-Proofpoint-GUID: vKMMf-B3Z3jCJ6HmpL873sHhaIhew3pm
-X-Proofpoint-ORIG-GUID: vKMMf-B3Z3jCJ6HmpL873sHhaIhew3pm
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] xfs: Fix missing block calculations in xfs datadev
+ fsmap
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <chandan.babu@oracle.com>, <dchinner@redhat.com>, <osandov@fb.com>,
+	<john.g.garry@oracle.com>, <linux-xfs@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>
+References: <20240826031005.2493150-1-wozizhi@huawei.com>
+ <20240826031005.2493150-2-wozizhi@huawei.com>
+ <20241107234352.GU2386201@frogsfrogsfrogs>
+ <1549f04a-8431-405d-adfc-23e5988abe51@huawei.com>
+ <20241108173006.GA168069@frogsfrogsfrogs>
+From: Zizhi Wo <wozizhi@huawei.com>
+In-Reply-To: <20241108173006.GA168069@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemf100017.china.huawei.com (7.202.181.16)
 
-Add support for the new atomic_write_unit_min, atomic_write_unit_max, and
-atomic_write_segments_max fields in statx for xfs_io. In order to support builds
-against old kernel headers, define our own internal statx structs. If the
-system's struct statx does not have the required atomic write fields, override
-the struct definitions with the internal definitions in statx.h.
 
-Signed-off-by: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
----
- configure.ac          |  1 +
- include/builddefs.in  |  4 ++++
- io/stat.c             |  9 +++++++--
- io/statx.h            | 35 ++++++++++++++++++++++++++++-------
- m4/package_libcdev.m4 | 14 ++++++++++++++
- 5 files changed, 54 insertions(+), 9 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index 33b01399..0b1ef3c3 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -146,6 +146,7 @@ AC_HAVE_COPY_FILE_RANGE
- AC_NEED_INTERNAL_FSXATTR
- AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
- AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
-+AC_NEED_INTERNAL_STATX
- AC_HAVE_GETFSMAP
- AC_HAVE_MAP_SYNC
- AC_HAVE_DEVMAPPER
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 1647d2cd..cbc9ab0c 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -96,6 +96,7 @@ HAVE_COPY_FILE_RANGE = @have_copy_file_range@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
- NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
- NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
-+NEED_INTERNAL_STATX = @need_internal_statx@
- HAVE_GETFSMAP = @have_getfsmap@
- HAVE_MAP_SYNC = @have_map_sync@
- HAVE_DEVMAPPER = @have_devmapper@
-@@ -130,6 +131,9 @@ endif
- ifeq ($(NEED_INTERNAL_FSCRYPT_POLICY_V2),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_FSCRYPT_POLICY_V2
- endif
-+ifeq ($(NEED_INTERNAL_STATX),yes)
-+PCFLAGS+= -DOVERRIDE_SYSTEM_STATX
-+endif
- ifeq ($(HAVE_GETFSMAP),yes)
- PCFLAGS+= -DHAVE_GETFSMAP
- endif
-diff --git a/io/stat.c b/io/stat.c
-index 0f5618f6..5c0bab41 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -17,6 +17,8 @@
- 
- #include <fcntl.h>
- 
-+#define IO_STATX_MASK	(STATX_ALL | STATX_WRITE_ATOMIC)
-+
- static cmdinfo_t stat_cmd;
- static cmdinfo_t statfs_cmd;
- static cmdinfo_t statx_cmd;
-@@ -347,6 +349,9 @@ dump_raw_statx(struct statx *stx)
- 	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
- 	printf("stat.dev_major = %u\n", stx->stx_dev_major);
- 	printf("stat.dev_minor = %u\n", stx->stx_dev_minor);
-+	printf("stat.stx_atomic_write_unit_min = %lld\n", (long long)stx->stx_atomic_write_unit_min);
-+	printf("stat.stx_atomic_write_unit_max = %lld\n", (long long)stx->stx_atomic_write_unit_max);
-+	printf("stat.stx_atomic_write_segments_max = %lld\n", (long long)stx->stx_atomic_write_segments_max);
- 	return 0;
- }
- 
-@@ -365,7 +370,7 @@ statx_f(
- 	char		*p;
- 	struct statx	stx;
- 	int		atflag = 0;
--	unsigned int	mask = STATX_ALL;
-+	unsigned int	mask = IO_STATX_MASK;
- 
- 	while ((c = getopt(argc, argv, "m:rvFD")) != EOF) {
- 		switch (c) {
-@@ -373,7 +378,7 @@ statx_f(
- 			if (strcmp(optarg, "basic") == 0)
- 				mask = STATX_BASIC_STATS;
- 			else if (strcmp(optarg, "all") == 0)
--				mask = STATX_ALL;
-+				mask = IO_STATX_MASK;
- 			else {
- 				mask = strtoul(optarg, &p, 0);
- 				if (!p || p == optarg) {
-diff --git a/io/statx.h b/io/statx.h
-index c6625ac4..0a51c86c 100644
---- a/io/statx.h
-+++ b/io/statx.h
-@@ -5,6 +5,7 @@
- 
- #include <unistd.h>
- #include <sys/syscall.h>
-+#include <sys/types.h>
- 
- #ifndef AT_EMPTY_PATH
- #define AT_EMPTY_PATH	0x1000
-@@ -37,10 +38,10 @@
- #ifndef STATX_TYPE
- /* Pick up kernel definitions if glibc didn't already provide them */
- #include <linux/stat.h>
--#endif
-+#endif /* STATX_TYPE */
- 
--#ifndef STATX_TYPE
--/* Local definitions if glibc & kernel headers didn't already provide them */
-+#ifdef OVERRIDE_SYSTEM_STATX
-+/* Local definitions if they don't exist or are too old */
- 
- /*
-  * Timestamp structure for the timestamps in struct statx.
-@@ -56,11 +57,12 @@
-  *
-  * __reserved is held in case we need a yet finer resolution.
-  */
--struct statx_timestamp {
-+struct statx_timestamp_internal {
- 	__s64	tv_sec;
- 	__s32	tv_nsec;
- 	__s32	__reserved;
- };
-+#define statx_timestamp statx_timestamp_internal
- 
- /*
-  * Structures for the extended file attribute retrieval system call
-@@ -99,7 +101,7 @@ struct statx_timestamp {
-  * will have values installed for compatibility purposes so that stat() and
-  * co. can be emulated in userspace.
-  */
--struct statx {
-+struct statx_internal {
- 	/* 0x00 */
- 	__u32	stx_mask;	/* What results were written [uncond] */
- 	__u32	stx_blksize;	/* Preferred general I/O size [uncond] */
-@@ -126,9 +128,21 @@ struct statx {
- 	__u32	stx_dev_major;	/* ID of device containing file [uncond] */
- 	__u32	stx_dev_minor;
- 	/* 0x90 */
--	__u64	__spare2[14];	/* Spare space for future expansion */
-+	__u64	stx_mnt_id;
-+	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
-+	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
-+	/* 0xa0 */
-+	__u64	stx_subvol;	/* Subvolume identifier */
-+	__u32	stx_atomic_write_unit_min;	/* Min atomic write unit in bytes */
-+	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
-+	/* 0xb0 */
-+	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment count */
-+	__u32   __spare1[1];
-+	/* 0xb8 */
-+	__u64	__spare3[9];	/* Spare space for future expansion */
- 	/* 0x100 */
- };
-+#define statx statx_internal
- 
- /*
-  * Flags to be stx_mask
-@@ -138,6 +152,7 @@ struct statx {
-  * These bits should be set in the mask argument of statx() to request
-  * particular items when calling statx().
-  */
-+#ifndef STATX_TYPE
- #define STATX_TYPE		0x00000001U	/* Want/got stx_mode & S_IFMT */
- #define STATX_MODE		0x00000002U	/* Want/got stx_mode & ~S_IFMT */
- #define STATX_NLINK		0x00000004U	/* Want/got stx_nlink */
-@@ -153,7 +168,11 @@ struct statx {
- #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
- #define STATX_ALL		0x00000fffU	/* All currently supported flags */
- #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
-+#endif /* STATX_TYPE */
- 
-+#ifndef STATX_WRITE_ATOMIC
-+#define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields */
-+#endif /* STATX_WRITE_ATOMIC */
- /*
-  * Attributes to be found in stx_attributes
-  *
-@@ -165,6 +184,7 @@ struct statx {
-  * semantically.  Where possible, the numerical value is picked to correspond
-  * also.
-  */
-+#ifndef STATX_ATTR_COMPRESSED
- #define STATX_ATTR_COMPRESSED		0x00000004 /* [I] File is compressed by the fs */
- #define STATX_ATTR_IMMUTABLE		0x00000010 /* [I] File is marked immutable */
- #define STATX_ATTR_APPEND		0x00000020 /* [I] File is append-only */
-@@ -172,6 +192,7 @@ struct statx {
- #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
- 
- #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
-+#endif /* STATX_ATTR_COMPRESSED */
- 
--#endif /* STATX_TYPE */
-+#endif /* OVERRIDE_SYSTEM_STATX */
- #endif /* XFS_IO_STATX_H */
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 6de8b33e..fd01c4d5 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -220,3 +220,17 @@ AC_DEFUN([AC_PACKAGE_CHECK_LTO],
-     AC_SUBST(lto_cflags)
-     AC_SUBST(lto_ldflags)
-   ])
-+
-+AC_DEFUN([AC_NEED_INTERNAL_STATX],
-+  [ AC_CHECK_TYPE(struct statx,
-+      [
-+        AC_CHECK_MEMBER(struct statx.stx_atomic_write_unit_min,
-+          ,
-+          need_internal_statx=yes,
-+          [#include <linux/stat.h>]
-+        )
-+      ],,
-+      [#include <linux/stat.h>]
-+    )
-+    AC_SUBST(need_internal_statx)
-+  ])
--- 
-2.34.1
+在 2024/11/9 1:30, Darrick J. Wong 写道:
+> On Fri, Nov 08, 2024 at 10:29:08AM +0800, Zizhi Wo wrote:
+>>
+>>
+>> 在 2024/11/8 7:43, Darrick J. Wong 写道:
+>>> On Mon, Aug 26, 2024 at 11:10:04AM +0800, Zizhi Wo wrote:
+>>>> In xfs datadev fsmap query, I noticed a missing block calculation problem:
+>>>> [root@fedora ~]# xfs_db -r -c "sb 0" -c "p" /dev/vdb
+>>>> magicnum = 0x58465342
+>>>> blocksize = 4096
+>>>> dblocks = 5242880
+>>>> ......
+>>>> [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
+>>>> ...
+>>>> 30: 253:16 [31457384..41943031]: free space            3  (104..10485751)    10485648
+>>>>
+>>>> (41943031 + 1) / 8 = 5242879 != 5242880
+>>>> We missed one block in our fsmap calculation!
+>>>
+>>> Eek.
+>>>
+>>>> The root cause of the problem lies in __xfs_getfsmap_datadev(), where the
+>>>> calculation of "end_fsb" requires a classification discussion. If "end_fsb"
+>>>> is calculated based on "eofs", we need to add an extra sentinel node for
+>>>> subsequent length calculations. Otherwise, one block will be missed. If
+>>>> "end_fsb" is calculated based on "keys[1]", then there is no need to add an
+>>>> extra node. Because "keys[1]" itself is unreachable, it cancels out one of
+>>>> the additions. The diagram below illustrates this:
+>>>>
+>>>> |0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|-----eofs
+>>>> |---------------|---------------------|
+>>>> a       n       b         n+1         c
+>>>>
+>>>> Assume that eofs is 16, the start address of the previous query is block n,
+>>>> sector 0, and the length is 1, so the "info->next" is at point b, sector 8.
+>>>> In the last query, suppose the "rm_startblock" calculated based on
+>>>> "eofs - 1" is the last block n+1 at point b. All we get is the starting
+>>>> address of the block, not the end. Therefore, an additional sentinel node
+>>>> needs to be added to move it to point c. After that, subtracting one from
+>>>> the other will yield the remaining 1.
+>>>>
+>>>> Although we can now calculate the exact last query using "info->end_daddr",
+>>>> we will still get an incorrect value if the device at this point is not the
+>>>> boundary device specified by "keys[1]", as "end_daddr" is still the initial
+>>>> value. Therefore, the eofs situation here needs to be corrected. The issue
+>>>> is resolved by adding a sentinel node.
+>>>
+>>> Why don't we set end_daddr unconditionally, then?
+>>>
+>>> Hmm, looking at the end_daddr usage in fsmap.c, I think it's wrong.  If
+>>> end_daddr is set at all, it's set either to the last sector for which
+>>> the user wants a mapping; or it's set to the last sector for the device.
+>>> But then look at how we use it:
+>>>
+>>> 	if (info->last...)
+>>> 		frec->start_daddr = info->end_daddr;
+>>>
+>>> 	...
+>>>
+>>> 	/* "report the gap..."
+>>> 	if (frec->start_daddr > info->next_daddr) {
+>>> 		fmr.fmr_length = frec->start_daddr - info->next_daddr;
+>>> 	}
+>>>
+>>> This is wrong -- we're using start_daddr to compute the distance from
+>>> the last mapping that we output up to the end of the range that we want.
+>>> The "end of the range" is modeled with a phony rmap record that starts
+>>> at the first fsblock after that range.
+>>>
+>>
+>> In the current code, we set "rec_daddr = end_daddr" only when
+>> (info->last && info->end_daddr != NULL), which should ensure that this
+>> is the last query?
+> 
+> Right.
+> 
+>> Because end_daddr is set to the last device, and
+>> info->last is set to the last query. Therefore, assigning it to
+>> start_daddr should not cause issues in the next query?
+> 
+> Right, the code currently sets end_daddr only for the last device, so
+> there won't be any issues with the next query.
+> 
+> That said, we reset the xfs_getfsmap_info state between each device, so
+> it's safe to set end_daddr for every device, not just the last time
+> through that loop.
+> 
+>> Did I misunderstand something? Or is it because the latest code
+>> constantly updates end_daddr, which is why this issue arises?
+> 
+> The 6.13 metadir/rtgroups patches didn't change when end_daddr gets set,
+> but my fixpatch *does* make it set end_daddr for all devices.  Will send
+> a patch + fstests update shortly to demonstrate. :)
 
+OK, I got it. Thank you for your reply.
+
+Thanks,
+Zizhi Wo
+
+> 
+>>> IOWs, that assignment should have been
+>>> frec->start_daddr = info->end_daddr + 1.
+>>>
+>>> Granted in August the codebase was less clear about the difference
+>>> between rec_daddr and rmap->rm_startblock.  For 6.13, hch cleaned all
+>>> that up -- rec_daddr is now called start_daddr and the fsmap code passes
+>>> rmap records with space numbers in units of daddrs via a new struct
+>>> xfs_fsmap_rec.  Unfortunately, that's all buried in the giant pile of
+>>> pull requests I sent a couple of days ago which hasn't shown up on
+>>> for-next yet.
+>>>
+>>> https://lore.kernel.org/linux-xfs/173084396955.1871025.18156568347365549855.stgit@frogsfrogsfrogs/
+>>>
+>>> So I think I know how to fix this against the 6.13 codebase, but I'm
+>>> going to take a slightly different approach than yours...
+>>>
+>>>> Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
+>>>> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+>>>> ---
+>>>>    fs/xfs/xfs_fsmap.c | 19 +++++++++++++++++--
+>>>>    1 file changed, 17 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+>>>> index 85dbb46452ca..8a2dfe96dae7 100644
+>>>> --- a/fs/xfs/xfs_fsmap.c
+>>>> +++ b/fs/xfs/xfs_fsmap.c
+>>>> @@ -596,12 +596,27 @@ __xfs_getfsmap_datadev(
+>>>>    	xfs_agnumber_t			end_ag;
+>>>>    	uint64_t			eofs;
+>>>>    	int				error = 0;
+>>>> +	int				sentinel = 0;
+>>>>    	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+>>>>    	if (keys[0].fmr_physical >= eofs)
+>>>>    		return 0;
+>>>>    	start_fsb = XFS_DADDR_TO_FSB(mp, keys[0].fmr_physical);
+>>>> -	end_fsb = XFS_DADDR_TO_FSB(mp, min(eofs - 1, keys[1].fmr_physical));
+>>>> +	/*
+>>>> +	 * For the case of eofs, we need to add a sentinel node;
+>>>> +	 * otherwise, one block will be missed when calculating the length
+>>>> +	 * in the last query.
+>>>> +	 * For the case of key[1], there is no need to add a sentinel node
+>>>> +	 * because it already represents a value that cannot be reached.
+>>>> +	 * For the case where key[1] after shifting is within the same
+>>>> +	 * block as the starting address, it is resolved using end_daddr.
+>>>> +	 */
+>>>> +	if (keys[1].fmr_physical > eofs - 1) {
+>>>> +		sentinel = 1;
+>>>> +		end_fsb = XFS_DADDR_TO_FSB(mp, eofs - 1);
+>>>> +	} else {
+>>>> +		end_fsb = XFS_DADDR_TO_FSB(mp, keys[1].fmr_physical);
+>>>> +	}
+>>>
+>>> ...because running against djwong-wtf, I actually see the same symptoms
+>>> for the realtime device.  So I think a better solution is to change
+>>> xfs_getfsmap to set end_daddr always, and then fix the off by one error.
+>>>
+>>
+>> Yes, my second patch looks at this rt problem...
+>> Thank you for your reply
+> 
+> <nod>
+> 
+> --D
+> 
+>> Thanks,
+>> Zizhi Wo
+>>
+>>
+>>> I also don't really like "sentinel" values because they're not
+>>> intuitive.
+>>>
+>>> I will also go update xfs/273 to check that there are no gaps in the
+>>> mappings returned, and that they go to where the filesystem thinks is
+>>> the end of the device.  Thanks for reporting this, sorry I was too busy
+>>> trying to get metadir/rtgroups done to look at this until now. :(
+>>>
+>>> --D
+>>>
+>>
+>>
+>>
+>>>>    	/*
+>>>>    	 * Convert the fsmap low/high keys to AG based keys.  Initialize
+>>>> @@ -649,7 +664,7 @@ __xfs_getfsmap_datadev(
+>>>>    		info->pag = pag;
+>>>>    		if (pag->pag_agno == end_ag) {
+>>>>    			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
+>>>> -					end_fsb);
+>>>> +					end_fsb) + sentinel;
+>>>>    			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
+>>>>    					keys[1].fmr_offset);
+>>>>    			error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
+>>>> -- 
+>>>> 2.39.2
+>>>>
+>>>>
+>>
+> 
