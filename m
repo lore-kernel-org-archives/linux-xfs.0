@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3FEC13B58F;
-	Sat,  9 Nov 2024 16:19:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E6BB185B62
+	for <linux-xfs@vger.kernel.org>; Sat,  9 Nov 2024 16:21:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731169170; cv=none; b=MdTYCs8xwxBeXR1D67WlcUIDluMmXVWM3sGf9Ohh++yAV47XgkMSwl/AMcAf/a+qPq1TpWWT0WXL93fEuM7YxTbF2frf2TPJ8YNKQhmrpupJMzr0Cg/gktFhDhr9Udm4QzI1OLAUNavRs+6JUlJJboG1/tttwY9AfPXymplOF00=
+	t=1731169285; cv=none; b=bN31rD2O3AO7GvPT9KAO46il5ZhMGEj1tYXxgjYTbmK8HYjUSVLxtBbklp3xr/kPssTyaMBI8Mfy5A4dkibFh/ULil7nMT2UEtrpSiWJ/s/x2wGPFpZit69FXikPcqeZ77vdvcFnyogrVzho9H7WfH7nf9J1COJBq4VhnNPaumI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731169170; c=relaxed/simple;
-	bh=OmQbHN8SUBS17RgtQKYC9IfdEKn5BJlFxbGXB4lrFPg=;
+	s=arc-20240116; t=1731169285; c=relaxed/simple;
+	bh=mQ7/UMeZwDN2ANEAzu1TJDnJu//LpFyIyLgM17EfKBU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KjA9XIR8786A8h8QhRCaQTRwJTmAYK3svBuUFSZx3iMB/++zDft0NLeUbbD8SV9/3pE4mZz5ycgjavqdn03PQAzfts5WroTmR3CuInkOE03xIGV+QAJGd/tbtBe4cG9BvQ9OsR2WIuXUptzfdgAraKErvnYxawN6Ibrn1gt8hB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OmR0jT/f; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=pROnRAsCqxI0RopxR6ueHSMD+AZg5sCqKD7+z39N6bnd739y7lXGYE/tyjeQO2Uib3E14BXAFUHcZgLroQO9lBZNc7MDBvhLb9mG7QFJYloSsfFiI+8Ye02o7ohwsmtgnhfFO8ogMAdc8SNKSJJ3uCtqA4r16/MlafDeNZXxzlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GiMnUfYb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OmR0jT/f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 774EEC4CECE;
-	Sat,  9 Nov 2024 16:19:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GiMnUfYb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8952BC4CED3;
+	Sat,  9 Nov 2024 16:21:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731169169;
-	bh=OmQbHN8SUBS17RgtQKYC9IfdEKn5BJlFxbGXB4lrFPg=;
+	s=k20201202; t=1731169284;
+	bh=mQ7/UMeZwDN2ANEAzu1TJDnJu//LpFyIyLgM17EfKBU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OmR0jT/fKNLpcKg2upR8exOTxnIadEFEcPZHBFSEYgGESP9LmH3an9JAJrJmXVyNI
-	 lTD/tT/2O+wMayUI+9LOJZrvtOODTRdedD/asleWI4Mb6eDwtkbgGMNi4hz5StjZJR
-	 TwAavgBKKZ9Dn0s7PXHN1WveqJpUzvdE1fXtfcpeqLeO8lNMDaB1P8gccI+Su0pbjD
-	 U6ZKKtA3oZde90d6i/bXY9fAXZb2TPy/2IovZsq57iySl5PUnVSiodSg0KWBp90oCk
-	 7vHNkihWG3BOCS5V1z4GSLDsI23eovKuohVjNlCp+AAHdBlCO6rclC5IYmQHGgIoy9
-	 UGDJ7oooOq5FA==
-Date: Sat, 9 Nov 2024 08:19:28 -0800
+	b=GiMnUfYbixTN/XOK/u1b0T3iVLd7WCOcrDZRZbUxyZXPYcjVPj09HOEovMTqCvQCW
+	 CR3OYID2iNePFEaYvkmlcCiXWP7omd59TjWqB5TFilXEpVDsjtrM8FNFGOEiBqHpRc
+	 QqwL/3tIjBLRKTPRf4gMFb5YypBn2lDBMS3FVRn67qIkm19LAbOfHRARj2l0MtldqT
+	 UZ3UIdvwt9m2lNvHtRP4pnWAtlnAXEE8/i8Zi2C4Y/Py8Rs8k5r5OGdEVSqkpUr9QM
+	 qpJXx2YdiYor+gFmstOuglVP2id7ZgCGPTbmvgWcV4JZD27ZviYKtWn39csFA7snqH
+	 HqXgt98S/dg8g==
+Date: Sat, 9 Nov 2024 08:21:24 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Zizhi Wo <wozizhi@huawei.com>, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, fstests <fstests@vger.kernel.org>
-Subject: Re: [PATCH] xfs/273: check thoroughness of the fsmappings
-Message-ID: <20241109161928.GA9462@frogsfrogsfrogs>
-References: <20241108173907.GB168069@frogsfrogsfrogs>
- <20241108174146.GA168062@frogsfrogsfrogs>
- <20241109144516.irgjz2zllkpkqsqz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH] xfs: remove unknown compat feature check in superblock
+ write validation
+Message-ID: <20241109162124.GA9438@frogsfrogsfrogs>
+References: <20241021012549.875726-1-leo.lilong@huawei.com>
+ <Zy8Rj7eISiraFIha@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,104 +44,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241109144516.irgjz2zllkpkqsqz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <Zy8Rj7eISiraFIha@localhost.localdomain>
 
-On Sat, Nov 09, 2024 at 10:45:16PM +0800, Zorro Lang wrote:
-> On Fri, Nov 08, 2024 at 09:41:46AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Enhance this test to make sure that there are no gaps in the fsmap
-> > records, and (especially) that they we report all the way to the end of
-> > the device.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/xfs/273 |   47 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 47 insertions(+)
-> > 
-> > diff --git a/tests/xfs/273 b/tests/xfs/273
-> > index d7fb80c4033429..ecfe5e7760a092 100755
-> > --- a/tests/xfs/273
-> > +++ b/tests/xfs/273
-> > @@ -24,6 +24,8 @@ _require_scratch
-> >  _require_populate_commands
-> >  _require_xfs_io_command "fsmap"
-> >  
-> > +_fixed_by_git_commit kernel XXXXXXXXXXXXXX "xfs: fix off-by-one error in fsmap's end_daddr usage"
+On Sat, Nov 09, 2024 at 03:38:55PM +0800, Long Li wrote:
 > 
-> The _fixed_by_kernel_commit can replace the "_fixed_by_git_commit kernel".
+> Friendly Ping ...
 
-<nod>
+Sorry about that, I missed this one.
 
-> > +
-> >  rm -f "$seqres.full"
-> >  
-> >  echo "Format and mount"
-> > @@ -37,6 +39,51 @@ cat $TEST_DIR/a $TEST_DIR/b >> $seqres.full
-> >  
-> >  diff -uw $TEST_DIR/a $TEST_DIR/b
-> >  
-> > +# Do we have mappings for every sector on the device?
-> > +ddev_fsblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.datablocks)
-> > +rtdev_fsblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtblocks)
-> > +fsblock_bytes=$(_xfs_statfs_field "$SCRATCH_MNT" geom.bsize)
-> > +
-> > +ddev_daddrs=$((ddev_fsblocks * fsblock_bytes / 512))
-> > +rtdev_daddrs=$((rtdev_fsblocks * fsblock_bytes / 512))
-> > +
-> > +ddev_devno=$(stat -c '%t:%T' $SCRATCH_DEV)
-> > +if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ]; then
-> > +	rtdev_devno=$(stat -c '%t:%T' $SCRATCH_RTDEV)
-> > +fi
-> > +
-> > +$XFS_IO_PROG -c 'fsmap -m -n 65536' $SCRATCH_MNT | awk -F ',' \
-> > +	-v data_devno=$ddev_devno \
-> > +	-v rt_devno=$rtdev_devno \
-> > +	-v data_daddrs=$ddev_daddrs \
-> > +	-v rt_daddrs=$rtdev_daddrs \
-> > +'BEGIN {
-> > +	next_daddr[data_devno] = 0;
-> > +	next_daddr[rt_devno] = 0;
-> > +}
-> > +{
-> > +	if ($1 == "EXT")
-> > +		next
-> > +	devno = sprintf("%x:%x", $2, $3);
-> > +	if (devno != data_devno && devno != rt_devno)
-> > +		next
-> > +
-> > +	if (next_daddr[devno] < $4)
-> > +		printf("%sh: expected daddr %d, saw \"%s\"\n", devno,
-> > +				next_daddr[devno], $0);
-> > +		next = $5 + 1;
-> 
-> Ahaha, awk expert Darrick :) I tried this patch, but got below error when
-> I tried this patch:
-> 
->   +awk: cmd. line:15:             next = $5 + 1;
->   +awk: cmd. line:15:                  ^ syntax error
+> On Mon, Oct 21, 2024 at 09:25:49AM +0800, Long Li wrote:
+> > Compat features are new features that older kernels can safely ignore,
+> > allowing read-write mounts without issues. The current sb write validation
+> > implementation returns -EFSCORRUPTED for unknown compat features,
+> > preventing filesystem write operations and contradicting the feature's
+> > definition.
+> > 
+> > Additionally, if the mounted image is unclean, the log recovery may need
+> > to write to the superblock. Returning an error for unknown compat features
+> > during sb write validation can cause mount failures.
+> > 
+> > Although XFS currently does not use compat feature flags, this issue
+> > affects current kernels' ability to mount images that may use compat
+> > feature flags in the future.
+> > 
+> > Since superblock read validation already warns about unknown compat
+> > features, it's unnecessary to repeat this warning during write validation.
+> > Therefore, the relevant code in write validation is being removed.
+> > 
 
-Aha, I forgot to commit the change renaming next to n before sending. :(
+You might want to add this so it actually gets backported:
+
+Cc: <stable@vger.kernel.org> # v4.19
+
+> > Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superblock write verifier")
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+
+Makes sense, so
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Thanks,
-> Zorro
-> 
-> > +		if (next > next_daddr[devno])
-> > +		       next_daddr[devno] = next;
-> > +}
-> > +END {
-> > +	if (data_daddrs != next_daddr[data_devno])
-> > +		printf("%sh: fsmap stops at %d, expected %d\n",
-> > +				data_devno, next_daddr[data_devno], data_daddrs);
-> > +	if (rt_devno != "" && rt_daddrs != next_daddr[rt_devno])
-> > +		printf("%sh: fsmap stops at %d, expected %d\n",
-> > +				rt_devno, next_daddr[rt_devno], rt_daddrs);
-> > +}'
-> > +
-> >  # success, all done
-> >  status=0
-> >  exit
+> > ---
+> >  fs/xfs/libxfs/xfs_sb.c | 7 -------
+> >  1 file changed, 7 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > index d95409f3cba6..02ebcbc4882f 100644
+> > --- a/fs/xfs/libxfs/xfs_sb.c
+> > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > @@ -297,13 +297,6 @@ xfs_validate_sb_write(
+> >  	 * the kernel cannot support since we checked for unsupported bits in
+> >  	 * the read verifier, which means that memory is corrupt.
+> >  	 */
+> > -	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
+> > -		xfs_warn(mp,
+> > -"Corruption detected in superblock compatible features (0x%x)!",
+> > -			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
+> > -		return -EFSCORRUPTED;
+> > -	}
+> > -
+> >  	if (!xfs_is_readonly(mp) &&
+> >  	    xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+> >  		xfs_alert(mp,
+> > -- 
+> > 2.39.2
 > > 
 > 
