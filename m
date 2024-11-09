@@ -1,253 +1,94 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9DD12110E;
-	Sat,  9 Nov 2024 02:34:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFDA73B192
+	for <linux-xfs@vger.kernel.org>; Sat,  9 Nov 2024 07:14:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731119681; cv=none; b=dTN/DzSY15/H2R/h/8zVYHBwxenglj0KrZv+n3bOxjx1P0guyeNYH+EvIQpXLo12sjyxFMFbqiEQWKIdbRb6Em8runEcNSI/akDqu3MitJol6H1WfBcxTDWDK4RbvKJSRUXhU7y/6snHB1TJ7OPaOqF2ohguAuTuvgWPbLQGweE=
+	t=1731136498; cv=none; b=anTliM4QedhpynT6txX+ZN3epFqYN28Q6RZZOzf2oC/5ytuyBF+GEyfZsrlDMCOaGt3JDuV6wEgU8ZELBqJvJfULR/Mtl31eAIfhWQ99HyR0au160GLv67LCQaZJ5mhQMMwXbEDoNeWExnQoG7jLc/CtPCeh51sP1/yeywmsT3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731119681; c=relaxed/simple;
-	bh=uswVlEUZr7uvxmbURgkMM3gl0th0qLi2chpHnjse7FU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ilVzqdKDcejzOFCTPXleR1F8BGYv+NM0ENjpH9PkXed25wfcy9VQDdJIUPvNHw7e6wjoDnOsNVYn/B5oe6ut1vIgh3iv9YDStSAnIPBWWFaowYk2XNL/RjOlxq7rChstgPcNBog+cJgfA4WnEk7lnPfNwC70cZioENWMtUF+hIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+	s=arc-20240116; t=1731136498; c=relaxed/simple;
+	bh=5pSJi/m32ee47RxnG/QbaP/XI/gjf9dsCj57K52Yr3A=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BMufR9NdEfqxv27E+uQYUoU3FKaCPFYY9OyjRhrGWFmb1Xe414DfWf4aS1c2LZZ1u384Mz2AKEw4k4tMq6YEVIG0laxvAAv405YHAS/Q+sPEZfiQNf2yOyoYhX/ZJJLXVURjPoQlnr5b6XxuP82tni/xtor9gYA2GvwbZAMxSg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4XlfwC2Yzlz10Qp4;
-	Sat,  9 Nov 2024 10:32:11 +0800 (CST)
-Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
-	by mail.maildlp.com (Postfix) with ESMTPS id 175EC180106;
-	Sat,  9 Nov 2024 10:34:35 +0800 (CST)
-Received: from [10.174.176.88] (10.174.176.88) by
- kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Sat, 9 Nov 2024 10:34:34 +0800
-Message-ID: <d22fcc83-9290-4561-acf8-be5741ab94f7@huawei.com>
-Date: Sat, 9 Nov 2024 10:34:33 +0800
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Xln8N3bmLz2Fb42;
+	Sat,  9 Nov 2024 15:13:08 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3B47A1A016C;
+	Sat,  9 Nov 2024 15:14:53 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 9 Nov
+ 2024 15:14:52 +0800
+Date: Sat, 9 Nov 2024 15:13:53 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Christoph Hellwig <hch@infradead.org>
+CC: <djwong@kernel.org>, <cem@kernel.org>, <brauner@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <yangerkun@huawei.com>, <lonuxli.64@gmail.com>
+Subject: Re: [PATCH] iomap: fix zero padding data issue in concurrent append
+ writes
+Message-ID: <Zy8Lsee7EDodz5Xk@localhost.localdomain>
+References: <20241108122738.2617669-1-leo.lilong@huawei.com>
+ <Zy4mW6r3rjMEsNir@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] xfs: Fix missing block calculations in xfs datadev
- fsmap
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <chandan.babu@oracle.com>, <dchinner@redhat.com>, <osandov@fb.com>,
-	<john.g.garry@oracle.com>, <linux-xfs@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>
-References: <20240826031005.2493150-1-wozizhi@huawei.com>
- <20240826031005.2493150-2-wozizhi@huawei.com>
- <20241107234352.GU2386201@frogsfrogsfrogs>
- <1549f04a-8431-405d-adfc-23e5988abe51@huawei.com>
- <20241108173006.GA168069@frogsfrogsfrogs>
-From: Zizhi Wo <wozizhi@huawei.com>
-In-Reply-To: <20241108173006.GA168069@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemf100017.china.huawei.com (7.202.181.16)
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <Zy4mW6r3rjMEsNir@infradead.org>
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
+On Fri, Nov 08, 2024 at 06:55:23AM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 08, 2024 at 08:27:38PM +0800, Long Li wrote:
+> > After reboot, file has zero padding in range [A+B, A+B+C]:
+> > 
+> >   |<         Block Size (BS)      >|
+> >   |DDDDDDDDDDDDDDDD0000000000000000|
+> >   ^               ^        ^
+> >   A              A+B      A+B+C (EOF)
+> > 
+> >   D = Valid Data
+> >   0 = Zero Padding
+> > 
+> > The issue stems from disk size being set to min(io_offset + io_size,
+> > inode->i_size) at I/O completion. Since io_offset+io_size is block
+> > size granularity, it may exceed the actual valid file data size. In
+> > the case of concurrent append writes, inode->i_size may be larger
+> > than the actual range of valid file data written to disk, leading to
+> > inaccurate disk size updates.
+> 
+> Oh, interesting one.  Do you have a reproducer we could wire up
+> to xfstests?
+> 
 
+Yes, I have a simple reproducer, but it would require significant
+work to incorporate it into xfstestis.
 
-在 2024/11/9 1:30, Darrick J. Wong 写道:
-> On Fri, Nov 08, 2024 at 10:29:08AM +0800, Zizhi Wo wrote:
->>
->>
->> 在 2024/11/8 7:43, Darrick J. Wong 写道:
->>> On Mon, Aug 26, 2024 at 11:10:04AM +0800, Zizhi Wo wrote:
->>>> In xfs datadev fsmap query, I noticed a missing block calculation problem:
->>>> [root@fedora ~]# xfs_db -r -c "sb 0" -c "p" /dev/vdb
->>>> magicnum = 0x58465342
->>>> blocksize = 4096
->>>> dblocks = 5242880
->>>> ......
->>>> [root@fedora ~]# xfs_io -c 'fsmap -vvvv' /mnt
->>>> ...
->>>> 30: 253:16 [31457384..41943031]: free space            3  (104..10485751)    10485648
->>>>
->>>> (41943031 + 1) / 8 = 5242879 != 5242880
->>>> We missed one block in our fsmap calculation!
->>>
->>> Eek.
->>>
->>>> The root cause of the problem lies in __xfs_getfsmap_datadev(), where the
->>>> calculation of "end_fsb" requires a classification discussion. If "end_fsb"
->>>> is calculated based on "eofs", we need to add an extra sentinel node for
->>>> subsequent length calculations. Otherwise, one block will be missed. If
->>>> "end_fsb" is calculated based on "keys[1]", then there is no need to add an
->>>> extra node. Because "keys[1]" itself is unreachable, it cancels out one of
->>>> the additions. The diagram below illustrates this:
->>>>
->>>> |0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|-----eofs
->>>> |---------------|---------------------|
->>>> a       n       b         n+1         c
->>>>
->>>> Assume that eofs is 16, the start address of the previous query is block n,
->>>> sector 0, and the length is 1, so the "info->next" is at point b, sector 8.
->>>> In the last query, suppose the "rm_startblock" calculated based on
->>>> "eofs - 1" is the last block n+1 at point b. All we get is the starting
->>>> address of the block, not the end. Therefore, an additional sentinel node
->>>> needs to be added to move it to point c. After that, subtracting one from
->>>> the other will yield the remaining 1.
->>>>
->>>> Although we can now calculate the exact last query using "info->end_daddr",
->>>> we will still get an incorrect value if the device at this point is not the
->>>> boundary device specified by "keys[1]", as "end_daddr" is still the initial
->>>> value. Therefore, the eofs situation here needs to be corrected. The issue
->>>> is resolved by adding a sentinel node.
->>>
->>> Why don't we set end_daddr unconditionally, then?
->>>
->>> Hmm, looking at the end_daddr usage in fsmap.c, I think it's wrong.  If
->>> end_daddr is set at all, it's set either to the last sector for which
->>> the user wants a mapping; or it's set to the last sector for the device.
->>> But then look at how we use it:
->>>
->>> 	if (info->last...)
->>> 		frec->start_daddr = info->end_daddr;
->>>
->>> 	...
->>>
->>> 	/* "report the gap..."
->>> 	if (frec->start_daddr > info->next_daddr) {
->>> 		fmr.fmr_length = frec->start_daddr - info->next_daddr;
->>> 	}
->>>
->>> This is wrong -- we're using start_daddr to compute the distance from
->>> the last mapping that we output up to the end of the range that we want.
->>> The "end of the range" is modeled with a phony rmap record that starts
->>> at the first fsblock after that range.
->>>
->>
->> In the current code, we set "rec_daddr = end_daddr" only when
->> (info->last && info->end_daddr != NULL), which should ensure that this
->> is the last query?
+> > This patch introduce ioend->io_end to trace the end position of the
+> > valid data in ioend, rather than solely relying on ioend->io_size.
+> > It ensures more precise disk size updates and avoids the zero padding
+> > issue. Another benefit is that it makes the xfs_ioend_is_append()
+> > check more accurate, which can reduce unnecessary end bio callbacks
+> > of xfs_end_bio() in certain scenarios, such as repeated writes at the
+> > file tail without extending the file size.
 > 
-> Right.
+> Hmm.  Can we do away with two members for the size by just rounding
+> up the block size for the block based operations?
 > 
->> Because end_daddr is set to the last device, and
->> info->last is set to the last query. Therefore, assigning it to
->> start_daddr should not cause issues in the next query?
-> 
-> Right, the code currently sets end_daddr only for the last device, so
-> there won't be any issues with the next query.
-> 
-> That said, we reset the xfs_getfsmap_info state between each device, so
-> it's safe to set end_daddr for every device, not just the last time
-> through that loop.
-> 
->> Did I misunderstand something? Or is it because the latest code
->> constantly updates end_daddr, which is why this issue arises?
-> 
-> The 6.13 metadir/rtgroups patches didn't change when end_daddr gets set,
-> but my fixpatch *does* make it set end_daddr for all devices.  Will send
-> a patch + fstests update shortly to demonstrate. :)
 
-OK, I got it. Thank you for your reply.
+If we only use one size record, we can remove io_size and keep only
+io_end to record the tail end of valid file data in ioend. Meanwhile,
+we can add a wrapper function iomep_ioend_iosize() to get the extent
+size of ioend, replacing the existing ioend->io_size. Would this work?
 
 Thanks,
-Zizhi Wo
-
-> 
->>> IOWs, that assignment should have been
->>> frec->start_daddr = info->end_daddr + 1.
->>>
->>> Granted in August the codebase was less clear about the difference
->>> between rec_daddr and rmap->rm_startblock.  For 6.13, hch cleaned all
->>> that up -- rec_daddr is now called start_daddr and the fsmap code passes
->>> rmap records with space numbers in units of daddrs via a new struct
->>> xfs_fsmap_rec.  Unfortunately, that's all buried in the giant pile of
->>> pull requests I sent a couple of days ago which hasn't shown up on
->>> for-next yet.
->>>
->>> https://lore.kernel.org/linux-xfs/173084396955.1871025.18156568347365549855.stgit@frogsfrogsfrogs/
->>>
->>> So I think I know how to fix this against the 6.13 codebase, but I'm
->>> going to take a slightly different approach than yours...
->>>
->>>> Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
->>>> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
->>>> ---
->>>>    fs/xfs/xfs_fsmap.c | 19 +++++++++++++++++--
->>>>    1 file changed, 17 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
->>>> index 85dbb46452ca..8a2dfe96dae7 100644
->>>> --- a/fs/xfs/xfs_fsmap.c
->>>> +++ b/fs/xfs/xfs_fsmap.c
->>>> @@ -596,12 +596,27 @@ __xfs_getfsmap_datadev(
->>>>    	xfs_agnumber_t			end_ag;
->>>>    	uint64_t			eofs;
->>>>    	int				error = 0;
->>>> +	int				sentinel = 0;
->>>>    	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
->>>>    	if (keys[0].fmr_physical >= eofs)
->>>>    		return 0;
->>>>    	start_fsb = XFS_DADDR_TO_FSB(mp, keys[0].fmr_physical);
->>>> -	end_fsb = XFS_DADDR_TO_FSB(mp, min(eofs - 1, keys[1].fmr_physical));
->>>> +	/*
->>>> +	 * For the case of eofs, we need to add a sentinel node;
->>>> +	 * otherwise, one block will be missed when calculating the length
->>>> +	 * in the last query.
->>>> +	 * For the case of key[1], there is no need to add a sentinel node
->>>> +	 * because it already represents a value that cannot be reached.
->>>> +	 * For the case where key[1] after shifting is within the same
->>>> +	 * block as the starting address, it is resolved using end_daddr.
->>>> +	 */
->>>> +	if (keys[1].fmr_physical > eofs - 1) {
->>>> +		sentinel = 1;
->>>> +		end_fsb = XFS_DADDR_TO_FSB(mp, eofs - 1);
->>>> +	} else {
->>>> +		end_fsb = XFS_DADDR_TO_FSB(mp, keys[1].fmr_physical);
->>>> +	}
->>>
->>> ...because running against djwong-wtf, I actually see the same symptoms
->>> for the realtime device.  So I think a better solution is to change
->>> xfs_getfsmap to set end_daddr always, and then fix the off by one error.
->>>
->>
->> Yes, my second patch looks at this rt problem...
->> Thank you for your reply
-> 
-> <nod>
-> 
-> --D
-> 
->> Thanks,
->> Zizhi Wo
->>
->>
->>> I also don't really like "sentinel" values because they're not
->>> intuitive.
->>>
->>> I will also go update xfs/273 to check that there are no gaps in the
->>> mappings returned, and that they go to where the filesystem thinks is
->>> the end of the device.  Thanks for reporting this, sorry I was too busy
->>> trying to get metadir/rtgroups done to look at this until now. :(
->>>
->>> --D
->>>
->>
->>
->>
->>>>    	/*
->>>>    	 * Convert the fsmap low/high keys to AG based keys.  Initialize
->>>> @@ -649,7 +664,7 @@ __xfs_getfsmap_datadev(
->>>>    		info->pag = pag;
->>>>    		if (pag->pag_agno == end_ag) {
->>>>    			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
->>>> -					end_fsb);
->>>> +					end_fsb) + sentinel;
->>>>    			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
->>>>    					keys[1].fmr_offset);
->>>>    			error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
->>>> -- 
->>>> 2.39.2
->>>>
->>>>
->>
-> 
+Long Li
