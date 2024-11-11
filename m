@@ -1,54 +1,57 @@
-Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9A161A2653
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 20:19:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E18E1A9B3E
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 20:19:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731356350; cv=none; b=M5P/iYuqcGcLmmIbfN8trFDxL3DfYeEZuRTOSKlHM6SRZMgXb+wd29rrWb8maQU2YxaTrJ1qb8g0+W+y3l16zLUG5FVA7Z56zrIJC3PocJxqBzmJog9u9lJ8aq1yWVhGq48jWkTt1IkrdfB75Pm2MJyBjwifPILTw34l7enyFts=
+	t=1731356350; cv=none; b=OKgY5YHp9tK/SazckbmwU7HWO3BZiU2WccNCUNSIEBZvAtzaeV4MxbfA3WPbbyrnKXj3bcV7VjM6Q92xujMSsrJrIIMXyQqN9waZ3PKPIu2ngdvlvZ0K+7bEuQvAyvDoAPhwGz73zZy+DiasgGNxETtNwynAsZD8k8ypIebMrR8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731356350; c=relaxed/simple;
-	bh=HdplNj7rOxScqTl4rk8oUMTEW83bkqjTMcamzHMWNso=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=gt+JzZA4sOeDZzDgY7RuW2pxayRw7p8VHXjAadirRen8GeOK0v1jDL5C7CBH1IVIGlY/8ueRUGjgj7AywYcglu+QnAxwcIUntiN6GiI/SNzl2eX+kmdltZxaI9b3wr96MDxGFRUSkeKrvFS8NGvZJ3y6IgJlCYdLtDHSxzt6jtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=ZKw9jXk5; arc=none smtp.client-ip=209.85.219.44
+	bh=vjD4OwpRem9TPu2ocewh7lTIgYYZ3zDQs0yfGPZF/n0=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=WSoypRC5XuCdxozH5j4GTIzcSu8qXk7S9y5/eobshv8v8/YnMKMNGjt2KLwXvZxbvWQ+3b5l3mQzxwo8xRe0OsqVckwnWHta48c5swKtXdELKwvyolLRBzaLzuxqLa/uTpsk1FW3NccJn/YxFtabbNPcq+7SRV8uxdCDFrFOGis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=FF61wmJC; arc=none smtp.client-ip=209.85.160.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="ZKw9jXk5"
-Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-6cbe9e8bbb1so33550346d6.1
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 12:19:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="FF61wmJC"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-46098928354so37673191cf.1
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 12:19:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731356347; x=1731961147; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=vZOzWH6oaRX5zBw6SWTo1BBrfJV7I9UbqRC6LQ/o1Dw=;
-        b=ZKw9jXk5FDjm0A3e5A5x49y0MfYvgXoyHF2/90kGnxomPU1LaWAkcZubPjS2rAwF9B
-         EgryBHD6ZsebWyKiUIR6jT/H+sqB4uWAthXrECqRay6nODZsywMK6LJtczVePmRag+oI
-         NtNgTJWYa56CDSn4rYbtAcojhL/EreWdoYDjSn2ftxCPsXCpzQCIRRQPf8/BMkw7mALg
-         SXmk7up3DvEjFHLwCYZL4okbiR1AF8A7cQ0fArRJh0hESL2Xayg6ZXaGeQDpdqVZTblh
-         tMbqhVjlcYwV4vDgDciP7GpPepeKW5hTQvx5tPppgjO4AEmqQbzj2YnbGEQ5rl6QJEnn
-         F6qg==
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731356348; x=1731961148; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=E7uBdkMZBWHBDqGd5Y6AU6Zp9KPmNzsckryemzg27pk=;
+        b=FF61wmJCAs5sW+Ltc6hHnxfHNfLuSS7EMPDwSNYovAe+4O30IGEFLbvgSQ/1+G/bgT
+         2CUt9Jkw09SkKvfwSpHaOBCFYUqdV3/wPQwVSya9LUhSFMhlnaEI5rgB0IU2n/5HBZm9
+         7Mq22KkcPAUM+hV2NtsjGK/6LBNe4SvVco9EbJ/DBG8z3CF6HXmP2GRtUSeUmBH5qduJ
+         67VrcBL2bmAPVgsy1gneIE0pjP7rB86Whn5T5NlV+y56u5IZziA9h6y3tufOAtyd7RQr
+         Q7/Cvq/WTHVjlXcFPbSYPqELsIv6MMN63gqUPJunZVa9NLa0lj9i3y+M96JZy5jDn3Ir
+         HzAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731356347; x=1731961147;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vZOzWH6oaRX5zBw6SWTo1BBrfJV7I9UbqRC6LQ/o1Dw=;
-        b=UBfqvGTgmAFOVf5oXWxk8om97j3zq99UD5bngiUQD8U/w4IRrAFqMjyaEjoB3J9kMd
-         ojtoCKJ+UQ3MSDobHUk6nTX5oToqSPfm2ZF4oWXO4NXtcc0DOg0XHplxdyAdvGKDczIg
-         BZazIP6TaiH7IIwo7BFRmwkeKetB6J2erImOTLRa5RNlzVswf5oIHL+xu6Ev+KeWmRz3
-         /0cWd80gZudn6CkS2chYQXHOh1UN4oK+fx5yij00QWWkTaKHybwNmTownMS0IqiFewDH
-         eaW8tvRhvG2z4j5CANYY8KLrJwrj+GVv+5lg9kZNqoOG48RA0lGs/9OjmHRjPGrKGjS0
-         piUg==
-X-Forwarded-Encrypted: i=1; AJvYcCUkfGLzhHApzys/sAACxnYfZnlw59/MGnqc1zFgpyQSlNf1GuBcF8vDNLb5HmomSoo9QFavxm/yyI4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzYzI5T4fwzld1K6CpkK8e9gVYKEmGp/cd7GYPRLJe8467GpUvt
-	Yx6lWuTxX2ZPPN4zaUBIuaKdc8Cao0tBiJOgEgG9iBK5+iqiOPp7E8LKXH6jMBg=
-X-Google-Smtp-Source: AGHT+IFacC1xPqIxXNxCPQqSe1nFqrjTge/tXsUCiXF5RzZu3TnzD62FWh15sejnpZsyvhuNw+LCaA==
-X-Received: by 2002:a05:6214:5f04:b0:6cb:eabb:13d3 with SMTP id 6a1803df08f44-6d39e19d7a4mr198971316d6.36.1731356346753;
-        Mon, 11 Nov 2024 12:19:06 -0800 (PST)
+        d=1e100.net; s=20230601; t=1731356348; x=1731961148;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=E7uBdkMZBWHBDqGd5Y6AU6Zp9KPmNzsckryemzg27pk=;
+        b=MxgrFJMRwN8XIJHab8QItbFgN/JBbGukzHXTTCMneyr8nV9BVWWqzeArwl9JmelV6i
+         QrpnlKHBGEfwzOA8TSQfHYi4ftz9HG+aRZvr/lHCDLrX421RFAMOXIOsJsvimDitOMz7
+         fXZaKY15h5wMJT6KvShpKRq5ajr7Etq7ex6n04teK8NW4+jZ8cwV4EgRoVWiOhr/SR6f
+         9wMUeZdrCEGdBpLrq6FhNW9kCGZOnSWnA9ij15xBzGNg34fgGai+MXYiITk8KrHfa6EF
+         iTGxmOljokLezsxyeH7DIVJ7uQBwF7Z0jjy810bX0xDdyB+xtiSS18qv1R/MN/CM1VyD
+         JitQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVCeuvE4HJ9oT8RieS4RnMfjcY7x77eWdQ+/pOYQftYhC7kcgN9RhWngGDwQF6NXqCgiGnBVFq9bp0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwFNHfFJuugBUcVGW4h+bXQs1IJUwg4csZ/ozZxJ2bCztumOl+b
+	ZCDDFJDBrglWt5Bqmldnh5fcaP6XKXI6rf+Mg7MVSjQfWIebSvNJFySXymTbY/w=
+X-Google-Smtp-Source: AGHT+IEBguTWGGBpfMXX3i8vnE5t3UsJSDJvfVnQMRYjxbDOQbaxUPSmwC+HZSzOw+awlnAlKaw9jA==
+X-Received: by 2002:ac8:7390:0:b0:463:eef:baaf with SMTP id d75a77b69052e-4630eefbc12mr132991331cf.29.1731356348402;
+        Mon, 11 Nov 2024 12:19:08 -0800 (PST)
 Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6d3bf23cc01sm20137136d6.122.2024.11.11.12.19.05
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-462ff3df534sm66530971cf.10.2024.11.11.12.19.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Nov 2024 12:19:06 -0800 (PST)
+        Mon, 11 Nov 2024 12:19:07 -0800 (PST)
 From: Josef Bacik <josef@toxicpanda.com>
 To: kernel-team@fb.com,
 	linux-fsdevel@vger.kernel.org,
@@ -60,10 +63,12 @@ To: kernel-team@fb.com,
 	linux-btrfs@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-ext4@vger.kernel.org
-Subject: [PATCH v6 00/17] fanotify: add pre-content hooks
-Date: Mon, 11 Nov 2024 15:17:49 -0500
-Message-ID: <cover.1731355931.git.josef@toxicpanda.com>
+Subject: [PATCH v6 01/17] fanotify: don't skip extra event info if no info_mode is set
+Date: Mon, 11 Nov 2024 15:17:50 -0500
+Message-ID: <a1be4ec39d230eda892191e972aa5e077d50186e.1731355931.git.josef@toxicpanda.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1731355931.git.josef@toxicpanda.com>
+References: <cover.1731355931.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,187 +77,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-v5: https://lore.kernel.org/linux-fsdevel/cover.1725481503.git.josef@toxicpanda.com/
-v4: https://lore.kernel.org/linux-fsdevel/cover.1723670362.git.josef@toxicpanda.com/
-v3: https://lore.kernel.org/linux-fsdevel/cover.1723228772.git.josef@toxicpanda.com/
-v2: https://lore.kernel.org/linux-fsdevel/cover.1723144881.git.josef@toxicpanda.com/
-v1: https://lore.kernel.org/linux-fsdevel/cover.1721931241.git.josef@toxicpanda.com/
+New pre-content events will be path events but they will also carry
+additional range information. Remove the optimization to skip checking
+whether info structures need to be generated for path events. This
+results in no change in generated info structures for existing events.
 
-v5->v6:
-- Linus had problems with this and rejected Jan's PR
-  (https://lore.kernel.org/linux-fsdevel/20240923110348.tbwihs42dxxltabc@quack3/),
-  so I'm respinning this series to address his concerns.  Hopefully this is more
-  acceptable.
-- Change the page fault hooks to happen only in the case where we have to add a
-  page, not where there exists pages already.
-- Amir added a hook to truncate.
-- We made the flag per SB instead of per fstype, Amir wanted this because of
-  some potential issues with other file system specific work he's doing.
-- Dropped the bcachefs patch, there were some concerns that we were doing
-  something wrong, and it's not a huge deal to not have this feature for now.
-- Unfortunately the xfs write fault path still has to do the page fault hook
-  before we know if we have a page or not, this is because of the locking that's
-  done before we get to the part where we know if we have a page already or not,
-  so that's the path that is still the same from last iteration.
-- I've re-validated this series with btrfs, xfs, and ext4 to make sure I didn't
-  break anything.
+Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+---
+ fs/notify/fanotify/fanotify_user.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-v4->v5:
-- Cleaned up the various "I'll fix it on commit" notes that Jan made since I had
-  to respin the series anyway.
-- Renamed the filemap pagefault helper for fsnotify per Christians suggestion.
-- Added a FS_ALLOW_HSM flag per Jan's comments, based on Amir's rough sketch.
-- Added a patch to disable btrfs defrag on pre-content watched files.
-- Added a patch to turn on FS_ALLOW_HSM for all the file systems that I tested.
-- Added two fstests (which will be posted separately) to validate everything,
-  re-validated the series with btrfs, xfs, ext4, and bcachefs to make sure I
-  didn't break anything.
-
-v3->v4:
-- Trying to send a final verson Friday at 5pm before you go on vacation is a
-  recipe for silly mistakes, fixed the xfs handling yet again, per Christoph's
-  review.
-- Reworked the file system helper so it's handling of fpin was a little less
-  silly, per Chinner's suggestion.
-- Updated the return values to not or in VM_FAULT_RETRY, as we have a comment
-  in filemap_fault that says if VM_FAULT_ERROR is set we won't have
-  VM_FAULT_RETRY set.
-
-v2->v3:
-- Fix the pagefault path to do MAY_ACCESS instead, updated the perm handler to
-  emit PRE_ACCESS in this case, so we can avoid the extraneous perm event as per
-  Amir's suggestion.
-- Reworked the exported helper so the per-filesystem changes are much smaller,
-  per Amir's suggestion.
-- Fixed the screwup for DAX writes per Chinner's suggestion.
-- Added Christian's reviewed-by's where appropriate.
-
-v1->v2:
-- reworked the page fault logic based on Jan's suggestion and turned it into a
-  helper.
-- Added 3 patches per-fs where we need to call the fsnotify helper from their
-  ->fault handlers.
-- Disabled readahead in the case that there's a pre-content watch in place.
-- Disabled huge faults when there's a pre-content watch in place (entirely
-  because it's untested, theoretically it should be straightforward to do).
-- Updated the command numbers.
-- Addressed the random spelling/grammer mistakes that Jan pointed out.
-- Addressed the other random nits from Jan.
-
---- Original email ---
-
-Hello,
-
-These are the patches for the bare bones pre-content fanotify support.  The
-majority of this work is Amir's, my contribution to this has solely been around
-adding the page fault hooks, testing and validating everything.  I'm sending it
-because Amir is traveling a bunch, and I touched it last so I'm going to take
-all the hate and he can take all the credit.
-
-There is a PoC that I've been using to validate this work, you can find the git
-repo here
-
-https://github.com/josefbacik/remote-fetch
-
-This consists of 3 different tools.
-
-1. populate.  This just creates all the stub files in the directory from the
-   source directory.  Just run ./populate ~/linux ~/hsm-linux and it'll
-   recursively create all of the stub files and directories.
-2. remote-fetch.  This is the actual PoC, you just point it at the source and
-   destination directory and then you can do whatever.  ./remote-fetch ~/linux
-   ~/hsm-linux.
-3. mmap-validate.  This was to validate the pagefault thing, this is likely what
-   will be turned into the selftest with remote-fetch.  It creates a file and
-   then you can validate the file matches the right pattern with both normal
-   reads and mmap.  Normally I do something like
-
-   ./mmap-validate create ~/src/foo
-   ./populate ~/src ~/dst
-   ./rmeote-fetch ~/src ~/dst
-   ./mmap-validate validate ~/dst/foo
-
-I did a bunch of testing, I also got some performance numbers.  I copied a
-kernel tree, and then did remote-fetch, and then make -j4
-
-Normal
-real    9m49.709s
-user    28m11.372s
-sys     4m57.304s
-
-HSM
-real    10m6.454s
-user    29m10.517s
-sys     5m2.617s
-
-So ~17 seconds more to build with HSM.  I then did a make mrproper on both trees
-to see the size
-
-[root@fedora ~]# du -hs /src/linux
-1.6G    /src/linux
-[root@fedora ~]# du -hs dst
-125M    dst
-
-This mirrors the sort of savings we've seen in production.
-
-Meta has had these patches (minus the page fault patch) deployed in production
-for almost a year with our own utility for doing on-demand package fetching.
-The savings from this has been pretty significant.
-
-The page-fault hooks are necessary for the last thing we need, which is
-on-demand range fetching of executables.  Some of our binaries are several gigs
-large, having the ability to remote fetch them on demand is a huge win for us
-not only with space savings, but with startup time of containers.
-
-There will be tests for this going into LTP once we're satisfied with the
-patches and they're on their way upstream.  Thanks,
-
-Josef
-
-Amir Goldstein (9):
-  fanotify: rename a misnamed constant
-  fanotify: reserve event bit of deprecated FAN_DIR_MODIFY
-  fsnotify: introduce pre-content permission events
-  fsnotify: pass optional file access range in pre-content event
-  fsnotify: generate pre-content permission event on open
-  fsnotify: generate pre-content permission event on truncate
-  fanotify: introduce FAN_PRE_ACCESS permission event
-  fanotify: report file range info with pre-content events
-  fanotify: allow to set errno in FAN_DENY permission response
-
-Josef Bacik (8):
-  fanotify: don't skip extra event info if no info_mode is set
-  fanotify: add a helper to check for pre content events
-  fanotify: disable readahead if we have pre-content watches
-  mm: don't allow huge faults for files with pre content watches
-  fsnotify: generate pre-content permission event on page fault
-  xfs: add pre-content fsnotify hook for write faults
-  btrfs: disable defrag on pre-content watched files
-  fs: enable pre-content events on supported file systems
-
- fs/btrfs/ioctl.c                   |   9 +++
- fs/btrfs/super.c                   |   5 +-
- fs/ext4/super.c                    |   3 +
- fs/namei.c                         |  10 ++-
- fs/notify/fanotify/fanotify.c      |  33 ++++++--
- fs/notify/fanotify/fanotify.h      |  15 ++++
- fs/notify/fanotify/fanotify_user.c | 120 +++++++++++++++++++++++------
- fs/notify/fsnotify.c               |  18 ++++-
- fs/open.c                          |  31 +++++---
- fs/xfs/xfs_file.c                  |   4 +
- fs/xfs/xfs_super.c                 |   2 +-
- include/linux/fanotify.h           |  19 +++--
- include/linux/fs.h                 |   1 +
- include/linux/fsnotify.h           |  73 ++++++++++++++++--
- include/linux/fsnotify_backend.h   |  59 +++++++++++++-
- include/linux/mm.h                 |   1 +
- include/uapi/linux/fanotify.h      |  18 +++++
- mm/filemap.c                       |  90 ++++++++++++++++++++++
- mm/memory.c                        |  22 ++++++
- mm/readahead.c                     |  13 ++++
- security/selinux/hooks.c           |   3 +-
- 21 files changed, 491 insertions(+), 58 deletions(-)
-
+diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
+index 8e2d43fc6f7c..d4dd34690fc6 100644
+--- a/fs/notify/fanotify/fanotify_user.c
++++ b/fs/notify/fanotify/fanotify_user.c
+@@ -160,9 +160,6 @@ static size_t fanotify_event_len(unsigned int info_mode,
+ 	int fh_len;
+ 	int dot_len = 0;
+ 
+-	if (!info_mode)
+-		return event_len;
+-
+ 	if (fanotify_is_error_event(event->mask))
+ 		event_len += FANOTIFY_ERROR_INFO_LEN;
+ 
+@@ -757,12 +754,10 @@ static ssize_t copy_event_to_user(struct fsnotify_group *group,
+ 	buf += FAN_EVENT_METADATA_LEN;
+ 	count -= FAN_EVENT_METADATA_LEN;
+ 
+-	if (info_mode) {
+-		ret = copy_info_records_to_user(event, info, info_mode, pidfd,
+-						buf, count);
+-		if (ret < 0)
+-			goto out_close_fd;
+-	}
++	ret = copy_info_records_to_user(event, info, info_mode, pidfd,
++					buf, count);
++	if (ret < 0)
++		goto out_close_fd;
+ 
+ 	if (f)
+ 		fd_install(fd, f);
 -- 
 2.43.0
 
