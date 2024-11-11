@@ -1,157 +1,258 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3AE01A0704
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 14:17:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9A161A2653
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 20:19:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731334673; cv=none; b=Fa6Qb/FW/bdtLaEE/3ZM6d4fvEHAQAsi7lTx2ax363XMA5DoXiSeq52TdynYym3dQwJy7WZyWfnQq5Rq2MDWagbWJpcq29AaZIacDgV69cucyVziTBtRiBSneHpxxgGDS58ih3M66pZ8zCdCtlk79scjTTBu5lvnSzrRqfpslFc=
+	t=1731356350; cv=none; b=M5P/iYuqcGcLmmIbfN8trFDxL3DfYeEZuRTOSKlHM6SRZMgXb+wd29rrWb8maQU2YxaTrJ1qb8g0+W+y3l16zLUG5FVA7Z56zrIJC3PocJxqBzmJog9u9lJ8aq1yWVhGq48jWkTt1IkrdfB75Pm2MJyBjwifPILTw34l7enyFts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731334673; c=relaxed/simple;
-	bh=1mhtz2nH32HjuTBO3LQJmSFXzsrOenTZ63qBFtxtZlE=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=htsi4KWNPWqoMoy5O7OxkszgBmF6zN2LnP0k92O4IfBhfMP7T4TXEVnVxsoBKgPMWTFnIerdoNPA6ouIkGuZqOLv9vrW7r5Qtm4BvLjp1sjZP2akahzVKdFMJJWy3IbSLUdPFIRJwWqeK4cHWPj6+6j4fcrO9VtljxeptDCGe1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4XnBRM1pXnz1hwP1;
-	Mon, 11 Nov 2024 22:15:59 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7A0C01A016C;
-	Mon, 11 Nov 2024 22:17:47 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 11 Nov
- 2024 22:17:47 +0800
-Date: Mon, 11 Nov 2024 22:16:40 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: <djwong@kernel.org>, <cem@kernel.org>, <brauner@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <yangerkun@huawei.com>, <lonuxli.64@gmail.com>
-Subject: Re: [PATCH] iomap: fix zero padding data issue in concurrent append
- writes
-Message-ID: <ZzIRyA8DtxLcs_vO@localhost.localdomain>
-References: <20241108122738.2617669-1-leo.lilong@huawei.com>
- <Zy4mW6r3rjMEsNir@infradead.org>
- <Zy8Lsee7EDodz5Xk@localhost.localdomain>
- <ZzGZ76Qy7mCZo8a3@infradead.org>
+	s=arc-20240116; t=1731356350; c=relaxed/simple;
+	bh=HdplNj7rOxScqTl4rk8oUMTEW83bkqjTMcamzHMWNso=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=gt+JzZA4sOeDZzDgY7RuW2pxayRw7p8VHXjAadirRen8GeOK0v1jDL5C7CBH1IVIGlY/8ueRUGjgj7AywYcglu+QnAxwcIUntiN6GiI/SNzl2eX+kmdltZxaI9b3wr96MDxGFRUSkeKrvFS8NGvZJ3y6IgJlCYdLtDHSxzt6jtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=ZKw9jXk5; arc=none smtp.client-ip=209.85.219.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="ZKw9jXk5"
+Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-6cbe9e8bbb1so33550346d6.1
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 12:19:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731356347; x=1731961147; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vZOzWH6oaRX5zBw6SWTo1BBrfJV7I9UbqRC6LQ/o1Dw=;
+        b=ZKw9jXk5FDjm0A3e5A5x49y0MfYvgXoyHF2/90kGnxomPU1LaWAkcZubPjS2rAwF9B
+         EgryBHD6ZsebWyKiUIR6jT/H+sqB4uWAthXrECqRay6nODZsywMK6LJtczVePmRag+oI
+         NtNgTJWYa56CDSn4rYbtAcojhL/EreWdoYDjSn2ftxCPsXCpzQCIRRQPf8/BMkw7mALg
+         SXmk7up3DvEjFHLwCYZL4okbiR1AF8A7cQ0fArRJh0hESL2Xayg6ZXaGeQDpdqVZTblh
+         tMbqhVjlcYwV4vDgDciP7GpPepeKW5hTQvx5tPppgjO4AEmqQbzj2YnbGEQ5rl6QJEnn
+         F6qg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731356347; x=1731961147;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=vZOzWH6oaRX5zBw6SWTo1BBrfJV7I9UbqRC6LQ/o1Dw=;
+        b=UBfqvGTgmAFOVf5oXWxk8om97j3zq99UD5bngiUQD8U/w4IRrAFqMjyaEjoB3J9kMd
+         ojtoCKJ+UQ3MSDobHUk6nTX5oToqSPfm2ZF4oWXO4NXtcc0DOg0XHplxdyAdvGKDczIg
+         BZazIP6TaiH7IIwo7BFRmwkeKetB6J2erImOTLRa5RNlzVswf5oIHL+xu6Ev+KeWmRz3
+         /0cWd80gZudn6CkS2chYQXHOh1UN4oK+fx5yij00QWWkTaKHybwNmTownMS0IqiFewDH
+         eaW8tvRhvG2z4j5CANYY8KLrJwrj+GVv+5lg9kZNqoOG48RA0lGs/9OjmHRjPGrKGjS0
+         piUg==
+X-Forwarded-Encrypted: i=1; AJvYcCUkfGLzhHApzys/sAACxnYfZnlw59/MGnqc1zFgpyQSlNf1GuBcF8vDNLb5HmomSoo9QFavxm/yyI4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYzI5T4fwzld1K6CpkK8e9gVYKEmGp/cd7GYPRLJe8467GpUvt
+	Yx6lWuTxX2ZPPN4zaUBIuaKdc8Cao0tBiJOgEgG9iBK5+iqiOPp7E8LKXH6jMBg=
+X-Google-Smtp-Source: AGHT+IFacC1xPqIxXNxCPQqSe1nFqrjTge/tXsUCiXF5RzZu3TnzD62FWh15sejnpZsyvhuNw+LCaA==
+X-Received: by 2002:a05:6214:5f04:b0:6cb:eabb:13d3 with SMTP id 6a1803df08f44-6d39e19d7a4mr198971316d6.36.1731356346753;
+        Mon, 11 Nov 2024 12:19:06 -0800 (PST)
+Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6d3bf23cc01sm20137136d6.122.2024.11.11.12.19.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Nov 2024 12:19:06 -0800 (PST)
+From: Josef Bacik <josef@toxicpanda.com>
+To: kernel-team@fb.com,
+	linux-fsdevel@vger.kernel.org,
+	jack@suse.cz,
+	amir73il@gmail.com,
+	brauner@kernel.org,
+	torvalds@linux-foundation.org,
+	linux-xfs@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-ext4@vger.kernel.org
+Subject: [PATCH v6 00/17] fanotify: add pre-content hooks
+Date: Mon, 11 Nov 2024 15:17:49 -0500
+Message-ID: <cover.1731355931.git.josef@toxicpanda.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <ZzGZ76Qy7mCZo8a3@infradead.org>
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+Content-Transfer-Encoding: 8bit
 
-On Sun, Nov 10, 2024 at 09:45:19PM -0800, Christoph Hellwig wrote:
-> On Sat, Nov 09, 2024 at 03:13:53PM +0800, Long Li wrote:
-> > > Oh, interesting one.  Do you have a reproducer we could wire up
-> > > to xfstests?
-> > > 
-> > 
-> > Yes, I have a simple reproducer, but it would require significant
-> > work to incorporate it into xfstestis.
-> 
-> Can you at least shared it?  We might be able to help turning it into
-> a test.
-> 
+v5: https://lore.kernel.org/linux-fsdevel/cover.1725481503.git.josef@toxicpanda.com/
+v4: https://lore.kernel.org/linux-fsdevel/cover.1723670362.git.josef@toxicpanda.com/
+v3: https://lore.kernel.org/linux-fsdevel/cover.1723228772.git.josef@toxicpanda.com/
+v2: https://lore.kernel.org/linux-fsdevel/cover.1723144881.git.josef@toxicpanda.com/
+v1: https://lore.kernel.org/linux-fsdevel/cover.1721931241.git.josef@toxicpanda.com/
 
-At first, we used the following script to find the problem, but it was
-difficult to reproduce the problem, run test.sh after system startup.
+v5->v6:
+- Linus had problems with this and rejected Jan's PR
+  (https://lore.kernel.org/linux-fsdevel/20240923110348.tbwihs42dxxltabc@quack3/),
+  so I'm respinning this series to address his concerns.  Hopefully this is more
+  acceptable.
+- Change the page fault hooks to happen only in the case where we have to add a
+  page, not where there exists pages already.
+- Amir added a hook to truncate.
+- We made the flag per SB instead of per fstype, Amir wanted this because of
+  some potential issues with other file system specific work he's doing.
+- Dropped the bcachefs patch, there were some concerns that we were doing
+  something wrong, and it's not a huge deal to not have this feature for now.
+- Unfortunately the xfs write fault path still has to do the page fault hook
+  before we know if we have a page or not, this is because of the locking that's
+  done before we get to the part where we know if we have a page already or not,
+  so that's the path that is still the same from last iteration.
+- I've re-validated this series with btrfs, xfs, and ext4 to make sure I didn't
+  break anything.
 
---------------------filesystem.sh---------------------
-#!/bin/bash
-index=$1
-value=$2
+v4->v5:
+- Cleaned up the various "I'll fix it on commit" notes that Jan made since I had
+  to respin the series anyway.
+- Renamed the filemap pagefault helper for fsnotify per Christians suggestion.
+- Added a FS_ALLOW_HSM flag per Jan's comments, based on Amir's rough sketch.
+- Added a patch to disable btrfs defrag on pre-content watched files.
+- Added a patch to turn on FS_ALLOW_HSM for all the file systems that I tested.
+- Added two fstests (which will be posted separately) to validate everything,
+  re-validated the series with btrfs, xfs, ext4, and bcachefs to make sure I
+  didn't break anything.
 
-while true; do
-    echo "$value" >> /mnt/fs_"$index"/file1
-    echo "$value" >> /mnt/fs_"$index"/file2
-    cp /mnt/fs_"$index"/file1 /mnt/fs_"$index"/file3
-    cat /mnt/fs_"$index"/file1 /mnt/fs_"$index"/file2
-    mv /mnt/fs_"$index"/file3 /mnt/fs_"$index"/file1
-done
+v3->v4:
+- Trying to send a final verson Friday at 5pm before you go on vacation is a
+  recipe for silly mistakes, fixed the xfs handling yet again, per Christoph's
+  review.
+- Reworked the file system helper so it's handling of fpin was a little less
+  silly, per Chinner's suggestion.
+- Updated the return values to not or in VM_FAULT_RETRY, as we have a comment
+  in filemap_fault that says if VM_FAULT_ERROR is set we won't have
+  VM_FAULT_RETRY set.
 
---------------------test.sh--------------------------
-#!/bin/bash
-mount /dev/sda /mnt
-cat -v /mnt/* | grep @
-if [ $? == 0 ] ;then
-        echo "find padding data"
-        exit 1
-fi
+v2->v3:
+- Fix the pagefault path to do MAY_ACCESS instead, updated the perm handler to
+  emit PRE_ACCESS in this case, so we can avoid the extraneous perm event as per
+  Amir's suggestion.
+- Reworked the exported helper so the per-filesystem changes are much smaller,
+  per Amir's suggestion.
+- Fixed the screwup for DAX writes per Chinner's suggestion.
+- Added Christian's reviewed-by's where appropriate.
 
-sh -x filesystem.sh 1 1111 &>/dev/null &
-sh -x filesystem.sh 1 2222 &>/dev/null &
-sh -x filesystem.sh 1 3333 &>/dev/null &
-sleep $(($RANDOM%30))
-echo "reboot..."
-echo b > /proc/sysrq-trigger
-------------------------------------------------------
+v1->v2:
+- reworked the page fault logic based on Jan's suggestion and turned it into a
+  helper.
+- Added 3 patches per-fs where we need to call the fsnotify helper from their
+  ->fault handlers.
+- Disabled readahead in the case that there's a pre-content watch in place.
+- Disabled huge faults when there's a pre-content watch in place (entirely
+  because it's untested, theoretically it should be straightforward to do).
+- Updated the command numbers.
+- Addressed the random spelling/grammer mistakes that Jan pointed out.
+- Addressed the other random nits from Jan.
 
-I later reproduce it by adding a delay to the kernel code
-and verified the fixed patch. 
+--- Original email ---
 
-1) add some sleep in xfs_end_ioend
+Hello,
 
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -130,8 +130,10 @@ xfs_end_ioend(
-        else if (ioend->io_type == IOMAP_UNWRITTEN)
-                error = xfs_iomap_write_unwritten(ip, offset, size, false);
- 
--       if (!error && xfs_ioend_is_append(ioend))
-+       if (!error && xfs_ioend_is_append(ioend)) {
-+               msleep(30000);
-                error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
-+       }
- done:
-        iomap_finish_ioends(ioend, error);
-        memalloc_nofs_restore(nofs_flag);
+These are the patches for the bare bones pre-content fanotify support.  The
+majority of this work is Amir's, my contribution to this has solely been around
+adding the page fault hooks, testing and validating everything.  I'm sending it
+because Amir is traveling a bunch, and I touched it last so I'm going to take
+all the hate and he can take all the credit.
 
+There is a PoC that I've been using to validate this work, you can find the git
+repo here
 
-2) run rep.sh and reboot system
------------------------rep.sh-------------------------
-#!/bin/bash
+https://github.com/josefbacik/remote-fetch
 
-mkfs.xfs -f /dev/sda
-mount /dev/sda /mnt/test
-touch /mnt/test/file
-xfs_io -c "pwrite 0 20 -S 0x31" /mnt/test/file
-sync &
-sleep 5
+This consists of 3 different tools.
 
-echo 100000 > /proc/sys/vm/dirty_writeback_centisecs
-echo 100000 > /proc/sys/vm/dirty_expire_centisecs
-xfs_io -c "pwrite 20 20 -S 0x31" /mnt/test/file 
-sleep 40
+1. populate.  This just creates all the stub files in the directory from the
+   source directory.  Just run ./populate ~/linux ~/hsm-linux and it'll
+   recursively create all of the stub files and directories.
+2. remote-fetch.  This is the actual PoC, you just point it at the source and
+   destination directory and then you can do whatever.  ./remote-fetch ~/linux
+   ~/hsm-linux.
+3. mmap-validate.  This was to validate the pagefault thing, this is likely what
+   will be turned into the selftest with remote-fetch.  It creates a file and
+   then you can validate the file matches the right pattern with both normal
+   reads and mmap.  Normally I do something like
 
-echo b > /proc/sysrq-trigger
-------------------------------------------------------
+   ./mmap-validate create ~/src/foo
+   ./populate ~/src ~/dst
+   ./rmeote-fetch ~/src ~/dst
+   ./mmap-validate validate ~/dst/foo
 
-3) after reboot, check file.
+I did a bunch of testing, I also got some performance numbers.  I copied a
+kernel tree, and then did remote-fetch, and then make -j4
 
-mount /dev/sda /mnt/test
-cat -v /mnt/test/file | grep @
+Normal
+real    9m49.709s
+user    28m11.372s
+sys     4m57.304s
 
-> > If we only use one size record, we can remove io_size and keep only
-> > io_end to record the tail end of valid file data in ioend. Meanwhile,
-> > we can add a wrapper function iomep_ioend_iosize() to get the extent
-> > size of ioend, replacing the existing ioend->io_size. Would this work?
-> 
-> I'd probably still use offset + size to avoid churn because it feels
-> more natural and causes less churn, but otherwise this sounds good to
-> me.
-> 
+HSM
+real    10m6.454s
+user    29m10.517s
+sys     5m2.617s
 
-Ok, I got it. However, we need to change the meaning of "io_size" to
-the size of the valid file data in ioend.
+So ~17 seconds more to build with HSM.  I then did a make mrproper on both trees
+to see the size
 
-Thanks,
-Long Li
+[root@fedora ~]# du -hs /src/linux
+1.6G    /src/linux
+[root@fedora ~]# du -hs dst
+125M    dst
+
+This mirrors the sort of savings we've seen in production.
+
+Meta has had these patches (minus the page fault patch) deployed in production
+for almost a year with our own utility for doing on-demand package fetching.
+The savings from this has been pretty significant.
+
+The page-fault hooks are necessary for the last thing we need, which is
+on-demand range fetching of executables.  Some of our binaries are several gigs
+large, having the ability to remote fetch them on demand is a huge win for us
+not only with space savings, but with startup time of containers.
+
+There will be tests for this going into LTP once we're satisfied with the
+patches and they're on their way upstream.  Thanks,
+
+Josef
+
+Amir Goldstein (9):
+  fanotify: rename a misnamed constant
+  fanotify: reserve event bit of deprecated FAN_DIR_MODIFY
+  fsnotify: introduce pre-content permission events
+  fsnotify: pass optional file access range in pre-content event
+  fsnotify: generate pre-content permission event on open
+  fsnotify: generate pre-content permission event on truncate
+  fanotify: introduce FAN_PRE_ACCESS permission event
+  fanotify: report file range info with pre-content events
+  fanotify: allow to set errno in FAN_DENY permission response
+
+Josef Bacik (8):
+  fanotify: don't skip extra event info if no info_mode is set
+  fanotify: add a helper to check for pre content events
+  fanotify: disable readahead if we have pre-content watches
+  mm: don't allow huge faults for files with pre content watches
+  fsnotify: generate pre-content permission event on page fault
+  xfs: add pre-content fsnotify hook for write faults
+  btrfs: disable defrag on pre-content watched files
+  fs: enable pre-content events on supported file systems
+
+ fs/btrfs/ioctl.c                   |   9 +++
+ fs/btrfs/super.c                   |   5 +-
+ fs/ext4/super.c                    |   3 +
+ fs/namei.c                         |  10 ++-
+ fs/notify/fanotify/fanotify.c      |  33 ++++++--
+ fs/notify/fanotify/fanotify.h      |  15 ++++
+ fs/notify/fanotify/fanotify_user.c | 120 +++++++++++++++++++++++------
+ fs/notify/fsnotify.c               |  18 ++++-
+ fs/open.c                          |  31 +++++---
+ fs/xfs/xfs_file.c                  |   4 +
+ fs/xfs/xfs_super.c                 |   2 +-
+ include/linux/fanotify.h           |  19 +++--
+ include/linux/fs.h                 |   1 +
+ include/linux/fsnotify.h           |  73 ++++++++++++++++--
+ include/linux/fsnotify_backend.h   |  59 +++++++++++++-
+ include/linux/mm.h                 |   1 +
+ include/uapi/linux/fanotify.h      |  18 +++++
+ mm/filemap.c                       |  90 ++++++++++++++++++++++
+ mm/memory.c                        |  22 ++++++
+ mm/readahead.c                     |  13 ++++
+ security/selinux/hooks.c           |   3 +-
+ 21 files changed, 491 insertions(+), 58 deletions(-)
+
+-- 
+2.43.0
+
