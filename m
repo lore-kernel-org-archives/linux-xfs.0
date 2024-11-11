@@ -1,57 +1,57 @@
-Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
+Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com [209.85.167.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1373C1BB6B3
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 20:19:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9379B1C7265
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 20:19:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731356371; cv=none; b=bz6rSiVn0d9ALIm0e2lmXIU7NNssXDPBSz/tYzsOQ1gKBBgH3YBj8n9WPwWz+wwjoP66UU007XfF/jVcDQwMB9eZlJ0B2SMglYVfHMytfszELQUo7zmi3VKEa2eH9XUzmb41t7/6AIqg7/HkB3s62xasQBs3IpXUNbjJXBpxmqo=
+	t=1731356376; cv=none; b=i41mwx2giPiZR93huciRHwA5fC5YvXPVYawgaTwHJXUup2ZqysJ7aqr6wP0l0aRVGIeUPg5Vucfq/P0wjLJHFRUjVWaix0ciIN2XYgOgJD7fhkEUjTS/ObSb+V9SCaZm5WJ8StKAC5hL/mK4yFNP7qMP8/pBhqJIjuU0OjOqbkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731356371; c=relaxed/simple;
-	bh=ERxzpPq6+BTFpJlaeLsF9b18iaASUw1kO5vY91SqSo4=;
+	s=arc-20240116; t=1731356376; c=relaxed/simple;
+	bh=rBlo9msfCryQ8ECMKKeQafDSRsCFz5AQABc5DmNyuNU=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ScGxXrsd/eWxayUy9cpEV3Ta29IT6eGMHhcM6iYt4VxOSkyeLGsG9h3Mej1cNYVGHXiuFI32Niu3RneVyZNBAmrdNh0ZxmQuJTcjMrnVv1vVq2pxSLCUfyFrI3niZm9JmEBenjZiME6380Gnf4eyOJT9i0lsvB/8FRXX+SFVxH8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=gFeTXSrI; arc=none smtp.client-ip=209.85.222.177
+	 MIME-Version; b=JJ3qxuAjHQEsfVmwXDraQCEPi7yxLHhPA3eySkhpVWNRbGwzbB6N53KrmwHmrf+3DZaU6aiKqHM/e0OM3LT78OyDPyybCoPsx5hq1TCrab7odfPJ5lbrO6QaofFsuOSn1YjughxkPu14zYvDn89VXwomMd4cdZWxUvtYJtYXjZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=XJchjYSf; arc=none smtp.client-ip=209.85.167.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="gFeTXSrI"
-Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-7b1511697a5so337602685a.2
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 12:19:30 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="XJchjYSf"
+Received: by mail-oi1-f173.google.com with SMTP id 5614622812f47-3e6075cba82so2503702b6e.0
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 12:19:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731356369; x=1731961169; darn=vger.kernel.org;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731356374; x=1731961174; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=+z+eQ7oJzdE2umju6Fr1kTV7qg6yn6q+3nb8dNkk/ko=;
-        b=gFeTXSrIycX/TFRcG9ot3CIMqEwBusTzJfJ5IlbIaBWNxo73ZSRDM6BY9CvvyPoZyM
-         eLAFXVyKBRD3b0+qOVtLI13a8dkOqfedmLl3sAiOdQsEZwGWQJSETT39rFNTeSbzHpqp
-         0N2Gt3eQVJg5Br68idRqR7xojEwpK3qSyCdlI3TeoybosHon6M4V3iPCjf+UJ/VU79L2
-         OWXdRJ+iEsU+YMGxmjjOFG/vyOV/soHJ9lxJK11qd1EpI50x8fHAmQ+QE06XBLbKy0Bz
-         hhrlKYdYhuQrrIqxFWhhQ6u2LSjHkrsrkvKnVCwdj8lkl+W83wJIlghgvPcSdelSDHVI
-         MCgg==
+        bh=+nXKwcxfUzOePvYnZ4Bb/p4hYsf8sSP8uIyFDoaTPjc=;
+        b=XJchjYSfa/9PowqW3RlMTawvBnROQlaDWJU20vVRgXq2beysOhaYvcdTzqpbi14eFA
+         z0d0OV/DKoXz3LVc2CljEqrsiBB5ycM7QYq63lvQKXdofacLIBXBA51hZfGXCB7Y0t6Q
+         P3M+sie4FfoH0wMzYdLrk+MR1Q8+EvAXMCOQ470XfkRAr1lbcT83QU2wtyrfD6vBCHJb
+         t2/weZJ8rlVEi2KdP9mwM3foad0rMfQp+bx8TXI6vxDRRSgVp0EvD6Ek7LKdwUYjiDC1
+         1xSZtZzN4hbJhPoHCR6Iiig6YdIsw7VhjXkzypHMwlrCCc02b6kjvaURppQY9LBa4wdw
+         G0jg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731356369; x=1731961169;
+        d=1e100.net; s=20230601; t=1731356374; x=1731961174;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=+z+eQ7oJzdE2umju6Fr1kTV7qg6yn6q+3nb8dNkk/ko=;
-        b=M66o76Cv9qBQhGnGHyNhk+Y07kG2B5azKf4BWIGxM8Fm1hcGYia9U0Td50H2awV2G3
-         TpJeC2exEmbJqLQ0bfwBHsBOXjaaqmPv7k70DtTLc3XG//wfLtF9H9adD2cd9YZZTu0W
-         BZwFpZBHbqY7ziLp1rYxH70kn7FKe0rkOigDMmKFWZqgCkr+FVoFG+RgV92Bo7YJzNxx
-         hsbkYLoSxll6w075pOJmSe9ylFPUEkK3febXoRtzhv0O3dBYC2jaeMJaQ5DanvIZlCR6
-         USx6YRNkYPFTgXEUciyeT2OC3L97bJrTVwT1j/0t/386TLShvMlyJ3y2meG6q17HPXgz
-         YaqQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUK8qS/QcyOQm6s/sZx4icqOafnd0hKLnf/PJjj6P5ZH0xcp1zXIVgZnY6xidsff8IRYt5zTTYBFgw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxFC8VzLmImfElalL1Z0yeqZ2EkV86v7SngI/jMNoJeouI9Yr4D
-	Lu5kBUGd7z3PcEuMDg9ohOIM+oqkE5rT6ml66iUm3d2umjumTlkh7cW8jKkoL/g=
-X-Google-Smtp-Source: AGHT+IGms12DOLEJdB5bkW0IvqVA392HkoYhkn4Pg1bvSAHP7u5Zdmd/IqhCvTQbHrBd1gwbJKpdcw==
-X-Received: by 2002:a05:620a:179e:b0:7ac:9b5e:baf3 with SMTP id af79cd13be357-7b331eb4c7cmr2112662485a.26.1731356369095;
-        Mon, 11 Nov 2024 12:19:29 -0800 (PST)
+        bh=+nXKwcxfUzOePvYnZ4Bb/p4hYsf8sSP8uIyFDoaTPjc=;
+        b=awhLBml84SOZ2n8aKONss/5CLwar0Xgcs2x5xNXVXOO0njXtovOTtqSfkaUymdgi3+
+         9nLR9e9SSDGFFzipDG5sjQUE7Mh9ZB+STQQBCjismdTuFYhcVcQGASWbihQ8lW3w0OVL
+         hMcZCyeRYyOrQ3RPRjjx6VsC1QOT6p/ks9l3mM/d6xyo7SfH4tAbRxByfmellPv+L5m5
+         zVID33mjjBgI8SmPjJ2yuu+BwApcISVAaYNF/a8fk2g91/UYo5AB7Ii95IPdgMYpOYOl
+         uXGFDEO7ZzhoAq6OJsC300OWfZ2/ZYMFtuZQEmom4pN/d9n2+7pEYxxyeOytiQfYcyIj
+         HeBw==
+X-Forwarded-Encrypted: i=1; AJvYcCVGOAb5pt3SgvLpt48L/Wv8sWX4eVahboh/nZVNsPJf5E+s0wwp02NVN5szdJTbPWiKyxKBoYvZe04=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxsnrJD9HQlJDcTGY/wPC2yhvsjxsOAr5QkEJRUJqCoMrMMwjG3
+	faARaXSB0/X0iiRNdMsbSBAdGnX9bWm9mRt+vdZxs+YHCF9Oa/0ho1BFzKMrc5I=
+X-Google-Smtp-Source: AGHT+IHAntmNSKHnJiD7mii22aSouugOuv2LnJCY83E+/C/49mfb6yy9irDZkbJmhglaB0kAus4AaA==
+X-Received: by 2002:a05:6808:3a15:b0:3e6:943:63c9 with SMTP id 5614622812f47-3e79470a33cmr12285250b6e.33.1731356373743;
+        Mon, 11 Nov 2024 12:19:33 -0800 (PST)
 Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7b32acf7f31sm524104585a.129.2024.11.11.12.19.28
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6d3962089fesm63519156d6.61.2024.11.11.12.19.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Nov 2024 12:19:28 -0800 (PST)
+        Mon, 11 Nov 2024 12:19:33 -0800 (PST)
 From: Josef Bacik <josef@toxicpanda.com>
 To: kernel-team@fb.com,
 	linux-fsdevel@vger.kernel.org,
@@ -63,9 +63,9 @@ To: kernel-team@fb.com,
 	linux-btrfs@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-ext4@vger.kernel.org
-Subject: [PATCH v6 12/17] fanotify: disable readahead if we have pre-content watches
-Date: Mon, 11 Nov 2024 15:18:01 -0500
-Message-ID: <983e7415c8d083c7bee0d77e81c87b630f093170.1731355931.git.josef@toxicpanda.com>
+Subject: [PATCH v6 14/17] fsnotify: generate pre-content permission event on page fault
+Date: Mon, 11 Nov 2024 15:18:03 -0500
+Message-ID: <4046b63f054f5896c9c4c715180664eca1366ac1.1731355931.git.josef@toxicpanda.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1731355931.git.josef@toxicpanda.com>
 References: <cover.1731355931.git.josef@toxicpanda.com>
@@ -77,88 +77,137 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-With page faults we can trigger readahead on the file, and then
-subsequent faults can find these pages and insert them into the file
-without emitting an fanotify event.  To avoid this case, disable
-readahead if we have pre-content watches on the file.  This way we are
-guaranteed to get an event for every range we attempt to access on a
-pre-content watched file.
+FS_PRE_ACCESS or FS_PRE_MODIFY will be generated on page fault depending
+on the faulting method.
 
-Reviewed-by: Christian Brauner <brauner@kernel.org>
+This pre-content event is meant to be used by hierarchical storage
+managers that want to fill in the file content on first read access.
+
+Export a simple helper that file systems that have their own ->fault()
+will use, and have a more complicated helper to be do fancy things with
+in filemap_fault.
+
 Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 ---
- mm/filemap.c   | 12 ++++++++++++
- mm/readahead.c | 13 +++++++++++++
- 2 files changed, 25 insertions(+)
+ include/linux/mm.h |  1 +
+ mm/filemap.c       | 78 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 79 insertions(+)
 
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 61fff5d34ed5..bce9e2f5dfa4 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -3405,6 +3405,7 @@ extern vm_fault_t filemap_fault(struct vm_fault *vmf);
+ extern vm_fault_t filemap_map_pages(struct vm_fault *vmf,
+ 		pgoff_t start_pgoff, pgoff_t end_pgoff);
+ extern vm_fault_t filemap_page_mkwrite(struct vm_fault *vmf);
++extern vm_fault_t filemap_fsnotify_fault(struct vm_fault *vmf);
+ 
+ extern unsigned long stack_guard_gap;
+ /* Generic expand stack which grows the stack according to GROWS{UP,DOWN} */
 diff --git a/mm/filemap.c b/mm/filemap.c
-index 56fa431c52af..fc36a00fa014 100644
+index fc36a00fa014..aa3c92d605b4 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
-@@ -3149,6 +3149,14 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
- 	unsigned long vm_flags = vmf->vma->vm_flags;
- 	unsigned int mmap_miss;
- 
-+	/*
-+	 * If we have pre-content watches we need to disable readahead to make
-+	 * sure that we don't populate our mapping with 0 filled pages that we
-+	 * never emitted an event for.
-+	 */
-+	if (fsnotify_file_has_pre_content_watches(file))
-+		return fpin;
-+
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
- 	/* Use the readahead code, even if readahead is disabled */
- 	if ((vm_flags & VM_HUGEPAGE) && HPAGE_PMD_ORDER <= MAX_PAGECACHE_ORDER) {
-@@ -3217,6 +3225,10 @@ static struct file *do_async_mmap_readahead(struct vm_fault *vmf,
- 	struct file *fpin = NULL;
- 	unsigned int mmap_miss;
- 
-+	/* See comment in do_sync_mmap_readahead. */
-+	if (fsnotify_file_has_pre_content_watches(file))
-+		return fpin;
-+
- 	/* If we don't want any read-ahead, don't bother */
- 	if (vmf->vma->vm_flags & VM_RAND_READ || !ra->ra_pages)
- 		return fpin;
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 3dc6c7a128dd..9fe678cceba8 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -128,6 +128,7 @@
- #include <linux/blk-cgroup.h>
- #include <linux/fadvise.h>
+@@ -47,6 +47,7 @@
+ #include <linux/splice.h>
+ #include <linux/rcupdate_wait.h>
  #include <linux/sched/mm.h>
 +#include <linux/fsnotify.h>
- 
+ #include <asm/pgalloc.h>
+ #include <asm/tlbflush.h>
  #include "internal.h"
+@@ -3287,6 +3288,52 @@ static vm_fault_t filemap_fault_recheck_pte_none(struct vm_fault *vmf)
+ 	return ret;
+ }
  
-@@ -544,6 +545,14 @@ void page_cache_sync_ra(struct readahead_control *ractl,
- 	unsigned long max_pages, contig_count;
- 	pgoff_t prev_index, miss;
- 
++/**
++ * filemap_fsnotify_fault - maybe emit a pre-content event.
++ * @vmf:	struct vm_fault containing details of the fault.
++ * @folio:	the folio we're faulting in.
++ *
++ * If we have a pre-content watch on this file we will emit an event for this
++ * range.  If we return anything the fault caller should return immediately, we
++ * will return VM_FAULT_RETRY if we had to emit an event, which will trigger the
++ * fault again and then the fault handler will run the second time through.
++ *
++ * This is meant to be called with the folio that we will be filling in to make
++ * sure the event is emitted for the correct range.
++ *
++ * Return: a bitwise-OR of %VM_FAULT_ codes, 0 if nothing happened.
++ */
++vm_fault_t filemap_fsnotify_fault(struct vm_fault *vmf)
++{
++	struct file *fpin = NULL;
++	int mask = (vmf->flags & FAULT_FLAG_WRITE) ? MAY_WRITE : MAY_ACCESS;
++	loff_t pos = vmf->pgoff >> PAGE_SHIFT;
++	size_t count = PAGE_SIZE;
++	vm_fault_t ret;
++
 +	/*
-+	 * If we have pre-content watches we need to disable readahead to make
-+	 * sure that we don't find 0 filled pages in cache that we never emitted
-+	 * events for.
++	 * We already did this and now we're retrying with everything locked,
++	 * don't emit the event and continue.
 +	 */
-+	if (ractl->file && fsnotify_file_has_pre_content_watches(ractl->file))
-+		return;
++	if (vmf->flags & FAULT_FLAG_TRIED)
++		return 0;
 +
- 	/*
- 	 * Even if readahead is disabled, issue this request as readahead
- 	 * as we'll need it to satisfy the requested range. The forced
-@@ -622,6 +631,10 @@ void page_cache_async_ra(struct readahead_control *ractl,
- 	if (!ra->ra_pages)
- 		return;
- 
-+	/* See the comment in page_cache_sync_ra. */
-+	if (ractl->file && fsnotify_file_has_pre_content_watches(ractl->file))
-+		return;
++	/* No watches, we're done. */
++	if (!fsnotify_file_has_pre_content_watches(vmf->vma->vm_file))
++		return 0;
 +
- 	/*
- 	 * Same bit is used for PG_readahead and PG_reclaim.
++	fpin = maybe_unlock_mmap_for_io(vmf, fpin);
++	if (!fpin)
++		return VM_FAULT_SIGBUS;
++
++	ret = fsnotify_file_area_perm(fpin, mask, &pos, count);
++	fput(fpin);
++	if (ret)
++		return VM_FAULT_SIGBUS;
++	return VM_FAULT_RETRY;
++}
++EXPORT_SYMBOL_GPL(filemap_fsnotify_fault);
++
+ /**
+  * filemap_fault - read in file data for page fault handling
+  * @vmf:	struct vm_fault containing details of the fault
+@@ -3390,6 +3437,37 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)
+ 	 * or because readahead was otherwise unable to retrieve it.
  	 */
+ 	if (unlikely(!folio_test_uptodate(folio))) {
++		/*
++		 * If this is a precontent file we have can now emit an event to
++		 * try and populate the folio.
++		 */
++		if (!(vmf->flags & FAULT_FLAG_TRIED) &&
++		    fsnotify_file_has_pre_content_watches(file)) {
++			loff_t pos = folio_pos(folio);
++			size_t count = folio_size(folio);
++
++			/* We're NOWAIT, we have to retry. */
++			if (vmf->flags & FAULT_FLAG_RETRY_NOWAIT) {
++				folio_unlock(folio);
++				goto out_retry;
++			}
++
++			if (mapping_locked)
++				filemap_invalidate_unlock_shared(mapping);
++			mapping_locked = false;
++
++			folio_unlock(folio);
++			fpin = maybe_unlock_mmap_for_io(vmf, fpin);
++			if (!fpin)
++				goto out_retry;
++
++			error = fsnotify_file_area_perm(fpin, MAY_ACCESS, &pos,
++							count);
++			if (error)
++				ret = VM_FAULT_SIGBUS;
++			goto out_retry;
++		}
++
+ 		/*
+ 		 * If the invalidate lock is not held, the folio was in cache
+ 		 * and uptodate and now it is not. Strange but possible since we
 -- 
 2.43.0
 
