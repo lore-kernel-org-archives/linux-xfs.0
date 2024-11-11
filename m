@@ -1,118 +1,75 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DDF017F7
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 02:16:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F87718E1F
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 05:45:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731291367; cv=none; b=JuLLNEkZUQR6xxhQ5pvQCHodu/8kEKiw7wsa64GowdKcolzATYzWOh2Ybe/w2mORPNSxLHBNA9xPECya/aXWM3EAdk2jw1bz1GzDJFyvKa/9uOxcCjcCaIbvlkyV/dMX9moA9qKzqDfFEbZIzkvcC1ngq+6RlL4cMOouzcFODZo=
+	t=1731303925; cv=none; b=NwiXyxR6c7Cwrl20AGb39q36414UJdIbkeJFRpb/GQuZI5jMJ8AxcZflIt22zGI4gb6bOMelfMV3kiqV0AoltYVmqxSp60HL1O9MrVgTSfFNBdlh+Wjf3pNf6jFAbvXh+hhydBgFRxw4sCepE5uO1KkAUI66m3TXhbiJQnp5Er0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731291367; c=relaxed/simple;
-	bh=UpLygm05GUQy+iPLOZcJEsnhb5R7brPWCguqTWSsDmY=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sXEOkrnXUMJ7O2KpJIIYUN1wFbh4yYUqDhUUHQJPbTucFSsCXnaJYCR9kJimgmaZW9iAMIFjqbG+5knCxHv5+mUwRe9BVgp//wcfzqgS/JxTMYXQ7TO5+tyfLnS72qHBC4ZxWzWx+5Pyr+lVHGe8qcOp2yYnlDHdFZLqzaPTILw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4XmtQZ13s9z2DgwS;
-	Mon, 11 Nov 2024 10:14:14 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2C03C14011F;
-	Mon, 11 Nov 2024 10:16:01 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 11 Nov
- 2024 10:16:00 +0800
-Date: Mon, 11 Nov 2024 10:14:55 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <cem@kernel.org>, <linux-xfs@vger.kernel.org>, <david@fromorbit.com>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
-Subject: Re: [PATCH] xfs: remove unknown compat feature check in superblock
- write validation
-Message-ID: <ZzFon-0VbKscbGMT@localhost.localdomain>
-References: <20241021012549.875726-1-leo.lilong@huawei.com>
- <Zy8Rj7eISiraFIha@localhost.localdomain>
- <20241109162124.GA9438@frogsfrogsfrogs>
+	s=arc-20240116; t=1731303925; c=relaxed/simple;
+	bh=ABvcLSvUsznlB9q2JnzrMgWRq0R7QBqJDoRrCctewfM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qFGo/TKG3gmkYaS5AR+1yVzzWA4WmpgZUsh2S5hsqahhbjZDZFV709rQxvqHobJxjOv8dTII69EWnELDloIUGAnWsFpWkLw13fg3KmXCH94FiH0rjdKRHUO2ovcMcRYnR4M9ecPSlSDtufy2VBjVFTTEAvL5TGoBZvlYIiKUIJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=sm65iAc7; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sm65iAc7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=ZgwJAAwDN2m/WVr4TzWEo4/v7goxWkVljK9zhm5160c=; b=sm65iAc7RjKLwoEN8aT8deYPfM
+	ewutxDKHK8auPgTjTiV4FrY5FtMlnFqaleNIzgdZeK4PfXOTeMzCspjBgWjky5tG7acSPUGzCFEQt
+	fMfG045c9fMfeHvLAA4+TzwepJ/1cT/ebhJZdInM5JCP7x+cS3DRUeQfdhWGfb2F44IOysPPQC3tl
+	w8Nr257tfnMTesguzfSR66pOIIp4aA97PXTsdmgE6fKb+Pc2wSYMvoGk65JM3mY5cVkQ095RthwVs
+	PyrAwnTPIBen8MT7qSMuvb7ndKvoZzT8+/AuZQuZt/8idWiJdp4ZbwavG9/ZKmmgFUc3rQS1GBeNW
+	8kJWsQDA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tANEl-0000000GPte-3b9d;
+	Mon, 11 Nov 2024 05:45:20 +0000
+Date: Sun, 10 Nov 2024 21:45:19 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Long Li <leo.lilong@huawei.com>
+Cc: Christoph Hellwig <hch@infradead.org>, djwong@kernel.org,
+	cem@kernel.org, brauner@kernel.org, linux-xfs@vger.kernel.org,
+	david@fromorbit.com, yi.zhang@huawei.com, houtao1@huawei.com,
+	yangerkun@huawei.com, lonuxli.64@gmail.com
+Subject: Re: [PATCH] iomap: fix zero padding data issue in concurrent append
+ writes
+Message-ID: <ZzGZ76Qy7mCZo8a3@infradead.org>
+References: <20241108122738.2617669-1-leo.lilong@huawei.com>
+ <Zy4mW6r3rjMEsNir@infradead.org>
+ <Zy8Lsee7EDodz5Xk@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241109162124.GA9438@frogsfrogsfrogs>
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+In-Reply-To: <Zy8Lsee7EDodz5Xk@localhost.localdomain>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sat, Nov 09, 2024 at 08:21:24AM -0800, Darrick J. Wong wrote:
-> On Sat, Nov 09, 2024 at 03:38:55PM +0800, Long Li wrote:
-> > 
-> > Friendly Ping ...
-> 
-> Sorry about that, I missed this one.
-> 
-> > On Mon, Oct 21, 2024 at 09:25:49AM +0800, Long Li wrote:
-> > > Compat features are new features that older kernels can safely ignore,
-> > > allowing read-write mounts without issues. The current sb write validation
-> > > implementation returns -EFSCORRUPTED for unknown compat features,
-> > > preventing filesystem write operations and contradicting the feature's
-> > > definition.
-> > > 
-> > > Additionally, if the mounted image is unclean, the log recovery may need
-> > > to write to the superblock. Returning an error for unknown compat features
-> > > during sb write validation can cause mount failures.
-> > > 
-> > > Although XFS currently does not use compat feature flags, this issue
-> > > affects current kernels' ability to mount images that may use compat
-> > > feature flags in the future.
-> > > 
-> > > Since superblock read validation already warns about unknown compat
-> > > features, it's unnecessary to repeat this warning during write validation.
-> > > Therefore, the relevant code in write validation is being removed.
-> > > 
-> 
-> You might want to add this so it actually gets backported:
-> 
-> Cc: <stable@vger.kernel.org> # v4.19
-> 
-
-Thanks for your review, indeed, it should backport to v4.19+.
-
-> > > Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superblock write verifier")
-> > > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> 
-> Makes sense, so
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> --D
-> 
-> > > ---
-> > >  fs/xfs/libxfs/xfs_sb.c | 7 -------
-> > >  1 file changed, 7 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > > index d95409f3cba6..02ebcbc4882f 100644
-> > > --- a/fs/xfs/libxfs/xfs_sb.c
-> > > +++ b/fs/xfs/libxfs/xfs_sb.c
-> > > @@ -297,13 +297,6 @@ xfs_validate_sb_write(
-> > >  	 * the kernel cannot support since we checked for unsupported bits in
-> > >  	 * the read verifier, which means that memory is corrupt.
-> > >  	 */
-> > > -	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
-> > > -		xfs_warn(mp,
-> > > -"Corruption detected in superblock compatible features (0x%x)!",
-> > > -			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
-> > > -		return -EFSCORRUPTED;
-> > > -	}
-> > > -
-> > >  	if (!xfs_is_readonly(mp) &&
-> > >  	    xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-> > >  		xfs_alert(mp,
-> > > -- 
-> > > 2.39.2
-> > > 
+On Sat, Nov 09, 2024 at 03:13:53PM +0800, Long Li wrote:
+> > Oh, interesting one.  Do you have a reproducer we could wire up
+> > to xfstests?
 > > 
 > 
+> Yes, I have a simple reproducer, but it would require significant
+> work to incorporate it into xfstestis.
+
+Can you at least shared it?  We might be able to help turning it into
+a test.
+
+> If we only use one size record, we can remove io_size and keep only
+> io_end to record the tail end of valid file data in ioend. Meanwhile,
+> we can add a wrapper function iomep_ioend_iosize() to get the extent
+> size of ioend, replacing the existing ioend->io_size. Would this work?
+
+I'd probably still use offset + size to avoid churn because it feels
+more natural and causes less churn, but otherwise this sounds good to
+me.
+
