@@ -1,75 +1,73 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41ADC19C56D;
-	Mon, 11 Nov 2024 12:13:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E570A185E53;
+	Mon, 11 Nov 2024 13:37:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731327227; cv=none; b=FuJ2tuDNwkDRJTEdXt3+xUO69lFE3TJJ0Xhf1o5qn6kzQ/Zo6fKl20hNbNFtL7tM7CUHZRI5SPXRLJKtmpnCj+OkzFbGrnIqoEuIOUlJcbcFRPuilCnnTZlZcvGl84PtLyzhXMcWpDKsb6O7R10STUASYc+Srv//jy/+drbAU+I=
+	t=1731332223; cv=none; b=OflcV7nB95pIsBBmd9fEExJWtWU7sMwq9pJOv00Ty4UhoJwaQQ9YRnOJbUgw+bE6E4U0/RQ7JC1Is2lV2zLDXcWVkjKoKBuncxzrOpGlV58KbkIWrAS89qKy8R6nJw4HjZjR2wm5zSEL7t6APwM2q8ykq3odzYtuROyXc5QHzr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731327227; c=relaxed/simple;
-	bh=gBQVEUfuGWGDr5d4kA8rz0t0KWrkq1mOGEvyfZsnzaQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NfO9aXHUQjEeh+c9NA7q9r154W6m4pS+THHUx8iXhrBTomyRscggHOb1NJnA9xSYYfC/l0g95abCnCYdMG68RLGZnVbDG/k5nBpoqjURx+Qe4ZsijYPs/I9oCQ5zdPkX/KK86gr6csJIjzN3qEa1FwTJbqdvzFsCbeBpW7UX7Rg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UFTiOrI5; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1731332223; c=relaxed/simple;
+	bh=A5CG6usmJNcoG1nt5QQKCrQDep0s4f7nVGEcg/qKBSw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=B3QqDs4wVaHp525/0bLElzj0btyVUlN0MAK6vqOWtolLppmHAc6PCke0o6xaKXic5ABaEq5xAlQ4UUH4axcunxVE3hpHX2txKDZaQ1asudqMn3Uapu3GTKSRwVU+UoyH7EL/XqdllO2jELnOOpsR59QdA9vQR3+RufTqtg7CJ5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XyYRYbfc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UFTiOrI5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=3+AEn+zfjevbB39dEhh/UvtraX2Que2xQcTnsUzqyzA=; b=UFTiOrI5EumtXb8vf0W0uLLr6B
-	0+DFxfc1l6rDQPSxNk+BnUlXkJshaX/Lab4P6WMC7/mCJ31UXiH0N3Ei0O82sPX+TRotItn2msn/i
-	2U30tO9B99UFRCvuMWyhQuZ3okCrDymEnOfLlACxBjGHNMbJqgua4GuQQkcEAo9sEbr9hLqNgA7oR
-	8P2VPGWrdMgpdHwetIqcL7IwPWm1AHtUf32iZawDdJi0olW5V/ImL5/2o4xWTYkcFOADJMVsE8sdt
-	6VjvaVXIzX70EtygKPzoK0LI/SOwdpD2PDWxst1utBZV0sohBH4oPGL9GiSNPpKhBbnwlCve2Bfox
-	djRRhTmA==;
-Received: from 2a02-8389-2341-5b80-87d4-3858-08b4-a7a1.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:87d4:3858:8b4:a7a1] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tATId-0000000HYng-41Js;
-	Mon, 11 Nov 2024 12:13:44 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: brauner@kernel.org
-Cc: djwong@kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XyYRYbfc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA174C4CECF;
+	Mon, 11 Nov 2024 13:37:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731332222;
+	bh=A5CG6usmJNcoG1nt5QQKCrQDep0s4f7nVGEcg/qKBSw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=XyYRYbfclfmbrr/E4ZTLuBq7N+uXSHAG460VRUNwngj2yRfB8iM/EoxBdnN3yx5CO
+	 nZQxmbeTITxVn/eVMxwpCvTYf3mMq1GXaan9SrcAL1R1RziPwVldQCG6XGAD7vJ9yL
+	 yjJXCfGSVGhv4OnysyiM3spQiBkhFVT8tpVOnVYF25k/wLQxpH4AOkm0TbRpgPPfIM
+	 /PGcg9phHjV6OLMG+OOr6D5phiyziQ6PLsv2L2m3CJ0YEcDWlm8zLA9lpoalWZifNk
+	 1Op233lbJcwIXLgqYZDXWM7GsF9NcVcc6WUi0ey47wsMfYcGtl2l1Jbk/Zc83Ql9Bu
+	 vbxaLyMGr4AWw==
+From: Christian Brauner <brauner@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	djwong@kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH] iomap: drop an obsolete comment in iomap_dio_bio_iter
-Date: Mon, 11 Nov 2024 13:13:40 +0100
-Message-ID: <20241111121340.1390540-1-hch@lst.de>
+Subject: Re: [PATCH] iomap: drop an obsolete comment in iomap_dio_bio_iter
+Date: Mon, 11 Nov 2024 14:36:52 +0100
+Message-ID: <20241111-unpolitisch-stutzen-a925132be48f@brauner>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20241111121340.1390540-1-hch@lst.de>
+References: <20241111121340.1390540-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=928; i=brauner@kernel.org; h=from:subject:message-id; bh=A5CG6usmJNcoG1nt5QQKCrQDep0s4f7nVGEcg/qKBSw=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQbcZTPF+7qVzz4XfzDz39P5wgerwss/nN0YzRXcL7E7 s/nbD4d7ChlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiIQAEjw28ekc5Azs3HPYR/ rlh95KfxsiMclzU3acuuyEuY6TOR8Sgjw3fnJZNMP3X6MiyMF+vWM34yq/f7i/hZzBm+e/c9Cbi 9kB0A
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-No more zone append special casing in iomap for quite a while.
+On Mon, 11 Nov 2024 13:13:40 +0100, Christoph Hellwig wrote:
+> No more zone append special casing in iomap for quite a while.
+> 
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/direct-io.c | 5 -----
- 1 file changed, 5 deletions(-)
+Applied to the vfs.untorn.writes branch of the vfs/vfs.git tree.
+Patches in the vfs.untorn.writes branch should appear in linux-next soon.
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index ed4764e3b8f0..b521eb15759e 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -383,11 +383,6 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 			goto out;
- 	}
- 
--	/*
--	 * Set the operation flags early so that bio_iov_iter_get_pages
--	 * can set up the page vector appropriately for a ZONE_APPEND
--	 * operation.
--	 */
- 	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
- 
- 	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
--- 
-2.45.2
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.untorn.writes
+
+[1/1] iomap: drop an obsolete comment in iomap_dio_bio_iter
+      https://git.kernel.org/vfs/vfs/c/54079430c5db
