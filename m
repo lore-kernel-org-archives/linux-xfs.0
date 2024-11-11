@@ -1,43 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E570A185E53;
-	Mon, 11 Nov 2024 13:37:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3AE01A0704
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 14:17:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731332223; cv=none; b=OflcV7nB95pIsBBmd9fEExJWtWU7sMwq9pJOv00Ty4UhoJwaQQ9YRnOJbUgw+bE6E4U0/RQ7JC1Is2lV2zLDXcWVkjKoKBuncxzrOpGlV58KbkIWrAS89qKy8R6nJw4HjZjR2wm5zSEL7t6APwM2q8ykq3odzYtuROyXc5QHzr4=
+	t=1731334673; cv=none; b=Fa6Qb/FW/bdtLaEE/3ZM6d4fvEHAQAsi7lTx2ax363XMA5DoXiSeq52TdynYym3dQwJy7WZyWfnQq5Rq2MDWagbWJpcq29AaZIacDgV69cucyVziTBtRiBSneHpxxgGDS58ih3M66pZ8zCdCtlk79scjTTBu5lvnSzrRqfpslFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731332223; c=relaxed/simple;
-	bh=A5CG6usmJNcoG1nt5QQKCrQDep0s4f7nVGEcg/qKBSw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B3QqDs4wVaHp525/0bLElzj0btyVUlN0MAK6vqOWtolLppmHAc6PCke0o6xaKXic5ABaEq5xAlQ4UUH4axcunxVE3hpHX2txKDZaQ1asudqMn3Uapu3GTKSRwVU+UoyH7EL/XqdllO2jELnOOpsR59QdA9vQR3+RufTqtg7CJ5g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XyYRYbfc; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XyYRYbfc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA174C4CECF;
-	Mon, 11 Nov 2024 13:37:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731332222;
-	bh=A5CG6usmJNcoG1nt5QQKCrQDep0s4f7nVGEcg/qKBSw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=XyYRYbfclfmbrr/E4ZTLuBq7N+uXSHAG460VRUNwngj2yRfB8iM/EoxBdnN3yx5CO
-	 nZQxmbeTITxVn/eVMxwpCvTYf3mMq1GXaan9SrcAL1R1RziPwVldQCG6XGAD7vJ9yL
-	 yjJXCfGSVGhv4OnysyiM3spQiBkhFVT8tpVOnVYF25k/wLQxpH4AOkm0TbRpgPPfIM
-	 /PGcg9phHjV6OLMG+OOr6D5phiyziQ6PLsv2L2m3CJ0YEcDWlm8zLA9lpoalWZifNk
-	 1Op233lbJcwIXLgqYZDXWM7GsF9NcVcc6WUi0ey47wsMfYcGtl2l1Jbk/Zc83Ql9Bu
-	 vbxaLyMGr4AWw==
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	djwong@kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: drop an obsolete comment in iomap_dio_bio_iter
-Date: Mon, 11 Nov 2024 14:36:52 +0100
-Message-ID: <20241111-unpolitisch-stutzen-a925132be48f@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241111121340.1390540-1-hch@lst.de>
-References: <20241111121340.1390540-1-hch@lst.de>
+	s=arc-20240116; t=1731334673; c=relaxed/simple;
+	bh=1mhtz2nH32HjuTBO3LQJmSFXzsrOenTZ63qBFtxtZlE=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=htsi4KWNPWqoMoy5O7OxkszgBmF6zN2LnP0k92O4IfBhfMP7T4TXEVnVxsoBKgPMWTFnIerdoNPA6ouIkGuZqOLv9vrW7r5Qtm4BvLjp1sjZP2akahzVKdFMJJWy3IbSLUdPFIRJwWqeK4cHWPj6+6j4fcrO9VtljxeptDCGe1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4XnBRM1pXnz1hwP1;
+	Mon, 11 Nov 2024 22:15:59 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7A0C01A016C;
+	Mon, 11 Nov 2024 22:17:47 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 11 Nov
+ 2024 22:17:47 +0800
+Date: Mon, 11 Nov 2024 22:16:40 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Christoph Hellwig <hch@infradead.org>
+CC: <djwong@kernel.org>, <cem@kernel.org>, <brauner@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <yangerkun@huawei.com>, <lonuxli.64@gmail.com>
+Subject: Re: [PATCH] iomap: fix zero padding data issue in concurrent append
+ writes
+Message-ID: <ZzIRyA8DtxLcs_vO@localhost.localdomain>
+References: <20241108122738.2617669-1-leo.lilong@huawei.com>
+ <Zy4mW6r3rjMEsNir@infradead.org>
+ <Zy8Lsee7EDodz5Xk@localhost.localdomain>
+ <ZzGZ76Qy7mCZo8a3@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,29 +44,114 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=928; i=brauner@kernel.org; h=from:subject:message-id; bh=A5CG6usmJNcoG1nt5QQKCrQDep0s4f7nVGEcg/qKBSw=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaQbcZTPF+7qVzz4XfzDz39P5wgerwss/nN0YzRXcL7E7 s/nbD4d7ChlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiIQAEjw28ekc5Azs3HPYR/ rlh95KfxsiMclzU3acuuyEuY6TOR8Sgjw3fnJZNMP3X6MiyMF+vWM34yq/f7i/hZzBm+e/c9Cbi 9kB0A
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Disposition: inline
+In-Reply-To: <ZzGZ76Qy7mCZo8a3@infradead.org>
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Mon, 11 Nov 2024 13:13:40 +0100, Christoph Hellwig wrote:
-> No more zone append special casing in iomap for quite a while.
+On Sun, Nov 10, 2024 at 09:45:19PM -0800, Christoph Hellwig wrote:
+> On Sat, Nov 09, 2024 at 03:13:53PM +0800, Long Li wrote:
+> > > Oh, interesting one.  Do you have a reproducer we could wire up
+> > > to xfstests?
+> > > 
+> > 
+> > Yes, I have a simple reproducer, but it would require significant
+> > work to incorporate it into xfstestis.
 > 
+> Can you at least shared it?  We might be able to help turning it into
+> a test.
 > 
 
-Applied to the vfs.untorn.writes branch of the vfs/vfs.git tree.
-Patches in the vfs.untorn.writes branch should appear in linux-next soon.
+At first, we used the following script to find the problem, but it was
+difficult to reproduce the problem, run test.sh after system startup.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+--------------------filesystem.sh---------------------
+#!/bin/bash
+index=$1
+value=$2
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+while true; do
+    echo "$value" >> /mnt/fs_"$index"/file1
+    echo "$value" >> /mnt/fs_"$index"/file2
+    cp /mnt/fs_"$index"/file1 /mnt/fs_"$index"/file3
+    cat /mnt/fs_"$index"/file1 /mnt/fs_"$index"/file2
+    mv /mnt/fs_"$index"/file3 /mnt/fs_"$index"/file1
+done
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+--------------------test.sh--------------------------
+#!/bin/bash
+mount /dev/sda /mnt
+cat -v /mnt/* | grep @
+if [ $? == 0 ] ;then
+        echo "find padding data"
+        exit 1
+fi
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.untorn.writes
+sh -x filesystem.sh 1 1111 &>/dev/null &
+sh -x filesystem.sh 1 2222 &>/dev/null &
+sh -x filesystem.sh 1 3333 &>/dev/null &
+sleep $(($RANDOM%30))
+echo "reboot..."
+echo b > /proc/sysrq-trigger
+------------------------------------------------------
 
-[1/1] iomap: drop an obsolete comment in iomap_dio_bio_iter
-      https://git.kernel.org/vfs/vfs/c/54079430c5db
+I later reproduce it by adding a delay to the kernel code
+and verified the fixed patch. 
+
+1) add some sleep in xfs_end_ioend
+
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -130,8 +130,10 @@ xfs_end_ioend(
+        else if (ioend->io_type == IOMAP_UNWRITTEN)
+                error = xfs_iomap_write_unwritten(ip, offset, size, false);
+ 
+-       if (!error && xfs_ioend_is_append(ioend))
++       if (!error && xfs_ioend_is_append(ioend)) {
++               msleep(30000);
+                error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
++       }
+ done:
+        iomap_finish_ioends(ioend, error);
+        memalloc_nofs_restore(nofs_flag);
+
+
+2) run rep.sh and reboot system
+-----------------------rep.sh-------------------------
+#!/bin/bash
+
+mkfs.xfs -f /dev/sda
+mount /dev/sda /mnt/test
+touch /mnt/test/file
+xfs_io -c "pwrite 0 20 -S 0x31" /mnt/test/file
+sync &
+sleep 5
+
+echo 100000 > /proc/sys/vm/dirty_writeback_centisecs
+echo 100000 > /proc/sys/vm/dirty_expire_centisecs
+xfs_io -c "pwrite 20 20 -S 0x31" /mnt/test/file 
+sleep 40
+
+echo b > /proc/sysrq-trigger
+------------------------------------------------------
+
+3) after reboot, check file.
+
+mount /dev/sda /mnt/test
+cat -v /mnt/test/file | grep @
+
+> > If we only use one size record, we can remove io_size and keep only
+> > io_end to record the tail end of valid file data in ioend. Meanwhile,
+> > we can add a wrapper function iomep_ioend_iosize() to get the extent
+> > size of ioend, replacing the existing ioend->io_size. Would this work?
+> 
+> I'd probably still use offset + size to avoid churn because it feels
+> more natural and causes less churn, but otherwise this sounds good to
+> me.
+> 
+
+Ok, I got it. However, we need to change the meaning of "io_size" to
+the size of the valid file data in ioend.
+
+Thanks,
+Long Li
