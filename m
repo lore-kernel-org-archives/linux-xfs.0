@@ -1,320 +1,248 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25D5C19CC0C;
-	Mon, 11 Nov 2024 20:27:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBE9C15539F
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 21:43:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731356849; cv=none; b=uLtHCpgXHObMCW882SHQN8FK9ixFIZ3dcK1iSjRpmW55i1QF4hmJ9Vx+v19UGNBHBPlnUazGwiNkziikphuwAt/JDlz6tgk4V/1PyEifEshp263gY1ksjrFxqGgP+Obf5wTHf9N84cmmfzn0nnVcWP32Wndyoc0GB7J2gw6tuMQ=
+	t=1731361388; cv=none; b=nFkeP5HJBTIFKzK5sgBhw0RF7HzNQrJuy7Uilo6kwfh9EUP9lckJsIY1TBnIEmEftjmNvbRIuJebhmWdnWFo0UiRTKAUC+RT3pCcLN9R9YYyHIDQ/RW5OoQy//bAX2Qddl/WualAWW+WAOOyYEUyzlibPHG0LA+4VTHPGLWzttw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731356849; c=relaxed/simple;
-	bh=ewhC3vF3LWIoycpEaD/sb388FFWGUOEk/tHs10zyeA0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Dc+F6LBh1whnYnTad9hFJSSUVsA8I7war+U47IkzrqxgclQf4rpHJDqADxHZmK6QebhnlP40eMRpQhJD6SBReMIQ42JgknvJnesrane8G2+RyQXk0Gmydh7OsS15BjnLsjqubSazM8muMdT2Y5O+LOmidZIsjCUSLHopCQIswWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kAt4bhwp; arc=none smtp.client-ip=209.85.161.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1731361388; c=relaxed/simple;
+	bh=odQroCdwTCKLYtwaR2rxJc47qGlAiq2iX6Lv8IWGCTM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RYYCXd2bLGxxeHlQDyVz6bli9wYMhXVYRo/dK+/vlnBUghZS7nKqzb4ApOe3jsGOne2oQBLenuNORsj3VFojr7rBmKgttNLPij0HirDg0Thu1x5QTT36ha+wipHkG9h3VoJOLV03NO3WXQFCMnrPK2tezXxfENCy6iFPeTY4hII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKOMzuNS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kAt4bhwp"
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5ee3e12b191so2057720eaf.0;
-        Mon, 11 Nov 2024 12:27:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731356845; x=1731961645; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=c9QaPRaGh7bw5bqPaGITtEPnNR2LGGuZCaS4WqMgl5c=;
-        b=kAt4bhwpLEPJ/4L9IDM6Y2nygmw4qzU7ocJipRKaLCMvbOo9VjnyjgcUZCfspVzPw/
-         GrdnXB9/v0KfBQTFbmvB0+HgotW+DJKrAnwSKEpBxLkeOC5uUy9L5B5Cy4GckkXPR4Sr
-         QMsLSO5vg0d7MwULp3/lmI/mRqmB904j/VDZe5Ndh6tp1C9O/gwBgOVWI0uNxn2J3Nze
-         UtsXl57WgrFE4vSncSedPTMtmoaKwfKhmhzRPZehG+0Zzi3p5C3vgsCGIfOySEn+DGhe
-         PaoYfs4pl/AdNxJQj5xX72sqSZ7o/1+JbMVnd2vyEN9zz9LfAqPF+MjMUnqUY7oVYxMg
-         pH9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731356845; x=1731961645;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=c9QaPRaGh7bw5bqPaGITtEPnNR2LGGuZCaS4WqMgl5c=;
-        b=DIezBNupcBucLyMxrfwhm9iviLWpidT+av3Tu6fc96UbtmXC8P3jrEDins1At3IXt3
-         z9wkj3PKdhgJHJuHysF+8mdHQ8dXb9HattK4SvxNh5WdRGr5M3wSS9ZKJbxra71DGiHM
-         WxqwqUg3fbA+2dyj5rmJtB9c48zFT23XbWcF4ba2b48VHiiVKzxRSgpmSDye8rSTi6MB
-         MknOhKiLtzJBG20QmQEnM8yz8QJx0oQzBpFrtDHEqPZBCPuJOOW4ZoCO0I6DE5CLDGI0
-         a25SdbuwCf+90GVwnoqsMoYCUoRd5DfUK+ph69zveQpf+T1+pEs7taMu8bv+Hzm03mbi
-         4vmw==
-X-Forwarded-Encrypted: i=1; AJvYcCVI0pQ1iQv9DJec9xbX1+U3kVXv0RtogPMy1DkAFpobmlmR3wFkhXbxRLfreRNER54a9Hw4ZJ0/YE0nFXbnAw==@vger.kernel.org, AJvYcCVqDKdnRs3P2T2no5+6Bh0DGBNixq1GB8oaaGAlrcjMpretO7vJFKP9mnB/XLkpGO2fh+mtCLSKSLB9@vger.kernel.org, AJvYcCW01Juz/nCddPNQF6EEDwu2N1yO7OyDFx1ye8+RhoItzJj/9eUtJ6pyig0k0sgDEe3lJVLWJHWy8FY/uQ==@vger.kernel.org, AJvYcCXiPYJnxtPoCuzui0zs8sYNIMWhWtxrdwcr2n8qdXRID8+HyC5YWuoQadxozobznUSTfNZX/bG4xB0x4Q==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxH8e/4jGgaipzXyR0z+xVuRXzzMxllTMvDqjTJ2WmeMTuG0yBl
-	5+C8kvZvdnkeKsO28C6naPwtRyJ91FUuGZw0tCDwkEjBCSbKnNect4qLvlq3kh+vVCt9cEFq6u9
-	pubWXaKCnLYLdLi4nROpmVKwmyw4=
-X-Google-Smtp-Source: AGHT+IEoThJIKWhSy1sVjVdrSYHS9PPvCysBXmyjm3/91owWrpCqZeqALU/ivnY0aIfruV13lp3Y2ax4AW9B7wKddTQ=
-X-Received: by 2002:a05:6358:4b50:b0:1bc:2d00:84ad with SMTP id
- e5c5f4694b2df-1c641e83bd0mr576865055d.3.1731356844814; Mon, 11 Nov 2024
- 12:27:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKOMzuNS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67006C4CECF;
+	Mon, 11 Nov 2024 21:43:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731361388;
+	bh=odQroCdwTCKLYtwaR2rxJc47qGlAiq2iX6Lv8IWGCTM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cKOMzuNS70KwnmBMJL8Knv90EemY0Wzmvkm1TMsRXX9RKdkhwAM0Gk6CsiSyU/woe
+	 qQrRMHqiRYmqfNWvUrOZRgykdt65pHE61ISAOZS8jCVCrIfDN5Ubin59dKhLh1ouV6
+	 4gBIoSdKOn8uFSukLIolSwbjmq8T3aMS5lO1htKWJfiaLsv4EEjP9F2inI2OMdCyQi
+	 UbK7cSfY16X8yQBjJdUe8sd86hYoabWDt9/yGweilA6/jf0wjiWIxd2H7l8afC+R++
+	 olcdhIWF6GiTFlnWFQCveC+2wNElUy5one+IAhRR2so3I9jeU8resBJsoSb6Nuc+Iw
+	 AnnIcABroO9uA==
+Date: Mon, 11 Nov 2024 13:43:07 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to 67297671cbae
+Message-ID: <20241111214307.GD9438@frogsfrogsfrogs>
+References: <a4q7ceul2urww4bfn7uxy5orbsllor27ov5ix7fzbthbr3nvf6@xx67livha6kt>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731355931.git.josef@toxicpanda.com>
-In-Reply-To: <cover.1731355931.git.josef@toxicpanda.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 11 Nov 2024 21:27:13 +0100
-Message-ID: <CAOQ4uxitBcDpe+1t7Jf5UaMJS2=qAZVCqzKESZJyOwXaX6omww@mail.gmail.com>
-Subject: Re: [PATCH v6 00/17] fanotify: add pre-content hooks
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
-	brauner@kernel.org, torvalds@linux-foundation.org, linux-xfs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a4q7ceul2urww4bfn7uxy5orbsllor27ov5ix7fzbthbr3nvf6@xx67livha6kt>
 
-On Mon, Nov 11, 2024 at 9:19=E2=80=AFPM Josef Bacik <josef@toxicpanda.com> =
-wrote:
->
-> v5: https://lore.kernel.org/linux-fsdevel/cover.1725481503.git.josef@toxi=
-cpanda.com/
-> v4: https://lore.kernel.org/linux-fsdevel/cover.1723670362.git.josef@toxi=
-cpanda.com/
-> v3: https://lore.kernel.org/linux-fsdevel/cover.1723228772.git.josef@toxi=
-cpanda.com/
-> v2: https://lore.kernel.org/linux-fsdevel/cover.1723144881.git.josef@toxi=
-cpanda.com/
-> v1: https://lore.kernel.org/linux-fsdevel/cover.1721931241.git.josef@toxi=
-cpanda.com/
->
-> v5->v6:
-> - Linus had problems with this and rejected Jan's PR
->   (https://lore.kernel.org/linux-fsdevel/20240923110348.tbwihs42dxxltabc@=
-quack3/),
->   so I'm respinning this series to address his concerns.  Hopefully this =
-is more
->   acceptable.
-> - Change the page fault hooks to happen only in the case where we have to=
- add a
->   page, not where there exists pages already.
-> - Amir added a hook to truncate.
-> - We made the flag per SB instead of per fstype, Amir wanted this because=
- of
->   some potential issues with other file system specific work he's doing.
+On Mon, Nov 11, 2024 at 01:07:19PM +0100, Andrey Albershteyn wrote:
+> Hello.
+> 
+> The xfsprogs for-next branch, located at:
+> 
+> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+> 
+> Has just been updated.
+> 
+> Patches often get missed, so if your outstanding patches are properly reviewed on
+> the list and not included in this update, please let me know.
 
-Not me :) it for the upcoming ps > bs patch set for xfs.
-It would be easiest to opt-out of this config for HSM to begin with.
+Ooh, thanks!  I'll send this out for testing shortly. :)
 
-> - Dropped the bcachefs patch, there were some concerns that we were doing
->   something wrong, and it's not a huge deal to not have this feature for =
-now.
-> - Unfortunately the xfs write fault path still has to do the page fault h=
-ook
+Also you might want to pull in a port of commit 3ef22684038aa5 ("xfs:
+Reduce unnecessary searches when searching for the best extents") which
+landed in -rc6.  Will send a port patch shortly.
 
-As Jan corrected me, this is only for the DAX page faults in xfs, so we sho=
-uld
-be ok with fsnotify hook called on every fault in this case.
+--D
 
->   before we know if we have a page or not, this is because of the locking=
- that's
->   done before we get to the part where we know if we have a page already =
-or not,
->   so that's the path that is still the same from last iteration.
-> - I've re-validated this series with btrfs, xfs, and ext4 to make sure I =
-didn't
->   break anything.
-
-Thanks!
-Amir.
-
->
-> v4->v5:
-> - Cleaned up the various "I'll fix it on commit" notes that Jan made sinc=
-e I had
->   to respin the series anyway.
-> - Renamed the filemap pagefault helper for fsnotify per Christians sugges=
-tion.
-> - Added a FS_ALLOW_HSM flag per Jan's comments, based on Amir's rough ske=
-tch.
-> - Added a patch to disable btrfs defrag on pre-content watched files.
-> - Added a patch to turn on FS_ALLOW_HSM for all the file systems that I t=
-ested.
-> - Added two fstests (which will be posted separately) to validate everyth=
-ing,
->   re-validated the series with btrfs, xfs, ext4, and bcachefs to make sur=
-e I
->   didn't break anything.
->
-> v3->v4:
-> - Trying to send a final verson Friday at 5pm before you go on vacation i=
-s a
->   recipe for silly mistakes, fixed the xfs handling yet again, per Christ=
-oph's
->   review.
-> - Reworked the file system helper so it's handling of fpin was a little l=
-ess
->   silly, per Chinner's suggestion.
-> - Updated the return values to not or in VM_FAULT_RETRY, as we have a com=
-ment
->   in filemap_fault that says if VM_FAULT_ERROR is set we won't have
->   VM_FAULT_RETRY set.
->
-> v2->v3:
-> - Fix the pagefault path to do MAY_ACCESS instead, updated the perm handl=
-er to
->   emit PRE_ACCESS in this case, so we can avoid the extraneous perm event=
- as per
->   Amir's suggestion.
-> - Reworked the exported helper so the per-filesystem changes are much sma=
-ller,
->   per Amir's suggestion.
-> - Fixed the screwup for DAX writes per Chinner's suggestion.
-> - Added Christian's reviewed-by's where appropriate.
->
-> v1->v2:
-> - reworked the page fault logic based on Jan's suggestion and turned it i=
-nto a
->   helper.
-> - Added 3 patches per-fs where we need to call the fsnotify helper from t=
-heir
->   ->fault handlers.
-> - Disabled readahead in the case that there's a pre-content watch in plac=
-e.
-> - Disabled huge faults when there's a pre-content watch in place (entirel=
-y
->   because it's untested, theoretically it should be straightforward to do=
-).
-> - Updated the command numbers.
-> - Addressed the random spelling/grammer mistakes that Jan pointed out.
-> - Addressed the other random nits from Jan.
->
-> --- Original email ---
->
-> Hello,
->
-> These are the patches for the bare bones pre-content fanotify support.  T=
-he
-> majority of this work is Amir's, my contribution to this has solely been =
-around
-> adding the page fault hooks, testing and validating everything.  I'm send=
-ing it
-> because Amir is traveling a bunch, and I touched it last so I'm going to =
-take
-> all the hate and he can take all the credit.
->
-> There is a PoC that I've been using to validate this work, you can find t=
-he git
-> repo here
->
-> https://github.com/josefbacik/remote-fetch
->
-> This consists of 3 different tools.
->
-> 1. populate.  This just creates all the stub files in the directory from =
-the
->    source directory.  Just run ./populate ~/linux ~/hsm-linux and it'll
->    recursively create all of the stub files and directories.
-> 2. remote-fetch.  This is the actual PoC, you just point it at the source=
- and
->    destination directory and then you can do whatever.  ./remote-fetch ~/=
-linux
->    ~/hsm-linux.
-> 3. mmap-validate.  This was to validate the pagefault thing, this is like=
-ly what
->    will be turned into the selftest with remote-fetch.  It creates a file=
- and
->    then you can validate the file matches the right pattern with both nor=
-mal
->    reads and mmap.  Normally I do something like
->
->    ./mmap-validate create ~/src/foo
->    ./populate ~/src ~/dst
->    ./rmeote-fetch ~/src ~/dst
->    ./mmap-validate validate ~/dst/foo
->
-> I did a bunch of testing, I also got some performance numbers.  I copied =
-a
-> kernel tree, and then did remote-fetch, and then make -j4
->
-> Normal
-> real    9m49.709s
-> user    28m11.372s
-> sys     4m57.304s
->
-> HSM
-> real    10m6.454s
-> user    29m10.517s
-> sys     5m2.617s
->
-> So ~17 seconds more to build with HSM.  I then did a make mrproper on bot=
-h trees
-> to see the size
->
-> [root@fedora ~]# du -hs /src/linux
-> 1.6G    /src/linux
-> [root@fedora ~]# du -hs dst
-> 125M    dst
->
-> This mirrors the sort of savings we've seen in production.
->
-> Meta has had these patches (minus the page fault patch) deployed in produ=
-ction
-> for almost a year with our own utility for doing on-demand package fetchi=
-ng.
-> The savings from this has been pretty significant.
->
-> The page-fault hooks are necessary for the last thing we need, which is
-> on-demand range fetching of executables.  Some of our binaries are severa=
-l gigs
-> large, having the ability to remote fetch them on demand is a huge win fo=
-r us
-> not only with space savings, but with startup time of containers.
->
-> There will be tests for this going into LTP once we're satisfied with the
-> patches and they're on their way upstream.  Thanks,
->
-> Josef
->
-> Amir Goldstein (9):
->   fanotify: rename a misnamed constant
->   fanotify: reserve event bit of deprecated FAN_DIR_MODIFY
->   fsnotify: introduce pre-content permission events
->   fsnotify: pass optional file access range in pre-content event
->   fsnotify: generate pre-content permission event on open
->   fsnotify: generate pre-content permission event on truncate
->   fanotify: introduce FAN_PRE_ACCESS permission event
->   fanotify: report file range info with pre-content events
->   fanotify: allow to set errno in FAN_DENY permission response
->
-> Josef Bacik (8):
->   fanotify: don't skip extra event info if no info_mode is set
->   fanotify: add a helper to check for pre content events
->   fanotify: disable readahead if we have pre-content watches
->   mm: don't allow huge faults for files with pre content watches
->   fsnotify: generate pre-content permission event on page fault
->   xfs: add pre-content fsnotify hook for write faults
->   btrfs: disable defrag on pre-content watched files
->   fs: enable pre-content events on supported file systems
->
->  fs/btrfs/ioctl.c                   |   9 +++
->  fs/btrfs/super.c                   |   5 +-
->  fs/ext4/super.c                    |   3 +
->  fs/namei.c                         |  10 ++-
->  fs/notify/fanotify/fanotify.c      |  33 ++++++--
->  fs/notify/fanotify/fanotify.h      |  15 ++++
->  fs/notify/fanotify/fanotify_user.c | 120 +++++++++++++++++++++++------
->  fs/notify/fsnotify.c               |  18 ++++-
->  fs/open.c                          |  31 +++++---
->  fs/xfs/xfs_file.c                  |   4 +
->  fs/xfs/xfs_super.c                 |   2 +-
->  include/linux/fanotify.h           |  19 +++--
->  include/linux/fs.h                 |   1 +
->  include/linux/fsnotify.h           |  73 ++++++++++++++++--
->  include/linux/fsnotify_backend.h   |  59 +++++++++++++-
->  include/linux/mm.h                 |   1 +
->  include/uapi/linux/fanotify.h      |  18 +++++
->  mm/filemap.c                       |  90 ++++++++++++++++++++++
->  mm/memory.c                        |  22 ++++++
->  mm/readahead.c                     |  13 ++++
->  security/selinux/hooks.c           |   3 +-
->  21 files changed, 491 insertions(+), 58 deletions(-)
->
-> --
-> 2.43.0
->
+> The new head of the for-next branch is commit:
+> 
+> 67297671cbae3043e495312964470d31f4b9e5e7
+> 
+> 66 new commits:
+> 
+> Christoph Hellwig (35):
+>       [5bed9480fecd] libfrog: add xarray emulation
+>       [7220f58bed91] xfs: remove xfs_validate_rtextents
+>       [b03d9058b030] xfs: factor out a xfs_validate_rt_geometry helper
+>       [a9af23f75abb] xfs: remove the limit argument to xfs_rtfind_back
+>       [39c5ade94400] xfs: assert a valid limit in xfs_rtfind_forw
+>       [915ebe7528ce] xfs: add bounds checking to xfs_rt{bitmap,summary}_read_buf
+>       [f666752a6278] xfs: factor out rtbitmap/summary initialization helpers
+>       [cd0b8448a812] xfs: push transaction join out of xfs_rtbitmap_lock and xfs_rtgroup_lock
+>       [d9e765646569] xfs: ensure rtx mask/shift are correct after growfs
+>       [325a7bbff1cf] xfs: remove xfs_rtb_to_rtxrem
+>       [f7d5200c609e] xfs: simplify xfs_rtalloc_query_range
+>       [4fb1557f4a23] xfs: clean up the ISVALID macro in xfs_bmap_adjacent
+>       [609cb7865f9a] xfs: remove xfs_{rtbitmap,rtsummary}_wordcount
+>       [84704ebf61a2] xfs: replace m_rsumsize with m_rsumblocks
+>       [596253fb3acb] xfs: use kfree_rcu_mightsleep to free the perag structures
+>       [14a383c4a680] xfs: move the tagged perag lookup helpers to xfs_icache.c
+>       [db0d88e9aab8] xfs: convert perag lookup to xarray
+>       [a8c3578c55cf] xfs: ensure st_blocks never goes to zero during COW writes
+>       [e63467a29e49] xfs: merge xfs_attr_leaf_try_add into xfs_attr_leaf_addname
+>       [3b59e7d1cd1f] xfs: return bool from xfs_attr3_leaf_add
+>       [2089fbfedcde] xfs: distinguish extra split from real ENOSPC from xfs_attr3_leaf_split
+>       [1f246811849b] xfs: distinguish extra split from real ENOSPC from xfs_attr_node_try_addname
+>       [a7c063b27cfe] xfs: fold xfs_bmap_alloc_userdata into xfs_bmapi_allocate
+>       [628f9141bd6c] xfs: don't ifdef around the exact minlen allocations
+>       [31f5b24c3e42] xfs: call xfs_bmap_exact_minlen_extent_alloc from xfs_bmap_btalloc
+>       [43f4e9bef3f5] xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
+>       [aadfcab59975] xfs: pass the exact range to initialize to xfs_initialize_perag
+>       [d64d607e19f4] xfs: merge the perag freeing helpers
+>       [4b7c32f74e83] xfs: don't use __GFP_RETRY_MAYFAIL in xfs_initialize_perag
+>       [6611215e3d44] xfs: update the pag for the last AG at recovery time
+>       [a65f5eefa631] xfs_repair: use xfs_validate_rt_geometry
+>       [47e42101759e] mkfs: remove a pointless rtfreesp_init forward declaration
+>       [7bb9a55fea7b] mkfs: use xfs_rtfile_initialize_blocks
+>       [49ef9d5070dd] xfs_repair: use libxfs_rtfile_initialize_blocks
+>       [07c09d46665c] xfs_repair: stop preallocating blocks in mk_rbmino and mk_rsumino
+> 
+> Dan Carpenter (1):
+>       [0e955beedcb8] xfs: remove unnecessary check
+> 
+> Darrick J. Wong (27):
+>       [fb4e1bc02044] libxfs: require -std=gnu11 for compilation by default
+>       [6e1d3517d108] libxfs: test compiling public headers with a C++ compiler
+>       [3a7e14f936c8] libxfs: port IS_ENABLED from the kernel
+>       [ec322218899e] xfs: introduce new file range commit ioctls
+>       [bca9de398b66] xfs: pass the icreate args object to xfs_dialloc
+>       [9bd5f52de658] xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
+>       [2f8e9b0aa899] xfs: replace shouty XFS_BM{BT,DR} macros
+>       [07037e853426] xfs: standardize the btree maxrecs function parameters
+>       [bc37fe78843f] man: document file range commit ioctls
+>       [943d67216327] libfrog: add support for commit range ioctl family
+>       [ee97b29a4413] libxfs: remove unused xfs_inode fields
+>       [4612e4ad75ce] libxfs: validate inumber in xfs_iget
+>       [ea1626b8a8d6] xfs_fsr: port to new file exchange library function
+>       [e21a6c0c5aad] xfs_io: add a commitrange option to the exchangerange command
+>       [1cf7afbc0c8b] xfs_io: add atomic file update commands to exercise file commit range
+>       [e84718ec0a40] xfs_db: support passing the realtime device to the debugger
+>       [49844913d4d8] xfs_db: report the realtime device when associated with each io cursor
+>       [52b857269481] xfs_db: make the daddr command target the realtime device
+>       [b05a31722f5d] xfs_db: access realtime file blocks
+>       [3b04ddaed83d] xfs_db: access arbitrary realtime blocks and extents
+>       [08ff89704463] xfs_db: enable conversion of rt space units
+>       [9c4441af72e7] xfs_db: convert rtbitmap geometry
+>       [5f10590bae67] xfs_db: convert rtsummary geometry
+>       [5e8139658b79] xfs_db: allow setting current address to log blocks
+>       [9e63cdfd416a] xfs_repair: checking rt free space metadata must happen during phase 4
+>       [024f91c02f22] xfs_scrub_all: wait for services to start activating
+>       [d19c5581b03e] mkfs: add a config file for 6.12 LTS kernels
+> 
+> Dave Chinner (1):
+>       [541ba966b2ee] xfs: use kvmalloc for xattr buffers
+> 
+> Jan Palus (1):
+>       [67297671cbae] xfs_spaceman: add dependency on libhandle target
+> 
+> Pankaj Raghav (1):
+>       [8a04405248ab] xfs: enable block size larger than page size support
+> 
+> Code Diffstat:
+> 
+>  Makefile                          |   2 +-
+>  configure.ac                      |  13 +-
+>  db/block.c                        | 272 ++++++++++++++++++++++-
+>  db/block.h                        |  20 ++
+>  db/bmap.c                         |  10 +-
+>  db/bmap_inflate.c                 |   2 +-
+>  db/bmroot.c                       |   8 +-
+>  db/btheight.c                     |  18 +-
+>  db/check.c                        |  11 +-
+>  db/convert.c                      | 438 ++++++++++++++++++++++++++++++++++++--
+>  db/faddr.c                        |   5 +-
+>  db/frag.c                         |   8 +-
+>  db/init.c                         |   7 +-
+>  db/io.c                           |  39 +++-
+>  db/io.h                           |   3 +
+>  db/iunlink.c                      |   2 +-
+>  db/metadump.c                     |  16 +-
+>  db/xfs_admin.sh                   |   4 +-
+>  fsr/xfs_fsr.c                     |  74 +++----
+>  include/builddefs.in              |   8 +
+>  include/kmem.h                    |  11 +
+>  include/libxfs.h                  |   6 +-
+>  include/platform_defs.h           |  63 ++++++
+>  include/xfs_inode.h               |   4 -
+>  include/xfs_mount.h               |   4 +-
+>  io/exchrange.c                    | 390 ++++++++++++++++++++++++++++++++-
+>  io/io.h                           |   4 +
+>  io/open.c                         |  27 ++-
+>  libfrog/file_exchange.c           | 194 +++++++++++++++++
+>  libfrog/file_exchange.h           |  10 +
+>  libfrog/radix-tree.h              |  35 +++
+>  libxfs/Makefile                   |  31 ++-
+>  libxfs/defer_item.c               |  14 ++
+>  libxfs/init.c                     |  17 +-
+>  libxfs/inode.c                    |   2 +-
+>  libxfs/ioctl_c_dummy.c            |  11 +
+>  libxfs/ioctl_cxx_dummy.cpp        |  13 ++
+>  libxfs/libxfs_api_defs.h          |   4 +-
+>  libxfs/libxfs_priv.h              |   6 +-
+>  libxfs/xfs_ag.c                   | 165 +++-----------
+>  libxfs/xfs_ag.h                   |  25 +--
+>  libxfs/xfs_alloc.c                |   7 +-
+>  libxfs/xfs_alloc.h                |   4 +-
+>  libxfs/xfs_alloc_btree.c          |   6 +-
+>  libxfs/xfs_alloc_btree.h          |   3 +-
+>  libxfs/xfs_attr.c                 | 190 +++++++----------
+>  libxfs/xfs_attr_leaf.c            |  63 +++---
+>  libxfs/xfs_attr_leaf.h            |   2 +-
+>  libxfs/xfs_bmap.c                 | 243 +++++++++------------
+>  libxfs/xfs_bmap_btree.c           |  24 +--
+>  libxfs/xfs_bmap_btree.h           | 207 ++++++++++++------
+>  libxfs/xfs_da_btree.c             |   5 +-
+>  libxfs/xfs_fs.h                   |  26 +++
+>  libxfs/xfs_ialloc.c               |  14 +-
+>  libxfs/xfs_ialloc.h               |   4 +-
+>  libxfs/xfs_ialloc_btree.c         |   6 +-
+>  libxfs/xfs_ialloc_btree.h         |   3 +-
+>  libxfs/xfs_inode_fork.c           |  40 ++--
+>  libxfs/xfs_inode_util.c           |   2 +-
+>  libxfs/xfs_refcount_btree.c       |   5 +-
+>  libxfs/xfs_refcount_btree.h       |   3 +-
+>  libxfs/xfs_rmap_btree.c           |   7 +-
+>  libxfs/xfs_rmap_btree.h           |   3 +-
+>  libxfs/xfs_rtbitmap.c             | 274 +++++++++++++++++-------
+>  libxfs/xfs_rtbitmap.h             |  61 +-----
+>  libxfs/xfs_sb.c                   |  92 ++++----
+>  libxfs/xfs_sb.h                   |   3 +
+>  libxfs/xfs_shared.h               |   3 +
+>  libxfs/xfs_trans_resv.c           |   4 +-
+>  libxfs/xfs_types.h                |  12 --
+>  m4/package_utilies.m4             |   5 +
+>  man/man2/ioctl_xfs_commit_range.2 | 296 ++++++++++++++++++++++++++
+>  man/man2/ioctl_xfs_fsgeometry.2   |   2 +-
+>  man/man2/ioctl_xfs_start_commit.2 |   1 +
+>  man/man8/xfs_db.8                 | 148 ++++++++++++-
+>  man/man8/xfs_io.8                 |  35 ++-
+>  mkfs/Makefile                     |   3 +-
+>  mkfs/lts_6.12.conf                |  19 ++
+>  mkfs/proto.c                      | 116 ++--------
+>  repair/bmap_repair.c              |   2 +-
+>  repair/dinode.c                   |  17 +-
+>  repair/phase4.c                   |   7 +
+>  repair/phase5.c                   |  22 +-
+>  repair/phase6.c                   | 292 +++++--------------------
+>  repair/prefetch.c                 |   8 +-
+>  repair/rt.c                       |   7 +-
+>  repair/sb.c                       |  40 +---
+>  repair/scan.c                     |   6 +-
+>  repair/xfs_repair.c               |   3 -
+>  scrub/xfs_scrub_all.in            |  52 +++++
+>  90 files changed, 3079 insertions(+), 1314 deletions(-)
+>  create mode 100644 libxfs/ioctl_c_dummy.c
+>  create mode 100644 libxfs/ioctl_cxx_dummy.cpp
+>  create mode 100644 man/man2/ioctl_xfs_commit_range.2
+>  create mode 100644 man/man2/ioctl_xfs_start_commit.2
+>  create mode 100644 mkfs/lts_6.12.conf
+> 
