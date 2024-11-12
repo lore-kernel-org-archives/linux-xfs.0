@@ -1,178 +1,147 @@
-Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B77521A71C;
-	Tue, 12 Nov 2024 23:06:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3227B219E5F
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 23:15:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731452783; cv=none; b=IuM5u+RYkJ1PWYTB7s5pQxPG9j34mR8rkA2ekTJqgcZFiXnN6Dn+jvu/gPV9iiCu2M5mQitkaEWdxJ6QclrAKvy0kRdkvg4+k/InF51rYZMFPkIRiFigVJ0uyf+OUrx/w8CnOCmVhWHz0MS5RyBLQpJ6riscZYRWlfO8A2uaf5U=
+	t=1731453341; cv=none; b=K7LYJ8FdICKrG5+6ozWjCnK5Fp2NBmpc3F/2oRG8fec+8pmYtqNd62ZCeBNz5voDy7kVY0FXkc6mQmaOoLhMKwoDU5z5GYhJSB2LD08qxLW40wWmFudFsAaQm83f69dCwzYYwPvsbV4srlX2SGyRJLLDRwL2FZILM93crVJRv0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731452783; c=relaxed/simple;
-	bh=gfFVCHmb+HoisgZ2lNP7XW0mnRshgsLW/YkaWiNMF3o=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=N9iqhfRdp7+U36crGN7x7/OQtWzad2K+wDoWyzmPEafc/r2JufQ1ivLd6Y43t3/NS4d6nIB74wJQ4VXtBspMTb+IqQfS+9b5/5E3aFx8ZFHA65S0Ds0A/alyMoNVJDo7qFD3FcyW6VWgiWcysxWFEpj+EvbYAK80oHPjhw9fklc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W/68WnA6; arc=none smtp.client-ip=209.85.219.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1731453341; c=relaxed/simple;
+	bh=b93U+WU1dZglHZzoeUd8f9/nLm7jbGUrRx/P7XzS7ds=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ed6YhfJHC83PjV3tScUkOsZE2D52qb4HqgBhwHQSQT2QRDqr0YOrv6/n+grU3fmMoxNwc9WIoZ031PIW56/4qYO08I0P4YIE0xXfdnTr+PUMpuUOrq03W/NO2KOKEQ2fy60cD0tcL16HPsAJTY0rXLhYgEb3SolB37aGU6Ld5+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pHmgKwQc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W/68WnA6"
-Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-6cbf2fc28feso42720036d6.0;
-        Tue, 12 Nov 2024 15:06:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731452779; x=1732057579; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SIr16uc11UiqTl1Sx8j59V2P8BYfKtJ63uAHahcToIA=;
-        b=W/68WnA6if+LbRWB3C07X58E+hXp8jf/6OZj/LTHG37SpmN75dn1vZN5M3fgQAXPSQ
-         EBD2Bk2+kMXMwF6TOH4nJ+tv6klGmblrwwsdyB6OC8zysc009oTd5gbxKB3G0QAERNj5
-         gMZj6XvF0CCr0lCCS8u3g+6MYxMkV8HFJldwAQKSboABkIwoe8ZW3hx0F/uMhevrOYb1
-         jxo9/TCjoJrnrPlTC/MFPJLqDbN6aDpcFgOGvJdP8Dz6NK/mvWAfcDNb5G1QYkNNtaO9
-         t3Yxj60jnMTnA5I4qOcIPTNr9Afd6aWa7I0kMw6EtC6YTUklPhKhyePeU7cqIjtc2I0l
-         1nRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731452779; x=1732057579;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SIr16uc11UiqTl1Sx8j59V2P8BYfKtJ63uAHahcToIA=;
-        b=IodAK5Wbda85AyJ2sXG/RJgONVZdU+Lw3QSQWL+c5ryqWA/a6UqV6nby8bknDVpTWG
-         5DPPe0zPKFPQ1do+1NpzHW3nejwUCX7MrHBzeQug4jRBaCpYTxFNIp5yjNgrSJ05dVLW
-         raBRtdlk44/jNsI5yxh207qRIIj6VvmD0Oall1swJo5q+tMkjE0VxnFJ+z7RrCr1O23B
-         z1LtWq8dhT+ZiJTCQaKJ4Fc2TEY2qyw0gmhFWFF7AuF9fug9YZnU31pQk0+gMiMycctu
-         3SraH/+VmxCL/86EXRTa7tKwxGsTo26ZnwZbtg7PbyG18fKDYMvd72XPy/c/RmfjHFsa
-         4/dw==
-X-Forwarded-Encrypted: i=1; AJvYcCVUqWZpQfLlQhAVz698NB9iIPzR2Iz4xaKU5OhHqREhk7+sVD6d2TEUkN3GeMWEkmBa1Qa2PPnGVUrfMGGKsw==@vger.kernel.org, AJvYcCVa6GJeZWgqYEz6ZgTF2tD9VkZpkvIu3Jcg471Ig5AyT+q4+4kqRsf2spDurE0f96sWq46KLZ1tgTvcRg==@vger.kernel.org, AJvYcCWHkhD5N6quXRUE2JeUgyjDyCllwZsF+nd5Hw4WzHSuCPT0TZHLILjLxH5NoYuutz6l5lJ/wRCu7UrJ@vger.kernel.org, AJvYcCWPltaDMsONfUclI1a51cxN6MF2Y3yQXAjPtZu2nuYf9ie6okcDoIA9h5vm54Er5hccJ7Lu0EHHUMuzrQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx8tcCeIrd9IrtWHkXqVqFYcajPm9K6KdgUixCB1fHtp45/l4hE
-	7S73mUapUG7vehuBb8tdEdLXctoRjmasJGaggoenxDHpcchMHKrfnsaHlR/7e+xSnHMbsv5yxds
-	wnLkCLfxGbP2auzzC6jFeX1w2kbk=
-X-Google-Smtp-Source: AGHT+IHxu77JKYYa/Yi0IgqgbzYETuy6BNeSMuPucl1B8xYxyyUZE8YdamGYeRduzkpm8Frlb0wJ61eZe0uRDQXpVlo=
-X-Received: by 2002:a05:6214:3287:b0:6d1:74d4:4ba2 with SMTP id
- 6a1803df08f44-6d39e15549cmr215580146d6.9.1731452779171; Tue, 12 Nov 2024
- 15:06:19 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pHmgKwQc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5F58C4CED6;
+	Tue, 12 Nov 2024 23:15:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731453340;
+	bh=b93U+WU1dZglHZzoeUd8f9/nLm7jbGUrRx/P7XzS7ds=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=pHmgKwQcpNL93JIh2PATyJNjbirFC9ULA9c9+J8PZReOyn3YwnV1XQlKqlUJj7EDb
+	 S8wx9PEN7McAqq42LZOblWs0R4tmA7fXjEEJUHDFYs8JlDDXOu4ULFsesAUWrrTT1h
+	 9ewncwMqhDKYoZvn9UI2EKgLXWhrTuwo4F38RjJLVa46s1PkGO+DdBXyc1FmO8VaSS
+	 Bx6Tr6zO/oSUacf4ZxRJ83LZzR8odhwXBfVjYYJy5x3vY05vzyKj+N24Yk6xuzmtQH
+	 og2kvmohH9wf3iYfGx7qtvFi6f0UaMHhgusYD9uyIYuHRoR+JevDZeUTJJtTnnW1Pg
+	 3kJEyPIUPRQlw==
+Date: Tue, 12 Nov 2024 15:15:39 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org
+Subject: Re: [PATCH 1/3] xfs: fix sparse inode limits on runt AG
+Message-ID: <20241112231539.GG9438@frogsfrogsfrogs>
+References: <20241112221920.1105007-1-david@fromorbit.com>
+ <20241112221920.1105007-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
- <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
-In-Reply-To: <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 13 Nov 2024 00:06:07 +0100
-Message-ID: <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
-Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	jack@suse.cz, brauner@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241112221920.1105007-2-david@fromorbit.com>
 
-On Tue, Nov 12, 2024 at 9:12=E2=80=AFPM Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> On Tue, 12 Nov 2024 at 09:56, Josef Bacik <josef@toxicpanda.com> wrote:
-> >
-> >  #ifdef CONFIG_FANOTIFY_ACCESS_PERMISSIONS
-> > +static inline int fsnotify_pre_content(struct file *file)
-> > +{
-> > +       struct inode *inode =3D file_inode(file);
-> > +
-> > +       /*
-> > +        * Pre-content events are only reported for regular files and d=
-irs
-> > +        * if there are any pre-content event watchers on this sb.
-> > +        */
-> > +       if ((!S_ISDIR(inode->i_mode) && !S_ISREG(inode->i_mode)) ||
-> > +           !(inode->i_sb->s_iflags & SB_I_ALLOW_HSM) ||
-> > +           !fsnotify_sb_has_priority_watchers(inode->i_sb,
-> > +                                              FSNOTIFY_PRIO_PRE_CONTEN=
-T))
-> > +               return 0;
-> > +
-> > +       return fsnotify_file(file, FS_PRE_ACCESS);
-> > +}
->
-> Yeah, no.
->
-> None of this should check inode->i_sb->s_iflags at any point.
->
-> The "is there a pre-content" thing should check one thing, and one
-> thing only: that "is this file watched" flag.
-> The whole indecipherable mess of inline functions that do random
-> things in <linux/fsnotify.h> needs to be cleaned up, not made even
-> more indecipherable.
->
-> I'm NAKing this whole series until this is all sane and cleaned up,
-> and I don't want to see a new hacky version being sent out tomorrow
-> with just another layer of new hacks, with random new inline functions
-> that call other inline functions and have complex odd conditionals
-> that make no sense.
->
-> Really. If the new hooks don't have that *SINGLE* bit test, they will
-> not get merged.
->
-> And that *SINGLE* bit test had better not be hidden under multiple
-> layers of odd inline functions.
->
-> You DO NOT get to use the same old broken complex function for the new
-> hooks that then mix these odd helpers.
->
-> This whole "add another crazy inline function using another crazy
-> helper needs to STOP. Later on in the patch series you do
->
-> +/*
-> + * fsnotify_truncate_perm - permission hook before file truncate
-> + */
-> +static inline int fsnotify_truncate_perm(const struct path *path,
-> loff_t length)
-> +{
-> +       return fsnotify_pre_content(path, &length, 0);
-> +}
->
-> or things like this:
->
-> +static inline bool fsnotify_file_has_pre_content_watches(struct file *fi=
-le)
-> +{
-> +       if (!(file->f_mode & FMODE_NOTIFY_PERM))
-> +               return false;
-> +
-> +       if (!(file_inode(file)->i_sb->s_iflags & SB_I_ALLOW_HSM))
-> +               return false;
-> +
-> +       return fsnotify_file_object_watched(file, FSNOTIFY_PRE_CONTENT_EV=
-ENTS);
-> +}
->
-> and no, NONE of that should be tested at runtime.
->
-> I repeat: you should have *ONE* inline function that basically does
->
->  static inline bool fsnotify_file_watched(struct file *file)
->  {
->         return file && unlikely(file->f_mode & FMODE_NOTIFY_PERM);
->  }
->
-> and absolutely nothing else. If that file is set, the file has
-> notification events, and you go to an out-of-line slow case. You don't
-> inline the unlikely cases after that.
->
-> And you make sure that you only set that special bit on files and
-> filesystems that support it. You most definitely don't check for
-> SB_I_ALLOW_HSM kind of flags at runtime in critical code.
+On Wed, Nov 13, 2024 at 09:05:14AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The runt AG at the end of a filesystem is almost always smaller than
+> the mp->m_sb.sb_agblocks. Unfortunately, when setting the max_agbno
+> limit for the inode chunk allocation, we do not take this into
+> account. This means we can allocate a sparse inode chunk that
+> overlaps beyond the end of an AG. When we go to allocate an inode
+> from that sparse chunk, the irec fails validation because the
+> agbno of the start of the irec is beyond valid limits for the runt
+> AG.
+> 
+> Prevent this from happening by taking into account the size of the
+> runt AG when allocating inode chunks. Also convert the various
+> checks for valid inode chunk agbnos to use xfs_ag_block_count()
+> so that they will also catch such issues in the future.
+> 
+> Fixes: 56d1115c9bc7 ("xfs: allocate sparse inode chunks on full chunk allocation failure")
 
-I understand your point. It makes sense.
-But it requires using another FMODE_HSM flag,
-because FMODE_NOTIFY_PERM covers also the legacy
-FS_ACCESS_PERM event, which has different semantics
-that I consider broken, but it is what it is.
+Cc: <stable@vger.kernel.org> # v4.2
 
-I am fine not optimizing out the legacy FS_ACCESS_PERM event
-and just making sure not to add new bad code, if that is what you prefer
-and I also am fine with using two FMODE_ flags if that is prefered.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 16 +++++++++-------
+>  1 file changed, 9 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 271855227514..6258527315f2 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -855,7 +855,8 @@ xfs_ialloc_ag_alloc(
+>  		 * the end of the AG.
+>  		 */
+>  		args.min_agbno = args.mp->m_sb.sb_inoalignmt;
+> -		args.max_agbno = round_down(args.mp->m_sb.sb_agblocks,
+> +		args.max_agbno = round_down(xfs_ag_block_count(args.mp,
+> +							pag->pag_agno),
 
-Thanks,
-Amir.
+So if I'm reading this right, the inode cluster allocation checks now
+enforce that we cannot search for free space beyond the actual end of
+the AG, rounded down per inode alignment rules?
+
+In that case, can this use the cached ag block count:
+
+		args.max_agbno = round_down(
+					pag_group(pag)->xg_block_count,
+					args.mp->m_sb.sb_inoalignmt);
+
+rather than recomputing the block count every time?
+
+>  					    args.mp->m_sb.sb_inoalignmt) -
+>  				 igeo->ialloc_blks;
+>  
+> @@ -2332,9 +2333,9 @@ xfs_difree(
+>  		return -EINVAL;
+>  	}
+>  	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+> -	if (agbno >= mp->m_sb.sb_agblocks)  {
+> -		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
+> -			__func__, agbno, mp->m_sb.sb_agblocks);
+> +	if (agbno >= xfs_ag_block_count(mp, pag->pag_agno)) {
+> +		xfs_warn(mp, "%s: agbno >= xfs_ag_block_count (%d >= %d).",
+> +			__func__, agbno, xfs_ag_block_count(mp, pag->pag_agno));
+
+and everywhere else too?
+
+(The logic itself looks ok)
+
+--D
+
+>  		ASSERT(0);
+>  		return -EINVAL;
+>  	}
+> @@ -2457,7 +2458,7 @@ xfs_imap(
+>  	 */
+>  	agino = XFS_INO_TO_AGINO(mp, ino);
+>  	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+> -	if (agbno >= mp->m_sb.sb_agblocks ||
+> +	if (agbno >= xfs_ag_block_count(mp, pag->pag_agno) ||
+>  	    ino != XFS_AGINO_TO_INO(mp, pag->pag_agno, agino)) {
+>  		error = -EINVAL;
+>  #ifdef DEBUG
+> @@ -2467,11 +2468,12 @@ xfs_imap(
+>  		 */
+>  		if (flags & XFS_IGET_UNTRUSTED)
+>  			return error;
+> -		if (agbno >= mp->m_sb.sb_agblocks) {
+> +		if (agbno >= xfs_ag_block_count(mp, pag->pag_agno)) {
+>  			xfs_alert(mp,
+>  		"%s: agbno (0x%llx) >= mp->m_sb.sb_agblocks (0x%lx)",
+>  				__func__, (unsigned long long)agbno,
+> -				(unsigned long)mp->m_sb.sb_agblocks);
+> +				(unsigned long)xfs_ag_block_count(mp,
+> +							pag->pag_agno));
+>  		}
+>  		if (ino != XFS_AGINO_TO_INO(mp, pag->pag_agno, agino)) {
+>  			xfs_alert(mp,
+> -- 
+> 2.45.2
+> 
+> 
