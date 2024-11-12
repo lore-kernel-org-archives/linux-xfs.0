@@ -1,71 +1,57 @@
-Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84FE5200B88
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 15:24:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0821F206944
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:34:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731425060; cv=none; b=LCPkr3nul0BmZeS5SMJ40Bw4QYzzrGSN8bXxd4XeJIN9VtV2MeCU9RDv981lcol6exVeVvVOTOXaQdEzZeoYRpxDPXT4xlp8CMjaE6/wVrGFJLbICEUZijVlfeP5J2aIusNJ1RMp2S/9OI3qnLGlh9SD1ofNNdpsrwO6+KNNW+Q=
+	t=1731429295; cv=none; b=ODE3S5y9ibfN4o8dnvQJ8+YtTJqJPybMdnRqtOj5HcD5mERN9zaMyc0b/Pfphr439sxHpzMwneIHb7Xfz1ZEtMkswT1g+T/Mo2ZVNImwuTB+6dVrfRy8g9+Mo3tB7fOeqGaON3sLFciOE8/fafVAOiR2h/rD7FxdjUbinE+YwuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731425060; c=relaxed/simple;
-	bh=Pw76qoxuEBmSQZkc5D1i8WJCwIAQTQoR8D52Af7iCGQ=;
+	s=arc-20240116; t=1731429295; c=relaxed/simple;
+	bh=maejiSruHV87Y+aXMuzBMKh+5AM/W/xMedlQ3gYipAQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i4LFcZfNppCPVvRGsgw9NMifq/HHeLH11F0R3CGKHtRodt79aBP4oPeSd6szILxooosguR9eIUCFzw0ixLTQda4VjoKXqb1GdnWAUYyQgVSMq8RNOaixqHQwme7kKYybDiCnBraigcPeRaUdC/qvKYOu2McBzZl7OWYz2+zKBEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=MBfUNQXK; arc=none smtp.client-ip=209.85.219.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=ovMEgsqhedFaaR76Oijy4iuduVSSQL7eIdxv9NeRxIeBbHKe0Z1bb5xLsS0Cg2x8hJOUmDwYVMmdWb2Wl4cMfuAKDTaZkHvIi8sXjSzaQIKtoMzon9s3xGMC9n7UjqRE1rqCxQIwh96KsxbqB8EmlEbspa6vuEQD1G+NDl2xwqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZonWo7C6; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="MBfUNQXK"
-Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-6cbf0769512so39104116d6.3
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 07:24:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731425057; x=1732029857; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IYKvte0z2sS6p7AKJqybZy0XMGJi5wQZwdmuSoY937M=;
-        b=MBfUNQXKEQRIWECUw2OHC45gWLyya3jbvyC3cShyvxU7yKBbS/SgE+cY7zb3E084is
-         GrnfHfnzMwN0s/cG5W7EH/OBAxYdJoKgHm2cNBJ+LYZLImEnPIHx5Tjt2JX6ykoo8Ulu
-         VORo1CPD3vdxt8gQpy7htO0QuG7n85acUDItfYGwO+A2p3GjLNZjCUYXXik4VXNL1SQm
-         Y8j3voSb9yGP/wE1YJ5C5cIxLfu9c4rfJyGvBDMETh+CSTH82DGoCHWcHwE5bo1pvOpX
-         3NkMDCptn6m8ny5jQrdJjTTDnO3vlYRj+arc23v2ieKIjO2NWZqwEtM/pGUDZPQVsqAX
-         Kurw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731425057; x=1732029857;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IYKvte0z2sS6p7AKJqybZy0XMGJi5wQZwdmuSoY937M=;
-        b=S1tBF0Oj9UIbiBb3G0i5JtMCe81EdAP4aSg0I1c+5s6a2ypLWodqlHDhti+6/2C1nr
-         fjleNMd7iXPI7idp72RDr6RA3KWALFlX0HZ1Xn7IZPlcaSXSdrfPIg8d1KoBtqaLrc8T
-         OPRMfk0E6nXRfSrU7v0lh+Va2isNu8njSJv0z1+EjxYU1VicooS5K96ZoyKvLeqqRjS7
-         bUuIAO+P/1g6mrMM6out6RfGVKgX7f3Wl88lqflWf1/F4PSZgvH6lq8yvmkyQr4o7Qkc
-         7oy/Dw2ox0LXK452CNibOpJgnRD/Qc0M54WS0XigxjsbFveTKWOqyerHiLAikjUGcL7t
-         +6MQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXX0yHxOcLdCKQ1kOl2QrVSNIJFqF5aFDQD+Vw3De3L6DEfg1xVhhItFjmz0laqK96ZzxheqvgSPqk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxM+OIe0Ln9TmVKPwHf6GIXtNgqDWhMjZAGye95qOLosEW0RI8J
-	LInWtx/hZOT6gUJu5Mg1L0rq2LbFin4naWgWu1BQFLOirywlgtUb9rz4FrcjSL8=
-X-Google-Smtp-Source: AGHT+IEREsT1IN/Jyb5jxnIeqB6aJ6hHi/Typq40PSivxK57muONB5alYpUuJkLlVhIRLIUqlqBUcw==
-X-Received: by 2002:a05:6214:53ca:b0:6cb:ef22:6274 with SMTP id 6a1803df08f44-6d39e10772emr228170466d6.3.1731425057185;
-        Tue, 12 Nov 2024 07:24:17 -0800 (PST)
-Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6d39643b36asm71965466d6.75.2024.11.12.07.24.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2024 07:24:16 -0800 (PST)
-Date: Tue, 12 Nov 2024 10:24:15 -0500
-From: Josef Bacik <josef@toxicpanda.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
-	amir73il@gmail.com, brauner@kernel.org, linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v6 06/17] fsnotify: generate pre-content permission event
- on open
-Message-ID: <20241112152415.GA826972@perftesting>
-References: <cover.1731355931.git.josef@toxicpanda.com>
- <b509ec78c045d67d4d7e31976eba4b708b238b66.1731355931.git.josef@toxicpanda.com>
- <CAHk-=wh4BEjbfaO93hiZs3YXoNmV=YkWT4=OOhuxM3vD2S-1iA@mail.gmail.com>
- <CAEzrpqdtSAoS+p4i0EzWFr0Nrpw1Q2hphatV7Sk4VM49=L3kGw@mail.gmail.com>
- <CAHk-=wj8L=mtcRTi=NECHMGfZQgXOp_uix1YVh04fEmrKaMnXA@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZonWo7C6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1731429293;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rKB5Z1lLpeLT0LZ+NAjLFKIK23L71bpb9LtJKKAzd7w=;
+	b=ZonWo7C6h+jUpGYzpH+ZTegK102nQI2Zx/tVlh3/wWm+hvsKx23IFICcZ+PqqqBiJDNOjL
+	6JtFoGZgeJo+Na4gMoGAOTKiKifaJiBCMcsH0vXDh1dXGQugJfggFfXYIaT+lQflhwkAEv
+	em129YKwgetzH+MusIz/79qqMKpBSjI=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-381-gwL-hOU5MVeY31HFqQOAlA-1; Tue,
+ 12 Nov 2024 11:34:47 -0500
+X-MC-Unique: gwL-hOU5MVeY31HFqQOAlA-1
+X-Mimecast-MFC-AGG-ID: gwL-hOU5MVeY31HFqQOAlA
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id ABAB61956096;
+	Tue, 12 Nov 2024 16:34:44 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.120])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 28C6330000DF;
+	Tue, 12 Nov 2024 16:34:41 +0000 (UTC)
+Date: Tue, 12 Nov 2024 11:36:14 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org,
+	clm@meta.com, linux-kernel@vger.kernel.org, willy@infradead.org,
+	kirill@shutemov.name, linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 12/16] ext4: add RWF_UNCACHED write support
+Message-ID: <ZzOD_qV5tpv9nbw7@bfoster>
+References: <20241111234842.2024180-1-axboe@kernel.dk>
+ <20241111234842.2024180-13-axboe@kernel.dk>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,174 +60,178 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHk-=wj8L=mtcRTi=NECHMGfZQgXOp_uix1YVh04fEmrKaMnXA@mail.gmail.com>
+In-Reply-To: <20241111234842.2024180-13-axboe@kernel.dk>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Mon, Nov 11, 2024 at 03:22:06PM -0800, Linus Torvalds wrote:
-> On Mon, 11 Nov 2024 at 14:46, Josef Bacik <josef@toxicpanda.com> wrote:
-> >
-> > Did you see the patch that added the
-> > fsnotify_file_has_pre_content_watches() thing?
+On Mon, Nov 11, 2024 at 04:37:39PM -0700, Jens Axboe wrote:
+> IOCB_UNCACHED IO needs to prune writeback regions on IO completion,
+> and hence need the worker punt that ext4 also does for unwritten
+> extents. Add an io_end flag to manage that.
 > 
-> No, because I had gotten to patch 6/11, and it added this open thing,
-> and there was no such thing in any of the patches before it.
+> If foliop is set to foliop_uncached in ext4_write_begin(), then set
+> FGP_UNCACHED so that __filemap_get_folio() will mark newly created
+> folios as uncached. That in turn will make writeback completion drop
+> these ranges from the page cache.
 > 
-> It looks like you added FSNOTIFY_PRE_CONTENT_EVENTS in 11/17.
+> Now that ext4 supports both uncached reads and writes, add the fop_flag
+> FOP_UNCACHED to enable it.
 > 
-> However, at no point does it look like you actually test it at open
-> time, so none of this seems to matter.
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> ---
+>  fs/ext4/ext4.h    |  1 +
+>  fs/ext4/file.c    |  2 +-
+>  fs/ext4/inline.c  |  7 ++++++-
+>  fs/ext4/inode.c   | 18 ++++++++++++++++--
+>  fs/ext4/page-io.c | 28 ++++++++++++++++------------
+>  5 files changed, 40 insertions(+), 16 deletions(-)
 > 
-> As far as I can see, even at the end of the series, you will call the
-> fsnotify hook at open time even if there are no content watches on the
-> file.
+...
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 54bdd4884fe6..afae3ab64c9e 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -1138,6 +1138,7 @@ static int ext4_write_begin(struct file *file, struct address_space *mapping,
+>  	int ret, needed_blocks;
+>  	handle_t *handle;
+>  	int retries = 0;
+> +	fgf_t fgp_flags;
+>  	struct folio *folio;
+>  	pgoff_t index;
+>  	unsigned from, to;
+> @@ -1164,6 +1165,15 @@ static int ext4_write_begin(struct file *file, struct address_space *mapping,
+>  			return 0;
+>  	}
+>  
+> +	/*
+> +	 * Set FGP_WRITEBEGIN, and FGP_UNCACHED if foliop contains
+> +	 * foliop_uncached. That's how generic_perform_write() informs us
+> +	 * that this is an uncached write.
+> +	 */
+> +	fgp_flags = FGP_WRITEBEGIN;
+> +	if (*foliop == foliop_uncached)
+> +		fgp_flags |= FGP_UNCACHED;
+> +
+>  	/*
+>  	 * __filemap_get_folio() can take a long time if the
+>  	 * system is thrashing due to memory pressure, or if the folio
+> @@ -1172,7 +1182,7 @@ static int ext4_write_begin(struct file *file, struct address_space *mapping,
+>  	 * the folio (if needed) without using GFP_NOFS.
+>  	 */
+>  retry_grab:
+> -	folio = __filemap_get_folio(mapping, index, FGP_WRITEBEGIN,
+> +	folio = __filemap_get_folio(mapping, index, fgp_flags,
+>  					mapping_gfp_mask(mapping));
+>  	if (IS_ERR(folio))
+>  		return PTR_ERR(folio);
+
+JFYI, I notice that ext4 cycles the folio lock here in this path and
+thus follows up with a couple checks presumably to accommodate that. One
+is whether i_mapping has changed, which I assume means uncached state
+would have been handled/cleared externally somewhere..? I.e., if an
+uncached folio is somehow truncated/freed without ever having been
+written back?
+
+The next is a folio_wait_stable() call "in case writeback began ..."
+It's not immediately clear to me if that is possible here, but taking
+that at face value, is it an issue if we were to create an uncached
+folio, drop the folio lock, then have some other task dirty and
+writeback the folio (due to a sync write or something), then have
+writeback completion invalidate the folio before we relock it here?
+
+Brian
+
+> @@ -2903,6 +2913,7 @@ static int ext4_da_write_begin(struct file *file, struct address_space *mapping,
+>  	struct folio *folio;
+>  	pgoff_t index;
+>  	struct inode *inode = mapping->host;
+> +	fgf_t fgp_flags;
+>  
+>  	if (unlikely(ext4_forced_shutdown(inode->i_sb)))
+>  		return -EIO;
+> @@ -2926,8 +2937,11 @@ static int ext4_da_write_begin(struct file *file, struct address_space *mapping,
+>  			return 0;
+>  	}
+>  
+> +	fgp_flags = FGP_WRITEBEGIN;
+> +	if (*foliop == foliop_uncached)
+> +		fgp_flags |= FGP_UNCACHED;
+>  retry:
+> -	folio = __filemap_get_folio(mapping, index, FGP_WRITEBEGIN,
+> +	folio = __filemap_get_folio(mapping, index, fgp_flags,
+>  			mapping_gfp_mask(mapping));
+>  	if (IS_ERR(folio))
+>  		return PTR_ERR(folio);
+> diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+> index ad5543866d21..10447c3c4ff1 100644
+> --- a/fs/ext4/page-io.c
+> +++ b/fs/ext4/page-io.c
+> @@ -226,8 +226,6 @@ static void ext4_add_complete_io(ext4_io_end_t *io_end)
+>  	unsigned long flags;
+>  
+>  	/* Only reserved conversions from writeback should enter here */
+> -	WARN_ON(!(io_end->flag & EXT4_IO_END_UNWRITTEN));
+> -	WARN_ON(!io_end->handle && sbi->s_journal);
+>  	spin_lock_irqsave(&ei->i_completed_io_lock, flags);
+>  	wq = sbi->rsv_conversion_wq;
+>  	if (list_empty(&ei->i_rsv_conversion_list))
+> @@ -252,7 +250,7 @@ static int ext4_do_flush_completed_IO(struct inode *inode,
+>  
+>  	while (!list_empty(&unwritten)) {
+>  		io_end = list_entry(unwritten.next, ext4_io_end_t, list);
+> -		BUG_ON(!(io_end->flag & EXT4_IO_END_UNWRITTEN));
+> +		BUG_ON(!(io_end->flag & (EXT4_IO_END_UNWRITTEN|EXT4_IO_UNCACHED)));
+>  		list_del_init(&io_end->list);
+>  
+>  		err = ext4_end_io_end(io_end);
+> @@ -287,14 +285,15 @@ ext4_io_end_t *ext4_init_io_end(struct inode *inode, gfp_t flags)
+>  
+>  void ext4_put_io_end_defer(ext4_io_end_t *io_end)
+>  {
+> -	if (refcount_dec_and_test(&io_end->count)) {
+> -		if (!(io_end->flag & EXT4_IO_END_UNWRITTEN) ||
+> -				list_empty(&io_end->list_vec)) {
+> -			ext4_release_io_end(io_end);
+> -			return;
+> -		}
+> -		ext4_add_complete_io(io_end);
+> +	if (!refcount_dec_and_test(&io_end->count))
+> +		return;
+> +	if ((!(io_end->flag & EXT4_IO_END_UNWRITTEN) ||
+> +	    list_empty(&io_end->list_vec)) &&
+> +	    !(io_end->flag & EXT4_IO_UNCACHED)) {
+> +		ext4_release_io_end(io_end);
+> +		return;
+>  	}
+> +	ext4_add_complete_io(io_end);
+>  }
+>  
+>  int ext4_put_io_end(ext4_io_end_t *io_end)
+> @@ -348,7 +347,7 @@ static void ext4_end_bio(struct bio *bio)
+>  				blk_status_to_errno(bio->bi_status));
+>  	}
+>  
+> -	if (io_end->flag & EXT4_IO_END_UNWRITTEN) {
+> +	if (io_end->flag & (EXT4_IO_END_UNWRITTEN|EXT4_IO_UNCACHED)) {
+>  		/*
+>  		 * Link bio into list hanging from io_end. We have to do it
+>  		 * atomically as bio completions can be racing against each
+> @@ -417,8 +416,13 @@ static void io_submit_add_bh(struct ext4_io_submit *io,
+>  submit_and_retry:
+>  		ext4_io_submit(io);
+>  	}
+> -	if (io->io_bio == NULL)
+> +	if (io->io_bio == NULL) {
+>  		io_submit_init_bio(io, bh);
+> +		if (folio_test_uncached(folio)) {
+> +			ext4_io_end_t *io_end = io->io_bio->bi_private;
+> +			io_end->flag |= EXT4_IO_UNCACHED;
+> +		}
+> +	}
+>  	if (!bio_add_folio(io->io_bio, io_folio, bh->b_size, bh_offset(bh)))
+>  		goto submit_and_retry;
+>  	wbc_account_cgroup_owner(io->io_wbc, &folio->page, bh->b_size);
+> -- 
+> 2.45.2
 > 
-> So apparently the fsnotify_file_has_pre_content_watches() is not
-> called when it should be, and when it *is* called, it's also doing
-> completely the wrong thing.
-> 
-> Look, for basic operations THAT DON'T CARE, you now added a function
-> call to fsnotify_file_has_pre_content_watches(), that function call
-> looks at inode->i_sb->s_iflags (doing two D$ accesses that shouldn't
-> be done!), and then after that looks at the i_fsnotify_mask.
-> 
-> THIS IS EXACTLY THE KIND OF GARBAGE I'M TALKING ABOUT.
-> 
-> This code has been written by somebody who NEVER EVER looked at
-> profiles. You're following chains of pointers when you never should.
-> 
-> Look, here's a very basic example of the kind of complete mis-design
-> I'm talking about:
-> 
->  - we're doing a basic read() on a file that isn't being watched.
-> 
->  - we want to maybe do read-ahead
-> 
->  - the code does
-> 
->         if (fsnotify_file_has_pre_content_watches(file))
->                 return fpin;
-> 
->    to say that "don't do read-ahead".
-> 
-> Fine, I understand the concept. But keep in mind that the common case
-> is presumably that there are no content watches.
-> 
-> And even ignoring the "common case" issue, that's the one you want to
-> OPTIMIZE for. That's the case that matters for performance, because
-> clearly if there are content watches, you're going to go into "Go
-> Slow" mode anyway and not do pre-fetching. So even if content watches
-> are common on some load, they are clearly not the case you should do
-> performance optimization for.
-> 
-> With me so far?
-> 
-> So if THAT is the case that matters, then dammit, we shouldn't be
-> calling a function at all.
-> 
-> And when calling the function, we shouldn't start out with this
-> completely broken logic:
-> 
->         struct inode *inode = file_inode(file);
->         __u32 mnt_mask = real_mount(file->f_path.mnt)->mnt_fsnotify_mask;
-> 
->         if (!(inode->i_sb->s_iflags & SB_I_ALLOW_HSM))
->                 return false;
-> 
-> that does random crap and looks up some "mount mask" and looks up the
-> superblock flags.
-> 
-> Why shouldn't we do this?
-> 
-> BECAUSE NONE OF THIS MATTERS IF THE FILE HASN'T EVEN BEEN MARKED FOR
-> CONTENT MATCHES!
-> 
-> See why I'm shouting? You're doing insane things, and you're doing
-> them for all the cases that DO NOT MATTER. You're doing all of this
-> for the common case that doesn't want to see that kind of mindless
-> overhead.
-> 
-> You literally check for the "do I even care" *last*, when you finally
-> do that fsnotify_object_watched() check that looks at the inode. But
-> by then you have already wasted all that time and effort, and
-> fsnotify_object_watched() is broken anyway, because it's stupidly
-> designed to require that mnt_mask that isn't needed if you have
-> properly marked each object individually.
-> 
-> So what *should* you have?
-> 
-> You should have had a per-file flag saying "Do I need to even call
-> this crud at all", and have it in a location where you don't need to
-> look at anything else.
-> 
-> And fsnotify already basically has that flag, except it's mis-designed
-> too. We have FMODE_NONOTIFY, which is the wrong way around (saying
-> "don't notify", when that should just be the *default*), and the
-> fsnotify layer uses it only to mark its own internal files so that it
-> doesn't get called recursively. So that flag that *looks* sane and is
-> in the right location is actually doing the wrong thing, because it's
-> dealing with a rare special case, not the important cases that
-> actually matter.
-> 
-> So all of this readahead logic - and all of the read and write hooks -
-> should be behind a simple "oh, this file doesn't have any notification
-> stuff, so don't bother calling any fsnotify functions".
-> 
-> So I think the pattern should be
-> 
->     static inline bool fsnotify_file_has_pre_content_watches(struct file *file)
->     {
->         if (unlikely(file->f_mode & FMODE_NOTIFY))
->                 return out_of_line_crud(file);
->         return false;
->     }
-> 
-> so that the *only* thing that gets inlined is "does this file have any
-> fsnotify stuff at all", and in the common case where that isn't true,
-> we don't call any fsnotify functions, and we don't start looking at
-> inodes or superblocks or anything pointless like that.
-> 
-> THAT is the kind of code sequence we should have for unlikely cases.
-> Not the "call fsnotify code to check for something unlikely". Not
-> "look at file_inode(file)->i_sb->s_iflags" until it's *required*.
-> 
-> Similarly, the actual open-time code SHOULD NEVER BE CALLED, because
-> it should have the same kind of simple logic based on some simple flag
-> either in the dentry or maybe in the inode. So that all those *normal*
-> dentries and inodes that don't have watches don't get the overhead of
-> calling into fsnotify code.
-> 
-> Because yes, I do see all those function calls, and all those
-> unnecessary indirect pointer accesses when I do profiles. And if I see
-> fsnotify in my profiles when I don't have any notifications enabled,
-> that really really *annoys* me.
 > 
 
-There are good suggestions here, and decent analysis, Amir has followed up with
-a patch that will improve things, and that's good.
-
-But this was an entirely inappropriate way to communicate your point, even with
-people who have been here a while and are used to being yelled at.
-
-Throughout this email you have suggested that myself, Amir, and Jan have never
-looked at profiles.  You go so far as to suggest that we have no idea what we're
-doing and don't understand common case optimizations.  These are the sort of
-comments that are unhelpful and put most people on the defensive, and make them
-unwilling to listen to your suggestions and feedback.  These are the sort of
-comments that make people work very hard to exit this community.
-
-Are you wrong?  No.  We all get tunnel vision, I know I was deeply focused on
-making the page fault case have as little impact as possible, but I definitely
-didn't consider the indirect access case.  I don't run with mitigations on, and
-frankly I am a file system person, I know if you're here we're going to do IO
-and that's going to be the bad part.  That's why we do code review, because
-we're all human and we all miss things.
-
-But being dressed down like this for missing a better way, because lets be
-honest what I did wasn't earth shatteringly bad, is not helpful.  It is actively
-harmful, and it makes me not want to work on this stuff anymore.
-
-We constantly have discussions about how do we bring in new people and how do we
-train up new maintainers, without looking at how do we keep maintainers and how
-do we keep developers.  If you're losing people like me, gaining new people is
-going to be an even taller order.  Thanks,
-
-Josef
