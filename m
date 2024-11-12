@@ -1,198 +1,128 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B5F1292CE
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 22:19:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABC1721745E;
+	Tue, 12 Nov 2024 22:37:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731449970; cv=none; b=NCY0xu4vTEpjqVaVsNlXg0+UWAeZEE0TTSdAA6iKf+2C4TbAFaoASu0gOcKYA9PiEuSaN8LTtKFdqbpNArWJPbwWr8k6zWh0cEflxdpSc4P8qhwTMc38fS4UnK1BrLRpOlHnmYSbaXPx1gfMqdOV45wWVCmF23KsyVNHu1nZU7M=
+	t=1731451057; cv=none; b=WcLf241bycYHHyFZDdZ+zuo6LDALOR1Dl5Wn7ODUTAkf55lwi2OoeQyL0iKWVV/bKXen7oEDxTFSR3bF/sI7E/jjDy3MF8dVj64ch/mJmnYttZTyRJjywA6P+rB3AbD3j4ozgNUnezZ0Rqwjy/jgbDBbz+W33Yd+MKDv6DDg05Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731449970; c=relaxed/simple;
-	bh=UahsPdezhKfe1FeRYKBw9nkhAEVrxSDhaIHvglDUEuM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pgcbTmpQQYCLZRuLg/1CbY8tbAAHgLMWJ6QOK0AcMkvXD7gVkhYDeC8CvlS5/PXRGdo+O6VtciiYVZX2ehvn4YZKWXyGO+aRwhUqT+26kakb0X2wH4UYmk3LxKaWpnjs4sE6CAqKX7Ep1mhZ2ZHbZxk0sZYsC47ztk9S/j7MtZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=kfdcOoXE; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1731451057; c=relaxed/simple;
+	bh=2Xgye9kLSVVbThxJiOuv4J9XrHzW3k7ZdKbuDsZUfQs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=sPl2MeoBlXuQfg9jljcTgE9F/uWohrLsbNLxERkhBUHccHnaFf7UUcd7DlX/asn0y9BPqZev1F09PSiHjILgXzYIjzTySYf0FwY2Nb734TvdA9jjMAQVC/2FoK8PhxPhjlP56XfjITuVI775yb66CFGede9FMu/iNvgaGK+a6hk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y3/S7KMm; arc=none smtp.client-ip=209.85.160.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="kfdcOoXE"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-720be27db74so89007b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 14:19:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y3/S7KMm"
+Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-460ab1bc2aeso41740581cf.3;
+        Tue, 12 Nov 2024 14:37:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731449965; x=1732054765; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1731451054; x=1732055854; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=uLQEA5U2rjQCoFu4hmUmY2uxE5Fxmi3WuoV1ejBhXa8=;
-        b=kfdcOoXEDST5fJsd9oPYaF3hFVxVEu9lXriR+sJbINVBYhwF4NDhJC3WY5ZyRsyOOP
-         lIhP6X7tAbvhfb6AtQYGC+uQNJTnsi7Kgg2XpMDkRplwtzGPV/MUzjKv/GKCQokQtjk4
-         Ub9+Lzsc4J4HNYZuwLABvS2FJF0f8mCYAY3K+dtap0BoLgwpMzphvzLwnzzgefSD2a+V
-         OKwDsqvxKNe3gzVmqkFEwcLmVd5H8jaMlGiheqcAoxdtdgWKKuWnUfPvNCw1HTO4m13f
-         oSxSV5tAfSmZwJgcW1b/Q3dRmvbAx/Xs/kxQ39iJneKwooU3T84Cmm3bDELDu3ULlNFi
-         lwcQ==
+        bh=JsJ4qi0tKyd0z6dgveSDFEC/C40H7WEHG7mL/4zFsfM=;
+        b=Y3/S7KMmcXifxWWFnm6pb4z91esJ78yDboGLiFHhkNaw1EyvP7PcKjmru5Bl+FPXWT
+         /muGP73W25PQQnar+CIZUz69poDWzfIvkCpe6EmIWw990djrFdOEiXM9unaGxKzRaXjD
+         i02Z+uSNgfk2oJQ/I2mm7rDannqPci00QTkSZlhFFdZyr72hSjcfNibYCYQ+Sa73ISZG
+         x6Ii0Ku/e8ZhFSqvXiz83Lwr/IV9r7rd48b85wyjpRersB0hyvSJ7CcNfv6Sk6Ny8IUh
+         Sb1JC6IPDyF/g6cJlhAfUrNBzLQD+HUatUC905R7w44JwZT2dtuAv34tgwcZwZEHxDJ6
+         SngA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731449965; x=1732054765;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1731451054; x=1732055854;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=uLQEA5U2rjQCoFu4hmUmY2uxE5Fxmi3WuoV1ejBhXa8=;
-        b=SXQjT9PIc4WlaryWi5Iy4LVAHmZmIbeNMPc/eCg+xXZ04pw4s3Ix8xXt43Qja+9dFK
-         Vr958grSxF3TA6RKRwjv286j/rQ/0gbxfcJ08sxEpSW4QMbKPqBR4cxxJ1ZfqiZZHS39
-         O0NZREYQ/hsVgAwgZYTDLLs4B4i3JoFH/xqR7DnBdS5fct8Crz+NoCYiE+p8kS1nN8e5
-         E6v0+nA8QV83dgTRjkwPg6tWk8aXz5FcXKHjmx+fpM7ZNh2R+MhpBdy0kRY15IIyPMBc
-         jpS6HRGCEJBhs5GZ2oN8yDb8Ohqr67EpRp271hS6t9HMRrI7oAPL1hXcTMW5MiGlDPY0
-         H8Yg==
-X-Gm-Message-State: AOJu0YzE9ob9M2+FiBK3cvjXiJBwiW3FG8R9YVyMC/SGWeOXaMp2fjJZ
-	I7I6+hx38IBPOoqA6zTdxwqKkCvr4LavrMshHE7kbt8lFpZE+snfeVDoHU+btVbSluBEjlN3XK2
-	9
-X-Google-Smtp-Source: AGHT+IGxL1cQaPbiFcFVXjYr/PEXFHJt2qgqsMSy6YXL5rnWxAhTn+LmG95UCuNNR/fMXSAGbMBD6w==
-X-Received: by 2002:a05:6a00:22ce:b0:71e:76dc:10f7 with SMTP id d2e1a72fcca58-72413f7c7c3mr27948697b3a.4.1731449965053;
-        Tue, 12 Nov 2024 14:19:25 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72407a571a8sm11732967b3a.195.2024.11.12.14.19.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2024 14:19:24 -0800 (PST)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-	by dread.disaster.area with esmtp (Exim 4.96)
-	(envelope-from <dave@fromorbit.com>)
-	id 1tAzEH-00Doot-0h;
-	Wed, 13 Nov 2024 09:19:21 +1100
-Received: from dave by devoid.disaster.area with local (Exim 4.98)
-	(envelope-from <dave@devoid.disaster.area>)
-	id 1tAzEH-00000004e82-2os8;
-	Wed, 13 Nov 2024 09:19:21 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org
-Subject: [PATCH 2/3] xfs: delalloc and quota softlimit timers are incoherent
-Date: Wed, 13 Nov 2024 09:05:15 +1100
-Message-ID: <20241112221920.1105007-3-david@fromorbit.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241112221920.1105007-1-david@fromorbit.com>
-References: <20241112221920.1105007-1-david@fromorbit.com>
+        bh=JsJ4qi0tKyd0z6dgveSDFEC/C40H7WEHG7mL/4zFsfM=;
+        b=o9L4Bu1zD1C8sbgBAoONgDosWmJxsn6r7DABPY3g/zzyuUGloZc/KgCcRoZzKG0y15
+         00U/1ddXY5Ka4vzwtnEYYFhzJ+6BXElP//TnIR0D79VodOND8Vbplxy5hZqNJP+3Y3Wn
+         r1Y7iBw9tCWGnW1sHoycUG4ERadJ6+7EXZo5bkjAUqyqWyZ7i3YdHHDDBh02UCL/8gmE
+         oaUoJ3z/PpiuCO71Erz1KOOPPxMphsIpvBkjCBDM1nmNE8viV1aLDpbpH0DLoEz7IsMp
+         ScvNsAixlwdSf/I+nyw16KqZ2mRFi+yYSOaD2Uyq6wS+zFIE+b3JAD5QR2sMjB8qT+NV
+         ROag==
+X-Forwarded-Encrypted: i=1; AJvYcCU9Kd5q6aRIgGG78AsfbXpJRyKkkQV9l6uHiM9iRX8xj1h1w2kGkod4XWEb2Cz087SyDekiS8tm7jBL/Q==@vger.kernel.org, AJvYcCVEoGhCm6uzrwupYQ0IZ0U7l4/CSL9KHK4z6j7V6jCcHLapWbeoOZ5UZjTP6+IDbKhvI6CalUPHTqC0cIwB3w==@vger.kernel.org, AJvYcCWA6Lf8YLuGLXe3X5FIh6WkqUDnvc0gAIU4O76CfJ4ZXc+RThmq48NDwTDQt0J2SBiFrqy2WGH5o6kY@vger.kernel.org, AJvYcCX5mV5xrbfSXGgxmPvVUi6jbHKYXutTedothY/YPB50OphDFlKfHY7HckNvlEo5oEWHwG9+Hp1Y9NVpRA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPVO2SlzO4MJ5rNUBy8R+FsZXVJIx+zxQjHulK9XekClQaJMcF
+	4ljbT0qL+KMBWv+n3OYiFUfwMCKxTdfVc1I0Ov+kVnpAGtKM2OVMqi348EwZIiclXVlTOBJGy86
+	OSRfwAK/yvAxROp2yKMrFqickFh2EjCt+NUU=
+X-Google-Smtp-Source: AGHT+IET/tFAIWy1NMuNPLTnj95HbAr/sGehV2uRf9hScSchtuK/dDofnhh+PiANipLY45hJp1UT5T5IJchyMZUuD0U=
+X-Received: by 2002:a05:622a:4c08:b0:45f:3b3:49e6 with SMTP id
+ d75a77b69052e-463093ef010mr274250321cf.41.1731451054504; Tue, 12 Nov 2024
+ 14:37:34 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <cover.1731433903.git.josef@toxicpanda.com> <8c8e9452d153a1918470cbe52a8eb6505c675911.1731433903.git.josef@toxicpanda.com>
+ <CAHk-=wjFKgs-to95Op3p19Shy+EqW2ttSOwk2OadVN-e=eV73g@mail.gmail.com>
+In-Reply-To: <CAHk-=wjFKgs-to95Op3p19Shy+EqW2ttSOwk2OadVN-e=eV73g@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 12 Nov 2024 23:37:23 +0100
+Message-ID: <CAOQ4uxjHXmYGH3wUO=w+tM+CiFWBjWvZEZZkSXA5FO8T+VP4mA@mail.gmail.com>
+Subject: Re: [PATCH v7 01/18] fsnotify: opt-in for permission events at
+ file_open_perm() time
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
+	jack@suse.cz, brauner@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Supriya Wickrematillake <sup@sgi.com>
+On Tue, Nov 12, 2024 at 8:46=E2=80=AFPM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> On Tue, 12 Nov 2024 at 09:56, Josef Bacik <josef@toxicpanda.com> wrote:
+> >
+> > @@ -119,14 +118,37 @@ static inline int fsnotify_file(struct file *file=
+, __u32 mask)
+> >          * handle creation / destruction events and not "real" file eve=
+nts.
+> >          */
+> >         if (file->f_mode & (FMODE_NONOTIFY | FMODE_PATH))
+> > +               return false;
+> > +
+> > +       /* Permission events require that watches are set before FS_OPE=
+N_PERM */
+> > +       if (mask & ALL_FSNOTIFY_PERM_EVENTS & ~FS_OPEN_PERM &&
+> > +           !(file->f_mode & FMODE_NOTIFY_PERM))
+> > +               return false;
+>
+> This still all looks very strange.
+>
+> As far as I can tell, there is exactly one user of FS_OPEN_PERM in
+> 'mask', and that's fsnotify_open_perm(). Which is called in exactly
+> one place: security_file_open(), which is the wrong place to call it
+> anyway and is the only place where fsnotify is called from the
+> security layer.
+>
+> In fact, that looks like an active bug: if you enable FSNOTIFY, but
+> you *don't* enable CONFIG_SECURITY, the whole fsnotify_open_perm()
+> will never be called at all.
+>
+> And I just verified that yes, you can very much generate such a config.
+>
 
-I've been seeing this failure on during xfs/050 recently:
+See: 1cda52f1b461 fsnotify, lsm: Decouple fsnotify from lsm
+in linux-next. This patch set is based on the fs-next branch.
 
- XFS: Assertion failed: dst->d_spc_timer != 0, file: fs/xfs/xfs_qm_syscalls.c, line: 435
-....
- Call Trace:
-  <TASK>
-  xfs_qm_scall_getquota_fill_qc+0x2a2/0x2b0
-  xfs_qm_scall_getquota_next+0x69/0xa0
-  xfs_fs_get_nextdqblk+0x62/0xf0
-  quota_getnextxquota+0xbf/0x320
-  do_quotactl+0x1a1/0x410
-  __se_sys_quotactl+0x126/0x310
-  __x64_sys_quotactl+0x21/0x30
-  x64_sys_call+0x2819/0x2ee0
-  do_syscall_64+0x68/0x130
-  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> So the whole FS_OPEN_PERM thing looks like a special case, called from
+> a (broken) special place, and now polluting this "fsnotify_file()"
+> logic for no actual reason and making it all look unnecessarily messy.
+>
+> I'd suggest that the whole fsnotify_open_perm() simply be moved to
+> where it *should* be - in the open path - and not make a bad and
+> broken attempt at hiding inside the security layer, and not use this
+> "fsnotify_file()" logic at all.
+>
+> The open-time logic is different. It shouldn't even attempt - badly -
+> to look like it's the same thing as some regular file access.
+>
 
-It turns out that the _qmount call has silently been failing to
-unmount and mount the filesystem, so when the softlimit is pushed
-past with a buffered write, it is not getting synced to disk before
-the next quota report is being run.
+OK, we can move setting the FMODE_NOTIFY_PERM to the open path.
+I have considered that it may be better to unhide it, but wasn't sure.
 
-Hence when the quota report runs, we have 300 blocks of delalloc
-data on an inode, with a soft limit of 200 blocks. XFS dquots
-account delalloc reservations as used space, hence the dquot is over
-the soft limit.
-
-However, we don't update the soft limit timers until we do a
-transactional update of the dquot. That is, the dquot sits over the
-soft limit without a softlimit timer being started until writeback
-occurs and the allocation modifies the dquot and we call
-xfs_qm_adjust_dqtimers() from xfs_trans_apply_dquot_deltas() in
-xfs_trans_commit() context.
-
-This isn't really a problem, except for this debug code in
-xfs_qm_scall_getquota_fill_qc():
-
-#ifdef DEBUG
-        if (xfs_dquot_is_enforced(dqp) && dqp->q_id != 0) {
-                if ((dst->d_space > dst->d_spc_softlimit) &&
-                    (dst->d_spc_softlimit > 0)) {
-                        ASSERT(dst->d_spc_timer != 0);
-                }
-....
-
-It asserts taht if the used block count is over the soft limit,
-it *must* have a soft limit timer running. This is clearly not
-the case, because we haven't committed the delalloc space to disk
-yet. Hence the soft limit is only exceeded temporarily in memory
-(which isn't an issue) and we start the timer the moment we exceed
-the soft limit in journalled metadata.
-
-This debug was introduced in:
-
-commit 0d5ad8383061fbc0a9804fbb98218750000fe032
-Author: Supriya Wickrematillake <sup@sgi.com>
-Date:   Wed May 15 22:44:44 1996 +0000
-
-    initial checkin
-    quotactl syscall functions.
-
-The very first quota support commit back in 1996. This is zero-day
-debug for Irix and, as it turns out, a zero-day bug in the debug
-code because the delalloc code on Irix didn't update the softlimit
-timers, either.
-
-IOWs, this issue has been in the code for 28 years.
-
-We obviously don't care if soft limit timers are a bit rubbery when
-we have delalloc reservations in memory. Production systems running
-quota reports have been exposed to this situation for 28 years and
-nobody has noticed it, so the debug code is essentially worthless at
-this point in time.
-
-We also have the on-disk dquot verifiers checking that the soft
-limit timer is running whenever the dquot is over the soft limit
-before we write it to disk and after we read it from disk. These
-aren't firing, so it is clear the issue is purely a temporary
-in-memory incoherency that I never would have noticed had the test
-not silently failed to unmount the filesystem.
-
-Hence I'm simply going to trash this runtime debug because it isn't
-useful in the slightest for catching quota bugs.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_qm_syscalls.c | 13 -------------
- 1 file changed, 13 deletions(-)
-
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 4eda50ae2d1c..0c78f30fa4a3 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -427,19 +427,6 @@ xfs_qm_scall_getquota_fill_qc(
- 		dst->d_ino_timer = 0;
- 		dst->d_rt_spc_timer = 0;
- 	}
--
--#ifdef DEBUG
--	if (xfs_dquot_is_enforced(dqp) && dqp->q_id != 0) {
--		if ((dst->d_space > dst->d_spc_softlimit) &&
--		    (dst->d_spc_softlimit > 0)) {
--			ASSERT(dst->d_spc_timer != 0);
--		}
--		if ((dst->d_ino_count > dqp->q_ino.softlimit) &&
--		    (dqp->q_ino.softlimit > 0)) {
--			ASSERT(dst->d_ino_timer != 0);
--		}
--	}
--#endif
- }
- 
- /* Return the quota information for the dquot matching id. */
--- 
-2.45.2
-
+Thanks,
+Amir.
