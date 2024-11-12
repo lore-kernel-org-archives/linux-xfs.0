@@ -1,161 +1,218 @@
-Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 389671F707E
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 00:37:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF5320262C
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 00:57:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731371875; cv=none; b=D7OvOnQ75fcmF8kTnX1pFvNwaMA8vHny9MMTZiRoQD78H/pM2BzaFppNB+loPqg6MgMKO8JbTH8Uvy8uwIFkJIJ+yCyYox1aR063L4b2I8NZRbYkiwJOWlBWGQ74zul8eJYGIpJAPX5KlssVFKndMJs3T/IyT19FW69ai4Z4GQo=
+	t=1731373030; cv=none; b=uoP6g1PeTO0CMqzK4YbGUqyQycX07o1ug6nSkJ6cKQkTZw2e+Fba+hkowwh1ZpIo9btef8azkXn04j26w8h50IWmCPG3lyiG2loU0ytAtX4yWw6DStMB2c6kQFlhpf1OTEcPfJyOa6HtEYNxIDZJrAe5NFHg2V96jBQBxBNNJa0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731371875; c=relaxed/simple;
-	bh=t6P42hBzZCFlDjsCYhooA9AZjGMzRt8DzGc4WyVzrqo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Beoc9yW3cfwNls6LWGnKGycIAqga4AAhpeivIk4mprka7Ihhg8eSP2rNdepw1H0qd7iDd/iLz40R2Lf0I1C7XOP4Svf2CmZk9chnWIjiYwubic9Lqnwp8p9hqt02n2CrSDE3ZD/EZEqY0TMLAvgJ6K9Us683fQpOG3pimLZVnfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=OJeY9Fc4; arc=none smtp.client-ip=209.85.167.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1731373030; c=relaxed/simple;
+	bh=YYOImkpUT1Yja9zYCaAJgCtxSCnlayekNMYaprAva7E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KFml+SkYIcT156Zxdhljc7PI9RTUllBHgRozzyuzgHJbAPksbcNEMZQ1hwFBYtcRXBley2vHvsqJiwmBymcWdyBO6Ywru98jz99Ld/8XqFYKaF6mfd2n0rgxLmcw2068JX+z3L9ENtlMD6Ejwrtchsp7owLS+vBxmDgetDI6Rlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Yw/B7jYd; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="OJeY9Fc4"
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-539ee1acb86so5626620e87.0
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 16:37:52 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Yw/B7jYd"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-20e6981ca77so57993665ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 16:57:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1731371871; x=1731976671; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=8s+Ye3Sb5A7DOLizr5823ibyYsiIFEnIKQUrUtOpKwk=;
-        b=OJeY9Fc45xFlog/Q27CDW3XNhAmvHvXTKaH8/GbXd+tBQJydV8KcandQD9vTfzahxL
-         yjtzNDdQgJs+6B0eI18aNXfPzMA5gd0RXGn2T62jRi33F9o50LwAMWk6l+clsWiDiG6c
-         8cRWkct01eI42rI8t2vHpQx3zknFzGJ4DLC4U=
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731373027; x=1731977827; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZUwyokbteUzniHEENjrKpRRTwbWjJZjJmULNQblWcik=;
+        b=Yw/B7jYd1iTBsqSPt91moD+FDQFLCIDrhCx1LUB35sV9BfXvpGTYPQgsuKBbOp9S0R
+         9r2rAWUIq7wkLrCjwSvR461fDS0japg8ra4cRbIcyXD7VGkBgsjToV05zivO9AjaS6Sl
+         tPMaNxCCCfXI0ZWXPLWuPtZP1rU8xJFVwpcDbuR6Cny9jhvz9+ObLz6HeKmxj2SX/m3J
+         KvUNY3Ih8DthB8OrWFcLKKnBRsrLH+UPjUD2WEVZTE11cHLc0jeTJLAreoRqDG2tLRsH
+         dcm3/0FbGi0p10BYQgtlkrIvoucpT1NWS72Y0WJEvrBcQyTXG3h1XtCa1FbZ52IO0HJ0
+         XsGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731371871; x=1731976671;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8s+Ye3Sb5A7DOLizr5823ibyYsiIFEnIKQUrUtOpKwk=;
-        b=guSuo0YL8UGNekBmOVM4VDPjxcuZaH7Xwe1fInLtji6Hsr4MolfZLffAyX0w3gIcP1
-         HAKT5ccSkkSJcJDil5ZhSvlMdkoE1oj5UmVjpaDPgFp7NU8Zh6b8Sj4XgLJnNPSLE/zx
-         FumyCzFjHhQX5x2Mj3oatjVFVEnSeVhdI8nDGp9MSTJRiUdaM/MPq4v4iLrEtkhIhCbu
-         igr4bClzBzs6aK4TCl5vymFZ0sYWyaegsm4HnY84sJIYSW8QWTUY730rGgOFv9jtPK/a
-         Zxa7PyleoPhsZq4cpA1PXQQeHUIewVDzgi5FdFB2kWg/EqI/SU2yi8Op8tFF1lPNNzJ8
-         3Cmg==
-X-Forwarded-Encrypted: i=1; AJvYcCVvrGTP9+31wHwdM7A7dmOTyTduWxhp4wfqzhMJprnSTx6qnJ/9j2wq1vdolDyAKX2ZEk7ZGv+UcGs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzK5dqwdytyLdAmk6/1tiicG9Z+PqMyA1cat3V5azqLkD+bAr2X
-	EJKpmO0NmWE12LXTHk2vD9d61TcGCLPY3p32oiB4Y/GSP2kieBBS2bRJmv2841C6Tg+TZUUvj1d
-	FRDU=
-X-Google-Smtp-Source: AGHT+IFJaq/MoDH44KqZaijaNnNGQHpgokRRCLeUdU0D62Ij9s/btyNhbKmD7qs0/LfYxtQL907Msg==
-X-Received: by 2002:a05:6512:3a88:b0:536:a6c6:33f with SMTP id 2adb3069b0e04-53d862bb481mr6827436e87.13.1731371871081;
-        Mon, 11 Nov 2024 16:37:51 -0800 (PST)
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com. [209.85.218.41])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cf03b7e8d0sm5443217a12.33.2024.11.11.16.37.47
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Nov 2024 16:37:48 -0800 (PST)
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-a93c1cc74fdso863586266b.3
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2024 16:37:47 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWD+4geoMO6cf3HJE4xwWnXLLGwRnHWYU9uik2PM6878IiGjrSuFbsjikWdC+uX3oz04FglsazvY84=@vger.kernel.org
-X-Received: by 2002:a17:906:dc8a:b0:a9e:b090:e65d with SMTP id
- a640c23a62f3a-a9eeff383eemr1195211366b.32.1731371866917; Mon, 11 Nov 2024
- 16:37:46 -0800 (PST)
+        d=1e100.net; s=20230601; t=1731373027; x=1731977827;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZUwyokbteUzniHEENjrKpRRTwbWjJZjJmULNQblWcik=;
+        b=wBGWIo9WajhN3Tg3Yd92S+CGrXq+Qtwy1s2upNMl/sVc2LLtN/WMQvSiAriq7urin0
+         0F0VoshwUTnKos+IZ3KG8zj6AGqrQHBxWP3y8vC+EJHbk2pSuSRwnFTMD/4qK3hhhfIS
+         m9ADOuejyvc9teXPG68+28KsA/zC89YYGbg0m4XPJHw6u08vmnoMWeYJaXxtXOKsxbQm
+         /dKkNsOw7CfhPWIxh4O6LPQv1rx94KSXm2gXmAp5MZHh0Yq6OaJ7m0R/LYfwIpkBjPyY
+         NSTsbaNttDt8wJsTb6U9izWtNL82APSuhKucCUvg/YJIqHDWoXM7GRLazwAEdlpzXWzu
+         W96Q==
+X-Forwarded-Encrypted: i=1; AJvYcCV5LMOeutXPtcsRUAbgMUCzesfxb+xRckd96ihbzRsyn1TeU5rudjhdso6+sOv6c5zEfTZ61lFphq8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywi4xKStuSzb/NF9ie3FWJcXNZ0m98FdAx52bjsWepzO6Enl8UO
+	4AMUyzRA9PJRnDGSoY1T15/in1KUZUUVCBPzT3fi19Fq55zac5SpWeWjJcMnz0M=
+X-Google-Smtp-Source: AGHT+IG6t7qQXVQ3LjFCpVZCH1u4sMB615TBElvGr3S07x/zbJIq4pbcacpDwlnZyNM4UL5MtKIurg==
+X-Received: by 2002:a17:902:d50c:b0:20b:449c:8978 with SMTP id d9443c01a7336-21183559ba4mr207039635ad.31.1731373027524;
+        Mon, 11 Nov 2024 16:57:07 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177e6a3f4sm81430715ad.234.2024.11.11.16.57.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Nov 2024 16:57:07 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1tAfDM-00DQ0B-1Q;
+	Tue, 12 Nov 2024 11:57:04 +1100
+Date: Tue, 12 Nov 2024 11:57:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org,
+	clm@meta.com, linux-kernel@vger.kernel.org, willy@infradead.org,
+	kirill@shutemov.name, linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 10/16] mm/filemap: make buffered writes work with
+ RWF_UNCACHED
+Message-ID: <ZzKn4OyHXq5r6eiI@dread.disaster.area>
+References: <20241111234842.2024180-1-axboe@kernel.dk>
+ <20241111234842.2024180-11-axboe@kernel.dk>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731355931.git.josef@toxicpanda.com> <b509ec78c045d67d4d7e31976eba4b708b238b66.1731355931.git.josef@toxicpanda.com>
- <CAHk-=wh4BEjbfaO93hiZs3YXoNmV=YkWT4=OOhuxM3vD2S-1iA@mail.gmail.com>
- <CAEzrpqdtSAoS+p4i0EzWFr0Nrpw1Q2hphatV7Sk4VM49=L3kGw@mail.gmail.com>
- <CAHk-=wj8L=mtcRTi=NECHMGfZQgXOp_uix1YVh04fEmrKaMnXA@mail.gmail.com> <CAOQ4uxgxtQhe_3mj5SwH9568xEFsxtNqexLfw9Wx_53LPmyD=Q@mail.gmail.com>
-In-Reply-To: <CAOQ4uxgxtQhe_3mj5SwH9568xEFsxtNqexLfw9Wx_53LPmyD=Q@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 11 Nov 2024 16:37:30 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wgUV27XF8g23=aWNJecRbn8fCDDW2=10y9yJ122+d8JrA@mail.gmail.com>
-Message-ID: <CAHk-=wgUV27XF8g23=aWNJecRbn8fCDDW2=10y9yJ122+d8JrA@mail.gmail.com>
-Subject: Re: [PATCH v6 06/17] fsnotify: generate pre-content permission event
- on open
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	jack@suse.cz, brauner@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241111234842.2024180-11-axboe@kernel.dk>
 
-On Mon, 11 Nov 2024 at 16:00, Amir Goldstein <amir73il@gmail.com> wrote:
->
-> I think that's a good idea for pre-content events, because it's fine
-> to say that if the sb/mount was not watched by a pre-content event listener
-> at the time of file open, then we do not care.
+On Mon, Nov 11, 2024 at 04:37:37PM -0700, Jens Axboe wrote:
+> If RWF_UNCACHED is set for a write, mark new folios being written with
+> uncached. This is done by passing in the fact that it's an uncached write
+> through the folio pointer. We can only get there when IOCB_UNCACHED was
+> allowed, which can only happen if the file system opts in. Opting in means
+> they need to check for the LSB in the folio pointer to know if it's an
+> uncached write or not. If it is, then FGP_UNCACHED should be used if
+> creating new folios is necessary.
+> 
+> Uncached writes will drop any folios they create upon writeback
+> completion, but leave folios that may exist in that range alone. Since
+> ->write_begin() doesn't currently take any flags, and to avoid needing
+> to change the callback kernel wide, use the foliop being passed in to
+> ->write_begin() to signal if this is an uncached write or not. File
+> systems can then use that to mark newly created folios as uncached.
+> 
+> Add a helper, generic_uncached_write(), that generic_file_write_iter()
+> calls upon successful completion of an uncached write.
 
-Right.
+This doesn't implement an "uncached" write operation. This
+implements a cache write-through operation.
 
-> The problem is that legacy inotify/fanotify watches can be added after
-> file is open, so that is allegedly why this optimization was not done for
-> fsnotify hooks in the past.
+We've actually been talking about this for some time as a desirable
+general buffered write trait on fast SSDs. Excessive write-behind
+caching is a real problem in general, especially when doing
+streaming sequential writes to pcie 4 and 5 nvme SSDs that can do
+more than 7GB/s to disk. When the page cache fills up, we see all
+the same problems you are trying to work around in this series
+with "uncached" writes.
 
-So honestly, even if the legacy fsnotify hooks can't look at the file
-flag, they could damn well look at an inode flag.
+IOWS, what we really want is page cache write-through as an
+automatic feature for buffered writes.
 
-And I'm not even convinced that we couldn't fix them to just look at a
-file flag, and say "tough luck, somebody opened that file before you
-started watching, you don't get to see what they did".
 
-So even if we don't look at a file->f_mode flag, the lergacy cases
-should look at i_fsnotify_mask, and do that *first*.
+> @@ -70,6 +71,34 @@ static inline int filemap_write_and_wait(struct address_space *mapping)
+>  	return filemap_write_and_wait_range(mapping, 0, LLONG_MAX);
+>  }
+>  
+> +/*
+> + * generic_uncached_write - start uncached writeback
+> + * @iocb: the iocb that was written
+> + * @written: the amount of bytes written
+> + *
+> + * When writeback has been handled by write_iter, this helper should be called
+> + * if the file system supports uncached writes. If %IOCB_UNCACHED is set, it
+> + * will kick off writeback for the specified range.
+> + */
+> +static inline void generic_uncached_write(struct kiocb *iocb, ssize_t written)
+> +{
+> +	if (iocb->ki_flags & IOCB_UNCACHED) {
+> +		struct address_space *mapping = iocb->ki_filp->f_mapping;
+> +
+> +		/* kick off uncached writeback */
+> +		__filemap_fdatawrite_range(mapping, iocb->ki_pos,
+> +					   iocb->ki_pos + written, WB_SYNC_NONE);
+> +	}
+> +}
 
-IOW, not do it like fsnotify_object_watched() does now, which is just
-broken. Again, it looks at inode->i_sb->s_fsnotify_mask completely
-pointlessly, but it also does it much too late - it gets called after
-we've already called into the fsnotify() code and have messed up the
-I$ etc.
+Yup, this is basically write-through.
 
-The "linode->i_sb->s_fsnotify_mask" is not only an extra indirection,
-it should be very *literally* pointless. If some bit isn't set in
-i_sb->s_fsnotify_mask, then there should be no way to set that bit in
-inode->i_fsnotify_mask. So the only time we should access
-i_sb->s_fsnotify_mask is when i_notify_mask gets *modified*, not when
-it gets tested.
+> +
+> +/*
+> + * Value passed in to ->write_begin() if IOCB_UNCACHED is set for the write,
+> + * and the ->write_begin() handler on a file system supporting FOP_UNCACHED
+> + * must check for this and pass FGP_UNCACHED for folio creation.
+> + */
+> +#define foliop_uncached			((struct folio *) 0xfee1c001)
+> +#define foliop_is_uncached(foliop)	(*(foliop) == foliop_uncached)
+> +
+>  /**
+>   * filemap_set_wb_err - set a writeback error on an address_space
+>   * @mapping: mapping in which to set writeback error
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 40debe742abe..0d312de4e20c 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -430,6 +430,7 @@ int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
+>  
+>  	return filemap_fdatawrite_wbc(mapping, &wbc);
+>  }
+> +EXPORT_SYMBOL_GPL(__filemap_fdatawrite_range);
+>  
+>  static inline int __filemap_fdatawrite(struct address_space *mapping,
+>  	int sync_mode)
+> @@ -4076,7 +4077,7 @@ ssize_t generic_perform_write(struct kiocb *iocb, struct iov_iter *i)
+>  	ssize_t written = 0;
+>  
+>  	do {
+> -		struct folio *folio;
+> +		struct folio *folio = NULL;
+>  		size_t offset;		/* Offset into folio */
+>  		size_t bytes;		/* Bytes to write to folio */
+>  		size_t copied;		/* Bytes copied from user */
+> @@ -4104,6 +4105,16 @@ ssize_t generic_perform_write(struct kiocb *iocb, struct iov_iter *i)
+>  			break;
+>  		}
+>  
+> +		/*
+> +		 * If IOCB_UNCACHED is set here, we now the file system
+> +		 * supports it. And hence it'll know to check folip for being
+> +		 * set to this magic value. If so, it's an uncached write.
+> +		 * Whenever ->write_begin() changes prototypes again, this
+> +		 * can go away and just pass iocb or iocb flags.
+> +		 */
+> +		if (iocb->ki_flags & IOCB_UNCACHED)
+> +			folio = foliop_uncached;
+> +
+>  		status = a_ops->write_begin(file, mapping, pos, bytes,
+>  						&folio, &fsdata);
+>  		if (unlikely(status < 0))
+> @@ -4234,8 +4245,10 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  		ret = __generic_file_write_iter(iocb, from);
+>  	inode_unlock(inode);
+>  
+> -	if (ret > 0)
+> +	if (ret > 0) {
+> +		generic_uncached_write(iocb, ret);
+>  		ret = generic_write_sync(iocb, ret);
 
-But even if that silly and pointless i_sb->s_fsnotify_mask thing is
-removed, fsnotify_object_watched() is *still* wrong, because it
-requires that mnt_mask as an argument, which means that the caller now
-has to look it up - all this entirely pointless work that should never
-be done if the bit wasn't set in inode->i_fsnotify_mask.
+Why isn't the writethrough check inside generic_write_sync()?
+Having to add it to every filesystem that supports write-through is
+unwieldy. If the IO is DSYNC or SYNC, we're going to run WB_SYNC_ALL
+writeback through the generic_write_sync() path already, so the only time we
+actually want to run WB_SYNC_NONE write-through here is if the iocb
+is not marked as dsync.
 
-So I really think fsnotify is doing *everything* wrong.
+Hence I think this write-through check should be done conditionally
+inside generic_write_sync(), not in addition to the writeback
+generic_write_sync() might need to do...
 
-And I most certainly don't want to add more runtime hooks to
-*critical* code like open/read/write.
+That also gives us a common place for adding cache write-through
+trigger logic (think writebehind trigger logic similar to readahead)
+and this is also a place where we could automatically tag mapping
+ranges for reclaim on writeback completion....
 
-Right now, many of the fsnotify things are for "metadata", ie for
-bigger file creation / removal / move etc. And yes, the "don't do this
-if there are no fsnotify watchers AT ALL" does actually end up meaning
-that most of the time I never see any of it in profiles, because the
-fsnotify_sb_has_watchers() culls out that case.
-
-And while the fsnotify_sb_has_watchers() thing is broken garbage and
-does too many indirections and is not testing the right thing, at
-least it's inlined and you don't get the function calls.
-
-That doesn't make fsnotify "right", but at least it's not in my face.
-I see the sb accesses, and I hate them, but it's usually at least
-hidden. Admittedly not as well hidden as it *should* be, since it does
-the access tests in the wrong order, but the old fsnotify_open()
-doesn't strike me as "terminally broken".
-
-It doesn't have a permission test after the open has already done
-things, and it's inlined enough that it isn't actively offensive.
-
-And most of the other fsnotify things have the same pattern - not
-great, but not actively offensive.
-
-These new patches make it in my face.
-
-So I do require that the *new* cases at least get it right. The fact
-that we have old code that is misdesigned and gets it wrong and should
-also be improved isn't an excuse to add *more* badly coded stuff.
-
-And yes, if somebody fixes the old fsnotify stuff to check just the
-i_fsnotify_mask in the inline function, and moves all the other silly
-checks out-of-line, that would be an improvement. I'd very much
-applaud that. But it's a separate thing from adding new hooks.
-
-                Linus
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
