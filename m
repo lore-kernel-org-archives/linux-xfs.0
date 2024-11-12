@@ -1,75 +1,74 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8353217F31
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 19:54:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E063218D7C
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 20:12:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731441278; cv=none; b=n4wmxiG0Q6Wygnl40olAG2XAP+jrbxf7lxCVutumHEBZ9YoQ+4OMDBDL3BqwDuYCIlESEmCgXVAUgkRoKHircjvm6lMJD6UlIW6ympd6Eh8HDskZq94FHlgYIbtuMiYQGtZVkfrNYtEAbWLukkfwkPYIpcCsKp0aa6L/i5Rh7kY=
+	t=1731442362; cv=none; b=Y7Vx5Htp0OWMy7xUeKwiGBUJaLeRMuJZuYIiPkVaBxeiqtvuzoupFroL0XKKZItzHz60VQ79ZsbbCwSx2G8E+f0g0frKOtjuFGQpZjYZHbqhD3CGdjERuf6RPgbSZGGuj0uwAst8s2QYtPbiUAO2TtT946o2Foa0l8oz5YpABdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731441278; c=relaxed/simple;
-	bh=w5M4DdbV0JDQqGXDCjJMEXFd24rwLm/qJCT5r02ClmE=;
+	s=arc-20240116; t=1731442362; c=relaxed/simple;
+	bh=APg3rcEySs1o4uLtYJBcvRsc9Qe6Q1ZTOQRJgr9MbAs=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=d2lVoSMGa+/4ufw6aSe2n+9+2sT3dNAszOQ1EdyEKFXcAtVJEp5MqIz9Oi4Px/Leu28KCLj2cmXRpJBfTdQg/t/Gq6fDI0z3paOLkAcSo3IudIK+lgQTUliOF/cjt5NncnkIvj0azA+RoQ0xUD8qg4wG8JHFPGCUdv5D/DdewJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=RhxEt9Fm; arc=none smtp.client-ip=209.85.218.48
+	 To:Cc:Content-Type; b=ly71cGRxuPDCsZx0BiVvmsUmuHwu4NcaR5hbG0ASXsFtKM+LJIcHLXCVLquQweojmIaZw4inRxq9hS/vAa3cfiP7PCW76PjBVwXDJ9MW865s2Ro3V9jLbPh3z6HltZh4gzSJu0UQs1BdWbt48hNZL5X0S0q3omn46tc9O3TenDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=FcOcY1Xx; arc=none smtp.client-ip=209.85.218.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="RhxEt9Fm"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a99f3a5a44cso811289366b.3
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 11:54:35 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="FcOcY1Xx"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a99fa009adcso409177666b.0
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 12:12:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1731441274; x=1732046074; darn=vger.kernel.org;
+        d=linux-foundation.org; s=google; t=1731442358; x=1732047158; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=5b0rySYUL4FjfsS4jGUX3HJrYE8uK75+UecupTqejZA=;
-        b=RhxEt9FmPo8St2zCKzhQ/hGs1H7OKOBkXI4LLWLqNbiuCswZA6ZThLG/JuI/Rr3u+5
-         b7fyF8esgW9xVh2qbjES17yqj/GUbC7VYr8oSnipbmVLTHvegIjed6O3xNEWX6odCBgw
-         gwb5N2SiyhBpBwCBrOl99QOtXWsttlJierXy8=
+        bh=0qYB3r0e+M+AIIS7skjeHUYQNaIJb6UwbAHof7SMGqw=;
+        b=FcOcY1XxfT+AIEI3USMaJFNGOqARqrtF9owUJtu2wEb7/ptVNOsHJ84QKKDrH5zKzp
+         90B3GLsaMtaZ4HVVL5aEiXKC15V6zMLNLhjI5TOcBsuOrvNzEgQIwbqIsahkizx7bcwv
+         BNcShXFPkvJ4eS56JamG12HyOxMXJWxI5cuFg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731441274; x=1732046074;
+        d=1e100.net; s=20230601; t=1731442358; x=1732047158;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=5b0rySYUL4FjfsS4jGUX3HJrYE8uK75+UecupTqejZA=;
-        b=Hcy/jw6e+1YwwXJjC4jSvqxRszpqqX3myJcfnin2ON2WYKMC0cBGJDPQXI5HEqW71v
-         hDrPHWYkKSdmZIp+ehiw2jQPyKe0dOX7WYPajpfA2rAosRvwuTAcbNn02ZWLL0iQ6f16
-         /5r6DybnM+9jF06kxMNbOflB8+QXP7cREuOcB+wot1sVVtD9xi9bjrfc+U+16t9Kh8WX
-         kqRYXZ5I3qvkfylaOD+eW39/1K/JRv87jh9SVfprd7cJ7TIbZfmHPbjpgr1sQ6VsChYd
-         ryfFl58uMNDU5z7ovR3hn2Je1yctgAZYEu+RChT46FtR4kIhb8AXvy/7QTeP+Q9bKA7k
-         l2tA==
-X-Forwarded-Encrypted: i=1; AJvYcCULm/K0MzbIYoS37hQcHESDDa26VQkqFpo7RKpib1qNLwuvWDdi69SSHfCKOk6pkmTLPTYPmqBA4yc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwfL8Qfl/dUNBjnkMsydqkXMatbZb/Ha0q0Araii9L4YrVhgVBP
-	Fem4jW9zm+mt1zDUF0AIKivN3d4Uezv0QcgtluHVyb9t3ymrq79PAbQTc6VagjF5p6VxeYXj8II
-	5uuzZjQ==
-X-Google-Smtp-Source: AGHT+IGlGw95EGWhFTG9TfUHkbrRze87Ii/nAtVGjGZxlTOxhY2jdgsH+yDv134g7n5+Lmt7Mf9/KQ==
-X-Received: by 2002:a17:906:d542:b0:a8a:58c5:78f1 with SMTP id a640c23a62f3a-a9eefe9bb2fmr1619742266b.11.1731441273891;
-        Tue, 12 Nov 2024 11:54:33 -0800 (PST)
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com. [209.85.218.43])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9ee0e2e3ffsm770058366b.183.2024.11.12.11.54.33
+        bh=0qYB3r0e+M+AIIS7skjeHUYQNaIJb6UwbAHof7SMGqw=;
+        b=ildopAIwnfefoumxEzD6I7K4BvlPSf+gt22fRXB6zBTioC0QtetLbC1xp+Nmf4Oql8
+         PF7IQmndhanYjaS/0Qy0iq6g/dgW4BOYNAV8taKeg+qyC3dZZ2GFYQ8XZRxGTZ+295GA
+         +4RbiYtPVeaG8QGFoQdMI5/PZFiIxKjuMh9sgq3OgnFJDzxSMT/akmYaqSljxTHSg+Dl
+         DvVQNi5XLFvhlpUk2lBhCxs/uXKCe/G1HFF/u60S/2dsYHPG/UuoXMaY7qJO6vrSlLOa
+         aaNmZ4Jx3jfXdIhdo7p55XMk+Euls72RHawf/4LQ/w/ur341wcdTbjljRs3PEwET1CyF
+         a0OQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUrq44JETVQggQy0+Z4BqJdHUxj0TdpbB6Vf607vWJ9mpvo7SjpMctHNhKLuiePjw4Faax3sex21kA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwXtW6yB+k1upYQFB8FnBz9/l11QvBOzsMiRWs1R5lxoqPqXFw
+	7mNTWsgPd75rKMS/uO+2vSgM8O+8+FgXPFx4Ek5bzd6VYBv0uWXF+267s0kGw/Is0/vvBssdjlu
+	4tNZo9g==
+X-Google-Smtp-Source: AGHT+IEagsQcLPu2ROL/vCE5eJ0ReYhe2naJYtooELLazkwHECU5QJ72Sw+s8KVNgDvSAII2nfMmSg==
+X-Received: by 2002:a05:6402:4405:b0:5ce:d435:c26d with SMTP id 4fb4d7f45d1cf-5cf0a3206ecmr22090503a12.19.1731442358480;
+        Tue, 12 Nov 2024 12:12:38 -0800 (PST)
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com. [209.85.208.42])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cf03c7cabbsm6353280a12.79.2024.11.12.12.12.37
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 12 Nov 2024 11:54:33 -0800 (PST)
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-a9aa8895facso1118660066b.2
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 11:54:33 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVN2WuYWCD1R3fk2G9V44zlqH3kmnMLQ7RSMcxh+SPjNys9Rbo6/AV43jgivFDS8WGwYar+INdpIlk=@vger.kernel.org
-X-Received: by 2002:a17:907:1b21:b0:a99:ff70:3abd with SMTP id
- a640c23a62f3a-a9eeff25d17mr1761977066b.31.1731441272860; Tue, 12 Nov 2024
- 11:54:32 -0800 (PST)
+        Tue, 12 Nov 2024 12:12:37 -0800 (PST)
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5cf0810f5f9so3944694a12.0
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 12:12:37 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWGCnjz6uTcVh9X2V8UwmK2Cqte3p7M/uoHS/yjmwWZD2IBZyL6siG0U5GrdlBABUGCNcj9YcrHAzE=@vger.kernel.org
+X-Received: by 2002:a50:cd1d:0:b0:5cf:22ab:c3b5 with SMTP id
+ 4fb4d7f45d1cf-5cf22abcab5mr13468088a12.1.1731442356992; Tue, 12 Nov 2024
+ 12:12:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731433903.git.josef@toxicpanda.com> <60a2309da948dc81e4c66b9e5fe3f1e2faa2010e.1731433903.git.josef@toxicpanda.com>
-In-Reply-To: <60a2309da948dc81e4c66b9e5fe3f1e2faa2010e.1731433903.git.josef@toxicpanda.com>
+References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
+In-Reply-To: <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
 From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 12 Nov 2024 11:54:16 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wgNFNYinkWCUvT2UnH2E2K_qPexEPgrm-xgr68YXnEQ_g@mail.gmail.com>
-Message-ID: <CAHk-=wgNFNYinkWCUvT2UnH2E2K_qPexEPgrm-xgr68YXnEQ_g@mail.gmail.com>
-Subject: Re: [PATCH v7 07/18] fsnotify: generate pre-content permission event
- on open
+Date: Tue, 12 Nov 2024 12:12:20 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
+Message-ID: <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
+Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
 To: Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
 	amir73il@gmail.com, brauner@kernel.org, linux-xfs@vger.kernel.org, 
@@ -78,47 +77,90 @@ Content-Type: text/plain; charset="UTF-8"
 
 On Tue, 12 Nov 2024 at 09:56, Josef Bacik <josef@toxicpanda.com> wrote:
 >
+>  #ifdef CONFIG_FANOTIFY_ACCESS_PERMISSIONS
+> +static inline int fsnotify_pre_content(struct file *file)
+> +{
+> +       struct inode *inode = file_inode(file);
+> +
 > +       /*
-> +        * This permission hook is different than fsnotify_open_perm() hook.
-> +        * This is a pre-content hook that is called without sb_writers held
-> +        * and after the file was truncated.
+> +        * Pre-content events are only reported for regular files and dirs
+> +        * if there are any pre-content event watchers on this sb.
 > +        */
-> +       return fsnotify_file_area_perm(file, MAY_OPEN, &file->f_pos, 0);
->  }
+> +       if ((!S_ISDIR(inode->i_mode) && !S_ISREG(inode->i_mode)) ||
+> +           !(inode->i_sb->s_iflags & SB_I_ALLOW_HSM) ||
+> +           !fsnotify_sb_has_priority_watchers(inode->i_sb,
+> +                                              FSNOTIFY_PRIO_PRE_CONTENT))
+> +               return 0;
+> +
+> +       return fsnotify_file(file, FS_PRE_ACCESS);
+> +}
 
-I still object to this all.
+Yeah, no.
 
-You can't say "permission denied" after you've already truncated the
-file. It's not a sane model. I complained about that earlier, it seems
-that complaint was missed in the other complaints.
+None of this should check inode->i_sb->s_iflags at any point.
 
-Also, this whole "This permission hook is different than
-fsnotify_open_perm() hook" statement is purely because
-fsnotify_open_perm() itself was broken and called from the wrong place
-as mentioned in the other email.
+The "is there a pre-content" thing should check one thing, and one
+thing only: that "is this file watched" flag.
 
-Fix *THAT* first, then unify the two places that should *not* be
-different into one single "this is the fsnotify_open" code. And that
-place explicitly sets that FMODE_NOTIFY_PERM bit, and makes sure that
-it does *not* set it for FMODE_NONOTIFY or FMODE_PATH cases.
+The whole indecipherable mess of inline functions that do random
+things in <linux/fsnotify.h> needs to be cleaned up, not made even
+more indecipherable.
 
-And then please work on making sure that that isn't called unless
-actually required.
+I'm NAKing this whole series until this is all sane and cleaned up,
+and I don't want to see a new hacky version being sent out tomorrow
+with just another layer of new hacks, with random new inline functions
+that call other inline functions and have complex odd conditionals
+that make no sense.
 
-The actual real "pre-content permission events" should then ONLY test
-the FMODE_NOTIFY_PERM bit. Nothing else. None of this "re-use the
-existing fsnotify_file() logic" stuff. Noe extra tests, no extra
-logic.
+Really. If the new hooks don't have that *SINGLE* bit test, they will
+not get merged.
 
-Don't make me jump through filve layers of inline functions that all
-test different 'mask' bits, just to verify that the open / read /
-write paths don't do something stupid.
+And that *SINGLE* bit test had better not be hidden under multiple
+layers of odd inline functions.
 
-IOW, make it straightforward and obvious what you are doing, and make
-it very clear that you're not pointlessly testing things like
-FMODE_NONOTIFY when the *ONLY* thing that should be tested is whether
-FMODE_NOTIFY_PERM is set.
+You DO NOT get to use the same old broken complex function for the new
+hooks that then mix these odd helpers.
 
-Please.
+This whole "add another crazy inline function using another crazy
+helper needs to STOP. Later on in the patch series you do
 
-              Linus
++/*
++ * fsnotify_truncate_perm - permission hook before file truncate
++ */
++static inline int fsnotify_truncate_perm(const struct path *path,
+loff_t length)
++{
++       return fsnotify_pre_content(path, &length, 0);
++}
+
+or things like this:
+
++static inline bool fsnotify_file_has_pre_content_watches(struct file *file)
++{
++       if (!(file->f_mode & FMODE_NOTIFY_PERM))
++               return false;
++
++       if (!(file_inode(file)->i_sb->s_iflags & SB_I_ALLOW_HSM))
++               return false;
++
++       return fsnotify_file_object_watched(file, FSNOTIFY_PRE_CONTENT_EVENTS);
++}
+
+and no, NONE of that should be tested at runtime.
+
+I repeat: you should have *ONE* inline function that basically does
+
+ static inline bool fsnotify_file_watched(struct file *file)
+ {
+        return file && unlikely(file->f_mode & FMODE_NOTIFY_PERM);
+ }
+
+and absolutely nothing else. If that file is set, the file has
+notification events, and you go to an out-of-line slow case. You don't
+inline the unlikely cases after that.
+
+And you make sure that you only set that special bit on files and
+filesystems that support it. You most definitely don't check for
+SB_I_ALLOW_HSM kind of flags at runtime in critical code.
+
+               Linus
