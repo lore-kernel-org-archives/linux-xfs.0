@@ -1,259 +1,186 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 930007080C
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 13:36:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34141FBF7D;
+	Tue, 12 Nov 2024 13:55:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731418585; cv=none; b=udJ5FS5rySznKqS0Ad7ss/Dz9fIHIFcjx4dWmSF+pdJcfdO9YYIpGbx/xvMwFxTQNDPKoMBl7icc7Wi+bgUKD4MQ7l15joaMC69eD5mN3j69mSlC+HRlGURf+gndt4ZLiGecIuxNg7PelR3Qz+P4MIVE8i6EvYZPfl8iMWGeERU=
+	t=1731419705; cv=none; b=SyXw7fp1FyUrqHJm42FsvUUUucVipRXV05+MzPmx1WMtC0k9UE1BEIcYlew0+uXpYJfFQ9vQR5QOEbeJYOopjPIozkmlawGsaYu32tylqpQ5W+tTF5W2194V6d2XfuO1eXHOl7PsDDibRChHLwnP+ZX7RKO5HdzJITbiQeDYru8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731418585; c=relaxed/simple;
-	bh=UYMynpzb2neHmOqjVl3+/I9ELWYwbSrCsGyBvOAQhe0=;
+	s=arc-20240116; t=1731419705; c=relaxed/simple;
+	bh=Xj8Q5LkHc5oaTyfRByOo/XwoC4md8gp+NrGybKyzbMQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OeD+I+7pkWUMIZNCnU1ju1ctxoB8s7L+Ls6yt64hfAoay3B4o8okjd2R/FasQp/SU9k0tFD14v7d4rIOsLqbR2LkAK8h5rhQK4d3ntodKhn3dqy2JrigTCiZSMmbOlES13ue5GTudTLid6pb1h4AmINhrYZqDGxogMmDENJrBVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=TrJAdfMO; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=KuvJZaJXvRknRabDk3ytgJ+xckTC/p1wL/cDotsnDYBA7fB1flt0lPg8knDDw8KdvTGkfBngqergjAymJEdeygtQUxM46LuOCgoLvr31QhahkwPEGWGpINF0qr5JXE7BNgDtGSJ5FLfFEAbNb6WSp1zd8MtpnVZa8LOh/vAWN6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Ap/VuOj/; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=X7ZlUU4O; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=cpMNzLWX; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=BhEUIMbj; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="TrJAdfMO"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-7f12ba78072so4266607a12.2
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 05:36:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731418583; x=1732023383; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=t6Oh4OX2Jyzis83TRylUMhyFscGtnBD3LHLbc+6KIU8=;
-        b=TrJAdfMOlI9mBVmk6TvKipxIGwo9pyW6N3t/wyGzr1NOh0/DQLxDE4hg2G1Cg15cqD
-         yWx3T2CT12EtjUuPNvJJe6C/cyQ0U/V7RAcwLzq0x4dKfshuzyJZT8d1LK91p5cqjAVP
-         vcj1vWpwFIpanq9Z3QDvcMCRkk8RZgd9W9X5RFKFJmJDkB7d8u1YaDqkSgtrD+2uSSLd
-         2GSQwhjGB3WCGM3YgKsmhGRAd1apeL8robDH5UhRrojaq6SKklOrpbsMKXI+v6wtUX2V
-         gvGItBmpz0WRMxOn8xK9jMXKilXi8HVjsk21eNZxYfUfZ0wwaQ1Dciy+DCoSH9NbJNum
-         w4vA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731418583; x=1732023383;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=t6Oh4OX2Jyzis83TRylUMhyFscGtnBD3LHLbc+6KIU8=;
-        b=cUOq4IQQU9w2a1xMHWED2llqIsmXZxEBRLBsI+F32RgCypLeIzLSJ6VbUiEqULAYit
-         A22XWtgEBHi+0PXy/NVKCOGTAP5ym7K6/N2REjxt1l3pnbUJFWjwhfMzj/mmj7fDZG3e
-         59/ALRQloU6XvpfKqaHQuS+OlBXHjJ9K+c7QoZoEbMJATC7PHPswD0/teWQ44AmYRNjf
-         p+WWuAcPlWRp2iV5dcq93cJeDUPRMODDw941gJuoXHvhF0hmmeCCrvSVa+S4Gxt9iADE
-         rfQQyCDaesDja5LiTBdEJTd7yQ+f3TWE9VD4hBpWoK9vweQctkuzbu/36tab9aPYiXkz
-         s8Gw==
-X-Forwarded-Encrypted: i=1; AJvYcCX6c/iMVJN8t/BEhw9jLHahpDo8oEZX20I9vkBgATYWDcUr5DSnTSdtGv9puoGmHs/5G59HIYCSo6o=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxmq+Ca19jF/FwbFQEpTVoAqFKVhMFLqwA4pyO6nOo0VpEvIhfP
-	2DfXUcKnjh6NlU54I6xgO06TEVmevdNw7BfJyvonFPWvK2K5+1vItlo/rIrV2ZE=
-X-Google-Smtp-Source: AGHT+IFIqnnMyIxMivt2cPh+q7ifEJlIf3ezR4cfEqcYFyOgxpQyOhRuCX6EGtaMImreoqHFw37fdQ==
-X-Received: by 2002:a17:90b:5484:b0:2e2:bb32:73eb with SMTP id 98e67ed59e1d1-2e9b178ea9emr22376758a91.31.1731418582953;
-        Tue, 12 Nov 2024 05:36:22 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e9e8148d9dsm645777a91.2.2024.11.12.05.36.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2024 05:36:22 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1tAr46-00DelY-1w;
-	Wed, 13 Nov 2024 00:36:18 +1100
-Date: Wed, 13 Nov 2024 00:36:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org, clm@meta.com,
-	linux-kernel@vger.kernel.org, willy@infradead.org,
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/16] mm/filemap: make buffered writes work with
- RWF_UNCACHED
-Message-ID: <ZzNZ0iqx8EMlGVf0@dread.disaster.area>
-References: <20241111234842.2024180-1-axboe@kernel.dk>
- <20241111234842.2024180-11-axboe@kernel.dk>
- <ZzKn4OyHXq5r6eiI@dread.disaster.area>
- <0487b852-6e2b-4879-adf1-88ba75bdecc0@kernel.dk>
- <ZzMLmYNQFzw9Xywv@dread.disaster.area>
- <2sjhov4poma4o4efvwe2xk474iorxwvf4ifqa5oee74744ke2e@lipjana3f5ti>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Ap/VuOj/";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="X7ZlUU4O";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="cpMNzLWX";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="BhEUIMbj"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id D38172128F;
+	Tue, 12 Nov 2024 13:55:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1731419702; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GggHjq6mlfXdpXhy6vku+7SxFDasBwrmkZtO3QYAPpA=;
+	b=Ap/VuOj/uPqqu0YJCo/upxhvpT1gL65rnquNlS9fK9Oxw+ekiHvA5S7YFlk17/ISyH8r28
+	BmzB+RIY2r87L4UT6C8MCAdT1/IXUrqwdVf8UBdzMwHojzxmwNwaK7qpxGJ90/9ZIIU5qI
+	MDukUePOxM78VoAt7M7u43Fx82eobo0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1731419702;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GggHjq6mlfXdpXhy6vku+7SxFDasBwrmkZtO3QYAPpA=;
+	b=X7ZlUU4O8aIis5H8gO1MMPYtKX4e99qPEvZZhgO0TbP+b3NnUo5tMjqNHySYa3O5SJFtFF
+	jB50zv3wLh8V6cAw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1731419701; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GggHjq6mlfXdpXhy6vku+7SxFDasBwrmkZtO3QYAPpA=;
+	b=cpMNzLWX7mSb5R3J+LFyZ7KuTODAbuhad69ifHlpyyzMrEe/aM+ayo7u/842jYPPtSSWi8
+	DGavQWBKqhvPHWc5V7rnDC1BvFQpfEeKbim10wrf4uzTLAX+m6g9lAuBvBugRG/JbW8Eef
+	+Lep4cyhpZlV3LsFRPkgRb4BADH7EXk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1731419701;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GggHjq6mlfXdpXhy6vku+7SxFDasBwrmkZtO3QYAPpA=;
+	b=BhEUIMbjOckf909sxr4ypQWrcGmWwOTExK8ce3kk5E9zGpOa3SC4kc1T0ZBylBYcheq2um
+	Jl7OpQjrBZza5vDg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C77BC13721;
+	Tue, 12 Nov 2024 13:55:01 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Jgi6MDVeM2dpcgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 12 Nov 2024 13:55:01 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 72D0DA08D0; Tue, 12 Nov 2024 14:54:57 +0100 (CET)
+Date: Tue, 12 Nov 2024 14:54:57 +0100
+From: Jan Kara <jack@suse.cz>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com,
+	linux-fsdevel@vger.kernel.org, jack@suse.cz, brauner@kernel.org,
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v6 06/17] fsnotify: generate pre-content permission event
+ on open
+Message-ID: <20241112135457.zxzhtoe537gapkmu@quack3>
+References: <cover.1731355931.git.josef@toxicpanda.com>
+ <b509ec78c045d67d4d7e31976eba4b708b238b66.1731355931.git.josef@toxicpanda.com>
+ <CAHk-=wh4BEjbfaO93hiZs3YXoNmV=YkWT4=OOhuxM3vD2S-1iA@mail.gmail.com>
+ <CAEzrpqdtSAoS+p4i0EzWFr0Nrpw1Q2hphatV7Sk4VM49=L3kGw@mail.gmail.com>
+ <CAHk-=wj8L=mtcRTi=NECHMGfZQgXOp_uix1YVh04fEmrKaMnXA@mail.gmail.com>
+ <CAOQ4uxgxtQhe_3mj5SwH9568xEFsxtNqexLfw9Wx_53LPmyD=Q@mail.gmail.com>
+ <CAHk-=wgUV27XF8g23=aWNJecRbn8fCDDW2=10y9yJ122+d8JrA@mail.gmail.com>
+ <CAOQ4uxh7aT+EvWYMa9v=SyRjfdh4Je_FmS0+TNqonHE5Z+_TPw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <2sjhov4poma4o4efvwe2xk474iorxwvf4ifqa5oee74744ke2e@lipjana3f5ti>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxh7aT+EvWYMa9v=SyRjfdh4Je_FmS0+TNqonHE5Z+_TPw@mail.gmail.com>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.998];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_COUNT_THREE(0.00)[3];
+	FREEMAIL_TO(0.00)[gmail.com];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -3.80
+X-Spam-Flag: NO
 
-On Tue, Nov 12, 2024 at 11:50:46AM +0200, Kirill A. Shutemov wrote:
-> On Tue, Nov 12, 2024 at 07:02:33PM +1100, Dave Chinner wrote:
-> > I think the post-IO invalidation that these IOs do is largely
-> > irrelevant to how the page cache processes the write. Indeed,
-> > from userspace, the functionality in this patchset would be
-> > implemented like this:
-> > 
-> > oneshot_data_write(fd, buf, len, off)
-> > {
-> > 	/* write into page cache */
-> > 	pwrite(fd, buf, len, off);
-> > 
-> > 	/* force the write through the page cache */
-> > 	sync_file_range(fd, off, len, SYNC_FILE_RANGE_WRITE | SYNC_FILE_RANGE_WAIT_AFTER);
-> > 
-> > 	/* Invalidate the single use data in the cache now it is on disk */
-> > 	posix_fadvise(fd, off, len, POSIX_FADV_DONTNEED);
-> > }
-> > 
-> > Allowing the application to control writeback and invalidation
-> > granularity is a much more flexible solution to the problem here;
-> > when IO is sequential, delayed allocation will be allowed to ensure
-> > large contiguous extents are created and that will greatly reduce
-> > file fragmentation on XFS, btrfs, bcachefs and ext4. For random
-> > writes, it'll submit async IOs in batches...
-> > 
-> > Given that io_uring already supports sync_file_range() and
-> > posix_fadvise(), I'm wondering why we need an new IO API to perform
-> > this specific write-through behaviour in a way that is less flexible
-> > than what applications can already implement through existing
-> > APIs....
+On Tue 12-11-24 09:11:32, Amir Goldstein wrote:
+> On Tue, Nov 12, 2024 at 1:37 AM Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> > On Mon, 11 Nov 2024 at 16:00, Amir Goldstein <amir73il@gmail.com> wrote:
+> > >
+> > > I think that's a good idea for pre-content events, because it's fine
+> > > to say that if the sb/mount was not watched by a pre-content event listener
+> > > at the time of file open, then we do not care.
+> >
+> > Right.
+> >
+> > > The problem is that legacy inotify/fanotify watches can be added after
+> > > file is open, so that is allegedly why this optimization was not done for
+> > > fsnotify hooks in the past.
+> >
+> > So honestly, even if the legacy fsnotify hooks can't look at the file
+> > flag, they could damn well look at an inode flag.
 > 
-> Attaching the hint to the IO operation allows kernel to keep the data in
-> page cache if it is there for other reason. You cannot do it with a
-> separate syscall.
+> Legacy fanotify has a mount watch (FAN_MARK_MOUNT),
+> which is the common way for Anti-malware to set watches on
+> filesystems, so I am not sure what you are saying.
+> 
+> > And I'm not even convinced that we couldn't fix them to just look at a
+> > file flag, and say "tough luck, somebody opened that file before you
+> > started watching, you don't get to see what they did".
+> 
+> That would specifically break tail -f (for inotify) and probably many other
+> tools, but as long as we also look at the inode flags (i_fsnotify_mask)
+> and the dentry flags (DCACHE_FSNOTIFY_PARENT_WATCHED),
+> then I think we may be able to get away with changing the semantics
+> for open files on a fanotify mount watch.
 
-Sure we can. FADV_NOREUSE is attached to the struct file - that's
-available to every IO that is done on that file. Hence we know
-before we start every IO on that file if we only need to preserve
-existing page cache or all data we access.
+Yes, I agree we cannot afford to generate FS_MODIFY event only if the mark
+was placed after file open. There's too much stuff in userspace depending
+on this since this behavior dates back to inotify interface sometime in
+2010 or so.
 
-Having a file marked like this doesn't affect any other application
-that is accessing the same inode. It just means that the specific
-fd opened by a specific process will not perturb the long term
-residency of the page cache on that inode.
+> Specifically, I would really like to eliminate completely the cost of
+> FAN_ACCESS_PERM event, which could be gated on file flag, because
+> this is only for security/Anti-malware and I don't think this event is
+> practically
+> useful and it sure does not need to guarantee permission events to mount
+> watchers on already open files.
 
-> Consider a scenario of a nightly backup of the data. The same data is in
-> cache because the actual workload needs it. You don't want backup task to
-> invalidate the data from cache. Your snippet would do that.
+For traditional fanotify permission events I agree generating them only if
+the mark was placed before open is likely fine but we'll have to try and
+see whether something breaks. For the new pre-content events I like the
+per-file flag as Linus suggested. That should indeed save us some cache
+misses in some fast paths.
 
-The code I presented was essentially just a demonstration of what
-"uncached IO" was doing. That it is actually cached IO, and that it
-can be done from userspace right now. Yes, it's not exactly the same
-cache invalidation semantics, but that's not the point.
-
-The point was that the existing APIs are *much more flexible* than
-this proposal, and we don't actually need new kernel functionality
-for applications to see the same benchmark results as Jens has
-presented. All they need to do is be modified to use existing APIs.
-
-The additional point to that end is that FADV_NOREUSE should be
-hooke dup to the conditional cache invalidation mechanism Jens added
-to the page cache IO paths. Then we have all the functionality of
-this patch set individually selectable by userspace applications
-without needing a new IO API to be rolled out. i.e. the snippet
-then bcomes:
-
-	/* don't cache after IO */
-	fadvise(fd, FADV_NORESUSE)
-	....
-	write(fd, buf, len, off);
-	/* write through */
-	sync_file_range(fd, off, len, SYNC_FILE_RANGE);
-
-Note how this doesn't need to block in sync_file_range() before
-doing the invalidation anymore? We've separated the cache control
-behaviour from the writeback behaviour. We can now do both write
-back and write through buffered writes that clean up the page cache
-after IO completion has occurred - write-through is not restricted
-to uncached writes, nor is the cache purge after writeback
-completion.
-
-IOWs, we can do:
-
-	/* don't cache after IO */
-	fadvise(fd, FADV_NORESUSE)
-	....
-	off = pos;
-	count = 4096;
-	while (off < pos + len) {
-		ret = write(fd, buf, count, off);
-		/* get more data and put it in buf */
-		off += ret;
-	}
-	/* write through */
-	sync_file_range(fd, pos, len, SYNC_FILE_RANGE);
-
-And now we only do one set of writeback on the file range, instead
-of one per IO. And we still get the page cache being released on
-writeback Io completion.
-
-This is a *much* better API for IO and page cache control. It is not
-constrained to individual IOs, so applications can allow the page
-cache to write-combine data from multiple syscalls into a single
-physical extent allocation and writeback IO.
-
-This is much more efficient for modern filesytsems - the "writeback
-per IO" model forces filesystms like XFS and ext4 to work like ext3
-did, and defeats buffered write IO optimisations like dealyed
-allocation. If we are going to do small "allocation and write IO"
-patterns, we may as well be using direct IO as it is optimised for
-that sort of behaviour.
-
-So let's conside the backup application example. IMO, backup
-applications  really don't want to use this new uncached IO
-mechanism for either reading or writing data.
-
-Backup programs do sequential data read IO as they walk the backup set -
-if they are doing buffered IO then we -really- want readahead to be
-active.
-
-However, uncached IO turns off readahead, which is the equivalent of
-the backup application doing:
-
-	fadvise(fd, FADV_RANDOM);
-	while (len > 0) {
-		ret = read(fd, buf, len, off);
-		fadvise(fd, FADV_DONTNEED, off, len);
-
-		/* do stuff with buf */
-
-		off += ret;
-		len -= ret;
-	}
-
-Sequential buffered read IO after setting FADV_RANDOM absolutely
-*sucks* from a performance perspective.
-
-This is when FADV_NOREUSE is useful. We can leave readahead turned
-on, and when we do the first read from the page cache after
-readahead completes, we can then apply the NOREUSE policy. i.e. if
-the data we are reading has not been accessed, then turf it after
-reading if NOREUSE is set. If the data was already resident in
-cache, then leave it there as per a normal read.
-
-IOWs, if we separate the cache control from the read IO itself,
-there is no need to turn off readahead to implement "drop cache
-on-read" semantics. We just need to know if the folio has been
-accessed or not to determine what to do with it.
-
-Let's also consider the backup data file - that is written
-sequentially.  It's going to be large and we don't know it's size
-ahead of time. If we are using buffered writes we want delayed
-allocation to optimise the file layout and hence writeback IO
-throughput.  We also want to drop the page cache when writeback
-eventually happens, but we really don't want writeback to happen on
-every write.
-
-IOWs, backup programs can take advantage of "drop cache when clean"
-semantics, but can't really take any significant advantage from
-per-IO write-through semantics. IOWs, backup applications really
-want per-file NOREUSE write semantics that are seperately controlled
-w.r.t. cache write-through behaviour.
-
-One of the points I tried to make was that the uncached IO proposal
-smashes multiple disparate semantics into a single per-IO control
-bit. The backup application example above shows exactly how that API
-isn't actually very good for the applications that could benefit
-from the functionality this patchset adds to the page cache to
-support that single control bit...
-
--Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
