@@ -1,113 +1,118 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D672076DA;
-	Tue, 12 Nov 2024 17:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 492AC2123EE
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 17:16:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731431673; cv=none; b=nt5NQVKzYTOvES4ddbjKC9pEX45ozMAhdbIgx2sbMJdl708A0z/RIJwVrNTyM230ZT9X9NIHPtOkn7nz25W3BE9D+dzTP8LqZNwEyPjCx2M3o1XwvzO3YOHvHLL8vPBf7M4PcEZuavl+Zz5SYpgug0HD2RCbiD1GZ1Wz1zmSzTc=
+	t=1731431774; cv=none; b=jAdz8W62eBR4YPAyWwBBCKdcgejhsYYlV3cevhvLySYE4VwiSmGE1OouJBGxCD6Qo6CEXRvM9WVTXPkLj2HRxhPmhtRoLdcjPuApg9Sd47ph4B7TREVPIUILti6WsKFcuo3h1/X9A3KR4sGzK5iZeJ8mRGoVqhnWCzojK6kPG2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731431673; c=relaxed/simple;
-	bh=OVDxMNjz/kRsn0mlLewto2R8wq9d+xl95pyKd2dQH/k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mPe25LqONyLSryh2qps2m5g7C0+LcFbPPAVyrl9CixtbMWeeOUULNB6RWdiXYIYnLrPqpmGTQ4lPyZB8OSLePt/YTG8KuxPSn6fdJtrQRucI4aQSsRVNwAA8lJCzzlg/XWSpHc6W+bL3C74HuCGzL7u9dOV5IIspqkT0XVEoS3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=zWRGxxwv; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=XbBCMGA2; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1731431774; c=relaxed/simple;
+	bh=WElPdD8LZYryTigGCKIJr1x7hPyk/0fp60+PcfErbm4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=uPOWF35VD9RFUyWJTf/n55vcYL666+7r22XZ0dzclX1dhBU76YYb9fD+hmoWFa/Sh05BGybw6TXyE+Zb85o+wi1oeRe25PaKOd3DnvjSOPd4Vs2uYsJpmrRqgjN+zlY+bUv2E8bFm1eI83Qv3cXT72xQiakgsLP/eKYM0ipRz2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=oAjCIijy; arc=none smtp.client-ip=209.85.161.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zWRGxxwv";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="XbBCMGA2"
-Date: Tue, 12 Nov 2024 18:14:28 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1731431669;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fLSGSsbdaiZ6JUBSPFVjQaHTBzfxSyRl8vuArkyUJAs=;
-	b=zWRGxxwvUomZz2ou/p/A3prEpsitfkJlzoi55RFCGH6L6nF+VtL6L6auxDo7Oe/u74hBnQ
-	9/o/xErl3Dt8Zjuz6010t84GKYAL41pLMljW/E+0pCfNBk0yZ7BMdhDakRAcFi9XEcFNPa
-	QGzGuGbkpIUQkzY/dlZewnYNVFNHsrgKWMlunaC8ghudyCLyxHkPRteduYUchfgkW4vawu
-	yCTJrZr3KMbyb55pRgwba13gvVI9W2Y4I4MwGzBxE8CfvMi0EU/6opviX54Y/u8lLBidKh
-	0zJIFza1ApvBf4Fgy9Yqmej9iFtuAx1LtNO59NNUs8cAJl1i3Cp/F2mzcSpjlQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1731431669;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fLSGSsbdaiZ6JUBSPFVjQaHTBzfxSyRl8vuArkyUJAs=;
-	b=XbBCMGA2XMMqf1ILPCkgK8507FyvT6FWiYczNcIbxgasO5RneCbS/dxLprzBzaCeiF/R8j
-	HoEG7mwJB8xSUlAg==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Alex Shi <seakeel@gmail.com>, linux-xfs@vger.kernel.org,
-	Linux-MM <linux-mm@kvack.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: xfs deadlock on mm-unstable kernel?
-Message-ID: <20241112171428.UqPpObPV@linutronix.de>
-References: <e5814465-b39a-44d8-aa3d-427773c9ae16@gmail.com>
- <Zou8FCgPKqqWXKyS@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="oAjCIijy"
+Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5ee55fa4b31so2514241eaf.0
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 09:16:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731431772; x=1732036572; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=tnwYJHTHAIT7NhrPIR59Xh9wM+nrsn1VWuRs7Z2BGss=;
+        b=oAjCIijytabdM5gECO8+BuZ4Jqs/uZmzyfwftew4kiT4b9OMzcSAhy5StU1kxXA+mY
+         paUUrFjsq1d7/6SqzetFMqv4FZzuwg+HBElvj6XQh1lvA46bghdn4HaN1mpRcms2Ri/o
+         zmVrHZwMh6q6EM12J2iIYAMU+Og0HAXrkHESC2ewc/Ll3xaXwqC4LqMmZ4tInelY+dPS
+         CfMicufONUT5KN9x0Vfvt5hu6oJt3MRDKBW/Od48G9daj4aTh2ZobRFsfyJhszxv+ZMw
+         mkiyXQVWvgtC/HLatTrB75Hra0UaKA3/9N3TDCmQzxUsmvagV0GfGPyrNGFS+jX/ceqi
+         DdBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731431772; x=1732036572;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tnwYJHTHAIT7NhrPIR59Xh9wM+nrsn1VWuRs7Z2BGss=;
+        b=KNmeFjhaL9pjtrEs0Q5MCgBt+JiUn3v27yYjfUAg9A100C9SV0REHaS+XYn6rl9ZD+
+         PobmFMOB5lZA5s+un2hTPaWXFipxuUpUkGT4yWEXlzttDtZ7/LS1eJDH968mvCMMj/en
+         11KLK185GmEiUdvRzKCbTaYXc6WLu+eZye/RCSYpsIlXJBYffLKTf5zT+s6bKgumIgqp
+         C2nGoBIYr4SE7OTHqLSrscFHvzW0A+eERfBrp/EQOFQZDjZ5oVJuFcU1IJiGiO85IDqz
+         0diPQLwW0w8NvT6sw7xRw+PhxALmC3lAgsZIvy1ttdLJTpQqjjXyeI3SpIT172SptSsU
+         GNzQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUmFQRgF3Gwy/cLrdX8VGOIElN7i/uaGn34K6ZeoDGvihW+N9XcLUqaTJgTL2D/BA/WLsN3eDRtVoM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzY/Prqgbp13bRucmWhsPsn5ITP2gqLOjrIHUlQBF1USejxUBFe
+	4hFA87GitGO4gwSNBBTw+Bgt/hzSx+o12ilP3NMtu7C2g2zOUEbNB1VNRgje6W4=
+X-Google-Smtp-Source: AGHT+IG7wz2TGObI3XCZLc6czEW3NEVtcJxYLSH6bVzUApdp4Zu/FDc4eOSHYLi8nQ/yqwWNP9VyFg==
+X-Received: by 2002:a05:6820:4c85:b0:5eb:6c26:1ca0 with SMTP id 006d021491bc7-5ee57b9d3f9mr11631558eaf.1.1731431772373;
+        Tue, 12 Nov 2024 09:16:12 -0800 (PST)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-71a1080fb77sm2816311a34.20.2024.11.12.09.16.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Nov 2024 09:16:11 -0800 (PST)
+Message-ID: <aeb58f3d-67b2-4df3-abc7-49a2e9bb8270@kernel.dk>
+Date: Tue, 12 Nov 2024 10:16:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <Zou8FCgPKqqWXKyS@dread.disaster.area>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 13/16] iomap: make buffered writes work with RWF_UNCACHED
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org,
+ clm@meta.com, linux-kernel@vger.kernel.org, willy@infradead.org,
+ kirill@shutemov.name, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20241111234842.2024180-1-axboe@kernel.dk>
+ <20241111234842.2024180-14-axboe@kernel.dk> <ZzOEVwWpGEaq6wE7@bfoster>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <ZzOEVwWpGEaq6wE7@bfoster>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 2024-07-08 20:14:44 [+1000], Dave Chinner wrote:
-> On Mon, Jul 08, 2024 at 04:36:08PM +0800, Alex Shi wrote:
-> >   372.297234][ T3001] ============================================
-> > [  372.297530][ T3001] WARNING: possible recursive locking detected
-> > [  372.297827][ T3001] 6.10.0-rc6-00453-g2be3de2b70e6 #64 Not tainted
-> > [  372.298137][ T3001] --------------------------------------------
-> > [  372.298436][ T3001] cc1/3001 is trying to acquire lock:
-> > [  372.298701][ T3001] ffff88802cb910d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_reclaim_inode+0x59e/0x710
-> > [  372.299242][ T3001] 
-> > [  372.299242][ T3001] but task is already holding lock:
-> > [  372.299679][ T3001] ffff88800e145e58 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_data_map_shared+0x4d/0x60
-> > [  372.300258][ T3001] 
-> > [  372.300258][ T3001] other info that might help us debug this:
-> > [  372.300650][ T3001]  Possible unsafe locking scenario:
-> > [  372.300650][ T3001] 
-> > [  372.301031][ T3001]        CPU0
-> > [  372.301231][ T3001]        ----
-> > [  372.301386][ T3001]   lock(&xfs_dir_ilock_class);
-> > [  372.301623][ T3001]   lock(&xfs_dir_ilock_class);
-> > [  372.301860][ T3001] 
-> > [  372.301860][ T3001]  *** DEADLOCK ***
-> > [  372.301860][ T3001] 
-> > [  372.302325][ T3001]  May be due to missing lock nesting notation
-> > [  372.302325][ T3001] 
-> > [  372.302723][ T3001] 3 locks held by cc1/3001:
-> > [  372.302944][ T3001]  #0: ffff88800e146078 (&inode->i_sb->s_type->i_mutex_dir_key){++++}-{3:3}, at: walk_component+0x2a5/0x500
-> > [  372.303554][ T3001]  #1: ffff88800e145e58 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_data_map_shared+0x4d/0x60
-> > [  372.304183][ T3001]  #2: ffff8880040190e0 (&type->s_umount_key#48){++++}-{3:3}, at: super_cache_scan+0x82/0x4e0
+On 11/12/24 9:37 AM, Brian Foster wrote:
+> On Mon, Nov 11, 2024 at 04:37:40PM -0700, Jens Axboe wrote:
+>> Add iomap buffered write support for RWF_UNCACHED. If RWF_UNCACHED is
+>> set for a write, mark the folios being written with drop_writeback. Then
 > 
-> False positive. Inodes above allocation must be actively referenced,
-> and inodes accees by xfs_reclaim_inode() must have no references and
-> been evicted and destroyed by the VFS. So there is no way that an
-> unreferenced inode being locked for reclaim in xfs_reclaim_inode()
-> can deadlock against the refrenced inode locked by the inode lookup
-> code.
+> s/drop_writeback/uncached/ ?
+
+Ah indeed, guess that never got changed. Thanks, will fix that in the
+commit message.
+
+> BTW, this might be getting into wonky "don't care that much" territory,
+> but something else to be aware of is that certain writes can potentially
+> change pagecache state as a side effect outside of the actual buffered
+> write itself.
 > 
-> Unfortunately, we don't have enough lockdep subclasses available to
-> annotate this correctly - we're already using all
-> MAX_LOCKDEP_SUBCLASSES to tell lockdep about all the ways we can
-> nest inode locks. That leaves us no space to add a "reclaim"
-> annotation for locking done from super_cache_scan() paths that would
-> avoid these false positives....
+> For example, xfs calls iomap_zero_range() on write extension (i.e. pos >
+> isize), which uses buffered writes and thus could populate a pagecache
+> folio without setting it uncached, even if done on behalf of an uncached
+> write.
+> 
+> I've only made a first pass and could be missing some details, but IIUC
+> I _think_ this means something like writing out a stream of small,
+> sparse and file extending uncached writes could actually end up behaving
+> more like sync I/O. Again, not saying that's something we really care
+> about, just raising it in case it's worth considering or documenting..
 
-So the former inode (the one triggering the reclaim) is created and can
-not be the same as the one in reclaim list. Couldn't we assign it a
-different lock-class?
-My guess would be that you drop the lockdep_set_class() in
-xfs_setup_inode() and then do it in xfs_iget_cache_miss() before adding
-it to the tree. So you would have one class initially and then change it
-once it enters the tree. I guess once the inode is removed from the
-tree, it goes to kfree().
+No that's useful info, I'm not really surprised that there would still
+be cases where UNCACHED goes unnoticed. In other words, I'd be surprised
+if the current patches for eg xfs/ext4 cover all the cases where new
+folios are created and should be marked as UNCACHED of IOCB_UNCACHED is
+set in the iocb.
 
-> -Dave.
+I think those can be sorted out or documented as we move forward.
+UNCACHED is really just a hint - the kernel should do its best to not
+have permanent folios for this IO, but there are certainly cases where
+it won't be honored if you're racing with regular buffered IO or mmap.
+For the case above, sounds like we could cover that, however, and
+probably should.
 
-Sebastian
+-- 
+Jens Axboe
