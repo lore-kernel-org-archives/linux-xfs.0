@@ -1,33 +1,33 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447201BDA8D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446C818B49B;
 	Wed, 13 Nov 2024 09:47:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731491254; cv=none; b=Txo5juIPJZkB1PJJgjoeThwkrtpjCWOCP3WQDwLHm7G4S3pgU0mgNbDmXKTq09AcoBmutF21nY3DhvCL3hPrKRNA9GvjHIY/c13un8F2apnUOp3caf3ohxCLNx1eD3lp/6TK8mDXIlE7IZ96stQmhVB5bTKQWzhDwzU23wTBMNs=
+	t=1731491254; cv=none; b=MY0tfltQdzMQr/UDIkl3yyRJacRvIV4ggksX1PCdk/eS/BaKW7yg0X6ftji1RpSUd2Te5M/xndFw1ar6/B5Id888RDiCAYh6P3tmf8mT6g8A2i2DqEgdkvPN9z6u7N5lxeBS7t4inD0yvNZbRa4vLJ54t05qQOw7Zy2uLKHI5/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731491254; c=relaxed/simple;
-	bh=wcHoBPeIwO9R+T4Bz/4wZhek++J1yG/sWOECQhZCXI4=;
+	bh=SsLwRYjDnZhLjFEWH6rmXr0rjN+JdjyyGgFfERa/yfM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j0ic6xQzHIz+MMFAMgcSDl/wogEzkwWkXFd2Kwzb2qJxJO8K24VsCoXl1jOf22FFvC+DR2lZWpjiVLPEv7FnlIcDWKo+wulLPn7VVMwHqJxYfT16Hswt9qk6aMUqMUvaij/zN6D6XU59RVVyQ35dWJM1aV/TCwOIKj8Mfom1gKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Gu2MfyO+; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=RKVUu18jx0PnhQc6CE6Zj4/lcIZ1oljesD0w7M+PKiTEjd/Ql4qzHbatNVS+m5GGTBorDZHgrIe806a767lBK2vX0qbDX9xR6HbBcWWepR9IfvoNT2l5cvS0a9368rE7Z3RSP4KnBEijBNfCPI1ioIEZ7aYMo3J4BO6ipCemJ4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LfjqClc8; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gu2MfyO+"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LfjqClc8"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=EeFsYhvb/Fdit2R4hCFUp0b7VKyDdbX2dUmYXd00mGc=; b=Gu2MfyO+KOMeF2SXnrD9P/+Yok
-	ZDkackaAAZcM922Q2kci3CL8PuXVDU3ipL5W/i0JARN0Ecf4AMl+R9WYIZ4MjG6rBTVsRiX2s23jf
-	Y1SGKls98aedAJVN5zJ9MrapGIkNeCebbvf00Jc772ox6gByfWwqFTITY4Ol/QR08T4fH18Dpz4X9
-	xMSuviowVOdca3AC9xrghQxbXYXHK+HOc/fBo+zng9q/nKrY9zyh0E/Vs1XrHK+p4z0yxx9Z7ClTP
-	P6umpagaAJMQvQ7chWp66JmdoBso0jnn0hL2GBNLLFILfTKQ0UK0jD+5ZjDQZOzqPD00xXj/1t9TZ
-	h6oYqmxg==;
+	bh=rV5AoYJPlny/7wnGoBOtLs3pAmaEJ9e3y3MRINCsK0A=; b=LfjqClc8gfoI1goRIcRzOCl8nx
+	xMnODzqL5tTVLpi+FvD7+C5W+4VSWGyWxc3O+VSWQZQAFTpyXCMMObOBJng3DiVAWzZqWif6ybCFj
+	1O1EBmG6ZyQqRd7CWreGNvgE2bM6bDPeON3eWYpp/4tFR3VOGoX0DFrJqQzJ7C6ny88TS5jTT7n1X
+	yTUGmwZ3qBkBY2FU9WcxTHWk0AbZ9o2XGr7dAUgRXdjhPETrSapitHz1jEMeQiNIgVshgBIZn2Sgx
+	Qr15Lt8fMF2tYztfz6bjVjeNmc1SCe1W0+wSBLZl6BK/QX4jkKp9xyyHWp6S4SE3bG7wcsx39c4Cy
+	/3lmBZRg==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tB9yD-00000006Hd6-0Cj0;
+	id 1tB9yD-00000006HdB-1F85;
 	Wed, 13 Nov 2024 09:47:29 +0000
 From: Luis Chamberlain <mcgrof@kernel.org>
 To: willy@infradead.org,
@@ -47,9 +47,9 @@ Cc: john.g.garry@oracle.com,
 	da.gomez@samsung.com,
 	kernel@pankajraghav.com,
 	mcgrof@kernel.org
-Subject: [RFC 3/8] fs/buffer: restart block_read_full_folio() to avoid array overflow
-Date: Wed, 13 Nov 2024 01:47:22 -0800
-Message-ID: <20241113094727.1497722-4-mcgrof@kernel.org>
+Subject: [RFC 5/8] block/bdev: enable large folio support for large logical block sizes
+Date: Wed, 13 Nov 2024 01:47:24 -0800
+Message-ID: <20241113094727.1497722-6-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241113094727.1497722-1-mcgrof@kernel.org>
 References: <20241113094727.1497722-1-mcgrof@kernel.org>
@@ -64,70 +64,35 @@ Sender: Luis Chamberlain <mcgrof@infradead.org>
 
 From: Hannes Reinecke <hare@suse.de>
 
-block_read_full_folio() uses an on-stack array to hold any buffer_heads
-which should be updated. The array is sized for the number of buffer_heads
-per PAGE_SIZE, which of course will overflow for large folios.
-So instead of increasing the size of the array (and thereby incurring
-a possible stack overflow for really large folios) stop the iteration
-when the array is filled up, submit these buffer_heads, and restart
-the iteration with the remaining buffer_heads.
+Call mapping_set_folio_min_order() when modifying the logical block
+size to ensure folios are allocated with the correct size.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- fs/buffer.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ block/bdev.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 1fc9a50def0b..818c9c5840fe 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2366,7 +2366,7 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
- {
- 	struct inode *inode = folio->mapping->host;
- 	sector_t iblock, lblock;
--	struct buffer_head *bh, *head, *arr[MAX_BUF_PER_PAGE];
-+	struct buffer_head *bh, *head, *restart_bh = NULL, *arr[MAX_BUF_PER_PAGE];
- 	size_t blocksize;
- 	int nr, i;
- 	int fully_mapped = 1;
-@@ -2385,6 +2385,7 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
- 	iblock = div_u64(folio_pos(folio), blocksize);
- 	lblock = div_u64(limit + blocksize - 1, blocksize);
- 	bh = head;
-+restart:
- 	nr = 0;
- 	i = 0;
- 
-@@ -2417,7 +2418,12 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
- 				continue;
- 		}
- 		arr[nr++] = bh;
--	} while (i++, iblock++, (bh = bh->b_this_page) != head);
-+	} while (i++, iblock++, (bh = bh->b_this_page) != head && nr < MAX_BUF_PER_PAGE);
-+
-+	if (nr == MAX_BUF_PER_PAGE && bh != head)
-+		restart_bh = bh;
-+	else
-+		restart_bh = NULL;
- 
- 	if (fully_mapped)
- 		folio_set_mappedtodisk(folio);
-@@ -2450,6 +2456,15 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
- 		else
- 			submit_bh(REQ_OP_READ, bh);
+diff --git a/block/bdev.c b/block/bdev.c
+index 738e3c8457e7..167d82b46781 100644
+--- a/block/bdev.c
++++ b/block/bdev.c
+@@ -148,6 +148,8 @@ static void set_init_blocksize(struct block_device *bdev)
+ 		bsize <<= 1;
  	}
-+
-+	/*
-+	 * Found more buffers than 'arr' could hold,
-+	 * restart to submit the remaining ones.
-+	 */
-+	if (restart_bh) {
-+		bh = restart_bh;
-+		goto restart;
-+	}
- 	return 0;
+ 	BD_INODE(bdev)->i_blkbits = blksize_bits(bsize);
++	mapping_set_folio_min_order(BD_INODE(bdev)->i_mapping,
++				    get_order(bsize));
  }
- EXPORT_SYMBOL(block_read_full_folio);
+ 
+ int set_blocksize(struct file *file, int size)
+@@ -170,6 +172,7 @@ int set_blocksize(struct file *file, int size)
+ 	if (inode->i_blkbits != blksize_bits(size)) {
+ 		sync_blockdev(bdev);
+ 		inode->i_blkbits = blksize_bits(size);
++		mapping_set_folio_min_order(inode->i_mapping, get_order(size));
+ 		kill_bdev(bdev);
+ 	}
+ 	return 0;
 -- 
 2.43.0
 
