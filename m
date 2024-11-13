@@ -1,121 +1,145 @@
-Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48B2FB676
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 00:39:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E649C147
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 00:56:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731458345; cv=none; b=b3IpADOOHMK7UpCZu8P9lCzWf6FGWq9qrMTdp3ShSzFhbB9Q9Zst1hj4gn5xSwXu8kkdc7q8En+pYnEgKHDDhfBjzV8zQ4OVOvzMQU5RqRSTAqGTXT1RXiOj2TqdKIIDiY9V/8Q/l8vzEzbmNcKKVgnm/50CKMb0RSfVl3FrzGs=
+	t=1731459397; cv=none; b=AxQyWlYTGdUjfy7vXhl24M/DVyHbqGQ3VcQ8+DVPPZjPxM5eI4KyLuCNTzMWZi72TZDOnjsgPJkisH7WpWGfWG7jTu/eUsof+TBtDH+b+IF96wjzqsD56rhi3O3UALhKH0hsP3WkzxWuoFrD/zvN/N8LNEdV3pBEj37K7Akdgp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731458345; c=relaxed/simple;
-	bh=YpobwbtA2+vKxtJu8xZ2FUyLg/btakBlHfnLUEUx69o=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hcUc34skMSqL3PP24lHXMGzpzaILWPSe/pFHZyMO/fmM2VhfLv8m54v/88/y8MpqNK5k2JAK+DcIaZvr0aKFA364zHaWUo31mNnRYu9qdGT5lF6engqVosgCHEQN8jOMMx254nufUTKPcTNJhVbNFhgNhXicg98ZmMMfmVD3nAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=EoE+xZvU; arc=none smtp.client-ip=209.85.218.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1731459397; c=relaxed/simple;
+	bh=RN9jWC/pUGLs7zVAlSsQAIRzTlyo1nG/rgVS+HxQwl4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A805GEDT+mwin0BXPOi84R9IW12iuQxD20IzcjoZv+tBBZbdRBuGZgkHK9gilVmFTQ2GfbG9jZWLsxR9ceEmlVwaA0cxOmXZlGLC7cQXBjwMncBs3MwJw912q8hiI8+djux2iETMFYLsOtU60YyF30LhYNCkGH5tSFG173ZsuIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=k1DtuLTm; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="EoE+xZvU"
-Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-a9eb3794a04so908726366b.3
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:39:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="k1DtuLTm"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-20cceb8d8b4so1386505ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:56:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1731458341; x=1732063141; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=HToIlSDY7cOn93fCLokqkKx9Z4UBbjM0FNxhpulJNm8=;
-        b=EoE+xZvU6EDOKXSvsLLNaZJ9RmD6Fffex02A4Q4C3xXlUTc4oliTxpO+AKHeBUY130
-         Od7ENT9349yuehtel68hjw6V06589TZmNnXGldpmdruBp02OUtC0GcAtx3KKQPc+XgOY
-         w/yuR6jLbQux+QGscVnFDgk7Swp6D9d4z3ZL0=
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731459395; x=1732064195; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=iYkl9uOkq7OHwPXa4RpGPlaR6fJpu6EGYwCm1dCs0Pw=;
+        b=k1DtuLTmMphwMtk9ofYmfe47wIimjIgK2CGml7qoIkJR4Dz82uWUfbOouNPZX1Dqki
+         PWIwWjhp8GFAQtUAoMMch3I53OTvX2IemmCUCVt5DNsrnYdhw58IcC9yQZMZr0e45xn7
+         37yMC+WbGjAG0yGvQX9eKk2IXc2FPNfXPuudL6xzlY2ADPlISJ50z4UDpSYj3CXpt8XO
+         95ovQiuF0MPaTYHmsIMSm48sta9oG7oIQR6ffizvqUS4Kbor6OL7cdLKS+6bpYqJEEPY
+         RjD5QZ65PwtBByPYmM18Tp3tiqAqrTXB4U3jEeUujA1xE0kfzznPyoeOtWNXbDdpBwAV
+         9RZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731458341; x=1732063141;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HToIlSDY7cOn93fCLokqkKx9Z4UBbjM0FNxhpulJNm8=;
-        b=lHT9lJK8hCC7AyMhv+mHyxyLFq4thtOg2wcB06W0Jq+Uo+vDXoyw55c5Baao3mtxAk
-         wHRoW8hjakh3pdMjzKTqV2BwfJDUyxxBBoECp9k2CYVGv23hhuxeTw1n1wZDams8iPTP
-         Go8/Je2+jhcColxvgWqJrHRLJYDn5DJfVrNx5dtNlxI2+vIknBaqwAyV53q26qBfiTpc
-         fTZ2jhb6eTV+J21wL79UuV2J/WNS50gE1nlq+gGQJHPbGv0CL2Bkmv49j6loyrAFfXkM
-         kjHP8OBM3TwKUmTqQGmNhR4FFCDGODXw1LGbEe2Vx7qXUfDfCV6b/OQAJLt7f7neuidQ
-         vgUA==
-X-Forwarded-Encrypted: i=1; AJvYcCUkh4kVPSJGrRRCRMXySLi6PoeVJe1OIKc0SAM1JqcoBMeMJzX+2ub2xKmTvkb9T+sgbWK48v4LFJg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyA8sma1skHFBMkTQv+y6IFrJ3Rzk9C/MrW6TXJCmuNnUZmHoNW
-	2qmqj2VQ5ZCB1OnGQA38XdHRVzr/t3YnfruWJw4LPHQ9ZLrYaHcohv4ii5F67zjYWFCVhA07pQN
-	u79OXCA==
-X-Google-Smtp-Source: AGHT+IGtTpD4SMxHmEhQA1NhQjWnQwJaGi8RnsVyHsE/ZJFMNdMTFSdv4MoTJHP+PgMwrOABWpCGPw==
-X-Received: by 2002:a17:907:1c90:b0:a99:36ab:d843 with SMTP id a640c23a62f3a-aa1c57ae894mr423060366b.38.1731458341576;
-        Tue, 12 Nov 2024 16:39:01 -0800 (PST)
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com. [209.85.218.44])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9ee0dc4c60sm799234166b.102.2024.11.12.16.38.58
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 12 Nov 2024 16:38:59 -0800 (PST)
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-a9ed49ec0f1so1062060366b.1
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:38:58 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWNXM0KzU77w2lH9KEMPC64nLHgRT29JjKC98pPfjar4cjV/d4hYtTaWp4NTCZcBW856ooKatDiETA=@vger.kernel.org
-X-Received: by 2002:a17:907:1b0e:b0:a9a:1792:f05 with SMTP id
- a640c23a62f3a-aa1b10a45a5mr487896766b.31.1731458338247; Tue, 12 Nov 2024
- 16:38:58 -0800 (PST)
+        d=1e100.net; s=20230601; t=1731459395; x=1732064195;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iYkl9uOkq7OHwPXa4RpGPlaR6fJpu6EGYwCm1dCs0Pw=;
+        b=MJ8sempbuyPExn1lJHMuvvEHF7cMI6TBJMgA3amOp90Q3X3DdoTDK/LGicnqpob40H
+         wuGfmX5LZB7hT53D+7kPp8xssnd3xJLJqk0mLrY2ZAxVYUJLuZK6BKXKltjG5ltRAnZd
+         gclRfG19su3tE33+Kf8GUWVLyE43mDCyyDNQoKp5SgxDBI5K6CbfRgf1IAa0RUU1Z77X
+         y6HHyd9vJvy9JQtoLHUOk7eiHPW/g15lOb2N0PAlH8Ys1yXoCF5nea/pKDyK47m0B3xF
+         Yev79At59Bn8Mn5iDbQzuotWJka6KVCFfc6JL7/tCaifajg6Uuc9evDLNjbXLmbcljMV
+         ORWg==
+X-Gm-Message-State: AOJu0YwGO9IN5htN7CtCId2IapkLFEsbZ7RX27DDbWh4s1aSUtss76Fm
+	0MLAZaNiY4BPrfWV5aBKjeteZYQAILU/mZB5B5K5RXBhp2s+9W8VIyIoXWM19M66J8EaVy5MA9Y
+	k
+X-Google-Smtp-Source: AGHT+IHxVKNZJ5ecTaKrhWWxw7fdo3eFfEOtOLMl4Ez29/yQjvVXWvRJhwDqBym1vdAqJhP4AcPmLg==
+X-Received: by 2002:a17:902:f54b:b0:20c:cb6b:3631 with SMTP id d9443c01a7336-211837c10b3mr263317705ad.27.1731459395354;
+        Tue, 12 Nov 2024 16:56:35 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177dc826fsm99878495ad.11.2024.11.12.16.56.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Nov 2024 16:56:34 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1tB1gN-00Ds0H-2K;
+	Wed, 13 Nov 2024 11:56:31 +1100
+Date: Wed, 13 Nov 2024 11:56:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org
+Subject: Re: [PATCH 3/3] xfs: prevent mount and log shutdown race
+Message-ID: <ZzP5P4hNnEC0P1NF@dread.disaster.area>
+References: <20241112221920.1105007-1-david@fromorbit.com>
+ <20241112221920.1105007-4-david@fromorbit.com>
+ <20241112235808.GI9438@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
- <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
- <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
- <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
- <20241113001251.GF3387508@ZenIV> <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
-In-Reply-To: <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 12 Nov 2024 16:38:42 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
-Message-ID: <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
-Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, 
-	linux-fsdevel@vger.kernel.org, jack@suse.cz, brauner@kernel.org, 
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-ext4@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241112235808.GI9438@frogsfrogsfrogs>
 
-On Tue, 12 Nov 2024 at 16:23, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> On Tue, 12 Nov 2024 at 16:12, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> >
-> > Ugh...  Actually, I would rather mask that on fcntl side (and possibly
-> > moved FMODE_RANDOM/FMODE_NOREUSE over there as well).
-> >
-> > Would make for simpler rules for locking - ->f_mode would be never
-> > changed past open, ->f_flags would have all changes under ->f_lock.
->
-> Yeah, sounds sane.
->
-> That said, just looking at which bits are used in f_flags is a major
-> PITA. About half the definitions use octal, with the other half using
-> hex. Lovely.
->
-> So I'd rather not touch that mess until we have to.
+On Tue, Nov 12, 2024 at 03:58:08PM -0800, Darrick J. Wong wrote:
+> On Wed, Nov 13, 2024 at 09:05:16AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > I recently had an fstests hang where there were two internal tasks
+> > stuck like so:
+....
+> > For the CIL to be doing shutdown processing, the log must be marked
+> > with XLOG_IO_ERROR, but that doesn't happen until after the log
+> > force is issued. Hence for xfs_do_force_shutdown() to be forcing
+> > the log on a shut down log, we must have had a racing
+> > xlog_force_shutdown and xfs_force_shutdown like so:
+> > 
+> > p0			p1			CIL push
+> > 
+> >    			<holds buffer lock>
+> > xlog_force_shutdown
+> >   xfs_log_force
+> >    test_and_set_bit(XLOG_IO_ERROR)
+> >    						xlog_state_release_iclog()
+> > 						  sees XLOG_IO_ERROR
+> > 						  xlog_state_shutdown_callbacks
+> > 						    ....
+> > 						    xfs_buf_item_unpin
+> > 						    xfs_buf_lock
+> > 						    <blocks on buffer p1 holds>
+> > 
+> >    			xfs_force_shutdown
+> > 			  xfs_set_shutdown(mp) wins
+> > 			    xlog_force_shutdown
+> > 			      xfs_log_force
+> > 			        <blocks on CIL push>
+> > 
+> >   xfs_set_shutdown(mp) fails
+> >   <shuts down rest of log>
+> 
+> Huh.  I wonder, what happens today if there are multiple threads all
+> trying to shut down the log?  Same thing?
 
-Actually, maybe the locking and the octal/hex mess should be
-considered a reason to clean this all up early rather than ignore it.
+Yes. Anywhere that a both a log shutdown and a mount shutdown can be
+called concurrently and one of them holds a locked buffer that is
+also dirty in the CIL can trip over this. When I first saw it I
+thought "calling shutdown with a locked buffer is bad", then
+realised that we do that -everywhere- and assume it is safe to do
+so. That's when I started looking deeper and found this....
 
-Looking at that locking code in fadvise() just for the f_mode use does
-make me think this would be a really good cleanup.
+> I guess we've never really
+> gone Farmer Brown's Bad Day[1] on this part of the fs.
 
-I note that our fcntl code seems buggy as-is, because while it does
-use f_lock for assignments (good), it clearly does *not* use them for
-reading.
+Oh, running ~64 individual fstests concurrently on the same VM does
+a good imitation of that.
 
-So it looks like you can actually read inconsistent values.
+$ time sudo ./check-parallel /mnt/xfs -s xfs -x dump
+Tests run: 1143
+Failure count: 11
 
-I get the feeling that f_flags would want WRITE_ONCE/READ_ONCE in
-_addition_ to the f_lock use it has.
+real    9m12.307s
+user    0m0.007s
+sys     0m0.013s
+$
 
-The f_mode thing with fadvise() smells like the same bug. Just because
-the modifications are serialized wrt each other doesn't mean that
-readers are then automatically ok.
+That's what's finding these little weird timing-related issues. I've got
+several other repeating issues that I haven't got to the bottom of
+yet, so Farmer Brown's Bad Day is not over yet...
 
-           Linus
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
