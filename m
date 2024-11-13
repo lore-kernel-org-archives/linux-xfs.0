@@ -1,138 +1,103 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA180382
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 00:14:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 196252594
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 00:23:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731456869; cv=none; b=BpPFLTruRxpZ6KKib7XnT6gXkGapHx/AhdE+/2Zdvo3KnBgPTLqLynlgEyBY/Ys6hZ1VPUEvcBaYgGCliaHlnuTMBPTmFuPGF5aMtJ4C3sXB5lhqSOlvgo2ZtX+jrqVelDSZVtTcdWf2KuH/0s6oCoj/DVNBBF7USkGoAiY3s1I=
+	t=1731457430; cv=none; b=GsnIt2I4GizeugcpPZt+3YrHC2RFFhOnrp2Fv8saCTCtof2OBqe2gFD9lyZGrK0VrKQZuzQwfUVNVJou4JfKtGQMKeuCkTWJu1PfltA1a3BySRb9249g410k7zCDkMf21l9WhGldJTbOG6TDIjF+dbb9DmfdfAUSu3uhgmhokPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731456869; c=relaxed/simple;
-	bh=rJvxHfPVOmiYdHTuwuvaYnWonD0YlBdSUBIA1BAWvaI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O1L6cPiYrZxcVKEklIqqmpjtH2wYPBopUfeDtPqkP5CHBx6iPdl4ITEWejy3SgmMkZPSq+YjeDw8tyl1+Vs0cb58GFu/RlCRH/cz19pK8u4y6GOHIoBdeXElGYEC5SqBk2x09/ILx3Q8EEbP4+tf/I9JkgOLQUzrMfsVb3Lk1lI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=uzziUqhx; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1731457430; c=relaxed/simple;
+	bh=3EvWd7pwnGEo7dSfx/lB6lTVU0t1HY+pMEl3MV/3ACE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=c2Mbx7ft8A87Ualvg04Eki/1Z+9WCQCpV18LWFV/qFyG6XJxJDW9mfPPQnOTo1lfGwYurNCfSdO4eJR8ak1yDkR9NsqBXsqGP0ccbeU5p0Hbk+cSVOAFaqkeijHiYHhVYhIgXwVP4/D1b+W8egsxgWeb7hDfe2k0sAxcwVN0mVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Aro67tLO; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="uzziUqhx"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-72410cc7be9so5433919b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:14:27 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Aro67tLO"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5ceb03aaddeso7459520a12.2
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:23:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731456867; x=1732061667; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=dMgP9ksCS/2lj0lE3qAOlc0c5aKz8/PzdAI7R0Rrr/I=;
-        b=uzziUqhxf/p4Xjp9C4HePqEsqPvi/WA/M0QWHKYARnCVZEVwry8j1iZdDq5bzo8TIm
-         I/IQpv8K5haIJ1Tvl2DJUxspGdED0ByU8y8NaZYXtgtgZd68FtYwQfodN+tNVtFtBxAA
-         UWQo9+BZQHizPdtd68GjxvyhzGtW9anpeaE2p3v9wAo73DmMuZeoyaJv8SxT5gXzhTIM
-         +00oHjBHs/3rE9Gwr9welOc7wQwZdjh7ve5u4/dseX3/2fmwLeEMg1vtCvvjVFLS4IUu
-         ETzNjYqjxblYU6Sbwhdx0KS+coubUZcN2TT2wEhzypZvCjIyzzETu0cOSBSvdSQ9sTwM
-         Yzag==
+        d=linux-foundation.org; s=google; t=1731457427; x=1732062227; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=WupZbUO57pzsyzLIiF16uH4yNUQCRicfvRdbxH31iT8=;
+        b=Aro67tLOzP3eQSWGa50i5YyG+88HpyzcwLe24wymxNxGfNBcFa4HIQN/5b/ubbIG/Q
+         C5hbLHgl5W1kEnxpL4pFFsKZtBkUYyWn56k1NnX7oJp7S/Neu0lFWUuPAYkovUzcGRV2
+         TuiDC3hEGTHsGkVCdwM34EosEW1CWGRWLF7Kc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731456867; x=1732061667;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dMgP9ksCS/2lj0lE3qAOlc0c5aKz8/PzdAI7R0Rrr/I=;
-        b=kn1kLhdU1Zz5p9QmbZG32PRzhbUcbrHm+1dGvmuSqhDsmWMP0EO8P62/zRGJP54eRt
-         62PTAzGzAB9gAIZpVJHkwXVsHc8fqNaGtuwmqzzlM0nez3xUaSgQun5hpxGEgZBZTccf
-         kxOUlOhaChUm051RLWgyv4oJy7cD7HYalTXF/CMqxjGrim1QtR6Medm93IXplELZqQ4M
-         bAQG6hCp5HptdLDML6x3hLdm4qx96EY2GOVMjkbOx59teAtZrYOrDMZPDcvLNAYBfkz+
-         krNOWu9nDX5Lh6s9W7RePb6YR1KaWC3oc7tujacHzQcDE/oxZrFiH1mf4VpuoH0zI8yH
-         qoFQ==
-X-Gm-Message-State: AOJu0YyEh9VdoeVsQSgTp3xg09A/BdeLadORNOdqp+KlWOqhZoFpQRMQ
-	KPFQyZ+HAGlcFOdWNmNOqFfs1Yljz2zwUpkoMJbqyx+H4hLjALojbYFjJIcWSpLHK+fVM/b21/s
-	T
-X-Google-Smtp-Source: AGHT+IEHe7Iicx1FTaUfJoTk5XbxmmuSHCNt53ED5PLX7m0XtslV6IcbZ9r7uOBQ2K92Vb1Bom2a7A==
-X-Received: by 2002:a05:6a00:1819:b0:71e:5d1d:1aa0 with SMTP id d2e1a72fcca58-72413282abcmr26224172b3a.6.1731456866984;
-        Tue, 12 Nov 2024 16:14:26 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7240799bab1sm12188540b3a.107.2024.11.12.16.14.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2024 16:14:26 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1tB11b-00Dr68-38;
-	Wed, 13 Nov 2024 11:14:23 +1100
-Date: Wed, 13 Nov 2024 11:14:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH 2/3] xfs: delalloc and quota softlimit timers are
- incoherent
-Message-ID: <ZzPvX824X9M9PZoM@dread.disaster.area>
-References: <20241112221920.1105007-1-david@fromorbit.com>
- <20241112221920.1105007-3-david@fromorbit.com>
- <20241112234835.GH9438@frogsfrogsfrogs>
+        d=1e100.net; s=20230601; t=1731457427; x=1732062227;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=WupZbUO57pzsyzLIiF16uH4yNUQCRicfvRdbxH31iT8=;
+        b=aYGq1a06FnBUtG2JHZcwDg+ClRjCNwc0BxGSqVGxRWNg79OIjA5n/6lpcXnzjbZKIe
+         ERm4fnioLyEZm78BJDuvJpGcJFZ5MXWmv3mTa7Esr7dxx+3mPHRlujOJsAdInHY49rGX
+         obmivfzD0L0bTtw4B2WOz5nlJfpBypG8xwqFA5iIOdoLdhJyXjkgAZPjTyXNR/Gjzsef
+         gZftdAJrjv/NiK/9AtH0wBVlnlYEHJwATG3OO5kk6Kwf7DhOAZ+fuE9yb0ZR2W0i+FyO
+         y9wEtJvCNED6kcjP6l0kC4zt5lqR8XyuZCg+I37T1bRfu6ZsKdAOxDWRmuOLhJ8xkhXW
+         BXdg==
+X-Forwarded-Encrypted: i=1; AJvYcCVQlw49JZAbDwyF43ozkhDKviAIVmO6mxn7OdD4aE4qiP3DdcBsiJ/lDf+K+lN2gAWpalR5ubrwlk4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyQcsHm8uiwk/EZ0TdBEjrW3A3iTngc/Y2UEiQwjGAk/pIQtlwT
+	oeU2fghU5NfwYE7G1PtOTk5zXNwOD3a/F0yr1YHHJHlcxgi3PXTDMDKvY7g1ixlkWIZmdOL4uPH
+	x3sdniA==
+X-Google-Smtp-Source: AGHT+IFOQarhv7AEyERNY62fhyazUpRByffWy/Qt9Fk0gRpAZIqZXelp0ujslPtFb4DLhSJ1yaxUzg==
+X-Received: by 2002:aa7:dcc3:0:b0:5cf:e43:785a with SMTP id 4fb4d7f45d1cf-5cf0e437b39mr13070928a12.7.1731457427164;
+        Tue, 12 Nov 2024 16:23:47 -0800 (PST)
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com. [209.85.218.48])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cf03bb6a2fsm6791212a12.40.2024.11.12.16.23.45
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Nov 2024 16:23:46 -0800 (PST)
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-aa1e633b829so183142066b.3
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:23:45 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVykRHeaB+MwvIqOfQPyLG/rf4tod/rwf/hjTKmmebfUwsIM1k9CZz0aD8YBrZr8hAkqBY4xd1cEB8=@vger.kernel.org
+X-Received: by 2002:a17:907:94c4:b0:a9e:8522:1bd8 with SMTP id
+ a640c23a62f3a-a9eefebd13bmr1910160166b.6.1731457424914; Tue, 12 Nov 2024
+ 16:23:44 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241112234835.GH9438@frogsfrogsfrogs>
+References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
+ <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
+ <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
+ <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com> <20241113001251.GF3387508@ZenIV>
+In-Reply-To: <20241113001251.GF3387508@ZenIV>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 12 Nov 2024 16:23:28 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
+Message-ID: <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
+Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, 
+	linux-fsdevel@vger.kernel.org, jack@suse.cz, brauner@kernel.org, 
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Nov 12, 2024 at 03:48:35PM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 13, 2024 at 09:05:15AM +1100, Dave Chinner wrote:
-> > From: Supriya Wickrematillake <sup@sgi.com>
-> 
-> Wow, there are still people working at SGI??
+On Tue, 12 Nov 2024 at 16:12, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> Ugh...  Actually, I would rather mask that on fcntl side (and possibly
+> moved FMODE_RANDOM/FMODE_NOREUSE over there as well).
 
-huh, that's a git-send-email screwup. It must have pulled that from
-the quote of the initial quota commit:
+Yeah, that's probably cleaner. I was thinking the bitfield would be a
+simpler solution, but we already mask writes to specific bits on the
+fcntl side for other reasons *anyway*, so we might as well mask reads
+too, and just not expose any kernel-internal bits to user space.
 
-> > This debug was introduced in:
-> > 
-> > commit 0d5ad8383061fbc0a9804fbb98218750000fe032
-> > Author: Supriya Wickrematillake <sup@sgi.com>
-> > Date:   Wed May 15 22:44:44 1996 +0000
-> > 
-> >     initial checkin
-> >     quotactl syscall functions.
+> Would make for simpler rules for locking - ->f_mode would be never
+> changed past open, ->f_flags would have all changes under ->f_lock.
 
-Here, and decided to ignore the actual "From: dchinner@redhat" tag
-in the local commit message.
+Yeah, sounds sane.
 
-Great work, git!
+That said, just looking at which bits are used in f_flags is a major
+PITA. About half the definitions use octal, with the other half using
+hex. Lovely.
 
+So I'd rather not touch that mess until we have to.
 
-> > The very first quota support commit back in 1996. This is zero-day
-> > debug for Irix and, as it turns out, a zero-day bug in the debug
-> > code because the delalloc code on Irix didn't update the softlimit
-> > timers, either.
-> > 
-> > IOWs, this issue has been in the code for 28 years.
-> > 
-> > We obviously don't care if soft limit timers are a bit rubbery when
-> > we have delalloc reservations in memory. Production systems running
-> > quota reports have been exposed to this situation for 28 years and
-> > nobody has noticed it, so the debug code is essentially worthless at
-> > this point in time.
-> > 
-> > We also have the on-disk dquot verifiers checking that the soft
-> > limit timer is running whenever the dquot is over the soft limit
-> > before we write it to disk and after we read it from disk. These
-> > aren't firing, so it is clear the issue is purely a temporary
-> > in-memory incoherency that I never would have noticed had the test
-> > not silently failed to unmount the filesystem.
-> > 
-> > Hence I'm simply going to trash this runtime debug because it isn't
-> > useful in the slightest for catching quota bugs.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Agreed!  I've hit this once in a blue moon and didn't think it was
-> especially useful either.
-> 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-Thanks!
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+                Linus
