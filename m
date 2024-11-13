@@ -1,87 +1,75 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D832309AC;
-	Wed, 13 Nov 2024 01:19:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA52622339;
+	Wed, 13 Nov 2024 01:36:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731460801; cv=none; b=qQLalPp3+K0KMN+AtTxd5kWc8eRyo7rVy7eTKZGmzHF0qTRKJoZHB/3jLURmcZKClUggEkgpfDMTQmTckWhCoq2klPMlJ1mLgxbI6+ri8zoZu83sq7l8RQokm8tteL3lZlivOmduQzphqcWI5yLCIGemSG7QtvfLYeExekGwuIo=
+	t=1731461813; cv=none; b=QKVT6JR2uIa3y5+9wg2WKNuUbq91pVfByficzzO1kZAe13o1EZ0PePeR6lmH+4lYzG0X6vBn4uaw9qJIfE6sH4fhBoPm4ZWtRXt/M++Asi0EOYCdlYGneuzprA5RGdw4/icv9apd9yPe3zMunhPUQoSKnbrbMKUsLqv1FxttCpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731460801; c=relaxed/simple;
-	bh=EEW2fQlOgw7/LdLNgEFcmqde26RG5RGhFq5cl9pKORY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fdizncf6YWY/ICzPb8k70YEGnuU9uT91l335/YpjVoEC3bj2gg7Kg3dSn8SQxQJi7np8gJNCjrcxIhmcPGTjd59XIM8pGAr6QI2PwisG+k97eibiFGYFhHppQMlQ9E4Nef5M39F4q76uUlSLt5q5+KK9WssbOK52fW+TDHNYOTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=NWnQS4xv; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	s=arc-20240116; t=1731461813; c=relaxed/simple;
+	bh=aIp3du8Slh5IR1xMHChukRd8Cc5m/LFjBertlfVQDjw=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=JY1L9y/g1PYb8GoyL2S9ohI9pfRwIAqT5PNZkKvEOPOwQGDEhjAYYWKBmKLDNYhbJSAkcsJUq7CMDCEVBdJ2s6/HlgxtpdOGCgafVJDF4xS2TsODk19Bxymwf6P4JbvK6E7UaKnsRokRZETa7KRELmoowibYH0Y3z5zebAsbHjg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b5mmRn+3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="NWnQS4xv"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=+xBD1LG1LcD2WvJWHLClpL4CkoduBy/hMixH+3L2C0k=; b=NWnQS4xver1owBO+dn2OG3m35m
-	YqYGw2WubUWRGvoj6Nj/I0yVjQQcIshCS5hh7T6H6svbkoLqNtVuFjUB6lmVEGiItwgK6KwVHP24w
-	249wjP8HAnySe2tiW15dmU9Uco4QR5sjxt/u9ffiwypdBNYN1uhFwXXejD2H6698UzgMHy4AafB12
-	noJhUGXPkJjMlejOr9GPIsgaRcCFPvZ6px03xHvhivHqv+Ei3lp9e0ZtFCY1u5aerpBN+jrgq1G5E
-	gOe27ozCV21rRcIkZI5ePTtJ5sgUfkPdiou88Fr9qkqoyxHzsVsJUjrR0Bq2zx/K0t+ut4sXOvs9h
-	ibbU2D6g==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tB230-0000000EJRo-3OnO;
-	Wed, 13 Nov 2024 01:19:54 +0000
-Date: Wed, 13 Nov 2024 01:19:54 +0000
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <josef@toxicpanda.com>,
-	kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
-	brauner@kernel.org, linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission
- events
-Message-ID: <20241113011954.GG3387508@ZenIV>
-References: <cover.1731433903.git.josef@toxicpanda.com>
- <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
- <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
- <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
- <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
- <20241113001251.GF3387508@ZenIV>
- <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
- <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b5mmRn+3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F0ACC4CECD;
+	Wed, 13 Nov 2024 01:36:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731461813;
+	bh=aIp3du8Slh5IR1xMHChukRd8Cc5m/LFjBertlfVQDjw=;
+	h=Date:Subject:From:To:Cc:From;
+	b=b5mmRn+3pX1/uzHhPyVUjotloI6DSocAufmCUFU1/I4AwxENBEheATGLVMX54YpSC
+	 0ESBPdX9DFN2yzGtTfTaNJYJs40Q07e8iqLw/ldBpFjA6g8pohBPlJ/JUf7FO8DhZm
+	 feZLY3HEuMAFVxqU1dNEDvk8nrWPWQY9xd7hnhwBt+TxSMlhKNiuYMOQj/af9SOF3M
+	 /Pu/XkUXmjTZsXJrshr2AKIio63jRWfqJkd89qB4usVFnic/2unk44IwIrang0dAst
+	 bW6SYFdjOXAlcx2AUYx+IDBjZ9OUQWEp2dJ6oYPrmmYR3FoHkqQGdkOA08M7M+NMjk
+	 N/Fj5/62zV1kw==
+Date: Tue, 12 Nov 2024 17:36:52 -0800
+Subject: [PATCHSET] fstests: random fixes for v2024.10.28
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 12, 2024 at 04:38:42PM -0800, Linus Torvalds wrote:
-> Looking at that locking code in fadvise() just for the f_mode use does
-> make me think this would be a really good cleanup.
-> 
-> I note that our fcntl code seems buggy as-is, because while it does
-> use f_lock for assignments (good), it clearly does *not* use them for
-> reading.
-> 
-> So it looks like you can actually read inconsistent values.
-> 
-> I get the feeling that f_flags would want WRITE_ONCE/READ_ONCE in
-> _addition_ to the f_lock use it has.
+Hi all,
 
-AFAICS, fasync logics is the fishy part - the rest should be sane.
+Here's the usual odd fixes for fstests.  Most of these are cleanups and
+bug fixes that have been aging in my djwong-wtf branch forever.
 
-> The f_mode thing with fadvise() smells like the same bug. Just because
-> the modifications are serialized wrt each other doesn't mean that
-> readers are then automatically ok.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-Reads are also under ->f_lock in there, AFAICS...
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
-Another thing in the vicinity is ->f_mode modifications after the calls
-of anon_inode_getfile() in several callers - probably ought to switch
-those to anon_inode_getfile_fmode().  That had been discussed back in
-April when the function got merged, but "convert to using it" followup
-series hadn't materialized...
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+Commits in this patchset:
+ * xfs/273: check thoroughness of the mappings
+ * xfs/185: don't fail when rtfile is larger than rblocks
+ * generic/757: fix various bugs in this test
+---
+ tests/generic/757 |    7 ++++++-
+ tests/xfs/185     |    6 ++++--
+ tests/xfs/273     |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 57 insertions(+), 3 deletions(-)
+
