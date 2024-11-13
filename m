@@ -1,145 +1,108 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E649C147
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 00:56:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB62EB665
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 00:58:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731459397; cv=none; b=AxQyWlYTGdUjfy7vXhl24M/DVyHbqGQ3VcQ8+DVPPZjPxM5eI4KyLuCNTzMWZi72TZDOnjsgPJkisH7WpWGfWG7jTu/eUsof+TBtDH+b+IF96wjzqsD56rhi3O3UALhKH0hsP3WkzxWuoFrD/zvN/N8LNEdV3pBEj37K7Akdgp0=
+	t=1731459510; cv=none; b=NofRLaRBtN0WZYMpXxKz56bxwZUImKHT0SQy04/+FjMEOUfeCGJYmati8ujyVh5s6eRO0kGqiE5cqtSknyIeimR54lz5yc2UN1YkrTAX3afoLZoW3d6p6gbJ71/t3gAziW/28ubZZBFRgZw76hTYgLYbCdEMLDhcZ3YTcqkHC9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731459397; c=relaxed/simple;
-	bh=RN9jWC/pUGLs7zVAlSsQAIRzTlyo1nG/rgVS+HxQwl4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A805GEDT+mwin0BXPOi84R9IW12iuQxD20IzcjoZv+tBBZbdRBuGZgkHK9gilVmFTQ2GfbG9jZWLsxR9ceEmlVwaA0cxOmXZlGLC7cQXBjwMncBs3MwJw912q8hiI8+djux2iETMFYLsOtU60YyF30LhYNCkGH5tSFG173ZsuIE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=k1DtuLTm; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1731459510; c=relaxed/simple;
+	bh=n3j6hYJca3iK+8w4R60+GpDVT4tBx8PgHWEo86e/9FM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gjHEcYPAoMTPmb1+2/NElaDemPEZ9sW0RgxCMjBFEetWm77pjRTcznX23m8NNeX20grGRbgXf43QJ9+m5TEdoLnww7iDE4fe+znhMBRiCmjfEXkISx3ecSp/PGbJQpWKNIHzbadxeZVoOOJWuw2gG0zyfJxbJm7umsmCStbD6Lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=RMChi8OW; arc=none smtp.client-ip=209.85.218.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="k1DtuLTm"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-20cceb8d8b4so1386505ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:56:35 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="RMChi8OW"
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a9f1d76dab1so503112466b.0
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:58:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731459395; x=1732064195; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=iYkl9uOkq7OHwPXa4RpGPlaR6fJpu6EGYwCm1dCs0Pw=;
-        b=k1DtuLTmMphwMtk9ofYmfe47wIimjIgK2CGml7qoIkJR4Dz82uWUfbOouNPZX1Dqki
-         PWIwWjhp8GFAQtUAoMMch3I53OTvX2IemmCUCVt5DNsrnYdhw58IcC9yQZMZr0e45xn7
-         37yMC+WbGjAG0yGvQX9eKk2IXc2FPNfXPuudL6xzlY2ADPlISJ50z4UDpSYj3CXpt8XO
-         95ovQiuF0MPaTYHmsIMSm48sta9oG7oIQR6ffizvqUS4Kbor6OL7cdLKS+6bpYqJEEPY
-         RjD5QZ65PwtBByPYmM18Tp3tiqAqrTXB4U3jEeUujA1xE0kfzznPyoeOtWNXbDdpBwAV
-         9RZg==
+        d=linux-foundation.org; s=google; t=1731459505; x=1732064305; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=5tJ813zBq+G2Ew0iXW8JEVhQMVvtnrBGzEzzKoVgMoc=;
+        b=RMChi8OW/1Vy6bsK3yi0qk7kBNFAd3stwE+DcWK8limrrf5Nh45ka1cI3GyawVGg1Z
+         EIge1O+lRa5eZoqvK/ofELDWi7Kxc511tDaS5rDvRzX3wmumibbrfxyQ2j67lK8kIIr0
+         0KQUW+VSIV0EPBnHG2yKdX2NvQPGVc/o4qRIc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731459395; x=1732064195;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=iYkl9uOkq7OHwPXa4RpGPlaR6fJpu6EGYwCm1dCs0Pw=;
-        b=MJ8sempbuyPExn1lJHMuvvEHF7cMI6TBJMgA3amOp90Q3X3DdoTDK/LGicnqpob40H
-         wuGfmX5LZB7hT53D+7kPp8xssnd3xJLJqk0mLrY2ZAxVYUJLuZK6BKXKltjG5ltRAnZd
-         gclRfG19su3tE33+Kf8GUWVLyE43mDCyyDNQoKp5SgxDBI5K6CbfRgf1IAa0RUU1Z77X
-         y6HHyd9vJvy9JQtoLHUOk7eiHPW/g15lOb2N0PAlH8Ys1yXoCF5nea/pKDyK47m0B3xF
-         Yev79At59Bn8Mn5iDbQzuotWJka6KVCFfc6JL7/tCaifajg6Uuc9evDLNjbXLmbcljMV
-         ORWg==
-X-Gm-Message-State: AOJu0YwGO9IN5htN7CtCId2IapkLFEsbZ7RX27DDbWh4s1aSUtss76Fm
-	0MLAZaNiY4BPrfWV5aBKjeteZYQAILU/mZB5B5K5RXBhp2s+9W8VIyIoXWM19M66J8EaVy5MA9Y
-	k
-X-Google-Smtp-Source: AGHT+IHxVKNZJ5ecTaKrhWWxw7fdo3eFfEOtOLMl4Ez29/yQjvVXWvRJhwDqBym1vdAqJhP4AcPmLg==
-X-Received: by 2002:a17:902:f54b:b0:20c:cb6b:3631 with SMTP id d9443c01a7336-211837c10b3mr263317705ad.27.1731459395354;
-        Tue, 12 Nov 2024 16:56:35 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177dc826fsm99878495ad.11.2024.11.12.16.56.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2024 16:56:34 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1tB1gN-00Ds0H-2K;
-	Wed, 13 Nov 2024 11:56:31 +1100
-Date: Wed, 13 Nov 2024 11:56:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH 3/3] xfs: prevent mount and log shutdown race
-Message-ID: <ZzP5P4hNnEC0P1NF@dread.disaster.area>
-References: <20241112221920.1105007-1-david@fromorbit.com>
- <20241112221920.1105007-4-david@fromorbit.com>
- <20241112235808.GI9438@frogsfrogsfrogs>
+        d=1e100.net; s=20230601; t=1731459505; x=1732064305;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=5tJ813zBq+G2Ew0iXW8JEVhQMVvtnrBGzEzzKoVgMoc=;
+        b=Jx2FGmKnzPWUWyXW3qU+t0hydqVl3xGGD/ZPuAH33ENO9v7jow8V/BapaJLeTUiry4
+         6c07su9KlXl4Ruv7SATdWXarx3m6aIUTW9pf/S/QqCk7L2IoUgB96taxEjnrx21eR55+
+         Q6/a8CTXqqlUL10KWsRD0tqWI0vqWEvXReIL1R8u3q6Jp5Ygd8cnrfRQe9GFENC+n+CQ
+         Oh5qhaCM28V5IKrvk32y1MmFcGXQa9XPpQehNrlLg/b7/4YETcNHQN+dhwl3qSxMq2S5
+         tTGDsgsmZa3lLlj61Ez50pECBHNVLEY/eT62CVv2vPx/mzgBGyBF/85dCqo5xxJ7uSM2
+         mi1g==
+X-Forwarded-Encrypted: i=1; AJvYcCWtjrvAlOTBpWVDtJGENxEVF5KK6MIwDMlxv8LYwc6SmbEnCBR/HA+dyIGrVqYSwLcenZ+yRr7ENyM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzdklEEKEDb6qXlBjkOasDHRd9n7FLXk6GY7iio46E8RhGxwhIe
+	RUv2Fyk4Fzjunujxh8BfQ4wB5rZyo+WfDPmL1eJJTPbt1T/OtmaHY3I0jDPwYNbQ0Y6PxlLG8xo
+	lvXIrmg==
+X-Google-Smtp-Source: AGHT+IFLY74zypmEF8wyLocnsvDg7PTsRhthgYj93tvgYpAG3b595NxZ7F0ANqDK5tXeBP/uE4UzCw==
+X-Received: by 2002:a17:907:2d07:b0:a9a:29a9:70bb with SMTP id a640c23a62f3a-aa1b1055795mr408620666b.14.1731459504786;
+        Tue, 12 Nov 2024 16:58:24 -0800 (PST)
+Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com. [209.85.208.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9ee0dc5db6sm785057066b.119.2024.11.12.16.58.22
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Nov 2024 16:58:23 -0800 (PST)
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-5ced377447bso8848210a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 16:58:22 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUf9DRWDQ5j2QyfB0gJqF+Y4JNdpRRjHKpBPsGHQqmjuNdZieg4sFMEwrmLYzqjFGhcU89VpApeYDU=@vger.kernel.org
+X-Received: by 2002:a17:907:1c11:b0:a9e:b08e:3de1 with SMTP id
+ a640c23a62f3a-aa1b10a9779mr425956266b.36.1731459502310; Tue, 12 Nov 2024
+ 16:58:22 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241112235808.GI9438@frogsfrogsfrogs>
+References: <cover.1731433903.git.josef@toxicpanda.com> <60a2309da948dc81e4c66b9e5fe3f1e2faa2010e.1731433903.git.josef@toxicpanda.com>
+ <CAHk-=wgNFNYinkWCUvT2UnH2E2K_qPexEPgrm-xgr68YXnEQ_g@mail.gmail.com> <CAOQ4uxgakk8pW39JkjL1Up-dGZtTDn06QAQvX8p0fVZksCzA9Q@mail.gmail.com>
+In-Reply-To: <CAOQ4uxgakk8pW39JkjL1Up-dGZtTDn06QAQvX8p0fVZksCzA9Q@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 12 Nov 2024 16:58:06 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wiMy72pfXi7SQZoth5tY9bkXaA+_4vpoY_tOhqAmowvBw@mail.gmail.com>
+Message-ID: <CAHk-=wiMy72pfXi7SQZoth5tY9bkXaA+_4vpoY_tOhqAmowvBw@mail.gmail.com>
+Subject: Re: [PATCH v7 07/18] fsnotify: generate pre-content permission event
+ on open
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
+	jack@suse.cz, brauner@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Nov 12, 2024 at 03:58:08PM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 13, 2024 at 09:05:16AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > I recently had an fstests hang where there were two internal tasks
-> > stuck like so:
-....
-> > For the CIL to be doing shutdown processing, the log must be marked
-> > with XLOG_IO_ERROR, but that doesn't happen until after the log
-> > force is issued. Hence for xfs_do_force_shutdown() to be forcing
-> > the log on a shut down log, we must have had a racing
-> > xlog_force_shutdown and xfs_force_shutdown like so:
-> > 
-> > p0			p1			CIL push
-> > 
-> >    			<holds buffer lock>
-> > xlog_force_shutdown
-> >   xfs_log_force
-> >    test_and_set_bit(XLOG_IO_ERROR)
-> >    						xlog_state_release_iclog()
-> > 						  sees XLOG_IO_ERROR
-> > 						  xlog_state_shutdown_callbacks
-> > 						    ....
-> > 						    xfs_buf_item_unpin
-> > 						    xfs_buf_lock
-> > 						    <blocks on buffer p1 holds>
-> > 
-> >    			xfs_force_shutdown
-> > 			  xfs_set_shutdown(mp) wins
-> > 			    xlog_force_shutdown
-> > 			      xfs_log_force
-> > 			        <blocks on CIL push>
-> > 
-> >   xfs_set_shutdown(mp) fails
-> >   <shuts down rest of log>
-> 
-> Huh.  I wonder, what happens today if there are multiple threads all
-> trying to shut down the log?  Same thing?
+On Tue, 12 Nov 2024 at 15:41, Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> You wrote it should be called "in the open path" - that is ambiguous.
+> pre-content hook must be called without sb_writers held, so current
+> (in linux-next) location of fsnotify_open_perm() is not good in case of
+> O_CREATE flag, so I am not sure where a good location is.
+> Easier is to drop this patch.
 
-Yes. Anywhere that a both a log shutdown and a mount shutdown can be
-called concurrently and one of them holds a locked buffer that is
-also dirty in the CIL can trip over this. When I first saw it I
-thought "calling shutdown with a locked buffer is bad", then
-realised that we do that -everywhere- and assume it is safe to do
-so. That's when I started looking deeper and found this....
+Dropping that patch obviously removes my objection.
 
-> I guess we've never really
-> gone Farmer Brown's Bad Day[1] on this part of the fs.
+But since none of the whole "return errors" is valid with a truncate
+or a new file creation anyway, isn't the whole thing kind of moot?
 
-Oh, running ~64 individual fstests concurrently on the same VM does
-a good imitation of that.
+I guess do_open() could do it, but only inside a
 
-$ time sudo ./check-parallel /mnt/xfs -s xfs -x dump
-Tests run: 1143
-Failure count: 11
+        if (!error && !do_truncate && !(file->f_mode & FMODE_CREATED))
+                error = fsnotify_opened_old(file);
 
-real    9m12.307s
-user    0m0.007s
-sys     0m0.013s
-$
+kind of thing. With a big comment about how this is a pre-read hook,
+and not relevant for a new file or a truncate event since then it's
+always empty anyway.
 
-That's what's finding these little weird timing-related issues. I've got
-several other repeating issues that I haven't got to the bottom of
-yet, so Farmer Brown's Bad Day is not over yet...
+But hey, if you don't absolutely need it in the first place, not
+having it is *MUCH* preferable.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+It sounds like the whole point was to catch reads - not opens. So then
+you should catch it at read() time, not at open() time.
+
+                Linus
