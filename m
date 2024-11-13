@@ -1,140 +1,245 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47EA1187FEC
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 22:23:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD0C815444E;
+	Wed, 13 Nov 2024 22:35:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731536640; cv=none; b=Fm8ubmQCAQihnwBYqfYIb+6Nd+XUfx2IUalMAmXU0pF6O7dT/uypfzub8/kYqrveGVrV/NUHWE/nFcmOVt/s+01VppXBvQYf/Bup8oMHxHUBSv+oxtrvG3dFO/WKLOSuyPWbsZXJbpbzTsRzN2rS5zMKNOyqRXADs8QhF3Z4QIg=
+	t=1731537331; cv=none; b=MsOeJ7LL0+6T3fwTfE9m1LnFnbcZd1+AFsRxONvaKEQVIwValJugaAT4+tAh/2LC4gCX5OMB6MYUpn5DM12FIjtKFYZNsxD9SxFNsDvyMBPoHS5mmxsliICSgkhvgp/8bc6SD1He65z9Sn1xQt6XxZQkNGMB2UHIIAAkVs6Kzcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731536640; c=relaxed/simple;
-	bh=TgLSM3kw/IESz6YfA/6CcM0kRm8NHR70/vlEMxjDpdE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JcMpGSZyk64UauDlC3WVqsohIrx5NySceCmVmGSSzC7oQ5au2Eqs5QQjhFGMgGPeTaCsKwJNl3Yakc6OAq5ZasLpx/wGNv8RHBED9IQqJWAk1DKZKRkXOAwSw139NMNaIKdXeLZE4FHsA/ArABfyX2Q5k8ZOfPsiwgeqCR1t23s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=QBjvm2BV; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1731537331; c=relaxed/simple;
+	bh=rjn0KiGgiLv1xsIPwjcqSSHf6SlULfYkhLvvSZTBIqw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GrDqpCqt8/sqHRNwnQW0fLrv3ZYIWtJrXHLy/wU7DQF4iyZDe/Y3l2swNlRt70K7s0Wr/AFwNuky79Iw6LFQPWeTzDY68dIS6wHEGhrKHoFHZV1ghJJsT5glXssKDn8DFlpUlXsFRTAgWuDZJOCNNX+vG2T/DyuSp8jhNsVP1pY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mSE8H3D+; arc=none smtp.client-ip=209.85.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="QBjvm2BV"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-7ee020ec76dso5537009a12.3
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 14:23:58 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mSE8H3D+"
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-7180d9d0dcbso3394845a34.3;
+        Wed, 13 Nov 2024 14:35:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731536637; x=1732141437; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=XhU1DTFWsUZULhpNS1f0hFA10SN7OegQFOrkLjd72jU=;
-        b=QBjvm2BVQ3a+mq5FYbcfSBvesRgnlh5smymbDA4YWvSZXW2869GBssZrpDlEzJFv/Q
-         5FY6Ii7+kqEvJp5IMTEOadDoHWwDjmGijvU7XbGmuULfIL1HBY6UrBzEZQlHtspAoVZX
-         E8impMf1ikl6/VN4e09SEA91gSn4xG/DMbadkA2zhvz5f7dKzFMNZcWbBJRzO1QmgTwB
-         wWAhkF0uWT7IGjWbIMyyQY19WVfH+EgOvE62UjQcOA1d8HxkMU55ladkeHcXqxrGzw2p
-         LJ5IhVC8jtWfZHejGuIyuqXtlbg3QaWRJzHZ10QGegwT8ylV+VP8FDSswszIloVmqrMp
-         quMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731536637; x=1732141437;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1731537329; x=1732142129; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=XhU1DTFWsUZULhpNS1f0hFA10SN7OegQFOrkLjd72jU=;
-        b=IU5KQesQ0dCXzjj0TAgTpZ86kwPHdyfR3D1zAAoxeHrX7/e5d73vchgQPjWZ1bGOb3
-         3gQfmTpps1SoXHTcijJhQPNQ3FPWymK7XIPXsrGEP7PpfOZ6Ozxsv54L1tR8b5SxdjD9
-         Mcd3fJygMruXI9QfZ75zNgsMM29QkkxY0ToIO6A5nFZ2TonIiTRFEAQiLEwHlRgPsps4
-         IxF0CNf1t2kSv2LJFavCfEr1SnDeCQzTaflsdLfZLSNrO1vdkvb2RtSXqrXokc9jCRao
-         DNVDnUVjTApj3oxYZq0XtvxDwvSaNALfEy0FJTLhi4Ald+/D7qUgyPw6nObuuSYpEl10
-         F8nA==
-X-Forwarded-Encrypted: i=1; AJvYcCUdQIsAob4n1PrC+YUN4vR+xPVL5MzKL6+y00/eZCqOLwun3iJJF43MuXBOnJfrgh1Mi6LfasYG93w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzlBMbMR6mFb72xga1JxK9mKGkd7ZWtP3Vq7Tm99OrCdRpocwvE
-	Rihwr8oN4YAddHzOBjTePg1PPk/HXcAM24mhi7QZEyU+ADef0IrUaa3NNgw0JuE=
-X-Google-Smtp-Source: AGHT+IFp+u01htZ7+R4q0w8zY+0n6pwR7q3KOwbId/6FUz/GheGxoVBPUTfGzcZ0P6rKeXYjD5vOXg==
-X-Received: by 2002:a05:6a20:748b:b0:1d9:c78f:4207 with SMTP id adf61e73a8af0-1dc2292c2a4mr30095003637.11.1731536630122;
-        Wed, 13 Nov 2024 14:23:50 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7f7127f3b01sm2017218a12.84.2024.11.13.14.23.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Nov 2024 14:23:49 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1tBLm6-00EGof-0x;
-	Thu, 14 Nov 2024 09:23:46 +1100
-Date: Thu, 14 Nov 2024 09:23:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Alex Shi <seakeel@gmail.com>, linux-xfs@vger.kernel.org,
-	Linux-MM <linux-mm@kvack.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: xfs deadlock on mm-unstable kernel?
-Message-ID: <ZzUm8jiGmyDVyEwX@dread.disaster.area>
-References: <e5814465-b39a-44d8-aa3d-427773c9ae16@gmail.com>
- <Zou8FCgPKqqWXKyS@dread.disaster.area>
- <20241112171428.UqPpObPV@linutronix.de>
+        bh=+KDLg9To/YkPL+lMewcxLGFQQ9zp/mgylVTsqbiOTEQ=;
+        b=mSE8H3D+HoORVw3G11NNbbXushkwbWfc0uBPO/YZ9YzRFgvZoXVAsK3n55sJ1BrThG
+         V87wYhkQq8mZd7SHfMzumVEhsy3VqMY28lf3cvMjbjcVaS+ebHlH9veqp9xcImYHuMU/
+         9m0dT7lpVOAzLWthY9XicU2UC2zHJB6LVPBzGDRoweL6FgZ19ozz120YR+svV8jzB12e
+         EhaXUhoQPJaf0A4Il/wpjaTb9r3nmwlGXAbrrRvJSYlm87J1Xq3rX6vfKSLP1fDMmv+i
+         IoLsXjvOzNlrVc9jZhzDN5q/1I8A7inPjoaR16NYXGLDPSFsYr9n9qww1eVuWiCBoavW
+         uqXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731537329; x=1732142129;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+KDLg9To/YkPL+lMewcxLGFQQ9zp/mgylVTsqbiOTEQ=;
+        b=b5KlzXiSQWvVlIiWSznbZshSS5e26Q/UAAWO5dkD8AYa8PwyJM4eHS2iMa/Xciyygr
+         Htm48Nj1Ml3qnQjRbArmec7qAClojT18/cQ6lj/AJOiAAZfNk+i5PrJNGeWw95Hs0Pwq
+         5F4NBNDW1FQQmgCMgissS4tTGiE4azXEYSRLvggaPTxF3NSqO3S0bQXtRttEQt2ZTp5c
+         Aq+R4e4JvvDUV2tzPYQDmiKO0qRS219IRf+hgHZn1OyejUtfprc64MxlZjvqIOUn0EaL
+         2TWiwUmoZ25GawDm4coxPUTwZK2kzEqEcRHOuGhiwl7JMBFbTbBguu4lZPLYyj2L6cVN
+         +HXg==
+X-Forwarded-Encrypted: i=1; AJvYcCVEzAiQgquc4PQcRwW8ijKYku1xNjTlbeRVwxa0m8aGQb8T4CAhUCjz/eYZDvxJbgfwCIWxleTWzxBuWg==@vger.kernel.org, AJvYcCWzHWaCRPWcMLZ1oPgYcIFjil04r/KrN05eWTvy4zyT70o1YKkq+0tHBixokUly5ivHGvOFWEKwjfOzTo2Qxw==@vger.kernel.org, AJvYcCX8J53wR6IFqqHFgWA2cvB5N5iyHg9R3Ha3YQ1IUoz7OiC15KKHmnIE8KjYzymjj96pYUCG+I1R0ewL@vger.kernel.org, AJvYcCXHIsDlzl+5babYj8Hkwdtel5CdxLCVqjK8/Wi82OcHNdaXhTg63GtWIKLaOaCvo0i2Lze2FnKeYctbCg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx9mNzmIzwV1dzmEbthioWoJ+XhahSsYhAqCoG0kBgv/Kxb3udb
+	a/W+KfRZ8S9s/6owCNaPRaPf+RR66TA8IJjdCTjy44l9iKqXlqK83N7/kvhYgZJ+vQgxhi8ecNK
+	Z1/GJpIjkvYnXsjue3Q30/Wh52lw=
+X-Google-Smtp-Source: AGHT+IEdZlQxt48o8J8iDRR0Lg99n+z9ualxe1wY20DVHLuL74dL16q0iW+CsMahVNFRcOyIZXBweMNj0cx54B5GAec=
+X-Received: by 2002:a05:6830:2117:b0:718:18d6:a447 with SMTP id
+ 46e09a7af769-71a6020c4c3mr4694846a34.24.1731537328656; Wed, 13 Nov 2024
+ 14:35:28 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241112171428.UqPpObPV@linutronix.de>
+References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
+ <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
+ <CAOQ4uxjQHh=fUnBw=KwuchjRt_4JbaZAqrkDd93E2_mrqv_Pkw@mail.gmail.com> <CAHk-=wirrmNUD9mD5OByfJ3XFb7rgept4kARNQuA+xCHTSDhyw@mail.gmail.com>
+In-Reply-To: <CAHk-=wirrmNUD9mD5OByfJ3XFb7rgept4kARNQuA+xCHTSDhyw@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 13 Nov 2024 23:35:16 +0100
+Message-ID: <CAOQ4uxgFJX+AJbswKwQP3oFE273JDOO3UAvtxHz4r8+tVkHJnQ@mail.gmail.com>
+Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
+	jack@suse.cz, brauner@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 12, 2024 at 06:14:28PM +0100, Sebastian Andrzej Siewior wrote:
-> On 2024-07-08 20:14:44 [+1000], Dave Chinner wrote:
-> > On Mon, Jul 08, 2024 at 04:36:08PM +0800, Alex Shi wrote:
-> > >   372.297234][ T3001] ============================================
-> > > [  372.297530][ T3001] WARNING: possible recursive locking detected
-> > > [  372.297827][ T3001] 6.10.0-rc6-00453-g2be3de2b70e6 #64 Not tainted
-> > > [  372.298137][ T3001] --------------------------------------------
-> > > [  372.298436][ T3001] cc1/3001 is trying to acquire lock:
-> > > [  372.298701][ T3001] ffff88802cb910d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_reclaim_inode+0x59e/0x710
-> > > [  372.299242][ T3001] 
-> > > [  372.299242][ T3001] but task is already holding lock:
-> > > [  372.299679][ T3001] ffff88800e145e58 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_data_map_shared+0x4d/0x60
-> > > [  372.300258][ T3001] 
-> > > [  372.300258][ T3001] other info that might help us debug this:
-> > > [  372.300650][ T3001]  Possible unsafe locking scenario:
-> > > [  372.300650][ T3001] 
-> > > [  372.301031][ T3001]        CPU0
-> > > [  372.301231][ T3001]        ----
-> > > [  372.301386][ T3001]   lock(&xfs_dir_ilock_class);
-> > > [  372.301623][ T3001]   lock(&xfs_dir_ilock_class);
-> > > [  372.301860][ T3001] 
-> > > [  372.301860][ T3001]  *** DEADLOCK ***
-> > > [  372.301860][ T3001] 
-> > > [  372.302325][ T3001]  May be due to missing lock nesting notation
-> > > [  372.302325][ T3001] 
-> > > [  372.302723][ T3001] 3 locks held by cc1/3001:
-> > > [  372.302944][ T3001]  #0: ffff88800e146078 (&inode->i_sb->s_type->i_mutex_dir_key){++++}-{3:3}, at: walk_component+0x2a5/0x500
-> > > [  372.303554][ T3001]  #1: ffff88800e145e58 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_data_map_shared+0x4d/0x60
-> > > [  372.304183][ T3001]  #2: ffff8880040190e0 (&type->s_umount_key#48){++++}-{3:3}, at: super_cache_scan+0x82/0x4e0
-> > 
-> > False positive. Inodes above allocation must be actively referenced,
-> > and inodes accees by xfs_reclaim_inode() must have no references and
-> > been evicted and destroyed by the VFS. So there is no way that an
-> > unreferenced inode being locked for reclaim in xfs_reclaim_inode()
-> > can deadlock against the refrenced inode locked by the inode lookup
-> > code.
-> > 
-> > Unfortunately, we don't have enough lockdep subclasses available to
-> > annotate this correctly - we're already using all
-> > MAX_LOCKDEP_SUBCLASSES to tell lockdep about all the ways we can
-> > nest inode locks. That leaves us no space to add a "reclaim"
-> > annotation for locking done from super_cache_scan() paths that would
-> > avoid these false positives....
-> 
-> So the former inode (the one triggering the reclaim) is created and can
-> not be the same as the one in reclaim list. Couldn't we assign it a
-> different lock-class?
+On Wed, Nov 13, 2024 at 10:22=E2=80=AFPM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> On Wed, 13 Nov 2024 at 11:11, Amir Goldstein <amir73il@gmail.com> wrote:
+> >
+> > >
+> > > This whole "add another crazy inline function using another crazy
+> > > helper needs to STOP. Later on in the patch series you do
+> > >
+> >
+> > The patch that I sent did add another convenience helper
+> > fsnotify_path(), but as long as it is not hiding crazy tests,
+> > and does not expand to huge inlined code, I don't see the problem.
+>
+> So I don't mind adding a new inline function for convenience.
+>
+> But I do mind the whole "multiple levels of inline functions" model,
+> and the thing I _particularly_ hate is the "mask is usually constant
+> so that the effect of the inline function is practically two different
+> things" as exemplified by "fsnotify_file()" and friends.
+>
+> At that point, the inline function isn't a helper any more, it's a
+> hindrance to understanding what the heck is going on.
+>
+> Basically, as an example: fsnotify_file() is actually two very
+> different things depending on the "mask" argument, an that argument is
+> *typically* a constant.
+>
+> In fact, in fsnotify_file_area_perm() is very much is a constant, but
+> to make it extra non-obvious, it's a *hidden* constant, using
+>
+>         __u32 fsnotify_mask =3D FS_ACCESS_PERM;
+>
+> to hide the fact that it's actually calling fsnotify_file() with that
+> constant argument.
 
-We've done that in the past. The problem with that is we lose lock
-ordering verification across reclaim. i.e. inode lock ordering must
-be the same both above and below reclaim, and changing the lock
-class loses the ability to verify this.
+Yeh, that specific "obfuscation" is a leftover from history.
+It is already gone in the patches that we sent.
 
-This is important to us as some code (e.g. extent removal) can be
-called from both above and below reclaim, and they require the same
-transaction and inode lock contexts to be held regardless of where
-they are called from...
+>
+> And in fsnotify_open() it's not exactly a constant, but it's kind of
+> one: when you actually look at fsnotify_file(), it has that "I do a
+> different filtering event based on mask", and the two different
+> constants fsnotify_open() uses are actually the same for that mask.
+>
+> In other words, that whole "mask" test part of fsnotify_file()
+>
+>         /* Permission events require group prio >=3D FSNOTIFY_PRIO_CONTEN=
+T */
+>         if (mask & ALL_FSNOTIFY_PERM_EVENTS &&
+>             !fsnotify_sb_has_priority_watchers(path->dentry->d_sb,
+>                                                FSNOTIFY_PRIO_CONTENT))
+>                 return 0;
+>
+> mess is actually STATICALLY TRUE OR FALSE, but it's made out to be
+> somehow an "arghumenty" to the function, and it's really obfuscated.
+>
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Yeh. I see that problem absolutely.
+This is already gone in the patch that I send you today:
+- All the old hooks call fsnotify_file() that only checks FMODE_NONOTIFY
+  and calls fsnotify_path()
+- The permission hooks now check FMODE_NONOTIFY_PERM
+  and call fsnotify_path()
+
+> That is the kind of "helper inline" that I don't want to see in the
+> new paths. Making that conditional more complicated was part of what I
+> objected to in one of the patches.
+>
+> > Those convenience helpers help me to maintain readability and code
+> > reuse.
+>
+> ABSOLUTELY NOT.
+>
+> That "convenience helkper" does exactly the opposite. It explicitly
+> and actively obfuscates when the actual
+> fsnotify_sb_has_priority_watchers() filtering is done.
+>
+> That helper is evil.
+>
+> Just go and look at the actual uses, let's take
+> fsnotify_file_area_perm() as an example. As mentioned, as an extra
+> level of obfuscation, that horrid "helper" function tries to hide how
+> "mask" is constant by doing
+>
+>         __u32 fsnotify_mask =3D FS_ACCESS_PERM;
+>
+> and then never modifying it, and then doing
+>
+>         return fsnotify_file(file, fsnotify_mask);
+>
+> but if you walk through the logic, you now see that ok, that means
+> that the "mask" conditional fsnotify_file() is actually just
+>
+>     FS_ACCESS_PERM & ALL_FSNOTIFY_PERM_EVENTS
+>
+> which is always true, so it means that fsnotify_file_area_perm()
+> unconditionally does that
+>
+>     fsnotify_sb_has_priority_watchers(..)
+>
+> filitering.
+>
+> And dammit, you shouldn't have to walk through that pointless "helper"
+> variable, and that pointless "helper" inline function to see that. It
+> shouldn't be the case that fsnotify_file() does two completely
+> different things based on a constant argument.
+>
+
+ok. that's going to be history soon.
+I will send this cleanup patch regardless of the pre-content series.
+
+> It would have literally been much clearer to just have two explicitly
+> different versions of that function, *WITHOUT* some kind of
+> pseudo-conditional that isn't actually a conditional, and just have
+> fsnotify_file_area_perm() be very explicit about the fact that it uses
+> the fsnotify_sb_has_priority_watchers() logic.
+>
+> IOW, that conditional only makes it harder to see what the actual
+> rules are. For no good reason.
+>
+> Look, magically for some reason fsnotify_name() could do the same
+> thing without this kind of silly obfuscation. It just unconditonally
+> calls fsnotify_sb_has_watchers() to filter the events. No silly games
+> with doing two entirely different things based on a random constant
+> argument.
+>
+> So this is why I say that any new fsnotify events will be NAK'ed and
+> not merged by me unless it's all obvious, and unless it all obviously
+> DOES NOT USE these inline garbage "helper" functions.
+>
+> The new logic had better be very obviously *only* using the
+> file->f_mode bits, and just calling out-of-line to do the work. If I
+> have to walk through several layers of inline functions, and look at
+> what magic arguments those inline functions get just to see what the
+> hell they actually do, I'm not going to merge it.
+
+Sure for new hooks with new check-on-open semantics that is
+going to be easy to do. The historic reason for the heavy inlining
+is trying to optimize out indirect calls when we do not have the
+luxury of using the check-on-open semantics.
+
+>
+> Because I'm really tired of actively obfuscated VFS hooks that use
+> inline functions to hide what the hell they are doing and whether they
+> are expensive or not.
+>
+> Your fsnotify_file_range() uses fsnotify_parent(), which is another of
+> those "it does two different things" functions that either call
+> fsnotify() on the dentry, or call __fsnotify_parent() on it if it's an
+> inode, which means that it's another case of "what does this actually
+> do" which is pointlessly hard to follow, since clearly for a truncate
+> event it can't be a directory.
+>
+> And to make matters worse, fsnotify_truncate_perm() actually checks
+> truncate events for directories and regular files, when truncates
+> can't actually happen for anything but regular files in the first
+> place. So  your helper function does a nonsensical cray-cray test that
+> shouldn't exist.
+
+Ha, right, that's a stupid copy&paste braino.
+Easy to fix.
+
+The simplest thing to do for the new hooks I think is to make
+fsnotify_file_range() extern and then you won't need to look beyond it,
+because it already comes after the unlikley FMODE_NONOTIFY_ bits check.
+
+Will work on the rest of the series following those guidelines.
+Let me know if the patch I sent you has taken a wrong direction.
+
+Thanks,
+Amir.
