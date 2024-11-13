@@ -1,68 +1,53 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741FA382
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 01:10:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D832309AC;
+	Wed, 13 Nov 2024 01:19:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731460204; cv=none; b=Favc9Y9yXLABw06OIoB+FnMgAJQS/N7gaNSegdy/yr1iOpShkH5w64dfoXzr5hfzDl+6Q3C4CMqXWxVJN2qj225LcAK5xUsJA0Wx1FhFRI/hjs+4zCOcE3EMIAyjZzkxhZjDtJhJrjfjKKsgiPUp41Ws+VI4/GmaCaJz1GtmKqY=
+	t=1731460801; cv=none; b=qQLalPp3+K0KMN+AtTxd5kWc8eRyo7rVy7eTKZGmzHF0qTRKJoZHB/3jLURmcZKClUggEkgpfDMTQmTckWhCoq2klPMlJ1mLgxbI6+ri8zoZu83sq7l8RQokm8tteL3lZlivOmduQzphqcWI5yLCIGemSG7QtvfLYeExekGwuIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731460204; c=relaxed/simple;
-	bh=BjxCzGBxGpYLG0CarhhUmQHntdRVxtQ1aH+hhp9WGWA=;
+	s=arc-20240116; t=1731460801; c=relaxed/simple;
+	bh=EEW2fQlOgw7/LdLNgEFcmqde26RG5RGhFq5cl9pKORY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dFm6oXUUdAvzg3kScyTpH4zgwtBU5hKYBPSQD/qxR/efj1TBz6LGabxD/Iqmjej2jyRcVRBTKNNUhVBxv+MHkifIuefYAWmBXBtoc52Hdbd/Ch3MAAF57Mkj9xIRGcZ4nha3Sa2o8WOLC4n88jLFfx5kY9uFhrL6S/WLg1Odqv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=EmkkPDcu; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=fdizncf6YWY/ICzPb8k70YEGnuU9uT91l335/YpjVoEC3bj2gg7Kg3dSn8SQxQJi7np8gJNCjrcxIhmcPGTjd59XIM8pGAr6QI2PwisG+k97eibiFGYFhHppQMlQ9E4Nef5M39F4q76uUlSLt5q5+KK9WssbOK52fW+TDHNYOTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=NWnQS4xv; arc=none smtp.client-ip=62.89.141.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="EmkkPDcu"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-720b2d8bb8dso4626436b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2024 17:10:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731460203; x=1732065003; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=KudbANySWeu7heFMK6xmw2c6w008z8e1Q4nYoxXGQrQ=;
-        b=EmkkPDcu/K4ll8cuKuiOAZT9KLJSZMBZGZd59hMSkozSfUV3JmC6s6To+0Mk7QW8IG
-         jC3t4ZFwG72WHbU1xwAbWnsCLzh3rZjvsQOxTXANYOTOH7N0RzbytTMDZdE4AEfwOmbl
-         iZR/23YcSTpV7a17vgJrPh8oXgkZA4Deq+BM+c7WsOtOOywcAhVz/KnhD/qHYaCBJVZ/
-         4DJuU9ujQBr3hniQwzC6QTAzP9UT+xnaKPGLa3oBFz2X6pF/I+1EinlZ/ed832EQPWwz
-         G8xN5ytLN87XSWJYQpwpKMY4SJyH34r/JUnrcq2rdFnEJVmPP9h5XCiuVvcKIM6NCb+x
-         +DVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731460203; x=1732065003;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KudbANySWeu7heFMK6xmw2c6w008z8e1Q4nYoxXGQrQ=;
-        b=l+oU15MMjIp3YwOIbVC7e145QC/n/gwzQtJGxS/5n4guDKTMzLwJTNsFeVPMlCWMMs
-         La2FWypuMXc9jGxozpV52UD7ESCXzonHoGS9H7NdLqHcGuyO4F5IjqZTXLchkhtpVghY
-         9PIIiSmPRrhsqyNd0f57SLX/Ft++5DRSMf52ED8kqxFwzB93mlS+zuOmGNdfu9EqfGdC
-         xGWmB9NeBPJvxBQwUSiICjyEQ3ZcjEi0w6UhKhx3VuIYpAyGmpUKA9Z/kmgmlQylqags
-         vDgqIo6ruAFj4Rky9vnkzDYOU6XbWGW/Zd91RCxBj4yJcNfZNRseCaMt2Q9RYNn0Z3MD
-         7XSA==
-X-Gm-Message-State: AOJu0YzMIBUjBhjzOo4bRVukKlg1K6GsRSMHNcFAjlGq53MRfZn9pw3Q
-	G54GU3scl3hXaZ+CsnQO/p875xgcSOvksfRaZ+SMf8HktsWLsN6fZ5neGuVyzFJCFuOtLJJEp1j
-	2
-X-Google-Smtp-Source: AGHT+IGe8ReH6I7tziG8Pz7wH+uwtDCaP/1QaDWanjzlRzORxZLcTeOzz6EsBiWRirefAUbmpv7X4g==
-X-Received: by 2002:a17:902:db0a:b0:20b:79cb:492f with SMTP id d9443c01a7336-2118359cb17mr222451015ad.43.1731460202763;
-        Tue, 12 Nov 2024 17:10:02 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177dc7df5sm100454225ad.19.2024.11.12.17.10.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2024 17:10:02 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1tB1tO-00DsDA-2c;
-	Wed, 13 Nov 2024 12:09:58 +1100
-Date: Wed, 13 Nov 2024 12:09:58 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH 0/3] xfs: miscellaneous bug fixes
-Message-ID: <ZzP8ZkVpa3S3G8v8@dread.disaster.area>
-References: <20241112221920.1105007-1-david@fromorbit.com>
- <20241112235946.GJ9438@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="NWnQS4xv"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=+xBD1LG1LcD2WvJWHLClpL4CkoduBy/hMixH+3L2C0k=; b=NWnQS4xver1owBO+dn2OG3m35m
+	YqYGw2WubUWRGvoj6Nj/I0yVjQQcIshCS5hh7T6H6svbkoLqNtVuFjUB6lmVEGiItwgK6KwVHP24w
+	249wjP8HAnySe2tiW15dmU9Uco4QR5sjxt/u9ffiwypdBNYN1uhFwXXejD2H6698UzgMHy4AafB12
+	noJhUGXPkJjMlejOr9GPIsgaRcCFPvZ6px03xHvhivHqv+Ei3lp9e0ZtFCY1u5aerpBN+jrgq1G5E
+	gOe27ozCV21rRcIkZI5ePTtJ5sgUfkPdiou88Fr9qkqoyxHzsVsJUjrR0Bq2zx/K0t+ut4sXOvs9h
+	ibbU2D6g==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tB230-0000000EJRo-3OnO;
+	Wed, 13 Nov 2024 01:19:54 +0000
+Date: Wed, 13 Nov 2024 01:19:54 +0000
+From: Al Viro <viro@zeniv.linux.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <josef@toxicpanda.com>,
+	kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
+	brauner@kernel.org, linux-xfs@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission
+ events
+Message-ID: <20241113011954.GG3387508@ZenIV>
+References: <cover.1731433903.git.josef@toxicpanda.com>
+ <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
+ <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
+ <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
+ <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
+ <20241113001251.GF3387508@ZenIV>
+ <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
+ <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,73 +56,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241112235946.GJ9438@frogsfrogsfrogs>
+In-Reply-To: <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 
-On Tue, Nov 12, 2024 at 03:59:46PM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 13, 2024 at 09:05:13AM +1100, Dave Chinner wrote:
-> > These are three bug fixes for recent issues.
-> > 
-> > The first is a repost of the original patch to prevent allocation of
-> > sparse inode clusters at the end of an unaligned runt AG. There
-> > was plenty of discussion over that fix here:
-> > 
-> > https://lore.kernel.org/linux-xfs/20241024025142.4082218-1-david@fromorbit.com/
-> > 
-> > And the outcome of that discussion is that we can't allow sparse
-> > inode clusters overlapping the end of the runt AG without an on disk
-> > format definition change. Hence this patch to ensure the check is
-> > done correctly is the only change we need to make to the kernel to
-> > avoid this problem in the future.
-> > 
-> > Filesystems that have this problem on disk will need to run
-> > xfs_repair to remove the bad cluster, but no data loss is possible
-> > from this because the kernel currently disallows inode allocation
-> > from the bad cluster and so none of the inodes in the sparse cluster
-> > can actually be used. Hence there is no possible data loss or other
-> > metadata corruption possible from this situation, all we need to do
-> > is ensure that it doesn't happen again once repair has done it's
-> > work.
+On Tue, Nov 12, 2024 at 04:38:42PM -0800, Linus Torvalds wrote:
+> Looking at that locking code in fadvise() just for the f_mode use does
+> make me think this would be a really good cleanup.
 > 
-> <shrug> How many systems are in this state?
+> I note that our fcntl code seems buggy as-is, because while it does
+> use f_lock for assignments (good), it clearly does *not* use them for
+> reading.
+> 
+> So it looks like you can actually read inconsistent values.
+> 
+> I get the feeling that f_flags would want WRITE_ONCE/READ_ONCE in
+> _addition_ to the f_lock use it has.
 
-Some. Maybe many. Unfortunately the number is largely
-unquantifiable. However, when it happens it dumps corruption reports
-dumped in the log, so I'd say that there aren't that many of them
-out there because we aren't getting swamped with corruption reports.
+AFAICS, fasync logics is the fishy part - the rest should be sane.
 
-> Would those users rather we
-> fix the validation code in repair/scrub/wherever to allow ichunks that
-> overrun the end of a runt AG?
+> The f_mode thing with fadvise() smells like the same bug. Just because
+> the modifications are serialized wrt each other doesn't mean that
+> readers are then automatically ok.
 
-Uh, the previous discussion ended at "considering inode chunks
-overlapping the end of the runt AG as valid requires an incompat
-feature flag as older kernels cannot access inodes in that
-location". i.e. older kernels will flag those inodes as corrupt if
-we don't add an incompat feature flag to indicate they are valid.
+Reads are also under ->f_lock in there, AFAICS...
 
-At that point, we have a situation where they are forced to upgrade
-userspace tools to do anything with the filesytsem that the kernel
-added the new incompat feature flag for on upgrade.
-
-That's a much worse situation, because they might not realise they
-need to upgrade all the userspace tools and disaster recovery
-utilities to handle this new format that the kernel upgrade
-introduced....
-
-The repair/scrub/whatever code already detects and fix the issue by
-removing the bad cluster from the runt AG. We just need to stop the
-kernel creating the bad clusters again.
-
-IOWs, it just simpler for everyone to fix the bug like this and
-continue to consider the sparse inode cluster at the end of the AG
-is invalid.
-
-Alternatively, if users can grow the block device, then they can
-simply round up the size of the block device to a whole inode
-chunk. They don't need to run repair to fix the issue; the cluster
-is now valid because a whole chunk will fit at end of the runt AG.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Another thing in the vicinity is ->f_mode modifications after the calls
+of anon_inode_getfile() in several callers - probably ought to switch
+those to anon_inode_getfile_fmode().  That had been discussed back in
+April when the function got merged, but "convert to using it" followup
+series hadn't materialized...
