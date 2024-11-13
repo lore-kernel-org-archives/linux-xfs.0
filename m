@@ -1,91 +1,84 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988F12AF00;
-	Wed, 13 Nov 2024 20:31:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D81B6207217;
+	Wed, 13 Nov 2024 21:13:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731529881; cv=none; b=HZtSylYbC6ooN5jJsbQ8t5GcKcuOiFWtWWK5NUER6VuUpd/a53UUBxlxeIkeFND8ItKUm3N9Hmk9narO1q4A4ijklJnOiqB42nW3pg5WaEvv+uTqzn01EnGqiEA48ixZr6U1vnTzjZPDR/E8dbXBIljLYGYkxfX4s7p0oOcKLpA=
+	t=1731532402; cv=none; b=GYpodjlctQhxjrZSLcuz+HWxeLy4z09V5dqkv2hF9ZLJLxrvFW1i59sQR1/ZifMuFxju/wjuqB38yqoKKk7akBQE/89vEVxCq/qAenw3zoEDRRLT7pKfqLISs0NlN8HHxrCLZMhjmdRs1eWrJtEFvRUz9Oc1kUTM703qN86nBTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731529881; c=relaxed/simple;
-	bh=1KoW9lkE2j3hH8vAJUo/fP2tINo05xrrANj5xwxv5xM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h794KEPIXJKkeWfHWAC7j8NvelAxgkoZChl41TaVXrL7NajVZWeuaXaFdVfQxNNonZSe0YNDqOObkjv/AcrbCi3enH7HmcCREcJRNqNzcDLSiUWDq2abw2ZyRXNyu8cAbBgWLcIEbKam7R13xFRRrOXlInQv7ccqQ0fGA0Mmfvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=Dp0lW7Bq; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	s=arc-20240116; t=1731532402; c=relaxed/simple;
+	bh=idkSI0w6nKoHM0b1V/ejwpNP+VHT0mP1s/Az6uRS6vA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=HpdBpXuOdGzkbtc0q9U7WzD6fQOP0XlMtN6oIJud15ONosv1ou2tqRO6QNbv3eica7SqqjCnR3XUN9cLO4HLTxPe0ryc968aMjeM2rRFj/+fgx++SogqSHPk1c8lZjY2czMDRfHysgNO84/qL8k50ArtbYZxjC6rdav/B1fy42M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=V2oFNlY4; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="Dp0lW7Bq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uBOk39HO5marrjmAPTj5btVGIMvjnKV9Fn7MUaxbEpk=; b=Dp0lW7BqSOlcJA51VtHwe564wV
-	bnUOR8BBbkRAur4PjGE1BSuYnNSS+FYXd0XvM31Y4dxBkG78PBnOo5/eO0CMOC9muhV7t1SEvK+p3
-	sjYerInIF1c7dYfxq38gWEnFTp+VLqXD+AVuxrgIB0k8CS997hVB//fBUYl5W53mWINzHZAsPkOZO
-	IPxEFvpNqy7eFQ3WepBlIahA4uLon9res3epmB4ywsx/CuS6ec9v5sdGZKDy3VLT085LtjwVhDzQK
-	0odxif7J3+KG0flpwujrcodDpBSPXi5I/dMR2gCQ2tpy/eFCTK8RG2gSdAgNB0eaYybdb/XH5qnSe
-	qk9i9eTw==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tBK1A-0000000EctM-2Gpv;
-	Wed, 13 Nov 2024 20:31:12 +0000
-Date: Wed, 13 Nov 2024 20:31:12 +0000
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com,
-	linux-fsdevel@vger.kernel.org, jack@suse.cz, brauner@kernel.org,
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission
- events
-Message-ID: <20241113203112.GI3387508@ZenIV>
-References: <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
- <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
- <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
- <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
- <20241113001251.GF3387508@ZenIV>
- <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
- <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
- <20241113011954.GG3387508@ZenIV>
- <20241113043003.GH3387508@ZenIV>
- <CAOQ4uxj01mrrPQMyygdyDAGpyA=K=SPH88E2tpY5RuSsqG9iiA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="V2oFNlY4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1731532392;
+	bh=YoeutCeqtyL1J9IpqI30I53OmtFMu0kpx93F6/ZZsh0=;
+	h=Date:From:To:Cc:Subject:From;
+	b=V2oFNlY4agQHTIoOF71nN4WLKIkrA1AT6AnzJopcPNz2zduZ2PScOJulqv4Q5yhv9
+	 +l8dWwD59kfyJ7+kyR59QXxkNWeUKI+Uuvz+wvdpyu1ule4LAIt8pvcUUhwVbWN8KH
+	 PabyQpetli0CyzjP31VYfCsyOGNhTBWNJ0MsMzEt3V5UdcimI2b5vKURhxymOpTEjo
+	 o41j0153wWFbrr999VMuHxmfRDHryQUK5NyUeS0758Eg5n0Kjm+zGn+molprB8zBRT
+	 8ZihQSXwFh56yKnUqTRnIQzvRNpW4x1gExPLdfuDgJs0JtMPmVc7WJEgTug4/EDQ/D
+	 AH1Pt+K7RQIvg==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Xpbbq6PCmz4wc3;
+	Thu, 14 Nov 2024 08:13:11 +1100 (AEDT)
+Date: Thu, 14 Nov 2024 08:13:13 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, <linux-xfs@vger.kernel.org>, Linux
+ Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next Mailing List
+ <linux-next@vger.kernel.org>
+Subject: linux-next: Signed-off-by missing for commit in the xfs tree
+Message-ID: <20241114081313.3f0be96b@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxj01mrrPQMyygdyDAGpyA=K=SPH88E2tpY5RuSsqG9iiA@mail.gmail.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+Content-Type: multipart/signed; boundary="Sig_/lu+ExA++mUnEtfPeSscuGus";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-On Wed, Nov 13, 2024 at 03:36:33PM +0100, Amir Goldstein wrote:
+--Sig_/lu+ExA++mUnEtfPeSscuGus
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> I would make this a bit more generic helper and the comment above
-> is truly clueless:
-> 
->         /*
-> -        * we need a new file handle for the userspace program so it
-> can read even if it was
-> -        * originally opened O_WRONLY.
-> +        * We provide an fd for the userspace program, so it could access the
-> +        * file without generating fanotify events itself.
->          */
-> -       new_file = dentry_open(path,
-> -                              group->fanotify_data.f_flags | __FMODE_NONOTIFY,
-> -                              current_cred());
-> +       new_file = dentry_open_fmode(path, group->fanotify_data.f_flags,
-> +                                    FMODE_NONOTIFY, current_cred());
+Hi all,
 
-Hmm...  Not sure I like that, TBH, since that'll lead to temptation to
-turn dentry_open() into a wrapper for that thing and I would rather
-keep them separate.
+Commit
 
-> > -       fd = anon_inode_getfd("[fanotify]", &fanotify_fops, group, f_flags);
-> > +       fd = get_unused_fd_flags(flags);
-> 
-> s/flags/f_flags
+  dcfc65befb76 ("xfs: clean up xfs_getfsmap_helper arguments")
 
-ACK - thanks for catching that one.
+is missing a Signed-off-by from its author.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/lu+ExA++mUnEtfPeSscuGus
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmc1FmkACgkQAVBC80lX
+0GzbtQf/UDZElp+SaV0Y2ajpt7md8YdBsXeS1GVihgITJcNPd0amEDXULEbdER+7
+iteogtyo6VeNLRolgrFGtwYuLs9L/SQS693dMzpAiL0FDeOoczYrPQjCMEFGp0CI
+7Ov0Wv2nGMqXDTRHoTeHWS9DvtoIq7x3mqqW87ME8Dz17Y4nvrF3rON49jdJDEC6
+hfYAMlMkv2YqEkay0AlzkVcd3FUk8x7iVwQI9l+rB3KAhgZBA1P8QnoaulRM3cVA
+e8/kAoM8k9GdE0qL5opH5YBL1RxZO7eBhZhrWIKF0i+6/i7Ip6XetMIXORxXDgOb
+iu5AtNPh7emO/6cIXFFhGIAUB12iww==
+=TZOO
+-----END PGP SIGNATURE-----
+
+--Sig_/lu+ExA++mUnEtfPeSscuGus--
