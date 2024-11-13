@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3044BBA34;
-	Wed, 13 Nov 2024 01:37:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA2C4224F0;
+	Wed, 13 Nov 2024 01:37:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731461835; cv=none; b=We9y81VLWubQpZ6fpiXc8Hln/PnWXZp6VOjGFdJ+B/vKnGOg2oueYwPsCSbtun6gpIKDyh11vvbOCPGaL0bdiJQ+5fl4bVTZlrtnTKoPaM5mAlvxkXIMIQaRtmvUaKMv1ZcgIcSNRx4wtQMyAsD+KMGa3UZRN6/wB/DMGAF15E4=
+	t=1731461851; cv=none; b=Svsqkvz/wQrqYczyqTWIu5rLzkMJCZrzB8sjEx7szNQN8e7SbnqkiH7BelYpntT5evdR9TljvPxWJBf4C7/U7uAPazwP7z6vdNeRPvK869Mk7IBAhbEq/boB5TW5fU4n+54IFb30oKRW5c0eTT5spsULP8Imv6kpAA5D7jlA12E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731461835; c=relaxed/simple;
-	bh=akMV1VHwnVRUKKGYxllDugCek8hxaU4/UdAIbGLo08A=;
+	s=arc-20240116; t=1731461851; c=relaxed/simple;
+	bh=5AluQWXplWzSgkw6kfSowGtQLFOSor0Pq+rIWf2jnM0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ciGryroOEa16jRN2GO18rzsJtiiaBf8qKo0rhz2NU+DLMQFH23qCaBPlRfV6gV11GA22itsggQ7xox7XmJ4Y2EDmtfHG7DBlVoQJIKwTRMM+ZjGKisZk3TNFez9FnSz2vX2EClApj5NcmH9lrnJ7eWceGYlb9d/nsH6655SaCN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EddWdiHD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KoJZ4Cms45NKV/xJkKwodkkS3aXIQv6SWQhAQkCCWRz6dqUlGnr42osiG5gDPGVIe2RAfW6EVx7QnZHnoBQ309Insxon1KkL3RWiwab39Qx8BzKnADW376CeEPbCvHXwuZFGChxL3VIzb+hbImujxLjZg6tMWh4mMWldAH/KwlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U2g4tnPD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EddWdiHD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C07E5C4CECD;
-	Wed, 13 Nov 2024 01:37:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U2g4tnPD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67656C4CECD;
+	Wed, 13 Nov 2024 01:37:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731461834;
-	bh=akMV1VHwnVRUKKGYxllDugCek8hxaU4/UdAIbGLo08A=;
+	s=k20201202; t=1731461850;
+	bh=5AluQWXplWzSgkw6kfSowGtQLFOSor0Pq+rIWf2jnM0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EddWdiHDTz6FEKfsSqaB3zZDwdUv6zSapd+O49TNjUT7ZTGcmuw2yvPJdjDYGw9YX
-	 7BvUnroXtnqJGXPKQ1WawvVmr0bzTaubpx+ndXggY4cj2NVAzCnfEmH7NyCrr6HZQ8
-	 E/PIDzpsXu6Z3/qa2XVtbQ7Z3YOGWhfDRaNJ6pb0VRB8+SITIozxhRcLLz98VPNyj7
-	 Fm/bTbCm0epcVu7KqLYp9Ndy8ot35nTZDM+6rPNCLaAXVNz0/TxUxoGcdpHFA+YAnw
-	 Oi1BYOJdAjrH3ofS7SSH1SvXR6ZR2vDU1+SptVPICbr+F4VBlqeUj8EE7q2xkB89m/
-	 fYGbr3DoXlxGw==
-Date: Tue, 12 Nov 2024 17:37:14 -0800
-Subject: [PATCH 2/3] xfs/185: don't fail when rtfile is larger than rblocks
+	b=U2g4tnPDL9teZF2Pf0xo2eqJXvq9YtSBV2I7ComXOD6MkaVlskio5EIWJy9XgM5eB
+	 0HkJHKevpsZZ7vy/wiGKEsga1xJ4apRZaXXAp7XATcmleZnXicpxzi/4HoBFl+Q46F
+	 4pv1JQmLJ35x3lM+m7JZJkMUCrTDYPCsdgLlZzL4wp2mVqNuFNy45pZ+5XumDVlWD9
+	 2zVki/lzh8CeWpfvsT8f1B0bVsruiYMqRUjypiG8Lv/c+lOw51zGl/u5zIa8Vk6D8p
+	 xymtpqYx+tlOgNqOBzXzYHAhKWVNMeUndPrUrEsQYdg4F99LUOyUOnt3Tyf0x2FhRp
+	 WjXy/ZOXYYT+A==
+Date: Tue, 12 Nov 2024 17:37:29 -0800
+Subject: [PATCH 3/3] generic/757: fix various bugs in this test
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <173146178844.156441.16410068994780353980.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173146178859.156441.16666438727834100554.stgit@frogsfrogsfrogs>
 In-Reply-To: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
 References: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,45 +45,33 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test creates a 200MB rt volume on a file-backed loopdev.  However,
-if the size of the loop file is not congruent with the rt extent size
-(e.g.  28k) then the rt volume will not use all 200MB because we cannot
-have partial rt extents.  Because of this rounding, we can end up with
-an fsmap listing that covers fewer sectors than the bmap of the loop
-file.
+Fix this test so the check doesn't fail on XFS, and restrict runtime to
+100 loops because otherwise this test takes many hours.
 
-Fix the test to allow this case.
-
-Cc: <fstests@vger.kernel.org> # v2022.05.01
-Fixes: 410a2e3186a1e8 ("xfs: regresion test for fsmap problems with realtime")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/185 |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ tests/generic/757 |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/185 b/tests/xfs/185
-index b14bcb9b791bb8..f3601a5292ef0b 100755
---- a/tests/xfs/185
-+++ b/tests/xfs/185
-@@ -156,7 +156,9 @@ fsmap() {
+diff --git a/tests/generic/757 b/tests/generic/757
+index 0ff5a8ac00182b..9d41975bde07bb 100755
+--- a/tests/generic/757
++++ b/tests/generic/757
+@@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
+ cur=$(_log_writes_find_next_fua $prev)
+ [ -z "$cur" ] && _fail "failed to locate next FUA write"
  
- # Check the fsmap output contains a record for the realtime device at a
- # physical offset higher than end of the data device and corresponding to the
--# beginning of the non-punched area.
-+# beginning of the non-punched area.  The "found_end" check uses >= because
-+# rtfile can be larger than the number of rtextents if the size of the rtfile
-+# is not congruent with the rt extent size.
- fsmap | $AWK_PROG -v dev="$rtmajor:$rtminor" -v offset=$expected_offset -v end=$expected_end '
- BEGIN {
- 	found_start = 0;
-@@ -165,7 +167,7 @@ BEGIN {
- {
- 	if ($1 == dev && $2 >= offset) {
- 		found_start = 1;
--		if ($3 == end) {
-+		if ($3 >= end) {
- 			found_end = 1;
- 		}
- 	}
+-while [ ! -z "$cur" ]; do
++for ((i = 0; i < 100; i++)); do
+ 	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
+ 
++	# xfs_repair won't run if the log is dirty
++	if [ $FSTYP = "xfs" ]; then
++		_scratch_mount
++		_scratch_unmount
++	fi
+ 	_check_scratch_fs
+ 
+ 	prev=$cur
 
