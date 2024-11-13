@@ -1,90 +1,118 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6937C13D2B2
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 16:57:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BF5200C90;
+	Wed, 13 Nov 2024 18:33:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731517076; cv=none; b=Et3VUN31+6ehzChBsEBIH97rQRHZlAZbRToEE0VE+EnaY9Q+QE7lM45vinmZl+QLw6zOGPNSNbJsLV4DBGoClzq74SGvYkkGGucxdlC887EQ8D5W8EWxEKqzdTAMg4IDZhfaeMRpXEvmuFO0yAzzfWtLV8cbp6ksXszrU+aPav8=
+	t=1731522824; cv=none; b=UTmqaQhX15GodRZhysBcCRoZ7qkymTKiAlQH6ccLHCHfbrwfMtiCvqeUmm8k8YxUq27a+Q0c7BzBwUDbe9RPB64ChF9i8aoeTCGvPSiq29kDHo2RDvh6XVc3zwML1IV7NkTBFUrrff8WQ9K1eUSuL+6rT1eye3HNl+ZsC/6ohWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731517076; c=relaxed/simple;
-	bh=csPBoYSDByNBHf+k5gUPUX7+wR76Q1hEBFh0oJb/HtE=;
+	s=arc-20240116; t=1731522824; c=relaxed/simple;
+	bh=epwvJnoTFUIhrGRAE1h/sE9a1tEfCBtKLtMp0kEUtUQ=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ebNFEV95MMXc0c3cPPAzc5beJLGG1+h5R0dgQ+SIhzpvDpTxjkmb3VuEi2vkO+Ua1HSYkuHqcuj+cRnHrqsCe+XLb3BgkFt6LstJOuxmaEcgsRPylFrL4unmrrbmkwbaT9L4W/LeGRHkI7jcvCKFCfBc//kOvtqRedofKM7Byzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=XsocD30/; arc=none smtp.client-ip=209.85.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	 To:Cc:Content-Type; b=lOhgFkGV9n/ZT6JlVtOfOM03W8tWVlwMqalZx2qb9lTKqc5r81jmNBHUtN9NmH/VpeQskUo1xxkdfsviVi0UdYAj0aHq7GtWXYdyooL1eDpn3ubDdOqDjxzKk4mtaMj6PtsyQVXfU3qaEoN7Yy95nge/LD5wz+gsd5+/T4lsiR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=imPsjuW2; arc=none smtp.client-ip=209.85.160.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="XsocD30/"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-5cf6f7ee970so1034968a12.3
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 08:57:54 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="imPsjuW2"
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-460da5a39fdso51725041cf.1;
+        Wed, 13 Nov 2024 10:33:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1731517072; x=1732121872; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=r6dKI9I0XiNa6P0LadyJEAqhNHGcRQ6Z3i6i70GfR1Y=;
-        b=XsocD30/gXul2vROh5Ys/l609H69kF00w7ADaURIHXGD2wnw+esQzMhYoLpPUNux1E
-         enpgwxayRyyogPs5s0BfTt4louTe7d2f64Fs7nPY/zaEBDf8mHLPx3b/3tIkSuvLY02i
-         HEoA0zTwcH3VjX7zxw3Pp+HS25XsCpSdpgnkg=
+        d=gmail.com; s=20230601; t=1731522822; x=1732127622; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cEAYPbzxEEGvecCJCUytCkqZZ5wbRQKBjqWUJAfVZRA=;
+        b=imPsjuW25P2elilN70Xm6nsOg6Fj9YPV1YhTqkgKWMa4D3dQjG132unkCVXGtspAm0
+         lpA2tDIf1MT4VZpdRDXMfkVOEKC/VqHiTKvfkzgtmSpntuOJBauWSlkucqaQdZVTF377
+         uWGUlHyOUbGE1VB/Vw/VNKQXtuXH/SkAPZPtTOSonyGLqG/NKScR0wO+rhd4C/9zVDSh
+         ule+cyfyYbxPTTBNcyjBqL6ewuV8VPaLzODhqPjydfZFi9V4HlH3H4SjP8rt3p3eMFsK
+         GN4pyJcnKWfq0ykzkjyjOUKuhG5qE5YEOb+5wpUvefAdYFwH5GH1hoPnSdlOdmz/gdeA
+         7tiw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731517072; x=1732121872;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=r6dKI9I0XiNa6P0LadyJEAqhNHGcRQ6Z3i6i70GfR1Y=;
-        b=RJhZTB8TQEdh16VlvUrPFvK0p5jCwvbtPH04xpGx7Z6C93+Ml1JiGO8MyYh8IvrR0L
-         SEHqxslRZ6CGUUcOleQup5zU9dNvEfBRV9aVeAG1eccsSmixp9/053w9QkrKVjYMG2P5
-         setCxH8VTAUqByYVj9rZ5PlVHKlLgTLYr0ws6dfo0l1nT5vjCXSso47ehNeWTdBLNJ6R
-         vox8zJstuahmgPe1litaf+J2853z+NV2/VSasT8ImoP9maUvsUCrBe1zjU5CZULa/XSq
-         PO8qPXJpipbFw9aQ3Co5olr6HA45cuVfFywow2q+Rt8qr9LHUtOl+YNH1wQ7nc7a4cPG
-         57og==
-X-Forwarded-Encrypted: i=1; AJvYcCUO6sBbK50tNXuyq7xS1phGWNbSgCSyjC/4E16MT+VAbCYld0bx12Euy7gfLJ995jhj0ZCOfpsAs0s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwvcKvYCUbeJABQJBawLIJL55Ig5DpNWVrOtAbhZKbbUeokqsJ8
-	ArWv3xSHbM7BdcYWdbFDvRv3IWzc1arEAaewsb10TNkS3A3md54kxGHNDb9slkFq/wkrUWFMdHK
-	oRsgXfw==
-X-Google-Smtp-Source: AGHT+IFQJfZLPdwDUAFW4DOIqOhmsh2gG7EGsoWN076zUd6p0sCWwRu5s7NicrBulN/dRkE1FreQAQ==
-X-Received: by 2002:aa7:d953:0:b0:5cf:66d2:103b with SMTP id 4fb4d7f45d1cf-5cf66d212eemr1832777a12.30.1731517072526;
-        Wed, 13 Nov 2024 08:57:52 -0800 (PST)
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com. [209.85.218.42])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cf03b7e803sm7442775a12.22.2024.11.13.08.57.51
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Nov 2024 08:57:52 -0800 (PST)
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-a9ed49ec0f1so1197058066b.1
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 08:57:51 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUnIhmBgL2hbjpy06+nVvDrxjB72X1auXASxEKlVbP3yvxp9rxyo4EbEiqZsdIsOVbfZlJ65WfQzVw=@vger.kernel.org
-X-Received: by 2002:a17:906:7308:b0:a9a:3718:6d6 with SMTP id
- a640c23a62f3a-aa1c57ffee4mr725890666b.58.1731517070805; Wed, 13 Nov 2024
- 08:57:50 -0800 (PST)
+        d=1e100.net; s=20230601; t=1731522822; x=1732127622;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cEAYPbzxEEGvecCJCUytCkqZZ5wbRQKBjqWUJAfVZRA=;
+        b=gOjuoXeNcIPDGZRPlC0rIJPuVeCJ7Qb5Uyz5gkpz+/csLsiXNzTpm7rWECJCrAIYzD
+         Udk8OkEb2L+JDBtKUMDaAznG3Ti1+zI1gQcLu/bOU85Wpncnk8LceWcjzITXGOXFzEUE
+         JugiZPfifkf5u3UMokN+9dCAbTuqRGeX/xC8uY/isM7wF1BqNRZyBP6QmaRcOxnYNDTa
+         T1UtL1kS4n1zqQTaw/i5ktNyyTAxkNiPglNAasPNzU9fcRXLh31vqYxaE4+YoUnFXqI7
+         rd5zQCn1OeG71hdlom7viob2uqubfRY8/PzIFpFCYxDb6ETaT3c75BatQsZLO1y8a87T
+         /OSA==
+X-Forwarded-Encrypted: i=1; AJvYcCU+uZeAAs8fgC5U1ZptWDRUN87StzWNS1Xuy/PdlOYVffY/dhTj6MdrJL3MzYkBF2cBdqZ4W4xBJl25@vger.kernel.org, AJvYcCUjhLXLl4FlOlKrRSTEMvs3Cd/lraSQaLlUfyeBZB2NRl8f9gBVGG+DriLa8u8+DdTEwn4+3ZziCOihtA==@vger.kernel.org, AJvYcCVCxd9/yXLySMJYmrLyFJIsv2jliEWRnzmTFMLoAgMDj+1uNi9aDinanmQCmse1HGnQmwJ+FAo2yYR7v+o2Ww==@vger.kernel.org, AJvYcCVkIJ71NVGN2E30qRwJKe3wMWwmynrFaL3T7oN/sCoepoGczWivxI3ewZrDqkdgPvB5R+9wHCYZ3R6N9A==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxPwfAOPJU1qrZb9TZkNC7LckmmwzEJRJsaej8XyT7xxJpfntdA
+	1VD1PPYw0yMvRqdkaKdoMbXWZ6/tA/0ybsjlrtrIWIvW0X89mq4AxOWbFm6HJqMm7gc9gbHz0v4
+	KMO+HPyEVpLfoOX962gQP8WjPa90=
+X-Google-Smtp-Source: AGHT+IFPeK8LsWBd11UIJ1HMjFwTxuHxrQfNEAnlG5VRDPByzvKN/slVc8pIz4HMqf/6Jwtq6PY//EGtUUqdQ2qDnfs=
+X-Received: by 2002:a05:622a:1191:b0:458:34df:1e6a with SMTP id
+ d75a77b69052e-46309421dedmr307570801cf.48.1731522821788; Wed, 13 Nov 2024
+ 10:33:41 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
- <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
- <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
- <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com> <CAOQ4uxjob2qKk4MRqPeNtbhfdSfP0VO-R5VWw0txMCGLwJ-Z1g@mail.gmail.com>
-In-Reply-To: <CAOQ4uxjob2qKk4MRqPeNtbhfdSfP0VO-R5VWw0txMCGLwJ-Z1g@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 13 Nov 2024 08:57:34 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wigQ0ew96Yv29tJUrUKBZRC-x=fDjCTQ7gc4yPys2Ngrw@mail.gmail.com>
-Message-ID: <CAHk-=wigQ0ew96Yv29tJUrUKBZRC-x=fDjCTQ7gc4yPys2Ngrw@mail.gmail.com>
-Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	jack@suse.cz, brauner@kernel.org, linux-xfs@vger.kernel.org, 
+References: <cover.1731433903.git.josef@toxicpanda.com> <44afe46517b379b6b998a35ba99dd2e1f55a2c7d.1731433903.git.josef@toxicpanda.com>
+In-Reply-To: <44afe46517b379b6b998a35ba99dd2e1f55a2c7d.1731433903.git.josef@toxicpanda.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 13 Nov 2024 19:33:30 +0100
+Message-ID: <CAOQ4uxhj7tQ1E4TmMbjodfiJtuosPdGp4B9WZQ2Qc76zs=g6sg@mail.gmail.com>
+Subject: Re: [PATCH v7 12/18] fanotify: add a helper to check for pre content events
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
+	brauner@kernel.org, torvalds@linux-foundation.org, linux-xfs@vger.kernel.org, 
 	linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 12 Nov 2024 at 16:06, Amir Goldstein <amir73il@gmail.com> wrote:
+On Tue, Nov 12, 2024 at 6:56=E2=80=AFPM Josef Bacik <josef@toxicpanda.com> =
+wrote:
 >
-> Maybe I could use just this one bit, but together with the existing
-> FMODE_NONOTIFY bit, I get 4 modes, which correspond to the
-> highest watching priority:
+> We want to emit events during page fault, and calling into fanotify
+> could be expensive, so add a helper to allow us to skip calling into
+> fanotify from page fault.  This will also be used to disable readahead
+> for content watched files which will be handled in a subsequent patch.
+>
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> ---
+>  fs/notify/fsnotify.c             | 12 ++++++++++++
+>  include/linux/fsnotify_backend.h | 26 ++++++++++++++++++++++++++
+>  2 files changed, 38 insertions(+)
+>
+> diff --git a/fs/notify/fsnotify.c b/fs/notify/fsnotify.c
+> index cab5a1a16e57..17047c44cf91 100644
+> --- a/fs/notify/fsnotify.c
+> +++ b/fs/notify/fsnotify.c
+> @@ -203,6 +203,18 @@ static inline bool fsnotify_object_watched(struct in=
+ode *inode, __u32 mnt_mask,
+>         return mask & marks_mask & ALL_FSNOTIFY_EVENTS;
+>  }
+>
+> +#ifdef CONFIG_FANOTIFY_ACCESS_PERMISSIONS
+> +bool fsnotify_file_object_watched(struct file *file, __u32 mask)
+> +{
+> +       struct inode *inode =3D file_inode(file);
+> +       __u32 mnt_mask =3D real_mount(file->f_path.mnt)->mnt_fsnotify_mas=
+k;
+> +
+> +       return fsnotify_object_watched(inode, mnt_mask, mask);
+> +}
+> +EXPORT_SYMBOL_GPL(fsnotify_file_object_watched);
+> +#endif
+> +
 
-So you'd use two bits, but one of those would re-use the existing
-FMODE_NONOTIFY? That sounds perfectly fine to me.
+FYI, I was going to use this helper to set the FMODE_ flags, but
+I noticed that it is missing the check for parent watching pre content
+events.
 
-             Linus
+The other user of fsnotify_object_watched(), __fsnotify_parent()
+explicitly checks the fsnotify_inode_watches_children() mask.
+
+I will need to add this.
+
+Thanks,
+Amir.
