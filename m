@@ -1,305 +1,270 @@
-Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 477DD1FF7A4;
-	Wed, 13 Nov 2024 14:36:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0D94249EB
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 16:12:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731508607; cv=none; b=uPdJWT9TliJux3Pg2OGFYGadVddaIlsvnNy4ecn7PwP6jqTb/vKuz+2kjJqnSBckN4eM7ZFDspeOg7exfkveXkGc2/UyIDJIMH2jY1+XO8w1DOg+fD3Bat6tPm4XNLQJaX5agSNHOcRU1z+PfnEEWfpVhlak4rsaGS1CxrXURuI=
+	t=1731514349; cv=none; b=SLt7Qm2X4fFmP9z49JUqkNfEc261nh6QPF5nxUhm8yc7m93bQ36hbZnUXJ6r210IMTYXmjIpcfV06QqK55iu4OHIV/hk+d1BlPDLd8DVR+jkVoFpzQyV/fQilNuu15k3DTwl95kV8q4ZDKXSAWTQdHYdtzx2jsK2x8NL0tBGJj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731508607; c=relaxed/simple;
-	bh=4ZOYAY9l9J0p+/pagouIG7S5TCj2naHI1ZJy9Dt8YLk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ep2eMU0WFd+MF6+EJGCEqs5uHi5zI1sZVIVNMlstxp7ZGlL7IVPIKh32GVCCCr7ukbkHBIqm3yWp7bMgMQjCrf4D5Nv20i6/aBb2eVK71nreb8hpfxPPSyIEjtY+fKrjX/e6AHgNApK8UD3sv0Pe6BL7y4p6HVvccf8Nw/i9+Qo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XydvH+7x; arc=none smtp.client-ip=209.85.219.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1731514349; c=relaxed/simple;
+	bh=YG7xNYdzUZaxC42kJX2IoFm7Ro58CDWHon85JeOG7UQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iPNEGR5hnYPF11xTOR1IyFaggg6wKU7mI7k1nmNjcPx8yKf6x+W0Onu2RRFnwTu+/4o1SG/uLXBVB3gNWAHO5rIJh7HaJsHHtNciIwj9oGq4XmmGnqWxYxb+LbNPxaH9wxXrvIO2dlRpsMO4GOtx6W4n2c/uGWTsU+K0j6Lg65Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FdkaxBls; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XydvH+7x"
-Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-6cc1b20ce54so47718526d6.0;
-        Wed, 13 Nov 2024 06:36:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731508604; x=1732113404; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5TpO1rEDli92wfsqt+A461mrFCCbHcRm9Ir9kcXs4JU=;
-        b=XydvH+7xyHsDmu2URrGPRxYFtb/LrDn4o5vsr5PlpoG71TNinbSyczAgN8A2chjdiG
-         7Phje9nlfdnp6oTjW+XY7Iv6guQFViTX6cYMUxFjqSHaPsCaFLtU/LSF0TEtd7PCQRSd
-         iG3pDSW0SSF5wJzI+Rz9XTxaHbBxm05g5cJXUuQ1OMAfYqwX/AJspwxMO0pEY7jG3zDr
-         wkcJlRlrDW49Hp1aFXdIdKghASHl+UpBvHMRlsS2go0ICBAEJ7193nAd4NVGsTFGsYzA
-         yhnSzbe+zXtmPSduazYR0xNepKckAIpaisbz1kn3kJfuZjkwbNnJlMJUEq5gXPR3NyuC
-         mvMA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731508604; x=1732113404;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5TpO1rEDli92wfsqt+A461mrFCCbHcRm9Ir9kcXs4JU=;
-        b=UbFqrtaKo80BBBIXB2bhvhdB7vHDjZwdziZzgCgRrjfcNf1uMN2Y9GiN7IBK2qk76l
-         U1gGVz+7SYHmEQ3Fjx52jbZCixWkL9frYv6ITnCP4RRJ76BcSsFVQkJoCTBnu9jDzX93
-         00H+V5ZFB5ZwPQJ214pBPLtTgqN7quPrOlEqbgAXZw/cU4ksffuhhRQwPbjq25ekmmMy
-         BYTSDTAJuiFz9ckkJ9o7W3Z5/dm5wp2eajocbmDdF1m6nRe39SLEJHj8n/fr2Lacidyb
-         ceW5l3mPFgNcbZ8e2lyNXu4Jg6aq3UIxhWPkl75VujPwIJAn+eDbg3IniAPoO0mvENcy
-         Jj/A==
-X-Forwarded-Encrypted: i=1; AJvYcCVNllex5CjnX4LL0+AN9k7KO4iI1VQpsrrv2uHCbnc1NZ1MACaDeA4RLNpJP7e7zd5hOY+4pzQRWt0szg==@vger.kernel.org, AJvYcCW2afoO0DNq/4VXpXzc0jjV1cjYOEunPNuxVx10H2lEyHF83oAo3QmeSHWRxjAherPn/C8pBl2j26jf2A==@vger.kernel.org, AJvYcCWoTYjrzMAwc/QLuH4Jier2eANN+5ysjvFLj2R3kS/WIAbWewT9YvXPDzQDgptyfoo81CA5epwgvhC11d5ZWQ==@vger.kernel.org, AJvYcCWxRkntwicpMMhN7Jv4877Gl+M7+yTjPW09BThuG1srbqrm1ChJ21+NcCpLvCgPdC+yudlKWib4ZvC0@vger.kernel.org
-X-Gm-Message-State: AOJu0YwA33UVzvMYzPAjcPpFutpsoXdGbma5EtW9X9k1Rnu8wmneo9Gt
-	EOSKUwaIkNXdqSiXeDIriHN+/WR65Lhq6xkoVDyaiGt3md1VuwyNokpmSdwo9b7HF82znUc7usq
-	V4UCtLynZ6NmDgEEg0/D3pAnGC/k=
-X-Google-Smtp-Source: AGHT+IHDM6yIlJ+rbWXJBsM1kdPByZi+pkkssJXLfoBLa9nCWP4173NtLKc4WYnD4Kt86lm779n87BvsYqF4dqhC3AQ=
-X-Received: by 2002:a05:6214:4589:b0:6d3:9359:26ef with SMTP id
- 6a1803df08f44-6d39e0f6663mr268917446d6.6.1731508604035; Wed, 13 Nov 2024
- 06:36:44 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FdkaxBls"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1731514346;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LBUg+yYwVEJ+Qz+l5mxDN3j7+eM4Rv073pYPlQYxwOY=;
+	b=FdkaxBlse4ANqejqy+jfTC6OzEng2DhhaC/+K0KXlF6xL3M9xrmgAxerTD+8mPmPO/4gad
+	ASVS2opdP5zif3iHUpPcisdfvyG5rLaBZ7VWeZJrH+6OzLYw2CVLq26+OURdhPmvrjJkIF
+	ANmh6XBvXPxLp3SO7wHDLpeyiTBrqmU=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-219-WwA7JqMsP1WybDZZLSomTw-1; Wed,
+ 13 Nov 2024 11:12:21 -0500
+X-MC-Unique: WwA7JqMsP1WybDZZLSomTw-1
+X-Mimecast-MFC-AGG-ID: WwA7JqMsP1WybDZZLSomTw
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 35DDB1955EE7;
+	Wed, 13 Nov 2024 16:12:19 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.120])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 420FD19560A3;
+	Wed, 13 Nov 2024 16:12:17 +0000 (UTC)
+Date: Wed, 13 Nov 2024 11:13:49 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: brauner@kernel.org, djwong@kernel.org, cem@kernel.org,
+	linux-xfs@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: Re: [PATCH v2 1/2] iomap: fix zero padding data issue in concurrent
+ append writes
+Message-ID: <ZzTQPdE5V155Soui@bfoster>
+References: <20241113091907.56937-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
- <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
- <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
- <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
- <20241113001251.GF3387508@ZenIV> <CAHk-=wg02AubUBZ5DxLra7b5w2+hxawdipPqEHemg=Lf8b1TDA@mail.gmail.com>
- <CAHk-=wgVzOQDNASK8tU3JoZHUgp7BMTmuo2Njmqh4NvEMYTrCw@mail.gmail.com>
- <20241113011954.GG3387508@ZenIV> <20241113043003.GH3387508@ZenIV>
-In-Reply-To: <20241113043003.GH3387508@ZenIV>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 13 Nov 2024 15:36:33 +0100
-Message-ID: <CAOQ4uxj01mrrPQMyygdyDAGpyA=K=SPH88E2tpY5RuSsqG9iiA@mail.gmail.com>
-Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Josef Bacik <josef@toxicpanda.com>, 
-	kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
-	brauner@kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-mm@kvack.org, linux-ext4@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241113091907.56937-1-leo.lilong@huawei.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Wed, Nov 13, 2024 at 5:30=E2=80=AFAM Al Viro <viro@zeniv.linux.org.uk> w=
-rote:
->
-> On Wed, Nov 13, 2024 at 01:19:54AM +0000, Al Viro wrote:
-> > On Tue, Nov 12, 2024 at 04:38:42PM -0800, Linus Torvalds wrote:
-> > > Looking at that locking code in fadvise() just for the f_mode use doe=
-s
-> > > make me think this would be a really good cleanup.
-> > >
-> > > I note that our fcntl code seems buggy as-is, because while it does
-> > > use f_lock for assignments (good), it clearly does *not* use them for
-> > > reading.
-> > >
-> > > So it looks like you can actually read inconsistent values.
-> > >
-> > > I get the feeling that f_flags would want WRITE_ONCE/READ_ONCE in
-> > > _addition_ to the f_lock use it has.
-> >
-> > AFAICS, fasync logics is the fishy part - the rest should be sane.
-> >
-> > > The f_mode thing with fadvise() smells like the same bug. Just becaus=
-e
-> > > the modifications are serialized wrt each other doesn't mean that
-> > > readers are then automatically ok.
-> >
-> > Reads are also under ->f_lock in there, AFAICS...
-> >
-> > Another thing in the vicinity is ->f_mode modifications after the calls
-> > of anon_inode_getfile() in several callers - probably ought to switch
-> > those to anon_inode_getfile_fmode().  That had been discussed back in
-> > April when the function got merged, but "convert to using it" followup
-> > series hadn't materialized...
->
-> While we are at it, there's is a couple of kludges I really hate -
-> mixing __FMODE_NONOTIFY and __FMODE_EXEC with O_... flags.
->
-> E.g. for __FMODE_NONOTIFY all it takes is switching fanotify from
-> anon_inode_getfd() to anon_inode_getfile_fmode() and adding
-> a dentry_open_nonotify() to be used by fanotify on the other path.
-> That's it - no more weird shit in OPEN_FMODE(), etc.
->
-> For __FMODE_EXEC it might get trickier (nfs is the main consumer),
-> but I seriously suspect that something like "have path_openat()
-> check op->acc_mode & MAY_EXEC and set FMODE_EXEC in ->f_mode
-> right after struct file allocation" would make a good starting
-> point; yes, it would affect uselib(2), but... I've no idea whether
-> it wouldn't be the right thing to do; would be hard to test.
->
-> Anyway, untested __FMODE_NONOTIFY side of it:
->
-> diff --git a/fs/fcntl.c b/fs/fcntl.c
-> index 22dd9dcce7ec..ebd1c82bfb6b 100644
-> --- a/fs/fcntl.c
-> +++ b/fs/fcntl.c
-> @@ -1161,10 +1161,10 @@ static int __init fcntl_init(void)
->          * Exceptions: O_NONBLOCK is a two bit define on parisc; O_NDELAY
->          * is defined as O_NONBLOCK on some platforms and not on others.
->          */
-> -       BUILD_BUG_ON(21 - 1 /* for O_RDONLY being 0 */ !=3D
-> +       BUILD_BUG_ON(20 - 1 /* for O_RDONLY being 0 */ !=3D
->                 HWEIGHT32(
->                         (VALID_OPEN_FLAGS & ~(O_NONBLOCK | O_NDELAY)) |
-> -                       __FMODE_EXEC | __FMODE_NONOTIFY));
-> +                       __FMODE_EXEC));
->
->         fasync_cache =3D kmem_cache_create("fasync_cache",
->                                          sizeof(struct fasync_struct), 0,
-> diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fano=
-tify_user.c
-> index 9644bc72e457..43fbf29ef03a 100644
-> --- a/fs/notify/fanotify/fanotify_user.c
-> +++ b/fs/notify/fanotify/fanotify_user.c
-> @@ -101,8 +101,7 @@ static void __init fanotify_sysctls_init(void)
->   *
->   * Internal and external open flags are stored together in field f_flags=
- of
->   * struct file. Only external open flags shall be allowed in event_f_fla=
-gs.
-> - * Internal flags like FMODE_NONOTIFY, FMODE_EXEC, FMODE_NOCMTIME shall =
-be
-> - * excluded.
-> + * Internal flags like FMODE_EXEC shall be excluded.
->   */
->  #define        FANOTIFY_INIT_ALL_EVENT_F_BITS                          (=
- \
->                 O_ACCMODE       | O_APPEND      | O_NONBLOCK    | \
-> @@ -262,8 +261,8 @@ static int create_fd(struct fsnotify_group *group, co=
-nst struct path *path,
->          * we need a new file handle for the userspace program so it can =
-read even if it was
->          * originally opened O_WRONLY.
->          */
-> -       new_file =3D dentry_open(path,
-> -                              group->fanotify_data.f_flags | __FMODE_NON=
-OTIFY,
-> +       new_file =3D dentry_open_nonotify(path,
-> +                              group->fanotify_data.f_flags,
+FYI, you probably want to include linux-fsdevel on iomap patches.
 
-I would make this a bit more generic helper and the comment above
-is truly clueless:
+On Wed, Nov 13, 2024 at 05:19:06PM +0800, Long Li wrote:
+> During concurrent append writes to XFS filesystem, zero padding data
+> may appear in the file after power failure. This happens due to imprecise
+> disk size updates when handling write completion.
+> 
+> Consider this scenario with concurrent append writes same file:
+> 
+>   Thread 1:                  Thread 2:
+>   ------------               -----------
+>   write [A, A+B]
+>   update inode size to A+B
+>   submit I/O [A, A+BS]
+>                              write [A+B, A+B+C]
+>                              update inode size to A+B+C
+>   <I/O completes, updates disk size to A+B+C>
+>   <power failure>
+> 
+> After reboot, file has zero padding in range [A+B, A+B+C]:
+> 
+>   |<         Block Size (BS)      >|
+>   |DDDDDDDDDDDDDDDD0000000000000000|
+>   ^               ^        ^
+>   A              A+B      A+B+C (EOF)
+> 
 
-        /*
--        * we need a new file handle for the userspace program so it
-can read even if it was
--        * originally opened O_WRONLY.
-+        * We provide an fd for the userspace program, so it could access t=
-he
-+        * file without generating fanotify events itself.
-         */
--       new_file =3D dentry_open(path,
--                              group->fanotify_data.f_flags | __FMODE_NONOT=
-IFY,
--                              current_cred());
-+       new_file =3D dentry_open_fmode(path, group->fanotify_data.f_flags,
-+                                    FMODE_NONOTIFY, current_cred());
+Thanks for the diagram. FWIW, I found the description a little confusing
+because A+B+C to me implies that we'd update i_size to the end of the
+write from thread 2, but it seems that is only true up to the end of the
+block.
 
+I.e., with 4k FSB and if thread 1 writes [0, 2k], then thread 2 writes
+from [2, 16k], the write completion from the thread 1 write will set
+i_size to 4k, not 16k, right?
 
-
->                                current_cred());
->         if (IS_ERR(new_file)) {
->                 /*
-> @@ -1404,6 +1403,7 @@ SYSCALL_DEFINE2(fanotify_init, unsigned int, flags,=
- unsigned int, event_f_flags)
->         unsigned int fid_mode =3D flags & FANOTIFY_FID_BITS;
->         unsigned int class =3D flags & FANOTIFY_CLASS_BITS;
->         unsigned int internal_flags =3D 0;
-> +       struct file *file;
->
->         pr_debug("%s: flags=3D%x event_f_flags=3D%x\n",
->                  __func__, flags, event_f_flags);
-> @@ -1472,7 +1472,7 @@ SYSCALL_DEFINE2(fanotify_init, unsigned int, flags,=
- unsigned int, event_f_flags)
->             (!(fid_mode & FAN_REPORT_NAME) || !(fid_mode & FAN_REPORT_FID=
-)))
->                 return -EINVAL;
->
-> -       f_flags =3D O_RDWR | __FMODE_NONOTIFY;
-> +       f_flags =3D O_RDWR;
->         if (flags & FAN_CLOEXEC)
->                 f_flags |=3D O_CLOEXEC;
->         if (flags & FAN_NONBLOCK)
-> @@ -1550,10 +1550,18 @@ SYSCALL_DEFINE2(fanotify_init, unsigned int, flag=
-s, unsigned int, event_f_flags)
->                         goto out_destroy_group;
->         }
->
-> -       fd =3D anon_inode_getfd("[fanotify]", &fanotify_fops, group, f_fl=
-ags);
-> +       fd =3D get_unused_fd_flags(flags);
-
-s/flags/f_flags
-
->         if (fd < 0)
->                 goto out_destroy_group;
->
-> +       file =3D anon_inode_getfile_fmode("[fanotify]", &fanotify_fops, g=
-roup,
-> +                                       f_flags, FMODE_NONOTIFY);
-> +       if (IS_ERR(file)) {
-> +               fd =3D PTR_ERR(file);
-> +               put_unused_fd(fd);
-> +               goto out_destroy_group;
-> +       }
-> +       fd_install(fd, file);
->         return fd;
->
->  out_destroy_group:
-> diff --git a/fs/open.c b/fs/open.c
-> index acaeb3e25c88..04cb581528ff 100644
-> --- a/fs/open.c
-> +++ b/fs/open.c
-> @@ -1118,6 +1118,23 @@ struct file *dentry_open(const struct path *path, =
-int flags,
->  }
->  EXPORT_SYMBOL(dentry_open);
->
-> +struct file *dentry_open_nonotify(const struct path *path, int flags,
-> +                        const struct cred *cred)
-> +{
-> +       struct file *f =3D alloc_empty_file(flags, cred);
-> +       if (!IS_ERR(f)) {
-> +               int error;
+>   D = Valid Data
+>   0 = Zero Padding
+> 
+> The issue stems from disk size being set to min(io_offset + io_size,
+> inode->i_size) at I/O completion. Since io_offset+io_size is block
+> size granularity, it may exceed the actual valid file data size. In
+> the case of concurrent append writes, inode->i_size may be larger
+> than the actual range of valid file data written to disk, leading to
+> inaccurate disk size updates.
+> 
+> This patch changes the meaning of io_size to represent the size of
+> valid data in ioend, while the extent size of ioend can be obtained
+> by rounding up based on block size. It ensures more precise disk
+> size updates and avoids the zero padding issue.  Another benefit is
+> that it makes the xfs_ioend_is_append() check more accurate, which
+> can reduce unnecessary end bio callbacks of xfs_end_bio() in certain
+> scenarios, such as repeated writes at the file tail without extending
+> the file size.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
+> ---
+>  fs/iomap/buffered-io.c | 21 +++++++++++++++------
+>  include/linux/iomap.h  |  7 ++++++-
+>  2 files changed, 21 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index ce73d2a48c1e..a2a75876cda6 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1599,6 +1599,8 @@ EXPORT_SYMBOL_GPL(iomap_finish_ioends);
+>  static bool
+>  iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+>  {
+> +	size_t size = iomap_ioend_extent_size(ioend);
 > +
-> +               f->f_mode |=3D FMODE_NONOTIFY;
-> +               error =3D vfs_open(path, f);
-> +               if (error) {
-> +                       fput(f);
-> +                       f =3D ERR_PTR(error);
-> +               }
-> +       }
-> +       return f;
+
+The function name is kind of misleading IMO because this may not
+necessarily reflect "extent size." Maybe something like
+_ioend_size_aligned() would be more accurate..?
+
+I also find it moderately annoying that we have to change pretty much
+every usage of this field to use the wrapper just so the setfilesize
+path can do the right thing. Though I see that was an explicit request
+from v1 to avoid a new field, so it's not the biggest deal.
+
+What urks me a bit are:
+
+1. It kind of feels like a landmine in an area where block alignment is
+typically expected. I wonder if a rename to something like io_bytes
+would help at all with that.
+
+2. Some of the rounding sites below sort of feel gratuitous. For
+example, if we run through the _add_to_ioend() path where we actually
+trim off bytes from the EOF block due to i_size, would we ever expect to
+tack more onto that ioend such that the iomap_ioend_extent_size() calls
+are actually effective? It kind of seems like something is wrong in that
+case where the wrapper call actually matters, but maybe I'm missing
+something.
+
+Another randomish idea might be to define a flag like
+IOMAP_F_EOF_TRIMMED for ioends that are trimmed to EOF. Then perhaps we
+could make an explicit decision not to grow or merge such ioends, and
+let the associated code use io_size as is.
+
+But I dunno.. just thinking out loud. I'm ambivalent on all of the above
+so I'm just sharing thoughts in the event that it triggers more
+thoughts/ideas/useful discussion. I'd probably not change anything
+until/unless others chime in on any of this...
+
+Brian
+
+>  	if (ioend->io_bio.bi_status != next->io_bio.bi_status)
+>  		return false;
+>  	if ((ioend->io_flags & IOMAP_F_SHARED) ^
+> @@ -1607,7 +1609,7 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+>  	if ((ioend->io_type == IOMAP_UNWRITTEN) ^
+>  	    (next->io_type == IOMAP_UNWRITTEN))
+>  		return false;
+> -	if (ioend->io_offset + ioend->io_size != next->io_offset)
+> +	if (ioend->io_offset + size != next->io_offset)
+>  		return false;
+>  	/*
+>  	 * Do not merge physically discontiguous ioends. The filesystem
+> @@ -1619,7 +1621,7 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+>  	 * submission so does not point to the start sector of the bio at
+>  	 * completion.
+>  	 */
+> -	if (ioend->io_sector + (ioend->io_size >> 9) != next->io_sector)
+> +	if (ioend->io_sector + (size >> 9) != next->io_sector)
+>  		return false;
+>  	return true;
+>  }
+> @@ -1636,7 +1638,7 @@ iomap_ioend_try_merge(struct iomap_ioend *ioend, struct list_head *more_ioends)
+>  		if (!iomap_ioend_can_merge(ioend, next))
+>  			break;
+>  		list_move_tail(&next->io_list, &ioend->io_list);
+> -		ioend->io_size += next->io_size;
+> +		ioend->io_size = iomap_ioend_extent_size(ioend) + next->io_size;
+>  	}
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_ioend_try_merge);
+> @@ -1736,7 +1738,7 @@ static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos)
+>  		return false;
+>  	if (wpc->iomap.type != wpc->ioend->io_type)
+>  		return false;
+> -	if (pos != wpc->ioend->io_offset + wpc->ioend->io_size)
+> +	if (pos != wpc->ioend->io_offset + iomap_ioend_extent_size(wpc->ioend))
+>  		return false;
+>  	if (iomap_sector(&wpc->iomap, pos) !=
+>  	    bio_end_sector(&wpc->ioend->io_bio))
+> @@ -1768,6 +1770,8 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  {
+>  	struct iomap_folio_state *ifs = folio->private;
+>  	size_t poff = offset_in_folio(folio, pos);
+> +	loff_t isize = i_size_read(inode);
+> +	struct iomap_ioend *ioend;
+>  	int error;
+>  
+>  	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, pos)) {
+> @@ -1778,12 +1782,17 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  		wpc->ioend = iomap_alloc_ioend(wpc, wbc, inode, pos);
+>  	}
+>  
+> -	if (!bio_add_folio(&wpc->ioend->io_bio, folio, len, poff))
+> +	ioend = wpc->ioend;
+> +	if (!bio_add_folio(&ioend->io_bio, folio, len, poff))
+>  		goto new_ioend;
+>  
+>  	if (ifs)
+>  		atomic_add(len, &ifs->write_bytes_pending);
+> -	wpc->ioend->io_size += len;
+> +
+> +	ioend->io_size = iomap_ioend_extent_size(ioend) + len;
+> +	if (ioend->io_offset + ioend->io_size > isize)
+> +		ioend->io_size = isize - ioend->io_offset;
+> +
+>  	wbc_account_cgroup_owner(wbc, folio, len);
+>  	return 0;
+>  }
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index f61407e3b121..2984eccfa213 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -330,7 +330,7 @@ struct iomap_ioend {
+>  	u16			io_type;
+>  	u16			io_flags;	/* IOMAP_F_* */
+>  	struct inode		*io_inode;	/* file being written to */
+> -	size_t			io_size;	/* size of the extent */
+> +	size_t			io_size;	/* size of valid data */
+>  	loff_t			io_offset;	/* offset in the file */
+>  	sector_t		io_sector;	/* start sector of ioend */
+>  	struct bio		io_bio;		/* MUST BE LAST! */
+> @@ -341,6 +341,11 @@ static inline struct iomap_ioend *iomap_ioend_from_bio(struct bio *bio)
+>  	return container_of(bio, struct iomap_ioend, io_bio);
+>  }
+>  
+> +static inline size_t iomap_ioend_extent_size(struct iomap_ioend *ioend)
+> +{
+> +	return round_up(ioend->io_size, i_blocksize(ioend->io_inode));
 > +}
 > +
->  /**
->   * dentry_create - Create and open a file
->   * @path: path to create
-> @@ -1215,7 +1232,7 @@ inline struct open_how build_open_how(int flags, um=
-ode_t mode)
->  inline int build_open_flags(const struct open_how *how, struct open_flag=
-s *op)
->  {
->         u64 flags =3D how->flags;
-> -       u64 strip =3D __FMODE_NONOTIFY | O_CLOEXEC;
-> +       u64 strip =3D O_CLOEXEC;
->         int lookup_flags =3D 0;
->         int acc_mode =3D ACC_MODE(flags);
->
+>  struct iomap_writeback_ops {
+>  	/*
+>  	 * Required, maps the blocks so that writeback can be performed on
+> -- 
+> 2.39.2
+> 
+> 
 
-Get rid of another stale comment:
-
-        /*
--        * Strip flags that either shouldn't be set by userspace like
--        * FMODE_NONOTIFY or that aren't relevant in determining struct
--        * open_flags like O_CLOEXEC.
-+        * Strip flags that aren't relevant in determining struct open_flag=
-s.
-         */
-
-With these changed, you can add:
-
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-
-With the f_flags typo fixed, this passed LTP sanity tests, but I am
-going to test the NONOTIFY functionally some more.
-
-Thanks,
-Amir.
