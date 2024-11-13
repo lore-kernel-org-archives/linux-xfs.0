@@ -1,216 +1,65 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4981270810;
-	Wed, 13 Nov 2024 09:59:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38A351FAC48;
+	Wed, 13 Nov 2024 10:10:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731491950; cv=none; b=A0StwdGTeixAbObkUwV4cihL4Nf2NipZIFhkz7XZ+7hdqOmPrUb7ItJRE57pnjyhpuqQF/sx1yhikif7RSLwQPV6oGscsmMqWL0A4mQZBXNmgd/U5poVb7i9lX5b4SHiKDEtMumDp8z4w9i6d+XuP574/XAbd2mMmv03NXviJv4=
+	t=1731492621; cv=none; b=N0rZQpH3db7W+HcAavqmseorzb8R7BuyRaAF5n3q7923vnAL79U491mUtl/dDSxhrjpxenl2cGR9WOttqQCBitB6mlNpVs+pdoF4Nnp+SkGGcCuo/RxYfErRDepZ7XskdcXkYJVDceYWSLQZmwCEWuoVU2eV/4OF37XaTBWNzzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731491950; c=relaxed/simple;
-	bh=wlwWQyqgfigOHFnC0igPH4x4lNhtgTSCJVyarREClJA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eEUevhnoT/UxKbicL/GSJ5e026MGMR+C6gGXA5FF1jvD23w4dwamGgdK3w8KBK1+PwxVQp8/jQLYf3rfxKazr5Rdn1tjEApqOBPhaUeg5XUqKEOW4Q8P8GvH73SKfQrYfmDjmFfVmpSDULDnyR1H2ZjiEJDFfTqm6LBkmaF95eY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Bb8esX97; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ziKQf3u8; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Bb8esX97; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ziKQf3u8; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1731492621; c=relaxed/simple;
+	bh=uRkZHq++6vvJc5c1lt0G40BH0cQ9qm5OLQOSpRTY2cU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dbLWBi1STJnRY8B+6Yv8Nq7Uh/mDNAHoPrgAJCWHNex57zmemEkAoRn7MShGqGTkBvupIbm3P7l72kUT0FR99XlKv+ZzHYC4VY/ZLL7OHbJyziYPXw+4EVzAx9FvaAg/hinKaTxDIlhxhvgNIo3B5ZvfmLJCNZxZD/52MTtdRqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G0ExhXRQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Bb8esX97";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ziKQf3u8";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Bb8esX97";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ziKQf3u8"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 6A9C3211D6;
-	Wed, 13 Nov 2024 09:59:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1731491947; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qpEmq55StDkj8VQx4RwABnWj7GLEWSpaSNtQkbHJD6w=;
-	b=Bb8esX97JwuIMX2YJlCS7CVormU5IIcXtw2nPEF5ErtlCSRBCIgp5mOjTfJJk8DFnX0rhj
-	G9JR0YYFoik3WjwKjkpHUnCC6vyLSSfbapiDDfLCfP3QoVFt7If86nPNK3Jw5y6ZmzlOt9
-	vO7WBGeOHBO02sHxELOWQWqJmGM++5k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1731491947;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qpEmq55StDkj8VQx4RwABnWj7GLEWSpaSNtQkbHJD6w=;
-	b=ziKQf3u87aHHgnbkE6avHiQcSBD6yzrrucdKFYag9bmcIUVI858+75cA3MEZdtXzHFRXLf
-	MhYlH1d0DQP6NBDA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1731491947; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qpEmq55StDkj8VQx4RwABnWj7GLEWSpaSNtQkbHJD6w=;
-	b=Bb8esX97JwuIMX2YJlCS7CVormU5IIcXtw2nPEF5ErtlCSRBCIgp5mOjTfJJk8DFnX0rhj
-	G9JR0YYFoik3WjwKjkpHUnCC6vyLSSfbapiDDfLCfP3QoVFt7If86nPNK3Jw5y6ZmzlOt9
-	vO7WBGeOHBO02sHxELOWQWqJmGM++5k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1731491947;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qpEmq55StDkj8VQx4RwABnWj7GLEWSpaSNtQkbHJD6w=;
-	b=ziKQf3u87aHHgnbkE6avHiQcSBD6yzrrucdKFYag9bmcIUVI858+75cA3MEZdtXzHFRXLf
-	MhYlH1d0DQP6NBDA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0AD6613A6E;
-	Wed, 13 Nov 2024 09:59:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id tZ5AAmt4NGd3GgAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 13 Nov 2024 09:59:07 +0000
-Message-ID: <25631870-851f-44bd-b214-8d7d451cb8a5@suse.de>
-Date: Wed, 13 Nov 2024 10:59:06 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G0ExhXRQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B77AC4CECD;
+	Wed, 13 Nov 2024 10:10:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731492620;
+	bh=uRkZHq++6vvJc5c1lt0G40BH0cQ9qm5OLQOSpRTY2cU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=G0ExhXRQ/syQ4PB/dKESinm7LkjILOZhKeguEcVdKtVYhqvPX6SOXiuw5TQ4K9PmE
+	 dtC8t5vryTXqu6MOlf0Ox6ksmC5mCMWj+HtGNyhEaYRoBtCqF7t7WSW3nF4UDpIWQk
+	 ax0z+9VAo6ktn2LhxB1W4LntvwfAQ2geTsc90p9Mfd509bxPJ9ATePu1I0XU2lRrxX
+	 LQ2z1bPGZCwyIVpVxtwb6z3oTQb6Zr2Woa1kmgE76DNT2jiAkY0sj7hQk62f97pk1e
+	 Uxs17lXHY7WuNVQwkFnrHEHsEQA4ozV8Gx5t7TXRRY1+Yv+JF4yJmc31YLQunXfjyb
+	 gHGDOKYVDbxgA==
+Date: Wed, 13 Nov 2024 11:10:15 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, 
+	Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission
+ events
+Message-ID: <20241113-beraten-ausformuliert-a2ddcc576d64@brauner>
+References: <cover.1731433903.git.josef@toxicpanda.com>
+ <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
+ <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
+ <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
+ <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC 8/8] bdev: use bdev_io_min() for statx block size
-To: Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org, hch@lst.de,
- david@fromorbit.com, djwong@kernel.org
-Cc: john.g.garry@oracle.com, ritesh.list@gmail.com, kbusch@kernel.org,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-mm@kvack.org, linux-block@vger.kernel.org, gost.dev@samsung.com,
- p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
-References: <20241113094727.1497722-1-mcgrof@kernel.org>
- <20241113094727.1497722-9-mcgrof@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20241113094727.1497722-9-mcgrof@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -2.80
-X-Spamd-Result: default: False [-2.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_TLS_ALL(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_TWELVE(0.00)[16];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[oracle.com,gmail.com,kernel.org,vger.kernel.org,kvack.org,samsung.com,pankajraghav.com];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Level: 
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
 
-On 11/13/24 10:47, Luis Chamberlain wrote:
-> You can use lsblk to query for a block device block device block size:
+On Tue, Nov 12, 2024 at 03:48:10PM -0800, Linus Torvalds wrote:
+> On Tue, 12 Nov 2024 at 15:06, Amir Goldstein <amir73il@gmail.com> wrote:
+> >
+> > I am fine not optimizing out the legacy FS_ACCESS_PERM event
+> > and just making sure not to add new bad code, if that is what you prefer
+> > and I also am fine with using two FMODE_ flags if that is prefered.
 > 
-> lsblk -o MIN-IO /dev/nvme0n1
-> MIN-IO
->   4096
-> 
-> The min-io is the minimum IO the block device prefers for optimal
-> performance. In turn we map this to the block device block size.
-> The current block size exposed even for block devices with an
-> LBA format of 16k is 4k. Likewise devices which support 4k LBA format
-> but have a larger Indirection Unit of 16k have an exposed block size
-> of 4k.
-> 
-> This incurs read-modify-writes on direct IO against devices with a
-> min-io larger than the page size. To fix this, use the block device
-> min io, which is the minimal optimal IO the device prefers.
-> 
-> With this we now get:
-> 
-> lsblk -o MIN-IO /dev/nvme0n1
-> MIN-IO
->   16384
-> 
-> And so userspace gets the appropriate information it needs for optimal
-> performance. This is verified with blkalgn against mkfs against a
-> device with LBA format of 4k but an NPWG of 16k (min io size)
-> 
-> mkfs.xfs -f -b size=16k  /dev/nvme3n1
-> blkalgn -d nvme3n1 --ops Write
-> 
->       Block size          : count     distribution
->           0 -> 1          : 0        |                                        |
->           2 -> 3          : 0        |                                        |
->           4 -> 7          : 0        |                                        |
->           8 -> 15         : 0        |                                        |
->          16 -> 31         : 0        |                                        |
->          32 -> 63         : 0        |                                        |
->          64 -> 127        : 0        |                                        |
->         128 -> 255        : 0        |                                        |
->         256 -> 511        : 0        |                                        |
->         512 -> 1023       : 0        |                                        |
->        1024 -> 2047       : 0        |                                        |
->        2048 -> 4095       : 0        |                                        |
->        4096 -> 8191       : 0        |                                        |
->        8192 -> 16383      : 0        |                                        |
->       16384 -> 32767      : 66       |****************************************|
->       32768 -> 65535      : 0        |                                        |
->       65536 -> 131071     : 0        |                                        |
->      131072 -> 262143     : 2        |*                                       |
-> Block size: 14 - 66
-> Block size: 17 - 2
-> 
->       Algn size           : count     distribution
->           0 -> 1          : 0        |                                        |
->           2 -> 3          : 0        |                                        |
->           4 -> 7          : 0        |                                        |
->           8 -> 15         : 0        |                                        |
->          16 -> 31         : 0        |                                        |
->          32 -> 63         : 0        |                                        |
->          64 -> 127        : 0        |                                        |
->         128 -> 255        : 0        |                                        |
->         256 -> 511        : 0        |                                        |
->         512 -> 1023       : 0        |                                        |
->        1024 -> 2047       : 0        |                                        |
->        2048 -> 4095       : 0        |                                        |
->        4096 -> 8191       : 0        |                                        |
->        8192 -> 16383      : 0        |                                        |
->       16384 -> 32767      : 66       |****************************************|
->       32768 -> 65535      : 0        |                                        |
->       65536 -> 131071     : 0        |                                        |
->      131072 -> 262143     : 2        |*                                       |
-> Algn size: 14 - 66
-> Algn size: 17 - 2
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
->   block/bdev.c | 1 +
->   fs/stat.c    | 2 +-
->   2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> So iirc we do have a handful of FMODE flags left. Not many, but I do
+> think a new one would be fine.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+I freed up five bits and commented which bits are available in
+include/linux/fs.h.
