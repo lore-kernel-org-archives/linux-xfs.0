@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98D5922339;
-	Wed, 13 Nov 2024 01:36:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3044BBA34;
+	Wed, 13 Nov 2024 01:37:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731461820; cv=none; b=hGnLZZQXH1SW2zKlbAI4i46uq5TIcwO/wDyZA+PiLefDQBGHxtFpsOXOEuhsO7UErOXL+ixmtCuL05kQ3z/23Wy6xr9P2U2eQdE3OSxEBKhbj7KovoGBc0w+i1G9USrPgETiQRWB0InP9+BjN0rvHtNkEiaMfyJaLaRFsM+cv4w=
+	t=1731461835; cv=none; b=We9y81VLWubQpZ6fpiXc8Hln/PnWXZp6VOjGFdJ+B/vKnGOg2oueYwPsCSbtun6gpIKDyh11vvbOCPGaL0bdiJQ+5fl4bVTZlrtnTKoPaM5mAlvxkXIMIQaRtmvUaKMv1ZcgIcSNRx4wtQMyAsD+KMGa3UZRN6/wB/DMGAF15E4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731461820; c=relaxed/simple;
-	bh=B5x//9Yga+V5I8YL0cuFp6K9+sqAou/XWkunOZKqWvo=;
+	s=arc-20240116; t=1731461835; c=relaxed/simple;
+	bh=akMV1VHwnVRUKKGYxllDugCek8hxaU4/UdAIbGLo08A=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=atlOThPXr1tnAQ64hQIKnIsdPDXxbqf3arzudGCeNMKehy8zlBwKIrjRLezPkwNvufkXJ/6f6+Epwaz+E1BD/ZU4MiUG0E8bUHfssSFkx4pPTDu0KBK2pJ4G+CbRRS2T8YbxG+RhEC7b7EbWxTNP+RR3WraEovuxapiAxSe9ps8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e5k+UkPF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ciGryroOEa16jRN2GO18rzsJtiiaBf8qKo0rhz2NU+DLMQFH23qCaBPlRfV6gV11GA22itsggQ7xox7XmJ4Y2EDmtfHG7DBlVoQJIKwTRMM+ZjGKisZk3TNFez9FnSz2vX2EClApj5NcmH9lrnJ7eWceGYlb9d/nsH6655SaCN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EddWdiHD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e5k+UkPF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2371CC4CECD;
-	Wed, 13 Nov 2024 01:36:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EddWdiHD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C07E5C4CECD;
+	Wed, 13 Nov 2024 01:37:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731461819;
-	bh=B5x//9Yga+V5I8YL0cuFp6K9+sqAou/XWkunOZKqWvo=;
+	s=k20201202; t=1731461834;
+	bh=akMV1VHwnVRUKKGYxllDugCek8hxaU4/UdAIbGLo08A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=e5k+UkPF24LjxsH37CXwcvH3c2M3aUGmqHQx5Ngc13HANwqNHpewqRMm1g9VR//gR
-	 1Dc1NKHk7V0KQkIfETlwoByEh5Zz0fgMto9PK+pYqkLjxVqObXh8SdZVvcZD4QGJ8K
-	 5QGcbkT3OMTZrRgYWAkIqi4ph2vjx73BnSNUQFZCpzAExvU2NRv6D1HsyrElJJqG5m
-	 4sLYzmZFRY4ulSdzVp9QFJlFuVc0ZbXFAgIKC/u2KLjLBhdiq+6Sm55BIybjZ1AC+6
-	 KjDFGr23dSQo6tO+tpxjtnqDsurdhwKhvDCK4lff0tdbBlbtyIR+z5Ad+aSPv7jB+O
-	 vKpCRuDdHm72Q==
-Date: Tue, 12 Nov 2024 17:36:58 -0800
-Subject: [PATCH 1/3] xfs/273: check thoroughness of the mappings
+	b=EddWdiHDTz6FEKfsSqaB3zZDwdUv6zSapd+O49TNjUT7ZTGcmuw2yvPJdjDYGw9YX
+	 7BvUnroXtnqJGXPKQ1WawvVmr0bzTaubpx+ndXggY4cj2NVAzCnfEmH7NyCrr6HZQ8
+	 E/PIDzpsXu6Z3/qa2XVtbQ7Z3YOGWhfDRaNJ6pb0VRB8+SITIozxhRcLLz98VPNyj7
+	 Fm/bTbCm0epcVu7KqLYp9Ndy8ot35nTZDM+6rPNCLaAXVNz0/TxUxoGcdpHFA+YAnw
+	 Oi1BYOJdAjrH3ofS7SSH1SvXR6ZR2vDU1+SptVPICbr+F4VBlqeUj8EE7q2xkB89m/
+	 fYGbr3DoXlxGw==
+Date: Tue, 12 Nov 2024 17:37:14 -0800
+Subject: [PATCH 2/3] xfs/185: don't fail when rtfile is larger than rblocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173146178829.156441.9898313568693484387.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <173146178844.156441.16410068994780353980.stgit@frogsfrogsfrogs>
 In-Reply-To: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
 References: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,79 +46,45 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enhance this test to make sure that there are no gaps in the fsmap
-records, and (especially) that they we report all the way to the end of
-the device.
+This test creates a 200MB rt volume on a file-backed loopdev.  However,
+if the size of the loop file is not congruent with the rt extent size
+(e.g.  28k) then the rt volume will not use all 200MB because we cannot
+have partial rt extents.  Because of this rounding, we can end up with
+an fsmap listing that covers fewer sectors than the bmap of the loop
+file.
 
+Fix the test to allow this case.
+
+Cc: <fstests@vger.kernel.org> # v2022.05.01
+Fixes: 410a2e3186a1e8 ("xfs: regresion test for fsmap problems with realtime")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/273 |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ tests/xfs/185 |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 
-diff --git a/tests/xfs/273 b/tests/xfs/273
-index d7fb80c4033429..9f11540a77603d 100755
---- a/tests/xfs/273
-+++ b/tests/xfs/273
-@@ -24,6 +24,8 @@ _require_scratch
- _require_populate_commands
- _require_xfs_io_command "fsmap"
+diff --git a/tests/xfs/185 b/tests/xfs/185
+index b14bcb9b791bb8..f3601a5292ef0b 100755
+--- a/tests/xfs/185
++++ b/tests/xfs/185
+@@ -156,7 +156,9 @@ fsmap() {
  
-+_fixed_by_kernel_commit XXXXXXXXXXXXXX "xfs: fix off-by-one error in fsmap"
-+
- rm -f "$seqres.full"
- 
- echo "Format and mount"
-@@ -37,6 +39,51 @@ cat $TEST_DIR/a $TEST_DIR/b >> $seqres.full
- 
- diff -uw $TEST_DIR/a $TEST_DIR/b
- 
-+# Do we have mappings for every sector on the device?
-+ddev_fsblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.datablocks)
-+rtdev_fsblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtblocks)
-+fsblock_bytes=$(_xfs_statfs_field "$SCRATCH_MNT" geom.bsize)
-+
-+ddev_daddrs=$((ddev_fsblocks * fsblock_bytes / 512))
-+rtdev_daddrs=$((rtdev_fsblocks * fsblock_bytes / 512))
-+
-+ddev_devno=$(stat -c '%t:%T' $SCRATCH_DEV)
-+if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ]; then
-+	rtdev_devno=$(stat -c '%t:%T' $SCRATCH_RTDEV)
-+fi
-+
-+$XFS_IO_PROG -c 'fsmap -m -n 65536' $SCRATCH_MNT | awk -F ',' \
-+	-v data_devno=$ddev_devno \
-+	-v rt_devno=$rtdev_devno \
-+	-v data_daddrs=$ddev_daddrs \
-+	-v rt_daddrs=$rtdev_daddrs \
-+'BEGIN {
-+	next_daddr[data_devno] = 0;
-+	next_daddr[rt_devno] = 0;
-+}
-+{
-+	if ($1 == "EXT")
-+		next
-+	devno = sprintf("%x:%x", $2, $3);
-+	if (devno != data_devno && devno != rt_devno)
-+		next
-+
-+	if (next_daddr[devno] < $4)
-+		printf("%sh: expected daddr %d, saw \"%s\"\n", devno,
-+				next_daddr[devno], $0);
-+		n = $5 + 1;
-+		if (n > next_daddr[devno])
-+		       next_daddr[devno] = n;
-+}
-+END {
-+	if (data_daddrs != next_daddr[data_devno])
-+		printf("%sh: fsmap stops at %d, expected %d\n",
-+				data_devno, next_daddr[data_devno], data_daddrs);
-+	if (rt_devno != "" && rt_daddrs != next_daddr[rt_devno])
-+		printf("%sh: fsmap stops at %d, expected %d\n",
-+				rt_devno, next_daddr[rt_devno], rt_daddrs);
-+}'
-+
- # success, all done
- status=0
- exit
+ # Check the fsmap output contains a record for the realtime device at a
+ # physical offset higher than end of the data device and corresponding to the
+-# beginning of the non-punched area.
++# beginning of the non-punched area.  The "found_end" check uses >= because
++# rtfile can be larger than the number of rtextents if the size of the rtfile
++# is not congruent with the rt extent size.
+ fsmap | $AWK_PROG -v dev="$rtmajor:$rtminor" -v offset=$expected_offset -v end=$expected_end '
+ BEGIN {
+ 	found_start = 0;
+@@ -165,7 +167,7 @@ BEGIN {
+ {
+ 	if ($1 == dev && $2 >= offset) {
+ 		found_start = 1;
+-		if ($3 == end) {
++		if ($3 >= end) {
+ 			found_end = 1;
+ 		}
+ 	}
 
