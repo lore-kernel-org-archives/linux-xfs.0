@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7E0CCA4E
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 00:18:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97503C2E0;
+	Thu, 14 Nov 2024 00:18:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731543516; cv=none; b=la+cm9IvFGF2sX4eWKv21FhLI6dWjaBU82AMYNFBUw6HqtxjW2FA4EyJ/LiXfXnbLJUAaTy1fennMsbTvrz9ZAnmrxtgJQk3to82BeRGT98XPoqqtVRj4rtfntUrEAnermLmxQTkv62H3PO9KGse53gaY9Y+I1XGgK3tyUB816c=
+	t=1731543532; cv=none; b=OxVL+G/TsUkpbJa1kp/GmBuYbk4DIryRCk9EneSuVDss5HSqzm9+cQ9mIEUYcS3YO+9XMgowpftp42e3JICqZTh3t3t4+yd96gRSLtgIN6zbYLOTskbByd33WkLb2XXEKqP+4IhLUAHz2rSNXVV6Gvx193wjXzRPPzsuI7v44n0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731543516; c=relaxed/simple;
-	bh=I3QMv15sYprCljNXuOfgpd0DOd4VgFB6VWGyzBYAzoA=;
+	s=arc-20240116; t=1731543532; c=relaxed/simple;
+	bh=d7FuRY31dqYNYxnener1g+KwXunx/z+tiiRMldLO6Sc=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=qojYLKMS/bf3bNKEyrw7+IxvltR9uckhrGwfng1YyTI3QFmZWP/5aai/ygXO3W52RDXhyCXL2+VqPl8z2Di/s19FeOWfKdN17vQX18FtJJ6uobfUKKkCLxXHqzUo+BbrgKEGKIFyFG7tHIyAeU6XmjJD1IRjgb+E+k4KA+Pu3WE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ji+lLofc; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=YxhpnOTz+yByGvgkoN29mCtMkpJKlDNhj4ofEkiP5vFX/fj1YI84i+XRb6zMIUOHRChwiGQcwUrEn3P+DHOyQWxIt2d4dyCSiLSFjm5lvk4Adgnd18S8pUhTvJIRLOH0RR46S15x9sJFwVUGnxDNS7QMewWOmcP/310G9ksFG0U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BzuyGzah; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ji+lLofc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E016C4CEC3;
-	Thu, 14 Nov 2024 00:18:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BzuyGzah"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15CCEC4CEC3;
+	Thu, 14 Nov 2024 00:18:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731543516;
-	bh=I3QMv15sYprCljNXuOfgpd0DOd4VgFB6VWGyzBYAzoA=;
+	s=k20201202; t=1731543532;
+	bh=d7FuRY31dqYNYxnener1g+KwXunx/z+tiiRMldLO6Sc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ji+lLofcxqpNslSX+qfJeuZ14uA/NjrNKoX1Dh4uZCAW3VcwIQvh9X3ON/F3ts+Qg
-	 Xl9ciIuzRkye89uKxKxYm7dZM/MhiVLhQ56USLYrRfUMOpn0vSS23rBupcMmsmlL5U
-	 z5X9g7DphzcNpOXcpAag/T+aoFkswir5HPzMZQxxLTmNGia89xluGE+EVo86jTm/yC
-	 C6YPcHg9ARrQxePAinhkACZe1kNiU6HZYuHckiELurvFWlcK60c6tx4AGSRmdwgOp8
-	 ZM9Vv2Wfcc2AoiddywTFlFh4mTiNbd6wvudSuKtiVm6rlprt0EMgiftmFjd42vHvPk
-	 EEnXXEllqFuEA==
-Date: Wed, 13 Nov 2024 16:18:35 -0800
-Subject: [GIT PULL 04/10] xfs: create incore rt allocation groups
+	b=BzuyGzahCXDKJ96/wvHx2gkLDhWHz2W7NekAuYixhuyWaJMqD5q9Z3SLQJjwnIk3c
+	 YTsdo/FCcsf0pgTr3OsNV9F9vgaNeGMLLjle9JKPjBgbxVoZZLv0ccr6jQeKUPImKl
+	 iwB3iQeCdyO4HkEFtc4PPM/eG4erkwMqAOljyCCVbn9Bb7VZlDJBxsnkVymNVxglS/
+	 oyVPVjqDxxYvqC820e65048jtfygnzP8YTXvCXJkdbssQeaX6P7kPJA1LRU1tV6dcX
+	 +an4jnbVxuWjiHGnklIb6FZMtRRib7lLArDqqZtD8diGOWoUgUmaTkod3uKitiqn/B
+	 zvoOXJw2dCw3g==
+Date: Wed, 13 Nov 2024 16:18:51 -0800
+Subject: [GIT PULL 05/10] xfs: preparation for realtime allocation groups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173154342189.1140548.3591824391884884112.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173154342285.1140548.1175824791120337171.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,95 +53,37 @@ encounter any problems.
 
 --D
 
-The following changes since commit ffc12626fd0ee4fc7c5f1c91d33b452e6d757acd:
-
-xfs: repair metadata directory file path connectivity (2024-11-13 16:05:28 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/incore-rtgroups-6.13_2024-11-13
-
-for you to fetch changes up to dd2a92877987e615f5b62f872ee0d4f992362994:
+The following changes since commit dd2a92877987e615f5b62f872ee0d4f992362994:
 
 xfs: make RT extent numbers relative to the rtgroup (2024-11-13 16:05:31 -0800)
 
-----------------------------------------------------------------
-xfs: create incore rt allocation groups [v5.6 04/10]
+are available in the Git repository at:
 
-Add in-memory data structures for sharding the realtime volume into
-independent allocation groups.  For existing filesystems, the entire rt
-volume is modelled as having a single large group, with (potentially) a
-number of rt extents exceeding 2^32 blocks, though these are not likely
-to exist because the codebase has been a bit broken for decades.  The
-next series fills in the ondisk format and other supporting structures.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/rtgroups-prep-6.13_2024-11-13
+
+for you to fetch changes up to 320c28fb42f571064ddc9b769dfaa3a59c105677:
+
+iomap: add a merge boundary flag (2024-11-13 16:05:32 -0800)
+
+----------------------------------------------------------------
+xfs: preparation for realtime allocation groups [v5.6 05/10]
+
+Prepare for realtime groups by adding a few bug fixes and generic code
+that will be necessary.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Christoph Hellwig (14):
-xfs: clean up xfs_getfsmap_helper arguments
-xfs: add a xfs_bmap_free_rtblocks helper
-xfs: add a xfs_qm_unmount_rt helper
-xfs: factor out a xfs_growfs_rt_alloc_blocks helper
-xfs: cleanup xfs_getfsmap_rtdev_rtbitmap
-xfs: split xfs_trim_rtdev_extents
-xfs: move RT bitmap and summary information to the rtgroup
-xfs: support creating per-RTG files in growfs
-xfs: calculate RT bitmap and summary blocks based on sb_rextents
-xfs: use xfs_growfs_rt_alloc_fake_mount in xfs_growfs_rt_alloc_blocks
-xfs: factor out a xfs_growfs_check_rtgeom helper
-xfs: refactor xfs_rtbitmap_blockcount
-xfs: refactor xfs_rtsummary_blockcount
-xfs: make RT extent numbers relative to the rtgroup
+Christoph Hellwig (1):
+iomap: add a merge boundary flag
 
-Darrick J. Wong (7):
-xfs: create incore realtime group structures
-xfs: define locking primitives for realtime groups
-xfs: add a lockdep class key for rtgroup inodes
-xfs: support caching rtgroup metadata inodes
-xfs: add rtgroup-based realtime scrubbing context management
-xfs: remove XFS_ILOCK_RT*
-xfs: factor out a xfs_growfs_rt_alloc_fake_mount helper
+Darrick J. Wong (1):
+xfs: fix rt device offset calculations for FITRIM
 
-fs/xfs/Makefile                 |   1 +
-fs/xfs/libxfs/xfs_bmap.c        |  46 ++--
-fs/xfs/libxfs/xfs_format.h      |   3 +
-fs/xfs/libxfs/xfs_rtbitmap.c    | 199 +++++++--------
-fs/xfs/libxfs/xfs_rtbitmap.h    | 147 ++++++------
-fs/xfs/libxfs/xfs_rtgroup.c     | 484 +++++++++++++++++++++++++++++++++++++
-fs/xfs/libxfs/xfs_rtgroup.h     | 274 +++++++++++++++++++++
-fs/xfs/libxfs/xfs_sb.c          |  13 +
-fs/xfs/libxfs/xfs_trans_resv.c  |   2 +-
-fs/xfs/libxfs/xfs_types.h       |   8 +-
-fs/xfs/scrub/bmap.c             |  13 +
-fs/xfs/scrub/common.c           |  78 ++++++
-fs/xfs/scrub/common.h           |  30 +++
-fs/xfs/scrub/fscounters.c       |  25 +-
-fs/xfs/scrub/repair.c           |  24 ++
-fs/xfs/scrub/repair.h           |   7 +
-fs/xfs/scrub/rtbitmap.c         |  54 +++--
-fs/xfs/scrub/rtsummary.c        | 111 +++++----
-fs/xfs/scrub/rtsummary_repair.c |   7 +-
-fs/xfs/scrub/scrub.c            |  33 ++-
-fs/xfs/scrub/scrub.h            |  13 +
-fs/xfs/xfs_bmap_util.c          |   3 +-
-fs/xfs/xfs_buf_item_recover.c   |  25 ++
-fs/xfs/xfs_discard.c            | 100 +++++---
-fs/xfs/xfs_fsmap.c              | 329 ++++++++++++++-----------
-fs/xfs/xfs_fsmap.h              |  15 ++
-fs/xfs/xfs_inode.c              |   3 +-
-fs/xfs/xfs_inode.h              |  13 +-
-fs/xfs/xfs_iomap.c              |   4 +-
-fs/xfs/xfs_mount.c              |  15 +-
-fs/xfs/xfs_mount.h              |  26 +-
-fs/xfs/xfs_qm.c                 |  27 ++-
-fs/xfs/xfs_rtalloc.c            | 520 +++++++++++++++++++++++++---------------
-fs/xfs/xfs_super.c              |   3 +-
-fs/xfs/xfs_trace.c              |   1 +
-fs/xfs/xfs_trace.h              |  74 ++++--
-36 files changed, 2020 insertions(+), 710 deletions(-)
-create mode 100644 fs/xfs/libxfs/xfs_rtgroup.c
-create mode 100644 fs/xfs/libxfs/xfs_rtgroup.h
+fs/iomap/buffered-io.c |  6 ++++++
+fs/xfs/xfs_discard.c   | 19 +++++++++++--------
+include/linux/iomap.h  |  4 ++++
+3 files changed, 21 insertions(+), 8 deletions(-)
 
