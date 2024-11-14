@@ -1,342 +1,197 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78DB1D86CB;
-	Thu, 14 Nov 2024 09:46:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 993321F8900;
+	Thu, 14 Nov 2024 12:49:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731577570; cv=none; b=r99CrTsJv8vTqqh4oL978tC87EY2vOOPFTLv7HMcA4oMjJaozx1cR5AqsxeJZ93al3kJW0hKcxjM2kTktu9mS08PGAfpwcmmXMadCHifj/SRmhnwKrTLU6tgSKtEYnFcOP2tm+4YTsU321r0BrhbWPizqiNGGG3kNdIgTtPEld0=
+	t=1731588590; cv=none; b=dSoDI/gzQ74sx3ikktAN6zST6m6a7gbv9Yt9sAox1PSImwFzEmM/8yL/PLyqHR00L5sQvX52cyuOvKC6Ow7Es9xrwwqVif/dyEpyVF2gNP1aEAW6MQ3JQu6A4rVh47YW3dbUtSz6b+6V7LOFFL2GNbr0Wulvcny48ZyRvuOP0sY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731577570; c=relaxed/simple;
-	bh=O1M1VzK7tHnd1/T53YKedTKNqiT4A0YLr4Shm/WLSn0=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=TGxNGrmQpqdV3nfLB57Vkz9vz/HXS4hyrpb1AM0ZIPSA4ddmcei8McxadqlpSf4MTsuxe8dHvHuUg80qSy7WMiKPXmT7IVHQQKHbVCQhvex4kXLqFaBbNE90khEw4OTSEEUAZ3ZSarG6peMSPh9QUeY5ey6AD2QLPRrXGOkQ/3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=dFCxLHic; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="dFCxLHic"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE8A5qa021603;
-	Thu, 14 Nov 2024 09:46:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=1S9Fb+
-	/uvEo1brGT+3jEZ98xvLIRtgGEDvpVxU6YSdA=; b=dFCxLHicJERiTzIewVwKIY
-	69XSww/WyYUPW8LtD8l6y/xV9NbaQIO4deZqedRzHbwcqhJydeH9poGcMnnYcRS0
-	feZrjbXYtgmP/RjKb1MqKTsGPXjkM8mgc5A5qnRNfFgq60LlxhrKYVGPoKFmd3DD
-	qowl5ohdLv3RcxjSDzcJkoAeie6EnsdpzD8ljKDflIVU5AazPxpCLthSyGZBaw2q
-	4YF/9JZXOfhhmFR9/bQs3wFZQj+0iNkAoNMkuQnEwk/soZm3exIS8oscpWxh8PDh
-	cMx3CdwLQr9AnpFCd6QxpWGeFaSPyKGNqpMOtW3fnnriG08pt3SOFH+Y5vMfakFg
-	==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42wdf00khu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 14 Nov 2024 09:46:04 +0000 (GMT)
-Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4AE9k3tW027423;
-	Thu, 14 Nov 2024 09:46:03 GMT
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42wdf00khq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 14 Nov 2024 09:46:03 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE8OEiJ008404;
-	Thu, 14 Nov 2024 09:46:02 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 42tjf06dju-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 14 Nov 2024 09:46:02 +0000
-Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4AE9k06V47841710
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Nov 2024 09:46:00 GMT
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0CEB52004E;
-	Thu, 14 Nov 2024 09:46:00 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9BDFA20040;
-	Thu, 14 Nov 2024 09:45:58 +0000 (GMT)
-Received: from [9.124.214.206] (unknown [9.124.214.206])
-	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 14 Nov 2024 09:45:58 +0000 (GMT)
-Message-ID: <1ec7b087-de12-4b43-b689-87b2e02ffd77@linux.ibm.com>
-Date: Thu, 14 Nov 2024 15:15:58 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] generic: Addition of new tests for extsize hints
-Content-Language: en-US
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-        ojaswin@linux.ibm.com, zlang@kernel.org
-References: <cover.1729624806.git.nirjhar@linux.ibm.com>
- <5cac327a9ee44c42035d9702b3a146aebc95e28c.1729624806.git.nirjhar@linux.ibm.com>
- <20241024181444.GE2386201@frogsfrogsfrogs>
-From: Nirjhar Roy <nirjhar@linux.ibm.com>
-In-Reply-To: <20241024181444.GE2386201@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: epyYv4Q2zINndeCkaJxUQRqV-bwLRzVY
-X-Proofpoint-ORIG-GUID: 1-VTWkH_ANoLGePFh4wjERD1SODpr8Gn
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	s=arc-20240116; t=1731588590; c=relaxed/simple;
+	bh=k3bq9txkWb0lZ8GyLDb0v5XOIzhc50LCc0dXpD/E+Lg=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JqkCmfmHsMp0VfmOsvUfLa16qqJuh+Q7uXuBo5Ds9+uJqjhZUBRsTg8yA6MPcYwzDa9YGQavb5ZtY+Q0rjgpHhvt+oeqiZb96QnyV/c2OdvUELI4XeC2V4c6IZhnnWlRBj+CdlHkmeRgt04F8ErGLVlS3Ln2yb92X15kBCVgHZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Xq0Lt4tbQzQt1b;
+	Thu, 14 Nov 2024 20:48:22 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 98CD9140393;
+	Thu, 14 Nov 2024 20:49:38 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 14 Nov
+ 2024 20:49:38 +0800
+Date: Thu, 14 Nov 2024 20:48:21 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: John Garry <john.g.garry@oracle.com>, Dave Chinner <david@fromorbit.com>
+CC: Ritesh Harjani <ritesh.list@gmail.com>, <chandan.babu@oracle.com>,
+	<djwong@kernel.org>, <dchinner@redhat.com>, <hch@lst.de>,
+	<viro@zeniv.linux.org.uk>, <brauner@kernel.org>, <jack@suse.cz>,
+	<linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <catherine.hoang@oracle.com>,
+	<martin.petersen@oracle.com>
+Subject: Re: [PATCH v4 00/14] forcealign for xfs
+Message-ID: <ZzXxlf6RWeX3e-3x@localhost.localdomain>
+References: <ZtjrUI+oqqABJL2j@dread.disaster.area>
+ <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
+ <Ztom6uI0L4uEmDjT@dread.disaster.area>
+ <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
+ <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
+ <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
+ <ZufBMioqpwjSFul+@dread.disaster.area>
+ <0e9dc6f8-df1b-48f3-a9e0-f5f5507d92c1@oracle.com>
+ <ZuoCafOAVqSN6AIK@dread.disaster.area>
+ <1394ceeb-ce8c-4d0f-aec8-ba93bf1afb90@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- priorityscore=1501 lowpriorityscore=0 malwarescore=0 phishscore=0
- suspectscore=0 bulkscore=0 mlxlogscore=999 spamscore=0 mlxscore=0
- impostorscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2409260000 definitions=main-2411140073
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <1394ceeb-ce8c-4d0f-aec8-ba93bf1afb90@oracle.com>
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
+
+On Wed, Sep 18, 2024 at 11:12:47AM +0100, John Garry wrote:
+> On 17/09/2024 23:27, Dave Chinner wrote:
+> > > # xfs_bmap -vvp  mnt/file
+> > > mnt/file:
+> > > EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+> > >    0: [0..15]:         384..399          0 (384..399)          16 010000
+> > >    1: [16..31]:        400..415          0 (400..415)          16 000000
+> > >    2: [32..127]:       416..511          0 (416..511)          96 010000
+> > >    3: [128..255]:      256..383          0 (256..383)         128 000000
+> > > FLAG Values:
+> > >     0010000 Unwritten preallocated extent
+> > > 
+> > > Here we have unaligned extents wrt extsize.
+> > > 
+> > > The sub-alloc unit zeroing would solve that - is that what you would still
+> > > advocate (to solve that issue)?
+> > Yes, I thought that was already implemented for force-align with the
+> > DIO code via the extsize zero-around changes in the iomap code. Why
+> > isn't that zero-around code ensuring the correct extent layout here?
+> 
+> I just have not included the extsize zero-around changes here. They were
+> just grouped with the atomic writes support, as they were added specifically
+> for the atomic writes support. Indeed - to me at least - it is strange that
+> the DIO code changes are required for XFS forcealign implementation. And,
+> even if we use extsize zero-around changes for DIO path, what about buffered
+> IO?
 
 
-On 10/24/24 23:44, Darrick J. Wong wrote:
-> On Wed, Oct 23, 2024 at 12:56:20AM +0530, Nirjhar Roy wrote:
->> This commit adds new tests that checks the behaviour of xfs/ext4
->> filesystems when extsize hint is set on file with inode size as 0, non-empty
->> files with allocated and delalloc extents and so on.
->> Although currently this test is placed under tests/generic, it
->> only runs on xfs and there is an ongoing patch series[1] to enable
->> extsize hints for ext4 as well.
->>
->> [1] https://lore.kernel.org/linux-ext4/cover.1726034272.git.ojaswin@linux.ibm.com/
->>
->> Suggested-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
->> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
->> Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
->> Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
->> ---
->>   tests/generic/365     | 156 ++++++++++++++++++++++++++++++++++++++++++
->>   tests/generic/365.out |  26 +++++++
->>   2 files changed, 182 insertions(+)
->>   create mode 100755 tests/generic/365
->>   create mode 100644 tests/generic/365.out
->>
->> diff --git a/tests/generic/365 b/tests/generic/365
->> new file mode 100755
->> index 00000000..85a7ce9a
->> --- /dev/null
->> +++ b/tests/generic/365
->> @@ -0,0 +1,156 @@
->> +#! /bin/bash
->> +# SPDX-License-Identifier: GPL-2.0
->> +# Copyright (c) 2024 Nirjhar Roy (nirjhar@linux.ibm.com).  All Rights Reserved.
->> +#
->> +# FS QA Test 365
->> +#
->> +# This test verifies that extent allocation hint setting works correctly on files with
->> +# no extents allocated and non-empty files which are truncated. It also checks that the
->> +# extent hints setting fails with non-empty file i.e, with any file with allocated
->> +# extents or delayed allocation. We also check if the extsize value and the
->> +# xflag bit actually got reflected after setting/re-setting the extsize value.
->> +
->> +. ./common/config
->> +. ./common/filter
->> +. ./common/preamble
->> +. ./common/xfs
->> +
->> +_begin_fstest ioctl quick
->> +
->> +_supported_fs xfs
->> +
->> +_fixed_by_kernel_commit XXXXXXXXXXXX \
->> +    "xfs: Check for delayed allocations before setting extsize",
->> +
->> +_require_scratch
->> +
->> +FILE_DATA_SIZE=1M
-> Do these tests work correctly with fsblock size of 64k?  Just curious
-> since Pankaj just sent a series doing 1M -> 4M bumps to fix quota
-> issues.
->
->> +filter_extsz()
->> +{
->> +    sed "s/$EXTSIZE/EXTSIZE/g"
->> +}
->> +
->> +setup()
->> +{
->> +    _scratch_mkfs >> "$seqres.full"  2>&1
->> +    _scratch_mount >> "$seqres.full" 2>&1
->> +    BLKSZ=`_get_block_size $SCRATCH_MNT`
->> +    EXTSIZE=$(( BLKSZ*2 ))
-> Might want to check that there isn't an extsize/cowextsize set on the
-> root directory due to mkfs options.
+I've been reviewing and testing the XFS atomic write patch series. Since
+there haven't been any new responses to the previous discussions on this
+issue, I'd like to inquire about the buffered IO problem with force-aligned
+files, which is a scenario we might encounter.
 
-We have made some changes in the tests in v2 so that the test behaves as 
-expected with preset extsize/extszinherit mkfs options on the root. Also 
-tested with  mkfs.xfs from [1]. I will send PATCH v2 shortly.
+Consider a case where the file supports force-alignment with a 64K extent size,
+and the system page size is 4K. Take the following commands as an example:
 
-[1]. 
-https://lore.kernel.org/all/20230929095342.2976587-7-john.g.garry@oracle.com/
+xfs_io  -c "pwrite 64k 64k" mnt/file
+xfs_io  -c "pwrite 8k 8k" mnt/file
 
->
->> +}
->> +
->> +read_file_extsize()
->> +{
->> +    $XFS_IO_PROG -c "extsize" $1 | _filter_scratch | filter_extsz
->> +}
->> +
->> +check_extsz_and_xflag()
->> +{
->> +    local filename=$1
->> +    read_file_extsize $filename
->> +    _test_xfs_xflags_field $filename "e" && echo "e flag set" || echo "e flag unset"
->> +}
->> +
->> +check_extsz_xflag_across_remount()
->> +{
->> +    local filename=$1
->> +    _scratch_cycle_mount
->> +    check_extsz_and_xflag $filename
->> +}
->> +
->> +# Extsize flag should be cleared when extsize is reset, so this function
->> +# checks that this behavior is followed.
->> +reset_extsz_and_recheck_extsz_xflag()
->> +{
->> +    local filename=$1
->> +    echo "Re-setting extsize hint to 0"
->> +    $XFS_IO_PROG -c "extsize 0" $filename
->> +    check_extsz_xflag_across_remount $filename
->> +}
->> +
->> +check_extsz_xflag_before_and_after_reset()
->> +{
->> +    local filename=$1
->> +    check_extsz_xflag_across_remount $filename
->> +    reset_extsz_and_recheck_extsz_xflag $filename
->> +}
->> +
->> +test_empty_file()
->> +{
->> +    echo "TEST: Set extsize on empty file"
->> +    local filename=$1
->> +    $XFS_IO_PROG \
->> +        -c "open -f $filename" \
->> +        -c "extsize $EXTSIZE" \
->> +
->> +    check_extsz_xflag_before_and_after_reset $filename
->> +    echo
->> +}
->> +
->> +test_data_delayed()
->> +{
->> +    echo "TEST: Set extsize on non-empty file with delayed allocation"
->> +    local filename=$1
->> +    $XFS_IO_PROG \
->> +        -c "open -f $filename" \
->> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
->> +        -c "extsize $EXTSIZE" | _filter_scratch
->> +
->> +    check_extsz_xflag_across_remount $filename
->> +    echo
->> +}
->> +
->> +test_data_allocated()
->> +{
->> +    echo "TEST: Set extsize on non-empty file with allocated extents"
->> +    local filename=$1
->> +    $XFS_IO_PROG \
->> +        -c "open -f $filename" \
->> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
->> +        -c "extsize $EXTSIZE" | _filter_scratch
->> +
->> +    check_extsz_xflag_across_remount $filename
->> +    echo
->> +}
->> +
->> +test_truncate_allocated()
->> +{
->> +    echo "TEST: Set extsize after truncating a file with allocated extents"
->> +    local filename=$1
->> +    $XFS_IO_PROG \
->> +        -c "open -f $filename" \
->> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
->> +        -c "truncate 0" \
->> +        -c "extsize $EXTSIZE" \
->> +
->> +    check_extsz_xflag_across_remount $filename
->> +    echo
->> +}
->> +
->> +test_truncate_delayed()
->> +{
->> +    echo "TEST: Set extsize after truncating a file with delayed allocation"
->> +    local filename=$1
->> +    $XFS_IO_PROG \
->> +        -c "open -f $filename" \
->> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
->> +        -c "truncate 0" \
->> +        -c "extsize $EXTSIZE" \
->> +
->> +    check_extsz_xflag_across_remount $filename
->> +    echo
->> +}
-> Does this work for filesystems that don't have delalloc?  Like fsdax
-> filesystems?
->
-> --D
->
->> +setup
->> +echo -e "EXTSIZE = $EXTSIZE BLOCKSIZE = $BLKSZ\n" >> "$seqres.full"
->> +
->> +NEW_FILE_NAME_PREFIX=$SCRATCH_MNT/new-file-
->> +
->> +test_empty_file "$NEW_FILE_NAME_PREFIX"00
->> +test_data_delayed "$NEW_FILE_NAME_PREFIX"01
->> +test_data_allocated "$NEW_FILE_NAME_PREFIX"02
->> +test_truncate_allocated "$NEW_FILE_NAME_PREFIX"03
->> +test_truncate_delayed "$NEW_FILE_NAME_PREFIX"04
->> +
->> +status=0
->> +exit
->> diff --git a/tests/generic/365.out b/tests/generic/365.out
->> new file mode 100644
->> index 00000000..38cd0885
->> --- /dev/null
->> +++ b/tests/generic/365.out
->> @@ -0,0 +1,26 @@
->> +QA output created by 365
->> +TEST: Set extsize on empty file
->> +[EXTSIZE] SCRATCH_MNT/new-file-00
->> +e flag set
->> +Re-setting extsize hint to 0
->> +[0] SCRATCH_MNT/new-file-00
->> +e flag unset
->> +
->> +TEST: Set extsize on non-empty file with delayed allocation
->> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-01: Invalid argument
->> +[0] SCRATCH_MNT/new-file-01
->> +e flag unset
->> +
->> +TEST: Set extsize on non-empty file with allocated extents
->> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-02: Invalid argument
->> +[0] SCRATCH_MNT/new-file-02
->> +e flag unset
->> +
->> +TEST: Set extsize after truncating a file with allocated extents
->> +[EXTSIZE] SCRATCH_MNT/new-file-03
->> +e flag set
->> +
->> +TEST: Set extsize after truncating a file with delayed allocation
->> +[EXTSIZE] SCRATCH_MNT/new-file-04
->> +e flag set
->> +
->> -- 
->> 2.43.5
->>
->>
--- 
----
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+If unaligned unwritten extents are not permitted, we need to zero out the
+sub-allocation units for ranges [0, 8K] and [16K, 64K] to prevent stale
+data. While this can be handled relatively easily in direct I/O scenarios,
+it presents significant challenges in buffered I/O operations. The main
+difficulty arises because the extent size (64K) is larger than the page
+size (4K), and our current code base has substantial limitations in handling
+such cases.
 
+Any thoughts on this?
+
+Thanks,
+Long Li
+
+> 
+> BTW, I still have concern with this extsize zero-around change which I was
+> making:
+> 
+> xfs_iomap_write_unwritten()
+> {
+> 	unsigned int rounding;
+> 
+> 	/* when converting anything unwritten, we must be spanning an 	alloc unit,
+> so round up/down */
+> 	if (rounding > 1) {
+> 		offset_fsb = rounddown(rounding);
+> 		count_fsb = roundup(rounding);
+> 	}
+> 
+> 	...
+> 	do {
+> 		xfs_bmapi_write();
+> 		...
+> 		xfs_trans_commit();
+> 	} while ();
+> }
+> 
+> As mentioned elsewhere, it's a bit of a bodge (to do this rounding).
+> 
+> > 
+> > > > FWIW, I also understand things are different if we are doing 128kB
+> > > > atomic writes on 16kB force aligned files. However, in this
+> > > > situation we are treating the 128kB atomic IO as eight individual
+> > > > 16kB atomic IOs that are physically contiguous.
+> > > Yes, if 16kB force aligned, userspace can only issue 16KB atomic writes.
+> > Right, but the eventual goal (given the statx parameters) is to be
+> > able to do 8x16kB sequential atomic writes as a single 128kB IO, yes?
+> 
+> No, if atomic write unit max is 16KB, then userspace can only issue a single
+> 16KB atomic write.
+> 
+> However, some things to consider:
+> a. the block layer may merge those 16KB atomic writes
+> b. userspace may also merge 16KB atomic writes and issue a larger atomic
+> write (if atomic write unit max is > 16KB)
+> 
+> I had been wondering if there is any value in a lib for helping with b.
+> 
+> > 
+> > > > > > Again, this is different to the traditional RT file behaviour - it
+> > > > > > can use unwritten extents for sub-alloc-unit alignment unmaps
+> > > > > > because the RT device can align file offset to any physical offset,
+> > > > > > and issue unaligned sector sized IO without any restrictions. Forced
+> > > > > > alignment does not have this freedom, and when we extend forced
+> > > > > > alignment to RT files, it will not have the freedom to use
+> > > > > > unwritten extents for sub-alloc-unit unmapping, either.
+> > > > > > 
+> > > > > So how do you think that we should actually implement
+> > > > > xfs_itruncate_extents_flags() properly for forcealign? Would it simply be
+> > > > > like:
+> > > > > 
+> > > > > --- a/fs/xfs/xfs_inode.c
+> > > > > +++ b/fs/xfs/xfs_inode.c
+> > > > > @@ -1050,7 +1050,7 @@ xfs_itruncate_extents_flags(
+> > > > >                   WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
+> > > > >                   return 0;
+> > > > >           }
+> > > > > +	if (xfs_inode_has_forcealign(ip))
+> > > > > +	       first_unmap_block = xfs_inode_roundup_alloc_unit(ip,
+> > > > > first_unmap_block);
+> > > > >           error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
+> > > > Yes, it would be something like that, except it would have to be
+> > > > done before first_unmap_block is verified.
+> > > > 
+> > > ok, and are you still of the opinion that this does not apply to rtvol?
+> > The rtvol is*not* force-aligned. It -may- have some aligned
+> > allocation requirements that are similar (i.e. sb_rextsize > 1 fsb)
+> > but it does*not* force-align extents, written or unwritten.
+> > 
+> > The moment we add force-align support to RT files (as is the plan),
+> > then the force-aligned inodes on the rtvol will need to behave as
+> > force aligned inodes, not "rtvol" inodes.
+> 
+> ok, fine
+> 
+> Thanks,
+> John
+> 
+> 
+> 
