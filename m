@@ -1,269 +1,308 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f170.google.com (mail-qk1-f170.google.com [209.85.222.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE3B817D366;
-	Thu, 14 Nov 2024 16:22:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731601360; cv=fail; b=uplxuZ/KVy/ExrJ+jwiqnSwiA0+xAC89BA/DcLc3OLE58LgmhNmc6wG1i1LJ0taLBzsSyDdrT2g+5BMn2PDnhCHT+fyFlz4/4aSCfyWXfDfGFiokwHxjVdSW0rdB39bZghETUYuoh3f0jr2VyoKvd+r5EQ/zSI13es+CQQ3VfvQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731601360; c=relaxed/simple;
-	bh=6Lxa31EWs1hJ9oX36oK+VbZ0O/T/EGlDq/2mlGCmx9k=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=BVYAxel1Kr2XHWYzllKhn2Bi1fUhcTLmwbr9Qb4mfKMhdUfc7NDPTq7tGA/w0BdzOIDIssbPm6EykiXYqzwVSnOzJif+HbZJbdHgurTqIQ8dFGTUpy508x1jTgoz3q3gjLajygHNL1Gap5ww7N5ndLJTACc8W/UKTKKnehEC5EA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=hpZsy98x; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=I61HoWSQ; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2950F6F2F3;
+	Thu, 14 Nov 2024 17:22:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.170
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1731604959; cv=none; b=Ln4wId8SV2jRdVSGB1NJD9345+s4g1VMgTNw8ncZ6Hd9xKIMfUp5ByfLOwByXsehG3e2f0tWhzz+OZBGqEYTznLWOrQS8++tQT5XlikyoiLhYp55W3yRRhEg8mgcYn/Lrmv7SOIMOMf82cyY41MSUeNvMJTXbDe0Ima5McQ8huY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1731604959; c=relaxed/simple;
+	bh=coBv7kOMWr4FUkylnULciwEVU/uk2ko3fjjBkmaG4ic=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KhGNKJKD73gkjk3jXloxEzay6N//7FvE4EeVb1cTXVdnzpvahDykgFncHaXDAUlkBA0sHF/MStkEA3sUFWgu+pOHdWqzznUMeV6qrg/K6I45IwpQRED5wCR4BsI9zomwXuFj1nwIVgxhF7tywnVQZNDGAiPNcDE/xZ/zC7T1dfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LJMRhPzX; arc=none smtp.client-ip=209.85.222.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hpZsy98x";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="I61HoWSQ"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AEChXpV018587;
-	Thu, 14 Nov 2024 16:22:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=c2Bfn4GaQHWd3dNbx0WvH5BKNNeqocOeEAfAx32S54g=; b=
-	hpZsy98xAx2q45m9h1JpkJRSL8TACz0sJEIslK/BdrShgw/Kg7/J3/caYIqFByr0
-	1DIz+07HGiPYyPGhfGy6m8QNrC2RsgjInzvREUE5Oof6MLAGB7ZAidvQOXTnZvTm
-	PRv9Uk6tFY2+/BbJgFWMoT5RZmFjp552O2GYEGKqXG648tRdQCrPhiSpLE7nOpsn
-	3kQYLooHCm5ftasfhMIrb/vS/uyJLgUl38TLtato6Qnop15FEjeXLpTk81/vD0et
-	Ed7hMHW91tWafbWts9TRmBvkrKksPLGjXuTcHFdD02pPKnKP2KPb46C4Y5j6zMrN
-	OKWNSlp88WKNxmKkSEoHtA==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42t0kc1qfw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Nov 2024 16:22:11 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4AEFARpe035973;
-	Thu, 14 Nov 2024 16:22:11 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2045.outbound.protection.outlook.com [104.47.58.45])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 42sx6b1ne9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Nov 2024 16:22:10 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rq4y2uesQ7+jKcik9NGQ+GyOMCsNFA9Dj971BPw8NgYMuYyOkWxWTovaMZV7MxJcXA4Drx2jpv6ue9yE3xig/dyUyVflu0fdIyw5x/qAs8XHKQxmXcz212QIwYnhERKk8O72kDmyzyA7GbKiEwvaRwkXxX1drndjVw4KIlZp0ZwC2yXkieWemoy0osR4dYL1z/ChVovFAJkYZ2EY0Ta2OE6rNcXS7+eAv+5VDU2ZeMacwPKfPpsabM3Z8g7E7ECYvzvejq/eVi7kzpBPewnHCVx5PH+RWlGDqQS2bSf++IPB6B4NQLWUm8nNrjRD4XfQOPBlCffPkUlV1sdvlhAm7g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=c2Bfn4GaQHWd3dNbx0WvH5BKNNeqocOeEAfAx32S54g=;
- b=O0vkKGp4fgqlCDy+yzIXKf+u7kbvLd0QQuW1Tdbt8re8iSIqh6IvRgGydVZPG0m243Mm3puBlgy6On4hU4nXSUhZlWyv3H1ox0myPNomAc5A8zMlzb2ynfcQ+QKGjb/3j4A2Z7nQa2PaICmoSlLn9yNkjZLBiinBNk0aYMsbwZ4hem54O8061kicBFkfCCMXQxQhUYmixmGuV04zJxJqT2IhhSvnfJiKTnuOE2uMNhK0YqjxH9iYQOBDvK6Ju/HBjIvMZwbUQRg75X8U8gIwbJhtIXaS9CpcsuuFpZwvqvjF9+hq6dC4CmDIOe1FnnEo3JDe7Zw3++FQ80BrKcPcsA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LJMRhPzX"
+Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-7b18da94ba9so72589185a.0;
+        Thu, 14 Nov 2024 09:22:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=c2Bfn4GaQHWd3dNbx0WvH5BKNNeqocOeEAfAx32S54g=;
- b=I61HoWSQynljUgUu9nzSnVnD/ODre8w5LtpCDDTp2bDpD+Wxj5AFAqvvLGIcjPSg429ZZnewgExVUsqVHMZIsfYgVcdogwHZZChyVrIBnZEhhKvJaz+SG0cC6tOBITskP44xjPt9BywhiKymBfCquxfonh6kKkJEqUUVeCOl8rk=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DS0PR10MB6894.namprd10.prod.outlook.com (2603:10b6:8:134::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8158.17; Thu, 14 Nov
- 2024 16:22:07 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.8158.017; Thu, 14 Nov 2024
- 16:22:06 +0000
-Message-ID: <94ed563e-5f18-4a80-a137-e35400cd038d@oracle.com>
-Date: Thu, 14 Nov 2024 16:22:01 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-To: Long Li <leo.lilong@huawei.com>, Dave Chinner <david@fromorbit.com>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, chandan.babu@oracle.com,
-        djwong@kernel.org, dchinner@redhat.com, hch@lst.de,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, catherine.hoang@oracle.com,
-        martin.petersen@oracle.com
-References: <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
- <Ztom6uI0L4uEmDjT@dread.disaster.area>
- <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
- <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
- <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
- <ZufBMioqpwjSFul+@dread.disaster.area>
- <0e9dc6f8-df1b-48f3-a9e0-f5f5507d92c1@oracle.com>
- <ZuoCafOAVqSN6AIK@dread.disaster.area>
- <1394ceeb-ce8c-4d0f-aec8-ba93bf1afb90@oracle.com>
- <ZzXxlf6RWeX3e-3x@localhost.localdomain>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <ZzXxlf6RWeX3e-3x@localhost.localdomain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO6P123CA0015.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:338::20) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=gmail.com; s=20230601; t=1731604957; x=1732209757; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OeFJjr3sAvxDHgXGKvBlBBH/HNXVr6YZMX5uUHaIfVg=;
+        b=LJMRhPzX4Z5H/E7IZAd45/5CNNvpFk1cfOJvSkUtyK2uPEzwDMY9QvGXNpPhmU/iWb
+         TyRszd7nj7Orv64xYzEi1NpwGG1NbbmhHguT42t32Td0yXdxBklYtWl+6TlM6s54RYfN
+         hRdkT6NEJrl4pck8VjtuG6vrYWJT702bOBuajgOaACd26cKMYwLOF+S79cvJJxUMOJ01
+         45OOWti4pQEHygzaVWXsQmTHccJ9T8XEc+6yfgkYF30RhT4EdvA0FIAaADhbghqiDsrf
+         r8rT1Eh3QMhq25/c9c5Us8F10Ip/azrzi2liyVlVEMUzuceno4dGUQdBn9I+HKOAVwUZ
+         Do/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731604957; x=1732209757;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OeFJjr3sAvxDHgXGKvBlBBH/HNXVr6YZMX5uUHaIfVg=;
+        b=p3pcroDvtiIrKTg4unCugvnIuIl6IpWoLsX7WTJVJJY3dX7rKwBeYdNl8QOH88VeRz
+         cp6vW/vlqD2IP23F4rDEsLnGCLZ3TAJuRsiHHA/+uLEmI+Ikp2C3a9Fycf5bR5cuXj3B
+         MFQrwu7OU4MtWcizRpTiaGSMFSr8cegEHeB+fbpqMoYfv4IOR6SJarr21Nxc6nRh9uSo
+         ObqhiL4yyNQNajsnyFSgZ+jeE/VJdOYvvdGDUxz3dt96SEpy268y6IT4dRyCtsp1zrp3
+         nP8My1SjRIeye+UKeVU3p0LfWh/MeOONmAuzq6c2WIi+sdQHVlLXH8Uv0ygIJFHI1KwJ
+         F7/A==
+X-Forwarded-Encrypted: i=1; AJvYcCUo6BQ+FKpnR2DF+IND+bTcRqc32CY6PFV4UL9D+O/MNOatUH3YdgGJ5/IPvnOoxaHpyVWcsJyUctFy@vger.kernel.org, AJvYcCUzMghRXj9BhyFhHU7KF/bYsqfwlLtkE6TpB/YYpIO32hT8b86IgQDzAm3D5svFEfP7frk712lSp2t7X4bLng==@vger.kernel.org, AJvYcCWfZra3sszKrUF135SHzpXaufdGHbrb4UJI35mQKkbvEONHfE8cpC4gNFncU/F0P9HHC5regbwebsWvgA==@vger.kernel.org, AJvYcCXju8F9gT/0NpSoRBa+7M1jNVdszZwUjaJhqae3bstuK898sBvlu7gj+tYpEm8kR8HbY/vXvcqcuohSnA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxyjgy9wj0+QwXL48kBl3xbt7Jz0CucaxJxMewdB2lzgQwOlNBN
+	KLYejlRm6xx2eJZjcfZdnc6jIzYqhlaCiM3jUWsEAhSsK25fkVCssInXaUfAjiP3KrpCEENEFd2
+	CIu/DY+eMq4Zrbsx22pE1HFqabTE=
+X-Google-Smtp-Source: AGHT+IGWy+vxnndz1151nIk1OoEYSziwAZ6Hll6nVis3K2RK0WbhxR9+FRkzy7ldvbq1Mbv1M4ojoumTX5Yaw3ABvqg=
+X-Received: by 2002:a05:620a:2894:b0:7a9:abdf:f517 with SMTP id
+ af79cd13be357-7b35a545fc5mr637868285a.25.1731604956930; Thu, 14 Nov 2024
+ 09:22:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB6894:EE_
-X-MS-Office365-Filtering-Correlation-Id: 677ce8ae-cdf7-4ff5-c721-08dd04c87b2b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?UWxZNWR4SVVuOStZeU83UW1iZU9NY0gza3h4eXFJUnlSTkc0aStyaGRwSWF2?=
- =?utf-8?B?TDJHTmprbnpiRGF1RmNTSzdSRnlSTnlORjVmNUlJcjJBRzVjVnlxYUpNMmJS?=
- =?utf-8?B?K3F5U1dURXlCcXFnSlhJNmlrNnVIL3VQcHhkTVRxVmxDTUhJRWhuNjlSQ3JJ?=
- =?utf-8?B?dTdTQ2hnVWFwYi9PZUNKMTRqdVFWVndZczdmak91eHFRSmdWZXNJZDk5WVk4?=
- =?utf-8?B?N0kwK2NwWkV3cmNnTFlrOCtsN3o2WmY0WW1VdENVZDZ4WDlpTVhQaDVGWlI2?=
- =?utf-8?B?cmhxQUxkZnZjUUVEd3d6WFhiZngvcDVLQUgvWkREVmhPRU1DdG9zWmdLYTZX?=
- =?utf-8?B?K3hRbHFmZm5rL2pPWDhCZGV2OE8xMFpJTlZXZUljMjNEMDFKY3RRdExTYWlY?=
- =?utf-8?B?Y1ZBMk1yc0JFcUxQVUdqa25kdldQcW83U3lPaCtaVytoRXNCcWFpS050Wjh6?=
- =?utf-8?B?MS9rZ1RqNTA0bmVwM0FiVDFQeWh2S1MydmlKV1Z4c1p0MDZ2SzdzUUNidFpK?=
- =?utf-8?B?RGRVd29uWUl2ckE3OWV3YThFcDVqWXpvMzNpam9oOHVpdi9HUUtDOGVZckQx?=
- =?utf-8?B?QlR3TUNMSVI1cjRKL09qWEpkMzdmdzlRaG1CQWpFRFpzRHM2RTFtOG03bzNW?=
- =?utf-8?B?azBmN2hZMm8rSzUxRDcrQjVXaWViVlRZcTdCdE1tMTZuK3hXTzhYbml2dm1V?=
- =?utf-8?B?Qlp4cVcwWlQ5T1JaZUdmZUxFYWowQXF1K0RRQk9PWXlQVk9WOW9SVUdkVDVT?=
- =?utf-8?B?Q0twL3FQU3BJUkIrOS9ZQ1dTSmpnS2E2eDdRZ0tGaGRGMFZqOUNBa0h3dnlY?=
- =?utf-8?B?WndEeUF1bDcrSGlrb1BhS1pqSURlbUJxaW1WVFU1ZnQzRTFtRlZTdDVRVWZT?=
- =?utf-8?B?RmEzb1ZmSnN4NzVYWlFBemdEdDhCUjQyTHIvU3k0MlpNazZ5MmZYczJIa1lQ?=
- =?utf-8?B?TGxCOHJ0MWVUNWN1SWZFWUEvdklQQm9KbmpyQ0JRSlJHQnptUm56ZHEyNjFB?=
- =?utf-8?B?N2hvTFRSMnlvRUJkYUZFNndOeGdITGtoSWtyQUZpbjVkeUlrVGRUWGxBN1Br?=
- =?utf-8?B?bDBiZWprc0ZYME5MY3dUNDlRYVIyNGVnOVlPampWU3NXU1R2NDBHNVFteUps?=
- =?utf-8?B?S1FzLzQwZ0V0anVLZHQzVkdNT0p0V1ZGb0NpanAxSE9Ha1FSRGo5dW5jWUtG?=
- =?utf-8?B?RjNudzNQME5YVjBSNGlCR2pXRW5pL1RibGpUOFFSTUdFUGowRmxUMVNaa0Mx?=
- =?utf-8?B?dnZqQ2VLUVV2U3J1WjR1TDViY2JKalhwMWZnRitRRkhKNUFkanJBcTRYbkFa?=
- =?utf-8?B?NlM2U0U1Smo2VzdmS0VkSW4vdjlrb09XZ2dRWHI0M2RFbzRuT2Z0R2d6T3pn?=
- =?utf-8?B?YWJFVGRua2RtZW56akgxK1RQMjFUNERvRTY2TG4wY2xGejg1T0cxR1h2cC8w?=
- =?utf-8?B?UXBjdGF3dDR2OTZuQ0Vuci9HdlFUR3FzWGNibGNQNkRsZEtUTFFpcFdpR00x?=
- =?utf-8?B?ZHdwYU9IdEN3d3o3RlBqVjc1aml3cjJLOHM5cm9YUVZTZlp4MHc0aHdmbm1y?=
- =?utf-8?B?K1RyMnh5dW4ydmdDRk1lbEMvUkQ4VWQxOHdETnNsdUJZL2V0Y1VYamxUUDBK?=
- =?utf-8?B?VFpOQVpONDZvaVRVYVFUdS9xV3dvc3QxTzZnTFZxUStPbytQK3REUGU1TzFC?=
- =?utf-8?B?YTBVb3FzdTZhSVRsWkMrL0pUU0xSamNuRnYzQnFhL1lNUzcvSU1CYW1mbGtv?=
- =?utf-8?Q?MiXX6H8GkoKiyiSeXN5NT+Xj/z/9QOYggPplFqH?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?L0NId2tWTU01UEF4SFFUVlhocU44K3ZyeDZMWWsyUmg4SW91dEg0MDB4NVFB?=
- =?utf-8?B?cVhkQXVNNnRHaGxCNUxzT3N3YThBY0JLODJCOG9Lei9mYUlNMTBZSTFNODRI?=
- =?utf-8?B?dUkxZHU1elgzWXlqU0Vvajg1MUFlQlk4ZE8wNmJMeHhhcnhpZHlyUkR2Yldj?=
- =?utf-8?B?VitFNkZ0dDRVK1FVVG9rTTZ3bEx1cWxGSkFJSTcwcGkrN2Eza2kvWnR1dUpY?=
- =?utf-8?B?VWRGSmtTWXRNcUlzN0k1alZOOWhla2JYbmxmMjZLeFRqYUlTM2pVNnJzK1Zx?=
- =?utf-8?B?M2M1c01td3VkMDkvbnZINkd5eDRYSVBZY3AwRm1JZVdxRXREVjc1WGpoZXJu?=
- =?utf-8?B?djJsSGx5RU1PSHhMOXhheXB3UmxGM3l1S2s0dTRaK0JnMXg1bVpvNG83ekVL?=
- =?utf-8?B?T3pFa0piV2ViaXdLV01GbHFsVXBnbytGTThKOVJueWh0eEsreWxyWk9DcENF?=
- =?utf-8?B?aFZTdlVsVjZSV0RObGxoV0luaE1DbzFaSENmZnR3VTFTTjZjZ0NpT3J4YW10?=
- =?utf-8?B?aENCUHd4K3VtODJXdWxLQzhPR3RGWWU0MU8xNzF3YjBLTGlTZDhHSlE5NWE4?=
- =?utf-8?B?endMY0lPOWVzbnlzMWFQOThQM3ZnVzRCM2hES2FRZVpSRW9IV01ZU3dyL051?=
- =?utf-8?B?cUt6OEhHdTBVRmdvcHhVMkNBT05RUm04cVMzVUtwZkRJdjJJWTFNdFZPY1ho?=
- =?utf-8?B?azl5WTVzSXIrR3BkS25YTkpIcExTY00vYWtZNzd2SS8rOFpybXV1dU14VXpJ?=
- =?utf-8?B?SjI4cndSQXBHeUUxa0ZNTW43UzV2dXM4Wnc4OWVBWTU3WGdpRGZZcDg2Y2ds?=
- =?utf-8?B?QW16L20yOUlsM1lYN2NZcHNVTVBjOEdtcWpaWVpEQjhxTldQYkdGUVVzVVVz?=
- =?utf-8?B?dndvQjVBN2REZVJRajVzL0h3VUl4OCtJZ0pMQ3A4cHByMzVQd285dFJCdXVF?=
- =?utf-8?B?SldOdCtaS3Rqb09QaHdLTWg0ZHQwMkFkd1pXVG1GamF2K28vNFUwQzZ2Q1VX?=
- =?utf-8?B?OGxXOU1XQ0lPUUhkMGF3UU1YampOS0twb3oyMG4rZW9nUnJZS041WDFyRk1B?=
- =?utf-8?B?UVBSL2E0MW54c0E0Vzl2TUQ0WjYrZElXb3pvMnF1dXBMc1Y5YkEzN3dXMUlt?=
- =?utf-8?B?NWU3V1RKMUxzazd6Nnh3NGdTSzlzV3pZaGFoWTdRQ1I4TFpZaU51cmw0aWhZ?=
- =?utf-8?B?UVM3eEU3VTZ3NGM2ZDdVYmkwL040Z2EzeXFPYUVRc3pQNEpLM1o0ZnYrNTRs?=
- =?utf-8?B?QlFVVXBQUld3M1M0YzBldDBOUFZGVWplUDk0MGVRVWRUUTk2R2trR0JybU1F?=
- =?utf-8?B?R2tadHJtRksyV21IWG9pN1h2bnpWRTV3R3hhNUN6RFlYRmh5Zi9sdFhOUkI3?=
- =?utf-8?B?L1I0dnpQck1nSlZ6WXBxVzFKUzUwS1ljeUVYd25tNGdyMDd1VDJRTGozeFZp?=
- =?utf-8?B?VGo2NUlwWFZ5UkUrOVBNZnZpTU80Zm1kRnZ2dnkyRHBvVjdmdzAvV3ZMVGsy?=
- =?utf-8?B?QURtSUJXTUZpMGVOWE5CYkM4NjRTR0hJMERXTFBra2RKYlo0OUxJVzBiYjY5?=
- =?utf-8?B?QmdFYWpGeXFHU1orNSt2NmhYOE8xL01pZy9FZXJrbkZ0TXFNNWZCNGJsVS9x?=
- =?utf-8?B?eElvWk05dFZYRHZzRlhVSDh3VFhzbmtuTi9WNXdabEVmY0l2WVgrdDBmMGw1?=
- =?utf-8?B?SHJ4Rzd0T2lxWFRaT0I3elpMMVEwNGJIVTRyckJKTEt3S2c5TjNEOVBseWJI?=
- =?utf-8?B?ZGRzNVp1VXBpdldIYmhsS3JDL2JCWmh4MUF2NjdPYThzWmd6enFvblZEcmZX?=
- =?utf-8?B?cGJxMlJ0bzBJYmFkekphRDJ1THhaNEVHeDdEWTVMUWtVQ2NaRFFnbVlnMVZk?=
- =?utf-8?B?V2xFN1JxMTJYL1lTaE9ybWpGdjlEeVRyNmtGY1RaUTZRNVFwbzhLN2FaWTk3?=
- =?utf-8?B?ZkgrOXFveVhVeExMZ1lNR2NacVVEcUtWKy9IWUtPL2JrL2xWdGoxQzEwS2Zx?=
- =?utf-8?B?d2k1NWJpcXJ6RHc2ejRUcXZob0g1UGdDU1c2S0RKV2tBRlNYY1hwMUpOM1JS?=
- =?utf-8?B?cE5KNWkwaWNUaEFDbkFLM1ljY1NWbW5SN0R4bW5PcDYyQ1hyN2diaTFKNHZS?=
- =?utf-8?B?K2N2aExWODN2WW1LTlNSYW1iampHdi9wRGRDMnJiSFdlU0FROWphZ2RNemNm?=
- =?utf-8?B?K1E9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	5w6MSKzue/KGeURcHRadvbu/LTEvnpt0V7g0wscKsKzN/e46NpIkylwP2Ius6YSl0rhPFrnuPf462vkgSrUVCQUbiNv80vJMUQJkjUS5Tlq0nTJipr6ZQcv6FqxoVEZppivHpD4IL0WoetmGpDRZaKjwObsoRCq6ZVtee4xQf7I2+7iXHtZQG3kaJZcP44DGkYnm/Xcc845DIg+N/67bdcT47E5tp+aCZBvgk/nhjwDiIV2Pxlmflr6kJK1xQaXX5tR/gK6oPXr0mAGkJQcDLwZbW8TXkxz2x+t7BNXzdu22N/57SItENHx0VnvHF8Met9U75iiuR23RkSMBYXm5I2fEB4VWlfLajaDmcPePgsDSIQu10dW4peXL8/juMZdZRsfjqRfJu6WCntjpaNiRIzIYrmWcIkfUMHbOUGBmUv+7C5BwjSebTlJUYyRJztyMoVriHv2n8QyqGQ/BW0oLUDDj4Nq0oKn/RliaAkc1SaiZtCJSdYtsd1quY6TOp+QsVOtuaTkIIwQK3y0FIiaQ/oM1NyVKexm0R2zWy8stSpiwKSC195oxwTqR59kjv7K4v8ywL3dfh4r8/pUJ/hLfD5YNJ4iP+5rI7ONvU1Jw+88=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 677ce8ae-cdf7-4ff5-c721-08dd04c87b2b
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Nov 2024 16:22:06.5910
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dyN5ETDic4eea/MRfBGMgiA4SF48LoQlMJYuLDrfCIKTtQG2+wy7EuGF1fVREUsMCg4jEu/jJPPUtl9JIvIAlA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6894
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-11-14_05,2024-11-13_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
- bulkscore=0 suspectscore=0 phishscore=0 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2409260000
- definitions=main-2411140127
-X-Proofpoint-GUID: kykisfbIJSYHG-t8Tml31fye2vKGck46
-X-Proofpoint-ORIG-GUID: kykisfbIJSYHG-t8Tml31fye2vKGck46
+References: <cover.1731433903.git.josef@toxicpanda.com> <141e2cc2dfac8b2f49c1c8d219dd7c20925b2cef.1731433903.git.josef@toxicpanda.com>
+ <CAHk-=wjkBEch_Z9EMbup2bHtbtt7aoj-o5V6Nara+VxeUtckGw@mail.gmail.com>
+ <CAOQ4uxiiFsu-cG89i_PA+kqUp8ycmewhuD9xJBgpuBy5AahG5Q@mail.gmail.com>
+ <CAHk-=wijFZtUxsunOVN5G+FMBJ+8A-+p5TOURv2h=rbtO44egw@mail.gmail.com>
+ <CAOQ4uxjob2qKk4MRqPeNtbhfdSfP0VO-R5VWw0txMCGLwJ-Z1g@mail.gmail.com>
+ <CAHk-=wigQ0ew96Yv29tJUrUKBZRC-x=fDjCTQ7gc4yPys2Ngrw@mail.gmail.com>
+ <CAOQ4uxjeWrJtcgsC0YEmjdMPBOOpfz=zQ9VuG=z-Sc6WYNJOjQ@mail.gmail.com> <20241114150127.clibtrycjd3ke5ld@quack3>
+In-Reply-To: <20241114150127.clibtrycjd3ke5ld@quack3>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 14 Nov 2024 18:22:25 +0100
+Message-ID: <CAOQ4uxgNoDUcgSjo=oK6QmzCuEdgauDs2H6WGbD=RuzkZX115Q@mail.gmail.com>
+Subject: Re: [PATCH v7 05/18] fsnotify: introduce pre-content permission events
+To: Jan Kara <jack@suse.cz>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Josef Bacik <josef@toxicpanda.com>, 
+	kernel-team@fb.com, linux-fsdevel@vger.kernel.org, brauner@kernel.org, 
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 14/11/2024 12:48, Long Li wrote:
-> On Wed, Sep 18, 2024 at 11:12:47AM +0100, John Garry wrote:
->> On 17/09/2024 23:27, Dave Chinner wrote:
->>>> # xfs_bmap -vvp  mnt/file
->>>> mnt/file:
->>>> EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->>>>     0: [0..15]:         384..399          0 (384..399)          16 010000
->>>>     1: [16..31]:        400..415          0 (400..415)          16 000000
->>>>     2: [32..127]:       416..511          0 (416..511)          96 010000
->>>>     3: [128..255]:      256..383          0 (256..383)         128 000000
->>>> FLAG Values:
->>>>      0010000 Unwritten preallocated extent
->>>>
->>>> Here we have unaligned extents wrt extsize.
->>>>
->>>> The sub-alloc unit zeroing would solve that - is that what you would still
->>>> advocate (to solve that issue)?
->>> Yes, I thought that was already implemented for force-align with the
->>> DIO code via the extsize zero-around changes in the iomap code. Why
->>> isn't that zero-around code ensuring the correct extent layout here?
->> I just have not included the extsize zero-around changes here. They were
->> just grouped with the atomic writes support, as they were added specifically
->> for the atomic writes support. Indeed - to me at least - it is strange that
->> the DIO code changes are required for XFS forcealign implementation. And,
->> even if we use extsize zero-around changes for DIO path, what about buffered
->> IO?
-> 
-> I've been reviewing and testing the XFS atomic write patch series. Since
-> there haven't been any new responses to the previous discussions on this
-> issue, I'd like to inquire about the buffered IO problem with force-aligned
-> files, which is a scenario we might encounter.
-> 
-> Consider a case where the file supports force-alignment with a 64K extent size,
-> and the system page size is 4K. Take the following commands as an example:
-> 
-> xfs_io  -c "pwrite 64k 64k" mnt/file
-> xfs_io  -c "pwrite 8k 8k" mnt/file
-> 
-> If unaligned unwritten extents are not permitted, we need to zero out the
-> sub-allocation units for ranges [0, 8K] and [16K, 64K] to prevent stale
-> data. 
+On Thu, Nov 14, 2024 at 4:01=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
+>
+> On Wed 13-11-24 19:49:31, Amir Goldstein wrote:
+> > From 7a2cd74654a53684d545b96c57c9091e420b3add Mon Sep 17 00:00:00 2001
+> > From: Amir Goldstein <amir73il@gmail.com>
+> > Date: Tue, 12 Nov 2024 13:46:08 +0100
+> > Subject: [PATCH] fsnotify: opt-in for permission events at file open ti=
+me
+> >
+> > Legacy inotify/fanotify listeners can add watches for events on inode,
+> > parent or mount and expect to get events (e.g. FS_MODIFY) on files that
+> > were already open at the time of setting up the watches.
+> >
+> > fanotify permission events are typically used by Anti-malware sofware,
+> > that is watching the entire mount and it is not common to have more tha=
+t
+> > one Anti-malware engine installed on a system.
+> >
+> > To reduce the overhead of the fsnotify_file_perm() hooks on every file
+> > access, relax the semantics of the legacy FAN_ACCESS_PERM event to gene=
+rate
+> > events only if there were *any* permission event listeners on the
+> > filesystem at the time that the file was opened.
+> >
+> > The new semantic is implemented by extending the FMODE_NONOTIFY bit int=
+o
+> > two FMODE_NONOTIFY_* bits, that are used to store a mode for which of t=
+he
+> > events types to report.
+> >
+> > This is going to apply to the new fanotify pre-content events in order
+> > to reduce the cost of the new pre-content event vfs hooks.
+> >
+> > Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+> > Link: https://lore.kernel.org/linux-fsdevel/CAHk-=3Dwj8L=3DmtcRTi=3DNEC=
+HMGfZQgXOp_uix1YVh04fEmrKaMnXA@mail.gmail.com/
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>
+> Couple of notes below.
+>
+> > diff --git a/fs/open.c b/fs/open.c
+> > index 226aca8c7909..194c2c8d8cd4 100644
+> > --- a/fs/open.c
+> > +++ b/fs/open.c
+> > @@ -901,7 +901,7 @@ static int do_dentry_open(struct file *f,
+> >       f->f_sb_err =3D file_sample_sb_err(f);
+> >
+> >       if (unlikely(f->f_flags & O_PATH)) {
+> > -             f->f_mode =3D FMODE_PATH | FMODE_OPENED;
+> > +             f->f_mode =3D FMODE_PATH | FMODE_OPENED | FMODE_NONOTIFY;
+> >               f->f_op =3D &empty_fops;
+> >               return 0;
+> >       }
+> > @@ -929,6 +929,12 @@ static int do_dentry_open(struct file *f,
+> >       if (error)
+> >               goto cleanup_all;
+> >
+> > +     /*
+> > +      * Set FMODE_NONOTIFY_* bits according to existing permission wat=
+ches.
+> > +      * If FMODE_NONOTIFY was already set for an fanotify fd, this doe=
+sn't
+> > +      * change anything.
+> > +      */
+> > +     f->f_mode |=3D fsnotify_file_mode(f);
+>
+> Maybe it would be obvious to do this like:
+>
+>         file_set_fsnotify_mode(f);
+>
+> Because currently this depends on the details of how exactly FMODE_NONOTI=
+FY
+> is encoded.
+>
 
-How does this prevent stale data? Just zeroing will ensure aligned 
-extents. Unless iomap is provided a mapping for the fully aligned extent.
+ok. makes sense.
 
-> While this can be handled relatively easily in direct I/O scenarios,
-> it presents significant challenges in buffered I/O operations. The main
-> difficulty arises because the extent size (64K) is larger than the page
-> size (4K), and our current code base has substantial limitations in handling
-> such cases.
+> > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > index 70359dd669ff..dd583ce7dba8 100644
+> > --- a/include/linux/fs.h
+> > +++ b/include/linux/fs.h
+> > @@ -173,13 +173,14 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, lo=
+ff_t offset,
+> >
+> >  #define      FMODE_NOREUSE           ((__force fmode_t)(1 << 23))
+> >
+> > -/* FMODE_* bit 24 */
+> > -
+> >  /* File is embedded in backing_file object */
+> > -#define FMODE_BACKING                ((__force fmode_t)(1 << 25))
+> > +#define FMODE_BACKING                ((__force fmode_t)(1 << 24))
+> > +
+> > +/* File shouldn't generate fanotify pre-content events */
+> > +#define FMODE_NONOTIFY_HSM   ((__force fmode_t)(1 << 25))
+> >
+> > -/* File was opened by fanotify and shouldn't generate fanotify events =
+*/
+> > -#define FMODE_NONOTIFY               ((__force fmode_t)(1 << 26))
+> > +/* File shouldn't generate fanotify permission events */
+> > +#define FMODE_NONOTIFY_PERM  ((__force fmode_t)(1 << 26))
+> >
+> >  /* File is capable of returning -EAGAIN if I/O will block */
+> >  #define FMODE_NOWAIT         ((__force fmode_t)(1 << 27))
+> > @@ -190,6 +191,21 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, lof=
+f_t offset,
+> >  /* File does not contribute to nr_files count */
+> >  #define FMODE_NOACCOUNT              ((__force fmode_t)(1 << 29))
+> >
+> > +/*
+> > + * The two FMODE_NONOTIFY_ bits used together have a special meaning o=
+f
+> > + * not reporting any events at all including non-permission events.
+> > + * These are the possible values of FMODE_NOTIFY(f->f_mode) and their =
+meaning:
+> > + *
+> > + * FMODE_NONOTIFY_HSM - suppress only pre-content events.
+> > + * FMODE_NONOTIFY_PERM - suppress permission (incl. pre-content) event=
+s.
+> > + * FMODE_NONOTIFY - suppress all (incl. non-permission) events.
+> > + */
+> > +#define FMODE_NONOTIFY_MASK \
+> > +     (FMODE_NONOTIFY_HSM | FMODE_NONOTIFY_PERM)
+> > +#define FMODE_NONOTIFY FMODE_NONOTIFY_MASK
+> > +#define FMODE_NOTIFY(mode) \
+> > +     ((mode) & FMODE_NONOTIFY_MASK)
+>
+> This looks a bit error-prone to me (FMODE_NONOTIFY looks like another FMO=
+DE
+> flag but in fact it is not which is an invitation for subtle bugs) and th=
+e
+> tests below which are sometimes done as (FMODE_NOTIFY(mode) =3D=3D xxx) a=
+nd
+> sometimes as (file->f_mode & xxx) are inconsistent and confusing (unless =
+you
+> understand what's happening under the hood).
+>
+> So how about defining macros like FMODE_FSNOTIFY_NORMAL(),
+> FMODE_FSNOTIFY_CONTENT() and FMODE_FSNOTIFY_PRE_CONTENT() which evaluate =
+to
+> true if we should be sending normal/content/pre-content events to the fil=
+e.
+> With appropriate comments this should make things more obvious.
+>
 
-What is the limitation exactly?
+ok, maybe something like this:
 
-> 
-> Any thoughts on this?
+#define FMODE_FSNOTIFY_NONE(mode) \
+        (FMODE_FSNOTIFY(mode) =3D=3D FMODE_NONOTIFY)
+#define FMODE_FSNOTIFY_NORMAL(mode) \
+        (FMODE_FSNOTIFY(mode) =3D=3D FMODE_NONOTIFY_PERM)
+#define FMODE_FSNOTIFY_PERM(mode) \
+        (!((mode) & FMODE_NONOTIFY_PERM))
+#define FMODE_FSNOTIFY_HSM(mode) \
+        (FMODE_FSNOTIFY(mode) =3D=3D 0)
 
-TBH, the buffered IO case has not been considered too much.
+At least keeping the double negatives contained in one place.
 
-The sub-extent zeroing was intended for atomic writes > 1x FSB and we 
-only care about DIO there.
+And then we have these users in the final code:
+
+static inline bool fsnotify_file_has_pre_content_watches(struct file *file)
+{
+        return file && unlikely(FMODE_FSNOTIFY_HSM(file->f_mode));
+}
+
+static inline int fsnotify_open_perm(struct file *file)
+{
+        int ret;
+
+        if (likely(!FMODE_FSNOTIFY_PERM(file->f_mode)))
+                return 0;
+...
+
+static inline int fsnotify_file(struct file *file, __u32 mask)
+{
+        if (FMODE_FSNOTIFY_NONE(file->f_mode))
+                return 0;
+...
+
+BTW, I prefer using PERM,HSM instead of the FSNOTIFY_PRIO_
+names for brevity, but also because at the moment of this patch
+FMODE_NONOTIFY_PERM means "suppress permission events
+if there are no listeners with priority >=3D FSNOTIFY_PRIO_CONTENT
+at all on any objects of the filesystem".
+
+It does NOT mean that there ARE permission events watchers on the file's
+sb/mnt/inode or parent, but what the users of the flag care about really is
+whether the specific file is being watched for permission events.
+
+I was contemplating if we should add the following check at open time
+as following patches add for pre-content watchers also for
+permission watchers on the specific file:
+
+        /*
+         * Permission events is a super set of pre-content events, so if th=
+ere
+         * are no permission event watchers, there are also no pre-content =
+event
+         * watchers and this is implied from the single FMODE_NONOTIFY_PERM=
+ bit.
+         */
+        if (likely(!fsnotify_sb_has_priority_watchers(sb,
+                                                FSNOTIFY_PRIO_CONTENT)))
+                return FMODE_NONOTIFY_PERM;
+
++        /*
++         * There are content watchers in the filesystem, but are there
++         * permission event watchers on this specific file?
++         */
++        if (likely(!fsnotify_file_object_watched(file,
++                                                 ALL_FSNOTIFY_PERM_EVENTS)=
+))
++                return FMODE_NONOTIFY_PERM;
++
+
+I decided not to stretch the behavior change too much and also since
+Anti-malware permission watchers often watch all the mounts of a
+filesystem, there is probably little to gain from this extra check.
+But we can reconsider this in the future.
+
+WDYT?
+
+In any case, IMO the language of FMODE_FSNOTIFY_PERM() matches
+the meaning of the users better and makes the code easier to understand.
+
+FMODE_FSNOTIFY_HSM() is debatable, but at least it is short ;)
+
+Anyway, I will send v2 with your suggestions.
 
 Thanks,
-John
+Amir.
