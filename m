@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27F1915575D;
-	Thu, 14 Nov 2024 05:30:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AFE81EABB7
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 06:16:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731562221; cv=none; b=OcAtxeIwjYyJri6X8BHi229CbfY4lw711sPiIAga9EKeemnd3PKOJ/bIMvKqdiiW1/NJyqsYOszxG3pvailft5tPnDMjAIPqAwzlWtDkiDOkWUdDI0kA15RP0h18hRMW/ALQ+ffa8oU8IUcGnwnqhOFTmXOnbohE+J2BKv47NMI=
+	t=1731565000; cv=none; b=scct0tK9xTJkXh0cKPndAzN3SJUgdU1ViGWRK7A6UwJlmxeB6+4EvpjgrDXlgJzdhfYJupntmNed1H2NO+DD4sewo9LMa3pk4+Oohfw3CatIqGC6Z4jalRA4E+e53xnhZgqI3D1TabJCC8bER/eaDj26xv9Cf4LgwykU6g/bkPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731562221; c=relaxed/simple;
-	bh=ng4+N57HWcDv6JVL1KnJomhQayM5TciGWgjaHaW3NZ4=;
+	s=arc-20240116; t=1731565000; c=relaxed/simple;
+	bh=0TMywlQlJ+kIFh/ngRcCJ+DimLzQ1yRiQA4x484LW+Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J0RuqlPofLLzyPb+CvpXMsdWUIsVVvc7Xbb61Xfw75L3ETEDIwPK9I+FasLY0W/sXGKEniEyVo0sVTd0UaELtnsAJT0cuADLOFGhgZTWw1VZ3YtiS+U/Lo+Wa/9AXKuYkjlBU1t6/tmhADGn3yxZML/e9wSmD56WV/CaHvjeDdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yc3E3TCp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tciycM8wu9wMTHarK6ijIl7625ZvXYJIC+6DVHO+e7yfnM2F5k9NIqD38iz433l9R3INlbvTQK64hBkWy6C0D4n5Qv7gJ9H+d+PlChAi7OfjcbSOFFNihw3RSL9kRcEfKY3VGQTX2zCxWe+kN2Zy4A6hclvaezrFheahXz45M2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nyQdD9H7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yc3E3TCp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9221CC4CED0;
-	Thu, 14 Nov 2024 05:30:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nyQdD9H7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35092C4CED0;
+	Thu, 14 Nov 2024 06:16:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731562220;
-	bh=ng4+N57HWcDv6JVL1KnJomhQayM5TciGWgjaHaW3NZ4=;
+	s=k20201202; t=1731565000;
+	bh=0TMywlQlJ+kIFh/ngRcCJ+DimLzQ1yRiQA4x484LW+Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Yc3E3TCpvooy5QFeiVgZMTMdIJQAOE/UXWt/JRD+Ruf9XCRThomrjzDPnoBcd2Y7B
-	 Mu8XQt2vqcfnDs3pPFESEm+iikr7aafEvPi7farzzU1tHPvqnVWDZB0ylbhhkluuDh
-	 CSyA3HEStOim8SyB8Y+M6vLD3E4CJ0SDpzMXzMFwyJ/gyMILQzxG/vJBOhkhsfvipr
-	 mBexJiVqGzVm1t47Np0m6BgIUXroa0qLmUOBeQtjuBYUmEcw01pZbd75CPqf6uHViN
-	 dIMZy/yzkAL083qGdTXAn8cKzGiv5vB/VDQ+y7Yd2gVQbIc/WUeI8IwdrrVTBRA0C+
-	 svJGpz6qUim2w==
-Date: Wed, 13 Nov 2024 21:30:19 -0800
+	b=nyQdD9H79s6yVWjn6RkYfW2Ox9OThkMHU7IvhfL92ZcLOeD+1Wl2qBpXjtQq7Aq7M
+	 6TjIoLc7zvtsUPdSgSY1ZnQ57M2Lgkmqk3EZwHHc/JUk6CW0TwplqGk1HXGUCoOAWe
+	 KdMBEkB7UeuyThWMoEdF12uR/32MoTm8Lb3vrr3fFC/u6hR3gDBvBzFbtptsH8sixr
+	 9KXKavA+ktCxn6YQVmK1cKvevFBFqcg6zxC6C9xPPOn3bOxMe3Y1RLtXmaZc2Ya5TU
+	 39IlqYAPQ2ZhMdX9ryoksTFu8bWPv4cQq1BCt8ChZGMPeMszBpwEk6x8EIoGEC/VG6
+	 7ro7K5GmIQvlg==
+Date: Wed, 13 Nov 2024 22:16:39 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] generic/757: fix various bugs in this test
-Message-ID: <20241114053019.GM9438@frogsfrogsfrogs>
-References: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
- <173146178859.156441.16666438727834100554.stgit@frogsfrogsfrogs>
- <20241114052328.rnm54xeqxnvkaluc@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [GIT PULLBOMB v5.6] xfs: metadata directories and realtime groups
+Message-ID: <20241114061639.GN9438@frogsfrogsfrogs>
+References: <20241114001637.GL9438@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,95 +41,113 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241114052328.rnm54xeqxnvkaluc@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <20241114001637.GL9438@frogsfrogsfrogs>
 
-On Thu, Nov 14, 2024 at 01:23:28PM +0800, Zorro Lang wrote:
-> On Tue, Nov 12, 2024 at 05:37:29PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Fix this test so the check doesn't fail on XFS, and restrict runtime to
-> > 100 loops because otherwise this test takes many hours.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/generic/757 |    7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/tests/generic/757 b/tests/generic/757
-> > index 0ff5a8ac00182b..9d41975bde07bb 100755
-> > --- a/tests/generic/757
-> > +++ b/tests/generic/757
-> > @@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
-> >  cur=$(_log_writes_find_next_fua $prev)
-> >  [ -z "$cur" ] && _fail "failed to locate next FUA write"
-> >  
-> > -while [ ! -z "$cur" ]; do
-> > +for ((i = 0; i < 100; i++)); do
-> >  	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
-> >  
-> > +	# xfs_repair won't run if the log is dirty
-> > +	if [ $FSTYP = "xfs" ]; then
-> > +		_scratch_mount
+On Wed, Nov 13, 2024 at 04:16:37PM -0800, Darrick J. Wong wrote:
+> Hi Carlos,
 > 
-> Hi Darrick, can you mount at here? I always get mount error as below:
+> Please pull these fully reviewed patchsets for kernel 6.13.  This
+> patchbomb corrects numerous paperwork errors in the v5.5 submission so
+> that we can pass linux-next linter.
 > 
-> SECTION       -- default
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 dell-per750-41 6.12.0-0.rc5.44.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Oct 28 14:12:55 UTC 2024
-> MKFS_OPTIONS  -- -f /dev/sda6
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch
+> I have corrected my stgit wrapper program to invoke git checkpatch
+> before issuing pull requests.  Despite its name, this means I now have
+> automated checks for tagging errors in git commits.  Freeform text
+> fields that require a lot of parsing cleverness to check and that can be
+> corrupted easily buc*********.
 > 
-> generic/757 2185s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//default/generic/757.out.bad)
->     --- tests/generic/757.out   2024-10-27 03:09:48.740518275 +0800
->     +++ /root/git/xfstests/results//default/generic/757.out.bad 2024-11-14 13:18:56.965210155 +0800
->     @@ -1,2 +1,5 @@
->      QA output created by 757
->     -Silence is golden
->     +mount: /mnt/scratch: cannot mount; probably corrupted filesystem on /dev/sda6.
->     +       dmesg(1) may have more information after failed mount system call.
->     +mount -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch failed
->     +(see /root/git/xfstests/results//default/generic/757.full for details)
->     ...
->     (Run 'diff -u /root/git/xfstests/tests/generic/757.out /root/git/xfstests/results//default/generic/757.out.bad'  to see the entire diff)
-> Ran: generic/757
-> Failures: generic/757
-> Failed 1 of 1 tests
+> The following excerpted range diff shows the differences between last
+> week's PRs and this week's:
 > 
-> # dmesg
+>   1:  62027820eb4486 !   1:  03326f42d6ef7a xfs: fix simplify extent lookup in xfs_can_free_eofblocks
+>     @@ Commit message
+>          this patch, we'd invoke xfs_free_eofblocks on first close if anything
+>          was in the CoW fork.  Now we don't do that.
+>      
+>          Fix the problem by reverting the removal of the i_delayed_blks check.
+>      
+>          Cc: <stable@vger.kernel.org> # v6.12-rc1
+>     -    Fixes: 11f4c3a53adde ("xfs: simplify extent lookup in xfs_can_free_eofblocks")
+>     +    Fixes: 11f4c3a53adde1 ("xfs: simplify extent lookup in xfs_can_free_eofblocks")
+>          Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>          Reviewed-by: Christoph Hellwig <hch@lst.de>
+>      
+>       ## fs/xfs/xfs_bmap_util.c ##
+>      @@ fs/xfs/xfs_bmap_util.c: xfs_can_free_eofblocks(
+>       		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
+>   2:  cd8ae42a82d2d7 =   2:  5bbfaf522b8c42 xfs: fix superfluous clearing of info->low in __xfs_getfsmap_datadev
 > ...
-> [1258572.169378] XFS (sda6): Mounting V5 Filesystem a0bf3918-1b66-4973-b03c-afd5197a6d21
-> [1258572.193037] XFS (sda6): Starting recovery (logdev: internal)
-> [1258572.201691] XFS (sda6): Corruption warning: Metadata has LSN (1:41116) ahead of current LSN (1:161). Please unmount and run xfs_repair (>= v4.3) to resolve.
-> [1258572.215850] XFS (sda6): Metadata CRC error detected at xfs_bmbt_read_verify+0x16/0xc0 [xfs], xfs_bmbt block 0x2000e8 
-> [1258572.226825] XFS (sda6): Unmount and run xfs_repair
-> [1258572.231796] XFS (sda6): First 128 bytes of corrupted metadata buffer:
-> [1258572.238411] 00000000: 42 4d 41 33 00 00 00 fb 00 00 00 00 00 04 00 9e  BMA3............
-> [1258572.246585] 00000010: 00 00 00 00 00 04 00 60 00 00 00 00 00 20 00 e8  .......`..... ..
-> [1258572.254766] 00000020: 00 00 00 01 00 00 a0 9c a0 bf 39 18 1b 66 49 73  ..........9..fIs
-> [1258572.262945] 00000030: b0 3c af d5 19 7a 6d 21 00 00 00 00 00 00 00 83  .<...zm!........
-> [1258572.271117] 00000040: 17 2f 1b e4 00 00 00 00 00 00 00 00 04 b1 2e 00  ./..............
-> [1258572.279291] 00000050: 00 00 00 4b 15 e0 00 01 80 00 00 00 04 b1 30 00  ...K..........0.
-> [1258572.287462] 00000060: 00 00 00 4b 16 00 00 4f 00 00 00 00 04 b1 ce 00  ...K...O........
-> [1258572.295635] 00000070: 00 00 00 4b 1f e0 00 01 80 00 00 00 04 b1 d0 00  ...K............
-> [1258572.303811] XFS (sda6): Filesystem has been shut down due to log error (0x2).
-> [1258572.311123] XFS (sda6): Please unmount the filesystem and rectify the problem(s).
-> [1258572.318791] XFS (sda6): log mount/recovery failed: error -74
-> [1258572.324798] XFS (sda6): log mount failed
-> [1258572.365169] XFS (sda5): Unmounting Filesystem eb4b7840-2c01-4306-9a6c-af2e7207a23f
+>  68:  dcfc65befb76df !  68:  3065c8cf8c7082 xfs: clean up xfs_getfsmap_helper arguments
+>     @@ Commit message
+>          fsmap irec structure that contains exactly the data we need, once.
+>      
+>          Note that we actually do need rm_startblock for rmap key comparisons
+>          when we're actually querying an rmap btree, so leave that field but
+>          document why it's there.
+>      
+>     -    Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>     +    Signed-off-by: Christoph Hellwig <hch@lst.de>
+>          Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>     +    [djwong: fix the SoB tag from hch, somehow my scripts replaced it...]
+>          Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>      
+>       ## fs/xfs/xfs_fsmap.c ##
+>      @@ fs/xfs/xfs_fsmap.c: xfs_fsmap_owner_to_rmap(
+>       	}
+>       	return 0;
+>  69:  87fe4c34a383d5 =  69:  15165713e812d9 xfs: create incore realtime group structures
+> ...
+>  83:  1029f08dc53920 !  83:  08ed382bba4f52 xfs: factor out a xfs_growfs_rt_alloc_fake_mount helper
+>     @@ Commit message
+>      
+>          Note that this changes the rmblocks calculation method to be based
+>          on the passed in rblocks and extsize and not the explicitly passed
+>          one, but both methods will always lead to the same result.  The new
+>          version just does a little bit more math while being more general.
+>      
+>     -    Signed-off-by: Christoph Hellwig <hch@lst.de>
+>     -    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>          Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>     +    Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-I see periodic corruption messages, but generally the mount succeeds and
-the test passes, even with TOT -rc6.
+hch pointed out that I reversed the polarity on this change and the one
+after it; both should be From/SOB him, and RVB me.  So I'll send a v5.7
+with that fixed.  Never mind that it's 22:15 and I've been dragged back
+to work because we're running the hell out of time.  I hate all this
+petty bureaucratic shit that's hard to manage.
 
 --D
 
-> > +		_scratch_unmount
-> > +	fi
+>       ## fs/xfs/xfs_rtalloc.c ##
+>      @@ fs/xfs/xfs_rtalloc.c: xfs_rtginode_ensure(
+>       
+>       	if (error != -ENOENT)
+>       		return 0;
+>  84:  fc233f1fb0588a =  84:  bc1cc1849a4bfe xfs: use xfs_growfs_rt_alloc_fake_mount in xfs_growfs_rt_alloc_blocks
+> ...
+> 110:  b91afef724710e ! 110:  2a81329aa08d66 xfs: don't merge ioends across RTGs
+>     @@ Commit message
+>          Unlike AGs, RTGs don't always have metadata in their first blocks, and
+>          thus we don't get automatic protection from merging I/O completions
+>          across RTG boundaries.  Add code to set the IOMAP_F_BOUNDARY flag for
+>          ioends that start at the first block of a RTG so that they never get
+>          merged into the previous ioend.
+>      
+>     -    Signed-off-by: Christoph Hellwig <hch@lst.de>
+>     -    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>          Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>     +    Reviewed-by: Christoph Hellwig <hch@lst.de>
+>      
+>       ## fs/xfs/libxfs/xfs_rtgroup.h ##
+>      @@ fs/xfs/libxfs/xfs_rtgroup.h: xfs_rtb_to_rgbno(
+>       	struct xfs_mount	*mp,
+>       	xfs_rtblock_t		rtbno)
+>       {
+> 111:  d162491c5459f4 = 111:  4895d7326c2f49 xfs: make the RT allocator rtgroup aware
+> ...
+> 139:  13877bc79d8135 = 139:  b038df088d5bf2 xfs: port ondisk structure checks from xfs/122 to the kernel
 > 
+> Apologies for the last minute churn and paperwork stress.
 > 
-> >  	_check_scratch_fs
-> >  
-> >  	prev=$cur
-> > 
-> 
+> --D
 > 
