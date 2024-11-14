@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2591E884A
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 06:26:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D77AB1EB9ED
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 06:26:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731565602; cv=none; b=IZ0mr4NZRX8URPQ0o7eWMi2Waq9qRR66dnfJDw6MnXbb50Q1ZCYdKpFOs/VU5IhoMCnPUKo6137NQqXtNKDl0QLa2ptFF3qMLce5bA2uHss3skrIwUUHJxRG4craDGUrGHT30ezg+fAB6sp1IykemZ4P5XP0TcgxK82LFAgn+r4=
+	t=1731565617; cv=none; b=JPrsLzWJ30h3SJFQYrwB/jlQMkOURMLa0pUxOgN+9PKaoS0PQV+i7Be3dWBNAm+ghv1KB4aJly6YVNNuOfXL3UqGVW8QrmeYaL5iU5J995xdS+q6+NpOLv1jHvdmM5GpHYqKkZZCnpjGbSg9NWBoZSx9RoRinGH4dL1YNgRENWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731565602; c=relaxed/simple;
-	bh=m5xh3gIx5IKLjrJiSJR/7Q/wWZppQd76wAm4/KUHkpo=;
+	s=arc-20240116; t=1731565617; c=relaxed/simple;
+	bh=hZyA9fqcouvSWkUk4+Jt7iDQPaph1JCfZMR9Wqsx7tg=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=rSkhTVUvF3jjBqbqLGJnq1V1VfmRNfpjqHaHnlx/6xf97L7TqkLQGKuasF1UTYg5xNyqd3UnEHqJikfpETmlBXG54qrvyJUtoRgdR7IIwgWTtZYxWGUKsN4v1rsYfMPUpI4H3RnwdAw9iFtnvobflg/ItBjzYrKd0rtMUcHBksg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dabEHOEC; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=Rn+kBtJ/0CPViecgezJoZUC16UBpLSN7TEQJ0hZZoCWnlu5F84ULMgqRYMkaSqwLNpwiMGV/d8LWAojXFRJ5h/BI+Ir7dqPEcurrmrhnjoqo3Wz8b/1DdByFSRVsOLptqNW3f8AX8U2GIOWX/cH+uoNTEfoc1aiZW0ZMpsNONVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sr4kAgsx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dabEHOEC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 226D4C4CECF;
-	Thu, 14 Nov 2024 06:26:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sr4kAgsx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8513C4CECF;
+	Thu, 14 Nov 2024 06:26:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731565602;
-	bh=m5xh3gIx5IKLjrJiSJR/7Q/wWZppQd76wAm4/KUHkpo=;
+	s=k20201202; t=1731565617;
+	bh=hZyA9fqcouvSWkUk4+Jt7iDQPaph1JCfZMR9Wqsx7tg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dabEHOECBtN5e2DVCupKabvXLnnOZeT2mLJPUUYnblDdwudBkmJ+Hq3SkiXiNIzVN
-	 PhhBMQL6fBacRF1viKks3hlQTgXh67HkADz6XH0I+Ax2Q70BLneS+FgXa+p1yc8Zke
-	 8souV6M2n+a4qJQS83gQ92UBuk1TB0S5UWBY+d7Vo0QM/ziK2Gc1E7+NzpFSzS4x5u
-	 4RuOLUpdc0BDJWzKg6yJO5HjWMW4ydxds6xrBOtcMGIop+ujxrSjNXcK5z5d57bktQ
-	 7XoQ5A/M/H8JVabBxHYvgxd8iqsTdKZsL/UiTK8SSTIEkh3AtAmNIooqFur612Hdnv
-	 Jkeq5sbzh7l2A==
-Date: Wed, 13 Nov 2024 22:26:41 -0800
-Subject: [GIT PULL 03/10] xfs: metadata inode directory trees
+	b=Sr4kAgsx0Bxo/2kTq8XTGfo2LzL5ZyLkbbqcK5MqOB6X7LGAmOU3R0ubQIVXXh+PJ
+	 jqqUJskkhJCYkdjEBErOt0c4WcmpXbZI7p0iSPBdN8eE0aBhTRCBnbFbMhJOC0kmGF
+	 RvmtSg6z2vxk9vu6cDZX/2pGFaTts8jknZZMvBbgwQrMGGBJbh0ENoTgubfFR9HExM
+	 eS19Dx7HiTlXvKRw607WvHV2JuofxeFVzWTuWEdY8xd7KbaL704mjq2t/x+gQKsumX
+	 0raNYyPs79OdxKm3WyeQ/uQQBi9I3vqf17Eyz04QAXRcOU4AstQCzyWFJ7BXTFbcXV
+	 x4vd34MYIUqbQ==
+Date: Wed, 13 Nov 2024 22:26:57 -0800
+Subject: [GIT PULL 04/10] xfs: create incore rt allocation groups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173156551270.1445256.5443513550621534826.stg-ugh@frogsfrogsfrogs>
+Message-ID: <173156551369.1445256.1153892087503510304.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,146 +53,95 @@ encounter any problems.
 
 --D
 
-The following changes since commit fd293760168c36f210b699f73727535e90a4e14d:
-
-xfs: store a generic group structure in the intents (2024-11-13 22:16:57 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/metadata-directory-tree-6.13_2024-11-13
-
-for you to fetch changes up to 16aa1e01ed77ca881dad0cffdeac1d33e3015d87:
+The following changes since commit 16aa1e01ed77ca881dad0cffdeac1d33e3015d87:
 
 xfs: repair metadata directory file path connectivity (2024-11-13 22:17:01 -0800)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/incore-rtgroups-6.13_2024-11-13
+
+for you to fetch changes up to 9d64db093d7b4974d24af34aa3fa85a394195292:
+
+xfs: make RT extent numbers relative to the rtgroup (2024-11-13 22:17:05 -0800)
+
 ----------------------------------------------------------------
-xfs: metadata inode directory trees [v5.7 03/10]
+xfs: create incore rt allocation groups [v5.7 04/10]
 
-This series delivers a new feature -- metadata inode directories.  This
-is a separate directory tree (rooted in the superblock) that contains
-only inodes that contain filesystem metadata.  Different metadata
-objects can be looked up with regular paths.
-
-Start by creating xfs_imeta{dir,file}* functions to mediate access to
-the metadata directory tree.  By the end of this mega series, all
-existing metadata inodes (rt+quota) will use this directory tree instead
-of the superblock.
-
-Next, define the metadir on-disk format, which consists of marking
-inodes with a new iflag that says they're metadata.  This prevents
-bulkstat and friends from ever getting their hands on fs metadata files.
+Add in-memory data structures for sharding the realtime volume into
+independent allocation groups.  For existing filesystems, the entire rt
+volume is modelled as having a single large group, with (potentially) a
+number of rt extents exceeding 2^32 blocks, though these are not likely
+to exist because the codebase has been a bit broken for decades.  The
+next series fills in the ondisk format and other supporting structures.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (28):
-xfs: constify the xfs_sb predicates
-xfs: constify the xfs_inode predicates
-xfs: rename metadata inode predicates
-xfs: standardize EXPERIMENTAL warning generation
-xfs: define the on-disk format for the metadir feature
-xfs: iget for metadata inodes
-xfs: load metadata directory root at mount time
-xfs: enforce metadata inode flag
-xfs: read and write metadata inode directory tree
-xfs: disable the agi rotor for metadata inodes
-xfs: hide metadata inodes from everyone because they are special
-xfs: advertise metadata directory feature
-xfs: allow bulkstat to return metadata directories
-xfs: don't count metadata directory files to quota
-xfs: mark quota inodes as metadata files
-xfs: adjust xfs_bmap_add_attrfork for metadir
-xfs: record health problems with the metadata directory
-xfs: refactor directory tree root predicates
-xfs: do not count metadata directory files when doing online quotacheck
-xfs: metadata files can have xattrs if metadir is enabled
-xfs: adjust parent pointer scrubber for sb-rooted metadata files
-xfs: fix di_metatype field of inodes that won't load
-xfs: scrub metadata directories
-xfs: check the metadata directory inumber in superblocks
-xfs: move repair temporary files to the metadata directory tree
-xfs: check metadata directory file path connectivity
-xfs: confirm dotdot target before replacing it during a repair
-xfs: repair metadata directory file path connectivity
+Christoph Hellwig (15):
+xfs: clean up xfs_getfsmap_helper arguments
+xfs: add a xfs_bmap_free_rtblocks helper
+xfs: add a xfs_qm_unmount_rt helper
+xfs: factor out a xfs_growfs_rt_alloc_blocks helper
+xfs: cleanup xfs_getfsmap_rtdev_rtbitmap
+xfs: split xfs_trim_rtdev_extents
+xfs: move RT bitmap and summary information to the rtgroup
+xfs: support creating per-RTG files in growfs
+xfs: calculate RT bitmap and summary blocks based on sb_rextents
+xfs: factor out a xfs_growfs_rt_alloc_fake_mount helper
+xfs: use xfs_growfs_rt_alloc_fake_mount in xfs_growfs_rt_alloc_blocks
+xfs: factor out a xfs_growfs_check_rtgeom helper
+xfs: refactor xfs_rtbitmap_blockcount
+xfs: refactor xfs_rtsummary_blockcount
+xfs: make RT extent numbers relative to the rtgroup
 
-fs/xfs/Makefile                 |   5 +-
-fs/xfs/libxfs/xfs_attr.c        |   5 +-
-fs/xfs/libxfs/xfs_bmap.c        |   5 +-
-fs/xfs/libxfs/xfs_format.h      | 121 ++++++++--
-fs/xfs/libxfs/xfs_fs.h          |  25 +-
-fs/xfs/libxfs/xfs_health.h      |   6 +-
-fs/xfs/libxfs/xfs_ialloc.c      |  58 +++--
-fs/xfs/libxfs/xfs_inode_buf.c   |  90 ++++++-
-fs/xfs/libxfs/xfs_inode_buf.h   |   3 +
-fs/xfs/libxfs/xfs_inode_util.c  |   2 +
-fs/xfs/libxfs/xfs_log_format.h  |   2 +-
-fs/xfs/libxfs/xfs_metadir.c     | 481 +++++++++++++++++++++++++++++++++++++
-fs/xfs/libxfs/xfs_metadir.h     |  47 ++++
-fs/xfs/libxfs/xfs_metafile.c    |  52 ++++
-fs/xfs/libxfs/xfs_metafile.h    |  31 +++
-fs/xfs/libxfs/xfs_ondisk.h      |   2 +-
-fs/xfs/libxfs/xfs_sb.c          |  12 +
-fs/xfs/libxfs/xfs_types.c       |   4 +-
-fs/xfs/libxfs/xfs_types.h       |   2 +-
-fs/xfs/scrub/agheader.c         |   5 +
-fs/xfs/scrub/common.c           |  65 ++++-
-fs/xfs/scrub/common.h           |   5 +
-fs/xfs/scrub/dir.c              |  10 +-
-fs/xfs/scrub/dir_repair.c       |  20 +-
-fs/xfs/scrub/dirtree.c          |  32 ++-
-fs/xfs/scrub/dirtree.h          |  12 +-
-fs/xfs/scrub/findparent.c       |  28 ++-
-fs/xfs/scrub/health.c           |   1 +
-fs/xfs/scrub/inode.c            |  35 ++-
-fs/xfs/scrub/inode_repair.c     |  34 ++-
-fs/xfs/scrub/metapath.c         | 521 ++++++++++++++++++++++++++++++++++++++++
-fs/xfs/scrub/nlinks.c           |   4 +-
-fs/xfs/scrub/nlinks_repair.c    |   4 +-
-fs/xfs/scrub/orphanage.c        |   4 +-
-fs/xfs/scrub/parent.c           |  39 ++-
-fs/xfs/scrub/parent_repair.c    |  37 ++-
-fs/xfs/scrub/quotacheck.c       |   7 +-
-fs/xfs/scrub/refcount_repair.c  |   2 +-
-fs/xfs/scrub/repair.c           |  14 +-
-fs/xfs/scrub/repair.h           |   3 +
-fs/xfs/scrub/scrub.c            |  12 +-
-fs/xfs/scrub/scrub.h            |   2 +
-fs/xfs/scrub/stats.c            |   1 +
-fs/xfs/scrub/tempfile.c         | 105 ++++++++
-fs/xfs/scrub/tempfile.h         |   3 +
-fs/xfs/scrub/trace.c            |   1 +
-fs/xfs/scrub/trace.h            |  42 +++-
-fs/xfs/xfs_dquot.c              |   1 +
-fs/xfs/xfs_fsops.c              |   4 +-
-fs/xfs/xfs_health.c             |   2 +
-fs/xfs/xfs_icache.c             |  74 ++++++
-fs/xfs/xfs_inode.c              |  19 +-
-fs/xfs/xfs_inode.h              |  36 ++-
-fs/xfs/xfs_inode_item.c         |   7 +-
-fs/xfs/xfs_inode_item_recover.c |   2 +-
-fs/xfs/xfs_ioctl.c              |   7 +
-fs/xfs/xfs_iops.c               |  15 +-
-fs/xfs/xfs_itable.c             |  33 ++-
-fs/xfs/xfs_itable.h             |   3 +
-fs/xfs/xfs_message.c            |  51 ++++
-fs/xfs/xfs_message.h            |  20 +-
-fs/xfs/xfs_mount.c              |  31 ++-
-fs/xfs/xfs_mount.h              |  25 +-
-fs/xfs/xfs_pnfs.c               |   3 +-
-fs/xfs/xfs_qm.c                 |  36 ++-
-fs/xfs/xfs_quota.h              |   5 +
-fs/xfs/xfs_rtalloc.c            |  38 +--
-fs/xfs/xfs_super.c              |  13 +-
-fs/xfs/xfs_trace.c              |   2 +
-fs/xfs/xfs_trace.h              | 102 ++++++++
-fs/xfs/xfs_trans_dquot.c        |   6 +
-fs/xfs/xfs_xattr.c              |   3 +-
-72 files changed, 2333 insertions(+), 206 deletions(-)
-create mode 100644 fs/xfs/libxfs/xfs_metadir.c
-create mode 100644 fs/xfs/libxfs/xfs_metadir.h
-create mode 100644 fs/xfs/libxfs/xfs_metafile.c
-create mode 100644 fs/xfs/libxfs/xfs_metafile.h
-create mode 100644 fs/xfs/scrub/metapath.c
+Darrick J. Wong (6):
+xfs: create incore realtime group structures
+xfs: define locking primitives for realtime groups
+xfs: add a lockdep class key for rtgroup inodes
+xfs: support caching rtgroup metadata inodes
+xfs: add rtgroup-based realtime scrubbing context management
+xfs: remove XFS_ILOCK_RT*
+
+fs/xfs/Makefile                 |   1 +
+fs/xfs/libxfs/xfs_bmap.c        |  46 ++--
+fs/xfs/libxfs/xfs_format.h      |   3 +
+fs/xfs/libxfs/xfs_rtbitmap.c    | 199 +++++++--------
+fs/xfs/libxfs/xfs_rtbitmap.h    | 147 ++++++------
+fs/xfs/libxfs/xfs_rtgroup.c     | 484 +++++++++++++++++++++++++++++++++++++
+fs/xfs/libxfs/xfs_rtgroup.h     | 274 +++++++++++++++++++++
+fs/xfs/libxfs/xfs_sb.c          |  13 +
+fs/xfs/libxfs/xfs_trans_resv.c  |   2 +-
+fs/xfs/libxfs/xfs_types.h       |   8 +-
+fs/xfs/scrub/bmap.c             |  13 +
+fs/xfs/scrub/common.c           |  78 ++++++
+fs/xfs/scrub/common.h           |  30 +++
+fs/xfs/scrub/fscounters.c       |  25 +-
+fs/xfs/scrub/repair.c           |  24 ++
+fs/xfs/scrub/repair.h           |   7 +
+fs/xfs/scrub/rtbitmap.c         |  54 +++--
+fs/xfs/scrub/rtsummary.c        | 111 +++++----
+fs/xfs/scrub/rtsummary_repair.c |   7 +-
+fs/xfs/scrub/scrub.c            |  33 ++-
+fs/xfs/scrub/scrub.h            |  13 +
+fs/xfs/xfs_bmap_util.c          |   3 +-
+fs/xfs/xfs_buf_item_recover.c   |  25 ++
+fs/xfs/xfs_discard.c            | 100 +++++---
+fs/xfs/xfs_fsmap.c              | 329 ++++++++++++++-----------
+fs/xfs/xfs_fsmap.h              |  15 ++
+fs/xfs/xfs_inode.c              |   3 +-
+fs/xfs/xfs_inode.h              |  13 +-
+fs/xfs/xfs_iomap.c              |   4 +-
+fs/xfs/xfs_mount.c              |  15 +-
+fs/xfs/xfs_mount.h              |  26 +-
+fs/xfs/xfs_qm.c                 |  27 ++-
+fs/xfs/xfs_rtalloc.c            | 520 +++++++++++++++++++++++++---------------
+fs/xfs/xfs_super.c              |   3 +-
+fs/xfs/xfs_trace.c              |   1 +
+fs/xfs/xfs_trace.h              |  74 ++++--
+36 files changed, 2020 insertions(+), 710 deletions(-)
+create mode 100644 fs/xfs/libxfs/xfs_rtgroup.c
+create mode 100644 fs/xfs/libxfs/xfs_rtgroup.h
 
