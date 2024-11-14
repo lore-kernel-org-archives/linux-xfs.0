@@ -1,57 +1,57 @@
-Received: from mail-oo1-f52.google.com (mail-oo1-f52.google.com [209.85.161.52])
+Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 247BB153803
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 15:28:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 976561AF0CA
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 15:28:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731598106; cv=none; b=DX3JnrhBr+L2UqEepu0CumGTvnABoxu1jjDLqbBqEcDYdzBXqFqr1zRS+de1F6bSzZXq4d0M46A1Lk5Q9kFelojpSdKVYXr85Ui6bTAuZUcWQEt2QaEfPjqVx3XvXha0D5v6kdERdbf3YQthHtOfBIzKczl+oPWa9vxiHx7FZzE=
+	t=1731598107; cv=none; b=q3iRX3hG0jEfZfAnbV2wsh8vWXIC0U+UaGHiQJjSELvOLsMFKnzuISpdM0B0X1Y3kXdpos75k9twuolbVLuiJkUZ78ZhCIRvNkB5htNbmM3hEAE3IvkAgc0Ua63gxjbmll8ZHNsbNVZOjfDyNFgmtvoBFbGXX02ncHeZYVBnStA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731598106; c=relaxed/simple;
-	bh=JN6ziuaz3h3w93syhui0sSuROUWYBUO3x3xlg3f4CsA=;
+	s=arc-20240116; t=1731598107; c=relaxed/simple;
+	bh=EWturTTFhXmkkEY1vgH0sCBOxeoOqbPcFCX1D34ye48=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bW6uoHgfaEI+kxYYIz1XDT71fXNc+xnjb9XucYO9za0TLBwGonnc4Wd7IEx4+dL6lmef+XSriR4qA/+tgqYeQW4co14n5B1IXhLYtQPRNXeGoJb/auox09NKyZVROlBQ+omh2DQakS0g0qxz1uk16sQrpeINVOWjjdDZRAZRAOs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=WoVpXnI4; arc=none smtp.client-ip=209.85.161.52
+	 MIME-Version; b=GkIeApWHlD8csUWchm5OOZfudAKzjvWLybzY8Nu+j6athPjUEl8iVvdUZB6wl1ekHAvVkW4y/wXCVcjUerVCba3P8Llsfl64xtd6Q4m9aud/PZlDM+qeehJx6sVaaoMANDOlUxoG2f6K0DtlIuFjy6Ij9+KvvY/G6HFlO08opZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=Vqv0OtCw; arc=none smtp.client-ip=209.85.210.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="WoVpXnI4"
-Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-5ee3c2e79aaso340642eaf.3
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 07:28:23 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="Vqv0OtCw"
+Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-718078c7f53so318712a34.1
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 07:28:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731598103; x=1732202903; darn=vger.kernel.org;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731598104; x=1732202904; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=LL88Qd2tMlsmBvcuEyGfQPoq7EBSjG4mmD1oB3CTmL4=;
-        b=WoVpXnI4R1Ju0TIEnacr+++McpiDpZpH9Q7rsPYH9SpUn9vMZESA2hvlpzAFb9slK5
-         kHIWPHr2fDItNhMzgknehqNQK8tLhPA9JEvW6hM73LhaRRy6P1wbF/oxMPPvvikdQ/Zo
-         3sMPrcD5h4Ji5j8LgRvmBHgma4Qs8y09MMpZ9DnC2FgWelnCb80ECIqLDA7SbF6FwbPl
-         5mw+If/NSXb+vofSMxXaNJ078D5LfKDV2JciLksbXBrH3M8HL0sYiVrD35w7uu0bImjQ
-         QiWj0Z+1VD54U37NAz28/FTSm3TmZ4IaXCvolffB+k3C6WtLklSP3aDYWTWP1lxSYnA9
-         eOgg==
+        bh=NyBHBKICHAilzWbXxQX4w3ArnCN9Xkn7LoXdkHxZ+NE=;
+        b=Vqv0OtCwgRDqsZtuQe08cRI5AEU4os8/ta0n4eX/9ZzESqQr69CLPRaiNzfcALUAMb
+         aCHuZLxROp6xGe2OFYherg9GVvtPc4ZPytYRlb7ZAU1YXLo73tMCG8+XXwbnEdRC2apn
+         F7FVPaW6JyU6pWRUOovA9Wsor71N2l3XfSmtTGH9Wlaov6WWbD8BrbVgtJutLcEn+kS8
+         iffYTdAD3JeLbC6yYgcbX+1+CWmxard7f0dv66gi42wzXTfeawuVkxuMUFVygJRVBlWy
+         WrBfOK2BNxRfRDtbZujF1cDTeAzQWfWRinS1A8GeBXJY6qE0+I6Sx52yGTaII0XUT6rW
+         n7uQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731598103; x=1732202903;
+        d=1e100.net; s=20230601; t=1731598104; x=1732202904;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=LL88Qd2tMlsmBvcuEyGfQPoq7EBSjG4mmD1oB3CTmL4=;
-        b=kjD8eWwPbrbmXmZw+M2ynLR8jgsOqRaVpCnv4e7gga+yBdosYkluBNwVugl1v43RXp
-         QxNMhN4eU3RU7hrRlDV3s+OT9SzXl77aVR+HfRgQ7On7pmNUdihJT8i/krGXT/bM13Ex
-         keGBSZxKpii5PYvcgIC5Lm2cG6zFl0K84vpB3wqnRheqiOZmuuDgGr7D9g7qn0LHjEst
-         MuJWmQmEPUHUBfIVqS1ak/UWPkM/UWJthEDLjsEogihVkmcscgjM9oSMFILGdZbGmdQA
-         3nib9283AsaQVbJ22/AiXwgpYwUaP7hsS4FVqo3xFFwB5c57tNPrPO3gqtoL65NkHq1h
-         xWHw==
-X-Forwarded-Encrypted: i=1; AJvYcCXJd2/M9490yPs1bq+aEamSDJt40Gz5A/XfqbbQjm8ZjJbOsnOmLIxFQ1GJ565IhWlh2WwCoM9HlbY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxHrN1V4+TUNfr9z0BqQvjTqxuYtk44Ry1/JG8Cvyei3cXCNFXX
-	KJ7IfEoSEXQ8Zorcu6cnlo66demzlXpYzN6++yCyjbvYpm2kS1NQamV4VDLb86w=
-X-Google-Smtp-Source: AGHT+IGxBOidvnNn2woru7d3dY6RKyVHYMtr7QGUJGpSzdzZfL3L6KYNggyKAJszR8sQZicyWvWugQ==
-X-Received: by 2002:a4a:e90e:0:b0:5eb:88a5:20e8 with SMTP id 006d021491bc7-5ee9ecc2c38mr2597677eaf.1.1731598103136;
-        Thu, 14 Nov 2024 07:28:23 -0800 (PST)
+        bh=NyBHBKICHAilzWbXxQX4w3ArnCN9Xkn7LoXdkHxZ+NE=;
+        b=v0o9RLGAdbYnfS3cIvehGOqKOfQ8CblKTbzaTp7n+65DvSEhAScdEFgm6ToCIILXxT
+         R3vns8gcPEQnTMD3szswQyxYcGV7zzIqS8yKvA0GeF3NOUOqOQ3aN1Oe7SpCK3oQMEzH
+         jDmpL6XW2LTQj177n4ESOF8+wBf8CHOsoXVgCmle3JmzoYPaSQ8bkuugnUJqNgJbVaLX
+         PNI9NTpimchbzAD1w70oSeH260vCknGuaBOVRZGUMUdN9RXefZE2+NH/elqwBVRWp2dr
+         7lHUII+TY1DvFMh75Ycac2oTFJ6STS7ZEn3XSOiL8bcL+kq3z2ADdpjUBk8u+v+0SF0c
+         /kIw==
+X-Forwarded-Encrypted: i=1; AJvYcCUs371bGZikdhDPkL9GXKEU3SKQbY49jzc20+LWagRe07QV2V71ooOMwqOQ3/N9RTkbWHZoN3xwQTU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwkoO+Jl7t5FhV9johWkD6dCsggCwD4Wurq2HxuHJ0tKehYQqjm
+	E4PP935+Tw9+m7bZvQNanJyIXAwJh8OcZvs1gd2oeVdW6S38nTovKenQe7l4+cU=
+X-Google-Smtp-Source: AGHT+IGTccgjkWiSk1+iFGbOjrOkQSSEn+5BvJmTbBLfatp4glFbzMa7kfcy1vSIijdABdXFBUl4NQ==
+X-Received: by 2002:a05:6830:7101:b0:718:8ce4:6912 with SMTP id 46e09a7af769-71a6af419f8mr3092006a34.14.1731598104601;
+        Thu, 14 Nov 2024 07:28:24 -0800 (PST)
 Received: from localhost.localdomain ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5eea026eb41sm368250eaf.39.2024.11.14.07.28.21
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5eea026eb41sm368250eaf.39.2024.11.14.07.28.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Nov 2024 07:28:22 -0800 (PST)
+        Thu, 14 Nov 2024 07:28:23 -0800 (PST)
 From: Jens Axboe <axboe@kernel.dk>
 To: linux-mm@kvack.org,
 	linux-fsdevel@vger.kernel.org
@@ -65,9 +65,9 @@ Cc: hannes@cmpxchg.org,
 	linux-xfs@vger.kernel.org,
 	bfoster@redhat.com,
 	Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 15/17] xfs: punt uncached write completions to the completion wq
-Date: Thu, 14 Nov 2024 08:25:19 -0700
-Message-ID: <20241114152743.2381672-17-axboe@kernel.dk>
+Subject: [PATCH 16/17] xfs: flag as supporting FOP_UNCACHED
+Date: Thu, 14 Nov 2024 08:25:20 -0700
+Message-ID: <20241114152743.2381672-18-axboe@kernel.dk>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20241114152743.2381672-2-axboe@kernel.dk>
 References: <20241114152743.2381672-2-axboe@kernel.dk>
@@ -79,34 +79,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-They need non-irq context guaranteed, to be able to prune ranges from
-the page cache. Treat them like unwritten extents and punt them to the
-completion workqueue.
+Read side was already fully supported, and with the write side
+appropriately punted to the worker queue, all that's needed now is
+setting FOP_UNCACHED in the file_operations structure to enable full
+support for read and write uncached IO.
 
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- fs/xfs/xfs_aops.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_file.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 559a3a577097..c86fc2b8f344 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -416,9 +416,12 @@ xfs_prepare_ioend(
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index b19916b11fd5..4fe593896bc5 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1595,7 +1595,8 @@ const struct file_operations xfs_file_operations = {
+ 	.fadvise	= xfs_file_fadvise,
+ 	.remap_file_range = xfs_file_remap_range,
+ 	.fop_flags	= FOP_MMAP_SYNC | FOP_BUFFER_RASYNC |
+-			  FOP_BUFFER_WASYNC | FOP_DIO_PARALLEL_WRITE,
++			  FOP_BUFFER_WASYNC | FOP_DIO_PARALLEL_WRITE |
++			  FOP_UNCACHED,
+ };
  
- 	memalloc_nofs_restore(nofs_flag);
- 
--	/* send ioends that might require a transaction to the completion wq */
-+	/*
-+	 * Send ioends that might require a transaction or need blocking
-+	 * context to the completion wq
-+	 */
- 	if (xfs_ioend_is_append(ioend) || ioend->io_type == IOMAP_UNWRITTEN ||
--	    (ioend->io_flags & IOMAP_F_SHARED))
-+	    (ioend->io_flags & (IOMAP_F_SHARED|IOMAP_F_UNCACHED)))
- 		ioend->io_bio.bi_end_io = xfs_end_bio;
- 	return status;
- }
+ const struct file_operations xfs_dir_file_operations = {
 -- 
 2.45.2
 
