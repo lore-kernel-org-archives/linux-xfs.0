@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 381061AF0DC;
-	Thu, 14 Nov 2024 06:26:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCB32905
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 06:26:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731565571; cv=none; b=RB/vqWnodLcdV9Vs0mog1HHc5cmgAQKgUBLyLuaf6zAH77t40Sc8UI76hEjLRzKd9kNM+O0NbTs9FJIrahQn3hzupo7Z09HZB1WOXOZnuQyu2xX6cRyQDaV3xXCeIWzpR+PYFUgmjBtlfCAAoTI2YCT8GMccUOlLtdDhymkA2+k=
+	t=1731565588; cv=none; b=a6czdEzBgalpqHvRlI4HXFa59xFvNDLuELv+70rVbvzqIfwbdnQNmmDx0hzxIPsyy6mm+z5mXTZOhi2K6lrKbYwwZkcDJQ5rmcTGbqhNqDDC0cHCadt5UD0Jm1aCiK9XWcKHdJJGaWvVdNTrClmmTrxWeu542wXlqpYNf6yuTQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731565571; c=relaxed/simple;
-	bh=LEL3vfhFjFruTbZaqw50YGgDPZtz6jOEqNAoRSgqgNY=;
+	s=arc-20240116; t=1731565588; c=relaxed/simple;
+	bh=XXl0eyKgIBMOdP1XlFVk8pwSjQ3V0YVcQBKF2/7bLds=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=rKETORc28ApivhfYXoQaqOXkCeGh2B2CjL4sAgebXKsTwxdfBEWvzdDJGIHSzOaAkzupc/KZgr1gP5YWt/p8FV6hJ9kjB1K7yYWtPIyenr4gHa7cn4c/yW2gzJW9WON/0vkTbXoeNOxw6c6lHQrVXrKTAGpuXd7AWLf7iYctv0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jp0tRDRg; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=kj5je0lvGZ3uOHol7GPHpQ43oRpB56K0odEO1OYBhKCYYJDYwzAN/V9klxIbVFjnjqpOhE8jvuTWogS7eVv8AMkyYO/YMvlCKMdmHaNjuINQB/1k1NSSjSlMRDto12kC5ArwAQLJt4piilWrOKkh2abPrmNfUCEwU/XbzVJ2vpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GcQmBmb/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jp0tRDRg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6A82C4CECF;
-	Thu, 14 Nov 2024 06:26:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GcQmBmb/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 747CAC4CECF;
+	Thu, 14 Nov 2024 06:26:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731565570;
-	bh=LEL3vfhFjFruTbZaqw50YGgDPZtz6jOEqNAoRSgqgNY=;
+	s=k20201202; t=1731565586;
+	bh=XXl0eyKgIBMOdP1XlFVk8pwSjQ3V0YVcQBKF2/7bLds=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Jp0tRDRgMAzqkKe7FBjeS+/MmD7hR/rV9QNAlDaB/yZvFfS+oTHz8Vov/q8Xgzd6w
-	 VDQMb95A+1X+//N98ucu0NFHYI7jsZOeTKaKgZ8Xlf+PE+h8SZA1WicbNBII3TBsoM
-	 KLs8BEM0tSD/Cbt/vnPXJcvtHXHkZYuM6OLiwfyFvVO1YkmymccO+4AjzBsg8x+lhZ
-	 EtRefylfD0qgqQrKcrN4K/5XIzhzBZ3RhtEpKrKn6TKOigiBlJHMpOh9EcO/mX6bNI
-	 XlmczGVhjBxyXvE5sqSpLGadRBYkEclazLoEMdpaWn8ohsgfBUhSNBJwKcXIsH6DqJ
-	 iX07/EIHDg7Ow==
-Date: Wed, 13 Nov 2024 22:26:10 -0800
-Subject: [GIT PULL 01/10] xfs: convert perag to use xarrays
+	b=GcQmBmb/S/Yuuwmob6VZsB9Y9avcrpP700MgUKYYQmcgWiPTTH+rMRr5XDY0b6Nf5
+	 Fus6Oe16mccf58CF0NeC7ILUiYTM1VieZlJzBt2dTGmVI8Am5U3WQzCOGzrmHmYCNz
+	 37uPFPhsL++RqlJ+0rrvlUIvNVCkECv+Z7h99l8UgXY6LGa0Rl23WOWt20ZFsq7y36
+	 tkx6w7L7ki5xuHkiJzBsQuvEUReo+3illT7xvPPTu7FCP5VrFCZtpgdWaZGCmirhlq
+	 01cAzQM0lZ5/brtmefLoG9Q7PGMu0gDlF3S5M/pEUz9QGNu3iBK7QuueGp1SSP1T3j
+	 Yq4+PLanazOgQ==
+Date: Wed, 13 Nov 2024 22:26:26 -0800
+Subject: [GIT PULL 02/10] xfs: create a generic allocation group structure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Message-ID: <173156551067.1445256.3538147587347330676.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173156551169.1445256.15124217838321935115.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,99 +53,121 @@ encounter any problems.
 
 --D
 
-The following changes since commit 59b723cd2adbac2a34fc8e12c74ae26ae45bf230:
-
-Linux 6.12-rc6 (2024-11-03 14:05:52 -1000)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/perag-xarray-6.13_2024-11-13
-
-for you to fetch changes up to 612dab1887b16838b524876555ac16fccb750e77:
+The following changes since commit 612dab1887b16838b524876555ac16fccb750e77:
 
 xfs: insert the pag structures into the xarray later (2024-11-13 22:16:54 -0800)
 
-----------------------------------------------------------------
-xfs: convert perag to use xarrays [v5.7 01/10]
+are available in the Git repository at:
 
-Convert the xfs_mount perag tree to use an xarray instead of a radix
-tree.  There should be no functional changes here.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/generic-groups-6.13_2024-11-13
+
+for you to fetch changes up to fd293760168c36f210b699f73727535e90a4e14d:
+
+xfs: store a generic group structure in the intents (2024-11-13 22:16:57 -0800)
+
+----------------------------------------------------------------
+xfs: create a generic allocation group structure [v5.7 02/10]
+
+Soon we'll be sharding the realtime volume into separate allocation
+groups.  These rt groups will /mostly/ behave the same as the ones on
+the data device, but since rt groups don't have quite the same set of
+struct fields as perags, let's hoist the parts that will be shared by
+both into a common xfs_group object.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Christoph Hellwig (22):
-xfs: fix superfluous clearing of info->low in __xfs_getfsmap_datadev
-xfs: remove the unused pagb_count field in struct xfs_perag
-xfs: remove the unused pag_active_wq field in struct xfs_perag
-xfs: pass a pag to xfs_difree_inode_chunk
-xfs: remove the agno argument to xfs_free_ag_extent
-xfs: add xfs_agbno_to_fsb and xfs_agbno_to_daddr helpers
-xfs: add a xfs_agino_to_ino helper
-xfs: pass a pag to xfs_extent_busy_{search,reuse}
-xfs: keep a reference to the pag for busy extents
-xfs: remove the mount field from struct xfs_busy_extents
-xfs: remove the unused trace_xfs_iwalk_ag trace point
-xfs: remove the unused xrep_bmap_walk_rmap trace point
-xfs: constify pag arguments to trace points
-xfs: pass a perag structure to the xfs_ag_resv_init_error trace point
-xfs: pass objects to the xfs_irec_merge_{pre,post} trace points
-xfs: pass the iunlink item to the xfs_iunlink_update_dinode trace point
-xfs: pass objects to the xrep_ibt_walk_rmap tracepoint
-xfs: pass the pag to the trace_xrep_calc_ag_resblks{,_btsize} trace points
-xfs: pass the pag to the xrep_newbt_extent_class tracepoints
-xfs: convert remaining trace points to pass pag structures
-xfs: split xfs_initialize_perag
-xfs: insert the pag structures into the xarray later
+Christoph Hellwig (16):
+xfs: factor out a xfs_iwalk_args helper
+xfs: factor out a generic xfs_group structure
+xfs: add a xfs_group_next_range helper
+xfs: switch perag iteration from the for_each macros to a while based iterator
+xfs: move metadata health tracking to the generic group structure
+xfs: mark xfs_perag_intent_{hold,rele} static
+xfs: move draining of deferred operations to the generic group structure
+xfs: move the online repair rmap hooks to the generic group structure
+xfs: return the busy generation from xfs_extent_busy_list_empty
+xfs: convert extent busy tracepoints to the generic group structure
+xfs: convert busy extent tracking to the generic group structure
+xfs: add a generic group pointer to the btree cursor
+xfs: store a generic xfs_group pointer in xfs_getfsmap_info
+xfs: add group based bno conversion helpers
+xfs: remove xfs_group_intent_hold and xfs_group_intent_rele
+xfs: store a generic group structure in the intents
 
-Darrick J. Wong (1):
-xfs: fix simplify extent lookup in xfs_can_free_eofblocks
-
-fs/xfs/libxfs/xfs_ag.c             | 135 ++++++++++++++------------
-fs/xfs/libxfs/xfs_ag.h             |  30 +++++-
-fs/xfs/libxfs/xfs_ag_resv.c        |   3 +-
-fs/xfs/libxfs/xfs_alloc.c          |  32 +++----
-fs/xfs/libxfs/xfs_alloc.h          |   5 +-
-fs/xfs/libxfs/xfs_alloc_btree.c    |   2 +-
-fs/xfs/libxfs/xfs_btree.c          |   7 +-
-fs/xfs/libxfs/xfs_ialloc.c         |  67 ++++++-------
-fs/xfs/libxfs/xfs_ialloc_btree.c   |   2 +-
-fs/xfs/libxfs/xfs_inode_util.c     |   4 +-
-fs/xfs/libxfs/xfs_refcount.c       |  11 +--
-fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
-fs/xfs/libxfs/xfs_rmap_btree.c     |   2 +-
-fs/xfs/scrub/agheader_repair.c     |  16 +---
-fs/xfs/scrub/alloc_repair.c        |  10 +-
-fs/xfs/scrub/bmap.c                |   5 +-
-fs/xfs/scrub/bmap_repair.c         |   4 +-
-fs/xfs/scrub/common.c              |   2 +-
-fs/xfs/scrub/cow_repair.c          |  18 ++--
-fs/xfs/scrub/ialloc.c              |   8 +-
-fs/xfs/scrub/ialloc_repair.c       |  25 ++---
-fs/xfs/scrub/newbt.c               |  46 ++++-----
-fs/xfs/scrub/reap.c                |   8 +-
-fs/xfs/scrub/refcount_repair.c     |   5 +-
-fs/xfs/scrub/repair.c              |  13 ++-
-fs/xfs/scrub/rmap_repair.c         |   9 +-
-fs/xfs/scrub/trace.h               | 161 +++++++++++++++----------------
-fs/xfs/xfs_bmap_util.c             |   8 +-
-fs/xfs/xfs_buf_item_recover.c      |   5 +-
+fs/xfs/Makefile                    |   1 +
+fs/xfs/libxfs/xfs_ag.c             | 149 +++++------------------
+fs/xfs/libxfs/xfs_ag.h             | 165 +++++++++++++------------
+fs/xfs/libxfs/xfs_ag_resv.c        |  19 +--
+fs/xfs/libxfs/xfs_alloc.c          |  74 ++++++------
+fs/xfs/libxfs/xfs_alloc.h          |   2 +-
+fs/xfs/libxfs/xfs_alloc_btree.c    |  30 ++---
+fs/xfs/libxfs/xfs_bmap.c           |   2 +-
+fs/xfs/libxfs/xfs_bmap.h           |   2 +-
+fs/xfs/libxfs/xfs_btree.c          |  37 ++----
+fs/xfs/libxfs/xfs_btree.h          |   3 +-
+fs/xfs/libxfs/xfs_btree_mem.c      |   6 +-
+fs/xfs/libxfs/xfs_group.c          | 225 +++++++++++++++++++++++++++++++++++
+fs/xfs/libxfs/xfs_group.h          | 131 ++++++++++++++++++++
+fs/xfs/libxfs/xfs_health.h         |  45 +++----
+fs/xfs/libxfs/xfs_ialloc.c         |  50 ++++----
+fs/xfs/libxfs/xfs_ialloc_btree.c   |  27 +++--
+fs/xfs/libxfs/xfs_refcount.c       |  26 ++--
+fs/xfs/libxfs/xfs_refcount.h       |   2 +-
+fs/xfs/libxfs/xfs_refcount_btree.c |  14 +--
+fs/xfs/libxfs/xfs_rmap.c           |  42 +++----
+fs/xfs/libxfs/xfs_rmap.h           |   6 +-
+fs/xfs/libxfs/xfs_rmap_btree.c     |  28 ++---
+fs/xfs/libxfs/xfs_sb.c             |  28 +++--
+fs/xfs/libxfs/xfs_types.c          |   5 +-
+fs/xfs/libxfs/xfs_types.h          |   8 ++
+fs/xfs/scrub/agheader_repair.c     |  22 ++--
+fs/xfs/scrub/alloc.c               |   2 +-
+fs/xfs/scrub/alloc_repair.c        |  12 +-
+fs/xfs/scrub/bmap.c                |   8 +-
+fs/xfs/scrub/bmap_repair.c         |   9 +-
+fs/xfs/scrub/common.c              |   4 +-
+fs/xfs/scrub/common.h              |   3 +-
+fs/xfs/scrub/cow_repair.c          |   9 +-
+fs/xfs/scrub/fscounters.c          |  10 +-
+fs/xfs/scrub/health.c              |  21 ++--
+fs/xfs/scrub/ialloc.c              |  14 +--
+fs/xfs/scrub/ialloc_repair.c       |   2 +-
+fs/xfs/scrub/inode_repair.c        |   5 +-
+fs/xfs/scrub/iscan.c               |   4 +-
+fs/xfs/scrub/newbt.c               |   8 +-
+fs/xfs/scrub/reap.c                |   2 +-
+fs/xfs/scrub/refcount.c            |   3 +-
+fs/xfs/scrub/repair.c              |   4 +-
+fs/xfs/scrub/rmap.c                |   4 +-
+fs/xfs/scrub/rmap_repair.c         |  16 +--
+fs/xfs/scrub/trace.h               |  82 ++++++-------
+fs/xfs/xfs_bmap_item.c             |   5 +-
 fs/xfs/xfs_discard.c               |  20 ++--
-fs/xfs/xfs_extent_busy.c           |  31 +++---
-fs/xfs/xfs_extent_busy.h           |  14 ++-
-fs/xfs/xfs_extfree_item.c          |   4 +-
-fs/xfs/xfs_filestream.c            |   5 +-
-fs/xfs/xfs_fsmap.c                 |  25 ++---
-fs/xfs/xfs_health.c                |   8 +-
-fs/xfs/xfs_inode.c                 |   5 +-
-fs/xfs/xfs_iunlink_item.c          |  13 ++-
-fs/xfs/xfs_iwalk.c                 |  17 ++--
-fs/xfs/xfs_log_cil.c               |   3 +-
-fs/xfs/xfs_log_recover.c           |   5 +-
+fs/xfs/xfs_drain.c                 |  78 +++++-------
+fs/xfs/xfs_drain.h                 |  22 ++--
+fs/xfs/xfs_extent_busy.c           | 201 +++++++++++++++++++------------
+fs/xfs/xfs_extent_busy.h           |  59 ++++-----
+fs/xfs/xfs_extfree_item.c          |  14 ++-
+fs/xfs/xfs_filestream.c            |   8 +-
+fs/xfs/xfs_fsmap.c                 |  49 ++++----
+fs/xfs/xfs_fsops.c                 |  10 +-
+fs/xfs/xfs_health.c                |  99 +++++++--------
+fs/xfs/xfs_icache.c                |  60 ++++------
+fs/xfs/xfs_inode.c                 |   6 +-
+fs/xfs/xfs_iwalk.c                 |  99 +++++++--------
+fs/xfs/xfs_iwalk.h                 |   7 +-
+fs/xfs/xfs_log_recover.c           |  11 +-
+fs/xfs/xfs_mount.h                 |  36 +++++-
+fs/xfs/xfs_refcount_item.c         |   9 +-
+fs/xfs/xfs_reflink.c               |   7 +-
+fs/xfs/xfs_rmap_item.c             |   9 +-
+fs/xfs/xfs_super.c                 |  11 +-
 fs/xfs/xfs_trace.c                 |   1 +
-fs/xfs/xfs_trace.h                 | 191 ++++++++++++++++---------------------
-fs/xfs/xfs_trans.c                 |   2 +-
-44 files changed, 459 insertions(+), 531 deletions(-)
+fs/xfs/xfs_trace.h                 | 238 ++++++++++++++++++++++---------------
+70 files changed, 1380 insertions(+), 1050 deletions(-)
+create mode 100644 fs/xfs/libxfs/xfs_group.c
+create mode 100644 fs/xfs/libxfs/xfs_group.h
 
