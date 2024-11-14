@@ -1,140 +1,294 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6C2AD39
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 00:37:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABC162F5A
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 02:35:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731544637; cv=none; b=hyCyEAK8vnNR2q4LOccKKZz82e008TMF/rYUrLLtm3zfuuJTehnyUTcxoacNar9icrW6TwqFt9vsL2RWBjrb44KyTAnbzSSp4R8Tsvh799tcq8ECQ3/jm+prlTE7WBo44tuHujjNp7wivkkJv7IALDts+IT75/rYXoGD9GmNUio=
+	t=1731551749; cv=none; b=HMs8tyGr1SPnsUTQZVlY8XsWqTJeCTHmZlN5bVe7mLEf/+8S/9jtYPzlwjQ6U6i4/5g20ofh2VJzfyR2kGC/Sj9NvGRcB1zGMh4OStJmMeyNYXTC0AsEhXCzphOZlLoo93bH7VH/LVtk56O0eDAY0TA5EFiGqDHPHTFA1FE9ci4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731544637; c=relaxed/simple;
-	bh=QPrG53eiGGqVOY8cqda1uKvaeMNMMQSz5E31mtFgkTY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QR2hQSpWBfla/zgkgEfujX9OQdUlNEvmKzWNuBk6t7dewAeDTQUmqsZLirNIWGbngBr8pPt9AaY4jML3ZJcCJ5S3OZNT6SUAgWenA1hIQ3dGvGLVFqlJiOTgCsbtgPQRcYKeNvxPB7FDg5ryhHmVSvrYc4RACeZRPGOLin8jifY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=CHNubFvf; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="CHNubFvf"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-20cceb8d8b4so79845ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2024 16:37:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731544635; x=1732149435; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jL1bq/cs3DwHGudCjECuU0svhY9jIgo9sOD6hc9Njrw=;
-        b=CHNubFvfxNi8ZllZMxVMh+kA2TR3/pxcfbRzXihouDIjx6DJUe4SI7KL3tV3M4SSkS
-         ZaT2axF8zizwWKEx+vZGwVJ7JOf5PW28uMErXhANVNAPuEsakWK3AF7nZanyIAeK1rOF
-         D+cNYHlKhb1EzbZgxtUOUSjxYCA+05mHOoZMy5Gw/ECguqYJsKI3whLG8F/94pRwYDLK
-         HudHSBxQSChA0vD8Lnn++vnYyO2M6RN89erodHrdpsVVMn2Ho2ga2vN0NIKXuha/d+ng
-         yn1GcbHu9dZH7oHbpNnPfDlY3jW5TsWXktlc5FeACuRXNzmDTMhgGOumud9Ubb/7S8BJ
-         nyZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731544635; x=1732149435;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jL1bq/cs3DwHGudCjECuU0svhY9jIgo9sOD6hc9Njrw=;
-        b=a4O+7vIGrzDp9ZcRQxhyUTskYNRQjO+kDjjepx3eRk3MsOvLrvmJXjwS20YDkdS6aM
-         zvv5KU/02bUltlfc0zxkdRE1BsWWS2iqfj/yIA8VLr6j4yvAjktDmTSS0anef2HlmbN/
-         HcTUInF8rhSiU8ttc5wZwuAfPmxzu3fyExrSycfKUWmTSgS79UR81Bsf/zQA9QcJAbPT
-         WjzO3mjgoeb8EFszFxFNLMLiI3s5sJTIzRmgzDRfUC4osUNsSj4NqqBwcT2j6xZziPw3
-         utcQlR1fgPEeF2X4GwuEUgts/Jo2M8OEvHT12EotO/VTofsM4Ym3grJp6BsF3COBv+UN
-         R6Nw==
-X-Forwarded-Encrypted: i=1; AJvYcCVsHhiecXgV+piXmx/e7PRRTtcaJYt0URClgJSLmqaarVRUzzAn2QwIerNNk6wz/XBMStU6PHeglm8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBWb3o1t3Ut/sjkpAANfmMo3Z79FVqlhoLlNurkmeYXDqUmIBc
-	N71Onk6z4WaEyArFbG/zbBDOrSz25SAWI7C/UrcmI+TM8uAN4jD76VYNVHQzmb0=
-X-Google-Smtp-Source: AGHT+IEbvuImRnO77YgC/dY5K85BskHZNK65tOmH0Zaa7ILqfZYPsHP613mLFhEWCU0U/8qr0ttT/g==
-X-Received: by 2002:a17:903:244b:b0:20c:c18f:c39e with SMTP id d9443c01a7336-211c0fab017mr20154665ad.21.1731544635527;
-        Wed, 13 Nov 2024 16:37:15 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177dc7d1csm116754865ad.51.2024.11.13.16.37.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Nov 2024 16:37:15 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1tBNrE-00EJXl-00;
-	Thu, 14 Nov 2024 11:37:12 +1100
-Date: Thu, 14 Nov 2024 11:37:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: syzbot <syzbot+3c653ce382d9a9b6fbc3@syzkaller.appspotmail.com>
-Cc: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] WARNING in mod_delayed_work_on (2)
-Message-ID: <ZzVGN3gvt4Pw2pwG@dread.disaster.area>
-References: <67342365.050a0220.1324f8.0003.GAE@google.com>
+	s=arc-20240116; t=1731551749; c=relaxed/simple;
+	bh=9tVYut7dn8KSuRLqoVT3G0FQpvP0AH4NcbFnbrNCT5k=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jSGuK6lvGgOO2JngQR7+HEvjhujSLb7742S6b+PmN3LmaTqn/Qb1F2usyZ7Ar5ooUrftcccpwlJErxaldOQkgPqVQWm8wx8uAHp3wDoxSr0WI4dC99k8aEohzLpB0IbIL0C2RnUyaqwcgDjwcWOmuATn6zh2aLBE93LIjjkLxzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Xpkj40yZmz10RWn;
+	Thu, 14 Nov 2024 10:33:12 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 66B4A140157;
+	Thu, 14 Nov 2024 10:35:42 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 14 Nov
+ 2024 10:35:42 +0800
+Date: Thu, 14 Nov 2024 10:34:26 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Brian Foster <bfoster@redhat.com>
+CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<yangerkun@huawei.com>
+Subject: Re: [PATCH v2 1/2] iomap: fix zero padding data issue in concurrent
+ append writes
+Message-ID: <ZzVhsvyFQu01PnHl@localhost.localdomain>
+References: <20241113091907.56937-1-leo.lilong@huawei.com>
+ <ZzTQPdE5V155Soui@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <67342365.050a0220.1324f8.0003.GAE@google.com>
+In-Reply-To: <ZzTQPdE5V155Soui@bfoster>
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Tue, Nov 12, 2024 at 07:56:21PM -0800, syzbot wrote:
-> Hello,
+On Wed, Nov 13, 2024 at 11:13:49AM -0500, Brian Foster wrote:
+> FYI, you probably want to include linux-fsdevel on iomap patches.
 > 
-> syzbot found the following issue on:
+> On Wed, Nov 13, 2024 at 05:19:06PM +0800, Long Li wrote:
+> > During concurrent append writes to XFS filesystem, zero padding data
+> > may appear in the file after power failure. This happens due to imprecise
+> > disk size updates when handling write completion.
+> > 
+> > Consider this scenario with concurrent append writes same file:
+> > 
+> >   Thread 1:                  Thread 2:
+> >   ------------               -----------
+> >   write [A, A+B]
+> >   update inode size to A+B
+> >   submit I/O [A, A+BS]
+> >                              write [A+B, A+B+C]
+> >                              update inode size to A+B+C
+> >   <I/O completes, updates disk size to A+B+C>
+> >   <power failure>
+> > 
+> > After reboot, file has zero padding in range [A+B, A+B+C]:
+> > 
+> >   |<         Block Size (BS)      >|
+> >   |DDDDDDDDDDDDDDDD0000000000000000|
+> >   ^               ^        ^
+> >   A              A+B      A+B+C (EOF)
+> > 
 > 
-> HEAD commit:    f1dce1f09380 Merge tag 'slab-for-6.12-rc7' of git://git.ke..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=143eaea7980000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=347f0ef7656eeb41
-> dashboard link: https://syzkaller.appspot.com/bug?extid=3c653ce382d9a9b6fbc3
-> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> Thanks for the diagram. FWIW, I found the description a little confusing
+> because A+B+C to me implies that we'd update i_size to the end of the
+> write from thread 2, but it seems that is only true up to the end of the
+> block.
 > 
-> Unfortunately, I don't have any reproducer for this issue yet.
+> I.e., with 4k FSB and if thread 1 writes [0, 2k], then thread 2 writes
+> from [2, 16k], the write completion from the thread 1 write will set
+> i_size to 4k, not 16k, right?
 > 
-> Downloadable assets:
-> disk image: https://storage.googleapis.com/syzbot-assets/290169b0e6d0/disk-f1dce1f0.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/e26fb82ee406/vmlinux-f1dce1f0.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/d26ba056ed6b/bzImage-f1dce1f0.xz
+
+Not right, the problem I'm trying to describe is:
+
+  1) thread 1 writes [0, 2k]
+  2) thread 2 writes [2k, 3k]
+  3) write completion from the thread 1 write set i_size to 3K
+  4) power failure
+  5) after reboot,  [2k, 3K] of the file filled with zero and the file size is 3k
+     
+
+> >   D = Valid Data
+> >   0 = Zero Padding
+> > 
+> > The issue stems from disk size being set to min(io_offset + io_size,
+> > inode->i_size) at I/O completion. Since io_offset+io_size is block
+> > size granularity, it may exceed the actual valid file data size. In
+> > the case of concurrent append writes, inode->i_size may be larger
+> > than the actual range of valid file data written to disk, leading to
+> > inaccurate disk size updates.
+> > 
+> > This patch changes the meaning of io_size to represent the size of
+> > valid data in ioend, while the extent size of ioend can be obtained
+> > by rounding up based on block size. It ensures more precise disk
+> > size updates and avoids the zero padding issue.  Another benefit is
+> > that it makes the xfs_ioend_is_append() check more accurate, which
+> > can reduce unnecessary end bio callbacks of xfs_end_bio() in certain
+> > scenarios, such as repeated writes at the file tail without extending
+> > the file size.
+> > 
+> > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > ---
+> >  fs/iomap/buffered-io.c | 21 +++++++++++++++------
+> >  include/linux/iomap.h  |  7 ++++++-
+> >  2 files changed, 21 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index ce73d2a48c1e..a2a75876cda6 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -1599,6 +1599,8 @@ EXPORT_SYMBOL_GPL(iomap_finish_ioends);
+> >  static bool
+> >  iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+> >  {
+> > +	size_t size = iomap_ioend_extent_size(ioend);
+> > +
 > 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+3c653ce382d9a9b6fbc3@syzkaller.appspotmail.com
+> The function name is kind of misleading IMO because this may not
+> necessarily reflect "extent size." Maybe something like
+> _ioend_size_aligned() would be more accurate..?
 > 
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 8571 at kernel/workqueue.c:2498 __queue_delayed_work+0x212/0x250 kernel/workqueue.c:2498
-> Modules linked in:
-> CPU: 0 UID: 0 PID: 8571 Comm: syz-executor Not tainted 6.12.0-rc6-syzkaller-00192-gf1dce1f09380 #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/30/2024
-> RIP: 0010:__queue_delayed_work+0x212/0x250 kernel/workqueue.c:2498
 
-WARN_ON_ONCE(!list_empty(&work->entry));
+Previously, io_size represented the extent size in ioend, so I wanted
+to maintain that description. Indeed, _ioend_size_aligned() does seem
+more accurate.
 
-> Code: 0f 0b 90 e9 39 fe ff ff e8 8b 9f 37 00 90 0f 0b 90 e9 65 fe ff ff e8 7d 9f 37 00 90 0f 0b 90 e9 81 fe ff ff e8 6f 9f 37 00 90 <0f> 0b 90 e9 9f fe ff ff e8 61 9f 37 00 48 89 df 44 89 f6 eb ac 89
-> RSP: 0018:ffffc90002d5fac8 EFLAGS: 00010093
-> RAX: ffffffff815d3a91 RBX: ffffe8ffffc43440 RCX: ffff888028098000
-> RDX: 0000000000000000 RSI: ffff88805a2f1800 RDI: 0000000000000000
-> RBP: ffffe8ffffc43448 R08: ffffffff815d3c06 R09: 0000000000000000
-> R10: ffffc90002d5fb40 R11: fffff520005abf69 R12: 0000000000000001
-> R13: dffffc0000000000 R14: 0000000000000000 R15: ffff88805a2f1800
-> FS:  000055556c4f5500(0000) GS:ffff8880b8600000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007fdcb605fe07 CR3: 000000005d732000 CR4: 00000000003526f0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> Call Trace:
->  <TASK>
->  mod_delayed_work_on+0x153/0x370 kernel/workqueue.c:2588
->  xfs_inodegc_queue fs/xfs/xfs_icache.c:2158 [inline]
->  xfs_inode_mark_reclaimable+0x7a6/0xf60 fs/xfs/xfs_icache.c:2194
->  destroy_inode fs/inode.c:315 [inline]
->  evict+0x7b5/0x9b0 fs/inode.c:756
->  do_unlinkat+0x512/0x830 fs/namei.c:4540
+> I also find it moderately annoying that we have to change pretty much
+> every usage of this field to use the wrapper just so the setfilesize
+> path can do the right thing. Though I see that was an explicit request
+> from v1 to avoid a new field, so it's not the biggest deal.
+> 
+> What urks me a bit are:
+> 
+> 1. It kind of feels like a landmine in an area where block alignment is
+> typically expected. I wonder if a rename to something like io_bytes
+> would help at all with that.
+> 
 
-AFAICT there is nothing wrong with the way XFS is using
-mod_delayed_work_on() here - the internal work entry state that the
-workqueue infrastructure manages appears to be in an incorrect
-state.
+I think that clearly documenting the meaning of io_size is more important,
+as changing the name doesn't fundamentally address the underlying concerns.
 
-This is not obviously an XFS issue.
+> 2. Some of the rounding sites below sort of feel gratuitous. For
+> example, if we run through the _add_to_ioend() path where we actually
+> trim off bytes from the EOF block due to i_size, would we ever expect to
+> tack more onto that ioend such that the iomap_ioend_extent_size() calls
+> are actually effective? It kind of seems like something is wrong in that
+> case where the wrapper call actually matters, but maybe I'm missing
+> something.
+> 
 
--Dave.
+I believe using iomap_ioend_extent_size() at merge decision points is
+valuable. Consider this scenario (with 4k FSB):
 
--- 
-Dave Chinner
-david@fromorbit.com
+  1) thread 1 writes [0, 2k]   //io_size set to 2K
+  2) thread 2 writes [4k, 8k]
+
+If these IOs complete simultaneously, the ioends can be merged, resulting
+in an io_size of 8k. Similarly, we can merge as many as possible ioend in
+_add_to_ioend(). 
+
+> Another randomish idea might be to define a flag like
+> IOMAP_F_EOF_TRIMMED for ioends that are trimmed to EOF. Then perhaps we
+> could make an explicit decision not to grow or merge such ioends, and
+> let the associated code use io_size as is.
+> 
+> But I dunno.. just thinking out loud. I'm ambivalent on all of the above
+> so I'm just sharing thoughts in the event that it triggers more
+> thoughts/ideas/useful discussion. I'd probably not change anything
+> until/unless others chime in on any of this...
+> 
+> Brian
+> 
+
+Thank you for your reply and thoughtful considerations. :)
+
+Thanks,
+Long Li
+
+
+> >  	if (ioend->io_bio.bi_status != next->io_bio.bi_status)
+> >  		return false;
+> >  	if ((ioend->io_flags & IOMAP_F_SHARED) ^
+> > @@ -1607,7 +1609,7 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+> >  	if ((ioend->io_type == IOMAP_UNWRITTEN) ^
+> >  	    (next->io_type == IOMAP_UNWRITTEN))
+> >  		return false;
+> > -	if (ioend->io_offset + ioend->io_size != next->io_offset)
+> > +	if (ioend->io_offset + size != next->io_offset)
+> >  		return false;
+> >  	/*
+> >  	 * Do not merge physically discontiguous ioends. The filesystem
+> > @@ -1619,7 +1621,7 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+> >  	 * submission so does not point to the start sector of the bio at
+> >  	 * completion.
+> >  	 */
+> > -	if (ioend->io_sector + (ioend->io_size >> 9) != next->io_sector)
+> > +	if (ioend->io_sector + (size >> 9) != next->io_sector)
+> >  		return false;
+> >  	return true;
+> >  }
+> > @@ -1636,7 +1638,7 @@ iomap_ioend_try_merge(struct iomap_ioend *ioend, struct list_head *more_ioends)
+> >  		if (!iomap_ioend_can_merge(ioend, next))
+> >  			break;
+> >  		list_move_tail(&next->io_list, &ioend->io_list);
+> > -		ioend->io_size += next->io_size;
+> > +		ioend->io_size = iomap_ioend_extent_size(ioend) + next->io_size;
+> >  	}
+> >  }
+> >  EXPORT_SYMBOL_GPL(iomap_ioend_try_merge);
+> > @@ -1736,7 +1738,7 @@ static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos)
+> >  		return false;
+> >  	if (wpc->iomap.type != wpc->ioend->io_type)
+> >  		return false;
+> > -	if (pos != wpc->ioend->io_offset + wpc->ioend->io_size)
+> > +	if (pos != wpc->ioend->io_offset + iomap_ioend_extent_size(wpc->ioend))
+> >  		return false;
+> >  	if (iomap_sector(&wpc->iomap, pos) !=
+> >  	    bio_end_sector(&wpc->ioend->io_bio))
+> > @@ -1768,6 +1770,8 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+> >  {
+> >  	struct iomap_folio_state *ifs = folio->private;
+> >  	size_t poff = offset_in_folio(folio, pos);
+> > +	loff_t isize = i_size_read(inode);
+> > +	struct iomap_ioend *ioend;
+> >  	int error;
+> >  
+> >  	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, pos)) {
+> > @@ -1778,12 +1782,17 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+> >  		wpc->ioend = iomap_alloc_ioend(wpc, wbc, inode, pos);
+> >  	}
+> >  
+> > -	if (!bio_add_folio(&wpc->ioend->io_bio, folio, len, poff))
+> > +	ioend = wpc->ioend;
+> > +	if (!bio_add_folio(&ioend->io_bio, folio, len, poff))
+> >  		goto new_ioend;
+> >  
+> >  	if (ifs)
+> >  		atomic_add(len, &ifs->write_bytes_pending);
+> > -	wpc->ioend->io_size += len;
+> > +
+> > +	ioend->io_size = iomap_ioend_extent_size(ioend) + len;
+> > +	if (ioend->io_offset + ioend->io_size > isize)
+> > +		ioend->io_size = isize - ioend->io_offset;
+> > +
+> >  	wbc_account_cgroup_owner(wbc, folio, len);
+> >  	return 0;
+> >  }
+> > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> > index f61407e3b121..2984eccfa213 100644
+> > --- a/include/linux/iomap.h
+> > +++ b/include/linux/iomap.h
+> > @@ -330,7 +330,7 @@ struct iomap_ioend {
+> >  	u16			io_type;
+> >  	u16			io_flags;	/* IOMAP_F_* */
+> >  	struct inode		*io_inode;	/* file being written to */
+> > -	size_t			io_size;	/* size of the extent */
+> > +	size_t			io_size;	/* size of valid data */
+> >  	loff_t			io_offset;	/* offset in the file */
+> >  	sector_t		io_sector;	/* start sector of ioend */
+> >  	struct bio		io_bio;		/* MUST BE LAST! */
+> > @@ -341,6 +341,11 @@ static inline struct iomap_ioend *iomap_ioend_from_bio(struct bio *bio)
+> >  	return container_of(bio, struct iomap_ioend, io_bio);
+> >  }
+> >  
+> > +static inline size_t iomap_ioend_extent_size(struct iomap_ioend *ioend)
+> > +{
+> > +	return round_up(ioend->io_size, i_blocksize(ioend->io_inode));
+> > +}
+> > +
+> >  struct iomap_writeback_ops {
+> >  	/*
+> >  	 * Required, maps the blocks so that writeback can be performed on
+> > -- 
+> > 2.39.2
+> > 
+> > 
+> 
+> 
