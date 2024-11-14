@@ -1,197 +1,169 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 993321F8900;
-	Thu, 14 Nov 2024 12:49:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69A0A1CABA;
+	Thu, 14 Nov 2024 13:48:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731588590; cv=none; b=dSoDI/gzQ74sx3ikktAN6zST6m6a7gbv9Yt9sAox1PSImwFzEmM/8yL/PLyqHR00L5sQvX52cyuOvKC6Ow7Es9xrwwqVif/dyEpyVF2gNP1aEAW6MQ3JQu6A4rVh47YW3dbUtSz6b+6V7LOFFL2GNbr0Wulvcny48ZyRvuOP0sY=
+	t=1731592084; cv=none; b=HzGVz7Xwvx630gKfhlzcxmcwBnLQbeUPJMjji464FqIvZaMPP+c+LYqZ4Z38hgLAzVPkHty5a506eG06E2kUac58FwGIzWbTLDOWl7wydlYE6ZPu0uc3ltqoQ0PVYGqTxjA+GUM1ataO0c7KokoSEHHo3BY5XHemsSNKoEdSHdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731588590; c=relaxed/simple;
-	bh=k3bq9txkWb0lZ8GyLDb0v5XOIzhc50LCc0dXpD/E+Lg=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JqkCmfmHsMp0VfmOsvUfLa16qqJuh+Q7uXuBo5Ds9+uJqjhZUBRsTg8yA6MPcYwzDa9YGQavb5ZtY+Q0rjgpHhvt+oeqiZb96QnyV/c2OdvUELI4XeC2V4c6IZhnnWlRBj+CdlHkmeRgt04F8ErGLVlS3Ln2yb92X15kBCVgHZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Xq0Lt4tbQzQt1b;
-	Thu, 14 Nov 2024 20:48:22 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 98CD9140393;
-	Thu, 14 Nov 2024 20:49:38 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 14 Nov
- 2024 20:49:38 +0800
-Date: Thu, 14 Nov 2024 20:48:21 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: John Garry <john.g.garry@oracle.com>, Dave Chinner <david@fromorbit.com>
-CC: Ritesh Harjani <ritesh.list@gmail.com>, <chandan.babu@oracle.com>,
-	<djwong@kernel.org>, <dchinner@redhat.com>, <hch@lst.de>,
-	<viro@zeniv.linux.org.uk>, <brauner@kernel.org>, <jack@suse.cz>,
-	<linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-fsdevel@vger.kernel.org>, <catherine.hoang@oracle.com>,
-	<martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 00/14] forcealign for xfs
-Message-ID: <ZzXxlf6RWeX3e-3x@localhost.localdomain>
-References: <ZtjrUI+oqqABJL2j@dread.disaster.area>
- <79e22c54-04bd-4b89-b20c-3f80a9f84f6b@oracle.com>
- <Ztom6uI0L4uEmDjT@dread.disaster.area>
- <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
- <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
- <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
- <ZufBMioqpwjSFul+@dread.disaster.area>
- <0e9dc6f8-df1b-48f3-a9e0-f5f5507d92c1@oracle.com>
- <ZuoCafOAVqSN6AIK@dread.disaster.area>
- <1394ceeb-ce8c-4d0f-aec8-ba93bf1afb90@oracle.com>
+	s=arc-20240116; t=1731592084; c=relaxed/simple;
+	bh=Sz/HCjWcHw2fNUUcTFPW8cNaSdfsidSlAYnDLaTLs1A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FK1LxcUqb226FnOlKGKVuHOftyMMSdyjNPFUmIQbYTbi7RXIa5xBffkh1bQJWebwxdt949InGLbJzBSTa0+i99GYCbo8KV199y1D2V81hjfFA6Krt6z1Unm/UR2M691fU1B/OrT1s8bkriqTPZQkAFpS5X2OKfbr6oEsR4qs7Gs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gbU7YX0a; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qwKLoy/i; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gbU7YX0a; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qwKLoy/i; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gbU7YX0a";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qwKLoy/i";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gbU7YX0a";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qwKLoy/i"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 6C1C41F395;
+	Thu, 14 Nov 2024 13:48:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731592080; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DUjIzgo1/q6wmPt3j3IRmdHoMb98/6oVGe67aiYYv/I=;
+	b=gbU7YX0aK2DMwfWKyI22wCpxlAylAYGuTj34yv87OtWi0JQa5xVU4nagYes3DJtflsYwhm
+	t0rxqEkk4fqZS7erDiOpXHQvt+5NcYJbJuKmSjG3xwVfD9PCyxjPz/MIRQE6jD9CU4Z/le
+	051p6wEuWrSI5kZo8LAbUa6kUOOFyF8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731592080;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DUjIzgo1/q6wmPt3j3IRmdHoMb98/6oVGe67aiYYv/I=;
+	b=qwKLoy/iki4X6i7WkAROAZFROb4gIdq0hloTOI6CBRu4QQYOz5Lc6DJz8lYL/4/35wFhHX
+	yuTdmpUbPyrQrXBw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=gbU7YX0a;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="qwKLoy/i"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731592080; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DUjIzgo1/q6wmPt3j3IRmdHoMb98/6oVGe67aiYYv/I=;
+	b=gbU7YX0aK2DMwfWKyI22wCpxlAylAYGuTj34yv87OtWi0JQa5xVU4nagYes3DJtflsYwhm
+	t0rxqEkk4fqZS7erDiOpXHQvt+5NcYJbJuKmSjG3xwVfD9PCyxjPz/MIRQE6jD9CU4Z/le
+	051p6wEuWrSI5kZo8LAbUa6kUOOFyF8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731592080;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DUjIzgo1/q6wmPt3j3IRmdHoMb98/6oVGe67aiYYv/I=;
+	b=qwKLoy/iki4X6i7WkAROAZFROb4gIdq0hloTOI6CBRu4QQYOz5Lc6DJz8lYL/4/35wFhHX
+	yuTdmpUbPyrQrXBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 358B013794;
+	Thu, 14 Nov 2024 13:48:00 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id R/KdDJD/NWe7ZQAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 14 Nov 2024 13:48:00 +0000
+Message-ID: <7ccc2ab3-4f04-4c4f-abc5-cb3d7a393031@suse.de>
+Date: Thu, 14 Nov 2024 14:47:59 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <1394ceeb-ce8c-4d0f-aec8-ba93bf1afb90@oracle.com>
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC 2/8] fs/mpage: avoid negative shift for large blocksize
+To: Matthew Wilcox <willy@infradead.org>, Luis Chamberlain <mcgrof@kernel.org>
+Cc: hch@lst.de, david@fromorbit.com, djwong@kernel.org,
+ john.g.garry@oracle.com, ritesh.list@gmail.com, kbusch@kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-mm@kvack.org, linux-block@vger.kernel.org, gost.dev@samsung.com,
+ p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com,
+ Hannes Reinecke <hare@kernel.org>
+References: <20241113094727.1497722-1-mcgrof@kernel.org>
+ <20241113094727.1497722-3-mcgrof@kernel.org>
+ <ZzSygjfVvyrV1jy6@casper.infradead.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <ZzSygjfVvyrV1jy6@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 6C1C41F395
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[17];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	FREEMAIL_CC(0.00)[lst.de,fromorbit.com,kernel.org,oracle.com,gmail.com,vger.kernel.org,kvack.org,samsung.com,pankajraghav.com];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim,suse.de:mid]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -3.01
+X-Spam-Flag: NO
 
-On Wed, Sep 18, 2024 at 11:12:47AM +0100, John Garry wrote:
-> On 17/09/2024 23:27, Dave Chinner wrote:
-> > > # xfs_bmap -vvp  mnt/file
-> > > mnt/file:
-> > > EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-> > >    0: [0..15]:         384..399          0 (384..399)          16 010000
-> > >    1: [16..31]:        400..415          0 (400..415)          16 000000
-> > >    2: [32..127]:       416..511          0 (416..511)          96 010000
-> > >    3: [128..255]:      256..383          0 (256..383)         128 000000
-> > > FLAG Values:
-> > >     0010000 Unwritten preallocated extent
-> > > 
-> > > Here we have unaligned extents wrt extsize.
-> > > 
-> > > The sub-alloc unit zeroing would solve that - is that what you would still
-> > > advocate (to solve that issue)?
-> > Yes, I thought that was already implemented for force-align with the
-> > DIO code via the extsize zero-around changes in the iomap code. Why
-> > isn't that zero-around code ensuring the correct extent layout here?
+On 11/13/24 15:06, Matthew Wilcox wrote:
+> On Wed, Nov 13, 2024 at 01:47:21AM -0800, Luis Chamberlain wrote:
+>> +++ b/fs/mpage.c
+>> @@ -181,7 +181,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+>>   	if (folio_buffers(folio))
+>>   		goto confused;
+>>   
+>> -	block_in_file = (sector_t)folio->index << (PAGE_SHIFT - blkbits);
+>> +	block_in_file = (sector_t)(((loff_t)folio->index << PAGE_SHIFT) >> blkbits);
 > 
-> I just have not included the extsize zero-around changes here. They were
-> just grouped with the atomic writes support, as they were added specifically
-> for the atomic writes support. Indeed - to me at least - it is strange that
-> the DIO code changes are required for XFS forcealign implementation. And,
-> even if we use extsize zero-around changes for DIO path, what about buffered
-> IO?
+> 	block_in_file = folio_pos(folio) >> blkbits;
+> ?
+> 
+>> @@ -527,7 +527,7 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
+>>   	 * The page has no buffers: map it to disk
+>>   	 */
+>>   	BUG_ON(!folio_test_uptodate(folio));
+>> -	block_in_file = (sector_t)folio->index << (PAGE_SHIFT - blkbits);
+>> +	block_in_file = (sector_t)(((loff_t)folio->index << PAGE_SHIFT) >> blkbits);
+> 
+> Likewise.
 
+Yeah. /me not being able to find proper macros ...
 
-I've been reviewing and testing the XFS atomic write patch series. Since
-there haven't been any new responses to the previous discussions on this
-issue, I'd like to inquire about the buffered IO problem with force-aligned
-files, which is a scenario we might encounter.
+Cheers,
 
-Consider a case where the file supports force-alignment with a 64K extent size,
-and the system page size is 4K. Take the following commands as an example:
-
-xfs_io  -c "pwrite 64k 64k" mnt/file
-xfs_io  -c "pwrite 8k 8k" mnt/file
-
-If unaligned unwritten extents are not permitted, we need to zero out the
-sub-allocation units for ranges [0, 8K] and [16K, 64K] to prevent stale
-data. While this can be handled relatively easily in direct I/O scenarios,
-it presents significant challenges in buffered I/O operations. The main
-difficulty arises because the extent size (64K) is larger than the page
-size (4K), and our current code base has substantial limitations in handling
-such cases.
-
-Any thoughts on this?
-
-Thanks,
-Long Li
-
-> 
-> BTW, I still have concern with this extsize zero-around change which I was
-> making:
-> 
-> xfs_iomap_write_unwritten()
-> {
-> 	unsigned int rounding;
-> 
-> 	/* when converting anything unwritten, we must be spanning an 	alloc unit,
-> so round up/down */
-> 	if (rounding > 1) {
-> 		offset_fsb = rounddown(rounding);
-> 		count_fsb = roundup(rounding);
-> 	}
-> 
-> 	...
-> 	do {
-> 		xfs_bmapi_write();
-> 		...
-> 		xfs_trans_commit();
-> 	} while ();
-> }
-> 
-> As mentioned elsewhere, it's a bit of a bodge (to do this rounding).
-> 
-> > 
-> > > > FWIW, I also understand things are different if we are doing 128kB
-> > > > atomic writes on 16kB force aligned files. However, in this
-> > > > situation we are treating the 128kB atomic IO as eight individual
-> > > > 16kB atomic IOs that are physically contiguous.
-> > > Yes, if 16kB force aligned, userspace can only issue 16KB atomic writes.
-> > Right, but the eventual goal (given the statx parameters) is to be
-> > able to do 8x16kB sequential atomic writes as a single 128kB IO, yes?
-> 
-> No, if atomic write unit max is 16KB, then userspace can only issue a single
-> 16KB atomic write.
-> 
-> However, some things to consider:
-> a. the block layer may merge those 16KB atomic writes
-> b. userspace may also merge 16KB atomic writes and issue a larger atomic
-> write (if atomic write unit max is > 16KB)
-> 
-> I had been wondering if there is any value in a lib for helping with b.
-> 
-> > 
-> > > > > > Again, this is different to the traditional RT file behaviour - it
-> > > > > > can use unwritten extents for sub-alloc-unit alignment unmaps
-> > > > > > because the RT device can align file offset to any physical offset,
-> > > > > > and issue unaligned sector sized IO without any restrictions. Forced
-> > > > > > alignment does not have this freedom, and when we extend forced
-> > > > > > alignment to RT files, it will not have the freedom to use
-> > > > > > unwritten extents for sub-alloc-unit unmapping, either.
-> > > > > > 
-> > > > > So how do you think that we should actually implement
-> > > > > xfs_itruncate_extents_flags() properly for forcealign? Would it simply be
-> > > > > like:
-> > > > > 
-> > > > > --- a/fs/xfs/xfs_inode.c
-> > > > > +++ b/fs/xfs/xfs_inode.c
-> > > > > @@ -1050,7 +1050,7 @@ xfs_itruncate_extents_flags(
-> > > > >                   WARN_ON_ONCE(first_unmap_block > XFS_MAX_FILEOFF);
-> > > > >                   return 0;
-> > > > >           }
-> > > > > +	if (xfs_inode_has_forcealign(ip))
-> > > > > +	       first_unmap_block = xfs_inode_roundup_alloc_unit(ip,
-> > > > > first_unmap_block);
-> > > > >           error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
-> > > > Yes, it would be something like that, except it would have to be
-> > > > done before first_unmap_block is verified.
-> > > > 
-> > > ok, and are you still of the opinion that this does not apply to rtvol?
-> > The rtvol is*not* force-aligned. It -may- have some aligned
-> > allocation requirements that are similar (i.e. sb_rextsize > 1 fsb)
-> > but it does*not* force-align extents, written or unwritten.
-> > 
-> > The moment we add force-align support to RT files (as is the plan),
-> > then the force-aligned inodes on the rtvol will need to behave as
-> > force aligned inodes, not "rtvol" inodes.
-> 
-> ok, fine
-> 
-> Thanks,
-> John
-> 
-> 
-> 
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
