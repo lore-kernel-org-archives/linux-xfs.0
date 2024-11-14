@@ -1,57 +1,57 @@
-Received: from mail-oo1-f47.google.com (mail-oo1-f47.google.com [209.85.161.47])
+Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB13016BE3A
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 15:28:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13DF818784A
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 15:28:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731598088; cv=none; b=ENBzR5h0Sh65/ZG9qDi1QI31pxN0LClBBw6timgFwk3zjovl7HbW+3oJ9/vnQ54s/V+/PGxarauFa0OexiIbp3KX81cURhzfasMXExeL+MAgV6m0yNQO4pWE2Bzgh2WWhqKp/EdoqYVPZm4k/wPzX+T+Jq+x4yZZj8z80UHmzo0=
+	t=1731598090; cv=none; b=LxsAp4Guh6fHq2FlDhA8HdVI/1VgjhFrfWylUpoey0lCNcTgZ1HlnujFrOn5o/w7XWp4pe5WuMBokHkcb1ZuU0gkb7GcJhLgpRTEC4JwDy6+2ISFAxmIG6cZtc6ZCzTuSg2JRWCgH/oSLK0KAQtXN1aKBAJUXW5vGOCZvZw819E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731598088; c=relaxed/simple;
-	bh=klEANlDo0QcivFe1NIYDNiOFa1lRCa2wf9JjLv/2My8=;
+	s=arc-20240116; t=1731598090; c=relaxed/simple;
+	bh=AFLrZl3fH+/hMhwZTjgZ0OWM0ndgzDi220n1zUDQffQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PKsefGbFy3sxyWmhLpvoO/5hQVsjTCy8CL5kz81NCDuLyiEPjRxKY1/I5a+40kJBOoHaghtq7VK6BfdN+RpQdj1gFw+G3RJzcjUkm9pI9FBSJalO2nRE6cXZGkYClCtqJCMrA/rhmvtBbJ4jEvfSuWbcMcLUgN7LQaHXG17MJlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=KoxCnn/F; arc=none smtp.client-ip=209.85.161.47
+	 MIME-Version; b=I/HmA3rYuZKGzYFz3ND+oSN+N/J1MrYBPUxtbOx7ZmlGq9U6BbhTSRzWxJIazBOTOMEsh2ABn7KLJIrd1FsbDNZ39+4d90uZ0zhVAjz8a884h8A0XHqSv96xSGxNfTDxB1kYOJaoTHBRMWT5A1V4WKkpj0eOS8WEncd1yCv6d3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=arnRiepF; arc=none smtp.client-ip=209.85.161.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="KoxCnn/F"
-Received: by mail-oo1-f47.google.com with SMTP id 006d021491bc7-5ebc05007daso325398eaf.1
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 07:28:06 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="arnRiepF"
+Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-5ebc5b4190eso366715eaf.3
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 07:28:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731598086; x=1732202886; darn=vger.kernel.org;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731598087; x=1732202887; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=9QDQ8u+XOjRX6rdX1KxWEpFxXqQ9HPCp5iTXnKjwIis=;
-        b=KoxCnn/FfZycku2PMA2bkOnRGL+7wMjFuUNW399IDi7AkgoaONHvIcoqxIm4Mc618f
-         n+G2NlDxEQyTBhHyTF1Q7icxPcS2tk6UMfe1IJ5BoLwNdx8zT+6d2TvipJAMQ91PT2by
-         5PmpYJyfO790CzxMQMtRgHw0GKGF90BzFMMuLRj55vzXkeaXrCSz3NBUbHcIp6AMikoC
-         wVcwvVgAfmZV/vOeQx+NFcy1y3JIBsqKElVuysSQV3shkBRrrmAGt3+SiD8d45XaAIAJ
-         5xLmUmtMTlQWn8fnHj4rR4HIUCF4yCCKqzxBUy9N42SWgTb+nWXuaFowTV5FelV/QNKL
-         6Stg==
+        bh=jvfAlDie45/dO/q2Oa4nMUlSYRbUQddnQckYeJvFoiA=;
+        b=arnRiepFOtCGKagziS6xtO4Vv/Jf+8LAVE0J8ryI70wI6+zLwxYTiedTsJ537HC4a2
+         LNlkH6zA2veKrY6gC1AV/soymGZv4dcjTFrRd401ey51Z2ZRNhbCWz1MrRG2VaHDZzZU
+         CtXa6Q7kxE3rM7/IfGcF6ekYH/Sf/DSYhadei8uNuwK+yUUDnHirrUBAfcWJ607o30su
+         d6FeQ+b3xv7erZkoT8Tz+ZkoIVPCu/Hde48Xczj9XrRav8FokUakSv8Xe5BFKkhjJUpF
+         y0R/VAeybRFMVsO0vmqjYr9OX8GJ++AAgoqqGbbxdip/H442BYrrkZHwQK0MuurJgjD/
+         r0jA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731598086; x=1732202886;
+        d=1e100.net; s=20230601; t=1731598087; x=1732202887;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=9QDQ8u+XOjRX6rdX1KxWEpFxXqQ9HPCp5iTXnKjwIis=;
-        b=SQtyvK1kFSJdgy30aWpV+snDsz4FKvZTwTXUjVy8ZTNwq0AMngBIgzpSOc1tAKtKtj
-         kj5HQnELto2kn6nQMV5mSiucwpbP0PogYLJIeW6kLeONujevEdz3FTd0ewmWb/ewX1dQ
-         ZJOtv9mPnBWscW8RZiXPZyh5q0VHQDdPF8MFM16MOVDNwRB6ayLtAzL6xnoYjrShvAm7
-         Fp2SaRu+CsogRoEkFvabKPPKSh2wsLtUH9TFYO9H+JrHmPooECaXYx9S3ABl64wfIczg
-         JQez86V26f0TK+AfwOzmrjglhRHSbGGdUxHYDAfGEvq6b1oOMCaw0rdYHCCjXh1PLrqP
-         E5pQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXrBO72QVL/eu0PRYTS9e5SEEw91Ed8sqrAUaLZr1ih148pgWcGqSEsXUmN+7FP6Z7UniLLeHdi+KQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEPrpXkMKl+wp6OgwD67ehzwcTO7J89GKJHMwf7UH1j8ICI37p
-	AzZzUXir+T6hWnZEl4njrQufzb9xyiCUYdD4ENtkoKDglBNglNX5muTMsN29Ito=
-X-Google-Smtp-Source: AGHT+IHYfzNU9jsYZVqq6BubIUmPINzkrBJpOzUKZ5nbA/vQYGCWpQqOD4e90GxHDczr5rmeIPTulQ==
-X-Received: by 2002:a05:6820:3088:b0:5e5:7086:ebe8 with SMTP id 006d021491bc7-5ee91feb02cmr6995384eaf.0.1731598085665;
-        Thu, 14 Nov 2024 07:28:05 -0800 (PST)
+        bh=jvfAlDie45/dO/q2Oa4nMUlSYRbUQddnQckYeJvFoiA=;
+        b=xQAwQGaWR/L2nMnIVht1JQtDXrikdJDQR1KWVvhnH2SF+96RCWDAAdJrZAD6jWEK81
+         HbsC38lzwgATCef0/Ojz0Jfh58tt/34eDQiOym0ZMdXyMvS4Za8IMzxxwlmA1WcYXZvT
+         wA07GKmDUKb8m9njRGJQwFc3s/NrqSwc7WcJZNoTrTgSBuWz35rprMs9r6wXci9Xzc6S
+         1lSaktqQAWXGNcIaQOcSxGBrbbSiAByY7EILJI8Y0lpGNjgrGtalGNlzrqKk0r47LpNS
+         9dAQKtCsaIr8LfAJcU22nXWuPraZNfK6msac5yeXS3ZbSQwYg352ry9SGIEGHOvULTSc
+         AOKQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWIqMSrMBYOzuE9mzo2Yoq5r5s+uGs1aAg+cvxPCDU2/UyBxhUy9nFpqo03H4YLsjrTGIr8YoiDzIo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz+xAiDQ/bIvUHI6qtiQC7j/rltejQU3ZpdvwZ5TOoEy6IEPaRu
+	ji7CUr3gtz8hKNVXOXLOTd1z0HUQIm7Z8aZ9aOudhwvOcH7YmbBiUAhgW8Br71w=
+X-Google-Smtp-Source: AGHT+IH7eepGaxoKX7XFVQSCKcZ5tiiQfUtPjwDWCbNdm4JNlvZQy9y+41dOTUM8EVcPpq30RA+88A==
+X-Received: by 2002:a05:6820:278c:b0:5ee:710:83fa with SMTP id 006d021491bc7-5ee922a81aemr6235784eaf.8.1731598087197;
+        Thu, 14 Nov 2024 07:28:07 -0800 (PST)
 Received: from localhost.localdomain ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5eea026eb41sm368250eaf.39.2024.11.14.07.28.04
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5eea026eb41sm368250eaf.39.2024.11.14.07.28.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Nov 2024 07:28:05 -0800 (PST)
+        Thu, 14 Nov 2024 07:28:06 -0800 (PST)
 From: Jens Axboe <axboe@kernel.dk>
 To: linux-mm@kvack.org,
 	linux-fsdevel@vger.kernel.org
@@ -65,9 +65,9 @@ Cc: hannes@cmpxchg.org,
 	linux-xfs@vger.kernel.org,
 	bfoster@redhat.com,
 	Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 03/17] mm: add PG_uncached page flag
-Date: Thu, 14 Nov 2024 08:25:07 -0700
-Message-ID: <20241114152743.2381672-5-axboe@kernel.dk>
+Subject: [PATCH 04/17] mm/readahead: add readahead_control->uncached member
+Date: Thu, 14 Nov 2024 08:25:08 -0700
+Message-ID: <20241114152743.2381672-6-axboe@kernel.dk>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20241114152743.2381672-2-axboe@kernel.dk>
 References: <20241114152743.2381672-2-axboe@kernel.dk>
@@ -79,53 +79,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a page flag that file IO can use to indicate that the IO being done
-is uncached, as in it should not persist in the page cache after the IO
-has been completed.
+If ractl->uncached is set to true, then folios created are marked as
+uncached as well.
 
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- include/linux/page-flags.h     | 5 +++++
- include/trace/events/mmflags.h | 3 ++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ include/linux/pagemap.h | 1 +
+ mm/readahead.c          | 8 +++++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-index cc839e4365c1..3c4003495929 100644
---- a/include/linux/page-flags.h
-+++ b/include/linux/page-flags.h
-@@ -110,6 +110,7 @@ enum pageflags {
- 	PG_reclaim,		/* To be reclaimed asap */
- 	PG_swapbacked,		/* Page is backed by RAM/swap */
- 	PG_unevictable,		/* Page is "unevictable"  */
-+	PG_uncached,		/* uncached read/write IO */
- #ifdef CONFIG_MMU
- 	PG_mlocked,		/* Page is vma mlocked */
- #endif
-@@ -562,6 +563,10 @@ PAGEFLAG(Reclaim, reclaim, PF_NO_TAIL)
- FOLIO_FLAG(readahead, FOLIO_HEAD_PAGE)
- 	FOLIO_TEST_CLEAR_FLAG(readahead, FOLIO_HEAD_PAGE)
- 
-+FOLIO_FLAG(uncached, FOLIO_HEAD_PAGE)
-+	FOLIO_TEST_CLEAR_FLAG(uncached, FOLIO_HEAD_PAGE)
-+	__FOLIO_SET_FLAG(uncached, FOLIO_HEAD_PAGE)
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 68a5f1ff3301..8afacb7520d4 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -1350,6 +1350,7 @@ struct readahead_control {
+ 	pgoff_t _index;
+ 	unsigned int _nr_pages;
+ 	unsigned int _batch_count;
++	bool uncached;
+ 	bool _workingset;
+ 	unsigned long _pflags;
+ };
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 003cfe79880d..8dbeab9bc1f0 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -191,7 +191,13 @@ static void read_pages(struct readahead_control *rac)
+ static struct folio *ractl_alloc_folio(struct readahead_control *ractl,
+ 				       gfp_t gfp_mask, unsigned int order)
+ {
+-	return filemap_alloc_folio(gfp_mask, order);
++	struct folio *folio;
 +
- #ifdef CONFIG_HIGHMEM
- /*
-  * Must use a macro here due to header dependency issues. page_zone() is not
-diff --git a/include/trace/events/mmflags.h b/include/trace/events/mmflags.h
-index bb8a59c6caa2..b60057284102 100644
---- a/include/trace/events/mmflags.h
-+++ b/include/trace/events/mmflags.h
-@@ -116,7 +116,8 @@
- 	DEF_PAGEFLAG_NAME(head),					\
- 	DEF_PAGEFLAG_NAME(reclaim),					\
- 	DEF_PAGEFLAG_NAME(swapbacked),					\
--	DEF_PAGEFLAG_NAME(unevictable)					\
-+	DEF_PAGEFLAG_NAME(unevictable),					\
-+	DEF_PAGEFLAG_NAME(uncached)					\
- IF_HAVE_PG_MLOCK(mlocked)						\
- IF_HAVE_PG_HWPOISON(hwpoison)						\
- IF_HAVE_PG_IDLE(idle)							\
++	folio = filemap_alloc_folio(gfp_mask, order);
++	if (folio && ractl->uncached)
++		__folio_set_uncached(folio);
++
++	return folio;
+ }
+ 
+ /**
 -- 
 2.45.2
 
