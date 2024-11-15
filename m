@@ -1,324 +1,217 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D5402E400;
-	Fri, 15 Nov 2024 04:17:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8863E61FEB
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 05:43:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731644257; cv=none; b=g/r7CwQMIplRpyuc7bGQrltRThxyHQMsS1heMQFaGDaWTsCGjGgDN7dODF4TVkirqP3HZzMjmhocVQHcNb5gegDGjk3ZoVaKAgh9sGBjsCMDxBvhu9+eJXFbiyeFmHnjDBNTkitPJOhqmegPoynoCC/yybuQLLNxT187kXkJ6u0=
+	t=1731649382; cv=none; b=If/DsK+cn828B2MXj+uM0U5L7DkkQHYf2IsXXnK31lpDRAuXl5T24a6AApJdPvrjLWPo+UmnOZfx+4V6PHeExw9Wpb6pe9k9ooEfKEUGfMo2YdJVUnptVrMbZeXu9tNnP0PF0rbW41bxaOyrKNRkV1qkICZP6HsgLHOepy/9rdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731644257; c=relaxed/simple;
-	bh=/tlzlOAJx/nJnmxGUB9JYmwKPaoRZDxZjUyf6pKCgMU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ekUSpXAOzaOOSQsQG5ov9vi9V7jawhyqKCT1E7NJidFmf9sYriKflO7ZL2PFsIGilFkECt3jPjjVW7V3z98rQGTGTxqLnW8QsRZqnkqAggfHDPdiJPGLt8mgsx2XYDuvC/kBoKbC2F/RSpeZ81RqMDiBsssj5VXgL2NsHcG1Ri0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=naES/mBY; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1731649382; c=relaxed/simple;
+	bh=psd79CktBVvNz5cRmc0prFkxRYlqdjtN5VrS32XoZd4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oitVaxDjLhm0FfvfexnjcJjLNm06tiXZecRbAe2/Eknww88+mSs5uYe6N3abuABmNSNgnmzEZFCRWxAnViyCiOUGM6GthyFojT7W3KiEPK4zUEH77K4mPDM2SCZCo6RgAkTg06B/BjYknwtX0A1qbOT2GlFpIzjYJkGhfGqKE9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ekleskzs; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="naES/mBY"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AF0jteS022913;
-	Fri, 15 Nov 2024 04:17:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=fhN+I4U8up6q18hTt
-	VfYthI7xpZnDBMvIzCmPcedcoA=; b=naES/mBYwXpqeVdMpmvOpOJrl3ge/Lh/b
-	P62RWI+uy28ymJ7kZSKSwyTPMYZnnnc+lX2XIiBb9f7owUhvIK6gl2hvGqZVpZnY
-	0DWqA4/xb9Z1usvN2aeZhV5Upn/5pZKD/rJmAPR5FAiSnLSjlgFu3LOeInMmYpoN
-	R7wc9Xi8mrn7rVyQadnXSgwvopN7M2TdzTIRl72AWAyRtRSV5oUfGR5zdN0K7xrq
-	3X7UsmYo8YsWV5al7rtbBjNTjnP4w+QSU/vi9cVg/EhlVuUJWa7JHkDLDEngSlhI
-	co50CqAmysOyxAP7oB+EM2fPrAx/QnVZUPjEAl45AMgKLp9tAq+Pg==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42wu2vs209-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 Nov 2024 04:17:32 +0000 (GMT)
-Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4AF4EUEU013432;
-	Fri, 15 Nov 2024 04:17:31 GMT
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42wu2vs204-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 Nov 2024 04:17:31 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4AF4D87W008270;
-	Fri, 15 Nov 2024 04:17:30 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 42tjf0eqsc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 Nov 2024 04:17:30 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4AF4HSFi56426986
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 15 Nov 2024 04:17:28 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 57C692004B;
-	Fri, 15 Nov 2024 04:17:28 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id B710E20040;
-	Fri, 15 Nov 2024 04:17:26 +0000 (GMT)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com.com (unknown [9.124.220.5])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 15 Nov 2024 04:17:26 +0000 (GMT)
-From: Nirjhar Roy <nirjhar@linux.ibm.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
-        zlang@kernel.org
-Subject: [PATCH v2 2/2] generic: Addition of new tests for extsize hints
-Date: Fri, 15 Nov 2024 09:45:59 +0530
-Message-ID: <373a7e378ba4a76067dc7da5835ac722248144f9.1731597226.git.nirjhar@linux.ibm.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <cover.1731597226.git.nirjhar@linux.ibm.com>
-References: <cover.1731597226.git.nirjhar@linux.ibm.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ekleskzs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1731649379;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AjdVIfuH7TOXOVQnaaki3TYwfiPZMvjKxLeVf16wA8Q=;
+	b=Ekleskzspk/wMh1PgiHT/VH6p0iVSNZ32buUv9U1agcl9TlRaEpmO1o1GOF4F46270wXq7
+	ALULTtj8iSQO2PjUDMHMjmypcylG+zXYgd9XQyEMGsnOGDLXaXckPNfJdukvBytc39oeos
+	y8ejucp46jJC4x61uc8OqO4CVP5yGv8=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-569-_yW9CbOxPnyaevhG1jX38Q-1; Fri, 15 Nov 2024 00:42:57 -0500
+X-MC-Unique: _yW9CbOxPnyaevhG1jX38Q-1
+X-Mimecast-MFC-AGG-ID: _yW9CbOxPnyaevhG1jX38Q
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2ea050e557dso1636935a91.1
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2024 21:42:57 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731649376; x=1732254176;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AjdVIfuH7TOXOVQnaaki3TYwfiPZMvjKxLeVf16wA8Q=;
+        b=vI8xgyH/DmoPEyfYnOTZTLS0ytSF5P54wu8XjJNWb3H23UQWdsaabdom/4xDhBeVZr
+         luwx5KjlqyRHf4Bot36rArH1LILtRbDVnjTW8t7kDguedhhzXR79b1TlvugCl2g4CxwH
+         nYFPxVoKtwMWfXMsInyKq/nH0O6AWbS60hEvWkvF4LXB9HRg7vz+J6TIAYnX3x4oor2V
+         usAG9r8A3NqeEharKm4jtCr1jXPQtQzjh1pv2sggwLuNyz2UuUCW7pWFA6npM6+AdMIw
+         TN2gY5zDzXHZdzQQdNjhb576rIgzbO70RD0NBG5dOWQSXrUFON2g5cqs2NFD/4T/ckvx
+         91KQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUKDHsp8dmEtcMlW1zg8QlFXZjFv1UlnFzKuYxqz9CErSo3u1ukrrIDmQ/0gyzlMIj5qiCW1REhGP4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz7iG+yFrG3rHFVo4SOTiS+/e4nwlX20G47nzB/dAsFVDs1TteG
+	NS29+YUZy2oIGO/Wg+y9M2KJLvKYk3DxsbujUUIhH8csbM5eC7STgp++5lOwRVLFlmwGojSYNFG
+	N1lyzpCWER67g2efb4ZrAzGANXYK4ko1sxc54Y/csJA0uiGyZ4xou+t4QkSyUr/rBFXsQ
+X-Received: by 2002:a17:90b:17c2:b0:2e2:d74f:65b6 with SMTP id 98e67ed59e1d1-2ea154f3f7amr2023001a91.10.1731649376027;
+        Thu, 14 Nov 2024 21:42:56 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFqEh62Hc2rbhox2WCNiW3VHGYhH+LKQA8Hasq4O+w6vgdwRuFTozmKPzPGHcmOeYGPdY+kWA==
+X-Received: by 2002:a17:90b:17c2:b0:2e2:d74f:65b6 with SMTP id 98e67ed59e1d1-2ea154f3f7amr2022981a91.10.1731649375432;
+        Thu, 14 Nov 2024 21:42:55 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ea02495b26sm2159289a91.21.2024.11.14.21.42.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Nov 2024 21:42:55 -0800 (PST)
+Date: Fri, 15 Nov 2024 13:42:51 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] generic/757: fix various bugs in this test
+Message-ID: <20241115054251.azrrmicopowrlqaa@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
+ <173146178859.156441.16666438727834100554.stgit@frogsfrogsfrogs>
+ <20241114052328.rnm54xeqxnvkaluc@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241114053019.GM9438@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: i5Yaa4WE-H6wtzYo1FpzA1WRF3NErTmM
-X-Proofpoint-GUID: 2VYnupRISgOAnJsxobHaNUO7YvJs8-ja
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 suspectscore=0 bulkscore=0 mlxlogscore=999 impostorscore=0
- malwarescore=0 mlxscore=0 clxscore=1015 adultscore=0 phishscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411150032
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241114053019.GM9438@frogsfrogsfrogs>
 
-This commit adds new tests that checks the behaviour of xfs/ext4
-filesystems when extsize hint is set on file with inode size as 0, non-empty
-files with allocated and delalloc extents and so on.
-Although currently this test is placed under tests/generic, it
-only runs on xfs and there is an ongoing patch series[1] to enable
-extsize hints for ext4 as well.
+On Wed, Nov 13, 2024 at 09:30:19PM -0800, Darrick J. Wong wrote:
+> On Thu, Nov 14, 2024 at 01:23:28PM +0800, Zorro Lang wrote:
+> > On Tue, Nov 12, 2024 at 05:37:29PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Fix this test so the check doesn't fail on XFS, and restrict runtime to
+> > > 100 loops because otherwise this test takes many hours.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/generic/757 |    7 ++++++-
+> > >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/tests/generic/757 b/tests/generic/757
+> > > index 0ff5a8ac00182b..9d41975bde07bb 100755
+> > > --- a/tests/generic/757
+> > > +++ b/tests/generic/757
+> > > @@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
+> > >  cur=$(_log_writes_find_next_fua $prev)
+> > >  [ -z "$cur" ] && _fail "failed to locate next FUA write"
+> > >  
+> > > -while [ ! -z "$cur" ]; do
+> > > +for ((i = 0; i < 100; i++)); do
+> > >  	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
+> > >  
+> > > +	# xfs_repair won't run if the log is dirty
+> > > +	if [ $FSTYP = "xfs" ]; then
+> > > +		_scratch_mount
+> > 
+> > Hi Darrick, can you mount at here? I always get mount error as below:
+> > 
+> > SECTION       -- default
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/x86_64 dell-per750-41 6.12.0-0.rc5.44.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Oct 28 14:12:55 UTC 2024
+> > MKFS_OPTIONS  -- -f /dev/sda6
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch
+> > 
+> > generic/757 2185s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//default/generic/757.out.bad)
+> >     --- tests/generic/757.out   2024-10-27 03:09:48.740518275 +0800
+> >     +++ /root/git/xfstests/results//default/generic/757.out.bad 2024-11-14 13:18:56.965210155 +0800
+> >     @@ -1,2 +1,5 @@
+> >      QA output created by 757
+> >     -Silence is golden
+> >     +mount: /mnt/scratch: cannot mount; probably corrupted filesystem on /dev/sda6.
+> >     +       dmesg(1) may have more information after failed mount system call.
+> >     +mount -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch failed
+> >     +(see /root/git/xfstests/results//default/generic/757.full for details)
+> >     ...
+> >     (Run 'diff -u /root/git/xfstests/tests/generic/757.out /root/git/xfstests/results//default/generic/757.out.bad'  to see the entire diff)
+> > Ran: generic/757
+> > Failures: generic/757
+> > Failed 1 of 1 tests
+> > 
+> > # dmesg
+> > ...
+> > [1258572.169378] XFS (sda6): Mounting V5 Filesystem a0bf3918-1b66-4973-b03c-afd5197a6d21
+> > [1258572.193037] XFS (sda6): Starting recovery (logdev: internal)
+> > [1258572.201691] XFS (sda6): Corruption warning: Metadata has LSN (1:41116) ahead of current LSN (1:161). Please unmount and run xfs_repair (>= v4.3) to resolve.
+> > [1258572.215850] XFS (sda6): Metadata CRC error detected at xfs_bmbt_read_verify+0x16/0xc0 [xfs], xfs_bmbt block 0x2000e8 
+> > [1258572.226825] XFS (sda6): Unmount and run xfs_repair
+> > [1258572.231796] XFS (sda6): First 128 bytes of corrupted metadata buffer:
+> > [1258572.238411] 00000000: 42 4d 41 33 00 00 00 fb 00 00 00 00 00 04 00 9e  BMA3............
+> > [1258572.246585] 00000010: 00 00 00 00 00 04 00 60 00 00 00 00 00 20 00 e8  .......`..... ..
+> > [1258572.254766] 00000020: 00 00 00 01 00 00 a0 9c a0 bf 39 18 1b 66 49 73  ..........9..fIs
+> > [1258572.262945] 00000030: b0 3c af d5 19 7a 6d 21 00 00 00 00 00 00 00 83  .<...zm!........
+> > [1258572.271117] 00000040: 17 2f 1b e4 00 00 00 00 00 00 00 00 04 b1 2e 00  ./..............
+> > [1258572.279291] 00000050: 00 00 00 4b 15 e0 00 01 80 00 00 00 04 b1 30 00  ...K..........0.
+> > [1258572.287462] 00000060: 00 00 00 4b 16 00 00 4f 00 00 00 00 04 b1 ce 00  ...K...O........
+> > [1258572.295635] 00000070: 00 00 00 4b 1f e0 00 01 80 00 00 00 04 b1 d0 00  ...K............
+> > [1258572.303811] XFS (sda6): Filesystem has been shut down due to log error (0x2).
+> > [1258572.311123] XFS (sda6): Please unmount the filesystem and rectify the problem(s).
+> > [1258572.318791] XFS (sda6): log mount/recovery failed: error -74
+> > [1258572.324798] XFS (sda6): log mount failed
+> > [1258572.365169] XFS (sda5): Unmounting Filesystem eb4b7840-2c01-4306-9a6c-af2e7207a23f
+> 
+> I see periodic corruption messages, but generally the mount succeeds and
+> the test passes, even with TOT -rc6.
 
-[1] https://lore.kernel.org/linux-ext4/cover.1726034272.git.ojaswin@linux.ibm.com/
+Still fails on -rc7+ [1]. Even with `xfs_repair $SCRATCH_DEV` before mount, it still fails [2].
+But `xfs_repair -L` helps, the test can keep running after that.
 
-Reviewed-by Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Suggested-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
----
- tests/generic/366     | 172 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/366.out |  26 +++++++
- 2 files changed, 198 insertions(+)
- create mode 100755 tests/generic/366
- create mode 100644 tests/generic/366.out
+Do you think it's a xfs issue, or a case issue (xfs need a log cleanup at here?).
 
-diff --git a/tests/generic/366 b/tests/generic/366
-new file mode 100755
-index 00000000..7ff4e8e2
---- /dev/null
-+++ b/tests/generic/366
-@@ -0,0 +1,172 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024 Nirjhar Roy (nirjhar@linux.ibm.com).  All Rights Reserved.
-+#
-+# FS QA Test 366
-+#
-+# This test verifies that extent allocation hint setting works correctly on files with
-+# no extents allocated and non-empty files which are truncated. It also checks that the
-+# extent hints setting fails with non-empty file i.e, with any file with allocated
-+# extents or delayed allocation. We also check if the extsize value and the
-+# xflag bit actually got reflected after setting/re-setting the extsize value.
-+
-+. ./common/config
-+. ./common/filter
-+. ./common/preamble
-+
-+_begin_fstest ioctl quick
-+
-+_supported_fs xfs
-+
-+_fixed_by_kernel_commit "2a492ff66673 \
-+                        xfs: Check for delayed allocations before setting extsize"
-+
-+_require_scratch
-+
-+FILE_DATA_SIZE=1M
-+
-+get_default_extsize()
-+{
-+    if [ -z $1 ] || [ ! -d $1 ]; then
-+        echo "Missing mount point argument for get_default_extsize"
-+        exit 1
-+    fi
-+    $XFS_IO_PROG -c "extsize" "$1" | sed 's/^\[\([0-9]\+\)\].*/\1/'
-+}
-+
-+filter_extsz()
-+{
-+    sed "s/\[$1\]/\[EXTSIZE\]/g"
-+}
-+
-+setup()
-+{
-+    _scratch_mkfs >> "$seqres.full"  2>&1
-+    _scratch_mount >> "$seqres.full" 2>&1
-+    BLKSZ=`_get_block_size $SCRATCH_MNT`
-+    DEFAULT_EXTSIZE=`get_default_extsize $SCRATCH_MNT`
-+    EXTSIZE=$(( BLKSZ*2 ))
-+    # Making sure the new extsize is not the same as the default extsize
-+    [[ "$DEFAULT_EXTSIZE" -eq "$EXTSIZE" ]] && EXTSIZE=$(( BLKSZ*4 ))
-+}
-+
-+read_file_extsize()
-+{
-+    $XFS_IO_PROG -c "extsize" $1 | _filter_scratch | filter_extsz $2
-+}
-+
-+check_extsz_and_xflag()
-+{
-+    local filename=$1
-+    local extsize=$2
-+    read_file_extsize $filename $extsize
-+    _test_fsx_xflags_field $filename "e" && echo "e flag set" || echo "e flag unset"
-+}
-+
-+check_extsz_xflag_across_remount()
-+{
-+    local filename=$1
-+    local extsize=$2
-+    _scratch_cycle_mount
-+    check_extsz_and_xflag $filename $extsize
-+}
-+
-+# Extsize flag should be cleared when extsize is reset, so this function
-+# checks that this behavior is followed.
-+reset_extsz_and_recheck_extsz_xflag()
-+{
-+    local filename=$1
-+    echo "Re-setting extsize hint to 0"
-+    $XFS_IO_PROG -c "extsize 0" $filename
-+    check_extsz_xflag_across_remount $filename "0"
-+}
-+
-+check_extsz_xflag_before_and_after_reset()
-+{
-+    local filename=$1
-+    local extsize=$2
-+    check_extsz_xflag_across_remount $filename $extsize
-+    reset_extsz_and_recheck_extsz_xflag $filename
-+}
-+
-+test_empty_file()
-+{
-+    echo "TEST: Set extsize on empty file"
-+    local filename=$1
-+    $XFS_IO_PROG \
-+        -c "open -f $filename" \
-+        -c "extsize $EXTSIZE" \
-+
-+    check_extsz_xflag_before_and_after_reset $filename $EXTSIZE
-+    echo
-+}
-+
-+test_data_delayed()
-+{
-+    echo "TEST: Set extsize on non-empty file with delayed allocation"
-+    local filename=$1
-+    $XFS_IO_PROG \
-+        -c "open -f $filename" \
-+        -c "pwrite -q  0 $FILE_DATA_SIZE" \
-+        -c "extsize $EXTSIZE" | _filter_scratch
-+
-+    echo "test for default extsize setting if any"
-+    read_file_extsize $filename $DEFAULT_EXTSIZE
-+    echo
-+}
-+
-+test_data_allocated()
-+{
-+    echo "TEST: Set extsize on non-empty file with allocated extents"
-+    local filename=$1
-+    $XFS_IO_PROG \
-+        -c "open -f $filename" \
-+        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
-+        -c "extsize $EXTSIZE" | _filter_scratch
-+
-+    echo "test for default extsize setting if any"
-+    read_file_extsize $filename $DEFAULT_EXTSIZE
-+    echo
-+}
-+
-+test_truncate_allocated()
-+{
-+    echo "TEST: Set extsize after truncating a file with allocated extents"
-+    local filename=$1
-+    $XFS_IO_PROG \
-+        -c "open -f $filename" \
-+        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
-+        -c "truncate 0" \
-+        -c "extsize $EXTSIZE" \
-+
-+    check_extsz_xflag_across_remount $filename $EXTSIZE
-+    echo
-+}
-+
-+test_truncate_delayed()
-+{
-+    echo "TEST: Set extsize after truncating a file with delayed allocation"
-+    local filename=$1
-+    $XFS_IO_PROG \
-+        -c "open -f $filename" \
-+        -c "pwrite -q  0 $FILE_DATA_SIZE" \
-+        -c "truncate 0" \
-+        -c "extsize $EXTSIZE" \
-+
-+    check_extsz_xflag_across_remount $filename $EXTSIZE
-+    echo
-+}
-+
-+setup
-+echo -e "EXTSIZE = $EXTSIZE DEFAULT_EXTSIZE = $DEFAULT_EXTSIZE BLOCKSIZE = $BLKSZ\n" >> "$seqres.full"
-+
-+NEW_FILE_NAME_PREFIX=$SCRATCH_MNT/new-file-
-+
-+test_empty_file "$NEW_FILE_NAME_PREFIX"00
-+test_data_delayed "$NEW_FILE_NAME_PREFIX"01
-+test_data_allocated "$NEW_FILE_NAME_PREFIX"02
-+test_truncate_allocated "$NEW_FILE_NAME_PREFIX"03
-+test_truncate_delayed "$NEW_FILE_NAME_PREFIX"04
-+
-+status=0
-+exit
-diff --git a/tests/generic/366.out b/tests/generic/366.out
-new file mode 100644
-index 00000000..cdd2f5fa
---- /dev/null
-+++ b/tests/generic/366.out
-@@ -0,0 +1,26 @@
-+QA output created by 366
-+TEST: Set extsize on empty file
-+[EXTSIZE] SCRATCH_MNT/new-file-00
-+e flag set
-+Re-setting extsize hint to 0
-+[EXTSIZE] SCRATCH_MNT/new-file-00
-+e flag unset
-+
-+TEST: Set extsize on non-empty file with delayed allocation
-+xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-01: Invalid argument
-+test for default extsize setting if any
-+[EXTSIZE] SCRATCH_MNT/new-file-01
-+
-+TEST: Set extsize on non-empty file with allocated extents
-+xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-02: Invalid argument
-+test for default extsize setting if any
-+[EXTSIZE] SCRATCH_MNT/new-file-02
-+
-+TEST: Set extsize after truncating a file with allocated extents
-+[EXTSIZE] SCRATCH_MNT/new-file-03
-+e flag set
-+
-+TEST: Set extsize after truncating a file with delayed allocation
-+[EXTSIZE] SCRATCH_MNT/new-file-04
-+e flag set
-+
--- 
-2.43.5
+Thanks,
+Zorro
+
+[1]
+# ./check -s default generic/757
+SECTION       -- default
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 dell-per750-41 6.12.0-0.rc7.58.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Nov 11 15:23:45 UTC 2024
+MKFS_OPTIONS  -- -f /dev/sda6
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch
+
+generic/757 2185s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//default/generic/757.out.bad)
+    --- tests/generic/757.out   2024-10-27 03:09:48.740518275 +0800
+    +++ /root/git/xfstests/results//default/generic/757.out.bad 2024-11-15 03:06:59.462739215 +0800
+    @@ -1,2 +1,5 @@
+     QA output created by 757
+    -Silence is golden
+    +mount: /mnt/scratch: cannot mount; probably corrupted filesystem on /dev/sda6.
+    +       dmesg(1) may have more information after failed mount system call.
+    +mount -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch failed
+    +(see /root/git/xfstests/results//default/generic/757.full for details)
+    ...
+    (Run 'diff -u /root/git/xfstests/tests/generic/757.out /root/git/xfstests/results//default/generic/757.out.bad'  to see the entire diff)
+Ran: generic/757
+Failures: generic/757
+Failed 1 of 1 tests
+
+[2]
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+ERROR: The filesystem has valuable metadata changes in a log which needs to
+be replayed.  Mount the filesystem to replay the log, and unmount it before
+re-running xfs_repair.  If you are unable to mount the filesystem, then use
+the -L option to destroy the log and attempt a repair.
+Note that destroying the log may cause corruption -- please attempt a mount
+of the filesystem before doing this.
+
+> 
+> --D
+> 
+> > > +		_scratch_unmount
+> > > +	fi
+> > 
+> > 
+> > >  	_check_scratch_fs
+> > >  
+> > >  	prev=$cur
+> > > 
+> > 
+> > 
+> 
 
