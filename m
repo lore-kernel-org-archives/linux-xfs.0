@@ -1,39 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C671BF37;
-	Fri, 15 Nov 2024 16:09:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D7713AA3E;
+	Fri, 15 Nov 2024 16:45:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731686999; cv=none; b=uDTqFM7lM/iGzEkmQNqWDfNHFZyg34hPSvIGf80WLgXyXLDSRRdWBMXDAKElXfCgmPdHBTBE46cJhpUoMnzSkJ9T00Vm0Cao4NiL6bBvyKVEuVMB0XhnsPipe8yJs+RkFoNjr7QfZBZ8ag4K4bWkygka2RdwFWzegBbMg6S/06Q=
+	t=1731689150; cv=none; b=MphXg1+ympTE6grIm8EvyiG+CP6u5Ts499VZ0dLeurKVX16aBZbXzIailM29kY6ioaC6QSiBq076K8KhsCMULsNmz8J9OTihRof42SDrxVrygfoxYCxpe1V+SOBfiopxwrx8B90X4Pnjhw9xM45IZBI6/vPsaHQwSreMDoWKSUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731686999; c=relaxed/simple;
-	bh=b8H7D7v3YTEvQVoc9zvXB3qD75FHPuozVprLDEYekOo=;
+	s=arc-20240116; t=1731689150; c=relaxed/simple;
+	bh=e50cVx2A1nY7atCYkybhbwvEmsBPVxbZ0bVfDZ473Eo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YJfHUx0d7tKnjhcj4DKOyrB9QU7D7FNMw6NpALNW4uGJkKsx2cHdMgalwstPBJYSTG6D7iGD7HliSLEbOx3ZYV588NFLxxFyvgRrOiqEEo0Wwbn4ZjN0hP/uhL+3MMT2z9nz3ScAYU6GbLQQXMfdPctkV4BKY00lWWPVH6K0H84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a66cA9r+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZRt89tFEStcZyEqlNqK74oAFDf2ZSzGoB90SKbudVL0X2VD+1Oy/htRkiy3UJG7hMhWxPjvS+ZqYy2yIyp2DZBX37kVDPxKlf+UkeIEE4ZXGc4bMCX5ya0u3YB8gq+RCVB9L6sfWkwddBP9XNWXfyFuXwTrGXKPR1ZzDL4UNikA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vs0OLyJk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a66cA9r+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1493C4CECF;
-	Fri, 15 Nov 2024 16:09:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vs0OLyJk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72B05C4CECF;
+	Fri, 15 Nov 2024 16:45:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731686998;
-	bh=b8H7D7v3YTEvQVoc9zvXB3qD75FHPuozVprLDEYekOo=;
+	s=k20201202; t=1731689149;
+	bh=e50cVx2A1nY7atCYkybhbwvEmsBPVxbZ0bVfDZ473Eo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=a66cA9r+o3mG97B+OoGsawqRKANoiQUe4jK67CDT6x/TwYIyy6JO2mqH14zaJ6TD8
-	 y6A9k4L2NphdmzqEjKsgF8Y/DOorRKSbsZuy+zsA4PcHwJRqsUhBapMn/qTOa/+EZ4
-	 4BiY3mZWzyr3NieXmMjyJ8w+ZW+iLqoXb4/dSUV805V9PhnjjE4O5cEkRHT3HBbY8g
-	 Nuv61rjqDUglej5x7QzOiMX2a4EwIyL2sVdYPowXGkwvspPaq6pduOip6VoiGJXR98
-	 J2eK8GI5b9j6KpBXldmqACsviGaXgQrYon3sNp6izdLxvMu4DYDGSq2KlV1hnzPRv6
-	 CfhcXmuIJflnw==
-Date: Fri, 15 Nov 2024 08:09:57 -0800
+	b=Vs0OLyJkL3VnxERlBWiHfrvY7y6BfHg6UWNhFOq9mAJW0ycc1/2rqEFNmGJVNWYvE
+	 4SYE0kM9dN7s51b3oj+ztBuiYGXojHZXMRzKmVu5p3wYCKyLTLZwul5RIOpGMnyQt3
+	 S9SJRjww0HXH4k7Z/PbsntgTDRhMrdHg2lK5iKlRQwfg47P2ZpN2PVMYh4Yhs/Dq4u
+	 bE/c5CZIAHyxC7JMnex31BPzo/T6Zi1T6oebN6hi5XZyedtnyZpMbjn5wzJ1e3dKgF
+	 rJ/aiWujkjwuBemRqoq/qmVR6dNtbDW8igEaoS+UZVZ3UPuAMEk5DryQet/FXilRWd
+	 fof7KpmKQMVxw==
+Date: Fri, 15 Nov 2024 08:45:48 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	hch@infradead.org
-Subject: Re: [PATCH v2] iomap: warn on zero range of a post-eof folio
-Message-ID: <20241115160957.GP9438@frogsfrogsfrogs>
-References: <20241115145931.535207-1-bfoster@redhat.com>
+To: Nirjhar Roy <nirjhar@linux.ibm.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, zlang@kernel.org
+Subject: Re: [PATCH v2 1/2] common/rc,xfs/207: Adding a common helper
+ function to check xflag bits on a given file
+Message-ID: <20241115164548.GE9425@frogsfrogsfrogs>
+References: <cover.1731597226.git.nirjhar@linux.ibm.com>
+ <9a955f34cab443d3ed0fc07c17886d5e8a11ad80.1731597226.git.nirjhar@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,64 +45,91 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241115145931.535207-1-bfoster@redhat.com>
+In-Reply-To: <9a955f34cab443d3ed0fc07c17886d5e8a11ad80.1731597226.git.nirjhar@linux.ibm.com>
 
-On Fri, Nov 15, 2024 at 09:59:31AM -0500, Brian Foster wrote:
-> iomap_zero_range() uses buffered writes for manual zeroing, no
-> longer updates i_size for such writes, but is still explicitly
-> called for post-eof ranges. The historical use case for this is
-> zeroing post-eof speculative preallocation on extending writes from
-> XFS. However, XFS also recently changed to convert all post-eof
-> delalloc mappings to unwritten in the iomap_begin() handler, which
-> means it now never expects manual zeroing of post-eof mappings. In
-> other words, all post-eof mappings should be reported as holes or
-> unwritten.
+On Fri, Nov 15, 2024 at 09:45:58AM +0530, Nirjhar Roy wrote:
+> This patch defines a common helper function to test whether any of
+> fsxattr xflags field is set or not. We will use this helper in the next
+> patch for checking extsize (e) flag.
 > 
-> This is a subtle dependency that can be hard to detect if violated
-> because associated codepaths are likely to update i_size after folio
-> locks are dropped, but before writeback happens to occur. For
-> example, if XFS reverts back to some form of manual zeroing of
-> post-eof blocks on write extension, writeback of those zeroed folios
-> will now race with the presumed i_size update from the subsequent
-> buffered write.
+> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
+> ---
+>  common/rc     |  7 +++++++
+>  tests/xfs/207 | 13 ++-----------
+>  2 files changed, 9 insertions(+), 11 deletions(-)
 > 
-> Since iomap_zero_range() can't correctly zero post-eof mappings
-> beyond EOF without updating i_size, warn if this ever occurs. This
-> serves as minimal indication that if this use case is reintroduced
-> by a filesystem, iomap_zero_range() might need to reconsider i_size
-> updates for write extending use cases.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> diff --git a/common/rc b/common/rc
+> index 2af26f23..fc18fc94 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -41,6 +41,13 @@ _md5_checksum()
+>  	md5sum $1 | cut -d ' ' -f1
+>  }
+>  
+> +# Check whether a fsxattr xflags character ($2) field is set on a given file ($1).
+> +# e.g, fsxattr.xflags =  0x80000800 [----------e-----X]
+> +_test_fsx_xflags_field()
 
-Looks fine to me now,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+How about we call this "_test_fsxattr_xflag" instead?
+
+fsx is already something else in fstests.
+
+> +{
+> +    grep -q "fsxattr.xflags.*\[.*$2.*\]" <($XFS_IO_PROG -c "stat" "$1")
+> +}
+
+Not sure why this lost the xfs_io | grep -q structure.  The return value
+of the whole expression will always be the return value of the last
+command in the pipeline.
+
+(Correct?  I hate bash...)
 
 --D
 
-> ---
-> 
-> v2:
-> - Dropped unnecessary local var.
-> v1: https://lore.kernel.org/linux-fsdevel/20241108124246.198489-5-bfoster@redhat.com/
-> 
->  fs/iomap/buffered-io.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index af2f59817779..25fbb541032a 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1369,6 +1369,8 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
->  		if (iter->iomap.flags & IOMAP_F_STALE)
->  			break;
+> +
+>  # Write a byte into a range of a file
+>  _pwrite_byte() {
+>  	local pattern="$1"
+> diff --git a/tests/xfs/207 b/tests/xfs/207
+> index bbe21307..4f6826f3 100755
+> --- a/tests/xfs/207
+> +++ b/tests/xfs/207
+> @@ -21,15 +21,6 @@ _require_cp_reflink
+>  _require_xfs_io_command "fiemap"
+>  _require_xfs_io_command "cowextsize"
 >  
-> +		/* warn about zeroing folios beyond eof that won't write back */
-> +		WARN_ON_ONCE(folio_pos(folio) > iter->inode->i_size);
->  		offset = offset_in_folio(folio, pos);
->  		if (bytes > folio_size(folio) - offset)
->  			bytes = folio_size(folio) - offset;
+> -# Takes the fsxattr.xflags line,
+> -# i.e. fsxattr.xflags = 0x0 [--------------C-]
+> -# and tests whether a flag character is set
+> -test_xflag()
+> -{
+> -    local flg=$1
+> -    grep -q "\[.*${flg}.*\]" && echo "$flg flag set" || echo "$flg flag unset"
+> -}
+> -
+>  echo "Format and mount"
+>  _scratch_mkfs > $seqres.full 2>&1
+>  _scratch_mount >> $seqres.full 2>&1
+> @@ -65,14 +56,14 @@ echo "Set cowextsize and check flag"
+>  $XFS_IO_PROG -c "cowextsize 1048576" $testdir/file3 | _filter_scratch
+>  _scratch_cycle_mount
+>  
+> -$XFS_IO_PROG -c "stat" $testdir/file3 | grep 'fsxattr.xflags' | test_xflag "C"
+> +_test_fsx_xflags_field "$testdir/file3" "C" && echo "C flag set" || echo "C flag unset"
+>  $XFS_IO_PROG -c "cowextsize" $testdir/file3 | _filter_scratch
+>  
+>  echo "Unset cowextsize and check flag"
+>  $XFS_IO_PROG -c "cowextsize 0" $testdir/file3 | _filter_scratch
+>  _scratch_cycle_mount
+>  
+> -$XFS_IO_PROG -c "stat" $testdir/file3 | grep 'fsxattr.xflags' | test_xflag "C"
+> +_test_fsx_xflags_field "$testdir/file3" "C" && echo "C flag set" || echo "C flag unset"
+>  $XFS_IO_PROG -c "cowextsize" $testdir/file3 | _filter_scratch
+>  
+>  status=0
 > -- 
-> 2.47.0
+> 2.43.5
 > 
 > 
