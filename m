@@ -1,59 +1,59 @@
-Received: from mail-oi1-f182.google.com (mail-oi1-f182.google.com [209.85.167.182])
+Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B74E1D0DDF
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 15:01:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E51931D460E
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 15:07:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731682901; cv=none; b=TrNVSU8w9i53A1SWUjphacgoJZfF64Ce1hWLXfBn7u4AYYFRKdUYGlC4DiVbrUOKGKFarJ5VMidoHoDnFLWc35P6XAas1GJt7aRe6fubIFkSIzj5DnR0ueCZJj7SWAIdD+TyCvI6fJ1Hjm25UoMVtKTyzwSIVLkiAtJ8uTY2A2g=
+	t=1731683224; cv=none; b=Sd2SryxJJidHNob9W4YGtDLX4vz7g+z3dSo5IgY619raY/Nmai5ZaS2UNSF9cLpUbC71NANfStta4Meqnsc5krR0ewTPTG9sjGcN9BUl6izpRPke+XfSe1TOuPEF/e4zpXCjnIKwQ+UMLsPqhVwHqeafk4LWxn3uaGOrdsEZI3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731682901; c=relaxed/simple;
-	bh=FkN51oQ+95A1kaKWWqtWb69R2pZOBZA2x/xx+3M5Dhw=;
+	s=arc-20240116; t=1731683224; c=relaxed/simple;
+	bh=JoueD5DdbEps7KANkoLAA34opKmVg057HSDEhnbmjsQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=byDBPs9GkdzxtEwlOo50sCgIxGqYG+B58kNgvud6DAGqG8py2PaGf8Ab0uArX6YmYpqOybccTgVf1Uwd8URkm7YLBbBVThUu0V2WDL6cNnfIj2y+c0p2Hlp2WHXl/zUQACbPEJUmNNdezk2S68ddzr2kyBM8Vxvx2DswwbBZ9LE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=D3B7npL7; arc=none smtp.client-ip=209.85.167.182
+	 In-Reply-To:Content-Type; b=G2tZ77xr/uK1RRGwGwpexjZb8EPtmWA8GaO3ygf1PwhfAchKFG4prtySKJJr3owIv5uho4YsxQ6m8uy0xPjwlhZN7Mtnse8qeqZ49aIXh60OE+UI3mHveXvBXKd3Bbg9UyOS0LV/45yROmVPzKKsLneWHPsrA73YchaglAjIIQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=RROIqpK4; arc=none smtp.client-ip=209.85.167.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="D3B7npL7"
-Received: by mail-oi1-f182.google.com with SMTP id 5614622812f47-3e600add5dcso1094981b6e.2
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 07:01:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="RROIqpK4"
+Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3e5fb8a4e53so475830b6e.1
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 07:07:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731682896; x=1732287696; darn=vger.kernel.org;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731683222; x=1732288022; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=daa6RCRSBOXDojMt+CYYvatICfCaMKTsm2GIsGdsz1o=;
-        b=D3B7npL77Lxvhtbv94JNVbUPQgmEtmmFeS+vqopJ+840bJmpIWvIP2vHpXCaaJvqCm
-         qk1W1AgJd+/CnqOwjI5pbr22jbUYgtnH80KGAVlo2+Kgl+q6kL24ovKYGA7/HIvD+pgu
-         rOIn89UBDKmMqwvUOhq3Mgr2n2fUPc1JcUU293RIxTsPfX1ETl7s00UiV/q/dTolDgRd
-         xEOI0uRv0AFT2AZmNo70/kcl6HAAQFlRN1RlVMjqd9pIC+usu3TBJcLBpuKTuaG5cO8l
-         +/tt68kz4Z6xuJvF5aiEZRnp02IlT3Z9CGItG4BRQLXjIewaEq99rK+T6+yhfon3junW
-         rUJQ==
+        bh=0gUCqtsVIcpTKxB887ynhni13OvvpCFWbJ2pT4TerOo=;
+        b=RROIqpK41XM1XxPaZU4J0Hh1Yfu3ibn1or6r1aMG1ocm37YpJkwMmjDUVOrpKMOjYk
+         MER/k9d6rkjtp7bLmd4cwudVjXvHPeJq/qrblXkwmgU/Z/5xf2VTv78OIoWS80MmhSAz
+         jfQ4AFY6jyQYIcAInv22ztdPjElN954+4NwSsAHlTrFvClQkaW5wSnqCaAQF2S8wiccM
+         gRZxvOaeK89c/vzRQF2fzw/UWZ3/Z6R8ersCSNkf3re7vMS2ye/2l0ThXdUGdBmD/lj3
+         JQy8KjuBf9h8CF1APS7HxMpp2l3M25kIwvC2wMspv11NMcrw9t0f9lF9hEYbwXjjZeeO
+         1Y4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731682896; x=1732287696;
+        d=1e100.net; s=20230601; t=1731683222; x=1732288022;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=daa6RCRSBOXDojMt+CYYvatICfCaMKTsm2GIsGdsz1o=;
-        b=n8mUYfMpDH5gPXGDHaqX9oLLXGHxAZuRrSoGpbmQOdVZ8RueoLA8+Xwa3DPQpcqPLU
-         HGVIthAWqyW7iRQQchfqL4UouVFbmAeAbhzioJeICs0ybytPVSQVRxvo5XcFTfK6wRAy
-         Ndh/C0BkfkEGG7neXnwgaDz+x8CQXwt37I/VKuQtdefCHfMhbf9WPVAPgADDwGTO0er+
-         b1hBSrOAY8z/vy5yi2TzMqBpKxcSAz+12dhO8cACS44cIFRCtgWsw66fy4n8JUfpVcww
-         CayG8HNkQ/fcIZdtC3YEkjrwWZ+SHl9MjNkeHZgEorMOIGxlG3AM1c33yHlPxRVXkTX4
-         kuMA==
-X-Forwarded-Encrypted: i=1; AJvYcCVjDl4HmhYcDfxLT2v+yKQ8YQuEadcDuvyLq3XuYo0xhU4xnNE+hpwxakDtNFWWu5JX25dinuwbwVY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxbh1FEBN4mPSAK1dAnPAVvNcm6AyGrQqgVFT7z7BSJIQT9+W39
-	3TUFU2MjR5MPi5GkR4r96ra6fQMP2VQIKjrjBK1F51v/EEbn3UD2o+GH4dESTzg=
-X-Google-Smtp-Source: AGHT+IHUMI9fHXDh2gLJRoCs0tTa351RP+bVjNh9KTwP1t19tdcKal4tMfqXouiaHQoPBiHfxg/DmA==
-X-Received: by 2002:a05:6808:2123:b0:3e6:3777:76a7 with SMTP id 5614622812f47-3e7bc7d4a70mr3117960b6e.23.1731682896434;
-        Fri, 15 Nov 2024 07:01:36 -0800 (PST)
+        bh=0gUCqtsVIcpTKxB887ynhni13OvvpCFWbJ2pT4TerOo=;
+        b=Fsy6//bFDq6e27r8+beaocY8nws1/7CMrxZNC+mFgcQi/SmiKaThBOqdKa2eHvGlSi
+         eo1MsKjW9qnu2ab64CqpfiWrH0eU2skiA5flkJAz5Xb/1EVbm4meQjkCVL28LNlgOUJA
+         FDvJRufptsmdogb8PhRf8Fc3MtMddsxI1fUqkYZqn9eYrmUdj6ac81Vu1MkKKj9UIINk
+         sd072/6QBlPwDN07aC933F+iUHahDoaua1Jgyo6m1JsiS2sterrhWHE3Eto8g/Q5w8LG
+         ZMSYm/ficOiFKlpVnKrjIon+1qUao79lQ4RFxfjR36jJC4qY+On7vc48r9KJcCHfJgT8
+         e43A==
+X-Forwarded-Encrypted: i=1; AJvYcCUfjnWmxyUZ/ZGBOOsezFc3Dn6h5bthMfJBtsTrXqnzvvG0QRDZ6ydXhFTdTXoN5tL3+rdWwqbv3R8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwMtOcviIZN0clCmMVAtwaoTgLP4NvlypU0bQcucMLfDKtx0tLZ
+	Oko+8m1eFbnm1i1x0xaiamZYSGagXt05Rd/eVV/fgQg+sNccHD6slj0HUwA8o3c=
+X-Google-Smtp-Source: AGHT+IESr8fzq2A6pN9+2NHIo06fx9RY7MS57VQq1z635m6xFAB4jhV9p9zb/JVkay2xsrjQDiNpqw==
+X-Received: by 2002:a05:6808:3096:b0:3e6:14a6:4288 with SMTP id 5614622812f47-3e7bc7c14a8mr3816872b6e.11.1731683221679;
+        Fri, 15 Nov 2024 07:07:01 -0800 (PST)
 Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-3e7bcd10914sm529838b6e.12.2024.11.15.07.01.34
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-3e7bcd82ad7sm536427b6e.40.2024.11.15.07.07.00
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 Nov 2024 07:01:35 -0800 (PST)
-Message-ID: <5c6b9c45-25fd-4a6a-bfcd-781431f5c6e0@kernel.dk>
-Date: Fri, 15 Nov 2024 08:01:34 -0700
+        Fri, 15 Nov 2024 07:07:00 -0800 (PST)
+Message-ID: <94116ae9-30a8-40fa-8ff0-0c51ee126c64@kernel.dk>
+Date: Fri, 15 Nov 2024 08:06:59 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,43 +61,186 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/17] mm/filemap: add read support for RWF_UNCACHED
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, hannes@cmpxchg.org,
- clm@meta.com, linux-kernel@vger.kernel.org, willy@infradead.org,
- linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCHSET v5 0/17] Uncached buffered IO
+To: Julian Sun <sunjunchao2870@gmail.com>, linux-mm@kvack.org,
+ linux-fsdevel@vger.kernel.org
+Cc: hannes@cmpxchg.org, clm@meta.com, linux-kernel@vger.kernel.org,
+ willy@infradead.org, kirill@shutemov.name, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com
 References: <20241114152743.2381672-2-axboe@kernel.dk>
- <20241114152743.2381672-10-axboe@kernel.dk>
- <66q2ojkbzy2l7ozzc4ilputbgvdtwav4r4qdvnl7x32tuutums@zachqbvl7y3w>
+ <8b47ebabf12a531f2fa24a7671df5e569b82adb7.camel@gmail.com>
 Content-Language: en-US
 From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <66q2ojkbzy2l7ozzc4ilputbgvdtwav4r4qdvnl7x32tuutums@zachqbvl7y3w>
+In-Reply-To: <8b47ebabf12a531f2fa24a7671df5e569b82adb7.camel@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/15/24 1:49 AM, Kirill A. Shutemov wrote:
-> On Thu, Nov 14, 2024 at 08:25:12AM -0700, Jens Axboe wrote:
->> @@ -2595,6 +2601,20 @@ static inline bool pos_same_folio(loff_t pos1, loff_t pos2, struct folio *folio)
->>  	return (pos1 >> shift == pos2 >> shift);
->>  }
->>  
->> +static void filemap_uncached_read(struct address_space *mapping,
->> +				  struct folio *folio)
->> +{
->> +	if (!folio_test_uncached(folio))
->> +		return;
->> +	if (folio_test_writeback(folio))
->> +		return;
+On 11/14/24 9:01 PM, Julian Sun wrote:
+> On Thu, 2024-11-14 at 08:25 -0700, Jens Axboe wrote:
+>> Hi,
+>>
+>> 5 years ago I posted patches adding support for RWF_UNCACHED, as a way
+>> to do buffered IO that isn't page cache persistent. The approach back
+>> then was to have private pages for IO, and then get rid of them once IO
+>> was done. But that then runs into all the issues that O_DIRECT has, in
+>> terms of synchronizing with the page cache.
+>>
+>> So here's a new approach to the same concent, but using the page cache
+>> as synchronization. That makes RWF_UNCACHED less special, in that it's
+>> just page cache IO, except it prunes the ranges once IO is completed.
+>>
+>> Why do this, you may ask? The tldr is that device speeds are only
+>> getting faster, while reclaim is not. Doing normal buffered IO can be
+>> very unpredictable, and suck up a lot of resources on the reclaim side.
+>> This leads people to use O_DIRECT as a work-around, which has its own
+>> set of restrictions in terms of size, offset, and length of IO. It's
+>> also inherently synchronous, and now you need async IO as well. While
+>> the latter isn't necessarily a big problem as we have good options
+>> available there, it also should not be a requirement when all you want
+>> to do is read or write some data without caching.
+>>
+>> Even on desktop type systems, a normal NVMe device can fill the entire
+>> page cache in seconds. On the big system I used for testing, there's a
+>> lot more RAM, but also a lot more devices. As can be seen in some of the
+>> results in the following patches, you can still fill RAM in seconds even
+>> when there's 1TB of it. Hence this problem isn't solely a "big
+>> hyperscaler system" issue, it's common across the board.
+>>
+>> Common for both reads and writes with RWF_UNCACHED is that they use the
+>> page cache for IO. Reads work just like a normal buffered read would,
+>> with the only exception being that the touched ranges will get pruned
+>> after data has been copied. For writes, the ranges will get writeback
+>> kicked off before the syscall returns, and then writeback completion
+>> will prune the range. Hence writes aren't synchronous, and it's easy to
+>> pipeline writes using RWF_UNCACHED. Folios that aren't instantiated by
+>> RWF_UNCACHED IO are left untouched. This means you that uncached IO
+>> will take advantage of the page cache for uptodate data, but not leave
+>> anything it instantiated/created in cache.
+>>
+>> File systems need to support this. The patches add support for the
+>> generic filemap helpers, and for iomap. Then ext4 and XFS are marked as
+>> supporting it. The last patch adds support for btrfs as well, lightly
+>> tested. The read side is already done by filemap, only the write side
+>> needs a bit of help. The amount of code here is really trivial, and the
+>> only reason the fs opt-in is necessary is to have an RWF_UNCACHED IO
+>> return -EOPNOTSUPP just in case the fs doesn't use either the generic
+>> paths or iomap. Adding "support" to other file systems should be
+>> trivial, most of the time just a one-liner adding FOP_UNCACHED to the
+>> fop_flags in the file_operations struct.
+>>
+>> Performance results are in patch 8 for reads and patch 10 for writes,
+>> with the tldr being that I see about a 65% improvement in performance
+>> for both, with fully predictable IO times. CPU reduction is substantial
+>> as well, with no kswapd activity at all for reclaim when using uncached
+>> IO.
+>>
+>> Using it from applications is trivial - just set RWF_UNCACHED for the
+>> read or write, using pwritev2(2) or preadv2(2). For io_uring, same
+>> thing, just set RWF_UNCACHED in sqe->rw_flags for a buffered read/write
+>> operation. And that's it.
+>>
+>> Patches 1..7 are just prep patches, and should have no functional
+>> changes at all. Patch 8 adds support for the filemap path for
+>> RWF_UNCACHED reads, patch 10 adds support for filemap RWF_UNCACHED
+>> writes, and patches 13..17 adds ext4, xfs/iomap, and btrfs support.
+>>
+>> Passes full xfstests and fsx overnight runs, no issues observed. That
+>> includes the vm running the testing also using RWF_UNCACHED on the host.
+>> I'll post fsstress and fsx patches for RWF_UNCACHED separately. As far
+>> as I'm concerned, no further work needs doing here. Once we're into
+>> the 6.13 merge window, I'll split up this series and aim to get it
+>> landed that way. There are really 4 parts to this - generic mm bits,
+>> ext4 bits, xfs bits, and btrfs bits.
+>>
+>> And git tree for the patches is here:
+>>
+>> https://git.kernel.dk/cgit/linux/log/?h=buffered-uncached.7
+>>
+>>  fs/btrfs/bio.c                 |   4 +-
+>>  fs/btrfs/bio.h                 |   2 +
+>>  fs/btrfs/extent_io.c           |   8 ++-
+>>  fs/btrfs/file.c                |   9 ++-
+>>  fs/ext4/ext4.h                 |   1 +
+>>  fs/ext4/file.c                 |   2 +-
+>>  fs/ext4/inline.c               |   7 +-
+>>  fs/ext4/inode.c                |  18 +++++-
+>>  fs/ext4/page-io.c              |  28 ++++----
+>>  fs/iomap/buffered-io.c         |  15 ++++-
+>>  fs/xfs/xfs_aops.c              |   7 +-
+>>  fs/xfs/xfs_file.c              |   3 +-
+>>  include/linux/fs.h             |  21 +++++-
+>>  include/linux/iomap.h          |   8 ++-
+>>  include/linux/page-flags.h     |   5 ++
+>>  include/linux/pagemap.h        |  14 ++++
+>>  include/trace/events/mmflags.h |   3 +-
+>>  include/uapi/linux/fs.h        |   6 +-
+>>  mm/filemap.c                   | 114 +++++++++++++++++++++++++++++----
+>>  mm/readahead.c                 |  22 +++++--
+>>  mm/swap.c                      |   2 +
+>>  mm/truncate.c                  |  35 ++++++----
+>>  22 files changed, 271 insertions(+), 63 deletions(-)
+>>
+>> Since v3
+>> - Use foliop_is_uncached() in ext4 rather than do manual compares with
+>>   foliop_uncached.
+>> - Add filemap_fdatawrite_range_kick() helper and use that in
+>>   generic_write_sync() to kick off uncached writeback, rather than need
+>>   every fs adding a call to generic_uncached_write().
+>> - Drop generic_uncached_write() helper, not needed anymore.
+>> - Skip folio_unmap_invalidate() if the folio is dirty.
+>> - Move IOMAP_F_UNCACHED to the internal iomap flags section, and add
+>>   comment from Darrick to it as well.
+>> - Only kick uncached writeback in generic_write_sync() if
+>>   iocb_is_dsync() isn't true.
+>> - Disable RWF_UNCACHED on dax mappings. They require more extensive
+>>   invalidation, and as it isn't a likely use case, just disable it
+>>   for now.
+>> - Update a few commit messages
+>>
 > 
-> Do we want to drop out here if the folio is dirty, but not yet under
-> writeback?
+> Hi,
 > 
-> It is checked inside folio_unmap_invalidate(), but we will lose
-> PG_uncached if we get there.
+> Hello, the simplicity and performance improvement of this patch series are
+> really impressive, and I have no comments on it. 
+> 
+> I'm just curious about its use cases?under which scenarios should it be
+> used, and under which scenarios should it be avoided? I noticed that the
+> backing device you used for testing can provide at least 92GB/s read
+> performance and 115GB/s write performance. Does this mean that the higher
+> the performance of the backing device, the more noticeable the
+> optimization? How does this patch series perform on low-speed devices?
 
-True, seems prudent to skip if it's dirty as well, if only to avoid
-losing uncached for that particular case. I'll add the tweak, thanks.
+It's really more about ratio of device speed to size of RAM. Yes the box
+I tested on has a lot of drives, but it also has a lot of memory. Hence
+the ratio to device speeds and memory size isn't that different from a
+normal desktop box with eg 32G of memory, and a flash drive that does
+6GB/sec. Obviously reclaim for that smaller box will not be as bad as
+the big one, but still.
+
+It's really two fold:
+
+- You want to kick off writeback sooner rather than later. On devices
+  these days, it's pretty pointless to let a lot of dirty data build up
+  before starting to clean it. Uncached writeback starts when the copy
+  is done, rather than many seconds later when some writeback thread
+  decides the pressure is either too high, or it's been dirty too long.
+
+- Don't leave things in cache that aren't going to get reused, only to
+  get pruned later at the point where you need more memory for the cache
+  anyway.
+
+> My understanding is that the performance issue this patch is trying to
+> address originates from the page cache being filled up, causing the current
+> IO to wait for write-back or reclamation, correct? From this perspective,
+> it seems that this would be suitable for applications that issue a large
+> amount of IO in a short period of time, and it might not be dependent on
+> the speed of the backing device?
+
+On the read side, if you're not going to be reusing the data you read,
+uncached is appropriate. Ditto on the write side, if you're just
+flushing out a bunch of data with limted reuse, may as well prune the
+cache regions as soon as the write is done, rather than let some kind of
+background activity do that when memory becomes scarce.
 
 -- 
 Jens Axboe
