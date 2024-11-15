@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94E4C1CDA14;
-	Fri, 15 Nov 2024 16:50:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2246616FF37;
+	Fri, 15 Nov 2024 17:30:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731689455; cv=none; b=G0dUBi7jCstR8Q/uGD4sftGayt7PRmbeZOWs2EQg/yLPgQupZBYtc8gcsKTUbZZ0vHzevH80rD8PTMKwOL3/qaiuPpUAinq4ODUZ4qcb5XdgBnjPKzXgy2wuu1Wt6gJAVVUSyO1OEv4KLpgus0jRQT6Vn0a6KaDEPxCYH/aOzGg=
+	t=1731691828; cv=none; b=ZfifEoOaTrjMr2H84YZuK4ZeseO8M8VG46B0Mm56Ze2ooFYpxQUPay7V85zbadPPKHyl7VaBRj4WvQkMxGKSCR6lYRwUHZ5ZJ6DU15PEQVpJQsWqa9RhV3jl4bUeNGtzsgEpmkQ1/RoouhHfiXDDzmRrfHBEsVgzei9+1h53JW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731689455; c=relaxed/simple;
-	bh=i4F/ZOAv9LfzOgUoDLKx9OfMjWbsTkpHGjUa2UH0+WI=;
+	s=arc-20240116; t=1731691828; c=relaxed/simple;
+	bh=lsxEr5AulEMgKkD8NNdC6SL6Hn731Pqrdbwo6iWVx4c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rDa52c002T8pQ6nKG1K4bnMmVkCRmzae0i0wN8jdEclZJVpfeHjQrOsuMnpO1D1ugt9TB8frRsX7TdXfetojwmR+OnoJicQNl+Uh+kJO+ibJCXqNHwWfUBlg9xvfIrBl4NAnPvnyKfqLdNb26eQ2ipyL1r5iixuY0jyAFvNZhGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=okRzfNf8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=R/2h5VBd+wsVj/ZCnBs3JdN5N/K9piOJBGv6poC7OKEhbnmg6B+GSEYcmsxm0Oi7qjPJGSIP5JlHJyiQ1LFpXV2ouPRk7N0fK/6G7u5fhTqK2tpKT0tlya66dyXuBbgpJgKANBZRN8UhsvJuIeSqwA58sVcHNhyWXIyuQv3E81U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FDaDQ67N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="okRzfNf8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58964C4CED0;
-	Fri, 15 Nov 2024 16:50:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FDaDQ67N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5235C4CECF;
+	Fri, 15 Nov 2024 17:30:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731689455;
-	bh=i4F/ZOAv9LfzOgUoDLKx9OfMjWbsTkpHGjUa2UH0+WI=;
+	s=k20201202; t=1731691827;
+	bh=lsxEr5AulEMgKkD8NNdC6SL6Hn731Pqrdbwo6iWVx4c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=okRzfNf8ao8LD1CYrsckI+dD1iARYTpoJ+JsRbPMsOcN8WNntgvBNo4zeSO1fsv84
-	 BuU4eXyqaAjLe3wIaVftD8jwlmgrAyaS8YqoueDjZoNmVK3iBib7pUEsNrJaxvLDEQ
-	 UxFe7vzXE2G9HD+qRztWbP6q7mIo6YLmJTjKQxsLsUwQYLZLSSTk+kcjSQ583BO0Z6
-	 eFJD8TkHizsl5LRQPGgRHj9SuFCGhBMS+KLBxHiDVVDktwjuYCbU3mD2+DX2tkax86
-	 hMcBuD+JvWNBjXrEq8uoGb0fvGOWiXMNjdaD26k9NmZMRGAMctcZq8SFCPkOuPfCXz
-	 gvf55fQsBVW9w==
-Date: Fri, 15 Nov 2024 08:50:54 -0800
+	b=FDaDQ67NNFtrqhwl9SHjzAQO2AxpkLRHEwfC35Z4TFHWv6JRff58WUpZ9Ok9BCkBQ
+	 FsHwOKLVNZZkHMNvvt/K4+ThspI6SeQLxxmEVIK+fkI18xo/huJCCWwGp+l26adAD6
+	 Rzga7d0A0spvdeGEGuGdc1SShRHHvrzOLyqJXPx8CVdyvP8YaFCcP8+1JicmRGS4UO
+	 oBRa73YlLhn/ZBQ/fisVPoMbmqAnX9k+ByR3yDvNg+lpXibBImvIz2yQP9uXnxpLlH
+	 2KFxsJc3jY5Mc8Fa7yiIpSSFHnMihfYtyb7X3/fmAaahA1/M+RXg5Yw4CBnK13wDRl
+	 pJ0fPOVoEzQPg==
+Date: Fri, 15 Nov 2024 09:30:27 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Nirjhar Roy <nirjhar@linux.ibm.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, zlang@kernel.org
-Subject: Re: [PATCH v2 2/2] generic: Addition of new tests for extsize hints
-Message-ID: <20241115165054.GF9425@frogsfrogsfrogs>
-References: <cover.1731597226.git.nirjhar@linux.ibm.com>
- <373a7e378ba4a76067dc7da5835ac722248144f9.1731597226.git.nirjhar@linux.ibm.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] generic/757: fix various bugs in this test
+Message-ID: <20241115173027.GG9425@frogsfrogsfrogs>
+References: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
+ <173146178859.156441.16666438727834100554.stgit@frogsfrogsfrogs>
+ <20241114052328.rnm54xeqxnvkaluc@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241114053019.GM9438@frogsfrogsfrogs>
+ <20241115054251.azrrmicopowrlqaa@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,266 +45,152 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <373a7e378ba4a76067dc7da5835ac722248144f9.1731597226.git.nirjhar@linux.ibm.com>
+In-Reply-To: <20241115054251.azrrmicopowrlqaa@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Fri, Nov 15, 2024 at 09:45:59AM +0530, Nirjhar Roy wrote:
-> This commit adds new tests that checks the behaviour of xfs/ext4
-> filesystems when extsize hint is set on file with inode size as 0, non-empty
-> files with allocated and delalloc extents and so on.
-> Although currently this test is placed under tests/generic, it
-> only runs on xfs and there is an ongoing patch series[1] to enable
-> extsize hints for ext4 as well.
+On Fri, Nov 15, 2024 at 01:42:51PM +0800, Zorro Lang wrote:
+> On Wed, Nov 13, 2024 at 09:30:19PM -0800, Darrick J. Wong wrote:
+> > On Thu, Nov 14, 2024 at 01:23:28PM +0800, Zorro Lang wrote:
+> > > On Tue, Nov 12, 2024 at 05:37:29PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Fix this test so the check doesn't fail on XFS, and restrict runtime to
+> > > > 100 loops because otherwise this test takes many hours.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  tests/generic/757 |    7 ++++++-
+> > > >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > > > 
+> > > > 
+> > > > diff --git a/tests/generic/757 b/tests/generic/757
+> > > > index 0ff5a8ac00182b..9d41975bde07bb 100755
+> > > > --- a/tests/generic/757
+> > > > +++ b/tests/generic/757
+> > > > @@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
+> > > >  cur=$(_log_writes_find_next_fua $prev)
+> > > >  [ -z "$cur" ] && _fail "failed to locate next FUA write"
+> > > >  
+> > > > -while [ ! -z "$cur" ]; do
+> > > > +for ((i = 0; i < 100; i++)); do
+> > > >  	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
+> > > >  
+> > > > +	# xfs_repair won't run if the log is dirty
+> > > > +	if [ $FSTYP = "xfs" ]; then
+> > > > +		_scratch_mount
+> > > 
+> > > Hi Darrick, can you mount at here? I always get mount error as below:
+> > > 
+> > > SECTION       -- default
+> > > FSTYP         -- xfs (non-debug)
+> > > PLATFORM      -- Linux/x86_64 dell-per750-41 6.12.0-0.rc5.44.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Oct 28 14:12:55 UTC 2024
+> > > MKFS_OPTIONS  -- -f /dev/sda6
+> > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch
+> > > 
+> > > generic/757 2185s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//default/generic/757.out.bad)
+> > >     --- tests/generic/757.out   2024-10-27 03:09:48.740518275 +0800
+> > >     +++ /root/git/xfstests/results//default/generic/757.out.bad 2024-11-14 13:18:56.965210155 +0800
+> > >     @@ -1,2 +1,5 @@
+> > >      QA output created by 757
+> > >     -Silence is golden
+> > >     +mount: /mnt/scratch: cannot mount; probably corrupted filesystem on /dev/sda6.
+> > >     +       dmesg(1) may have more information after failed mount system call.
+> > >     +mount -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch failed
+> > >     +(see /root/git/xfstests/results//default/generic/757.full for details)
+> > >     ...
+> > >     (Run 'diff -u /root/git/xfstests/tests/generic/757.out /root/git/xfstests/results//default/generic/757.out.bad'  to see the entire diff)
+> > > Ran: generic/757
+> > > Failures: generic/757
+> > > Failed 1 of 1 tests
+> > > 
+> > > # dmesg
+> > > ...
+> > > [1258572.169378] XFS (sda6): Mounting V5 Filesystem a0bf3918-1b66-4973-b03c-afd5197a6d21
+> > > [1258572.193037] XFS (sda6): Starting recovery (logdev: internal)
+> > > [1258572.201691] XFS (sda6): Corruption warning: Metadata has LSN (1:41116) ahead of current LSN (1:161). Please unmount and run xfs_repair (>= v4.3) to resolve.
+> > > [1258572.215850] XFS (sda6): Metadata CRC error detected at xfs_bmbt_read_verify+0x16/0xc0 [xfs], xfs_bmbt block 0x2000e8 
+> > > [1258572.226825] XFS (sda6): Unmount and run xfs_repair
+> > > [1258572.231796] XFS (sda6): First 128 bytes of corrupted metadata buffer:
+> > > [1258572.238411] 00000000: 42 4d 41 33 00 00 00 fb 00 00 00 00 00 04 00 9e  BMA3............
+> > > [1258572.246585] 00000010: 00 00 00 00 00 04 00 60 00 00 00 00 00 20 00 e8  .......`..... ..
+> > > [1258572.254766] 00000020: 00 00 00 01 00 00 a0 9c a0 bf 39 18 1b 66 49 73  ..........9..fIs
+> > > [1258572.262945] 00000030: b0 3c af d5 19 7a 6d 21 00 00 00 00 00 00 00 83  .<...zm!........
+> > > [1258572.271117] 00000040: 17 2f 1b e4 00 00 00 00 00 00 00 00 04 b1 2e 00  ./..............
+> > > [1258572.279291] 00000050: 00 00 00 4b 15 e0 00 01 80 00 00 00 04 b1 30 00  ...K..........0.
+> > > [1258572.287462] 00000060: 00 00 00 4b 16 00 00 4f 00 00 00 00 04 b1 ce 00  ...K...O........
+> > > [1258572.295635] 00000070: 00 00 00 4b 1f e0 00 01 80 00 00 00 04 b1 d0 00  ...K............
+> > > [1258572.303811] XFS (sda6): Filesystem has been shut down due to log error (0x2).
+> > > [1258572.311123] XFS (sda6): Please unmount the filesystem and rectify the problem(s).
+> > > [1258572.318791] XFS (sda6): log mount/recovery failed: error -74
+> > > [1258572.324798] XFS (sda6): log mount failed
+> > > [1258572.365169] XFS (sda5): Unmounting Filesystem eb4b7840-2c01-4306-9a6c-af2e7207a23f
+> > 
+> > I see periodic corruption messages, but generally the mount succeeds and
+> > the test passes, even with TOT -rc6.
 > 
-> [1] https://lore.kernel.org/linux-ext4/cover.1726034272.git.ojaswin@linux.ibm.com/
+> Still fails on -rc7+ [1]. Even with `xfs_repair $SCRATCH_DEV` before mount, it still fails [2].
+> But `xfs_repair -L` helps, the test can keep running after that.
 > 
-> Reviewed-by Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> Suggested-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
-> ---
->  tests/generic/366     | 172 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/366.out |  26 +++++++
->  2 files changed, 198 insertions(+)
->  create mode 100755 tests/generic/366
->  create mode 100644 tests/generic/366.out
-> 
-> diff --git a/tests/generic/366 b/tests/generic/366
-> new file mode 100755
-> index 00000000..7ff4e8e2
-> --- /dev/null
-> +++ b/tests/generic/366
-> @@ -0,0 +1,172 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2024 Nirjhar Roy (nirjhar@linux.ibm.com).  All Rights Reserved.
-> +#
-> +# FS QA Test 366
-> +#
-> +# This test verifies that extent allocation hint setting works correctly on files with
-> +# no extents allocated and non-empty files which are truncated. It also checks that the
-> +# extent hints setting fails with non-empty file i.e, with any file with allocated
-> +# extents or delayed allocation. We also check if the extsize value and the
-> +# xflag bit actually got reflected after setting/re-setting the extsize value.
-> +
-> +. ./common/config
-> +. ./common/filter
-> +. ./common/preamble
-> +
-> +_begin_fstest ioctl quick
-> +
-> +_supported_fs xfs
+> Do you think it's a xfs issue, or a case issue (xfs need a log cleanup at here?).
 
-Aren't you all adding extsize support for ext4?  I would've expected
-some kind of _require_extsize helper to _notrun on filesystems that
-don't support it.
-
-> +
-> +_fixed_by_kernel_commit "2a492ff66673 \
-> +                        xfs: Check for delayed allocations before setting extsize"
-> +
-> +_require_scratch
-> +
-> +FILE_DATA_SIZE=1M
-> +
-> +get_default_extsize()
-> +{
-> +    if [ -z $1 ] || [ ! -d $1 ]; then
-> +        echo "Missing mount point argument for get_default_extsize"
-> +        exit 1
-> +    fi
-> +    $XFS_IO_PROG -c "extsize" "$1" | sed 's/^\[\([0-9]\+\)\].*/\1/'
-
-Doesn't this need to check for extszinherit on $SCRATCH_MNT?
-
-> +}
-> +
-> +filter_extsz()
-> +{
-> +    sed "s/\[$1\]/\[EXTSIZE\]/g"
-> +}
-> +
-> +setup()
-> +{
-> +    _scratch_mkfs >> "$seqres.full"  2>&1
-> +    _scratch_mount >> "$seqres.full" 2>&1
-> +    BLKSZ=`_get_block_size $SCRATCH_MNT`
-> +    DEFAULT_EXTSIZE=`get_default_extsize $SCRATCH_MNT`
-> +    EXTSIZE=$(( BLKSZ*2 ))
-> +    # Making sure the new extsize is not the same as the default extsize
-
-Er... why?
-
-> +    [[ "$DEFAULT_EXTSIZE" -eq "$EXTSIZE" ]] && EXTSIZE=$(( BLKSZ*4 ))
-> +}
-> +
-> +read_file_extsize()
-> +{
-> +    $XFS_IO_PROG -c "extsize" $1 | _filter_scratch | filter_extsz $2
-> +}
-> +
-> +check_extsz_and_xflag()
-> +{
-> +    local filename=$1
-> +    local extsize=$2
-> +    read_file_extsize $filename $extsize
-> +    _test_fsx_xflags_field $filename "e" && echo "e flag set" || echo "e flag unset"
-
-I almost asked in the last patch if the _test_fsxattr_flag function
-should be running xfs_io -c 'stat -v' so that you could grep for whole
-words instead of individual letters.
-
-"extsize flag unset"
-
-"cowextsize flag set"
-
-is a bit easier to figure out what's going wrong.
-
-The rest of the logic looks reasonable to me.
+I'm not sure.  Does your sda6 device support discards?  My VMs'
+SCRATCH_DEVs usually support it, and I noticed that all the other
+generic/ _log_writes_init tests set up a dm-thin volume so that the
+replays can always zero out the whole device before jumping to a
+snapshot.
 
 --D
 
-> +}
-> +
-> +check_extsz_xflag_across_remount()
-> +{
-> +    local filename=$1
-> +    local extsize=$2
-> +    _scratch_cycle_mount
-> +    check_extsz_and_xflag $filename $extsize
-> +}
-> +
-> +# Extsize flag should be cleared when extsize is reset, so this function
-> +# checks that this behavior is followed.
-> +reset_extsz_and_recheck_extsz_xflag()
-> +{
-> +    local filename=$1
-> +    echo "Re-setting extsize hint to 0"
-> +    $XFS_IO_PROG -c "extsize 0" $filename
-> +    check_extsz_xflag_across_remount $filename "0"
-> +}
-> +
-> +check_extsz_xflag_before_and_after_reset()
-> +{
-> +    local filename=$1
-> +    local extsize=$2
-> +    check_extsz_xflag_across_remount $filename $extsize
-> +    reset_extsz_and_recheck_extsz_xflag $filename
-> +}
-> +
-> +test_empty_file()
-> +{
-> +    echo "TEST: Set extsize on empty file"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "extsize $EXTSIZE" \
-> +
-> +    check_extsz_xflag_before_and_after_reset $filename $EXTSIZE
-> +    echo
-> +}
-> +
-> +test_data_delayed()
-> +{
-> +    echo "TEST: Set extsize on non-empty file with delayed allocation"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
-> +        -c "extsize $EXTSIZE" | _filter_scratch
-> +
-> +    echo "test for default extsize setting if any"
-> +    read_file_extsize $filename $DEFAULT_EXTSIZE
-> +    echo
-> +}
-> +
-> +test_data_allocated()
-> +{
-> +    echo "TEST: Set extsize on non-empty file with allocated extents"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
-> +        -c "extsize $EXTSIZE" | _filter_scratch
-> +
-> +    echo "test for default extsize setting if any"
-> +    read_file_extsize $filename $DEFAULT_EXTSIZE
-> +    echo
-> +}
-> +
-> +test_truncate_allocated()
-> +{
-> +    echo "TEST: Set extsize after truncating a file with allocated extents"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
-> +        -c "truncate 0" \
-> +        -c "extsize $EXTSIZE" \
-> +
-> +    check_extsz_xflag_across_remount $filename $EXTSIZE
-> +    echo
-> +}
-> +
-> +test_truncate_delayed()
-> +{
-> +    echo "TEST: Set extsize after truncating a file with delayed allocation"
-> +    local filename=$1
-> +    $XFS_IO_PROG \
-> +        -c "open -f $filename" \
-> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
-> +        -c "truncate 0" \
-> +        -c "extsize $EXTSIZE" \
-> +
-> +    check_extsz_xflag_across_remount $filename $EXTSIZE
-> +    echo
-> +}
-> +
-> +setup
-> +echo -e "EXTSIZE = $EXTSIZE DEFAULT_EXTSIZE = $DEFAULT_EXTSIZE BLOCKSIZE = $BLKSZ\n" >> "$seqres.full"
-> +
-> +NEW_FILE_NAME_PREFIX=$SCRATCH_MNT/new-file-
-> +
-> +test_empty_file "$NEW_FILE_NAME_PREFIX"00
-> +test_data_delayed "$NEW_FILE_NAME_PREFIX"01
-> +test_data_allocated "$NEW_FILE_NAME_PREFIX"02
-> +test_truncate_allocated "$NEW_FILE_NAME_PREFIX"03
-> +test_truncate_delayed "$NEW_FILE_NAME_PREFIX"04
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/366.out b/tests/generic/366.out
-> new file mode 100644
-> index 00000000..cdd2f5fa
-> --- /dev/null
-> +++ b/tests/generic/366.out
-> @@ -0,0 +1,26 @@
-> +QA output created by 366
-> +TEST: Set extsize on empty file
-> +[EXTSIZE] SCRATCH_MNT/new-file-00
-> +e flag set
-> +Re-setting extsize hint to 0
-> +[EXTSIZE] SCRATCH_MNT/new-file-00
-> +e flag unset
-> +
-> +TEST: Set extsize on non-empty file with delayed allocation
-> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-01: Invalid argument
-> +test for default extsize setting if any
-> +[EXTSIZE] SCRATCH_MNT/new-file-01
-> +
-> +TEST: Set extsize on non-empty file with allocated extents
-> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-02: Invalid argument
-> +test for default extsize setting if any
-> +[EXTSIZE] SCRATCH_MNT/new-file-02
-> +
-> +TEST: Set extsize after truncating a file with allocated extents
-> +[EXTSIZE] SCRATCH_MNT/new-file-03
-> +e flag set
-> +
-> +TEST: Set extsize after truncating a file with delayed allocation
-> +[EXTSIZE] SCRATCH_MNT/new-file-04
-> +e flag set
-> +
-> -- 
-> 2.43.5
+> Thanks,
+> Zorro
+> 
+> [1]
+> # ./check -s default generic/757
+> SECTION       -- default
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 dell-per750-41 6.12.0-0.rc7.58.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Nov 11 15:23:45 UTC 2024
+> MKFS_OPTIONS  -- -f /dev/sda6
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch
+> 
+> generic/757 2185s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//default/generic/757.out.bad)
+>     --- tests/generic/757.out   2024-10-27 03:09:48.740518275 +0800
+>     +++ /root/git/xfstests/results//default/generic/757.out.bad 2024-11-15 03:06:59.462739215 +0800
+>     @@ -1,2 +1,5 @@
+>      QA output created by 757
+>     -Silence is golden
+>     +mount: /mnt/scratch: cannot mount; probably corrupted filesystem on /dev/sda6.
+>     +       dmesg(1) may have more information after failed mount system call.
+>     +mount -o context=system_u:object_r:root_t:s0 /dev/sda6 /mnt/scratch failed
+>     +(see /root/git/xfstests/results//default/generic/757.full for details)
+>     ...
+>     (Run 'diff -u /root/git/xfstests/tests/generic/757.out /root/git/xfstests/results//default/generic/757.out.bad'  to see the entire diff)
+> Ran: generic/757
+> Failures: generic/757
+> Failed 1 of 1 tests
+> 
+> [2]
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> re-running xfs_repair.  If you are unable to mount the filesystem, then use
+> the -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this.
+> 
+> > 
+> > --D
+> > 
+> > > > +		_scratch_unmount
+> > > > +	fi
+> > > 
+> > > 
+> > > >  	_check_scratch_fs
+> > > >  
+> > > >  	prev=$cur
+> > > > 
+> > > 
+> > > 
+> > 
 > 
 > 
