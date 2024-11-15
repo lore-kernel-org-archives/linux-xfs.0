@@ -1,231 +1,244 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 822751B9835;
-	Thu, 14 Nov 2024 23:43:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBC692F37;
+	Fri, 15 Nov 2024 04:01:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731627782; cv=none; b=DKh256LtQxTg4BIzD5SRsjT47Vkpupc5OWKgBvTNsdw68q+I45Adcks3tHfmDEZ2CzG1G8jSheto5RBIl7uv3WyO3IyLuunG7VDXl5wnnJExBIOgFEX+RkAzdKiEPpM2PMLjythXJKx40144r/XiSVP2jsd22uCGEb66HTXLZCc=
+	t=1731643291; cv=none; b=A+taZVpYkOQ9nM86Z8Utdsu+cn+CPuLqBO0nJrJGOBMYTBE2UxZczBjeCKSfoArJO3rBCk4rExn2rvDRHDYmfK/e2YQfb2QogUUeGnwApvAzP/T2Ran+FltdjYL9c8fnMF9zR+jpLspl5N+a+euvMlINIsEQy1MHL+MlI/cMRD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731627782; c=relaxed/simple;
-	bh=cDhDLt4EhtO3QoQ88yOeJvigwyX1hfOvLdrcwss1c8Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FM2uwoOB3hegS7mJOASZOwdtKdw1xG8nlYvge9dq/95mTga0LX9xV0iVTRBq+remy2SoXZZGos+WTJUG7MwQdezOSF+Zps3OOwvucX3fmRh02Rivsb73V9fd9XIBR5vqn7Q6dW07VWq9MxSEP/10/F4dBg90kerVgVgRPmmdiYo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YOAG//Ey; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731643291; c=relaxed/simple;
+	bh=SBbOMZKSEglULtzjYYUceNSTFC5l18/XBMumWX6ysKc=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=CCkKML3YvGldaxYP7h345mA0VGZXQEvK9wrf8DrHBj9HDkdypcS9oi3dAuWrfU8torfXKozNyCg0yD9D4dMvgGszBUHDOr9WftGS17A3DiComu5sr9+YR95epsXcHqV66FmVIGUcE48/aYnERuYvjg3xQGpQlSxMJI1xIkNv470=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Fr521tE5; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YOAG//Ey"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCF40C4CECD;
-	Thu, 14 Nov 2024 23:43:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731627781;
-	bh=cDhDLt4EhtO3QoQ88yOeJvigwyX1hfOvLdrcwss1c8Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YOAG//EymfxbPmX7liR88w/IpLMdj5hGa98ChVf+Vjdaojp69dm/tlDPMewZt3MYA
-	 ewIK59h6+PCiqmYD8FyqjiR7kPiflrVq4+wp8JUPkbOFYnIol6yq4+leFrgsPe+6Q3
-	 ccZlfkPz3VS9O62AKosBva1gppB0TmBFMgQDh0omdO19Tdq/f88yO0UGMFi5QFIvS/
-	 ZEPQMDPKLFoel+SI94OCa1V4IVMzf2FbcBnVn9KY4tBKXDS0yAqm5Bt2z0WJmpBVdQ
-	 sZsrO6eTBV3wsxw6OIyW4qHv1SjX6FmHnrD5uXNYsIaHO8LoXCYaUhnIXDPMBFDclD
-	 DZe2oJfkbKySw==
-Date: Thu, 14 Nov 2024 15:43:01 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs/157: mkfs does not need a specific fssize
-Message-ID: <20241114234301.GB9425@frogsfrogsfrogs>
-References: <20241101054810.cu6zsjrxgfzdrnia@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241101214926.GW2578692@frogsfrogsfrogs>
- <Zyh8yP-FJUHKt2fK@infradead.org>
- <20241104130437.mutcy5mqzcqrbqf2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241104233426.GW21840@frogsfrogsfrogs>
- <ZynB+0hF1Bo6p0Df@dread.disaster.area>
- <Zyozgri3aa5DoAEN@infradead.org>
- <20241105154712.GJ2386201@frogsfrogsfrogs>
- <ZyxS0k6UWaHpooAo@dread.disaster.area>
- <20241107101011.2j5tel7zucn3rbbf@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fr521tE5"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-20c77459558so12609145ad.0;
+        Thu, 14 Nov 2024 20:01:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1731643289; x=1732248089; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=SBbOMZKSEglULtzjYYUceNSTFC5l18/XBMumWX6ysKc=;
+        b=Fr521tE52Zn0BNAVL5Luy/KWUt7NCtIRQcsdHx62QFREkZ0uD40MPH2hiuOf4Qicje
+         Fn0Cd3EnWJOzlcYhaOrI1zCbN10OB9B4lBC1O/fQ+CqnzpDJH71zJTsCjXcZ5etMgUWe
+         t0TQgrRX276KqWWuIJdn17y6+gE6nnAcEowmjd8lMabWFyz3aYqoQSx5wfRqOwg7cxhS
+         R3xA8sAfn7Kf3CJiW2V1PYsFH0SuZefYqyQpb3X/TVjdWKRs7oh8sw9NMQY/Uszl2OGc
+         VKhsZSIxovYjA1tJ0zggJ0Ijry/R6PNzSwpd5F3irGjA/AJCJhH6k1wK0VWfZkT3ov2T
+         NaXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731643289; x=1732248089;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=SBbOMZKSEglULtzjYYUceNSTFC5l18/XBMumWX6ysKc=;
+        b=QcuG99s1KDdIrqbOkHh/BUMpoUxKEn4LJAM5Y0mEULNr/8xWbhVRTXpPTuidsMdgoI
+         APJG4aY2guoHAHnV0j9/iNFeOwuQ9HStSMGivHR0W3AgZj4klxGvlH+shm8duF0VGg00
+         zs4ey62x3V4nOytZGZOnvzce8sGuCodCd5nAc4XtlWIb0VZniLoB7iXVt5Qy999oaDRi
+         G2WQuNxjkYm55olwPL4ElKScD1pJLlllE0s3MxocwbD1LNDP+pn1ORWu+ryKrIndL/cT
+         P0cfynvFlWujtcxzrJ6/pmuGKTmKUhXkfz+5X56o+reyVxIOqswoSF68HDo76iVVU6RU
+         HmNg==
+X-Forwarded-Encrypted: i=1; AJvYcCU5Y+5c2PIWFJpFh3ienkhIC1nmtB9ZbkGwd1JYEWmCtsMGbO0EEkiR2xXvP6US8MroWVJ71EzqVKJW9Q==@vger.kernel.org, AJvYcCUo6eAcDmUMNOsnGHZEG7ql1tjKvtLc3KSByUHY54NIuCtUnUS16O3/tusSWWA7NxZZp8M/V5EF5h/h@vger.kernel.org, AJvYcCUrbxqNWomlBfobYFFAB6gCCpTmD+4hKSyma+LGq5zARk8lPaQO9jZ380qUED3Ih+XdBOmqmdwJvUmRbw==@vger.kernel.org, AJvYcCUxJjrT2yqLR7RVq0v4mr7bcQKqK8CBOpKF1xV0lAZw58NwdlZK3/fYQjvsn+xEpIza84JR3RCOJe48xUkczA==@vger.kernel.org, AJvYcCWIxHXleLoeRk0c02jd6sqlqpvtJbmEyaIaYILVBnkPyv5wsL5XZaL5oityizjMAGFZPkV1fS+jDm6cln1W@vger.kernel.org
+X-Gm-Message-State: AOJu0YzEIaEW0fJ41MK2lTY5N6hErdtVpQAT8gbwSJBfT2V1O0jYj6Ox
+	8m6fZgQywv80JjmMKGJGIfRBMwtEHX1FActgT0T8EwHoV5y/k8B5
+X-Google-Smtp-Source: AGHT+IGIGDCtkGXvHsXcS/UCbj1fAXsOFtXspIdyEuLCS6WlpXb/8B43cROPn6gVvB1e1TRaXbciRw==
+X-Received: by 2002:a17:902:ec88:b0:20c:da98:d752 with SMTP id d9443c01a7336-211d0d6fcdfmr17849335ad.16.1731643288821;
+        Thu, 14 Nov 2024 20:01:28 -0800 (PST)
+Received: from [10.172.23.43] ([206.237.119.150])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211d0dc5d7bsm3902325ad.36.2024.11.14.20.01.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Nov 2024 20:01:28 -0800 (PST)
+Message-ID: <8b47ebabf12a531f2fa24a7671df5e569b82adb7.camel@gmail.com>
+Subject: Re: [PATCHSET v5 0/17] Uncached buffered IO
+From: Julian Sun <sunjunchao2870@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org
+Cc: hannes@cmpxchg.org, clm@meta.com, linux-kernel@vger.kernel.org, 
+	willy@infradead.org, kirill@shutemov.name, linux-btrfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com
+Date: Fri, 15 Nov 2024 12:01:23 +0800
+In-Reply-To: <20241114152743.2381672-2-axboe@kernel.dk>
+References: <20241114152743.2381672-2-axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4-2 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241107101011.2j5tel7zucn3rbbf@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Thu, Nov 07, 2024 at 06:10:11PM +0800, Zorro Lang wrote:
-> On Thu, Nov 07, 2024 at 04:40:34PM +1100, Dave Chinner wrote:
-> > On Tue, Nov 05, 2024 at 07:47:12AM -0800, Darrick J. Wong wrote:
-> > > On Tue, Nov 05, 2024 at 07:02:26AM -0800, Christoph Hellwig wrote:
-> > > > On Tue, Nov 05, 2024 at 05:58:03PM +1100, Dave Chinner wrote:
-> > > > > When the two conflict, _scratch_mkfs drops the global MKFS_OPTIONS
-> > > > > and uses only the local parameters so the filesystem is set up with
-> > > > > the configuration the test expects.
-> > > > > 
-> > > > > In this case, MKFS_OPTIONS="-m rmapbt=1" which conflicts with the
-> > > > > local RTDEV/USE_EXTERNAL test setup. Because the test icurrently
-> > > > > overloads the global MKFS_OPTIONS with local test options, the local
-> > > > > test parameters are dropped along with the global paramters when
-> > > > > there is a conflict. Hence the mkfs_scratch call fails to set the
-> > > > > filesystem up the way the test expects.
-> > > > 
-> > > > But the rmapbt can be default on, in which case it does not get
-> > > > removed.  And then without the _sized we'll run into the problem that
-> > > > Hans' patches fixed once again.
-> > > 
-> > > Well we /could/ make _scratch_mkfs_sized pass options through to the
-> > > underlying _scratch_mkfs.
-> > 
-> > That seems like the right thing to do to me.
-> 
-> OK, thanks for all of these suggestions, how about below (draft) change[1].
-> If it's good to all of you, I'll send another patch.
-> 
-> Thanks,
-> Zorro
-> 
-> diff --git a/common/rc b/common/rc
-> index 2af26f23f..673f056fb 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -1027,7 +1027,9 @@ _small_fs_size_mb()
->  _try_scratch_mkfs_sized()
->  {
->         local fssize=$1
-> -       local blocksize=$2
-> +       shift
-> +       local blocksize=$1
-> +       shift
->         local def_blksz
->         local blocksize_opt
->         local rt_ops
-> @@ -1091,10 +1093,10 @@ _try_scratch_mkfs_sized()
->                 # don't override MKFS_OPTIONS that set a block size.
->                 echo $MKFS_OPTIONS |grep -E -q "b\s*size="
->                 if [ $? -eq 0 ]; then
-> -                       _try_scratch_mkfs_xfs -d size=$fssize $rt_ops
-> +                       _try_scratch_mkfs_xfs -d size=$fssize $rt_ops $@
->                 else
->                         _try_scratch_mkfs_xfs -d size=$fssize $rt_ops \
-> -                               -b size=$blocksize
-> +                               -b size=$blocksize $@
+On Thu, 2024-11-14 at 08:25 -0700, Jens Axboe wrote:
+> Hi,
+>=20
+> 5 years ago I posted patches adding support for RWF_UNCACHED, as a way
+> to do buffered IO that isn't page cache persistent. The approach back
+> then was to have private pages for IO, and then get rid of them once IO
+> was done. But that then runs into all the issues that O_DIRECT has, in
+> terms of synchronizing with the page cache.
+>=20
+> So here's a new approach to the same concent, but using the page cache
+> as synchronization. That makes RWF_UNCACHED less special, in that it's
+> just page cache IO, except it prunes the ranges once IO is completed.
+>=20
+> Why do this, you may ask? The tldr is that device speeds are only
+> getting faster, while reclaim is not. Doing normal buffered IO can be
+> very unpredictable, and suck up a lot of resources on the reclaim side.
+> This leads people to use O_DIRECT as a work-around, which has its own
+> set of restrictions in terms of size, offset, and length of IO. It's
+> also inherently synchronous, and now you need async IO as well. While
+> the latter isn't necessarily a big problem as we have good options
+> available there, it also should not be a requirement when all you want
+> to do is read or write some data without caching.
+>=20
+> Even on desktop type systems, a normal NVMe device can fill the entire
+> page cache in seconds. On the big system I used for testing, there's a
+> lot more RAM, but also a lot more devices. As can be seen in some of the
+> results in the following patches, you can still fill RAM in seconds even
+> when there's 1TB of it. Hence this problem isn't solely a "big
+> hyperscaler system" issue, it's common across the board.
+>=20
+> Common for both reads and writes with RWF_UNCACHED is that they use the
+> page cache for IO. Reads work just like a normal buffered read would,
+> with the only exception being that the touched ranges will get pruned
+> after data has been copied. For writes, the ranges will get writeback
+> kicked off before the syscall returns, and then writeback completion
+> will prune the range. Hence writes aren't synchronous, and it's easy to
+> pipeline writes using RWF_UNCACHED. Folios that aren't instantiated by
+> RWF_UNCACHED IO are left untouched. This means you that uncached IO
+> will take advantage of the page cache for uptodate data, but not leave
+> anything it instantiated/created in cache.
+>=20
+> File systems need to support this. The patches add support for the
+> generic filemap helpers, and for iomap. Then ext4 and XFS are marked as
+> supporting it. The last patch adds support for btrfs as well, lightly
+> tested. The read side is already done by filemap, only the write side
+> needs a bit of help. The amount of code here is really trivial, and the
+> only reason the fs opt-in is necessary is to have an RWF_UNCACHED IO
+> return -EOPNOTSUPP just in case the fs doesn't use either the generic
+> paths or iomap. Adding "support" to other file systems should be
+> trivial, most of the time just a one-liner adding FOP_UNCACHED to the
+> fop_flags in the file_operations struct.
+>=20
+> Performance results are in patch 8 for reads and patch 10 for writes,
+> with the tldr being that I see about a 65% improvement in performance
+> for both, with fully predictable IO times. CPU reduction is substantial
+> as well, with no kswapd activity at all for reclaim when using uncached
+> IO.
+>=20
+> Using it from applications is trivial - just set RWF_UNCACHED for the
+> read or write, using pwritev2(2) or preadv2(2). For io_uring, same
+> thing, just set RWF_UNCACHED in sqe->rw_flags for a buffered read/write
+> operation. And that's it.
+>=20
+> Patches 1..7 are just prep patches, and should have no functional
+> changes at all. Patch 8 adds support for the filemap path for
+> RWF_UNCACHED reads, patch 10 adds support for filemap RWF_UNCACHED
+> writes, and patches 13..17 adds ext4, xfs/iomap, and btrfs support.
+>=20
+> Passes full xfstests and fsx overnight runs, no issues observed. That
+> includes the vm running the testing also using RWF_UNCACHED on the host.
+> I'll post fsstress and fsx patches for RWF_UNCACHED separately. As far
+> as I'm concerned, no further work needs doing here. Once we're into
+> the 6.13 merge window, I'll split up this series and aim to get it
+> landed that way. There are really 4 parts to this - generic mm bits,
+> ext4 bits, xfs bits, and btrfs bits.
+>=20
+> And git tree for the patches is here:
+>=20
+> https://git.kernel.dk/cgit/linux/log/?h=3Dbuffered-uncached.7
+>=20
+> =C2=A0fs/btrfs/bio.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 4 +-
+> =C2=A0fs/btrfs/bio.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 2 +
+> =C2=A0fs/btrfs/extent_io.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 8 ++-
+> =C2=A0fs/btrfs/file.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 9 ++-
+> =C2=A0fs/ext4/ext4.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 1 +
+> =C2=A0fs/ext4/file.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 2 +-
+> =C2=A0fs/ext4/inline.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 7 +-
+> =C2=A0fs/ext4/inode.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 18 +++++-
+> =C2=A0fs/ext4/page-io.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 28 ++++----
+> =C2=A0fs/iomap/buffered-io.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0 |=C2=A0 15 ++++-
+> =C2=A0fs/xfs/xfs_aops.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 7 +-
+> =C2=A0fs/xfs/xfs_file.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 3 +-
+> =C2=A0include/linux/fs.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 21 +++++-
+> =C2=A0include/linux/iomap.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 |=C2=A0=C2=A0 8 ++-
+> =C2=A0include/linux/page-flags.h=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 5 =
+++
+> =C2=A0include/linux/pagemap.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=
+=C2=A0 14 ++++
+> =C2=A0include/trace/events/mmflags.h |=C2=A0=C2=A0 3 +-
+> =C2=A0include/uapi/linux/fs.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=
+=C2=A0=C2=A0 6 +-
+> =C2=A0mm/filemap.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 | 114 ++++++++++++++=
++++++++++++++++----
+> =C2=A0mm/readahead.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 22 +++++--
+> =C2=A0mm/swap.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=
+=A0=C2=A0 2 +
+> =C2=A0mm/truncate.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 35 ++++++----
+> =C2=A022 files changed, 271 insertions(+), 63 deletions(-)
+>=20
+> Since v3
+> - Use foliop_is_uncached() in ext4 rather than do manual compares with
+> =C2=A0 foliop_uncached.
+> - Add filemap_fdatawrite_range_kick() helper and use that in
+> =C2=A0 generic_write_sync() to kick off uncached writeback, rather than n=
+eed
+> =C2=A0 every fs adding a call to generic_uncached_write().
+> - Drop generic_uncached_write() helper, not needed anymore.
+> - Skip folio_unmap_invalidate() if the folio is dirty.
+> - Move IOMAP_F_UNCACHED to the internal iomap flags section, and add
+> =C2=A0 comment from Darrick to it as well.
+> - Only kick uncached writeback in generic_write_sync() if
+> =C2=A0 iocb_is_dsync() isn't true.
+> - Disable RWF_UNCACHED on dax mappings. They require more extensive
+> =C2=A0 invalidation, and as it isn't a likely use case, just disable it
+> =C2=A0 for now.
+> - Update a few commit messages
+>=20
 
-I've finally had some time to integrate this into my test setup; I'll
-try this out tonight.
+Hi,
 
-Note: According to shellcheck, if you use $@, you should enclose it in
-double quotes.
+Hello, the simplicity and performance improvement of this patch series are
+really impressive, and I have no comments on it.=C2=A0
 
-                       _try_scratch_mkfs_xfs -d size=$fssize $rt_ops \
-                               -b size=$blocksize
-                               -b size=$blocksize "$@"
---D
+I'm just curious about its use cases=E2=80=94under which scenarios should i=
+t be
+used, and under which scenarios should it be avoided? I noticed that the
+backing device you used for testing can provide at least 92GB/s read
+performance and 115GB/s write performance. Does this mean that the higher
+the performance of the backing device, the more noticeable the
+optimization? How does this patch series perform on low-speed devices?
 
+My understanding is that the performance issue this patch is trying to
+address originates from the page cache being filled up, causing the current
+IO to wait for write-back or reclamation, correct? From this perspective,
+it seems that this would be suitable for applications that issue a large
+amount of IO in a short period of time, and it might not be dependent on
+the speed of the backing device?
 
->                 fi
->                 ;;
->         ext2|ext3|ext4)
-> @@ -1105,7 +1107,7 @@ _try_scratch_mkfs_sized()
->                                 _notrun "Could not make scratch logdev"
->                         MKFS_OPTIONS="$MKFS_OPTIONS -J device=$SCRATCH_LOGDEV"
->                 fi
-> -               ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> +               ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $@ $SCRATCH_DEV $blocks
->                 ;;
->         gfs2)
->                 # mkfs.gfs2 doesn't automatically shrink journal files on small
-> @@ -1120,13 +1122,13 @@ _try_scratch_mkfs_sized()
->                         (( journal_size >= min_journal_size )) || journal_size=$min_journal_size
->                         MKFS_OPTIONS="-J $journal_size $MKFS_OPTIONS"
->                 fi
-> -               ${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize $SCRATCH_DEV $blocks
-> +               ${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize $@ $SCRATCH_DEV $blocks
->                 ;;
->         ocfs2)
-> -               yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> +               yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $@ $SCRATCH_DEV $blocks
->                 ;;
->         udf)
-> -               $MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> +               $MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize $@ $SCRATCH_DEV $blocks
->                 ;;
->         btrfs)
->                 local mixed_opt=
-> @@ -1134,33 +1136,33 @@ _try_scratch_mkfs_sized()
->                 # the device is not zoned. Ref: btrfs-progs: btrfs_min_dev_size()
->                 (( fssize < $((256 * 1024 * 1024)) )) &&
->                         ! _scratch_btrfs_is_zoned && mixed_opt='--mixed'
-> -               $MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $SCRATCH_DEV
-> +               $MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $@ $SCRATCH_DEV
->                 ;;
->         jfs)
-> -               ${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS $SCRATCH_DEV $blocks
-> +               ${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS $@ $SCRATCH_DEV $blocks
->                 ;;
->         reiserfs)
-> -               ${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> +               ${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize $@ $SCRATCH_DEV $blocks
->                 ;;
->         reiser4)
->                 # mkfs.resier4 requires size in KB as input for creating filesystem
-> -               $MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize $SCRATCH_DEV \
-> +               $MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize $@ $SCRATCH_DEV \
->                                    `expr $fssize / 1024`
->                 ;;
->         f2fs)
->                 # mkfs.f2fs requires # of sectors as an input for the size
->                 local sector_size=`blockdev --getss $SCRATCH_DEV`
-> -               $MKFS_F2FS_PROG $MKFS_OPTIONS $SCRATCH_DEV `expr $fssize / $sector_size`
-> +               $MKFS_F2FS_PROG $MKFS_OPTIONS $@ $SCRATCH_DEV `expr $fssize / $sector_size`
->                 ;;
->         tmpfs)
->                 local free_mem=`_free_memory_bytes`
->                 if [ "$free_mem" -lt "$fssize" ] ; then
->                    _notrun "Not enough memory ($free_mem) for tmpfs with $fssize bytes"
->                 fi
-> -               export MOUNT_OPTIONS="-o size=$fssize $TMPFS_MOUNT_OPTIONS"
-> +               export MOUNT_OPTIONS="-o size=$fssize $@ $TMPFS_MOUNT_OPTIONS"
->                 ;;
->         bcachefs)
-> -               $MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt $SCRATCH_DEV
-> +               $MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt $@ $SCRATCH_DEV
->                 ;;
->         *)
->                 _notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
-> @@ -1170,7 +1172,7 @@ _try_scratch_mkfs_sized()
->  
->  _scratch_mkfs_sized()
->  {
-> -       _try_scratch_mkfs_sized $* || _notrun "_scratch_mkfs_sized failed with ($*)"
-> +       _try_scratch_mkfs_sized "$@" || _notrun "_scratch_mkfs_sized failed with ($@)"
->  }
->  
->  # Emulate an N-data-disk stripe w/ various stripe units
-> diff --git a/tests/xfs/157 b/tests/xfs/157
-> index 9b5badbae..f8f102d78 100755
-> --- a/tests/xfs/157
-> +++ b/tests/xfs/157
-> @@ -66,8 +66,7 @@ scenario() {
->  }
->  
->  check_label() {
-> -       MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size \
-> -               >> $seqres.full
-> +       _scratch_mkfs_sized "$fs_size" "" "-L oldlabel" >> $seqres.full 2>&1
->         _scratch_xfs_db -c label
->         _scratch_xfs_admin -L newlabel "$@" >> $seqres.full
->         _scratch_xfs_db -c label
-> 
-> 
-> 
-> 
-> > 
-> > -Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> 
-> 
+Thanks,
+--=20
+Julian Sun <sunjunchao2870@gmail.com>
