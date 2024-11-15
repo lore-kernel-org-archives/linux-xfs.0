@@ -1,205 +1,146 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CF3952F9E;
-	Fri, 15 Nov 2024 11:47:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26F819CD08
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 11:54:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731671281; cv=none; b=Zn8hRW82O4Yi9H6EARJWChj9rOwfWsHuu+JZfRiNh0ckQ3/+Agm0LigLG8rNyNGnL9eENiAoRAf8g2RHSpER6gyON69ZoVFsXCRNY4FAbDg06fYzlSzk8E8XYloIcUln3FcTt1cksHEex0LVD2rd2YqUosFmC1UgyQOGMhFbfQ8=
+	t=1731671683; cv=none; b=pqMvbuLLuCBbIge0wsu8ORdzH5VbUf/G24YlUsxm3I4ePjW5xnEUMzmfIgAGkYF1r5UEjpSgcxUfuPH35+LpIj6S08WWWZp66wAc4zwz+DyzyiVqaz0JG5EBWcCD5twPlr46WqK7zz7Ni0+rDL4qoF+O39TB5Ohj8K6RQxvD+Y0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731671281; c=relaxed/simple;
-	bh=6TldGmezEQC2A7I1k9j2yGZFGHLcdzOgC9FeAlFty3g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gvjxZQ/CrzdHwrxmE+4WuEM7jwn2+00tGTi+vSHJWT01SsagLLoClRF1AUt1VnXqrRiWf/VlIi7D6Uj+23vApIDOrPL/ygd+nnmvWoa5eAlsZbiMcn6wxnl4qOH8Pq3iYfB3n1sF4yRizGmkX2LubZwcyjnCWThsxwBeeddioB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=jPi7ZF/m; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=XT72GDTl; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yfxa+0uy; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=xj9DXuah; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="jPi7ZF/m";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="XT72GDTl";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yfxa+0uy";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="xj9DXuah"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 452252116C;
-	Fri, 15 Nov 2024 11:47:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1731671277; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sLSISZqZ5n9htJt4xL3hS+cL5Ypb46GaDYtip+z3mJ8=;
-	b=jPi7ZF/miO6vjADrGElR8HFeXb3tieltSOCVp/yopEEv6ov0NiIZQBoQf1JcgLxL4+vf2C
-	Y2hj07MuJTQCc/KdIqEBPY+uF2gEL9QKWOkP6525ss0AgTNgeMK6bv4d1MB0DMw9BNSF84
-	5QtQc6wIbcT7ew4wozE0k/OrE8bMLY0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1731671277;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sLSISZqZ5n9htJt4xL3hS+cL5Ypb46GaDYtip+z3mJ8=;
-	b=XT72GDTlFIzotnygXMZgsWu6N1xjbUOPqXhnyUy9dcr+gPCLTKaw4WD0//QbbkO1/whdNy
-	MHpetfDCo1EuFTDA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=yfxa+0uy;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=xj9DXuah
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1731671276; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sLSISZqZ5n9htJt4xL3hS+cL5Ypb46GaDYtip+z3mJ8=;
-	b=yfxa+0uyIesOZzZBCTLXJdk2kUMYlkcLUWznOg32xH3p0fiEWzzY5AQ7lVFL/2fEeYNdbI
-	OYf/kgB0RMO3XJKkEB28iqZYrN0+K5IGeFaXgRU8st3O+WzjZFyd/ovlR8auI8PBh3oyHy
-	iJ94rNfmzkEMfYEmEArrxh0Wv9i5ZLo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1731671276;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sLSISZqZ5n9htJt4xL3hS+cL5Ypb46GaDYtip+z3mJ8=;
-	b=xj9DXuah+YQn4GXWUPuaeojBApMtPJSw/6KQHov+b4gqbCPl+jcKjJiTJ3HcK6LfY09om8
-	NEB0BDvM7VuwgIBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 37663134B8;
-	Fri, 15 Nov 2024 11:47:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id cT+DDew0N2eXcgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 15 Nov 2024 11:47:56 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id F2707A0986; Fri, 15 Nov 2024 12:47:55 +0100 (CET)
-Date: Fri, 15 Nov 2024 12:47:55 +0100
-From: Jan Kara <jack@suse.cz>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com,
-	linux-fsdevel@vger.kernel.org, jack@suse.cz, brauner@kernel.org,
-	torvalds@linux-foundation.org, linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v7 09/18] fanotify: introduce FAN_PRE_ACCESS permission
- event
-Message-ID: <20241115114755.whr4q3tuj5rdj7hm@quack3>
-References: <cover.1731433903.git.josef@toxicpanda.com>
- <8de8e335e07502f31011a18ec91583467dff51eb.1731433903.git.josef@toxicpanda.com>
- <CAOQ4uxhkPJ=atVPeQ3PsOKps3w8qxJgpvMR1wwT=-onc4KLV5Q@mail.gmail.com>
+	s=arc-20240116; t=1731671683; c=relaxed/simple;
+	bh=MvOdPp1ronZydSC8y25QvcapUdG38ZBA7fohyWadj7o=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=C2YkwxCjs1z0eIjuytG4H1fhZmIaoEK1B6VuPVtoMRKiYmqrpwCK4ie9bYfUMFZ9l/M15lwJ5weSfO/1FBJJ19OpJ997IBW8JgavQVYM/y6b34HQfABBs92EG0BsishafQi1HJceZDuq1gLeQ5uMBUDOrmgKSasX3l4Xai54xd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Xqb4w6xXfz21lBq;
+	Fri, 15 Nov 2024 19:53:20 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id B58D61A0188;
+	Fri, 15 Nov 2024 19:54:37 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 15 Nov
+ 2024 19:54:37 +0800
+Date: Fri, 15 Nov 2024 19:53:17 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Brian Foster <bfoster@redhat.com>
+CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<yangerkun@huawei.com>
+Subject: Re: [PATCH v2 1/2] iomap: fix zero padding data issue in concurrent
+ append writes
+Message-ID: <Zzc2LcUqCPqMjjxr@localhost.localdomain>
+References: <20241113091907.56937-1-leo.lilong@huawei.com>
+ <ZzTQPdE5V155Soui@bfoster>
+ <ZzVhsvyFQu01PnHl@localhost.localdomain>
+ <ZzY7r1l5dpBw7UsY@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxhkPJ=atVPeQ3PsOKps3w8qxJgpvMR1wwT=-onc4KLV5Q@mail.gmail.com>
-X-Rspamd-Queue-Id: 452252116C
-X-Spam-Score: -4.01
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_DN_SOME(0.00)[];
-	FREEMAIL_TO(0.00)[gmail.com];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email,toxicpanda.com:email,suse.cz:dkim]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
+In-Reply-To: <ZzY7r1l5dpBw7UsY@bfoster>
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Fri 15-11-24 12:28:01, Amir Goldstein wrote:
-> On Tue, Nov 12, 2024 at 6:56 PM Josef Bacik <josef@toxicpanda.com> wrote:
-> >
-> > From: Amir Goldstein <amir73il@gmail.com>
-> >
-> > Similar to FAN_ACCESS_PERM permission event, but it is only allowed with
-> > class FAN_CLASS_PRE_CONTENT and only allowed on regular files and dirs.
-> >
-> > Unlike FAN_ACCESS_PERM, it is safe to write to the file being accessed
-> > in the context of the event handler.
-> >
-> > This pre-content event is meant to be used by hierarchical storage
-> > managers that want to fill the content of files on first read access.
-> >
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >  fs/notify/fanotify/fanotify.c      |  3 ++-
-> >  fs/notify/fanotify/fanotify_user.c | 22 +++++++++++++++++++---
-> >  include/linux/fanotify.h           | 14 ++++++++++----
-> >  include/uapi/linux/fanotify.h      |  2 ++
-> >  4 files changed, 33 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/fs/notify/fanotify/fanotify.c b/fs/notify/fanotify/fanotify.c
-> > index 2e6ba94ec405..da6c3c1c7edf 100644
-> > --- a/fs/notify/fanotify/fanotify.c
-> > +++ b/fs/notify/fanotify/fanotify.c
-> > @@ -916,8 +916,9 @@ static int fanotify_handle_event(struct fsnotify_group *group, u32 mask,
-> >         BUILD_BUG_ON(FAN_OPEN_EXEC_PERM != FS_OPEN_EXEC_PERM);
-> >         BUILD_BUG_ON(FAN_FS_ERROR != FS_ERROR);
-> >         BUILD_BUG_ON(FAN_RENAME != FS_RENAME);
-> > +       BUILD_BUG_ON(FAN_PRE_ACCESS != FS_PRE_ACCESS);
-> >
-> > -       BUILD_BUG_ON(HWEIGHT32(ALL_FANOTIFY_EVENT_BITS) != 21);
-> > +       BUILD_BUG_ON(HWEIGHT32(ALL_FANOTIFY_EVENT_BITS) != 22);
-> >
-> >         mask = fanotify_group_event_mask(group, iter_info, &match_mask,
-> >                                          mask, data, data_type, dir);
-> > diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
-> > index 9cc4a9ac1515..2ec0cc9c85cf 100644
-> > --- a/fs/notify/fanotify/fanotify_user.c
-> > +++ b/fs/notify/fanotify/fanotify_user.c
-> > @@ -1633,11 +1633,23 @@ static int fanotify_events_supported(struct fsnotify_group *group,
-> >                                      unsigned int flags)
-> >  {
-> >         unsigned int mark_type = flags & FANOTIFY_MARK_TYPE_BITS;
-> > +       bool is_dir = d_is_dir(path->dentry);
-> >         /* Strict validation of events in non-dir inode mask with v5.17+ APIs */
-> >         bool strict_dir_events = FAN_GROUP_FLAG(group, FAN_REPORT_TARGET_FID) ||
-> >                                  (mask & FAN_RENAME) ||
-> >                                  (flags & FAN_MARK_IGNORE);
-> >
-> > +       /*
-> > +        * Filesystems need to opt-into pre-content evnets (a.k.a HSM)
-> > +        * and they are only supported on regular files and directories.
-> > +        */
-> > +       if (mask & FANOTIFY_PRE_CONTENT_EVENTS) {
-> > +               if (!(path->mnt->mnt_sb->s_iflags & SB_I_ALLOW_HSM))
-> > +                       return -EINVAL;
+On Thu, Nov 14, 2024 at 01:04:31PM -0500, Brian Foster wrote:
+> On Thu, Nov 14, 2024 at 10:34:26AM +0800, Long Li wrote:
+> > On Wed, Nov 13, 2024 at 11:13:49AM -0500, Brian Foster wrote:
+> > > FYI, you probably want to include linux-fsdevel on iomap patches.
+> > > 
+> > > On Wed, Nov 13, 2024 at 05:19:06PM +0800, Long Li wrote:
+> > > > During concurrent append writes to XFS filesystem, zero padding data
+> > > > may appear in the file after power failure. This happens due to imprecise
+> > > > disk size updates when handling write completion.
+> > > > 
+> > > > Consider this scenario with concurrent append writes same file:
+> > > > 
+> > > >   Thread 1:                  Thread 2:
+> > > >   ------------               -----------
+> > > >   write [A, A+B]
+> > > >   update inode size to A+B
+> > > >   submit I/O [A, A+BS]
+> > > >                              write [A+B, A+B+C]
+> > > >                              update inode size to A+B+C
+> > > >   <I/O completes, updates disk size to A+B+C>
+> > > >   <power failure>
+> > > > 
+> > > > After reboot, file has zero padding in range [A+B, A+B+C]:
+> > > > 
+> > > >   |<         Block Size (BS)      >|
+> > > >   |DDDDDDDDDDDDDDDD0000000000000000|
+> > > >   ^               ^        ^
+> > > >   A              A+B      A+B+C (EOF)
+> > > > 
+> > > 
+> > > Thanks for the diagram. FWIW, I found the description a little confusing
+> > > because A+B+C to me implies that we'd update i_size to the end of the
+> > > write from thread 2, but it seems that is only true up to the end of the
+> > > block.
+> > > 
+> > > I.e., with 4k FSB and if thread 1 writes [0, 2k], then thread 2 writes
+> > > from [2, 16k], the write completion from the thread 1 write will set
+> > > i_size to 4k, not 16k, right?
+> > > 
+> > 
+> > Not right, the problem I'm trying to describe is:
+> > 
+> >   1) thread 1 writes [0, 2k]
+> >   2) thread 2 writes [2k, 3k]
+> >   3) write completion from the thread 1 write set i_size to 3K
+> >   4) power failure
+> >   5) after reboot,  [2k, 3K] of the file filled with zero and the file size is 3k
+> >      
 > 
-> Should we make this return -EOPNOTSUPP?
+> Yeah, I get the subblock case. What I am saying above is it seems like
+> "update inode size to A+B+C" is only true for certain, select values
+> that describe the subblock case. I.e., what is the resulting i_size if
+> we replace C=1k in the example above with something >= FSB size, like
+> C=4k?
+> 
+> Note this isn't all that important. I was just trying to say that the
+> overly general description made this a little more confusing to grok at
+> first than it needed to be, because to me it subtly implies there is
+> logic around somewhere that explicitly writes in-core i_size to disk,
+> when that is not actually what is happening.
+> 
+> > 
 
-I see no reason not to do that so go ahead.
+Sorry for my previous misunderstanding. You are correct - my commit
+message description didn't cover the case where A+B+C > block size.
+In such scenarios, the final file size might end up being 4K, which
+is not what we would expect. Initially, I incorrectly thought this
+wasn't a significant issue and thus overlooked this case. Let me
+update the diagram to address this.
 
-								Honza
+  Thread 1:                  Thread 2:
+  ------------               -----------
+  write [A, A+B]
+  update inode size to A+B
+  submit I/O [A, A+BS]
+                             write [A+B, A+B+C]
+                             update inode size to A+B+C
+  <I/O completes, updates disk size to A+B+C>
+  <power failure>
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+After reboot:
+  1) The file has zero padding in the range [A+B, A+BS]
+  2) The file size is unexpectedly set to A+BS
+
+  |<         Block Size (BS)      >|<           Block Size (BS)    >|
+  |DDDDDDDDDDDDDDDD0000000000000000|00000000000000000000000000000000|
+  ^               ^                ^               ^
+  A              A+B              A+BS (EOF)     A+B+C
+
+
+It will be update in the next version.
+
+
+Thanks,
+Long Li
