@@ -1,57 +1,57 @@
-Received: from mail-yb1-f174.google.com (mail-yb1-f174.google.com [209.85.219.174])
+Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com [209.85.219.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B1431E2304
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 15:31:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA3411E2613
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 15:31:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731684691; cv=none; b=jIE5bw0lgpEutIZA2r4i4X+pUiWts2Bq2DJuDCrlJiSg8v7hNcA+H0t5+hSSu7ZcMm3jkTnfnOyquSEtOUH2QdRnrN13MnL+fC4cNNIMmu0OcP1jHMXSBPEaYfbba7m3kwXef9x8cOWsEzvz+EQ8JNBu5a8OqnXRGJhneHJCHBM=
+	t=1731684694; cv=none; b=jNbG3sAO4S9oYHJwwRK5Nw6vxMy+uivLzcrKVoHLTbO2EY2+xVtgiWKfe/jaxS1LV9tVdPdsQ2eoxWYgYYNs6iBrTyBzbCeoSCFy7bBTo5Km0ZEcssbNxdhpRws99uTrZdkSeNYLiK+KSNSXkYEdCnN4emdZKyPDOqrwtuFF+mg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731684691; c=relaxed/simple;
-	bh=lJOFXxVHcZLI+SjVd+0f1jV7QzcPV4Ai9MyZQsFymWc=;
+	s=arc-20240116; t=1731684694; c=relaxed/simple;
+	bh=6M2usmJQkSj6QxVwbWiMg28e+rwVNQY/NgVhiKLrG4Y=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FMzGb+y43jGFv9ftNz179CuFeeCgq49zZEPmR2LydNTAy7X9ucYnIf6KPyoue9vmUU1OJ6gU5mAiFSdO+kXGj6uWt7M63MisWIxrDeUvZip3y3yB1AJRj33H4Np+CP8j7WEwiJ/CnRveUTN0VG3S2m4eJN2Fn1ipMh2czIC9ARo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=WgCxMT83; arc=none smtp.client-ip=209.85.219.174
+	 MIME-Version; b=FioqhaoFNmbohXHV2z/rutYluIH2DtqZIO0zm8unNzmzSX0Us7QRmvVFkOWFdW6KhMRce2EodKVTyYKWpCzLa2AFlsm2TGFRwXHTT//QKF1Y5H9oCp0po8AIopyoTZCGrpVlfZ+KAxnY6GLbuX9uT6vM9uBMgt7U6KZHDQ7DsmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=uKQ/P9Pu; arc=none smtp.client-ip=209.85.219.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="WgCxMT83"
-Received: by mail-yb1-f174.google.com with SMTP id 3f1490d57ef6-e38193093a7so1569125276.0
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 07:31:29 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="uKQ/P9Pu"
+Received: by mail-yb1-f172.google.com with SMTP id 3f1490d57ef6-e30eca40dedso1856562276.3
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 07:31:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731684688; x=1732289488; darn=vger.kernel.org;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1731684692; x=1732289492; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=5jVczlJ/TW6EECuU4gj9yYFP++VZ/oJUqPiY9P+PdPU=;
-        b=WgCxMT83OJndjUPd1bpnut4k1njFzRSZT+45Xv3MOuEfIXNhQ8xGLPxT0GqdDQHzNP
-         3FAWKaE95mHY8cUM+/Z5QrkWB0K2NYjSpt+ynKmwctxgJinxlfalSnXxa8fOhVKxfb/r
-         tf9/isOH+Yy4aOI396zxw1OlUitAZJj1uMr/FmQMmtcFWRgeXhdZF1/+5AnF88+K0ilc
-         MC9tIpVfjIx/NdV9UCRqJaDktOuFLyAn5ypGjSbY6Kzd8xez0CWvSR9ZXhOdtDojIykm
-         hIY+HUEro6Ry3Z00n1ne4KcwAg4GG0CxfnafkIR/PjPfO5G+FTo/yMRJ4Yjgj1LodC5Q
-         NxSw==
+        bh=ZU0dZL52CuS55HBpnlFc9Ffg6kvih/VgFXFf1fJzIbE=;
+        b=uKQ/P9PuFqn2v7/y0fPda/iahcVOvKuurxOPKOGMxz9eSY4nXNQDVsnvDGU2Ec8mjZ
+         v89OE1RLsZdFLxGDqwUJktUi8JyMhBAkBylNKxz/f250qEWPWI31Yap7XI9JWr5W28Nn
+         A+lur0VaWwtsm+zcVfUrp7E8nIwdQK9/g/9M1d3v+XDOB4oHPKT3BFokosAtiAj5ZvWr
+         SbSYUgLs8vEpzWW1WUbOqwOfC1zktamhOQuDGWodGqjORQmXMoxvtDoSID4YA9fKlEwW
+         XUAT9ZuW5tqUDv6tzOGdWM9A6S2AmccWeMvZczUHR1fWVk++64ofO1Id/eIiMg2BHMEK
+         TC4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731684688; x=1732289488;
+        d=1e100.net; s=20230601; t=1731684692; x=1732289492;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=5jVczlJ/TW6EECuU4gj9yYFP++VZ/oJUqPiY9P+PdPU=;
-        b=gfJNfygSSPupptOdNTcIXO1S1UUfZ6+FcgLVtmsOioaNMons/9Ls53IRlw9b/yRSsi
-         liLQwhu1jmE+P+/jnjGebdOiBJciPtUA/lwvGuPVI+GG4iTuQ5BPEwx8RclTgaeBsBoM
-         /vg+pwMFZVmTKozKWVkVHSAHglglSy/B0iGDVO8fzL2AIPMSIvMJZfFu1m4sM+QL67dq
-         NIspXcknLPhCQFbGhuJDgxYUZmAccoZwANwhT3IqA3mgFmqULzQb37PPNPlkFxd/gtfx
-         Uk4z4mAxHRyHW2ARN3vck4c/Rg9oMet66cw84b7l3YNS0S0Cv7PEcgMwGLjCVAzCAZmW
-         7Bmw==
-X-Forwarded-Encrypted: i=1; AJvYcCV4PUGzmeJdOsSwYVXqaIeaDoAasVecfjRt+ODet7kiFmysFsjzfrD2QjNcGk0pkTURSCXN+iycKRs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzqeDQJZBbaULnB/Nj8pFOtwaFwDTfD2pVOc1QojInflxldJ483
-	yd4ZTxhmFyGDeg0TEyIgOo9Ossc2wRaDayJabFgehS91LUSPW9OCSueWG2xT/mE=
-X-Google-Smtp-Source: AGHT+IEWEdrPnRli1gv+jVnLYsORdUcuZyTi/FsZKRBYcdcM64Io8ydfsi1gmscyy1vF3dAQcsDh6w==
-X-Received: by 2002:a05:690c:4c02:b0:6ea:2ac4:9df6 with SMTP id 00721157ae682-6ee55bbade0mr37073597b3.3.1731684688405;
-        Fri, 15 Nov 2024 07:31:28 -0800 (PST)
+        bh=ZU0dZL52CuS55HBpnlFc9Ffg6kvih/VgFXFf1fJzIbE=;
+        b=MvnyxFKxVbfu/c5ZEu8CDImVyXytxg7nUrYV6DuYR3+iYkRNpvSVyWZm6+87sRqbND
+         BJrOMJPFJQMBAA05fH1bCt+OFUulJ8J8mJzRo3RQL2/FZaQ5KIWqYGUusmf8vcIZrGfN
+         OvCyYeTY+gwquiSP+tuuOVDotZ6Tmri/kPwyG3uYVuhFXnGCzQvca34sPUG5MMiCKllM
+         OFEduquPZcvicco4ESDtZxJYm2Wjbb0W6fc5GhGGUoksnQ3iAcTOwd2g+1EiExM8yKWT
+         jz6AySxM0vOccFZXd5j8DJO1TQDxCcmy5FAY8rDERTEID41utx6YzjMSQGv7ksGybuC9
+         gfUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUt8cb9G4e4ng4tQUpiDkviXSlzOOm8wVbS/NozcZ8y5QPkiz9UOLaRdsuiKjNznhm6f0nbcvEFqew=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyjgjQYaGTamWtf64z3Mm6YxRGMUdVAkHauoJc8vZjp8NlYpiV2
+	9HxDFO4H0GE8Hd1ddFRb3K9hw/rnOjXwkvTMj460bgH4dZm3MidA/97KUveiAvU=
+X-Google-Smtp-Source: AGHT+IGL1oUEZJ3rWhtkHzcHN//l4Kwa6WIU+uMQ5VnS4NxAxx6XDhapJjpe9N68qs8G4gEKoRwuyw==
+X-Received: by 2002:a05:6902:1825:b0:e28:fa51:634a with SMTP id 3f1490d57ef6-e382615f44fmr2204741276.31.1731684691641;
+        Fri, 15 Nov 2024 07:31:31 -0800 (PST)
 Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-6ee4449516asm7602087b3.124.2024.11.15.07.31.27
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e38152caccdsm1011626276.14.2024.11.15.07.31.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Nov 2024 07:31:27 -0800 (PST)
+        Fri, 15 Nov 2024 07:31:30 -0800 (PST)
 From: Josef Bacik <josef@toxicpanda.com>
 To: kernel-team@fb.com,
 	linux-fsdevel@vger.kernel.org,
@@ -64,9 +64,9 @@ To: kernel-team@fb.com,
 	linux-btrfs@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-ext4@vger.kernel.org
-Subject: [PATCH v8 04/19] fanotify: don't skip extra event info if no info_mode is set
-Date: Fri, 15 Nov 2024 10:30:17 -0500
-Message-ID: <afcbc4e4139dee076ef1757918b037d3b48c3edb.1731684329.git.josef@toxicpanda.com>
+Subject: [PATCH v8 06/19] fanotify: reserve event bit of deprecated FAN_DIR_MODIFY
+Date: Fri, 15 Nov 2024 10:30:19 -0500
+Message-ID: <632d9f80428e2e7a6b6a8ccc2925d87c92bbb518.1731684329.git.josef@toxicpanda.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1731684329.git.josef@toxicpanda.com>
 References: <cover.1731684329.git.josef@toxicpanda.com>
@@ -80,50 +80,39 @@ Content-Transfer-Encoding: 8bit
 
 From: Amir Goldstein <amir73il@gmail.com>
 
-Previously we would only include optional information if you requested
-it via an FAN_ flag at fanotify_init time (FAN_REPORT_FID for example).
-However this isn't necessary as the event length is encoded in the
-metadata, and if the user doesn't want to consume the information they
-don't have to.  With the PRE_ACCESS events we will always generate range
-information, so drop this check in order to allow this extra
-information to be exported without needing to have another flag.
+Avoid reusing it, because we would like to reserve it for future
+FAN_PATH_MODIFY pre-content event.
 
-Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/notify/fanotify/fanotify_user.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ include/linux/fsnotify_backend.h | 1 +
+ include/uapi/linux/fanotify.h    | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
-index 919ff59cb802..8fca5ec442e4 100644
---- a/fs/notify/fanotify/fanotify_user.c
-+++ b/fs/notify/fanotify/fanotify_user.c
-@@ -158,9 +158,6 @@ static size_t fanotify_event_len(unsigned int info_mode,
- 	int fh_len;
- 	int dot_len = 0;
+diff --git a/include/linux/fsnotify_backend.h b/include/linux/fsnotify_backend.h
+index 99d81c3c11d7..2dc30cf637aa 100644
+--- a/include/linux/fsnotify_backend.h
++++ b/include/linux/fsnotify_backend.h
+@@ -55,6 +55,7 @@
+ #define FS_OPEN_PERM		0x00010000	/* open event in an permission hook */
+ #define FS_ACCESS_PERM		0x00020000	/* access event in a permissions hook */
+ #define FS_OPEN_EXEC_PERM	0x00040000	/* open/exec event in a permission hook */
++/* #define FS_DIR_MODIFY	0x00080000 */	/* Deprecated (reserved) */
  
--	if (!info_mode)
--		return event_len;
--
- 	if (fanotify_is_error_event(event->mask))
- 		event_len += FANOTIFY_ERROR_INFO_LEN;
+ /*
+  * Set on inode mark that cares about things that happen to its children.
+diff --git a/include/uapi/linux/fanotify.h b/include/uapi/linux/fanotify.h
+index 34f221d3a1b9..79072b6894f2 100644
+--- a/include/uapi/linux/fanotify.h
++++ b/include/uapi/linux/fanotify.h
+@@ -25,6 +25,7 @@
+ #define FAN_OPEN_PERM		0x00010000	/* File open in perm check */
+ #define FAN_ACCESS_PERM		0x00020000	/* File accessed in perm check */
+ #define FAN_OPEN_EXEC_PERM	0x00040000	/* File open/exec in perm check */
++/* #define FAN_DIR_MODIFY	0x00080000 */	/* Deprecated (reserved) */
  
-@@ -754,12 +751,10 @@ static ssize_t copy_event_to_user(struct fsnotify_group *group,
- 	buf += FAN_EVENT_METADATA_LEN;
- 	count -= FAN_EVENT_METADATA_LEN;
+ #define FAN_EVENT_ON_CHILD	0x08000000	/* Interested in child events */
  
--	if (info_mode) {
--		ret = copy_info_records_to_user(event, info, info_mode, pidfd,
--						buf, count);
--		if (ret < 0)
--			goto out_close_fd;
--	}
-+	ret = copy_info_records_to_user(event, info, info_mode, pidfd,
-+					buf, count);
-+	if (ret < 0)
-+		goto out_close_fd;
- 
- 	if (f)
- 		fd_install(fd, f);
 -- 
 2.43.0
 
