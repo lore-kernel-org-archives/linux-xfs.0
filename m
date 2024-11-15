@@ -1,130 +1,121 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA8A192B9D
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 10:13:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0D61B218E;
+	Fri, 15 Nov 2024 11:21:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731665625; cv=none; b=sGsH15Yz/1i4ZK678+oduc1sSeO02HJU7wzs3s25iSC8qMyvbKuACRz6OUXTw/OdCdNAyur68HO5D3Jc86IJLXCvV9iMZq0rKtshJdlZoKMs/MVFESwhiOKQojsZZ2TxDW2nlhMMZHDHLTEYq0lVNJPiLu65HDSKh1JkmS9KJqM=
+	t=1731669697; cv=none; b=uXaGuKwosNQQze9z4NcZUR7EiIi2tOkqQaHy+PQn0IDTKMT20ZodpALyGC4F7vLZ52e3ZZoE+w9eRVkyLQEByuLIu/8j7LWWcP7tI26nfFnImoeH07xf/36QsENXS5wB0TtA/RC+Ts9v0pZVYHq0azlhYuH3XRz2p+c3ACJ6eJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731665625; c=relaxed/simple;
-	bh=iilK65+5uAZD9k9cuafhLx55P7KOcaH8dTzWUO+pPAQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W/vAidx4kCCM7EBiCTcdTKokFuIcCMdE/lZUhfY3fkmlQSBlHKi6ke5cERWnTnGW0hj0wYj0AT2RcjNLIRQEohjYERa1uqNRBQixlzeXHs3Nntl75C100rsMVc7kcYN9PynvGK+7K33AwurImBCHfL3/PbniWEG/yui/cWdhweo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dwY6iN7h; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dwY6iN7h"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1731665622;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0Y4ySrL+N5mDGiGXdf0mBo2mxUbz7/JQ+mzKyQ+R/hc=;
-	b=dwY6iN7hmobUDScLMLJ9ubrthmigrfb5jyX7flCW1VtY/GzeCTBlzgglUXerNNFMQ1sygS
-	vIps9+kfQT09hcc03tphv+86t5PP0PLPuzPFut95FD0MMU62hNtz9v5qtcOPF8eLMgKHGJ
-	j4B5kRcbVXeNT2zWkTsHUwehUz9cQQU=
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
- [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-44-aMX6guNYOt6mX1Bty_DaGw-1; Fri, 15 Nov 2024 05:13:40 -0500
-X-MC-Unique: aMX6guNYOt6mX1Bty_DaGw-1
-X-Mimecast-MFC-AGG-ID: aMX6guNYOt6mX1Bty_DaGw
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-722531f7806so1851560b3a.0
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2024 02:13:40 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731665619; x=1732270419;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0Y4ySrL+N5mDGiGXdf0mBo2mxUbz7/JQ+mzKyQ+R/hc=;
-        b=K7gt0JZrZSu68c1lc+5HxzEbdxqkXCVOyGnrZD5QBO6f//uHBF9TUXMecL5NiEa/Y/
-         6h9Wod2J2poqtM6Qvvc3kBOVcahKmiaHyekVekzkol5JHl/DMMMklvQDLn9/bZpNTGG/
-         RWzWEHBURFfSY5LOHULo3ufEvf9nlCkmMTQNMwojxK71iAYkiL0sAHjhqWvAMQCWL4s1
-         CA0g28a8AMgQ1S/hnFOiidWzqa8Qmf6lqOMRte1+t2+SYRxyicb3eKBBepiI2gqMeoQA
-         NttGoycgCIYQCGeTlDelZAZGRzH5jT/8mQ3s4gspVRCcQ0dumrvUdpm6ybtYdCVXqKiO
-         iezQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW/rSoiMHr5GvbHxkN6Xm1t6R8wf1bLANlXDvxFu991oDGhh7o9is8vzaKSQFlF/GqLgBj4zwqAPLw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywb5lTzEck/0fkCyZ1m0YcpbvQhU7R9BBxP1JTuvqfQr/WP0Uga
-	HF4Jfm9pP6XC5v+il3R+D4WArQ1AoUr1zvf3Sq8q81H8cpqvOZlhRYmi9tBjCWS5AEcqCo6JRuB
-	m+Qhn71HBOJlCMtSN0aQzxvyUJ6lcb1IqroH3k1Rh38Ovs2HKgI16zlwFZZrKVF1pp9U1
-X-Received: by 2002:a05:6a00:1483:b0:71e:452:13dc with SMTP id d2e1a72fcca58-72476bb8a9bmr2248502b3a.13.1731665619044;
-        Fri, 15 Nov 2024 02:13:39 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEfL9O7nII/mXZF+B3NEpmkH++Ja1JLTA5rcp+dXCDJZZEHOS5c/oQXaPK/v5e9/SsiC8g+vQ==
-X-Received: by 2002:a05:6a00:1483:b0:71e:452:13dc with SMTP id d2e1a72fcca58-72476bb8a9bmr2248484b3a.13.1731665618604;
-        Fri, 15 Nov 2024 02:13:38 -0800 (PST)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-724770ee7d3sm1012917b3a.38.2024.11.15.02.13.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Nov 2024 02:13:38 -0800 (PST)
-Date: Fri, 15 Nov 2024 18:13:34 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs/185: don't fail when rtfile is larger than
- rblocks
-Message-ID: <20241115101334.jrxgle4r45cjfxzo@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <173146178810.156441.10482148782980062018.stgit@frogsfrogsfrogs>
- <173146178844.156441.16410068994780353980.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1731669697; c=relaxed/simple;
+	bh=KTIoMi/r1hTENNKL0/G/hsDkGqPwoHDgtpul7a9ld2w=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NoOglhZdTJxcnlBxFiF5V4ByM1/UFO4HnYws4shEvQrZtGn8fLstdSsnLKmd+CKNe4VQADn14CjOh34w1ydSKIUtO3bkIBwCJHVuVEErmZ3mlVOGHSQgXj/Lloa2NKyLx+c4mIDy2xR3sn0k/0aRVzD4DfmMe+jNTHLg3fxP7yE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4XqZL1286qz2GZhG;
+	Fri, 15 Nov 2024 19:19:37 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id E370518002B;
+	Fri, 15 Nov 2024 19:21:29 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 15 Nov
+ 2024 19:21:29 +0800
+Date: Fri, 15 Nov 2024 19:20:09 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Dave Chinner <dchinner@redhat.com>
+CC: John Garry <john.g.garry@oracle.com>, Dave Chinner <david@fromorbit.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>, <chandan.babu@oracle.com>,
+	<djwong@kernel.org>, <hch@lst.de>, <viro@zeniv.linux.org.uk>,
+	<brauner@kernel.org>, <jack@suse.cz>, <linux-xfs@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<catherine.hoang@oracle.com>, <martin.petersen@oracle.com>
+Subject: Re: [PATCH v4 00/14] forcealign for xfs
+Message-ID: <ZzcuaYVuFuhknNs_@localhost.localdomain>
+References: <Ztom6uI0L4uEmDjT@dread.disaster.area>
+ <ce87e4fb-ab5f-4218-aeb8-dd60c48c67cb@oracle.com>
+ <Zt4qCLL6gBQ1kOFj@dread.disaster.area>
+ <84b68068-e159-4e28-bf06-767ea7858d79@oracle.com>
+ <ZufBMioqpwjSFul+@dread.disaster.area>
+ <0e9dc6f8-df1b-48f3-a9e0-f5f5507d92c1@oracle.com>
+ <ZuoCafOAVqSN6AIK@dread.disaster.area>
+ <1394ceeb-ce8c-4d0f-aec8-ba93bf1afb90@oracle.com>
+ <ZzXxlf6RWeX3e-3x@localhost.localdomain>
+ <ZzZYmTuSsHN-M0Of@rh>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <173146178844.156441.16410068994780353980.stgit@frogsfrogsfrogs>
+In-Reply-To: <ZzZYmTuSsHN-M0Of@rh>
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Tue, Nov 12, 2024 at 05:37:14PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Nov 15, 2024 at 07:07:53AM +1100, Dave Chinner wrote:
+> On Thu, Nov 14, 2024 at 08:48:21PM +0800, Long Li wrote:
+> > On Wed, Sep 18, 2024 at 11:12:47AM +0100, John Garry wrote:
+> > > On 17/09/2024 23:27, Dave Chinner wrote:
+> > > > > # xfs_bmap -vvp  mnt/file
+> > > > > mnt/file:
+> > > > > EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+> > > > >    0: [0..15]:         384..399          0 (384..399)          16 010000
+> > > > >    1: [16..31]:        400..415          0 (400..415)          16 000000
+> > > > >    2: [32..127]:       416..511          0 (416..511)          96 010000
+> > > > >    3: [128..255]:      256..383          0 (256..383)         128 000000
+> > > > > FLAG Values:
+> > > > >     0010000 Unwritten preallocated extent
+> > > > > 
+> > > > > Here we have unaligned extents wrt extsize.
+> > > > > 
+> > > > > The sub-alloc unit zeroing would solve that - is that what you would still
+> > > > > advocate (to solve that issue)?
+> > > > Yes, I thought that was already implemented for force-align with the
+> > > > DIO code via the extsize zero-around changes in the iomap code. Why
+> > > > isn't that zero-around code ensuring the correct extent layout here?
+> > > 
+> > > I just have not included the extsize zero-around changes here. They were
+> > > just grouped with the atomic writes support, as they were added specifically
+> > > for the atomic writes support. Indeed - to me at least - it is strange that
+> > > the DIO code changes are required for XFS forcealign implementation. And,
+> > > even if we use extsize zero-around changes for DIO path, what about buffered
+> > > IO?
+> > 
+> > 
+> > I've been reviewing and testing the XFS atomic write patch series. Since
+> > there haven't been any new responses to the previous discussions on this
+> > issue, I'd like to inquire about the buffered IO problem with force-aligned
+> > files, which is a scenario we might encounter.
+> > 
+> > Consider a case where the file supports force-alignment with a 64K extent size,
+> > and the system page size is 4K. Take the following commands as an example:
+> > 
+> > xfs_io  -c "pwrite 64k 64k" mnt/file
+> > xfs_io  -c "pwrite 8k 8k" mnt/file
+> > 
+> > If unaligned unwritten extents are not permitted, we need to zero out the
+> > sub-allocation units for ranges [0, 8K] and [16K, 64K] to prevent stale
+> > data. While this can be handled relatively easily in direct I/O scenarios,
+> > it presents significant challenges in buffered I/O operations. The main
+> > difficulty arises because the extent size (64K) is larger than the page
+> > size (4K), and our current code base has substantial limitations in handling
+> > such cases.
+> > 
+> > Any thoughts on this?
 > 
-> This test creates a 200MB rt volume on a file-backed loopdev.  However,
-> if the size of the loop file is not congruent with the rt extent size
-> (e.g.  28k) then the rt volume will not use all 200MB because we cannot
-> have partial rt extents.  Because of this rounding, we can end up with
-> an fsmap listing that covers fewer sectors than the bmap of the loop
-> file.
+> Large folios in the page cache solve this problem. i.e. it's the
+> same problem that block size > page size support had to solve.
 > 
-> Fix the test to allow this case.
 > 
-> Cc: <fstests@vger.kernel.org> # v2022.05.01
-> Fixes: 410a2e3186a1e8 ("xfs: regresion test for fsmap problems with realtime")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
 
-Makes sense to me,
+Thanks for your reply, it cleared up my confusion. So maybe we need
+to set a minimum folio order for force-aligned inodes, just
+like Large block sizes (LBS).
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  tests/xfs/185 |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/tests/xfs/185 b/tests/xfs/185
-> index b14bcb9b791bb8..f3601a5292ef0b 100755
-> --- a/tests/xfs/185
-> +++ b/tests/xfs/185
-> @@ -156,7 +156,9 @@ fsmap() {
->  
->  # Check the fsmap output contains a record for the realtime device at a
->  # physical offset higher than end of the data device and corresponding to the
-> -# beginning of the non-punched area.
-> +# beginning of the non-punched area.  The "found_end" check uses >= because
-> +# rtfile can be larger than the number of rtextents if the size of the rtfile
-> +# is not congruent with the rt extent size.
->  fsmap | $AWK_PROG -v dev="$rtmajor:$rtminor" -v offset=$expected_offset -v end=$expected_end '
->  BEGIN {
->  	found_start = 0;
-> @@ -165,7 +167,7 @@ BEGIN {
->  {
->  	if ($1 == dev && $2 >= offset) {
->  		found_start = 1;
-> -		if ($3 == end) {
-> +		if ($3 >= end) {
->  			found_end = 1;
->  		}
->  	}
-> 
-
+Thanks,
+Long Li
