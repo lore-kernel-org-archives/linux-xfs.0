@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C981E1E8825
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2024 23:05:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63339153BE4;
+	Mon, 18 Nov 2024 23:05:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731971118; cv=none; b=CsNMZgBW7hnXNnlNQosYS74gUm1SdDaOyFNIi+BsGbqEINnrPW1/Zh9rc23ukEoXsx5/NvGv1DFNa9m8LEiy52d3SYqnYUdQSyqMPl//JzuRui1+MSBx5TLi1hVO5UWP8VTuGL/zT6H/mxWFe9YS1A0+rQWlDBdTcjzGcxZSv4Y=
+	t=1731971134; cv=none; b=khoy7Wpl2ki2JfHrpJ7uWw+ypsXxcMT4QJ7v5iTSKKAfa9gqTFUiNAGHK9SLTJ7WG/UclcShT1hLJygqtPtDSohNOFS1SeIExTWqJUlnnvI989A0ZIRL9vmXFRnt+1313m7FOxGToswRdjUYSb9D5cn/sKx7v9FdIX0jNPmF/mE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731971118; c=relaxed/simple;
-	bh=RClv7TgyUiAa7r9vBMdY+zDwG1IH5owph4dTxtgurHA=;
+	s=arc-20240116; t=1731971134; c=relaxed/simple;
+	bh=Z1R38SnehH6MB09rjsLVKG/DpEtCFdEVtBvmiBtwzRs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kwhT2pYbB02E7LOX6P3w2Nad4xABzygiRev+ek53oVocW+d9GrK2heDdhfEc1fKEO1TX0iVutcmebj6RFZozUXxE3svrZsPYAoy3xE1Ej4U7taefDBtKhAf6ZwaHQ9lb92TgEXkSqorPqP1vr5AH1eFbL4vQb9tPgTOUnuLZ7pY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LrUqf21b; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VWP5FJmgnQ7zHwrRYZWT5NXEqCjtp3rVri76E3/uGN5vD14L3Yrn6cDE+O/qKE63ZDcUopsVCckEZeOfQ1h0YPbVivLGixxL4mOm4NxdLwVXV34WFwf2z0MZlr3p+ldNn9FvtrbDZLeoiStG6vXLUCZKc0CdMJx+AsjAlbNfXq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gUhqpemS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LrUqf21b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 533D6C4CECF;
-	Mon, 18 Nov 2024 23:05:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gUhqpemS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8875C4CECC;
+	Mon, 18 Nov 2024 23:05:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731971118;
-	bh=RClv7TgyUiAa7r9vBMdY+zDwG1IH5owph4dTxtgurHA=;
+	s=k20201202; t=1731971134;
+	bh=Z1R38SnehH6MB09rjsLVKG/DpEtCFdEVtBvmiBtwzRs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LrUqf21b1OILrE13ulC9HIkCm8q89DQ8992n5bynsCn9vG2jJPKvf4DIO6CfjaXQe
-	 Wt+sIQfVv44+N53RBdIjI1pJoXZlFRPrz3nKd25ILfyknUtZDA9dhFn7Ctr2tpvUvC
-	 76gjMH8Dp8D6XQFNaPrzmOBKzpVs8dwYLi3wrECp332gf37P/S3M0FFj2roChlFf1W
-	 B/kY4HiUwnPpYuCN2oMaPNk4KkUeBZ5xG+WttEKtLWVlF3oPf2tWAeg++t++a1lTKD
-	 DqIp9hMq3klaYNoEHaLgHRPH3ycGOAooqqNl1dM0MIo3gQ33ZJ69Xzk5Kzhn9unU9t
-	 uUjVqiLgc+g7A==
-Date: Mon, 18 Nov 2024 15:05:17 -0800
-Subject: [PATCH 03/10] xfs: keep quota directory inode loaded
+	b=gUhqpemSRhq6NmCLcWYN18N2Wa9W887z1dlvusLtaDPCBPNNHVRbQbDXaWCswy/F+
+	 F6R661Ec3+//MB7HuFbalcax38JfD5b6WyFO6v7M3W4vJSa0V6HYyQUpTrcCf9tbVj
+	 nB/tnNaGlHnJgG0Pb5qME5MB9ydPHewgjTWkDn9HxowI2f1206Tt/JysbDLxnrWaE4
+	 aZGMeGnarCWbwoT9q0eM/O79qdBaZWiwDTqQkWN1rTd5rLDZunKULek7mXOZtdsL3i
+	 53Dsk2fM+Cbhrgzqxgqmr0XNTWVXlyZ4TfRq1xeWrPjCEMEH9N1/TFfrs7qogOLOMI
+	 5fRdffg/Se6TQ==
+Date: Mon, 18 Nov 2024 15:05:33 -0800
+Subject: [PATCH 04/10] xfs: return a 64-bit block count from
+ xfs_btree_count_blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <173197084464.911325.18182055244953182778.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173197084481.911325.2907716202971546808.stgit@frogsfrogsfrogs>
 In-Reply-To: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
 References: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,234 +46,206 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In the same vein as the previous patch, there's no point in the metapath
-scrub setup function doing a lookup on the quota metadir just so it can
-validate that lookups work correctly.  Instead, retain the quota
-directory inode in memory so that we can check this.
+With the nrext64 feature enabled, it's possible for a data fork to have
+2^48 extent mappings.  Even with a 64k fsblock size, that maps out to
+a bmbt containing more than 2^32 blocks.  Therefore, this predicate must
+return a u64 count to avoid an integer wraparound that will cause scrub
+to do the wrong thing.
 
+It's unlikely that any such filesystem currently exists, because the
+incore bmbt would consume more than 64GB of kernel memory on its own,
+and so far nobody except me has driven a filesystem that far, judging
+from the lack of complaints.
+
+Cc: <stable@vger.kernel.org> # v5.19
+Fixes: df9ad5cc7a5240 ("xfs: Introduce macros to represent new maximum extent counts for data/attr forks")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/metapath.c |   37 ++++++-------------------------------
- fs/xfs/xfs_qm.c         |   47 +++++++++++++++++++++++++----------------------
- fs/xfs/xfs_qm.h         |    1 +
- 3 files changed, 32 insertions(+), 53 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c        |    4 ++--
+ fs/xfs/libxfs/xfs_btree.h        |    2 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    4 +++-
+ fs/xfs/scrub/agheader.c          |    6 +++---
+ fs/xfs/scrub/agheader_repair.c   |    6 +++---
+ fs/xfs/scrub/fscounters.c        |    2 +-
+ fs/xfs/scrub/ialloc.c            |    4 ++--
+ fs/xfs/scrub/refcount.c          |    2 +-
+ fs/xfs/xfs_bmap_util.c           |    2 +-
+ 9 files changed, 17 insertions(+), 15 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index 80467d6bc76389..c678cba1ffc3f7 100644
---- a/fs/xfs/scrub/metapath.c
-+++ b/fs/xfs/scrub/metapath.c
-@@ -171,23 +171,13 @@ static int
- xchk_setup_metapath_quotadir(
- 	struct xfs_scrub	*sc)
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 2b5fc5fd16435d..c748866ef92368 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -5144,7 +5144,7 @@ xfs_btree_count_blocks_helper(
+ 	int			level,
+ 	void			*data)
  {
--	struct xfs_trans	*tp;
--	struct xfs_inode	*dp = NULL;
--	int			error;
-+	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
+-	xfs_extlen_t		*blocks = data;
++	xfs_filblks_t		*blocks = data;
+ 	(*blocks)++;
  
--	error = xfs_trans_alloc_empty(sc->mp, &tp);
--	if (error)
--		return error;
-+	if (!qi || !qi->qi_dirip)
-+		return -ENOENT;
- 
--	error = xfs_dqinode_load_parent(tp, &dp);
--	xfs_trans_cancel(tp);
--	if (error)
--		return error;
--
--	error = xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
--			kasprintf(GFP_KERNEL, "quota"), dp);
--	xfs_irele(dp);
--	return error;
-+	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
-+			kstrdup("quota", GFP_KERNEL), qi->qi_dirip);
- }
- 
- /* Scan a quota inode under the /quota directory. */
-@@ -197,10 +187,7 @@ xchk_setup_metapath_dqinode(
- 	xfs_dqtype_t		type)
+ 	return 0;
+@@ -5154,7 +5154,7 @@ xfs_btree_count_blocks_helper(
+ int
+ xfs_btree_count_blocks(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_extlen_t		*blocks)
++	xfs_filblks_t		*blocks)
  {
- 	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
--	struct xfs_trans	*tp = NULL;
--	struct xfs_inode	*dp = NULL;
- 	struct xfs_inode	*ip = NULL;
--	int			error;
+ 	*blocks = 0;
+ 	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 3b739459ebb0f4..c5bff273cae255 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -484,7 +484,7 @@ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
+ 		xfs_btree_visit_blocks_fn fn, unsigned int flags, void *data);
  
- 	if (!qi)
- 		return -ENOENT;
-@@ -222,20 +209,8 @@ xchk_setup_metapath_dqinode(
- 	if (!ip)
- 		return -ENOENT;
+-int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
++int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_filblks_t *blocks);
  
--	error = xfs_trans_alloc_empty(sc->mp, &tp);
--	if (error)
--		return error;
--
--	error = xfs_dqinode_load_parent(tp, &dp);
--	xfs_trans_cancel(tp);
--	if (error)
--		return error;
--
--	error = xchk_setup_metapath_scan(sc, dp,
-+	return xchk_setup_metapath_scan(sc, qi->qi_dirip,
- 			kstrdup(xfs_dqinode_path(type), GFP_KERNEL), ip);
--
--	xfs_irele(dp);
--	return error;
- }
- #else
- # define xchk_setup_metapath_quotadir(...)	(-ENOENT)
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b928b036990bc3..a4fa21dfd6b4ad 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -241,6 +241,10 @@ xfs_qm_destroy_quotainos(
- 		xfs_irele(qi->qi_pquotaip);
- 		qi->qi_pquotaip = NULL;
- 	}
-+	if (qi->qi_dirip) {
-+		xfs_irele(qi->qi_dirip);
-+		qi->qi_dirip = NULL;
-+	}
- }
- 
- /*
-@@ -648,8 +652,7 @@ xfs_qm_init_timelimits(
- static int
- xfs_qm_load_metadir_qinos(
- 	struct xfs_mount	*mp,
--	struct xfs_quotainfo	*qi,
--	struct xfs_inode	**dpp)
-+	struct xfs_quotainfo	*qi)
+ union xfs_btree_rec *xfs_btree_rec_addr(struct xfs_btree_cur *cur, int n,
+ 		struct xfs_btree_block *block);
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 9b34896dd1a32f..6f270d8f4270cb 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -744,6 +744,7 @@ xfs_finobt_count_blocks(
  {
- 	struct xfs_trans	*tp;
+ 	struct xfs_buf		*agbp = NULL;
+ 	struct xfs_btree_cur	*cur;
++	xfs_filblks_t		blocks;
  	int			error;
-@@ -658,7 +661,7 @@ xfs_qm_load_metadir_qinos(
- 	if (error)
+ 
+ 	error = xfs_ialloc_read_agi(pag, tp, 0, &agbp);
+@@ -751,9 +752,10 @@ xfs_finobt_count_blocks(
  		return error;
  
--	error = xfs_dqinode_load_parent(tp, dpp);
-+	error = xfs_dqinode_load_parent(tp, &qi->qi_dirip);
- 	if (error == -ENOENT) {
- 		/* no quota dir directory, but we'll create one later */
- 		error = 0;
-@@ -668,21 +671,21 @@ xfs_qm_load_metadir_qinos(
- 		goto out_trans;
+ 	cur = xfs_finobt_init_cursor(pag, tp, agbp);
+-	error = xfs_btree_count_blocks(cur, tree_blocks);
++	error = xfs_btree_count_blocks(cur, &blocks);
+ 	xfs_btree_del_cursor(cur, error);
+ 	xfs_trans_brelse(tp, agbp);
++	*tree_blocks = blocks;
  
- 	if (XFS_IS_UQUOTA_ON(mp)) {
--		error = xfs_dqinode_load(tp, *dpp, XFS_DQTYPE_USER,
-+		error = xfs_dqinode_load(tp, qi->qi_dirip, XFS_DQTYPE_USER,
- 				&qi->qi_uquotaip);
- 		if (error && error != -ENOENT)
- 			goto out_trans;
- 	}
- 
- 	if (XFS_IS_GQUOTA_ON(mp)) {
--		error = xfs_dqinode_load(tp, *dpp, XFS_DQTYPE_GROUP,
-+		error = xfs_dqinode_load(tp, qi->qi_dirip, XFS_DQTYPE_GROUP,
- 				&qi->qi_gquotaip);
- 		if (error && error != -ENOENT)
- 			goto out_trans;
- 	}
- 
- 	if (XFS_IS_PQUOTA_ON(mp)) {
--		error = xfs_dqinode_load(tp, *dpp, XFS_DQTYPE_PROJ,
-+		error = xfs_dqinode_load(tp, qi->qi_dirip, XFS_DQTYPE_PROJ,
- 				&qi->qi_pquotaip);
- 		if (error && error != -ENOENT)
- 			goto out_trans;
-@@ -698,34 +701,33 @@ xfs_qm_load_metadir_qinos(
- STATIC int
- xfs_qm_create_metadir_qinos(
- 	struct xfs_mount	*mp,
--	struct xfs_quotainfo	*qi,
--	struct xfs_inode	**dpp)
-+	struct xfs_quotainfo	*qi)
- {
- 	int			error;
- 
--	if (!*dpp) {
--		error = xfs_dqinode_mkdir_parent(mp, dpp);
-+	if (!qi->qi_dirip) {
-+		error = xfs_dqinode_mkdir_parent(mp, &qi->qi_dirip);
- 		if (error && error != -EEXIST)
- 			return error;
- 	}
- 
- 	if (XFS_IS_UQUOTA_ON(mp) && !qi->qi_uquotaip) {
--		error = xfs_dqinode_metadir_create(*dpp, XFS_DQTYPE_USER,
--				&qi->qi_uquotaip);
-+		error = xfs_dqinode_metadir_create(qi->qi_dirip,
-+				XFS_DQTYPE_USER, &qi->qi_uquotaip);
- 		if (error)
- 			return error;
- 	}
- 
- 	if (XFS_IS_GQUOTA_ON(mp) && !qi->qi_gquotaip) {
--		error = xfs_dqinode_metadir_create(*dpp, XFS_DQTYPE_GROUP,
--				&qi->qi_gquotaip);
-+		error = xfs_dqinode_metadir_create(qi->qi_dirip,
-+				XFS_DQTYPE_GROUP, &qi->qi_gquotaip);
- 		if (error)
- 			return error;
- 	}
- 
- 	if (XFS_IS_PQUOTA_ON(mp) && !qi->qi_pquotaip) {
--		error = xfs_dqinode_metadir_create(*dpp, XFS_DQTYPE_PROJ,
--				&qi->qi_pquotaip);
-+		error = xfs_dqinode_metadir_create(qi->qi_dirip,
-+				XFS_DQTYPE_PROJ, &qi->qi_pquotaip);
- 		if (error)
- 			return error;
- 	}
-@@ -770,7 +772,6 @@ xfs_qm_init_metadir_qinos(
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
--	struct xfs_inode	*dp = NULL;
- 	int			error;
- 
- 	if (!xfs_has_quota(mp)) {
-@@ -779,20 +780,22 @@ xfs_qm_init_metadir_qinos(
- 			return error;
- 	}
- 
--	error = xfs_qm_load_metadir_qinos(mp, qi, &dp);
-+	error = xfs_qm_load_metadir_qinos(mp, qi);
- 	if (error)
- 		goto out_err;
- 
--	error = xfs_qm_create_metadir_qinos(mp, qi, &dp);
-+	error = xfs_qm_create_metadir_qinos(mp, qi);
- 	if (error)
- 		goto out_err;
- 
--	xfs_irele(dp);
-+	/* The only user of the quota dir inode is online fsck */
-+#if !IS_ENABLED(CONFIG_XFS_ONLINE_SCRUB)
-+	xfs_irele(qi->qi_dirip);
-+	qi->qi_dirip = NULL;
-+#endif
- 	return 0;
- out_err:
- 	xfs_qm_destroy_quotainos(mp->m_quotainfo);
--	if (dp)
--		xfs_irele(dp);
  	return error;
  }
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 61f80a6410c738..1d41b85478da9d 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -458,7 +458,7 @@ xchk_agf_xref_btreeblks(
+ {
+ 	struct xfs_agf		*agf = sc->sa.agf_bp->b_addr;
+ 	struct xfs_mount	*mp = sc->mp;
+-	xfs_agblock_t		blocks;
++	xfs_filblks_t		blocks;
+ 	xfs_agblock_t		btreeblks;
+ 	int			error;
  
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index e919c7f62f5780..35b64bc3a7a867 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -55,6 +55,7 @@ struct xfs_quotainfo {
- 	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
- 	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
- 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
-+	struct xfs_inode	*qi_dirip;	/* quota metadir */
- 	struct list_lru		qi_lru;
- 	int			qi_dquots;
- 	struct mutex		qi_quotaofflock;/* to serialize quotaoff */
+@@ -507,7 +507,7 @@ xchk_agf_xref_refcblks(
+ 	struct xfs_scrub	*sc)
+ {
+ 	struct xfs_agf		*agf = sc->sa.agf_bp->b_addr;
+-	xfs_agblock_t		blocks;
++	xfs_filblks_t		blocks;
+ 	int			error;
+ 
+ 	if (!sc->sa.refc_cur)
+@@ -840,7 +840,7 @@ xchk_agi_xref_fiblocks(
+ 	struct xfs_scrub	*sc)
+ {
+ 	struct xfs_agi		*agi = sc->sa.agi_bp->b_addr;
+-	xfs_agblock_t		blocks;
++	xfs_filblks_t		blocks;
+ 	int			error = 0;
+ 
+ 	if (!xfs_has_inobtcounts(sc->mp))
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 0fad0baaba2f69..b45d2b32051a63 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -256,7 +256,7 @@ xrep_agf_calc_from_btrees(
+ 	struct xfs_agf		*agf = agf_bp->b_addr;
+ 	struct xfs_mount	*mp = sc->mp;
+ 	xfs_agblock_t		btreeblks;
+-	xfs_agblock_t		blocks;
++	xfs_filblks_t		blocks;
+ 	int			error;
+ 
+ 	/* Update the AGF counters from the bnobt. */
+@@ -946,7 +946,7 @@ xrep_agi_calc_from_btrees(
+ 	if (error)
+ 		goto err;
+ 	if (xfs_has_inobtcounts(mp)) {
+-		xfs_agblock_t	blocks;
++		xfs_filblks_t	blocks;
+ 
+ 		error = xfs_btree_count_blocks(cur, &blocks);
+ 		if (error)
+@@ -959,7 +959,7 @@ xrep_agi_calc_from_btrees(
+ 	agi->agi_freecount = cpu_to_be32(freecount);
+ 
+ 	if (xfs_has_finobt(mp) && xfs_has_inobtcounts(mp)) {
+-		xfs_agblock_t	blocks;
++		xfs_filblks_t	blocks;
+ 
+ 		cur = xfs_finobt_init_cursor(sc->sa.pag, sc->tp, agi_bp);
+ 		error = xfs_btree_count_blocks(cur, &blocks);
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index 4a50f8e0004092..ca23cf4db6c5ef 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -261,7 +261,7 @@ xchk_fscount_btreeblks(
+ 	struct xchk_fscounters	*fsc,
+ 	xfs_agnumber_t		agno)
+ {
+-	xfs_extlen_t		blocks;
++	xfs_filblks_t		blocks;
+ 	int			error;
+ 
+ 	error = xchk_ag_init_existing(sc, agno, &sc->sa);
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index abad54c3621d44..4dc7c83dc08a40 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -650,8 +650,8 @@ xchk_iallocbt_xref_rmap_btreeblks(
+ 	struct xfs_scrub	*sc)
+ {
+ 	xfs_filblks_t		blocks;
+-	xfs_extlen_t		inobt_blocks = 0;
+-	xfs_extlen_t		finobt_blocks = 0;
++	xfs_filblks_t		inobt_blocks = 0;
++	xfs_filblks_t		finobt_blocks = 0;
+ 	int			error;
+ 
+ 	if (!sc->sa.ino_cur || !sc->sa.rmap_cur ||
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index 2b6be75e942415..1c5e45cc64190c 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -491,7 +491,7 @@ xchk_refcount_xref_rmap(
+ 	struct xfs_scrub	*sc,
+ 	xfs_filblks_t		cow_blocks)
+ {
+-	xfs_extlen_t		refcbt_blocks = 0;
++	xfs_filblks_t		refcbt_blocks = 0;
+ 	xfs_filblks_t		blocks;
+ 	int			error;
+ 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 1fe676710394e1..d08505bdfe17a3 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -112,7 +112,7 @@ xfs_bmap_count_blocks(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
+ 	struct xfs_btree_cur	*cur;
+-	xfs_extlen_t		btblocks = 0;
++	xfs_filblks_t		btblocks = 0;
+ 	int			error;
+ 
+ 	*nextents = 0;
 
