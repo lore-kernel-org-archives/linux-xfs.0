@@ -1,42 +1,33 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202D313CA95
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2024 06:59:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C96973477;
+	Mon, 18 Nov 2024 07:08:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731913197; cv=none; b=Yf/ISPulKwSdoLTdiEBZx7873OwaSqdknDcjhzSmnACQMA6AWe/k8yGv72P6RNmMXP4ATxf5tEGQuPBi0A/TBupK4sDnEzLc/cvllBFBu1iIDnbf87XBFiHnb4eGUAzcZI5thhLxMu9hVACudI/5anIIyD4fx1Qgguj8Ploy0yo=
+	t=1731913693; cv=none; b=P1qqBr8m+R2hxPBfk4+vw10ewwNjTEUd9s013TOazHc4sjOuMgTHVxLGXf/foBWmGonEJWLq3N97d4i1y6SVWz5I4OgdbbGaDLcUA41kn5FwvuvcDrWCPHEqJgckJR1jNNH0s7eZBxLi+wTtDxN+KfIVc7Ad8H10L8VqNaXVK4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731913197; c=relaxed/simple;
-	bh=dhJVvMyIpdiXT/SShVYSgC7CbUy0uDYRNR+Jm7/ct/s=;
+	s=arc-20240116; t=1731913693; c=relaxed/simple;
+	bh=2MjWzVhO3LoIoNwOPfZjNl8BYOQnIpzF/wwXC5X6mvM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UTYWhz9rQhoA0GvSPMkyuhdR+WoTZ4YOVBB+KPFP4ECZukaWprveS8AAN2Z3lBQqiofLych/TosNU0vFeQW2KT3XjoAYq9pcjw1q4DeAgdWc0ZP0c7BHmn1H0suWz2ckJxmAK0pxd9NQbh1RyMNw6Tuio3EWiI745/sHis+M9XA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=T9EgRf5W; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="T9EgRf5W"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ygTUqQ1T5sdduje3yM6YeD84bIbbOnkm8WtmmPsvgUg=; b=T9EgRf5WIuohmCOpVxAgppinc1
-	WgjNFxdcAbLLDY17jhFtHT1jx+bfnjTh176ji5DxWd+98mD+km5NfzOXWf+wdWCKIP5cAJViiEFNK
-	zOe9Ai4Gu9diTQBnjoOKrPj9T7q/VMeQ9JGDSQMwPwbmQFUCuw//4L6z8y795nl2ThINB3I29F2sr
-	dVr0f3CQgE7ZUSwvoJlQK/FlZKvBhhPxSBlXzo4EzrjzGzXe05ekxNsuaQ8RTxzwKL82k177BlcD7
-	4JX57CpQofb8yBXetRGzz1noNKqrt2H+WwoJzRGg19TKFK2rgl9wayQ/du4CeDjMhyrKPppdzaJSW
-	LHRscbOA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tCvjn-00000008anP-3325;
-	Mon, 18 Nov 2024 06:59:55 +0000
-Date: Sun, 17 Nov 2024 22:59:55 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Zizhi Wo <wozizhi@huawei.com>, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH] xfs: fix off-by-one error in fsmap's end_daddr usage
-Message-ID: <Zzrl63rLW3h9G0z7@infradead.org>
-References: <20241108173907.GB168069@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=UpPupvgKX/A3s2lZ9Zm4LM6WqPDyl9VEmZFEXzkeTJgZFg0wcb/gguy92xCMdVIAqBw8tQxB3AbM/EcpCD1yyETaargpsrJmn41jTFM8MDsn85qnlmrUyK8g3YuglOWUeVVb3QOvj+/EtuRwILBafk3A/RzvJ8BIE0gVVpVZ9nI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 66A2F68B05; Mon, 18 Nov 2024 08:08:05 +0100 (CET)
+Date: Mon, 18 Nov 2024 08:08:05 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: willy@infradead.org, hch@lst.de, hare@suse.de, david@fromorbit.com,
+	djwong@kernel.org, john.g.garry@oracle.com, ritesh.list@gmail.com,
+	kbusch@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
+Subject: Re: [RFC 8/8] bdev: use bdev_io_min() for statx block size
+Message-ID: <20241118070805.GA932@lst.de>
+References: <20241113094727.1497722-1-mcgrof@kernel.org> <20241113094727.1497722-9-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,23 +36,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241108173907.GB168069@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20241113094727.1497722-9-mcgrof@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-> @@ -737,8 +738,8 @@ xfs_getfsmap_rtdev_rtbitmap_helper(
->  	 * we calculated from userspace's high key to synthesize the record.
->  	 * Note that if the btree query found a mapping, there won't be a gap.
->  	 */
-> -	if (info->last && info->end_daddr != XFS_BUF_DADDR_NULL) {
-> -		frec.start_daddr = info->end_daddr;
-> +	if (info->last) {
-> +		frec.start_daddr = info->end_daddr + 1;
->  	} else {
->  		frec.start_daddr = xfs_rtb_to_daddr(mp, start_rtb);
+On Wed, Nov 13, 2024 at 01:47:27AM -0800, Luis Chamberlain wrote:
+> The min-io is the minimum IO the block device prefers for optimal
+> performance. In turn we map this to the block device block size.
+
+It's not the block size, but (to quote the man page) 'the "preferred"
+block size for efficient filesystem I/O'.  While the difference might
+sound minor it actually is important.
+
+> 
+> diff --git a/block/bdev.c b/block/bdev.c
+> index 3a5fd65f6c8e..4dcc501ed953 100644
+> --- a/block/bdev.c
+> +++ b/block/bdev.c
+> @@ -1306,6 +1306,7 @@ void bdev_statx(struct path *path, struct kstat *stat,
+>  			queue_atomic_write_unit_max_bytes(bd_queue));
 >  	}
+>  
+> +	stat->blksize = (unsigned int) bdev_io_min(bdev);
 
-Nit: no need for the braces here.
+No need for the cast.
 
-Otherwise looks good:
+>  	if (S_ISBLK(stat->mode))
+> -		bdev_statx(path, stat, request_mask);
+> +		bdev_statx(path, stat, request_mask | STATX_DIOALIGN);
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+And this is both unrelated and wrong.
+
