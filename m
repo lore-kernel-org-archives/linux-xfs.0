@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C5EA1E767D;
-	Mon, 18 Nov 2024 23:06:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB8A4153BE4
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2024 23:06:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731971181; cv=none; b=HtWrIx/4cshNbdTlr3O129j3GUdr/ALQtDON13OnQMUuvSz59JJm87sjys+uf4kdoPbu12cNCp3mCljnNLdkYxlx4x1PldlOeMtS8cw69gvJdcbjcUE5ENpA87mY1NJCzVJun3VYdsQT5iuPys5FrH/070xgSidsxvug1rHSTGk=
+	t=1731971196; cv=none; b=OUfO7mXvepOO3n5EG2DgStQA6zdMSf/tU93LVlj9Q8ykNnx3dAEjikneBCOGc+7VhxROGoalrFeNdP5hGblnPFrqzrPqXWdmW+ZWKuH0t4uhy6FoNAYucvG9OMEvipXyzXHOkatIuS4ppBqDB7NxOUaXIrVbCu7lavMVVZKVdTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731971181; c=relaxed/simple;
-	bh=PvtW6tfIcNcUbhG3Xo1d2VxsQ+XoCeJz0XHMA34S+LI=;
+	s=arc-20240116; t=1731971196; c=relaxed/simple;
+	bh=jpgtYhzEy0h6+jhMQGW8f72YX+1iogqws/uhpAFc434=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ItjZjULqlP2Jpabhr2wnhOVvFGZQMEBSFnEKw+TOLuVTG39cYrR/tyj2QcFVMJ3+fz9Vmnw1uWN1Ge9GT1nF/JCu5OPpfTt8D3v350m9MbcQYgv8V4QNPScLC9ATGOfx/O0CdUBdlKrIX+NEynhuDBFrYKYOMP3Nk1QH1f8jIfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sxaym0uE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=U5wn4NsWp6IvFKVTlCGlzRB+7f0xM+bHvnfdy36sH6OXm1qz3I2Wuf+/TT443Zbt5qbOv+rzA7hM/J5z9U6x9HHdo+WcxknX2X3Dxr7rQM2lqzHgiaLET4PzgKcRZOtv+ygR5Xpl5bY58SXElqRSnGvgBq6beNPy6sB2omfW0S4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mgWcF+iM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sxaym0uE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B37B4C4CECF;
-	Mon, 18 Nov 2024 23:06:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mgWcF+iM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A9B7C4CECC;
+	Mon, 18 Nov 2024 23:06:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731971180;
-	bh=PvtW6tfIcNcUbhG3Xo1d2VxsQ+XoCeJz0XHMA34S+LI=;
+	s=k20201202; t=1731971196;
+	bh=jpgtYhzEy0h6+jhMQGW8f72YX+1iogqws/uhpAFc434=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Sxaym0uETQAjbS1gBtnktWhIMExe7rQ8SEIdb90TkHF40dRITTgi9arFlWXYDUR7U
-	 85X06PpKX+JEo+chs/j7/Y1kr2JXW22lYlzZHhujJmBRSD0KvePqlgwBzjZ3HUs5ue
-	 qzp8xO49q9p6KEhTDV1pzlup+EPAmxxrIAVRHEtnPYcBP9FA313hGHP2m7hvyg6wK+
-	 pMz3laVO8yyjHALX1ydc0fWBAL3KOraeolNs4doXlTmvZZwyPjTxkCY0JsotOsFsOM
-	 KrdDNuUcgrM+5irc/GUsjEHGyiT5rOF2AYq34uWQB19WmCWuu7m/JCsbz3xWWD5fg/
-	 w8wTemj8/utAg==
-Date: Mon, 18 Nov 2024 15:06:20 -0800
-Subject: [PATCH 07/10] xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when
- zapping a symlink
+	b=mgWcF+iMmPtflhQSphf6pycklhdTCAQCleeLyIJf+N6tHbNP3g7W3N7T7ewn3OMPE
+	 pK4LWKlLLWwxFGQgma//yeBkqtETcIR3yv5NWs3qqWQERVAivfbZlprDK0Oxx1WywX
+	 Q8S/41bwqCUQTbRk/QbkYUTfBbYStAlo2419ZcrpCjRHt9m2FUeAKKWpzZpTFc5Puw
+	 ZBus80bnQbc7hntNKmrEiZ5iKT3yoUEFAyT66KN1KkrBWPM3XQ/AKDV7No4pgCh09i
+	 qEqXl20yeAlX+B6zJFfhRLiJHj2hdOAV1D782Uc/cSf3N3ENdcDyKjMJ2o/zs2BIsR
+	 YuRUQlKhJ3PYg==
+Date: Mon, 18 Nov 2024 15:06:35 -0800
+Subject: [PATCH 08/10] xfs: mark metadir repair tempfiles with IRECOVERY
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173197084532.911325.5157952313128832887.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <173197084549.911325.5472870057444935473.stgit@frogsfrogsfrogs>
 In-Reply-To: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
 References: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,38 +45,96 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we need to reset a symlink target to the "durr it's busted" string,
-then we clear the zapped flag as well.  However, this should be using
-the provided helper so that we don't set the zapped state on an
-otherwise ok symlink.
+Once in a long while, xfs/566 and xfs/801 report directory corruption in
+one of the metadata subdirectories while it's forcibly rebuilding all
+filesystem metadata.  I observed the following sequence of events:
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 2651923d8d8db0 ("xfs: online repair of symbolic links")
+1. Initiate a repair of the parent pointers for the /quota/user file.
+   This is the secret file containing user quota data.
+
+2. The pptr repair thread creates a temporary file and begins staging
+   parent pointers in the ondisk metadata in preparation for an
+   exchange-range to commit the new pptr data.
+
+3. At the same time, initiate a repair of the /quota directory itself.
+
+4. The dir repair thread finds the temporary file from (2), scans it for
+   parent pointers, and stages a dirent in its own temporary dir in
+   preparation to commit the fixed directory.
+
+5. The parent pointer repair completes and frees the temporary file.
+
+6. The dir repair commits the new directory and scans it again.  It
+   finds the dirent that points to the old temporary file in (2) and
+   marks the directory corrupt.
+
+Oops!  Repair code must never scan the temporary files that other repair
+functions create to stage new metadata.  They're not supposed to do
+that, but the predicate function xrep_is_tempfile is incorrect because
+it assumes that any XFS_DIFLAG2_METADATA file cannot ever be a temporary
+file, but xrep_tempfile_adjust_directory_tree creates exactly that.
+
+Fix this by setting the IRECOVERY flag on temporary metadata directory
+inodes and using that to correct the predicate.  Repair code is supposed
+to erase all the data in temporary files before releasing them, so it's
+ok if a thread scans the temporary file after we drop IRECOVERY.
+
+Fixes: bb6cdd5529ff67 ("xfs: hide metadata inodes from everyone because they are special")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/symlink_repair.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/tempfile.c |   10 ++++++++--
+ fs/xfs/xfs_inode.h      |    2 +-
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
-index d015a86ef460fb..953ce7be78dc2f 100644
---- a/fs/xfs/scrub/symlink_repair.c
-+++ b/fs/xfs/scrub/symlink_repair.c
-@@ -36,6 +36,7 @@
- #include "scrub/tempfile.h"
- #include "scrub/tempexch.h"
- #include "scrub/reap.h"
-+#include "scrub/health.h"
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 4b7f7860e37ece..dc3802c7f678ce 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -223,6 +223,7 @@ xrep_tempfile_adjust_directory_tree(
+ 	if (error)
+ 		goto out_ilock;
  
- /*
-  * Symbolic Link Repair
-@@ -233,7 +234,7 @@ xrep_symlink_salvage(
- 	 * target zapped flag.
++	xfs_iflags_set(sc->tempip, XFS_IRECOVERY);
+ 	xfs_qm_dqdetach(sc->tempip);
+ out_ilock:
+ 	xrep_tempfile_iunlock(sc);
+@@ -246,6 +247,8 @@ xrep_tempfile_remove_metadir(
+ 
+ 	ASSERT(sc->tp == NULL);
+ 
++	xfs_iflags_clear(sc->tempip, XFS_IRECOVERY);
++
+ 	xfs_ilock(sc->tempip, XFS_IOLOCK_EXCL);
+ 	sc->temp_ilock_flags |= XFS_IOLOCK_EXCL;
+ 
+@@ -945,10 +948,13 @@ xrep_is_tempfile(
+ 
+ 	/*
+ 	 * Files in the metadata directory tree also have S_PRIVATE set and
+-	 * IOP_XATTR unset, so we must distinguish them separately.
++	 * IOP_XATTR unset, so we must distinguish them separately.  We (ab)use
++	 * the IRECOVERY flag to mark temporary metadir inodes knowing that the
++	 * end of log recovery clears IRECOVERY, so the only ones that can
++	 * exist during online repair are the ones we create.
  	 */
- 	if (buflen == 0) {
--		sc->sick_mask |= XFS_SICK_INO_SYMLINK_ZAPPED;
-+		xchk_mark_healthy_if_clean(sc, XFS_SICK_INO_SYMLINK_ZAPPED);
- 		sprintf(target_buf, DUMMY_TARGET);
- 	}
+ 	if (xfs_has_metadir(mp) && (ip->i_diflags2 & XFS_DIFLAG2_METADATA))
+-		return false;
++		return __xfs_iflags_test(ip, XFS_IRECOVERY);
  
+ 	if (IS_PRIVATE(inode) && !(inode->i_opflags & IOP_XATTR))
+ 		return true;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 2a4485fb990846..bd6b37beabacdd 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -231,7 +231,7 @@ xfs_iflags_clear(xfs_inode_t *ip, unsigned long flags)
+ }
+ 
+ static inline int
+-__xfs_iflags_test(xfs_inode_t *ip, unsigned long flags)
++__xfs_iflags_test(const struct xfs_inode *ip, unsigned long flags)
+ {
+ 	return (ip->i_flags & flags);
+ }
 
