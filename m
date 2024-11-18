@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB7A1E7C0A;
-	Mon, 18 Nov 2024 23:01:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 530D01EBA0C;
+	Mon, 18 Nov 2024 23:01:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731970888; cv=none; b=aa1jFbbvCJR6SSVMERE073s92O4yyf/QA8USBRR+KFLlyskUOBJLO2KAdImFpgOIyabs305HXENv6pInkQpC7ld5iBcosoGpPx/nzbCTbP15zPnKuAdwbZqqDv8QmqcSrAOIrbT+2bvCl1vJpU/3/2ePfS8AbW6Bj4T29PSlYAA=
+	t=1731970895; cv=none; b=c2fnFIcGfCvDOaP2L4ijdXLLjnlrsVAD2piWzUOX5vxAgiZYsmaf6PqNZPyTNavEKtEtd5CTb0n0cBP7dCTd3O6LYQAGKJVMOk+RaZgb1MliGr9A/fZEpi7RvQ6ookbpF0jsMR9xyAhxqkWPjkhRUPjseroLfI2vIth6X14jk3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731970888; c=relaxed/simple;
-	bh=8rBtGUaLn9fzY7hZzzdE571gYYsXALSfwybdG1Mkglc=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=hWpJow+ESyGtvi8Cqr6c+P0bHKgWOza1Yxc8QGBMojh3YtiK9MHmt6tpPSDPOAY2+0L75AMnJdkQSyt7CdZEhMnDkzeWBf9i5x/GHhrs9Ev2TSaKpMsxGW0NOQ3C2lRISuA/+qAl32aFr1+fJCTShrjAXMtVzSBOujDEu90PsgE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hS05dhW7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731970895; c=relaxed/simple;
+	bh=bARq+IanWDi+o1bAx7pNfFQRqEtVG7WdE58XWrS4hxg=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=VM0hokOgUL3eav746jDutuRFfkRYtTQfUBRh3zdSRafZFbLCEZ4QUoS/If3fhEOtPV/6en8LdaJxYatQNu+r/1aTSC5iKJqwrBMbzpLVXKJwd9e7AgDesJwrrCEwNcQp+1lCNdlAnbTxQs5ZSsy4SRRQiIkx361PYSyT/uJ3mxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dna9yI5E; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hS05dhW7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AA50C4CECC;
-	Mon, 18 Nov 2024 23:01:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dna9yI5E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF073C4CED0;
+	Mon, 18 Nov 2024 23:01:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731970888;
-	bh=8rBtGUaLn9fzY7hZzzdE571gYYsXALSfwybdG1Mkglc=;
+	s=k20201202; t=1731970893;
+	bh=bARq+IanWDi+o1bAx7pNfFQRqEtVG7WdE58XWrS4hxg=;
 	h=Date:Subject:From:To:Cc:From;
-	b=hS05dhW7cDpx5U4eruLWKFRFN3ZfAWmTBEUAr0r4CfpyEMmUsMm7kSO4CU2Jy1uKB
-	 n9YRbvuuCcKi12aKeT/HD2mSlCJdQdsxESCzORxh9clRXPVmvuoHUe072lrhL4EVfY
-	 kj5e7LlBPvOtph8WGfPUL6Z108+ZlU+d8A7tsYevO0P+GB7L+XvWryICNSzgC/QOlZ
-	 wJltQ54kuwRESnDyCfhU/WvpbZtiejc+BeKVutPQBWQbBjqprzq2wEymol/Kn2Aicn
-	 5eIhf3WHXzr1GUJ2sbN2UTyhNOqyugzrDSu3RCP7dXju+k3M1Tcn8bDWLMNyk7OV0h
-	 nIv7r4qXWSnXw==
-Date: Mon, 18 Nov 2024 15:01:27 -0800
-Subject: [PATCHSET] fstests: random fixes for v2024.11.17
+	b=Dna9yI5EladsgbJ1MBrR8PDiEsgRFQZcS9NSrUP5vDfjeh0yxiJh8xMTjVL8eV/VP
+	 pKQZiA7p8FrJJGOOAKjZ3q2cHHAVnBS4PuekYSVj/W/96gpJ4TG5D7y1M6uQCBRjLt
+	 ypuBru4xzkQRX/lLzwPpWfQ9nHvNme4qDwySTSIFLY4pX5YQy/LRPXH/ifa+GclMO5
+	 8NlkwHxJR0gwom8KMbQ6RgEbAunl4lIG73Brh4+TEAHDHSZ2wkMK8drOQpcbULqnNH
+	 E4wx7gYJSeu5mIzgfFsqnnrT5/bw0+n2YCZGgfTNQ30YmJ3Z85O890JWwutAvZq018
+	 FIRbLN6epYeWA==
+Date: Mon, 18 Nov 2024 15:01:33 -0800
+Subject: [PATCHSET] xfs: bug fixes for 6.13
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com, djwong@kernel.org
-Cc: zlang@kernel.org, fstests@vger.kernel.org, hch@lst.de,
- linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+To: djwong@kernel.org, cem@kernel.org
+Cc: dan.carpenter@linaro.org, hch@lst.de, stable@vger.kernel.org,
+ wozizhi@huawei.com, linux-xfs@vger.kernel.org
+Message-ID: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,8 +43,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Here's the usual odd fixes for fstests.  Most of these are cleanups and
-bug fixes that have been aging in my djwong-wtf branch forever.
+Bug fixes for 6.13.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -55,36 +54,40 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-fixes-6.13
 ---
 Commits in this patchset:
- * generic/757: fix various bugs in this test
- * xfs/113: fix failure to corrupt the entire directory
- * xfs/508: fix test for 64k blocksize
- * common/rc: capture dmesg when oom kills happen
- * generic/562: handle ENOSPC while cloning gracefully
- * xfs/163: skip test if we can't shrink due to enospc issues
- * xfs/009: allow logically contiguous preallocations
- * generic/251: use sentinel files to kill the fstrim loop
- * generic/251: constrain runtime via time/load/soak factors
- * common/rc: _scratch_mkfs_sized supports extra arguments
- * xfs/157: do not drop necessary mkfs options
- * xfs/157: fix test failures when MKFS_OPTIONS has -L options
+ * xfs: fix off-by-one error in fsmap's end_daddr usage
+ * xfs: metapath scrubber should use the already loaded inodes
+ * xfs: keep quota directory inode loaded
+ * xfs: return a 64-bit block count from xfs_btree_count_blocks
+ * xfs: don't drop errno values when we fail to ficlone the entire range
+ * xfs: separate healthy clearing mask during repair
+ * xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when zapping a symlink
+ * xfs: mark metadir repair tempfiles with IRECOVERY
+ * xfs: fix null bno_hint handling in xfs_rtallocate_rtg
+ * xfs: fix error bailout in xfs_rtginode_create
 ---
- common/rc         |   35 +++++++++++++++++++----------------
- tests/generic/251 |   34 ++++++++++++++++++----------------
- tests/generic/562 |   10 ++++++++--
- tests/generic/757 |    7 ++++++-
- tests/xfs/009     |   29 ++++++++++++++++++++++++++++-
- tests/xfs/113     |   33 +++++++++++++++++++++++++++------
- tests/xfs/157     |   30 +++++++++++++++++++++++++++---
- tests/xfs/163     |    9 ++++++++-
- tests/xfs/508     |    4 ++--
- 9 files changed, 143 insertions(+), 48 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c        |    4 +-
+ fs/xfs/libxfs/xfs_btree.h        |    2 +
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    4 ++
+ fs/xfs/libxfs/xfs_rtgroup.c      |    2 +
+ fs/xfs/scrub/agheader.c          |    6 ++-
+ fs/xfs/scrub/agheader_repair.c   |    6 ++-
+ fs/xfs/scrub/fscounters.c        |    2 +
+ fs/xfs/scrub/health.c            |   57 ++++++++++++++++++--------------
+ fs/xfs/scrub/ialloc.c            |    4 +-
+ fs/xfs/scrub/metapath.c          |   68 +++++++++++++++-----------------------
+ fs/xfs/scrub/refcount.c          |    2 +
+ fs/xfs/scrub/scrub.h             |    6 +++
+ fs/xfs/scrub/symlink_repair.c    |    3 +-
+ fs/xfs/scrub/tempfile.c          |   10 ++++--
+ fs/xfs/xfs_bmap_util.c           |    2 +
+ fs/xfs/xfs_file.c                |    8 ++++
+ fs/xfs/xfs_fsmap.c               |   38 ++++++++++++---------
+ fs/xfs/xfs_inode.h               |    2 +
+ fs/xfs/xfs_qm.c                  |   47 ++++++++++++++------------
+ fs/xfs/xfs_qm.h                  |    1 +
+ fs/xfs/xfs_rtalloc.c             |    2 +
+ 21 files changed, 151 insertions(+), 125 deletions(-)
 
