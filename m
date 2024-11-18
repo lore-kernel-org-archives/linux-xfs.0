@@ -1,285 +1,221 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C13D81CB51D
-	for <linux-xfs@vger.kernel.org>; Sun, 17 Nov 2024 13:42:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDF63146D6A
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2024 06:10:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731850965; cv=none; b=dFdkQNOW3WWMpxCXQaM2pXasplc2UsMbNBo2g1iWcDL/h0kZXWx5NNvUu9th1LVqGwDiA6tm03jmgVATNFdy2QmcLj/vFT1s3whR686HCTC17CWtCapQxnDGvk/p4F8BXLIAgOy3jtJLzdKduExThvZTLt0ZOSo6HvEVgfi6qO0=
+	t=1731910227; cv=none; b=SrOY6KHJL1j2fimCvO1h1hw9LqKfqfU+VLsYJCpnI73g77B9TAZ2nKz5WXb1cONlRqMfJbx6etYNrdSMFEL2fkUD+Iy1wgwfA6iFlE0IaVfW/X9uGzLgkwGG3puVGIk1R+AEF67xpmrxJZSmqX0ES/8ZfaSPuMgPqBgj6zFqGYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731850965; c=relaxed/simple;
-	bh=cxBHCNGDM6QHvvuGBlakc3bVgo03+m++ohOoi5wnMv8=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=LxVvS4s8Ipl8bHN1Y8enmjsyCddn7EY4GOX2RTuZcybM4F18mGk5YEoDenWog1BqGWfSih7QGgL4muFKC8DmQcOcIUEfN5XPZ22qMeYE2h0ZmGQLFXJXc3RJTf9AtlYL3+mCi7UiNrWZ3j1EgkRqQ9ZqS7Z1AzT59Z3J405ZhNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H89Px/gc; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H89Px/gc"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 46157C4CEDA
-	for <linux-xfs@vger.kernel.org>; Sun, 17 Nov 2024 13:42:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731850965;
-	bh=cxBHCNGDM6QHvvuGBlakc3bVgo03+m++ohOoi5wnMv8=;
-	h=From:To:Subject:Date:From;
-	b=H89Px/gcqjP4G+5238IqbEbW3agfmjz48wU/6Vs39mmCUj2JYPDA3BYoXes+Ga8+2
-	 54e7XIaRtACI/KW4F/a8QA8pd0oYAT9w6asS22AAEBu9GqHMvq2BeSZjnc8msSkh9C
-	 ZP6UZxAl71rJwRcuJ2tgOH8vMIG8h3opZ6zy+QT2uMK34mm800LN86KJVMBQXMCJG0
-	 +isOCjy4YeQn8Nw5SvlcOOVn0z9PdlfLbQ+Wkf6Q+MuxigvUE8+5bT5zntQiqA8Lxm
-	 +Aottc5kBQ/J95hliB7f2NOuTqpc15L+IC3MbMEm0ILSMIN+a40zIR05YptMAGBrfC
-	 qVHCF8FV1zLLg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 39198C53BBF; Sun, 17 Nov 2024 13:42:45 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 219504] New: XFS crashes with kernel Version > 6.1.91. Perhaps
- Changes in kernel 6.1.92 for XFS/iomap causing the problems?
-Date: Sun, 17 Nov 2024 13:42:44 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: speedcracker@hotmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
- op_sys bug_status bug_severity priority component assigned_to reporter
- cf_regression
-Message-ID: <bug-219504-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=arc-20240116; t=1731910227; c=relaxed/simple;
+	bh=k41xpQpak0o3UxWeiK/hBruMxSnAsJCuhEVORVRG6a8=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=sK1zwKvH+oYnxRlA0iKlcS6ji0nqKXSQsBla/69pvDAVX9XddBzhLcijyCV/22XqDYKCQA8sEhnq5/Tiu6im3vK3X7NnbgWaPNSHx2vWSfYBOncrC09hJExiqx+RctojFqJQqoKVFF/YFlYk4ttjsMrbL6op5I4ms9WV7/x3G7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-3a75dd4b1f3so11909715ab.1
+        for <linux-xfs@vger.kernel.org>; Sun, 17 Nov 2024 22:10:25 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731910225; x=1732515025;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RgFEXeL5HW7zNvXmnwi2Z5n7swTsOKdXfoEvlu2V4iw=;
+        b=fKlr/GK0k10aGQo87snust7GtHdmeE4uqW20GyOgJNAi6ssjpStGH4x9v0mjVqcsqn
+         xQH7JaSfFwS2lWl4vg0oDx1O5Np3YNlVbHxMOYGAb/NSK68c94mFW6y+kRgHyfywgZjA
+         1Ge/BBnfbdWYsVM2oOza7BTPoHd363bL3PbYjJI2nOM/JrXnC1cLV3Vt/g3iVQZFSjOD
+         h6NhFZLl0wG/SVlg6yyE4mDrvSYfhrau9mxDxfUrTJXg2KlRe1hUh7o2XBpJBCeIBK4h
+         Wd/4jSnhpXyCpPGVGJ95z68tDyAxHbPQfdkcTPz4k3V+DueQYxxYiilrnZCiDH5mWVIM
+         C2Ew==
+X-Forwarded-Encrypted: i=1; AJvYcCWCmmNam71kqVcRNJddhh2l7ClhHCf3/4OQP3pmjGamQhc/w5DLAFqxMGNGgKauuZRcvOHxwRdIjgI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSZqA6j8M31YPlEA3DGyFIruxG1Fgs5n9ic41HF+Xm3OP3ijU7
+	OQwjHk0ep+BfLfakwspnpz2j7zIszvhjzPTyWTiH/euJwxKcj+VWMVgmt9nZtgXVoMak69uLpoi
+	gbZVbhTdEg91LaNsAAXfMdWypJXch/v9g8HSPXIO2cgUsubdQOhOgFdc=
+X-Google-Smtp-Source: AGHT+IGYH8gSTGwd2mCIuFF0OXuzoAsuHmAUIrK/uW22Sv+GKPxdw31ydeBykno2avs8NvMpMP41NKBxj/eY4PlvIbAQrHjnjqRf
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Received: by 2002:a05:6e02:188c:b0:3a7:4644:eebb with SMTP id
+ e9e14a558f8ab-3a74808ea9cmr99363595ab.21.1731910224995; Sun, 17 Nov 2024
+ 22:10:24 -0800 (PST)
+Date: Sun, 17 Nov 2024 22:10:24 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <673ada50.050a0220.87769.0022.GAE@google.com>
+Subject: [syzbot] [xfs?] possible deadlock in xfs_ilock (3)
+From: syzbot <syzbot+b143b25b374fbc5c3a04@syzkaller.appspotmail.com>
+To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219504
+Hello,
 
-            Bug ID: 219504
-           Summary: XFS crashes with kernel Version > 6.1.91. Perhaps
-                    Changes in kernel 6.1.92 for XFS/iomap causing the
-                    problems?
-           Product: File System
-           Version: 2.5
-          Hardware: AMD
-                OS: Linux
-            Status: NEW
-          Severity: normal
-          Priority: P3
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: speedcracker@hotmail.com
-        Regression: No
+syzbot found the following issue on:
 
-Hi there,
+HEAD commit:    f1b785f4c787 Merge tag 'for_linus' of git://git.kernel.org..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1352c130580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=c3a3896a92fb300b
+dashboard link: https://syzkaller.appspot.com/bug?extid=b143b25b374fbc5c3a04
+compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
 
-the reason for this message is, with changes in Kernel 6.1.92, I've got some
-trouble with high I/O by using the XFS filesystem.
-I think the reason for the kernel-backtrace, which is mentioned later, is o=
-ne
-of the following commits (in Kernel 6.1.92):
-e811fec51c66a0056459daa1ac834aea7d8d98f5,
-ea67e73129fceffd40b9193da93544c34d81b9c2,
-54a37e5d07478358dcbf6e73b6c7e40e50a6f375,
-580f40b4c956f38e83f66ebed4d81bbe4a7d82fb,
-12339ec6fe4d41e69a81a13ca5e1c443fbe5bcba... and so on.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-By using kernel 6.1.91 or lower version, no problems occur. By using kernel
-6.1.92 or up (latest tests I've done with 6.1.105 - then I gave up) and high
-I/O workload, the problem occur.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/3cdfef160cc2/disk-f1b785f4.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/f0f0ec3434aa/vmlinux-f1b785f4.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/6a901270f54d/bzImage-f1b785f4.xz
 
-I'm using XFS as a underlaying file-system with a 32bit kernel for exporting
-LUN's by using SCST (https://github.com/SCST-project/scst) through fileio (=
-not
-blockio).
-I'm using the latest SCST git release.
-One of the scst developers also sees the problem here as being more in the
-direction of the Linux kernel, high I/O and XFS file system.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+b143b25b374fbc5c3a04@syzkaller.appspotmail.com
+
+XFS (loop8): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
+XFS (loop8): Ending clean mount
+======================================================
+WARNING: possible circular locking dependency detected
+6.12.0-rc7-syzkaller-00042-gf1b785f4c787 #0 Not tainted
+------------------------------------------------------
+syz.8.662/10149 is trying to acquire lock:
+ffffffff8e347080 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:318 [inline]
+ffffffff8e347080 (fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:4036 [inline]
+ffffffff8e347080 (fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:4114 [inline]
+ffffffff8e347080 (fs_reclaim){+.+.}-{0:0}, at: __do_kmalloc_node mm/slub.c:4263 [inline]
+ffffffff8e347080 (fs_reclaim){+.+.}-{0:0}, at: __kmalloc_noprof+0xb1/0x400 mm/slub.c:4276
+
+but task is already holding lock:
+ffff88805a939858 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock+0xf5/0x210 fs/xfs/xfs_inode.c:166
+
+which lock already depends on the new lock.
 
 
-Here is the kernel-backtrace:
+the existing dependency chain (in reverse order) is:
 
-[Tue Aug 20 00:02:00 2024] ------------[ cut here ]------------
-[Tue Aug 20 00:02:00 2024] WARNING: CPU: 5 PID: 2048 at
-fs/iomap/buffered-io.c:980 iomap_file_buffered_write_punch_delalloc+0x3b0/0=
-x440
-[Tue Aug 20 00:02:00 2024] Modules linked in: iscsi_scst(O) scst_vdisk(O)
-scst(O) dlm quota_v2 quota_tree autofs4 tcp_bbr sch_fq udf crc_itu_t input_=
-leds
-led_class ses enclosure hid_generic wmi_bmof edac_mce_amd crc32_pclmul usbh=
-id
-aesni_intel crypto_simd uas hid usb_storage rapl r8169 bnx2 i2c_piix4 mpt3s=
-as
-ccp i2c_core sha1_generic k10temp pcspkr video wmi backlight
-[Tue Aug 20 00:02:00 2024] CPU: 5 PID: 2048 Comm: disk042_0 Tainted: G S=20=
-=20=20=20=20=20=20
- O       6.1.106_LFS_FILE01 #1
-[Tue Aug 20 00:02:00 2024] Hardware name: To Be Filled By O.E.M. X370 Pro4/=
-X370
-Pro4, BIOS P10.08 01/22/2024
-[Tue Aug 20 00:02:00 2024] EIP:
-iomap_file_buffered_write_punch_delalloc+0x3b0/0x440
-[Tue Aug 20 00:02:00 2024] Code: 26 00 89 c6 89 d8 e8 4f e3 ed ff f0 ff 4b =
-1c
-75 9c 89 d8 e8 22 0a ef ff 66 90 eb 91 8d b6 00 00 00 00 0f 0b e9 f5 fd ff =
-ff
-90 <0f> 0b e9 df fd ff ff 90 0f 0b 8b 45 ec 8b 55 f0 89 f9 39 c6 19 d1
-[Tue Aug 20 00:02:00 2024] EAX: a733e000 EBX: 0007f000 ECX: fffffef2 EDX:
-0000010e
-[Tue Aug 20 00:02:00 2024] ESI: a733f000 EDI: 00000000 EBP: 86df3bd0 ESP:
-86df3b80
-[Tue Aug 20 00:02:00 2024] DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068 EFL=
-AGS:
-00010293
-[Tue Aug 20 00:02:00 2024] CR0: 80050033 CR2: 37f87000 CR3: 0185a6e0 CR4:
-00350ef0
-[Tue Aug 20 00:02:00 2024] Call Trace:
-[Tue Aug 20 00:02:00 2024]  ? show_regs.cold+0x16/0x1b
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x3b0/0x440
-[Tue Aug 20 00:02:00 2024]  ? __warn+0x87/0xe0
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x3b0/0x440
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x3b0/0x440
-[Tue Aug 20 00:02:00 2024]  ? report_bug+0xe5/0x170
-[Tue Aug 20 00:02:00 2024]  ? exc_overflow+0x60/0x60
-[Tue Aug 20 00:02:00 2024]  ? handle_bug+0x2a/0x50
-[Tue Aug 20 00:02:00 2024]  ? exc_invalid_op+0x1e/0x70
-[Tue Aug 20 00:02:00 2024]  ? handle_exception+0x101/0x101
-[Tue Aug 20 00:02:00 2024]  ? exc_overflow+0x60/0x60
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x3b0/0x440
-[Tue Aug 20 00:02:00 2024]  ? exc_overflow+0x60/0x60
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x3b0/0x440
-[Tue Aug 20 00:02:00 2024]  ? xfs_dax_write_iomap_end+0xa0/0xa0
-[Tue Aug 20 00:02:00 2024]  xfs_buffered_write_iomap_end+0x52/0xc0
-[Tue Aug 20 00:02:00 2024]  ? xfs_buffered_write_iomap_end+0xc0/0xc0
-[Tue Aug 20 00:02:00 2024]  iomap_iter+0xce/0x4b0
-[Tue Aug 20 00:02:00 2024]  ? xfs_dax_write_iomap_end+0xa0/0xa0
-[Tue Aug 20 00:02:00 2024]  iomap_file_buffered_write+0xa9/0x420
-[Tue Aug 20 00:02:00 2024]  xfs_file_buffered_write+0x9d/0x2e0
-[Tue Aug 20 00:02:00 2024]  xfs_file_write_iter+0xc9/0x100
-[Tue Aug 20 00:02:00 2024]  fileio_exec_async+0x25e/0x3a0 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  fileio_exec_write+0x2ce/0x400 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xdd/0xf0
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xd7/0xf0
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xd1/0xf0
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xcb/0xf0
-[Tue Aug 20 00:02:00 2024]  vdev_do_job+0x36/0xe0 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0x8f/0xf0
-[Tue Aug 20 00:02:00 2024]  fileio_exec+0x1f/0x30 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  scst_do_real_exec+0x51/0x130 [scst]
-[Tue Aug 20 00:02:00 2024]  scst_exec_check_blocking+0xa8/0x220 [scst]
-[Tue Aug 20 00:02:00 2024]  scst_process_active_cmd+0x200/0x18f0 [scst]
-[Tue Aug 20 00:02:00 2024]  scst_cmd_thread+0x15c/0x500 [scst]
-[Tue Aug 20 00:02:00 2024]  ? prepare_to_wait_event+0x160/0x160
-[Tue Aug 20 00:02:00 2024]  kthread+0xd2/0x100
-[Tue Aug 20 00:02:00 2024]  ? scst_cmd_done_local+0x90/0x90 [scst]
-[Tue Aug 20 00:02:00 2024]  ? kthread_complete_and_exit+0x20/0x20
-[Tue Aug 20 00:02:00 2024]  ret_from_fork+0x1c/0x28
-[Tue Aug 20 00:02:00 2024] ---[ end trace 0000000000000000 ]---
-[Tue Aug 20 00:02:00 2024] ------------[ cut here ]------------
-[Tue Aug 20 00:02:00 2024] WARNING: CPU: 5 PID: 2048 at
-fs/iomap/buffered-io.c:993 iomap_file_buffered_write_punch_delalloc+0x2f0/0=
-x440
-[Tue Aug 20 00:02:00 2024] Modules linked in: iscsi_scst(O) scst_vdisk(O)
-scst(O) dlm quota_v2 quota_tree autofs4 tcp_bbr sch_fq udf crc_itu_t input_=
-leds
-led_class ses enclosure hid_generic wmi_bmof edac_mce_amd crc32_pclmul usbh=
-id
-aesni_intel crypto_simd uas hid usb_storage rapl r8169 bnx2 i2c_piix4 mpt3s=
-as
-ccp i2c_core sha1_generic k10temp pcspkr video wmi backlight
-[Tue Aug 20 00:02:00 2024] CPU: 5 PID: 2048 Comm: disk042_0 Tainted: G S   =
-   W
- O       6.1.106_LFS_FILE01 #1
-[Tue Aug 20 00:02:00 2024] Hardware name: To Be Filled By O.E.M. X370 Pro4/=
-X370
-Pro4, BIOS P10.08 01/22/2024
-[Tue Aug 20 00:02:00 2024] EIP:
-iomap_file_buffered_write_punch_delalloc+0x2f0/0x440
-[Tue Aug 20 00:02:00 2024] Code: 8b 7d f0 01 c2 c1 e2 0c c7 45 d8 00 00 00 =
-00
-89 55 d4 39 d6 89 f9 83 d9 00 0f 8d 1e ff ff ff 89 75 d4 89 7d d8 e9 13 ff =
-ff
-ff <0f> 0b 39 45 dc 8b 4d e4 19 d1 0f 8c b8 00 00 00 8b 45 ec 8b 7d dc
-[Tue Aug 20 00:02:00 2024] EAX: a733f000 EBX: 00000000 ECX: a733f000 EDX:
-00000000
-[Tue Aug 20 00:02:00 2024] ESI: a733f000 EDI: 00000000 EBP: 86df3bd0 ESP:
-86df3b80
-[Tue Aug 20 00:02:00 2024] DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068 EFL=
-AGS:
-00010246
-[Tue Aug 20 00:02:00 2024] CR0: 80050033 CR2: 37f87000 CR3: 0185a6e0 CR4:
-00350ef0
-[Tue Aug 20 00:02:00 2024] Call Trace:
-[Tue Aug 20 00:02:00 2024]  ? show_regs.cold+0x16/0x1b
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x2f0/0x440
-[Tue Aug 20 00:02:00 2024]  ? __warn+0x87/0xe0
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x2f0/0x440
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x2f0/0x440
-[Tue Aug 20 00:02:00 2024]  ? report_bug+0xe5/0x170
-[Tue Aug 20 00:02:00 2024]  ? exc_overflow+0x60/0x60
-[Tue Aug 20 00:02:00 2024]  ? handle_bug+0x2a/0x50
-[Tue Aug 20 00:02:00 2024]  ? exc_invalid_op+0x1e/0x70
-[Tue Aug 20 00:02:00 2024]  ? handle_exception+0x101/0x101
-[Tue Aug 20 00:02:00 2024]  ? exc_overflow+0x60/0x60
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x2f0/0x440
-[Tue Aug 20 00:02:00 2024]  ? exc_overflow+0x60/0x60
-[Tue Aug 20 00:02:00 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x2f0/0x440
-[Tue Aug 20 00:02:00 2024]  ? xfs_dax_write_iomap_end+0xa0/0xa0
-[Tue Aug 20 00:02:00 2024]  xfs_buffered_write_iomap_end+0x52/0xc0
-[Tue Aug 20 00:02:00 2024]  ? xfs_buffered_write_iomap_end+0xc0/0xc0
-[Tue Aug 20 00:02:00 2024]  iomap_iter+0xce/0x4b0
-[Tue Aug 20 00:02:00 2024]  ? xfs_dax_write_iomap_end+0xa0/0xa0
-[Tue Aug 20 00:02:00 2024]  iomap_file_buffered_write+0xa9/0x420
-[Tue Aug 20 00:02:00 2024]  xfs_file_buffered_write+0x9d/0x2e0
-[Tue Aug 20 00:02:00 2024]  xfs_file_write_iter+0xc9/0x100
-[Tue Aug 20 00:02:00 2024]  fileio_exec_async+0x25e/0x3a0 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  fileio_exec_write+0x2ce/0x400 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xdd/0xf0
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xd7/0xf0
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xd1/0xf0
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0xcb/0xf0
-[Tue Aug 20 00:02:00 2024]  vdev_do_job+0x36/0xe0 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  ? __switch_to_asm+0x8f/0xf0
-[Tue Aug 20 00:02:00 2024]  fileio_exec+0x1f/0x30 [scst_vdisk]
-[Tue Aug 20 00:02:00 2024]  scst_do_real_exec+0x51/0x130 [scst]
-[Tue Aug 20 00:02:00 2024]  scst_exec_check_blocking+0xa8/0x220 [scst]
-[Tue Aug 20 00:02:00 2024]  scst_process_active_cmd+0x200/0x18f0 [scst]
-[Tue Aug 20 00:02:00 2024]  scst_cmd_thread+0x15c/0x500 [scst]
-[Tue Aug 20 00:02:00 2024]  ? prepare_to_wait_event+0x160/0x160
-[Tue Aug 20 00:02:00 2024]  kthread+0xd2/0x100
-[Tue Aug 20 00:02:00 2024]  ? scst_cmd_done_local+0x90/0x90 [scst]
-[Tue Aug 20 00:02:00 2024]  ? kthread_complete_and_exit+0x20/0x20
-[Tue Aug 20 00:02:00 2024]  ret_from_fork+0x1c/0x28
-[Tue Aug 20 00:02:00 2024] ---[ end trace 0000000000000000 ]---
+-> #1 (&xfs_dir_ilock_class){++++}-{3:3}:
+       down_write_nested+0x97/0x210 kernel/locking/rwsem.c:1693
+       xfs_ilock+0x198/0x210 fs/xfs/xfs_inode.c:164
+       xfs_reclaim_inode fs/xfs/xfs_icache.c:981 [inline]
+       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1675 [inline]
+       xfs_icwalk_ag+0xca6/0x1780 fs/xfs/xfs_icache.c:1757
+       xfs_icwalk fs/xfs/xfs_icache.c:1805 [inline]
+       xfs_reclaim_inodes_nr+0x1bc/0x300 fs/xfs/xfs_icache.c:1047
+       super_cache_scan+0x40c/0x550 fs/super.c:227
+       do_shrink_slab+0x452/0x11c0 mm/shrinker.c:437
+       shrink_slab+0x32b/0x12a0 mm/shrinker.c:664
+       shrink_one+0x47e/0x7b0 mm/vmscan.c:4824
+       shrink_many mm/vmscan.c:4885 [inline]
+       lru_gen_shrink_node mm/vmscan.c:4963 [inline]
+       shrink_node+0xb23/0x3a90 mm/vmscan.c:5943
+       kswapd_shrink_node mm/vmscan.c:6771 [inline]
+       balance_pgdat+0xc1f/0x18f0 mm/vmscan.c:6963
+       kswapd+0x5ea/0xbf0 mm/vmscan.c:7232
+       kthread+0x2c4/0x3a0 kernel/kthread.c:389
+       ret_from_fork+0x48/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
 
-Now my question is:
-Where we have to search for the problem? At the kernel-maintaining staff or=
- at
-the maintainer @SCST?
+-> #0 (fs_reclaim){+.+.}-{0:0}:
+       check_prev_add kernel/locking/lockdep.c:3161 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3280 [inline]
+       validate_chain kernel/locking/lockdep.c:3904 [inline]
+       __lock_acquire+0x250b/0x3ce0 kernel/locking/lockdep.c:5202
+       lock_acquire.part.0+0x11b/0x380 kernel/locking/lockdep.c:5825
+       __fs_reclaim_acquire mm/page_alloc.c:3836 [inline]
+       fs_reclaim_acquire+0x102/0x150 mm/page_alloc.c:3850
+       might_alloc include/linux/sched/mm.h:318 [inline]
+       slab_pre_alloc_hook mm/slub.c:4036 [inline]
+       slab_alloc_node mm/slub.c:4114 [inline]
+       __do_kmalloc_node mm/slub.c:4263 [inline]
+       __kmalloc_noprof+0xb1/0x400 mm/slub.c:4276
+       kmalloc_noprof include/linux/slab.h:882 [inline]
+       xfs_attr_shortform_list fs/xfs/xfs_attr_list.c:117 [inline]
+       xfs_attr_list_ilocked+0x9a0/0x1b00 fs/xfs/xfs_attr_list.c:569
+       xfs_attr_list+0x1f9/0x2b0 fs/xfs/xfs_attr_list.c:595
+       xfs_vn_listxattr+0x11f/0x1c0 fs/xfs/xfs_xattr.c:341
+       vfs_listxattr+0xba/0x140 fs/xattr.c:493
+       listxattr+0x69/0x190 fs/xattr.c:841
+       path_listxattr+0xc0/0x160 fs/xattr.c:865
+       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+       do_syscall_64+0xcd/0x250 arch/x86/entry/common.c:83
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Thanks in advance and for investigation,
-Mike
+other info that might help us debug this:
 
---=20
-You may reply to this email to add a comment.
+ Possible unsafe locking scenario:
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+       CPU0                    CPU1
+       ----                    ----
+  rlock(&xfs_dir_ilock_class);
+                               lock(fs_reclaim);
+                               lock(&xfs_dir_ilock_class);
+  lock(fs_reclaim);
+
+ *** DEADLOCK ***
+
+1 lock held by syz.8.662/10149:
+ #0: ffff88805a939858 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock+0xf5/0x210 fs/xfs/xfs_inode.c:166
+
+stack backtrace:
+CPU: 1 UID: 0 PID: 10149 Comm: syz.8.662 Not tainted 6.12.0-rc7-syzkaller-00042-gf1b785f4c787 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/30/2024
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x116/0x1f0 lib/dump_stack.c:120
+ print_circular_bug+0x41c/0x610 kernel/locking/lockdep.c:2074
+ check_noncircular+0x31a/0x400 kernel/locking/lockdep.c:2206
+ check_prev_add kernel/locking/lockdep.c:3161 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3280 [inline]
+ validate_chain kernel/locking/lockdep.c:3904 [inline]
+ __lock_acquire+0x250b/0x3ce0 kernel/locking/lockdep.c:5202
+ lock_acquire.part.0+0x11b/0x380 kernel/locking/lockdep.c:5825
+ __fs_reclaim_acquire mm/page_alloc.c:3836 [inline]
+ fs_reclaim_acquire+0x102/0x150 mm/page_alloc.c:3850
+ might_alloc include/linux/sched/mm.h:318 [inline]
+ slab_pre_alloc_hook mm/slub.c:4036 [inline]
+ slab_alloc_node mm/slub.c:4114 [inline]
+ __do_kmalloc_node mm/slub.c:4263 [inline]
+ __kmalloc_noprof+0xb1/0x400 mm/slub.c:4276
+ kmalloc_noprof include/linux/slab.h:882 [inline]
+ xfs_attr_shortform_list fs/xfs/xfs_attr_list.c:117 [inline]
+ xfs_attr_list_ilocked+0x9a0/0x1b00 fs/xfs/xfs_attr_list.c:569
+ xfs_attr_list+0x1f9/0x2b0 fs/xfs/xfs_attr_list.c:595
+ xfs_vn_listxattr+0x11f/0x1c0 fs/xfs/xfs_xattr.c:341
+ vfs_listxattr+0xba/0x140 fs/xattr.c:493
+ listxattr+0x69/0x190 fs/xattr.c:841
+ path_listxattr+0xc0/0x160 fs/xattr.c:865
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xcd/0x250 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f81fa37e719
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f81fb1cf038 EFLAGS: 00000246 ORIG_RAX: 00000000000000c2
+RAX: ffffffffffffffda RBX: 00007f81fa535f80 RCX: 00007f81fa37e719
+RDX: 0000000000000014 RSI: 0000000020000480 RDI: 0000000020000440
+RBP: 00007f81fa3f175e R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 00007f81fa535f80 R15: 00007ffe5f9dc7d8
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
