@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA471E6DC2;
-	Mon, 18 Nov 2024 23:02:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E285E1E7643;
+	Mon, 18 Nov 2024 23:02:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731970962; cv=none; b=nwymCCKU0i9VJ0Dnc6kGbrs/RJl10BZZydAZ1DZsEqMKlyYRwfiUv5ZlqMKu/TF1bLwoPATo3yicHzpqAuA4biWbJ/IZjxBcIXeHKC9dCGgz0PcLLmf3zsPSHXTM8zTIBVhfvz/2rJQngAWnYgcFG12J8Y/Mw4e6L2AiNYXa2As=
+	t=1731970978; cv=none; b=qd1aDD0EpTe7CPi8VVOtiVFZ/m5/E+vxzYg2H50HO+7cHbobt/OI8R2ZGEbgP4Y9PU7FYOnK4Bwd31FULRKRshP2zqZka+sdA/2BVm4oiB6hZv4PBf7sYIE/kJgP4IyvXwqdHj6emboUOwPt9LLv2b5p2aNGZHgjm27MyL5ujs8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731970962; c=relaxed/simple;
-	bh=+MawB7cwzzMb3BL0woY87nFbUmAX4umDudmAGod8v2k=;
+	s=arc-20240116; t=1731970978; c=relaxed/simple;
+	bh=G+fQ8zAEbRNmHhLF948ul0JBfTLHgc9HOvlgGXrhgrk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XNu6T8W2haWocAJCNpeVOsEAoVi98Wxsgxtptn0ebdB8PZU1DXgI8ZW1mobS/MEUfkulUBP+3QBXjiHxMT+6JS4EI5q5Gs/29uvGvF5Ut+4lj4NIHEQcYS7NXB7hRj4pnC+XA8pmSCNMard2QEUk5Y5qjeWtT2+KcMbS7rursNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ugQuk9Lk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HESxa8x8rwT0cRefV0lMrUoTtWzTgQ8EmmhgpZYcF5RzuzAE7nFJv6HwRcTr8UdE/2c0ERXT99C1p4bCP3wOkHP/cT3KcLwivt54FnXuK/9YpVfBTfzQ+qQb8Twcg0xfPgHWFGTZXzB7A+uKXcmStO7UrLtv0jdcV1Wb1nKqjz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cx/hNUSY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugQuk9Lk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE8A5C4CECC;
-	Mon, 18 Nov 2024 23:02:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cx/hNUSY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79F11C4CECC;
+	Mon, 18 Nov 2024 23:02:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731970961;
-	bh=+MawB7cwzzMb3BL0woY87nFbUmAX4umDudmAGod8v2k=;
+	s=k20201202; t=1731970977;
+	bh=G+fQ8zAEbRNmHhLF948ul0JBfTLHgc9HOvlgGXrhgrk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ugQuk9LkpX83Ltrbu7ZpNdqpJgQ7SgbVTr1IV/Fx9neJ/+cheG1N7HNlrOFP6Yzq2
-	 6b1YIhK/u16SpDQgTSUYgY1L20jwlwXqnSptJjaAGNSaK1EdZUqGT1aLQECP2IvNZ3
-	 5GU+LMRNu48tOglcD+oM7ZOiXrBEIHulwxmQ8WOO9fx+HUe9sSMjqW1tgy102FP8+4
-	 YrIZ1hVOTIQe4ulrwJjI7XnAFR2XExAPawiYKaYCC9lzr+VZl4SscdOdO8y5PxpRqO
-	 5Ui5CmXGMc2rAiYEsxPcQ/BSAlrsCETCWICvRKeAE6APjkZexKlHmHoZWyhSrUPJ6k
-	 +OCIau6aBbMxw==
-Date: Mon, 18 Nov 2024 15:02:41 -0800
-Subject: [PATCH 05/12] generic/562: handle ENOSPC while cloning gracefully
+	b=Cx/hNUSYz9XGrTgG2VuBIgyNihvBCXJjDLWrGfIdylHd4VbgH7yoMVuOt3z4XDNAb
+	 foR+TtJBAgFmUXxEUgZUCsOQRqQBdD/LCB+mFwsNMzFBsSXUcZMF3FtbfQtOilR1Nd
+	 6vqjjCBaAhPGlwICUYmd622LW/oBMiXeBU6CD3tRjKTPXAX5XlaJJ8j/OlK8UTG2LH
+	 X0JBRhR90BzmwZOx3LR1zzJCeisbeYDFYFuS/MqRUtYK0AOj6rRBj/CDBazHMddiZi
+	 p3Lfeme/98K2GhWscJIcRRgn/cZypITuXRQ588E16dBmrQjjP7E0i4lcGpMddKpUV6
+	 gsOy4odmSW3sw==
+Date: Mon, 18 Nov 2024 15:02:57 -0800
+Subject: [PATCH 06/12] xfs/163: skip test if we can't shrink due to enospc
+ issues
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173197064501.904310.1505759730439532159.stgit@frogsfrogsfrogs>
+Message-ID: <173197064517.904310.3981739368234759783.stgit@frogsfrogsfrogs>
 In-Reply-To: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
 References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,56 +46,40 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test creates a couple of patterned files on a tiny filesystem,
-fragments the free space, clones one patterned file to the other, and
-checks that the entire file was cloned.
-
-However, this test doesn't work on a 64k fsblock filesystem because
-we've used up all the free space reservation for the rmapbt, and that
-causes the FICLONE to error out with ENOSPC partway through.  Hence we
-need to detect the ENOSPC and _notrun the test.
-
-That said, it turns out that XFS has been silently dropping error codes
-if we managed to make some progress cloning extents.  That's ok if the
-operation has REMAP_FILE_CAN_SHORTEN like copy_file_range does, but
-FICLONE/FICLONERANGE do not permit partial results, so the dropped error
-codes is actually an error.
-
-Therefore, this testcase now becomes a regression test for the patch to
-fix that.
+If this test fails due to insufficient space, skip this test.  This can
+happen if a realtime volume is enabled on the filesystem and we cannot
+shrink due to the rtbitmap.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/562 |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ tests/xfs/163 |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/generic/562 b/tests/generic/562
-index 91360c4154a6a2..62899945003513 100755
---- a/tests/generic/562
-+++ b/tests/generic/562
-@@ -15,6 +15,9 @@ _begin_fstest auto clone punch
- . ./common/filter
- . ./common/reflink
+diff --git a/tests/xfs/163 b/tests/xfs/163
+index 2bd94060222f96..75c3113dc2fd03 100755
+--- a/tests/xfs/163
++++ b/tests/xfs/163
+@@ -17,13 +17,20 @@ _begin_fstest auto quick growfs shrinkfs
  
-+test "$FSTYP" = "xfs" && \
-+	_fixed_by_kernel_commit XXXXXXXXXX "xfs: don't drop errno values when we fail to ficlone the entire range"
+ test_shrink()
+ {
+-	$XFS_GROWFS_PROG -D"$1" $SCRATCH_MNT >> $seqres.full 2>&1
++	$XFS_GROWFS_PROG -D"$1" $SCRATCH_MNT &> $tmp.growfs
+ 	ret=$?
+ 
+ 	_scratch_unmount
+ 	_check_scratch_fs
+ 	_scratch_mount
+ 
++	# If we couldn't shrink the filesystem due to lack of space, we're
++	# done with this test.
++	[ $1 -ne $dblocks ] && \
++		grep -q 'No space left on device' $tmp.growfs && \
++		_notrun "Could not shrink due to lack of space"
++	cat $tmp.growfs >> $seqres.full
 +
- _require_scratch_reflink
- _require_test_program "punch-alternating"
- _require_xfs_io_command "fpunch"
-@@ -48,8 +51,11 @@ while true; do
- done
- 
- # Now clone file bar into file foo. This is supposed to succeed and not fail
--# with ENOSPC for example.
--_reflink $SCRATCH_MNT/bar $SCRATCH_MNT/foo >>$seqres.full
-+# with ENOSPC for example.  However, XFS will sometimes run out of space.
-+_reflink $SCRATCH_MNT/bar $SCRATCH_MNT/foo >>$seqres.full 2> $tmp.err
-+cat $tmp.err
-+grep -q 'No space left on device' $tmp.err && \
-+	_notrun "ran out of space while cloning"
- 
- # Unmount and mount the filesystem again to verify the operation was durably
- # persisted.
+ 	$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
+ 	. $tmp.growfs
+ 	[ $ret -eq 0 -a $1 -eq $dblocks ]
 
