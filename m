@@ -1,218 +1,415 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 962FE186E2F;
-	Mon, 18 Nov 2024 09:19:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731921601; cv=fail; b=J9wtJnjMhEdlhkRCIkXl0YzGUV0ronK9r8+HHjzCbgbbwPNyt0HSOU4ohGUy3YYbvYFi5Si66oEX4iEz1SxpdYr2Xa6gnBDTz51093RbEdQ4PENVG94WcpOsrW/Jq/JOrcBMpxeEzcEs0nj9+9ELjyKVyeaN3cbNYifcEgXgwOs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731921601; c=relaxed/simple;
-	bh=INslZ09onDyQJczdQWhS02MZ+iXqZ6fTsIPCzwMv8uc=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=PE2aeNv8nsizyjnyY3LidRy76I7M/iofZN+i1QNvS/Zw4ih0KabyZAYynvHqacvwqylNuFUWWZo+v6caU1u5Z0udNuts6Rpt6H44D7ZFewX+PEfRFJph5tlbGiO1RRseGudJlIY9wGLiEl606XE8NPx7VlJg2TCKjc+YSlk8pz0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=UdAMM76H; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=y6VK5D7e; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5964218B46E;
+	Mon, 18 Nov 2024 09:24:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1731921859; cv=none; b=GsjyRkbLhIfkskU2Bxyvq++YBI0inNziCiwNxvA/N35txUOOXELlU10OWp0EjTBQJFzLwzi28o+t0wiEqEH4aKhLmTb2jB3gi7FeN0/j15fYdrYlk8viykvH707aeOUlW8MpHYvEsgIfBuhb26hPy78Ct7kvH+uJle22ie+1Pkg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1731921859; c=relaxed/simple;
+	bh=MlCjVl/TxyUCxXcUJMXLoMIyW0e/PGPS6pBVfJ/K5h4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kpOX70lnFFEvT24lkWh2T+KJo4kw3o/bCCQ46NbG3WevdQlTTkW43GLxYlzq3XEmpeiAg7w7tHh6n1urgZ7DCUi9VqvI0XySGihq/LMt08U5VuvUafqbymemVq6orm6pxkPrIlh2bxfMUh/BH2xb4tnhltDRoRMBSfH32tVjrxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=n1Ap6WcG; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UdAMM76H";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="y6VK5D7e"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AI8QbFe001088;
-	Mon, 18 Nov 2024 09:18:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="n1Ap6WcG"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AI3wJdF015288;
+	Mon, 18 Nov 2024 09:24:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=XGVLTk7dNvpPVfDn0DYf8nff3HbMK71iQYNqQDeLoB0=; b=
-	UdAMM76HGiUV3yA1qr1mudNtKxh4W+wh0TCP28rUtA21Kbmy9LYW6mhwp+n0GOav
-	jnJBq5bqskGUKeF2RM+HboD7pNcurr7+GchvPmn1ifcA3w15bKNBLtjjRTu+vc0I
-	rBrb12I7b1w8mJWMS2jC4Uu3+OpKnVzm+CSNdQhlvG7LFtec0qFDFcd5XYXpgb+1
-	ZQBnOUDx5qbivO28bSewjmfuH481JaU88bLgNiDcAAOQsnSSyWCWlwZhLwpwKDRZ
-	fmjxse9z9l0tXCVz7yEy///IFtZzLNhNiXY6uhcftLZVPmMGNR6yXXnIPOv+flsX
-	V0btOQFk9nQlx69ex4pBPw==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42xhyya8c5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 18 Nov 2024 09:18:56 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4AI8gFK7008934;
-	Mon, 18 Nov 2024 09:18:55 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2043.outbound.protection.outlook.com [104.47.70.43])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 42xhu73ahs-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 18 Nov 2024 09:18:55 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yKTuc5Oqsfe6j5DlKOWTZGWYD52RZfStQv7zMqd7EkaZ2MTtwYOtnKBBCRMmZTUGnGW/L6J3mQcl2BA3Ey9jczfvUEIrmiV8/6/r7ZfJjRXe6fGGw9bGKTftLep6xgP0rdT7GUyoEaITmMvsZ61VyEGd/1XHpCnwncYjQDNuYiCYUS9VOuLglNG3+KwqUEUO5Tr3hFpmemIsYRNxv2DIWOfe33osNDDVLIXyMR1ndARA4b4EWMT+I7aMhXD67dc7X2rjR1xo5m684MThZfCGsFbqHqhExC45B8n5PhrR7Mo/Ymo22xgUN2ch13XK8r4dkUJ1ORt1xm7CLaqUwVb+yQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XGVLTk7dNvpPVfDn0DYf8nff3HbMK71iQYNqQDeLoB0=;
- b=neAniMU5tezE47D9IgMvSEF5C4Lp3SGPiH4+KY694io+Zp4mFE8pZhpEwdpuEOoB8hzHEfRzJJi4sg2kOb8cBSNO2tZPazk7YQ575wVoqDFuoyS6SUORYxcZ0Fs2QjyYTjc/e1+hT6icVfW7Pibg53KoGommp6T60yEo8TbK2WT7vC2k7xldQUdtBdrj1QNzQY4HS08/oyTqVGsTsNbDI/oT1eSEpSfIH/2msovVzdJB0kKpw/9zpvpQJK3hFc12EpMj2fABN1MPJoKdlMYXZyGOuveZI0D4LSXkOfdBM8NoIZ/Mr/0M2FHSgXptX0Reup+MGjrsTmb0b+6UvDX2Pg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XGVLTk7dNvpPVfDn0DYf8nff3HbMK71iQYNqQDeLoB0=;
- b=y6VK5D7edaStOlUwE2eTuYkGY1h7RwHWj5yBVPAfS1e6BMCZ66KDjH6o6CYYYgY6JH/evS3PUBHATwVVI02dYcFgHch1gT4uHz8P5LJMs9cra/LGcunkLnhLRponKkS6S9YR2VJLz/FjNlxhU6pGCHGk9PrV3D5MbTnfu4jOPWw=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by CO6PR10MB5553.namprd10.prod.outlook.com (2603:10b6:303:140::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8158.22; Mon, 18 Nov
- 2024 09:18:53 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.8158.019; Mon, 18 Nov 2024
- 09:18:52 +0000
-Message-ID: <2b9c3d7c-a52e-4c6b-89b6-fb147e6d5233@oracle.com>
-Date: Mon, 18 Nov 2024 09:18:48 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC 6/8] block/bdev: lift block size restrictions and use common
- definition
-To: Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org, hch@lst.de,
-        hare@suse.de, david@fromorbit.com, djwong@kernel.org
-Cc: ritesh.list@gmail.com, kbusch@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-block@vger.kernel.org, gost.dev@samsung.com,
-        p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
-References: <20241113094727.1497722-1-mcgrof@kernel.org>
- <20241113094727.1497722-7-mcgrof@kernel.org>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20241113094727.1497722-7-mcgrof@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM0PR03CA0035.eurprd03.prod.outlook.com
- (2603:10a6:208:14::48) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	:message-id:mime-version:references:subject:to; s=pp1; bh=0OeCch
+	iJjocfkoQo+wbRUatCIuAbJ5zfg+6hljZjoC0=; b=n1Ap6WcGrOKc9zWfI0O8o/
+	3AhirjyOew0qvShqcVQy3rzaVTaWbLO8yaE0RC5vI0bQ62xng9k3BqyzN7tyBkzF
+	WpOQ+HzioAQsqB1hOtoJ91BjNaw1x2avB2emzLqXjuTqJwm6aoh0rrLvD9csPuxd
+	5VI499r+O22bL3imChHuXhBh7IMttc0NWqEZxYzZQHHJr23gS9A38aJA8k9Vc7zG
+	STGQOKfjZen/qwEXuLxdsuYuw5x8jlRgYe1PFZCIat9w5iAtEy3qNAYuN2TDfRaG
+	GCiiYWIhf/MRnz+lWyItacpkN8X/RM77CaAc9R2aodYMHm5OHI5eNmqDZzaRutVA
+	==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42xk20r9mm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 Nov 2024 09:24:12 +0000 (GMT)
+Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4AI9N7N2017623;
+	Mon, 18 Nov 2024 09:24:11 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42xk20r9mj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 Nov 2024 09:24:11 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4AI2TlEf021833;
+	Mon, 18 Nov 2024 09:24:11 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 42y6qmtb9u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 Nov 2024 09:24:11 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4AI9O9ue53084464
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 18 Nov 2024 09:24:09 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 196E320040;
+	Mon, 18 Nov 2024 09:24:09 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id D092420043;
+	Mon, 18 Nov 2024 09:24:07 +0000 (GMT)
+Received: from [9.39.30.224] (unknown [9.39.30.224])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 18 Nov 2024 09:24:07 +0000 (GMT)
+Message-ID: <c6ca5784-de55-43ec-ba6a-3afbf6b2aa53@linux.ibm.com>
+Date: Mon, 18 Nov 2024 14:54:06 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CO6PR10MB5553:EE_
-X-MS-Office365-Filtering-Correlation-Id: 78c08534-b45f-4aa0-b7fb-08dd07b204fc
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|7416014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?b0lmd0prSWNjNmlIeG1jL3FBU05kUTF6dHZnWld2ZmQ4bFBJNjJ6SUF3SGRl?=
- =?utf-8?B?bzI3TGFydDA4ekUyWHVvZVlzZGxGQm9GQlJRT0I3SnRhemkxN0ZVV2Q0V1BM?=
- =?utf-8?B?Si9xRTVaN0pkMi9tSGhLamxMajZjNXdnNEZuaHVqNGdnUTJVNjhRZjYwRitP?=
- =?utf-8?B?TWN6empJdy9IVHVjRFhPNXdYdVlFQlFUU2xpYk8rYkYzZ2lIb3BhNXBJV2k3?=
- =?utf-8?B?K3gwK3JONkd0dzh1WVBCaXQzcklGanRWejVqRmlCVmcwblFvRmVaU1hER3Fo?=
- =?utf-8?B?NElxRmJwQzhIdWJvd29MZW8rdGQvM3JSTEM3UEcrL282UkVTai9lVS9CR21l?=
- =?utf-8?B?dmM3cnJZSDZ4ZG85c2JlbW0wdGNMaEFWUng3a3A2dHZpcW5sbkJxZ0FzU1VE?=
- =?utf-8?B?N00wUWJIR0pJMVVhaktxdmVVdEFpTGpTZzFrYWRzT2picTFseng1cXExV1ZD?=
- =?utf-8?B?dG91ZUxCUEkzdVEya2c0K3BHaCsrT1ZySnpPckw0QmhOejVIUFIvVDM3OHRu?=
- =?utf-8?B?NllEWmU5azFDZWVKZk05UEVHY0lXN1lTL0htL1dhcmNWZFk0VXFieS9YNVVu?=
- =?utf-8?B?bFhVV2xJQkR6R1RiZTk5MDlVRk5ta3l4Q0pML25qa2lQanlaMVN1eVhpS0pr?=
- =?utf-8?B?SzRTbkdQUDFWTTFSNXdUeTZydjFTclVRVzc4T3FPZ1RXZzVkMVFhRXh6dXRp?=
- =?utf-8?B?QUY2QzI2d3VpV3JZcFhLaS9rQXh1cnQxWlQxYzJFT2xJNVVKdDRVdElQc1Ex?=
- =?utf-8?B?bTYxZ21zMW11ZjE2WnJDc2xtWGZmdW14ODhpOUpqdm92WXVia2VFUHRpYWtn?=
- =?utf-8?B?WDBkb0txVW9BTE1iMVM1bXpWZ2VyNHM2NzRHS0kwWFMzN015UURFTG8xTzRl?=
- =?utf-8?B?UHJhMXRkYUgvU0tacmpIWkM5SU5xR3dDY0xaZWx0MXRLckg1K2xvTm9HTGVM?=
- =?utf-8?B?NmFCTUlSQXVQYS9ldmtUaHZWa2psaFlvc2NiblRoQWUxNmVvdmltZitrRGty?=
- =?utf-8?B?SWlVZ3NzSkN4RnNaNWN4TDhUcHhHWDkwZUo2WW14bmxzcmI1cFNUdmJKdUl3?=
- =?utf-8?B?ZlduYnZHRk9aS1lsVjdkZXZwOGVOTlJScEhsTjRrMFROK3NyRnE5WDAxWTFM?=
- =?utf-8?B?VCsra3Azb21mZytsNGJUbFRGWEh1YmV1My9xK0xvSDR4K3ExaGFaYkM2aGVH?=
- =?utf-8?B?SnBkdkdoU2F4Ky9Ld05KdHJmV01nOERidjdrWEJ6WEhBN3I0c1VCc3dtWDhh?=
- =?utf-8?B?eE5ZcUUyV3V6WndWNHpKMDcycVpFZk9kcDBOSFlhUytJVm44b1dhQnFPWFRr?=
- =?utf-8?B?UkpkdEtqMmNCSnRLcndOQnA5anJCK3ZIZVNGNFRpTkNFU24wQVkxaXNWbDBm?=
- =?utf-8?B?a2NFWlkzN0JYNFVyc1FjZmJOamdOMFcvTzNtenhYNGdEaFppempDM0JnUFc4?=
- =?utf-8?B?VVhSZ1BRSWlyRG44aXFpc3UzcUNWVlNudnFRL1ovZHpHdkhZY2dma09CMTNS?=
- =?utf-8?B?d3U1eTZUYUxVaC9Sb2JFcHZHNVZJSlMzemRDRjdyc2hNaGl5QVFLUmhXWWpC?=
- =?utf-8?B?Q1Y0S2phaUFuWmtEWGJ1L09uUkk1VjJCMUdDRTRBWTM0aWczSVV1cEVMVE51?=
- =?utf-8?B?UC9KaFUvREhwckowSS8wUjZaNjlsTWI5a2gwaWVlN1BoTGROb1VDYi9PTGk3?=
- =?utf-8?B?MklaZ3gvZDdCbjZVRnptZ1p4YzkySjh1NU55NGtNUVRtcWY1ai8xc3ZHVTVs?=
- =?utf-8?Q?+JdKDojyXWM2ll8+PJRXoyM5sGUXG3jm7WgAzxj?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Um1DSXZlSGZFdU5xcmE4RlM0cFBSaUtWd1dGTHkwWmRPYlBHOXZJMUJGZUIy?=
- =?utf-8?B?TW9CR3pxZWd5TnpFWUFEMm1ibmdXWFlqMC9pQ0xOSWpHWGRPZWNrWnB5U2VK?=
- =?utf-8?B?cUlrRUZXR1NJVWFoam1jK09uZUR5N1UyRWRLNkhzSnVHQjB1WWFlQ09RdnBq?=
- =?utf-8?B?anVLUjJyWnNiN1FMN0hkTDNWeVVjV1hSNGorb2krb0sxMEJuVXhrYllyT1FZ?=
- =?utf-8?B?WlVpMG5keXo0dTJMNWlKZ3hqQVRmM2RjS0lIbWF4S1F4UlU5ZDN4d0o2Myt3?=
- =?utf-8?B?eVM5b2RKdUVMZnN2dDlJYlF0dFVpK0p6dHRDdHZNeW9FdE83L3p2clF3cmhU?=
- =?utf-8?B?Q21DOHFRUkNwQVJUd1hjTXVzenBmTWN6OUNaeU5kd3d5ZW9GeUxlSVRkMWFE?=
- =?utf-8?B?R21OOVZhRGErR1JCcVZMaWdydG1VclRkdFZPZHFaUDV6b1JvdGcydDJYaFFv?=
- =?utf-8?B?YWwxUW4vaUJYaHdtQlRRWklreTN6WUtESFJ2MFEzc3hDeGpjV0RUZThTdUhS?=
- =?utf-8?B?ZmxlUFBNS082TGZUTnFnZXRSd1htNEhpeTExakJCbS80dG9kZ1hRTkttWEVw?=
- =?utf-8?B?LzBmRU1hQXM0VXp3OHQvT3NEbGZMQzdzRVN3Y2VUWk1TdDdiL0R0elZMZEJO?=
- =?utf-8?B?YXl0VFRuRndvVjlZTWR4dDh6UDhnQVZsbUN0K1BrOEdpUEpsRU5CZjBjeGtt?=
- =?utf-8?B?Y1ViZTVpWGlxcGFsa2kxLzFETkdLY3ljc2dUZWNuYTNqdDhBWE1MY2M2THJ2?=
- =?utf-8?B?ZlpFZVhqTERSbFBsNzF6QVp3aS9JRWlQT0V0eWJMKzdhb0ZRSkwvTmU1eDJF?=
- =?utf-8?B?K05ZQ3lJbW5UK1pEbEtVRVZpWU5HZ3A4S05zZTM3Y0JJa3FUMUtiZlhyN0FE?=
- =?utf-8?B?OTRXNy9WalV4enJkQlhKaDkvOXZkeWY2NCs2V3l1aXltMC9rSzRDNVlvYkNl?=
- =?utf-8?B?MS92eEphOTV0Z2plWjZJQUl3bE1NejdISExXU2RkY1RWYzB0Qm9XbGM3Ymda?=
- =?utf-8?B?VjZadE1tTndpNHB6bW53dkt1Qi9mYWlTVHl4aDd5VXZ6b1ZpOTI3SWRGUTdV?=
- =?utf-8?B?TjhJQUpHNzY5YUlUS1JFbVJBZjQ1VlNEQzl1enU5UnlCOGM1OUVyaVFCUW5s?=
- =?utf-8?B?SFEyVGxmZWlubjFPa0Z3MG51bEdxRlNIdmx2NThPeUFVb2F3Njk1cnQ0SWQ4?=
- =?utf-8?B?b2JqbWxNR0dHOVVpMFoyVEY1UEZQOEVBYjNjYXl6ek5NZ1A1eXc3cmJleVRv?=
- =?utf-8?B?dHpFbW1VM1BvL2tJQ3dpQXcvVUdRRlQvdURKQmFkc3NWMFl3WlV5WXcxQUVJ?=
- =?utf-8?B?eW9tV05lWDZFMTByNE1lN2V3emZQZlZtQ3RXa2p5UDhaTVN3OGV2Mk5IcVhI?=
- =?utf-8?B?VEQ2d1hqYVROMUlBSUd3UWRUbHVlT01OTW5XZGl6UEYrYUFtN3QySW5aRm5K?=
- =?utf-8?B?L0MrV2Y4MlhrSXp4QjZPd0JSbklMRzFoR2NXOEhIcGRGVjU1S1ArZFlqejYz?=
- =?utf-8?B?MmdHSk1lL1lpYTF1UDJKQk9tNHBPUGwxTy93ckxtV3h4b1U1K3lBYVk3V3dO?=
- =?utf-8?B?Z0VvYy9QNFIwZktiWmZyN1BDbGFDK1Jldzl3NUZDTndyTjRTUStEQ1FXTVp0?=
- =?utf-8?B?MUlnM3BzRW5CRWgyUWdhNzZUZUpjZ3E3WVU5VUx6UjJwSlQwT1ZOQUJyYmVG?=
- =?utf-8?B?aGplQStyQmRiV0NzY21NazZ0Rm1wcWI0MWlRc3A5S2x0OThnR3p4MThoTXFD?=
- =?utf-8?B?N1lVOWxBNVY3R24rd2toWFl0bmszQnRTMDU1b0pOUU14dHdFZU9MMTZJWjNH?=
- =?utf-8?B?Y2JHZDRUSWI0Z2JQWkZVejRYQUd1NER0cmFLSWxLZWVTcVdmUlhLcFp3Tldu?=
- =?utf-8?B?b0VPSjBENklkcjdpZlR2ZmtYRGNGRzJYak1rNVU5T0RadzA2SkpRWWMreWNZ?=
- =?utf-8?B?MTlTdGZiajVrcG1UZ3FuWFVYK0R2MFBIV3pwM2N3cWNpQUJFa2kxZm1TenVC?=
- =?utf-8?B?b1NmUnBKaGhkOW14QTAvVUpXTlV2R2tUMTZHeXlIODlPRnhwcHF5MHprNWhI?=
- =?utf-8?B?RXF3cmtYU2pROUZBMXdjeEhSdlBYUHpEN0NaUjdPN2tWT0YrdENQNGwvRm83?=
- =?utf-8?Q?+wMOI1yWETDiJcgkbVbAas0Uf?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	B/IaWhtDCWKZHPysBZIxEhC1WA4RAJ/2S8nNLnp16y7MO1axBiYgssLYk7xxrPQh3hEjvCqC+DIXCgOUEPIbS0t865RhEcICJBjECITCjcxzNK98jPTuDrujLeVdVCTWHBc/FX7hVKsVV655gQzbvZIhhCxbzufKLmW6m0l/2eMZK12MQBQm7vq480sEC1b9/pUQCzDkUTmAh2RBiQFUyeH9IHFkG2UoAAyJZmURzc4/J03v2Y9dmm5ZiZIga6UUEG2DRPUo86FApvMJ91D8TJQueBtDikr2rUmCchRwbMm0oHNwAXOtTP7VQ935gXEmv7EvgLVLKWi+++DKk6D5lFwJhcSbF8JI9p5x/T/V+Oe8PuDR51EVckuAadWzJpYFrgCA5Wz/aC7U1o2Pmcy1oKSnvvl7dC6grpPqRbrUhx+rxtcaBq0JBkDgv+gherq0vCX7R3lhVz17AxY2l3i3MoC0nRUq5JaOfWbSNVF2rBi9zslLUUUDX477ENrSrL8KDYeszwRWOJyFUwz/iaBjd7iOK//BZSYxY3HcnRw7w6QZX3Tfa3LDCfW5YlXfetnlDCwMUVKtmc7FolwRfTIz9IiXyCINZV3v80dfimTqHL0=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78c08534-b45f-4aa0-b7fb-08dd07b204fc
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Nov 2024 09:18:52.8552
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kmgFIS1izDzJ3tQ5ZOIW5hO/cnmtbatWclobYZGdIM/vEXC0SNNW2JmfFVU9AKORs09Il65FiwIcKjyMfaNxzQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR10MB5553
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/2] generic: Addition of new tests for extsize hints
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+        ojaswin@linux.ibm.com, zlang@kernel.org
+References: <cover.1731597226.git.nirjhar@linux.ibm.com>
+ <373a7e378ba4a76067dc7da5835ac722248144f9.1731597226.git.nirjhar@linux.ibm.com>
+ <20241115165054.GF9425@frogsfrogsfrogs>
+Content-Language: en-US
+From: Nirjhar Roy <nirjhar@linux.ibm.com>
+In-Reply-To: <20241115165054.GF9425@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: GYMJirTzDiqI_FCWqGZ8GYqG3mFXhawM
+X-Proofpoint-GUID: 5hI4ly7H6u_L1YBnxwhWVb-xj0H0VoCf
 X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-11-18_06,2024-11-14_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- suspectscore=0 adultscore=0 bulkscore=0 mlxscore=0 malwarescore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2409260000 definitions=main-2411180077
-X-Proofpoint-ORIG-GUID: lnIkOYO6ft5IoU6JFNLRnxnhbBioh25j
-X-Proofpoint-GUID: lnIkOYO6ft5IoU6JFNLRnxnhbBioh25j
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
+ mlxlogscore=999 lowpriorityscore=0 priorityscore=1501 suspectscore=0
+ malwarescore=0 clxscore=1015 mlxscore=0 spamscore=0 adultscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2411180074
 
-On 13/11/2024 09:47, Luis Chamberlain wrote:
->   #include <linux/uuid.h>
->   #include <linux/xarray.h>
->   #include <linux/file.h>
-> +#include <linux/pagemap.h>
->   
->   struct module;
->   struct request_queue;
-> @@ -268,10 +269,13 @@ static inline dev_t disk_devt(struct gendisk *disk)
->   	return MKDEV(disk->major, disk->first_minor);
->   }
->   
-> +/* We should strive for 1 << (PAGE_SHIFT + MAX_PAGECACHE_ORDER) */
 
-I fell that this comment can be reworked.
+On 11/15/24 22:20, Darrick J. Wong wrote:
+> On Fri, Nov 15, 2024 at 09:45:59AM +0530, Nirjhar Roy wrote:
+>> This commit adds new tests that checks the behaviour of xfs/ext4
+>> filesystems when extsize hint is set on file with inode size as 0, non-empty
+>> files with allocated and delalloc extents and so on.
+>> Although currently this test is placed under tests/generic, it
+>> only runs on xfs and there is an ongoing patch series[1] to enable
+>> extsize hints for ext4 as well.
+>>
+>> [1] https://lore.kernel.org/linux-ext4/cover.1726034272.git.ojaswin@linux.ibm.com/
+>>
+>> Reviewed-by Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+>> Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+>> Suggested-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+>> Signed-off-by: Nirjhar Roy <nirjhar@linux.ibm.com>
+>> ---
+>>   tests/generic/366     | 172 ++++++++++++++++++++++++++++++++++++++++++
+>>   tests/generic/366.out |  26 +++++++
+>>   2 files changed, 198 insertions(+)
+>>   create mode 100755 tests/generic/366
+>>   create mode 100644 tests/generic/366.out
+>>
+>> diff --git a/tests/generic/366 b/tests/generic/366
+>> new file mode 100755
+>> index 00000000..7ff4e8e2
+>> --- /dev/null
+>> +++ b/tests/generic/366
+>> @@ -0,0 +1,172 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2024 Nirjhar Roy (nirjhar@linux.ibm.com).  All Rights Reserved.
+>> +#
+>> +# FS QA Test 366
+>> +#
+>> +# This test verifies that extent allocation hint setting works correctly on files with
+>> +# no extents allocated and non-empty files which are truncated. It also checks that the
+>> +# extent hints setting fails with non-empty file i.e, with any file with allocated
+>> +# extents or delayed allocation. We also check if the extsize value and the
+>> +# xflag bit actually got reflected after setting/re-setting the extsize value.
+>> +
+>> +. ./common/config
+>> +. ./common/filter
+>> +. ./common/preamble
+>> +
+>> +_begin_fstest ioctl quick
+>> +
+>> +_supported_fs xfs
+> Aren't you all adding extsize support for ext4?  I would've expected
+> some kind of _require_extsize helper to _notrun on filesystems that
+> don't support it.
+Yes, this is a good idea. I will try to have something like this. Thank 
+you.
+>
+>> +
+>> +_fixed_by_kernel_commit "2a492ff66673 \
+>> +                        xfs: Check for delayed allocations before setting extsize"
+>> +
+>> +_require_scratch
+>> +
+>> +FILE_DATA_SIZE=1M
+>> +
+>> +get_default_extsize()
+>> +{
+>> +    if [ -z $1 ] || [ ! -d $1 ]; then
+>> +        echo "Missing mount point argument for get_default_extsize"
+>> +        exit 1
+>> +    fi
+>> +    $XFS_IO_PROG -c "extsize" "$1" | sed 's/^\[\([0-9]\+\)\].*/\1/'
+> Doesn't this need to check for extszinherit on $SCRATCH_MNT?
 
-I think that what we want to say is that hard limit is 1 << (PAGE_SHIFT 
-+ MAX_PAGECACHE_ORDER), but we set at sensible size of 64K.
+The above function tries to get the default extsize set on a directory 
+($SCRATCH_MNT for this test). Even if there is an extszinherit set or 
+extsize (with -d extsize=<size> [1]), the function will get the extsize 
+(in bytes) which is what the function intends to do. In case there is 
+no extszinherit or extsize set on the directory, it will return 0.  Does 
+this answer your question, or are you asking something else?
 
-> +#define BLK_MAX_BLOCK_SIZE      (SZ_64K)
-> +
+[1] 
+https://lore.kernel.org/all/20230929095342.2976587-7-john.g.garry@oracle.com/
+
+>
+>> +}
+>> +
+>> +filter_extsz()
+>> +{
+>> +    sed "s/\[$1\]/\[EXTSIZE\]/g"
+>> +}
+>> +
+>> +setup()
+>> +{
+>> +    _scratch_mkfs >> "$seqres.full"  2>&1
+>> +    _scratch_mount >> "$seqres.full" 2>&1
+>> +    BLKSZ=`_get_block_size $SCRATCH_MNT`
+>> +    DEFAULT_EXTSIZE=`get_default_extsize $SCRATCH_MNT`
+>> +    EXTSIZE=$(( BLKSZ*2 ))
+>> +    # Making sure the new extsize is not the same as the default extsize
+> Er... why?
+The test behaves a bit differently when the new and old extsizes are 
+equal and the intention of this test is to check if the kernel behaves 
+as expected
+when we are trying to *change* the extsize. Two of the sub-tests 
+(test_data_delayed(), test_data_allocated()) test whether extsize 
+settting fails if there are allocated extents or delayed allocation. The 
+failure doesn't take place when the new and the default extsizes are 
+equal, i.e, when the extsize is not changing. If the default and the new 
+extsize are equal, the xfs_io command succeeds, which is not what we 
+want the test to do. So we are always ensuring that the new extsize is 
+not equal to the default extsize. Does this answer your question?
+>
+>> +    [[ "$DEFAULT_EXTSIZE" -eq "$EXTSIZE" ]] && EXTSIZE=$(( BLKSZ*4 ))
+>> +}
+>> +
+>> +read_file_extsize()
+>> +{
+>> +    $XFS_IO_PROG -c "extsize" $1 | _filter_scratch | filter_extsz $2
+>> +}
+>> +
+>> +check_extsz_and_xflag()
+>> +{
+>> +    local filename=$1
+>> +    local extsize=$2
+>> +    read_file_extsize $filename $extsize
+>> +    _test_fsx_xflags_field $filename "e" && echo "e flag set" || echo "e flag unset"
+> I almost asked in the last patch if the _test_fsxattr_flag function
+> should be running xfs_io -c 'stat -v' so that you could grep for whole
+> words instead of individual letters.
+>
+> "extsize flag unset"
+>
+> "cowextsize flag set"
+>
+> is a bit easier to figure out what's going wrong.
+>
+> The rest of the logic looks reasonable to me.
+>
+> --D
+
+Yes, that makes sense. So do you mean something like the following?
+
+# Check whether a fsxattr xflags name ($2) field is set on a given file 
+($1).
+# e.g, fsxattr.xflags = 0x80000800 [extsize, has-xattr]
+_test_fsxattr_flag_field()
+{
+     grep -q "fsxattr.xflags.*\[.*$2.*\]" <($XFS_IO_PROG -c "stat -v" "$1")
+}
+
+and the call sites can be like
+
+_test_fsx_xflags_field $filename "extsize" && echo "e flag set" || echo 
+"e flag unset"
+
+
+THE OTHER OPTION IS:
+
+We can embed the "<flag name> flag set/unset" message, inside the 
+_test_fsx_xflags_field() function. Something like
+
+_test_fsxattr_flag_field()
+{
+     grep -q "fsxattr.xflags.*\[.*$2.*\]" <($XFS_IO_PROG -c "stat -v" 
+"$1") && echo "$2 flag set" || echo "$2 flag unset"
+}
+
+Which one do you prefer?
+
+>
+>> +}
+>> +
+>> +check_extsz_xflag_across_remount()
+>> +{
+>> +    local filename=$1
+>> +    local extsize=$2
+>> +    _scratch_cycle_mount
+>> +    check_extsz_and_xflag $filename $extsize
+>> +}
+>> +
+>> +# Extsize flag should be cleared when extsize is reset, so this function
+>> +# checks that this behavior is followed.
+>> +reset_extsz_and_recheck_extsz_xflag()
+>> +{
+>> +    local filename=$1
+>> +    echo "Re-setting extsize hint to 0"
+>> +    $XFS_IO_PROG -c "extsize 0" $filename
+>> +    check_extsz_xflag_across_remount $filename "0"
+>> +}
+>> +
+>> +check_extsz_xflag_before_and_after_reset()
+>> +{
+>> +    local filename=$1
+>> +    local extsize=$2
+>> +    check_extsz_xflag_across_remount $filename $extsize
+>> +    reset_extsz_and_recheck_extsz_xflag $filename
+>> +}
+>> +
+>> +test_empty_file()
+>> +{
+>> +    echo "TEST: Set extsize on empty file"
+>> +    local filename=$1
+>> +    $XFS_IO_PROG \
+>> +        -c "open -f $filename" \
+>> +        -c "extsize $EXTSIZE" \
+>> +
+>> +    check_extsz_xflag_before_and_after_reset $filename $EXTSIZE
+>> +    echo
+>> +}
+>> +
+>> +test_data_delayed()
+>> +{
+>> +    echo "TEST: Set extsize on non-empty file with delayed allocation"
+>> +    local filename=$1
+>> +    $XFS_IO_PROG \
+>> +        -c "open -f $filename" \
+>> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
+>> +        -c "extsize $EXTSIZE" | _filter_scratch
+>> +
+>> +    echo "test for default extsize setting if any"
+>> +    read_file_extsize $filename $DEFAULT_EXTSIZE
+>> +    echo
+>> +}
+>> +
+>> +test_data_allocated()
+>> +{
+>> +    echo "TEST: Set extsize on non-empty file with allocated extents"
+>> +    local filename=$1
+>> +    $XFS_IO_PROG \
+>> +        -c "open -f $filename" \
+>> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
+>> +        -c "extsize $EXTSIZE" | _filter_scratch
+>> +
+>> +    echo "test for default extsize setting if any"
+>> +    read_file_extsize $filename $DEFAULT_EXTSIZE
+>> +    echo
+>> +}
+>> +
+>> +test_truncate_allocated()
+>> +{
+>> +    echo "TEST: Set extsize after truncating a file with allocated extents"
+>> +    local filename=$1
+>> +    $XFS_IO_PROG \
+>> +        -c "open -f $filename" \
+>> +        -c "pwrite -qW  0 $FILE_DATA_SIZE" \
+>> +        -c "truncate 0" \
+>> +        -c "extsize $EXTSIZE" \
+>> +
+>> +    check_extsz_xflag_across_remount $filename $EXTSIZE
+>> +    echo
+>> +}
+>> +
+>> +test_truncate_delayed()
+>> +{
+>> +    echo "TEST: Set extsize after truncating a file with delayed allocation"
+>> +    local filename=$1
+>> +    $XFS_IO_PROG \
+>> +        -c "open -f $filename" \
+>> +        -c "pwrite -q  0 $FILE_DATA_SIZE" \
+>> +        -c "truncate 0" \
+>> +        -c "extsize $EXTSIZE" \
+>> +
+>> +    check_extsz_xflag_across_remount $filename $EXTSIZE
+>> +    echo
+>> +}
+>> +
+>> +setup
+>> +echo -e "EXTSIZE = $EXTSIZE DEFAULT_EXTSIZE = $DEFAULT_EXTSIZE BLOCKSIZE = $BLKSZ\n" >> "$seqres.full"
+>> +
+>> +NEW_FILE_NAME_PREFIX=$SCRATCH_MNT/new-file-
+>> +
+>> +test_empty_file "$NEW_FILE_NAME_PREFIX"00
+>> +test_data_delayed "$NEW_FILE_NAME_PREFIX"01
+>> +test_data_allocated "$NEW_FILE_NAME_PREFIX"02
+>> +test_truncate_allocated "$NEW_FILE_NAME_PREFIX"03
+>> +test_truncate_delayed "$NEW_FILE_NAME_PREFIX"04
+>> +
+>> +status=0
+>> +exit
+>> diff --git a/tests/generic/366.out b/tests/generic/366.out
+>> new file mode 100644
+>> index 00000000..cdd2f5fa
+>> --- /dev/null
+>> +++ b/tests/generic/366.out
+>> @@ -0,0 +1,26 @@
+>> +QA output created by 366
+>> +TEST: Set extsize on empty file
+>> +[EXTSIZE] SCRATCH_MNT/new-file-00
+>> +e flag set
+>> +Re-setting extsize hint to 0
+>> +[EXTSIZE] SCRATCH_MNT/new-file-00
+>> +e flag unset
+>> +
+>> +TEST: Set extsize on non-empty file with delayed allocation
+>> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-01: Invalid argument
+>> +test for default extsize setting if any
+>> +[EXTSIZE] SCRATCH_MNT/new-file-01
+>> +
+>> +TEST: Set extsize on non-empty file with allocated extents
+>> +xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT/new-file-02: Invalid argument
+>> +test for default extsize setting if any
+>> +[EXTSIZE] SCRATCH_MNT/new-file-02
+>> +
+>> +TEST: Set extsize after truncating a file with allocated extents
+>> +[EXTSIZE] SCRATCH_MNT/new-file-03
+>> +e flag set
+>> +
+>> +TEST: Set extsize after truncating a file with delayed allocation
+>> +[EXTSIZE] SCRATCH_MNT/new-file-04
+>> +e flag set
+>> +
+>> -- 
+>> 2.43.5
+>>
+>>
+-- 
+---
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
