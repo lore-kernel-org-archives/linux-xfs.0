@@ -1,37 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 530D01EBA0C;
-	Mon, 18 Nov 2024 23:01:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B299C1E8846;
+	Mon, 18 Nov 2024 23:01:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731970895; cv=none; b=c2fnFIcGfCvDOaP2L4ijdXLLjnlrsVAD2piWzUOX5vxAgiZYsmaf6PqNZPyTNavEKtEtd5CTb0n0cBP7dCTd3O6LYQAGKJVMOk+RaZgb1MliGr9A/fZEpi7RvQ6ookbpF0jsMR9xyAhxqkWPjkhRUPjseroLfI2vIth6X14jk3Y=
+	t=1731970899; cv=none; b=cpvzMJELhto2chfhGMxUaatXlFtDVCXhW1RtofbBMNWmxmioxqCAEF2nrMBPGXeb1Of/Ij4+xifpxFWJfZmAoa9q9soF9yAHK0G7E15UrBMF5UonhuoofZmKJ5p7xbSpntmi+HuK4p3L8nJ8apE6mcCso3bJ3y89SUYOcLmW29k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731970895; c=relaxed/simple;
-	bh=bARq+IanWDi+o1bAx7pNfFQRqEtVG7WdE58XWrS4hxg=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=VM0hokOgUL3eav746jDutuRFfkRYtTQfUBRh3zdSRafZFbLCEZ4QUoS/If3fhEOtPV/6en8LdaJxYatQNu+r/1aTSC5iKJqwrBMbzpLVXKJwd9e7AgDesJwrrCEwNcQp+1lCNdlAnbTxQs5ZSsy4SRRQiIkx361PYSyT/uJ3mxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dna9yI5E; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731970899; c=relaxed/simple;
+	bh=SQ8hEz0+P+LezKybCrG9BVBvg+dEV9Gmh832ak8B2d0=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=cW8KuJwStlhPsfr3IiILDtsLZAKvKJfZE4R6iDveHTPH/HDmKZN+Gs81GgmXM2J69aTSQX1ZWLX9iy19BPsTua74c5XBN34b9CeVJBbx6VDuLonnKGg64u7dZL6ZalpQTKiu/E9nWcn8xrElDYXSPSJzR75mTwNPM9TLA86Kes0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WIaXRvfy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dna9yI5E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF073C4CED0;
-	Mon, 18 Nov 2024 23:01:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WIaXRvfy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78B73C4CECC;
+	Mon, 18 Nov 2024 23:01:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731970893;
-	bh=bARq+IanWDi+o1bAx7pNfFQRqEtVG7WdE58XWrS4hxg=;
-	h=Date:Subject:From:To:Cc:From;
-	b=Dna9yI5EladsgbJ1MBrR8PDiEsgRFQZcS9NSrUP5vDfjeh0yxiJh8xMTjVL8eV/VP
-	 pKQZiA7p8FrJJGOOAKjZ3q2cHHAVnBS4PuekYSVj/W/96gpJ4TG5D7y1M6uQCBRjLt
-	 ypuBru4xzkQRX/lLzwPpWfQ9nHvNme4qDwySTSIFLY4pX5YQy/LRPXH/ifa+GclMO5
-	 8NlkwHxJR0gwom8KMbQ6RgEbAunl4lIG73Brh4+TEAHDHSZ2wkMK8drOQpcbULqnNH
-	 E4wx7gYJSeu5mIzgfFsqnnrT5/bw0+n2YCZGgfTNQ30YmJ3Z85O890JWwutAvZq018
-	 FIRbLN6epYeWA==
-Date: Mon, 18 Nov 2024 15:01:33 -0800
-Subject: [PATCHSET] xfs: bug fixes for 6.13
+	s=k20201202; t=1731970899;
+	bh=SQ8hEz0+P+LezKybCrG9BVBvg+dEV9Gmh832ak8B2d0=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=WIaXRvfyOkIDiaeMaSFqKi7t/+xjmTkRbH1colSnqac0DDaKdb0PBh3Q6wn6eFFOJ
+	 Q666EF9GxKSWhoNtkOgqtCzLaHybZcjg8gsmZfRlnBHoPx82HKBUAVpxdizUqiAPst
+	 rUYUx6M4pV6yW02H9u06dSF7Z6gaxZRo2PFXali5yqD8Kdw2n+21iDRoHOwuv7LdrJ
+	 zvGrVFKuLKc+PZcc+KHY2g5xKdigisRRXcfXh8w+pHRSMlFwP6n4B+ILXo+l9xR3pT
+	 Ux4Nf59xUqzDXsEUUMHsI6um1b1HvCJ+7ZgSV96QlMOb1+5yYJaIiFlA9Tc8zZOwFh
+	 dn7sd6kSmw0Sw==
+Date: Mon, 18 Nov 2024 15:01:38 -0800
+Subject: [PATCH 01/12] generic/757: fix various bugs in this test
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: dan.carpenter@linaro.org, hch@lst.de, stable@vger.kernel.org,
- wozizhi@huawei.com, linux-xfs@vger.kernel.org
-Message-ID: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
+In-Reply-To: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,53 +43,36 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Bug fixes for 6.13.
+Fix this test so the check doesn't fail on XFS, and restrict runtime to
+100 loops because otherwise this test takes many hours.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-fixes-6.13
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * xfs: fix off-by-one error in fsmap's end_daddr usage
- * xfs: metapath scrubber should use the already loaded inodes
- * xfs: keep quota directory inode loaded
- * xfs: return a 64-bit block count from xfs_btree_count_blocks
- * xfs: don't drop errno values when we fail to ficlone the entire range
- * xfs: separate healthy clearing mask during repair
- * xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when zapping a symlink
- * xfs: mark metadir repair tempfiles with IRECOVERY
- * xfs: fix null bno_hint handling in xfs_rtallocate_rtg
- * xfs: fix error bailout in xfs_rtginode_create
----
- fs/xfs/libxfs/xfs_btree.c        |    4 +-
- fs/xfs/libxfs/xfs_btree.h        |    2 +
- fs/xfs/libxfs/xfs_ialloc_btree.c |    4 ++
- fs/xfs/libxfs/xfs_rtgroup.c      |    2 +
- fs/xfs/scrub/agheader.c          |    6 ++-
- fs/xfs/scrub/agheader_repair.c   |    6 ++-
- fs/xfs/scrub/fscounters.c        |    2 +
- fs/xfs/scrub/health.c            |   57 ++++++++++++++++++--------------
- fs/xfs/scrub/ialloc.c            |    4 +-
- fs/xfs/scrub/metapath.c          |   68 +++++++++++++++-----------------------
- fs/xfs/scrub/refcount.c          |    2 +
- fs/xfs/scrub/scrub.h             |    6 +++
- fs/xfs/scrub/symlink_repair.c    |    3 +-
- fs/xfs/scrub/tempfile.c          |   10 ++++--
- fs/xfs/xfs_bmap_util.c           |    2 +
- fs/xfs/xfs_file.c                |    8 ++++
- fs/xfs/xfs_fsmap.c               |   38 ++++++++++++---------
- fs/xfs/xfs_inode.h               |    2 +
- fs/xfs/xfs_qm.c                  |   47 ++++++++++++++------------
- fs/xfs/xfs_qm.h                  |    1 +
- fs/xfs/xfs_rtalloc.c             |    2 +
- 21 files changed, 151 insertions(+), 125 deletions(-)
+ tests/generic/757 |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+
+diff --git a/tests/generic/757 b/tests/generic/757
+index 0ff5a8ac00182b..9d41975bde07bb 100755
+--- a/tests/generic/757
++++ b/tests/generic/757
+@@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
+ cur=$(_log_writes_find_next_fua $prev)
+ [ -z "$cur" ] && _fail "failed to locate next FUA write"
+ 
+-while [ ! -z "$cur" ]; do
++for ((i = 0; i < 100; i++)); do
+ 	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
+ 
++	# xfs_repair won't run if the log is dirty
++	if [ $FSTYP = "xfs" ]; then
++		_scratch_mount
++		_scratch_unmount
++	fi
+ 	_check_scratch_fs
+ 
+ 	prev=$cur
 
