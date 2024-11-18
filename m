@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB8A4153BE4
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2024 23:06:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AB95153BE4;
+	Mon, 18 Nov 2024 23:06:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731971196; cv=none; b=OUfO7mXvepOO3n5EG2DgStQA6zdMSf/tU93LVlj9Q8ykNnx3dAEjikneBCOGc+7VhxROGoalrFeNdP5hGblnPFrqzrPqXWdmW+ZWKuH0t4uhy6FoNAYucvG9OMEvipXyzXHOkatIuS4ppBqDB7NxOUaXIrVbCu7lavMVVZKVdTE=
+	t=1731971212; cv=none; b=A+858ZHNjfmw4kM5X+jYoHP2FeNO1Kh7ECcnLt0XpuQcx/olOS8vM1zk3i1FOJrJqKYD4Rsxtj8Jg/63Vf9auarkNxv9xaT8S8RiFrX5yB/lOEdQkgttDJANEufKQudkE/wLms8VLoTYiE1Cl25UFVBTy6bZD3oBJcOoZpaRT3w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731971196; c=relaxed/simple;
-	bh=jpgtYhzEy0h6+jhMQGW8f72YX+1iogqws/uhpAFc434=;
+	s=arc-20240116; t=1731971212; c=relaxed/simple;
+	bh=eLsu41YeD0HrTyRtmIQlUugqMJ3IXNNewNaUs639yJs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=U5wn4NsWp6IvFKVTlCGlzRB+7f0xM+bHvnfdy36sH6OXm1qz3I2Wuf+/TT443Zbt5qbOv+rzA7hM/J5z9U6x9HHdo+WcxknX2X3Dxr7rQM2lqzHgiaLET4PzgKcRZOtv+ygR5Xpl5bY58SXElqRSnGvgBq6beNPy6sB2omfW0S4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mgWcF+iM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gdPhfypIst8pdtCb6TmvctNVDCSuv1epk5ODLCzOwGafU83cM8O1PE9l8GKQySSYAffJ2FTSJVcegxRsATnDAgVZeoY/hsyDYyJnR9GXYKveVK+TiTJiOSwKkcOvvvlAXdYi3GtfIJsTgHka8cCrwxWe64GC3So4UjN9p3h5yR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1mlkdsS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mgWcF+iM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A9B7C4CECC;
-	Mon, 18 Nov 2024 23:06:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1mlkdsS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE1ACC4CECC;
+	Mon, 18 Nov 2024 23:06:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731971196;
-	bh=jpgtYhzEy0h6+jhMQGW8f72YX+1iogqws/uhpAFc434=;
+	s=k20201202; t=1731971212;
+	bh=eLsu41YeD0HrTyRtmIQlUugqMJ3IXNNewNaUs639yJs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mgWcF+iMmPtflhQSphf6pycklhdTCAQCleeLyIJf+N6tHbNP3g7W3N7T7ewn3OMPE
-	 pK4LWKlLLWwxFGQgma//yeBkqtETcIR3yv5NWs3qqWQERVAivfbZlprDK0Oxx1WywX
-	 Q8S/41bwqCUQTbRk/QbkYUTfBbYStAlo2419ZcrpCjRHt9m2FUeAKKWpzZpTFc5Puw
-	 ZBus80bnQbc7hntNKmrEiZ5iKT3yoUEFAyT66KN1KkrBWPM3XQ/AKDV7No4pgCh09i
-	 qEqXl20yeAlX+B6zJFfhRLiJHj2hdOAV1D782Uc/cSf3N3ENdcDyKjMJ2o/zs2BIsR
-	 YuRUQlKhJ3PYg==
-Date: Mon, 18 Nov 2024 15:06:35 -0800
-Subject: [PATCH 08/10] xfs: mark metadir repair tempfiles with IRECOVERY
+	b=D1mlkdsSv5bzrYnReyWvYBEh8U5fhrjq44REhiIDXeSFlqh0xDysvzBdMaLoZJBg9
+	 cctREXTyEraDCIWnsvZlYOI+TxXVVXl0Ls52CulTaGhhk9eIS6euP/zaEOTXS9ST9f
+	 wZ6pjs/T3Jxzoy7n+xHVlIklENwwe0k+DKCQDGcX4r1oqWZNcsp3W+mQB4FPiO65J7
+	 4Sr+UgoN0t/ZM3vPKQ9lsEuwKUL0JFCUIrbuthFlZXZqV/imLg1PCgRNEDmCB50Kz9
+	 Qczjb2ztJwA68O8JrGRmxo/hJ+iFI3ZBhoM6O8A+w0BH0BkOcDX7vw5PqHURuJUt6C
+	 2rKaU/C0CM/+g==
+Date: Mon, 18 Nov 2024 15:06:51 -0800
+Subject: [PATCH 09/10] xfs: fix null bno_hint handling in xfs_rtallocate_rtg
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <173197084549.911325.5472870057444935473.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173197084566.911325.17606647892449835782.stgit@frogsfrogsfrogs>
 In-Reply-To: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
 References: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,96 +45,41 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Once in a long while, xfs/566 and xfs/801 report directory corruption in
-one of the metadata subdirectories while it's forcibly rebuilding all
-filesystem metadata.  I observed the following sequence of events:
+xfs_bmap_rtalloc initializes the bno_hint variable to NULLRTBLOCK (aka
+NULLFSBLOCK).  If the allocation request is for a file range that's
+adjacent to an existing mapping, it will then change bno_hint to the
+blkno hint in the bmalloca structure.
 
-1. Initiate a repair of the parent pointers for the /quota/user file.
-   This is the secret file containing user quota data.
+In other words, bno_hint is either a rt block number, or it's all 1s.
+Unfortunately, commit ec12f97f1b8a8f didn't take the NULLRTBLOCK state
+into account, which means that it tries to translate that into a
+realtime extent number.  We then end up with an obnoxiously high rtx
+number and pointlessly feed that to the near allocator.  This often
+fails and falls back to the by-size allocator.  Seeing as we had no
+locality hint anyway, this is a waste of time.
 
-2. The pptr repair thread creates a temporary file and begins staging
-   parent pointers in the ondisk metadata in preparation for an
-   exchange-range to commit the new pptr data.
+Fix the code to detect a lack of bno_hint correctly.  This was detected
+by running xfs/009 with metadir enabled and a 28k rt extent size.
 
-3. At the same time, initiate a repair of the /quota directory itself.
-
-4. The dir repair thread finds the temporary file from (2), scans it for
-   parent pointers, and stages a dirent in its own temporary dir in
-   preparation to commit the fixed directory.
-
-5. The parent pointer repair completes and frees the temporary file.
-
-6. The dir repair commits the new directory and scans it again.  It
-   finds the dirent that points to the old temporary file in (2) and
-   marks the directory corrupt.
-
-Oops!  Repair code must never scan the temporary files that other repair
-functions create to stage new metadata.  They're not supposed to do
-that, but the predicate function xrep_is_tempfile is incorrect because
-it assumes that any XFS_DIFLAG2_METADATA file cannot ever be a temporary
-file, but xrep_tempfile_adjust_directory_tree creates exactly that.
-
-Fix this by setting the IRECOVERY flag on temporary metadata directory
-inodes and using that to correct the predicate.  Repair code is supposed
-to erase all the data in temporary files before releasing them, so it's
-ok if a thread scans the temporary file after we drop IRECOVERY.
-
-Fixes: bb6cdd5529ff67 ("xfs: hide metadata inodes from everyone because they are special")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Cc: <stable@vger.kernel.org> # v6.12
+Fixes: ec12f97f1b8a8f ("xfs: make the rtalloc start hint a xfs_rtblock_t")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/tempfile.c |   10 ++++++++--
- fs/xfs/xfs_inode.h      |    2 +-
- 2 files changed, 9 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_rtalloc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
-index 4b7f7860e37ece..dc3802c7f678ce 100644
---- a/fs/xfs/scrub/tempfile.c
-+++ b/fs/xfs/scrub/tempfile.c
-@@ -223,6 +223,7 @@ xrep_tempfile_adjust_directory_tree(
- 	if (error)
- 		goto out_ilock;
- 
-+	xfs_iflags_set(sc->tempip, XFS_IRECOVERY);
- 	xfs_qm_dqdetach(sc->tempip);
- out_ilock:
- 	xrep_tempfile_iunlock(sc);
-@@ -246,6 +247,8 @@ xrep_tempfile_remove_metadir(
- 
- 	ASSERT(sc->tp == NULL);
- 
-+	xfs_iflags_clear(sc->tempip, XFS_IRECOVERY);
-+
- 	xfs_ilock(sc->tempip, XFS_IOLOCK_EXCL);
- 	sc->temp_ilock_flags |= XFS_IOLOCK_EXCL;
- 
-@@ -945,10 +948,13 @@ xrep_is_tempfile(
- 
- 	/*
- 	 * Files in the metadata directory tree also have S_PRIVATE set and
--	 * IOP_XATTR unset, so we must distinguish them separately.
-+	 * IOP_XATTR unset, so we must distinguish them separately.  We (ab)use
-+	 * the IRECOVERY flag to mark temporary metadir inodes knowing that the
-+	 * end of log recovery clears IRECOVERY, so the only ones that can
-+	 * exist during online repair are the ones we create.
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 0cb534d71119a5..fcfa6e0eb3ad2a 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1827,7 +1827,7 @@ xfs_rtallocate_rtg(
+ 	 * For an allocation to an empty file at offset 0, pick an extent that
+ 	 * will space things out in the rt area.
  	 */
- 	if (xfs_has_metadir(mp) && (ip->i_diflags2 & XFS_DIFLAG2_METADATA))
--		return false;
-+		return __xfs_iflags_test(ip, XFS_IRECOVERY);
- 
- 	if (IS_PRIVATE(inode) && !(inode->i_opflags & IOP_XATTR))
- 		return true;
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 2a4485fb990846..bd6b37beabacdd 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -231,7 +231,7 @@ xfs_iflags_clear(xfs_inode_t *ip, unsigned long flags)
- }
- 
- static inline int
--__xfs_iflags_test(xfs_inode_t *ip, unsigned long flags)
-+__xfs_iflags_test(const struct xfs_inode *ip, unsigned long flags)
- {
- 	return (ip->i_flags & flags);
- }
+-	if (bno_hint)
++	if (bno_hint != NULLFSBLOCK)
+ 		start = xfs_rtb_to_rtx(args.mp, bno_hint);
+ 	else if (!xfs_has_rtgroups(args.mp) && initial_user_data)
+ 		start = xfs_rtpick_extent(args.rtg, tp, maxlen);
 
