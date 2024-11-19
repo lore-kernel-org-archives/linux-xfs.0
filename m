@@ -1,43 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53C322563
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 05:44:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9805142E7C
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 05:45:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731995060; cv=none; b=nDsoOAWeViEj9P+bRwWsV11G9ixnnzWzxr/sGhOFlpyMFoFKrqR9aIj4v4WZk8wY1WzOxR/+S4yMODPQlAY+Jr8GKRKjuA1fQCdA/MlriYqijhCEliDa+R1ve82mLJ8aC3mZCTqIsS9gYND+p1FI599zZAf6zGcJ9sNNr+Ek5ho=
+	t=1731995142; cv=none; b=fvJPcBbzS4v/qSRAz0kSXcePZDzDQlrLX+A1Q6plmcmsFEqQUcMf/khnGJiyv6Qz00O4VdepVzGkiw6oB+vs44fNKRw+hZD4sIVWf9tZ6S/FzwVpd9lK8OF+Kp73tgxIRZChOtgKmcBWkiurlQ2aVIe4PROS3ZINjzBPpUlQWYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731995060; c=relaxed/simple;
-	bh=IkVmcrKD7/BGu3eINJYM1EOkJAoDPCVjlwxFId9tpzQ=;
+	s=arc-20240116; t=1731995142; c=relaxed/simple;
+	bh=EHqU852PRZ1LcCKpK53KZGP1go1ferglbQDTfbHP6SQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rs//73s0FzFb4fdpijkthtY4DOajmK0wIHht/j5zw29EcQVL+aPp75dScgpuFrs/lQRHsN6oVlPiGyrW+civAxXchm5+prjx97fjcqEptDUgHx8fDxBn3gW8oyjap1b2ZJoJA/sVLXkLJbibf6Un2TGozPqn46PIMmxGrgt0l/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZRLe3PJI; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=cVXEroem3b94j5adH6j2a+DgpUypqWSNpFP1sBgaY++z2wVKNC1yhnuLnLq2zoiQsyj873DHgNXhmSn5tsq3HrWCREabaPDjcN4QUcMm+Cu/8KSZINp6ixq+cJwKzij9aoD5cy4p16pRdRgf6dsykgTolh5mgGKDEwltm0PgSuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=tBcp/VEq; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZRLe3PJI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tBcp/VEq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=04vBqLXnutpawhW5Z6EIJuDN9w1/Wrs41yl8rnif2nE=; b=ZRLe3PJIL4H8SEz3WtIQ2YNmmH
-	4DgsVUY6gjwUHpVKhkyyzXJz69GBBqYZDVZn/iEBoF7za3xVzDyiFxhz08BVVbCsiR8AAbB2Mb2sY
-	T+CP2tiF7AwMC4MOg0o3Zo4WbP144ahsS8wkA8/E//XAy0z/xm8NM3Yi4JEEC0IrxdJJbLoVPZzJZ
-	zLyW7c0YBMANBATGt74yOR+vz3XFEQW/mtRpk5IxvCgRc9IGkofBOmrqlHZwFBVRS7AlTvpchensy
-	muXvspGvMMv8wq+VhOtkXXMmB+ISXcBesniuzdr3c7pXJysr8KicI72Hy5TGKfH7um6PLbzlU98xj
-	j3BJyOrg==;
+	bh=CpMErFNruwR1DJRlMvajGIkSIrXxmqIP1nRqUQcDGLk=; b=tBcp/VEqexUTWAYxZFgjw+JLTi
+	N9VUztQd1+shCRG10aKhekq0h2wEWUj86IkJljKQi0NlvGhOg+QZP5p4kX1eBm+50O6DIS1GqrZJQ
+	Fq9up6uLnJ1GErT1b8DwGHvpWNzFQs1yRQrwgLVtw7vAs4x8rq/+gcYNIMZu/qjravn2fNB5SI7yM
+	rZu4yHg1bR0dl4VL9dDjrRM2IvJsE7u+Ma+0wYOE7C7R/riM2L7ggUTMYxjpRhSQUYaCyVd/gBrk3
+	VL3VTbRoYSE7VNYEfR3pXAuZ0kpfOKKneW+68hjtQCyICm/NxDe6jc8P2CLPA6QD5WmVOkishZppu
+	XjqOhY0g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tDH29-0000000BRi9-2unX;
-	Tue, 19 Nov 2024 05:44:17 +0000
-Date: Mon, 18 Nov 2024 21:44:17 -0800
+	id 1tDH3R-0000000BRvu-2Bmg;
+	Tue, 19 Nov 2024 05:45:37 +0000
+Date: Mon, 18 Nov 2024 21:45:37 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/10] xfs: metapath scrubber should use the already
- loaded inodes
-Message-ID: <ZzwlsdYLPEl8hXhS@infradead.org>
+Subject: Re: [PATCH 03/10] xfs: keep quota directory inode loaded
+Message-ID: <ZzwmAevNy-Tcl9R0@infradead.org>
 References: <173197084388.911325.10473700839283408918.stgit@frogsfrogsfrogs>
- <173197084448.911325.8377209709944240957.stgit@frogsfrogsfrogs>
+ <173197084464.911325.18182055244953182778.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,18 +45,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173197084448.911325.8377209709944240957.stgit@frogsfrogsfrogs>
+In-Reply-To: <173197084464.911325.18182055244953182778.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Nov 18, 2024 at 03:05:02PM -0800, Darrick J. Wong wrote:
+On Mon, Nov 18, 2024 at 03:05:17PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Don't waste time in xchk_setup_metapath_dqinode doing a second lookup of
-> the quota inodes, just grab them from the quotainfo structure.  The
-> whole point of this scrubber is to make sure that the dirents exist, so
-> it's completely silly to do lookups.
+> In the same vein as the previous patch, there's no point in the metapath
+> scrub setup function doing a lookup on the quota metadir just so it can
+> validate that lookups work correctly.  Instead, retain the quota
+> directory inode in memory so that we can check this.
 
-Looks good:
+The commit log here feels a bit sloppy - it keeps the quotadir inode
+in memory for the entire life time of the file system, and not just
+the scrub as the above implicitly would imply to me.  Maybe clarify
+this a bit?
+
+Otherwise looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
