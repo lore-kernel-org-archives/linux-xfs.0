@@ -1,85 +1,84 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B66A1527B4;
-	Tue, 19 Nov 2024 06:13:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20CE11531DB
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 08:37:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731996805; cv=none; b=TmyqEa6+2QzONmFCTy4Ae1LEAEBISbWyYRSXtTwqIZ9e16NerppljAx+A0aqTQX39oGfYeE0Rmtw+S9Zm73PHqS0bDMnpbb7XjEDhSt0X4wyOOGo+WMiyZY4g7muY/0f65GlV6rCh+SFL2JGr7TJ0jDjaolKxBK/LrzeOsD5czs=
+	t=1732005426; cv=none; b=XriIRINykoQhb7FbS095zMkut/rUNjRKaJ7fkOpdM39iqHlkqpjC0ojDmb/4duLpPmIQO+D3z3tcOF4/x7Rk6M2Rse8uWDlsq8QXRBP5RPuf1hP5LP2BbvG3wY04oRUwkQry+VaCKNUwzqAuZ6Wr4X4MNtAVWkoEKwQIw6nTLCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731996805; c=relaxed/simple;
-	bh=dX+14lpY6ThHnkkAApMBKzYLSGOJR1QcEMZeZfarRc4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cY/xE7z8xZz2G2aXYGflpcpsbNVpEpBYgygAEjZwatU7bVcsBkZ6xQwlLsmJ3qRsOJAF3pJUDtJwUy72e1CXMuli4vWFEnNJm04ZRGPT386u2SSd537OnsMqzQV8bV/DcEJEgGDgmEemB/hij984PB4v5HqmxVFzs7x1A9RilVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HFrUV56A; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HFrUV56A"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=+8+b/D8sexm2rRahcyGmLCAhK6dhnCOC3ns9q+QYJEU=; b=HFrUV56Ac9ueFZsCD3+KmeEYwd
-	Js9PWiFzVS19KknYmkSA/Bh8WFR2UU+EKJBqmLfA0dfF9Xtry6dM8LMVBcs4mYSiItwcr2LbIz6fu
-	hasdgR8vgPWW5APyVcWVBjR45nu9MW047EgY0yuv0qUJiX/mzSmu6nfuhcbpY0fsLwViJQNm07g5N
-	kHT8cpNVqJp0BbZXdMOdlmv0jVHmyzjvr1r8+cDuoKF+ORJQ6FCmEvMDa+rBL1YNTXMlSBvF4SfId
-	doigzWCcGOWNEPsgwtHX/kdbmThDl7z2KKLHwW7AdPsJwpzhp6YJNlqDad1ydE5qLLzpZ/13qa1nM
-	R/nEBtHw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tDHUJ-0000000BVNK-21BE;
-	Tue, 19 Nov 2024 06:13:23 +0000
-Date: Mon, 18 Nov 2024 22:13:23 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 09/12] generic/251: constrain runtime via time/load/soak
- factors
-Message-ID: <Zzwsgzu81kiv5JPB@infradead.org>
-References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
- <173197064562.904310.6083759089693476713.stgit@frogsfrogsfrogs>
- <ZzvtoVID2ASv4IM2@dread.disaster.area>
+	s=arc-20240116; t=1732005426; c=relaxed/simple;
+	bh=30Pk1noYoRWUgb7B23ae9iyWnXfqCV/9Eho3X4kAIO8=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sxETGO+VRAYrmTL2ck5h9TqIPPJL4G6wlisIb+Ejv4yhGKtx746ZfezvS/7MY+ZP2DuO2DX5heP/imIzCU1OpOve6/dSuZXR8c3jV93IrotfJc2zNeB5OwHwdLiM3to6bAmO3h+ISgY3xGm4eiwC9N/OasXE+m9LFDQ1I0fMDwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4XsyVt4HDcz21lLC;
+	Tue, 19 Nov 2024 16:35:34 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8A1B91401F0;
+	Tue, 19 Nov 2024 16:36:55 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 19 Nov
+ 2024 16:36:55 +0800
+Date: Tue, 19 Nov 2024 16:35:22 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>
+CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<yangerkun@huawei.com>
+Subject: Re: [PATCH v2 1/2] iomap: fix zero padding data issue in concurrent
+ append writes
+Message-ID: <ZzxNygJUXTXd6H_w@localhost.localdomain>
+References: <20241113091907.56937-1-leo.lilong@huawei.com>
+ <ZzTQPdE5V155Soui@bfoster>
+ <ZzrlO_jEz9WdBcAF@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <ZzvtoVID2ASv4IM2@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZzrlO_jEz9WdBcAF@infradead.org>
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Tue, Nov 19, 2024 at 12:45:05PM +1100, Dave Chinner wrote:
-> Question for you: Does your $here directory contain a .git subdir?
+On Sun, Nov 17, 2024 at 10:56:59PM -0800, Christoph Hellwig wrote:
+> On Wed, Nov 13, 2024 at 11:13:49AM -0500, Brian Foster wrote:
+> > >  static bool
+> > >  iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+> > >  {
+> > > +	size_t size = iomap_ioend_extent_size(ioend);
+> > > +
+> > 
+> > The function name is kind of misleading IMO because this may not
+> > necessarily reflect "extent size." Maybe something like
+> > _ioend_size_aligned() would be more accurate..?
 > 
-> One of the causes of long runtime for me has been that $here might
-> only contain 30MB of files, but the .git subdir balloons to several
-> hundred MB over time, resulting is really long runtimes because it's
-> copying GBs of data from the .git subdir.
-
-Or the results/ directory when run in a persistent test VM like the
-one for quick runs on my laptop.  I currently need to persistently
-purge that for just this test.
-
+> Agreed.  What also would be useful is a comment describing the
+> function and why io_size is not aligned.
 > 
-> I have this patch in my tree:
+
+Ok, it will be changed in the next version.
+
+> > 1. It kind of feels like a landmine in an area where block alignment is
+> > typically expected. I wonder if a rename to something like io_bytes
+> > would help at all with that.
 > 
-> --- a/tests/generic/251
-> +++ b/tests/generic/251
-> @@ -175,9 +175,12 @@ nproc=20
->  # Copy $here to the scratch fs and make coipes of the replica.  The fstests
->  # output (and hence $seqres.full) could be in $here, so we need to snapshot
->  # $here before computing file checksums.
-> +#
-> +# $here/* as the files to copy so we avoid any .git directory that might be
-> +# much, much larger than the rest of the fstests source tree we are copying.
->  content=$SCRATCH_MNT/orig
->  mkdir -p $content
-> -cp -axT $here/ $content/
-> +cp -ax $here/* $content/
+> Fine with me.
+> 
 
-Maybe we just need a way to generate more predictable file system
-content?
+While continuing to use io_size may introduce some ambiguity, this can
+be adequately addressed through proper documentation. Furthermore,
+retaining io_size would minimize code changes. I would like to
+confirm whether renaming io_size to io_bytes is truly necessary in
+this context.
 
+Thanks,
+Long Li
+ 
