@@ -1,86 +1,130 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAA181D094F
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 15:50:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE8A1CF2A6;
+	Tue, 19 Nov 2024 15:50:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732031413; cv=none; b=hjSRmUbIDqX4rWvifBMEXNVsE3ekx67h7lmn9ysC1mLSOz99OrHXdUBPbsPIZEcsgBHZ2hjrewjIi9R1UjpfCz9BGPERTa2iTuaoVQflkXWtnU4n7P4CjVWZc0dtwBKY7+9rQXvmPoNYFRARavRdDDAUsAeXPRTEVUGoUVoO1Qg=
+	t=1732031423; cv=none; b=e5mt9/Od+HZOxyCsjVKE2WMqWOsJGk2heeMsUOuUaJvhIq4o4dHFssqX06ZG/FZQKMG5cu+4vppzWjJoPfuphLOXsVAi+omFAOBilMUhvs2uouYd4f0y8yNknDMut2R2hxo1nXiEPIqtesurdqaImrkJDZ01PFAvw+OXdmomRDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732031413; c=relaxed/simple;
-	bh=6Rt7PZAvQiNXomYBaonnHcUBiWa8F8nkqfm4o4kPkNU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uXdyVTFgCEJnOyp29wiIoePYJtH/VhUKn/I5xy56xglJzuDYEk1svK09Hpe2HIfVnE0gogrc20JWmu0myQfKcOyVOVpG7QQJGJTCJ7Ck08037DghI2A3Dg6gSGxH9smxwNoePrSXn0vLfvSHh30PcpIVUN26Ymbh+vVfAxmfsuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lqGj9lyr; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1732031423; c=relaxed/simple;
+	bh=g/Bnq0c3kVfuw050gmnIzRFe6bXvM/oyCEthTZxId+0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e5KbJmAWnRs/gGdNG7MfzyvECqPeqxgUMzJSnqjZJF2cL5cMvCWU/ND2o7RFEGMjLQHeEkiOtMbMiShK7IlOz6vFxe5IKzjTOWjW8zhWHcYWUc1GRZr6it2G34xUd92/5kLWdmxYOGmpjatUbLACPs0Grm06/ee/MaYOdKQDPsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JuWttsxZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lqGj9lyr"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Jy0Bbc3Wjnh53NxE1H/n57FoMYwWI+PoahicBAr5DwQ=; b=lqGj9lyrYmKLRN6I6wletr1jeK
-	IwKES88ZYPNfE8daO9XxatB5vOVWOhR/KOzwMNxoY5WzBq2F5YGOkURi6t8poAHh7b+VyyByvdBx4
-	ZcSfy3Q72EllJf7AD2Zbu4OmSQDhiUJYoTwRzkb+ytv+IVAVAuDcC/kwCvLZSVDpc9QKZI/CZt+FS
-	tIZ9xYITCwKKe7PukULRPBxUNVO8lvbB3OWZ/2OnYC3/2l1zquKPqcb1UlDT0V3QqSi6iYc2Z6zAA
-	v3fg6t5VsUhYG52M32KxW1mtp0GhZDy2vByM9pPzqJs71XHMmqBN2U4uk9UgK0spwwDfdflX55fAB
-	pTsRzH7w==;
-Received: from 2a02-8389-2341-5b80-1731-a089-d2b1-3edf.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:1731:a089:d2b1:3edf] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tDQUV-0000000CvfX-0qJg;
-	Tue, 19 Nov 2024 15:50:11 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 3/3] xfs: don't call xfs_bmap_same_rtgroup in xfs_bmap_add_extent_hole_delay
-Date: Tue, 19 Nov 2024 16:49:49 +0100
-Message-ID: <20241119154959.1302744-4-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241119154959.1302744-1-hch@lst.de>
-References: <20241119154959.1302744-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JuWttsxZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACB0FC4CECF;
+	Tue, 19 Nov 2024 15:50:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732031422;
+	bh=g/Bnq0c3kVfuw050gmnIzRFe6bXvM/oyCEthTZxId+0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=JuWttsxZsna9Fly7NxGhHD5wWOr8/fFwEQB8zHZ24EjPQBrtKEoQWGoD4ui1ELHHw
+	 bryhhSYWrcMTqDpYBVaExHW1AiAGo/0Bzl/L2WzbvsKAN8qLabnF7V9E26RX+QB0Fq
+	 +/WE/mvNiP51f8pj5iby4bxSPL9vXBNzqMI1zU2u0/7AbsULqA79rQhEn2FXoIz/xn
+	 7APLIawZE/7r1hBkhPjylWFiyJLuTUVJ7v3KDIqAimfRqHUYY+fbHvzP0jrynEuoFQ
+	 sakBEZ8uct29UXypHl+TA3dphqxTwCGSvPCWAyBkusGh2/lEeqiCFDTpV9mOKV+c9L
+	 WxiKPSJiVVMiQ==
+Date: Tue, 19 Nov 2024 07:50:22 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 09/12] generic/251: constrain runtime via time/load/soak
+ factors
+Message-ID: <20241119155022.GO9425@frogsfrogsfrogs>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+ <173197064562.904310.6083759089693476713.stgit@frogsfrogsfrogs>
+ <ZzvtoVID2ASv4IM2@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZzvtoVID2ASv4IM2@dread.disaster.area>
 
-xfs_bmap_add_extent_hole_delay works entirely on delalloc extents, for
-which xfs_bmap_same_rtgroup doesn't make sense.
+On Tue, Nov 19, 2024 at 12:45:05PM +1100, Dave Chinner wrote:
+> On Mon, Nov 18, 2024 at 03:03:43PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > On my test fleet, this test can run for well in excess of 20 minutes:
+> > 
+> >    613 generic/251
+> >    616 generic/251
+> >    624 generic/251
+> >    630 generic/251
+> >    634 generic/251
+> >    652 generic/251
+> >    675 generic/251
+> >    749 generic/251
+> >    777 generic/251
+> >    808 generic/251
+> >    832 generic/251
+> >    946 generic/251
+> >   1082 generic/251
+> >   1221 generic/251
+> >   1241 generic/251
+> >   1254 generic/251
+> >   1305 generic/251
+> >   1366 generic/251
+> >   1646 generic/251
+> >   1936 generic/251
+> >   1952 generic/251
+> >   2358 generic/251
+> >   4359 generic/251
+> >   5325 generic/251
+> >  34046 generic/251
+> > 
+> > because it hardcodes 20 threads and 10 copies.  It's not great to have a
+> > test that results in a significant fraction of the total test runtime.
+> > Fix the looping and load on this test to use LOAD and TIME_FACTOR to
+> > scale up its operations, along with the usual SOAK_DURATION override.
+> > That brings the default runtime down to less than a minute.
+> > 
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> 
+> Question for you: Does your $here directory contain a .git subdir?
+> 
+> One of the causes of long runtime for me has been that $here might
+> only contain 30MB of files, but the .git subdir balloons to several
+> hundred MB over time, resulting is really long runtimes because it's
+> copying GBs of data from the .git subdir.
+> 
+> I have this patch in my tree:
+> 
+> --- a/tests/generic/251
+> +++ b/tests/generic/251
+> @@ -175,9 +175,12 @@ nproc=20
+>  # Copy $here to the scratch fs and make coipes of the replica.  The fstests
+>  # output (and hence $seqres.full) could be in $here, so we need to snapshot
+>  # $here before computing file checksums.
+> +#
+> +# $here/* as the files to copy so we avoid any .git directory that might be
+> +# much, much larger than the rest of the fstests source tree we are copying.
+>  content=$SCRATCH_MNT/orig
+>  mkdir -p $content
+> -cp -axT $here/ $content/
+> +cp -ax $here/* $content/
+> 
+>  mkdir -p $tmp
+> 
+> And that's made the runtime drop from (typically) 10-15 minutes
+> down to around 5 minutes....
+> 
+> Does this have any impact on the runtime on your test systems?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Nope, I do vpath builds (sort of) so there's no .git history getting
+sucked up by generic/251.  The fstests directory on the test VMs is
+~34MB spread across ~4800 files.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9052839305e2..5255f93bae31 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2620,8 +2620,7 @@ xfs_bmap_add_extent_hole_delay(
- 	 */
- 	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
- 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
--	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
--	    xfs_bmap_same_rtgroup(ip, whichfork, &left, new))
-+	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
- 		state |= BMAP_LEFT_CONTIG;
- 
- 	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
-@@ -2629,8 +2628,7 @@ xfs_bmap_add_extent_hole_delay(
- 	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
- 	    (!(state & BMAP_LEFT_CONTIG) ||
- 	     (left.br_blockcount + new->br_blockcount +
--	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)) &&
--	    xfs_bmap_same_rtgroup(ip, whichfork, new, &right))
-+	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
- 		state |= BMAP_RIGHT_CONTIG;
- 
- 	/*
--- 
-2.45.2
+--D
 
+> -Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
