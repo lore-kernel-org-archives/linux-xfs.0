@@ -1,43 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17E12150981;
-	Tue, 19 Nov 2024 06:11:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B66A1527B4;
+	Tue, 19 Nov 2024 06:13:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731996706; cv=none; b=dZ6JMoL55pB7dSlMfQv+49v2lFO+4SfntazSGO7gpX+tG0CmmwrcXLcLa89A2SN2vvrUeEHmP/kD19QhplOltI6pO7GEBdYrwiZpUs7o5c0hCoq7d6Jl61FtaLzRrsb8Ufguw6e2CZY5w3RGD/LVpRHxidmwrGmAr5hPxaA+geM=
+	t=1731996805; cv=none; b=TmyqEa6+2QzONmFCTy4Ae1LEAEBISbWyYRSXtTwqIZ9e16NerppljAx+A0aqTQX39oGfYeE0Rmtw+S9Zm73PHqS0bDMnpbb7XjEDhSt0X4wyOOGo+WMiyZY4g7muY/0f65GlV6rCh+SFL2JGr7TJ0jDjaolKxBK/LrzeOsD5czs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731996706; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1731996805; c=relaxed/simple;
+	bh=dX+14lpY6ThHnkkAApMBKzYLSGOJR1QcEMZeZfarRc4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XsWf43rzPQUy78lcgl8pEkXdzmEdcPYHNFsJfDE/5BUdE9kTe0Yjo3gvWOv7KyyW0TRODlntjGJRV/x8CfPZspXy3p2PgwHEwgL7KMN+7Z/AZ7d4DX1rtVtRJR2bm+k6iTRbQ7MzFXHtC6i1pvNe2yRxYFSXy8gJxnu+XvQjv4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1PN+xlfU; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=cY/xE7z8xZz2G2aXYGflpcpsbNVpEpBYgygAEjZwatU7bVcsBkZ6xQwlLsmJ3qRsOJAF3pJUDtJwUy72e1CXMuli4vWFEnNJm04ZRGPT386u2SSd537OnsMqzQV8bV/DcEJEgGDgmEemB/hij984PB4v5HqmxVFzs7x1A9RilVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HFrUV56A; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1PN+xlfU"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HFrUV56A"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=1PN+xlfUSRQyCuJHAtZ3MWRpZ2
-	Vxq9EdiMXW88cpTfOu5diweaLuVgvmHIvAUmwmJf+qxjTdePFKj+8SEuiJyOZ+4moffWEqbr7WbEy
-	2bxa+tQEafwsS7RFhbWuI8qZeDnuBo3F/CyW1Y+WDIblHlQUUA2T3b2ixu65nt1Fjoo7nTNDrdIeg
-	Cma7bwSRJ1GkTiw90Rx2RbpDa+NjvgEl1TC8VEN+yGb1QA/vzmpuBKkwx+YI9hB2kyzUeBqRw0oam
-	78dbfzS4LFGsvWvjhNABWffKEphETI/+u2Ea/WK8ulIikucdCIl36GKY0JpGkZ4+68DQFOa223Eg+
-	YKpEmi1w==;
+	bh=+8+b/D8sexm2rRahcyGmLCAhK6dhnCOC3ns9q+QYJEU=; b=HFrUV56Ac9ueFZsCD3+KmeEYwd
+	Js9PWiFzVS19KknYmkSA/Bh8WFR2UU+EKJBqmLfA0dfF9Xtry6dM8LMVBcs4mYSiItwcr2LbIz6fu
+	hasdgR8vgPWW5APyVcWVBjR45nu9MW047EgY0yuv0qUJiX/mzSmu6nfuhcbpY0fsLwViJQNm07g5N
+	kHT8cpNVqJp0BbZXdMOdlmv0jVHmyzjvr1r8+cDuoKF+ORJQ6FCmEvMDa+rBL1YNTXMlSBvF4SfId
+	doigzWCcGOWNEPsgwtHX/kdbmThDl7z2KKLHwW7AdPsJwpzhp6YJNlqDad1ydE5qLLzpZ/13qa1nM
+	R/nEBtHw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tDHSi-0000000BVAv-2vII;
-	Tue, 19 Nov 2024 06:11:44 +0000
-Date: Mon, 18 Nov 2024 22:11:44 -0800
+	id 1tDHUJ-0000000BVNK-21BE;
+	Tue, 19 Nov 2024 06:13:23 +0000
+Date: Mon, 18 Nov 2024 22:13:23 -0800
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 08/12] generic/251: use sentinel files to kill the fstrim
- loop
-Message-ID: <ZzwsIGFn4qKi507L@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 09/12] generic/251: constrain runtime via time/load/soak
+ factors
+Message-ID: <Zzwsgzu81kiv5JPB@infradead.org>
 References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
- <173197064547.904310.14473736825696277411.stgit@frogsfrogsfrogs>
+ <173197064562.904310.6083759089693476713.stgit@frogsfrogsfrogs>
+ <ZzvtoVID2ASv4IM2@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,10 +48,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173197064547.904310.14473736825696277411.stgit@frogsfrogsfrogs>
+In-Reply-To: <ZzvtoVID2ASv4IM2@dread.disaster.area>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+On Tue, Nov 19, 2024 at 12:45:05PM +1100, Dave Chinner wrote:
+> Question for you: Does your $here directory contain a .git subdir?
+> 
+> One of the causes of long runtime for me has been that $here might
+> only contain 30MB of files, but the .git subdir balloons to several
+> hundred MB over time, resulting is really long runtimes because it's
+> copying GBs of data from the .git subdir.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Or the results/ directory when run in a persistent test VM like the
+one for quick runs on my laptop.  I currently need to persistently
+purge that for just this test.
+
+> 
+> I have this patch in my tree:
+> 
+> --- a/tests/generic/251
+> +++ b/tests/generic/251
+> @@ -175,9 +175,12 @@ nproc=20
+>  # Copy $here to the scratch fs and make coipes of the replica.  The fstests
+>  # output (and hence $seqres.full) could be in $here, so we need to snapshot
+>  # $here before computing file checksums.
+> +#
+> +# $here/* as the files to copy so we avoid any .git directory that might be
+> +# much, much larger than the rest of the fstests source tree we are copying.
+>  content=$SCRATCH_MNT/orig
+>  mkdir -p $content
+> -cp -axT $here/ $content/
+> +cp -ax $here/* $content/
+
+Maybe we just need a way to generate more predictable file system
+content?
 
