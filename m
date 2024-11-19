@@ -1,160 +1,150 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDB5FE57D
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 01:37:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523C512E1CD
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 01:45:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731980243; cv=none; b=LH2wUHCOF5Ep+bE4PL8SSu4fTOl8GkFMOhxlRmd9pBAB6RheHENWVGPzLgi7hNXcYSQpE/37+ssL+oSFyNaeiHYzkMf+bI5JSClXPlSjiXLpQscDVdXXr+RJSrrUI2jGsKKGBS7D5IhpMiRGPZLEMU5t9mWuXubcYU4rBm3vhw0=
+	t=1731980712; cv=none; b=q0ijyoBRugQqEspyDUQjx8zxzb4B+x+VzMcH58+ySsfyQDxX66cNYPajeukiT9BOQ9EIUbgbly3nctQWP3+cWVyWzCHt8eoFlCS3hXX+DTrSjqcpgyDkQCAwpsG0qVZBn+kXo1ooWpjNaPqzHc9/l7PZF46TUGhX3cquAva602k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731980243; c=relaxed/simple;
-	bh=8ifwJz8D0JzPJr2S84obVi+LZkspH6QRYBsG5ZYUM1M=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IFRkaEKLPSDP4j7N35p9AWe7JlDXPYExMO8Gcd/USU7Anf1Eq1u8gjDONaRYE09cFraegYT2zfZYhfIaFOusVInf14iKAQ6+MnhAkp1N/YmDh6mDPms9hCi7R4zaB/4yIkW/MagRmwe4LrFzx3/ye8A+NOG1wJ7/jGV6FKQ+jd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Xsn9p13g7z10W9J;
-	Tue, 19 Nov 2024 09:35:10 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8BDD1180064;
-	Tue, 19 Nov 2024 09:37:10 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 19 Nov
- 2024 09:37:10 +0800
-Date: Tue, 19 Nov 2024 09:35:38 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Brian Foster <bfoster@redhat.com>
-CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
-	<yangerkun@huawei.com>
-Subject: Re: [PATCH v2 1/2] iomap: fix zero padding data issue in concurrent
- append writes
-Message-ID: <ZzvratqVo-ll6NOY@localhost.localdomain>
-References: <20241113091907.56937-1-leo.lilong@huawei.com>
- <ZzTQPdE5V155Soui@bfoster>
- <ZzVhsvyFQu01PnHl@localhost.localdomain>
- <ZzY7r1l5dpBw7UsY@bfoster>
- <Zzc2LcUqCPqMjjxr@localhost.localdomain>
- <ZzdQpXyVNHaT7MGv@bfoster>
+	s=arc-20240116; t=1731980712; c=relaxed/simple;
+	bh=HWrScgmlSH9Ydnz/bo4mjiuum6SOXdt0BoQvzZRZ3nk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fkGQ0OPlP0wgInDIL2olEKdrploqYM8YePT/U/qz9Iey4XWQDRSYgYuswEKZjN9F3Rftn5pQTUAOlyHtHmgmbVIi/B+uUbwm3amV4kDIsaHL3ZfkialWvw6rhp7Bq900J+s7qLu43JQM3S1m4WjpCjC0+WaUfbC8ooQgo0njHIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ndRyz8WM; arc=none smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ndRyz8WM"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-71e953f4e7cso1682237b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2024 17:45:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731980709; x=1732585509; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=PeNwmBH3uaE/2l4FFiktqBAtKgA+fiiSinSc7l/5l9I=;
+        b=ndRyz8WMk6oCze/5UnZpUPtab1aagtKDg0DVw96Lz3AeWpESRq0/UwAPMFDtnc80xL
+         WiB15cuyVVa5H4VuHonqcDflH6ThCG7CM2Hs1OeimMWOKdnd4nQ4oFAHywUM2jqaTQ2+
+         9ggxQTv1oCVlDVYjxTH3QKd3OwLlEuCF+ct2JTRer8oLPwpmjYVfs61wAlkdP4qm52fo
+         JI15OoH+HOIvzPhN7Dxt7Ge2uQ4YiyiuABEi+hlXCXPryNItCUiELz519kkxWElER8cz
+         YS+bqZzOr0T0qqPQKtm7MtNlSEZ/dtCZ/ABIUY9pLANKjc1EzPpt//lNdwV7mMPfkTyP
+         1FMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731980709; x=1732585509;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PeNwmBH3uaE/2l4FFiktqBAtKgA+fiiSinSc7l/5l9I=;
+        b=MZ6reX6W27uREbJx3y1wHBFboRJk0Iv7BiqlJVex3CHkTjc9REGeik3z8ecqbSojKw
+         /pw+fm+FhVjV8w9T14jIcPWfr1MEC9XKQPr6eoZ3kUahwwA8tZOOQL4yjJuFBwK4jftD
+         P3Zon4A0YPGsHaTWhEFJE83RqZePfk2GvPxxL86wJDpAXf06G45279O1Gi1/4Kgh2EwO
+         D+uCR/A32wgPA3/iKs62bz0R3P+XGbFJs9Df8BfS/0gX88TkqEyTJLvpngnXnBIceqRj
+         ApL9p6yuzVZHNCslZqNm5t6iaIr0my615F/aTj/79Ma4FhEOPqHVx6HruoB2QTwxGlsw
+         bTMA==
+X-Forwarded-Encrypted: i=1; AJvYcCUHK4daHU1f/pwmE1no1963rpj4TSE2AcnL+zDuH1ZoQJnM3Y6kK/aIsSwAKNhvHu7uw0o5xRWy6Lo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5nxw4fgKOIMFGKHTAo99+M+QnKfXty4xptUyNTZzNLYedYczY
+	RnW7prVSaDoVDTNzv9BPjzL4L8+GbaZ1ww5SRiWBiiwjnp161f0mDGis+NvRJLM=
+X-Google-Smtp-Source: AGHT+IF0fL50jPCSnRcKjS0tjYHDPmqlfKZJ7apkYq7jMiNj0EpdvBI1rZkhGyagLjWd3CxJIWcBmw==
+X-Received: by 2002:a05:6a20:244d:b0:1db:e884:6370 with SMTP id adf61e73a8af0-1dc90afc4d2mr22791496637.7.1731980709425;
+        Mon, 18 Nov 2024 17:45:09 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-121-96.pa.nsw.optusnet.com.au. [49.180.121.96])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72477120bc8sm6909973b3a.70.2024.11.18.17.45.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Nov 2024 17:45:08 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tDDIf-00000000Hli-3dBl;
+	Tue, 19 Nov 2024 12:45:05 +1100
+Date: Tue, 19 Nov 2024 12:45:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 09/12] generic/251: constrain runtime via time/load/soak
+ factors
+Message-ID: <ZzvtoVID2ASv4IM2@dread.disaster.area>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+ <173197064562.904310.6083759089693476713.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZzdQpXyVNHaT7MGv@bfoster>
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+In-Reply-To: <173197064562.904310.6083759089693476713.stgit@frogsfrogsfrogs>
 
-On Fri, Nov 15, 2024 at 08:46:13AM -0500, Brian Foster wrote:
-> On Fri, Nov 15, 2024 at 07:53:17PM +0800, Long Li wrote:
-> > On Thu, Nov 14, 2024 at 01:04:31PM -0500, Brian Foster wrote:
-> > > On Thu, Nov 14, 2024 at 10:34:26AM +0800, Long Li wrote:
-> > > > On Wed, Nov 13, 2024 at 11:13:49AM -0500, Brian Foster wrote:
-> > > > > FYI, you probably want to include linux-fsdevel on iomap patches.
-> > > > > 
-> > > > > On Wed, Nov 13, 2024 at 05:19:06PM +0800, Long Li wrote:
-> > > > > > During concurrent append writes to XFS filesystem, zero padding data
-> > > > > > may appear in the file after power failure. This happens due to imprecise
-> > > > > > disk size updates when handling write completion.
-> > > > > > 
-> > > > > > Consider this scenario with concurrent append writes same file:
-> > > > > > 
-> > > > > >   Thread 1:                  Thread 2:
-> > > > > >   ------------               -----------
-> > > > > >   write [A, A+B]
-> > > > > >   update inode size to A+B
-> > > > > >   submit I/O [A, A+BS]
-> > > > > >                              write [A+B, A+B+C]
-> > > > > >                              update inode size to A+B+C
-> > > > > >   <I/O completes, updates disk size to A+B+C>
-> > > > > >   <power failure>
-> > > > > > 
-> > > > > > After reboot, file has zero padding in range [A+B, A+B+C]:
-> > > > > > 
-> > > > > >   |<         Block Size (BS)      >|
-> > > > > >   |DDDDDDDDDDDDDDDD0000000000000000|
-> > > > > >   ^               ^        ^
-> > > > > >   A              A+B      A+B+C (EOF)
-> > > > > > 
-> > > > > 
-> > > > > Thanks for the diagram. FWIW, I found the description a little confusing
-> > > > > because A+B+C to me implies that we'd update i_size to the end of the
-> > > > > write from thread 2, but it seems that is only true up to the end of the
-> > > > > block.
-> > > > > 
-> > > > > I.e., with 4k FSB and if thread 1 writes [0, 2k], then thread 2 writes
-> > > > > from [2, 16k], the write completion from the thread 1 write will set
-> > > > > i_size to 4k, not 16k, right?
-> > > > > 
-> > > > 
-> > > > Not right, the problem I'm trying to describe is:
-> > > > 
-> > > >   1) thread 1 writes [0, 2k]
-> > > >   2) thread 2 writes [2k, 3k]
-> > > >   3) write completion from the thread 1 write set i_size to 3K
-> > > >   4) power failure
-> > > >   5) after reboot,  [2k, 3K] of the file filled with zero and the file size is 3k
-> > > >      
-> > > 
-> > > Yeah, I get the subblock case. What I am saying above is it seems like
-> > > "update inode size to A+B+C" is only true for certain, select values
-> > > that describe the subblock case. I.e., what is the resulting i_size if
-> > > we replace C=1k in the example above with something >= FSB size, like
-> > > C=4k?
-> > > 
-> > > Note this isn't all that important. I was just trying to say that the
-> > > overly general description made this a little more confusing to grok at
-> > > first than it needed to be, because to me it subtly implies there is
-> > > logic around somewhere that explicitly writes in-core i_size to disk,
-> > > when that is not actually what is happening.
-> > > 
-> > > > 
-> > 
-> > Sorry for my previous misunderstanding. You are correct - my commit
-> > message description didn't cover the case where A+B+C > block size.
-> > In such scenarios, the final file size might end up being 4K, which
-> > is not what we would expect. Initially, I incorrectly thought this
-> > wasn't a significant issue and thus overlooked this case. Let me
-> > update the diagram to address this.
-> > 
+On Mon, Nov 18, 2024 at 03:03:43PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Ok no problem.. like I said, just a minor nit. ;)
+> On my test fleet, this test can run for well in excess of 20 minutes:
 > 
-> >   Thread 1:                  Thread 2:
-> >   ------------               -----------
-> >   write [A, A+B]
-> >   update inode size to A+B
-> >   submit I/O [A, A+BS]
-> >                              write [A+B, A+B+C]
-> >                              update inode size to A+B+C
-> >   <I/O completes, updates disk size to A+B+C>
-> >   <power failure>
-> > 
-> > After reboot:
-> >   1) The file has zero padding in the range [A+B, A+BS]
-> >   2) The file size is unexpectedly set to A+BS
-> > 
-> >   |<         Block Size (BS)      >|<           Block Size (BS)    >|
-> >   |DDDDDDDDDDDDDDDD0000000000000000|00000000000000000000000000000000|
-> >   ^               ^                ^               ^
-> >   A              A+B              A+BS (EOF)     A+B+C
-> > 
-> > 
-> > It will be update in the next version.
-> > 
+>    613 generic/251
+>    616 generic/251
+>    624 generic/251
+>    630 generic/251
+>    634 generic/251
+>    652 generic/251
+>    675 generic/251
+>    749 generic/251
+>    777 generic/251
+>    808 generic/251
+>    832 generic/251
+>    946 generic/251
+>   1082 generic/251
+>   1221 generic/251
+>   1241 generic/251
+>   1254 generic/251
+>   1305 generic/251
+>   1366 generic/251
+>   1646 generic/251
+>   1936 generic/251
+>   1952 generic/251
+>   2358 generic/251
+>   4359 generic/251
+>   5325 generic/251
+>  34046 generic/251
 > 
-> The text above still says "updates disk size to A+B+C." I'm not sure if
-> you intended to change that to A+BS as well, but regardless LGTM.
-> Thanks.
+> because it hardcodes 20 threads and 10 copies.  It's not great to have a
+> test that results in a significant fraction of the total test runtime.
+> Fix the looping and load on this test to use LOAD and TIME_FACTOR to
+> scale up its operations, along with the usual SOAK_DURATION override.
+> That brings the default runtime down to less than a minute.
 > 
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Yes, forgot to update here.
+Question for you: Does your $here directory contain a .git subdir?
 
-Thanks,
-Long Li
+One of the causes of long runtime for me has been that $here might
+only contain 30MB of files, but the .git subdir balloons to several
+hundred MB over time, resulting is really long runtimes because it's
+copying GBs of data from the .git subdir.
+
+I have this patch in my tree:
+
+--- a/tests/generic/251
++++ b/tests/generic/251
+@@ -175,9 +175,12 @@ nproc=20
+ # Copy $here to the scratch fs and make coipes of the replica.  The fstests
+ # output (and hence $seqres.full) could be in $here, so we need to snapshot
+ # $here before computing file checksums.
++#
++# $here/* as the files to copy so we avoid any .git directory that might be
++# much, much larger than the rest of the fstests source tree we are copying.
+ content=$SCRATCH_MNT/orig
+ mkdir -p $content
+-cp -axT $here/ $content/
++cp -ax $here/* $content/
+
+ mkdir -p $tmp
+
+And that's made the runtime drop from (typically) 10-15 minutes
+down to around 5 minutes....
+
+Does this have any impact on the runtime on your test systems?
+
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
