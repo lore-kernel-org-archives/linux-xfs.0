@@ -1,124 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16A031804E;
-	Tue, 19 Nov 2024 00:31:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDB5FE57D
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 01:37:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731976292; cv=none; b=KjJVmRtdXa01VaRnImLjSxYzNKZAfzyBB3aCsFF6BK1GUOwju1ICBtJtN4jGRrutVNJKuzKsAYNDl3PB1oxdFlP+mo61rnqbsWk1Ez0uzfjjUfNcOSbMoaJH91hjfhRvS0s4seBpQmIwh8gG4RnbfgjpKvEI/eh6+Vnf/SNE+j4=
+	t=1731980243; cv=none; b=LH2wUHCOF5Ep+bE4PL8SSu4fTOl8GkFMOhxlRmd9pBAB6RheHENWVGPzLgi7hNXcYSQpE/37+ssL+oSFyNaeiHYzkMf+bI5JSClXPlSjiXLpQscDVdXXr+RJSrrUI2jGsKKGBS7D5IhpMiRGPZLEMU5t9mWuXubcYU4rBm3vhw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731976292; c=relaxed/simple;
-	bh=Q45ZIPQ9YbB5QnPTR8wHNgDAlut8pVq8PhNLlE0fgnc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d9H4UJJgAH+I3tA2wOK/3MLd0plHmlnpWZNBbGNHZDiVPbU7GCAlHUQcvPMbtmigxJ6FWhKK3UPZUfJtF0ydlCBRU73MlBIes0px9IMNsycyfHEIUMAIAMoK7qFSo9dBYSmrsvQfCKnsGsKwncasHHCnphAMKbNNGle0AVU8mLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PagHbR+u; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PagHbR+u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FB4EC4CECC;
-	Tue, 19 Nov 2024 00:31:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731976291;
-	bh=Q45ZIPQ9YbB5QnPTR8wHNgDAlut8pVq8PhNLlE0fgnc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PagHbR+uSpSSIl/IspyahK+zXswl5oW6XM5P+PTmGoWttRzoF5hvteJlnVh5tmKC8
-	 8z9kNp9nlO9HfrY/CfNaQo+SgXbnaB8KdUsiZi50dOgMAuiHKBcaokBKX6wo/JK1SA
-	 mwyMdFPGbFrtG8HCIqka8x0WdQe3YSnyLeqAS9OkrVm/hmlmtu85vNsznEoLIJTzHD
-	 tUK2ZKkF9fHUAeahAVYwSkrHKR0dIZ1AzOcOkyj7nB5IsQNcglohPVLTgfbUbsgx0t
-	 qn6x8hjlTWJ3c++HjdMCrLClfF9lg5J9E+WkoL4ZjUfGvZehZLOuxDM3l5ptAx6e7Y
-	 iwSjCcwfSDGpw==
-Date: Mon, 18 Nov 2024 16:31:31 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Filipe Manana <fdmanana@kernel.org>
-Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-	linux-btrfs <linux-btrfs@vger.kernel.org>
-Subject: Re: [PATCH 05/12] generic/562: handle ENOSPC while cloning gracefully
-Message-ID: <20241119003131.GT9438@frogsfrogsfrogs>
-References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
- <173197064501.904310.1505759730439532159.stgit@frogsfrogsfrogs>
- <CAL3q7H5KjvXsXzt4n0XP1FTUt=A5cKom7p+dGD6GG-iL7CyDXQ@mail.gmail.com>
+	s=arc-20240116; t=1731980243; c=relaxed/simple;
+	bh=8ifwJz8D0JzPJr2S84obVi+LZkspH6QRYBsG5ZYUM1M=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IFRkaEKLPSDP4j7N35p9AWe7JlDXPYExMO8Gcd/USU7Anf1Eq1u8gjDONaRYE09cFraegYT2zfZYhfIaFOusVInf14iKAQ6+MnhAkp1N/YmDh6mDPms9hCi7R4zaB/4yIkW/MagRmwe4LrFzx3/ye8A+NOG1wJ7/jGV6FKQ+jd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Xsn9p13g7z10W9J;
+	Tue, 19 Nov 2024 09:35:10 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8BDD1180064;
+	Tue, 19 Nov 2024 09:37:10 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 19 Nov
+ 2024 09:37:10 +0800
+Date: Tue, 19 Nov 2024 09:35:38 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Brian Foster <bfoster@redhat.com>
+CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<yangerkun@huawei.com>
+Subject: Re: [PATCH v2 1/2] iomap: fix zero padding data issue in concurrent
+ append writes
+Message-ID: <ZzvratqVo-ll6NOY@localhost.localdomain>
+References: <20241113091907.56937-1-leo.lilong@huawei.com>
+ <ZzTQPdE5V155Soui@bfoster>
+ <ZzVhsvyFQu01PnHl@localhost.localdomain>
+ <ZzY7r1l5dpBw7UsY@bfoster>
+ <Zzc2LcUqCPqMjjxr@localhost.localdomain>
+ <ZzdQpXyVNHaT7MGv@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAL3q7H5KjvXsXzt4n0XP1FTUt=A5cKom7p+dGD6GG-iL7CyDXQ@mail.gmail.com>
+In-Reply-To: <ZzdQpXyVNHaT7MGv@bfoster>
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Tue, Nov 19, 2024 at 12:17:56AM +0000, Filipe Manana wrote:
-> On Mon, Nov 18, 2024 at 11:03 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > This test creates a couple of patterned files on a tiny filesystem,
-> > fragments the free space, clones one patterned file to the other, and
-> > checks that the entire file was cloned.
-> >
-> > However, this test doesn't work on a 64k fsblock filesystem because
-> > we've used up all the free space reservation for the rmapbt, and that
-> > causes the FICLONE to error out with ENOSPC partway through.  Hence we
-> > need to detect the ENOSPC and _notrun the test.
-> >
-> > That said, it turns out that XFS has been silently dropping error codes
-> > if we managed to make some progress cloning extents.  That's ok if the
-> > operation has REMAP_FILE_CAN_SHORTEN like copy_file_range does, but
-> > FICLONE/FICLONERANGE do not permit partial results, so the dropped error
-> > codes is actually an error.
-> >
-> > Therefore, this testcase now becomes a regression test for the patch to
-> > fix that.
-> >
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/generic/562 |   10 ++++++++--
-> >  1 file changed, 8 insertions(+), 2 deletions(-)
-> >
-> >
-> > diff --git a/tests/generic/562 b/tests/generic/562
-> > index 91360c4154a6a2..62899945003513 100755
-> > --- a/tests/generic/562
-> > +++ b/tests/generic/562
-> > @@ -15,6 +15,9 @@ _begin_fstest auto clone punch
-> >  . ./common/filter
-> >  . ./common/reflink
-> >
-> > +test "$FSTYP" = "xfs" && \
-> > +       _fixed_by_kernel_commit XXXXXXXXXX "xfs: don't drop errno values when we fail to ficlone the entire range"
-> > +
-> >  _require_scratch_reflink
-> >  _require_test_program "punch-alternating"
-> >  _require_xfs_io_command "fpunch"
-> > @@ -48,8 +51,11 @@ while true; do
-> >  done
-> >
-> >  # Now clone file bar into file foo. This is supposed to succeed and not fail
-> > -# with ENOSPC for example.
-> > -_reflink $SCRATCH_MNT/bar $SCRATCH_MNT/foo >>$seqres.full
-> > +# with ENOSPC for example.  However, XFS will sometimes run out of space.
-> > +_reflink $SCRATCH_MNT/bar $SCRATCH_MNT/foo >>$seqres.full 2> $tmp.err
-> > +cat $tmp.err
-> > +grep -q 'No space left on device' $tmp.err && \
-> > +       _notrun "ran out of space while cloning"
+On Fri, Nov 15, 2024 at 08:46:13AM -0500, Brian Foster wrote:
+> On Fri, Nov 15, 2024 at 07:53:17PM +0800, Long Li wrote:
+> > On Thu, Nov 14, 2024 at 01:04:31PM -0500, Brian Foster wrote:
+> > > On Thu, Nov 14, 2024 at 10:34:26AM +0800, Long Li wrote:
+> > > > On Wed, Nov 13, 2024 at 11:13:49AM -0500, Brian Foster wrote:
+> > > > > FYI, you probably want to include linux-fsdevel on iomap patches.
+> > > > > 
+> > > > > On Wed, Nov 13, 2024 at 05:19:06PM +0800, Long Li wrote:
+> > > > > > During concurrent append writes to XFS filesystem, zero padding data
+> > > > > > may appear in the file after power failure. This happens due to imprecise
+> > > > > > disk size updates when handling write completion.
+> > > > > > 
+> > > > > > Consider this scenario with concurrent append writes same file:
+> > > > > > 
+> > > > > >   Thread 1:                  Thread 2:
+> > > > > >   ------------               -----------
+> > > > > >   write [A, A+B]
+> > > > > >   update inode size to A+B
+> > > > > >   submit I/O [A, A+BS]
+> > > > > >                              write [A+B, A+B+C]
+> > > > > >                              update inode size to A+B+C
+> > > > > >   <I/O completes, updates disk size to A+B+C>
+> > > > > >   <power failure>
+> > > > > > 
+> > > > > > After reboot, file has zero padding in range [A+B, A+B+C]:
+> > > > > > 
+> > > > > >   |<         Block Size (BS)      >|
+> > > > > >   |DDDDDDDDDDDDDDDD0000000000000000|
+> > > > > >   ^               ^        ^
+> > > > > >   A              A+B      A+B+C (EOF)
+> > > > > > 
+> > > > > 
+> > > > > Thanks for the diagram. FWIW, I found the description a little confusing
+> > > > > because A+B+C to me implies that we'd update i_size to the end of the
+> > > > > write from thread 2, but it seems that is only true up to the end of the
+> > > > > block.
+> > > > > 
+> > > > > I.e., with 4k FSB and if thread 1 writes [0, 2k], then thread 2 writes
+> > > > > from [2, 16k], the write completion from the thread 1 write will set
+> > > > > i_size to 4k, not 16k, right?
+> > > > > 
+> > > > 
+> > > > Not right, the problem I'm trying to describe is:
+> > > > 
+> > > >   1) thread 1 writes [0, 2k]
+> > > >   2) thread 2 writes [2k, 3k]
+> > > >   3) write completion from the thread 1 write set i_size to 3K
+> > > >   4) power failure
+> > > >   5) after reboot,  [2k, 3K] of the file filled with zero and the file size is 3k
+> > > >      
+> > > 
+> > > Yeah, I get the subblock case. What I am saying above is it seems like
+> > > "update inode size to A+B+C" is only true for certain, select values
+> > > that describe the subblock case. I.e., what is the resulting i_size if
+> > > we replace C=1k in the example above with something >= FSB size, like
+> > > C=4k?
+> > > 
+> > > Note this isn't all that important. I was just trying to say that the
+> > > overly general description made this a little more confusing to grok at
+> > > first than it needed to be, because to me it subtly implies there is
+> > > logic around somewhere that explicitly writes in-core i_size to disk,
+> > > when that is not actually what is happening.
+> > > 
+> > > > 
+> > 
+> > Sorry for my previous misunderstanding. You are correct - my commit
+> > message description didn't cover the case where A+B+C > block size.
+> > In such scenarios, the final file size might end up being 4K, which
+> > is not what we would expect. Initially, I incorrectly thought this
+> > wasn't a significant issue and thus overlooked this case. Let me
+> > update the diagram to address this.
+> > 
 > 
-> This defeats the original purpose of the test, which was to verify
-> btrfs didn't fail with -ENOSPC (or any other error).
+> Ok no problem.. like I said, just a minor nit. ;)
 > 
-> If XFS has an ENOSPC issue in some cases, and it's not fixable, why
-> not make it _notrun only if it's XFS that is being tested?
-
-Ok, will do.  In the case of xfs, we don't let you share data if the
-allocation group it's in is more than about 90% full.
-
---D
-
+> >   Thread 1:                  Thread 2:
+> >   ------------               -----------
+> >   write [A, A+B]
+> >   update inode size to A+B
+> >   submit I/O [A, A+BS]
+> >                              write [A+B, A+B+C]
+> >                              update inode size to A+B+C
+> >   <I/O completes, updates disk size to A+B+C>
+> >   <power failure>
+> > 
+> > After reboot:
+> >   1) The file has zero padding in the range [A+B, A+BS]
+> >   2) The file size is unexpectedly set to A+BS
+> > 
+> >   |<         Block Size (BS)      >|<           Block Size (BS)    >|
+> >   |DDDDDDDDDDDDDDDD0000000000000000|00000000000000000000000000000000|
+> >   ^               ^                ^               ^
+> >   A              A+B              A+BS (EOF)     A+B+C
+> > 
+> > 
+> > It will be update in the next version.
+> > 
+> 
+> The text above still says "updates disk size to A+B+C." I'm not sure if
+> you intended to change that to A+BS as well, but regardless LGTM.
 > Thanks.
 > 
-> 
-> >
-> >  # Unmount and mount the filesystem again to verify the operation was durably
-> >  # persisted.
-> >
-> >
-> 
+
+Yes, forgot to update here.
+
+Thanks,
+Long Li
