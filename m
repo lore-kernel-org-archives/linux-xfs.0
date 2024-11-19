@@ -1,51 +1,55 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 750501D14FB
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 15:45:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE2111D0DC0
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 15:45:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732031133; cv=none; b=FzVH2z6hr8X6OUa0w+rddZZkkqvmnzVXCY26a/ZW4S3hy2m9UnI1iXEEpArxaXhlCVg8VJ9L/3KvNkIF13O/74iXQLHdHbFigx/879+VKcuaLMT7F1xeIxKBCkBZMiplK1m5TgaR5rlkEflZZloa0odb3dnd4M9SpInYYTxBoGc=
+	t=1732031133; cv=none; b=al8e6M3oMG5fEulemWTaTMiwAwHc8/YJprGNLp0cq9K5gi5TNvMZahzDdvo/gRaSPMzbANdGuFOTLE4hMtVeUqE6LS5E58KDEuI0eB60SloJRF9O2D2t65qcgAcBJJEP03uq4gxXd+jBojcLRagDzGNFjvCno0nTTe3Spzf6UWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1732031133; c=relaxed/simple;
-	bh=uXa3GNCk4+aFvMxdlZDkyJ47Ip4E24kVOh9sGLv24X8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=btXfSwGv+8/J9Exnsb2k79jZsqacrJ+xY2TgE1/Mck6XIqxahfctXwm6PmRq9K5fUoeOtyRSoi6pGvOY5zCOzdgqcNYsm/vgz1a+3IVZfMQSZHpEOcmjGqfjeNWIHg5Z+lf6c/vQrXSslNiBQmcNYpYNtA7Pfl1dyHuuHh8+EEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YWy4Nnns; arc=none smtp.client-ip=170.10.129.124
+	bh=Up3cclIyE+AvTp4pGY/iLJVrtvPIKk/vFgFUeo+opMQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=W7F2rIHNbPU/0Yp7T62J17OC+dS6iQSuImj8NM3uDjhf/GonziwH2b5BZT/amlajwP49j+HogCmN3B8Qp1baJbcDEiMYKZAr2eG9b7R1c1jL9Yj+a7eabI8PCvV1LYZR3TPh2HTYkNV4+wBgD4C2uS2TqQgV50K3WjVQ5qdRTIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MEkiUWsV; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YWy4Nnns"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MEkiUWsV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1732031129;
+	s=mimecast20190719; t=1732031130;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=D58nFfd1UxCC7UJee48pdA41F8/AUZLtav09tMWCaOA=;
-	b=YWy4Nnnsl8U8wV4KEo/kCx8hLx6xzEYaaa7H+GI2pbCSsTFU0936+cVtglZExvLXkf7qX4
-	NTzin1/PBGNMlo/Hz7UQ54zbEhIYMoICCiVLU6tNy6CB/YQpZYNywvoOc1JkOIBDRB0RE/
-	f7+hyVHZJ0UsA5T4i0FpV8N6iW9Hc/0=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8f8HKbKWh0kuU3b7VdbwercA9aW0MwtWzpz5jhuYWvU=;
+	b=MEkiUWsVXFwLWoj2dnxY7DkTricRPXO+8nW0DFjWFapd/aDolG6hrJzSEKF1ka6f267naT
+	mrwNjqrkmWrUTZffTviruoH+3z/0X3IuZe5qjFOuSNOPrExHRyqY/VgdPPNd05nUbDyR+L
+	WGIoQCq0T9WXu0JZDBRz/fVM7/TY2O4=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-205-VjQUdmsJNiqIK03a2mPqNg-1; Tue,
- 19 Nov 2024 10:45:24 -0500
-X-MC-Unique: VjQUdmsJNiqIK03a2mPqNg-1
-X-Mimecast-MFC-AGG-ID: VjQUdmsJNiqIK03a2mPqNg
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-277-J0OgBZk7OrqsTVbKWd7sEw-1; Tue,
+ 19 Nov 2024 10:45:27 -0500
+X-MC-Unique: J0OgBZk7OrqsTVbKWd7sEw-1
+X-Mimecast-MFC-AGG-ID: J0OgBZk7OrqsTVbKWd7sEw
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6DE8B1955EE8;
-	Tue, 19 Nov 2024 15:45:22 +0000 (UTC)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3236D19560B5;
+	Tue, 19 Nov 2024 15:45:26 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.80.120])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C69851956054;
-	Tue, 19 Nov 2024 15:45:21 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6BE411956054;
+	Tue, 19 Nov 2024 15:45:25 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH RFC 0/4] iomap: zero range folio batch processing prototype
-Date: Tue, 19 Nov 2024 10:46:52 -0500
-Message-ID: <20241119154656.774395-1-bfoster@redhat.com>
+Subject: [PATCH RFC 4/4] xfs: fill dirty folios on zero range of unwritten mappings
+Date: Tue, 19 Nov 2024 10:46:56 -0500
+Message-ID: <20241119154656.774395-5-bfoster@redhat.com>
+In-Reply-To: <20241119154656.774395-1-bfoster@redhat.com>
+References: <20241119154656.774395-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,40 +60,36 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Hi all,
+Use the iomap folio batch mechanism to identify which folios to zero
+on zero range of unwritten mappings. Trim the resulting mapping if
+the batch is filled (unlikely) and set the HAS_FOLIOS flag to inform
+iomap that pagecache has been checked for dirty folios.
 
-Here's a first pass prototype of dirty folio batch processing for zero
-range. The idea here is that the fs can avoid pagecache flushing or
-wonky ordering/racing issues by passing in a batch of dirty folios that
-might exist over unwritten mappings at lookup time.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_iomap.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-This is only lightly tested so far, but works well enough to demonstrate
-the idea. The biggest open question in my mind is how to better define
-the interface. For now I just stuffed the folio_batch in the struct
-iomap, but I don't really like it there due to confusion between iomap
-and srcmap and because it bloats the structure.
-
-I thought about using ->private along with a custom ->get_folio(), but I
-don't think that really fits the idea of a built-in mechanism. It might
-be more appropriate to attach to the iter, but that currently isn't
-accessible to ->iomap_begin(). I suppose we could define an
-iomap_to_iter() or some such helper that the fill helper could use to
-populate the batch, but maybe there are other thoughts/ideas?
-
-Brian
-
-Brian Foster (4):
-  iomap: allow passing a folio into write begin path
-  iomap: optional zero range dirty folio processing
-  xfs: always trim mapping to requested range for zero range
-  xfs: fill dirty folios on zero range of unwritten mappings
-
- fs/iomap/buffered-io.c | 93 ++++++++++++++++++++++++++++++++++++++----
- fs/iomap/iter.c        |  2 +
- fs/xfs/xfs_iomap.c     | 28 ++++++++-----
- include/linux/iomap.h  |  5 +++
- 4 files changed, 109 insertions(+), 19 deletions(-)
-
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index ed42a28973bb..d84b7abf540c 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1037,6 +1037,15 @@ xfs_buffered_write_iomap_begin(
+ 				goto convert_delay;
+ 			if (end_fsb > eof_fsb)
+ 				end_fsb = eof_fsb;
++		} else if (imap.br_state == XFS_EXT_UNWRITTEN) {
++			u64 end;
++
++			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
++			end = iomap_fill_dirty_folios(VFS_I(ip), iomap,
++					XFS_FSB_TO_B(mp, imap.br_startoff),
++					XFS_FSB_TO_B(mp, imap.br_blockcount));
++			end_fsb = min_t(xfs_fileoff_t, end_fsb, XFS_B_TO_FSB(mp, end));
++			iomap_flags |= IOMAP_F_HAS_FOLIOS;
+ 		}
+ 		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+ 	}
 -- 
 2.47.0
 
