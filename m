@@ -1,40 +1,30 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA161CF7DE
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 16:21:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4BA61CF7DB
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 16:24:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732033318; cv=none; b=V8LC0Ogi4FHDz/JCX0uGpRPu1TlhZvVpsYfr/uF9yv9p2SbYUMTXgiZtn6YH/ROkzfaC81NX7GXXbrtIoKeXiAOO3WzqNCqogNxSlhmLzkvcE+DnXgbBFsftW2XmsWSvAkYN22Px9eSJFY4YPeYLIQtXiQLa/Pk2gVUVDlpMqEc=
+	t=1732033443; cv=none; b=RPI+6FdxrjLV+OwJiUhv7vSynjfD4dFHPLwk52cBXxPhrIR5ND2kVHrR7CGOKaXMq6FzVooZ5HsZukNh8SrQR/6D91GuQXJwDKrBeUcX+KMmFBCmTAYHHudg7bn48A1xlNLWktz+rsNID9lt7n7ZSA4K+FV9pg9/eM16zP/HLZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732033318; c=relaxed/simple;
-	bh=Tte77ozcnV01tVrN+eg7lC31uA0V9rS9yVrg5QKfBss=;
+	s=arc-20240116; t=1732033443; c=relaxed/simple;
+	bh=Kt+CbGpGNP0LIAEF3oso3gmkmEVipIrnn3Cq8E+zuS0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M4oedHBUS0Re5ZdHYtf/l2RWHs5W4prc0ELwvd65VHi7xh0qIBBcd4CLadJkuCS38B13WANafdkZFvaDEIIq96aVnpjNWpVAAjWem2gGs67DfMZ/mP0HuREi7lNrSGlQtcvcoB529vfuN71JagbL09SzW/1KZvD6Tcua/3WF5ls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o3YX/4eq; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o3YX/4eq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BD2CC4CECF;
-	Tue, 19 Nov 2024 16:21:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732033317;
-	bh=Tte77ozcnV01tVrN+eg7lC31uA0V9rS9yVrg5QKfBss=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=o3YX/4eqaLIkPL7e4xlHAvZXOC/i2qFA/zJ4OhYaKl91hmKaJmEzBIHKRNh+uS7ix
-	 iuhUhT12UgAU/b7woLFvc76MX7kNR2jYR8i9SXThBXR1IL+nnWFal5m+2p0Oy85deM
-	 ZAuY4TggvzU/n0dW1StfmSMCt+elXRXBavzWGlCOuWu8dAzwPqHX5V2hIOuf78NrEF
-	 /GK71ZuFM6I8JXVrFcLCfh1pec4/J/D/eUeca3yFnrVod39KKcmktBVaQ2wHI6G8oH
-	 qYd+KDgNG2DzS2c1hv1VAZSnx/8KeA57+eoNHOnjUhX60xBW5FTgvja1UILo2TO1bs
-	 DrBgjXeOmMFQg==
-Date: Tue, 19 Nov 2024 08:21:57 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: don't call xfs_bmap_same_rtgroup in
- xfs_bmap_add_extent_hole_delay
-Message-ID: <20241119162157.GY9438@frogsfrogsfrogs>
-References: <20241119154959.1302744-1-hch@lst.de>
- <20241119154959.1302744-4-hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=LnF/FTOYMsR1TQt0Gf4+SKHqOQM6yk8LMotlOK0BBeM6kdzDEbiXvrLt8YSMtxSj80UlaqKgAuP/M0gG38vnIzn0p69k8DfztOEe/JPya9gqnH77Ln1Lf0TS0MU8eS3TRbldgTem6d8ArhGhcxEP57iBUlzYiFXBfp5D73UcxOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0BB5068D8D; Tue, 19 Nov 2024 17:23:58 +0100 (CET)
+Date: Tue, 19 Nov 2024 17:23:57 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: use the proper conversion helpers in
+ xfs_rt_check_size
+Message-ID: <20241119162357.GA15163@lst.de>
+References: <20241119154959.1302744-1-hch@lst.de> <20241119154959.1302744-3-hch@lst.de> <20241119162142.GX9438@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,48 +33,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241119154959.1302744-4-hch@lst.de>
+In-Reply-To: <20241119162142.GX9438@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Nov 19, 2024 at 04:49:49PM +0100, Christoph Hellwig wrote:
-> xfs_bmap_add_extent_hole_delay works entirely on delalloc extents, for
-> which xfs_bmap_same_rtgroup doesn't make sense.
+On Tue, Nov 19, 2024 at 08:21:42AM -0800, Darrick J. Wong wrote:
+> > -	xfs_daddr_t		daddr = XFS_FSB_TO_BB(mp, last_block);
+> > +	xfs_daddr_t		daddr = xfs_rtb_to_daddr(mp, last_block);
+> >  	struct xfs_buf		*bp;
+> >  	int			error;
+> >  
+> > -	if (XFS_BB_TO_FSB(mp, daddr) != last_block) {
+> > +	if (xfs_daddr_to_rtb(mp, daddr) != last_block) {
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Er... this converts the daddr to a segmented xfs_rtblock_t type, but
+> last_block is a non segmented xfs_rfsblock_t type.  You can't compare
+> the two directly.  I think the code was correct without this patch.
 
-Oooooops :(
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Hmm.  Yeah, it just breaks the other things I'm about to overload
+xfs_rtb_to_daddr/xfs_daddr_to_rtb with..  Time for even more
+helpers probably..
 
---D
-
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 9052839305e2..5255f93bae31 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -2620,8 +2620,7 @@ xfs_bmap_add_extent_hole_delay(
->  	 */
->  	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
->  	    left.br_startoff + left.br_blockcount == new->br_startoff &&
-> -	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
-> -	    xfs_bmap_same_rtgroup(ip, whichfork, &left, new))
-> +	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
->  		state |= BMAP_LEFT_CONTIG;
->  
->  	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
-> @@ -2629,8 +2628,7 @@ xfs_bmap_add_extent_hole_delay(
->  	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
->  	    (!(state & BMAP_LEFT_CONTIG) ||
->  	     (left.br_blockcount + new->br_blockcount +
-> -	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)) &&
-> -	    xfs_bmap_same_rtgroup(ip, whichfork, new, &right))
-> +	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
->  		state |= BMAP_RIGHT_CONTIG;
->  
->  	/*
-> -- 
-> 2.45.2
-> 
-> 
