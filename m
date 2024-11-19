@@ -1,91 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D2BB1CF7DB;
-	Tue, 19 Nov 2024 15:47:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6C0B1D094F
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 15:50:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732031269; cv=none; b=dlKaL14XHw2NcWN3tCvCz3s5Oy87tpScwbmYUj0WHpFSAqEt5O/qGKMHBrrBqVadQ5OzhGG0+XXHLioxo8L0zO9gwPYgQHbUVC9Tbs3myEnsLLJsrn17zjEjXNJ+anUFN5KSR3i1s98DcY3jP5rYFW5P95zzue1MsFsw34sDD1Q=
+	t=1732031405; cv=none; b=cjYH5LCx7Y74tzs57M3ef0t/g7pcRcege2IcBuFOnANujLnEuaJtfdFSPBs2YWlaBNKJIq+7iYjtyBhd23JYXhogj9dUHHyo8e0e44ZbNU38/0Mp4xcgnD31Znhu7sDRN7aRg+3UIw9bELxGB6nUHswGbhFXYKhi1W9835MKqAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732031269; c=relaxed/simple;
-	bh=tHngLvgGPb7+MhUpbKHsHZOGq0UQE8h6fPVDbv2Vxvo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hRL4amps8Jtya0VTlyf/kqVX4BuI7nc4f++g4G33PAW5d6hufV4rZVW9O3nUhQu+6KqhAsIE9mehzD6rTG97/c8U4w9f3XXfki3La1WAvAXE3xk1wJawdQ2gBxPRSIOFYRtsZOslG5ZfNAPK1tHB1Zk2qpYGdJB88WY/gMQ8DGU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z4EjkAbb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732031405; c=relaxed/simple;
+	bh=mhCIWdILfJN+TZAgEtJ0lGwWxFrv0y9tILq4f+9TAJ4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FlMtsKFjrazY514eJ6GoPocBJXBLHmYq6A7Zqg7W9IFITrBA3/7bIcFWL3A1nrgxg5vkPl/SpApMoJO1OGm82YLezXH59xLmvq2gDvdwDgySG8qNgmy80oM1VVN2Qsy3ZOwASQ0fEgOguvUfcsu+9YLw6cYIBir2tTkv3X7zJNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=sjMTaA0h; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z4EjkAbb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF55BC4CECF;
-	Tue, 19 Nov 2024 15:47:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732031269;
-	bh=tHngLvgGPb7+MhUpbKHsHZOGq0UQE8h6fPVDbv2Vxvo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Z4EjkAbbe7BvDBZmIjPHoFLCk5GklHDOiW6QSYY/smQTl68IIgdyzOYodu3W4AeeW
-	 vHppCEA8ja9mCJdl0FwzenT1kWunj9xqODEPDC2mNRTnkYzhWm2cYliL2wRyF/Unz2
-	 gaPL1IJjps0bV9W8LBfUSw99BfdkAPKQbHq2gLOXSVh8V2iKxXF5n4alKfbjGgznPn
-	 SqaLNMTHLIV48d92ZyvjM2hB34sZ2DjcPhZkKSXpRkO2golHrfr0iUv/uBmf3GeXLg
-	 KnO6QzwJashaH+K4DOguyj2nzG6pUF0rYlLSa8ws8DcnjlxuQ5Faa2tsr9kU9SbYU7
-	 v0coBEqpx4SeQ==
-Date: Tue, 19 Nov 2024 07:47:48 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH] xfs/229: call on the test directory
-Message-ID: <20241119154748.GN9425@frogsfrogsfrogs>
-References: <20241119145507.1240249-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sjMTaA0h"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=qI/DQ1NSetPEzM5gCWZ1+nj/lPgVLJY711tv3TH7WVg=; b=sjMTaA0h2m26dN0+gX68U4aEkc
+	217LD2pGdXdeKQjrppLc5Bro2zJvawQmiO5c8eEyMT/xo4F5jSGyzAk3yOpHZwADpCMlIppm7A0DU
+	0BfXvBI61v5PJwCZk42I8/DbCec90F+FMnVvqMa9Mo6/fpHRxOR+wyQ3cU1BN0VB5bMr9Ym4jO10E
+	imOaedXrHVmw6aZegobJSj6/wYUBy/msV3WAk5UjS+Ojy9dh4O8gLDt6ZjoIAj79iS3ozWWGPSrMU
+	Yys9e1t6+ZyOZAxrs7suhU0b5eN8jWpFMcfMrWAol1Ft90mM0/jQ/akYCQ4EeOyOnqxiTqY43EFTr
+	8WHCpbmQ==;
+Received: from 2a02-8389-2341-5b80-1731-a089-d2b1-3edf.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:1731:a089:d2b1:3edf] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tDQUM-0000000CvcP-3P3O;
+	Tue, 19 Nov 2024 15:50:03 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: small fixes for 6.13
+Date: Tue, 19 Nov 2024 16:49:46 +0100
+Message-ID: <20241119154959.1302744-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241119145507.1240249-1-hch@lst.de>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Nov 19, 2024 at 03:55:07PM +0100, Christoph Hellwig wrote:
-> xfs/229 operates on a directory that is forced to the data volume, but
-> it calls _require_fs_space on $TEST_DIR which might point to the RT
-> device when -d rtinherit is set.
-> 
-> Call _require_fs_space on $TDIR after it is create to check for the
-> space actually used by the test.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi all,
 
-Whoops, I missed that when I put in _xfs_force_bdev :(
+two little fixes and a refactoring to prepare one of them for the
+new rtgroup code.
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
-> ---
->  tests/xfs/229 | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/tests/xfs/229 b/tests/xfs/229
-> index 9dae0f6496e9..3ac1f9401a1a 100755
-> --- a/tests/xfs/229
-> +++ b/tests/xfs/229
-> @@ -24,7 +24,6 @@ _cleanup()
->  # Import common functions.
->  
->  _require_test
-> -_require_fs_space $TEST_DIR 3200000
->  
->  TDIR="${TEST_DIR}/t_holes"
->  NFILES="10"
-> @@ -39,6 +38,9 @@ mkdir ${TDIR}
->  # that will affect other tests.
->  _xfs_force_bdev data $TDIR
->  
-> +# check for free space on the data volume even if rthinherit is set
-> +_require_fs_space $TDIR 3200000
-> +
->  # Set the test directory extsize
->  $XFS_IO_PROG -c "extsize ${EXTSIZE}" ${TDIR}
->  
-> -- 
-> 2.45.2
-> 
-> 
+Diffstat:
+ libxfs/xfs_bmap.c |    6 +----
+ xfs_rtalloc.c     |   62 +++++++++++++++++++++++++++---------------------------
+ 2 files changed, 33 insertions(+), 35 deletions(-)
