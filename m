@@ -1,240 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F37AA1CDFA6
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 16:05:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD761C68BE
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 16:08:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732032352; cv=none; b=LkoKe/5oGklpkASj4kFQosWNmGybqXJe5s+/EBBPDheFYHFhLttAmHuIqOKFRD0bOTkjoH323PnmVd2Jn0eDX7OEh1MEiDn16Z0Shh8Q0sOHEqVcSeOb5oC3DSG8O+7JheWKdlv21uEofz9EUOl3KPnXbaaS+JUTgOAElRkYYy0=
+	t=1732032536; cv=none; b=cM3ZX4mNQDQ3gjXzL8uqAB+HgkA2Hy3Xp21khsTIzaE+0l5UyPsVOYGJMnyDofRCDzJcNhcvoxObCAyM0DLRtEUMaAN0sq1A/ibKHFSERZmI3XLxvKNehWtxMygh2FPhFH4myOi9rb4BkVmd6XaMB2xfmrMiqDMJIw0xoGdRwvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732032352; c=relaxed/simple;
-	bh=YsR08cU5HLzLYCgC1msYMV5CQc55xvFIEol0ajCI0L8=;
+	s=arc-20240116; t=1732032536; c=relaxed/simple;
+	bh=6VKOylrqYG3/gmHFCZqhajrX7DZ5hJ74J3JnrXnI7vc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fCgEKZ/iaslfIMrsGiAJPjfMktIOJkZeAeUnI5aZuEXPJkw279dnyEZTNJPqpng0eDDuouFPJIGKmFZxZ1n5dc1g6dPd4L2D88askd8fDwlZBNu7k0ONV/dHlo9z/tsnoc6F/RIeao1pYTcPguwhuAPpSFt3bzEDYOISm/ELvOM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a06od399; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sd9qh9jKp1C1cRRHqJW1mv+X7rNK2yW1qEFStQZVcP8a7EuUE/xEfWZt/upF+lgv8P2Oi0kLUWpYJ1KBY74edjjvqykuAsrt9jNU4OmtaLPrHrmWNYvNXDBBT9FBKArOupVniOdhPxdZZhUNGXbQLLok+nmkHtJTuqaUeoe/beE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WSIOGIE5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a06od399"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D4EAC4CECF;
-	Tue, 19 Nov 2024 16:05:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WSIOGIE5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67D04C4CECF;
+	Tue, 19 Nov 2024 16:08:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732032351;
-	bh=YsR08cU5HLzLYCgC1msYMV5CQc55xvFIEol0ajCI0L8=;
+	s=k20201202; t=1732032536;
+	bh=6VKOylrqYG3/gmHFCZqhajrX7DZ5hJ74J3JnrXnI7vc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=a06od399hhQXahmE/ZUODC+jzj/LHWfCEo5qlB885DxJiJqWtGg6DrXS9cCg9AjtQ
-	 Yj4KpJnzz+eNy42TaDQGne11NhMv7wWCBqUJ7RAOK9FJ/6T03bji5IBd0O3F+obvfm
-	 IOzffSiIsQfyCBgphC8hDE+o9TWO2RPSyC0j3tvwb3YfXMrV3aWYIlt6JSct5FvWiM
-	 u4poQ94UgtzLhpSY9TxgAKIg0WsviWORGiHdf3+9lc8Eu2lSnVMruzgjS6zB/wMyAR
-	 SNRJiLB39F3+FSu/11e2SczTF3yA3y4xFWAKze+qnJuhVAs4iGWCeqXZ0WG1vFGhWT
-	 0/QnbktIfnmyQ==
-Date: Tue, 19 Nov 2024 08:05:50 -0800
+	b=WSIOGIE5xWTXtEHUZMx5cYxikeVb9KZRJNKiAbk/R7R98CcgpuqsaQsMFEynuzVgp
+	 pdvDWnB5oVfjs0sQ/yrhsckmVVq+KAlTKTn9ZUTiHhTph77Ke9L/K/pyYhXoBRsvnN
+	 TyAfG9qWD9BOJ5WtpdfUXI+hAfyePmm0Z5mV4tauomKi1491bHoD0wzVxkZxgBNU+s
+	 U78RD9S+PXv3un9vDR46lUpNdwUBRUJoplhTRz3NGapHmjsf05b9LNCDEWKWe0LlBh
+	 e3HHm4lCKQQDhoEGGwiJvJ5cS8y53qjxV9qgS0BpchXgG2W9wBxwD0ArhbSFTg3HVW
+	 BBCcdfH661N6A==
+Date: Tue, 19 Nov 2024 08:08:55 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Catherine Hoang <catherine.hoang@oracle.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH v2] xfs_io: add support for atomic write statx fields
-Message-ID: <20241119160550.GU9438@frogsfrogsfrogs>
+Message-ID: <20241119160855.GV9438@frogsfrogsfrogs>
 References: <20241118235255.23133-1-catherine.hoang@oracle.com>
- <20241119000154.GS9438@frogsfrogsfrogs>
- <EF17168C-C933-4A14-B8F5-DD8E7EA37CCA@oracle.com>
+ <6657d426-d227-4679-b4ca-db64d39140fb@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <EF17168C-C933-4A14-B8F5-DD8E7EA37CCA@oracle.com>
+In-Reply-To: <6657d426-d227-4679-b4ca-db64d39140fb@oracle.com>
 
-On Tue, Nov 19, 2024 at 02:30:52AM +0000, Catherine Hoang wrote:
-> > On Nov 18, 2024, at 4:01 PM, Darrick J. Wong <djwong@kernel.org> wrote:
-> > 
-> > On Mon, Nov 18, 2024 at 03:52:55PM -0800, Catherine Hoang wrote:
-> >> Add support for the new atomic_write_unit_min, atomic_write_unit_max, and
-> >> atomic_write_segments_max fields in statx for xfs_io. In order to support builds
-> >> against old kernel headers, define our own internal statx structs. If the
-> >> system's struct statx does not have the required atomic write fields, override
-> >> the struct definitions with the internal definitions in statx.h.
-> >> 
-> >> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> >> ---
-> >> configure.ac          |  1 +
-> >> include/builddefs.in  |  4 ++++
-> >> io/stat.c             |  7 +++++++
-> >> io/statx.h            | 23 ++++++++++++++++++++++-
-> >> m4/package_libcdev.m4 | 20 ++++++++++++++++++++
-> >> 5 files changed, 54 insertions(+), 1 deletion(-)
-> >> 
-> >> diff --git a/configure.ac b/configure.ac
-> >> index 33b01399..0b1ef3c3 100644
-> >> --- a/configure.ac
-> >> +++ b/configure.ac
-> >> @@ -146,6 +146,7 @@ AC_HAVE_COPY_FILE_RANGE
-> >> AC_NEED_INTERNAL_FSXATTR
-> >> AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
-> >> AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
-> >> +AC_NEED_INTERNAL_STATX
-> >> AC_HAVE_GETFSMAP
-> >> AC_HAVE_MAP_SYNC
-> >> AC_HAVE_DEVMAPPER
-> >> diff --git a/include/builddefs.in b/include/builddefs.in
-> >> index 1647d2cd..cbc9ab0c 100644
-> >> --- a/include/builddefs.in
-> >> +++ b/include/builddefs.in
-> >> @@ -96,6 +96,7 @@ HAVE_COPY_FILE_RANGE = @have_copy_file_range@
-> >> NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
-> >> NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
-> >> NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
-> >> +NEED_INTERNAL_STATX = @need_internal_statx@
-> >> HAVE_GETFSMAP = @have_getfsmap@
-> >> HAVE_MAP_SYNC = @have_map_sync@
-> >> HAVE_DEVMAPPER = @have_devmapper@
-> >> @@ -130,6 +131,9 @@ endif
-> >> ifeq ($(NEED_INTERNAL_FSCRYPT_POLICY_V2),yes)
-> >> PCFLAGS+= -DOVERRIDE_SYSTEM_FSCRYPT_POLICY_V2
-> >> endif
-> >> +ifeq ($(NEED_INTERNAL_STATX),yes)
-> >> +PCFLAGS+= -DOVERRIDE_SYSTEM_STATX
-> >> +endif
-> >> ifeq ($(HAVE_GETFSMAP),yes)
-> >> PCFLAGS+= -DHAVE_GETFSMAP
-> >> endif
-> >> diff --git a/io/stat.c b/io/stat.c
-> >> index 0f5618f6..7d1c1c93 100644
-> >> --- a/io/stat.c
-> >> +++ b/io/stat.c
-> >> @@ -6,6 +6,10 @@
-> >>  * Portions of statx support written by David Howells (dhowells@redhat.com)
-> >>  */
-> >> 
-> >> +#ifdef OVERRIDE_SYSTEM_STATX
-> >> +#define statx sys_statx
-> >> +#endif
-> >> +
-> >> #include "command.h"
-> >> #include "input.h"
-> >> #include "init.h"
-> >> @@ -347,6 +351,9 @@ dump_raw_statx(struct statx *stx)
-> >> printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
-> >> printf("stat.dev_major = %u\n", stx->stx_dev_major);
-> >> printf("stat.dev_minor = %u\n", stx->stx_dev_minor);
-> >> + printf("stat.atomic_write_unit_min = %lld\n", (long long)stx->stx_atomic_write_unit_min);
-> >> + printf("stat.atomic_write_unit_max = %lld\n", (long long)stx->stx_atomic_write_unit_max);
-> >> + printf("stat.atomic_write_segments_max = %lld\n", (long long)stx->stx_atomic_write_segments_max);
-> >> return 0;
-> >> }
-> >> 
-> >> diff --git a/io/statx.h b/io/statx.h
-> >> index c6625ac4..d151f732 100644
-> >> --- a/io/statx.h
-> >> +++ b/io/statx.h
-> >> @@ -61,6 +61,7 @@ struct statx_timestamp {
-> >> __s32 tv_nsec;
-> >> __s32 __reserved;
-> >> };
-> >> +#endif
-> >> 
-> >> /*
-> >>  * Structures for the extended file attribute retrieval system call
-> >> @@ -99,6 +100,8 @@ struct statx_timestamp {
-> >>  * will have values installed for compatibility purposes so that stat() and
-> >>  * co. can be emulated in userspace.
-> >>  */
-> >> +#if !defined STATX_TYPE || defined OVERRIDE_SYSTEM_STATX
-> > 
-> > Is there any place where STATX_TYPE is not defined but
-> > OVERRIDE_SYSTEM_STATX will *also* not be defined?
+On Tue, Nov 19, 2024 at 02:10:59PM +0000, John Garry wrote:
+> On 18/11/2024 23:52, Catherine Hoang wrote:
+> >   #include "init.h"
+> > @@ -347,6 +351,9 @@ dump_raw_statx(struct statx *stx)
+> >   	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
+> >   	printf("stat.dev_major = %u\n", stx->stx_dev_major);
+> >   	printf("stat.dev_minor = %u\n", stx->stx_dev_minor);
+> > +	printf("stat.atomic_write_unit_min = %lld\n", (long long)stx->stx_atomic_write_unit_min);
+> > +	printf("stat.atomic_write_unit_max = %lld\n", (long long)stx->stx_atomic_write_unit_max);
+> > +	printf("stat.atomic_write_segments_max = %lld\n", (long long)stx->stx_atomic_write_segments_max);
 > 
-> I don’t think so. So I guess this could just be
-> 
-> #ifdef OVERRIDE_SYSTEM_STATX
-> 
-> Does that seem right?
+> Is there a special reason to do this casting to long long? We only do that
+> for u64 values, I think.
 
-It seems ok to me.
+Yeah, I don't think it's necessary here because the stx_atomic values
+are __u32.  xfsprogs has a tendency to cast to explicit C types to avoid
+lint warnings, particularly because 64-bit values are grossly typedef'd
+depending on how long long is.
+
+Now that I see it -- those should be %u and casts to unsigned int.
 
 --D
 
-
-> > 
-> > I think the m4 macro you added sets need_internal_statx=yes for old
-> > systems where there's no STATX_TYPE, because there won't be a struct
-> > statx, let alone atomic_write_* fields in it, right?
-> > 
-> > --D
-> > 
-> >> +#undef statx
-> >> struct statx {
-> >> /* 0x00 */
-> >> __u32 stx_mask; /* What results were written [uncond] */
-> >> @@ -126,10 +129,23 @@ struct statx {
-> >> __u32 stx_dev_major; /* ID of device containing file [uncond] */
-> >> __u32 stx_dev_minor;
-> >> /* 0x90 */
-> >> - __u64 __spare2[14]; /* Spare space for future expansion */
-> >> + __u64 stx_mnt_id;
-> >> + __u32 stx_dio_mem_align; /* Memory buffer alignment for direct I/O */
-> >> + __u32 stx_dio_offset_align; /* File offset alignment for direct I/O */
-> >> + /* 0xa0 */
-> >> + __u64 stx_subvol; /* Subvolume identifier */
-> >> + __u32 stx_atomic_write_unit_min; /* Min atomic write unit in bytes */
-> >> + __u32 stx_atomic_write_unit_max; /* Max atomic write unit in bytes */
-> >> + /* 0xb0 */
-> >> + __u32   stx_atomic_write_segments_max; /* Max atomic write segment count */
-> >> + __u32   __spare1[1];
-> >> + /* 0xb8 */
-> >> + __u64 __spare3[9]; /* Spare space for future expansion */
-> >> /* 0x100 */
-> >> };
-> >> +#endif
-> >> 
-> >> +#ifndef STATX_TYPE
-> >> /*
-> >>  * Flags to be stx_mask
-> >>  *
-> >> @@ -174,4 +190,9 @@ struct statx {
-> >> #define STATX_ATTR_AUTOMOUNT 0x00001000 /* Dir: Automount trigger */
-> >> 
-> >> #endif /* STATX_TYPE */
-> >> +
-> >> +#ifndef STATX_WRITE_ATOMIC
-> >> +#define STATX_WRITE_ATOMIC 0x00010000U /* Want/got atomic_write_* fields */
-> >> +#endif
-> >> +
-> >> #endif /* XFS_IO_STATX_H */
-> >> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> >> index 6de8b33e..bc8a49a9 100644
-> >> --- a/m4/package_libcdev.m4
-> >> +++ b/m4/package_libcdev.m4
-> >> @@ -98,6 +98,26 @@ AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_POLICY_V2],
-> >>     AC_SUBST(need_internal_fscrypt_policy_v2)
-> >>   ])
-> >> 
-> >> +#
-> >> +# Check if we need to override the system struct statx with
-> >> +# the internal definition.  This /only/ happens if the system
-> >> +# actually defines struct statx /and/ the system definition
-> >> +# is missing certain fields.
-> >> +#
-> >> +AC_DEFUN([AC_NEED_INTERNAL_STATX],
-> >> +  [ AC_CHECK_TYPE(struct statx,
-> >> +      [
-> >> +        AC_CHECK_MEMBER(struct statx.stx_atomic_write_unit_min,
-> >> +          ,
-> >> +          need_internal_statx=yes,
-> >> +          [#include <linux/stat.h>]
-> >> +        )
-> >> +      ],,
-> >> +      [#include <linux/stat.h>]
-> >> +    )
-> >> +    AC_SUBST(need_internal_statx)
-> >> +  ])
-> >> +
-> >> #
-> >> # Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
-> >> #
-> >> -- 
-> >> 2.34.1
-> >> 
-> >> 
+> Thanks,
+> John
 > 
