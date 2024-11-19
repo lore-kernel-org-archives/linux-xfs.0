@@ -1,87 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC701D14FB;
-	Tue, 19 Nov 2024 15:45:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780B51D0B9B
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2024 15:45:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732031121; cv=none; b=gT0r7dlcdS47pay5qq7Jd7fCvV4wEBKvOyQ4DlVvOaH+ZuIN06vvMnD8TE2RnV//vv8atGeXzJJ94tykokasFenG17yyKmHTtav4HOhLybYzYNFjMWt7ECNrBWHq5ACeAl+cxxJQ32IauvC/8gZusKoReXIvlvwTpjPRlW+LCkg=
+	t=1732031130; cv=none; b=qz7IPl790A15xEELlKuKH+DY/bQknrPD3FxGwC+v7vLFz/TJRr64vxq3KmAr0bc2GUrTmeTmJ8reqiWY9awkuckIiv5LqfP3zcdgrQNFfGr26e+ukLL76xvnDUIgwW6yEqtkNR0RV7di9rp6oysdlgYWHoInnwyrC6HqiIcEEzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732031121; c=relaxed/simple;
-	bh=mgVaw/gaBpEwRQJg7OQipi80mdgppv5nbX6a4IWxIOw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kctg17+ZNgcxhAepCVJFxh4wh2yYYJod9xVTwSl8lCJ5rUOagxJZWxzJrpK8NjbBA/FClRvTMEyOcDd3iX+oz67Og+7fVjZ3xJ+elnuz5MQKYoT/3/yB2rb8f71Z/8Xn+Cr27Ne3aPeB6ABWc59A1dRPA/eBqPGSlOGaA99pU+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pUjOAVbi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732031130; c=relaxed/simple;
+	bh=DUqTZuX3ibPNvI0oVsl5z3VIK6xmqdlnQ95TwMVcteo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=q42FJ9MGZvVCZUfz26697mGqxkIV0ueNgdmdEJ718ex7kpVr3vyb7Lbv5SAHBVp/xiGU56jb5n8a3ct7r01lMQ7GCwajtu8nrLDHdfF74jJ6wv3BjMPepqjYRgZ5+BtwyxaXVgPPh0p19UO7J/cinJx3yFwEYhupUH9MIKQLLGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aybjoRi5; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pUjOAVbi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AD27C4CED2;
-	Tue, 19 Nov 2024 15:45:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732031121;
-	bh=mgVaw/gaBpEwRQJg7OQipi80mdgppv5nbX6a4IWxIOw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pUjOAVbi5v3vlF5TVcJpEg63HpKxbVrW1ByFJsz5swQ4mOf9QbCzNvQ5Dep5pj7zd
-	 y5A5kU+i+CY12D7V5rYcIkmJmy2E1af+Ak6eXwJFMem/Z5RngRho3ZINvfAyhX4CYW
-	 SpPkosJO8w6IZ9HNbS4b20svOafhDIvvRYlJh4WX0dMogt5olByPoKBaefKz5OEIdj
-	 Kx+PGU1pI8I5qREvGsZ+xucRAKLLZADqef/iQ7nO/SpaqcEZWbBQqbFBnGi+LGit9f
-	 QYw7bvn0QzkJEjRxRZApbmBdeSu/Y8TPZYstAjyhz212F2IfSNWe3Wf3UYSCGYhzoz
-	 ysR4uDkjSjzqg==
-Date: Tue, 19 Nov 2024 07:45:20 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, zlang@redhat.com,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 09/12] generic/251: constrain runtime via time/load/soak
- factors
-Message-ID: <20241119154520.GM9425@frogsfrogsfrogs>
-References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
- <173197064562.904310.6083759089693476713.stgit@frogsfrogsfrogs>
- <ZzvtoVID2ASv4IM2@dread.disaster.area>
- <Zzwsgzu81kiv5JPB@infradead.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aybjoRi5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1732031126;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hjZU7g2vo6uZ/HXSxZz5fNHUtmju3LrZ0LlIZ9RX0h4=;
+	b=aybjoRi58w4I59jBXXiQmeBf5QKgxIG2hHsFyHGnEIdq6ZiRO0v3Zo/94SGn336UzauDlZ
+	zFJoigeSmHKUAP3xZZ2YiBwhvc53JVrU1rfFCd3Mvp0sp+zPYacYjw47xBKHZCKEavi7E2
+	1T3GB1ToBz7iaDdHcBXsj+7aYlJa5+Y=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-505-4m05kcxjMXy3WLJZNo6vmg-1; Tue,
+ 19 Nov 2024 10:45:24 -0500
+X-MC-Unique: 4m05kcxjMXy3WLJZNo6vmg-1
+X-Mimecast-MFC-AGG-ID: 4m05kcxjMXy3WLJZNo6vmg
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 54107195608D;
+	Tue, 19 Nov 2024 15:45:23 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.80.120])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AFFDE1956054;
+	Tue, 19 Nov 2024 15:45:22 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH RFC 1/4] iomap: allow passing a folio into write begin path
+Date: Tue, 19 Nov 2024 10:46:53 -0500
+Message-ID: <20241119154656.774395-2-bfoster@redhat.com>
+In-Reply-To: <20241119154656.774395-1-bfoster@redhat.com>
+References: <20241119154656.774395-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zzwsgzu81kiv5JPB@infradead.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Mon, Nov 18, 2024 at 10:13:23PM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 19, 2024 at 12:45:05PM +1100, Dave Chinner wrote:
-> > Question for you: Does your $here directory contain a .git subdir?
-> > 
-> > One of the causes of long runtime for me has been that $here might
-> > only contain 30MB of files, but the .git subdir balloons to several
-> > hundred MB over time, resulting is really long runtimes because it's
-> > copying GBs of data from the .git subdir.
-> 
-> Or the results/ directory when run in a persistent test VM like the
-> one for quick runs on my laptop.  I currently need to persistently
-> purge that for just this test.
-> 
-> > 
-> > I have this patch in my tree:
-> > 
-> > --- a/tests/generic/251
-> > +++ b/tests/generic/251
-> > @@ -175,9 +175,12 @@ nproc=20
-> >  # Copy $here to the scratch fs and make coipes of the replica.  The fstests
-> >  # output (and hence $seqres.full) could be in $here, so we need to snapshot
-> >  # $here before computing file checksums.
-> > +#
-> > +# $here/* as the files to copy so we avoid any .git directory that might be
-> > +# much, much larger than the rest of the fstests source tree we are copying.
-> >  content=$SCRATCH_MNT/orig
-> >  mkdir -p $content
-> > -cp -axT $here/ $content/
-> > +cp -ax $here/* $content/
-> 
-> Maybe we just need a way to generate more predictable file system
-> content?
+To facilitate batch processing of dirty folios for zero range, tweak
+the write begin path to allow the caller to optionally pass in its
+own folio/pos combination.
 
-How about running fsstress for ~50000ops or so, to generate some test
-files and directory tree?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/iomap/buffered-io.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
---D
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index ce73d2a48c1e..d1a86aea1a7a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -781,7 +781,7 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
+ {
+ 	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
+ 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+-	struct folio *folio;
++	struct folio *folio = *foliop;
+ 	int status = 0;
+ 
+ 	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
+@@ -794,9 +794,15 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
+ 	if (!mapping_large_folio_support(iter->inode->i_mapping))
+ 		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
+ 
+-	folio = __iomap_get_folio(iter, pos, len);
+-	if (IS_ERR(folio))
+-		return PTR_ERR(folio);
++	/*
++	 * XXX: Might want to plumb batch handling down through here. For now
++	 * let the caller do it.
++	 */
++	if (!folio) {
++		folio = __iomap_get_folio(iter, pos, len);
++		if (IS_ERR(folio))
++			return PTR_ERR(folio);
++	}
+ 
+ 	/*
+ 	 * Now we have a locked folio, before we do anything with it we need to
+@@ -918,7 +924,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
+ 
+ 	do {
+-		struct folio *folio;
++		struct folio *folio = NULL;
+ 		loff_t old_size;
+ 		size_t offset;		/* Offset into folio */
+ 		size_t bytes;		/* Bytes to write to folio */
+@@ -1281,7 +1287,7 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+ 		return length;
+ 
+ 	do {
+-		struct folio *folio;
++		struct folio *folio = NULL;
+ 		int status;
+ 		size_t offset;
+ 		size_t bytes = min_t(u64, SIZE_MAX, length);
+@@ -1385,7 +1391,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+ 	}
+ 
+ 	do {
+-		struct folio *folio;
++		struct folio *folio = NULL;
+ 		int status;
+ 		size_t offset;
+ 		size_t bytes = min_t(u64, SIZE_MAX, length);
+-- 
+2.47.0
+
