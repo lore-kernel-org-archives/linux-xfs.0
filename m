@@ -1,96 +1,63 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 081FF184F;
-	Wed, 20 Nov 2024 08:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E23015B547;
+	Wed, 20 Nov 2024 08:37:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732091595; cv=none; b=bgtGluTNdH1KzC/M4hBbFI42dTLQMmUpwCmtebYB4Dg4sYZ0cLViff5hgtYoeBH8Rh3b9TO+am4Iqq+MNzrHKCZ+n9JJsXP6M1u8xj1ygZo5KCtiAoSEHURQouhuBeJoEziqDkemLEauP7vQ05GVdciMUOSDtf17GrAkXlvvi/E=
+	t=1732091864; cv=none; b=dAIB+S63XVtf3EGwdPTecMBdtdPcSeHudj0x6D8CIZo4Dk+H9URHP3lxF61mB3CmI+QD+KftA3znkMIyl+0iavhyboI+2pgfYUtbOoPtzVaiLZiuHnkbFtx2WSN1thLkpnC9OYNxw50ru9YoB+e/qCuo7E6oE8t3AxpqRR2QRwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732091595; c=relaxed/simple;
-	bh=d4u5pzoyizOb+YPm1k72BRclODI6VehGONBF1CRirzQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZqbiayOOuqmBl9bv6TtkzW5Zz9ySpXL6calNG4+EoUj6iBAU9Cd+XRUvMz+P9Nei7p/1N3EM4ULrQCxmnfsI3C4ZoQXsh4Oeq36P3WYFC2+uFe1iPpX81vNwS+dtTm1OrsB0mz4bVJuQ8t3Fdm/ToVXAyADLK93EegsmpZroX8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LPb5sMik; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732091864; c=relaxed/simple;
+	bh=HuLo+tWp6cDwjyCAP8svgTyytpnPPmSrnmHZ7IlDYvs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pIDj68s+vxJFMiSmurEeGr0lPeOfBpaonAwgvTSVNPFqsY9bdoqHYkqQzxRuuyBODeis2COKxCBKgfb4wyxi8XYibW6CyZQUK2p/p5rlfflFgQHaz+HikB69Z4H/17h6m0lZXTGO27kf5LrJ9en0sgsLSutpHDfji2iiRRpE9/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=n6Ip2e6e; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LPb5sMik"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F71DC4CECD;
-	Wed, 20 Nov 2024 08:33:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732091594;
-	bh=d4u5pzoyizOb+YPm1k72BRclODI6VehGONBF1CRirzQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=LPb5sMikD3r3iGyeVMF4g5kC5fcJMDQzck/W7xvhwa6u3prvOtQtOlJCmy8LPb01I
-	 3zk9Upzpe4Er28hVhCzOsnnctvGz6neLZy2MRtyAomr7CHzrhuej0lKH+AN2RVM/Xx
-	 03Rykkk9cZz0YmnilVLYxr7MqCFkIEqM6JFIdDFX9DqYJAfQMZIxcU3A89BLfv2vBz
-	 w7OTgSdN6PtC2JGMwsWuwfEYDwcyyHB6ENzBK25d9P4IXX/85ETC1Il497Ut0M4j8K
-	 u1PiDGncxkWJNEbxSGEdIUgEMjClV2jXh79tg2S5ApP7M+eB9xloGoa6AD5gp0acnU
-	 vVhHewvbpAtsA==
-From: Christian Brauner <brauner@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n6Ip2e6e"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=voCL6fIJCtX1eS59yHaY0YfCyhGFMvAzbbvpd0EHkJA=; b=n6Ip2e6eN0gTUNGQO4KHd+IK8X
+	rEcTyjPizfjFQw+QQbmKud0F84OBG6dn4112E5ZwD3K8WZ86IRPgOHHhjsTYCwJlnhM3fydVN24/Q
+	s6hpdcjrgeSIobTJlQtbk11IU2tED/iGpcJOhs5onOAWKq6auCS3sBRYeu0cMS1ubn4PI84+43w3F
+	sOsCieWBvQGVSQB5upPD3RcPiWWM9J3NP5gjfuPicHSjmmTwzphmqj8UMt2XUXhxpb23sIWHy/KTX
+	GvtBLHHCXsk/DOosefmQhcMjn+PPPFa22E5JDMmtrE/c8ct2V+LhM01oCOTiftIXVvR9ySuLF5GTW
+	ac1UGVcQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tDgDV-0000000EmdR-1d4t;
+	Wed, 20 Nov 2024 08:37:41 +0000
+Date: Wed, 20 Nov 2024 00:37:41 -0800
+From: Christoph Hellwig <hch@infradead.org>
 To: Brian Foster <bfoster@redhat.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	hch@infradead.org,
-	djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v4 0/3] iomap: zero range flush fixes
-Date: Wed, 20 Nov 2024 09:33:01 +0100
-Message-ID: <20241120-beklebt-spontan-2cf2d3927c2e@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241115200155.593665-1-bfoster@redhat.com>
-References: <20241115200155.593665-1-bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC 0/4] iomap: zero range folio batch processing
+ prototype
+Message-ID: <Zz2f1c4mjR9blfTg@infradead.org>
+References: <20241119154656.774395-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1984; i=brauner@kernel.org; h=from:subject:message-id; bh=d4u5pzoyizOb+YPm1k72BRclODI6VehGONBF1CRirzQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTbzju87twf5s/Ngdz7dr9i/PRi472DfMd8/kxXOZIV5 /1IJkVOq6OUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAiUiUM/5Ne1P2wSdqreelE 6V4Rh+l9iS16E/gclyglXSyffGfBEWmG/0F1LQGFPxgFXR8dTxY68cR2mtoi+V/fzv368GbxAxV bZgYA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241119154656.774395-1-bfoster@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, 15 Nov 2024 15:01:52 -0500, Brian Foster wrote:
-> Here's v4 of the zero range flush improvements. No real major changes
-> here, mostly minor whitespace, naming issues, etc.
-> 
-> Brian
-> 
-> v4:
-> - Whitespace and variable naming fixes.
-> - Split off patch 4 to a separate post.
-> v3: https://lore.kernel.org/linux-fsdevel/20241108124246.198489-1-bfoster@redhat.com/
-> - Added new patch 1 to always reset per-iter state in iomap_iter.
-> - Dropped iomap_iter_init() helper.
-> - Misc. cleanups.
-> - Appended patch 4 to warn on zeroing beyond EOF.
-> v2: https://lore.kernel.org/linux-fsdevel/20241031140449.439576-1-bfoster@redhat.com/
-> - Added patch 1 to lift zeroed mapping handling code into caller.
-> - Split unaligned start range handling at the top level.
-> - Retain existing conditional flush behavior (vs. unconditional flush)
->   for the remaining range.
-> v1: https://lore.kernel.org/linux-fsdevel/20241023143029.11275-1-bfoster@redhat.com/
-> 
-> [...]
+On Tue, Nov 19, 2024 at 10:46:52AM -0500, Brian Foster wrote:
+> I thought about using ->private along with a custom ->get_folio(), but I
+> don't think that really fits the idea of a built-in mechanism. It might
+> be more appropriate to attach to the iter, but that currently isn't
+> accessible to ->iomap_begin(). I suppose we could define an
+> iomap_to_iter() or some such helper that the fill helper could use to
+> populate the batch, but maybe there are other thoughts/ideas?
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+The iter is the right place, and you can get at it using
+container_of as already done by btrfs (and osme of my upcoming code):
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+	struct iomap_iter *iter = container_of(iomap, struct iomap_iter, iomap);
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
-
-[1/3] iomap: reset per-iter state on non-error iter advances
-      https://git.kernel.org/vfs/vfs/c/cad47157a55d
-[2/3] iomap: lift zeroed mapping handling into iomap_zero_range()
-      https://git.kernel.org/vfs/vfs/c/46538f0b405b
-[3/3] iomap: elide flush from partial eof zero range
-      https://git.kernel.org/vfs/vfs/c/c07ba2d5979b
