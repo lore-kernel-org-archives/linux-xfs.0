@@ -1,140 +1,155 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 191261BBBE8
-	for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 20:37:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7F3333998;
+	Wed, 20 Nov 2024 22:07:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732135043; cv=none; b=Xn9nMExTHYG279S/ueywwrEEOiThyA7beyRVkMU8UyINJVLPij+uVoyewE5bxqASbRg/kgNrLaYFVSSBWla8/voR/BBf67JQzTrf/SHosXp6Pi/ixwhiZK7HilDkR/81NpnMO5vSkofWNdIkE0xeuG2AWRgbwv3UgRyMGYyT0JI=
+	t=1732140431; cv=none; b=GsxcdpzqmAxGbHRC42yNGc2r+9lPnsxtGC5nwuoKXtWUv9OJ+rKN3NyNkSZfiZJoDMOwY9hO5BBRJ4aluLjtksXiXsRv0LBJRWDlt8ziMDINu3Hzk4a7E/ypFgnauFtV538RFkkj2vj8SS/dxWOwfhEdB2hG8c82nBs2Rngpl7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732135043; c=relaxed/simple;
-	bh=gxdo/qfNxQeE8KQho8RvlhXWrZvSkpA6qPXBeVgUJXo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MX623bCyhGp86Ovx1nLTQF4O3mgyAiskTr11I83CbYimy/vwC/zI6X4rUpWxexNDT79oUmQG78o+iQlm+qrLUObYm1lBS8qsAB+w2LvDQu+uUgCV1TVN+bu77UlncGiDpRQZH3+EOTD79VjrACIjB5zu7NPkaxcYAWZiORmLAYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Q++p/NM5; arc=none smtp.client-ip=209.85.216.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1732140431; c=relaxed/simple;
+	bh=TcoueP1+LPjAqEKWEbJ58Np0bSqbg757lhFVZsREuxw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=p8jRw4gf3zqBQb1xGgZkwCRS2N+32lDzu94WfbolEGw7VpRJWQ6J9Jg/TXMLWsN55t/ZfRUm5GChVT0kM54rx1Nc8pGiPP9MyNcoE1x8S9AbPXk/cuOg4yFnPK/M0bwlI8PlXIbnehbAUlhJ9uGnmQgHCQ1sXF+1cCMxy3Z7QAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com; spf=pass smtp.mailfrom=gmx.com; dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b=YqvcxOjE; arc=none smtp.client-ip=212.227.15.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Q++p/NM5"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2ea68cd5780so169838a91.3
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 12:37:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1732135041; x=1732739841; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=j7agw+MVRyIWuBCl7pZ+mHszf9nzIBAC/CJ3AinkBqw=;
-        b=Q++p/NM5V2P0QCp2VjUddqV8grc4gu6TasiyBOjEJQMiSQgildyUd8BLF97mO16/gX
-         kTe1Jos6tv+4nNZPMMMSPx6HSzOetxJw82emuaY6c0d3ITXa3luQTBYGSay+ie+6oABL
-         TOJ1SCQiHGe1R75MPDrXtVZ/QlTWHU4jrPsRzdipsip9KcV5nAA1aio0kXTzHCSKLlTG
-         k/i6fvt7Cd8OkTorLtfhQWGGVV52tDjb0ASwIvHHLTOh3eLBffLLJR5/4WKbuR6q99Rb
-         vGfkeqp9eFbmc3ow7QN9qYTkKYrhRlJinKXsmg2NJHCKu+puEBR4zawIeTf45GOEcxHO
-         JrsA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732135041; x=1732739841;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=j7agw+MVRyIWuBCl7pZ+mHszf9nzIBAC/CJ3AinkBqw=;
-        b=Sw38DxZLdm862gVIH5cz/QF7BySUczPmlK0nrU9Opf0ZDW9GAlRGw0xkQOptoIWpuE
-         lsLzFOMyEKXjK54gkM1I98IgGFHN7S2Uh8Mgs0PB8uQelkNCKxr9z64UQu5uYUJe6sjP
-         YASFU0bzxeMpxoW7Z34kEPho0fpGeLSKSlZrRUgIhSJo8HE1blqV6o8Tqqx0blxAawh5
-         VLJGo9uhYy8Pp6s4zTAKzeVWwyols2luxh7Y6rP/e6eGzt1/FsLOr3EJiP/fma/qB34Y
-         gvnj7dxQfKyu6kqQTFcOipZ/5VXAJDaiYb6Wz54s24ye70Dikww3WPzdRuXTxk5GmXDQ
-         aqDA==
-X-Gm-Message-State: AOJu0Yx/se8aL+BzeBjkkP/QfqrdRgKV6rCOslW6s6dAmoYHUTVWftOq
-	zqhqBDkUZTfeA2jWiWGM/TI+yTZSrYkYdZgPlhcnHz93k4TpCHg3LU9CLFusIig=
-X-Google-Smtp-Source: AGHT+IGreu4pbRdf9RAsxW9otLcD4fFTHm8D1pwAWAPrW4pJkHesAy9VcpvXrA5aTGE2ELi+7vWGbw==
-X-Received: by 2002:a17:90b:52c3:b0:2ea:b564:4b35 with SMTP id 98e67ed59e1d1-2eaca6e41f2mr5271046a91.9.1732135041400;
-        Wed, 20 Nov 2024 12:37:21 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-121-96.pa.nsw.optusnet.com.au. [49.180.121.96])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ead03de6f6sm1762377a91.34.2024.11.20.12.37.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Nov 2024 12:37:20 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tDrRt-000000010Wl-2glT;
-	Thu, 21 Nov 2024 07:37:17 +1100
-Date: Thu, 21 Nov 2024 07:37:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Uros Bizjak <ubizjak@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
-Message-ID: <Zz5IfYYQXHyZPwbi@dread.disaster.area>
-References: <20241120150725.3378-1-ubizjak@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b="YqvcxOjE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.com;
+	s=s31663417; t=1732140422; x=1732745222; i=quwenruo.btrfs@gmx.com;
+	bh=KQkwEdGradvceENobCLXZ2bQPiyM8Zvog1e4KGbgXg8=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=YqvcxOjEKU6Ix7YiOOz0MKnQsTCzFlw/qPFApUw5GBiLi1TRlTKB+LqusH2K/UBL
+	 2IGtD6A/GurXR4EjDGBA+1t3poEL9C/qUXFZMvACNUGKkipKVxt+QGuzlEcBmgnkv
+	 NRwAA7Ynbi4xe7/0eFx79NnEHT/60Sef/W4h2TdY0LSFee5+I6QdjHy/fPEhoRfO0
+	 k9cgKixlyRqAI7sqmdnpL6wntY7Govjux0MO0IdcUmwNBCZ4DL6F8M6Mhvkbjdq83
+	 cIrJRldQ/Ac0eFLshTeFuRbFwIO5ux57QGntGsXBWJtm70Xp0DFsmzozEsfD8CzEz
+	 GU9oJB4LDPo1M8Ekzg==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [172.16.0.191] ([159.196.52.54]) by mail.gmx.net (mrgmx005
+ [212.227.17.184]) with ESMTPSA (Nemesis) id 1MplXz-1tWzvc3SYf-00dNSO; Wed, 20
+ Nov 2024 23:07:02 +0100
+Message-ID: <1141f20f-86e4-4638-adc4-5cb290f87691@gmx.com>
+Date: Thu, 21 Nov 2024 08:36:58 +1030
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241120150725.3378-1-ubizjak@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] fstests: fix blksize_t printf format warnings across
+ architectures
+To: Anand Jain <anand.jain@oracle.com>, fstests@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <c4847cd94f86bd98fc563f112e177b317dc21111.1732102551.git.anand.jain@oracle.com>
+Content-Language: en-US
+From: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Autocrypt: addr=quwenruo.btrfs@gmx.com; keydata=
+ xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
+ 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
+ 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
+ 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
+ gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
+ AAHNIlF1IFdlbnJ1byA8cXV3ZW5ydW8uYnRyZnNAZ214LmNvbT7CwJQEEwEIAD4CGwMFCwkI
+ BwIGFQgJCgsCBBYCAwECHgECF4AWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCZxF1YAUJEP5a
+ sQAKCRDCPZHzoSX+qF+mB/9gXu9C3BV0omDZBDWevJHxpWpOwQ8DxZEbk9b9LcrQlWdhFhyn
+ xi+l5lRziV9ZGyYXp7N35a9t7GQJndMCFUWYoEa+1NCuxDs6bslfrCaGEGG/+wd6oIPb85xo
+ naxnQ+SQtYLUFbU77WkUPaaIU8hH2BAfn9ZSDX9lIxheQE8ZYGGmo4wYpnN7/hSXALD7+oun
+ tZljjGNT1o+/B8WVZtw/YZuCuHgZeaFdhcV2jsz7+iGb+LsqzHuznrXqbyUQgQT9kn8ZYFNW
+ 7tf+LNxXuwedzRag4fxtR+5GVvJ41Oh/eygp8VqiMAtnFYaSlb9sjia1Mh+m+OBFeuXjgGlG
+ VvQFzsBNBFnVga8BCACqU+th4Esy/c8BnvliFAjAfpzhI1wH76FD1MJPmAhA3DnX5JDORcga
+ CbPEwhLj1xlwTgpeT+QfDmGJ5B5BlrrQFZVE1fChEjiJvyiSAO4yQPkrPVYTI7Xj34FnscPj
+ /IrRUUka68MlHxPtFnAHr25VIuOS41lmYKYNwPNLRz9Ik6DmeTG3WJO2BQRNvXA0pXrJH1fN
+ GSsRb+pKEKHKtL1803x71zQxCwLh+zLP1iXHVM5j8gX9zqupigQR/Cel2XPS44zWcDW8r7B0
+ q1eW4Jrv0x19p4P923voqn+joIAostyNTUjCeSrUdKth9jcdlam9X2DziA/DHDFfS5eq4fEv
+ ABEBAAHCwHwEGAEIACYCGwwWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCZxF1gQUJEP5a0gAK
+ CRDCPZHzoSX+qHGpB/kB8A7M7KGL5qzat+jBRoLwB0Y3Zax0QWuANVdZM3eJDlKJKJ4HKzjo
+ B2Pcn4JXL2apSan2uJftaMbNQbwotvabLXkE7cPpnppnBq7iovmBw++/d8zQjLQLWInQ5kNq
+ Vmi36kmq8o5c0f97QVjMryHlmSlEZ2Wwc1kURAe4lsRG2dNeAd4CAqmTw0cMIrR6R/Dpt3ma
+ +8oGXJOmwWuDFKNV4G2XLKcghqrtcRf2zAGNogg3KulCykHHripG3kPKsb7fYVcSQtlt5R6v
+ HZStaZBzw4PcDiaAF3pPDBd+0fIKS6BlpeNRSFG94RYrt84Qw77JWDOAZsyNfEIEE0J6LSR/
+In-Reply-To: <c4847cd94f86bd98fc563f112e177b317dc21111.1732102551.git.anand.jain@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:7Jy1/iK0JvEKL5DCMLaF3rDju68UjdhpGKPnqdxycB30kjS4Ffk
+ Lp/+QcXtl2kdw4Kf94pvCFaO1lAmZ/+i7OBht+9GKr4HAO0B5DQgPkqAiLm7LO7R3wxVnmJ
+ gAfT9eMya8J8EtGXjrdWjz/Vi/wXSjqj6+WredU+/kmRqhDPdKjwA7+fPt0eb5dEwp6lwml
+ uCj1mK19ZDnOO+JLVTBuw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:pDgitaMPl4s=;SV8h4iBs/QXOaarLMzd0AqKW+Y/
+ 9HMd5wfc/uiRNbe3tdmq+rvhPZIPp6Fq7fzSrDGbIwRfdkSUFxX7eXWcCslK+M8zzgiVZZcYt
+ +J4lt0/ga7WIIct9zIzzIHE8Yl0yYs2AokGmMhpdzWBRIUXXzzVoOT0fEJYl+Bpt+fkwAlFg/
+ vSsGrAmJRj8VSsKo7KKqfF1NbsWpbM06UyVaTtbnXMWISbp+Rr8WCzOMe6baFthSbGfewXm7C
+ 6sEdceH/M7o8inivSvGNouVQgnDljpe/efl8qBZhUWXFvF1sSRs64Qjg6hE5SBql7P/zsWZIG
+ yhrYBkRLg8hgQ3nSJ3FXL2vfIcri+Y+m7IceYocIqHyHPpGiOmZdNqzfpgXtGkoreC/zsJaK0
+ 8Rbb9sHHycdVErCjD+YSHVKJjsArqkyBAcBSsTZrweYa3sKAatRRcAAHBc60zod+bdLbxTCcM
+ 7IsfvEGDr+UB5jW6tkqIeFfWkq1DZi1tbhxCjlITFqU6T/iwbp+PmxG5K7yP89U1HDF0TmOWJ
+ HxUVFTAZRpv6PembjBMWTwpDUD1eMejzIpE8QwoMz4DnZRJzHRgIMXvsZwByeC0XswRPhv1ip
+ cLEk1lMkOvFmLeewuzERWz5fd7CbKq32R5lvM8DrQUOOeEPkoKGO4m4iJL9FqfXNQVoLvUWV4
+ fy9HLBuXwyQAxtDq1qHI3QG41wfLmM+XTWZm79g2M/kZDxreWfQPWpujUW6fC7SqhGyBYSujn
+ g8EF6YY0CvXi2Qwbx62u0ZfuRqvZzcaFdLzzRrLc8iQBUKOtgCgQ/E1Ujf149oqILkt0eR+WY
+ IDV9va1TqL3aVwxG2npbPAYJDjaW4gwY26qjOHwmO6DwChYJLrzSLIagcwstswetC+BKbzZ9W
+ 1/VGDJQzmUU9kQ0QXaiXWmkK44I8BKPasjcgsTKgjmXrXU2YNYCSdp6n6
 
-On Wed, Nov 20, 2024 at 04:06:22PM +0100, Uros Bizjak wrote:
-> try_cmpxchg() loop with constant "new" value can be substituted
-> with just xchg() to atomically get and clear the location.
-> 
-> The code on x86_64 improves from:
-> 
->     1e7f:	48 89 4c 24 10       	mov    %rcx,0x10(%rsp)
->     1e84:	48 03 14 c5 00 00 00 	add    0x0(,%rax,8),%rdx
->     1e8b:	00
-> 			1e88: R_X86_64_32S	__per_cpu_offset
->     1e8c:	8b 02                	mov    (%rdx),%eax
->     1e8e:	41 89 c5             	mov    %eax,%r13d
->     1e91:	31 c9                	xor    %ecx,%ecx
->     1e93:	f0 0f b1 0a          	lock cmpxchg %ecx,(%rdx)
->     1e97:	75 f5                	jne    1e8e <xlog_cil_commit+0x84e>
->     1e99:	48 8b 4c 24 10       	mov    0x10(%rsp),%rcx
->     1e9e:	45 01 e9             	add    %r13d,%r9d
-> 
-> to just:
-> 
->     1e7f:	48 03 14 cd 00 00 00 	add    0x0(,%rcx,8),%rdx
->     1e86:	00
-> 			1e83: R_X86_64_32S	__per_cpu_offset
->     1e87:	31 c9                	xor    %ecx,%ecx
->     1e89:	87 0a                	xchg   %ecx,(%rdx)
->     1e8b:	41 01 cb             	add    %ecx,%r11d
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-> Cc: Chandan Babu R <chandan.babu@oracle.com>
-> Cc: "Darrick J. Wong" <djwong@kernel.org>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Dave Chinner <dchinner@redhat.com>
+
+
+=E5=9C=A8 2024/11/20 22:10, Anand Jain =E5=86=99=E9=81=93:
+> Fix format string warnings when printing blksize_t values that vary
+> across architectures. The warning occurs because blksize_t is defined
+> differently between architectures: aarch64 architectures blksize_t is
+> int, on x86-64 it's long-int.  Cast the values to long. Fixes warnings
+> as below.
+>
+>   seek_sanity_test.c:110:45: warning: format '%ld' expects argument of t=
+ype
+>   'long int', but argument 3 has type 'blksize_t' {aka 'int'}
+>
+>   attr_replace_test.c:70:22: warning: format '%ld' expects argument of t=
+ype
+>   'long int', but argument 3 has type '__blksize_t' {aka 'int'}
+
+Why not just use %zu instead?
+
+Thanks,
+Qu
+
+>
+> Signed-off-by: Anand Jain <anand.jain@oracle.com>
 > ---
->  fs/xfs/xfs_log_cil.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 80da0cf87d7a..9d667be1d909 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -171,11 +171,8 @@ xlog_cil_insert_pcp_aggregate(
->  	 */
->  	for_each_cpu(cpu, &ctx->cil_pcpmask) {
->  		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
-> -		int			old = READ_ONCE(cilpcp->space_used);
->  
-> -		while (!try_cmpxchg(&cilpcp->space_used, &old, 0))
-> -			;
-> -		count += old;
-> +		count += xchg(&cilpcp->space_used, 0);
->  	}
->  	atomic_add(count, &ctx->space_used);
->  }
+>   src/attr_replace_test.c | 2 +-
+>   src/seek_sanity_test.c  | 2 +-
+>   2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
+> index 1218e7264c8f..5d560a633361 100644
+> --- a/src/attr_replace_test.c
+> +++ b/src/attr_replace_test.c
+> @@ -67,7 +67,7 @@ int main(int argc, char *argv[])
+>   	if (ret < 0) die();
+>   	size =3D sbuf.st_blksize * 3 / 4;
+>   	if (!size)
+> -		fail("Invalid st_blksize(%ld)\n", sbuf.st_blksize);
+> +		fail("Invalid st_blksize(%ld)\n", (long)sbuf.st_blksize);
+>   	size =3D MIN(size, maxsize);
+>   	value =3D malloc(size);
+>   	if (!value)
+> diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
+> index a61ed3da9a8f..c5930357911f 100644
+> --- a/src/seek_sanity_test.c
+> +++ b/src/seek_sanity_test.c
+> @@ -107,7 +107,7 @@ static int get_io_sizes(int fd)
+>   		offset +=3D pos ? 0 : 1;
+>   	alloc_size =3D offset;
+>   done:
+> -	fprintf(stdout, "Allocation size: %ld\n", alloc_size);
+> +	fprintf(stdout, "Allocation size: %ld\n", (long)alloc_size);
+>   	return 0;
+>
+>   fail:
 
-Looks fine.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
