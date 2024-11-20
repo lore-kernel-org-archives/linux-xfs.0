@@ -1,140 +1,88 @@
-Received: from mail-il1-f176.google.com (mail-il1-f176.google.com [209.85.166.176])
+Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE4C74068
-	for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 15:34:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A012F84D3E;
+	Wed, 20 Nov 2024 15:36:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732116857; cv=none; b=jWGyI6cqTBIguKn20UFwhp81pfH7jfXPYwSz4aHvw7n0Dir5R88+plqz1VdjM9Qetyy+JcG8aU4IsbztfpGcZp2MClNwp+yjzUxfQnXg1dbkK2RbSe92Bo7/hOPXOV2+u6J66xZlGSQ6Sdt8s6aPHwwR5On5wB3J9FVdW/R0bJw=
+	t=1732117006; cv=none; b=s3Lf5/6psa7kcZkocW2x2mqScicXzqjREtGPMphEk9inLsYJVOhWvTVBxAOBFj0DbxLK7sP58eyaWYPZ/08LjZLufHB7NzAujpYIVxIfbKr/g9M3s86hLmtoGYfK2+gILwP4tMbiL+0Sl0y+yEwvUEJujOniu6hdT/yiGQ+uRz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732116857; c=relaxed/simple;
-	bh=tapspqOc3LuINmsY9rmIJdgI/iII+12IiBiFvTeBICM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=etc5td+dXHIEZvW27kt3qeTcYv9iKMuDtzZU0i2u+f3NFYJxjHQioBbQP3dk7u1mo+/YmLn9XO9Yhg4B/YbxL/J+xsZgT8qS1z8QPx+zPbJ2HEFxu0gljuJkJS/Lkr/4Gu2uzN9/dcmTSLDpE7N9pb/09vo5qhnI31/pHqfDGYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b=i0VGvw7N; arc=none smtp.client-ip=209.85.166.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1732117006; c=relaxed/simple;
+	bh=rRQ4OBZRgRUT2QDchNqnm2+yTXcDEmctPLBAk9SKaYc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=RBsF2N5X3EoTYaCy5IIxIAV7Vk/4RkxXUR7laAszgXwNzzrBNZFARfTgyjnpEo4TWHJ98o+KsUmN+bPHuQrm2Y9g8iLwaSP40xHv3zBwZONBPyDb2LdUFjm4AFDzWrH5CL1Ay+fP6cD0KHV2OqldX+2+CplocGokqtHMW+5d9Ng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RiX0pJeV; arc=none smtp.client-ip=209.85.208.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b="i0VGvw7N"
-Received: by mail-il1-f176.google.com with SMTP id e9e14a558f8ab-3a777958043so8538095ab.2
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 07:34:14 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RiX0pJeV"
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2ff3232ee75so25814021fa.0;
+        Wed, 20 Nov 2024 07:36:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20230601.gappssmtp.com; s=20230601; t=1732116853; x=1732721653; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NcM59+8TfsvtZUlPOhwHkunXZn/aPvaA5x4RA/2fbaw=;
-        b=i0VGvw7NmCLy5l2LcWFsVbSw9GAYY9lzJgPyKqR/t4BFu3CQdHS8nKUiYc60FIkSf9
-         hgv14hx5z8pXqdbter8gk01LBV1TXrJkZ5Zxtw6K9e+VanHCUW4EhxLxJgcNZWPaXir0
-         7yz8jmfkfesvZpFrkC19OyGQwSf1lZNPcJh3X7B2s3Ln5/QC3fu1gFOK6REYQC/GoEW5
-         3HnKygrC7Rv6Ygo+wY4Bt1mz9dqnuDU8K8oTm8+VSrCl2VJ5XUJM6+5Ym/6caJISL5Th
-         3avqh9GfqzCiINHKFY4GWuIFxwVYbOnUzmOYF7yA730sBWgvSDoDgYio3Op2zHj4v794
-         A4oA==
+        d=gmail.com; s=20230601; t=1732117003; x=1732721803; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=J4480msYWYSV1aWn6FUea6HU3tyZnI63NOgH1lUg7gA=;
+        b=RiX0pJeVzQ7fdQ8P/OjjNe3lUqpRlEwSN2X+9+T86/yH8PoHav9OBJOI7gymjfL4Tk
+         8u3JJ9w3uU1Y7GiiVbSok38oW2LB6KiVSmdsA88F2tBv+eHzu09DMCdLm/nsC7B3D5SM
+         xdWB5bRFNowvFMZcge33J41ddTxGILfwLfDh2j9KPsxjeKnYfca7f6j8m65G5u0TaIvv
+         8PM/8qZ1GnlGyQQxKXr1gWmomSO5mr1zH2A4od0XGIIJ5fHTZn7sngKINzXhs8UktB88
+         e9MRTyPrOp2i5Z6nm5rZwLpqJrHvSH5y34UHR91q1RvrNtmrmnPrvGB4IMzt2tg6v31M
+         dJow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732116853; x=1732721653;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=NcM59+8TfsvtZUlPOhwHkunXZn/aPvaA5x4RA/2fbaw=;
-        b=PyEuO5hizpus4LvafZ8TEWlaTTwVaWRQ2YEE6FXZJongnf/3Lv6qbmbdpkgMbxnpGI
-         Wg5ubHbFpFk+4qodKDaXDp6W5crtUgyhravtBE6/HPDObK0xMKY0i4Q+I1v39aGhgu+m
-         2zeuwIZTeWrtVs5XmShwxn/GJUi/TRmBJVbCArDkzBVKZaIWq7/IyaClymVETrQC+Xz3
-         HajZ1z6TMBHZc41e3JRUymgv8pCKDw8oPd2e2Sd76TpP6sKpKA+NSJiNWwWzEx6Gismh
-         z76EB0UJto82KNhDXZP2k861VRxZERUlCM3VqwBkkIdr8QTZCqcK0aUS0DT2brqdCFEv
-         B/iw==
-X-Forwarded-Encrypted: i=1; AJvYcCVz+a4vn7q9Y6bnADyhhnRQ2f9bEh212aPzSKReBjOQ5zBeHtKar6Pn3Saq5xXWKKYfzlB5ws/qf5w=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzcz+D8f4DbKkVCQNlUUNrcuvqOTsjLRZCpd4l9UjJ886COlvV/
-	BpNoE/jbPAro3c4l3wxVgbIY8USYsR8iwOdKPwc+1e6eGoVlYmTXYMy2PEbvx9/uiwg5nrUx4kA
-	C
-X-Google-Smtp-Source: AGHT+IFPsi16Sc1ScQxHAt2zv4mWqJHo5ZB3ZAX2DX28qdi/G7PLyBH6ZUWtH19EKbUwdn26IKCIXg==
-X-Received: by 2002:a05:6e02:1a85:b0:3a7:8ee6:cd6e with SMTP id e9e14a558f8ab-3a78ee6ce0emr7280365ab.8.1732116853354;
-        Wed, 20 Nov 2024 07:34:13 -0800 (PST)
-Received: from [172.22.22.28] (c-73-228-159-35.hsd1.mn.comcast.net. [73.228.159.35])
-        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3a748115b79sm30804095ab.53.2024.11.20.07.34.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Nov 2024 07:34:12 -0800 (PST)
-Message-ID: <ad32f0aa-79df-41b2-90d0-9d98de695a18@riscstar.com>
-Date: Wed, 20 Nov 2024 09:34:11 -0600
+        d=1e100.net; s=20230601; t=1732117003; x=1732721803;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=J4480msYWYSV1aWn6FUea6HU3tyZnI63NOgH1lUg7gA=;
+        b=uv/aHPSvsYpE0UaYQCseffrsMjAu1v7sSxF5Yc6Ubpal3W83D3dEKAFKbSpJTePj11
+         UVkiBCfgsofWl2Iixzsp8iFs/l/iijf2WeXIlVXOgdkHBTKPdeBgHdMOGDukYSf3Ttn+
+         9c6niV6F7WdeLHuEiGOm8Kf8/zULESZvolHd/w0XDtM4cxSl3daDoCEfvV64KeR2sRww
+         uwqnt0IMVUlZ2STWl9QlX7VMdTS50VVcuOLxdBYWMAW5jX/CA++14CVDMq33DAI+i614
+         CZt271AXHOulYYwsBYyfI1mPpHV1JknP3HEBkXXIMYjixuguQM6qJLQ5OgiMUv4+pAMQ
+         cYnw==
+X-Forwarded-Encrypted: i=1; AJvYcCVsvD9qfmq4JtGxeY4AKPzXuKlMwtSljoyzf1R9QLoe34bkJkcPV9HdoaQsc/u8fA4rB5KOgxFtI4obPyo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyng32+K4oOo4LJJc4wDML2RHZB1cksDayKLHPdO6TYTb80zBtD
+	vt+9BR4UIy3JdtYC78McOAlxXoOnjPiEZwghnPiAe7VJcQmG4TmdllmK/ZasTq8fO9AFUf/Vx6v
+	aPoyzhfihD5w69y9RzW8oQAhiHp4=
+X-Gm-Gg: ASbGncu/UoK2a+HVTC61PG2Gcg2LbL3aE4dX5vQopt6ojJJpeqismN9Ws2jHtrqUQcx
+	Wv4ViMA8bTUKZVgypl9kdQIAcv1g2YhQ=
+X-Google-Smtp-Source: AGHT+IE0bt43BHS9nIQ63LeFwzqnyam1nsHgEkDbLK9lae8oPkZ3wEfyCNHxDLWM8UkdXvP2YPMfBynx1DXZIZnRzcg=
+X-Received: by 2002:a2e:a5c7:0:b0:2ff:8d7e:56f with SMTP id
+ 38308e7fff4ca-2ff8dcbee1fmr25369481fa.32.1732117002554; Wed, 20 Nov 2024
+ 07:36:42 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <20241120150725.3378-1-ubizjak@gmail.com> <ad32f0aa-79df-41b2-90d0-9d98de695a18@riscstar.com>
+In-Reply-To: <ad32f0aa-79df-41b2-90d0-9d98de695a18@riscstar.com>
+From: Uros Bizjak <ubizjak@gmail.com>
+Date: Wed, 20 Nov 2024 16:36:31 +0100
+Message-ID: <CAFULd4afgt7LtqzZ_oFDz4wtMe+TZKGX3E_XpSo2HD5rQEvOjg@mail.gmail.com>
 Subject: Re: [PATCH] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
-To: Uros Bizjak <ubizjak@gmail.com>, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
- "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig
- <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>
-References: <20241120150725.3378-1-ubizjak@gmail.com>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20241120150725.3378-1-ubizjak@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Alex Elder <elder@riscstar.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 11/20/24 9:06 AM, Uros Bizjak wrote:
-> try_cmpxchg() loop with constant "new" value can be substituted
-> with just xchg() to atomically get and clear the location.
+On Wed, Nov 20, 2024 at 4:34=E2=80=AFPM Alex Elder <elder@riscstar.com> wro=
+te:
+>
+> On 11/20/24 9:06 AM, Uros Bizjak wrote:
+> > try_cmpxchg() loop with constant "new" value can be substituted
+> > with just xchg() to atomically get and clear the location.
+>
+> You're right.  With a constant new value (0), there is no need
+> to loop to ensure we get a "stable" update.
+>
+> Is the READ_ONCE() is still needed?
 
-You're right.  With a constant new value (0), there is no need
-to loop to ensure we get a "stable" update.
+No, xchg() guarantees atomic access on its own.
 
-Is the READ_ONCE() is still needed?
-
-					-Alex
-
-> The code on x86_64 improves from:
-> 
->      1e7f:	48 89 4c 24 10       	mov    %rcx,0x10(%rsp)
->      1e84:	48 03 14 c5 00 00 00 	add    0x0(,%rax,8),%rdx
->      1e8b:	00
-> 			1e88: R_X86_64_32S	__per_cpu_offset
->      1e8c:	8b 02                	mov    (%rdx),%eax
->      1e8e:	41 89 c5             	mov    %eax,%r13d
->      1e91:	31 c9                	xor    %ecx,%ecx
->      1e93:	f0 0f b1 0a          	lock cmpxchg %ecx,(%rdx)
->      1e97:	75 f5                	jne    1e8e <xlog_cil_commit+0x84e>
->      1e99:	48 8b 4c 24 10       	mov    0x10(%rsp),%rcx
->      1e9e:	45 01 e9             	add    %r13d,%r9d
-> 
-> to just:
-> 
->      1e7f:	48 03 14 cd 00 00 00 	add    0x0(,%rcx,8),%rdx
->      1e86:	00
-> 			1e83: R_X86_64_32S	__per_cpu_offset
->      1e87:	31 c9                	xor    %ecx,%ecx
->      1e89:	87 0a                	xchg   %ecx,(%rdx)
->      1e8b:	41 01 cb             	add    %ecx,%r11d
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-> Cc: Chandan Babu R <chandan.babu@oracle.com>
-> Cc: "Darrick J. Wong" <djwong@kernel.org>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Dave Chinner <dchinner@redhat.com>
-> ---
->   fs/xfs/xfs_log_cil.c | 5 +----
->   1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 80da0cf87d7a..9d667be1d909 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -171,11 +171,8 @@ xlog_cil_insert_pcp_aggregate(
->   	 */
->   	for_each_cpu(cpu, &ctx->cil_pcpmask) {
->   		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
-> -		int			old = READ_ONCE(cilpcp->space_used);
->   
-> -		while (!try_cmpxchg(&cilpcp->space_used, &old, 0))
-> -			;
-> -		count += old;
-> +		count += xchg(&cilpcp->space_used, 0);
->   	}
->   	atomic_add(count, &ctx->space_used);
->   }
-
+Uros.
