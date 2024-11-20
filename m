@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 120661B7F4;
-	Wed, 20 Nov 2024 08:24:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 081FF184F;
+	Wed, 20 Nov 2024 08:33:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732091079; cv=none; b=WkIQPmI6/zejBy2fdtjaS0/DIOney+qpl7JIw4xlp/CHKE65It3LVNKL7zAixAS7uxClJvzUSFIaTn8I8g/xI3X/FSQTGJJYY52hp+m6nukHoMEQm7Q98EN4AXhRvScjIeyUh+E4T3dG3T06uGx9JZeJoqO+3Qp0TH9ZIY59yUM=
+	t=1732091595; cv=none; b=bgtGluTNdH1KzC/M4hBbFI42dTLQMmUpwCmtebYB4Dg4sYZ0cLViff5hgtYoeBH8Rh3b9TO+am4Iqq+MNzrHKCZ+n9JJsXP6M1u8xj1ygZo5KCtiAoSEHURQouhuBeJoEziqDkemLEauP7vQ05GVdciMUOSDtf17GrAkXlvvi/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732091079; c=relaxed/simple;
-	bh=Rq9e0l8Mb8VnwWU3I5xtmko6/hmN2+LBvkRMLVX7rEU=;
+	s=arc-20240116; t=1732091595; c=relaxed/simple;
+	bh=d4u5pzoyizOb+YPm1k72BRclODI6VehGONBF1CRirzQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CtD2EYwJWPkToaj5crmphUDTWd7+HXzsWws9fKq7dZfh0r4GGXTXexlFBpykIkJGRM8dzGToXbFmXRei2sKT/+Xc3VNaTBxb4CCMghIDEsU/l4L5SoQr/NQG5olkhDFXmG6k49UyNm68PUC+i9SAdLKXNZ/VBBoHFfB4bj3wpxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CNR5ONfp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ZqbiayOOuqmBl9bv6TtkzW5Zz9ySpXL6calNG4+EoUj6iBAU9Cd+XRUvMz+P9Nei7p/1N3EM4ULrQCxmnfsI3C4ZoQXsh4Oeq36P3WYFC2+uFe1iPpX81vNwS+dtTm1OrsB0mz4bVJuQ8t3Fdm/ToVXAyADLK93EegsmpZroX8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LPb5sMik; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CNR5ONfp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FD66C4CECD;
-	Wed, 20 Nov 2024 08:24:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LPb5sMik"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F71DC4CECD;
+	Wed, 20 Nov 2024 08:33:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732091078;
-	bh=Rq9e0l8Mb8VnwWU3I5xtmko6/hmN2+LBvkRMLVX7rEU=;
+	s=k20201202; t=1732091594;
+	bh=d4u5pzoyizOb+YPm1k72BRclODI6VehGONBF1CRirzQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CNR5ONfpYPhk1Mb2Jjm1gytuTnN5rsqgHdcr1vJj2xlOnIzvgD+wWOJrSLlMnyi7f
-	 LqK4slLl040dXK+V/RdguYCH3LUalOHQPXVC0BeROeOjRy5o6ZFTAm0m1Yt9pGXFxl
-	 1Hv2YsmhpYgNoPwi2BTnNJJpx9PNw2vge4podv37BcHThAS1t1f31doHmxKQu8Bu+5
-	 IGT+c2muVRy9m5Ht3dsexFHvDEWdagXQeSEXNL+ZMbpXD1cIFsGbb4X+/UK1bT6dZO
-	 qZbbEB9nJhzSLPk8agprZR7FQZ9MNHwjHlFMnY6alJdZiThBM+JT2cICUVMjkXPC07
-	 WhYI7ea/dafWg==
+	b=LPb5sMikD3r3iGyeVMF4g5kC5fcJMDQzck/W7xvhwa6u3prvOtQtOlJCmy8LPb01I
+	 3zk9Upzpe4Er28hVhCzOsnnctvGz6neLZy2MRtyAomr7CHzrhuej0lKH+AN2RVM/Xx
+	 03Rykkk9cZz0YmnilVLYxr7MqCFkIEqM6JFIdDFX9DqYJAfQMZIxcU3A89BLfv2vBz
+	 w7OTgSdN6PtC2JGMwsWuwfEYDwcyyHB6ENzBK25d9P4IXX/85ETC1Il497Ut0M4j8K
+	 u1PiDGncxkWJNEbxSGEdIUgEMjClV2jXh79tg2S5ApP7M+eB9xloGoa6AD5gp0acnU
+	 vVhHewvbpAtsA==
 From: Christian Brauner <brauner@kernel.org>
 To: Brian Foster <bfoster@redhat.com>
 Cc: Christian Brauner <brauner@kernel.org>,
@@ -33,12 +33,12 @@ Cc: Christian Brauner <brauner@kernel.org>,
 	hch@infradead.org,
 	djwong@kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2] iomap: warn on zero range of a post-eof folio
-Date: Wed, 20 Nov 2024 09:24:24 +0100
-Message-ID: <20241120-rennleitung-barsch-6e02748e36f2@brauner>
+Subject: Re: [PATCH v4 0/3] iomap: zero range flush fixes
+Date: Wed, 20 Nov 2024 09:33:01 +0100
+Message-ID: <20241120-beklebt-spontan-2cf2d3927c2e@brauner>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241115145931.535207-1-bfoster@redhat.com>
-References: <20241115145931.535207-1-bfoster@redhat.com>
+In-Reply-To: <20241115200155.593665-1-bfoster@redhat.com>
+References: <20241115200155.593665-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,20 +46,30 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1390; i=brauner@kernel.org; h=from:subject:message-id; bh=Rq9e0l8Mb8VnwWU3I5xtmko6/hmN2+LBvkRMLVX7rEU=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTbzjkguUDglc0EG7mqSad2KRodKth03q4/eGpy1Yejx Q2OO4596ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiIUjvDf6e+ORt8zcR4703x 92uNlN+qeOdR0WzOMxnTbxtznebmf8bIsNzneasB18Vp9s2FhnyGPI+ZBXlu2aof1Lnw626g0c9 MbgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1984; i=brauner@kernel.org; h=from:subject:message-id; bh=d4u5pzoyizOb+YPm1k72BRclODI6VehGONBF1CRirzQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTbzju87twf5s/Ngdz7dr9i/PRi472DfMd8/kxXOZIV5 /1IJkVOq6OUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAiUiUM/5Ne1P2wSdqreelE 6V4Rh+l9iS16E/gclyglXSyffGfBEWmG/0F1LQGFPxgFXR8dTxY68cR2mtoi+V/fzv368GbxAxV bZgYA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-On Fri, 15 Nov 2024 09:59:31 -0500, Brian Foster wrote:
-> iomap_zero_range() uses buffered writes for manual zeroing, no
-> longer updates i_size for such writes, but is still explicitly
-> called for post-eof ranges. The historical use case for this is
-> zeroing post-eof speculative preallocation on extending writes from
-> XFS. However, XFS also recently changed to convert all post-eof
-> delalloc mappings to unwritten in the iomap_begin() handler, which
-> means it now never expects manual zeroing of post-eof mappings. In
-> other words, all post-eof mappings should be reported as holes or
-> unwritten.
+On Fri, 15 Nov 2024 15:01:52 -0500, Brian Foster wrote:
+> Here's v4 of the zero range flush improvements. No real major changes
+> here, mostly minor whitespace, naming issues, etc.
+> 
+> Brian
+> 
+> v4:
+> - Whitespace and variable naming fixes.
+> - Split off patch 4 to a separate post.
+> v3: https://lore.kernel.org/linux-fsdevel/20241108124246.198489-1-bfoster@redhat.com/
+> - Added new patch 1 to always reset per-iter state in iomap_iter.
+> - Dropped iomap_iter_init() helper.
+> - Misc. cleanups.
+> - Appended patch 4 to warn on zeroing beyond EOF.
+> v2: https://lore.kernel.org/linux-fsdevel/20241031140449.439576-1-bfoster@redhat.com/
+> - Added patch 1 to lift zeroed mapping handling code into caller.
+> - Split unaligned start range handling at the top level.
+> - Retain existing conditional flush behavior (vs. unconditional flush)
+>   for the remaining range.
+> v1: https://lore.kernel.org/linux-fsdevel/20241023143029.11275-1-bfoster@redhat.com/
 > 
 > [...]
 
@@ -78,5 +88,9 @@ trailer updates or similar. If in doubt, please check the listed branch.
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
 branch: vfs.fixes
 
-[1/1] iomap: warn on zero range of a post-eof folio
-      https://git.kernel.org/vfs/vfs/c/2eba5b6013a5
+[1/3] iomap: reset per-iter state on non-error iter advances
+      https://git.kernel.org/vfs/vfs/c/cad47157a55d
+[2/3] iomap: lift zeroed mapping handling into iomap_zero_range()
+      https://git.kernel.org/vfs/vfs/c/46538f0b405b
+[3/3] iomap: elide flush from partial eof zero range
+      https://git.kernel.org/vfs/vfs/c/c07ba2d5979b
