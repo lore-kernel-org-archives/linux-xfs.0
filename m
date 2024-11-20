@@ -1,42 +1,48 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57FEE15CD46;
-	Wed, 20 Nov 2024 08:43:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2839618952C
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 09:05:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732092229; cv=none; b=WWVUUtM8gWJ30NB8IabcgyXcxXj8a6Kb3fB4HwknbY1OhIjVW3N08omoyd1cDZFx8tS2oRCApfxucdSXxj53CXv1Nqcr+HL2Btb4L1eiZmA2YDzzjFwW/Ure4BXKJRp0RFA+tmO+JUsJ1idFxhKxSZM3DFMK+1g20C4w8TVU9C4=
+	t=1732093518; cv=none; b=JD9GjG9PMVv9ESLeJRVs7HWV6xfUuxsc/TvnBBTfZXQhesUmGeqzonJgbv5gMtq06spHWeebbp61u24Xyw2OsSpKZ86nw5ttwdS68KI0fM0Y/pQ4xtk/hUFiTrqeK8r2A8Hw1g1zphKfDj9YBR2QPERwnrPeY0S3sQhgsH8bWZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732092229; c=relaxed/simple;
-	bh=fMhrOl+nY4qnzhafrcQPW/Z0Qozrepf0MPnbSy9LnY8=;
+	s=arc-20240116; t=1732093518; c=relaxed/simple;
+	bh=V0j4glC442/92T/jE36E7dLQiw7JYe43suk63IbLQXo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QVTV08kw7ubjdnsVIc9449gDDHKjTC46hLTy4EfZNQIKlYqcZn3lqPy5KI8iVemi5R7wg8fOy8/ccnHnPOUCMaXo8Dlcew/GId4LZTAAgjKsafBP7+3F+U2lhIV39kHYdjVQiwpEfPdu/w5nQ0dBRtyJtTteDmy22na6kLOgV28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jSZEaAg6; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=GrOkxu5LczYAY0l8ws42mH8eWqupXXwBALaJI4Hp0CxxFH2GwNVSeMM6J8hssBu8hL1gPFl9z+IKEFf0sP6vi0FX8khcR5zqfxA2ghUYRjLdlqGF2CygZeRFmMwOuwWN/VEtL6MLLaGWe33Fzblqje4N65+mobMfdVlRoolRELU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=c118t83n; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jSZEaAg6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="c118t83n"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=JnZQmEVCjUehsHWVpGBm+X2p0J0S/Dzk+i9+yxPD6HU=; b=jSZEaAg6uPIm7zDAbC2L6IoJnv
-	/Me1OKvLDbvI12riudOPq+rgsh0MY1awPP/RcKGALJa6O+jWLeKfDzFZmRAXxstagN0wbHXQGLNad
-	2XXZ5jCzXvC9m+q1OsKLL2clbf0lvTkQhcQ7D1sjnIU5+cvMSAtK1XYUZUUOM12UU390M9Wb53y9v
-	3GyxdPLKoGmVdjCMEdVX3q3ac1M5YnnKHJ5KSxBipMAg5VDmvXOa97m40vX7Ayz6ZLd8SrqMxYZ6q
-	7R1gsMlxx6QVSnfPOg9sZy36G2tPUVMrN29zzYBAKEnyFrd6Hd6xatk9C81VT+R1rHwY+Yh0HUPuZ
-	FzUFTWhQ==;
+	bh=RzDdM4gaJCYZcne1MAulL+tXV6rEVQPjLiSPRURZ+74=; b=c118t83nJi6+Hiib6gxnJ76ha+
+	Sz+eFEjjl7L4U6iQkYbHCQoV6HRHYqJhvOmdLimTxxosgrINIcGkzN+0/XGeG5AJaXzftDDJXnvmI
+	vy6P0JnDk7T1TDbl+fy5AR0JqGA19WZNf7LrFbF1iFmK5kHMaiLz+W0TtSdAJ41VKyz+CZhlM62sE
+	BQ2cfCRilHCPH5HqbtJSvsAm3x1BxnTcz91iGjbLHLQ+JZITZkKmlyGbTIc1Y20f6NDjD3EtUFMpK
+	a57NVRJPqYSj0gYrVdP5/0hKFV1+py0GjBiK8M7yeH/a4kBtFd6hordlLzJYiFo58gWdK3BZxsAG4
+	giMbMazg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tDgJP-0000000EnPt-3Qmm;
-	Wed, 20 Nov 2024 08:43:47 +0000
-Date: Wed, 20 Nov 2024 00:43:47 -0800
+	id 1tDgeC-0000000Eqib-1iUy;
+	Wed, 20 Nov 2024 09:05:16 +0000
+Date: Wed, 20 Nov 2024 01:05:16 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC 2/4] iomap: optional zero range dirty folio processing
-Message-ID: <Zz2hQ05dZC4D5fEl@infradead.org>
-References: <20241119154656.774395-1-bfoster@redhat.com>
- <20241119154656.774395-3-bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Long Li <leo.lilong@huawei.com>,
+	brauner@kernel.org, djwong@kernel.org, cem@kernel.org,
+	linux-xfs@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: Re: [PATCH v2 1/2] iomap: fix zero padding data issue in concurrent
+ append writes
+Message-ID: <Zz2mTCq03SEjoUZV@infradead.org>
+References: <20241113091907.56937-1-leo.lilong@huawei.com>
+ <ZzTQPdE5V155Soui@bfoster>
+ <ZzrlO_jEz9WdBcAF@infradead.org>
+ <ZztOpQwU0pRagGwU@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,55 +51,13 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241119154656.774395-3-bfoster@redhat.com>
+In-Reply-To: <ZztOpQwU0pRagGwU@bfoster>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Nov 19, 2024 at 10:46:54AM -0500, Brian Foster wrote:
-> +loff_t
-> +iomap_fill_dirty_folios(
-> +	struct inode		*inode,
-> +	struct iomap		*iomap,
+On Mon, Nov 18, 2024 at 09:26:45AM -0500, Brian Foster wrote:
+> IOW following the train of thought in the other subthread, would any
+> practical workload be affected if we just trimmed io_size when needed by
+> i_size and left it at that?
 
-If you pass in the batch directly instead of the iomap this is
-completely generic and could go into filemap.c.  Adding willy
-and linux-mm for these kinds of things also tends to help to
-get good review feedback and often improvements.
-
-> +	loff_t			offset,
-> +	loff_t			length)
-> +{
-> +	struct address_space	*mapping = inode->i_mapping;
-> +	struct folio_batch	fbatch;
-> +	pgoff_t			start, end;
-> +	loff_t			end_pos;
-> +
-> +	folio_batch_init(&fbatch);
-> +	folio_batch_init(&iomap->fbatch);
-> +
-> +	end_pos = offset + length;
-> +	start = offset >> PAGE_SHIFT;
-> +	end = (end_pos - 1) >> PAGE_SHIFT;
-
-Nit: initializing these at declaration time make the code easier to
-read (at least for me :)).
-
-> +
-> +	while (filemap_get_folios(mapping, &start, end, &fbatch) &&
-> +	       folio_batch_space(&iomap->fbatch)) {
-> +		struct folio *folio;
-> +		while ((folio = folio_batch_next(&fbatch))) {
-> +			if (folio_trylock(folio)) {
-> +				bool clean = !folio_test_dirty(folio) &&
-> +					     !folio_test_writeback(folio);
-> +				folio_unlock(folio);
-> +				if (clean)
-> +					continue;
-
-What does the lock protect here given that it can become stale as soon
-as we unlock?
-
-Note that there also is a filemap_get_folios_tag that only looks up
-folios with the right tag (dirty or writeback).  Currently it only
-supports a single tag, which wuld not be helpful here, but this might
-be worth talking to the pagecache and xarray maintainer.
+Can you explain what you mean with that? 
 
