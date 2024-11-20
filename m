@@ -1,88 +1,96 @@
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+Received: from mail-io1-f53.google.com (mail-io1-f53.google.com [209.85.166.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A012F84D3E;
-	Wed, 20 Nov 2024 15:36:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB3424B28
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 15:37:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732117006; cv=none; b=s3Lf5/6psa7kcZkocW2x2mqScicXzqjREtGPMphEk9inLsYJVOhWvTVBxAOBFj0DbxLK7sP58eyaWYPZ/08LjZLufHB7NzAujpYIVxIfbKr/g9M3s86hLmtoGYfK2+gILwP4tMbiL+0Sl0y+yEwvUEJujOniu6hdT/yiGQ+uRz0=
+	t=1732117077; cv=none; b=K6vF6blpcKdSbM+XLYVfTi96MfepwM+9ffgjMrKlqZfG0EjNiXqT29R88PFGJcTrPTHZiva/9czY2F9hAgnvzWE0YGl1Fx3CBY8+bBf2h77oVUFoyeYAEogzseEX599hA7SJRMhdY0SwwwNLRBKhmgXrw/yUKyqgkpHtldhUq6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732117006; c=relaxed/simple;
-	bh=rRQ4OBZRgRUT2QDchNqnm2+yTXcDEmctPLBAk9SKaYc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RBsF2N5X3EoTYaCy5IIxIAV7Vk/4RkxXUR7laAszgXwNzzrBNZFARfTgyjnpEo4TWHJ98o+KsUmN+bPHuQrm2Y9g8iLwaSP40xHv3zBwZONBPyDb2LdUFjm4AFDzWrH5CL1Ay+fP6cD0KHV2OqldX+2+CplocGokqtHMW+5d9Ng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RiX0pJeV; arc=none smtp.client-ip=209.85.208.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732117077; c=relaxed/simple;
+	bh=0JOaf6Fc4oX3EuXWi7wZzlKsXgXLXWdlqYqGsC+CHqM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ec6Byf/Rv6CCop4s8yRUTdKkCOwvMdE5EDu/FM+sNqqrdMA7u5aRwYnyiLB3jMftPyfqUk5dYZImpzUKLhDMVMV4y3mNZwHg1tO0neMUmN35W0iNQ4yZzHfSWc75FfNWO5QMydQJso6dzrICPnVs56MbZgDjh4rqw6fhXetwlEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b=IKSqd4px; arc=none smtp.client-ip=209.85.166.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RiX0pJeV"
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2ff3232ee75so25814021fa.0;
-        Wed, 20 Nov 2024 07:36:44 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b="IKSqd4px"
+Received: by mail-io1-f53.google.com with SMTP id ca18e2360f4ac-83ab21c269eso151622139f.2
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 07:37:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732117003; x=1732721803; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=J4480msYWYSV1aWn6FUea6HU3tyZnI63NOgH1lUg7gA=;
-        b=RiX0pJeVzQ7fdQ8P/OjjNe3lUqpRlEwSN2X+9+T86/yH8PoHav9OBJOI7gymjfL4Tk
-         8u3JJ9w3uU1Y7GiiVbSok38oW2LB6KiVSmdsA88F2tBv+eHzu09DMCdLm/nsC7B3D5SM
-         xdWB5bRFNowvFMZcge33J41ddTxGILfwLfDh2j9KPsxjeKnYfca7f6j8m65G5u0TaIvv
-         8PM/8qZ1GnlGyQQxKXr1gWmomSO5mr1zH2A4od0XGIIJ5fHTZn7sngKINzXhs8UktB88
-         e9MRTyPrOp2i5Z6nm5rZwLpqJrHvSH5y34UHR91q1RvrNtmrmnPrvGB4IMzt2tg6v31M
-         dJow==
+        d=riscstar-com.20230601.gappssmtp.com; s=20230601; t=1732117075; x=1732721875; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ns+8qgp8ihemUk4LALEfrdrF/V/lndEQMLbRy8TsQuE=;
+        b=IKSqd4pxegVL2TPPzpxXgninTcvoFe2aCB62xYdmwWF7D3rm9QYgCgAmqZf1K9DKiB
+         PEBHugY+tSpzg6SG955LzPBz5sQl3mHLjxhwie03mlRkRur01J4+79hyqlIUc/5B1tZU
+         rPWq+KnkOHD1jbc9/3atcJE5LBNpMBWDYeGM4GyDw5a+bNPZe2csvGDulNfI0KK0FywQ
+         4a3JwRmMBAH1Uo9pAoYUiyL1zZpfFnMDrDbfQKDPlfmzF4x2dIxGM0hzLrasHbOiihET
+         P6SC6ss6aybg1iPMaXmA5mIM2fE/SvN6kfeCPmH+gtvXeBNU04W62P2wVqsu8g9BZfhx
+         6bgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732117003; x=1732721803;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=J4480msYWYSV1aWn6FUea6HU3tyZnI63NOgH1lUg7gA=;
-        b=uv/aHPSvsYpE0UaYQCseffrsMjAu1v7sSxF5Yc6Ubpal3W83D3dEKAFKbSpJTePj11
-         UVkiBCfgsofWl2Iixzsp8iFs/l/iijf2WeXIlVXOgdkHBTKPdeBgHdMOGDukYSf3Ttn+
-         9c6niV6F7WdeLHuEiGOm8Kf8/zULESZvolHd/w0XDtM4cxSl3daDoCEfvV64KeR2sRww
-         uwqnt0IMVUlZ2STWl9QlX7VMdTS50VVcuOLxdBYWMAW5jX/CA++14CVDMq33DAI+i614
-         CZt271AXHOulYYwsBYyfI1mPpHV1JknP3HEBkXXIMYjixuguQM6qJLQ5OgiMUv4+pAMQ
-         cYnw==
-X-Forwarded-Encrypted: i=1; AJvYcCVsvD9qfmq4JtGxeY4AKPzXuKlMwtSljoyzf1R9QLoe34bkJkcPV9HdoaQsc/u8fA4rB5KOgxFtI4obPyo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyng32+K4oOo4LJJc4wDML2RHZB1cksDayKLHPdO6TYTb80zBtD
-	vt+9BR4UIy3JdtYC78McOAlxXoOnjPiEZwghnPiAe7VJcQmG4TmdllmK/ZasTq8fO9AFUf/Vx6v
-	aPoyzhfihD5w69y9RzW8oQAhiHp4=
-X-Gm-Gg: ASbGncu/UoK2a+HVTC61PG2Gcg2LbL3aE4dX5vQopt6ojJJpeqismN9Ws2jHtrqUQcx
-	Wv4ViMA8bTUKZVgypl9kdQIAcv1g2YhQ=
-X-Google-Smtp-Source: AGHT+IE0bt43BHS9nIQ63LeFwzqnyam1nsHgEkDbLK9lae8oPkZ3wEfyCNHxDLWM8UkdXvP2YPMfBynx1DXZIZnRzcg=
-X-Received: by 2002:a2e:a5c7:0:b0:2ff:8d7e:56f with SMTP id
- 38308e7fff4ca-2ff8dcbee1fmr25369481fa.32.1732117002554; Wed, 20 Nov 2024
- 07:36:42 -0800 (PST)
+        d=1e100.net; s=20230601; t=1732117075; x=1732721875;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ns+8qgp8ihemUk4LALEfrdrF/V/lndEQMLbRy8TsQuE=;
+        b=FJnSd5ZvhFaQ3jWSqNA/RWo0PpJpTPTtxLqbNQpRIJLPFA3HauvjMIySU6YS2R4nmn
+         dKeK298hUXef7ACY1nJRzoz2OQN8rsmeVVHn+xutg1CGv/16SNKGjDk4CHAoV6YQAgX8
+         szjit0xpRUWcqAkpCsn3HK0+r9iSvgA31mdO5xCqKiKD7QyvwaWuUmgY3U73IKt65cN6
+         EnfInTCH9KeMQcEGKk8+pHCRVB28/W5EoSLszmdFRFB9A+Y7qeGb3XoG26AkCqSak9GN
+         jF9FMTJ/sfVzkHP4MR2KB5CZJ0whVk6FwQPt26B7MX7ccLzu0X9rcbArzRdZSxhCAMkY
+         es/g==
+X-Gm-Message-State: AOJu0YzHG026dQt/TBG0lj3l2t0JGI/clZem67RvBrg+u9X+Kg49ueuJ
+	aVeRwtqCgRhEbnGvXtkxRzZpXy2qNPM8zesqpHzvb7BsMejPeWuyeIbqFlEoqtA=
+X-Google-Smtp-Source: AGHT+IEhzzdiy3jkiDuHkj5iHET4WmAI4DlalGu7KztQOSaRQf09JJ91HJPq6IG4dJV7oNVePnYCTA==
+X-Received: by 2002:a05:6602:3c6:b0:83a:b3f8:e517 with SMTP id ca18e2360f4ac-83eb5e364c5mr383922139f.0.1732117075090;
+        Wed, 20 Nov 2024 07:37:55 -0800 (PST)
+Received: from [172.22.22.28] (c-73-228-159-35.hsd1.mn.comcast.net. [73.228.159.35])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4e06d6eacebsm3349176173.25.2024.11.20.07.37.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Nov 2024 07:37:54 -0800 (PST)
+Message-ID: <1a9a75bd-d946-40ec-8307-10fa04672300@riscstar.com>
+Date: Wed, 20 Nov 2024 09:37:54 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241120150725.3378-1-ubizjak@gmail.com> <ad32f0aa-79df-41b2-90d0-9d98de695a18@riscstar.com>
-In-Reply-To: <ad32f0aa-79df-41b2-90d0-9d98de695a18@riscstar.com>
-From: Uros Bizjak <ubizjak@gmail.com>
-Date: Wed, 20 Nov 2024 16:36:31 +0100
-Message-ID: <CAFULd4afgt7LtqzZ_oFDz4wtMe+TZKGX3E_XpSo2HD5rQEvOjg@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
-To: Alex Elder <elder@riscstar.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+To: Uros Bizjak <ubizjak@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong"
+ <djwong@kernel.org>, Christoph Hellwig <hch@infradead.org>,
+ Dave Chinner <dchinner@redhat.com>
+References: <20241120150725.3378-1-ubizjak@gmail.com>
+ <ad32f0aa-79df-41b2-90d0-9d98de695a18@riscstar.com>
+ <CAFULd4afgt7LtqzZ_oFDz4wtMe+TZKGX3E_XpSo2HD5rQEvOjg@mail.gmail.com>
+Content-Language: en-US
+From: Alex Elder <elder@riscstar.com>
+In-Reply-To: <CAFULd4afgt7LtqzZ_oFDz4wtMe+TZKGX3E_XpSo2HD5rQEvOjg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 20, 2024 at 4:34=E2=80=AFPM Alex Elder <elder@riscstar.com> wro=
-te:
->
-> On 11/20/24 9:06 AM, Uros Bizjak wrote:
-> > try_cmpxchg() loop with constant "new" value can be substituted
-> > with just xchg() to atomically get and clear the location.
->
-> You're right.  With a constant new value (0), there is no need
-> to loop to ensure we get a "stable" update.
->
-> Is the READ_ONCE() is still needed?
+On 11/20/24 9:36 AM, Uros Bizjak wrote:
+> On Wed, Nov 20, 2024 at 4:34 PM Alex Elder <elder@riscstar.com> wrote:
+>>
+>> On 11/20/24 9:06 AM, Uros Bizjak wrote:
+>>> try_cmpxchg() loop with constant "new" value can be substituted
+>>> with just xchg() to atomically get and clear the location.
+>>
+>> You're right.  With a constant new value (0), there is no need
+>> to loop to ensure we get a "stable" update.
+>>
+>> Is the READ_ONCE() is still needed?
+> 
+> No, xchg() guarantees atomic access on its own.
+> 
+> Uros.
 
-No, xchg() guarantees atomic access on its own.
+Based on that:
 
-Uros.
+Reviewed-by: Alex Elder <elder@riscstar.com>
