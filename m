@@ -1,96 +1,168 @@
-Received: from mail-io1-f53.google.com (mail-io1-f53.google.com [209.85.166.53])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB3424B28
-	for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 15:37:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0E0B24B28;
+	Wed, 20 Nov 2024 15:44:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732117077; cv=none; b=K6vF6blpcKdSbM+XLYVfTi96MfepwM+9ffgjMrKlqZfG0EjNiXqT29R88PFGJcTrPTHZiva/9czY2F9hAgnvzWE0YGl1Fx3CBY8+bBf2h77oVUFoyeYAEogzseEX599hA7SJRMhdY0SwwwNLRBKhmgXrw/yUKyqgkpHtldhUq6s=
+	t=1732117492; cv=none; b=IMddHgWZsMzHk4q1Z+glPUL7kxwrCzzBZOE97K9FoJmWBehANbl2pDyVZozOKtVwhT0/Jh+e/jJLeBqygz2I6KNDDyEw8fyKnQCPMs8st7e1bpEqWzcX9DBi63poqgUbijE7hUcieQbUWnkzTAcNrs64ukpJeofnLI5VGYUM28w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732117077; c=relaxed/simple;
-	bh=0JOaf6Fc4oX3EuXWi7wZzlKsXgXLXWdlqYqGsC+CHqM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ec6Byf/Rv6CCop4s8yRUTdKkCOwvMdE5EDu/FM+sNqqrdMA7u5aRwYnyiLB3jMftPyfqUk5dYZImpzUKLhDMVMV4y3mNZwHg1tO0neMUmN35W0iNQ4yZzHfSWc75FfNWO5QMydQJso6dzrICPnVs56MbZgDjh4rqw6fhXetwlEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b=IKSqd4px; arc=none smtp.client-ip=209.85.166.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1732117492; c=relaxed/simple;
+	bh=vdTxX2YuKU95fz9NIU7I0rXE9Xh1OSWG3TAF4nxWTTo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VrUOPlrFwn0+HDfw46hgiKGnbbFkPUmnNm3ugZDSa/d7294qUSY4DeA0nmvHgTYXDnIYz6cyQwml8pgqpb3n6g5tS7dxT3Pt2AB4A8OrxPXd44jJammrp2gvJuZqDPcaSs1CnM8e9qH/WPvMfVBBnyRHNN4u6k7g51vmaxVQWKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=JvPVwTtd; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=GDl/w4KP; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ZRaT9ur+; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=tIemCaNb; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b="IKSqd4px"
-Received: by mail-io1-f53.google.com with SMTP id ca18e2360f4ac-83ab21c269eso151622139f.2
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2024 07:37:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20230601.gappssmtp.com; s=20230601; t=1732117075; x=1732721875; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ns+8qgp8ihemUk4LALEfrdrF/V/lndEQMLbRy8TsQuE=;
-        b=IKSqd4pxegVL2TPPzpxXgninTcvoFe2aCB62xYdmwWF7D3rm9QYgCgAmqZf1K9DKiB
-         PEBHugY+tSpzg6SG955LzPBz5sQl3mHLjxhwie03mlRkRur01J4+79hyqlIUc/5B1tZU
-         rPWq+KnkOHD1jbc9/3atcJE5LBNpMBWDYeGM4GyDw5a+bNPZe2csvGDulNfI0KK0FywQ
-         4a3JwRmMBAH1Uo9pAoYUiyL1zZpfFnMDrDbfQKDPlfmzF4x2dIxGM0hzLrasHbOiihET
-         P6SC6ss6aybg1iPMaXmA5mIM2fE/SvN6kfeCPmH+gtvXeBNU04W62P2wVqsu8g9BZfhx
-         6bgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732117075; x=1732721875;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ns+8qgp8ihemUk4LALEfrdrF/V/lndEQMLbRy8TsQuE=;
-        b=FJnSd5ZvhFaQ3jWSqNA/RWo0PpJpTPTtxLqbNQpRIJLPFA3HauvjMIySU6YS2R4nmn
-         dKeK298hUXef7ACY1nJRzoz2OQN8rsmeVVHn+xutg1CGv/16SNKGjDk4CHAoV6YQAgX8
-         szjit0xpRUWcqAkpCsn3HK0+r9iSvgA31mdO5xCqKiKD7QyvwaWuUmgY3U73IKt65cN6
-         EnfInTCH9KeMQcEGKk8+pHCRVB28/W5EoSLszmdFRFB9A+Y7qeGb3XoG26AkCqSak9GN
-         jF9FMTJ/sfVzkHP4MR2KB5CZJ0whVk6FwQPt26B7MX7ccLzu0X9rcbArzRdZSxhCAMkY
-         es/g==
-X-Gm-Message-State: AOJu0YzHG026dQt/TBG0lj3l2t0JGI/clZem67RvBrg+u9X+Kg49ueuJ
-	aVeRwtqCgRhEbnGvXtkxRzZpXy2qNPM8zesqpHzvb7BsMejPeWuyeIbqFlEoqtA=
-X-Google-Smtp-Source: AGHT+IEhzzdiy3jkiDuHkj5iHET4WmAI4DlalGu7KztQOSaRQf09JJ91HJPq6IG4dJV7oNVePnYCTA==
-X-Received: by 2002:a05:6602:3c6:b0:83a:b3f8:e517 with SMTP id ca18e2360f4ac-83eb5e364c5mr383922139f.0.1732117075090;
-        Wed, 20 Nov 2024 07:37:55 -0800 (PST)
-Received: from [172.22.22.28] (c-73-228-159-35.hsd1.mn.comcast.net. [73.228.159.35])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4e06d6eacebsm3349176173.25.2024.11.20.07.37.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Nov 2024 07:37:54 -0800 (PST)
-Message-ID: <1a9a75bd-d946-40ec-8307-10fa04672300@riscstar.com>
-Date: Wed, 20 Nov 2024 09:37:54 -0600
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="JvPVwTtd";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="GDl/w4KP";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ZRaT9ur+";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="tIemCaNb"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id D890E21851;
+	Wed, 20 Nov 2024 15:44:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1732117489; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Fj7fJmtXRZ0FYhZKsaGUvpP5NpR+kcXv8aPZO9BcWjs=;
+	b=JvPVwTtd+MbQta7TYhE3Ky1Ptg76578DHL7fgJRnuwS7+EsjvTqcU9i6o/WXzmJeE8/N95
+	JTJEubWc7cKSXekkbiWLr+8QeuQdxF+/wJiMi6nwYwC5pWCC0UzVWiJe+/xVjkJvFm102q
+	QPn0uqXaz5J8MFw/Gyn1KBh6Ri7hPJM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1732117489;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Fj7fJmtXRZ0FYhZKsaGUvpP5NpR+kcXv8aPZO9BcWjs=;
+	b=GDl/w4KP2hGUTusRS1+ZfEgiwAUkAFE7fTbWakvs4pkVQ/H47OQoRNBfl3lIN48Yb5kSaR
+	2U98Oty+38009eBA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=ZRaT9ur+;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=tIemCaNb
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1732117488; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Fj7fJmtXRZ0FYhZKsaGUvpP5NpR+kcXv8aPZO9BcWjs=;
+	b=ZRaT9ur+uK+GrsNe98Ae5xAKSdHwwjOYsXnh6vWZb1aFjfSwIzfHP/4a4g/pdKEw75/OyK
+	zJBz4RsXJKCF3N028EuaJAmy61D/hRCHFNWsNjv68myNwsg10F19QCy9B6e6aEUCOngJlp
+	Vhu6nqNIAHlv6S9h2ahehApZHEML1mE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1732117488;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Fj7fJmtXRZ0FYhZKsaGUvpP5NpR+kcXv8aPZO9BcWjs=;
+	b=tIemCaNb8aws/6zZYsoCT7z2+fWPQLWYSWUcsZXfzESgYYnxicFjdPaZoU4OwfyQCt+kQR
+	+VBn1euU5mRMU2Ag==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C9BF113297;
+	Wed, 20 Nov 2024 15:44:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id /Og8MfADPmfhSAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 20 Nov 2024 15:44:48 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 80F8CA08A2; Wed, 20 Nov 2024 16:44:48 +0100 (CET)
+Date: Wed, 20 Nov 2024 16:44:48 +0100
+From: Jan Kara <jack@suse.cz>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
+	amir73il@gmail.com, brauner@kernel.org,
+	torvalds@linux-foundation.org, viro@zeniv.linux.org.uk,
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v8 13/19] fanotify: add a helper to check for pre content
+ events
+Message-ID: <20241120154448.onc2q5rsusfs4zsm@quack3>
+References: <cover.1731684329.git.josef@toxicpanda.com>
+ <657f50e37d6d8f908c13f652129bcdd34ed7f4a9.1731684329.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
-To: Uros Bizjak <ubizjak@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong"
- <djwong@kernel.org>, Christoph Hellwig <hch@infradead.org>,
- Dave Chinner <dchinner@redhat.com>
-References: <20241120150725.3378-1-ubizjak@gmail.com>
- <ad32f0aa-79df-41b2-90d0-9d98de695a18@riscstar.com>
- <CAFULd4afgt7LtqzZ_oFDz4wtMe+TZKGX3E_XpSo2HD5rQEvOjg@mail.gmail.com>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <CAFULd4afgt7LtqzZ_oFDz4wtMe+TZKGX3E_XpSo2HD5rQEvOjg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <657f50e37d6d8f908c13f652129bcdd34ed7f4a9.1731684329.git.josef@toxicpanda.com>
+X-Rspamd-Queue-Id: D890E21851
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	FREEMAIL_CC(0.00)[fb.com,vger.kernel.org,suse.cz,gmail.com,kernel.org,linux-foundation.org,zeniv.linux.org.uk,kvack.org];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.01
+X-Spam-Flag: NO
 
-On 11/20/24 9:36 AM, Uros Bizjak wrote:
-> On Wed, Nov 20, 2024 at 4:34 PM Alex Elder <elder@riscstar.com> wrote:
->>
->> On 11/20/24 9:06 AM, Uros Bizjak wrote:
->>> try_cmpxchg() loop with constant "new" value can be substituted
->>> with just xchg() to atomically get and clear the location.
->>
->> You're right.  With a constant new value (0), there is no need
->> to loop to ensure we get a "stable" update.
->>
->> Is the READ_ONCE() is still needed?
+On Fri 15-11-24 10:30:26, Josef Bacik wrote:
+> From: Amir Goldstein <amir73il@gmail.com>
 > 
-> No, xchg() guarantees atomic access on its own.
+> We want to emit events during page fault, and calling into fanotify
+> could be expensive, so add a helper to allow us to skip calling into
+> fanotify from page fault.  This will also be used to disable readahead
+> for content watched files which will be handled in a subsequent patch.
 > 
-> Uros.
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  include/linux/fsnotify.h | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/include/linux/fsnotify.h b/include/linux/fsnotify.h
+> index 08893429a818..d5a0d8648000 100644
+> --- a/include/linux/fsnotify.h
+> +++ b/include/linux/fsnotify.h
+> @@ -178,6 +178,11 @@ static inline void file_set_fsnotify_mode(struct file *file)
+>  	}
+>  }
+>  
+> +static inline bool fsnotify_file_has_pre_content_watches(struct file *file)
+> +{
+> +	return file && unlikely(FMODE_FSNOTIFY_HSM(file->f_mode));
+> +}
+> +
 
-Based on that:
+I was pondering about this and since we are trying to make these quick
+checks more explicit, I'll probably drop this helper. Also the 'file &&'
+part looks strange (I understand page_cache_[a]sync_ra() need it but I'd
+rather handle it explicitely there).
 
-Reviewed-by: Alex Elder <elder@riscstar.com>
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
