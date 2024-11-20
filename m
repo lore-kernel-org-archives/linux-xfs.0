@@ -1,109 +1,209 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AFAC13D638;
-	Wed, 20 Nov 2024 16:28:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 755BD13AA31;
+	Wed, 20 Nov 2024 16:42:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732120108; cv=none; b=dCAJV894TkFcxtIQWJR9kCxXjO/M+vnfkzvYWAuCeoO+9JqxMKsQKvlig5ejgVoat2ZLxudESekjhNydQ8gMdM96LWpD8WZYYOYR2kpO+B4PEaUgmzBwdVkcRM3btIaVQX0bV2nJPUcQR9wf3YHwVYVWz5ajo8ZerNZU8NogwUg=
+	t=1732120953; cv=none; b=cqJyD6iVCUVFg10fr+5dEvCqHSjV9g06tPxDSLAgWuFxwTeCMZ3wilbZ87jLFJZQclcHgLg7c8Tt7sZJjCXHMMgWsPoqhzfCl1Lzhmu/hK5+gGLTdt05bwgi4zShe0dZ2EN6/jap2WF+J1GAOODHx5nJIthvz45CbJ8JKa330Ns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732120108; c=relaxed/simple;
-	bh=FwCA5kpv5qBVIFi6jHShRB71izAMJl84UI018I3EImk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qrOkK8n3/oSQ/8ym3Lls+IpsKA/zGpbHvlXVlBUVuK8+zLGUxSnMfZNPMOJv3SNNWCuF5He4k3Lg0qagX/5OEP2sfW9Z8mEuPAkv1rZFUgtA1J2jg24WwaV0G9BIB5/GWmaR7b3axcdTRbacrtjXLgiWw112JaaaxEOUSGFlkNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZeqHHHOd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732120953; c=relaxed/simple;
+	bh=e6Qp6oBiUPlSxswotyKcOIKoPUzbc+hiUUbCKuI7KJQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Yj4BNbrtdixuKZKJMN9J9ripDDvkQC7lJAYNYvmDKq3liglJyecQpkzoUM8ViddC4q564yqnzPD3w6/bTw898fcqaDsozjFke2lym4Ep0pkAKVYsp4sRdnSF205lo+96BhZOlEEeiTzlho5NLTWyuMRCye/jV6W5AGO2RKntFts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Rn+IhqYI; arc=none smtp.client-ip=209.85.218.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZeqHHHOd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6362CC4CECD;
-	Wed, 20 Nov 2024 16:28:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732120105;
-	bh=FwCA5kpv5qBVIFi6jHShRB71izAMJl84UI018I3EImk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZeqHHHOd/fueuNwvyIx/uID2irjKJ9kFoJLTgqPiaZN1qmmuXZDmv5onILfpTIWvH
-	 bWW1M1lBXjGTg4WpaUr6a1YJIV+feCQlSNuDWTR0h3sY2ZE0d24GrbGSNFUZIiEbdZ
-	 1Ay29mSRSsJNl0i2J17gEuMoysQL8ee/8dT0KsEMYIkjL98k048MdFUAxKALBOUbm8
-	 KV7f4PN4q83ucMqfe1rcH2BaypwSdHaJmrpuLFu02Kqc5KPSpaE/TcBAjOWEjiEg6Q
-	 or+OTrEZAnQpxrejwrX6Y/8QAO3TlK3P0gE8S1vtA57n0piXpvwD7GhGXvlQYdZmai
-	 Umy2c1Db8puZA==
-Date: Wed, 20 Nov 2024 08:28:24 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Anand Jain <anand.jain@oracle.com>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] fstests: fix blksize_t printf format warnings across
- architectures
-Message-ID: <20241120162824.GC9438@frogsfrogsfrogs>
-References: <c4847cd94f86bd98fc563f112e177b317dc21111.1732102551.git.anand.jain@oracle.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rn+IhqYI"
+Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-aa20c733e92so790253566b.0;
+        Wed, 20 Nov 2024 08:42:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1732120950; x=1732725750; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FcZ/qVRFrTrPsl9wheVLwLdCEZFphqCBC9fFa8ajopI=;
+        b=Rn+IhqYIelFUFS4Ba9qF2KaHYhSTlMazRmz2eDXyIF8HDyk+2i68a9a9Jms4TMmk88
+         XvmuaYoTh4eSINxAk90HQNpuJyeOm9dTqEq31991gVVDroMKZ8Xr05HNg/tPWiTxYhlv
+         p0TTLkgBVXscG9XfjpLrvAOKNCrJIo0FOtCXRlMSec7jIVGZKeBWcFG8AxRKyfrtMR1z
+         0bUDbA67qoeglVJLK2DVyUF0auIFV9arKEi0aAnJgEC37wa5zvATpIiaWUUiJZ8tcOnZ
+         2DT6y54FssCwPBjIaVjHSsF22AYMO9MzDVvnVupWNb4iszAX3wdaLOk8RUYtffo/P+1r
+         4rew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732120950; x=1732725750;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=FcZ/qVRFrTrPsl9wheVLwLdCEZFphqCBC9fFa8ajopI=;
+        b=SAOX9tXveKUZQNBpo7lqbpvvRfVQz8PHvhx07VsJqjCv0JLYjw+ZshSrL2Vzmukn2M
+         8+OIb4mS0wGcJY9w31CO0RL43tf7GUsW5399QCDbLPM7sbrcqa+YV8AQ9fMJNzCaEs1R
+         c4O5IQQS/viB6LkB4XnSpRqux744Vh9JaT10+cqN4GMdNoGGDj1YJpzRYzZt/vB8pIzv
+         3NW6orJXg9GKudEkRMvTTAaU5Ex7NXnKBq/V/hqwjyEsJg5uIxRCJs8bxJjSgZl4il19
+         ld59qGi8oNzVaITThSFwcbtoioc3mA20oUICVROsp1R4fensG5/nEKKEB6QsfBygMhIN
+         eGYQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUCJrxx/UO8AarXyVeUrdEdXelSBtQw4UXXmXWyJHVCPNs7sf/MjllFQY0aBQsHak/82vh+hyBYvEGI2A==@vger.kernel.org, AJvYcCUKr1asp09UT8qC4sQrnzYsnzl37tGnjA0AJS8rL8wCeh5+e/zHNoxb3+dNYhk0I05IDjrhlO3bYeKu@vger.kernel.org, AJvYcCWKUmgVmUSZluqWuXefdQjW68HyOmaRD5JMLN8kyb1VMpYdK+LlTu9xeH5DtRfFhap0Rlu3XHNfle45UA==@vger.kernel.org, AJvYcCWuszp1pjgK7t8XCxE1yxwnazEQ+AAPrOoQTwsQCfi5hnQJ9lbXW2kHymIfDgLbHk5mreRvIQKw76iypto34Q==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzKcVJ9nNpnZhDor/VarQiUKGwWtCLizE56nRwkXDzE4WJZl2XN
+	T4w2wu8nT8IBcmyCisxWOc4HmSXeVtZIBO7bZk1RtphV0hoyXaaLPJikvH518ougGRnx3p17jwf
+	gQEW04Oh/pHhlFUPOfo7QEpB/3lw=
+X-Google-Smtp-Source: AGHT+IESXkPbNLJC+3RMgOX6j+HutEH0kyIIO5eXd31+9oHtDOGVK9zXOmSMvlelO3h+JPf71j6COjp4Ahjs7rPmPGw=
+X-Received: by 2002:a17:906:4793:b0:a99:fb56:39cc with SMTP id
+ a640c23a62f3a-aa4dd71e7famr354632666b.38.1732120949412; Wed, 20 Nov 2024
+ 08:42:29 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c4847cd94f86bd98fc563f112e177b317dc21111.1732102551.git.anand.jain@oracle.com>
+References: <cover.1731684329.git.josef@toxicpanda.com> <2ddcc9f8d1fde48d085318a6b5a889289d8871d8.1731684329.git.josef@toxicpanda.com>
+ <20241120160247.sdvonyxkpmf4wnt2@quack3>
+In-Reply-To: <20241120160247.sdvonyxkpmf4wnt2@quack3>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 20 Nov 2024 17:42:18 +0100
+Message-ID: <CAOQ4uxj4pwH2hfmNL0N=q8-rOF6d=-Z_yWLEwHQ671t1EvRn6A@mail.gmail.com>
+Subject: Re: [PATCH v8 03/19] fsnotify: add helper to check if file is
+ actually being watched
+To: Jan Kara <jack@suse.cz>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
+	brauner@kernel.org, torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, 
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Nov 20, 2024 at 07:40:41PM +0800, Anand Jain wrote:
-> Fix format string warnings when printing blksize_t values that vary
-> across architectures. The warning occurs because blksize_t is defined
-> differently between architectures: aarch64 architectures blksize_t is
-> int, on x86-64 it's long-int.  Cast the values to long. Fixes warnings
-> as below.
-> 
->  seek_sanity_test.c:110:45: warning: format '%ld' expects argument of type
->  'long int', but argument 3 has type 'blksize_t' {aka 'int'}
-> 
->  attr_replace_test.c:70:22: warning: format '%ld' expects argument of type
->  'long int', but argument 3 has type '__blksize_t' {aka 'int'}
-> 
-> Signed-off-by: Anand Jain <anand.jain@oracle.com>
+On Wed, Nov 20, 2024 at 5:02=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
+>
+> On Fri 15-11-24 10:30:16, Josef Bacik wrote:
+> > From: Amir Goldstein <amir73il@gmail.com>
+> >
+> > So far, we set FMODE_NONOTIFY_ flags at open time if we know that there
+> > are no permission event watchers at all on the filesystem, but lack of
+> > FMODE_NONOTIFY_ flags does not mean that the file is actually watched.
+> >
+> > To make the flags more accurate we add a helper that checks if the
+> > file's inode, mount, sb or parent are being watched for a set of events=
+.
+> >
+> > This is going to be used for setting FMODE_NONOTIFY_HSM only when the
+> > specific file is actually watched for pre-content events.
+> >
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>
+> I did some changes here as well. See below:
+>
+> > -/* Are there any inode/mount/sb objects that are interested in this ev=
+ent? */
+> > -static inline bool fsnotify_object_watched(struct inode *inode, __u32 =
+mnt_mask,
+> > -                                        __u32 mask)
+> > +/* Are there any inode/mount/sb objects that watch for these events? *=
+/
+> > +static inline __u32 fsnotify_object_watched(struct inode *inode, __u32=
+ mnt_mask,
+> > +                                         __u32 events_mask)
+> >  {
+> >       __u32 marks_mask =3D READ_ONCE(inode->i_fsnotify_mask) | mnt_mask=
+ |
+> >                          READ_ONCE(inode->i_sb->s_fsnotify_mask);
+> >
+> > -     return mask & marks_mask & ALL_FSNOTIFY_EVENTS;
+> > +     return events_mask & marks_mask;
+> >  }
+> >
+> > +/* Are there any inode/mount/sb/parent objects that watch for these ev=
+ents? */
+> > +__u32 fsnotify_file_object_watched(struct file *file, __u32 events_mas=
+k)
+> > +{
+> > +     struct dentry *dentry =3D file->f_path.dentry;
+> > +     struct dentry *parent;
+> > +     __u32 marks_mask, mnt_mask =3D
+> > +             READ_ONCE(real_mount(file->f_path.mnt)->mnt_fsnotify_mask=
+);
+> > +
+> > +     marks_mask =3D fsnotify_object_watched(d_inode(dentry), mnt_mask,
+> > +                                          events_mask);
+> > +
+> > +     if (likely(!(dentry->d_flags & DCACHE_FSNOTIFY_PARENT_WATCHED)))
+> > +             return marks_mask;
+> > +
+> > +     parent =3D dget_parent(dentry);
+> > +     marks_mask |=3D fsnotify_inode_watches_children(d_inode(parent));
+> > +     dput(parent);
+> > +
+> > +     return marks_mask & events_mask;
+> > +}
+> > +EXPORT_SYMBOL_GPL(fsnotify_file_object_watched);
+>
+> I find it confusing that fsnotify_object_watched() does not take parent
+> into account while fsnotify_file_object_watched() does. Furthermore the
+> naming doesn't very well reflect the fact we are actually returning a mas=
+k
+> of events. I've ended up dropping this helper (it's used in a single plac=
+e
+> anyway) and instead doing the same directly in file_set_fsnotify_mode().
+>
+> @@ -658,6 +660,27 @@ void file_set_fsnotify_mode(struct file *file)
+>                 file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
+>                 return;
+>         }
+> +
+> +       /*
+> +        * OK, there are some pre-content watchers. Check if anybody can =
+be
+> +        * watching for pre-content events on *this* file.
+> +        */
+> +       mnt_mask =3D READ_ONCE(real_mount(file->f_path.mnt)->mnt_fsnotify=
+_mask);
+> +       if (likely(!(dentry->d_flags & DCACHE_FSNOTIFY_PARENT_WATCHED) &&
+> +           !fsnotify_object_watched(d_inode(dentry), mnt_mask,
+> +                                    FSNOTIFY_PRE_CONTENT_EVENTS))) {
+> +               file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
+> +               return;
+> +       }
+> +
+> +       /* Even parent is not watching for pre-content events on this fil=
+e? */
+> +       parent =3D dget_parent(dentry);
+> +       p_mask =3D fsnotify_inode_watches_children(d_inode(parent));
+> +       dput(parent);
+> +       if (!(p_mask & FSNOTIFY_PRE_CONTENT_EVENTS)) {
+> +               file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
+> +               return;
+> +       }
+>  }
+>
 
-I waded through a whole bunch of glibc typedef and macro crud and
-discovered that on x64 it can even be long long.  I think.  There were
-so many levels of indirection that I am not certain that my analysis was
-correct. :(
+Nice!
 
-However, I don't see any harm in explicitly casting to long.  Nobody has
-yet come up with a 8GB fsblock filesystem, so we're ok for now. :P
+Note that I had a "hidden motive" for future optimization when I changed
+return value of fsnotify_object_watched() to a mask -
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+I figured that while we are doing the checks above, we can check for the
+same price the mask ALL_FSNOTIFY_PERM_EVENTS
+then we get several answers for the same price:
+1. Is the specific file watched by HSM?
+2. Is the specific file watched by open permission events?
+3. Is the specific file watched by post-open FAN_ACCESS_PERM?
 
---D
+If the answers are No, No, No, we get some extra optimization
+in the (uncommon) use case that there are permission event watchers
+on some random inodes in the filesystem.
 
-> ---
->  src/attr_replace_test.c | 2 +-
->  src/seek_sanity_test.c  | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
-> index 1218e7264c8f..5d560a633361 100644
-> --- a/src/attr_replace_test.c
-> +++ b/src/attr_replace_test.c
-> @@ -67,7 +67,7 @@ int main(int argc, char *argv[])
->  	if (ret < 0) die();
->  	size = sbuf.st_blksize * 3 / 4;
->  	if (!size)
-> -		fail("Invalid st_blksize(%ld)\n", sbuf.st_blksize);
-> +		fail("Invalid st_blksize(%ld)\n", (long)sbuf.st_blksize);
->  	size = MIN(size, maxsize);
->  	value = malloc(size);
->  	if (!value)
-> diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-> index a61ed3da9a8f..c5930357911f 100644
-> --- a/src/seek_sanity_test.c
-> +++ b/src/seek_sanity_test.c
-> @@ -107,7 +107,7 @@ static int get_io_sizes(int fd)
->  		offset += pos ? 0 : 1;
->  	alloc_size = offset;
->  done:
-> -	fprintf(stdout, "Allocation size: %ld\n", alloc_size);
-> +	fprintf(stdout, "Allocation size: %ld\n", (long)alloc_size);
->  	return 0;
->  
->  fail:
-> -- 
-> 2.47.0
-> 
-> 
+If the answers are Yes, Yes, No, or No, Yes, No we can return a special
+value from file_set_fsnotify_mode() to indicate that permission events
+are needed ONLY for fsnotify_open_perm() hook, but not thereafter.
+
+This would implement the semantic change of "respect FAN_ACCESS_PERM
+only if it existed at open time" that can save a lot of unneeded cycles in
+the very hot read/write path, for example, when watcher only cares about
+FAN_OPEN_EXEC_PERM.
+
+I wasn't sure that any of this was worth the effort at this time, but
+just in case
+this gives you ideas of other useful optimizations we can do with the
+object combined marks_mask if we get it for free.
+
+Thanks,
+Amir.
