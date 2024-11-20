@@ -1,133 +1,157 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AAC91CB31A;
-	Wed, 20 Nov 2024 15:07:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F395CAD58;
+	Wed, 20 Nov 2024 15:23:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732115260; cv=none; b=DSIa2jaNYu9YFmRvO323kHwr3+VnHT+OaG8p3oLw3C6IyzOEDK/3Lnzclk/uZ99Af+wV9r7Y5cCkdSoxmKrKpLT7Xls/g6pt0uEhRt2yPzoQZc1oKsw/Pmni40yScfKCMqQWkGYMfSF7dq0SeU/P5wx6lRh5M+XPfT6i7iKh5DE=
+	t=1732116229; cv=none; b=OK72m2IJjE1TEU0OWtCxPdq/qGjQXOHFHHRrG2OuT31nXQpD79LPTc7ZvnArigUu3isJC6nN9oxkj2LyDvXw1NQPVd0YOotM/O//htGzkvQlNfWKUKJm2IiyKt9k/nMaV+eXqx/8fHoWRjGdmMhWBuOWRMOjcam1MXeXk1a5Yb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732115260; c=relaxed/simple;
-	bh=mFSbYXPV+v2cwEB3jjz+Ldk/O/kX3CN9PCSnFH0JjLc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jnqhc6TO1GX4D3VRVDDNpY2dVRFjoaSwFZ5oZwRfrJ4pPjmNYH+n3BzriWiTkBwkgCB4399QpXgD2YSqiD9L/L9DG24X48KOLGpvnLfVlZpGCnYhiqzIfGU3IUx9hzfz4GngfZ291dR1DFLNuGx5g9qaMdh+bH81DdBF548Q9zI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GUcPtb5r; arc=none smtp.client-ip=209.85.218.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732116229; c=relaxed/simple;
+	bh=yM3fdwupjvWIi5QCB60oGdhLi9PZdzHDr5blBMfmfts=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N662jDtu+sIya0M/7zmSh7be0psPcAU2cWK5cZohO0ZBjI4yadpSvXzqI9kIWsGYT9bpj2lNFkz1LtMStAEjqJbwx9m0HOSvI1qOqsqUdl2GKqM89t0Rydo9HaPU/F+7SmUssxF++xB8BBBfsj6WdYfw4T7xrZ+mp6GSQkQXVUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=vXvMKbuJ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=HdAhwtR9; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=0b3zeo0j; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=B4SowmnV; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GUcPtb5r"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-a9ed49edd41so416336666b.0;
-        Wed, 20 Nov 2024 07:07:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732115256; x=1732720056; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=T15rz/YcFvzeWIWmYn0gRMt/pqbI9YM62Hb9AUjRP4Y=;
-        b=GUcPtb5rUN7Jb/JbJ1LWKCbUUk31pbk1Oo4e4urLmH9a1ZRGvpFjOUQZzPf/eXJerH
-         PO9IsToeiNi1i4rUpWzIJ2Zj540tmV39A0S7opeFGkhTApq8a8Z7AO+ZOuM45+nXosUm
-         YttjTvws3EKcqLECeIfDJ/QIk7cQJAQQHkp5N0gfRq85ngBvx8OGVPLayqqxyYYRqqci
-         mr003qIzfwPGOSMarBgVBPZZYUT1vSlW4pZ1JSogsCBEv1RoR0rHUXIPPoBNaH2D6UyQ
-         dBQiHXkhiPJJDHHr/IHpr8Cp6n3Sc4ODLSdghRrta1X0QMqDp4ZaF6NQImEa7efOCPnp
-         H/2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732115256; x=1732720056;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=T15rz/YcFvzeWIWmYn0gRMt/pqbI9YM62Hb9AUjRP4Y=;
-        b=QwjAJ1/p2eyCYTijtAmhh0Ktue1sNJPsVBnum51YMDM5EUGoh2y1UmSh+p5By0ionw
-         zHIzjadlEg8aP6ubBNSpjg/j0OvkdvNFVciJRKGAUIPS1n1EdbupwYxzKZdhmUeYU1M2
-         9qSgfYYKlioeXgB+2n1En3np99hl/OwmOjU0GYGSqrFJVGZI873xI4y+mrgHebGC9ev4
-         RvuLZae6vCK4rLqZJR7YS3TQMb1MxI4qOoZEb8Ck3ZBcfWlt4e9+Chi3uon7tefXSVY1
-         ztDRzF8hd2Bp+7PfXrwPnsFO3ZqiXk+Ltf3wX+p+Ks8yuNreN5ngNy+1Aa7B4I/9XXKZ
-         HRhg==
-X-Forwarded-Encrypted: i=1; AJvYcCUgDcJwQSyozTlb7774GBgYQ8/4MKDhy7e83H7QkgvXo9JepVqifBgHH4pI4L+lURPn3U1YEZ4T5+q9DLU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy8q2L8393dT0w3ahX2LNmCLoLGwznz83h6oVocBlNp7eAE1AGF
-	MHN2M0/EzTfAeIbbdYh+FdIZD8dwcdHkCiE9slFmhG0/jaPyDfEtpHgNiH4+
-X-Gm-Gg: ASbGnctCz2EslW/kUTmW1HGLtCrJmJDxbQLcaKIxktdeVyjLG5m2Q3niNl626Z3tIm+
-	airwU1vuq5MrCClG4SI9eUs9VRJNdDDIIAmtF7gdDGDEvKOnMKUHiSDYhdJwQBuuxJfvE5X8MZB
-	spejMsVXtLHuBgn//pzsTCHJ6A1nRkdZ8GfNZ5H7jqBFnLnB8uPQLB7VWPhK6ULz0F8Vk2NZoWW
-	HmjR2Oxfrn2WQ6X+saM9xCcrq7YYNBDe5z8u6f2G4NrMZNnEe6bj1TI2v4=
-X-Google-Smtp-Source: AGHT+IHxCToREO2TMV86vV4m4GDNa+70BqrbVmzPWlTxmGJXunTC4Zuj7RZBEiF1IRyh8zHh/fbiXQ==
-X-Received: by 2002:a17:907:6eab:b0:aa3:e9a6:a5bf with SMTP id a640c23a62f3a-aa4dd70b960mr330519966b.47.1732115255713;
-        Wed, 20 Nov 2024 07:07:35 -0800 (PST)
-Received: from localhost.localdomain ([46.248.82.114])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa20e08624fsm792677466b.183.2024.11.20.07.07.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Nov 2024 07:07:35 -0800 (PST)
-From: Uros Bizjak <ubizjak@gmail.com>
-To: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Uros Bizjak <ubizjak@gmail.com>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
-Date: Wed, 20 Nov 2024 16:06:22 +0100
-Message-ID: <20241120150725.3378-1-ubizjak@gmail.com>
-X-Mailer: git-send-email 2.42.0
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="vXvMKbuJ";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="HdAhwtR9";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0b3zeo0j";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="B4SowmnV"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 5F66B1F79B;
+	Wed, 20 Nov 2024 15:23:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1732116226; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rbLMuMC2yYdzj3nG2I+d54+tseu9D8HIg5szJY41NA4=;
+	b=vXvMKbuJ8/tKiFmOFejVn6aU5sqs95QkUwnPnUMV3Z4UZBsxxPYAoJrIrt56XH/efZHl3h
+	jI545fB+xBCTJC//WtokwslS4wBZMDfYEnO+u1hmrHDfr+QkavHbd9pbWlLwrzeUHB0Y0v
+	nvB28liZ6VQrUXH0fW8+daCwskjVcuc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1732116226;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rbLMuMC2yYdzj3nG2I+d54+tseu9D8HIg5szJY41NA4=;
+	b=HdAhwtR9MU3lDSTEQRB2OMAGN7JgHjx2Abe/4h/txkI83A6JxEtlfXQH8ZMOI+IWeeMt3b
+	VZ6zBdLye5p+ciDA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1732116225; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rbLMuMC2yYdzj3nG2I+d54+tseu9D8HIg5szJY41NA4=;
+	b=0b3zeo0j+VtafXLc0T225LA1IjNvqKTPZ/CRcJikFUHJ5iu3wAjsEAc/P5ZDgC+9ahd9B5
+	/D+4aYmI3snW2tlMNaAV9xjJJjneYf1nz+lpItqQAHsE1/K+CXkRwKxfXzdEDovsGV74Qg
+	ku/qH818rb5j37Zp7MosU5oIZ1guFSc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1732116225;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rbLMuMC2yYdzj3nG2I+d54+tseu9D8HIg5szJY41NA4=;
+	b=B4SowmnVqbIass1asF76dEX9d8zqNh3zp6d6fd6iTT36FOV6OlKGA/cqGiiD3+t+32YUJ7
+	eIjeek0E4JGTxWBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4FA5213297;
+	Wed, 20 Nov 2024 15:23:45 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id js5nEwH/PWfzQgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 20 Nov 2024 15:23:45 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id E5D1AA08A2; Wed, 20 Nov 2024 16:23:40 +0100 (CET)
+Date: Wed, 20 Nov 2024 16:23:40 +0100
+From: Jan Kara <jack@suse.cz>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
+	amir73il@gmail.com, brauner@kernel.org,
+	torvalds@linux-foundation.org, viro@zeniv.linux.org.uk,
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v8 09/19] fsnotify: generate pre-content permission event
+ on truncate
+Message-ID: <20241120152340.gu7edmtm2j3lmxoy@quack3>
+References: <cover.1731684329.git.josef@toxicpanda.com>
+ <23af8201db6ac2efdea94f09ab067d81ba5de7a7.1731684329.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <23af8201db6ac2efdea94f09ab067d81ba5de7a7.1731684329.git.josef@toxicpanda.com>
+X-Spam-Score: -3.80
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[fb.com,vger.kernel.org,suse.cz,gmail.com,kernel.org,linux-foundation.org,zeniv.linux.org.uk,kvack.org];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-try_cmpxchg() loop with constant "new" value can be substituted
-with just xchg() to atomically get and clear the location.
+On Fri 15-11-24 10:30:22, Josef Bacik wrote:
+> From: Amir Goldstein <amir73il@gmail.com>
+> 
+> Generate FS_PRE_ACCESS event before truncate, without sb_writers held.
+> 
+> Move the security hooks also before sb_start_write() to conform with
+> other security hooks (e.g. in write, fallocate).
+> 
+> The event will have a range info of the page surrounding the new size
+> to provide an opportunity to fill the conetnt at the end of file before
+> truncating to non-page aligned size.
+> 
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 
-The code on x86_64 improves from:
+I was thinking about this. One small issue is that similarly as the
+filesystems may do RMW of tail page during truncate, they will do RMW of
+head & tail pages on hole punch or zero range so we should have some
+strategically sprinkled fsnotify_truncate_perm() calls there as well.
+That's easy enough to fix.
 
-    1e7f:	48 89 4c 24 10       	mov    %rcx,0x10(%rsp)
-    1e84:	48 03 14 c5 00 00 00 	add    0x0(,%rax,8),%rdx
-    1e8b:	00
-			1e88: R_X86_64_32S	__per_cpu_offset
-    1e8c:	8b 02                	mov    (%rdx),%eax
-    1e8e:	41 89 c5             	mov    %eax,%r13d
-    1e91:	31 c9                	xor    %ecx,%ecx
-    1e93:	f0 0f b1 0a          	lock cmpxchg %ecx,(%rdx)
-    1e97:	75 f5                	jne    1e8e <xlog_cil_commit+0x84e>
-    1e99:	48 8b 4c 24 10       	mov    0x10(%rsp),%rcx
-    1e9e:	45 01 e9             	add    %r13d,%r9d
+But there's another problem which I'm more worried about: If we have
+a file 64k large, user punches 12k..20k and then does read for 0..64k, then
+how does HSM daemon in userspace know what data to fill in? When we'll have
+modify pre-content event, daemon can watch it and since punch will send modify
+for 12k-20k, the daemon knows the local (empty) page cache is the source of
+truth. But without modify event this is just a recipe for data corruption
+AFAICT.
 
-to just:
+So it seems the current setting with access pre-content event has only chance
+to work reliably in read-only mode? So we should probably refuse writeable
+open if file is being watched for pre-content events and similarly refuse
+truncate?
 
-    1e7f:	48 03 14 cd 00 00 00 	add    0x0(,%rcx,8),%rdx
-    1e86:	00
-			1e83: R_X86_64_32S	__per_cpu_offset
-    1e87:	31 c9                	xor    %ecx,%ecx
-    1e89:	87 0a                	xchg   %ecx,(%rdx)
-    1e8b:	41 01 cb             	add    %ecx,%r11d
-
-No functional change intended.
-
-Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log_cil.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 80da0cf87d7a..9d667be1d909 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -171,11 +171,8 @@ xlog_cil_insert_pcp_aggregate(
- 	 */
- 	for_each_cpu(cpu, &ctx->cil_pcpmask) {
- 		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
--		int			old = READ_ONCE(cilpcp->space_used);
- 
--		while (!try_cmpxchg(&cilpcp->space_used, &old, 0))
--			;
--		count += old;
-+		count += xchg(&cilpcp->space_used, 0);
- 	}
- 	atomic_add(count, &ctx->space_used);
- }
+								Honza
 -- 
-2.42.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
