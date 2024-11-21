@@ -1,130 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D5321C728F
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 11:49:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E3FD1369AA
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 12:26:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732189774; cv=none; b=J+kBaniCxsEA8SHyO8bZObXjwuEO64m3zWmLVRKdicjlkmfxha8kiR025ICJCLrmt2V8097w6rRvXWml634u0fhpFTz73Xy39hsH37/cTA8MbMojrOCcPHBsrbS3lN8cl+tuVxlVk2vs5mg2rUXcbwtS67FnKUQZLTHDathabIk=
+	t=1732192003; cv=none; b=k1uono3y/1xJzXI9qFvDB3C5A+QZR1YrtGKl818/nDCCIdjEiljq/U/NcRQH4Fj5DBNNOA6m+S8V4xTXDSNxfcZNGqKL78m8XO+X7Jq/UlJNzLZ07AAnHFpm5HiT2QPqYeeLn38VYsp/lI1VlBiFH7VdEP6bOA4CSUuWrHLyjYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732189774; c=relaxed/simple;
-	bh=i1ASXbR/DjSykTaP6qqvQ8A1N8wKWZ666y/LYxYgfIA=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=aa667UMOFR+8N21oJjB6vkCgf6k4zMawwDRB0iaau8DBSB56p4X3G/NEyjwCAZ0EDBtwsisg/ntYK4h1TqJa1YFe65Wj72IE8iGQFLnFuR5IHjXvh+BkH9ECQ/ZZJ/JhM9GU8nQtZhq7DL/ArhH1T+omxK1o1paH9EFcji+GKs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cpwFMzx3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732192003; c=relaxed/simple;
+	bh=2gmw3TtZ74evWqkZQOXp6WpK76bL6NXcauu2H9BR1nU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jShiyh0dYfKVzgvBpREeFF0/Iu49uoqPeVGYhrzeRLUBdG8AR5oxHo3aN+7yQrKv0AHBoUIDV3f9plyqlHc2/ITqpA0UD5sp3oDfu//P9eJZ4n5VB3G0OrI4KPWqLxBLlvg8M3x7hxMtypjWcOUl87rGEpS8Qua+HCu2zIZRaj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XKaDNa+B; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cpwFMzx3"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C0923C4CED6
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 11:49:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732189773;
-	bh=i1ASXbR/DjSykTaP6qqvQ8A1N8wKWZ666y/LYxYgfIA=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=cpwFMzx3SHSnR5gjx5EUK22OB65RDTlJssdbmtIfCZ7JOAVQ0u4B87UOz08mPI+6k
-	 DMMefMKmCKe05NGFWbKZlLYiaSzKog2aUSuWqo31DUP5/cV4EvyiWQQfVpVwQGmZIr
-	 ghhSC7dYgdQywgOBAutZd9GnGxyuvp5Ac6UUzw7Zgvaoa8XvqPUGpDxqY8RkmdDjPP
-	 kD+3SQF7fTTZJOQiFJlWEcutTSjhe7Dbf7bkfWAVJkR32wkYwK9I7ABrD0weQdkkbF
-	 MJo8SMiXzoi+b8kEjvXIKu/k7/WFTzQl969jOuLmX9P9H33EdOms42G54l1cuncFX6
-	 80DEeXbLFNsng==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id B5704C53BBF; Thu, 21 Nov 2024 11:49:33 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 219504] XFS crashes with kernel Version > 6.1.91. Perhaps
- Changes in kernel 6.1.92 for XFS/iomap causing the problems?
-Date: Thu, 21 Nov 2024 11:49:33 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: leo.lilong@huawei.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-219504-201763-vTyDamg688@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219504-201763@https.bugzilla.kernel.org/>
-References: <bug-219504-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XKaDNa+B"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1732192001;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qo7XCeVVX8IhUqQcJEWyVxTZVzwZoHMSPGQc0XsIWiM=;
+	b=XKaDNa+B86/r6Oq0EEETpAoWchnu+6tZGd679lxU3RkB0FELxij85YjLW1ZIg/w7EuxCF3
+	4i3IrvDohrt05g7LsohXYt6MUQUovdeYj3VihzrjiCEPU0qmQZq2N6X3zo1A4EB8YIyt+Q
+	z8/rgc5Sc6Ll4fk7bkSY+a30/eMDuuc=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-633-NUpJdBgxOxK71wpBGIq94A-1; Thu,
+ 21 Nov 2024 07:26:39 -0500
+X-MC-Unique: NUpJdBgxOxK71wpBGIq94A-1
+X-Mimecast-MFC-AGG-ID: NUpJdBgxOxK71wpBGIq94A
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 54A571955F2D;
+	Thu, 21 Nov 2024 12:26:38 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.120])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C32530000DF;
+	Thu, 21 Nov 2024 12:26:37 +0000 (UTC)
+Date: Thu, 21 Nov 2024 07:28:09 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 01/12] generic/757: fix various bugs in this test
+Message-ID: <Zz8nWa1xGm7c2FHt@bfoster>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+ <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
+ <20241121095624.ecpo67lxtrqqdkyh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241121100555.GA4176@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241121100555.GA4176@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219504
+On Thu, Nov 21, 2024 at 11:05:55AM +0100, Christoph Hellwig wrote:
+> On Thu, Nov 21, 2024 at 05:56:24PM +0800, Zorro Lang wrote:
+> > I didn't merge this patch last week, due to we were still talking
+> > about the "discards" things:
+> > 
+> > https://lore.kernel.org/fstests/20241115182821.s3pt4wmkueyjggx3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com/T/#u
+> > 
+> > Do you think we need to do a force discards at here, or change the
+> > SCRATCH_DEV to dmthin to support discards?
+> 
+> FYI, I'm seeing regular failures with generic/757 when using Darrick's
+> not yet merged RT rmap support, but only with that.
+> 
+> But the whole discard thing leaves me really confused, and the commit
+> log in the patch references by the above link doesn't clear that up
+> either.
+> 
+> Why does dmlogwrites require discard for XFS (and apprently XFS only)?
+> Note that discard is not required and often does not zero data.  So
+> if we need data to be zeroed we need to do that explicitly, and
+> preferably in a way that is obvious.
+> 
 
-Long Li (leo.lilong@huawei.com) changed:
+IIRC it was to accommodate the test program, which presumably used
+discard for efficiency reasons because it did a lot of context switching
+to different point-in-time variations of the fs. If the discard didn't
+actually zero the range (depending on the underlying test dev), then at
+least on XFS, we'd see odd recovery issues and whatnot from the fs going
+forward/back in time.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |leo.lilong@huawei.com
+Therefore the reason for using dm-thin was that it was an easy way to
+provide predictable behavior to the test program, where discards punch
+out blocks that subsequently return zeroes.
 
---- Comment #1 from Long Li (leo.lilong@huawei.com) ---
-Hi, Mike:
+I don't recall all the specifics, but I thought part of the reason for
+using discard over explicit zeroing was the latter made the test
+impractically slow. I could be misremembering, but if you want to change
+it I'd suggest to at least verify runtimes on some of the preexisting
+logwrites tests as well.
 
-Look at the code of 6.1.106:
+Brian
 
- 970                 /*
- 971                  * If there is no more data to scan, all that is left =
-is
-to
- 972                  * punch out the remaining range.
- 973                  */
- 974                 if (start_byte =3D=3D -ENXIO || start_byte =3D=3D scan=
-_end_byte)
- 975                         break;
- 976                 if (start_byte < 0) {
- 977                         error =3D start_byte;
- 978                         goto out_unlock;=20
- 979                 }
- 980                 WARN_ON_ONCE(start_byte < punch_start_byte);
- 981                 WARN_ON_ONCE(start_byte > scan_end_byte);
- 982=20=20=20=20=20=20=20=20=20
- 983                 /*
- 984                  * We find the end of this contiguous cached data rang=
-e by
- 985                  * seeking from start_byte to the beginning of the next
-hole.
- 986                  */
- 987                 data_end =3D mapping_seek_hole_data(inode->i_mapping,
-start_byte,
- 988                                 scan_end_byte, SEEK_HOLE);
- 989                 if (data_end < 0) {
- 990                         error =3D data_end;
- 991                         goto out_unlock;
- 992                 }
- 993                 WARN_ON_ONCE(data_end <=3D start_byte);=20=20
- 994                 WARN_ON_ONCE(data_end > scan_end_byte);
- 995=20
- 996                 error =3D iomap_write_delalloc_scan(inode,
-&punch_start_byte,
- 997                                 start_byte, data_end, punch);
-
-Looking at your warning stack, it reminds me of a problem[1] I tried to sol=
-ve
-before, but it seems different. In my case, there was only a warning on line
-993. Perhaps it's not the same issue. Below is a link to my attempted fix
-patch, which wasn't accepted, but hopefully it can be helpful to you.
-
-[1]
-https://patchwork.kernel.org/project/xfs/patch/20231216115559.3823359-1-leo=
-.lilong@huawei.com/
-
-Long Li
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
