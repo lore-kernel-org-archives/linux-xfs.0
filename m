@@ -1,213 +1,113 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D860155CBF;
-	Thu, 21 Nov 2024 16:01:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBB2755C29;
+	Thu, 21 Nov 2024 16:04:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732204890; cv=none; b=ALv1YjMpJCKxeU6OVH+ILQF18Yv2JQ4mCyhTSHF5kmrwvcF3uczfqOVYa1EQNN1A3EpuRHQ7vYsYWJHQ4Nup0PvxmJgUGwKtJr+m8UjsC/CmlSb9ZDY4x/lkT3lWeKYTbgmbvV0qIF3I3WTmtdUbLIaiDz1p3CgprLLNi0uwvss=
+	t=1732205056; cv=none; b=ZnYex4Nwy6Bqziwl6dfSUr4x9aaSy2nqyToZ/HRY0XkvU9IxiwjLHiUBx5OVRTxauTKEYNl74hHko0AE0k8kGZm+xk1e/6nbS7gMhF+zO0Ea7//E9+xtHQJzoUjE9mGvRxlCBz9NoMtORwwZoPO5TdlHfgILJCmyKotjmwpM5VU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732204890; c=relaxed/simple;
-	bh=gF+y8oWfA2KuMu5p1cbT0vK/FJTgYlyMW30jF96xGPY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nyMEVDeBpxrav7Q9Ll9iwWwSOPEmtCmpnhXUpMPbAJOa8ClshsDPMr09J+Jkom+X/KtA3IlvK7yC+AEVJwxrdcLLJzLJLFrcJ8pJ34g+14V6wv2NSHz8+tTYYUi/htTplFKJqP0JbkFxcXsGTEeeaA9U4XbDlN4YTZO+lfKGYBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iEVS99su; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732205056; c=relaxed/simple;
+	bh=HJSzPSfUfKS7kLce85ECaVvJhuq9GxRRF3FYyUFhh7U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=d8DggztE/2H/HzPsN62TIB7vXqswKp4XMuTVw6vc+Vl1y0w999jI4+seI6BOLxnXxLfPZadKY/zhCHA0fATKDNXQgiu5Km7n6F3XQI2dZ/1h+T5FfGvCoicCHEhuFuIaIcIjD6WwWhidBCY1dvIrxV7KPkvT9nXjLdXJfnRP9zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y2SDwF+s; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iEVS99su"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a9ed49edd41so199067666b.0;
-        Thu, 21 Nov 2024 08:01:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732204886; x=1732809686; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/D7HID2373t79vMCmeYvvZaFKSvpWPkH3dxYYPJQ+KQ=;
-        b=iEVS99suSqd7Kro+PQw8vzEC/b11EGXTfECNL1Rjf+OMxv5ur1pBOVi40elanIYKAe
-         mLdTe/GI6+bwrbkv8LpR0BjIkBfIkqCTU8Zx3vTjP5XFViqRJA6RqN/a0/1lND0zUKO7
-         fOHl7JUANOIHuluVH4LLrEKpYzamv1bimTD8q7+zQ6PXbSQOtb3h5nRCXemv+qpgxbvG
-         J9TNOVsx6CSLmabkiJrMoYaJ9AXTxscWEpkXcTOnjEULWfoZutOCB9X1Fwg2+liiyc1R
-         lVLh0Fs46KkMVECCp6beMBqrMaF7bsyRmnYDyZVcj6fBx8soqWlPjRRwKGwPUpW9AHFZ
-         WNpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732204886; x=1732809686;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/D7HID2373t79vMCmeYvvZaFKSvpWPkH3dxYYPJQ+KQ=;
-        b=EB96QsjpZwrVGcUALAARQ4wDy9+C/Z2DOU9eBePgJZ5GatbSXMtQGUseWjGl+iIHQM
-         YyR7345klWx4PWYbdRNpX5I3GDxjeQ5Uw02ri2cJrk7b50t+BiXjHkZz9L8mFlU77dXr
-         1yxRMJfE+0/EyjRnlt93HGvIfShklLtBXJ5f8poGqbtIBmG84qt9U0U+GfyIZNHLxruH
-         OsXTDpUO+Q2sTL6drQh1qkrJn1MgVGoO4kAjrLbRxdaOAB2Vp29FxiRddTfY3JCcJhLD
-         x1tRy2D+q+N7o2TNj+jAtypK2dblLJ9HrTucMth44om/v4I7IaCwMya838HwqGAVSfK2
-         431Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUQBWLXpdxTKku75uNggqAEmTlEYCyqcJiCb9JVzqJ6RIiXLFDvwDnJKoTxxpPJVm2IDpbj05x/YGQh/Q==@vger.kernel.org, AJvYcCUZ3iwK0EKIF+cf+2/CfUqyx/TxeZgUhXzk377O374QzCQXKT1Bi1GFglC8iSU8i4YNZjI8iPXK3/AL@vger.kernel.org, AJvYcCWppWT/DkTOd/JcB7ZS57C4wZCESzyTeFumQZ7SMfrOt4ltr9qXn/ba6fFmRLNbe5AC+Wcv8iu21AoH9g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1a4BEI+opn7wTANisW5uD2k+SrzTObVo/6gviPg8QAAdF9CkH
-	mbRzfx0Jk3LhWa1xgmIva/sg+Zec2VupX4I0/0qIv1pY8f6miXqAZqHcf4ubnwNbSdUpCGaI/DV
-	2LQl9CGVr7t37WnN2nhEALCICU/jMQ1PTNTE=
-X-Gm-Gg: ASbGncvjFDQ5hu/R2Lk1Wk9awzaaCp0cu0SNu9FDcD5xcekCYfd9S+MO36uuOFaXZuf
-	HU6uGw4pEwA6JIUrejTO7LINnDURoDXI=
-X-Google-Smtp-Source: AGHT+IHdxsoaDROzQG8qEj5x/K+j8d0Op0HAfKhZzlzLbAAPgZOVvmKuZZFzk9WC4mWx+/oxlwIOMbxa3djrhsRAlko=
-X-Received: by 2002:a17:907:9281:b0:aa1:f73b:be3d with SMTP id
- a640c23a62f3a-aa4dd56aa50mr737837466b.27.1732204884517; Thu, 21 Nov 2024
- 08:01:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y2SDwF+s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52C7DC4CECC;
+	Thu, 21 Nov 2024 16:04:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732205056;
+	bh=HJSzPSfUfKS7kLce85ECaVvJhuq9GxRRF3FYyUFhh7U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Y2SDwF+sbd7or2qlwtYuJ9RcA1HzTLeGx1uB6Ca0j17B96l46zoRBvpwF3Rrqgyz/
+	 lmD0sRqbzO9cmb0DsWi1F4RL/J8+BKxNCCC2W6X7PY2DOVNGVjDsfHaK4MOy7dxLMG
+	 cMtgTdS+PO+Kb2xsslmsEvPiA5TWnFzkShTFz/qOMDD0KlsFToAvDLPGXkULQt2EAw
+	 tPRauliV3s3+omrsLathFEb2fNsvEP8Qkt310evYL/OeOi6zgl4n4DmXUTz7QjH7Ws
+	 3hvHMMVNA/l+TonaKqHE/+yhvOrqq5lQwid5l0XLTbHfSnm7pj7Y21wJOWngAPyve0
+	 ZpDUf5N9YRVcA==
+Date: Thu, 21 Nov 2024 08:04:15 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@redhat.com>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 01/12] generic/757: fix various bugs in this test
+Message-ID: <20241121160415.GT9425@frogsfrogsfrogs>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+ <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
+ <20241121095624.ecpo67lxtrqqdkyh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241121100555.GA4176@lst.de>
+ <Zz8nWa1xGm7c2FHt@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241121112218.8249-1-jack@suse.cz> <20241121112218.8249-4-jack@suse.cz>
-In-Reply-To: <20241121112218.8249-4-jack@suse.cz>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 21 Nov 2024 17:01:13 +0100
-Message-ID: <CAOQ4uxgJiiv2KrEkxwND9zpwYLakAMPX_UruGC_6Zrd5ep7duw@mail.gmail.com>
-Subject: Re: [PATCH 03/19] fsnotify: check if file is actually being watched
- for pre-content events on open
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, Josef Bacik <josef@toxicpanda.com>, brauner@kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, 
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zz8nWa1xGm7c2FHt@bfoster>
 
-On Thu, Nov 21, 2024 at 12:22=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
->
-> From: Amir Goldstein <amir73il@gmail.com>
->
-> So far, we set FMODE_NONOTIFY_ flags at open time if we know that there
-> are no permission event watchers at all on the filesystem, but lack of
-> FMODE_NONOTIFY_ flags does not mean that the file is actually watched.
->
-> For pre-content events, it is possible to optimize things so that we
-> don't bother trying to send pre-content events if file was not watched
-> (through sb, mnt, parent or inode itself) on open. Set FMODE_NONOTIFY_
-> flags according to that.
->
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> Link: https://patch.msgid.link/2ddcc9f8d1fde48d085318a6b5a889289d8871d8.1=
-731684329.git.josef@toxicpanda.com
-> ---
->  fs/notify/fsnotify.c             | 27 +++++++++++++++++++++++++--
->  include/linux/fsnotify_backend.h |  3 +++
->  2 files changed, 28 insertions(+), 2 deletions(-)
->
-> diff --git a/fs/notify/fsnotify.c b/fs/notify/fsnotify.c
-> index 569ec356e4ce..dd1dffd89fd6 100644
-> --- a/fs/notify/fsnotify.c
-> +++ b/fs/notify/fsnotify.c
-> @@ -193,7 +193,7 @@ static bool fsnotify_event_needs_parent(struct inode =
-*inode, __u32 mnt_mask,
->         return mask & marks_mask;
->  }
->
-> -/* Are there any inode/mount/sb objects that are interested in this even=
-t? */
-> +/* Are there any inode/mount/sb objects that watch for these events? */
->  static inline bool fsnotify_object_watched(struct inode *inode, __u32 mn=
-t_mask,
->                                            __u32 mask)
->  {
-> @@ -632,7 +632,9 @@ EXPORT_SYMBOL_GPL(fsnotify);
->   */
->  void file_set_fsnotify_mode(struct file *file)
->  {
-> -       struct super_block *sb =3D file->f_path.dentry->d_sb;
-> +       struct dentry *dentry =3D file->f_path.dentry, *parent;
-> +       struct super_block *sb =3D dentry->d_sb;
-> +       __u32 mnt_mask, p_mask;
->
->         /* Is it a file opened by fanotify? */
->         if (FMODE_FSNOTIFY_NONE(file->f_mode))
-> @@ -658,6 +660,27 @@ void file_set_fsnotify_mode(struct file *file)
->                 file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
->                 return;
->         }
+On Thu, Nov 21, 2024 at 07:28:09AM -0500, Brian Foster wrote:
+> On Thu, Nov 21, 2024 at 11:05:55AM +0100, Christoph Hellwig wrote:
+> > On Thu, Nov 21, 2024 at 05:56:24PM +0800, Zorro Lang wrote:
+> > > I didn't merge this patch last week, due to we were still talking
+> > > about the "discards" things:
+> > > 
+> > > https://lore.kernel.org/fstests/20241115182821.s3pt4wmkueyjggx3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com/T/#u
+> > > 
+> > > Do you think we need to do a force discards at here, or change the
+> > > SCRATCH_DEV to dmthin to support discards?
+> > 
+> > FYI, I'm seeing regular failures with generic/757 when using Darrick's
+> > not yet merged RT rmap support, but only with that.
+> > 
+> > But the whole discard thing leaves me really confused, and the commit
+> > log in the patch references by the above link doesn't clear that up
+> > either.
+> > 
+> > Why does dmlogwrites require discard for XFS (and apprently XFS only)?
+> > Note that discard is not required and often does not zero data.  So
+> > if we need data to be zeroed we need to do that explicitly, and
+> > preferably in a way that is obvious.
+> > 
+> 
+> IIRC it was to accommodate the test program, which presumably used
+> discard for efficiency reasons because it did a lot of context switching
+> to different point-in-time variations of the fs. If the discard didn't
+> actually zero the range (depending on the underlying test dev), then at
+> least on XFS, we'd see odd recovery issues and whatnot from the fs going
+> forward/back in time.
 
-This was lost in translation:
+Yes, that's my recollection too -- performing a logwrite replay of an
+old mark means that you can end up with blocks with the correct fs uuid
+but an LSN that's higher than anything in the log.  Recovery will then
+skip the block replay, which is not correct.
 
-@@ -672,8 +672,10 @@ void file_set_fsnotify_mode(struct file *file)
-        /*
-         * If there are permission event watchers but no pre-content event
-         * watchers, set FMODE_NONOTIFY | FMODE_NONOTIFY_PERM to indicate t=
-hat.
-+        * Pre-content events are only reported for regular files and dirs.
-         */
--       if (likely(!fsnotify_sb_has_priority_watchers(sb,
-+       if ((!d_is_dir(dentry) && !d_is_reg(dentry)) ||
-+           likely(!fsnotify_sb_has_priority_watchers(sb,
-                                                FSNOTIFY_PRIO_PRE_CONTENT))=
-) {
-                file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-                return;
+I suppose we could fix log recovery to treat incoming block LSNs that
+are higher than the log head as if there were no block contents at all.
+OTOH going backwards in time isn't usually a concern...right?
 
-> +
-> +       /*
-> +        * OK, there are some pre-content watchers. Check if anybody can =
-be
-> +        * watching for pre-content events on *this* file.
-> +        */
-> +       mnt_mask =3D READ_ONCE(real_mount(file->f_path.mnt)->mnt_fsnotify=
-_mask);
-> +       if (likely(!(dentry->d_flags & DCACHE_FSNOTIFY_PARENT_WATCHED) &&
-> +           !fsnotify_object_watched(d_inode(dentry), mnt_mask,
-> +                                    FSNOTIFY_PRE_CONTENT_EVENTS))) {
-> +               file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-> +               return;
-> +       }
-> +
-> +       /* Even parent is not watching for pre-content events on this fil=
-e? */
-> +       parent =3D dget_parent(dentry);
-> +       p_mask =3D fsnotify_inode_watches_children(d_inode(parent));
-> +       dput(parent);
-> +       if (!(p_mask & FSNOTIFY_PRE_CONTENT_EVENTS)) {
-> +               file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-> +               return;
-> +       }
+> Therefore the reason for using dm-thin was that it was an easy way to
+> provide predictable behavior to the test program, where discards punch
+> out blocks that subsequently return zeroes.
 
-inlining broke the logic and your branch fails the new PRE_ACCESS
-test cases of fanotify03 LTP test (now pushed to branch fan_hsm).
+Yep.  The test needs to reset the block device to a zeroed state.
+Discards get us there quickly, but only if discard_zeroes_data==1.
+Hence bolting dm-thinp (where this is guaranteed) onto the logwrites
+tests.
 
-Specifically in the test case that fails, parent is not watching and
-inode is watching pre-content and your code gets to the p_mask
-test and marks this file as no-pre-content watchers.
+> I don't recall all the specifics, but I thought part of the reason for
+> using discard over explicit zeroing was the latter made the test
+> impractically slow. I could be misremembering, but if you want to change
+> it I'd suggest to at least verify runtimes on some of the preexisting
+> logwrites tests as well.
 
-This passes the test:
+Not sure -- I think BLKZEROOUT will cause allocations and real disk
+writes if we're not careful.
 
-@@ -684,17 +686,18 @@ void file_set_fsnotify_mode(struct file *file)
-         * watching for pre-content events on *this* file.
-         */
-        mnt_mask =3D READ_ONCE(real_mount(file->f_path.mnt)->mnt_fsnotify_m=
-ask);
--       if (likely(!(dentry->d_flags & DCACHE_FSNOTIFY_PARENT_WATCHED) &&
--           !fsnotify_object_watched(d_inode(dentry), mnt_mask,
--                                    FSNOTIFY_PRE_CONTENT_EVENTS))) {
--               file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-+       if (unlikely(fsnotify_object_watched(d_inode(dentry), mnt_mask,
-+                                            FSNOTIFY_PRE_CONTENT_EVENTS)))=
- {
-                return;
-        }
+--D
 
-        /* Even parent is not watching for pre-content events on this file?=
- */
--       parent =3D dget_parent(dentry);
--       p_mask =3D fsnotify_inode_watches_children(d_inode(parent));
--       dput(parent);
-+       p_mask =3D 0;
-+       if (unlikely(dentry->d_flags & DCACHE_FSNOTIFY_PARENT_WATCHED)) {
-+               parent =3D dget_parent(dentry);
-+               p_mask =3D fsnotify_inode_watches_children(d_inode(parent))=
-;
-+               dput(parent);
-+       }
-        if (!(p_mask & FSNOTIFY_PRE_CONTENT_EVENTS)) {
-                file->f_mode |=3D FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-                return;
-
-Thanks,
-Amir.
+> Brian
+> 
+> 
