@@ -1,39 +1,80 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40CD61D0F4D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8041D0E2F;
 	Thu, 21 Nov 2024 11:22:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732188148; cv=none; b=SSxBpANyCeDtP0plXjU9GfxtO4c8YOEj65rX96z1pwp+pVGHqVAv9fv5pv2dyMEG2DdvYkERI/KLeg7rpPPgSMHNiKHCzZ0RfLX7PbCj1KrE0CILbN5+vZWJIyHRdE66XAiCeIvxru1aPWsjKBkGwWKi2698H9yevLj94CoOIhg=
+	t=1732188148; cv=none; b=Wg+mPSeoz/5OvMwRGcbRxauVSz54La3PCbaqvNtCw7XBjpEJ9RsrF0AD18zw2bCSqYfXgH9kuZygK/qxEeFxxb+pXCAOASXjORRZIXvnK9rXPYK/B/cSdKtR/J6GPrLrhwOmres45tzEWQsJNVB5BmuFIm22dKbx+CetYpz/+8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1732188148; c=relaxed/simple;
-	bh=nx6hkt7Z8hJWhC5uM7Uyy/WMuVLmL8LG7o9QkV0cVLQ=;
+	bh=lh0DE46HKoFCeEKv9mz1OBWHLLuYhGNXls/80tR2Xmc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JAY049WvxIevYadiOwhGR4Dq7tcAa692H2aUuUB+61q+qwsNmkxmF7Gx4hgnVDDEk1tl6WBSXKKKlvHixyjMpm/bz3IPDr07DrfKZSEf4+gXnGJ/IevyVUZkzs0mpT0gXi0pAl/lb1SRUUgTHT0wXOpGrVrGfJprDGMgLLrm8Ic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; arc=none smtp.client-ip=195.135.223.130
+	 MIME-Version; b=FWPjv3PoBvUJfSzMGkVy1+IlUYUkriboO/YhezFG9Ct/X6qpTGUshc+vM7ok6AYQykSFSUlKerGFOaZy7OfN5gqj74gFrLRrNuywLjP2iUUdxNMkBgV2DBIcaMQTuLeTudd8hxtaMEEzlucIJXu7TBFo1GJPKICqSOIv7nuYJXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=iREK+iQI; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=7xNbZGvk; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=iREK+iQI; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=7xNbZGvk; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="iREK+iQI";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="7xNbZGvk";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="iREK+iQI";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="7xNbZGvk"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7AEBB21A01;
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 43A9A1F7FB;
 	Thu, 21 Nov 2024 11:22:24 +0000 (UTC)
-Authentication-Results: smtp-out1.suse.de;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1732188144; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PbasX8L1DF1kko1XHmpW+FloLNMQ60rGoymVwWu7q3c=;
+	b=iREK+iQIa8VD+IQAsNxaRPH3c+UVPiDRhwYIRkzNdD2gw4dwbeTFdqoUWpAx5D9Qzv9qK6
+	AGuvIcOe9V9O1GvuQ6houVQT5MsweuLUelPNWgXE8lR86wLCDz4VDLywmdmYXZOiuTgMGi
+	Y1zNquW+yUcyqWRE1il32MYpCxz0tBg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1732188144;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PbasX8L1DF1kko1XHmpW+FloLNMQ60rGoymVwWu7q3c=;
+	b=7xNbZGvkIPNsP3Vx/KcTfy6KsIT/whYBpjoJYT1/qSPfrI8OuZWY9bqiMKwJioFG7xuebG
+	+YizzvLMF5Y6NxCg==
+Authentication-Results: smtp-out2.suse.de;
 	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1732188144; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PbasX8L1DF1kko1XHmpW+FloLNMQ60rGoymVwWu7q3c=;
+	b=iREK+iQIa8VD+IQAsNxaRPH3c+UVPiDRhwYIRkzNdD2gw4dwbeTFdqoUWpAx5D9Qzv9qK6
+	AGuvIcOe9V9O1GvuQ6houVQT5MsweuLUelPNWgXE8lR86wLCDz4VDLywmdmYXZOiuTgMGi
+	Y1zNquW+yUcyqWRE1il32MYpCxz0tBg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1732188144;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PbasX8L1DF1kko1XHmpW+FloLNMQ60rGoymVwWu7q3c=;
+	b=7xNbZGvkIPNsP3Vx/KcTfy6KsIT/whYBpjoJYT1/qSPfrI8OuZWY9bqiMKwJioFG7xuebG
+	+YizzvLMF5Y6NxCg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6A86313ACE;
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2ABC613AC3;
 	Thu, 21 Nov 2024 11:22:24 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ceABGvAXP2cvfwAAD6G6ig
+	id HYEHCvAXP2ccfwAAD6G6ig
 	(envelope-from <jack@suse.cz>); Thu, 21 Nov 2024 11:22:24 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 00B4DA0907; Thu, 21 Nov 2024 12:22:23 +0100 (CET)
+	id DC217A08FA; Thu, 21 Nov 2024 12:22:23 +0100 (CET)
 From: Jan Kara <jack@suse.cz>
 To: <linux-fsdevel@vger.kernel.org>
 Cc: Amir Goldstein <amir73il@gmail.com>,
@@ -46,9 +87,9 @@ Cc: Amir Goldstein <amir73il@gmail.com>,
 	linux-ext4@vger.kernel.org,
 	linux-mm@kvack.org,
 	Jan Kara <jack@suse.cz>
-Subject: [PATCH 07/19] fsnotify: introduce pre-content permission events
-Date: Thu, 21 Nov 2024 12:22:06 +0100
-Message-Id: <20241121112218.8249-8-jack@suse.cz>
+Subject: [PATCH 04/19] fanotify: don't skip extra event info if no info_mode is set
+Date: Thu, 21 Nov 2024 12:22:03 +0100
+Message-Id: <20241121112218.8249-5-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20241121112218.8249-1-jack@suse.cz>
 References: <20241121112218.8249-1-jack@suse.cz>
@@ -59,160 +100,82 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
 X-Spam-Level: 
-X-Spamd-Result: default: False [-4.00 / 50.00];
+X-Spamd-Result: default: False [-6.80 / 50.00];
 	REPLY(-4.00)[];
-	ASN(0.00)[asn:25478, ipnet:::/0, country:RU]
-X-Spam-Score: -4.00
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[gmail.com,toxicpanda.com,kernel.org,linux-foundation.org,ZenIV.linux.org.uk,vger.kernel.org,kvack.org,suse.cz];
+	R_RATELIMIT(0.00)[to_ip_from(RLdu9otajk16idfrkma9mbkf9b)];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[msgid.link:url,imap1.dmz-prg2.suse.org:helo];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com]
+X-Spam-Score: -6.80
 X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 7AEBB21A01
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
 
 From: Amir Goldstein <amir73il@gmail.com>
 
-The new FS_PRE_ACCESS permission event is similar to FS_ACCESS_PERM,
-but it meant for a different use case of filling file content before
-access to a file range, so it has slightly different semantics.
+Previously we would only include optional information if you requested
+it via an FAN_ flag at fanotify_init time (FAN_REPORT_FID for example).
+However this isn't necessary as the event length is encoded in the
+metadata, and if the user doesn't want to consume the information they
+don't have to.  With the PRE_ACCESS events we will always generate range
+information, so drop this check in order to allow this extra
+information to be exported without needing to have another flag.
 
-Generate FS_PRE_ACCESS/FS_ACCESS_PERM as two seperate events, so content
-scanners could inspect the content filled by pre-content event handler.
-
-Unlike FS_ACCESS_PERM, FS_PRE_ACCESS is also called before a file is
-modified by syscalls as write() and fallocate().
-
-FS_ACCESS_PERM is reported also on blockdev and pipes, but the new
-pre-content events are only reported for regular files and dirs.
-
-The pre-content events are meant to be used by hierarchical storage
-managers that want to fill the content of files on first access.
-
-There are some specific requirements from filesystems that could
-be used with pre-content events, so add a flag for fs to opt-in
-for pre-content events explicitly before they can be used.
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
-Link: https://patch.msgid.link/b934c5e3af205abc4e0e4709f6486815937ddfdf.1731684329.git.josef@toxicpanda.com
+Link: https://patch.msgid.link/afcbc4e4139dee076ef1757918b037d3b48c3edb.1731684329.git.josef@toxicpanda.com
 ---
- fs/notify/fsnotify.c             |  2 +-
- include/linux/fs.h               |  1 +
- include/linux/fsnotify.h         | 19 ++++++++++++++++++-
- include/linux/fsnotify_backend.h | 11 ++++++++---
- security/selinux/hooks.c         |  3 ++-
- 5 files changed, 30 insertions(+), 6 deletions(-)
+ fs/notify/fanotify/fanotify_user.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-diff --git a/fs/notify/fsnotify.c b/fs/notify/fsnotify.c
-index dd1dffd89fd6..d61f6bc679f1 100644
---- a/fs/notify/fsnotify.c
-+++ b/fs/notify/fsnotify.c
-@@ -688,7 +688,7 @@ static __init int fsnotify_init(void)
- {
- 	int ret;
+diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
+index 83ee591744e9..8dcd46fe6964 100644
+--- a/fs/notify/fanotify/fanotify_user.c
++++ b/fs/notify/fanotify/fanotify_user.c
+@@ -159,9 +159,6 @@ static size_t fanotify_event_len(unsigned int info_mode,
+ 	int fh_len;
+ 	int dot_len = 0;
  
--	BUILD_BUG_ON(HWEIGHT32(ALL_FSNOTIFY_BITS) != 23);
-+	BUILD_BUG_ON(HWEIGHT32(ALL_FSNOTIFY_BITS) != 24);
+-	if (!info_mode)
+-		return event_len;
+-
+ 	if (fanotify_is_error_event(event->mask))
+ 		event_len += FANOTIFY_ERROR_INFO_LEN;
  
- 	ret = init_srcu_struct(&fsnotify_mark_srcu);
- 	if (ret)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 6a170c2c5326..d9bccec6cc4d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1257,6 +1257,7 @@ extern int send_sigurg(struct file *file);
- #define SB_I_RETIRED	0x00000800	/* superblock shouldn't be reused */
- #define SB_I_NOUMASK	0x00001000	/* VFS does not apply umask */
- #define SB_I_NOIDMAP	0x00002000	/* No idmapped mounts on this superblock */
-+#define SB_I_ALLOW_HSM	0x00004000	/* Allow HSM events on this superblock */
+@@ -755,12 +752,10 @@ static ssize_t copy_event_to_user(struct fsnotify_group *group,
+ 	buf += FAN_EVENT_METADATA_LEN;
+ 	count -= FAN_EVENT_METADATA_LEN;
  
- /* Possible states of 'frozen' field */
- enum {
-diff --git a/include/linux/fsnotify.h b/include/linux/fsnotify.h
-index 8d1849137a96..d91aa064f0e4 100644
---- a/include/linux/fsnotify.h
-+++ b/include/linux/fsnotify.h
-@@ -144,12 +144,29 @@ static inline int fsnotify_file_area_perm(struct file *file, int perm_mask,
- 	 */
- 	lockdep_assert_once(file_write_not_started(file));
+-	if (info_mode) {
+-		ret = copy_info_records_to_user(event, info, info_mode, pidfd,
+-						buf, count);
+-		if (ret < 0)
+-			goto out_close_fd;
+-	}
++	ret = copy_info_records_to_user(event, info, info_mode, pidfd,
++					buf, count);
++	if (ret < 0)
++		goto out_close_fd;
  
--	if (!(perm_mask & MAY_READ))
-+	if (!(perm_mask & (MAY_READ | MAY_WRITE | MAY_ACCESS)))
- 		return 0;
- 
- 	if (likely(!FMODE_FSNOTIFY_PERM(file->f_mode)))
- 		return 0;
- 
-+	/*
-+	 * read()/write() and other types of access generate pre-content events.
-+	 */
-+	if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode))) {
-+		int ret = fsnotify_path(&file->f_path, FS_PRE_ACCESS);
-+
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (!(perm_mask & MAY_READ))
-+		return 0;
-+
-+	/*
-+	 * read() also generates the legacy FS_ACCESS_PERM event, so content
-+	 * scanners can inspect the content filled by pre-content event.
-+	 */
- 	return fsnotify_path(&file->f_path, FS_ACCESS_PERM);
- }
- 
-diff --git a/include/linux/fsnotify_backend.h b/include/linux/fsnotify_backend.h
-index c38762b62bf1..9bda354b5538 100644
---- a/include/linux/fsnotify_backend.h
-+++ b/include/linux/fsnotify_backend.h
-@@ -57,6 +57,8 @@
- #define FS_OPEN_EXEC_PERM	0x00040000	/* open/exec event in a permission hook */
- /* #define FS_DIR_MODIFY	0x00080000 */	/* Deprecated (reserved) */
- 
-+#define FS_PRE_ACCESS		0x00100000	/* Pre-content access hook */
-+
- /*
-  * Set on inode mark that cares about things that happen to its children.
-  * Always set for dnotify and inotify.
-@@ -78,11 +80,14 @@
-  */
- #define ALL_FSNOTIFY_DIRENT_EVENTS (FS_CREATE | FS_DELETE | FS_MOVE | FS_RENAME)
- 
-+/* Content events can be used to inspect file content */
-+#define FSNOTIFY_CONTENT_PERM_EVENTS (FS_OPEN_PERM | FS_OPEN_EXEC_PERM | \
-+				      FS_ACCESS_PERM)
- /* Pre-content events can be used to fill file content */
--#define FSNOTIFY_PRE_CONTENT_EVENTS 0
-+#define FSNOTIFY_PRE_CONTENT_EVENTS  (FS_PRE_ACCESS)
- 
--#define ALL_FSNOTIFY_PERM_EVENTS (FS_OPEN_PERM | FS_ACCESS_PERM | \
--				  FS_OPEN_EXEC_PERM)
-+#define ALL_FSNOTIFY_PERM_EVENTS (FSNOTIFY_CONTENT_PERM_EVENTS | \
-+				  FSNOTIFY_PRE_CONTENT_EVENTS)
- 
- /*
-  * This is a list of all events that may get sent to a parent that is watching
-diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index fc926d3cac6e..c6f38705c715 100644
---- a/security/selinux/hooks.c
-+++ b/security/selinux/hooks.c
-@@ -3404,7 +3404,8 @@ static int selinux_path_notify(const struct path *path, u64 mask,
- 		perm |= FILE__WATCH_WITH_PERM;
- 
- 	/* watches on read-like events need the file:watch_reads permission */
--	if (mask & (FS_ACCESS | FS_ACCESS_PERM | FS_CLOSE_NOWRITE))
-+	if (mask & (FS_ACCESS | FS_ACCESS_PERM | FS_PRE_ACCESS |
-+		    FS_CLOSE_NOWRITE))
- 		perm |= FILE__WATCH_READS;
- 
- 	return path_has_perm(current_cred(), path, perm);
+ 	if (f)
+ 		fd_install(fd, f);
 -- 
 2.35.3
 
