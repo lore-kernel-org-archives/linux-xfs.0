@@ -1,76 +1,71 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E2D1A3BC8
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 09:56:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 109A41A0B08
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 10:03:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732182993; cv=none; b=hYjwcwxMhatfUCByyAGtIjngMbODDYfD98tOh2c7/xTucoc/ZQGdEdVq4Y371rZLEbFf2GRQpr4o6xHXn7dKjtWuYVHLNZaKdQ599Ek09aRoByrsU+Cs8auVLNiOVGgiUsYy78r3NUnjTF+WXgdxSMba3pCMZGphGAUBG9/aY3w=
+	t=1732183409; cv=none; b=LbFZJgM2ToSB8/+B3Y+ancEx5J0YgXqMtBetPOkgoApAA/3ByGXNLZ1KQdusYDvN29hdeKDSj9roWhuAwl9mYq1PMYAK5tJmSnCDDIFPpWAQP9VRuTAmUH09F7Hr2YqG21wqnr+MnwWx8STKSq3EPEm0z/PbbpK0SCtGkKxfJMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732182993; c=relaxed/simple;
-	bh=owWfgXMJceoVKQYu2Y1hPvKmkBh3F7Uq/Rj5+cAtqs4=;
+	s=arc-20240116; t=1732183409; c=relaxed/simple;
+	bh=1DikyKK7WvdLlZBgmNsnOJ4Jly6gUydvJnU+pbZw/q0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rRXHSH77qA8ZQffC6HDYsQE4QGcQw2aD3Iy1EdGvGGXEF7YaUQR9DKxZ8hq3B5k903aL1AYpkiv/y/2eHVaEn9wuQMr0UzhWj13DFqoPzYM7owjv/6jOTgek5uBXZDfjUflW2gGdD40oQlICXQmLWjwhvarNw4KRJg3ftXyyyx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=d5aMDsgL; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=uM2EUkdy6371eLz82V8Eh/Y1lhjHTjxc5eOyYXyK5bGVbJlptcLvvpDc2owOslPuvM1m0hQyWxp4bGl6ad/A/7EpqMuIRLP3wrcHvpczJA+r8f5s2Be/x3Ctgnfkw573f1bBATY6K5NRZjbW1kV6nxlt51qLELGQ6K938iC3Ekc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Q3hPiKKB; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d5aMDsgL"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q3hPiKKB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1732182990;
+	s=mimecast20190719; t=1732183405;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=aGie0N2Elnl/yy7t8WxFnMGt+3b74fXr2zpNlwvjC50=;
-	b=d5aMDsgL7zth6e8QdlFPnEKg7/CyCKwRIK1mJsQVcmQ3a8EXK+i84JL/Yde8l+d64or9V0
-	qBQwha5DG4MNv1BjGfBEVHLmLDAVRoWKK+HabySgRJA3J5AulLfSQmN3G/zt7WNeHTxOYd
-	sh9Q+UrxutJT9QKas0vdJLot+cK8jd8=
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com
- [209.85.167.200]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=CaC/ipvdWYgdC+g1YIvlQTYSbe7hpMUyqF9C7dD/4cE=;
+	b=Q3hPiKKBfoFCiaQqsR4PXeA88qJhG6mi5SuuySNMgPItH+IwvbfwQP6VmO8sNBZxM7somE
+	Yo6MgV27BCAh3T066zPB4NmdRYGyPw9ez1TCHbVmRKe9+FR5zh4EB2BRbosiLF/iTTsCGq
+	eqbqYwTxyJcrz20ikDmM6k9Lc2S4ToQ=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-204-d9NB6It1OdK4pVy6VN59Qg-1; Thu, 21 Nov 2024 04:56:29 -0500
-X-MC-Unique: d9NB6It1OdK4pVy6VN59Qg-1
-X-Mimecast-MFC-AGG-ID: d9NB6It1OdK4pVy6VN59Qg
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-3e6095eac8bso754103b6e.0
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 01:56:29 -0800 (PST)
+ us-mta-261-r8KsM1iMNv-IyRuYu4rJeQ-1; Thu, 21 Nov 2024 05:03:22 -0500
+X-MC-Unique: r8KsM1iMNv-IyRuYu4rJeQ-1
+X-Mimecast-MFC-AGG-ID: r8KsM1iMNv-IyRuYu4rJeQ
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-20e67b82aa6so7427845ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 02:03:22 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732182988; x=1732787788;
+        d=1e100.net; s=20230601; t=1732183401; x=1732788201;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=aGie0N2Elnl/yy7t8WxFnMGt+3b74fXr2zpNlwvjC50=;
-        b=feXPaql7oLBqEEMSdbaTi40ytIULdk0E1CG5eTJhMe3jh0sjdRKyZcP6h/Sk2fgl9h
-         ErWGtvhkQc5RHyJ8jqRh7JmIos43oYwxWlGZ3nuRFonXluSOrHDO2TftQmcBUtY6HCxo
-         UAkcWMtFnEMdzdMWPrSp9GQKZkJb1dcsnLJ1w3Ywjh8rqlj5jk9Cami/9HgGFoHbFEjL
-         CXRAzCmCcKd2DmsUz5IY+nZu2RQQEjU50eOHDBoVd/ytT1v4fXvmuM216cD3lt7XnLpK
-         dU27InZTDXbPh85Xw9z/xXBcTwHvyc7/ailnfkHbkJY+02Mnj6AyIkDdj9QM2FQgEgi1
-         ogCw==
-X-Forwarded-Encrypted: i=1; AJvYcCUNOGQw5jcnU5LUlCs+xAu0J8ZzS5j1tnQf2nT6POiqbgMQWuoAMPOIIRppJIrN02BOlLSUo0331WY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzg7RZCgCuonhK2Zu9SVaHSYEIOlpTy5JEREQLK1+yXM7iToiKt
-	1YgXzSQ18PQ8hVSCWnTlJ4s/gf0gCB2Q2/kMIJEyCZCYnGiwT5sUSJSsiuaOGyfZlDOg48LuOIm
-	YcHo0NSU9bhASRzIgJJeXpN+ssFZNvr7VshKOFeHVSJKa6xQo20H5avwpZQ==
-X-Gm-Gg: ASbGncsLcDrYbsCtfdxY7TdjzdjrLNuUubPYGemHko4h9fDTXpH3y4WfLFT9OSqPG2A
-	Mp2+MCvCayqcyxN9zxF20MYGmQ32dtaIX2GyAwjMzG/0OZLDJb3FqwEL50T5rmi2wjmPEl0OqRR
-	T4mL3PXoWztdP7vaPO8lFHgu6yffbHXfqAaNz8DaFMlvOztdX8We6QREQPSPYNB7WJkBINlLEn3
-	gclurh05Uqr5bFElhy2wC1d/BsJhjap5Vt91i2bE30M1kESkYXdyerUCOCmW5EK/8TfQgRWekoY
-	u4Zs9vW1DOlpQsY=
-X-Received: by 2002:a05:6808:1528:b0:3e6:10d1:ecb6 with SMTP id 5614622812f47-3e7eb7aaa78mr7689134b6e.28.1732182988400;
-        Thu, 21 Nov 2024 01:56:28 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGHcGGO/fuAZjCdB1UZnr8/UR+CZuGi0NubZ2YSXZ52z9fb8OlenUf9bjt8btrftDQe/e66hw==
-X-Received: by 2002:a05:6808:1528:b0:3e6:10d1:ecb6 with SMTP id 5614622812f47-3e7eb7aaa78mr7689116b6e.28.1732182988087;
-        Thu, 21 Nov 2024 01:56:28 -0800 (PST)
+        bh=CaC/ipvdWYgdC+g1YIvlQTYSbe7hpMUyqF9C7dD/4cE=;
+        b=GCkik3qdCbBm3MzlK9el/IgWq1j8S5qLiU/B4bYG+VcWnK0PalgqyhxW1FEYo9kj+t
+         CwVSMJuOicz4anrxF396JurizHGmtKPMPewau/JC5CNsjB6AS0heVly6jjAGGgQW9uuU
+         T8WM05i53UhLUr3uIVCxe8nKBM44yH6eBznUdmYvpZsmTpbaI3Lo5x52Z4ILY6oLNg7k
+         2ThMMtop9kpcWzMc8gcBJLhstU6AQI1aOj5r05sxZeGJ99NvDDXD9fyCpxPe/TYXKNxh
+         bWX7r0PI9KXhAsmfIuf4jODNmNohaI8cQW/bqGiOQ01xT4VbxFsrLxkc1GHaZz0+UEj/
+         bohA==
+X-Forwarded-Encrypted: i=1; AJvYcCXSLXqMa8W2vZ1z7T090LfvzWfdgG1kUlcOn2grpc8IFRdbp4h3BswUZ7IprduxyhZfgNLDOLaMIes=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyzyul+WemewyoQfFPvuUpU5LOmy1BAB7evA9V7ThTcyG1b3QSl
+	ATucmX07TN5oVKywtGr6Y54NLwzrW6VNCJG2cx3OalOfMA+JN/JE+DjfQhfgMsFIcSTsY5VCpLD
+	9Kfxy1+FCpYrwFyqY1QpjSJAHvzG8YYnvfsld9mzfTFH6YXUeF3EK3WFvOJOgAanAwfpu
+X-Received: by 2002:a17:902:f551:b0:20c:aa41:9968 with SMTP id d9443c01a7336-2126a49ddfemr83444585ad.53.1732183401494;
+        Thu, 21 Nov 2024 02:03:21 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGiFOED9gXnf0cEhe7CQvRNF+jWARUlG9zyCyXXLBg46ifFj38fBdUHadvrECr+GhtCqpiWUA==
+X-Received: by 2002:a17:902:f551:b0:20c:aa41:9968 with SMTP id d9443c01a7336-2126a49ddfemr83444225ad.53.1732183401112;
+        Thu, 21 Nov 2024 02:03:21 -0800 (PST)
 Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7fbb6581d66sm950539a12.65.2024.11.21.01.56.26
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-212883fde4asm9993755ad.259.2024.11.21.02.03.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Nov 2024 01:56:27 -0800 (PST)
-Date: Thu, 21 Nov 2024 17:56:24 +0800
+        Thu, 21 Nov 2024 02:03:20 -0800 (PST)
+Date: Thu, 21 Nov 2024 18:03:17 +0800
 From: Zorro Lang <zlang@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 01/12] generic/757: fix various bugs in this test
-Message-ID: <20241121095624.ecpo67lxtrqqdkyh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Cc: zlang@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 11/12] xfs/157: do not drop necessary mkfs options
+Message-ID: <20241121100317.zqz6l4z7kawqxtia@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
- <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
+ <173197064593.904310.9005954163451030743.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,54 +74,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
+In-Reply-To: <173197064593.904310.9005954163451030743.stgit@frogsfrogsfrogs>
 
-On Mon, Nov 18, 2024 at 03:01:38PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Nov 18, 2024 at 03:04:15PM -0800, Darrick J. Wong wrote:
+> From: Zorro Lang <zlang@kernel.org>
 > 
-> Fix this test so the check doesn't fail on XFS, and restrict runtime to
-> 100 loops because otherwise this test takes many hours.
+> To give the test option "-L oldlabel" to _scratch_mkfs_sized, xfs/157
+> does:
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>   MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size
+> 
+> but the _scratch_mkfs_sized trys to keep the $fs_size, when mkfs
+> fails with incompatible $MKFS_OPTIONS options, likes this:
+> 
+>   ** mkfs failed with extra mkfs options added to "-L oldlabel -m rmapbt=1" by test 157 **
+>   ** attempting to mkfs using only test 157 options: -d size=524288000 -b size=4096 **
+> 
+> but the "-L oldlabel" is necessary, we shouldn't drop it. To avoid
+> that, we give the "-L oldlabel" to _scratch_mkfs_sized through
+> function parameters, not through global MKFS_OPTIONS.
+> 
+> Signed-off-by: Zorro Lang <zlang@kernel.org>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> [djwong: fix more string quoting issues]
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  tests/generic/757 |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+
+Oh, you helped to merge the patchset at here. Thanks :)
+
+>  tests/xfs/157 |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
 > 
-> diff --git a/tests/generic/757 b/tests/generic/757
-> index 0ff5a8ac00182b..9d41975bde07bb 100755
-> --- a/tests/generic/757
-> +++ b/tests/generic/757
-> @@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
->  cur=$(_log_writes_find_next_fua $prev)
->  [ -z "$cur" ] && _fail "failed to locate next FUA write"
+> diff --git a/tests/xfs/157 b/tests/xfs/157
+> index 9b5badbaeb3c76..e102a5a10abe4b 100755
+> --- a/tests/xfs/157
+> +++ b/tests/xfs/157
+> @@ -66,8 +66,7 @@ scenario() {
+>  }
 >  
-> -while [ ! -z "$cur" ]; do
-> +for ((i = 0; i < 100; i++)); do
->  	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
->  
-> +	# xfs_repair won't run if the log is dirty
-> +	if [ $FSTYP = "xfs" ]; then
-> +		_scratch_mount
-> +		_scratch_unmount
-> +	fi
-
-Hi Darrick,
-
-I didn't merge this patch last week, due to we were still talking
-about the "discards" things:
-
-https://lore.kernel.org/fstests/20241115182821.s3pt4wmkueyjggx3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com/T/#u
-
-Do you think we need to do a force discards at here, or change the
-SCRATCH_DEV to dmthin to support discards?
-
-Thanks,
-Zorro
-
->  	_check_scratch_fs
->  
->  	prev=$cur
+>  check_label() {
+> -	MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size \
+> -		>> $seqres.full
+> +	_scratch_mkfs_sized "$fs_size" "" -L oldlabel >> $seqres.full 2>&1
+>  	_scratch_xfs_db -c label
+>  	_scratch_xfs_admin -L newlabel "$@" >> $seqres.full
+>  	_scratch_xfs_db -c label
 > 
 
