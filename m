@@ -1,121 +1,210 @@
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA35F1D63FD;
-	Thu, 21 Nov 2024 14:18:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 932DB13AA38;
+	Thu, 21 Nov 2024 15:50:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732198731; cv=none; b=CJKYLG/w8g6AhOvkV6H3NbiEOeeHGeLViiGfqQwxRHmAE3OxK+APufrGyQ+/mFcQ7I3AI7HJTJNkMsBCUwgLxe366SWI71yrfxUmZB5ZwgJso+ePXf7Pucfe574h/63gKsiSDun4Zulu5qddlSCcFRjxlOrpjejy0igVEw7f9LU=
+	t=1732204212; cv=none; b=PlvXPzi4fm7euuoIDqdm8c9d/ZXCgW2kbgAGb3vDuNhK9duEL2xokZ+02/P85JQqknqsRERsVvT4KwPlQCsi47gx58Dc8j72jTgB+uB1u0b3CVeQLVkPabkcpiLl3YN6coPehWamPLfnbAiKYlM4Vqix+5208Zl7azahyfM/UEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732198731; c=relaxed/simple;
-	bh=bNvc0py64DAf3/4lI8U9CHFwkfOTtYkeLHfMBzYWgL0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=laxbt52zaRamPTskvndM1cnoJkI5SpukVtTU4etGvmSrwPthSX8QNkagkpUNMaGO25/FPDc3OyOkMZGHtd7GeF/toI3+MZjobk1RUWPr3KxoXzmMY9Md0ONl07Drv+uhMTHpbGvV262+/m9UT2xX8i6guey+oLoDkLewGGVJJrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C9b5+Yox; arc=none smtp.client-ip=209.85.208.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732204212; c=relaxed/simple;
+	bh=tXUsFkyHQI1WGSb7nDtMKY//90oNzpqvyn5lc/c8Fw8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=niLgla3U89vVIRTIEhPrdBTjq9iciRIUmbPgadlQ+o2Qkm/G5BFlSLFHk0gFvBVwhFUa/wG8g5SKY+nmXCB1GwQZcIoV8rQnK4jo9ycE1MBIO8qxt2M0Sb+ekM+ZoHfW4GwmhMShCShh4QuygjW7mnuIbu0KZSPB5rzmQ4VeMJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nc9oxaaf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C9b5+Yox"
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-2fb51e00c05so17819901fa.0;
-        Thu, 21 Nov 2024 06:18:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732198728; x=1732803528; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pO8DokmCbNTYcYBfKWRaeP/dEwanubQ3Z/RPc3+IoOQ=;
-        b=C9b5+YoxQTsg22CtxdHmQ+C/UgBNpLrp4SWsE50vJkVtO7GH6k0/VL71mGSFjinVYO
-         nsvWfCUJEhpKB/god6w7lDyunqtQzJ0FT17WFq43nym4fLJJI/FNR5Qb3HtlIuYLCBo0
-         fLjIB+p8ogntOxbEhVxaV4W0n7dxpmC167o/CscEQsLwk0dAJbwHaRZ02VLrpfB1LHQG
-         8X2RecRpiMbq6XtbhmmEbguecXZXH0Y6qdvYgHrYXi8Fzj25zIz9JqAmrVrdvOX7y9wg
-         JgMlsZh4ZwewEEII2EbEffATIfTApSdbyPL9afwGvETPV05ZDeD71D+TUH4v5S8hwnMJ
-         LzVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732198728; x=1732803528;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pO8DokmCbNTYcYBfKWRaeP/dEwanubQ3Z/RPc3+IoOQ=;
-        b=hIaeuUZCH0M4r5N5PxGDEmkUvAKdpwAU4lc/f7ZN8v/Bm0vmeR4yMygcmi2Veqt3sB
-         G+rw0Mf2UM6jEf0p3cVJf1yCPhXvk0qBxEOEq+IBXhzJHC0CcTxy0x4ee5Nscdm09YO2
-         gBOMBSMLDwOigdJgpDW0sHO+T61Z/IuUvgXF3dAVoJbvLfvOzkysnejDw6jr6lCj3ENE
-         /S40xf78ypL88oiJ8zBXEIfghblmlr6XkmR+owyrcv6DfuH5x+vjFEzCHraXZPbbxJt5
-         go14NGL7ntBBO2aaeDGH5DYwmX7P5NgH6yqUxx2f8gGM2vG5EVEFIsr8jsW4CJAAEeY3
-         onGQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUVRDzeOXdIq3k1/ek6OA4xS/OvNrKx2pmY6axGo1rQlG6i5mROf5OyuEHK2M/hnLr4hTbEMyVjDZSN5w==@vger.kernel.org, AJvYcCUp53BwGoJ4WZC9YRWAOe9iXJlncIwf/eYolXIVOyda8CY3OR6dcQX8zyQsGfutAhFyGGf/9C7ZMQ2Y@vger.kernel.org, AJvYcCW3L+MkSiNS1mssbLbV9u516veyTB9A4aXFYSGK7jnOpQCLI6s6zeRuYn9zlf6noSf0qf5Cld9Bdh7YF/Cxrg==@vger.kernel.org, AJvYcCXzBD1nSm3gJoY5vbxG+ScBR9h7g9b9CYtn9hKt+IE6bGPvrkqqFeX8Tl2DmuqPn+SGyfhSMiNKHMwv3A==@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywbu/fLB1wDxhamDxujh5sRvf4mXNTgpsO+4+LLmEihrEPU75rW
-	dsqJcbJB5mfUBY6oFEOtPwSR1sar0f3NUOXLAh+McrJ/921k4p7facNXGe3/zCaDfytleeK6hrZ
-	8OVJcaO6wNgcCxmn1Jt+kkJriJjlYcclCP4I=
-X-Gm-Gg: ASbGnctnyCR0Ht11o8GcMSpkMUpevrJZvyI9bo7WuKJx2JPt2Nz8Hs/RpecoAQDfd+z
-	FLsQx85AtFE+Gb2kQk9OXQcsoro0oepg=
-X-Google-Smtp-Source: AGHT+IEE9uu1LLPFKTWP8pimZf7yZgaRdrUeWk2IUF2LLnQpNe7uZnVbznEcE/8soKYRUUWZb2SAtbqxpd+Sov4cXAQ=
-X-Received: by 2002:a05:651c:221b:b0:2fb:6362:284e with SMTP id
- 38308e7fff4ca-2ff8db165bdmr58987841fa.8.1732198727467; Thu, 21 Nov 2024
- 06:18:47 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nc9oxaaf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B76C4CECC;
+	Thu, 21 Nov 2024 15:50:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732204212;
+	bh=tXUsFkyHQI1WGSb7nDtMKY//90oNzpqvyn5lc/c8Fw8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Nc9oxaafmW+hUIFtSajNqwdQOfaH++gMgQLTMUa9H2r3t7+lMV6iS0e2PsGdFBju9
+	 V4i+gZ/eRkE9xIZPXNNHjUwaMK0UOrH4cMkKt/8GZueKlz1eh8yftNQVFV5vwI/ejA
+	 nU2yP6/xYa05q0ElnICSstzpr1SRpzIxO6ecTCU/hpAQDroSU3QWzrT2uhe1sO0gew
+	 2323lrcZjQj0xCOsAFOJaLz5IYrL1I1pAXoQ66Nd6p0UBvYfC1t0NIpH6oag/xWWXs
+	 HnyO9SJEXiSrw53Av+ne+LuWpEuDBez1qFe/QN+t2wG5MED1N1Lc0Tn47ypi7msZME
+	 hriY2ntoRYHGg==
+Date: Thu, 21 Nov 2024 07:50:11 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] common/rc: _scratch_mkfs_sized supports extra
+ arguments
+Message-ID: <20241121155011.GR9425@frogsfrogsfrogs>
+References: <20241116190800.1870975-1-zlang@kernel.org>
+ <20241116190800.1870975-2-zlang@kernel.org>
+ <20241118222136.GJ9425@frogsfrogsfrogs>
+ <20241121091733.iumhfm2esby6aidt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731684329.git.josef@toxicpanda.com> <b80986f8d5b860acea2c9a73c0acd93587be5fe4.1731684329.git.josef@toxicpanda.com>
- <20241121104428.wtlrfhadcvipkjia@quack3>
-In-Reply-To: <20241121104428.wtlrfhadcvipkjia@quack3>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 21 Nov 2024 15:18:36 +0100
-Message-ID: <CAOQ4uxhTiR8eHaf4q0_gLC62CWi9KdaQ05GSeqFkKFkXCH++PA@mail.gmail.com>
-Subject: Re: [PATCH v8 10/19] fanotify: introduce FAN_PRE_ACCESS permission event
-To: Jan Kara <jack@suse.cz>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	brauner@kernel.org, torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, 
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-ext4@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241121091733.iumhfm2esby6aidt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Thu, Nov 21, 2024 at 11:44=E2=80=AFAM Jan Kara <jack@suse.cz> wrote:
->
-> On Fri 15-11-24 10:30:23, Josef Bacik wrote:
-> > From: Amir Goldstein <amir73il@gmail.com>
-> >
-> > Similar to FAN_ACCESS_PERM permission event, but it is only allowed wit=
-h
-> > class FAN_CLASS_PRE_CONTENT and only allowed on regular files and dirs.
-> >
-> > Unlike FAN_ACCESS_PERM, it is safe to write to the file being accessed
-> > in the context of the event handler.
-> >
-> > This pre-content event is meant to be used by hierarchical storage
-> > managers that want to fill the content of files on first read access.
-> >
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->
-> Here I was wondering about one thing:
->
-> > +     /*
-> > +      * Filesystems need to opt-into pre-content evnets (a.k.a HSM)
-> > +      * and they are only supported on regular files and directories.
-> > +      */
-> > +     if (mask & FANOTIFY_PRE_CONTENT_EVENTS) {
-> > +             if (!(path->mnt->mnt_sb->s_iflags & SB_I_ALLOW_HSM))
-> > +                     return -EINVAL;
-> > +             if (!is_dir && !d_is_reg(path->dentry))
-> > +                     return -EINVAL;
-> > +     }
->
-> AFAICS, currently no pre-content events are generated for directories. So
-> perhaps we should refuse directories here as well for now? I'd like to
+On Thu, Nov 21, 2024 at 05:17:33PM +0800, Zorro Lang wrote:
+> On Mon, Nov 18, 2024 at 02:21:36PM -0800, Darrick J. Wong wrote:
+> > On Sun, Nov 17, 2024 at 03:07:59AM +0800, Zorro Lang wrote:
+> > > To give more arguments to _scratch_mkfs_sized, we generally do as:
+> > > 
+> > >   MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size
+> > > 
+> > > to give "-L oldlabel" to it. But if _scratch_mkfs_sized fails, it
+> > > will get rid of the whole MKFS_OPTIONS and try to mkfs again.
+> > > Likes:
+> > > 
+> > >   ** mkfs failed with extra mkfs options added to "-L oldlabel -m rmapbt=1" by test 157 **
+> > >   ** attempting to mkfs using only test 157 options: -d size=524288000 -b size=4096 **
+> > > 
+> > > But that's not the fault of "-L oldlabel". So for keeping the mkfs
+> > > options ("-L oldlabel") we need, we'd better to let the
+> > > scratch_mkfs_sized to support extra arguments, rather than using
+> > > global MKFS_OPTIONS.
+> > > 
+> > > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > > ---
+> > >  common/rc | 34 ++++++++++++++++++----------------
+> > >  1 file changed, 18 insertions(+), 16 deletions(-)
+> > > 
+> > > diff --git a/common/rc b/common/rc
+> > > index 2af26f23f..ce8602383 100644
+> > > --- a/common/rc
+> > > +++ b/common/rc
+> > > @@ -1023,11 +1023,13 @@ _small_fs_size_mb()
+> > >  }
+> > >  
+> > >  # Create fs of certain size on scratch device
+> > > -# _try_scratch_mkfs_sized <size in bytes> [optional blocksize]
+> > > +# _try_scratch_mkfs_sized <size in bytes> [optional blocksize] [other options]
+> > >  _try_scratch_mkfs_sized()
+> > >  {
+> > >  	local fssize=$1
+> > > -	local blocksize=$2
+> > > +	shift
+> > > +	local blocksize=$1
+> > > +	shift
+> > >  	local def_blksz
+> > >  	local blocksize_opt
+> > >  	local rt_ops
+> > > @@ -1091,10 +1093,10 @@ _try_scratch_mkfs_sized()
+> > >  		# don't override MKFS_OPTIONS that set a block size.
+> > >  		echo $MKFS_OPTIONS |grep -E -q "b\s*size="
+> > >  		if [ $? -eq 0 ]; then
+> > > -			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops
+> > > +			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops "$@"
+> > >  		else
+> > >  			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops \
+> > > -				-b size=$blocksize
+> > > +				-b size=$blocksize "$@"
+> > >  		fi
+> > >  		;;
+> > >  	ext2|ext3|ext4)
+> > > @@ -1105,7 +1107,7 @@ _try_scratch_mkfs_sized()
+> > >  				_notrun "Could not make scratch logdev"
+> > >  			MKFS_OPTIONS="$MKFS_OPTIONS -J device=$SCRATCH_LOGDEV"
+> > >  		fi
+> > > -		${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > > +		${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> > >  		;;
+> > >  	gfs2)
+> > >  		# mkfs.gfs2 doesn't automatically shrink journal files on small
+> > > @@ -1120,13 +1122,13 @@ _try_scratch_mkfs_sized()
+> > >  			(( journal_size >= min_journal_size )) || journal_size=$min_journal_size
+> > >  			MKFS_OPTIONS="-J $journal_size $MKFS_OPTIONS"
+> > >  		fi
+> > > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize $SCRATCH_DEV $blocks
+> > > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize "$@" $SCRATCH_DEV $blocks
+> > >  		;;
+> > >  	ocfs2)
+> > > -		yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > > +		yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> > >  		;;
+> > >  	udf)
+> > > -		$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > > +		$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> > >  		;;
+> > >  	btrfs)
+> > >  		local mixed_opt=
+> > > @@ -1134,33 +1136,33 @@ _try_scratch_mkfs_sized()
+> > >  		# the device is not zoned. Ref: btrfs-progs: btrfs_min_dev_size()
+> > >  		(( fssize < $((256 * 1024 * 1024)) )) &&
+> > >  			! _scratch_btrfs_is_zoned && mixed_opt='--mixed'
+> > > -		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $SCRATCH_DEV
+> > > +		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize "$@" $SCRATCH_DEV
+> > >  		;;
+> > >  	jfs)
+> > > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS $SCRATCH_DEV $blocks
+> > > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS "$@" $SCRATCH_DEV $blocks
+> > >  		;;
+> > >  	reiserfs)
+> > > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> > >  		;;
+> > >  	reiser4)
+> > >  		# mkfs.resier4 requires size in KB as input for creating filesystem
+> > > -		$MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize $SCRATCH_DEV \
+> > > +		$MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize "$@" $SCRATCH_DEV \
+> > >  				   `expr $fssize / 1024`
+> > >  		;;
+> > >  	f2fs)
+> > >  		# mkfs.f2fs requires # of sectors as an input for the size
+> > >  		local sector_size=`blockdev --getss $SCRATCH_DEV`
+> > > -		$MKFS_F2FS_PROG $MKFS_OPTIONS $SCRATCH_DEV `expr $fssize / $sector_size`
+> > > +		$MKFS_F2FS_PROG $MKFS_OPTIONS "$@" $SCRATCH_DEV `expr $fssize / $sector_size`
+> > >  		;;
+> > >  	tmpfs)
+> > >  		local free_mem=`_free_memory_bytes`
+> > >  		if [ "$free_mem" -lt "$fssize" ] ; then
+> > >  		   _notrun "Not enough memory ($free_mem) for tmpfs with $fssize bytes"
+> > >  		fi
+> > > -		export MOUNT_OPTIONS="-o size=$fssize $TMPFS_MOUNT_OPTIONS"
+> > > +		export MOUNT_OPTIONS="-o size=$fssize "$@" $TMPFS_MOUNT_OPTIONS"
+> > >  		;;
+> > >  	bcachefs)
+> > > -		$MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt $SCRATCH_DEV
+> > > +		$MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt "$@" $SCRATCH_DEV
+> > >  		;;
+> > >  	*)
+> > >  		_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
+> > > @@ -1170,7 +1172,7 @@ _try_scratch_mkfs_sized()
+> > >  
+> > >  _scratch_mkfs_sized()
+> > >  {
+> > > -	_try_scratch_mkfs_sized $* || _notrun "_scratch_mkfs_sized failed with ($*)"
+> > > +	_try_scratch_mkfs_sized "$@" || _notrun "_scratch_mkfs_sized failed with ($@)"
+> > 
+> > Nit: Don't use '$@' within a longer string -- either it's "$@" so that
+> > each element in the arg array is rendered individually as a separate
+> > string parameter to the program being called, or "foo $*" so that you
+> > end up with a single string.
+> 
+> Hi Darrick, do you mean I should keep the later $*? Likes:
+> 
+>   _try_scratch_mkfs_sized "$@" || _notrun "_scratch_mkfs_sized failed with ($*)"
 
-readdir() does emit PRE_ACCESS (without a range) and also always
-emitted ACCESS_PERM. my POC is using that PRE_ACCESS to populate
-directories on-demand, although the functionality is incomplete without the
-"populate on lookup" event.
+Yes, as you saw in my more recent reposting of this. :)
 
-> avoid the mistake of original fanotify which had some events available on
-> directories but they did nothing and then you have to ponder hard whether
-> you're going to break userspace if you actually start emitting them...
+--D
 
-But in any case, the FAN_ONDIR built-in filter is applicable to PRE_ACCESS.
-
-Thanks,
-Amir.
+> > 
+> > shellcheck will complain about that, though bash itself doesn't seem to
+> > care.
+> > 
+> > --D
+> > 
+> > >  }
+> > >  
+> > >  # Emulate an N-data-disk stripe w/ various stripe units
+> > > -- 
+> > > 2.45.2
+> > > 
+> > > 
+> > 
+> 
+> 
