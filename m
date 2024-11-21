@@ -1,16 +1,16 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A391D151F;
-	Thu, 21 Nov 2024 11:22:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D60401D88DD;
+	Thu, 21 Nov 2024 11:22:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732188149; cv=none; b=o3SoOVOK13BTdnPjpfNBOQDdMYYBh0m8hLwUk6zrT7RczZN97Nc6bwmjvZU3gKUsTYgIUf6ZHWJMw9gmZ26KxtYFsqgXgCSw4kYfAEocuYZQ9n2187hWvqD8Ofw4EqSBoKBmFEuhg8ahAUsJff+lrI1+EAeUzq2VI/lgDtFYheI=
+	t=1732188152; cv=none; b=ugc10ehbE9oaPWxT/nTGnZ9yO9g8DWiF8pKAWzI7zFgCSRKhZLpSZXw8VsMyjFMXpNRdwy8B7WCkWj4gxfvHC6jDvX2rHpuVOc5Tjkk+XQLInqn4G7CfSUNKYGTsp7CIoh/m60JFGTmxq/JgUbqCrUewvZ50LKg5h+WYt0zXJ5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732188149; c=relaxed/simple;
-	bh=mARybcFpx5FN15zOlX4qjIMPF2of9ox+ThG9ZZde5ps=;
+	s=arc-20240116; t=1732188152; c=relaxed/simple;
+	bh=Ocn+ZrQi5V1CPYlGhsunfEvTz+Q2zP+e8CYCc7XXUCM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=QVBKQANzydJzGQaMWvbC2kSRAYIb28ZLBc4WdgBi5q3eGoO8npSuzWXfVYImlf+eRVZ5sayuJK3TVxyIdYxwFZjqYueC0bTpOJpBtdrG8GRjI6dDtFJFJOALKeVyK0Tp0q1QR01aCTlEQSRfOuiUFP8lpI3wlhKdE/o8irVvyhY=
+	 MIME-Version; b=kNPSkLU4cd8Gzd66MwNvDvB98tJugF8FuqnErDMx2bIVAVEmom4lJ+dnYTJgutOY0wUYPNV80rWiqkeV8Fxko4vS8KddkLPpTPHPsjXXS0MAF2CjE2aZx0W9owSzUYSuSnEQo4CKc9HHF6Pa5GVzyJdUgqfJcOCrCPFfDckoqzs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
@@ -18,7 +18,7 @@ Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 7CCDA1F7FD;
+	by smtp-out2.suse.de (Postfix) with ESMTPS id A13C51F801;
 	Thu, 21 Nov 2024 11:22:24 +0000 (UTC)
 Authentication-Results: smtp-out2.suse.de;
 	none
@@ -26,14 +26,14 @@ Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6DD9E13927;
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8C59213ACC;
 	Thu, 21 Nov 2024 11:22:24 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id JSbQGvAXP2cxfwAAD6G6ig
+	id s9NLIvAXP2c/fwAAD6G6ig
 	(envelope-from <jack@suse.cz>); Thu, 21 Nov 2024 11:22:24 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id E454CA08FB; Thu, 21 Nov 2024 12:22:23 +0100 (CET)
+	id 3B47BA089E; Thu, 21 Nov 2024 12:22:24 +0100 (CET)
 From: Jan Kara <jack@suse.cz>
 To: <linux-fsdevel@vger.kernel.org>
 Cc: Amir Goldstein <amir73il@gmail.com>,
@@ -46,9 +46,9 @@ Cc: Amir Goldstein <amir73il@gmail.com>,
 	linux-ext4@vger.kernel.org,
 	linux-mm@kvack.org,
 	Jan Kara <jack@suse.cz>
-Subject: [PATCH 05/19] fanotify: rename a misnamed constant
-Date: Thu, 21 Nov 2024 12:22:04 +0100
-Message-Id: <20241121112218.8249-6-jack@suse.cz>
+Subject: [PATCH 14/19] mm: don't allow huge faults for files with pre content watches
+Date: Thu, 21 Nov 2024 12:22:13 +0100
+Message-Id: <20241121112218.8249-15-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20241121112218.8249-1-jack@suse.cz>
 References: <20241121112218.8249-1-jack@suse.cz>
@@ -68,64 +68,107 @@ X-Spamd-Result: default: False [-4.00 / 50.00];
 	ASN(0.00)[asn:25478, ipnet:::/0, country:RU]
 X-Spam-Score: -4.00
 X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 7CCDA1F7FD
+X-Rspamd-Queue-Id: A13C51F801
 X-Rspamd-Pre-Result: action=no action;
 	module=replies;
 	Message is reply to one we originated
 X-Rspamd-Action: no action
 X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
 
-From: Amir Goldstein <amir73il@gmail.com>
+From: Josef Bacik <josef@toxicpanda.com>
 
-FANOTIFY_PIDFD_INFO_HDR_LEN is not the length of the header.
+There's nothing stopping us from supporting this, we could simply pass
+the order into the helper and emit the proper length.  However currently
+there's no tests to validate this works properly, so disable it until
+there's a desire to support this along with the appropriate tests.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Christian Brauner <brauner@kernel.org>
+Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
-Link: https://patch.msgid.link/8776ab90fe538225aeb561c560296bafd16b97c4.1731684329.git.josef@toxicpanda.com
+Link: https://patch.msgid.link/9035b82cff08a3801cef3d06bbf2778b2e5a4dba.1731684329.git.josef@toxicpanda.com
 ---
- fs/notify/fanotify/fanotify_user.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ mm/memory.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
-index 8dcd46fe6964..8d8afa09560b 100644
---- a/fs/notify/fanotify/fanotify_user.c
-+++ b/fs/notify/fanotify/fanotify_user.c
-@@ -118,7 +118,7 @@ struct kmem_cache *fanotify_perm_event_cachep __ro_after_init;
- #define FANOTIFY_EVENT_ALIGN 4
- #define FANOTIFY_FID_INFO_HDR_LEN \
- 	(sizeof(struct fanotify_event_info_fid) + sizeof(struct file_handle))
--#define FANOTIFY_PIDFD_INFO_HDR_LEN \
-+#define FANOTIFY_PIDFD_INFO_LEN \
- 	sizeof(struct fanotify_event_info_pidfd)
- #define FANOTIFY_ERROR_INFO_LEN \
- 	(sizeof(struct fanotify_event_info_error))
-@@ -173,14 +173,14 @@ static size_t fanotify_event_len(unsigned int info_mode,
- 		dot_len = 1;
- 	}
+diff --git a/mm/memory.c b/mm/memory.c
+index 2366578015ad..111ba20a22e7 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -78,6 +78,7 @@
+ #include <linux/ptrace.h>
+ #include <linux/vmalloc.h>
+ #include <linux/sched/sysctl.h>
++#include <linux/fsnotify.h>
  
--	if (info_mode & FAN_REPORT_PIDFD)
--		event_len += FANOTIFY_PIDFD_INFO_HDR_LEN;
--
- 	if (fanotify_event_has_object_fh(event)) {
- 		fh_len = fanotify_event_object_fh_len(event);
- 		event_len += fanotify_fid_info_len(fh_len, dot_len);
- 	}
+ #include <trace/events/kmem.h>
  
-+	if (info_mode & FAN_REPORT_PIDFD)
-+		event_len += FANOTIFY_PIDFD_INFO_LEN;
-+
- 	return event_len;
- }
- 
-@@ -502,7 +502,7 @@ static int copy_pidfd_info_to_user(int pidfd,
- 				   size_t count)
+@@ -5622,8 +5623,17 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
+ static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
  {
- 	struct fanotify_event_info_pidfd info = { };
--	size_t info_len = FANOTIFY_PIDFD_INFO_HDR_LEN;
-+	size_t info_len = FANOTIFY_PIDFD_INFO_LEN;
+ 	struct vm_area_struct *vma = vmf->vma;
++	struct file *file = vma->vm_file;
+ 	if (vma_is_anonymous(vma))
+ 		return do_huge_pmd_anonymous_page(vmf);
++	/*
++	 * Currently we just emit PAGE_SIZE for our fault events, so don't allow
++	 * a huge fault if we have a pre content watch on this file.  This would
++	 * be trivial to support, but there would need to be tests to ensure
++	 * this works properly and those don't exist currently.
++	 */
++	if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode)))
++		return VM_FAULT_FALLBACK;
+ 	if (vma->vm_ops->huge_fault)
+ 		return vma->vm_ops->huge_fault(vmf, PMD_ORDER);
+ 	return VM_FAULT_FALLBACK;
+@@ -5633,6 +5643,7 @@ static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
+ static inline vm_fault_t wp_huge_pmd(struct vm_fault *vmf)
+ {
+ 	struct vm_area_struct *vma = vmf->vma;
++	struct file *file = vma->vm_file;
+ 	const bool unshare = vmf->flags & FAULT_FLAG_UNSHARE;
+ 	vm_fault_t ret;
  
- 	if (WARN_ON_ONCE(info_len > count))
- 		return -EFAULT;
+@@ -5647,6 +5658,9 @@ static inline vm_fault_t wp_huge_pmd(struct vm_fault *vmf)
+ 	}
+ 
+ 	if (vma->vm_flags & (VM_SHARED | VM_MAYSHARE)) {
++		/* See comment in create_huge_pmd. */
++		if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode)))
++			goto split;
+ 		if (vma->vm_ops->huge_fault) {
+ 			ret = vma->vm_ops->huge_fault(vmf, PMD_ORDER);
+ 			if (!(ret & VM_FAULT_FALLBACK))
+@@ -5666,9 +5680,13 @@ static vm_fault_t create_huge_pud(struct vm_fault *vmf)
+ #if defined(CONFIG_TRANSPARENT_HUGEPAGE) &&			\
+ 	defined(CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD)
+ 	struct vm_area_struct *vma = vmf->vma;
++	struct file *file = vma->vm_file;
+ 	/* No support for anonymous transparent PUD pages yet */
+ 	if (vma_is_anonymous(vma))
+ 		return VM_FAULT_FALLBACK;
++	/* See comment in create_huge_pmd. */
++	if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode)))
++		return VM_FAULT_FALLBACK;
+ 	if (vma->vm_ops->huge_fault)
+ 		return vma->vm_ops->huge_fault(vmf, PUD_ORDER);
+ #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+@@ -5680,12 +5698,16 @@ static vm_fault_t wp_huge_pud(struct vm_fault *vmf, pud_t orig_pud)
+ #if defined(CONFIG_TRANSPARENT_HUGEPAGE) &&			\
+ 	defined(CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD)
+ 	struct vm_area_struct *vma = vmf->vma;
++	struct file *file = vma->vm_file;
+ 	vm_fault_t ret;
+ 
+ 	/* No support for anonymous transparent PUD pages yet */
+ 	if (vma_is_anonymous(vma))
+ 		goto split;
+ 	if (vma->vm_flags & (VM_SHARED | VM_MAYSHARE)) {
++		/* See comment in create_huge_pmd. */
++		if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode)))
++			goto split;
+ 		if (vma->vm_ops->huge_fault) {
+ 			ret = vma->vm_ops->huge_fault(vmf, PUD_ORDER);
+ 			if (!(ret & VM_FAULT_FALLBACK))
 -- 
 2.35.3
 
