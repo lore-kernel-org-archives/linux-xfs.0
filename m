@@ -1,145 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 130331CB528;
-	Thu, 21 Nov 2024 09:45:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E2D1A3BC8
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 09:56:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732182328; cv=none; b=DjNR03pSLU9JNToNFxdgKMp0+7KrD/BcAUry/WsC8u+P/Oy5dGoraoV38AUafJjgBd12C+b0D1qnsuge7L6TaXVmh5GXdr5iypUaed2BoMQSUkAFhJDuNytXqpA18tS6M5FQ4iEzIKsBMAU/VYHsSKuaX6PnEtLuzR+BM6XXxQk=
+	t=1732182993; cv=none; b=hYjwcwxMhatfUCByyAGtIjngMbODDYfD98tOh2c7/xTucoc/ZQGdEdVq4Y371rZLEbFf2GRQpr4o6xHXn7dKjtWuYVHLNZaKdQ599Ek09aRoByrsU+Cs8auVLNiOVGgiUsYy78r3NUnjTF+WXgdxSMba3pCMZGphGAUBG9/aY3w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732182328; c=relaxed/simple;
-	bh=nR6Fy8BGli1AlLmlleeK5DC+YwdhxCJdaekFYFy9zek=;
+	s=arc-20240116; t=1732182993; c=relaxed/simple;
+	bh=owWfgXMJceoVKQYu2Y1hPvKmkBh3F7Uq/Rj5+cAtqs4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jZriyM8DirJkrN2CCKITsr4zpsdauDthvsbpFvwz5PUqzgOGZ6cdVxt1GtYQwRt6uX5dzC4sCDIKa1+tOJx2XEGxvKBjeKwqfqCHIaVOS9/NB4s7Z89knGrIcK4Xk3mx7SooMtHUR5ShKPKIeF3xReIrJFWo2FxLa56S7uUK7CY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JvQbRRj4; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rRXHSH77qA8ZQffC6HDYsQE4QGcQw2aD3Iy1EdGvGGXEF7YaUQR9DKxZ8hq3B5k903aL1AYpkiv/y/2eHVaEn9wuQMr0UzhWj13DFqoPzYM7owjv/6jOTgek5uBXZDfjUflW2gGdD40oQlICXQmLWjwhvarNw4KRJg3ftXyyyx0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=d5aMDsgL; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JvQbRRj4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE788C4CECC;
-	Thu, 21 Nov 2024 09:45:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732182326;
-	bh=nR6Fy8BGli1AlLmlleeK5DC+YwdhxCJdaekFYFy9zek=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JvQbRRj4sm/HAswLm+uEPJpFCHenM3QhEJpdW/zRcI2UtBZ7xvMagK560XlqTAZs6
-	 dwBJuxyD3zv0hZfM5Gfv1/rDiqxZjiIwzPe9upYWy5q3puSJlkr+zVXtY0HTQ03HL/
-	 vO9kHutmP/K0tAjySseSOeJuW9lkoKW2heaaBct7nGk/F9LGX0g0Js6vc3vNmlu+BB
-	 oPW8edpmXZUElFXTLG4qI6feF+rU5Ma9h3Ls+6tGVGS62b0HzNFZCuIS/X3f9bzo4P
-	 N0NW2nNRz4DAq3gguneCMkCe0sqmNB01G8CDSBezQX9CUDqlHmY2h0wtXBtiCIYtCT
-	 PhdRicjOZ55ng==
-Date: Thu, 21 Nov 2024 10:45:20 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, 
-	linux-fsdevel@vger.kernel.org, amir73il@gmail.com, torvalds@linux-foundation.org, 
-	viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-mm@kvack.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v8 02/19] fsnotify: opt-in for permission events at file
- open time
-Message-ID: <20241121-boxring-abhandeln-c2095863da2d@brauner>
-References: <cover.1731684329.git.josef@toxicpanda.com>
- <5ea5f8e283d1edb55aa79c35187bfe344056af14.1731684329.git.josef@toxicpanda.com>
- <20241120155309.lecjqqhohgcgyrkf@quack3>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d5aMDsgL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1732182990;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=aGie0N2Elnl/yy7t8WxFnMGt+3b74fXr2zpNlwvjC50=;
+	b=d5aMDsgL7zth6e8QdlFPnEKg7/CyCKwRIK1mJsQVcmQ3a8EXK+i84JL/Yde8l+d64or9V0
+	qBQwha5DG4MNv1BjGfBEVHLmLDAVRoWKK+HabySgRJA3J5AulLfSQmN3G/zt7WNeHTxOYd
+	sh9Q+UrxutJT9QKas0vdJLot+cK8jd8=
+Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com
+ [209.85.167.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-204-d9NB6It1OdK4pVy6VN59Qg-1; Thu, 21 Nov 2024 04:56:29 -0500
+X-MC-Unique: d9NB6It1OdK4pVy6VN59Qg-1
+X-Mimecast-MFC-AGG-ID: d9NB6It1OdK4pVy6VN59Qg
+Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-3e6095eac8bso754103b6e.0
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 01:56:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732182988; x=1732787788;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aGie0N2Elnl/yy7t8WxFnMGt+3b74fXr2zpNlwvjC50=;
+        b=feXPaql7oLBqEEMSdbaTi40ytIULdk0E1CG5eTJhMe3jh0sjdRKyZcP6h/Sk2fgl9h
+         ErWGtvhkQc5RHyJ8jqRh7JmIos43oYwxWlGZ3nuRFonXluSOrHDO2TftQmcBUtY6HCxo
+         UAkcWMtFnEMdzdMWPrSp9GQKZkJb1dcsnLJ1w3Ywjh8rqlj5jk9Cami/9HgGFoHbFEjL
+         CXRAzCmCcKd2DmsUz5IY+nZu2RQQEjU50eOHDBoVd/ytT1v4fXvmuM216cD3lt7XnLpK
+         dU27InZTDXbPh85Xw9z/xXBcTwHvyc7/ailnfkHbkJY+02Mnj6AyIkDdj9QM2FQgEgi1
+         ogCw==
+X-Forwarded-Encrypted: i=1; AJvYcCUNOGQw5jcnU5LUlCs+xAu0J8ZzS5j1tnQf2nT6POiqbgMQWuoAMPOIIRppJIrN02BOlLSUo0331WY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzg7RZCgCuonhK2Zu9SVaHSYEIOlpTy5JEREQLK1+yXM7iToiKt
+	1YgXzSQ18PQ8hVSCWnTlJ4s/gf0gCB2Q2/kMIJEyCZCYnGiwT5sUSJSsiuaOGyfZlDOg48LuOIm
+	YcHo0NSU9bhASRzIgJJeXpN+ssFZNvr7VshKOFeHVSJKa6xQo20H5avwpZQ==
+X-Gm-Gg: ASbGncsLcDrYbsCtfdxY7TdjzdjrLNuUubPYGemHko4h9fDTXpH3y4WfLFT9OSqPG2A
+	Mp2+MCvCayqcyxN9zxF20MYGmQ32dtaIX2GyAwjMzG/0OZLDJb3FqwEL50T5rmi2wjmPEl0OqRR
+	T4mL3PXoWztdP7vaPO8lFHgu6yffbHXfqAaNz8DaFMlvOztdX8We6QREQPSPYNB7WJkBINlLEn3
+	gclurh05Uqr5bFElhy2wC1d/BsJhjap5Vt91i2bE30M1kESkYXdyerUCOCmW5EK/8TfQgRWekoY
+	u4Zs9vW1DOlpQsY=
+X-Received: by 2002:a05:6808:1528:b0:3e6:10d1:ecb6 with SMTP id 5614622812f47-3e7eb7aaa78mr7689134b6e.28.1732182988400;
+        Thu, 21 Nov 2024 01:56:28 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGHcGGO/fuAZjCdB1UZnr8/UR+CZuGi0NubZ2YSXZ52z9fb8OlenUf9bjt8btrftDQe/e66hw==
+X-Received: by 2002:a05:6808:1528:b0:3e6:10d1:ecb6 with SMTP id 5614622812f47-3e7eb7aaa78mr7689116b6e.28.1732182988087;
+        Thu, 21 Nov 2024 01:56:28 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7fbb6581d66sm950539a12.65.2024.11.21.01.56.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Nov 2024 01:56:27 -0800 (PST)
+Date: Thu, 21 Nov 2024 17:56:24 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 01/12] generic/757: fix various bugs in this test
+Message-ID: <20241121095624.ecpo67lxtrqqdkyh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+ <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241120155309.lecjqqhohgcgyrkf@quack3>
+In-Reply-To: <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
 
-On Wed, Nov 20, 2024 at 04:53:09PM +0100, Jan Kara wrote:
-> On Fri 15-11-24 10:30:15, Josef Bacik wrote:
-> > From: Amir Goldstein <amir73il@gmail.com>
-> > 
-> > Legacy inotify/fanotify listeners can add watches for events on inode,
-> > parent or mount and expect to get events (e.g. FS_MODIFY) on files that
-> > were already open at the time of setting up the watches.
-> > 
-> > fanotify permission events are typically used by Anti-malware sofware,
-> > that is watching the entire mount and it is not common to have more that
-> > one Anti-malware engine installed on a system.
-> > 
-> > To reduce the overhead of the fsnotify_file_perm() hooks on every file
-> > access, relax the semantics of the legacy FAN_ACCESS_PERM event to generate
-> > events only if there were *any* permission event listeners on the
-> > filesystem at the time that the file was opened.
-> > 
-> > The new semantic is implemented by extending the FMODE_NONOTIFY bit into
-> > two FMODE_NONOTIFY_* bits, that are used to store a mode for which of the
-> > events types to report.
-> > 
-> > This is going to apply to the new fanotify pre-content events in order
-> > to reduce the cost of the new pre-content event vfs hooks.
-> > 
-> > Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-> > Link: https://lore.kernel.org/linux-fsdevel/CAHk-=wj8L=mtcRTi=NECHMGfZQgXOp_uix1YVh04fEmrKaMnXA@mail.gmail.com/
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+On Mon, Nov 18, 2024 at 03:01:38PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> FWIW I've ended up somewhat massaging this patch (see below).
+> Fix this test so the check doesn't fail on XFS, and restrict runtime to
+> 100 loops because otherwise this test takes many hours.
 > 
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 23bd058576b1..8e5c783013d2 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -173,13 +173,14 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
-> >  
-> >  #define	FMODE_NOREUSE		((__force fmode_t)(1 << 23))
-> >  
-> > -/* FMODE_* bit 24 */
-> > -
-> >  /* File is embedded in backing_file object */
-> > -#define FMODE_BACKING		((__force fmode_t)(1 << 25))
-> > +#define FMODE_BACKING		((__force fmode_t)(1 << 24))
-> >  
-> > -/* File was opened by fanotify and shouldn't generate fanotify events */
-> > -#define FMODE_NONOTIFY		((__force fmode_t)(1 << 26))
-> > +/* File shouldn't generate fanotify pre-content events */
-> > +#define FMODE_NONOTIFY_HSM	((__force fmode_t)(1 << 25))
-> > +
-> > +/* File shouldn't generate fanotify permission events */
-> > +#define FMODE_NONOTIFY_PERM	((__force fmode_t)(1 << 26))
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  tests/generic/757 |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> Firstly, I've kept FMODE_NONOTIFY to stay a single bit instead of two bit
-> constant. I've seen too many bugs caused by people expecting the constant
-> has a single bit set when it actually had more in my life. So I've ended up
-> with:
 > 
-> +/*
-> + * Together with FMODE_NONOTIFY_PERM defines which fsnotify events shouldn't be
-> + * generated (see below)
-> + */
-> +#define FMODE_NONOTIFY         ((__force fmode_t)(1 << 25))
-> + 
-> +/*
-> + * Together with FMODE_NONOTIFY defines which fsnotify events shouldn't be
-> + * generated (see below)
-> + */
-> +#define FMODE_NONOTIFY_PERM    ((__force fmode_t)(1 << 26))
-> 
-> and
-> 
-> +/*
-> + * The two FMODE_NONOTIFY* define which fsnotify events should not be generated
-> + * for a file. These are the possible values of (f->f_mode &
-> + * FMODE_FSNOTIFY_MASK) and their meaning:
-> + *
-> + * FMODE_NONOTIFY - suppress all (incl. non-permission) events.
-> + * FMODE_NONOTIFY_PERM - suppress permission (incl. pre-content) events.
-> + * FMODE_NONOTIFY | FMODE_NONOTIFY_PERM - suppress only pre-content events.
-> + */
-> +#define FMODE_FSNOTIFY_MASK \
-> +       (FMODE_NONOTIFY | FMODE_NONOTIFY_PERM)
+> diff --git a/tests/generic/757 b/tests/generic/757
+> index 0ff5a8ac00182b..9d41975bde07bb 100755
+> --- a/tests/generic/757
+> +++ b/tests/generic/757
+> @@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
+>  cur=$(_log_writes_find_next_fua $prev)
+>  [ -z "$cur" ] && _fail "failed to locate next FUA write"
+>  
+> -while [ ! -z "$cur" ]; do
+> +for ((i = 0; i < 100; i++)); do
+>  	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
+>  
+> +	# xfs_repair won't run if the log is dirty
+> +	if [ $FSTYP = "xfs" ]; then
+> +		_scratch_mount
+> +		_scratch_unmount
+> +	fi
 
-This is fine by me. But I want to preemptively caution to please not
-spread the disease of further defines based on such multi-bit defines
-like fanotify does. I'm specifically worried about stuff like:
+Hi Darrick,
 
-#define ALL_FSNOTIFY_PERM_EVENTS (FS_OPEN_PERM | FS_ACCESS_PERM | \
-                                  FS_OPEN_EXEC_PERM)
+I didn't merge this patch last week, due to we were still talking
+about the "discards" things:
 
-#define FS_EVENTS_POSS_ON_CHILD   (ALL_FSNOTIFY_PERM_EVENTS | \
-                                   FS_ACCESS | FS_MODIFY | FS_ATTRIB | \
-                                   FS_CLOSE_WRITE | FS_CLOSE_NOWRITE | \
-                                   FS_OPEN | FS_OPEN_EXEC)
+https://lore.kernel.org/fstests/20241115182821.s3pt4wmkueyjggx3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com/T/#u
+
+Do you think we need to do a force discards at here, or change the
+SCRATCH_DEV to dmthin to support discards?
+
+Thanks,
+Zorro
+
+>  	_check_scratch_fs
+>  
+>  	prev=$cur
+> 
+
