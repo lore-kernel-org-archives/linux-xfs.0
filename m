@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 932DB13AA38;
-	Thu, 21 Nov 2024 15:50:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 403CF17333A;
+	Thu, 21 Nov 2024 15:52:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732204212; cv=none; b=PlvXPzi4fm7euuoIDqdm8c9d/ZXCgW2kbgAGb3vDuNhK9duEL2xokZ+02/P85JQqknqsRERsVvT4KwPlQCsi47gx58Dc8j72jTgB+uB1u0b3CVeQLVkPabkcpiLl3YN6coPehWamPLfnbAiKYlM4Vqix+5208Zl7azahyfM/UEo=
+	t=1732204322; cv=none; b=AzqOIzKg8JBvKL48ynFscz2+H1Fy7PrpN7DMMZSpV9AKqcbPJZsiIw66R4iZh+Cix5IAA1shmrKNI/zAbE0azcELPw5cIkbv8zGp57oGhmk+Hy9+Ah9dGGfg1rpqknbElYfkhwgZxRJi9hnCbV8btot/f6h6xQ/NyWPg0YgL3so=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732204212; c=relaxed/simple;
-	bh=tXUsFkyHQI1WGSb7nDtMKY//90oNzpqvyn5lc/c8Fw8=;
+	s=arc-20240116; t=1732204322; c=relaxed/simple;
+	bh=TiXvXG7lIoFy+EoAE4P+PK0MuH1doboxw/kNlbcxhVU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=niLgla3U89vVIRTIEhPrdBTjq9iciRIUmbPgadlQ+o2Qkm/G5BFlSLFHk0gFvBVwhFUa/wG8g5SKY+nmXCB1GwQZcIoV8rQnK4jo9ycE1MBIO8qxt2M0Sb+ekM+ZoHfW4GwmhMShCShh4QuygjW7mnuIbu0KZSPB5rzmQ4VeMJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nc9oxaaf; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z4wsZlSTJ0enH8o6xjJLhdEFbYLcAygMTjdiQmWzABilSAZYB/AgcKTrLyUNukp2n0AZsgKwBiXaB++AWbCuzPxwRSH71EWkJlvDvVHouQJSahacwTN/iSUahMzogK//RkvK4QAb1ZPKu78i+9qn4mNa5Kf1P8OOWhsrDbg6UOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O53wXV9F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nc9oxaaf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B76C4CECC;
-	Thu, 21 Nov 2024 15:50:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O53wXV9F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1E83C4CECC;
+	Thu, 21 Nov 2024 15:52:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732204212;
-	bh=tXUsFkyHQI1WGSb7nDtMKY//90oNzpqvyn5lc/c8Fw8=;
+	s=k20201202; t=1732204321;
+	bh=TiXvXG7lIoFy+EoAE4P+PK0MuH1doboxw/kNlbcxhVU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Nc9oxaafmW+hUIFtSajNqwdQOfaH++gMgQLTMUa9H2r3t7+lMV6iS0e2PsGdFBju9
-	 V4i+gZ/eRkE9xIZPXNNHjUwaMK0UOrH4cMkKt/8GZueKlz1eh8yftNQVFV5vwI/ejA
-	 nU2yP6/xYa05q0ElnICSstzpr1SRpzIxO6ecTCU/hpAQDroSU3QWzrT2uhe1sO0gew
-	 2323lrcZjQj0xCOsAFOJaLz5IYrL1I1pAXoQ66Nd6p0UBvYfC1t0NIpH6oag/xWWXs
-	 HnyO9SJEXiSrw53Av+ne+LuWpEuDBez1qFe/QN+t2wG5MED1N1Lc0Tn47ypi7msZME
-	 hriY2ntoRYHGg==
-Date: Thu, 21 Nov 2024 07:50:11 -0800
+	b=O53wXV9F54NaeYUQZjgJaGxGvpakFlhHNfMaVl79E3xSaofxZ/g8jBM8GUATG5Zlj
+	 Iik4H9P5bO/nwniejyaXTlrOcfn8myJeQGoHbFIWWyGsOYWJkXH177JnfLAcBD/VHB
+	 U9/5hUVw+yvZtx5zV0wDV+nVxqheK/Y8tcZ2JSm4HUZqur+nCQeWDu6LXdETC5EIQZ
+	 dnVjc2pqiXBcjxmUUOQ4Z83ghjCHU6AH58QjPxAjs571Q0EJx+qc5+fWi7yBWttl/h
+	 fvLbvcyRBJyvVSDdUhkECFkgd32WAetSjLceA3P2ZY0Bk98uQkjAe+pzdYUHeBBulf
+	 5H6SNmow1DQFQ==
+Date: Thu, 21 Nov 2024 07:52:01 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Zorro Lang <zlang@redhat.com>
 Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] common/rc: _scratch_mkfs_sized supports extra
- arguments
-Message-ID: <20241121155011.GR9425@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/2] xfs/157: do not drop necessary mkfs options
+Message-ID: <20241121155201.GS9425@frogsfrogsfrogs>
 References: <20241116190800.1870975-1-zlang@kernel.org>
- <20241116190800.1870975-2-zlang@kernel.org>
- <20241118222136.GJ9425@frogsfrogsfrogs>
- <20241121091733.iumhfm2esby6aidt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241116190800.1870975-3-zlang@kernel.org>
+ <20241118222614.GK9425@frogsfrogsfrogs>
+ <20241121093537.ae74gwbzl53yvsn2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,161 +45,85 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241121091733.iumhfm2esby6aidt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <20241121093537.ae74gwbzl53yvsn2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Thu, Nov 21, 2024 at 05:17:33PM +0800, Zorro Lang wrote:
-> On Mon, Nov 18, 2024 at 02:21:36PM -0800, Darrick J. Wong wrote:
-> > On Sun, Nov 17, 2024 at 03:07:59AM +0800, Zorro Lang wrote:
-> > > To give more arguments to _scratch_mkfs_sized, we generally do as:
+On Thu, Nov 21, 2024 at 05:35:37PM +0800, Zorro Lang wrote:
+> On Mon, Nov 18, 2024 at 02:26:14PM -0800, Darrick J. Wong wrote:
+> > On Sun, Nov 17, 2024 at 03:08:00AM +0800, Zorro Lang wrote:
+> > > To give the test option "-L oldlabel" to _scratch_mkfs_sized, xfs/157
+> > > does:
 > > > 
 > > >   MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size
 > > > 
-> > > to give "-L oldlabel" to it. But if _scratch_mkfs_sized fails, it
-> > > will get rid of the whole MKFS_OPTIONS and try to mkfs again.
-> > > Likes:
+> > > but the _scratch_mkfs_sized trys to keep the $fs_size, when mkfs
+> > > fails with incompatible $MKFS_OPTIONS options, likes this:
 > > > 
 > > >   ** mkfs failed with extra mkfs options added to "-L oldlabel -m rmapbt=1" by test 157 **
 > > >   ** attempting to mkfs using only test 157 options: -d size=524288000 -b size=4096 **
 > > > 
-> > > But that's not the fault of "-L oldlabel". So for keeping the mkfs
-> > > options ("-L oldlabel") we need, we'd better to let the
-> > > scratch_mkfs_sized to support extra arguments, rather than using
-> > > global MKFS_OPTIONS.
+> > > but the "-L oldlabel" is necessary, we shouldn't drop it. To avoid
+> > > that, we give the "-L oldlabel" to _scratch_mkfs_sized through
+> > > function parameters, not through global MKFS_OPTIONS.
 > > > 
 > > > Signed-off-by: Zorro Lang <zlang@kernel.org>
 > > > ---
-> > >  common/rc | 34 ++++++++++++++++++----------------
-> > >  1 file changed, 18 insertions(+), 16 deletions(-)
+> > >  tests/xfs/157 | 3 +--
+> > >  1 file changed, 1 insertion(+), 2 deletions(-)
 > > > 
-> > > diff --git a/common/rc b/common/rc
-> > > index 2af26f23f..ce8602383 100644
-> > > --- a/common/rc
-> > > +++ b/common/rc
-> > > @@ -1023,11 +1023,13 @@ _small_fs_size_mb()
+> > > diff --git a/tests/xfs/157 b/tests/xfs/157
+> > > index 9b5badbae..f8f102d78 100755
+> > > --- a/tests/xfs/157
+> > > +++ b/tests/xfs/157
+> > > @@ -66,8 +66,7 @@ scenario() {
 > > >  }
 > > >  
-> > >  # Create fs of certain size on scratch device
-> > > -# _try_scratch_mkfs_sized <size in bytes> [optional blocksize]
-> > > +# _try_scratch_mkfs_sized <size in bytes> [optional blocksize] [other options]
-> > >  _try_scratch_mkfs_sized()
-> > >  {
-> > >  	local fssize=$1
-> > > -	local blocksize=$2
-> > > +	shift
-> > > +	local blocksize=$1
-> > > +	shift
-> > >  	local def_blksz
-> > >  	local blocksize_opt
-> > >  	local rt_ops
-> > > @@ -1091,10 +1093,10 @@ _try_scratch_mkfs_sized()
-> > >  		# don't override MKFS_OPTIONS that set a block size.
-> > >  		echo $MKFS_OPTIONS |grep -E -q "b\s*size="
-> > >  		if [ $? -eq 0 ]; then
-> > > -			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops
-> > > +			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops "$@"
-> > >  		else
-> > >  			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops \
-> > > -				-b size=$blocksize
-> > > +				-b size=$blocksize "$@"
-> > >  		fi
-> > >  		;;
-> > >  	ext2|ext3|ext4)
-> > > @@ -1105,7 +1107,7 @@ _try_scratch_mkfs_sized()
-> > >  				_notrun "Could not make scratch logdev"
-> > >  			MKFS_OPTIONS="$MKFS_OPTIONS -J device=$SCRATCH_LOGDEV"
-> > >  		fi
-> > > -		${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> > > +		${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
-> > >  		;;
-> > >  	gfs2)
-> > >  		# mkfs.gfs2 doesn't automatically shrink journal files on small
-> > > @@ -1120,13 +1122,13 @@ _try_scratch_mkfs_sized()
-> > >  			(( journal_size >= min_journal_size )) || journal_size=$min_journal_size
-> > >  			MKFS_OPTIONS="-J $journal_size $MKFS_OPTIONS"
-> > >  		fi
-> > > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize $SCRATCH_DEV $blocks
-> > > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize "$@" $SCRATCH_DEV $blocks
-> > >  		;;
-> > >  	ocfs2)
-> > > -		yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> > > +		yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
-> > >  		;;
-> > >  	udf)
-> > > -		$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> > > +		$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
-> > >  		;;
-> > >  	btrfs)
-> > >  		local mixed_opt=
-> > > @@ -1134,33 +1136,33 @@ _try_scratch_mkfs_sized()
-> > >  		# the device is not zoned. Ref: btrfs-progs: btrfs_min_dev_size()
-> > >  		(( fssize < $((256 * 1024 * 1024)) )) &&
-> > >  			! _scratch_btrfs_is_zoned && mixed_opt='--mixed'
-> > > -		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $SCRATCH_DEV
-> > > +		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize "$@" $SCRATCH_DEV
-> > >  		;;
-> > >  	jfs)
-> > > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS $SCRATCH_DEV $blocks
-> > > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS "$@" $SCRATCH_DEV $blocks
-> > >  		;;
-> > >  	reiserfs)
-> > > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
-> > > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
-> > >  		;;
-> > >  	reiser4)
-> > >  		# mkfs.resier4 requires size in KB as input for creating filesystem
-> > > -		$MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize $SCRATCH_DEV \
-> > > +		$MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize "$@" $SCRATCH_DEV \
-> > >  				   `expr $fssize / 1024`
-> > >  		;;
-> > >  	f2fs)
-> > >  		# mkfs.f2fs requires # of sectors as an input for the size
-> > >  		local sector_size=`blockdev --getss $SCRATCH_DEV`
-> > > -		$MKFS_F2FS_PROG $MKFS_OPTIONS $SCRATCH_DEV `expr $fssize / $sector_size`
-> > > +		$MKFS_F2FS_PROG $MKFS_OPTIONS "$@" $SCRATCH_DEV `expr $fssize / $sector_size`
-> > >  		;;
-> > >  	tmpfs)
-> > >  		local free_mem=`_free_memory_bytes`
-> > >  		if [ "$free_mem" -lt "$fssize" ] ; then
-> > >  		   _notrun "Not enough memory ($free_mem) for tmpfs with $fssize bytes"
-> > >  		fi
-> > > -		export MOUNT_OPTIONS="-o size=$fssize $TMPFS_MOUNT_OPTIONS"
-> > > +		export MOUNT_OPTIONS="-o size=$fssize "$@" $TMPFS_MOUNT_OPTIONS"
-> > >  		;;
-> > >  	bcachefs)
-> > > -		$MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt $SCRATCH_DEV
-> > > +		$MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt "$@" $SCRATCH_DEV
-> > >  		;;
-> > >  	*)
-> > >  		_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
-> > > @@ -1170,7 +1172,7 @@ _try_scratch_mkfs_sized()
-> > >  
-> > >  _scratch_mkfs_sized()
-> > >  {
-> > > -	_try_scratch_mkfs_sized $* || _notrun "_scratch_mkfs_sized failed with ($*)"
-> > > +	_try_scratch_mkfs_sized "$@" || _notrun "_scratch_mkfs_sized failed with ($@)"
+> > >  check_label() {
+> > > -	MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size \
+> > > -		>> $seqres.full
+> > > +	_scratch_mkfs_sized "$fs_size" "" "-L oldlabel" >> $seqres.full 2>&1
 > > 
-> > Nit: Don't use '$@' within a longer string -- either it's "$@" so that
-> > each element in the arg array is rendered individually as a separate
-> > string parameter to the program being called, or "foo $*" so that you
-> > end up with a single string.
+> > Don't quote the "-L" and "oldlabel" within the same string unless you
+> > want them passed as a single string to _scratch_mkfs.  Right now that
+> > works because although you have _scratch_mkfs_sized using "$@"
 > 
-> Hi Darrick, do you mean I should keep the later $*? Likes:
+> I use "$@" just for _scratch_mkfs_sized can give an empty argument to
+> _try_scratch_mkfs_sized to be its second argument.
 > 
->   _try_scratch_mkfs_sized "$@" || _notrun "_scratch_mkfs_sized failed with ($*)"
+> how about:
+> _scratch_mkfs_sized "$fs_size" "" -L oldlabel
+> 
+> > (doublequote-dollarsign-atsign-doublequote) to pass its arguments intact
+> > to _scratch_mkfs, it turns out that _scratch_mkfs just brazely passes $*
+> > (with no quoting) to the actual MKFS_PROG which results in any space in
+> > any single argument being treated as an argument separator and the
+> > string is broken into multiple arguments.
+> > 
+> > This is why you *can't* do _scratch_mkfs -L "moo cow".
+> > 
+> > This is also part of why everyone hates bash.
+> 
+> Hmm... do you need to change the $* of _scratch_mkfs to $@ too?
 
-Yes, as you saw in my more recent reposting of this. :)
+Yeah, that's something that needs to be done treewide.  The trouble is,
+I bet there's other tests out there that have come to rely on the bad
+splitting behavior and do things like
+
+_scratch_fubar "-x 555"
+
+becoming
+
+execve("foobar", "-x" "555");
+
+and will break if we try to fix it now.
 
 --D
 
 > > 
-> > shellcheck will complain about that, though bash itself doesn't seem to
-> > care.
-> > 
 > > --D
 > > 
-> > >  }
-> > >  
-> > >  # Emulate an N-data-disk stripe w/ various stripe units
+> > >  	_scratch_xfs_db -c label
+> > >  	_scratch_xfs_admin -L newlabel "$@" >> $seqres.full
+> > >  	_scratch_xfs_db -c label
 > > > -- 
 > > > 2.45.2
 > > > 
