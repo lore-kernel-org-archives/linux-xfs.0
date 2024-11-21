@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3FA633F9
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 00:08:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A7E1FB3
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 00:08:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732147711; cv=none; b=OkkVD9u69LVLx9qCGi0shDpXogNI+MdR1Pe2HouWL5bBy9cVZE4F4iYjN8fgCb9LPxloMth+JF2PzSZD6KjHyvq8OzCqODbTCcmJrVVgfn1Zicd9PTrkLHPjdMc/1ettFz51679rOYGrPhKDQKzmpX/cYiRnB+YrW0Z0PatZjrE=
+	t=1732147727; cv=none; b=ApdshCbL/PLlBdpDtIfZSxy3LRHf3NPkfTgaDxWzDl/SmdmYW8t6BQ2F/bF2DBaNcd9mFEzROZ3mofqygz8SvK8kLr4zHCv0HagCflaDBsN4K2BoSZJxH49mh6Gbi+QSvfc8DnDPQLW2+WX+yHCDgXop5vzK+f41B+SeWwqG+Ko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732147711; c=relaxed/simple;
-	bh=0rSNrx+G53cJwXs5q+6SOCtp5DcgXeuGgvj+HTGrGXg=;
+	s=arc-20240116; t=1732147727; c=relaxed/simple;
+	bh=UJcGtiCLbTHoLX22YhPFWAwK5aalHj7M5uNeGVv7YqA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=G90c2wNVW3vF3sYcWENJ49kc+FtL+zGmbZaeFxZOVYJewA4VntLp09hyrhZ0P8jVk4FU8RH/wcdTLckb1S/6sfcGNy+Jka1W+F8wDnewuDu9dH+KPeqIomP6qmY+DO75Z6CcYxqpLNn8FB7WPsMqGdpVF7EWo9E+0n/3WAEVZGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OY+fjlJ7; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AZDweUhLJopcP60y+R/vptk55hIa3bDNyEo6CELvNtOX7Bi3xwHVC7QcArPAtmCC9/0WJs+s2s7nS1ps8B9z8hO41YuytIs/MKrvOReJNSqx5r1h+rQvNeGm0wQRilcHvqseueszR2gtdCszHkjY7rZ/u9azatDoKxkbdyhkPYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FvTrIRiO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OY+fjlJ7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D35BC4CECD;
-	Thu, 21 Nov 2024 00:08:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FvTrIRiO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2386EC4CECD;
+	Thu, 21 Nov 2024 00:08:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732147711;
-	bh=0rSNrx+G53cJwXs5q+6SOCtp5DcgXeuGgvj+HTGrGXg=;
+	s=k20201202; t=1732147727;
+	bh=UJcGtiCLbTHoLX22YhPFWAwK5aalHj7M5uNeGVv7YqA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OY+fjlJ7wkV52i3AtCwPLr+DGznKcLmzjLPM8DjKvkUgqD1DSnTLPd0Xadsxr7k7m
-	 ygJRjrfFFQvGyURaZWhJ8KxrfXWCnv3edydYYuXui/YfzxMvfPRpI8ZiitiAvIB6BS
-	 R4JndQ2vaWjRG2SMnsvwM/6oTIkCvd7gXZNZiG9id559bplNobsVDRrOqzxiBSFZ+Y
-	 sImij4pkqxxb2JkKUH5vh61Jd04fxGE0oaF3BtHrPsikNVFQmnu3HY0ppKR0r50XRz
-	 0fDpkFJNtByF3PeG/CkUTyfcQz8M8/U5UKz/iV2LJEG/f5RsMFLkpeDX/qmh/XdWc4
-	 gHqDuE7DMn5tQ==
-Date: Wed, 20 Nov 2024 16:08:30 -0800
-Subject: [PATCHSET 1/2] libxfs: new code for 6.12
+	b=FvTrIRiOHKZRWtauaWbnS/aWc7Q+iWRLp0ieqBX0lbRwj18t3t5NZKaKzWk//p7CJ
+	 flzEYgRA4iJvkBhcjkSmPRl19KyyybUGPsNqbs4L9zhrGJYAuPJJ9Mcfr+Bj0i+qlj
+	 fkOo2jLtzo0a7HJIPlq614kpljNMEDs64urWjTPI/Espbq3Y+DjqgPJsgwllZlcDqJ
+	 NP6+a8RVfwYPjQZ5Gf4upN4LRRtJ3kZfu3t/J2UQlTR8BulxHUb1C8rJ7a6M2obc+U
+	 k49zuCf44fhnJ2KQITM96XWsDzNp7YH145zgm5TiD0wDF7cWbYMNA+FPcQXZy98Fo3
+	 SwZsRp0uX3jlA==
+Date: Wed, 20 Nov 2024 16:08:46 -0800
+Subject: [PATCHSET 2/2] xfs: bug fixes for 6.12
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, chizhiling@kylinos.cn, dchinner@redhat.com,
- linux-xfs@vger.kernel.org
-Message-ID: <173214768449.2957437.8329676911721535813.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173214768829.2957531.4071177223892485486.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241121000705.GE9438@frogsfrogsfrogs>
 References: <20241121000705.GE9438@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,19 +45,24 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-New code for 6.12.
+Bug fixes for 6.12.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
 
 Comments and questions are, as always, welcome.
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-fixes-6.12
+
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-sync-6.12
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs-fixes-6.12
 ---
 Commits in this patchset:
- * xfs: Reduce unnecessary searches when searching for the best extents
+ * xfs_repair: fix crasher in pf_queuing_worker
+ * xfs_repair: synthesize incore inode tree records when required
 ---
- libxfs/xfs_alloc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ repair/dino_chunks.c |   28 ++++++++++++++++++++++++++++
+ repair/prefetch.c    |    2 ++
+ 2 files changed, 30 insertions(+)
 
