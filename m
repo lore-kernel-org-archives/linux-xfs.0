@@ -1,265 +1,240 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9040B1CD1F3;
-	Thu, 21 Nov 2024 08:54:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7A0A14EC55
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 09:17:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732179270; cv=none; b=DbobWVI8UTy73FAYC8Mtm6KkaVWLNEUzrtlAPZDovVmccsTCLmRggbFTALmYEaM6Tk84rFB/kZpP4H2eCxLUgs12P3AGj4OXJcnHTVl7T9416gxaBWm0Al0oS22TaEH05fp1E755YdbKspvhI9l/3i+b/BTuMRupEiMsovs/B4k=
+	t=1732180662; cv=none; b=drvbQOTNxLV9V4AKDkR0IbfzH4Fo4oALDjK8CZSsWqsfEObx5k0TPKDDSzXxjXKQns3h7NyQEDNdVNQvRiYr+OHulnCoL/VIbKEXDAalWeOqkIfasnxibQQyBMIZ6IphBiAzW3bq5/MJ9nIzbvYyyfdFiIz8SUDjw1Q7t3ZGvmg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732179270; c=relaxed/simple;
-	bh=TwzpGNcP8sBopTqZejLvIXwRObHW9PYvsMVU2F3rJu4=;
+	s=arc-20240116; t=1732180662; c=relaxed/simple;
+	bh=rSwQmXUj4krzBoA2DXn7wkxpp+LWrBw1vh/MA3jCvL0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a2Cx/584YYMFTjsXLzYgzZ+Cw+aGLXSTBA/xNTLpIBICC4yZQgs+3X8Vc8uHtZXTcUV7BkG1CbM2RTpHcZ+JEr/qyQ2X4ZpmBMNlNWaz9hTjJIREhg3WWxdmdR5GqbBsqk70lQPditoojWvY/cvJQEIOBbfl2xZK3UJGjs5FV4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=uJ9rSuTw; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=tKV06pKx; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=uJ9rSuTw; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=tKV06pKx; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=lA1T2i6Fsn8LF7oIAlQ87i3YBkk6YnzFl63A6MIKHoNDqYnIqSjKksrSIgQtxvPKts2lFyVbDx0mIRhpObzwL2BuP2dzSeb7errmWtjD+PF5e/LciWvHYX03EIOJwIHkdYDl55CeCq6X6tiOEtFp6zBhO4XMbXl8nrOpPYCjRzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LINEBfoI; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="uJ9rSuTw";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="tKV06pKx";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="uJ9rSuTw";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="tKV06pKx"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 78A88211BB;
-	Thu, 21 Nov 2024 08:54:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1732179265; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LINEBfoI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1732180659;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=M9QDYFVgK18ikztR1aFCMrX/3aAhs0bWXjPhxnlRZtE=;
-	b=uJ9rSuTwHq42Q9eV0Pm3KewVmcTElVkYABQedvIts4bOr9jE3bLJrPbvz8D5Rd72op769r
-	D7hlLV2vCSExFT7xyg96dZnT7ugJoY+s2sae2a3czx8qSallOh1s+L6JdqkLWv5J/7yngC
-	pJ4kj2KZPPBGrpJrFfgkxPnSCLc0t24=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1732179265;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M9QDYFVgK18ikztR1aFCMrX/3aAhs0bWXjPhxnlRZtE=;
-	b=tKV06pKxDviRzPYcFgiT/BAb1ygh8vMnho6u2rZfPiQVKd8sSUv3Vw29/qRKVTtrUHuJJq
-	kc+z72YKxb8ircAA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=uJ9rSuTw;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=tKV06pKx
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1732179265; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M9QDYFVgK18ikztR1aFCMrX/3aAhs0bWXjPhxnlRZtE=;
-	b=uJ9rSuTwHq42Q9eV0Pm3KewVmcTElVkYABQedvIts4bOr9jE3bLJrPbvz8D5Rd72op769r
-	D7hlLV2vCSExFT7xyg96dZnT7ugJoY+s2sae2a3czx8qSallOh1s+L6JdqkLWv5J/7yngC
-	pJ4kj2KZPPBGrpJrFfgkxPnSCLc0t24=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1732179265;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M9QDYFVgK18ikztR1aFCMrX/3aAhs0bWXjPhxnlRZtE=;
-	b=tKV06pKxDviRzPYcFgiT/BAb1ygh8vMnho6u2rZfPiQVKd8sSUv3Vw29/qRKVTtrUHuJJq
-	kc+z72YKxb8ircAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 59C57137CF;
-	Thu, 21 Nov 2024 08:54:25 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id VuebFUH1PmdBTgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 21 Nov 2024 08:54:25 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id CEDF3A089E; Thu, 21 Nov 2024 09:54:20 +0100 (CET)
-Date: Thu, 21 Nov 2024 09:54:20 +0100
-From: Jan Kara <jack@suse.cz>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, Josef Bacik <josef@toxicpanda.com>,
-	kernel-team@fb.com, linux-fsdevel@vger.kernel.org,
-	brauner@kernel.org, torvalds@linux-foundation.org,
-	viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v8 03/19] fsnotify: add helper to check if file is
- actually being watched
-Message-ID: <20241121085420.lpsvkixshtuju23i@quack3>
-References: <cover.1731684329.git.josef@toxicpanda.com>
- <2ddcc9f8d1fde48d085318a6b5a889289d8871d8.1731684329.git.josef@toxicpanda.com>
- <20241120160247.sdvonyxkpmf4wnt2@quack3>
- <CAOQ4uxj4pwH2hfmNL0N=q8-rOF6d=-Z_yWLEwHQ671t1EvRn6A@mail.gmail.com>
+	bh=NWynQ17JVVdzwmK7zsV5nN/jjmRiA2ROsatZlh5cw5A=;
+	b=LINEBfoIx50BEQnfzfikbND7mJf+2xdQUkqOY72ccjnHQBiaE/+fGQZ2/YsxIGVGCgdUpJ
+	v9sN8XXOiPH7kPmbzx7kjk/1O9orgqEiSwOuosaLAJJiJomet40KmLY8GCLSY8nb9U8HSI
+	FR3+Y6yQ0SMOoK3pEpYlI/KCS4g6pqg=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-661-rcnYPj-eMxGMY7K-okdSfA-1; Thu, 21 Nov 2024 04:17:38 -0500
+X-MC-Unique: rcnYPj-eMxGMY7K-okdSfA-1
+X-Mimecast-MFC-AGG-ID: rcnYPj-eMxGMY7K-okdSfA
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2120c877e75so8052505ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2024 01:17:38 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732180657; x=1732785457;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NWynQ17JVVdzwmK7zsV5nN/jjmRiA2ROsatZlh5cw5A=;
+        b=G/uQKwVLNRk4ZfC6p8de2E59y9b+O7Twq727MQRHinbsQQEvr6O+149kUIc+YXTmfg
+         04x58QI+z6Lx2D5UxQMs8HupRNCKjAufjfSYbNS11WA2Pt38dJhWQsF8/Ouc2ZNBIvAS
+         EvmfugI9G0ebPRrsenRCu2RywSkozfeTJpYQLvVrrS/IPq2kLLqCOmVIMXFTajsdIymm
+         BDjAYJpPoLFiKXJu6iE3B2dI2LPlUpTFec8yqULMGkvf33y8QgrvAjGKCznLkntsqxg+
+         bD1qQzxRgE7mc+qifE7KhCSJdc2GE9bgLqILm5E/I4oex2vvwPLZkFTCppMFAEaw0qeU
+         GFog==
+X-Forwarded-Encrypted: i=1; AJvYcCX4KB0oW9XUUEsFpA6QojdaH3IIxdHz7eRf0LEMiH6pJ6oo/iem7bB4G0ycIHT/KxkYsZicD/mA9DI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxXl23w3EAny5NsnL3w/iBg9tODbPbuHp26FCuU+9YVzItOT8u1
+	Sdqr0h9hlrHV0nBDSRF2q8nfDKqLLv7tVquVZl7NFsqFEW55XMQ6mih5i/iqVx9eDXHSLmfgHpu
+	zt0a0oxIBKg+V/5MjJ+tyZdkqi+mXrmXb75tm3Y71OEsFv0rCaksPBZlSHAS2bdMV9Sgt
+X-Gm-Gg: ASbGncs76//zI7xt5yDNxLMK1pTp6m+j1xRunH8Wq6YKC+lbz1r1N/zVXSsVVai+Ip8
+	xpgNSt6u3eThvZoWkbVOI8/yh4gZs16KnPjsv9f/+WGrCvRw5zclP/lKA7c6RcvnLazB6+nk+E7
+	x/1FF40+pM8PATMmOM0cfvm/xobPf3QtslRNmWQo/QDyxJVxfXAMyPZoTTawTcEq/Yy4fhwA6U8
+	uAyLKe1Ri3yM8bhvp2BUWvyS8gDxOrzy1eiQDX0YNuEuMKt+8DD7V7pVTUsNKGiGRAKTNIBKXxF
+	PDH/xtg1AVtP//U=
+X-Received: by 2002:a17:903:251:b0:20c:9d8d:1f65 with SMTP id d9443c01a7336-2126c11bf0fmr78131445ad.30.1732180657204;
+        Thu, 21 Nov 2024 01:17:37 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFmZSAdJrRh5LAgkwqSHaE9Hyj5J5TIvtOdVxAlTT/5ropqcFpoWz6NRe+pLvjvYKslEn254w==
+X-Received: by 2002:a17:903:251:b0:20c:9d8d:1f65 with SMTP id d9443c01a7336-2126c11bf0fmr78131215ad.30.1732180656839;
+        Thu, 21 Nov 2024 01:17:36 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21287ee158csm9176395ad.131.2024.11.21.01.17.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Nov 2024 01:17:36 -0800 (PST)
+Date: Thu, 21 Nov 2024 17:17:33 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] common/rc: _scratch_mkfs_sized supports extra
+ arguments
+Message-ID: <20241121091733.iumhfm2esby6aidt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20241116190800.1870975-1-zlang@kernel.org>
+ <20241116190800.1870975-2-zlang@kernel.org>
+ <20241118222136.GJ9425@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxj4pwH2hfmNL0N=q8-rOF6d=-Z_yWLEwHQ671t1EvRn6A@mail.gmail.com>
-X-Rspamd-Queue-Id: 78A88211BB
-X-Spam-Score: -4.01
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
-	MISSING_XM_UA(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RCPT_COUNT_TWELVE(0.00)[12];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_TO(0.00)[gmail.com];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,suse.cz:dkim,suse.com:email];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
+In-Reply-To: <20241118222136.GJ9425@frogsfrogsfrogs>
 
-On Wed 20-11-24 17:42:18, Amir Goldstein wrote:
-> On Wed, Nov 20, 2024 at 5:02 PM Jan Kara <jack@suse.cz> wrote:
-> >
-> > On Fri 15-11-24 10:30:16, Josef Bacik wrote:
-> > > From: Amir Goldstein <amir73il@gmail.com>
-> > >
-> > > So far, we set FMODE_NONOTIFY_ flags at open time if we know that there
-> > > are no permission event watchers at all on the filesystem, but lack of
-> > > FMODE_NONOTIFY_ flags does not mean that the file is actually watched.
-> > >
-> > > To make the flags more accurate we add a helper that checks if the
-> > > file's inode, mount, sb or parent are being watched for a set of events.
-> > >
-> > > This is going to be used for setting FMODE_NONOTIFY_HSM only when the
-> > > specific file is actually watched for pre-content events.
-> > >
-> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> >
-> > I did some changes here as well. See below:
-> >
-> > > -/* Are there any inode/mount/sb objects that are interested in this event? */
-> > > -static inline bool fsnotify_object_watched(struct inode *inode, __u32 mnt_mask,
-> > > -                                        __u32 mask)
-> > > +/* Are there any inode/mount/sb objects that watch for these events? */
-> > > +static inline __u32 fsnotify_object_watched(struct inode *inode, __u32 mnt_mask,
-> > > +                                         __u32 events_mask)
-> > >  {
-> > >       __u32 marks_mask = READ_ONCE(inode->i_fsnotify_mask) | mnt_mask |
-> > >                          READ_ONCE(inode->i_sb->s_fsnotify_mask);
-> > >
-> > > -     return mask & marks_mask & ALL_FSNOTIFY_EVENTS;
-> > > +     return events_mask & marks_mask;
-> > >  }
-> > >
-> > > +/* Are there any inode/mount/sb/parent objects that watch for these events? */
-> > > +__u32 fsnotify_file_object_watched(struct file *file, __u32 events_mask)
-> > > +{
-> > > +     struct dentry *dentry = file->f_path.dentry;
-> > > +     struct dentry *parent;
-> > > +     __u32 marks_mask, mnt_mask =
-> > > +             READ_ONCE(real_mount(file->f_path.mnt)->mnt_fsnotify_mask);
-> > > +
-> > > +     marks_mask = fsnotify_object_watched(d_inode(dentry), mnt_mask,
-> > > +                                          events_mask);
-> > > +
-> > > +     if (likely(!(dentry->d_flags & DCACHE_FSNOTIFY_PARENT_WATCHED)))
-> > > +             return marks_mask;
-> > > +
-> > > +     parent = dget_parent(dentry);
-> > > +     marks_mask |= fsnotify_inode_watches_children(d_inode(parent));
-> > > +     dput(parent);
-> > > +
-> > > +     return marks_mask & events_mask;
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(fsnotify_file_object_watched);
-> >
-> > I find it confusing that fsnotify_object_watched() does not take parent
-> > into account while fsnotify_file_object_watched() does. Furthermore the
-> > naming doesn't very well reflect the fact we are actually returning a mask
-> > of events. I've ended up dropping this helper (it's used in a single place
-> > anyway) and instead doing the same directly in file_set_fsnotify_mode().
-> >
-> > @@ -658,6 +660,27 @@ void file_set_fsnotify_mode(struct file *file)
-> >                 file->f_mode |= FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-> >                 return;
-> >         }
-> > +
-> > +       /*
-> > +        * OK, there are some pre-content watchers. Check if anybody can be
-> > +        * watching for pre-content events on *this* file.
-> > +        */
-> > +       mnt_mask = READ_ONCE(real_mount(file->f_path.mnt)->mnt_fsnotify_mask);
-> > +       if (likely(!(dentry->d_flags & DCACHE_FSNOTIFY_PARENT_WATCHED) &&
-> > +           !fsnotify_object_watched(d_inode(dentry), mnt_mask,
-> > +                                    FSNOTIFY_PRE_CONTENT_EVENTS))) {
-> > +               file->f_mode |= FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-> > +               return;
-> > +       }
-> > +
-> > +       /* Even parent is not watching for pre-content events on this file? */
-> > +       parent = dget_parent(dentry);
-> > +       p_mask = fsnotify_inode_watches_children(d_inode(parent));
-> > +       dput(parent);
-> > +       if (!(p_mask & FSNOTIFY_PRE_CONTENT_EVENTS)) {
-> > +               file->f_mode |= FMODE_NONOTIFY | FMODE_NONOTIFY_PERM;
-> > +               return;
-> > +       }
+On Mon, Nov 18, 2024 at 02:21:36PM -0800, Darrick J. Wong wrote:
+> On Sun, Nov 17, 2024 at 03:07:59AM +0800, Zorro Lang wrote:
+> > To give more arguments to _scratch_mkfs_sized, we generally do as:
+> > 
+> >   MKFS_OPTIONS="-L oldlabel $MKFS_OPTIONS" _scratch_mkfs_sized $fs_size
+> > 
+> > to give "-L oldlabel" to it. But if _scratch_mkfs_sized fails, it
+> > will get rid of the whole MKFS_OPTIONS and try to mkfs again.
+> > Likes:
+> > 
+> >   ** mkfs failed with extra mkfs options added to "-L oldlabel -m rmapbt=1" by test 157 **
+> >   ** attempting to mkfs using only test 157 options: -d size=524288000 -b size=4096 **
+> > 
+> > But that's not the fault of "-L oldlabel". So for keeping the mkfs
+> > options ("-L oldlabel") we need, we'd better to let the
+> > scratch_mkfs_sized to support extra arguments, rather than using
+> > global MKFS_OPTIONS.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > ---
+> >  common/rc | 34 ++++++++++++++++++----------------
+> >  1 file changed, 18 insertions(+), 16 deletions(-)
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index 2af26f23f..ce8602383 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -1023,11 +1023,13 @@ _small_fs_size_mb()
 > >  }
-> >
+> >  
+> >  # Create fs of certain size on scratch device
+> > -# _try_scratch_mkfs_sized <size in bytes> [optional blocksize]
+> > +# _try_scratch_mkfs_sized <size in bytes> [optional blocksize] [other options]
+> >  _try_scratch_mkfs_sized()
+> >  {
+> >  	local fssize=$1
+> > -	local blocksize=$2
+> > +	shift
+> > +	local blocksize=$1
+> > +	shift
+> >  	local def_blksz
+> >  	local blocksize_opt
+> >  	local rt_ops
+> > @@ -1091,10 +1093,10 @@ _try_scratch_mkfs_sized()
+> >  		# don't override MKFS_OPTIONS that set a block size.
+> >  		echo $MKFS_OPTIONS |grep -E -q "b\s*size="
+> >  		if [ $? -eq 0 ]; then
+> > -			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops
+> > +			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops "$@"
+> >  		else
+> >  			_try_scratch_mkfs_xfs -d size=$fssize $rt_ops \
+> > -				-b size=$blocksize
+> > +				-b size=$blocksize "$@"
+> >  		fi
+> >  		;;
+> >  	ext2|ext3|ext4)
+> > @@ -1105,7 +1107,7 @@ _try_scratch_mkfs_sized()
+> >  				_notrun "Could not make scratch logdev"
+> >  			MKFS_OPTIONS="$MKFS_OPTIONS -J device=$SCRATCH_LOGDEV"
+> >  		fi
+> > -		${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > +		${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> >  		;;
+> >  	gfs2)
+> >  		# mkfs.gfs2 doesn't automatically shrink journal files on small
+> > @@ -1120,13 +1122,13 @@ _try_scratch_mkfs_sized()
+> >  			(( journal_size >= min_journal_size )) || journal_size=$min_journal_size
+> >  			MKFS_OPTIONS="-J $journal_size $MKFS_OPTIONS"
+> >  		fi
+> > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize $SCRATCH_DEV $blocks
+> > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -O -b $blocksize "$@" $SCRATCH_DEV $blocks
+> >  		;;
+> >  	ocfs2)
+> > -		yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > +		yes | ${MKFS_PROG} -t $FSTYP -F $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> >  		;;
+> >  	udf)
+> > -		$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > +		$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> >  		;;
+> >  	btrfs)
+> >  		local mixed_opt=
+> > @@ -1134,33 +1136,33 @@ _try_scratch_mkfs_sized()
+> >  		# the device is not zoned. Ref: btrfs-progs: btrfs_min_dev_size()
+> >  		(( fssize < $((256 * 1024 * 1024)) )) &&
+> >  			! _scratch_btrfs_is_zoned && mixed_opt='--mixed'
+> > -		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $SCRATCH_DEV
+> > +		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize "$@" $SCRATCH_DEV
+> >  		;;
+> >  	jfs)
+> > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS $SCRATCH_DEV $blocks
+> > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS "$@" $SCRATCH_DEV $blocks
+> >  		;;
+> >  	reiserfs)
+> > -		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+> > +		${MKFS_PROG} -t $FSTYP $MKFS_OPTIONS -b $blocksize "$@" $SCRATCH_DEV $blocks
+> >  		;;
+> >  	reiser4)
+> >  		# mkfs.resier4 requires size in KB as input for creating filesystem
+> > -		$MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize $SCRATCH_DEV \
+> > +		$MKFS_REISER4_PROG $MKFS_OPTIONS -y -b $blocksize "$@" $SCRATCH_DEV \
+> >  				   `expr $fssize / 1024`
+> >  		;;
+> >  	f2fs)
+> >  		# mkfs.f2fs requires # of sectors as an input for the size
+> >  		local sector_size=`blockdev --getss $SCRATCH_DEV`
+> > -		$MKFS_F2FS_PROG $MKFS_OPTIONS $SCRATCH_DEV `expr $fssize / $sector_size`
+> > +		$MKFS_F2FS_PROG $MKFS_OPTIONS "$@" $SCRATCH_DEV `expr $fssize / $sector_size`
+> >  		;;
+> >  	tmpfs)
+> >  		local free_mem=`_free_memory_bytes`
+> >  		if [ "$free_mem" -lt "$fssize" ] ; then
+> >  		   _notrun "Not enough memory ($free_mem) for tmpfs with $fssize bytes"
+> >  		fi
+> > -		export MOUNT_OPTIONS="-o size=$fssize $TMPFS_MOUNT_OPTIONS"
+> > +		export MOUNT_OPTIONS="-o size=$fssize "$@" $TMPFS_MOUNT_OPTIONS"
+> >  		;;
+> >  	bcachefs)
+> > -		$MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt $SCRATCH_DEV
+> > +		$MKFS_BCACHEFS_PROG $MKFS_OPTIONS --fs_size=$fssize $blocksize_opt "$@" $SCRATCH_DEV
+> >  		;;
+> >  	*)
+> >  		_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
+> > @@ -1170,7 +1172,7 @@ _try_scratch_mkfs_sized()
+> >  
+> >  _scratch_mkfs_sized()
+> >  {
+> > -	_try_scratch_mkfs_sized $* || _notrun "_scratch_mkfs_sized failed with ($*)"
+> > +	_try_scratch_mkfs_sized "$@" || _notrun "_scratch_mkfs_sized failed with ($@)"
 > 
-> Nice!
-> 
-> Note that I had a "hidden motive" for future optimization when I changed
-> return value of fsnotify_object_watched() to a mask -
-> 
-> I figured that while we are doing the checks above, we can check for the
-> same price the mask ALL_FSNOTIFY_PERM_EVENTS
-> then we get several answers for the same price:
-> 1. Is the specific file watched by HSM?
-> 2. Is the specific file watched by open permission events?
-> 3. Is the specific file watched by post-open FAN_ACCESS_PERM?
-> 
-> If the answers are No, No, No, we get some extra optimization
-> in the (uncommon) use case that there are permission event watchers
-> on some random inodes in the filesystem.
-> 
-> If the answers are Yes, Yes, No, or No, Yes, No we can return a special
-> value from file_set_fsnotify_mode() to indicate that permission events
-> are needed ONLY for fsnotify_open_perm() hook, but not thereafter.
-> 
-> This would implement the semantic change of "respect FAN_ACCESS_PERM
-> only if it existed at open time" that can save a lot of unneeded cycles in
-> the very hot read/write path, for example, when watcher only cares about
-> FAN_OPEN_EXEC_PERM.
-> 
-> I wasn't sure that any of this was worth the effort at this time, but
-> just in case this gives you ideas of other useful optimizations we can do
-> with the object combined marks_mask if we get it for free.
+> Nit: Don't use '$@' within a longer string -- either it's "$@" so that
+> each element in the arg array is rendered individually as a separate
+> string parameter to the program being called, or "foo $*" so that you
+> end up with a single string.
 
-OK, I'm not opposed to returning the combined mask in principle. Just I'd
-pick somewhat different function name and it didn't quite make sense to me
-in the context of this series. If we decide to implement the optimizations
-you describe above, then I have no problem with tweaking the helpers.
+Hi Darrick, do you mean I should keep the later $*? Likes:
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+  _try_scratch_mkfs_sized "$@" || _notrun "_scratch_mkfs_sized failed with ($*)"
+
+> 
+> shellcheck will complain about that, though bash itself doesn't seem to
+> care.
+> 
+> --D
+> 
+> >  }
+> >  
+> >  # Emulate an N-data-disk stripe w/ various stripe units
+> > -- 
+> > 2.45.2
+> > 
+> > 
+> 
+
