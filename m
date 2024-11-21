@@ -1,80 +1,80 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6D171DA11A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E6D31D14E0;
 	Thu, 21 Nov 2024 11:22:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732188153; cv=none; b=XgtqflnUu6Ipnw799txdgp+eH/lDMe8XGsY4+T+G0ydoSS+R7EK0vG+oD3hLHDFSNcgnS3svK4qA5zbvV66LCL7nrJcSHwiCq14EKEO124VQLjAYAGYoR0j+cl/38VaEHYVH+84Iwe9Za0gG9BjlKk4OampoA3CRLp5sSIJvFq0=
+	t=1732188154; cv=none; b=MlV0rP4vbgjYNsdmTAVTEtZo4xgkLwl0N+8RhrZtg1Pc5Jt08Pq78d14YiBFsctCjSlTEUsAEx/B3Emdlx7Rqsx1dWQc7oZZylD4YmhANjjtedQsuhbivP+jmIHXVpJHt+NA2MGM2dQlMG36RWxh0Kb771iDrgSGJ9ct0CpvIRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732188153; c=relaxed/simple;
-	bh=GEwnlrOiMu0h7O6NSVhM5VwSkR2ma9htqafS2JvmCdk=;
+	s=arc-20240116; t=1732188154; c=relaxed/simple;
+	bh=6GFrark5ziGjC0lDmMgVw+bIVXXJbPmsQDQOWSZ6Cxw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HZJJCxZflvYYuJUynJxwrCRM3L8dq5yt+BmFakejcGfPZ0IXexRd9i8448WrMLEFMVH8Ri3qv+TYljAq1SzGO62tODRcHdArdAkUTbYzo3N2ChbxVAhaRYlto7i/mLu4DZCWr0uSCNkd4XeRYQi6SpqIRa9FZHK/ZN0TUXeBFUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=gwyp/tiu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=6rhH2MkM; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=gwyp/tiu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=6rhH2MkM; arc=none smtp.client-ip=195.135.223.130
+	 MIME-Version; b=BA9vpY3Kb4eWVyN/Y5roVvLJ+qHLkcYhNPYYB08ikg0x9gulGEfp+dTJkoRUeiZl6tES8Zt/UCIwFsdO+PeobbXchQtnNj66RDdFJ5weRVEG1e9RaDANBHgMJNShL6Do78HzY4lCvGFY15CTQjit92kw0TigGlnp+7/OjRP9Y5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=pzPiHSSo; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ySVK/qoK; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=pzPiHSSo; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ySVK/qoK; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="gwyp/tiu";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6rhH2MkM";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="gwyp/tiu";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6rhH2MkM"
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="pzPiHSSo";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ySVK/qoK";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="pzPiHSSo";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ySVK/qoK"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id BF8A721A07;
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 99BF21F800;
 	Thu, 21 Nov 2024 11:22:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
 	t=1732188144; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ES82s1Ri3LKq9EL11F8KNpqRIlXam9IZ5netWZvoqAk=;
-	b=gwyp/tiuCorqHKw30CrvpaG3bM521seihwVZ9+I53W3/04UUglT5QPXaUVDdrPLw2dtptU
-	RJIzHcd8nOZa/Kk+OYxhokM2EWRJ/YKZWN2bYCviDnYW8R3eYYz+3wuUNJ/bUyoHdL7HFj
-	w72vjEQe2yIvw4L7kwSHaqKayhCwwT4=
+	bh=WuIrTjlD7giJFMek9Z6w/1QoxLAn4PO/HWcQhy0un38=;
+	b=pzPiHSSoj4yXZITU9FzzG/TOnecS2AiHaoo+LmjlLuTmpYZoOPEJsreboE8wZElOAuyQiO
+	CkwWqoOOCFq19p8/96z7OXvZgDWI2cirJQfSsNBE0RF7577iQ4JBaO5A1cnVLunCITcCQr
+	3gBKj959vZLmDotAFMDtD8APrBvQQMk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
 	s=susede2_ed25519; t=1732188144;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ES82s1Ri3LKq9EL11F8KNpqRIlXam9IZ5netWZvoqAk=;
-	b=6rhH2MkMVU24YBhu26kbxGPJjyAavqg40Q1UFGLkgcMytyCIW/J3NUAQU/uJcqi9gyxvoS
-	nqYdFwwHqi6D6gCw==
-Authentication-Results: smtp-out1.suse.de;
+	bh=WuIrTjlD7giJFMek9Z6w/1QoxLAn4PO/HWcQhy0un38=;
+	b=ySVK/qoKjU5kW7y5SOLCqSnSJHUHG4yAd93e0OgJc9Etp96qL95NEO+j8rBkRd9VeVXMlx
+	NH1tzEKardeXVDBQ==
+Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
 	t=1732188144; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ES82s1Ri3LKq9EL11F8KNpqRIlXam9IZ5netWZvoqAk=;
-	b=gwyp/tiuCorqHKw30CrvpaG3bM521seihwVZ9+I53W3/04UUglT5QPXaUVDdrPLw2dtptU
-	RJIzHcd8nOZa/Kk+OYxhokM2EWRJ/YKZWN2bYCviDnYW8R3eYYz+3wuUNJ/bUyoHdL7HFj
-	w72vjEQe2yIvw4L7kwSHaqKayhCwwT4=
+	bh=WuIrTjlD7giJFMek9Z6w/1QoxLAn4PO/HWcQhy0un38=;
+	b=pzPiHSSoj4yXZITU9FzzG/TOnecS2AiHaoo+LmjlLuTmpYZoOPEJsreboE8wZElOAuyQiO
+	CkwWqoOOCFq19p8/96z7OXvZgDWI2cirJQfSsNBE0RF7577iQ4JBaO5A1cnVLunCITcCQr
+	3gBKj959vZLmDotAFMDtD8APrBvQQMk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
 	s=susede2_ed25519; t=1732188144;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ES82s1Ri3LKq9EL11F8KNpqRIlXam9IZ5netWZvoqAk=;
-	b=6rhH2MkMVU24YBhu26kbxGPJjyAavqg40Q1UFGLkgcMytyCIW/J3NUAQU/uJcqi9gyxvoS
-	nqYdFwwHqi6D6gCw==
+	bh=WuIrTjlD7giJFMek9Z6w/1QoxLAn4PO/HWcQhy0un38=;
+	b=ySVK/qoKjU5kW7y5SOLCqSnSJHUHG4yAd93e0OgJc9Etp96qL95NEO+j8rBkRd9VeVXMlx
+	NH1tzEKardeXVDBQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B4A5513A23;
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8CCF913ACE;
 	Thu, 21 Nov 2024 11:22:24 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id DuYZLPAXP2dJfwAAD6G6ig
+	id aVFGIvAXP2c+fwAAD6G6ig
 	(envelope-from <jack@suse.cz>); Thu, 21 Nov 2024 11:22:24 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 51766A0930; Thu, 21 Nov 2024 12:22:24 +0100 (CET)
+	id 2C652A08A2; Thu, 21 Nov 2024 12:22:24 +0100 (CET)
 From: Jan Kara <jack@suse.cz>
 To: <linux-fsdevel@vger.kernel.org>
 Cc: Amir Goldstein <amir73il@gmail.com>,
@@ -87,9 +87,9 @@ Cc: Amir Goldstein <amir73il@gmail.com>,
 	linux-ext4@vger.kernel.org,
 	linux-mm@kvack.org,
 	Jan Kara <jack@suse.cz>
-Subject: [PATCH 17/19] btrfs: disable defrag on pre-content watched files
-Date: Thu, 21 Nov 2024 12:22:16 +0100
-Message-Id: <20241121112218.8249-18-jack@suse.cz>
+Subject: [PATCH 12/19] fanotify: allow to set errno in FAN_DENY permission response
+Date: Thu, 21 Nov 2024 12:22:11 +0100
+Message-Id: <20241121112218.8249-13-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20241121112218.8249-1-jack@suse.cz>
 References: <20241121112218.8249-1-jack@suse.cz>
@@ -103,7 +103,7 @@ Content-Transfer-Encoding: 8bit
 X-Spam-Score: -6.80
 X-Spamd-Result: default: False [-6.80 / 50.00];
 	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[99.99%];
+	BAYES_HAM(-3.00)[100.00%];
 	MID_CONTAINS_FROM(1.00)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	R_MISSING_CHARSET(0.50)[];
@@ -128,43 +128,177 @@ X-Spamd-Result: default: False [-6.80 / 50.00];
 X-Spam-Flag: NO
 X-Spam-Level: 
 
-From: Josef Bacik <josef@toxicpanda.com>
+From: Amir Goldstein <amir73il@gmail.com>
 
-We queue up inodes to be defrag'ed asynchronously, which means we do not
-have their original file for readahead.  This means that the code to
-skip readahead on pre-content watched files will not run, and we could
-potentially read in empty pages.
+With FAN_DENY response, user trying to perform the filesystem operation
+gets an error with errno set to EPERM.
 
-Handle this corner case by disabling defrag on files that are currently
-being watched for pre-content events.
+It is useful for hierarchical storage management (HSM) service to be able
+to deny access for reasons more diverse than EPERM, for example EAGAIN,
+if HSM could retry the operation later.
 
-Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+Allow fanotify groups with priority FAN_CLASSS_PRE_CONTENT to responsd
+to permission events with the response value FAN_DENY_ERRNO(errno),
+instead of FAN_DENY to return a custom error.
+
+Limit custom error values to errors expected on read(2)/write(2) and
+open(2) of regular files. This list could be extended in the future.
+Userspace can test for legitimate values of FAN_DENY_ERRNO(errno) by
+writing a response to an fanotify group fd with a value of FAN_NOFD in
+the fd field of the response.
+
+The change in fanotify_response is backward compatible, because errno is
+written in the high 8 bits of the 32bit response field and old kernels
+reject respose value with high bits set.
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
-Link: https://patch.msgid.link/4cc5bcea13db7904174353d08e85157356282a59.1731684329.git.josef@toxicpanda.com
+Link: https://patch.msgid.link/1e5fb6af84b69ca96b5c849fa5f10bdf4d1dc414.1731684329.git.josef@toxicpanda.com
 ---
- fs/btrfs/ioctl.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ fs/notify/fanotify/fanotify.c      | 17 +++++++++++++----
+ fs/notify/fanotify/fanotify.h      |  5 +++++
+ fs/notify/fanotify/fanotify_user.c | 29 +++++++++++++++++++++++++++--
+ include/linux/fanotify.h           |  4 +++-
+ include/uapi/linux/fanotify.h      |  7 +++++++
+ 5 files changed, 55 insertions(+), 7 deletions(-)
 
-diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-index 226c91fe31a7..a908f75458f0 100644
---- a/fs/btrfs/ioctl.c
-+++ b/fs/btrfs/ioctl.c
-@@ -2638,6 +2638,15 @@ static int btrfs_ioctl_defrag(struct file *file, void __user *argp)
- 			goto out;
- 		}
+diff --git a/fs/notify/fanotify/fanotify.c b/fs/notify/fanotify/fanotify.c
+index 5e05410ddb9f..6ebe95e5bbdd 100644
+--- a/fs/notify/fanotify/fanotify.c
++++ b/fs/notify/fanotify/fanotify.c
+@@ -224,7 +224,7 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 				 struct fanotify_perm_event *event,
+ 				 struct fsnotify_iter_info *iter_info)
+ {
+-	int ret;
++	int ret, errno;
  
-+		/*
-+		 * Don't allow defrag on pre-content watched files, as it could
-+		 * populate the page cache with 0's via readahead.
-+		 */
-+		if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode))) {
-+			ret = -EINVAL;
-+			goto out;
+ 	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+ 
+@@ -263,14 +263,23 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 		ret = 0;
+ 		break;
+ 	case FAN_DENY:
++		/* Check custom errno from pre-content events */
++		errno = fanotify_get_response_errno(event->response);
++		if (errno) {
++			ret = -errno;
++			break;
 +		}
++		fallthrough;
+ 	default:
+ 		ret = -EPERM;
+ 	}
+ 
+ 	/* Check if the response should be audited */
+-	if (event->response & FAN_AUDIT)
+-		audit_fanotify(event->response & ~FAN_AUDIT,
+-			       &event->audit_rule);
++	if (event->response & FAN_AUDIT) {
++		u32 response = event->response &
++			(FANOTIFY_RESPONSE_ACCESS | FANOTIFY_RESPONSE_FLAGS);
++		audit_fanotify(response & ~FAN_AUDIT, &event->audit_rule);
++	}
+ 
+ 	pr_debug("%s: group=%p event=%p about to return ret=%d\n", __func__,
+ 		 group, event, ret);
+diff --git a/fs/notify/fanotify/fanotify.h b/fs/notify/fanotify/fanotify.h
+index 7f06355afa1f..c12cbc270539 100644
+--- a/fs/notify/fanotify/fanotify.h
++++ b/fs/notify/fanotify/fanotify.h
+@@ -528,3 +528,8 @@ static inline unsigned int fanotify_mark_user_flags(struct fsnotify_mark *mark)
+ 
+ 	return mflags;
+ }
 +
- 		if (argp) {
- 			if (copy_from_user(&range, argp, sizeof(range))) {
- 				ret = -EFAULT;
++static inline u32 fanotify_get_response_errno(int res)
++{
++	return (res >> FAN_ERRNO_SHIFT) & FAN_ERRNO_MASK;
++}
+diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
+index 61e0f67169e4..0919ea735f4a 100644
+--- a/fs/notify/fanotify/fanotify_user.c
++++ b/fs/notify/fanotify/fanotify_user.c
+@@ -328,11 +328,12 @@ static int process_access_response(struct fsnotify_group *group,
+ 	struct fanotify_perm_event *event;
+ 	int fd = response_struct->fd;
+ 	u32 response = response_struct->response;
++	int errno = fanotify_get_response_errno(response);
+ 	int ret = info_len;
+ 	struct fanotify_response_info_audit_rule friar;
+ 
+-	pr_debug("%s: group=%p fd=%d response=%u buf=%p size=%zu\n", __func__,
+-		 group, fd, response, info, info_len);
++	pr_debug("%s: group=%p fd=%d response=%x errno=%d buf=%p size=%zu\n",
++		 __func__, group, fd, response, errno, info, info_len);
+ 	/*
+ 	 * make sure the response is valid, if invalid we do nothing and either
+ 	 * userspace can send a valid response or we will clean it up after the
+@@ -343,7 +344,31 @@ static int process_access_response(struct fsnotify_group *group,
+ 
+ 	switch (response & FANOTIFY_RESPONSE_ACCESS) {
+ 	case FAN_ALLOW:
++		if (errno)
++			return -EINVAL;
++		break;
+ 	case FAN_DENY:
++		/* Custom errno is supported only for pre-content groups */
++		if (errno && group->priority != FSNOTIFY_PRIO_PRE_CONTENT)
++			return -EINVAL;
++
++		/*
++		 * Limit errno to values expected on open(2)/read(2)/write(2)
++		 * of regular files.
++		 */
++		switch (errno) {
++		case 0:
++		case EIO:
++		case EPERM:
++		case EBUSY:
++		case ETXTBSY:
++		case EAGAIN:
++		case ENOSPC:
++		case EDQUOT:
++			break;
++		default:
++			return -EINVAL;
++		}
+ 		break;
+ 	default:
+ 		return -EINVAL;
+diff --git a/include/linux/fanotify.h b/include/linux/fanotify.h
+index c747af064d2c..78f660ebc318 100644
+--- a/include/linux/fanotify.h
++++ b/include/linux/fanotify.h
+@@ -132,7 +132,9 @@
+ /* These masks check for invalid bits in permission responses. */
+ #define FANOTIFY_RESPONSE_ACCESS (FAN_ALLOW | FAN_DENY)
+ #define FANOTIFY_RESPONSE_FLAGS (FAN_AUDIT | FAN_INFO)
+-#define FANOTIFY_RESPONSE_VALID_MASK (FANOTIFY_RESPONSE_ACCESS | FANOTIFY_RESPONSE_FLAGS)
++#define FANOTIFY_RESPONSE_VALID_MASK \
++	(FANOTIFY_RESPONSE_ACCESS | FANOTIFY_RESPONSE_FLAGS | \
++	 (FAN_ERRNO_MASK << FAN_ERRNO_SHIFT))
+ 
+ /* Do not use these old uapi constants internally */
+ #undef FAN_ALL_CLASS_BITS
+diff --git a/include/uapi/linux/fanotify.h b/include/uapi/linux/fanotify.h
+index 0636a9c85dd0..bd8167979707 100644
+--- a/include/uapi/linux/fanotify.h
++++ b/include/uapi/linux/fanotify.h
+@@ -235,6 +235,13 @@ struct fanotify_response_info_audit_rule {
+ /* Legit userspace responses to a _PERM event */
+ #define FAN_ALLOW	0x01
+ #define FAN_DENY	0x02
++/* errno other than EPERM can specified in upper byte of deny response */
++#define FAN_ERRNO_BITS	8
++#define FAN_ERRNO_SHIFT (32 - FAN_ERRNO_BITS)
++#define FAN_ERRNO_MASK	((1 << FAN_ERRNO_BITS) - 1)
++#define FAN_DENY_ERRNO(err) \
++	(FAN_DENY | ((((__u32)(err)) & FAN_ERRNO_MASK) << FAN_ERRNO_SHIFT))
++
+ #define FAN_AUDIT	0x10	/* Bitmask to create audit record for result */
+ #define FAN_INFO	0x20	/* Bitmask to indicate additional information */
+ 
 -- 
 2.35.3
 
