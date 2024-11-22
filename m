@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C238A22339;
-	Fri, 22 Nov 2024 16:52:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728F422339;
+	Fri, 22 Nov 2024 16:52:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732294337; cv=none; b=FIOYttvapJwDlj3UCQZ+BLFCWIQudZ17PIkIqfC9yb9IP6tdSEelWSHiuSBRGozRVnj+35MKVx75TsV+hwKv5d8NGXPHBd/pJ6kW5WxhKow/uf9nmMnlAu7LGS3tS5jYCsSS99hQncI0jSbEMDoDDZtjOVGt/KC85toub9mbpOk=
+	t=1732294353; cv=none; b=JYUgSKOeLLUMjh5lrrFHV7ig+P9NVw42ihK3H+Ecsf2jaspdww8HhousTVIMf0yFgoPy+A4Lz+W7Ph+rorOl5WCpCpEL9iG6Adb1r4oRQsJRekhrH3UkQODiNcjrAyPgKMoZZ0oigwA5ZveGTeNfTnS/B3N2STi5TVWuFEBZ+Q0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732294337; c=relaxed/simple;
-	bh=cSj5vLFu+VCywZD0eb6RbpiB0kdG47gWWWDsOEAE7yw=;
+	s=arc-20240116; t=1732294353; c=relaxed/simple;
+	bh=VLe+iO2CGjCnXmc18PilZKB7CW203XR0IjhQyPHSbvU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rVaSKOjT3VPSuQYYMyPTSLqA1aWgmQK4qgBQLW3nvtMAZhJR6undvLdA8yoB4IbowVQFHevluYzQNjLUVPgOLsMg4P4zZs+C9WGZiNLGKkjo3pdlL8mm2/Eqq7ccuPgNmEogEJmwJycB6JQtD0Vm4aRvWlMyYUuHJ7zLznU1DqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qE2MYcly; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bOkDEOZo+UVe65W5wVSOz884lNFF81MNYEe2DsT5tNTapP20ln33eAhUVKSgOXosi/SshsLr7F2krgMGLoBCfreEnxwAOgXvjEy5XOPKo1nsbS3w4WbJDA7+Zu3CfqdZWmvJCfuTj3/rT9Bu2JAtxoShPW83TZy7dvXfz9G/1Oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+TmqGHz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qE2MYcly"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4362BC4CECE;
-	Fri, 22 Nov 2024 16:52:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+TmqGHz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E59FAC4CECE;
+	Fri, 22 Nov 2024 16:52:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732294337;
-	bh=cSj5vLFu+VCywZD0eb6RbpiB0kdG47gWWWDsOEAE7yw=;
+	s=k20201202; t=1732294353;
+	bh=VLe+iO2CGjCnXmc18PilZKB7CW203XR0IjhQyPHSbvU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qE2MYclydg2KBzz6FWrA8KEr00zqEoTIm//eY2PM9lnGHdnQ802+NReFKQ1hFJkMT
-	 qTN8DNXkWG8VpYxO8uFsPdoPS5li8nAMKWsTC4EJJrZ+t+jnA59Yx1XnZrDkiEkK78
-	 ZymRt20mtEZ//wXHmklPkejuoRycLNCXDCokl4Yrfc60eGiJ4tGEMerYcOLDgN6+Wm
-	 wkymdxJonBt4JTFen1acMUi5XurrlQ/HtRl/obRTkmHQNBNe6qpVOf45+gaL5HuqcP
-	 tK3pg9e6LTF9xh9rE9Tiw2tOlvAPq1wsnHKCPVqm7DChqMZ7ssbUewwFzzfFYCIurL
-	 8/P1tEbXQ7vng==
-Date: Fri, 22 Nov 2024 08:52:16 -0800
-Subject: [PATCH 07/17] xfs/508: fix test for 64k blocksize
+	b=b+TmqGHzRSvj5mDhWa9z5h0HKwiCpNXJgtVTfEq9YjoF+dcorFaxoDIyDC+RrqxUN
+	 w7OAD6VzWcf+uJ2pXf76GJIszwBk/H9iMDhWMVlfwo376XFspE06/GNM5ctDGz+8iG
+	 fBms4seDqlpPlZtuwCcMoEZbXVcq+UUNEZxM9Cmn/zmuPMszjv2w/6x19ABovP6WFl
+	 EaruX3MW4tOj1y03w5zpbHposADj5XhOhvFaJJCHqABWIuiN6OAp6oi/T8kdntWfp1
+	 Cp4SegJPixvWtXo34vBZg4MeQC/JkR/YB85EXpmKYJd5w/zpEUySc4l2NdFNxUMOFZ
+	 YcAd3mPMRObGg==
+Date: Fri, 22 Nov 2024 08:52:32 -0800
+Subject: [PATCH 08/17] common/rc: capture dmesg when oom kills happen
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173229420117.358248.8488570912527103936.stgit@frogsfrogsfrogs>
+Message-ID: <173229420132.358248.17693136056902875765.stgit@frogsfrogsfrogs>
 In-Reply-To: <173229419991.358248.8516467437316874374.stgit@frogsfrogsfrogs>
 References: <173229419991.358248.8516467437316874374.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,48 +45,24 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It turns out that icreate transactions will try to reserve quite a bit
-of space on a 64k fsblock filesystem -- enough to handle the worst case
-parent directory expansion, a new inode chunk, and these days a parent
-pointer as well.  This can work out to quite a bit of space:
+Capture the dmesg output if the OOM killer is invoked during fstests.
 
-fsblock		reservation
-1k		172K
-4k		368K
-16k		1136K
-64k		3650K
-
-Unfortunately, this test sets its block quota limits at 1-2MB, so we
-can't even create a child file.  Bump the limits up by 10x so that this
-test will pass even if there's more metadata size creep in the future.
-
-Fixes: f769a923f576df ("xfs: project quota ineritance flag test")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/508 |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ common/rc |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/tests/xfs/508 b/tests/xfs/508
-index ee1a0371db7d6d..1bd13e98c9f641 100755
---- a/tests/xfs/508
-+++ b/tests/xfs/508
-@@ -44,7 +44,7 @@ do_quota_nospc()
- 	local exp=$2
- 
- 	echo "Write $file, expect $exp:" | _filter_scratch
--	$XFS_IO_PROG -t -f -c "pwrite 0 5m" $file 2>&1 >/dev/null | \
-+	$XFS_IO_PROG -t -f -c "pwrite 0 50m" $file 2>&1 >/dev/null | \
- 		_filter_xfs_io_error
- 	rm -f $file
- }
-@@ -56,7 +56,7 @@ _require_prjquota $SCRATCH_DEV
- 
- mkdir $SCRATCH_MNT/dir
- $QUOTA_CMD -x -c 'project -s test' $SCRATCH_MNT >>$seqres.full 2>&1
--$QUOTA_CMD -x -c 'limit -p bsoft=1m bhard=2m test' $SCRATCH_MNT
-+$QUOTA_CMD -x -c 'limit -p bsoft=10m bhard=20m test' $SCRATCH_MNT
- 
- # test the Project inheritance bit is a directory only flag, and it's set on
- # directory by default. Expect no complain about "project inheritance flag is
+diff --git a/common/rc b/common/rc
+index 2ee46e5101e168..70a0f1d1c6acd9 100644
+--- a/common/rc
++++ b/common/rc
+@@ -4538,6 +4538,7 @@ _check_dmesg()
+ 	     -e "INFO: possible circular locking dependency detected" \
+ 	     -e "general protection fault:" \
+ 	     -e "BUG .* remaining" \
++	     -e "oom-kill" \
+ 	     -e "UBSAN:" \
+ 	     $seqres.dmesg
+ 	if [ $? -eq 0 ]; then
 
