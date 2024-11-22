@@ -1,106 +1,169 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E285F23741
-	for <linux-xfs@vger.kernel.org>; Fri, 22 Nov 2024 13:48:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 131C712E7F;
+	Fri, 22 Nov 2024 13:51:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732283298; cv=none; b=qKGBKJJCHJCSbN3oDozwXowxku3YgxYBwHyfKgdRjRx/2HocsHz8noSOMbiN5xHMQURhDA69R/fNub3IHUBKbVKcfp4tI8xkCPE+EfcRFOf9y1mJLIxZDqvvBkZ6DmWS5u35/wJU1KRUKuAFrKbXIEy8ldha+aaNaL4zxzv0b7M=
+	t=1732283499; cv=none; b=rPtZTv2dNJUyEtUt+pcFBynk2w8WPIozRP0z4xzdj5XCw3YVYzno66ZRy2UNOK4esF1z/6ZF3x822uWvoiclSj5vHUOro12rEaj2zuKq7Z5ZwfI2JdYqRXyhNOGcXli0hkjZfGo6XA1vPaW7fC5AWWIYQJEjRMSQ2vDY1DN9/KQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732283298; c=relaxed/simple;
-	bh=AsnF7uMvN0eRtGXYhFrqMAg6m7h8jnSsCf6Fw641YuU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UnVLaKEMSqSuzWCmz2FItwqDhs0svJWdGX8AIiultQ6lyqgkoAjCYJIKicXEgD/BNR8WMO/VWAo1D8Rm/6IEj1VY09jvna5lovZV53W1m2C8Uz1d8LOTK58CUv4ERAoEhsfiVjdw/hRTftp3CnELXLyw91QwS7qgMxRN3YDilnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LcCIijKe; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1732283499; c=relaxed/simple;
+	bh=FUSPjYnmqvq3EZk+YaMlZMRYm+mAt5sMmrYQadC1O2g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=b8mwwj53vzjI6D3p1kYdpBxhy2cbAEnY73jNf//6S9d9P8+TjNKqMcIj8/EZORfTD6vGoyrfhbzsChNs+/oDsKIOAHH2Tf/UxbZWADlQ69YxEZAVCwemHQIIWOTX5CXus96pfXohSHutGV/23BZ1nI6zgkY/YH3Hg459Yi8mfFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E9PPjpiq; arc=none smtp.client-ip=209.85.167.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LcCIijKe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1732283294;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bBZKEWhGhdVbuceKbj/OueVJxQ9kBbTeFdr8hEoXgCQ=;
-	b=LcCIijKe3gN3d8kLWXhR6vUdVg8us8ZAidpPhV6Vs/3d854nBUkyIilTWER4ZDP5x3wpl/
-	tmcU9QYZM2YuKJjlbKKUifYy8Iuhqt5Fhox1DmQ/phE3kLpqTyzIPRczEiQRcZQVtxFqx4
-	h3ROM1ACOfAVhAz0sG0gXgp4E4d6Xuk=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-597-qgktbsB4PtK-xRxHKOZNCA-1; Fri,
- 22 Nov 2024 08:48:11 -0500
-X-MC-Unique: qgktbsB4PtK-xRxHKOZNCA-1
-X-Mimecast-MFC-AGG-ID: qgktbsB4PtK-xRxHKOZNCA
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 68D6A195FE06;
-	Fri, 22 Nov 2024 13:48:10 +0000 (UTC)
-Received: from bfoster (unknown [10.22.80.120])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 50C6630000DF;
-	Fri, 22 Nov 2024 13:48:09 +0000 (UTC)
-Date: Fri, 22 Nov 2024 08:49:42 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 01/12] generic/757: fix various bugs in this test
-Message-ID: <Z0CL9mrUeHxgwFFg@bfoster>
-References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
- <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
- <20241121095624.ecpo67lxtrqqdkyh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20241121100555.GA4176@lst.de>
- <Zz8nWa1xGm7c2FHt@bfoster>
- <20241121131239.GA28064@lst.de>
- <Zz8_rFRio0vp07rd@bfoster>
- <20241122123133.GA26198@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E9PPjpiq"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-53da2140769so2516127e87.3;
+        Fri, 22 Nov 2024 05:51:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1732283496; x=1732888296; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=O1M+VNoDV01ttI4ykAkLiT0TH7dIi4lr51PaobubPkY=;
+        b=E9PPjpiqRbbSa7J3T9vUDuBGgA9SOh1kNLjk7K/5ROfBDth04v0vWA0qtv0U3U1Du+
+         8vOojvYVoMfT1KSk1kaV4IyR0qm5UZdIDRTZe24xi5Gc1RsRW0LGaUOlPkKXk32XefNF
+         TMNgm1DS3e1I8xWQyCisW/92ay9e2xs1nIgzYsEtYMyEwFhoBJGLDYft+VzdHTHHcbS+
+         bCS5idpnPDtQx57wzXVNPNEPUX/EXXpUsjCuoX1HpsPrZjLaNgrqWV2gmW8DeAeXi4jb
+         VNEQ5FpJ2pcPjSBUJ+pFLQm74uL8ZYTTE4D22xWy9Bxn8mhrJfPzS96483g/EkzazJjI
+         r27w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732283496; x=1732888296;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=O1M+VNoDV01ttI4ykAkLiT0TH7dIi4lr51PaobubPkY=;
+        b=g65hLxst0YlG+nk0SH61RgdJmm7yLEpi5wyHMr410e9LaewRL5gKBwkROHJE580O2u
+         QLdwrkvfqzakkoUIJHL8Ssz4ghGrtx5cn3V6ZKhxEMX+ZVqkUDVVzBPw73ag1ZdoQWnI
+         9mtCvjwujbIggTSgLCZ86A7ZkZTz9Sad/jhed5uDI8gD0n00sMxUcOkyrDV77urURCZb
+         Xmy4O2UJwMpZIdGIIRgcOJqggm96xPoasRy5e4y4vwCcagcHrTyVlHdPxgRyVPPbCTsd
+         H7O+5Bbrr8Lh1sV5UCnL3m8WVqZoccHxB7SXivJSf5cVIHcryAhBTY/i2MVsTMKoOST8
+         OAEA==
+X-Forwarded-Encrypted: i=1; AJvYcCVkdoubayeRCfLRPouKPolAoZWuQ5gkV+MmtsAAmF82il7rd5ehKse1W5o7S5/TMFF1KmooSbq1uZNmag==@vger.kernel.org, AJvYcCWf+8ocdmKX7htEBxQi+BasjnRAp707vwXVJMrXCOtIMKCynFFJ+niom7iLSNUQi5bFxwhof8sB3DT4@vger.kernel.org, AJvYcCXYuetgmrM5d5wGNJF2UAFFW3pWIxcg/86LKtXo4C4ZcFRfi4c4AABtz3795OU3aFTURtj7Idz1V3dVpA==@vger.kernel.org, AJvYcCXtmElmaOy/TZ6a2rfwfVTPNQW/0lwPOU9sADVbcp8QEg3E+J7mfGxi+CLKo+WeERS4tIFpjUc9m60gq0/Lmw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2HQlnRGHFAQDJwhG1kmf6fTLiwemLWMmVXgcpOEWa+4DBiOmQ
+	OZTyBh52a3A7z7vyWMmPVC6WN+wO2hTbfY1HXOH7R5pgyjbWkaedKFJGxrrQsOORqo9rjiO1/h7
+	SlTNvk1Tfp0aKL9VwAd5ZsoF31UQ=
+X-Gm-Gg: ASbGnctM+/2K/xe/mrq6tWi38y4JF4m3R7xiWGRzo076PQLZNWdhiHKNRl8hZZA0v7a
+	884ixZJc1DRmvHceqVMO57ovibTue1Ag=
+X-Google-Smtp-Source: AGHT+IFksCaFnz5KcROoZ2l24vat56l/bmgqMqDIpj9UInqeXkdyaOzrJLTT+HRXZb32Fn4KXFKnG0FbN2YKckPb6S0=
+X-Received: by 2002:a05:6512:3d06:b0:539:9645:97ab with SMTP id
+ 2adb3069b0e04-53dd389d83dmr1593356e87.33.1732283495537; Fri, 22 Nov 2024
+ 05:51:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241122123133.GA26198@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+References: <cover.1731684329.git.josef@toxicpanda.com> <b80986f8d5b860acea2c9a73c0acd93587be5fe4.1731684329.git.josef@toxicpanda.com>
+ <20241121104428.wtlrfhadcvipkjia@quack3> <CAOQ4uxhTiR8eHaf4q0_gLC62CWi9KdaQ05GSeqFkKFkXCH++PA@mail.gmail.com>
+ <20241121163618.ubz7zplrnh66aajw@quack3> <CAOQ4uxhsEA2zj-a6H+==S+6G8nv+BQEJDoGjJeimX0yRhHso2w@mail.gmail.com>
+ <CAOQ4uxgsjKwX7eoYcjU8SRWjRw39MNv=CMjjO1mQGr9Cd4iafQ@mail.gmail.com> <20241122124215.3k3udv5o6eys6ffy@quack3>
+In-Reply-To: <20241122124215.3k3udv5o6eys6ffy@quack3>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 22 Nov 2024 14:51:23 +0100
+Message-ID: <CAOQ4uxgCU6fETZTMdyzQmfyE4oBF_xgqpBdVjP20K1Yp1BSDxQ@mail.gmail.com>
+Subject: Re: [PATCH v8 10/19] fanotify: introduce FAN_PRE_ACCESS permission event
+To: Jan Kara <jack@suse.cz>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
+	brauner@kernel.org, torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, 
+	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 22, 2024 at 01:31:33PM +0100, Christoph Hellwig wrote:
-> On Thu, Nov 21, 2024 at 09:11:56AM -0500, Brian Foster wrote:
-> > > I'm all for speeding up tests.  But relying on a unspecified side effect
-> > > of an operation and then requiring a driver that implements that side
-> > > effect without documenting that isn't really good practice.
-> > > 
-> > 
-> > It's a hack to facilitate test coverage. It would obviously need to be
-> > revisited if behavior changed sufficiently to break the test.
-> > 
-> > I'm not really sure what you're asking for wrt documentation. A quick
-> > scan of the git history shows the first such commit is 65cc9a235919
-> > ("generic/482: use thin volume as data device"), the commit log for
-> > which seems to explain the reasoning.
-> 
-> A comment on _log_writes_init that it must only be used by dm-thin
-> because it relies on the undocumented behavior that dm-trim zeroes
-> all blocks discarded.
-> 
-> Or even better my moving the dm-think setup boilerplate into the log
-> writes helpers, so that it gets done automatically.
-> 
+On Fri, Nov 22, 2024 at 1:42=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
+>
+> On Thu 21-11-24 19:37:43, Amir Goldstein wrote:
+> > On Thu, Nov 21, 2024 at 7:31=E2=80=AFPM Amir Goldstein <amir73il@gmail.=
+com> wrote:
+> > > On Thu, Nov 21, 2024 at 5:36=E2=80=AFPM Jan Kara <jack@suse.cz> wrote=
+:
+> > > > On Thu 21-11-24 15:18:36, Amir Goldstein wrote:
+> > > > > On Thu, Nov 21, 2024 at 11:44=E2=80=AFAM Jan Kara <jack@suse.cz> =
+wrote:
+> > > > > and also always emitted ACCESS_PERM.
+> > > >
+> > > > I know that and it's one of those mostly useless events AFAICT.
+> > > >
+> > > > > my POC is using that PRE_ACCESS to populate
+> > > > > directories on-demand, although the functionality is incomplete w=
+ithout the
+> > > > > "populate on lookup" event.
+> > > >
+> > > > Exactly. Without "populate on lookup" doing "populate on readdir" i=
+s ok for
+> > > > a demo but not really usable in practice because you can get spurio=
+us
+> > > > ENOENT from a lookup.
+> > > >
+> > > > > > avoid the mistake of original fanotify which had some events av=
+ailable on
+> > > > > > directories but they did nothing and then you have to ponder ha=
+rd whether
+> > > > > > you're going to break userspace if you actually start emitting =
+them...
+> > > > >
+> > > > > But in any case, the FAN_ONDIR built-in filter is applicable to P=
+RE_ACCESS.
+> > > >
+> > > > Well, I'm not so concerned about filtering out uninteresting events=
+. I'm
+> > > > more concerned about emitting the event now and figuring out later =
+that we
+> > > > need to emit it in different places or with some other info when ac=
+tual
+> > > > production users appear.
+> > > >
+> > > > But I've realized we must allow pre-content marks to be placed on d=
+irs so
+> > > > that such marks can be placed on parents watching children. What we=
+'d need
+> > > > to forbid is a combination of FAN_ONDIR and FAN_PRE_ACCESS, wouldn'=
+t we?
+> > >
+> > > Yes, I think that can work well for now.
+> > >
+> >
+> > Only it does not require only check at API time that both flags are not
+> > set, because FAN_ONDIR can be set earlier and then FAN_PRE_ACCESS
+> > can be added later and vice versa, so need to do this in
+> > fanotify_may_update_existing_mark() AFAICT.
+>
+> I have now something like:
+>
+> @@ -1356,7 +1356,7 @@ static int fanotify_group_init_error_pool(struct fs=
+notify_group *group)
+>  }
+>
+>  static int fanotify_may_update_existing_mark(struct fsnotify_mark *fsn_m=
+ark,
+> -                                             unsigned int fan_flags)
+> +                                            __u32 mask, unsigned int fan=
+_flags)
+>  {
+>         /*
+>          * Non evictable mark cannot be downgraded to evictable mark.
+> @@ -1383,6 +1383,11 @@ static int fanotify_may_update_existing_mark(struc=
+t fsnotify_mark *fsn_mark,
+>             fsn_mark->flags & FSNOTIFY_MARK_FLAG_IGNORED_SURV_MODIFY)
+>                 return -EEXIST;
+>
+> +       /* For now pre-content events are not generated for directories *=
+/
+> +       mask |=3D fsn_mark->mask;
+> +       if (mask & FANOTIFY_PRE_CONTENT_EVENTS && mask & FAN_ONDIR)
+> +               return -EEXIST;
+> +
 
-A related idea might be to incorporate your BLKZEROOUT fix so the core
-tool is fundamentally correct, but then wrap the existing discard
-behavior in a param or something that the dm-thin oriented tests can
-pass to enable it as a fast zero hack/optimization.
+EEXIST is going to be confusing if there was never any mark.
+Either return -EINVAL here or also check this condition on the added mask
+itself before calling fanotify_add_mark() and return -EINVAL there.
 
-But that all seems reasonable to me either way. I'm not sure that's
-something I would have fully abstracted into the logwrites stuff
-initially, but here we are ~5 years later and it seems pretty much every
-additional logwrites test has wanted the same treatment. If whoever
-wants to convert this newer test over wants to start by refactoring
-things that way, that sounds like a welcome cleanup to me.
+I prefer two distinct errors, but probably one is also good enough.
 
-Brian
-
+Thanks,
+Amir.
