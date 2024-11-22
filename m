@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975D722339;
-	Fri, 22 Nov 2024 16:53:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 239107082F;
+	Fri, 22 Nov 2024 16:53:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732294384; cv=none; b=Qbdo3cZmHyod2U4+Swglff5+FMRgIkj0Wx0SsGMcikTOaDdDKQW5CWRUCQy/Z2sSzQLt9eEIaiNQYZUFeyhVcphpJC0Jd1AVCl36tLMo139aVQcB8rRcLnYR8FB9ywbZASTzzec4L410VWB8WDFLY3OKfz+jn0Ix57bRKYgbGbc=
+	t=1732294400; cv=none; b=CrZd+LjZiHMAkPSBfUfC2H20lmDc+w82vmgz58imWdFFdL2T4kfbxtbOnBG6OF1SsAsBL4KlE60B4MwnQjtVb3XY5vWQvVwnQIfplgLHDplkpB9GXRLJkw57Tk/ag8psqX2g+UBfUw5e6RmXyDE9IhHWDb9Eyq8kETmTrG84F2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732294384; c=relaxed/simple;
-	bh=gExprrLIh6QkDIw05PgeX5U6Q/m9Rxofjk2IItTszR8=;
+	s=arc-20240116; t=1732294400; c=relaxed/simple;
+	bh=BJP7oRpeUsyY8KQ7I8nt5/4GCsG2VhbI6uP5nDt1imE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nwjJ6wi17yV9UqtiP4yo9ALrMCaUOLeFO5NuPMjZ0xmMHFLX3GCg+tXYqRo9M1E1m6m0KxUmdrLSj+GMJuOmW/psqGYczC/FfHHHiT6PH0+r7q8z8HzsXoW+DUCjpeJ4jsEfz0IzFVDb3oamfUDGzBNIoByi7chnlYcw+2Wuibo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DSm87hm9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=N8aTrnrPSKCcrHHtoiy+yxALsOGjH94KPYtdkznxBjTcx7t7MewUY0bdD/Aww77UGuzp78fS8FEp/qhNfdQNnvYPJNCuMl4maTs7Yc4KxJcTV3MhcHHYPvueKzu7DX3qH0d6oYBVdIEG9nEczMmPY34zD4GPf3czCNrmWnyNlpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jbHo0Y9+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DSm87hm9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 230B4C4CECE;
-	Fri, 22 Nov 2024 16:53:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jbHo0Y9+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B78D3C4CECE;
+	Fri, 22 Nov 2024 16:53:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732294384;
-	bh=gExprrLIh6QkDIw05PgeX5U6Q/m9Rxofjk2IItTszR8=;
+	s=k20201202; t=1732294399;
+	bh=BJP7oRpeUsyY8KQ7I8nt5/4GCsG2VhbI6uP5nDt1imE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DSm87hm9vvEJHLFbaHSVJu7dgVbNdxGdl4zudq4cZtOjzrWg35ZaOEI88/99+MZHA
-	 JRNWj/7xbxgkIEANtVI0GSON6LtSyTEIksGs2dUMElQqCt1ewDWORPRGLg4iZtNm4z
-	 SKp7a2r2/d/jdR+QDYzUqKglgZVO0yBIliJGq+KeOUUK4vHJwUWRwabae7ukuy7Mft
-	 uvfIfUGSrL2jhlj4lsuzvg2B4EvZc1B1VR3tH78EcHUHxXIdsOZDyebFaL4vdw9r3V
-	 jsBET+ECLpn3w/U8XJx18d3OcgMIUl7HK7kaizmaWL5QDsOMALXrF28g0dtqjdJBp8
-	 rGL2f8f00OdCw==
-Date: Fri, 22 Nov 2024 08:53:03 -0800
-Subject: [PATCH 10/17] xfs/163: skip test if we can't shrink due to enospc
- issues
+	b=jbHo0Y9+A6VKjj9vFJ1U9PliycB6j7mX62K+V+SZWac22+OtQ//NvMhNTe+Dy6yUQ
+	 zFHim74mB+uRRQN6aK2JPD5aL/PyXKj+F7zfrHglpLiSpA81hxOvgC93M59tCu3Yk4
+	 tt5nUg3p4ULNppXWwTFuwI8IiJDOhFMfYt10qP17Q7xdKL9XDzrSEe0J2lFgZL5iWn
+	 aRXqv4WkkSZM1X/h/+oV2ThtXvXX3DntyqYCYOWjnXxnf01Oz1RHuR1cfyh6UGlvKa
+	 RkmzKn/9m78H7dtAEbXV2jY/wV4Ba7KGrLYGjyKXIJyHhrCu2e+rGo3m482OaayZz+
+	 C2bmBT39rU2Dg==
+Date: Fri, 22 Nov 2024 08:53:19 -0800
+Subject: [PATCH 11/17] xfs/009: allow logically contiguous preallocations
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173229420163.358248.12881809744914882048.stgit@frogsfrogsfrogs>
+Message-ID: <173229420178.358248.14522170594906217361.stgit@frogsfrogsfrogs>
 In-Reply-To: <173229419991.358248.8516467437316874374.stgit@frogsfrogsfrogs>
 References: <173229419991.358248.8516467437316874374.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,41 +45,106 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If this test fails due to insufficient space, skip this test.  This can
-happen if a realtime volume is enabled on the filesystem and we cannot
-shrink due to the rtbitmap.
+The new rtgroups feature implements a simplistic rotor to pick the
+rtgroup for an initial allocation to a file.  This causes test failures
+if the preallocations are spread across two rtgroups, which happens if
+there are more subtests than rtgroups.
+
+One way to fix this would be to reset the rotor then each subtest starts
+allocating from rtgroup 0, but the only way to do that is to cycle the
+scratch mount, which is a bit gross.
+
+Instead, report logically contiguous mappings as a single mapping even
+if the physical space is not contiguous.  Unfortunately, there's not
+enough context in the comments to know if the test actually was checking
+for physical contiguity?  Or if this is just an exerciser of the old
+preallocation calls, and it's fine as long as the file ranges are mapped
+(or unmapped) as desired.
+
+Messing with some awk is a lot cheaper than umount/mount cycling.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/163 |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ tests/xfs/009 |   29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/163 b/tests/xfs/163
-index 2bd94060222f96..75c3113dc2fd03 100755
---- a/tests/xfs/163
-+++ b/tests/xfs/163
-@@ -17,13 +17,20 @@ _begin_fstest auto quick growfs shrinkfs
- 
- test_shrink()
+diff --git a/tests/xfs/009 b/tests/xfs/009
+index dde505f079f4f8..bb42ce32490df5 100755
+--- a/tests/xfs/009
++++ b/tests/xfs/009
+@@ -49,13 +49,26 @@ _filesize()
+ _block_filter()
  {
--	$XFS_GROWFS_PROG -D"$1" $SCRATCH_MNT >> $seqres.full 2>&1
-+	$XFS_GROWFS_PROG -D"$1" $SCRATCH_MNT &> $tmp.growfs
- 	ret=$?
+ 	$AWK_PROG -v bsize="$bsize" '
++	BEGIN {
++		br_pos = 0
++		br_len = 0
++	}
++	function dump_blockrange() {
++		if (br_len == 0)
++			return
++		printf("        [%d,%d]: BLOCKRANGE\n", br_pos, br_len)
++		br_pos = 0
++		br_len = 0
++	}
+ 	/blocksize/ {
++		dump_blockrange()
+ 		printf("    blocksize BSIZE\n")
  
- 	_scratch_unmount
- 	_check_scratch_fs
- 	_scratch_mount
+ 		next
+ 	}
  
-+	# If we couldn't shrink the filesystem due to lack of space, we're
-+	# done with this test.
-+	[ $1 -ne $dblocks ] && \
-+		grep -q 'No space left on device' $tmp.growfs && \
-+		_notrun "Could not shrink due to lack of space"
-+	cat $tmp.growfs >> $seqres.full
-+
- 	$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
- 	. $tmp.growfs
- 	[ $ret -eq 0 -a $1 -eq $dblocks ]
+ 	/CMD/ {
++		dump_blockrange()
+ 		split($3, off, "=")
+ 		offset = strtonum(off[2])
+ 		if (offset != -1)
+@@ -72,6 +85,7 @@ _block_filter()
+ 	}
+ 
+ 	/MAP/ {
++		dump_blockrange()
+ 		split($2, off, "=")
+ 		offset = strtonum(off[2])
+ 		if (offset != -1)
+@@ -90,6 +104,7 @@ _block_filter()
+ 	}
+ 
+ 	/TRUNCATE/ {
++		dump_blockrange()
+ 		split($2, off, "=")
+ 		offset = strtonum(off[2]) / bsize
+ 
+@@ -99,16 +114,28 @@ _block_filter()
+ 	}
+ 
+ 	/\[[0-9]+,[0-9]+\]:/ {
+-		printf("        %s BLOCKRANGE\n", $1)
++		rangestr = gensub(/\[([0-9]+),([0-9]+)\]:/, "\\1,\\2", "g", $1);
++		split(rangestr, off, ",")
++		if (br_pos + br_len == off[1]) {
++			br_len += off[2];
++		} else {
++			dump_blockrange()
++			br_pos = off[1];
++			br_len = off[2];
++		}
+ 
+ 		next
+ 	}
+ 
+ 	{
++		dump_blockrange()
+ 		print
+ 
+ 		next
+ 	}
++	END {
++		dump_blockrange()
++	}
+ 	'
+ }
+ 
 
