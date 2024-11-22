@@ -1,212 +1,106 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE5A22075;
-	Fri, 22 Nov 2024 12:42:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E285F23741
+	for <linux-xfs@vger.kernel.org>; Fri, 22 Nov 2024 13:48:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732279340; cv=none; b=uPS+sOUityXW3Ca0gbT+ySQeMCbYDNA6eceMZGg/pSn+LCnP10pUvzVo7C+zz/8QNOq7fxC29zjuJkyUhofQIXnEV8eqjZRpenelJ9DqHpHiEvZWZBaQlN+oH/jVEW5GTbFO+Z+Xd5jUkbcs6zJCVRFboMvlIqR/aSmEKbnIr/o=
+	t=1732283298; cv=none; b=qKGBKJJCHJCSbN3oDozwXowxku3YgxYBwHyfKgdRjRx/2HocsHz8noSOMbiN5xHMQURhDA69R/fNub3IHUBKbVKcfp4tI8xkCPE+EfcRFOf9y1mJLIxZDqvvBkZ6DmWS5u35/wJU1KRUKuAFrKbXIEy8ldha+aaNaL4zxzv0b7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732279340; c=relaxed/simple;
-	bh=hKUIYAxLv3+uDas2GbrjOk2la6uS7w7IOF4e/sI/cro=;
+	s=arc-20240116; t=1732283298; c=relaxed/simple;
+	bh=AsnF7uMvN0eRtGXYhFrqMAg6m7h8jnSsCf6Fw641YuU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YZl7KueKHCOvFjlBnFVmqBQ06k2ioobcdxTmaYd//UPzrK/wa+5QTu25DENMOXX6fVfR2HSlRURZQOLlevJq3i4kCk+L1/WN8CDG05mAfRuXdGTueb4/4u8YS0qpa6j030QxkZboBz97Kpcuqjvv8W3sQgy+pBtIEW04p87MJY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=wg83j0e3; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=EhtrLo1t; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=wg83j0e3; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=EhtrLo1t; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=UnVLaKEMSqSuzWCmz2FItwqDhs0svJWdGX8AIiultQ6lyqgkoAjCYJIKicXEgD/BNR8WMO/VWAo1D8Rm/6IEj1VY09jvna5lovZV53W1m2C8Uz1d8LOTK58CUv4ERAoEhsfiVjdw/hRTftp3CnELXLyw91QwS7qgMxRN3YDilnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LcCIijKe; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="wg83j0e3";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="EhtrLo1t";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="wg83j0e3";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="EhtrLo1t"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LcCIijKe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1732283294;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=bBZKEWhGhdVbuceKbj/OueVJxQ9kBbTeFdr8hEoXgCQ=;
+	b=LcCIijKe3gN3d8kLWXhR6vUdVg8us8ZAidpPhV6Vs/3d854nBUkyIilTWER4ZDP5x3wpl/
+	tmcU9QYZM2YuKJjlbKKUifYy8Iuhqt5Fhox1DmQ/phE3kLpqTyzIPRczEiQRcZQVtxFqx4
+	h3ROM1ACOfAVhAz0sG0gXgp4E4d6Xuk=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-597-qgktbsB4PtK-xRxHKOZNCA-1; Fri,
+ 22 Nov 2024 08:48:11 -0500
+X-MC-Unique: qgktbsB4PtK-xRxHKOZNCA-1
+X-Mimecast-MFC-AGG-ID: qgktbsB4PtK-xRxHKOZNCA
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 617291F37E;
-	Fri, 22 Nov 2024 12:42:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1732279336; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m1y1r4sHVpVio90pxvAPQyjpbXtCbYSZFBXxevcolao=;
-	b=wg83j0e3hSLltgYOUYSZN0jS+angV9uQghS0LenqzGPk3qbp86odk05SMKk4+Mhf7hpfyf
-	ZGXYH/3G/sfodnI38ZtqnQgEILuFBVGJ2Jn7orHyVjxfX72HC9xs791LbYgebWr2bl8+GC
-	Kl50ZHoiD2FMC5bHwsPy4ZPIL706+ug=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1732279336;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m1y1r4sHVpVio90pxvAPQyjpbXtCbYSZFBXxevcolao=;
-	b=EhtrLo1t6LF9G4YWEqQr33i346haGUJHbJcFmU1TT4kt9Aw5LnX1axDrQOr5+bwEGLVchz
-	qVZB81zTxia51PBQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=wg83j0e3;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=EhtrLo1t
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1732279336; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m1y1r4sHVpVio90pxvAPQyjpbXtCbYSZFBXxevcolao=;
-	b=wg83j0e3hSLltgYOUYSZN0jS+angV9uQghS0LenqzGPk3qbp86odk05SMKk4+Mhf7hpfyf
-	ZGXYH/3G/sfodnI38ZtqnQgEILuFBVGJ2Jn7orHyVjxfX72HC9xs791LbYgebWr2bl8+GC
-	Kl50ZHoiD2FMC5bHwsPy4ZPIL706+ug=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1732279336;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m1y1r4sHVpVio90pxvAPQyjpbXtCbYSZFBXxevcolao=;
-	b=EhtrLo1t6LF9G4YWEqQr33i346haGUJHbJcFmU1TT4kt9Aw5LnX1axDrQOr5+bwEGLVchz
-	qVZB81zTxia51PBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5134A138A7;
-	Fri, 22 Nov 2024 12:42:16 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id wOrMEyh8QGdOSQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 22 Nov 2024 12:42:16 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 00DB1A08B5; Fri, 22 Nov 2024 13:42:15 +0100 (CET)
-Date: Fri, 22 Nov 2024 13:42:15 +0100
-From: Jan Kara <jack@suse.cz>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, Josef Bacik <josef@toxicpanda.com>,
-	kernel-team@fb.com, linux-fsdevel@vger.kernel.org,
-	brauner@kernel.org, torvalds@linux-foundation.org,
-	viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v8 10/19] fanotify: introduce FAN_PRE_ACCESS permission
- event
-Message-ID: <20241122124215.3k3udv5o6eys6ffy@quack3>
-References: <cover.1731684329.git.josef@toxicpanda.com>
- <b80986f8d5b860acea2c9a73c0acd93587be5fe4.1731684329.git.josef@toxicpanda.com>
- <20241121104428.wtlrfhadcvipkjia@quack3>
- <CAOQ4uxhTiR8eHaf4q0_gLC62CWi9KdaQ05GSeqFkKFkXCH++PA@mail.gmail.com>
- <20241121163618.ubz7zplrnh66aajw@quack3>
- <CAOQ4uxhsEA2zj-a6H+==S+6G8nv+BQEJDoGjJeimX0yRhHso2w@mail.gmail.com>
- <CAOQ4uxgsjKwX7eoYcjU8SRWjRw39MNv=CMjjO1mQGr9Cd4iafQ@mail.gmail.com>
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 68D6A195FE06;
+	Fri, 22 Nov 2024 13:48:10 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.120])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 50C6630000DF;
+	Fri, 22 Nov 2024 13:48:09 +0000 (UTC)
+Date: Fri, 22 Nov 2024 08:49:42 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 01/12] generic/757: fix various bugs in this test
+Message-ID: <Z0CL9mrUeHxgwFFg@bfoster>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+ <173197064441.904310.18406008193922603782.stgit@frogsfrogsfrogs>
+ <20241121095624.ecpo67lxtrqqdkyh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20241121100555.GA4176@lst.de>
+ <Zz8nWa1xGm7c2FHt@bfoster>
+ <20241121131239.GA28064@lst.de>
+ <Zz8_rFRio0vp07rd@bfoster>
+ <20241122123133.GA26198@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxgsjKwX7eoYcjU8SRWjRw39MNv=CMjjO1mQGr9Cd4iafQ@mail.gmail.com>
-X-Rspamd-Queue-Id: 617291F37E
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	FREEMAIL_TO(0.00)[gmail.com];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[12];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.01
-X-Spam-Flag: NO
+In-Reply-To: <20241122123133.GA26198@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Thu 21-11-24 19:37:43, Amir Goldstein wrote:
-> On Thu, Nov 21, 2024 at 7:31 PM Amir Goldstein <amir73il@gmail.com> wrote:
-> > On Thu, Nov 21, 2024 at 5:36 PM Jan Kara <jack@suse.cz> wrote:
-> > > On Thu 21-11-24 15:18:36, Amir Goldstein wrote:
-> > > > On Thu, Nov 21, 2024 at 11:44 AM Jan Kara <jack@suse.cz> wrote:
-> > > > and also always emitted ACCESS_PERM.
-> > >
-> > > I know that and it's one of those mostly useless events AFAICT.
-> > >
-> > > > my POC is using that PRE_ACCESS to populate
-> > > > directories on-demand, although the functionality is incomplete without the
-> > > > "populate on lookup" event.
-> > >
-> > > Exactly. Without "populate on lookup" doing "populate on readdir" is ok for
-> > > a demo but not really usable in practice because you can get spurious
-> > > ENOENT from a lookup.
-> > >
-> > > > > avoid the mistake of original fanotify which had some events available on
-> > > > > directories but they did nothing and then you have to ponder hard whether
-> > > > > you're going to break userspace if you actually start emitting them...
-> > > >
-> > > > But in any case, the FAN_ONDIR built-in filter is applicable to PRE_ACCESS.
-> > >
-> > > Well, I'm not so concerned about filtering out uninteresting events. I'm
-> > > more concerned about emitting the event now and figuring out later that we
-> > > need to emit it in different places or with some other info when actual
-> > > production users appear.
-> > >
-> > > But I've realized we must allow pre-content marks to be placed on dirs so
-> > > that such marks can be placed on parents watching children. What we'd need
-> > > to forbid is a combination of FAN_ONDIR and FAN_PRE_ACCESS, wouldn't we?
-> >
-> > Yes, I think that can work well for now.
-> >
+On Fri, Nov 22, 2024 at 01:31:33PM +0100, Christoph Hellwig wrote:
+> On Thu, Nov 21, 2024 at 09:11:56AM -0500, Brian Foster wrote:
+> > > I'm all for speeding up tests.  But relying on a unspecified side effect
+> > > of an operation and then requiring a driver that implements that side
+> > > effect without documenting that isn't really good practice.
+> > > 
+> > 
+> > It's a hack to facilitate test coverage. It would obviously need to be
+> > revisited if behavior changed sufficiently to break the test.
+> > 
+> > I'm not really sure what you're asking for wrt documentation. A quick
+> > scan of the git history shows the first such commit is 65cc9a235919
+> > ("generic/482: use thin volume as data device"), the commit log for
+> > which seems to explain the reasoning.
 > 
-> Only it does not require only check at API time that both flags are not
-> set, because FAN_ONDIR can be set earlier and then FAN_PRE_ACCESS
-> can be added later and vice versa, so need to do this in
-> fanotify_may_update_existing_mark() AFAICT.
+> A comment on _log_writes_init that it must only be used by dm-thin
+> because it relies on the undocumented behavior that dm-trim zeroes
+> all blocks discarded.
+> 
+> Or even better my moving the dm-think setup boilerplate into the log
+> writes helpers, so that it gets done automatically.
+> 
 
-I have now something like:
+A related idea might be to incorporate your BLKZEROOUT fix so the core
+tool is fundamentally correct, but then wrap the existing discard
+behavior in a param or something that the dm-thin oriented tests can
+pass to enable it as a fast zero hack/optimization.
 
-@@ -1356,7 +1356,7 @@ static int fanotify_group_init_error_pool(struct fsnotify_group *group)
- }
- 
- static int fanotify_may_update_existing_mark(struct fsnotify_mark *fsn_mark,
--                                             unsigned int fan_flags)
-+                                            __u32 mask, unsigned int fan_flags)
- {
-        /*
-         * Non evictable mark cannot be downgraded to evictable mark.
-@@ -1383,6 +1383,11 @@ static int fanotify_may_update_existing_mark(struct fsnotify_mark *fsn_mark,
-            fsn_mark->flags & FSNOTIFY_MARK_FLAG_IGNORED_SURV_MODIFY)
-                return -EEXIST;
- 
-+       /* For now pre-content events are not generated for directories */
-+       mask |= fsn_mark->mask;
-+       if (mask & FANOTIFY_PRE_CONTENT_EVENTS && mask & FAN_ONDIR)
-+               return -EEXIST;
-+
-        return 0;
- }
- 
-So far only compile tested...
+But that all seems reasonable to me either way. I'm not sure that's
+something I would have fully abstracted into the logwrites stuff
+initially, but here we are ~5 years later and it seems pretty much every
+additional logwrites test has wanted the same treatment. If whoever
+wants to convert this newer test over wants to start by refactoring
+things that way, that sounds like a welcome cleanup to me.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Brian
+
