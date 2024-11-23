@@ -1,147 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 200C422331;
-	Sat, 23 Nov 2024 16:19:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 966DAEADC;
+	Sat, 23 Nov 2024 18:53:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732378796; cv=none; b=lKkpdOp2xxcn4bKRmCIezjegJlzVXNnFUsQKh236qf7z5SAPI9RbFLRElgjKkFIpqAPOJm24jm9kd0zsWRDqt+xDdDSZ79dnVpg9NYEXJyRAmUKISTWVNYokUVRojJwyfmeSwQRxwxBQdbHsDVzchI8fQfBz7W/BkcNWuAQadcE=
+	t=1732387986; cv=none; b=VE0hF0PE73ut4vICPp9UOW/CzTamkyfhAX1MeJx2ZL1y7c6g7Ay+92ZgN0RZZgSd4cm02/hY//LJyfgSZSmAmaxXu1+C26XH2jYVuP6EuUw57l6TB+Vy/qaRHTEtRumJzr7OLFsMaAPB1a7qWdu+TY+PbJqU0liNL+tVx9iRGSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732378796; c=relaxed/simple;
-	bh=UAz/5rueebgzUWvU1dKEBr8+mhyiLuppUlnKNTQYIFI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sNPAjFJpeGNwsgIrFu8qGcneR3XVz+aTzxFZLCpZ7CR18cNdMNPzmhlhiasDbWeFLvSQhojr3VKsKWw41xIZ0zo8HoAkuqj3SNuK7Pbi2FDdhgEczAQ4qem1Mr6HmeaaRimovcRFNo0CQYfgg0tzuuhbGsh8w6AvLpal/t5k1NM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QCzb5a8A; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732387986; c=relaxed/simple;
+	bh=N/kdCp8Cukl2JF1zdvwDE0yC1vDgRr5jd/C661u4hmo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KawXJ1yZgrWAIyMZfsY/gy5lfZcYmBn6IATl5JA5ZZgG/AR5G5beUX8soyBd5LuCWClX8tNQxvsSvVF2zQhJdmbcnEfr25/Be2VSgU4x/N+BaK7AWNhtZP0DM+WvwiX3320740OHyvLst/+uZjt3PQHVarPnZa68QDMJ2CKuD3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IRIREZZL; arc=none smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QCzb5a8A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB1DFC4CECD;
-	Sat, 23 Nov 2024 16:19:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732378795;
-	bh=UAz/5rueebgzUWvU1dKEBr8+mhyiLuppUlnKNTQYIFI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QCzb5a8AwcfZgjSgKNQ9EzailygTLJLz7Tt4vJRh42qWopVD4jZyCGWUKHYgwYqq0
-	 Y7P7snVgNK/ZYbVk+sYiwAhuIq5tNZpvE/l58aW9NmVrCz9J2h3WopZjRbHtBolFbP
-	 W3pgtZCZ4ZL1rWEHVzJE4Gonzukx+x52DxIiV9rq/3XZWeNPgVWK9I4xWQcSJuLjyD
-	 oPIHiUIp6CwL++wAjqhhCWWCwLfztj57EwdGjXrNLtbHnunMSSnlpmqYYymTWGrVYS
-	 gm5rugLT/TdNEbvEh0+VSKopjFEZo/Nfjbh+vzTXS1IwWWfSZNan2mZSxVpJ1KIQGE
-	 xVBk07mdLsKfA==
-Date: Sat, 23 Nov 2024 08:19:55 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Mateusz Guzik <mjguzik@gmail.com>
-Cc: dchinner@redhat.com, cem@kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: use inode_set_cached_link()
-Message-ID: <20241123161955.GO1926309@frogsfrogsfrogs>
-References: <20241123075105.1082661-1-mjguzik@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IRIREZZL"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-5cfcd99846fso4154250a12.1;
+        Sat, 23 Nov 2024 10:53:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1732387983; x=1732992783; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=G+P8IuRNOPnYl68Wr1phF57tcI/VLlzApQAJOR/FrHk=;
+        b=IRIREZZL9EWDvBvqtBqESz/knI0wBSLgK9mNwQRjxs2tzcaEZSyAzUXnQVC5kyXu3w
+         8hoNeCTyd876vZzHO5rmQwzXgAd/C9fu0potU6zXjzDgvNQxIjcDvhOZ4NtBYekEakvO
+         lpoStAK3i44x+Dzaw62kBp6Mrsbfgh4cnvJa+gEEu1F/67cBeMpUy3NTprcFxZZHRnKb
+         DJZYMT7GUnLe9neRgobRzCA1qrav+yAx0UTslQ4Rex84E4gBQYR3kBtturUowiTjaqVT
+         6XWw0R4LKBfrla52wV/WYwDPCDygYbtfT1GL3drKTnrZTKmF56jwt4Fx+eWHcMnPe8vX
+         Cugw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732387983; x=1732992783;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=G+P8IuRNOPnYl68Wr1phF57tcI/VLlzApQAJOR/FrHk=;
+        b=eW+TW0ERmAuQKSQMmUkdygkILd5shtHUzW3tFVL9vU6e21fPjGAHY5jl1iomQ6Zsj0
+         Whi+KnKmw+KD4jB7XXpAhbxAR8bUQcISFfpFx4h2BqqoWhN9VHzmbwCiUobIHFJj7Ma8
+         mRfTGBvaoV0JTGXeoQ0+V+aJYt4d7YTtyOJAHYlp2KKqxyUTpc1v8KMJ6Tz0+7U77pV4
+         7M2bbA6LshJCRcwB5gfUrljgsYa4T/m01Ik8FwB87/F2ydVKoesqaywLMVmDyi8mANd7
+         Gdtg5H+KCNdctAWMD9VbghPZ7fMm53rZd6N5ESw8y3nDDahbgrWzPisXKSUTo9FlFSBV
+         J+9A==
+X-Forwarded-Encrypted: i=1; AJvYcCV6fFFqGtjGVk7Nw/s8315BNV7Y3C6HnRyf1EGUuZTgftXmobKyalC+BhCXS2XcZ/lq/HMTbME1WOSS@vger.kernel.org, AJvYcCVrKQU1bIelImErZz7hpVk5qmF+71wXtv9JF+zXqWq/RoaJBlgK39cFMg/uKgJyWbO6/iFfCUqaeQP3M9Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YycstgkCw0FUtCJJcTUvUSXrXpPiQp8hwrVq/eFAAWVUIOwMrfp
+	mpYReINAAqo45VPZhZE4tqg0YU0eO4aBhTQtuIFhhD2mBF20fTFLZLtUjl4DXa4HgJ4Xc725Hsg
+	RwnA58zKDggXOlD0Ohm3h6I0mAg/WDQ==
+X-Gm-Gg: ASbGncuiIsqHmsAbmk5zZq0K+0rEPJiBtBGTOWO9hf/bDGTaK9fv5m4ro/74Uyfq/Gb
+	oFUu7Ht8RCxngOHDqYB82eYr+DKUmJT0=
+X-Google-Smtp-Source: AGHT+IFV/1j7SFZZrVDwqT9kxWcHOutCC0ZE5Vf5FSesY1wixS8qSP57oJOeNWwZ4gfC/GimnirqXvzTBk7G+EqLPXk=
+X-Received: by 2002:a17:906:cc1:b0:aa5:2817:cd34 with SMTP id
+ a640c23a62f3a-aa52817cff6mr413960166b.57.1732387982610; Sat, 23 Nov 2024
+ 10:53:02 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241123075105.1082661-1-mjguzik@gmail.com>
+References: <20241123075105.1082661-1-mjguzik@gmail.com> <20241123161955.GO1926309@frogsfrogsfrogs>
+In-Reply-To: <20241123161955.GO1926309@frogsfrogsfrogs>
+From: Mateusz Guzik <mjguzik@gmail.com>
+Date: Sat, 23 Nov 2024 19:52:50 +0100
+Message-ID: <CAGudoHEHSoFzadeNW3dhStCVy03G61X+Rd50SQKYt=aDRv6BYw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: use inode_set_cached_link()
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: dchinner@redhat.com, cem@kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Nov 23, 2024 at 08:51:05AM +0100, Mateusz Guzik wrote:
-> For cases where caching is applicable this dodges inode locking, memory
-> allocation and memcpy + strlen.
-> 
-> Throughput of readlink on Saphire Rappids (ops/s):
-> before:	3641273
-> after:	4009524 (+10%)
-> 
-> Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
-> ---
-> 
-> First a minor note that in the stock case strlen is called on the buffer
-> and I verified that i_disk_size is the value which is computed.
-> 
-> The important note is that I'm assuming the pointed to area is stable
-> for the duration of the inode's lifetime -- that is if the read off
-> symlink is fine *or* it was just created and is eligible caching, it
-> wont get invalidated as long as the inode is in memory. If this does not
-> hold then this submission is wrong and it would be nice(tm) to remedy
-> it.
+On Sat, Nov 23, 2024 at 5:19=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> On Sat, Nov 23, 2024 at 08:51:05AM +0100, Mateusz Guzik wrote:
+> > For cases where caching is applicable this dodges inode locking, memory
+> > allocation and memcpy + strlen.
+> >
+> > Throughput of readlink on Saphire Rappids (ops/s):
+> > before:       3641273
+> > after:        4009524 (+10%)
+> >
+> > Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
+> > ---
+> >
+> > First a minor note that in the stock case strlen is called on the buffe=
+r
+> > and I verified that i_disk_size is the value which is computed.
+> >
+> > The important note is that I'm assuming the pointed to area is stable
+> > for the duration of the inode's lifetime -- that is if the read off
+> > symlink is fine *or* it was just created and is eligible caching, it
+> > wont get invalidated as long as the inode is in memory. If this does no=
+t
+> > hold then this submission is wrong and it would be nice(tm) to remedy
+> > it.
+>
+> It is not stable for the lifetime of the inode.  See commit
+> 7b7820b83f2300 ("xfs: don't expose internal symlink metadata buffers to
+> the vfs").  With parent pointers' ability to expand the symlink xattr
+> fork area sufficiently to bump the symlink target into a remote block
+> and online repair's ability to mess with the inode, direct vfs access of
+> if_data has only become more difficult.
+>
 
-It is not stable for the lifetime of the inode.  See commit
-7b7820b83f2300 ("xfs: don't expose internal symlink metadata buffers to
-the vfs").  With parent pointers' ability to expand the symlink xattr
-fork area sufficiently to bump the symlink target into a remote block
-and online repair's ability to mess with the inode, direct vfs access of
-if_data has only become more difficult.
+That's a bummer.
 
---D
-
-> This depends on stuff which landed in vfs-6.14.misc, but is not in next
-> nor fs-next yet.
-> 
-> For benchmark code see bottom of https://lore.kernel.org/linux-fsdevel/20241120112037.822078-1-mjguzik@gmail.com/
-> 
->  fs/xfs/xfs_iops.c    |  1 +
->  fs/xfs/xfs_symlink.c | 24 ++++++++++++++++++++++++
->  fs/xfs/xfs_symlink.h |  1 +
->  3 files changed, 26 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 207e0dadffc3..1d0a3797f876 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1394,6 +1394,7 @@ xfs_setup_iops(
->  		break;
->  	case S_IFLNK:
->  		inode->i_op = &xfs_symlink_inode_operations;
-> +		xfs_setup_cached_symlink(ip);
->  		break;
->  	default:
->  		inode->i_op = &xfs_inode_operations;
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 4252b07cd251..59bf1b9ccb20 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -28,6 +28,30 @@
->  #include "xfs_parent.h"
->  #include "xfs_defer.h"
->  
-> +void
-> +xfs_setup_cached_symlink(
-> +	struct xfs_inode	*ip)
-> +{
-> +	struct inode		*inode = &ip->i_vnode;
-> +	xfs_fsize_t		pathlen;
-> +
-> +	/*
-> +	 * If we have the symlink readily accessible let the VFS know where to
-> +	 * find it. This avoids calls to xfs_readlink().
-> +	 */
-> +	pathlen = ip->i_disk_size;
-> +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN)
-> +		return;
-> +
-> +	if (ip->i_df.if_format != XFS_DINODE_FMT_LOCAL)
-> +		return;
-> +
-> +	if (XFS_IS_CORRUPT(ip->i_mount, !ip->i_df.if_data))
-> +		return;
-> +
-> +	inode_set_cached_link(inode, ip->i_df.if_data, pathlen);
-> +}
-> +
->  int
->  xfs_readlink(
->  	struct xfs_inode	*ip,
-> diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
-> index 0d29a50e66fd..0e45a8a33829 100644
-> --- a/fs/xfs/xfs_symlink.h
-> +++ b/fs/xfs/xfs_symlink.h
-> @@ -12,5 +12,6 @@ int xfs_symlink(struct mnt_idmap *idmap, struct xfs_inode *dp,
->  		umode_t mode, struct xfs_inode **ipp);
->  int xfs_readlink(struct xfs_inode *ip, char *link);
->  int xfs_inactive_symlink(struct xfs_inode *ip);
-> +void xfs_setup_cached_symlink(struct xfs_inode *ip);
->  
->  #endif /* __XFS_SYMLINK_H */
-> -- 
-> 2.43.0
-> 
+Thanks for the review.
+--=20
+Mateusz Guzik <mjguzik gmail.com>
