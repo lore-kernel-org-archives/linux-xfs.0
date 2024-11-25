@@ -1,61 +1,75 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD6E41B87D1;
-	Mon, 25 Nov 2024 18:37:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA74217557C
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 21:03:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732559878; cv=none; b=bAByo0wmZ3ogBlntz/l3YbG48nfOP/n5hwLDbfR860thRY20DMXjiIFESUwwqVVtXTV7QbNhxjsoKZf1RlerrmZ1WIBJ84XxlN1uUbVhkQdnk33/I64/KrZ2YFxumMm4xrfbz95kpVlBdcMwMeVGUgcl6AXdbZNdc4+0KysWl1I=
+	t=1732568629; cv=none; b=ji1RQ8FtBGKCTZ6M9ghjbEukkHfq0L2IP+xJBWpRCuvRYcyBBZBQdksXGq2U6jPy24WxFwvoBqmjpn1e8O+FbvMyIKigv4ZLxE8TKEkEE2aS+jAaW8nXSlltN90Me5hxs3aP/eU1GYDoagHxIHN/Dcj4QXKY3QuobgED0iyfdr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732559878; c=relaxed/simple;
-	bh=NugYv08BYe3lPbqHN7RyGw+0SkIfxnLo5ulV53qN6GY=;
+	s=arc-20240116; t=1732568629; c=relaxed/simple;
+	bh=kYbta3tAWAo4BkodZo4MGc86spv0VvTS6IS487XSYEs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uyTQ8opK4r6nDhuyePgpj0xAid4kjR2WFjsxvC8yh2GZ08YL7prQFtIoDT9xWeSTYYwObR2j/d6AB6L+pL4dxm9UP8gaBeFJ5ry2SF0Qd/A1ppuG9DLwiwpq96oB6kOL27hECUFGjz2CyaXCc1DSbW8766XCVRX9x96QaRezPr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jegiaw9c; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qs+YHs7RMl34I+pUGR7ji1EhnVdmtM0m2utEcyWGs7vOd1cxysiBOPq7K8p6iiBTM5qTmfBT+c6KmXhALQcGWvfXHF8DMyogD+BdCzEIpXs4g/9m1Gz9Fx4qQzAzzTpiRKOoXPrBH70LdtKhnqYmT6J9tQUIZ6MnVaiEtqC7UfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=WhCXc3da; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jegiaw9c"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1732559877; x=1764095877;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=NugYv08BYe3lPbqHN7RyGw+0SkIfxnLo5ulV53qN6GY=;
-  b=jegiaw9clSt2LXQd23ZSh+rzCHDPIQBRGTb/2Lxuu8w3iDCmNy60m9S2
-   +kLCPEHMKNWbpU+TtvZPBAPULfHOEdAKAvQCmeX02QhAm8kK5hgwOpeo0
-   +CcT16t3EeYlq7hp/wtrDVbQr81N0WlOTo6oinHjMV4amR+W9P+XPcjxr
-   ZUOTp1jISze4z8f4s0I8w0Big70uhrdBmBYivoIbDwjiWCczLzu4Qspjb
-   CsOdXU+sVqyj9bjBn6PjOHxA11/lT9ykpA1J5E9zqauOQl/W37mbQdjgW
-   la3IekozuM4IgAb/2qeHCdXc2taZ2DnGmVL3FtlTsMGJkUmU7IjXcK+ZA
-   g==;
-X-CSE-ConnectionGUID: OKl105fST5qJwxsN0B0aQw==
-X-CSE-MsgGUID: nh59LpzMTkyLTNuC3V4rYw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11267"; a="44067841"
-X-IronPort-AV: E=Sophos;i="6.12,183,1728975600"; 
-   d="scan'208";a="44067841"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2024 10:37:57 -0800
-X-CSE-ConnectionGUID: 9Ztr9UmaQ/u4ZklK+K4cTQ==
-X-CSE-MsgGUID: QnN19mWuTwSd2yAZjkt4Pw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,183,1728975600"; 
-   d="scan'208";a="122213339"
-Received: from lkp-server01.sh.intel.com (HELO 8122d2fc1967) ([10.239.97.150])
-  by orviesa002.jf.intel.com with ESMTP; 25 Nov 2024 10:37:52 -0800
-Received: from kbuild by 8122d2fc1967 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tFdxx-0006h3-2i;
-	Mon, 25 Nov 2024 18:37:45 +0000
-Date: Tue, 26 Nov 2024 02:36:51 +0800
-From: kernel test robot <lkp@intel.com>
-To: Mateusz Guzik <mjguzik@gmail.com>, dchinner@redhat.com
-Cc: oe-kbuild-all@lists.linux.dev, cem@kernel.org, djwong@kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Mateusz Guzik <mjguzik@gmail.com>
-Subject: Re: [PATCH] xfs: use inode_set_cached_link()
-Message-ID: <202411260215.6DW8BfsK-lkp@intel.com>
-References: <20241123075105.1082661-1-mjguzik@gmail.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="WhCXc3da"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-724f81cc659so1870686b3a.2
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 13:03:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1732568627; x=1733173427; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7OHTQ+7Sc+VjqzZ+g7+Qrd5AJo0mqddh6xd03j3GFtg=;
+        b=WhCXc3da0ZnpZ5EG0+4F71eN5mXyGzHqZo6kiUyiUCuxfsxdGXbT/J2grWNuHS+8A7
+         yVbv4fr93pBz1/Y837JCbkNFhCoBEPBSqg+9RDi8Yh4cNFrIpwLhDGl8QtXgMtbi2DLY
+         35e/bEKITRjQ1UQyekTZ087W8jvpd9MjwPCmG5ku2m1lVoY4fptLr6Y+VjiVele7uQWG
+         BYq66oU9JD2/hwuc/Bb5Ds57UG3cgOz7ZSTURoXjfNrMBCjn0X4Y81VEn/8hjL4FPOnd
+         pVrURK3O4D3Vs4WKaxbl9GSYFN0wl1yEdFtTuA0yKqAN7bi4vl4pAoZyE3vTN1+mKQ2D
+         p0Ww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732568627; x=1733173427;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7OHTQ+7Sc+VjqzZ+g7+Qrd5AJo0mqddh6xd03j3GFtg=;
+        b=moKHWv/XAL3EmzVO2kjLe6KT68rWr8o7S550n9UhdVIp88a/eKVZr3OB4VXnXr5Oh5
+         uAa3f3lGSVz8xMmSQ3JEnMp5N9u0yqG4WUmFHCjVfPyRaWoOAheNEjwXpngVkEYltK/p
+         bxS9cH4H7Kl5Gyzq+XAXaPKvMVqPiLnqxzGu7qrFJYc7G9Gvpg0rZxXWlzkZD7IPgSfg
+         jDGlS5bgGRmk6rrDfGaIeQGBX6xHtDl9xQtXFdz0eVwE+PY0LEtHMbTBOBqoB3VRglYz
+         esLC/KXK8kqOC5A3/3ROvNV/HcYdKksVkarW5OY5iFdtKbcHlpD/WRglMqz3uBCXoeOr
+         vnAw==
+X-Forwarded-Encrypted: i=1; AJvYcCVwdAr4qrbglIr6GfFyTvNOHRULMrVyTadAoybxtLPBlpM0vYIiOgnjB+Kd7ln4e+PSqzWxWQzsvXM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzKAm+6ImD4jibVtuzccMCvdhgJy09zexnGRSI/YXoEICfNq4yB
+	TmanPh+K4R+uYlsySk40N4AoEyHjO44gWSn2zwhm0Yy3+LWDWQnnzwZh5BZGc00=
+X-Gm-Gg: ASbGnctbqu11ipkbZmHfmSD39TrqGbtZqQcXewavmBY9ukrbE6Pf6+colOC6UITyFDf
+	KVX6eXb2Wyorf7a5Bw+Q9/CY32BR9yCq9jFrrtRYMxB5MWOsMIz3yGZQeTOBQTnvmX+U44oesdt
+	LLilOjvn0B2JL46pt1wZxNqOCuIzbK8b5Vh7pgSYEUEX7Ezzgk8U2ojyfINmcYnaq2mRJrt0ZZQ
+	eqckZ6F+lMq9MGyb7lnb7k1ucY3v+CqGc139p+PWxlNXHs8FqGYSa4OFW1sfbgtCj9U+VsTWQPH
+	K7Vvr8RAx47cVDimtWVBNVzsbw==
+X-Google-Smtp-Source: AGHT+IG2DpWE9r0w8j2QI7Rgw6UoL4E7CdySBNGfh1WAKJMyUU5VlOZOJQ9FOmaYeHgak1pS7K2NYA==
+X-Received: by 2002:a05:6a00:10c8:b0:71e:21:d2d8 with SMTP id d2e1a72fcca58-724df5dd7f8mr16932771b3a.7.1732568626947;
+        Mon, 25 Nov 2024 13:03:46 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-121-96.pa.nsw.optusnet.com.au. [49.180.121.96])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7fbcbfc068csm6149899a12.13.2024.11.25.13.03.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Nov 2024 13:03:46 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tFgFD-000000032KL-1Gu5;
+	Tue, 26 Nov 2024 08:03:43 +1100
+Date: Tue, 26 Nov 2024 08:03:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+	lonuxli.64@gmail.com
+Subject: Re: [PATCH] xfs: fix race condition in inodegc list and cpumask
+ handling
+Message-ID: <Z0TmLzSmLr78T8Im@dread.disaster.area>
+References: <20241125015258.2652325-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -64,68 +78,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241123075105.1082661-1-mjguzik@gmail.com>
+In-Reply-To: <20241125015258.2652325-1-leo.lilong@huawei.com>
 
-Hi Mateusz,
+On Mon, Nov 25, 2024 at 09:52:58AM +0800, Long Li wrote:
+> There is a race condition between inodegc queue and inodegc worker where
+> the cpumask bit may not be set when concurrent operations occur.
 
-kernel test robot noticed the following build errors:
+What problems does this cause? i.e. how do we identify systems
+hitting this issue?
 
-[auto build test ERROR on xfs-linux/for-next]
-[also build test ERROR on linus/master v6.12 next-20241125]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> Current problematic sequence:
+> 
+>   CPU0                             CPU1
+>   --------------------             ---------------------
+>   xfs_inodegc_queue()              xfs_inodegc_worker()
+>                                      llist_del_all(&gc->list)
+>     llist_add(&ip->i_gclist, &gc->list)
+>     cpumask_test_and_set_cpu()
+>                                      cpumask_clear_cpu()
+>                   < cpumask not set >
+> 
+> Fix this by moving llist_del_all() after cpumask_clear_cpu() to ensure
+> proper ordering. This change ensures that when the worker thread clears
+> the cpumask, any concurrent queue operations will either properly set
+> the cpumask bit or have already emptied the list.
+> 
+> Also remove unnecessary smp_mb__{before/after}_atomic() barriers since
+> the llist_* operations already provide required ordering semantics. it
+> make the code cleaner.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Mateusz-Guzik/xfs-use-inode_set_cached_link/20241125-115441
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20241123075105.1082661-1-mjguzik%40gmail.com
-patch subject: [PATCH] xfs: use inode_set_cached_link()
-config: i386-randconfig-001-20241125 (https://download.01.org/0day-ci/archive/20241126/202411260215.6DW8BfsK-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241126/202411260215.6DW8BfsK-lkp@intel.com/reproduce)
+IIRC, the barriers were for ordering the cpumask bitmap ops against
+llist operations. There are calls elsewhere to for_each_cpu() that
+then use llist_empty() checks (e.g xfs_inodegc_queue_all/wait_all),
+so on relaxed architectures (like alpha) I think we have to ensure
+the bitmask ops carried full ordering against the independent llist
+ops themselves. i.e. llist_empty() just uses READ_ONCE, so it only
+orders against other llist ops and won't guarantee any specific
+ordering against against cpumask modifications.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202411260215.6DW8BfsK-lkp@intel.com/
+I could be remembering incorrectly, but I think that was the
+original reason for the barriers. Can you please confirm that the
+cpumask iteration/llist_empty checks do not need these bitmask
+barriers anymore? If that's ok, then the change looks fine.
 
-All errors (new ones prefixed by >>):
-
-   fs/xfs/xfs_symlink.c: In function 'xfs_setup_cached_symlink':
->> fs/xfs/xfs_symlink.c:52:9: error: implicit declaration of function 'inode_set_cached_link' [-Werror=implicit-function-declaration]
-      52 |         inode_set_cached_link(inode, ip->i_df.if_data, pathlen);
-         |         ^~~~~~~~~~~~~~~~~~~~~
-   cc1: some warnings being treated as errors
-
-
-vim +/inode_set_cached_link +52 fs/xfs/xfs_symlink.c
-
-    30	
-    31	void
-    32	xfs_setup_cached_symlink(
-    33		struct xfs_inode	*ip)
-    34	{
-    35		struct inode		*inode = &ip->i_vnode;
-    36		xfs_fsize_t		pathlen;
-    37	
-    38		/*
-    39		 * If we have the symlink readily accessible let the VFS know where to
-    40		 * find it. This avoids calls to xfs_readlink().
-    41		 */
-    42		pathlen = ip->i_disk_size;
-    43		if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN)
-    44			return;
-    45	
-    46		if (ip->i_df.if_format != XFS_DINODE_FMT_LOCAL)
-    47			return;
-    48	
-    49		if (XFS_IS_CORRUPT(ip->i_mount, !ip->i_df.if_data))
-    50			return;
-    51	
-  > 52		inode_set_cached_link(inode, ip->i_df.if_data, pathlen);
-    53	}
-    54	
-
+-Dave.
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Dave Chinner
+david@fromorbit.com
