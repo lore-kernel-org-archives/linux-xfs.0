@@ -1,128 +1,86 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.209])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA74217557C
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 21:03:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C5ED13C80E
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 22:26:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.144.209
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732568629; cv=none; b=ji1RQ8FtBGKCTZ6M9ghjbEukkHfq0L2IP+xJBWpRCuvRYcyBBZBQdksXGq2U6jPy24WxFwvoBqmjpn1e8O+FbvMyIKigv4ZLxE8TKEkEE2aS+jAaW8nXSlltN90Me5hxs3aP/eU1GYDoagHxIHN/Dcj4QXKY3QuobgED0iyfdr0=
+	t=1732573589; cv=none; b=oYNFyak1iQzdNGLFr0zVgwmHtJdEvWUWhcgC005ssA3zbAMzeUN0bmiQQU6WHMOM9iSPd/jDXN7fdHouMt3mXBqFDg5x/PCT/mvVufpLYUeqHoGTs+6yIwbN0p66wBYL2Vh6nu/0pq1ngC72XlurK1MZe5uGR+Lb4BAxVXPRGCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732568629; c=relaxed/simple;
-	bh=kYbta3tAWAo4BkodZo4MGc86spv0VvTS6IS487XSYEs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qs+YHs7RMl34I+pUGR7ji1EhnVdmtM0m2utEcyWGs7vOd1cxysiBOPq7K8p6iiBTM5qTmfBT+c6KmXhALQcGWvfXHF8DMyogD+BdCzEIpXs4g/9m1Gz9Fx4qQzAzzTpiRKOoXPrBH70LdtKhnqYmT6J9tQUIZ6MnVaiEtqC7UfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=WhCXc3da; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1732573589; c=relaxed/simple;
+	bh=DxV0ZYtZhx0j71BKj6s1gQ9m3nGm9kZ0DLlQD2Kjaao=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QXTKV7T5BdEB3M//QkeG1sP+63hD0iskSq2gu+jkqibmkgh71Ls6n1Dc3tw3VaKnbQ+MJ4qeAmac6NUJjuCMefwGuXy6w5jvm8jCP5rrAXNoPeZ5B4GKH+DCY+Nrl3NK9FJ92aIv+LZNeEM4Thi2MxS/rQeLGNHVhWnYhlwmHDU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=vKk6pPHz; arc=none smtp.client-ip=192.19.144.209
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="WhCXc3da"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-724f81cc659so1870686b3a.2
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 13:03:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1732568627; x=1733173427; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7OHTQ+7Sc+VjqzZ+g7+Qrd5AJo0mqddh6xd03j3GFtg=;
-        b=WhCXc3da0ZnpZ5EG0+4F71eN5mXyGzHqZo6kiUyiUCuxfsxdGXbT/J2grWNuHS+8A7
-         yVbv4fr93pBz1/Y837JCbkNFhCoBEPBSqg+9RDi8Yh4cNFrIpwLhDGl8QtXgMtbi2DLY
-         35e/bEKITRjQ1UQyekTZ087W8jvpd9MjwPCmG5ku2m1lVoY4fptLr6Y+VjiVele7uQWG
-         BYq66oU9JD2/hwuc/Bb5Ds57UG3cgOz7ZSTURoXjfNrMBCjn0X4Y81VEn/8hjL4FPOnd
-         pVrURK3O4D3Vs4WKaxbl9GSYFN0wl1yEdFtTuA0yKqAN7bi4vl4pAoZyE3vTN1+mKQ2D
-         p0Ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732568627; x=1733173427;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7OHTQ+7Sc+VjqzZ+g7+Qrd5AJo0mqddh6xd03j3GFtg=;
-        b=moKHWv/XAL3EmzVO2kjLe6KT68rWr8o7S550n9UhdVIp88a/eKVZr3OB4VXnXr5Oh5
-         uAa3f3lGSVz8xMmSQ3JEnMp5N9u0yqG4WUmFHCjVfPyRaWoOAheNEjwXpngVkEYltK/p
-         bxS9cH4H7Kl5Gyzq+XAXaPKvMVqPiLnqxzGu7qrFJYc7G9Gvpg0rZxXWlzkZD7IPgSfg
-         jDGlS5bgGRmk6rrDfGaIeQGBX6xHtDl9xQtXFdz0eVwE+PY0LEtHMbTBOBqoB3VRglYz
-         esLC/KXK8kqOC5A3/3ROvNV/HcYdKksVkarW5OY5iFdtKbcHlpD/WRglMqz3uBCXoeOr
-         vnAw==
-X-Forwarded-Encrypted: i=1; AJvYcCVwdAr4qrbglIr6GfFyTvNOHRULMrVyTadAoybxtLPBlpM0vYIiOgnjB+Kd7ln4e+PSqzWxWQzsvXM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKAm+6ImD4jibVtuzccMCvdhgJy09zexnGRSI/YXoEICfNq4yB
-	TmanPh+K4R+uYlsySk40N4AoEyHjO44gWSn2zwhm0Yy3+LWDWQnnzwZh5BZGc00=
-X-Gm-Gg: ASbGnctbqu11ipkbZmHfmSD39TrqGbtZqQcXewavmBY9ukrbE6Pf6+colOC6UITyFDf
-	KVX6eXb2Wyorf7a5Bw+Q9/CY32BR9yCq9jFrrtRYMxB5MWOsMIz3yGZQeTOBQTnvmX+U44oesdt
-	LLilOjvn0B2JL46pt1wZxNqOCuIzbK8b5Vh7pgSYEUEX7Ezzgk8U2ojyfINmcYnaq2mRJrt0ZZQ
-	eqckZ6F+lMq9MGyb7lnb7k1ucY3v+CqGc139p+PWxlNXHs8FqGYSa4OFW1sfbgtCj9U+VsTWQPH
-	K7Vvr8RAx47cVDimtWVBNVzsbw==
-X-Google-Smtp-Source: AGHT+IG2DpWE9r0w8j2QI7Rgw6UoL4E7CdySBNGfh1WAKJMyUU5VlOZOJQ9FOmaYeHgak1pS7K2NYA==
-X-Received: by 2002:a05:6a00:10c8:b0:71e:21:d2d8 with SMTP id d2e1a72fcca58-724df5dd7f8mr16932771b3a.7.1732568626947;
-        Mon, 25 Nov 2024 13:03:46 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-121-96.pa.nsw.optusnet.com.au. [49.180.121.96])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7fbcbfc068csm6149899a12.13.2024.11.25.13.03.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Nov 2024 13:03:46 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tFgFD-000000032KL-1Gu5;
-	Tue, 26 Nov 2024 08:03:43 +1100
-Date: Tue, 26 Nov 2024 08:03:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Long Li <leo.lilong@huawei.com>
-Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
-	lonuxli.64@gmail.com
-Subject: Re: [PATCH] xfs: fix race condition in inodegc list and cpumask
- handling
-Message-ID: <Z0TmLzSmLr78T8Im@dread.disaster.area>
-References: <20241125015258.2652325-1-leo.lilong@huawei.com>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="vKk6pPHz"
+Received: from mail-lvn-it-01.lvn.broadcom.net (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
+	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id CF7AAC00151A;
+	Mon, 25 Nov 2024 14:26:19 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com CF7AAC00151A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+	s=dkimrelay; t=1732573579;
+	bh=DxV0ZYtZhx0j71BKj6s1gQ9m3nGm9kZ0DLlQD2Kjaao=;
+	h=From:To:Cc:Subject:Date:From;
+	b=vKk6pPHzeS+YFAES7CLLClmeXxqquYErbS3wK8V9RmEmafeC2+PLXczhS/cn3HpL5
+	 GuZ1PB2eSLhLDupjB5MeRHyMH+52P1YEL1fXk62ZATOnLfoSpBsb1GTsajEwJ+Wl2p
+	 kJCn09mdoQ3j1y1YXCLwMEzuwllj/BIJtJB/39tM=
+Received: from stbirv-lnx-1.igp.broadcom.net (stbirv-lnx-1.igp.broadcom.net [10.67.48.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mail-lvn-it-01.lvn.broadcom.net (Postfix) with ESMTPSA id 8546518041CAC6;
+	Mon, 25 Nov 2024 14:26:19 -0800 (PST)
+From: Florian Fainelli <florian.fainelli@broadcom.com>
+To: linux-xfs@vger.kernel.org
+Cc: mmayer@broadcom.com,
+	justin.chen@broadcom.com,
+	catherine.hoang@oracle.com,
+	Florian Fainelli <florian.fainelli@broadcom.com>
+Subject: [PATCH] xfs_io: Avoid using __kernel_rwf_t for older kernels
+Date: Mon, 25 Nov 2024 14:26:18 -0800
+Message-Id: <20241125222618.1276708-1-florian.fainelli@broadcom.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241125015258.2652325-1-leo.lilong@huawei.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 25, 2024 at 09:52:58AM +0800, Long Li wrote:
-> There is a race condition between inodegc queue and inodegc worker where
-> the cpumask bit may not be set when concurrent operations occur.
+__kernel_rwf_t was defined with upstream Linux commit
+ddef7ed2b5cbafae692d1d580bb5a07808926a9c ("annotate RWF_... flags")
+which has been included in Linux v4.14 and newer. When building xfsprogs
+against older kernel headers, this type is not defined, leading to the
+following build error:
 
-What problems does this cause? i.e. how do we identify systems
-hitting this issue?
+pwrite.c: In function 'pwrite_f':
+../include/xfs/linux.h:236:22: error: '__kernel_rwf_t' undeclared (first use in this function); did you mean '__kernel_off_t'?
+ #define RWF_ATOMIC ((__kernel_rwf_t)0x00000040)
+                      ^~~~~~~~~~~~~~
+pwrite.c:329:22: note: in expansion of macro 'RWF_ATOMIC'
+    pwritev2_flags |= RWF_ATOMIC;
 
-> 
-> Current problematic sequence:
-> 
->   CPU0                             CPU1
->   --------------------             ---------------------
->   xfs_inodegc_queue()              xfs_inodegc_worker()
->                                      llist_del_all(&gc->list)
->     llist_add(&ip->i_gclist, &gc->list)
->     cpumask_test_and_set_cpu()
->                                      cpumask_clear_cpu()
->                   < cpumask not set >
-> 
-> Fix this by moving llist_del_all() after cpumask_clear_cpu() to ensure
-> proper ordering. This change ensures that when the worker thread clears
-> the cpumask, any concurrent queue operations will either properly set
-> the cpumask bit or have already emptied the list.
-> 
-> Also remove unnecessary smp_mb__{before/after}_atomic() barriers since
-> the llist_* operations already provide required ordering semantics. it
-> make the code cleaner.
+Fixes: ee6c5941352a ("xfs_io: add RWF_ATOMIC support to pwrite")
+Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+---
+ include/linux.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-IIRC, the barriers were for ordering the cpumask bitmap ops against
-llist operations. There are calls elsewhere to for_each_cpu() that
-then use llist_empty() checks (e.g xfs_inodegc_queue_all/wait_all),
-so on relaxed architectures (like alpha) I think we have to ensure
-the bitmask ops carried full ordering against the independent llist
-ops themselves. i.e. llist_empty() just uses READ_ONCE, so it only
-orders against other llist ops and won't guarantee any specific
-ordering against against cpumask modifications.
-
-I could be remembering incorrectly, but I think that was the
-original reason for the barriers. Can you please confirm that the
-cpumask iteration/llist_empty checks do not need these bitmask
-barriers anymore? If that's ok, then the change looks fine.
-
--Dave.
+diff --git a/include/linux.h b/include/linux.h
+index e9eb7bfb26a1..68b43393aad7 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -233,7 +233,7 @@ struct fsxattr {
+ 
+ /* Atomic Write */
+ #ifndef RWF_ATOMIC
+-#define RWF_ATOMIC	((__kernel_rwf_t)0x00000040)
++#define RWF_ATOMIC	(0x00000040)
+ #endif
+ 
+ /*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.34.1
+
