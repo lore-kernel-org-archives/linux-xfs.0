@@ -1,61 +1,138 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 360382500DE;
-	Mon, 25 Nov 2024 05:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 113AE2500DE;
+	Mon, 25 Nov 2024 05:18:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732511808; cv=none; b=sbe8Gg83kPRkLpqMyvhZ3JthrNRJNJkZRiLPDeBdBD7ZuATX4om7Gqd+K0Z+vGATgB+ve5w8Vb6kCdd3bhyRjvgYr+ipymvCbektvDAd/RPwxjCZ687dbOMq0EiSW302Xxcg6oSWIDthWjk6MmyIdSiLdDIU/30R6e0UvSUvBag=
+	t=1732511936; cv=none; b=tzeNsEt6LRV3Dm7IeqEchg5V7I5JeronGuW+ZLc8MT4f1fvrByGmTZtDH24+e47REYpE9e4ZqESUvl1kAPC9MZccxCtj3+WziCfMxsqTEMRiUI1becaR01NN7TWmNzRUpHTVFZ0V6sbiUpu95k/2hA85lamGBSudeQwOPWSvvXM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732511808; c=relaxed/simple;
-	bh=+1AAnvKsvzjB4HfOnQQsfkyV9kmvs/+6DA/fbUxlGDY=;
+	s=arc-20240116; t=1732511936; c=relaxed/simple;
+	bh=yhEb6Yw2cvrIsiWVMxwFLxOjs32MuxixRg9ct+Ex9FY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=flYXpQSVgd8YENtkYFxQ+GTzuBSUouhBVA2cKTAZj+YRDu8FZh+e5gxSIeBkoCx4pr7KuJLExRQjwq7jR1/06IZop0Kbbu7kWicO9K3pq5ZYajWnsMsCdxXM3HPvm/cUcCQqhDlzqbyG8DWsp169YgndAQ7zj6QkEKeBXNbbYOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yVNK/zjf; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=mwcCNzvemnVDU2KR4Dc6+4Ri7Su2wHpwDqyr5o0q96ZbpBwwKLj0O4Ek7xTavGjTaHcZy92MSV1YE2xnnfEk0DfoAeACiNUGsOnsvtZk9EK0NGUH34nzJItRawBWN72VT1Yhe7aNE0Qww825snPG8jml7e74K7wwU+hh2WxOGwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ik47XLOZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yVNK/zjf"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Xj7Q4hc7lJG+5vks50nmvB55EifD3Rwc2+pN6+1/0HA=; b=yVNK/zjfAP+xhA4yDb1Jh7XmMC
-	bMBW1qIms4nEMaXzV7F5Q5bhYtE4QxcuhF8SdyNpmDmkuGHJS1RCTCQWNDEvByHPv7FUfBi2Z3+QD
-	FXiPLm8MMvwzLmLCpzV5OmUn32w0eB0Nal64+NvQqgoQw7r1L8c5kDLqsdMGfNtohcPU9n511IlLr
-	oA07TAP/pWWP17qvowj9+3HcNTFXjY9dEWEiiujwrARuVQwpTVDFhuUqG1Eo2DJTmPZ34ecnYVfOm
-	wJzhl6EaqvbEO5oXMIDPyLGs2UKRJ7FpF6yO1JRb5PIF7lI2hG8ca8kLxBc0+bo8EW9fWpg9o1L12
-	8uAkcpSg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tFRSo-000000074ug-3mID;
-	Mon, 25 Nov 2024 05:16:46 +0000
-Date: Sun, 24 Nov 2024 21:16:46 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/17] generic/366: fix directio requirements checking
-Message-ID: <Z0QIPvrmeUduX4FA@infradead.org>
-References: <173229419991.358248.8516467437316874374.stgit@frogsfrogsfrogs>
- <173229420269.358248.6325435085396026110.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ik47XLOZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CC1CC4CECE;
+	Mon, 25 Nov 2024 05:18:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732511935;
+	bh=yhEb6Yw2cvrIsiWVMxwFLxOjs32MuxixRg9ct+Ex9FY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ik47XLOZCiBLF0/yb8hHBHzCCyxZmn9dmHgl2jAHsKdkh83qhMQVLCKGDcqg2f2/O
+	 9LYPxliE4MjGZSbrvdmPgpeNQ8M2PfoeBuNpjSUzNM2412csn/Qu6ZbSmrNTcSt8ib
+	 k5PVz7cM8UYtxi8VC1Mfq0C8ajrh89xsvPRwrto+q/qKZ5FbY6BVMOTzwD6WyFrjty
+	 JKw9D5paolVM6nIQgKtc7qTPhu7jBiEpGDQ/ZY6OsjYg15adLcAWvavilZjb/iqvGT
+	 TV8aLo/bI1gBeyUhAi2BnKolZa0gA7CEMigRQOsZQu4yrrSQKZK7xkswrxscnAJAS1
+	 5nciQsz5Er5PQ==
+Date: Sun, 24 Nov 2024 21:18:54 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Filipe Manana <fdmanana@kernel.org>
+Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+	linux-btrfs <linux-btrfs@vger.kernel.org>
+Subject: Re: [PATCH 05/12] generic/562: handle ENOSPC while cloning gracefully
+Message-ID: <20241125051854.GH9438@frogsfrogsfrogs>
+References: <173197064408.904310.6784273927814845381.stgit@frogsfrogsfrogs>
+ <173197064501.904310.1505759730439532159.stgit@frogsfrogsfrogs>
+ <CAL3q7H5KjvXsXzt4n0XP1FTUt=A5cKom7p+dGD6GG-iL7CyDXQ@mail.gmail.com>
+ <20241119003131.GT9438@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <173229420269.358248.6325435085396026110.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241119003131.GT9438@frogsfrogsfrogs>
 
-On Fri, Nov 22, 2024 at 08:54:53AM -0800, Darrick J. Wong wrote:
-> -_require_odirect
-> +_require_odirect 512	# see fio job1 config below
+On Mon, Nov 18, 2024 at 04:31:31PM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 19, 2024 at 12:17:56AM +0000, Filipe Manana wrote:
+> > On Mon, Nov 18, 2024 at 11:03 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> > >
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > >
+> > > This test creates a couple of patterned files on a tiny filesystem,
+> > > fragments the free space, clones one patterned file to the other, and
+> > > checks that the entire file was cloned.
+> > >
+> > > However, this test doesn't work on a 64k fsblock filesystem because
+> > > we've used up all the free space reservation for the rmapbt, and that
+> > > causes the FICLONE to error out with ENOSPC partway through.  Hence we
+> > > need to detect the ENOSPC and _notrun the test.
+> > >
+> > > That said, it turns out that XFS has been silently dropping error codes
+> > > if we managed to make some progress cloning extents.  That's ok if the
+> > > operation has REMAP_FILE_CAN_SHORTEN like copy_file_range does, but
+> > > FICLONE/FICLONERANGE do not permit partial results, so the dropped error
+> > > codes is actually an error.
+> > >
+> > > Therefore, this testcase now becomes a regression test for the patch to
+> > > fix that.
+> > >
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/generic/562 |   10 ++++++++--
+> > >  1 file changed, 8 insertions(+), 2 deletions(-)
+> > >
+> > >
+> > > diff --git a/tests/generic/562 b/tests/generic/562
+> > > index 91360c4154a6a2..62899945003513 100755
+> > > --- a/tests/generic/562
+> > > +++ b/tests/generic/562
+> > > @@ -15,6 +15,9 @@ _begin_fstest auto clone punch
+> > >  . ./common/filter
+> > >  . ./common/reflink
+> > >
+> > > +test "$FSTYP" = "xfs" && \
+> > > +       _fixed_by_kernel_commit XXXXXXXXXX "xfs: don't drop errno values when we fail to ficlone the entire range"
+> > > +
+> > >  _require_scratch_reflink
+> > >  _require_test_program "punch-alternating"
+> > >  _require_xfs_io_command "fpunch"
+> > > @@ -48,8 +51,11 @@ while true; do
+> > >  done
+> > >
+> > >  # Now clone file bar into file foo. This is supposed to succeed and not fail
+> > > -# with ENOSPC for example.
+> > > -_reflink $SCRATCH_MNT/bar $SCRATCH_MNT/foo >>$seqres.full
+> > > +# with ENOSPC for example.  However, XFS will sometimes run out of space.
+> > > +_reflink $SCRATCH_MNT/bar $SCRATCH_MNT/foo >>$seqres.full 2> $tmp.err
+> > > +cat $tmp.err
+> > > +grep -q 'No space left on device' $tmp.err && \
+> > > +       _notrun "ran out of space while cloning"
+> > 
+> > This defeats the original purpose of the test, which was to verify
+> > btrfs didn't fail with -ENOSPC (or any other error).
+> > 
+> > If XFS has an ENOSPC issue in some cases, and it's not fixable, why
+> > not make it _notrun only if it's XFS that is being tested?
+> 
+> Ok, will do.  In the case of xfs, we don't let you share data if the
+> allocation group it's in is more than about 90% full.
 
-Hah, I did not know about this optional argument to
-_require_odirect, which sounds pretty useful.
+Er... scratch that response :)
 
-Looks good:
+It's true that XFS doesn't let you share data if the AG is more than 90%
+full, but this test exposed a data corruption vector in 4.20-6.12 if you
+did run out of space.  Granted you'd only hit that if you had 64k block
+size and a fairly small disk (~33GB) but still, that's reason enough to
+keep running on XFS even if it runs out of space.  ENOSPC is better than
+data corruption.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
 
+> --D
+> 
+> > Thanks.
+> > 
+> > 
+> > >
+> > >  # Unmount and mount the filesystem again to verify the operation was durably
+> > >  # persisted.
+> > >
+> > >
+> > 
+> 
