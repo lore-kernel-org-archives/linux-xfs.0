@@ -1,86 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D961A01BE
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 11:46:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0449186E59
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 11:57:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732535217; cv=none; b=kJUWDyH6VMjvYs9RiF98Rel8fuYPuzYf3hUNZac4Qe62KAP78dfFtVubBUzQlNhQht1LM3kY0rklc6yVc9uGnIGxUHcQKq9Pz0QjY7EBHhtAWcbKtl9rQlXXKK6L/wi4KggSF1Z1/TfM/aFxKpQZZQRccSeYmjRpvdbOkVLh+jo=
+	t=1732535861; cv=none; b=uMHb1WwJe4Kp8EW4opgBV6/fQfocOfCZtq3jlZRUrcndTZJS6evi3sFXFR3O2mzf+2wid2yexA1JoCk6KCQuZEbwe4rlykU8XZoLn0ReFyCkNBpphuQ3/olj9zCsTNaZaJbFJukm6CjqnXP4PBza0IYy5eGk7bOvxQvcags5ED8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732535217; c=relaxed/simple;
-	bh=Kcr1FsBWESgHtClUN59yVKGGBUO05yTyoIQEbswZnGE=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=r2ppGxKjPnHQWBlcOmO0mR/NygyOMcSDmU+azuXh8a4TfpAEp/IaMCi3ztavNksXa2wzX1+vNg7U8+i17dInSdqWQqr3LmtSc5+RNYEtAzYlKyHYebFS/hdXThkpkM43mYFV3/2QSfcavlClEP14ssigI4xQO059C5RCk/TtNj4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ERefo9b7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732535861; c=relaxed/simple;
+	bh=MGp1l142g+CXPR/e50e7mS9BI7MbxqdXSOHtRHPjpf8=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=XwLB3FXhMilVdw/yFztZyi6yiDvxCQBQUzei8EGzNt5fonLR+Ng0RIQQVIZkkYhjGB7emm+kAYYpSlrm8WEDhNyB9mRt8AcAOB2nt6I/d8WNehRbe5q5Mr1UY7DleZamXnTSmWOrCwT4ihFs0p7rjeqMRgi+kIpOThaFcEoiIh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RPXB+D2h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ERefo9b7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 056A2C4CECE
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2024 11:46:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RPXB+D2h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 065C1C4CECE;
+	Mon, 25 Nov 2024 11:57:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732535216;
-	bh=Kcr1FsBWESgHtClUN59yVKGGBUO05yTyoIQEbswZnGE=;
-	h=Date:From:To:Subject:From;
-	b=ERefo9b7PW7+TrqD41FfkhzwNReUlmLAxk51n5Qo8ZppknWJcMSwULmPzQPDNqNfo
-	 Ivoyqzv8hbQ/2piSZSIxIlN1TBszCkqxpiZg4p2dSXNx9YXNItCh97rtK5clwOrYuQ
-	 x2rkQ2hAoiaOLW8SwL2U+B3Am4V11xlj03hY3zSQYBYs11i97V0sNfT3bBEXhgUZ4d
-	 iX9/t072lmNBS08OUDML7Ye6L4AhXhgjloS+YUoiKmffcPzJ3ZWZfjMRoUCG9dmz3N
-	 sMNRfkHVqmBnLkFMMmU5L1SFgcbAVBQxNuY2QjAn1F7OrW2h0B7S62mvfWfXInzhBn
-	 osvUROV14KzPg==
-Date: Mon, 25 Nov 2024 12:46:52 +0100
+	s=k20201202; t=1732535861;
+	bh=MGp1l142g+CXPR/e50e7mS9BI7MbxqdXSOHtRHPjpf8=;
+	h=From:To:In-Reply-To:References:Subject:Date:From;
+	b=RPXB+D2hctC75m39QqVdEe9G65eMHJTSI/8H89aj2s0FDZ95Uwi0xI2miZduskA6S
+	 fcB2h6AHiAug257Kkcnl8ksKKZNWtVF66pb9WSy+D/eYl8tHJQXYwzAG8lStVLehhB
+	 W+PwAuXJJFAweyHb9lNoq9rO1nvaMuXnPu72Sdhdhg7zoLxAMUKFoDzwLkE4bbr+5D
+	 GFMb8IdXpD98Ne2KPvJH52NyFmcLM877OH9fGrBz1/hwuERyiAsicTVNQWK1ugodsd
+	 q67iHsehtBp6j8QcM6HTpC20nSVwbjTXstXcxjotUpXig4oiVEiE4dKqVYVn/ksLr/
+	 RPqaOwOemr7uQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to a8581099604d
-Message-ID: <medvw2k7ii2gwyk3urggz4aq7l7yutpdc7m672dwwjf2ddjf3m@wazf2t46tgby>
+To: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+In-Reply-To: <20241112221920.1105007-1-david@fromorbit.com>
+References: <20241112221920.1105007-1-david@fromorbit.com>
+Subject: Re: [PATCH 0/3] xfs: miscellaneous bug fixes
+Message-Id: <173253585964.514512.8381852317349250817.b4-ty@kernel.org>
+Date: Mon, 25 Nov 2024 12:57:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
+On Wed, 13 Nov 2024 09:05:13 +1100, Dave Chinner wrote:
+> These are three bug fixes for recent issues.
+> 
+> The first is a repost of the original patch to prevent allocation of
+> sparse inode clusters at the end of an unaligned runt AG. There
+> was plenty of discussion over that fix here:
+> 
+> https://lore.kernel.org/linux-xfs/20241024025142.4082218-1-david@fromorbit.com/
+> 
+> [...]
 
+Applied to for-next, thanks!
 
-Hi folks,
+[1/3] xfs: fix sparse inode limits on runt AG
+      commit: 13325333582d4820d39b9e8f63d6a54e745585d9
+[2/3] xfs: delalloc and quota softlimit timers are incoherent
+      commit: c9c293240e4351aa2678186cd88a08141fc6ce9e
+[3/3] xfs: prevent mount and log shutdown race
+      commit: a8581099604dfa609a34a3fac8ef5af0d300d2c1
 
-The for-next branch of the xfs-linux repository at:
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-Beyond xfs patches, this also update for-next to be closer to Linus's ToT.
-
-The relevant XFS patches are follows...
-
-
-The new head of the for-next branch is commit:
-
-a8581099604d xfs: prevent mount and log shutdown race
-
-5 new commits:
-
-Dave Chinner (3):
-      [13325333582d] xfs: fix sparse inode limits on runt AG
-      [c9c293240e43] xfs: delalloc and quota softlimit timers are incoherent
-      [a8581099604d] xfs: prevent mount and log shutdown race
-
-Long Li (2):
-      [45f69d091bab] xfs: eliminate lockdep false positives in xfs_attr_shortform_list
-      [652f03db897b] xfs: remove unknown compat feature check in superblock write validation
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_ialloc.c | 16 +++++++++-------
- fs/xfs/libxfs/xfs_sb.c     |  7 -------
- fs/xfs/xfs_attr_list.c     |  3 ++-
- fs/xfs/xfs_log.c           | 11 +++++++++++
- fs/xfs/xfs_log_priv.h      |  1 +
- fs/xfs/xfs_qm_syscalls.c   | 13 -------------
- 6 files changed, 23 insertions(+), 28 deletions(-)
