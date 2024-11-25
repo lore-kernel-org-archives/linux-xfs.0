@@ -1,69 +1,67 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98FED1ABECD;
-	Mon, 25 Nov 2024 13:44:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D573E192D6C;
+	Mon, 25 Nov 2024 17:19:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732542289; cv=none; b=LaSq6LardekRkfWXkEK4ohKRoc+nYdFEkK1Ax6DAyOzF39R7GAm3hyx6uIP25QKhr7cAZXk4UPVA+4Np7kMyJPz/nEbv4IiKgBJ2bwXGqlDubxmCHCaE7tJOe6gndQ4M23jtu6NeZ7G5GjqZP2N10V3S7NOlE3MJgkvPME4TLbA=
+	t=1732555143; cv=none; b=O0Iju0Pb1xuvBCJKWj2Tvvo1J/JlPrxC/Oafd5gIfrM724O/GzFSEnymutUPdEjXsMwRjd51SOPLyVq9EXibP9GdRiJoKnekWKnl0uXHc45e+eARd7XRrDKb0yTRdMZ2P6KlG9RAzbICMxYaSuW16VMhouDyqVtoN4mVEx725Ik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732542289; c=relaxed/simple;
-	bh=pXWrfgPtUiMGaYO4YxKycoWEXFfEFi5SD0iAfeDGyo0=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YHsRKWmQT2HfLjaIqYUyODovQglzHAllZK6sTLJQZF97onjM+7rKvwaBBGam2bflU67YHg/3Pvi7uQd2Hebku3opdyzScZJkRo39pLd9+z8jNV+h9XLwOgNnEO+i3m4Ig//Vi2Y1XLAaolsxZ78cvxESi6R1kBc8yMkaMkber9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Xxn364h4czRhn5;
-	Mon, 25 Nov 2024 21:43:14 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 91548180105;
-	Mon, 25 Nov 2024 21:44:42 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 25 Nov
- 2024 21:44:42 +0800
-Date: Mon, 25 Nov 2024 21:42:48 +0800
-From: Long Li <leo.lilong@huawei.com>
+	s=arc-20240116; t=1732555143; c=relaxed/simple;
+	bh=iNcGrI9d68zEhE5RKTlnRCd1gTE3tpgUDCfpeGp211Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X4ZC7o4sODcgzXgTzNIH9payp/g1YCOx9biWAlgFdVG+i5LHSFBT+B2iUIJ8XFAjozXjkej6TisKWbyxyfxraChiLci3xFhpkrXEi5Nzas/AsnFFtSAmKDkj9zpYwj7XRhHyC7Ki+LH+zgMFpC/k4EAIwqlUEIIlTVCmlk4yI9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ti/9DrSy; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ti/9DrSy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A6EBC4CECE;
+	Mon, 25 Nov 2024 17:19:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732555143;
+	bh=iNcGrI9d68zEhE5RKTlnRCd1gTE3tpgUDCfpeGp211Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ti/9DrSysYNLAqE66/hAxwi4k/28vONDweaBYItytdUGJQYpNaJE9/pxk9pLcZzU+
+	 uN/YtHcp1AlH2a/G0VxnwMw0uVaKqM2QE/EJ7rXYEzf3+oVPBks9Z3LiKtISpRuUtj
+	 8JrUAHysBZgdI4FIROXqdpDMi2rfBPzybzmvCmuCU+1m+/kjm1OEbQrU3RjBN7eFzH
+	 eZkzr4tR8+saLN9vQC2A4ttg8pfWF6qCNS4ZA/LtDGSDHrHMNKbRTElWl5J2AChXgH
+	 SjsuR8e8oPTdaGtVHnxqZGtROqaauiI3980TRuKq9j8JILsxkrgv+KUXsbihjh1a2f
+	 9dUX+fur+H0Pg==
+Date: Mon, 25 Nov 2024 09:19:02 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
-Subject: Re: [PATCH v4 1/2] iomap: fix zero padding data issue in concurrent
- append writes
-Message-ID: <Z0R-2Jmj2u-Cqwxu@localhost.localdomain>
-References: <20241125023341.2816630-1-leo.lilong@huawei.com>
- <Z0Qb1HKqWJKyR5Q0@infradead.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/17] logwrites: warn if we don't think read after
+ discard returns zeroes
+Message-ID: <20241125171902.GC9425@frogsfrogsfrogs>
+References: <173229419991.358248.8516467437316874374.stgit@frogsfrogsfrogs>
+ <173229420060.358248.11054238752146807489.stgit@frogsfrogsfrogs>
+ <Z0QHOjqagg5VuhFf@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z0Qb1HKqWJKyR5Q0@infradead.org>
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+In-Reply-To: <Z0QHOjqagg5VuhFf@infradead.org>
 
-On Sun, Nov 24, 2024 at 10:40:20PM -0800, Christoph Hellwig wrote:
-> On Mon, Nov 25, 2024 at 10:33:40AM +0800, Long Li wrote:
-> >   1. collect reviewed tag
-> >   2. Modify the comment of io_size and iomap_ioend_size_aligned().
-> >   3. Add explain of iomap_ioend_size_aligned() to commit message.
+On Sun, Nov 24, 2024 at 09:12:26PM -0800, Christoph Hellwig wrote:
+> This feels like it's heading in the wrong direction, as it just adds
+> more hacks.
 > 
-> Just curious, did you look into Brian's suggestions to do away
-> with the rounding up entirely as there is not much practical benefit
-> in merging behind EOF?
+> IMHO the right thing is to:
 > 
+>  a) document current assumptions and tell users very clearly to use
+>     dm-thin to get the expected semantics
+>  b) if we have a use for it, provide an option to use write zeroes
+>     instead that can be used on any device
 > 
+> I'm happy to do that work, but until then I'd suggest to skip this and
+> the next two patches.
 
-I agree with Brian's point. The scenarios where rounding up io_size
-enables ioend merging are quite rare, so the practical benefits are
-limited, though such cases can still exist. Therefore, I think both
-approaches are acceptable as there doesn't seem to be a significant
-difference between them. 
+Works for me. :)
 
-Thanks,
-Long Li
+Also feel free to grab/modify patch 4 if you like.
+
+--D
