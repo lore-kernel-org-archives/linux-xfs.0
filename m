@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 298B5C2C6;
-	Tue, 26 Nov 2024 01:28:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70989C2C6;
+	Tue, 26 Nov 2024 01:28:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732584487; cv=none; b=TKHxhcKhHf/CbTanYd85PAHjDGjD1i2nNk0PVoBemCklPYqge8wPKhjDAEh+Z3p9VayBFUGFSyoHpFj9ZxuS5O2Eyv6Eid4N0Ixx8U2GO58E6h4Bs8drwjNv4N0D8VDSvrVfr6Q/ze+AFqHK0SIELbwYblM/zTfiRyn3yDfpuhE=
+	t=1732584502; cv=none; b=FGnN8VRw6b8RTmsRcpfH4raSWEwEUgRj1Hc+ljpBWpo6FBNgbjGmvaOLyiAniMqn1HM9WbSMj/awOe2vm+wYdLRR6S3dHXyRRVc33wm1sBxWGxk1j/DG2Y05yS+QVlTWH7WCEj1P/CRH58gvTQviygt3gYps8fBN5BegKVUd1xQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732584487; c=relaxed/simple;
-	bh=c7PzyRcLjLqL1PLXx/V6AmTTP88j/FVN/S8Y2Gt4J5o=;
+	s=arc-20240116; t=1732584502; c=relaxed/simple;
+	bh=UjeDlYDq8ScPR+IUo7fNtTSfVftf2MN/U7ORrCmVgV8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Qv7+xOGHuVNUoI5l5SJ47oYQeKRHYtbCgKME5mOkUbCYrD+giE3SmH4fuqjBaGNSJ6sEyv/4rPAs2vrYagtOjAVtFOKSS4YqIkf7I+soPtNJrXztXbQmlLgeaOkXqD882mrurWZYYNnhMowYsBkWV0zu4nUEeu4cdixaDZlVPTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PhqfGRvS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=PeibGH9kRGVVNIFJZOxGqkkB/3nXRtSsP8RsEsA3+6ede4PujAnj8Pz4cDQK08QuNn8uCcNsVVHJOF1pT6cvEWkNtVIxW1RPWtXMG9ePhrei7a9fldCvH6i1IuEtw3p5FYRmPA/QryNu66+glr9Xc+GoZayKAnDROffrjxUC9b8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ATMNzXsY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PhqfGRvS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99F55C4CECE;
-	Tue, 26 Nov 2024 01:28:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ATMNzXsY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40BE8C4CECE;
+	Tue, 26 Nov 2024 01:28:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732584486;
-	bh=c7PzyRcLjLqL1PLXx/V6AmTTP88j/FVN/S8Y2Gt4J5o=;
+	s=k20201202; t=1732584502;
+	bh=UjeDlYDq8ScPR+IUo7fNtTSfVftf2MN/U7ORrCmVgV8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PhqfGRvSsyGkCjFFWZds13BSu7x4FwneBmC1d6eFk4q07Yf2I6D+hqrz29kfzYAjE
-	 UVW4CF3ImykzOZHg5mTXTtbEaiqa11Tsu0NaW+61Kxi2zwDfmnNF21/WZcS5paLnFl
-	 A7IzcM5UtqoOqw+yv7KQjnzhi3gnqS3CT4F2vJDjFdNgaWS7dYQGQg9Q7nM+LcNQAq
-	 9aNHJdHnJ8hM8M5F1NY+G8Evpkcz7Yz8u/7wJO9zXd7e1FfBHY5/3BmrqZHjRQhHyx
-	 VpOrRf9dvfmETnqSRlBMjBPVClJm4ytrPGKkcayS0ExqJ13nFnFcdkqeXUYwD+OlZh
-	 Y/nmcyHXvIIow==
-Date: Mon, 25 Nov 2024 17:28:06 -0800
-Subject: [PATCH 13/21] xfs: unlock inodes when erroring out of
- xfs_trans_alloc_dir
+	b=ATMNzXsYLCkqqu1XBp5sWAwwyRl1SzXNQWIQMPah3SHrP5Q8TSyNAiXIVaA6HXPcN
+	 NA1VxfBiNTJK6J4+/TSyldw19qGL5nmYYF1IVTiGRuMwoinQ3kIP7OcDrJGL3eTXhX
+	 ESW0kfdkdeePUIE4jVVuKNTfLHrHwQJIxErlRC4ZJiUYtC1q0Ah1qApxxshmsLnqUT
+	 sdg4SBbt7EkRYx5cNM7kzyU7NKazr0yim/G1csu6kEHppT7/8gn5s3C4FlQ01dHYLx
+	 dXZRG5vnBhX7lIkQPGnZ0m2lPhQvvXdwNhAOMVoO5MIlFC+dbf6H9hpl5dkVmKqSMR
+	 fwgozT8Q1SXZQ==
+Date: Mon, 25 Nov 2024 17:28:21 -0800
+Subject: [PATCH 14/21] xfs: only run precommits once per transaction object
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173258398025.4032920.17639399507003367709.stgit@frogsfrogsfrogs>
+Message-ID: <173258398042.4032920.1346072051908401243.stgit@frogsfrogsfrogs>
 In-Reply-To: <173258397748.4032920.4159079744952779287.stgit@frogsfrogsfrogs>
 References: <173258397748.4032920.4159079744952779287.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,45 +45,80 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Debugging a filesystem patch with generic/475 caused the system to hang
-after observing the following sequences in dmesg:
+Committing a transaction tx0 with a defer ops chain of (A, B, C)
+creates a chain of transactions that looks like this:
 
- XFS (dm-0): metadata I/O error in "xfs_imap_to_bp+0x61/0xe0 [xfs]" at daddr 0x491520 len 32 error 5
- XFS (dm-0): metadata I/O error in "xfs_btree_read_buf_block+0xba/0x160 [xfs]" at daddr 0x3445608 len 8 error 5
- XFS (dm-0): metadata I/O error in "xfs_imap_to_bp+0x61/0xe0 [xfs]" at daddr 0x138e1c0 len 32 error 5
- XFS (dm-0): log I/O error -5
- XFS (dm-0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1ea/0x4b0 [xfs] (fs/xfs/xfs_trans_buf.c:311).  Shutting down filesystem.
- XFS (dm-0): Please unmount the filesystem and rectify the problem(s)
- XFS (dm-0): Internal error dqp->q_ino.reserved < dqp->q_ino.count at line 869 of file fs/xfs/xfs_trans_dquot.c.  Caller xfs_trans_dqresv+0x236/0x440 [xfs]
- XFS (dm-0): Corruption detected. Unmount and run xfs_repair
- XFS (dm-0): Unmounting Filesystem be6bcbcc-9921-4deb-8d16-7cc94e335fa7
+tx0 -> txA -> txB -> txC
 
-The system is stuck in unmount trying to lock a couple of inodes so that
-they can be purged.  The dquot corruption notice above is a clue to what
-happened -- a link() call tried to set up a transaction to link a child
-into a directory.  Quota reservation for the transaction failed after IO
-errors shut down the filesystem, but then we forgot to unlock the inodes
-on our way out.  Fix that.
+Prior to commit cb042117488dbf, __xfs_trans_commit would run precommits
+on tx0, then call xfs_defer_finish_noroll to convert A-C to tx[A-C].
+Unfortunately, after the finish_noroll loop we forgot to run precommits
+on txC.  That was fixed by adding the second precommit call.
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: bd5562111d5839 ("xfs: Hold inode locks in xfs_trans_alloc_dir")
+Unfortunately, none of us remembered that xfs_defer_finish_noroll
+calls __xfs_trans_commit a second time to commit tx0 before finishing
+work A in txA and committing that.  In other words, we run precommits
+twice on tx0:
+
+xfs_trans_commit(tx0)
+    __xfs_trans_commit(tx0, false)
+        xfs_trans_run_precommits(tx0)
+        xfs_defer_finish_noroll(tx0)
+            xfs_trans_roll(tx0)
+                txA = xfs_trans_dup(tx0)
+                __xfs_trans_commit(tx0, true)
+                xfs_trans_run_precommits(tx0)
+
+This currently isn't an issue because the inode item precommit is
+idempotent; the iunlink item precommit deletes itself so it can't be
+called again; and the buffer/dquot item precommits only check the incore
+objects for corruption.  However, it doesn't make sense to run
+precommits twice.
+
+Fix this situation by only running precommits after finish_noroll.
+
+Cc: <stable@vger.kernel.org> # v6.4
+Fixes: cb042117488dbf ("xfs: defered work could create precommits")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_trans.c |    3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/xfs_trans.c |   16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 30fbed27cf05cc..05b18e30368e4b 100644
+index 05b18e30368e4b..4a517250efc911 100644
 --- a/fs/xfs/xfs_trans.c
 +++ b/fs/xfs/xfs_trans.c
-@@ -1435,5 +1435,8 @@ xfs_trans_alloc_dir(
+@@ -860,13 +860,6 @@ __xfs_trans_commit(
  
- out_cancel:
- 	xfs_trans_cancel(tp);
-+	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (dp != ip)
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
- }
+ 	trace_xfs_trans_commit(tp, _RET_IP_);
+ 
+-	error = xfs_trans_run_precommits(tp);
+-	if (error) {
+-		if (tp->t_flags & XFS_TRANS_PERM_LOG_RES)
+-			xfs_defer_cancel(tp);
+-		goto out_unreserve;
+-	}
+-
+ 	/*
+ 	 * Finish deferred items on final commit. Only permanent transactions
+ 	 * should ever have deferred ops.
+@@ -877,13 +870,12 @@ __xfs_trans_commit(
+ 		error = xfs_defer_finish_noroll(&tp);
+ 		if (error)
+ 			goto out_unreserve;
+-
+-		/* Run precommits from final tx in defer chain. */
+-		error = xfs_trans_run_precommits(tp);
+-		if (error)
+-			goto out_unreserve;
+ 	}
+ 
++	error = xfs_trans_run_precommits(tp);
++	if (error)
++		goto out_unreserve;
++
+ 	/*
+ 	 * If there is nothing to be logged by the transaction,
+ 	 * then unlock all of the items associated with the
 
