@@ -1,78 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE24916F8F5;
-	Tue, 26 Nov 2024 12:26:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9460627442
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Nov 2024 12:31:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732623978; cv=none; b=BzWBbXtTVA3i+OH5U80/XR8K7f/djze8QeByEVFPrrao4Y1OWSs5IaHxZ8hThWl/72EwA168htN2K9qhvH0ArKhTkBnxsl6nP1ZASAW+dsgPlCbjTZrANfn6NZiLnu/IGCgCbabJw662lGjkszN0MwEfTfjwFOtDUAzyctRThR8=
+	t=1732624286; cv=none; b=dt3hR1v2x27sh94UcWe1Gmkz+9D7+2Vvirwn2mMG7TaFODheJCCGHtGxFqEABVvwTE2aVHB7Zl1qZfGpoQRS1579cViGRSnnW7F8jCddeUEic1/f3+eLcXXdsxVrSZ066tg/nBDUpFp1BGVgHm4Ai1KKmjphsm7YaPBEfXnWPYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732623978; c=relaxed/simple;
-	bh=juROCnqnnvcJF/NO+u0LGmc7W4KPbLX3deCwkBAj++8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RxTRnAcjgD6eXXMqi86b/Ozpoxl9SnMYBzGMARZz5aHQlVf8UzR2JHvbd3GAQAU/Ck3RbsOxu90o/J2uBzyMXjTLXxCWLs0RTGQLI/8bl30cUoqQYrvLicBlwnKfi7gRkUynD54nw7SEsbMuoTvKya/QE9rrCa40Ny/OSmCfF3I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ui0hC4IZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732624286; c=relaxed/simple;
+	bh=Brx2GU6ky8pPdoe864NqJL65A3KR9cO23cxvOvasVM8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gOS7EwMDNULlSZuvX1xVJL8uDfq3F9AtWRvNcruTa5GALLvlRyLfIfgKuuJP2W+wRppuWzvL+ykxLtl7OLB8GzEV/nBXrJ0u+qEDfFjOnOKeCHvPeQ1I6bewRBW37sKE8o+Kpi6avP1ypdhdUJcSatlRL9nk/k5DXqcTyIuJ93g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JtQfBQ9u; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ui0hC4IZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F809C4CECF;
-	Tue, 26 Nov 2024 12:26:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732623977;
-	bh=juROCnqnnvcJF/NO+u0LGmc7W4KPbLX3deCwkBAj++8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ui0hC4IZvmgi5qLfNbI//Wg4TUyRjvvlOcoBAUH8Mvz1wpR11lhuFH4m6z34Fk8vG
-	 jiDvjD3xSSmJrq4qp/Dh5AEHJnj4duR3uBM2pBgJE95awovGKhdn0pqQJK9pSSXdqd
-	 c7V9cS0LDkRShcuMXuybhWgiVLYH8be+8b/v7MiWr4Yuf/F6DBuCQ+cKKyFzyG5wNA
-	 7Z4/oNKf4hYojxwV5fPNut4jNQnOtuuUHYZkj4VJnT0P9DI0WSuolmePqta38lpGHc
-	 PzI1iPf5NHq6s56R3maa3/T/M6dkMjDhbPEf0hMXgij+3W/3oR/pXqNzUkvwQxyvng
-	 oeUzSUJ4Z8ajQ==
-Date: Tue, 26 Nov 2024 13:26:13 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Sasha Levin <sashal@kernel.org>, stable@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 6.12] MAINTAINERS: appoint myself the XFS maintainer for
- 6.12 LTS
-Message-ID: <pzbcspuevok7ljq4asry5xevj46kb6dy4in77hdzjm77okdjwp@yfs462ee5fdg>
-References: <20241123013828.GA620578@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JtQfBQ9u"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=7y850qLtTz5qzLFVnnY5P+tkDAIXtkRPeDdUDFSp0NU=; b=JtQfBQ9uKqY3VTcDAef0D1K22v
+	QKiXEdB2JmQKfknIPysi/uWGQcYhT5KxHj4uIL6ZeCFp/SSgu9eNEjBc1dj2226TVCs8rK2clNfHn
+	cG+MNVcR9s0xPuRxjaJAcaz4dmhZFiINKcY9Eo3UYJsdTL8HRw81KdsiKAClqGVTnx/tN+bcuso7Y
+	kiqcOTBL+7yEc/lpZt7Hd1MEKs93luzcgFNl2TmrG5kMmfFIQKjTFGB0iE2eIuupv4HMULKxNrssC
+	THdx3qKdEbGNu1N8ATDixTrzBXmUJ+xZEtkR3LcIVQ6vHnlj5lCPDI3mHM5O0CZBOCF4IpMSbvTD/
+	M4gTy7eg==;
+Received: from 2a02-8389-2341-5b80-8f90-0002-7d3f-174e.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:8f90:2:7d3f:174e] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tFuiu-0000000AZhR-2RUD;
+	Tue, 26 Nov 2024 12:31:21 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH] xfs: don't call xfs_bmap_same_rtgroup in xfs_bmap_add_extent_hole_delay
+Date: Tue, 26 Nov 2024 13:31:06 +0100
+Message-ID: <20241126123117.631675-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241123013828.GA620578@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Nov 22, 2024 at 05:38:28PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> I'm appointing myself to be responsible for getting after people to
-> submit their upstream bug fixes with the appropriate Fixes tags and to
-> cc stable; to find whatever slips through the cracks; and to keep an eye
-> on the automatic QA of all that stuff.
-> 
-> Cc: <stable@vger.kernel.org> # v6.12
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  MAINTAINERS |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index b878ddc99f94e7..23d89f2a3008e2 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -25358,8 +25358,7 @@ F:	include/xen/arm/swiotlb-xen.h
->  F:	include/xen/swiotlb-xen.h
->  
->  XFS FILESYSTEM
-> -M:	Carlos Maiolino <cem@kernel.org>
-> -R:	Darrick J. Wong <djwong@kernel.org>
-> +M:	Darrick J. Wong <djwong@kernel.org>
->  L:	linux-xfs@vger.kernel.org
->  S:	Supported
->  W:	http://xfs.org/
-> 
+xfs_bmap_add_extent_hole_delay works entirely on delalloc extents, for
+which xfs_bmap_same_rtgroup doesn't make sense.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index e7f768a43724..d1e700213550 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2617,8 +2617,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
+ 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
+-	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+-	    xfs_bmap_same_rtgroup(ip, whichfork, &left, new))
++	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
+@@ -2626,8 +2625,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+ 	    (!(state & BMAP_LEFT_CONTIG) ||
+ 	     (left.br_blockcount + new->br_blockcount +
+-	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)) &&
+-	    xfs_bmap_same_rtgroup(ip, whichfork, new, &right))
++	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	/*
+-- 
+2.45.2
+
