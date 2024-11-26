@@ -1,67 +1,78 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 679A51A260;
-	Tue, 26 Nov 2024 06:55:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE24916F8F5;
+	Tue, 26 Nov 2024 12:26:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732604147; cv=none; b=qqmn+BOL/i/Fxt7yveKNTDLWQQoTzprZrBNNswuJsKbGy3XLJlxP5vuFm6bzfXqRBq7g6ZtEoO7GYY19qJqIdHmtZYZNrKZTfRmg8EV6fj/r1oVK/j2m0wYoV73Sw/m/PvNbD3C6XdOOrOHjJOvawfDsHZBRlRCDmu7WnkX0ABw=
+	t=1732623978; cv=none; b=BzWBbXtTVA3i+OH5U80/XR8K7f/djze8QeByEVFPrrao4Y1OWSs5IaHxZ8hThWl/72EwA168htN2K9qhvH0ArKhTkBnxsl6nP1ZASAW+dsgPlCbjTZrANfn6NZiLnu/IGCgCbabJw662lGjkszN0MwEfTfjwFOtDUAzyctRThR8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732604147; c=relaxed/simple;
-	bh=q687nhoBX4SCVayJCg7rK/GY+IYLXQ86kdUrh+gr95c=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dAm/1/XAe0a8Gx7NM0TIu3keYAphhe/n+cZYnoKduG/Cg1xxGNolVd06k63BWN+P0vhYhHuhBkORtu7f7Ak9mDRzIXS+Yn4nMZ/PFPYg7iMGX10JgwqoctfMKciYWJE+YoZd3UaO5Bn6Ryrtdli5eqBbmYe4d9YE7GFzkj9KfSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4XyCwH4r8XzqSpT;
-	Tue, 26 Nov 2024 14:53:51 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id DCB8C1401F4;
-	Tue, 26 Nov 2024 14:55:41 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 26 Nov
- 2024 14:55:41 +0800
-Date: Tue, 26 Nov 2024 14:53:45 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
-Subject: Re: [PATCH v4 1/2] iomap: fix zero padding data issue in concurrent
- append writes
-Message-ID: <Z0Vwed_tGNAC-adv@localhost.localdomain>
-References: <20241125023341.2816630-1-leo.lilong@huawei.com>
- <Z0Qb1HKqWJKyR5Q0@infradead.org>
- <Z0R-2Jmj2u-Cqwxu@localhost.localdomain>
- <Z0VqmgQisdDxlSAy@infradead.org>
+	s=arc-20240116; t=1732623978; c=relaxed/simple;
+	bh=juROCnqnnvcJF/NO+u0LGmc7W4KPbLX3deCwkBAj++8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RxTRnAcjgD6eXXMqi86b/Ozpoxl9SnMYBzGMARZz5aHQlVf8UzR2JHvbd3GAQAU/Ck3RbsOxu90o/J2uBzyMXjTLXxCWLs0RTGQLI/8bl30cUoqQYrvLicBlwnKfi7gRkUynD54nw7SEsbMuoTvKya/QE9rrCa40Ny/OSmCfF3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ui0hC4IZ; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ui0hC4IZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F809C4CECF;
+	Tue, 26 Nov 2024 12:26:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732623977;
+	bh=juROCnqnnvcJF/NO+u0LGmc7W4KPbLX3deCwkBAj++8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Ui0hC4IZvmgi5qLfNbI//Wg4TUyRjvvlOcoBAUH8Mvz1wpR11lhuFH4m6z34Fk8vG
+	 jiDvjD3xSSmJrq4qp/Dh5AEHJnj4duR3uBM2pBgJE95awovGKhdn0pqQJK9pSSXdqd
+	 c7V9cS0LDkRShcuMXuybhWgiVLYH8be+8b/v7MiWr4Yuf/F6DBuCQ+cKKyFzyG5wNA
+	 7Z4/oNKf4hYojxwV5fPNut4jNQnOtuuUHYZkj4VJnT0P9DI0WSuolmePqta38lpGHc
+	 PzI1iPf5NHq6s56R3maa3/T/M6dkMjDhbPEf0hMXgij+3W/3oR/pXqNzUkvwQxyvng
+	 oeUzSUJ4Z8ajQ==
+Date: Tue, 26 Nov 2024 13:26:13 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Sasha Levin <sashal@kernel.org>, stable@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 6.12] MAINTAINERS: appoint myself the XFS maintainer for
+ 6.12 LTS
+Message-ID: <pzbcspuevok7ljq4asry5xevj46kb6dy4in77hdzjm77okdjwp@yfs462ee5fdg>
+References: <20241123013828.GA620578@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z0VqmgQisdDxlSAy@infradead.org>
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+In-Reply-To: <20241123013828.GA620578@frogsfrogsfrogs>
 
-On Mon, Nov 25, 2024 at 10:28:42PM -0800, Christoph Hellwig wrote:
-> On Mon, Nov 25, 2024 at 09:42:48PM +0800, Long Li wrote:
-> > I agree with Brian's point. The scenarios where rounding up io_size
-> > enables ioend merging are quite rare, so the practical benefits are
-> > limited, though such cases can still exist. Therefore, I think both
-> > approaches are acceptable as there doesn't seem to be a significant
-> > difference between them. 
+On Fri, Nov 22, 2024 at 05:38:28PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Given that not rounding and using the unaligned value should be
-> a lot simpler, can you give it a try?
+> I'm appointing myself to be responsible for getting after people to
+> submit their upstream bug fixes with the appropriate Fixes tags and to
+> cc stable; to find whatever slips through the cracks; and to keep an eye
+> on the automatic QA of all that stuff.
+> 
+> Cc: <stable@vger.kernel.org> # v6.12
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  MAINTAINERS |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index b878ddc99f94e7..23d89f2a3008e2 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -25358,8 +25358,7 @@ F:	include/xen/arm/swiotlb-xen.h
+>  F:	include/xen/swiotlb-xen.h
+>  
+>  XFS FILESYSTEM
+> -M:	Carlos Maiolino <cem@kernel.org>
+> -R:	Darrick J. Wong <djwong@kernel.org>
+> +M:	Darrick J. Wong <djwong@kernel.org>
+>  L:	linux-xfs@vger.kernel.org
+>  S:	Supported
+>  W:	http://xfs.org/
 > 
 
-Okay, so let me send a new version and change it.
-
-Thanks,
-Long Li
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
