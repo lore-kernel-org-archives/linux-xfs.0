@@ -1,95 +1,150 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DC74BA27
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Nov 2024 01:22:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F15C133;
+	Tue, 26 Nov 2024 01:22:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732584145; cv=none; b=ZhFsAJbduliV+jO0+Q4+4IlD7zKBuVthObRzJSgWbwqKzNvECkI093/Bm4XEj70sSIrSppNfgc/2y7tQVYA4wkN6SpXac77b0ISi+s36Z7z7dzw4bY3kiZE1/OVecAj8jrDqhMMGHUpY8VYifABc+UYPDRqbX4Flq6QBzFQHk/I=
+	t=1732584157; cv=none; b=kF+rKiZ9BmPG/gCo8HtZodPOK1HkXFpjXClGUjj11Is02RCAwea8djl+5GRCHCDTRIj7b211cjaJ+LL3Yi/cLTxEebZ26jh3OEZ2eGAd2C0mlE1Z3e/DCiU56dtS3fJhuZTLpoD/zOJ/M6HbWYDPQhVOdnQ/Z+QcVxzAJmAlllg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732584145; c=relaxed/simple;
-	bh=YE2PJSwR3MzlpFt993hmmYDnKm5WIHyWIyBDxspAAVM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jT1C09RKXjOlK/Rk0zk0r6fzhZf8xltkEqMZ2qh9gJa8xfe9yLeAB5E5ZtsbRv3FkjJo/VnJXp/n18Huy2HEid3wa6f45RuPwCf+JPfs7C6sRRI+rLEK8YjRk7Y/3M2Z8t35eXCRbo75f/XnGiybmScJ4KdbD4cZav8fsDwCM0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a5zo+st/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732584157; c=relaxed/simple;
+	bh=BJP7oRpeUsyY8KQ7I8nt5/4GCsG2VhbI6uP5nDt1imE=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=MgEftrVhWkhO8JbFm6YMYIhogTeuWWgY0c7UP4j9Ga7+R//40xBq92oU5XRQEIFFOp4gFWXoFCIWOdep5cnpkBxOBytA69WLD+tMyR9wF4cBWxEOJoO2+NAXVOWgaUvMLL3nwodoptr7WiYWgogWdYoAOiO+cHWpfvwofHj3ePk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hsi/eCWV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a5zo+st/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE70EC4CECE;
-	Tue, 26 Nov 2024 01:22:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hsi/eCWV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 956F3C4CECE;
+	Tue, 26 Nov 2024 01:22:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732584144;
-	bh=YE2PJSwR3MzlpFt993hmmYDnKm5WIHyWIyBDxspAAVM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=a5zo+st/job3C3ZRjcEqXySkSYPtW39okrGp+QvQjB1ETVR30Vwh/oYpltRwReAxp
-	 u76s0mw4i9fAV8Qmw2U5/pZROBhbs1oPLIw1zIdNMFzvRNaQs2nznmS0rgK0g6mb48
-	 qnGR7OROupvIcLcNzxovOuyN8kQu0WjANmaFPr99xjz2Nlj3B7uO94k8LjoirLvq8X
-	 XmIdqRxJ11m6Rh/AQHsiE+WzawofbgniJzrW/Wpv3agInAf9yMKmlzt/t8hNiOl4H7
-	 mM+wPw5X4M5XSnxe+iaAz1O+za815pol9zi8R2l58UbSbuAlE1KET00biD0I/C2QLM
-	 Zqv5iIEYVMOnw==
-Date: Mon, 25 Nov 2024 17:22:24 -0800
+	s=k20201202; t=1732584157;
+	bh=BJP7oRpeUsyY8KQ7I8nt5/4GCsG2VhbI6uP5nDt1imE=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=Hsi/eCWVu4E5QA54G4IsZ4WDTKBHOrLe04+87jun6MxCZL++UmJg9LFDhJONonjPL
+	 QAxQW9TyqYXJyxpC5xFc8MJdAZGmkyu6dlcSiZWQiU2W1wNJZPtcZ8aCslHKGbncsd
+	 M57805tklgMFeiWn5uLLoSg7TjIbcAjPiSLIr1ldpHFK8/EbHOX5t3vrgTvbKEsmun
+	 Pz36te/S3R/yhx/5baA8dgBckEy9yPgKhh6l7PCxXJ/iAY/PPvRgkBcfAWE6WbomYc
+	 kPKACcFOwZVxX1nmy/mDvXRgZ79Y8ZBT8XM70iJmq5d7QZJP9Mif1Chh55U669waKn
+	 DIQDtVh2I9quw==
+Date: Mon, 25 Nov 2024 17:22:37 -0800
+Subject: [PATCH 08/16] xfs/009: allow logically contiguous preallocations
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: linux-xfs@vger.kernel.org, mmayer@broadcom.com,
-	justin.chen@broadcom.com, catherine.hoang@oracle.com
-Subject: Re: [PATCH] xfs_io: Avoid using __kernel_rwf_t for older kernels
-Message-ID: <20241126012224.GJ9438@frogsfrogsfrogs>
-References: <20241125222618.1276708-1-florian.fainelli@broadcom.com>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173258395193.4031902.6288465123347994448.stgit@frogsfrogsfrogs>
+In-Reply-To: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
+References: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241125222618.1276708-1-florian.fainelli@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Mon, Nov 25, 2024 at 02:26:18PM -0800, Florian Fainelli wrote:
-> __kernel_rwf_t was defined with upstream Linux commit
-> ddef7ed2b5cbafae692d1d580bb5a07808926a9c ("annotate RWF_... flags")
-> which has been included in Linux v4.14 and newer. When building xfsprogs
+From: Darrick J. Wong <djwong@kernel.org>
 
-/methinks you should upgrade your kernel, 4.14 is quite dead now, and
-you're not even running something /that/ new.
+The new rtgroups feature implements a simplistic rotor to pick the
+rtgroup for an initial allocation to a file.  This causes test failures
+if the preallocations are spread across two rtgroups, which happens if
+there are more subtests than rtgroups.
 
-> against older kernel headers, this type is not defined, leading to the
-> following build error:
-> 
-> pwrite.c: In function 'pwrite_f':
-> ../include/xfs/linux.h:236:22: error: '__kernel_rwf_t' undeclared (first use in this function); did you mean '__kernel_off_t'?
->  #define RWF_ATOMIC ((__kernel_rwf_t)0x00000040)
->                       ^~~~~~~~~~~~~~
-> pwrite.c:329:22: note: in expansion of macro 'RWF_ATOMIC'
->     pwritev2_flags |= RWF_ATOMIC;
-> 
-> Fixes: ee6c5941352a ("xfs_io: add RWF_ATOMIC support to pwrite")
-> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+One way to fix this would be to reset the rotor then each subtest starts
+allocating from rtgroup 0, but the only way to do that is to cycle the
+scratch mount, which is a bit gross.
 
-That said, if this doesn't break anything with a ~2020s distro then I
-don't have any objections to this, so:
+Instead, report logically contiguous mappings as a single mapping even
+if the physical space is not contiguous.  Unfortunately, there's not
+enough context in the comments to know if the test actually was checking
+for physical contiguity?  Or if this is just an exerciser of the old
+preallocation calls, and it's fine as long as the file ranges are mapped
+(or unmapped) as desired.
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Messing with some awk is a lot cheaper than umount/mount cycling.
 
---D
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ tests/xfs/009 |   29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
-> ---
->  include/linux.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/include/linux.h b/include/linux.h
-> index e9eb7bfb26a1..68b43393aad7 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -233,7 +233,7 @@ struct fsxattr {
->  
->  /* Atomic Write */
->  #ifndef RWF_ATOMIC
-> -#define RWF_ATOMIC	((__kernel_rwf_t)0x00000040)
-> +#define RWF_ATOMIC	(0x00000040)
->  #endif
->  
->  /*
-> -- 
-> 2.34.1
-> 
-> 
+
+diff --git a/tests/xfs/009 b/tests/xfs/009
+index dde505f079f4f8..bb42ce32490df5 100755
+--- a/tests/xfs/009
++++ b/tests/xfs/009
+@@ -49,13 +49,26 @@ _filesize()
+ _block_filter()
+ {
+ 	$AWK_PROG -v bsize="$bsize" '
++	BEGIN {
++		br_pos = 0
++		br_len = 0
++	}
++	function dump_blockrange() {
++		if (br_len == 0)
++			return
++		printf("        [%d,%d]: BLOCKRANGE\n", br_pos, br_len)
++		br_pos = 0
++		br_len = 0
++	}
+ 	/blocksize/ {
++		dump_blockrange()
+ 		printf("    blocksize BSIZE\n")
+ 
+ 		next
+ 	}
+ 
+ 	/CMD/ {
++		dump_blockrange()
+ 		split($3, off, "=")
+ 		offset = strtonum(off[2])
+ 		if (offset != -1)
+@@ -72,6 +85,7 @@ _block_filter()
+ 	}
+ 
+ 	/MAP/ {
++		dump_blockrange()
+ 		split($2, off, "=")
+ 		offset = strtonum(off[2])
+ 		if (offset != -1)
+@@ -90,6 +104,7 @@ _block_filter()
+ 	}
+ 
+ 	/TRUNCATE/ {
++		dump_blockrange()
+ 		split($2, off, "=")
+ 		offset = strtonum(off[2]) / bsize
+ 
+@@ -99,16 +114,28 @@ _block_filter()
+ 	}
+ 
+ 	/\[[0-9]+,[0-9]+\]:/ {
+-		printf("        %s BLOCKRANGE\n", $1)
++		rangestr = gensub(/\[([0-9]+),([0-9]+)\]:/, "\\1,\\2", "g", $1);
++		split(rangestr, off, ",")
++		if (br_pos + br_len == off[1]) {
++			br_len += off[2];
++		} else {
++			dump_blockrange()
++			br_pos = off[1];
++			br_len = off[2];
++		}
+ 
+ 		next
+ 	}
+ 
+ 	{
++		dump_blockrange()
+ 		print
+ 
+ 		next
+ 	}
++	END {
++		dump_blockrange()
++	}
+ 	'
+ }
+ 
+
