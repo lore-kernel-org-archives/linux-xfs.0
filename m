@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F3D8F5B;
-	Tue, 26 Nov 2024 01:20:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC88A366;
+	Tue, 26 Nov 2024 01:20:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732584017; cv=none; b=vFQKREY/tDY3pxLwTlseAvd/Oq0oCHnRlQP+lIin8R1qVf+PKHO2WObuRzjc3m2K+Ox8MHXxCC/i+cH30ZWMgAE2RfzsevtQBLEz0Y4tW7gwGzvIGwUYS1PJN131fDuJJf/LIznqWLQIQhQuSZnwJlyX+MGndDRGCB+Zq2PXZQU=
+	t=1732584033; cv=none; b=JmimpC3X8cqoKaIPPZdtCeD+yIJALY/KEqCvnZmhkZd+oyUnz8RdBgMn3KA5aOWRDgTZsIGVzHC3x++Z7onXNSlctrn4hkSu7pveS9rF8qf+Loe9dXYdKPC8w0H4pLn6M+jGS+UwgSASrn3dD2w4i6LSCcu6+CPx6LKdqMjcJJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732584017; c=relaxed/simple;
-	bh=Ip1H1DWgoijBnzVKaipW4l8nd82suYuwnHmGC2CGmZY=;
+	s=arc-20240116; t=1732584033; c=relaxed/simple;
+	bh=SxQmFw1pSl0evDPGJiU5BfvWKUS46tXgAy/pY1+q/ZA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RYk5eHK/ePS+LqRAYUhU/A94uecPNdz0TaPohCOyqvg33skbS4wkyxg3pY/epUHMuPzhlLbDeRkn0k23imIv96tPiWyx9dIDQe4VYq77Gdcm2Vb7VlNZwA8T8/XJmYiFwJ2t6m7JGumSvj48Pc/wlR7oOrjIs5m18/Bzr1kDL6c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dBlQt5iM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hG4k+6J/JO2+MGYyROVF188O/F0ChKjYRGEiE4XORov5W6t99foJumAovYlsw5mkVFw5CPwhW0bNCTNIcR+jmbJ78hzaX8HlziZiChlCj7MniOS5OZ8V62W2nJ1FSAjRxcsbSZtK6oV72+xcIwZxrEnuOudIUXajWiMAu/bioQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mp2MPaYS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dBlQt5iM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 867D2C4CECF;
-	Tue, 26 Nov 2024 01:20:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mp2MPaYS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 581AAC4CECE;
+	Tue, 26 Nov 2024 01:20:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732584016;
-	bh=Ip1H1DWgoijBnzVKaipW4l8nd82suYuwnHmGC2CGmZY=;
+	s=k20201202; t=1732584032;
+	bh=SxQmFw1pSl0evDPGJiU5BfvWKUS46tXgAy/pY1+q/ZA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dBlQt5iMtSH2QqUmjOCjhkYezESmGXW+r582v1utvfijhTVZi6fRc/jDhN1rYlI28
-	 FUBqi/Z22erAeP0cSEkxfCyjc4+LN5vcQZm78onrtSAjVNcwec/gsYyM235XJFpaLm
-	 v3Gaj86rj8/2y7r6Bj3rAbxqeO5b/KCHglVt7IxejUvzp2SQfpHxuoOxDFwE1gms7O
-	 iIFH+NxBwcMwuAynGd7iot5o75mLxw2ksvA5XCiWTGJABwJHwtEn/0iNqMyNlBd7Wi
-	 nMmDBC0fH2eLfcDZ2IXQ5JqWv32Duv28BRuzLbPPWdUyZ8X2wTJZ9GFW0XAGuMgvuj
-	 gsgzrVlE6jeTA==
-Date: Mon, 25 Nov 2024 17:20:16 -0800
-Subject: [PATCHSET v3] fstests: random fixes for v2024.11.17
+	b=mp2MPaYS3NPCFQXlThgS7ZmywjB6QpTHof/xJYw1pnJVoaKq3CeuTh7WQpsokcYeX
+	 zvmYUBdsz8xEQe5dSD/n7ht9T7iMEjpnHT0gjZanvcsaVXdkeBXoM5OlONpGpUXJTV
+	 tf97YrpGZno8WW8JQy3QIAi8vZvoqvtt6f4D4O9UVwX9SljEk1TTXyuBrr8CVjLUnw
+	 CUgZjtAJ9kD3/Op8ZB35AUwMAS+HJjvHsnkooaoZTrfvEZrdK9of3O7i2kGT28JKMK
+	 JtVEThHl5/HNIZLfA29TQD4HuQmR5pk1fspo5n3YxSOfjypX5DGZrMl7eUey+yc3v/
+	 P0TI5HHuxI7Ag==
+Date: Mon, 25 Nov 2024 17:20:31 -0800
+Subject: [PATCHSET] xfs: bug fixes for 6.13
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, zlang@redhat.com
-Cc: tytso@mit.edu, hch@lst.de, zlang@kernel.org, fstests@vger.kernel.org,
- fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
+To: djwong@kernel.org
+Cc: stable@vger.kernel.org, hch@lst.de, wozizhi@huawei.com,
+ dan.carpenter@linaro.org, linux-xfs@vger.kernel.org
+Message-ID: <173258397748.4032920.4159079744952779287.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241126011838.GI9438@frogsfrogsfrogs>
 References: <20241126011838.GI9438@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,60 +46,74 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Here's the usual odd fixes for fstests.  Most of these are cleanups and
-bug fixes that have been aging in my djwong-wtf branch forever.
-
-v2: Now with more cleanups to the logwrites code and better loop control
-    for 251, as discussed on the v1 patchset.
-v3: Add more acks, kick out some of the logwrites stuff, add more
-    bugfixes.
+Bug fixes for 6.13.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
 
-With a bit of luck, this should all go splendidly.
+This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-6.13-fixes
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs-6.13-fixes
 ---
 Commits in this patchset:
- * generic/757: fix various bugs in this test
- * generic/757: convert to thinp
- * xfs/113: fix failure to corrupt the entire directory
- * xfs/508: fix test for 64k blocksize
- * common/rc: capture dmesg when oom kills happen
- * generic/562: handle ENOSPC while cloning gracefully
- * xfs/163: skip test if we can't shrink due to enospc issues
- * xfs/009: allow logically contiguous preallocations
- * generic/251: use sentinel files to kill the fstrim loop
- * generic/251: constrain runtime via time/load/soak factors
- * generic/251: don't copy the fsstress source code
- * common/rc: _scratch_mkfs_sized supports extra arguments
- * xfs/157: do not drop necessary mkfs options
- * generic/366: fix directio requirements checking
- * generic/454: actually set attr value for llamapirate subtest
- * xfs/122: add tests for commitrange structures
+ * xfs: fix off-by-one error in fsmap's end_daddr usage
+ * xfs: metapath scrubber should use the already loaded inodes
+ * xfs: keep quota directory inode loaded
+ * xfs: return a 64-bit block count from xfs_btree_count_blocks
+ * xfs: don't drop errno values when we fail to ficlone the entire range
+ * xfs: separate healthy clearing mask during repair
+ * xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when zapping a symlink
+ * xfs: mark metadir repair tempfiles with IRECOVERY
+ * xfs: fix null bno_hint handling in xfs_rtallocate_rtg
+ * xfs: fix error bailout in xfs_rtginode_create
+ * xfs: update btree keys correctly when _insrec splits an inode root block
+ * xfs: fix scrub tracepoints when inode-rooted btrees are involved
+ * xfs: unlock inodes when erroring out of xfs_trans_alloc_dir
+ * xfs: only run precommits once per transaction object
+ * xfs: remove recursion in __xfs_trans_commit
+ * xfs: don't lose solo superblock counter update transactions
+ * xfs: don't lose solo dquot update transactions
+ * xfs: separate dquot buffer reads from xfs_dqflush
+ * xfs: clean up log item accesses in xfs_qm_dqflush{,_done}
+ * xfs: attach dquot buffer to dquot log item buffer
+ * xfs: convert quotacheck to attach dquot buffers
 ---
- common/rc         |   35 +++++++++++++++++++----------------
- tests/generic/251 |   42 +++++++++++++++++++++---------------------
- tests/generic/366 |    2 +-
- tests/generic/454 |    8 ++++----
- tests/generic/562 |   10 ++++++++--
- tests/generic/757 |   26 ++++++++++++++++++++------
- tests/xfs/009     |   29 ++++++++++++++++++++++++++++-
- tests/xfs/113     |   33 +++++++++++++++++++++++++++------
- tests/xfs/122.out |    1 +
- tests/xfs/157     |    3 +--
- tests/xfs/163     |    9 ++++++++-
- tests/xfs/508     |    4 ++--
- 12 files changed, 140 insertions(+), 62 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c        |   33 +++++--
+ fs/xfs/libxfs/xfs_btree.h        |    2 
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    4 +
+ fs/xfs/libxfs/xfs_rtgroup.c      |    2 
+ fs/xfs/scrub/agheader.c          |    6 +
+ fs/xfs/scrub/agheader_repair.c   |    6 +
+ fs/xfs/scrub/fscounters.c        |    2 
+ fs/xfs/scrub/health.c            |   57 +++++++-----
+ fs/xfs/scrub/ialloc.c            |    4 -
+ fs/xfs/scrub/metapath.c          |   68 +++++---------
+ fs/xfs/scrub/refcount.c          |    2 
+ fs/xfs/scrub/scrub.h             |    6 +
+ fs/xfs/scrub/symlink_repair.c    |    3 -
+ fs/xfs/scrub/tempfile.c          |   10 ++
+ fs/xfs/scrub/trace.h             |    2 
+ fs/xfs/xfs_bmap_util.c           |    2 
+ fs/xfs/xfs_dquot.c               |  185 ++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_dquot.h               |    5 +
+ fs/xfs/xfs_dquot_item.c          |   51 ++++++++--
+ fs/xfs/xfs_dquot_item.h          |    7 +
+ fs/xfs/xfs_file.c                |    8 ++
+ fs/xfs/xfs_fsmap.c               |   38 +++++---
+ fs/xfs/xfs_inode.h               |    2 
+ fs/xfs/xfs_qm.c                  |   92 +++++++++++++------
+ fs/xfs/xfs_qm.h                  |    1 
+ fs/xfs/xfs_quota.h               |    7 +
+ fs/xfs/xfs_rtalloc.c             |    2 
+ fs/xfs/xfs_trans.c               |   58 ++++++------
+ fs/xfs/xfs_trans_ail.c           |    2 
+ fs/xfs/xfs_trans_dquot.c         |   31 +++++-
+ 30 files changed, 475 insertions(+), 223 deletions(-)
 
