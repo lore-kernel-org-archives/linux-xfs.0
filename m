@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC88A366;
-	Tue, 26 Nov 2024 01:20:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C6D9366;
+	Tue, 26 Nov 2024 01:20:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732584033; cv=none; b=JmimpC3X8cqoKaIPPZdtCeD+yIJALY/KEqCvnZmhkZd+oyUnz8RdBgMn3KA5aOWRDgTZsIGVzHC3x++Z7onXNSlctrn4hkSu7pveS9rF8qf+Loe9dXYdKPC8w0H4pLn6M+jGS+UwgSASrn3dD2w4i6LSCcu6+CPx6LKdqMjcJJk=
+	t=1732584048; cv=none; b=but/IYYfJGNcEOVgl33W4R4XFwJCHcCi+2/EmWYZhSwLqGMno2+c8HPp3WFHV4VDYOtwKFaLlTARCUdNb0GjS0lvLfZwqAriVWHMM1wUDVdmCVZSQ9SuMEtrpL77pAJ2CxMj54NVUwzbdpnX+LG0Rb6LBKQ/y5Oo/OdLEUMgNao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732584033; c=relaxed/simple;
-	bh=SxQmFw1pSl0evDPGJiU5BfvWKUS46tXgAy/pY1+q/ZA=;
+	s=arc-20240116; t=1732584048; c=relaxed/simple;
+	bh=118F3cLeQLECfTPe2n1rCyAfJUReJzNfz7TOatchghk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hG4k+6J/JO2+MGYyROVF188O/F0ChKjYRGEiE4XORov5W6t99foJumAovYlsw5mkVFw5CPwhW0bNCTNIcR+jmbJ78hzaX8HlziZiChlCj7MniOS5OZ8V62W2nJ1FSAjRxcsbSZtK6oV72+xcIwZxrEnuOudIUXajWiMAu/bioQE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mp2MPaYS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=O7BoaF2KIYtOn6iR5IWf/x07fxBBGHu2i0/Ph0SD4nChQlmjDq0JWbivrFS4ZD1iIrKmqZTTbEMSKZCsAJV7iDL+59Vv3P/KRLdxGNdnlX/jHGiEQHnAuh4hFPb5lX+/ZCf1tfS2Dktq/19agP7X5ZgJve6c0lOECCDafyrlHPI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E3DTKTPL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mp2MPaYS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 581AAC4CECE;
-	Tue, 26 Nov 2024 01:20:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E3DTKTPL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1404CC4CECE;
+	Tue, 26 Nov 2024 01:20:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732584032;
-	bh=SxQmFw1pSl0evDPGJiU5BfvWKUS46tXgAy/pY1+q/ZA=;
+	s=k20201202; t=1732584048;
+	bh=118F3cLeQLECfTPe2n1rCyAfJUReJzNfz7TOatchghk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mp2MPaYS3NPCFQXlThgS7ZmywjB6QpTHof/xJYw1pnJVoaKq3CeuTh7WQpsokcYeX
-	 zvmYUBdsz8xEQe5dSD/n7ht9T7iMEjpnHT0gjZanvcsaVXdkeBXoM5OlONpGpUXJTV
-	 tf97YrpGZno8WW8JQy3QIAi8vZvoqvtt6f4D4O9UVwX9SljEk1TTXyuBrr8CVjLUnw
-	 CUgZjtAJ9kD3/Op8ZB35AUwMAS+HJjvHsnkooaoZTrfvEZrdK9of3O7i2kGT28JKMK
-	 JtVEThHl5/HNIZLfA29TQD4HuQmR5pk1fspo5n3YxSOfjypX5DGZrMl7eUey+yc3v/
-	 P0TI5HHuxI7Ag==
-Date: Mon, 25 Nov 2024 17:20:31 -0800
-Subject: [PATCHSET] xfs: bug fixes for 6.13
+	b=E3DTKTPLk8idIiXl45llLT53UVm4akjJ7AHJrBV74aP7KNAtKAOxcnQAzZfvcp/6J
+	 tXu6qg3sTK7pwYU0QyPUJZFqqW3b4FuIN52cogkJwpbl3DZIpT8Es5L59APUGPai7E
+	 1aAvuu5Gp/dJMHxxKyXt/BE7B6JM0A/ylITKqr6MCljQYANkdtWSp2YUK7HZ6fAoIM
+	 zMX7grPZ+XsAn7VmkO595OPAMpDF6KhdqhAFo3agsVS/gmhAUkPTSPRmSha2GaBMnS
+	 oy/l+uxieGOLqvc8fwvwgpfTfRB6uRJsV7EbWP/B5sED0REdJZ5e4KKm187ybjBKJO
+	 U5TnE5NByn1NQ==
+Date: Mon, 25 Nov 2024 17:20:47 -0800
+Subject: [PATCH 01/16] generic/757: fix various bugs in this test
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org
-Cc: stable@vger.kernel.org, hch@lst.de, wozizhi@huawei.com,
- dan.carpenter@linaro.org, linux-xfs@vger.kernel.org
-Message-ID: <173258397748.4032920.4159079744952779287.stgit@frogsfrogsfrogs>
-In-Reply-To: <20241126011838.GI9438@frogsfrogsfrogs>
-References: <20241126011838.GI9438@frogsfrogsfrogs>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173258395086.4031902.11102441101818456621.stgit@frogsfrogsfrogs>
+In-Reply-To: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
+References: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,76 +43,36 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Bug fixes for 6.13.
+Fix this test so the check doesn't fail on XFS, and restrict runtime to
+100 loops because otherwise this test takes many hours.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-6.13-fixes
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs-6.13-fixes
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * xfs: fix off-by-one error in fsmap's end_daddr usage
- * xfs: metapath scrubber should use the already loaded inodes
- * xfs: keep quota directory inode loaded
- * xfs: return a 64-bit block count from xfs_btree_count_blocks
- * xfs: don't drop errno values when we fail to ficlone the entire range
- * xfs: separate healthy clearing mask during repair
- * xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when zapping a symlink
- * xfs: mark metadir repair tempfiles with IRECOVERY
- * xfs: fix null bno_hint handling in xfs_rtallocate_rtg
- * xfs: fix error bailout in xfs_rtginode_create
- * xfs: update btree keys correctly when _insrec splits an inode root block
- * xfs: fix scrub tracepoints when inode-rooted btrees are involved
- * xfs: unlock inodes when erroring out of xfs_trans_alloc_dir
- * xfs: only run precommits once per transaction object
- * xfs: remove recursion in __xfs_trans_commit
- * xfs: don't lose solo superblock counter update transactions
- * xfs: don't lose solo dquot update transactions
- * xfs: separate dquot buffer reads from xfs_dqflush
- * xfs: clean up log item accesses in xfs_qm_dqflush{,_done}
- * xfs: attach dquot buffer to dquot log item buffer
- * xfs: convert quotacheck to attach dquot buffers
----
- fs/xfs/libxfs/xfs_btree.c        |   33 +++++--
- fs/xfs/libxfs/xfs_btree.h        |    2 
- fs/xfs/libxfs/xfs_ialloc_btree.c |    4 +
- fs/xfs/libxfs/xfs_rtgroup.c      |    2 
- fs/xfs/scrub/agheader.c          |    6 +
- fs/xfs/scrub/agheader_repair.c   |    6 +
- fs/xfs/scrub/fscounters.c        |    2 
- fs/xfs/scrub/health.c            |   57 +++++++-----
- fs/xfs/scrub/ialloc.c            |    4 -
- fs/xfs/scrub/metapath.c          |   68 +++++---------
- fs/xfs/scrub/refcount.c          |    2 
- fs/xfs/scrub/scrub.h             |    6 +
- fs/xfs/scrub/symlink_repair.c    |    3 -
- fs/xfs/scrub/tempfile.c          |   10 ++
- fs/xfs/scrub/trace.h             |    2 
- fs/xfs/xfs_bmap_util.c           |    2 
- fs/xfs/xfs_dquot.c               |  185 ++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_dquot.h               |    5 +
- fs/xfs/xfs_dquot_item.c          |   51 ++++++++--
- fs/xfs/xfs_dquot_item.h          |    7 +
- fs/xfs/xfs_file.c                |    8 ++
- fs/xfs/xfs_fsmap.c               |   38 +++++---
- fs/xfs/xfs_inode.h               |    2 
- fs/xfs/xfs_qm.c                  |   92 +++++++++++++------
- fs/xfs/xfs_qm.h                  |    1 
- fs/xfs/xfs_quota.h               |    7 +
- fs/xfs/xfs_rtalloc.c             |    2 
- fs/xfs/xfs_trans.c               |   58 ++++++------
- fs/xfs/xfs_trans_ail.c           |    2 
- fs/xfs/xfs_trans_dquot.c         |   31 +++++-
- 30 files changed, 475 insertions(+), 223 deletions(-)
+ tests/generic/757 |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+
+diff --git a/tests/generic/757 b/tests/generic/757
+index 0ff5a8ac00182b..37cf49e6bc7fd9 100755
+--- a/tests/generic/757
++++ b/tests/generic/757
+@@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
+ cur=$(_log_writes_find_next_fua $prev)
+ [ -z "$cur" ] && _fail "failed to locate next FUA write"
+ 
+-while [ ! -z "$cur" ]; do
++while _soak_loop_running $((100 * TIME_FACTOR)); do
+ 	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
+ 
++	# xfs_repair won't run if the log is dirty
++	if [ $FSTYP = "xfs" ]; then
++		_scratch_mount
++		_scratch_unmount
++	fi
+ 	_check_scratch_fs
+ 
+ 	prev=$cur
 
