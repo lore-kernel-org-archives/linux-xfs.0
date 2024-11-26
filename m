@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 544E98F40;
-	Tue, 26 Nov 2024 01:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9DC7366;
+	Tue, 26 Nov 2024 01:21:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732584064; cv=none; b=Cny1Chr1WYcujHDZQ9R78y3U9kNEjMI90R0WePQ0JEsTT29crK1iHmESntucfL6KFDQ7wolw0or2q0IyoJFcOA+BBwOABivBBPc4Z+Mt+d6QsyxN2zuwMKtedPid0OTkrB4MN/11cQXkBUseN3lRCzJlMI9sW3KXa4yqCO7+TQE=
+	t=1732584079; cv=none; b=JTYLXreqt9AO8fkUP7cMNlnebNIZGKjbFlnBTR6oDGcX1wyV4nFAeU5WZxzMltjr2h8M32tlHiTkuPOpq3w2MB09jBhrA85oRbvSYbTSZR5iPzS9R3/tdkoXrNz4nAjJ9TDyIwynH0gkhUBadiAxhwq5QgqNtakw5bvblFz1oIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732584064; c=relaxed/simple;
-	bh=lGeUt/i/gDeyl0ELHUQ7/2iFviEl45XJmogXUkGtvJ0=;
+	s=arc-20240116; t=1732584079; c=relaxed/simple;
+	bh=MwlLblXm4yvShNCo+masInqXiO+qwCtzzMrlK5awwk4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n2t4cTr4CxJc6XY4w9AXw2P4G0GGjB6J+y15hJTuZT5siCTK/SV5vx+QD4URlTvhpSTy2Zj5NsyaFBihQCLaGX/1QNGxDswhk0oUgPR03rteMEiVem/Zjj3gVlZOg6lJAb4pmU27NsZrWKI9YhtCKTu2UqFJU7kDvSEPP7xBxvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HChpX60x; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jEQ6p1MeHwjbsEIsYjaoMgHKc7RWdJsmKxt9jzvrDYu39/uEYUg28SZUWMAW2Ad4ghvNJizJTUOEqYeLC28u91mQ1+RfYCfFWs0UJsmxzf+5YNf4dd2UIqBBL3evjI1piFTS/xUMnas7dELJrZtxZAoSSScds7JPgbr0mSzoq7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hYSJlkQo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HChpX60x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B106CC4CECE;
-	Tue, 26 Nov 2024 01:21:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hYSJlkQo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F45DC4CECE;
+	Tue, 26 Nov 2024 01:21:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732584063;
-	bh=lGeUt/i/gDeyl0ELHUQ7/2iFviEl45XJmogXUkGtvJ0=;
+	s=k20201202; t=1732584079;
+	bh=MwlLblXm4yvShNCo+masInqXiO+qwCtzzMrlK5awwk4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HChpX60xdVPbrdrIb32DVdKilDR5rrjjBjNoEBweHTV308QNBn+rkXzb3q2l1cDaq
-	 EvuR+hCKwrh1JgwWkMaCz9cHW+yD3xFKAgmpe8wMKN+wSWxtmSLuZ3pDGPmLyT4XV0
-	 jvsWc+rPJx6CLNxzxZcGu0k9F9kZrnuE2/wW1Vys1Nf0h3RG3OcFAgTwmeRsYHNCiR
-	 pFg7UlZ6zMaNokAQ1AJOK0OcZPy27O3tudArC4d5nkocn29nYko4XYchX3jPDpgFou
-	 fSuV0OfcKgmxXsFHzIIv9KiZVIAF7tkVe79gzvfeZpGpV2NPE5j39aD96yNFJmMKnb
-	 FqNxYYII5MYIw==
-Date: Mon, 25 Nov 2024 17:21:03 -0800
-Subject: [PATCH 02/16] generic/757: convert to thinp
+	b=hYSJlkQol9PsAUxtqEGslJHKlFWGQr1MFomkOPCyaMLzNmtePorY05x5d718w9Dh9
+	 JeO7fUakz50QwiLHBAgmfswX9RlhcL3nkEk8NfQSPSiWmkm4/2ooEe9p2KUc418hkl
+	 TOr7CEpgSfJPdQhBDrI6y724as8ZJ93K8SxflCadY//aM8PZQIrYxJM97pgH4OUHEX
+	 6/WlTJiZhBM0bFTH1u9Ar/1tqBlyBuKQR7pv7GvRhCcC3V2mckto5wpg6zOWcJWmdw
+	 D6a48WoAluJ259hE+EDPlZrqQU0GQyXYtNhfF1TRdaf5BoomIDIVA5WtquHkxo3iZ8
+	 ek7seAJRO4/UA==
+Date: Mon, 25 Nov 2024 17:21:18 -0800
+Subject: [PATCH 03/16] xfs/113: fix failure to corrupt the entire directory
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173258395101.4031902.14954667811124439467.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, hch@lst.de, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <173258395116.4031902.7860965991021855237.stgit@frogsfrogsfrogs>
 In-Reply-To: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
 References: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,83 +46,69 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Convert this test to use dm-thinp so that discards always zero the data.
-This prevents weird replay problems if the scratch device doesn't
-guarantee that read after discard returns zeroes.
+This test tries to corrupt the data blocks of a directory, but it
+doesn't take into account the fact that __populate_check_xfs_dir can
+remove enough entries to cause sparse holes in the directory.  If that
+happens, this "file data block is unmapped" logic will cause the
+corruption loop to exit early.  Then we can add to the directory, which
+causes the test to fail.
 
+Instead, create a list of mappable dir block offsets, and run 100
+corruptions at a time to reduce the amount of time we spend initializing
+xfs_db.  This fixes the regressions that I see with 32k/64k block sizes.
+
+Cc: <fstests@vger.kernel.org> # v2022.05.01
+Fixes: c8e6dbc8812653 ("xfs: test directory metadata corruption checking and repair")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/generic/757 |   23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+ tests/xfs/113 |   33 +++++++++++++++++++++++++++------
+ 1 file changed, 27 insertions(+), 6 deletions(-)
 
 
-diff --git a/tests/generic/757 b/tests/generic/757
-index 37cf49e6bc7fd9..6c13c6af41c57c 100755
---- a/tests/generic/757
-+++ b/tests/generic/757
-@@ -8,12 +8,13 @@
- # This can be seen on subpage FSes on Linux 6.4.
- #
- . ./common/preamble
--_begin_fstest auto quick metadata log recoveryloop aio
-+_begin_fstest auto quick metadata log recoveryloop aio thin
+diff --git a/tests/xfs/113 b/tests/xfs/113
+index 094ab71f2aefec..22ac8c3fd51b80 100755
+--- a/tests/xfs/113
++++ b/tests/xfs/113
+@@ -52,13 +52,34 @@ _scratch_xfs_repair -n >> $seqres.full 2>&1 || _fail "xfs_repair should not fail
+ echo "+ check dir"
+ __populate_check_xfs_dir "${inode}" btree
  
- _cleanup()
- {
- 	cd /
- 	_log_writes_cleanup &> /dev/null
-+	_dmthin_cleanup
- 	rm -f $tmp.*
- }
++dir_data_offsets() {
++	_scratch_xfs_db -c "inode ${inode}" -c 'bmap' | \
++		awk -v leaf_lblk=$leaf_lblk \
++		'{
++			if ($3 >= leaf_lblk)
++				exit;
++			for (i = 0; i < $8; i++)
++				printf("%d\n", $3 + i);
++		}'
++}
++
+ echo "+ corrupt dir"
+-loff=0
+-while true; do
+-	_scratch_xfs_db -x -c "inode ${inode}" -c "dblock ${loff}" -c "stack" | grep -q 'file data block is unmapped' && break
+-	_scratch_xfs_db -x -c "inode ${inode}" -c "dblock ${loff}" -c "stack" -c "blocktrash -x 32 -y $((blksz * 8)) -z ${FUZZ_ARGS}" >> $seqres.full
+-	loff="$((loff + 1))"
+-done
++subcommands=()
++while read loff; do
++	# run 100 commands at a time
++	if [ "${#subcommands[@]}" -lt 600 ]; then
++		subcommands+=(-c "inode ${inode}")
++		subcommands+=(-c "dblock ${loff}")
++		subcommands+=(-c "blocktrash -x 32 -y $((blksz * 8)) -z ${FUZZ_ARGS}")
++		continue
++	fi
++
++	_scratch_xfs_db -x "${subcommands[@]}" >> $seqres.full
++	subcommands=()
++done < <(dir_data_offsets)
++if [ "${#subcommands[@]}" -gt 0 ]; then
++	_scratch_xfs_db -x "${subcommands[@]}" >> $seqres.full
++fi
  
-@@ -23,11 +24,14 @@ _cleanup()
- 
- fio_config=$tmp.fio
- 
-+. ./common/dmthin
- . ./common/dmlogwrites
- 
--_require_scratch
-+# Use thin device as replay device, which requires $SCRATCH_DEV
-+_require_scratch_nocheck
- _require_aiodio
- _require_log_writes
-+_require_dm_target thin-pool
- 
- cat >$fio_config <<EOF
- [global]
-@@ -47,7 +51,13 @@ _require_fio $fio_config
- 
- cat $fio_config >> $seqres.full
- 
--_log_writes_init $SCRATCH_DEV
-+# Use a thin device to provide deterministic discard behavior. Discards are used
-+# by the log replay tool for fast zeroing to prevent out-of-order replay issues.
-+_test_unmount
-+sectors=$(blockdev --getsz $SCRATCH_DEV)
-+sectors=$((sectors * 90 / 100))
-+_dmthin_init $sectors $sectors
-+_log_writes_init $DMTHIN_VOL_DEV
- _log_writes_mkfs >> $seqres.full 2>&1
- _log_writes_mark mkfs
- 
-@@ -64,14 +74,13 @@ cur=$(_log_writes_find_next_fua $prev)
- [ -z "$cur" ] && _fail "failed to locate next FUA write"
- 
- while _soak_loop_running $((100 * TIME_FACTOR)); do
--	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
-+	_log_writes_replay_log_range $cur $DMTHIN_VOL_DEV >> $seqres.full
- 
- 	# xfs_repair won't run if the log is dirty
- 	if [ $FSTYP = "xfs" ]; then
--		_scratch_mount
--		_scratch_unmount
-+		_dmthin_mount
- 	fi
--	_check_scratch_fs
-+	_dmthin_check_fs
- 
- 	prev=$cur
- 	cur=$(_log_writes_find_next_fua $(($cur + 1)))
+ echo "+ mount image && modify dir"
+ if _try_scratch_mount >> $seqres.full 2>&1; then
 
