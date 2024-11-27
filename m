@@ -1,45 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0C328E8;
-	Wed, 27 Nov 2024 05:43:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AFB228E8
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Nov 2024 05:44:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732686224; cv=none; b=TliA/U4671C/qduUFeu2yZVUeE4b9fdf/4M7oiShnS+Wb/VsFMomwz3W3GthUv3zCFctNBEMe+ievZneGwMY5QyIwsjHEDMWAp40HtUhfGgdn2vEeZtBSKwgAIuuHiNEZL51svChSr/k5okyifDjJwZnFChKEucQj2qQMPmnLpc=
+	t=1732686242; cv=none; b=sIET2n5Zge3Gsen3enJMSaiVen6spQw1kQyvjQIRbMHtY3/77BGVjnCv58ZruUudAJhTxm0W5c8ri0LX+4sXw3bEJiQtCXHv+QPsdfSXpuDAv4JD7DBNLLscxUqk2W1NC2Zyljk2KvxxwlK//dnN9m7H3sLExjDxVBeqNb+kxho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732686224; c=relaxed/simple;
-	bh=i1YXJf+zohW1vQXm/B2jWTvXI1VIlQRP41kMGoS+p5g=;
+	s=arc-20240116; t=1732686242; c=relaxed/simple;
+	bh=l1pKx1Qy9a9XrLaBGzPUQdgS/mJkuHZbsll/nKglcsI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i2UScKGxwsugq26O6jesLJ8Y+cn7F1diFOYhyZetFpGSevbp4Y7pD03bTs3DS62cYI1vYApk9KM4l/Np3OgeQk80lDqJupbxZgKcW5k+BPensrodk7csrnKkzcgzhbDz4IvhT2RRbaO8Q5edG2a4wniNes7h4GPASi2dCXr2zyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1WYEIMWz; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=BDP8IkoW4CZlbpZU9o6pXYlJfnFSqihONLG7VkJ+xwag4d47jqpPY4Gk3PjewgGsFlebPJqPWVpr29jZ8oZiEigXSU65u3+0Olgn5bHqIuxlEDhgkHEWjtLJEP8mKJqYolA3iJFOiDgOGP1WTqkL0TaKefe0IU4FGCdpPMBNNio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=c7KVAWBL; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1WYEIMWz"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="c7KVAWBL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=4VDhEBhsjdZkxM0W7JISSdkMYX+4907G83obYId2tdU=; b=1WYEIMWzE6rq92uAxfeiYfvnUu
-	XyQkCT112AIs966+QPG4ucrl6Kd2n+Ld23d0Ck6yBRQJy2/BK/uvx9pooR56nWbBi6F7HgFlE4muG
-	i/iZ0L76rpziIjqxJCrYUxNnwIIFFsXzJDTHItzR6Cnb4drJE9rWV/eSptL9YwtdVgpDj1UFhq6RM
-	zwvsDcFWz/qPW1r+pO+L/EF1rzT1ivt/EZK7O8F/+ysGjMPSMwRpEap4xrrOuhEQk/ehT8WcEyPHO
-	ZBFkcPNKBKa6zjRG6o8A+7OwrKy1jf09T6ifMV7WtgW2EmKeIuBTgjXGXzGkFUKFMQn6oKxWDfg4+
-	S3sFyrQg==;
+	bh=bo/dD2ULucrHYF01tEGERjFcjIXK6bKgly10ass2f/A=; b=c7KVAWBL1OkWPbKy9UB8jMCHPD
+	uYYpxOGyBjDZ9rrnPefN1CcRuq36vyx1tVTNbSTHd9RGWXAr0lvlDgtNismD9MYLyB0iPDu/LvuOg
+	eA2qVwE3qLWjzViTLAJgWKpw8VuZETMf6FvgxfvhDw8OSBlCsuTpItguSh6+ITfDa53x/J5tJyGpA
+	8KXPtnnyqvVvgst/BKqMGJVEznBWM7fuUtprtDeT1MSDCDDVZG7RTmifwCCpmcnQgmPIuk4T+jR6u
+	srC/NW1On8uma9QmXvjnoi2u/UXnDFr+kuRFdVKnuVClptJwxYe9ybQbSqvFCZae1Gw11q/fW6bFz
+	YtXBjP2w==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tGApy-0000000CHAs-3Prb;
-	Wed, 27 Nov 2024 05:43:42 +0000
-Date: Tue, 26 Nov 2024 21:43:42 -0800
+	id 1tGAqH-0000000CHC3-161H;
+	Wed, 27 Nov 2024 05:44:01 +0000
+Date: Tue, 26 Nov 2024 21:44:01 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, zlang@kernel.org, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/16] generic/459: prevent collisions between test VMs
- backed by a shared disk pool
-Message-ID: <Z0axjgDuiC5m-xUO@infradead.org>
-References: <20241126011838.GI9438@frogsfrogsfrogs>
- <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
- <20241126202729.GP9438@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 15/21] xfs: remove recursion in __xfs_trans_commit
+Message-ID: <Z0axofQOO1hYWt-b@infradead.org>
+References: <173258397748.4032920.4159079744952779287.stgit@frogsfrogsfrogs>
+ <173258398059.4032920.3998675004204277948.stgit@frogsfrogsfrogs>
+ <Z0VYar-LmcdXptXh@infradead.org>
+ <Z0VYew8ATCmf-jBA@infradead.org>
+ <20241126182052.GK9438@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,29 +48,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241126202729.GP9438@frogsfrogsfrogs>
+In-Reply-To: <20241126182052.GK9438@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Nov 26, 2024 at 12:27:29PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Nov 26, 2024 at 10:20:52AM -0800, Darrick J. Wong wrote:
+> How about:
 > 
-> If you happen to be running fstests on a bunch of VMs and the VMs all
-> have access to a shared disk pool, then it's possible that two VMs could
-> be running generic/459 at exactly the same time.  In that case, it's a
-> VERY bad thing to have two nodes trying to create an LVM volume group
-> named "vg_459" because one node will succeed, after which the other node
-> will see the vg_459 volume group that it didn't create:
+> "xfs: avoid nested calls to __xfs_trans_commit
 > 
->   A volume group called vg_459 already exists.
->   Logical volume pool_459 already exists in Volume group vg_459.
->   Logical Volume "lv_459" already exists in volume group "vg_459"
+> "Currently, __xfs_trans_commit calls xfs_defer_finish_noroll, which
+> calls __xfs_trans_commit again on the same transaction.  In other words,
+> there's a nested function call (albeit with slightly different
+> arguments) that has caused minor amounts of confusion in the past.
+> There's no reason to keep this around, since there's only one place
+> where we actually want the xfs_defer_finish_noroll, and that is in the
+> top level xfs_trans_commit call.
 > 
-> But then, because this is bash, we don't abort the test script and
-> continue executing.  If we're lucky this fails when /dev/vg_459/lv_459
-> disappears before mkfs can run:
+> "This also reduces stack usage a little bit."
 
-How the F.. do the VG names leak out of the VM scope?
+Sounds good.
 
-That being said, the unique names looks fine to me, so:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
