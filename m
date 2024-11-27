@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB3E53A7
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Nov 2024 00:18:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BC15881E
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Nov 2024 00:18:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732666699; cv=none; b=us2uIBVw1MSX0P6Z2uAxdCppWfiPceOiAudH5zcs3wLL31zQX/gRSHBIsMEM/lhf/WKe5kphq6StPgug7IFxm3z/vV0ce0a2UbPlH2Nn6YjcnHNgXYwThNwHucZmQjjmdpz1xRylJORFrIPr47/wvnPsUQdL8syy90T6z+5zq8k=
+	t=1732666713; cv=none; b=s2NGdyWhn3iSDGM8s8R5RZlXAKyKRBZUseC+FUezKD/STntQ8+C6oVTHP2VoA9zS2SrvXZxF6/h9FY+HTn64ka4CzBWHpuhQuE+OHZl/gzvX/a9qhwLnRIux+3/kGqRVByusmcnqTJCpRG7hfzNGnTHwrENBli4mAL0uHu7nHyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732666699; c=relaxed/simple;
-	bh=7rlnOMoFsS9aD1uz+ODdmMOzLVl3yHhkZ6Gk1eGk4G4=;
+	s=arc-20240116; t=1732666713; c=relaxed/simple;
+	bh=l13/TD/1Joj+LQn85oI816+hudg/RxoGoeATTMMw8Gc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sPMUU3SUkvclCg6/KUoCygaXkQKlcuvR1NvZKUEbY5GbKUo5rjh7GEWdZMRHLKSPAhxQr+1yLCDPh0ZkMiTn+R+9cMQuqI6XePaA7SIpBXlgVF/wT821yviEUfI/qqicB8X2ctO6lr3QAxOnVDlADAupOmH3U2Wlc5Fd8Qkvm24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e3dV8Ok3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YTGRL76ZmiZmPlhZkdZin8y1He96QAp1sBAIEzFZM/8PrXUN3e5EothT6lyeoYd+TdnyRv/LXW6DuxwPMWsIMV3mVkQBLm5Oea4xxnCOIb89crfA4qw/tSR4Eb74g0/mlbfUc06ErLxO7idq0DWu+Az39YoEnibZ6qbjC2mSF9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TnyuuowL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e3dV8Ok3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5179DC4CECF;
-	Wed, 27 Nov 2024 00:18:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TnyuuowL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 146C1C4CECF;
+	Wed, 27 Nov 2024 00:18:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732666697;
-	bh=7rlnOMoFsS9aD1uz+ODdmMOzLVl3yHhkZ6Gk1eGk4G4=;
+	s=k20201202; t=1732666713;
+	bh=l13/TD/1Joj+LQn85oI816+hudg/RxoGoeATTMMw8Gc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=e3dV8Ok3p5UVxsi2/OarCe/7lVNgMNCA/xN0os8R6CNDe+OOm8Y4KFggTDXqaG2sA
-	 R0BG5UBcUiJp1LoPzXjgCEaGPUwZsdCxZnlwqghDghu0MJ1mSxY2Vk8UnFkVCy5JPQ
-	 8suX/fh6Iv6fDz5IeNbV9hQCxi2Nhus+nMyPVBiy7vg7Rnb1OBzfe48xBY1RppwdZF
-	 IW1CiWrFN8l/tlJdnqi1ggruKVcramRQHZbaPc64DUvUEZWcE+Utn3z6KbT+mxCZXe
-	 YBgRW2QdHFhko2kgFC5EwIWCJICjePoVTGdV0Xcu1goFzm28wVTP2gLJZD7SSwT6yH
-	 zOdq+m9L8L+og==
-Date: Tue, 26 Nov 2024 16:18:16 -0800
-Subject: [PATCH 01/10] design: update metadata reconstruction chapter
+	b=TnyuuowLeOskexZ2+FtmkqBECc7PWFlo3VOVVVGQ7F0DX2TngCejLjXxzv+s4A5mb
+	 VBR3uJZ4Ap6dLtCr86nHNS6eovHEIDZhoWqvlGkN2+5UVEUVGb/p8XPagdWpF84P6F
+	 drEjY3gpEM+UnO+3CusQJRSuuobYJJOd33p5z0ro+j1EO46BlWlDld3LzjGZUtyK7h
+	 jLPWEdza3MjI69WBvEfbUe08OGf6aD2tlnEaV9lqvF62vc3V3xti4Knmk8DoQgHcAX
+	 cIuWmgXEL3ER9oWuGW/MO9Q8dRaZy2aHlunkm2LreDh91TWJ4cGkDBxhQfqUTpN74B
+	 ppVGVkrEqyEOg==
+Date: Tue, 26 Nov 2024 16:18:32 -0800
+Subject: [PATCH 02/10] design: document filesystem properties
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, hch@lst.de, cem@kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173266662227.996198.3279322255032676510.stgit@frogsfrogsfrogs>
+Message-ID: <173266662241.996198.11668830686120619782.stgit@frogsfrogsfrogs>
 In-Reply-To: <173266662205.996198.11304294193325450774.stgit@frogsfrogsfrogs>
 References: <173266662205.996198.11304294193325450774.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -41,53 +41,68 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We've landed online repair and full backrefs in the filesystem, so
-update the links to the new sections and transform future tense to
-present tense.
+Now that xfsprogs utilities can set properties to coordinate the
+behavior of other xfsprogs utilities, record them in the ondisk format
+documentation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- .../reconstruction.asciidoc                        |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ .../fs_properties.asciidoc                         |   28 ++++++++++++++++++++
+ .../xfs_filesystem_structure.asciidoc              |    2 +
+ 2 files changed, 30 insertions(+)
+ create mode 100644 design/XFS_Filesystem_Structure/fs_properties.asciidoc
 
 
-diff --git a/design/XFS_Filesystem_Structure/reconstruction.asciidoc b/design/XFS_Filesystem_Structure/reconstruction.asciidoc
-index f172e0f8161656..f4c10217910b6c 100644
---- a/design/XFS_Filesystem_Structure/reconstruction.asciidoc
-+++ b/design/XFS_Filesystem_Structure/reconstruction.asciidoc
-@@ -1,10 +1,6 @@
- [[Reconstruction]]
- = Metadata Reconstruction
- 
--[NOTE]
--This is a theoretical discussion of how reconstruction could work; none of this
--is implemented as of 2015.
--
- A simple UNIX filesystem can be thought of in terms of a directed acyclic graph.
- To a first approximation, there exists a root directory node, which points to
- other nodes.  Those other nodes can themselves be directories or they can be
-@@ -45,9 +41,14 @@ The xref:Reverse_Mapping_Btree[reverse-mapping B+tree] fills in part of the
- puzzle.  Since it contains copies of every entry in each inode’s data and
- attribute forks, we can fix a corrupted block map with these records.
- Furthermore, if the inode B+trees become corrupt, it is possible to visit all
--inode chunks using the reverse-mapping data.  Should XFS ever gain the ability
--to store parent directory information in each inode, it also becomes possible
-+inode chunks using the reverse-mapping data.  xref:Parent_Pointers[Directory
-+parent pointers] fill in the rest of the puzzle by mirroring the directory tree
-+structure with parent directory information in each inode.  It is now possible
- to resurrect damaged directory trees, which should reduce the complaints about
- inodes ending up in +/lost+found+.  Everything else in the per-AG primary
--metadata can already be reconstructed via +xfs_repair+.  Hopefully,
--reconstruction will not turn out to be a fool's errand.
-+metadata can already be reconstructed via +xfs_repair+.
+diff --git a/design/XFS_Filesystem_Structure/fs_properties.asciidoc b/design/XFS_Filesystem_Structure/fs_properties.asciidoc
+new file mode 100644
+index 00000000000000..b639aec9ab6366
+--- /dev/null
++++ b/design/XFS_Filesystem_Structure/fs_properties.asciidoc
+@@ -0,0 +1,28 @@
++[[Filesystem_Properties]]
++= Filesystem Properties
 +
-+See the
-+https://docs.kernel.org/filesystems/xfs/xfs-online-fsck-design.html[design
-+document] for online repair for a more thorough discussion of how this metadata
-+are put to use.
++System administrators can set filesystem-wide properties to coordinate the
++behavior of userspace XFS administration tools.  These properties are recorded
++as extended attributes of the +ATTR_ROOT+ namesace that are set on the root
++directory.
++
++[options="header"]
++|=====
++| Property			| Description
++| +xfs:autofsck+		| Online fsck background scanning behavior
++|=====
++
++*xfs:autofsck*::
++This property controls the behavior of background online fsck.
++Unrecognized values are treated as if the property was not set.
++Check the +xfs_scrub+ manual page for more information.
++
++.autofsck property values
++[options="header"]
++|=====
++| Value				| Description
++| +none+			| Do not perform background scans.
++| +check+			| Only check metadata.
++| +optimize+			| Check and optimize metadata.
++| +repair+			| Check, repair, or optimize metadata.
++|=====
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index a95a5806172a0c..689e2a874c13e9 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -84,6 +84,8 @@ include::journaling_log.asciidoc[]
+ 
+ include::internal_inodes.asciidoc[]
+ 
++include::fs_properties.asciidoc[]
++
+ :leveloffset: 0
+ 
+ Dynamically Allocated Structures
 
