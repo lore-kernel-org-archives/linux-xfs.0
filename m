@@ -1,74 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD604144D1A
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Nov 2024 12:18:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89D54144D1A;
+	Thu, 28 Nov 2024 12:19:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732796335; cv=none; b=piGmqJ4bCJYpD7RLgtgyWeVB9DED5cvSVbhwMy6Mhd8GVDKpEQ8mNpAPqaFkoMo46P0HC5ssf2rN0MVs2NnhS9K8odrBkBnIyKs07pc6hHeqgPezbEva18xn5ytpHijULE9PDOUEkzOxtV2YHMz7Mo52YJIvP2LpDDde3sE/Sjw=
+	t=1732796366; cv=none; b=qzpOguyJMbWjtrur1Lunkl/ryAAmnsl67+FTaWZjXqfYGg5DfAAfZwtlyX32j2FBbdvWeaN05nSGlxWZQtfLqABICyFZgHKaRtXkso94AwEzQDworP6GuH0yAxSwl9V+i+es/tgkOvthEW4IJED9eEvuRDCvy0UC/L8DiRtnxvY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732796335; c=relaxed/simple;
-	bh=sG37FtAmgJZ76bKKt9MLYZVBEUO/gbZToiY20KlhY0c=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=vDTntSOpxwomCbS7AEOwZTNEb9I1Jv9Np9rbiVMxFPBPC3hjvtQ8HwdzmvtCPj25emsTlMQVjTV++VLAupcjgFffsKA2FGk90ru71CP2KHDBZjVqqmnMVyf+i6RoVm0mk9D8hzRh+rsR6fo0IkaeRJTKVWX+BNG0qEErI/6Uxms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UyXEoMby; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732796366; c=relaxed/simple;
+	bh=e++nwru0zd4kvvC3DSUfFfq0LtTuOvgYq3EDSt/5JFs=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=kffUBvri4ZJRqAJ4B00DrS/7xTIH3nCcxxQaZy9djuRNMRDFvbpfTRpj73+sku2ZMg30OEe+jOzzCr9IGQPHLKjdiGhcSBuxXreNSojfyVjxJPKA8fJ/wdAGBYazTYiP1NkwDIAVEwoVSNPJc8IMUofpvjEED8rarC9gRCAXuT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IzXGFSi5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UyXEoMby"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F92FC4CECE
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Nov 2024 12:18:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IzXGFSi5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA80AC4CECE;
+	Thu, 28 Nov 2024 12:19:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732796335;
-	bh=sG37FtAmgJZ76bKKt9MLYZVBEUO/gbZToiY20KlhY0c=;
-	h=Date:From:To:Subject:From;
-	b=UyXEoMbyMHq1G+Wi5nFC6o7GX77cX8vz3fozaiurfQI06rnxYGdM7AuP8bzHbcE7o
-	 AFXBR2mKKviwS6PsZTRwPD2MAOxFMpPdhQaXZ/PyZdm3ObkMr99xEfs1CGySdPJwPE
-	 2oF7cdDaDp3SMaYaZ1PwypiOLh5yXb11zVQCOgSbCN5y6c23f0v/xA3bOxOLCHXsx2
-	 3RKmxSKJGocpEfSPO+blw+IHuB70sonrciJ/2GInEGxhDFPhMWSv6RWB1ectcLqlNK
-	 CkpfOLE3HFvUAf5Mx05h00EooEsZ+w4sM9I9GJmKbcd7RDbjj6ebtVy5UDIFNHSDE/
-	 MZ4voYifugRMA==
-Date: Thu, 28 Nov 2024 13:18:51 +0100
+	s=k20201202; t=1732796366;
+	bh=e++nwru0zd4kvvC3DSUfFfq0LtTuOvgYq3EDSt/5JFs=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=IzXGFSi5QPKOFxewQZZyDqLOJHxqoDHA9Q24a5yM/W+YN8yMjT5iFxWHwp4LWyVBz
+	 jKATDx6jtwJnucS3BL+ikjjGjiX1LZeZ+TsVfkFCT5RdgEIKjKbfudmsq7dtEo1PM3
+	 Zv9cdBlZgd06PMXkX8y/S07SpHS9RTRygf/ps/dAFEARInvAyvgQNwzkVsNSL4HavX
+	 8g38xvWjmp3PYrgnKx3CufF9E/XIgzrMLPeCROc0KKKdUGRcCtF71yecwqgLyC1Bso
+	 4wqCFq3zh7BEbp3FzH3YhC6Hb31ZHzkDVdZf06BlXEXU/hwT2HJsnVTRk3tnHugxjZ
+	 9AaCTHZAYJ6Hw==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to cc2dba08cc33
-Message-ID: <e727xexxruxrs7ut7f76wmaiodoc7r6wa3sqr7jfaknoveab6o@wav7rmgmkvtv>
+To: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Uros Bizjak <ubizjak@gmail.com>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, 
+ "Darrick J. Wong" <djwong@kernel.org>, 
+ Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>
+In-Reply-To: <20241120150725.3378-1-ubizjak@gmail.com>
+References: <20241120150725.3378-1-ubizjak@gmail.com>
+Subject: Re: [PATCH] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
+Message-Id: <173279636431.817822.13565572630858949349.b4-ty@kernel.org>
+Date: Thu, 28 Nov 2024 13:19:24 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
+On Wed, 20 Nov 2024 16:06:22 +0100, Uros Bizjak wrote:
+> try_cmpxchg() loop with constant "new" value can be substituted
+> with just xchg() to atomically get and clear the location.
+> 
+> The code on x86_64 improves from:
+> 
+>     1e7f:	48 89 4c 24 10       	mov    %rcx,0x10(%rsp)
+>     1e84:	48 03 14 c5 00 00 00 	add    0x0(,%rax,8),%rdx
+>     1e8b:	00
+> 			1e88: R_X86_64_32S	__per_cpu_offset
+>     1e8c:	8b 02                	mov    (%rdx),%eax
+>     1e8e:	41 89 c5             	mov    %eax,%r13d
+>     1e91:	31 c9                	xor    %ecx,%ecx
+>     1e93:	f0 0f b1 0a          	lock cmpxchg %ecx,(%rdx)
+>     1e97:	75 f5                	jne    1e8e <xlog_cil_commit+0x84e>
+>     1e99:	48 8b 4c 24 10       	mov    0x10(%rsp),%rcx
+>     1e9e:	45 01 e9             	add    %r13d,%r9d
+> 
+> [...]
 
+Applied to for-next, thanks!
 
-Hi folks,
+[1/1] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
+      commit: 214093534f3c046bf5acc9affbf4e6bd9af4538b
 
-The for-next branch of the xfs-linux repository at:
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-cc2dba08cc33 xfs: don't call xfs_bmap_same_rtgroup in xfs_bmap_add_extent_hole_delay
-
-2 new commits:
-
-Christoph Hellwig (1):
-      [cc2dba08cc33] xfs: don't call xfs_bmap_same_rtgroup in xfs_bmap_add_extent_hole_delay
-
-Uros Bizjak (1):
-      [214093534f3c] xfs: Use xchg() in xlog_cil_insert_pcp_aggregate()
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_bmap.c | 6 ++----
- fs/xfs/xfs_log_cil.c     | 5 +----
- 2 files changed, 3 insertions(+), 8 deletions(-)
