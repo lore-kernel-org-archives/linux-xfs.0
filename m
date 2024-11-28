@@ -1,57 +1,125 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F52B2CAB;
-	Thu, 28 Nov 2024 03:33:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A08041C94;
+	Thu, 28 Nov 2024 06:41:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732764835; cv=none; b=Xxhg9CGON9rEHUw2b0DsPXLLF+T5jv79kAYcahJdQzV5xf4wC6poPa8oCf5nxS5Oir3ivitSuw3Am9YF4DmonYuphjdUw7TcdUVcKwwnhMN3UgF5dqqVeC9RNvDU9oyfAPlXC/vzGkx2kwv4wwacVP+v3SyWqDG0CS/ZI80ZBkY=
+	t=1732776066; cv=none; b=ot0giO4x1AjFAANlTyZ770sYhm/yVUmJ6JHkpYmHCPoz89uo7wcyQU+UZYqkT5vd0cH1AxmCkp+qN83D/1Uf+fSvVAKBjmfY/UodGE9O7MgyidTWkEgb63WHj0VDeDktvzFztsZdgVJznRkXhvrGSY+3T2NVMMJq6rJcO1rFJ+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732764835; c=relaxed/simple;
-	bh=dvbIFmLuqxy4v7rEGoU4I+r+KUMkEgIFQflgiBhS1aE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fnkwuHQNmUFXaWIfYN/MXCcr430Zy1J7ZO6qKcgcU0rMRMqDaUmJ0jhR4VfEwjwv3ciVMvbIkJQOltwsROMsOfYZNGcMR6GkKyUGfD7JMgd6Eg//ERC59xPba8avd2ANlGvErJLlGSn2m4U7p5N3yTi50NvIQptKLtuWd8QTsDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QFqkrrqv; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QFqkrrqv"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=dvbIFmLuqxy4v7rEGoU4I+r+KUMkEgIFQflgiBhS1aE=; b=QFqkrrqvp/sEjh7cTW7atHCRxE
-	vNm8sixG8c/y86eCL6dwNBCbnQWKioR6hDVm0bPWMNv/ipW60jU+w6oBVfg18Kvk7T3u9Cb8+BrUa
-	191zwAJdijD+bvOrRv+BZuQ7EM8gdTRs2ijP0wvFA6Bgq6QFv0u5SZOfYHKpXiVCcdjzjTQZGIMQh
-	muYFmXzBV9BLZU7e7sZpNTHwQb1NUF481gQ7zae+DVXTfFGiFCh16fdo5xJMyfzPhkupDvSLoiX8c
-	JcDUEaeSXNCNygSj2FbW8ppM6/UCt+c3ItbwXCbVOhcb46N68//goqaGxxNxrFp36j/8FT2pFw0n3
-	cUt0PYGw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tGVHr-0000000Ed3K-4B0A;
-	Thu, 28 Nov 2024 03:33:51 +0000
-Date: Wed, 27 Nov 2024 19:33:51 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Long Li <leo.lilong@huawei.com>
-Cc: brauner@kernel.org, djwong@kernel.org, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
+	s=arc-20240116; t=1732776066; c=relaxed/simple;
+	bh=yjLyfcn2g5HdR7a1Axwb8+PqkeslJtyagwiXrAJwYFU=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uc9UDoYw32jrep3bKMjxJag5wbrOB1fslxvk66u+k1a87B2eNYrtEVue4uWqbwJaYlo7WDUTDZyAzxmYxz+waTncAIHmIb6GBck6qM8ZlBNwO+eg4mP4cmXWmv7C3sLZUnsAGoPnKbIraUdL2SpNsDDpFK0e0mEi+tIT2VRkaYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4XzRTw20zYz1T5yZ;
+	Thu, 28 Nov 2024 14:38:44 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id D5D7D1400CB;
+	Thu, 28 Nov 2024 14:40:53 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 28 Nov
+ 2024 14:40:53 +0800
+Date: Thu, 28 Nov 2024 14:38:50 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <brauner@kernel.org>, <cem@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<yangerkun@huawei.com>
 Subject: Re: [PATCH v5 1/2] iomap: fix zero padding data issue in concurrent
  append writes
-Message-ID: <Z0fknwDTlm55XeTg@infradead.org>
+Message-ID: <Z0gP-peky2Se-YIy@localhost.localdomain>
 References: <20241127063503.2200005-1-leo.lilong@huawei.com>
+ <20241127162829.GY1926309@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <20241127063503.2200005-1-leo.lilong@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20241127162829.GY1926309@frogsfrogsfrogs>
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-I agree with Darrick that the graphic comment would be nice to keep,
-but otherwise this looks good:
+On Wed, Nov 27, 2024 at 08:28:29AM -0800, Darrick J. Wong wrote:
+> > @@ -1789,7 +1790,16 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+> >  
+> >  	if (ifs)
+> >  		atomic_add(len, &ifs->write_bytes_pending);
+> > +
+> > +	/*
+> > +	 * If the ioend spans i_size, trim io_size to the former to provide
+> > +	 * the fs with more accurate size information. This is useful for
+> > +	 * completion time on-disk size updates.
+> 
+> I think it's useful to preserve the diagram showing exactly what problem
+> you're solving:
+> 
+> 	/*
+> 	 * Clamp io_offset and io_size to the incore EOF so that ondisk
+> 	 * file size updates in the ioend completion are byte-accurate.
+> 	 * This avoids recovering files with zeroed tail regions when
+> 	 * writeback races with appending writes:
+> 	 *
+> 	 *    Thread 1:                  Thread 2:
+> 	 *    ------------               -----------
+> 	 *    write [A, A+B]
+> 	 *    update inode size to A+B
+> 	 *    submit I/O [A, A+BS]
+> 	 *                               write [A+B, A+B+C]
+> 	 *                               update inode size to A+B+C
+> 	 *    <I/O completes, updates disk size to min(A+B+C, A+BS)>
+> 	 *    <power failure>
+> 	 *
+> 	 *  After reboot:
+> 	 *    1) with A+B+C < A+BS, the file has zero padding in range
+> 	 *       [A+B, A+B+C]
+> 	 *
+> 	 *    |<     Block Size (BS)    >|
+> 	 *    |DDDDDDDDDDDD00000000000000|
+> 	 *    ^           ^        ^
+> 	 *    A          A+B     A+B+C
+> 	 *                       (EOF)
+> 	 *
+> 	 *    2) with A+B+C > A+BS, the file has zero padding in range
+> 	 *       [A+B, A+BS]
+> 	 *
+> 	 *    |<     Block Size (BS)    >|<      Block Size (BS)    >|
+> 	 *    |DDDDDDDDDDDD00000000000000|000000000000000000000000000|
+> 	 *    ^           ^              ^           ^
+> 	 *    A          A+B            A+BS       A+B+C
+> 	 *                              (EOF)
+> 	 *
+> 	 *    D = Valid Data
+> 	 *    0 = Zero Padding
+> 	 *
+> 	 * Note that this defeats the ability to chain the ioends of
+> 	 * appending writes.
+> 	 */
+> 
+> (I reduced the blocksize a bit for wrapping purposes)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Ok, I will update it.
 
+> 
+> The logic looks ok, but I'm curious about how you landed at 2.6.12-rc
+> for the fixes tag.
+> 
+> --D
+
+I see that io_size was introduced in version 2.6. It's quite difficult
+to determine the exact version where the issue was introduced, but I can
+confirm it was before version 4.19, as I can reproduce the issue in 4.19.
+It should before introduce iomap infrastructure, how about using the
+following fix tag?
+
+Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure") # goes further back than this
+
+Thanks, 
+Long Li
