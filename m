@@ -1,125 +1,123 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A08041C94;
-	Thu, 28 Nov 2024 06:41:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB20383CC1
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Nov 2024 07:56:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732776066; cv=none; b=ot0giO4x1AjFAANlTyZ770sYhm/yVUmJ6JHkpYmHCPoz89uo7wcyQU+UZYqkT5vd0cH1AxmCkp+qN83D/1Uf+fSvVAKBjmfY/UodGE9O7MgyidTWkEgb63WHj0VDeDktvzFztsZdgVJznRkXhvrGSY+3T2NVMMJq6rJcO1rFJ+0=
+	t=1732780601; cv=none; b=gqrOfRTtF8mR4ObYCFHFfxXdK+0pYhK9aTNdHqEUaRRKjFemveoas+lpJNULNSQmiPPxUBBnaw9V3Y3q9K5QZpS8W7LhtOYvN8xTx5uuWb93noq6ASM21WEtPZJZMaVBTWdjW3CznPgbLVUyFyR6v6go35E/uu7yE72QiJS7xVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732776066; c=relaxed/simple;
-	bh=yjLyfcn2g5HdR7a1Axwb8+PqkeslJtyagwiXrAJwYFU=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uc9UDoYw32jrep3bKMjxJag5wbrOB1fslxvk66u+k1a87B2eNYrtEVue4uWqbwJaYlo7WDUTDZyAzxmYxz+waTncAIHmIb6GBck6qM8ZlBNwO+eg4mP4cmXWmv7C3sLZUnsAGoPnKbIraUdL2SpNsDDpFK0e0mEi+tIT2VRkaYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4XzRTw20zYz1T5yZ;
-	Thu, 28 Nov 2024 14:38:44 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id D5D7D1400CB;
-	Thu, 28 Nov 2024 14:40:53 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 28 Nov
- 2024 14:40:53 +0800
-Date: Thu, 28 Nov 2024 14:38:50 +0800
-From: Long Li <leo.lilong@huawei.com>
+	s=arc-20240116; t=1732780601; c=relaxed/simple;
+	bh=T7o7PMjFfZptSONdxwQaXlra6xoNgrVYA5Z1HsJ6hFo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iE4MzSqWFvFOz4ZXzVGmYBjlsUZq/wEklonthAV6xfCwSxdnyDwCZ07oZPm12Eq6LmlulfNnQSmZSJ68XBuKLtMEoxYNkhFgAgr9iBc9Of99Zafg2dL56VQuNXzy30DJFPaisf/AHiixvUKODUubBVsC+8pUeJ9ExTv9sCCLIBM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QyPuiGQR; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QyPuiGQR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1732780598;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=71i9ce2I/uQhJTU9bdlTAGRpoIBRp3TYA/+yze5rhMs=;
+	b=QyPuiGQRs9sSDrydqL3TeKPw/sGNg6Aw6H2A1IAWK9RJGyM7mH59tJ4oFm6tBEEq7ey9K8
+	UG043sqnlAtfQ3YjesYwg1yRjr4knmoz9VCO5kIuuooTR1c8a+/SuQdh7o2Gpe2ycyhnLO
+	fEIedNcMqN5NHKzd+1VL2RCVMZpzb7E=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-695-89GXoADHML6qDyR64_8nuw-1; Thu, 28 Nov 2024 02:56:36 -0500
+X-MC-Unique: 89GXoADHML6qDyR64_8nuw-1
+X-Mimecast-MFC-AGG-ID: 89GXoADHML6qDyR64_8nuw
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2e5efb04da7so665640a91.0
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Nov 2024 23:56:36 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732780595; x=1733385395;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=71i9ce2I/uQhJTU9bdlTAGRpoIBRp3TYA/+yze5rhMs=;
+        b=MOkXntu96rQ76aFIzfrPS+G8cNZWhLWTP1vjo4gGsEAgPSTchu/M5YqmY7ONQ6eUGu
+         bbbP0YfMmnsxeNLn6ZKMqpPh513wqxMxGKZK4qgVoUPGvRxawFOB1/0C16/o1FDsRYMr
+         8oBi7ZJ3vaXS/QAL5WYKrAYyh0u78z/2AJGARHxJIHC74VPO0JTrv0fP5gQPbqtlKaYN
+         wjq8IeRBTAF210eZJLORyJ1v85Du8IN6smCWHP8o6Dz3Dh3YC3WoVrMhrEpG4Znfim1o
+         beTY/kHEWN/j/6/wYPtUmEtWUvjBowUb77anj3oYGZaGpYjUVceMPySbtgDhQgfMbDMM
+         ychg==
+X-Forwarded-Encrypted: i=1; AJvYcCW8fdkxf/wtEXVsPjnzRGCuJQy/VKlTDE2PpwtBNbfAdbf/+cQtmXliaPOlNIi0mG7830pQYR53Ut8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywk6RMNbN+++nFIlBTiorapJJt2/4bIVXR/HYGs7K3+5J4w6vdG
+	De+YElJZwEnmGHq0kuWzwC5kIJkwhpNIEZT4xhX2YoEGEPsdwu7qM/7whnGldCoRmZDbx36pYgX
+	UYO77ohjcAA2lSFI7WcNlx5Iz2BnSwbJ1sk4V36maq4Xc91xA2q/5Dc7MyK3dx6Ppc0me
+X-Gm-Gg: ASbGnctgGfvWxRWEwwpJWwG3UioCtAo4dBpg7yJBjC4YkOmRxOxkpdRlmEkrx9yojpo
+	+uRO+U50Hp4xiEUNcGQQ/6V12ldM5smQdH0d9HEHANxxRBpnsY6xuyRAi2k2UChMubXS9NK5CAK
+	ASMh8rzcXbY2cijn2ThR0UgZphmdVj1G5ItkQhxeaBc9KGBRp55LaW5QMt32v1eJ3e2Bm5rRugl
+	H6oSrKdy//Jr/HBAC5sYJWrRzcZoVXCKdmdbEG7Cjalg98T6DG3x4bNUkB8E1Upn1Am6no8b08f
+	tH0r79uxwaYoE6U=
+X-Received: by 2002:a17:90b:3b4a:b0:2ea:88d4:a0bb with SMTP id 98e67ed59e1d1-2ee08e9e8b1mr9517781a91.12.1732780595685;
+        Wed, 27 Nov 2024 23:56:35 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFtoGq/lMRsoxzHe90S7V+PNg9YziwDKZ6PAyp+oX+RKGf1wuiZaWyJPlam7RePWXH9NdAZXw==
+X-Received: by 2002:a17:90b:3b4a:b0:2ea:88d4:a0bb with SMTP id 98e67ed59e1d1-2ee08e9e8b1mr9517767a91.12.1732780595357;
+        Wed, 27 Nov 2024 23:56:35 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ee0fa341bdsm2859902a91.5.2024.11.27.23.56.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Nov 2024 23:56:34 -0800 (PST)
+Date: Thu, 28 Nov 2024 15:56:31 +0800
+From: Zorro Lang <zlang@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <brauner@kernel.org>, <cem@kernel.org>, <linux-xfs@vger.kernel.org>,
-	<linux-fsdevel@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
-	<yangerkun@huawei.com>
-Subject: Re: [PATCH v5 1/2] iomap: fix zero padding data issue in concurrent
- append writes
-Message-ID: <Z0gP-peky2Se-YIy@localhost.localdomain>
-References: <20241127063503.2200005-1-leo.lilong@huawei.com>
- <20241127162829.GY1926309@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/16] generic/757: fix various bugs in this test
+Message-ID: <20241128075631.whxsd2j4yjvd7t45@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
+ <173258395086.4031902.11102441101818456621.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241127162829.GY1926309@frogsfrogsfrogs>
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+In-Reply-To: <173258395086.4031902.11102441101818456621.stgit@frogsfrogsfrogs>
 
-On Wed, Nov 27, 2024 at 08:28:29AM -0800, Darrick J. Wong wrote:
-> > @@ -1789,7 +1790,16 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
-> >  
-> >  	if (ifs)
-> >  		atomic_add(len, &ifs->write_bytes_pending);
-> > +
-> > +	/*
-> > +	 * If the ioend spans i_size, trim io_size to the former to provide
-> > +	 * the fs with more accurate size information. This is useful for
-> > +	 * completion time on-disk size updates.
+On Mon, Nov 25, 2024 at 05:20:47PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> I think it's useful to preserve the diagram showing exactly what problem
-> you're solving:
+> Fix this test so the check doesn't fail on XFS, and restrict runtime to
+> 100 loops because otherwise this test takes many hours.
 > 
-> 	/*
-> 	 * Clamp io_offset and io_size to the incore EOF so that ondisk
-> 	 * file size updates in the ioend completion are byte-accurate.
-> 	 * This avoids recovering files with zeroed tail regions when
-> 	 * writeback races with appending writes:
-> 	 *
-> 	 *    Thread 1:                  Thread 2:
-> 	 *    ------------               -----------
-> 	 *    write [A, A+B]
-> 	 *    update inode size to A+B
-> 	 *    submit I/O [A, A+BS]
-> 	 *                               write [A+B, A+B+C]
-> 	 *                               update inode size to A+B+C
-> 	 *    <I/O completes, updates disk size to min(A+B+C, A+BS)>
-> 	 *    <power failure>
-> 	 *
-> 	 *  After reboot:
-> 	 *    1) with A+B+C < A+BS, the file has zero padding in range
-> 	 *       [A+B, A+B+C]
-> 	 *
-> 	 *    |<     Block Size (BS)    >|
-> 	 *    |DDDDDDDDDDDD00000000000000|
-> 	 *    ^           ^        ^
-> 	 *    A          A+B     A+B+C
-> 	 *                       (EOF)
-> 	 *
-> 	 *    2) with A+B+C > A+BS, the file has zero padding in range
-> 	 *       [A+B, A+BS]
-> 	 *
-> 	 *    |<     Block Size (BS)    >|<      Block Size (BS)    >|
-> 	 *    |DDDDDDDDDDDD00000000000000|000000000000000000000000000|
-> 	 *    ^           ^              ^           ^
-> 	 *    A          A+B            A+BS       A+B+C
-> 	 *                              (EOF)
-> 	 *
-> 	 *    D = Valid Data
-> 	 *    0 = Zero Padding
-> 	 *
-> 	 * Note that this defeats the ability to chain the ioends of
-> 	 * appending writes.
-> 	 */
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+
+Thanks, this patchset looks good to me now.
+
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+>  tests/generic/757 |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> (I reduced the blocksize a bit for wrapping purposes)
-
-Ok, I will update it.
-
 > 
-> The logic looks ok, but I'm curious about how you landed at 2.6.12-rc
-> for the fixes tag.
+> diff --git a/tests/generic/757 b/tests/generic/757
+> index 0ff5a8ac00182b..37cf49e6bc7fd9 100755
+> --- a/tests/generic/757
+> +++ b/tests/generic/757
+> @@ -63,9 +63,14 @@ prev=$(_log_writes_mark_to_entry_number mkfs)
+>  cur=$(_log_writes_find_next_fua $prev)
+>  [ -z "$cur" ] && _fail "failed to locate next FUA write"
+>  
+> -while [ ! -z "$cur" ]; do
+> +while _soak_loop_running $((100 * TIME_FACTOR)); do
+>  	_log_writes_replay_log_range $cur $SCRATCH_DEV >> $seqres.full
+>  
+> +	# xfs_repair won't run if the log is dirty
+> +	if [ $FSTYP = "xfs" ]; then
+> +		_scratch_mount
+> +		_scratch_unmount
+> +	fi
+>  	_check_scratch_fs
+>  
+>  	prev=$cur
 > 
-> --D
 
-I see that io_size was introduced in version 2.6. It's quite difficult
-to determine the exact version where the issue was introduced, but I can
-confirm it was before version 4.19, as I can reproduce the issue in 4.19.
-It should before introduce iomap infrastructure, how about using the
-following fix tag?
-
-Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure") # goes further back than this
-
-Thanks, 
-Long Li
