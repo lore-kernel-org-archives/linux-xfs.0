@@ -1,43 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 342B8200132;
-	Wed, 27 Nov 2024 16:35:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C7EC18E25
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Nov 2024 02:29:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732725344; cv=none; b=rkyG7um2Db/EyrzNXQ1at7jBZWawk8xFmxYSfOcE3wOcVobeg/AYjdLnLTZAQ7Ocm2mHtKV3Mn4XaHeiXQGAbRmUv2X2XReFs2LB92ZW3wuPgcj9E4cQ9rD+x5gNz/EI5+Hb/zpIATGg4BYDm7tw4yvXHrBzQoQjrTxwUJcSR5c=
+	t=1732760983; cv=none; b=BaQjEdVdD4+Q4eywmjHjf0o4bF1As68jHC0Xv3kYjO3qyKoTpAJxYEL81xcKam/yk0yELcaEDlq7l3swnvcwcQwBXgd5KOtxE1MLxIpD1NZOJXOFN9YwwS7Ln1jlB12UrXDFnIAA3ZIisOEcj3TNF77STX8A+HWs6WkEdY4sAWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732725344; c=relaxed/simple;
-	bh=UEd+3zNPwj1r5T3Kg0hZHbxmUUi1LYnRRY2GM+gt1lc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FH0o5jc0JqWJnVHcD2+gzSG5cSso99K0pcnecA1AvalMEWq8qQY5UA7I6BlbQX6roWkKz4uRSyjm+jpccIC1s+5dXJSS3YatPu6KExNLdXxWBLYsmdz1LwZAhaB4otMAt7Q/ehYCfOcYPPNrdQNJWBnEPKT8uSlGLHOvBz8qnsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lrZ6g2Gt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732760983; c=relaxed/simple;
+	bh=bkVJ4OpPORjzjrBUkLn+cHuMt9w48zL7LJ4EP9vWDLI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=AcZGEGcOmxmtL7BfnQqKu+h0WduRyX8NUW886F2Jadj+iZ5S+6rwPQC3nFLPbXhp1Oz2rzDPiCkIW+pRvtNl1a7jn6TbZ+1kGgR9RiJNvFIgp308u6IQjUUdcAdkEOw8j02WUruQXDf999cZsxWgTYIVI7R5akjkn4J/PG/nxT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KzeqC7y2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lrZ6g2Gt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB912C4CED2;
-	Wed, 27 Nov 2024 16:35:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KzeqC7y2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3972C4CECC;
+	Thu, 28 Nov 2024 02:29:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732725343;
-	bh=UEd+3zNPwj1r5T3Kg0hZHbxmUUi1LYnRRY2GM+gt1lc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lrZ6g2Gt/Ap5r3f3sFp0SbUEkh6fFbUbQ0pLIQ1D6rnH13qJFr/+iDSJtBV2rDnEG
-	 JeyVvnyAFwoHcgROQZcgEJQMa2iy11JtC9RYqaCLAyljwvdkpxwhTOT9fUVF9uWrEn
-	 k59Jc3vNLHKT68kCSv9f+WmOU7DcHo3vDRHUPRJTX1jLfu4fvkZOmBarsBdUinEPzV
-	 dJFxjcp0xIZI5igFaNgMelAy3gHaTZyL9gmbMNmf5DYdF4oimn7j44mDrjscnOJiXx
-	 RIV5ShLT+W3j2TszeH9eWX06n+uPFYNUDmVuA+ZNpEFFZVMCULFohko4578hGdRI2E
-	 eaNq0e2XaVYlQ==
-Date: Wed, 27 Nov 2024 08:35:43 -0800
+	s=k20201202; t=1732760982;
+	bh=bkVJ4OpPORjzjrBUkLn+cHuMt9w48zL7LJ4EP9vWDLI=;
+	h=Date:From:To:Cc:Subject:From;
+	b=KzeqC7y2C9LWGKXBVkictvyqfKVJw5TW5bfomfDaGdgWlDbFNxZqQ2RUQE9tyXpA3
+	 77Ege3bbSRjDE3uiiQ1JxmkLpd6b4MZ4Lg3dusYIdDvm27yeGtEQ6CAkdDIJ+bcnOE
+	 wZnUY/Fpbl6Vnk9DeTKdSJiUMkB6x2YHptL/PKeIU/jhjTFT9zkM9DvvqSrMGfoYcD
+	 hEHZpnqeg9VCysgDP9esj5wIaQqFHe9Yf1hfEIsqFZCe7bVSFWuLVfOoZrdr8tSHbk
+	 VoJvocht7nXoJMcj2cRu/pFQ43Y+aquMKnY9V8/QGtiO6/Qu2bGZvKVoCTc6/QB20M
+	 CE6MwyN3pB/Yw==
+Date: Wed, 27 Nov 2024 18:29:42 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, zlang@kernel.org, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/16] generic/459: prevent collisions between test VMs
- backed by a shared disk pool
-Message-ID: <20241127163543.GU9438@frogsfrogsfrogs>
-References: <20241126011838.GI9438@frogsfrogsfrogs>
- <173258395050.4031902.8257740212723106524.stgit@frogsfrogsfrogs>
- <20241126202729.GP9438@frogsfrogsfrogs>
- <Z0axjgDuiC5m-xUO@infradead.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH xfsprogs 6.12] man: document the -n parent mkfs option
+Message-ID: <20241128022942.GV9438@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,43 +40,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z0axjgDuiC5m-xUO@infradead.org>
 
-On Tue, Nov 26, 2024 at 09:43:42PM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 26, 2024 at 12:27:29PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > If you happen to be running fstests on a bunch of VMs and the VMs all
-> > have access to a shared disk pool, then it's possible that two VMs could
-> > be running generic/459 at exactly the same time.  In that case, it's a
-> > VERY bad thing to have two nodes trying to create an LVM volume group
-> > named "vg_459" because one node will succeed, after which the other node
-> > will see the vg_459 volume group that it didn't create:
-> > 
-> >   A volume group called vg_459 already exists.
-> >   Logical volume pool_459 already exists in Volume group vg_459.
-> >   Logical Volume "lv_459" already exists in volume group "vg_459"
-> > 
-> > But then, because this is bash, we don't abort the test script and
-> > continue executing.  If we're lucky this fails when /dev/vg_459/lv_459
-> > disappears before mkfs can run:
-> 
-> How the F.. do the VG names leak out of the VM scope?
+From: Darrick J. Wong <djwong@kernel.org>
 
-I ran fstests-xfs on my fstests-ocfs2 cluster, wherein all nodes have
-write access to all disks because we're all one big happy fleet.  Each
-node gets a list of which disks it can use for fstests so in theory
-there's no overlap ... until two machines tried to create LVM VGs with
-the same name at exactly the same time and tripped.  A sane prod system
-would adjust the access controls per fstests run but I'm too lazy to do
-that every night.
+Document the -n parent option to mkfs.xfs so that users will actually
+know how to turn on directory parent pointers.
 
-(Yeah, I just confessed to occasionally fstesting ocfs2.)
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+This fell out at some point when hch and I were refactoring parent
+pointers; can this be included in 6.12?
+---
+ man/man8/mkfs.xfs.8.in |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-> That being said, the unique names looks fine to me, so:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks!
-
---D
+diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+index a854b0e87cb1a2..95b3d42700cf0e 100644
+--- a/man/man8/mkfs.xfs.8.in
++++ b/man/man8/mkfs.xfs.8.in
+@@ -900,8 +900,20 @@ .SH OPTIONS
+ 
+ When CRCs are enabled (the default), the ftype functionality is always
+ enabled, and cannot be turned off.
+ .IP
+ In other words, this option is only tunable on the deprecated V4 format.
++.TP
++.BI parent= value
++This feature creates back references from child files to parent directories
++so that online repair can reconstruct broken directory files.
++The value is either 0 to disable the feature, or 1 to create parent pointers.
++
++By default,
++.B mkfs.xfs
++will not create parent pointers.
++This feature is only available for filesystems created with the (default)
++.B \-m crc=1
++option set.
+ .RE
+ .PP
+ .PD 0
