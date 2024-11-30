@@ -1,121 +1,168 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FC16148838;
-	Sat, 30 Nov 2024 11:11:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A66322066;
+	Sat, 30 Nov 2024 13:41:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732965100; cv=none; b=LSUpjQYN3x7+FRndfCMRKTqADsIH4qOf1fgvEfeQr5Q7XmUi/ntUxQ/JxbKWLcd3VjUBidTB9av+GiS/2B6Uv1bKum9eNtLqfILKmKc33pBEq3uRydU3YvMLItgVwuvm7/QoA3MXK/nNrlAkNYjx9N7DgYa/X68yjLN46EDOEHQ=
+	t=1732974112; cv=none; b=m8Q9xS2h+jd8YtJARIgBoiu9bpRtLD2IRtldOwzMKkI7gYXhCugh0G85vGnzkYQXs0kfw1dsFZhAq+0bymtcJY2q+Je1oa0X4OM0HoneKUuLwZUSDElY+PeCZe8+0rai7VPLdxzqJj5S4zU7CO5/TZYQfa5pjLks6JzmSSLqm68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732965100; c=relaxed/simple;
-	bh=cNJqd8Gq9dL3pl8c/7s75ZXuAo5G6dnq2OXzKit73e4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ujOAqaLNINcKbdtr9BX8XVvxQgueSPYT0sL7fm+/Rght8PW90XSHgBXNJ8xGZXKNzOhikP52YhZIZkyql7xiLoZX64ldcydJyLpRYsSxhWaO97lLxqZzLG/nHGbjSbA6/8z2eDyYadhIzpTvZiGd3AOqZhAAI2CJTa6lS4Edha4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V8H807dZ; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V8H807dZ"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-215666ea06aso1359805ad.0;
-        Sat, 30 Nov 2024 03:11:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732965098; x=1733569898; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=/3WJHo98bQyOK7leaV/ie37wgoCMdI8fncgr0igqgGk=;
-        b=V8H807dZtDkIkAcv4rTTvirEjjcyrjUgMKeYCQp4Qm25FVu8sWxsUlDjHczE9V7zLj
-         DiQCaqiEfGpX29rbc8EWBIDs37XwLZO/ERgVjJzs581uXgLpyCUUimqEdQo73IU522Ir
-         /Dhm8l1MwCiUs9Mi/Y5YN3oAxaaL163sQGx2wK8n8bpF2thMBRIOlcmOu45mbja0ggFq
-         rE3rixWmMOmxnbQD5z5W0jDCRFVBJyebRbxllRxAT7DuN6pFHoXwQdaUhibltzD0hdbX
-         pjPJOdl3/aDGQyh4pL49hk/+oMp4SkPSzvzckzqlonU2RWBV+J4c2P7tonEAONBmkJT0
-         DGYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732965098; x=1733569898;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/3WJHo98bQyOK7leaV/ie37wgoCMdI8fncgr0igqgGk=;
-        b=ixalhKi1ptUzYTpviNl/KFDJNyR5NRgqc1V3By5PbOHNLmS94WrMRYuvo0bWTNsIna
-         82CB7EE+ABIzp/f1apX9rH4B83DLmP9kfjYVcIdrQ2soNOq1ynJCCISiCWngTJHgjzXx
-         iQPxxDf6FXx3f96rN0fXiluyZ8m5TwFHdr6n5C/VOKQdxvk3ydwJrk69iO0JR4io+qZO
-         7bZi/n9GkGReZSWpWf3DjL417qx4mmR+Q1s+9pu/wLQa/jKNOMzhW5huRx2K+rrd9ms6
-         l4o+ZNwNisRCPF3l4C94oEV5t0TDxZ5IJmeAEJsWUbd4A8KDhjvw4Yw/bOLXqhu/9F7M
-         tkOA==
-X-Forwarded-Encrypted: i=1; AJvYcCUwHHkm4M3sK2cOfVUGiHtxK0DKVLY5MtKOhFjzg3VIbhYnhyZyadJFnmKUya+i/Rpzu7tPreR/hsuguvY=@vger.kernel.org, AJvYcCVIWjw3Z4KWJmj+F7hzootkqnHjVwuy8HhzeJWUUfk5dEd9jciT2bWhD1sEE2c/7nxzpXHjSC4JKgD6@vger.kernel.org
-X-Gm-Message-State: AOJu0YziAia0wsQOxVQVTjudz1I3r7R0xHN1SMI9P7wUsNwrs9kxGGqs
-	J1SvNQl0Kc7S8BYHJOwWLZaSCyn+VQQotCGGk8YaUDy7CxFah4rv
-X-Gm-Gg: ASbGnctPFDi2CPu033V8GrTShKfTEd5i2V9x1STa68Hpom3axC/Xo/kpCj3HYuh32m/
-	1HNeeVMtZrR3VPc3zD9NNFTvps/wONjTh4SRJiv65QBMC8pc84gLU0GKBr1PltLKfDPO3njtNoB
-	Ugi70EsBFd764Lzpp8MbF7S5LA3kI8d0YJhYAkkN3WaGxJBZmbwfvEAZBCn+PxtpZEIvy0fttsD
-	tfSplJ8J+ncKS2XKAKMdE+4PLIF1WJ0d98r5D42v8oq52SUNGMuqbXlS8Ul5qt/tg==
-X-Google-Smtp-Source: AGHT+IFG3TAqd0hXyjaej3sCKqgNlBw5otCPv++0tEbCvdJJFuJeQJR+Qjaxoe5NXx5K2IP95eMrbA==
-X-Received: by 2002:a17:902:f104:b0:215:531f:8e39 with SMTP id d9443c01a7336-215531f9156mr39974525ad.11.1732965097879;
-        Sat, 30 Nov 2024 03:11:37 -0800 (PST)
-Received: from localhost.localdomain ([119.28.17.178])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72541762d59sm4967818b3a.31.2024.11.30.03.11.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 30 Nov 2024 03:11:37 -0800 (PST)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: cem@kernel.org,
-	djwong@kernel.org
-Cc: hch@infradead.org,
-	dchinner@redhat.com,
-	chandanbabu@kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: [RESEND PATCH v2] xfs: fix the entry condition of exact EOF block allocation optimization
-Date: Sat, 30 Nov 2024 19:11:32 +0800
-Message-ID: <20241130111132.1359138-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.41.1
+	s=arc-20240116; t=1732974112; c=relaxed/simple;
+	bh=8yHA58RnBcqJ4iTh2+b2D7RTyLJDCG+KrfLJXsRle+4=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QvOj9FCheqE8r8uq/8V2eCI7ravEYfE0PG6wmmPc6oBjgbrmRPp1Ps9sxZYGC1nOxor+S25S5Xd4Tu238hLGFZFtmEYjYqFpG86MUreDIDVnWSnOmxAxV4vjpoBp62qE2xFgIS9U59MjipV3BzkVTKG2HGBRROEDuSoSE3gQ0gk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Y0rjh33XRzxSPS;
+	Sat, 30 Nov 2024 21:38:48 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2E904180106;
+	Sat, 30 Nov 2024 21:41:40 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 30 Nov
+ 2024 21:41:39 +0800
+Date: Sat, 30 Nov 2024 21:39:29 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
+Subject: Re: [PATCH v5 1/2] iomap: fix zero padding data issue in concurrent
+ append writes
+Message-ID: <Z0sVkSXzxUDReow7@localhost.localdomain>
+References: <20241127063503.2200005-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20241127063503.2200005-1-leo.lilong@huawei.com>
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-When we call create(), lseek() and write() sequentially, offset != 0
-cannot be used as a judgment condition for whether the file already
-has extents.
-
-Furthermore, when xfs_bmap_adjacent() has not given a better blkno,
-it is not necessary to use exact EOF block allocation.
-
-Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
----
-Changelog:
-- V2: Fix the entry condition
-- V1: https://lore.kernel.org/linux-xfs/ZyFJm7xg7Msd6eVr@dread.disaster.area/T/#t
----
- fs/xfs/libxfs/xfs_bmap.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 36dd08d13293..c1e5372b6b2e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3531,12 +3531,14 @@ xfs_bmap_btalloc_at_eof(
- 	int			error;
+On Wed, Nov 27, 2024 at 02:35:02PM +0800, Long Li wrote:
+> During concurrent append writes to XFS filesystem, zero padding data
+> may appear in the file after power failure. This happens due to imprecise
+> disk size updates when handling write completion.
+> 
+> Consider this scenario with concurrent append writes same file:
+> 
+>   Thread 1:                  Thread 2:
+>   ------------               -----------
+>   write [A, A+B]
+>   update inode size to A+B
+>   submit I/O [A, A+BS]
+>                              write [A+B, A+B+C]
+>                              update inode size to A+B+C
+>   <I/O completes, updates disk size to min(A+B+C, A+BS)>
+>   <power failure>
+> 
+> After reboot:
+>   1) with A+B+C < A+BS, the file has zero padding in range [A+B, A+B+C]
+> 
+>   |<         Block Size (BS)      >|
+>   |DDDDDDDDDDDDDDDD0000000000000000|
+>   ^               ^        ^
+>   A              A+B     A+B+C
+>                          (EOF)
+> 
+>   2) with A+B+C > A+BS, the file has zero padding in range [A+B, A+BS]
+> 
+>   |<         Block Size (BS)      >|<           Block Size (BS)    >|
+>   |DDDDDDDDDDDDDDDD0000000000000000|00000000000000000000000000000000|
+>   ^               ^                ^               ^
+>   A              A+B              A+BS           A+B+C
+>                                   (EOF)
+> 
+>   D = Valid Data
+>   0 = Zero Padding
+> 
+> The issue stems from disk size being set to min(io_offset + io_size,
+> inode->i_size) at I/O completion. Since io_offset+io_size is block
+> size granularity, it may exceed the actual valid file data size. In
+> the case of concurrent append writes, inode->i_size may be larger
+> than the actual range of valid file data written to disk, leading to
+> inaccurate disk size updates.
+> 
+> This patch modifies the meaning of io_size to represent the size of
+> valid data within EOF in an ioend. If the ioend spans beyond i_size,
+> io_size will be trimmed to provide the file with more accurate size
+> information. This is particularly useful for on-disk size updates
+> at completion time.
+> 
+> After this change, ioends that span i_size will not grow or merge with
+> other ioends in concurrent scenarios. However, these cases that need
+> growth/merging rarely occur and it seems no noticeable performance impact.
+> Although rounding up io_size could enable ioend growth/merging in these
+> scenarios, we decided to keep the code simple after discussion [1].
+> 
+> Another benefit is that it makes the xfs_ioend_is_append() check more
+> accurate, which can reduce unnecessary end bio callbacks of xfs_end_bio()
+> in certain scenarios, such as repeated writes at the file tail without
+> extending the file size.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Link[1]: https://patchwork.kernel.org/project/xfs/patch/20241113091907.56937-1-leo.lilong@huawei.com
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+> v4->v5: remove iomap_ioend_size_aligned() and don't round up io_size for
+> 	ioend growth/merging to keep the code simple. 
+>  fs/iomap/buffered-io.c | 10 ++++++++++
+>  include/linux/iomap.h  |  2 +-
+>  2 files changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index d42f01e0fc1c..dc360c8e5641 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1774,6 +1774,7 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  {
+>  	struct iomap_folio_state *ifs = folio->private;
+>  	size_t poff = offset_in_folio(folio, pos);
+> +	loff_t isize = i_size_read(inode);
+>  	int error;
+>  
+>  	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, pos)) {
+> @@ -1789,7 +1790,16 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  
+>  	if (ifs)
+>  		atomic_add(len, &ifs->write_bytes_pending);
+> +
+> +	/*
+> +	 * If the ioend spans i_size, trim io_size to the former to provide
+> +	 * the fs with more accurate size information. This is useful for
+> +	 * completion time on-disk size updates.
+> +	 */
+>  	wpc->ioend->io_size += len;
+> +	if (wpc->ioend->io_offset + wpc->ioend->io_size > isize)
+> +		wpc->ioend->io_size = isize - wpc->ioend->io_offset;
+> +
  
- 	/*
--	 * If there are already extents in the file, try an exact EOF block
--	 * allocation to extend the file as a contiguous extent. If that fails,
--	 * or it's the first allocation in a file, just try for a stripe aligned
--	 * allocation.
-+	 * If there are already extents in the file, and xfs_bmap_adjacent() has
-+	 * given a better blkno, try an exact EOF block allocation to extend the
-+	 * file as a contiguous extent. If that fails, or it's the first
-+	 * allocation in a file, just try for a stripe aligned allocation.
- 	 */
--	if (ap->offset) {
-+	if (ap->prev.br_startoff != NULLFILEOFF &&
-+	     !isnullstartblock(ap->prev.br_startblock) &&
-+	     xfs_bmap_adjacent_valid(ap, ap->blkno, ap->prev.br_startblock)) {
- 		xfs_extlen_t	nextminlen = 0;
- 
- 		/*
--- 
-2.41.1
+When performing fsstress test with this patch set, there is a very low probability of
+encountering an issue where isize is less than ioend->io_offset in iomap_add_to_ioend.
+After investigation, this was found to be caused by concurrent with truncate operations.
+Consider a scenario with 4K block size and a file size of 12K.
+
+//write back [8K, 12K]           //truncate file to 4K
+----------------------          ----------------------
+iomap_writepage_map             xfs_setattr_size
+  iomap_writepage_handle_eof
+                                  truncate_setsize
+				    i_size_write(inode, newsize)  //update inode size to 4K
+  iomap_writepage_map_blocks
+    iomap_add_to_ioend
+           < iszie < ioend->io_offset>
+	   <iszie = 4K,  ioend->io_offset=8K>
+
+It appears that in extreme cases, folios beyond EOF might be written back,
+resulting in situations where isize is less than pos. In such cases,
+maybe we should not trim the io_size further.
+
+Long Li
 
