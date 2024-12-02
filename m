@@ -1,168 +1,141 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A66322066;
-	Sat, 30 Nov 2024 13:41:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E0D11804A
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Dec 2024 01:48:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.208
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732974112; cv=none; b=m8Q9xS2h+jd8YtJARIgBoiu9bpRtLD2IRtldOwzMKkI7gYXhCugh0G85vGnzkYQXs0kfw1dsFZhAq+0bymtcJY2q+Je1oa0X4OM0HoneKUuLwZUSDElY+PeCZe8+0rai7VPLdxzqJj5S4zU7CO5/TZYQfa5pjLks6JzmSSLqm68=
+	t=1733104111; cv=none; b=FMq4aZS2IlmIWmZ1kwmdXvIqKaKTNUuZz+rjapFqKh9bFX3/MAS2LNoNMr0RRPox8CQMrRqGy0tHg3SrkdTi4fMGqHc12g9gDwbjqH3ftkcypeMF1NzptIuhu+iS9wJg4br5joh7+BRb0NvgJdyH2CwMJOLuHZF1KlpeH2mFX6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732974112; c=relaxed/simple;
-	bh=8yHA58RnBcqJ4iTh2+b2D7RTyLJDCG+KrfLJXsRle+4=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QvOj9FCheqE8r8uq/8V2eCI7ravEYfE0PG6wmmPc6oBjgbrmRPp1Ps9sxZYGC1nOxor+S25S5Xd4Tu238hLGFZFtmEYjYqFpG86MUreDIDVnWSnOmxAxV4vjpoBp62qE2xFgIS9U59MjipV3BzkVTKG2HGBRROEDuSoSE3gQ0gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Y0rjh33XRzxSPS;
-	Sat, 30 Nov 2024 21:38:48 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2E904180106;
-	Sat, 30 Nov 2024 21:41:40 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 30 Nov
- 2024 21:41:39 +0800
-Date: Sat, 30 Nov 2024 21:39:29 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
-Subject: Re: [PATCH v5 1/2] iomap: fix zero padding data issue in concurrent
- append writes
-Message-ID: <Z0sVkSXzxUDReow7@localhost.localdomain>
-References: <20241127063503.2200005-1-leo.lilong@huawei.com>
+	s=arc-20240116; t=1733104111; c=relaxed/simple;
+	bh=9PjllhJm7+CnRDBO7Wnq4qwf6c89AiFMHLsT4Gquj6w=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=UWNgba2/H1oGwHnVWrF7fQJDtsS5k0x7N9cvzQ8JZEVsMVbchO0IS3UBTq+vWFVVEQ7jXP5/zeXl/YKfPrtMhL3wkIJwVXmIiguHZ9jrBgCZ7KaPK3fOaZ74weoVcSnGmoXw0TIe8SCCIwvdvNlHHRjr8pw/4wOJvCOQzpFpeUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-3a7c729bfbaso36173575ab.0
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Dec 2024 17:48:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733104108; x=1733708908;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=pdw3pLOY/4L13DYwYHkr5SY7BMmdZN4rlTp/ll+Zuhg=;
+        b=O5kXP2wy6njw2S3ppKKu5jrGELiDY6KnVUsgao6pUkwiGl2ocKCRk8w0VtgIs0xnLf
+         B9YmgbDBIpNc6qoN5bfD7jlOnCoqQfDmsjhsuwPyM5f20p/djQpBWRNQphOL1hZiv5Xd
+         VgVKVxtC1o9YIZRWnT/QT9duVegt9iR4IRvliGII9vd4RHH/RL5YEXhUg9moa3drndz7
+         i+E6Tve7xpClzYE8V1u04yzNY0Ca1tJPLJMzVo+sZ0srlMoZYm0PFNaZaECroJ1gDizu
+         eU5zMpUNpBuaxZjgtFkMANXMt5PdNNclmtTMQh24pzFC5MqPHig0+QGCiHTB192AEj+x
+         eCSw==
+X-Forwarded-Encrypted: i=1; AJvYcCVgqlFlz7D174czyLGp3hD4tOmh9vTu6yjDlGUy9mWg4uP+//y9QSgfd1Zp06/jtXMJS8CWk74DkJs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyYV4skiAZEsCYIjq2L8rOn/BSk0hwTDR9TL/WNv1XkZf+ACAP/
+	/jXfep/rAZWsPc29FEAbAtAlH3wVbePHuEXUB7/oIVJSS3DSuJUTIgM2pKghYkJSoqljv9j5iO7
+	5P3ZpExFlr0GGpwa1ET2n8pQzv9K4UIwLdK9Eb+K+sCw2XiRH/aGi/7s=
+X-Google-Smtp-Source: AGHT+IHlK5e6az1KCVW1n7qcXsi4eC/QWGZwwqJfJHtAzIjEiFTIAYNNKxDBollBwVyEwxzO9lR8azPmx8EkPhIIy5hJEgwFIGmq
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <20241127063503.2200005-1-leo.lilong@huawei.com>
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+X-Received: by 2002:a05:6e02:1a26:b0:3a0:9c99:32d6 with SMTP id
+ e9e14a558f8ab-3a7c55e297bmr217700045ab.24.1733104108727; Sun, 01 Dec 2024
+ 17:48:28 -0800 (PST)
+Date: Sun, 01 Dec 2024 17:48:28 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <674d11ec.050a0220.48a03.001c.GAE@google.com>
+Subject: [syzbot] [iomap?] WARNING in iomap_zero_iter
+From: syzbot <syzbot+af7e25f0384dc888e1bf@syzkaller.appspotmail.com>
+To: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Nov 27, 2024 at 02:35:02PM +0800, Long Li wrote:
-> During concurrent append writes to XFS filesystem, zero padding data
-> may appear in the file after power failure. This happens due to imprecise
-> disk size updates when handling write completion.
-> 
-> Consider this scenario with concurrent append writes same file:
-> 
->   Thread 1:                  Thread 2:
->   ------------               -----------
->   write [A, A+B]
->   update inode size to A+B
->   submit I/O [A, A+BS]
->                              write [A+B, A+B+C]
->                              update inode size to A+B+C
->   <I/O completes, updates disk size to min(A+B+C, A+BS)>
->   <power failure>
-> 
-> After reboot:
->   1) with A+B+C < A+BS, the file has zero padding in range [A+B, A+B+C]
-> 
->   |<         Block Size (BS)      >|
->   |DDDDDDDDDDDDDDDD0000000000000000|
->   ^               ^        ^
->   A              A+B     A+B+C
->                          (EOF)
-> 
->   2) with A+B+C > A+BS, the file has zero padding in range [A+B, A+BS]
-> 
->   |<         Block Size (BS)      >|<           Block Size (BS)    >|
->   |DDDDDDDDDDDDDDDD0000000000000000|00000000000000000000000000000000|
->   ^               ^                ^               ^
->   A              A+B              A+BS           A+B+C
->                                   (EOF)
-> 
->   D = Valid Data
->   0 = Zero Padding
-> 
-> The issue stems from disk size being set to min(io_offset + io_size,
-> inode->i_size) at I/O completion. Since io_offset+io_size is block
-> size granularity, it may exceed the actual valid file data size. In
-> the case of concurrent append writes, inode->i_size may be larger
-> than the actual range of valid file data written to disk, leading to
-> inaccurate disk size updates.
-> 
-> This patch modifies the meaning of io_size to represent the size of
-> valid data within EOF in an ioend. If the ioend spans beyond i_size,
-> io_size will be trimmed to provide the file with more accurate size
-> information. This is particularly useful for on-disk size updates
-> at completion time.
-> 
-> After this change, ioends that span i_size will not grow or merge with
-> other ioends in concurrent scenarios. However, these cases that need
-> growth/merging rarely occur and it seems no noticeable performance impact.
-> Although rounding up io_size could enable ioend growth/merging in these
-> scenarios, we decided to keep the code simple after discussion [1].
-> 
-> Another benefit is that it makes the xfs_ioend_is_append() check more
-> accurate, which can reduce unnecessary end bio callbacks of xfs_end_bio()
-> in certain scenarios, such as repeated writes at the file tail without
-> extending the file size.
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Link[1]: https://patchwork.kernel.org/project/xfs/patch/20241113091907.56937-1-leo.lilong@huawei.com
-> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> ---
-> v4->v5: remove iomap_ioend_size_aligned() and don't round up io_size for
-> 	ioend growth/merging to keep the code simple. 
->  fs/iomap/buffered-io.c | 10 ++++++++++
->  include/linux/iomap.h  |  2 +-
->  2 files changed, 11 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d42f01e0fc1c..dc360c8e5641 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1774,6 +1774,7 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
->  {
->  	struct iomap_folio_state *ifs = folio->private;
->  	size_t poff = offset_in_folio(folio, pos);
-> +	loff_t isize = i_size_read(inode);
->  	int error;
->  
->  	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, pos)) {
-> @@ -1789,7 +1790,16 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
->  
->  	if (ifs)
->  		atomic_add(len, &ifs->write_bytes_pending);
-> +
-> +	/*
-> +	 * If the ioend spans i_size, trim io_size to the former to provide
-> +	 * the fs with more accurate size information. This is useful for
-> +	 * completion time on-disk size updates.
-> +	 */
->  	wpc->ioend->io_size += len;
-> +	if (wpc->ioend->io_offset + wpc->ioend->io_size > isize)
-> +		wpc->ioend->io_size = isize - wpc->ioend->io_offset;
-> +
- 
-When performing fsstress test with this patch set, there is a very low probability of
-encountering an issue where isize is less than ioend->io_offset in iomap_add_to_ioend.
-After investigation, this was found to be caused by concurrent with truncate operations.
-Consider a scenario with 4K block size and a file size of 12K.
+Hello,
 
-//write back [8K, 12K]           //truncate file to 4K
-----------------------          ----------------------
-iomap_writepage_map             xfs_setattr_size
-  iomap_writepage_handle_eof
-                                  truncate_setsize
-				    i_size_write(inode, newsize)  //update inode size to 4K
-  iomap_writepage_map_blocks
-    iomap_add_to_ioend
-           < iszie < ioend->io_offset>
-	   <iszie = 4K,  ioend->io_offset=8K>
+syzbot found the following issue on:
 
-It appears that in extreme cases, folios beyond EOF might be written back,
-resulting in situations where isize is less than pos. In such cases,
-maybe we should not trim the io_size further.
+HEAD commit:    b86545e02e8c Merge tag 'acpi-6.13-rc1-2' of git://git.kern..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=107623c0580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=5f0b9d4913852126
+dashboard link: https://syzkaller.appspot.com/bug?extid=af7e25f0384dc888e1bf
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-Long Li
+Unfortunately, I don't have any reproducer for this issue yet.
 
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7feb34a89c2a/non_bootable_disk-b86545e0.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/00ec87aaa7ee/vmlinux-b86545e0.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/fcc70e20d51b/bzImage-b86545e0.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+af7e25f0384dc888e1bf@syzkaller.appspotmail.com
+
+loop0: detected capacity change from 0 to 32768
+gfs2: fsid=syz:syz: Trying to join cluster "lock_nolock", "syz:syz"
+gfs2: fsid=syz:syz: Now mounting FS (format 1801)...
+gfs2: fsid=syz:syz.0: journal 0 mapped with 1 extents in 0ms
+gfs2: fsid=syz:syz.0: first mount done, others may mount
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 5341 at fs/iomap/buffered-io.c:1373 iomap_zero_iter+0x3b3/0x4c0 fs/iomap/buffered-io.c:1373
+Modules linked in:
+CPU: 0 UID: 0 PID: 5341 Comm: syz.0.0 Not tainted 6.12.0-syzkaller-10553-gb86545e02e8c #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+RIP: 0010:iomap_zero_iter+0x3b3/0x4c0 fs/iomap/buffered-io.c:1373
+Code: 85 ff 49 bc 00 00 00 00 00 fc ff df 7e 56 49 01 dd e8 21 66 60 ff 48 8b 1c 24 48 8d 4c 24 60 e9 0b fe ff ff e8 0e 66 60 ff 90 <0f> 0b 90 e9 1b ff ff ff 48 8b 4c 24 10 80 e1 07 fe c1 38 c1 0f 8c
+RSP: 0018:ffffc9000d27f3e0 EFLAGS: 00010283
+RAX: ffffffff82357e72 RBX: 0000000000000000 RCX: 0000000000100000
+RDX: ffffc9000e2fa000 RSI: 000000000000053d RDI: 000000000000053e
+RBP: ffffc9000d27f4b0 R08: ffffffff82357d88 R09: 1ffffd40002a07d8
+R10: dffffc0000000000 R11: fffff940002a07d9 R12: 0000000000008000
+R13: 0000000000008000 R14: ffffea0001503ec0 R15: 0000000000000001
+FS:  00007efeb79fe6c0(0000) GS:ffff88801fc00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007efeb81360e8 CR3: 00000000442d8000 CR4: 0000000000352ef0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ iomap_zero_range+0x69b/0x970 fs/iomap/buffered-io.c:1456
+ gfs2_block_zero_range fs/gfs2/bmap.c:1303 [inline]
+ __gfs2_punch_hole+0x311/0xb30 fs/gfs2/bmap.c:2420
+ gfs2_fallocate+0x3a1/0x490 fs/gfs2/file.c:1399
+ vfs_fallocate+0x569/0x6e0 fs/open.c:327
+ do_vfs_ioctl+0x258c/0x2e40 fs/ioctl.c:885
+ __do_sys_ioctl fs/ioctl.c:904 [inline]
+ __se_sys_ioctl+0x80/0x170 fs/ioctl.c:892
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7efeb7f80809
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007efeb79fe058 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007efeb8145fa0 RCX: 00007efeb7f80809
+RDX: 0000000020000000 RSI: 0000000040305829 RDI: 0000000000000005
+RBP: 00007efeb7ff393e R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 00007efeb8145fa0 R15: 00007ffd994f7a38
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
