@@ -1,69 +1,107 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70A919068E;
-	Wed,  4 Dec 2024 09:08:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE0D11B4153
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Dec 2024 12:03:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733303309; cv=none; b=LhfhdhR463vtQ9j/J672OenTdEEU1pAFt4CX64uVAhsYDr8ZMj3gQN+oELiDOVJqTmBeHUCSzo7ZpKL54NmVMMpFhKhR+bAMHpgFB/XU8iaQFM/WDmPl9B6cM/iAO4VJoAIs4Blp/shrpWm77RVunEaZujFEtJNJqtAyKLBRIfs=
+	t=1733313808; cv=none; b=grRXqhcW1qwKoZFiHFPI9nuazRWFZIIKrUUih9qO/cH5+bWieyc6DcNqI20P9+dbOthNOMyua8YzqPzFS01BC+AP8aMFprMv0EIcYoRwIWXKbaiSmdyVPzMtILRlPYe+5PiNi7u+zo3n1conbVTVhC/7mY8S15UTR1tk46EQyKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733303309; c=relaxed/simple;
-	bh=qC35SMWN2tr9LeaniR+l4MKRsR8cafaGZgQjHvjkib4=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U+rzKlZPh09VHd4Uc2DUt2yDyGLm70JwjyB1gVGhhvu1s+JpSIaw7VsB7jznVr21Klb9HTy/lha2IScSrwnwxbFBnAV8bnnJIi1OUp1Aj0/KBjwpHueCMMu3PwkeV9a3IsjHfn+RcEAeU3QsFupCY6Hi08DdStY5GjKVr3wHRfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.44])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Y3BTC69qMz1kvH4;
-	Wed,  4 Dec 2024 17:06:07 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 70EE9140136;
-	Wed,  4 Dec 2024 17:08:24 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 4 Dec
- 2024 17:08:24 +0800
-Date: Wed, 4 Dec 2024 17:06:00 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
-CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
+	s=arc-20240116; t=1733313808; c=relaxed/simple;
+	bh=4EssO4jdsWxU+on0mCUZ3Gaq4iVHe+0b3yQKawkrdKA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kP91VE28d+bc5FhCpONuw4608WjmFnnekNnpYw2cD7ZGEaqUirhY6IQphUkfc7gVjQDYiwGbYtqcLTdwtqhw1Izi2/tVow9dKELXA2rA0Yrzs0taEHWnaRnBOdEi4wBs4+de8ATPrmKP/RDXw85Q7hBCQpwfqffxc+vWeeTaMVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BDKAHHUl; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BDKAHHUl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1733313805;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=E8NGLP7ez45KM9t8ebgMe+199p/GlMRQH4wzhaiHZS4=;
+	b=BDKAHHUlj+E7KspWrWYBYVb2wv65vniiy9mEwseatBjyNB7WThtbP3R/FP5oa25F+xsWt6
+	j2fkiGu88vKiz70c/U8khWsJZ67s7c2rfbmhDNRl4aao121Ekz/SjyKhnf8st4XbjtHHFD
+	BkTAHl6NZhrEtHIYMumbuewrIbolVhY=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-371-ghEn3z_cOJSN_wNSEQlHgA-1; Wed,
+ 04 Dec 2024 07:03:19 -0500
+X-MC-Unique: ghEn3z_cOJSN_wNSEQlHgA-1
+X-Mimecast-MFC-AGG-ID: ghEn3z_cOJSN_wNSEQlHgA
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7C13F1956087;
+	Wed,  4 Dec 2024 12:03:17 +0000 (UTC)
+Received: from bfoster (unknown [10.22.90.12])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0ECF23000197;
+	Wed,  4 Dec 2024 12:03:14 +0000 (UTC)
+Date: Wed, 4 Dec 2024 07:05:01 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: Dave Chinner <david@fromorbit.com>, brauner@kernel.org,
+	djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, yi.zhang@huawei.com,
+	houtao1@huawei.com, yangerkun@huawei.com
 Subject: Re: [PATCH v5 1/2] iomap: fix zero padding data issue in concurrent
  append writes
-Message-ID: <Z1AbeD8QVtITsvic@localhost.localdomain>
+Message-ID: <Z1BFbVhqjnCt-Gk5@bfoster>
 References: <20241127063503.2200005-1-leo.lilong@huawei.com>
  <Z0sVkSXzxUDReow7@localhost.localdomain>
  <Z03RlpfdJgsJ_glO@bfoster>
  <Z05oJqT7983ifKqv@dread.disaster.area>
  <Z08bsQ07cilOsUKi@bfoster>
+ <Z1AbeD8QVtITsvic@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z08bsQ07cilOsUKi@bfoster>
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+In-Reply-To: <Z1AbeD8QVtITsvic@localhost.localdomain>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Tue, Dec 03, 2024 at 09:54:41AM -0500, Brian Foster wrote:
-> Not sure I see how this is a serialization dependency given that
-> writeback completion also samples i_size. But no matter, it seems a
-> reasonable implementation to me to make the submission path consistent
-> in handling eof.
+On Wed, Dec 04, 2024 at 05:06:00PM +0800, Long Li wrote:
+> On Tue, Dec 03, 2024 at 09:54:41AM -0500, Brian Foster wrote:
+> > Not sure I see how this is a serialization dependency given that
+> > writeback completion also samples i_size. But no matter, it seems a
+> > reasonable implementation to me to make the submission path consistent
+> > in handling eof.
+> > 
+> > I wonder if this could just use end_pos returned from
+> > iomap_writepage_handle_eof()?
+> > 
+> > Brian
+> > 
 > 
-> I wonder if this could just use end_pos returned from
-> iomap_writepage_handle_eof()?
+> It seems reasonable to me, but end_pos is block-size granular. We need
+> to pass in a more precise byte-granular end. 
+
+Well Ok, but _handle_eof() doesn't actually use the value itself so from
+that standpoint I see no reason it couldn't at least return the
+unaligned end pos. From there, it looks like we do still want the
+rounded up value for the various ifs state management calls.
+
+I can see a couple ways of doing that.. one is just align the value in
+the caller and use the two variants appropriately. Since the ifs_
+helpers all seem to be in byte units, another option could be to
+sanitize the helpers to the appropriate start/end rounding internally.
+
+Either of those probably warrant a separate prep patch or two rather
+than being squashed in with the i_size fix, but otherwise I'm not seeing
+much of a roadblock here. Am I missing something?
+
+Brian
+
 > 
-> Brian
+> Thanks,
+> Long Li
 > 
 
-It seems reasonable to me, but end_pos is block-size granular. We need
-to pass in a more precise byte-granular end. 
-
-Thanks,
-Long Li
