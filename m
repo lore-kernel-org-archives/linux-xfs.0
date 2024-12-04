@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A91C145A0B;
-	Wed,  4 Dec 2024 03:23:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70A22746C;
+	Wed,  4 Dec 2024 03:45:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733282601; cv=none; b=sjPPGW2S3kiBxW+aveoy3QRcG/2nROsX1glK8nDhZFng2PZf4azEnQfC1srgjFViRDdD8vGS4ksqqo9OmCWAAKu/VteS66DeQDK0rFPQy1HkmJM4fP38DAhFjRE/VblW6XCZ8yQ8KL5VXq5vqW/q+bLQRxhsadZqhsRSJGb0RZo=
+	t=1733283944; cv=none; b=BONiCj8nJg+ebCoxhUj5OEIVr/gIaM6tK6UW6kMVIWCEHMVtwBEk9k9EilYpL1tnlcocDhXiyG6IIzad6KPULjj27PSiUFYykRxeW0VoCZ8d3TWvKzOpjyPIqanv3z48m2BfNyVowqsd0eIyiNk8gXD9UftGgt0SgxZpSoYtwUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733282601; c=relaxed/simple;
-	bh=JeTbbGh+igtqLAeGNq1wAJhz9kFuQ1HReyhHEuaf+i8=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=IrtN+WiJ2fnfGyb+O5TY0MhA4pzel/WgVFpo8JnXzI1r8ZrQ15YAieitCQ9DqLMZV/u88roCwVn27sZYWx4OkkM69YZSVU0OwllVF8ufrveR2vYLQWovGeojheYK1kyGRoXePNVUze5tkfXfDj9hO1mVT6m0uDNvhSfnIjOIUxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aB3z9lhB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733283944; c=relaxed/simple;
+	bh=cUm3yDRuGm1rPQLGYSVF71RBia8Uzrs6h2kRHydwDgU=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=qITJM+SJHBlFXrtl75K3vnVLO2t2qqx4nbKasXh6EJTyW+vzzEfk7J6vGg7JTiKZq+iwJlq41CW2EV298fc51qcT7pIbciHsBuUNO8RXQxYi+Avdy/bcpdnRKeHuEFtNnh9Qzu9uL5gtaGeN6D1DKi8lTV6mvqeXwjN1uuK+FME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F5Pqe25R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aB3z9lhB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76F58C4CEDE;
-	Wed,  4 Dec 2024 03:23:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F5Pqe25R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1D3EC4CED1;
+	Wed,  4 Dec 2024 03:45:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733282600;
-	bh=JeTbbGh+igtqLAeGNq1wAJhz9kFuQ1HReyhHEuaf+i8=;
+	s=k20201202; t=1733283944;
+	bh=cUm3yDRuGm1rPQLGYSVF71RBia8Uzrs6h2kRHydwDgU=;
 	h=Date:Subject:From:To:Cc:From;
-	b=aB3z9lhBXIfsItt38ZmBuzQ430cFCCe/k8jUXTftH1VDaOb6s0ed+LcLQzXXddOFW
-	 KXqOYoXtnwzbbSmAw7P6Xf9zZU1LvLw0H2JokoGUemkCWcDck8cFm/BC8o5sDEsHih
-	 tKBdLZUcp14qMsZ2cUqbQmzHI7J/IA5vyETqPq+GtYLCuE884fQDE09oLYDQ5hcJ/D
-	 MtK9PE9mJFKDpH2NB2ULYLbOV9G9fSe+AMNwmBZJx1cs2y07AqjJH9o8+CVg9HwvjA
-	 y60tHptsVsR3o+L4W15alROnzscQk+9sUmWrEWJxLFCIGkAfnWEDWYfzQPiHaJRtjZ
-	 aF6/Gp2qRPuPQ==
-Date: Tue, 03 Dec 2024 19:23:19 -0800
-Subject: [GIT PULL] xfs: bug fixes for 6.13
+	b=F5Pqe25RXVvxbuqINucT8yC4t2lY60op0g5t5sWDqRZX76tS81UkZHXA/fjJuGo2j
+	 G9UKsMj2LAKMgf9UxuhoDu5yAWvVBhj4PeFvlbqYNyr/8NK4EKKlLKfGNZMKNVnb9u
+	 Bjs81uSCXDWVJiJFtcSsHxwazmZM7FGTgOKCjC8pO1qtEjbnBnpBKOUL/+hIv0I67e
+	 TTRjYtv4UX++N6Ly7WfHv/PGZx8JuFIq5uW9FWdSZVm3zoUeuB3z+NnYEXSBBLCv9P
+	 9owhGZ5+9VWFdg4nnSZlzW3NUuWkXBzhaMqrXKbvXM1ATcTJXpeDsf67zhljMxYof0
+	 H0JXWK3HToQyw==
+Date: Tue, 03 Dec 2024 19:45:43 -0800
+Subject: [PATCHSET v3] fstests: random fixes for v2024.12.01
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: dan.carpenter@linaro.org, hch@lst.de, linux-xfs@vger.kernel.org, stable@vger.kernel.org, wozizhi@huawei.com
-Message-ID: <173328206660.1159971.4540485910402305562.stg-ugh@frogsfrogsfrogs>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <173328389984.1190210.3362312366818719077.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,93 +40,41 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi Carlos,
+Hi all,
 
-Please pull this branch with changes for xfs against 6.13-rc1.
+Here's the usual odd fixes for fstests.  Most of these are cleanups and
+bug fixes that have been aging in my djwong-wtf branch forever.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+v2: Now with more cleanups to the logwrites code and better loop control
+    for 251, as discussed on the v1 patchset.
+v3: Add more acks, kick out some of the logwrites stuff, add more
+    bugfixes.
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
 --D
 
-The following changes since commit feffde684ac29a3b7aec82d2df850fbdbdee55e4:
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
 
-Merge tag 'for-6.13-rc1-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/kdave/linux (2024-12-03 11:02:17 -0800)
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
 
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fixes-6.13_2024-12-03
-
-for you to fetch changes up to 641a4a63154885060b7900f86bb45582f07e964b:
-
-xfs: fix sb_spino_align checks for large fsblock sizes (2024-12-03 18:54:49 -0800)
-
-----------------------------------------------------------------
-xfs: bug fixes for 6.13 [v2 1/2]
-
-Here are some bugfixes for 6.13 that have been accumulating since 6.12
-was released.
-
-With a bit of luck, this should all go splendidly.
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (22):
-xfs: fix off-by-one error in fsmap's end_daddr usage
-xfs: metapath scrubber should use the already loaded inodes
-xfs: keep quota directory inode loaded
-xfs: return a 64-bit block count from xfs_btree_count_blocks
-xfs: don't drop errno values when we fail to ficlone the entire range
-xfs: separate healthy clearing mask during repair
-xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when zapping a symlink
-xfs: mark metadir repair tempfiles with IRECOVERY
-xfs: fix null bno_hint handling in xfs_rtallocate_rtg
-xfs: fix error bailout in xfs_rtginode_create
-xfs: update btree keys correctly when _insrec splits an inode root block
-xfs: fix scrub tracepoints when inode-rooted btrees are involved
-xfs: unlock inodes when erroring out of xfs_trans_alloc_dir
-xfs: only run precommits once per transaction object
-xfs: avoid nested calls to __xfs_trans_commit
-xfs: don't lose solo superblock counter update transactions
-xfs: don't lose solo dquot update transactions
-xfs: separate dquot buffer reads from xfs_dqflush
-xfs: clean up log item accesses in xfs_qm_dqflush{,_done}
-xfs: attach dquot buffer to dquot log item buffer
-xfs: convert quotacheck to attach dquot buffers
-xfs: fix sb_spino_align checks for large fsblock sizes
-
-fs/xfs/libxfs/xfs_btree.c        |  33 +++++--
-fs/xfs/libxfs/xfs_btree.h        |   2 +-
-fs/xfs/libxfs/xfs_ialloc_btree.c |   4 +-
-fs/xfs/libxfs/xfs_rtgroup.c      |   2 +-
-fs/xfs/libxfs/xfs_sb.c           |  11 ++-
-fs/xfs/scrub/agheader.c          |   6 +-
-fs/xfs/scrub/agheader_repair.c   |   6 +-
-fs/xfs/scrub/fscounters.c        |   2 +-
-fs/xfs/scrub/health.c            |  57 +++++++-----
-fs/xfs/scrub/ialloc.c            |   4 +-
-fs/xfs/scrub/metapath.c          |  68 ++++++--------
-fs/xfs/scrub/refcount.c          |   2 +-
-fs/xfs/scrub/scrub.h             |   6 ++
-fs/xfs/scrub/symlink_repair.c    |   3 +-
-fs/xfs/scrub/tempfile.c          |  10 +-
-fs/xfs/scrub/trace.h             |   2 +-
-fs/xfs/xfs_bmap_util.c           |   2 +-
-fs/xfs/xfs_dquot.c               | 195 +++++++++++++++++++++++++++++++++------
-fs/xfs/xfs_dquot.h               |   6 +-
-fs/xfs/xfs_dquot_item.c          |  51 +++++++---
-fs/xfs/xfs_dquot_item.h          |   7 ++
-fs/xfs/xfs_file.c                |   8 ++
-fs/xfs/xfs_fsmap.c               |  38 ++++----
-fs/xfs/xfs_inode.h               |   2 +-
-fs/xfs/xfs_qm.c                  |  95 +++++++++++++------
-fs/xfs/xfs_qm.h                  |   1 +
-fs/xfs/xfs_quota.h               |   7 +-
-fs/xfs/xfs_rtalloc.c             |   2 +-
-fs/xfs/xfs_trans.c               |  58 ++++++------
-fs/xfs/xfs_trans_ail.c           |   2 +-
-fs/xfs/xfs_trans_dquot.c         |  31 ++++++-
-31 files changed, 495 insertions(+), 228 deletions(-)
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+Commits in this patchset:
+ * xfs/032: try running on blocksize > pagesize filesystems
+ * xfs/43[4-6]: implement impatient module reloading
+---
+ common/module |   11 +++++++++++
+ tests/xfs/032 |   11 +++++++++++
+ tests/xfs/434 |    2 +-
+ tests/xfs/435 |    2 +-
+ tests/xfs/436 |    2 +-
+ 5 files changed, 25 insertions(+), 3 deletions(-)
 
