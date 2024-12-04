@@ -1,62 +1,61 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 346A61B5EBC
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Dec 2024 12:03:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4003FB0E
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Dec 2024 12:16:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733313821; cv=none; b=VblGtmvkeSuEb98Kd0KRyZ3yLxYH4h/mnjUgYh4P4ws2joT56phc6lJXW3vS7VJSRYRIFz8QryvHnz4OyfoeI/zC9z0jACtP394FvdKDj/EhSa0FlXxCmaguGkSVV2uZvgqnIYRQENufMjnKNvAYiJxHeGIUeigswFX5IAM6DpA=
+	t=1733314575; cv=none; b=YOLXU5/UAv61ysrIHgVYNeo94FTmz8NrbBpKImAxsWN8a48DQECk/sIMt+ad29I+YfD114j5N0LEekgay+2QVwSEZznfLh6f4F2wFacIF1TwTYAR+WAS2CxLU7u1PdmgXfuSK+tUOTld3HnOZEnq2pGGZpCzPpkQhHphj+X/JkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733313821; c=relaxed/simple;
-	bh=8ejfWQlP3wC8HLlZ9l1FTdAXoOaWZ/4pkS4zhBys2ZA=;
+	s=arc-20240116; t=1733314575; c=relaxed/simple;
+	bh=yH2lc1vOe1dJ+S33MXmQsrWY+8omxVkp+Y6IgmuTGDs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AgldN980nU55FBaBlFmqxJE3BXjs3JGOSUhiMLfp22tBnVsKfH2LBuFiowH59L9m0xmiNPyPC3toIjPGpsqXt/vDR10psaLPGNgsfU+C6vmKaza1PZxtFjPjsy/QL7cf1qLkxrOb06pH5lstSqyH2WC7kD0A205UFX5SfAFBz78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L/oh6h9A; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=oT+hqciJyjwcE41Jd+YYelWjbxldEKbmF31gS+PS1xO5LJDUgDQBdpAU4Pwy6lMqEjIEYen2B4eVCheXju9DTs3ihjKf30ENR7eDBPoEQE/2LRtoVVmt6k3K7T1kekY0wMumZcgq7eYiQxc4QqzyxKFtY7GNkg+Z6FznLPmW83M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IUMSA7mZ; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L/oh6h9A"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IUMSA7mZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1733313818;
+	s=mimecast20190719; t=1733314572;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jA/TrtALI4YFhMGnmAIHZDLngvBNjWPJZXBAWvYqY6g=;
-	b=L/oh6h9ArkBJ0pe92VjYjLF2fyX8E6DrOSjyAP/P8h4F8PZPUsHuUv3slq/ZCCZSJndpqs
-	YeBg/5xUBKkFXbHS7M6qJzofI9Fk3RcrnVKunkR/D9c43fbqi7s6wQtQFC2KerFjvLanZS
-	uipyoxFI99UYjugZjCliLWShRaIpxX8=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	bh=JG4ZxK8EE+KOPLX0iJwVt0KTiBtaXP/QySllgx3ZpBc=;
+	b=IUMSA7mZmYxuoDKzqOmfWxq/L87e1cslJIOfpfrZmovUyYDuwCrsVDZ7r0BDAlb4dix87N
+	xtfUSD87kspAzPF9faVnuVm7D7Ax9198EsQeHGIQ+ZFtp6pcu1N36bLMXeid2Y3dIWmlmd
+	gp6/5H2H+m3m1jnhUeJbQoAnreXWD30=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-127-k2HVIn5gOX2yw1Tbx1cDXA-1; Wed,
- 04 Dec 2024 07:03:34 -0500
-X-MC-Unique: k2HVIn5gOX2yw1Tbx1cDXA-1
-X-Mimecast-MFC-AGG-ID: k2HVIn5gOX2yw1Tbx1cDXA
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-679-b9tGxvbgMY-ms-LQwysJlA-1; Wed,
+ 04 Dec 2024 07:16:03 -0500
+X-MC-Unique: b9tGxvbgMY-ms-LQwysJlA-1
+X-Mimecast-MFC-AGG-ID: b9tGxvbgMY-ms-LQwysJlA
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8BB591954126;
-	Wed,  4 Dec 2024 12:03:32 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2CB7B1955F39;
+	Wed,  4 Dec 2024 12:16:02 +0000 (UTC)
 Received: from bfoster (unknown [10.22.90.12])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8E9F03000197;
-	Wed,  4 Dec 2024 12:03:30 +0000 (UTC)
-Date: Wed, 4 Dec 2024 07:05:16 -0500
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DCC391956048;
+	Wed,  4 Dec 2024 12:15:59 +0000 (UTC)
+Date: Wed, 4 Dec 2024 07:17:45 -0500
 From: Brian Foster <bfoster@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Long Li <leo.lilong@huawei.com>, brauner@kernel.org, djwong@kernel.org,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
+To: Long Li <leo.lilong@huawei.com>
+Cc: Dave Chinner <david@fromorbit.com>, brauner@kernel.org,
+	djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, yi.zhang@huawei.com,
 	houtao1@huawei.com, yangerkun@huawei.com
 Subject: Re: [PATCH v5 1/2] iomap: fix zero padding data issue in concurrent
  append writes
-Message-ID: <Z1BFfIk_iDAh2uwF@bfoster>
+Message-ID: <Z1BIab8G3KmXuyfS@bfoster>
 References: <20241127063503.2200005-1-leo.lilong@huawei.com>
  <Z0sVkSXzxUDReow7@localhost.localdomain>
  <Z03RlpfdJgsJ_glO@bfoster>
  <Z05oJqT7983ifKqv@dread.disaster.area>
- <Z08bsQ07cilOsUKi@bfoster>
- <Z090Jd06yjgh_Q-y@dread.disaster.area>
+ <Z1AaPNoN_z5EQxFQ@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -65,111 +64,164 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z090Jd06yjgh_Q-y@dread.disaster.area>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <Z1AaPNoN_z5EQxFQ@localhost.localdomain>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Wed, Dec 04, 2024 at 08:12:05AM +1100, Dave Chinner wrote:
-> On Tue, Dec 03, 2024 at 09:54:41AM -0500, Brian Foster wrote:
-> > On Tue, Dec 03, 2024 at 01:08:38PM +1100, Dave Chinner wrote:
-> > > On Mon, Dec 02, 2024 at 10:26:14AM -0500, Brian Foster wrote:
-> > > > On Sat, Nov 30, 2024 at 09:39:29PM +0800, Long Li wrote:
-> > > We hold the MMAP_LOCK (filemap_invalidate_lock()) so no new pages
-> > > can be instantiated over the range whilst we are running
-> > > xfs_itruncate_extents(). hence once truncate_setsize() returns, we
-> > > are guaranteed that there will be no IO in progress or can be
-> > > started over the range we are removing.
-> > > 
-> > > Really, the issue is that writeback mappings have to be able to
-> > > handle the range being mapped suddenly appear to be beyond EOF.
-> > > This behaviour is a longstanding writeback constraint, and is what
-> > > iomap_writepage_handle_eof() is attempting to handle.
-> > > 
-> > > We handle this by only sampling i_size_read() whilst we have the
-> > > folio locked and can determine the action we should take with that
-> > > folio (i.e. nothing, partial zeroing, or skip altogether). Once
-> > > we've made the decision that the folio is within EOF and taken
-> > > action on it (i.e. moved the folio to writeback state), we cannot
-> > > then resample the inode size because a truncate may have started
-> > > and changed the inode size.
-> > > 
-> > > We have to complete the mapping of the folio to disk blocks - the
-> > > disk block mapping is guaranteed to be valid for the life of the IO
-> > > because the folio is locked and under writeback - and submit the IO
-> > > so that truncate_pagecache() will unblock and invalidate the folio
-> > > when the IO completes.
-> > > 
-> > > Hence writeback vs truncate serialisation is really dependent on
-> > > only sampling the inode size -once- whilst the dirty folio we are
-> > > writing back is locked.
-> > > 
+On Wed, Dec 04, 2024 at 05:00:44PM +0800, Long Li wrote:
+> On Tue, Dec 03, 2024 at 01:08:38PM +1100, Dave Chinner wrote:
+> > On Mon, Dec 02, 2024 at 10:26:14AM -0500, Brian Foster wrote:
+> > > On Sat, Nov 30, 2024 at 09:39:29PM +0800, Long Li wrote:
+> > > > When performing fsstress test with this patch set, there is a very low probability of
+> > > > encountering an issue where isize is less than ioend->io_offset in iomap_add_to_ioend.
+> > > > After investigation, this was found to be caused by concurrent with truncate operations.
+> > > > Consider a scenario with 4K block size and a file size of 12K.
+> > > > 
+> > > > //write back [8K, 12K]           //truncate file to 4K
+> > > > ----------------------          ----------------------
+> > > > iomap_writepage_map             xfs_setattr_size
 > > 
-> > Not sure I see how this is a serialization dependency given that
-> > writeback completion also samples i_size.
+> > folio is locked here
+> > 
+> > > >   iomap_writepage_handle_eof
+> > > >                                   truncate_setsize
+> > > > 				    i_size_write(inode, newsize)  //update inode size to 4K
+> > 
+> > truncate_setsize() is supposed to invalidate whole pages beyond
+> > EOF before completing, yes?
+> > 
+> > /**
+> >  * truncate_setsize - update inode and pagecache for a new file size
+> >  * @inode: inode
+> >  * @newsize: new file size
+> >  *
+> >  * truncate_setsize updates i_size and performs pagecache truncation (if
+> >  * necessary) to @newsize. It will be typically be called from the filesystem's
+> >  * setattr function when ATTR_SIZE is passed in.
+> >  *
+> >  * Must be called with a lock serializing truncates and writes (generally
+> >  * i_rwsem but e.g. xfs uses a different lock) and before all filesystem
+> >  * specific block truncation has been performed.
+> >  */
+> > void truncate_setsize(struct inode *inode, loff_t newsize)
+> > {
+> >         loff_t oldsize = inode->i_size;
+> > 
+> >         i_size_write(inode, newsize);
+> >         if (newsize > oldsize)
+> >                 pagecache_isize_extended(inode, oldsize, newsize);
+> >         truncate_pagecache(inode, newsize);
+> > }
+> > EXPORT_SYMBOL(truncate_setsize);
+> > 
+> > Note that this says "serialising truncates and writes" - the
+> > emphasis needs to be placed on "writes" here, not "writeback". The
+> > comment about XFS is also stale - it uses the i_rwsem here like
+> > all other filesystems now.
+> > 
+> > The issue demonstrated above is -write back- racing against
+> > truncate_setsize(), not writes. And -write back- is only serialised
+> > against truncate_pagecache() by folio locks and state, not inode
+> > locks. hence any change to the inode size in truncate can and will
+> > race with writeback in progress.
+> > 
+> > Hence writeback needs to be able to handle folios end up beyond
+> > EOF at any time during writeback. i.e. once we have a folio locked
+> > in writeback and we've checked against i_size_read() for validity,
+> > it needs to be considered a valid offset all the way through to
+> > IO completion.
+> > 
+> > 
+> > > >   iomap_writepage_map_blocks
+> > > >     iomap_add_to_ioend
+> > > >            < iszie < ioend->io_offset>
+> > > > 	   <iszie = 4K,  ioend->io_offset=8K>
+> > 
+> > Ah, so the bug fix adds a new call to i_size_read() in the IO
+> > submission path? I suspect that is the underlying problem leading
+> > to the observed behaviour....
+> > 
+> > > > 
+> > > > It appears that in extreme cases, folios beyond EOF might be written back,
+> > > > resulting in situations where isize is less than pos. In such cases,
+> > > > maybe we should not trim the io_size further.
+> > > > 
+> > > 
+> > > Hmm.. it might be wise to characterize this further to determine whether
+> > > there are potentially larger problems to address before committing to
+> > > anything. For example, assuming truncate acquires ilock and does
+> > > xfs_itruncate_extents() and whatnot before this ioend submits/completes,
+> > 
+> > I don't think xfs_itruncate_extents() is the concern here - that
+> > happens after the page cache and writeback has been sorted out and
+> > the ILOCK has been taken and the page cache state should
+> > have already been sorted out. truncate_setsize() does that for us;
+> > it guarantees that all writeback in the truncate down range has
+> > been completed and the page cache invalidated.
+> > 
+> > We hold the MMAP_LOCK (filemap_invalidate_lock()) so no new pages
+> > can be instantiated over the range whilst we are running
+> > xfs_itruncate_extents(). hence once truncate_setsize() returns, we
+> > are guaranteed that there will be no IO in progress or can be
+> > started over the range we are removing.
+> > 
+> > Really, the issue is that writeback mappings have to be able to
+> > handle the range being mapped suddenly appear to be beyond EOF.
+> > This behaviour is a longstanding writeback constraint, and is what
+> > iomap_writepage_handle_eof() is attempting to handle.
+> > 
+> > We handle this by only sampling i_size_read() whilst we have the
+> > folio locked and can determine the action we should take with that
+> > folio (i.e. nothing, partial zeroing, or skip altogether). Once
+> > we've made the decision that the folio is within EOF and taken
+> > action on it (i.e. moved the folio to writeback state), we cannot
+> > then resample the inode size because a truncate may have started
+> > and changed the inode size.
+> > 
 > 
-> Ah, I didn't explain what I meant very clearly, did I?
-> 
-> What I mean was we can't sample i_size in the IO path without
-> specific checking/serialisation against truncate operations. And
-> that means once we have partially zeroed the contents of a EOF
-> straddling folio, we can't then sample the EOF again to determine
-> the length of valid data in the folio as this can race with truncate
-> and result in a different size for the data in the folio than we
-> prepared it for.
+> My understanding is the issue isn't that we can't sample the inode size. 
+> The key point is that writeback mapping must be able to handle cases where
+> the mapped range suddenly appears beyond EOF. If we can handle such
+> cases properly, wouldn't sampling still be possible?
 > 
 
-Ok, I think we're just saying the same thing using different words.
+I think so. I wouldn't harp too much on this as I think we're tripping
+over words. ISTM the critical thing is that the folio is handled
+properly wrt the truncate operation, which should be facilitated by the
+folio lock.
 
-> > But no matter, it seems a
-> > reasonable implementation to me to make the submission path consistent
-> > in handling eof.
-> 
-> Yes, the IO completion path does sample it again via xfs_new_eof().
-> However, as per above, it has specific checking for truncate down
-> races and handles them:
-> 
-> /*
->  * If this I/O goes past the on-disk inode size update it unless it would
->  * be past the current in-core inode size.
->  */
-> static inline xfs_fsize_t
-> xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
-> {
->         xfs_fsize_t i_size = i_size_read(VFS_I(ip));
-> 
-> >>>>    if (new_size > i_size || new_size < 0)
-> >>>>            new_size = i_size;
->         return new_size > ip->i_disk_size ? new_size : 0;
-> }
-> 
-> If we have a truncate_setsize() called for a truncate down whilst
-> this IO is in progress, then xfs_new_eof() will see the new, smaller
-> inode isize. The clamp on new_size handles this situation, and we
-> then only triggers an update if the on-disk size is still smaller
-> than the new truncated size (i.e. the IO being completed is still
-> partially within the new EOF from the truncate down).
-> 
-> So I don't think there's an issue here at all at IO completion;
-> it handles truncate down races cleanly...
+> Coming back to our current issue, during writeback mapping, we sample
+> the inode size to determine if the ioend is within EOF and attempt to
+> trim io_size. Concurrent truncate operations may update the inode size,
+> causing the pos of write back beyond EOF. In such cases, we simply don't
+> trim io_size, which seems like a viable approach.
 > 
 
-Agree.. this was kind of the point of the submit side trimming. I'm not
-sure a second sample of i_size on submission for trimming purposes
-affects this in any problematic way either.
+Perhaps. I'm not claiming it isn't functional. But to Dave's (more
+elaborated) point and in light of the racy i_size issue you've
+uncovered, what bugs me also about this is that this creates an internal
+inconsistency in the submission codepath.
+
+I.e., the top level code does one thing based on one value of i_size,
+then the ioend construction does another, and the logic is not directly
+correlated so there is no real guarantee changes in one area correlate
+to the other. IME, this increases potential for future bugs and adds
+maintenance burden.
+
+A simple example to consider might be.. suppose sometime in the future
+we determine there is a selective case where we do want to allow a
+post-eof writeback. As of right now, all that really requires is
+adjustment to the "handle_eof()" logic and the rest of the codepath does
+the right thing agnostic to outside operations like truncate. I think
+there's value if we can preserve that invariant going forward.
+
+FWIW, I'm not objecting to the alternative if something in the above
+reasoning is wrong. I'm just trying to prioritize keeping things simple
+and maintainable, particularly since truncate is kind of a complicated
+beast as it is.
 
 Brian
 
-> > I wonder if this could just use end_pos returned from
-> > iomap_writepage_handle_eof()?
-> 
-> Yeah, that was what I was thinking, but I haven't looked at the code
-> for long enough to have any real idea of whether that is sufficient
-> or not.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Thanks,
+> Long Li
 > 
 
