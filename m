@@ -1,189 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from fhigh-b1-smtp.messagingengine.com (fhigh-b1-smtp.messagingengine.com [202.12.124.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4F81E519
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2024 08:48:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62B11215F5C
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2024 10:04:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733388484; cv=none; b=eR5bbNt4gQQv6NyGHSppsL73YykHTWQTyUSeCrts5dYSC5xuVG5MOGYKIaW5gJy/rQ3EZfZKrF11RCRUl1hngYilb8P5NA7oZVQBd+BTFvUo9V/jL8RHelmUB4WRTqLQpCvX9s3aGeo9DaHNQtD+yCM2ous+K1xoqn3phsvge04=
+	t=1733393054; cv=none; b=Vo2VwFKkGQ8LAu4QgF2pix/Xm2zUfoY4rXnqrfEDkwOy610Mskwwl4Eqixlhqih4QLeCEAFAI7IETBDSknYRBbU2TSz8ZpUCR1Ee7d0Tw9hS9MnzfCzJL54+dWkQaYi2JmWboQayJBkXycBemC5LsqL+ErBnN9DanVKRNJsMuj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733388484; c=relaxed/simple;
-	bh=wYDw1TuN2k35SkoIU0toiEcsVuzpIP7INLAH3/IoOlQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZU8YwWOFPFn0mlezV0KcLAKMrIt7cioazLkd69cc6rAa4tpvrGpDJYBfhKSSJkFGlyT8PJem5Ve/oGcAId2zsoxa4X2kGJJJcrwxyBcBq5pdvbYeDJun1+m7F3Itx3gORSfgBV/AKp5KxwuoOdZVNBJe7CWAfJIcdyvZLjuhmVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C23rppL6; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1733393054; c=relaxed/simple;
+	bh=TE2uEgZC6nvfFxaC1BDDg5Qia/idhm+M6acr64uUi44=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ElVKqA9oHV0iGZj3OdADZdsHHNrX5o7Xg8DVml1/4tuoMisEPro9cI1kAnQ4kmEoXlTdLyLFDlFi2jBMKBZJqrHlDVuh/P/5dgCZNdSPXA38JLDHOfmo+Nc8uEeXb+u8sM9p4nOCDgUrfy8ZgFlMT2p6/2CS4K2ocMheqZ/0CIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fastmail.com; spf=pass smtp.mailfrom=fastmail.com; dkim=pass (2048-bit key) header.d=fastmail.com header.i=@fastmail.com header.b=O1WJZ+QN; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=uTZwysAN; arc=none smtp.client-ip=202.12.124.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fastmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fastmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C23rppL6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1733388481;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ccQzRwMGVsbCgo9un1k/hDN15wwRwt7Gy/SqmL8E9vc=;
-	b=C23rppL6VOyuyULNHoIjN/CWAKSwqJB7nJ3tc49z7zIS9kIuM5Exjju6etVomhMW2OhpId
-	xgj6+t8RywqcTjaOKcHdCMwBIU3j28sSZUrYF1g4w68dHggf6Kiuinv5EvWEYobJWssAXp
-	abgLpMADqhu/poXuXjqDEjr8TCuRnFE=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-388-qIMSRSmVPxGb32FvCtITKg-1; Thu,
- 05 Dec 2024 03:47:55 -0500
-X-MC-Unique: qIMSRSmVPxGb32FvCtITKg-1
-X-Mimecast-MFC-AGG-ID: qIMSRSmVPxGb32FvCtITKg
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A5FDC19560BD;
-	Thu,  5 Dec 2024 08:47:53 +0000 (UTC)
-Received: from redhat.com (unknown [10.22.64.4])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C1D491956052;
-	Thu,  5 Dec 2024 08:47:51 +0000 (UTC)
-Date: Thu, 5 Dec 2024 02:47:49 -0600
-From: Bill O'Donnell <bodonnel@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
-	stable@vger.kernel.org, jlayton@kernel.org,
-	linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCHSET v2] xfs: proposed bug fixes for 6.13
-Message-ID: <Z1FotR1TR8y_kY4D@redhat.com>
-References: <173328106571.1145623.3212405760436181793.stgit@frogsfrogsfrogs>
- <Z1EBXqpMWGL306sh@redhat.com>
- <20241205064243.GD7837@frogsfrogsfrogs>
- <Z1FNqV27x5hjnqQ9@redhat.com>
- <Z1FPGXpTIJ1Fc2Xy@infradead.org>
- <Z1FQdYEXLR5BoOE-@redhat.com>
- <20241205073321.GH7837@frogsfrogsfrogs>
- <Z1Facuy97Xxj9mKO@redhat.com>
- <Z1Fd-FVR84x3fLVd@redhat.com>
- <2024120533-dirtiness-streak-c69d@gregkh>
+	dkim=pass (2048-bit key) header.d=fastmail.com header.i=@fastmail.com header.b="O1WJZ+QN";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="uTZwysAN"
+Received: from phl-compute-03.internal (phl-compute-03.phl.internal [10.202.2.43])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 48E0E254024E;
+	Thu,  5 Dec 2024 05:04:11 -0500 (EST)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-03.internal (MEProxy); Thu, 05 Dec 2024 05:04:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
+	cc:cc:content-transfer-encoding:content-type:date:date:from:from
+	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
+	:to; s=fm1; t=1733393051; x=1733479451; bh=ymQWH+NC3mwLBpXJmVyFX
+	eNqIeGfERpeG8TdAJE3YRM=; b=O1WJZ+QNmtPFHz8n3VDiTsRdaitJkYamiDce1
+	yDwf2ZL14meT23mJtDBL/iCeMSck+3U/yijxot+ZRISTUs0h+UbBn5MtbXDFeYg7
+	tV9JK6xP888EnpLP/ba9KF9ojhdqyOMEzuZsDbaKyJkpiOffo0SDzcF11RJTLnxV
+	Cd84VfykKf98XVES39tUO2J+wmgK7vDRpYEF7wkEjmh/W6DXXyFZi79+6oFht+SI
+	D8oog12CJOgksloYlpWMEMgcf+twEbNnwaobdQ69xo4t9ay1PcLZBw5KeNLl+Krd
+	r+bTl9AGY4+HQ0ZMMWgmV/i2btq/G4grH63HuudxZWrsFbPuw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:date:date:feedback-id:feedback-id:from:from
+	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
+	1733393051; x=1733479451; bh=ymQWH+NC3mwLBpXJmVyFXeNqIeGfERpeG8T
+	dAJE3YRM=; b=uTZwysANhJTT5Bi99Veri76Osgy/ZN25UfHf2Bck3bf0NlXHmO/
+	h7XunlqehsmO7hj/FB25WUY8V6n6IPpRi+knFIdsoIkJlTZT7mys78UuNgfJOVd+
+	8zqYOeziVyl2R1dSpqEvEMYIDpMDSCCYyRdnrBHZRiUSILB5EPtTnP4WEB3MY8xI
+	Lxlm25y6kR5DmwE6BYybXj59844CjY0HKYa0IGVmqTpMwhGcdl7iep6N6KO1Essx
+	FCsKTvwn7fpdePH8HNZDCH2Xli0/Mv2TnY60K/Z+cO4eYh4vuSUORkUZsXnmLGAP
+	KLJkpPaq7SMQxIUNf2kB9R/9c9hQBy83CKA==
+X-ME-Sender: <xms:mnpRZ6kKc3V2EVi4J0FYLo8JxqDwtziqPe4b02Q4z6i1iFNjBkrPBA>
+    <xme:mnpRZx18UQfgFNiMMyugyLf90vcbm0P4B3uV5rrvkEeCHTbo0f4rvQem37ZtaTm_P
+    KPvIS05pl7QslNLWA>
+X-ME-Received: <xmr:mnpRZ4o-UNuxIigGTpyxdTPqB4nLyK5-3i4dVcMGLvefrn6lgMt0yfuzeZ0KZtONEt_30eqpT5HE0vIj481LGLVDNkHWfKM4jw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefuddrieejgddutdcutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpggftfghnshhusghstghrihgsvgdpuffr
+    tefokffrpgfnqfghnecuuegrihhlohhuthemuceftddtnecunecujfgurhephffvvefuff
+    fkofgggfestdekredtredttdenucfhrhhomheplfgrnhcurfgrlhhushcuoehjphgrlhhu
+    shesfhgrshhtmhgrihhlrdgtohhmqeenucggtffrrghtthgvrhhnpefhkedvvdegkefhje
+    duieevueeihfdukeehjefhleehudfhhfelgefgtedtteeutdenucevlhhushhtvghrufhi
+    iigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehjphgrlhhushesfhgrshhtmhgrih
+    hlrdgtohhmpdhnsggprhgtphhtthhopedvpdhmohguvgepshhmthhpohhuthdprhgtphht
+    thhopehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoh
+    epjhhprghluhhssehfrghsthhmrghilhdrtghomh
+X-ME-Proxy: <xmx:m3pRZ-kIdhEQziC9LioOF6u0RtVfI_z8d4_OSqX5pmsvgr9izNVOfw>
+    <xmx:m3pRZ43lUvyU39dMJFrQRG3XRBHDNr4HkGYS26fOlZX-tFuC_1EZww>
+    <xmx:m3pRZ1sHa04f95-rnUq_a0WnkGZlRhDiGSKtNgse3eqsKJ6qej7Lgg>
+    <xmx:m3pRZ0V1r7CI5zhTKsJDGS5ck-9Yr90A113-8JcEo0CvUhVhcbCykQ>
+    <xmx:m3pRZ2A3boDOoT7ff2K9uD7f496prr6Ip4eVqWSH8TgJCiN8EWHiMa9E>
+Feedback-ID: i01894241:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 5 Dec 2024 05:04:10 -0500 (EST)
+From: Jan Palus <jpalus@fastmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Palus <jpalus@fastmail.com>
+Subject: [PATCH] man: fix ioctl_xfs_commit_range man page install
+Date: Thu,  5 Dec 2024 11:04:01 +0100
+Message-ID: <20241205100401.17308-1-jpalus@fastmail.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2024120533-dirtiness-streak-c69d@gregkh>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Transfer-Encoding: 8bit
 
-On Thu, Dec 05, 2024 at 09:39:42AM +0100, Greg KH wrote:
-> On Thu, Dec 05, 2024 at 02:02:00AM -0600, Bill O'Donnell wrote:
-> > On Thu, Dec 05, 2024 at 01:46:58AM -0600, Bill O'Donnell wrote:
-> > > On Wed, Dec 04, 2024 at 11:33:21PM -0800, Darrick J. Wong wrote:
-> > > > On Thu, Dec 05, 2024 at 01:04:21AM -0600, Bill O'Donnell wrote:
-> > > > > On Wed, Dec 04, 2024 at 10:58:33PM -0800, Christoph Hellwig wrote:
-> > > > > > On Thu, Dec 05, 2024 at 12:52:25AM -0600, Bill O'Donnell wrote:
-> > > > > > > > 1) Our vaunted^Wshitty review process didn't catch various coding bugs,
-> > > > > > > > and testing didn't trip over them until I started (ab)using precommit
-> > > > > > > > hooks for spot checking of inode/dquot/buffer log items.
-> > > > > > > 
-> > > > > > > You give little time for the review process.
-> > > > 
-> > > > Seriously?!
-> > > > 
-> > > > Metadir has been out for review in some form or another since January
-> > > > 2019[1].  If five years and eleven months is not sufficient for you to
-> > > > review a patchset or even to make enough noise that I'm aware that
-> > > > you're even reading my code, then I don't want you ever to touch any of
-> > > > my patchsets ever again.
-> > > > 
-> > > > > > I don't really think that is true.  But if you feel you need more time
-> > > > > > please clearly ask for it.  I've done that in the past and most of the
-> > > > > > time the relevant people acted on it (not always).
-> > > > > > 
-> > > > > > > > 2) Most of the metadir/rtgroups fixes are for things that hch reworked
-> > > > > > > > towards the end of the six years the patchset has been under
-> > > > > > > > development, and that introduced bugs.  Did it make things easier for a
-> > > > > > > > second person to understand?  Yes.
-> > > > > > > 
-> > > > > > > No.
-> > > > > > 
-> > > > > > So you speak for other people here?
-> > > > > 
-> > > > > No. I speak for myself. A lowly downstream developer.
-> > > > > 
-> > > > > > 
-> > > > > > > I call bullshit. You guys are fast and loose with your patches. Giving
-> > > > > > > little time for review and soaking.
-> > > > > > 
-> > > > > > I'm not sure who "you" is, but please say what is going wrong and what
-> > > > > > you'd like to do better.
-> > > > > 
-> > > > > You and Darrick. Can I be much clearer?
-> > > > > 
-> > > > > > 
-> > > > > > > > > becoming rather dodgy these days. Do things need to be this
-> > > > > > > > > complicated?
-> > > > > > > > 
-> > > > > > > > Yeah, they do.  We left behind the kindly old world where people didn't
-> > > > > > > > feed computers fuzzed datafiles and nobody got fired for a computer
-> > > > > > > > crashing periodically.  Nowadays it seems that everything has to be
-> > > > > > > > bulletproofed AND fast. :(
-> > > > > > > 
-> > > > > > > Cop-out answer.
-> > > > > > 
-> > > > > > What Darrick wrote feels a little snarky, but he has a very valid
-> > > > > > point.  A lot of recent bug fixes come from better test coverage, where
-> > > > > > better test coverage is mostly two new fuzzers hitting things, or
-> > > > > > people using existing code for different things that weren't tested
-> > > > > > much before.  And Darrick is single handedly responsible for a large
-> > > > > > part of the better test coverage, both due to fuzzing and specific
-> > > > > > xfstests.  As someone who's done a fair amount of new development
-> > > > > > recently I'm extremely glad about all this extra coverage.
-> > > > > > 
-> > > > > I think you are killing xfs with your fast and loose patches.
-> > > > 
-> > > > Go work on the maintenance mode filesystems like JFS then.  Shaggy would
-> > > > probably love it if someone took on some of that.
-> > > 
-> > > No idea who "Shaggy" is. Nor do I care.	   
-> > > > 
-> > > > > Downstreamers like me are having to clean up the mess you make of
-> > > > > things.
-> > > > 
-> > > > What are you doing downstream these days, exactly?  You don't
-> > > > participate in the LTS process at all, and your employer boasts about
-> > > > ignoring that community process.  If your employer chooses to perform
-> > > > independent forklift upgrades of the XFS codebase in its product every
-> > > > three months and you don't like that, take it up with them, not
-> > > > upstream.
-> > 
-> > Why are you such a nasty person? I try to get along with people, but you're
-> > impossible. I've been an engineer for 40+ years, and I've never encountered such
-> > an arrogant one as you.
-> 
-> I have to step in here, sorry.
-> 
-> Please take a beat and relax and maybe get some sleep before you respond
-> again.  Darrick is not being "nasty" here at all, but reiterating the
-> fact that your company does do huge fork-lifts of code into their kernel
-> tree.  If that development model doesn't work for you, please work with
-> your company to change it.
-> 
-> And if you wish to help out here, please do so by reviewing and even
-> better yet, testing, the proposed changes.  If you can't just suck down
-> a patch series and put it into your test framework with a few
-> keystrokes, perhaps that needs to be worked on to make it simpler to do
-> from your side (i.e. that's what most of us do here with our development
-> systems.)
-> 
-> By critisizing the mere posting of bugfixes, you aren't helping anything
-> out at all, sorry.  Bugfixes are good, I don't know why you don't want
-> even more, that means that people are testing and finding issues to fix!
-> Surely you don't want the people finding the issues to be your users,
-> right?
-> 
-> thanks,
+INSTALL_MAN uses first symbol in .SH NAME section for both source and
+destination filename hence it needs to match current filename. since
+ioctl_xfs_commit_range.2 documents both ioctl_xfs_start_commit as well
+as ioctl_xfs_commit_range ensure they are listed in order INSTALL_MAN
+expects.
 
-Thank you for putting this in a better perspective.
--Bill
+Signed-off-by: Jan Palus <jpalus@fastmail.com>
+---
+ man/man2/ioctl_xfs_commit_range.2 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> greg k-h
-> 
+diff --git a/man/man2/ioctl_xfs_commit_range.2 b/man/man2/ioctl_xfs_commit_range.2
+index 3244e52c..4cd074ed 100644
+--- a/man/man2/ioctl_xfs_commit_range.2
++++ b/man/man2/ioctl_xfs_commit_range.2
+@@ -22,8 +22,8 @@
+ .\" %%%LICENSE_END
+ .TH IOCTL-XFS-COMMIT-RANGE 2  2024-02-18 "XFS"
+ .SH NAME
+-ioctl_xfs_start_commit \- prepare to exchange the contents of two files
+ ioctl_xfs_commit_range \- conditionally exchange the contents of parts of two files
++ioctl_xfs_start_commit \- prepare to exchange the contents of two files
+ .SH SYNOPSIS
+ .br
+ .B #include <sys/ioctl.h>
+-- 
+2.47.1
 
