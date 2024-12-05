@@ -1,56 +1,78 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A194821C197
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2024 16:11:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70B451C3BEF
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2024 21:15:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733415081; cv=none; b=VhN7aESjQpOKxl5IVdhQqYkeePy35N78Weo4BdGebN3wsnK7GIB2wP7EYukKzmyutQTWfulknFi3D2/h5fUn9Mp2Rtok8Faq9MbhacNQnMyM/7SjiPq11oPF+yT1yRe1NV6p0G2EW+u7fdpaQCoT3PY42xF90XdhCBOAoxb4Lvk=
+	t=1733433312; cv=none; b=nyk4FD6Tr1VWYkehyzphqX44TJoye+d/dHFCeT3dG61pSUsnw2HJur2fTxA26kOEmE/0R3lkvDa1sP1eb4T575/LCjixhDnqkwJmrrTd5TY7FbiomBeFtoEAGFXQijUZH9T2JeNu+x63h3OZLz7uDbRryUYZseHGyUPoMGFTvEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733415081; c=relaxed/simple;
-	bh=CGV3nrfOdtIn/R/zeE+QepX7ELOqTDf+f54cTiCiKRo=;
+	s=arc-20240116; t=1733433312; c=relaxed/simple;
+	bh=h3cshb4rCdaW6s7WqmDad6l3SlGpjsv59lMl5HHGEQE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NInx2ub08LXqyqilPePGybqdRHOVOWbnzcyXUd0Y0MqGm7RVGzlUUN9D1Oj/2KG8SQqqanRKqlhneVXFv5UZbSvhVM/tWJMMWU8+ky43Jpr8mIstruJ2IroIbWnbA41anGeoa48F7m8sN/njI3dZnDRGoy9WNC0b2wKZtLoeR7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E78DAV4m; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=OTozYb7XwdepFPPwoiAYrwxcPnKjngHZu+Qfb1MO5AgHHPqvCTOric+3Sr3iQAPGc6iRKrc1XyCs6SIhejoYZ9tuqchyj8OccY13RU0GTvrDN7vq6eWlVs5uoVJc9jhtbv3V4BJtbp+AnfPo8FKkheFngVus1wVQOFAbq3LgMgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RGSODj+M; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E78DAV4m"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1733415078;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VbE0LpYWlfozp+Prjg91uxyaxT18eyWKwljreCBo4xI=;
-	b=E78DAV4m1/TAaFezrMDDOxRlGUYJ1kGY5ptbEaey/a5u2nQJy6TD4vpKpKq/FNs/fXTLtH
-	5fRlwd706BKzhWWTStR0lwIH59RlG4ccI10hVnDRQlVBdYyUVLpl+qc0dArjn0AtUb8xEl
-	wJKwimC0108tnp7ymJDLh4cyy6xh+Bs=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-112-AD2EDa_1N72Z388pv61z7A-1; Thu,
- 05 Dec 2024 11:11:15 -0500
-X-MC-Unique: AD2EDa_1N72Z388pv61z7A-1
-X-Mimecast-MFC-AGG-ID: AD2EDa_1N72Z388pv61z7A
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8CEC7195421C;
-	Thu,  5 Dec 2024 16:11:13 +0000 (UTC)
-Received: from redhat.com (unknown [10.22.64.4])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 316AB1956095;
-	Thu,  5 Dec 2024 16:11:12 +0000 (UTC)
-Date: Thu, 5 Dec 2024 10:11:09 -0600
-From: Bill O'Donnell <bodonnel@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, stable@vger.kernel.org, jlayton@kernel.org,
-	linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCHSET v2] xfs: proposed bug fixes for 6.13
-Message-ID: <Z1HQneqJMaDe3-Dt@redhat.com>
-References: <173328106571.1145623.3212405760436181793.stgit@frogsfrogsfrogs>
- <Z1EBXqpMWGL306sh@redhat.com>
- <20241205064243.GD7837@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RGSODj+M"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-215810fff52so15517215ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Dec 2024 13:15:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1733433310; x=1734038110; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=iMNOQ/LbvkZ3RF8xsPDD/T0btfy12YyJO+FcJtUBr1I=;
+        b=RGSODj+MxXsXe7fNQ4NdjdmlFWo+q5p2g2XJJv/hlQWs61GvxWZtbiS4FphcnfVaNU
+         6834g7g/SR0NR42VP7f2uMSr6ba/j1L8VwSa4b6i1P2honLSrKu1ay7+eQJ4BGWfiLqT
+         MpCC7zRgfmcEdos1+CAEIoAU7pZh1ujAeAGqOKG/vNy8uHKFfFS01kcrUWLf22UlrImS
+         kCOIBE0mYhL13VfCDLILEPoSFl0FwAS30mOis7mHz3grNDxGSrCeaRUUoxba/MWeHh5O
+         Mwud2Itahm3zDHAQ9RQY4w0t9H0LhtyvlBL1WCZrxsY+bTR0FWQkBya4spPmW3RmcPLp
+         lL2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733433310; x=1734038110;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iMNOQ/LbvkZ3RF8xsPDD/T0btfy12YyJO+FcJtUBr1I=;
+        b=OzGhVYKTGjJKZELM7NCgXdmyyW9+i3vRAqoY0K0HCjtqbffg7qyvQu5eQ/3XxKylQW
+         D3dJMurlrLThl5kcQhONajcvcUZrMrLR7cq3dE4zkgte2QWrHtyKCYFrrxuMIddhFJT1
+         acYNoBh5qXuyDH6vUTfAIO+DhyftoTF91eWGVf96x4yVBWGO9V0Me7ylGYGhBYUXt5p3
+         yAG7SHruePusGcgsA8sePREYq8bYHf0EZMyEiFP9fjjNAojqcMOllE2CnqczK1sVeTD6
+         OXoT/6l29e/6BWNXc5Zhm2QUOx4N4vWcZ/YEZKvWsQNVGMDc/0T0WcSXQktfWdRBUtRJ
+         Sz5w==
+X-Forwarded-Encrypted: i=1; AJvYcCXN/Y0zSiZHdKqlFAjzbkYOJPQmnB5j96RBwq8jslE0X5lkRsW7vBQNRtNgBquPawLmiEhuQc5d/to=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxitYhhfHmmpHn3/Ww9HdvVxahaU2T8zvPaCxvfvpQZyh6V2P42
+	GchELuKAra9DpdtGIK87d/jreLvb77Yf6f/NrIUARzf+nSSAP2YWoS853z/bw2w=
+X-Gm-Gg: ASbGncsd8ssuu88i1H+9ZAew9lpj26vJVF6LtH4VbujWWvSMm4f/nDPmpmzwbJg5kIj
+	F5wp1eMvpX17YCYwrhaZnOT3Pxn3xYMfqjJs95PJgGWDUFgyZdLDFydXixF0J/dyp5px0v5HiB7
+	PgZ19h+GWllR6eqpdAH7OrkKvZllQxLx2YvIY3EOh1bDo64XkkfbNiEV+kaL9UDCxsXOkKHd0dV
+	aVVM6xR4F8Vf5RWtMqa8YyZHKRPwC9VYn5Z6IR+FKBc+3m9yFj5ZmoceVaa9hdGWb7a92fcWcpa
+	y8gwRvHw3Kx9o78EaNEpOoc=
+X-Google-Smtp-Source: AGHT+IE8OGm5O/X2/YMeH3EW08/gwIAqgtqX1jLcQ9PDg4MrtkF2WjvetNDK/FH/k5cKpV5Zgvy7rg==
+X-Received: by 2002:a17:902:c40a:b0:211:ce91:63ea with SMTP id d9443c01a7336-21614d35675mr5837985ad.15.1733433309420;
+        Thu, 05 Dec 2024 13:15:09 -0800 (PST)
+Received: from dread.disaster.area (pa49-195-9-235.pa.nsw.optusnet.com.au. [49.195.9.235])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-215f8e67244sm16836875ad.86.2024.12.05.13.15.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Dec 2024 13:15:08 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tJJBh-000000076LC-3Vyp;
+	Fri, 06 Dec 2024 08:15:05 +1100
+Date: Fri, 6 Dec 2024 08:15:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, djwong@kernel.org, cem@kernel.org,
+	dchinner@redhat.com, hch@lst.de, ritesh.list@gmail.com,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, martin.petersen@oracle.com
+Subject: Re: [PATCH 1/4] iomap: Lift blocksize restriction on atomic writes
+Message-ID: <Z1IX2dFida3coOxe@dread.disaster.area>
+References: <20241204154344.3034362-1-john.g.garry@oracle.com>
+ <20241204154344.3034362-2-john.g.garry@oracle.com>
+ <Z1C9IfLgB_jDCF18@dread.disaster.area>
+ <3ab6000e-030d-435a-88c3-9026171ae9f1@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,100 +81,154 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241205064243.GD7837@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+In-Reply-To: <3ab6000e-030d-435a-88c3-9026171ae9f1@oracle.com>
 
-On Wed, Dec 04, 2024 at 10:42:43PM -0800, Darrick J. Wong wrote:
-> On Wed, Dec 04, 2024 at 07:26:54PM -0600, Bill O'Donnell wrote:
-> > On Tue, Dec 03, 2024 at 07:02:23PM -0800, Darrick J. Wong wrote:
-> > > Hi all,
+On Thu, Dec 05, 2024 at 10:52:50AM +0000, John Garry wrote:
+> On 04/12/2024 20:35, Dave Chinner wrote:
+> > On Wed, Dec 04, 2024 at 03:43:41PM +0000, John Garry wrote:
+> > > From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
 > > > 
-> > > Here are even more bugfixes for 6.13 that have been accumulating since
-> > > 6.12 was released.
+> > > Filesystems like ext4 can submit writes in multiples of blocksizes.
+> > > But we still can't allow the writes to be split into multiple BIOs. Hence
+> > > let's check if the iomap_length() is same as iter->len or not.
 > > > 
-> > > If you're going to start using this code, I strongly recommend pulling
-> > > from my git trees, which are linked below.
-> > > 
-> > > With a bit of luck, this should all go splendidly.
-> > > Comments and questions are, as always, welcome.
-> > > 
-> > > --D
+> > > It is the responsibility of userspace to ensure that a write does not span
+> > > mixed unwritten and mapped extents (which would lead to multiple BIOs).
 > > 
-> > Hi Darrick-
+> > How is "userspace" supposed to do this?
+> 
+> If an atomic write spans mixed unwritten and mapped extents, then it should
+> manually zero the unwritten extents beforehand.
+> 
 > > 
-> > I must ask, why are these constant bug fixes and fixes for fixes, and
-> > fixes for fixes for fixes often appearing? It's worrying that xfs is
-> 
-> Roughly speaking, the ~35 bugfixes can be split into three categories:
-> 
-> 1) Our vaunted^Wshitty review process didn't catch various coding bugs,
-> and testing didn't trip over them until I started (ab)using precommit
-> hooks for spot checking of inode/dquot/buffer log items.
-> 
-> 2) Most of the metadir/rtgroups fixes are for things that hch reworked
-> towards the end of the six years the patchset has been under
-> development, and that introduced bugs.  Did it make things easier for a
-> second person to understand?  Yes.
-> 
-> 3) The rest are mostly cases of the authors not fully understanding the
-> subtleties of that which they were constructing (myself included!) and
-> lucking out that the errors cancelled each other out until someone
-> started wanting to use that code for a slightly different purpose, which
-> wouldn't be possible until the bug finally got fixed.
-> 
-> 4) The dquot buffer changes have been a known problem since dchinner
-> decided that RMW cycles in the AIL with inode buffers was having very
-> bad effects on reclaim performance.  Nobody stepped up to convert dquots
-> (even though I noted this at the time) so here I am years later because
-> the mm got pissy at us in 6.12.
-> 
-> 5) XFS lit up a lot of new functionality this year, which means the code
-> is ripe with bugfixing opportunities where cognitive friction comes into
-> play.
-> 
-> > becoming rather dodgy these days. Do things need to be this
-> > complicated?
-> 
-> Yeah, they do.  We left behind the kindly old world where people didn't
-> feed computers fuzzed datafiles and nobody got fired for a computer
-> crashing periodically.  Nowadays it seems that everything has to be
-> bulletproofed AND fast. :(
-> 
-
-My apologies to you, Darrick and to all on this thread. I'm in over my head
-and barely treading water.
-
-Thanks-
-Bill
-
-
-
-> --D
-> 
-> > -Bill
+> > No existing utility in userspace is aware of atomic write limits or
+> > rtextsize configs, so how does "userspace" ensure everything is
+> > laid out in a manner compatible with atomic writes?
 > > 
-> > 
-> > > 
-> > > kernel git tree:
-> > > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=proposed-fixes-6.13
-> > > ---
-> > > Commits in this patchset:
-> > >  * xfs: don't move nondir/nonreg temporary repair files to the metadir namespace
-> > >  * xfs: don't crash on corrupt /quotas dirent
-> > >  * xfs: check pre-metadir fields correctly
-> > >  * xfs: fix zero byte checking in the superblock scrubber
-> > >  * xfs: return from xfs_symlink_verify early on V4 filesystems
-> > >  * xfs: port xfs_ioc_start_commit to multigrain timestamps
-> > > ---
-> > >  fs/xfs/libxfs/xfs_symlink_remote.c |    4 ++
-> > >  fs/xfs/scrub/agheader.c            |   66 ++++++++++++++++++++++++++++--------
-> > >  fs/xfs/scrub/tempfile.c            |    3 ++
-> > >  fs/xfs/xfs_exchrange.c             |   14 ++++----
-> > >  fs/xfs/xfs_qm.c                    |    7 ++++
-> > >  5 files changed, 71 insertions(+), 23 deletions(-)
-> > > 
-> > > 
-> > 
-> > 
+> > e.g. restoring a backup (or other disaster recovery procedures) is
+> > going to have to lay the files out correctly for atomic writes.
+> > backup tools often sparsify the data set and so what gets restored
+> > will not have the same layout as the original data set...
 > 
+> I am happy to support whatever is needed to make atomic writes work over
+> mixed extents if that is really an expected use case and it is a pain for an
+> application writer/admin to deal with this (by manually zeroing extents).
+> 
+> JFYI, I did originally support the extent pre-zeroing for this. That was to
+> support a real-life scenario which we saw where we were attempting atomic
+> writes over mixed extents. The mixed extents were coming from userspace
+> punching holes and then attempting an atomic write over that space. However
+> that was using an early experimental and buggy forcealign; it was buggy as
+> it did not handle punching holes properly - it punched out single blocks and
+> not only full alloc units.
+> 
+> > 
+> > Where's the documentation that outlines all the restrictions on
+> > userspace behaviour to prevent this sort of problem being triggered?
+> 
+> I would provide a man page update.
 
+I think, at this point, we need an better way of documenting all the
+atomic write stuff in one place. Not just the user interface and
+what is expected of userspace, but also all the things the
+filesystems need to do to ensure atomic writes work correctly. I was
+thinking that a document somewhere in the Documentation/ directory,
+rather than random pieces of information splattered across random man pages
+would be a much better way of explaining all this.
+
+Don't get me wrong - man pages explaining the programmatic API are
+necessary, but there's a whole lot more to understanding and making
+effective use of atomic writes than what has been added to the man
+pages so far.
+
+> > Common operations such as truncate, hole punch,
+> 
+> So how would punch hole be a problem? The atomic write unit max is limited
+> by the alloc unit, and we can only punch out full alloc units.
+
+I was under the impression that this was a feature of the
+force-align code, not a feature of atomic writes. i.e. force-align
+is what ensures the BMBT aligns correctly with the underlying
+extents.
+
+Or did I miss the fact that some of the force-align semantics bleed
+back into the original atomic write patch set?
+
+> > buffered writes,
+> > reflinks, etc will trip over this, so application developers, users
+> > and admins really need to know what they should be doing to avoid
+> > stepping on this landmine...
+> 
+> If this is not a real-life scenario which we expect to see, then I don't see
+> why we would add the complexity to the kernel for this.
+
+I gave you one above - restoring a data set as a result of disaster
+recovery. 
+
+> My motivation for atomic writes support is to support atomically writing
+> large database internal page size. If the database only writes at a fixed
+> internal page size, then we should not see mixed mappings.
+
+Yup, that's the problem here. Once atomic writes are supported by
+the kernel and userspace, all sorts of applications are going to
+start using them for in all sorts of ways you didn't think of.
+
+> But you see potential problems elsewhere ..
+
+That's my job as a senior engineer with 20+ years of experience in
+filesystems and storage related applications. I see far because I
+stand on the shoulders of giants - I don't try to be a giant myself.
+
+Other people become giants by implementing ground-breaking features
+(e.g. like atomic writes), but without the people who can see far
+enough ahead just adding features ends up with an incoherent mess of
+special interest niche features rather than a neatly integrated set
+of widely usable generic features.
+
+e.g. look at MySQL's use of fallocate(hole punch) for transparent
+data compression - nobody had forseen that hole punching would be
+used like this, but it's a massive win for the applications which
+store bulk compressible data in the database even though it does bad
+things to the filesystem.
+
+Spend some time looking outside the proprietary database application
+box and think a little harder about the implications of atomic write
+functionality.  i.e. what happens when we have ubiquitous support
+for guaranteeing only the old or the new data will be seen after
+a crash *without the need for using fsync*.
+
+Think about the implications of that for a minute - for any full
+file overwrite up to the hardware atomic limits, we won't need fsync
+to guarantee the integrity of overwritten data anymore. We only need
+a mechanism to flush the journal and device caches once all the data
+has been written (e.g. syncfs)...
+
+Want to overwrite a bunch of small files safely?  Atomic write the
+new data, then syncfs(). There's no need to run fdatasync after each
+write to ensure individual files are not corrupted if we crash in
+the middle of the operation. Indeed, atomic writes actually provide
+better overwrite integrity semantics that fdatasync as it will be
+all or nothing. fdatasync does not provide that guarantee if we
+crash during the fdatasync operation.
+
+Further, with COW data filesystems like XFS, btrfs and bcachefs, we
+can emulate atomic writes for any size larger than what the hardware
+supports.
+
+At this point we actually provide app developers with what they've
+been repeatedly asking kernel filesystem engineers to provide them
+for the past 20 years: a way of overwriting arbitrary file data
+safely without needing an expensive fdatasync operation on every
+file that gets modified.
+
+Put simply: atomic writes have a huge potential to fundamentally
+change the way applications interact with Linux filesystems and to
+make it *much* simpler for applications to safely overwrite user
+data.  Hence there is an imperitive here to make the foundational
+support for this technology solid and robust because atomic writes
+are going to be with us for the next few decades...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
