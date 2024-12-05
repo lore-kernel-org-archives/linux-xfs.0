@@ -1,44 +1,61 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FD212391AB;
-	Thu,  5 Dec 2024 07:17:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C826A193064
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2024 07:30:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733383025; cv=none; b=fdXQNOFNSL58YXIaVdmqVeN1b5iDrwBqjNQsdK3PuJNji5Dyspd4UJ4a6jw45zW8hQywjeNLE0KYAB1S0I4V/yZxOWEQGwkarVIj2aX+ao2211rtx0S3O2N7AY2oHHmQrn4MgTR7hyr2dGRsYw3nnv2eoC1sTQubIEa657NFPt0=
+	t=1733383854; cv=none; b=EGB4PQiEuri9W3ta4nH3+dID9159ueXNKuAphBRr4ICPBUasFQL/sM8rvMI9rX1YIYZNYQh6yr51dfhGkf2RE1yGnu8H9WXtvaBIR9cZk7GlwWKtdxMFL6IORgg4hpzaheVJGsDAk4RUN34wwsf6L8NTxg0g0VDeILWOioAT8PA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733383025; c=relaxed/simple;
-	bh=aQyQ2G4X3PCiGYhOFonDeYkfKdNOt7hA6AMmscJV1Gw=;
+	s=arc-20240116; t=1733383854; c=relaxed/simple;
+	bh=OlRNBUjASL7FVNGtWoyFFzTei7wVTiYRgktEzUrextU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IE9fCl2JTwp5QuwVtSOOfiFago7M+hnELQZROumJ+3mrHS3ysSjvSBnwoCd7tpKD2LKvwMMM0IHmmJo7HVN+m3u+Jb6PJuJKTYCxd+1PIdLxU7+6D/60xFpAS1PTuKInSaMXJlhg3lkYrzloaAM6Gda0xkuBs8G+GIZSPkbNa+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IORnTci4; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jq6CGOejVRjPjEFSLcIhchtRRRqH4hXgavEe3M/FkcVIKMONB9BDf6oRsTsTV5yc12DeTiwlouFgzMhn81qiVMiKydaK9KE1F2t98S/UmbtaaAppm8l/0GcD4O2pYEwreVK6mSbWxczWJscUqNiqsARBqFhRqGXJlsBotDAqUOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hUOqu3po; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IORnTci4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55FC1C4CED1;
-	Thu,  5 Dec 2024 07:17:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733383025;
-	bh=aQyQ2G4X3PCiGYhOFonDeYkfKdNOt7hA6AMmscJV1Gw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IORnTci4vEquWqpQOmqxBwp891HJmqQSAAZIza4UWhGlJah2DudN1VVu93y97STEf
-	 Qd2xmXO95+DHxVIjyozYWTLAGBXVegltQ1tLxKGhUsVCJmbdxGNLyrEfM1q3NjMtXJ
-	 HHuRi9Ako/zYZMsLO09zcLzyVe7d9qZoBqTh5VG3gm65z/2RU3+3drtY3AzputkVxN
-	 8uIE80huZgl4KZOLx5+WJFy8dRduJmFyqxiQ8SZwZHlb8b2waHSxJrVt2p8xuT6nt6
-	 gMlpT9IX8F1EQyHdidHnUR/fW18B+6at4eIQftcRP6zR5T6qhqSBWOJvbnDCQmUb6O
-	 +K69XzLB2m84w==
-Date: Wed, 4 Dec 2024 23:17:04 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org,
-	hch@lst.de
-Subject: Re: [PATCH 4/6] xfs: fix zero byte checking in the superblock
- scrubber
-Message-ID: <20241205071704.GG7837@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hUOqu3po"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1733383851;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lgSEU4ckanSgk0HuuZW1mGMR1MCqcuQYAI+6N7Ir2cg=;
+	b=hUOqu3pohP1qC38cAQIpIDNFDIs8lzv7K4uFVEMQTVkspui6ERhJELcBbO3cz7LOyag9bQ
+	2DSs//ZvOJh4YK7jDvbZyJ4RXrhyaOu4d5COKINe0rcjPOCrTBVc/4WcwJwwGn6z2kSQ47
+	7CVUENWeAwiPG8fkz+14M5p3q7zpSJs=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-47-TJwhZTnXMC6wBve6kCH3zA-1; Thu,
+ 05 Dec 2024 02:30:48 -0500
+X-MC-Unique: TJwhZTnXMC6wBve6kCH3zA-1
+X-Mimecast-MFC-AGG-ID: TJwhZTnXMC6wBve6kCH3zA
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D445D1955DC8;
+	Thu,  5 Dec 2024 07:30:46 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.64.4])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1517F1956054;
+	Thu,  5 Dec 2024 07:30:44 +0000 (UTC)
+Date: Thu, 5 Dec 2024 01:30:42 -0600
+From: Bill O'Donnell <bodonnel@redhat.com>
+To: Bill O'Donnell <bodonnel@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org,
+	stable@vger.kernel.org, jlayton@kernel.org,
+	linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCHSET v2] xfs: proposed bug fixes for 6.13
+Message-ID: <Z1FWojAndtCxEt-d@redhat.com>
 References: <173328106571.1145623.3212405760436181793.stgit@frogsfrogsfrogs>
- <173328106652.1145623.7325198732846866757.stgit@frogsfrogsfrogs>
- <Z1ASehwdTewFiwZE@infradead.org>
- <20241205055451.GB7837@frogsfrogsfrogs>
- <Z1FMx63BD_KAUZna@infradead.org>
+ <Z1EBXqpMWGL306sh@redhat.com>
+ <20241205064243.GD7837@frogsfrogsfrogs>
+ <Z1FNqV27x5hjnqQ9@redhat.com>
+ <Z1FPGXpTIJ1Fc2Xy@infradead.org>
+ <Z1FQdYEXLR5BoOE-@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,50 +64,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z1FMx63BD_KAUZna@infradead.org>
+In-Reply-To: <Z1FQdYEXLR5BoOE-@redhat.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Wed, Dec 04, 2024 at 10:48:39PM -0800, Christoph Hellwig wrote:
-> On Wed, Dec 04, 2024 at 09:54:51PM -0800, Darrick J. Wong wrote:
-> > > This really should be libxfs so tht it can be shared with
-> > > secondary_sb_whack in xfsrepair.  The comment at the end of
-> > > the xfs_dsb definition should also be changed to point to this
-> > > libxfs version.
+On Thu, Dec 05, 2024 at 01:04:21AM -0600, Bill O'Donnell wrote:
+> On Wed, Dec 04, 2024 at 10:58:33PM -0800, Christoph Hellwig wrote:
+> > On Thu, Dec 05, 2024 at 12:52:25AM -0600, Bill O'Donnell wrote:
+> > > > 1) Our vaunted^Wshitty review process didn't catch various coding bugs,
+> > > > and testing didn't trip over them until I started (ab)using precommit
+> > > > hooks for spot checking of inode/dquot/buffer log items.
+> > > 
+> > > You give little time for the review process.
 > > 
-> > The xfs_repair version of this is subtlely different -- given a
-> > secondary ondisk superblock, it figures out the size of the ondisk
-> > superblock given the features set *in that alleged superblock*.  From
-> > there it validates the secondary superblock.  The featureset in the
-> > alleged superblock doesn't even have to match the primary super, but
-> > it'll go zero things all the same before copying the incore super back
-> > to disk:
+> > I don't really think that is true.  But if you feel you need more time
+> > please clearly ask for it.  I've done that in the past and most of the
+> > time the relevant people acted on it (not always).
 > > 
-> > 	if (xfs_sb_version_hasmetadir(sb))
-> > 		size = offsetofend(struct xfs_dsb, sb_pad);
-> > 	else if (xfs_sb_version_hasmetauuid(sb))
-> > 		size = offsetofend(struct xfs_dsb, sb_meta_uuid);
+> > > > 2) Most of the metadir/rtgroups fixes are for things that hch reworked
+> > > > towards the end of the six years the patchset has been under
+> > > > development, and that introduced bugs.  Did it make things easier for a
+> > > > second person to understand?  Yes.
+> > > 
+> > > No.
 > > 
-> > This version in online computes the size of the secondary ondisk
-> > superblock object given the features set in the *primary* superblock
-> > that we used to mount the filesystem.
+> > So you speak for other people here?
 > 
-> Well, it considers the size for the passed in superblock.  Where the
-> passed in one happens to be the primary one and the usage is for the
-> second.
+> No. I speak for myself. A lowly downstream developer.
 > 
-> > Also if I did that we'd have to recopy the xfs_sb_version_hasXXXX
-> > functions back into libxfs after ripping most of them out.  Or we'd have
-> > to encode the logic manually.  But even then, the xfs_repair and
-> > xfs_scrub functions are /not quite/ switching on the same thing.
-> 
-> We don't really need the helpers and could just check the flag vs
-> the field directly.
-> 
-> I'd personally prefer to share this code, but I also don't want to
-> hold off the fix for it.  So if you prefer to stick to this
-> version maybe just clearly document why these two are different
-> with a comment that has the above information?
+scrub is the worst offender. What the hell is it, and why do you insist its imortance?
 
-Ok.  I was thinking this hoist is a reasonable cleanup for 6.14 anyway,
-not a bugfix to apply to 6.13.
+> > 
+> > > I call bullshit. You guys are fast and loose with your patches. Giving
+> > > little time for review and soaking.
+> > 
+> > I'm not sure who "you" is, but please say what is going wrong and what
+> > you'd like to do better.
+> 
+> You and Darrick. Can I be much clearer?
+> 
+> > 
+> > > > > becoming rather dodgy these days. Do things need to be this
+> > > > > complicated?
+> > > > 
+> > > > Yeah, they do.  We left behind the kindly old world where people didn't
+> > > > feed computers fuzzed datafiles and nobody got fired for a computer
+> > > > crashing periodically.  Nowadays it seems that everything has to be
+> > > > bulletproofed AND fast. :(
+> > > 
+> > > Cop-out answer.
+> > 
+> > What Darrick wrote feels a little snarky, but he has a very valid
+> > point.  A lot of recent bug fixes come from better test coverage, where
+> > better test coverage is mostly two new fuzzers hitting things, or
+> > people using existing code for different things that weren't tested
+> > much before.  And Darrick is single handedly responsible for a large
+> > part of the better test coverage, both due to fuzzing and specific
+> > xfstests.  As someone who's done a fair amount of new development
+> > recently I'm extremely glad about all this extra coverage.
+> > 
+> I think you are killing xfs with your fast and loose patches. Downstreamers
+> like me are having to clean up the mess you make of things.
+> 
+> 
+> > 
+> 
+> 
 
---D
