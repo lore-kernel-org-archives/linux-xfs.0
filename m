@@ -1,46 +1,61 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E0161B2192;
-	Thu,  5 Dec 2024 07:39:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E0EF1B2186
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2024 07:40:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733384351; cv=none; b=V2CKoxBqtTzxpwuP0D4KzrjDOWoh/38cHPPSZ+qzXknT+FCXiM2oUZBESZ7o+cANzGJoH3rN/3JSZwlLVEga9zyuApJ8NMWIvHSVWOIoJeCEIIsA1jSUnnrBG07EXxDKHFSJ8OV9flbaj7Tv3WUkUswVwIAtaZ5qoLZzVzv7bkI=
+	t=1733384426; cv=none; b=nn6o5mCdfLrSqrTwQv9ZovnGR3AxfMj50i3bdLLaziI4c/yB4OUuyVATG/q7nqvr2ZwvQqhWYVvFGDkhsiUF2yR28nlNC5gmCv8Fj4CIbj2d3FIa1ODWF3TLjq07f3p7rpLVFLS85p16OhAGiQVLcu4H4JEVAgyJhduNYa5K6ZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733384351; c=relaxed/simple;
-	bh=W0vsV76GQ9avyGC42PvizHxokJ+l1aCOuAd2OO3DhkE=;
+	s=arc-20240116; t=1733384426; c=relaxed/simple;
+	bh=5GjnelmaP2oQ2PHAsX1VRCtjj6gP1e1XeeZt6xTfyP8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VuxpGhyXck7yDU3u/cyCwM83ArzdSGqcuK0DtBwOv3dNTsWEJAQPxghku+kM04KdZvh/xznEBp2R82LYLOfC5mq9eJ7+bQkBGZ7GqKdUGYqgQ/oqF4k5Ne2WUfwUXnraamnR3FkLU7tYQ/MLr57x7LcwN/m2ZONo12ZCSGAfsJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pyvzgMmA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=NETEUdx7VdOcuK5pVrHfEZbkYGRwbnNPcp2SQTjd7OCB19MnCBK0SFBdrS2js6qF/97VARVfcFiw20l5eSEaoj/ZF9+30xISBTeDK0c9eGOilCODNORyLIJvfzAUzMahHmdW+RvUAofND01OMtmEFNeBrPUZOs8FD8v6H77YDMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FR9wnoQ0; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pyvzgMmA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83D46C4CED1;
-	Thu,  5 Dec 2024 07:39:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733384350;
-	bh=W0vsV76GQ9avyGC42PvizHxokJ+l1aCOuAd2OO3DhkE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pyvzgMmA1VQRPAMRaHzig15iR6YHsODbdi7YLNlEigIqMQPiWN8zFU0/f5aeGnyaT
-	 4TT4OICbP047NCObVK60MbGXKgy9nx2EaDIyjjWYND5a0RxAkK4rawXQ5YtNnp90P6
-	 8CFDNADF5l7P2WjavxiH/CsgxcuSmL9Nq0JKIZqm0vKY3Q7s0hufKFBl1PPqNS0aaZ
-	 z+sPsZmDIxMg0klrbXxVBp8il2V73IAIgJC18/uIIocADdL5596kmWcXNu2Ljs88xv
-	 CuxmxXkYJtFi5svqMDmcjOKw5j4aICzLJK6oeeIuYMV4AgXKnqshK8F0YVqTkGGS59
-	 4xQIr22TyziDQ==
-Date: Wed, 4 Dec 2024 23:39:09 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bill O'Donnell <bodonnel@redhat.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FR9wnoQ0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1733384423;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Aal832r3Ge6Stj/1MEPFvVSfymKbtnfyjDG8NMwEYT8=;
+	b=FR9wnoQ0xuWzyzksUg6svfKV+5F/EGt1waF4+CON4t1xv0pWFu1Q88Ak8Fl6vRrdFczo7D
+	sC/y+ZoYZNt+MCvT1xvnb9zbrQ48WTGFhTzTBedVyoqIJ0RfoAYOsPpaaNBx257c4XjGmE
+	pRwkiiCUR0b+D2WnxC+Dq1TF1v+rGyI=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-690-5y7ZpaWRNMuahYy7YV7jSA-1; Thu,
+ 05 Dec 2024 02:40:19 -0500
+X-MC-Unique: 5y7ZpaWRNMuahYy7YV7jSA-1
+X-Mimecast-MFC-AGG-ID: 5y7ZpaWRNMuahYy7YV7jSA
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 811611955F3F;
+	Thu,  5 Dec 2024 07:40:18 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.64.4])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C48701956054;
+	Thu,  5 Dec 2024 07:40:16 +0000 (UTC)
+Date: Thu, 5 Dec 2024 01:40:14 -0600
+From: Bill O'Donnell <bodonnel@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
 	stable@vger.kernel.org, jlayton@kernel.org,
 	linux-xfs@vger.kernel.org, hch@lst.de
 Subject: Re: [PATCHSET v2] xfs: proposed bug fixes for 6.13
-Message-ID: <20241205073909.GI7837@frogsfrogsfrogs>
+Message-ID: <Z1FY3jJdTFryZOFn@redhat.com>
 References: <173328106571.1145623.3212405760436181793.stgit@frogsfrogsfrogs>
  <Z1EBXqpMWGL306sh@redhat.com>
  <20241205064243.GD7837@frogsfrogsfrogs>
  <Z1FNqV27x5hjnqQ9@redhat.com>
  <Z1FPGXpTIJ1Fc2Xy@infradead.org>
  <Z1FQdYEXLR5BoOE-@redhat.com>
- <Z1FWojAndtCxEt-d@redhat.com>
+ <20241205073321.GH7837@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,9 +64,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z1FWojAndtCxEt-d@redhat.com>
+In-Reply-To: <20241205073321.GH7837@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Thu, Dec 05, 2024 at 01:30:42AM -0600, Bill O'Donnell wrote:
+On Wed, Dec 04, 2024 at 11:33:21PM -0800, Darrick J. Wong wrote:
 > On Thu, Dec 05, 2024 at 01:04:21AM -0600, Bill O'Donnell wrote:
 > > On Wed, Dec 04, 2024 at 10:58:33PM -0800, Christoph Hellwig wrote:
 > > > On Thu, Dec 05, 2024 at 12:52:25AM -0600, Bill O'Donnell wrote:
@@ -60,7 +76,15 @@ On Thu, Dec 05, 2024 at 01:30:42AM -0600, Bill O'Donnell wrote:
 > > > > > hooks for spot checking of inode/dquot/buffer log items.
 > > > > 
 > > > > You give little time for the review process.
-> > > 
+> 
+> Seriously?!
+> 
+> Metadir has been out for review in some form or another since January
+> 2019[1].  If five years and eleven months is not sufficient for you to
+> review a patchset or even to make enough noise that I'm aware that
+> you're even reading my code, then I don't want you ever to touch any of
+> my patchsets ever again.
+> 
 > > > I don't really think that is true.  But if you feel you need more time
 > > > please clearly ask for it.  I've done that in the past and most of the
 > > > time the relevant people acted on it (not always).
@@ -76,18 +100,6 @@ On Thu, Dec 05, 2024 at 01:30:42AM -0600, Bill O'Donnell wrote:
 > > 
 > > No. I speak for myself. A lowly downstream developer.
 > > 
-> scrub is the worst offender. What the hell is it, and why do you insist its imortance?
-
-Online fsck, so you can check and repair metadata errors without needing
-to incur downtime for xfs_repair.  This is information that was posted
-in the design document review that was started in June 2022[1] and
-merged in the kernel[2] last year before the code was merged.
-
-[1] https://lore.kernel.org/linux-xfs/165456652256.167418.912764930038710353.stgit@magnolia/
-[2] https://docs.kernel.org/filesystems/xfs/xfs-online-fsck-design.html
-
---D
-
 > > > 
 > > > > I call bullshit. You guys are fast and loose with your patches. Giving
 > > > > little time for review and soaking.
@@ -117,12 +129,32 @@ merged in the kernel[2] last year before the code was merged.
 > > > xfstests.  As someone who's done a fair amount of new development
 > > > recently I'm extremely glad about all this extra coverage.
 > > > 
-> > I think you are killing xfs with your fast and loose patches. Downstreamers
-> > like me are having to clean up the mess you make of things.
-> > 
+> > I think you are killing xfs with your fast and loose patches.
+> 
+> Go work on the maintenance mode filesystems like JFS then.  Shaggy would
+> probably love it if someone took on some of that.
+> 
+> > Downstreamers like me are having to clean up the mess you make of
+> > things.
+> 
+> What are you doing downstream these days, exactly?  You don't
+> participate in the LTS process at all, and your employer boasts about
+> ignoring that community process.  If your employer chooses to perform
+> independent forklift upgrades of the XFS codebase in its product every
+> three months and you don't like that, take it up with them, not
+> upstream.
+
+Thanks for your reply. You win.
+
+> 
+> --D
+> 
+> [1] https://lore.kernel.org/linux-xfs/154630934595.21716.17416691804044507782.stgit@magnolia/
+> 
+> 
 > > 
 > > > 
 > > 
 > > 
 > 
-> 
+
