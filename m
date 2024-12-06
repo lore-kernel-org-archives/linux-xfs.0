@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180DA19ABC6
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:34:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9EC419ABC6
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:35:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733528098; cv=none; b=pAHhYmBTq/q8CtX+kVxWtZD+Fr887gpFivQpbEAgHRk4ygWcDVxliHMK6T8M3tu4NRwdvqVWE3ZelJeSDuB/9MKFG9xTwhBMIvdWv2kg6klcBkNVhSOhWPNR5zY2RXe7DOAosuywYpaA/mKcghj2aV529m/ODEqKah0Rh6DeTcA=
+	t=1733528113; cv=none; b=iibjsDLlJfLEGamdCYhkqCZrkYTnBIeqmvhpuHsn4KlUl2W4XYijElKc2uBedsnhpbwKQgKoSAq1KftgAj3fRZXeYDJdf4P4g+sjqnRw/WeOyNMKhexYdzPM8VbHIN8pOFg0ofU+w61esu+U4XWL1YiSwB3nLzqX650CX7QCtKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733528098; c=relaxed/simple;
-	bh=tERi46s4eRjksKAoa2U9sVNBZ3K4aXo0dEKPfKyah/Y=;
+	s=arc-20240116; t=1733528113; c=relaxed/simple;
+	bh=2+0NHwJPfZbN3FbvKf+1GSVKoi27sF11Vfu7nE3YvjU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qu9x34Ltz99OEv4tlNRTSsr8eISF6bq23prkoFuTi0JS1tivR81l/491hx9kgbtxOO+M25/bgh89s8XbxMmdXWWANod8sstTbadKQppaKKZuPRRCBKaSsmvH8ERwdoBjGcRhlPOQOjNXB1I9YlyJtWoHIGZ38JIOJVUdw7W9exg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gHBey3kQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JznEIQSmC1226AdxjNVckjTpyAOsKyWY5Q+cyt2y59BrNmAZAbDdTiqdApAyE41wFx/WKHRkN6ZE2K9aWdgC6O4Ko42yhUszsS7tTqoJkOEcOyjJ1ZcD8JshVM1AZx2ikEAVHGGtXcjol8Jwk/yvd4lYhQRNrAtTcshuxi/QR28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JqgITbuT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gHBey3kQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EACB1C4CED1;
-	Fri,  6 Dec 2024 23:34:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JqgITbuT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81E96C4CED1;
+	Fri,  6 Dec 2024 23:35:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733528098;
-	bh=tERi46s4eRjksKAoa2U9sVNBZ3K4aXo0dEKPfKyah/Y=;
+	s=k20201202; t=1733528113;
+	bh=2+0NHwJPfZbN3FbvKf+1GSVKoi27sF11Vfu7nE3YvjU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gHBey3kQbpWawVXpWFG0BHCg7ulyiXVm/PlirpmT9phRGZnexq/SuVgKLVZbnOvm1
-	 3j5KLjysz8mOaKFqIWMn3rFD4Xybev1mLK/ZIthiEFah7dKGsz+1Ipey1UVN8l+CcV
-	 4ah3a0ENjt24CGKQPNX+9QJ3DA+wsy0s8bZYeTRuT9/5Sp+oiu76fJSeC+5mkoTI2e
-	 pAjHX43KDcp8/9wqRw5/zhD0pP3flbIHIRyw2TpJ3TX/Xo4gBvmUut3pbaMhdvF72u
-	 J69nLoXnqQzvNXYiNyEv2GHYn6QK6x2kfCOhMRCb0cuwn84xub51W7PCyzjHg6zgQq
-	 AjzIfx9a6xjRw==
-Date: Fri, 06 Dec 2024 15:34:57 -0800
-Subject: [PATCH 18/36] xfs: move metadata health tracking to the generic group
- structure
+	b=JqgITbuTaBO68UiqcACUM8HW4+VQPAj3uOJGFeqtnoZKtP8R19j/sl75EV/Gi16i1
+	 AEm7WvUMdASXX0/Au2nUFp0cDGEYLCaB6O3kN4wZgoOfB0vhqprOChiUdqhSTp1ic6
+	 tf35yzHtEEKo6BI78NtZaTqX94yS+9nSQZtOC2CZ059oRwJKKZqUWNiIj5sGucQlaM
+	 gzUaYZId+NoJeyY12Vkc+16VEQLzlXPwLKrk8eX7Kq3VqugV9+zoGz8t9tNX4F/Ys4
+	 vqHOLCRTNKSR23H8fpj9GyJIONO4gKgbSnVl3zDj25B5rd0Pi9dBY15hRWarF2nBp6
+	 1RJ/aBLpyq1BQ==
+Date: Fri, 06 Dec 2024 15:35:13 -0800
+Subject: [PATCH 19/36] xfs: move draining of deferred operations to the
+ generic group structure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352747152.121772.7792514725151292550.stgit@frogsfrogsfrogs>
+Message-ID: <173352747165.121772.8123048951170093788.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352746825.121772.11414387759505707402.stgit@frogsfrogsfrogs>
 References: <173352746825.121772.11414387759505707402.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,196 +46,128 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 5c8483cec3fe261a5c1ede7430bab042ed156361
+Source kernel commit: 34cf3a6f3952ecabd54b4fe3d431aa44ce98fe45
 
-Prepare for also tracking the health status of the upcoming realtime
-groups by moving the health tracking code to the generic xfs_group
-structure.
+Prepare supporting the upcoming realtime groups feature by moving the
+deferred operation draining to the generic xfs_group structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/util.c       |    4 ++--
- libxfs/xfs_ag.c     |    1 -
- libxfs/xfs_ag.h     |    9 ---------
- libxfs/xfs_group.c  |    4 ++++
- libxfs/xfs_group.h  |   12 ++++++++++++
- libxfs/xfs_health.h |   45 +++++++++++++++++----------------------------
- 6 files changed, 35 insertions(+), 40 deletions(-)
+ libxfs/xfs_ag.c    |    7 ++-----
+ libxfs/xfs_ag.h    |    9 ---------
+ libxfs/xfs_group.c |    4 ++++
+ libxfs/xfs_group.h |    9 +++++++++
+ 4 files changed, 15 insertions(+), 14 deletions(-)
 
 
-diff --git a/libxfs/util.c b/libxfs/util.c
-index a3f3ad299336c7..97da94506aee01 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -449,8 +449,8 @@ void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo) { }
- void xfs_fs_mark_sick(struct xfs_mount *mp, unsigned int mask) { }
- void xfs_agno_mark_sick(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		unsigned int mask) { }
--void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask) { }
--void xfs_ag_measure_sickness(struct xfs_perag *pag, unsigned int *sick,
-+void xfs_group_mark_sick(struct xfs_group *xg, unsigned int mask) { }
-+void xfs_group_measure_sickness(struct xfs_group *xg, unsigned int *sick,
- 		unsigned int *checked)
- {
- 	*sick = 0;
 diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index 15d4ac5a99f0e7..20af8b67d86e88 100644
+index 20af8b67d86e88..d67e40f49a3fc0 100644
 --- a/libxfs/xfs_ag.c
 +++ b/libxfs/xfs_ag.c
-@@ -230,7 +230,6 @@ xfs_perag_alloc(
- 	/* Place kernel structure only init below this point. */
- 	spin_lock_init(&pag->pag_ici_lock);
+@@ -110,7 +110,6 @@ xfs_perag_uninit(
+ #ifdef __KERNEL__
+ 	struct xfs_perag	*pag = to_perag(xg);
+ 
+-	xfs_defer_drain_free(&pag->pag_intents_drain);
+ 	cancel_delayed_work_sync(&pag->pag_blockgc_work);
+ 	xfs_buf_cache_destroy(&pag->pag_bcache);
+ #endif
+@@ -232,7 +231,6 @@ xfs_perag_alloc(
  	spin_lock_init(&pag->pagb_lock);
--	spin_lock_init(&pag->pag_state_lock);
  	INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
  	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- 	xfs_defer_drain_init(&pag->pag_intents_drain);
+-	xfs_defer_drain_init(&pag->pag_intents_drain);
+ 	init_waitqueue_head(&pag->pagb_wait);
+ 	pag->pagb_tree = RB_ROOT;
+ 	xfs_hooks_init(&pag->pag_rmap_update_hooks);
+@@ -240,7 +238,7 @@ xfs_perag_alloc(
+ 
+ 	error = xfs_buf_cache_init(&pag->pag_bcache);
+ 	if (error)
+-		goto out_defer_drain_free;
++		goto out_free_perag;
+ 
+ 	/*
+ 	 * Pre-calculated geometry
+@@ -258,8 +256,7 @@ xfs_perag_alloc(
+ 
+ out_buf_cache_destroy:
+ 	xfs_buf_cache_destroy(&pag->pag_bcache);
+-out_defer_drain_free:
+-	xfs_defer_drain_free(&pag->pag_intents_drain);
++out_free_perag:
+ 	kfree(pag);
+ 	return error;
+ }
 diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index 80969682dc4746..8271cb72c88387 100644
+index 8271cb72c88387..45f8de06cdbc8a 100644
 --- a/libxfs/xfs_ag.h
 +++ b/libxfs/xfs_ag.h
-@@ -69,13 +69,6 @@ struct xfs_perag {
- #ifdef __KERNEL__
- 	/* -- kernel only structures below this line -- */
+@@ -97,15 +97,6 @@ struct xfs_perag {
+ 	/* background prealloc block trimming */
+ 	struct delayed_work	pag_blockgc_work;
  
 -	/*
--	 * Bitsets of per-ag metadata that have been checked and/or are sick.
--	 * Callers should hold pag_state_lock before accessing this field.
+-	 * We use xfs_drain to track the number of deferred log intent items
+-	 * that have been queued (but not yet processed) so that waiters (e.g.
+-	 * scrub) will not lock resources when other threads are in the middle
+-	 * of processing a chain of intent items only to find momentary
+-	 * inconsistencies.
 -	 */
--	uint16_t	pag_checked;
--	uint16_t	pag_sick;
+-	struct xfs_defer_drain	pag_intents_drain;
 -
- #ifdef CONFIG_XFS_ONLINE_REPAIR
- 	/*
- 	 * Alternate btree heights so that online repair won't trip the write
-@@ -87,8 +80,6 @@ struct xfs_perag {
- 	uint8_t		pagf_repair_rmap_level;
- #endif
- 
--	spinlock_t	pag_state_lock;
--
- 	spinlock_t	pagb_lock;	/* lock for pagb_tree */
- 	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
- 	unsigned int	pagb_gen;	/* generation count for pagb_tree */
+ 	/* Hook to feed rmapbt updates to an active online repair. */
+ 	struct xfs_hooks	pag_rmap_update_hooks;
+ #endif /* __KERNEL__ */
 diff --git a/libxfs/xfs_group.c b/libxfs/xfs_group.c
-index 04d65033b75eca..c5269cd659f327 100644
+index c5269cd659f327..dfcebf2e9b30f8 100644
 --- a/libxfs/xfs_group.c
 +++ b/libxfs/xfs_group.c
-@@ -181,6 +181,10 @@ xfs_group_insert(
- 	xg->xg_gno = index;
- 	xg->xg_type = type;
+@@ -159,6 +159,8 @@ xfs_group_free(
  
-+#ifdef __KERNEL__
-+	spin_lock_init(&xg->xg_state_lock);
-+#endif
+ 	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_ref) != 0);
+ 
++	xfs_defer_drain_free(&xg->xg_intents_drain);
 +
+ 	if (uninit)
+ 		uninit(xg);
+ 
+@@ -184,6 +186,7 @@ xfs_group_insert(
+ #ifdef __KERNEL__
+ 	spin_lock_init(&xg->xg_state_lock);
+ #endif
++	xfs_defer_drain_init(&xg->xg_intents_drain);
+ 
  	/* Active ref owned by mount indicates group is online. */
  	atomic_set(&xg->xg_active_ref, 1);
+@@ -191,6 +194,7 @@ xfs_group_insert(
+ 	error = xa_insert(&mp->m_groups[type].xa, index, xg, GFP_KERNEL);
+ 	if (error) {
+ 		WARN_ON_ONCE(error == -EBUSY);
++		xfs_defer_drain_free(&xg->xg_intents_drain);
+ 		return error;
+ 	}
  
 diff --git a/libxfs/xfs_group.h b/libxfs/xfs_group.h
-index dd7da90443054b..d2c61dd1f43e44 100644
+index d2c61dd1f43e44..ebefbba7d98cc2 100644
 --- a/libxfs/xfs_group.h
 +++ b/libxfs/xfs_group.h
-@@ -11,6 +11,18 @@ struct xfs_group {
- 	enum xfs_group_type	xg_type;
- 	atomic_t		xg_ref;		/* passive reference count */
- 	atomic_t		xg_active_ref;	/* active reference count */
-+
-+#ifdef __KERNEL__
-+	/* -- kernel only structures below this line -- */
+@@ -22,6 +22,15 @@ struct xfs_group {
+ 	uint16_t		xg_checked;
+ 	uint16_t		xg_sick;
+ 	spinlock_t		xg_state_lock;
 +
 +	/*
-+	 * Bitsets of per-ag metadata that have been checked and/or are sick.
-+	 * Callers should hold xg_state_lock before accessing this field.
++	 * We use xfs_drain to track the number of deferred log intent items
++	 * that have been queued (but not yet processed) so that waiters (e.g.
++	 * scrub) will not lock resources when other threads are in the middle
++	 * of processing a chain of intent items only to find momentary
++	 * inconsistencies.
 +	 */
-+	uint16_t		xg_checked;
-+	uint16_t		xg_sick;
-+	spinlock_t		xg_state_lock;
-+#endif /* __KERNEL__ */
++	struct xfs_defer_drain	xg_intents_drain;
+ #endif /* __KERNEL__ */
  };
  
- struct xfs_group *xfs_group_get(struct xfs_mount *mp, uint32_t index,
-diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index b0edb4288e5929..13301420a2f670 100644
---- a/libxfs/xfs_health.h
-+++ b/libxfs/xfs_health.h
-@@ -6,6 +6,8 @@
- #ifndef __XFS_HEALTH_H__
- #define __XFS_HEALTH_H__
- 
-+struct xfs_group;
-+
- /*
-  * In-Core Filesystem Health Assessments
-  * =====================================
-@@ -197,10 +199,12 @@ void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
- 
- void xfs_agno_mark_sick(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		unsigned int mask);
--void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask);
--void xfs_ag_mark_corrupt(struct xfs_perag *pag, unsigned int mask);
--void xfs_ag_mark_healthy(struct xfs_perag *pag, unsigned int mask);
--void xfs_ag_measure_sickness(struct xfs_perag *pag, unsigned int *sick,
-+void xfs_group_mark_sick(struct xfs_group *xg, unsigned int mask);
-+#define xfs_ag_mark_sick(pag, mask) \
-+	xfs_group_mark_sick(pag_group(pag), (mask))
-+void xfs_group_mark_corrupt(struct xfs_group *xg, unsigned int mask);
-+void xfs_group_mark_healthy(struct xfs_group *xg, unsigned int mask);
-+void xfs_group_measure_sickness(struct xfs_group *xg, unsigned int *sick,
- 		unsigned int *checked);
- 
- void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask);
-@@ -227,22 +231,19 @@ xfs_fs_has_sickness(struct xfs_mount *mp, unsigned int mask)
- }
- 
- static inline bool
--xfs_rt_has_sickness(struct xfs_mount *mp, unsigned int mask)
-+xfs_group_has_sickness(
-+	struct xfs_group	*xg,
-+	unsigned int		mask)
- {
--	unsigned int	sick, checked;
-+	unsigned int		sick, checked;
- 
--	xfs_rt_measure_sickness(mp, &sick, &checked);
--	return sick & mask;
--}
--
--static inline bool
--xfs_ag_has_sickness(struct xfs_perag *pag, unsigned int mask)
--{
--	unsigned int	sick, checked;
--
--	xfs_ag_measure_sickness(pag, &sick, &checked);
-+	xfs_group_measure_sickness(xg, &sick, &checked);
- 	return sick & mask;
- }
-+#define xfs_ag_has_sickness(pag, mask) \
-+	xfs_group_has_sickness(pag_group(pag), (mask))
-+#define xfs_ag_is_healthy(pag) \
-+	(!xfs_ag_has_sickness((pag), UINT_MAX))
- 
- static inline bool
- xfs_inode_has_sickness(struct xfs_inode *ip, unsigned int mask)
-@@ -259,18 +260,6 @@ xfs_fs_is_healthy(struct xfs_mount *mp)
- 	return !xfs_fs_has_sickness(mp, -1U);
- }
- 
--static inline bool
--xfs_rt_is_healthy(struct xfs_mount *mp)
--{
--	return !xfs_rt_has_sickness(mp, -1U);
--}
--
--static inline bool
--xfs_ag_is_healthy(struct xfs_perag *pag)
--{
--	return !xfs_ag_has_sickness(pag, -1U);
--}
--
- static inline bool
- xfs_inode_is_healthy(struct xfs_inode *ip)
- {
 
