@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2886814D717
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:43:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70BB14D717
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:43:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733528614; cv=none; b=cHqNRqU0G+KLhrv5dAv3gv/n79bLlYrA0Pun9U3O4VWIZu5ptOhN0s2jSxHA8ak9fWiDaezPsv3LI3bv8LWJW2vdMZaixXTqiH/taHpa+q7aJNlQ65WRXK2hwCF910pfj51YAv/9njDon7k6bahzAPpK3o9Sx+EJyOtghLv+Les=
+	t=1733528629; cv=none; b=nIhr/6eKdRPyuvBa2USI2o+5E0fJYoneV0A4ztK97WoUSJEk2CGAmaAOO2xDiqyZXkVOHNYMEQKS4WKCwmaifsfzJYguCGS3Fa41pG6KYfYiYZwyK/05EhKVGZShzEQ6tt/WdtTbvGRc+8t04DdtNq5igs6AtJkJ8FlSWp4L29Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733528614; c=relaxed/simple;
-	bh=gCVZmQGMVWtnrFFhQJsg4HVP4rA9dHK4GLP4vekB8kI=;
+	s=arc-20240116; t=1733528629; c=relaxed/simple;
+	bh=95tcmvUy/aa9REApCaG9Y/9vBC/Ul37F+xmPmgCJyM8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u6go7cWjCaHCQj+Cp3JdrLQh2oUMiB3NadCGC3FEDKklbhjqbQyVdPgUdYoqUM72LGJ+LIoQ/J6kCGtwafeHoFc2J+wv++pqYyEyUoFyJ1Aky3pv0HNGykA2Cako9sL+jYfJ/DmC0hQuUMMpKeN55eHAHUhxwpLKNMAR7Ey0EMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g4jRQYla; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RUMnFu+jWEdYW91KTnamgxCvuN8s+AqgaLKHSiG4czewEmXydNze9rDe3sQkiPDn+TBx0mgKx974+yy4UmpUd7GdvmO754jBb1AK0kFSFObHKqsqI3lb1rmbxPTmsWUJsw/CnNe6JedyS/xQGjV7C7FF9+FuwbuA4z7tvLBzaW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nTemEOlX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g4jRQYla"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2099C4CED1;
-	Fri,  6 Dec 2024 23:43:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nTemEOlX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A083CC4CED1;
+	Fri,  6 Dec 2024 23:43:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733528614;
-	bh=gCVZmQGMVWtnrFFhQJsg4HVP4rA9dHK4GLP4vekB8kI=;
+	s=k20201202; t=1733528629;
+	bh=95tcmvUy/aa9REApCaG9Y/9vBC/Ul37F+xmPmgCJyM8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=g4jRQYlaeGL9wa4KKDgAhvyPvgiADxAX/gxOimmsElfFu1+xdjgaFF8srQWC0nhUa
-	 ZaHveAJVoaupt65+AmyoENz77APFA1QiDCPQB9fjE84+EQzHTWuJ6yJap0h/DOkiS4
-	 6l6rf41qA4CgBqIq19TTvBOmXNkkpvYl7eOaEfXA8ov2dFH2CBdQsCYvwxvVgBRHQZ
-	 J43AzWFsVador30Cf8CUV94+/EZnpa1xV44fxbvXUxe3+hqt2Xj0Zxm77rkNpljBjt
-	 UIqOkzUdx5MZ/an11FJ5Vl7+lOYnCLdmR7L2yRD1C+FTJzXaf/Cfxg4poKQu5njBu9
-	 EUJQUk4NhSQ1A==
-Date: Fri, 06 Dec 2024 15:43:33 -0800
-Subject: [PATCH 15/41] xfs_io: support the bulkstat metadata directory flag
+	b=nTemEOlXsF269o/MT8DLsY6VxFhQi9EAZy6q0l1vXLGP1dFWaX0oRltus96iVKUIa
+	 uaIcYvdmibPpL0fhs6JKQ33FEowHuBqawc0kXeRBvuYvTkZxPiePrtpYiWSf1eFyo/
+	 sBSoc8RxiJc5s4qNw55/cSfOewpxSDi9pP4eaYZiN6waGEpeL37NjMalA7AKBQnLCA
+	 FxCQSLFwJ3j6dYnH2OoGoESVaLa2I+DZVFsS8wUqD7y/CD/p1Dskf78MoHz9LBNNQI
+	 dTLND5s6iIYQ6aIGdHeV8k0x20lI4Go5/5vV8sWXVeZKAgF7NV9QVd3nb1lq6OpH44
+	 M/4xoJdk81YMg==
+Date: Fri, 06 Dec 2024 15:43:49 -0800
+Subject: [PATCH 16/41] xfs_io: support scrubbing metadata directory paths
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352748467.122992.7994504931432399626.stgit@frogsfrogsfrogs>
+Message-ID: <173352748483.122992.13810127442680845944.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 References: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,123 +45,149 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Support the new XFS_BULK_IREQ_METADIR flag for bulkstat commands.
+Support invoking the metadata directory path scrubber from xfs_io for
+testing.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- io/bulkstat.c     |   16 +++++++++++++++-
- man/man8/xfs_io.8 |   10 +++++++---
- 2 files changed, 22 insertions(+), 4 deletions(-)
+ io/scrub.c        |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ man/man8/xfs_io.8 |    3 ++-
+ 2 files changed, 62 insertions(+), 3 deletions(-)
 
 
-diff --git a/io/bulkstat.c b/io/bulkstat.c
-index 06023e1289e420..f312c6d55f47bc 100644
---- a/io/bulkstat.c
-+++ b/io/bulkstat.c
-@@ -70,6 +70,7 @@ bulkstat_help(void)
- "   -d         Print debugging output.\n"
- "   -q         Be quiet, no output.\n"
- "   -e <ino>   Stop after this inode.\n"
-+"   -m         Include metadata directories.\n"
- "   -n <nr>    Ask for this many results at once.\n"
- "   -s <ino>   Inode to start with.\n"
- "   -v <ver>   Use this version of the ioctl (1 or 5).\n"));
-@@ -107,11 +108,12 @@ bulkstat_f(
- 	bool			has_agno = false;
- 	bool			debug = false;
- 	bool			quiet = false;
-+	bool			metadir = false;
- 	unsigned int		i;
- 	int			c;
- 	int			ret;
+diff --git a/io/scrub.c b/io/scrub.c
+index e03c1d0eaf1db8..45229a8ae81099 100644
+--- a/io/scrub.c
++++ b/io/scrub.c
+@@ -41,6 +41,12 @@ scrub_help(void)
+ " Known metadata scrub types are:"));
+ 	for (i = 0, d = xfrog_scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++)
+ 		printf(" %s", d->name);
++	printf(_(
++"\n"
++"\n"
++" Known metapath scrub arguments are:"));
++	for (i = 0, d = xfrog_metapaths; i < XFS_SCRUB_METAPATH_NR; i++, d++)
++		printf(" %s", d->name);
+ 	printf("\n");
+ }
  
--	while ((c = getopt(argc, argv, "a:de:n:qs:v:")) != -1) {
-+	while ((c = getopt(argc, argv, "a:de:mn:qs:v:")) != -1) {
- 		switch (c) {
- 		case 'a':
- 			agno = cvt_u32(optarg, 10);
-@@ -131,6 +133,9 @@ bulkstat_f(
- 				return 1;
- 			}
- 			break;
-+		case 'm':
-+			metadir = true;
-+			break;
- 		case 'n':
- 			batch_size = cvt_u32(optarg, 10);
- 			if (errno) {
-@@ -185,6 +190,8 @@ bulkstat_f(
+@@ -125,6 +131,40 @@ parse_none(
+ 	return true;
+ }
  
- 	if (has_agno)
- 		xfrog_bulkstat_set_ag(breq, agno);
-+	if (metadir)
-+		breq->hdr.flags |= XFS_BULK_IREQ_METADIR;
- 
- 	set_xfd_flags(&xfd, ver);
- 
-@@ -253,6 +260,7 @@ bulkstat_single_f(
- 	unsigned long		ver = 0;
- 	unsigned int		i;
- 	bool			debug = false;
-+	bool			metadir = false;
- 	int			c;
- 	int			ret;
- 
-@@ -261,6 +269,9 @@ bulkstat_single_f(
- 		case 'd':
- 			debug = true;
- 			break;
-+		case 'm':
-+			metadir = true;
-+			break;
- 		case 'v':
- 			errno = 0;
- 			ver = strtoull(optarg, NULL, 10);
-@@ -313,6 +324,9 @@ bulkstat_single_f(
- 			}
- 		}
- 
-+		if (metadir)
-+			flags |= XFS_BULK_IREQ_METADIR;
++static bool
++parse_metapath(
++	int		argc,
++	char		**argv,
++	int		optind,
++	__u64		*ino)
++{
++	char		*p;
++	unsigned long long control;
++	int		i;
 +
- 		ret = -xfrog_bulkstat_single(&xfd, ino, flags, &bulkstat);
- 		if (ret) {
- 			xfrog_perror(ret, "xfrog_bulkstat_single");
++	if (optind != argc - 1) {
++		fprintf(stderr, _("Must specify metapath number.\n"));
++		return false;
++	}
++
++	for (i = 0; i < XFS_SCRUB_METAPATH_NR; i++) {
++		if (!strcmp(argv[optind], xfrog_metapaths[i].name)) {
++			*ino = i;
++			return true;
++		}
++	}
++
++	control = strtoll(argv[optind], &p, 0);
++	if (*p != '\0') {
++		fprintf(stderr, _("Bad metapath number '%s'.\n"),
++				argv[optind]);
++		return false;
++	}
++
++	*ino = control;
++	return true;
++}
++
+ static int
+ parse_args(
+ 	int				argc,
+@@ -170,6 +210,12 @@ parse_args(
+ 	meta->sm_flags = flags;
+ 
+ 	switch (d->group) {
++	case XFROG_SCRUB_GROUP_METAPATH:
++		if (!parse_metapath(argc, argv, optind, &meta->sm_ino)) {
++			exitcode = 1;
++			return command_usage(cmdinfo);
++		}
++		break;
+ 	case XFROG_SCRUB_GROUP_INODE:
+ 		if (!parse_inode(argc, argv, optind, &meta->sm_ino,
+ 						     &meta->sm_gen)) {
+@@ -244,7 +290,7 @@ scrub_init(void)
+ 	scrub_cmd.argmin = 1;
+ 	scrub_cmd.argmax = -1;
+ 	scrub_cmd.flags = CMD_NOMAP_OK;
+-	scrub_cmd.args = _("type [agno|ino gen]");
++	scrub_cmd.args = _("type [agno|ino gen|metapath]");
+ 	scrub_cmd.oneline = _("scrubs filesystem metadata");
+ 	scrub_cmd.help = scrub_help;
+ 
+@@ -275,6 +321,12 @@ repair_help(void)
+ " Known metadata repair types are:"));
+ 	for (i = 0, d = xfrog_scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++)
+ 		printf(" %s", d->name);
++	printf(_(
++"\n"
++"\n"
++" Known metapath repair arguments are:"));
++	for (i = 0, d = xfrog_metapaths; i < XFS_SCRUB_METAPATH_NR; i++, d++)
++		printf(" %s", d->name);
+ 	printf("\n");
+ }
+ 
+@@ -327,7 +379,7 @@ repair_init(void)
+ 	repair_cmd.argmin = 1;
+ 	repair_cmd.argmax = -1;
+ 	repair_cmd.flags = CMD_NOMAP_OK;
+-	repair_cmd.args = _("type [agno|ino gen]");
++	repair_cmd.args = _("type [agno|ino gen|metapath]");
+ 	repair_cmd.oneline = _("repairs filesystem metadata");
+ 	repair_cmd.help = repair_help;
+ 
+@@ -495,6 +547,12 @@ scrubv_f(
+ 	optind++;
+ 
+ 	switch (group) {
++	case XFROG_SCRUB_GROUP_METAPATH:
++		if (!parse_metapath(argc, argv, optind, &scrubv.head.svh_ino)) {
++			exitcode = 1;
++			return command_usage(&scrubv_cmd);
++		}
++		break;
+ 	case XFROG_SCRUB_GROUP_INODE:
+ 		if (!parse_inode(argc, argv, optind, &scrubv.head.svh_ino,
+ 						     &scrubv.head.svh_gen)) {
 diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index eb2201fca74380..fb7a026224fda7 100644
+index fb7a026224fda7..c73fee7c2780c6 100644
 --- a/man/man8/xfs_io.8
 +++ b/man/man8/xfs_io.8
-@@ -1243,7 +1243,7 @@ .SH MEMORY MAPPED I/O COMMANDS
- 
- .SH FILESYSTEM COMMANDS
- .TP
--.BI "bulkstat [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-n " batchsize " ] [ \-q ] [ \-s " startino " ] [ \-v " version" ]
-+.BI "bulkstat [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-m ] [ \-n " batchsize " ] [ \-q ] [ \-s " startino " ] [ \-v " version" ]
- Display raw stat information about a bunch of inodes in an XFS filesystem.
- Options are as follows:
- .RS 1.0i
-@@ -1260,6 +1260,9 @@ .SH FILESYSTEM COMMANDS
- Stop displaying records when this inode number is reached.
- Defaults to stopping when the system call stops returning results.
- .TP
-+.BI \-m
-+Include metadata directories in the output.
-+.TP
- .BI \-n " batchsize"
- Retrieve at most this many records per call.
- Defaults to 4,096.
-@@ -1280,10 +1283,11 @@ .SH FILESYSTEM COMMANDS
+@@ -1425,13 +1425,14 @@ .SH FILESYSTEM COMMANDS
  .RE
  .PD
  .TP
--.BI "bulkstat_single [ \-d ] [ \-v " version " ] [ " inum... " | " special... " ]
-+.BI "bulkstat_single [ \-d ] [ \-m ] [ \-v " version " ] [ " inum... " | " special... " ]
- Display raw stat information about individual inodes in an XFS filesystem.
- The
--.B \-d
-+.BR \-d ,
-+.BR \-m ,
- and
- .B \-v
- options are the same as the
+-.BI "scrub " type " [ " agnumber " | " "ino" " " "gen" " ]"
++.BI "scrub " type " [ " agnumber " | " "ino" " " "gen" " | " metapath " ]"
+ Scrub internal XFS filesystem metadata.  The
+ .BI type
+ parameter specifies which type of metadata to scrub.
+ For AG metadata, one AG number must be specified.
+ For file metadata, the scrub is applied to the open file unless the
+ inode number and generation number are specified.
++For metapath, the name of a file or a raw number must be specified.
+ .RE
+ .PD
+ .TP
 
