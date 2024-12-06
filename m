@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA20B1FA172
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:39:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63FF7213E66
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:39:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733528379; cv=none; b=Tc6OGNsOKpIt+68e675KYbHVa1XZ287wlTU2hJhJquk5nL8WFHLzZIBbxlHMdo9PAfOEg/tpSZKcIcvvmGf9bJrd2LcOyUyUNZflS6c6+UN7CDuNbKUEB6A+7pnOgMOzqrQLWoH8DXp4VjErC2Y2SJFnEjAZiV34Aw9dwWjDANk=
+	t=1733528395; cv=none; b=n0a8fGWwD6Q57XmunAQg0h/NKAh0KnysWVkZ1ZWL3TPcgx9JkUjplEvt7j38qm7HmOmtZ6m8vApfGNJHy+LSn2NjI5AA5BlIq/7Q6wrMxYyw3L7usEib6XJBsJZSqAt4pO8Clu+g5a1jqhlnNMi6U1fzcq1PR46Q0Cq9JvdYuDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733528379; c=relaxed/simple;
-	bh=XYEdP597n1D74NX5g9WtpTlQGZCdmx8TmnMroa+Dd9I=;
+	s=arc-20240116; t=1733528395; c=relaxed/simple;
+	bh=/i/xWxcxXw3UTLs4MnsDx/o6HRamgS1GdBGG0OGlxWc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=J/sgb9ImngEjlx4qVKekN8ppKqyZD0y5zAnbUGQAjZZZBt0Lc7PxbJCemfkEj6SYuI2LDemVEhbhZ9jGbGTCMeTjVv3zn4RlhBRmTuKMvF02efA64sW6hho3C2PW8wrWxUbuy5ieSij9RlBwOJ7v+XRm5EDoaPLRm/Vy/wxcDVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pE3pxqy8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=fqFfJ7XpZcT0kMglO7xJ4cU21D5ooG5QLB/SVBNqQlnEuKeY2t05NG0CGm0yMSbxqCsbG5MwTxk1dKmcGHwLAi5fK8LWn8Qy4RrfL3njwHi4znhvK75HTuu9WKdx1L0uemmn4Rujy9C40eRsHnd0u1tqowUoUSyjcrp56u23q/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YVoNjzUT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pE3pxqy8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5815AC4CED1;
-	Fri,  6 Dec 2024 23:39:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YVoNjzUT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA0F6C4CED1;
+	Fri,  6 Dec 2024 23:39:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733528379;
-	bh=XYEdP597n1D74NX5g9WtpTlQGZCdmx8TmnMroa+Dd9I=;
+	s=k20201202; t=1733528395;
+	bh=/i/xWxcxXw3UTLs4MnsDx/o6HRamgS1GdBGG0OGlxWc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pE3pxqy8H6VXFEx1Ig5xzmxKKaotm7wJdMqlA1MjXdL0COqE+HqYck3UEla54jT6g
-	 8mbKXv0aVYr1ZaL5h8lZwHbhNqxTs5XclGgnkbCivtVc0spRbkO/S2Kkozapl+lsVL
-	 fzlYCFKvO7T0j/EwnBM2ournkvntf/loD8wMbAAc1bkkrR7X2TXZ8uIY0B4M+yK2GA
-	 AltfgbtQV3aM/IGM9M0qmQMPcWgfAn9ieUJ/3ZyR7WXO6WwWn6uGON5STnTRIRU0Rn
-	 TBKKY9BEfWE2r1tr6Nyp7pH4zH3yi04qmItu6GrMyqHpX5lVWWLVE6DlDsXMLI142O
-	 80KL18ypF3E6Q==
-Date: Fri, 06 Dec 2024 15:39:38 -0800
-Subject: [PATCH 36/36] xfs: check metadata directory file path connectivity
+	b=YVoNjzUTgb1mfhMXhBnyMFF8VBMx3mhDwp2JOui0wbLlsxO3YF/eLfZhc88eBkFTu
+	 1IngxYelh5MSJ2oOIY3RhXCiCL5OG8H5hZ3w/7fWoN0jECb5zrMIILn8jC9S/udorm
+	 qz26flTz3DjMC0tlPvxoRqSNENg2e0yaqrrGCn0Up8YM+dXOv7mWjEs82DfcS5oIQs
+	 gN4KMXEWpeGSiJ7xseRuhBBMPnHnrjgdbs1qJrOYpEz5pe9nUuQ0t8h0SRQPRgG8Iv
+	 y1vD5WmhgQGc6jeBXm7R9sbIeuHBvWi6QaTlEZEIYSd/Gs+2Vml11BXG7H9mLQYEcB
+	 dpWGY7oqH8jfA==
+Date: Fri, 06 Dec 2024 15:39:54 -0800
+Subject: [PATCH 01/41] libxfs: constify the xfs_inode predicates
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352747425.121772.5629402600312137149.stgit@frogsfrogsfrogs>
-In-Reply-To: <173352746825.121772.11414387759505707402.stgit@frogsfrogsfrogs>
-References: <173352746825.121772.11414387759505707402.stgit@frogsfrogsfrogs>
+Message-ID: <173352748254.122992.9527762042948678250.stgit@frogsfrogsfrogs>
+In-Reply-To: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
+References: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,82 +45,63 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: b3c03efa5972f084e40104307dbe432359279cf2
+Change the xfs_inode predicates to take a const struct xfs_inode pointer
+because they do not change the inode.
 
-Create a new scrubber type that checks that well known metadata
-directory paths are connected to the metadata inode that the incore
-structures think is in use.  For example, check that "/quota/user" in
-the metadata directory tree actually points to
-mp->m_quotainfo->qi_uquotaip->i_ino.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h     |   13 ++++++++++++-
- libxfs/xfs_health.h |    4 +++-
- 2 files changed, 15 insertions(+), 2 deletions(-)
+ include/xfs_inode.h |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index b05e6fb1470351..faa38a7d1eb019 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -199,6 +199,7 @@ struct xfs_fsop_geom {
- #define XFS_FSOP_GEOM_SICK_QUOTACHECK	(1 << 6)  /* quota counts */
- #define XFS_FSOP_GEOM_SICK_NLINKS	(1 << 7)  /* inode link counts */
- #define XFS_FSOP_GEOM_SICK_METADIR	(1 << 8)  /* metadata directory */
-+#define XFS_FSOP_GEOM_SICK_METAPATH	(1 << 9)  /* metadir tree path */
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 6f2d23987d5f8a..30e171696c80e2 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -248,7 +248,7 @@ typedef struct xfs_inode {
+ 	struct inode		i_vnode;
+ } xfs_inode_t;
  
- /* Output for XFS_FS_COUNTS */
- typedef struct xfs_fsop_counts {
-@@ -732,9 +733,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_NLINKS	26	/* inode link counts */
- #define XFS_SCRUB_TYPE_HEALTHY	27	/* everything checked out ok */
- #define XFS_SCRUB_TYPE_DIRTREE	28	/* directory tree structure */
-+#define XFS_SCRUB_TYPE_METAPATH	29	/* metadata directory tree paths */
+-static inline bool xfs_inode_has_attr_fork(struct xfs_inode *ip)
++static inline bool xfs_inode_has_attr_fork(const struct xfs_inode *ip)
+ {
+ 	return ip->i_forkoff > 0;
+ }
+@@ -372,17 +372,17 @@ static inline void drop_nlink(struct inode *inode)
+ 	inode->i_nlink--;
+ }
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	29
-+#define XFS_SCRUB_TYPE_NR	30
+-static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
++static inline bool xfs_is_reflink_inode(const struct xfs_inode *ip)
+ {
+ 	return ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
+ }
  
- /*
-  * This special type code only applies to the vectored scrub implementation.
-@@ -812,6 +814,15 @@ struct xfs_scrub_vec_head {
+-static inline bool xfs_inode_has_bigtime(struct xfs_inode *ip)
++static inline bool xfs_inode_has_bigtime(const struct xfs_inode *ip)
+ {
+ 	return ip->i_diflags2 & XFS_DIFLAG2_BIGTIME;
+ }
  
- #define XFS_SCRUB_VEC_FLAGS_ALL		(0)
- 
-+/*
-+ * i: sm_ino values for XFS_SCRUB_TYPE_METAPATH to select a metadata file for
-+ * path checking.
-+ */
-+#define XFS_SCRUB_METAPATH_PROBE	(0)  /* do we have a metapath scrubber? */
-+
-+/* Number of metapath sm_ino values */
-+#define XFS_SCRUB_METAPATH_NR		(1)
-+
- /*
-  * ioctl limits
+-static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
++static inline bool xfs_inode_has_large_extent_counts(const struct xfs_inode *ip)
+ {
+ 	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
+ }
+@@ -392,12 +392,12 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+  * Decide if this file is a realtime file whose data allocation unit is larger
+  * than a single filesystem block.
   */
-diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index f90e8dfc050000..a23df94319e5fb 100644
---- a/libxfs/xfs_health.h
-+++ b/libxfs/xfs_health.h
-@@ -63,6 +63,7 @@ struct xfs_da_args;
- #define XFS_SICK_FS_QUOTACHECK	(1 << 4)  /* quota counts */
- #define XFS_SICK_FS_NLINKS	(1 << 5)  /* inode link counts */
- #define XFS_SICK_FS_METADIR	(1 << 6)  /* metadata directory tree */
-+#define XFS_SICK_FS_METAPATH	(1 << 7)  /* metadata directory tree path */
+-static inline bool xfs_inode_has_bigrtalloc(struct xfs_inode *ip)
++static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+ {
+ 	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
+ }
  
- /* Observable health issues for realtime volume metadata. */
- #define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
-@@ -107,7 +108,8 @@ struct xfs_da_args;
- 				 XFS_SICK_FS_PQUOTA | \
- 				 XFS_SICK_FS_QUOTACHECK | \
- 				 XFS_SICK_FS_NLINKS | \
--				 XFS_SICK_FS_METADIR)
-+				 XFS_SICK_FS_METADIR | \
-+				 XFS_SICK_FS_METAPATH)
- 
- #define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
- 				 XFS_SICK_RT_SUMMARY)
+-static inline bool xfs_is_always_cow_inode(struct xfs_inode *ip)
++static inline bool xfs_is_always_cow_inode(const struct xfs_inode *ip)
+ {
+ 	return false;
+ }
 
