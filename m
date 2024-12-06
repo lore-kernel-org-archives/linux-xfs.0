@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C441AAA24
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:30:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C02111FCD18
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:30:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733527817; cv=none; b=JRAp1/ohrC1ya10sfgrodcb/mDRDyZRi0mS91ApzWN1alSHnlxvMHSWEA5sp/16zRD1T7Fa4Lxe5dtFx9yAlrfjD8zZiJVFefU0JXy4gLqXlIJXjTT8sezA/xSqf8+oaVNfCA6KKioD+e+y7+c2Z0tOiWaQ/AnFgKbZqUJgQbgo=
+	t=1733527832; cv=none; b=ptfmtiyw4VZ7JVdofzfckllozqDcV9FYnPlcmnnh9P+zo9e2AX7u4SC4iI10JUHbsrNPQaV0MyBgo0+mXfGjJB4+2Rl9ElwdhTujT47M8tezpqiqjn9KC8iIGwYljGsLTbmqSrP+9MlOvZhpy6vHESN6VYxD96waECBP/R5C0kI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733527817; c=relaxed/simple;
-	bh=jVc7FyzA78vPmgqhuFB8iAX/wZdr2HsbanBsJnOeThU=;
+	s=arc-20240116; t=1733527832; c=relaxed/simple;
+	bh=d3Vu/YGQ49fxEhHmTCNaDmt+0LxGV0BHuA0IUFIHU7E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=P65XsIWm0fzz05twYDA1/yUHCO2SRzpRD+vYUeGr2rUk+V32ZViyzCaXQkyCQED+OTgDw8WzqylKVu0IcC2sXNfB5sbSVFPakyYq+qCsUz68HmmSimyxrlagot5XuEUdC25lJ2cgjVT3rAWf1ZeLD2j7OS1jj92OEjUfz1/fZuM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K42WqjQu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tCAsSWaUQYqiMVQcErum78hVFydYOvkSy8fP3MoRCN/z6D8eP6kVokiOauIJUgu3uAA92tBG7Wa+EhmADfh2rWVKHwUqjADmNn6xoBaRwFm/aRTsOPNlqQ5HE7NXEmHIrcQuCk4RDLyiCXRrZ3KVo4gpsZ5+ryJsRFoO6pxGdY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pRCxw5jX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K42WqjQu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0ECC4CED1;
-	Fri,  6 Dec 2024 23:30:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pRCxw5jX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C61DC4CED1;
+	Fri,  6 Dec 2024 23:30:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733527816;
-	bh=jVc7FyzA78vPmgqhuFB8iAX/wZdr2HsbanBsJnOeThU=;
+	s=k20201202; t=1733527832;
+	bh=d3Vu/YGQ49fxEhHmTCNaDmt+0LxGV0BHuA0IUFIHU7E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=K42WqjQuPZ9ljxVa63qUu2u9HR/xvHGNhnICg/LlV5TxPq14CZl8/O4xBMaXG59Ck
-	 ame9/1eNY2X4iJ6naLrRfAwvN+dlpRihl/KuZEHrDfk/WblaQV+IrPhC+B6fMTrvyK
-	 GR8O4WJ3bMYcH2gt566M4JTOtzrCSy+pDOa/tiij4LdUCheulOglcyTqV18glBgKuM
-	 DGenJ6Ov+bOxFuvehBAdBVbXVoE8mEhJxcPKm8NU1IVXVPRFs5d3X5X0kA76q47cA9
-	 oxUji40UCao1dsaQ94zfrPo3rCitqACvER623Wc+JU1cOChHjJPWzc2qNBhHRLUY/x
-	 3FAdQRdR4zJBg==
-Date: Fri, 06 Dec 2024 15:30:16 -0800
-Subject: [PATCH 2/2] man: document the -n parent mkfs option
+	b=pRCxw5jXsAzUicOQ2jAgDkgXJctqaUQETgSV93TMDAtdNBugHUEtzv/e9/hv5kA8e
+	 ivwgi1b+nctx4xHlcIZF9d4xCyS2FvuPIlK6yyUm6pjL2U0DZHegaoKjiXgUqNOIVz
+	 LNqzFJY5PuqzG2hPxxIZ1R+LkRO+nTyWsZZBkYcY4uGehunqEPPdXJceBDHM7q1DAT
+	 76beCfG630LUNBONH0xJH+Y8Wzax/gPtR+2PMprMH+Utg3ro60ilDfoRHkwAzqda07
+	 8jAlySJzK4gsDLisMurjqbO66YxdJma0zNfZgtWofdaWizsFTZ41qT0JJwnlUQJ9tB
+	 jL2wHT0rV06uQ==
+Date: Fri, 06 Dec 2024 15:30:31 -0800
+Subject: [PATCH 01/36] xfs: remove the redundant xfs_alloc_log_agf
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352746331.121646.4339047798362935705.stgit@frogsfrogsfrogs>
-In-Reply-To: <173352746299.121646.10555086770297720030.stgit@frogsfrogsfrogs>
-References: <173352746299.121646.10555086770297720030.stgit@frogsfrogsfrogs>
+Cc: leo.lilong@huawei.com, dchinner@redhat.com, cem@kernel.org, hch@lst.de,
+ linux-xfs@vger.kernel.org
+Message-ID: <173352746897.121772.5621271968296589393.stgit@frogsfrogsfrogs>
+In-Reply-To: <173352746825.121772.11414387759505707402.stgit@frogsfrogsfrogs>
+References: <173352746825.121772.11414387759505707402.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,38 +44,34 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Long Li <leo.lilong@huawei.com>
 
-Document the -n parent option to mkfs.xfs so that users will actually
-know how to turn on directory parent pointers.
+Source kernel commit: 8b9b261594d8ef218ef4d0e732dad153f82aab49
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+There are two invocations of xfs_alloc_log_agf in xfs_alloc_put_freelist.
+The AGF does not change between the two calls. Although this does not pose
+any practical problems, it seems like a small mistake. Therefore, fix it
+by removing the first xfs_alloc_log_agf invocation.
+
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- man/man8/mkfs.xfs.8.in |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ libxfs/xfs_alloc.c |    2 --
+ 1 file changed, 2 deletions(-)
 
 
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index a854b0e87cb1a2..e56c8f31a52c78 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -902,6 +902,18 @@ .SH OPTIONS
- enabled, and cannot be turned off.
- .IP
- In other words, this option is only tunable on the deprecated V4 format.
-+.TP
-+.BI parent= value
-+This feature creates back references from child files to parent directories
-+so that online repair can reconstruct broken directory files.
-+The value is either 0 to disable the feature, or 1 to create parent pointers.
-+
-+By default,
-+.B mkfs.xfs
-+will not create parent pointers.
-+This feature is only available for filesystems created with the (default)
-+.B \-m crc=1
-+option set.
- .RE
- .PP
- .PD 0
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index f0635b17f18548..355f8ef1a872d3 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -3152,8 +3152,6 @@ xfs_alloc_put_freelist(
+ 		logflags |= XFS_AGF_BTREEBLKS;
+ 	}
+ 
+-	xfs_alloc_log_agf(tp, agbp, logflags);
+-
+ 	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
+ 
+ 	agfl_bno = xfs_buf_to_agfl_bno(agflbp);
 
