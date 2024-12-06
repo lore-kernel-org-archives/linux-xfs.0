@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0654148827
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:56:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 692FF148827
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:56:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733529363; cv=none; b=IdxFeztdVW750UNhmZpBUjMYJy1KSx7+ruMcok55sfIwxja8a7oXAq6gDJUcII2IWNF8NDSv7aRNn2k6GuKump2HJP+Yv4wC0JU6/3e93PxUAKOUa4cWMZI7GzluC628diUsDPfXA+3vs925vvz0MgvTC/curG5pNEl7m0WSs4A=
+	t=1733529379; cv=none; b=FZmOrfdZDgw/APWQIZ/Z6DkyOW5w2+nxUPAqpCAgqINN5yDSdfcq7lXzK+5LiENULJYlSSDCIkQHmMeREzdUmLEvLabQayC5xrkG7nY8igYrnQgsiiRgb0mJObEsbLk4qTHnD+vgnDGpdXjsGP3G7Q8EmKQTPRb7y2E6TaKFZ/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733529363; c=relaxed/simple;
-	bh=WETWCJap8hE5Y50v8b4cs49qvI7/jIwMRikqdvVIsuM=;
+	s=arc-20240116; t=1733529379; c=relaxed/simple;
+	bh=gvKRscmlLuSZ3PqmWUMjmhpLJIhiAYUfYggOjzud2Bs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SCK7vzVW4SLZKoGe5ZthLngmok6j9kyb04zYQILhVligQXibgYqyJEMPjiWU1FW5F4Ao3u5bVrgJGSk9UB4dK5H+sHgauaF9wh5yBlkg9iD4TNWdaFbjr9HmBBKKjqQUOe1pI1CXPNWL5QoH9cmAic/kSrLblbKmudcWnsRt5FU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vs6XCgHG; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MW0WIY0lpnfiaBRXjjZkX1mTl+lV6kWGdEiIPoDUlQrJEmDByk/xv2FuLyi8iEUjxt+/J3V0libpRZRDOxdANnZBjs9TDPp1/SGqLl5cnERSDAphDnvcejvIDcSrKkYUYwzSsuiqvyVWBNoC64G2NobL/pksHXEoqRqpxTt8Eow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pbcplmQQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vs6XCgHG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5582C4CED1;
-	Fri,  6 Dec 2024 23:56:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pbcplmQQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47568C4CED1;
+	Fri,  6 Dec 2024 23:56:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733529363;
-	bh=WETWCJap8hE5Y50v8b4cs49qvI7/jIwMRikqdvVIsuM=;
+	s=k20201202; t=1733529379;
+	bh=gvKRscmlLuSZ3PqmWUMjmhpLJIhiAYUfYggOjzud2Bs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Vs6XCgHG5uRLWr4e7dnK5G2r7atlHl+UW7aq+PUBkilnAxVJLgeOzSUOgIFnXUwlS
-	 nOwIpgbe7Si+lfzBEUs+LV2I8xbFmp6g7oGAk7r2CggDNTWbHAsNQg4MjNsvZjPwzW
-	 ZF7Zob7MWLuSouxQs+1dYh6zaec+JwrnOOjQqLzDaCwBKsPnmApN1ONk7NaM6f65f9
-	 xW85QYpKzF5msKOk3+CmXcN2+RZMPdp0bKs7By87dOOh+8ydOx78rC5QcpLadOvkyj
-	 FMFAYq1wBh8VlTqEQafYHdB/piR1pvJxBIJB9Tzw1C67qlkIFB+k/FUD2t4HXTAcQO
-	 tTmeXU8qJsOFQ==
-Date: Fri, 06 Dec 2024 15:56:03 -0800
-Subject: [PATCH 18/46] xfs: record rt group metadata errors in the health
- system
+	b=pbcplmQQv3NNVBmIzEWo9XXR9+lnIYAkh4jP5uXVZfjcxDSzX4vD/tai69cKqu/fi
+	 4MVlneQf6fjraZK3DL1SIPABkBBppjfshVUQKcv7i289tG5O0GV+wfRImFbMyEV6EN
+	 eqNpOETZHYI8h8+uBbqUGgU7BsxZZ9Ll8WFhHeCbflmTCyZxYFoxn18T2K8Bdkm+sV
+	 4Ds2UgsXic4AI2hN97aMgx+04cHWXIdjvYl1j54U3FLiEHkCUSpIQelSkg0sqbXpd3
+	 Oza0682RXlzA92RxuLNfBQiN8/UG7Dtqab5/J5YyR7mN31353QWQEHGxQxaBuXeLbM
+	 n0O9OsP4jrakA==
+Date: Fri, 06 Dec 2024 15:56:18 -0800
+Subject: [PATCH 19/46] xfs: export the geometry of realtime groups to
+ userspace
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352750270.124560.14227801078237099766.stgit@frogsfrogsfrogs>
+Message-ID: <173352750285.124560.7877645330844796851.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 References: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,362 +46,132 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: ab7bd650e17a392a205ec6b6c72b97cae18d43b4
+Source kernel commit: 3fa7a6d0c7eb264e469eaf1e3ef59b6793a853ee
 
-Record the state of per-rtgroup metadata sickness in the rtgroup
-structure for later reporting.
+Create an ioctl so that the kernel can report the status of realtime
+groups to userspace.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/util.c         |    1 -
- libxfs/xfs_health.h   |   40 +++++++++++++++++++++++-----------------
- libxfs/xfs_rtbitmap.c |   37 +++++++++++++++++++------------------
- libxfs/xfs_rtgroup.c  |   38 +++++++++++++++++++++++++++++++++-----
- libxfs/xfs_rtgroup.h  |    1 +
- 5 files changed, 76 insertions(+), 41 deletions(-)
+ libxfs/util.c        |    7 +++++++
+ libxfs/xfs_fs.h      |   16 ++++++++++++++++
+ libxfs/xfs_health.h  |    2 ++
+ libxfs/xfs_rtgroup.c |   14 ++++++++++++++
+ libxfs/xfs_rtgroup.h |    4 ++++
+ 5 files changed, 43 insertions(+)
 
 
 diff --git a/libxfs/util.c b/libxfs/util.c
-index 8c2ecff5855775..83f2f048bbe9f2 100644
+index 83f2f048bbe9f2..ed48e2045b484b 100644
 --- a/libxfs/util.c
 +++ b/libxfs/util.c
-@@ -507,7 +507,6 @@ void xfs_btree_mark_sick(struct xfs_btree_cur *cur) { }
- void xfs_dirattr_mark_sick(struct xfs_inode *ip, int whichfork) { }
- void xfs_da_mark_sick(struct xfs_da_args *args) { }
- void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask) { }
--void xfs_rt_mark_sick(struct xfs_mount *mp, unsigned int mask) { }
+@@ -492,6 +492,13 @@ xfs_fs_mark_healthy(
+ }
  
- #ifdef HAVE_GETRANDOM_NONBLOCK
- uint32_t
-diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index a23df94319e5fb..3d93b57cf57143 100644
---- a/libxfs/xfs_health.h
-+++ b/libxfs/xfs_health.h
-@@ -54,6 +54,7 @@ struct xfs_inode;
- struct xfs_fsop_geom;
- struct xfs_btree_cur;
- struct xfs_da_args;
-+struct xfs_rtgroup;
- 
- /* Observable health issues for metadata spanning the entire filesystem. */
- #define XFS_SICK_FS_COUNTERS	(1 << 0)  /* summary counters */
-@@ -65,9 +66,10 @@ struct xfs_da_args;
- #define XFS_SICK_FS_METADIR	(1 << 6)  /* metadata directory tree */
- #define XFS_SICK_FS_METAPATH	(1 << 7)  /* metadata directory tree path */
- 
--/* Observable health issues for realtime volume metadata. */
--#define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
--#define XFS_SICK_RT_SUMMARY	(1 << 1)  /* realtime summary */
-+/* Observable health issues for realtime group metadata. */
-+#define XFS_SICK_RG_SUPER	(1 << 0)  /* rt group superblock */
-+#define XFS_SICK_RG_BITMAP	(1 << 1)  /* rt group bitmap */
-+#define XFS_SICK_RG_SUMMARY	(1 << 2)  /* rt groups summary */
- 
- /* Observable health issues for AG metadata. */
- #define XFS_SICK_AG_SB		(1 << 0)  /* superblock */
-@@ -111,8 +113,9 @@ struct xfs_da_args;
- 				 XFS_SICK_FS_METADIR | \
- 				 XFS_SICK_FS_METAPATH)
- 
--#define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
--				 XFS_SICK_RT_SUMMARY)
-+#define XFS_SICK_RG_PRIMARY	(XFS_SICK_RG_SUPER | \
-+				 XFS_SICK_RG_BITMAP | \
-+				 XFS_SICK_RG_SUMMARY)
- 
- #define XFS_SICK_AG_PRIMARY	(XFS_SICK_AG_SB | \
- 				 XFS_SICK_AG_AGF | \
-@@ -142,26 +145,26 @@ struct xfs_da_args;
- 
- /* Secondary state related to (but not primary evidence of) health problems. */
- #define XFS_SICK_FS_SECONDARY	(0)
--#define XFS_SICK_RT_SECONDARY	(0)
-+#define XFS_SICK_RG_SECONDARY	(0)
- #define XFS_SICK_AG_SECONDARY	(0)
- #define XFS_SICK_INO_SECONDARY	(XFS_SICK_INO_FORGET)
- 
- /* Evidence of health problems elsewhere. */
- #define XFS_SICK_FS_INDIRECT	(0)
--#define XFS_SICK_RT_INDIRECT	(0)
-+#define XFS_SICK_RG_INDIRECT	(0)
- #define XFS_SICK_AG_INDIRECT	(XFS_SICK_AG_INODES)
- #define XFS_SICK_INO_INDIRECT	(0)
- 
- /* All health masks. */
--#define XFS_SICK_FS_ALL	(XFS_SICK_FS_PRIMARY | \
-+#define XFS_SICK_FS_ALL		(XFS_SICK_FS_PRIMARY | \
- 				 XFS_SICK_FS_SECONDARY | \
- 				 XFS_SICK_FS_INDIRECT)
- 
--#define XFS_SICK_RT_ALL	(XFS_SICK_RT_PRIMARY | \
--				 XFS_SICK_RT_SECONDARY | \
--				 XFS_SICK_RT_INDIRECT)
-+#define XFS_SICK_RG_ALL		(XFS_SICK_RG_PRIMARY | \
-+				 XFS_SICK_RG_SECONDARY | \
-+				 XFS_SICK_RG_INDIRECT)
- 
--#define XFS_SICK_AG_ALL	(XFS_SICK_AG_PRIMARY | \
-+#define XFS_SICK_AG_ALL		(XFS_SICK_AG_PRIMARY | \
- 				 XFS_SICK_AG_SECONDARY | \
- 				 XFS_SICK_AG_INDIRECT)
- 
-@@ -195,11 +198,8 @@ void xfs_fs_mark_healthy(struct xfs_mount *mp, unsigned int mask);
- void xfs_fs_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
- 		unsigned int *checked);
- 
--void xfs_rt_mark_sick(struct xfs_mount *mp, unsigned int mask);
--void xfs_rt_mark_corrupt(struct xfs_mount *mp, unsigned int mask);
--void xfs_rt_mark_healthy(struct xfs_mount *mp, unsigned int mask);
--void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
--		unsigned int *checked);
-+void xfs_rgno_mark_sick(struct xfs_mount *mp, xfs_rgnumber_t rgno,
-+		unsigned int mask);
- 
+ void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo) { }
++void
++xfs_rtgroup_geom_health(
++	struct xfs_rtgroup		*rtg,
++	struct xfs_rtgroup_geometry	*rgeo)
++{
++	/* empty */
++}
+ void xfs_fs_mark_sick(struct xfs_mount *mp, unsigned int mask) { }
  void xfs_agno_mark_sick(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		unsigned int mask);
-@@ -244,11 +244,17 @@ xfs_group_has_sickness(
- 	xfs_group_measure_sickness(xg, &sick, &checked);
- 	return sick & mask;
- }
+ 		unsigned int mask) { }
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 5c224d03270ce9..4c0682173d6144 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -971,6 +971,21 @@ struct xfs_getparents_by_handle {
+ 	struct xfs_getparents		gph_request;
+ };
+ 
++/*
++ * Output for XFS_IOC_RTGROUP_GEOMETRY
++ */
++struct xfs_rtgroup_geometry {
++	__u32 rg_number;	/* i/o: rtgroup number */
++	__u32 rg_length;	/* o: length in blocks */
++	__u32 rg_sick;		/* o: sick things in ag */
++	__u32 rg_checked;	/* o: checked metadata in ag */
++	__u32 rg_flags;		/* i/o: flags for this ag */
++	__u32 rg_reserved[27];	/* o: zero */
++};
++#define XFS_RTGROUP_GEOM_SICK_SUPER	(1U << 0)  /* superblock */
++#define XFS_RTGROUP_GEOM_SICK_BITMAP	(1U << 1)  /* rtbitmap */
++#define XFS_RTGROUP_GEOM_SICK_SUMMARY	(1U << 2)  /* rtsummary */
 +
- #define xfs_ag_has_sickness(pag, mask) \
- 	xfs_group_has_sickness(pag_group(pag), (mask))
- #define xfs_ag_is_healthy(pag) \
- 	(!xfs_ag_has_sickness((pag), UINT_MAX))
- 
-+#define xfs_rtgroup_has_sickness(rtg, mask) \
-+	xfs_group_has_sickness(rtg_group(rtg), (mask))
-+#define xfs_rtgroup_is_healthy(rtg) \
-+	(!xfs_rtgroup_has_sickness((rtg), UINT_MAX))
-+
- static inline bool
- xfs_inode_has_sickness(struct xfs_inode *ip, unsigned int mask)
- {
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 84ca5447ca770f..5e63340668a03d 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -74,28 +74,31 @@ static int
- xfs_rtbuf_get(
- 	struct xfs_rtalloc_args	*args,
- 	xfs_fileoff_t		block,	/* block number in bitmap or summary */
--	int			issum)	/* is summary not bitmap */
-+	enum xfs_rtg_inodes	type)
- {
-+	struct xfs_inode	*ip = args->rtg->rtg_inodes[type];
- 	struct xfs_mount	*mp = args->mp;
- 	struct xfs_buf		**cbpp;	/* cached block buffer */
- 	xfs_fileoff_t		*coffp;	/* cached block number */
- 	struct xfs_buf		*bp;	/* block buffer, result */
--	struct xfs_inode	*ip;	/* bitmap or summary inode */
- 	struct xfs_bmbt_irec	map;
--	enum xfs_blft		type;
-+	enum xfs_blft		buf_type;
- 	int			nmap = 1;
- 	int			error;
- 
--	if (issum) {
-+	switch (type) {
-+	case XFS_RTGI_SUMMARY:
- 		cbpp = &args->sumbp;
- 		coffp = &args->sumoff;
--		ip = args->rtg->rtg_inodes[XFS_RTGI_SUMMARY];
--		type = XFS_BLFT_RTSUMMARY_BUF;
--	} else {
-+		buf_type = XFS_BLFT_RTSUMMARY_BUF;
-+		break;
-+	case XFS_RTGI_BITMAP:
- 		cbpp = &args->rbmbp;
- 		coffp = &args->rbmoff;
--		ip = args->rtg->rtg_inodes[XFS_RTGI_BITMAP];
--		type = XFS_BLFT_RTBITMAP_BUF;
-+		buf_type = XFS_BLFT_RTBITMAP_BUF;
-+		break;
-+	default:
-+		return -EINVAL;
- 	}
- 
- 	/*
-@@ -118,8 +121,7 @@ xfs_rtbuf_get(
- 		return error;
- 
- 	if (XFS_IS_CORRUPT(mp, nmap == 0 || !xfs_bmap_is_written_extent(&map))) {
--		xfs_rt_mark_sick(mp, issum ? XFS_SICK_RT_SUMMARY :
--					     XFS_SICK_RT_BITMAP);
-+		xfs_rtginode_mark_sick(args->rtg, type);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -128,12 +130,11 @@ xfs_rtbuf_get(
- 				   XFS_FSB_TO_DADDR(mp, map.br_startblock),
- 				   mp->m_bsize, 0, &bp, &xfs_rtbuf_ops);
- 	if (xfs_metadata_is_sick(error))
--		xfs_rt_mark_sick(mp, issum ? XFS_SICK_RT_SUMMARY :
--					     XFS_SICK_RT_BITMAP);
-+		xfs_rtginode_mark_sick(args->rtg, type);
- 	if (error)
- 		return error;
- 
--	xfs_trans_buf_set_type(args->tp, bp, type);
-+	xfs_trans_buf_set_type(args->tp, bp, buf_type);
- 	*cbpp = bp;
- 	*coffp = block;
- 	return 0;
-@@ -147,11 +148,11 @@ xfs_rtbitmap_read_buf(
- 	struct xfs_mount		*mp = args->mp;
- 
- 	if (XFS_IS_CORRUPT(mp, block >= mp->m_sb.sb_rbmblocks)) {
--		xfs_rt_mark_sick(mp, XFS_SICK_RT_BITMAP);
-+		xfs_rtginode_mark_sick(args->rtg, XFS_RTGI_BITMAP);
- 		return -EFSCORRUPTED;
- 	}
- 
--	return xfs_rtbuf_get(args, block, 0);
-+	return xfs_rtbuf_get(args, block, XFS_RTGI_BITMAP);
- }
- 
- int
-@@ -162,10 +163,10 @@ xfs_rtsummary_read_buf(
- 	struct xfs_mount		*mp = args->mp;
- 
- 	if (XFS_IS_CORRUPT(mp, block >= mp->m_rsumblocks)) {
--		xfs_rt_mark_sick(args->mp, XFS_SICK_RT_SUMMARY);
-+		xfs_rtginode_mark_sick(args->rtg, XFS_RTGI_SUMMARY);
- 		return -EFSCORRUPTED;
- 	}
--	return xfs_rtbuf_get(args, block, 1);
-+	return xfs_rtbuf_get(args, block, XFS_RTGI_SUMMARY);
- }
+ /*
+  * ioctl commands that are used by Linux filesystems
+  */
+@@ -1009,6 +1024,7 @@ struct xfs_getparents_by_handle {
+ #define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents)
+ #define XFS_IOC_GETPARENTS_BY_HANDLE _IOWR('X', 63, struct xfs_getparents_by_handle)
+ #define XFS_IOC_SCRUBV_METADATA	_IOWR('X', 64, struct xfs_scrub_vec_head)
++#define XFS_IOC_RTGROUP_GEOMETRY _IOWR('X', 65, struct xfs_rtgroup_geometry)
  
  /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index 3d93b57cf57143..d34986ac18c3fa 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -278,6 +278,8 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
+ 
+ void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
+ void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
++void xfs_rtgroup_geom_health(struct xfs_rtgroup *rtg,
++		struct xfs_rtgroup_geometry *rgeo);
+ void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bulkstat *bs);
+ 
+ #define xfs_metadata_is_sick(error) \
 diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
-index 6eabc66099dc50..f753ed5fc05588 100644
+index f753ed5fc05588..50cfb038f03b79 100644
 --- a/libxfs/xfs_rtgroup.c
 +++ b/libxfs/xfs_rtgroup.c
-@@ -268,6 +268,8 @@ struct xfs_rtginode_ops {
- 
- 	enum xfs_metafile_type	metafile_type;
- 
-+	unsigned int		sick;	/* rtgroup sickness flag */
-+
- 	/* Does the fs have this feature? */
- 	bool			(*enabled)(struct xfs_mount *mp);
- 
-@@ -282,11 +284,13 @@ static const struct xfs_rtginode_ops xfs_rtginode_ops[XFS_RTGI_MAX] = {
- 	[XFS_RTGI_BITMAP] = {
- 		.name		= "bitmap",
- 		.metafile_type	= XFS_METAFILE_RTBITMAP,
-+		.sick		= XFS_SICK_RG_BITMAP,
- 		.create		= xfs_rtbitmap_create,
- 	},
- 	[XFS_RTGI_SUMMARY] = {
- 		.name		= "summary",
- 		.metafile_type	= XFS_METAFILE_RTSUMMARY,
-+		.sick		= XFS_SICK_RG_SUMMARY,
- 		.create		= xfs_rtsummary_create,
- 	},
- };
-@@ -320,6 +324,17 @@ xfs_rtginode_enabled(
- 	return ops->enabled(rtg_mount(rtg));
+@@ -211,6 +211,20 @@ xfs_rtgroup_trans_join(
+ 	}
  }
  
-+/* Mark an rtgroup inode sick */
-+void
-+xfs_rtginode_mark_sick(
++/* Retrieve rt group geometry. */
++int
++xfs_rtgroup_get_geometry(
 +	struct xfs_rtgroup	*rtg,
-+	enum xfs_rtg_inodes	type)
++	struct xfs_rtgroup_geometry *rgeo)
 +{
-+	const struct xfs_rtginode_ops *ops = &xfs_rtginode_ops[type];
-+
-+	xfs_group_mark_sick(rtg_group(rtg), ops->sick);
++	/* Fill out form. */
++	memset(rgeo, 0, sizeof(*rgeo));
++	rgeo->rg_number = rtg_rgno(rtg);
++	rgeo->rg_length = rtg->rtg_extents * rtg_mount(rtg)->m_sb.sb_rextsize;
++	xfs_rtgroup_geom_health(rtg, rgeo);
++	return 0;
 +}
 +
- /* Load and existing rtgroup inode into the rtgroup structure. */
- int
- xfs_rtginode_load(
-@@ -355,8 +370,10 @@ xfs_rtginode_load(
- 	} else {
- 		const char	*path;
+ #ifdef CONFIG_PROVE_LOCKING
+ static struct lock_class_key xfs_rtginode_lock_class;
  
--		if (!mp->m_rtdirip)
-+		if (!mp->m_rtdirip) {
-+			xfs_fs_mark_sick(mp, XFS_SICK_FS_METADIR);
- 			return -EFSCORRUPTED;
-+		}
- 
- 		path = xfs_rtginode_path(rtg_rgno(rtg), type);
- 		if (!path)
-@@ -366,17 +383,22 @@ xfs_rtginode_load(
- 		kfree(path);
- 	}
- 
--	if (error)
-+	if (error) {
-+		if (xfs_metadata_is_sick(error))
-+			xfs_rtginode_mark_sick(rtg, type);
- 		return error;
-+	}
- 
- 	if (XFS_IS_CORRUPT(mp, ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
- 			       ip->i_df.if_format != XFS_DINODE_FMT_BTREE)) {
- 		xfs_irele(ip);
-+		xfs_rtginode_mark_sick(rtg, type);
- 		return -EFSCORRUPTED;
- 	}
- 
- 	if (XFS_IS_CORRUPT(mp, ip->i_projid != rtg_rgno(rtg))) {
- 		xfs_irele(ip);
-+		xfs_rtginode_mark_sick(rtg, type);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -413,8 +435,10 @@ xfs_rtginode_create(
- 	if (!xfs_rtginode_enabled(rtg, type))
- 		return 0;
- 
--	if (!mp->m_rtdirip)
-+	if (!mp->m_rtdirip) {
-+		xfs_fs_mark_sick(mp, XFS_SICK_FS_METADIR);
- 		return -EFSCORRUPTED;
-+	}
- 
- 	upd.path = xfs_rtginode_path(rtg_rgno(rtg), type);
- 	if (!upd.path)
-@@ -461,8 +485,10 @@ int
- xfs_rtginode_mkdir_parent(
- 	struct xfs_mount	*mp)
- {
--	if (!mp->m_metadirip)
-+	if (!mp->m_metadirip) {
-+		xfs_fs_mark_sick(mp, XFS_SICK_FS_METADIR);
- 		return -EFSCORRUPTED;
-+	}
- 
- 	return xfs_metadir_mkdir(mp->m_metadirip, "rtgroups", &mp->m_rtdirip);
- }
-@@ -474,8 +500,10 @@ xfs_rtginode_load_parent(
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
- 
--	if (!mp->m_metadirip)
-+	if (!mp->m_metadirip) {
-+		xfs_fs_mark_sick(mp, XFS_SICK_FS_METADIR);
- 		return -EFSCORRUPTED;
-+	}
- 
- 	return xfs_metadir_load(tp, mp->m_metadirip, "rtgroups",
- 			XFS_METAFILE_DIR, &mp->m_rtdirip);
 diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index e7679fafff8ce7..fba62b26912a89 100644
+index fba62b26912a89..026f34f984b32f 100644
 --- a/libxfs/xfs_rtgroup.h
 +++ b/libxfs/xfs_rtgroup.h
-@@ -240,6 +240,7 @@ int xfs_rtginode_load_parent(struct xfs_trans *tp);
- const char *xfs_rtginode_name(enum xfs_rtg_inodes type);
- enum xfs_metafile_type xfs_rtginode_metafile_type(enum xfs_rtg_inodes type);
- bool xfs_rtginode_enabled(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type);
-+void xfs_rtginode_mark_sick(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type);
- int xfs_rtginode_load(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
- 		struct xfs_trans *tp);
- int xfs_rtginode_create(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
+@@ -234,6 +234,9 @@ void xfs_rtgroup_unlock(struct xfs_rtgroup *rtg, unsigned int rtglock_flags);
+ void xfs_rtgroup_trans_join(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
+ 		unsigned int rtglock_flags);
+ 
++int xfs_rtgroup_get_geometry(struct xfs_rtgroup *rtg,
++		struct xfs_rtgroup_geometry *rgeo);
++
+ int xfs_rtginode_mkdir_parent(struct xfs_mount *mp);
+ int xfs_rtginode_load_parent(struct xfs_trans *tp);
+ 
+@@ -277,6 +280,7 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
+ # define xfs_rtgroup_trans_join(tp, rtg, gf)	((void)0)
+ # define xfs_update_rtsb(bp, sb_bp)	((void)0)
+ # define xfs_log_rtsb(tp, sb_bp)	(NULL)
++# define xfs_rtgroup_get_geometry(rtg, rgeo)	(-EOPNOTSUPP)
+ #endif /* CONFIG_XFS_RT */
+ 
+ #endif /* __LIBXFS_RTGROUP_H */
 
