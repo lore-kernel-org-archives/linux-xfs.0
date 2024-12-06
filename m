@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97096148827
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:50:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32492148827
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:51:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733529051; cv=none; b=T5Avc9AM7aF6m31ZB8lQ8u93xAG3YPXnruEQ+fLoKwpFtj83beASwajHGjOL16tCF3eiVt7Ru8git6uwl7mHzubVcH8sxURh3T936k93RUmysRencOYwGS3KKpTd56Joo/Y0vALk6ptXPVDwMTWlDm1FAnfLoVG+6v93+sLNDLg=
+	t=1733529067; cv=none; b=d61OPXyePPgK/j/6sRDg88ogPvTdSILnLmKAlLhGbWMB9peWbhBvYOa42DygBiXM6g5j/dye/m6zPHZnIIJn1CBZLK0tEx5zhoDjjarTgSHdNyrux5DJKxwy4Y0rtay9CFYPXsMyCu25HvBu04xWPGK+UyktwXZu6xJluQ2lTp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733529051; c=relaxed/simple;
-	bh=ULguuhCM7CWQ/O+s1vVXwtK409IfWjlMGCcC+2EXSMA=;
+	s=arc-20240116; t=1733529067; c=relaxed/simple;
+	bh=Lh0rLripXC3GytttZ2Nl2jIQBS1n42EbaGGWpm3cpK4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AYfP/NfeQUB7PZJToKpBwgDoZAut+C7CQ9Xybtq5eMZkzRPAW/4ZywjQI1DYm7XoObXdKJ4t1mZp+aKlG2D4gjDNcXIs5DKL1wlHJON+YNqEFFaCWEWowTlHm5U0s3xRRWZvS5Oek3W/JJBfdoeawp+00NC5T78b0y7/bfw6k4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FACTwR1g; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XvsqRp3byl7nWj7ji1/uWjpPCvKgEBKeJu56kqVMJH4ZxGmUnaQwC6aZnMRcjKZZzM56YYoBcsFceLfxu52F+kQ2O/QNEDLBUyqmLmWdMG5sxKZcsm3k2Ra3TN0XIVrPRl3s8Dr/QaIJPYACjz9dl7eLuvv3MNrmuDVNlvj1vZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CS3E7fwv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FACTwR1g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D32AC4CED1;
-	Fri,  6 Dec 2024 23:50:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CS3E7fwv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C51BC4CED1;
+	Fri,  6 Dec 2024 23:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733529051;
-	bh=ULguuhCM7CWQ/O+s1vVXwtK409IfWjlMGCcC+2EXSMA=;
+	s=k20201202; t=1733529067;
+	bh=Lh0rLripXC3GytttZ2Nl2jIQBS1n42EbaGGWpm3cpK4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FACTwR1gdoU6FL/2L3afBFKeoiM6oVGhh51Ws+nrn1kot6nGwVJ7H2dWf0QfGPT0O
-	 6Nm/79HhlUvBm0YZU4bGTnK6oygR+ypyXoNnbiBYFZ6Dd12Ywo7baXJefRroLBk1Cu
-	 ECNFiZP7l4pQ8fdmtwSkPUr3LqALFsaoloTeix7BG3UvkX1ay1tlJ/nxKVeYsOhffX
-	 lyW6/okYHGB2WIpE5wiZjgDP875pv/xdkPoEk+AliNOslkEZQEW8X3gGJjX8d2JBsl
-	 Kx9SqQsm2h4IVr8mDcgs+NBlP/5W+jEkLMyOW1Bu5bUH379w1ZF3NTWGF9O3rdCAHn
-	 5V0UtMej+tNfA==
-Date: Fri, 06 Dec 2024 15:50:51 -0800
-Subject: [PATCH 2/4] mkfs: support copying in large or sparse files
+	b=CS3E7fwv/sx1CDcbvwZNUFfMZ0gPCmZW32mpPc7IC2UZZSoJBJoY46LGOU0/AdppF
+	 2bWAXyzOofTY7BKOSmeOgTjacpom4zAZAR44VJTeQ+BJZK07qZLQnE7DGsBV/1Ibfl
+	 5UHvrg5mgsbjI8LljyjXnN4joKmv1GmgnbdexzPdJhB9DB25+jy9yCpaX1/47SQTG0
+	 7SzvUcaABW+fxqTXKD56QaDs/ubLeSRR2/5xlMP4pjZpplu/kU9LpX4nsrLBFgaDSe
+	 pDYApdmikGohkdrS5uzxaYPBYe4FV7xxmY7MxGtIrhT+deIpqDjoFb+CvfRvfYNZJk
+	 18coYWiSs7RZg==
+Date: Fri, 06 Dec 2024 15:51:06 -0800
+Subject: [PATCH 3/4] mkfs: support copying in xattrs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352749346.124368.1797987373913222257.stgit@frogsfrogsfrogs>
+Message-ID: <173352749362.124368.16120119760449034051.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352749310.124368.15119896789476594437.stgit@frogsfrogsfrogs>
 References: <173352749310.124368.15119896789476594437.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,362 +45,132 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Restructure the protofile code to handle sparse files and files that are
-larger than the program's address space.
+Update the protofile code to import extended attributes from the source
+files.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- include/libxfs.h |    2 +
- libxfs/util.c    |   67 +++++++++++++++++++++
- mkfs/proto.c     |  175 ++++++++++++++++++++++++++++++++----------------------
- 3 files changed, 174 insertions(+), 70 deletions(-)
+ mkfs/proto.c |   94 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 94 insertions(+)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 878fefbbde7524..985646e6ad89d1 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -178,6 +178,8 @@ extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
- 
- int	libxfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len, uint32_t bmapi_flags);
-+int	libxfs_file_write(struct xfs_inode *ip, void *buf, off_t pos,
-+		size_t len);
- 
- /* XXX: this is messy and needs fixing */
- #ifndef __LIBXFS_INTERNAL_XFS_H__
-diff --git a/libxfs/util.c b/libxfs/util.c
-index e5892fc86c3e92..8c2ecff5855775 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -527,3 +527,70 @@ get_random_u32(void)
- 	return ret;
- }
- #endif
-+
-+/*
-+ * Write a buffer to a file on the data device.  There must not be sparse holes
-+ * or unwritten extents.
-+ */
-+int
-+libxfs_file_write(
-+	struct xfs_inode	*ip,
-+	void			*buf,
-+	off_t			pos,
-+	size_t			len)
-+{
-+	struct xfs_bmbt_irec	map;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_buf		*bp;
-+	xfs_fileoff_t		bno = XFS_B_TO_FSBT(mp, pos);
-+	xfs_fileoff_t		end_bno = XFS_B_TO_FSB(mp, pos + len);
-+	unsigned int		block_off = pos % mp->m_sb.sb_blocksize;
-+	size_t			count;
-+	size_t			bcount;
-+	int			nmap;
-+	int			error = 0;
-+
-+	/* Write up to 1MB at a time. */
-+	while (bno < end_bno) {
-+		xfs_filblks_t	maplen;
-+
-+		maplen = min(end_bno - bno, XFS_B_TO_FSBT(mp, 1048576));
-+		nmap = 1;
-+		error = libxfs_bmapi_read(ip, bno, maplen, &map, &nmap, 0);
-+		if (error)
-+			return error;
-+		if (nmap != 1)
-+			return -ENOSPC;
-+
-+		if (map.br_startblock == HOLESTARTBLOCK ||
-+		    map.br_state == XFS_EXT_UNWRITTEN)
-+			return -EINVAL;
-+
-+		error = libxfs_buf_get(mp->m_dev,
-+				XFS_FSB_TO_DADDR(mp, map.br_startblock),
-+				XFS_FSB_TO_BB(mp, map.br_blockcount),
-+				&bp);
-+		if (error)
-+			break;
-+		bp->b_ops = NULL;
-+
-+		if (block_off > 0)
-+			memset((char *)bp->b_addr, 0, block_off);
-+		count = min(len, XFS_FSB_TO_B(mp, map.br_blockcount));
-+		memmove(bp->b_addr, buf + block_off, count);
-+		bcount = BBTOB(bp->b_length);
-+		if (count < bcount)
-+			memset((char *)bp->b_addr + block_off + count, 0,
-+					bcount - (block_off + count));
-+
-+		libxfs_buf_mark_dirty(bp);
-+		libxfs_buf_relse(bp);
-+
-+		buf += count;
-+		len -= count;
-+		bno += map.br_blockcount;
-+		block_off = 0;
-+	}
-+
-+	return error;
-+}
 diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 0764064e043e97..6946c22ff14d2a 100644
+index 6946c22ff14d2a..7a0493ec71cfd9 100644
 --- a/mkfs/proto.c
 +++ b/mkfs/proto.c
-@@ -16,7 +16,7 @@ static char *getstr(char **pp);
- static void fail(char *msg, int i);
- static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
- static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
--static char *newregfile(char **pp, int *len);
-+static int newregfile(char **pp, char **fname);
- static void rtinit(xfs_mount_t *mp);
- static long filesize(int fd);
- static int slashes_are_spaces;
-@@ -261,88 +261,120 @@ writesymlink(
+@@ -6,6 +6,8 @@
+ 
+ #include "libxfs.h"
+ #include <sys/stat.h>
++#include <sys/xattr.h>
++#include <linux/xattr.h>
+ #include "libfrog/convert.h"
+ #include "proto.h"
+ 
+@@ -359,6 +361,97 @@ writefile(
+ 		fail(_("error committing isize transaction"), error);
  }
  
- static void
--writefile(
--	struct xfs_trans	*tp,
-+writefile_range(
- 	struct xfs_inode	*ip,
--	char			*buf,
--	int			len)
++static void
++writeattr(
++	struct xfs_inode	*ip,
 +	const char		*fname,
 +	int			fd,
-+	off_t			pos,
-+	uint64_t		len)
- {
--	struct xfs_bmbt_irec	map;
--	struct xfs_mount	*mp;
--	struct xfs_buf		*bp;
--	xfs_daddr_t		d;
--	xfs_extlen_t		nb;
--	int			nmap;
-+	static char		buf[131072];
- 	int			error;
- 
--	mp = ip->i_mount;
--	if (len > 0) {
--		int	bcount;
-+	if (XFS_IS_REALTIME_INODE(ip)) {
-+		fprintf(stderr,
-+ _("%s: creating realtime files from proto file not supported.\n"),
-+				progname);
-+		exit(1);
++	const char		*attrname,
++	char			*valuebuf,
++	size_t			valuelen)
++{
++	struct xfs_da_args	args = {
++		.dp		= ip,
++		.geo		= ip->i_mount->m_attr_geo,
++		.owner		= ip->i_ino,
++		.whichfork	= XFS_ATTR_FORK,
++		.op_flags	= XFS_DA_OP_OKNOENT,
++		.value		= valuebuf,
++	};
++	ssize_t			ret;
++	int			error;
++
++	ret = fgetxattr(fd, attrname, valuebuf, valuelen);
++	if (ret < 0) {
++		if (errno == EOPNOTSUPP)
++			return;
++		fail(_("error collecting xattr value"), errno);
 +	}
- 
--		nb = XFS_B_TO_FSB(mp, len);
--		nmap = 1;
--		error = -libxfs_bmapi_write(tp, ip, 0, nb, 0, nb, &map, &nmap);
--		if (error == ENOSYS && XFS_IS_REALTIME_INODE(ip)) {
--			fprintf(stderr,
--	_("%s: creating realtime files from proto file not supported.\n"),
--					progname);
-+	while (len > 0) {
-+		ssize_t		read_len;
++	if (ret == 0)
++		return;
 +
-+		read_len = pread(fd, buf, min(len, sizeof(buf)), pos);
-+		if (read_len < 0) {
-+			fprintf(stderr, _("%s: read failed on %s: %s\n"),
-+					progname, fname, strerror(errno));
- 			exit(1);
- 		}
--		if (error) {
-+
-+		error = -libxfs_alloc_file_space(ip, pos, read_len, 0);
-+		if (error)
- 			fail(_("error allocating space for a file"), error);
-+
-+		error = -libxfs_file_write(ip, buf, pos, read_len);
-+		if (error)
-+			fail(_("error writing file"), error);
-+
-+		pos += read_len;
-+		len -= read_len;
++	if (!strncmp(attrname, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN)) {
++		args.name = (unsigned char *)attrname + XATTR_TRUSTED_PREFIX_LEN;
++		args.attr_filter = LIBXFS_ATTR_ROOT;
++	} else if (!strncmp(attrname, XATTR_SECURITY_PREFIX, XATTR_SECURITY_PREFIX_LEN)) {
++		args.name = (unsigned char *)attrname + XATTR_SECURITY_PREFIX_LEN;
++		args.attr_filter = LIBXFS_ATTR_SECURE;
++	} else if (!strncmp(attrname, XATTR_USER_PREFIX, XATTR_USER_PREFIX_LEN)) {
++		args.name = (unsigned char *)attrname + XATTR_USER_PREFIX_LEN;
++		args.attr_filter = 0;
++	} else {
++		args.name = (unsigned char *)attrname;
++		args.attr_filter = 0;
 +	}
++	args.namelen = strlen((char *)args.name);
++
++	args.valuelen = ret;
++	libxfs_attr_sethash(&args);
++
++	error = -libxfs_attr_set(&args, XFS_ATTRUPDATE_UPSERT, false);
++	if (error)
++		fail(_("setting xattr value"), error);
 +}
 +
 +static void
-+writefile(
++writeattrs(
 +	struct xfs_inode	*ip,
 +	const char		*fname,
 +	int			fd)
 +{
-+	struct xfs_trans	*tp;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct stat		statbuf;
-+	off_t			data_pos;
-+	off_t			eof = 0;
-+	int			error;
++	char			*namebuf, *p, *end;
++	char			*valuebuf = NULL;
++	ssize_t			ret;
 +
-+	/* do not try to read from non-regular files */
-+	error = fstat(fd, &statbuf);
-+	if (error < 0)
-+		fail(_("unable to stat file to copyin"), errno);
++	namebuf = malloc(XATTR_LIST_MAX);
++	if (!namebuf)
++		fail(_("error allocating xattr name buffer"), errno);
 +
-+	if (!S_ISREG(statbuf.st_mode))
-+		return;
++	ret = flistxattr(fd, namebuf, XATTR_LIST_MAX);
++	if (ret < 0) {
++		if (errno == EOPNOTSUPP)
++			goto out_namebuf;
++		fail(_("error collecting xattr names"), errno);
++	}
 +
-+	data_pos = lseek(fd, 0, SEEK_DATA);
-+	while (data_pos >= 0) {
-+		off_t		hole_pos;
++	p = namebuf;
++	end = namebuf + ret;
++	for (p = namebuf; p < end; p += strlen(p) + 1) {
++		if (!valuebuf) {
++			valuebuf = malloc(ATTR_MAX_VALUELEN);
++			if (!valuebuf)
++				fail(_("error allocating xattr value buffer"),
++						errno);
++		}
 +
-+		hole_pos = lseek(fd, data_pos, SEEK_HOLE);
-+		if (hole_pos < 0) {
-+			/* save error, break */
-+			data_pos = hole_pos;
-+			break;
- 		}
--		if (nmap != 1) {
--			fprintf(stderr,
--				_("%s: cannot allocate space for file\n"),
--				progname);
--			exit(1);
--		}
--		d = XFS_FSB_TO_DADDR(mp, map.br_startblock);
--		error = -libxfs_trans_get_buf(NULL, mp->m_dev, d,
--				nb << mp->m_blkbb_log, 0, &bp);
--		if (error) {
--			fprintf(stderr,
--				_("%s: cannot allocate buffer for file\n"),
--				progname);
--			exit(1);
-+		if (hole_pos <= data_pos) {
-+			/* shouldn't happen??? */
-+			break;
- 		}
--		memmove(bp->b_addr, buf, len);
--		bcount = BBTOB(bp->b_length);
--		if (len < bcount)
--			memset((char *)bp->b_addr + len, 0, bcount - len);
--		libxfs_buf_mark_dirty(bp);
--		libxfs_buf_relse(bp);
++		writeattr(ip, fname, fd, p, valuebuf, ATTR_MAX_VALUELEN);
++	}
 +
-+		writefile_range(ip, fname, fd, data_pos, hole_pos - data_pos);
-+		eof = hole_pos;
++	free(valuebuf);
++out_namebuf:
++	free(namebuf);
++}
 +
-+		data_pos = lseek(fd, hole_pos, SEEK_DATA);
- 	}
--	ip->i_disk_size = len;
-+	if (data_pos < 0 && errno != ENXIO)
-+		fail(_("error finding file data to import"), errno);
-+
-+	/* extend EOF only after writing all the file data */
-+	error = -libxfs_trans_alloc_inode(ip, &M_RES(mp)->tr_ichange, 0, 0,
-+			false, &tp);
-+	if (error)
-+		fail(_("error creating isize transaction"), error);
-+
-+	libxfs_trans_ijoin(tp, ip, 0);
-+	ip->i_disk_size = eof;
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("error committing isize transaction"), error);
- }
- 
--static char *
-+static int
+ static int
  newregfile(
  	char		**pp,
--	int		*len)
-+	char		**fname)
- {
--	char		*buf;
- 	int		fd;
--	char		*fname;
--	long		size;
-+	off_t		size;
- 
--	fname = getstr(pp);
--	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-+	*fname = getstr(pp);
-+	if ((fd = open(*fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
- 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
--			progname, fname, strerror(errno));
-+			progname, *fname, strerror(errno));
- 		exit(1);
- 	}
--	if ((*len = (int)size)) {
--		buf = malloc(size);
--		if (read(fd, buf, size) < size) {
--			fprintf(stderr, _("%s: read failed on %s: %s\n"),
--				progname, fname, strerror(errno));
--			exit(1);
--		}
--	} else
--		buf = NULL;
--	close(fd);
--	return buf;
-+
-+	return fd;
- }
- 
- static void
-@@ -552,7 +584,8 @@ parseproto(
- 	int		fmt;
- 	int		i;
- 	xfs_inode_t	*ip;
--	int		len;
-+	int		fd = -1;
-+	off_t		len;
- 	long long	llen;
- 	int		majdev;
- 	int		mindev;
-@@ -563,6 +596,7 @@ parseproto(
- 	int		isroot = 0;
- 	struct cred	creds;
- 	char		*value;
-+	char		*fname = NULL;
- 	struct xfs_name	xname;
- 	struct xfs_parent_args *ppargs = NULL;
- 
-@@ -636,16 +670,13 @@ parseproto(
- 	flags = XFS_ILOG_CORE;
- 	switch (fmt) {
- 	case IF_REGULAR:
--		buf = newregfile(pp, &len);
--		tp = getres(mp, XFS_B_TO_FSB(mp, len));
-+		fd = newregfile(pp, &fname);
-+		tp = getres(mp, 0);
- 		ppargs = newpptr(mp);
- 		error = creatproto(&tp, pip, mode | S_IFREG, 0, &creds, fsxp,
- 				&ip);
- 		if (error)
- 			fail(_("Inode allocation failed"), error);
--		writefile(tp, ip, buf, len);
--		if (buf)
--			free(buf);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_REG_FILE;
- 		newdirent(mp, tp, pip, &xname, ip, ppargs);
-@@ -800,6 +831,10 @@ parseproto(
- 	}
- 
+@@ -833,6 +926,7 @@ parseproto(
  	libxfs_parent_finish(mp, ppargs);
-+	if (fmt == IF_REGULAR) {
-+		writefile(ip, fname, fd);
-+		close(fd);
-+	}
+ 	if (fmt == IF_REGULAR) {
+ 		writefile(ip, fname, fd);
++		writeattrs(ip, fname, fd);
+ 		close(fd);
+ 	}
  	libxfs_irele(ip);
- }
- 
-@@ -950,7 +985,7 @@ rtinit(
- 	rtfreesp_init(mp);
- }
- 
--static long
-+static off_t
- filesize(
- 	int		fd)
- {
-@@ -958,5 +993,5 @@ filesize(
- 
- 	if (fstat(fd, &stb) < 0)
- 		return -1;
--	return (long)stb.st_size;
-+	return stb.st_size;
- }
 
