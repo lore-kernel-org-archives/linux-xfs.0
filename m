@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A69F114D717
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:44:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4747714D717
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:44:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733528676; cv=none; b=G0ybqgZJzRwXC6AR72bFL3Z2RKOGJs7CUUNsHzwfh1qd3kfY7zS/A8o99kpJvNrBDfIH8VCAhnXakleow3ifjenDfQH+II8BKv9hzqGetR/qUxb1iGpZzcJoe0dW1MweVlWz3URuicbJJb01MQ48JZnsxvCp6KNKkiKEVEyJLug=
+	t=1733528692; cv=none; b=pxU/DsGodGSmnW18tWI5iTT+XwX9uM2pw5X47n7V/Yia8PG01hdFJ+iCfLA5A6i4QSxOAAWCnbrF/N64QvGf+yxfzkYthjnnv2jf5gFsJDwHPQPv8h1CU6GcDbcxwNo7IaJ+PcoSz0eTPRtJFtBvQbIlSR/a3i6EarmqfZufo5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733528676; c=relaxed/simple;
-	bh=uDv0CKV+fUC4jzdg/pOua9cADhzuUkNm9FoZpVWdcYE=;
+	s=arc-20240116; t=1733528692; c=relaxed/simple;
+	bh=jORNXZ57O28e2dekv9ucVZ26GzOkXSisYo+Bu+zdw5w=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kSpMfJDmzSZoMzbIboWdClPpYBb1ZeiFKorwHlvlfv5t/+jj1XYLcUXUV7jiP9xJ2m8whJZDAGCXreFElPVwL7J7S2f+BzlODxvNVDWJsyTdJV8Wdd99bCPvddPI6Zik23ZyAEL0p8pGU1zVDReJYniRYjPb86ktwxqB6TZZ1io=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WZ+7rjxl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pM+JAFeSrkUNXABs2k8jow18GHG8Tg3+BTdwD2q5zg24KD1BnWPgdIbbVL/HcA6dIKcGajTp+jvI9orskdFuoWxd/KIIdjmpCne2kE5kPlUvYsEDLyMGrn8YR6i2Kwv50DI+8QwKBthZ2dxEo1YdSGI7Xw8/PBXezJ+VlF4CBY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J7R7eE6o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WZ+7rjxl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EF94C4CED1;
-	Fri,  6 Dec 2024 23:44:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J7R7eE6o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DF8EC4CED1;
+	Fri,  6 Dec 2024 23:44:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733528676;
-	bh=uDv0CKV+fUC4jzdg/pOua9cADhzuUkNm9FoZpVWdcYE=;
+	s=k20201202; t=1733528692;
+	bh=jORNXZ57O28e2dekv9ucVZ26GzOkXSisYo+Bu+zdw5w=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WZ+7rjxlWgK8bU+PkWBdOHORsoZbNlwCXaknfAG8LinIEQP6t0Z57lALqL0CRfkCn
-	 JzlDTyKduLHsAI/L3wNHExcGrnk49+A3hZ0e+Jdqk32MObhucIuuq5XKGVXGtmuy4f
-	 f5bgIeFb5bigi857WqCLi3wU6tA4p9hI4vFwzzXi1cuHyZkQbRY8u2kmfQinvbcdYr
-	 x6ab6sF91ES2duHCcdUEe1UBeYeL+vWaEXoGM/SKiC019Baf5tQ60U33xL8ZQFqWVO
-	 S6xFx+pEeRpILuZiKQoQz594Ay2wSQ3mqQdELP24txBgNWX+dkWDJ4817JhdycRw5l
-	 SwwYjzffOL1RQ==
-Date: Fri, 06 Dec 2024 15:44:36 -0800
-Subject: [PATCH 19/41] xfs_scrub: scan metadata directories during phase 3
+	b=J7R7eE6oIeNRCacju+WCvYps702tcLsFzyZKCcqoVwAlRIsKH9Eq6XvV5CoYF628B
+	 RXyxGf7pKkQVj4rmJ9883SKCk/EdYtSdmmTOuPDsVO/MVW7wG4JuT9UsrZusjrI+Y3
+	 YBmn8do0WGms9uvKU8VknQoJ7AJvINeuFlomHoiKXpR/ShEz0HsbfrpZVsuWBBHaet
+	 ozQ7O35lGMmoFqzg7y60s4fcoVltf+mY6lCghfxQkjMCoyvqG0qb4uN291W4+NiYNx
+	 n3k4j/wralm/qGoCtkn4YTsaL3hQ5JI2HqUXO6CjR5D+oiEhY9oqHf7zKb7Xlc8Ef7
+	 7VM98yZJ+QWHw==
+Date: Fri, 06 Dec 2024 15:44:51 -0800
+Subject: [PATCH 20/41] xfs_scrub: re-run metafile scrubbers during phase 5
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352748528.122992.10939627158010208077.stgit@frogsfrogsfrogs>
+Message-ID: <173352748543.122992.11036013424624729322.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 References: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,162 +45,155 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Scan metadata directories for correctness during phase 3.
+For metadata files on a metadir filesystem, re-run the scrubbers during
+phase 5 to ensure that the metadata files are still connected.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/inodes.c |   11 ++++++++++-
- scrub/inodes.h |    5 ++++-
- scrub/phase3.c |    7 ++++++-
- scrub/phase5.c |    5 ++++-
- scrub/phase6.c |    2 +-
- 5 files changed, 25 insertions(+), 5 deletions(-)
+ scrub/phase5.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ scrub/scrub.h  |    7 ++++
+ 2 files changed, 103 insertions(+), 1 deletion(-)
 
 
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 16c79cf495c793..3fe759e8f4867d 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -56,6 +56,7 @@ bulkstat_for_inumbers(
- {
- 	struct xfs_bulkstat	*bstat = breq->bulkstat;
- 	struct xfs_bulkstat	*bs;
-+	unsigned int		flags = 0;
- 	int			i;
- 	int			error;
- 
-@@ -70,6 +71,9 @@ bulkstat_for_inumbers(
- 			 strerror_r(error, errbuf, DESCR_BUFSZ));
- 	}
- 
-+	if (breq->hdr.flags & XFS_BULK_IREQ_METADIR)
-+		flags |= XFS_BULK_IREQ_METADIR;
-+
- 	/*
- 	 * Check each of the stats we got back to make sure we got the inodes
- 	 * we asked for.
-@@ -84,7 +88,7 @@ bulkstat_for_inumbers(
- 
- 		/* Load the one inode. */
- 		error = -xfrog_bulkstat_single(&ctx->mnt,
--				inumbers->xi_startino + i, 0, bs);
-+				inumbers->xi_startino + i, flags, bs);
- 		if (error || bs->bs_ino != inumbers->xi_startino + i) {
- 			memset(bs, 0, sizeof(struct xfs_bulkstat));
- 			bs->bs_ino = inumbers->xi_startino + i;
-@@ -100,6 +104,7 @@ struct scan_inodes {
- 	scrub_inode_iter_fn	fn;
- 	void			*arg;
- 	unsigned int		nr_threads;
-+	unsigned int		flags;
- 	bool			aborted;
- };
- 
-@@ -158,6 +163,8 @@ alloc_ichunk(
- 
- 	breq = ichunk_to_bulkstat(ichunk);
- 	breq->hdr.icount = LIBFROG_BULKSTAT_CHUNKSIZE;
-+	if (si->flags & SCRUB_SCAN_METADIR)
-+		breq->hdr.flags |= XFS_BULK_IREQ_METADIR;
- 
- 	*ichunkp = ichunk;
- 	return 0;
-@@ -380,10 +387,12 @@ int
- scrub_scan_all_inodes(
- 	struct scrub_ctx	*ctx,
- 	scrub_inode_iter_fn	fn,
-+	unsigned int		flags,
- 	void			*arg)
- {
- 	struct scan_inodes	si = {
- 		.fn		= fn,
-+		.flags		= flags,
- 		.arg		= arg,
- 		.nr_threads	= scrub_nproc_workqueue(ctx),
- 	};
-diff --git a/scrub/inodes.h b/scrub/inodes.h
-index 9447fb56aa62e7..7a0b275e575ead 100644
---- a/scrub/inodes.h
-+++ b/scrub/inodes.h
-@@ -17,8 +17,11 @@
- typedef int (*scrub_inode_iter_fn)(struct scrub_ctx *ctx,
- 		struct xfs_handle *handle, struct xfs_bulkstat *bs, void *arg);
- 
-+/* Return metadata directories too. */
-+#define SCRUB_SCAN_METADIR	(1 << 0)
-+
- int scrub_scan_all_inodes(struct scrub_ctx *ctx, scrub_inode_iter_fn fn,
--		void *arg);
-+		unsigned int flags, void *arg);
- 
- int scrub_open_handle(struct xfs_handle *handle);
- 
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-index 046a42c1da8beb..c90da78439425a 100644
---- a/scrub/phase3.c
-+++ b/scrub/phase3.c
-@@ -312,6 +312,7 @@ phase3_func(
- 	struct scrub_inode_ctx	ictx = { .ctx = ctx };
- 	uint64_t		val;
- 	xfs_agnumber_t		agno;
-+	unsigned int		scan_flags = 0;
- 	int			err;
- 
- 	err = -ptvar_alloc(scrub_nproc(ctx), sizeof(struct action_list),
-@@ -328,6 +329,10 @@ phase3_func(
- 		goto out_ptvar;
- 	}
- 
-+	/* Scan the metadata directory tree too. */
-+	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_METADIR)
-+		scan_flags |= SCRUB_SCAN_METADIR;
-+
- 	/*
- 	 * If we already have ag/fs metadata to repair from previous phases,
- 	 * we would rather not try to repair file metadata until we've tried
-@@ -338,7 +343,7 @@ phase3_func(
- 			ictx.always_defer_repairs = true;
- 	}
- 
--	err = scrub_scan_all_inodes(ctx, scrub_inode, &ictx);
-+	err = scrub_scan_all_inodes(ctx, scrub_inode, scan_flags, &ictx);
- 	if (!err && ictx.aborted)
- 		err = ECANCELED;
- 	if (err)
 diff --git a/scrub/phase5.c b/scrub/phase5.c
-index e1d94f9a3568b1..69b1cae5c5e2c0 100644
+index 69b1cae5c5e2c0..4d0a76a529b55d 100644
 --- a/scrub/phase5.c
 +++ b/scrub/phase5.c
-@@ -462,6 +462,9 @@ retry_deferred_inode(
- 	unsigned int		flags = 0;
- 	int			error;
- 
-+	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_METADIR)
-+		flags |= XFS_BULK_IREQ_METADIR;
-+
- 	error = -xfrog_bulkstat_single(&ctx->mnt, ino, flags, &bstat);
- 	if (error == ENOENT) {
- 		/* Directory is gone, mark it clear. */
-@@ -772,7 +775,7 @@ _("Filesystem has errors, skipping connectivity checks."));
- 
- 	pthread_mutex_init(&ncs.lock, NULL);
- 
--	ret = scrub_scan_all_inodes(ctx, check_inode_names, &ncs);
-+	ret = scrub_scan_all_inodes(ctx, check_inode_names, 0, &ncs);
- 	if (ret)
- 		goto out_lock;
- 	if (ncs.aborted) {
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 54d21820a722a6..e4f26e7f1dd93e 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -578,7 +578,7 @@ report_all_media_errors(
- 	}
- 
- 	/* Scan for unlinked files. */
--	return scrub_scan_all_inodes(ctx, report_inode_loss, vs);
-+	return scrub_scan_all_inodes(ctx, report_inode_loss, 0, vs);
+@@ -745,6 +745,87 @@ run_kernel_fs_scan_scrubbers(
+ 	return ret;
  }
  
- /* Schedule a read-verify of a (data block) extent. */
++/* Queue one metapath scrubber. */
++static int
++queue_metapath_scan(
++	struct workqueue	*wq,
++	bool			*abortedp,
++	uint64_t		type)
++{
++	struct fs_scan_item	*item;
++	struct scrub_ctx	*ctx = wq->wq_ctx;
++	int			ret;
++
++	item = malloc(sizeof(struct fs_scan_item));
++	if (!item) {
++		ret = ENOMEM;
++		str_liberror(ctx, ret, _("setting up metapath scan"));
++		return ret;
++	}
++	scrub_item_init_metapath(&item->sri, type);
++	scrub_item_schedule(&item->sri, XFS_SCRUB_TYPE_METAPATH);
++	item->abortedp = abortedp;
++
++	ret = -workqueue_add(wq, fs_scan_worker, 0, item);
++	if (ret)
++		str_liberror(ctx, ret, _("queuing metapath scan work"));
++
++	return ret;
++}
++
++/*
++ * Scrub metadata directory file paths to ensure that fs metadata are still
++ * connected where the fs needs to find them.
++ */
++static int
++run_kernel_metadir_path_scrubbers(
++	struct scrub_ctx	*ctx)
++{
++	struct workqueue	wq;
++	const struct xfrog_scrub_descr	*sc;
++	uint64_t		type;
++	unsigned int		nr_threads = scrub_nproc_workqueue(ctx);
++	bool			aborted = false;
++	int			ret, ret2;
++
++	ret = -workqueue_create(&wq, (struct xfs_mount *)ctx, nr_threads);
++	if (ret) {
++		str_liberror(ctx, ret, _("setting up metapath scan workqueue"));
++		return ret;
++	}
++
++	/*
++	 * Scan all the metadata files in parallel if metadata directories
++	 * are enabled, because the phase 3 scrubbers might have taken out
++	 * parts of the metadir tree.
++	 */
++	for (type = 0; type < XFS_SCRUB_METAPATH_NR; type++) {
++		sc = &xfrog_metapaths[type];
++		if (sc->group != XFROG_SCRUB_GROUP_FS)
++			continue;
++
++		ret = queue_metapath_scan(&wq, &aborted, type);
++		if (ret) {
++			str_liberror(ctx, ret,
++ _("queueing metapath scrub work"));
++			goto wait;
++		}
++	}
++
++wait:
++	ret2 = -workqueue_terminate(&wq);
++	if (ret2) {
++		str_liberror(ctx, ret2, _("joining metapath scan workqueue"));
++		if (!ret)
++			ret = ret2;
++	}
++	if (aborted && !ret)
++		ret = ECANCELED;
++
++	workqueue_destroy(&wq);
++	return ret;
++}
++
+ /* Check directory connectivity. */
+ int
+ phase5_func(
+@@ -753,6 +834,16 @@ phase5_func(
+ 	struct ncheck_state	ncs = { .ctx = ctx };
+ 	int			ret;
+ 
++	/*
++	 * Make sure metadata files are still connected to the metadata
++	 * directory tree now that phase 3 pruned all corrupt directory tree
++	 * links.
++	 */
++	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_METADIR) {
++		ret = run_kernel_metadir_path_scrubbers(ctx);
++		if (ret)
++			return ret;
++	}
+ 
+ 	/*
+ 	 * Check and fix anything that requires a full filesystem scan.  We do
+@@ -805,8 +896,12 @@ phase5_estimate(
+ 	unsigned int		*nr_threads,
+ 	int			*rshift)
+ {
++	unsigned int		scans = 2;
++
+ 	*items = scrub_estimate_iscan_work(ctx);
+-	*nr_threads = scrub_nproc(ctx) * 2;
++	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_METADIR)
++		scans++;
++	*nr_threads = scrub_nproc(ctx) * scans;
+ 	*rshift = 0;
+ 	return 0;
+ }
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index c3eed1b261d511..3bb3ea1d07bf40 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -108,6 +108,13 @@ scrub_item_init_file(struct scrub_item *sri, const struct xfs_bulkstat *bstat)
+ 	sri->sri_gen = bstat->bs_gen;
+ }
+ 
++static inline void
++scrub_item_init_metapath(struct scrub_item *sri, uint64_t metapath)
++{
++	memset(sri, 0, sizeof(*sri));
++	sri->sri_ino = metapath;
++}
++
+ void scrub_item_dump(struct scrub_item *sri, unsigned int group_mask,
+ 		const char *tag);
+ 
 
