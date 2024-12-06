@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CF91F3D3D
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:47:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5D3F1F3D3D
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:47:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733528864; cv=none; b=lYho+ApB0j5zoBpTR7OOAYODMdmPLnjuGXox6700jcZ/AXJnL0nQuX0J20klhYdwjsQHlMnruniCKP8NvgzwyMnkifcBdGt4C5iVpvEjUrBc6c6AxbamWIYyXu1JZIrZfaHHjNDewrsATYB9y9JvyhMS0kxeIROYsvlL5S4yl6o=
+	t=1733528879; cv=none; b=aDNbel3bbUCnEiOmt29U6qduQnImMgrzAsPeV4hi3RYGufhKvnH4wHFcDvzzz9QpEXKElep8uo4b3i9rwca/9OcAnHuGclT/dexDBEO337e0DJEhwjK2RDgUUC9NZRnGM2lpJyBOsZO+zxJCxxJbtXeTP/3+upTnv+QFnfis2uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733528864; c=relaxed/simple;
-	bh=/NXBxWBDSNk6wWv/WLJYvhXfWdgQSqEdlnu/3zrSUQU=;
+	s=arc-20240116; t=1733528879; c=relaxed/simple;
+	bh=zYn8XHRi90Ww034IOy+f2ZHpqkI4UvtOS60SnVikw1E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=L5hOM+gH1znfzfvVm7c0fAzO4QzL+uip7ArhJmMMxLbCTv8l7Im2czx/wSFYFYZwKs6triMISjhASo7934MzTHx8ZVNuX17tpJCnh1hQfQOK/VwWxr4fC8j5PoKKn8fwG/CwSe8JVtY2K2zCohWrJsFILVgl8xA/uF7v1TLV4WA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Suq9aQPH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KJ9MAHbf7Ar7joeq+NxthkigpQE4lXqQlvHR1jsE9N/bU8A4MH+AHBAFbUt3l6XGU3XIsmZGeOqItS54PfUsDOuB8lc/ZKpavwjHEYeDMqh+/49vtKIR5yOV5rZVIIlBT6PnBHYRx7sfY2QAObtVb09FaH5/GcJDqtjt71tFwJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PSJpEVmP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Suq9aQPH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A495C4CED1;
-	Fri,  6 Dec 2024 23:47:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PSJpEVmP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEFDCC4CED1;
+	Fri,  6 Dec 2024 23:47:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733528864;
-	bh=/NXBxWBDSNk6wWv/WLJYvhXfWdgQSqEdlnu/3zrSUQU=;
+	s=k20201202; t=1733528879;
+	bh=zYn8XHRi90Ww034IOy+f2ZHpqkI4UvtOS60SnVikw1E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Suq9aQPH44SJHWJks//VKi0U0mOx/PAF8XpOFuIQ3RwWWRUdgbjTGBA9s9qlOySJM
-	 4XH566Yu/hcL0nI6AsPrO6cOGhFuPdWF50OsIhXp0lQ1Tk+EhE+MerDflUuVEXziYp
-	 orsmoHWjThl4Bh1ZJTS3fo7/S/8YFTqgcXBqNrShMit0wkPHRX8+j+02CVrBUdiwcZ
-	 YYfD8j7D2ELdOUNdeNNIQRYR+YDWgqJLXEK8k5x9NR+DtcAQUYPNzD9hQem4OoHUlc
-	 fji3VBFUgoUF3fwhARL+6I9PtYL1K7+G8i087HAvfgLfTWqaggGxDvILlqyGzuZSJG
-	 gDmThfyc7K+NA==
-Date: Fri, 06 Dec 2024 15:47:43 -0800
-Subject: [PATCH 31/41] xfs_repair: update incore metadata state whenever we
- create new files
+	b=PSJpEVmPZrL6jLqn6eAJU9vX4oYOgNUb4FNH1MhCDaynCwGrs3xHdwB1vFEotgETe
+	 NKbmc36tipHUsqSYB/lmONxogXGFndLZLYzPu8cXyR1MyVqjXhfwrkRxB3CmhBj3bp
+	 tI/Z4oFZfeprXLrpukTPkViFM+sPD8didcwELSfZIapZZ2FNa3U1SLgnGp62U/0a3+
+	 pzfQLElZrARhzXzLU9BZWdegawO1hBuDbKUn1cnLa4d/moRKq6drbvTBct5ZciGiMf
+	 XPUB7IMcrUb28nFl6vT6LQkrdXoBxQeZNuvse3Ktgr4eVFnzFtCztaHX/NNrUkU8R9
+	 tQQRAS4HrCJaQ==
+Date: Fri, 06 Dec 2024 15:47:59 -0800
+Subject: [PATCH 32/41] xfs_repair: pass private data pointer to scan_lbtree
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352748710.122992.8928188548717908519.stgit@frogsfrogsfrogs>
+Message-ID: <173352748725.122992.1994741139588590565.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 References: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,50 +45,110 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that we update our incore metadata inode bookkeepping whenever
-we create new metadata files.  There will be many more of these later.
+Pass a private data pointer through scan_lbtree.  We'll use this
+later when scanning the rtrmapbt to keep track of scan state.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- repair/phase6.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ repair/dinode.c |    2 +-
+ repair/scan.c   |   11 +++++++----
+ repair/scan.h   |    7 +++++--
+ 3 files changed, 13 insertions(+), 7 deletions(-)
 
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index f2358bde194e38..dd17e8a60d05a3 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -474,6 +474,24 @@ reset_sbroot_ino(
- 	libxfs_inode_init(tp, &args, ip);
- }
+diff --git a/repair/dinode.c b/repair/dinode.c
+index b9d2d15882c593..4d4e901ef796d6 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -839,7 +839,7 @@ _("bad bmap btree ptr 0x%" PRIx64 " in ino %" PRIu64 "\n"),
  
-+/*
-+ * Mark a newly allocated inode as metadata in the incore bitmap.  Callers
-+ * must have already called mark_ino_inuse to ensure there is an incore record.
-+ */
-+static void
-+mark_ino_metadata(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino)
-+{
-+	struct ino_tree_node	*irec;
-+	int			ino_offset;
-+
-+	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, ino),
-+			XFS_INO_TO_AGINO(mp, ino));
-+	ino_offset = get_inode_offset(mp, ino, irec);
-+	set_inode_is_meta(irec, ino_offset);
-+}
-+
- /* Load a realtime freespace metadata inode from disk and reset it. */
- static int
- ensure_rtino(
-@@ -693,6 +711,7 @@ mk_metadir(
+ 		if (scan_lbtree(get_unaligned_be64(&pp[i]), level, scan_bmapbt,
+ 				type, whichfork, lino, tot, nex, blkmapp,
+-				&cursor, 1, check_dups, magic,
++				&cursor, 1, check_dups, magic, NULL,
+ 				&xfs_bmbt_buf_ops))
+ 			return(1);
+ 		/*
+diff --git a/repair/scan.c b/repair/scan.c
+index b115dd4948b969..f6d46a2861b312 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -139,7 +139,8 @@ scan_lbtree(
+ 				int			isroot,
+ 				int			check_dups,
+ 				int			*dirty,
+-				uint64_t		magic),
++				uint64_t		magic,
++				void			*priv),
+ 	int		type,
+ 	int		whichfork,
+ 	xfs_ino_t	ino,
+@@ -150,6 +151,7 @@ scan_lbtree(
+ 	int		isroot,
+ 	int		check_dups,
+ 	uint64_t	magic,
++	void		*priv,
+ 	const struct xfs_buf_ops *ops)
+ {
+ 	struct xfs_buf	*bp;
+@@ -181,7 +183,7 @@ scan_lbtree(
+ 	err = (*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1,
+ 			type, whichfork, root, ino, tot, nex, blkmapp,
+ 			bm_cursor, isroot, check_dups, &dirty,
+-			magic);
++			magic, priv);
  
- 	libxfs_trans_ijoin(tp, mp->m_metadirip, 0);
- 	libxfs_metafile_set_iflag(tp, mp->m_metadirip, XFS_METAFILE_DIR);
-+	mark_ino_metadata(mp, mp->m_metadirip->i_ino);
+ 	ASSERT(dirty == 0 || (dirty && !no_modify));
  
- 	error = -libxfs_trans_commit(tp);
- 	if (error)
+@@ -210,7 +212,8 @@ scan_bmapbt(
+ 	int			isroot,
+ 	int			check_dups,
+ 	int			*dirty,
+-	uint64_t		magic)
++	uint64_t		magic,
++	void			*priv)
+ {
+ 	int			i;
+ 	int			err;
+@@ -486,7 +489,7 @@ _("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
+ 
+ 		err = scan_lbtree(be64_to_cpu(pp[i]), level, scan_bmapbt,
+ 				type, whichfork, ino, tot, nex, blkmapp,
+-				bm_cursor, 0, check_dups, magic,
++				bm_cursor, 0, check_dups, magic, priv,
+ 				&xfs_bmbt_buf_ops);
+ 		if (err)
+ 			return(1);
+diff --git a/repair/scan.h b/repair/scan.h
+index ee16362b6d3c69..4da788becbef66 100644
+--- a/repair/scan.h
++++ b/repair/scan.h
+@@ -26,7 +26,8 @@ int scan_lbtree(
+ 				int			isroot,
+ 				int			check_dups,
+ 				int			*dirty,
+-				uint64_t		magic),
++				uint64_t		magic,
++				void			*priv),
+ 	int		type,
+ 	int		whichfork,
+ 	xfs_ino_t	ino,
+@@ -37,6 +38,7 @@ int scan_lbtree(
+ 	int		isroot,
+ 	int		check_dups,
+ 	uint64_t	magic,
++	void		*priv,
+ 	const struct xfs_buf_ops *ops);
+ 
+ int scan_bmapbt(
+@@ -53,7 +55,8 @@ int scan_bmapbt(
+ 	int			isroot,
+ 	int			check_dups,
+ 	int			*dirty,
+-	uint64_t		magic);
++	uint64_t		magic,
++	void			*priv);
+ 
+ void
+ scan_ags(
 
