@@ -1,287 +1,196 @@
-Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sg2apc01on2111.outbound.protection.outlook.com [40.107.215.111])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43B6F202F7C
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 12:43:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.215.111
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733488991; cv=fail; b=J+TOycKtYdmpmeLJ/E88WhX6SI7zAa4HFsdf4KvyqfhzpBVaitgRDCRFRr6vZhWhbh7zjGsyWzDY26hff/hTqsXIwHVpTjbSMHnSGWcDgU6yiJI+Ka+1iN73hGFv1wRvF0OtQaRE1nLSBuGKjNCUPsoKR7bfETgEo5csT6boYiM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733488991; c=relaxed/simple;
-	bh=FeaEk4zlIZZLSGPlp66FRBbxSX67B7PUSBFyYQ8HBnA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=IbF0jZTwYUuQ0Y828uIe2z7YwGOkkA751RBk7NBMd8XHgPEpbKCFHsKTZaG6jQGfu2zbYYEYgZUcckFC2qcKec1heFR/SOQ8JYr2MKVAag7v9use4HvJE/VeF1dD1AqEC968u8eIhBCEi2yC9PqmbkR1oOt0zkwyaM8NLa0CU84=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=He5QIENO; arc=fail smtp.client-ip=40.107.215.111
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC76E22C6DC
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:23:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1733527381; cv=none; b=hdRdBpOOgXiSM8AkMKbNk98mprFpH0ws81xpdovva7zx1DX3geXJCXGGpGCc3VaKruaLFQsczQeN7/V5NRrXXeOKDG/AyvSmF43DvfKJFwhD8vM8L8Xvbm0tZ5b51wO/bIL3mcLwUy6NtueAsJtBzkcxBx9Bl6thhEjSdpYRQIE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1733527381; c=relaxed/simple;
+	bh=a4nZl0FiV9I+RXI/TEMrrz5ryU9bEl+07gwTfRXrhoQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=C15tGR3obgn4PAMnQBpRz7c7t9pFvYa6rPJTSUbTYMuLsx1I/tUilxyLmlWopBTPEAfGY5oroGZsnuHSQbG295s+qFahRUAN8NcSIar2hEIQLbDDS1R4FMlIfdvyvICgx1OmpZL48JUgRsRPIkO+gKbFjQWeXcUb6azNBtsHcDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u/y9eXmj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="He5QIENO"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JEIM01RxAbwuki6c7bfnWNG1H4JmqFFlXc+0sjCDvWU3YGUm1uvL2bx59y8xnOVusuZRGzj/eFFtowSycntKgXUYyhytlZx0mmTN6IeTQmon8P5UbKgnDCt34og3NlsKdZql1MFgA6WpPzpqNKRZehKk8i56AMpOmEoJO2GykLgagST2ETvKqgP5C4gDGcd9v004ZrcHtSLTSqWJNMsHTsaYTv+/AEPVZlzRcBJ9+0RJ8hwEqGRiIgnax5tuZYQhn5NcXpVA1VfkWFGZTbSWALowlKcXVAnawHCbIJ+lq/EppmOQxjXhLg94EpLo1Sc9ZnTdEVfUvECRi2KnSzCQnw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FeaEk4zlIZZLSGPlp66FRBbxSX67B7PUSBFyYQ8HBnA=;
- b=lDpogUvYpBBn2fSkT0ltVOEDWUNp/d+y/2InT+tf+HoOZCONZAlmd/jp1HOuh3HuvJww+KW04PUYXZy0/hOLbL6bXGLAwlAv3QPllHyYejaR+xYZ3xOARr4vu4RcYL/XI8uRDb1ZBwXEqXK8kFVOS8vbufQF50NDIMfUC6/vSAnptknCSUdH+sMcLRutz7fnp46tmKgmr0Pn07a5OUfKMrMzUE6s2xK6YjYWRzkNhG3mI3l05uuFmbDrVqrWEKplWcM+2bit6jiOdNmIafg+Oy6zinr7Fmnq0T2BCiP8zfmbLV4yTiUkD5zE5JRpq5O195hOVcHoEfDx1ZS5UnuZBA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FeaEk4zlIZZLSGPlp66FRBbxSX67B7PUSBFyYQ8HBnA=;
- b=He5QIENOrebGEnc038B1EwxEbCMOYjmG3dUHuu0xdgveRUdcV46AcKMTxdX0tU1b6fW3EIeQH5GK/Ue6reFX3v2lNo6k8lG/buDpdpw+AZj0VZ/66EkWYxKQoawWFO+CYiFuO1765QmmmLkhpNd+nGJR6i9C4P/kvR1lYUgQpXY=
-Received: from PUZP153MB0728.APCP153.PROD.OUTLOOK.COM (2603:1096:301:e0::11)
- by PUZP153MB0666.APCP153.PROD.OUTLOOK.COM (2603:1096:301:e7::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8251.10; Fri, 6 Dec
- 2024 12:43:05 +0000
-Received: from PUZP153MB0728.APCP153.PROD.OUTLOOK.COM
- ([fe80::95cf:5f2d:1288:f6c7]) by PUZP153MB0728.APCP153.PROD.OUTLOOK.COM
- ([fe80::95cf:5f2d:1288:f6c7%5]) with mapi id 15.20.8251.008; Fri, 6 Dec 2024
- 12:43:03 +0000
-From: Mitta Sai Chaithanya <mittas@microsoft.com>
-To: Dave Chinner <david@fromorbit.com>
-CC: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Nilesh Awate
-	<Nilesh.Awate@microsoft.com>, Ganesan Kalyanasundaram
-	<ganesanka@microsoft.com>, Pawan Sharma <sharmapawan@microsoft.com>
-Subject: Re: [EXTERNAL] Re: XFS: Approach to persist data & metadata changes
- on original file before IO acknowledgment when file is reflinked
-Thread-Topic: [EXTERNAL] Re: XFS: Approach to persist data & metadata changes
- on original file before IO acknowledgment when file is reflinked
-Thread-Index: AQHbRKYhc9efa2RuU06Gs+yGInZqAbLTncMAgAWC0iE=
-Date: Fri, 6 Dec 2024 12:43:03 +0000
-Message-ID:
- <PUZP153MB07284BD46AB65F734B0FBB76D7312@PUZP153MB0728.APCP153.PROD.OUTLOOK.COM>
-References:
- <PUZP153MB07280F8AE7FA1BB00946E25CD7352@PUZP153MB0728.APCP153.PROD.OUTLOOK.COM>
- <Z05FXA2ScHuEf2UW@dread.disaster.area>
-In-Reply-To: <Z05FXA2ScHuEf2UW@dread.disaster.area>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2024-12-06T12:43:02.445Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PUZP153MB0728:EE_|PUZP153MB0666:EE_
-x-ms-office365-filtering-correlation-id: 91de91de-b4b2-4c3c-bd6b-08dd15f3865f
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|1800799024|366016|7053199007|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?alBEU21rK2c5b3J3dU13RUYwODZUNW5Mb210K3lRbGZueWxLWW9KWURHclRU?=
- =?utf-8?B?RVBqOTZNcEcrTlBQV2M5a0ZNTjNoTWxQK0x0R29HdG9ESGxENktsbUxVVmlp?=
- =?utf-8?B?T04vYks2NW55THpIc0lNV3BnRUJmR2NUeTBzTWd5UWpBdjN2ck0rTHk5a0Q5?=
- =?utf-8?B?cWI4Z2REekpIOHBQZldGc0Vwc3BEN21oc2x2alAzN2w0elhJZHNldjE4OTFO?=
- =?utf-8?B?TDBiK0hENXgvVG5SNVM2aTB1K2NvN05CMTE3Vys5eUdqaW51UDlrczcvYldV?=
- =?utf-8?B?MWtwTUxDRW03MzkzNlAvTzdjWWJNNzNXaHZSajNqVUt1NGZtWDI3byttZEJm?=
- =?utf-8?B?OU9kRGdNYjRsTS9PQ3RlTUVoQnRTMGFNdU9zcndyQUxFQXZwVkpady9SZXlT?=
- =?utf-8?B?NVplWWlRQzRtQmhaRkJqVXR0aWxIT2p3ZzA4alpVQndZL2xsV3g1eWM5eXZ1?=
- =?utf-8?B?M2VTWUVLbllLN0FDdWdoZ0MvZ0diZUxyb29MdXA1ZXhKNDJCWUdmZm1pUmpP?=
- =?utf-8?B?cXVvMmlOODdmTjYyTWN1YTdVZU9haFF0cHNkc0FnTk9wWWRMTVZZMEU2bklZ?=
- =?utf-8?B?bms1VE5ROTNITDhMT08wb0NNUmxoUE9UbndadWRjaElzZ0NJeHZsM3JqSTZh?=
- =?utf-8?B?eU10QVNobktEQTFpWE5uZ0p1K2ZaSnJkYWJvbFJtL1dzK1NhOTZkWnZjdUs4?=
- =?utf-8?B?b3dEQTlkMEs5U0k0b0FLRXZYNHNUK2o1UFVyZ2RPWDJodFMvbUUvakZmUVVH?=
- =?utf-8?B?K3pHQnQ3Ny9QcFJka3ZId3k4ZmZGc2VTcmFpcnRIWUZoWFNXcHFvbGZFQS8x?=
- =?utf-8?B?VjdFWWlVYkJXTUhXamRiOGlWWDN0L3NBVnE3RkFYdmd1TDJPV3YrdzcyK2o4?=
- =?utf-8?B?STV1WlYxTVcxem9DRkdXSmt0UlNsVlpET2VNc1F2bnVQQnFXZzY0aTdZQ2xh?=
- =?utf-8?B?RzlKSTN6OVFRb0luSFhpMFNBVmhLbWpwUEZlZXZBNGZYT0NMY25kcDc1K3cx?=
- =?utf-8?B?OUFhenY1QmhMMnBLY3U0a0NDR1JGazc0SElLeU5CZndiYVVOSnJnSWsvLy9E?=
- =?utf-8?B?dmt3ak1ySStBVDU0ejhUMnNORkxxL3NYdGNwQVpIdEdPT0Z1K2F0Yk1zTkQw?=
- =?utf-8?B?K29HRVlzZHJMTjRsNndIRzJWM2NsaDVveXBEZXRyZnJjbVMvQUw3bks2bWNy?=
- =?utf-8?B?Qk8wS0Y3UW9tNnBuaE13cG9sT3ozQXk3WFdzUE5yRmwwYjVYdDdCMlB2WXZz?=
- =?utf-8?B?UFpLTVk1bnE2Rko3b2NoV25XK0I0RXJLa1VMeTBpeUhTdGkxVmF0NG1NemVk?=
- =?utf-8?B?YlViQ0VJMUZTNko4SnJ1Si9wYjJhZW9QS2NwTCs4UnpMNGo1d00rSWFJeWo4?=
- =?utf-8?B?ampVdkdDTENTdlA1S29ZeGJpRmxGQ0hZM2hzQVpqeTJwaWh2eHIxRXpFekNv?=
- =?utf-8?B?d082REFQOHNKSmxYdnlvMjRTanNuaHdmZUZ2bFBYVWNRVFo5d1N6V3ZlOFow?=
- =?utf-8?B?bC9PK3Y3UXNqTXpjcHJYcDVPRnd5c09GdXkva2VlQWpDOVBzcmlnaHZtV3dh?=
- =?utf-8?B?emhxcWhnMHBJS2dueHFEeDZRZ0RQckZtak01a2kwTHFONnYyY2I0RlBPbm1K?=
- =?utf-8?B?cWgwUDk1QWgxQXJYbWtPV1hhOWdNTzJ2akhRdjRnR3VrSUxDYUZiMzVmZjhv?=
- =?utf-8?B?TTUrVlVsTmI2TFlLeWN5dDNac3BWMmptK1pkWjRqTmN5QnZZd29iNWhueSts?=
- =?utf-8?B?ZTgxelJmcW5FcUt3RkdwaG03WHhTaGNGUEp6SHh0bEk4MFpmYXVidnRNaXdw?=
- =?utf-8?B?VStKYWh0VGQ3TzRQUE9NZlp5YjlQanlRZVVLQmE4UVpEcXgvWC9hdWhEeHJ5?=
- =?utf-8?B?WUhadlNyaWYzQm1Qa2pCVm0rcGtCNER2cStkQjBzQVVQZkE9PQ==?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PUZP153MB0728.APCP153.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(7053199007)(38070700018);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?SjVDQkFMbXMyZEw1L2U0QU0yNEFYaTNoVkdLR3g1NFY3eDA5VTRnR25ab2ZE?=
- =?utf-8?B?SjBYMURVRFZ0eGpDOGI0ck44WGVoY1lCbEZHOVIzQm94VG5pSlQvWDZLT0pP?=
- =?utf-8?B?TUVGQTJXWTd5THA1Q1E1bFRmRFV2OHpFeGR3U0lxbUI3eUw5T3MvTVJkZGZs?=
- =?utf-8?B?c0lSam1zeTZCdFJKUC9zdU9JVE5iZktHTjdvMWFCOFp5YTUwVFdDNitZdWJp?=
- =?utf-8?B?SlNtQUJEdGFxVEZMb2E0WERJTFkrTGNvbnRiRXpDVS82WlNaRHEzQXdiRkt0?=
- =?utf-8?B?V3l1aURZMjlVZzh4a2ZLM01IelR0Tk9KODk3dWI2MmpqY3lYdmdxOWJxaU5O?=
- =?utf-8?B?TWdXc2dES3NSNVI2TU12dkJYSWdmbi80KzVwYmExeEluK2Mwam5rZnMwL0tJ?=
- =?utf-8?B?SWV3SVZFdmFyV2J3RFMxQ3dGS20vZVJTTjAvb1QvcXFMUVFWTThHWkROTWpP?=
- =?utf-8?B?cy9ZTlc3SXo3aWdiSUFjdWVLeVhCVE1DbDg0RHlzK2gyMndFTDlQc2Z6ZGdP?=
- =?utf-8?B?RmJVNjZhNVVGTjM0cVUzbmJ2SXFMRVFjc0h3WGYyTkVvNE1jRzlibEdSUUM5?=
- =?utf-8?B?QW81dHdZWXZRdkJvZS9CaDFUSHZibFB1Wk5ZenAzcFR0WXVqaTRYMWU1V0Za?=
- =?utf-8?B?aHFCellRd0VYcVk2U2swTm5lL1UwcVZGNDNaSUVXUW9YbDBaWnBPU2x5bUpw?=
- =?utf-8?B?blplZmYreHJiRWcyQjg2eW9NWGhQeURTeVJvT1pIVDlaRGdzdVZsVDQwOHVy?=
- =?utf-8?B?cjlTUEJNSkV2U2V1NTlaL1Bnc2l1YzBkUjFLa0VOMFBzVmkrcjZwYUFuWkRu?=
- =?utf-8?B?V3NyTjk0N1RQNzRMKzRUVWFVeGNvNVZhQmJvN0tqQnpNYkFWZVIxWFEybDY1?=
- =?utf-8?B?Q2liUW95QzgyUDNIVEllWFQ4Um12Ky9WWVBUUkkyK29vVndJdTZnT1hzYWdG?=
- =?utf-8?B?Zi9VbHNKZ0Z0azdCM1VOTzR0YUNzc2NTQUwxcmpwK1c4bDI1cWUvdUJUUE1R?=
- =?utf-8?B?NmQwTlVNZFZOZ1luVVdQa1RxVXU4blpPaEVXU2VZNW1KcUR5ajJNcmQ2cnJa?=
- =?utf-8?B?aDBxQjZpMXJ0NzlUN1dtVzBWeXpQNzlkeDNNUnZZbnFHbTM4ODhkRnUxUkk5?=
- =?utf-8?B?NlNubC9LVm91SUp1NndYQlN0NnFVanN0b3RSN21nejJVcC8wWHEwdFp3alpU?=
- =?utf-8?B?cnFVbm1GUlprTkF0QUxjcEgxZE9mZ3VDZnRuTWpMWTkrdmZ3dE51WTlzaGJB?=
- =?utf-8?B?UmsxaGl0cUlkdTZZdXZYNmg3Ty8rUHRkRDVxN0ZNbmoyK01Bb1lJRGRFS25p?=
- =?utf-8?B?TmFlMi8yS3dZNmhGYzBNdUVTN3hUbXFiMTFKWVFhMk5iOXFXcVZYb1FNaTND?=
- =?utf-8?B?a3c2QjJDbzk4K0dVS2YwVXk3OXduREdwaW8raWF3RHFrNkNtbGZ4WFo4Z1ZP?=
- =?utf-8?B?cjQydnVyNTh5cU9yWE1QaURjYy96YjdwSHNzYVdTVHB3K0FoWFBWRTU3QW0x?=
- =?utf-8?B?ZDExNGwrbkhZUS9uWXZvSWRiVkEvS0VyQXdlUVRXbEI4eVo4WktwQVNwV1VH?=
- =?utf-8?B?S2FzMjlENURpY0tPNW44YllJWHZMTzdqd0FnQnVPOGt6NjRPckdsaHZueE0x?=
- =?utf-8?B?QWFhbnNoWmpOT0lBKzVqS0dFV2VacGU1S1RTaWRWL1NvR01ycUREN2w1a1Nh?=
- =?utf-8?B?am5MWmV3dGRZUkdVZUpHZXpUR1dkb3c1ZlpkNEhnbE1kcm9qN0RBYTV0eTFS?=
- =?utf-8?B?cVZaZnRuZ3FjSnFGclNrRGxFSW9IWTlpMXk4a2JDUDFFYnFuUUVFc0hxaWJP?=
- =?utf-8?B?SVN5bTFsT2JUdTkyNHJRK29kTmdzRHY4bU8yT0c0Q2pPNzNuOTdGOU5yckJq?=
- =?utf-8?B?VElTVCs0QVNOQWQ4Z3RvYnBPMnk1MFAwTHlqV3FJU2ZyOGdxRVh2azgxcmdV?=
- =?utf-8?B?QTBDZis0V1JPTTdmcmd3eEVWRlFMMndITmRKbzZnRWtxc3pZR0FXTEI1UGNi?=
- =?utf-8?Q?lmM4e8/H6E+0rm9egwkZjZYphR/SjU=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u/y9eXmj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60667C4CED1;
+	Fri,  6 Dec 2024 23:23:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733527381;
+	bh=a4nZl0FiV9I+RXI/TEMrrz5ryU9bEl+07gwTfRXrhoQ=;
+	h=Date:From:To:Cc:Subject:From;
+	b=u/y9eXmjhjEpHj+WW5ykvkW7X8LqEKVJblsUAvc4jDgqQNssT3GdFtsWDOpnqzCVd
+	 aS0QtJgUZcMtmsqlD7WSWF4qSRJeFc7tJb+XGMilY06cEBvFyv1nLJDdqYt2fdgM8z
+	 H64kpliz7dK9fydCVA9BfAnGCCIqXG3dhLjaBdiHNLPImzETbExHRlhIuXE/eSfKlC
+	 vv4lUoYcqjGzFVFsA/PqJb00/wTyySuQ5zoDu6/yeslE1op4Y3KjhSh8LV2HNuaTW9
+	 v+MDl9Wa57Y66ocw/U8uoOWnvxYopKk3P71uUMIAVsd5hACirvyuFysYATadVbOz2b
+	 SFJJYUmSowCnQ==
+Date: Fri, 6 Dec 2024 15:22:59 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: [PATCHBOMB v5.8] xfsprogs: metadata directories and realtime groups
+Message-ID: <20241206232259.GO7837@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PUZP153MB0728.APCP153.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 91de91de-b4b2-4c3c-bd6b-08dd15f3865f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Dec 2024 12:43:03.2079
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: sO0PUTY58jD/ngJfn3bFDmKHLn+GzF7fqWf9/scVMyNWgmU59qcdMfU9kiK1XukSayRYSHrq61KV1zI7s/paSw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PUZP153MB0666
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-VGhhbmtzIERhdmUgQ2hpbm5lciBmb3IgdGFraW5nIHRpbWUgYW5kIGV4cGxhaW5pbmcgaW4gZGV0
-YWlsLCB3ZSBhcmUgZXhwb3NpbmcgWEZTIGZpbGVzIHRocm91Z2ggU1BESyBtZWNoYW5pc20gYW5k
-IGFzIHlvdQpwb2ludGVkIGZvciBoYXZpbmcgbG93IGxhdGVuY2llcyB3ZSBhcmUgd3JpdGluZyB0
-byB0aGUgZmlsZSBhc3luY2hyb25vdXNseSAodXNpbmcgdXJpbmcgYXMgZGVmYXVsdCBjb25maWd1
-cmF0aW9uKS4gSSBoYXZlIG9uZSBmb2xsb3cKdXAgcXVlc3Rpb24gIldpbGwgYmUgdGhlcmUgYW55
-IGpvdXJuYWwgdXBkYXRlcyBmb3IgZnV0dXJlIElPcyB3aGVuIGVudGlyZSBmaWxlIGlzIGV4cGxp
-Y2l0bHkgemVyb2UnZCBhbmQgc3luY2VkIGZvciBmdXR1cmUgSU9zIj8KCgpUaGFua3MgJiBSZWdh
-cmRzLApTYWkKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KRnJvbTrC
-oERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4KU2VudDrCoFR1ZXNkYXksIERlY2Vt
-YmVyIDMsIDIwMjQgMDU6MTAKVG86wqBNaXR0YSBTYWkgQ2hhaXRoYW55YSA8bWl0dGFzQG1pY3Jv
-c29mdC5jb20+CkNjOsKgbGludXgteGZzQHZnZXIua2VybmVsLm9yZyA8bGludXgteGZzQHZnZXIu
-a2VybmVsLm9yZz4KU3ViamVjdDrCoFtFWFRFUk5BTF0gUmU6IFhGUzogQXBwcm9hY2ggdG8gcGVy
-c2lzdCBkYXRhICYgbWV0YWRhdGEgY2hhbmdlcyBvbiBvcmlnaW5hbCBmaWxlIGJlZm9yZSBJTyBh
-Y2tub3dsZWRnbWVudCB3aGVuIGZpbGUgaXMgcmVmbGlua2VkCsKgCltZb3UgZG9uJ3Qgb2Z0ZW4g
-Z2V0IGVtYWlsIGZyb20gZGF2aWRAZnJvbW9yYml0LmNvbS4gTGVhcm4gd2h5IHRoaXMgaXMgaW1w
-b3J0YW50IGF0IGh0dHBzOi8vYWthLm1zL0xlYXJuQWJvdXRTZW5kZXJJZGVudGlmaWNhdGlvbsKg
-XQoKW3BsZWFzZSB3cmFwIHlvdXIgZW1haWxzIGF0IDcyIGNvbHVtbnNdCgpPbiBNb24sIERlYyAw
-MiwgMjAyNCBhdCAxMDo0MTowMkFNICswMDAwLCBNaXR0YSBTYWkgQ2hhaXRoYW55YSB3cm90ZToK
-PiBIaSBUZWFtLAoKPiDigILigILigILigILigILigIJXZSBhcmUgdXNpbmcgWEZTIHJlZmxpbmsg
-ZmVhdHVyZSB0byBjcmVhdGUgc25hcHNob3Qgb2YgYW4KPiBvcmlnaW4gZmlsZSAoYSB0aGljayBm
-aWxlLCBjcmVhdGVkIHRocm91Z2ggZmFsbG9jYXRlKSBhbmQgZXhwb3NpbmcKPiBvcmlnaW4gZmls
-ZSBhcyBhIGJsb2NrIGRldmljZSB0byB0aGUgdXNlcnMuCgpTbyBpdCdzIGJhc2ljYWxseSBhIGxv
-b3AgYmxvY2sgZGV2aWNlPwoKQWxsIHRoZSBxdWVzdGlvbnMgeW91IGFyZSBhc2tpbmcgYXJlIGFu
-c3dlcmVkIGJ5IHN0dWR5aW5nIGhvdwpkcml2ZXJzL2Jsb2NrL2xvb3AuYyB0cmFuc2xhdGVzIGJs
-b2NrIGRldmljZSBpbnRlZ3JpdHkgcmVxdWVzdHMKdG8gVkZTIG9wZXJhdGlvbnMgb24gdGhlIGJh
-Y2tpbmcgZmlsZS4KClRoZSBibG9jayBkZXZpY2UgQVBJIGhhcyBhIG1lY2hhbmlzbSBmb3IgdHJp
-Z2dlcmluZyBpbnRlZ3JpdHkKb3BlcmF0aW9uczogUkVRX1BSRUZMVVNIIHRvIGZsdXNoIHZvbGF0
-aWxlIGNhY2hlcywgYW5kIFJFUV9GVUEgdG8KYXNrIGZvciBhIHNwZWNpZmljIElPIHRvIGJlIHBl
-cnNpc3RlZCB0byBzdGFibGUgc3RvcmFnZS4KClRoZSBsb29wIGRldmljZSB0cmFuc2xhdGVzIFJF
-UV9QUkVGTFVTSCB0byB2ZnNfZnN5bmMoKSBvbiB0aGUKYmFja2luZyBmaWxlLCBhbmQgUkVRX0ZV
-QSBpcyBlbXVsYXRlZCBieSB3cml0ZS92ZnNfZnN5bmNfcmFuZ2UoKS4KSSBoYXZlIGEgcGF0Y2gg
-dG8gbmF0aXZlbHkgc3VwcG9ydCBSRVFfRlVBIGJ5IGNvbnZlcnRpbmcgaXQgdG8KYSBSV0ZfRFNZ
-TkMgd3JpdGUgY2FsbCwgd2hpY2ggYWxsb3dzIHRoZSB1bmRlcmx5aW5nIGZpbGVzeXN0ZW0gdG8K
-Y29udmVydCB0aGF0IGRhdGEgaW50ZWdyaXR5IHdyaXRlIHRvIGEgUkVRX0ZVQSB3cml0ZSB3LyBP
-X0RJUkVDVC4uLgoKCj4gWEZTIGZpbGUgd2FzIG9wZW5lZAo+IHdpdGggT19ESVJFQ1Qgb3B0aW9u
-IHRvIGF2b2lkIGJ1ZmZlcnMgYXQgbG93ZXIgbGF5ZXIgd2hpbGUKPiBwZXJmb3JtaW5nIHdyaXRl
-cywgZXZlbiB0aG91Z2ggYSB0aGljayBmaWxlIGlzIGNyZWF0ZWQsIHdoZW4gdXNlcgo+IHBlcmZv
-cm1zIHdyaXRlcyB0aGVuIHRoZXJlIGFyZSBtZXRhZGF0YSBjaGFuZ2VzIGFzc29jaWF0ZWQgdG8K
-PiB3cml0ZXMgKG1vc3RseSB4ZnMgbWFya3MgZXh0ZW50cyB0byBrbm93IHdoZXRoZXIgdGhlIGRh
-dGEgaXMKPiB3cml0dGVuIHRvIHBoeXNpY2FsIGJsb2NrcyBvciBub3QpLgoKVGhpcyBpcyBub3Qg
-c3BlY2lmaWMgdG8gT19ESVJFQ1QgLSBldmVuIGJ1ZmZlcmVkIHdyaXRlcyBuZWVkIHRvIGRvCnBv
-c3QgZGF0YS1JTyB1bndyaXR0ZW4gZXh0ZW50IGNvbnZlcnNpb24gb24gdGhlIGZpcnN0IHdyaXRl
-IHRvIGFueQpmaWxlIGRhdGEuCgo+IFRvIGF2b2lkIG1ldGFkYXRhIGNoYW5nZXMKPiBkdXJpbmcg
-dXNlciB3cml0ZXMgd2UgYXJlIGV4cGxpY2l0bHkgemVyb2luZyBlbnRpcmUgZmlsZSByYW5nZQo+
-IHBvc3QgY3JlYXRpb24gb2YgZmlsZSwgc28gdGhhdCB0aGVyZSB3b24ndCBiZSBhbnkgbWV0YWRh
-dGEgY2hhbmdlcwo+IGluIGZ1dHVyZSBmb3Igd3JpdGVzIHRoYXQgaGFwcGVuIG9uIHplcm9lZCBi
-bG9ja3MuCgpXaGljaCBtYWtlcyBmYWxsb2NhdGUoKSByZWR1bmRhbnQuIFNpbXBseSB3cml0aW5n
-IHplcm9lcyB0byBhbiBlbXB0eQpmaWxlIHdpbGwgYWxsb2NhdGUgYW5kIG1hcmsgdGhlIGV4dGVu
-dHMgYXMgd3JpdHRlbi7CoCBSdW4gZnN5bmMgYXQKdGhlIGVuZCBvZiB0aGUgd3JpdGVzLCBhbmQg
-dGhlbiB0aGVyZSBhcmUgbm8gbWV0YWRhdGEgdXBkYXRlcyBvdGhlcgp0aGFuIHRpbWVzdGFtcHMg
-Zm9yIGZ1dHVyZSBvdmVyd3JpdGVzLgoKVW50aWwsIG9mIGNvdXJzZSAuLi4uCgo+IOKAguKAguKA
-guKAguKAguKAgk5vdywgaWYgcmVmbGluayBjb3B5IG9mIG9yaWdpbiBmaWxlIGlzIGNyZWF0ZWQg
-dGhlbiB0aGVyZQo+IHdpbGwgYmUgbWV0YWRhdGEgY2hhbmdlcyB3aGljaCBuZWVkIHRvIGJlIHBl
-cnNpc3RlZCBpZiBkYXRhIGlzCj4gb3ZlcndyaXR0ZW4gb24gdGhlIHJlZmxpbmtlZCBibG9ja3Mg
-b2Ygb3JpZ2luYWwgZmlsZS4KCi4uLi4geW91IHNoYXJlIHRoZSBkYXRhIGV4dGVudHMgYmV0d2Vl
-biBtdWx0aXBsZSBpbm9kZXMuCgpUaGVuIGV2ZXJ5IGRhdGEgd3JpdGUgdGhhdCBuZWVkcyB0byBi
-cmVhayBleHRlbnQgc2hhcmluZyB3aWxsCnRyaWdnZXIgYSBDT1cgdGhhdCBhbGxvY2F0ZXMgbmV3
-IGV4dGVudHMsIGhlbmNlIHJlcXVpcmluZyBtZXRhZGF0YQptb2RpZmljYXRpb24gYm90aCBiZWZv
-cmUgdGhlIGRhdGEgSU8gaXMgc3VibWl0dGVkIGFuZCBhZ2FpbiBhZnRlciBpdAppcyBjb21wbGV0
-ZWQuCgo+IEV2ZW4gdGhvdWdoCj4gdGhlIGZpbGUgaXMgb3BlbmVkIGluIE9fRElSRUNUIG1vZGUg
-Y2hhbmdlcyB0byBtZXRhZGF0YSBkbyBub3QKPiBwZXJzaXN0IGJlZm9yZSB3cml0ZSBpcyBhY2tu
-b3dsZWRnZWQgYmFjayB0byB1c2VyLAoKT19ESVJFQ1QgYnkgaXRzZWxmIGRvZXMgbm90IGltcGx5
-IC1hbnktIGRhdGEgaW50ZWdyaXR5IG5vciBhbnkKc3BlY2lmaWMgZGF0YS9tZXRhZGF0YSBvcmRl
-cmluZy4gRmlsZXN5c3RlbXMgYW5kIGJsb2NrIGRldmljZXMgYXJlCmZyZWUgdG8gdHJlYXQgT19E
-SVJFQ1Qgd3JpdGVzIGluIGFueSB3YXkgdGhleSB3YW50IHcuci50LiBjYWNoaW5nLAoobGFjayBv
-ZikgY3Jhc2ggcmVzaWxpZW5jZSwgZXRjLgoKPiBpZiBzeXN0ZW0KPiBjcmFzaGVzIHdoZW4gY2hh
-bmdlcyBhcmUgaW4gYnVmZmVyIHRoZW4gcG9zdCByZWNvdmVyeSB3cml0ZXMgd2hpY2gKPiB3ZXJl
-IGFja25vd2xlZGdlZCBhcmUgbm90IGF2YWlsYWJsZSB0byByZWFkLgoKV2VsbCwgeWVzLgoKWW91
-IG5lZWQgdG8gY29tYmluZSBPX0RJUkVDVCB3aXRoIE9fRFNZTkMvT19TWU5DL2ZbZGF0YV1zeW5j
-IGZvciBpdAp0byBoYXZlIGFueSBtZWFuaW5nIGZvciB0aGUgcGVyc2lzdGVuY2Ugb2YgdGhlIGRh
-dGEgYW5kIG1ldGFkYXRhCm5lZWRlZCB0byByZXRyaWV2ZSB0aGUgZGF0YSBiZWluZyB3cml0dGVu
-LgoKPiBUd28gb3B0aW9ucyB0aGF0IHdlCj4gd2VyZSBhd2FyZSB0byBhdm9pZCBjb25zaXN0ZW5j
-eSBpc3N1ZSBpczoKPgo+IDEuIEFkZGluZyBPX1NZTkMgZmxhZyB3aGlsZSBvcGVuaW5nIGZpbGUg
-d2hpY2ggZW5zdXJlcyBlYWNoIHdyaXRlCj4gZ2V0cyBwZXJzaXN0ZWQgaW4gcGVyc2lzdGVudCBt
-ZWRpYSwgYnV0IHRoaXMgbGVhZHMgdG8gcG9vcgo+IHBlcmZvcm1hbmNlLgoKIlBvb3IgcGVyZm9y
-bWFuY2UiID09ICJleGFjdCBjYXBhYmlsaXR5IG9mIHRoZSBzdG9yYWdlIGhhcmR3YXJlIHRvCnBl
-cnNpc3QgZGF0YSIuCgppLmUuIHBlcmZvcm1hbmNlIG9mIE9fRElSRUNUIHdyaXRlcyB3aXRoIGRh
-dGEgaW50ZWdyaXR5IHJlcXVpcmVtZW50CmlzIGRpcmVjdGx5IGRldGVybWluZWQgYnkgdGhlIHNw
-ZWVkIHdpdGggd2hpY2ggdGhlIHN0b3JhZ2UgZGV2aWNlCmNhbiBwZXJzaXN0IHRoZSBkYXRhLgoK
-QSBmaWxlc3lzdGVtIGxpa2UgWEZTIHdpbGwgcmVxdWlyZSB0d28gSU9zIHRvIHBlcnNpc3QgZGF0
-YSB3cml0dGVuCnRvIGEgbmV3bHkgYWxsb2NhdGVkIGV4dGVudCwgYW5kIHRoZXkgYXJlIGRlcGVu
-ZGVudCB3cml0ZXMuIFdlIGhhdmUKbm8gbWVjaGFuaXNtIGZvciB0ZWxsaW5nIGJsb2NrIGRldmlj
-ZXMgdGhhdCB0aGV5IG11c3Qgb3JkZXIgd3JpdGVzCnRvIHBlcnNpc3RlbnQgc3RvcmFnZSBpbiBh
-IHNwZWNpZmljIG1hbm5lciwgc28gb3VyIG9ubHkgdG9vbCBmb3IKZW5zdXJpbmcgdGhhdCB0aGUg
-YmxvY2sgZGV2aWNlIG9yZGVycyB0aGUgZGF0YSBhbmQgbWV0YWRhdGEgSU9zCmNvcnJlY3RseSBp
-cyB0byBpc3N1ZSBhIFJFUV9QUkVGTFVTSCBiZXR3ZWVuIHRoZSB0d28gSU9zLiBXZSBkbyB0aGlz
-CndpdGggdGhlIGpvdXJuYWwgSU8sIGFzIGl0IGlzIHRoZSBJTyB0aGF0IHJlcXVpcmVzIGFsbCBk
-YXRhIHdyaXRlcwp0byBiZSBwZXJzaXN0ZW50IGJlZm9yZSB3ZSBwZXJzaXN0IHRoZSBtZXRhZGF0
-YSBpbiB0aGUgam91cm5hbC4uLi4KCklmIHlvdSBjYW4gdXNlIEFJTy9pb191cmluZywgdGhlbiB0
-aGUgbGF0ZW5jeSBvZiB0aGVzZSBkZXBlbmRlbnQKd3JpdGVzIGNhbiBiZSBoaWRkZW4gYXMgdGhl
-IHByb2Nlc3MgZG9lcyBub3QgYmxvY2sgd2FpdGluZyBmb3IgdHdvCklPcyB0byBjb21wbGV0ZS4g
-SXQgY2FuIHByb2Nlc3MgbW9yZSBJTyBzdWJtaXNzaW9ucyB3aGlsc3QgdGhlIGRhdGEKaW50ZWdy
-aXR5IHdyaXRlIGlzIGluIGZsaWdodC4gVGhlbiBwZXJmb3JtYW5jZSBpcyBub3QgbGltaXRlZCBi
-eQpzeW5jaHJvbm91cyBkYXRhIGludGVncml0eSBJTyBsYXRlbmN5Li4uLgoKPiAyLiBQZXJmb3Jt
-aW5nIHN5bmMgb3BlcmF0aW9uIGFsb25nIHdpdGggd3JpdGVzL3Bvc3Qgd3JpdGVzIHdpbGwKPiBn
-dWFyYW50ZWVzIHRoYXQgbWV0YWRhdGEgY2hhbmdlcyB3aWxsIGJlIHBlcnNpc3RlZC4KClllcywg
-YnV0IHRoYXQgd2lsbCBvbmx5IHJlc3VsdCBpbiBmYXN0ZXIgSU8gaWYgdGhlIGZkYXRhc3luYyBj
-YWxscwphcmUgYmF0Y2hlZCBmb3IgbXVsdGlwbGUgZGF0YSBJT3MuCgppLmUuIGZvciBPX0RJUkVD
-VCwgZmRhdGFzeW5jKCkgaXMgZWZmZWN0aXZlbHkgUkVRX1BSRUZMVVNIfFJFUV9GVUEKam91cm5h
-bCB3cml0ZS4gSWYgeW91IGFyZSBpc3N1aW5nIG9uZSBmZGF0YXN5bmMgcGVyIHdyaXRlLCB0aGVy
-ZQppcyBubyBiZW5lZml0IG92ZXIgT19EU1lOQy4KCkFuZCBpZiB5b3UgY2FuIGJhdGNoIE9fRElS
-RUNUIHdyaXRlcyBwZXIgZmRhdGFzeW5jKCkgY2FsbCwgdGhlbiB0aGUKYmxvY2sgZGV2aWNlIGhh
-cyBhIHZvbGF0aWxlIGNhY2hlLCBhbmQgdGhlbiB0aGUgdXBwZXIgYmxvY2sgZGV2aWNlClJFUV9Q
-UkVGTFVTSCBhbmQgUkVRX0ZVQSBvcGVyYXRpb25zIG5lZWQgdG8gYmUgb2JleWVkLiBJT1dzLCBp
-Zgp5b3UgY2FuIGFtb3J0aXNlIGZkYXRhc3luYyBhY3Jvc3MgbXVsdGlwbGUgSU9zLCB0aGVuIHlv
-dSBtYXkgYXMgd2VsbApqdXN0IGFkdmVydGlzZSB0aGUgZGV2aWNlIGFzIGhhdmluZyB2b2xhdGls
-ZSBjYWNoZXMgYW5kIHNpbXBseQpyZWx5IG9uIHRoZSB1cHBlciBmaWxlc3lzdGVtIChpLmUuIHdo
-YXRldmVyIGlzIG9uIHRoZSBibG9jayBkZXZpY2UpCnRvIGlzc3VlIGRhdGEgaW50ZWdyaXR5IGZs
-dXNoZXMgYXMgYXBwcm9wcmlhdGUuLi4uCgppLmUuIHRoaXMgaXMgdGhlIG1vZGVsIHRoZSBibG9j
-ayBsb29wIGRldmljZSBpbXBsZW1lbnRzLgoKPiBBcmUgdGhlcmUgYW55IG90aGVyIG9wdGlvbiBh
-dmFpbGFibGUgdG8gYXZvaWQgdGhlIGFib3ZlCj4gY29uc2lzdGVuY3kgaXNzdWUgKFdpdGhvdXQg
-bXVjaCBkZWdyYWRhdGlvbiBpbiBwZXJmb3JtYW5jZSk/CgpUaGVyZSBpcyBsaXR0bGUgYW55b25l
-IGNhbiBkbyB0byByZWR1Y2UgdGhlIGxhdGVuY3kgb2YgaW5kaXZpZHVhbCBJTwpjb21wbGV0aW9u
-IHRvIHN0YWJsZSBzdG9yYWdlIC0gc2luZ2xlIHRocmVhZGVkLCBzeW5jaHJvbm91cyBkYXRhCmlu
-dGVncml0eSBJTyBpcyBhbHdheXMgZ29pbmcgdG8gaGF2ZSBhIHNpZ25pZmljYW50IGNvbXBsZXRp
-b24KbGF0ZW5jeSBwZW5hbHR5LiBUbyBtaXRpZ2F0ZSB0aGlzIHRoZSBzdG9yYWdlIHN0YWNrIGFu
-ZC9vcgphcHBsaWNhdGlvbnMgbmVlZCB0byBiZSBhcmNoaXRlY3RlZCB0byB3b3JrIGluIGEgd2F5
-IHRoYXQgaXNuJ3QKZGlyZWN0bHkgSU8gbGF0ZW5jeSBzZW5zaXRpdmUuCgpBcyBJIHNhaWQgYXQg
-dGhlIHN0YXJ0LCBzdHVkeSB0aGUgYmxvY2sgbG9vcCBkZXZpY2UgYXJjaGl0ZWN0dXJlIGFuZApw
-YXkgYXR0ZW50aW9uIHRvIGhvdyBpdCBpbXBsZW1lbnRzIFJFUV9QUkVGTFVTSCBhbmQgdGhlIEFJ
-TytESU8KYmFja2luZyBmaWxlIElPIHN1Ym1pc3Npb24gYW5kIGNvbXBsZXRpb24gc2lnbmFsbGlu
-Zy4KCi1EYXZlLgotLQpEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQ==
+Hi Andrey and Christoph,
+
+This begins the first round of review of userspace support for the
+metadata directory tree and realtime allocation group code that was
+merged into kernel 6.13-rc1.
+
+The first patchset contains bug fixes against xfsprogs 6.12.  I think
+they're minor enough that they might as well get rolled into xfsprogs
+6.13.
+
+This time around, I'm presenting the libxfs sync for 6.13 a bit
+differently than I've done traditionally.  Whereas I usually do all the
+kernel sync and only then go to work on the surrounding utilities, I
+noticed that the conversion of xfs_perag to be a subclass of generic
+xfs_group objects and the introduction of xfs_rtgroup objects causes a
+lot of changes in the utilities.
+
+As a result, I decided that it'd be easier to take care of the libxfs
+sync for only the metadata directory tree code and the utility changes
+*before* moving on to the allocation groups restructuring.  That's why
+there are nine patchsets instead of five.  I hope that makes it easier
+to tackle.
+
+The second and third patchsets are all the metadir changes.
+
+The fourth patchset augments the mkfs protofile code so that we can
+handle large files and xattrs; and provides a tool to generate a
+protofile from a directory tree.  Protofiles have existed in Unix for 51
+years now, we should modernize our implementation a bit, or possibly
+just withdraw it.
+
+Patchsets 5 and 6 are the rest of the 6.13 merge.  Eventually this will
+become one patchset, but not all of my bugfixes have made it into the
+kernel yet.  I'll be resending bugfixes II shortly after this.
+
+Patchset 7 are the utility changes to handle realtime allocation groups.
+
+Patchsets 8-9 update the utilities for the quota file changes that we
+made for metadir filesystems.
+
+As always, you can browse / pull the branch from here:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-quotas_2024-12-06
+
+These are the patches that have not yet been reviewed:
+
+[PATCHSET 1/9] xfsprogs: bug fixes for 6.12
+  [PATCH 2/2] man: document the -n parent mkfs option
+[PATCHSET v5.8 3/9] xfsprogs: metadata inode directory trees
+  [PATCH 04/41] man2: document metadata directory flag in fsgeom ioctl
+  [PATCH 05/41] man: update scrub ioctl documentation for metadir
+  [PATCH 06/41] libfrog: report metadata directories in the geometry
+  [PATCH 07/41] libfrog: allow METADIR in xfrog_bulkstat_single5
+  [PATCH 08/41] xfs_io: support scrubbing metadata directory paths
+  [PATCH 09/41] xfs_db: disable xfs_check when metadir is enabled
+  [PATCH 10/41] xfs_db: report metadir support for version command
+  [PATCH 11/41] xfs_db: don't obfuscate metadata directories and
+  [PATCH 12/41] xfs_db: support metadata directories in the path
+  [PATCH 13/41] xfs_db: show the metadata root directory when dumping
+  [PATCH 14/41] xfs_db: display di_metatype
+  [PATCH 15/41] xfs_io: support the bulkstat metadata directory flag
+  [PATCH 16/41] xfs_io: support scrubbing metadata directory paths
+  [PATCH 17/41] xfs_spaceman: report health of metadir inodes too
+  [PATCH 18/41] xfs_scrub: tread zero-length read verify as an IO error
+  [PATCH 19/41] xfs_scrub: scan metadata directories during phase 3
+  [PATCH 20/41] xfs_scrub: re-run metafile scrubbers during phase 5
+  [PATCH 21/41] xfs_repair: preserve the metadirino field when zeroing
+  [PATCH 22/41] xfs_repair: dont check metadata directory dirent
+  [PATCH 23/41] xfs_repair: refactor fixing dotdot
+  [PATCH 24/41] xfs_repair: refactor marking of metadata inodes
+  [PATCH 25/41] xfs_repair: refactor root directory initialization
+  [PATCH 26/41] xfs_repair: refactor grabbing realtime metadata inodes
+  [PATCH 27/41] xfs_repair: check metadata inode flag
+  [PATCH 28/41] xfs_repair: use libxfs_metafile_iget for quota/rt
+  [PATCH 29/41] xfs_repair: rebuild the metadata directory
+  [PATCH 30/41] xfs_repair: don't let metadata and regular files mix
+  [PATCH 31/41] xfs_repair: update incore metadata state whenever we
+  [PATCH 32/41] xfs_repair: pass private data pointer to scan_lbtree
+  [PATCH 33/41] xfs_repair: mark space used by metadata files
+  [PATCH 34/41] xfs_repair: adjust keep_fsinos to handle metadata
+  [PATCH 35/41] xfs_repair: metadata dirs are never plausible root dirs
+  [PATCH 36/41] xfs_repair: drop all the metadata directory files
+  [PATCH 37/41] xfs_repair: truncate and unmark orphaned metadata
+  [PATCH 38/41] xfs_repair: do not count metadata directory files when
+  [PATCH 39/41] xfs_repair: fix maximum file offset comparison
+  [PATCH 41/41] mkfs.xfs: enable metadata directories
+[PATCHSET v5.8 4/9] mkfs: make protofiles less janky
+  [PATCH 1/4] libxfs: resync libxfs_alloc_file_space interface with the
+  [PATCH 2/4] mkfs: support copying in large or sparse files
+  [PATCH 3/4] mkfs: support copying in xattrs
+  [PATCH 4/4] mkfs: add a utility to generate protofiles
+[PATCHSET 5/9] xfsprogs: new code for 6.13
+  [PATCH 11/46] libfrog: add memchr_inv
+[PATCHSET 6/9] xfsprogs: bug fixes for 6.13
+  [PATCH 1/6] xfs: return a 64-bit block count from
+  [PATCH 2/6] xfs: fix error bailout in xfs_rtginode_create
+  [PATCH 5/6] xfs: fix sb_spino_align checks for large fsblock sizes
+  [PATCH 6/6] xfs: return from xfs_symlink_verify early on V4
+[PATCHSET v5.8 7/9] xfsprogs: shard the realtime section
+  [PATCH 02/50] libxfs: adjust xfs_fsb_to_db to handle segmented
+  [PATCH 03/50] xfs_repair,mkfs: port to
+  [PATCH 04/50] libxfs: use correct rtx count to block count conversion
+  [PATCH 05/50] libfrog: scrub the realtime group superblock
+  [PATCH 06/50] man: document the rt group geometry ioctl
+  [PATCH 07/50] libxfs: port userspace deferred log item to handle
+  [PATCH 08/50] libxfs: implement some sanity checking for enormous
+  [PATCH 09/50] libfrog: support scrubbing rtgroup metadata paths
+  [PATCH 10/50] libfrog: report rt groups in output
+  [PATCH 11/50] libfrog: add bitmap_clear
+  [PATCH 12/50] xfs_logprint: report realtime EFIs
+  [PATCH 13/50] xfs_repair: adjust rtbitmap/rtsummary word updates to
+  [PATCH 15/50] xfs_repair: refactor offsetof+sizeof to offsetofend
+  [PATCH 16/50] xfs_repair: improve rtbitmap discrepancy reporting
+  [PATCH 21/50] xfs_repair: find and clobber rtgroup bitmap and summary
+  [PATCH 22/50] xfs_repair: support realtime superblocks
+  [PATCH 23/50] xfs_repair: repair rtbitmap and rtsummary block headers
+  [PATCH 25/50] xfs_db: fix the rtblock and rtextent commands for
+  [PATCH 26/50] xfs_db: fix rtconvert to handle segmented rtblocks
+  [PATCH 27/50] xfs_db: listify the definition of enum typnm
+  [PATCH 28/50] xfs_db: support dumping realtime group data and
+  [PATCH 29/50] xfs_db: support changing the label and uuid of rt
+  [PATCH 30/50] xfs_db: enable conversion of rt space units
+  [PATCH 32/50] xfs_db: metadump realtime devices
+  [PATCH 33/50] xfs_db: dump rt bitmap blocks
+  [PATCH 34/50] xfs_db: dump rt summary blocks
+  [PATCH 35/50] xfs_db: report rt group and block number in the bmap
+  [PATCH 36/50] xfs_mdrestore: restore rt group superblocks to realtime
+  [PATCH 37/50] xfs_io: support scrubbing rtgroup metadata
+  [PATCH 38/50] xfs_io: support scrubbing rtgroup metadata paths
+  [PATCH 39/50] xfs_io: add a command to display allocation group
+  [PATCH 40/50] xfs_io: add a command to display realtime group
+  [PATCH 41/50] xfs_io: display rt group in verbose bmap output
+  [PATCH 42/50] xfs_io: display rt group in verbose fsmap output
+  [PATCH 43/50] xfs_spaceman: report on realtime group health
+  [PATCH 44/50] xfs_scrub: scrub realtime allocation group metadata
+  [PATCH 45/50] xfs_scrub: check rtgroup metadata directory connections
+  [PATCH 46/50] xfs_scrub: call GETFSMAP for each rt group in parallel
+  [PATCH 47/50] xfs_scrub: trim realtime volumes too
+  [PATCH 48/50] xfs_scrub: use histograms to speed up phase 8 on the
+  [PATCH 49/50] mkfs: add headers to realtime bitmap blocks
+  [PATCH 50/50] mkfs: format realtime groups
+[PATCHSET v5.8 8/9] xfsprogs: store quota files in the metadir
+  [PATCH 1/7] libfrog: scrub quota file metapaths
+  [PATCH 2/7] xfs_db: support metadir quotas
+  [PATCH 3/7] xfs_repair: refactor quota inumber handling
+  [PATCH 4/7] xfs_repair: hoist the secondary sb qflags handling
+  [PATCH 5/7] xfs_repair: support quota inodes in the metadata
+  [PATCH 6/7] xfs_repair: try not to trash qflags on metadir
+  [PATCH 7/7] mkfs: add quota flags when setting up filesystem
+[PATCHSET v5.8 9/9] xfsprogs: enable quota for realtime voluems
+  [PATCH 1/2] xfs_quota: report warning limits for realtime space
+  [PATCH 2/2] mkfs: enable rt quota options
+
+--D
