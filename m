@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC44148827
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:56:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4032D148827
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:57:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733529411; cv=none; b=tUsk1UcG3PEZRQ4ZgwXqXJTmPctEWz7F1SzfpT+hZSZJWNd93xGeZ/G+uRrngAoa5W5oDLEhCxLYRZu6nCteB+z2t3DmLJLFUhkoZeAeAcX81VG40LGfCOaTIr7fP5/Ug+7oxgo3gEfwU5tBDV0Aq/2GBYTckzQJBHOUcDxkCL4=
+	t=1733529426; cv=none; b=QxN1iFq/0kCQA/QQ5Wyjzd6ADue+YEeR+OzWNx76/BZXGDbM2qywnbyk/3nMcVAPS7aTo6wQxbp6LnmPZzAfj9WZ7YCGxumK4+GxQYNOja86OQmpv/JnKXy6x/K9vL4qMOAHohQtP6WoweJ8dQqjKcUOEPIEVApFbSn5Ajxi0hM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733529411; c=relaxed/simple;
-	bh=bcOsnCCU0+ioyTyXsyHLCHWmFsplb/AZHSKR+X6z/bs=;
+	s=arc-20240116; t=1733529426; c=relaxed/simple;
+	bh=q4lay0O7Hk/yYYg696jBQ5QmCgtE8NeoflfGnkh161g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HNe6qFdt0sUTDda/p1jcbphKrZgGRWL7KQ1rWrFAxWvWa9PdcRh5oPXkjMOqA7xEjcQefFgRgPTAnYNagqya0q17tiDUP4rKyVPVxhEovlSCIkChOF7I0b4UtOG2wcnlQvPGSafWzTu5TrC+gctsiDV9OL6ulFDAakdVTdw9cGU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e13MdV1v; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HjoJ1ADyOWGayJyb3nqYsZ5CKU0as4/b+VPZF0cml0pz7i6vydPW1fKMweXtcuNYKVhvRgmzr2nXp56294IhgCD2pHm07kUftqlpIEsqF0fHwgHWEy5YxbpspFhHf7biqYqqPFlA8bXftadOIoZRJThzxVtaHEcMjWNPG88/M/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BEm16Kl0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e13MdV1v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75498C4CED2;
-	Fri,  6 Dec 2024 23:56:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BEm16Kl0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13E4EC4CED1;
+	Fri,  6 Dec 2024 23:57:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733529410;
-	bh=bcOsnCCU0+ioyTyXsyHLCHWmFsplb/AZHSKR+X6z/bs=;
+	s=k20201202; t=1733529426;
+	bh=q4lay0O7Hk/yYYg696jBQ5QmCgtE8NeoflfGnkh161g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=e13MdV1vYXh4rsTa+NuKTf3bdFqHsieP3WVWaBc58u/D4rfvvfZpB8rMO4fO2jb7r
-	 p9fPrteqKmrJLurJmG0/HuDeCO18Oy2Eh8B9kxtI/XfKYffJykbmAHgEaCaGl6GT+s
-	 RVKv697Z0elZPz0Wz/8b1RavqZvL7ag74AJPoKosnkG2dVrUWFqAIam9AZ5f03oau0
-	 ecwmlQvpYIr08f+nF8xjL0MUjY0xcvOyIzMkVkOK7Zkinb4TEuz9So6ya6LrSzgvUe
-	 ZapiSE3z2aYpcTJgBmYOayrpUczi/Nsgt6+mZNSqvAbDJGewNI+vySCWBII0ndXvMf
-	 +hJKGTVMAKbzw==
-Date: Fri, 06 Dec 2024 15:56:50 -0800
-Subject: [PATCH 21/46] xfs: encode the rtbitmap in big endian format
+	b=BEm16Kl0v4W6DRqYMd7Be00rGwCoWNtfXru90cMQHjr/sO8KaNOnzi/ZQImUENXgX
+	 HiH3xzVKnuV5QmyYtLyvMWVS46Ii6EppV+yq1xwgfPv9wpPDKywWf9iBp/5WR8DVZP
+	 45AzT/Opke0iOOBX9GD3DmWoKGYmgaZn5nJP9rrhfglWSvNm9jLxb90OgfD/sPO+Hg
+	 wd/A0eilMdmLt8HBQbTUinRiD0xQRUWdsUubsKUSPfJx3wz5H5UsSDQ4em1dTpWbp8
+	 upFJ6/8ul8yOW8HQH3cLplemUbgP0vggk//6MYMlVDvhxJjIkf7dX7TfoDZ4fV2hOU
+	 OlrcWNkb6i7XQ==
+Date: Fri, 06 Dec 2024 15:57:05 -0800
+Subject: [PATCH 22/46] xfs: encode the rtsummary in big endian format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352750316.124560.15446416951033337147.stgit@frogsfrogsfrogs>
+Message-ID: <173352750331.124560.16924279203812191459.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 References: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,63 +45,65 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: eba42c2c53c8b8905307b702c93dffef0719a896
+Source kernel commit: a2c28367396a85f2d9cfb22acfcedcff08dd1c3c
 
-Currently, the ondisk realtime bitmap file is accessed in units of
-32-bit words.  There's no endian translation of the contents of this
-file, which means that the Bad Things Happen(tm) if you go from (say)
-x86 to powerpc.  Since we have a new feature flag, let's take the
-opportunity to enforce an endianness on the file.
+Currently, the ondisk realtime summary file counters are accessed in
+units of 32-bit words.  There's no endian translation of the contents of
+this file, which means that the Bad Things Happen(tm) if you go from
+(say) x86 to powerpc.  Since we have a new feature flag, let's take the
+opportunity to enforce an endianness on the file.  Encode the summary
+information in big endian format, like most of the rest of the
+filesystem.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
  libxfs/xfs_format.h   |    4 +++-
- libxfs/xfs_rtbitmap.h |    7 ++++++-
- 2 files changed, 9 insertions(+), 2 deletions(-)
+ libxfs/xfs_rtbitmap.h |    7 +++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 016ee4ff537440..cd9457ed5873fe 100644
+index cd9457ed5873fe..f56ff9f43c218f 100644
 --- a/libxfs/xfs_format.h
 +++ b/libxfs/xfs_format.h
-@@ -709,10 +709,12 @@ struct xfs_agfl {
+@@ -719,10 +719,12 @@ union xfs_rtword_raw {
  
  /*
-  * Realtime bitmap information is accessed by the word, which is currently
+  * Realtime summary counts are accessed by the word, which is currently
 - * stored in host-endian format.
 + * stored in host-endian format.  Starting with the realtime groups feature,
 + * the words are stored in be32 ondisk.
   */
- union xfs_rtword_raw {
+ union xfs_suminfo_raw {
  	__u32		old;
 +	__be32		rtg;
  };
  
  /*
 diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index 2286a98ecb32bb..f9c0d241590104 100644
+index f9c0d241590104..7be76490a31879 100644
 --- a/libxfs/xfs_rtbitmap.h
 +++ b/libxfs/xfs_rtbitmap.h
-@@ -210,6 +210,8 @@ xfs_rtbitmap_getword(
+@@ -300,6 +300,8 @@ xfs_suminfo_get(
  {
- 	union xfs_rtword_raw	*word = xfs_rbmblock_wordptr(args, index);
+ 	union xfs_suminfo_raw	*info = xfs_rsumblock_infoptr(args, index);
  
 +	if (xfs_has_rtgroups(args->mp))
-+		return be32_to_cpu(word->rtg);
- 	return word->old;
++		return be32_to_cpu(info->rtg);
+ 	return info->old;
  }
  
-@@ -222,7 +224,10 @@ xfs_rtbitmap_setword(
+@@ -312,6 +314,11 @@ xfs_suminfo_add(
  {
- 	union xfs_rtword_raw	*word = xfs_rbmblock_wordptr(args, index);
+ 	union xfs_suminfo_raw	*info = xfs_rsumblock_infoptr(args, index);
  
--	word->old = value;
-+	if (xfs_has_rtgroups(args->mp))
-+		word->rtg = cpu_to_be32(value);
-+	else
-+		word->old = value;
++	if (xfs_has_rtgroups(args->mp)) {
++		be32_add_cpu(&info->rtg, delta);
++		return be32_to_cpu(info->rtg);
++	}
++
+ 	info->old += delta;
+ 	return info->old;
  }
- 
- /*
 
