@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22C851F3D3D
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:48:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 307D61F3D3D
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:48:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733528911; cv=none; b=jYvDUimodtHM5+/pRCes5lJ8h8xUeTGLI20OqR++tzMMnOnK+5AXATlPTZEyHny8xuRZuuIxz3fnF0PNX4pdTueB9RWp2CB+WuC7sH89wEP3QF8K8qYUEGMUXfhTBOstPFwfCS4WdHarmNg+3UhoseISWoc2EW3TumJjE/LB2qs=
+	t=1733528927; cv=none; b=aKL9T7W0EWNp5GwrH5Febym05KOGPkj7Hp9HUPJoEArz2wgtp1R9Y8pphwAtcxdH5f8lzbHJsp2HCWgcgk3J2glWQUJr33+mcmCSp9vWTukdxOo+ARaIz17jMFmKV+yVVWENo/raOmFKbzVITbIbBikJGmEtnlWfSHN705I8U7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733528911; c=relaxed/simple;
-	bh=U0xNar/9dHFHgN6epq09cPXaYm90nXz00NLyuKkwW20=;
+	s=arc-20240116; t=1733528927; c=relaxed/simple;
+	bh=rTu67UyeQ3mwj1NH6uwAT37q1TOaGK1+Lw55YUVlN34=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=APrtieC+tn2P/yRqE7zWWWxq5GEo/+MfX+sgph60QEKkq+9aW5WFofGuStQWubwRLRCuaxKGwmlSxdW9VYfaVtJdysxHedETf2+pmG+C+7utazS+IC6lFdgTqbX06TO9OISKsUYTYd8j0Emd4jxq6uAkKkof0m0Jdll8xoo0ajo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mXPe1izR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SeFkaTQ2y0C73v3hNG/kGcZWIU17w+ZmicvFd3nsNL9iexf79yaqAd7tHDid1uarQhtcekLkriOVByVDP49w7VmWa4Y5cJ5qUkERllTjoReZQ1w0n2jsfzjbdttHvssDTgx3iG90N+59vsDUUeakMHNd3xv1MGyQ2AuaZjacOMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OE6Av5b8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mXPe1izR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE871C4CED1;
-	Fri,  6 Dec 2024 23:48:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OE6Av5b8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 952EDC4CED1;
+	Fri,  6 Dec 2024 23:48:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733528911;
-	bh=U0xNar/9dHFHgN6epq09cPXaYm90nXz00NLyuKkwW20=;
+	s=k20201202; t=1733528926;
+	bh=rTu67UyeQ3mwj1NH6uwAT37q1TOaGK1+Lw55YUVlN34=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mXPe1izRCL5n0D5wB0LWKr3bhW4Z9V3aTeroREtib+oTytX3DbXX2exImrgd88flb
-	 X8vcI5FwCLcWbS1/cwHY3TIxXtPVgWmF71yLxKBXS4YBUv3MYwoYaOcnCZKt177i+B
-	 Ozh9/rz0qs/w1Y1tdfnBFrd/IEbwauRSrg32qSLANi2EWwkPbpiJe2ern6ftFMsqMN
-	 kMFyA8yKwfyGAbaGVsFEMHkJkRMXGbiyGIOioAhKyK0y9u8pUWhO/A+f99uv70Y000
-	 PBej39tU6rML8FV94SO7rBxoA7fossEmJeNA87aHnW+i0XPSoap3hwah2hE6vB75iS
-	 hM+k9GijFmGQQ==
-Date: Fri, 06 Dec 2024 15:48:30 -0800
-Subject: [PATCH 34/41] xfs_repair: adjust keep_fsinos to handle metadata
- directories
+	b=OE6Av5b8qV/jF4QkrWPt1RL+m+obrEDqUX5qJUjsX6aKxkOERET4WiqYq8eUV2mNc
+	 5vlIdbLt339BW1ZzN7iTonI/DwpCQAxz0glXXaNM8rBxQg5/b9m6atFzloGLnfBLx2
+	 IeTSOf0KozQ3gDSqxQ9/AZF0asuZ58vAkWytR59DpZxeMECswBVZn5pygHWmeoM1K/
+	 WGfizZQupes5z2yHmUwmROOv5h7v6mGn0bufBnLiuXBdD78AFt7GJ+tbqh9Agcc/b9
+	 dZlHg1aA5OacIPKxQrBIL6snFNGuZVzeYvGY7HHAmO0MQITaOdLRMl/RzCJa44FVLD
+	 t7Z+/92cSnP7w==
+Date: Fri, 06 Dec 2024 15:48:46 -0800
+Subject: [PATCH 35/41] xfs_repair: metadata dirs are never plausible root dirs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352748756.122992.15190773572152273320.stgit@frogsfrogsfrogs>
+Message-ID: <173352748771.122992.7993160341325290029.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 References: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,39 +45,35 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In keep_fsinos, mark the root of the metadata directory tree as inuse.
-The realtime bitmap and summary files still come after the root
-directories, so this is a fairly simple change to the loop test.
+Metadata directories are never candidates to be the root of the
+user-accessible directory tree.  Update has_plausible_rootdir to ignore
+them all, as well as detecting the case where the superblock incorrectly
+thinks both trees have the same root.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- repair/phase5.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ repair/xfs_repair.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 86b1f681a72bb8..a5e19998b97061 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -419,13 +419,18 @@ static void
- keep_fsinos(xfs_mount_t *mp)
- {
- 	ino_tree_node_t		*irec;
--	int			i;
-+	unsigned int		inuse = xfs_rootrec_inodes_inuse(mp), i;
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 70cab1ad852a21..30b014898c3203 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -546,9 +546,15 @@ has_plausible_rootdir(
+ 	int			error;
+ 	bool			ret = false;
  
- 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
- 			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
- 
--	for (i = 0; i < 3; i++)
-+	for (i = 0; i < inuse; i++) {
- 		set_inode_used(irec, i);
++	if (xfs_has_metadir(mp) &&
++	    mp->m_sb.sb_rootino == mp->m_sb.sb_metadirino)
++		goto out;
 +
-+		/* Everything after the root dir is metadata */
-+		if (i)
-+			set_inode_is_meta(irec, i);
-+	}
- }
+ 	error = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &ip);
+ 	if (error)
+ 		goto out;
++	if (xfs_is_metadir_inode(ip))
++		goto out_rele;
+ 	if (!S_ISDIR(VFS_I(ip)->i_mode))
+ 		goto out_rele;
  
- static void
 
