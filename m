@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B93D1DBB2E
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:59:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAFD71DBB2E
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:59:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733529582; cv=none; b=E3+LwawxZQk00xxJ1Gnq05KJpY9DE/r4Ed0wJhICSocWCJqHEgbIkoOT4FSMJxlUY691hCXOv4qwbcIF1/Mbjbfh2ly1z9V8XROB6MiwcvaiWSxSJM6cI+ymljhiEpAa6ODHxzj0ulhw70Xmq2ALWwHxE876i4icJWnDpLyzYxE=
+	t=1733529598; cv=none; b=n3+SGmiH9WE3dfZWEq3TxZCKD0gucNAE/j8K6e8Dq6KdNoj+LGMfidMcs/iTROmLaKgj14y+AW6bCZ+guPKoZNDB5se0GlRgDjkDTap5lTpq1BgZqJ+ignyycGi3pST2JdNCq8OEZGlFqrD/mV7ivgkWBqqsVTOYsZ+DxH0CHxE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733529582; c=relaxed/simple;
-	bh=r+JOey2kdyWb8sZmQ8+lm/Sl9KT9WvbT+ivXj9RbVjU=;
+	s=arc-20240116; t=1733529598; c=relaxed/simple;
+	bh=BoEuKslmlunmGK9XsqGgfqZZWmFCRaAYMJRoD9pOqNs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZaEotORu+7PAfvAgfzP9iyGkNTYarSayRaYhqVabRR9Sz984THTgGffzAusoxkx8CJOR2KriuVfBhum8vTF4ab25YaItMaCpKXlXMVEVN94Rqbwzk40cRQgii0dr7HGrya5cTdTuSIWBKlgm4HKzbRFQu99nxRcASrkc2lR1oG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G+uzZmpP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=OZigmgyKtX4/XPpdvcxxvTb3fkK1Mmscq+HZdcI/0G27cYqTyDihUIG5p3FuNqSDp+bfFa7gZtdK4Nid3JI6cGoNJsQvMVcfq0RrDetvfIXuh+UGR9XHpzi64ByAbZ6vXPHSUFlxzo8fwfgu1d0AnZ395Gjdjah6uc2DdbcfwLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fyQ3eKJV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G+uzZmpP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 264BBC4CED1;
-	Fri,  6 Dec 2024 23:59:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fyQ3eKJV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2FDEC4CED2;
+	Fri,  6 Dec 2024 23:59:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733529582;
-	bh=r+JOey2kdyWb8sZmQ8+lm/Sl9KT9WvbT+ivXj9RbVjU=;
+	s=k20201202; t=1733529597;
+	bh=BoEuKslmlunmGK9XsqGgfqZZWmFCRaAYMJRoD9pOqNs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=G+uzZmpPvcRQaIvRhMhxbUJPs1rfUwlioEhOCTMUE/iCMSiKnTbjEcTWT9uy0oqpl
-	 R3evas1sBZTXel/EI+fc336KGny80IOs+QrJM9VmitNT0A6MWv9DkDKCJaSKxRMjwW
-	 tsOdKV+NQjLuLQTiVl6xWhbkgjf4jJdF/Nzc7AnPDY5+iHdwtUk6DGmAwLdXbPdtrv
-	 L22MlK+skkktScc7euNCqBYY9PjGU6F/bPvgfi+cJib13lUAW+b9l3zTBfuD9QUhd/
-	 vBXH0Kk/kozox7jjQxa2e1KSoVBcTCViR4AzDm+o/09c8nemlP8oL+IOwSyn86VwOR
-	 a1QRQAZ0PvbYw==
-Date: Fri, 06 Dec 2024 15:59:41 -0800
-Subject: [PATCH 32/46] xfs: create helpers to deal with rounding xfs_fileoff_t
+	b=fyQ3eKJVar7u3qS9txQeRhSm4dnA5/Auv2mNtY/WKSnAe/ARGNGzSlCEq6MzV1xNh
+	 2/YvvvYrd+lg03tHN8nz4dQj8gcEGRnKK5pFWLNfyMhvtqjzKxrPGczq5KrV4gQ0A6
+	 dpEuHkBVIbLYfr5hsGHsrIeGVmsEzG1Ma8925jeG73UjUHZwf5vp8pQzSIjr4iTv9Y
+	 TWBRC4hPubsSRZvygRRS72PR7sEY13E1J5Xhbp9c8hFvmyMPvgqDP1H1LIfONRHeqk
+	 2ChHNk+ue+HTQs3YEU9LOKK+heBTiseR9RNrNCmXi+i4vhVlxd2FXeAKEh48Fdld68
+	 2gv9LZwaYN/0g==
+Date: Fri, 06 Dec 2024 15:59:57 -0800
+Subject: [PATCH 33/46] xfs: create helpers to deal with rounding xfs_filblks_t
  to rtx boundaries
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352750484.124560.12006693185286070177.stgit@frogsfrogsfrogs>
+Message-ID: <173352750500.124560.16611607999549230755.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 References: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,71 +46,79 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: fd7588fa6475771fe95f44011aea268c5d841da2
+Source kernel commit: 3f0205ebe71f92c1b98ca580de8df6eea631cfd2
 
 We're about to segment xfs_rtblock_t addresses, so we must create
-type-specific helpers to do rt extent rounding of file block offsets
-because the rtb helpers soon will not do the right thing there.
+type-specific helpers to do rt extent rounding of file mapping block
+lengths because the rtb helpers soon will not do the right thing there.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rtbitmap.h |   17 +++++++++++++----
- repair/dinode.c       |    4 ++--
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ libxfs/xfs_rtbitmap.c |    2 +-
+ libxfs/xfs_rtbitmap.h |   30 +++++++++++++++++++++---------
+ 2 files changed, 22 insertions(+), 10 deletions(-)
 
 
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 44c801f31d5dc3..e304f07189d3c9 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1119,7 +1119,7 @@ xfs_rtfree_blocks(
+ 
+ 	ASSERT(rtlen <= XFS_MAX_BMBT_EXTLEN);
+ 
+-	mod = xfs_rtb_to_rtxoff(mp, rtlen);
++	mod = xfs_blen_to_rtxoff(mp, rtlen);
+ 	if (mod) {
+ 		ASSERT(mod == 0);
+ 		return -EIO;
 diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index 7be76490a31879..dc2b8beadfc331 100644
+index dc2b8beadfc331..e0fb36f181cc9e 100644
 --- a/libxfs/xfs_rtbitmap.h
 +++ b/libxfs/xfs_rtbitmap.h
-@@ -135,13 +135,22 @@ xfs_rtb_roundup_rtx(
- 	return roundup_64(rtbno, mp->m_sb.sb_rextsize);
+@@ -101,6 +101,27 @@ xfs_blen_to_rtbxlen(
+ 	return div_u64(blen, mp->m_sb.sb_rextsize);
  }
  
--/* Round this rtblock down to the nearest rt extent size. */
-+/* Round this file block offset up to the nearest rt extent size. */
- static inline xfs_rtblock_t
--xfs_rtb_rounddown_rtx(
-+xfs_fileoff_roundup_rtx(
- 	struct xfs_mount	*mp,
--	xfs_rtblock_t		rtbno)
-+	xfs_fileoff_t		off)
- {
--	return rounddown_64(rtbno, mp->m_sb.sb_rextsize);
-+	return roundup_64(off, mp->m_sb.sb_rextsize);
++/* Return the offset of a file block length within an rt extent. */
++static inline xfs_extlen_t
++xfs_blen_to_rtxoff(
++	struct xfs_mount	*mp,
++	xfs_filblks_t		blen)
++{
++	if (likely(mp->m_rtxblklog >= 0))
++		return blen & mp->m_rtxblkmask;
++
++	return do_div(blen, mp->m_sb.sb_rextsize);
 +}
 +
-+/* Round this file block offset down to the nearest rt extent size. */
-+static inline xfs_rtblock_t
-+xfs_fileoff_rounddown_rtx(
++/* Round this block count up to the nearest rt extent size. */
++static inline xfs_filblks_t
++xfs_blen_roundup_rtx(
 +	struct xfs_mount	*mp,
-+	xfs_fileoff_t		off)
++	xfs_filblks_t		blen)
 +{
-+	return rounddown_64(off, mp->m_sb.sb_rextsize);
++	return roundup_64(blen, mp->m_sb.sb_rextsize);
++}
++
+ /* Convert an rt block number into an rt extent number. */
+ static inline xfs_rtxnum_t
+ xfs_rtb_to_rtx(
+@@ -126,15 +147,6 @@ xfs_rtb_to_rtxoff(
+ 	return do_div(rtbno, mp->m_sb.sb_rextsize);
  }
  
- /* Convert an rt extent number to a file block offset in the rt bitmap file. */
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 2185214ac41bdf..56c7257d3766f1 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -197,7 +197,7 @@ process_rt_rec_dups(
- 	xfs_rtblock_t		b;
- 	xfs_rtxnum_t		ext;
- 
--	for (b = xfs_rtb_rounddown_rtx(mp, irec->br_startblock);
-+	for (b = irec->br_startblock;
- 	     b < irec->br_startblock + irec->br_blockcount;
- 	     b += mp->m_sb.sb_rextsize) {
- 		ext = xfs_rtb_to_rtx(mp, b);
-@@ -245,7 +245,7 @@ process_rt_rec_state(
- 				do_error(
- _("data fork in rt inode %" PRIu64 " found invalid rt extent %"PRIu64" state %d at rt block %"PRIu64"\n"),
- 					ino, ext, state, b);
--			b = xfs_rtb_roundup_rtx(mp, b);
-+			b += mp->m_sb.sb_rextsize - mod;
- 			continue;
- 		}
- 
+-/* Round this rtblock up to the nearest rt extent size. */
+-static inline xfs_rtblock_t
+-xfs_rtb_roundup_rtx(
+-	struct xfs_mount	*mp,
+-	xfs_rtblock_t		rtbno)
+-{
+-	return roundup_64(rtbno, mp->m_sb.sb_rextsize);
+-}
+-
+ /* Round this file block offset up to the nearest rt extent size. */
+ static inline xfs_rtblock_t
+ xfs_fileoff_roundup_rtx(
 
