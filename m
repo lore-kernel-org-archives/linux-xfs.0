@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38D8F212FAD
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:30:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C441AAA24
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:30:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733527801; cv=none; b=AQ0SVjpbxcyHfRktK3shQMZV3ACfWy+c9ZGB8wvAkTzzli0VGOPWy84H2yg86zZSLle+Cms9GPWbbAGC62aLTpDhlLp2JHfHxzk7wZsyNBB2dY9S9UsUWDbQNUEs1uBzxtIO+uaJrLJoMFnqIybnq2MRkSmA23CpaZb2iRO5Jis=
+	t=1733527817; cv=none; b=JRAp1/ohrC1ya10sfgrodcb/mDRDyZRi0mS91ApzWN1alSHnlxvMHSWEA5sp/16zRD1T7Fa4Lxe5dtFx9yAlrfjD8zZiJVFefU0JXy4gLqXlIJXjTT8sezA/xSqf8+oaVNfCA6KKioD+e+y7+c2Z0tOiWaQ/AnFgKbZqUJgQbgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733527801; c=relaxed/simple;
-	bh=r4LRIVltITO21AbPivmzhRo80jBA8npW90ONb+XUkYY=;
+	s=arc-20240116; t=1733527817; c=relaxed/simple;
+	bh=jVc7FyzA78vPmgqhuFB8iAX/wZdr2HsbanBsJnOeThU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HcJqayrLC5Py7Lq7BvX4zuEL5Z3tW4LX+6ivr18F1dpPyRTf0YI4EIZ6dmAZeXaPjbv5RVADNuKRlysmeFOLfZk5AwWeGtbY5kNeNUuAO+aOqxitD6Hwc4Q+CZ5ScLKSDPYBVOlA4KIjlP9TYT+KcroD19DfDhA/1FnvKgMk1MM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UHIKCg2L; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=P65XsIWm0fzz05twYDA1/yUHCO2SRzpRD+vYUeGr2rUk+V32ZViyzCaXQkyCQED+OTgDw8WzqylKVu0IcC2sXNfB5sbSVFPakyYq+qCsUz68HmmSimyxrlagot5XuEUdC25lJ2cgjVT3rAWf1ZeLD2j7OS1jj92OEjUfz1/fZuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K42WqjQu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UHIKCg2L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D338C4CED1;
-	Fri,  6 Dec 2024 23:30:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K42WqjQu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0ECC4CED1;
+	Fri,  6 Dec 2024 23:30:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733527801;
-	bh=r4LRIVltITO21AbPivmzhRo80jBA8npW90ONb+XUkYY=;
+	s=k20201202; t=1733527816;
+	bh=jVc7FyzA78vPmgqhuFB8iAX/wZdr2HsbanBsJnOeThU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UHIKCg2LfNcUkreauaIkNrcJmrZjbqJZmOQyjVJ/Gq01IXL9IvAiRVrm43h39ORPP
-	 wKYOxg1u72PYAXVDto99TxmcQB4ZIMhv4VLMVYU2JlMf12SW4pQBY6REj/p24mcQ5K
-	 56f+OT8sQ9ff9NjoKaW7VxGMA3tQk+6MCMxtjbvH0bJUwZaKHgBOTsS35aVp2vZWHx
-	 T2hvOJG9qAzCZidugF5F2BWUhpBgmHxIg28T3VXQ7Zt/utozlv7e9s2iKKyynws7M7
-	 iB6Mnh6FH5KMLrIW+yRof+0Pzb9hbXbgXVzkd653gf3ATxyseNGVQhEwSPENGnFrN6
-	 5DliOuB3xqarA==
-Date: Fri, 06 Dec 2024 15:30:00 -0800
-Subject: [PATCH 1/2] man: fix ioctl_xfs_commit_range man page install
+	b=K42WqjQuPZ9ljxVa63qUu2u9HR/xvHGNhnICg/LlV5TxPq14CZl8/O4xBMaXG59Ck
+	 ame9/1eNY2X4iJ6naLrRfAwvN+dlpRihl/KuZEHrDfk/WblaQV+IrPhC+B6fMTrvyK
+	 GR8O4WJ3bMYcH2gt566M4JTOtzrCSy+pDOa/tiij4LdUCheulOglcyTqV18glBgKuM
+	 DGenJ6Ov+bOxFuvehBAdBVbXVoE8mEhJxcPKm8NU1IVXVPRFs5d3X5X0kA76q47cA9
+	 oxUji40UCao1dsaQ94zfrPo3rCitqACvER623Wc+JU1cOChHjJPWzc2qNBhHRLUY/x
+	 3FAdQRdR4zJBg==
+Date: Fri, 06 Dec 2024 15:30:16 -0800
+Subject: [PATCH 2/2] man: document the -n parent mkfs option
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: jpalus@fastmail.com, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352746316.121646.2193613203383089524.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173352746331.121646.4339047798362935705.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352746299.121646.10555086770297720030.stgit@frogsfrogsfrogs>
 References: <173352746299.121646.10555086770297720030.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,34 +43,38 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Jan Palus <jpalus@fastmail.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-INSTALL_MAN uses first symbol in .SH NAME section for both source and
-destination filename hence it needs to match current filename. since
-ioctl_xfs_commit_range.2 documents both ioctl_xfs_start_commit as well
-as ioctl_xfs_commit_range ensure they are listed in order INSTALL_MAN
-expects.
+Document the -n parent option to mkfs.xfs so that users will actually
+know how to turn on directory parent pointers.
 
-Signed-off-by: Jan Palus <jpalus@fastmail.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- man/man2/ioctl_xfs_commit_range.2 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ man/man8/mkfs.xfs.8.in |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 
-diff --git a/man/man2/ioctl_xfs_commit_range.2 b/man/man2/ioctl_xfs_commit_range.2
-index 3244e52c3e0946..4cd074ed00c6f2 100644
---- a/man/man2/ioctl_xfs_commit_range.2
-+++ b/man/man2/ioctl_xfs_commit_range.2
-@@ -22,8 +22,8 @@
- .\" %%%LICENSE_END
- .TH IOCTL-XFS-COMMIT-RANGE 2  2024-02-18 "XFS"
- .SH NAME
--ioctl_xfs_start_commit \- prepare to exchange the contents of two files
- ioctl_xfs_commit_range \- conditionally exchange the contents of parts of two files
-+ioctl_xfs_start_commit \- prepare to exchange the contents of two files
- .SH SYNOPSIS
- .br
- .B #include <sys/ioctl.h>
+diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+index a854b0e87cb1a2..e56c8f31a52c78 100644
+--- a/man/man8/mkfs.xfs.8.in
++++ b/man/man8/mkfs.xfs.8.in
+@@ -902,6 +902,18 @@ .SH OPTIONS
+ enabled, and cannot be turned off.
+ .IP
+ In other words, this option is only tunable on the deprecated V4 format.
++.TP
++.BI parent= value
++This feature creates back references from child files to parent directories
++so that online repair can reconstruct broken directory files.
++The value is either 0 to disable the feature, or 1 to create parent pointers.
++
++By default,
++.B mkfs.xfs
++will not create parent pointers.
++This feature is only available for filesystems created with the (default)
++.B \-m crc=1
++option set.
+ .RE
+ .PP
+ .PD 0
 
