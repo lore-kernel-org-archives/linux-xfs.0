@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1674D22C6DC
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:27:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05A5A22C6DC;
+	Fri,  6 Dec 2024 23:28:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733527663; cv=none; b=ZQfbdaY9uwmmHokKDUgHyD2OUgy0CAugn2vJCTrN4hVy1aSIIo0UwZZ+Zlw8XOOU4NB7CD8QUcNwk6I71+iOdWnzUqIW+p6+vmk9x/SG3Mli88w/E5YPaIxnSwPcWZZ14q1dBomrMl43nCx4++ZklEM3k8ZOueZQZ5KYhKiiwmo=
+	t=1733527740; cv=none; b=sTOh5+zLOYOjL8lLUn6vCkRPSWYgVGMq46r51UaZJ4y/cSg8TOxoEKWg1wHRTvhkgXo3uRRRF8gfC6q7WuUEn9LI7rY+zBfKV+l2TqOaVeeW5TOlICXLfrT8vJ0x05O27J8utmz8Jdg2veYW/NQoFsGJpmsb0JN100uk9MaQdLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733527663; c=relaxed/simple;
-	bh=vkB9GK4mnq3DrWQZKcGI2eScEiqtoYafGM1mt5zCKDI=;
+	s=arc-20240116; t=1733527740; c=relaxed/simple;
+	bh=RYWePNtpBn+RCbQSwogjWrVFUw65rsh2w1yPLebtyXE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QwRVdTnLuxqyVGmLrT8YDrrE8dVgcen5JjF63SX7I0JQewLO0o2im2jESqUu6cufs2R4++IL5nnUNAFK0HIFKcWYnnBNeL2A8e7pWYFMW492uMKBoPiXjZwowKxE9dqutjYqswIH4TWMAez2pmBSPUtWBq9+w2kJk6+kkPN5NAU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XqioSQZy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Y+udWVM2rzuK1gSgRs7x52RPTd18i/WZ1e5F81FxVHCZ5FMo4vCRD1mxn9J5VckmvTYQ/fIZQqFziLysvLC0SxQ1qfBHUh8uHqYKb0IXQkh/masATAuMwCnU+dfiHq9Ew4xoSTnkywnOICfNUiem5ioUxRSfearukArgcu7URvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eHjcKEI7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XqioSQZy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EDC9C4CED1;
-	Fri,  6 Dec 2024 23:27:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eHjcKEI7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 593ECC4CED1;
+	Fri,  6 Dec 2024 23:28:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733527662;
-	bh=vkB9GK4mnq3DrWQZKcGI2eScEiqtoYafGM1mt5zCKDI=;
+	s=k20201202; t=1733527738;
+	bh=RYWePNtpBn+RCbQSwogjWrVFUw65rsh2w1yPLebtyXE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XqioSQZyHg2R5JPY8SCel8f/hmvdVhI8hDHCuVSuaq1vQxjmKMWO0ITsulj+CIC1R
-	 1rV2i/ZTgCxcL17hgbH7gscPYMnCnA+/iTvmY/Sd+qNp2pyDNfnva/76xn2yHm51b9
-	 tv/hbvdknaPrIuKyJW85D3IFcbgpNX+VcNt3HWsb9Pu5dLKGTr8fh//eOalvLxdQj8
-	 jvK+yBeP0diAx4ZlZ5nGaCtQJVADh2gz8p+Uj3gAASPeqm/aTyj9u8icL9Gti/ncWH
-	 sbZanAFvpfzi29B43cTdHQqXTRClm7xPsDsNDfbld6JO8WhmsZh+TI8lUFjxTtN+jv
-	 VIk2SmcBWwcqw==
-Date: Fri, 06 Dec 2024 15:27:42 -0800
-Subject: [PATCHSET v5.8 4/9] mkfs: make protofiles less janky
+	b=eHjcKEI71AApogmeGPoKRwr1G4OFjv8yfUkvpqrd58qsXQ3zFIMywNuZSBsOgYr7E
+	 TQ/yDtGXCHytUw1pM3sbWEs79yqyLLh3gXv4EG4Sfim/6WxyCuLAss5oKwTLZe606t
+	 wbq+gVHHy3aVMsxPRJCVGAaPmnt4fqt6S6pSA8L77kKR10sZ7zidADjNRsHoBHT7aF
+	 +ywRgJ+Iq/Gcb6UDLo+KEE6PgNm9xLaLkJCLYbjpSXzOQiq7yMJVLtNctAgsWpPkp3
+	 rvYZ+KQI8vL5sUdNhIy0w/KwEFHFCpiM3qI5ZyQzSoc3WCEEdgq7YzYaq7k/IBWfrb
+	 L8cOqDfkGFDjA==
+Date: Fri, 06 Dec 2024 15:28:57 -0800
+Subject: [PATCHSET 6/9] xfsprogs: bug fixes for 6.13
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352749310.124368.15119896789476594437.stgit@frogsfrogsfrogs>
+Cc: dan.carpenter@linaro.org, hch@lst.de, stable@vger.kernel.org, hch@lst.de,
+ linux-xfs@vger.kernel.org
+Message-ID: <173352751190.126106.5258055486306925523.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241206232259.GO7837@frogsfrogsfrogs>
 References: <20241206232259.GO7837@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,17 +46,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Here are some minor improvements to the protofile code in mkfs.  First,
-we improve the file copy-in code to avoid allocating gigantic heap
-buffers by replacing it with a SEEK_{DATA,HOLE} loop and only copying
-a fixed size buffer.  Next, we add the ability to pull in extended
-attributes.  Finally, we add a program to generate a protofile from a
-directory tree.
-
-Originally this code refactoring was intended to support more efficient
-construction of rt bitmap and summary files, but that was subsequently
-refactored into libxfs.  However, the cleanups still make the protofile
-code less disgusting, so they're being submitted anyway.
+Bug fixes for 6.13.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -65,25 +56,26 @@ Comments and questions are, as always, welcome.
 
 --D
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=protofiles
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-6.13-fixes
 
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=protofiles
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs-6.13-fixes
 ---
 Commits in this patchset:
- * libxfs: resync libxfs_alloc_file_space interface with the kernel
- * mkfs: support copying in large or sparse files
- * mkfs: support copying in xattrs
- * mkfs: add a utility to generate protofiles
+ * xfs: return a 64-bit block count from xfs_btree_count_blocks
+ * xfs: fix error bailout in xfs_rtginode_create
+ * xfs: update btree keys correctly when _insrec splits an inode root block
+ * xfs: don't call xfs_bmap_same_rtgroup in xfs_bmap_add_extent_hole_delay
+ * xfs: fix sb_spino_align checks for large fsblock sizes
+ * xfs: return from xfs_symlink_verify early on V4 filesystems
 ---
- include/libxfs.h         |    6 +
- libxfs/util.c            |  207 +++++++++++++++++++++++++++--------
- man/man8/xfs_protofile.8 |   33 ++++++
- mkfs/Makefile            |   10 ++
- mkfs/proto.c             |  269 ++++++++++++++++++++++++++++++++++------------
- mkfs/xfs_protofile.in    |  152 ++++++++++++++++++++++++++
- 6 files changed, 557 insertions(+), 120 deletions(-)
- create mode 100644 man/man8/xfs_protofile.8
- create mode 100644 mkfs/xfs_protofile.in
+ libxfs/xfs_bmap.c           |    6 ++----
+ libxfs/xfs_btree.c          |   33 +++++++++++++++++++++++++--------
+ libxfs/xfs_btree.h          |    2 +-
+ libxfs/xfs_ialloc_btree.c   |    4 +++-
+ libxfs/xfs_rtgroup.c        |    2 +-
+ libxfs/xfs_sb.c             |   11 ++++++-----
+ libxfs/xfs_symlink_remote.c |    4 +++-
+ 7 files changed, 41 insertions(+), 21 deletions(-)
 
