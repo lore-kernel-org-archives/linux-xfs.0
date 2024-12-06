@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EECF148827
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:56:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC44148827
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Dec 2024 23:56:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733529395; cv=none; b=eNsWS22NIECO4XeDfRIdvqeTMVmIYEbdJwkWqgxqPgr3rz1yCgUn9xcotYRE5eKqFp7qlFID4Tk/KFOXHsUclpGPqvsGMUYBSkuFsetSkPnm1TxeLy6edvA+ZOitc3johzl9QSyppE8l4K6rU3KZ7vbNmYzQQdC/bN0pWtBIovU=
+	t=1733529411; cv=none; b=tUsk1UcG3PEZRQ4ZgwXqXJTmPctEWz7F1SzfpT+hZSZJWNd93xGeZ/G+uRrngAoa5W5oDLEhCxLYRZu6nCteB+z2t3DmLJLFUhkoZeAeAcX81VG40LGfCOaTIr7fP5/Ug+7oxgo3gEfwU5tBDV0Aq/2GBYTckzQJBHOUcDxkCL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733529395; c=relaxed/simple;
-	bh=bIKkvgb7Ou+BR+ozeEU6hYVd1XqS0rXw5hoIlAza8W0=;
+	s=arc-20240116; t=1733529411; c=relaxed/simple;
+	bh=bcOsnCCU0+ioyTyXsyHLCHWmFsplb/AZHSKR+X6z/bs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=c/TwXMMNGwuxvHykkV6bJNXC9AvLjlwZRgp8AUKNeYjeGa+h1ypeopccOaOFa4R51ncR8MUvlQkrimVoKw0vOVXv9Mpw2zfe+Tq8JjdXpokZQsmOBDU8+sJx371rvZEzfbL2/S119aaTncihSgmey7Oh1V+6COi10t/WV6YYOv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HAVeL/yM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HNe6qFdt0sUTDda/p1jcbphKrZgGRWL7KQ1rWrFAxWvWa9PdcRh5oPXkjMOqA7xEjcQefFgRgPTAnYNagqya0q17tiDUP4rKyVPVxhEovlSCIkChOF7I0b4UtOG2wcnlQvPGSafWzTu5TrC+gctsiDV9OL6ulFDAakdVTdw9cGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e13MdV1v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HAVeL/yM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D391BC4CED1;
-	Fri,  6 Dec 2024 23:56:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e13MdV1v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75498C4CED2;
+	Fri,  6 Dec 2024 23:56:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733529394;
-	bh=bIKkvgb7Ou+BR+ozeEU6hYVd1XqS0rXw5hoIlAza8W0=;
+	s=k20201202; t=1733529410;
+	bh=bcOsnCCU0+ioyTyXsyHLCHWmFsplb/AZHSKR+X6z/bs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HAVeL/yM/rVH0+THxfTO7IiZx0ff7Q+CTm0Y/JgheBMBvQeGneG487lpMUS7X+B31
-	 fHGYTccReS3N3cTlXkvdaKphYjweyoxsXW0Rx+4I2sYthyQAnlxyU0ApCLQnaH109C
-	 KAwmuGNhusxtz7648Y1Q320xIy1BZkaTNK836aj9QZRMShBpKOlowWh+23MJ2LqNLM
-	 CG1gbvoICI7DD8Q9denzvHorl12OkYEEhqYHGROF4Eao0iIBpgKEN3GlTx03JehslA
-	 tqc9kFlhTK4kF8wJLPCJmiTfspoG/FRtrGWE9CFVVZIfPZIeC9N+lwkC24iy+81FQA
-	 Ybu4AGKk5iO9g==
-Date: Fri, 06 Dec 2024 15:56:34 -0800
-Subject: [PATCH 20/46] xfs: add block headers to realtime bitmap and summary
- blocks
+	b=e13MdV1vYXh4rsTa+NuKTf3bdFqHsieP3WVWaBc58u/D4rfvvfZpB8rMO4fO2jb7r
+	 p9fPrteqKmrJLurJmG0/HuDeCO18Oy2Eh8B9kxtI/XfKYffJykbmAHgEaCaGl6GT+s
+	 RVKv697Z0elZPz0Wz/8b1RavqZvL7ag74AJPoKosnkG2dVrUWFqAIam9AZ5f03oau0
+	 ecwmlQvpYIr08f+nF8xjL0MUjY0xcvOyIzMkVkOK7Zkinb4TEuz9So6ya6LrSzgvUe
+	 ZapiSE3z2aYpcTJgBmYOayrpUczi/Nsgt6+mZNSqvAbDJGewNI+vySCWBII0ndXvMf
+	 +hJKGTVMAKbzw==
+Date: Fri, 06 Dec 2024 15:56:50 -0800
+Subject: [PATCH 21/46] xfs: encode the rtbitmap in big endian format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352750301.124560.11373951758236708937.stgit@frogsfrogsfrogs>
+Message-ID: <173352750316.124560.15446416951033337147.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 References: <173352749923.124560.17452697523660805471.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,475 +45,63 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 118895aa9513412b9077a8cae0bc63df8956f9b2
+Source kernel commit: eba42c2c53c8b8905307b702c93dffef0719a896
 
-Upgrade rtbitmap and rtsummary blocks to have self describing metadata
-like most every other thing in XFS.
+Currently, the ondisk realtime bitmap file is accessed in units of
+32-bit words.  There's no endian translation of the contents of this
+file, which means that the Bad Things Happen(tm) if you go from (say)
+x86 to powerpc.  Since we have a new feature flag, let's take the
+opportunity to enforce an endianness on the file.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/xfs_mount.h   |    3 +
- libxfs/xfs_format.h   |   18 ++++++
- libxfs/xfs_ondisk.h   |    1 
- libxfs/xfs_rtbitmap.c |  144 ++++++++++++++++++++++++++++++++++++++++++++-----
- libxfs/xfs_rtbitmap.h |   50 ++++++++++++++++-
- libxfs/xfs_sb.c       |   21 ++++++-
- libxfs/xfs_shared.h   |    2 +
- 7 files changed, 218 insertions(+), 21 deletions(-)
+ libxfs/xfs_format.h   |    4 +++-
+ libxfs/xfs_rtbitmap.h |    7 ++++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index c03246a08a4af3..92c01c52e99e4a 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -101,7 +101,8 @@ typedef struct xfs_mount {
- 	int8_t			m_rgblklog;	/* log2 of rt group sz if possible */
- 	uint			m_blockmask;	/* sb_blocksize-1 */
- 	uint			m_blockwsize;	/* sb_blocksize in words */
--	uint			m_blockwmask;	/* blockwsize-1 */
-+	/* number of rt extents per rt bitmap block if rtgroups enabled */
-+	unsigned int		m_rtx_per_rbmblock;
- 	uint			m_alloc_mxr[2];	/* XFS_ALLOC_BLOCK_MAXRECS */
- 	uint			m_alloc_mnr[2];	/* XFS_ALLOC_BLOCK_MINRECS */
- 	uint			m_bmap_dmxr[2];	/* XFS_BMAP_BLOCK_DMAXRECS */
 diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 3cf044a2d5f2a9..016ee4ff537440 100644
+index 016ee4ff537440..cd9457ed5873fe 100644
 --- a/libxfs/xfs_format.h
 +++ b/libxfs/xfs_format.h
-@@ -1278,6 +1278,24 @@ static inline bool xfs_dinode_is_metadir(const struct xfs_dinode *dip)
- #define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
- #define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
+@@ -709,10 +709,12 @@ struct xfs_agfl {
  
-+/*
-+ * RT bit manipulation macros.
-+ */
-+#define XFS_RTBITMAP_MAGIC	0x424D505A	/* BMPZ */
-+#define XFS_RTSUMMARY_MAGIC	0x53554D59	/* SUMY */
-+
-+struct xfs_rtbuf_blkinfo {
-+	__be32		rt_magic;	/* validity check on block */
-+	__be32		rt_crc;		/* CRC of block */
-+	__be64		rt_owner;	/* inode that owns the block */
-+	__be64		rt_blkno;	/* first block of the buffer */
-+	__be64		rt_lsn;		/* sequence number of last write */
-+	uuid_t		rt_uuid;	/* filesystem we belong to */
-+};
-+
-+#define XFS_RTBUF_CRC_OFF \
-+	offsetof(struct xfs_rtbuf_blkinfo, rt_crc)
-+
  /*
-  * Dquot and dquot block format definitions
+  * Realtime bitmap information is accessed by the word, which is currently
+- * stored in host-endian format.
++ * stored in host-endian format.  Starting with the realtime groups feature,
++ * the words are stored in be32 ondisk.
   */
-diff --git a/libxfs/xfs_ondisk.h b/libxfs/xfs_ondisk.h
-index 38b314113d8f24..6a2bcbc392842c 100644
---- a/libxfs/xfs_ondisk.h
-+++ b/libxfs/xfs_ondisk.h
-@@ -76,6 +76,7 @@ xfs_check_ondisk_structs(void)
- 	/* realtime structures */
- 	XFS_CHECK_STRUCT_SIZE(union xfs_rtword_raw,		4);
- 	XFS_CHECK_STRUCT_SIZE(union xfs_suminfo_raw,		4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_rtbuf_blkinfo,		48);
- 
- 	/*
- 	 * m68k has problems with xfs_attr_leaf_name_remote_t, but we pad it to
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 5e63340668a03d..580e74b7d317db 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -24,23 +24,77 @@
-  * Realtime allocator bitmap functions shared with userspace.
-  */
- 
--/*
-- * Real time buffers need verifiers to avoid runtime warnings during IO.
-- * We don't have anything to verify, however, so these are just dummy
-- * operations.
-- */
-+static xfs_failaddr_t
-+xfs_rtbuf_verify(
-+	struct xfs_buf			*bp)
-+{
-+	struct xfs_mount		*mp = bp->b_mount;
-+	struct xfs_rtbuf_blkinfo	*hdr = bp->b_addr;
-+
-+	if (!xfs_verify_magic(bp, hdr->rt_magic))
-+		return __this_address;
-+	if (!xfs_has_rtgroups(mp))
-+		return __this_address;
-+	if (!xfs_has_crc(mp))
-+		return __this_address;
-+	if (!uuid_equal(&hdr->rt_uuid, &mp->m_sb.sb_meta_uuid))
-+		return __this_address;
-+	if (hdr->rt_blkno != cpu_to_be64(xfs_buf_daddr(bp)))
-+		return __this_address;
-+	return NULL;
-+}
-+
- static void
- xfs_rtbuf_verify_read(
--	struct xfs_buf	*bp)
-+	struct xfs_buf			*bp)
- {
-+	struct xfs_mount		*mp = bp->b_mount;
-+	struct xfs_rtbuf_blkinfo	*hdr = bp->b_addr;
-+	xfs_failaddr_t			fa;
-+
-+	if (!xfs_has_rtgroups(mp))
-+		return;
-+
-+	if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr->rt_lsn))) {
-+		fa = __this_address;
-+		goto fail;
-+	}
-+
-+	if (!xfs_buf_verify_cksum(bp, XFS_RTBUF_CRC_OFF)) {
-+		fa = __this_address;
-+		goto fail;
-+	}
-+
-+	fa = xfs_rtbuf_verify(bp);
-+	if (fa)
-+		goto fail;
-+
- 	return;
-+fail:
-+	xfs_verifier_error(bp, -EFSCORRUPTED, fa);
- }
- 
- static void
- xfs_rtbuf_verify_write(
- 	struct xfs_buf	*bp)
- {
--	return;
-+	struct xfs_mount		*mp = bp->b_mount;
-+	struct xfs_rtbuf_blkinfo	*hdr = bp->b_addr;
-+	struct xfs_buf_log_item		*bip = bp->b_log_item;
-+	xfs_failaddr_t			fa;
-+
-+	if (!xfs_has_rtgroups(mp))
-+		return;
-+
-+	fa = xfs_rtbuf_verify(bp);
-+	if (fa) {
-+		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
-+		return;
-+	}
-+
-+	if (bip)
-+		hdr->rt_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+	xfs_buf_update_cksum(bp, XFS_RTBUF_CRC_OFF);
- }
- 
- const struct xfs_buf_ops xfs_rtbuf_ops = {
-@@ -49,6 +103,22 @@ const struct xfs_buf_ops xfs_rtbuf_ops = {
- 	.verify_write = xfs_rtbuf_verify_write,
+ union xfs_rtword_raw {
+ 	__u32		old;
++	__be32		rtg;
  };
  
-+const struct xfs_buf_ops xfs_rtbitmap_buf_ops = {
-+	.name		= "xfs_rtbitmap",
-+	.magic		= { 0, cpu_to_be32(XFS_RTBITMAP_MAGIC) },
-+	.verify_read	= xfs_rtbuf_verify_read,
-+	.verify_write	= xfs_rtbuf_verify_write,
-+	.verify_struct	= xfs_rtbuf_verify,
-+};
-+
-+const struct xfs_buf_ops xfs_rtsummary_buf_ops = {
-+	.name		= "xfs_rtsummary",
-+	.magic		= { 0, cpu_to_be32(XFS_RTSUMMARY_MAGIC) },
-+	.verify_read	= xfs_rtbuf_verify_read,
-+	.verify_write	= xfs_rtbuf_verify_write,
-+	.verify_struct	= xfs_rtbuf_verify,
-+};
-+
- /* Release cached rt bitmap and summary buffers. */
- void
- xfs_rtbuf_cache_relse(
-@@ -128,12 +198,24 @@ xfs_rtbuf_get(
- 	ASSERT(map.br_startblock != NULLFSBLOCK);
- 	error = xfs_trans_read_buf(mp, args->tp, mp->m_ddev_targp,
- 				   XFS_FSB_TO_DADDR(mp, map.br_startblock),
--				   mp->m_bsize, 0, &bp, &xfs_rtbuf_ops);
-+				   mp->m_bsize, 0, &bp,
-+				   xfs_rtblock_ops(mp, type));
- 	if (xfs_metadata_is_sick(error))
- 		xfs_rtginode_mark_sick(args->rtg, type);
- 	if (error)
- 		return error;
- 
-+	if (xfs_has_rtgroups(mp)) {
-+		struct xfs_rtbuf_blkinfo	*hdr = bp->b_addr;
-+
-+		if (hdr->rt_owner != cpu_to_be64(ip->i_ino)) {
-+			xfs_buf_mark_corrupt(bp);
-+			xfs_trans_brelse(args->tp, bp);
-+			xfs_rtginode_mark_sick(args->rtg, type);
-+			return -EFSCORRUPTED;
-+		}
-+	}
-+
- 	xfs_trans_buf_set_type(args->tp, bp, buf_type);
- 	*cbpp = bp;
- 	*coffp = block;
-@@ -1144,6 +1226,19 @@ xfs_rtalloc_extent_is_free(
- 	return 0;
- }
- 
-+/* Compute the number of rt extents tracked by a single bitmap block. */
-+xfs_rtxnum_t
-+xfs_rtbitmap_rtx_per_rbmblock(
-+	struct xfs_mount	*mp)
-+{
-+	unsigned int		rbmblock_bytes = mp->m_sb.sb_blocksize;
-+
-+	if (xfs_has_rtgroups(mp))
-+		rbmblock_bytes -= sizeof(struct xfs_rtbuf_blkinfo);
-+
-+	return rbmblock_bytes * NBBY;
-+}
-+
  /*
-  * Compute the number of rtbitmap blocks needed to track the given number of rt
-  * extents.
-@@ -1153,7 +1248,7 @@ xfs_rtbitmap_blockcount_len(
- 	struct xfs_mount	*mp,
- 	xfs_rtbxlen_t		rtextents)
- {
--	return howmany_64(rtextents, NBBY * mp->m_sb.sb_blocksize);
-+	return howmany_64(rtextents, xfs_rtbitmap_rtx_per_rbmblock(mp));
- }
- 
- /* How many rt extents does each rtbitmap file track? */
-@@ -1190,11 +1285,12 @@ xfs_rtsummary_blockcount(
- 	struct xfs_mount	*mp,
- 	unsigned int		*rsumlevels)
- {
-+	xfs_rtbxlen_t		rextents = xfs_rtbitmap_bitcount(mp);
- 	unsigned long long	rsumwords;
- 
--	*rsumlevels = xfs_compute_rextslog(xfs_rtbitmap_bitcount(mp)) + 1;
--	rsumwords = xfs_rtbitmap_blockcount(mp) * (*rsumlevels);
--	return XFS_B_TO_FSB(mp, rsumwords << XFS_WORDLOG);
-+	*rsumlevels = xfs_compute_rextslog(rextents) + 1;
-+	rsumwords = xfs_rtbitmap_blockcount_len(mp, rextents) * (*rsumlevels);
-+	return howmany_64(rsumwords, mp->m_blockwsize);
- }
- 
- static int
-@@ -1246,6 +1342,7 @@ xfs_rtfile_initialize_block(
- 	struct xfs_inode	*ip = rtg->rtg_inodes[type];
- 	struct xfs_trans	*tp;
- 	struct xfs_buf		*bp;
-+	void			*bufdata;
- 	const size_t		copylen = mp->m_blockwsize << XFS_WORDLOG;
- 	enum xfs_blft		buf_type;
- 	int			error;
-@@ -1269,13 +1366,30 @@ xfs_rtfile_initialize_block(
- 		xfs_trans_cancel(tp);
- 		return error;
- 	}
-+	bufdata = bp->b_addr;
- 
- 	xfs_trans_buf_set_type(tp, bp, buf_type);
--	bp->b_ops = &xfs_rtbuf_ops;
-+	bp->b_ops = xfs_rtblock_ops(mp, type);
-+
-+	if (xfs_has_rtgroups(mp)) {
-+		struct xfs_rtbuf_blkinfo	*hdr = bp->b_addr;
-+
-+		if (type == XFS_RTGI_BITMAP)
-+			hdr->rt_magic = cpu_to_be32(XFS_RTBITMAP_MAGIC);
-+		else
-+			hdr->rt_magic = cpu_to_be32(XFS_RTSUMMARY_MAGIC);
-+		hdr->rt_owner = cpu_to_be64(ip->i_ino);
-+		hdr->rt_blkno = cpu_to_be64(XFS_FSB_TO_DADDR(mp, fsbno));
-+		hdr->rt_lsn = 0;
-+		uuid_copy(&hdr->rt_uuid, &mp->m_sb.sb_meta_uuid);
-+
-+		bufdata += sizeof(*hdr);
-+	}
-+
- 	if (data)
--		memcpy(bp->b_addr, data, copylen);
-+		memcpy(bufdata, data, copylen);
- 	else
--		memset(bp->b_addr, 0, copylen);
-+		memset(bufdata, 0, copylen);
- 	xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
- 	return xfs_trans_commit(tp);
- }
 diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index b2b9e59a87a278..2286a98ecb32bb 100644
+index 2286a98ecb32bb..f9c0d241590104 100644
 --- a/libxfs/xfs_rtbitmap.h
 +++ b/libxfs/xfs_rtbitmap.h
-@@ -150,6 +150,9 @@ xfs_rtx_to_rbmblock(
- 	struct xfs_mount	*mp,
- 	xfs_rtxnum_t		rtx)
+@@ -210,6 +210,8 @@ xfs_rtbitmap_getword(
  {
-+	if (xfs_has_rtgroups(mp))
-+		return div_u64(rtx, mp->m_rtx_per_rbmblock);
-+
- 	return rtx >> mp->m_blkbit_log;
- }
+ 	union xfs_rtword_raw	*word = xfs_rbmblock_wordptr(args, index);
  
-@@ -159,6 +162,13 @@ xfs_rtx_to_rbmword(
- 	struct xfs_mount	*mp,
- 	xfs_rtxnum_t		rtx)
- {
-+	if (xfs_has_rtgroups(mp)) {
-+		unsigned int	mod;
-+
-+		div_u64_rem(rtx >> XFS_NBWORDLOG, mp->m_blockwsize, &mod);
-+		return mod;
-+	}
-+
- 	return (rtx >> XFS_NBWORDLOG) & (mp->m_blockwsize - 1);
- }
- 
-@@ -168,6 +178,9 @@ xfs_rbmblock_to_rtx(
- 	struct xfs_mount	*mp,
- 	xfs_fileoff_t		rbmoff)
- {
-+	if (xfs_has_rtgroups(mp))
-+		return rbmoff * mp->m_rtx_per_rbmblock;
-+
- 	return rbmoff << mp->m_blkbit_log;
- }
- 
-@@ -177,7 +190,14 @@ xfs_rbmblock_wordptr(
- 	struct xfs_rtalloc_args	*args,
- 	unsigned int		index)
- {
--	union xfs_rtword_raw	*words = args->rbmbp->b_addr;
-+	struct xfs_mount	*mp = args->mp;
-+	union xfs_rtword_raw	*words;
-+	struct xfs_rtbuf_blkinfo *hdr = args->rbmbp->b_addr;
-+
-+	if (xfs_has_rtgroups(mp))
-+		words = (union xfs_rtword_raw *)(hdr + 1);
-+	else
-+		words = args->rbmbp->b_addr;
- 
- 	return words + index;
- }
-@@ -227,6 +247,9 @@ xfs_rtsumoffs_to_block(
- 	struct xfs_mount	*mp,
- 	xfs_rtsumoff_t		rsumoff)
- {
-+	if (xfs_has_rtgroups(mp))
-+		return rsumoff / mp->m_blockwsize;
-+
- 	return XFS_B_TO_FSBT(mp, rsumoff * sizeof(xfs_suminfo_t));
- }
- 
-@@ -241,6 +264,9 @@ xfs_rtsumoffs_to_infoword(
- {
- 	unsigned int		mask = mp->m_blockmask >> XFS_SUMINFOLOG;
- 
-+	if (xfs_has_rtgroups(mp))
-+		return rsumoff % mp->m_blockwsize;
-+
- 	return rsumoff & mask;
- }
- 
-@@ -250,7 +276,13 @@ xfs_rsumblock_infoptr(
- 	struct xfs_rtalloc_args	*args,
- 	unsigned int		index)
- {
--	union xfs_suminfo_raw	*info = args->sumbp->b_addr;
-+	union xfs_suminfo_raw	*info;
-+	struct xfs_rtbuf_blkinfo *hdr = args->sumbp->b_addr;
-+
 +	if (xfs_has_rtgroups(args->mp))
-+		info = (union xfs_suminfo_raw *)(hdr + 1);
-+	else
-+		info = args->sumbp->b_addr;
- 
- 	return info + index;
- }
-@@ -279,6 +311,19 @@ xfs_suminfo_add(
- 	return info->old;
++		return be32_to_cpu(word->rtg);
+ 	return word->old;
  }
  
-+static inline const struct xfs_buf_ops *
-+xfs_rtblock_ops(
-+	struct xfs_mount	*mp,
-+	enum xfs_rtg_inodes	type)
-+{
-+	if (xfs_has_rtgroups(mp)) {
-+		if (type == XFS_RTGI_SUMMARY)
-+			return &xfs_rtsummary_buf_ops;
-+		return &xfs_rtbitmap_buf_ops;
-+	}
-+	return &xfs_rtbuf_ops;
-+}
-+
- /*
-  * Functions for walking free space rtextents in the realtime bitmap.
-  */
-@@ -324,6 +369,7 @@ int xfs_rtfree_extent(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
- int xfs_rtfree_blocks(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
- 		xfs_fsblock_t rtbno, xfs_filblks_t rtlen);
- 
-+xfs_rtxnum_t xfs_rtbitmap_rtx_per_rbmblock(struct xfs_mount *mp);
- xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp);
- xfs_filblks_t xfs_rtbitmap_blockcount_len(struct xfs_mount *mp,
- 		xfs_rtbxlen_t rtextents);
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 88fb4890d95a72..87be47083aa571 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -243,11 +243,26 @@ xfs_extents_per_rbm(
- 	return sbp->sb_rextents;
- }
- 
-+/*
-+ * Return the payload size of a single rt bitmap block (without the metadata
-+ * header if any).
-+ */
-+static inline unsigned int
-+xfs_rtbmblock_size(
-+	struct xfs_sb		*sbp)
-+{
-+	if (xfs_sb_is_v5(sbp) &&
-+	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR))
-+		return sbp->sb_blocksize - sizeof(struct xfs_rtbuf_blkinfo);
-+	return sbp->sb_blocksize;
-+}
-+
- static uint64_t
- xfs_expected_rbmblocks(
- 	struct xfs_sb		*sbp)
+@@ -222,7 +224,10 @@ xfs_rtbitmap_setword(
  {
--	return howmany_64(xfs_extents_per_rbm(sbp), NBBY * sbp->sb_blocksize);
-+	return howmany_64(xfs_extents_per_rbm(sbp),
-+			  NBBY * xfs_rtbmblock_size(sbp));
+ 	union xfs_rtword_raw	*word = xfs_rbmblock_wordptr(args, index);
+ 
+-	word->old = value;
++	if (xfs_has_rtgroups(args->mp))
++		word->rtg = cpu_to_be32(value);
++	else
++		word->old = value;
  }
  
- /* Validate the realtime geometry */
-@@ -1109,8 +1124,8 @@ xfs_sb_mount_common(
- 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
- 	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
- 	mp->m_blockmask = sbp->sb_blocksize - 1;
--	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
--	mp->m_blockwmask = mp->m_blockwsize - 1;
-+	mp->m_blockwsize = xfs_rtbmblock_size(sbp) >> XFS_WORDLOG;
-+	mp->m_rtx_per_rbmblock = mp->m_blockwsize << XFS_NBWORDLOG;
- 
- 	ags->blocks = mp->m_sb.sb_agblocks;
- 	ags->blklog = mp->m_sb.sb_agblklog;
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index 552365d212ea26..9363f918675ac0 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -38,6 +38,8 @@ extern const struct xfs_buf_ops xfs_inode_buf_ops;
- extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
- extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
- extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
-+extern const struct xfs_buf_ops xfs_rtbitmap_buf_ops;
-+extern const struct xfs_buf_ops xfs_rtsummary_buf_ops;
- extern const struct xfs_buf_ops xfs_rtbuf_ops;
- extern const struct xfs_buf_ops xfs_rtsb_buf_ops;
- extern const struct xfs_buf_ops xfs_sb_buf_ops;
+ /*
 
