@@ -1,93 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 708DC17FE
-	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:32:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDED7323D;
+	Sat,  7 Dec 2024 00:32:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733531525; cv=none; b=O/M4WBXxRz41kDpppSpEM/ekwJnGSQfNuIeZEterKLoypZr6cVDAljpaIEj02gGMvMlr8grG+LDwDoenho4+dBSNU+l3TAWxqncTV/kok8g5Ap21fDNjYp7hypUK5v6n+fZvsGVsH+bV2aw5hWSVIEfdidlhg86rynvJ46HBV0c=
+	t=1733531530; cv=none; b=WJSAFQ+GgGMnPUmwCy/tFLxRB+zpXykmt1kKsZ5aCR+tBrBm6GgT2WHuTMjcynL4ByJl8vFvxBrb6kbKVr29cLDFQ3MuBCr/SCDE9IBxDMyQByySIugJKwrigotfFBE5N5E9ab4oyWBxxafMWuW78g+i9ccJtDOaNsxCjAaAPKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733531525; c=relaxed/simple;
-	bh=6fr6pUeBQVXqwLZLFalOW2qp0OxXkjHfdjfrOAYntzg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YGcfqp8CM4ho9o9UofiaxMXiXRxhmnCSDKKhlhXoFnsntNQ/DIMBvBhWkVU6q1iLKYK2nQJMvSOMqrH4DIAPZok+E6EfN7N62FXiyC75DNn2UvsB40RKWVWm28qBdtAx7Bx82jlyCTmr68m7gpRyNjo20mrUe+m5MgAIvppcND8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sGwVj8h+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733531530; c=relaxed/simple;
+	bh=V4djZAqloTW/JtfS6BayRTkU4mK+EkNDZzNG2jMMdQw=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=iByZYjEjkgXhHsGepCVxGerfPx2HH/CL0p1RtCHCJpEN8iLpt+/fYN6tfV8bsMz3GD5Qwf5okBdn6dC1A31yil8/u0dKljJELajcoHi9Q37Gvg0VgD7q+ePYNUNC3Y9x8MWFUwp2tu4gzDFpsvCwzRXUk0EcABsYWN2r6dfTjjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=snB548vE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sGwVj8h+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A7C7C4CED1;
-	Sat,  7 Dec 2024 00:32:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="snB548vE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 289B9C4CED1;
+	Sat,  7 Dec 2024 00:32:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733531525;
-	bh=6fr6pUeBQVXqwLZLFalOW2qp0OxXkjHfdjfrOAYntzg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sGwVj8h+ip5WP9ezumfikDhcSnxd+4DcnG/0sXcqy7aJlOxTD4TFDztYX/o+jzUyn
-	 2Y3jVgYOdkz1BKccIAPnyNMpGks8DudCBPcNMs7xftwIRZB4lGfJUn5cCjUyYvZXhm
-	 8/YCOYiXOORBrZYdOHg8+DV9mR53KJYemDIR2fxRYL3Oe/JOTHtIcQr8ACsy4y32qL
-	 LZcswUdIjzqFnTBOhcc7L3O5hAx6IF6uyEnAdEJBwOHl8VXtotSSyV4IxKrqSoNpvC
-	 StXsHEy1cCsbczuUXX8Q6Smxx7j3VaiGCqTuBf41WC3MsO00fdYE4OCUkXJDfsowDD
-	 u9iWVys6ZlVxQ==
-Date: Fri, 6 Dec 2024 16:32:04 -0800
+	s=k20201202; t=1733531530;
+	bh=V4djZAqloTW/JtfS6BayRTkU4mK+EkNDZzNG2jMMdQw=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=snB548vEXgkC8woN0KcgqTRbygMPYI10UDw2NEfpo9fnNbJgot9k5I4HZ8GLKWaqo
+	 eeku+dnxZbk1SZf1KYYXmMDG6BqSexOBYWP6gfMQ/jKt07/y1qBrdjr4uMDsJLy3XX
+	 rbttgIL+SmEwtIUXyM/sKtmgBTsDtXg/ezRHmteXGCWoK8wvXl8IYtjGC14MMjLTql
+	 nsur/k8/XmL4ODnuRef2XLo7NNPfe6YWh8c8XqkcqRdMuYZSO59VVfg9vnq0p+KFQD
+	 h90t24yP+1suOfahBXipZsWaq1uAGLl7ib9P2eLoCMFGbly/JKPBGqVXgGGDT24ar2
+	 RyereaEqrt7ug==
+Date: Fri, 06 Dec 2024 16:32:09 -0800
+Subject: [PATCH 5/6] xfs: return from xfs_symlink_verify early on V4
+ filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-	Eric Sandeen <sandeen@sandeen.net>,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	Carlos Maiolino <cem@kernel.org>, Brian Foster <bfoster@redhat.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Kundan Kumar <kundan.kumar@samsung.com>, gost.dev@samsung.com
-Subject: Re: [PATCH 3/3] xfs: sb_spino_align is not verified
-Message-ID: <20241207003204.GQ7837@frogsfrogsfrogs>
-References: <20241024025142.4082218-1-david@fromorbit.com>
- <20241024025142.4082218-4-david@fromorbit.com>
- <Z1OV8leVvOAmqBY3@bombadil.infradead.org>
+To: cem@kernel.org, djwong@kernel.org
+Cc: stable@vger.kernel.org, hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173353139385.192136.1552414924467294012.stgit@frogsfrogsfrogs>
+In-Reply-To: <173353139288.192136.15243674953215007178.stgit@frogsfrogsfrogs>
+References: <173353139288.192136.15243674953215007178.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z1OV8leVvOAmqBY3@bombadil.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Fri, Dec 06, 2024 at 04:25:22PM -0800, Luis Chamberlain wrote:
-> On Thu, Oct 24, 2024 at 01:51:05PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > It's just read in from the superblock and used without doing any
-> > validity checks at all on the value.
-> > 
-> > Fixes: fb4f2b4e5a82 ("xfs: add sparse inode chunk alignment superblock field")
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> This is 59e43f5479cce106d71c0b91a297c7ad1913176c on v6.13-r1 now.
-> 
-> This commit broke mounting 32k and 64k bs filesystems on 4k page size systems.
-> Oddly, it does not break 16k or 8k bs. I took a quick glance and I can't
-> easily identify a fix.
-> 
-> I haven't had a chance yet to find a large page size system to see if
-> 32k page size and 64k page size systems are affected as well.
-> 
-> CIs in place did not pick up on this given fstests check script just
-> bails out right away, we don't annotate this as a failure on fstests and
-> the tests don't even get listed as failures on xunit. You'd have to have
-> a trained curious eye to just monitor CIs and verify that all hosts
-> actually were chugging along. I suppose we can enhance this by just
-> assuming hosts which don't have results are assumed to be a failure.
-> 
-> However if we want to enahnce this on fstests so that in the future we
-> pick up on these failures more easily it would be good time to evaluate
-> that now too.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Known bug, already patched here:
-https://lore.kernel.org/linux-xfs/20241126202619.GO9438@frogsfrogsfrogs/
+V4 symlink blocks didn't have headers, so return early if this is a V4
+filesystem.
 
-and PR to the release manager here:
-https://lore.kernel.org/linux-xfs/173328206660.1159971.4540485910402305562.stg-ugh@frogsfrogsfrogs/
+Cc: <stable@vger.kernel.org> # v5.1
+Fixes: 39708c20ab5133 ("xfs: miscellaneous verifier magic value fixups")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_symlink_remote.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
---D
 
->   Luis
-> 
+diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+index f228127a88ff26..fb47a76ead18c2 100644
+--- a/fs/xfs/libxfs/xfs_symlink_remote.c
++++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+@@ -92,8 +92,10 @@ xfs_symlink_verify(
+ 	struct xfs_mount	*mp = bp->b_mount;
+ 	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
+ 
++	/* no verification of non-crc buffers */
+ 	if (!xfs_has_crc(mp))
+-		return __this_address;
++		return NULL;
++
+ 	if (!xfs_verify_magic(bp, dsl->sl_magic))
+ 		return __this_address;
+ 	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_meta_uuid))
+
