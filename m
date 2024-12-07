@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E854D2563
-	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:16:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBB28322B
+	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:17:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733530618; cv=none; b=F74U6x0XUFInnd0rIPrATifWkXIFQx3uAJV5rkdb4VW6Y49TLfLy5oiQvx6vN+frZOszUCV2qA9L0bG22muPWEAlnQXfiSkmcIzUmD1kJf0DBZdzflsaVThlWc98s9CKBZlVyE8H1gUdlpJ/tZa31jLbd7Agi4W+xk+aQICInaI=
+	t=1733530633; cv=none; b=e5whbNRJMKGJlzykZ/GBMkqGx76XIPSq4Pg2Z+8L2Q4KWYaev6KKn6A0NZ9+bvH+XM3NqHVs/lb+WNrz9uZ8r25qtCksUtm/K/eIfL3ES8XaqhYpBNOWZXQ6Da3zVBLv+ea0rTjwCoaEKMGMONZ+el/wDkN0CYObnesyHgiHwIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733530618; c=relaxed/simple;
-	bh=70FzFzhXysQRVXEv2NrcZvFxdZKKKCj+J7wslTu5Ap0=;
+	s=arc-20240116; t=1733530633; c=relaxed/simple;
+	bh=xnBhOAryebC+Vwdwnr/jisnEmdHDTN7am1RQt/mtWIU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sINZG3YbxiGT2UyAQ28sUpN9dO2PmpCQ/+dbcb7fGIC1vW+ooGBmwwMHMdcHVL5w5EJUzrhkjTNaAv2M0aDEHPxZqUxrs1MbFMAFfPDl2XHBu3wz8kDTOMTsoFGStm0e4p5EXuRg3DggaIN8FTWIi/c/aYAul82yYUWJQLgfaOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nk72k64Z; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bpbPMp7RyGzU6jM7pbPfAbC7WydTXlVPIu7AJLo7rzToRzwEX3XOhV5F/3nCAtVouuVqPFr4rc9LhpVJPT2m5FzebAY3oP1yMuRtPTfdQKex3oJfbrX0gb5zkiJXn1SjdB626tD+AVKtLZEh8EH6n63sLJHFJq70UkEzzWr7uS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ORjVeWrG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nk72k64Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7405FC4CED1;
-	Sat,  7 Dec 2024 00:16:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ORjVeWrG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 469EEC4CED1;
+	Sat,  7 Dec 2024 00:17:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733530617;
-	bh=70FzFzhXysQRVXEv2NrcZvFxdZKKKCj+J7wslTu5Ap0=;
+	s=k20201202; t=1733530633;
+	bh=xnBhOAryebC+Vwdwnr/jisnEmdHDTN7am1RQt/mtWIU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nk72k64ZFq8HtfYUSj77RJMv/OpbUtyHXcruMJe62CHUNq4vhHhQoMnnj6hh0M0v3
-	 Jt0btRzrVMnroFufdD16EUq2y5KrOdsWg9PhNxz3TRmi5ANO/R3nQZqPH57v1+Zsoj
-	 ymm9vz5EGxrR7gOhU/Ga2K0ayzLsIwXeangDsmwbYIIgWeOFzmcMUBE0MEHM/s+CKY
-	 GQFvwvD+3hHCDm7Lh87LFi05b0KVCdGjaxfTk5Mqd880qKhFJWNyUW/30fUtBFv+Yg
-	 W36/M5cEQPimn/nmNZO52kxJT23Jvp0CHDviLn2FT9AQA+x/+Ml/rNY40Pcw30p4q7
-	 KgO28Alt7jdWw==
-Date: Fri, 06 Dec 2024 16:16:57 -0800
-Subject: [PATCH 46/50] xfs_scrub: call GETFSMAP for each rt group in parallel
+	b=ORjVeWrG+rhzTLIyo1N/WwOj2/M2ZQ0vqDa0bz3uwF1WvRv+tnIs79cnRWVNHp4od
+	 WKDqXqx3yMSlrVYtzFTCyOedcu42T3M1XzCaSmFa56PQubzMyuWFqMGsn2RDh+iq4l
+	 jjPx47tpru/qV9hWQC5Khs1tNPVdRKrH1CM1rvoaDMikmpE1qOz+7nyMoYlshJQ77R
+	 15QikJLWigVbLHTQFJKqj1HzrEL2Q3I/nGtReeMSzEN15bqyl/YlXTWMMuHrTJkeq1
+	 SYy0PD95SXowJnl6VGJ5+nvR+baR5fQc4TfdaYdwGp3avkKvbc7AUskp8SwrE1IxIZ
+	 TAxBZQLmtr+ew==
+Date: Fri, 06 Dec 2024 16:17:12 -0800
+Subject: [PATCH 47/50] xfs_scrub: trim realtime volumes too
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352752648.126362.13619225422874515961.stgit@frogsfrogsfrogs>
+Message-ID: <173352752664.126362.6074533714975702330.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352751867.126362.1763344829761562977.stgit@frogsfrogsfrogs>
 References: <173352751867.126362.1763344829761562977.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,111 +45,94 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If realtime groups are enabled, we should take advantage of the sharding
-to speed up the spacemap scans.  Do so by issuing per-rtgroup GETFSMAP
-calls.
+On the kernel side, the XFS realtime groups patchset added support for
+FITRIM of the realtime volume.  This support doesn't actually require
+there to be any realtime groups, so teach scrub to run through the whole
+region.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/spacemap.c |   72 ++++++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 64 insertions(+), 8 deletions(-)
+ scrub/phase8.c |   32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
 
-diff --git a/scrub/spacemap.c b/scrub/spacemap.c
-index e35756db2eed43..5b6bad138ce502 100644
---- a/scrub/spacemap.c
-+++ b/scrub/spacemap.c
-@@ -128,6 +128,45 @@ scan_ag_rmaps(
+diff --git a/scrub/phase8.c b/scrub/phase8.c
+index 1c88460c33962b..adb177ecdafbeb 100644
+--- a/scrub/phase8.c
++++ b/scrub/phase8.c
+@@ -59,7 +59,8 @@ fstrim_fsblocks(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		start_fsb,
+ 	uint64_t		fsbcount,
+-	uint64_t		minlen_fsb)
++	uint64_t		minlen_fsb,
++	bool			ignore_einval)
+ {
+ 	uint64_t		start = cvt_off_fsb_to_b(&ctx->mnt, start_fsb);
+ 	uint64_t		len = cvt_off_fsb_to_b(&ctx->mnt, fsbcount);
+@@ -72,6 +73,8 @@ fstrim_fsblocks(
+ 		run = min(len, FSTRIM_MAX_BYTES);
+ 
+ 		error = fstrim(ctx, start, run, minlen);
++		if (error == EINVAL && ignore_einval)
++			error = EOPNOTSUPP;
+ 		if (error == EOPNOTSUPP) {
+ 			/* Pretend we finished all the work. */
+ 			progress_add(len);
+@@ -193,7 +196,8 @@ fstrim_datadev(
+ 		 */
+ 		progress_add(geo->blocksize);
+ 		fsbcount = min(geo->datablocks - fsbno, geo->agblocks);
+-		error = fstrim_fsblocks(ctx, fsbno, fsbcount, minlen_fsb);
++		error = fstrim_fsblocks(ctx, fsbno, fsbcount, minlen_fsb,
++				false);
+ 		if (error)
+ 			return error;
  	}
+@@ -201,15 +205,35 @@ fstrim_datadev(
+ 	return 0;
  }
  
-+/* Iterate all the reverse mappings of a realtime group. */
-+static void
-+scan_rtg_rmaps(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		rgno,
-+	void			*arg)
++/* Trim the realtime device. */
++static int
++fstrim_rtdev(
++	struct scrub_ctx	*ctx)
 +{
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	struct scan_blocks	*sbx = arg;
-+	struct fsmap		keys[2];
-+	off_t			bperrg = bytes_per_rtgroup(&ctx->mnt.fsgeom);
-+	int			ret;
++	struct xfs_fsop_geom	*geo = &ctx->mnt.fsgeom;
 +
-+
-+	memset(keys, 0, sizeof(struct fsmap) * 2);
-+	keys->fmr_device = ctx->fsinfo.fs_rtdev;
-+	keys->fmr_physical = (xfs_rtblock_t)rgno * bperrg;
-+	(keys + 1)->fmr_device = ctx->fsinfo.fs_rtdev;
-+	(keys + 1)->fmr_physical = ((rgno + 1) * bperrg) - 1;
-+	(keys + 1)->fmr_owner = ULLONG_MAX;
-+	(keys + 1)->fmr_offset = ULLONG_MAX;
-+	(keys + 1)->fmr_flags = UINT_MAX;
-+
-+	if (sbx->aborted)
-+		return;
-+
-+	ret = scrub_iterate_fsmap(ctx, keys, sbx->fn, sbx->arg);
-+	if (ret) {
-+		char		descr[DESCR_BUFSZ];
-+
-+		snprintf(descr, DESCR_BUFSZ, _("dev %d:%d rtgroup %u fsmap"),
-+					major(ctx->fsinfo.fs_datadev),
-+					minor(ctx->fsinfo.fs_datadev),
-+					rgno);
-+		str_liberror(ctx, ret, descr);
-+		sbx->aborted = true;
-+	}
++	/*
++	 * The fstrim ioctl pretends that the realtime volume is in the address
++	 * space immediately after the data volume.  Ignore EINVAL if someone
++	 * tries to run us on an older kernel.
++	 */
++	return fstrim_fsblocks(ctx, geo->datablocks, geo->rtblocks, 0, true);
 +}
 +
- /* Iterate all the reverse mappings of a standalone device. */
- static void
- scan_dev_rmaps(
-@@ -208,14 +247,6 @@ scrub_scan_all_spacemaps(
- 		str_liberror(ctx, ret, _("creating fsmap workqueue"));
- 		return ret;
- 	}
--	if (ctx->fsinfo.fs_rt) {
--		ret = -workqueue_add(&wq, scan_rt_rmaps, 0, &sbx);
--		if (ret) {
--			sbx.aborted = true;
--			str_liberror(ctx, ret, _("queueing rtdev fsmap work"));
--			goto out;
--		}
--	}
- 	if (ctx->fsinfo.fs_log) {
- 		ret = -workqueue_add(&wq, scan_log_rmaps, 0, &sbx);
- 		if (ret) {
-@@ -232,6 +263,31 @@ scrub_scan_all_spacemaps(
- 			break;
- 		}
- 	}
-+	if (ctx->fsinfo.fs_rt) {
-+		for (agno = 0; agno < ctx->mnt.fsgeom.rgcount; agno++) {
-+			ret = -workqueue_add(&wq, scan_rtg_rmaps, agno, &sbx);
-+			if (ret) {
-+				sbx.aborted = true;
-+				str_liberror(ctx, ret,
-+						_("queueing rtgroup fsmap work"));
-+				break;
-+			}
-+		}
+ /* Trim the filesystem, if desired. */
+ int
+ phase8_func(
+ 	struct scrub_ctx	*ctx)
+ {
++	int			error;
 +
-+		/*
-+		 * If the fs doesn't have any realtime groups, scan the entire
-+		 * volume all at once, since the above loop did nothing.
-+		 */
-+		if (ctx->mnt.fsgeom.rgcount == 0) {
-+			ret = -workqueue_add(&wq, scan_rt_rmaps, 0, &sbx);
-+			if (ret) {
-+				sbx.aborted = true;
-+				str_liberror(ctx, ret,
-+						_("queueing rtdev fsmap work"));
-+				goto out;
-+			}
-+		}
-+	}
- out:
- 	ret = -workqueue_terminate(&wq);
- 	if (ret) {
+ 	if (!fstrim_ok(ctx))
+ 		return 0;
+ 
+-	return fstrim_datadev(ctx);
++	error = fstrim_datadev(ctx);
++	if (error)
++		return error;
++	return fstrim_rtdev(ctx);
+ }
+ 
+ /* Estimate how much work we're going to do. */
+@@ -223,6 +247,8 @@ phase8_estimate(
+ 	if (fstrim_ok(ctx)) {
+ 		*items = cvt_off_fsb_to_b(&ctx->mnt,
+ 				ctx->mnt.fsgeom.datablocks);
++		*items += cvt_off_fsb_to_b(&ctx->mnt,
++				ctx->mnt.fsgeom.rtblocks);
+ 	} else {
+ 		*items = 0;
+ 	}
 
