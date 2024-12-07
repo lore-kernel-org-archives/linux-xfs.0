@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2FDD7482
-	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:16:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E854D2563
+	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:16:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733530602; cv=none; b=RjRnd2QiFwz//+k7yC23iP59V7AKJboUUND9/hJi8Pdzno6A/yCO3TcYG+QiYVXEx+rHMY26NhdhhXQcnK43cG6CQ+Y4Vj4u/WvImDH0pQgdPaIH5IRW2HoaG2BOtTAopuCiS0qNW2f05V7R9pjRbUyv8/Px0c0lFH0cOdxCUH4=
+	t=1733530618; cv=none; b=F74U6x0XUFInnd0rIPrATifWkXIFQx3uAJV5rkdb4VW6Y49TLfLy5oiQvx6vN+frZOszUCV2qA9L0bG22muPWEAlnQXfiSkmcIzUmD1kJf0DBZdzflsaVThlWc98s9CKBZlVyE8H1gUdlpJ/tZa31jLbd7Agi4W+xk+aQICInaI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733530602; c=relaxed/simple;
-	bh=6oaT7ZJX8Yinv1Q35SykGGJMtAXS/4/h9hTpeNjtAeQ=;
+	s=arc-20240116; t=1733530618; c=relaxed/simple;
+	bh=70FzFzhXysQRVXEv2NrcZvFxdZKKKCj+J7wslTu5Ap0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MFkDoM03LUEQvepRGQyfbb9O/enKP6cSawKKsvm3ezcVvng0E5L+EAuccPMG5Owe2o5twJdYV9mlgl1yQIWwFji3/pjUTw1c/3acUYHaysVJJJZ+fEG0u63I89dY2WNzx1H/XYcUOxx3G+ah1Yr1k5B+lCobIforM40R0DS7jW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OfJntGty; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=sINZG3YbxiGT2UyAQ28sUpN9dO2PmpCQ/+dbcb7fGIC1vW+ooGBmwwMHMdcHVL5w5EJUzrhkjTNaAv2M0aDEHPxZqUxrs1MbFMAFfPDl2XHBu3wz8kDTOMTsoFGStm0e4p5EXuRg3DggaIN8FTWIi/c/aYAul82yYUWJQLgfaOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nk72k64Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OfJntGty"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1BCFC4CED1;
-	Sat,  7 Dec 2024 00:16:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nk72k64Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7405FC4CED1;
+	Sat,  7 Dec 2024 00:16:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733530601;
-	bh=6oaT7ZJX8Yinv1Q35SykGGJMtAXS/4/h9hTpeNjtAeQ=;
+	s=k20201202; t=1733530617;
+	bh=70FzFzhXysQRVXEv2NrcZvFxdZKKKCj+J7wslTu5Ap0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OfJntGtyGpeu0GS4nHdD4AZsKpLCBpbuOGT06cEgyaVAzezSj/6o2k3PQvgDkulFX
-	 adGbreuaNX+4pTdCfjsjUl2QzGExuLITkwLJgDtPDHnPReQen1iGfefYOnfL5vAzjY
-	 Dn+Bh7rSjGXA9z39Mr8YNLaVMjvtFdQreqr5/KFvwgHPYPlpLAFjxBrpNER4TzNVRO
-	 WQ2yEeS9i3FsP1yh2hnIAd9YyQYINgmbPAYmAv4HiaHXViZ5rMCYS24xYNRz8/w6cr
-	 U+k37VFX5dmYJKRhotr/qW/NW6sxeBfxMZFvqs79TLsmuyH/x4y/LNw0h6TA5Etw4n
-	 CZFM/dUQ1aeNA==
-Date: Fri, 06 Dec 2024 16:16:41 -0800
-Subject: [PATCH 45/50] xfs_scrub: check rtgroup metadata directory connections
+	b=nk72k64ZFq8HtfYUSj77RJMv/OpbUtyHXcruMJe62CHUNq4vhHhQoMnnj6hh0M0v3
+	 Jt0btRzrVMnroFufdD16EUq2y5KrOdsWg9PhNxz3TRmi5ANO/R3nQZqPH57v1+Zsoj
+	 ymm9vz5EGxrR7gOhU/Ga2K0ayzLsIwXeangDsmwbYIIgWeOFzmcMUBE0MEHM/s+CKY
+	 GQFvwvD+3hHCDm7Lh87LFi05b0KVCdGjaxfTk5Mqd880qKhFJWNyUW/30fUtBFv+Yg
+	 W36/M5cEQPimn/nmNZO52kxJT23Jvp0CHDviLn2FT9AQA+x/+Ml/rNY40Pcw30p4q7
+	 KgO28Alt7jdWw==
+Date: Fri, 06 Dec 2024 16:16:57 -0800
+Subject: [PATCH 46/50] xfs_scrub: call GETFSMAP for each rt group in parallel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352752633.126362.18289089881619449643.stgit@frogsfrogsfrogs>
+Message-ID: <173352752648.126362.13619225422874515961.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352751867.126362.1763344829761562977.stgit@frogsfrogsfrogs>
 References: <173352751867.126362.1763344829761562977.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,95 +45,111 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Run the rtgroup metapath scrubber during phase 5 to ensure that any
-rtgroup metadata files are still connected to the metadir tree after
-we've pruned any bad links.
+If realtime groups are enabled, we should take advantage of the sharding
+to speed up the spacemap scans.  Do so by issuing per-rtgroup GETFSMAP
+calls.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/phase5.c |   24 ++++++++++++++++++++++--
- scrub/scrub.h  |    4 +++-
- 2 files changed, 25 insertions(+), 3 deletions(-)
+ scrub/spacemap.c |   72 ++++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 64 insertions(+), 8 deletions(-)
 
 
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 4d0a76a529b55d..22a22915dbc68d 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -750,6 +750,7 @@ static int
- queue_metapath_scan(
- 	struct workqueue	*wq,
- 	bool			*abortedp,
-+	xfs_rgnumber_t		rgno,
- 	uint64_t		type)
- {
- 	struct fs_scan_item	*item;
-@@ -762,7 +763,7 @@ queue_metapath_scan(
- 		str_liberror(ctx, ret, _("setting up metapath scan"));
+diff --git a/scrub/spacemap.c b/scrub/spacemap.c
+index e35756db2eed43..5b6bad138ce502 100644
+--- a/scrub/spacemap.c
++++ b/scrub/spacemap.c
+@@ -128,6 +128,45 @@ scan_ag_rmaps(
+ 	}
+ }
+ 
++/* Iterate all the reverse mappings of a realtime group. */
++static void
++scan_rtg_rmaps(
++	struct workqueue	*wq,
++	xfs_agnumber_t		rgno,
++	void			*arg)
++{
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	struct scan_blocks	*sbx = arg;
++	struct fsmap		keys[2];
++	off_t			bperrg = bytes_per_rtgroup(&ctx->mnt.fsgeom);
++	int			ret;
++
++
++	memset(keys, 0, sizeof(struct fsmap) * 2);
++	keys->fmr_device = ctx->fsinfo.fs_rtdev;
++	keys->fmr_physical = (xfs_rtblock_t)rgno * bperrg;
++	(keys + 1)->fmr_device = ctx->fsinfo.fs_rtdev;
++	(keys + 1)->fmr_physical = ((rgno + 1) * bperrg) - 1;
++	(keys + 1)->fmr_owner = ULLONG_MAX;
++	(keys + 1)->fmr_offset = ULLONG_MAX;
++	(keys + 1)->fmr_flags = UINT_MAX;
++
++	if (sbx->aborted)
++		return;
++
++	ret = scrub_iterate_fsmap(ctx, keys, sbx->fn, sbx->arg);
++	if (ret) {
++		char		descr[DESCR_BUFSZ];
++
++		snprintf(descr, DESCR_BUFSZ, _("dev %d:%d rtgroup %u fsmap"),
++					major(ctx->fsinfo.fs_datadev),
++					minor(ctx->fsinfo.fs_datadev),
++					rgno);
++		str_liberror(ctx, ret, descr);
++		sbx->aborted = true;
++	}
++}
++
+ /* Iterate all the reverse mappings of a standalone device. */
+ static void
+ scan_dev_rmaps(
+@@ -208,14 +247,6 @@ scrub_scan_all_spacemaps(
+ 		str_liberror(ctx, ret, _("creating fsmap workqueue"));
  		return ret;
  	}
--	scrub_item_init_metapath(&item->sri, type);
-+	scrub_item_init_metapath(&item->sri, rgno, type);
- 	scrub_item_schedule(&item->sri, XFS_SCRUB_TYPE_METAPATH);
- 	item->abortedp = abortedp;
- 
-@@ -785,6 +786,7 @@ run_kernel_metadir_path_scrubbers(
- 	const struct xfrog_scrub_descr	*sc;
- 	uint64_t		type;
- 	unsigned int		nr_threads = scrub_nproc_workqueue(ctx);
-+	xfs_rgnumber_t		rgno;
- 	bool			aborted = false;
- 	int			ret, ret2;
- 
-@@ -804,7 +806,7 @@ run_kernel_metadir_path_scrubbers(
- 		if (sc->group != XFROG_SCRUB_GROUP_FS)
- 			continue;
- 
--		ret = queue_metapath_scan(&wq, &aborted, type);
-+		ret = queue_metapath_scan(&wq, &aborted, 0, type);
+-	if (ctx->fsinfo.fs_rt) {
+-		ret = -workqueue_add(&wq, scan_rt_rmaps, 0, &sbx);
+-		if (ret) {
+-			sbx.aborted = true;
+-			str_liberror(ctx, ret, _("queueing rtdev fsmap work"));
+-			goto out;
+-		}
+-	}
+ 	if (ctx->fsinfo.fs_log) {
+ 		ret = -workqueue_add(&wq, scan_log_rmaps, 0, &sbx);
  		if (ret) {
- 			str_liberror(ctx, ret,
-  _("queueing metapath scrub work"));
-@@ -812,6 +814,24 @@ run_kernel_metadir_path_scrubbers(
+@@ -232,6 +263,31 @@ scrub_scan_all_spacemaps(
+ 			break;
  		}
  	}
- 
-+	/* Scan all rtgroup metadata files */
-+	for (rgno = 0;
-+	     rgno < ctx->mnt.fsgeom.rgcount && !aborted;
-+	     rgno++) {
-+		for (type = 0; type < XFS_SCRUB_METAPATH_NR; type++) {
-+			sc = &xfrog_metapaths[type];
-+			if (sc->group != XFROG_SCRUB_GROUP_RTGROUP)
-+				continue;
-+
-+			ret = queue_metapath_scan(&wq, &aborted, rgno, type);
++	if (ctx->fsinfo.fs_rt) {
++		for (agno = 0; agno < ctx->mnt.fsgeom.rgcount; agno++) {
++			ret = -workqueue_add(&wq, scan_rtg_rmaps, agno, &sbx);
 +			if (ret) {
++				sbx.aborted = true;
 +				str_liberror(ctx, ret,
-+  _("queueing metapath scrub work"));
-+				goto wait;
++						_("queueing rtgroup fsmap work"));
++				break;
++			}
++		}
++
++		/*
++		 * If the fs doesn't have any realtime groups, scan the entire
++		 * volume all at once, since the above loop did nothing.
++		 */
++		if (ctx->mnt.fsgeom.rgcount == 0) {
++			ret = -workqueue_add(&wq, scan_rt_rmaps, 0, &sbx);
++			if (ret) {
++				sbx.aborted = true;
++				str_liberror(ctx, ret,
++						_("queueing rtdev fsmap work"));
++				goto out;
 +			}
 +		}
 +	}
-+
- wait:
- 	ret2 = -workqueue_terminate(&wq);
- 	if (ret2) {
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index bb94a11dcfce71..24b5ad629c5158 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -118,9 +118,11 @@ scrub_item_init_file(struct scrub_item *sri, const struct xfs_bulkstat *bstat)
- }
- 
- static inline void
--scrub_item_init_metapath(struct scrub_item *sri, uint64_t metapath)
-+scrub_item_init_metapath(struct scrub_item *sri, xfs_rgnumber_t rgno,
-+		uint64_t metapath)
- {
- 	memset(sri, 0, sizeof(*sri));
-+	sri->sri_agno = rgno;
- 	sri->sri_ino = metapath;
- }
- 
+ out:
+ 	ret = -workqueue_terminate(&wq);
+ 	if (ret) {
 
