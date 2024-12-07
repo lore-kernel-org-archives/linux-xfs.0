@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B82C4A07
-	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:12:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382FA4A07
+	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:12:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733530336; cv=none; b=HlFd5aFFBLaZoNYAbk+Ytrrp9/6h6m3EV1ft5WGkijnR+tjBzG2FpLgBCKTaWb9hDIerbjCDss46ACB2tmRsTrXToKohjejPcbspnFNNa3Jn0F32FdLCyLlXdApH47Yh4xW76LuhidLXTX1Fs9u4eLv3IqkrXKzlAFT7mGZByro=
+	t=1733530352; cv=none; b=elwZtpcq7JI3Q/avEIOAA+rHBfMQdsNsciXkVc4BfqNUR/Y2SeGLalyEW/3VbyXgg3YRyarOVDeOqNHJw1ISoWConSY/vmEDjyD3djTxdTeOfLipQCoRgAwNVPfAianv7+HUx7NCR6Eup/5t8Qc+uVRxQnd0eMiOCc54+SkaJsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733530336; c=relaxed/simple;
-	bh=HJJpI4GCnrkAToffLSRbL1KWr0K08ZUmLDgHQvsnOl4=;
+	s=arc-20240116; t=1733530352; c=relaxed/simple;
+	bh=ujpZ8/GHjJVULljRJqGMS0nOJZht8C2J5CR9TQ9VH2Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u8bMPmb9pmXl8vHY4rlmeptgiraQp9ZidOzD2varMETKPOS5ej8jSq4jdoeXU+ozIq6EvFvsV1WwxXJRBN7bM//3ijoFGJSwLgJFXn9Rj8Kl7mmLzm8Zu/5nXd2OyFZmyzUPdPtcR7almSMbcqrdY3YKL3cg1NZFi8VQYMTnPX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vMMcwNk9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TwkPAwhC6TlF6x5gMMjOt8aTci7y03GoFZNXkb4+aK6NlzKT6i3n4E6QqPZrGN0zIAKOxSs214D+o+FfmoUt21yq3T2y7fYOYoibWM7tUB78RrZnf/F/EioWF1gX5qoqsNG9oCSQipZRxE+A5Nk0yW/+VvMBnyi1YHzkvwwE4wI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ws6HwkD4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vMMcwNk9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F149C4CED1;
-	Sat,  7 Dec 2024 00:12:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ws6HwkD4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10353C4CED1;
+	Sat,  7 Dec 2024 00:12:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733530336;
-	bh=HJJpI4GCnrkAToffLSRbL1KWr0K08ZUmLDgHQvsnOl4=;
+	s=k20201202; t=1733530352;
+	bh=ujpZ8/GHjJVULljRJqGMS0nOJZht8C2J5CR9TQ9VH2Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=vMMcwNk9Y+KoKdLECgKWd4R/6Aw6iLfcKHfkAubCaNYXCkX7ayW7m41dqygPDMWN3
-	 wlhg/Z5sSunxXX0AZRqWCcougJJNj16jc5jS2Bw7ORvgIyz3mvjKJ5ujqSI79Wux5K
-	 HMS7SWVd+CFSKOMoLGTT0+D162QHKHSEdoM271Nk1zOkfZh2yMmyW2PG5iL+x0Y0oR
-	 OywwsKhWNKMEcbSzup0PN9xJxpGqGX2xrpQiOFy2GNi9sZyVOmiQLFs8QYMaDbPV6Q
-	 07kRDOTRMFqEsUYdsEtW8ctczd0KRSn+jnbqVA37aOLxYuHE6Y0aScy9hgvwBplRXx
-	 qd8mHAWwQgrcw==
-Date: Fri, 06 Dec 2024 16:12:13 -0800
-Subject: [PATCH 28/50] xfs_db: support dumping realtime group data and
+	b=Ws6HwkD4pWlGZ5tR9euSJbsWDCoMLDgRFqpd51/4iETJLnDXXow5PIp2Q2GWNRbQ7
+	 ofOg0WuSccX2dJTwU5y1xfE9/keg1g8iqhTYDNX2OWZ3d8yDr7K6Uk2HXetzjcyy+s
+	 uNEK+X3d+0oz61qBA8YcFslM2YjXugHcGXwCgxt7SRtnzqwnTErxbiri1/kCcYowR3
+	 W44Lw0amJQch1Jpftv1YMgKQtrd+u5WUqu6OX0qwOLF79clCxu6QCOua1HRSkfGpW0
+	 0V43mjISWh0Guka8uIqUALJ/ftOKqDwwLnoDWupd9a24ev6CEmqsMtzGQpFtQ15Bjn
+	 1Og0sF7TCblVg==
+Date: Fri, 06 Dec 2024 16:12:31 -0800
+Subject: [PATCH 29/50] xfs_db: support changing the label and uuid of rt
  superblocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352752373.126362.17848531751610324154.stgit@frogsfrogsfrogs>
+Message-ID: <173352752388.126362.13051985148596315963.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352751867.126362.1763344829761562977.stgit@frogsfrogsfrogs>
 References: <173352751867.126362.1763344829761562977.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,309 +46,186 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Allow dumping of realtime device superblocks and the new fields in the
-primary superblock that were added for rtgroups support.
+Update the label and uuid commands to change the rt superblocks along
+with the filesystem superblocks.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- db/Makefile  |    1 +
- db/command.c |    2 +
- db/field.c   |   10 ++++++
- db/field.h   |    5 +++
- db/rtgroup.c |  100 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- db/rtgroup.h |   15 +++++++++
- db/sb.c      |    8 +++++
- db/type.c    |    6 +++
- db/type.h    |    1 +
- 9 files changed, 148 insertions(+)
- create mode 100644 db/rtgroup.c
- create mode 100644 db/rtgroup.h
+ db/sb.c |  109 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 98 insertions(+), 11 deletions(-)
 
 
-diff --git a/db/Makefile b/db/Makefile
-index 83389376c36c46..02eeead25b49d0 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -49,6 +49,7 @@ HFILES = \
- 	output.h \
- 	print.h \
- 	quit.h \
-+	rtgroup.h \
- 	sb.h \
- 	sig.h \
- 	strvec.h \
-diff --git a/db/command.c b/db/command.c
-index 6cda03e9856d84..1b46c3fec08a0e 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -39,6 +39,7 @@
- #include "fsmap.h"
- #include "crc.h"
- #include "fuzz.h"
-+#include "rtgroup.h"
+diff --git a/db/sb.c b/db/sb.c
+index de248c10cb27f5..ba5a2d5851f602 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -27,6 +27,7 @@ static int	label_f(int argc, char **argv);
+ static void     label_help(void);
+ static int	version_f(int argc, char **argv);
+ static void     version_help(void);
++static size_t check_label(char *label, bool can_warn);
  
- cmdinfo_t	*cmdtab;
- int		ncmds;
-@@ -135,6 +136,7 @@ init_commands(void)
- 	output_init();
- 	print_init();
- 	quit_init();
-+	rtsb_init();
- 	sb_init();
- 	type_init();
- 	write_init();
-diff --git a/db/field.c b/db/field.c
-index 946684415f65d3..f70955ef57a323 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -23,6 +23,7 @@
- #include "dir2.h"
- #include "dir2sf.h"
- #include "symlink.h"
-+#include "rtgroup.h"
+ static const cmdinfo_t	sb_cmd =
+ 	{ "sb", NULL, sb_f, 0, 1, 1, N_("[agno]"),
+@@ -332,6 +333,65 @@ uuid_help(void)
+ ));
+ }
  
- #define	PPOFF(f)	bitize(offsetof(struct xfs_parent_rec, f))
- const field_t		parent_flds[] = {
-@@ -52,6 +53,13 @@ const ftattr_t	ftattrtab[] = {
- 	{ FLDT_AGNUMBER, "agnumber", fp_num, "%u", SI(bitsz(xfs_agnumber_t)),
- 	  FTARG_DONULL, NULL, NULL },
- 
-+	{ FLDT_RGBLOCK, "rgblock", fp_num, "%u", SI(bitsz(xfs_rgblock_t)),
-+	  FTARG_DONULL, NULL, NULL },
-+	{ FLDT_RTXLEN, "rtxlen", fp_num, "%u", SI(bitsz(xfs_rtxlen_t)),
-+	  FTARG_DONULL, NULL, NULL },
-+	{ FLDT_RGNUMBER, "rgnumber", fp_num, "%u", SI(bitsz(xfs_rgnumber_t)),
-+	  FTARG_DONULL, NULL, NULL },
-+
- /* attr fields */
- 	{ FLDT_ATTR, "attr", NULL, (char *)attr_flds, attr_size, FTARG_SIZE,
- 	  NULL, attr_flds },
-@@ -357,6 +365,8 @@ const ftattr_t	ftattrtab[] = {
- 	  NULL, NULL },
- 	{ FLDT_SB, "sb", NULL, (char *)sb_flds, sb_size, FTARG_SIZE, NULL,
- 	  sb_flds },
-+	{ FLDT_RTSB, "rtsb", NULL, (char *)rtsb_flds, rtsb_size, FTARG_SIZE,
-+	  NULL, rtsb_flds },
- 
- /* CRC enabled symlink */
- 	{ FLDT_SYMLINK_CRC, "symlink", NULL, (char *)symlink_crc_flds,
-diff --git a/db/field.h b/db/field.h
-index 9746676a6c7ac9..8797a75f669246 100644
---- a/db/field.h
-+++ b/db/field.h
-@@ -15,6 +15,10 @@ typedef enum fldt	{
- 	FLDT_AGINONN,
- 	FLDT_AGNUMBER,
- 
-+	FLDT_RGBLOCK,
-+	FLDT_RTXLEN,
-+	FLDT_RGNUMBER,
-+
- 	/* attr fields */
- 	FLDT_ATTR,
- 	FLDT_ATTR_BLKINFO,
-@@ -167,6 +171,7 @@ typedef enum fldt	{
- 	FLDT_QCNT,
- 	FLDT_QWARNCNT,
- 	FLDT_SB,
-+	FLDT_RTSB,
- 
- 	/* CRC enabled symlink */
- 	FLDT_SYMLINK_CRC,
-diff --git a/db/rtgroup.c b/db/rtgroup.c
-new file mode 100644
-index 00000000000000..5cda1a4f35efb6
---- /dev/null
-+++ b/db/rtgroup.c
-@@ -0,0 +1,100 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "libxfs.h"
-+#include "libxlog.h"
-+#include "command.h"
-+#include "type.h"
-+#include "faddr.h"
-+#include "fprint.h"
-+#include "field.h"
-+#include "io.h"
-+#include "sb.h"
-+#include "bit.h"
-+#include "output.h"
-+#include "init.h"
-+#include "rtgroup.h"
-+
-+#define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
-+
-+static int	rtsb_f(int argc, char **argv);
-+static void     rtsb_help(void);
-+
-+static const cmdinfo_t	rtsb_cmd =
-+	{ "rtsb", NULL, rtsb_f, 0, 0, 1, "",
-+	  N_("set current address to realtime sb header"), rtsb_help };
-+
-+void
-+rtsb_init(void)
++static bool
++check_rtsb(
++	struct xfs_mount	*mp)
 +{
-+	if (xfs_has_rtgroups(mp))
-+		add_command(&rtsb_cmd);
-+}
++	int			error;
 +
-+#define	OFF(f)	bitize(offsetof(struct xfs_rtsb, rsb_ ## f))
-+#define	SZC(f)	szcount(struct xfs_rtsb, rsb_ ## f)
-+const field_t	rtsb_flds[] = {
-+	{ "magicnum", FLDT_UINT32X, OI(OFF(magicnum)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "pad", FLDT_UINT32X, OI(OFF(pad)), C1, 0, TYP_NONE },
-+	{ "fname", FLDT_CHARNS, OI(OFF(fname)), CI(SZC(fname)), 0, TYP_NONE },
-+	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-+	{ "meta_uuid", FLDT_UUID, OI(OFF(meta_uuid)), C1, 0, TYP_NONE },
-+	{ NULL }
-+};
++	if (!xfs_has_rtsb(mp) || !xfs_has_realtime(mp))
++		return false;
 +
-+const field_t	rtsb_hfld[] = {
-+	{ "", FLDT_RTSB, OI(0), C1, 0, TYP_NONE },
-+	{ NULL }
-+};
++	push_cur();
++	error = set_rt_cur(&typtab[TYP_RTSB], XFS_RTSB_DADDR,
++			XFS_FSB_TO_BB(mp, 1), DB_RING_ADD, NULL);
++	if (error == ENODEV) {
++		/* no rt dev means we should just bail out */
++		pop_cur();
++		return true;
++	}
 +
-+static void
-+rtsb_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" seek to realtime superblock\n"
-+"\n"
-+" Example:\n"
-+"\n"
-+" 'rtsb - set location to realtime superblock, set type to 'rtsb'\n"
-+"\n"
-+" Located in the first block of the realtime volume, the rt superblock\n"
-+" contains the base information for the realtime section of a filesystem.\n"
-+"\n"
-+));
++	pop_cur();
++	return false;
 +}
 +
 +static int
-+rtsb_f(
-+	int		argc,
-+	char		**argv)
++update_rtsb(
++	struct xfs_mount	*mp,
++	uuid_t			*uuid,
++	char			*label)
 +{
-+	int		c;
++	struct xfs_rtsb		*rsb;
++	int			error;
 +
-+	while ((c = getopt(argc, argv, "")) != -1) {
-+		switch (c) {
-+		default:
-+			rtsb_help();
-+			return 0;
-+		}
++	if (!xfs_has_rtsb(mp) || !xfs_has_realtime(mp))
++		return false;
++
++	push_cur();
++	error = set_rt_cur(&typtab[TYP_RTSB], XFS_RTSB_DADDR,
++			XFS_FSB_TO_BB(mp, 1), DB_RING_ADD, NULL);
++	if (error == ENODEV) {
++		/* no rt dev means we should just bail out */
++		exitcode = 1;
++		pop_cur();
++		return 1;
 +	}
 +
-+	cur_agno = NULLAGNUMBER;
++	rsb = iocur_top->data;
++	if (label) {
++		size_t	len = check_label(label, false);
 +
-+	ASSERT(typtab[TYP_RTSB].typnm == TYP_RTSB);
-+	set_rt_cur(&typtab[TYP_RTSB], XFS_RTSB_DADDR, XFS_FSB_TO_BB(mp, 1),
-+			DB_RING_ADD, NULL);
++		memset(&rsb->rsb_fname, 0, XFSLABEL_MAX);
++		memcpy(&rsb->rsb_fname, label, len);
++	}
++	if (uuid)
++		memcpy(&rsb->rsb_uuid, uuid, sizeof(rsb->rsb_uuid));
++	write_cur();
++	pop_cur();
++
 +	return 0;
 +}
 +
-+int
-+rtsb_size(
-+	void	*obj,
-+	int	startoff,
-+	int	idx)
+ static uuid_t *
+ do_uuid(xfs_agnumber_t agno, uuid_t *uuid)
+ {
+@@ -376,6 +436,7 @@ do_uuid(xfs_agnumber_t agno, uuid_t *uuid)
+ 	memcpy(&tsb.sb_uuid, uuid, sizeof(uuid_t));
+ 	libxfs_sb_to_disk(iocur_top->data, &tsb);
+ 	write_cur();
++	memcpy(&mp->m_sb.sb_uuid, uuid, sizeof(uuid_t));
+ 	return uuid;
+ }
+ 
+@@ -438,11 +499,18 @@ uuid_f(
+ 			}
+ 		}
+ 
++		if (check_rtsb(mp)) {
++			exitcode = 1;
++			return 0;
++		}
++
+ 		/* clear the log (setting uuid) if it's not dirty */
+ 		if (!sb_logzero(&uu))
+ 			return 0;
+ 
+ 		dbprintf(_("writing all SBs\n"));
++		if (update_rtsb(mp, &uu, NULL))
++			return 1;
+ 		for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+ 			if (!do_uuid(agno, &uu)) {
+ 				dbprintf(_("failed to set UUID in AG %d\n"), agno);
+@@ -511,6 +579,27 @@ label_help(void)
+ ));
+ }
+ 
++static size_t
++check_label(
++	char	*label,
++	bool	can_warn)
 +{
-+	return bitize(mp->m_sb.sb_blocksize);
++	size_t	len = strlen(label);
++
++	if (len > XFSLABEL_MAX) {
++		if (can_warn)
++			dbprintf(_("%s: truncating label length from %d to %d\n"),
++				progname, (int)len, XFSLABEL_MAX);
++		len = XFSLABEL_MAX;
++	}
++	if ( len == 2 &&
++	     (strcmp(label, "\"\"") == 0 ||
++	      strcmp(label, "''")   == 0 ||
++	      strcmp(label, "--")   == 0) )
++		label[0] = label[1] = '\0';
++	return len;
 +}
-diff --git a/db/rtgroup.h b/db/rtgroup.h
-new file mode 100644
-index 00000000000000..85960a3fb9f5c9
---- /dev/null
-+++ b/db/rtgroup.h
-@@ -0,0 +1,15 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef DB_RTGROUP_H_
-+#define DB_RTGROUP_H_
 +
-+extern const struct field	rtsb_flds[];
-+extern const struct field	rtsb_hfld[];
-+
-+extern void	rtsb_init(void);
-+extern int	rtsb_size(void *obj, int startoff, int idx);
-+
-+#endif /* DB_RTGROUP_H_ */
-diff --git a/db/sb.c b/db/sb.c
-index fa15b429ecbefa..de248c10cb27f5 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -127,6 +127,14 @@ const field_t	sb_flds[] = {
- 	{ "meta_uuid", FLDT_UUID, OI(OFF(meta_uuid)), C1, 0, TYP_NONE },
- 	{ "metadirino", FLDT_INO, OI(OFF(metadirino)), metadirfld_count,
- 		FLD_COUNT, TYP_INODE },
-+	{ "rgcount", FLDT_RGNUMBER, OI(OFF(rgcount)), metadirfld_count,
-+		FLD_COUNT, TYP_NONE },
-+	{ "rgextents", FLDT_RTXLEN, OI(OFF(rgextents)), metadirfld_count,
-+		FLD_COUNT, TYP_NONE },
-+	{ "rgblklog", FLDT_UINT8D, OI(OFF(rgblklog)), metadirfld_count,
-+		FLD_COUNT, TYP_NONE },
-+	{ "pad", FLDT_UINT8X, OI(OFF(pad)), metadirfld_count,
-+		FLD_COUNT, TYP_NONE },
- 	{ NULL }
- };
+ static char *
+ do_label(xfs_agnumber_t agno, char *label)
+ {
+@@ -529,22 +618,13 @@ do_label(xfs_agnumber_t agno, char *label)
+ 		return &lbl[0];
+ 	}
+ 	/* set label */
+-	if ((len = strlen(label)) > sizeof(tsb.sb_fname)) {
+-		if (agno == 0)
+-			dbprintf(_("%s: truncating label length from %d to %d\n"),
+-				progname, (int)len, (int)sizeof(tsb.sb_fname));
+-		len = sizeof(tsb.sb_fname);
+-	}
+-	if ( len == 2 &&
+-	     (strcmp(label, "\"\"") == 0 ||
+-	      strcmp(label, "''")   == 0 ||
+-	      strcmp(label, "--")   == 0) )
+-		label[0] = label[1] = '\0';
++	len = check_label(label, agno == 0);
+ 	memset(&tsb.sb_fname, 0, sizeof(tsb.sb_fname));
+ 	memcpy(&tsb.sb_fname, label, len);
+ 	memcpy(&lbl[0], &tsb.sb_fname, sizeof(tsb.sb_fname));
+ 	libxfs_sb_to_disk(iocur_top->data, &tsb);
+ 	write_cur();
++	memcpy(&mp->m_sb.sb_fname, &tsb.sb_fname, XFSLABEL_MAX);
+ 	return &lbl[0];
+ }
  
-diff --git a/db/type.c b/db/type.c
-index efe7044569d357..d875c0c636553b 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -28,6 +28,7 @@
- #include "text.h"
- #include "symlink.h"
- #include "fuzz.h"
-+#include "rtgroup.h"
+@@ -576,7 +656,14 @@ label_f(
+ 			return 0;
+ 		}
  
- static const typ_t	*findtyp(char *name);
- static int		type_f(int argc, char **argv);
-@@ -60,6 +61,7 @@ static const typ_t	__typtab[] = {
- 	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
-+	{ TYP_RTSB, "rtsb", handle_struct, rtsb_hfld, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
-@@ -102,6 +104,8 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
-+	{ TYP_RTSB, "rtsb", handle_struct, rtsb_hfld, &xfs_rtsb_buf_ops,
-+		XFS_SB_CRC_OFF },
- 	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops,
- 		XFS_SB_CRC_OFF },
- 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
-@@ -146,6 +150,8 @@ static const typ_t	__typtab_spcrc[] = {
- 	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
-+	{ TYP_RTSB, "rtsb", handle_struct, rtsb_hfld, &xfs_rtsb_buf_ops,
-+		XFS_SB_CRC_OFF },
- 	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops,
- 		XFS_SB_CRC_OFF },
- 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
-diff --git a/db/type.h b/db/type.h
-index 397dcf5464c6c8..d4efa4b0fab541 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -30,6 +30,7 @@ typedef enum typnm
- 	TYP_LOG,
- 	TYP_RTBITMAP,
- 	TYP_RTSUMMARY,
-+	TYP_RTSB,
- 	TYP_SB,
- 	TYP_SYMLINK,
- 	TYP_TEXT,
++		if (check_rtsb(mp)) {
++			exitcode = 1;
++			return 0;
++		}
++
+ 		dbprintf(_("writing all SBs\n"));
++		if (update_rtsb(mp, NULL, argv[1]))
++			return 1;
+ 		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
+ 			if ((p = do_label(ag, argv[1])) == NULL) {
+ 				dbprintf(_("failed to set label in AG %d\n"), ag);
 
