@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7F13FF1
-	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:18:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18E2E4A1C
+	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:19:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733530727; cv=none; b=We5BOmxuAnYW7QXaBgU1We2JFcXaea7WkI9X/OoUFgjzU/zMsaF17I29rFOAjMXOxgtsntKSdJKHa3rgXTMprlfalYrcNU3SycwAEWEmHOZFYoLWqEHHFbarvLj1+HMOFmfP1AgFSMTrzeUQqo1TqcDzinLvy+nPNP7gVyJAP2k=
+	t=1733530743; cv=none; b=orQq/4vK+C9eUXwGwivu0p9RiTYPa3XOOxDic8FIaLhrKxhvH81nICmZEd4jmJBrKAlbHgDhAc6EK9Zgrm0f+O+OwW8RxcmBj3ai0EFSBz0qFEVVk7Zp30VR07vrU1ILLi4UGpMRyOvFDHe/QJdsz+Yw40WrmM22bpbByW5OiPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733530727; c=relaxed/simple;
-	bh=JCLAzqjET3qlZEtGhGHIiSrsU/pTRxERdQO/3VhrKuo=;
+	s=arc-20240116; t=1733530743; c=relaxed/simple;
+	bh=05RybQkomPUSxlOULRYuitna7fvlIX40uS6tMMN899g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VwOa5s+J60hIY/QlJGUWuDIZ35CqHLNymHXNhC0qQz919aicus5G32elw2GM0jS9A0DIaaOWNm7hqjWws7d+J1BRNWdPRLCyoX+9rNXbY4oCx55PkVyWky6uVbj4MShuXspgFASY3dTcaKGDuuZHZuxGWaxxm4rvo83zsYRmTjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kr7wcANy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lv5i+gC/etvRNsPlwSd7gNCfgHyYuKg/eiW6uSKuQ3PMB1T1rI3yETf2Zj9dtvO3Z5Oqipdrky2BjR/klIGFOVUTIAmF74A1Fjk3CviODC8rmRIVpzCLY0kJ++ZDgN/CwLIGWaz8Ny8zErhejBO/WFyvlNCWd4tOEC/x7QPq2Ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PQytojDA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kr7wcANy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1222CC4CED1;
-	Sat,  7 Dec 2024 00:18:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQytojDA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADFC7C4CED1;
+	Sat,  7 Dec 2024 00:19:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733530727;
-	bh=JCLAzqjET3qlZEtGhGHIiSrsU/pTRxERdQO/3VhrKuo=;
+	s=k20201202; t=1733530742;
+	bh=05RybQkomPUSxlOULRYuitna7fvlIX40uS6tMMN899g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Kr7wcANyjN5e1sHwKHJuioygqw80Q0e6ABT/XzhgAZAbKkpXXUmKFX21To3F1Qydu
-	 6nFchQOJeZKoV7BoQ9oayQEqbn62HtZPyu+dkZZoylaQKYvHI/VpQSknziL2YPptth
-	 I2MntnAlaHjeCUfdPMju0vtRpw4n8lwF/Jz8ts0mywpMsK8tMsxCAPNbV6ytfKLqRl
-	 IHcTxqGNxUMzGC8xOWfgGDtHOB6MDI8r5kV07fNAcbAz0NZmglOHwgDgneFbXhl/lp
-	 ZbeylVcsrfE29CZq4Ime/qPhkCQjhZJ7qsr3U6dj1SH56eofrtwPni32M9SbEFWEBs
-	 JLk7rJYW/UKgw==
-Date: Fri, 06 Dec 2024 16:18:46 -0800
-Subject: [PATCH 3/7] xfs_repair: refactor quota inumber handling
+	b=PQytojDAM0gZfWDM/7eoCQzgsKaRg7l8+4BsNf2MBfvYEOtOBMo5gULC6zcoiMwGJ
+	 K3ILbM9Xnen4tvmd2+eNu2kF7fPIoKh4R3ZR+WohmKQQMD3SBuB0LWcNyb2zgVq9av
+	 Hz/jhIb+iEOSct1ZFAK0C0ENFSFAByrpbWuk/52Ha2Nxg1e/MY3uNI+/JpYg+WtnoM
+	 6dr08+w24PnkJMXwyY4xRdDgN3QVTCOJyT5YJq21fTkR0hCAn4Ylw0XEpQYP+b43Ug
+	 NYqGt/OCRRmHtPVuC76hANW0JZ1VT1pvr5h6umRp+PgakGpyXaf067aH7ZDATPqLcR
+	 0oZ2QJlH5k5hg==
+Date: Fri, 06 Dec 2024 16:19:02 -0800
+Subject: [PATCH 4/7] xfs_repair: hoist the secondary sb qflags handling
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173352753279.129683.18254140495168515228.stgit@frogsfrogsfrogs>
+Message-ID: <173352753294.129683.12319167915814901490.stgit@frogsfrogsfrogs>
 In-Reply-To: <173352753222.129683.17995064282877591283.stgit@frogsfrogsfrogs>
 References: <173352753222.129683.17995064282877591283.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,625 +45,196 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In preparation for putting quota files in the metadata directory tree,
-refactor repair's quota inumber handling to use its own variables
-instead of the xfs_mount's.
+Hoist all the secondary superblock qflags and quota inode modification
+code into a separate function so that we can disable it in the next
+patch.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- repair/dinode.c     |   18 ++++----
- repair/dir2.c       |   12 +++---
- repair/globals.c    |  111 ++++++++++++++++++++++++++++++++++++++++++++++++---
- repair/globals.h    |   15 ++++---
- repair/phase4.c     |   96 ++++++++++++++++++--------------------------
- repair/phase6.c     |   12 +++---
- repair/quotacheck.c |   47 +++++++++++++++-------
- repair/quotacheck.h |    2 +
- repair/versions.c   |    9 +---
- repair/xfs_repair.c |   12 ++++--
- 10 files changed, 221 insertions(+), 113 deletions(-)
+ repair/agheader.c |  157 +++++++++++++++++++++++++++++------------------------
+ 1 file changed, 85 insertions(+), 72 deletions(-)
 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 2d341975e53993..9ab193bc5fe973 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1662,29 +1662,29 @@ process_check_metadata_inodes(
- 		}
- 		return 0;
- 	}
--	if (lino == mp->m_sb.sb_uquotino)  {
-+	if (is_quota_inode(XFS_DQTYPE_USER, lino))  {
- 		if (*type != XR_INO_UQUOTA)  {
- 			do_warn(_("user quota inode %" PRIu64 " has bad type 0x%x\n"),
- 				lino, dinode_fmt(dinoc));
--			mp->m_sb.sb_uquotino = NULLFSINO;
-+			clear_quota_inode(XFS_DQTYPE_USER);
- 			return 1;
- 		}
- 		return 0;
- 	}
--	if (lino == mp->m_sb.sb_gquotino)  {
-+	if (is_quota_inode(XFS_DQTYPE_GROUP, lino))  {
- 		if (*type != XR_INO_GQUOTA)  {
- 			do_warn(_("group quota inode %" PRIu64 " has bad type 0x%x\n"),
- 				lino, dinode_fmt(dinoc));
--			mp->m_sb.sb_gquotino = NULLFSINO;
-+			clear_quota_inode(XFS_DQTYPE_GROUP);
- 			return 1;
- 		}
- 		return 0;
- 	}
--	if (lino == mp->m_sb.sb_pquotino)  {
-+	if (is_quota_inode(XFS_DQTYPE_PROJ, lino))  {
- 		if (*type != XR_INO_PQUOTA)  {
- 			do_warn(_("project quota inode %" PRIu64 " has bad type 0x%x\n"),
- 				lino, dinode_fmt(dinoc));
--			mp->m_sb.sb_pquotino = NULLFSINO;
-+			clear_quota_inode(XFS_DQTYPE_PROJ);
- 			return 1;
- 		}
- 		return 0;
-@@ -2980,11 +2980,11 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 		else if (lino == mp->m_sb.sb_rsumino ||
- 			 is_rtsummary_inode(lino))
- 			type = XR_INO_RTSUM;
--		else if (lino == mp->m_sb.sb_uquotino)
-+		else if (is_quota_inode(XFS_DQTYPE_USER, lino))
- 			type = XR_INO_UQUOTA;
--		else if (lino == mp->m_sb.sb_gquotino)
-+		else if (is_quota_inode(XFS_DQTYPE_GROUP, lino))
- 			type = XR_INO_GQUOTA;
--		else if (lino == mp->m_sb.sb_pquotino)
-+		else if (is_quota_inode(XFS_DQTYPE_PROJ, lino))
- 			type = XR_INO_PQUOTA;
- 		else
- 			type = XR_INO_DATA;
-diff --git a/repair/dir2.c b/repair/dir2.c
-index ca747c90175e93..ed615662009957 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -265,13 +265,13 @@ process_sf_dir2(
- 		           is_rtsummary_inode(lino)) {
- 			junkit = 1;
- 			junkreason = _("realtime summary");
--		} else if (lino == mp->m_sb.sb_uquotino)  {
-+		} else if (is_quota_inode(XFS_DQTYPE_USER, lino)) {
- 			junkit = 1;
- 			junkreason = _("user quota");
--		} else if (lino == mp->m_sb.sb_gquotino)  {
-+		} else if (is_quota_inode(XFS_DQTYPE_GROUP, lino)) {
- 			junkit = 1;
- 			junkreason = _("group quota");
--		} else if (lino == mp->m_sb.sb_pquotino)  {
-+		} else if (is_quota_inode(XFS_DQTYPE_PROJ, lino)) {
- 			junkit = 1;
- 			junkreason = _("project quota");
- 		} else if (lino == mp->m_sb.sb_metadirino)  {
-@@ -746,11 +746,11 @@ process_dir2_data(
- 		} else if (ent_ino == mp->m_sb.sb_rsumino ||
- 		           is_rtsummary_inode(ent_ino)) {
- 			clearreason = _("realtime summary");
--		} else if (ent_ino == mp->m_sb.sb_uquotino) {
-+		} else if (is_quota_inode(XFS_DQTYPE_USER, ent_ino)) {
- 			clearreason = _("user quota");
--		} else if (ent_ino == mp->m_sb.sb_gquotino) {
-+		} else if (is_quota_inode(XFS_DQTYPE_GROUP, ent_ino)) {
- 			clearreason = _("group quota");
--		} else if (ent_ino == mp->m_sb.sb_pquotino) {
-+		} else if (is_quota_inode(XFS_DQTYPE_PROJ, ent_ino)) {
- 			clearreason = _("project quota");
- 		} else if (ent_ino == mp->m_sb.sb_metadirino)  {
- 			clearreason = _("metadata directory root");
-diff --git a/repair/globals.c b/repair/globals.c
-index 30995f5298d5a1..99291d6afd61b9 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -73,12 +73,6 @@ int	need_rbmino;
- int	need_rsumino;
+diff --git a/repair/agheader.c b/repair/agheader.c
+index fd279559aed973..4a530fd6b8fe96 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -319,6 +319,90 @@ check_v5_feature_mismatch(
+ 	return XR_AG_SB_SEC;
+ }
  
- int	lost_quotas;
--int	have_uquotino;
--int	have_gquotino;
--int	have_pquotino;
--int	lost_uquotino;
--int	lost_gquotino;
--int	lost_pquotino;
- 
- /* configuration vars -- fs geometry dependent */
- 
-@@ -119,3 +113,108 @@ int		thread_count;
- 
- /* If nonzero, simulate failure after this phase. */
- int		fail_after_phase;
-+
-+/* quota inode numbers */
-+enum quotino_state {
-+	QI_STATE_UNKNOWN,
-+	QI_STATE_HAVE,
-+	QI_STATE_LOST,
-+};
-+
-+static xfs_ino_t quotinos[3] = { NULLFSINO, NULLFSINO, NULLFSINO };
-+static enum quotino_state quotino_state[3];
-+
-+static inline unsigned int quotino_off(xfs_dqtype_t type)
++/*
++ * quota inodes and flags in secondary superblocks are never set by mkfs.
++ * However, they could be set in a secondary if a fs with quotas was growfs'ed
++ * since growfs copies the new primary into the secondaries.
++ *
++ * Also, the in-core inode flags now have different meaning to the on-disk
++ * flags, and so libxfs_sb_to_disk cannot directly write the
++ * sb_gquotino/sb_pquotino fields without specific sb_qflags being set.  Hence
++ * we need to zero those fields directly in the sb buffer here.
++ */
++static int
++secondary_sb_quota(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*sbuf,
++	struct xfs_sb		*sb,
++	xfs_agnumber_t		i,
++	int			do_bzero)
 +{
-+	switch (type) {
-+	case XFS_DQTYPE_USER:
-+		return 0;
-+	case XFS_DQTYPE_GROUP:
-+		return 1;
-+	case XFS_DQTYPE_PROJ:
-+		return 2;
++	struct xfs_dsb		*dsb = sbuf->b_addr;
++	int			rval = 0;
++
++	if (sb->sb_inprogress == 1 && sb->sb_uquotino != NULLFSINO)  {
++		if (!no_modify)
++			sb->sb_uquotino = 0;
++		if (!do_bzero)  {
++			rval |= XR_AG_SB;
++			do_warn(
++		_("non-null user quota inode field in superblock %d\n"),
++				i);
++
++		} else
++			rval |= XR_AG_SB_SEC;
 +	}
 +
-+	ASSERT(0);
-+	return -1;
-+}
++	if (sb->sb_inprogress == 1 && sb->sb_gquotino != NULLFSINO)  {
++		if (!no_modify) {
++			sb->sb_gquotino = 0;
++			dsb->sb_gquotino = 0;
++		}
++		if (!do_bzero)  {
++			rval |= XR_AG_SB;
++			do_warn(
++		_("non-null group quota inode field in superblock %d\n"),
++				i);
 +
-+void
-+set_quota_inode(
-+	xfs_dqtype_t	type,
-+	xfs_ino_t	ino)
-+{
-+	unsigned int	off = quotino_off(type);
++		} else
++			rval |= XR_AG_SB_SEC;
++	}
 +
-+	quotinos[off] = ino;
-+	quotino_state[off] = QI_STATE_HAVE;
-+}
++	/*
++	 * Note that sb_pquotino is not considered a valid sb field for pre-v5
++	 * superblocks. If it is anything other than 0 it is considered garbage
++	 * data beyond the valid sb and explicitly zeroed above.
++	 */
++	if (xfs_has_pquotino(mp) &&
++	    sb->sb_inprogress == 1 && sb->sb_pquotino != NULLFSINO)  {
++		if (!no_modify) {
++			sb->sb_pquotino = 0;
++			dsb->sb_pquotino = 0;
++		}
++		if (!do_bzero)  {
++			rval |= XR_AG_SB;
++			do_warn(
++		_("non-null project quota inode field in superblock %d\n"),
++				i);
 +
-+void
-+lose_quota_inode(
-+	xfs_dqtype_t	type)
-+{
-+	unsigned int	off = quotino_off(type);
++		} else
++			rval |= XR_AG_SB_SEC;
++	}
 +
-+	quotinos[off] = NULLFSINO;
-+	quotino_state[off] = QI_STATE_LOST;
-+}
++	if (sb->sb_inprogress == 1 && sb->sb_qflags)  {
++		if (!no_modify)
++			sb->sb_qflags = 0;
++		if (!do_bzero)  {
++			rval |= XR_AG_SB;
++			do_warn(_("non-null quota flags in superblock %d\n"),
++				i);
++		} else
++			rval |= XR_AG_SB_SEC;
++	}
 +
-+void
-+clear_quota_inode(
-+	xfs_dqtype_t	type)
-+{
-+	unsigned int	off = quotino_off(type);
-+
-+	quotinos[off] = NULLFSINO;
-+	quotino_state[off] = QI_STATE_UNKNOWN;
-+}
-+
-+xfs_ino_t
-+get_quota_inode(
-+	xfs_dqtype_t	type)
-+{
-+	unsigned int	off = quotino_off(type);
-+
-+	return quotinos[off];
-+}
-+
-+bool
-+is_quota_inode(
-+	xfs_dqtype_t	type,
-+	xfs_ino_t	ino)
-+{
-+	unsigned int	off = quotino_off(type);
-+
-+	return quotinos[off] == ino;
-+}
-+
-+bool
-+is_any_quota_inode(
-+	xfs_ino_t		ino)
-+{
-+	unsigned int		i;
-+
-+	for(i = 0; i < ARRAY_SIZE(quotinos); i++)
-+		if (quotinos[i] == ino)
-+			return true;
-+	return false;
-+}
-+
-+bool
-+lost_quota_inode(
-+	xfs_dqtype_t	type)
-+{
-+	unsigned int	off = quotino_off(type);
-+
-+	return quotino_state[off] == QI_STATE_LOST;
-+}
-+
-+bool
-+has_quota_inode(
-+	xfs_dqtype_t	type)
-+{
-+	unsigned int	off = quotino_off(type);
-+
-+	return quotino_state[off] == QI_STATE_HAVE;
-+}
-diff --git a/repair/globals.h b/repair/globals.h
-index 7c2d9c56c8f8a7..b23a06af6cc81b 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -114,12 +114,6 @@ extern int		need_rbmino;
- extern int		need_rsumino;
- 
- extern int		lost_quotas;
--extern int		have_uquotino;
--extern int		have_gquotino;
--extern int		have_pquotino;
--extern int		lost_uquotino;
--extern int		lost_gquotino;
--extern int		lost_pquotino;
- 
- /* configuration vars -- fs geometry dependent */
- 
-@@ -165,4 +159,13 @@ extern int		fail_after_phase;
- 
- extern struct libxfs_init x;
- 
-+void set_quota_inode(xfs_dqtype_t type, xfs_ino_t);
-+void lose_quota_inode(xfs_dqtype_t type);
-+void clear_quota_inode(xfs_dqtype_t type);
-+xfs_ino_t get_quota_inode(xfs_dqtype_t type);
-+bool is_quota_inode(xfs_dqtype_t type, xfs_ino_t ino);
-+bool is_any_quota_inode(xfs_ino_t ino);
-+bool lost_quota_inode(xfs_dqtype_t type);
-+bool has_quota_inode(xfs_dqtype_t type);
-+
- #endif /* _XFS_REPAIR_GLOBAL_H */
-diff --git a/repair/phase4.c b/repair/phase4.c
-index f43f8ecd84e25b..a4183c557a1891 100644
---- a/repair/phase4.c
-+++ b/repair/phase4.c
-@@ -23,6 +23,35 @@
- 
- bool collect_rmaps;
- 
-+static inline void
-+quotino_check_one(
-+	struct xfs_mount	*mp,
-+	xfs_dqtype_t		type)
-+{
-+	struct ino_tree_node	*irec;
-+	xfs_ino_t		ino;
-+
-+	if (!has_quota_inode(type))
-+		return;
-+
-+	ino = get_quota_inode(type);
-+	if (!libxfs_verify_ino(mp, ino))
-+		goto bad;
-+
-+	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, ino),
-+			XFS_INO_TO_AGINO(mp, ino));
-+	if (!irec)
-+		goto bad;
-+
-+	if (is_inode_free(irec, ino - irec->ino_startnum))
-+		goto bad;
-+
-+	return;
-+
-+bad:
-+	lose_quota_inode(type);
++	return rval;
 +}
 +
  /*
-  * null out quota inode fields in sb if they point to non-existent inodes.
-  * this isn't as redundant as it looks since it's possible that the sb field
-@@ -31,57 +60,12 @@ bool collect_rmaps;
-  * be cleared by process_dinode().
-  */
- static void
--quotino_check(xfs_mount_t *mp)
-+quotino_check(
-+	struct xfs_mount	*mp)
+  * Possible fields that may have been set at mkfs time,
+  * sb_inoalignmt, sb_unit, sb_width and sb_dirblklog.
+@@ -340,7 +424,6 @@ secondary_sb_whack(
+ 	struct xfs_sb	*sb,
+ 	xfs_agnumber_t	i)
  {
--	ino_tree_node_t *irec;
--
--	if (mp->m_sb.sb_uquotino != NULLFSINO && mp->m_sb.sb_uquotino != 0)  {
--		if (!libxfs_verify_ino(mp, mp->m_sb.sb_uquotino))
--			irec = NULL;
--		else
--			irec = find_inode_rec(mp,
--				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_uquotino),
--				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_uquotino));
--
--		if (irec == NULL || is_inode_free(irec,
--				mp->m_sb.sb_uquotino - irec->ino_startnum))  {
--			mp->m_sb.sb_uquotino = NULLFSINO;
--			lost_uquotino = 1;
--		} else
--			lost_uquotino = 0;
--	}
--
--	if (mp->m_sb.sb_gquotino != NULLFSINO && mp->m_sb.sb_gquotino != 0)  {
--		if (!libxfs_verify_ino(mp, mp->m_sb.sb_gquotino))
--			irec = NULL;
--		else
--			irec = find_inode_rec(mp,
--				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_gquotino),
--				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_gquotino));
--
--		if (irec == NULL || is_inode_free(irec,
--				mp->m_sb.sb_gquotino - irec->ino_startnum))  {
--			mp->m_sb.sb_gquotino = NULLFSINO;
--			lost_gquotino = 1;
--		} else
--			lost_gquotino = 0;
--	}
--
--	if (mp->m_sb.sb_pquotino != NULLFSINO && mp->m_sb.sb_pquotino != 0)  {
--		if (!libxfs_verify_ino(mp, mp->m_sb.sb_pquotino))
--			irec = NULL;
--		else
--			irec = find_inode_rec(mp,
--				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_pquotino),
--				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_pquotino));
--
--		if (irec == NULL || is_inode_free(irec,
--				mp->m_sb.sb_pquotino - irec->ino_startnum))  {
--			mp->m_sb.sb_pquotino = NULLFSINO;
--			lost_pquotino = 1;
--		} else
--			lost_pquotino = 0;
--	}
-+	quotino_check_one(mp, XFS_DQTYPE_USER);
-+	quotino_check_one(mp, XFS_DQTYPE_GROUP);
-+	quotino_check_one(mp, XFS_DQTYPE_PROJ);
- }
- 
- static void
-@@ -107,14 +91,14 @@ quota_sb_check(xfs_mount_t *mp)
- 	 */
- 
- 	if (fs_quotas &&
--	    (mp->m_sb.sb_uquotino == NULLFSINO || mp->m_sb.sb_uquotino == 0) &&
--	    (mp->m_sb.sb_gquotino == NULLFSINO || mp->m_sb.sb_gquotino == 0) &&
--	    (mp->m_sb.sb_pquotino == NULLFSINO || mp->m_sb.sb_pquotino == 0))  {
-+	    !has_quota_inode(XFS_DQTYPE_USER) &&
-+	    !has_quota_inode(XFS_DQTYPE_GROUP) &&
-+	    !has_quota_inode(XFS_DQTYPE_PROJ))  {
- 		lost_quotas = 1;
- 		fs_quotas = 0;
--	} else if (libxfs_verify_ino(mp, mp->m_sb.sb_uquotino) &&
--		   libxfs_verify_ino(mp, mp->m_sb.sb_gquotino) &&
--		   libxfs_verify_ino(mp, mp->m_sb.sb_pquotino)) {
-+	} else if (libxfs_verify_ino(mp, get_quota_inode(XFS_DQTYPE_USER)) &&
-+		   libxfs_verify_ino(mp, get_quota_inode(XFS_DQTYPE_GROUP)) &&
-+		   libxfs_verify_ino(mp, get_quota_inode(XFS_DQTYPE_PROJ))) {
- 		fs_quotas = 1;
+-	struct xfs_dsb	*dsb = sbuf->b_addr;
+ 	int		do_bzero = 0;
+ 	int		size;
+ 	char		*ip;
+@@ -426,77 +509,7 @@ secondary_sb_whack(
+ 			rval |= XR_AG_SB_SEC;
  	}
- }
-diff --git a/repair/phase6.c b/repair/phase6.c
-index fa4eeb08265f0c..7bfacb66d4464e 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -3189,12 +3189,12 @@ mark_standalone_inodes(xfs_mount_t *mp)
- 	if (!fs_quotas)
- 		return;
  
--	if (mp->m_sb.sb_uquotino && mp->m_sb.sb_uquotino != NULLFSINO)
--		mark_inode(mp, mp->m_sb.sb_uquotino);
--	if (mp->m_sb.sb_gquotino && mp->m_sb.sb_gquotino != NULLFSINO)
--		mark_inode(mp, mp->m_sb.sb_gquotino);
--	if (mp->m_sb.sb_pquotino && mp->m_sb.sb_pquotino != NULLFSINO)
--		mark_inode(mp, mp->m_sb.sb_pquotino);
-+	if (has_quota_inode(XFS_DQTYPE_USER))
-+		mark_inode(mp, get_quota_inode(XFS_DQTYPE_USER));
-+	if (has_quota_inode(XFS_DQTYPE_GROUP))
-+		mark_inode(mp, get_quota_inode(XFS_DQTYPE_GROUP));
-+	if (has_quota_inode(XFS_DQTYPE_PROJ))
-+		mark_inode(mp, get_quota_inode(XFS_DQTYPE_PROJ));
- }
- 
- static void
-diff --git a/repair/quotacheck.c b/repair/quotacheck.c
-index 11e2d64eb34791..c4baf70e41d6b1 100644
---- a/repair/quotacheck.c
-+++ b/repair/quotacheck.c
-@@ -203,9 +203,7 @@ quotacheck_adjust(
- 		return;
- 
- 	/* Quota files are not included in quota counts. */
--	if (ino == mp->m_sb.sb_uquotino ||
--	    ino == mp->m_sb.sb_gquotino ||
--	    ino == mp->m_sb.sb_pquotino)
-+	if (is_any_quota_inode(ino))
- 		return;
- 
- 	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
-@@ -415,20 +413,20 @@ quotacheck_verify(
- 
- 	switch (type) {
- 	case XFS_DQTYPE_USER:
--		ino = mp->m_sb.sb_uquotino;
- 		dquots = user_dquots;
- 		metafile_type = XFS_METAFILE_USRQUOTA;
- 		break;
- 	case XFS_DQTYPE_GROUP:
--		ino = mp->m_sb.sb_gquotino;
- 		dquots = group_dquots;
- 		metafile_type = XFS_METAFILE_GRPQUOTA;
- 		break;
- 	case XFS_DQTYPE_PROJ:
--		ino = mp->m_sb.sb_pquotino;
- 		dquots = proj_dquots;
- 		metafile_type = XFS_METAFILE_PRJQUOTA;
- 		break;
-+	default:
-+		ASSERT(0);
-+		return;
- 	}
+-	/*
+-	 * quota inodes and flags in secondary superblocks are never set by
+-	 * mkfs.  However, they could be set in a secondary if a fs with quotas
+-	 * was growfs'ed since growfs copies the new primary into the
+-	 * secondaries.
+-	 *
+-	 * Also, the in-core inode flags now have different meaning to the
+-	 * on-disk flags, and so libxfs_sb_to_disk cannot directly write the
+-	 * sb_gquotino/sb_pquotino fields without specific sb_qflags being set.
+-	 * Hence we need to zero those fields directly in the sb buffer here.
+-	 */
+-
+-	if (sb->sb_inprogress == 1 && sb->sb_uquotino != NULLFSINO)  {
+-		if (!no_modify)
+-			sb->sb_uquotino = 0;
+-		if (!do_bzero)  {
+-			rval |= XR_AG_SB;
+-			do_warn(
+-		_("non-null user quota inode field in superblock %d\n"),
+-				i);
+-
+-		} else
+-			rval |= XR_AG_SB_SEC;
+-	}
+-
+-	if (sb->sb_inprogress == 1 && sb->sb_gquotino != NULLFSINO)  {
+-		if (!no_modify) {
+-			sb->sb_gquotino = 0;
+-			dsb->sb_gquotino = 0;
+-		}
+-		if (!do_bzero)  {
+-			rval |= XR_AG_SB;
+-			do_warn(
+-		_("non-null group quota inode field in superblock %d\n"),
+-				i);
+-
+-		} else
+-			rval |= XR_AG_SB_SEC;
+-	}
+-
+-	/*
+-	 * Note that sb_pquotino is not considered a valid sb field for pre-v5
+-	 * superblocks. If it is anything other than 0 it is considered garbage
+-	 * data beyond the valid sb and explicitly zeroed above.
+-	 */
+-	if (xfs_has_pquotino(mp) &&
+-	    sb->sb_inprogress == 1 && sb->sb_pquotino != NULLFSINO)  {
+-		if (!no_modify) {
+-			sb->sb_pquotino = 0;
+-			dsb->sb_pquotino = 0;
+-		}
+-		if (!do_bzero)  {
+-			rval |= XR_AG_SB;
+-			do_warn(
+-		_("non-null project quota inode field in superblock %d\n"),
+-				i);
+-
+-		} else
+-			rval |= XR_AG_SB_SEC;
+-	}
+-
+-	if (sb->sb_inprogress == 1 && sb->sb_qflags)  {
+-		if (!no_modify)
+-			sb->sb_qflags = 0;
+-		if (!do_bzero)  {
+-			rval |= XR_AG_SB;
+-			do_warn(_("non-null quota flags in superblock %d\n"),
+-				i);
+-		} else
+-			rval |= XR_AG_SB_SEC;
+-	}
++	rval |= secondary_sb_quota(mp, sbuf, sb, i, do_bzero);
  
  	/*
-@@ -443,6 +441,7 @@ quotacheck_verify(
- 	if (error)
- 		do_error(_("could not alloc transaction to open quota file\n"));
- 
-+	ino = get_quota_inode(type);
- 	error = -libxfs_trans_metafile_iget(tp, ino, metafile_type, &ip);
- 	if (error) {
- 		do_warn(
-@@ -505,34 +504,28 @@ qc_has_quotafile(
- 	struct xfs_mount	*mp,
- 	xfs_dqtype_t		type)
- {
--	bool			lost;
- 	xfs_ino_t		ino;
- 	unsigned int		qflag;
- 
- 	switch (type) {
- 	case XFS_DQTYPE_USER:
--		lost = lost_uquotino;
--		ino = mp->m_sb.sb_uquotino;
- 		qflag = XFS_UQUOTA_CHKD;
- 		break;
- 	case XFS_DQTYPE_GROUP:
--		lost = lost_gquotino;
--		ino = mp->m_sb.sb_gquotino;
- 		qflag = XFS_GQUOTA_CHKD;
- 		break;
- 	case XFS_DQTYPE_PROJ:
--		lost = lost_pquotino;
--		ino = mp->m_sb.sb_pquotino;
- 		qflag = XFS_PQUOTA_CHKD;
- 		break;
- 	default:
- 		return false;
- 	}
- 
--	if (lost)
-+	if (lost_quota_inode(type))
- 		return false;
- 	if (!(mp->m_sb.sb_qflags & qflag))
- 		return false;
-+	ino = get_quota_inode(type);
- 	if (ino == NULLFSINO || ino == 0)
- 		return false;
- 	return true;
-@@ -626,3 +619,29 @@ quotacheck_teardown(void)
- 	qc_purge(&group_dquots);
- 	qc_purge(&proj_dquots);
- }
-+
-+void
-+update_sb_quotinos(
-+	struct xfs_mount	*mp,
-+	struct xfs_buf		*sbp)
-+{
-+	bool			dirty = false;
-+
-+	if (mp->m_sb.sb_uquotino != get_quota_inode(XFS_DQTYPE_USER)) {
-+		mp->m_sb.sb_uquotino = get_quota_inode(XFS_DQTYPE_USER);
-+		dirty = true;
-+	}
-+
-+	if (mp->m_sb.sb_gquotino != get_quota_inode(XFS_DQTYPE_GROUP)) {
-+		mp->m_sb.sb_gquotino = get_quota_inode(XFS_DQTYPE_GROUP);
-+		dirty = true;
-+	}
-+
-+	if (mp->m_sb.sb_pquotino != get_quota_inode(XFS_DQTYPE_PROJ)) {
-+		mp->m_sb.sb_pquotino = get_quota_inode(XFS_DQTYPE_PROJ);
-+		dirty = true;
-+	}
-+
-+	if (dirty)
-+		libxfs_sb_to_disk(sbp->b_addr, &mp->m_sb);
-+}
-diff --git a/repair/quotacheck.h b/repair/quotacheck.h
-index dcbf1623947b48..36f9f5a12f7f3e 100644
---- a/repair/quotacheck.h
-+++ b/repair/quotacheck.h
-@@ -13,4 +13,6 @@ uint16_t quotacheck_results(void);
- int quotacheck_setup(struct xfs_mount *mp);
- void quotacheck_teardown(void);
- 
-+void update_sb_quotinos(struct xfs_mount *mp, struct xfs_buf *sbp);
-+
- #endif /* __XFS_REPAIR_QUOTACHECK_H__ */
-diff --git a/repair/versions.c b/repair/versions.c
-index 7dc91b4597eece..689cc471176da0 100644
---- a/repair/versions.c
-+++ b/repair/versions.c
-@@ -104,9 +104,6 @@ parse_sb_version(
- 	fs_sb_feature_bits = 0;
- 	fs_ino_alignment = 0;
- 	fs_has_extflgbit = 1;
--	have_uquotino = 0;
--	have_gquotino = 0;
--	have_pquotino = 0;
- 
- 	if (mp->m_sb.sb_versionnum & XFS_SB_VERSION_SHAREDBIT) {
- 		do_warn(_("Shared Version bit set. Not supported. Ever.\n"));
-@@ -166,13 +163,13 @@ _("WARNING: you have a V1 inode filesystem. It would be converted to a\n"
- 		fs_quotas = 1;
- 
- 		if (mp->m_sb.sb_uquotino != 0 && mp->m_sb.sb_uquotino != NULLFSINO)
--			have_uquotino = 1;
-+			set_quota_inode(XFS_DQTYPE_USER, mp->m_sb.sb_uquotino);
- 
- 		if (mp->m_sb.sb_gquotino != 0 && mp->m_sb.sb_gquotino != NULLFSINO)
--			have_gquotino = 1;
-+			set_quota_inode(XFS_DQTYPE_GROUP, mp->m_sb.sb_gquotino);
- 
- 		if (mp->m_sb.sb_pquotino != 0 && mp->m_sb.sb_pquotino != NULLFSINO)
--			have_pquotino = 1;
-+			set_quota_inode(XFS_DQTYPE_PROJ, mp->m_sb.sb_pquotino);
- 	}
- 
- 	if (xfs_has_align(mp))  {
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 2a8a72e7027591..363f8260bd575a 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -1404,7 +1404,9 @@ _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
- 		free_rtgroup_inodes();
- 	}
- 
--	if (lost_quotas && !have_uquotino && !have_gquotino && !have_pquotino) {
-+	if (lost_quotas && !has_quota_inode(XFS_DQTYPE_USER) &&
-+	    !has_quota_inode(XFS_DQTYPE_GROUP) &&
-+	    !has_quota_inode(XFS_DQTYPE_PROJ)) {
- 		if (!no_modify)  {
- 			do_warn(
- _("Warning:  no quota inodes were found.  Quotas disabled.\n"));
-@@ -1421,7 +1423,7 @@ _("Warning:  quota inodes were cleared.  Quotas disabled.\n"));
- _("Warning:  quota inodes would be cleared.  Quotas would be disabled.\n"));
- 		}
- 	} else  {
--		if (lost_uquotino)  {
-+		if (lost_quota_inode(XFS_DQTYPE_USER))  {
- 			if (!no_modify)  {
- 				do_warn(
- _("Warning:  user quota information was cleared.\n"
-@@ -1433,7 +1435,7 @@ _("Warning:  user quota information would be cleared.\n"
- 			}
- 		}
- 
--		if (lost_gquotino)  {
-+		if (lost_quota_inode(XFS_DQTYPE_GROUP))  {
- 			if (!no_modify)  {
- 				do_warn(
- _("Warning:  group quota information was cleared.\n"
-@@ -1445,7 +1447,7 @@ _("Warning:  group quota information would be cleared.\n"
- 			}
- 		}
- 
--		if (lost_pquotino)  {
-+		if (lost_quota_inode(XFS_DQTYPE_PROJ))  {
- 			if (!no_modify)  {
- 				do_warn(
- _("Warning:  project quota information was cleared.\n"
-@@ -1485,6 +1487,8 @@ _("Warning:  project quota information would be cleared.\n"
- 	if (!sbp)
- 		do_error(_("couldn't get superblock\n"));
- 
-+	update_sb_quotinos(mp, sbp);
-+
- 	if ((mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD) != quotacheck_results()) {
- 		do_warn(_("Note - quota info will be regenerated on next "
- 			"quota mount.\n"));
+ 	 * if the secondaries agree on a stripe unit/width or inode
 
