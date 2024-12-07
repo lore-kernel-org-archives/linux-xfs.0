@@ -1,45 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70E5822C6CF
-	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:25:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4BB328E8
+	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 00:29:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733531124; cv=none; b=u1j3z2a5u4L9n7cdT36/vgYzI0pBCgYC/ckDlJA7JXZUHfrsUkpVEfMV282VsBw9xbHkmrguHSoBnMAJIO32Vy6yU0FPdKN9+aja9tihimAPRNijioFqAJS+LeWYX7OLO7/mTRlaEVRsdo4kqWAXKO8dYy5MIH/ceGK1j2UDl8w=
+	t=1733531369; cv=none; b=B7Xi/FM9GsJHDwK5mpzTDsrmdhogrwIz2dX3DRLR/VmDF77wpuasVojmn7YIwoKofG6+y9wwvd6OL0DC0wQNlGJ8/OdU3Ube/nP3410Xrylkw8bLaOyqLCxHRluIN0i6vnnkaBY6OG3MOFMQVBodVx714bkYgBQ1HUkFy/R7jOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733531124; c=relaxed/simple;
-	bh=y5Nnqfhj/jeFMaIkdwd+/OB2LUfPkqKPnx3s/IQd1Bk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gIi+fXOXGMvB0vjGevrFlVyTybA9XthLCVci/Xtz/O2gW4WCJ5ZBp2AWTbL08GXkNbqb5fv7GJhTANEKFrwVnNRvFXQ05qseEAI6OdABVy9Gyj09bGUHzcoDPqTF5I+rONVZfq+BAstaWqECNynu2utukdRX6sElHsroVZRhxx4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A1qLvmS7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733531369; c=relaxed/simple;
+	bh=e56/K9Pyh9SBaaUdVkVKgpTJVEmW3gn0JAjubi6V06o=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=WCymhwus+y7QU/Gc+dpa6x+eS6CRzHvfC4aOzhAEykclDHYbUyewBje+nIeWr/xB1IMRTbcUubF1NDVztwmYF7Lcb35LvclG2CWLAukumBAz5ZnASUHCTV/AnnMIWDmFWaCWZDE66MggPsmGw2w+SZ/et6CdtJu1xN5hhA7NidI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fY+jc86I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A1qLvmS7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0EC4C4CED2;
-	Sat,  7 Dec 2024 00:25:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fY+jc86I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EE66C4CED1;
+	Sat,  7 Dec 2024 00:29:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733531124;
-	bh=y5Nnqfhj/jeFMaIkdwd+/OB2LUfPkqKPnx3s/IQd1Bk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=A1qLvmS7NoufrwToIRkRT9NqApUqCjJAOIob9xLNdJVtr9CVN7BbYnQYnJLTh+J0h
-	 Br4FBnBuwlrvdP59+4E1FPdnLo9uArwrGEXToYtCoTaRYYD/Za/Tpaano1FTeuJMwg
-	 ndeQVym6mzD40ROYLcNqmbwF9ql+4BYrU75SA6lLY1MkJkXC2YeNQh2YXCrSN80wrT
-	 IeUUXhFtWllCZe4J/vAGYQ3TAEdh7DwMTO7Eik60C9MPJAtyoyVq65lQ0pUWZ3pkcU
-	 CfoI2ujTK3Gvw4lULw0G23/LCEHTqAFFlJLtb0UeoixJoe0zV5MQmdYdl6hqVSIDK5
-	 s9u6nNrb3V19g==
-Date: Fri, 6 Dec 2024 16:25:22 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-	Eric Sandeen <sandeen@sandeen.net>,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	Carlos Maiolino <cem@kernel.org>, Brian Foster <bfoster@redhat.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Kundan Kumar <kundan.kumar@samsung.com>, gost.dev@samsung.com
-Subject: Re: [PATCH 3/3] xfs: sb_spino_align is not verified
-Message-ID: <Z1OV8leVvOAmqBY3@bombadil.infradead.org>
-References: <20241024025142.4082218-1-david@fromorbit.com>
- <20241024025142.4082218-4-david@fromorbit.com>
+	s=k20201202; t=1733531368;
+	bh=e56/K9Pyh9SBaaUdVkVKgpTJVEmW3gn0JAjubi6V06o=;
+	h=Date:From:To:Cc:Subject:From;
+	b=fY+jc86IPoUflQYlaoV+eOMmsm+tWRzm+J6Vd2uD6J0xcrHT55DpxZ4FmdPw8ywSJ
+	 ycIn9yIOgkjMrf+j48c2necam0IVoM3TcZ8RTQ1sIPhScGJbiLLyW/mJi8ZykATTOu
+	 rTAnD+QYoVRuxmIwpIivQrYUbYTcbRe7gazJ+JjhdZl3Ri85XfnYSwsbjSKm6lRQkT
+	 x9rgwWhirBHvwFdXxdl5GRTr7sHNZmTP/MgG0wUdkf/ykf2QJ6rFPCnnLmfBS1FQ+B
+	 QpLK82Fuux4SyBXg1dAN+xNGwsoFC8UzLsHGmfe2mOpcSrXk/Q5RAgJ6NFkIiAuADf
+	 Xmwv1SnzdMyFw==
+Date: Fri, 6 Dec 2024 16:29:27 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCHBOMB v3] xfs: proposed fixes for 6.13-rc2
+Message-ID: <20241207002927.GP7837@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,35 +40,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241024025142.4082218-4-david@fromorbit.com>
 
-On Thu, Oct 24, 2024 at 01:51:05PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> It's just read in from the superblock and used without doing any
-> validity checks at all on the value.
-> 
-> Fixes: fb4f2b4e5a82 ("xfs: add sparse inode chunk alignment superblock field")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hi everyone,
 
-This is 59e43f5479cce106d71c0b91a297c7ad1913176c on v6.13-r1 now.
+Here's this week's bugfixes series with the changes that came up during
+the last round of review.  There is one patch that has not yet passed
+review:
 
-This commit broke mounting 32k and 64k bs filesystems on 4k page size systems.
-Oddly, it does not break 16k or 8k bs. I took a quick glance and I can't
-easily identify a fix.
+[PATCHSET v3] xfs: proposed bug fixes for 6.13
+  [PATCH 1/6] xfs: don't move nondir/nonreg temporary repair files to
 
-I haven't had a chance yet to find a large page size system to see if
-32k page size and 64k page size systems are affected as well.
+Could someone please review that one so I can send a PR to carlos for
+this batch?
 
-CIs in place did not pick up on this given fstests check script just
-bails out right away, we don't annotate this as a failure on fstests and
-the tests don't even get listed as failures on xunit. You'd have to have
-a trained curious eye to just monitor CIs and verify that all hosts
-actually were chugging along. I suppose we can enhance this by just
-assuming hosts which don't have results are assumed to be a failure.
-
-However if we want to enahnce this on fstests so that in the future we
-pick up on these failures more easily it would be good time to evaluate
-that now too.
-
-  Luis
+--D
