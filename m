@@ -1,100 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.envs.net (mail.envs.net [5.199.136.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E844823D1
-	for <linux-xfs@vger.kernel.org>; Sat,  7 Dec 2024 11:34:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C8F618E2A;
+	Sun,  8 Dec 2024 03:55:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.199.136.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733571287; cv=none; b=YOojscH1UUFNp37v6UyruCWDDYKtaDYafo20EvhoEWhfS/KoCRdMKwAxHOY1I7Q/lUP0Hw01vayFzfKsnGrCAbT/IrsAhhM2O+aTrWeghu6ior9k4yMjYlzYcQPeMrszQaPyxmgJ1TrMy7HrL73XdplyOSQLS1pM9FXvuKaKbtU=
+	t=1733630136; cv=none; b=ugGebyRcJwxvrlBwqXw9nupyXcwAn2WcQcz42wHJ/kH4kVXR/SIlq9aTuLoLsAYl4CadEM4drRxPdiKbNCZSdepwShMfsft3qVxeTrUvlX1OzOlSdmuOD820MEiuv6EefFDx661HV7exTgcNsgAkE/A/LZ0D8gAQvpzVa3VmtKg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733571287; c=relaxed/simple;
-	bh=mS3QB18w+q/0yrQCrqUyOJjrC4SaB6VGQzGXMeo11vI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JWig/yRV9ZEK1DjQc+zLuUwElxYK2WlGo39fUHVQMpJeEgcvgdpju2gwfBzb6FUrP4DnktQNVP/T1uao7lorQ1a4KbxQ2/xhqN7G0fl3FQDBhX+20H2FLURWSzrEjdUJLWUXl75nzehI6bPaapiURmpw6+xF2SptZqT64ecBhds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YcuyZtBx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733630136; c=relaxed/simple;
+	bh=xAmSa2wmvqGf1lGLgOH9ojlWkb6b6Iz9ykFs+KUJMDY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TzrufKhGA3flh+Jw5+sbnB+rwn8T7gUsLTNGMw4YLGaBnCvj5QTGMsN3TiixM3M7cRW2kN1Dkcy+PLNsF1byJYVcKDBHdCZ+6egftWXBvk9qi7BVmTPmRgW07WAhogCiyfBll4KcDTwDe3QKn0QaRijs4AEA8W8ICCDHxmrWinw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=envs.net; spf=pass smtp.mailfrom=envs.net; dkim=pass (4096-bit key) header.d=envs.net header.i=@envs.net header.b=p8MVGDLv; arc=none smtp.client-ip=5.199.136.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=envs.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=envs.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YcuyZtBx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 551EFC4CECD;
-	Sat,  7 Dec 2024 11:34:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733571287;
-	bh=mS3QB18w+q/0yrQCrqUyOJjrC4SaB6VGQzGXMeo11vI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YcuyZtBxyY10oPxnvgt6W+7WPbblsGMhGdLSWJXcl8jpw3K/6A8qImRlSUf4RCp6I
-	 YEpoRO7t6tVwI64pe2E3A4om/xV7d8ePN7jIKJspetXegmXXX/xZP+vCa7dahq61aK
-	 foML6wTZZ2rgDLGtB2pc+YNsZMrxf7h+bWJKLb+YUiVj9XXdpn+UpDaYlbFF1fK5nC
-	 vTTKoeV29gXIPswiDK7Hr9v6MY8x6jj+4wG2nBANITuB2Mz6hp+qa1f2YMbzLbkDYU
-	 9hKRDV3+bz1yUjIKgGL8Tlh70uie1HINHkKlqntOejuMM3xHPmPYG0Imzer8oabgkd
-	 a25fiSLwLn/GA==
-Date: Sat, 7 Dec 2024 12:34:40 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
-	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, 
-	Ritesh Harjani <ritesh.list@gmail.com>, Brian Foster <bfoster@redhat.com>, 
-	Pankaj Raghav <p.raghav@samsung.com>, Daniel Gomez <da.gomez@samsung.com>, 
-	Kundan Kumar <kundan.kumar@samsung.com>, gost.dev@samsung.com
-Subject: Re: [PATCH 3/3] xfs: sb_spino_align is not verified
-Message-ID: <hk53mameom3g3mjma37mnxfatngdg7gxcr7e6ezzkodwwqsvu7@26inqict47de>
-References: <20241024025142.4082218-1-david@fromorbit.com>
- <20241024025142.4082218-4-david@fromorbit.com>
- <Z1OV8leVvOAmqBY3@bombadil.infradead.org>
- <20241207003204.GQ7837@frogsfrogsfrogs>
- <Z1OYnXbOyK_Elfm8@bombadil.infradead.org>
+	dkim=pass (4096-bit key) header.d=envs.net header.i=@envs.net header.b="p8MVGDLv"
+Received: from localhost (mail.envs.net [127.0.0.1])
+	by mail.envs.net (Postfix) with ESMTP id 16B4B38A3DB5;
+	Sun,  8 Dec 2024 03:55:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=envs.net; s=modoboa;
+	t=1733630116; bh=sMUgAdv1UYnveXfCZj+caAO4EoyTts+ar0T4j7DKx5g=;
+	h=From:To:Cc:Subject:Date:From;
+	b=p8MVGDLvZ2DjI2dDUTvpLS4Uu1qiFbOHcJ+q9SHRNTpB/b2x3A8NCF6oWzT2Ee0Au
+	 tp0AuiXiHo4GsC1YEaH1mt28adK4CSgXKx7Phw9EGVqY5b4JcxEN7Nk1aTsms8VjMZ
+	 9BpLjLTGlUuu+yLngU5G6BfbyHm51dMmtotkFXxti1+pWM6vg9Z72EpctKPYAjHoLs
+	 iGR++67RnBmzlc3bE6ZPOdc3ck4V8aOw2lgAmXzuR9ZG0IRjgY8Uu/PS74n1IuBLuF
+	 dNEoP5RF7QP9bGnTuUiGJuT+TL7XdKBokO3JyC85E5TfSS/WrlW8MVmsMmTw/C4eFe
+	 eK9kGpAOzH5ZnYMSvNXe/C/k4fnhKtsMJl5MgTk/KY4+IDJ1HmU/8cFA4plbKF+wWt
+	 y4CZI51euc3CwnTyqWT0kWQIYsM5B8LSvi2w/Ja/WRjayKkZ2QfAAqFkZKzSsAmlGf
+	 MO4v3/ckgDgGDNW66vgQZvgJMShBBdwgCo9zy/H3pJkyHZMXRj9CbQoEsGmuXXAMwA
+	 ULoRpBpwp/E6R+awAf3v2MQ8NKNIvwxV5KRnOx8dA2mBnD640Dv3LnD/7wdH3bDFaq
+	 O1x40Yws4hWETfW9kC4OolO23Vmm4IObAP0HK2mVK7jWtGRZLCc3TuEmCpeOGGz9Mt
+	 r7jmOpYqK4hzLxOog9JU1bXk=
+X-Virus-Scanned: Debian amavisd-new at mail.envs.net
+Received: from mail.envs.net ([127.0.0.1])
+	by localhost (mail.envs.net [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id w9f5h8Xf5DVg; Sun,  8 Dec 2024 03:55:11 +0000 (UTC)
+Received: from xtexx.eu.org (unknown [120.230.227.80])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.envs.net (Postfix) with ESMTPSA;
+	Sun,  8 Dec 2024 03:55:11 +0000 (UTC)
+From: Bingwu Zhang <xtex@envs.net>
+To: Jonathan Corbet <corbet@lwn.net>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Bingwu Zhang <xtex@aosc.io>,
+	linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-unionfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	~xtex/staging@lists.sr.ht
+Subject: [PATCH] Documentation: filesystems: fix two misspells
+Date: Sun,  8 Dec 2024 11:54:47 +0800
+Message-ID: <20241208035447.162465-2-xtex@envs.net>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z1OYnXbOyK_Elfm8@bombadil.infradead.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2008; i=xtex@aosc.io; h=from:subject; bh=hjZ2QViAYHrS5s534bTXhzG7XzBTMciy149RrZNXASU=; b=owGbwMvMwCW2U4Ij7wZL9ETG02pJDOmhEu0PF/41P/nawMPRcl1ngL2V0tK600ERb3rvOu+cy HRDgv91RykLgxgXg6yYIkuRYYM3q046v+iyclmYOaxMIEMYuDgFYCK22gz/FK/qbH4xQy0imcGz Xzay0uj4C8ZH91Q5HjFu36+jK7FIiOF/1joNDZPSBzMLInbZWl2Ouf5877otcltmP2h56Te99wU 7BwA=
+X-Developer-Key: i=xtex@aosc.io; a=openpgp; fpr=7231804B052C670F15A6771DB918086ED8045B91
+Content-Transfer-Encoding: 8bit
 
-On Fri, Dec 06, 2024 at 04:36:45PM -0800, Luis Chamberlain wrote:
-> On Fri, Dec 06, 2024 at 04:32:04PM -0800, Darrick J. Wong wrote:
-> > On Fri, Dec 06, 2024 at 04:25:22PM -0800, Luis Chamberlain wrote:
-> > > On Thu, Oct 24, 2024 at 01:51:05PM +1100, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > It's just read in from the superblock and used without doing any
-> > > > validity checks at all on the value.
-> > > > 
-> > > > Fixes: fb4f2b4e5a82 ("xfs: add sparse inode chunk alignment superblock field")
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > This is 59e43f5479cce106d71c0b91a297c7ad1913176c on v6.13-r1 now.
-> > > 
-> > > This commit broke mounting 32k and 64k bs filesystems on 4k page size systems.
-> > > Oddly, it does not break 16k or 8k bs. I took a quick glance and I can't
-> > > easily identify a fix.
-> > > 
-> > > I haven't had a chance yet to find a large page size system to see if
-> > > 32k page size and 64k page size systems are affected as well.
-> > > 
-> > > CIs in place did not pick up on this given fstests check script just
-> > > bails out right away, we don't annotate this as a failure on fstests and
-> > > the tests don't even get listed as failures on xunit. You'd have to have
-> > > a trained curious eye to just monitor CIs and verify that all hosts
-> > > actually were chugging along. I suppose we can enhance this by just
-> > > assuming hosts which don't have results are assumed to be a failure.
-> > > 
-> > > However if we want to enahnce this on fstests so that in the future we
-> > > pick up on these failures more easily it would be good time to evaluate
-> > > that now too.
-> > 
-> > Known bug, already patched here:
-> > https://lore.kernel.org/linux-xfs/20241126202619.GO9438@frogsfrogsfrogs/
-> > 
-> > and PR to the release manager here:
-> > https://lore.kernel.org/linux-xfs/173328206660.1159971.4540485910402305562.stg-ugh@frogsfrogsfrogs/
-> 
-> Woot, thanks!
-> 
->   Luis
-> 
+From: Bingwu Zhang <xtex@aosc.io>
 
-FWIW, I didn't pull these to -rc2, as I wouldn't have enough time to test them
-before sending them to Linus.
+This fixes two small misspells in the filesystems documentation.
 
-I'm picking them up first thing for -rc3.
+Signed-off-by: Bingwu Zhang <xtex@aosc.io>
+---
+I found these typos when learning about OverlayFS recently.
+---
+ Documentation/filesystems/iomap/operations.rst | 2 +-
+ Documentation/filesystems/overlayfs.rst        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
+index ef082e5a4e0c..2c7f5df9d8b0 100644
+--- a/Documentation/filesystems/iomap/operations.rst
++++ b/Documentation/filesystems/iomap/operations.rst
+@@ -104,7 +104,7 @@ iomap calls these functions:
+ 
+     For the pagecache, races can happen if writeback doesn't take
+     ``i_rwsem`` or ``invalidate_lock`` and updates mapping information.
+-    Races can also happen if the filesytem allows concurrent writes.
++    Races can also happen if the filesystem allows concurrent writes.
+     For such files, the mapping *must* be revalidated after the folio
+     lock has been taken so that iomap can manage the folio correctly.
+ 
+diff --git a/Documentation/filesystems/overlayfs.rst b/Documentation/filesystems/overlayfs.rst
+index 4c8387e1c880..d2a277e3976e 100644
+--- a/Documentation/filesystems/overlayfs.rst
++++ b/Documentation/filesystems/overlayfs.rst
+@@ -156,7 +156,7 @@ A directory is made opaque by setting the xattr "trusted.overlay.opaque"
+ to "y".  Where the upper filesystem contains an opaque directory, any
+ directory in the lower filesystem with the same name is ignored.
+ 
+-An opaque directory should not conntain any whiteouts, because they do not
++An opaque directory should not contain any whiteouts, because they do not
+ serve any purpose.  A merge directory containing regular files with the xattr
+ "trusted.overlay.whiteout", should be additionally marked by setting the xattr
+ "trusted.overlay.opaque" to "x" on the merge directory itself.
+
+base-commit: 7503345ac5f5e82fd9a36d6e6b447c016376403a
+-- 
+2.47.1
+
