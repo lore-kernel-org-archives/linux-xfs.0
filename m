@@ -1,385 +1,281 @@
-Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam04on2057.outbound.protection.outlook.com [40.107.102.57])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f207.google.com (mail-il1-f207.google.com [209.85.166.207])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9D881DA23;
-	Mon,  9 Dec 2024 10:45:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.102.57
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733741146; cv=fail; b=UsTrLVmufKX0g99FYEpK4dBh0uS6MrYXKDhbvrjd18PZS7ylG+VnkAq16XNwQzzzVvg/B/9wSyXookyzDIp3I7N621Dl0NS4breAgNEuWrX7PSZ/PE8Tmt2+h5XjV8wcafWWus6ZFVX227SGvOJ1+dv6ulUPzGd8W/3ScMaei8Y=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733741146; c=relaxed/simple;
-	bh=oNhucx2A87Pi/GC8FWpSEtw9T4VXBfrK24r38I1cK18=;
-	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=QAStBHWKuyk1HIx7+orKErhpmbHX0l1mt+boir6pn+/tr3td/eFshLzBpPPfeB3Hr8eZSXweSnjQEYpZOgg+ax6y9ilKCGG0IhvR9wf3JPjneI5D+4+zVk4vspP6u6F1WIPKOog/NjiifJ3sEpVOcnTUu+GH5/vRnZ8tivtRlic=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=pgTi4D4m; arc=fail smtp.client-ip=40.107.102.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="pgTi4D4m"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=b5aMsVBz+ny84/yqlwdzOLo4ksOP82cJt1KTFMNhAlkeh/WkGuJJjL2bAtCsrtNrgQmkcVQVjlS97UeBPehzRFTAKLWi2NM54j89OMnegjijVKgKLoL2gEKLh6iz9s54fQpGA7VEmRT6zdXsIxRSh8IsM9atDLQcSLkOxfN4CF4UqVaDmw6Mbjao+MrzVbb+s6Em+gKDhXbgvppzgwihO2R774VYOAa8OGSseMWHqHW0JNMW7pBccs0o37Olog//QAQTLD0HVulUfGUrPckpbsD9CBFH9dxFSmHDvXsG3elebz7qE6qDFGzj7+z43VINpJDoPia4SHc0BUOIuBYMnw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/YUO+VAK1Uh3niZMaADrsZNOPDOJkUA176z4pu6miXs=;
- b=JmFdZlY4bu0TVQI6UweuBlahJTEivYNpEBkeho0dxzsRWSdGKy4ELuy9EEjagoBHHmR/rBUlEB4f9QY00fGCd71MIAJRuW4Qudky9TTzOKaeJ+AHBtC53ZbDl8iiG9aYUftpMSJGn0AqN7itJNqYCm9Bgrw26ThH8BtwdPTAbbERBNyyCSRLYkvsPDgLGqP9T9kHiE03B9DtHYmTljpG2P7J4+IhDjIInB0gk6YFFB3CFVmHCiE0ZLr1jkxZgPNfv4Ep2VMXOshXR55BYe7p4+8ZQTbseO491UO4g1iVK3hZi8oC6SWCDpHLnVDnMBUY0l8rrlxRUkjGpsvIWY++qg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/YUO+VAK1Uh3niZMaADrsZNOPDOJkUA176z4pu6miXs=;
- b=pgTi4D4mfHGVIDF2V3MTmjG2vGcalJ0Rz7ULHqKnArpFJs8Od2t4V8bslki5Mcp4d2JGBgI/CDl3L93IuXzn/+vcignVShZ/BGXd/yFXT3tdnwZS8F+Mb8G0ofKLAiuw3hhL2R60v84NJnsOSHwOPU2HPRyEb5l+2tKoXIK6qRA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from IA1PR12MB6460.namprd12.prod.outlook.com (2603:10b6:208:3a8::13)
- by PH0PR12MB8824.namprd12.prod.outlook.com (2603:10b6:510:26f::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8207.16; Mon, 9 Dec
- 2024 10:45:42 +0000
-Received: from IA1PR12MB6460.namprd12.prod.outlook.com
- ([fe80::c819:8fc0:6563:aadf]) by IA1PR12MB6460.namprd12.prod.outlook.com
- ([fe80::c819:8fc0:6563:aadf%4]) with mapi id 15.20.8207.017; Mon, 9 Dec 2024
- 10:45:42 +0000
-Message-ID: <e9f65f75-7f0c-423f-9fd4-b29dd006852b@amd.com>
-Date: Mon, 9 Dec 2024 16:15:32 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 16/19] fsnotify: generate pre-content permission event
- on page fault
-To: Klara Modin <klarasmodin@gmail.com>, Josef Bacik <josef@toxicpanda.com>,
- kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
- amir73il@gmail.com, brauner@kernel.org, torvalds@linux-foundation.org,
- viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org,
- Linux-Next Mailing List <linux-next@vger.kernel.org>
-References: <cover.1731684329.git.josef@toxicpanda.com>
- <aa56c50ce81b1fd18d7f5d71dd2dfced5eba9687.1731684329.git.josef@toxicpanda.com>
- <5d0cd660-251c-423a-8828-5b836a5130f9@gmail.com>
-Content-Language: en-US
-From: "Aithal, Srikanth" <sraithal@amd.com>
-In-Reply-To: <5d0cd660-251c-423a-8828-5b836a5130f9@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: PN2PR01CA0043.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:c01:22::18) To IA1PR12MB6460.namprd12.prod.outlook.com
- (2603:10b6:208:3a8::13)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62BD1219E91
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Dec 2024 11:23:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.207
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1733743409; cv=none; b=NDkTUa0+/WPunZaRUBVKsNpaqYPZeK3IbnnOLGQd7qMFTTZY0fWjyh9uynMsaLm8WBh8SD46PzdFQ8DEES3smnyv5bdnbs+JPNH794OQYNxS9fzvmkTe1OEf+sBWibIPuJkHAUlm+v5lIVxUHGIQ8gW0aQa5gA1GhLoVmTvcGOs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1733743409; c=relaxed/simple;
+	bh=G1oMQIuUcy1aQyFeSgfVedIvY8oXeEFkNldf6KQee4c=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=CWEbzFqXRq+n0qVdvRlV01Lec1s6t24mkrFKxFBC7Nfcv/BhY6m1djgTUIljyQvFved1Prs55xOmtBAwKsX1Eb5SRK9ZU3a3jY2YtHOAr4b5HUTXjlhqW6LFGHoY6pHGCIb9JNj1kSyV9bG+lb/9FFQE+BHob4g8vwIDjuU7pl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.207
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f207.google.com with SMTP id e9e14a558f8ab-3a815ab079cso62281265ab.0
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Dec 2024 03:23:27 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733743406; x=1734348206;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=76j1GvUOire3gGHM4gaEqfWoT6ggd3LcvClgvNUY9Qc=;
+        b=Y6SDKZTtsh1yIeXkVmgdJcBatYn7fwNipnoFtzLMiXjclxF1WtH0Exl28lX1uxeABP
+         YWCOv8bsRFK3dV+NYmtkgTgqPxgq2FAEXn0rYxAcD7FtP2wrX7FpQ3u2iuTbawEOgwuF
+         lTK4w3Hail1C78vd0Qpurkp6ss8QOIF78vYVj9F5EKPf7P0jseFhrMpA6EnZlkknLHrU
+         0YTmWj+qUerSL2EvZAHiXswgACAp/tEY/5nhjqRGn225pKCmlb7kG9q09hKBw4ChiuYg
+         iARWKve2fBvOFNKAtWlmMcLFnmJXEM7yBQJIpFPieTTFRAU0WrZs7+RX2XKqSKYFYdFV
+         lJ1A==
+X-Forwarded-Encrypted: i=1; AJvYcCXyujxR6ZWlRQZbS9Yv1fGQBlvvwpuNFLqyTbvMZZMJivQMB5aRQH8gQMyDTzDnmLUKyVHQqDqTOxU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxTXJJNVsQJ2oJ4+UeweB+w3yLQeZDjY8KbmMXCqEXml97eG1vs
+	OGQBpoEu93nGhEM2IzUsgBFoqpIeYqiq73cxqffp6I9v0yY/9EdZ5+Vz32tlPIMOOsBOLzi3fWO
+	rKAlwj+4GO+3y59J09WzNEbw9LUDIUU4jt2kfMqAkkFj6bhryzJJXSWo=
+X-Google-Smtp-Source: AGHT+IE3Exvnlmm6bUuGWQ1Rli5LjP+PMqx7WMWLLyC+PIsyepSKY6FHI++ol1VQuUN257ePl4ArnsdH12Nqf/doYweFzIFxGd/C
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA1PR12MB6460:EE_|PH0PR12MB8824:EE_
-X-MS-Office365-Filtering-Correlation-Id: c4ee9b1d-2f2e-4414-0b83-08dd183ea070
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?K2lMSmFLS2ZrUkRMY2lxOFFldTFiM2lwWkxieHV0R0I4ZzBZTzlCNitPTWlk?=
- =?utf-8?B?T3BXNTdETkFkb0h6YU9zOHlLZWhKMVBRMFpDdkcyaGgzZXZUcDNHVGV1UmlR?=
- =?utf-8?B?dkppcGlFdlhRUWw5ZUxQdlY3NlB1SmxrSXgwTU5aVlYvclQ5UStiUDc2dDBi?=
- =?utf-8?B?bzhvY01tZnQ4ZE1Kbkhid25sL09IU1pSVEdGNENySVRaL2srRHF1RDF0QzNT?=
- =?utf-8?B?STRxMzFIOW05Y3kzWGIzeXNRbTRkRjg0am84MnRPS2ZYVk12dmhNWDFQRDRF?=
- =?utf-8?B?MlpqQk5KcDYybXlsU0I3MjZPZzlzc0ZZbzIxWlJRWVNydnZDTmMvU0FaM0tP?=
- =?utf-8?B?TmtnM0VPRUd2bTcvMFl0b0drV3hQY2h2RVVPUm1nNWpmVW5vd1IybXVXaWFo?=
- =?utf-8?B?RHZ5QTJkNzZlR1RPazlNUmNjdjJWUU1YbjJNL293c2pZZEIzeE1aZlUzMTNV?=
- =?utf-8?B?blJYSlptR2Q3TkF6TVd3cDlZYUEweUcrTHM1bEJkdEdxUW9iSVF4YndvQmdo?=
- =?utf-8?B?SXFMOGplUTdDaUJBVzNQa2lKd2JEbitWL1Fad1B0K2lYais2M1BXd2NSbmlu?=
- =?utf-8?B?Q25VbS81aDVQejRBOVE0TWdjOFdzd1V1aEd0WkQvcmF4Q21kbnN3QTNpM3lL?=
- =?utf-8?B?eVpDWGN1SmZOTGpyQjYzY0ZhTGg2NWkxUGlnblpFZFNzVk5IZFAwS0xPSWMv?=
- =?utf-8?B?VDRJbFJGMm9mYTd1eTBHZlppYkNXWEdpS1N3ZTJGUHJ3dHhGMkk1U0RISnUy?=
- =?utf-8?B?WGgxMmRMTXZaN0ljSEg1WENQY0ZrR3d6M2d6VW1EU0YvQUdCbEJVVm5BTGh3?=
- =?utf-8?B?dEx3bFNJa1h5aWczY25YZGs4RG5zVXBFODJISlhjRXhJQjJJUkxGbVZBNzBz?=
- =?utf-8?B?R3BxRjBnYndQZ3ROVE5aMFFiVzNDRUh5WjFZcG0vZ1N3OGROZ0lnWC9EVm5X?=
- =?utf-8?B?bmFEYXFndHhvVXU3NlJPYjdMTFA4TlJibFlIVUF1MVU0S2s4c1N3bDFQODNL?=
- =?utf-8?B?SGFmNjhSV2F1dXk4L1hyT2l2NlZBbW9NQm1POFFYd3h6b2lrVGduQTdmVVRl?=
- =?utf-8?B?cEpycWxRSGNZaG1TZkN3TWdMYWxzUVljK3g0QXZEN2pXTk56WENEREdLajJz?=
- =?utf-8?B?QUY3cVIyUWFZUzhkZmpoZ3E4QkorWC9kNVRVM1E2NCt4UFdnZVdMNG5ST0tY?=
- =?utf-8?B?emNSUVNZUUxXaTRoMFhmMXRRcm1ncFRVSi9QNnpNNUx6OFQ4WkhzRlh5R05o?=
- =?utf-8?B?ekhXRHl5R2Y4Q29NQ29WNk9tTGRzR3ZtMENlS1VLY1pOaG5lcWdMbGRvTE5y?=
- =?utf-8?B?eFhaR01aNXdlNFFjTGN4RFVTcVdYL2hzanpWMFlMelcwdGM5T1NBQUxWZTNu?=
- =?utf-8?B?aUhXdzhCeFZzNHYvcGt1dWxjTDBsaTRrd2RGRUhhUnNDVnpXSHQxclllcUh2?=
- =?utf-8?B?OElJR1hMb25yV0tJY2IxZmdrMXUySGhEMmNKYWNObU9yV0JFNGw4SkZZNXFP?=
- =?utf-8?B?bWE2N0JvL3pnZ0JBMWpGS0YvRGVtQ1p5TXQrSXZvQTFNcEQ4ZnhnT0xqK05Y?=
- =?utf-8?B?bjgxN3A0Y0JEK3dqNERoYlZ4b2Y2c0UxZUxjbGdDWlZDTThXTWpXbEdIZVU2?=
- =?utf-8?B?SEJsUHcxcGlVVVl6ZVFFN09CYTk0dGt6bHhVYk5RbXBNNmk5T3NwRmwzc0dV?=
- =?utf-8?B?YzFwZENBcmRjallqSk5jZFdYNkpDelE1SEdsdWdvVnhhbVBEOXpYWXFLUGhp?=
- =?utf-8?B?Zm9PWlBYbWxWckw1WFgzZGZnRmNhbHQzZnppekNHQ2JKdVZEbXNOQ2JLZk9D?=
- =?utf-8?B?NWltcjFkWW1YYSt1UWRWalR6SGFRSjBwbXN0VDROQWF0SXNZdnJHVGxBWmE0?=
- =?utf-8?B?Qk5zTjJrWTZObXlsaVlRSDdHNjB1UGFwRHZWTG1SOFk0bHc9PQ==?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB6460.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?aHd2Yml6YlQ1N2YydEdUZ2QwQmlTL2ZZcXRrbHlDejVRRmt0OXNXRWkyMzVZ?=
- =?utf-8?B?bFQrM2lvR2ZRQ2tyaVV5amROWmx3V3lleW0yMEo4MHpucmNTZk5iWmNDMkp5?=
- =?utf-8?B?NGpGQWJOYml1U0kyMzAvVVNhaWZ2RVpqREo5QU4zWVFJRStYZHVaL0liZmNa?=
- =?utf-8?B?d3ljRmo1QmhTdmVhNVVsOS9GTlp5N09rN3o2eXRTQndvRDduc1lINlZkVWdO?=
- =?utf-8?B?cHBsMU05d0M1UHlqLzNTcVJKczNCcjcwZm80dTc5a3F0eGE0dE1iWmxKV3Fp?=
- =?utf-8?B?eG1rQ2FIYTJKWmdNSHp4T2JVSWRLSHY2Z0ZWMVRWU29NeFRSaVpWYXNySGsy?=
- =?utf-8?B?YjJ4UzBMQzA5VWlPQ09Jb1dydEMrRFJSRFcvSEhXTzFING1uaWVmRzhpM1dL?=
- =?utf-8?B?NVlSOXZ3VG9CVUpOSThidXdnTUUwRWJKOUwzdnBRWHU2UGNwOXZVS0MrZjZ3?=
- =?utf-8?B?NUZhK2xBaUxobG0xQmJyUlhGTEJkNkdET0djU2FqR1F4cDFqVmFUVEtFcFRE?=
- =?utf-8?B?RENKSEVKVGg4U0R0MVZsK1hJNHZGREwwVmhrdkRWNExKNSthSzk3eXZFNmhX?=
- =?utf-8?B?U1I0S1RYZWFkQlpkclhrOGl5UWRPS0VLVFhVZGhXMEFmVjlQa3FxRzcwRlo2?=
- =?utf-8?B?WXJFbzM2bUdtL21VZVRmMTlIUWR0WnAxSlFoZ016Ym91cEdqeDMreDVGWkkr?=
- =?utf-8?B?NlpnWGpRZFcyUGFsdHI4SzUxc01yeWNpMFNiOWE2Qjd4RjZZaWJsbzg1Q1Vp?=
- =?utf-8?B?UWNNUUpSR0plOTdkOE5BTlVlSkF0QVY2Z0pzZUZTVm5Ga3dndlFPVnFLMnda?=
- =?utf-8?B?ak85ZXRXOG5oTE1RRXlWVFlFOWhUeFFUMlFNcU9RVmRVbk0yUkloSlJaV1NU?=
- =?utf-8?B?NGJuOUdJc2JpRG83bFR4RzlMNkU1dnRuOTBiU2JVMWQ0MmNGVEM0clJER01l?=
- =?utf-8?B?QkRlZDhDWko0UlI3UUxqQXZPOFZQNVJPY0g2OTZwcGdpUk42ODZ4Mzk4a2lr?=
- =?utf-8?B?ODk5anBhTkRNakNYTjZQM2RvazRBNTU5NTRFVTRlcHpEamlXYVBwcFNHSXN0?=
- =?utf-8?B?eGFCd05tQndBeE5PeVlTRUp6OU5vdzg5UjFjaExjYVhGNEFVUm1NOHFqRks5?=
- =?utf-8?B?N0VGTnFGZDJlbW1QaUFCQURudEprM2hmSTlHd3MvWHNvWENMVm5hOUZ0MDNV?=
- =?utf-8?B?L01aWnBMUDRVbFZmWUNvYkdZNWJOcmg4WXhnTDhVeUp6SE9Wems4UW9FaG1y?=
- =?utf-8?B?b0JQR1NsM0lxT0lKUkhpNTlua1E5bEdyaElCMEJPeTJqOVpYMlRNQXNHL1E5?=
- =?utf-8?B?NjVuc05Pb295MXBrNEVCZlpoRm0vaEtJWk01bGxkRXJPdjZheFR0UXpYLzFB?=
- =?utf-8?B?cHpXNE1JK002OEpHVXhJQnpBSWc3czhBdXlRRC95NWN1dnlhWGpyZmRXck9D?=
- =?utf-8?B?aUtybG1mbE13a1RJTnVlWTFMMXpJRDM3NTgybHMyb1NmUUVJZnRmMDhwUVEx?=
- =?utf-8?B?NUFIVm9jTU9oQ3hrM255SFlMaGZ6N1kyb1JhNU9MdlZUMVNvWFpUVXRPWGF6?=
- =?utf-8?B?RVRDd3dxaG1mZ2twRXRaSVJTNTN2blpzbnFRVW8yZ0tGVjhVS0kzc3ZHOXhl?=
- =?utf-8?B?eC9aSEVGMi92QzRhSHJTQUt1YSt2eWdoWFRYMWhVNHcyS0d6Q05JVWJkc3ZD?=
- =?utf-8?B?cE5vMWpWTVVYeTluNlRZbEFKMS82TnZaaCtNMzdsdVRycTVDd1BiM2dwYlBs?=
- =?utf-8?B?QW8yVmVqMDh4RFowN3M4anBwamxYZUNoWURtSWw2TUFiR1BXSVRBUFd5MWh0?=
- =?utf-8?B?ejZZQjZzdzZFOVh1UGZJVWdScitEOGdFL2Z0Uzh4RUxXY3dXUlIvN2YvbkFH?=
- =?utf-8?B?V1NuMHZHSFRRYkNBdXd2OXF2ejVHcFB5Z2J6Y0FrTjdmVE1tZlhwSUJ1SDVz?=
- =?utf-8?B?YTVIeVg3bzNSYlpDRzN6UG5UNGhqaFUva1FpNjl5TnJKbjBBaTZZdk9MWU92?=
- =?utf-8?B?SVMwc2dWTXV4VmJHMmtsK0ZMRjlUNXhlZTZOTWgyc0NsSVRwblNFMUxxZ0c5?=
- =?utf-8?B?VEhIT21FY1N5UXhWb0Q1RXB5U05qR2dYYW4wOXk3bDljSUJzM1A3bmlyeHQy?=
- =?utf-8?Q?igsD7GjUK6y/H5ZsT3+WWeDZV?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c4ee9b1d-2f2e-4414-0b83-08dd183ea070
-X-MS-Exchange-CrossTenant-AuthSource: IA1PR12MB6460.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Dec 2024 10:45:42.0390
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: o712VDPP3Hsx1X+gbrj1NNifDIQ5VszfWboBUNKQU/0qwpI6OwuIIxyQbdIB6qP8w6UhTly1gNiFba0/mNZyoQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB8824
+X-Received: by 2002:a05:6e02:18ca:b0:3a7:a3a4:2cb3 with SMTP id
+ e9e14a558f8ab-3a9dbb26947mr746125ab.15.1733743406576; Mon, 09 Dec 2024
+ 03:23:26 -0800 (PST)
+Date: Mon, 09 Dec 2024 03:23:26 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6756d32e.050a0220.a30f1.019c.GAE@google.com>
+Subject: [syzbot] [xfs?] KASAN: slab-use-after-free Read in xfs_buf_rele (2)
+From: syzbot <syzbot+643ffa707a94e3d66378@syzkaller.appspotmail.com>
+To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 12/8/2024 10:28 PM, Klara Modin wrote:
-> Hi,
-> 
-> On 2024-11-15 16:30, Josef Bacik wrote:
->> FS_PRE_ACCESS or FS_PRE_MODIFY will be generated on page fault depending
->> on the faulting method.
->>
->> This pre-content event is meant to be used by hierarchical storage
->> managers that want to fill in the file content on first read access.
->>
->> Export a simple helper that file systems that have their own ->fault()
->> will use, and have a more complicated helper to be do fancy things with
->> in filemap_fault.
->>
-> 
-> This patch (0790303ec869d0fd658a548551972b51ced7390c in next-20241206) 
-> interacts poorly with some programs which hang and are stuck at 100 % 
-> sys cpu usage (examples of programs are logrotate and atop with root 
-> privileges).
-> 
-> I also retested the new version on Jan Kara's for_next branch and it 
-> behaves the same way.
+Hello,
 
- From linux-next20241206 onward we started hitting issues where KVM 
-guests running kernel > next20241206 on AMD platforms fails to shutdown, 
-hangs forever with below errors:
+syzbot found the following issue on:
 
-[  OK  ] Reached target Late Shutdown Services.
-[  OK  ] Finished System Power Off.
-[  OK  ] Reached target System Power Off.
-[  128.946271] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Connection refused
-[  198.945362] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-[  298.945402] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-[  378.945345] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-[  488.945402] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-[  558.945904] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-[  632.945409] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-[  738.945403] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-[  848.945342] systemd-journald[93]: Failed to send WATCHDOG=1 
-notification message: Transport endpoint is not connected
-..
-..
+HEAD commit:    7af08b57bcb9 Merge tag 'trace-v6.13-2' of git://git.kernel..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=17cecd30580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=129a9798def93175
+dashboard link: https://syzkaller.appspot.com/bug?extid=643ffa707a94e3d66378
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-Bisecting the issue pointed to this patch.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-commit 0790303ec869d0fd658a548551972b51ced7390c
-Author: Josef Bacik <josef@toxicpanda.com>
-Date: Fri Nov 15 10:30:29 2024 -0500
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/f6e67f04bc76/disk-7af08b57.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/31932bddea1f/vmlinux-7af08b57.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/62707034e0dd/bzImage-7af08b57.xz
 
-fsnotify: generate pre-content permission event on page fault
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+643ffa707a94e3d66378@syzkaller.appspotmail.com
 
-Same issue exists with todays linux-next build as well.
+==================================================================
+BUG: KASAN: slab-use-after-free in rht_key_hashfn include/linux/rhashtable.h:159 [inline]
+BUG: KASAN: slab-use-after-free in rht_head_hashfn include/linux/rhashtable.h:174 [inline]
+BUG: KASAN: slab-use-after-free in __rhashtable_remove_fast_one include/linux/rhashtable.h:1007 [inline]
+BUG: KASAN: slab-use-after-free in __rhashtable_remove_fast include/linux/rhashtable.h:1093 [inline]
+BUG: KASAN: slab-use-after-free in rhashtable_remove_fast include/linux/rhashtable.h:1122 [inline]
+BUG: KASAN: slab-use-after-free in xfs_buf_rele_cached fs/xfs/xfs_buf.c:1125 [inline]
+BUG: KASAN: slab-use-after-free in xfs_buf_rele+0xd26/0x15b0 fs/xfs/xfs_buf.c:1151
+Read of size 4 at addr ffff888033dd6c08 by task syz.7.96/6977
 
-Adding below configs in the guest_config fixes the shutdown hang issue:
+CPU: 1 UID: 0 PID: 6977 Comm: syz.7.96 Not tainted 6.12.0-syzkaller-10689-g7af08b57bcb9 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:378 [inline]
+ print_report+0x169/0x550 mm/kasan/report.c:489
+ kasan_report+0x143/0x180 mm/kasan/report.c:602
+ rht_key_hashfn include/linux/rhashtable.h:159 [inline]
+ rht_head_hashfn include/linux/rhashtable.h:174 [inline]
+ __rhashtable_remove_fast_one include/linux/rhashtable.h:1007 [inline]
+ __rhashtable_remove_fast include/linux/rhashtable.h:1093 [inline]
+ rhashtable_remove_fast include/linux/rhashtable.h:1122 [inline]
+ xfs_buf_rele_cached fs/xfs/xfs_buf.c:1125 [inline]
+ xfs_buf_rele+0xd26/0x15b0 fs/xfs/xfs_buf.c:1151
+ xfs_buftarg_shrink_scan+0x264/0x300 fs/xfs/xfs_buf.c:2001
+ do_shrink_slab+0x72d/0x1160 mm/shrinker.c:437
+ shrink_slab+0x1093/0x14d0 mm/shrinker.c:664
+ drop_slab_node mm/vmscan.c:414 [inline]
+ drop_slab+0x142/0x280 mm/vmscan.c:432
+ drop_caches_sysctl_handler+0xbc/0x160 fs/drop_caches.c:68
+ proc_sys_call_handler+0x5ec/0x920 fs/proc/proc_sysctl.c:601
+ do_iter_readv_writev+0x600/0x880
+ vfs_writev+0x376/0xba0 fs/read_write.c:1050
+ do_writev+0x1b6/0x360 fs/read_write.c:1096
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fd7c0780809
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fd7be5f6058 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
+RAX: ffffffffffffffda RBX: 00007fd7c0945fa0 RCX: 00007fd7c0780809
+RDX: 0000000000000001 RSI: 00000000200000c0 RDI: 0000000000000004
+RBP: 00007fd7c07f393e R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 00007fd7c0945fa0 R15: 00007fffcac00d18
+ </TASK>
 
-CONFIG_FANOTIFY=y
-CONFIG_FANOTIFY_ACCESS_PERMISSIONS=y
+Allocated by task 6968:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ poison_kmalloc_redzone mm/kasan/common.c:377 [inline]
+ __kasan_kmalloc+0x98/0xb0 mm/kasan/common.c:394
+ kasan_kmalloc include/linux/kasan.h:260 [inline]
+ __do_kmalloc_node mm/slub.c:4283 [inline]
+ __kmalloc_node_noprof+0x290/0x4d0 mm/slub.c:4289
+ __kvmalloc_node_noprof+0x72/0x190 mm/util.c:650
+ bucket_table_alloc lib/rhashtable.c:186 [inline]
+ rhashtable_init_noprof+0x534/0xa60 lib/rhashtable.c:1071
+ xfs_perag_alloc fs/xfs/libxfs/xfs_ag.c:238 [inline]
+ xfs_initialize_perag+0x26a/0x630 fs/xfs/libxfs/xfs_ag.c:279
+ xfs_mountfs+0xaaf/0x2410 fs/xfs/xfs_mount.c:831
+ xfs_fs_fill_super+0x12db/0x1590 fs/xfs/xfs_super.c:1791
+ get_tree_bdev_flags+0x48c/0x5c0 fs/super.c:1636
+ vfs_get_tree+0x90/0x2b0 fs/super.c:1814
+ do_new_mount+0x2be/0xb40 fs/namespace.c:3507
+ do_mount fs/namespace.c:3847 [inline]
+ __do_sys_mount fs/namespace.c:4057 [inline]
+ __se_sys_mount+0x2d6/0x3c0 fs/namespace.c:4034
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Regards,
-Srikanth Aithal
-> 
->> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
->> ---
->>  include/linux/mm.h |  1 +
->>  mm/filemap.c       | 78 ++++++++++++++++++++++++++++++++++++++++++++++
->>  2 files changed, 79 insertions(+)
->>
->> diff --git a/include/linux/mm.h b/include/linux/mm.h
->> index 01c5e7a4489f..90155ef8599a 100644
->> --- a/include/linux/mm.h
->> +++ b/include/linux/mm.h
->> @@ -3406,6 +3406,7 @@ extern vm_fault_t filemap_fault(struct vm_fault 
->> *vmf);
->>  extern vm_fault_t filemap_map_pages(struct vm_fault *vmf,
->>          pgoff_t start_pgoff, pgoff_t end_pgoff);
->>  extern vm_fault_t filemap_page_mkwrite(struct vm_fault *vmf);
->> +extern vm_fault_t filemap_fsnotify_fault(struct vm_fault *vmf);
->>
->>  extern unsigned long stack_guard_gap;
->>  /* Generic expand stack which grows the stack according to 
->> GROWS{UP,DOWN} */
->> diff --git a/mm/filemap.c b/mm/filemap.c
->> index 68ea596f6905..0bf7d645dec5 100644
->> --- a/mm/filemap.c
->> +++ b/mm/filemap.c
->> @@ -47,6 +47,7 @@
->>  #include <linux/splice.h>
->>  #include <linux/rcupdate_wait.h>
->>  #include <linux/sched/mm.h>
->> +#include <linux/fsnotify.h>
->>  #include <asm/pgalloc.h>
->>  #include <asm/tlbflush.h>
->>  #include "internal.h"
->> @@ -3289,6 +3290,52 @@ static vm_fault_t 
->> filemap_fault_recheck_pte_none(struct vm_fault *vmf)
->>      return ret;
->>  }
->>
->> +/**
->> + * filemap_fsnotify_fault - maybe emit a pre-content event.
->> + * @vmf:    struct vm_fault containing details of the fault.
->> + * @folio:    the folio we're faulting in.
->> + *
->> + * If we have a pre-content watch on this file we will emit an event 
->> for this
->> + * range.  If we return anything the fault caller should return 
->> immediately, we
->> + * will return VM_FAULT_RETRY if we had to emit an event, which will 
->> trigger the
->> + * fault again and then the fault handler will run the second time 
->> through.
->> + *
->> + * This is meant to be called with the folio that we will be filling 
->> in to make
->> + * sure the event is emitted for the correct range.
->> + *
->> + * Return: a bitwise-OR of %VM_FAULT_ codes, 0 if nothing happened.
->> + */
->> +vm_fault_t filemap_fsnotify_fault(struct vm_fault *vmf)
-> 
-> The parameters mentioned above do not seem to match with the function.
-> 
->> +{
->> +    struct file *fpin = NULL;
->> +    int mask = (vmf->flags & FAULT_FLAG_WRITE) ? MAY_WRITE : MAY_ACCESS;
->> +    loff_t pos = vmf->pgoff >> PAGE_SHIFT;
->> +    size_t count = PAGE_SIZE;
->> +    vm_fault_t ret;
->> +
->> +    /*
->> +     * We already did this and now we're retrying with everything 
->> locked,
->> +     * don't emit the event and continue.
->> +     */
->> +    if (vmf->flags & FAULT_FLAG_TRIED)
->> +        return 0;
->> +
->> +    /* No watches, we're done. */
->> +    if (!fsnotify_file_has_pre_content_watches(vmf->vma->vm_file))
->> +        return 0;
->> +
->> +    fpin = maybe_unlock_mmap_for_io(vmf, fpin);
->> +    if (!fpin)
->> +        return VM_FAULT_SIGBUS;
->> +
->> +    ret = fsnotify_file_area_perm(fpin, mask, &pos, count);
->> +    fput(fpin);
->> +    if (ret)
->> +        return VM_FAULT_SIGBUS;
->> +    return VM_FAULT_RETRY;
->> +}
->> +EXPORT_SYMBOL_GPL(filemap_fsnotify_fault);
->> +
->>  /**
->>   * filemap_fault - read in file data for page fault handling
->>   * @vmf:    struct vm_fault containing details of the fault
-> 
-> 
-> 
->> @@ -3392,6 +3439,37 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)
->>       * or because readahead was otherwise unable to retrieve it.
->>       */
->>      if (unlikely(!folio_test_uptodate(folio))) {
->> +        /*
->> +         * If this is a precontent file we have can now emit an event to
->> +         * try and populate the folio.
->> +         */
->> +        if (!(vmf->flags & FAULT_FLAG_TRIED) &&
->> +            fsnotify_file_has_pre_content_watches(file)) {
->> +            loff_t pos = folio_pos(folio);
->> +            size_t count = folio_size(folio);
->> +
->> +            /* We're NOWAIT, we have to retry. */
->> +            if (vmf->flags & FAULT_FLAG_RETRY_NOWAIT) {
->> +                folio_unlock(folio);
->> +                goto out_retry;
->> +            }
->> +
->> +            if (mapping_locked)
->> +                filemap_invalidate_unlock_shared(mapping);
->> +            mapping_locked = false;
->> +
->> +            folio_unlock(folio);
->> +            fpin = maybe_unlock_mmap_for_io(vmf, fpin);
-> 
-> When I look at it with GDB it seems to get here, but then always jumps 
-> to out_retry, which keeps happening when it reenters, and never seems to 
-> progress beyond from what I could tell.
-> 
-> For logrotate, strace stops at "mmap(NULL, 909, PROT_READ, MAP_PRIVATE| 
-> MAP_POPULATE, 3, 0".
-> For atop, strace stops at "mlockall(MCL_CURRENT|MCL_FUTURE".
-> 
-> If I remove this entire patch snippet everything seems to be normal.
-> 
->> +            if (!fpin)
->> +                goto out_retry;
->> +
->> +            error = fsnotify_file_area_perm(fpin, MAY_ACCESS, &pos,
->> +                            count);
->> +            if (error)
->> +                ret = VM_FAULT_SIGBUS;
->> +            goto out_retry;
->> +        }
->> +
->>          /*
->>           * If the invalidate lock is not held, the folio was in cache
->>           * and uptodate and now it is not. Strange but possible since we
-> 
-> Please let me know if there's anything else you need.
-> 
-> Regards,
-> Klara Modin
+Freed by task 5852:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ kasan_save_free_info+0x40/0x50 mm/kasan/generic.c:582
+ poison_slab_object mm/kasan/common.c:247 [inline]
+ __kasan_slab_free+0x59/0x70 mm/kasan/common.c:264
+ kasan_slab_free include/linux/kasan.h:233 [inline]
+ slab_free_hook mm/slub.c:2338 [inline]
+ slab_free mm/slub.c:4598 [inline]
+ kfree+0x196/0x430 mm/slub.c:4746
+ rhashtable_free_and_destroy+0x7c6/0x920 lib/rhashtable.c:1169
+ xfs_group_free+0xd4/0x230 fs/xfs/libxfs/xfs_group.c:170
+ xfs_free_perag_range+0x36/0x60 fs/xfs/libxfs/xfs_ag.c:133
+ xfs_unmountfs+0x24d/0x2e0 fs/xfs/xfs_mount.c:1185
+ xfs_fs_put_super+0x65/0x150 fs/xfs/xfs_super.c:1149
+ generic_shutdown_super+0x139/0x2d0 fs/super.c:642
+ kill_block_super+0x44/0x90 fs/super.c:1710
+ xfs_kill_sb+0x15/0x50 fs/xfs/xfs_super.c:2089
+ deactivate_locked_super+0xc4/0x130 fs/super.c:473
+ cleanup_mnt+0x41f/0x4b0 fs/namespace.c:1373
+ task_work_run+0x24f/0x310 kernel/task_work.c:239
+ resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
+ exit_to_user_mode_loop kernel/entry/common.c:114 [inline]
+ exit_to_user_mode_prepare include/linux/entry-common.h:329 [inline]
+ __syscall_exit_to_user_mode_work kernel/entry/common.c:207 [inline]
+ syscall_exit_to_user_mode+0x13f/0x340 kernel/entry/common.c:218
+ do_syscall_64+0x100/0x230 arch/x86/entry/common.c:89
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
+The buggy address belongs to the object at ffff888033dd6c00
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 8 bytes inside of
+ freed 512-byte region [ffff888033dd6c00, ffff888033dd6e00)
+
+The buggy address belongs to the physical page:
+page: refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x33dd4
+head: order:2 mapcount:0 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+flags: 0xfff00000000040(head|node=0|zone=1|lastcpupid=0x7ff)
+page_type: f5(slab)
+raw: 00fff00000000040 ffff88801ac41c80 dead000000000100 dead000000000122
+raw: 0000000000000000 0000000000100010 00000001f5000000 0000000000000000
+head: 00fff00000000040 ffff88801ac41c80 dead000000000100 dead000000000122
+head: 0000000000000000 0000000000100010 00000001f5000000 0000000000000000
+head: 00fff00000000002 ffffea0000cf7501 ffffffffffffffff 0000000000000000
+head: 0000000000000004 0000000000000000 00000000ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 2, migratetype Unmovable, gfp_mask 0xd20c0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 5216, tgid 5216 (udevadm), ts 27719249718, free_ts 27704552099
+ set_page_owner include/linux/page_owner.h:32 [inline]
+ post_alloc_hook+0x1f3/0x230 mm/page_alloc.c:1556
+ prep_new_page mm/page_alloc.c:1564 [inline]
+ get_page_from_freelist+0x3651/0x37a0 mm/page_alloc.c:3474
+ __alloc_pages_noprof+0x292/0x710 mm/page_alloc.c:4751
+ alloc_pages_mpol_noprof+0x3e8/0x680 mm/mempolicy.c:2265
+ alloc_slab_page+0x6a/0x140 mm/slub.c:2408
+ allocate_slab+0x5a/0x2f0 mm/slub.c:2574
+ new_slab mm/slub.c:2627 [inline]
+ ___slab_alloc+0xcd1/0x14b0 mm/slub.c:3815
+ __slab_alloc+0x58/0xa0 mm/slub.c:3905
+ __slab_alloc_node mm/slub.c:3980 [inline]
+ slab_alloc_node mm/slub.c:4141 [inline]
+ __kmalloc_cache_noprof+0x27b/0x390 mm/slub.c:4309
+ kmalloc_noprof include/linux/slab.h:901 [inline]
+ kzalloc_noprof include/linux/slab.h:1037 [inline]
+ kernfs_fop_open+0x3e0/0xd10 fs/kernfs/file.c:623
+ do_dentry_open+0xbe1/0x1b70 fs/open.c:945
+ vfs_open+0x3e/0x330 fs/open.c:1075
+ do_open fs/namei.c:3828 [inline]
+ path_openat+0x2c84/0x3590 fs/namei.c:3987
+ do_filp_open+0x27f/0x4e0 fs/namei.c:4014
+ do_sys_openat2+0x13e/0x1d0 fs/open.c:1402
+ do_sys_open fs/open.c:1417 [inline]
+ __do_sys_openat fs/open.c:1433 [inline]
+ __se_sys_openat fs/open.c:1428 [inline]
+ __x64_sys_openat+0x247/0x2a0 fs/open.c:1428
+page last free pid 5227 tgid 5227 stack trace:
+ reset_page_owner include/linux/page_owner.h:25 [inline]
+ free_pages_prepare mm/page_alloc.c:1127 [inline]
+ free_unref_page+0xde3/0x1130 mm/page_alloc.c:2657
+ discard_slab mm/slub.c:2673 [inline]
+ __put_partials+0xeb/0x130 mm/slub.c:3142
+ put_cpu_partial+0x17c/0x250 mm/slub.c:3217
+ __slab_free+0x2ea/0x3d0 mm/slub.c:4468
+ qlink_free mm/kasan/quarantine.c:163 [inline]
+ qlist_free_all+0x9a/0x140 mm/kasan/quarantine.c:179
+ kasan_quarantine_reduce+0x14f/0x170 mm/kasan/quarantine.c:286
+ __kasan_slab_alloc+0x23/0x80 mm/kasan/common.c:329
+ kasan_slab_alloc include/linux/kasan.h:250 [inline]
+ slab_post_alloc_hook mm/slub.c:4104 [inline]
+ slab_alloc_node mm/slub.c:4153 [inline]
+ kmem_cache_alloc_noprof+0x1d9/0x380 mm/slub.c:4160
+ alloc_empty_file+0x9e/0x1d0 fs/file_table.c:228
+ path_openat+0x107/0x3590 fs/namei.c:3973
+ do_filp_open+0x27f/0x4e0 fs/namei.c:4014
+ do_sys_openat2+0x13e/0x1d0 fs/open.c:1402
+ do_sys_open fs/open.c:1417 [inline]
+ __do_sys_openat fs/open.c:1433 [inline]
+ __se_sys_openat fs/open.c:1428 [inline]
+ __x64_sys_openat+0x247/0x2a0 fs/open.c:1428
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+Memory state around the buggy address:
+ ffff888033dd6b00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff888033dd6b80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff888033dd6c00: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                      ^
+ ffff888033dd6c80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff888033dd6d00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
