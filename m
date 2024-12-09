@@ -1,162 +1,114 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EB5214A0AA;
-	Mon,  9 Dec 2024 16:23:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C22919D083
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Dec 2024 22:23:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733761420; cv=none; b=KrR2jhNCe4zmSKVyf9W7lNSMUmqnu5xjxO45ZHQ4VYwqCAcXa1Um4/jF2cstvCVQQZ0GmQ/24z5Ba74LAA3A9U5mL0yMYaLbJbEaFh1uaYiBXQ8z4Zwv4q1rXAvGWsM2rBX9gEbydnjCV0i9IF9K0Fb5OULRfaSMNZV2tOgredc=
+	t=1733783023; cv=none; b=hpDQMyR9BntvbvVzZ1ro7esSCEpwNBlQrcZltlkyzU1HPBnFTq7avj/uv+WVSlnJmCy/LDXrBfGZRdcIduWyRAZSKnjrPt3MK3hMBnaxC2eEHrICJhNBa+MJIDzV7qDw6RLQwqLj96pYnjW6xeRce0nONZggIWIvxpMUgbAB3bY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733761420; c=relaxed/simple;
-	bh=J7WTWNZjTNU6Inc8M05Ida9EHcfcexe793ivbpD1Zls=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aIfIdomPrq5Dn8QrPGfvzrFQf6GHzl8014hK73zHlo5b7fOGuftHW0zFnwJc2WVeYNgeWc+0j8mXbMPEkPLReYAirMCD8PW9viIUy+0QVj2O/SYjrwCaCuqizjK95SdN2BABk+VXOzKy5kmEDvkP0h+otYw3BEd1eA8oh4Cl3iI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gS5zSVGU; arc=none smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1733783023; c=relaxed/simple;
+	bh=y60+WkDIoDksfJbLUcmqYmWt8AI73AHojlSc05XnQQo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BdE/zKEsxsOaHTVPwa5/p4kKT3J3fbyPsmFfz7/nE+RAMn4DrAh5weaDvMh7yl5aPXqerF5SJmuEeejZcFq9vsAK9IFh2iFF37SKCAXrNjLdTS6n3sqqGuOH+ysSjf+qvrz6z3mAfl8gEheambVsrYPKY/Kc6Hjq7ISi/d4jOOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=j41kUQtM; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gS5zSVGU"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-5d3d2a30afcso4558614a12.3;
-        Mon, 09 Dec 2024 08:23:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="j41kUQtM"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-21644aca3a0so18025915ad.3
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Dec 2024 14:23:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1733761416; x=1734366216; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0K8ZP2F40I1V9oEBcZ5JHDlz8ReIw6B0xGg0te9jF0k=;
-        b=gS5zSVGUicqjDYMYUITd6cV9y5tTk34DvbL/jjIcc5EDQIfag5cRlnlpBnF9qUpjiv
-         BXW8SU4RIApxMe2fjbMTYSgZvto6U0RTLnKqAMa+luj3g5RCtBTAihRloblYD1oNigaH
-         QRLYrXNVY13A22b0wZIuAttOj/iws13X4tIz4QZlVP0/RnebuSww0RkF0mP0qf0yqCMZ
-         w0V7TCrE1RnnHIE/U4tSGB1+yKTGWX3IgIRso1pwDn8HZ6i0W35ALzYqJEagPOMBp7fj
-         xuvVOJtuPF/QecOoo1619N01LZemGRu2cYiSmsYf0/FdmNHjnHHSaKWdqXZsna/okVj7
-         /Mzg==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1733783021; x=1734387821; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=xqiC4C8fc5tfBeVUWU5CDHxc0RuIt2ztL3i4yk62p9g=;
+        b=j41kUQtMO+S/xEWUMC3Hy8RboFF4I8Gc5LJsyUOvL0aR4c/I7yceq95WQ1RMxj9hC+
+         k3OdaKiW/TK9QFduUOM7MRNm1pBrYSHZXck3R0Lw4HeKWug3YdDXbvJeQePGjZcBK17Y
+         i0xjcBEOJ8kuyZ/enDhk0qJ5nPuBnZJN7tTgWc4HsMZAhdgziBBubx2/VFsQHkCBiAqM
+         9j4dsoBezAa33gQxSjTw+848cq98rLjtuR52727VHN01lhYUpbSZpXuOd84Oq4mhIyi5
+         tMr9OVaom83AzVVgMdTfzyMiTJ/hesikP/wFLS8d6gkSvjJ6WxVopGdXgP78T9fz0rFL
+         GM8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733761416; x=1734366216;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0K8ZP2F40I1V9oEBcZ5JHDlz8ReIw6B0xGg0te9jF0k=;
-        b=jHMtFLfN7wpqipMR+6IoWpc8vgkeMGRidpqS5zbghWebwFkYyHoVTAZ+zsRoXwTT9f
-         qQUwIC2B8/8uKwcwx8z2K++kBVEnkim1OhmV+38BrmMmxmBjfak2d5x6MPHO/SHgLdPX
-         RParkq0D2vaitV15+rPnps41D1agEQQrthUeETNHg5u7owQSfaOAtIBqzMOn4vVMtIi+
-         R1++xrnsW1FrK9/mmU/b/xTzPPlCRlMb+z9FWANPgaxYf9VY4C+FPefONIgD0dpn9KGq
-         k8OvZVUeH6B+t3/+T1SHgP6hhNf2shaMaTpYCu2Cx7HjHMgUta3XAfytcwU3sFykl54J
-         4A1w==
-X-Forwarded-Encrypted: i=1; AJvYcCUbC1XPSGSI9j3iluFSw2EEWc65esD2t9Y43JMjVR+KqIA4BTbOKQo4Jtq1unJYkFxwdskb1XJLczwj/Q==@vger.kernel.org, AJvYcCUf+qcuuIvyCikd/BzOqOv1CSd5iR409MAwUK2xvMxatHf33AWdzSVjrU166S9aLyFqelLvn49t1yQDBq15@vger.kernel.org, AJvYcCVA2bQ/OcdkPEIrWGnMyxRZpeSpZeYQ/BJfHKg7pgT2CJIQkurQMoZqe3b1xaRLyzGQ3LsZ95yLq3k+@vger.kernel.org, AJvYcCVEMnqh+u6y2c2ThyWZEEnndagmckBpVUTnB4P2jdXxyEyKPaZ2SYTHVElAEJqxj7DCqnw5dH3B92quXfoUnQ==@vger.kernel.org, AJvYcCWSawgqBdKfdA/v1BAH/i7Vi9qCVeigT+EUcyo9YD0wmb3wm0JdR7/rxS1oHx88dyOHtKWscgchQHuNZw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwZEhhDNq9xKBiXEaTqBPiwlAa0KEb+rxGCjL4TRdJxhmrmIiEK
-	JH9OR2T1OW3iY4tFQPoUcOgHi1SvE9WbTgLQDbSE9Vm3CgthxjKivO+QxXrbSmvw7/bXi/4U/gF
-	MQhRcp4tTC3RPB80mnHQPlk+yr2E=
-X-Gm-Gg: ASbGncvgtw+2R3P8bHCzdojMkYlNBx6qMFxCy47jroR9DIF3nLmdX5ihTmFvJ2rbOMg
-	xLgTQdecV/gAnhGK1fUnX0BzUb4IL/dAUUQY=
-X-Google-Smtp-Source: AGHT+IHmex2O3oPEmcdzQYRDxskxCLJEzFe9sxDiHkQR1oioeUncNUJNUrhnRyG2dNZ7LdMyL3H2jyVIZBJBfxS9GRo=
-X-Received: by 2002:a05:6402:3906:b0:5cf:924f:9968 with SMTP id
- 4fb4d7f45d1cf-5d3be661c03mr13750415a12.2.1733761415276; Mon, 09 Dec 2024
- 08:23:35 -0800 (PST)
+        d=1e100.net; s=20230601; t=1733783021; x=1734387821;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xqiC4C8fc5tfBeVUWU5CDHxc0RuIt2ztL3i4yk62p9g=;
+        b=VJcsyy4p4K/fWgH1b1yyMZ/Ef1sRGzbKJCvqu2m//YEyfroPuPEGRV2c5A/bGr3nF1
+         yn3+YC1MFnUsK3z756joXhntcYlf2CpYwZYia/0hw5tcWb2XTw5Q6pcv1z4IHY00yn+J
+         wumc22qMw3ChbWiqnbbqOBp+mnKFm9GPHnd8ddGdq0qc5raGdSiUiqZs2c/uO017kXGX
+         BvWRTtP6KgwruCZ4hgwFNErjlGOd+HtSlTb1s9HPJFO83VOJncW12xeEVBsuHqlWiV/7
+         UjWgYWw7iEs8Ms1dFswsNWTFp86KFUerP1cdJGDCbQ8EaDlYDshY4DAxDRjfTW7qNnsF
+         wdHQ==
+X-Gm-Message-State: AOJu0YwPCDYegTUvnHJJmzsyvc8/LozYhW2pFC/GjkPM8AkWJFR51dKV
+	NHAT6xkbkzQaLw/PgyCfvBTlJLq4Z2moar5/h6uYgEYakzWdUaiCr5XxE4ODhLCm6YVbrLKozxc
+	s
+X-Gm-Gg: ASbGncuD7nv2f4VEjtJKQ6nG3XQxtd0anWBX7ohv7A3hqkvQokLDnQhERQPbb5Ioh1l
+	UlKn3UUVjtjS6i7PQcUN7oJRPRvCuQQzxuqqQQBvEsYmKfjFfGh1hSKBewTgTdeTM7pf4ysjWD/
+	hAssE9QPDSkLvBhawGX2MK+qTnCmhEWfUE6yv+eU2C5fjmTKlAnjmh7edfiqNvbAdBvzdf5MlZ3
+	WCvMGTBUKzfkDRaapBPPbrt3XU6nKDbAZzweMu43a12thP6KpsRBOFZano4m/IolRp+ZFeVntf0
+	FIX6Q7G5/X0wwxxWBxQvloRUQjg=
+X-Google-Smtp-Source: AGHT+IFQYLWf6tbUQzYkpKUndm1pOAewIRDm1lRSy9XE/+VkyuZ+FQsunrzJDymwRfdKn5CNZVqWsQ==
+X-Received: by 2002:a17:903:2445:b0:216:4e9f:4ed4 with SMTP id d9443c01a7336-2166a0777dfmr36049485ad.36.1733783021545;
+        Mon, 09 Dec 2024 14:23:41 -0800 (PST)
+Received: from dread.disaster.area (pa49-195-9-235.pa.nsw.optusnet.com.au. [49.195.9.235])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-216728cf4cbsm1268325ad.219.2024.12.09.14.23.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Dec 2024 14:23:40 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tKmAD-00000008k9S-2hq8;
+	Tue, 10 Dec 2024 09:23:37 +1100
+Date: Tue, 10 Dec 2024 09:23:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Mitta Sai Chaithanya <mittas@microsoft.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Nilesh Awate <Nilesh.Awate@microsoft.com>,
+	Ganesan Kalyanasundaram <ganesanka@microsoft.com>,
+	Pawan Sharma <sharmapawan@microsoft.com>
+Subject: Re: [EXTERNAL] Re: XFS: Approach to persist data & metadata changes
+ on original file before IO acknowledgment when file is reflinked
+Message-ID: <Z1dt6RmCyMtIlCPW@dread.disaster.area>
+References: <PUZP153MB07280F8AE7FA1BB00946E25CD7352@PUZP153MB0728.APCP153.PROD.OUTLOOK.COM>
+ <Z05FXA2ScHuEf2UW@dread.disaster.area>
+ <PUZP153MB07284BD46AB65F734B0FBB76D7312@PUZP153MB0728.APCP153.PROD.OUTLOOK.COM>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241208152520.3559-1-spasswolf@web.de> <20241209121104.j6zttbqod3sh3qhr@quack3>
- <20241209122648.dpptugrol4p6ikmm@quack3>
-In-Reply-To: <20241209122648.dpptugrol4p6ikmm@quack3>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 9 Dec 2024 17:23:24 +0100
-Message-ID: <CAOQ4uxgVNGmLqURdO0wf3vo=K-a2C--ZLKFzXw-22PJdkBjEdA@mail.gmail.com>
-Subject: Re: commit 0790303ec869 leads to cpu stall without CONFIG_FANOTIFY_ACCESS_PERMISSIONS=y
-To: Jan Kara <jack@suse.cz>
-Cc: Bert Karwatzki <spasswolf@web.de>, Josef Bacik <josef@toxicpanda.com>, linux-kernel@vger.kernel.org, 
-	kernel-team@fb.com, linux-fsdevel@vger.kernel.org, brauner@kernel.org, 
-	torvalds@linux-foundation.org, viro@zeniv.linux.org.uk, 
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-ext4@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <PUZP153MB07284BD46AB65F734B0FBB76D7312@PUZP153MB0728.APCP153.PROD.OUTLOOK.COM>
 
-On Mon, Dec 9, 2024 at 1:26=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
->
-> On Mon 09-12-24 13:11:04, Jan Kara wrote:
-> > > Then I took a closer look at the function called in the problematic c=
-ode
-> > > and noticed that fsnotify_file_area_perm(), is a NOOP when
-> > > CONFIG_FANOTIFY_ACCESS_PERMISSIONS is not set (which was the case in =
-my
-> > > .config). This also explains why this was not found before, as
-> > > distributional .config file have this option enabled.  Setting the op=
-tion
-> > > to y solves the issue, too
-> >
-> > Well, I agree with you on all the points but the real question is, how =
-come
-> > the test FMODE_FSNOTIFY_HSM(file->f_mode) was true on our kernel when y=
-ou
-> > clearly don't run HSM software, even more so with
-> > CONFIG_FANOTIFY_ACCESS_PERMISSIONS disabled. That's the real cause of t=
-his
-> > problem. Something fishy is going on here... checking...
-> >
-> > Ah, because I've botched out file_set_fsnotify_mode() in case
-> > CONFIG_FANOTIFY_ACCESS_PERMISSIONS is disabled. This should fix the
-> > problem:
-> >
-> > index 1a9ef8f6784d..778a88fcfddc 100644
-> > --- a/include/linux/fsnotify.h
-> > +++ b/include/linux/fsnotify.h
-> > @@ -215,6 +215,7 @@ static inline int fsnotify_open_perm(struct file *f=
-ile)
-> >  #else
-> >  static inline void file_set_fsnotify_mode(struct file *file)
-> >  {
-> > +       file->f_mode |=3D FMODE_NONOTIFY_PERM;
-> >  }
-> >
-> > I'm going to test this with CONFIG_FANOTIFY_ACCESS_PERMISSIONS disabled=
- and
-> > push out a fixed version. Thanks again for the report and analysis!
->
-> So this was not enough, What we need is:
-> index 1a9ef8f6784d..778a88fcfddc 100644
-> --- a/include/linux/fsnotify.h
-> +++ b/include/linux/fsnotify.h
-> @@ -215,6 +215,10 @@ static inline int fsnotify_open_perm(struct file *fi=
-le)
->  #else
->  static inline void file_set_fsnotify_mode(struct file *file)
->  {
-> +       /* Is it a file opened by fanotify? */
-> +       if (FMODE_FSNOTIFY_NONE(file->f_mode))
-> +               return;
-> +       file->f_mode |=3D FMODE_NONOTIFY_PERM;
->  }
->
-> This passes testing for me so I've pushed it out and the next linux-next
-> build should have this fix.
+On Fri, Dec 06, 2024 at 12:43:03PM +0000, Mitta Sai Chaithanya
+wrote:
+> Thanks Dave Chinner for taking time and explaining in detail, we
+> are exposing XFS files through SPDK mechanism and as you pointed
 
-This fix is not obvious to the code reviewer (especially when that is
-reviewer Linus...)
-Perhaps it would be safer and less hidden to do:
+I have no idea what a "SPDK mechanism" is - there isn't a single hit
+in the kernel tree on "SPDK"....
 
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -211,11 +211,16 @@ typedef int (dio_iodone_t)(struct kiocb *iocb,
-loff_t offset,
+> for having low latencies we are writing to the file asynchronously
+> (using uring as default configuration). I have one follow up
+> question "Will be there any journal updates for future IOs when
+> entire file is explicitly zeroe'd and synced for future IOs"?
 
- #define FMODE_FSNOTIFY_NONE(mode) \
-        ((mode & FMODE_FSNOTIFY_MASK) =3D=3D FMODE_NONOTIFY)
-+#ifdef CONFIG_FANOTIFY_ACCESS_PERMISSIONS
- #define FMODE_FSNOTIFY_PERM(mode) \
-        ((mode & FMODE_FSNOTIFY_MASK) =3D=3D 0 || \
-         (mode & FMODE_FSNOTIFY_MASK) =3D=3D (FMODE_NONOTIFY | FMODE_NONOTI=
-FY_PERM))
- #define FMODE_FSNOTIFY_HSM(mode) \
-        ((mode & FMODE_FSNOTIFY_MASK) =3D=3D 0)
-+#else
-+#define FMODE_FSNOTIFY_PERM(mode)      0
-+#define FMODE_FSNOTIFY_HSM(mode)       0
-+#endif
+Yes: mtime updates.
 
-Similar to IS_POSIXACL()
+These are asynchronous transactions, though, and if you are using
+O_DSYNC/RWF_DSYNC will not directly trigger journal flushes.  If you
+use fsync/O_SYNC/RWF_SYNC, then mtime update will trigger journal
+flushes.
 
-Thanks,
-Amir.
+You can use the lazytime mount option to avoid transactional mtime
+updates if necessary (only syncs mtime updates from write() calls
+when the file is otherwise modified or evicted from cache).
+
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
