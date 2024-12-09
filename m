@@ -1,191 +1,239 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BCD7215F6B;
-	Mon,  9 Dec 2024 11:46:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451FE21CFF0;
+	Mon,  9 Dec 2024 12:11:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733744776; cv=none; b=FJol7gqiQKOpaOCzakCF4d1S7bYFY+bzLbDjLlD6XPkjS+HMU0ks3HIx7ySsURKKjzPrJxi6oyjNAJ9/l1x02CjrTHOkl0DE7AQs41MMa9j+AhQXpubrUtIjkIIYNhXf6VoZYEz2utdoXWXEpv63bi0e95aNDlCramaFLGwYFb0=
+	t=1733746273; cv=none; b=awtmuAolxz98FBgu9HXAnQP0xnlgS1p8kpcaCGd0rxZwHXPqtSkXXPCOM9/rv707BsLn+8RITCZDACRxuDoNCgVyAop3ZJeuJsCbMKkQBchwD6h1yEEd4RsR5OTjuB/V8wh3cvQxm0sgL1j8p+9AUDtgLR49PJSEzYxHp1gYFJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733744776; c=relaxed/simple;
-	bh=6oDZU9oP6/RCI2PKw8qjt/FOp2TX1j81Trbu2A3FNJI=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jpUAfk1jp1bgsN3mjP7wF79vx1kTZBRf/xcBaxKQxhfSuQ42LBPk2SFPfRi1BfHDAKqxknot/XLASU4suEMEPjNyfEXqphVAJKvwEQMP2qeaLpBwZbIXU72OktPw3XPY0aOsDbVkzgBuAr5UDXqE8OlzHLNR2dH0m48y1eHw3Sc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Y6KnJ4hNvz1JDr7;
-	Mon,  9 Dec 2024 19:45:56 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id ABA9118001B;
-	Mon,  9 Dec 2024 19:46:09 +0800 (CST)
-Received: from huawei.com (10.175.104.67) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 9 Dec
- 2024 19:46:09 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <leo.lilong@huawei.com>,
-	<yangerkun@huawei.com>
-Subject: [PATCH v6 2/3] iomap: fix zero padding data issue in concurrent append writes
-Date: Mon, 9 Dec 2024 19:42:40 +0800
-Message-ID: <20241209114241.3725722-3-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20241209114241.3725722-1-leo.lilong@huawei.com>
-References: <20241209114241.3725722-1-leo.lilong@huawei.com>
+	s=arc-20240116; t=1733746273; c=relaxed/simple;
+	bh=DW37JksRys5w20Dss6QcUZ8G3H0LMQpXXkLpEeU7Kaw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DdyP5b7oconMSghdQSZfW0FgVzm5Z936BHQBGvwz3zJMX5FI388L7VDugKOQCUhwFyHVHVlz3nR0bod0eMN7T3NQMMwwPVVjYqPlYw71n3j4y/PV9psJ811mogS7yamFMPbuo67qYmibH6iw0PdSBDsRkyh6/rN+9C9FeQf7vnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=sM4L6vVL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=C+9ZeTNI; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=sM4L6vVL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=C+9ZeTNI; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="sM4L6vVL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="C+9ZeTNI";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="sM4L6vVL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="C+9ZeTNI"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 1B8421F45B;
+	Mon,  9 Dec 2024 12:11:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1733746269; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z9eTu4ICqX/MBWv87d6ghYK9vw3zsKiLYe3pMYvqXdg=;
+	b=sM4L6vVL4A73Y1BAcWwMnbB8eeLPSE88ltpR2s3HoRQ7A8BmyvdPjqSvIKjr1Cn1gsRMJu
+	/VZjAG1bQcix+ncpFJpFgPWfBgQXCSCKsbNjjiXkBFVRuw0kp18eQG7XQlryzLHiSiLE7Y
+	X9OUOQyeOcVQ/hmyf23wcfYRddwpCnw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1733746269;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z9eTu4ICqX/MBWv87d6ghYK9vw3zsKiLYe3pMYvqXdg=;
+	b=C+9ZeTNI7MdhXfH0wO4e2TOSHL404mhYJPPpbDy4LlsCeaHiR3DY7jvZSKcihK/XZMtJpA
+	0xbQVbv3uMlYk7BQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=sM4L6vVL;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=C+9ZeTNI
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1733746269; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z9eTu4ICqX/MBWv87d6ghYK9vw3zsKiLYe3pMYvqXdg=;
+	b=sM4L6vVL4A73Y1BAcWwMnbB8eeLPSE88ltpR2s3HoRQ7A8BmyvdPjqSvIKjr1Cn1gsRMJu
+	/VZjAG1bQcix+ncpFJpFgPWfBgQXCSCKsbNjjiXkBFVRuw0kp18eQG7XQlryzLHiSiLE7Y
+	X9OUOQyeOcVQ/hmyf23wcfYRddwpCnw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1733746269;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=z9eTu4ICqX/MBWv87d6ghYK9vw3zsKiLYe3pMYvqXdg=;
+	b=C+9ZeTNI7MdhXfH0wO4e2TOSHL404mhYJPPpbDy4LlsCeaHiR3DY7jvZSKcihK/XZMtJpA
+	0xbQVbv3uMlYk7BQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E3C30138D2;
+	Mon,  9 Dec 2024 12:11:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 8fiVN1zeVmfwUwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 09 Dec 2024 12:11:08 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 71156A0B0C; Mon,  9 Dec 2024 13:11:04 +0100 (CET)
+Date: Mon, 9 Dec 2024 13:11:04 +0100
+From: Jan Kara <jack@suse.cz>
+To: Bert Karwatzki <spasswolf@web.de>
+Cc: Josef Bacik <josef@toxicpanda.com>, linux-kernel@vger.kernel.org,
+	Jan Kara <jack@suse.cz>, kernel-team@fb.com,
+	linux-fsdevel@vger.kernel.org, amir73il@gmail.com,
+	brauner@kernel.org, torvalds@linux-foundation.org,
+	viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-ext4@vger.kernel.org
+Subject: Re: commit 0790303ec869 leads to cpu stall without
+ CONFIG_FANOTIFY_ACCESS_PERMISSIONS=y
+Message-ID: <20241209121104.j6zttbqod3sh3qhr@quack3>
+References: <20241208152520.3559-1-spasswolf@web.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241208152520.3559-1-spasswolf@web.de>
+X-Rspamd-Queue-Id: 1B8421F45B
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	FREEMAIL_TO(0.00)[web.de];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com,web.de];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	FREEMAIL_CC(0.00)[toxicpanda.com,vger.kernel.org,suse.cz,fb.com,gmail.com,kernel.org,linux-foundation.org,zeniv.linux.org.uk,kvack.org];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.01
+X-Spam-Flag: NO
 
-During concurrent append writes to XFS filesystem, zero padding data
-may appear in the file after power failure. This happens due to imprecise
-disk size updates when handling write completion.
+Hello!
 
-Consider this scenario with concurrent append writes same file:
+On Sun 08-12-24 16:25:19, Bert Karwatzki wrote:
+> Since linux-next-20241206 booting my debian unstable system hangs before starting gdm.
+> After some time these messages appear in /var/log/kern.log:
 
-  Thread 1:                  Thread 2:
-  ------------               -----------
-  write [A, A+B]
-  update inode size to A+B
-  submit I/O [A, A+BS]
-                             write [A+B, A+B+C]
-                             update inode size to A+B+C
-  <I/O completes, updates disk size to min(A+B+C, A+BS)>
-  <power failure>
+Thanks for report!
 
-After reboot:
-  1) with A+B+C < A+BS, the file has zero padding in range [A+B, A+B+C]
+<snip stacktraces>
 
-  |<         Block Size (BS)      >|
-  |DDDDDDDDDDDDDDDD0000000000000000|
-  ^               ^        ^
-  A              A+B     A+B+C
-                         (EOF)
+> I bisected this between linux-6.13-rc1 and linux-20241206 and found this as
+> offending commit:
+> 0790303ec869 ("fsnotify: generate pre-content permission event on page fault")
+> 
+> I also noticed that only a part of the commit causes the issue, and reverting
+> that part solves it in linux-next-20241206:
+> 
+> commit 6207000b72058b45bb03f0975fbbbcd9dae06238
+> Author: Bert Karwatzki <spasswolf@web.de>
+> Date:   Sun Dec 8 01:51:59 2024 +0100
+> 
+>     mm: filemap: partially revert commit 790303ec869
+> 
+>     Reverting this part of commit 790303ec869 is enough
+>     to fix the issue.
+> 
+>     Signed-off-by: Bert Karwatzki <spasswolf@web.de>
+> 
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 23e001f5cd0f..9bf2fc833f3c 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3419,37 +3419,6 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)
+>  	 * or because readahead was otherwise unable to retrieve it.
+>  	 */
+>  	if (unlikely(!folio_test_uptodate(folio))) {
+> -		/*
+> -		 * If this is a precontent file we have can now emit an event to
+> -		 * try and populate the folio.
+> -		 */
+> -		if (!(vmf->flags & FAULT_FLAG_TRIED) &&
+> -		    unlikely(FMODE_FSNOTIFY_HSM(file->f_mode))) {
+> -			loff_t pos = folio_pos(folio);
+> -			size_t count = folio_size(folio);
+> -
+> -			/* We're NOWAIT, we have to retry. */
+> -			if (vmf->flags & FAULT_FLAG_RETRY_NOWAIT) {
+> -				folio_unlock(folio);
+> -				goto out_retry;
+> -			}
+> -
+> -			if (mapping_locked)
+> -				filemap_invalidate_unlock_shared(mapping);
+> -			mapping_locked = false;
+> -
+> -			folio_unlock(folio);
+> -			fpin = maybe_unlock_mmap_for_io(vmf, fpin);
+> -			if (!fpin)
+> -				goto out_retry;
+> -
+> -			error = fsnotify_file_area_perm(fpin, MAY_ACCESS, &pos,
+> -							count);
+> -			if (error)
+> -				ret = VM_FAULT_SIGBUS;
+> -			goto out_retry;
+> -		}
+> -
+>  		/*
+>  		 * If the invalidate lock is not held, the folio was in cache
+>  		 * and uptodate and now it is not. Strange but possible since we
+> 
+> 
+> Then I took a closer look at the function called in the problematic code
+> and noticed that fsnotify_file_area_perm(), is a NOOP when
+> CONFIG_FANOTIFY_ACCESS_PERMISSIONS is not set (which was the case in my
+> .config). This also explains why this was not found before, as
+> distributional .config file have this option enabled.  Setting the option
+> to y solves the issue, too
 
-  2) with A+B+C > A+BS, the file has zero padding in range [A+B, A+BS]
+Well, I agree with you on all the points but the real question is, how come
+the test FMODE_FSNOTIFY_HSM(file->f_mode) was true on our kernel when you
+clearly don't run HSM software, even more so with
+CONFIG_FANOTIFY_ACCESS_PERMISSIONS disabled. That's the real cause of this
+problem. Something fishy is going on here... checking...
 
-  |<         Block Size (BS)      >|<           Block Size (BS)    >|
-  |DDDDDDDDDDDDDDDD0000000000000000|00000000000000000000000000000000|
-  ^               ^                ^               ^
-  A              A+B              A+BS           A+B+C
-                                  (EOF)
+Ah, because I've botched out file_set_fsnotify_mode() in case
+CONFIG_FANOTIFY_ACCESS_PERMISSIONS is disabled. This should fix the
+problem:
 
-  D = Valid Data
-  0 = Zero Padding
-
-The issue stems from disk size being set to min(io_offset + io_size,
-inode->i_size) at I/O completion. Since io_offset+io_size is block
-size granularity, it may exceed the actual valid file data size. In
-the case of concurrent append writes, inode->i_size may be larger
-than the actual range of valid file data written to disk, leading to
-inaccurate disk size updates.
-
-This patch modifies the meaning of io_size to represent the size of
-valid data within EOF in an ioend. If the ioend spans beyond i_size,
-io_size will be trimmed to provide the file with more accurate size
-information. This is particularly useful for on-disk size updates
-at completion time.
-
-After this change, ioends that span i_size will not grow or merge with
-other ioends in concurrent scenarios. However, these cases that need
-growth/merging rarely occur and it seems no noticeable performance impact.
-Although rounding up io_size could enable ioend growth/merging in these
-scenarios, we decided to keep the code simple after discussion [1].
-
-Another benefit is that it makes the xfs_ioend_is_append() check more
-accurate, which can reduce unnecessary end bio callbacks of xfs_end_bio()
-in certain scenarios, such as repeated writes at the file tail without
-extending the file size.
-
-Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure") # goes further back than this
-Link [1]: https://patchwork.kernel.org/project/xfs/patch/20241113091907.56937-1-leo.lilong@huawei.com
-Signed-off-by: Long Li <leo.lilong@huawei.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/buffered-io.c | 45 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h  |  2 +-
- 2 files changed, 46 insertions(+), 1 deletion(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index bcc7831d03af..54dc27d92781 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1794,7 +1794,52 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
- 
- 	if (ifs)
- 		atomic_add(len, &ifs->write_bytes_pending);
-+
-+	/*
-+	 * Clamp io_offset and io_size to the incore EOF so that ondisk
-+	 * file size updates in the ioend completion are byte-accurate.
-+	 * This avoids recovering files with zeroed tail regions when
-+	 * writeback races with appending writes:
-+	 *
-+	 *    Thread 1:                  Thread 2:
-+	 *    ------------               -----------
-+	 *    write [A, A+B]
-+	 *    update inode size to A+B
-+	 *    submit I/O [A, A+BS]
-+	 *                               write [A+B, A+B+C]
-+	 *                               update inode size to A+B+C
-+	 *    <I/O completes, updates disk size to min(A+B+C, A+BS)>
-+	 *    <power failure>
-+	 *
-+	 *  After reboot:
-+	 *    1) with A+B+C < A+BS, the file has zero padding in range
-+	 *       [A+B, A+B+C]
-+	 *
-+	 *    |<     Block Size (BS)   >|
-+	 *    |DDDDDDDDDDDD0000000000000|
-+	 *    ^           ^        ^
-+	 *    A          A+B     A+B+C
-+	 *                       (EOF)
-+	 *
-+	 *    2) with A+B+C > A+BS, the file has zero padding in range
-+	 *       [A+B, A+BS]
-+	 *
-+	 *    |<     Block Size (BS)   >|<     Block Size (BS)    >|
-+	 *    |DDDDDDDDDDDD0000000000000|00000000000000000000000000|
-+	 *    ^           ^             ^           ^
-+	 *    A          A+B           A+BS       A+B+C
-+	 *                             (EOF)
-+	 *
-+	 *    D = Valid Data
-+	 *    0 = Zero Padding
-+	 *
-+	 * Note that this defeats the ability to chain the ioends of
-+	 * appending writes.
-+	 */
- 	wpc->ioend->io_size += len;
-+	if (wpc->ioend->io_offset + wpc->ioend->io_size > end_pos)
-+		wpc->ioend->io_size = end_pos - wpc->ioend->io_offset;
-+
- 	wbc_account_cgroup_owner(wbc, folio, len);
- 	return 0;
+index 1a9ef8f6784d..778a88fcfddc 100644
+--- a/include/linux/fsnotify.h
++++ b/include/linux/fsnotify.h
+@@ -215,6 +215,7 @@ static inline int fsnotify_open_perm(struct file *file)
+ #else
+ static inline void file_set_fsnotify_mode(struct file *file)
+ {
++       file->f_mode |= FMODE_NONOTIFY_PERM;
  }
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 5675af6b740c..75bf54e76f3b 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -335,7 +335,7 @@ struct iomap_ioend {
- 	u16			io_type;
- 	u16			io_flags;	/* IOMAP_F_* */
- 	struct inode		*io_inode;	/* file being written to */
--	size_t			io_size;	/* size of the extent */
-+	size_t			io_size;	/* size of data within eof */
- 	loff_t			io_offset;	/* offset in the file */
- 	sector_t		io_sector;	/* start sector of ioend */
- 	struct bio		io_bio;		/* MUST BE LAST! */
--- 
-2.39.2
 
+I'm going to test this with CONFIG_FANOTIFY_ACCESS_PERMISSIONS disabled and
+push out a fixed version. Thanks again for the report and analysis!
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
