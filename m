@@ -1,37 +1,40 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8C9815EFA0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 167EF16DEB5;
 	Mon,  9 Dec 2024 11:46:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733744774; cv=none; b=TgXjXNG6xcsuyTVcA7y78TF7POQm6yxBCflCBVJsekDxpmzqi5UffCooBINQFRqB3NeK2qWlXSdocyatjXQ4u98xvXKg9OCWPykVVErIwIyrGolXfRehzX7STyDVY8nFbsbPGPGcNQE9hexNv2Dcf3dDdz94r5UJvOgveMor2sQ=
+	t=1733744774; cv=none; b=okHe9SzDh0WClf0iygGvzK9iw+qo2vX2dN8vt60UlANmxliSJebTlpKiPKn+8qwNi/EK7hF1+SoduRnfmAAok1J0ikZdWu6+PMz+sNvuzgRyJX+TzKlNDYb9F6i2uYzNPBB6v0ZNIw/w5RgtJIqw0JJmgtdTeDTsYlMR26tnmns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1733744774; c=relaxed/simple;
-	bh=0Bzgv1TRS8v7g//RHenENj3hzbBPhURktJxinIOrqN0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hdWLKhLUo5hegS08nFuSjm1hE26kRk2cI3JYDUrsP8fsS57FQXVExYiWj1G05SHl407UL69kyf8nqgkZDwHaBhTcsLvieIgdkpgTlC7rqJ5CMrRz7K2fP+H6KGMM0fzbDfwVwTobGBgWhAhV8pNalPSEaPsNaVGWFYj6eu1YhbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+	bh=R1pc8q8hx0B377k0OKQCAO2725lVpcX5xGdMU+Bi2rs=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=cJM3YIQPvy1Jj06R/YXeqKyNPFz3EL90MVdW4AAQK+bv9jWLH01LCLCN6G/aAP6mIwYbBYBNdS0O0hCaFqTljlIhtJ3TZYVmb/4RL5hlLzvvWTOHJW/pn74pwo43aReXVeHRFv5rf9bM+modTLikkpak5ZuAUwn4kPB9e8KOTOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Y6KlY590czRj5c;
-	Mon,  9 Dec 2024 19:44:25 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Y6Kk25gsxz11MF4;
+	Mon,  9 Dec 2024 19:43:06 +0800 (CST)
 Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id B07E7180064;
-	Mon,  9 Dec 2024 19:46:08 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 29DFE180104;
+	Mon,  9 Dec 2024 19:46:10 +0800 (CST)
 Received: from huawei.com (10.175.104.67) by dggpemf500017.china.huawei.com
  (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 9 Dec
- 2024 19:46:08 +0800
+ 2024 19:46:09 +0800
 From: Long Li <leo.lilong@huawei.com>
 To: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>
 CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
 	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <leo.lilong@huawei.com>,
 	<yangerkun@huawei.com>
-Subject: [PATCH v6 0/3] iomap: fix zero padding data issue in concurrent append writes
-Date: Mon, 9 Dec 2024 19:42:38 +0800
-Message-ID: <20241209114241.3725722-1-leo.lilong@huawei.com>
+Subject: [PATCH v6 3/3] xfs: clean up xfs_end_ioend() to reuse local variables
+Date: Mon, 9 Dec 2024 19:42:41 +0800
+Message-ID: <20241209114241.3725722-4-leo.lilong@huawei.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20241209114241.3725722-1-leo.lilong@huawei.com>
+References: <20241209114241.3725722-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,38 +46,31 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  dggpemf500017.china.huawei.com (7.185.36.126)
 
-Hi ALL,
+Use already initialized local variables 'offset' and 'size' instead
+of accessing ioend members directly in xfs_setfilesize() call.
 
-This patch series fixes zero padding data issues in concurrent append write
-scenarios. A detailed problem description and solution can be found in patch 2.
-Patch 1 is introduced as preparation for the fix in patch 2, eliminating the
-need to resample inode size for io_size trimming and avoiding issues caused
-by inode size changes during concurrent writeback and truncate operations.
-Patch 3 is a minor cleanup.
+This is just a code cleanup with no functional changes.
 
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_aops.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-v5: https://lore.kernel.org/linux-xfs/20241127063503.2200005-1-leo.lilong@huawei.com/
-v4: https://lore.kernel.org/linux-xfs/20241125023341.2816630-1-leo.lilong@huawei.com/
-v3: https://lore.kernel.org/linux-xfs/20241121063430.3304895-1-leo.lilong@huawei.com/
-v2: https://lore.kernel.org/linux-xfs/20241113091907.56937-1-leo.lilong@huawei.com/
-v1: https://lore.kernel.org/linux-xfs/20241108122738.2617669-1-leo.lilong@huawei.com/
-
-v5->v6:
-  1. Introduce patch 1. 
-  2. The io_size is trimmed based on the end_pos in patch 2.
-  3. Update the fix tag to a more accurate in patch 2.
-  4. Collect reviewed tag.
-
-Long Li (3):
-  iomap: pass byte granular end position to iomap_add_to_ioend
-  iomap: fix zero padding data issue in concurrent append writes
-  xfs: clean up xfs_end_ioend() to reuse local variables
-
- fs/iomap/buffered-io.c | 66 ++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_aops.c      |  2 +-
- include/linux/iomap.h  |  2 +-
- 3 files changed, 59 insertions(+), 11 deletions(-)
-
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 559a3a577097..67877c36ed11 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -131,7 +131,7 @@ xfs_end_ioend(
+ 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+ 
+ 	if (!error && xfs_ioend_is_append(ioend))
+-		error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
++		error = xfs_setfilesize(ip, offset, size);
+ done:
+ 	iomap_finish_ioends(ioend, error);
+ 	memalloc_nofs_restore(nofs_flag);
 -- 
 2.39.2
 
