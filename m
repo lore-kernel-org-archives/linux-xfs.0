@@ -1,41 +1,47 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC565194C6A;
-	Tue, 10 Dec 2024 08:12:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB10D78F40;
+	Tue, 10 Dec 2024 10:15:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733818336; cv=none; b=XIGO112UlrwSHZomKsUVgif5oJLXstD6XNa9EZFnVInrgabJj463jkphFzfY1c4XplDVrfPBTHfZEUYUbHNmGjsfD7qByDxHfBBXM/LJpyB7JVc0byTejbsLLgeTD+U21SMx595+UjNk4jgTSkQvfISN5fkVIMnyStx5NhWP0V0=
+	t=1733825724; cv=none; b=caini+fLXC+vecFZ2ok3480zJutzGyeDmx49vOQky1+lU3KtqNedosUR+z2QOVLatS7zRZFBviSEc6ro6gYZHNoNg6VimQ3HqzO5XiPgXCoH8i3XcHQeJ66KFeW6QZ2+hu03nhIUdskdZBgCdhGI/uX/+LjqdLUnWsVvepKIefk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733818336; c=relaxed/simple;
-	bh=pIKBvgEBKJeNMpgSymFQ1nB6pah1MI/foJv14Szko8E=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PN74kJV7/ar47uwKYTXE9YZfd28R8FQs3WfxhEbLzaSoaJeDBs+A9tLylBKZ1Ape89WA9bzQ9OKPMqDQdeOz2YYgu5EYNqaUE4h1tRlrKgxzkKfYEaVJFgR2WMtJNxRvwNYDb6h91aLAJonL+ZEksOKsmxJ8h0OSlrOhymznuwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Y6ryC2r51z21mph;
-	Tue, 10 Dec 2024 16:10:27 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1792B140259;
-	Tue, 10 Dec 2024 16:12:11 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 10 Dec
- 2024 16:12:10 +0800
-Date: Tue, 10 Dec 2024 16:09:26 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Brian Foster <bfoster@redhat.com>
-CC: <brauner@kernel.org>, <djwong@kernel.org>, <cem@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
-Subject: Re: [PATCH v6 1/3] iomap: pass byte granular end position to
- iomap_add_to_ioend
-Message-ID: <Z1f3NvI6j0tuIU7a@localhost.localdomain>
+	s=arc-20240116; t=1733825724; c=relaxed/simple;
+	bh=+rEiKxhqUygOWTVSpD3oK/giPTOjYVuMvSl36cahWvE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=L9BZSK5A2fIPMmCvd832NgoBaMLcdl/O5tFAX6Tyn7/6gXJlCTuOszQQh91MXu7bFROi9ZphlhJxDBLg+NZxwZyCdDMq2h3RIgNMp4ryDgRG//kiOmWKHueYbuXX+RdZZgYCNp7jVPmSEZS/mMatEWa50Jbk+SJmJjqg9LKDd3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MEjwbBI7; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MEjwbBI7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED457C4CED6;
+	Tue, 10 Dec 2024 10:15:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733825724;
+	bh=+rEiKxhqUygOWTVSpD3oK/giPTOjYVuMvSl36cahWvE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=MEjwbBI7iqQzDf5DkptjzT7N4RgSvGiDQzKOsKtoP6O8ncLyR8fHtTdowT+dS7q98
+	 0TMG2eRX3A3vQeqx8oI7Hwyu/W+spZF9N5lN+lUKa5JolMZxd3KlGWxtEgjfQKedHg
+	 /BjMVQKYtmQnXu+ORZ64IHs4A5fRuOxdi3GV+sNE4HTbtRysrmc8h2z+ESv0bmkXhg
+	 Kmhvcu/b7kP1q1JMR1GJEWsurOvlFenr7Tad2RFrjwFE2zBKS72Ys1E3dZM740FINV
+	 z6DdtXn01cfQ/8mWGDMbS1ywT3wu5/ml1WzhbqJdjX+hyGIoXhuTxTcZUXI4YUVA+K
+	 +p8LW9SFwhgwg==
+From: Christian Brauner <brauner@kernel.org>
+To: djwong@kernel.org,
+	cem@kernel.org,
+	Long Li <leo.lilong@huawei.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: Re: [PATCH v6 0/3] iomap: fix zero padding data issue in concurrent append writes
+Date: Tue, 10 Dec 2024 11:15:13 +0100
+Message-ID: <20241210-strecken-anbeginn-4c3af8c6abe8@brauner>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20241209114241.3725722-1-leo.lilong@huawei.com>
 References: <20241209114241.3725722-1-leo.lilong@huawei.com>
- <20241209114241.3725722-2-leo.lilong@huawei.com>
- <Z1b5Vr96Aysa_JCG@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,92 +49,38 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <Z1b5Vr96Aysa_JCG@bfoster>
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1508; i=brauner@kernel.org; h=from:subject:message-id; bh=+rEiKxhqUygOWTVSpD3oK/giPTOjYVuMvSl36cahWvE=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaRHiGx57vg4X+rPkk8qlRd0bUx8N6y44Go2Zf37ioUTl 20KMvd52FHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRmbkMf+WZ37wJjOPaXb4p Pd5TzmDCk/gNLs/v9TEFJc5v+vilK4SR4YpK2evOZZvTimolVDa56f/4qWlaERfJl5LKW/GyW8C TEwA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Mon, Dec 09, 2024 at 09:06:14AM -0500, Brian Foster wrote:
-> On Mon, Dec 09, 2024 at 07:42:39PM +0800, Long Li wrote:
-> > This is a preparatory patch for fixing zero padding issues in concurrent
-> > append write scenarios. In the following patches, we need to obtain
-> > byte-granular writeback end position for io_size trimming after EOF
-> > handling.
-> > 
-> > Due to concurrent writeback and truncate operations, inode size may
-> > shrink. Resampling inode size would force writeback code to handle the
-> > newly appeared post-EOF blocks, which is undesirable. As Dave
-> > explained in [1]:
-> > 
-> > "Really, the issue is that writeback mappings have to be able to
-> > handle the range being mapped suddenly appear to be beyond EOF.
-> > This behaviour is a longstanding writeback constraint, and is what
-> > iomap_writepage_handle_eof() is attempting to handle.
-> > 
-> > We handle this by only sampling i_size_read() whilst we have the
-> > folio locked and can determine the action we should take with that
-> > folio (i.e. nothing, partial zeroing, or skip altogether). Once
-> > we've made the decision that the folio is within EOF and taken
-> > action on it (i.e. moved the folio to writeback state), we cannot
-> > then resample the inode size because a truncate may have started
-> > and changed the inode size."
-> > 
-> > To avoid resampling inode size after EOF handling, we convert end_pos
-> > to byte-granular writeback position and return it from EOF handling
-> > function.
-> > 
-> > Since iomap_set_range_dirty() can handle unaligned lengths, this
-> > conversion has no impact on it. However, iomap_find_dirty_range()
-> > requires aligned start and end range to find dirty blocks within the
-> > given range, so the end position needs to be rounded up when passed
-> > to it.
-> > 
-> > LINK [1]: https://lore.kernel.org/linux-xfs/Z1Gg0pAa54MoeYME@localhost.localdomain/
-> > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > ---
-> >  fs/iomap/buffered-io.c | 21 ++++++++++++---------
-> >  1 file changed, 12 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 955f19e27e47..bcc7831d03af 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> ...
-> > @@ -1914,6 +1915,7 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
-> >  	struct inode *inode = folio->mapping->host;
-> >  	u64 pos = folio_pos(folio);
-> >  	u64 end_pos = pos + folio_size(folio);
-> > +	u64 end_aligned = 0;
-> >  	unsigned count = 0;
-> >  	int error = 0;
-> >  	u32 rlen;
-> > @@ -1955,9 +1957,10 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
-> >  	/*
-> >  	 * Walk through the folio to find dirty areas to write back.
-> >  	 */
-> > -	while ((rlen = iomap_find_dirty_range(folio, &pos, end_pos))) {
-> > +	end_aligned = round_up(end_pos, i_blocksize(inode));
+On Mon, 09 Dec 2024 19:42:38 +0800, Long Li wrote:
+> This patch series fixes zero padding data issues in concurrent append write
+> scenarios. A detailed problem description and solution can be found in patch 2.
+> Patch 1 is introduced as preparation for the fix in patch 2, eliminating the
+> need to resample inode size for io_size trimming and avoiding issues caused
+> by inode size changes during concurrent writeback and truncate operations.
+> Patch 3 is a minor cleanup.
 > 
-> So do I follow correctly that the set_range_dirty() path doesn't need
-> the alignment because it uses inclusive first_blk/last_blk logic,
-> whereas this find_dirty_range() path does the opposite and thus does
-> require the round_up? If so, presumably that means if we fixed up the
-> find path we wouldn't need end_aligned at all anymore?
-> 
+> [...]
 
-Agreed with you.
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-> If I follow the reasoning correctly, then this looks Ok to me:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
->
-> ... but as a followup exercise it might be nice to clean up the
-> iomap_find_dirty_range() path to either do the rounding itself or be
-> more consistent with set_range_dirty().
-> 
-> Brian
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Yes, I think we can handle the cleanup through a separate patch later?                                                                            
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-Thanks,
-Long Li
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/3] iomap: pass byte granular end position to iomap_add_to_ioend
+      https://git.kernel.org/vfs/vfs/c/f307c58239b5
+[2/3] iomap: fix zero padding data issue in concurrent append writes
+      https://git.kernel.org/vfs/vfs/c/33e72d56fb3a
+[3/3] xfs: clean up xfs_end_ioend() to reuse local variables
+      https://git.kernel.org/vfs/vfs/c/30e611890d89
