@@ -1,88 +1,100 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D55A153BF6;
-	Tue, 10 Dec 2024 21:12:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5FF92451F1;
+	Tue, 10 Dec 2024 22:12:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733865135; cv=none; b=nwGJJ7xiqZYddqyGlqeOB7LfdguCv9K4fF8BkOWl4sJdVC6N6OgqmeHVCWv8U0am7rR0p0OiwZjQzViNFSAuSN8ZQEPumze8x2FhHV8DWUY98JC7UDooibD9FzE9GGBJHRCFh8Gf7KLjJQ+QSVdvPqj2kxWKQ3SUlXmZhjlQZbk=
+	t=1733868723; cv=none; b=Q8Q7y3MbszE5RAttDmwJSfUaPC5048v5klcqvB9KUkjU9vtmbbB7OkKJMm00hpq0hDtGE0jf0cXSmUj2DEnnNaMWhwHyuKsRutWpnbNkjCGBZuWOrz2Yqx5q4+LoEkebc6B8/QjWm96dO7bTGgCUbIDQuXrDmvEFblNfCVuEIrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733865135; c=relaxed/simple;
-	bh=dyZtB26aExN1AXnqAq5HefDzn3mHyrfChTdtCAd/lK4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=d/Qr01vo7zcxIbPiyRH3cqIDOroCYbGGZ4kxxEeJOL0oR5ZhIdvzsYwG0oOchextjqEuQIsENS54SQO5GrkNVUZ9L2qTfWooTkPpI1ul3syt/T8uPIylCfdNZKdDWsT5k4P0zn5I4qn+OjjEP+n4ZgN1/PpnG5+bvkuYEwj+uoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Ks6wF4WD; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1733868723; c=relaxed/simple;
+	bh=C+VGg9Te1RoFWH1QxqbHwOC4+kDj5oMz3gr4BAuLx/k=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=DT9pM9HT3a/bItnhYUv5hLnLbIYNtI9jilReI72IU2XfvGs1cBCAkMso9GFW5p/h9+W6HhK/OV3u+qgsXOskxMJ6U4TIHVGFXMnItiZkXDmJA4kt4QnmUrOEtKJg6Mequ9DeYjXAgj4QmDyQUSquBa3ts467QsFjwuonkgU3RCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=ke3I16qY; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ks6wF4WD"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
-	:In-Reply-To:From:References:To:Subject:MIME-Version:Date:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description;
-	bh=pWl+DoLp0B19v+ccbH7KTwZvEdcgO1RiPrIKqvG36yw=; b=Ks6wF4WDIa88ZrBviT77i64QEP
-	z0/eIDYnsI/5C9SnKcBLOIaEsQptBDTNSppYZBTHejy7xYSX3Ko/R/9Rdyyog2GMaAXjJKFi1ih3t
-	Bx1OW6DQKGu5atLQyau93Jk8XFWygjeYMJ1jd3nT3qvQOAAf//2ylD4vCJZkBGQqQiqHE5sXCBDCt
-	9MWkT609GGtB8kgRbGx6eg4MEQLvimXloVYVdwAsW1NwRrUj0pFc8P/MKty0M/tafxIC5ZXt3/6Bp
-	9KgR+NKrouP6tI8wSUpeEvw+fYF+R1lmH79NgQ3hO/jr6r5G6PXKSJsGhQy+ZYOB/6/eKtdsD8P/q
-	kx7tzKdg==;
-Received: from [50.53.2.24] (helo=[192.168.254.17])
-	by desiato.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tL7WZ-00000003jG4-3hSc;
-	Tue, 10 Dec 2024 21:12:08 +0000
-Message-ID: <391b9d5f-ec3a-4c90-8345-5dab929917f7@infradead.org>
-Date: Tue, 10 Dec 2024 13:12:01 -0800
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="ke3I16qY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1733868282;
+	bh=V6UPHcPzwOo+KejU7patriwerwN4iMc1t5g5z34b7zY=;
+	h=Date:From:To:Cc:Subject:From;
+	b=ke3I16qYCmxPq1VTjo+MN7jrUgUUPqqq6hRKx7cZb4ycElTRXrP8JQAGFPMaJXDf7
+	 upOQNXnRTp4GwW4c6NZe4Mj1APFmo495a5rlyZ/OsdqE2j4gBICBusp5/s7W7aI1KP
+	 TWDKbuMl0+99dygctfG85qgD5m+YEQKDMHSDr7q9723PVVP2XiJUU0Jcm6tUdxaYdq
+	 OUUyLPcxLR6KfSiKXWuV1rvnlNm2Jjj4zXXnS7k6ez8ulfrvv+gTEIGJN7yq0WuzyQ
+	 +h3QANy3tW9rDMDviHf6nf5SweGrfNa4pHmXA1Q+tsmE1T1zdyH6mipCIae6IRwE2N
+	 t1wbCsKN+5vZA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Y7CSp4smtz4wvd;
+	Wed, 11 Dec 2024 09:04:41 +1100 (AEDT)
+Date: Wed, 11 Dec 2024 09:04:45 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>, <linux-xfs@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next
+ Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: build failure after merge of the xfs tree
+Message-ID: <20241211090445.3ca8dfed@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 16/19] fsnotify: generate pre-content permission event
- on page fault
-To: Klara Modin <klarasmodin@gmail.com>, Josef Bacik <josef@toxicpanda.com>,
- kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
- amir73il@gmail.com, brauner@kernel.org, torvalds@linux-foundation.org,
- viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org
-References: <cover.1731684329.git.josef@toxicpanda.com>
- <aa56c50ce81b1fd18d7f5d71dd2dfced5eba9687.1731684329.git.josef@toxicpanda.com>
- <5d0cd660-251c-423a-8828-5b836a5130f9@gmail.com>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <5d0cd660-251c-423a-8828-5b836a5130f9@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="Sig_/DzxDu0MsDwEf7IHQ4V8td.m";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
+--Sig_/DzxDu0MsDwEf7IHQ4V8td.m
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+Hi all,
 
-On 12/8/24 8:58 AM, Klara Modin wrote:
->> +/**
->> + * filemap_fsnotify_fault - maybe emit a pre-content event.
->> + * @vmf:    struct vm_fault containing details of the fault.
->> + * @folio:    the folio we're faulting in.
->> + *
->> + * If we have a pre-content watch on this file we will emit an event for this
->> + * range.  If we return anything the fault caller should return immediately, we
->> + * will return VM_FAULT_RETRY if we had to emit an event, which will trigger the
->> + * fault again and then the fault handler will run the second time through.
->> + *
->> + * This is meant to be called with the folio that we will be filling in to make
->> + * sure the event is emitted for the correct range.
->> + *
->> + * Return: a bitwise-OR of %VM_FAULT_ codes, 0 if nothing happened.
->> + */
->> +vm_fault_t filemap_fsnotify_fault(struct vm_fault *vmf)
-> 
-> The parameters mentioned above do not seem to match with the function.
+After merging the xfs tree, today's linux-next build (powerpc
+ppc64_defconfig) failed like this:
 
+fs/xfs/xfs_trans.c: In function '__xfs_trans_commit':
+fs/xfs/xfs_trans.c:869:40: error: macro "xfs_trans_apply_dquot_deltas" requ=
+ires 2 arguments, but only 1 given
+  869 |         xfs_trans_apply_dquot_deltas(tp);
+      |                                        ^
+In file included from fs/xfs/xfs_trans.c:15:
+fs/xfs/xfs_quota.h:176:9: note: macro "xfs_trans_apply_dquot_deltas" define=
+d here
+  176 | #define xfs_trans_apply_dquot_deltas(tp, a)
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-which causes a warning:
+Caused by commit
 
-mm/filemap.c:3289: warning: Excess function parameter 'folio' description in 'filemap_fsnotify_fault'
+  03d23e3ebeb7 ("xfs: don't lose solo dquot update transactions")
 
+$ grep CONFIG_XFS_QUOTA .config
+# CONFIG_XFS_QUOTA is not set
 
--- 
-~Randy
+I have used the xfs tree from next-20241210 for today.
 
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/DzxDu0MsDwEf7IHQ4V8td.m
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmdYuv0ACgkQAVBC80lX
+0Gz/7gf9FKrMEjYTDhb1Tr3Ux8JlEaOGcSCL2hRuYawoa2tLUPPD1eVN5Cd5++Qe
+giWQreO+vlmeX/4ErB6nnYG5GhWWg11pRAnzDuXDqQH5Pwnn/rZL8lz9+F2w5/nq
+HnhC14fiKDPcUGnYHAkJbcytS11iu8dHvdDCNibrudonNGp1lepB2fmlPIwS1MST
+ufK/YWY97DOWs3fRBzLJD5eHuALg7z1CXpk0LzGaX3wIgwnlWCsIqB73KvjnjhqI
+yFM33fYfCAxrj5HwqI2dFvYD2B+5hWDe+pjY6FNTtX4Nr6zabrzjXaOhfLcCXmdb
+q/ATrcjXLGMTu3EWkrrcVbMfCui1Sg==
+=nCEH
+-----END PGP SIGNATURE-----
+
+--Sig_/DzxDu0MsDwEf7IHQ4V8td.m--
