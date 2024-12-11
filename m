@@ -1,41 +1,45 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3B4B1C4612;
-	Wed, 11 Dec 2024 19:40:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D21BC1C3F27;
+	Wed, 11 Dec 2024 19:58:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733946023; cv=none; b=cPY0liOnudAP9nEVZn4uuRV3+9blI6oK/sI7ibv49vd5BZzpyvUUnb1F0o+NCdkZW985f/sIBjvXUk84mGgrJBIHlz3tszAV2rdoF0UKKw4QMO8dfxyIwL8kv2cBGgOv0Dsfnsn+ga3s6V5z7ikPan4+1sXXD4In2NjBLZTbkes=
+	t=1733947126; cv=none; b=Pr1a2TXgz0hdXqU/G/1gQ3NzHH06GxwBBkXSVuWdPy31R+5d3RImflvOLCKfHmkCPJmCsnIfxgp0CbRmjVR3YNiL4xmriNqlSLRCuRbcR58ps2/gB5d9qofZU4kBeS+pJPPz84p0fFqtWV/6GDYNm8Uu6MaI3mC4xDIC/X4jm+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733946023; c=relaxed/simple;
-	bh=pF9yeK2U0N4zuHzn6i9qzQDvsoImqm8+N5CgxpYnPzY=;
+	s=arc-20240116; t=1733947126; c=relaxed/simple;
+	bh=iLL7j+lhKXojSACcFUP2A1NPQsahr5PmalZuUhrk2LQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LuaMrRSHQ9KaTdoO5oF5OjCNZMUr7VojAWN6GPkKH//s9n2yUjPEKerSr1Tx4mzynW8bZlLlwyrjzFHiNGJbKpGTERCqgpYpgxIbQHxUJXipe1TJiwcYjE7EhjxvxNY7Ro5wrI55LZYjRkzWaUFFQ1744L/6Vb7QjEO/w2k6hBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rc5bLUQA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=WrbxwQ3jxyE+DpWuWAfbG2+HfF/jaTyzVxxRexqkt1yJ+H5uRX5xV0dSNsFx20mTPnzdMg+VHUP+ZFbjqt1BwHyDSY5LMPW5DX3pSVFqQN/wqJouZTeIhoBT3dhIj4rw5uH82/TdR2ybd+u106lgF52DtAW0k+pR3zJvgisHQDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rot+BtX0; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rc5bLUQA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21279C4CED2;
-	Wed, 11 Dec 2024 19:40:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733946023;
-	bh=pF9yeK2U0N4zuHzn6i9qzQDvsoImqm8+N5CgxpYnPzY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rc5bLUQAActr8VJjzmZKrml9+cWr+D+GwRe9KGWM9jXuPqYxq5uIxHjEl6ycYKIFi
-	 UiicwAJiKp3yZIx4GIz3DNL6woKJcb/xYj22/tCv/AijLdTUElcj67OJ4VqL3eIctW
-	 sIhK1Os9uZ5sYYYc8vEl5CYR6h8pbwJG4HbujZH5dx4cuxcbm02MVSaZqDrIXSkICm
-	 WPYM0KzkFdJJR0DFG1mYuDlpmW10TsiDoOGOxbDB/r3YdIRcvSN67k6UuY3U+q7bv6
-	 V4XQDEVPp0g/m8MS0B+juS0RuRptr3amRvZ7KROA6dKhWnO/nBcFSArxbBd8xsPQ5R
-	 s0maofjTdz7hQ==
-Date: Wed, 11 Dec 2024 11:40:22 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@kernel.org, dan.carpenter@linaro.org, stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCHSET 6/9] xfsprogs: bug fixes for 6.13
-Message-ID: <20241211194022.GH6678@frogsfrogsfrogs>
-References: <20241206232259.GO7837@frogsfrogsfrogs>
- <173352751190.126106.5258055486306925523.stgit@frogsfrogsfrogs>
- <Z1fQruaMo-kQU6KK@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rot+BtX0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=BAIaH1HkkTf+nk+nd0kNKy4nHuwixpyhCxY3FdT7Iho=; b=rot+BtX03O5eoy+/W6CImZtpLF
+	B2J+HV2MN9hpw14VUE8XYix2VFRVhGQU8H/uTM3J1mmZpjcjZp7yPIWLjQL1fJCi9+9N9/aSKmPZ/
+	Svh5R+aTcGV3ygcwNilZsNAVDsJ2zFvQCiYdL7kDfBXZ3V2C5CYGv8x2wU8s4hZPyD/EiuABN8YZj
+	Kbvi5qL3KMJmIBkEaHBKIyvBiaU19Mzyz/cvH7DnSDXMxSaaxq0KHZSPx7HYX5fjetwaV4T6jd1M3
+	DfMnNSQkOFSGtn0znk++1yZeNqZ96gcm5m5YwlSWI8/9BGffEhtW9salGxQp8W3IeAWWpCYDTq41t
+	YlPmnZVw==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tLSqt-00000000Yyl-1lLr;
+	Wed, 11 Dec 2024 19:58:31 +0000
+Date: Wed, 11 Dec 2024 19:58:31 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Bingwu Zhang <xtex@envs.net>
+Cc: Jonathan Corbet <corbet@lwn.net>, Miklos Szeredi <miklos@szeredi.hu>,
+	"Darrick J. Wong" <djwong@kernel.org>, Bingwu Zhang <xtex@aosc.io>,
+	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-unionfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ~xtex/staging@lists.sr.ht
+Subject: Re: [PATCH] Documentation: filesystems: fix two misspells
+Message-ID: <Z1nu50C6grj5th7e@casper.infradead.org>
+References: <20241208035447.162465-2-xtex@envs.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,45 +48,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z1fQruaMo-kQU6KK@infradead.org>
+In-Reply-To: <20241208035447.162465-2-xtex@envs.net>
 
-On Mon, Dec 09, 2024 at 09:25:02PM -0800, Christoph Hellwig wrote:
-> Shouldn't the bug fix series go first?
+On Sun, Dec 08, 2024 at 11:54:47AM +0800, Bingwu Zhang wrote:
+> From: Bingwu Zhang <xtex@aosc.io>
+> 
+> This fixes two small misspells in the filesystems documentation.
 
-Something got messed up in the patchbombing sequence.  Patchset 5/9
-should have sorted before this one (6/9) but instead it came at the end.
+There's a couple of similar ones if you want to submit some bonus
+patches:
 
-Ohhh, right.  Long Li add a "Cc: stable@vger.kernel.org # v4.19+"
-tag.  This isn't rfc2822 compliant, so the stgit subcommand that
-converts Cc: tags in the commit message to actual cc: headers tried to
-put the entire string (minus spaces!) in the cc line, which caused the
-msmtp to reject the cover letter.  I stripped out the stable@ entirely
-and resent just that message, but forgot that my patchbombing script
-always updates the send time for each attempt, so the mutt sort order is
-now incorrect.
+$ git grep sytem
+Documentation/devicetree/bindings/sound/amlogic,axg-sound-card.yaml:      Base PLL clocks of audio susbsytem, used to configure base clock
+Documentation/devicetree/bindings/sound/amlogic,gx-sound-card.yaml:      Base PLL clocks of audio susbsytem, used to configure base clock
+Documentation/filesystems/iomap/operations.rst:    Races can also happen if the filesytem allows concurrent writes.
+drivers/gpu/drm/xe/xe_bo.c: * On successful completion, the object memory will be moved to sytem memory.
+fs/freevxfs/vxfs_super.c: * @fc:                        filesytem context
+fs/ocfs2/sysfile.c:                      * return NULL here so that ocfs2_get_sytem_file_inodes
+scripts/spelling.txt:sytem||system
 
-String parsing sucks, and our automated tools don't catch it either:
-
-  $ ./scripts/checkpatch.pl ../xfsprogs/patches-djwong-dev10/129*
-  ERROR: Please use git commit description style 'commit <12+ chars of sha1> ("<title line>")'
-  - ie: 'commit 652f03db897b ("xfs: remove unknown compat feature check in superblock write validation")'
-  #4:
-  Source kernel commit: 652f03db897ba24f9c4b269e254ccc6cc01ff1b7
-
-  total: 1 errors, 0 warnings, 13 lines checked
-
-  NOTE: For some of the reported defects, checkpatch may be able to
-        mechanically convert to the typical style using --fix or --fix-inplace.
-
-  ../xfsprogs/patches-djwong-dev10/129-xfs__remove_unknown_compat_feature_check_in_superblock_write_validation.patch has style problems, please review.
-
-  NOTE: If any of the errors are false positives, please report
-        them to the maintainer, see CHECKPATCH in MAINTAINERS.
-
-Yeah, it whines about the commit hash being **too long** which is
-totally inconsequential but totally misses the incorrect Cc: header
-specification that confuses the hyell out of MTAs.
-
-Sorry about that.
-
---D
