@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414182594B3;
-	Wed, 11 Dec 2024 20:08:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E80E41D6DA4;
+	Wed, 11 Dec 2024 20:08:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733947695; cv=none; b=Mv9/86qwgL02EFOhnip5xpQoAo96a3mLBsTvkglPPbxOm2Ip1wVzGqiaKeaqZAM1H3nVlQi5HhwOBGHxOsTf6HVJfsQ2eFk6tqJnPwTJiHHEkGwBDo+HB66ZkLSn32VIBE2lTVE/3HUtO7Oz8gV+o/qajD8oUjpLuLwQitWrYrs=
+	t=1733947711; cv=none; b=eIAJiNwDSilg5Jcl3HlElhCqAThMOUax7lOYfTWPAoPfzeK560xUwWZxckyZw6GI5Zt7qU/56Lij8Kgpoku8sV6Q1eDXfBq3D/4aoXIzN2QSvKUypxboWg/KX4Ks5LH8m5ROTvRuibYSZOyY3fwrNqnV7rqPoedKAmEWKpO5b0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733947695; c=relaxed/simple;
-	bh=9IWf77lrk7H8zbrW+W0y6OObHF2pbcOytSxzgwnz0sE=;
+	s=arc-20240116; t=1733947711; c=relaxed/simple;
+	bh=iI19QR/L/ukXQi3tmndHRmdDiNI7qXxqZWOMoPhxsL8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s/e02YkWToXaX+bdSZOMCYCi7tr2f0JbFgwIpN/OITK6q0J5KTkNKka9A1rmd/LL/VhqgaA5FRGPJibqtEBpAiWJy5uT0LANJIr0PQZmxHqJcdSJ4ih1ldf5qCF6BlZDxlUf3gODSpKZTwjS9tYzFBMo8Aiw6KcnJM/+Yfc3Oow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EFXwVJo8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ll5dOPw0lohlqwMTiJyPMXjaJj30N0pf+/FjOIt3hoLSMlg+RQuYGDa0qmvrSkUN4O3qSCnRpfKuuW4g0BVbtha+m+NNCGYfxzUU95PPTwar3bgDtLTNvCRc9FFM8qfLtNJEUcUTi7mxYnhng4rEgIQn8i4pWT5jZ7wt5/XR900=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hWEIu4sY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EFXwVJo8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7A60C4CED2;
-	Wed, 11 Dec 2024 20:08:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hWEIu4sY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EEFEC4CED2;
+	Wed, 11 Dec 2024 20:08:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733947694;
-	bh=9IWf77lrk7H8zbrW+W0y6OObHF2pbcOytSxzgwnz0sE=;
+	s=k20201202; t=1733947710;
+	bh=iI19QR/L/ukXQi3tmndHRmdDiNI7qXxqZWOMoPhxsL8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EFXwVJo8Fa+I6qRfDRbojjnriXcDaKrI9Rw8jv913I7z2gAPAMG0yedIUPKtU2X2D
-	 JakMR4LLERk3VaKWjQ5KVK6zPq7VtQsRv/d4xBDNcRNC/adRPWy5GNzm670WwKTy2O
-	 Nc3x1c6CPRAzzS/9ZiX5dhtzwGj/LAQVq+90zrNT6OCYSgvu0AQ22vGnBo+QdoK4lz
-	 hexBKLTWVi99lTS9cOB0JooNWxubaTAMCKpGXi6uIRgaytVV+4hqrFeasdl/rLya9S
-	 r0Yy3BQQq8AU0r1kbsZyamFgPMYdPnFdHe4MV+3jcB+3J5CGr80T878+8oGuspeDKf
-	 2xoTRAesZ+xBA==
-Date: Wed, 11 Dec 2024 12:08:14 -0800
-Subject: [PATCH 3/6] xfs: check pre-metadir fields correctly
+	b=hWEIu4sYiBz5DrihqoN/M1MAB92IA0WcSQgXtLoEHTHR5Y8ERy1lJ784JPjYiqhT8
+	 hyrxuUTSiYSgoS5OG11M/gKoI028N77yq0EzEIgUhAf1YNfp/A5wWY7cRf1zQRdFtG
+	 pZcBZC2rm0BnmT2g47QnhzKB8iYGKabUKwTorgONo7SqvfAGO06+wuVMZJxvI8IeuZ
+	 t8SiX+qslXHrsW8HriWRQJqFVI3u7NKt6NMh+VA6v3irieZM2fgS9AbC3HX1jb4UkB
+	 cN58KfZjDnhS6Z7w1vhuKs9aYTIDkUct4m83AbwYe5XbaAhlaZfRXK4UitRvgUKfM2
+	 oo7SXRieTHYhg==
+Date: Wed, 11 Dec 2024 12:08:29 -0800
+Subject: [PATCH 4/6] xfs: fix zero byte checking in the superblock scrubber
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: stable@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173394758120.171676.4704523076706311668.stgit@frogsfrogsfrogs>
+Message-ID: <173394758136.171676.17192371570679186844.stgit@frogsfrogsfrogs>
 In-Reply-To: <173394758055.171676.7276594331259256376.stgit@frogsfrogsfrogs>
 References: <173394758055.171676.7276594331259256376.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,103 +45,78 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The checks that were added to the superblock scrubber for metadata
-directories aren't quite right -- the old inode pointers are now defined
-to be zeroes until someone else reuses them.  Also consolidate the new
-metadir field checks to one place; they were inexplicably scattered
-around.
+The logic to check that the region past the end of the superblock is all
+zeroes is wrong -- we don't want to check only the bytes past the end of
+the maximally sized ondisk superblock structure as currently defined in
+xfs_format.h; we want to check the bytes beyond the end of the ondisk as
+defined by the feature bits.
 
-Cc: <stable@vger.kernel.org> # v6.13-rc1
-Fixes: 28d756d4d562dc ("xfs: update sb field checks when metadir is turned on")
+Port the superblock size logic from xfs_repair and then put it to use in
+xfs_scrub.
+
+Cc: <stable@vger.kernel.org> # v4.15
+Fixes: 21fb4cb1981ef7 ("xfs: scrub the secondary superblocks")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/agheader.c |   40 +++++++++++++++++++++++++++-------------
- 1 file changed, 27 insertions(+), 13 deletions(-)
+ fs/xfs/scrub/agheader.c |   31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 1d41b85478da9d..88063d67cb5fd4 100644
+index 88063d67cb5fd4..9f8c312dfd3c82 100644
 --- a/fs/xfs/scrub/agheader.c
 +++ b/fs/xfs/scrub/agheader.c
-@@ -145,8 +145,11 @@ xchk_superblock(
- 		xchk_block_set_preen(sc, bp);
+@@ -59,6 +59,32 @@ xchk_superblock_xref(
+ 	/* scrub teardown will take care of sc->sa for us */
+ }
  
- 	if (xfs_has_metadir(sc->mp)) {
--		if (sb->sb_metadirino != cpu_to_be64(mp->m_sb.sb_metadirino))
--			xchk_block_set_preen(sc, bp);
-+		if (sb->sb_rbmino != cpu_to_be64(0))
-+			xchk_block_set_corrupt(sc, bp);
++/*
++ * Calculate the ondisk superblock size in bytes given the feature set of the
++ * mounted filesystem (aka the primary sb).  This is subtlely different from
++ * the logic in xfs_repair, which computes the size of a secondary sb given the
++ * featureset listed in the secondary sb.
++ */
++STATIC size_t
++xchk_superblock_ondisk_size(
++	struct xfs_mount	*mp)
++{
++	if (xfs_has_metadir(mp))
++		return offsetofend(struct xfs_dsb, sb_pad);
++	if (xfs_has_metauuid(mp))
++		return offsetofend(struct xfs_dsb, sb_meta_uuid);
++	if (xfs_has_crc(mp))
++		return offsetofend(struct xfs_dsb, sb_lsn);
++	if (xfs_sb_version_hasmorebits(&mp->m_sb))
++		return offsetofend(struct xfs_dsb, sb_bad_features2);
++	if (xfs_has_logv2(mp))
++		return offsetofend(struct xfs_dsb, sb_logsunit);
++	if (xfs_has_sector(mp))
++		return offsetofend(struct xfs_dsb, sb_logsectsize);
++	/* only support dirv2 or more recent */
++	return offsetofend(struct xfs_dsb, sb_dirblklog);
++}
 +
-+		if (sb->sb_rsumino != cpu_to_be64(0))
-+			xchk_block_set_corrupt(sc, bp);
- 	} else {
- 		if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
- 			xchk_block_set_preen(sc, bp);
-@@ -229,7 +232,13 @@ xchk_superblock(
- 	 * sb_icount, sb_ifree, sb_fdblocks, sb_frexents
- 	 */
- 
--	if (!xfs_has_metadir(mp)) {
-+	if (xfs_has_metadir(mp)) {
-+		if (sb->sb_uquotino != cpu_to_be64(0))
-+			xchk_block_set_corrupt(sc, bp);
-+
-+		if (sb->sb_gquotino != cpu_to_be64(0))
-+			xchk_block_set_preen(sc, bp);
-+	} else {
- 		if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
- 			xchk_block_set_preen(sc, bp);
- 
-@@ -281,15 +290,8 @@ xchk_superblock(
- 		if (!!(sb->sb_features2 & cpu_to_be32(~v2_ok)))
- 			xchk_block_set_corrupt(sc, bp);
- 
--		if (xfs_has_metadir(mp)) {
--			if (sb->sb_rgblklog != mp->m_sb.sb_rgblklog)
--				xchk_block_set_corrupt(sc, bp);
--			if (memchr_inv(sb->sb_pad, 0, sizeof(sb->sb_pad)))
--				xchk_block_set_preen(sc, bp);
--		} else {
--			if (sb->sb_features2 != sb->sb_bad_features2)
--				xchk_block_set_preen(sc, bp);
--		}
-+		if (sb->sb_features2 != sb->sb_bad_features2)
-+			xchk_block_set_preen(sc, bp);
- 	}
- 
- 	/* Check sb_features2 flags that are set at mkfs time. */
-@@ -351,7 +353,10 @@ xchk_superblock(
- 		if (sb->sb_spino_align != cpu_to_be32(mp->m_sb.sb_spino_align))
- 			xchk_block_set_corrupt(sc, bp);
- 
--		if (!xfs_has_metadir(mp)) {
-+		if (xfs_has_metadir(mp)) {
-+			if (sb->sb_pquotino != cpu_to_be64(0))
-+				xchk_block_set_corrupt(sc, bp);
-+		} else {
- 			if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
- 				xchk_block_set_preen(sc, bp);
- 		}
-@@ -366,11 +371,20 @@ xchk_superblock(
- 	}
- 
- 	if (xfs_has_metadir(mp)) {
-+		if (sb->sb_metadirino != cpu_to_be64(mp->m_sb.sb_metadirino))
-+			xchk_block_set_preen(sc, bp);
-+
- 		if (sb->sb_rgcount != cpu_to_be32(mp->m_sb.sb_rgcount))
- 			xchk_block_set_corrupt(sc, bp);
- 
- 		if (sb->sb_rgextents != cpu_to_be32(mp->m_sb.sb_rgextents))
- 			xchk_block_set_corrupt(sc, bp);
-+
-+		if (sb->sb_rgblklog != mp->m_sb.sb_rgblklog)
-+			xchk_block_set_corrupt(sc, bp);
-+
-+		if (memchr_inv(sb->sb_pad, 0, sizeof(sb->sb_pad)))
-+			xchk_block_set_corrupt(sc, bp);
+ /*
+  * Scrub the filesystem superblock.
+  *
+@@ -75,6 +101,7 @@ xchk_superblock(
+ 	struct xfs_buf		*bp;
+ 	struct xfs_dsb		*sb;
+ 	struct xfs_perag	*pag;
++	size_t			sblen;
+ 	xfs_agnumber_t		agno;
+ 	uint32_t		v2_ok;
+ 	__be32			features_mask;
+@@ -388,8 +415,8 @@ xchk_superblock(
  	}
  
  	/* Everything else must be zero. */
+-	if (memchr_inv(sb + 1, 0,
+-			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
++	sblen = xchk_superblock_ondisk_size(mp);
++	if (memchr_inv((char *)sb + sblen, 0, BBTOB(bp->b_length) - sblen))
+ 		xchk_block_set_corrupt(sc, bp);
+ 
+ 	xchk_superblock_xref(sc, bp);
 
