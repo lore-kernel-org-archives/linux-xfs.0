@@ -1,85 +1,115 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A96246344
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 18:05:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E091246344;
+	Wed, 11 Dec 2024 18:09:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733940356; cv=none; b=iKUR7RcJvAq34cNaNaOpt4OK53vd5Gut5o+mTE7WypNyvthcJkrlwH4TAMuaImTdRL4/tLGltIoU75M9HQFpWYRKEA1WT/W1tfPJWh5drk87OpWaDYV3gUkm2W8QXyjWc+e64Hh7GO5XCryXGKJWjDtLmMVk7mSHO2XlLuajHh8=
+	t=1733940543; cv=none; b=bxd2Jk1XUnV9//M230xinsyIhQXpM2AFgGVwDDG2avHcKkij3A2F2PA7lpz1tqp+YItfDqs15enKX7VMYiHnmVlj+W6hseQBqxUas+DrYWd59Ubwr9IAB5qDc8JGH2wRlRudVQVkaRzMLXrXFKlvsDUAnGK8ihhaTG8NbHGhctY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733940356; c=relaxed/simple;
-	bh=ZBbqlh8g89aCHFF+VU48UG8efs7Nuhs4FO7RWupUF7w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=M6XrL3O2mUhm65LM0Hkw8yAjjlaD9UadAats9OEmG5Oj3kv43D1kZm0zewROgwc97xeJQmQmVpltkZekAsglnpfN/sstFe/+QZcBEpX8ktWg3b8hcgizSW48j7nsiSX3g3WIk7lE0tJDcFxwbTY7HCkxtRTwMeRi9oDF0UTGtIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hiJN1T9Z; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1733940543; c=relaxed/simple;
+	bh=zPEuBaFJs0hO+pYKyZErs+pnHfMb5a1H6fIgZhfiuJI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EPU63PPp3H3PdyPsXNm8al244cJ/d7GZxJq3VD/G2hAJqEJsgjZbW/klzXe9voPH9AzMfBrEec+xBesJf0DA8aaKZJJ9j2aaSQ79x9URHDWrpPa+OMavgd5MEmPYAymeHSXq1xVYbbclZS4aMp9SkFdIns3Pk4aHV59IJ/e8yfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mcUFqsS0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hiJN1T9Z"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=QTiEYY497h7eG2bQ1BO3AUVcPZsU0jNVJGnCBkqkwvI=; b=hiJN1T9ZGhjtMoWbjLzOaoyKBA
-	Z0le7P6nQdTzgdUcjHNzHpZXo5w+O2Ewnh9FEvtR9CWRLj1X+q1zENzkazg7iycGts7H/VREYS32N
-	8igfYI/4h9fDdn6V8mNH6JXsDYwTYyPK1xdp4H0Muz5yHjim0rx5hEtl3Nea1mQRXnIx9upMsEBYH
-	5AXP9XD9c0HCzJP2sf2qdEUe64KPVNfLJGESAg4i/NtltIonjOPp/COVc9hbBrk2jPEQNaMDo0FTc
-	TFquqwQ5CYDo0eb9b5bTnkIVoMB+fLRtYgTdf4aV7DrrDlR24XY+92kWJJdaKt6OStmxDwezJBHRZ
-	syRXfj1A==;
-Received: from 2a02-8389-2341-5b80-99ee-4ff3-1961-a1ec.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:99ee:4ff3:1961:a1ec] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tLR5q-0000000Fhgu-3rbC;
-	Wed, 11 Dec 2024 18:05:51 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: aalbersh@kernel.org
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] man: document rgextents geom field
-Date: Wed, 11 Dec 2024 19:05:37 +0100
-Message-ID: <20241211180542.1411428-3-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241211180542.1411428-1-hch@lst.de>
-References: <20241211180542.1411428-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mcUFqsS0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12C3AC4CED2;
+	Wed, 11 Dec 2024 18:09:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733940543;
+	bh=zPEuBaFJs0hO+pYKyZErs+pnHfMb5a1H6fIgZhfiuJI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mcUFqsS0snssUsYzkB8vQnGYSY1ln6dzw6FYi9YphMxqFHnxSyR9BruYZ7cNf6YeK
+	 SwkZiSxBMT+w+lPhH5CJLZg45OUzgTzy8c+iCJ80iGk7gygXOdaj/Wty7WFC80tFwp
+	 HXx5+TDan456VqBTf+eALKDqU3RTN+tiOTiRwjKgsGx/6uJ9KlTBeJWpjCRM2CGVTl
+	 LrkfcyrvC5k+nfhF7J3F+K5TeNUOpOJE/9nOWcU6bvETWZ3xpddZoJ6C8qzEaR0aIg
+	 CsYWqK435b3EESXGlPn5F4cYspDw6D3PBXLt/Li+ijQoveouAuPKTB3zkPl0PztW+6
+	 IEPGabXxDWR5A==
+Date: Wed, 11 Dec 2024 10:09:02 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	Andrey Albershteyn <aalbersh@kernel.org>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [RFC 1/3] include/linux.h: Factor out generic
+ platform_test_fs_fd() helper
+Message-ID: <20241211180902.GA6678@frogsfrogsfrogs>
+References: <cover.1733902742.git.ojaswin@linux.ibm.com>
+ <5996d6854a16852daca5977063af6f2af2f0f4ca.1733902742.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5996d6854a16852daca5977063af6f2af2f0f4ca.1733902742.git.ojaswin@linux.ibm.com>
 
-Document the new rgextent geom field.
+On Wed, Dec 11, 2024 at 01:24:02PM +0530, Ojaswin Mujoo wrote:
+> Factor our the generic code to detect the FS type out of
+> platform_test_fs_fd(). This can then be used to detect different file
+> systems types based on magic number.
+> 
+> Also, add a helper to detect if the fd is from an ext4 filesystem.
+> 
+> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> ---
+>  include/linux.h | 25 +++++++++++++++++--------
+>  1 file changed, 17 insertions(+), 8 deletions(-)
+> 
+> diff --git a/include/linux.h b/include/linux.h
+> index e9eb7bfb26a1..52c64014c57f 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -43,13 +43,7 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+>  	return ioctl(fd, cmd, p);
+>  }
+>  
+> -/*
+> - * platform_test_xfs_*() implies that xfsctl will succeed on the file;
+> - * on Linux, at least, special files don't get xfs file ops,
+> - * so return 0 for those
+> - */
+> -
+> -static __inline__ int platform_test_xfs_fd(int fd)
+> +static __inline__ int platform_test_fs_fd(int fd, long type)
+>  {
+>  	struct statfs statfsbuf;
+>  	struct stat statbuf;
+> @@ -60,7 +54,22 @@ static __inline__ int platform_test_xfs_fd(int fd)
+>  		return 0;
+>  	if (!S_ISREG(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
+>  		return 0;
+> -	return (statfsbuf.f_type == 0x58465342);	/* XFSB */
+> +	return (statfsbuf.f_type == type);
+> +}
+> +
+> +/*
+> + * platform_test_xfs_*() implies that xfsctl will succeed on the file;
+> + * on Linux, at least, special files don't get xfs file ops,
+> + * so return 0 for those
+> + */
+> +static __inline__ int platform_test_xfs_fd(int fd)
+> +{
+> +	return platform_test_fs_fd(fd, 0x58465342); /* XFSB */
+> +}
+> +
+> +static __inline__ int platform_test_ext4_fd(int fd)
+> +{
+> +	return platform_test_fs_fd(fd, 0xef53); /* EXT4 magic number */
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- man/man2/ioctl_xfs_fsgeometry.2 | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Should this be pulling EXT4_SUPER_MAGIC from linux/magic.h?
 
-diff --git a/man/man2/ioctl_xfs_fsgeometry.2 b/man/man2/ioctl_xfs_fsgeometry.2
-index c808ad5b8b91..502054f391e9 100644
---- a/man/man2/ioctl_xfs_fsgeometry.2
-+++ b/man/man2/ioctl_xfs_fsgeometry.2
-@@ -49,7 +49,8 @@ struct xfs_fsop_geom {
- 
- 	__u32         sick;
- 	__u32         checked;
--	__u64         reserved[17];
-+	__u64         rgextents;
-+	__u64         reserved[16];
- };
- .fi
- .in
-@@ -139,6 +140,9 @@ Please see the section
- .B XFS METADATA HEALTH REPORTING
- for more details.
- .PP
-+.I rgextents
-+Is the number of RT extents in each rtgroup.
-+.PP
- .I reserved
- is set to zero.
- .SH FILESYSTEM FEATURE FLAGS
--- 
-2.45.2
+--D
 
+>  }
+>  
+>  static __inline__ int platform_test_xfs_path(const char *path)
+> -- 
+> 2.43.5
+> 
+> 
