@@ -1,43 +1,74 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D0FC29A1
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 03:54:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64F902451E2;
+	Wed, 11 Dec 2024 07:54:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733889281; cv=none; b=t8DqW0Kb4sdHmu7g3x8URg8wxYxkZdQ7LpeUarlD5nYRS6tf3LlIqwUgBqn3inIXUuXbL5ofP9aKC41pLHKuPrJUUPYDNJA+EIr7qeIK+R1+bXRNOa8wjTrFjPSXwf4LL0gDnNx5/plAnpqTjSvlI5dnzQ7mmrrr0r3xzqHH6pQ=
+	t=1733903662; cv=none; b=IcTMFB8LHMbtUFXqCEveYth4bi4v5nCKIy7EVi26EZp2sKEUvExax6h0ldptIPo2yg17T/EPcx8YDr/9TiZkhyOxS0h/TNADHmPhZmMpM3SwUtaCvvCFqrdn+/3L7BAyarPvChzsf0VNEZrUbbJqbq05uB13cHua6c/ixlv4Xso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733889281; c=relaxed/simple;
-	bh=Re3G9vtNttWNP2ZawaYcVtVBejpeMAzYpwew5pnefIU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EPvcWcGlo+F+7476+CQt/AgD4B4BBcE/RhPU1wnygftyms+rMq/1mzV7Qp7dvFaYotG3AUWs2z/8jiyr1BMaVliznD32/PUHk3D7rYS+Q2OqKIe5LppzmfNqnslB29c8XlNgHQAeGpwGYZHM0nsmwVy4v8CE8kxB8iJB/vVZAsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z7Iywrwp; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1733903662; c=relaxed/simple;
+	bh=0eb2ChwuhJO3aXALnXIz6OyBLLpbdmY1b4fnmlWmxa8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TPZCrKR5TO47gxILGK2F2DrAfKPzEBLSsn6ceh8FemRPPJB4f4U+mdLHbaWra7cPGODeTJ6EvRcLNnQrq/VLi2uNErZq4fhzaz88YDOjGS4cLdZ3x/83NiQ4H+nbI8Qrq9n1EF5W/Wc6r92XDr3hZz7509C4CcEFb510BfyveQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=TgV72ARl; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z7Iywrwp"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=HYrhnytZtebNr79494Iayn9IBv3qLsK2zYhO3TZowNo=; b=Z7IywrwpURQdHND2ygOALNtYCS
-	FbippDZ8EF8PHgpzW/SivaIDYRo+Y8uCo7MjT0JcCG7sJOvMLbww/EHtcGxZmzDHT3lMldEPOmY1r
-	QSrCaTVsaOnqqP7EryDkThI8+T4ofp54TngbjYYdarMCPh0xwm3Vze+c6MpiTvH4ZwJ7+blN1q2Jc
-	sFNb59dsX3HoC6cVMMKyHhG6W3Yf6JysQIrZiGkHtqMJ9cc9VV75vuH4E8hZ7+Nw5NMDmuaF3i3ci
-	jxC9aBzdGXmhbeKGhdgMvY06+ZqXPJk2HwYovZ21ITJHR8ELuWAuPsdDf8+YYTSrWlJWkFgYs1jy+
-	1Z0Lx2bA==;
-Received: from 2a02-8389-2341-5b80-4491-cb0c-6ce7-8d5e.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:4491:cb0c:6ce7:8d5e] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tLDo5-0000000DhxT-0Dq0;
-	Wed, 11 Dec 2024 03:54:37 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: [PATCH] xfs: fix !quota build
-Date: Wed, 11 Dec 2024 04:54:32 +0100
-Message-ID: <20241211035433.1321051-1-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="TgV72ARl"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BANsJgm008997;
+	Wed, 11 Dec 2024 07:54:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=ZS0AQESLf9JjVRA3zxZdEunf/JmsRRHE1CbcWshP0
+	+k=; b=TgV72ARlv+leJOTOxYIR3XuR/NMu/tU38nmVUV6GEA84qUv0RrUw1TTRj
+	+VZqTFsOU/QLNPB23G5BzrOmXriJNM56uGqE+WqxaIEPl4G0y9KPUe34MW72ZSAJ
+	+Pdyf+/39fwtqIxsB6nohk5LQrwJNO8kRJK3fyuHbtfR6akomfMRVR7WZsGkJNcD
+	7DFJV3k25BZWHqRUr9oNZq2tZEU/yXx5y6LbzznYZO1zdi5GTfC/MpktP/a2Wqxx
+	8/KkbSJ5rDzIGTGiDo4M6Fen6iLsqq120PgdmM/rNyOuPWx5sK2jTPvy1/dRJTlo
+	PHunRO2+St3QuWdNlrctODEtlyfKA==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ccsjjtxb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 11 Dec 2024 07:54:16 +0000 (GMT)
+Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4BB7jtMr025746;
+	Wed, 11 Dec 2024 07:54:15 GMT
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ccsjjtx9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 11 Dec 2024 07:54:15 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BB5TMI4016926;
+	Wed, 11 Dec 2024 07:54:14 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 43d12y8daq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 11 Dec 2024 07:54:14 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BB7sCm657606632
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 11 Dec 2024 07:54:12 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B7A4D20043;
+	Wed, 11 Dec 2024 07:54:12 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2F63320040;
+	Wed, 11 Dec 2024 07:54:11 +0000 (GMT)
+Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com.com (unknown [9.39.30.217])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 11 Dec 2024 07:54:11 +0000 (GMT)
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        Andrey Albershteyn <aalbersh@kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        John Garry <john.g.garry@oracle.com>
+Subject: [RFC 0/3] xfs_io: enable extsize and stat -v support for ext4
+Date: Wed, 11 Dec 2024 13:24:01 +0530
+Message-ID: <cover.1733902742.git.ojaswin@linux.ibm.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,30 +76,34 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: st4vE7iTocGsOOR6ZQ37UAF4Nbb7SZ9t
+X-Proofpoint-ORIG-GUID: J0ZhtBwtYfkK84xiW480FSn6iRGtGBVH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
+ impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0 mlxlogscore=731
+ mlxscore=0 priorityscore=1501 suspectscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
+ definitions=main-2412110056
 
-fix the !quota stub for xfs_trans_apply_dquot_deltas.
+With ext4 extsize hints support being worked on, enable extsize 
+command to be run on FSes other than xfs so ext4 can utilize it.
+Also extend stat -v to perform FS_IOC_FSGETXATTR ioctl on ext4.
 
-Fixes: 03d23e3ebeb7 ("xfs: don't lose solo dquot update transactions")
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_quota.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No funtional changes are intended for XFS.
 
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index b864ed597877..d7565462af3d 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -173,7 +173,7 @@ static inline void xfs_trans_mod_dquot_byino(struct xfs_trans *tp,
- 		struct xfs_inode *ip, uint field, int64_t delta)
- {
- }
--#define xfs_trans_apply_dquot_deltas(tp, a)
-+#define xfs_trans_apply_dquot_deltas(tp)
- #define xfs_trans_unreserve_and_mod_dquots(tp, a)
- static inline int xfs_trans_reserve_quota_nblks(struct xfs_trans *tp,
- 		struct xfs_inode *ip, int64_t dblocks, int64_t rblocks,
+Ojaswin Mujoo (3):
+  include/linux.h: Factor out generic platform_test_fs_fd() helper
+  xfs_io: Add ext4 support to show FS_IOC_FSGETXATTR details
+  xfs_io: add extsize command support
+
+ include/linux.h | 25 +++++++++++++++++--------
+ io/open.c       |  2 +-
+ io/stat.c       | 38 +++++++++++++++++++++-----------------
+ 3 files changed, 39 insertions(+), 26 deletions(-)
+
 -- 
-2.45.2
+2.43.5
 
