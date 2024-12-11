@@ -1,77 +1,44 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 785511D7E57;
-	Wed, 11 Dec 2024 07:54:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98D1A1EC4D5;
+	Wed, 11 Dec 2024 08:54:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733903668; cv=none; b=rmQ9Bg8SewLCpuThz4KBf2Co4XqK82zp5/v6BkdeMCEOufHKiNbYfUtscBKKUaATeYMM3AJ9K3tROJtxTBVlFgFlOaKBkQrkhXmRbOx42uaw7fQpWFVXIvRT79DlShgoCdTgG6+CIA9q1XJhHeHbvhPiidAac6bp/VcDivDLhRU=
+	t=1733907266; cv=none; b=Vv6ixZ+g1/cpcyxj/QzAKpd/7TluD22ur8eAoabJGMqyh6PUpCW6tonmEQFVMqkJVKG1gefOtlJKMwBZ8Latz9F4fbTcSqm2FxATtx3k3Qsr9uT2qJ377wh9biQ6E2O76CdyXp0jrrn2Wsh5j+vdGrq2BEkXaL7/B4MBsryyENk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733903668; c=relaxed/simple;
-	bh=pfGkfSRbBeBZe2pfv8FMlZ/K7pb4YLUhiD7uHI13nsM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iZ7eqraqpz3tLxCplFx3r7+CMNbRx/oCFqtG8umN7Uwz+ND00mNBg2JRWPjZxgGBS2e7ki9cTtIQYiVTroDPCW2QZsijqfdPejYke4Pv27vWFS6hx+G0ofDcsg4F/05APo10DKWERuk+mt2HuLrYO7K9pXVz8ofXW5rt1tUCuy8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=TYy2zpvA; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1733907266; c=relaxed/simple;
+	bh=BMh+w3/tg+tZirztubOJ5vNeflDrm3URcyPHz1fxtCo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=C3PNG7IeHMMlgM9JI3tNJpb+9998oEER5lKT8aWCJ+XacqO4zv4kLJoaOp29Mw/Hm0wu1CM8oL9wYBA0ta5f5iF0R6m5CX+Motzdt3Do5EOOcD+iDX9IA8fKmuvRxv9/dt4BYXQDCsGeCcVdlJLYp4wZ9CwDoVmrXXwjGJDnu5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3IBMD2k/; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="TYy2zpvA"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BB0QRQH003998;
-	Wed, 11 Dec 2024 07:54:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=56iEWu45x5ZogUIJ3
-	B7E3Njw8FYRxDwCN46dpTp1gNM=; b=TYy2zpvAaLe+j65ZSKM9ilCNfobngMCBQ
-	6cnqrWBKxKxPE95N3thMlapaZEahiTXvefvH5gzG7yxzTEAUekEnEfTLklA0xRds
-	uGgc4Jlu78XErlpt0/h1sto1rIwZl15OEW52cEHZpsjDbpemP1UfJ/py6PohHv0L
-	paaz3MQwstbQrwn8e4ds3SAXCg5KOy018Ffd5sPNqsakqRZ0Nly57ahDKIEdjybQ
-	M4wOf0adGABOizcqCvOMx1sqSNtUUPLdJHnv8YuI/uzGXFkRU5vPWqD2q1irmHNL
-	NPwstQcIP4+/h8a35SBi1ALlcZxh0jxdzvdTFnHW8Dvr481ji2l2Q==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ce0xjpw8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 11 Dec 2024 07:54:22 +0000 (GMT)
-Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4BB7sL4T027263;
-	Wed, 11 Dec 2024 07:54:21 GMT
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ce0xjpw4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 11 Dec 2024 07:54:21 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BB5RaBS032724;
-	Wed, 11 Dec 2024 07:54:20 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 43d0psges1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 11 Dec 2024 07:54:20 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BB7sJXc56754476
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 11 Dec 2024 07:54:19 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2E37020043;
-	Wed, 11 Dec 2024 07:54:19 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EE4BF2004B;
-	Wed, 11 Dec 2024 07:54:16 +0000 (GMT)
-Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com.com (unknown [9.39.30.217])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 11 Dec 2024 07:54:16 +0000 (GMT)
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Andrey Albershteyn <aalbersh@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        John Garry <john.g.garry@oracle.com>
-Subject: [RFC 3/3] xfs_io: add extsize command support
-Date: Wed, 11 Dec 2024 13:24:04 +0530
-Message-ID: <6448e3adc13eff8b152f7954c838eb9315c91574.1733902742.git.ojaswin@linux.ibm.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <cover.1733902742.git.ojaswin@linux.ibm.com>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3IBMD2k/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=7cLn+uTVrMCvUz2MJDIzkGr2CsvjHgFvgJGssfOzYfw=; b=3IBMD2k/2sMKcn5C61EDNp/MxT
+	+9Hp1m/BPM61rFjpe6p1Q0WdsGP005Z50Z8SsHT6oUYAn8oup6/AUgrWKOX9yDaYtOBe0RiV8H4xD
+	w2LkMV/m1jjbXFqZPq7HW7pDuEsI8b57J+a2/I3D+aGlalF7DDUSf1d0VQIM+Wdq4tguvoy/9hiIy
+	HfBTo9CadSdWszI9HD2ShAyZuej2Z69bs9XLFxUi8MUO7dqaAam9BwwX3TX1k34J5L1ez/nQ88y2w
+	IWy8WLODM7d+wMyDNJALWBWLLmGbWFH+OQMtUgehJr81buquyLXV16V7uhPYuyOZadgmmiHfpFTQ3
+	9K9va/AA==;
+Received: from [2001:4bb8:2ae:8817:935:3eb8:759c:c417] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tLIUB-0000000EIJ6-39m8;
+	Wed, 11 Dec 2024 08:54:24 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: RFC: iomap patches for zoned XFS
+Date: Wed, 11 Dec 2024 09:53:40 +0100
+Message-ID: <20241211085420.1380396-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,39 +46,32 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: zPgKlWGDTEiC5BBEweJUQkS2-JFkl0GQ
-X-Proofpoint-ORIG-GUID: gGOaBbh5aCzP7gqrkh6LrX6uO8hz8naR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 clxscore=1015 impostorscore=0 mlxscore=0 mlxlogscore=999
- priorityscore=1501 malwarescore=0 adultscore=0 bulkscore=0 phishscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412110056
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-extsize command is currently only supported with XFS filesystem.
-Lift this restriction now that ext4 is also supporting extsize hints.
+Hi all,
 
-Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
----
- io/open.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+this series contains the iomap prep work to support zoned XFS.
 
-diff --git a/io/open.c b/io/open.c
-index a30dd89a1fd5..2582ff9b862e 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -997,7 +997,7 @@ open_init(void)
- 	extsize_cmd.args = _("[-D | -R] [extsize]");
- 	extsize_cmd.argmin = 0;
- 	extsize_cmd.argmax = -1;
--	extsize_cmd.flags = CMD_NOMAP_OK;
-+	extsize_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
- 	extsize_cmd.oneline =
- 		_("get/set preferred extent size (in bytes) for the open file");
- 	extsize_cmd.help = extsize_help;
--- 
-2.43.5
+The biggest changes are:
 
+ - an option to reuse the ioend code for direct writes in addition to the
+   current use for buffered writeback, which allows the file system to
+   track completions on a per-bio basis instead of the current end_io
+   callback which operates on the entire I/O.
+   Note that it might make sense to split the ioend code from
+   buffered-io.c into its own file with this.  Let me know what you think
+   of that and I can include it in the next version
+ - change of the writeback_ops so that the submit_bio call can be done by
+   the file system.  Note that btrfs will also need this eventually when
+   it starts using iomap
+ - helpers to split ioend to the zone append queue_limits that plug
+   into the previous item above.
+ - a bunch of changes for slightly different merge conditions when using
+   zone append.  Note that btrfs wants something similar also for
+   compressed I/O, which might be able to share some code.  For now
+   the flags use zone append naming, but we can change that if it gets
+   used elsewhere.
+ - passing private data to a few more helper
+
+The XFS changes to use this will be posted to the xfs list only to not
+spam fsdevel too much.
