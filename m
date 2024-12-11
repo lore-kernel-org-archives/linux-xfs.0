@@ -1,29 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA141DE2A0
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 17:36:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3F30207A1B;
+	Wed, 11 Dec 2024 17:40:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733938573; cv=none; b=Fadg/O0DI7LxO6qKiaTFV6z8sOASZWpnqtpIHqgWjuHVY3QGHQ2aKZSSy4uB11FqK6EAw1O7fF2pPMgk7ZyOx20y/vHOMfH6VLztUOsbM/6sgk3BG3Oepc2zGp1V9kp+TwIdDi+UII+iNuvw2WhB7nqkq9DS09dXJ6D1HQecIl4=
+	t=1733938830; cv=none; b=C2YqWeUmqrV70YBFEzFS/lmniYxfzuT/tsCBqVqOZxLsQTx9iaDXt08z6SVLhiS670eDokQPsaTUAx5huaxllvPcmlGjrMhv4P1nIVwVPxB31VcidamYtInb68A2KsJVnd9C0WlKP0vy5EynMmXVAk8PUbvpkhgmM6MrD8JuNA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733938573; c=relaxed/simple;
-	bh=JEk/4ff4ytmlKU+JWXAFr8PMRsg3+qaWQiG8Ifx70hk=;
+	s=arc-20240116; t=1733938830; c=relaxed/simple;
+	bh=2+F/X1bbGIHQ/mssm4ic+1dPk7ifq8G4W/p2zLLRRpU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jgv05SwaBe3K8U4LuRJJaFy9ISk1b9YUQxsxf+j7vWqbSF0uR5ZPFJRmjMCzoZnvVPNac+4IuCZCAkhknBQsDI2FT9EDZfbus6Vs2rC2KmubXRVPMROD3KhvpdjrUdpdaBm6RbpaIgDl2UMpqsdDuA9V2CtHzBISE+iqLi/scCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id A432368D0E; Wed, 11 Dec 2024 18:36:01 +0100 (CET)
-Date: Wed, 11 Dec 2024 18:36:01 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] xfs: fix !quota build
-Message-ID: <20241211173601.GA19633@lst.de>
-References: <20241211035433.1321051-1-hch@lst.de> <20241211173318.GB6698@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sn36fNkdfYrYf00u8uWPhy7j0NAiWUdhtOkTtXKYrkYnX1CjA1I4KwL1sJlCEQxo7Xc4EjOon8WZTTtZRGhido+DiA0b+D2/5HuEfGg17bMp34SLtTtvrmd98r+WT5s6bqJG41Wg1Pej7QZYBUFH2VHt8WV9Toq+pSGiV/LUM90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VT+sjqve; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VT+sjqve"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 265AAC4CED4;
+	Wed, 11 Dec 2024 17:40:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733938830;
+	bh=2+F/X1bbGIHQ/mssm4ic+1dPk7ifq8G4W/p2zLLRRpU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VT+sjqveVKdK/NfGq4n5cyb2pqWjeE9nbhy4BqvoVAvd3BJ+S+Y7ekVeIz++JHo3H
+	 9gk0J3lAkoB2xAlkUVp6X39V+/6170gRQNWynBhSltC/k0XBRY7X42pcIXnk4o5Gdr
+	 Kxx9swpTtNz1/oIHcsX7+9VbE84QO6yqt8a1z7i39VsQnYBnzjpuzXWIgjJE8aieDK
+	 z8mi+1JZanjpIeTKsyfU5JpKb/Ns0si0VbxtdBBZvcogq34A905nR77sH+/93gZNge
+	 p2+EmWU6FIwxnykdMOxvlacAUCpz+wfbv56G6Pw9jYsk41IYJBJG8o/nFg83zyfShK
+	 5qj57TQhY4ZSg==
+Date: Wed, 11 Dec 2024 09:40:29 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Bingwu Zhang <xtex@envs.net>
+Cc: Jonathan Corbet <corbet@lwn.net>, Miklos Szeredi <miklos@szeredi.hu>,
+	Bingwu Zhang <xtex@aosc.io>, linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+	~xtex/staging@lists.sr.ht
+Subject: Re: [PATCH] Documentation: filesystems: fix two misspells
+Message-ID: <20241211174029.GC6698@frogsfrogsfrogs>
+References: <20241208035447.162465-2-xtex@envs.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,15 +45,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211173318.GB6698@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20241208035447.162465-2-xtex@envs.net>
 
-On Wed, Dec 11, 2024 at 09:33:18AM -0800, Darrick J. Wong wrote:
-> Also, can we get rid of CONFIG_XFS_{QUOTA,POSIX_ACL}?  Maintaining all
-> these dummy macros is ... irritating.
+On Sun, Dec 08, 2024 at 11:54:47AM +0800, Bingwu Zhang wrote:
+> From: Bingwu Zhang <xtex@aosc.io>
+> 
+> This fixes two small misspells in the filesystems documentation.
+> 
+> Signed-off-by: Bingwu Zhang <xtex@aosc.io>
 
-I have a slightly older branch that looked into the config options
-including module size comparisms.  Quota is surprisingly big, RT less so,
-but ACL should be a no-brainer:
+Yep, typoes happun, thanks for the patch.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-http://git.infradead.org/?p=users/hch/xfs.git;a=shortlog;h=refs/heads/xfs-config-options
+--D
+
+> ---
+> I found these typos when learning about OverlayFS recently.
+> ---
+>  Documentation/filesystems/iomap/operations.rst | 2 +-
+>  Documentation/filesystems/overlayfs.rst        | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
+> index ef082e5a4e0c..2c7f5df9d8b0 100644
+> --- a/Documentation/filesystems/iomap/operations.rst
+> +++ b/Documentation/filesystems/iomap/operations.rst
+> @@ -104,7 +104,7 @@ iomap calls these functions:
+>  
+>      For the pagecache, races can happen if writeback doesn't take
+>      ``i_rwsem`` or ``invalidate_lock`` and updates mapping information.
+> -    Races can also happen if the filesytem allows concurrent writes.
+> +    Races can also happen if the filesystem allows concurrent writes.
+>      For such files, the mapping *must* be revalidated after the folio
+>      lock has been taken so that iomap can manage the folio correctly.
+>  
+> diff --git a/Documentation/filesystems/overlayfs.rst b/Documentation/filesystems/overlayfs.rst
+> index 4c8387e1c880..d2a277e3976e 100644
+> --- a/Documentation/filesystems/overlayfs.rst
+> +++ b/Documentation/filesystems/overlayfs.rst
+> @@ -156,7 +156,7 @@ A directory is made opaque by setting the xattr "trusted.overlay.opaque"
+>  to "y".  Where the upper filesystem contains an opaque directory, any
+>  directory in the lower filesystem with the same name is ignored.
+>  
+> -An opaque directory should not conntain any whiteouts, because they do not
+> +An opaque directory should not contain any whiteouts, because they do not
+>  serve any purpose.  A merge directory containing regular files with the xattr
+>  "trusted.overlay.whiteout", should be additionally marked by setting the xattr
+>  "trusted.overlay.opaque" to "x" on the merge directory itself.
+> 
+> base-commit: 7503345ac5f5e82fd9a36d6e6b447c016376403a
+> -- 
+> 2.47.1
+> 
