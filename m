@@ -1,92 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AB802594B3;
-	Wed, 11 Dec 2024 20:09:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FAF318BC3F
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 21:05:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733947758; cv=none; b=O3KBYkgPDiEcRcjpl5GkZLcPBXLdphMSU5TDESw+kBp/6FE/PdV/4u4ysD8Yeug6i2wL6poAyb9tce/VyqgoLITPg4awrlXGk+OaI4t3beEDFeSBKXb3lcpWK7lAkqPxe86ywx1M+PHxki5TfiAFoDqZewhSx4BZyL6E/v9aEFA=
+	t=1733951155; cv=none; b=rySZ6LRs6U4I2j8LCwhJXKJQfqy4tIY8P0KIVeNHXqbWBZR7lMiHTDkKHOhWg1XXwRfe7UBf0EHptqgsjv+JS/l2yw3hSVD9oKwhSJSj3d+JgKu/r+/tITsoqz1LCjgBs6YEWY4092DiuVjW3TRAMzsyqa/Dee71tOgwYzjGnMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733947758; c=relaxed/simple;
-	bh=jp/wvfnyN2P3AQj2IZ+GRyBM8BCjE6wHvxTJYJV+a04=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=IMlfDsIRJWZ4hmalKRp+HyIpAiUdN/WvNxWXvJvWuJDd5PXIfSpQJ+qiW5r0mGso89HXDOuPMijBIVYd8YRR1qT7Zd7a6GF+SWe1CkrBKyg3n7fYFafb5O0fyshhE7qGuBNX1kU6i9VEv7oJRZKKn/uWXUsC8JhUmU3E8a39dmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTbe+HBC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733951155; c=relaxed/simple;
+	bh=RbDbvIcBb65N+PM0lXtvM9eoQC5QkvfQd8Ui1y7kH/o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o9VpXAdXNMnCaRAuP7UXLImCW4UqY2v8bY4pVzZmcfZaC6+AqUIPkM7A547rU9sZs1HHX4Epk+q7/us8a9AappDCgD15OiZUcn14F+dhtB/O6POavrAL0n7RkxUZa2tGvCc1o6VrGcBwNbRyPNdBSDPBtnoErwtsQHvBXDUaOUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HaSH0ZYP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTbe+HBC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70620C4CED2;
-	Wed, 11 Dec 2024 20:09:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HaSH0ZYP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DED45C4CED2;
+	Wed, 11 Dec 2024 21:05:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733947757;
-	bh=jp/wvfnyN2P3AQj2IZ+GRyBM8BCjE6wHvxTJYJV+a04=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eTbe+HBCDQZBpigAdpU/Z7dHaN+stvw6DkdarP5hPlgLn7SWp5mNpNjbgsk98R7ZP
-	 aZkw2p20bmKK3oI4dmsr9EPdAbKrvdoEMPEXUTIcnRqAufeEB6KYr8qsfWPfIlvKwd
-	 u7zDT/l2KOgvCD5X8zQNYbufQNa44ExzW5B/obGT27+dDrE3MunOwz2Nm7rmPgOko3
-	 HFC200FrxaHKL5BU6phE34h968Itc5Y/Y9YY6zdPGdBuDvWzAD/AeFeAs2B9RHFuGh
-	 LyirgY/fyqBa+ddgjrhLxLCwPb7ehtAweiKKbuuxYPKDmUcYpCmlmbVeW0HbENW1Sx
-	 aYzTkkAorVoOA==
-Date: Wed, 11 Dec 2024 12:09:16 -0800
-Subject: [GIT PULL] xfs: bug fixes for 6.13
+	s=k20201202; t=1733951154;
+	bh=RbDbvIcBb65N+PM0lXtvM9eoQC5QkvfQd8Ui1y7kH/o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=HaSH0ZYPsjQ4IKauTi10b7cSdHR6r+BgOZyG5IBaxZHk3onhhLEKs2Z2Mc42Kj7yL
+	 NLgMBIvQBRWdev+FW1gECUCdIv7foruL+qexqdOl29ui3kOdKLpnJ5VptOsIEbp2nX
+	 AGZS3P9zRAEzjJmnyQqnyW5gZ99APb64eSkcnn17Ye98Em5AZwIHG9/mXGOCVxSeHO
+	 344ndsyFMZPC3ORrx2GN8cAtxtqNg3DZ3d9g1vVpCxD0KKR9fK//GI+ABO/p23IVuZ
+	 6k9rStxU8fSJce6bCz8PvI3SDPfDE7vQAk18LIE4NNpe1QKNwu1r6cawIpgtBQzhwl
+	 r7zIPQdBi1mpQ==
+Date: Wed, 11 Dec 2024 13:05:54 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, jlayton@kernel.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
-Message-ID: <173394762861.173777.4307006088235333862.stg-ugh@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 14/41] xfs_db: display di_metatype
+Message-ID: <20241211210554.GK6678@frogsfrogsfrogs>
+References: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
+ <173352748452.122992.5424837513822834189.stgit@frogsfrogsfrogs>
+ <Z1fK9ul-gWSabENb@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241211200559.GI6678@frogsfrogsfrogs>
-References: <20241211200559.GI6678@frogsfrogsfrogs>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z1fK9ul-gWSabENb@infradead.org>
 
-Hi Carlos,
+On Mon, Dec 09, 2024 at 09:00:38PM -0800, Christoph Hellwig wrote:
+> On Fri, Dec 06, 2024 at 03:43:17PM -0800, Darrick J. Wong wrote:
+> > +extern int	fp_metatype(void *obj, int bit, int count, char *fmtstr,
+> > +			      int size, int arg, int base, int array);
+> 
+> No need for the extern here.
 
-Please pull this branch with changes for xfs for 6.13-rc1.
+Will remove.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Thank you!
 
 --D
-
-The following changes since commit 13f3376dd82be60001200cddecea0b317add0c28:
-
-xfs: fix !quota build (2024-12-11 10:55:08 +0100)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fixes-6.13_2024-12-11
-
-for you to fetch changes up to bb77ec78c1ae78e414863032b71d62356a113942:
-
-xfs: port xfs_ioc_start_commit to multigrain timestamps (2024-12-11 11:56:05 -0800)
-
-----------------------------------------------------------------
-xfs: bug fixes for 6.13 [v4]
-
-This is hopefully the last set of bugfixes that I'll have for 6.13.
-
-With a bit of luck, this should all go splendidly.
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (6):
-xfs: don't move nondir/nonreg temporary repair files to the metadir namespace
-xfs: don't crash on corrupt /quotas dirent
-xfs: check pre-metadir fields correctly
-xfs: fix zero byte checking in the superblock scrubber
-xfs: return from xfs_symlink_verify early on V4 filesystems
-xfs: port xfs_ioc_start_commit to multigrain timestamps
-
-fs/xfs/libxfs/xfs_symlink_remote.c |  4 ++-
-fs/xfs/scrub/agheader.c            | 71 ++++++++++++++++++++++++++++++--------
-fs/xfs/scrub/tempfile.c            | 12 ++++++-
-fs/xfs/xfs_exchrange.c             | 14 ++++----
-fs/xfs/xfs_qm.c                    |  7 ++++
-5 files changed, 84 insertions(+), 24 deletions(-)
-
