@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 691E924632E;
-	Wed, 11 Dec 2024 18:24:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DF5F2594A8
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 19:26:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733941497; cv=none; b=ZevcJNNvcyPue7I95LYfMlJ0D4hiC900klWj4Vg30+IVhTkOqe2VPGnndypF7Pk2pgvdJxQa9ya7BzhtjhgmSfuAtlrRgrOb6UgyWqfqYft8POC56zVm8EjnVLnmxdYxxsF44JCe9wv7e9VdteJLe+Cm0lLZkhHmCa1BiB+BIfg=
+	t=1733945192; cv=none; b=b/u/uk8us9s5DnMoWErCFMq++9EP9OXThLTHfsDyqhgSjWlusdGfoRTnRuLHDyUK0LBlI6oQEZkf4oBzI3/67Qw5AAmB/Sh+372RLh7vf4E4W2H76GbrD65kOuXFhceLN7xLJc4tN3AFEvZejWXXXQhrgFzbtMCWWWfw8i7yvTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733941497; c=relaxed/simple;
-	bh=CpkVqRsqTVYTWq8tJp8V8w4gjqmdJ7vzau4nV0SSUSs=;
+	s=arc-20240116; t=1733945192; c=relaxed/simple;
+	bh=DqK8sIFSTcjyqLhSdD7VVkcs+M5WN3lA563kfmunVVo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LEtk4EWvQYqhTV00VQg9gBDx3Yu1cuQ4m538t0YXiGfP8wEvkSmY5oI9DHvfCP+h/RCNkuKNXJvlfgxXqco1skgz/P15IMTTDN9CIdHFZNdqy6X/vZ1zZFHzbHcSCT23MbcS1RqJOqLIl7ImRt2/UydfWFL7fG0X2/gwr5VIXQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nP1B1zeT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=NAiozO2jKdrhKXRaD9sFToeY4eU0bAyluJL4jp3JLSbMcgrVFdyPN+BB/u1aTlE35w3ef0lvlmNlOnXW6BSqh7/01X0Ydjj3gC/ab5NcGVtn7F0ZllcVyetRgto4OupoaSFm3VJ7jC6wSEk9w2Pkoz7X1lAhwpyUHpYvidphnBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfuCUu1s; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nP1B1zeT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8043C4CED2;
-	Wed, 11 Dec 2024 18:24:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfuCUu1s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F4233C4CED2;
+	Wed, 11 Dec 2024 19:26:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733941497;
-	bh=CpkVqRsqTVYTWq8tJp8V8w4gjqmdJ7vzau4nV0SSUSs=;
+	s=k20201202; t=1733945192;
+	bh=DqK8sIFSTcjyqLhSdD7VVkcs+M5WN3lA563kfmunVVo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nP1B1zeTtq2WQpdzNpH7g8de/SvkU7dtWRTf4JC2uvWovDASZrlgwlKi3zOOiHUzq
-	 KjBFkhKJWiEInqNd3+qN9SbWPzoeS4HtWr1ehp+SIJ+Im5KN57hvEAsY9CbSV2CTc/
-	 co9fHbGqk+6X52hvT42GUGULzBCuyiTU6rQn0ebY5CxrdGMulPY2SQr0Y7zCc7ok37
-	 o4/sPmsS2l90CfcUGgj9mPmnLOFkecI/MwlwC4puQmXnHHc0/MeM/qmKWrWSG7OQyw
-	 qMpKzrANMdda2XoA/esKuggYq3h131FpBQ+RmHO+gyn2bre5YpwBtPMl9ZQdxk5hhd
-	 tOAwh01ElHdOw==
-Date: Wed, 11 Dec 2024 10:24:56 -0800
+	b=cfuCUu1sTt8FZUy6eAYgelS0YDQN+i1SxKmX5ZRqc/rfSPQI8GMqeCsILkTOTDW5/
+	 AlGIbo2Pln/wQSmFSufJLyqRHUncYJRRCdbgJCF8yD3EGTo0xvTBHK2YmyL53IFl3D
+	 ZMSAX8F7Zc9t5hYg1yRS7hnkHIBqyzuEUT662eWbs06oh3eqmC+7tUSTOhvgYS1oEf
+	 Z5s+e6u4cEu+QfeXQVWsX4uTp3XlQbzPEmCy+RD83SN9w6jFFdcbUuI9kBnG7yVOn3
+	 ClV0i+7Vcv34PUixcV+G5S6tSIINSu4emvUCtFW48N5QzBHHTkd0+L5vTCNcvuBWPy
+	 xA9ETUVi9iyRA==
+Date: Wed, 11 Dec 2024 11:26:31 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Filipe Manana <fdmanana@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>,
-	linux-btrfs <linux-btrfs@vger.kernel.org>
-Subject: Re: Bug when attempting to active swap file that used to be
- cloned/shared
-Message-ID: <20241211182456.GF6678@frogsfrogsfrogs>
-References: <CAL3q7H7cURmnkJfUUx44HM3q=xKmqHb80eRdisErD_x8rU4+0Q@mail.gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/41] xfs_db: disable xfs_check when metadir is enabled
+Message-ID: <20241211192631.GG6678@frogsfrogsfrogs>
+References: <173352748177.122992.6670592331667391166.stgit@frogsfrogsfrogs>
+ <173352748376.122992.14095194470830359878.stgit@frogsfrogsfrogs>
+ <Z1fJxuvjsExuYbye@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,195 +43,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAL3q7H7cURmnkJfUUx44HM3q=xKmqHb80eRdisErD_x8rU4+0Q@mail.gmail.com>
+In-Reply-To: <Z1fJxuvjsExuYbye@infradead.org>
 
-On Wed, Dec 11, 2024 at 02:49:08PM +0000, Filipe Manana wrote:
-> Hello,
+On Mon, Dec 09, 2024 at 08:55:34PM -0800, Christoph Hellwig wrote:
+> On Fri, Dec 06, 2024 at 03:41:59PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > As of July 2024, xfs_repair can detect more types of corruptions than
+> > xfs_check does.  I don't think it makes sense to maintain the xfs_check
+> > code anymore, so let's just turn it off for any filesystem that has
+> > metadata directory trees.
 > 
-> While looking at a btrfs bug where we fail to active a swap file that
-> used to have shared extents, I noticed xfs has the same bug, however
-> the test fails intermittently, suggesting some sort of race.
+> Puh, long overdue.  Would be great to also have a deprecation schedule
+> for it in general..
 
-I bet swapon is racing with inodegc unmapping the extents from the
-previously rm'd files.  The fix for this is (probably?) to call
-xfs_inodegc_flush from xfs_iomap_swapfile_activate... though that might
-be involved, since iirc at that point we hold the swapfile's IOLOCK.
+We stopped shipping xfs_check a decade ago and removed xfs_check from
+fstests back in July, so I think we could just remove everything between
+check_rootdir() and the final quota_check() in blockget_f.
+
+I guess I could try that and see what happens.  Thanks for the reviews
+here. :)
 
 --D
 
-> The test is this:
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> root 11:03:31 /home/fdmanana/scripts/btrfs-bugs > cat swap-all-tests.sh
-> #!/bin/bash
-> 
-> DEV=/dev/sdi
-> MNT=/mnt/sdi
-> NUM_CLONES=50
-> 
-> run_test()
-> {
->     local sync_after_add_reflinks=$1
->     local sync_after_remove_reflinks=$2
-> 
->    # mkfs.btrfs -f $DEV > /dev/null
->    mkfs.xfs -f $DEV > /dev/null
->    mount $DEV $MNT
-> 
->    touch $MNT/foo
->    chmod 0600 $MNT/foo
->    # On btrfs the file must be NOCOW.
->    chattr +C $MNT/foo &> /dev/null
->    xfs_io -s -c "pwrite -b 1M 0 1M" $MNT/foo
->    mkswap $MNT/foo
-> 
->    for ((i = 1; i <= $NUM_CLONES; i++)); do
->        touch $MNT/foo_clone_$i
->        chmod 0600 $MNT/foo_clone_$i
->       # On btrfs the file must be NOCOW.
->       chattr +C $MNT/foo_clone_$i &> /dev/null
->       cp --reflink=always $MNT/foo $MNT/foo_clone_$i
->    done
-> 
->    if [ $sync_after_add_reflinks -ne 0 ]; then
->       # Flush delayed refs and commit current transaction.
->       sync -f $MNT
->    fi
-> 
->    # Remove the original file and all clones except the last.
->    rm -f $MNT/foo
->    for ((i = 1; i < $NUM_CLONES; i++)); do
->       rm -f $MNT/foo_clone_$i
->    done
-> 
->    if [ $sync_after_remove_reflinks -ne 0 ]; then
->       # Flush delayed refs and commit current transaction.
->       sync -f $MNT
->    fi
-> 
->    # Now use the last clone as a swap file. It should work since
->    # its extent are not shared anymore.
->    swapon $MNT/foo_clone_${NUM_CLONES}
->    swapoff $MNT/foo_clone_${NUM_CLONES}
-> 
->    umount $MNT
-> }
-> 
-> echo -e "\nTest without sync after creating and removing clones"
-> run_test 0 0
-> 
-> echo -e "\nTest with sync after creating clones"
-> run_test 1 0
-> 
-> echo -e "\nTest with sync after removing clones"
-> run_test 0 1
-> 
-> echo -e "\nTest with sync after creating and removing clones"
-> run_test 1 1
-> 
-> 
-> Running the test, it fails most of the time, but not always:
-> 
-> root 11:04:25 /home/fdmanana/scripts/btrfs-bugs > ./swap-all-tests.sh
-> 
-> Test without sync after creating and removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0013 sec (756.430 MiB/sec and 756.4297 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=5613cb28-3f3d-4530-a152-c98184e58e63
-> 
-> Test with sync after creating clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0028 sec (354.862 MiB/sec and 354.8616 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=da7932b0-0428-4318-82b1-d7a536daa066
-> 
-> Test with sync after removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0017 sec (586.510 MiB/sec and 586.5103 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=2ef8212c-64df-4bca-89fd-9ddadb7a824d
-> 
-> Test with sync after creating and removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0014 sec (672.495 MiB/sec and 672.4950 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=0d7a0bf3-081b-4069-a346-81f1a10ebdda
-> root 11:04:29 /home/fdmanana/scripts/btrfs-bugs >
-> 
-> No failures above, great.
-> 
-> Running it again:
-> 
-> root 11:04:31 /home/fdmanana/scripts/btrfs-bugs > ./swap-all-tests.sh
-> 
-> Test without sync after creating and removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0019 sec (513.611 MiB/sec and 513.6107 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=9dbafcff-1270-419a-9677-f30f8ea78b18
-> swapon: /mnt/sdi/foo_clone_50: swapon failed: Invalid argument
-> swapoff: /mnt/sdi/foo_clone_50: swapoff failed: Invalid argument
-> 
-> Test with sync after creating clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0010 sec (969.932 MiB/sec and 969.9321 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=dae60c3d-524f-4be5-9d1c-4cfd6a968beb
-> 
-> Test with sync after removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0018 sec (548.847 MiB/sec and 548.8474 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=9d99061e-5675-414d-9067-c591eb6e3528
-> 
-> Test with sync after creating and removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0020 sec (488.520 MiB/sec and 488.5198 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=ff225f28-7e54-4045-8ba6-2c99df02eded
-> root 11:04:34 /home/fdmanana/scripts/btrfs-bugs >
-> 
-> Only the first sub-test failed.
-> 
-> Running it once again:
-> 
-> root 11:04:35 /home/fdmanana/scripts/btrfs-bugs > ./swap-all-tests.sh
-> 
-> Test without sync after creating and removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0012 sec (803.859 MiB/sec and 803.8585 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=aeb8d730-f2c4-4adc-a59d-8047df74b75c
-> 
-> Test with sync after creating clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0018 sec (550.055 MiB/sec and 550.0550 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=d5b7d7eb-327c-4df8-a63f-c8d556d3a083
-> swapon: /mnt/sdi/foo_clone_50: swapon failed: Invalid argument
-> swapoff: /mnt/sdi/foo_clone_50: swapoff failed: Invalid argument
-> 
-> Test with sync after removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0017 sec (567.859 MiB/sec and 567.8592 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=22b26e8b-c1db-4e86-a39c-82df9b4f324c
-> swapon: /mnt/sdi/foo_clone_50: swapon failed: Invalid argument
-> swapoff: /mnt/sdi/foo_clone_50: swapoff failed: Invalid argument
-> 
-> Test with sync after creating and removing clones
-> wrote 1048576/1048576 bytes at offset 0
-> 1 MiB, 1 ops; 0.0019 sec (514.139 MiB/sec and 514.1388 ops/sec)
-> Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
-> no label, UUID=1becd3ea-a6a5-4245-92b9-f4ef4ad23afd
-> swapon: /mnt/sdi/foo_clone_50: swapon failed: Invalid argument
-> swapoff: /mnt/sdi/foo_clone_50: swapoff failed: Invalid argument
-> root 11:04:39 /home/fdmanana/scripts/btrfs-bugs >
-> 
-> This time all sub-tests failed except the first one.
-> 
-> So just to let you know, as I was integrating the test into a generic
-> test case for fstests.
-> 
-> Thanks.
+> > +
+> >  	check_rootdir();
+> >  	/*
+> >  	 * Check that there are no blocks either
+> > 
+> > 
+> ---end quoted text---
 > 
