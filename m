@@ -1,43 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF38201266;
-	Wed, 11 Dec 2024 18:18:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E4E24632E
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 18:18:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733941109; cv=none; b=aeLkn0tF64lm0Sq+2x212cYUJ9cAveEDvPC1vQNezRRNkw9Xjz1jrQN3mPEd/eMOd2Pzi+n5iK4Y8EpZSqUIGgkLf6ksGSm3cfjWYWcB3QSWT3Zc0Ns45PY2nD7gUGjcYY6Cbeswra1GXZFk7ciCXYGn36qaoTHPDxV7hnXl9Is=
+	t=1733941136; cv=none; b=f7zgqalVKZlEgH9XBYqJ51iegApGaO/jYBfSCsRMput+fFmJ1XKetDQWNs2a7AK0Wkn8WyhaG0AgoTOOBr6GznvtHZbnZL/s5yy7oNLE4PqTKsP5PuBT3aKaNGnNnwlJeEQPKJT4IAEkfBUdok2hY5zVqHliebrIo62Rd5TVl+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733941109; c=relaxed/simple;
-	bh=0Ha0iFDk7Ri2O+rZLVr8uvjg5fh5VNVFuhQutjRlXDE=;
+	s=arc-20240116; t=1733941136; c=relaxed/simple;
+	bh=lAVFomGCUY+CKdUZbWTKmb0kI9bClVuqCgKW0DqAM/A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A7eRfzb10jFgYWlOOj8BxR/dZaP9RlbQPlbr1thMzxIbcRjeHuslqoNEDKQd5aYx7UDZyhh7nvrYD++CVdPP1bHXXC9r9R6UC+SeX6ZN3vpJ5c65XnPCQq37rtw+sFu/rhBW0C6+x/pH2YaNMpqP401S2TsH2kDi6Jp9qLm0NvQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mO/4ozg6; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=n6+1ymJRCfVnOvjxV2ndUDopvMoEg9onxdRKep5Xg++JESplJvaRzi+Fzp7NJmyr1oNGAINBgGJmYhtPb6UzGuBDmrSH/5aWzy/dNx8CVNoYFy6w1Li7iYImsmzU6hX5tqHOGV6j7nJnwrpX0khzXdxTs/v2JsqXdKtEeyZ+txk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VNDLHoG/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mO/4ozg6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8559BC4CED2;
-	Wed, 11 Dec 2024 18:18:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VNDLHoG/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AF23C4CED2;
+	Wed, 11 Dec 2024 18:18:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733941107;
-	bh=0Ha0iFDk7Ri2O+rZLVr8uvjg5fh5VNVFuhQutjRlXDE=;
+	s=k20201202; t=1733941136;
+	bh=lAVFomGCUY+CKdUZbWTKmb0kI9bClVuqCgKW0DqAM/A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mO/4ozg6DJKMCxmeI6euSHEGop6RmQKa5U5tCu4Es5X2566kyxtggE7ev8DMZ6ksE
-	 1q9XSOvGt+0U6WImq8H+LhapO2ODdBrrmmjjuMkLurHtNU88dMZnMLxl9dzqMfdOju
-	 B3Ya0zfJO+5QWEzDRsc5Xvw+RiEzrvbIeOjtPVbMZDS1fqA8Xk7IZak9kl1rbFQ1LC
-	 9yLWAX6riZx1ObNjGP1pxJdhF32gQOk45S+s7yazjq3eF/tns4AncFI1UtX8NLXfB0
-	 O3PaV0Fo1QwI0xrD11634AL860vvNi7zzzqfRltn003+YCBq0DhNzOnqDqt+NogEih
-	 XzIYCOG2NVxbA==
-Date: Wed, 11 Dec 2024 10:18:27 -0800
+	b=VNDLHoG/HkAPiC0CVKDrnF75T2zeBabDypfQeAX8WVJhaNMmJL71jSK5b/vHyXfiU
+	 ZDotBmjBWjSMokDlwO5s70MbrPqNOVZHROxne8KJcpm+Ex3C6ftWTxzmD/3Y9ECDpg
+	 mRRlClWesz5ABj0jbsa6gN01PCI7HpmKdIdPZCtc3iynzm63yUovBSSMh2yvitC3u0
+	 1MM6MkIoxBfEYM5iwSVoVUsw6fu/SzBQ0blb0SCfwuiok2u01QDnmRDLIGLFPxIUNA
+	 fuo/gz7K/rq/4WY4MR6ImXMwc/bGpzh3N6j25m96YPHC6buYMyaUscC0vLR2WFXfLA
+	 qYK96nQCi4RUw==
+Date: Wed, 11 Dec 2024 10:18:55 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [RFC 3/3] xfs_io: add extsize command support
-Message-ID: <20241211181827.GC6678@frogsfrogsfrogs>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
- <6448e3adc13eff8b152f7954c838eb9315c91574.1733902742.git.ojaswin@linux.ibm.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] mkfs: small rgcount man page fixup
+Message-ID: <20241211181855.GD6678@frogsfrogsfrogs>
+References: <20241211180542.1411428-1-hch@lst.de>
+ <20241211180542.1411428-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,39 +42,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6448e3adc13eff8b152f7954c838eb9315c91574.1733902742.git.ojaswin@linux.ibm.com>
+In-Reply-To: <20241211180542.1411428-2-hch@lst.de>
 
-On Wed, Dec 11, 2024 at 01:24:04PM +0530, Ojaswin Mujoo wrote:
-> extsize command is currently only supported with XFS filesystem.
-> Lift this restriction now that ext4 is also supporting extsize hints.
+On Wed, Dec 11, 2024 at 07:05:36PM +0100, Christoph Hellwig wrote:
+> All the other options that require a value spell that out, do the same
+> for the rgcount option.
 > 
-> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Seems pretty straightforward to me.  Are you planning to add an extsize
-option to chattr?
-
+Oops, yeah, I forgot that. :(
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  io/open.c | 2 +-
+>  man/man8/mkfs.xfs.8.in | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/io/open.c b/io/open.c
-> index a30dd89a1fd5..2582ff9b862e 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -997,7 +997,7 @@ open_init(void)
->  	extsize_cmd.args = _("[-D | -R] [extsize]");
->  	extsize_cmd.argmin = 0;
->  	extsize_cmd.argmax = -1;
-> -	extsize_cmd.flags = CMD_NOMAP_OK;
-> +	extsize_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
->  	extsize_cmd.oneline =
->  		_("get/set preferred extent size (in bytes) for the open file");
->  	extsize_cmd.help = extsize_help;
+> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+> index 5a4d481061ff..32361cf973fc 100644
+> --- a/man/man8/mkfs.xfs.8.in
+> +++ b/man/man8/mkfs.xfs.8.in
+> @@ -1190,7 +1190,7 @@ or logical volume containing the section.
+>  This option disables stripe size detection, enforcing a realtime device with no
+>  stripe geometry.
+>  .TP
+> -.BI rgcount=
+> +.BI rgcount= value
+>  This is used to specify the number of allocation groups in the realtime
+>  section.
+>  The realtime section of the filesystem can be divided into allocation groups to
 > -- 
-> 2.43.5
+> 2.45.2
 > 
 > 
