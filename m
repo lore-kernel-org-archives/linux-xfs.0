@@ -1,79 +1,75 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46AC1F3D42
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 22:33:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6B51DC9AB
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 22:49:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733956416; cv=none; b=t2jChnxYLOS9VTIPcyG5u7D7xONg0VYu3Py+PKiJBf+ueTyWi8Ub+uYb1bQ9JjfQqX+YFefIGwQZdzW7C5W33cD3ff2Sd21l6Vec0zySIdWBzUHyuGKWTcJ8MX9mecnWHNL9dB/7GJxWokjoS+TBUxn+KqScojo/iN9f9VoKtbo=
+	t=1733957367; cv=none; b=jbCiS7kAIgbiIitHZtT+f6kMzmd8IwtTz014pbHVNMSs/DpJ8VjstmCZMvKRwsZ0o8KSF9D2n2xo7sx7VN2kNu0o2nN4Z2dZiQtzaouotX38ltNRCLuhnfpWZ2jkVSYOyX6dQQfCPVyXRrH7hMDEapbH4hp6+QxZJfY1f7j2ovk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733956416; c=relaxed/simple;
-	bh=VOGzIGGSxqcC7jyFVRhHAo+5MH48iBCMJkB64VO7HdA=;
+	s=arc-20240116; t=1733957367; c=relaxed/simple;
+	bh=hLgx/GHctPvBC5gT81L8mMes6QkXxyioquqWpo1tpa4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YS56IJill4oVZsrdavx2ZeHPzpdriCZ2bxoT1JWZny0JSYkEG6DPafFmJ03TaDVLwhzVDi3k4gDgnX/te3LFY6qESi0eRzktL8wt5PGCnI6XmE3VgoPFQOtZSABx32+r1u73Uv6DKei2tW9sdKG+9yn4kbesfxpCr/osNMwS0pQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=j/ejm0YH; arc=none smtp.client-ip=209.85.215.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=I/TeY+EEuwl1nHI0LMODu7TtSz9+MpaK3mIjHp1Zsx1B0dzhjK6Ji1JpM5CTH1L5xgEma58Sof7xw80rpet4USbMIwDGh9oE/ek2q1vgj6OlhtBtiY8BBydZDIbW/9fP7sSfCk/0oQXRTRFwyw+nKPPGNNXlJoxmFSwV35cPOEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=XeDbUT9s; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="j/ejm0YH"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-7feffe7cdb7so12302a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 14:33:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="XeDbUT9s"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-725ce7b82cbso3450b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Dec 2024 14:49:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1733956414; x=1734561214; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1733957365; x=1734562165; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ngWPL7F+k5wxiISlgKbwW4fjhxxXTEP4BljwhbzST3s=;
-        b=j/ejm0YH6vC3JTn6aSaULZwKVb89iCsaOgno1knpGPttaxzaexerLkwhwtTgTAYe3i
-         6Q2kT/jo7vdHRRcLmk+qxinVMGJWI/wgVjkal81UtOU3esAlKVxiJ12O1QhU1uWvvI8X
-         ZSxrcig/cUDx+ROYR1l0ciOET5DvuSjfDeuONsH1i0wqXUmYDuhm/KUq3Uh5iBa/a/rC
-         Up0NzYZQezfMvegZ6nMR4LICpIUHTEBLpt6+bS47f98Ush3v5BkEHaPPlZSMSOOExoo5
-         8dnh69STWKdciRv4FW8E2707xhq9LVyjTJLasZ7EUpFsj0J6eGhtGRoKO2RIsoebYdg/
-         NMNw==
+        bh=fXmXLf7sd5V5uMi56Lp8HUf5AZDRP/3EUrkbHYOtNjY=;
+        b=XeDbUT9sdZ7eJ5rTmaeTF82gnhBES+/JmhGjayz9pSRDDsOB/PH4iXE2Xv2LJB/uct
+         YMIJpFd1vA7OwAMjCLa+Tde36WIAk6voUpgozqajYguR5ksxzX5BpR47AZj3IlViIWql
+         XA17TbS0MC35dieelHwfpl35pIJs3pDkQsJTU7Y9B1r1SW6zSDZWj3hdyeHB+/P23tb4
+         yWqCGSoYTLjzzo4FM+o0C7K89Y5K+JCb3piR/ZPWGZwqXug8R423G5dtLPiWtjWd/Cye
+         uDYV0H2Kbym1Xk1UJ6GzGTp7s4EGRc4ZKITXBaq/bszsetK2liHMu9p9dPRW/IGdPdZr
+         3BGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733956414; x=1734561214;
+        d=1e100.net; s=20230601; t=1733957365; x=1734562165;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ngWPL7F+k5wxiISlgKbwW4fjhxxXTEP4BljwhbzST3s=;
-        b=PyspG0yNtxEYCcYq9gVVilNl8tn32vrvpGqCzOWnV5j9wroWv5VfikX+capAvq0kyC
-         XCqUy3QdwdeqqDovGJ/xWGxVXQDsAi7QliYZ687WIAlfFo+BJKPMB1bRj4mnKnAGjWUq
-         pnw4u2Ug75efWlsYBGfuL6SOoigMY/SQqMq9DTgmXBl+8PV5/XlXQ2VqYIH7lPF1VlKW
-         Q2gYiAC5g9ahC4Q3lqGLjWSMJ1a+pU+N0AuA8hbjjQ8n6FfHd9pe1f7Y+PlV+zCCoc39
-         2V12YEJWZonq5IgM3pkN+sWxkgzc6LLJFx6o8wW2RyDPBQjgSLYIEn6cdFL4ZMu0+oRF
-         xCJw==
-X-Forwarded-Encrypted: i=1; AJvYcCUs+dbg7mkuyuV7uf+7nP1E7045T30GaRe/UdXtPYmRfWPbciBWZAerkbdwp5U8r9s+wMgiRjnBK8s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxH99xCSLz2ZigdaU39D70rixRlU7JrtsOR+XZ0k+dBPSzZyHc4
-	jfqfccdCgk29FObEvlzVqFoLAAZxYN1MprTjtVJhOBSV4ymDCIuqa/TfRplpbMs=
-X-Gm-Gg: ASbGnctZnJ8ImxmJtgaskt+G9XTD9PnVTZOAdd5biH4BHXPtIjaY6q4CWWs15CP/Axc
-	fUHeLrM9AAItiqglcpoK8V0Byxzu5jk0rEc/ClZSYpQ17HEoWBQcwfgw2qKDvTiBZTO7PgOXUku
-	h95XJlXzwlmouUXN1E2zc0lT2bJkxJoZeHVy3SSpWSSMye7WQS01lr1+4FrnxzhS+2ViMs/ZrEh
-	1xOA/QTJjR3i8vhLVPednWTZhbb33bX3cu/MsMJK5MaE6vPubLKrgQUJ94wAISk0XusdL5g4jGf
-	/eSMCWb5DnIGKIEC0MtIkR7A1S4=
-X-Google-Smtp-Source: AGHT+IEVKuZamiHIkIRgt4sKWSN/CxUsh7q1Rtn5YMJ8loDhLinrZmWvhpreTWA49/k9SjEkFUp/vQ==
-X-Received: by 2002:a17:90b:358b:b0:2ee:c457:bf83 with SMTP id 98e67ed59e1d1-2f1392b7518mr2309164a91.19.1733956413993;
-        Wed, 11 Dec 2024 14:33:33 -0800 (PST)
+        bh=fXmXLf7sd5V5uMi56Lp8HUf5AZDRP/3EUrkbHYOtNjY=;
+        b=Y90H5vNl5MtNu2+L23KzbpasOL2dOMpR2Ynyaq9302AnapoXfDBNUnKQjyM8xJKDZg
+         rrtGHG8j5QmzAwJSD7I/iLyqsiJAI4FgfjnV/b14LcdnEaSireTFFcBp9kt5OcWykKjR
+         fTLh6LskLVGZlZ/+8lRFUBHKhWE1YQEahFUvIpLkodH8jy7cIAmyYBcGYPNzrV49bsfB
+         AX1f05WOBLRHki6E/rvVUImaaEdvV9cyUCbTEU331zd6QhtVVp5QQq8H+qfqzBxQsVQW
+         bVAuzfPc6630hbnuVyzCrLFyKnIwz8zgHAVOI8nSCL+BKie/a7Cx01ob/j6GZZ4v+iJ9
+         +z8w==
+X-Forwarded-Encrypted: i=1; AJvYcCWMzraabtQT6SU9MYRNVJVjl+nU3urFqdfmwCnbaKr7BYU97A1hZsLt3i1iJaBT2GjNcOnA/KFVRBg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5MNN/8NNbO9q8erXl9a6lgwlzJ1hfMakhQsi058cYWm4NKKuF
+	lX/OmZ+rWEraZGMfBjR03hoGzOwm0vKbUmrDoymZrVywAuUBNWD5OSTQWAnMbmg=
+X-Gm-Gg: ASbGncurOKqd9eg0Ufk/vBDWdXC0uKVYQZgsZXhx1SbQ345WOh9zDEhXbLb+zU3fTpF
+	yoAhEkYu8/fC1cQX9X9x0ANIFc1rOAIGmzez+Rrd4ZFQOiyRAqb1vZ3g1wp4hy4QeaftB+cF2yO
+	SuPEqwr+R0vMWEtewnU9/9WWjA+jiMgqgPOSIK9FlZZELryh+GkLr4X74c7yshOl1kurSkBeotp
+	G6SuxB+i9XTH+OXWLWLmvSYSxSZquPKe31lf0TLYA+KVHiGgjsP6a4iNCaPS/HMWBiP6noATKSn
+	Gr4wydCik/AaDzoFokwm5Zcxsz29IA==
+X-Google-Smtp-Source: AGHT+IHOEVAuUDLvH3fqF5/aEiPkx8MMVDQvX2O7ilQPH0RNIkQt4BmREe417EpJ8+GJSNy3blDmcg==
+X-Received: by 2002:a05:6a00:1790:b0:725:cfd0:dffa with SMTP id d2e1a72fcca58-728fa9c9addmr1645480b3a.5.1733957365450;
+        Wed, 11 Dec 2024 14:49:25 -0800 (PST)
 Received: from dread.disaster.area (pa49-195-9-235.pa.nsw.optusnet.com.au. [49.195.9.235])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ef45ff77b9sm12072842a91.36.2024.12.11.14.33.33
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-725e3369c62sm7010447b3a.167.2024.12.11.14.49.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Dec 2024 14:33:33 -0800 (PST)
+        Wed, 11 Dec 2024 14:49:24 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tLVGr-00000009ZKP-40OP;
-	Thu, 12 Dec 2024 09:33:29 +1100
-Date: Thu, 12 Dec 2024 09:33:29 +1100
+	id 1tLVWD-00000009ZUb-378O;
+	Thu, 12 Dec 2024 09:49:21 +1100
+Date: Thu, 12 Dec 2024 09:49:21 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [RFC 2/3] xfs_io: Add ext4 support to show FS_IOC_FSGETXATTR
- details
-Message-ID: <Z1oTOUCui9vTgNoM@dread.disaster.area>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
- <3b4b9f091519d2b2085888d296888179da3bdb73.1733902742.git.ojaswin@linux.ibm.com>
- <20241211181706.GB6678@frogsfrogsfrogs>
+Cc: Filipe Manana <fdmanana@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
+	linux-btrfs <linux-btrfs@vger.kernel.org>
+Subject: Re: Bug when attempting to active swap file that used to be
+ cloned/shared
+Message-ID: <Z1oW8SiW3sq2dVps@dread.disaster.area>
+References: <CAL3q7H7cURmnkJfUUx44HM3q=xKmqHb80eRdisErD_x8rU4+0Q@mail.gmail.com>
+ <20241211182456.GF6678@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,61 +78,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211181706.GB6678@frogsfrogsfrogs>
+In-Reply-To: <20241211182456.GF6678@frogsfrogsfrogs>
 
-On Wed, Dec 11, 2024 at 10:17:06AM -0800, Darrick J. Wong wrote:
-> On Wed, Dec 11, 2024 at 01:24:03PM +0530, Ojaswin Mujoo wrote:
-> > Currently with stat we only show FS_IOC_FSGETXATTR details
-> > if the filesystem is XFS. With extsize support also coming
-> > to ext4 make sure to show these details when -c "stat" or "statx"
-> > is used.
+On Wed, Dec 11, 2024 at 10:24:56AM -0800, Darrick J. Wong wrote:
+> On Wed, Dec 11, 2024 at 02:49:08PM +0000, Filipe Manana wrote:
+> > Hello,
 > > 
-> > No functional changes for filesystems other than ext4.
-> > 
-> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> > ---
-> >  io/stat.c | 38 +++++++++++++++++++++-----------------
-> >  1 file changed, 21 insertions(+), 17 deletions(-)
-> > 
-> > diff --git a/io/stat.c b/io/stat.c
-> > index 326f2822e276..d06c2186cde4 100644
-> > --- a/io/stat.c
-> > +++ b/io/stat.c
-> > @@ -97,14 +97,14 @@ print_file_info(void)
-> >  		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
-> >  }
-> >  
-> > -static void
-> > -print_xfs_info(int verbose)
-> > +static void print_extended_info(int verbose)
-> >  {
-> > -	struct dioattr	dio;
-> > -	struct fsxattr	fsx, fsxa;
-> > +	struct dioattr dio;
-> > +	struct fsxattr fsx, fsxa;
-> > +	bool is_xfs_fd = platform_test_xfs_fd(file->fd);
-> >  
-> > -	if ((xfsctl(file->name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
-> > -	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
-> > +	if ((ioctl(file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
-> > +		(is_xfs_fd && (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa) < 0))) {
+> > While looking at a btrfs bug where we fail to active a swap file that
+> > used to have shared extents, I noticed xfs has the same bug, however
+> > the test fails intermittently, suggesting some sort of race.
 > 
-> Urgh... perhaps we should call FS_IOC_FSGETXATTR and if it returns zero
-> print whatever is returned, no matter what filesystem we think is
-> feeding us information?
+> I bet swapon is racing with inodegc unmapping the extents from the
+> previously rm'd files.
 
-Yes, please. FS_IOC_FSGETXATTR has been generic functionality for
-some time, we should treat it the same way for all filesystems.
+Almost certainly the case.  All sync does is stabilise the unlinked
+lists so recovery will see the unlinked inodes; it has no effect on
+expediting background inodegc, nor should it.
 
-> e.g.
-> 
-> 	if (ioctl(file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-> 		if (is_xfs_fd || (errno != EOPNOTSUPP &&
-> 				  errno != ENOTTY))
-> 			perror("FS_IOC_GETXATTR");
+> The fix for this is (probably?) to call
+> xfs_inodegc_flush from xfs_iomap_swapfile_activate... though that might
+> be involved, since iirc at that point we hold the swapfile's IOLOCK.
 
-Why do we even need "is_xfs_fd" there? XFS will never give a
-EOPNOTSUPP or ENOTTY error to this or the FS_IOC_GETXATTRA ioctl...
+For this sort of artificial test, freeze and unfreeze to ensure that
+the background inodegc is drained before the swapon command is run.
+It's not clear to me that there is a real world use case where this
+is actually a problem, so for testing purposes a freeze before
+swapon seems like the right way to go here...
 
 -Dave.
 -- 
