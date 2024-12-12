@@ -1,48 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC8E174EF0;
-	Thu, 12 Dec 2024 21:07:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D799A1D54F7
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2024 21:11:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734037681; cv=none; b=D/GI4WHESbOc2Ejapbqg2XQC2vR47P26lKwrs9rL+I7EKvuMMl5I7TNNeESK89IVdr6w4ScMaT5ssA3RGqu0ELd+ME3r4HKzAydxjlVOkM7PDwmsaw8oUVfmYoguidesPHhrsCyPFPUk0h7hNtmhCE3a47yG3mDLG0hj/jvA00g=
+	t=1734037870; cv=none; b=kh/zAIFQOsWj2JuPBcGpVd9tYSzfcG7mSxgXhr/fegFmgluq0fxFHfg149rgDAFfUsT/hAP9/Y6+Fb9FOfeG9IAZEQy1xj8eQzN+hmSRBasEGh7DEhQDJSvJc6/2KG6AqfvJFq6g+orYU+6q+eAWFN14k/jc14rCnEl14n+TYxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734037681; c=relaxed/simple;
-	bh=PBIseoIzz7QhT/pRERjDZ/l0g8VlNWxM4+wA3Tgo67g=;
+	s=arc-20240116; t=1734037870; c=relaxed/simple;
+	bh=pu6BizVDHeUSnSiZMVDGRKxLjGRQ9Gi5NC8DCGjGSkc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gwubHCCAnJvUlY5wWhlfBAaBVRYPSAyb3sX2iw+gCE8R5ULVsr9H5OG0NQA50b6EiYol6E0c2qHNQR/hPng3RvR8xrA1adacmjdPRhPDNnwMDECXRRHKk53SroKYMG06vFaDsUPnkUPunJ7qklg59D/Q+6AIgvz2FOowToWkJ9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=chUhsNx1; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=UAuVY0YGryGA7o9GKNefRMTdsmWhgtm6Gw6ZXpkIIMiCMZRcmc4j1QPxudqEyKL5DWIvb9J6XmlNxnxIkjWqRuZedRh5W3aKGhLJ7+kXy0K5cQipA8ljfMbGRGNg8qhqY1k/THjet0N2M2gKD3fxKpAV1WmhzhmSgcrIMwJrNRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jmI+8weM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="chUhsNx1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58E54C4CECE;
-	Thu, 12 Dec 2024 21:07:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jmI+8weM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C336C4CED0;
+	Thu, 12 Dec 2024 21:11:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734037679;
-	bh=PBIseoIzz7QhT/pRERjDZ/l0g8VlNWxM4+wA3Tgo67g=;
+	s=k20201202; t=1734037870;
+	bh=pu6BizVDHeUSnSiZMVDGRKxLjGRQ9Gi5NC8DCGjGSkc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=chUhsNx1l66zDcZxhvbkFqarmrCfaQ+lpmIAvGwZ6+c23jD6RxX5KR7pcNWU/EWjv
-	 67jHbT13ZQfjHmPbwgvnsLzSnbe9X2BYhBNEPXExqe6PP0UgM7pOBngY5yYThsn3Tt
-	 6WG2IquDM3wxsZS9kY/1f6V9wevucU0P5FnMR+W5C5RX4gjErSseY1zKqlXJqMttXG
-	 utPE/pVTjtoK1GZHHLbd/sELL3uJ2m0pGoCTJtRoSUhiWG1LBzcyVJlebeTjlr1AyE
-	 cnes8Y1YtydhL4aM0Xj82mRMd5hGWJDyD3ThWV9BowCSFj7DNYPQ4idwWlQFG8QZ9D
-	 LUZ1LPPvsKHAA==
-Date: Thu, 12 Dec 2024 13:07:58 -0800
+	b=jmI+8weMxmKHZqXrZjncrCGrDRjpIV4I9wyr/+3hMIs93ltWrdpDbq8qJ4EEC7e4q
+	 WA3fHP3o1/zsbFkSp8J8uEDvVTDTyIXzG3cUfewyb6GUpnIbfxokhDknxx3soiODXi
+	 NnrNTjmtJ8ycKfUfAXKcfAyM4Luox6eDwRqtJntIKwXeREeCqGwrwlX03PxSXBobTp
+	 xEGnDst1+4PFfIu062jExHFvsZd5A506Wl8iN9QIr+5fXqHRtIVnoQ2DNrfeYSvjBw
+	 o9bPZ5vnwLit+unwVVeoEhAyHBjWB68k3Ii1Q5wyO2FjKkw1NGEJ1x2cGBIB1pFLeo
+	 hM59pJ0do8nJg==
+Date: Thu, 12 Dec 2024 13:11:09 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [RFC 2/3] xfs_io: Add ext4 support to show FS_IOC_FSGETXATTR
- details
-Message-ID: <20241212210758.GN6678@frogsfrogsfrogs>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
- <3b4b9f091519d2b2085888d296888179da3bdb73.1733902742.git.ojaswin@linux.ibm.com>
- <20241211181706.GB6678@frogsfrogsfrogs>
- <Z1oTOUCui9vTgNoM@dread.disaster.area>
- <20241212161919.GA6657@frogsfrogsfrogs>
- <Z1tLEQmRiZc7alBo@dread.disaster.area>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/43] xfs: factor out a xfs_rt_check_size helper
+Message-ID: <20241212211109.GO6678@frogsfrogsfrogs>
+References: <20241211085636.1380516-1-hch@lst.de>
+ <20241211085636.1380516-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,138 +43,128 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z1tLEQmRiZc7alBo@dread.disaster.area>
+In-Reply-To: <20241211085636.1380516-3-hch@lst.de>
 
-On Fri, Dec 13, 2024 at 07:44:01AM +1100, Dave Chinner wrote:
-> On Thu, Dec 12, 2024 at 08:19:19AM -0800, Darrick J. Wong wrote:
-> > On Thu, Dec 12, 2024 at 09:33:29AM +1100, Dave Chinner wrote:
-> > > On Wed, Dec 11, 2024 at 10:17:06AM -0800, Darrick J. Wong wrote:
-> > > > On Wed, Dec 11, 2024 at 01:24:03PM +0530, Ojaswin Mujoo wrote:
-> > > > > Currently with stat we only show FS_IOC_FSGETXATTR details
-> > > > > if the filesystem is XFS. With extsize support also coming
-> > > > > to ext4 make sure to show these details when -c "stat" or "statx"
-> > > > > is used.
-> > > > > 
-> > > > > No functional changes for filesystems other than ext4.
-> > > > > 
-> > > > > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> > > > > ---
-> > > > >  io/stat.c | 38 +++++++++++++++++++++-----------------
-> > > > >  1 file changed, 21 insertions(+), 17 deletions(-)
-> > > > > 
-> > > > > diff --git a/io/stat.c b/io/stat.c
-> > > > > index 326f2822e276..d06c2186cde4 100644
-> > > > > --- a/io/stat.c
-> > > > > +++ b/io/stat.c
-> > > > > @@ -97,14 +97,14 @@ print_file_info(void)
-> > > > >  		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
-> > > > >  }
-> > > > >  
-> > > > > -static void
-> > > > > -print_xfs_info(int verbose)
-> > > > > +static void print_extended_info(int verbose)
-> > > > >  {
-> > > > > -	struct dioattr	dio;
-> > > > > -	struct fsxattr	fsx, fsxa;
-> > > > > +	struct dioattr dio;
-> > > > > +	struct fsxattr fsx, fsxa;
-> > > > > +	bool is_xfs_fd = platform_test_xfs_fd(file->fd);
-> > > > >  
-> > > > > -	if ((xfsctl(file->name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
-> > > > > -	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
-> > > > > +	if ((ioctl(file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
-> > > > > +		(is_xfs_fd && (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa) < 0))) {
-> > > > 
-> > > > Urgh... perhaps we should call FS_IOC_FSGETXATTR and if it returns zero
-> > > > print whatever is returned, no matter what filesystem we think is
-> > > > feeding us information?
-> > > 
-> > > Yes, please. FS_IOC_FSGETXATTR has been generic functionality for
-> > > some time, we should treat it the same way for all filesystems.
-> > > 
-> > > > e.g.
-> > > > 
-> > > > 	if (ioctl(file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-> > > > 		if (is_xfs_fd || (errno != EOPNOTSUPP &&
-> > > > 				  errno != ENOTTY))
-> > > > 			perror("FS_IOC_GETXATTR");
-> > > 
-> > > Why do we even need "is_xfs_fd" there? XFS will never give a
-> > > EOPNOTSUPP or ENOTTY error to this or the FS_IOC_GETXATTRA ioctl...
-> > 
-> > Yeah, in hindsight I don't think it's needed for FS_IOC_FSGETXATTR, but
+On Wed, Dec 11, 2024 at 09:54:27AM +0100, Christoph Hellwig wrote:
+> Add a helper to check that the last block of a RT device is readable
+> to share the code between mount and growfs.  This also adds the mount
+> time overflow check to growfs and improves the error messages.
 > 
-> *nod*
-> 
-> > it's definitely nice for XFS_IOC_FSGETXATTRA (which is not implemented
-> > outside xfs) so that you don't get unnecessary error messages on ext4.
-> 
-> I don't think we even need it for FS_IOC_GETXATTRA - if the
-> filesystem does not support that ioctl, we don't print the fields,
-> nor do we output an error.
-> 
-> After all, this "extended info" and it's only ever been printed
-> for XFS, so we can define whatever semantics we want for foreign
-> filesystem output right now. As long as XFS always prints the same
-> info as it always has (i.e. all of it), we can do whatever we want
-> with the foreign filesystem stuff.
-> 
-> Keep in mind that we don't need platform tests for XFS files - that
-> has already been done when the file was opened and the state stored
-> in file->flags via the IO_FOREIGN flag. We already use that in the
-> stat_f() to determine whether we print the "xfs info" or not.
-> 
-> IOWs, I think all we need to do is  move where we check the
-> IO_FOREIGN flag. i.e.:
-> 
-> print_extented_info(file)
-> {
-> 	struct dioattr  dio = {};
->         struct fsxattr  fsx = {}, fsxa = {};
-> 
-> 	if (ioctl(file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-> 		perror("FS_IOC_GETXATTR");
-> 		exitcode = 1;
-> 		return;
-> 	}
-> 
-> 	printf(_("fsxattr.xflags = 0x%x "), fsx.fsx_xflags);
-> 	printxattr(fsx.fsx_xflags, verbose, 0, file->name, 1, 1);
-> 	printf(_("fsxattr.projid = %u\n"), fsx.fsx_projid);
-> 	printf(_("fsxattr.extsize = %u\n"), fsx.fsx_extsize);
-> 	printf(_("fsxattr.cowextsize = %u\n"), fsx.fsx_cowextsize);
-> 	printf(_("fsxattr.nextents = %u\n"), fsx.fsx_nextents);
-> 
-> 	/* Only XFS supports FS_IOC_FSGETXATTRA and XFS_IOC_DIOINFO */
-> 	if (file->flags & IO_FOREIGN)
-> 		return;
-> 
-> 	if (ioctl(file->fd, FS_IOC_FSGETXATTRA, &fsxa)) < 0) {
-> 		perror("FS_IOC_GETXATTRA");
-> 		exitcode = 1;
-> 		return;
-> 	}
-> 	if ((xfsctl(file->name, file->fd, XFS_IOC_DIOINFO, &dio)) < 0) {
-> 		perror("XFS_IOC_DIOINFO");
-> 		exitcode = 1;
-> 		return;
-> 	}
-> 
-> 	printf(_("fsxattr.naextents = %u\n"), fsxa.fsx_nextents);
-> 	printf(_("dioattr.mem = 0x%x\n"), dio.d_mem);
-> 	printf(_("dioattr.miniosz = %u\n"), dio.d_miniosz);
-> 	printf(_("dioattr.maxiosz = %u\n"), dio.d_maxiosz);
-> }
-> 
-> Thoughts?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Seems fine to me, though I'd print the fsxa before trying to call
-DIOINFO.
+Seems fine to me...
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> -Dave.
+> ---
+>  fs/xfs/xfs_rtalloc.c | 62 ++++++++++++++++++++++----------------------
+>  1 file changed, 31 insertions(+), 31 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index d8e6d073d64d..bc18b694db75 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -1248,6 +1248,34 @@ xfs_grow_last_rtg(
+>  			mp->m_sb.sb_rgextents;
+>  }
+>  
+> +/*
+> + * Read in the last block of the RT device to make sure it is accessible.
+> + */
+> +static int
+> +xfs_rt_check_size(
+> +	struct xfs_mount	*mp,
+> +	xfs_rfsblock_t		last_block)
+> +{
+> +	xfs_daddr_t		daddr = XFS_FSB_TO_BB(mp, last_block);
+> +	struct xfs_buf		*bp;
+> +	int			error;
+> +
+> +	if (XFS_BB_TO_FSB(mp, daddr) != last_block) {
+> +		xfs_warn(mp, "RT device size overflow: %llu != %llu",
+> +			XFS_BB_TO_FSB(mp, daddr), last_block);
+> +		return -EFBIG;
+> +	}
+> +
+> +	error = xfs_buf_read_uncached(mp->m_rtdev_targp, daddr,
+> +			XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
+> +	if (error)
+> +		xfs_warn(mp, "cannot read last RT device sector (%lld)",
+> +				last_block);
+> +	else
+> +		xfs_buf_relse(bp);
+> +	return error;
+> +}
+> +
+>  /*
+>   * Grow the realtime area of the filesystem.
+>   */
+> @@ -1259,7 +1287,6 @@ xfs_growfs_rt(
+>  	xfs_rgnumber_t		old_rgcount = mp->m_sb.sb_rgcount;
+>  	xfs_rgnumber_t		new_rgcount = 1;
+>  	xfs_rgnumber_t		rgno;
+> -	struct xfs_buf		*bp;
+>  	xfs_agblock_t		old_rextsize = mp->m_sb.sb_rextsize;
+>  	int			error;
+>  
+> @@ -1302,15 +1329,10 @@ xfs_growfs_rt(
+>  	error = xfs_sb_validate_fsb_count(&mp->m_sb, in->newblocks);
+>  	if (error)
+>  		goto out_unlock;
+> -	/*
+> -	 * Read in the last block of the device, make sure it exists.
+> -	 */
+> -	error = xfs_buf_read_uncached(mp->m_rtdev_targp,
+> -				XFS_FSB_TO_BB(mp, in->newblocks - 1),
+> -				XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
+> +
+> +	error = xfs_rt_check_size(mp, in->newblocks - 1);
+>  	if (error)
+>  		goto out_unlock;
+> -	xfs_buf_relse(bp);
+>  
+>  	/*
+>  	 * Calculate new parameters.  These are the final values to be reached.
+> @@ -1444,10 +1466,6 @@ int				/* error */
+>  xfs_rtmount_init(
+>  	struct xfs_mount	*mp)	/* file system mount structure */
+>  {
+> -	struct xfs_buf		*bp;	/* buffer for last block of subvolume */
+> -	xfs_daddr_t		d;	/* address of last block of subvolume */
+> -	int			error;
+> -
+>  	if (mp->m_sb.sb_rblocks == 0)
+>  		return 0;
+>  	if (mp->m_rtdev_targp == NULL) {
+> @@ -1458,25 +1476,7 @@ xfs_rtmount_init(
+>  
+>  	mp->m_rsumblocks = xfs_rtsummary_blockcount(mp, &mp->m_rsumlevels);
+>  
+> -	/*
+> -	 * Check that the realtime section is an ok size.
+> -	 */
+> -	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
+> -	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
+> -		xfs_warn(mp, "realtime mount -- %llu != %llu",
+> -			(unsigned long long) XFS_BB_TO_FSB(mp, d),
+> -			(unsigned long long) mp->m_sb.sb_rblocks);
+> -		return -EFBIG;
+> -	}
+> -	error = xfs_buf_read_uncached(mp->m_rtdev_targp,
+> -					d - XFS_FSB_TO_BB(mp, 1),
+> -					XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
+> -	if (error) {
+> -		xfs_warn(mp, "realtime device size check failed");
+> -		return error;
+> -	}
+> -	xfs_buf_relse(bp);
+> -	return 0;
+> +	return xfs_rt_check_size(mp, mp->m_sb.sb_rblocks - 1);
+>  }
+>  
+>  static int
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.45.2
+> 
 > 
