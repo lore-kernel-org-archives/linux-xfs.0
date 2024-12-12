@@ -1,97 +1,202 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F74721171A;
-	Thu, 12 Dec 2024 15:12:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DC3E4F218
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2024 15:41:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=66.39.3.162
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734016346; cv=none; b=OcQMPi0dslPsf2qpOyBtB3ZbjmT8d6ZwuwDeZuga1QtKL4zFaiTYNLqzsRUWaAFByhQyIIsJBlscMXoZLb06LYI5qjcArsJmMWpzwvYw9BEYe5RzvXtu3rMsO3HkOyzLrn1ibY3ALFsZp64tFz95wmmHLfI+1Swm6IZkLGPN70w=
+	t=1734018123; cv=none; b=CUZuIZ1Itb7H08gaLdbHtp8nDaesSjGQXEKeVmQjc5wbvhBelDkziMBFjaUl/RmGUdygJYDNLYrn7Wt4XOHx0EIUJ1LBfNvS97sn29SP9tXrN9BuzXWKfcw1/V6ZoJggefZJhk8gLoqblr4texS5E9rtgbNhFoIqVxZSUcbPmWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734016346; c=relaxed/simple;
-	bh=F1l/Appo45L4GxTayGWCuu+y2jPlO4BKBhy0/EheVdM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V1zBPqxmiqpnWt3zPlAk5Y1uLPkO3khtyvdn88oPkeQfElZNOxQC03RWMN9H/5jiI2ruJYyqwPpxV1h3aU3mKU/iL3j83vdJk+/wa+67fdhU0/0DwWCGno5k2vD7hXFMfSLW5BELuupIhzMItz5L1DANjWxh+euZvsq6JBpULHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id A945368D34; Thu, 12 Dec 2024 16:12:19 +0100 (CET)
-Date: Thu, 12 Dec 2024 16:12:19 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 5/8] iomap: optionally use ioends for direct I/O
-Message-ID: <20241212151219.GC6840@lst.de>
-References: <20241211085420.1380396-1-hch@lst.de> <20241211085420.1380396-6-hch@lst.de> <Z1rlQA6N8tCfRlLi@bfoster>
+	s=arc-20240116; t=1734018123; c=relaxed/simple;
+	bh=aYQipamSKhwzdVh0jnSVjIfl9baWSzx+6IoPXrlsuhI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HilSuWEy/QfkaSE68cmypnY/xQI7Xdt5DXogYhxoctqVQNFlUdFu/wvhYDmipRYkoTaAybWudWSd1P0I1t7zV4UW5pKcLWWUMMX6t6kQGf7U17/2EpOUJbRMXAK87TUpoZnDd7n5xshWJX2exzHuKxmTp0zBANLciFTIUJpj/Eo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intellique.com; spf=pass smtp.mailfrom=intellique.com; arc=none smtp.client-ip=66.39.3.162
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intellique.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intellique.com
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+	by mail1.g1.pair.com (Postfix) with ESMTP id C31E53AE6D6;
+	Thu, 12 Dec 2024 10:33:47 -0500 (EST)
+Received: from harpe.intellique.com (labo.djinux.com [82.65.97.13])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail1.g1.pair.com (Postfix) with ESMTPSA id 1F15A3FAF2C;
+	Thu, 12 Dec 2024 10:33:47 -0500 (EST)
+Date: Thu, 12 Dec 2024 16:33:51 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: Weird behaviour with project quotas
+Message-ID: <20241212163351.58dd1305@harpe.intellique.com>
+In-Reply-To: <Z0o8vE4MlIg-jQeR@dread.disaster.area>
+References: <20241128171458.37dc80ed@harpe.intellique.com>
+	<Z0jbffI2A6Fn7LfO@dread.disaster.area>
+	<20241129103332.4a6b452e@harpe.intellique.com>
+	<Z0o8vE4MlIg-jQeR@dread.disaster.area>
+Organization: Intellique
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.31; x86_64-slackware-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z1rlQA6N8tCfRlLi@bfoster>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: multipart/signed; boundary="Sig_/qM_lO=2mNU3zuNdDXps5_v+";
+ protocol="application/pgp-signature"; micalg=pgp-sha1
+X-Scanned-By: mailmunge 3.11 on 66.39.3.162
 
-On Thu, Dec 12, 2024 at 08:29:36AM -0500, Brian Foster wrote:
-> > +	bool should_dirty = (dio->flags & IOMAP_DIO_DIRTY);
-> > +	struct kiocb *iocb = dio->iocb;
-> > +	u32 vec_count = ioend->io_bio.bi_vcnt;
-> > +
-> > +	if (ioend->io_error)
-> > +		iomap_dio_set_error(dio, ioend->io_error);
-> > +
-> > +	if (atomic_dec_and_test(&dio->ref)) {
-> > +		struct inode *inode = file_inode(iocb->ki_filp);
-> > +
-> > +		if (dio->wait_for_completion) {
-> > +			struct task_struct *waiter = dio->submit.waiter;
-> > +
-> > +			WRITE_ONCE(dio->submit.waiter, NULL);
-> > +			blk_wake_io_task(waiter);
-> > +		} else if (!inode->i_mapping->nrpages) {
-> > +			WRITE_ONCE(iocb->private, NULL);
-> > +
-> > +			/*
-> > +			 * We must never invalidate pages from this thread to
-> > +			 * avoid deadlocks with buffered I/O completions.
-> > +			 * Tough luck if you hit the tiny race with someone
-> > +			 * dirtying the range now.
-> > +			 */
-> > +			dio->flags |= IOMAP_DIO_NO_INVALIDATE;
-> > +			iomap_dio_complete_work(&dio->aio.work);
-> > +		} else {
-> > +			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
-> > +			queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
-> > +		}
-> > +	}
-> > +
-> > +	if (should_dirty) {
-> > +		bio_check_pages_dirty(&ioend->io_bio);
-> > +	} else {
-> > +		bio_release_pages(&ioend->io_bio, false);
-> > +		bio_put(&ioend->io_bio);
-> > +	}
-> > +
-> 
-> Not that it matters all that much, but I'm a little curious about the
-> reasoning for using vec_count here. AFAICS this correlates to per-folio
-> writeback completions for buffered I/O, but that doesn't seem to apply
-> to direct I/O. Is there a reason to have the caller throttle based on
-> vec_counts, or are we just pulling some non-zero value for consistency
-> sake?
+--Sig_/qM_lO=2mNU3zuNdDXps5_v+
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-So direct I/O also iterates over all folios for the bio, to unpin,
-and in case of reads dirty all of them.
+Le Sat, 30 Nov 2024 09:14:20 +1100
+Dave Chinner <david@fromorbit.com> =C3=A9crivait:
 
-I wanted to plug something useful into cond_resched condition in the
-caller.  Now number of bvecs isn't the number of folios as we can
-physically merge outside the folio context, but I think this is about
-as goot as it gets without changing the block code to return the
-number of folios processed from __bio_release_pages and
-bio_check_pages_dirty.
+> > xfs_quota -x -c "limit -p bhard=3D30000g 10" /mnt/raid =20
+>=20
+> That should set it up appropriately, hence the need to check if it
+> has actually been set up correctly on disk.
+>=20
 
+Unfortunately in the meantime the users did some cleanup, therefore the
+displayed information is coherent again (as there is more free space on
+the filesystem as a whole as any remaining allocated quota).
+
+xfs_quota -x -c "report -p"
+Project quota on /mnt/raid (/dev/mapper/vg0-raid)
+                         Blocks =20
+Project ID       Used       Soft       Hard    Warn/Grace
+
+----------- ------------------------------------------------------
+
+<snip>
+#40        10795758244          0 16106127360     00 [--------]
+
+
+> > > Output of df and a project quota report showing usage and limits
+> > > would be useful here.
+
+looking at the corresponding folder :
+
+/dev/mapper/vg0-raid    15T     11T  5,0T  68% /mnt/raid/pad
+
+
+ du -s /mnt/raid/pad
+10795758244	/mnt/raid/pad
+
+# find /mnt/raid/pad -print | wc -l
+39086
+
+> > > Then, for each of the top level project directories you are
+> > > querying with df, also run `xfs_io -rxc "stat" <dir>` and post
+> > > the output. This will tell us if the project quota is set up
+> > > correctly for df to report quota limits for them.
+> > >=20
+
+Starting with "pad" :
+
+# xfs_io -rxc "stat" pad
+fd.path =3D "."
+fd.flags =3D non-sync,non-direct,read-only
+stat.ino =3D 6442662464
+stat.type =3D directory
+stat.size =3D 4096
+stat.blocks =3D 16
+fsxattr.xflags =3D 0x200 \[--------P--------\]
+fsxattr.projid =3D 40
+fsxattr.extsize =3D 0
+fsxattr.cowextsize =3D 0
+fsxattr.nextents =3D 2
+fsxattr.naextents =3D 0
+dioattr.mem =3D 0x200
+dioattr.miniosz =3D 512
+dioattr.maxiosz =3D 2147483136
+
+# xfs_io -rxc "stat" rush
+fd.path =3D "."
+fd.flags =3D non-sync,non-direct,read-only
+stat.ino =3D 142
+stat.type =3D directory
+stat.size =3D 283
+stat.blocks =3D 0
+fsxattr.xflags =3D 0x200 \[--------P--------\]
+fsxattr.projid =3D 10
+fsxattr.extsize =3D 0
+fsxattr.cowextsize =3D 0
+fsxattr.nextents =3D 0
+fsxattr.naextents =3D 0
+dioattr.mem =3D 0x200
+dioattr.miniosz =3D 512
+dioattr.maxiosz =3D 2147483136
+
+# xfs_io -rxc "stat" labo
+fd.path =3D "."
+fd.flags =3D non-sync,non-direct,read-only
+stat.ino =3D 2147695168
+stat.type =3D directory
+stat.size =3D 310
+stat.blocks =3D 0
+fsxattr.xflags =3D 0x200 \[--------P--------\]
+fsxattr.projid =3D 20
+fsxattr.extsize =3D 0
+fsxattr.cowextsize =3D 0
+fsxattr.nextents =3D 0
+fsxattr.naextents =3D 0
+dioattr.mem =3D 0x200
+dioattr.miniosz =3D 512
+dioattr.maxiosz =3D 2147483136
+
+# xfs_io -rxc "stat" prods
+fd.path =3D "."
+fd.flags =3D non-sync,non-direct,read-only
+stat.ino =3D 4295178816
+stat.type =3D directory
+stat.size =3D 319
+stat.blocks =3D 0
+fsxattr.xflags =3D 0x200 \[--------P--------\]
+fsxattr.projid =3D 30
+fsxattr.extsize =3D 0
+fsxattr.cowextsize =3D 0
+fsxattr.nextents =3D 0
+fsxattr.naextents =3D 0
+dioattr.mem =3D 0x200
+dioattr.miniosz =3D 512
+dioattr.maxiosz =3D 2147483136
+
+> > > It would also be useful to know if the actual quota usage is
+> > > correct
+> > > - having the output of `du -s /mnt/raid/project1` to count the
+> > > blocks and `find /mnt/raid/project1 -print |wc -l` to count the
+> > > files in quota controlled directories. That'll give us some idea
+> > > if there's a quota accounting issue. =20
+>=20
+> iAnother thought occurred to me - can you also check that
+> /etc/projid and /etc/projects is similar on all machines, and post
+> the contents of them from the bad machine?
+>=20
+
+Hum, actually they didn't set up neither projid nor projects. Of course
+I did create these during my tests, but could this be the culprit ?
+
+--=20
+------------------------------------------------------------------------
+   Emmanuel Florac     |   Direction technique
+------------------------------------------------------------------------
+   https://intellique.com
+   +33 6 16 30 15 95
+------------------------------------------------------------------------
+=20
+
+--Sig_/qM_lO=2mNU3zuNdDXps5_v+
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EARECAB0WIQSAqoYluUD5h4D+mbZfeNBc1SJxVgUCZ1sCXwAKCRBfeNBc1SJx
+Vnl4AJ9gsS/Zc8qiUecFsybTApptGBUhjACfb6Df47VsKFUUygUaZTJitI/qCeU=
+=L7bO
+-----END PGP SIGNATURE-----
+
+--Sig_/qM_lO=2mNU3zuNdDXps5_v+--
