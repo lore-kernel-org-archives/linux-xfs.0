@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C08417736;
-	Wed, 11 Dec 2024 23:47:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72C90126C03;
+	Thu, 12 Dec 2024 01:34:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733960869; cv=none; b=DnL2TiCQt6jlwx38w0/ixhNIGWIbONBSDp09QWRr0CSATLohM1FXBMZrJq9+DmCLWWbdVGa+QGD4zmwk9oDz0Sj3GFwMfRK5Og8mZNFGyCVz3nwMW1j2Il/JIx9vUDnq8LGShvpPM8PAyOQ559SUTs8ytldf88V9yOnKnfTfl0g=
+	t=1733967274; cv=none; b=VR2M/De0aOakchjW/9b9SHpg6TFRkd/dAB01KA273iQMJoWu2KhV0JvSzGTkbPhZK47Ja2AiPy8Ji4BuZFkTwU9ObjRR4EgFYfgg61Mp5QF2f6wHUz1ZmeigbyGE31ibumD9NYFmYTbZWICBS9yQlmJpAYmLOkfjuDesGCqJwYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733960869; c=relaxed/simple;
-	bh=0yiZ245LASEXA6c8jyY/oe2CUb8FtjgwJITkX3Mmvk4=;
+	s=arc-20240116; t=1733967274; c=relaxed/simple;
+	bh=rFH7Vy0d4qqQnrvT18y1Gzee/2MVlERDiCCKxcMB4MY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k5EZYQnz4dBmWcti1OOFdtszTQ4/tyss+owe0Fe6IgKO/C3ETqQyHbwtPZWN/T4cUXcUGLIdrXFKfilDymL2SxqpzxnelWXokFopkCIOhpT/IND380ezibvfkybiGWUogpHZoPce+a140HXVo4AB2Ku2MlHLXms2TGPIU3Y/ZWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ixMKd0LB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rJq8ZbJ7yCODeq+As7zrIZeQyLF2PO+8fmJbtPUpKJnRkcjm3EL3HegzIdbQcUplcyCL4WRwsdk54+G73xgSJ0y9Z/aE6smMv93F11hyKwq2DC8Z4d/ty7z5tuIUSnkr5lgP34mWi0K9KNEuBHt3ELCFLB5bVyXudDibkECmINY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ff0xsieG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ixMKd0LB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16724C4CED2;
-	Wed, 11 Dec 2024 23:47:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ff0xsieG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA672C4CED2;
+	Thu, 12 Dec 2024 01:34:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733960869;
-	bh=0yiZ245LASEXA6c8jyY/oe2CUb8FtjgwJITkX3Mmvk4=;
+	s=k20201202; t=1733967273;
+	bh=rFH7Vy0d4qqQnrvT18y1Gzee/2MVlERDiCCKxcMB4MY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ixMKd0LB5E5pwQpW9Uyy11FDNLT05hYB2byVGDzcW5qCHyBWfQNQe37kdfeQtq1bD
-	 sa2eIjIdzAYoNRJPEY5/XXagn+0fvmbyL04wShG/s+XvJKqpT5n7xbW7xlsg1InznT
-	 V4theosTq8De/6wPEEWukGRVbZBGTK+QYb+ZkPLTIdD6Mz7hjZjddEefqAJs7DUcMN
-	 O1CKNXGWyV+Xk0nTbog6YN7g46x1ckDBfrM4X5f5kBUWptpMyxDtLF8zdfWGWw4dp/
-	 RcJnvIXz8YQdN40PCPoptWdCRVprI2HFLH96Q4wx8DxT/ixae3HdIjqqmvJzlpLIzZ
-	 ZO6TZMp0V+9JA==
-Date: Wed, 11 Dec 2024 15:47:48 -0800
+	b=ff0xsieGdd30CDFIGipHS9fXaBBfwfPOOmAjl/1jf0hhwfAiy5y56+ezcDUpQBJwP
+	 5c0UFmjVvk0ThugADzndeZZl8hiOe0A9GIY0ZHf5o2Za0jAGR9R8EZvs1dr1RD5VdS
+	 rjuJOeB1CspoEf52aXdIpU8CVRj2DBobvrd3KnMdPJog9dd/uxFIf2iVILApv9PFew
+	 eqGhCcLGlDX4N4sgu24LwbwsKvMRoWD5qfmgvq4WLgrYqqZj9Kx2q6uo9wTmg6gjNo
+	 Vx6coRarW8mcuryvvx+55EBtxyk9YqjzTPDMtcjmz3PCPUtrTnfbFDelML48YNINPL
+	 okr6cdyZc/KKA==
+Date: Wed, 11 Dec 2024 17:34:33 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: brauner@kernel.org, cem@kernel.org, dchinner@redhat.com, hch@lst.de,
+To: Dave Chinner <david@fromorbit.com>
+Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
+	cem@kernel.org, dchinner@redhat.com, hch@lst.de,
 	ritesh.list@gmail.com, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
 	martin.petersen@oracle.com
-Subject: Re: [PATCH v2 2/7] iomap: Add zero unwritten mappings dio support
-Message-ID: <20241211234748.GB6678@frogsfrogsfrogs>
-References: <20241210125737.786928-1-john.g.garry@oracle.com>
- <20241210125737.786928-3-john.g.garry@oracle.com>
+Subject: Re: [PATCH 1/4] iomap: Lift blocksize restriction on atomic writes
+Message-ID: <20241212013433.GC6678@frogsfrogsfrogs>
+References: <20241204154344.3034362-1-john.g.garry@oracle.com>
+ <20241204154344.3034362-2-john.g.garry@oracle.com>
+ <Z1C9IfLgB_jDCF18@dread.disaster.area>
+ <3ab6000e-030d-435a-88c3-9026171ae9f1@oracle.com>
+ <Z1IX2dFida3coOxe@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,157 +49,193 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241210125737.786928-3-john.g.garry@oracle.com>
+In-Reply-To: <Z1IX2dFida3coOxe@dread.disaster.area>
 
-On Tue, Dec 10, 2024 at 12:57:32PM +0000, John Garry wrote:
-> For atomic writes support, it is required to only ever submit a single bio
-> (for an atomic write).
+On Fri, Dec 06, 2024 at 08:15:05AM +1100, Dave Chinner wrote:
+> On Thu, Dec 05, 2024 at 10:52:50AM +0000, John Garry wrote:
+> > On 04/12/2024 20:35, Dave Chinner wrote:
+> > > On Wed, Dec 04, 2024 at 03:43:41PM +0000, John Garry wrote:
+> > > > From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+> > > > 
+> > > > Filesystems like ext4 can submit writes in multiples of blocksizes.
+> > > > But we still can't allow the writes to be split into multiple BIOs. Hence
+> > > > let's check if the iomap_length() is same as iter->len or not.
+> > > > 
+> > > > It is the responsibility of userspace to ensure that a write does not span
+> > > > mixed unwritten and mapped extents (which would lead to multiple BIOs).
+> > > 
+> > > How is "userspace" supposed to do this?
+> > 
+> > If an atomic write spans mixed unwritten and mapped extents, then it should
+> > manually zero the unwritten extents beforehand.
+> > 
+> > > 
+> > > No existing utility in userspace is aware of atomic write limits or
+> > > rtextsize configs, so how does "userspace" ensure everything is
+> > > laid out in a manner compatible with atomic writes?
+> > > 
+> > > e.g. restoring a backup (or other disaster recovery procedures) is
+> > > going to have to lay the files out correctly for atomic writes.
+> > > backup tools often sparsify the data set and so what gets restored
+> > > will not have the same layout as the original data set...
+> > 
+> > I am happy to support whatever is needed to make atomic writes work over
+> > mixed extents if that is really an expected use case and it is a pain for an
+> > application writer/admin to deal with this (by manually zeroing extents).
+> > 
+> > JFYI, I did originally support the extent pre-zeroing for this. That was to
+> > support a real-life scenario which we saw where we were attempting atomic
+> > writes over mixed extents. The mixed extents were coming from userspace
+> > punching holes and then attempting an atomic write over that space. However
+> > that was using an early experimental and buggy forcealign; it was buggy as
+> > it did not handle punching holes properly - it punched out single blocks and
+> > not only full alloc units.
+> > 
+> > > 
+> > > Where's the documentation that outlines all the restrictions on
+> > > userspace behaviour to prevent this sort of problem being triggered?
+> > 
+> > I would provide a man page update.
 > 
-> Furthermore, currently the atomic write unit min and max limit is fixed at
-> the FS block size.
+> I think, at this point, we need an better way of documenting all the
+> atomic write stuff in one place. Not just the user interface and
+> what is expected of userspace, but also all the things the
+> filesystems need to do to ensure atomic writes work correctly. I was
+> thinking that a document somewhere in the Documentation/ directory,
+> rather than random pieces of information splattered across random man pages
+> would be a much better way of explaining all this.
 > 
-> For lifting the atomic write unit max limit, it may occur that an atomic
-> write spans mixed unwritten and mapped extents. For this case, due to the
-> iterative nature of iomap, multiple bios would be produced, which is
-> intolerable.
+> Don't get me wrong - man pages explaining the programmatic API are
+> necessary, but there's a whole lot more to understanding and making
+> effective use of atomic writes than what has been added to the man
+> pages so far.
 > 
-> Add a function to zero unwritten extents in a certain range, which may be
-> used to ensure that unwritten extents are zeroed prior to issuing of an
-> atomic write.
-
-I still dislike this.  IMO block untorn writes _is_ a niche feature for
-programs that perform IO in large blocks.  Any program that wants a
-general "apply all these updates or none of them" interface should use
-XFS_IOC_EXCHANGE_RANGE since it has no awu_max restrictions, can handle
-discontiguous update ranges, doesn't require block alignment, etc.
-
-Instead here we are adding a bunch of complexity, and not even all that
-well:
-
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/iomap/direct-io.c  | 76 +++++++++++++++++++++++++++++++++++++++++++
->  include/linux/iomap.h |  3 ++
->  2 files changed, 79 insertions(+)
+> > > Common operations such as truncate, hole punch,
+> > 
+> > So how would punch hole be a problem? The atomic write unit max is limited
+> > by the alloc unit, and we can only punch out full alloc units.
 > 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 23fdad16e6a8..18c888f0c11f 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -805,6 +805,82 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  }
->  EXPORT_SYMBOL_GPL(iomap_dio_rw);
->  
-> +static loff_t
-> +iomap_dio_zero_unwritten_iter(struct iomap_iter *iter, struct iomap_dio *dio)
-> +{
-> +	const struct iomap *iomap = &iter->iomap;
-> +	loff_t length = iomap_length(iter);
-> +	loff_t pos = iter->pos;
-> +
-> +	if (iomap->type == IOMAP_UNWRITTEN) {
-> +		int ret;
-> +
-> +		dio->flags |= IOMAP_DIO_UNWRITTEN;
-> +		ret = iomap_dio_zero(iter, dio, pos, length);
+> I was under the impression that this was a feature of the
+> force-align code, not a feature of atomic writes. i.e. force-align
+> is what ensures the BMBT aligns correctly with the underlying
+> extents.
+> 
+> Or did I miss the fact that some of the force-align semantics bleed
+> back into the original atomic write patch set?
+> 
+> > > buffered writes,
+> > > reflinks, etc will trip over this, so application developers, users
+> > > and admins really need to know what they should be doing to avoid
+> > > stepping on this landmine...
+> > 
+> > If this is not a real-life scenario which we expect to see, then I don't see
+> > why we would add the complexity to the kernel for this.
+> 
+> I gave you one above - restoring a data set as a result of disaster
+> recovery. 
+> 
+> > My motivation for atomic writes support is to support atomically writing
+> > large database internal page size. If the database only writes at a fixed
+> > internal page size, then we should not see mixed mappings.
+> 
+> Yup, that's the problem here. Once atomic writes are supported by
+> the kernel and userspace, all sorts of applications are going to
+> start using them for in all sorts of ways you didn't think of.
+> 
+> > But you see potential problems elsewhere ..
+> 
+> That's my job as a senior engineer with 20+ years of experience in
+> filesystems and storage related applications. I see far because I
+> stand on the shoulders of giants - I don't try to be a giant myself.
+> 
+> Other people become giants by implementing ground-breaking features
+> (e.g. like atomic writes), but without the people who can see far
+> enough ahead just adding features ends up with an incoherent mess of
+> special interest niche features rather than a neatly integrated set
+> of widely usable generic features.
+> 
+> e.g. look at MySQL's use of fallocate(hole punch) for transparent
+> data compression - nobody had forseen that hole punching would be
+> used like this, but it's a massive win for the applications which
+> store bulk compressible data in the database even though it does bad
+> things to the filesystem.
+> 
+> Spend some time looking outside the proprietary database application
+> box and think a little harder about the implications of atomic write
+> functionality.  i.e. what happens when we have ubiquitous support
+> for guaranteeing only the old or the new data will be seen after
+> a crash *without the need for using fsync*.
 
-Shouldn't this be detecting the particular case that the mapping for the
-kiocb is in mixed state and only zeroing in that case?  This just
-targets every unwritten extent, even if the unwritten extent covered the
-entire range that is being written.  It doesn't handle COW, it doesn't
-handle holes, etc.
+IOWs, the program either wants an old version or a new version of the
+files that it wrote, and the commit boundary is syncfs() after updating
+all the files?
 
-Also, can you make a version of blkdev_issue_zeroout that returns the
-bio so the caller can issue them asynchronously instead of opencoding
-the bio_alloc loop in iomap_dev_zero?
+> Think about the implications of that for a minute - for any full
+> file overwrite up to the hardware atomic limits, we won't need fsync
+> to guarantee the integrity of overwritten data anymore. We only need
+> a mechanism to flush the journal and device caches once all the data
+> has been written (e.g. syncfs)...
 
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
-> +	dio->size += length;
-> +
-> +	return length;
-> +}
-> +
-> +ssize_t
-> +iomap_dio_zero_unwritten(struct kiocb *iocb, struct iov_iter *iter,
-> +		const struct iomap_ops *ops, const struct iomap_dio_ops *dops)
-> +{
-> +	struct inode *inode = file_inode(iocb->ki_filp);
-> +	struct iomap_dio *dio;
-> +	ssize_t ret;
-> +	struct iomap_iter iomi = {
-> +		.inode		= inode,
-> +		.pos		= iocb->ki_pos,
-> +		.len		= iov_iter_count(iter),
-> +		.flags		= IOMAP_WRITE,
+"up to the hardware atomic limits" -- that's a big limitation.  What if
+I need to write 256K but the device only supports up to 64k?  RWF_ATOMIC
+won't work.  Or what if the file range I want to dirty isn't aligned
+with the atomic write alignment?  What if the awu geometry changes
+online due to a device change, how do programs detect that?
 
-IOMAP_WRITE | IOMAP_DIRECT, no?
+Programs that aren't 100% block-based should use exchange-range.  There
+are no alignment restrictions, no limits on the size you can exchange,
+no file mapping state requiments to trip over, and you can update
+arbitrary sparse ranges.  As long as you don't tell exchange-range to
+flush the log itself, programs can use syncfs to amortize the log and
+cache flush across a bunch of file content exchanges.
+
+Even better, if you still wanted to use untorn block writes to persist
+the temporary file's dirty data to disk, you don't even need forcealign
+because the exchange-range will take care of restarting the operation
+during log recovery.  I don't know that there's much point in doing that
+but the idea is there.
+
+> Want to overwrite a bunch of small files safely?  Atomic write the
+> new data, then syncfs(). There's no need to run fdatasync after each
+> write to ensure individual files are not corrupted if we crash in
+> the middle of the operation. Indeed, atomic writes actually provide
+> better overwrite integrity semantics that fdatasync as it will be
+> all or nothing. fdatasync does not provide that guarantee if we
+> crash during the fdatasync operation.
+> 
+> Further, with COW data filesystems like XFS, btrfs and bcachefs, we
+> can emulate atomic writes for any size larger than what the hardware
+> supports.
+> 
+> At this point we actually provide app developers with what they've
+> been repeatedly asking kernel filesystem engineers to provide them
+> for the past 20 years: a way of overwriting arbitrary file data
+> safely without needing an expensive fdatasync operation on every
+> file that gets modified.
+> 
+> Put simply: atomic writes have a huge potential to fundamentally
+> change the way applications interact with Linux filesystems and to
+> make it *much* simpler for applications to safely overwrite user
+> data.  Hence there is an imperitive here to make the foundational
+> support for this technology solid and robust because atomic writes
+> are going to be with us for the next few decades...
+
+I agree that we need to make the interface solid and robust, but I don't
+agree that the current RWF_ATOMIC, with its block-oriented storage
+device quirks is the way to go here.  Maybe a byte-oriented RWF_ATOMIC
+would work, but the only way I can think of to do that is (say) someone
+implements Christoph's suggestion to change the COW code to allow
+multiple writes to a staging extent, and only commit the remapping
+operations at sync time... and you'd still have problems if you have to
+do multiple remappings if there's not also a way to restart the ioend
+chains.
+
+Exchange-range already solved all of that, and it's already merged.
 
 --D
 
-> +	};
-> +
-> +	dio = kzalloc(sizeof(*dio), GFP_KERNEL);
-> +	if (!dio)
-> +		return -ENOMEM;
-> +
-> +	dio->iocb = iocb;
-> +	atomic_set(&dio->ref, 1);
-> +	dio->i_size = i_size_read(inode);
-> +	dio->dops = dops;
-> +	dio->submit.waiter = current;
-> +	dio->wait_for_completion = true;
-> +
-> +	inode_dio_begin(inode);
-> +
-> +	while ((ret = iomap_iter(&iomi, ops)) > 0)
-> +		iomi.processed = iomap_dio_zero_unwritten_iter(&iomi, dio);
-> +
-> +	if (ret < 0)
-> +		iomap_dio_set_error(dio, ret);
-> +
-> +	if (!atomic_dec_and_test(&dio->ref)) {
-> +		for (;;) {
-> +			set_current_state(TASK_UNINTERRUPTIBLE);
-> +			if (!READ_ONCE(dio->submit.waiter))
-> +				break;
-> +
-> +			blk_io_schedule();
-> +		}
-> +		__set_current_state(TASK_RUNNING);
-> +	}
-> +
-> +	if (dops && dops->end_io)
-> +		ret = dops->end_io(iocb, dio->size, ret, dio->flags);
-> +
-> +	kfree(dio);
-> +
-> +	inode_dio_end(file_inode(iocb->ki_filp));
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_dio_zero_unwritten);
-> +
->  static int __init iomap_dio_init(void)
->  {
->  	zero_page = alloc_pages(GFP_KERNEL | __GFP_ZERO,
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 5675af6b740c..c2d44b9e446d 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -440,6 +440,9 @@ ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  struct iomap_dio *__iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
->  		unsigned int dio_flags, void *private, size_t done_before);
-> +ssize_t iomap_dio_zero_unwritten(struct kiocb *iocb, struct iov_iter *iter,
-> +		const struct iomap_ops *ops, const struct iomap_dio_ops *dops);
-> +
->  ssize_t iomap_dio_complete(struct iomap_dio *dio);
->  void iomap_dio_bio_end_io(struct bio *bio);
->  
+> -Dave.
 > -- 
-> 2.31.1
-> 
+> Dave Chinner
+> david@fromorbit.com
 > 
