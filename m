@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D413238E22;
-	Thu, 12 Dec 2024 18:05:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2877125948B;
+	Thu, 12 Dec 2024 19:51:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734026749; cv=none; b=lAQGA9pCppUAzA5ks3q+Y6xv8Csmnle4i31/erKkvLyy7ciyjy1w3+DpwmvKhGtLjsd5PB8o0WP/0cgEF5N52xO77/9H7UZLnOhV70a0B2XU0jsuop0ltsM7hr1BX210dw5FOswCy/QtniD3CC/AWuLZnw6NjBUgA3ZfCBZqxlo=
+	t=1734033110; cv=none; b=WQKRuCYjTciXtyOzUSL6Fg7psXYEMlwcfKy45ZntsnnAjSyErNOmFmwXLXfb8hGq1I1ALeB6kgOT65RtpvBsW+PQ69XoFfUzi7+h4rhKoWOmx9azPN3s0DxqLnqk7NqOL4h21cnSlf1FHlsT8M6ozBcvbDkseCN5elPaWCqU36s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734026749; c=relaxed/simple;
-	bh=b09BzlkBn5ZiBIoQnAg52vaknsVsSNo2dwq6sHm5mxM=;
+	s=arc-20240116; t=1734033110; c=relaxed/simple;
+	bh=gsLCGFtWgIXUFQz1VGBwsNAGRHxfQL6jWLeT9DNmUqs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sU+5DZvh2Nht2d48Ze0W2F4A/KGqN+wnQYrDeoqqq8XCJs5TiMqlcsJgpUI499Dw2jSqLA+kZUqXIecVNAXDh4G5jf0YByEvAUKhoi4cd6Si8UkGUXbyPVLAzw4TP08ZrO5h9mc0hXM7VDKnO48Srov+ZB/cbSOz654+mWNvquY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y34KeZOD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uI3yPhbBJxA5HiCHD595FwoCfVYTqOgp3JamnohABj11kdLXmK9q2wjbfXP4xjRKXbbMUiVaXUcsPxH02da4oCmCD0X6pmbCDsqIRtGRZ2lJgmRh84MKNpnvrRUjLvhOwVWvD2zrGYDfKLCOVwkCQrnNbKy4UcwXkq7UfYJ1EDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R+Zjmk66; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y34KeZOD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A958C4CECE;
-	Thu, 12 Dec 2024 18:05:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R+Zjmk66"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B096DC4CECE;
+	Thu, 12 Dec 2024 19:51:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734026748;
-	bh=b09BzlkBn5ZiBIoQnAg52vaknsVsSNo2dwq6sHm5mxM=;
+	s=k20201202; t=1734033109;
+	bh=gsLCGFtWgIXUFQz1VGBwsNAGRHxfQL6jWLeT9DNmUqs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y34KeZODEvWrSL1yC6Yd7RBMc1CPGfQSNUT8uujWHXDy6iaz5KQjIf5fC243sdtCT
-	 Ve31kxVKlksK/u7wsBxxjnFEJpX4OsibvdwT/2+1ZZXFF+SDl+0voCGu8lL72SEzcU
-	 EJoywt5e0BrwjP2m+uQM/+h405g/BOfKzhJFeT16h12oIP+HWi+D5e5+Yr9GfZacuv
-	 zylARX1hnS7vPF5+AzHFOChdTJAv98EP6LwwrowA6gal6xI4LUl89yUm+Wb4rYWnNL
-	 sdXcZVTVuAjaln7k5hd6PtRi1WUHTmUA9ZaU/gW2ZdU4X8Asabfu2uUGdB0RZJGgTp
-	 dIymKqHHSIycg==
-Date: Thu, 12 Dec 2024 10:05:47 -0800
+	b=R+Zjmk66502NSkJ7jyzB40SrQUoMvUrcyUm7/r9OKYweJc/aSXW8B/mVsHhpYJPD1
+	 YkLto214WNw15TEla55ZwmTkt7dS3bbcX5dLBc22SiAMAuzWrpy2F7NDUhljx+H7tY
+	 ecr9z2lY/FHNH5+kLygE3tJNxnZo6dIHlIKZlfzHvKVCuKaGfGVwqLj7SgktbUjwPq
+	 w/e9HMshDvNyveVmPwsDhBLs+Y77kxaA8ercVgGUGfFNcuC757/gZ8PUVQ1dCwA7zr
+	 /pG/ardDn+h/N50p2OrcYzgbbR+CyrgWoOq41iF71zjsH+7vLblKfk66THIEFjbeJc
+	 3nq2Ti0pvbXEw==
+Date: Thu, 12 Dec 2024 11:51:49 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 3/8] iomap: add a IOMAP_F_ZONE_APPEND flag
-Message-ID: <20241212180547.GG6678@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/8] iomap: split bios to zone append limits in the
+ submission handlers
+Message-ID: <20241212195149.GH6678@frogsfrogsfrogs>
 References: <20241211085420.1380396-1-hch@lst.de>
- <20241211085420.1380396-4-hch@lst.de>
+ <20241211085420.1380396-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,111 +45,259 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211085420.1380396-4-hch@lst.de>
+In-Reply-To: <20241211085420.1380396-5-hch@lst.de>
 
-On Wed, Dec 11, 2024 at 09:53:43AM +0100, Christoph Hellwig wrote:
-> This doesn't much - just always returns the start block number for each
-
-"This doesn't much" - I don't understand the sentence very well.  How
-about:
-
-"Add a new IOMAP_F_ZONE_APPEND flag for the filesystem to indicate that
-the storage device must inform us where it wrote the data, so that the
-filesystem can update its own internal mapping metadata.  The filesystem
-should set the starting address of the zone in iomap::addr, and extract
-the LBA address from the bio during ioend processing.  iomap builds
-bios unconstrained by the hardware limits and will split them in the bio
-submission handler."
-
-The splitting happens whenever IOMAP_F_BOUNDARY gets set by
-->map_blocks, right?
-
-> iomap instead of increasing it.  This is because we'll keep building bios
-> unconstrained by the hardware limits and just split them in file system
-> submission handler.
+On Wed, Dec 11, 2024 at 09:53:44AM +0100, Christoph Hellwig wrote:
+> Provide helpers for file systems to split bios in the direct I/O and
+> writeback I/O submission handlers.
 > 
-> Maybe we should find another name for it, because it might be useful for
-> btrfs compressed bio submissions as well, but I can't come up with a
-> good one.
-
-Since you have to tell the device the starting LBA of the zone you want
-to write to, I think _ZONE_APPEND is a reasonable name.  The code looks
-correct though.
-
+> This Follows btrfs' lead and don't try to build bios to hardware limits
+> for zone append commands, but instead build them as normal unconstrained
+> bios and split them to the hardware limits in the I/O submission handler.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/iomap/buffered-io.c | 19 ++++++++++++++++---
->  include/linux/iomap.h  |  7 +++++++
->  2 files changed, 23 insertions(+), 3 deletions(-)
+>  fs/iomap/Makefile      |  1 +
+>  fs/iomap/buffered-io.c | 43 ++++++++++++++-----------
+>  fs/iomap/ioend.c       | 73 ++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/iomap.h  |  9 ++++++
+>  4 files changed, 108 insertions(+), 18 deletions(-)
+>  create mode 100644 fs/iomap/ioend.c
 > 
+> diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
+> index 381d76c5c232..69e8ebb41302 100644
+> --- a/fs/iomap/Makefile
+> +++ b/fs/iomap/Makefile
+> @@ -12,6 +12,7 @@ iomap-y				+= trace.o \
+>  				   iter.o
+>  iomap-$(CONFIG_BLOCK)		+= buffered-io.o \
+>  				   direct-io.o \
+> +				   ioend.o \
+>  				   fiemap.o \
+>  				   seek.o
+>  iomap-$(CONFIG_SWAP)		+= swapfile.o
 > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 3176dc996fb7..129cd96c6c96 100644
+> index 129cd96c6c96..8125f758a99d 100644
 > --- a/fs/iomap/buffered-io.c
 > +++ b/fs/iomap/buffered-io.c
-> @@ -1744,9 +1744,22 @@ static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos,
->  		return false;
->  	if (pos != wpc->ioend->io_offset + wpc->ioend->io_size)
->  		return false;
-> -	if (iomap_sector(&wpc->iomap, pos) !=
-> -	    bio_end_sector(&wpc->ioend->io_bio))
-> -		return false;
-> +	if (wpc->iomap.flags & IOMAP_F_ZONE_APPEND) {
-> +		/*
-> +		 * For Zone Append command, bi_sector points to the zone start
-> +		 * before submission.  We can merge all I/O for the same zone.
-> +		 */
-> +		if (iomap_sector(&wpc->iomap, pos) !=
-> +		    wpc->ioend->io_bio.bi_iter.bi_sector)
-> +			return false;
-> +	} else {
-> +		/*
-> +		 * For regular writes, the disk blocks needs to be contiguous.
-> +		 */
-> +		if (iomap_sector(&wpc->iomap, pos) !=
-> +		    bio_end_sector(&wpc->ioend->io_bio))
-> +			return false;
+> @@ -40,7 +40,8 @@ struct iomap_folio_state {
+>  	unsigned long		state[];
+>  };
+>  
+> -static struct bio_set iomap_ioend_bioset;
+> +struct bio_set iomap_ioend_bioset;
+> +EXPORT_SYMBOL_GPL(iomap_ioend_bioset);
+>  
+>  static inline bool ifs_is_fully_uptodate(struct folio *folio,
+>  		struct iomap_folio_state *ifs)
+> @@ -1539,15 +1540,15 @@ static void iomap_finish_folio_write(struct inode *inode, struct folio *folio,
+>   * ioend after this.
+>   */
+>  static u32
+> -iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+> +iomap_finish_ioend_buffered(struct iomap_ioend *ioend)
+>  {
+>  	struct inode *inode = ioend->io_inode;
+>  	struct bio *bio = &ioend->io_bio;
+>  	struct folio_iter fi;
+>  	u32 folio_count = 0;
+>  
+> -	if (error) {
+> -		mapping_set_error(inode->i_mapping, error);
+> +	if (ioend->io_error) {
+> +		mapping_set_error(inode->i_mapping, ioend->io_error);
+>  		if (!bio_flagged(bio, BIO_QUIET)) {
+>  			pr_err_ratelimited(
+>  "%s: writeback error on inode %lu, offset %lld, sector %llu",
+> @@ -1566,6 +1567,24 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+>  	return folio_count;
+>  }
+>  
+> +static u32
+> +iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+> +{
+> +	if (ioend->io_parent) {
+> +		struct bio *bio = &ioend->io_bio;
+> +
+> +		ioend = ioend->io_parent;
+> +		bio_put(bio);
 > +	}
->  	/*
->  	 * Limit ioend bio chain lengths to minimise IO completion latency. This
->  	 * also prevents long tight loops ending page writeback on all the
+> +
+> +	if (error)
+> +		cmpxchg(&ioend->io_error, 0, error);
+> +
+> +	if (!atomic_dec_and_test(&ioend->io_remaining))
+> +		return 0;
+> +	return iomap_finish_ioend_buffered(ioend);
+> +}
+> +
+>  /*
+>   * Ioend completion routine for merged bios. This can only be called from task
+>   * contexts as merged ioends can be of unbound length. Hence we have to break up
+> @@ -1709,7 +1728,6 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
+>  		struct writeback_control *wbc, struct inode *inode, loff_t pos,
+>  		u16 ioend_flags)
+>  {
+> -	struct iomap_ioend *ioend;
+>  	struct bio *bio;
+>  
+>  	bio = bio_alloc_bioset(wpc->iomap.bdev, BIO_MAX_VECS,
+> @@ -1717,21 +1735,10 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
+>  			       GFP_NOFS, &iomap_ioend_bioset);
+>  	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
+>  	bio->bi_end_io = iomap_writepage_end_bio;
+> -	wbc_init_bio(wbc, bio);
+>  	bio->bi_write_hint = inode->i_write_hint;
+> -
+> -	ioend = iomap_ioend_from_bio(bio);
+> -	INIT_LIST_HEAD(&ioend->io_list);
+> -	ioend->io_flags = ioend_flags;
+> -	if (pos > wpc->iomap.offset)
+> -		wpc->iomap.flags &= ~IOMAP_F_BOUNDARY;
+> -	ioend->io_inode = inode;
+> -	ioend->io_size = 0;
+> -	ioend->io_offset = pos;
+> -	ioend->io_sector = bio->bi_iter.bi_sector;
+> -
+> +	wbc_init_bio(wbc, bio);
+>  	wpc->nr_folios = 0;
+> -	return ioend;
+> +	return iomap_init_ioend(inode, bio, pos, ioend_flags);
+>  }
+>  
+>  static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos,
+> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+> new file mode 100644
+> index 000000000000..f3d98121c593
+> --- /dev/null
+> +++ b/fs/iomap/ioend.c
+> @@ -0,0 +1,73 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2024 Christoph Hellwig.
+> + */
+> +#include <linux/iomap.h>
+> +
+> +struct iomap_ioend *iomap_init_ioend(struct inode *inode,
+> +		struct bio *bio, loff_t file_offset, u16 flags)
+> +{
+
+Nit: s/flags/ioend_flags/ to be consistent with the previous few
+patches.
+
+> +	struct iomap_ioend *ioend = iomap_ioend_from_bio(bio);
+> +
+> +	atomic_set(&ioend->io_remaining, 1);
+> +	ioend->io_error = 0;
+> +	ioend->io_parent = NULL;
+> +	INIT_LIST_HEAD(&ioend->io_list);
+> +	ioend->io_flags = flags;
+> +	ioend->io_inode = inode;
+> +	ioend->io_offset = file_offset;
+> +	ioend->io_size = bio->bi_iter.bi_size;
+> +	ioend->io_sector = bio->bi_iter.bi_sector;
+> +	return ioend;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_init_ioend);
+> +
+> +struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend, bool is_append,
+
+Can you determine is_append from (ioend->io_flags & ZONE_APPEND)?
+
+Also it's not clear to me what the initial and output state of
+*alloc_len is supposed to be?  I guess you set it to the number of bytes
+the @ioend covers?  And this function either returns NULL and alloc_len
+untouched; or it returns a new ioend and the number of bytes remaining
+in the passed-in ioend?
+
+(or, as bfoster said, please improve the comments)
+
+> +		unsigned int *alloc_len)
+> +{
+> +	struct bio *bio = &ioend->io_bio;
+> +	struct iomap_ioend *split_ioend;
+> +	struct bio *split;
+> +	int sector_offset;
+> +	unsigned int nr_segs;
+> +
+> +	if (is_append) {
+> +		struct queue_limits *lim = bdev_limits(bio->bi_bdev);
+> +
+> +		sector_offset = bio_split_rw_at(bio, lim, &nr_segs,
+> +			min(lim->max_zone_append_sectors << SECTOR_SHIFT,
+> +			    *alloc_len));
+> +		if (!sector_offset)
+> +			return NULL;
+> +	} else {
+> +		if (bio->bi_iter.bi_size <= *alloc_len)
+> +			return NULL;
+> +		sector_offset = *alloc_len >> SECTOR_SHIFT;
+> +	}
+> +
+> +	/* ensure the split ioend is still block size aligned */
+> +	sector_offset = ALIGN_DOWN(sector_offset << SECTOR_SHIFT,
+> +			i_blocksize(ioend->io_inode)) >> SECTOR_SHIFT;
+> +
+> +	split = bio_split(bio, sector_offset, GFP_NOFS, &iomap_ioend_bioset);
+> +	if (!split)
+> +		return NULL;
+> +	split->bi_private = bio->bi_private;
+> +	split->bi_end_io = bio->bi_end_io;
+> +
+> +	split_ioend = iomap_init_ioend(ioend->io_inode, split, ioend->io_offset,
+> +			ioend->io_flags);
+> +	split_ioend->io_parent = ioend;
+> +
+> +	atomic_inc(&ioend->io_remaining);
+> +	ioend->io_offset += split_ioend->io_size;
+> +	ioend->io_size -= split_ioend->io_size;
+> +
+> +	split_ioend->io_sector = ioend->io_sector;
+> +	if (!is_append)
+> +		ioend->io_sector += (split_ioend->io_size >> SECTOR_SHIFT);
+> +
+> +	*alloc_len -= split->bi_iter.bi_size;
+> +	return split_ioend;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_split_ioend);
 > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 1d8658c7beb8..173d490c20ba 100644
+> index 173d490c20ba..eaa8cb9083eb 100644
 > --- a/include/linux/iomap.h
 > +++ b/include/linux/iomap.h
-> @@ -56,6 +56,10 @@ struct vm_fault;
->   *
->   * IOMAP_F_BOUNDARY indicates that I/O and I/O completions for this iomap must
->   * never be merged with the mapping before it.
-> + *
-> + * IOMAP_F_ZONE_APPEND indicates that (write) I/O should be done as a zone
-> + * append command for zoned devices.  Note that the file system needs to
-> + * override the bi_end_io handler to record the actual written sector.
->   */
->  #define IOMAP_F_NEW		(1U << 0)
->  #define IOMAP_F_DIRTY		(1U << 1)
-> @@ -68,6 +72,7 @@ struct vm_fault;
->  #endif /* CONFIG_BUFFER_HEAD */
->  #define IOMAP_F_XATTR		(1U << 5)
->  #define IOMAP_F_BOUNDARY	(1U << 6)
-> +#define IOMAP_F_ZONE_APPEND	(1U << 7)
+> @@ -354,6 +354,9 @@ struct iomap_ioend {
+>  	struct list_head	io_list;	/* next ioend in chain */
+>  	u16			io_flags;	/* IOMAP_IOEND_* */
+>  	struct inode		*io_inode;	/* file being written to */
+> +	atomic_t		io_remaining;	/* completetion defer count */
+> +	int			io_error;	/* stashed away status */
+> +	struct iomap_ioend	*io_parent;	/* parent for completions */
 
-Needs a corresponding update in Documentation/iomap/ before we merge
-this series.
+I guess this means ioends can chain together, sort of like how bios can
+when you split them?
 
 --D
 
+>  	size_t			io_size;	/* size of the extent */
+>  	loff_t			io_offset;	/* offset in the file */
+>  	sector_t		io_sector;	/* start sector of ioend */
+> @@ -404,6 +407,10 @@ struct iomap_writepage_ctx {
+>  	u32			nr_folios;	/* folios added to the ioend */
+>  };
 >  
->  /*
->   * Flags set by the core iomap code during operations:
-> @@ -111,6 +116,8 @@ struct iomap {
+> +struct iomap_ioend *iomap_init_ioend(struct inode *inode, struct bio *bio,
+> +		loff_t file_offset, u16 flags);
+> +struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend, bool is_append,
+> +		unsigned int *alloc_len);
+>  void iomap_finish_ioends(struct iomap_ioend *ioend, int error);
+>  void iomap_ioend_try_merge(struct iomap_ioend *ioend,
+>  		struct list_head *more_ioends);
+> @@ -475,4 +482,6 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+>  # define iomap_swapfile_activate(sis, swapfile, pagespan, ops)	(-EIO)
+>  #endif /* CONFIG_SWAP */
 >  
->  static inline sector_t iomap_sector(const struct iomap *iomap, loff_t pos)
->  {
-> +	if (iomap->flags & IOMAP_F_ZONE_APPEND)
-> +		return iomap->addr >> SECTOR_SHIFT;
->  	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
->  }
->  
+> +extern struct bio_set iomap_ioend_bioset;
+> +
+>  #endif /* LINUX_IOMAP_H */
 > -- 
 > 2.45.2
 > 
