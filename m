@@ -1,45 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF68A235C43;
-	Thu, 12 Dec 2024 16:19:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E098522370C;
+	Thu, 12 Dec 2024 17:48:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734020385; cv=none; b=smTu/EqIlTc8S24QsA8FXVIHrU0oBK4qcNi47NhTm17j5xWZaweieu9ZgVG6J1T8fbDeIqsUQG4vVsELv/dBcNVi5nIYLyV4bq9YX1PCavJwNLGbboBeu6+XpfBYZtXcO28iuriJlItUfyg6kK0gu6lFVCdIw7yiUydP+3fqyR0=
+	t=1734025728; cv=none; b=E50uWEOKR3+wo3RiCG4ref73qQLmXOAU4S8x7agOSZtfqXRva16pgUv+gyBo57+wucJvNUabciylxDuoszyvmJ5QgE9p8X3mVORXluFcOWz5tCBWvJalMDp1l249gbdn0UGsrd0Rle7zcJT22baBdlRdomV5niQbj3IvEJPjjEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734020385; c=relaxed/simple;
-	bh=/q5SnzbhKG9ZsCMsrsu0W8Znp+/aEL+IeBbjU+HdMSg=;
+	s=arc-20240116; t=1734025728; c=relaxed/simple;
+	bh=q2YICqpppTqdDJf64AAhY+bAjgqPYCSV1BdyiWmJNu0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=msKC1lao92RTgU6a+TAYO21TmCxvj3khxutHhcvV+N4tUu+MlDzsqFXJmq6SYAbVLKdNmP0fMcc34umL4vvos3TKyYD0Pnm+NbHBNC66Q+2Vyf3/7FY42FKZuecxl9JsemV4LjlLIKzzl64lIALNf5UJfOA/27/eCsjsvH7FUiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kU1tf2WL; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=MEXyGiNUmzvHWjxS6WaigbU9Sbn7r0VPAoVWbW8NT+yoWtU/4XMgvWRLAENfoOPWV0XxNfvQUlTBFskNxJNjAJbzbj+x/Z9TLv1BacOD4i2u23Chs+sB1f7b3yMPV+C+M6mEfmPFuxXX67g5I6gXNLIIB/LzMVm6ocWgj0TDOg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bjo/Ecdf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kU1tf2WL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78E8EC4CECE;
-	Thu, 12 Dec 2024 16:19:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bjo/Ecdf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A21A2C4CED0;
+	Thu, 12 Dec 2024 17:48:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734020385;
-	bh=/q5SnzbhKG9ZsCMsrsu0W8Znp+/aEL+IeBbjU+HdMSg=;
+	s=k20201202; t=1734025727;
+	bh=q2YICqpppTqdDJf64AAhY+bAjgqPYCSV1BdyiWmJNu0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kU1tf2WLMnVVcvH1xXjvMEQdRk2bTipJP4lECV/VE24BXmJpK5owN+t8kxdVek7WY
-	 JLU2MWQStFICqPmvt+vriHeMwxyOF9elzNuy1GnPnJUdpRMsXYK0Ij/Q6OSeA8+S4M
-	 +BgcyDmPINCcfj5zYkov032maKCwVbbA7v11MzkOsRxYgXY6wFyDop/v41RQJ55bU2
-	 r1VTRlE2/kR80q31CKN0Wc1YKHpa5cRI+x8pLtw7CYwvjFudozC6POwbw3HFwavhBq
-	 b9HZOz+vi8r7JnnxWa3PZriQqHumHdNQd8i8mIA1EwkPNRKN6UNbWSbmgcDOAI7RXj
-	 IE9P7iZucTI1g==
-Date: Thu, 12 Dec 2024 08:19:45 -0800
+	b=Bjo/EcdfWRYD0es85vfW8YLTYJKSP5OqCSxWMNyaHuyiPKEIliQiK9p+kvzUYmLR2
+	 EZ6ws9v+e/pGpYJ+Ju4rDdA45LtRAVQ7N6utilu/X6dcXpkYI25KBk2jlgpj7AkpaF
+	 J+erQB2XjeupXJBwEPPRah2ay8tC2A111tStHx72/S6a/4t2UtV8+ldzvtSJ310oEd
+	 YcFCA3Gn3+ToMsXuf8kYDIapYDRgh+1Qcv2H3wZtWaAWm5lbhQcEVrfExXdRFTRmEQ
+	 8y/d1377pYzFtXx9sB4HuzbXT0Mg/vrgiNHsnOO3HZd+Oh+Zy+WYFqPxY3BWKfzXNq
+	 dxi8VkZH1+rJA==
+Date: Thu, 12 Dec 2024 09:48:47 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [RFC 3/3] xfs_io: add extsize command support
-Message-ID: <20241212161945.GB6657@frogsfrogsfrogs>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
- <6448e3adc13eff8b152f7954c838eb9315c91574.1733902742.git.ojaswin@linux.ibm.com>
- <20241211181827.GC6678@frogsfrogsfrogs>
- <Z1rRQdKs/9lHT6P7@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/8] iomap: allow the file system to submit the writeback
+ bios
+Message-ID: <20241212174847.GE6678@frogsfrogsfrogs>
+References: <20241211085420.1380396-1-hch@lst.de>
+ <20241211085420.1380396-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,53 +45,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z1rRQdKs/9lHT6P7@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
+In-Reply-To: <20241211085420.1380396-2-hch@lst.de>
 
-On Thu, Dec 12, 2024 at 05:34:17PM +0530, Ojaswin Mujoo wrote:
-> On Wed, Dec 11, 2024 at 10:18:27AM -0800, Darrick J. Wong wrote:
-> > On Wed, Dec 11, 2024 at 01:24:04PM +0530, Ojaswin Mujoo wrote:
-> > > extsize command is currently only supported with XFS filesystem.
-> > > Lift this restriction now that ext4 is also supporting extsize hints.
-> > > 
-> > > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> > 
-> > Seems pretty straightforward to me.  Are you planning to add an extsize
-> > option to chattr?
-> 
-> Do you mean e2fsprogs? If so, then yes we'll add it there eventually
-> however for now I only have xfs_io patches since I was working on them 
-> to make the extsize xfstests work with ext4.
+On Wed, Dec 11, 2024 at 09:53:41AM +0100, Christoph Hellwig wrote:
+> Change ->prepare_ioend to ->submit_ioend and require file systems that
+> implement it to submit the bio.  This is needed for file systems that
+> do their own work on the bios before submitting them to the block layer
+> like btrfs or zoned xfs.  To make this easier also pass the writeback
+> context to the method.
 
-Yep, and good to know (about adding chattr support eventually).
+The code changes here are pretty straightforward, but please update
+Documentation/filesystems/iomap/operations.rst to reflect the new name
+and the new "submit the bio yourself" behavior expected of the
+implementation.
 
 --D
 
-> Regards,
-> ojaswin
-> > 
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > 
-> > --D
-> > 
-> > > ---
-> > >  io/open.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/io/open.c b/io/open.c
-> > > index a30dd89a1fd5..2582ff9b862e 100644
-> > > --- a/io/open.c
-> > > +++ b/io/open.c
-> > > @@ -997,7 +997,7 @@ open_init(void)
-> > >  	extsize_cmd.args = _("[-D | -R] [extsize]");
-> > >  	extsize_cmd.argmin = 0;
-> > >  	extsize_cmd.argmax = -1;
-> > > -	extsize_cmd.flags = CMD_NOMAP_OK;
-> > > +	extsize_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> > >  	extsize_cmd.oneline =
-> > >  		_("get/set preferred extent size (in bytes) for the open file");
-> > >  	extsize_cmd.help = extsize_help;
-> > > -- 
-> > > 2.43.5
-> > > 
-> > > 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/buffered-io.c | 10 +++++-----
+>  fs/xfs/xfs_aops.c      | 13 +++++++++----
+>  include/linux/iomap.h  | 12 +++++++-----
+>  3 files changed, 21 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 955f19e27e47..cdccf11bb3be 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1675,7 +1675,7 @@ static void iomap_writepage_end_bio(struct bio *bio)
+>  }
+>  
+>  /*
+> - * Submit the final bio for an ioend.
+> + * Submit an ioend.
+>   *
+>   * If @error is non-zero, it means that we have a situation where some part of
+>   * the submission process has failed after we've marked pages for writeback.
+> @@ -1694,14 +1694,14 @@ static int iomap_submit_ioend(struct iomap_writepage_ctx *wpc, int error)
+>  	 * failure happened so that the file system end I/O handler gets called
+>  	 * to clean up.
+>  	 */
+> -	if (wpc->ops->prepare_ioend)
+> -		error = wpc->ops->prepare_ioend(wpc->ioend, error);
+> +	if (wpc->ops->submit_ioend)
+> +		error = wpc->ops->submit_ioend(wpc, error);
+> +	else if (!error)
+> +		submit_bio(&wpc->ioend->io_bio);
+>  
+>  	if (error) {
+>  		wpc->ioend->io_bio.bi_status = errno_to_blk_status(error);
+>  		bio_endio(&wpc->ioend->io_bio);
+> -	} else {
+> -		submit_bio(&wpc->ioend->io_bio);
+>  	}
+>  
+>  	wpc->ioend = NULL;
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 559a3a577097..d175853da5ae 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -395,10 +395,11 @@ xfs_map_blocks(
+>  }
+>  
+>  static int
+> -xfs_prepare_ioend(
+> -	struct iomap_ioend	*ioend,
+> +xfs_submit_ioend(
+> +	struct iomap_writepage_ctx *wpc,
+>  	int			status)
+>  {
+> +	struct iomap_ioend	*ioend = wpc->ioend;
+>  	unsigned int		nofs_flag;
+>  
+>  	/*
+> @@ -420,7 +421,11 @@ xfs_prepare_ioend(
+>  	if (xfs_ioend_is_append(ioend) || ioend->io_type == IOMAP_UNWRITTEN ||
+>  	    (ioend->io_flags & IOMAP_F_SHARED))
+>  		ioend->io_bio.bi_end_io = xfs_end_bio;
+> -	return status;
+> +
+> +	if (status)
+> +		return status;
+> +	submit_bio(&ioend->io_bio);
+> +	return 0;
+>  }
+>  
+>  /*
+> @@ -462,7 +467,7 @@ xfs_discard_folio(
+>  
+>  static const struct iomap_writeback_ops xfs_writeback_ops = {
+>  	.map_blocks		= xfs_map_blocks,
+> -	.prepare_ioend		= xfs_prepare_ioend,
+> +	.submit_ioend		= xfs_submit_ioend,
+>  	.discard_folio		= xfs_discard_folio,
+>  };
+>  
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 5675af6b740c..c0339678d798 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -362,12 +362,14 @@ struct iomap_writeback_ops {
+>  			  loff_t offset, unsigned len);
+>  
+>  	/*
+> -	 * Optional, allows the file systems to perform actions just before
+> -	 * submitting the bio and/or override the bio end_io handler for complex
+> -	 * operations like copy on write extent manipulation or unwritten extent
+> -	 * conversions.
+> +	 * Optional, allows the file systems to hook into bio submission,
+> +	 * including overriding the bi_end_io handler.
+> +	 *
+> +	 * Returns 0 if the bio was successfully submitted, or a negative
+> +	 * error code if status was non-zero or another error happened and
+> +	 * the bio could not be submitted.
+>  	 */
+> -	int (*prepare_ioend)(struct iomap_ioend *ioend, int status);
+> +	int (*submit_ioend)(struct iomap_writepage_ctx *wpc, int status);
+>  
+>  	/*
+>  	 * Optional, allows the file system to discard state on a page where
+> -- 
+> 2.45.2
+> 
 > 
