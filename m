@@ -1,78 +1,58 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB788210F5E;
-	Thu, 12 Dec 2024 12:05:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFCC62144AA
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2024 13:26:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734005117; cv=none; b=jhGmb2AB7t9aIGnIIibyA3BjRtWD04/ZltFenRvv57WTJrGkBdDNFxgb76wpL5MmaC9mObb7URO7mo0kKNsMILztIJG+WbBRTY1WG5GGsGOsChZfRjKnjKYnmDuH9qN80Yw1JUuw+9oFaop1JmcPf/c+hBUWPQMKfLoz1JM5BAY=
+	t=1734009999; cv=none; b=pC1IHAelC5etF3LTcwDf7QMXjkPrmC/byqYkJPSBeMj9yYaRLj463+T0qL2630BWzmk5bhtFC2iiKVlLPsgCS2X8wAg+qeezEY1Or9STmb02958GI5litGvty1o/CjYkUqkeduechpA0W71Mf0sZgEUVvbXphpksW3fjaaWB39o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734005117; c=relaxed/simple;
-	bh=dczLnZD9ji8Trn9VosWQYezAvBkKMhVWPVVwWcNhnZE=;
+	s=arc-20240116; t=1734009999; c=relaxed/simple;
+	bh=u+dmpNG8Yj8BcGE5i4DtJvzd73IcK3nhueSWatmvk8I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D51Vgu6A4ACHNJwnuGYILlTYRpDr6Vt+fYrA77dF7k9RCEELR2V8wIYJvU5hFet9eupTZv7aC9V8ftkOre/4K8sqwdIefEdsFqyNBJxPPWwv6xoKqiHOxBr3+J5BQx1LbkhtejoxMKAEFCqPzVT0e/zVGYiqPeow0GiPKOpTLKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=fYOOdp9y; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=D71mVNKcvek8lxJCvX4vyaBibfOkH26jQcUh8xXGE/akXjovCBiG75jzuVObSeGuJU+1T3Y+AZ2lqHEeI1Vee2ft+GABexGEv6J/IyazHM2ZwWC5v3M8Fkc1sotUdKAy7sp/x/5gK5NhRPPB67dOHzwYI2OOdT8In0y/29WYjAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZKPz8ZMr; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="fYOOdp9y"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BC7HOWv012053;
-	Thu, 12 Dec 2024 12:05:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=2a3k1mkd0XcuQRayXOuU+WcpNVU7Q/
-	sxbzZYUDe0PV8=; b=fYOOdp9yuiOKakr7DVaDTJGGKj1r2LlGVTzdPHZy7lc3GL
-	k4F9y0sdCU94hbvGAvTLZo1bOG4l0eBbtIHC3DZnaPz7OQvtmNxhem/5zbYyFEZt
-	531SN8vtBjcWLFdsKqIYCQgRXVzr3egaxMxDf3c6uSre4sCoLsdWYy1TgJyYfeBQ
-	lxWWPeSFIleHkwOaLGarEgxMKuNCLPPEI632SBKMK32G0SH3znW8RWkSKeWXDC+h
-	HblqSjg3fZRrdWB2XWq2TRc6EGWnUzvI7Ty/ekXKNX91Hq2eVKLqB1absHy3lb3Q
-	R8mWgOlcxWD0K+Qxcg99i6PyTvWTuCz1UZhHW6MQ==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ce3942g0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 12 Dec 2024 12:05:11 +0000 (GMT)
-Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4BCC4sIs001959;
-	Thu, 12 Dec 2024 12:05:11 GMT
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ce3942fw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 12 Dec 2024 12:05:10 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BCBVfcd017421;
-	Thu, 12 Dec 2024 12:05:10 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 43d3d1yv9n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 12 Dec 2024 12:05:09 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BCC58vG64291274
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 12 Dec 2024 12:05:08 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4201620040;
-	Thu, 12 Dec 2024 12:05:08 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AF7DE2004B;
-	Thu, 12 Dec 2024 12:05:06 +0000 (GMT)
-Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com (unknown [9.109.253.82])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu, 12 Dec 2024 12:05:06 +0000 (GMT)
-Date: Thu, 12 Dec 2024 17:35:04 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Andrey Albershteyn <aalbersh@kernel.org>,
-        John Garry <john.g.garry@oracle.com>
-Subject: Re: [RFC 1/3] include/linux.h: Factor out generic
- platform_test_fs_fd() helper
-Message-ID: <Z1rRcFbDR4IbjyVl@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
- <5996d6854a16852daca5977063af6f2af2f0f4ca.1733902742.git.ojaswin@linux.ibm.com>
- <20241211180902.GA6678@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZKPz8ZMr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1734009995;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3YvNJkl05maIGuNuzoWVYbhwHtKq/NS+r9OpCLbvxXo=;
+	b=ZKPz8ZMr2ZWpcy17RjgZ5n3wm5pWRmWDR87CZZQVpTVlQqU+6/Hbj3Y/zbJqf2MA/3Ub9O
+	RI2KPbpZ3P73Q4pG0lEHKHTKufjgXfNLNElRabtpePRIvJLtmJ7XIpA2Y0BHBqH+9/KSbh
+	qPNFKS4H3SK5OdJhYedYmGdN8UCuigc=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-388-OapHiv5aNu68T3XbCFz4hA-1; Thu,
+ 12 Dec 2024 08:26:34 -0500
+X-MC-Unique: OapHiv5aNu68T3XbCFz4hA-1
+X-Mimecast-MFC-AGG-ID: OapHiv5aNu68T3XbCFz4hA
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A9C741956088;
+	Thu, 12 Dec 2024 13:26:32 +0000 (UTC)
+Received: from bfoster (unknown [10.22.90.12])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 867EB1956052;
+	Thu, 12 Dec 2024 13:26:31 +0000 (UTC)
+Date: Thu, 12 Dec 2024 08:28:17 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 4/8] iomap: split bios to zone append limits in the
+ submission handlers
+Message-ID: <Z1rk8YriBRX637h6@bfoster>
+References: <20241211085420.1380396-1-hch@lst.de>
+ <20241211085420.1380396-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,87 +61,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211180902.GA6678@frogsfrogsfrogs>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: FN5KEreYSzSgbTaaoJ1nGUk6XxbA0WAO
-X-Proofpoint-ORIG-GUID: TKdWiGCsZquPg3lnTsMpmCa3OJxrf8_L
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 suspectscore=0
- spamscore=0 clxscore=1015 priorityscore=1501 lowpriorityscore=0
- impostorscore=0 bulkscore=0 mlxscore=0 malwarescore=0 mlxlogscore=831
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412120086
+In-Reply-To: <20241211085420.1380396-5-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Wed, Dec 11, 2024 at 10:09:02AM -0800, Darrick J. Wong wrote:
-> On Wed, Dec 11, 2024 at 01:24:02PM +0530, Ojaswin Mujoo wrote:
-> > Factor our the generic code to detect the FS type out of
-> > platform_test_fs_fd(). This can then be used to detect different file
-> > systems types based on magic number.
-> > 
-> > Also, add a helper to detect if the fd is from an ext4 filesystem.
-> > 
-> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> > ---
-> >  include/linux.h | 25 +++++++++++++++++--------
-> >  1 file changed, 17 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/include/linux.h b/include/linux.h
-> > index e9eb7bfb26a1..52c64014c57f 100644
-> > --- a/include/linux.h
-> > +++ b/include/linux.h
-> > @@ -43,13 +43,7 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
-> >  	return ioctl(fd, cmd, p);
-> >  }
-> >  
-> > -/*
-> > - * platform_test_xfs_*() implies that xfsctl will succeed on the file;
-> > - * on Linux, at least, special files don't get xfs file ops,
-> > - * so return 0 for those
-> > - */
-> > -
-> > -static __inline__ int platform_test_xfs_fd(int fd)
-> > +static __inline__ int platform_test_fs_fd(int fd, long type)
-> >  {
-> >  	struct statfs statfsbuf;
-> >  	struct stat statbuf;
-> > @@ -60,7 +54,22 @@ static __inline__ int platform_test_xfs_fd(int fd)
-> >  		return 0;
-> >  	if (!S_ISREG(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
-> >  		return 0;
-> > -	return (statfsbuf.f_type == 0x58465342);	/* XFSB */
-> > +	return (statfsbuf.f_type == type);
-> > +}
-> > +
-> > +/*
-> > + * platform_test_xfs_*() implies that xfsctl will succeed on the file;
-> > + * on Linux, at least, special files don't get xfs file ops,
-> > + * so return 0 for those
-> > + */
-> > +static __inline__ int platform_test_xfs_fd(int fd)
-> > +{
-> > +	return platform_test_fs_fd(fd, 0x58465342); /* XFSB */
-> > +}
-> > +
-> > +static __inline__ int platform_test_ext4_fd(int fd)
-> > +{
-> > +	return platform_test_fs_fd(fd, 0xef53); /* EXT4 magic number */
+On Wed, Dec 11, 2024 at 09:53:44AM +0100, Christoph Hellwig wrote:
+> Provide helpers for file systems to split bios in the direct I/O and
+> writeback I/O submission handlers.
 > 
-> Should this be pulling EXT4_SUPER_MAGIC from linux/magic.h?
-
-Oh right, thanks for pointing out. I'll use that for the magic numbers.
-
-Thanks,
-ojaswin
-
+> This Follows btrfs' lead and don't try to build bios to hardware limits
+> for zone append commands, but instead build them as normal unconstrained
+> bios and split them to the hardware limits in the I/O submission handler.
 > 
-> --D
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/Makefile      |  1 +
+>  fs/iomap/buffered-io.c | 43 ++++++++++++++-----------
+>  fs/iomap/ioend.c       | 73 ++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/iomap.h  |  9 ++++++
+>  4 files changed, 108 insertions(+), 18 deletions(-)
+>  create mode 100644 fs/iomap/ioend.c
 > 
-> >  }
-> >  
-> >  static __inline__ int platform_test_xfs_path(const char *path)
-> > -- 
-> > 2.43.5
-> > 
-> > 
+...
+> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+> new file mode 100644
+> index 000000000000..f3d98121c593
+> --- /dev/null
+> +++ b/fs/iomap/ioend.c
+...
+
+It might be useful to add a small comment here to point out this splits
+from the front of the ioend (i.e. akin to bio_split()), documents the
+params, and maybe mentions the ioend relationship requirements (i.e.
+according to bio_split(), the split ioend bio refers to the vectors in
+the original ioend bio).
+
+Brian
+
+> +struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend, bool is_append,
+> +		unsigned int *alloc_len)
+> +{
+> +	struct bio *bio = &ioend->io_bio;
+> +	struct iomap_ioend *split_ioend;
+> +	struct bio *split;
+> +	int sector_offset;
+> +	unsigned int nr_segs;
+> +
+> +	if (is_append) {
+> +		struct queue_limits *lim = bdev_limits(bio->bi_bdev);
+> +
+> +		sector_offset = bio_split_rw_at(bio, lim, &nr_segs,
+> +			min(lim->max_zone_append_sectors << SECTOR_SHIFT,
+> +			    *alloc_len));
+> +		if (!sector_offset)
+> +			return NULL;
+> +	} else {
+> +		if (bio->bi_iter.bi_size <= *alloc_len)
+> +			return NULL;
+> +		sector_offset = *alloc_len >> SECTOR_SHIFT;
+> +	}
+> +
+> +	/* ensure the split ioend is still block size aligned */
+> +	sector_offset = ALIGN_DOWN(sector_offset << SECTOR_SHIFT,
+> +			i_blocksize(ioend->io_inode)) >> SECTOR_SHIFT;
+> +
+> +	split = bio_split(bio, sector_offset, GFP_NOFS, &iomap_ioend_bioset);
+> +	if (!split)
+> +		return NULL;
+> +	split->bi_private = bio->bi_private;
+> +	split->bi_end_io = bio->bi_end_io;
+> +
+> +	split_ioend = iomap_init_ioend(ioend->io_inode, split, ioend->io_offset,
+> +			ioend->io_flags);
+> +	split_ioend->io_parent = ioend;
+> +
+> +	atomic_inc(&ioend->io_remaining);
+> +	ioend->io_offset += split_ioend->io_size;
+> +	ioend->io_size -= split_ioend->io_size;
+> +
+> +	split_ioend->io_sector = ioend->io_sector;
+> +	if (!is_append)
+> +		ioend->io_sector += (split_ioend->io_size >> SECTOR_SHIFT);
+> +
+> +	*alloc_len -= split->bi_iter.bi_size;
+> +	return split_ioend;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_split_ioend);
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 173d490c20ba..eaa8cb9083eb 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -354,6 +354,9 @@ struct iomap_ioend {
+>  	struct list_head	io_list;	/* next ioend in chain */
+>  	u16			io_flags;	/* IOMAP_IOEND_* */
+>  	struct inode		*io_inode;	/* file being written to */
+> +	atomic_t		io_remaining;	/* completetion defer count */
+> +	int			io_error;	/* stashed away status */
+> +	struct iomap_ioend	*io_parent;	/* parent for completions */
+>  	size_t			io_size;	/* size of the extent */
+>  	loff_t			io_offset;	/* offset in the file */
+>  	sector_t		io_sector;	/* start sector of ioend */
+> @@ -404,6 +407,10 @@ struct iomap_writepage_ctx {
+>  	u32			nr_folios;	/* folios added to the ioend */
+>  };
+>  
+> +struct iomap_ioend *iomap_init_ioend(struct inode *inode, struct bio *bio,
+> +		loff_t file_offset, u16 flags);
+> +struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend, bool is_append,
+> +		unsigned int *alloc_len);
+>  void iomap_finish_ioends(struct iomap_ioend *ioend, int error);
+>  void iomap_ioend_try_merge(struct iomap_ioend *ioend,
+>  		struct list_head *more_ioends);
+> @@ -475,4 +482,6 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+>  # define iomap_swapfile_activate(sis, swapfile, pagespan, ops)	(-EIO)
+>  #endif /* CONFIG_SWAP */
+>  
+> +extern struct bio_set iomap_ioend_bioset;
+> +
+>  #endif /* LINUX_IOMAP_H */
+> -- 
+> 2.45.2
+> 
+> 
+
