@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BDED2F2F
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2024 22:09:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED3581DB540
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2024 22:13:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734041354; cv=none; b=ptanrhTtdAZkWC8WczssW9ooqmhK6+d8J/nIVQ0Z6UlF6BD0MDHBXYA9Vq0hrPrE5NkH5Lm+vJVJSLxHpEJUS9m0TUh+gc9h0WB/NEOPsTnP+qCa2cmXurhRZGTNAXZv9oW9HB6Fup5e1NasxS0w/Wl4n544RmxiTlsNnUq84BY=
+	t=1734041594; cv=none; b=FKammdBZT7q7dgpJe4BlIeLkH1NNnQCr3UQNz78mWGVkYgR/8KMrUS6VtU2OaiMPxXuQCox5Yslz4Mv5qmpvjN3A6hTVYthAvEJk2Br57BcxFOCHx/C36X2ZIsHit8VTFYJ8CeELqrZqeZbYJwJvdaVeUsBoI2mNphbyFZxGvww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734041354; c=relaxed/simple;
-	bh=zA5C5RAFS9O/wR8CQqn6teVSPxgixl7I5hwGRVGt034=;
+	s=arc-20240116; t=1734041594; c=relaxed/simple;
+	bh=8SE7QJ6Rrpp4QzZl1Iinyz89eKj82c0l/ICAgPaPMro=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eg88yrxhJ/t0Osj6ble6oDvguQS+m+u+U5vMeTpRdaUPTgNdyTvCXkaq9we/rogOupShelzKTUkMT/exkHXNx8XXTk1vVNn5ERJCZWbN1BcMpsVvhQA3KlnqLMjq8tJsOZ2XwT9wspMzV8Sl8L2PmLFUfMeBf6SLRvsoeQc+xrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZUuu83HE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GUKAW19SIuUdrzyDZ5hQ0502ywXzi/JH+5klXFJ/J1gBjitxmWyNFwZr2ScHrPEJR5C3pV3nzadJ4U5rYTyqC/n2Q8jZY/3lzDe1bYPOFVvZXq9uxUpJQTFaeuzKMT8xiDzJJWx66wzKH4ROnaILFPSt79gFOqSztQxl9C709kw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZYrEvqmk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZUuu83HE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D66DAC4CECE;
-	Thu, 12 Dec 2024 22:09:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZYrEvqmk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F359C4CED0;
+	Thu, 12 Dec 2024 22:13:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734041353;
-	bh=zA5C5RAFS9O/wR8CQqn6teVSPxgixl7I5hwGRVGt034=;
+	s=k20201202; t=1734041593;
+	bh=8SE7QJ6Rrpp4QzZl1Iinyz89eKj82c0l/ICAgPaPMro=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZUuu83HEJDhvDy1v23332vjSdHTj7BN85WlkRXwAetBzra/dtlz8ljBgB4BuHp8tN
-	 TQT2BEKwqKlg5dXV4aCET5RhF/m3xW+VKrle1jSMPTd/Jlar+e6Wov9osXlmq8hdqK
-	 roOLZcBvVMHGZMz/ie8LNTuPrR+ypndnTK+r5+uyoQvtP5gq95fClt66BtAW05YleO
-	 Rtg919N0XKo8C8CMZNobolt0OZk8poVzQ1oFufun/zkqiW2KiNTYg6A1ZjDaQ8U/3C
-	 fkhFii2vDCCU9OATamEBNe9lslM/PsXwUlamfaTaEhvJLzKdkjgEUZwyY3ygZPlUS8
-	 Fis9alN6fXEXw==
-Date: Thu, 12 Dec 2024 14:09:13 -0800
+	b=ZYrEvqmkKNYBxcj4UwHllFbAxOu0Uh7FtwqSuE7Tptx5FSQ82qDmd/0koV48Tucpz
+	 tGLjObZs4SoYBYzuq19QTwbHp8Xh3rKg1GONFojlufJ8fyttSwRkdwF6p3OO0oQdUr
+	 Vf5hIXLr6Io7yFHo6eNFb7i7mN6nPeXCVI1qDk7d91hw+hD/VOPSkaDcG5e1aHM5en
+	 GJtHsC8iyz05quSN5pFZuI82SzfESwmSFAKeXnDjptKVCwAfZLwM7lCoWrB53vM06j
+	 T699g8VftNcF1Uudjoa5OH0VUo7EKiriRHJM/2Ih9TQF8qW5/hHPKcpcTKeQa54Xt7
+	 V2aNjTmqzcq9w==
+Date: Thu, 12 Dec 2024 14:13:12 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 18/43] xfs: export zoned geometry via XFS_FSOP_GEOM
-Message-ID: <20241212220913.GD6678@frogsfrogsfrogs>
+Subject: Re: [PATCH 20/43] xfs: disable FITRIM for zoned RT devices
+Message-ID: <20241212221312.GE6678@frogsfrogsfrogs>
 References: <20241211085636.1380516-1-hch@lst.de>
- <20241211085636.1380516-19-hch@lst.de>
+ <20241211085636.1380516-21-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,70 +43,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211085636.1380516-19-hch@lst.de>
+In-Reply-To: <20241211085636.1380516-21-hch@lst.de>
 
-On Wed, Dec 11, 2024 at 09:54:43AM +0100, Christoph Hellwig wrote:
-> Export the zoned geometry information so that userspace can query it.
+On Wed, Dec 11, 2024 at 09:54:45AM +0100, Christoph Hellwig wrote:
+> The zoned allocator unconditionally issues zone resets or discards after
+> emptying an entire zone, so supporting FITRIM for a zoned RT device is
+> not useful.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_fs.h | 5 ++++-
->  fs/xfs/libxfs/xfs_sb.c | 6 ++++++
->  2 files changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 2c3171262b44..5e66fb2b2cc7 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -189,7 +189,9 @@ struct xfs_fsop_geom {
->  	uint32_t	checked;	/* o: checked fs & rt metadata	*/
->  	__u32		rgextents;	/* rt extents in a realtime group */
->  	__u32		rgcount;	/* number of realtime groups	*/
-> -	__u64		reserved[16];	/* reserved space		*/
-> +	__u64		rtstart;	/* start of internal rt section */
-> +	__u64		rtreserved;	/* RT (zoned) reserved blocks	*/
-> +	__u64		reserved[14];	/* reserved space		*/
->  };
->  
->  #define XFS_FSOP_GEOM_SICK_COUNTERS	(1 << 0)  /* summary counters */
-> @@ -247,6 +249,7 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE (1 << 24) /* exchange range */
->  #define XFS_FSOP_GEOM_FLAGS_PARENT	(1 << 25) /* linux parent pointers */
->  #define XFS_FSOP_GEOM_FLAGS_METADIR	(1 << 26) /* metadata directories */
-> +#define XFS_FSOP_GEOM_FLAGS_ZONED	(1 << 27) /* zoned rt device */
->  
->  /*
->   * Minimum and maximum sizes need for growth checks.
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 20b8318d4a59..6fc21c0a332b 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -1541,6 +1541,8 @@ xfs_fs_geometry(
->  		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE;
->  	if (xfs_has_metadir(mp))
->  		geo->flags |= XFS_FSOP_GEOM_FLAGS_METADIR;
-> +	if (xfs_has_zoned(mp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_ZONED;
->  	geo->rtsectsize = sbp->sb_blocksize;
->  	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
->  
-> @@ -1561,6 +1563,10 @@ xfs_fs_geometry(
->  		geo->rgcount = sbp->sb_rgcount;
->  		geo->rgextents = sbp->sb_rgextents;
->  	}
-> +	if (xfs_has_zoned(mp)) {
-> +		geo->rtstart = XFS_FSB_TO_BB(mp, sbp->sb_rtstart);
 
-Not sure why this is reported in units of 512b, everything else set by
-xfs_fs_geometry is in units of fsblocks.
+Makes sense,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +		geo->rtreserved = sbp->sb_rtreserved;
-> +	}
->  }
+> ---
+>  fs/xfs/xfs_discard.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> index c4bd145f5ec1..4447c835a373 100644
+> --- a/fs/xfs/xfs_discard.c
+> +++ b/fs/xfs/xfs_discard.c
+> @@ -844,7 +844,8 @@ xfs_ioc_trim(
 >  
->  /* Read a secondary superblock. */
+>  	if (!capable(CAP_SYS_ADMIN))
+>  		return -EPERM;
+> -	if (mp->m_rtdev_targp &&
+> +
+> +	if (mp->m_rtdev_targp && !xfs_has_zoned(mp) &&
+>  	    bdev_max_discard_sectors(mp->m_rtdev_targp->bt_bdev))
+>  		rt_bdev = mp->m_rtdev_targp->bt_bdev;
+>  	if (!bdev_max_discard_sectors(mp->m_ddev_targp->bt_bdev) && !rt_bdev)
 > -- 
 > 2.45.2
 > 
