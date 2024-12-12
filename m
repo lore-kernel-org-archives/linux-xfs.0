@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D799A1D54F7
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2024 21:11:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2E35189BAF
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2024 21:12:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734037870; cv=none; b=kh/zAIFQOsWj2JuPBcGpVd9tYSzfcG7mSxgXhr/fegFmgluq0fxFHfg149rgDAFfUsT/hAP9/Y6+Fb9FOfeG9IAZEQy1xj8eQzN+hmSRBasEGh7DEhQDJSvJc6/2KG6AqfvJFq6g+orYU+6q+eAWFN14k/jc14rCnEl14n+TYxY=
+	t=1734037948; cv=none; b=AvrLWITLoGb9b3woZFkxalvKxCExXAHiP45UptM8oO3X4YsDjgqxEyZqpGXrvfGRWA04osvDBn1RvMsCO1TSXFzEcKlwCbyYw5nD0kVLEl4nkLA8D1h8IP9mti4CEJLNGtMHBz4wE5fEdy6YrLCEBXdD4UnmMSEGjeI6SwMsgbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734037870; c=relaxed/simple;
-	bh=pu6BizVDHeUSnSiZMVDGRKxLjGRQ9Gi5NC8DCGjGSkc=;
+	s=arc-20240116; t=1734037948; c=relaxed/simple;
+	bh=t4ulW45zZ1nPJadllzl6LAOlNhw9gKsdmlqrMynZqAY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UAuVY0YGryGA7o9GKNefRMTdsmWhgtm6Gw6ZXpkIIMiCMZRcmc4j1QPxudqEyKL5DWIvb9J6XmlNxnxIkjWqRuZedRh5W3aKGhLJ7+kXy0K5cQipA8ljfMbGRGNg8qhqY1k/THjet0N2M2gKD3fxKpAV1WmhzhmSgcrIMwJrNRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jmI+8weM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uFqEo1BWisWLztQrpbNHRjZgFMUlfJNQ4Csf7PTYrIItrGUP0au4elONVn5M4iCtR4dxveXRpekSqUa/1LBfADg0Tv00yW+OSLVv4jOIEoKBmlGYalVYOULVL1fXEgx6OkQCHhYlbEJh07wrGtuwRg3zoUI8isJCzwWaUUpcUfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ok83Xa/4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jmI+8weM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C336C4CED0;
-	Thu, 12 Dec 2024 21:11:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ok83Xa/4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D8B9C4CECE;
+	Thu, 12 Dec 2024 21:12:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734037870;
-	bh=pu6BizVDHeUSnSiZMVDGRKxLjGRQ9Gi5NC8DCGjGSkc=;
+	s=k20201202; t=1734037946;
+	bh=t4ulW45zZ1nPJadllzl6LAOlNhw9gKsdmlqrMynZqAY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jmI+8weMxmKHZqXrZjncrCGrDRjpIV4I9wyr/+3hMIs93ltWrdpDbq8qJ4EEC7e4q
-	 WA3fHP3o1/zsbFkSp8J8uEDvVTDTyIXzG3cUfewyb6GUpnIbfxokhDknxx3soiODXi
-	 NnrNTjmtJ8ycKfUfAXKcfAyM4Luox6eDwRqtJntIKwXeREeCqGwrwlX03PxSXBobTp
-	 xEGnDst1+4PFfIu062jExHFvsZd5A506Wl8iN9QIr+5fXqHRtIVnoQ2DNrfeYSvjBw
-	 o9bPZ5vnwLit+unwVVeoEhAyHBjWB68k3Ii1Q5wyO2FjKkw1NGEJ1x2cGBIB1pFLeo
-	 hM59pJ0do8nJg==
-Date: Thu, 12 Dec 2024 13:11:09 -0800
+	b=ok83Xa/4GV98pS6Afob+bX6pCy/uKS9s6w8huuAsZIfJlc00m5/lDJ2iHIPTYZSfL
+	 3qDSuv0v+lAczmy1f6Wh9rWxMe8uw0sN834NWKBcfCxB4DREAO24vjmO5EKjy9j09d
+	 VCGleiI5pB6LT4RN04Plklj/KNRfcNqvTU3yUFYYH5GzlkLbX2Lkrys7JLToB3UJ0d
+	 Z9B/n183cULJQuPx8y72bUTKTeLumeF7NC4f1R0du0MLJZjHbJuZWt/qYbHSl8pjKv
+	 EfDtITxH0EdxM4HO038k7ZaLe+2t78O8d8ZwMx1qlgzDR+4k6sXlUmkLbqC2Q3zwp1
+	 QZljYVMQ9xnJA==
+Date: Thu, 12 Dec 2024 13:12:25 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/43] xfs: factor out a xfs_rt_check_size helper
-Message-ID: <20241212211109.GO6678@frogsfrogsfrogs>
+Subject: Re: [PATCH 03/43] xfs: add a rtg_blocks helper
+Message-ID: <20241212211225.GP6678@frogsfrogsfrogs>
 References: <20241211085636.1380516-1-hch@lst.de>
- <20241211085636.1380516-3-hch@lst.de>
+ <20241211085636.1380516-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,127 +43,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211085636.1380516-3-hch@lst.de>
+In-Reply-To: <20241211085636.1380516-4-hch@lst.de>
 
-On Wed, Dec 11, 2024 at 09:54:27AM +0100, Christoph Hellwig wrote:
-> Add a helper to check that the last block of a RT device is readable
-> to share the code between mount and growfs.  This also adds the mount
-> time overflow check to growfs and improves the error messages.
+On Wed, Dec 11, 2024 at 09:54:28AM +0100, Christoph Hellwig wrote:
+> Shortcut dereferencing the xg_block_count field in the generic group
+> structure.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Seems fine to me...
+Looks good, though I imagine there are a few more places where you could
+use this helper?
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_rtalloc.c | 62 ++++++++++++++++++++++----------------------
->  1 file changed, 31 insertions(+), 31 deletions(-)
+>  fs/xfs/libxfs/xfs_rtgroup.c | 2 +-
+>  fs/xfs/libxfs/xfs_rtgroup.h | 5 +++++
+>  2 files changed, 6 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index d8e6d073d64d..bc18b694db75 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1248,6 +1248,34 @@ xfs_grow_last_rtg(
->  			mp->m_sb.sb_rgextents;
+> diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+> index d84d32f1b48f..97aad8967149 100644
+> --- a/fs/xfs/libxfs/xfs_rtgroup.c
+> +++ b/fs/xfs/libxfs/xfs_rtgroup.c
+> @@ -270,7 +270,7 @@ xfs_rtgroup_get_geometry(
+>  	/* Fill out form. */
+>  	memset(rgeo, 0, sizeof(*rgeo));
+>  	rgeo->rg_number = rtg_rgno(rtg);
+> -	rgeo->rg_length = rtg_group(rtg)->xg_block_count;
+> +	rgeo->rg_length = rtg_blocks(rtg);
+>  	xfs_rtgroup_geom_health(rtg, rgeo);
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+> index de4eeb381fc9..0e1d9474ab77 100644
+> --- a/fs/xfs/libxfs/xfs_rtgroup.h
+> +++ b/fs/xfs/libxfs/xfs_rtgroup.h
+> @@ -66,6 +66,11 @@ static inline xfs_rgnumber_t rtg_rgno(const struct xfs_rtgroup *rtg)
+>  	return rtg->rtg_group.xg_gno;
 >  }
 >  
-> +/*
-> + * Read in the last block of the RT device to make sure it is accessible.
-> + */
-> +static int
-> +xfs_rt_check_size(
-> +	struct xfs_mount	*mp,
-> +	xfs_rfsblock_t		last_block)
+> +static inline xfs_rgblock_t rtg_blocks(const struct xfs_rtgroup *rtg)
 > +{
-> +	xfs_daddr_t		daddr = XFS_FSB_TO_BB(mp, last_block);
-> +	struct xfs_buf		*bp;
-> +	int			error;
-> +
-> +	if (XFS_BB_TO_FSB(mp, daddr) != last_block) {
-> +		xfs_warn(mp, "RT device size overflow: %llu != %llu",
-> +			XFS_BB_TO_FSB(mp, daddr), last_block);
-> +		return -EFBIG;
-> +	}
-> +
-> +	error = xfs_buf_read_uncached(mp->m_rtdev_targp, daddr,
-> +			XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
-> +	if (error)
-> +		xfs_warn(mp, "cannot read last RT device sector (%lld)",
-> +				last_block);
-> +	else
-> +		xfs_buf_relse(bp);
-> +	return error;
+> +	return rtg->rtg_group.xg_block_count;
 > +}
 > +
->  /*
->   * Grow the realtime area of the filesystem.
->   */
-> @@ -1259,7 +1287,6 @@ xfs_growfs_rt(
->  	xfs_rgnumber_t		old_rgcount = mp->m_sb.sb_rgcount;
->  	xfs_rgnumber_t		new_rgcount = 1;
->  	xfs_rgnumber_t		rgno;
-> -	struct xfs_buf		*bp;
->  	xfs_agblock_t		old_rextsize = mp->m_sb.sb_rextsize;
->  	int			error;
->  
-> @@ -1302,15 +1329,10 @@ xfs_growfs_rt(
->  	error = xfs_sb_validate_fsb_count(&mp->m_sb, in->newblocks);
->  	if (error)
->  		goto out_unlock;
-> -	/*
-> -	 * Read in the last block of the device, make sure it exists.
-> -	 */
-> -	error = xfs_buf_read_uncached(mp->m_rtdev_targp,
-> -				XFS_FSB_TO_BB(mp, in->newblocks - 1),
-> -				XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
-> +
-> +	error = xfs_rt_check_size(mp, in->newblocks - 1);
->  	if (error)
->  		goto out_unlock;
-> -	xfs_buf_relse(bp);
->  
->  	/*
->  	 * Calculate new parameters.  These are the final values to be reached.
-> @@ -1444,10 +1466,6 @@ int				/* error */
->  xfs_rtmount_init(
->  	struct xfs_mount	*mp)	/* file system mount structure */
+>  static inline struct xfs_inode *rtg_bitmap(const struct xfs_rtgroup *rtg)
 >  {
-> -	struct xfs_buf		*bp;	/* buffer for last block of subvolume */
-> -	xfs_daddr_t		d;	/* address of last block of subvolume */
-> -	int			error;
-> -
->  	if (mp->m_sb.sb_rblocks == 0)
->  		return 0;
->  	if (mp->m_rtdev_targp == NULL) {
-> @@ -1458,25 +1476,7 @@ xfs_rtmount_init(
->  
->  	mp->m_rsumblocks = xfs_rtsummary_blockcount(mp, &mp->m_rsumlevels);
->  
-> -	/*
-> -	 * Check that the realtime section is an ok size.
-> -	 */
-> -	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
-> -	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
-> -		xfs_warn(mp, "realtime mount -- %llu != %llu",
-> -			(unsigned long long) XFS_BB_TO_FSB(mp, d),
-> -			(unsigned long long) mp->m_sb.sb_rblocks);
-> -		return -EFBIG;
-> -	}
-> -	error = xfs_buf_read_uncached(mp->m_rtdev_targp,
-> -					d - XFS_FSB_TO_BB(mp, 1),
-> -					XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
-> -	if (error) {
-> -		xfs_warn(mp, "realtime device size check failed");
-> -		return error;
-> -	}
-> -	xfs_buf_relse(bp);
-> -	return 0;
-> +	return xfs_rt_check_size(mp, mp->m_sb.sb_rblocks - 1);
->  }
->  
->  static int
+>  	return rtg->rtg_inodes[XFS_RTGI_BITMAP];
 > -- 
 > 2.45.2
 > 
