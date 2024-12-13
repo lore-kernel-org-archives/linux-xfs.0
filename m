@@ -1,109 +1,160 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99AA41E32BB
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 15:03:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECA831E2828
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 15:42:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=66.39.3.162
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734102232; cv=none; b=O+khy5tqF7amkuLrVipyz0shGQZCgxsv+KK497AxV4sAiuC57gTGuXYgD8bcdskkDP6jhVmrUP4aW68ns17u8IiWebYWCEkMyF871e8Nto3+vp07yea+PwqIRM65YwBPYV5FYYLsyL+elyKWIbT0MCu/jLkUK+arezggqEUAZ8w=
+	t=1734104578; cv=none; b=RcsUPP5n49AUOOBDh51qMGgQs3Rk1Ngy2bv944U8whpg7uvLo3BARF5H48uerTbv9GyGxu+KlY/0jgPPEMePMkAJJiBtb2fmS5wj1FM4qcVRFsjJ/EpK2wqIvuJZaabXdKW8dsToc3uLHmLV4uz02RTZBwDgYrMvdhnHWYc9siA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734102232; c=relaxed/simple;
-	bh=YRJkWpVrsK5tWAkj3h7O0KKz9hSJzbc1riBkCq6zkRk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=R3k3uR88gmhgyocAV3ZyvQ+KxqTy/BodXIOWLjYJGlOHJKtwBXX4PEeObwZFUOeGfn8ig4sRrGLW7t6dfkKkvFqzA+we45GeLC+a3NnqZKLb5SGFny86q4Si+pWGaz1NHvKYv1h5tOTjqh9Ra3Sgu/ArePqhesQYK5hjRRjUWHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AdK2VG1p; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AdK2VG1p"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1734102229;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Gtlfk7brtiOHWfKLJSeT8G4FA2trYaZJpMkIqijZqRc=;
-	b=AdK2VG1pBtzToh/1IF7n6SPVLpu6MZiL1hFkfgO+aW4elC041dQAGikFeNttk2rNM57Wrv
-	F0qzjKdUH0L2h+kWftwP74vhd+1ZYwXd3ZeoCDXVfI9+Q8Q8hDlorqrJVrQ47Ap7wQCJpQ
-	5LEGTwZf1mGUvr3RapRz0w/3M/62GaM=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-130-RbX2NjB4MFWGeghGE-D9EA-1; Fri,
- 13 Dec 2024 10:03:46 -0500
-X-MC-Unique: RbX2NjB4MFWGeghGE-D9EA-1
-X-Mimecast-MFC-AGG-ID: RbX2NjB4MFWGeghGE-D9EA
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	s=arc-20240116; t=1734104578; c=relaxed/simple;
+	bh=3Wn6PQNG66LeXtmL1RMIE6AkeQiqnj0Ba+RhRrHmb/Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JBfSX9Ogq8qRmYntZGdKmR7mTQgw7zpSjfN50Lj7/a3xTcgJVDJEtoxM+ZTKk7L6xkA9Avn2wrWE7QRLTn5Kc/wAVNCWaXWKxGjXLjf+bibpQm5qBNjcz4cfpUsLzj/XdSulWpEz78zPgh912frDNVeEP8rQ+m9x4XLw9Y3Sq/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intellique.com; spf=pass smtp.mailfrom=intellique.com; arc=none smtp.client-ip=66.39.3.162
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intellique.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intellique.com
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+	by mail1.g1.pair.com (Postfix) with ESMTP id 4AB6B3AE7CF;
+	Fri, 13 Dec 2024 10:42:49 -0500 (EST)
+Received: from harpe.intellique.com (labo.djinux.com [82.65.97.13])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4F95919560A3;
-	Fri, 13 Dec 2024 15:03:45 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.90.12])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ADEA9195394B;
-	Fri, 13 Dec 2024 15:03:44 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH RFCv2 4/4] xfs: fill dirty folios on zero range of unwritten mappings
-Date: Fri, 13 Dec 2024 10:05:28 -0500
-Message-ID: <20241213150528.1003662-5-bfoster@redhat.com>
-In-Reply-To: <20241213150528.1003662-1-bfoster@redhat.com>
-References: <20241213150528.1003662-1-bfoster@redhat.com>
+	by mail1.g1.pair.com (Postfix) with ESMTPSA id 7F66B3FAEE2;
+	Fri, 13 Dec 2024 10:42:48 -0500 (EST)
+Date: Fri, 13 Dec 2024 16:42:51 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: Weird behaviour with project quotas
+Message-ID: <20241213164251.361f8877@harpe.intellique.com>
+In-Reply-To: <20241212202547.GK6678@frogsfrogsfrogs>
+References: <20241128171458.37dc80ed@harpe.intellique.com>
+	<Z0jbffI2A6Fn7LfO@dread.disaster.area>
+	<20241129103332.4a6b452e@harpe.intellique.com>
+	<Z0o8vE4MlIg-jQeR@dread.disaster.area>
+	<20241212163351.58dd1305@harpe.intellique.com>
+	<20241212202547.GK6678@frogsfrogsfrogs>
+Organization: Intellique
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.31; x86_64-slackware-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: multipart/signed; boundary="Sig_/7uTjcsfHM8RUB.Uk84Zk9nt";
+ protocol="application/pgp-signature"; micalg=pgp-sha1
+X-Scanned-By: mailmunge 3.11 on 66.39.3.162
 
-Use the iomap folio batch mechanism to identify which folios to zero
-on zero range of unwritten mappings. Trim the resulting mapping if
-the batch is filled (unlikely) and set the HAS_FOLIOS flag to inform
-iomap that pagecache has been checked for dirty folios.
+--Sig_/7uTjcsfHM8RUB.Uk84Zk9nt
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iomap.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Le Thu, 12 Dec 2024 12:25:47 -0800
+"Darrick J. Wong" <djwong@kernel.org> =C3=A9crivait:
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 97fa860a6401..b7dbd34fc02f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -998,6 +998,7 @@ xfs_buffered_write_iomap_begin(
- 	struct iomap		*iomap,
- 	struct iomap		*srcmap)
- {
-+	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter, iomap);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-@@ -1065,12 +1066,21 @@ xfs_buffered_write_iomap_begin(
- 	 */
- 	if (flags & IOMAP_ZERO) {
- 		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-+		u64 end;
- 
- 		if (isnullstartblock(imap.br_startblock) &&
- 		    offset_fsb >= eof_fsb)
- 			goto convert_delay;
- 		if (offset_fsb < eof_fsb && end_fsb > eof_fsb)
- 			end_fsb = eof_fsb;
-+		if (imap.br_state == XFS_EXT_UNWRITTEN &&
-+		    offset_fsb < eof_fsb) {
-+			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
-+			end = iomap_fill_dirty_folios(iter,
-+					XFS_FSB_TO_B(mp, imap.br_startoff),
-+					XFS_FSB_TO_B(mp, imap.br_blockcount));
-+			end_fsb = min_t(xfs_fileoff_t, end_fsb, XFS_B_TO_FSB(mp, end));
-+		}
- 
- 		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
- 	}
--- 
-2.47.0
 
+> Does this recreate the symptoms?
+>=20
+<snip>
+> # df /mnt /mnt/dir
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sda         20G  420M   20G   3% /mnt
+> /dev/sda        2.0G     0  2.0G   0% /mnt
+> # fallocate -l 19g /mnt/a
+> # df /mnt /mnt/dir
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sda         20G   20G  345M  99% /mnt
+> /dev/sda        2.0G     0  2.0G   0% /mnt
+>=20
+> Clearly, df should be reporting 345M available for both cases, since
+> we haven't actually used any of project 55's blocks.
+>=20
+> # xfs_io -f -c 'pwrite -S 0x59 0 1m' -c fsync -c 'stat -vvvv'
+> /mnt/dir/fork wrote 1048576/1048576 bytes at offset 0
+> 1 MiB, 256 ops; 0.0008 sec (1.121 GiB/sec and 293915.0402 ops/sec)
+> fd.path =3D "/mnt/dir/fork"
+> fd.flags =3D non-sync,non-direct,read-write
+> stat.ino =3D 134
+> stat.type =3D regular file
+> stat.size =3D 1048576
+> stat.blocks =3D 2048
+> stat.atime =3D Thu Dec 12 12:11:06 2024
+> stat.mtime =3D Thu Dec 12 12:11:06 2024
+> stat.ctime =3D Thu Dec 12 12:11:06 2024
+> fsxattr.xflags =3D 0x0 []
+> fsxattr.projid =3D 55
+> fsxattr.extsize =3D 0
+> fsxattr.cowextsize =3D 0
+> fsxattr.nextents =3D 1
+> fsxattr.naextents =3D 0
+> dioattr.mem =3D 0x200
+> dioattr.miniosz =3D 512
+> dioattr.maxiosz =3D 2147483136
+> # df /mnt /mnt/dir
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sda         20G   20G  344M  99% /mnt
+> /dev/sda        2.0G  1.0M  2.0G   1% /mnt
+>=20
+> I think this behavior comes from xfs_fill_statvfs_from_dquot, which
+> does this:
+>=20
+> 	limit =3D blkres->softlimit ?
+> 		blkres->softlimit :
+> 		blkres->hardlimit;
+> 	if (limit && statp->f_blocks > limit) {
+> 		statp->f_blocks =3D limit;
+> 		statp->f_bfree =3D statp->f_bavail =3D
+> 			(statp->f_blocks > blkres->reserved) ?
+> 			 (statp->f_blocks - blkres->reserved) : 0;
+> 	}
+>=20
+> I think the f_bfree/f_bavail assignment is wrong because it doesn't
+> handle the case where f_bfree was less than (limit - reserved).
+>=20
+> 	if (limit) {
+> 		uint64_t	remaining =3D 0;
+>=20
+> 		if (statp->f_blocks > limit)
+> 			statp->f_blocks =3D limit;
+> 		if (limit > blkres->reserved)
+> 			remaining =3D limit - blkres->reserved;
+> 		statp->f_bfree =3D min(statp->f_bfree, remaining);
+> 		statp->f_bavail =3D min(statp->f_bavail, remaining);
+> 	}
+>=20
+> This fixes the df output a bit:
+> # df /mnt /mnt/dir
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sda         20G   20G  344M  99% /mnt
+> /dev/sda        2.0G  1.7G  344M  84% /mnt
+>=20
+> Though the "used" column is nonsense now.  But I guess that's why
+> statfs only defines total blocks and free/available blocks.
+
+Yep, that looks exactly like the problem we've met. Does the fact that
+not all folders have project quota change something in that case ?
+
+--=20
+------------------------------------------------------------------------
+   Emmanuel Florac     |   Direction technique
+------------------------------------------------------------------------
+   https://intellique.com
+   +33 6 16 30 15 95
+------------------------------------------------------------------------
+=20
+
+--Sig_/7uTjcsfHM8RUB.Uk84Zk9nt
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EARECAB0WIQSAqoYluUD5h4D+mbZfeNBc1SJxVgUCZ1xV/AAKCRBfeNBc1SJx
+Vio2AKCFMGPOt87HjFEkTNa6RXN82wU/bwCg40dlXDjexups2VY2CImZC/5uZcE=
+=WisA
+-----END PGP SIGNATURE-----
+
+--Sig_/7uTjcsfHM8RUB.Uk84Zk9nt--
