@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C10421345
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:23:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B437118EA2
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:24:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734053029; cv=none; b=KShEssr+bzUx/tmEkCUgtTBvLPnCpuM1ruHajYNuIFIha1raVkf78ejil8GXkISOMwDp2U2cBcggu38PRI8S386nQ2uMcAfPs/CQXs1biiNmLsuBXeZnzKOZG9Jze4p6TY8yBhn3hUg6IS6dyIB54zBlWkR6bkDY2pNmA2Uvm/I=
+	t=1734053044; cv=none; b=ZqFIKeRQtmY4rD+TqWxa5CYUvRe1iNCXekiPqyPUFKFoK+wgu5v+YKytojQQRgA5vCDv9chDAZ1FqQ+wE21iV6CFYQ4tGHaRg+0oVnZnag/W79DYbsHRQWIRtHJFGNqngmqFPdfHuz3vDFqQot18duCk4KbF0QAx5eiSbvi3KE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734053029; c=relaxed/simple;
-	bh=CA3zQGiztERvQtDTb+QA0vzkbRbztOQJVB13SigRqIA=;
+	s=arc-20240116; t=1734053044; c=relaxed/simple;
+	bh=IdDYYjRNrpi6gmPsYhhzs8I1wZiq+3261RkKgjFDRSU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b3gjcpMeG0tRGkEILbLvSFBZTuUwHzElkAUNqKtFirxkMk6LNh3PtasGTAyIG8sgyUo3lSylS9V6LMroTiQ06DcZ2F7xru6geFj/96GhGbqa0Q4hWD7owIYaBkjzCeojM2NUXKgn86v4G1OBBz8cA0HvuHa7DW0RWKjNcuVNL9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZVQxZTnS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kzwtIra1CmP6AIRELYjDB41SYAEyzbC7N0j9mLjIuf8Og4U70mEc69InFzZLmTxeeQRtb56vsEvyoyrF9a00Nea/GbBR+hxAG7sX1FL5u4W8RgTiFZJD8pmgoXSWtuVknl31xlq3fkqhhRRyYAkzZOjlMeY38QOr1c3u5gHSOyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YwpZDQnX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZVQxZTnS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1F5DC4CECE;
-	Fri, 13 Dec 2024 01:23:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YwpZDQnX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F69DC4CED3;
+	Fri, 13 Dec 2024 01:24:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734053028;
-	bh=CA3zQGiztERvQtDTb+QA0vzkbRbztOQJVB13SigRqIA=;
+	s=k20201202; t=1734053044;
+	bh=IdDYYjRNrpi6gmPsYhhzs8I1wZiq+3261RkKgjFDRSU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZVQxZTnSeo2MZIPnCAN7Xv/rN4nKUk+8KLbGlKHmIBOUN+UP4pS1/OAXPOaGQbEp2
-	 /235627snhSmV8wRKXNEQ4VZEsoQrqGN4OZRozpkfEyq6nJeBl8kkLveGWccEhyaZy
-	 oRa3Xhd1PWJyDZhCQ7EzP7/ebnpzRsppaVg4fsTHhlFolGcl61UoglCMagaylKloPF
-	 Uh2un/uDRzmJwwLd55OFfraYzu3bDrjJETzf0UvJ06pyqUAq3k33YocGlFH1TE3h/9
-	 2tblW7kSE0TSQPfk+6qkvC1bOgJldJeV9qv8Se+ZgxYvrVcfe6GMH49uv0Cn4a230+
-	 7gnMYgVaEh+Yw==
-Date: Thu, 12 Dec 2024 17:23:48 -0800
-Subject: [PATCH 09/11] xfs: allow reflink on the rt volume when extent size is
- larger than 1 rt block
+	b=YwpZDQnXBgF1MP2IqHHfOz+4kZ4hhDHCBRCu2L1ZZYPccZQ81R8PTrK2m1TABVTNz
+	 PEo0+dD92myTh3yzHZtkP7s6GvCrdA5JSPMmmrXjF4eVeZtLmrXndqsq3/oIT44V/m
+	 s5AP6vApLgUrO+KnXw7X4pKwc9egs9278wRo2dcIaIUnQbGOb7ILTJ+ofgOr8u83fh
+	 xCVFx9yzs9sUyBcaRKjJe3xUOblcmrgqckuofe2kdo/2o2JI87aUb+mTV3Kwbh8E8T
+	 Zzps9JY6FpdNp9EWeJbxss3R14zMWGXIXxGgGUYNCAjhxhISF2/l0ND5ZCm/Ba99xF
+	 3MYvAStfbC4dQ==
+Date: Thu, 12 Dec 2024 17:24:04 -0800
+Subject: [PATCH 10/11] xfs: fix integer overflow when validating extent size
+ hints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405125896.1184063.11119572969501198910.stgit@frogsfrogsfrogs>
+Message-ID: <173405125912.1184063.5511687476090644949.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405125712.1184063.11685981006674346615.stgit@frogsfrogsfrogs>
 References: <173405125712.1184063.11685981006674346615.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,181 +46,104 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the necessary tweaks to the reflink remapping code to support
-remapping on the realtime volume when the rt extent size is larger than
-a single rt block.  We need to check that the remap arguments from
-userspace are aligned to a rt extent boundary, and that the length
-is always aligned, even if the kernel tried to round it up to EOF for
-us.  XFS can only map and remap full rt extents, so we have to be a
-little more strict about the alignment there.
+Both file extent size hints are stored as 32-bit quantities, in units of
+filesystem blocks.  As part of validating the hints, we convert these
+quantities to bytes to ensure that the hint is congruent with the file's
+allocation size.
+
+The maximum possible hint value is 2097151 (aka XFS_MAX_BMBT_EXTLEN).
+If the file allocation unit is larger than 2048, the unit conversion
+will exceed 32 bits in size, which overflows the uint32_t used to store
+the value used in the comparison.  This isn't a problem for files on the
+data device since the hint will always be a multiple of the block size.
+However, this is a problem for realtime files because the rtextent size
+can be any integer number of fs blocks, and truncation of upper bits
+changes the outcome of division.
+
+Eliminate the overflow by performing the congruency check in units of
+blocks, not bytes.  Otherwise, we get errors like this:
+
+$ truncate -s 500T /tmp/a
+$ mkfs.xfs -f -N /tmp/a -d extszinherit=2097151,rtinherit=1 -r extsize=28k
+illegal extent size hint 2097151, must be less than 2097151 and a multiple of 7.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_reflink.c |   91 +++++++++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_super.c   |    2 +
- fs/xfs/xfs_trace.h   |    3 ++
- 3 files changed, 85 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |   20 ++++++--------------
+ 1 file changed, 6 insertions(+), 14 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 82ceec8517a020..0222b78dedd92d 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1506,6 +1506,13 @@ xfs_reflink_remap_blocks(
- 	len = min_t(xfs_filblks_t, XFS_B_TO_FSB(mp, remap_len),
- 			XFS_MAX_FILEOFF);
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index f24fa628fecf1e..3fd1b03b4c78cc 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -819,13 +819,11 @@ xfs_inode_validate_extsize(
+ 	bool				rt_flag;
+ 	bool				hint_flag;
+ 	bool				inherit_flag;
+-	uint32_t			extsize_bytes;
+-	uint32_t			blocksize_bytes;
++	uint32_t			alloc_unit = 1;
  
-+	/*
-+	 * Make sure the end is aligned with an allocation unit, even if it's
-+	 * past EOF.
-+	 */
-+	if (xfs_inode_has_bigrtalloc(dest))
-+		len = xfs_blen_roundup_rtx(mp, len);
-+
- 	trace_xfs_reflink_remap_blocks(src, srcoff, len, dest, destoff);
- 
- 	while (len > 0) {
-@@ -1580,6 +1587,57 @@ xfs_reflink_zero_posteof(
- 	return xfs_zero_range(ip, isize, pos - isize, NULL);
- }
- 
-+#ifdef CONFIG_XFS_RT
-+/*
-+ * Adjust the length of the remap operation to end on an allocation unit (AU)
-+ * boundary.
-+ */
-+STATIC int
-+xfs_reflink_adjust_rtbigalloc_len(
-+	struct xfs_inode	*src,
-+	loff_t			pos_in,
-+	struct xfs_inode	*dest,
-+	loff_t			pos_out,
-+	loff_t			*len,
-+	unsigned int		remap_flags)
-+{
-+	unsigned int		alloc_unit = xfs_inode_alloc_unitsize(src);
-+	uint32_t		mod;
-+
-+	div_u64_rem(*len, alloc_unit, &mod);
-+
-+	/*
-+	 * We previously checked the AU alignment of both offsets, so we now
-+	 * have to check the AU alignment of the length.  The VFS remap prep
-+	 * function can change the length on us, so we can only make length
-+	 * adjustments after that.  If the length is aligned to an AU, we're
-+	 * good to go.
-+	 *
-+	 * Otherwise, the length is not aligned to an AU.  If the source file's
-+	 * range ends at EOF, the VFS ensured that the dest file's range also
-+	 * ends at EOF.  The actual remap function will round the (byte) length
-+	 * up to the nearest AU, so we're ok here too.
-+	 */
-+	if (mod == 0 || pos_in + *len == i_size_read(VFS_I(src)))
-+		return 0;
-+
-+	/*
-+	 * Otherwise, the only thing we can do is round the request length down
-+	 * to an AU boundary.  If the caller doesn't allow that, we cannot move
-+	 * forward.
-+	 */
-+	if (!(remap_flags & REMAP_FILE_CAN_SHORTEN))
-+		return -EINVAL;
-+
-+	/* Back off by a single extent. */
-+	(*len) -= mod;
-+	trace_xfs_reflink_adjust_rtbigalloc_len(src, pos_in, *len, dest, pos_out);
-+	return 0;
-+}
-+#else
-+# define xfs_reflink_adjust_rtbigalloc_len(...)		(0)
-+#endif /* CONFIG_XFS_RT */
-+
- /*
-  * Prepare two files for range cloning.  Upon a successful return both inodes
-  * will have the iolock and mmaplock held, the page cache of the out file will
-@@ -1622,6 +1680,7 @@ xfs_reflink_remap_prep(
- 	struct xfs_inode	*src = XFS_I(inode_in);
- 	struct inode		*inode_out = file_inode(file_out);
- 	struct xfs_inode	*dest = XFS_I(inode_out);
-+	const struct iomap_ops	*dax_read_ops = NULL;
- 	int			ret;
- 
- 	/* Lock both files against IO */
-@@ -1639,15 +1698,25 @@ xfs_reflink_remap_prep(
- 	if (IS_DAX(inode_in) != IS_DAX(inode_out))
- 		goto out_unlock;
- 
--	if (!IS_DAX(inode_in))
--		ret = generic_remap_file_range_prep(file_in, pos_in, file_out,
--				pos_out, len, remap_flags);
--	else
--		ret = dax_remap_file_range_prep(file_in, pos_in, file_out,
--				pos_out, len, remap_flags, &xfs_read_iomap_ops);
-+	ASSERT(is_power_of_2(xfs_inode_alloc_unitsize(dest)));
-+
-+	if (IS_DAX(inode_in))
-+		dax_read_ops = &xfs_read_iomap_ops;
-+
-+	ret = __generic_remap_file_range_prep(file_in, pos_in, file_out,
-+			pos_out, len, remap_flags, dax_read_ops,
-+			xfs_inode_alloc_unitsize(dest));
- 	if (ret || *len == 0)
- 		goto out_unlock;
- 
-+	/* Adjust the end to align to an allocation unit. */
-+	if (xfs_inode_has_bigrtalloc(src)) {
-+		ret = xfs_reflink_adjust_rtbigalloc_len(src, pos_in, dest,
-+				pos_out, len, remap_flags);
-+		if (ret || *len == 0)
-+			goto out_unlock;
-+	}
-+
- 	/* Attach dquots to dest inode before changing block map */
- 	ret = xfs_qm_dqattach(dest);
- 	if (ret)
-@@ -1896,11 +1965,13 @@ xfs_reflink_supports_rextsize(
- 	       return false;
+ 	rt_flag = (flags & XFS_DIFLAG_REALTIME);
+ 	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
+ 	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
+-	extsize_bytes = XFS_FSB_TO_B(mp, extsize);
  
  	/*
--	 * Reflink doesn't support rt extent size larger than a single fsblock
--	 * because we would have to perform CoW-around for unaligned write
--	 * requests to guarantee that we always remap entire rt extents.
-+	 * Reflink doesn't support file allocation units larger than a single
-+	 * block and not a power of two because we would have to perform
-+	 * CoW-around for unaligned write requests to guarantee that we always
-+	 * remap entire allocation units and the reflink code cannot yet handle
-+	 * rounding ranges to align to non powers of two.
+ 	 * This comment describes a historic gap in this verifier function.
+@@ -854,9 +852,7 @@ xfs_inode_validate_extsize(
  	 */
--	if (rextsize != 1)
-+	if (!is_power_of_2(rextsize))
- 		return false;
  
- 	return true;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 0fa7b7cc75c146..c91b9467a3eef8 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1757,7 +1757,7 @@ xfs_fs_fill_super(
- 		if (xfs_has_realtime(mp) &&
- 		    !xfs_reflink_supports_rextsize(mp, mp->m_sb.sb_rextsize)) {
- 			xfs_alert(mp,
--	"reflink not compatible with realtime extent size %u!",
-+	"reflink not compatible with non-power-of-2 realtime extent size %u!",
- 					mp->m_sb.sb_rextsize);
- 			error = -EINVAL;
- 			goto out_filestream_unmount;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 021ea65909c915..b218786e734df0 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3965,6 +3965,9 @@ TRACE_EVENT(xfs_reflink_remap_blocks,
- 		  __entry->dest_lblk)
- );
- DEFINE_DOUBLE_IO_EVENT(xfs_reflink_remap_range);
-+#ifdef CONFIG_XFS_RT
-+DEFINE_DOUBLE_IO_EVENT(xfs_reflink_adjust_rtbigalloc_len);
-+#endif /* CONFIG_XFS_RT */
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_remap_range_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_set_inode_flag_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_update_inode_size_error);
+ 	if (rt_flag)
+-		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
+-	else
+-		blocksize_bytes = mp->m_sb.sb_blocksize;
++		alloc_unit = mp->m_sb.sb_rextsize;
+ 
+ 	if ((hint_flag || inherit_flag) && !(S_ISDIR(mode) || S_ISREG(mode)))
+ 		return __this_address;
+@@ -874,7 +870,7 @@ xfs_inode_validate_extsize(
+ 	if (mode && !(hint_flag || inherit_flag) && extsize != 0)
+ 		return __this_address;
+ 
+-	if (extsize_bytes % blocksize_bytes)
++	if (extsize % alloc_unit)
+ 		return __this_address;
+ 
+ 	if (extsize > XFS_MAX_BMBT_EXTLEN)
+@@ -909,12 +905,10 @@ xfs_inode_validate_cowextsize(
+ {
+ 	bool				rt_flag;
+ 	bool				hint_flag;
+-	uint32_t			cowextsize_bytes;
+-	uint32_t			blocksize_bytes;
++	uint32_t			alloc_unit = 1;
+ 
+ 	rt_flag = (flags & XFS_DIFLAG_REALTIME);
+ 	hint_flag = (flags2 & XFS_DIFLAG2_COWEXTSIZE);
+-	cowextsize_bytes = XFS_FSB_TO_B(mp, cowextsize);
+ 
+ 	/*
+ 	 * Similar to extent size hints, a directory can be configured to
+@@ -929,9 +923,7 @@ xfs_inode_validate_cowextsize(
+ 	 */
+ 
+ 	if (rt_flag)
+-		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
+-	else
+-		blocksize_bytes = mp->m_sb.sb_blocksize;
++		alloc_unit = mp->m_sb.sb_rextsize;
+ 
+ 	if (hint_flag && !xfs_has_reflink(mp))
+ 		return __this_address;
+@@ -946,7 +938,7 @@ xfs_inode_validate_cowextsize(
+ 	if (mode && !hint_flag && cowextsize != 0)
+ 		return __this_address;
+ 
+-	if (cowextsize_bytes % blocksize_bytes)
++	if (cowextsize % alloc_unit)
+ 		return __this_address;
+ 
+ 	if (cowextsize > XFS_MAX_BMBT_EXTLEN)
 
