@@ -1,40 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B7022071
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:29:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB452AF07;
+	Fri, 13 Dec 2024 01:51:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734053363; cv=none; b=qiSdjMcE62u+zqRLobQOFDQTYfxzpk+uOZDDUK306jWvqcF43vpQoQXDUNnDE8DzGXBTLd2Jy4HO6CSjhI+HBOcdLcXjc0RlzD8F0OW/N+QnsGNPuEpV04JuHQNgvcO15g3cwf0Ocjdu/ZZkFGYibdw2r/bJmPUXOJu4I7cb8xY=
+	t=1734054710; cv=none; b=cASzcgDR/75qIiJ9cEVDr+PfoW69P1TlnbO3mqTJgvsZpePioZ5j1D9d4sxiiomUNwuMx+qoSOX+Yix+1gVrQTzkblsKwB+VBUG3sSn61MSesjkCMfGeVCVOIosMr65+fRZ+bD1eGxF3px2cVQhUsx2FL/WbPnAFC9B9UtPM1u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734053363; c=relaxed/simple;
-	bh=zuZpHkqboysASAemrWVpwKx/+YapZ8jcK6MSaSAzO2o=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZereDeD2CgbhRokDP74hT1KV2SZP/5AHg+S45Vf+OlrDWtL1JOzukTS1Ucvtd/vbS2WU78wsi4/7rRXoJXOBD3DrZb9YRPB4+6oPrX+lI968TSoPPvHCAXQfVB0ONfZiNeDGn5dYg7/1TxYA3BIZXBBpIJP7CuHrlsMXC37tuE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NIGE70Xb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734054710; c=relaxed/simple;
+	bh=A5hmFDPQrDk3mhkD1kROkrgTdZbf8cewr5kUL74YAuc=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=sohq0SkEHWjzJbznwNT4qI8brc90II6uH9XF1LvkhxShXEX1uFzv5WMF8jIipoH8g5qz4zVrt8XryuxCfeLA5VEBxNtXH+RX8muHA70oz0Mm320qJygbmZ/szW1MVv3DwlObaLHZbY2tUucN3ilx7wHfUH/RlnX8Cyy8bGy7Rp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=puUG3x9o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NIGE70Xb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 098FCC4CED3;
-	Fri, 13 Dec 2024 01:29:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="puUG3x9o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4156EC4CECE;
+	Fri, 13 Dec 2024 01:51:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734053363;
-	bh=zuZpHkqboysASAemrWVpwKx/+YapZ8jcK6MSaSAzO2o=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NIGE70Xbsdz0qgFOxVcfK5tehqmM7F1ZAgOXrV6dIrtqJ0zQ72DXxPG/wz+IS5suu
-	 sh6bFpiD6AWINZ5WnZWrSi+0FbLHSBY+W275x+NwoxVNhwXd0G8JewQtGUhx2wIkYF
-	 /BliivzfnQruhUoJy30YO/87Z+RWC6PVRRlE0747BvWzsS84fGGWZimMVOdwVETsoX
-	 V9aKC+WwAN9gPDO4K1Oya61bhI7GqfI8VZNT5SoDQQkRvHAtOU3x5d/O59qddaicGM
-	 JhK9atJyiLXjgXfi2MQcGb8WI9u4jS062NKGJbyRrICQbZsH/uCD/6WOv0YhdLSXZQ
-	 phowD5MAZEIOQ==
-Date: Thu, 12 Dec 2024 17:29:22 -0800
-Subject: [PATCH 35/50] xfs_mdrestore: restore rt group superblocks to realtime
- device
+	s=k20201202; t=1734054710;
+	bh=A5hmFDPQrDk3mhkD1kROkrgTdZbf8cewr5kUL74YAuc=;
+	h=Date:Subject:From:To:Cc:From;
+	b=puUG3x9o/7gVoQrSf/GXfxUd3SGgQwVdDIKEPWofni1a0p4RV8vu15aQUssH2etvJ
+	 E9pElEK6Vh55MnhyJezVLl7UEtm069GwYzLZ6WNUQmFx/IY6L1XgPl33StXswbZd59
+	 pRQZYq4dI4QE/zo2ZUXXTxHAfwVUxeB6On397jsf6ZkfDNGChXr1GrKx7f6deUfmKe
+	 PJgl/gNbF09BvyaxWrU3onebUIzly2xEw3XuGEf32RpC+d1+od2GdcpzrXd1giapjS
+	 BvbLdY+mFHHH5RVkl4hhCufkTHtR4EvEfdsbwpywB1XSyfleDUOv0cSPudk2hS8yEK
+	 ooSrx+ViX/NHQ==
+Date: Thu, 12 Dec 2024 17:51:49 -0800
+Subject: [GIT PULL] xfs: bug fixes for 6.13
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405323720.1228937.8741858826144010013.stgit@frogsfrogsfrogs>
-In-Reply-To: <173405323136.1228937.15295934936342173452.stgit@frogsfrogsfrogs>
-References: <173405323136.1228937.15295934936342173452.stgit@frogsfrogsfrogs>
+To: cem@kernel.org
+Cc: dan.carpenter@linaro.org, hch@lst.de, jlayton@kernel.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org, wozizhi@huawei.com
+Message-ID: <173405445870.1255647.17634074191421041925.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,207 +40,104 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi Carlos,
 
-Support restoring realtime device metadata to the realtime device, if
-the dumped filesystem had one.
+Please pull this branch with changes for xfs.  Christoph said that he'd
+rather we rebased the whole xfs for-next branch to preserve
+bisectability so this branch folds in his fix for !quota builds and a
+missing zero initialization for struct kstat in the mgtime conversion
+patch that the build robots just pointed out.
+
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
+
+--D
+
+The following changes since commit f92f4749861b06fed908d336b4dee1326003291b:
+
+Merge tag 'clk-fixes-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/clk/linux (2024-12-10 18:21:40 -0800)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/xfs-6.13-fixes_2024-12-12
+
+for you to fetch changes up to 12f2930f5f91bc0d67794c69d1961098c7c72040:
+
+xfs: port xfs_ioc_start_commit to multigrain timestamps (2024-12-12 17:45:13 -0800)
+
+----------------------------------------------------------------
+xfs: bug fixes for 6.13 [01/12]
+
+Bug fixes for 6.13.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- man/man8/xfs_mdrestore.8  |   10 ++++++++++
- mdrestore/xfs_mdrestore.c |   47 ++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 48 insertions(+), 9 deletions(-)
 
+----------------------------------------------------------------
+Darrick J. Wong (28):
+xfs: fix off-by-one error in fsmap's end_daddr usage
+xfs: metapath scrubber should use the already loaded inodes
+xfs: keep quota directory inode loaded
+xfs: return a 64-bit block count from xfs_btree_count_blocks
+xfs: don't drop errno values when we fail to ficlone the entire range
+xfs: separate healthy clearing mask during repair
+xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when zapping a symlink
+xfs: mark metadir repair tempfiles with IRECOVERY
+xfs: fix null bno_hint handling in xfs_rtallocate_rtg
+xfs: fix error bailout in xfs_rtginode_create
+xfs: update btree keys correctly when _insrec splits an inode root block
+xfs: fix scrub tracepoints when inode-rooted btrees are involved
+xfs: unlock inodes when erroring out of xfs_trans_alloc_dir
+xfs: only run precommits once per transaction object
+xfs: avoid nested calls to __xfs_trans_commit
+xfs: don't lose solo superblock counter update transactions
+xfs: don't lose solo dquot update transactions
+xfs: separate dquot buffer reads from xfs_dqflush
+xfs: clean up log item accesses in xfs_qm_dqflush{,_done}
+xfs: attach dquot buffer to dquot log item buffer
+xfs: convert quotacheck to attach dquot buffers
+xfs: fix sb_spino_align checks for large fsblock sizes
+xfs: don't move nondir/nonreg temporary repair files to the metadir namespace
+xfs: don't crash on corrupt /quotas dirent
+xfs: check pre-metadir fields correctly
+xfs: fix zero byte checking in the superblock scrubber
+xfs: return from xfs_symlink_verify early on V4 filesystems
+xfs: port xfs_ioc_start_commit to multigrain timestamps
 
-diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
-index f60e7b56ebf0d1..6f6e14e96c6a5c 100644
---- a/man/man8/xfs_mdrestore.8
-+++ b/man/man8/xfs_mdrestore.8
-@@ -8,6 +8,9 @@ .SH SYNOPSIS
- ] [
- .B \-l
- .I logdev
-+] [
-+.B \-r
-+.I rtdev
- ]
- .I source
- .I target
-@@ -17,6 +20,9 @@ .SH SYNOPSIS
- [
- .B \-l
- .I logdev
-+] [
-+.B \-r
-+.I rtdev
- ]
- .I source
- .br
-@@ -61,6 +67,10 @@ .SH OPTIONS
- In such a scenario, the user has to provide a device to which the log device
- contents from the metadump file are copied.
- .TP
-+.BI \-r " rtdev"
-+Restore realtime device metadata to this device.
-+This is only required for a metadump in v2 format.
-+.TP
- .B \-V
- Prints the version number and exits.
- .SH DIAGNOSTICS
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index c5584fec68813e..d5014981b15a68 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -28,7 +28,8 @@ struct mdrestore_ops {
- 	void (*show_info)(union mdrestore_headers *header, const char *md_file);
- 	void (*restore)(union mdrestore_headers *header, FILE *md_fp,
- 			const struct mdrestore_dev *ddev,
--			const struct mdrestore_dev *logdev);
-+			const struct mdrestore_dev *logdev,
-+			const struct mdrestore_dev *rtdev);
- };
- 
- static struct mdrestore {
-@@ -37,6 +38,7 @@ static struct mdrestore {
- 	bool			show_info;
- 	bool			progress_since_warning;
- 	bool			external_log;
-+	bool			realtime_data;
- } mdrestore;
- 
- static void
-@@ -212,7 +214,8 @@ restore_v1(
- 	union mdrestore_headers		*h,
- 	FILE				*md_fp,
- 	const struct mdrestore_dev	*ddev,
--	const struct mdrestore_dev	*logdev)
-+	const struct mdrestore_dev	*logdev,
-+	const struct mdrestore_dev	*rtdev)
- {
- 	struct xfs_metablock	*metablock;	/* header + index + blocks */
- 	__be64			*block_index;
-@@ -336,8 +339,9 @@ read_header_v2(
- 	if (!mdrestore.external_log && (compat & XFS_MD2_COMPAT_EXTERNALLOG))
- 		fatal("External Log device is required\n");
- 
--	if (h->v2.xmh_incompat_flags & cpu_to_be32(XFS_MD2_INCOMPAT_RTDEVICE))
--		fatal("Realtime device not yet supported\n");
-+	if ((h->v2.xmh_incompat_flags & cpu_to_be32(XFS_MD2_INCOMPAT_RTDEVICE)) &&
-+	    !mdrestore.realtime_data)
-+		fatal("Realtime device is required\n");
- }
- 
- static void
-@@ -346,14 +350,17 @@ show_info_v2(
- 	const char		*md_file)
- {
- 	uint32_t		compat_flags;
-+	uint32_t		incompat_flags;
- 
- 	compat_flags = be32_to_cpu(h->v2.xmh_compat_flags);
-+	incompat_flags = be32_to_cpu(h->v2.xmh_incompat_flags);
- 
--	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, %s metadata blocks,\n",
-+	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, rt device contents are %sdumped, %s metadata blocks,\n",
- 		md_file,
- 		compat_flags & XFS_MD2_COMPAT_OBFUSCATED ? "":"not ",
- 		compat_flags & XFS_MD2_COMPAT_DIRTYLOG ? "dirty":"clean",
- 		compat_flags & XFS_MD2_COMPAT_EXTERNALLOG ? "":"not ",
-+		incompat_flags & XFS_MD2_INCOMPAT_RTDEVICE ? "":"not ",
- 		compat_flags & XFS_MD2_COMPAT_FULLBLOCKS ? "full":"zeroed");
- }
- 
-@@ -390,7 +397,8 @@ restore_v2(
- 	union mdrestore_headers		*h,
- 	FILE				*md_fp,
- 	const struct mdrestore_dev	*ddev,
--	const struct mdrestore_dev	*logdev)
-+	const struct mdrestore_dev	*logdev,
-+	const struct mdrestore_dev	*rtdev)
- {
- 	struct xfs_sb		sb;
- 	struct xfs_meta_extent	xme;
-@@ -431,6 +439,11 @@ restore_v2(
- 		verify_device_size(logdev, sb.sb_logblocks, sb.sb_blocksize);
- 	}
- 
-+	if (sb.sb_rblocks > 0) {
-+		ASSERT(mdrestore.realtime_data == true);
-+		verify_device_size(rtdev, sb.sb_rblocks, sb.sb_blocksize);
-+	}
-+
- 	if (pwrite(ddev->fd, block_buffer, len, 0) < 0)
- 		fatal("error writing primary superblock: %s\n",
- 			strerror(errno));
-@@ -459,6 +472,10 @@ restore_v2(
- 			device = "log";
- 			fd = logdev->fd;
- 			break;
-+		case XME_ADDR_RT_DEVICE:
-+			device = "rt";
-+			fd = rtdev->fd;
-+			break;
- 		default:
- 			fatal("Invalid device found in metadump\n");
- 			break;
-@@ -488,7 +505,7 @@ static struct mdrestore_ops mdrestore_ops_v2 = {
- static void
- usage(void)
- {
--	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] source target\n",
-+	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] [-r rtdev] source target\n",
- 		progname);
- 	exit(1);
- }
-@@ -501,18 +518,21 @@ main(
- 	union mdrestore_headers	headers;
- 	DEFINE_MDRESTORE_DEV(ddev);
- 	DEFINE_MDRESTORE_DEV(logdev);
-+	DEFINE_MDRESTORE_DEV(rtdev);
- 	FILE			*src_f;
- 	char			*logdev_path = NULL;
-+	char			*rtdev_path = NULL;
- 	int			c;
- 
- 	mdrestore.show_progress = false;
- 	mdrestore.show_info = false;
- 	mdrestore.progress_since_warning = false;
- 	mdrestore.external_log = false;
-+	mdrestore.realtime_data = false;
- 
- 	progname = basename(argv[0]);
- 
--	while ((c = getopt(argc, argv, "gil:V")) != EOF) {
-+	while ((c = getopt(argc, argv, "gil:r:V")) != EOF) {
- 		switch (c) {
- 			case 'g':
- 				mdrestore.show_progress = true;
-@@ -524,6 +544,10 @@ main(
- 				logdev_path = optarg;
- 				mdrestore.external_log = true;
- 				break;
-+			case 'r':
-+				rtdev_path = optarg;
-+				mdrestore.realtime_data = true;
-+				break;
- 			case 'V':
- 				printf("%s version %s\n", progname, VERSION);
- 				exit(0);
-@@ -592,10 +616,15 @@ main(
- 	if (mdrestore.external_log)
- 		open_device(&logdev, logdev_path);
- 
--	mdrestore.mdrops->restore(&headers, src_f, &ddev, &logdev);
-+	/* check and open realtime device */
-+	if (mdrestore.realtime_data)
-+		open_device(&rtdev, rtdev_path);
-+
-+	mdrestore.mdrops->restore(&headers, src_f, &ddev, &logdev, &rtdev);
- 
- 	close_device(&ddev);
- 	close_device(&logdev);
-+	close_device(&rtdev);
- 
- 	if (src_f != stdin)
- 		fclose(src_f);
+fs/xfs/libxfs/xfs_btree.c          |  33 +++++--
+fs/xfs/libxfs/xfs_btree.h          |   2 +-
+fs/xfs/libxfs/xfs_ialloc_btree.c   |   4 +-
+fs/xfs/libxfs/xfs_rtgroup.c        |   2 +-
+fs/xfs/libxfs/xfs_sb.c             |  11 ++-
+fs/xfs/libxfs/xfs_symlink_remote.c |   4 +-
+fs/xfs/scrub/agheader.c            |  77 +++++++++++----
+fs/xfs/scrub/agheader_repair.c     |   6 +-
+fs/xfs/scrub/fscounters.c          |   2 +-
+fs/xfs/scrub/health.c              |  57 ++++++-----
+fs/xfs/scrub/ialloc.c              |   4 +-
+fs/xfs/scrub/metapath.c            |  68 +++++--------
+fs/xfs/scrub/refcount.c            |   2 +-
+fs/xfs/scrub/scrub.h               |   6 ++
+fs/xfs/scrub/symlink_repair.c      |   3 +-
+fs/xfs/scrub/tempfile.c            |  22 ++++-
+fs/xfs/scrub/trace.h               |   2 +-
+fs/xfs/xfs_bmap_util.c             |   2 +-
+fs/xfs/xfs_dquot.c                 | 195 +++++++++++++++++++++++++++++++------
+fs/xfs/xfs_dquot.h                 |   6 +-
+fs/xfs/xfs_dquot_item.c            |  51 +++++++---
+fs/xfs/xfs_dquot_item.h            |   7 ++
+fs/xfs/xfs_exchrange.c             |  14 +--
+fs/xfs/xfs_file.c                  |   8 ++
+fs/xfs/xfs_fsmap.c                 |  38 +++++---
+fs/xfs/xfs_inode.h                 |   2 +-
+fs/xfs/xfs_qm.c                    | 102 +++++++++++++------
+fs/xfs/xfs_qm.h                    |   1 +
+fs/xfs/xfs_quota.h                 |   5 +-
+fs/xfs/xfs_rtalloc.c               |   2 +-
+fs/xfs/xfs_trans.c                 |  58 ++++++-----
+fs/xfs/xfs_trans_ail.c             |   2 +-
+fs/xfs/xfs_trans_dquot.c           |  31 +++++-
+33 files changed, 578 insertions(+), 251 deletions(-)
 
