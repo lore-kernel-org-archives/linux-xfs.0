@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53C9DDDC
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:00:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A312633D1
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:00:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734051604; cv=none; b=AwEGG7y3bTBssEQ3Hu9zW4GbdEk2hhr4/j4vML/PGMBa2v2qK4O0b15gc81zNA4fUFYi0BKk71cXPDpcZz6iOMEjbKyUxsT82WQE/+zuiOtnYBubT6DeimYFQ8Tq98QlppnZd1D+rmjXp/Q1hSVNNGsjm4YzeyfT/cVGvRGsGZI=
+	t=1734051622; cv=none; b=EFI31A652+eccmGUrQjFZMoNKNlmE1NxdDbMeUA9YTRaKFdAP66EyCXA8pQjo2ViBFGikomNbU5GpieK6w1ILA2SUZ3dSiiOaNcIa9RYnA598p0dAWjA37XTx7gWiPXNOsfWrI8cgbwfwM9V5T4YbPULFPvA20IUf8C+/V2oo+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734051604; c=relaxed/simple;
-	bh=cAVmFIGGg8MNHEqaT8gU4BUe3LqOT87yT/6Gbjmabfs=;
+	s=arc-20240116; t=1734051622; c=relaxed/simple;
+	bh=KxzKVBAqmkCo107hCEzHl1aAQsVGoze3jh6ydvl4Nec=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mJIxlVq8fkbwrwXtLBi4oRaAtzbFo0gnsRppNQsZmMI4CdgyfuH2AnBb2ow+x0tv7EZWucBKSjWO2D2FDR719qsevknYEo4dtUyHO70DHkyWcQgYCQxfTbcXcmg3rU0DKyMB55i2rMD3tbVbpQIaTc1vMEDJb4ZYM6qVVJdV5j8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bs08bTo3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Yr5H3u3CCNxrMfSFwAB0Ti4lPHoYXZ6fOgsfijSQao3Ez/4wTZgp8li4gwEdsrsV1C7mNdR810ZdFvs1/WHggecZsiWmwAo5mXQPc8PohEEmt5aM5Xg3FZrcXvLtHxjqyzudo6xBZMEZQbop1IEHiND+STpsRyZsR86qyYgqdHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=anDh/JFg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bs08bTo3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EB7AC4CECE;
-	Fri, 13 Dec 2024 01:00:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="anDh/JFg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C3C8C4CECE;
+	Fri, 13 Dec 2024 01:00:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734051604;
-	bh=cAVmFIGGg8MNHEqaT8gU4BUe3LqOT87yT/6Gbjmabfs=;
+	s=k20201202; t=1734051620;
+	bh=KxzKVBAqmkCo107hCEzHl1aAQsVGoze3jh6ydvl4Nec=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Bs08bTo3X0nY5ut3KSFLRdQik3FF4QHKmsBD5hjONn3mpPOfZWH8s/YgPGd+jq5Jc
-	 U9SFH+t7qcfpVMIy6k5uPwVkp9iM1RWksTjwxk++VO1SVBFdp4GiEqN8EXrF/LN5Ir
-	 HDDNx/THhzGQOjD7OAMFEr+Naht6l3cND6f5MaET5GCf401V+h5a9ZYX2NfsOrTofc
-	 h2L8rQrCRAtEc1mzcVbWM8DU4JQaVrUBLohN3wiwiK1juG+F7x+xSPvMmC7LBz8fqz
-	 gmdtvMtn3DoewBfEw/jKt42QyE/c92gVKfuW+SLPykHLghJi7XhxneBfhVrd8/iB+q
-	 kKhmVt/sSMhiw==
-Date: Thu, 12 Dec 2024 17:00:03 -0800
-Subject: [PATCH 8/8] xfs: support storing records in the inode core root
+	b=anDh/JFgTU38tDV0ByGfUZKry844c3cgihS0e0AA2Re+KqfeZohmD8AZ+oL7jnaLr
+	 P0qKuR49+ObpU3BWfmnTDPMh0m4JSEqOLgCqFOhg9CEfHkvItVFxfLJLEnQ8mkQ+EG
+	 6uTAXpPSPVNMzthl+psKEd+6HIKW4+Fc7y3VRlRAqlnmNWhsxywpfLCdYPrqLC0/UI
+	 iEQPNbQuto2b5dqMkjUzYPt+ri9Er1ihkP+oRw1juIX1lg0Lu3S8t1B3Uj5wj7HZ43
+	 A5GfaRfLtm4eq6Pm81/ArPNR/Hrav2yeBTTaN3bDQEorDc7d5Nh1J6zHF1jh3MIi57
+	 lP73mCEtccNoQ==
+Date: Thu, 12 Dec 2024 17:00:19 -0800
+Subject: [PATCH 1/2] xfs: prepare to reuse the dquot pointer space in struct
+ xfs_inode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405122297.1180922.14475265699161663487.stgit@frogsfrogsfrogs>
-In-Reply-To: <173405122140.1180922.1477850791026540480.stgit@frogsfrogsfrogs>
-References: <173405122140.1180922.1477850791026540480.stgit@frogsfrogsfrogs>
+Message-ID: <173405122719.1181241.4694610206738243416.stgit@frogsfrogsfrogs>
+In-Reply-To: <173405122694.1181241.15502767706128799927.stgit@frogsfrogsfrogs>
+References: <173405122694.1181241.15502767706128799927.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,281 +46,199 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add the necessary flags and code so that we can support storing leaf
-records in the inode root block of a btree.  This hasn't been necessary
-before, but the realtime rmapbt will need to be able to do this.
+Files participating in the metadata directory tree are not accounted to
+the quota subsystem.  Therefore, the i_[ugp]dquot pointers in struct
+xfs_inode are never used and should always be NULL.
+
+In the next patch we want to add a u64 count of fs blocks reserved for
+metadata btree expansion, but we don't want every inode in the fs to pay
+the memory price for this feature.  The intent is to union those three
+pointers with the u64 counter, but for that to work we must guard
+against all access to the dquot pointers for metadata files.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree.c         |  138 ++++++++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_btree.h         |    2 -
- fs/xfs/libxfs/xfs_btree_staging.c |    9 ++
- 3 files changed, 132 insertions(+), 17 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c |    4 +---
+ fs/xfs/libxfs/xfs_bmap.c |    4 +---
+ fs/xfs/scrub/tempfile.c  |    1 +
+ fs/xfs/xfs_dquot.h       |    3 +++
+ fs/xfs/xfs_exchrange.c   |    3 +++
+ fs/xfs/xfs_inode.h       |   10 +++++++---
+ fs/xfs/xfs_qm.c          |    2 ++
+ fs/xfs/xfs_quota.h       |    5 -----
+ fs/xfs/xfs_trans.c       |    4 ++++
+ fs/xfs/xfs_trans_dquot.c |    8 ++++----
+ 10 files changed, 26 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index e83a8de5fb8746..5ab201ef041e7d 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1537,12 +1537,16 @@ xfs_btree_log_recs(
- 	int			first,
- 	int			last)
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 17875ad865f5d6..8c04acd30d489c 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1004,9 +1004,7 @@ xfs_attr_add_fork(
+ 	unsigned int		blks;		/* space reservation */
+ 	int			error;		/* error return value */
+ 
+-	if (xfs_is_metadir_inode(ip))
+-		ASSERT(XFS_IS_DQDETACHED(ip));
+-	else
++	if (!xfs_is_metadir_inode(ip))
+ 		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 
+ 	blks = XFS_ADDAFORK_SPACE_RES(mp);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 0842577755f7bb..02323936cc9b20 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1042,9 +1042,7 @@ xfs_bmap_add_attrfork(
+ 	int			error;		/* error return value */
+ 
+ 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+-	if (xfs_is_metadir_inode(ip))
+-		ASSERT(XFS_IS_DQDETACHED(ip));
+-	else
++	if (!xfs_is_metadir_inode(ip))
+ 		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 	ASSERT(!xfs_inode_has_attr_fork(ip));
+ 
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 2d7ca7e1bbca0f..4ebb5f8459e8f3 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -749,6 +749,7 @@ xrep_tempexch_reserve_quota(
+ 	 * or the two inodes have the same dquots.
+ 	 */
+ 	if (!XFS_IS_QUOTA_ON(tp->t_mountp) || req->ip1 == req->ip2 ||
++	    xfs_is_metadir_inode(req->ip1) ||
+ 	    (req->ip1->i_udquot == req->ip2->i_udquot &&
+ 	     req->ip1->i_gdquot == req->ip2->i_gdquot &&
+ 	     req->ip1->i_pdquot == req->ip2->i_pdquot))
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index c617bac75361b2..61217adf5ba551 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -160,6 +160,9 @@ static inline struct xfs_dquot *xfs_inode_dquot(
+ 	struct xfs_inode	*ip,
+ 	xfs_dqtype_t		type)
  {
-+	if (!bp) {
-+		xfs_trans_log_inode(cur->bc_tp, cur->bc_ino.ip,
-+				xfs_ilog_fbroot(cur->bc_ino.whichfork));
++	if (xfs_is_metadir_inode(ip))
++		return NULL;
++
+ 	switch (type) {
+ 	case XFS_DQTYPE_USER:
+ 		return ip->i_udquot;
+diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
+index dd24de420714ab..d1c1d5819fbfe0 100644
+--- a/fs/xfs/xfs_exchrange.c
++++ b/fs/xfs/xfs_exchrange.c
+@@ -119,6 +119,9 @@ xfs_exchrange_reserve_quota(
+ 	int				ip1_error = 0;
+ 	int				error;
+ 
++	ASSERT(!xfs_is_metadir_inode(req->ip1));
++	ASSERT(!xfs_is_metadir_inode(req->ip2));
++
+ 	/*
+ 	 * Don't bother with a quota reservation if we're not enforcing them
+ 	 * or the two inodes have the same dquots.
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 1648dc5a806882..1141c2e8e123ae 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -25,9 +25,13 @@ struct xfs_dquot;
+ typedef struct xfs_inode {
+ 	/* Inode linking and identification information. */
+ 	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
+-	struct xfs_dquot	*i_udquot;	/* user dquot */
+-	struct xfs_dquot	*i_gdquot;	/* group dquot */
+-	struct xfs_dquot	*i_pdquot;	/* project dquot */
++	union {
++		struct {
++			struct xfs_dquot *i_udquot;	/* user dquot */
++			struct xfs_dquot *i_gdquot;	/* group dquot */
++			struct xfs_dquot *i_pdquot;	/* project dquot */
++		};
++	};
+ 
+ 	/* Inode location stuff */
+ 	xfs_ino_t		i_ino;		/* inode number (agno/agino)*/
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index dc8b1010d4d332..3abab5fb593e37 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -428,6 +428,8 @@ void
+ xfs_qm_dqdetach(
+ 	xfs_inode_t	*ip)
+ {
++	if (xfs_is_metadir_inode(ip))
 +		return;
-+	}
+ 	if (!(ip->i_udquot || ip->i_gdquot || ip->i_pdquot))
+ 		return;
  
- 	xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLFT_BTREE_BUF);
- 	xfs_trans_log_buf(cur->bc_tp, bp,
- 			  xfs_btree_rec_offset(cur, first),
- 			  xfs_btree_rec_offset(cur, last + 1) - 1);
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index d7565462af3dc4..105e6eb5762011 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -29,11 +29,6 @@ struct xfs_buf;
+ 	 (XFS_IS_GQUOTA_ON(mp) && (ip)->i_gdquot == NULL) || \
+ 	 (XFS_IS_PQUOTA_ON(mp) && (ip)->i_pdquot == NULL))
+ 
+-#define XFS_IS_DQDETACHED(ip) \
+-	((ip)->i_udquot == NULL && \
+-	 (ip)->i_gdquot == NULL && \
+-	 (ip)->i_pdquot == NULL)
 -
- }
+ #define XFS_QM_NEED_QUOTACHECK(mp) \
+ 	((XFS_IS_UQUOTA_ON(mp) && \
+ 		(mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD) == 0) || \
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 4cd25717c9d130..f53f82456288e5 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1266,6 +1266,9 @@ xfs_trans_alloc_ichange(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
  
- /*
-@@ -3078,6 +3082,59 @@ xfs_btree_split(
- #define xfs_btree_split	__xfs_btree_split
- #endif /* __KERNEL__ */
- 
-+/* Move the records from a root leaf block to a separate block. */
-+STATIC void
-+xfs_btree_promote_leaf_iroot(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_btree_block	*block,
-+	struct xfs_buf		*cbp,
-+	union xfs_btree_ptr	*cptr,
-+	struct xfs_btree_block	*cblock)
-+{
-+	union xfs_btree_rec	*rp;
-+	union xfs_btree_rec	*crp;
-+	union xfs_btree_key	*kp;
-+	union xfs_btree_ptr	*pp;
-+	struct xfs_btree_block	*broot;
-+	int			numrecs = xfs_btree_get_numrecs(block);
++	if (xfs_is_metadir_inode(ip))
++		goto out;
 +
-+	/* Copy the records from the leaf broot into the new child block. */
-+	rp = xfs_btree_rec_addr(cur, 1, block);
-+	crp = xfs_btree_rec_addr(cur, 1, cblock);
-+	xfs_btree_copy_recs(cur, crp, rp, numrecs);
-+
-+	/*
-+	 * Increment the tree height.
-+	 *
-+	 * Trickery here: The amount of memory that we need per record for the
-+	 * ifork's btree root block may change when we convert the broot from a
-+	 * leaf to a node block.  Free the existing leaf broot so that nobody
-+	 * thinks we need to migrate node pointers when we realloc the broot
-+	 * buffer after bumping nlevels.
-+	 */
-+	cur->bc_ops->broot_realloc(cur, 0);
-+	cur->bc_nlevels++;
-+	cur->bc_levels[1].ptr = 1;
-+
-+	/*
-+	 * Allocate a new node broot and initialize it to point to the new
-+	 * child block.
-+	 */
-+	broot = cur->bc_ops->broot_realloc(cur, 1);
-+	xfs_btree_init_block(cur->bc_mp, broot, cur->bc_ops,
-+			cur->bc_nlevels - 1, 1, cur->bc_ino.ip->i_ino);
-+
-+	pp = xfs_btree_ptr_addr(cur, 1, broot);
-+	kp = xfs_btree_key_addr(cur, 1, broot);
-+	xfs_btree_copy_ptrs(cur, pp, cptr, 1);
-+	xfs_btree_get_keys(cur, cblock, kp);
-+
-+	/* Attach the new block to the cursor and log it. */
-+	xfs_btree_setbuf(cur, 0, cbp);
-+	xfs_btree_log_block(cur, cbp, XFS_BB_ALL_BITS);
-+	xfs_btree_log_recs(cur, cbp, 1, numrecs);
-+}
-+
- /*
-  * Move the keys and pointers from a root block to a separate block.
-  *
-@@ -3163,7 +3220,7 @@ xfs_btree_new_iroot(
- 	struct xfs_buf		*cbp;		/* buffer for cblock */
- 	struct xfs_btree_block	*block;		/* btree block */
- 	struct xfs_btree_block	*cblock;	/* child btree block */
--	union xfs_btree_ptr	*pp;
-+	union xfs_btree_ptr	aptr;
- 	union xfs_btree_ptr	nptr;		/* new block addr */
- 	int			level;		/* btree level */
- 	int			error;		/* error return code */
-@@ -3175,10 +3232,15 @@ xfs_btree_new_iroot(
- 	level = cur->bc_nlevels - 1;
- 
- 	block = xfs_btree_get_iroot(cur);
--	pp = xfs_btree_ptr_addr(cur, 1, block);
-+	ASSERT(level > 0 || (cur->bc_ops->geom_flags & XFS_BTGEO_IROOT_RECORDS));
-+	if (level > 0)
-+		aptr = *xfs_btree_ptr_addr(cur, 1, block);
-+	else
-+		aptr.l = cpu_to_be64(XFS_INO_TO_FSB(cur->bc_mp,
-+				cur->bc_ino.ip->i_ino));
- 
- 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
--	error = xfs_btree_alloc_block(cur, pp, &nptr, stat);
-+	error = xfs_btree_alloc_block(cur, &aptr, &nptr, stat);
- 	if (error)
- 		goto error0;
- 	if (*stat == 0)
-@@ -3204,10 +3266,14 @@ xfs_btree_new_iroot(
- 			cblock->bb_u.s.bb_blkno = bno;
+ 	error = xfs_qm_dqattach_locked(ip, false);
+ 	if (error) {
+ 		/* Caller should have allocated the dquots! */
+@@ -1334,6 +1337,7 @@ xfs_trans_alloc_ichange(
+ 			goto out_cancel;
  	}
  
--	error = xfs_btree_promote_node_iroot(cur, block, level, cbp, &nptr,
--			cblock);
--	if (error)
--		goto error0;
-+	if (level > 0) {
-+		error = xfs_btree_promote_node_iroot(cur, block, level, cbp,
-+				&nptr, cblock);
-+		if (error)
-+			goto error0;
-+	} else {
-+		xfs_btree_promote_leaf_iroot(cur, block, cbp, &nptr, cblock);
-+	}
++out:
+ 	*tpp = tp;
+ 	return 0;
  
- 	*logflags |= XFS_ILOG_CORE | xfs_ilog_fbroot(cur->bc_ino.whichfork);
- 	*stat = 1;
-@@ -3726,6 +3792,43 @@ xfs_btree_insert(
- 	return error;
- }
- 
-+/* Move the records from a child leaf block to the root block. */
-+STATIC void
-+xfs_btree_demote_leaf_child(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_btree_block	*cblock,
-+	int			numrecs)
-+{
-+	union xfs_btree_rec	*rp;
-+	union xfs_btree_rec	*crp;
-+	struct xfs_btree_block	*broot;
-+
-+	/*
-+	 * Decrease the tree height.
-+	 *
-+	 * Trickery here: The amount of memory that we need per record for the
-+	 * ifork's btree root block may change when we convert the broot from a
-+	 * node to a leaf.  Free the old node broot so that we can get a fresh
-+	 * leaf broot.
-+	 */
-+	cur->bc_ops->broot_realloc(cur, 0);
-+	cur->bc_nlevels--;
-+
-+	/*
-+	 * Allocate a new leaf broot and copy the records from the old child.
-+	 * Detach the old child from the cursor.
-+	 */
-+	broot = cur->bc_ops->broot_realloc(cur, numrecs);
-+	xfs_btree_init_block(cur->bc_mp, broot, cur->bc_ops, 0, numrecs,
-+			cur->bc_ino.ip->i_ino);
-+
-+	rp = xfs_btree_rec_addr(cur, 1, broot);
-+	crp = xfs_btree_rec_addr(cur, 1, cblock);
-+	xfs_btree_copy_recs(cur, rp, crp, numrecs);
-+
-+	cur->bc_levels[0].bp = NULL;
-+}
-+
- /*
-  * Move the keyptrs from a child node block to the root block.
-  *
-@@ -3804,14 +3907,19 @@ xfs_btree_kill_iroot(
- #endif
- 
- 	ASSERT(cur->bc_ops->type == XFS_BTREE_TYPE_INODE);
--	ASSERT(cur->bc_nlevels > 1);
-+	ASSERT((cur->bc_ops->geom_flags & XFS_BTGEO_IROOT_RECORDS) ||
-+	       cur->bc_nlevels > 1);
- 
- 	/*
- 	 * Don't deal with the root block needs to be a leaf case.
- 	 * We're just going to turn the thing back into extents anyway.
- 	 */
- 	level = cur->bc_nlevels - 1;
--	if (level == 1)
-+	if (level == 1 && !(cur->bc_ops->geom_flags & XFS_BTGEO_IROOT_RECORDS))
-+		goto out0;
-+
-+	/* If we're already a leaf, jump out. */
-+	if (level == 0)
- 		goto out0;
- 
- 	/*
-@@ -3841,9 +3949,13 @@ xfs_btree_kill_iroot(
- 	ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
- #endif
- 
--	error = xfs_btree_demote_node_child(cur, cblock, level, numrecs);
--	if (error)
--		return error;
-+	if (level > 1) {
-+		error = xfs_btree_demote_node_child(cur, cblock, level,
-+				numrecs);
-+		if (error)
-+			return error;
-+	} else
-+		xfs_btree_demote_leaf_child(cur, cblock, numrecs);
- 
- 	error = xfs_btree_free_block(cur, cbp);
- 	if (error)
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 8380ae0a64dd5e..3b8c2ccad90847 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -233,7 +233,7 @@ struct xfs_btree_ops {
- 
- /* btree geometry flags */
- #define XFS_BTGEO_OVERLAPPING		(1U << 0) /* overlapping intervals */
--
-+#define XFS_BTGEO_IROOT_RECORDS		(1U << 1) /* iroot can store records */
- 
- union xfs_btree_irec {
- 	struct xfs_alloc_rec_incore	a;
-diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
-index 6949297031529e..58c146b5c9d479 100644
---- a/fs/xfs/libxfs/xfs_btree_staging.c
-+++ b/fs/xfs/libxfs/xfs_btree_staging.c
-@@ -573,6 +573,7 @@ xfs_btree_bload_compute_geometry(
- 	struct xfs_btree_bload	*bbl,
- 	uint64_t		nr_records)
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 713b6d243e5631..765456bf342851 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -156,7 +156,8 @@ xfs_trans_mod_ino_dquot(
+ 	unsigned int			field,
+ 	int64_t				delta)
  {
-+	const struct xfs_btree_ops *ops = cur->bc_ops;
- 	uint64_t		nr_blocks = 0;
- 	uint64_t		nr_this_level;
+-	ASSERT(!xfs_is_metadir_inode(ip) || XFS_IS_DQDETACHED(ip));
++	if (xfs_is_metadir_inode(ip))
++		return;
  
-@@ -599,7 +600,7 @@ xfs_btree_bload_compute_geometry(
- 		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
- 				&avg_per_block, &level_blocks, &dontcare64);
+ 	xfs_trans_mod_dquot(tp, dqp, field, delta);
  
--		if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE) {
-+		if (ops->type == XFS_BTREE_TYPE_INODE) {
- 			/*
- 			 * If all the items we want to store at this level
- 			 * would fit in the inode root block, then we have our
-@@ -607,7 +608,9 @@ xfs_btree_bload_compute_geometry(
- 			 *
- 			 * Note that bmap btrees forbid records in the root.
- 			 */
--			if (level != 0 && nr_this_level <= avg_per_block) {
-+			if ((level != 0 ||
-+			     (ops->geom_flags & XFS_BTGEO_IROOT_RECORDS)) &&
-+			    nr_this_level <= avg_per_block) {
- 				nr_blocks++;
- 				break;
- 			}
-@@ -658,7 +661,7 @@ xfs_btree_bload_compute_geometry(
- 		return -EOVERFLOW;
+@@ -246,11 +247,10 @@ xfs_trans_mod_dquot_byino(
+ 	xfs_mount_t	*mp = tp->t_mountp;
  
- 	bbl->btree_height = cur->bc_nlevels;
--	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
-+	if (ops->type == XFS_BTREE_TYPE_INODE)
- 		bbl->nr_blocks = nr_blocks - 1;
- 	else
- 		bbl->nr_blocks = nr_blocks;
+ 	if (!XFS_IS_QUOTA_ON(mp) ||
+-	    xfs_is_quota_inode(&mp->m_sb, ip->i_ino))
++	    xfs_is_quota_inode(&mp->m_sb, ip->i_ino) ||
++	    xfs_is_metadir_inode(ip))
+ 		return;
+ 
+-	ASSERT(!xfs_is_metadir_inode(ip) || XFS_IS_DQDETACHED(ip));
+-
+ 	if (XFS_IS_UQUOTA_ON(mp) && ip->i_udquot)
+ 		xfs_trans_mod_ino_dquot(tp, ip, ip->i_udquot, field, delta);
+ 	if (XFS_IS_GQUOTA_ON(mp) && ip->i_gdquot)
 
