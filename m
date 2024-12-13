@@ -1,31 +1,30 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DC0363D;
-	Fri, 13 Dec 2024 04:50:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B679863D;
+	Fri, 13 Dec 2024 04:51:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734065438; cv=none; b=ngoBE/3zNpS47gvqf6pQ8jVK/1SKnjGiFyw7NWRwlC+Cy9ak2Z7Eba3eqjUIZt5xHpj1nc9nCYSJqqx7iU59T2tDIlq7/DbEAChcym/6S64SJitHYi3k5qanCfUq59PSRzeAflkPMdyIH2AA2BD3XGbeQA3E8wdO/xdjeaDKKRo=
+	t=1734065509; cv=none; b=lr55nbyzGNCewNDBeYfX32629MjgSlapQ/jBX4N4SBPWrJsl5OjK4q75fG+6krt39970r+DmszOldEZUa5VlKayKfa2hry7hc40IWVI6xELVJuMR1WezPxE1AN4Vm6hYA2L+t0uTTzMAKJyi+sEhsd7dSG+nBkV2QQoTviuYb64=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734065438; c=relaxed/simple;
-	bh=lJBmq1Osd4wHwFS0x6g/24foZUyQvb6cjPRsBe4nhW0=;
+	s=arc-20240116; t=1734065509; c=relaxed/simple;
+	bh=OyxOfgY7HZSHCE+cEVtm3KUf2a9dNfP7/thCJWWUkwk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ha8/bJyln0vHQ6qIVntngBZHE60GCiH9K6W/wL3SvBjgAMgbIc3Sks0i8DQ7WdzJrse3+T9Lm8devQmGruR7/1PZMF5njvxQJ1eUokAaIcjqLHYM4gYbcH70a+upAPqfMd5im3VLHDr0LDO/bExbd/VuSz9U6i9Sdo5/wByxujQ=
+	 Content-Type:Content-Disposition:In-Reply-To; b=on5tr1L1Kl6td3LibMvqF5yHO/SkrG/WCcNOV09NG8kAFC3kgo5Rrsul9DJQ7XNd8eYMiD4UB0r+JVQUXbj+WqB2mYrejOiYhPW8f/kygOWlzhf13DJLEKtCE38VrbgSUGHqdymGUlJln/ZWObUPLwVmYitNmFO2q96tn/EVv28=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id BBF1368BEB; Fri, 13 Dec 2024 05:50:32 +0100 (CET)
-Date: Fri, 13 Dec 2024 05:50:32 +0100
+	id E6F2868BEB; Fri, 13 Dec 2024 05:51:44 +0100 (CET)
+Date: Fri, 13 Dec 2024 05:51:44 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 4/8] iomap: split bios to zone append limits in the
- submission handlers
-Message-ID: <20241213045032.GD5281@lst.de>
-References: <20241211085420.1380396-1-hch@lst.de> <20241211085420.1380396-5-hch@lst.de> <20241212195149.GH6678@frogsfrogsfrogs>
+Subject: Re: [PATCH 5/8] iomap: optionally use ioends for direct I/O
+Message-ID: <20241213045144.GE5281@lst.de>
+References: <20241211085420.1380396-1-hch@lst.de> <20241211085420.1380396-6-hch@lst.de> <20241212195624.GI6678@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,37 +33,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241212195149.GH6678@frogsfrogsfrogs>
+In-Reply-To: <20241212195624.GI6678@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Dec 12, 2024 at 11:51:49AM -0800, Darrick J. Wong wrote:
-> > +struct iomap_ioend *iomap_split_ioend(struct iomap_ioend *ioend, bool is_append,
+On Thu, Dec 12, 2024 at 11:56:24AM -0800, Darrick J. Wong wrote:
+> >  		return 0;
+> > +	if (ioend->io_flags & IOMAP_IOEND_DIRECT)
+> > +		return iomap_finish_ioend_direct(ioend);
+> >  	return iomap_finish_ioend_buffered(ioend);
+> >  }
 > 
-> Can you determine is_append from (ioend->io_flags & ZONE_APPEND)?
+> I'm a little surprised that more of the iomap_ioend* functions didn't
+> end up in ioend.c.
 
-That would require us to add that flag first :)  As we don't really
-need that as persistent per-iomap that it's probably not worth it.
+See the cover letter.  For development I wanted to avoid churn.  Once
+we have general approval for the concept I'd like to move more code.
 
-> Also it's not clear to me what the initial and output state of
-> *alloc_len is supposed to be?  I guess you set it to the number of bytes
-> the @ioend covers?
-
-It gets set to the number of blocks that the allocator could find,
-and iomap_split_ioend decrements the amount of that it used for the
-ioend returned, which is min(*alloc_len, max_zone_append_sectors) for
-sequential zones, or *alloc_len for conventional zones.
-
-> > +++ b/include/linux/iomap.h
-> > @@ -354,6 +354,9 @@ struct iomap_ioend {
-> >  	struct list_head	io_list;	/* next ioend in chain */
-> >  	u16			io_flags;	/* IOMAP_IOEND_* */
-> >  	struct inode		*io_inode;	/* file being written to */
-> > +	atomic_t		io_remaining;	/* completetion defer count */
-> > +	int			io_error;	/* stashed away status */
-> > +	struct iomap_ioend	*io_parent;	/* parent for completions */
+> > +			WRITE_ONCE(dio->submit.waiter, NULL);
+> > +			blk_wake_io_task(waiter);
+> > +		} else if (!inode->i_mapping->nrpages) {
+> > +			WRITE_ONCE(iocb->private, NULL);
+> > +
+> > +			/*
+> > +			 * We must never invalidate pages from this thread to
+> > +			 * avoid deadlocks with buffered I/O completions.
+> > +			 * Tough luck if you hit the tiny race with someone
+> > +			 * dirtying the range now.
 > 
-> I guess this means ioends can chain together, sort of like how bios can
-> when you split them?
+> What happens, exactly?  Does that mean that the dirty pagecache always
+> survives?
 
-Exactly.
+Yes.
 
