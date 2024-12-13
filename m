@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C2932907
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:15:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160EA2F4A
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:15:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734052529; cv=none; b=atvRCfU+oPLpuWbIYUDJxXf/zwFitPj758wY1/I9bubsrCCnq7/stVSuVxYjqB8smgwtmWdW3W7uLS5eM+8ii1Zz4p0g2DQ2ZZMFceq5rldeqAUPUdb7ak4nD371XBgVSz2TRgcxlu2IDWA7HeN5/Kbmw9kI7a4Lwk6pR8Bs93o=
+	t=1734052544; cv=none; b=Xh1XMeQtH9/Z+iFbx//rVPDVN8N40ZaYVBL/TdetZCzwihj05OJVHJvTc5pGsQu3WOf2c9G9nRribv1A0S+0pyH5gQkedDr6NQI9ESdzEOSz5gbllFVKHJiIikaaMZeE7KJtwvtiSKqlj4TDKI9zqaIJAgdyq3EWscZSXVxCH2Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734052529; c=relaxed/simple;
-	bh=LRNkg2KtqFgAtC/QjUE8pU5AD7cYslgcjecLZ+2eErQ=;
+	s=arc-20240116; t=1734052544; c=relaxed/simple;
+	bh=PoSCXuC0xyj5XUSfiG6AhMuOh7JLIN2RGgS8+pOhyAM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ms6VoBMBm09qOYfVey8WKEq6HQvIJbKu7n6bo95ztnmPlJMM8NdT44gM4Pg7E9KRDp2ZnXdhfMEk8EzfGw3MFMhIKEgP9ys5efyVj6vepf8Go75vCL+6BaCD5PVEPmXTonvGbMZrV95PrwMx+wjXyLVkY5TJK1gj19DIyTQ7Q4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B2gLNiy4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jw4sGs8stxoKz7tYXH+GvDImrUIUM+DYKuxQtLH9a43qG+6z9d2ukli6XfgO0rl7k3iTzwOOb9Jd2c57jwPaIKgxgUdaIE+K0jQnnPCPlORYVPMKthE8FVeKsojZfBG1UwPcZfSP+9RGxzvB4sP3mSyINk2Ym26bw62fFVWuwfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N/ZEoyy7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B2gLNiy4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4D70C4CED3;
-	Fri, 13 Dec 2024 01:15:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N/ZEoyy7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85D3CC4CED3;
+	Fri, 13 Dec 2024 01:15:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734052527;
-	bh=LRNkg2KtqFgAtC/QjUE8pU5AD7cYslgcjecLZ+2eErQ=;
+	s=k20201202; t=1734052543;
+	bh=PoSCXuC0xyj5XUSfiG6AhMuOh7JLIN2RGgS8+pOhyAM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=B2gLNiy4Aib3W53KodCAxcEPMHQVR/bcz8WaaNnm1Mmy46TKBmP3E7TJBYmW3UZ7a
-	 pLQOhW3QFCbuvFPsA6MiR7K0sGGAw0QwVrJGWp6kQNnYqlgHmiSf+UAKDMuvPuWXEa
-	 dj2yd5AUuO36dpVb1sOmt6juXAWCwg+bkcvg9+JsJYxoA8pxPiXZbLzZc1urvDrilL
-	 FQoOcIUxKvmzY9V38vhpdqLhg+opT4SLrcXy4tbIyIepNUu02Qi4c+mEADL34TpROe
-	 ekeK4xzIsRP0LDBP5cdbE8LFkKFkdLNziVapYxqTXDLTe+X1wpebmiWmBt4Z0E8IKy
-	 yX7zCg1KQYjDQ==
-Date: Thu, 12 Dec 2024 17:15:27 -0800
-Subject: [PATCH 20/43] xfs: enable sharing of realtime file blocks
+	b=N/ZEoyy7FkRXLfBU4iVNLvNwo1sjHOMV9N5JunA9JoJKGwzv/Ro38vtHvh8Cpgkmi
+	 HpfbUWpnTZzEdHNjNHP17aAY2ybHgf7KN4YwV/RNWAUQOaymff2ifzfdPuVx4XKa8i
+	 6MQiiK2x9J9k4QL5maonoHL/lP2h8wNZMlUn3WcePxEK4hP5k5D/WOCJfqFGEhQLS+
+	 4Kb+zdcvFvd9HzuR5qIcM5g9K2gaVyjbO2Sia6CmURSDJZqPlYypD9a+e/iw87OP0q
+	 ikjF8AVpLM7lQJJe5n03U+DJpCEeV6PWbzyOoFo7FDWl63OKunlcK4QwCeiGMf7lvB
+	 xx7u5yis9W/MQ==
+Date: Thu, 12 Dec 2024 17:15:43 -0800
+Subject: [PATCH 21/43] xfs: allow inodes to have the realtime and reflink
+ flags
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405124910.1182620.7183592337728397486.stgit@frogsfrogsfrogs>
+Message-ID: <173405124927.1182620.3219838636826332787.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405124452.1182620.15290140717848202826.stgit@frogsfrogsfrogs>
 References: <173405124452.1182620.15290140717848202826.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,76 +46,85 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update the remapping routines to be able to handle realtime files.
+Now that we can share blocks between realtime files, allow this
+combination.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_reflink.c |   25 ++++++++++++++++++++-----
- 1 file changed, 20 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |    3 ++-
+ fs/xfs/scrub/inode.c          |    5 +++--
+ fs/xfs/scrub/inode_repair.c   |    6 ------
+ fs/xfs/xfs_ioctl.c            |    4 ----
+ 4 files changed, 5 insertions(+), 13 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 24f545687b8730..78b47b2ac12453 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -33,6 +33,7 @@
- #include "xfs_rtrefcount_btree.h"
- #include "xfs_rtalloc.h"
- #include "xfs_rtgroup.h"
-+#include "xfs_metafile.h"
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 65eec8f60376d3..4273d096fb0a9c 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -748,7 +748,8 @@ xfs_dinode_verify(
+ 		return __this_address;
+ 
+ 	/* don't let reflink and realtime mix */
+-	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME))
++	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME) &&
++	    !xfs_has_rtreflink(mp))
+ 		return __this_address;
+ 
+ 	/* COW extent size hint validation */
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 8e702121dc8699..c7bbc3f78e90b1 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -360,8 +360,9 @@ xchk_inode_flags2(
+ 	if ((flags2 & XFS_DIFLAG2_REFLINK) && !S_ISREG(mode))
+ 		goto bad;
+ 
+-	/* realtime and reflink make no sense, currently */
+-	if ((flags & XFS_DIFLAG_REALTIME) && (flags2 & XFS_DIFLAG2_REFLINK))
++	/* realtime and reflink don't always go together */
++	if ((flags & XFS_DIFLAG_REALTIME) && (flags2 & XFS_DIFLAG2_REFLINK) &&
++	    !xfs_has_rtreflink(mp))
+ 		goto bad;
+ 
+ 	/* no bigtime iflag without the bigtime feature */
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index d7e3f033b16073..938a18721f3697 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -564,8 +564,6 @@ xrep_dinode_flags(
+ 		flags2 |= XFS_DIFLAG2_REFLINK;
+ 	else
+ 		flags2 &= ~(XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE);
+-	if (flags & XFS_DIFLAG_REALTIME)
+-		flags2 &= ~XFS_DIFLAG2_REFLINK;
+ 	if (!xfs_has_bigtime(mp))
+ 		flags2 &= ~XFS_DIFLAG2_BIGTIME;
+ 	if (!xfs_has_large_extent_counts(mp))
+@@ -1790,10 +1788,6 @@ xrep_inode_flags(
+ 	/* DAX only applies to files and dirs. */
+ 	if (!(S_ISREG(mode) || S_ISDIR(mode)))
+ 		sc->ip->i_diflags2 &= ~XFS_DIFLAG2_DAX;
+-
+-	/* No reflink files on the realtime device. */
+-	if (sc->ip->i_diflags & XFS_DIFLAG_REALTIME)
+-		sc->ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+ }
  
  /*
-  * Copy on Write of Shared Blocks
-@@ -1187,14 +1188,28 @@ xfs_reflink_update_dest(
- static int
- xfs_reflink_ag_has_free_space(
- 	struct xfs_mount	*mp,
--	xfs_agnumber_t		agno)
-+	struct xfs_inode	*ip,
-+	xfs_fsblock_t		fsb)
- {
- 	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
- 	int			error = 0;
- 
- 	if (!xfs_has_rmapbt(mp))
- 		return 0;
-+	if (XFS_IS_REALTIME_INODE(ip)) {
-+		struct xfs_rtgroup	*rtg;
-+		xfs_rgnumber_t		rgno;
- 
-+		rgno = xfs_rtb_to_rgno(mp, fsb);
-+		rtg = xfs_rtgroup_get(mp, rgno);
-+		if (xfs_metafile_resv_critical(rtg_rmap(rtg)))
-+			error = -ENOSPC;
-+		xfs_rtgroup_put(rtg);
-+		return error;
-+	}
-+
-+	agno = XFS_FSB_TO_AGNO(mp, fsb);
- 	pag = xfs_perag_get(mp, agno);
- 	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_RMAPBT) ||
- 	    xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA))
-@@ -1308,8 +1323,8 @@ xfs_reflink_remap_extent(
- 
- 	/* No reflinking if the AG of the dest mapping is low on space. */
- 	if (dmap_written) {
--		error = xfs_reflink_ag_has_free_space(mp,
--				XFS_FSB_TO_AGNO(mp, dmap->br_startblock));
-+		error = xfs_reflink_ag_has_free_space(mp, ip,
-+				dmap->br_startblock);
- 		if (error)
- 			goto out_cancel;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0789c18aaa1871..4caf29cc59b9ef 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -541,10 +541,6 @@ xfs_ioctl_setattr_xflags(
+ 		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
+ 		    xfs_extlen_to_rtxmod(mp, ip->i_extsize))
+ 			return -EINVAL;
+-
+-		/* Clear reflink if we are actually able to set the rt flag. */
+-		if (xfs_is_reflink_inode(ip))
+-			ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
  	}
-@@ -1568,8 +1583,8 @@ xfs_reflink_remap_prep(
  
- 	/* Check file eligibility and prepare for block sharing. */
- 	ret = -EINVAL;
--	/* Don't reflink realtime inodes */
--	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
-+	/* Can't reflink between data and rt volumes */
-+	if (XFS_IS_REALTIME_INODE(src) != XFS_IS_REALTIME_INODE(dest))
- 		goto out_unlock;
- 
- 	/* Don't share DAX file data with non-DAX file. */
+ 	/* diflags2 only valid for v3 inodes. */
 
