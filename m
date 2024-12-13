@@ -1,79 +1,37 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D34321E47C6;
-	Fri, 13 Dec 2024 18:37:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578671684AC
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 19:23:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734115077; cv=none; b=nRJS0pTVk5FysgcMBKC/AeUJ26Qvlvzpq+fdQWQS2AmHI5OHT5i799KyGJlOgUdym52ZbUOHc+fybfTum470mtkHHasB1C8e4b/sMfak20P2cW7htzP/HPg4pkJojRRRcggg2ZOnXAv6289raWqMvGiFmKSu1wULiL7RSYkxyi8=
+	t=1734117828; cv=none; b=oWg4Hy60XyS+D5QYv++u4g8F7ZdjDkLUfraTuBLt50awiv6LftRIIxnauiUOlpEyVPU96E4bf1sVrCrlz2vVYNPSyxr4Als8Ua6fAfRs4X/g7TseGgbkLzT0fL9KLieLP1T64JoVmFKW5M+mBUhGlgEw/U94+/BF0a++vWyv1OE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734115077; c=relaxed/simple;
-	bh=GHTiDWQ8l4MxxvcvQ5JO/nbQiqmxWMhbioeYCSiAbSM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jMKeHGggz2wcyZo0qRRYhHn/araC7RtXgkwv7tbqVy2EM4p6xEmA19aCKUVLb2plJuGXC0wUslrIY47yGgB2VHBqGTUtgIDO4qXOdn9f/4PzF56D3YMYvAKotXvjMEUwa/2lQIVN2wjD22IngQ/r8naXuysuaOTk0r7OIpkZ/yY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=H4kwTkYS; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1734117828; c=relaxed/simple;
+	bh=EGeAtA+g/W/sVXmW0p0/H7LXlzj6fI+jRHhVcWAS8JA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=WkcLwoGBKMvjalaNkql06OvlawP+kIyvXum8Iprj2wt+QI6p3cLGoS1027/T7vKDdGrxwXhht+S3NI7X7AJRRD6lJ2+e4m9XROlpfjygi1v/4lzwlgOrbVcvDrUUslmAHlD0GEjSxWUrejL67JfP7fge0MKWb37P3Wkpo1fx3gs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pu1zLmTv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="H4kwTkYS"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BDGfGof026690;
-	Fri, 13 Dec 2024 18:37:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=9Z0MgH4z+vMSBlxd6M2ZdPOrf2+eCd
-	04Vtl+EOjzvsc=; b=H4kwTkYSJlkCTB2dR6fEOUeOVL9LGA9Lu7WoOhacnKNjzk
-	UhRObfEA/l2hhJmH0WERi0nPFCA3MFS6c47KqCvmmmdDdG3xjBPUivTl/EYry6Lk
-	PvmyD/eOChmtHevsVeZfmM1SgHlbyoyJo1z/Q0oYVBj+8A2cmVB8ZTwsJLSDRglH
-	Dda4UpHZFvoPOZbQAEhreUe4LESIwR8vqxZ82uGiFgBmhpKEgYxykT/+ZapaItpa
-	FDDOnUTfg7GzV/2e5dj+Zq2RYhcJ3LAsLcXI5Ps1db5AybBN0o4F5XQdfFxMWNMw
-	gcSA2OfJZ9pMPMvWwG+eAKuMBmhJPsn5t4PGvYPg==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43g9yhmsv1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 18:37:42 +0000 (GMT)
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4BDIbfV7021297;
-	Fri, 13 Dec 2024 18:37:41 GMT
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43g9yhmsuv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 18:37:41 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BDHOBkr018605;
-	Fri, 13 Dec 2024 18:37:40 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 43d26ky4qc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 18:37:40 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BDIbc1b64160092
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 13 Dec 2024 18:37:38 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 158EA20040;
-	Fri, 13 Dec 2024 18:37:38 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 630F62004B;
-	Fri, 13 Dec 2024 18:37:36 +0000 (GMT)
-Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com (unknown [9.39.19.196])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri, 13 Dec 2024 18:37:36 +0000 (GMT)
-Date: Sat, 14 Dec 2024 00:07:34 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Andrey Albershteyn <aalbersh@kernel.org>,
-        John Garry <john.g.garry@oracle.com>
-Subject: Re: [RFC 1/3] include/linux.h: Factor out generic
- platform_test_fs_fd() helper
-Message-ID: <Z1x+7gtJkfl8Q+pT@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
- <5996d6854a16852daca5977063af6f2af2f0f4ca.1733902742.git.ojaswin@linux.ibm.com>
- <20241211180902.GA6678@frogsfrogsfrogs>
- <Z1vMrUqBWcarQ6_s@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pu1zLmTv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCDD5C4CED0;
+	Fri, 13 Dec 2024 19:23:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734117828;
+	bh=EGeAtA+g/W/sVXmW0p0/H7LXlzj6fI+jRHhVcWAS8JA=;
+	h=Date:From:To:Cc:Subject:From;
+	b=pu1zLmTvWO5H0pOdLr3sUEUBNWq9rwqVIbgJ2eNNZJr3LaWH1R+iPCz6dUFTntHmo
+	 1e5lWONZBixNEYvQwWLSAmDJS5/fLV9EDdsDkQ7HG0YUEz0qWWMQHcPlHEe6NhJ9MJ
+	 Y7Kf8o2b7PQf6NyMuhYW4F8pSsvnLVhGLCaheigrCvILXd3Htq4VC5Y9qdcMwXfPco
+	 hdbXi1SKoGSq2tPHV/v6B5MLKrdI+gMiGrIAn4CRPtA7hmxJ5hmAiY7b5y1P46adiW
+	 dJlZsmW5D1jzhHNNR/JLWauLA4UxCQUndHZIb8Vw1KF5ktYnVe6ROJAdurFzSXQw4V
+	 HX8IHC25hEVuQ==
+Date: Fri, 13 Dec 2024 20:23:43 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: hch@lst.de, djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS fixes for 6.13-rc3 - V2
+Message-ID: <hcfhmfl252ski7nglf7f7uf2roulbd5da3uu2qs3jrtk45kai5@phgqvy4t2hkf>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,40 +40,119 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z1vMrUqBWcarQ6_s@infradead.org>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: oayEPtbgvi9cwSkrCfMqqmwC7WKDdmkg
-X-Proofpoint-ORIG-GUID: nted5Q_0tVeyOS31R5PW7AYjWIbCBc0I
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1015
- priorityscore=1501 spamscore=0 lowpriorityscore=0 suspectscore=0
- malwarescore=0 impostorscore=0 mlxscore=0 bulkscore=0 mlxlogscore=571
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412130131
 
-On Thu, Dec 12, 2024 at 09:57:01PM -0800, Christoph Hellwig wrote:
-> On Wed, Dec 11, 2024 at 10:09:02AM -0800, Darrick J. Wong wrote:
-> > > +
-> > > +static __inline__ int platform_test_ext4_fd(int fd)
-> > > +{
-> > > +	return platform_test_fs_fd(fd, 0xef53); /* EXT4 magic number */
-> > 
-> > Should this be pulling EXT4_SUPER_MAGIC from linux/magic.h?
-> 
-> I think we can just drop adding platform_test_ext4_fd with the
-> suggested patches later in the series?  Having ext4-specific code
-> in xfsprogs would seem pretty odd in xfsprogs anyway over our previous
-> categories of xfs only or generic.
-> 
 
-Oh right, xfs_io is so widely used across FSes that I missed to consider it 
-might not be okay to add special code specific to ext4 :)
 
-Anyways, I agree we don't need to separately handle ext4 anymore.  I'll
-drop this patch. (Maybe still get XFS_SUPER_MAGIC from linux/magic.h as
-that seems like the right thing to do)
+Hello Linus,
 
-Regards,
-ojaswin
+could you please pull the patches described on the request below?
+
+It's the very same pull I sent earlier, just signed with the correct key.
+Just in case, I tried a merge against your TOT and didn't get any conflicts.
+I'm keeping the original pull request below for context
+
+Fixes highlights are in the tag description.
+
+Notice though, this has been rebased after Steven Rothwell pulled this into
+linux-next. The reason for the rebase is because he initially found a build
+issue when XFS_QUOTA config option was turned off. We initially fixed that by
+patching the problem, but we decided to squash the fix into the problematic
+patch to avoid breaking bisectability as the patches were still not in mainline.
+Please let me know if there is any issues with that.
+
+Thanks and my apologies for the key mistake,
+Carlos.
+
+
+The following changes since commit f932fb9b40749d1c9a539d89bb3e288c077aafe5:
+
+  Merge tag 'v6.13-rc2-ksmbd-server-fixes' of git://git.samba.org/ksmbd (2024-12-12 17:33:20 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.13-rc3
+
+for you to fetch changes up to bf354410af832232db8438afe006bb12675778bc:
+
+  Merge tag 'xfs-6.13-fixes_2024-12-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into next-rc (2024-12-13 07:47:12 +0100)
+
+----------------------------------------------------------------
+Bug fixes for 6.13-rc3
+
+* Fixes for scrub subsystem
+* Fix quota crashes
+* Fix sb_spino_align checons on large fsblock sizes
+* Fix discarded superblock updates
+* fix stuck unmount due to a locked inode
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Carlos Maiolino (1):
+      Merge tag 'xfs-6.13-fixes_2024-12-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into next-rc
+
+Darrick J. Wong (28):
+      xfs: fix off-by-one error in fsmap's end_daddr usage
+      xfs: metapath scrubber should use the already loaded inodes
+      xfs: keep quota directory inode loaded
+      xfs: return a 64-bit block count from xfs_btree_count_blocks
+      xfs: don't drop errno values when we fail to ficlone the entire range
+      xfs: separate healthy clearing mask during repair
+      xfs: set XFS_SICK_INO_SYMLINK_ZAPPED explicitly when zapping a symlink
+      xfs: mark metadir repair tempfiles with IRECOVERY
+      xfs: fix null bno_hint handling in xfs_rtallocate_rtg
+      xfs: fix error bailout in xfs_rtginode_create
+      xfs: update btree keys correctly when _insrec splits an inode root block
+      xfs: fix scrub tracepoints when inode-rooted btrees are involved
+      xfs: unlock inodes when erroring out of xfs_trans_alloc_dir
+      xfs: only run precommits once per transaction object
+      xfs: avoid nested calls to __xfs_trans_commit
+      xfs: don't lose solo superblock counter update transactions
+      xfs: don't lose solo dquot update transactions
+      xfs: separate dquot buffer reads from xfs_dqflush
+      xfs: clean up log item accesses in xfs_qm_dqflush{,_done}
+      xfs: attach dquot buffer to dquot log item buffer
+      xfs: convert quotacheck to attach dquot buffers
+      xfs: fix sb_spino_align checks for large fsblock sizes
+      xfs: don't move nondir/nonreg temporary repair files to the metadir namespace
+      xfs: don't crash on corrupt /quotas dirent
+      xfs: check pre-metadir fields correctly
+      xfs: fix zero byte checking in the superblock scrubber
+      xfs: return from xfs_symlink_verify early on V4 filesystems
+      xfs: port xfs_ioc_start_commit to multigrain timestamps
+
+ fs/xfs/libxfs/xfs_btree.c          |  33 +++++--
+ fs/xfs/libxfs/xfs_btree.h          |   2 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   4 +-
+ fs/xfs/libxfs/xfs_rtgroup.c        |   2 +-
+ fs/xfs/libxfs/xfs_sb.c             |  11 ++-
+ fs/xfs/libxfs/xfs_symlink_remote.c |   4 +-
+ fs/xfs/scrub/agheader.c            |  77 +++++++++++----
+ fs/xfs/scrub/agheader_repair.c     |   6 +-
+ fs/xfs/scrub/fscounters.c          |   2 +-
+ fs/xfs/scrub/health.c              |  57 ++++++-----
+ fs/xfs/scrub/ialloc.c              |   4 +-
+ fs/xfs/scrub/metapath.c            |  68 +++++--------
+ fs/xfs/scrub/refcount.c            |   2 +-
+ fs/xfs/scrub/scrub.h               |   6 ++
+ fs/xfs/scrub/symlink_repair.c      |   3 +-
+ fs/xfs/scrub/tempfile.c            |  22 ++++-
+ fs/xfs/scrub/trace.h               |   2 +-
+ fs/xfs/xfs_bmap_util.c             |   2 +-
+ fs/xfs/xfs_dquot.c                 | 195 +++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_dquot.h                 |   6 +-
+ fs/xfs/xfs_dquot_item.c            |  51 +++++++---
+ fs/xfs/xfs_dquot_item.h            |   7 ++
+ fs/xfs/xfs_exchrange.c             |  14 +--
+ fs/xfs/xfs_file.c                  |   8 ++
+ fs/xfs/xfs_fsmap.c                 |  38 +++++---
+ fs/xfs/xfs_inode.h                 |   2 +-
+ fs/xfs/xfs_qm.c                    | 102 +++++++++++++------
+ fs/xfs/xfs_qm.h                    |   1 +
+ fs/xfs/xfs_quota.h                 |   5 +-
+ fs/xfs/xfs_rtalloc.c               |   2 +-
+ fs/xfs/xfs_trans.c                 |  56 +++++------
+ fs/xfs/xfs_trans_ail.c             |   2 +-
+ fs/xfs/xfs_trans_dquot.c           |  31 +++++-
+ 33 files changed, 577 insertions(+), 250 deletions(-)
+
