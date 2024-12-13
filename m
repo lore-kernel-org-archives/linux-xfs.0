@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0021946AA
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 22:49:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C92019992C
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 22:52:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734130196; cv=none; b=HpY9L9jgX+AKdGGwGHeJ83BJCniBxpFsmB2TbtfrSvu3d8rvsvNxMhLcHHWO8dQXgKTX0OWi0KzBbndUz5jAr0mQtSpOquZhzAdzSF7ICvGJJQJgKO+JXhcu99CWaVhJ9i/xjRn124a+lfedqKw+eBuB/xnx9a2vw7fXGiYc0Zg=
+	t=1734130366; cv=none; b=TEv+lDA/ZRZ3Il2urNa2DTpb0GVRZ8p056bBp1k7cQil+4dmMBtcSokOqngXbBs7SkKLQggAW22/st7M9cp7ezWx9wxNiqFMsS+xhxkT8H6qtzuhncU2gSL5HnFOg/s+96/hYtdP76wKnn5pHR8kOvBjv/4Dj8Rd2091VbGyVRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734130196; c=relaxed/simple;
-	bh=ThuH3KrIGP7q6pOpRuVkyvjBjkuhtuN/tgA92GE6/ys=;
+	s=arc-20240116; t=1734130366; c=relaxed/simple;
+	bh=KyKyRdOJdJXl5hNCx5IQI1dtiQfPa6tevsztqFmnwzY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j7U2L1eGIj6FEtS6r70P24j9qsbzmBDJIMOJYjYiVTANfLt6YsoxQV57MlHRt3rqCtnKTrNdnB/eZblIhV/qHaE+HFY61mhrK6dO+8i1C5uHq02ZmlzSBIwfKCFBzt6vVbaUihOLY8D3z6bF1ErQyOdJbA4B4jKHbmZfHZw6VNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qQR+/umP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=M9WvnLVLHJS9uC8QgsbnaDV/tAYNuhmAFm3y/PBGNhwg9pBePdfA55D6Sqtj7Cu+HCnwNHObAnC+bR4EezSr4QrWAM10FdIy7c883Yvw9XLgk4b4UP7S1rs3npxmW98479+i3qB2oYLi98Nn9Gn6zc+mRqQIhxaWFmlpECTX/R8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UzYuDBui; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qQR+/umP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2015DC4CED4;
-	Fri, 13 Dec 2024 22:49:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UzYuDBui"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1486C4CED0;
+	Fri, 13 Dec 2024 22:52:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734130196;
-	bh=ThuH3KrIGP7q6pOpRuVkyvjBjkuhtuN/tgA92GE6/ys=;
+	s=k20201202; t=1734130365;
+	bh=KyKyRdOJdJXl5hNCx5IQI1dtiQfPa6tevsztqFmnwzY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qQR+/umPc4mXtupar1hDz3vR+VFj9yp0Q519LYfquB/zQJ9FWLJ7zOSWwQM5I06iM
-	 8xSTtIFdJPCEVFzWytUIjiDYaSoLAXb1C048EY86GrqQk4ro5apQhoH/79619XNteQ
-	 TNz0AQW7p7juLGL5WcG2I8DY36r/Gr26uZm97LYNzfWQpGWEDXYDbK0DwgSe5NIVZF
-	 OXy6vy4Mn95+il2jxYJY/7+u66yQCLZN5a2JcUrS4I8OyVk0WDWnZmNVNGA6cFmVTm
-	 QDRJ+bj4LlGwN3tOOa/Z8++UKbk+1bhDTn7DoxINzPgOT8kRc7MRwqOyHNd5eVh7s8
-	 vhxKLLsJUV96Q==
-Date: Fri, 13 Dec 2024 14:49:55 -0800
+	b=UzYuDBuihlsWyks3rgyV0HZdv2FO3sm1hoT0ftuF6uwsTRF5BA2/pI3xOK9n3k3dm
+	 JlfhPzIhxBU2bASKxZKttcudPFX/2EVzXVtpJYcrMPROasosyOc98zwcdBe3rnWYME
+	 FguDcKQYSiWpc5jXymHt4/AhH1avU6usin1VflHCtEexxu/lH7/+vfIL4DyLikkY/4
+	 DMT1LKjr8nuHa/IP5C7esiwzFmyeWseEaFZIJEzkBexikdCOpKwbN0003bRnqMvX49
+	 H1EyeZ3iKaMgOKou7kqwE2JzOthqn3BTP2RLrj5bFewT8w+0rK4Ax9j9xKbp3wXqpw
+	 jPEDbppX7I1sg==
+Date: Fri, 13 Dec 2024 14:52:45 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 34/43] xfs: support xrep_require_rtext_inuse on zoned
- file systems
-Message-ID: <20241213224955.GX6678@frogsfrogsfrogs>
+Subject: Re: [PATCH 38/43] xfs: enable the zoned RT device feature
+Message-ID: <20241213225245.GY6678@frogsfrogsfrogs>
 References: <20241211085636.1380516-1-hch@lst.de>
- <20241211085636.1380516-35-hch@lst.de>
+ <20241211085636.1380516-39-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,52 +43,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211085636.1380516-35-hch@lst.de>
+In-Reply-To: <20241211085636.1380516-39-hch@lst.de>
 
-On Wed, Dec 11, 2024 at 09:54:59AM +0100, Christoph Hellwig wrote:
-> Space usage is tracked by the rmap, which already is separately
-> cross-reference.  But on top of that we have the write pointer and can
-> do a basic sanity check here that the block is not beyond the write
-> pointer.
+On Wed, Dec 11, 2024 at 09:55:03AM +0100, Christoph Hellwig wrote:
+> Enable the zoned RT device directory feature.  With this feature, RT
+> groups are written sequentially and always emptied before rewriting
+> the blocks.  This perfectly maps to zoned devices, but can also be
+> used on conventional block devices.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok,
+Looks ok, though it's a bit odd that this isn't the very end of the
+series.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/scrub/repair.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_format.h | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 90740718ac70..dd88a237d629 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -43,6 +43,7 @@
->  #include "xfs_rtalloc.h"
->  #include "xfs_metafile.h"
->  #include "xfs_rtrefcount_btree.h"
-> +#include "xfs_zone_alloc.h"
->  #include "scrub/scrub.h"
->  #include "scrub/common.h"
->  #include "scrub/trace.h"
-> @@ -1048,7 +1049,13 @@ xrep_require_rtext_inuse(
->  	xfs_rtxnum_t		startrtx;
->  	xfs_rtxnum_t		endrtx;
->  	bool			is_free = false;
-> -	int			error;
-> +	int			error = 0;
-> +
-> +	if (xfs_has_zoned(mp)) {
-> +		if (!xfs_zone_rgbno_is_valid(sc->sr.rtg, rgbno + len - 1))
-> +			return -EFSCORRUPTED;
-> +		return 0;
-> +	}
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 12979496f30a..fc56de8fe696 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -408,7 +408,8 @@ xfs_sb_has_ro_compat_feature(
+>  		 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
+>  		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
+>  		 XFS_SB_FEAT_INCOMPAT_PARENT | \
+> -		 XFS_SB_FEAT_INCOMPAT_METADIR)
+> +		 XFS_SB_FEAT_INCOMPAT_METADIR | \
+> +		 XFS_SB_FEAT_INCOMPAT_ZONED)
 >  
->  	startrtx = xfs_rgbno_to_rtx(mp, rgbno);
->  	endrtx = xfs_rgbno_to_rtx(mp, rgbno + len - 1);
+>  #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+>  static inline bool
 > -- 
 > 2.45.2
 > 
