@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57CB72AD02
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:09:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08B80629
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:09:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734052153; cv=none; b=j7J5FRvekJL6hOg2NzrO4p0lrSN8kNhMp9LeKvIQpu3ARpBSStlzwIynasQkiIiU29uckEff7+8Drz9S20ND1UtvKd/66txjA65yC6T39Fj9Rd93LsZPAnloVxt5xmuuKvMYWcF0jW3QugEv9QzxrVNdBjKX69JHLGNUEn55z0s=
+	t=1734052169; cv=none; b=FWeOWfA3HJvsOvBSaOf3CsZ5KHvkXIizDWsGL0wDX8at8/HwwZoY1XZ+s1KpomojtJHPpdHJ1MqqTpUEdoj8tfknQv8A0t03B8O+BUcTp8ImnckW1nevsmJss5wTgwEWyF/dhQypXaNkF3MziO3rXNXW2iZQtz+cNFDRH7wWDfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734052153; c=relaxed/simple;
-	bh=gm5L/M+qs7wi97HDtC0rn0lZYYM0+GbWyW0A9IvAljI=;
+	s=arc-20240116; t=1734052169; c=relaxed/simple;
+	bh=ZbJx1M9JAY8n2e11arruWa/XZ6pMmwlV2jUQmuTVT7M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ty2buMrRFAA7b8H4DDearyfox3yP0R+rmI7OKkn7xTsQTlFGTQEmmbNfXAeqrVCUNmeG5A4vIxd8gLPWYu/wJPyWOclcRcs1QeZzQhG/zIsTEBjoMIo8G0mmK5HeS8ick1XotelcQEFFCgSYIf7MDifiQaaR0q3EJAJt6R6KRsw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kn5+EMiZ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EpeuT7NGr8slItHwAGEvmSfngz/4vmu8W9NnG2ZYky1UrsiETM58lTP35TBXrMN9JY2tOuv83CSpfpQoguiEBTqtGZ7PruBNW9g+99btZ8JJcrE3WS6d+b/aUzsx9FAjhtd/nDOccPP0n6KidzLKDagI+N+a1ZhvFuJtVPLsGfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gyj5kX2X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kn5+EMiZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4E79C4CECE;
-	Fri, 13 Dec 2024 01:09:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gyj5kX2X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86286C4CECE;
+	Fri, 13 Dec 2024 01:09:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734052152;
-	bh=gm5L/M+qs7wi97HDtC0rn0lZYYM0+GbWyW0A9IvAljI=;
+	s=k20201202; t=1734052168;
+	bh=ZbJx1M9JAY8n2e11arruWa/XZ6pMmwlV2jUQmuTVT7M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Kn5+EMiZFE5SXb7TWf8KgmtWoG6g5x3i2Wo4XSHN1LxKoo6CL3WQ+pAluOHNuGVDC
-	 sTABsorUKzn1q4awui+xVNaKOC2llWgOnOK2mkYdt+NDVN3TNqjwrAjktpcTQn9bdX
-	 M+bSb447y2NJVLJIu3ZX2ZqiCbVsnmQxmXNXJeiGisO2iDV1K+jeV8ECafseldgezW
-	 UlwHC9hG4l0yF/tp01oKy27QfV8mT/lO65nj5gY6eqrVPV8D9GKYtO5j99nIYkwGdt
-	 N2G7PyjasWrE9ZhsFNLGJOYQlUOJO7Wj12tTeHNXNlk3OcGdcFnrDlfgOGTXEbkQSS
-	 p+Pa2HwI9Yl8A==
-Date: Thu, 12 Dec 2024 17:09:12 -0800
-Subject: [PATCH 33/37] xfs: create a shadow rmap btree during realtime rmap
- repair
+	b=gyj5kX2XCmfU3b1ZTs+/hvXXat6uaA56XDPQiBBAZBmOEECohNYtqxSh0CMx+W7o0
+	 5mAOZE532rz7SHv6G/LD3lpGGISs9vZQI2U07zm6ILrA7NqFFE3BBsOdFPIridPtsM
+	 LefKyxba4hOW3fMS4CEX/V6VX1V12J/WPtO7nB1xpGnI+Zm5HPYB6wbwS+dK4jZwBP
+	 v2YFE7ZAavdvae9cKljO/cNXoM8GJ1TFz9mVaNYv7vIQAoIhNil6I1vZnvlXqGL/zo
+	 l4au7HJhDr+pCHeZ/2zWQAYQOBjiu6f8e+oA8c9EQb/JwKjkTRKYaOeVqPP8FToAIn
+	 Sw9E23VAwlWDw==
+Date: Thu, 12 Dec 2024 17:09:28 -0800
+Subject: [PATCH 34/37] xfs: hook live realtime rmap operations during a repair
+ operation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405123883.1181370.13660475990300912157.stgit@frogsfrogsfrogs>
+Message-ID: <173405123900.1181370.14934453235625748262.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 References: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,552 +46,308 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create an in-memory btree of rmap records instead of an array.  This
-enables us to do live record collection instead of freezing the fs.
+Hook the regular realtime rmap code when an rtrmapbt repair operation is
+running so that we can unlock the AGF buffer to scan the filesystem and
+keep the in-memory btree up to date during the scan.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree_mem.c    |    1 
- fs/xfs/libxfs/xfs_rmap.c         |    3 +
- fs/xfs/libxfs/xfs_rtrmap_btree.c |  117 ++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtrmap_btree.h |    6 ++
- fs/xfs/libxfs/xfs_shared.h       |    7 ++
- fs/xfs/scrub/rtrmap_repair.c     |  137 ++++++++++++++++++++++++++------------
- fs/xfs/xfs_stats.c               |    3 +
- fs/xfs/xfs_stats.h               |    1 
- 8 files changed, 228 insertions(+), 47 deletions(-)
+ fs/xfs/scrub/rmap_repair.c   |    2 -
+ fs/xfs/scrub/rtrmap_repair.c |  131 +++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/scrub/trace.h         |   17 ++++-
+ 3 files changed, 140 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree_mem.c b/fs/xfs/libxfs/xfs_btree_mem.c
-index df3d613675a15a..f2f7b4305413e9 100644
---- a/fs/xfs/libxfs/xfs_btree_mem.c
-+++ b/fs/xfs/libxfs/xfs_btree_mem.c
-@@ -18,6 +18,7 @@
- #include "xfs_ag.h"
- #include "xfs_buf_item.h"
- #include "xfs_trace.h"
-+#include "xfs_rtgroup.h"
+diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
+index 91c17feb49768b..c2c7b76cc25ab8 100644
+--- a/fs/xfs/scrub/rmap_repair.c
++++ b/fs/xfs/scrub/rmap_repair.c
+@@ -1614,7 +1614,7 @@ xrep_rmapbt_live_update(
+ 	if (!xrep_rmapbt_want_live_update(&rr->iscan, &p->oinfo))
+ 		goto out_unlock;
  
- /* Set the root of an in-memory btree. */
- void
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 2f0688a57991cc..f8415fd96cc2aa 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -327,7 +327,8 @@ xfs_rmap_check_btrec(
- 	struct xfs_btree_cur		*cur,
- 	const struct xfs_rmap_irec	*irec)
- {
--	if (xfs_btree_is_rtrmap(cur->bc_ops))
-+	if (xfs_btree_is_rtrmap(cur->bc_ops) ||
-+	    xfs_btree_is_mem_rtrmap(cur->bc_ops))
- 		return xfs_rtrmap_check_irec(to_rtg(cur->bc_group), irec);
- 	return xfs_rmap_check_irec(to_perag(cur->bc_group), irec);
- }
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-index 571a9e1b956099..3cb8f126b9ce16 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-@@ -28,6 +28,8 @@
- #include "xfs_rtgroup.h"
- #include "xfs_bmap.h"
- #include "xfs_health.h"
-+#include "xfs_buf_mem.h"
-+#include "xfs_btree_mem.h"
+-	trace_xrep_rmap_live_update(rr->sc->sa.pag, action, p);
++	trace_xrep_rmap_live_update(pag_group(rr->sc->sa.pag), action, p);
  
- static struct kmem_cache	*xfs_rtrmapbt_cur_cache;
- 
-@@ -542,6 +544,121 @@ xfs_rtrmapbt_init_cursor(
- 	return cur;
- }
- 
-+#ifdef CONFIG_XFS_BTREE_IN_MEM
-+/*
-+ * Validate an in-memory realtime rmap btree block.  Callers are allowed to
-+ * generate an in-memory btree even if the ondisk feature is not enabled.
-+ */
-+static xfs_failaddr_t
-+xfs_rtrmapbt_mem_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_mount;
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	xfs_failaddr_t		fa;
-+	unsigned int		level;
-+	unsigned int		maxrecs;
-+
-+	if (!xfs_verify_magic(bp, block->bb_magic))
-+		return __this_address;
-+
-+	fa = xfs_btree_fsblock_v5hdr_verify(bp, XFS_RMAP_OWN_UNKNOWN);
-+	if (fa)
-+		return fa;
-+
-+	level = be16_to_cpu(block->bb_level);
-+	if (xfs_has_rmapbt(mp)) {
-+		if (level >= mp->m_rtrmap_maxlevels)
-+			return __this_address;
-+	} else {
-+		if (level >= xfs_rtrmapbt_maxlevels_ondisk())
-+			return __this_address;
-+	}
-+
-+	maxrecs = xfs_rtrmapbt_maxrecs(mp, XFBNO_BLOCKSIZE, level == 0);
-+	return xfs_btree_memblock_verify(bp, maxrecs);
-+}
-+
-+static void
-+xfs_rtrmapbt_mem_rw_verify(
-+	struct xfs_buf	*bp)
-+{
-+	xfs_failaddr_t	fa = xfs_rtrmapbt_mem_verify(bp);
-+
-+	if (fa)
-+		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
-+}
-+
-+/* skip crc checks on in-memory btrees to save time */
-+static const struct xfs_buf_ops xfs_rtrmapbt_mem_buf_ops = {
-+	.name			= "xfs_rtrmapbt_mem",
-+	.magic			= { 0, cpu_to_be32(XFS_RTRMAP_CRC_MAGIC) },
-+	.verify_read		= xfs_rtrmapbt_mem_rw_verify,
-+	.verify_write		= xfs_rtrmapbt_mem_rw_verify,
-+	.verify_struct		= xfs_rtrmapbt_mem_verify,
-+};
-+
-+const struct xfs_btree_ops xfs_rtrmapbt_mem_ops = {
-+	.type			= XFS_BTREE_TYPE_MEM,
-+	.geom_flags		= XFS_BTGEO_OVERLAPPING,
-+
-+	.rec_len		= sizeof(struct xfs_rmap_rec),
-+	/* Overlapping btree; 2 keys per pointer. */
-+	.key_len		= 2 * sizeof(struct xfs_rmap_key),
-+	.ptr_len		= XFS_BTREE_LONG_PTR_LEN,
-+
-+	.lru_refs		= XFS_RMAP_BTREE_REF,
-+	.statoff		= XFS_STATS_CALC_INDEX(xs_rtrmap_mem_2),
-+
-+	.dup_cursor		= xfbtree_dup_cursor,
-+	.set_root		= xfbtree_set_root,
-+	.alloc_block		= xfbtree_alloc_block,
-+	.free_block		= xfbtree_free_block,
-+	.get_minrecs		= xfbtree_get_minrecs,
-+	.get_maxrecs		= xfbtree_get_maxrecs,
-+	.init_key_from_rec	= xfs_rtrmapbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_rtrmapbt_init_high_key_from_rec,
-+	.init_rec_from_cur	= xfs_rtrmapbt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfbtree_init_ptr_from_cur,
-+	.key_diff		= xfs_rtrmapbt_key_diff,
-+	.buf_ops		= &xfs_rtrmapbt_mem_buf_ops,
-+	.diff_two_keys		= xfs_rtrmapbt_diff_two_keys,
-+	.keys_inorder		= xfs_rtrmapbt_keys_inorder,
-+	.recs_inorder		= xfs_rtrmapbt_recs_inorder,
-+	.keys_contiguous	= xfs_rtrmapbt_keys_contiguous,
-+};
-+
-+/* Create a cursor for an in-memory btree. */
-+struct xfs_btree_cur *
-+xfs_rtrmapbt_mem_cursor(
-+	struct xfs_rtgroup	*rtg,
-+	struct xfs_trans	*tp,
-+	struct xfbtree		*xfbt)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+	struct xfs_btree_cur	*cur;
-+
-+	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_rtrmapbt_mem_ops,
-+			mp->m_rtrmap_maxlevels, xfs_rtrmapbt_cur_cache);
-+	cur->bc_mem.xfbtree = xfbt;
-+	cur->bc_nlevels = xfbt->nlevels;
-+	cur->bc_group = xfs_group_hold(rtg_group(rtg));
-+	return cur;
-+}
-+
-+/* Create an in-memory realtime rmap btree. */
-+int
-+xfs_rtrmapbt_mem_init(
-+	struct xfs_mount	*mp,
-+	struct xfbtree		*xfbt,
-+	struct xfs_buftarg	*btp,
-+	xfs_rgnumber_t		rgno)
-+{
-+	xfbt->owner = rgno;
-+	return xfbtree_init(mp, xfbt, btp, &xfs_rtrmapbt_mem_ops);
-+}
-+#endif /* CONFIG_XFS_BTREE_IN_MEM */
-+
- /*
-  * Install a new rt reverse mapping btree root.  Caller is responsible for
-  * invalidating and freeing the old btree blocks.
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.h b/fs/xfs/libxfs/xfs_rtrmap_btree.h
-index 6e3dab8c44f7c2..6a2d432b55ad78 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.h
-@@ -11,6 +11,7 @@ struct xfs_btree_cur;
- struct xfs_mount;
- struct xbtree_ifakeroot;
- struct xfs_rtgroup;
-+struct xfbtree;
- 
- /* rmaps only exist on crc enabled filesystems */
- #define XFS_RTRMAP_BLOCK_LEN	XFS_BTREE_LBLOCK_CRC_LEN
-@@ -201,4 +202,9 @@ int xfs_rtrmapbt_init_rtsb(struct xfs_mount *mp, struct xfs_rtgroup *rtg,
- unsigned long long xfs_rtrmapbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
- 
-+struct xfs_btree_cur *xfs_rtrmapbt_mem_cursor(struct xfs_rtgroup *rtg,
-+		struct xfs_trans *tp, struct xfbtree *xfbtree);
-+int xfs_rtrmapbt_mem_init(struct xfs_mount *mp, struct xfbtree *xfbtree,
-+		struct xfs_buftarg *btp, xfs_rgnumber_t rgno);
-+
- #endif	/* __XFS_RTRMAP_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index da23dac22c3f08..960716c387cc2b 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -57,6 +57,7 @@ extern const struct xfs_btree_ops xfs_refcountbt_ops;
- extern const struct xfs_btree_ops xfs_rmapbt_ops;
- extern const struct xfs_btree_ops xfs_rmapbt_mem_ops;
- extern const struct xfs_btree_ops xfs_rtrmapbt_ops;
-+extern const struct xfs_btree_ops xfs_rtrmapbt_mem_ops;
- 
- static inline bool xfs_btree_is_bno(const struct xfs_btree_ops *ops)
- {
-@@ -98,8 +99,14 @@ static inline bool xfs_btree_is_mem_rmap(const struct xfs_btree_ops *ops)
- {
- 	return ops == &xfs_rmapbt_mem_ops;
- }
-+
-+static inline bool xfs_btree_is_mem_rtrmap(const struct xfs_btree_ops *ops)
-+{
-+	return ops == &xfs_rtrmapbt_mem_ops;
-+}
- #else
- # define xfs_btree_is_mem_rmap(...)	(false)
-+# define xfs_btree_is_mem_rtrmap(...)	(false)
- #endif
- 
- static inline bool xfs_btree_is_rtrmap(const struct xfs_btree_ops *ops)
+ 	error = xrep_trans_alloc_hook_dummy(mp, &txcookie, &tp);
+ 	if (error)
 diff --git a/fs/xfs/scrub/rtrmap_repair.c b/fs/xfs/scrub/rtrmap_repair.c
-index 60e317725dea86..b376bcc8d1d2ed 100644
+index b376bcc8d1d2ed..49de8bc2dd17f5 100644
 --- a/fs/xfs/scrub/rtrmap_repair.c
 +++ b/fs/xfs/scrub/rtrmap_repair.c
-@@ -12,6 +12,8 @@
- #include "xfs_defer.h"
- #include "xfs_btree.h"
- #include "xfs_btree_staging.h"
-+#include "xfs_buf_mem.h"
-+#include "xfs_btree_mem.h"
- #include "xfs_bit.h"
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
-@@ -64,24 +66,13 @@
-  * We use the 'xrep_rtrmap' prefix for all the rmap functions.
-  */
- 
--/*
-- * Packed rmap record.  The UNWRITTEN flags are hidden in the upper bits of
-- * offset, just like the on-disk record.
-- */
--struct xrep_rtrmap_extent {
--	xfs_rgblock_t	startblock;
--	xfs_extlen_t	blockcount;
--	uint64_t	owner;
--	uint64_t	offset;
--} __packed;
--
- /* Context for collecting rmaps */
- struct xrep_rtrmap {
+@@ -71,6 +71,9 @@ struct xrep_rtrmap {
  	/* new rtrmapbt information */
  	struct xrep_newbt	new_btree;
  
++	/* lock for the xfbtree and xfile */
++	struct mutex		lock;
++
  	/* rmap records generated from primary metadata */
--	struct xfarray		*rtrmap_records;
-+	struct xfbtree		rtrmap_btree;
+ 	struct xfbtree		rtrmap_btree;
  
- 	struct xfs_scrub	*sc;
+@@ -79,6 +82,9 @@ struct xrep_rtrmap {
+ 	/* bitmap of old rtrmapbt blocks */
+ 	struct xfsb_bitmap	old_rtrmapbt_blocks;
  
-@@ -91,8 +82,11 @@ struct xrep_rtrmap {
++	/* Hooks into rtrmap update code. */
++	struct xfs_rmap_hook	rhook;
++
  	/* inode scan cursor */
  	struct xchk_iscan	iscan;
  
--	/* get_records()'s position in the free space record array. */
--	xfarray_idx_t		array_cur;
-+	/* in-memory btree cursor for the ->get_blocks walk */
-+	struct xfs_btree_cur	*mcur;
+@@ -98,6 +104,8 @@ xrep_setup_rtrmapbt(
+ 	char			*descr;
+ 	int			error;
+ 
++	xchk_fsgates_enable(sc, XCHK_FSGATES_RMAP);
 +
-+	/* Number of records we're staging in the new btree. */
-+	uint64_t		nr_records;
- };
- 
- /* Set us up to repair rt reverse mapping btrees. */
-@@ -101,6 +95,14 @@ xrep_setup_rtrmapbt(
- 	struct xfs_scrub	*sc)
- {
- 	struct xrep_rtrmap	*rr;
-+	char			*descr;
-+	int			error;
-+
-+	descr = xchk_xfile_rtgroup_descr(sc, "reverse mapping records");
-+	error = xrep_setup_xfbtree(sc, descr);
-+	kfree(descr);
-+	if (error)
-+		return error;
- 
- 	rr = kzalloc(sizeof(struct xrep_rtrmap), XCHK_GFP_FLAGS);
- 	if (!rr)
-@@ -135,11 +137,6 @@ xrep_rtrmap_stash(
- 	uint64_t		offset,
- 	unsigned int		flags)
- {
--	struct xrep_rtrmap_extent	rre = {
--		.startblock	= startblock,
--		.blockcount	= blockcount,
--		.owner		= owner,
--	};
- 	struct xfs_rmap_irec	rmap = {
- 		.rm_startblock	= startblock,
- 		.rm_blockcount	= blockcount,
-@@ -148,6 +145,7 @@ xrep_rtrmap_stash(
- 		.rm_flags	= flags,
- 	};
- 	struct xfs_scrub	*sc = rr->sc;
-+	struct xfs_btree_cur	*mcur;
- 	int			error = 0;
- 
+ 	descr = xchk_xfile_rtgroup_descr(sc, "reverse mapping records");
+ 	error = xrep_setup_xfbtree(sc, descr);
+ 	kfree(descr);
+@@ -151,19 +159,31 @@ xrep_rtrmap_stash(
  	if (xchk_should_terminate(sc, &error))
-@@ -155,8 +153,18 @@ xrep_rtrmap_stash(
+ 		return error;
  
++	if (xchk_iscan_aborted(&rr->iscan))
++		return -EFSCORRUPTED;
++
  	trace_xrep_rtrmap_found(sc->mp, &rmap);
  
--	rre.offset = xfs_rmap_irec_offset_pack(&rmap);
--	return xfarray_append(rr->rtrmap_records, &rre);
-+	/* Add entry to in-memory btree. */
-+	mcur = xfs_rtrmapbt_mem_cursor(sc->sr.rtg, sc->tp, &rr->rtrmap_btree);
-+	error = xfs_rmap_map_raw(mcur, &rmap);
+ 	/* Add entry to in-memory btree. */
++	mutex_lock(&rr->lock);
+ 	mcur = xfs_rtrmapbt_mem_cursor(sc->sr.rtg, sc->tp, &rr->rtrmap_btree);
+ 	error = xfs_rmap_map_raw(mcur, &rmap);
+ 	xfs_btree_del_cursor(mcur, error);
+ 	if (error)
+ 		goto out_cancel;
+ 
+-	return xfbtree_trans_commit(&rr->rtrmap_btree, sc->tp);
++	error = xfbtree_trans_commit(&rr->rtrmap_btree, sc->tp);
++	if (error)
++		goto out_abort;
++
++	mutex_unlock(&rr->lock);
++	return 0;
+ 
+ out_cancel:
+ 	xfbtree_trans_cancel(&rr->rtrmap_btree, sc->tp);
++out_abort:
++	xchk_iscan_abort(&rr->iscan);
++	mutex_unlock(&rr->lock);
+ 	return error;
+ }
+ 
+@@ -486,6 +506,13 @@ xrep_rtrmap_find_rmaps(
+ 	if (error)
+ 		return error;
+ 
++	/*
++	 * If a hook failed to update the in-memory btree, we lack the data to
++	 * continue the repair.
++	 */
++	if (xchk_iscan_aborted(&rr->iscan))
++		return -EFSCORRUPTED;
++
+ 	/* Scan for old rtrmap blocks. */
+ 	while ((pag = xfs_perag_next(sc->mp, pag))) {
+ 		error = xrep_rtrmap_scan_ag(rr, pag);
+@@ -702,6 +729,83 @@ xrep_rtrmap_remove_old_tree(
+ 	return xrep_reset_metafile_resv(rr->sc);
+ }
+ 
++static inline bool
++xrep_rtrmapbt_want_live_update(
++	struct xchk_iscan		*iscan,
++	const struct xfs_owner_info	*oi)
++{
++	if (xchk_iscan_aborted(iscan))
++		return false;
++
++	/*
++	 * We scanned the CoW staging extents before we started the iscan, so
++	 * we need all the updates.
++	 */
++	if (XFS_RMAP_NON_INODE_OWNER(oi->oi_owner))
++		return true;
++
++	/* Ignore updates to files that the scanner hasn't visited yet. */
++	return xchk_iscan_want_live_update(iscan, oi->oi_owner);
++}
++
++/*
++ * Apply a rtrmapbt update from the regular filesystem into our shadow btree.
++ * We're running from the thread that owns the rtrmap ILOCK and is generating
++ * the update, so we must be careful about which parts of the struct
++ * xrep_rtrmap that we change.
++ */
++static int
++xrep_rtrmapbt_live_update(
++	struct notifier_block		*nb,
++	unsigned long			action,
++	void				*data)
++{
++	struct xfs_rmap_update_params	*p = data;
++	struct xrep_rtrmap		*rr;
++	struct xfs_mount		*mp;
++	struct xfs_btree_cur		*mcur;
++	struct xfs_trans		*tp;
++	void				*txcookie;
++	int				error;
++
++	rr = container_of(nb, struct xrep_rtrmap, rhook.rmap_hook.nb);
++	mp = rr->sc->mp;
++
++	if (!xrep_rtrmapbt_want_live_update(&rr->iscan, &p->oinfo))
++		goto out_unlock;
++
++	trace_xrep_rmap_live_update(rtg_group(rr->sc->sr.rtg), action, p);
++
++	error = xrep_trans_alloc_hook_dummy(mp, &txcookie, &tp);
++	if (error)
++		goto out_abort;
++
++	mutex_lock(&rr->lock);
++	mcur = xfs_rtrmapbt_mem_cursor(rr->sc->sr.rtg, tp, &rr->rtrmap_btree);
++	error = __xfs_rmap_finish_intent(mcur, action, p->startblock,
++			p->blockcount, &p->oinfo, p->unwritten);
 +	xfs_btree_del_cursor(mcur, error);
 +	if (error)
 +		goto out_cancel;
 +
-+	return xfbtree_trans_commit(&rr->rtrmap_btree, sc->tp);
++	error = xfbtree_trans_commit(&rr->rtrmap_btree, tp);
++	if (error)
++		goto out_cancel;
++
++	xrep_trans_cancel_hook_dummy(&txcookie, tp);
++	mutex_unlock(&rr->lock);
++	return NOTIFY_DONE;
 +
 +out_cancel:
-+	xfbtree_trans_cancel(&rr->rtrmap_btree, sc->tp);
-+	return error;
- }
- 
- /* Finding all file and bmbt extents. */
-@@ -395,6 +403,24 @@ xrep_rtrmap_scan_ag(
- 	return error;
- }
- 
-+/* Count and check all collected records. */
-+STATIC int
-+xrep_rtrmap_check_record(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*priv)
-+{
-+	struct xrep_rtrmap		*rr = priv;
-+	int				error;
-+
-+	error = xrep_rtrmap_check_mapping(rr->sc, rec);
-+	if (error)
-+		return error;
-+
-+	rr->nr_records++;
-+	return 0;
++	xfbtree_trans_cancel(&rr->rtrmap_btree, tp);
++	xrep_trans_cancel_hook_dummy(&txcookie, tp);
++out_abort:
++	xchk_iscan_abort(&rr->iscan);
++	mutex_unlock(&rr->lock);
++out_unlock:
++	return NOTIFY_DONE;
 +}
 +
- /* Generate all the reverse-mappings for the realtime device. */
+ /* Set up the filesystem scan components. */
  STATIC int
- xrep_rtrmap_find_rmaps(
-@@ -403,6 +429,7 @@ xrep_rtrmap_find_rmaps(
+ xrep_rtrmap_setup_scan(
+@@ -710,6 +814,7 @@ xrep_rtrmap_setup_scan(
  	struct xfs_scrub	*sc = rr->sc;
- 	struct xfs_perag	*pag = NULL;
- 	struct xfs_inode	*ip;
-+	struct xfs_btree_cur	*mcur;
  	int			error;
  
- 	/* Generate rmaps for the realtime superblock */
-@@ -468,7 +495,19 @@ xrep_rtrmap_find_rmaps(
- 		}
- 	}
- 
--	return 0;
-+	/*
-+	 * Now that we have everything locked again, we need to count the
-+	 * number of rmap records stashed in the btree.  This should reflect
-+	 * all actively-owned rt files in the filesystem.  At the same time,
-+	 * check all our records before we start building a new btree, which
-+	 * requires the rtbitmap lock.
-+	 */
-+	mcur = xfs_rtrmapbt_mem_cursor(rr->sc->sr.rtg, NULL, &rr->rtrmap_btree);
-+	rr->nr_records = 0;
-+	error = xfs_rmap_query_all(mcur, xrep_rtrmap_check_record, rr);
-+	xfs_btree_del_cursor(mcur, error);
-+
-+	return error;
- }
- 
- /* Building the new rtrmap btree. */
-@@ -482,29 +521,25 @@ xrep_rtrmap_get_records(
- 	unsigned int			nr_wanted,
- 	void				*priv)
- {
--	struct xrep_rtrmap_extent	rec;
--	struct xfs_rmap_irec		*irec = &cur->bc_rec.r;
- 	struct xrep_rtrmap		*rr = priv;
- 	union xfs_btree_rec		*block_rec;
- 	unsigned int			loaded;
- 	int				error;
- 
- 	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
--		error = xfarray_load_next(rr->rtrmap_records, &rr->array_cur,
--				&rec);
-+		int			stat = 0;
-+
-+		error = xfs_btree_increment(rr->mcur, 0, &stat);
- 		if (error)
- 			return error;
--
--		irec->rm_startblock = rec.startblock;
--		irec->rm_blockcount = rec.blockcount;
--		irec->rm_owner = rec.owner;
--
--		if (xfs_rmap_irec_offset_unpack(rec.offset, irec) != NULL)
-+		if (!stat)
- 			return -EFSCORRUPTED;
- 
--		error = xrep_rtrmap_check_mapping(rr->sc, irec);
-+		error = xfs_rmap_get_rec(rr->mcur, &cur->bc_rec.r, &stat);
- 		if (error)
- 			return error;
-+		if (!stat)
-+			return -EFSCORRUPTED;
- 
- 		block_rec = xfs_btree_rec_addr(cur, idx, block);
- 		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-@@ -549,7 +584,6 @@ xrep_rtrmap_build_new_tree(
- 	struct xfs_scrub	*sc = rr->sc;
- 	struct xfs_rtgroup	*rtg = sc->sr.rtg;
- 	struct xfs_btree_cur	*rmap_cur;
--	uint64_t		nr_records;
- 	int			error;
- 
- 	/*
-@@ -569,11 +603,9 @@ xrep_rtrmap_build_new_tree(
- 	rmap_cur = xfs_rtrmapbt_init_cursor(NULL, rtg);
- 	xfs_btree_stage_ifakeroot(rmap_cur, &rr->new_btree.ifake);
- 
--	nr_records = xfarray_length(rr->rtrmap_records);
--
- 	/* Compute how many blocks we'll need for the rmaps collected. */
- 	error = xfs_btree_bload_compute_geometry(rmap_cur,
--			&rr->new_btree.bload, nr_records);
-+			&rr->new_btree.bload, rr->nr_records);
- 	if (error)
- 		goto err_cur;
- 
-@@ -599,12 +631,20 @@ xrep_rtrmap_build_new_tree(
- 	if (error)
- 		goto err_cur;
- 
-+	/*
-+	 * Create a cursor to the in-memory btree so that we can bulk load the
-+	 * new btree.
-+	 */
-+	rr->mcur = xfs_rtrmapbt_mem_cursor(sc->sr.rtg, NULL, &rr->rtrmap_btree);
-+	error = xfs_btree_goto_left_edge(rr->mcur);
-+	if (error)
-+		goto err_mcur;
-+
- 	/* Add all observed rmap records. */
- 	rr->new_btree.ifake.if_fork->if_format = XFS_DINODE_FMT_META_BTREE;
--	rr->array_cur = XFARRAY_CURSOR_INIT;
- 	error = xfs_btree_bload(rmap_cur, &rr->new_btree.bload, rr);
- 	if (error)
--		goto err_cur;
-+		goto err_mcur;
- 
- 	/*
- 	 * Install the new rtrmap btree in the inode.  After this point the old
-@@ -614,6 +654,14 @@ xrep_rtrmap_build_new_tree(
- 	xfs_rtrmapbt_commit_staged_btree(rmap_cur, sc->tp);
- 	xrep_inode_set_nblocks(rr->sc, rr->new_btree.ifake.if_blocks);
- 	xfs_btree_del_cursor(rmap_cur, 0);
-+	xfs_btree_del_cursor(rr->mcur, 0);
-+	rr->mcur = NULL;
-+
-+	/*
-+	 * Now that we've written the new btree to disk, we don't need to keep
-+	 * updating the in-memory btree.  Abort the scan to stop live updates.
-+	 */
-+	xchk_iscan_abort(&rr->iscan);
- 
- 	/* Dispose of any unused blocks and the accounting information. */
- 	error = xrep_newbt_commit(&rr->new_btree);
-@@ -622,6 +670,8 @@ xrep_rtrmap_build_new_tree(
- 
- 	return xrep_roll_trans(sc);
- 
-+err_mcur:
-+	xfs_btree_del_cursor(rr->mcur, error);
- err_cur:
- 	xfs_btree_del_cursor(rmap_cur, error);
- 	xrep_newbt_cancel(&rr->new_btree);
-@@ -658,16 +708,13 @@ xrep_rtrmap_setup_scan(
- 	struct xrep_rtrmap	*rr)
- {
- 	struct xfs_scrub	*sc = rr->sc;
--	char			*descr;
- 	int			error;
- 
++	mutex_init(&rr->lock);
  	xfsb_bitmap_init(&rr->old_rtrmapbt_blocks);
  
  	/* Set up some storage */
--	descr = xchk_xfile_rtgroup_descr(sc, "reverse mapping records");
--	error = xfarray_create(descr, 0, sizeof(struct xrep_rtrmap_extent),
--			&rr->rtrmap_records);
--	kfree(descr);
-+	error = xfs_rtrmapbt_mem_init(sc->mp, &rr->rtrmap_btree, sc->xmbtp,
-+			rtg_rgno(sc->sr.rtg));
- 	if (error)
- 		goto out_bitmap;
+@@ -720,10 +825,26 @@ xrep_rtrmap_setup_scan(
  
-@@ -686,7 +733,7 @@ xrep_rtrmap_teardown(
- 	struct xrep_rtrmap	*rr)
- {
- 	xchk_iscan_teardown(&rr->iscan);
--	xfarray_destroy(rr->rtrmap_records);
+ 	/* Retry iget every tenth of a second for up to 30 seconds. */
+ 	xchk_iscan_start(sc, 30000, 100, &rr->iscan);
++
++	/*
++	 * Hook into live rtrmap operations so that we can update our in-memory
++	 * btree to reflect live changes on the filesystem.  Since we drop the
++	 * rtrmap ILOCK to scan all the inodes, we need this piece to avoid
++	 * installing a stale btree.
++	 */
++	ASSERT(sc->flags & XCHK_FSGATES_RMAP);
++	xfs_rmap_hook_setup(&rr->rhook, xrep_rtrmapbt_live_update);
++	error = xfs_rmap_hook_add(rtg_group(sc->sr.rtg), &rr->rhook);
++	if (error)
++		goto out_iscan;
+ 	return 0;
+ 
++out_iscan:
++	xchk_iscan_teardown(&rr->iscan);
 +	xfbtree_destroy(&rr->rtrmap_btree);
+ out_bitmap:
  	xfsb_bitmap_destroy(&rr->old_rtrmapbt_blocks);
++	mutex_destroy(&rr->lock);
+ 	return error;
  }
  
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index f94fb70b524ffb..b7f2988bc03bb7 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -53,7 +53,8 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
- 		{ "refcntbt",		xfsstats_offset(xs_rmap_mem_2)	},
- 		{ "rmapbt_mem",		xfsstats_offset(xs_rcbag_2)	},
- 		{ "rcbagbt",		xfsstats_offset(xs_rtrmap_2)	},
--		{ "rtrmapbt",		xfsstats_offset(xs_qm_dqreclaims)},
-+		{ "rtrmapbt",		xfsstats_offset(xs_rtrmap_mem_2)},
-+		{ "rtrmapbt_mem",	xfsstats_offset(xs_qm_dqreclaims)},
- 		/* we print both series of quota information together */
- 		{ "qm",			xfsstats_offset(xs_xstrat_bytes)},
- 	};
-diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-index 05dc69c6d94906..9c47de5dff2dd6 100644
---- a/fs/xfs/xfs_stats.h
-+++ b/fs/xfs/xfs_stats.h
-@@ -128,6 +128,7 @@ struct __xfsstats {
- 	uint32_t		xs_rmap_mem_2[__XBTS_MAX];
- 	uint32_t		xs_rcbag_2[__XBTS_MAX];
- 	uint32_t		xs_rtrmap_2[__XBTS_MAX];
-+	uint32_t		xs_rtrmap_mem_2[__XBTS_MAX];
- 	uint32_t		xs_qm_dqreclaims;
- 	uint32_t		xs_qm_dqreclaim_misses;
- 	uint32_t		xs_qm_dquot_dups;
+@@ -732,9 +853,14 @@ STATIC void
+ xrep_rtrmap_teardown(
+ 	struct xrep_rtrmap	*rr)
+ {
++	struct xfs_scrub	*sc = rr->sc;
++
++	xchk_iscan_abort(&rr->iscan);
++	xfs_rmap_hook_del(rtg_group(sc->sr.rtg), &rr->rhook);
+ 	xchk_iscan_teardown(&rr->iscan);
+ 	xfbtree_destroy(&rr->rtrmap_btree);
+ 	xfsb_bitmap_destroy(&rr->old_rtrmapbt_blocks);
++	mutex_destroy(&rr->lock);
+ }
+ 
+ /* Repair the realtime rmap btree. */
+@@ -745,9 +871,6 @@ xrep_rtrmapbt(
+ 	struct xrep_rtrmap	*rr = sc->buf;
+ 	int			error;
+ 
+-	/* Functionality is not yet complete. */
+-	return xrep_notsupported(sc);
+-
+ 	/* Make sure any problems with the fork are fixed. */
+ 	error = xrep_metadata_inode_forks(sc);
+ 	if (error)
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 3f2a8695ef5cb5..fb86b746bc174a 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -41,6 +41,9 @@ struct xchk_dirtree_outcomes;
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_SHARED);
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_COW);
+ 
++TRACE_DEFINE_ENUM(XG_TYPE_AG);
++TRACE_DEFINE_ENUM(XG_TYPE_RTG);
++
+ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PROBE);
+ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_SB);
+ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_AGF);
+@@ -2709,11 +2712,12 @@ DEFINE_SCRUB_NLINKS_DIFF_EVENT(xrep_nlinks_update_inode);
+ DEFINE_SCRUB_NLINKS_DIFF_EVENT(xrep_nlinks_unfixable_inode);
+ 
+ TRACE_EVENT(xrep_rmap_live_update,
+-	TP_PROTO(const struct xfs_perag *pag, unsigned int op,
++	TP_PROTO(const struct xfs_group *xg, unsigned int op,
+ 		 const struct xfs_rmap_update_params *p),
+-	TP_ARGS(pag, op, p),
++	TP_ARGS(xg, op, p),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
++		__field(enum xfs_group_type, type)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(unsigned int, op)
+ 		__field(xfs_agblock_t, agbno)
+@@ -2723,8 +2727,9 @@ TRACE_EVENT(xrep_rmap_live_update,
+ 		__field(unsigned int, flags)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = pag_mount(pag)->m_super->s_dev;
+-		__entry->agno = pag_agno(pag);
++		__entry->dev = xg->xg_mount->m_super->s_dev;
++		__entry->type = xg->xg_type;
++		__entry->agno = xg->xg_gno;
+ 		__entry->op = op;
+ 		__entry->agbno = p->startblock;
+ 		__entry->len = p->blockcount;
+@@ -2733,10 +2738,12 @@ TRACE_EVENT(xrep_rmap_live_update,
+ 		if (p->unwritten)
+ 			__entry->flags |= XFS_RMAP_UNWRITTEN;
+ 	),
+-	TP_printk("dev %d:%d agno 0x%x op %d agbno 0x%x fsbcount 0x%x owner 0x%llx fileoff 0x%llx flags 0x%x",
++	TP_printk("dev %d:%d %sno 0x%x op %d %sbno 0x%x fsbcount 0x%x owner 0x%llx fileoff 0x%llx flags 0x%x",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
+ 		  __entry->agno,
+ 		  __entry->op,
++		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
+ 		  __entry->agbno,
+ 		  __entry->len,
+ 		  __entry->owner,
 
