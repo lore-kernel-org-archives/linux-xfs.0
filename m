@@ -1,30 +1,31 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAE5A364D6
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 17:18:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37EC364D6;
+	Fri, 13 Dec 2024 17:22:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734110339; cv=none; b=rdkL+OeK9Qn+WIADZl0U/sHyB+lsry0uHQeF36wGiX76gUyf8aqxQc9cv2mfobdoGOVq8n+zo0bU4sL9QIy/MInGEVYlH7erXIq2AZpTPCjqvfhT348QbXwWw3/GNDpdgPoXkwbsHXvU80HtLEHPIi95MRutKpI9hPC95crt+fE=
+	t=1734110570; cv=none; b=kNe4bo781QM2qgj+Ho61CITe78utAH+E8x+kNcwRh2YA/WlDWJuwQzvAbjJHPsUju6mEQETgZ22aZ1p82EVAmXVtWpJtREaCm/zYnwpbK5H7WpKcX64Fjx4H/bl0x39Y/3GPUp8JvbCzfzyZ5EPd0HAM/3Bzg6a0lUg87B2XgYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734110339; c=relaxed/simple;
-	bh=39nGFBWXkPqvan403ITpkFTxZYaFmpvkBPAliTK8UoY=;
+	s=arc-20240116; t=1734110570; c=relaxed/simple;
+	bh=s/3RanWX31525EKgo0No1RXAUxHElCTGWx8EQ+qS2UI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f7/Eag4MUBtWZRSdmatNw3XQAJUEXDkDmwaUT9ctTTZVXSNR6pDq1RZdD1oi1RARf8R2sUCYI+qo6J3qRKLMArzEq2VamD1khHymsJLrOavj+ejTFfudIvvygypFKcBg/sN8EmhZXRG/j0FAuunvCRrfi/pevKeL20uDBCTyyS8=
+	 Content-Type:Content-Disposition:In-Reply-To; b=SvO+kPFqwEIKnz2SvEZRAJ5I3vRvgIBPjI9//jUNGNzEJzUORlZCLLLxMzOzr82PW4dVvo1NggIOycpKtZKsbnKYj2+lOoY2TTnmhOAVuaHtcYZZz/R1klCLdEB9cuygslwJtZ0erMYzjXu2sm6FESo81l0bIBrV/m5dAAuCy9M=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 0E57F68BEB; Fri, 13 Dec 2024 18:18:49 +0100 (CET)
-Date: Fri, 13 Dec 2024 18:18:48 +0100
+	id C992A68BEB; Fri, 13 Dec 2024 18:22:43 +0100 (CET)
+Date: Fri, 13 Dec 2024 18:22:43 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 21/43] xfs: don't call xfs_can_free_eofblocks from
- ->release for zoned inodes
-Message-ID: <20241213171848.GA29750@lst.de>
-References: <20241211085636.1380516-1-hch@lst.de> <20241211085636.1380516-22-hch@lst.de> <20241212221523.GF6678@frogsfrogsfrogs> <20241213052841.GN5630@lst.de> <20241213171353.GL6678@frogsfrogsfrogs>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org, djwong@kernel.org,
+	cem@kernel.org, dchinner@redhat.com, ritesh.list@gmail.com,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, martin.petersen@oracle.com
+Subject: Re: [PATCH v2 0/7] large atomic writes for xfs
+Message-ID: <20241213172243.GA30046@lst.de>
+References: <20241210125737.786928-1-john.g.garry@oracle.com> <20241213143841.GC16111@lst.de> <51f5b96e-0a7e-4a88-9ba2-2d67c7477dfb@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,34 +34,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241213171353.GL6678@frogsfrogsfrogs>
+In-Reply-To: <51f5b96e-0a7e-4a88-9ba2-2d67c7477dfb@oracle.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Dec 13, 2024 at 09:13:53AM -0800, Darrick J. Wong wrote:
-> > > I wonder if this is true of alwayscow inodes in general, not just zoned
-> > > inodes?
-> > 
-> > Maybe I'm missing something, but AFAICS always_cow still generates
-> > preallocations in xfs_buffered_write_iomap_begin.  It probably shouldn't.
-> 
-> For non-zoned alwayscow I think it's trying to generate preallocations
-> in the cow fork to reduce fragmentation of the bmbt since we don't have
-> to write in the linear order.
+On Fri, Dec 13, 2024 at 05:15:55PM +0000, John Garry wrote:
+> Sure, so some background is that we are using atomic writes for innodb 
+> MySQL so that we can stop relying on the double-write buffer for crash 
+> protection. MySQL is using an internal 16K page size (so we want 16K atomic 
+> writes).
 
-Ah yes, and xfs_can_free_eofblocks only deals with the data fork.
+Make perfect sense so far.
 
-> 
-> > Btw, the always_cow code as intended as the common support code for
-> > zoned and atomic msync style atomic writes, which always require hard
-> > out of place writes.  It turns out it doesn't actually do that right
-> > now (see the bounce buffering patch reviewed earlier), which makes it
-> > a bit of an oddball.  I'd personally love to kill it once the zoned
-> > code lands, as just running the zoned mode on a regular device actually
-> > gives you a good way to test always out of place write semantics,
-> > which ended up diverging a bit from the earlier version after it hit
-> > the hard reality of hardware actually enforcing out of place writes.
-> 
-> Which patch is the bounce buffering patch?
+>
+> MySQL has what is known as a REDO log - see 
+> https://dev.mysql.com/doc/dev/mysql-server/9.0.1/PAGE_INNODB_REDO_LOG.html
+>
+> Essentially it means that for any data page we write, ahead of time we do a 
+> buffered 512B log update followed by a periodic fsync. I think that such a 
+> thing is common to many apps.
 
-[PATCH 12/43] xfs: refine the unaligned check for always COW inodes in xfs_file_dio_write
+So it's actually using buffered I/O for that and not direct I/O?
+
+> When we tried just using 16K FS blocksize, we found for low thread count 
+> testing that performance was poor - even worse baseline of 4K FS blocksize 
+> and double-write buffer. We put this down to high write latency for REDO 
+> log. As you can imagine, mostly writing 16K for only a 512B update is not 
+> efficient in terms of traffic generated and increased latency (versus 4K FS 
+> block size). At higher thread count, performance was better. We put that 
+> down to bigger log data portions to be written to REDO per FS block write.
+
+So if the redo log uses buffered I/O I can see how that would bloat writes.
+But then again using buffered I/O for a REDO log seems pretty silly
+to start with.
 
