@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460687485
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:01:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9030C2629D
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:02:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734051714; cv=none; b=MBiJZMf7cfhf8JgMNW/vExFR8ObqRsLtqeJ091Fr/E978wt3YdGc3fm+h3Lh6QriFoA30rFWl1BrAnGIUXX7mE7DNQbpZtvEwrQjyTC4KPXmRolmbP6xPKNx5vmOyD3+tq64IIPtr/2SJFWYJIiPUW+fzMd87KqyDV5kp4mCRUQ=
+	t=1734051729; cv=none; b=TD0zyfWeVGVJU/J+80L0L7ZtL5cL9GlUz04N3EwQ3WlpY7sCJl8gdAXre0E95OvwoVlrHMaef/LI19i/SIM2a0bCet+76RNTUux8jXaf8pCLIBDo/FcHD2RZLcNWsI4M+1R2CXQ7ZCG7/DYsUonadNWuzvkw2CnPSF+WIv+Dv3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734051714; c=relaxed/simple;
-	bh=lIwZew1L2geLGB9vn4+JuQwT6Sh4NZt+BA6+78TQRG0=;
+	s=arc-20240116; t=1734051729; c=relaxed/simple;
+	bh=wiGiVRa3PT2bsI3QT+JP8YKgPCBl58Ue9paV0GvFUrw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jarYAc1IpAG7ExV88XhVO72yExStRA5iVjn1g1RsFCB03jprzfZ7fNYPbMu6941ebX8zDPQ5BI8vWtkz5jhvHTaiHCbbdCuugfjrFg3xktyjIe8t8dzgDWKt1sBvSjiVsBAHCyy+EmtEK0C6d67d5NXqkONjSKPmvA8Et/dFjgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F/VCpc/E; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=orWLVImIZbc3Y2tThbw3XXfmR8KvXCofzkL1Xqv9Ig+vOyfvY61VVvxuFpUQ6uZoBwUgF+fS7BKfDXpcp9yaX1EJzsQCdsiZScaukWojnv2AgIdazdhIJm7QlDIJ/No0S9rpfd4AfO1iF8RVfO8YNxAgAz8E5CauQ0R4xJCT7Ws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hSY8eOrV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F/VCpc/E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6EE7C4CECE;
-	Fri, 13 Dec 2024 01:01:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hSY8eOrV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68AEDC4CECE;
+	Fri, 13 Dec 2024 01:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734051713;
-	bh=lIwZew1L2geLGB9vn4+JuQwT6Sh4NZt+BA6+78TQRG0=;
+	s=k20201202; t=1734051729;
+	bh=wiGiVRa3PT2bsI3QT+JP8YKgPCBl58Ue9paV0GvFUrw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=F/VCpc/EOlrNQctElDFNfSaAIDHB2X+MSs32Zol3GSLRJBige0qjR7WHXyDGfpNLM
-	 X+++BVTpCm9M5yIxooZuUw/DOAvC+rccSNX9NYWNAay8LG2do0R60O7Ln83P+aLINw
-	 i8sQyUoTYrnXUH5hkG8MNGnJetopjYK3ZPLPKIP3/eJXra7sIzD04JkrjfFnoabV6l
-	 2SY141YcFLEmvVHMlThPX8oVzHq7kq3WDOHnOn3nBK2Sdwl4Twl+wwklCnN5Al/T8u
-	 C37EEbmrXopBrg1S9dPlC9qhd8J1oD+k9f7wGNfiF0HVVOxue1IBzoWc8fTwrjvLsW
-	 p77oLwP87uejg==
-Date: Thu, 12 Dec 2024 17:01:53 -0800
-Subject: [PATCH 05/37] xfs: realtime rmap btree transaction reservations
+	b=hSY8eOrV6Yq4hWzzusXhnbdg+rykaRpRfUCaIgaDH0ZLRLZyy4OULDdxevIuLRaLE
+	 Oq4QFKguqZQooiA/NdawaPzHs07EvqUbIzN28C7coFOCjpxWwgXLpK7vvpzOu6xpeS
+	 ccYjJJR1yctk2G/+/7bCXNDoQgmlRvGlmj/6rkfPBwNoSJdOd+QiCkEQCu260+DNLQ
+	 R9/7OKI/DPCjFAjQH0Wc8HLhUsyHoNLlbxDv6T2CmryLRYZV26URiRlLMGnsd9VN4R
+	 nl9N+6VSQ+L459pCUxtHnnKqdYm4DuCc93S7gl2Si2OnH/r/TLR+tB4m9W1mbw9a5s
+	 smU6nDGJusZUQ==
+Date: Thu, 12 Dec 2024 17:02:08 -0800
+Subject: [PATCH 06/37] xfs: add realtime rmap btree operations
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405123399.1181370.1254278860717277218.stgit@frogsfrogsfrogs>
+Message-ID: <173405123416.1181370.6765657366135349371.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 References: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,89 +45,425 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that there's enough log reservation to handle mapping
-and unmapping realtime extents.  We have to reserve enough space
-to handle a split in the rtrmapbt to add the record and a second
-split in the regular rmapbt to record the rtrmapbt split.
+Implement the generic btree operations needed to manipulate rtrmap
+btree blocks. This is different from the regular rmapbt in that we
+allocate space from the filesystem at large, and are neither
+constrained to the free space nor any particular AG.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_exchmaps.c    |    4 +++-
- fs/xfs/libxfs/xfs_trans_resv.c  |   12 ++++++++++--
- fs/xfs/libxfs/xfs_trans_space.h |   13 +++++++++++++
- 3 files changed, 26 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c        |   68 ++++++++++
+ fs/xfs/libxfs/xfs_btree.h        |    6 +
+ fs/xfs/libxfs/xfs_rtrmap_btree.c |  271 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 345 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
-index 2021396651de27..3f1d6a98c11819 100644
---- a/fs/xfs/libxfs/xfs_exchmaps.c
-+++ b/fs/xfs/libxfs/xfs_exchmaps.c
-@@ -662,7 +662,9 @@ xfs_exchmaps_rmapbt_blocks(
- 	if (!xfs_has_rmapbt(mp))
- 		return 0;
- 	if (XFS_IS_REALTIME_INODE(req->ip1))
--		return 0;
-+		return howmany_64(req->nr_exchanges,
-+					XFS_MAX_CONTIG_RTRMAPS_PER_BLOCK(mp)) *
-+			XFS_RTRMAPADD_SPACE_RES(mp);
- 
- 	return howmany_64(req->nr_exchanges,
- 					XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) *
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index bab402340b5da8..f3392eb2d7f41f 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -213,7 +213,9 @@ xfs_calc_inode_chunk_res(
-  * Per-extent log reservation for the btree changes involved in freeing or
-  * allocating a realtime extent.  We have to be able to log as many rtbitmap
-  * blocks as needed to mark inuse XFS_BMBT_MAX_EXTLEN blocks' worth of realtime
-- * extents, as well as the realtime summary block.
-+ * extents, as well as the realtime summary block (t1).  Realtime rmap btree
-+ * operations happen in a second transaction, so factor in a couple of rtrmapbt
-+ * splits (t2).
-  */
- static unsigned int
- xfs_rtalloc_block_count(
-@@ -222,10 +224,16 @@ xfs_rtalloc_block_count(
- {
- 	unsigned int		rtbmp_blocks;
- 	xfs_rtxlen_t		rtxlen;
-+	unsigned int		t1, t2 = 0;
- 
- 	rtxlen = xfs_extlen_to_rtxlen(mp, XFS_MAX_BMBT_EXTLEN);
- 	rtbmp_blocks = xfs_rtbitmap_blockcount_len(mp, rtxlen);
--	return (rtbmp_blocks + 1) * num_ops;
-+	t1 = (rtbmp_blocks + 1) * num_ops;
-+
-+	if (xfs_has_rmapbt(mp))
-+		t2 = num_ops * (2 * mp->m_rtrmap_maxlevels - 1);
-+
-+	return max(t1, t2);
- }
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 0e271919374780..36ab06f8a3bc99 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -31,6 +31,10 @@
+ #include "xfs_buf_mem.h"
+ #include "xfs_btree_mem.h"
+ #include "xfs_rtrmap_btree.h"
++#include "xfs_bmap.h"
++#include "xfs_rmap.h"
++#include "xfs_quota.h"
++#include "xfs_metafile.h"
  
  /*
-diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-index 1155ff2d37e29f..d89b570aafcc64 100644
---- a/fs/xfs/libxfs/xfs_trans_space.h
-+++ b/fs/xfs/libxfs/xfs_trans_space.h
-@@ -14,6 +14,19 @@
- #define XFS_MAX_CONTIG_BMAPS_PER_BLOCK(mp)    \
- 		(((mp)->m_bmap_dmxr[0]) - ((mp)->m_bmap_dmnr[0]))
+  * Btree magic numbers.
+@@ -5576,3 +5580,67 @@ xfs_btree_goto_left_edge(
  
-+/* Worst case number of realtime rmaps that can be held in a block. */
-+#define XFS_MAX_CONTIG_RTRMAPS_PER_BLOCK(mp)    \
-+		(((mp)->m_rtrmap_mxr[0]) - ((mp)->m_rtrmap_mnr[0]))
+ 	return 0;
+ }
 +
-+/* Adding one realtime rmap could split every level to the top of the tree. */
-+#define XFS_RTRMAPADD_SPACE_RES(mp) ((mp)->m_rtrmap_maxlevels)
++/* Allocate a block for an inode-rooted metadata btree. */
++int
++xfs_btree_alloc_metafile_block(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat)
++{
++	struct xfs_alloc_arg		args = {
++		.mp			= cur->bc_mp,
++		.tp			= cur->bc_tp,
++		.resv			= XFS_AG_RESV_METAFILE,
++		.minlen			= 1,
++		.maxlen			= 1,
++		.prod			= 1,
++	};
++	struct xfs_inode		*ip = cur->bc_ino.ip;
++	int				error;
 +
-+/* Blocks we might need to add "b" realtime rmaps to a tree. */
-+#define XFS_NRTRMAPADD_SPACE_RES(mp, b) \
-+	((((b) + XFS_MAX_CONTIG_RTRMAPS_PER_BLOCK(mp) - 1) / \
-+	  XFS_MAX_CONTIG_RTRMAPS_PER_BLOCK(mp)) * \
-+	  XFS_RTRMAPADD_SPACE_RES(mp))
++	ASSERT(xfs_is_metadir_inode(ip));
 +
- /* Worst case number of rmaps that can be held in a block. */
- #define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
- 		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
++	xfs_rmap_ino_bmbt_owner(&args.oinfo, ip->i_ino, cur->bc_ino.whichfork);
++	error = xfs_alloc_vextent_start_ag(&args,
++			XFS_INO_TO_FSB(cur->bc_mp, ip->i_ino));
++	if (error)
++		return error;
++	if (args.fsbno == NULLFSBLOCK) {
++		*stat = 0;
++		return 0;
++	}
++	ASSERT(args.len == 1);
++
++	xfs_metafile_resv_alloc_space(ip, &args);
++
++	new->l = cpu_to_be64(args.fsbno);
++	*stat = 1;
++	return 0;
++}
++
++/* Free a block from an inode-rooted metadata btree. */
++int
++xfs_btree_free_metafile_block(
++	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*bp)
++{
++	struct xfs_owner_info	oinfo;
++	struct xfs_mount	*mp = cur->bc_mp;
++	struct xfs_inode	*ip = cur->bc_ino.ip;
++	struct xfs_trans	*tp = cur->bc_tp;
++	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
++	int			error;
++
++	ASSERT(xfs_is_metadir_inode(ip));
++
++	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
++	error = xfs_free_extent_later(tp, fsbno, 1, &oinfo, XFS_AG_RESV_METAFILE,
++			0);
++	if (error)
++		return error;
++
++	xfs_metafile_resv_free_space(ip, tp, 1);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 3b8c2ccad90847..ee82dc777d6d5b 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -703,4 +703,10 @@ xfs_btree_at_iroot(
+ 	       level == cur->bc_nlevels - 1;
+ }
+ 
++int xfs_btree_alloc_metafile_block(struct xfs_btree_cur *cur,
++		const union xfs_btree_ptr *start, union xfs_btree_ptr *newp,
++		int *stat);
++int xfs_btree_free_metafile_block(struct xfs_btree_cur *cur,
++		struct xfs_buf *bp);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+index d3e4c52dcaa9d0..99d828bb5fe7c3 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+@@ -18,12 +18,14 @@
+ #include "xfs_alloc.h"
+ #include "xfs_btree.h"
+ #include "xfs_btree_staging.h"
++#include "xfs_rmap.h"
+ #include "xfs_rtrmap_btree.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
+ #include "xfs_error.h"
+ #include "xfs_extent_busy.h"
+ #include "xfs_rtgroup.h"
++#include "xfs_bmap.h"
+ 
+ static struct kmem_cache	*xfs_rtrmapbt_cur_cache;
+ 
+@@ -44,6 +46,182 @@ xfs_rtrmapbt_dup_cursor(
+ 	return xfs_rtrmapbt_init_cursor(cur->bc_tp, to_rtg(cur->bc_group));
+ }
+ 
++STATIC int
++xfs_rtrmapbt_get_minrecs(
++	struct xfs_btree_cur	*cur,
++	int			level)
++{
++	if (level == cur->bc_nlevels - 1) {
++		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
++
++		return xfs_rtrmapbt_maxrecs(cur->bc_mp, ifp->if_broot_bytes,
++				level == 0) / 2;
++	}
++
++	return cur->bc_mp->m_rtrmap_mnr[level != 0];
++}
++
++STATIC int
++xfs_rtrmapbt_get_maxrecs(
++	struct xfs_btree_cur	*cur,
++	int			level)
++{
++	if (level == cur->bc_nlevels - 1) {
++		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
++
++		return xfs_rtrmapbt_maxrecs(cur->bc_mp, ifp->if_broot_bytes,
++				level == 0);
++	}
++
++	return cur->bc_mp->m_rtrmap_mxr[level != 0];
++}
++
++/*
++ * Convert the ondisk record's offset field into the ondisk key's offset field.
++ * Fork and bmbt are significant parts of the rmap record key, but written
++ * status is merely a record attribute.
++ */
++static inline __be64 ondisk_rec_offset_to_key(const union xfs_btree_rec *rec)
++{
++	return rec->rmap.rm_offset & ~cpu_to_be64(XFS_RMAP_OFF_UNWRITTEN);
++}
++
++STATIC void
++xfs_rtrmapbt_init_key_from_rec(
++	union xfs_btree_key		*key,
++	const union xfs_btree_rec	*rec)
++{
++	key->rmap.rm_startblock = rec->rmap.rm_startblock;
++	key->rmap.rm_owner = rec->rmap.rm_owner;
++	key->rmap.rm_offset = ondisk_rec_offset_to_key(rec);
++}
++
++STATIC void
++xfs_rtrmapbt_init_high_key_from_rec(
++	union xfs_btree_key		*key,
++	const union xfs_btree_rec	*rec)
++{
++	uint64_t			off;
++	int				adj;
++
++	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
++
++	key->rmap.rm_startblock = rec->rmap.rm_startblock;
++	be32_add_cpu(&key->rmap.rm_startblock, adj);
++	key->rmap.rm_owner = rec->rmap.rm_owner;
++	key->rmap.rm_offset = ondisk_rec_offset_to_key(rec);
++	if (XFS_RMAP_NON_INODE_OWNER(be64_to_cpu(rec->rmap.rm_owner)) ||
++	    XFS_RMAP_IS_BMBT_BLOCK(be64_to_cpu(rec->rmap.rm_offset)))
++		return;
++	off = be64_to_cpu(key->rmap.rm_offset);
++	off = (XFS_RMAP_OFF(off) + adj) | (off & ~XFS_RMAP_OFF_MASK);
++	key->rmap.rm_offset = cpu_to_be64(off);
++}
++
++STATIC void
++xfs_rtrmapbt_init_rec_from_cur(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*rec)
++{
++	rec->rmap.rm_startblock = cpu_to_be32(cur->bc_rec.r.rm_startblock);
++	rec->rmap.rm_blockcount = cpu_to_be32(cur->bc_rec.r.rm_blockcount);
++	rec->rmap.rm_owner = cpu_to_be64(cur->bc_rec.r.rm_owner);
++	rec->rmap.rm_offset = cpu_to_be64(
++			xfs_rmap_irec_offset_pack(&cur->bc_rec.r));
++}
++
++STATIC void
++xfs_rtrmapbt_init_ptr_from_cur(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*ptr)
++{
++	ptr->l = 0;
++}
++
++/*
++ * Mask the appropriate parts of the ondisk key field for a key comparison.
++ * Fork and bmbt are significant parts of the rmap record key, but written
++ * status is merely a record attribute.
++ */
++static inline uint64_t offset_keymask(uint64_t offset)
++{
++	return offset & ~XFS_RMAP_OFF_UNWRITTEN;
++}
++
++STATIC int64_t
++xfs_rtrmapbt_key_diff(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*key)
++{
++	struct xfs_rmap_irec		*rec = &cur->bc_rec.r;
++	const struct xfs_rmap_key	*kp = &key->rmap;
++	__u64				x, y;
++	int64_t				d;
++
++	d = (int64_t)be32_to_cpu(kp->rm_startblock) - rec->rm_startblock;
++	if (d)
++		return d;
++
++	x = be64_to_cpu(kp->rm_owner);
++	y = rec->rm_owner;
++	if (x > y)
++		return 1;
++	else if (y > x)
++		return -1;
++
++	x = offset_keymask(be64_to_cpu(kp->rm_offset));
++	y = offset_keymask(xfs_rmap_irec_offset_pack(rec));
++	if (x > y)
++		return 1;
++	else if (y > x)
++		return -1;
++	return 0;
++}
++
++STATIC int64_t
++xfs_rtrmapbt_diff_two_keys(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2,
++	const union xfs_btree_key	*mask)
++{
++	const struct xfs_rmap_key	*kp1 = &k1->rmap;
++	const struct xfs_rmap_key	*kp2 = &k2->rmap;
++	int64_t				d;
++	__u64				x, y;
++
++	/* Doesn't make sense to mask off the physical space part */
++	ASSERT(!mask || mask->rmap.rm_startblock);
++
++	d = (int64_t)be32_to_cpu(kp1->rm_startblock) -
++		     be32_to_cpu(kp2->rm_startblock);
++	if (d)
++		return d;
++
++	if (!mask || mask->rmap.rm_owner) {
++		x = be64_to_cpu(kp1->rm_owner);
++		y = be64_to_cpu(kp2->rm_owner);
++		if (x > y)
++			return 1;
++		else if (y > x)
++			return -1;
++	}
++
++	if (!mask || mask->rmap.rm_offset) {
++		/* Doesn't make sense to allow offset but not owner */
++		ASSERT(!mask || mask->rmap.rm_owner);
++
++		x = offset_keymask(be64_to_cpu(kp1->rm_offset));
++		y = offset_keymask(be64_to_cpu(kp2->rm_offset));
++		if (x > y)
++			return 1;
++		else if (y > x)
++			return -1;
++	}
++
++	return 0;
++}
++
+ static xfs_failaddr_t
+ xfs_rtrmapbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -110,6 +288,86 @@ const struct xfs_buf_ops xfs_rtrmapbt_buf_ops = {
+ 	.verify_struct		= xfs_rtrmapbt_verify,
+ };
+ 
++STATIC int
++xfs_rtrmapbt_keys_inorder(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
++{
++	uint32_t			x;
++	uint32_t			y;
++	uint64_t			a;
++	uint64_t			b;
++
++	x = be32_to_cpu(k1->rmap.rm_startblock);
++	y = be32_to_cpu(k2->rmap.rm_startblock);
++	if (x < y)
++		return 1;
++	else if (x > y)
++		return 0;
++	a = be64_to_cpu(k1->rmap.rm_owner);
++	b = be64_to_cpu(k2->rmap.rm_owner);
++	if (a < b)
++		return 1;
++	else if (a > b)
++		return 0;
++	a = offset_keymask(be64_to_cpu(k1->rmap.rm_offset));
++	b = offset_keymask(be64_to_cpu(k2->rmap.rm_offset));
++	if (a <= b)
++		return 1;
++	return 0;
++}
++
++STATIC int
++xfs_rtrmapbt_recs_inorder(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
++{
++	uint32_t			x;
++	uint32_t			y;
++	uint64_t			a;
++	uint64_t			b;
++
++	x = be32_to_cpu(r1->rmap.rm_startblock);
++	y = be32_to_cpu(r2->rmap.rm_startblock);
++	if (x < y)
++		return 1;
++	else if (x > y)
++		return 0;
++	a = be64_to_cpu(r1->rmap.rm_owner);
++	b = be64_to_cpu(r2->rmap.rm_owner);
++	if (a < b)
++		return 1;
++	else if (a > b)
++		return 0;
++	a = offset_keymask(be64_to_cpu(r1->rmap.rm_offset));
++	b = offset_keymask(be64_to_cpu(r2->rmap.rm_offset));
++	if (a <= b)
++		return 1;
++	return 0;
++}
++
++STATIC enum xbtree_key_contig
++xfs_rtrmapbt_keys_contiguous(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*key1,
++	const union xfs_btree_key	*key2,
++	const union xfs_btree_key	*mask)
++{
++	ASSERT(!mask || mask->rmap.rm_startblock);
++
++	/*
++	 * We only support checking contiguity of the physical space component.
++	 * If any callers ever need more specificity than that, they'll have to
++	 * implement it here.
++	 */
++	ASSERT(!mask || (!mask->rmap.rm_owner && !mask->rmap.rm_offset));
++
++	return xbtree_key_contig(be32_to_cpu(key1->rmap.rm_startblock),
++				 be32_to_cpu(key2->rmap.rm_startblock));
++}
++
+ const struct xfs_btree_ops xfs_rtrmapbt_ops = {
+ 	.name			= "rtrmap",
+ 	.type			= XFS_BTREE_TYPE_INODE,
+@@ -125,7 +383,20 @@ const struct xfs_btree_ops xfs_rtrmapbt_ops = {
+ 	.statoff		= XFS_STATS_CALC_INDEX(xs_rtrmap_2),
+ 
+ 	.dup_cursor		= xfs_rtrmapbt_dup_cursor,
++	.alloc_block		= xfs_btree_alloc_metafile_block,
++	.free_block		= xfs_btree_free_metafile_block,
++	.get_minrecs		= xfs_rtrmapbt_get_minrecs,
++	.get_maxrecs		= xfs_rtrmapbt_get_maxrecs,
++	.init_key_from_rec	= xfs_rtrmapbt_init_key_from_rec,
++	.init_high_key_from_rec	= xfs_rtrmapbt_init_high_key_from_rec,
++	.init_rec_from_cur	= xfs_rtrmapbt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_rtrmapbt_init_ptr_from_cur,
++	.key_diff		= xfs_rtrmapbt_key_diff,
+ 	.buf_ops		= &xfs_rtrmapbt_buf_ops,
++	.diff_two_keys		= xfs_rtrmapbt_diff_two_keys,
++	.keys_inorder		= xfs_rtrmapbt_keys_inorder,
++	.recs_inorder		= xfs_rtrmapbt_recs_inorder,
++	.keys_contiguous	= xfs_rtrmapbt_keys_contiguous,
+ };
+ 
+ /* Allocate a new rt rmap btree cursor. */
 
