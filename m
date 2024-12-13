@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E04CF629
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:06:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD842629
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:07:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734052011; cv=none; b=N3zgJKsH1rJX7sMTn6PJ411R/l5h1gxoHkbqc50b2ebPCgJFqnZ6lvyiiCQWPm7Cqo5nCxz6Afm9e3RMJp6gjDXz4V1KD182eNGa/EhRgijyV0H81SN8dVVRwCCNkwPQFKUuY0BlsdKx2KXaqYexeusvB2U8eiZ08WtJkiseheQ=
+	t=1734052026; cv=none; b=BaWvyWJLV/8GkM+uMzPu9MvzKAwywSEcg2aq33PGFDF13DAIs2eYancx/gH+7w31KynTUH++ChoQlT1oV3Q6uZjv1SSxK+p6BR0c/STt20duP1ZLEif8Zb34E/8zdOB5rd/k3UqQbdEXJhCu1rC3E4VYRX42uevpFd1KcZKSy4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734052011; c=relaxed/simple;
-	bh=WUM6qnQ6Ne2z0qNRG752efCJR0fVEV9gVW9BMzP9bAY=;
+	s=arc-20240116; t=1734052026; c=relaxed/simple;
+	bh=Fwjs/kBV21i3Odcw9HpOgGCPxlZ0GnJjW649x1tBc1c=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GLtLHWYTH5cwDnYWWKC93FfsgFzYiW44sS6q3fro2Hw8kB/Zwd5nOn9ICL3BXSz/Fn3dK5ptk0O521rM6W4zWF1pzY4xKWPGH8Yp4X1T22LOAFEUV22SrvYCVFjYWbw3I4Y94amnSgoxOXX98IMB+g3/1xsv8VbPz/HUZN2HjCY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o5LrSnIf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ZNhkE7dObAJxb3P+ea07/0K/PfHLbQvPcJtiTBs803XQCaefy7LqyCJ3p7smeyMEH0GiN9XMgnaEMvcj3kHFrYXzE8bMERZse2k+f8f5wBOk5w+EOOa5CPLoL1oDrkI4jDu4MUddy53/z4nB8+rjaUdgKprGa0PjwKVFBzPrx7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kUdHmumx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o5LrSnIf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B98C2C4CED3;
-	Fri, 13 Dec 2024 01:06:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kUdHmumx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58960C4CED3;
+	Fri, 13 Dec 2024 01:07:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734052010;
-	bh=WUM6qnQ6Ne2z0qNRG752efCJR0fVEV9gVW9BMzP9bAY=;
+	s=k20201202; t=1734052026;
+	bh=Fwjs/kBV21i3Odcw9HpOgGCPxlZ0GnJjW649x1tBc1c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=o5LrSnIfDm7JOXadnoILNba+qzxYEcMvExZICOHbiJDcrt9Memdrnz74Q2s1jPbJl
-	 xQaHgePP5LP/LhjVjDyXZGi9n0xfcpDCsDfrbqqqG7TV1v+WelNKgTPQ0A6uL8zaIj
-	 rDHtW6FlZCvEEiLb4r3NgY5JYANyUdA9p7Pqf8w5PIHW7W2rbQG0ai1m2qG+dmRrOz
-	 z38g0AqenubtqVHZg9x5LOicYbAo8hG3alsHDbV41L+/69R6nhUItzO2ZtItNDxRVe
-	 bMx/lZusUuwJzZDL/X0vxEcc0Vkn/A8+jn3XkzQ44Z8mHNYb/oHiQFwJ2XtozvS2DJ
-	 KbwnkvwOan9Jw==
-Date: Thu, 12 Dec 2024 17:06:50 -0800
-Subject: [PATCH 24/37] xfs: scan rt rmap when we're doing an intense rmap
- check of bmbt mappings
+	b=kUdHmumxHV5BM2C2xtpPpnm7+0ZzPPjyEfKGehhtiIPNWVy2FxkJGRFoK8K0pMaVG
+	 ApurqTwNmboe3ZvfulTKExqMdsUXpxWOfMQcsXEaDUenB+ODTY+YZYG5UJH/DyTimd
+	 NlAOXhZlrmL+h652r71MUzZ+8Ax/nOwYQfAaRxU2Tg6uKOj+TxuTP1wIXOVn/E7YPW
+	 god/QutJ+ICM8G5ynqgU+I38pB13s640RbmgEwLl+llmkX1UeA/9L8wQQ7C2F1X9op
+	 9pOLGvz8uxH1YX/yco36/BuTqc9DxFQFkNs9Vqk2VS85SsMYig3XVBAbr75oHL+Zv7
+	 /Sb8qFrbYxKWw==
+Date: Thu, 12 Dec 2024 17:07:05 -0800
+Subject: [PATCH 25/37] xfs: scrub the metadir path of rt rmap btree files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405123727.1181370.595086889127827740.stgit@frogsfrogsfrogs>
+Message-ID: <173405123744.1181370.14108227241545412092.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 References: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,101 +45,51 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach the bmbt scrubber how to perform a comprehensive check that the
-rmapbt does not contain /any/ mappings that are not described by bmbt
-records when it's dealing with a realtime file.
+Add a new XFS_SCRUB_METAPATH subtype so that we can scrub the metadata
+directory tree path to the rmap btree file for each rt group.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/bmap.c |   48 ++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 42 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h  |    3 ++-
+ fs/xfs/scrub/metapath.c |    3 +++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index b7f9f3b3d81a3a..f6077b0cba8a14 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -21,6 +21,8 @@
- #include "xfs_rmap_btree.h"
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 34fcbcd0bcd5e3..d42d3a5617e314 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -830,9 +830,10 @@ struct xfs_scrub_vec_head {
+ #define XFS_SCRUB_METAPATH_USRQUOTA	(5)  /* user quota */
+ #define XFS_SCRUB_METAPATH_GRPQUOTA	(6)  /* group quota */
+ #define XFS_SCRUB_METAPATH_PRJQUOTA	(7)  /* project quota */
++#define XFS_SCRUB_METAPATH_RTRMAPBT	(8)  /* realtime reverse mapping */
+ 
+ /* Number of metapath sm_ino values */
+-#define XFS_SCRUB_METAPATH_NR		(8)
++#define XFS_SCRUB_METAPATH_NR		(9)
+ 
+ /*
+  * ioctl limits
+diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
+index c678cba1ffc3f7..74d71373e7edf1 100644
+--- a/fs/xfs/scrub/metapath.c
++++ b/fs/xfs/scrub/metapath.c
+@@ -21,6 +21,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_attr.h"
  #include "xfs_rtgroup.h"
- #include "xfs_health.h"
-+#include "xfs_rtalloc.h"
 +#include "xfs_rtrmap_btree.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
- #include "scrub/btree.h"
-@@ -641,8 +643,7 @@ xchk_bmap_check_rmap(
- 			xchk_fblock_set_corrupt(sc, sbcri->whichfork,
- 					check_rec.rm_offset);
- 		if (irec.br_startblock !=
--		    xfs_agbno_to_fsb(to_perag(cur->bc_group),
--				check_rec.rm_startblock))
-+		    xfs_gbno_to_fsb(cur->bc_group, check_rec.rm_startblock))
- 			xchk_fblock_set_corrupt(sc, sbcri->whichfork,
- 					check_rec.rm_offset);
- 		if (irec.br_blockcount > check_rec.rm_blockcount)
-@@ -696,6 +697,30 @@ xchk_bmap_check_ag_rmaps(
- 	return error;
- }
- 
-+/* Make sure each rt rmap has a corresponding bmbt entry. */
-+STATIC int
-+xchk_bmap_check_rt_rmaps(
-+	struct xfs_scrub		*sc,
-+	struct xfs_rtgroup		*rtg)
-+{
-+	struct xchk_bmap_check_rmap_info sbcri;
-+	struct xfs_btree_cur		*cur;
-+	int				error;
-+
-+	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
-+	cur = xfs_rtrmapbt_init_cursor(sc->tp, rtg);
-+
-+	sbcri.sc = sc;
-+	sbcri.whichfork = XFS_DATA_FORK;
-+	error = xfs_rmap_query_all(cur, xchk_bmap_check_rmap, &sbcri);
-+	if (error == -ECANCELED)
-+		error = 0;
-+
-+	xfs_btree_del_cursor(cur, error);
-+	xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
-+	return error;
-+}
-+
- /*
-  * Decide if we want to scan the reverse mappings to determine if the attr
-  * fork /really/ has zero space mappings.
-@@ -750,10 +775,6 @@ xchk_bmap_check_empty_datafork(
- {
- 	struct xfs_ifork	*ifp = &ip->i_df;
- 
--	/* Don't support realtime rmap checks yet. */
--	if (XFS_IS_REALTIME_INODE(ip))
--		return false;
--
- 	/*
- 	 * If the dinode repair found a bad data fork, it will reset the fork
- 	 * to extents format with zero records and wait for the this scrubber
-@@ -804,6 +825,21 @@ xchk_bmap_check_rmaps(
- 	struct xfs_perag	*pag = NULL;
- 	int			error;
- 
-+	if (xfs_ifork_is_realtime(sc->ip, whichfork)) {
-+		struct xfs_rtgroup	*rtg = NULL;
-+
-+		while ((rtg = xfs_rtgroup_next(sc->mp, rtg))) {
-+			error = xchk_bmap_check_rt_rmaps(sc, rtg);
-+			if (error ||
-+			    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
-+				xfs_rtgroup_rele(rtg);
-+				return error;
-+			}
-+		}
-+
-+		return 0;
-+	}
-+
- 	while ((pag = xfs_perag_next(sc->mp, pag))) {
- 		error = xchk_bmap_check_ag_rmaps(sc, whichfork, pag);
- 		if (error ||
+ #include "scrub/trace.h"
+@@ -246,6 +247,8 @@ xchk_setup_metapath(
+ 		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_GROUP);
+ 	case XFS_SCRUB_METAPATH_PRJQUOTA:
+ 		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_PROJ);
++	case XFS_SCRUB_METAPATH_RTRMAPBT:
++		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_RMAP);
+ 	default:
+ 		return -ENOENT;
+ 	}
 
