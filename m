@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39DF61078F
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:23:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D358617BA1
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:23:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734052982; cv=none; b=Q5mae6TIkW4bVaQByTiYpDY4QJ2knTN/YwPB+ZGKL0cg8kw7KcjlIHEC/FkVbyQf0IlF2Dcf1H7t6aEeXDDWLFWUg9TC1iJf98HgqZbD8VDYRpSJnc741Jstk1TI8EPwolbFeWTDd770X/Ga9i4fiGrQOh6ZIFPz6CWDOobMtGQ=
+	t=1734052997; cv=none; b=C3f3XRKsnupjUw2xXLl4AJRtdudDvbU5VJozkJKwR5JmGjJteef+klLxqYUknq75pmk3jqfWUQ3XZ2oaIz4lbDM3/oeO7mBzSmudxHY2OMlRELjqM7ntQ8buina0SyjYRJRa8CXvSRarc/eO9gQp7ypcF5rp1rqgestPFWnkEYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734052982; c=relaxed/simple;
-	bh=MGXPCPb2rp08r7BvOWJ0lcc715YkjlICeVLVxxChSww=;
+	s=arc-20240116; t=1734052997; c=relaxed/simple;
+	bh=kKz9K3F+lPeE+yIdMEqt89LUeSNml2IE66ly0hGswGI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CvDDHqwAVXk7Nla8z+xOP2Fm9i3Is3TFeumfXtbtp035V/jmEHo/8cWuSq5DYELLmSj7Acwnwb6aOE9AZZH6OCkeKDdYzNNoWVcnotdlWPfCsl31tFw034bk4w3ul7BytJ6oH5cokVvbDGoGE3BICAgQMnbYhtbbi5fd4iniP5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QjYQ0loj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=syPpqrO67u8fjH9OtPer1sPpRkRNg6/9XOgs/vXR7ykEqPXV+05ROiTfklgTK7dd0CZ6EidG9FUEYbyKEE23lSvYZ+c6WAfyWMZZlfVrdrGQ8ZMNqmLG1MzuU6JI2zdkZ4OjPbgG6G7zP/Zd3i79faXFlTWq+YfK+4Zfefn6OW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rghH5f8X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QjYQ0loj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14F12C4CECE;
-	Fri, 13 Dec 2024 01:23:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rghH5f8X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB3FEC4CECE;
+	Fri, 13 Dec 2024 01:23:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734052982;
-	bh=MGXPCPb2rp08r7BvOWJ0lcc715YkjlICeVLVxxChSww=;
+	s=k20201202; t=1734052997;
+	bh=kKz9K3F+lPeE+yIdMEqt89LUeSNml2IE66ly0hGswGI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QjYQ0lojW5tOzKcZx2JyBgH83gejwzKSZQNvypdmmeplPfRMwAYw4vNf9MSIL3HZ/
-	 xgSjx14dNXjDJqEcw3KqKzEr4DMiYZiJXN8BMf3iJ2UwUT5oRyDD1+UrdcKvoSKrvA
-	 gVIIifo2mAn9YA0g/D330VMwKCijO0uPwWH2WiRbhofK5OHiH0PDPstOOCKlE7e7pu
-	 UlYvO/2srTUsoUZNv4+n/6SfwsPaPrAbUaadXqO/MWuyZK3p3q5c8LzxBGn/XGiJw3
-	 j4gWd2vmCwIS++Q/+WMV5f5Sc5sQEPXnr7iEJalade/Jw0fbiKE7MtsSsXknUHsKsQ
-	 MzSDPZnhgoQIw==
-Date: Thu, 12 Dec 2024 17:23:01 -0800
-Subject: [PATCH 06/11] xfs: add some tracepoints for writeback
+	b=rghH5f8XGlNltI8pMyG3CWuva7IRzHkq4MHmbG4J5lrsbgn5Ilbdz/q3ISV9vDL/o
+	 1XkKNrciyR1cPFUkJKBKPpGD52dyXwiVOHl+h5XlgQqFp1HPwT8cEZYSXremH5y7pZ
+	 xSZ+vkVTSEhmS4zvY73dZUBFXYBGvImXOn+r2FvO9svM5HpbU2cLb1AXncfyz+PKyu
+	 c6QOU1hsmkFCs07K7sMrv6L9V1IgqgBfKX8kOXsZky3/Z+NpxsJ2SEpkJ99iDFgljy
+	 AvahV+QQbxII9nwtW+DfRaU02ghn+UwOidMV4qGS4q2UcKPXRhlWIRp7qH4qWVQ41t
+	 qpzZgtJdKtEUA==
+Date: Thu, 12 Dec 2024 17:23:17 -0800
+Subject: [PATCH 07/11] xfs: extend writeback requests to handle rt cow
+ correctly
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405125846.1184063.6516078668233318926.stgit@frogsfrogsfrogs>
+Message-ID: <173405125863.1184063.8842755288883819617.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405125712.1184063.11685981006674346615.stgit@frogsfrogsfrogs>
 References: <173405125712.1184063.11685981006674346615.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,96 +46,92 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a tracepoint so I can see where writeback is initiated.
+If we have shared realtime files and the rt extent size is larger than a
+single fs block, we need to extend writeback requests to be aligned to
+rt extent size granularity because we cannot share partial rt extents.
+The front end should have set us up for this by dirtying the relevant
+ranges.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_aops.c  |   19 ++++++++++++-------
- fs/xfs/xfs_trace.h |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_aops.c  |   38 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trace.h |    1 +
+ 2 files changed, 39 insertions(+)
 
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 559a3a57709748..f51f2f5f76d0f6 100644
+index f51f2f5f76d0f6..9bc2d7d92e4c46 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -468,21 +468,26 @@ static const struct iomap_writeback_ops xfs_writeback_ops = {
+@@ -466,6 +466,38 @@ static const struct iomap_writeback_ops xfs_writeback_ops = {
+ 	.discard_folio		= xfs_discard_folio,
+ };
  
++/*
++ * Extend the writeback range to allocation unit granularity and alignment.
++ * This is a requirement for blocksize > pagesize scenarios such as realtime
++ * copy on write, since we can only share full rt extents.
++ */
++static inline void
++xfs_vm_writepages_extend(
++	struct xfs_inode		*ip,
++	struct writeback_control	*wbc)
++{
++	unsigned int			bsize = xfs_inode_alloc_unitsize(ip);
++	long long int			pages_to_write;
++	loff_t				next = wbc->range_end + 1;
++
++	wbc->range_start = rounddown_64(wbc->range_start, bsize);
++	if (wbc->range_end != LLONG_MAX)
++		wbc->range_end = roundup_64(next, bsize) - 1;
++
++	if (wbc->nr_to_write != LONG_MAX) {
++		pgoff_t		pg_start = wbc->range_start >> PAGE_SHIFT;
++		pgoff_t		pg_next = (wbc->range_end + 1) >> PAGE_SHIFT;
++
++		pages_to_write = pg_next - pg_start;
++		if (pages_to_write >= LONG_MAX)
++			pages_to_write = LONG_MAX;
++		if (wbc->nr_to_write < pages_to_write)
++			wbc->nr_to_write = pages_to_write;
++	}
++
++	trace_xfs_vm_writepages_extend(ip, wbc);
++}
++
  STATIC int
  xfs_vm_writepages(
--	struct address_space	*mapping,
--	struct writeback_control *wbc)
-+	struct address_space		*mapping,
-+	struct writeback_control	*wbc)
- {
--	struct xfs_writepage_ctx wpc = { };
-+	struct xfs_writepage_ctx	wpc = { };
-+	struct xfs_inode		*ip = XFS_I(mapping->host);
+ 	struct address_space		*mapping,
+@@ -476,6 +508,9 @@ xfs_vm_writepages(
  
--	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-+	trace_xfs_vm_writepages(ip, wbc);
+ 	trace_xfs_vm_writepages(ip, wbc);
+ 
++	if (xfs_inode_needs_cow_around(ip))
++		xfs_vm_writepages_extend(ip, wbc);
 +
-+	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
  	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
  }
+@@ -489,6 +524,9 @@ xfs_dax_writepages(
  
- STATIC int
- xfs_dax_writepages(
--	struct address_space	*mapping,
--	struct writeback_control *wbc)
-+	struct address_space		*mapping,
-+	struct writeback_control	*wbc)
- {
--	struct xfs_inode	*ip = XFS_I(mapping->host);
-+	struct xfs_inode		*ip = XFS_I(mapping->host);
+ 	trace_xfs_dax_writepages(ip, wbc);
+ 
++	if (xfs_inode_needs_cow_around(ip))
++		xfs_vm_writepages_extend(ip, wbc);
 +
-+	trace_xfs_dax_writepages(ip, wbc);
- 
  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
  	return dax_writeback_mapping_range(mapping,
+ 			xfs_inode_buftarg(ip)->bt_daxdev, wbc);
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e744f9435ff88d..0234af78cea9a1 100644
+index 0234af78cea9a1..021ea65909c915 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -1554,6 +1554,40 @@ DEFINE_IMAP_EVENT(xfs_map_blocks_alloc);
- DEFINE_IMAP_EVENT(xfs_iomap_alloc);
- DEFINE_IMAP_EVENT(xfs_iomap_found);
+@@ -1586,6 +1586,7 @@ DEFINE_EVENT(xfs_writeback_class, name,	\
+ 	TP_PROTO(struct xfs_inode *ip, const struct writeback_control *wbc), \
+ 	TP_ARGS(ip, wbc))
+ DEFINE_WRITEBACK_EVENT(xfs_vm_writepages);
++DEFINE_WRITEBACK_EVENT(xfs_vm_writepages_extend);
+ DEFINE_WRITEBACK_EVENT(xfs_dax_writepages);
  
-+DECLARE_EVENT_CLASS(xfs_writeback_class,
-+	TP_PROTO(struct xfs_inode *ip, const struct writeback_control *wbc),
-+	TP_ARGS(ip, wbc),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(loff_t, range_start)
-+		__field(loff_t, range_end)
-+		__field(long, nr_to_write)
-+		__field(enum writeback_sync_modes, sync_mode)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->range_start = wbc->range_start;
-+		__entry->range_end = wbc->range_end;
-+		__entry->nr_to_write = wbc->nr_to_write;
-+		__entry->sync_mode = wbc->sync_mode;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx range_start 0x%llx range_end 0x%llx nr_to_write %ld sync_mode %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		   __entry->ino,
-+		   __entry->range_start,
-+		   __entry->range_end,
-+		   __entry->nr_to_write,
-+		   __entry->sync_mode)
-+);
-+#define DEFINE_WRITEBACK_EVENT(name)	\
-+DEFINE_EVENT(xfs_writeback_class, name,	\
-+	TP_PROTO(struct xfs_inode *ip, const struct writeback_control *wbc), \
-+	TP_ARGS(ip, wbc))
-+DEFINE_WRITEBACK_EVENT(xfs_vm_writepages);
-+DEFINE_WRITEBACK_EVENT(xfs_dax_writepages);
-+
  DECLARE_EVENT_CLASS(xfs_simple_io_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, u64 count),
- 	TP_ARGS(ip, offset, count),
 
