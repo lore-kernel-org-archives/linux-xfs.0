@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC44629
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:03:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B59ED7485
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:03:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734051808; cv=none; b=oRXNnQCv2YkF4UJrnyRI5D4IEyza4/ceadEgwTPMttphbQQZ7msGGGZCFXW8fPbBVh/sI15o2gIMneRfX67/yoVRbvio/ik2WN3npW+P6C/j6nZKL8v9FwKVp8yiYjJlN3/pTfthGte02NShVKHm/07XITyVLx1ksTq9DKI0nbE=
+	t=1734051823; cv=none; b=fv1b+43+abH5lGVyh0/q1Bwa3YjuPyVJviS/IRft6mvbcP/iLC7C1b/9zWi18jvcloyLNOHVIkaHBLNzJuZKZ61QCzVsjdb8RLRl2dUIa/Akv5VCb1FYvSHtp8Dn18A46+54IOBYY7hYv9DFhspCOGdchsVaHsIRUy4DdtnwbzA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734051808; c=relaxed/simple;
-	bh=LPHYse6XEKvsrWn9wDn+xIR6xA8GdpCAXU24qpn49H8=;
+	s=arc-20240116; t=1734051823; c=relaxed/simple;
+	bh=ya2t2uOUQhFxQBXWUw9ckzVZDx23uLxYJGvyG1tPWvM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Hqtc/jdWfinD8+0xLiDl6Ok6ltBrV/8rvWjl4W8XePDSpHFjmR6YgyW7cr5L3VMTyy2QFv2LSh7U2SjCzR/mZe4G8qxqrRqBeLTHPbzTLg9xPDLapspkMMSPIiXLAEdtpN3UiaskSugnoFomAVFJ4AZZtSwaU1UYoxRVTxF1X0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oRnUO+Af; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bCrN/07Pspi5kyhZv03V73aSJM/307M4iqzEUTd0g9/PrQ7jqnsNmikKzCLvIWNchGbH32qxcyQquyar0iwQDlc8Mlhr22Ds1Uvw1qn/kykptd4DWGXnGMddKRklgTiWiBxaTPZ/wQln8KpOt9bC3Fwsb3WY3DP3idHWDKO8mRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dHXjv8Qy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oRnUO+Af"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98B11C4CECE;
-	Fri, 13 Dec 2024 01:03:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dHXjv8Qy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C9A4C4CECE;
+	Fri, 13 Dec 2024 01:03:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734051807;
-	bh=LPHYse6XEKvsrWn9wDn+xIR6xA8GdpCAXU24qpn49H8=;
+	s=k20201202; t=1734051823;
+	bh=ya2t2uOUQhFxQBXWUw9ckzVZDx23uLxYJGvyG1tPWvM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=oRnUO+Af8vG1bwpzVmzjrIn38kSyxa//VsSSamdXLumo2/gwinkedwPlOL9HizqZF
-	 UGDak1TyAfbf8+jMjjR+/H895n5k/2A0gCXayiyeqENmGfMqYHVjUKaJ0KaIxh61Rc
-	 uPjN0kpGHFYrwmzfIfiTvlRmgQUh//rooHT47kafhnkjYTrdKMgJx5PxfmkN7+6mxZ
-	 /WP6mwUDmA8mtD8r4scGqi/zYjEWl8K3Tn8P4HENeWHvR8QD71qbXdLmV1m5zu5pPx
-	 2geWN9JXM67bdO9NvWBJ3p/orfy2M0yfvbDp+zNMLTLt7vSPQ0AkiYtXsdZHu94jgT
-	 QBEhXgcb0BSTw==
-Date: Thu, 12 Dec 2024 17:03:27 -0800
-Subject: [PATCH 11/37] xfs: support file data forks containing metadata btrees
+	b=dHXjv8QyT2nTSU/MzGxeJ+mXyhAQPF6udBrWNdHl7g2vaLn3M5p0UUrNw3/Sgw8dB
+	 PRebVEMcSk59j+4Iu37RAIx3S2rXR7nvdTomYSy0+nDo61/blQWiAyIwgtVzQXdanu
+	 sTwJNMr8O0j3ELE2K4XOyCegCgDvUKf0rXMlIISNk1rDLa5ci2wtsIZAov4v7QjZFf
+	 hQ/khPQn8ksULxDsMzHof7bWdSZVNtGLD66+69CO1LAHY5zWg243UQvCOx3xPJKIRm
+	 eMTidQxQVW2JqyYoCaFvLZ18gnw04GCdRxUazdKyfX3NoGy/hNDMH65uEJnqYL4A81
+	 Vf8yT/7MAR+/g==
+Date: Thu, 12 Dec 2024 17:03:42 -0800
+Subject: [PATCH 12/37] xfs: add realtime reverse map inode to metadata
+ directory
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405123501.1181370.9693980966695147034.stgit@frogsfrogsfrogs>
+Message-ID: <173405123520.1181370.12338691375422114269.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 References: <173405123212.1181370.1936576505332113490.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,444 +46,206 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new fork format type for metadata btrees.  This fork type
-requires that the inode is in the metadata directory tree, and only
-applies to the data fork.  The actual type of the metadata btree itself
-is determined by the di_metatype field.
+Add a metadir path to select the realtime rmap btree inode and load
+it at mount time.  The rtrmapbt inode will have a unique extent format
+code, which means that we also have to update the inode validation and
+flush routines to look for it.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h      |    6 ++++--
- fs/xfs/libxfs/xfs_inode_buf.c   |   23 ++++++++++++++++++++---
- fs/xfs/libxfs/xfs_inode_fork.c  |   19 +++++++++++++++++++
- fs/xfs/scrub/bmap.c             |    1 +
- fs/xfs/scrub/bmap_repair.c      |    1 +
- fs/xfs/scrub/inode.c            |    4 ++++
- fs/xfs/scrub/inode_repair.c     |   36 ++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/rmap_repair.c      |   31 +++++++++++++++++++++----------
- fs/xfs/xfs_inode.c              |   19 ++++++++++++++++++-
- fs/xfs/xfs_inode_item.c         |    2 ++
- fs/xfs/xfs_inode_item_recover.c |   38 ++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trace.h              |    1 +
- 12 files changed, 161 insertions(+), 20 deletions(-)
+ fs/xfs/libxfs/xfs_format.h       |    4 +++-
+ fs/xfs/libxfs/xfs_inode_buf.c    |    9 +++++++++
+ fs/xfs/libxfs/xfs_inode_fork.c   |    6 ++++++
+ fs/xfs/libxfs/xfs_rtgroup.c      |   20 ++++++++++++++++++--
+ fs/xfs/libxfs/xfs_rtgroup.h      |    8 ++++++++
+ fs/xfs/libxfs/xfs_rtrmap_btree.c |    6 +++---
+ 6 files changed, 47 insertions(+), 6 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 469fc7afa591b4..41ea4283c43cb4 100644
+index 41ea4283c43cb4..f32c9fda5a195f 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -997,7 +997,8 @@ enum xfs_dinode_fmt {
- 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
- 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
- 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
--	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
-+	XFS_DINODE_FMT_UUID,		/* added long ago, but never used */
-+	XFS_DINODE_FMT_META_BTREE,	/* metadata btree */
- };
+@@ -857,6 +857,7 @@ enum xfs_metafile_type {
+ 	XFS_METAFILE_PRJQUOTA,		/* project quota */
+ 	XFS_METAFILE_RTBITMAP,		/* rt bitmap */
+ 	XFS_METAFILE_RTSUMMARY,		/* rt summary */
++	XFS_METAFILE_RTRMAP,		/* rt rmap */
  
- #define XFS_INODE_FORMAT_STR \
-@@ -1005,7 +1006,8 @@ enum xfs_dinode_fmt {
- 	{ XFS_DINODE_FMT_LOCAL,		"local" }, \
- 	{ XFS_DINODE_FMT_EXTENTS,	"extent" }, \
- 	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
--	{ XFS_DINODE_FMT_UUID,		"uuid" }
-+	{ XFS_DINODE_FMT_UUID,		"uuid" }, \
-+	{ XFS_DINODE_FMT_META_BTREE,	"meta_btree" }
+ 	XFS_METAFILE_MAX
+ } __packed;
+@@ -868,7 +869,8 @@ enum xfs_metafile_type {
+ 	{ XFS_METAFILE_GRPQUOTA,	"grpquota" }, \
+ 	{ XFS_METAFILE_PRJQUOTA,	"prjquota" }, \
+ 	{ XFS_METAFILE_RTBITMAP,	"rtbitmap" }, \
+-	{ XFS_METAFILE_RTSUMMARY,	"rtsummary" }
++	{ XFS_METAFILE_RTSUMMARY,	"rtsummary" }, \
++	{ XFS_METAFILE_RTRMAP,		"rtrmap" }
  
  /*
-  * Max values for extnum and aextnum.
+  * On-disk inode structure.
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 424861fbf1bd49..1648d72d6ed95a 100644
+index 1648d72d6ed95a..17cb91b89fcaa1 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -441,6 +441,16 @@ xfs_dinode_verify_fork(
- 		if (di_nextents > max_extents)
+@@ -447,6 +447,15 @@ xfs_dinode_verify_fork(
+ 		if (!(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)))
  			return __this_address;
- 		break;
-+	case XFS_DINODE_FMT_META_BTREE:
-+		if (!xfs_has_metadir(mp))
-+			return __this_address;
-+		if (!(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)))
-+			return __this_address;
-+		switch (be16_to_cpu(dip->di_metatype)) {
-+		default:
-+			return __this_address;
-+		}
-+		break;
- 	default:
- 		return __this_address;
- 	}
-@@ -460,6 +470,10 @@ xfs_dinode_verify_forkoff(
- 		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
+ 		switch (be16_to_cpu(dip->di_metatype)) {
++		case XFS_METAFILE_RTRMAP:
++			/*
++			 * growfs must create the rtrmap inodes before adding a
++			 * realtime volume to the filesystem, so we cannot use
++			 * the rtrmapbt predicate here.
++			 */
++			if (!xfs_has_rmapbt(mp))
++				return __this_address;
++			break;
+ 		default:
  			return __this_address;
- 		break;
-+	case XFS_DINODE_FMT_META_BTREE:
-+		if (!xfs_has_metadir(mp) || !xfs_has_parent(mp))
-+			return __this_address;
-+		fallthrough;
- 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
- 	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
- 	case XFS_DINODE_FMT_BTREE:
-@@ -637,9 +651,6 @@ xfs_dinode_verify(
- 	if (mode && nextents + naextents > nblocks)
- 		return __this_address;
- 
--	if (nextents + naextents == 0 && nblocks != 0)
--		return __this_address;
--
- 	if (S_ISDIR(mode) && nextents > mp->m_dir_geo->max_extents)
- 		return __this_address;
- 
-@@ -743,6 +754,12 @@ xfs_dinode_verify(
- 			return fa;
- 	}
- 
-+	/* metadata inodes containing btrees always have zero extent count */
-+	if (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK) != XFS_DINODE_FMT_META_BTREE) {
-+		if (nextents + naextents == 0 && nblocks != 0)
-+			return __this_address;
-+	}
-+
- 	return NULL;
- }
- 
+ 		}
 diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 122ab362892de3..5ee733d4449b02 100644
+index 5ee733d4449b02..a8662185f8c22a 100644
 --- a/fs/xfs/libxfs/xfs_inode_fork.c
 +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -268,6 +268,12 @@ xfs_iformat_data_fork(
- 			return xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
- 		case XFS_DINODE_FMT_BTREE:
+@@ -270,6 +270,9 @@ xfs_iformat_data_fork(
  			return xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
-+		case XFS_DINODE_FMT_META_BTREE:
-+			switch (ip->i_metatype) {
-+			default:
-+				break;
-+			}
-+			fallthrough;
+ 		case XFS_DINODE_FMT_META_BTREE:
+ 			switch (ip->i_metatype) {
++			case XFS_METAFILE_RTRMAP:
++				ASSERT(0); /* to be implemented later */
++				return -EFSCORRUPTED;
+ 			default:
+ 				break;
+ 			}
+@@ -615,6 +618,9 @@ xfs_iflush_fork(
+ 			break;
+ 
+ 		switch (ip->i_metatype) {
++		case XFS_METAFILE_RTRMAP:
++			ASSERT(0); /* to be implemented later */
++			break;
  		default:
- 			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
- 					dip, sizeof(*dip), __this_address);
-@@ -602,6 +608,19 @@ xfs_iflush_fork(
- 		}
- 		break;
+ 			ASSERT(0);
+ 			break;
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+index 9e5fdc0dc55cef..1b56c13b282788 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.c
++++ b/fs/xfs/libxfs/xfs_rtgroup.c
+@@ -315,6 +315,8 @@ struct xfs_rtginode_ops {
  
-+	case XFS_DINODE_FMT_META_BTREE:
-+		ASSERT(whichfork == XFS_DATA_FORK);
+ 	unsigned int		sick;	/* rtgroup sickness flag */
+ 
++	unsigned int		fmt_mask; /* all valid data fork formats */
 +
-+		if (!(iip->ili_fields & brootflag[whichfork]))
-+			break;
-+
-+		switch (ip->i_metatype) {
-+		default:
-+			ASSERT(0);
-+			break;
-+		}
-+		break;
-+
- 	default:
- 		ASSERT(0);
- 		break;
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 7e00312225ed10..0d7ad692822d48 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -983,6 +983,7 @@ xchk_bmap(
- 	case XFS_DINODE_FMT_UUID:
- 	case XFS_DINODE_FMT_DEV:
- 	case XFS_DINODE_FMT_LOCAL:
-+	case XFS_DINODE_FMT_META_BTREE:
- 		/* No mappings to check. */
- 		if (whichfork == XFS_COW_FORK)
- 			xchk_fblock_set_corrupt(sc, whichfork, 0);
-diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
-index 7c4955482641f7..141d36f1da9a71 100644
---- a/fs/xfs/scrub/bmap_repair.c
-+++ b/fs/xfs/scrub/bmap_repair.c
-@@ -731,6 +731,7 @@ xrep_bmap_check_inputs(
- 	case XFS_DINODE_FMT_DEV:
- 	case XFS_DINODE_FMT_LOCAL:
- 	case XFS_DINODE_FMT_UUID:
-+	case XFS_DINODE_FMT_META_BTREE:
- 		return -ECANCELED;
- 	case XFS_DINODE_FMT_EXTENTS:
- 	case XFS_DINODE_FMT_BTREE:
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 25ee66e7649d40..2e911f38deaebe 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -502,6 +502,10 @@ xchk_dinode(
- 		if (!S_ISREG(mode) && !S_ISDIR(mode))
- 			xchk_ino_set_corrupt(sc, ino);
- 		break;
-+	case XFS_DINODE_FMT_META_BTREE:
-+		if (!S_ISREG(mode))
-+			xchk_ino_set_corrupt(sc, ino);
-+		break;
- 	case XFS_DINODE_FMT_UUID:
- 	default:
- 		xchk_ino_set_corrupt(sc, ino);
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 5a58ddd27bd2f5..7faa27472b9129 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -888,6 +888,25 @@ xrep_dinode_bad_bmbt_fork(
- 	return false;
+ 	/* Does the fs have this feature? */
+ 	bool			(*enabled)(struct xfs_mount *mp);
+ 
+@@ -330,14 +332,29 @@ static const struct xfs_rtginode_ops xfs_rtginode_ops[XFS_RTGI_MAX] = {
+ 		.name		= "bitmap",
+ 		.metafile_type	= XFS_METAFILE_RTBITMAP,
+ 		.sick		= XFS_SICK_RG_BITMAP,
++		.fmt_mask	= (1U << XFS_DINODE_FMT_EXTENTS) |
++				  (1U << XFS_DINODE_FMT_BTREE),
+ 		.create		= xfs_rtbitmap_create,
+ 	},
+ 	[XFS_RTGI_SUMMARY] = {
+ 		.name		= "summary",
+ 		.metafile_type	= XFS_METAFILE_RTSUMMARY,
+ 		.sick		= XFS_SICK_RG_SUMMARY,
++		.fmt_mask	= (1U << XFS_DINODE_FMT_EXTENTS) |
++				  (1U << XFS_DINODE_FMT_BTREE),
+ 		.create		= xfs_rtsummary_create,
+ 	},
++	[XFS_RTGI_RMAP] = {
++		.name		= "rmap",
++		.metafile_type	= XFS_METAFILE_RTRMAP,
++		.fmt_mask	= 1U << XFS_DINODE_FMT_META_BTREE,
++		/*
++		 * growfs must create the rtrmap inodes before adding a
++		 * realtime volume to the filesystem, so we cannot use the
++		 * rtrmapbt predicate here.
++		 */
++		.enabled	= xfs_has_rmapbt,
++	},
+ };
+ 
+ /* Return the shortname of this rtgroup inode. */
+@@ -434,8 +451,7 @@ xfs_rtginode_load(
+ 		return error;
+ 	}
+ 
+-	if (XFS_IS_CORRUPT(mp, ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
+-			       ip->i_df.if_format != XFS_DINODE_FMT_BTREE)) {
++	if (XFS_IS_CORRUPT(mp, !((1U << ip->i_df.if_format) & ops->fmt_mask))) {
+ 		xfs_irele(ip);
+ 		xfs_rtginode_mark_sick(rtg, type);
+ 		return -EFSCORRUPTED;
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index dc3ce660a01307..5b61291d26691f 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -14,6 +14,7 @@ struct xfs_trans;
+ enum xfs_rtg_inodes {
+ 	XFS_RTGI_BITMAP,	/* allocation bitmap */
+ 	XFS_RTGI_SUMMARY,	/* allocation summary */
++	XFS_RTGI_RMAP,		/* rmap btree inode */
+ 
+ 	XFS_RTGI_MAX,
+ };
+@@ -74,6 +75,11 @@ static inline struct xfs_inode *rtg_summary(const struct xfs_rtgroup *rtg)
+ 	return rtg->rtg_inodes[XFS_RTGI_SUMMARY];
  }
  
-+/* Check a metadata-btree fork. */
-+STATIC bool
-+xrep_dinode_bad_metabt_fork(
-+	struct xfs_scrub	*sc,
-+	struct xfs_dinode	*dip,
-+	unsigned int		dfork_size,
-+	int			whichfork)
++static inline struct xfs_inode *rtg_rmap(const struct xfs_rtgroup *rtg)
 +{
-+	if (whichfork != XFS_DATA_FORK)
-+		return true;
-+
-+	switch (be16_to_cpu(dip->di_metatype)) {
-+	default:
-+		return true;
-+	}
-+
-+	return false;
++	return rtg->rtg_inodes[XFS_RTGI_RMAP];
 +}
 +
- /*
-  * Check the data fork for things that will fail the ifork verifiers or the
-  * ifork formatters.
-@@ -968,6 +987,11 @@ xrep_dinode_check_dfork(
- 				XFS_DATA_FORK))
- 			return true;
- 		break;
-+	case XFS_DINODE_FMT_META_BTREE:
-+		if (xrep_dinode_bad_metabt_fork(sc, dip, dfork_size,
-+				XFS_DATA_FORK))
-+			return true;
-+		break;
- 	default:
- 		return true;
- 	}
-@@ -1088,6 +1112,11 @@ xrep_dinode_check_afork(
- 					XFS_ATTR_FORK))
- 			return true;
- 		break;
-+	case XFS_DINODE_FMT_META_BTREE:
-+		if (xrep_dinode_bad_metabt_fork(sc, dip, afork_size,
-+					XFS_ATTR_FORK))
-+			return true;
-+		break;
- 	default:
- 		return true;
- 	}
-@@ -1241,6 +1270,13 @@ xrep_dinode_ensure_forkoff(
- 		bmdr = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
- 		dfork_min = xfs_bmap_broot_space(sc->mp, bmdr);
- 		break;
-+	case XFS_DINODE_FMT_META_BTREE:
-+		switch (be16_to_cpu(dip->di_metatype)) {
-+		default:
-+			dfork_min = 0;
-+			break;
-+		}
-+		break;
- 	default:
- 		dfork_min = 0;
- 		break;
-diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
-index a0a227d183d28d..2a0b9e3d0fbaee 100644
---- a/fs/xfs/scrub/rmap_repair.c
-+++ b/fs/xfs/scrub/rmap_repair.c
-@@ -499,6 +499,14 @@ xrep_rmap_scan_iext(
- 	return xrep_rmap_stash_accumulated(rf);
- }
+ /* Passive rtgroup references */
+ static inline struct xfs_rtgroup *
+ xfs_rtgroup_get(
+@@ -284,6 +290,8 @@ int xfs_rtginode_create(struct xfs_rtgroup *rtg, enum xfs_rtg_inodes type,
+ 		bool init);
+ void xfs_rtginode_irele(struct xfs_inode **ipp);
  
-+static int
-+xrep_rmap_scan_meta_btree(
-+	struct xrep_rmap_ifork	*rf,
-+	struct xfs_inode	*ip)
-+{
-+	return -EFSCORRUPTED; /* XXX placeholder */
-+}
++void xfs_rtginode_irele(struct xfs_inode **ipp);
 +
- /* Find all the extents from a given AG in an inode fork. */
- STATIC int
- xrep_rmap_scan_ifork(
-@@ -512,14 +520,14 @@ xrep_rmap_scan_ifork(
- 		.whichfork	= whichfork,
- 	};
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
-+	bool			mappings_done;
- 	int			error = 0;
+ static inline const char *xfs_rtginode_path(xfs_rgnumber_t rgno,
+ 		enum xfs_rtg_inodes type)
+ {
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+index 99d828bb5fe7c3..22aabf326b2ccd 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+@@ -18,6 +18,7 @@
+ #include "xfs_alloc.h"
+ #include "xfs_btree.h"
+ #include "xfs_btree_staging.h"
++#include "xfs_metafile.h"
+ #include "xfs_rmap.h"
+ #include "xfs_rtrmap_btree.h"
+ #include "xfs_trace.h"
+@@ -405,12 +406,10 @@ xfs_rtrmapbt_init_cursor(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_rtgroup	*rtg)
+ {
+-	struct xfs_inode	*ip = NULL;
++	struct xfs_inode	*ip = rtg_rmap(rtg);
+ 	struct xfs_mount	*mp = rtg_mount(rtg);
+ 	struct xfs_btree_cur	*cur;
  
- 	if (!ifp)
- 		return 0;
- 
--	if (ifp->if_format == XFS_DINODE_FMT_BTREE) {
--		bool		mappings_done;
+-	return NULL; /* XXX */
 -
-+	switch (ifp->if_format) {
-+	case XFS_DINODE_FMT_BTREE:
- 		/*
- 		 * Scan the bmap btree for data device mappings.  This includes
- 		 * the btree blocks themselves, even if this is a realtime
-@@ -528,15 +536,18 @@ xrep_rmap_scan_ifork(
- 		error = xrep_rmap_scan_bmbt(&rf, ip, &mappings_done);
- 		if (error || mappings_done)
- 			return error;
--	} else if (ifp->if_format != XFS_DINODE_FMT_EXTENTS) {
--		return 0;
-+		fallthrough;
-+	case XFS_DINODE_FMT_EXTENTS:
-+		/* Scan incore extent cache if this isn't a realtime file. */
-+		if (xfs_ifork_is_realtime(ip, whichfork))
-+			return 0;
-+
-+		return xrep_rmap_scan_iext(&rf, ifp);
-+	case XFS_DINODE_FMT_META_BTREE:
-+		return xrep_rmap_scan_meta_btree(&rf, ip);
- 	}
+ 	xfs_assert_ilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
  
--	/* Scan incore extent cache if this isn't a realtime file. */
--	if (xfs_ifork_is_realtime(ip, whichfork))
--		return 0;
--
--	return xrep_rmap_scan_iext(&rf, ifp);
-+	return 0;
- }
+ 	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_rtrmapbt_ops,
+@@ -439,6 +438,7 @@ xfs_rtrmapbt_commit_staged_btree(
+ 	int			flags = XFS_ILOG_CORE | XFS_ILOG_DBROOT;
  
- /*
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c8ad2606f928b2..c95fe1b1de4e6f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2382,7 +2382,16 @@ xfs_iflush(
- 			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
- 		goto flush_out;
- 	}
--	if (S_ISREG(VFS_I(ip)->i_mode)) {
-+	if (ip->i_df.if_format == XFS_DINODE_FMT_META_BTREE) {
-+		if (!S_ISREG(VFS_I(ip)->i_mode) ||
-+		    !(ip->i_diflags2 & XFS_DIFLAG2_METADATA)) {
-+			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-+				"%s: Bad %s meta btree inode %Lu, ptr "PTR_FMT,
-+				__func__, xfs_metafile_type_str(ip->i_metatype),
-+				ip->i_ino, ip);
-+			goto flush_out;
-+		}
-+	} else if (S_ISREG(VFS_I(ip)->i_mode)) {
- 		if (XFS_TEST_ERROR(
- 		    ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
- 		    ip->i_df.if_format != XFS_DINODE_FMT_BTREE,
-@@ -2422,6 +2431,14 @@ xfs_iflush(
- 		goto flush_out;
- 	}
+ 	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++	ASSERT(ifake->if_fork->if_format == XFS_DINODE_FMT_META_BTREE);
  
-+	if (xfs_inode_has_attr_fork(ip) &&
-+	    ip->i_af.if_format == XFS_DINODE_FMT_META_BTREE) {
-+		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-+			"%s: meta btree in inode %Lu attr fork, ptr "PTR_FMT,
-+			__func__, ip->i_ino, ip);
-+		goto flush_out;
-+	}
-+
  	/*
- 	 * Inode item log recovery for v2 inodes are dependent on the flushiter
- 	 * count for correct sequencing.  We bump the flush iteration count so
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 912f0b1bc3cb70..a174f64b8bb250 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -242,6 +242,7 @@ xfs_inode_item_data_fork_size(
- 		}
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
-+	case XFS_DINODE_FMT_META_BTREE:
- 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
- 		    ip->i_df.if_broot_bytes > 0) {
- 			*nbytes += ip->i_df.if_broot_bytes;
-@@ -362,6 +363,7 @@ xfs_inode_item_format_data_fork(
- 		}
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
-+	case XFS_DINODE_FMT_META_BTREE:
- 		iip->ili_fields &=
- 			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT | XFS_ILOG_DEV);
- 
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index e70d2611456bc9..5bb057ba76ead4 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -266,6 +266,35 @@ xlog_dinode_verify_extent_counts(
- 	return 0;
- }
- 
-+static inline int
-+xlog_recover_inode_dbroot(
-+	struct xfs_mount	*mp,
-+	void			*src,
-+	unsigned int		len,
-+	struct xfs_dinode	*dip)
-+{
-+	void			*dfork = XFS_DFORK_DPTR(dip);
-+	unsigned int		dsize = XFS_DFORK_DSIZE(dip, mp);
-+
-+	switch (dip->di_format) {
-+	case XFS_DINODE_FMT_BTREE:
-+		xfs_bmbt_to_bmdr(mp, src, len, dfork, dsize);
-+		break;
-+	case XFS_DINODE_FMT_META_BTREE:
-+		switch (be16_to_cpu(dip->di_metatype)) {
-+		default:
-+			ASSERT(0);
-+			return -EFSCORRUPTED;
-+		}
-+		break;
-+	default:
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
-+}
-+
- STATIC int
- xlog_recover_inode_commit_pass2(
- 	struct xlog			*log,
-@@ -394,7 +423,8 @@ xlog_recover_inode_commit_pass2(
- 
- 	if (unlikely(S_ISREG(ldip->di_mode))) {
- 		if ((ldip->di_format != XFS_DINODE_FMT_EXTENTS) &&
--		    (ldip->di_format != XFS_DINODE_FMT_BTREE)) {
-+		    (ldip->di_format != XFS_DINODE_FMT_BTREE) &&
-+		    (ldip->di_format != XFS_DINODE_FMT_META_BTREE)) {
- 			XFS_CORRUPTION_ERROR(
- 				"Bad log dinode data fork format for regular file",
- 				XFS_ERRLEVEL_LOW, mp, ldip, sizeof(*ldip));
-@@ -475,9 +505,9 @@ xlog_recover_inode_commit_pass2(
- 		break;
- 
- 	case XFS_ILOG_DBROOT:
--		xfs_bmbt_to_bmdr(mp, (struct xfs_btree_block *)src, len,
--				 (struct xfs_bmdr_block *)XFS_DFORK_DPTR(dip),
--				 XFS_DFORK_DSIZE(dip, mp));
-+		error = xlog_recover_inode_dbroot(mp, src, len, dip);
-+		if (error)
-+			goto out_release;
- 		break;
- 
- 	default:
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 8b7bb1f5ae3c6f..a098935163b7c2 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2299,6 +2299,7 @@ TRACE_DEFINE_ENUM(XFS_DINODE_FMT_LOCAL);
- TRACE_DEFINE_ENUM(XFS_DINODE_FMT_EXTENTS);
- TRACE_DEFINE_ENUM(XFS_DINODE_FMT_BTREE);
- TRACE_DEFINE_ENUM(XFS_DINODE_FMT_UUID);
-+TRACE_DEFINE_ENUM(XFS_DINODE_FMT_META_BTREE);
- 
- DECLARE_EVENT_CLASS(xfs_swap_extent_class,
- 	TP_PROTO(struct xfs_inode *ip, int which),
+ 	 * Free any resources hanging off the real fork, then shallow-copy the
 
