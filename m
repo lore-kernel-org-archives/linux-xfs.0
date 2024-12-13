@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A05722AD25
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:21:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA37DDDC
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 01:22:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734052919; cv=none; b=mu670qsHSFYfcIZiUXr6aLEJlFdQwHh1NU70W9JajHqT9YZ709dLD9JDiB9HgNcQ+dMe8LHEbOSs4b9AAvj04IKGcfdqdf7KFlGkI6sZnnMEFTEumy3qYNGx117t+PEYF6E+pe9noBKElsa6Y1JHTbhPOvDTYRfVc6ahhxanztU=
+	t=1734052935; cv=none; b=Y6qeR+89P1Vusi2uNfWNIlKCyQUOKhOTEkNC+ODCesZlamxjsDMugILGuiNfciz4e2ArDV7y5YNU16Buin2sMrCgV+/qp/c5q7wyfufTd8OXQhoPyGo9AJb6+ztCnjeKuyfmuARy7ethurfj+8XEzAp6OgbQlGRHosk8mbezew0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734052919; c=relaxed/simple;
-	bh=DnbyVknEHkpEa7j2O2HYhbucDbhzPaQWV7TRZ0C8uOU=;
+	s=arc-20240116; t=1734052935; c=relaxed/simple;
+	bh=tYFRfTaYWFLF1LBGiqPXSf7STfiVxXYUre03GvvLNHc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=g1CXmpiyDEgHG1z54Rqo4Bnc3MWBmKrJX6nfZWk0M/G8n+wg53IvOmz8vsg94aL8xuG1+2o6xlPQP2Kzip9xIgec9Bqvl7D4GUB2xdq+X0lEww2Brr8XIXIE+wR5hBnzerNC5cNtOXSTi6uJdkU3x01XeFlRKfiZN4z/NWp3yc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KUvsxyJX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uCYkpUa3tEjLjzN8fHpbDmNNBRm11EWXrXXHTKtbWGh6buFVNSMsbTV1o3Va+RutGHRXHizCMVe/1WQRHsJviVS6FNOLTWRLWeoRYXPnA1MSgffHC7dhwiqKHm4vl7lDJ1poyQ8DTh9zFvWJDDp7xpXb+wvCrMeYkX0GUzI7a9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U2V4nviK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KUvsxyJX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 774BFC4CED4;
-	Fri, 13 Dec 2024 01:21:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U2V4nviK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 208B3C4CECE;
+	Fri, 13 Dec 2024 01:22:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734052919;
-	bh=DnbyVknEHkpEa7j2O2HYhbucDbhzPaQWV7TRZ0C8uOU=;
+	s=k20201202; t=1734052935;
+	bh=tYFRfTaYWFLF1LBGiqPXSf7STfiVxXYUre03GvvLNHc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=KUvsxyJXJa1gA/L3mgBNu507BVpty2IyWVj/o7l8WEEOhmJpYuS9YnWMoh+Ze7Cf3
-	 32j9n23KvlhhjCJWrw+yHKfpjZQKQ8yxupmJl7tp0nLYSlrqcOZLHyh/SFQasVJ1Mg
-	 O0tKTfJrgUoxU1L9Makw7pvJdWwZNq03OJSvigW8PAr0m6c4otfAKx7aeGxNHeSnJq
-	 AEpKiaIMXHlswa+wRZUF53sevz2ZpJr4AIjPP+uN2LarTUIazXBn5RRLowUw/VwuiS
-	 B/SLbiGqkOy1TtFzc3dAApjosvvE2j3Q3SK5Q7JgKjGHFSIcpaxqhU/wOPz3iMxFl9
-	 hndeGPDQ6DBNQ==
-Date: Thu, 12 Dec 2024 17:21:59 -0800
-Subject: [PATCH 02/11] iomap: allow zeroing of written extents beyond EOF
+	b=U2V4nviKKBwElknWBg8hAtlK4qFhC5NFTXptWIoVuSsQJJhMphfFBNjkrUWBqyZJn
+	 sxV41w0v3GXSA6ePN0E49bQKuIVKenAQQ4lDRgmPRBKNHbnIwVJnKtN6G3dvCAONWC
+	 F7A+3K2Z56nI2BKOgMIu6xhx4D4Z8BQys7balJ36mh+YqjnrWRrjsSbOUYnlhO/8Ue
+	 HgaYce9uhx1chAcZNc0Cj50w5bPN/jcAxIC4Dg4A6i1IbqQmd4MT2VXqhIXjjkbfyO
+	 0dmM2V6bQO3qLppp02kpg87yGgr06SqBy7huqcEv20r+G4GfiSYJrMMdmOv/PAIX8l
+	 vxJZtwbYeIeuA==
+Date: Thu, 12 Dec 2024 17:22:14 -0800
+Subject: [PATCH 03/11] xfs: convert partially written rt file extents to
+ completely written
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173405125776.1184063.5414430767804356851.stgit@frogsfrogsfrogs>
+Message-ID: <173405125794.1184063.17925337081966040081.stgit@frogsfrogsfrogs>
 In-Reply-To: <173405125712.1184063.11685981006674346615.stgit@frogsfrogsfrogs>
 References: <173405125712.1184063.11685981006674346615.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,174 +46,300 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In commit eb65540aa9fc82 ("iomap: warn on zero range of a post-eof
-folio"), we established that iomap_zero_range cannot dirty folios beyond
-EOF because writeback will ignore those dirty folios.
-
-However, XFS can only handle copy on write of entire file allocation
-units.  For reflink on a realtime volume where the allocation unit size
-is larger than a single fsblock, if EOF is in the middle of an
-allocation unit, we must use the pagecache to stage the out of place
-write, even if that means having (zeroed) dirty pagecache beyond EOF.
-
-To support this, the writeback call knows how to extend the writeback
-range to align with an allocation unit, and it successfully finds the
-dirty post-EOF folios.  Therefore, we need to disable this check for
-this particular situation.
+Create a utility function to convert the partially written extents of a
+realtime file to be completely written.  In other words, if rextsize==7
+and only block 6 is unwritten, these functions will zero out block 6 and
+convert the mapping to written so that the entire 7-block allocation
+unit can be remapped in a single operation.  This is required for any
+rt file remapping activities that do not use log items to restart
+interrupted operations.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/gfs2/bmap.c         |    2 +-
- fs/iomap/buffered-io.c |   25 ++++++++++++++++++++-----
- fs/xfs/xfs_iomap.c     |   27 ++++++++++++++++++++++++++-
- include/linux/iomap.h  |    6 +++++-
- 4 files changed, 52 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.h |   12 +++
+ fs/xfs/xfs_bmap_util.c       |  182 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h       |    7 ++
+ fs/xfs/xfs_trace.h           |   11 ++-
+ 4 files changed, 208 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
-index 1795c4e8dbf66a..ce9293c916363e 100644
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@ -1300,7 +1300,7 @@ static int gfs2_block_zero_range(struct inode *inode, loff_t from,
- 				 unsigned int length)
- {
- 	BUG_ON(current->journal_info);
--	return iomap_zero_range(inode, from, length, NULL, &gfs2_iomap_ops);
-+	return iomap_zero_range(inode, from, length, NULL, &gfs2_iomap_ops, 0);
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index 22e5d9cd95f47c..89eb1e42128b38 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -157,6 +157,18 @@ xfs_rtb_to_rtxoff(
+ 	return do_div(rtbno, mp->m_sb.sb_rextsize);
  }
  
- #define GFS2_JTRUNC_REVOKES 8192
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 955f19e27e47c5..4e851e9c2a1002 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1350,7 +1350,8 @@ static inline int iomap_zero_iter_flush_and_stale(struct iomap_iter *i)
- 	return filemap_write_and_wait_range(mapping, i->pos, end);
++/* Return the offset of a file block offset within an rt extent. */
++static inline xfs_extlen_t
++xfs_fileoff_to_rtxoff(
++	struct xfs_mount	*mp,
++	xfs_fileoff_t		off)
++{
++	if (likely(mp->m_rtxblklog >= 0))
++		return off & mp->m_rtxblkmask;
++
++	return do_div(off, mp->m_sb.sb_rextsize);
++}
++
+ /* Round this file block offset up to the nearest rt extent size. */
+ static inline xfs_rtblock_t
+ xfs_fileoff_roundup_rtx(
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 0836fea2d6d814..3229b756f33780 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1726,3 +1726,185 @@ xfs_swap_extents(
+ 	xfs_trans_cancel(tp);
+ 	goto out_unlock_ilock;
  }
- 
--static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-+static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
-+		unsigned zeroing_flags)
- {
- 	loff_t pos = iter->pos;
- 	loff_t length = iomap_length(iter);
-@@ -1363,6 +1364,18 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		size_t bytes = min_t(u64, SIZE_MAX, length);
- 		bool ret;
- 
-+		/*
-+		 * If we've gone past EOF and have a written mapping, and the
-+		 * filesystem supports written mappings past EOF, skip the rest
-+		 * of the range.  We can't write that back anyway.
-+		 */
-+		if (pos > iter->inode->i_size &&
-+		    (zeroing_flags & IOMAP_ZERO_MAPPED_BEYOND_EOF)) {
-+			written += length;
-+			length = 0;
-+			break;
++
++#ifdef CONFIG_XFS_RT
++/*
++ * Decide if this is an unwritten extent that isn't aligned to an allocation
++ * unit boundary.
++ *
++ * If it is, shorten the mapping to the end of the allocation unit so that
++ * we're ready to convert all the mappings for this allocation unit to a zeroed
++ * written extent.  If not, return false.
++ */
++static inline bool
++xfs_want_convert_rtbigalloc_mapping(
++	struct xfs_mount	*mp,
++	struct xfs_bmbt_irec	*irec)
++{
++	xfs_fileoff_t		rext_next;
++	xfs_extlen_t		modoff, modcnt;
++
++	if (irec->br_state != XFS_EXT_UNWRITTEN)
++		return false;
++
++	modoff = xfs_fileoff_to_rtxoff(mp, irec->br_startoff);
++	if (modoff == 0) {
++		xfs_rtbxlen_t	rexts;
++
++		rexts = xfs_blen_to_rtbxlen(mp, irec->br_blockcount);
++		modcnt = xfs_blen_to_rtxoff(mp, irec->br_blockcount);
++		if (rexts > 0) {
++			/*
++			 * Unwritten mapping starts at an rt extent boundary
++			 * and is longer than one rt extent.  Round the length
++			 * down to the nearest extent but don't select it for
++			 * conversion.
++			 */
++			irec->br_blockcount -= modcnt;
++			modcnt = 0;
 +		}
 +
- 		status = iomap_write_begin(iter, pos, bytes, &folio);
- 		if (status)
- 			return status;
-@@ -1395,7 +1408,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 
- int
- iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
--		const struct iomap_ops *ops)
-+		const struct iomap_ops *ops, unsigned zeroing_flags)
- {
- 	struct iomap_iter iter = {
- 		.inode		= inode,
-@@ -1424,7 +1437,8 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 	    filemap_range_needs_writeback(mapping, pos, pos + plen - 1)) {
- 		iter.len = plen;
- 		while ((ret = iomap_iter(&iter, ops)) > 0)
--			iter.processed = iomap_zero_iter(&iter, did_zero);
-+			iter.processed = iomap_zero_iter(&iter, did_zero,
-+							 zeroing_flags);
- 
- 		iter.len = len - (iter.pos - pos);
- 		if (ret || !iter.len)
-@@ -1453,7 +1467,8 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 			continue;
- 		}
- 
--		iter.processed = iomap_zero_iter(&iter, did_zero);
-+		iter.processed = iomap_zero_iter(&iter, did_zero,
-+						 zeroing_flags);
- 	}
- 	return ret;
- }
-@@ -1469,7 +1484,7 @@ iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
- 	/* Block boundary? Nothing to do */
- 	if (!off)
- 		return 0;
--	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
-+	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops, 0);
- }
- EXPORT_SYMBOL_GPL(iomap_truncate_page);
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 50fa3ef89f6c98..b7d0dfd5fd3117 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1490,14 +1490,39 @@ xfs_zero_range(
- 	bool			*did_zero)
- {
- 	struct inode		*inode = VFS_I(ip);
-+	unsigned int		zeroing_flags = 0;
- 
- 	xfs_assert_ilocked(ip, XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL);
- 
- 	if (IS_DAX(inode))
- 		return dax_zero_range(inode, pos, len, did_zero,
- 				      &xfs_dax_write_iomap_ops);
++		/* Unwritten mapping is perfectly aligned, do not convert. */
++		if (modcnt == 0)
++			return false;
++	}
 +
 +	/*
-+	 * Files with allocation units larger than the fsblock size can share
-+	 * zeroed written blocks beyond EOF if the EOF is in the middle of an
-+	 * allocation unit because it keeps the refcounting code simple.  We
-+	 * therefore permit zeroing of pagecache for these post-EOF written
-+	 * extents so that the blocks in the CoW staging extent beyond EOF are
-+	 * all initialized to zero.
-+	 *
-+	 * Alternate designs could be: (a) don't allow sharing of an allocation
-+	 * unit that spans EOF because of the unwritten blocks; (b) rewrite the
-+	 * reflink code to allow shared unwritten extents in this one corner
-+	 * case; or (c) insert zeroed pages into the pagecache to get around
-+	 * the checks in iomap_zero_range.
-+	 *
-+	 * However, this design (allow zeroing of pagecache beyond EOF) was
-+	 * chosen because it most closely resembles what we do for allocation
-+	 * unit == 1 fsblock.  Note that for these files, we force writeback
-+	 * of post-EOF folios to ensure that CoW always happens in units of
-+	 * allocation units.
++	 * Unaligned and unwritten; trim to the current rt extent and select it
++	 * for conversion.
 +	 */
-+	if (xfs_inode_has_bigrtalloc(ip) && xfs_has_reflink(ip->i_mount))
-+		zeroing_flags |= IOMAP_ZERO_MAPPED_BEYOND_EOF;
++	rext_next = (irec->br_startoff - modoff) + mp->m_sb.sb_rextsize;
++	xfs_trim_extent(irec, irec->br_startoff, rext_next - irec->br_startoff);
++	return true;
++}
 +
- 	return iomap_zero_range(inode, pos, len, did_zero,
--				&xfs_buffered_write_iomap_ops);
-+				&xfs_buffered_write_iomap_ops, zeroing_flags);
- }
++/*
++ * Find an unwritten extent in the given file range, zero it, and convert the
++ * mapping to written.  Adjust the scan cursor on the way out.
++ */
++STATIC int
++xfs_convert_rtbigalloc_mapping(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		*offp,
++	xfs_fileoff_t		endoff)
++{
++	struct xfs_bmbt_irec	irec;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	unsigned int		resblks;
++	int			nmap;
++	int			error;
++
++	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 1);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
++	if (error)
++		return error;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++
++	/*
++	 * Read the mapping.  If we find an unwritten extent that isn't aligned
++	 * to an allocation unit...
++	 */
++retry:
++	nmap = 1;
++	error = xfs_bmapi_read(ip, *offp, endoff - *offp, &irec, &nmap, 0);
++	if (error)
++		goto out_cancel;
++	ASSERT(nmap == 1);
++	ASSERT(irec.br_startoff == *offp);
++	if (!xfs_want_convert_rtbigalloc_mapping(mp, &irec)) {
++		*offp = irec.br_startoff + irec.br_blockcount;
++		if (*offp >= endoff)
++			goto out_cancel;
++		goto retry;
++	}
++
++	/*
++	 * ...then write zeroes to the space and change the mapping state to
++	 * written.  This consolidates the mappings for this allocation unit.
++	 */
++	nmap = 1;
++	error = xfs_bmapi_write(tp, ip, irec.br_startoff, irec.br_blockcount,
++			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO, 0, &irec, &nmap);
++	if (error)
++		goto out_cancel;
++	error = xfs_trans_commit(tp);
++	if (error)
++		goto out_unlock;
++
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	/*
++	 * If an unwritten mapping was returned, something is very wrong.
++	 * If no mapping was returned, then bmapi_write thought it performed
++	 * a short allocation, which should be impossible since we previously
++	 * queried the mapping and haven't cycled locks since then.  Either
++	 * way, fail the operation.
++	 */
++	if (nmap == 0 || irec.br_state != XFS_EXT_NORM) {
++		ASSERT(nmap != 0);
++		ASSERT(irec.br_state == XFS_EXT_NORM);
++		return -EIO;
++	}
++
++	/* Advance the cursor to the end of the mapping returned. */
++	*offp = irec.br_startoff + irec.br_blockcount;
++	return 0;
++
++out_cancel:
++	xfs_trans_cancel(tp);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++}
++
++/*
++ * Prepare a file with multi-fsblock allocation units for a remapping.
++ *
++ * File allocation units (AU) must be fully mapped to the data fork.  If the
++ * space in an AU have not been fully written, there can be multiple extent
++ * mappings (e.g. mixed written and unwritten blocks) to the AU.  If the log
++ * does not have a means to ensure that all remappings for a given AU will be
++ * completed even if the fs goes down, we must maintain the above constraint in
++ * another way.
++ *
++ * Convert the unwritten parts of an AU to written by writing zeroes to the
++ * storage and flipping the mapping.  Once this completes, there will be a
++ * single mapping for the entire AU, and we can proceed with the remapping
++ * operation.
++ *
++ * Callers must ensure that there are no dirty pages in the given range.
++ */
++int
++xfs_convert_rtbigalloc_file_space(
++	struct xfs_inode	*ip,
++	loff_t			pos,
++	uint64_t		len)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		off;
++	xfs_fileoff_t		endoff;
++	int			error;
++
++	if (!xfs_inode_has_bigrtalloc(ip))
++		return 0;
++
++	off = xfs_fileoff_rounddown_rtx(mp, XFS_B_TO_FSBT(mp, pos));
++	endoff = xfs_fileoff_roundup_rtx(mp, XFS_B_TO_FSB(mp, pos + len));
++
++	trace_xfs_convert_rtbigalloc_file_space(ip, pos, len);
++
++	while (off < endoff) {
++		if (fatal_signal_pending(current))
++			return -EINTR;
++
++		error = xfs_convert_rtbigalloc_mapping(ip, &off, endoff);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++#endif /* CONFIG_XFS_RT */
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index b29760d36e1ab1..3834962670449f 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -79,4 +79,11 @@ int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+ int	xfs_flush_unmap_range(struct xfs_inode *ip, xfs_off_t offset,
+ 			      xfs_off_t len);
  
- int
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 5675af6b740c27..31a5aa239aab1d 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -306,7 +306,11 @@ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
- int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
--		bool *did_zero, const struct iomap_ops *ops);
-+		bool *did_zero, const struct iomap_ops *ops,
-+		unsigned zeroing_flags);
-+/* ignore written mappings allowed beyond EOF */
-+#define IOMAP_ZERO_MAPPED_BEYOND_EOF	(1U << 0)
++#ifdef CONFIG_XFS_RT
++int xfs_convert_rtbigalloc_file_space(struct xfs_inode *ip, loff_t pos,
++		uint64_t len);
++#else
++# define xfs_convert_rtbigalloc_file_space(ip, pos, len)	(-EOPNOTSUPP)
++#endif
 +
- int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
- 		const struct iomap_ops *ops);
- vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf,
+ #endif	/* __XFS_BMAP_UTIL_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 4fe689410eb6ae..8af9c38bea152f 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1555,7 +1555,7 @@ DEFINE_IMAP_EVENT(xfs_iomap_alloc);
+ DEFINE_IMAP_EVENT(xfs_iomap_found);
+ 
+ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+-	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),
++	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, u64 count),
+ 	TP_ARGS(ip, offset, count),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+@@ -1563,7 +1563,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 		__field(loff_t, isize)
+ 		__field(loff_t, disize)
+ 		__field(loff_t, offset)
+-		__field(size_t, count)
++		__field(u64, count)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+@@ -1574,7 +1574,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 		__entry->count = count;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx isize 0x%llx disize 0x%llx "
+-		  "pos 0x%llx bytecount 0x%zx",
++		  "pos 0x%llx bytecount 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->isize,
+@@ -1585,7 +1585,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 
+ #define DEFINE_SIMPLE_IO_EVENT(name)	\
+ DEFINE_EVENT(xfs_simple_io_class, name,	\
+-	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),	\
++	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, u64 count),	\
+ 	TP_ARGS(ip, offset, count))
+ DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enospc);
+ DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
+@@ -3971,6 +3971,9 @@ TRACE_EVENT(xfs_ioctl_clone,
+ /* unshare tracepoints */
+ DEFINE_SIMPLE_IO_EVENT(xfs_reflink_unshare);
+ DEFINE_INODE_ERROR_EVENT(xfs_reflink_unshare_error);
++#ifdef CONFIG_XFS_RT
++DEFINE_SIMPLE_IO_EVENT(xfs_convert_rtbigalloc_file_space);
++#endif /* CONFIG_XFS_RT */
+ 
+ /* copy on write */
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_around_shared);
 
