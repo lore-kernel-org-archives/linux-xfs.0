@@ -1,48 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5A446F30F;
-	Fri, 13 Dec 2024 05:57:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8834A21
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2024 06:03:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734069424; cv=none; b=TUQohdbEkrmkkPAoc5w1nB0JrgBwgbzu6NM+5/o2xfrSQRwvT9YNmu/NLHTHrnMwtsdO52azeYtDwY4S+dHR9PIZoLsK7LjYW3EgYDTGGExZBtJXkAInvtjX9N7nXUqejoVOPPRYIUUAwAcyd5lOx3WK7FSrHGWAchggLONDCvs=
+	t=1734069826; cv=none; b=h8DX2FryQRQlzEsJsCmYAzduFaNWOKWpSQ2l4gtADTIZDa62YueO59SWoxbbimeN0GTpyY9Urrl1WrKegCdRHDcoTl+Jf2oKYQ8Lb4aNDxao4j7VY9KQTdeEkc6Dg0rlC2LUbxSymQaSmlrQpLk/gu8RMQgTOM16+V5UTMd981U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734069424; c=relaxed/simple;
-	bh=fRwSZFuKlVEwX8oDyo8IvsgFnf2SLOzzaiX84qKJvFA=;
+	s=arc-20240116; t=1734069826; c=relaxed/simple;
+	bh=KupL+pDcYqWTL52l3lLf6zOBlGinvYyRttGL8ypH81g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qU6rXw4aMymZJS+P+Zt6K24hnCn5jRrlq9Wx3cGR39SQplPtrCWzqWeo1kco7YkIKJTdBSKp3QQhQRSxBPjE4T/pArRQJLh0/HvoSIPP2Qp3TF7WEmPOrlC8zVReRNPpAAcX2aF5K2GcEefyRugZGXHkRl2r5DchcuW877q/4rQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JWGjaxXm; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=gb4YMr4czuPdLv1jvHOVWH4shgIDhBPLYqJ4wJqa1kEGs3O67bWWkDZexMEza2KDGXCY26noVO0896uEUwYBaLD6Gj5zr2kcYsdyJcWo5G/X+WReTzq9G3IzgKHwMlz2vP3ze+CyCJYprkv7BMljUeVk5eqhwQTHXW8QqyV/9aE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zyoKu6aT; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JWGjaxXm"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zyoKu6aT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=VtYK1Jcfu1QDnzrzvT1193eWum7ll3HtEhe/SLwyPBk=; b=JWGjaxXmLWf+ysB/Vls5WDllNB
-	tCn8uwzNJWbt8i4S4ez6Incd/C08f704FwkKi7U2mNEtbLYsAUXv6aKhmVmOlZXvSs3hrsmoQeTDR
-	hjZsAhOYZEK6DG+8Mh+Pwyte+0EO2SEN2DVY1EqlX/JeEo1VooJ8CN2G4Bzjy6RCpXvQGSO+4x0A3
-	3pc+yTa1FE4U1CmrjoWVp743vuAbZq7mCXSlGrwlksoxKQx9EiOKOKr45/nTxEAmWlgFMckTPeK1U
-	cuyLUtU6ARCEr8NSVuQ7sdn2knC5tRtN0QS72E2npOqKbD8VRANkrCqfQVSmlMHcHyJpCoN3GwVZ0
-	jdgyJYZQ==;
+	bh=gExojVDRyJlDVnDpIddnUrI/invtDQ9qJGWCuj3SyPQ=; b=zyoKu6aTFy5hf89zJV6ODm262p
+	4xwJej79hLTqbX/YpiOWy1SC2muQ5lz/M6skmMZG7oh3ZDx3ORxaYjJyS+MMAy5H+WGMsjDRV+MJF
+	CRnkSrpnzuFpjhRbdVMIHycwdls3G6c3flGvyHSJF7JTIHOXLgaVI56gP2nwP9lG4dwDdEVotGj0F
+	HgaUupqdKJlmz2MRU405z6hxJ9rxCWIQ0wOGcwqmHItUcpV9WDHq89+NYmYoS0iTIeut8S0cIb1Mn
+	CauUdaeMkY9W4b/ggI65aV+YJbeXR+NNax5kGaSOpPK9UAy8rsGYLaooihj2zDHgCNegALhmzzJk5
+	6SabCSPA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tLyfd-00000002ocI-0sDb;
-	Fri, 13 Dec 2024 05:57:01 +0000
-Date: Thu, 12 Dec 2024 21:57:01 -0800
+	id 1tLym8-00000002pWe-1hP9;
+	Fri, 13 Dec 2024 06:03:44 +0000
+Date: Thu, 12 Dec 2024 22:03:44 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [RFC 1/3] include/linux.h: Factor out generic
- platform_test_fs_fd() helper
-Message-ID: <Z1vMrUqBWcarQ6_s@infradead.org>
-References: <cover.1733902742.git.ojaswin@linux.ibm.com>
- <5996d6854a16852daca5977063af6f2af2f0f4ca.1733902742.git.ojaswin@linux.ibm.com>
- <20241211180902.GA6678@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: tidy up xfs_iroot_realloc
+Message-ID: <Z1vOQPX3-jTlMWRW@infradead.org>
+References: <173405122140.1180922.1477850791026540480.stgit@frogsfrogsfrogs>
+ <173405122177.1180922.14038648509804731936.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,19 +45,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241211180902.GA6678@frogsfrogsfrogs>
+In-Reply-To: <173405122177.1180922.14038648509804731936.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Dec 11, 2024 at 10:09:02AM -0800, Darrick J. Wong wrote:
-> > +
-> > +static __inline__ int platform_test_ext4_fd(int fd)
-> > +{
-> > +	return platform_test_fs_fd(fd, 0xef53); /* EXT4 magic number */
+On Thu, Dec 12, 2024 at 04:58:14PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Should this be pulling EXT4_SUPER_MAGIC from linux/magic.h?
+> Tidy up this function a bit before we start refactoring the memory
+> handling and move the function to the bmbt code.
 
-I think we can just drop adding platform_test_ext4_fd with the
-suggested patches later in the series?  Having ext4-specific code
-in xfsprogs would seem pretty odd in xfsprogs anyway over our previous
-categories of xfs only or generic.
+Looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
