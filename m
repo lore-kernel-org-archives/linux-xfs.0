@@ -1,218 +1,162 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D94FD1946BB
-	for <linux-xfs@vger.kernel.org>; Sat, 14 Dec 2024 15:32:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFE0742A8F
+	for <linux-xfs@vger.kernel.org>; Sat, 14 Dec 2024 21:29:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.208
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734190329; cv=none; b=G/VzUtre4X55wAbWypNbZuD/LH1c7pPDU5csdmxbI2N/F4bi53o4Bge7oRjvE/deyW9GOtWdDEX6TAC4mrTwjDCRaqnW9b7USZxKoalOwhF/SyS/Gwq1i1MYq/FMQ55zavvP8RokSDGv0WKIbU55voBI0svKlrjB6dhzsZ14qsI=
+	t=1734211762; cv=none; b=NgD31uQMmLJfKIO917JZB8IgQw9cNeTMgrqTWZBkqcDyiJVEa0JCSHejcVwEqtBFbE36ZDV/kLk4wskZvQfxqlZqaUE30e+ntXBvII0l8PmBa10K7+o+dp9dW+SAuRC7Q6k4gqx6umhuSgRky4qdiZqV1EN5e1o73imDtcJZUWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734190329; c=relaxed/simple;
-	bh=y6kTT7dJ0Cc65e8AFqV3nF0RvOwhxu5jTy0nO+NKfB0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Q7HnQBO0pHyur2ULiML1MwCBwXualcQY5cqflrRGueiHACCWuMlvDvCXBzdWwc8hwUvV18IVdjxKrOphQtYuKDCPpZuulYDYM5pzVJMf4U2p7VrJnBfA+rlntlLeVtut0SaYEpgGyImoaW8fL71gwMql8ntDaND2vcz04ZkDWss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NQdmOI29; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NQdmOI29"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1734190326;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=03N6Z6LVTWl2BXm3uGhmS6liuy/PRc0F/lQH4ag9wfQ=;
-	b=NQdmOI29k4VzgE6FvkFv9l5K23SWw4tcMoxTcElILiK4nS+1urVQItGv7u1WlMSfUv+8TK
-	2o4ZIMD3Jq0sUdE9wOg3oTrdgbTQ5clC9l1dkASyLj2YLZ9rrWQE0jf8jxRlPX+kWyokZg
-	Iv689c8xnbSpU4MEnuXjAwlZ2EgwTx8=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-286-A43WtTkcPv2X1Ca3CLhwYg-1; Sat, 14 Dec 2024 10:32:05 -0500
-X-MC-Unique: A43WtTkcPv2X1Ca3CLhwYg-1
-X-Mimecast-MFC-AGG-ID: A43WtTkcPv2X1Ca3CLhwYg
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-385e4a759e6so1438631f8f.1
-        for <linux-xfs@vger.kernel.org>; Sat, 14 Dec 2024 07:32:04 -0800 (PST)
+	s=arc-20240116; t=1734211762; c=relaxed/simple;
+	bh=AKu2GiIrzTepf6osi+gd35zsxDpl3zr6/O+hlAOcg3k=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=I1YRO2TGNDuM8TYH1sHQfkgs/aqVxaXYi+fNb1ReeCk7fi+97Ios915ODblszJfrHgTGKUfGfkO4qUbbIVSlywo2uk2qvIxSTJKTwPsRpKxcr0Lf43E6xKvz+mdSetNO2P/Ra8/iNv+VjUBbI1E2n/E+klUxdDS2ftCAyZGPU5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-3abe7375ba6so60274765ab.3
+        for <linux-xfs@vger.kernel.org>; Sat, 14 Dec 2024 13:29:20 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734190324; x=1734795124;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:from:references:cc:to:subject:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=03N6Z6LVTWl2BXm3uGhmS6liuy/PRc0F/lQH4ag9wfQ=;
-        b=qafeaj/6EHgNRcG3tqiys8YKMkDj8CARGebz+h0aLMihmlJqh3RQbdltGzsJDTrKam
-         /mZ8serpne18IhnEho4SjdTX8L+0oJ5GGhAZs/V/FIuLM7izW//2CfzsGDtkTA4O68UH
-         PsxTk6DHkDE//Jt4OZogNfIp0vG9LDtDGYePopyTM0v7gJl5WduC20tMZxWw8f4HujtM
-         oaf2CJrDeYbydCbKZKf2bAC45ZCoGGdxrjgX2ondHmzMXbxoQSX3ouovJ94tXPHPyQYo
-         GzHaQScTa8K6Sdwq7ggpHFgMaQWrMj9iTNcPJtHcTwEb6EHGFZRVIiNIqh9hn9t61zdH
-         8mFg==
-X-Forwarded-Encrypted: i=1; AJvYcCXMHe5qUJb1KKz+lQGnjfyjl6a1TESdgIHvTFTw7VKoD3WvaJAo85gdwPd1ckvvWsGViBC+0ECKYt0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8v6ED1XB68bxkaJNlUuQ4vDV+HU/ruwncJXj42dc27NTXMJjw
-	M1hA+XPstGzklSBnRjdMi+2MvyGvTSbWw4WTojQy5Vf9Sk5BpOZn2hAHMxY0HjnaYQ29VHSvuQb
-	D7jfJznJ8+Iz5nKY2YdAYdNDkybqBlZ3r+sWZUl4ZGoIMY4jMnB72BVIn4Q==
-X-Gm-Gg: ASbGncuYdWYnK2mUNtdBF39Rx+PAHK9wOkoAOYS+K8bfkWzHMZZ/rVYaYf7BHPyItiJ
-	E7dVoOqcjpZR0ukJS/Y5WaFOKuNeGEhQG1boZHy+KQOPCcFbR/AQeJ1201FnNLPVJLIT/V3u96R
-	xB4d813CU63tLkfv4+FdtlBdN4rtVVDxK3vGAe8ka71l5LRYsl4FPIJbl95RJ+7b5XUHL2L418y
-	vt5fEl9/VJLRYIwWzaRCjTR/kihbmlkCtzix4yLyyXK7LBzAKH62gbdsLvgjbBpYGqzVTGaqUF3
-	tAqd34wmwASJFXv13XrbZ+JpyGD65xHxuumH8v7ebSHogN9MLBeDUD/soHejmZikIei1878xR5S
-	mcYGisn1l
-X-Received: by 2002:a5d:64a7:0:b0:385:e9ca:4e18 with SMTP id ffacd0b85a97d-38880ac23d0mr5273148f8f.1.1734190323883;
-        Sat, 14 Dec 2024 07:32:03 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGCAoXGEeWaw7IcCbVrauVtoSu57S5/3Q7OA9u+ckTPTWUXqMKHzSJmCciXfEjs+C07Qo9JLg==
-X-Received: by 2002:a5d:64a7:0:b0:385:e9ca:4e18 with SMTP id ffacd0b85a97d-38880ac23d0mr5273103f8f.1.1734190323507;
-        Sat, 14 Dec 2024 07:32:03 -0800 (PST)
-Received: from ?IPV6:2003:cb:c711:6400:d1b9:21c5:b517:5f4e? (p200300cbc7116400d1b921c5b5175f4e.dip0.t-ipconnect.de. [2003:cb:c711:6400:d1b9:21c5:b517:5f4e])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-388c801211dsm2844150f8f.17.2024.12.14.07.32.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 14 Dec 2024 07:32:03 -0800 (PST)
-Message-ID: <fc83a855-bb3f-4374-8896-579420732b25@redhat.com>
-Date: Sat, 14 Dec 2024 16:32:00 +0100
+        d=1e100.net; s=20230601; t=1734211760; x=1734816560;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=paHaFcfWBXLMk205W3buDhn9iPt32Zvb/Ivu3tiWL5E=;
+        b=hDLKwEJB4EsEsR3Cl4Zd+fQIpo3lbMVWswB8ak0PCt4/JuNWFrAG75U374rZyrqb9w
+         mgSYcbBG/lvFg7FkvMqjkQEg71nKxc1uFACs6IuvDfwGlskj+2RSU0NZDsPwj/u+hclM
+         uOv0Zag2q7ZxOTmjRJoIEJ7sHgJYTTpY/YEJbcIWwKZl04UY7VBYAzcOwtCNcR93YSYx
+         f3cpINaJ1VUg2ZcgZ1P6ehM0mVFmJX2394kL2Yg89s8IPmnukJ5M5rjybefVslQ5B3pO
+         l1QjTr2lx2hzaPE0C5p5NBdFLH7xG0EUTGeE3pDAl1c+S6+Nq+I8rMKh6VdrStx8Mzlw
+         bhqw==
+X-Forwarded-Encrypted: i=1; AJvYcCViIedV1j6bHpGCUvMKq/PJec63tD/E0c8yFMu2UDC/z4JXw77QdNpCfxv9BzAzoC+DHWITShv7QJs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxNvq1PpM8GSbxSUBVA7B4NDP9vfityJZLtGaiK98ml65fZCZKY
+	q7o4wWv/SFb+SLZ3CI8V8ANElnvQFvUdb7Vt4Qz7PTijxr6snlxS/ikDJlkmGWrS6lTmXB4ZPJ7
+	2kU07mcHC7QjlI5QqWjuddzq8Y38G6i2mCdDsjFLEUcM0cfeBnSxbgmQ=
+X-Google-Smtp-Source: AGHT+IHxAtIaF3EuSR5gJb/0dm1RwTvHyOG5erp+QIuBp3KjmkrGTz390sp6Tb5nGh6an3lBqtxFuWv5P+wwgxbhnTJRAYIWDkuO
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 14/25] huge_memory: Allow mappings of PUD sized pages
-To: Alistair Popple <apopple@nvidia.com>, dan.j.williams@intel.com,
- linux-mm@kvack.org
-Cc: lina@asahilina.net, zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
- vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
- bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
- will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
- dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org,
- djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, peterx@redhat.com,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
- nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
- david@fromorbit.com
-References: <cover.e1ebdd6cab9bde0d232c1810deacf0bae25e6707.1732239628.git-series.apopple@nvidia.com>
- <dd86249dee026991b1a996a8ab551b1b1fdd32a4.1732239628.git-series.apopple@nvidia.com>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- WNyWQQ==
-Organization: Red Hat
-In-Reply-To: <dd86249dee026991b1a996a8ab551b1b1fdd32a4.1732239628.git-series.apopple@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6e02:18ca:b0:3a7:d7dd:e70f with SMTP id
+ e9e14a558f8ab-3afeee787ecmr98990225ab.12.1734211760152; Sat, 14 Dec 2024
+ 13:29:20 -0800 (PST)
+Date: Sat, 14 Dec 2024 13:29:20 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <675df8b0.050a0220.37aaf.00d8.GAE@google.com>
+Subject: [syzbot] [xfs?] BUG: unable to handle kernel paging request in xfs_destroy_mount_workqueues
+From: syzbot <syzbot+63340199267472536cf4@syzkaller.appspotmail.com>
+To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 22.11.24 02:40, Alistair Popple wrote:
-> Currently DAX folio/page reference counts are managed differently to
-> normal pages. To allow these to be managed the same as normal pages
-> introduce vmf_insert_folio_pud. This will map the entire PUD-sized folio
-> and take references as it would for a normally mapped page.
-> 
-> This is distinct from the current mechanism, vmf_insert_pfn_pud, which
-> simply inserts a special devmap PUD entry into the page table without
-> holding a reference to the page for the mapping.
-> 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> ---
+Hello,
 
-Hi,
+syzbot found the following issue on:
 
-The patch subject of this (and especially the next patch) is misleading. 
-Likely you meant to have it as:
+HEAD commit:    2e7aff49b5da Merge branches 'for-next/core' and 'for-next/..
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
+console output: https://syzkaller.appspot.com/x/log.txt?x=13f5a730580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=696fb014d05da3a3
+dashboard link: https://syzkaller.appspot.com/bug?extid=63340199267472536cf4
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+userspace arch: arm64
 
-"mm/huge_memory: add vmf_insert_folio_pud() for mapping PUD sized pages"
+Unfortunately, I don't have any reproducer for this issue yet.
 
->   	for (i = 0; i < nr_pages; i++) {
-> @@ -1523,6 +1531,26 @@ void folio_add_file_rmap_pmd(struct folio *folio, struct page *page,
->   #endif
->   }
->   
-> +/**
-> + * folio_add_file_rmap_pud - add a PUD mapping to a page range of a folio
-> + * @folio:	The folio to add the mapping to
-> + * @page:	The first page to add
-> + * @vma:	The vm area in which the mapping is added
-> + *
-> + * The page range of the folio is defined by [page, page + HPAGE_PUD_NR)
-> + *
-> + * The caller needs to hold the page table lock.
-> + */
-> +void folio_add_file_rmap_pud(struct folio *folio, struct page *page,
-> +		struct vm_area_struct *vma)
-> +{
-> +#ifdef CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD
-> +	__folio_add_file_rmap(folio, page, HPAGE_PUD_NR, vma, RMAP_LEVEL_PUD);
-> +#else
-> +	WARN_ON_ONCE(true);
-> +#endif
-> +}
-> +
->   static __always_inline void __folio_remove_rmap(struct folio *folio,
->   		struct page *page, int nr_pages, struct vm_area_struct *vma,
->   		enum rmap_level level)
-> @@ -1552,6 +1580,7 @@ static __always_inline void __folio_remove_rmap(struct folio *folio,
->   		partially_mapped = nr && atomic_read(mapped);
->   		break;
->   	case RMAP_LEVEL_PMD:
-> +	case RMAP_LEVEL_PUD:
->   		atomic_dec(&folio->_large_mapcount);
->   		last = atomic_add_negative(-1, &folio->_entire_mapcount);
->   		if (last) {
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/ef408f67fde3/disk-2e7aff49.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/414ac17a20dc/vmlinux-2e7aff49.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/a93415d2a7e7/Image-2e7aff49.gz.xz
 
-If you simply reuse that code (here and on the adding path), you will 
-end up effectively setting nr_pmdmapped to a very large value and 
-passing that into __folio_mod_stat().
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+63340199267472536cf4@syzkaller.appspotmail.com
 
-There, we will adjust NR_SHMEM_PMDMAPPED/NR_FILE_PMDMAPPED, which is 
-wrong (it's PUD mapped ;) ).
-
-It's probably best to split out the rmap changes from the other things 
-in this patch.
+XFS (loop3): Unmounting Filesystem ca7e2101-b8f1-4838-8e2d-7637b90620e6
+Unable to handle kernel paging request at virtual address 001f7fe000182113
+Mem abort info:
+  ESR = 0x0000000096000004
+  EC = 0x25: DABT (current EL), IL = 32 bits
+  SET = 0, FnV = 0
+  EA = 0, S1PTW = 0
+  FSC = 0x04: level 0 translation fault
+Data abort info:
+  ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+  CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+  GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+[001f7fe000182113] address between user and kernel address ranges
+Internal error: Oops: 0000000096000004 [#1] PREEMPT SMP
+Modules linked in:
+CPU: 0 UID: 0 PID: 6415 Comm: syz-executor Not tainted 6.13.0-rc2-syzkaller-g2e7aff49b5da #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
+pstate: 804000c5 (Nzcv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : __lock_acquire+0xfc/0x7904 kernel/locking/lockdep.c:5089
+lr : lock_acquire+0x23c/0x724 kernel/locking/lockdep.c:5849
+sp : ffff8000a0d87620
+x29: ffff8000a0d878e0 x28: ffff800080367964 x27: 0000000000000000
+x26: ffff0001b360b500 x25: 0000000000000000 x24: 0000000000000001
+x23: 0000000000000000 x22: 1ffff00011f300ca x21: 00ffff0000c10898
+x20: 0000000000000001 x19: 0000000000000000 x18: 1fffe000366c167e
+x17: ffff80008f97d000 x16: ffff80008326d65c x15: 0000000000000001
+x14: 1fffe00018211000 x13: dfff800000000000 x12: ffff7000141b0eec
+x11: ffff8000804648c0 x10: ffff80008f980650 x9 : 00000000000000f3
+x8 : 001fffe000182113 x7 : ffff800080367964 x6 : 0000000000000000
+x5 : 0000000000000001 x4 : 0000000000000001 x3 : 0000000000000000
+x2 : 0000000000000000 x1 : 0000000000000000 x0 : 00ffff0000c10898
+Call trace:
+ __lock_acquire+0xfc/0x7904 kernel/locking/lockdep.c:5089 (P)
+ lock_acquire+0x23c/0x724 kernel/locking/lockdep.c:5849 (L)
+ lock_acquire+0x23c/0x724 kernel/locking/lockdep.c:5849
+ __raw_spin_lock_irq include/linux/spinlock_api_smp.h:119 [inline]
+ _raw_spin_lock_irq+0x58/0x70 kernel/locking/spinlock.c:170
+ put_pwq_unlocked kernel/workqueue.c:1662 [inline]
+ destroy_workqueue+0x8d8/0xdc0 kernel/workqueue.c:5897
+ xfs_destroy_mount_workqueues+0x58/0xdc fs/xfs/xfs_super.c:606
+ xfs_fs_put_super+0x11c/0x138 fs/xfs/xfs_super.c:1157
+ generic_shutdown_super+0x12c/0x2bc fs/super.c:642
+ kill_block_super+0x44/0x90 fs/super.c:1710
+ xfs_kill_sb+0x20/0x58 fs/xfs/xfs_super.c:2089
+ deactivate_locked_super+0xc4/0x12c fs/super.c:473
+ deactivate_super+0xe0/0x100 fs/super.c:506
+ cleanup_mnt+0x34c/0x3dc fs/namespace.c:1373
+ __cleanup_mnt+0x20/0x30 fs/namespace.c:1380
+ task_work_run+0x230/0x2e0 kernel/task_work.c:239
+ resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
+ do_notify_resume+0x178/0x1f4 arch/arm64/kernel/entry-common.c:151
+ exit_to_user_mode_prepare arch/arm64/kernel/entry-common.c:169 [inline]
+ exit_to_user_mode arch/arm64/kernel/entry-common.c:178 [inline]
+ el0_svc+0xac/0x168 arch/arm64/kernel/entry-common.c:745
+ el0t_64_sync_handler+0x84/0x108 arch/arm64/kernel/entry-common.c:762
+ el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:600
+Code: 9007a8e8 b9465108 340090a8 d343fea8 (386d6908) 
+---[ end trace 0000000000000000 ]---
+----------------
+Code disassembly (best guess):
+   0:	9007a8e8 	adrp	x8, 0xf51c000
+   4:	b9465108 	ldr	w8, [x8, #1616]
+   8:	340090a8 	cbz	w8, 0x121c
+   c:	d343fea8 	lsr	x8, x21, #3
+* 10:	386d6908 	ldrb	w8, [x8, x13] <-- trapping instruction
 
 
--- 
-Cheers,
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-David / dhildenb
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
