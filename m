@@ -1,32 +1,33 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB5A2208A0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9E352033A;
 	Sat, 14 Dec 2024 03:10:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734145861; cv=none; b=Mj4D/e3VauX5arVyQZ9DJ+29kdg3mnrCn/yap12OEgwbq0/701m6NeZmnvs5GfvsYYN982lQlPC51wjV9fWzSm73EfS1P75qNbGzKDjanVOLV9IJJyG5FmDirvxkYU8nA98+nPOjCVpJ56VYJMaAiR5+10cenGvd/E0TYuNWVyE=
+	t=1734145861; cv=none; b=ad4nq84rog23UhlGmDsCYiHADpJyEtqOr3ZShfcGFk5WVUxAe1F7bgyRDzMTQ2ghMOil9SG1VNpTBCYMHQ+87e2xhQX1gBgVG/8pTY9yKGSvBk/jqY9d3fd0v7J1XHrR5AI41jryCy0nRusjAxrvePU8H7sIrVTNNhEZCS1bF9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1734145861; c=relaxed/simple;
-	bh=l/RbuV7mG+Q8pAYXvShoEilABA680o9Y1/+f82fwIZ0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Dmt1snhaup2Za6ZHDDMtazg6qNx3BH89+QJQXLRDXhYAbbI0xLb0bchoAEgxqRlCxRBFnmZsiX3mG+Ch1SwSQ4PlP8zqqw7HJXOkhlqTYH0lwED7V/zASZ28KK2r5jDeCyHlny9QM5YabV74zA+PZK+uemRWz00jF3QERYFxm6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jn+VzRT6; arc=none smtp.client-ip=198.137.202.133
+	bh=7OVdGKA9zHmiwz4sbqPuLFNrP59tUjIx+537GeT3dl4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qDBK6bQr+Q9sbKNbOLd0BeAtz035ddMO4VW+Tc0QXYPUk3bdrGoKjDsziKE5skluf0cU2m7WGsc8RYq8w8Dqd3+VK+1akA9oPYfx1kmgzA+G6Gw/TsgHM/vYpdljOVuvQ8r64TA/UQPmh/LqzdDYSNijHjdEZ+bGqo7cGM4weT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KMN4gb6Z; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jn+VzRT6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KMN4gb6Z"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=nVbdZFLburUKrMDxJT8VFegeQ4rw8dJVhDVUWKaEr00=; b=jn+VzRT6CVJfsvQPJRoW8mkloz
-	GoZIpq7JSMgAM6DJmg02YZeZT4X6VBzvBiaADik7dCm/qFzpx3Y3HH1iDIjyN8cSZC5CEi1k5gjxc
-	q+i72eyL65QnU8PUj4cofXYJZ2XwsGGDepXY5Q4vFrxwHW++dEgUclNB7IxTEkJrZWDiamgRa1SYc
-	d1vycqPDazUd8/H+hOIIrndCmlzG+3kvq6LG3JVMfdUN6QHQLJpvEbeLdglqz/qBnOrzNrsP2Xvsy
-	ZuByfAi2EHL26XH9FdtGWBjuewpDVKLys6UBzqDkVwqAB3Mt2HF2JiyEQ2x0ULx1qtrlod+yJwJDU
-	HY9us9Ww==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
+	Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=aEpOv6XaftX3uxnh2wMZL90wJOkQQ8bIBff4iQiKj9w=; b=KMN4gb6ZeBQRXIMA2XWLrKJJTB
+	pIrG5Ktc6U0DoQagUaj+ERQm4kWG6cF1ajtuJOl+EJiecSkCWL9GXyRhAqZ8ZxcVm5Ksv1I2pnswt
+	r6gbCfon+8RrA6makCRyTq2s0qpzICufK3Qdj8xWAgQIDdTUDKoS4c33yXNnUZpXL4wCwSX9r/B9c
+	hHzYuYWPTofuLhGoDbCXe3VE6cNZaovjbad0tLE8otQao0h9gB4kQjPsLXho3oceM3qHgMlt8Y4YJ
+	mJCX7XB9nldEhu4yn8HzaTcJBc+Nt3SIbOIF0mF3fra3/ckrLLzox5hRBSOxXp+dSRHwWfcMvFi46
+	KK9ACr9A==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tMIYN-00000005c3V-37oA;
+	id 1tMIYN-00000005c3f-3maB;
 	Sat, 14 Dec 2024 03:10:51 +0000
 From: Luis Chamberlain <mcgrof@kernel.org>
 To: willy@infradead.org,
@@ -47,10 +48,12 @@ Cc: john.g.garry@oracle.com,
 	da.gomez@samsung.com,
 	kernel@pankajraghav.com,
 	mcgrof@kernel.org
-Subject: [RFC v2 00/11] enable bs > ps for block devices
-Date: Fri, 13 Dec 2024 19:10:38 -0800
-Message-ID: <20241214031050.1337920-1-mcgrof@kernel.org>
+Subject: [RFC v2 05/11] fs/mpage: use blocks_per_folio instead of blocks_per_page
+Date: Fri, 13 Dec 2024 19:10:43 -0800
+Message-ID: <20241214031050.1337920-6-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20241214031050.1337920-1-mcgrof@kernel.org>
+References: <20241214031050.1337920-1-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,66 +63,188 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-Now that LBS is upstream on v6.12 and we have bs > ps for filesystems
-this address support for up bs > ps block devices. The first RFC v1 was
-posted [0] before the turkey massacre in the US. The changes on this v2
-addrsess all the feedback from that series.
+From: Hannes Reinecke <hare@suse.de>
 
-The changes on this v2:
+Convert mpage to folios and associate the number of blocks with
+a folio and not a page.
 
-  - Simplfy with folio_pos() as suggested by Matthew Wilcox
-  - To address support to reduce the buffer head array of
-    size MAX_BUF_PER_PAGE to avoid stack growth growth warnings
-    on systems with large base page sizes such as Hexagon with 256 KiB
-    base page sizes I've added the async batch helper bh_read_batch_async()
-    and iterator support for block_read_full_folio().
-  - Simplify the bdev_io_min() as suggested by Christoph Hellwig
-  - Collect tags, and minor comment enhancements and remove new header
-    inclusions where not actually needed
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ fs/mpage.c | 40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
-This still goes out as RFCs as I'm still not done with my testing. As part
-of my test plan I'm including a baseline of ext4 as we're mucking around with
-buffer heads and testing xfs alone won't help to ensure we don't regress
-existing buffer head users. I'm also testing XFS with 32k sector size support
-given part of this enablement is to allow filesystems to also increase their
-support sector size.
-
-Patches 2-4 are really the meat and bones behind these changes and careful
-review is appreciated. I suspect a bit of bike shedding potential is in order
-there as well for those patches.
-
-If you'd like to help test this, this is available in the kdevops linux
-branch large-block-buffer-heads-for-next [1]. It is based on v6.13-rc2, and
-on that tree has a fix not yet merged on v6.13-rc2 which is required for LBS.
-That fix is already being tested and planned for v6.13-rc3, I carry since
-otherwise you wound't be able to mount any LBS filesystem with a filesystem
-block size larger than 16k.
-
-[0] https://lkml.kernel.org/r/20241113094727.1497722-1-mcgrof@kernel.org
-[1] https://github.com/linux-kdevops/linux/tree/large-block-buffer-heads-for-next
-
-Hannes Reinecke (3):
-  fs/mpage: use blocks_per_folio instead of blocks_per_page
-  fs/mpage: avoid negative shift for large blocksize
-  block/bdev: enable large folio support for large logical block sizes
-
-Luis Chamberlain (8):
-  fs/buffer: move async batch read code into a helper
-  fs/buffer: add a for_each_bh() for block_read_full_folio()
-  fs/buffer: add iteration support for block_read_full_folio()
-  fs/buffer: reduce stack usage on bh_read_iter()
-  fs/buffer fs/mpage: remove large folio restriction
-  block/bdev: lift block size restrictions and use common definition
-  nvme: remove superfluous block size check
-  bdev: use bdev_io_min() for statx block size
-
- block/bdev.c             |  13 +--
- drivers/nvme/host/core.c |  10 --
- fs/buffer.c              | 209 +++++++++++++++++++++++++++------------
- fs/mpage.c               |  47 +++++----
- include/linux/blkdev.h   |  11 ++-
- 5 files changed, 187 insertions(+), 103 deletions(-)
-
+diff --git a/fs/mpage.c b/fs/mpage.c
+index 82aecf372743..eb6fee7de529 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -107,7 +107,7 @@ static void map_buffer_to_folio(struct folio *folio, struct buffer_head *bh,
+ 		 * don't make any buffers if there is only one buffer on
+ 		 * the folio and the folio just needs to be set up to date
+ 		 */
+-		if (inode->i_blkbits == PAGE_SHIFT &&
++		if (inode->i_blkbits == folio_shift(folio) &&
+ 		    buffer_uptodate(bh)) {
+ 			folio_mark_uptodate(folio);
+ 			return;
+@@ -153,7 +153,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 	struct folio *folio = args->folio;
+ 	struct inode *inode = folio->mapping->host;
+ 	const unsigned blkbits = inode->i_blkbits;
+-	const unsigned blocks_per_page = PAGE_SIZE >> blkbits;
++	const unsigned blocks_per_folio = folio_size(folio) >> blkbits;
+ 	const unsigned blocksize = 1 << blkbits;
+ 	struct buffer_head *map_bh = &args->map_bh;
+ 	sector_t block_in_file;
+@@ -161,7 +161,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 	sector_t last_block_in_file;
+ 	sector_t first_block;
+ 	unsigned page_block;
+-	unsigned first_hole = blocks_per_page;
++	unsigned first_hole = blocks_per_folio;
+ 	struct block_device *bdev = NULL;
+ 	int length;
+ 	int fully_mapped = 1;
+@@ -182,7 +182,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 		goto confused;
+ 
+ 	block_in_file = (sector_t)folio->index << (PAGE_SHIFT - blkbits);
+-	last_block = block_in_file + args->nr_pages * blocks_per_page;
++	last_block = block_in_file + args->nr_pages * blocks_per_folio;
+ 	last_block_in_file = (i_size_read(inode) + blocksize - 1) >> blkbits;
+ 	if (last_block > last_block_in_file)
+ 		last_block = last_block_in_file;
+@@ -204,7 +204,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 				clear_buffer_mapped(map_bh);
+ 				break;
+ 			}
+-			if (page_block == blocks_per_page)
++			if (page_block == blocks_per_folio)
+ 				break;
+ 			page_block++;
+ 			block_in_file++;
+@@ -216,7 +216,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 	 * Then do more get_blocks calls until we are done with this folio.
+ 	 */
+ 	map_bh->b_folio = folio;
+-	while (page_block < blocks_per_page) {
++	while (page_block < blocks_per_folio) {
+ 		map_bh->b_state = 0;
+ 		map_bh->b_size = 0;
+ 
+@@ -229,7 +229,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 
+ 		if (!buffer_mapped(map_bh)) {
+ 			fully_mapped = 0;
+-			if (first_hole == blocks_per_page)
++			if (first_hole == blocks_per_folio)
+ 				first_hole = page_block;
+ 			page_block++;
+ 			block_in_file++;
+@@ -247,7 +247,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 			goto confused;
+ 		}
+ 	
+-		if (first_hole != blocks_per_page)
++		if (first_hole != blocks_per_folio)
+ 			goto confused;		/* hole -> non-hole */
+ 
+ 		/* Contiguous blocks? */
+@@ -260,7 +260,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 			if (relative_block == nblocks) {
+ 				clear_buffer_mapped(map_bh);
+ 				break;
+-			} else if (page_block == blocks_per_page)
++			} else if (page_block == blocks_per_folio)
+ 				break;
+ 			page_block++;
+ 			block_in_file++;
+@@ -268,7 +268,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 		bdev = map_bh->b_bdev;
+ 	}
+ 
+-	if (first_hole != blocks_per_page) {
++	if (first_hole != blocks_per_folio) {
+ 		folio_zero_segment(folio, first_hole << blkbits, PAGE_SIZE);
+ 		if (first_hole == 0) {
+ 			folio_mark_uptodate(folio);
+@@ -303,10 +303,10 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 	relative_block = block_in_file - args->first_logical_block;
+ 	nblocks = map_bh->b_size >> blkbits;
+ 	if ((buffer_boundary(map_bh) && relative_block == nblocks) ||
+-	    (first_hole != blocks_per_page))
++	    (first_hole != blocks_per_folio))
+ 		args->bio = mpage_bio_submit_read(args->bio);
+ 	else
+-		args->last_block_in_bio = first_block + blocks_per_page - 1;
++		args->last_block_in_bio = first_block + blocks_per_folio - 1;
+ out:
+ 	return args->bio;
+ 
+@@ -385,7 +385,7 @@ int mpage_read_folio(struct folio *folio, get_block_t get_block)
+ {
+ 	struct mpage_readpage_args args = {
+ 		.folio = folio,
+-		.nr_pages = 1,
++		.nr_pages = folio_nr_pages(folio),
+ 		.get_block = get_block,
+ 	};
+ 
+@@ -456,12 +456,12 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
+ 	struct address_space *mapping = folio->mapping;
+ 	struct inode *inode = mapping->host;
+ 	const unsigned blkbits = inode->i_blkbits;
+-	const unsigned blocks_per_page = PAGE_SIZE >> blkbits;
++	const unsigned blocks_per_folio = folio_size(folio) >> blkbits;
+ 	sector_t last_block;
+ 	sector_t block_in_file;
+ 	sector_t first_block;
+ 	unsigned page_block;
+-	unsigned first_unmapped = blocks_per_page;
++	unsigned first_unmapped = blocks_per_folio;
+ 	struct block_device *bdev = NULL;
+ 	int boundary = 0;
+ 	sector_t boundary_block = 0;
+@@ -486,12 +486,12 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
+ 				 */
+ 				if (buffer_dirty(bh))
+ 					goto confused;
+-				if (first_unmapped == blocks_per_page)
++				if (first_unmapped == blocks_per_folio)
+ 					first_unmapped = page_block;
+ 				continue;
+ 			}
+ 
+-			if (first_unmapped != blocks_per_page)
++			if (first_unmapped != blocks_per_folio)
+ 				goto confused;	/* hole -> non-hole */
+ 
+ 			if (!buffer_dirty(bh) || !buffer_uptodate(bh))
+@@ -536,7 +536,7 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
+ 		goto page_is_mapped;
+ 	last_block = (i_size - 1) >> blkbits;
+ 	map_bh.b_folio = folio;
+-	for (page_block = 0; page_block < blocks_per_page; ) {
++	for (page_block = 0; page_block < blocks_per_folio; ) {
+ 
+ 		map_bh.b_state = 0;
+ 		map_bh.b_size = 1 << blkbits;
+@@ -618,14 +618,14 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
+ 	BUG_ON(folio_test_writeback(folio));
+ 	folio_start_writeback(folio);
+ 	folio_unlock(folio);
+-	if (boundary || (first_unmapped != blocks_per_page)) {
++	if (boundary || (first_unmapped != blocks_per_folio)) {
+ 		bio = mpage_bio_submit_write(bio);
+ 		if (boundary_block) {
+ 			write_boundary_block(boundary_bdev,
+ 					boundary_block, 1 << blkbits);
+ 		}
+ 	} else {
+-		mpd->last_block_in_bio = first_block + blocks_per_page - 1;
++		mpd->last_block_in_bio = first_block + blocks_per_folio - 1;
+ 	}
+ 	goto out;
+ 
 -- 
 2.43.0
 
