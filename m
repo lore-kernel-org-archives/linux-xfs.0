@@ -1,72 +1,154 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 310D11487F6
-	for <linux-xfs@vger.kernel.org>; Sun, 15 Dec 2024 18:16:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 513E2154BEA
+	for <linux-xfs@vger.kernel.org>; Sun, 15 Dec 2024 18:42:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734286570; cv=none; b=KfW+tysJ9m0e7fZ2zEFkO1etbvjJQfg4p/b2TRiU6LBhDaBSo5lLa9QYWHOFZkydl68EwEEkYaw3Tuya+spWmW5+t539pNFKCiErraU+7PRg2991sdI8LUmMENEYg56mYV0x68W9iMgWSIFOzGApTsM7svZCCdf3JMFlg2hLVRI=
+	t=1734288168; cv=none; b=ZcrKbv1oH4i96NRxwxmPKWkWkSNkpnXlw2HfFhptm6nn1E88L2/pEobsxZ2K1OsLtPkqgd/ncvXjKsqKULINGWxLM7GNmvVNAmdiKNxZWQh/JU+1Q+2sWHqnL4L6EHOMzaE3PDH/iX62D94rBcR/+P905a9pO2uv2x/hyfiWBrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734286570; c=relaxed/simple;
-	bh=g6u1H0FiWWm2hKO1KXO2kg0KDZa0fB/Fy+OnZnVXJr8=;
+	s=arc-20240116; t=1734288168; c=relaxed/simple;
+	bh=/X9DqBzH/Vh9nkjFOAdRijeNaW6etnFHPuzvTrKcwWs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UTjY1zZU9vLcm2ks6ZA4TCuwcl/rikqFrehpW5rLBtftcbdZ5hO/AdgOp10iamt3K+0jPCWI2tZdylCo2lWk8EHDZWg3zWf2MniCeuOkkXo5tQJPExxqQ99UjFfCuTE22dNq34GbxFtBn1NJUo0Dt802m+mgv55afQaycXBZB+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IO/1YOdm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=UCh3o6+630c4uAl4uluD3/UzqhsYLEo0L0S9N2ubCDoNuCPhrbPxJOa0qYl1jMDIqUaAR1iArWLng4ZcYLtzHb85bjcphuZAFRWwsNwOnloNY00W7tqJdGnzJIkTVpAJOWo64w/lGto5IiloB5ma2G/UZW33mhuacSxtJg8nh3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JnwVucvF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IO/1YOdm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF3C7C4CECE;
-	Sun, 15 Dec 2024 18:16:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JnwVucvF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B830CC4CECE;
+	Sun, 15 Dec 2024 18:42:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734286569;
-	bh=g6u1H0FiWWm2hKO1KXO2kg0KDZa0fB/Fy+OnZnVXJr8=;
+	s=k20201202; t=1734288167;
+	bh=/X9DqBzH/Vh9nkjFOAdRijeNaW6etnFHPuzvTrKcwWs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IO/1YOdmPd6qlqGNLkcDBgG44sBxPB+CBMOJysA3+24KJDPensR23MNmE01lOhWEd
-	 WVPtBLu1I4R20/jHsnVnsAwFbtnApNJ1JEgdF+Sl06hZYwvg2QORZZ68GplTJuQ0zN
-	 WnWX3Thr5sSzC8W4wHGO0IV3heHhUJqGH842hA3YeX7vccnKsYHNgp9vG4DsKYtgaI
-	 xm/Ha9XneLQQKsq3d7cf+J1G8/PwwRPFh2Rsu/89xehQd7GTQLVOSMYxkX/xchtl2f
-	 aQ0In0UFSmP9SKiaXrY2H4sx+p7ZmpP1uECmQwp8RHDycMH8GjCWjR6lR/cFQoELF3
-	 PfXHdeG7P0AEQ==
-Date: Sun, 15 Dec 2024 10:16:09 -0800
+	b=JnwVucvF5mlKHkMntUy/JWCcQece0Ciu4oxQFxqwbH4QWHlsCnhxpoCcdLSxlIMR2
+	 rnrXf3EF/z/LnV1yzh5OoOYq6YCws1y9YBryqIJOXaNmiTIe6gPW8OeMEIlfjVAAHO
+	 SxJHqlyB+nkeO6eHSw8F0qb6GLLvRCRX9v9kmxmqjIhsKqS/54YH79TUOtI6bH4QrM
+	 nrpaCQUrKtYk1h/vthvtWqnjKlEDAoU+doU92r45PWTAx8+yBk3IGxgiNoGDZA9226
+	 y4Do92+HbZhdFZrb9HUawQr6TlAFwHTNUYv8tiWRTg4bdFgZc7sb2m9/TuyBgv9RV/
+	 y+QudmI5cqJLw==
+Date: Sun, 15 Dec 2024 10:42:47 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/43] xfs: don't take m_sb_lock in xfs_fs_statfs
-Message-ID: <20241215181609.GC6174@frogsfrogsfrogs>
+To: Hans Holmberg <hans@owltronix.com>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 10/43] xfs: preserve RT reservations across remounts
+Message-ID: <20241215184247.GD6174@frogsfrogsfrogs>
 References: <20241211085636.1380516-1-hch@lst.de>
- <20241211085636.1380516-6-hch@lst.de>
- <20241212214206.GX6678@frogsfrogsfrogs>
- <20241213050615.GC5630@lst.de>
+ <20241211085636.1380516-11-hch@lst.de>
+ <20241212213833.GV6678@frogsfrogsfrogs>
+ <CANr-nt0QY-8Dwh2Vj_US4ZYBXB1Y1jF=Ms3G0ALM2wS=MopAbA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20241213050615.GC5630@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANr-nt0QY-8Dwh2Vj_US4ZYBXB1Y1jF=Ms3G0ALM2wS=MopAbA@mail.gmail.com>
 
-On Fri, Dec 13, 2024 at 06:06:15AM +0100, Christoph Hellwig wrote:
-> On Thu, Dec 12, 2024 at 01:42:06PM -0800, Darrick J. Wong wrote:
-> > On Wed, Dec 11, 2024 at 09:54:30AM +0100, Christoph Hellwig wrote:
-> > > The only non-constant value read under m_sb_lock in xfs_fs_statfs is
-> > > sb_dblocks, and it could become stale right after dropping the lock
-> > > anyway.  Remove the thus pointless lock section.
-> > 
-> > Is there a stronger reason later for removing the critical section?
-> > Do we lose much by leaving the protection in place?
+On Fri, Dec 13, 2024 at 10:15:25AM +0100, Hans Holmberg wrote:
+> On Thu, Dec 12, 2024 at 10:38 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > On Wed, Dec 11, 2024 at 09:54:35AM +0100, Christoph Hellwig wrote:
+> > > From: Hans Holmberg <hans.holmberg@wdc.com>
+> > >
+> > > Introduce a reservation setting for rt devices so that zoned GC
+> > > reservations are preserved over remount ro/rw cycles.
+> > >
+> > > Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/xfs_mount.c | 22 +++++++++++++++-------
+> > >  fs/xfs/xfs_mount.h |  3 ++-
+> > >  fs/xfs/xfs_super.c |  2 +-
+> > >  3 files changed, 18 insertions(+), 9 deletions(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > > index 4174035b2ac9..db910ecc1ed4 100644
+> > > --- a/fs/xfs/xfs_mount.c
+> > > +++ b/fs/xfs/xfs_mount.c
+> > > @@ -465,10 +465,15 @@ xfs_mount_reset_sbqflags(
+> > >  }
+> > >
+> > >  uint64_t
+> > > -xfs_default_resblks(xfs_mount_t *mp)
+> > > +xfs_default_resblks(
+> > > +     struct xfs_mount        *mp,
+> > > +     enum xfs_free_counter   ctr)
+> > >  {
+> > >       uint64_t resblks;
+> > >
+> > > +     if (ctr == XC_FREE_RTEXTENTS)
+> > > +             return 0;
+> > > +
+> > >       /*
+> > >        * We default to 5% or 8192 fsbs of space reserved, whichever is
+> > >        * smaller.  This is intended to cover concurrent allocation
+> > > @@ -683,6 +688,7 @@ xfs_mountfs(
+> > >       uint                    quotamount = 0;
+> > >       uint                    quotaflags = 0;
+> > >       int                     error = 0;
+> > > +     int                     i;
+> > >
+> > >       xfs_sb_mount_common(mp, sbp);
+> > >
+> > > @@ -1051,18 +1057,20 @@ xfs_mountfs(
+> > >        * privileged transactions. This is needed so that transaction
+> > >        * space required for critical operations can dip into this pool
+> > >        * when at ENOSPC. This is needed for operations like create with
+> > > -      * attr, unwritten extent conversion at ENOSPC, etc. Data allocations
+> > > -      * are not allowed to use this reserved space.
+> > > +      * attr, unwritten extent conversion at ENOSPC, garbage collection
+> > > +      * etc. Data allocations are not allowed to use this reserved space.
+> > >        *
+> > >        * This may drive us straight to ENOSPC on mount, but that implies
+> > >        * we were already there on the last unmount. Warn if this occurs.
+> > >        */
+> > >       if (!xfs_is_readonly(mp)) {
+> > > -             error = xfs_reserve_blocks(mp, XC_FREE_BLOCKS,
+> > > -                             xfs_default_resblks(mp));
+> > > -             if (error)
+> > > -                     xfs_warn(mp,
+> > > +             for (i = 0; i < XC_FREE_NR; i++) {
+> > > +                     error = xfs_reserve_blocks(mp, i,
+> > > +                                     xfs_default_resblks(mp, i));
+> > > +                     if (error)
+> > > +                             xfs_warn(mp,
+> > >       "Unable to allocate reserve blocks. Continuing without reserve pool.");
+> >
+> > Should we be able to log *which* reserve block pool is out?
 > 
-> It makes a completely mess of xfs_fs_statfs, and as stated in the
-> commit message about it's not actually useful at all.  I also don't
-> think taking a global lock from a non-privileged operation is an
-> old that good idea to start with if we can avoid it.
+> Yep, that should be useful I think. We could do something like this:
 
-Ok, I'm convinced.  But perhaps you could leave a comment that we don't
-care if the accesses are torn, to try to head off the inevitable kcsan/
-dept/whatever patches?
-
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Yeah, that looks good to me.
 
 --D
 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 20d564b3b564..6ef69d025f9a 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -674,6 +674,10 @@ xfs_rtbtree_compute_maxlevels(
+>         mp->m_rtbtree_maxlevels = levels;
+>  }
+> 
+> +static const char * const xfs_free_pool_name[XC_FREE_NR] = {
+> +               "free blocks", "free rt extents", "available rt extents"
+> +};
+> +
+>  /*
+>   * This function does the following on an initial mount of a file system:
+>   *     - reads the superblock from disk and init the mount struct
+> @@ -1081,7 +1085,8 @@ xfs_mountfs(
+>                                         xfs_default_resblks(mp, i));
+>                         if (error)
+>                                 xfs_warn(mp,
+> -       "Unable to allocate reserve blocks. Continuing without reserve pool.");
+> +"Unable to allocate reserve blocks. Continuing without reserve pool for %s.",
+> +                               xfs_free_pool_name[i]);
+>                 }
+> 
+>                 /* Reserve AG blocks for future btree expansion. */
+> 
