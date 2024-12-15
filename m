@@ -1,47 +1,29 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF9731FDD;
-	Sun, 15 Dec 2024 00:39:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9198E17C98
+	for <linux-xfs@vger.kernel.org>; Sun, 15 Dec 2024 05:20:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734223172; cv=none; b=hgB20qovZoA44hD1/7ElWq/fdwGKfOfUe3LsM4z3HLKDQCbwnQL9wkY2gJJhDDOfwiNqllnD/d8iG252Chp5fugV2VxcdqP/2gWSqY5tgBv1Jm44kFh+rReSE+52Up1nJ3ii5widWmSMfMvxKm4T7sneZOkUHh2Z/xUtw6XoiH4=
+	t=1734240053; cv=none; b=ApfpT/R1Ycgini4K4lys0q2RV2Dpuxc2Ng+u5pjS5nEvhDDDkQ4CM9xFCreQarjEczHZTCgnrmI2E7CNq1HLcmzkV7LpNqp5KqMGy0wwnOApG3rtU2jQch4hClu25pXz/D+kyAb+g6V0YZK3Azqu2bHlC1XGbamdFwM7Nz/OMdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734223172; c=relaxed/simple;
-	bh=blAmohXRs9at+HamL5FS6EkRRQ6jC3J+Ym8WUxcXnYA=;
+	s=arc-20240116; t=1734240053; c=relaxed/simple;
+	bh=xxfFb0ByI/jd+GI5bmPEjMWBsa7yMQsKeuPFRW+3T5s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Psi+IvLk+aDh6n6qsOnRszwC4vOu/q82Y6uQp/HjcC+8l77Ikp7SH/TYzo9jE3m5T28aTEznbCoOehhhURcg/vB9/XhK8JBhKtZMPSOBHB15o+0KDXaz2dnLvp6cDLIGP4Wt7beAPX9gCAAiSNSOJnTHdcnHu5nWgJhse7wFcq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qVqT0ecJ; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qVqT0ecJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=blAmohXRs9at+HamL5FS6EkRRQ6jC3J+Ym8WUxcXnYA=; b=qVqT0ecJFv+8q586RYNyoKOk6x
-	mLTEuRWKgr8hyOa99W93AGNDywVc/IVk3WYph2UOp0cyrafxJLYH90Xbd8pQ3UL+JxgnSUxJQfP/f
-	zI1tR3uM/bvLmOXyi/pUEbVTktbXHRmEXSCCNJNN3G/MYD4iIu3J0BMwsG5BrTe/i7MYAbF+8BAXB
-	z1a1KD1a9pITp5RGP6qU9eeN5sBo8mspiyecYq0LYBz6g/OMh5F+DRaJSweIHnBgMtl+3FwqQh5dT
-	62l0letUYISXD2GiwthkhyoO48FRPRPj+tGkc3tdAbQL2eT6e8qqWwTjCWIrLANiDifQk62H5vv7s
-	OP9C3DDg==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tMcfI-00000006B66-35qg;
-	Sun, 15 Dec 2024 00:39:20 +0000
-Date: Sun, 15 Dec 2024 00:39:20 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: hch@lst.de, hare@suse.de, dave@stgolabs.net, david@fromorbit.com,
-	djwong@kernel.org, john.g.garry@oracle.com, ritesh.list@gmail.com,
-	kbusch@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
-Subject: Re: [RFC v2 10/11] nvme: remove superfluous block size check
-Message-ID: <Z14lOOex77dgvIQB@casper.infradead.org>
-References: <20241214031050.1337920-1-mcgrof@kernel.org>
- <20241214031050.1337920-11-mcgrof@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=uTNFzTNG9zVShWx320trQL9CTztjUFLXc6pN21ws8BT4TaRSME+WJpsxFgShAHVh9ansy6hIikszeAq/YnKfMsAFuQDnAp2nOkwlcLyc383qmcp0XSpcrqxqJUxj62MMJDHd/S5A2ImQlgduQr+toIhXBgBTPRk9Xj6UyrF77Rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1DF8268C7B; Sun, 15 Dec 2024 06:20:41 +0100 (CET)
+Date: Sun, 15 Dec 2024 06:20:40 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 15/43] xfs: define the zoned on-disk format
+Message-ID: <20241215052040.GB10051@lst.de>
+References: <20241211085636.1380516-1-hch@lst.de> <20241211085636.1380516-16-hch@lst.de> <20241212220220.GA6653@frogsfrogsfrogs> <20241213052210.GK5630@lst.de> <20241213170917.GK6678@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,17 +32,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241214031050.1337920-11-mcgrof@kernel.org>
+In-Reply-To: <20241213170917.GK6678@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Dec 13, 2024 at 07:10:48PM -0800, Luis Chamberlain wrote:
-> The block layer already validates proper block sizes with
-> blk_validate_block_size() for us so we can remove this now
-> superfluous check.
+On Fri, Dec 13, 2024 at 09:09:17AM -0800, Darrick J. Wong wrote:
+> > It will be capacity in bytes / 256MB unless you found a really, really
+> > weird beast.
+> 
+> I bet someone will get tempted to make bigger zones for their 120TB hard
+> disk.
 
-If this patch were correct, it couldn't go far enough ("valid" is now
-only assigned true, so it can be removed and the function could return
-void, etc).
+Larger zones would make our life a lot easier, but there's not sign of
+HDD zone size changing soon.
 
-But I think there's still utility in checking the current configuration
-to see if it can be supported by the block layer, and setting capacity
-to 0 if it's not (so that the namespace can be reconfigured).
