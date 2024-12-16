@@ -1,100 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 319051D434F;
-	Mon, 16 Dec 2024 21:46:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9438D1D517E
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Dec 2024 22:18:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=66.39.3.162
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734385590; cv=none; b=dNmc02bu65piITxFL7wrawxaW9AZYzP1isR/e8/sbSWgMS8sF3Dxnbc8QXg8izzQxDU/brScMZxTlo2siWvsEvBJju1vFcW8paYLK3kP3/TM8gZl2TstR6cSdxLDcuEl9em9+CV1zyKKXAwISsl+84oXl5rso5LsX298e/Q3yFA=
+	t=1734387534; cv=none; b=f+SfMu09GNC8yKpuoRZFrK/p7AHLQChjyv8PvoYix1Zn5R1B2klJCujLpjY4aGToe0gEBh3zVjOLWpcD84UlKq1C9iN0w0Q60f7LhpetFRRpsGenrta/dk0PtHGugf9avgnHEhQzI+FXRjn6l+of/WrrMwmnXz9uXZBkPnWpmO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734385590; c=relaxed/simple;
-	bh=zVoa/3Oc5FzS+EfNO9uf7upvkjncYUhVe8FspYxQz0c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XKGW2fDlLhyjswkfSklGcg6ii7M5n6YIwBIEmGyLIDIgic3iaX637pPRQneDDhVns0utIaPY0mUtev4t0Q/3T34Jvv8wvXBhcyQOyA4QHr8JQEBriilolmP1xUQjDInma9L+gWccZ11TXLVNoU/0e8xIIe6XafcsR0/FnM4BooU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ovHyIWwL; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ovHyIWwL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D196C4CED0;
-	Mon, 16 Dec 2024 21:46:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734385589;
-	bh=zVoa/3Oc5FzS+EfNO9uf7upvkjncYUhVe8FspYxQz0c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ovHyIWwLQVRPv9DaeMkNyocG87kBANi07qRqLesaOz+3eArdoGEUnfr25PEYT4qfr
-	 NeOkL47ZrQfAKxt2gvH0rTccMi3cyne/v8H4zs9hFo1vPKIpPBrkr9nhDSsogFmFTW
-	 HFqdFJdAxFB+9Qm/dKqzpaogSOs7W69TVNTqUmaxU723xAnviAj70dIKvPxEKC4K2c
-	 1+ie53f4tgO95INdj1LngPqapMxppyL5//8Gb7ePQZtr+ZcNBg8kE9LSWTxuEAxtJv
-	 rUOfGMGg/sj7MRwXSi60gSdkldoemEHoSJuQ4EQU9/SLKwmfIh57dpJStL+mIuWiMf
-	 +iLYqg3qh1SDw==
-Date: Mon, 16 Dec 2024 13:46:27 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: hch@lst.de, hare@suse.de, dave@stgolabs.net, david@fromorbit.com,
-	djwong@kernel.org, john.g.garry@oracle.com, ritesh.list@gmail.com,
-	kbusch@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
-Subject: Re: [RFC v2 02/11] fs/buffer: add a for_each_bh() for
- block_read_full_folio()
-Message-ID: <Z2Cfs4-hWIauE0ce@bombadil.infradead.org>
-References: <20241214031050.1337920-1-mcgrof@kernel.org>
- <20241214031050.1337920-3-mcgrof@kernel.org>
- <Z10DbUnisJJMl0zW@casper.infradead.org>
- <Z2B36lejOx434hAR@bombadil.infradead.org>
- <Z2CIIArEF_NekLxs@bombadil.infradead.org>
+	s=arc-20240116; t=1734387534; c=relaxed/simple;
+	bh=iIpak9iBtJBGAKEhsa5pPGQLONJBmB8xiWD1AJEtx/s=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CzKs4NrSomI4/VUUdBCk2Zz1KgJpSLDWmWbpN5eVd9bCcuAXwZf4hKhB7Wqt8DxLgxTDbwkx7Hwx92enhaz7UYlXXDWArtkJc4myYEqp4q8B/9PsKuoMOeWtuQUckPnI37ZN3WrELlnL+zSyMH8LYgkG/G56syVy7MrLWSVvWGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intellique.com; spf=pass smtp.mailfrom=intellique.com; arc=none smtp.client-ip=66.39.3.162
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intellique.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intellique.com
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+	by mail1.g1.pair.com (Postfix) with ESMTP id 647EC3AE774;
+	Mon, 16 Dec 2024 17:18:45 -0500 (EST)
+Received: from harpe.intellique.com (labo.djinux.com [82.65.97.13])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail1.g1.pair.com (Postfix) with ESMTPSA id B5E143FAE72;
+	Mon, 16 Dec 2024 17:18:44 -0500 (EST)
+Date: Mon, 16 Dec 2024 23:18:51 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: Weird behaviour with project quotas
+Message-ID: <20241216231851.7b265e06@harpe.intellique.com>
+In-Reply-To: <20241213171537.GL6698@frogsfrogsfrogs>
+References: <20241128171458.37dc80ed@harpe.intellique.com>
+	<Z0jbffI2A6Fn7LfO@dread.disaster.area>
+	<20241129103332.4a6b452e@harpe.intellique.com>
+	<Z0o8vE4MlIg-jQeR@dread.disaster.area>
+	<20241212163351.58dd1305@harpe.intellique.com>
+	<20241212202547.GK6678@frogsfrogsfrogs>
+	<20241213164251.361f8877@harpe.intellique.com>
+	<20241213171537.GL6698@frogsfrogsfrogs>
+Organization: Intellique
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.31; x86_64-slackware-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z2CIIArEF_NekLxs@bombadil.infradead.org>
+Content-Type: multipart/signed; boundary="Sig_/DvXTfK7+8gc9K1oU8hM2.0o";
+ protocol="application/pgp-signature"; micalg=pgp-sha1
+X-Scanned-By: mailmunge 3.11 on 66.39.3.162
 
-On Mon, Dec 16, 2024 at 12:05:54PM -0800, Luis Chamberlain wrote:
-> On Mon, Dec 16, 2024 at 10:56:44AM -0800, Luis Chamberlain wrote:
-> > On Sat, Dec 14, 2024 at 04:02:53AM +0000, Matthew Wilcox wrote:
-> > > On Fri, Dec 13, 2024 at 07:10:40PM -0800, Luis Chamberlain wrote:
-> > > > -	do {
-> > > > +	for_each_bh(bh, head) {
-> > > >  		if (buffer_uptodate(bh))
-> > > >  			continue;
-> > > >  
-> > > > @@ -2454,7 +2464,9 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
-> > > >  				continue;
-> > > >  		}
-> > > >  		arr[nr++] = bh;
-> > > > -	} while (i++, iblock++, (bh = bh->b_this_page) != head);
-> > > > +		i++;
-> > > > +		iblock++;
-> > > > +	}
-> > > 
-> > > This is non-equivalent.  That 'continue' you can see would increment i
-> > > and iblock.  Now it doesn't.
-> > 
-> > Thanks, not sure how I missed that! With that fix in place I ran a full
-> > baseline against ext4 and all XFS profiles.
-> > 
-> > For ext4 the new failures I see are just:
-> > 
-> >   * generic/044
-> >   * generic/045
-> >   * generic/046
-> 
-> Oh my, these all fail on vanilla v6.12-rc2 so its not the code which is
-> at fault.
+--Sig_/DvXTfK7+8gc9K1oU8hM2.0o
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I looked inside my bag of "tribal knowedlge" and found that these are
-known to fail because by default ext4 uses mount -o data=ordered mode
-in favor of performance instead of the     mount -o data=journal mode.
-And I confirm using mount -o data=journal fixes this for both the
-baselines v6.13-rc2 and with these patches. In fstets you do that with:
+Le Fri, 13 Dec 2024 09:15:37 -0800
+"Darrick J. Wong" <djwong@kernel.org> =C3=A9crivait:
 
-MOUNT_OPTIONS='-o data=journal'
+> No, I don't think that changes anything.  If you can build your own
+> kernel, can you try this out?
+>=20
+> --D
+>=20
+> xfs: don't over-report free space or inodes in statvfs
 
-And so these failure are part of the baseline, and so, so far no
-regressions are found with ext4 with this patch series.
+I'll give it a try, but that looks like a patch for old weird RedHat
+kernel, I'm running plain vanilla generally, and much higher versions,
+I'll see how it applies :)
 
-  Luis
+--=20
+------------------------------------------------------------------------
+   Emmanuel Florac     |   Direction technique
+------------------------------------------------------------------------
+   https://intellique.com
+   +33 6 16 30 15 95
+------------------------------------------------------------------------
+=20
+
+--Sig_/DvXTfK7+8gc9K1oU8hM2.0o
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EARECAB0WIQSAqoYluUD5h4D+mbZfeNBc1SJxVgUCZ2CnSwAKCRBfeNBc1SJx
+Vv50AKCASfhFJbEK5pQpBmxbfFX6zR0xjgCcCKN3Wrr2rv1QIIB7/9U8F3vtKf4=
+=yWpc
+-----END PGP SIGNATURE-----
+
+--Sig_/DvXTfK7+8gc9K1oU8hM2.0o--
