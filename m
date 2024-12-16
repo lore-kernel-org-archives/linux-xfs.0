@@ -1,132 +1,145 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7F012036E8
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Dec 2024 10:23:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6DD148FF2;
+	Mon, 16 Dec 2024 13:06:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734344632; cv=none; b=Fp8N4erwpBf7Up/JWhCNdDW8o9A7AOufX2VgmM2hRvJxKwCmwDzTJLQ45udYO16H1uwYDsLEKPusfU0UKtnxSx8EIPKbT6kwNVmPZWGZn2OVCoLcIlszXT1Y93V/lixJ6Y6QiizYhxN+RfGfliHjWZHXVP+beogQCM/tK1wILqU=
+	t=1734354373; cv=none; b=MaFBcj7k5bJeQKne9Uz6atOyr05GMUOl7AwkPZV4ARXydKqmmw88ACjEGYrO4IjeOMVKK7DgDzQh+gGhe/peHbzFL5JvgiWViiyMSC1B+2qF9QkixH6RtND3UOINeqVvaFfEH7vysi+7eZn3/8wnfd+VsXad2HvEEg/vVF+Zaec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734344632; c=relaxed/simple;
-	bh=2XX3E0IH8ishDR9MK6kWsOiO7vDqmqVnxmnRnxHXd1I=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XOksbufev+woowuFJlTkUjw12xAIQxU8SiKrVO/V/1axRw8qoRPhBR35oJr4vJJalPXwHNkbjdW0EGsgh2cNRkHwLSEzDcfyAZbMbo9VCjQKSAfdT1+V1gyuZvBXqyMxabisVuou7zvc4Vu/I70CGkgDuucsC3FWWoiG+5g4dwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hUVhrB4a; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1734354373; c=relaxed/simple;
+	bh=G/EQEYbUfUgX/9g/yHsd/XHy/gtv4Foso0ip+uBh+w0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LYmngaRBkmJ+qaOLyRl56fYnWEBwbVHgae/qpZMFl0ykS441XcG3Sh14FlWut2i+YxBAJEqOSR8JzGheNe2jLx5ulXw0Uh2arXMCAHJeOvGj0nLU7rp5VM5bEdl9p375Z46wyrXr0/SNUrlafcS63v6bOEc8Qhm+y4vd7IyG/zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DBjH+BKT; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hUVhrB4a"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1734344629;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vJcwxIokippDLEGmOLSsMdzfJJziVp7aAF/Ta+P0mDo=;
-	b=hUVhrB4aaVtQNgMU88CMnozzOaOdywNVw5wgHOLU6njYAmH6AB0Qsm5foQINvvsGb8s8ck
-	mQNsmq/8dzUQu/cgytB31wzGNyoIOUhBcIH765uM4uhCxGKiO8tbpL9L2kyBA83cwQcJZq
-	u8A4tx8G1VKgb9xWvJYgE/dAEN4tOms=
-Received: from mail-vs1-f72.google.com (mail-vs1-f72.google.com
- [209.85.217.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-638-WCRETEC3OHG-quVOIDhEgw-1; Mon, 16 Dec 2024 05:23:48 -0500
-X-MC-Unique: WCRETEC3OHG-quVOIDhEgw-1
-X-Mimecast-MFC-AGG-ID: WCRETEC3OHG-quVOIDhEgw
-Received: by mail-vs1-f72.google.com with SMTP id ada2fe7eead31-4aff533abadso2890091137.1
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Dec 2024 02:23:48 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DBjH+BKT"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-728f1e66418so3368827b3a.2;
+        Mon, 16 Dec 2024 05:06:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1734354371; x=1734959171; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=1SX+7nbs2g55Edy9flsjRts3hUfytEg5mqt0hNP8CQw=;
+        b=DBjH+BKTj4cJCTcr4+PYy8+BUB0eVbdKA28MLk4V8Fxhe6HL+0shyy5KZUWIZlbD0N
+         XwsIBWemaOcLeXAGaGdxYbb6sa+9iy69GPvRY8Cq6OudNeovbod3coM5aY0lL379NRbp
+         djZL5E3wWRNn41Z8NH5rk2S20Jptn2kGr8fLSAYKUc/uipTAmogaYxA2TklEyTd2o6rl
+         UDLyBM7LLBk4ALYpnIfX4Y9wz/nFsNsV3DEVnkmdNmkfcyKPVZj+rYvCZ4RlbMueZSnq
+         s6yfKY4PPf8gyDx9okKdMzmi+uKiYTkwv+AeQAzLJCxltJEdJSQ7eOJ5WadL1ECg718I
+         di7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734344628; x=1734949428;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=vJcwxIokippDLEGmOLSsMdzfJJziVp7aAF/Ta+P0mDo=;
-        b=q7DFHzks33zizgJWicnM//v+vuE4jlCThqZpDYYLFCf8WygAPiU5Yq+QqQkrCNi8m/
-         yV/Qf6KVO58nGx/ptGXmLXg/kp0EOivFDI7OCi7EYJfXzXqTJomRA7lbYx30Wmgijw7k
-         1wusOATWhg0zA83531sHiGOyeOp0vtVbmHNlffvPg6zkwevA1H4bEJS+Cx1UdYq8U9Ut
-         YfjuOXs8ZRAPX5v63vcbnI21ve1wnt2T3e1zkOQJ4h3L9iDRykIh/aRryLhPLq7K3Y63
-         czATXfoyt85QHj/6vA37PqUsUT3y18HqnRAAn51IO49mF+WJ4SqSc9IPpdxRhRU9zA6N
-         wrHg==
-X-Forwarded-Encrypted: i=1; AJvYcCUDe/oL32ddfTj5gotmwfCbK7DdVurIrvAJYBncFFD5NXVewmdHo5NRJ9BQyxdtmnUaypcyZT6MbZU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzvLchaQYtdKQySIU+7Er9FkLI48LWPlMMrfNtXcTZGoz5XL+8z
-	puuZ4ExBKAUT7NWJ4my3Ex7RbT2y0izAl+L+qi/QCyC04WXEZidPy2piyQmy84jssR4jbI4N09v
-	JiYM0nOKqtYYYSopgkv/4Oitl+jPQW9lwP3/NXPniTCcXzwJHep8Di13J4iBwGxKCHMNr3JFxlF
-	NGUTWQc2cvB2nLXg1FBC0aO6x9hZIW0Fm4
-X-Gm-Gg: ASbGnctzNBOVZDH4Zy9DVRPJD7sQqNwInR+JnH7RSHCxvmsS/AqqQFoQsNNsyzSHWRM
-	fPS202VgqMRRWA3iQKyICESeL/YKBfR3EXuuPE9k=
-X-Received: by 2002:a05:6102:4429:b0:4b2:49ff:e470 with SMTP id ada2fe7eead31-4b25db3af8dmr10656204137.21.1734344628070;
-        Mon, 16 Dec 2024 02:23:48 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGWgSqRtLOuNkBzntYjpPcstXq1/HmQRBLuSGUi/bM5OVCIjhSFTH920y7viqRb3c8aGdcrUoqEC78K21wnR44=
-X-Received: by 2002:a05:6102:4429:b0:4b2:49ff:e470 with SMTP id
- ada2fe7eead31-4b25db3af8dmr10656192137.21.1734344627848; Mon, 16 Dec 2024
- 02:23:47 -0800 (PST)
+        d=1e100.net; s=20230601; t=1734354371; x=1734959171;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=1SX+7nbs2g55Edy9flsjRts3hUfytEg5mqt0hNP8CQw=;
+        b=BXpmrDof8SRculMPbRb8cb1YN000GuBEQNPUI5LF1TjMwf9NxJaGr71i1wV4mFG9xn
+         LbuSgkuXpYETthVMokgFYhQFzcOYyqroz0Xaz4cBN7r5hDk32qc9ybQKgeyd5RFO7zPe
+         lbBAnd3EEwM65DsBZ/CvU32fhMYF2hmnFPwvQOTnyK2YJIK8B9i1LrZJ0r67uuWXgDsK
+         sV0oANcaJA6kIZTu1iwN8MXIFtjhl+pS5wqTWsLHO0oRcSIB6UzxvQs9Ex5Ry8zdj+5H
+         j+hk/mtHK53AtFtzfqHXuy37HAer0PilQi1garikGdyHLFAjtbSCBO8aQBOf0WA7ZcZV
+         PxFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVhrClCt1pEB+tYh9a2WMtaZ6/qOF6p64xmzfL5IQ+IqmnrPDKNjyDW4EWIt5NrEmLPpHHyrdOPdIe3@vger.kernel.org, AJvYcCWzXGimmHs+ZbzZOgvPoDoJN37Cf62q5jyBcqk0LQjaPgB3JRrKqX35+rTXiGWTAgRjBo2iH9NgQ6U5wGju@vger.kernel.org, AJvYcCXfLyRmT7jZeox+N4H0TnUYXcnJpk1Eicu/5wJk1weKEeSFWWFenR9Qzm1LpgrmPph5nwJ77UdZgNfDdrM8@vger.kernel.org
+X-Gm-Message-State: AOJu0YylwYjSwEP38sqVGfrCCZyrkU08l1YiNUXDQ9XkqhFwUTDvOJys
+	05aGwo0BFS6K6TXP3r0FMeiS6/eD1EFmtQCBNvzf1mRRVuNWUJZR
+X-Gm-Gg: ASbGncut8u2F7s8/qZJyZjFECQKsE82a6TiwFs/aALpa72ASzPiVl8/UubaKnzoC+y8
+	0TvCwYEgl+D5MGZNHhjRyBLYqvlKlQfk7Bop1iGqQiGlmnSrUg48gVqDGNcRIpWzHLCQta9MDPt
+	/03eoidSQoAZj1X/W4RLAa1/D3TRFvPl39Tf0J/RecsrbA1nirUp4T+7f9TSj+kJep7BAtOOEER
+	iUDU8SdzNqUxo8pg07spsFn9nDp2FEkyhZ+6i6ynjswGiL5ut4y+MkWc/xXuhyx7iWHllHJzYkQ
+	Y4U5pQQoivBbrlE=
+X-Google-Smtp-Source: AGHT+IH+pBcjAJH0pqyQxgHVWhxXpenm4h4zuwazwELyxvBmztTQq6aG1CctSDjXMJu15RpcJqatHg==
+X-Received: by 2002:a05:6a20:1591:b0:1db:ebf4:2cb8 with SMTP id adf61e73a8af0-1e1dfe30c95mr16521282637.38.1734354371141;
+        Mon, 16 Dec 2024 05:06:11 -0800 (PST)
+Received: from localhost.localdomain ([180.101.244.64])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72918ad5ad0sm4651803b3a.56.2024.12.16.05.06.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Dec 2024 05:06:10 -0800 (PST)
+From: Tianxiang Peng <luminosity1999@gmail.com>
+X-Google-Original-From: Tianxiang Peng <txpeng@tencent.com>
+To: chandan.babu@oracle.com,
+	djwong@kernel.org,
+	p.raghav@samsung.com,
+	mcgrof@kernel.org,
+	brauner@kernel.org,
+	dchinner@redhat.com
+Cc: Tianxiang Peng <txpeng@tencent.com>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	allexjlzheng@tencent.com,
+	flyingpeng@tencent.com
+Subject: [PATCH 0/2] xfs: make cluster size tunnable for sparse allocation
+Date: Mon, 16 Dec 2024 21:05:47 +0800
+Message-ID: <20241216130551.811305-1-txpeng@tencent.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241214031050.1337920-1-mcgrof@kernel.org> <20241214031050.1337920-10-mcgrof@kernel.org>
- <9fadee49-b545-440e-b0c9-e552bec1f079@oracle.com> <CAFj5m9J0Lkr9hYx_3Vm2krC9Ja5+-xjmqkqjVjY0jvimjWbmTw@mail.gmail.com>
- <f872429f-9c81-444b-a4ea-ecb5af495e51@oracle.com>
-In-Reply-To: <f872429f-9c81-444b-a4ea-ecb5af495e51@oracle.com>
-From: Ming Lei <ming.lei@redhat.com>
-Date: Mon, 16 Dec 2024 18:23:37 +0800
-Message-ID: <CAFj5m9JOOS8yQSk1jksJdYz-wqQT8aAAQG08J-wWg2OF2jc3nQ@mail.gmail.com>
-Subject: Re: [RFC v2 09/11] block/bdev: lift block size restrictions and use
- common definition
-To: John Garry <john.g.garry@oracle.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org, hch@lst.de, hare@suse.de, 
-	dave@stgolabs.net, david@fromorbit.com, djwong@kernel.org, 
-	ritesh.list@gmail.com, kbusch@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, 
-	gost.dev@samsung.com, p.raghav@samsung.com, da.gomez@samsung.com, 
-	kernel@pankajraghav.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Mon, Dec 16, 2024 at 6:14=E2=80=AFPM John Garry <john.g.garry@oracle.com=
-> wrote:
->
-> On 16/12/2024 09:19, Ming Lei wrote:
-> > On Mon, Dec 16, 2024 at 4:58=E2=80=AFPM John Garry <john.g.garry@oracle=
-.com> wrote:
-> >>
-> >> On 14/12/2024 03:10, Luis Chamberlain wrote:
-> >>> index 167d82b46781..b57dc4bff81b 100644
-> >>> --- a/block/bdev.c
-> >>> +++ b/block/bdev.c
-> >>> @@ -157,8 +157,7 @@ int set_blocksize(struct file *file, int size)
-> >>>        struct inode *inode =3D file->f_mapping->host;
-> >>>        struct block_device *bdev =3D I_BDEV(inode);
-> >>>
-> >>> -     /* Size must be a power of two, and between 512 and PAGE_SIZE *=
-/
-> >>> -     if (size > PAGE_SIZE || size < 512 || !is_power_of_2(size))
-> >>> +     if (blk_validate_block_size(size))
-> >>>                return -EINVAL;
-> >>
-> >> I suppose that this can be sent as a separate patch to be merged now.
-> >
-> > There have been some bugs found in case that PAGE_SIZE =3D=3D 64K, and =
-I
-> > think it is bad to use PAGE_SIZE for validating many hw/queue limits, w=
-e might
-> > have to fix them first.
->
-> I am just suggesting to remove duplicated code, as these checks are same
-> as blk_validate_block_size()
+This patch series makes inode cluster size a tunnable parameter in
+mkfs.xfs when sparse allocation is enabled, and also makes xfs use
+inode cluster size directly from the superblock read in rather than
+recalculate itself and verify.
 
-My fault, misunderstood your point as pushing this single patch only.
+Under extreme fragmentation situations, even inode sparse allocation
+may fail with current default inode cluster size i.e. 8192 bytes. Such
+situations may come from the PUNCH_HOLE fallocation which is used by
+some applications, for example MySQL innodb page compression. With xfs
+of 4K blocksize, MySQL may write out 16K buffer with direct I/O(which
+immediately triggers block allocation) then try to compress the 16K
+buffer to <4K. If the compression succeeds, MySQL will punch out the
+latter 12K, leave only the first 4K allocated:
+	after write 16k buffer: OOOO
+	after punch latter 12K: OXXX
+where O means page with block allocated, X means page without.
 
->
-> >
-> > Such as:
->
-> Aren't the below list just enforcing block layer requirements? And so
-> only block drivers need fixing for PAGE_SIZE > 4K (or cannot be used for
-> PAGE_SIZE > 4K), right?
+Such feature saves disk space(the 12K freed by punching can be used
+by others), but also makes the filesystem much more fragmented.
+Considering xfs has no automatic defragmentation mechanism, in the
+most extreme cases, there will be only 1-3 physically continuous
+blocks finally avaliable.
 
-It is block layer which should be fixed to support  PAGE_SIZE > 4K.
+For data block allocation, such fragmentation is not a problem, as
+physical continuation is not always required. But inode chunk
+allocation requires so. Even for sparse allocation, physical
+continuation has also to be guaranteed in a way. Currently this
+value is calculated from a scaled inode cluster size. In xfs, inodes
+are manipulated(e.g. read in, logged, written back) in cluster, and
+the size of that cluster is just the inode cluster size. Sparse
+allocation unit currently is calculated from that:
+	(inode size / MIN_INODE_SIZE) * inode cluster size
+		-> sparse allocation aligmnet
+			-> sparse allocation unit
+For example, under default mkfs configuration(i.e. crc and sparse
+allocation enabled, 4K blocksize), inode size is 512 bytes(2 times
+of MIN_INODE_SIZE=256 bytes), then sparse allocation unit will be
+2 * current inode cluster size(8192 bytes) = 16384 bytes, that is
+4 blocks. As we mentioned above, under extreme fragmentation, the
+filesystem may be full of 1-3 physically continuous blocks but can
+never find one of 4, so even sparese allocation will also fail. If
+we know application will easily create such fragmentation, then we
+had better have a way to loose sparse allocation requirement manually.
 
-Thanks,
+This patch series achieves that by making the source of sparse
+allocation unit, inode cluster size a tunnable parameter. When
+sparse allocation enabled, make that size tunnable in mkfs. As xfs
+itself currently recalculate and verify related value, change xfs
+behavior to directly using the value provided by superblock read in.
+
+Tianxiang Peng (2):
+  xfs: calculate cluster_size_raw from sb when sparse alloc enabled
+  mkfs: make cluster size tunnable when sparse alloc enabled
+
+ fs/xfs/libxfs/xfs_ialloc.c | 35 ++++++++++++++++++++++-------------
+ fs/xfs/xfs_mount.c         | 12 ++++++------
+ mkfs/xfs_mkfs.c            | 34 +++++++++++++++++++++++++++++-----
+ 3 files changed, 57 insertions(+), 24 deletions(-)
+
+-- 
+2.43.5
 
