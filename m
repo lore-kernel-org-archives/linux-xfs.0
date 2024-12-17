@@ -1,91 +1,76 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D5301411EB
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 04:07:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D62C1487C1
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 04:27:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734408422; cv=none; b=MUyNWo2prwyV8//ATf+olbWXOqZf0YoVvSosZEPh3RYDAmXCw14uywCKqzsb7hywnfCz7tcAOTG4naMxfSvd+0cIQtqQI3EiOrdR0B4NCJC4z+PSVSPc/jBPdlyBySgrB2/glnx0DM9kkMPI2tVvU7PpCkaYiFH/tY31N/Ceft4=
+	t=1734409663; cv=none; b=JMqPHmw7LypAJNUkSKCeerKROcOJLF9vG20EgnQyIn/OZLfTQeUkdiwZeN2B9cLhrEqAcCLQwWgDzEK3tmJ+N07Uphx5SM6zXpeD/fJa+WJGSEnIY/eJ+31emWdQd/yNQ6tFMaSgHzpGdW8TrghOUudwG5cls4wKEe5qInrvTLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734408422; c=relaxed/simple;
-	bh=qsri7kM3d8qoB0Rz3hTM6nIogZjlaBIslfB/nBlRJJA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=thHXKF/nIqaUDuJq0v+QkLFRoa4nBKBAI+cdNnAuHH/mDCPnbcxKsNhR0vYSctSV99CJ0uHZ5pvgrOUFVbrrK8vO0IYzIliGkhciQFXtupMf859XkODY3e7+Bh9W3h71eQcCyUhddD9qD0VlEN93xDK+zDBxOhjKjyguU6lRHus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+	s=arc-20240116; t=1734409663; c=relaxed/simple;
+	bh=F8JQ1oNUiD1mNZm5hB1rT369i4V+eKEj4NN5/a42fhM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qcG6bTL4XcgDZHqp/BtEDjKC9nFwDbIcI8ww8L7T5HATHM5WGu4MNGuATki+9xQqSZxg05frANYD0MBDv6epB/aSgym8YfAq+N325cqQn5rPizTYiASWL1HorfQiq0Cz+Er4MmH4gx7afLtvTSqdlAYZqPDr8ithOIgxagl6na0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=E9T9tl2V; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1DBE868BEB; Tue, 17 Dec 2024 05:06:56 +0100 (CET)
-Date: Tue, 17 Dec 2024 05:06:55 +0100
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E9T9tl2V"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=gnNb9KHUYZMY9YL041j1VlohFNjbpjK2Py/sV2Ypzaw=; b=E9T9tl2VvoMdwD2IAtM9fBDRoe
+	eMwiHYD3q0UeulNaC+QYC7VspOrRh73kxT/T79yE6zUi7Rvg3Q2hF8/pymiG31ptP6sHCMbMRRItf
+	qp/47q3wFh9uHNYkx4nMAfuzmDKAc6ffSLN1n98FJY3Dm7+Gg4EgN6DOPjPK/Yp/1CnOxUJpQd2mP
+	3ppN3NY68PistQDKFOlgYFizWW6ZWY9/huMiauRdTzwmZTZo4iLb0ABmANdXKZT/w0CkI+XN/D5hp
+	xiyHn0/Hhuy7+wlhQ5wtZF+UG+CR3sKPdQvpFNsjLumniW7MvaNqHjFgU/MYm2WBAu7dKA0TVXSM/
+	wKGFIHzA==;
+Received: from 2a02-8389-2341-5b80-985e-4a20-56ce-2551.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:985e:4a20:56ce:2551] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tNPBM-0000000C9LI-2ONE;
+	Tue, 17 Dec 2024 04:27:40 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 26/43] xfs: implement zoned garbage collection
-Message-ID: <20241217040655.GA14856@lst.de>
-References: <20241211085636.1380516-1-hch@lst.de> <20241211085636.1380516-27-hch@lst.de> <20241213221851.GP6678@frogsfrogsfrogs> <20241215055723.GF10051@lst.de> <20241217012753.GE6174@frogsfrogsfrogs>
+To: cem@kernel.org
+Cc: djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: don't return an error from xfs_update_last_rtgroup_size for !XFS_RT
+Date: Tue, 17 Dec 2024 05:27:35 +0100
+Message-ID: <20241217042737.1755365-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241217012753.GE6174@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Dec 16, 2024 at 05:27:53PM -0800, Darrick J. Wong wrote:
-> > lot more work to move them and generates more metadata vs moving unshared
-> > blocks.  That being said it at least handles reflinks, which this currently
-> > doesn't.  I'll take a look at it for ideas on implementing shared block
-> > support for the GC code.
-> 
-> Hrmm.  For defragmenting free space, I thought it was best to move the
-> most highly shared extents first to increase the likelihood that the new
-> space allocation would be contiguous and not contribute to bmbt
-> expansion.
+Non-rtg file systems have a fake RT group even if they do not have a RT
+device, and thus an rgcount of 1.  Ensure xfs_update_last_rtgroup_size
+doesn't fail when called for !XFS_RT to handle this case.
 
-How does moving a highly shared extent vs a less shared extent help
-with keeping free space contiguous?  What matters for that in a non-zoned
-interface is that the extent is between two free space or soon to be
-free space extents, but the amount of sharing shouldn't really matter.
+Fixes: 87fe4c34a383 ("xfs: create incore realtime group structures")
+Reported-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_rtgroup.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> For zone gc we have to clear out the whole rtgroup and we don't have a
-> /lot/ of control so maybe that matters less.  OTOH we know how much
-> space we can get out of the zone, so
-
-But yes, independent of the above question, freespace for the zone
-allocator is always very contiguous.
-
-> <nod> I'd definitely give the in-kernel gc a means to stop the userspace
-> gc if the zone runs out of space and it clearly isn't making progress.
-> The tricky part is how do we give the userspace gc one of the "gc
-> zones"?
-
-Yes.  And how do we kill it when it doesn't act in time?  How do we
-even ensure it acts in time.  How do we deal with userspace GC not
-running or getting killed?
-
-I have to say all my experiments with user space call ups for activity
-triggered by kernel fast path and memory reclaim activity have been
-overwhelmingly negative.  I won't NAK any of someone wants to experiment,
-but I don't plan to spend my time on it.
-
-> Ah, right!  Would you mind putting that in a comment somewhere?
-
-Will do.
-
-> > 1 device XFS configurations we'll hit a metadata write error sooner
-> > or later and shut the file system down, but with an external RT device
-> > we don't and basically never shut down which is rather problematic.
-> > So I'm tempted to add code to (at least optionally) shut down after
-> > data write errors.
-> 
-> It would be kinda nice if we could report write(back) errors via
-> fanotify, but that's buried so deep in the filesystems that seems
-> tricky.
-
-Reporting that is more useful than just the shutdown would be useful.
-How we get it on the other hand might be a bit hard.
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index 7e7e491ff06f..2d7822644eff 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -272,7 +272,7 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
+ }
+ 
+ # define xfs_rtgroup_extents(mp, rgno)		(0)
+-# define xfs_update_last_rtgroup_size(mp, rgno)	(-EOPNOTSUPP)
++# define xfs_update_last_rtgroup_size(mp, rgno)	(0)
+ # define xfs_rtgroup_lock(rtg, gf)		((void)0)
+ # define xfs_rtgroup_unlock(rtg, gf)		((void)0)
+ # define xfs_rtgroup_trans_join(tp, rtg, gf)	((void)0)
+-- 
+2.45.2
 
