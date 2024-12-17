@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8865A1F37BE
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 17:02:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87C7F1DF251
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 17:06:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734454977; cv=none; b=f4QQjY/f6QuCOxeG5i+A3PI0csK8z7TuW6cYGG4p0ggZuz27iD9TkdKWuD5aUjEOxEUF7c1zBmygRDVz/zARAkf1yH2NbobiSaarA1WPctEUG3KoSYOCdBxL/3MaTmSJRx9yZ5o2ucbfJUNlk7NnhAhlSzNejpiZAGOEAh65U3I=
+	t=1734455170; cv=none; b=rFf4S5bqQVIGFmge2XBBCtlT+ed3B0OJ2hVFNjLHxXTMMU+SE+XGjdOx1HhigRiCR3s6ydvraJBJVOnT3fNf79pz40fM9lyg5oYV67gtbgXjfuBkTGyjVS6XkgIcpNk/C796uK9zx31+RNetn2VrwFtmpGOqOrPn5GevWaM+Zdg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734454977; c=relaxed/simple;
-	bh=bM14M5he4fYxuUluWUklftZlSUc2gBmESxCkUj7m770=;
+	s=arc-20240116; t=1734455170; c=relaxed/simple;
+	bh=qjdephfdj8AXQXK6lvksmRq2xM3aqLDxn+JZQkN6VPc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VI+w+2nXtmgk1qbmP3LbH4JY0BrwEGYIY7RxOMlDQh4VYIG9h06oHQ6euu2y6/a2y5z3uptffYXPcPKulKs+eOlePQ1CJbi1DbJEK9IXDT/tCfn/pZsncoli3btIP+Fyq3sIyXcp8OMYt6439WGejgPGkGQcPPaB9Z0EYf9K3ro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qkcu0vNC; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iSj9bHdb3Ln7zQuabY8pUNU0z4CETe/BjxTovEtPcbUd7Jn0nSGm8NPmqy0A5d25SWxA2ct/MeDL50Bis3ICqubFQyB4UeuAonmts4Nc+rlWW7tXrA0Y+5OqGqlxWq8n2Iuz8GMbonstF3tTiSNlIU2SSn3golBfTn6aXCq8pIs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JBPqVGfD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qkcu0vNC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00579C4CED3;
-	Tue, 17 Dec 2024 17:02:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JBPqVGfD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BB67C4CED3;
+	Tue, 17 Dec 2024 17:06:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734454977;
-	bh=bM14M5he4fYxuUluWUklftZlSUc2gBmESxCkUj7m770=;
+	s=k20201202; t=1734455170;
+	bh=qjdephfdj8AXQXK6lvksmRq2xM3aqLDxn+JZQkN6VPc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Qkcu0vNC1rJ6ZsplvCmB1K/hdxYteWEcz7qVge0QASPnfAK05xofpiNHC0Idu6ToF
-	 vHQ/7a4zZ+rlW5PjHITjvRXdNr/iL1OkQTdEUJxIT7lVnKWAN32vFPOXwnk15oT/FH
-	 BVwZGvOhW3tnrHFZxpUDNuIXvT318a8ZSjObPw8W/HihJHBz3M6FGJ5+S8qYQf/JWc
-	 SYpvXX7Y1mI22DjuNdkMhG+j4F4+ULKBlOKExeLoyTduEfIcUuaE+TOC++9RyY5fJw
-	 BV2wSUa1FGUvIqX1z862qfyABNf1XQPoQ44svexJSIPYVqxg/ISfG86JcrywGNXYOI
-	 Zf30t1fZ6CWIg==
-Date: Tue, 17 Dec 2024 09:02:56 -0800
+	b=JBPqVGfDhytHpADr7rPKtDx1PPWIv//NJthH01O0O/eH01KoQbHsWQJ+ut1U86nBk
+	 PPD+mdELD7OVu/KOoPeTz+mLvDbCFzBP9EBVkfyree0CO4TIhE8G+J3TV62vpUOvOI
+	 m2qy8B3L/9wCK/OHonHjBrTvFO8awbp9eYAUjAsK2pgt2snT7/Ha5gGZcFSjYZ9Ix1
+	 ZtC2ObzLlLd1VDJwpqIwGjA9Z90uSZ6MwHVgfuKBpFoU5JOnDvrQhclxOPn/Nlb1tT
+	 B+B5YYZc7uMTxmyxsQLwwlVyBdIyhe8viRAsNlTRvtlaStAsIdNmW8VC+3ssgD4zoU
+	 WUuyPYua51Gaw==
+Date: Tue, 17 Dec 2024 09:06:09 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 33/43] xfs: support xchk_xref_is_used_rt_space on zoned
- file systems
-Message-ID: <20241217170256.GH6174@frogsfrogsfrogs>
+Subject: Re: [PATCH 35/43] xfs: enable fsmap reporting for internal RT devices
+Message-ID: <20241217170609.GI6174@frogsfrogsfrogs>
 References: <20241211085636.1380516-1-hch@lst.de>
- <20241211085636.1380516-34-hch@lst.de>
- <20241213224912.GW6678@frogsfrogsfrogs>
- <20241215061349.GB10855@lst.de>
+ <20241211085636.1380516-36-hch@lst.de>
+ <20241213231115.GF6678@frogsfrogsfrogs>
+ <20241215062613.GG10855@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,29 +45,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241215061349.GB10855@lst.de>
+In-Reply-To: <20241215062613.GG10855@lst.de>
 
-On Sun, Dec 15, 2024 at 07:13:49AM +0100, Christoph Hellwig wrote:
-> On Fri, Dec 13, 2024 at 02:49:12PM -0800, Darrick J. Wong wrote:
-> > > @@ -272,7 +273,6 @@ xchk_xref_is_used_rt_space(
-> > >  	xfs_extlen_t		len)
-> > >  {
-> > >  	struct xfs_rtgroup	*rtg = sc->sr.rtg;
-> > > -	struct xfs_inode	*rbmip = rtg_bitmap(rtg);
-> 
-> 
-> > >  	if (is_free)
-> > > -		xchk_ino_xref_set_corrupt(sc, rbmip->i_ino);
-> > > +		xchk_ino_xref_set_corrupt(sc, rtg_bitmap(rtg)->i_ino);
+On Sun, Dec 15, 2024 at 07:26:13AM +0100, Christoph Hellwig wrote:
+> On Fri, Dec 13, 2024 at 03:11:15PM -0800, Darrick J. Wong wrote:
+> > > +		/* Fabricate an rmap entry for space occupied by the data dev */
+> > > +		error = xfs_getfsmap_helper(tp, info, &frec);
+> > > +		if (error)
+> > > +			return error;
 > > 
-> > rbmip is already the return value from rtg_bitmap()
+> > Seeing as you report different fmr_device values for the data and rt
+> > devices, I'd have though that you'd want the rt fsmappings to start at
+> > fmr_physical == 0.  But then I guess for the sb_rtstart > 0 case, the
+> > rtblock values that get written into the bmbt have that rtstart value
+> > added in, don't they?
 > 
-> Yes, but it gets removed above.  Because it only has a single user,
-> and it keeps me from incorrectly referencing it in the zone branch,
-> which I did initially and which didn't end up well :)
+> The bmbt values are all relative to rtstart, the daddr translation is what
+> adds the offset.  So if we want to take the offset out of the fsmap
+> reporting, I'll need new helpers to not add it or manually subtract it
+> afterwards.  If that's preferred it should be doable, even if the fsmap
+> code keeps confusing me more each time I look at it.
 
-Oh right, my bad.  With the typo in the commit message fixed,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+I think it's ok if you can leave it as it is.  Once you move to
+"virtual" fmr_device numbers (aka not a dev_t) then it's up to you to
+define how the fmr_physical address space works.  It's no longer a
+reference to a block device that you can open/pread/etc.
 
 --D
-
