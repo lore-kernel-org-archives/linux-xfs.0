@@ -1,83 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C0C1F8932;
-	Tue, 17 Dec 2024 18:20:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57FF812C475
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 19:44:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734459602; cv=none; b=CD2YEky+AJHwjGNKljCdm+zCshGaBhaNcuGxsf8Ih+7ZHbkXuzWpSKPs2SipMoSn/Zi+AytmGtgQAlesMZHpoTX4jD/qeXaQSd/6W8cfXxYO26Yf8sUTJGbO8NGxVmWepl75KpCumLFUY5f4eUbk6FjWeU1yA2a1nfjCt2OxI1c=
+	t=1734464640; cv=none; b=hz6XxQEmw+vnXKwUNcApRP2OvzjE2errwx3eFhX3Zq68GhS2gyi5HuB/SI4NWnRPcaikQ5dGCboZHYwl7rTGlH55bC0tULOQJ9u4zRk1bKhhKRww6zCs24rxbsHCjGQaKASzFDzE/2R9gcWpz1pYKwiy6xe29c41jMk59vFAVXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734459602; c=relaxed/simple;
-	bh=RuRjYBtd37eJ6BWE+WZCqpwEWnzVbgqMtoiwz31zqzM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DDXCXvNUImKZzNGuTSFJzDPbdAlm/kmi103rHOTwtO8AykRKxmx0H91uAeQ6gWQ9fl4Z4/EKYAU7/2K83QlARd6TQWZ3kGwOxPPR9dcDCTdiyVlgV1odZA+DIL/hN2rkdTcMsN398La7NVGlggj9K/0tk1gIThn1aI0BH1HtnnE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PcQqwgVb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734464640; c=relaxed/simple;
+	bh=gmQht9aaUTAtN0gdXHNKrlo/D1UFS1/+23IGG9z7w6s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z2EGshJjySTmqJVstYu5LWqpsUZIkfy0KF/OIZvfw+Ys1oxUuUW191eMZ3h3JMqqUyy8vanHhIjBm3cdJnm7ujbnyVe8Jyr9hk+KbYdAHmeoPN7QNRnayE5HANkuANcTwVx8iyhKeYduomEjkuUdqWx3oqWcJ3eUMhqZPuVt/GU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i/g2s7D5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PcQqwgVb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A29FBC4CEE0;
-	Tue, 17 Dec 2024 18:20:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i/g2s7D5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DB33C4CED3;
+	Tue, 17 Dec 2024 19:44:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734459601;
-	bh=RuRjYBtd37eJ6BWE+WZCqpwEWnzVbgqMtoiwz31zqzM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=PcQqwgVbF4eRBuC6Miw7kUsdH0T/T1OLpKoUL5hRT5+MOd07j8by2x6Dg+b3ogEn6
-	 b5Vti4yyMVboNIsu9s0qGBO+DyK86WJWkFgk7rW7eklHJvy2hPU2OiS+L6CoWcfklE
-	 2c3yT65FUk49T8l4n5NFfQdniSBP7qL1sHcO7T2MUTE25yCGce0j3AUz+jihMk1lHV
-	 WSmYzGQlMIvLvCvuW07tqb2ohLz9vpC2raKRbR8eV1R1wRvdDxG+wnOaCIh5nwFUr/
-	 lkzEsABN/BS3BdbHP3hRMD1xRqSPP83NEdwH24K2oVmUxIebIeGH5sxSBaB1olNfiM
-	 bosDYNS2NCICg==
-Received: by mail-io1-f44.google.com with SMTP id ca18e2360f4ac-844dae6a0caso162553639f.1;
-        Tue, 17 Dec 2024 10:20:01 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUZGKzCD+ixPyy0tEwBmcPFuIkIDIBzhelzvqmLIDp0NbH479bAL+435CTxXeB9E3oyzjZ9z2jDGjFW@vger.kernel.org, AJvYcCUdwH02xJ45lK8TbuIRj5Z+ZBp72FjLQBQvmIilEOblxpv1CDbm2fHeviUBskRfoK7mD4Tt/WCqZaQQxBSLIcuXWxoSvMTN@vger.kernel.org, AJvYcCWdAkoWTjWzvEiFCHYroV89BHH8Fdjq3RnVFgss6t69It37I4Mnn9dWRrasV2Uc4X7o6ABT9xDw7IQXD1sj@vger.kernel.org, AJvYcCWo/15qfq3Ihns+SfXT/oVRHrOBwE3iH0H/WF69wg7I/itbgUBa/Y5HL1EQjMgUjymuSvK8KzcnrFoB@vger.kernel.org, AJvYcCXdR6WtxU1+9plK2sxq6ONMqBnLvBdveU3HUxXzXhaJftzPCjMmQLGw2dvMn0vKammubwdfZWli7s/OiA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy7ezpzXFpwRlPj6hgInCduY1iwAIiDVGHNU2aqfZkfqf5mi/rd
-	eJTIVWa8Exqlgdl5gZJo/2nbfugUJip/Q8CZCpw3D+oYVxsx4WD3YrBzbDLZ73YxHL6IHwXzOeu
-	A8GJUpjZvbG3ivMoaZnQaInIt3+4=
-X-Google-Smtp-Source: AGHT+IGVF2/lzRonWuPyDH2ItNAehGEg982iraVqvHuFNJBoNdPieWEU/a4HYmGk0xpeWomItvBDrQWzPhD2J5GiKtc=
-X-Received: by 2002:a92:ca46:0:b0:3a0:9c99:32d6 with SMTP id
- e9e14a558f8ab-3aff3860488mr155848315ab.24.1734459601030; Tue, 17 Dec 2024
- 10:20:01 -0800 (PST)
+	s=k20201202; t=1734464640;
+	bh=gmQht9aaUTAtN0gdXHNKrlo/D1UFS1/+23IGG9z7w6s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=i/g2s7D5Br6UW9htAE5rLCm0T5iht5g4+TtvJJd+ixVK5mTFdd9qTdG5r8raAH58p
+	 4UpNshNcgUtdU+zrOT9d3tljjyYot4rH2ZGbc4M4F+mENhubuMqDkexwQNFp13Iei+
+	 DBMYYsFn8jru5ZQz0HvbRto7BWQm6G1zG/bo4mAlmcGqFKvCNP/M3ko99Bz0oD1YuL
+	 HKbOtWwmDzLaZUlEzK4h9j6whhKOruq/eQvF3g2iXWYkz7c5YMkS1gg59SvI/M0JtF
+	 TSnMsNeJBbwT6l2dFZBphXfKF10H6J1Czl6GDq1ahtVGw9ROCDFwDG/j1U4GOGaDYw
+	 DElMGCEY17CLA==
+Date: Tue, 17 Dec 2024 11:43:59 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/8] xfs: refactor the inode fork memory allocation
+ functions
+Message-ID: <20241217194359.GO6174@frogsfrogsfrogs>
+References: <173405122140.1180922.1477850791026540480.stgit@frogsfrogsfrogs>
+ <173405122193.1180922.17980274180527028926.stgit@frogsfrogsfrogs>
+ <Z1vOqMD-yROh6gY1@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241216234308.1326841-1-song@kernel.org> <20241217173807.GD1977892@ZenIV>
-In-Reply-To: <20241217173807.GD1977892@ZenIV>
-From: Song Liu <song@kernel.org>
-Date: Tue, 17 Dec 2024 10:19:49 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5Jik1B9SOXr992pQPDuaXbUuAw9Ktp_OYPEkaev5NdUA@mail.gmail.com>
-Message-ID: <CAPhsuW5Jik1B9SOXr992pQPDuaXbUuAw9Ktp_OYPEkaev5NdUA@mail.gmail.com>
-Subject: Re: [RFC] lsm: fs: Use i_callback to free i_security in RCU callback
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org, 
-	willy@infradead.org, corbet@lwn.net, clm@fb.com, josef@toxicpanda.com, 
-	dsterba@suse.com, brauner@kernel.org, jack@suse.cz, cem@kernel.org, 
-	djwong@kernel.org, paul@paul-moore.com, jmorris@namei.org, serge@hallyn.com, 
-	fdmanana@suse.com, johannes.thumshirn@wdc.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z1vOqMD-yROh6gY1@infradead.org>
 
-On Tue, Dec 17, 2024 at 9:38=E2=80=AFAM Al Viro <viro@zeniv.linux.org.uk> w=
-rote:
->
-> >  - Let pipe free inode from a RCU callback.
->
-> ... which hurts the systems with LSM crap disabled.
-> NAK.
+On Thu, Dec 12, 2024 at 10:05:28PM -0800, Christoph Hellwig wrote:
+> On Thu, Dec 12, 2024 at 04:58:30PM -0800, Darrick J. Wong wrote:
+> > -	ifp->if_broot = kmalloc(size,
+> > -				GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+> > -	ASSERT(ifp->if_broot != NULL);
+> > +	broot = xfs_broot_alloc(ifp, size);
+> > +	ASSERT(broot != NULL);
+> 
+> Maybe use the chance to drop this somewhat silly assert?  If a NOFAIL
+> allocation fails we're in deep trouble, and the NULL pointer dereference
+> a bit below will catch it anyway.
 
-How do we measure the overhead in such cases? AFAICT,
-the overhead is very small:
+Will do.  Thanks for reviewing!
 
-1. Many (most) systems have some LSM enabled anyway.
-2. pipe create/release is not on any hot path. On a busy system
-  with 176 CPUs, I measured ~30 pipe create/release per second.
-3. The overhead of a rcu callback is small.
+--D
 
-Given these measures, I don't think "hurts the system without LSM"
-justifies 2 extra pointers per inode.
-
-Thanks,
-Song
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> 
