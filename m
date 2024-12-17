@@ -1,118 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9EBB1F8AE1
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 17:44:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4D5A13EFF3;
+	Tue, 17 Dec 2024 18:09:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734457487; cv=none; b=WpZFtqXVC3CfX35quLvTI1/fXcTWDAggF11WdzFmJFnh2DEoHQdeC4/vatByogOy4DZotZ4mvvZcDFE0H4H9j3PGOwUAzsZhfmiPYmuNb38IcU0vxYfNbKTF7OAyLNZgjARTwNTlyGibqpRbMaNp5wbJ2IhepX+VGVthH1o9RqE=
+	t=1734458961; cv=none; b=fyO8o2kMYPmaDJLhZDopUOCTAwcXo6C+df7V1r3Z8h0QA11Xfv6cRqQzB3MpBXZgphxxDNkviw3mKZtSLoLNlkUdYlg+rpZh7l7HECQH9zzIC7MOm+BY+bIJQanWT/SONSZD8FxpQcTIltHmt6ClFr4o9gyDbIj/q29ULXRKoJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734457487; c=relaxed/simple;
-	bh=59BmmoWx9VIWeSVopyfTxEj0mMyMh5l9pHQdZOuu7UA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Qw1nOrqvMU0kYs2GstKvtcfVPxNJY+qlVxvMGv0rwUlZ2By7DCNG6LVOiIfvQix8MDda6TSOjxJ+xxtutW5mKT4oAddgU0nknsHQOTilbxRb4PHVatRfCuXcAzvT15a7AUKHSOdJoNhKNLxYaglc/cJHSSnP6UjaBhNENPtCkvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JjSnaqKI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734458961; c=relaxed/simple;
+	bh=a0hlx5/pHxIzM2xHkTzHsnN+2QIObRRbFkXEgYCKa/Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NPXlcHEIwhqmITjm2ASbcejBKa8I2vmhDQ6sgKQs+D16+Qkb0gxz3Z0yWh3z2hxytEdkdLxT/GXvzCClxFMsQIZqlo6nHd4HmBZ0IKNQNYdLLGjW5CgjYECyFQJr0k6LMjhI2Z0XWaFIWpWfrUk46TygrKquC4nkUC+jceOuyns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AfkamHIt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JjSnaqKI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E881C4CED7;
-	Tue, 17 Dec 2024 17:44:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AfkamHIt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4206DC4CEDE;
+	Tue, 17 Dec 2024 18:09:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734457487;
-	bh=59BmmoWx9VIWeSVopyfTxEj0mMyMh5l9pHQdZOuu7UA=;
-	h=Date:From:To:Cc:Subject:From;
-	b=JjSnaqKIMAt3qM5SlPK2qnr3DPL7H/Fg6iOwETmmHM5Tm/kTwIoCcGV/obpxEBp+a
-	 BY2leXTVT7lpTO6TD4Ir0fc9hP/6W78kiRbEKHegY3IzL2Y2zT9ihIWhO2keXCdKoL
-	 EOR/RFBMblKynY3nf4MLzjr0kC8Yakq3XSgnNMMFh7GklDmXe7mVMHsNUUAwZgaeXQ
-	 TpCsB+J+xesrSYrE3SsB9j3JVo6cCKbvfOJQfF1d3BQ5uUTNMCYJzdI2MPH/BUGOv/
-	 Gar2eAon7XkVGJqT2G9As21B1OIAFYgYDCh7sUfc2BvDjzv0/ryPPsMavskuzNRX9W
-	 oLIAwlnKR12Lw==
-Date: Tue, 17 Dec 2024 09:44:46 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Emmanuel Florac <eflorac@intellique.com>,
-	xfs <linux-xfs@vger.kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: don't over-report free space or inodes in statvfs
-Message-ID: <20241217174446.GN6174@frogsfrogsfrogs>
+	s=k20201202; t=1734458961;
+	bh=a0hlx5/pHxIzM2xHkTzHsnN+2QIObRRbFkXEgYCKa/Q=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=AfkamHItEv2Kv4B47kjICPEFxA8LMnxFzXGzY0y4a8Vnd2zJFlhZ+6LxpvLezSTCW
+	 mDUEMYFOLLDxU4YpPfRQp6C1qGEy/3FQh3oJhEIIKc4iJvtruQzFrak3vmyW2qPvAG
+	 PQTxSvO+4uHpznpbUGWDObHik+N1dEzLaNNGA7f96nA6A3VKpobqGYQyLIy92zNcir
+	 TJDxIREO975BfCjxJ+krxVVtFwRMxa8TJyOOcEAAfcxhb+Q+b7ZFvoE2DG9ShoZqST
+	 zKDCSTuNxXGdFQwEsE2g29ulogVmG8fsp4ZqQLfTwSmtMfB4jeBLrKWRG0jSPF7usn
+	 bcyd3nXVjeE3A==
+Received: by mail-il1-f171.google.com with SMTP id e9e14a558f8ab-3a9caa3726fso18452485ab.1;
+        Tue, 17 Dec 2024 10:09:21 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUgYBmOlfPAuBFyFnawDxVHYMn9PD9KMEkYgHzNX+CgwHpTIxaK4bPAPmQdlC0tx+/vhgZZlZBv3lTIUky+vYgLuUD5eBhB@vger.kernel.org, AJvYcCVH+8+cZlbpPRbsLfct6JOYMTkd6IlpvnOY/U4O+QdxkQppaTIXsHJb8vdU6QHXuaxRD5gmqg8qCAa4ew==@vger.kernel.org, AJvYcCVXL2xVYESaEGmnnEj2lQTkb5UWlL7t0UDYWJbiWTmA5fc5BGVCheyqqXVn3ukv0ney02sQpiPdfqzO76UT@vger.kernel.org, AJvYcCWzPVkjaIkoYoEv5m6lpkJVx1IiNZQqvBQU5IdUbvRW9dx9gNpN5y4j24H13pqOFE4s2IGLm5BSIAMq@vger.kernel.org, AJvYcCXhJvZJJ58ue4xonoDcgyYH7IbFmZGH9G1f/F7EQ2P7axY5PzEcxmDBVKIjkT5UguazzBotd7xo3Agw@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz/T5Giap+D3tdegWYaKlV7gQPXQa3lMzEqOKkIF/kMJS8f7l7u
+	grBYEhRTrnCBQSHteAYhwqdmZNrBtooZdmlrSX+xRUPbVdAmwqAdHkTcUSrljv8sGX581Ho/n5i
+	GJVS548SU2gdjoOTGnfZZJLnfhaM=
+X-Google-Smtp-Source: AGHT+IH4W+1qLYUv3RvMLLz4Rx3+PmbSk6FECj6Mjc1///iWLUROmvsJBNQ/+N1FqaQqBL2aHE0lswGQnxFBZ28aMoQ=
+X-Received: by 2002:a05:6e02:1a0a:b0:3a7:e956:13fc with SMTP id
+ e9e14a558f8ab-3bb0884d912mr37251375ab.5.1734458960607; Tue, 17 Dec 2024
+ 10:09:20 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20241216234308.1326841-1-song@kernel.org> <CAHC9VhSu4gJYWgHqvt7a_C_rr3yaubDdvxtHdw0=3wPdP+QbbA@mail.gmail.com>
+ <CAPhsuW4e8xcmZj_qrONSsC8SDrtNaqjeFgPRo=NE9MDiApQkvw@mail.gmail.com> <CAHC9VhQgS1n5RJxFmVxohng9UL_Wi6x_0MOaPAeiFTFsUxZd0A@mail.gmail.com>
+In-Reply-To: <CAHC9VhQgS1n5RJxFmVxohng9UL_Wi6x_0MOaPAeiFTFsUxZd0A@mail.gmail.com>
+From: Song Liu <song@kernel.org>
+Date: Tue, 17 Dec 2024 10:09:09 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6h4c-kkXaRYiVuhx20ZVM0z2LC7+x66=mEG-wc8xDugA@mail.gmail.com>
+Message-ID: <CAPhsuW6h4c-kkXaRYiVuhx20ZVM0z2LC7+x66=mEG-wc8xDugA@mail.gmail.com>
+Subject: Re: [RFC] lsm: fs: Use i_callback to free i_security in RCU callback
+To: Paul Moore <paul@paul-moore.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	willy@infradead.org, corbet@lwn.net, clm@fb.com, josef@toxicpanda.com, 
+	dsterba@suse.com, brauner@kernel.org, jack@suse.cz, cem@kernel.org, 
+	djwong@kernel.org, jmorris@namei.org, serge@hallyn.com, fdmanana@suse.com, 
+	johannes.thumshirn@wdc.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Dec 17, 2024 at 8:44=E2=80=AFAM Paul Moore <paul@paul-moore.com> wr=
+ote:
+>
+> On Mon, Dec 16, 2024 at 8:24=E2=80=AFPM Song Liu <song@kernel.org> wrote:
+> > On Mon, Dec 16, 2024 at 4:22=E2=80=AFPM Paul Moore <paul@paul-moore.com=
+> wrote:
+> > >
+> > > On Mon, Dec 16, 2024 at 6:43=E2=80=AFPM Song Liu <song@kernel.org> wr=
+ote:
+> > > >
+> > > > inode->i_security needes to be freed from RCU callback. A rcu_head =
+was
+> > > > added to i_security to call the RCU callback. However, since struct=
+ inode
+> > > > already has i_rcu, the extra rcu_head is wasteful. Specifically, wh=
+en any
+> > > > LSM uses i_security, a rcu_head (two pointers) is allocated for eac=
+h
+> > > > inode.
+> > > >
+> > > > Add security_inode_free_rcu() to i_callback to free i_security so t=
+hat
+> > > > a rcu_head is saved for each inode. Special care are needed for fil=
+e
+> > > > systems that provide a destroy_inode() callback, but not a free_ino=
+de()
+> > > > callback. Specifically, the following logic are added to handle suc=
+h
+> > > > cases:
+> > > >
+> > > >  - XFS recycles inode after destroy_inode. The inodes are freed fro=
+m
+> > > >    recycle logic. Let xfs_inode_free_callback() and xfs_inode_alloc=
+()
+> > > >    call security_inode_free_rcu() before freeing the inode.
+> > > >  - Let pipe free inode from a RCU callback.
+> > > >  - Let btrfs-test free inode from a RCU callback.
+> > >
+> > > If I recall correctly, historically the vfs devs have pushed back on
+> > > filesystem specific changes such as this, requiring LSM hooks to
+> > > operate at the VFS layer unless there was absolutely no other choice.
+> > >
+> > > From a LSM perspective I'm also a little concerned that this approach
+> > > is too reliant on individual filesystems doing the right thing with
+> > > respect to LSM hooks which I worry will result in some ugly bugs in
+> > > the future.
+> >
+> > Totally agree with the concerns. However, given the savings is quite
+> > significant (saving two pointers per inode), I think the it may justify
+> > the extra effort to maintain the logic. Note that, some LSMs are
+> > enabled in most systems and cannot be easily disabled, so I am
+> > assuming most systems will see the savings.
+>
+> I suggest trying to find a solution that is not as fragile in the face
+> of cross subsystem changes and ideally also limits the number of times
+> the LSM calls must be made in individual filesystems.
 
-Emmanual Florac reports a strange occurrence when project quota limits
-are enabled, free space is lower than the remaining quota, and someone
-runs statvfs:
+There are three (groups of) subsystems here: VFS, file systems, and
+LSM. It is not really possible to do this without crossing subsystem
+boundaries. Specifically, since VFS allow a file system to have
+destroy_inode callback, but not free_inode callback, we will need
+such file systems to handle rcu callback. Does this make sense?
 
-  # mkfs.xfs -f /dev/sda
-  # mount /dev/sda /mnt -o prjquota
-  # xfs_quota  -x -c 'limit -p bhard=2G 55' /mnt
-  # mkdir /mnt/dir
-  # xfs_io -c 'chproj 55' -c 'chattr +P' -c 'stat -vvvv' /mnt/dir
-  # fallocate -l 19g /mnt/a
-  # df /mnt /mnt/dir
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/sda         20G   20G  345M  99% /mnt
-  /dev/sda        2.0G     0  2.0G   0% /mnt
+Suggestions on how we can solve this better are always appreciated.
 
-I think the bug here is that xfs_fill_statvfs_from_dquot unconditionally
-assigns to f_bfree without checking that the filesystem has enough free
-space to fill the remaining project quota.  However, this is a
-longstanding behavior of xfs so it's unclear what to do here.
-
-Cc: <stable@vger.kernel.org> # v2.6.18
-Fixes: 932f2c323196c2 ("[XFS] statvfs component of directory/project quota support, code originally by Glen.")
-Reported-by: Emmanuel Florac <eflorac@intellique.com>
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_qm_bhv.c |   27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
-
-diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-index 847ba29630e9d8..db5b8afd9d1b97 100644
---- a/fs/xfs/xfs_qm_bhv.c
-+++ b/fs/xfs/xfs_qm_bhv.c
-@@ -32,21 +32,28 @@ xfs_fill_statvfs_from_dquot(
- 	limit = blkres->softlimit ?
- 		blkres->softlimit :
- 		blkres->hardlimit;
--	if (limit && statp->f_blocks > limit) {
--		statp->f_blocks = limit;
--		statp->f_bfree = statp->f_bavail =
--			(statp->f_blocks > blkres->reserved) ?
--			 (statp->f_blocks - blkres->reserved) : 0;
-+	if (limit) {
-+		uint64_t	remaining = 0;
-+
-+		if (limit > blkres->reserved)
-+			remaining = limit - blkres->reserved;
-+
-+		statp->f_blocks = min(statp->f_blocks, limit);
-+		statp->f_bfree = min(statp->f_bfree, remaining);
-+		statp->f_bavail = min(statp->f_bavail, remaining);
- 	}
- 
- 	limit = dqp->q_ino.softlimit ?
- 		dqp->q_ino.softlimit :
- 		dqp->q_ino.hardlimit;
--	if (limit && statp->f_files > limit) {
--		statp->f_files = limit;
--		statp->f_ffree =
--			(statp->f_files > dqp->q_ino.reserved) ?
--			 (statp->f_files - dqp->q_ino.reserved) : 0;
-+	if (limit) {
-+		uint64_t	remaining = 0;
-+
-+		if (limit > dqp->q_ino.reserved)
-+			remaining = limit - dqp->q_ino.reserved;
-+
-+		statp->f_files = min(statp->f_files, limit);
-+		statp->f_ffree = min(statp->f_ffree, remaining);
- 	}
- }
- 
+Thanks,
+Song
