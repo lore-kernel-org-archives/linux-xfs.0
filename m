@@ -1,83 +1,133 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A99313D891
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 16:50:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE002148310
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 16:59:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734454244; cv=none; b=hxhbnZYBCJjZPdfinhZSMbQ4RAoF6Quj7Q2ZaRiG0LjH0JkdXhkmGUDH0kgtAvkrOW5bAsCnFeM1OOHpQ5egVRInj/0uj9d2HfF7kcNGM2zFsB4HzI3u5UFlGOhw13UU8iNypf9gw7y6yiU0NOg2u05GyjAMKCvyRxE4louk864=
+	t=1734454795; cv=none; b=UxaGQ+KJ4FextMFeHf2FMYi2va4Bd7cJkRqLdpXxdhckyRiq1KtQAwzVnuBV0ddKWZxntst3YgAE0MGwT9oYfzEOr9WEw/Gq+489lBrUtNDZ/vFL+TM187ar47tvEsNjyWgO4j+KxgZncZWmmsbibE0VX+xlLM1Q/gOW2bGPvaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734454244; c=relaxed/simple;
-	bh=JaAtRzshMQrlTIwXMDIltKhMhSa+Q0WqCluNYE+83aQ=;
+	s=arc-20240116; t=1734454795; c=relaxed/simple;
+	bh=MVt+AvATfWfKwRotpvyj+cNJkh0OtctkB7S2uQf9uVw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XnuBt5I4mQ7+6/b0FXkn3BTZp0TZaw3cG5Jf9hXxx1nhmCLwwVjdkJng/At13/m2DZkvYknMjwAR44oEcpbu4DE5AkksYxkcOlO0c+p5dyKs7tBnp6bgbCrpDhx2pMBMEJ43cFAFqn0i85rGpttVzWKwaLRMnS0oVJA3ny72UIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r6OI1aEZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bdvxkTGuO82h9/x3af3NyANrId1aj1KRhibcQdCz6WV654n+XnmSmDfv7Y/s8/3yLmOFrRDfZfMltASq1e/FlkVvafLPShoSQniXl2a9e0fHWiNi97go059stqiL+m5P7gQgxHBBZl4JpIVwMRWwjeJoaQu1ndBsFJcpcCVYXWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bRueyCr0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r6OI1aEZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AACD3C4CED3;
-	Tue, 17 Dec 2024 16:50:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bRueyCr0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91DE5C4CED3;
+	Tue, 17 Dec 2024 16:59:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734454242;
-	bh=JaAtRzshMQrlTIwXMDIltKhMhSa+Q0WqCluNYE+83aQ=;
+	s=k20201202; t=1734454795;
+	bh=MVt+AvATfWfKwRotpvyj+cNJkh0OtctkB7S2uQf9uVw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=r6OI1aEZboHngSx0DqQeB+ezwbo/cvaLVIddZGYfQV87fawBgV5Jf75KnDshruqPj
-	 I5eLDwXatakArHX4TksXqIOpkHaP+uIW/rSKvba7WLvUFmt6DURzCO/SrJrwZM65Zo
-	 qhZZzHoXZblf5+mpOdTVrkQBdp2rKzu7ftdb8hNwFXKEvx81taI5wNVxR86+CKe4q4
-	 8jeksnEtGnXF1LYuWc96dh8ZsTdRooR9lO5Q1YgIfsGv+ymh7WnKacBrN236Vo0N5c
-	 KYI6VBOXpSBv/05kIr5SsXUmSM4jMwr0DhS4vFmxN1FJj9R8afhs1SNylA3fwGrVTV
-	 EPQ5QNJPik/ZQ==
-Date: Tue, 17 Dec 2024 08:50:42 -0800
+	b=bRueyCr0z9O2xk/L6HvnPmFfWxApJUn6+OeXXTZbGB0HZKTxHmKbtXrXphq1U1Lru
+	 D4O9v0S2QKsBOvf0H12Yl/2nS/02tHXbU7MFcJzS2o5nR/U+1FfHvF3fQnLDNML+PW
+	 pBojPuWNe0d8qcH+344xvwOmoeuLn7EJMsG1RAuWwo//TD2B1k8UDgK/s1lxLc9hWu
+	 lRyc5b4r6G9HDfBwIvLZweCpWqbW0wO3qLw7cBkTzyMt5aLB0ay3SKOyoZvkjpeBeO
+	 yiUKpb4NhNTKX4NT5CLkZ4IyVv0voD+kZUxCiLvyWmDII9Aw5uQkj/Qt/D19q8eDPB
+	 YGhcukLQ7zuYg==
+Date: Tue, 17 Dec 2024 08:59:55 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: Weird behaviour with project quotas
-Message-ID: <20241217165042.GF6174@frogsfrogsfrogs>
-References: <20241128171458.37dc80ed@harpe.intellique.com>
- <Z0jbffI2A6Fn7LfO@dread.disaster.area>
- <20241129103332.4a6b452e@harpe.intellique.com>
- <Z0o8vE4MlIg-jQeR@dread.disaster.area>
- <20241212163351.58dd1305@harpe.intellique.com>
- <20241212202547.GK6678@frogsfrogsfrogs>
- <20241213164251.361f8877@harpe.intellique.com>
- <20241213171537.GL6698@frogsfrogsfrogs>
- <20241216231851.7b265e06@harpe.intellique.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 25/43] xfs: add support for zoned space reservations
+Message-ID: <20241217165955.GG6174@frogsfrogsfrogs>
+References: <20241211085636.1380516-1-hch@lst.de>
+ <20241211085636.1380516-26-hch@lst.de>
+ <20241213210140.GO6678@frogsfrogsfrogs>
+ <20241215053135.GE10051@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241216231851.7b265e06@harpe.intellique.com>
+In-Reply-To: <20241215053135.GE10051@lst.de>
 
-On Mon, Dec 16, 2024 at 11:18:51PM +0100, Emmanuel Florac wrote:
-> Le Fri, 13 Dec 2024 09:15:37 -0800
-> "Darrick J. Wong" <djwong@kernel.org> écrivait:
-> 
-> > No, I don't think that changes anything.  If you can build your own
-> > kernel, can you try this out?
+On Sun, Dec 15, 2024 at 06:31:35AM +0100, Christoph Hellwig wrote:
+> On Fri, Dec 13, 2024 at 01:01:40PM -0800, Darrick J. Wong wrote:
+> > > +#define XFS_ZR_GREEDY		(1U << 0)
+> > > +#define XFS_ZR_NOWAIT		(1U << 1)
+> > > +#define XFS_ZR_RESERVED		(1U << 2)
 > > 
-> > --D
-> > 
-> > xfs: don't over-report free space or inodes in statvfs
+> > What do these flag values mean?  Can we put that into comments?
 > 
-> I'll give it a try, but that looks like a patch for old weird RedHat
-> kernel, I'm running plain vanilla generally, and much higher versions,
-> I'll see how it applies :)
+> Sure.
+> 
+> > > + * For XC_FREE_RTAVAILABLE only the smaller reservation required for GC and
+> > > + * block zeroing is excluded from the user capacity, while XC_FREE_RTEXTENTS
+> > > + * is further restricted by at least one zone as well as the optional
+> > > + * persistently reserved blocks.  This allows the allocator to run more
+> > > + * smoothly by not always triggering GC.
+> > 
+> > Hmm, so _RTAVAILABLE really means _RTNOGC?  That makes sense.
+> 
+> Yes, it means block available without doing further work.
+> I can't say _RTNOGC is very descriptive either, but I would not mind
+> a better name if someone came up with a good one :)
 
-That's from 6.13-rc3; I don't do RH kernels.
+Hrmm, they're rt extents that are available "now", or "for cheap"...
+
+XC_FREE_NOW_RTEXTENTS
+
+XC_FREE_RTEXTENTS_IMMED
+
+XC_FREE_RTEXTENTS_CHEAP
+
+Eh, I'm not enthusiastic about any of those.  The best I can think of
+is:
+
+	XC_FREE_RTEXTENTS_NOGC,	/* space available without gc */
+
+> > > +		spin_unlock(&zi->zi_reservation_lock);
+> > > +		schedule();
+> > > +		spin_lock(&zi->zi_reservation_lock);
+> > > +	}
+> > > +	list_del(&reservation.entry);
+> > > +	spin_unlock(&zi->zi_reservation_lock);
+> > 
+> > Hmm.  So if I'm understanding correctly, threads wanting to write to a
+> > file try to locklessly reserve space from RTAVAILABLE.
+> 
+> At least if there are no waiters yet, yes.
+> 
+> > If they can't
+> > get space because the zone is nearly full / needs gc / etc then everyone
+> > gets to wait FIFO style in the reclaim_reservations list.
+> 
+> Yes (In a way modelled after the log grant waits).
+> 
+> > They can be
+> > woken up from the wait if either (a) someone gives back reserved space
+> > or (b) the copygc empties out this zone.
+> > 
+> > Or if the thread isn't willing to wait, we skip the fifo and either fail
+> > up to userspace
+> 
+> Yes.
+> 
+> > or just move on to the next zone?
+> 
+> No other zone to move to.
+
+<nod>
+
+> > I think I understand the general idea, but I don't quite know when we're
+> > going to use the greedy algorithm.  Later I see XFS_ZR_GREEDY gets used
+> > from the buffered write path, but there doesn't seem to be an obvious
+> > reason why?
+> 
+> Posix/Linux semantics for buffered writes require us to implement
+> short writes.  That is if a single (p)write(v) syscall for say 10MB
+> only find 512k of space it should write those instead of failing
+> with ENOSPC.  The XFS_ZR_GREEDY implements that by backing down to
+> what we can allocate (and the current implementation for that is
+> a little ugly, I plan to find some time for changes to the core
+> percpu_counters to improve this after the code is merged).
+
+Ah, ok.  Can you put that in the comments defining XFS_ZR_GREEDY?
 
 --D
-
-> -- 
-> ------------------------------------------------------------------------
->    Emmanuel Florac     |   Direction technique
-> ------------------------------------------------------------------------
->    https://intellique.com
->    +33 6 16 30 15 95
-> ------------------------------------------------------------------------
->  
-
-
