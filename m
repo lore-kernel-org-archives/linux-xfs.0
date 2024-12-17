@@ -1,64 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E282150994
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 20:57:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 362DB1F9F44;
+	Tue, 17 Dec 2024 21:00:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734469021; cv=none; b=m2WtMCbDNazDwrRDMU9IU3CM+jRkIMyAajBz/dkpLs+2Z2wBaeIT+GqcbLEnhF0zvYmOzhwLJEIlEFrFbv5T1n4xEw/lpChbj/5hFyvmbMZLfwPZHWi02ZEXpxMHkM+j3RGN5zoBycW4BBXKGWM+e2D5h4Y2eZH6ABhRMg0sJkk=
+	t=1734469244; cv=none; b=uXaIJFAzHJ4daQVlvmr/cRwYLS8W8P3K3EB2J2770MJ/63VJygd3U2rNv9LtDyaIe982BxkAVWdwmjagZ6zUOpatBsRtlLz3+UowdPkUQROHJUt5KqMa2qM+cPdRpauz0QcUM+79jAd50HYGGlfRNi2gt3VCDpptOwc+ISCUz2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734469021; c=relaxed/simple;
-	bh=GSwamYUsHQJubNVoCiWnBw0IUxOVZnyNRBBv9YAYIiM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W3TzTIxhCm+mAK/dJKwieNs2Xq8gBGvR9VxtHVb/sZ4s6Gm8bp9nz2HlGHaglr1rugLPFSO6qDOyqFOkRkekXHIyJInuQViPlWcuGZ7EeZitDLjrnzSXHO1gMMbG02BkR/Sus/fCTsDCwZP1795vw0ZYNEBDHQX4fKa7EdcmgZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nin4F4pO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734469244; c=relaxed/simple;
+	bh=wHSJk7+FHuZRJv7x/7v1vpPWsIMv2AxP6jZhoIxoF34=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Bqe1eXESYpLYZPI4xC66gRDMTGd8nmmIQmUeOeHgxWz9osIW2TVQMoQ1SuiIxmNYg7wRdhi0/RUoKJBuBCfi3umY9BY/EPkzV9cigi8qTL+4PWY7yYopqF6MxbTm/jRUfZptJR9RKDsrx2sCmIbv41wWa217aHsgaTqDL7zxpq4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xMsxShaM; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nin4F4pO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91ED5C4CED3;
-	Tue, 17 Dec 2024 20:57:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734469020;
-	bh=GSwamYUsHQJubNVoCiWnBw0IUxOVZnyNRBBv9YAYIiM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Nin4F4pO1jBnjTl+ID0Kq0xIcsHEec/CMjpb2hBD4Xw7KSRtyo+7l6EOKcec3JeDl
-	 smfBK64UG9LrfQAJxb9FNa5XDR6jPYlzvG6OC3KEr4o6sbonp5CKj66vSmhZ/CcaMC
-	 RHIeFzqIZX/fmttierksvaYVX6Cy6yuTvT5F1AFkpZSc35lfPOK6q6negGb8VPcl/J
-	 4oPD5iLSJz+r1b8MWOTFtAiQwze1SzxSrlEu7Furts7OdeM0PiF7kJuYUX3BeQnE+e
-	 rJ4Iz7PzdGOWyTzrrEo+WQQ2G04rHzzprLwv9CDJtB/BgLYRUKVX1ucBnY8i8G2+Y0
-	 mHcySO3J/6jPg==
-Date: Tue, 17 Dec 2024 12:57:00 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 43/43] xfs: enable realtime reflink
-Message-ID: <20241217205700.GW6174@frogsfrogsfrogs>
-References: <173405124452.1182620.15290140717848202826.stgit@frogsfrogsfrogs>
- <173405125304.1182620.11655711195171869232.stgit@frogsfrogsfrogs>
- <Z1v9nl9DP4N_1mNQ@infradead.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xMsxShaM"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YCTjk2KGPz6ClY9B;
+	Tue, 17 Dec 2024 21:00:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1734469234; x=1737061235; bh=yzGOi3NneZYR9bDxI9UvolmG
+	dtoJM/NJwZQblAerzBw=; b=xMsxShaMUHaL8dRP4HYD6O66fFleU39uHO+HIuCD
+	GQ5jN4D1DZysGFmgqmPeiaGjpi8kwNKj0tpW6ZjU7SZ7f0RMNvYxDtnIr0RV9VjO
+	yeagNhzqgBBcZzEMMCcz0MTL2mNcKczlvbuwaXZJp6O6kjK2l+wEEC6l8lGydl8K
+	x6UXJovpiGP6PuuKldfeS4jIY9kmcruq9UnGDf/aGvk2vymwSZptfURnVYlVyAGC
+	6jxONNxHNQKL8T265JNhVfSwbwT0tKLoBmbVsSSwa1b0icoyI3sY65XbuQx94ZHe
+	op93Kjghvd2xrWGjy/sVnbD5mgU/PTo/zFFpF0WfkfYCvQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id aFjAikwuH6uN; Tue, 17 Dec 2024 21:00:34 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YCTjT2220z6ClY97;
+	Tue, 17 Dec 2024 21:00:28 +0000 (UTC)
+Message-ID: <df925ada-24a0-4f69-bb46-4f2b7b94217b@acm.org>
+Date: Tue, 17 Dec 2024 13:00:27 -0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z1v9nl9DP4N_1mNQ@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC v2 09/11] block/bdev: lift block size restrictions and use
+ common definition
+To: Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org, hch@lst.de,
+ hare@suse.de, dave@stgolabs.net, david@fromorbit.com, djwong@kernel.org
+Cc: john.g.garry@oracle.com, ritesh.list@gmail.com, kbusch@kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-mm@kvack.org, linux-block@vger.kernel.org, gost.dev@samsung.com,
+ p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
+References: <20241214031050.1337920-1-mcgrof@kernel.org>
+ <20241214031050.1337920-10-mcgrof@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241214031050.1337920-10-mcgrof@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Dec 13, 2024 at 01:25:50AM -0800, Christoph Hellwig wrote:
-> > -		if (xfs_globals.always_cow) {
-> > +		/*
-> > +		 * always-cow mode is not supported on filesystems with rt
-> > +		 * extent sizes larger than a single block because we'd have
-> > +		 * to perform write-around for unaligned writes because remap
-> > +		 * requests must be aligned to an rt extent.
-> > +		 */
-> > +		if (xfs_globals.always_cow &&
-> > +		    (!xfs_has_realtime(mp) || mp->m_sb.sb_rextsize == 1)) {
-> 
-> This looks unrelated to the rest of the patch, or am I missing
-> something?
+On 12/13/24 7:10 PM, Luis Chamberlain wrote:
+> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> +/*
+> + * The hard limit is (1 << (PAGE_SHIFT + MAX_PAGECACHE_ORDER).
+> + */
 
-Yeah, this belongs in the next series.
+A closing parenthesis is missing from the above comment.
 
---D
+> +#define BLK_MAX_BLOCK_SIZE      (SZ_64K)
+> +#else
+> +#define BLK_MAX_BLOCK_SIZE      (PAGE_SIZE)
+> +#endif
+
+Parentheses are never necessary around constants since the definition of
+the constant should include parenthesis if necessary.
+
+Thanks,
+
+Bart.
+
