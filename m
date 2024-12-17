@@ -1,463 +1,304 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9E2443AB9;
-	Tue, 17 Dec 2024 02:07:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734401226; cv=none; b=IHmE3+yItMWBMjds181tEZSl916TGlE/Im1EbXK1SaKPtJqmGstgSeOpwbl/Fb4qpdUaibsl+Qiwwsfla/e5DWggzJnM7ZlyE+UcRFa9gYumDdHaZUKBTYtAQKulnAn4jQx55ySqIE1x746EKI1hXSV109YzUVpSJMGtZt0BFiY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734401226; c=relaxed/simple;
-	bh=OW4PJ2H8rwUGYwV2j76rlK1lr4JHJ7t8V6mi7tx5VbY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eP2RczMgDtqb+Vi9E0zqOv/2MKWh1KSAjTJvOsgNJ7BbuxqfILpyMTNFFQSh+TqxFkhhF9k+L5ybdp6k5b21xcOxEgGBbEnBRDCsbn0o6Pbz7wYbhvw+OWSYHM+/skN/2YwUiGzpzj5Esqx4shQgJSZLxiWiuMF+emFzVfdOaok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PB7PdRZ4; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BBCC2595
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 02:08:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1734401318; cv=fail; b=Qj6ahsEE1BzbaDHkIaNT8PSUPeN+ejOEU64Sl6alCHSxNglBfEBWMU/U+hXeHAYrNZsyccgSid1nfONaNL0z5UkrumN6PN1fnnv6RZaq8nW8Fwgw/R5mT0S4J4LINCZRQoUwYkdtNqa3rM5oOZ6bHtLHW4DBjTt8uV0z8PxetCo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1734401318; c=relaxed/simple;
+	bh=2FbsY36kMQ/mxGWuzPSf5aGxDAziNr4mQE7zKIs19g0=;
+	h=From:To:Subject:Date:Message-Id:Content-Type:MIME-Version; b=SLcopRMKati/xX4b5wxCRYfGo1fBS37zqWpYqnVvIErT0NXk4Q22jdd3Xtezn/8lw/MKZyV2+Tjs6wT3KbXublRXTLzgqNqi2xYVRmXLo/I90O/szBMyA4C7yY/L0bH3UpGOuf+VHvpW4vECNmLCGtIL4sADo07yTeOB8KMeDSM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=hNqPinAO; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=ilxL50Mz; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PB7PdRZ4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1734401224; x=1765937224;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=OW4PJ2H8rwUGYwV2j76rlK1lr4JHJ7t8V6mi7tx5VbY=;
-  b=PB7PdRZ4FMK1kePSRSW/g52wNfKyWG+LKTS/L6qECpdyiD2835ME7j8s
-   Lb2BNLXjyvS8UnSwjbD++WyjpZPyzdGmsamCLCKGVGzLIEtn1I6+h/sKB
-   hWkKProx3utnYqgLVcc6hnNVLBMD9DAMo5JU3IQiPwKZvdbVpURvu63i8
-   0MzHPS91CD2BDvSt3eNoHY+VUhgmmkyhyWKRWipU7ZbzKQfNp8U4T0g65
-   g5PFWDLRbE9uIWJXlTDzYWbbY84e1C2v5uXJrX+Yu/krUOf0/fJF0VM1F
-   LuLgmsUFHV9iFv2/kHi25z5/+sXGQ/ddIjQwmjpwfQQemai/5qv103V1L
-   A==;
-X-CSE-ConnectionGUID: AtcA3d2wSROJP/606W2dhw==
-X-CSE-MsgGUID: 4dDKPtVoT0yrwk7Y1eDBAQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11288"; a="34106537"
-X-IronPort-AV: E=Sophos;i="6.12,240,1728975600"; 
-   d="scan'208";a="34106537"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2024 18:07:03 -0800
-X-CSE-ConnectionGUID: W26vZtHmRgaXm7GCjT9/yA==
-X-CSE-MsgGUID: +hmbnVAsR86t1v8PE+aZog==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,240,1728975600"; 
-   d="scan'208";a="97166640"
-Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.161.23])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2024 18:07:01 -0800
-Date: Tue, 17 Dec 2024 10:06:36 +0800
-From: "Lai, Yi" <yi1.lai@linux.intel.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, yi1.lai@intel.com,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [PATCH 21/21] xfs: convert quotacheck to attach dquot buffers
-Message-ID: <Z2DcrP7KRhRykfLe@ly-workstation>
-References: <173258397748.4032920.4159079744952779287.stgit@frogsfrogsfrogs>
- <173258398160.4032920.3728172117282478382.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hNqPinAO";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="ilxL50Mz"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BH1uTif002084
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 02:08:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=corp-2023-11-20; bh=fJ/FYGD24xm0sIFz
+	5Mo+dUb8/B79aqqYo+iO8R2+NjM=; b=hNqPinAOUGUemCBkej8J2wTglkf5Tpyo
+	WyoQy12mmBBKCI8cbIZJwqw9N0EFEJpTvH5AU/KGmnPPavCxpjAKYXzETO25Fko+
+	uSTdBp+1yHQGMvXWujA7uDC8xRXmPKwzqv48h1t4keNC7c8jvaSQ37RbkEpQwm9I
+	gG0QTO6MVX2T9xew0zW0YGcU87NESuy56nmwOI9WtBQ0Yn4RtCh9HUutbEnkvVD2
+	zLgSGNv7+Gd+5bP9mMoSneBoXKNeCY27dCo4PtEuDsKTLhC2N7T9RRRzRvcVW7iF
+	bAL0NDHpy58/9q1qVE8zF90PvZY//Cjua/Ie1IbEL39kG7NoWZgluA==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43h1w9cuyk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 02:08:35 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4BGNoVpt035486
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 02:08:34 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2175.outbound.protection.outlook.com [104.47.56.175])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 43h0f7ukh8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 02:08:34 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=oRjXc2896e5A40P0thOFOQ5aao5geAe8Af0O5e91i+CIzbMioQPcBO8acKjSFmgAanGNHS9GuQxVi+BAMyeXYvMQqnpuFILtC3+DoNHENdOujhjv4NDOV+Wv24AKMY5F9EsLuDRx5/9Dk+B1wVt7HEnQpG3b50oJ08lIVuXjCIt4Wmv+2NOjKKyLded5LJ696dEr7uA0T/Iha4MI+PoSkT8EWVcmMPn7xre1CTx8XdJo0x3mDssPgl/ecIQQqCIZrJ39I+ykcO9ciWoXlXDfF2Pf5Y4KFjC+9eejpChuTbbZjX3AqYcmJBFBLLap4/BdIETQzDbFDxIL2ELPDVTiDg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fJ/FYGD24xm0sIFz5Mo+dUb8/B79aqqYo+iO8R2+NjM=;
+ b=SiVAkHlSHl+Uw4Sxn0+yDNqwNLisezvrpU9fFTRqWAOg5xrEA19SPEMIkIZmoyu9/Ot+fbkJHDm4Ygj8PDPrY+hUL3a5mVypLlHzmedfTYCEq7NXeTl+qV+w5zWnYyzT9xtc1XIMMeglB1Z2evk1oSbOD8SHe7B5Srm5tVP3S5W8tzRDLyDAIKPXDRPixASuZ2PldTjo4zzofUAIyP3JTxj7YjvGvqeZbRjVWI0T8TTXoe0FGBYyJfRy03d04+yHhfFsZk9+Wl7P19a8CxtgKznjOUTh53osOllGU7GJrIikAMpY0GVDtoLutxbY5x9hV+PcyozFuUTPAKdTuBbTuQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fJ/FYGD24xm0sIFz5Mo+dUb8/B79aqqYo+iO8R2+NjM=;
+ b=ilxL50MzGyQwOY+002B1yqKG/hbbqdg+4rWf8IboQYwq+eKdUw4Lf5QyvBXz+vn6556Purhr05OdPhmS2WNaWw+ImWxaBQFxBXQPjRr60JnCMIJfQ+SLT8vCtSN3P/1D7qfcDB7wxIqVVeUiBFqRRFVhlJmb1Rix1/m0XOiv7e0=
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
+ by IA0PR10MB7231.namprd10.prod.outlook.com (2603:10b6:208:409::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8251.21; Tue, 17 Dec
+ 2024 02:08:31 +0000
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::a63b:c94b:7ed8:4142]) by BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::a63b:c94b:7ed8:4142%6]) with mapi id 15.20.8251.015; Tue, 17 Dec 2024
+ 02:08:30 +0000
+From: Catherine Hoang <catherine.hoang@oracle.com>
+To: linux-xfs@vger.kernel.org
+Subject: [PATCH v2] xfs: add a test for atomic writes
+Date: Mon, 16 Dec 2024 18:08:28 -0800
+Message-Id: <20241217020828.28976-1-catherine.hoang@oracle.com>
+X-Mailer: git-send-email 2.39.3 (Apple Git-146)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR02CA0060.namprd02.prod.outlook.com
+ (2603:10b6:a03:54::37) To BLAPR10MB5316.namprd10.prod.outlook.com
+ (2603:10b6:208:326::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <173258398160.4032920.3728172117282478382.stgit@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|IA0PR10MB7231:EE_
+X-MS-Office365-Filtering-Correlation-Id: c20e3aa6-5f5e-4972-74eb-08dd1e3fb3ed
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|10070799003|1800799024|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?BLlzFsxKmxpC1k76wqOG7ANjtZtu6kJTY5dJoAIdz6pjeptOR6haAIO5USXf?=
+ =?us-ascii?Q?ODhp2aoJHN5lfOYnmkI99ao+YGRgPSqBxOWNEyfD1nYB5CwfI7tZne3pjNPa?=
+ =?us-ascii?Q?PjsEt9c+UjjyHGZ/RDbgOINVArklHIdM/ojCR1b5nLwp9geXvpxRJqNcTFu2?=
+ =?us-ascii?Q?fdalmvzzLn8FEc0cp/8dRzrJ+/B6tKIof/TItGFHuK7FPX3CZiFm+VO6kw1Q?=
+ =?us-ascii?Q?spAjKtXlM75mbe4RfGr5uF1QHP1UaZAzOWYybp6P2kaEzoaYuJ7Q1nf9Q/DY?=
+ =?us-ascii?Q?aryS7057Tp+nGbDX/HCrmUaUnbT7mY+Q3ZJvPiWQ8p5mdNeyVT1a5Yd3dgLD?=
+ =?us-ascii?Q?8iWc9cuRyNbgNfoPXrEitf5ThZuWm4hhMC/EIqkqJy6HB3RjiseNsJqgaGNl?=
+ =?us-ascii?Q?S9w8I6LqlTntfFgIP/D63e5cmjRoAfxJb/KCOp03klK/zjEIT9XWXRtaMKEH?=
+ =?us-ascii?Q?aI4CefDP63XCdXeZNi5G+nmFwji5/vZp/gLkEc5r3rEQmhsBPHE5SuZwV6n2?=
+ =?us-ascii?Q?/qR+Np0Q1qOZW+kpV3nKjbLGY6jeDLipTfiUeFe4U7zEo3+qtdaHLDJJ8IEY?=
+ =?us-ascii?Q?S7Uj0ZSKv7ByvDPlnpgmzSN8cyqrOdqYhOXwgNHMIlHhV8URWUROR/R7tccG?=
+ =?us-ascii?Q?nN9GevY8jTENeQsG1PtezSo+nieHlhWN/Qt+1RhALlig/nfSTSupQ01/x+RV?=
+ =?us-ascii?Q?//1VvJFj1PC4FucclRjavaP6S4B7FVC7+e4L6445qrVIKY49k25CxbjuK6Jy?=
+ =?us-ascii?Q?yH2RtNEWxPWBFG9+8dwHsaXl1Z2wGnHK4aVcmxAoti3Nh0y3UozSB+nxq4DN?=
+ =?us-ascii?Q?ohmvanh9dExKiRxrHyUGQE9nkY7ZEU7PA+btZdhdTiep4quGDFXKvh+nu8u3?=
+ =?us-ascii?Q?Ki+RlEdMPQqQ44O18AL/0MVi2qCE4PjXgP6qQIvkgy42kfdTIFC5axn64z+r?=
+ =?us-ascii?Q?v5oTip/9/5gb+DlJgLw0QMsVppZDbZ6vmHM1MdghgBDf/mAg8b6M+DgQHxz2?=
+ =?us-ascii?Q?2DdaAeyhUr3EEPTxfzCoS14YycCClcZwV5PUrxppcXPUCvr/l1oYJFPUnEnW?=
+ =?us-ascii?Q?61nb/lbpSpGv+ARD7f6tfcf6RmtjNzcfHGqJXHebXcqcIXiW/6LFOj4kmxW4?=
+ =?us-ascii?Q?Trd3LKPNsvWjm7Jud//yLQOBh0VPn181SM+m8RdU0MNYj6mSOo4eHcVLfCNm?=
+ =?us-ascii?Q?B5EiPLe0Vu1JffSOcLJDvdfIV401yRI2/1As0VhrXYZuI6fSi2cndAmeZvnQ?=
+ =?us-ascii?Q?P9vN/lIQbwBIouvuNBRiN8ygSroKi5ZpmtBX7wuLuvfDKCtgQ8j2UpdkdPXk?=
+ =?us-ascii?Q?tAI0/lFndbr4GlPp1frq0Mz0CFDDDT/gL9/tW8Ef8iHc3z/LMkiIBIm3Dai4?=
+ =?us-ascii?Q?NG9pJ4y0SOaSNAMPXrfJjY8kYX6+?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?iFxUDFWJWTeodoCBlAYVtNN+6iq2o77ejRasgAroo9YEgkPuD0I/i++aU3FE?=
+ =?us-ascii?Q?6vJI01lBWUbDgOOzFgWw5zHJ3nvyKUnA1rVZjUpJO8WO+Zc5c+/i7UDy40Ol?=
+ =?us-ascii?Q?03bJW8Ure47OffH0BqfC23eqzOVm2Z2Won+pqflrQC2sUrQY+Lp1k8oS6VY9?=
+ =?us-ascii?Q?/Zcuv6witTlZCi5SJ8+B5tg+rr10mbrD1Ah4L3h/QAzCubHxUGu9GAUC/Z6u?=
+ =?us-ascii?Q?DCOgv8LCou5yhHQQzgz2abYeHhuLbYPYTwkqxTh8muP8FwDkBowrkwy4g8s9?=
+ =?us-ascii?Q?piFlPVgfUhGpVEu79z0d2AYxxugApkyuLrXKl6a3ZwpdJHl35BfgxOTazDw4?=
+ =?us-ascii?Q?UvhbHeFze0sbsyEPumJaXLL+vv+NDeTcq9Tol9xh4cMuw8687JYPlhObUszh?=
+ =?us-ascii?Q?DwSr2QTGN+c7iyjuLKs04K33uhp9QNbsXg9flQDwjuQvwLYfH+hs/3IR/EFQ?=
+ =?us-ascii?Q?cHlipUWVr/sJi8bLMwPI0zZJUWSB6WK2haPz/XOHPB46x0gk1z4DO0Wa+TGf?=
+ =?us-ascii?Q?gYd7UgpMFgNLQNEJF/cTFJidfxC+EZIbKlz6+/jLkqJP5kf5tfFiUcLG0onl?=
+ =?us-ascii?Q?UWmSD14Sr+r1UHCCZS6Caux6c8stlXJhe5mucmruJU7MfDkML+4fQm2tLWZt?=
+ =?us-ascii?Q?z6h7PYvUJFWQHxd7sTpzQ+64ZP8aMyMTdJ6qMZNPIZnJ72utZFE5IJReIu1z?=
+ =?us-ascii?Q?ERZcmCPnSBqdgMGESb0lAmVTFH2RhyH2xQnnRbtcRtWQagmLUd+cdcV2nLgm?=
+ =?us-ascii?Q?Cl5CvWm2x5O2gUkBpm3y9BXwEjBUDVvi8wIB0qHUDyGHgQAJ9xvRsfwloWT/?=
+ =?us-ascii?Q?lqXLw6jijPy3IZuQINPE+AV2t30T2/gEwM3uMsUAw+Et3S5Awsw+EMK1TPtW?=
+ =?us-ascii?Q?i7CTdWXHGEr27Az/FEEgs0hE3G/JgcnZD4HT0HWbjnhkQN9oDxjYUgyab0F7?=
+ =?us-ascii?Q?UtwF97uqDgv5hAGkFQE504o+/rkT7MQQgOJ+s8gdZrGpz05oQFV6Xjp0oc75?=
+ =?us-ascii?Q?0dCmzHWYiz1SHZkSsiP8xrE6kdzBJUHCvYHOppA/9oCgQUGZp4WHWVMJJvBN?=
+ =?us-ascii?Q?PR1m/REwNzFOCRihl3QZcptr8gLbS+sS2YYzM4rtpcyvzfndi5g3pA2IXE8O?=
+ =?us-ascii?Q?MJWScknhPxH51KuSyQgxlFJOPcyFvXEYCPwNaslUh8q1Pmkyzq8/Dyk1VxvK?=
+ =?us-ascii?Q?gMCzuvqUhg+gHb257V25+x87NMXiVrqraxyvcto6Na/xJNhYQtk225KYkyTL?=
+ =?us-ascii?Q?N60Jk2ojHLG0A+kPrQAe5wLQ+EIQqfR0RMuwZG7s5vY+RktU2p3obU1iBFXu?=
+ =?us-ascii?Q?UsgSf1D9x4dCbe3FetQuk22abQ9NG0p9qB39wFNXufGSMGIPBnf4InyF990u?=
+ =?us-ascii?Q?GX51kXInnUzYcmpkvTfOvidiUS4JwhHyCyjeDBLLWiFhfDoKOw/bfG7pFlVM?=
+ =?us-ascii?Q?g3MOA3y5W1YaDPdvbvqG4+HBM/DDkze7dOZabwuESh91+VMbdIwNLxSQaB75?=
+ =?us-ascii?Q?4XZEqFBKxatjRgCoVLjYUSLsMxB3VvFsSX3ntfUUA26HlJSOoGvPmrQlQxjt?=
+ =?us-ascii?Q?yFEK9yDF+dTMX1td0FHFdPGOGxtJt+xdFqHruMbH3GOWZIBYiLudLHo7Yw/1?=
+ =?us-ascii?Q?QIxkODs4k5TSVZPs5Smpr4/DjiRIl7+pNrPT26EeewEYlLgunCip9cnbkLfY?=
+ =?us-ascii?Q?w5G0UQ=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	9vfE4oYvgU9KpDiFtpxlg9Capbc/bowSWoXaDalezCU6rb3SKNSSBM0knRRQNOV/f3EeMEkE5CD39F3XcBr63mftGbQrrPXUN3UG+yrhP9iNjsBohgtv6wbW9I4HxfcyA8PYU7QT23IHaG7YutAp2L1mw8+BMXKqeYN+KuE3AbSqCGSd0lvutO1t7BbLFPFU4nZexfbj+6I1rbVPlMeFZWhCeTxtebf3cHaXXD2dDBK4Sgje+gaNOW0u7Uo3sNyeOP1vnuVHgXwpx0CQSu7o/Yu8wQOdaeqi6YkzP5OJ9BV2iI7+dFG2CjlIPay0zeYiKh3V0btghCL1kj3urgah8F6S3LeHN08rOYyLz7YUPQjVuEJc/MbgM7z1+FWImkKvdSCZTxpITsDSCrT60J1IoDyF+JaYlNGsHDGTnZDs1dSCaM0EUir19DY1oQ2Gif2s8/ha4ZQ9Hd11ahb4XTkB1j8wLn049fmG0h6A15MlMTob7SrV7dT2wX86jiIlrkse0pYOSNAPCnmiynMICSdPuq2seblzwUcA5C9W6GL+Rw49kJd+nHU86lhzPJhcDXt/utoa6fyNqJhqn7300n+BLGz//PSKy+jROQLteSBtSg4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c20e3aa6-5f5e-4972-74eb-08dd1e3fb3ed
+X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2024 02:08:30.8696
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Y+Y96feUqYIAmVr/RVPHjTZXvMesT4bGDewz81R1HZgnStIc0b04JIR7JwzGZ7/8onYL8nuh1D2iiqESkvp4Hm5x7CQjC1Mr3l39pbSUC+8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR10MB7231
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2024-12-16_10,2024-12-16_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 spamscore=0
+ suspectscore=0 malwarescore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
+ definitions=main-2412170016
+X-Proofpoint-GUID: wqA7ydgDeRkV0tqaO4anjULp27a-uRWm
+X-Proofpoint-ORIG-GUID: wqA7ydgDeRkV0tqaO4anjULp27a-uRWm
 
-On Mon, Nov 25, 2024 at 05:30:11PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Now that we've converted the dquot logging machinery to attach the dquot
-> buffer to the li_buf pointer so that the AIL dqflush doesn't have to
-> allocate or read buffers in a reclaim path, do the same for the
-> quotacheck code so that the reclaim shrinker dqflush call doesn't have
-> to do that either.
-> 
-> Cc: <stable@vger.kernel.org> # v6.12
-> Fixes: 903edea6c53f09 ("mm: warn about illegal __GFP_NOFAIL usage in a more appropriate location and manner")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_dquot.c |    9 +++------
->  fs/xfs/xfs_dquot.h |    2 --
->  fs/xfs/xfs_qm.c    |   18 +++++++++++++-----
->  3 files changed, 16 insertions(+), 13 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index c495f7ad80018f..c47f95c96fe0cf 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -1275,11 +1275,10 @@ xfs_qm_dqflush_check(
->   * Requires dquot flush lock, will clear the dirty flag, delete the quota log
->   * item from the AIL, and shut down the system if something goes wrong.
->   */
-> -int
-> +static int
->  xfs_dquot_read_buf(
->  	struct xfs_trans	*tp,
->  	struct xfs_dquot	*dqp,
-> -	xfs_buf_flags_t		xbf_flags,
->  	struct xfs_buf		**bpp)
->  {
->  	struct xfs_mount	*mp = dqp->q_mount;
-> @@ -1287,10 +1286,8 @@ xfs_dquot_read_buf(
->  	int			error;
->  
->  	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, dqp->q_blkno,
-> -				   mp->m_quotainfo->qi_dqchunklen, xbf_flags,
-> +				   mp->m_quotainfo->qi_dqchunklen, 0,
->  				   &bp, &xfs_dquot_buf_ops);
-> -	if (error == -EAGAIN)
-> -		return error;
->  	if (xfs_metadata_is_sick(error))
->  		xfs_dquot_mark_sick(dqp);
->  	if (error)
-> @@ -1324,7 +1321,7 @@ xfs_dquot_attach_buf(
->  		struct xfs_buf	*bp = NULL;
->  
->  		spin_unlock(&qlip->qli_lock);
-> -		error = xfs_dquot_read_buf(tp, dqp, 0, &bp);
-> +		error = xfs_dquot_read_buf(tp, dqp, &bp);
->  		if (error)
->  			return error;
->  
-> diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-> index 362ca34f7c248b..1c5c911615bf7f 100644
-> --- a/fs/xfs/xfs_dquot.h
-> +++ b/fs/xfs/xfs_dquot.h
-> @@ -214,8 +214,6 @@ void xfs_dquot_to_disk(struct xfs_disk_dquot *ddqp, struct xfs_dquot *dqp);
->  #define XFS_DQ_IS_DIRTY(dqp)	((dqp)->q_flags & XFS_DQFLAG_DIRTY)
->  
->  void		xfs_qm_dqdestroy(struct xfs_dquot *dqp);
-> -int		xfs_dquot_read_buf(struct xfs_trans *tp, struct xfs_dquot *dqp,
-> -				xfs_buf_flags_t flags, struct xfs_buf **bpp);
->  int		xfs_qm_dqflush(struct xfs_dquot *dqp, struct xfs_buf *bp);
->  void		xfs_qm_dqunpin_wait(struct xfs_dquot *dqp);
->  void		xfs_qm_adjust_dqtimers(struct xfs_dquot *d);
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index a79c4a1bf27fab..e073ad51af1a3d 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -148,13 +148,13 @@ xfs_qm_dqpurge(
->  		 * We don't care about getting disk errors here. We need
->  		 * to purge this dquot anyway, so we go ahead regardless.
->  		 */
-> -		error = xfs_dquot_read_buf(NULL, dqp, XBF_TRYLOCK, &bp);
-> +		error = xfs_dquot_use_attached_buf(dqp, &bp);
->  		if (error == -EAGAIN) {
->  			xfs_dqfunlock(dqp);
->  			dqp->q_flags &= ~XFS_DQFLAG_FREEING;
->  			goto out_unlock;
->  		}
-> -		if (error)
-> +		if (!bp)
->  			goto out_funlock;
->  
->  		/*
-> @@ -506,8 +506,8 @@ xfs_qm_dquot_isolate(
->  		/* we have to drop the LRU lock to flush the dquot */
->  		spin_unlock(lru_lock);
->  
-> -		error = xfs_dquot_read_buf(NULL, dqp, XBF_TRYLOCK, &bp);
-> -		if (error) {
-> +		error = xfs_dquot_use_attached_buf(dqp, &bp);
-> +		if (!bp || error == -EAGAIN) {
->  			xfs_dqfunlock(dqp);
->  			goto out_unlock_dirty;
->  		}
-> @@ -1330,6 +1330,10 @@ xfs_qm_quotacheck_dqadjust(
->  		return error;
->  	}
->  
-> +	error = xfs_dquot_attach_buf(NULL, dqp);
-> +	if (error)
-> +		return error;
-> +
->  	trace_xfs_dqadjust(dqp);
->  
->  	/*
-> @@ -1512,9 +1516,13 @@ xfs_qm_flush_one(
->  		goto out_unlock;
->  	}
->  
-> -	error = xfs_dquot_read_buf(NULL, dqp, XBF_TRYLOCK, &bp);
-> +	error = xfs_dquot_use_attached_buf(dqp, &bp);
->  	if (error)
->  		goto out_unlock;
-> +	if (!bp) {
-> +		error = -EFSCORRUPTED;
-> +		goto out_unlock;
-> +	}
->  
->  	error = xfs_qm_dqflush(dqp, bp);
->  	if (!error)
->
-Hi Darrick J. Wong,
+Add a test to validate the new atomic writes feature.
 
-Greetings!
-
-I used Syzkaller and found that there is possible deadlock in xfs_dquot_detach_buf in linux v6.13-rc3.
-
-After bisection and the first bad commit is:
-"
-ca378189fdfa xfs: convert quotacheck to attach dquot buffers
-"
-
-All detailed into can be found at:
-https://github.com/laifryiee/syzkaller_logs/tree/main/241216_192201_xfs_dquot_detach_buf
-Syzkaller repro code:
-https://github.com/laifryiee/syzkaller_logs/tree/main/241216_192201_xfs_dquot_detach_buf/repro.c
-Syzkaller repro syscall steps:
-https://github.com/laifryiee/syzkaller_logs/tree/main/241216_192201_xfs_dquot_detach_buf/repro.prog
-Syzkaller report:
-https://github.com/laifryiee/syzkaller_logs/tree/main/241216_192201_xfs_dquot_detach_buf/repro.report
-Kconfig(make olddefconfig):
-https://github.com/laifryiee/syzkaller_logs/tree/main/241216_192201_xfs_dquot_detach_buf/kconfig_origin
-Bisect info:
-https://github.com/laifryiee/syzkaller_logs/tree/main/241216_192201_xfs_dquot_detach_buf/bisect_info.log
-bzImage:
-https://github.com/laifryiee/syzkaller_logs/raw/refs/heads/main/241216_192201_xfs_dquot_detach_buf/bzImage_78d4f34e2115b517bcbfe7ec0d018bbbb6f9b0b8
-Issue dmesg:
-https://github.com/laifryiee/syzkaller_logs/blob/main/241216_192201_xfs_dquot_detach_buf/78d4f34e2115b517bcbfe7ec0d018bbbb6f9b0b8_dmesg.log
-
-"
-[   52.971391] ======================================================
-[   52.971706] WARNING: possible circular locking dependency detected
-[   52.972026] 6.13.0-rc3-78d4f34e2115+ #1 Not tainted
-[   52.972282] ------------------------------------------------------
-[   52.972596] repro/673 is trying to acquire lock:
-[   52.972842] ffff88802366b510 (&lp->qli_lock){+.+.}-{3:3}, at: xfs_dquot_detach_buf+0x2d/0x190
-[   52.973324]
-[   52.973324] but task is already holding lock:
-[   52.973617] ffff888015681b30 (&l->lock){+.+.}-{3:3}, at: __list_lru_walk_one+0x409/0x810
-[   52.974039]
-[   52.974039] which lock already depends on the new lock.
-[   52.974039]
-[   52.974442]
-[   52.974442] the existing dependency chain (in reverse order) is:
-[   52.974815]
-[   52.974815] -> #3 (&l->lock){+.+.}-{3:3}:
-[   52.975100]        lock_acquire+0x80/0xb0
-[   52.975319]        _raw_spin_lock+0x38/0x50
-[   52.975550]        list_lru_add+0x198/0x5d0
-[   52.975770]        list_lru_add_obj+0x207/0x360
-[   52.976008]        xfs_buf_rele+0xcb6/0x1610
-[   52.976243]        xfs_trans_brelse+0x385/0x410
-[   52.976484]        xfs_imap_lookup+0x38d/0x5a0
-[   52.976719]        xfs_imap+0x668/0xc80
-[   52.976923]        xfs_iget+0x875/0x2dd0
-[   52.977129]        xfs_mountfs+0x116b/0x2060
-[   52.977360]        xfs_fs_fill_super+0x12bc/0x1f10
-[   52.977612]        get_tree_bdev_flags+0x3d8/0x6c0
-[   52.977869]        get_tree_bdev+0x29/0x40
-[   52.978086]        xfs_fs_get_tree+0x26/0x30
-[   52.978310]        vfs_get_tree+0x9e/0x390
-[   52.978526]        path_mount+0x707/0x2000
-[   52.978742]        __x64_sys_mount+0x2bf/0x350
-[   52.978974]        x64_sys_call+0x1e1d/0x2140
-[   52.979210]        do_syscall_64+0x6d/0x140
-[   52.979431]        entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[   52.979723]
-[   52.979723] -> #2 (&bch->bc_lock){+.+.}-{3:3}:
-[   52.980029]        lock_acquire+0x80/0xb0
-[   52.980240]        _raw_spin_lock+0x38/0x50
-[   52.980456]        _atomic_dec_and_lock+0xb8/0x100
-[   52.980712]        xfs_buf_rele+0x112/0x1610
-[   52.980937]        xfs_trans_brelse+0x385/0x410
-[   52.981175]        xfs_imap_lookup+0x38d/0x5a0
-[   52.981410]        xfs_imap+0x668/0xc80
-[   52.981612]        xfs_iget+0x875/0x2dd0
-[   52.981816]        xfs_mountfs+0x116b/0x2060
-[   52.982042]        xfs_fs_fill_super+0x12bc/0x1f10
-[   52.982289]        get_tree_bdev_flags+0x3d8/0x6c0
-[   52.982540]        get_tree_bdev+0x29/0x40
-[   52.982756]        xfs_fs_get_tree+0x26/0x30
-[   52.982979]        vfs_get_tree+0x9e/0x390
-[   52.983194]        path_mount+0x707/0x2000
-[   52.983406]        __x64_sys_mount+0x2bf/0x350
-[   52.983637]        x64_sys_call+0x1e1d/0x2140
-[   52.983865]        do_syscall_64+0x6d/0x140
-[   52.984081]        entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[   52.984366]
-[   52.984366] -> #1 (&bp->b_lock){+.+.}-{3:3}:
-[   52.984665]        lock_acquire+0x80/0xb0
-[   52.984876]        _raw_spin_lock+0x38/0x50
-[   52.985092]        xfs_buf_rele+0x106/0x1610
-[   52.985319]        xfs_trans_brelse+0x385/0x410
-[   52.985556]        xfs_dquot_attach_buf+0x312/0x490
-[   52.985806]        xfs_qm_quotacheck_dqadjust+0x122/0x580
-[   52.986083]        xfs_qm_dqusage_adjust+0x5e0/0x7c0
-[   52.986340]        xfs_iwalk_ag_recs+0x423/0x780
-[   52.986579]        xfs_iwalk_run_callbacks+0x1e2/0x540
-[   52.986842]        xfs_iwalk_ag+0x6e6/0x920
-[   52.987061]        xfs_iwalk_ag_work+0x160/0x1e0
-[   52.987301]        xfs_pwork_work+0x8b/0x180
-[   52.987528]        process_one_work+0x92e/0x1b60
-[   52.987770]        worker_thread+0x68d/0xe90
-[   52.987992]        kthread+0x35a/0x470
-[   52.988186]        ret_from_fork+0x56/0x90
-[   52.988401]        ret_from_fork_asm+0x1a/0x30
-[   52.988627]
-[   52.988627] -> #0 (&lp->qli_lock){+.+.}-{3:3}:
-[   52.988924]        __lock_acquire+0x2ff8/0x5d60
-[   52.989156]        lock_acquire.part.0+0x142/0x390
-[   52.989402]        lock_acquire+0x80/0xb0
-[   52.989609]        _raw_spin_lock+0x38/0x50
-[   52.989820]        xfs_dquot_detach_buf+0x2d/0x190
-[   52.990061]        xfs_qm_dquot_isolate+0x1c6/0x12f0
-[   52.990312]        __list_lru_walk_one+0x31a/0x810
-[   52.990553]        list_lru_walk_one+0x4c/0x60
-[   52.990781]        xfs_qm_shrink_scan+0x1d0/0x380
-[   52.991020]        do_shrink_slab+0x410/0x10a0
-[   52.991253]        shrink_slab+0x349/0x1370
-[   52.991469]        drop_slab+0xf5/0x1f0
-[   52.991667]        drop_caches_sysctl_handler+0x179/0x1a0
-[   52.991943]        proc_sys_call_handler+0x418/0x610
-[   52.992197]        proc_sys_write+0x2c/0x40
-[   52.992409]        vfs_write+0xc59/0x1140
-[   52.992613]        ksys_write+0x14f/0x280
-[   52.992817]        __x64_sys_write+0x7b/0xc0
-[   52.993034]        x64_sys_call+0x16b3/0x2140
-[   52.993259]        do_syscall_64+0x6d/0x140
-[   52.993470]        entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[   52.993748]
-[   52.993748] other info that might help us debug this:
-[   52.993748]
-[   52.994133] Chain exists of:
-[   52.994133]   &lp->qli_lock --> &bch->bc_lock --> &l->lock
-[   52.994133]
-[   52.994613]  Possible unsafe locking scenario:
-[   52.994613]
-[   52.994901]        CPU0                    CPU1
-[   52.995125]        ----                    ----
-[   52.995348]   lock(&l->lock);
-[   52.995505]                                lock(&bch->bc_lock);
-[   52.995797]                                lock(&l->lock);
-[   52.996067]   lock(&lp->qli_lock);
-[   52.996242]
-[   52.996242]  *** DEADLOCK ***
-[   52.996242]
-[   52.996530] 3 locks held by repro/673:
-[   52.996719]  #0: ffff888012734408 (sb_writers#5){.+.+}-{0:0}, at: ksys_write+0x14f/0x280
-[   52.997127]  #1: ffff888015681b30 (&l->lock){+.+.}-{3:3}, at: __list_lru_walk_one+0x409/0x810
-[   52.997559]  #2: ffff88802366b5f8 (&dqp->q_qlock){+.+.}-{4:4}, at: xfs_qm_dquot_isolate+0x8f/0x12f0
-[   52.998011]
-[   52.998011] stack backtrace:
-[   52.998230] CPU: 1 UID: 0 PID: 673 Comm: repro Not tainted 6.13.0-rc3-78d4f34e2115+ #1
-[   52.998617] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qem4
-[   52.999165] Call Trace:
-[   52.999296]  <TASK>
-[   52.999411]  dump_stack_lvl+0xea/0x150
-[   52.999609]  dump_stack+0x19/0x20
-[   52.999786]  print_circular_bug+0x47f/0x750
-[   53.000002]  check_noncircular+0x2f4/0x3e0
-[   53.000213]  ? __pfx_check_noncircular+0x10/0x10
-[   53.000453]  ? __pfx_lockdep_lock+0x10/0x10
-[   53.000668]  __lock_acquire+0x2ff8/0x5d60
-[   53.000881]  ? __pfx___lock_acquire+0x10/0x10
-[   53.001105]  ? __kasan_check_read+0x15/0x20
-[   53.001324]  ? mark_lock.part.0+0xf3/0x17b0
-[   53.001539]  ? __this_cpu_preempt_check+0x21/0x30
-[   53.001779]  ? lock_acquire.part.0+0x152/0x390
-[   53.002008]  lock_acquire.part.0+0x142/0x390
-[   53.002228]  ? xfs_dquot_detach_buf+0x2d/0x190
-[   53.002456]  ? __pfx_lock_acquire.part.0+0x10/0x10
-[   53.002702]  ? debug_smp_processor_id+0x20/0x30
-[   53.002933]  ? rcu_is_watching+0x19/0xc0
-[   53.003141]  ? trace_lock_acquire+0x13d/0x1b0
-[   53.003366]  lock_acquire+0x80/0xb0
-[   53.003549]  ? xfs_dquot_detach_buf+0x2d/0x190
-[   53.003776]  _raw_spin_lock+0x38/0x50
-[   53.003965]  ? xfs_dquot_detach_buf+0x2d/0x190
-[   53.004190]  xfs_dquot_detach_buf+0x2d/0x190
-[   53.004408]  xfs_qm_dquot_isolate+0x1c6/0x12f0
-[   53.004638]  ? __pfx_xfs_qm_dquot_isolate+0x10/0x10
-[   53.004886]  ? lock_acquire+0x80/0xb0
-[   53.005080]  __list_lru_walk_one+0x31a/0x810
-[   53.005306]  ? __pfx_xfs_qm_dquot_isolate+0x10/0x10
-[   53.005555]  ? __pfx_xfs_qm_dquot_isolate+0x10/0x10
-[   53.005803]  list_lru_walk_one+0x4c/0x60
-[   53.006006]  xfs_qm_shrink_scan+0x1d0/0x380
-[   53.006221]  ? __pfx_xfs_qm_shrink_scan+0x10/0x10
-[   53.006465]  do_shrink_slab+0x410/0x10a0
-[   53.006673]  shrink_slab+0x349/0x1370
-[   53.006864]  ? __this_cpu_preempt_check+0x21/0x30
-[   53.007103]  ? lock_release+0x441/0x870
-[   53.007303]  ? __pfx_lock_release+0x10/0x10
-[   53.007517]  ? shrink_slab+0x161/0x1370
-[   53.007717]  ? __pfx_shrink_slab+0x10/0x10
-[   53.007931]  ? mem_cgroup_iter+0x3a6/0x670
-[   53.008147]  drop_slab+0xf5/0x1f0
-[   53.008324]  drop_caches_sysctl_handler+0x179/0x1a0
-[   53.008575]  proc_sys_call_handler+0x418/0x610
-[   53.008803]  ? __pfx_proc_sys_call_handler+0x10/0x10
-[   53.009054]  ? rcu_is_watching+0x19/0xc0
-[   53.009263]  ? __this_cpu_preempt_check+0x21/0x30
-[   53.009504]  proc_sys_write+0x2c/0x40
-[   53.009694]  vfs_write+0xc59/0x1140
-[   53.009876]  ? __pfx_proc_sys_write+0x10/0x10
-[   53.010101]  ? __pfx_vfs_write+0x10/0x10
-[   53.010307]  ? __sanitizer_cov_trace_const_cmp8+0x1c/0x30
-[   53.010583]  ksys_write+0x14f/0x280
-[   53.010765]  ? __pfx_ksys_write+0x10/0x10
-[   53.010971]  ? __audit_syscall_entry+0x39c/0x500
-[   53.011211]  __x64_sys_write+0x7b/0xc0
-[   53.011404]  ? syscall_trace_enter+0x14f/0x280
-[   53.011633]  x64_sys_call+0x16b3/0x2140
-[   53.011831]  do_syscall_64+0x6d/0x140
-[   53.012020]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[   53.012275] RIP: 0033:0x7f56d423ee5d
-[   53.012463] Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 8
-[   53.013348] RSP: 002b:00007ffcc7ab57f8 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
-[   53.013723] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f56d423ee5d
-[   53.014070] RDX: 0000000000000001 RSI: 0000000020000080 RDI: 0000000000000004
-[   53.014416] RBP: 00007ffcc7ab5810 R08: 00007ffcc7ab5810 R09: 00007ffcc7ab5810
-[   53.014763] R10: 002c646975756f6e R11: 0000000000000202 R12: 00007ffcc7ab5968
-[   53.015110] R13: 0000000000402d04 R14: 000000000041ae08 R15: 00007f56d45aa000
-[   53.015463]  </TASK>
-"
-
-Regards,
-Yi Lai
-
+Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 ---
+ common/rc         | 14 ++++++++
+ tests/xfs/611     | 81 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/611.out |  2 ++
+ 3 files changed, 97 insertions(+)
+ create mode 100755 tests/xfs/611
+ create mode 100644 tests/xfs/611.out
 
-If you don't need the following environment to reproduce the problem or if you
-already have one reproduced environment, please ignore the following information.
-
-How to reproduce:
-git clone https://gitlab.com/xupengfe/repro_vm_env.git
-cd repro_vm_env
-tar -xvf repro_vm_env.tar.gz
-cd repro_vm_env; ./start3.sh  // it needs qemu-system-x86_64 and I used v7.1.0
-  // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058f65 v6.2-rc5 kernel
-  // You could change the bzImage_xxx as you want
-  // Maybe you need to remove line "-drive if=pflash,format=raw,readonly=on,file=./OVMF_CODE.fd \" for different qemu version
-You could use below command to log in, there is no password for root.
-ssh -p 10023 root@localhost
-
-After login vm(virtual machine) successfully, you could transfer reproduced
-binary to the vm by below way, and reproduce the problem in vm:
-gcc -pthread -o repro repro.c
-scp -P 10023 repro root@localhost:/root/
-
-Get the bzImage for target kernel:
-Please use target kconfig and copy it to kernel_src/.config
-make olddefconfig
-make -jx bzImage           //x should equal or less than cpu num your pc has
-
-Fill the bzImage file into above start3.sh to load the target kernel in vm.
-
-
-Tips:
-If you already have qemu-system-x86_64, please ignore below info.
-If you want to install qemu v7.1.0 version:
-git clone https://github.com/qemu/qemu.git
-cd qemu
-git checkout -f v7.1.0
-mkdir build
-cd build
-yum install -y ninja-build.x86_64
-yum -y install libslirp-devel.x86_64
-../configure --target-list=x86_64-softmmu --enable-kvm --enable-vnc --enable-gtk --enable-sdl --enable-usb-redir --enable-slirp
-make
-make install
+diff --git a/common/rc b/common/rc
+index 2ee46e51..b9da749e 100644
+--- a/common/rc
++++ b/common/rc
+@@ -5148,6 +5148,20 @@ _require_scratch_btime()
+ 	_scratch_unmount
+ }
+ 
++_require_scratch_write_atomic()
++{
++	_require_scratch
++	_scratch_mkfs > /dev/null 2>&1
++	_scratch_mount
++
++	export STATX_WRITE_ATOMIC=0x10000
++	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_MNT \
++		| grep atomic >>$seqres.full 2>&1 || \
++		_notrun "write atomic not supported by this filesystem"
++
++	_scratch_unmount
++}
++
+ _require_inode_limits()
+ {
+ 	if [ $(_get_free_inode $TEST_DIR) -eq 0 ]; then
+diff --git a/tests/xfs/611 b/tests/xfs/611
+new file mode 100755
+index 00000000..a26ec143
+--- /dev/null
++++ b/tests/xfs/611
+@@ -0,0 +1,81 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test 611
++#
++# Validate atomic write support
++#
++. ./common/preamble
++_begin_fstest auto quick rw
++
++_supported_fs xfs
++_require_scratch
++_require_scratch_write_atomic
++
++test_atomic_writes()
++{
++    local bsize=$1
++
++    _scratch_mkfs_xfs -b size=$bsize >> $seqres.full
++    _scratch_mount
++    _xfs_force_bdev data $SCRATCH_MNT
++
++    testfile=$SCRATCH_MNT/testfile
++    touch $testfile
++
++    file_min_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile | \
++        grep atomic_write_unit_min | cut -d ' ' -f 3)
++    file_max_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile | \
++        grep atomic_write_unit_max | cut -d ' ' -f 3)
++    file_max_segments=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile | \
++        grep atomic_write_segments_max | cut -d ' ' -f 3)
++
++    # Check that atomic min/max = FS block size
++    test $file_min_write -eq $bsize || \
++        echo "atomic write min $file_min_write, should be fs block size $bsize"
++    test $file_min_write -eq $bsize || \
++        echo "atomic write max $file_max_write, should be fs block size $bsize"
++    test $file_max_segments -eq 1 || \
++        echo "atomic write max segments $file_max_segments, should be 1"
++
++    # Check that we can perform an atomic write of len = FS block size
++    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D 0 $bsize" $testfile | \
++        grep wrote | awk -F'[/ ]' '{print $2}')
++    test $bytes_written -eq $bsize || echo "atomic write len=$bsize failed"
++
++    # Check that we can perform an atomic write on an unwritten block
++    $XFS_IO_PROG -c "falloc $bsize $bsize" $testfile
++    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D $bsize $bsize" $testfile | \
++        grep wrote | awk -F'[/ ]' '{print $2}')
++    test $bytes_written -eq $bsize || echo "atomic write to unwritten block failed"
++
++    # Check that we can perform an atomic write on a sparse hole
++    $XFS_IO_PROG -c "fpunch 0 $bsize" $testfile
++    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D 0 $bsize" $testfile | \
++        grep wrote | awk -F'[/ ]' '{print $2}')
++    test $bytes_written -eq $bsize || echo "atomic write to sparse hole failed"
++
++    # Reject atomic write if len is out of bounds
++    $XFS_IO_PROG -dc "pwrite -A -D 0 $((bsize - 1))" $testfile 2>> $seqres.full && \
++        echo "atomic write len=$((bsize - 1)) should fail"
++    $XFS_IO_PROG -dc "pwrite -A -D 0 $((bsize + 1))" $testfile 2>> $seqres.full && \
++        echo "atomic write len=$((bsize + 1)) should fail"
++
++    _scratch_unmount
++}
++
++bdev_min_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_DEV | \
++    grep atomic_write_unit_min | cut -d ' ' -f 3)
++bdev_max_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_DEV | \
++    grep atomic_write_unit_max | cut -d ' ' -f 3)
++
++for ((bsize=$bdev_min_write; bsize<=bdev_max_write; bsize*=2)); do
++    _scratch_mkfs_xfs_supported -b size=$bsize >> $seqres.full 2>&1 && \
++        test_atomic_writes $bsize
++done;
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/611.out b/tests/xfs/611.out
+new file mode 100644
+index 00000000..b8a44164
+--- /dev/null
++++ b/tests/xfs/611.out
+@@ -0,0 +1,2 @@
++QA output created by 611
++Silence is golden
+-- 
+2.34.1
 
