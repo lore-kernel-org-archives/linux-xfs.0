@@ -1,86 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C1A5142624
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2024 17:55:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 916F085C5E
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2024 18:16:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734544502; cv=none; b=iA1Pdd6gHam/CWbA8kBgGof1YfhKLbndWAwz0bk9dI72uTQA10BtqWTclTxazkF1Ve9QAnEgg9gjo+6On5TvnHEFXEiD0OFTxJSk7QWTquahR/t1NJKlgnCHlt7jdWDXqCzZ7i54j7zGDkCR3ZNfpvCR+UvLEpVkLW+4MGB8j9o=
+	t=1734545800; cv=none; b=Nty7M7KoMwNFcBO82WD2z8wpiDsAl24yabjHRkMWE/Nx39eqqqfgUcBcubXZf0eSjfOKOquLeN4JMWviEzZi73zbBDpQeY4snvseYNaUYfnJk0Wc9f8ZdtC/fTCwtwppH9rNVzSxr8w3SdC5ZrOwGrmpfSHUaWqRjxkYRvxVgTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734544502; c=relaxed/simple;
-	bh=S+h3VCYAEGsBH/el9gEBeQhPokud2u/iFXO8ozYDNi0=;
+	s=arc-20240116; t=1734545800; c=relaxed/simple;
+	bh=YqopJ40cPjz4ggkZmdZ37kc19kHxRkr2yzwUbFgVtiI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oh5/icoHhfqyoUNBexnEEDMJ3iebe0DgNHz5qGhwdCk5O0zx4eA3meF12E3wZdYmOkOAY7oUmCvSyEUy91m4vvuKJuku2SUCAUi1W3vJDdjAQAyQ5KRyHMkaHwrrzdaNQvotYlBDLdIlj27R37o9JA6LL3xp9Fal1m1LD21HT/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XlkDiTx7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=NPc/kL1QWN6d4vJdxu1pYrXfL/Dtr4No7GzTdxDBgEdOJmzJMWvuJXdZwuTrvR6Jd3K4JaD/gclxx9VScN9K76/y0TAYYJrVn9+f3k1R62AwDNa59JT9nCeGn5bVkTpZtSDSMzIuZncx9R+qFLuYEDvNK2vWwHnMNTlKOFOMFr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a2OE+a8M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XlkDiTx7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0168EC4CECD;
-	Wed, 18 Dec 2024 17:55:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a2OE+a8M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16AA2C4CECD;
+	Wed, 18 Dec 2024 18:16:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734544502;
-	bh=S+h3VCYAEGsBH/el9gEBeQhPokud2u/iFXO8ozYDNi0=;
+	s=k20201202; t=1734545800;
+	bh=YqopJ40cPjz4ggkZmdZ37kc19kHxRkr2yzwUbFgVtiI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XlkDiTx7WvqFX8mIPb2XEYDx9X3zPAXW+eB+IzM7vb9WdTuEBW02xvzJx7AqM8bO8
-	 oKlPDvPfvniYyoHquXS0SXDEGCMN4C0nwE1VRuz26MiFfp06KsX6awueRMS8REYNiI
-	 jIugSdsiK771JsQf+L1R4EEXkFcKKIZzGugDzBA5Ysc5VesjHFf7dzWcew7/jY+lLE
-	 4KdDuszhW6NVvRtEXznh7vk91/v/rvdAAP9s191ALEZkiXC+BSF7zzk7mShTEvZ1gi
-	 vUAtsFXBuMeHNm8oI+DTQrMm1LLQMBD88NnlRIUSkQ0YH6lVHjNYaEnqRNSfNioMcq
-	 HOuhqMylLHhlQ==
-Date: Wed, 18 Dec 2024 09:55:01 -0800
+	b=a2OE+a8MwctIMT8Xabx7SRw6KmxjYfjVD0A2fs10hWNlZDCE3e5sBnAmARe3FxPwM
+	 LEOY99rNs89cuSLDk1BYrBgsQs09Hx5P0ZqFxST3LozNiHZhLJA78muxTgfy4JlgfG
+	 PkkvXwdKXBS+OT6dYdg79XUwbYgvFIUmKnoZD+vl3EmBdxPfS97kNeD/frEDgJLO1h
+	 JzToX0UaCqnYFW/5thH3pzbd02xT1IDChROzbH+YS9OcAiSxn2ZYMyKwRy9yqFCKyA
+	 rKXzfd+bKcNn7+hqe+vDAOygw3SsOEOnPdo7vS3sAMIXY6KcWa8FFkKB4hM/pTqCnV
+	 lGLhdudtROdsQ==
+Date: Wed, 18 Dec 2024 10:16:39 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: Weird behaviour with project quotas
-Message-ID: <20241218175501.GD6197@frogsfrogsfrogs>
-References: <Z0jbffI2A6Fn7LfO@dread.disaster.area>
- <20241129103332.4a6b452e@harpe.intellique.com>
- <Z0o8vE4MlIg-jQeR@dread.disaster.area>
- <20241212163351.58dd1305@harpe.intellique.com>
- <20241212202547.GK6678@frogsfrogsfrogs>
- <20241213164251.361f8877@harpe.intellique.com>
- <20241213171537.GL6698@frogsfrogsfrogs>
- <20241216231851.7b265e06@harpe.intellique.com>
- <20241217165042.GF6174@frogsfrogsfrogs>
- <20241218184732.4e38824f@harpe.intellique.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 36/43] xfs: disable reflink for zoned file systems
+Message-ID: <20241218181639.GY6174@frogsfrogsfrogs>
+References: <20241211085636.1380516-1-hch@lst.de>
+ <20241211085636.1380516-37-hch@lst.de>
+ <20241213231247.GG6678@frogsfrogsfrogs>
+ <20241215062654.GH10855@lst.de>
+ <20241217171055.GJ6174@frogsfrogsfrogs>
+ <20241218070934.GA25652@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241218184732.4e38824f@harpe.intellique.com>
+In-Reply-To: <20241218070934.GA25652@lst.de>
 
-On Wed, Dec 18, 2024 at 06:47:32PM +0100, Emmanuel Florac wrote:
-> Le Tue, 17 Dec 2024 08:50:42 -0800
-> "Darrick J. Wong" <djwong@kernel.org> écrivait:
+On Wed, Dec 18, 2024 at 08:09:34AM +0100, Christoph Hellwig wrote:
+> On Tue, Dec 17, 2024 at 09:10:55AM -0800, Darrick J. Wong wrote:
+> > Mostly intellectual curiosity on my part about self-reorganizing
+> > filesystems.  The zonegc you've already written is good enough for now,
+> > though the no-reflink requirement feels a bit onerous.
 > 
-> > > > xfs: don't over-report free space or inodes in statvfs  
-> > > 
-> > > I'll give it a try, but that looks like a patch for old weird RedHat
-> > > kernel, I'm running plain vanilla generally, and much higher
-> > > versions, I'll see how it applies :)  
-> > 
-> > That's from 6.13-rc3; I don't do RH kernels.
-> 
-> Sorry, I've seen the line 
-> 
-> > Cc: <stable@vger.kernel.org> # v2.6.18
-> 
-> And thought it was about some RH7.x kernel or something :)
+> The no-reflink is mostly because we want a minimum viable merge candidate,
+> and our initial uses for things like lsm databases and objects stores
+> don't strongly need it.  I hope to add reflink support ~ 2 or 3 merge
+> windows after the initial code.
 
-Ah.  Nope, cc:stable and RHEL kernels are not related.
+<nod>
 
 --D
-
-> -- 
-> ------------------------------------------------------------------------
->    Emmanuel Florac     |   Direction technique
-> ------------------------------------------------------------------------
->    https://intellique.com
-> ------------------------------------------------------------------------
->  
-
-
