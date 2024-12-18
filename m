@@ -1,44 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6499F2E630;
-	Wed, 18 Dec 2024 02:47:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 299FC1514F6
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2024 06:54:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734490075; cv=none; b=njuO+RMHfQmygsG2XEP8iGUg23PvAGF3g+FBNLtPN1SqDXNgDyrHz6x4WvCvivkkb8Zef6pjRBiGb4aKCHDL6GzdaxUbOVCbx3NHGwImvbu9+bcQt4jOuNgWxsZp6KiFfOkrbLtX//Uwix8NYEH4ORSrG7cb+utoydZ3Y0EPyz8=
+	t=1734504852; cv=none; b=Wb2uRyQD1ufP7kGzKWwDeCWXDwjyDER0PDvPbOo2Q3yo3rjZ2xpX2T/vbAKAoxs+NkqruB1huZqNsAdzvE6gxSInjsYLtuSGubLb2FGnTuSRi+idrWaH+BnF+LrQaX9byJ2wMjC9m98YYoHjshhDq2Dm8gUlZsS5ZdsN4/UngAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734490075; c=relaxed/simple;
-	bh=tnGx6pTsNvbBrbAYxGS0Gs9cemvIkinG+zu49qyWpHs=;
+	s=arc-20240116; t=1734504852; c=relaxed/simple;
+	bh=aiG/2GwwscRU7+oLC30nVG3YUKQIoPrmD+MMYVe/GGM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uFXu1fIsYb86LN20JsiuiN2ZNc19jKMGNCECLes2a3RW+klaCGoKUZL6RMVpQyF5dFMlOT0cFJc/CP2qIlGVsdgbJresO8ClYBdhjhp6blyMMHKXTyZWbGfxUzxrzN4WUNtqyR/gB4DkNeYYN0e6BiD26B92W0tMgdD80VWtGsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=riq+nY01; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tQXl8rBmO+51GeCkLHfrWI3rvvF3x2VnOhNVMlJE3xyfv+ho1xVk/kwNXISv4xExtgyeXVVCJHr/ZZRjfcinnVdM/x5vpkEBZtItMJ7QqXA1CiNxorzQXxPYG3HR/lTsWxOgsOrfM9HZPkQpvTyuOdzxOd9lUyNLTGFtCgsjn74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HMnh64W4; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="riq+nY01"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7133EC4CED3;
-	Wed, 18 Dec 2024 02:47:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734490074;
-	bh=tnGx6pTsNvbBrbAYxGS0Gs9cemvIkinG+zu49qyWpHs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=riq+nY01m2S7K/GguawyBy09WBzMdRSYLQUjnnzLIYUWOGc+btM9hBiPQDTgpwoHH
-	 sd06n0DwzmdKpMYxVAtGW07CAiqxb3VjTnpzTpC+LmyNPCHTXGneV2EcD33DCnj5Ma
-	 DyjbScaLUwPRSUjExECdhdfUtVxFe8dU8vUP7HobrcfnGa9dO78qnqapgtAcx1t56u
-	 VWXOmDwnHCbGs7y1qSVjxYDCRGQu+b5YPDK3hGyS5irR+zLQWStF/avuqwHOC7IzgF
-	 WQK0wHctEos+kHe8twbeC+RfCrGyr1uo7055sWSEBCSjQ3NW6cNPoydxu9HsG6ZNoz
-	 XQn0Ablkfej4Q==
-Date: Tue, 17 Dec 2024 18:47:53 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: hare@suse.de, willy@infradead.org, dave@stgolabs.net,
-	david@fromorbit.com, djwong@kernel.org, kbusch@kernel.org
-Cc: john.g.garry@oracle.com, hch@lst.de, ritesh.list@gmail.com,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, p.raghav@samsung.com, da.gomez@samsung.com,
-	kernel@pankajraghav.com
-Subject: Re: [PATCH 5/5] fs/buffer: reduce stack usage on bh_read_iter()
-Message-ID: <Z2I32cnkTMpk7_n1@bombadil.infradead.org>
-References: <20241218022626.3668119-1-mcgrof@kernel.org>
- <20241218022626.3668119-6-mcgrof@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HMnh64W4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=aiG/2GwwscRU7+oLC30nVG3YUKQIoPrmD+MMYVe/GGM=; b=HMnh64W4KkKyg6pLVTmukZf73Y
+	r2OL2pRTmYHjX0qbGwVVg9TZDxDPMOhZa6gQf3QVEHdGxp2q/jaitjz27ClS0dWFMH7veq2aoAOQt
+	+AT1ux1wSCaiV8pj+gerVsgqVb3BIWFEVx4rMOL+fER2JIyGz5b8Rc5LS0PbMkblRHUQ87gogcgtq
+	5TLpWnAJ3J3hSsNW+m38KBhyix9JDRXxfTqCkU1Sg4EyNnNnZqZ0iaLz5USlTFdOrUS7cr7D/1H1Q
+	ZlcOGO6epbOiOSw1M+/WL9bjprSQ1Hl6tAnZ8z6enkCqQOHkH2ZgCeLnOfsd4vaeA/j4VBbfjxfLq
+	rdXSjw+w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tNnwe-0000000FlZX-2BeT;
+	Wed, 18 Dec 2024 06:54:08 +0000
+Date: Tue, 17 Dec 2024 22:54:08 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	Emmanuel Florac <eflorac@intellique.com>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: don't over-report free space or inodes in statvfs
+Message-ID: <Z2JxkBd9eyBSc7Qq@infradead.org>
+References: <20241217174446.GN6174@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,38 +46,12 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241218022626.3668119-6-mcgrof@kernel.org>
+In-Reply-To: <20241217174446.GN6174@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Dec 17, 2024 at 06:26:26PM -0800, Luis Chamberlain wrote:
-> Now that we can read asynchronously buffer heads from a folio in
-> chunks,  we can chop up bh_read_iter() with a smaller array size.
-> Use an array of 8 to avoid stack growth warnings on systems with
-> huge base page sizes.
-> 
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
->  fs/buffer.c | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index b8ba72f2f211..bfa9c09b8597 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2415,7 +2415,10 @@ static void bh_read_batch_async(struct folio *folio,
->           (__tmp);					\
->           (__tmp) = bh_next(__tmp, __head))
->  
-> +#define MAX_BUF_CHUNK 8
-> +
->  struct bh_iter {
-> +	int chunk_number;
->  	sector_t iblock;
->  	get_block_t *get_block;
->  	bool any_get_block_error;
+Looks good:
 
-Oh... this can be cleaned up even further, chunk_idx and be removed now,
-and we can also remove the unused i variable... I'll wait for more
-feedback for a v2.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-  Luis
+We should probably wire up the reproducer to xfstests as well.
+
