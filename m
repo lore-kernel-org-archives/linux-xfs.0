@@ -1,300 +1,402 @@
-Received: from mail-il1-f205.google.com (mail-il1-f205.google.com [209.85.166.205])
+Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 173899460
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2024 00:27:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C07A08488;
+	Wed, 18 Dec 2024 01:31:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734481648; cv=none; b=lOvAUVtIVBEEZ9qBCDslA7iHBaary7AXtwqVoO/2hOKTs//CkyxKtFMcWHl+YGLpKcFfvfPWFB/axs9CZOuGrs0uMnUHZ8dZ5uwvDtLPbetjBZXXoKyVOdtK7pR4B1NEfGBcB3fisAFXzB/sYUJN9Hwj2fo0ppgteGMtlSeRRpg=
+	t=1734485503; cv=none; b=gCm5qkiuCr3zvH8nWPV2rQHvT+efwk3hpPX3KiTG7KA2iy8s4vW15hwZcUC6wEKJRaDEW998wEv6pnDleTXk1p1S5QHNlYLSOgnZgGOc0uTsrSKLkhphqhJv0xs05BSgPjAyC/TUSjYkfHZsXxk0nDsuJX8iAWLsanqxjIVRjnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734481648; c=relaxed/simple;
-	bh=NKSQJcLfIX4TXBrPQM3Z7qRCP6WUPo25U3pDL7fLOwo=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=RXQMMSj5Fqo+3SLE1bdfH8C4XpF5TRtcJsIr8qa3JKCJD1A24Uas7gk1hlPvcv+yY63JLLwlJB4ZLxlow6mCjK1WImtgysMj1F24Ol7DRSPRvrY23rwM8BhXnT5xyjc12/Zq8C7+Ac2vrJIBzUPL1e4/lH6eAfk59dTvWlz1JQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f205.google.com with SMTP id e9e14a558f8ab-3a9d195e6e5so60657555ab.2
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2024 16:27:25 -0800 (PST)
+	s=arc-20240116; t=1734485503; c=relaxed/simple;
+	bh=O8H9+hRSE1uwUg/G7oVEmi67z3aPvoF24tz/i6yZPdo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nCEFklyykylq8BXcmrAgxUXtCnKHdczDUERdwj9kMkMpdsIPmk1YUIUGDqoi6UAMlQQCTMqIbPc71NIpZ9Br6Zin+NleLqk6dDTXANglht2peg56B27c3fqWt2N7Ey6JSezU4S003A2Gck/2lmUFRe6feSYYn1Doc0bCl3FO6Kk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c+pDpb7p; arc=none smtp.client-ip=209.85.222.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c+pDpb7p"
+Received: by mail-qk1-f176.google.com with SMTP id af79cd13be357-7b8618be68bso58400485a.3;
+        Tue, 17 Dec 2024 17:31:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1734485501; x=1735090301; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SgfXVdimZyFGsiDSsorVhm0EV9HOw8uluyn3y12l4wg=;
+        b=c+pDpb7pAGXa2OoUQYwUOziIZ3pEOgKpbGbW56qv8+KtFmRUMjmzIwZqbMz1UKWLZk
+         EmIP8U690pbT/AUm+eWFCp9EMmwWXx7u2XcsaXrv9a7bsEtL40KnwH02+SPpKXZq82bn
+         j4vNRt30F7HYmGLYj/K7SwVO1o33dEbVlp5/NRgk6X4uaN7lWggs+edCgvQoLSzEvSBf
+         vXwO5toIS0Dg4nq19XxxBEbqxTLBSCbov48G6FgIutnc7iOYmIvfX98AMEL3tXrX3t+J
+         N3xMhguuePWWn76zPVs4t6+2K95H0mm822DKQgTBfKHBNCgelejcyVH8PZWR4rCY6e6x
+         Cx2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734481645; x=1735086445;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=nzzzAYviRF3iBCYz59WzBgpdQGau7YtZrcQ/qAeL5lo=;
-        b=fy5zDCWhTaiEkXYQO71LhAfGjOTfZTFN1zWCr/Wof/drj58Wb8faNJ3mYIieT8lBez
-         BHNGhSSbv35KTyjQeZP1xsNvuucZ6vszgT07rAiuUAll4/+ZATZAzhqhuIbu8bszFcjv
-         M84iyecxA2NHkDb9gxonGYtwplSShP7bgi17QXoHL2oT0GndDhcXr6g1Zcuhlo/gbrWs
-         N5e8QcrOt5H4RCD5lEtSzRNjXmi9t2pCOqn+3uJ10PkrlSgoj8Dv2Z211daoZ0E8dmF2
-         LbkfJs8iu5UnAD7F3CMuZeIeujam3hi7sW7bPfGd9dEDB143mpfV11IRCuj2eWVjZ/CJ
-         XN0A==
-X-Forwarded-Encrypted: i=1; AJvYcCVy19FgdtWSl2FDD8za3MnwbpVh3XffMac0PtOef5GsfyjLcnzhKLECdXDFQv6f43KenPdWUIyhELE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyLNpRmRJ9Ic1DEcbVIS04JpOT/SexMR0g8Ze3oSfeHc9uMcKRm
-	lyT/faUJNGCYuQGHYRihnDZYiN7tdXhzujIktWw2r4TS6wHJ9tOsbMWtjEOHkKMkjKUjRuLfM6z
-	heUdGQKx9QfT/9sPXCywEE5qjevTlP18TR9faxAgPxgjb9kGbkfJM19g=
-X-Google-Smtp-Source: AGHT+IHCDuoYffjFxcTaRfIi7fAV7Qrv0xMGMRWw35AFpFfkGSYeVcsFqlnj3n9dzx2R/CxRrBcJ2VBXbrt4Qsn7fwtlhv3ccmuo
+        d=1e100.net; s=20230601; t=1734485501; x=1735090301;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=SgfXVdimZyFGsiDSsorVhm0EV9HOw8uluyn3y12l4wg=;
+        b=eYhxkWQrMdW//mvu7Xsyx5EIbiNzPdjOP2xTCKhT57hcrhodbuN7qxFezN4wvmrd6e
+         kWxbQGxzbmHPZCDfCuyYrgp2LV/wLP6vRF3LzkeeVzj15PlFQEsK2cSYsTjGFUNr47Wr
+         5pN5QJwVwcaXCjLlmTcMaD1ly5z//ZX6C/xVeVKf9ulYJgHKD5QftCPcn/1shQR0XOAG
+         BdTEugD3pt5qPRRVjOJUjoG5l394nShmtDS5gbzlRouhzimOEH11WZDUgSzCQ/8ze+6Z
+         W2ONqjnRn8+dUHfnz2AZCBNBmnoAJXZ9+dm5Y0A1m99ddV2bGp4aQyTJmwOHi87fCoLX
+         Mxhw==
+X-Forwarded-Encrypted: i=1; AJvYcCWzU9mwBgPyO85TUJ+/Pl9oxy+BqgwSYyNi0Vocn24ULJOACKgSOnsybWP0EIFeWlMd7/NMuIOsCCI7t1Q=@vger.kernel.org, AJvYcCXV0CpCkU2/wvLA+yzR/6RqBWbbK1JFs667EirRpAUJ+Qjs75eVV6lfdNIHiXibLX0Dg3DZkmGyniOq@vger.kernel.org
+X-Gm-Message-State: AOJu0YyfcBGwY2BeYbvu9IFIAiOfZRCFwuYHp4cGCA4qZngsZrRvJaSB
+	DDU3LuEbBZ8LpveVYdk7PHSvPKqjofBdep9RUG/E++FtuFMZ8OCu26dp1TFSw12hjT/DZ55Id5L
+	aaCh+0BNuye4wqveoF7ZOofkJvX4=
+X-Gm-Gg: ASbGnctW1NezhiBR+lZ9TC8neTKOaukkAKtXJlr/Uw5gEkCJIrKoDU8Q4iCDeEnbD90
+	8ppVkQQ8qJ92iDP4apgzl1mPqGxsl15knYY1XXA==
+X-Google-Smtp-Source: AGHT+IHHzEn8RSLx2dO2YjubvIdrD7nLTpQY9JV5KQY24RTiF2NKVY+xEbTNLPixNWTcLfjdjBmO2U2AaaCfAth5iyY=
+X-Received: by 2002:a05:620a:4723:b0:7b6:ce6e:2294 with SMTP id
+ af79cd13be357-7b8638b7e46mr148845485a.56.1734485500685; Tue, 17 Dec 2024
+ 17:31:40 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:154e:b0:3a7:e732:471f with SMTP id
- e9e14a558f8ab-3bdc003e838mr9459835ab.1.1734481645246; Tue, 17 Dec 2024
- 16:27:25 -0800 (PST)
-Date: Tue, 17 Dec 2024 16:27:25 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <676216ed.050a0220.29fcd0.007e.GAE@google.com>
-Subject: [syzbot] [xfs?] possible deadlock in xfs_dquot_detach_buf
-From: syzbot <syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com>
-To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, hch@lst.de, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
+References: <20241104014439.3786609-1-zhangshida@kylinos.cn>
+ <ZyhAOEkrjZzOQ4kJ@dread.disaster.area> <CANubcdVbimowVMdoH+Tzk6AZuU7miwf4PrvTv2Dh0R+eSuJ1CQ@mail.gmail.com>
+ <Zyi683yYTcnKz+Y7@dread.disaster.area> <CANubcdX3zJ_uVk3rJM5t0ivzCgWacSj6ZHX+pDvzf3XOeonFQw@mail.gmail.com>
+ <ZzFmOzld1P9ReIiA@dread.disaster.area> <CANubcdXv8rmRGERFDQUELes3W2s_LdvfCSrOuWK8ge=cdEhFYA@mail.gmail.com>
+ <Zz5ogh1-52n35lZk@dread.disaster.area> <CANubcdX2q+HqZTw8v1Eqi560X841fzOFX=BzgVdEi=KwP7eijw@mail.gmail.com>
+ <Z0UbkWlaEuH9_bXd@dread.disaster.area>
+In-Reply-To: <Z0UbkWlaEuH9_bXd@dread.disaster.area>
+From: Stephen Zhang <starzhangzsd@gmail.com>
+Date: Wed, 18 Dec 2024 09:31:04 +0800
+Message-ID: <CANubcdULKcXmc0mQa4E=giG4BvErS4cPnk8gq5FO-AkdhhCgqw@mail.gmail.com>
+Subject: Re: [PATCH 0/5] *** Introduce new space allocation algorithm ***
+To: Dave Chinner <david@fromorbit.com>
+Cc: djwong@kernel.org, dchinner@redhat.com, leo.lilong@huawei.com, 
+	wozizhi@huawei.com, osandov@fb.com, xiang@kernel.org, 
+	zhangjiachen.jaycee@bytedance.com, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, zhangshida@kylinos.cn, allexjlzheng@tencent.com, 
+	flyingpeng@tencent.com, txpeng@tencent.com
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello,
+Dave Chinner <david@fromorbit.com> =E4=BA=8E2024=E5=B9=B411=E6=9C=8826=E6=
+=97=A5=E5=91=A8=E4=BA=8C 08:51=E5=86=99=E9=81=93=EF=BC=9A
+>
+> is simply restating what you said in the previous email that I
+> explicitly told you didn't answer the question I was asking you.
+>
+> Please listen to what I'm asking you to do. You don't need to
+> explain anything to me, I just want you to run an experiment and
+> report the results.
+>
+> This isn't a hard thing to do: the inode32 filesystem should fill to
+> roughly 50% before it really starts to spill to the lower AGs.
+> Record and paste the 'xfs_spaceman -c "freesp -a X"' histograms for
+> each AG when the filesystem is a little over half full.
+>
+> That's it. I don't need you to explain anything to me, I simply want
+> to know if the inode32 allocation policy does, in fact, work the way
+> it is expected to under your problematic workload.
+>
+> -Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
-syzbot found the following issue on:
+Hi, sorry for the delay.
+Seeing that others(adding them to CC list) have also encountered this issue=
+:
 
-HEAD commit:    78d4f34e2115 Linux 6.13-rc3
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=154b47e8580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=6fe704d2356374ad
-dashboard link: https://syzkaller.appspot.com/bug?extid=3126ab3db03db42e7a31
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=108434f8580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12fef344580000
+https://lore.kernel.org/all/20241216130551.811305-1-txpeng@tencent.com/
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/01951386840d/disk-78d4f34e.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/25dd6cdc37e1/vmlinux-78d4f34e.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/76c0990dd6b1/bzImage-78d4f34e.xz
-mounted in repro #1: https://storage.googleapis.com/syzbot-assets/22e572a24a7b/mount_0.gz
-mounted in repro #2: https://storage.googleapis.com/syzbot-assets/0171ea56f8f3/mount_1.gz
+As an reference, maybe we should give out the result we got so far:
++---------------+--------+--------+--------+
+| Space Used (%)| Normal | inode32|   AF   |
++---------------+--------+--------+--------+
+|            30 |  35.11 |  35.25 |  35.11 |
+|            41 |  57.35 |  57.58 |  55.96 |
+|            46 |  71.48 |  71.74 |  54.04 |
+|            51 |  88.40 |  88.68 |  49.49 |
+|            56 | 100.00 | 100.00 |  43.91 |
+|            62 |        |        |  37.00 |
+|            67 |        |        |  28.12 |
+|            72 |        |        |  16.32 |
+|            77 |        |        |  19.51 |
++---------------+--------+--------+--------+
 
-The issue was bisected to:
+The raw data will be attached in the tail of the mail.
 
-commit ca378189fdfa890a4f0622f85ee41b710bbac271
-Author: Darrick J. Wong <djwong@kernel.org>
-Date:   Mon Dec 2 18:57:39 2024 +0000
-
-    xfs: convert quotacheck to attach dquot buffers
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=122f34f8580000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=112f34f8580000
-console output: https://syzkaller.appspot.com/x/log.txt?x=162f34f8580000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com
-Fixes: ca378189fdfa ("xfs: convert quotacheck to attach dquot buffers")
-
-======================================================
-WARNING: possible circular locking dependency detected
-6.13.0-rc3-syzkaller #0 Not tainted
-------------------------------------------------------
-syz-executor179/5816 is trying to acquire lock:
-ffff8880292b4170 (&lp->qli_lock){+.+.}-{3:3}, at: spin_lock include/linux/spinlock.h:351 [inline]
-ffff8880292b4170 (&lp->qli_lock){+.+.}-{3:3}, at: xfs_dquot_detach_buf+0x2f/0x1a0 fs/xfs/xfs_dquot.c:83
-
-but task is already holding lock:
-ffff888032810830 (&l->lock){+.+.}-{3:3}, at: spin_lock include/linux/spinlock.h:351 [inline]
-ffff888032810830 (&l->lock){+.+.}-{3:3}, at: lock_list_lru_of_memcg+0x24b/0x4e0 mm/list_lru.c:77
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #3 (&l->lock){+.+.}-{3:3}:
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5849
-       __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
-       _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
-       spin_lock include/linux/spinlock.h:351 [inline]
-       lock_list_lru_of_memcg+0x24b/0x4e0 mm/list_lru.c:77
-       list_lru_add+0x59/0x270 mm/list_lru.c:164
-       xfs_buf_rele_cached fs/xfs/xfs_buf.c:1106 [inline]
-       xfs_buf_rele+0x4ca/0x15b0 fs/xfs/xfs_buf.c:1151
-       xfs_imap_lookup+0x26a/0x750 fs/xfs/libxfs/xfs_ialloc.c:2431
-       xfs_imap+0x54d/0x1090 fs/xfs/libxfs/xfs_ialloc.c:2514
-       xfs_iget_cache_miss fs/xfs/xfs_icache.c:644 [inline]
-       xfs_iget+0xaf6/0x2ec0 fs/xfs/xfs_icache.c:806
-       xfs_mountfs+0x13df/0x2410 fs/xfs/xfs_mount.c:919
-       xfs_fs_fill_super+0x12db/0x1590 fs/xfs/xfs_super.c:1791
-       get_tree_bdev_flags+0x48c/0x5c0 fs/super.c:1636
-       vfs_get_tree+0x90/0x2b0 fs/super.c:1814
-       do_new_mount+0x2be/0xb40 fs/namespace.c:3507
-       do_mount fs/namespace.c:3847 [inline]
-       __do_sys_mount fs/namespace.c:4057 [inline]
-       __se_sys_mount+0x2d6/0x3c0 fs/namespace.c:4034
-       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
-       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #2 (&bch->bc_lock){+.+.}-{3:3}:
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5849
-       __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
-       _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
-       spin_lock include/linux/spinlock.h:351 [inline]
-       _atomic_dec_and_lock+0xb8/0x130 lib/dec_and_lock.c:28
-       xfs_buf_rele_cached fs/xfs/xfs_buf.c:1085 [inline]
-       xfs_buf_rele+0x178/0x15b0 fs/xfs/xfs_buf.c:1151
-       xfs_imap_lookup+0x26a/0x750 fs/xfs/libxfs/xfs_ialloc.c:2431
-       xfs_imap+0x54d/0x1090 fs/xfs/libxfs/xfs_ialloc.c:2514
-       xfs_iget_cache_miss fs/xfs/xfs_icache.c:644 [inline]
-       xfs_iget+0xaf6/0x2ec0 fs/xfs/xfs_icache.c:806
-       xfs_mountfs+0x13df/0x2410 fs/xfs/xfs_mount.c:919
-       xfs_fs_fill_super+0x12db/0x1590 fs/xfs/xfs_super.c:1791
-       get_tree_bdev_flags+0x48c/0x5c0 fs/super.c:1636
-       vfs_get_tree+0x90/0x2b0 fs/super.c:1814
-       do_new_mount+0x2be/0xb40 fs/namespace.c:3507
-       do_mount fs/namespace.c:3847 [inline]
-       __do_sys_mount fs/namespace.c:4057 [inline]
-       __se_sys_mount+0x2d6/0x3c0 fs/namespace.c:4034
-       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
-       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #1 (&bp->b_lock){+.+.}-{3:3}:
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5849
-       __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
-       _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
-       spin_lock include/linux/spinlock.h:351 [inline]
-       xfs_buf_rele_cached fs/xfs/xfs_buf.c:1084 [inline]
-       xfs_buf_rele+0x164/0x15b0 fs/xfs/xfs_buf.c:1151
-       xfs_dquot_attach_buf+0x33e/0x560 fs/xfs/xfs_dquot.c:1345
-       xfs_qm_quotacheck_dqadjust+0x13f/0x5e0 fs/xfs/xfs_qm.c:1341
-       xfs_qm_dqusage_adjust+0x6a8/0x850 fs/xfs/xfs_qm.c:1464
-       xfs_iwalk_ag_recs+0x4e3/0x820 fs/xfs/xfs_iwalk.c:209
-       xfs_iwalk_run_callbacks+0x218/0x470 fs/xfs/xfs_iwalk.c:370
-       xfs_iwalk_ag+0xa9a/0xbb0 fs/xfs/xfs_iwalk.c:476
-       xfs_iwalk_ag_work+0xfb/0x1b0 fs/xfs/xfs_iwalk.c:625
-       xfs_pwork_work+0x7f/0x190 fs/xfs/xfs_pwork.c:47
-       process_one_work kernel/workqueue.c:3229 [inline]
-       process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
-       worker_thread+0x870/0xd30 kernel/workqueue.c:3391
-       kthread+0x2f0/0x390 kernel/kthread.c:389
-       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
-       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-
--> #0 (&lp->qli_lock){+.+.}-{3:3}:
-       check_prev_add kernel/locking/lockdep.c:3161 [inline]
-       check_prevs_add kernel/locking/lockdep.c:3280 [inline]
-       validate_chain+0x18ef/0x5920 kernel/locking/lockdep.c:3904
-       __lock_acquire+0x1397/0x2100 kernel/locking/lockdep.c:5226
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5849
-       __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
-       _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
-       spin_lock include/linux/spinlock.h:351 [inline]
-       xfs_dquot_detach_buf+0x2f/0x1a0 fs/xfs/xfs_dquot.c:83
-       xfs_qm_dquot_isolate+0x49d/0x1420 fs/xfs/xfs_qm.c:528
-       __list_lru_walk_one+0x170/0x470 mm/list_lru.c:301
-       list_lru_walk_one+0x3c/0x50 mm/list_lru.c:338
-       list_lru_shrink_walk include/linux/list_lru.h:240 [inline]
-       xfs_qm_shrink_scan+0x1e1/0x400 fs/xfs/xfs_qm.c:574
-       do_shrink_slab+0x72d/0x1160 mm/shrinker.c:437
-       shrink_slab+0x1093/0x14d0 mm/shrinker.c:664
-       drop_slab_node mm/vmscan.c:414 [inline]
-       drop_slab+0x142/0x280 mm/vmscan.c:432
-       drop_caches_sysctl_handler+0xbc/0x160 fs/drop_caches.c:68
-       proc_sys_call_handler+0x5ec/0x920 fs/proc/proc_sysctl.c:601
-       do_iter_readv_writev+0x600/0x880
-       vfs_writev+0x376/0xba0 fs/read_write.c:1050
-       do_writev+0x1b6/0x360 fs/read_write.c:1096
-       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
-       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
-other info that might help us debug this:
-
-Chain exists of:
-  &lp->qli_lock --> &bch->bc_lock --> &l->lock
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&l->lock);
-                               lock(&bch->bc_lock);
-                               lock(&l->lock);
-  lock(&lp->qli_lock);
-
- *** DEADLOCK ***
-
-3 locks held by syz-executor179/5816:
- #0: ffff888023dba420 (sb_writers#3){.+.+}-{0:0}, at: file_start_write include/linux/fs.h:2964 [inline]
- #0: ffff888023dba420 (sb_writers#3){.+.+}-{0:0}, at: vfs_writev+0x2d1/0xba0 fs/read_write.c:1048
- #1: ffff888032810830 (&l->lock){+.+.}-{3:3}, at: spin_lock include/linux/spinlock.h:351 [inline]
- #1: ffff888032810830 (&l->lock){+.+.}-{3:3}, at: lock_list_lru_of_memcg+0x24b/0x4e0 mm/list_lru.c:77
- #2: ffff8880292b4258 (&xfs_dquot_group_class){+.+.}-{4:4}, at: xfs_dqlock_nowait fs/xfs/xfs_dquot.h:126 [inline]
- #2: ffff8880292b4258 (&xfs_dquot_group_class){+.+.}-{4:4}, at: xfs_qm_dquot_isolate+0x8d/0x1420 fs/xfs/xfs_qm.c:467
-
-stack backtrace:
-CPU: 0 UID: 0 PID: 5816 Comm: syz-executor179 Not tainted 6.13.0-rc3-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 11/25/2024
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
- print_circular_bug+0x13a/0x1b0 kernel/locking/lockdep.c:2074
- check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2206
- check_prev_add kernel/locking/lockdep.c:3161 [inline]
- check_prevs_add kernel/locking/lockdep.c:3280 [inline]
- validate_chain+0x18ef/0x5920 kernel/locking/lockdep.c:3904
- __lock_acquire+0x1397/0x2100 kernel/locking/lockdep.c:5226
- lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5849
- __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
- _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
- spin_lock include/linux/spinlock.h:351 [inline]
- xfs_dquot_detach_buf+0x2f/0x1a0 fs/xfs/xfs_dquot.c:83
- xfs_qm_dquot_isolate+0x49d/0x1420 fs/xfs/xfs_qm.c:528
- __list_lru_walk_one+0x170/0x470 mm/list_lru.c:301
- list_lru_walk_one+0x3c/0x50 mm/list_lru.c:338
- list_lru_shrink_walk include/linux/list_lru.h:240 [inline]
- xfs_qm_shrink_scan+0x1e1/0x400 fs/xfs/xfs_qm.c:574
- do_shrink_slab+0x72d/0x1160 mm/shrinker.c:437
- shrink_slab+0x1093/0x14d0 mm/shrinker.c:664
- drop_slab_node mm/vmscan.c:414 [inline]
- drop_slab+0x142/0x280 mm/vmscan.c:432
- drop_caches_sysctl_handler+0xbc/0x160 fs/drop_caches.c:68
- proc_sys_call_handler+0x5ec/0x920 fs/proc/proc_sysctl.c:601
- do_iter_readv_writev+0x600/0x880
- vfs_writev+0x376/0xba0 fs/read_write.c:1050
- do_writev+0x1b6/0x360 fs/read_write.c:1096
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f5dd34a0ab9
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 61 17 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffd98ced508 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
-RAX: ffffffffffffffda RBX: 0030656c69662f2e RCX: 00007f5dd34a0ab9
-RDX: 0000000000000001 RSI: 00000000200000c0 RDI: 0000000000000004
-RBP: 00007f5dd351f610 R08: 0000000000000000 R09: 00007ffd98ced6d8
-R10: 00000000000001e3 R11: 0000000000000246 R12: 0000000000000001
-R13: 00007ffd98ced6c8 R14: 0000000000000001 R15: 0000000000000001
- </TASK>
+The first column represents the percentage of the space used.
+The rest three columns represents the fragmentation of the free space,
+which is the percentage of free extent in range [1,1] from the output
+of "xfs_db -c 'freesp' $test_dev".
 
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+How to test the Normal vs AF yourself?
+Apply the patches and follow the commands in:
+https://lore.kernel.org/linux-xfs/20241104014439.3786609-1-zhangshida@kylin=
+os.cn/
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+How to test the inode32 yourself?
+1. we need to do some hack to the kernel at first:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 09dc44480d16..69fa9f8867df 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -253,9 +253,10 @@ xfs_set_inode_alloc_perag(
+        }
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
+        set_bit(XFS_AGSTATE_ALLOWS_INODES, &pag->pag_opstate);
+-       if (pag->pag_agno < max_metadata)
++       if (pag->pag_agno < max_metadata) {
++               pr_info("%s=3D=3D=3Dagno:%d\n", __func__, pag->pag_agno);
+                set_bit(XFS_AGSTATE_PREFERS_METADATA, &pag->pag_opstate);
+-       else
++       } else
+                clear_bit(XFS_AGSTATE_PREFERS_METADATA, &pag->pag_opstate);
+        return true;
+ }
+@@ -312,7 +313,7 @@ xfs_set_inode_alloc(
+         * sufficiently large, set XFS_OPSTATE_INODE32 if we must alter
+         * the allocator to accommodate the request.
+         */
+-       if (xfs_has_small_inums(mp) && ino > XFS_MAXINUMBER_32)
++       if (xfs_has_small_inums(mp))
+                xfs_set_inode32(mp);
+        else
+                xfs_clear_inode32(mp);
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+so that we can test inode32 in a small disk img and observe it in a
+controllable way.
 
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+2. Do the same test as the method we used to test Normal vs AF, but with
+   a little change.
 
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
+2.1. Create an 1g sized img file and format it as xfs:
+  dd if=3D/dev/zero of=3Dtest.img bs=3D1M count=3D1024
+  mkfs.xfs -f test.img
+  sync
+2.2. Make a mount directory:
+  mkdir mnt
+2.3. Run the auto_frag.sh script, which will call another scripts
+  To enable the inode32, you should change the mount option in frag.sh:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+-       mount -o af1=3D1 $test_dev $test_mnt
++       mount -o inode32 $test_dev $test_mnt
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+  run:
+    ./auto_frag.sh 1
 
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
+And we are still hesitant about whether we should report these results sinc=
+e:
+1. it's tested with the assumption that the hack that we did to the inode32
+   will have no impact on the estimation of the metadata preference method.
+2. it's tested under an alternate-punching script instead of some real MySQ=
+L
+   workload.
 
-If you want to undo deduplication, reply with:
-#syz undup
+And I am afraid that Dave will blame us for not doing exactly what you
+told us to test. Sorry.:p
+Maybe we should port the algorithm to a release version and do a few months
+test with some users or database guys for the inode32 or the new algorithm
+in a whole.
+We should reply back at that time maybe.
+
+And Tianxiang, would you mind working with us on the problem? Teamwork
+will be quite efficient. We'll try our best to figure out a way to see how
+to let everyone play an important role in this work.
+
+Cheers,
+Shida
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3DAttachment 1: Normal=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+test_dev:test.img test_mnt:mnt/ fize_size:512000KB
+mount test.img mnt/
+file:mnt//frag size:500MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  285M  676M  30% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   63630   63630  35.11
+   2048    4095       1    2923   1.61
+  32768   65536       2  114672  63.28
+test_dev:test.img test_mnt:mnt/ fize_size:204800KB
+mount test.img mnt/
+file:mnt//frag2 size:200MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  386M  575M  41% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   89127   89127  57.35
+   2048    4095       1    2923   1.88
+   8192   16383       1   14226   9.15
+  32768   65536       1   49144  31.62
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount test.img mnt/
+file:mnt//frag3 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  436M  525M  46% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1  101877  101877  71.48
+   2048    4095       1    2923   2.05
+   8192   16383       1   14226   9.98
+  16384   32767       1   23492  16.48
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount test.img mnt/
+file:mnt//frag4 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  486M  475M  51% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1  114579  114579  88.40
+    512    1023       1     811   0.63
+   8192   16383       1   14226  10.98
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount test.img mnt/
+file:mnt//frag5 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  537M  424M  56% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1  116730  116730 100.00
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3DAttachment 2: inode 32=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+ test_dev:test.img test_mnt:mnt/ fize_size:512000KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag size:500MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  285M  676M  30% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   63887   63887  35.25
+   2048    4095       1    2931   1.62
+  32768   65536       2  114407  63.13
+test_dev:test.img test_mnt:mnt/ fize_size:204800KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag2 size:200MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  386M  575M  41% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   89487   89487  57.58
+   2048    4095       1    2931   1.89
+   8192   16383       1   13858   8.92
+  32768   65536       1   49144  31.62
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag3 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  435M  526M  46% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1  102235  102235  71.74
+   2048    4095       1    2931   2.06
+   8192   16383       1   13858   9.72
+  16384   32767       1   23492  16.48
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag4 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  486M  475M  51% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1  114937  114937  88.68
+    512    1023       1     819   0.63
+   8192   16383       1   13858  10.69
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag5 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  537M  424M  56% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1  116730  116730 100.00
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3DAttachment 3: AF=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+test_dev:test.img test_mnt:mnt/ fize_size:512000KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag size:500MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  285M  676M  30% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   63630   63630  35.11
+   2048    4095       1    2923   1.61
+  32768   65536       2  114672  63.28
+test_dev:test.img test_mnt:mnt/ fize_size:204800KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag2 size:200MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  385M  576M  41% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   86974   86974  55.96
+   2048    4095       1    2923   1.88
+  32768   65536       1   65528  42.16
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag3 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  436M  525M  46% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   77038   77038  54.04
+  32768   65536       1   65528  45.96
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag4 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  486M  475M  51% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   64186   64186  49.48
+  32768   65536       1   65528  50.52
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag5 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  536M  425M  56% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   51312   51312  43.91
+      2       3      11      22   0.02
+  32768   65536       1   65528  56.07
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag6 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  586M  375M  62% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   38486   38486  37.00
+  32768   65536       1   65528  63.00
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag7 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  637M  324M  67% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   25633   25633  28.12
+  32768   65536       1   65528  71.88
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag8 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  687M  274M  72% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   12783   12783  16.32
+  32768   65536       1   65528  83.68
+test_dev:test.img test_mnt:mnt/ fize_size:102400KB
+mount -o af1=3D1 test.img mnt/
+file:mnt//frag9 size:100MB
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/loop0     xfs   960M  737M  224M  77% /data/proj/frag_test/mnt
+umount test.img
+   from      to extents  blocks    pct
+      1       1   12768   12768  19.51
+   8192   16383       1   16370  25.02
+  32768   65536       1   36295  55.47
