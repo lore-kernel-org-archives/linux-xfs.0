@@ -1,39 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B808C1F63EF;
-	Wed, 18 Dec 2024 20:00:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67F61FC7D5;
+	Wed, 18 Dec 2024 20:05:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734552050; cv=none; b=MYKk5+N/hBJXM3QVZ+EMBTrRK311EE/vlO2vvk96fcVuQ4gh9QiFHoAqKtLwU84OPQuT+eiFbWG/Ns4KTCzrm6/Gy1KVZiOAOJqQVrYn4wMSx69LrLPAFWOv5y8DqZbAMe3SYqyw5fQ4N7g57fXRn95f3rN7Kc25Ao2tw78JRAQ=
+	t=1734552340; cv=none; b=mRXgMpKaXE/S2y5YydgTitzlKCq4j/sfNi8YObUMHeKX95u5A8dyKHLFSmbrFlRkRMBhJdHqVl1pyEAWBCCIOTfvU9R4mOI0Is4R5HlVTk43JmB4jiSygczHIccit54/lF0IC0FXOH6B3iEW3aYX9LhRoAEDfl6PUhLvFin3STU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734552050; c=relaxed/simple;
-	bh=aHdOoP210TcHhZvvp742WWJ7QL8YgwtrQkc7hbv5XCM=;
+	s=arc-20240116; t=1734552340; c=relaxed/simple;
+	bh=jwr7VoI8xrDln1LW7FhiygWtBOHRdqVr/6fBs6mNLXY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gW32OTisw6303q96T1XGOtrwY8VsX3eIA9aZw0WN+xANwljxcvP8BXZClk0PG+18HjzOQFwobiLCYh/ks6oGXy4vEaeAxhc5Atoc47v3UdolgRIpj/77X3JLzr/x2HhlvAcnPABLMwThLAFPgYbxafR9QEP1+cv3VWz7yC+aS7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fw3z0n8s; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=dM/nDFTEN713U6syflnTzvHMzPGf+5g/6ohKOlBsUYCEFoSvQNktqMZxRdT9Tw4Q+ytbIkqp66wmnqPBz4FWe6FEVybQZVUBnAfciTtOU9I53tecpHZm1t9Bab4TfCjMG5FOwNQR5dozWubLbOKUL5wfVGpX6YWg+G0JwCPy11Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R7NGvB9n; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fw3z0n8s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4181BC4CECD;
-	Wed, 18 Dec 2024 20:00:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734552050;
-	bh=aHdOoP210TcHhZvvp742WWJ7QL8YgwtrQkc7hbv5XCM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Fw3z0n8sP2EtOjwZ9r76ncjrCSexUaMO7syH6NlleHvjRt6eHTZZBi8dAw62tDcyy
-	 39of4DW9iDYJsRwiEEtIyP/A0cxIYSuLa2HmDOJelyfYx5q5no+5/1cuBQX6CZeGnf
-	 CPrjQYMlZ4t5S1NtyINGoVJ6MBXR+ABxd5xXT+v6yt0ALT6Mz311/u9a9R4Jy2fYHY
-	 eFae81fmdYaVHzHvsK8SS+Cl1It7ebkO97QX8O9RLS2mAs28CY5dgJy4UgZPFA7mrM
-	 AMSmYJQeWyVJitdkUfbeuIoeBtnzS4rrJpCPdgLTiGVjrjexcBZzZ4CUbLrkdflVPR
-	 rFEmnMuz0459w==
-Date: Wed, 18 Dec 2024 12:00:49 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: syzbot <syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_dquot_detach_buf
-Message-ID: <20241218200049.GC6174@frogsfrogsfrogs>
-References: <676216ed.050a0220.29fcd0.007e.GAE@google.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R7NGvB9n"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=EbdwqBnCPnMA30/eAen6jZBripOiH8JSBeZk3CDGHT0=; b=R7NGvB9nGB2rbrdZXVCuILMXRe
+	6fmvKr1WgwvzkZhMhJW1PJzMTyEuJsnWTFwEK82TXW4t5hUGJW7Nexip8W/K1+F1Q12BIglQCnyLF
+	SDx+wVu5qUHUgTrgTQ3/tpdPfrIJwQfnAs6JA8eaPfbn+wXalYMY7TLJYsX/0+C6Xc9wMc1dear2s
+	7qLxZ9KeymLgW3g3D3K53JGnUkcByEVsfIwGZI/BKzd72GsLBSC+/mVU3RFnOp7NYUUaJqqnJ+4Cr
+	Ut9cfQZtp12r2GmgXhlExf2I0wmGOetu+44l4rJptA1C0p/kKg0nEKarItbjCDFvxbUpLQexaLluF
+	il4EFXSg==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tO0IT-00000000ZPU-10Y0;
+	Wed, 18 Dec 2024 20:05:29 +0000
+Date: Wed, 18 Dec 2024 20:05:29 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: hare@suse.de, dave@stgolabs.net, david@fromorbit.com, djwong@kernel.org,
+	kbusch@kernel.org, john.g.garry@oracle.com, hch@lst.de,
+	ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
+Subject: Re: [PATCH 0/5] fs/buffer: strack reduction on async read
+Message-ID: <Z2MrCey3RIBJz9_E@casper.infradead.org>
+References: <20241218022626.3668119-1-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,6 +49,95 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <676216ed.050a0220.29fcd0.007e.GAE@google.com>
+In-Reply-To: <20241218022626.3668119-1-mcgrof@kernel.org>
 
-#syz test: git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git fixes-6.13_2024-12-18
+On Tue, Dec 17, 2024 at 06:26:21PM -0800, Luis Chamberlain wrote:
+> This splits up a minor enhancement from the bs > ps device support
+> series into its own series for better review / focus / testing.
+> This series just addresses the reducing the array size used and cleaning
+> up the async read to be easier to read and maintain.
+
+How about this approach instead -- get rid of the batch entirely?
+
+diff --git a/fs/buffer.c b/fs/buffer.c
+index cc8452f60251..f50ebbc1f518 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2361,9 +2361,9 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
+ {
+ 	struct inode *inode = folio->mapping->host;
+ 	sector_t iblock, lblock;
+-	struct buffer_head *bh, *head, *arr[MAX_BUF_PER_PAGE];
++	struct buffer_head *bh, *head;
+ 	size_t blocksize;
+-	int nr, i;
++	int i, submitted = 0;
+ 	int fully_mapped = 1;
+ 	bool page_error = false;
+ 	loff_t limit = i_size_read(inode);
+@@ -2380,7 +2380,6 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
+ 	iblock = div_u64(folio_pos(folio), blocksize);
+ 	lblock = div_u64(limit + blocksize - 1, blocksize);
+ 	bh = head;
+-	nr = 0;
+ 	i = 0;
+ 
+ 	do {
+@@ -2411,40 +2410,30 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
+ 			if (buffer_uptodate(bh))
+ 				continue;
+ 		}
+-		arr[nr++] = bh;
++
++		lock_buffer(bh);
++		if (buffer_uptodate(bh)) {
++			unlock_buffer(bh);
++			continue;
++		}
++
++		mark_buffer_async_read(bh);
++		submit_bh(REQ_OP_READ, bh);
++		submitted++;
+ 	} while (i++, iblock++, (bh = bh->b_this_page) != head);
+ 
+ 	if (fully_mapped)
+ 		folio_set_mappedtodisk(folio);
+ 
+-	if (!nr) {
+-		/*
+-		 * All buffers are uptodate or get_block() returned an
+-		 * error when trying to map them - we can finish the read.
+-		 */
+-		folio_end_read(folio, !page_error);
+-		return 0;
+-	}
+-
+-	/* Stage two: lock the buffers */
+-	for (i = 0; i < nr; i++) {
+-		bh = arr[i];
+-		lock_buffer(bh);
+-		mark_buffer_async_read(bh);
+-	}
+-
+ 	/*
+-	 * Stage 3: start the IO.  Check for uptodateness
+-	 * inside the buffer lock in case another process reading
+-	 * the underlying blockdev brought it uptodate (the sct fix).
++	 * All buffers are uptodate or get_block() returned an error
++	 * when trying to map them - we must finish the read because
++	 * end_buffer_async_read() will never be called on any buffer
++	 * in this folio.
+ 	 */
+-	for (i = 0; i < nr; i++) {
+-		bh = arr[i];
+-		if (buffer_uptodate(bh))
+-			end_buffer_async_read(bh, 1);
+-		else
+-			submit_bh(REQ_OP_READ, bh);
+-	}
++	if (!submitted)
++		folio_end_read(folio, !page_error);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(block_read_full_folio);
