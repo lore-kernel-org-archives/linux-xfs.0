@@ -1,68 +1,69 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09C413597C;
-	Wed, 18 Dec 2024 19:20:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC661155C87;
+	Wed, 18 Dec 2024 19:50:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734549632; cv=none; b=CnNQcZ2g8xt2n1oCgOM3ZP7ClqNw1wywoCbXwhne6KxGH1vfDOEn4c7FKUaRLvoCagim73Dwp5Zia43GLCjru+/rN6eO5HQZRWzcWFjjcTBq5tgLBG+9YbBUc05/4Y2/oJTyf94PXMbW2uHUH6X4nkWJWUv7W/g2g3M+AYufHhA=
+	t=1734551416; cv=none; b=ra9s8x34SKh3OrqUceq3HF1JnlC1Z6UyxnZZ2cBjl17aFkCq4Hz0+dcwS71onjk6tY1u6m3EM+aeXBEmXfYjH2/CYE4QXqHbz/k4EANC0rG/x3Y8oQ1X+UvUGhVfQNbtNkdUOoRsjFXMkys2qE8xrEzLtaYFg3qkCQoMJgcerC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734549632; c=relaxed/simple;
-	bh=mf18uw6yGLXbRpE4iWTCOFO0L5oozHSQS4s/+arltbc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fH7p0rWIMw/LtFljZqPyWFcTa2R4Lb7dXS2E+50vrJEWd0BhWmffO0T3ouY/kretCBvJYDh+CB7iskgbOMTICnuC2tmujmJzE86WFD72hKAmK8Nd8SavxaSBsdlKXFWPSRMlXLJqUmVo9p3b/0aqdD0agkBZTwfFkm7DxtIQlqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dVcjyo9T; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1734551416; c=relaxed/simple;
+	bh=sXb67nN4BuInFX9nPDrFHc6ZGj8mLPK0Gdmi6j8h9k0=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=irklqPExHH8Bt54kFdnki2SRImceDYQALtTUcQrMJrh25PkxQ1fm3nVPm8om7T3F8rBYEN4E/Kx38D3hX9mUsfngy47g6dwXxPK45DqRDzBn2RQWfBylbtpPrMd+ox7TulQL/gCx4mT/2G/G9WqyTePP8PGoO1kuYPjl9woE1XE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ORa5p2Ge; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dVcjyo9T"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=y+H9mbq07YmrLuzXQ/5j05Zjf+pa75UyPx0ekdw5M40=; b=dVcjyo9TeM8t8yyHKAvE06yW1b
-	6dvo+oWvfE1e1HDS0w8nFVagY6dfnoqUOEDoETffTcThfsnzrFZoVv3lDpg0Qyg8V9wSOqEKoPNKO
-	1+wiUEfJYuU26EkFXBi53t4kD5Z5LJW4Iyp93IM6rpY35y6DEu3L9uS9OFSIrfEHcmsFpErIb5Rnq
-	/ZnItbzfHWRcVeFR10JMZhm7lpOgZdDZku3aDFMnBAX7iz0k1ReWpk6l72JexGCbzzGPjWRtrPdXo
-	Zy8bbp0CwoFbhLT6C8hkGxxC4ZfF5d/Uf6tvqYSpaxTm60Bw3HT+VtHMsqL7sPU0WDu8sxMuP2Arn
-	wTsuGQog==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tNzaq-00000000VuC-0B2T;
-	Wed, 18 Dec 2024 19:20:24 +0000
-Date: Wed, 18 Dec 2024 19:20:23 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: hare@suse.de, dave@stgolabs.net, david@fromorbit.com, djwong@kernel.org,
-	kbusch@kernel.org, john.g.garry@oracle.com, hch@lst.de,
-	ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
-Subject: Re: [PATCH 3/5] fs/buffer: add a for_each_bh() for
- block_read_full_folio()
-Message-ID: <Z2Mgd4kYqPeDC4mP@casper.infradead.org>
-References: <20241218022626.3668119-1-mcgrof@kernel.org>
- <20241218022626.3668119-4-mcgrof@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ORa5p2Ge"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83AEFC4CECD;
+	Wed, 18 Dec 2024 19:50:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734551415;
+	bh=sXb67nN4BuInFX9nPDrFHc6ZGj8mLPK0Gdmi6j8h9k0=;
+	h=Date:Subject:From:To:Cc:From;
+	b=ORa5p2GeWccz4lgjzdEMR2x+JYrchmAaejEEzw0NgaN96T9l+rl0vaij5ppbQEcJI
+	 jYgLyvmrmxSG6Goqq/5eEdnSapJBfYxqCuQC0eEtvII3S8sS8AT/n7j9t0sTeOJeRA
+	 vlTAc8Y0WcfR/juCK9LmOymUI8oAlEeXfMp3w6I5HMs1wD0eGjhmuJYeAc1+3HhJJe
+	 iFCL77bk4E2yVGhLxOVmk8w4MprF8FJs6V/M0knEApvIrM2aBduOKwHl7I64BVY6j9
+	 QFjQPtSVLhzt/GOnFlz1LdKYPk4H9KfD58XjyFt1gAi7peH354OIYb9FNBDy7uIaj5
+	 cYJz8ZDklr0sw==
+Date: Wed, 18 Dec 2024 11:50:14 -0800
+Subject: [PATCHSET 6.12] xfs: bug fixes for 6.12.y LTS
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: stable@vger.kernel.org, djwong@kernel.org
+Cc: dchinner@redhat.com, hch@lst.de, cem@kernel.org, wozizhi@huawei.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <173455093488.305755.7686977865497104809.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241218022626.3668119-4-mcgrof@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, Dec 17, 2024 at 06:26:24PM -0800, Luis Chamberlain wrote:
->  	/* Stage one - collect buffer heads we need issue a read for */
-> -	do {
-> -		if (buffer_uptodate(bh))
-> +	for_each_bh(bh, head) {
-> +		if (buffer_uptodate(bh)) {
-> +			iblock++;
->  			continue;
-> +		}
+Hi all,
 
-I'm not loving this.  It's fragile to have to put 'iblock++' before each
-continue.
+Here's a bunch of bespoke hand-ported bug fixes for 6.12 LTS.  These
+fixes are the ones that weren't automatically picked up by Greg, either
+because they didn't apply or because they weren't cc'd to stable.  If
+there are any problems please let me know; this is the first time I've
+ever sent patches to stable.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
+
+--D
+---
+Commits in this patchset:
+ * xfs: sb_spino_align is not verified
+ * xfs: fix sparse inode limits on runt AG
+ * xfs: fix off-by-one error in fsmap's end_daddr usage
+ * xfs: fix sb_spino_align checks for large fsblock sizes
+ * xfs: fix zero byte checking in the superblock scrubber
+---
+ fs/xfs/libxfs/xfs_ialloc.c |   16 +++++++++-------
+ fs/xfs/libxfs/xfs_sb.c     |   15 +++++++++++++++
+ fs/xfs/scrub/agheader.c    |   29 +++++++++++++++++++++++++++--
+ fs/xfs/xfs_fsmap.c         |   29 ++++++++++++++++++-----------
+ 4 files changed, 69 insertions(+), 20 deletions(-)
 
