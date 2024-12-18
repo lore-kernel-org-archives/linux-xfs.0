@@ -1,94 +1,84 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AF336CDAF;
-	Wed, 18 Dec 2024 02:26:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6499F2E630;
+	Wed, 18 Dec 2024 02:47:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734488793; cv=none; b=faAZWCocS4eh4ZqdGQkB8zUrjeN6TuQraM0rGd2Rht6cfPM8Hz7y5ahmi14f65FoukjQye9SR2JdLbxLKsgQvAAd4PSm78FEKRbxdfnwFDmCkta7RrmxTfSsZrQujuhgeMayHCPHf9ZNL4jai8cPHAkoBNVTsMFO1wJj19aK33E=
+	t=1734490075; cv=none; b=njuO+RMHfQmygsG2XEP8iGUg23PvAGF3g+FBNLtPN1SqDXNgDyrHz6x4WvCvivkkb8Zef6pjRBiGb4aKCHDL6GzdaxUbOVCbx3NHGwImvbu9+bcQt4jOuNgWxsZp6KiFfOkrbLtX//Uwix8NYEH4ORSrG7cb+utoydZ3Y0EPyz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734488793; c=relaxed/simple;
-	bh=9dBXmKcgLQirHI2iYSo1wb5jOOk6jjcxYvTobhrvo9k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QjqnPubtocCYqoWmhHoxnxxgmEVNtBP7oh4e+g5yJEVW8Cx2/7iWHuYNYO78tlsxOEivhzIaEbDXL9Sv7Qnxs/5Az81j66eVyHjOSuJEQg3ERUMVNYpz70jH9BnoaYVdRGedzcGOR5he/nQ7sAN0ZO2OQeLRhjeA8zejAkeBVUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Voh8Sf3h; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1734490075; c=relaxed/simple;
+	bh=tnGx6pTsNvbBrbAYxGS0Gs9cemvIkinG+zu49qyWpHs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uFXu1fIsYb86LN20JsiuiN2ZNc19jKMGNCECLes2a3RW+klaCGoKUZL6RMVpQyF5dFMlOT0cFJc/CP2qIlGVsdgbJresO8ClYBdhjhp6blyMMHKXTyZWbGfxUzxrzN4WUNtqyR/gB4DkNeYYN0e6BiD26B92W0tMgdD80VWtGsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=riq+nY01; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Voh8Sf3h"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=zQboEwj/BnkbLUHNu4i0H6IOdbozIVeO6wUMyrdIBHI=; b=Voh8Sf3hO5qNkjoK4kIPOmOgEK
-	KymmqwZVrqKkrljZN2JeD/OQLToc1A8LNRhRuBTBcPfbdAjjEzWuJ0LI2x9XlHWHr0WNa/9gP3bmK
-	zd/YOrMgYy0ipBfnPr2D5RvFIFhc+nIZlwXW24TC/hW1DZnmuFQJQHv9RyMQLlhXUmtieqhNiet0b
-	CyRsUC2rLKtSQBiFM6gspK2m69dbsrPc6kP2MdZISh3XhokfJdRGmnOFlJBIu4h3mH1CigDN/cOY2
-	ckLuHCIjOl51/DOGdhElWBRqoxI49t8/r5R74GfUuj6zq5qeTQDZOPnD3dIda6xFV7Jn/oknafRHJ
-	IFScGQ0A==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tNjlc-0000000FOFQ-0omO;
-	Wed, 18 Dec 2024 02:26:28 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="riq+nY01"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7133EC4CED3;
+	Wed, 18 Dec 2024 02:47:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734490074;
+	bh=tnGx6pTsNvbBrbAYxGS0Gs9cemvIkinG+zu49qyWpHs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=riq+nY01m2S7K/GguawyBy09WBzMdRSYLQUjnnzLIYUWOGc+btM9hBiPQDTgpwoHH
+	 sd06n0DwzmdKpMYxVAtGW07CAiqxb3VjTnpzTpC+LmyNPCHTXGneV2EcD33DCnj5Ma
+	 DyjbScaLUwPRSUjExECdhdfUtVxFe8dU8vUP7HobrcfnGa9dO78qnqapgtAcx1t56u
+	 VWXOmDwnHCbGs7y1qSVjxYDCRGQu+b5YPDK3hGyS5irR+zLQWStF/avuqwHOC7IzgF
+	 WQK0wHctEos+kHe8twbeC+RfCrGyr1uo7055sWSEBCSjQ3NW6cNPoydxu9HsG6ZNoz
+	 XQn0Ablkfej4Q==
+Date: Tue, 17 Dec 2024 18:47:53 -0800
 From: Luis Chamberlain <mcgrof@kernel.org>
-To: hare@suse.de,
-	willy@infradead.org,
-	dave@stgolabs.net,
-	david@fromorbit.com,
-	djwong@kernel.org,
-	kbusch@kernel.org
-Cc: john.g.garry@oracle.com,
-	hch@lst.de,
-	ritesh.list@gmail.com,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-block@vger.kernel.org,
-	gost.dev@samsung.com,
-	p.raghav@samsung.com,
-	da.gomez@samsung.com,
-	kernel@pankajraghav.com,
-	mcgrof@kernel.org
-Subject: [PATCH 0/5] fs/buffer: strack reduction on async read
-Date: Tue, 17 Dec 2024 18:26:21 -0800
-Message-ID: <20241218022626.3668119-1-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.47.1
+To: hare@suse.de, willy@infradead.org, dave@stgolabs.net,
+	david@fromorbit.com, djwong@kernel.org, kbusch@kernel.org
+Cc: john.g.garry@oracle.com, hch@lst.de, ritesh.list@gmail.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, p.raghav@samsung.com, da.gomez@samsung.com,
+	kernel@pankajraghav.com
+Subject: Re: [PATCH 5/5] fs/buffer: reduce stack usage on bh_read_iter()
+Message-ID: <Z2I32cnkTMpk7_n1@bombadil.infradead.org>
+References: <20241218022626.3668119-1-mcgrof@kernel.org>
+ <20241218022626.3668119-6-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241218022626.3668119-6-mcgrof@kernel.org>
 
-This splits up a minor enhancement from the bs > ps device support
-series into its own series for better review / focus / testing.
-This series just addresses the reducing the array size used and cleaning
-up the async read to be easier to read and maintain.
+On Tue, Dec 17, 2024 at 06:26:26PM -0800, Luis Chamberlain wrote:
+> Now that we can read asynchronously buffer heads from a folio in
+> chunks,  we can chop up bh_read_iter() with a smaller array size.
+> Use an array of 8 to avoid stack growth warnings on systems with
+> huge base page sizes.
+> 
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> ---
+>  fs/buffer.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index b8ba72f2f211..bfa9c09b8597 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -2415,7 +2415,10 @@ static void bh_read_batch_async(struct folio *folio,
+>           (__tmp);					\
+>           (__tmp) = bh_next(__tmp, __head))
+>  
+> +#define MAX_BUF_CHUNK 8
+> +
+>  struct bh_iter {
+> +	int chunk_number;
+>  	sector_t iblock;
+>  	get_block_t *get_block;
+>  	bool any_get_block_error;
 
-Changes on this series from the RFC v2:
+Oh... this can be cleaned up even further, chunk_idx and be removed now,
+and we can also remove the unused i variable... I'll wait for more
+feedback for a v2.
 
-  - Fixes the loop by ensuring we bump counts on continue as noted by
-    Matthew Wilcox
-  - new patch to simplify the loop by using bh_offset()
-  - bike shed love on comments
-  - Testing: tested on ext4 and XFS with fstests, with no regressions found
-    after willy's suggested loop fix on continue. I'm however running a new
-    set of tests now after a rebase onto v6.13-rc3 and a bit of patch ordering
-    and the addition of bh_offset(). Prelimimary tests however show no
-    issues.
-
-[0] https://lkml.kernel.org/r/20241214031050.1337920-1-mcgrof@kernel.org
-
-Luis Chamberlain (5):
-  fs/buffer: move async batch read code into a helper
-  fs/buffer: simplify block_read_full_folio() with bh_offset()
-  fs/buffer: add a for_each_bh() for block_read_full_folio()
-  fs/buffer: add iteration support for block_read_full_folio()
-  fs/buffer: reduce stack usage on bh_read_iter()
-
- fs/buffer.c | 221 +++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 160 insertions(+), 61 deletions(-)
-
--- 
-2.43.0
-
+  Luis
