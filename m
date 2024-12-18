@@ -1,44 +1,29 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47BCC1514F6
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2024 06:55:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EFD5156991
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2024 07:09:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734504921; cv=none; b=PTbTz4YvFJVNzCzHMb+Z/JN1OcwTr2JXq3cTNoprH0hIvA+f0xfOsH16pXFFNnU7Vkohgeo9u1dcATnMhu06WE2p3bNoGswno0pa9VjnfZWu94ykFAMCEJFGELr2mGwY3GJ5EpePbGMZSgcBXr+R6tth8VQenktjw8wC0qILqEE=
+	t=1734505780; cv=none; b=LKUH3KZEnhDIAQIkjARhmuSv0n4KLEUeXeZGgTbaJh4hy8lxxdzRWwXp2T8+jxqx6buvGGFqeonFKMU7fXaQjiK0RUPM3sKFEi+aiqqURBc8TVvfMaZu+UWnnG5gGmUxQtJWooBH3KEY4zixr3NQbnV7NIptxhQCWfTmWDqufg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734504921; c=relaxed/simple;
-	bh=vkdk4mEosVSOEaw4sD8PJU+F3UkXPcboPn2ytx5msGM=;
+	s=arc-20240116; t=1734505780; c=relaxed/simple;
+	bh=rF6V3aUh3YdcxP2xuBMvsZBnxuy4Ozz1zT5cHPDeCes=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DtG2nyu0LTcDHnsMdA2UlP7nq4QPKlhV1SkskumThwwpJLxb8RyCWqj2NLbzRODsmDp+/PUWbpU6E874i/ok2g3q0NRfn0mGfyg7RL2PzzeRfFqJmlPm2Ap/6Daql3B+uBF7NvwYTx9RJG6gSeT4fih4rOhCTgNzf6y7AA6ByTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=czavUWkz; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="czavUWkz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=XS7y+YYuSIVgog1wMBPaCLzZFfma90DZLOreku6ZMsE=; b=czavUWkzHCgYT5XioMgL9RBjHZ
-	cRATgEtD0sixVYMOoGjvzm7nxWSfnQrQPTjEkjWrBCn2QRIK2J86si5gQZpaE4x1fmiDIvrZd/4Qm
-	f/MUQS2llmS8vehGAPDuW3ZdnlbxaLFNHCI5joxmkgyWL4kFBw5CT9+YIlizPVdGANLlETtcRTreH
-	Y5ZgpoWBCnIt7iPDrb2hZClsQaC6U040ry1Nq54+4aOgCMiFbB/7gdBCydfC/usiwcyElyhfCp6Fi
-	DY0V7gjO1UFjHs8ir9jX8S+yCBUBEHzL4Ziue2w1vYtPRBDmXiban7+aGJAGKBd0Fm32KJIcQy87k
-	iEl6t3UA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tNnxo-0000000Flek-03ka;
-	Wed, 18 Dec 2024 06:55:20 +0000
-Date: Tue, 17 Dec 2024 22:55:19 -0800
-From: Christoph Hellwig <hch@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=BJnV9iqzdfhrcPwMzCGnF8d08iy+KVaY8S92htO+trRBofRlGpqHZBb+J8NazL3AJbF2cRkyT/2U+tYnvY9XDHM2RqN/E+E4r3OOfofyN8rj1zX+2rOjoHLsjoXoNeFa4XwpTYpc33y57lz0kTXp+tlzH3hXWF/f87jVZVrmN48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 846A668AA6; Wed, 18 Dec 2024 08:09:34 +0100 (CET)
+Date: Wed, 18 Dec 2024 08:09:34 +0100
+From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 28/43] xfs: scrub the realtime refcount btree
-Message-ID: <Z2Jx140RMiOHBLjx@infradead.org>
-References: <173405124452.1182620.15290140717848202826.stgit@frogsfrogsfrogs>
- <173405125046.1182620.123195236500556349.stgit@frogsfrogsfrogs>
- <Z1v7zpBiiZ-G_sB0@infradead.org>
- <20241217205510.GV6174@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 36/43] xfs: disable reflink for zoned file systems
+Message-ID: <20241218070934.GA25652@lst.de>
+References: <20241211085636.1380516-1-hch@lst.de> <20241211085636.1380516-37-hch@lst.de> <20241213231247.GG6678@frogsfrogsfrogs> <20241215062654.GH10855@lst.de> <20241217171055.GJ6174@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,13 +32,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241217205510.GV6174@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20241217171055.GJ6174@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Dec 17, 2024 at 12:55:10PM -0800, Darrick J. Wong wrote:
-> "Add code to scrub realtime refcount btrees.  Similar to the refcount
-> btree checking code for the data device, we walk the rmap btree for
-> each refcount record to confirm that the reference counts are correct."
+On Tue, Dec 17, 2024 at 09:10:55AM -0800, Darrick J. Wong wrote:
+> Mostly intellectual curiosity on my part about self-reorganizing
+> filesystems.  The zonegc you've already written is good enough for now,
+> though the no-reflink requirement feels a bit onerous.
 
-Sounds good.
-
+The no-reflink is mostly because we want a minimum viable merge candidate,
+and our initial uses for things like lsm databases and objects stores
+don't strongly need it.  I hope to add reflink support ~ 2 or 3 merge
+windows after the initial code.
