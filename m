@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF3FA1AA7BA;
-	Thu, 19 Dec 2024 19:18:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77A581A0B0C
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:19:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734635938; cv=none; b=UmHBwOdCEAERtc91o0BZAX8lPFkPLLW4MDsPglLyHd7nGkpYVTdL7ck902eC3Nh9XDRgCfMyhLyBe/00pAEcuyQ9qClPQRfk8EwbLwcdxKH6SrY6aJrTIv/COUz4dKNtrOHmLmVmBhei9OS+xaSDPF1kU+g7gL3huNx7rdetqec=
+	t=1734635954; cv=none; b=Y0WxL1KnMD4cahyD2BHni8ADbc6G/y3lUBJ+NObcb4D7q/hDuN59pesjMy2ddQsa7JnIkEMS+07avU6aNijCdjHqjiMnfoL3KUeYtDKvS2acN+kHJpv3p0uT++rQ9CRrbqQPVLcrTVOsu/25Mg/TiSKA0TtRbEA1+b4HjRKaJfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734635938; c=relaxed/simple;
-	bh=PiEDJmRgJ7E0oJScUKnekyqnsf1u7h8/HbTR1w56YKw=;
+	s=arc-20240116; t=1734635954; c=relaxed/simple;
+	bh=n85AfbX3zXWZcvawgeT8U3Sqh6r6/4u7xoUg42CJeI8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ScMX/MuseIf5iZ5T05YW8JD09DXJhwhP/mr2YxEbnWWp8YK6bsvbd1FofNeqSEdsCGjuTIjFMEajdp6hbshxIGeW9K5kQdwVG3tCpODCTUTbkFD8sLKDJZVImTTAfxnxRsw7kGEnamx4cSPQbFgyD+K4jbR/thU3cxxE/YoPC8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pDVUSTji; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=D11Gi+FALE5P71lQqcNv0TOBu5zgAaHjALQ1zmXiAe66RwMrMxDSiODzDX0tUiT+byXW6qgsmW22hhdiSS2xxzmuog91Bq0l7b4CzfDudkKvTWoNcnlRe8fpDsexvk4MSqazWvt3lh/NTpaoLUhQUsX19Psql/LmDMENWBaGiFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VRLzmMs9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pDVUSTji"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D99DC4CECE;
-	Thu, 19 Dec 2024 19:18:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VRLzmMs9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0881C4CECE;
+	Thu, 19 Dec 2024 19:19:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734635938;
-	bh=PiEDJmRgJ7E0oJScUKnekyqnsf1u7h8/HbTR1w56YKw=;
+	s=k20201202; t=1734635954;
+	bh=n85AfbX3zXWZcvawgeT8U3Sqh6r6/4u7xoUg42CJeI8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pDVUSTjiATTYNlSP4xKvoZoZEojxB2maGEayHH5HqwhCWef9cetrwv3H5sEt1k0a0
-	 eSFxXOeJIMpsP69ITFh/NU8TGFl5Xhx6ECuS9t7D55FdzV/PUp7KstmNKusqUXbzw3
-	 vEBUpT7FdV1KpKFPPTI9SPLnGBSgwWLSyxMHFOv7WuCQIL64axqhF5zxcu06aJiwsg
-	 XOenZm2yjUUloELD+jToBIHVpsnHS9O7VcTmhBirNmB2MP4UWqr+tL9YbhJXT1jBVT
-	 TuZDEs+0pmVbe3mkj68hd3qknE6w5k6u5Xsl+kA68MeEVpq5hs8cFWmC65gO9bqywD
-	 T6pFNUJYU4THw==
-Date: Thu, 19 Dec 2024 11:18:57 -0800
-Subject: [PATCHSET 1/5] xfs: bug fixes for 6.13
+	b=VRLzmMs9kztg8JLcsRUR3nfaiWY0GjRr+UXzRLEsSKD2eCN2CEnks02B/3nYGbCMC
+	 CCYdyIXOAXl5U6MyrOzgQJP7oMNks8ipZf2XckOfWcl6OkVousBN9bbHPP0NdiSfD6
+	 ao1X5lLlFmI6h3S37qPFQqA3cSL8yNwISyhbg64zT3yrwemOs0uaZA1fkJAb12Bwp/
+	 KEh8N5max/XHGrYH2LgjpwbSXZfJw+t0H26AzcCv5mbwpN8CLD/hoHHyhEkc8zdvTv
+	 ruSE6UUbECOQzpen99BgOn/VyUS7AVz5jAvFYi/cHMdtoZGReRdIqdHBujo+xFh6Uu
+	 EmFJou9IbPJ3w==
+Date: Thu, 19 Dec 2024 11:19:13 -0800
+Subject: [PATCHSET v6.1 2/5] xfs: refactor btrees to support records in inode
+ root
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: eflorac@intellique.com,
- syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com, hch@lst.de,
- stable@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173463578212.1570935.4004660775026906039.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <173463578631.1571062.6149474539778937307.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241219191553.GI6160@frogsfrogsfrogs>
 References: <20241219191553.GI6160@frogsfrogsfrogs>
 Precedence: bulk
@@ -47,7 +46,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Bug fixes for 6.13.
+Amend the btree code to support storing btree rcords in the inode root,
+because the current bmbt code does not support this.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,16 +58,28 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-6.13-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-ifork-records
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs-6.13-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-ifork-records
 ---
 Commits in this patchset:
- * xfs: don't over-report free space or inodes in statvfs
- * xfs: release the dquot buf outside of qli_lock
+ * xfs: tidy up xfs_iroot_realloc
+ * xfs: refactor the inode fork memory allocation functions
+ * xfs: make xfs_iroot_realloc take the new numrecs instead of deltas
+ * xfs: make xfs_iroot_realloc a bmap btree function
+ * xfs: tidy up xfs_bmap_broot_realloc a bit
+ * xfs: hoist the node iroot update code out of xfs_btree_new_iroot
+ * xfs: hoist the node iroot update code out of xfs_btree_kill_iroot
+ * xfs: support storing records in the inode core root
 ---
- fs/xfs/xfs_dquot.c  |   12 ++++++++----
- fs/xfs/xfs_qm_bhv.c |   27 +++++++++++++++++----------
- 2 files changed, 25 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c          |    7 -
+ fs/xfs/libxfs/xfs_bmap_btree.c    |  111 ++++++++++++
+ fs/xfs/libxfs/xfs_bmap_btree.h    |    3 
+ fs/xfs/libxfs/xfs_btree.c         |  333 ++++++++++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_btree.h         |   18 ++
+ fs/xfs/libxfs/xfs_btree_staging.c |    9 +
+ fs/xfs/libxfs/xfs_inode_fork.c    |  170 ++++++-------------
+ fs/xfs/libxfs/xfs_inode_fork.h    |    6 +
+ 8 files changed, 445 insertions(+), 212 deletions(-)
 
