@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56134198A08
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:36:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1D7F19884C
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:36:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734636970; cv=none; b=iUi7mt/H0LLRtBw4Vb2YZJgDV+esXK8ErSx1ung9TmtOmd0AfGj1KsxL0/uX1t7HdJYfihWCB3sLHxT1/9kw37LVEmjO940d90+pod3o8D89XiphXRTnMHVLQwvm4ZfqNPoskm0p4b+1fiUtjzkUBIzfkcqbPqyJoQZkspLtTH4=
+	t=1734636986; cv=none; b=Uo3De9swXFtb+h/jOea+/o9TCKtRwlpBmdthM7z2+jGT7plShXuQ9JV2iSWaG46jzBdGXqa2zbRtPzhwyLs7VRKOI1qg/dOAsVU1QYVRKWrYBBW/T1XjPQ3w4h7N4faHlCRhdT3w9bQ7aWT+y5lpGNWnWJ/QSyJWy7tQgU/vtNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734636970; c=relaxed/simple;
-	bh=Ywxt0wAm6tq9rXW00OrX+n6FEIidY315QFv5pvVrp3o=;
+	s=arc-20240116; t=1734636986; c=relaxed/simple;
+	bh=BHRbYOSOMrjEhH7hVLZtzQlLLm0zn+b3eJSp3UQQO2Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dxB8TjZqRMXzvvczpBK+TRePUOFm630/9YJMxTj1d/TMLbOCrGdH2ykK6wSru+jbvOZZ6h0W09yP6CJre8vx1me8uu9X4IHxREh7vDIm8oxrdj3qbksWPBTCtl0qzg2wvGTluDzRXgh7gHV0YYXq0gHOJB91g9+G+jOqJugDIOM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hvam/seg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=aRZ2qS6ipLu4JVg7dITTz1FI6ND7WHOCuuRPyYREEQDGDUnvSV+znl6juwfnTaHAVtPrqcIOpIlqa00PkACu/ClM0l8RctwjsYiKFzBzQr1rN7j1jj0SV/UP6FsanLC5okpmgISSmq6N36ypXBeywl/0x+bc47RyDgJZINx2wY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GllalgpG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hvam/seg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D561C4CECE;
-	Thu, 19 Dec 2024 19:36:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GllalgpG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D734DC4CECE;
+	Thu, 19 Dec 2024 19:36:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734636970;
-	bh=Ywxt0wAm6tq9rXW00OrX+n6FEIidY315QFv5pvVrp3o=;
+	s=k20201202; t=1734636985;
+	bh=BHRbYOSOMrjEhH7hVLZtzQlLLm0zn+b3eJSp3UQQO2Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hvam/segYgx0jck29rzBbopHbV0cKuDpY5mm499t9ljgZ9PxH5BXgaPnrlTGzxFij
-	 2E/65ashmRWnoSDFwryob95tis4/RFODSb1i+pM1JMMl25k9FKlgEXoUhwdOOL/a47
-	 JkJaDX5iEPf2Prz3wveMNRu8qaEuK68nS1l14Checzl6bkDJb3b6X9NGW9sTXUF05y
-	 j0aCyunwA9qLrSebp396mXN6IwfLI4w1bEpX2ywgvXHGQsmnu/fFtZUSXI3+Aie9kM
-	 wzHqXr+pRXbc1lnhVHXKk1744QGs2Na/4P1uuR/MKk7lCaJzqjURotLW50CmoKeVxv
-	 4YkUFNj1QqFag==
-Date: Thu, 19 Dec 2024 11:36:09 -0800
-Subject: [PATCH 12/43] xfs: wire up a new metafile type for the realtime
- refcount
+	b=GllalgpGUtIgOLu39fi5mky6z4T2SFUu4bmXMppO4+8WsY6cNaZA+Ra6Xntks1uAV
+	 YIKSTreFF01niGw9nCRtOS11U5ndY3+26pS9p+4gESfIoNNraDrYDOpshAIKENT05+
+	 53jrEzRqkpxw9xwUg047NMkmGZC/VdHJDHTxSdJsqV+Ct4L8ak8oGV7qmslD7BrEwF
+	 eqWEKTrv04uWvnTvUHgyTwsOUcprgNIFZbG8/561ZZLLzqjSG9qgp1sM/1+o8pLvXF
+	 Y97eu3FQXH50OYnEzgCDTNuGONGejgA0bxa3JgbVATCiSbd1/kCFX5AcaXF9WldN7s
+	 JqPAOXtzmLswg==
+Date: Thu, 19 Dec 2024 11:36:25 -0800
+Subject: [PATCH 13/43] xfs: refactor xfs_reflink_find_shared
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173463581183.1572761.8414212161734467306.stgit@frogsfrogsfrogs>
+Message-ID: <173463581201.1572761.8940967949660201516.stgit@frogsfrogsfrogs>
 In-Reply-To: <173463580863.1572761.14930951818251914429.stgit@frogsfrogsfrogs>
 References: <173463580863.1572761.14930951818251914429.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,534 +43,208 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Plumb in the pieces we need to embed the root of the realtime refcount
-btree in an inode's data fork, complete with metafile type and on-disk
-interpretation functions.
+Move lookup of the perag structure from the callers into the helpers,
+and return the offset into the extent of the shared region instead of
+the block number that needs post-processing.  This prepares the
+callsites for the creation of an rt-specific variant in the next patch.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+[djwong: port to the middle of the rtreflink series for cleanliness]
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_format.h           |    8 +
- fs/xfs/libxfs/xfs_inode_fork.c       |    6 -
- fs/xfs/libxfs/xfs_ondisk.h           |    1 
- fs/xfs/libxfs/xfs_rtrefcount_btree.c |  264 ++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtrefcount_btree.h |  112 ++++++++++++++
- fs/xfs/xfs_inode_item_recover.c      |    4 +
- 6 files changed, 392 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_reflink.c |  110 ++++++++++++++++++++++----------------------------
+ fs/xfs/xfs_reflink.h |    2 -
+ 2 files changed, 50 insertions(+), 62 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index b6828f92c131fb..b1007fb661ba73 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1805,6 +1805,14 @@ typedef __be32 xfs_refcount_ptr_t;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 02457e176c4252..71b4743ffb7741 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -120,38 +120,46 @@
   */
- #define	XFS_RTREFC_CRC_MAGIC	0x52434e54	/* 'RCNT' */
- 
-+/*
-+ * rt refcount root header, on-disk form only.
-+ */
-+struct xfs_rtrefcount_root {
-+	__be16		bb_level;	/* 0 is a leaf */
-+	__be16		bb_numrecs;	/* current # of data records */
-+};
-+
- /* inode-rooted btree pointer type */
- typedef __be64 xfs_rtrefcount_ptr_t;
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 0c4bc12401a151..4f99b90add5526 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -28,6 +28,7 @@
- #include "xfs_health.h"
- #include "xfs_symlink_remote.h"
- #include "xfs_rtrmap_btree.h"
-+#include "xfs_rtrefcount_btree.h"
- 
- struct kmem_cache *xfs_ifork_cache;
- 
-@@ -273,8 +274,7 @@ xfs_iformat_data_fork(
- 			case XFS_METAFILE_RTRMAP:
- 				return xfs_iformat_rtrmap(ip, dip);
- 			case XFS_METAFILE_RTREFCOUNT:
--				ASSERT(0); /* to be implemented later */
--				return -EFSCORRUPTED;
-+				return xfs_iformat_rtrefcount(ip, dip);
- 			default:
- 				break;
- 			}
-@@ -624,7 +624,7 @@ xfs_iflush_fork(
- 			xfs_iflush_rtrmap(ip, dip);
- 			break;
- 		case XFS_METAFILE_RTREFCOUNT:
--			ASSERT(0); /* to be implemented later */
-+			xfs_iflush_rtrefcount(ip, dip);
- 			break;
- 		default:
- 			ASSERT(0);
-diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
-index efb035050c009c..a85ecddaa48eed 100644
---- a/fs/xfs/libxfs/xfs_ondisk.h
-+++ b/fs/xfs/libxfs/xfs_ondisk.h
-@@ -86,6 +86,7 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(xfs_rtrmap_ptr_t,			8);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtrmap_root,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_rtrefcount_ptr_t,		8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_rtrefcount_root,	4);
- 
- 	/*
- 	 * m68k has problems with struct xfs_attr_leaf_name_remote, but we pad
-diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.c b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-index ff72ed09e75f08..6a5bc7ea42fbe6 100644
---- a/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-@@ -77,6 +77,41 @@ xfs_rtrefcountbt_get_maxrecs(
- 	return cur->bc_mp->m_rtrefc_mxr[level != 0];
- }
- 
-+/*
-+ * Calculate number of records in a realtime refcount btree inode root.
-+ */
-+unsigned int
-+xfs_rtrefcountbt_droot_maxrecs(
-+	unsigned int		blocklen,
-+	bool			leaf)
-+{
-+	blocklen -= sizeof(struct xfs_rtrefcount_root);
-+
-+	if (leaf)
-+		return blocklen / sizeof(struct xfs_refcount_rec);
-+	return blocklen / (2 * sizeof(struct xfs_refcount_key) +
-+			sizeof(xfs_rtrefcount_ptr_t));
-+}
-+
-+/*
-+ * Get the maximum records we could store in the on-disk format.
-+ *
-+ * For non-root nodes this is equivalent to xfs_rtrefcountbt_get_maxrecs, but
-+ * for the root node this checks the available space in the dinode fork so that
-+ * we can resize the in-memory buffer to match it.  After a resize to the
-+ * maximum size this function returns the same value as
-+ * xfs_rtrefcountbt_get_maxrecs for the root node, too.
-+ */
-+STATIC int
-+xfs_rtrefcountbt_get_dmaxrecs(
-+	struct xfs_btree_cur	*cur,
-+	int			level)
-+{
-+	if (level != cur->bc_nlevels - 1)
-+		return cur->bc_mp->m_rtrefc_mxr[level != 0];
-+	return xfs_rtrefcountbt_droot_maxrecs(cur->bc_ino.forksize, level == 0);
-+}
-+
- STATIC void
- xfs_rtrefcountbt_init_key_from_rec(
- 	union xfs_btree_key		*key,
-@@ -247,6 +282,87 @@ xfs_rtrefcountbt_keys_contiguous(
- 				 be32_to_cpu(key2->refc.rc_startblock));
- }
- 
-+static inline void
-+xfs_rtrefcountbt_move_ptrs(
-+	struct xfs_mount	*mp,
-+	struct xfs_btree_block	*broot,
-+	short			old_size,
-+	size_t			new_size,
-+	unsigned int		numrecs)
-+{
-+	void			*dptr;
-+	void			*sptr;
-+
-+	sptr = xfs_rtrefcount_broot_ptr_addr(mp, broot, 1, old_size);
-+	dptr = xfs_rtrefcount_broot_ptr_addr(mp, broot, 1, new_size);
-+	memmove(dptr, sptr, numrecs * sizeof(xfs_rtrefcount_ptr_t));
-+}
-+
-+static struct xfs_btree_block *
-+xfs_rtrefcountbt_broot_realloc(
-+	struct xfs_btree_cur	*cur,
-+	unsigned int		new_numrecs)
-+{
-+	struct xfs_mount	*mp = cur->bc_mp;
-+	struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
-+	struct xfs_btree_block	*broot;
-+	unsigned int		new_size;
-+	unsigned int		old_size = ifp->if_broot_bytes;
-+	const unsigned int	level = cur->bc_nlevels - 1;
-+
-+	new_size = xfs_rtrefcount_broot_space_calc(mp, level, new_numrecs);
-+
-+	/* Handle the nop case quietly. */
-+	if (new_size == old_size)
-+		return ifp->if_broot;
-+
-+	if (new_size > old_size) {
-+		unsigned int	old_numrecs;
-+
-+		/*
-+		 * If there wasn't any memory allocated before, just allocate
-+		 * it now and get out.
-+		 */
-+		if (old_size == 0)
-+			return xfs_broot_realloc(ifp, new_size);
-+
-+		/*
-+		 * If there is already an existing if_broot, then we need to
-+		 * realloc it and possibly move the node block pointers because
-+		 * those are not butted up against the btree block header.
-+		 */
-+		old_numrecs = xfs_rtrefcountbt_maxrecs(mp, old_size, level);
-+		broot = xfs_broot_realloc(ifp, new_size);
-+		if (level > 0)
-+			xfs_rtrefcountbt_move_ptrs(mp, broot, old_size,
-+					new_size, old_numrecs);
-+		goto out_broot;
-+	}
-+
-+	/*
-+	 * We're reducing numrecs.  If we're going all the way to zero, just
-+	 * free the block.
-+	 */
-+	ASSERT(ifp->if_broot != NULL && old_size > 0);
-+	if (new_size == 0)
-+		return xfs_broot_realloc(ifp, 0);
-+
-+	/*
-+	 * Shrink the btree root by possibly moving the rtrmapbt pointers,
-+	 * since they are not butted up against the btree block header.  Then
-+	 * reallocate broot.
-+	 */
-+	if (level > 0)
-+		xfs_rtrefcountbt_move_ptrs(mp, ifp->if_broot, old_size,
-+				new_size, new_numrecs);
-+	broot = xfs_broot_realloc(ifp, new_size);
-+
-+out_broot:
-+	ASSERT(xfs_rtrefcount_droot_space(broot) <=
-+	       xfs_inode_fork_size(cur->bc_ino.ip, cur->bc_ino.whichfork));
-+	return broot;
-+}
-+
- const struct xfs_btree_ops xfs_rtrefcountbt_ops = {
- 	.name			= "rtrefcount",
- 	.type			= XFS_BTREE_TYPE_INODE,
-@@ -264,6 +380,7 @@ const struct xfs_btree_ops xfs_rtrefcountbt_ops = {
- 	.free_block		= xfs_btree_free_metafile_block,
- 	.get_minrecs		= xfs_rtrefcountbt_get_minrecs,
- 	.get_maxrecs		= xfs_rtrefcountbt_get_maxrecs,
-+	.get_dmaxrecs		= xfs_rtrefcountbt_get_dmaxrecs,
- 	.init_key_from_rec	= xfs_rtrefcountbt_init_key_from_rec,
- 	.init_high_key_from_rec	= xfs_rtrefcountbt_init_high_key_from_rec,
- 	.init_rec_from_cur	= xfs_rtrefcountbt_init_rec_from_cur,
-@@ -274,6 +391,7 @@ const struct xfs_btree_ops xfs_rtrefcountbt_ops = {
- 	.keys_inorder		= xfs_rtrefcountbt_keys_inorder,
- 	.recs_inorder		= xfs_rtrefcountbt_recs_inorder,
- 	.keys_contiguous	= xfs_rtrefcountbt_keys_contiguous,
-+	.broot_realloc		= xfs_rtrefcountbt_broot_realloc,
- };
- 
- /* Allocate a new rt refcount btree cursor. */
-@@ -457,3 +575,149 @@ xfs_rtrefcountbt_calc_reserves(
- 
- 	return xfs_rtrefcountbt_max_size(mp, mp->m_sb.sb_rgextents);
- }
-+
-+/*
-+ * Convert on-disk form of btree root to in-memory form.
-+ */
-+STATIC void
-+xfs_rtrefcountbt_from_disk(
-+	struct xfs_inode		*ip,
-+	struct xfs_rtrefcount_root	*dblock,
-+	int				dblocklen,
-+	struct xfs_btree_block		*rblock)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_refcount_key	*fkp;
-+	__be64				*fpp;
-+	struct xfs_refcount_key	*tkp;
-+	__be64				*tpp;
-+	struct xfs_refcount_rec	*frp;
-+	struct xfs_refcount_rec	*trp;
-+	unsigned int			numrecs;
-+	unsigned int			maxrecs;
-+	unsigned int			rblocklen;
-+
-+	rblocklen = xfs_rtrefcount_broot_space(mp, dblock);
-+
-+	xfs_btree_init_block(mp, rblock, &xfs_rtrefcountbt_ops, 0, 0,
-+			ip->i_ino);
-+
-+	rblock->bb_level = dblock->bb_level;
-+	rblock->bb_numrecs = dblock->bb_numrecs;
-+
-+	if (be16_to_cpu(rblock->bb_level) > 0) {
-+		maxrecs = xfs_rtrefcountbt_droot_maxrecs(dblocklen, false);
-+		fkp = xfs_rtrefcount_droot_key_addr(dblock, 1);
-+		tkp = xfs_rtrefcount_key_addr(rblock, 1);
-+		fpp = xfs_rtrefcount_droot_ptr_addr(dblock, 1, maxrecs);
-+		tpp = xfs_rtrefcount_broot_ptr_addr(mp, rblock, 1, rblocklen);
-+		numrecs = be16_to_cpu(dblock->bb_numrecs);
-+		memcpy(tkp, fkp, 2 * sizeof(*fkp) * numrecs);
-+		memcpy(tpp, fpp, sizeof(*fpp) * numrecs);
-+	} else {
-+		frp = xfs_rtrefcount_droot_rec_addr(dblock, 1);
-+		trp = xfs_rtrefcount_rec_addr(rblock, 1);
-+		numrecs = be16_to_cpu(dblock->bb_numrecs);
-+		memcpy(trp, frp, sizeof(*frp) * numrecs);
-+	}
-+}
-+
-+/* Load a realtime reference count btree root in from disk. */
-+int
-+xfs_iformat_rtrefcount(
-+	struct xfs_inode	*ip,
-+	struct xfs_dinode	*dip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_rtrefcount_root *dfp = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
-+	struct xfs_btree_block	*broot;
-+	unsigned int		numrecs;
-+	unsigned int		level;
-+	int			dsize;
-+
-+	/*
-+	 * growfs must create the rtrefcount inodes before adding a realtime
-+	 * volume to the filesystem, so we cannot use the rtrefcount predicate
-+	 * here.
-+	 */
-+	if (!xfs_has_reflink(ip->i_mount))
-+		return -EFSCORRUPTED;
-+
-+	dsize = XFS_DFORK_SIZE(dip, mp, XFS_DATA_FORK);
-+	numrecs = be16_to_cpu(dfp->bb_numrecs);
-+	level = be16_to_cpu(dfp->bb_level);
-+
-+	if (level > mp->m_rtrefc_maxlevels ||
-+	    xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize)
-+		return -EFSCORRUPTED;
-+
-+	broot = xfs_broot_alloc(xfs_ifork_ptr(ip, XFS_DATA_FORK),
-+			xfs_rtrefcount_broot_space_calc(mp, level, numrecs));
-+	if (broot)
-+		xfs_rtrefcountbt_from_disk(ip, dfp, dsize, broot);
-+	return 0;
-+}
-+
-+/*
-+ * Convert in-memory form of btree root to on-disk form.
-+ */
-+void
-+xfs_rtrefcountbt_to_disk(
-+	struct xfs_mount		*mp,
-+	struct xfs_btree_block		*rblock,
-+	int				rblocklen,
-+	struct xfs_rtrefcount_root	*dblock,
-+	int				dblocklen)
-+{
-+	struct xfs_refcount_key	*fkp;
-+	__be64				*fpp;
-+	struct xfs_refcount_key	*tkp;
-+	__be64				*tpp;
-+	struct xfs_refcount_rec	*frp;
-+	struct xfs_refcount_rec	*trp;
-+	unsigned int			maxrecs;
-+	unsigned int			numrecs;
-+
-+	ASSERT(rblock->bb_magic == cpu_to_be32(XFS_RTREFC_CRC_MAGIC));
-+	ASSERT(uuid_equal(&rblock->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid));
-+	ASSERT(rblock->bb_u.l.bb_blkno == cpu_to_be64(XFS_BUF_DADDR_NULL));
-+	ASSERT(rblock->bb_u.l.bb_leftsib == cpu_to_be64(NULLFSBLOCK));
-+	ASSERT(rblock->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK));
-+
-+	dblock->bb_level = rblock->bb_level;
-+	dblock->bb_numrecs = rblock->bb_numrecs;
-+
-+	if (be16_to_cpu(rblock->bb_level) > 0) {
-+		maxrecs = xfs_rtrefcountbt_droot_maxrecs(dblocklen, false);
-+		fkp = xfs_rtrefcount_key_addr(rblock, 1);
-+		tkp = xfs_rtrefcount_droot_key_addr(dblock, 1);
-+		fpp = xfs_rtrefcount_broot_ptr_addr(mp, rblock, 1, rblocklen);
-+		tpp = xfs_rtrefcount_droot_ptr_addr(dblock, 1, maxrecs);
-+		numrecs = be16_to_cpu(rblock->bb_numrecs);
-+		memcpy(tkp, fkp, 2 * sizeof(*fkp) * numrecs);
-+		memcpy(tpp, fpp, sizeof(*fpp) * numrecs);
-+	} else {
-+		frp = xfs_rtrefcount_rec_addr(rblock, 1);
-+		trp = xfs_rtrefcount_droot_rec_addr(dblock, 1);
-+		numrecs = be16_to_cpu(rblock->bb_numrecs);
-+		memcpy(trp, frp, sizeof(*frp) * numrecs);
-+	}
-+}
-+
-+/* Flush a realtime reference count btree root out to disk. */
-+void
-+xfs_iflush_rtrefcount(
-+	struct xfs_inode	*ip,
-+	struct xfs_dinode	*dip)
-+{
-+	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
-+	struct xfs_rtrefcount_root *dfp = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
-+
-+	ASSERT(ifp->if_broot != NULL);
-+	ASSERT(ifp->if_broot_bytes > 0);
-+	ASSERT(xfs_rtrefcount_droot_space(ifp->if_broot) <=
-+			xfs_inode_fork_size(ip, XFS_DATA_FORK));
-+	xfs_rtrefcountbt_to_disk(ip->i_mount, ifp->if_broot,
-+			ifp->if_broot_bytes, dfp,
-+			XFS_DFORK_SIZE(dip, ip->i_mount, XFS_DATA_FORK));
-+}
-diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.h b/fs/xfs/libxfs/xfs_rtrefcount_btree.h
-index 3cd44590c9304c..e558a10c4744ad 100644
---- a/fs/xfs/libxfs/xfs_rtrefcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.h
-@@ -25,6 +25,7 @@ void xfs_rtrefcountbt_commit_staged_btree(struct xfs_btree_cur *cur,
- unsigned int xfs_rtrefcountbt_maxrecs(struct xfs_mount *mp,
- 		unsigned int blocklen, bool leaf);
- void xfs_rtrefcountbt_compute_maxlevels(struct xfs_mount *mp);
-+unsigned int xfs_rtrefcountbt_droot_maxrecs(unsigned int blocklen, bool leaf);
  
  /*
-  * Addresses of records, keys, and pointers within an incore rtrefcountbt block.
-@@ -71,4 +72,115 @@ xfs_filblks_t xfs_rtrefcountbt_calc_reserves(struct xfs_mount *mp);
- unsigned long long xfs_rtrefcountbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
- 
-+/* Addresses of key, pointers, and records within an ondisk rtrefcount block. */
-+
-+static inline struct xfs_refcount_rec *
-+xfs_rtrefcount_droot_rec_addr(
-+	struct xfs_rtrefcount_root	*block,
-+	unsigned int			index)
-+{
-+	return (struct xfs_refcount_rec *)
-+		((char *)(block + 1) +
-+		 (index - 1) * sizeof(struct xfs_refcount_rec));
-+}
-+
-+static inline struct xfs_refcount_key *
-+xfs_rtrefcount_droot_key_addr(
-+	struct xfs_rtrefcount_root	*block,
-+	unsigned int			index)
-+{
-+	return (struct xfs_refcount_key *)
-+		((char *)(block + 1) +
-+		 (index - 1) * sizeof(struct xfs_refcount_key));
-+}
-+
-+static inline xfs_rtrefcount_ptr_t *
-+xfs_rtrefcount_droot_ptr_addr(
-+	struct xfs_rtrefcount_root	*block,
-+	unsigned int			index,
-+	unsigned int			maxrecs)
-+{
-+	return (xfs_rtrefcount_ptr_t *)
-+		((char *)(block + 1) +
-+		 maxrecs * sizeof(struct xfs_refcount_key) +
-+		 (index - 1) * sizeof(xfs_rtrefcount_ptr_t));
-+}
-+
-+/*
-+ * Address of pointers within the incore btree root.
+- * Given an AG extent, find the lowest-numbered run of shared blocks
+- * within that range and return the range in fbno/flen.  If
+- * find_end_of_shared is true, return the longest contiguous extent of
+- * shared blocks.  If there are no shared extents, fbno and flen will
+- * be set to NULLAGBLOCK and 0, respectively.
++ * Given a file mapping for the data device, find the lowest-numbered run of
++ * shared blocks within that mapping and return it in shared_offset/shared_len.
++ * The offset is relative to the start of irec.
 + *
-+ * These are to be used when we know the size of the block and
-+ * we don't have a cursor.
-+ */
-+static inline xfs_rtrefcount_ptr_t *
-+xfs_rtrefcount_broot_ptr_addr(
++ * If find_end_of_shared is true, return the longest contiguous extent of shared
++ * blocks.  If there are no shared extents, shared_offset and shared_len will be
++ * set to 0;
+  */
+ static int
+ xfs_reflink_find_shared(
+-	struct xfs_perag	*pag,
 +	struct xfs_mount	*mp,
-+	struct xfs_btree_block	*bb,
-+	unsigned int		index,
-+	unsigned int		block_size)
-+{
-+	return xfs_rtrefcount_ptr_addr(bb, index,
-+			xfs_rtrefcountbt_maxrecs(mp, block_size, false));
-+}
+ 	struct xfs_trans	*tp,
+-	xfs_agblock_t		agbno,
+-	xfs_extlen_t		aglen,
+-	xfs_agblock_t		*fbno,
+-	xfs_extlen_t		*flen,
++	const struct xfs_bmbt_irec *irec,
++	xfs_extlen_t		*shared_offset,
++	xfs_extlen_t		*shared_len,
+ 	bool			find_end_of_shared)
+ {
+ 	struct xfs_buf		*agbp;
++	struct xfs_perag	*pag;
+ 	struct xfs_btree_cur	*cur;
+ 	int			error;
++	xfs_agblock_t		orig_bno, found_bno;
 +
-+/*
-+ * Compute the space required for the incore btree root containing the given
-+ * number of records.
-+ */
-+static inline size_t
-+xfs_rtrefcount_broot_space_calc(
-+	struct xfs_mount	*mp,
-+	unsigned int		level,
-+	unsigned int		nrecs)
-+{
-+	size_t			sz = XFS_RTREFCOUNT_BLOCK_LEN;
-+
-+	if (level > 0)
-+		return sz + nrecs * (sizeof(struct xfs_refcount_key) +
-+				     sizeof(xfs_rtrefcount_ptr_t));
-+	return sz + nrecs * sizeof(struct xfs_refcount_rec);
-+}
-+
-+/*
-+ * Compute the space required for the incore btree root given the ondisk
-+ * btree root block.
-+ */
-+static inline size_t
-+xfs_rtrefcount_broot_space(struct xfs_mount *mp, struct xfs_rtrefcount_root *bb)
-+{
-+	return xfs_rtrefcount_broot_space_calc(mp, be16_to_cpu(bb->bb_level),
-+			be16_to_cpu(bb->bb_numrecs));
-+}
-+
-+/* Compute the space required for the ondisk root block. */
-+static inline size_t
-+xfs_rtrefcount_droot_space_calc(
-+	unsigned int		level,
-+	unsigned int		nrecs)
-+{
-+	size_t			sz = sizeof(struct xfs_rtrefcount_root);
-+
-+	if (level > 0)
-+		return sz + nrecs * (sizeof(struct xfs_refcount_key) +
-+				     sizeof(xfs_rtrefcount_ptr_t));
-+	return sz + nrecs * sizeof(struct xfs_refcount_rec);
-+}
-+
-+/*
-+ * Compute the space required for the ondisk root block given an incore root
-+ * block.
-+ */
-+static inline size_t
-+xfs_rtrefcount_droot_space(struct xfs_btree_block *bb)
-+{
-+	return xfs_rtrefcount_droot_space_calc(be16_to_cpu(bb->bb_level),
-+			be16_to_cpu(bb->bb_numrecs));
-+}
-+
-+int xfs_iformat_rtrefcount(struct xfs_inode *ip, struct xfs_dinode *dip);
-+void xfs_rtrefcountbt_to_disk(struct xfs_mount *mp,
-+		struct xfs_btree_block *rblock, int rblocklen,
-+		struct xfs_rtrefcount_root *dblock, int dblocklen);
-+void xfs_iflush_rtrefcount(struct xfs_inode *ip, struct xfs_dinode *dip);
-+
- #endif	/* __XFS_RTREFCOUNT_BTREE_H__ */
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index 5de1d3563b7686..f3bfb814378c06 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -23,6 +23,7 @@
- #include "xfs_icache.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_rtrmap_btree.h"
-+#include "xfs_rtrefcount_btree.h"
++	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, irec->br_startblock));
++	orig_bno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
  
- STATIC void
- xlog_recover_inode_ra_pass2(
-@@ -286,6 +287,9 @@ xlog_recover_inode_dbroot(
- 		case XFS_METAFILE_RTRMAP:
- 			xfs_rtrmapbt_to_disk(mp, src, len, dfork, dsize);
+ 	error = xfs_alloc_read_agf(pag, tp, 0, &agbp);
+ 	if (error)
+-		return error;
+-
+-	cur = xfs_refcountbt_init_cursor(pag_mount(pag), tp, agbp, pag);
+-
+-	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
+-			find_end_of_shared);
++		goto out;
+ 
++	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, pag);
++	error = xfs_refcount_find_shared(cur, orig_bno, irec->br_blockcount,
++			&found_bno, shared_len, find_end_of_shared);
+ 	xfs_btree_del_cursor(cur, error);
+-
+ 	xfs_trans_brelse(tp, agbp);
++
++	if (!error && *shared_len)
++		*shared_offset = found_bno - orig_bno;
++out:
++	xfs_perag_put(pag);
+ 	return error;
+ }
+ 
+@@ -172,11 +180,7 @@ xfs_reflink_trim_around_shared(
+ 	bool			*shared)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_perag	*pag;
+-	xfs_agblock_t		agbno;
+-	xfs_extlen_t		aglen;
+-	xfs_agblock_t		fbno;
+-	xfs_extlen_t		flen;
++	xfs_extlen_t		shared_offset, shared_len;
+ 	int			error = 0;
+ 
+ 	/* Holes, unwritten, and delalloc extents cannot be shared */
+@@ -187,41 +191,33 @@ xfs_reflink_trim_around_shared(
+ 
+ 	trace_xfs_reflink_trim_around_shared(ip, irec);
+ 
+-	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, irec->br_startblock));
+-	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
+-	aglen = irec->br_blockcount;
+-
+-	error = xfs_reflink_find_shared(pag, NULL, agbno, aglen, &fbno, &flen,
+-			true);
+-	xfs_perag_put(pag);
++	error = xfs_reflink_find_shared(mp, NULL, irec, &shared_offset,
++			&shared_len, true);
+ 	if (error)
+ 		return error;
+ 
+-	*shared = false;
+-	if (fbno == NULLAGBLOCK) {
++	if (!shared_len) {
+ 		/* No shared blocks at all. */
+-		return 0;
+-	}
+-
+-	if (fbno == agbno) {
++		*shared = false;
++	} else if (!shared_offset) {
+ 		/*
+-		 * The start of this extent is shared.  Truncate the
+-		 * mapping at the end of the shared region so that a
+-		 * subsequent iteration starts at the start of the
+-		 * unshared region.
++		 * The start of this mapping points to shared space.  Truncate
++		 * the mapping at the end of the shared region so that a
++		 * subsequent iteration starts at the start of the unshared
++		 * region.
+ 		 */
+-		irec->br_blockcount = flen;
++		irec->br_blockcount = shared_len;
+ 		*shared = true;
+-		return 0;
++	} else {
++		/*
++		 * There's a shared region that doesn't start at the beginning
++		 * of the mapping.  Truncate the mapping at the start of the
++		 * shared extent so that a subsequent iteration starts at the
++		 * start of the shared region.
++		 */
++		irec->br_blockcount = shared_offset;
++		*shared = false;
+ 	}
+-
+-	/*
+-	 * There's a shared extent midway through this extent.
+-	 * Truncate the mapping at the start of the shared
+-	 * extent so that a subsequent iteration starts at the
+-	 * start of the shared region.
+-	 */
+-	irec->br_blockcount = fbno - agbno;
+ 	return 0;
+ }
+ 
+@@ -1552,27 +1548,19 @@ xfs_reflink_inode_has_shared_extents(
+ 	*has_shared = false;
+ 	found = xfs_iext_lookup_extent(ip, ifp, 0, &icur, &got);
+ 	while (found) {
+-		struct xfs_perag	*pag;
+-		xfs_agblock_t		agbno;
+-		xfs_extlen_t		aglen;
+-		xfs_agblock_t		rbno;
+-		xfs_extlen_t		rlen;
++		xfs_extlen_t		shared_offset, shared_len;
+ 
+ 		if (isnullstartblock(got.br_startblock) ||
+ 		    got.br_state != XFS_EXT_NORM)
+ 			goto next;
+ 
+-		pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, got.br_startblock));
+-		agbno = XFS_FSB_TO_AGBNO(mp, got.br_startblock);
+-		aglen = got.br_blockcount;
+-		error = xfs_reflink_find_shared(pag, tp, agbno, aglen,
+-				&rbno, &rlen, false);
+-		xfs_perag_put(pag);
++		error = xfs_reflink_find_shared(mp, tp, &got, &shared_offset,
++				&shared_len, false);
+ 		if (error)
+ 			return error;
+ 
+ 		/* Is there still a shared block here? */
+-		if (rbno != NULLAGBLOCK) {
++		if (shared_len) {
+ 			*has_shared = true;
  			return 0;
-+		case XFS_METAFILE_RTREFCOUNT:
-+			xfs_rtrefcountbt_to_disk(mp, src, len, dfork, dsize);
-+			return 0;
- 		default:
- 			ASSERT(0);
- 			return -EFSCORRUPTED;
+ 		}
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 4a58e4533671c0..3bfd7ab9e1148a 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -25,7 +25,7 @@ xfs_can_free_cowblocks(struct xfs_inode *ip)
+ 	return true;
+ }
+ 
+-extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
++int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *irec, bool *shared);
+ int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+ 		bool *shared);
 
