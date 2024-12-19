@@ -1,197 +1,166 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f206.google.com (mail-il1-f206.google.com [209.85.166.206])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2D2E54727;
-	Thu, 19 Dec 2024 03:51:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA9AE78F4A
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 04:39:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.206
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734580304; cv=none; b=K93EKCn5hD4Y5CFAD5Th1FEzUpvHFo9myFfYzjeRyrAMFog2dH+cyFxN3n/pA614knSQ8IDCo+d69bAC4ya8fcFbFeNCWtLB/IECWKLG8VgZZKfDlXNePL/vbEpI8ncH8I4vHCPzTchV3+zKeQc+nyolFSc8tlG4lQIO0UT+aig=
+	t=1734583168; cv=none; b=W3KGI+Ojc08iIW9e7FoH4DrWThoK/Zapnd2IXXWONcfPWo3UPZY5uSNRMNM8vzUfxeFDuz4Es94OB8RSy4T9+vEfxAk/3Ce0AhV4LwdXwtdtsTDnUtlrWdNqLSYL4ccVb+YcSkFkdPpgAOvRZ0/8T+jSQgaEDVn4Yw/tkhMFEJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734580304; c=relaxed/simple;
-	bh=FuLoU7U0xMRNGmCKElRECU7Kfai8vIdgxthTaTR16+s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=opaqBXsCfChSVxM4b4bBhWuDTHjMX9w2tAG6GNRmRMn0EzXK6zQJY4uIagpgO393U4u8O6+lM/k4SQfPAUKlmq1k7L8qF4UNP2jy348SiYOOOi4McdHQxfAapOX8SF6MtdDaCe/IScpf07MWGAdvm7lH3xLx51BxVAyZGoN9W6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LfP6ELbn; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LfP6ELbn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=aSFlG7F9RzIzrW9Hgf/vG0f//Q9KVoULX33zB6BeU64=; b=LfP6ELbnHPNdNQWgkQVyW+k95b
-	n+Al8AAcP6xhm5f/VqJq8bnnGo8i+kc+QAXLppn7Q3vLY9QDt1vFe8eFksJyJ4iy/S1SSmhIYhSzJ
-	6zQElKG2GQ6gkzOKlzY/d+O5h/7Rg55NckHN67uxrWpGg35nJl3Bg3tLmMTVTzFBkITiSnDrIbmYY
-	UDsOp7RB5PvXuA8ir72a5yOOt+kjzYUr/cNpOHx72BneZAcCd9gDIAKb9fMWVr3Tbdn43iURjZZX7
-	ovE+rajnMBeTuXTBWYLWiKxHW0I0QHJMWbnytmM5J2sfgRlmPYz8tkq4weeMcYgb5S4I8DJAyxxGL
-	PMH/XEMA==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tO7ZW-00000001VPq-3dSV;
-	Thu, 19 Dec 2024 03:51:34 +0000
-Date: Thu, 19 Dec 2024 03:51:34 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: hare@suse.de, dave@stgolabs.net, david@fromorbit.com, djwong@kernel.org,
-	kbusch@kernel.org, john.g.garry@oracle.com, hch@lst.de,
-	ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
-Subject: Re: [PATCH 0/5] fs/buffer: strack reduction on async read
-Message-ID: <Z2OYRkpRcUFIOFog@casper.infradead.org>
-References: <20241218022626.3668119-1-mcgrof@kernel.org>
- <Z2MrCey3RIBJz9_E@casper.infradead.org>
- <Z2OEmALBGB8ARLlc@bombadil.infradead.org>
+	s=arc-20240116; t=1734583168; c=relaxed/simple;
+	bh=bTABqYDCcIxbulGqsstULU/50d0AagCvi2ivv7Y0Cl0=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=TXQub6ThqLVJg9+2IAd9hsCvJtZiPkdzB5Z0/vTr7qoVS9qAANoalxK82JSgAPydTRD0qDQsWntjkHV4kKsRCVeMcsVqCDrY5/1lKVKl4nOm1wktx4dPHrz8ZUA0NxHBgeP+kI640crmjD6OxAbdeK/qhq9RAP8pqFm6jm8WJG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.206
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f206.google.com with SMTP id e9e14a558f8ab-3a9cd0b54c1so3132455ab.0
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2024 20:39:26 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734583166; x=1735187966;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EdFDWRMHgTOGVYxfZF/dtH18mgv8HOgeVr8Ds1MAEH0=;
+        b=jonOGPpDeh/wUzwPdLilOVquCp8Ec8cPEEgT50B2/IcncB2DI9TVmLMJGudPUGgKAn
+         NB6Wf9MrT9k2T4pkrOlPsck0vHPwNGIMMPzk4Z9YPw3xkXtbYbFvBzQGiPTBid+wKcd+
+         o18o05fWYZfTblTLeD+O1YnTn71XtTkvhLoOaWKhLxC1R1BZ0W3Rpmq9nWVAM3lbtPQw
+         KSFPDAXpj/j7MYFOz0aXLNdKOJBP5eyPc79PkcJEyVRK6CiGknCY/WLgN3GEEWg44+Q8
+         UWBs2y/kjNyyHi+J12/c4LOSWPp92P0GU1KC4ZNw0hcI5c7Mu/gx1tcuoY1HmcDHVzzv
+         2zhg==
+X-Forwarded-Encrypted: i=1; AJvYcCXxLXbMhtehpvv3+sj2/FbZnBV2iIUbUapYFhhca2FSEdAWQgo/nkk0inLHhHG3PlT9uTNs2PAosfA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzMGRqTWLlrgEmm1YWSTssYvsrBU0OqOYAWA0R5uBdL985qPP4v
+	k0t7HnOM6/MtVwMqAYMsDgADIHWu1Emep5MTdQjmL4SOk0gB+ddMkgsZh8bYJB6eBV/9EtnDCxo
+	8BTMi4/8Kc29d93yUY981umaXrV1fUjYmrpD2XDYdGrX1Ps5uJhUxTfA=
+X-Google-Smtp-Source: AGHT+IHUt4CChzG8GMsKEM2qJdjxmj9o7rlIXWHDrToydBZ1OcHzbEQxl61LWf+eYCt/SeYkYb1elvaXQoAl4xSw4UWPI2wM42u2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z2OEmALBGB8ARLlc@bombadil.infradead.org>
+X-Received: by 2002:a05:6e02:3d47:b0:3a0:9c99:32d6 with SMTP id
+ e9e14a558f8ab-3c015056945mr18379415ab.24.1734583166086; Wed, 18 Dec 2024
+ 20:39:26 -0800 (PST)
+Date: Wed, 18 Dec 2024 20:39:26 -0800
+In-Reply-To: <6714a705.050a0220.1e4b4d.0035.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6763a37e.050a0220.15da49.0005.GAE@google.com>
+Subject: Re: [syzbot] [bcachefs?] general protection fault in put_pwq_unlocked (2)
+From: syzbot <syzbot+aa930d41d2f32904c5da@syzkaller.appspotmail.com>
+To: cem@kernel.org, clm@fb.com, djwong@kernel.org, dsterba@suse.com, 
+	josef@toxicpanda.com, kent.overstreet@linux.dev, 
+	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Dec 18, 2024 at 06:27:36PM -0800, Luis Chamberlain wrote:
-> On Wed, Dec 18, 2024 at 08:05:29PM +0000, Matthew Wilcox wrote:
-> > On Tue, Dec 17, 2024 at 06:26:21PM -0800, Luis Chamberlain wrote:
-> > > This splits up a minor enhancement from the bs > ps device support
-> > > series into its own series for better review / focus / testing.
-> > > This series just addresses the reducing the array size used and cleaning
-> > > up the async read to be easier to read and maintain.
-> > 
-> > How about this approach instead -- get rid of the batch entirely?
-> 
-> Less is more! I wish it worked, but we end up with a null pointer on
-> ext4/032 (and indeed this is the test that helped me find most bugs in
-> what I was working on):
+syzbot has found a reproducer for the following issue on:
 
-Yeah, I did no testing; just wanted to give people a different approach
-to consider.
+HEAD commit:    eabcdba3ad40 Merge tag 'for-6.13-rc3-tag' of git://git.ker..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=15adb730580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=1234f097ee657d8b
+dashboard link: https://syzkaller.appspot.com/bug?extid=aa930d41d2f32904c5da
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16dc4cf8580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12faef44580000
 
-> [  106.034851] BUG: kernel NULL pointer dereference, address: 0000000000000000
-> [  106.046300] RIP: 0010:end_buffer_async_read_io+0x11/0x90
-> [  106.047819] Code: f2 ff 0f 1f 80 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 53 48 8b 47 10 48 89 fb 48 8b 40 18 <48> 8b 00 f6 40 0d 40 74 0d 0f b7 00 66 25 00 f0 66 3d 00 80 74 09
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/7a4dff87674a/disk-eabcdba3.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/266bc2b7ced3/vmlinux-eabcdba3.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/ee4bcd9be832/bzImage-eabcdba3.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/90ce8b925e79/mount_0.gz
 
-That decodes as:
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+aa930d41d2f32904c5da@syzkaller.appspotmail.com
 
-   5:	53                   	push   %rbx
-   6:	48 8b 47 10          	mov    0x10(%rdi),%rax
-   a:	48 89 fb             	mov    %rdi,%rbx
-   d:	48 8b 40 18          	mov    0x18(%rax),%rax
-  11:*	48 8b 00             	mov    (%rax),%rax		<-- trapping instruction
-  14:	f6 40 0d 40          	testb  $0x40,0xd(%rax)
+Oops: general protection fault, probably for non-canonical address 0xf11024afb8802002: 0000 [#1] PREEMPT SMP KASAN PTI
+KASAN: maybe wild-memory-access in range [0x8881457dc4010010-0x8881457dc4010017]
+CPU: 1 UID: 0 PID: 5817 Comm: syz-executor163 Not tainted 6.13.0-rc3-syzkaller-00073-geabcdba3ad40 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 11/25/2024
+RIP: 0010:__lock_acquire+0x6a/0x2100 kernel/locking/lockdep.c:5089
+Code: b6 04 30 84 c0 0f 85 f8 16 00 00 45 31 f6 83 3d cb ce 9d 0e 00 0f 84 c8 13 00 00 89 54 24 60 89 5c 24 38 4c 89 f8 48 c1 e8 03 <80> 3c 30 00 74 12 4c 89 ff e8 38 93 88 00 48 be 00 00 00 00 00 fc
+RSP: 0018:ffffc90003a87950 EFLAGS: 00010803
+RAX: 111028afb8802002 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: dffffc0000000000 RDI: 8881457dc4010017
+RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000001
+R10: dffffc0000000000 R11: fffffbfff2030a27 R12: ffff888030045a00
+R13: 0000000000000000 R14: 0000000000000000 R15: 8881457dc4010017
+FS:  00005555749e8480(0000) GS:ffff8880b8700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f624dfff000 CR3: 000000007761c000 CR4: 00000000003526f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5849
+ __raw_spin_lock_irq include/linux/spinlock_api_smp.h:119 [inline]
+ _raw_spin_lock_irq+0xd3/0x120 kernel/locking/spinlock.c:170
+ put_pwq_unlocked+0x42/0x190 kernel/workqueue.c:1662
+ destroy_workqueue+0x99d/0xc40 kernel/workqueue.c:5897
+ __bch2_fs_free fs/bcachefs/super.c:596 [inline]
+ bch2_fs_release+0x69d/0x7d0 fs/bcachefs/super.c:611
+ kobject_cleanup lib/kobject.c:689 [inline]
+ kobject_release lib/kobject.c:720 [inline]
+ kref_put include/linux/kref.h:65 [inline]
+ kobject_put+0x22f/0x480 lib/kobject.c:737
+ deactivate_locked_super+0xc4/0x130 fs/super.c:473
+ cleanup_mnt+0x41f/0x4b0 fs/namespace.c:1373
+ task_work_run+0x24f/0x310 kernel/task_work.c:239
+ resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
+ exit_to_user_mode_loop kernel/entry/common.c:114 [inline]
+ exit_to_user_mode_prepare include/linux/entry-common.h:329 [inline]
+ __syscall_exit_to_user_mode_work kernel/entry/common.c:207 [inline]
+ syscall_exit_to_user_mode+0x13f/0x340 kernel/entry/common.c:218
+ do_syscall_64+0x100/0x230 arch/x86/entry/common.c:89
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f62555f9517
+Code: 00 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 31 f6 e9 09 00 00 00 66 0f 1f 84 00 00 00 00 00 b8 a6 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 01 c3 48 c7 c2 b0 ff ff ff f7 d8 64 89 02 b8
+RSP: 002b:00007ffe0e922dc8 EFLAGS: 00000202 ORIG_RAX: 00000000000000a6
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 00007f62555f9517
+RDX: 0000000000000000 RSI: 0000000000000009 RDI: 00007ffe0e922e80
+RBP: 00007ffe0e922e80 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000ffffffff R11: 0000000000000202 R12: 00007ffe0e923f40
+R13: 00005555749e97c0 R14: 00007ffe0e923f80 R15: 0000000000000008
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:__lock_acquire+0x6a/0x2100 kernel/locking/lockdep.c:5089
+Code: b6 04 30 84 c0 0f 85 f8 16 00 00 45 31 f6 83 3d cb ce 9d 0e 00 0f 84 c8 13 00 00 89 54 24 60 89 5c 24 38 4c 89 f8 48 c1 e8 03 <80> 3c 30 00 74 12 4c 89 ff e8 38 93 88 00 48 be 00 00 00 00 00 fc
+RSP: 0018:ffffc90003a87950 EFLAGS: 00010803
+RAX: 111028afb8802002 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: dffffc0000000000 RDI: 8881457dc4010017
+RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000001
+R10: dffffc0000000000 R11: fffffbfff2030a27 R12: ffff888030045a00
+R13: 0000000000000000 R14: 0000000000000000 R15: 8881457dc4010017
+FS:  00005555749e8480(0000) GS:ffff8880b8700000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f624dfff000 CR3: 000000007761c000 CR4: 00000000003526f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+----------------
+Code disassembly (best guess):
+   0:	b6 04                	mov    $0x4,%dh
+   2:	30 84 c0 0f 85 f8 16 	xor    %al,0x16f8850f(%rax,%rax,8)
+   9:	00 00                	add    %al,(%rax)
+   b:	45 31 f6             	xor    %r14d,%r14d
+   e:	83 3d cb ce 9d 0e 00 	cmpl   $0x0,0xe9dcecb(%rip)        # 0xe9dcee0
+  15:	0f 84 c8 13 00 00    	je     0x13e3
+  1b:	89 54 24 60          	mov    %edx,0x60(%rsp)
+  1f:	89 5c 24 38          	mov    %ebx,0x38(%rsp)
+  23:	4c 89 f8             	mov    %r15,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	80 3c 30 00          	cmpb   $0x0,(%rax,%rsi,1) <-- trapping instruction
+  2e:	74 12                	je     0x42
+  30:	4c 89 ff             	mov    %r15,%rdi
+  33:	e8 38 93 88 00       	call   0x889370
+  38:	48                   	rex.W
+  39:	be 00 00 00 00       	mov    $0x0,%esi
+  3e:	00 fc                	add    %bh,%ah
 
-6: bh->b_folio
-d: b_folio->mapping
-11: mapping->host
 
-So folio->mapping is NULL.
-
-Ah, I see the problem.  end_buffer_async_read() uses the buffer_async_read
-test to decide if all buffers on the page are uptodate or not.  So both
-having no batch (ie this patch) and having a batch which is smaller than
-the number of buffers in the folio can lead to folio_end_read() being
-called prematurely (ie we'll unlock the folio before finishing reading
-every buffer in the folio).
-
-Once the folio is unlocked, it can be truncated.  That's a second-order
-problem, but it's the one your test happened to hit.
-
-
-This should fix the problem; we always have at least one BH held in
-the submission path with the async_read flag set, so
-end_buffer_async_read() will not end it prematurely.
-
-By the way, do you have CONFIG_VM_DEBUG enabled in your testing?
-
-        VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
-in folio_end_read() should have tripped before hitting the race with
-truncate.
-
-diff --git a/fs/buffer.c b/fs/buffer.c
-index cc8452f60251..fd2633e4a5d2 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2361,9 +2361,9 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
- {
- 	struct inode *inode = folio->mapping->host;
- 	sector_t iblock, lblock;
--	struct buffer_head *bh, *head, *arr[MAX_BUF_PER_PAGE];
-+	struct buffer_head *bh, *head, *prev = NULL;
- 	size_t blocksize;
--	int nr, i;
-+	int i;
- 	int fully_mapped = 1;
- 	bool page_error = false;
- 	loff_t limit = i_size_read(inode);
-@@ -2380,7 +2380,6 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
- 	iblock = div_u64(folio_pos(folio), blocksize);
- 	lblock = div_u64(limit + blocksize - 1, blocksize);
- 	bh = head;
--	nr = 0;
- 	i = 0;
- 
- 	do {
-@@ -2411,40 +2410,33 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
- 			if (buffer_uptodate(bh))
- 				continue;
- 		}
--		arr[nr++] = bh;
-+
-+		lock_buffer(bh);
-+		if (buffer_uptodate(bh)) {
-+			unlock_buffer(bh);
-+			continue;
-+		}
-+
-+		mark_buffer_async_read(bh);
-+		if (prev)
-+			submit_bh(REQ_OP_READ, prev);
-+		prev = bh;
- 	} while (i++, iblock++, (bh = bh->b_this_page) != head);
- 
- 	if (fully_mapped)
- 		folio_set_mappedtodisk(folio);
- 
--	if (!nr) {
--		/*
--		 * All buffers are uptodate or get_block() returned an
--		 * error when trying to map them - we can finish the read.
--		 */
--		folio_end_read(folio, !page_error);
--		return 0;
--	}
--
--	/* Stage two: lock the buffers */
--	for (i = 0; i < nr; i++) {
--		bh = arr[i];
--		lock_buffer(bh);
--		mark_buffer_async_read(bh);
--	}
--
- 	/*
--	 * Stage 3: start the IO.  Check for uptodateness
--	 * inside the buffer lock in case another process reading
--	 * the underlying blockdev brought it uptodate (the sct fix).
-+	 * All buffers are uptodate or get_block() returned an error
-+	 * when trying to map them - we must finish the read because
-+	 * end_buffer_async_read() will never be called on any buffer
-+	 * in this folio.
- 	 */
--	for (i = 0; i < nr; i++) {
--		bh = arr[i];
--		if (buffer_uptodate(bh))
--			end_buffer_async_read(bh, 1);
--		else
--			submit_bh(REQ_OP_READ, bh);
--	}
-+	if (prev)
-+		submit_bh(REQ_OP_READ, prev);
-+	else
-+		folio_end_read(folio, !page_error);
-+
- 	return 0;
- }
- EXPORT_SYMBOL(block_read_full_folio);
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
