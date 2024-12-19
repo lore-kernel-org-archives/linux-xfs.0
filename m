@@ -1,66 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D45593C30
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 17:37:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B7C61A727D;
+	Thu, 19 Dec 2024 17:39:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734629828; cv=none; b=ox4FHvqn+W5mGk8VrpoTQvHAjsmOZ3m3pJbn0whNie3tvc476vgAbrESiqsBfl5LMLHqIPrWPKIR309OKZAZfA6xdJ75Zuf7rHELrvEwsCvmV1ip/kcZWAgEt6X8v3HADYQK/I1j4A8gRLFyy1JyYTNPs8TGzNMdfXC2lbn4Srg=
+	t=1734630001; cv=none; b=pr95gzA8BErqGC1ehctZfqvcQFxvDhaef3+oUINEhuqp6o7DtgdcmQlP8lVpiBL4MNDmWg/m8PEg6vTPwrx5o0IPUTY7I6bDxdoorAwcPVA3ws/lJo7d5xGS00IhyeSgWXX036pN/ebvopBMuqQGv3ifIbH+6xJq1jl5HW855XM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734629828; c=relaxed/simple;
-	bh=EkbRP28bFipvvNW429H076P4hxgGfiG2LM6tLSrA00o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZZfztPoVum9Nu56ZTXwXto286LBWtB+fOM+KgWzRVHEHd+TGLPFegJy0iQB7+Kc5gaSbCzTFVojWq1/f8B4K6g3jRkahAlKcmGWeamreKZjkmeoCPaNpxIgL1m31BwaaDIYOZgkvIw6MGUyabW3eEVmCEgur46CnoVSOCIfl62M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R9rzGKEg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734630001; c=relaxed/simple;
+	bh=Sm7EyHziSukCA6Jq7Dq9xan3h6rv2XkVMxPPaFNT8cY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L82+jOeRp+TcET8FsqDpwJNeykYa37NJ5djFaZx/gRSU/0UMTBggEPye42FrqA7K0VvSrCByzVr6Qqr+qbORh1UPd4DZOYJb1SxjaSNIVcSEbZoTwdb79BfFBEk6xBb5J9lrg3mP5Ct69SJKVYjV0s74y5OL7KaDrT/q262q2fY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yfC/90fd; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R9rzGKEg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7ABEC4CECE;
-	Thu, 19 Dec 2024 17:37:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734629828;
-	bh=EkbRP28bFipvvNW429H076P4hxgGfiG2LM6tLSrA00o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=R9rzGKEg2o/2qL8FSZmXqcnYVSkr7aHQIR70LUpHvojJkIlUp1QtLa5ukNQ0Dt+q9
-	 pRPQTcxG/LEl4AD9/wDI+41mslzlAew6RGYbKFLU5DVlTb/OtKe6xfZbL89UrjTAhc
-	 b6jMUxfpT8kSDh3GOfyTRtCG5Cq3+N3BrzW1XyaD9Gz8NcTYCHaSYaZ1O9TFJsHh3M
-	 jx5v5kC4jqwoAJSOQbeqyJ5+X4M5uO/RE7GOPFycWs2dz5qwdCSf/hJd5k1pFiMbsN
-	 +YcRjK1hbsKAPX7kf2KFHNMfg+ZdBlEXJsCq9GwcXc9+oiffVDaxWf/CVna6k13txf
-	 ZBDfhR5u+J+JQ==
-Date: Thu, 19 Dec 2024 09:37:08 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 25/43] xfs: add support for zoned space reservations
-Message-ID: <20241219173708.GN6174@frogsfrogsfrogs>
-References: <20241211085636.1380516-1-hch@lst.de>
- <20241211085636.1380516-26-hch@lst.de>
- <20241213210140.GO6678@frogsfrogsfrogs>
- <20241215053135.GE10051@lst.de>
- <20241217165955.GG6174@frogsfrogsfrogs>
- <20241219055059.GA19058@lst.de>
- <20241219160004.GI6174@frogsfrogsfrogs>
- <20241219173616.GB30295@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yfC/90fd"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=wlhbNKOEeZhJRK52qotea+lLlGi0IsmKVdZXS2TXImc=; b=yfC/90fdX/X+vAEg+ZvlnRJaMs
+	QhfmtmCjtVtmM10A5oY+2Sn+TfpU2a34Tp4xygmtLYfkPnuTEmFnS2ERf6fyTJobgSsd9fqcA1xNS
+	8jCXmGbkkrxoUWg5EX3B39aPdqXqSbQIgwbAmWDASbud8hV5yV1EA8IR16i9Yit7qIREeNXh0op3+
+	sNuqjs60BZwvlPe5KGjnQ0JIJDs1SmaSUAXi4zqNAtmT6BjhmIcYO/34iny8Ha80V3BdNAe13pfkp
+	o2Fa77JMsdbm5HFrrBLkc5+P8nsgCNw1MqLDFatQPB7qGl7w6dvIbIsSeb+OmaS9M6NULsyDmuSNS
+	ntDkw0RA==;
+Received: from [2001:4bb8:2ae:97bf:7b0d:9cbd:e369:c821] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tOKVB-00000002aua-38tZ;
+	Thu, 19 Dec 2024 17:39:58 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: iomap patches for zoned XFS v1
+Date: Thu, 19 Dec 2024 17:39:05 +0000
+Message-ID: <20241219173954.22546-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241219173616.GB30295@lst.de>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Dec 19, 2024 at 06:36:16PM +0100, Christoph Hellwig wrote:
-> On Thu, Dec 19, 2024 at 08:00:04AM -0800, Darrick J. Wong wrote:
-> > > I really hate that, as it encodes the policy how to get (or not) the
-> > > blocks vs what they are.
-> > 
-> > Yeah, me too.  Want to leave it as XC_FREE_RTAVAILABLE?
-> 
-> That would be my preference (at least based on the so far presented
-> options)
+Hi all,
 
-Fine by me.
+this series contains the iomap prep work to support zoned XFS.
 
---D
+The biggest changes are:
+
+ - an option to reuse the ioend code for direct writes in addition to the
+   current use for buffered writeback, which allows the file system to
+   track completions on a per-bio basis instead of the current end_io
+   callback which operates on the entire I/O.
+   Note that it might make sense to split the ioend code from
+   buffered-io.c into its own file with this.  Let me know what you think
+   of that and I can include it in the next version
+ - change of the writeback_ops so that the submit_bio call can be done by
+   the file system.  Note that btrfs will also need this eventually when
+   it starts using iomap
+ - helpers to split ioend to the zone append queue_limits that plug
+   into the previous item above.
+ - a new ANON_WRITE flags for writes that don't have a block number
+   assigned to them at the iomap level, leaving the file system to do
+   that work in the submission handler.  Note that btrfs wants something
+   similar also for compressed I/O, which should be able to reuse this,
+   maybe with minor tweaks.
+ - passing private data to a few more helper
+
+The XFS changes to use this will be posted to the xfs list only to not
+spam fsdevel too much.
+
+Changes since RFC:
+ - update Documentation/filesystems/iomap/
+ - improve comments
+ - make the iomap_split_ioend calling convention simpler and hopefully
+   more cleasr
+ - propagate bio_split errors
+ - rename the flags argument to iomap_init_ioend
+ - move more code to fs/iomap/ioend.c
+ - refactor the ioend completion code a bit
+ - replace the ZONE_APPEND flag with an ANON_WRITE flag
