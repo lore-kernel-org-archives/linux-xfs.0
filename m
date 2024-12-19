@@ -1,100 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7ABE226529
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 16:00:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C248155308
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 16:50:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734624005; cv=none; b=huY1uPtKOSi1/5G9MIgmVlaJWnYsY+XTsGMdg/mWoBOk7uk8AlBb2UvZMd7+hQQsxsrrCU6jjZaFRrzVDFnyteTxc/Pp+FZLi/iWnYOnUrGJPtw6NDXRTqBkCuxfmPNqgNBQks9KYNlZW8a8Cd5+3ZR41tXBoSLelKS+gPmceUs=
+	t=1734627005; cv=none; b=U79u3+NpBTbTE5vPDibEdsDod0+rtQCXjlsvYOqtDl0/hhbfhtIpUV08Monf03nsW21N0mtzVTC+qnZU5cTOL5teVHRzIoPKE9PGdgPn1hCnB53Uc0rdI5ewoQ7x0GlKN9wMQaZOa1Bkh2I2z0aJxRA0lXE3yb7ZWtJgfGh2hk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734624005; c=relaxed/simple;
-	bh=aAhBcOMVYBbUe3A3kirjkVjcgxvNLrDBWhPR4/6L6Zk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fe7qOtiVA+uSV29KpbmLDaaQM0YojBedTC6Xl+DGFEeAxUyhcge9jaIArf0ELBm5NCvqXlHCUFryZeMII1Q2NVtEhIHndGrgKBUpH1sUx0XJA6me21Q7coNbAbXN267cENhtverEdtu8e3xc8TFq6D8rric03TjlG1SQOIuqNEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jU/tEG1u; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jU/tEG1u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E65AC4CECE;
-	Thu, 19 Dec 2024 16:00:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734624005;
-	bh=aAhBcOMVYBbUe3A3kirjkVjcgxvNLrDBWhPR4/6L6Zk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jU/tEG1uIEEAWPTjeSlim2Jh6Xw6sFb8ppbB7k2Apt/z0ucg/QR/Eyf7a/i04Ouda
-	 uf9SI/5nOGZ3e5fQYx1yr4CHFg/SCf3VZJWnqH04ady4sMZVba/2Z9YxwMNJRxYIup
-	 /g25gR7/eGZG6VwjePFH1J2rkpx4/7vHJD0GztaYjWOU8jk+bawNuzfFrcIE2A48kj
-	 X2Xw+V3frDqP77sRU+V7dpFC3Xf1xPrfG8hkqAaMOipHyqsU1J6yct/aycV+FhlzDb
-	 KHNxO/J2fnj6LD3NSzCAeVQwZZQ+lNlGnRowWxzlECPH5R5pZmXY7ZvN1FAMTeTqwB
-	 560jlLDLhsAbg==
-Date: Thu, 19 Dec 2024 08:00:04 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 25/43] xfs: add support for zoned space reservations
-Message-ID: <20241219160004.GI6174@frogsfrogsfrogs>
-References: <20241211085636.1380516-1-hch@lst.de>
- <20241211085636.1380516-26-hch@lst.de>
- <20241213210140.GO6678@frogsfrogsfrogs>
- <20241215053135.GE10051@lst.de>
- <20241217165955.GG6174@frogsfrogsfrogs>
- <20241219055059.GA19058@lst.de>
+	s=arc-20240116; t=1734627005; c=relaxed/simple;
+	bh=gS+npKdZGQZAbsWwUEudkXa3CKGCK66fIhIEVF8JjKY=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=c8HESJrAhYeGoo+Rr5nItxvpJFxGLjgD15GYz7qSe57lw7NVAfvs1xMU+yoTmkV7wSQvLOLV2a6+LMXS1Oo6OH0CeX6a5BJQvYt5v8UGK2hvAxQMnOBhxHuqYvE9Ly77j8hSUAFCHHQzq9H2ZlLuzWcHciF3/j4mXgpcFXt+OPA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3a9d075bdc3so16509445ab.3
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 08:50:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734627003; x=1735231803;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4m5ECO5ZQYjU363K3tYMrrXZVX5Ak+kvSrvy0oU41eQ=;
+        b=ogRK7kJIm26Ecftmb4F9BYKhg1Mxnb7I4sYETbb8a5c7wsPrhxPif0oHBvg5XiNlQ5
+         FXUV0vYkBDiJFlEp7R4r/IxMjc4uNmX8yLJvtsxiWTkOocW1T7z8AWjPA2GCJTrfxF8G
+         tiAq3MiIEkkLgYJDFBXp1PHRDJ4ae62U5kT/M7yCg7UnFc6eYhXAMXRCNFiGQV6kHjBt
+         0CiTJ7yPORThx9mUaJ2T50VjqaaO7wl1ZYxFgLOchqUjmGzRA49NOqgDEuSF/dPA+OJN
+         8DvcVNOh45ko9ZA3nrKfRiJ9MjoO0zNSNTFvJm07yxmAC35Z+xkzZBxlKgV6z/G6zIgB
+         thOw==
+X-Forwarded-Encrypted: i=1; AJvYcCVRdgn+E/DqmcYTDmEOpeAP4YTdvbfXWtemY8v0eoBfrFLGTqqlIirW8SoI0bKlqiyJc5qHVqfjEXs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPYVG3YmHwpaoShoQ8OvZ7i0c2m3ve5JYWq4wuOZRJHNIaa8F9
+	vGBxlgR9Yf+ovBYf65dSTX+SSehz7I2vIG6jcrIG3iBxHDdJfOsfLuX2Z6lMh937nLZHVL0ydan
+	knEvdy47c/wcYVyz8wQjvyal8Tz5Gp4mRWx1hBhgUgsR/IgWLEuZ9xZ8=
+X-Google-Smtp-Source: AGHT+IGq9d8xZKFDmkARN3f/WM6Eh2iRfI+5dIlGJY6myaXwmpftKqfsBzOeYPZR0+Elp5/JMzLFhbx/Ilstz/LNysJK6bxIfXw5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241219055059.GA19058@lst.de>
+X-Received: by 2002:a05:6602:168c:b0:83a:9488:154c with SMTP id
+ ca18e2360f4ac-847584f267fmr893413439f.3.1734627002755; Thu, 19 Dec 2024
+ 08:50:02 -0800 (PST)
+Date: Thu, 19 Dec 2024 08:50:02 -0800
+In-Reply-To: <6714a705.050a0220.1e4b4d.0035.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67644eba.050a0220.1e8afc.0001.GAE@google.com>
+Subject: Re: [syzbot] [bcachefs?] general protection fault in put_pwq_unlocked (2)
+From: syzbot <syzbot+aa930d41d2f32904c5da@syzkaller.appspotmail.com>
+To: axboe@kernel.dk, cem@kernel.org, clm@fb.com, djwong@kernel.org, 
+	dsterba@suse.com, josef@toxicpanda.com, kent.overstreet@linux.dev, 
+	linux-bcachefs@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Dec 19, 2024 at 06:50:59AM +0100, Christoph Hellwig wrote:
-> On Tue, Dec 17, 2024 at 08:59:55AM -0800, Darrick J. Wong wrote:
-> > Hrmm, they're rt extents that are available "now", or "for cheap"...
-> > 
-> > XC_FREE_NOW_RTEXTENTS
-> > 
-> > XC_FREE_RTEXTENTS_IMMED
-> > 
-> > XC_FREE_RTEXTENTS_CHEAP
-> > 
-> > Eh, I'm not enthusiastic about any of those.  The best I can think of
-> > is:
-> > 
-> > 	XC_FREE_RTEXTENTS_NOGC,	/* space available without gc */
-> 
-> I really hate that, as it encodes the policy how to get (or not) the
-> blocks vs what they are.
+syzbot has bisected this issue to:
 
-Yeah, me too.  Want to leave it as XC_FREE_RTAVAILABLE?
+commit 62719cf33c3ad62986130a19496cd864a0ed06c3
+Author: Kent Overstreet <kent.overstreet@linux.dev>
+Date:   Sat Dec 23 22:50:29 2023 +0000
 
-> > > > going to use the greedy algorithm.  Later I see XFS_ZR_GREEDY gets used
-> > > > from the buffered write path, but there doesn't seem to be an obvious
-> > > > reason why?
-> > > 
-> > > Posix/Linux semantics for buffered writes require us to implement
-> > > short writes.  That is if a single (p)write(v) syscall for say 10MB
-> > > only find 512k of space it should write those instead of failing
-> > > with ENOSPC.  The XFS_ZR_GREEDY implements that by backing down to
-> > > what we can allocate (and the current implementation for that is
-> > > a little ugly, I plan to find some time for changes to the core
-> > > percpu_counters to improve this after the code is merged).
-> > 
-> > Ah, ok.  Can you put that in the comments defining XFS_ZR_GREEDY?
-> 
-> This is what I added earlier this week:
-> 
-> /*
->  * Grab any available space, even if it is less than what the caller asked for.
->  */
-> #define XFS_ZR_GREEDY           (1U << 0)
-> 
-> Do you want the glory details on why we're doing it here as well?
-> I guess it if can't be left as an exercise to the reader I'd probably
-> rather place it in the caller.
+    bcachefs: Fix nochanges/read_only interaction
 
-Nah, that's enough to hint at what I should be looking for any time
-there's a branch involving XFS_ZR_GREEDY.
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=17a4f7e8580000
+start commit:   eabcdba3ad40 Merge tag 'for-6.13-rc3-tag' of git://git.ker..
+git tree:       upstream
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=1464f7e8580000
+console output: https://syzkaller.appspot.com/x/log.txt?x=1064f7e8580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=1234f097ee657d8b
+dashboard link: https://syzkaller.appspot.com/bug?extid=aa930d41d2f32904c5da
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16dc4cf8580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12faef44580000
 
---D
+Reported-by: syzbot+aa930d41d2f32904c5da@syzkaller.appspotmail.com
+Fixes: 62719cf33c3a ("bcachefs: Fix nochanges/read_only interaction")
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
