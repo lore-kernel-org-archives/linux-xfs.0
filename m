@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A48A0155342
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:30:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 491B41B394E
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:30:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734636610; cv=none; b=IW7itZB75yZQhN9z8VcMMsECfTEvtdCpz3cxM7icDPyPCJek7vL7F6LxTpe84c5pWaUNX2kXJxEtpQaQQczoagt6aT/y3dVRGx27EDOoQVCbGvnOii2w6gI3x9yq6QBbKp4fDxg1eOoJPruD0SY8BRiuwe1BNUnoMrd8iqujR4A=
+	t=1734636626; cv=none; b=CBTgvxNta1XC0dIGwFNHcE8dZCVWZfVq0MymhtlKUmZjsHhmZp1Rp13njQZNweZTAgcFWMa8pwpNl9BEpkEwucCpE/qNTst1NJyp4zxxp8WnHvqgyBDU5f8bHUYhr7wSOF3eY5kuwrpm//gWTj2HvlFmabtjSiXOwr7KqhY8sg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734636610; c=relaxed/simple;
-	bh=U3TBYDb7zmIH7detoXHkxxvmFmSEFG4g0tZQbleAiko=;
+	s=arc-20240116; t=1734636626; c=relaxed/simple;
+	bh=oUECwuUhbUZ2H3ncledvAgSN9MokcMM9j7SBjr8iQKA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WJia7yBJzrl9o4HhHATRITTFf5eX0BqB9uKKrnIp6x1mRGgLZDnP860TxUAR1KsZylxC9UqKF7dYgtGylI4X3jet6LG+AvUGCJRgx8VWZYfvvva+tnijpJMCNlMFt6+Vta0A2v34JizACIBJ0Y1MvULQQeadR/YDUlDuhawaviw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U3z3mH2N; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=j52mQZ/HlHKY9JJ5cQ53X95aiJLT93jP7122gPI7GAYHNP2sOy0DCrV1EVi1NY2NEXP0XdDjiwX/jGgMGZ0L1Q8XxYk2pXpuO3+ikMYbDkNR+P3DZjxsX1O7JPNQKKvX0xBz0It0Pt/0/l4equKlf5DoDdId6QHqj2yYnW+5ABg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F/eZVSLr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U3z3mH2N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81DFCC4CED0;
-	Thu, 19 Dec 2024 19:30:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F/eZVSLr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 226CAC4CECE;
+	Thu, 19 Dec 2024 19:30:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734636610;
-	bh=U3TBYDb7zmIH7detoXHkxxvmFmSEFG4g0tZQbleAiko=;
+	s=k20201202; t=1734636626;
+	bh=oUECwuUhbUZ2H3ncledvAgSN9MokcMM9j7SBjr8iQKA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=U3z3mH2NOGejEZfoGMJlT2Tjbywypb2q1DYk5d8xIZ6EixkMSHg4S9j1bguAMH8xT
-	 rGyEJYwJUMsT1g7VgISnM+SusF2UDRRpf88U2tPggfF70j2YTFVUAqRqJTbs0mk5Ma
-	 Mb2B+/8n8QRoHTgupv+6PWeRSir6lJhbJXeLpzy5zNkshZs7LH4ZfV27f+tCdcSozL
-	 dJ9bvUgkCP+vcqrUS0y/9Mnl25/tEpH+TYdKmg5zO25lUfztLfqgXaFaZaNvD9xgWM
-	 YPhpBMHgvWFxD2CvxCNBTflFqwrGffaogvPZizguQrqFDkx9MzFFSDy0ccL3jWnbIl
-	 AschcZnGMg6qQ==
-Date: Thu, 19 Dec 2024 11:30:10 -0800
-Subject: [PATCH 26/37] xfs: walk the rt reverse mapping tree when rebuilding
- rmap
+	b=F/eZVSLr8KXQfg/a8ooSZ3rLh7CY3rLI2ZEeHcNuirzmBHJ1lclOCCAQ4aBNOaV8z
+	 DClgq3fVnihuG+Sa89mtCbUjEZaqxRktba93M2a0dGHJQ/xq4Yv5CYuYBlv6dbD2CZ
+	 x/4FfsuLBzEgo6JrE2P3j31Ls2gc9gV/52aqE2Bwa9veo+Lin3xDM04qoCH0z5BdXj
+	 j16Tz7vtIVmV0LyKfjRhXA1ZfLnVps7XN4mpLjIokQs0KYuw54Cvz3GI9T1qrFOwu5
+	 nqXUBTXtU24OFeJvQFd+DLpBhuaiq4+Y/UuiM67+o6Efh99FP8dD3iiFAS4y/iV9sC
+	 gLUtmFw94gJ7g==
+Date: Thu, 19 Dec 2024 11:30:25 -0800
+Subject: [PATCH 27/37] xfs: online repair of realtime file bmaps
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173463580203.1571512.5680797684749132629.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <173463580220.1571512.12389318349614689954.stgit@frogsfrogsfrogs>
 In-Reply-To: <173463579653.1571512.7862891421559358642.stgit@frogsfrogsfrogs>
 References: <173463579653.1571512.7862891421559358642.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,86 +45,266 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're rebuilding the data device rmap, if we encounter an "rmap"
-format fork, we have to walk the (realtime) rmap btree inode to build
-the appropriate mappings.
+Now that we have a reverse-mapping index of the realtime device, we can
+rebuild the data fork forward-mappings of any realtime file.  Enhance
+the existing bmbt repair code to walk the rtrmap btrees to gather this
+information.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/rmap_repair.c |   53 +++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 52 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/bmap_repair.c |  128 +++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/scrub/repair.c      |   46 ++++++++++++++++
+ fs/xfs/scrub/repair.h      |    2 +
+ 3 files changed, 172 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
-index 2a0b9e3d0fbaee..91c17feb49768b 100644
---- a/fs/xfs/scrub/rmap_repair.c
-+++ b/fs/xfs/scrub/rmap_repair.c
-@@ -31,6 +31,8 @@
- #include "xfs_refcount.h"
- #include "xfs_refcount_btree.h"
- #include "xfs_ag.h"
+diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
+index 141d36f1da9a71..fd64bdf4e13887 100644
+--- a/fs/xfs/scrub/bmap_repair.c
++++ b/fs/xfs/scrub/bmap_repair.c
+@@ -25,11 +25,13 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_rmap.h"
+ #include "xfs_rmap_btree.h"
 +#include "xfs_rtrmap_btree.h"
+ #include "xfs_refcount.h"
+ #include "xfs_quota.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_ag.h"
+ #include "xfs_reflink.h"
 +#include "xfs_rtgroup.h"
  #include "scrub/xfs_scrub.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
-@@ -504,7 +506,56 @@ xrep_rmap_scan_meta_btree(
- 	struct xrep_rmap_ifork	*rf,
- 	struct xfs_inode	*ip)
- {
--	return -EFSCORRUPTED; /* XXX placeholder */
-+	struct xfs_scrub	*sc = rf->rr->sc;
-+	struct xfs_rtgroup	*rtg = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	enum xfs_rtg_inodes	type;
-+	int			error;
-+
-+	if (rf->whichfork != XFS_DATA_FORK)
-+		return -EFSCORRUPTED;
-+
-+	switch (ip->i_metatype) {
-+	case XFS_METAFILE_RTRMAP:
-+		type = XFS_RTGI_RMAP;
-+		break;
-+	default:
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	while ((rtg = xfs_rtgroup_next(sc->mp, rtg))) {
-+		if (ip == rtg->rtg_inodes[type])
-+			goto found;
-+	}
-+
-+	/*
-+	 * We should never find an rt metadata btree inode that isn't
-+	 * associated with an rtgroup yet has ondisk blocks allocated to it.
-+	 */
-+	if (ip->i_nblocks) {
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
-+
-+found:
-+	switch (ip->i_metatype) {
-+	case XFS_METAFILE_RTRMAP:
-+		cur = xfs_rtrmapbt_init_cursor(sc->tp, rtg);
-+		break;
-+	default:
-+		ASSERT(0);
-+		error = -EFSCORRUPTED;
-+		goto out_rtg;
-+	}
-+
-+	error = xrep_rmap_scan_iroot_btree(rf, cur);
-+	xfs_btree_del_cursor(cur, error);
-+out_rtg:
-+	xfs_rtgroup_rele(rtg);
-+	return error;
+@@ -359,6 +361,112 @@ xrep_bmap_scan_ag(
+ 	return error;
  }
  
- /* Find all the extents from a given AG in an inode fork. */
++#ifdef CONFIG_XFS_RT
++/* Check for any obvious errors or conflicts in the file mapping. */
++STATIC int
++xrep_bmap_check_rtfork_rmap(
++	struct xfs_scrub		*sc,
++	struct xfs_btree_cur		*cur,
++	const struct xfs_rmap_irec	*rec)
++{
++	/* xattr extents are never stored on realtime devices */
++	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
++		return -EFSCORRUPTED;
++
++	/* bmbt blocks are never stored on realtime devices */
++	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		return -EFSCORRUPTED;
++
++	/* Data extents for non-rt files are never stored on the rt device. */
++	if (!XFS_IS_REALTIME_INODE(sc->ip))
++		return -EFSCORRUPTED;
++
++	/* Check the file offsets and physical extents. */
++	if (!xfs_verify_fileext(sc->mp, rec->rm_offset, rec->rm_blockcount))
++		return -EFSCORRUPTED;
++
++	/* Check that this is within the rtgroup. */
++	if (!xfs_verify_rgbext(to_rtg(cur->bc_group), rec->rm_startblock,
++				rec->rm_blockcount))
++		return -EFSCORRUPTED;
++
++	/* Make sure this isn't free space. */
++	return xrep_require_rtext_inuse(sc, rec->rm_startblock,
++			rec->rm_blockcount);
++}
++
++/* Record realtime extents that belong to this inode's fork. */
++STATIC int
++xrep_bmap_walk_rtrmap(
++	struct xfs_btree_cur		*cur,
++	const struct xfs_rmap_irec	*rec,
++	void				*priv)
++{
++	struct xrep_bmap		*rb = priv;
++	int				error = 0;
++
++	if (xchk_should_terminate(rb->sc, &error))
++		return error;
++
++	/* Skip extents which are not owned by this inode and fork. */
++	if (rec->rm_owner != rb->sc->ip->i_ino)
++		return 0;
++
++	error = xrep_bmap_check_rtfork_rmap(rb->sc, cur, rec);
++	if (error)
++		return error;
++
++	/*
++	 * Record all blocks allocated to this file even if the extent isn't
++	 * for the fork we're rebuilding so that we can reset di_nblocks later.
++	 */
++	rb->nblocks += rec->rm_blockcount;
++
++	/* If this rmap isn't for the fork we want, we're done. */
++	if (rb->whichfork == XFS_DATA_FORK &&
++	    (rec->rm_flags & XFS_RMAP_ATTR_FORK))
++		return 0;
++	if (rb->whichfork == XFS_ATTR_FORK &&
++	    !(rec->rm_flags & XFS_RMAP_ATTR_FORK))
++		return 0;
++
++	return xrep_bmap_from_rmap(rb, rec->rm_offset,
++			xfs_rgbno_to_rtb(to_rtg(cur->bc_group),
++				rec->rm_startblock),
++			rec->rm_blockcount,
++			rec->rm_flags & XFS_RMAP_UNWRITTEN);
++}
++
++/* Scan the realtime reverse mappings to build the new extent map. */
++STATIC int
++xrep_bmap_scan_rtgroup(
++	struct xrep_bmap	*rb,
++	struct xfs_rtgroup	*rtg)
++{
++	struct xfs_scrub	*sc = rb->sc;
++	int			error;
++
++	if (!xfs_has_rtrmapbt(sc->mp))
++		return 0;
++
++	error = xrep_rtgroup_init(sc, rtg, &sc->sr,
++			XFS_RTGLOCK_RMAP | XFS_RTGLOCK_BITMAP_SHARED);
++	if (error)
++		return error;
++
++	error = xfs_rmap_query_all(sc->sr.rmap_cur, xrep_bmap_walk_rtrmap, rb);
++	xchk_rtgroup_btcur_free(&sc->sr);
++	xchk_rtgroup_free(sc, &sc->sr);
++	return error;
++}
++#else
++static inline int
++xrep_bmap_scan_rtgroup(struct xrep_bmap *rb, struct xfs_rtgroup *rtg)
++{
++	return -EFSCORRUPTED;
++}
++#endif
++
+ /* Find the delalloc extents from the old incore extent tree. */
+ STATIC int
+ xrep_bmap_find_delalloc(
+@@ -410,6 +518,22 @@ xrep_bmap_find_mappings(
+ 	struct xfs_perag	*pag = NULL;
+ 	int			error = 0;
+ 
++	/*
++	 * Iterate the rtrmaps for extents.  Metadata files never have content
++	 * on the realtime device, so there's no need to scan them.
++	 */
++	if (!xfs_is_metadir_inode(sc->ip)) {
++		struct xfs_rtgroup	*rtg = NULL;
++
++		while ((rtg = xfs_rtgroup_next(sc->mp, rtg))) {
++			error = xrep_bmap_scan_rtgroup(rb, rtg);
++			if (error) {
++				xfs_rtgroup_rele(rtg);
++				return error;
++			}
++		}
++	}
++
+ 	/* Iterate the rmaps for extents. */
+ 	while ((pag = xfs_perag_next(sc->mp, pag))) {
+ 		error = xrep_bmap_scan_ag(rb, pag);
+@@ -754,10 +878,6 @@ xrep_bmap_check_inputs(
+ 		return -EINVAL;
+ 	}
+ 
+-	/* Don't know how to rebuild realtime data forks. */
+-	if (XFS_IS_REALTIME_INODE(sc->ip))
+-		return -EOPNOTSUPP;
+-
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index e788e3032f8e33..18946dd46fa745 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -37,6 +37,9 @@
+ #include "xfs_da_btree.h"
+ #include "xfs_attr.h"
+ #include "xfs_dir2.h"
++#include "xfs_rtrmap_btree.h"
++#include "xfs_rtbitmap.h"
++#include "xfs_rtgroup.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+@@ -955,6 +958,22 @@ xrep_ag_init(
+ }
+ 
+ #ifdef CONFIG_XFS_RT
++/* Initialize all the btree cursors for a RT repair. */
++static void
++xrep_rtgroup_btcur_init(
++	struct xfs_scrub	*sc,
++	struct xchk_rt		*sr)
++{
++	struct xfs_mount	*mp = sc->mp;
++
++	ASSERT(sr->rtg != NULL);
++
++	if (sc->sm->sm_type != XFS_SCRUB_TYPE_RTRMAPBT &&
++	    (sr->rtlock_flags & XFS_RTGLOCK_RMAP) &&
++	    xfs_has_rtrmapbt(mp))
++		sr->rmap_cur = xfs_rtrmapbt_init_cursor(sc->tp, sr->rtg);
++}
++
+ /*
+  * Given a reference to a rtgroup structure, lock rtgroup btree inodes and
+  * create btree cursors.  Must only be called to repair a regular rt file.
+@@ -973,6 +992,33 @@ xrep_rtgroup_init(
+ 
+ 	/* Grab our own passive reference from the caller's ref. */
+ 	sr->rtg = xfs_rtgroup_hold(rtg);
++	xrep_rtgroup_btcur_init(sc, sr);
++	return 0;
++}
++
++/* Ensure that all rt blocks in the given range are not marked free. */
++int
++xrep_require_rtext_inuse(
++	struct xfs_scrub	*sc,
++	xfs_rgblock_t		rgbno,
++	xfs_filblks_t		len)
++{
++	struct xfs_mount	*mp = sc->mp;
++	xfs_rtxnum_t		startrtx;
++	xfs_rtxnum_t		endrtx;
++	bool			is_free = false;
++	int			error;
++
++	startrtx = xfs_rgbno_to_rtx(mp, rgbno);
++	endrtx = xfs_rgbno_to_rtx(mp, rgbno + len - 1);
++
++	error = xfs_rtalloc_extent_is_free(sc->sr.rtg, sc->tp, startrtx,
++			endrtx - startrtx + 1, &is_free);
++	if (error)
++		return error;
++	if (is_free)
++		return -EFSCORRUPTED;
++
+ 	return 0;
+ }
+ #endif /* CONFIG_XFS_RT */
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index b649da1a93eb8c..584135042d9aa9 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -110,6 +110,8 @@ int xrep_ag_init(struct xfs_scrub *sc, struct xfs_perag *pag,
+ #ifdef CONFIG_XFS_RT
+ int xrep_rtgroup_init(struct xfs_scrub *sc, struct xfs_rtgroup *rtg,
+ 		struct xchk_rt *sr, unsigned int rtglock_flags);
++int xrep_require_rtext_inuse(struct xfs_scrub *sc, xfs_rgblock_t rgbno,
++		xfs_filblks_t len);
+ #else
+ # define xrep_rtgroup_init(sc, rtg, sr, lockflags)	(-ENOSYS)
+ #endif /* CONFIG_XFS_RT */
 
