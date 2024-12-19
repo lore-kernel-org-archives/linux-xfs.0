@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADE7A19884C
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:37:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF661B4F04
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:38:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734637079; cv=none; b=oBNNlS/q8U4yh4UBE9FEyubIYJAdWDKaNwi9KErexwHHx6YPOZLxaG8/8J/Pjk6GycoGPOKaxpJVdY+ijBUEew2FpslrC2YrUf40q3m09P6DWoOmTSFkdStk/XN8UB5UTlSKsEyFUsdbikJasAU9PWSB7qmf2CDCTPD36GQbE98=
+	t=1734637095; cv=none; b=Ok9ajkLGQtpuKyqnzaKtr7udgay42ptxj2S7JzJbSY2x6TyntndWZukU85ckLzdHVSsumx7jW30+dUv8wM+igwEqUDPI+nM4M4vuHVVd84ys0l4tHA/Oq/bdEI06/0c5eCxztsViqcK+UWL0r7TDBbHYPXhRecZu1BHITdpCq4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734637079; c=relaxed/simple;
-	bh=krTqPSDbEL4Uf4dmqOY5JcZGYJBUioGdHSoLVkGzkCk=;
+	s=arc-20240116; t=1734637095; c=relaxed/simple;
+	bh=GDfgkiZ3H0bF/1KyRQutzFdUD1zdUZFsF8rc7IlIdNc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A7bM+lTyKYTc3+giTEXAqTY/dadK3u1uCmYRaj5sxBTk//Kq5GpIWXZGSZCGb6hBZ4/Gz8+l+aVc1pGh13/VLxYkY+TTIOg6/Z0H8HNFGHIL5QZUs6uJgsjRbWo0GyhbUKqlh2AFsx8fOl/t/PPoRNzp8u9wtaymqexzursNxzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lsoBpaKk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=t65wR9QiwJVNDf2K2XnA6CzkDa95TJjc11Ag0IZBYkBCxCf0OHZYL+kbz5l7O1UkBxd2RtuiE4u+0qrIkCrGj/igMbl77FeIN3A03IhPoY+Zhas/fuD5wXt2saxdP1+6CupeT6moz+QJpySPbGc4W9v4lJxwQ3alUMqoez2JhtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wv+fHRas; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lsoBpaKk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C6E5C4CECE;
-	Thu, 19 Dec 2024 19:37:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wv+fHRas"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E49EC4CECE;
+	Thu, 19 Dec 2024 19:38:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734637079;
-	bh=krTqPSDbEL4Uf4dmqOY5JcZGYJBUioGdHSoLVkGzkCk=;
+	s=k20201202; t=1734637095;
+	bh=GDfgkiZ3H0bF/1KyRQutzFdUD1zdUZFsF8rc7IlIdNc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lsoBpaKkF4y/UhmJWUdCyu3erMyBYVJH5QkHZDhVhPU2Wi5aMfZ/hPtRS3iDGkkM4
-	 B4QwDghU+o63J/Ix5ZWeNWJmo3mF0vrPs7t7zfvAxqAiy3J1DpIB7gMpLrBSBbpzgv
-	 JtUUgH4SvqC2OAjfSdF0MECJ6OWC0OaV6cwx+XOV0FO467l5BWkkMFXzWMT3NZqEUN
-	 uKyrHzqDZtXSf6xc3+syZjuBLPH1BzZC6bYBY/6OMCttgXlGtNNNa0waMhx2LGLJn1
-	 Ey/KXvXZELBlMiMrSOe8SanMwhTfdiUtKEqsENs1g6k4Wun0dQmzoE3Bg0TlC38YVo
-	 iM7PeA0SDOaxQ==
-Date: Thu, 19 Dec 2024 11:37:59 -0800
-Subject: [PATCH 19/43] xfs: enable CoW for realtime data
+	b=Wv+fHRasMk22AV9cpBCB5mqR5vS5IVX+/YsMGH7Eq2Dj3s0i/x1u5JJJaE0Jq47OF
+	 PPYrpXuFtmhJKqYkyzdYgaSOyxmMi3CsveuTAnnotpgHfMAvP7D34lI0Tc1Bu+Cz3w
+	 hz7hg0jPMo5PacZRR1RNnuXq5A4hCvqVwIgdNu+/rIuHiIYpoRQTU+6Td/YhIGiktU
+	 V8ltRAc4WKO7Sq6q5AVadmnLTIoodXX4jxyB1BcIKhGTx94GctCsABUFmLk5KnYhcS
+	 7PdIgrUnV0xvIfTQELuWL8iogFC2Frd14Q0/neXh3slgfqPXarSy8x9nY5nBsvmIP/
+	 RfKCL3tcjT9UQ==
+Date: Thu, 19 Dec 2024 11:38:14 -0800
+Subject: [PATCH 20/43] xfs: enable sharing of realtime file blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173463581304.1572761.16104892994654937567.stgit@frogsfrogsfrogs>
+Message-ID: <173463581321.1572761.3233283111774533052.stgit@frogsfrogsfrogs>
 In-Reply-To: <173463580863.1572761.14930951818251914429.stgit@frogsfrogsfrogs>
 References: <173463580863.1572761.14930951818251914429.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,99 +45,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update our write paths to support copy on write on the rt volume.  This
-works in more or less the same way as it does on the data device, with
-the major exception that we never do delalloc on the rt volume.
-
-Because we consider unwritten CoW fork staging extents to be incore
-quota reservation, we update xfs_quota_reserve_blkres to support this
-case.  Though xfs doesn't allow rt and quota together, the change is
-trivial and we shouldn't leave a logic bomb here.
+Update the remapping routines to be able to handle realtime files.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_reflink.c |   36 ++++++++++++++++++++++++++++--------
- 1 file changed, 28 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_reflink.c |   25 ++++++++++++++++++++-----
+ 1 file changed, 20 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 29574b015fddc0..24f545687b8730 100644
+index 24f545687b8730..78b47b2ac12453 100644
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -439,20 +439,26 @@ xfs_reflink_fill_cow_hole(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
- 	xfs_filblks_t		resaligned;
--	xfs_extlen_t		resblks;
-+	unsigned int		dblocks = 0, rblocks = 0;
- 	int			nimaps;
- 	int			error;
- 	bool			found;
+@@ -33,6 +33,7 @@
+ #include "xfs_rtrefcount_btree.h"
+ #include "xfs_rtalloc.h"
+ #include "xfs_rtgroup.h"
++#include "xfs_metafile.h"
  
- 	resaligned = xfs_aligned_fsb_count(imap->br_startoff,
- 		imap->br_blockcount, xfs_get_cowextsz_hint(ip));
--	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+ /*
+  * Copy on Write of Shared Blocks
+@@ -1187,14 +1188,28 @@ xfs_reflink_update_dest(
+ static int
+ xfs_reflink_ag_has_free_space(
+ 	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno)
++	struct xfs_inode	*ip,
++	xfs_fsblock_t		fsb)
+ {
+ 	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
+ 	int			error = 0;
+ 
+ 	if (!xfs_has_rmapbt(mp))
+ 		return 0;
 +	if (XFS_IS_REALTIME_INODE(ip)) {
-+		dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
-+		rblocks = resaligned;
-+	} else {
-+		dblocks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
-+		rblocks = 0;
++		struct xfs_rtgroup	*rtg;
++		xfs_rgnumber_t		rgno;
+ 
++		rgno = xfs_rtb_to_rgno(mp, fsb);
++		rtg = xfs_rtgroup_get(mp, rgno);
++		if (xfs_metafile_resv_critical(rtg_rmap(rtg)))
++			error = -ENOSPC;
++		xfs_rtgroup_put(rtg);
++		return error;
 +	}
++
++	agno = XFS_FSB_TO_AGNO(mp, fsb);
+ 	pag = xfs_perag_get(mp, agno);
+ 	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_RMAPBT) ||
+ 	    xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA))
+@@ -1308,8 +1323,8 @@ xfs_reflink_remap_extent(
  
- 	xfs_iunlock(ip, *lockmode);
- 	*lockmode = 0;
- 
--	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks, 0,
--			false, &tp);
-+	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, dblocks,
-+			rblocks, false, &tp);
- 	if (error)
- 		return error;
- 
-@@ -1212,7 +1218,7 @@ xfs_reflink_remap_extent(
- 	struct xfs_trans	*tp;
- 	xfs_off_t		newlen;
- 	int64_t			qdelta = 0;
--	unsigned int		resblks;
-+	unsigned int		dblocks, rblocks, resblks;
- 	bool			quota_reserved = true;
- 	bool			smap_real;
- 	bool			dmap_written = xfs_bmap_is_written_extent(dmap);
-@@ -1243,8 +1249,15 @@ xfs_reflink_remap_extent(
- 	 * we're remapping.
- 	 */
- 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
-+	if (XFS_IS_REALTIME_INODE(ip)) {
-+		dblocks = resblks;
-+		rblocks = dmap->br_blockcount;
-+	} else {
-+		dblocks = resblks + dmap->br_blockcount;
-+		rblocks = 0;
-+	}
- 	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
--			resblks + dmap->br_blockcount, 0, false, &tp);
-+			dblocks, rblocks, false, &tp);
- 	if (error == -EDQUOT || error == -ENOSPC) {
- 		quota_reserved = false;
- 		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
-@@ -1324,8 +1337,15 @@ xfs_reflink_remap_extent(
- 	 * done.
- 	 */
- 	if (!quota_reserved && !smap_real && dmap_written) {
--		error = xfs_trans_reserve_quota_nblks(tp, ip,
--				dmap->br_blockcount, 0, false);
-+		if (XFS_IS_REALTIME_INODE(ip)) {
-+			dblocks = 0;
-+			rblocks = dmap->br_blockcount;
-+		} else {
-+			dblocks = dmap->br_blockcount;
-+			rblocks = 0;
-+		}
-+		error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks,
-+				false);
+ 	/* No reflinking if the AG of the dest mapping is low on space. */
+ 	if (dmap_written) {
+-		error = xfs_reflink_ag_has_free_space(mp,
+-				XFS_FSB_TO_AGNO(mp, dmap->br_startblock));
++		error = xfs_reflink_ag_has_free_space(mp, ip,
++				dmap->br_startblock);
  		if (error)
  			goto out_cancel;
  	}
+@@ -1568,8 +1583,8 @@ xfs_reflink_remap_prep(
+ 
+ 	/* Check file eligibility and prepare for block sharing. */
+ 	ret = -EINVAL;
+-	/* Don't reflink realtime inodes */
+-	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
++	/* Can't reflink between data and rt volumes */
++	if (XFS_IS_REALTIME_INODE(src) != XFS_IS_REALTIME_INODE(dest))
+ 		goto out_unlock;
+ 
+ 	/* Don't share DAX file data with non-DAX file. */
 
