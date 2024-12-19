@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C06D1A08CC
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:37:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661E219884C
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:37:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734637048; cv=none; b=SXU+iMSicbzdTWAwWAw10SPOvifOd1GmLD57jtna1/a4XRAdH1T+ABy5B344xX+tVtFp47PDx6NIJri8U4XO5YmmW36qmtaTLZYsvAy54krZqjgLWuN5UHskIfqvJgWI9upFh51bh9YcTDohqc76mwmjP2n+btQXz1Cy6HZfz24=
+	t=1734637064; cv=none; b=WluyoJnG3uPuc4r0lrx1PVjiT3MkDGVGhXG8bsp6F1dm/ktjnlIzylSLioP3J1faSJT80V9lx6nVqes+0zQ33TnLjx7fKrQWh16uukgi/ll6VrmDueIX3HEaA8dPeIDIxOUttbkIjlae7N7xr+E/i9A4NqnrIWpUy79JrW3WUxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734637048; c=relaxed/simple;
-	bh=E33NpwMg35NquW8dRlbAcvuMrYYS5rxRlCKt3lzwikg=;
+	s=arc-20240116; t=1734637064; c=relaxed/simple;
+	bh=VqbvNoWjRQs46L5/Xu/EPUXMq6a+GB9slHXl2N51EB4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AnXbg2c415FCN8xEE0yGqQh/9ndbNHq18eqgI1ZfGXYD+T4r8VMKOAjdpWw2hpi0jJCGPlpe+Jn6TlC4NMNionHRjM5uNNjV2LSYHAIOklceYsFT1H+3DhWKBhBc0E2Mug+XRCWxAQdr4osJys+KLQ6PVVDcKfRhTVk0PwDWsrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pmBcm/XZ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TsqfQ0mwAh//6Uo9IPuKdu1zc8XbqC7bFxGzxtaRiLh4LDrA/lHrJnc2c2wqQtLz3PUnMsOTRXhzAgXCSj40J1oR7k8jO4jASNmslunnYD8lnAq4WiZAmVGg8x2bjrnseB3ZzXMEGQooKO+Hh6g1FSFoZxPbWtnu2a48k3+EMSg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jupXuzKq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pmBcm/XZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49FC2C4CECE;
-	Thu, 19 Dec 2024 19:37:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jupXuzKq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7C7FC4CECE;
+	Thu, 19 Dec 2024 19:37:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734637048;
-	bh=E33NpwMg35NquW8dRlbAcvuMrYYS5rxRlCKt3lzwikg=;
+	s=k20201202; t=1734637063;
+	bh=VqbvNoWjRQs46L5/Xu/EPUXMq6a+GB9slHXl2N51EB4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pmBcm/XZfx2Mcq0TCOABZBkR8rmaEA7XUE8jswKEjqan+BvjNkQIz4mTWf8vr1/2A
-	 iKGfPhjcxCZ/e/74XTcj7inLdctg9fsdZ/jCFLZ8fJPS0bYXY0Y5Errhu7kfBRn12F
-	 helxBjNToc7qA3mZR7hQqTvrkm/JrQ78d6H4E/Um4EZ21vqr4aHjnFBuubvOytOLup
-	 4PQQPlO4g7GxXSnae9vZDNiTHT9i0KnCx1eqTRtuiG5nmw3KJh5O3/bD1LR0+zAGpb
-	 lT5WI4DvgZB22TqllxMQwgZmgqDrQYQtMs1ocXY8FjFhh+0yI2I/jmclFcQ9Sl1qO9
-	 Ug2ozG9CW46tA==
-Date: Thu, 19 Dec 2024 11:37:27 -0800
-Subject: [PATCH 17/43] xfs: compute rtrmap btree max levels when reflink
- enabled
+	b=jupXuzKq6n8f5FM2fdZdIlF9NzuYo3bSt7rv0mShVppmgEkMau6RdspyJAw53hePX
+	 ekLMaRcnKfvBgGEBjklDkHxjHZhUfWw5lL1WRmiIKmeotJO3m6P178wQbrjgbR18jT
+	 2HKdnRiLHAIIdt9DKClsOS0xqstXuAG/ZNASbYdJq0S+aPt6mzzGQ6g9OlmupBYesM
+	 WiVkLgjxYPE/wOHsePTiTrduHZUvCp7VkaOUP8vPpsGqk3AbzDkqMAXtMYrPdafFj0
+	 6J1YU4LqIYknWop2zaL2d+2a0jdQqxKUGDG2Htl+G5HzWJ322UBV5iZsCP6t2jMQHs
+	 +beF8ktWGmraA==
+Date: Thu, 19 Dec 2024 11:37:43 -0800
+Subject: [PATCH 18/43] xfs: refactor reflink quota updates
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173463581270.1572761.16688976269157812588.stgit@frogsfrogsfrogs>
+Message-ID: <173463581287.1572761.10199818887802475152.stgit@frogsfrogsfrogs>
 In-Reply-To: <173463580863.1572761.14930951818251914429.stgit@frogsfrogsfrogs>
 References: <173463580863.1572761.14930951818251914429.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,70 +45,83 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Compute the maximum possible height of the realtime rmap btree when
-reflink is enabled.
+Hoist all quota updates for reflink into a helper function, since things
+are about to become more complicated.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtrmap_btree.c |   28 ++++++++++++++++++++++++++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_reflink.c |   37 ++++++++++++++++++++++++++++++++-----
+ 1 file changed, 32 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-index 3cb8f126b9ce16..04b9c76380adb0 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-@@ -718,6 +718,7 @@ xfs_rtrmapbt_maxrecs(
- unsigned int
- xfs_rtrmapbt_maxlevels_ondisk(void)
- {
-+	unsigned long long	max_dblocks;
- 	unsigned int		minrecs[2];
- 	unsigned int		blocklen;
- 
-@@ -726,8 +727,20 @@ xfs_rtrmapbt_maxlevels_ondisk(void)
- 	minrecs[0] = xfs_rtrmapbt_block_maxrecs(blocklen, true) / 2;
- 	minrecs[1] = xfs_rtrmapbt_block_maxrecs(blocklen, false) / 2;
- 
--	/* We need at most one record for every block in an rt group. */
--	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_RGBLOCKS);
-+	/*
-+	 * Compute the asymptotic maxlevels for an rtrmapbt on any rtreflink fs.
-+	 *
-+	 * On a reflink filesystem, each block in an rtgroup can have up to
-+	 * 2^32 (per the refcount record format) owners, which means that
-+	 * theoretically we could face up to 2^64 rmap records.  However, we're
-+	 * likely to run out of blocks in the data device long before that
-+	 * happens, which means that we must compute the max height based on
-+	 * what the btree will look like if it consumes almost all the blocks
-+	 * in the data device due to maximal sharing factor.
-+	 */
-+	max_dblocks = -1U; /* max ag count */
-+	max_dblocks *= XFS_MAX_CRC_AG_BLOCKS;
-+	return xfs_btree_space_to_height(minrecs, max_dblocks);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 66ce29101462cd..29574b015fddc0 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -739,6 +739,35 @@ xfs_reflink_cancel_cow_range(
+ 	return error;
  }
  
- int __init
-@@ -766,9 +779,20 @@ xfs_rtrmapbt_compute_maxlevels(
- 	 * maximum height is constrained by the size of the data device and
- 	 * the height required to store one rmap record for each block in an
- 	 * rt group.
-+	 *
-+	 * On a reflink filesystem, each rt block can have up to 2^32 (per the
-+	 * refcount record format) owners, which means that theoretically we
-+	 * could face up to 2^64 rmap records.  This makes the computation of
-+	 * maxlevels based on record count meaningless, so we only consider the
-+	 * size of the data device.
- 	 */
- 	d_maxlevels = xfs_btree_space_to_height(mp->m_rtrmap_mnr,
- 				mp->m_sb.sb_dblocks);
-+	if (xfs_has_rtreflink(mp)) {
-+		mp->m_rtrmap_maxlevels = d_maxlevels + 1;
-+		return;
-+	}
++#ifdef CONFIG_XFS_QUOTA
++/*
++ * Update quota accounting for a remapping operation.  When we're remapping
++ * something from the CoW fork to the data fork, we must update the quota
++ * accounting for delayed allocations.  For remapping from the data fork to the
++ * data fork, use regular block accounting.
++ */
++static inline void
++xfs_reflink_update_quota(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	bool			is_cow,
++	int64_t			blocks)
++{
++	unsigned int		qflag;
 +
- 	r_maxlevels = xfs_btree_compute_maxlevels(mp->m_rtrmap_mnr,
- 				mp->m_groups[XG_TYPE_RTG].blocks);
++	if (XFS_IS_REALTIME_INODE(ip)) {
++		qflag = is_cow ? XFS_TRANS_DQ_DELRTBCOUNT :
++				 XFS_TRANS_DQ_RTBCOUNT;
++	} else {
++		qflag = is_cow ? XFS_TRANS_DQ_DELBCOUNT :
++				 XFS_TRANS_DQ_BCOUNT;
++	}
++	xfs_trans_mod_dquot_byino(tp, ip, qflag, blocks);
++}
++#else
++# define xfs_reflink_update_quota(tp, ip, is_cow, blocks)	((void)0)
++#endif
++
+ /*
+  * Remap part of the CoW fork into the data fork.
+  *
+@@ -833,8 +862,7 @@ xfs_reflink_end_cow_extent(
+ 		 */
+ 		xfs_bmap_unmap_extent(tp, ip, XFS_DATA_FORK, &data);
+ 		xfs_refcount_decrease_extent(tp, isrt, &data);
+-		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
+-				-data.br_blockcount);
++		xfs_reflink_update_quota(tp, ip, false, -data.br_blockcount);
+ 	} else if (data.br_startblock == DELAYSTARTBLOCK) {
+ 		int		done;
  
+@@ -859,8 +887,7 @@ xfs_reflink_end_cow_extent(
+ 	xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, &del);
+ 
+ 	/* Charge this new data fork mapping to the on-disk quota. */
+-	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
+-			(long)del.br_blockcount);
++	xfs_reflink_update_quota(tp, ip, true, del.br_blockcount);
+ 
+ 	/* Remove the mapping from the CoW fork. */
+ 	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+@@ -1347,7 +1374,7 @@ xfs_reflink_remap_extent(
+ 		qdelta += dmap->br_blockcount;
+ 	}
+ 
+-	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, qdelta);
++	xfs_reflink_update_quota(tp, ip, false, qdelta);
+ 
+ 	/* Update dest isize if needed. */
+ 	newlen = XFS_FSB_TO_B(mp, dmap->br_startoff + dmap->br_blockcount);
 
