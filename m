@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC0631A9B32
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:14:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 756C519E98C
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:15:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734635659; cv=none; b=EeBf8WuOTIbcLQamMT/PP6A6tDbW63xbwcqW4/crSR3fVzx5DFbTkstBXbnfV+/QdwEVoDVI6SQwT72ef9TgJKfkcSBID/OtF6sPC4okmIH2wRywT3MAdOrND7DP6G5qiBwMyLUx75XCbdZtzDA6MVogsxbDKl7o9606BhRjYLM=
+	t=1734635754; cv=none; b=X6HEJO0qtaRQlJoWFbkp/rN9XXpEMaTbSJPpkkL8VWbteosoQiNiFUxpBLQ0xQrAp8kbq9k4xvM+NAPAcmua1Eh888LT9KSKQ1mx6jOHlb6YEwCulM6z7Uax09BZhP65x5iZwOkKlvF3SAH77DW4h5bwcR6rcfuo5HLbjFBLE94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734635659; c=relaxed/simple;
-	bh=A/J21ppEsaimP63MU4RG+wiU1SJdSVIe/eRxUT89S5U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ABrwvm3COaseeG1VLNNVgXA0Ci3U0Xd/B8Rs45S0U51qdRWQ2uv2vqb8H8LerZ3LSStrcbIoFrjFC1qyeHo0wZTKSVbGevmxF9dwfsRIKLYRMWQ3p4i7Jp8UoNV8zIA62ZyeV0oFAcVKZjkgrsXhwxPI8ZPicyBvjO/c4KoAAws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jk8LeRpM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734635754; c=relaxed/simple;
+	bh=0DJsreMYDEQvLYkPrYxKJKKshBjMAJvK2t1VkF1i9e8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=N6OVZwypCEzdRSq8al4lvKqXQ1GebyZGIXbD/MSNAjchTMcnwkquGhI1IkAlTvQGATpGX7Zp0nicct7qxnZzFU0TSYoBO6k90nqLfoij47cw7whJPlTB7bFBcMZZaMEL+9lY55uq24HqKxm8fpfs0ZmJFm5qkL0yZ/NE2v5H+Dk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K5pv9X1+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jk8LeRpM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58B37C4CECE;
-	Thu, 19 Dec 2024 19:14:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K5pv9X1+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F4BEC4CED0;
+	Thu, 19 Dec 2024 19:15:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734635659;
-	bh=A/J21ppEsaimP63MU4RG+wiU1SJdSVIe/eRxUT89S5U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jk8LeRpMSDF9hcC/gNTkc6p6dMKopeFQujY3OkhY1s3cTYGYWvJ6IIqgBgnhuDUFD
-	 q9vU0A2R48UXPh1zoUwGpe+Gc7x1Zyke7X5zVXQywGu1Fb6m2MCLHwjMFaggX1SJj8
-	 CDOR1aUkd9jFJnGZ8nsu+jL4UyFvqCdiENsgZBA0Acdl/vX1ws6Cb7GPNmPUJVX+ue
-	 2+WXCVF8wx5iURYFxpPQ9MK/2mmRIkFjqa8EJ4ddvZ9T+qnopD9eiJsPo4CB84wLUh
-	 9fa2GljcSzKdDrOnLPCgSE1KUXUM2SsBXHA1YIeUq0zlIx7Qs9iSILstIq0VOyMlou
-	 nahKaMsgfYJBg==
-Date: Thu, 19 Dec 2024 11:14:18 -0800
+	s=k20201202; t=1734635754;
+	bh=0DJsreMYDEQvLYkPrYxKJKKshBjMAJvK2t1VkF1i9e8=;
+	h=Date:From:To:Cc:Subject:From;
+	b=K5pv9X1+io/3uQ+pQnzQ5iAtWWJ73tx42gmv9L1m7R3LkUnwdmc7of2ucE/mdAyOX
+	 datJl790XequfgPFQ5a8KZ5U0McJJPrbdjkqYe00AZbF7H5c4eCwfboZKwIOoA6h9r
+	 LctjTolKgZJ1MSmtIgaeUpMVdgltpauEdWLFWl62DaDVr2diq/adQ45tn0wR8SQL9B
+	 AoUnoYETs20VAzIW4q/Ohkw71gbN+Q0TjUnFFInD5Q/3MlyuOhpeOKPNtd4Vci37Mt
+	 i4u+0b0Wmq+oLQAkDK/Qw8RNeCmZrMK0tbxlU7RoUVPDa3jCyrKmWyiSiZsabxrAnB
+	 gLTSTOW+QbtKA==
+Date: Thu, 19 Dec 2024 11:15:53 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Carlos Maiolino <cem@kernel.org>,
 	Andrey Albershteyn <aalbersh@redhat.com>
 Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 Subject: [PATCHBOMB 6.14 v6.1] xfs: realtime rmap and reflink
-Message-ID: <20241219191418.GP6174@frogsfrogsfrogs>
-References: <20241213005314.GJ6678@frogsfrogsfrogs>
+Message-ID: <20241219191553.GI6160@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,7 +41,8 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241213005314.GJ6678@frogsfrogsfrogs>
+
+[resend, this time not as a reply to the v6.0 series]
 
 Hi everyone,
 
