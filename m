@@ -1,166 +1,393 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3D22224AE3
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 13:58:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8335A225782;
+	Thu, 19 Dec 2024 15:13:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734616719; cv=none; b=JC9b/wiN5gM2NnO+rmD9JcOB56f15rCGBSS5CgErI/AmTbPX/GafqXWg2NhcUo3yf5v1ScDqkHwHJQjsKAX0U1ldy2jVSC2c9vqxi19o/haLP5JTC6xiUCkkikMo0HaHkiwQ4Jm8885lhSOKU5+vlccp32SFI1niAGgL+tUnIAs=
+	t=1734621232; cv=none; b=U14IeAG2MmQ1yBwpyxPepguWUxMdr05chWhccoCDSiHTs//AssDZ0huHELoxhmNaztB5/MEvuq1Ex870T0h5jxnUGXuiLAwCLgaOjMTX1CnRpJrIhEYVd8aDSTNj/zdD6N4SfJneG9VRgK8GHqYiL07Do/Dbe2yo6FrOVOLgdks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734616719; c=relaxed/simple;
-	bh=a3gABU68ZHg7WBjOKd2l1+bqSv81PQ3BEBi/YdbDUM8=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=n1/4xkGaA6KcXa0PPNWKtBWoAlHhDkXR0//aEUYOmVjyHB7/ejqPZ1lPqsME2vuiRRg5txIzlqnQNMBCMzs/z5K9IbRM5DqADGSdGHoajGbnUuAw3ew8G2pB9WpmAoYgwD2H0vCEV1L7g9HsXEGKxr89FiqSManG7ijd1kdms/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S1ClcavD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734621232; c=relaxed/simple;
+	bh=huv/0kdznuz2tXxZVFEKAN6yQCK2KTrv/jNvF17NDWk=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=UxU9NocVuf1kXcAs2Zdx9PeMQ0oN5SzeAO5ac21jJD9IcN+NNe6GwAx89wIpJrrjwv6PGTQc5pXmtZdXPksFmttFQh6nX/q697aXNaB/fj8CPw2TVUd/DWCth4YcPHMUJd2HomJ2SxIAJf+et0SjIXPtU3CF8ms3Czk87CJ0gkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=sBIXAQTI; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S1ClcavD"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 3AA6FC4CEDF
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 13:58:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734616719;
-	bh=a3gABU68ZHg7WBjOKd2l1+bqSv81PQ3BEBi/YdbDUM8=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=S1ClcavD4kIZsu3Q1LUoPzn8Sd97I2j+e+AmCbEw7BNLhlihpyaSggBbDm1tMzJAa
-	 y7z00dgwFDB9CrQ1K1smGWPUz3zZb7K/UCGX/s7kiogN8oWWav/ypoQYMC5pARbNME
-	 UQkLXSkt73sGX2048MHDOUhxvxw3NiD5WNkHpvxERxrPHYDrfC7EmkGeF+gVD0YvJA
-	 GwBGyvL/odi4BE+t7d7XNAMBmPR0Ts3KbUnejV6iKPdddfkTpKY75NnOd/xdxOax+j
-	 8CTgtvK+mp+cJKVSVGTgrx6PEFC7UztPDYPi533torCj7DefyehYBZieLBK3MX7+gn
-	 a8gSbFiIsC7mA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 348E9C3279E; Thu, 19 Dec 2024 13:58:39 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 219504] XFS crashes with kernel Version > 6.1.91. Perhaps
- Changes in kernel 6.1.92 for XFS/iomap causing the problems?
-Date: Thu, 19 Dec 2024 13:58:38 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: speedcracker@hotmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: component cf_kernel_version product
-Message-ID: <bug-219504-201763-muHGWZfemd@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219504-201763@https.bugzilla.kernel.org/>
-References: <bug-219504-201763@https.bugzilla.kernel.org/>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="sBIXAQTI"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BJ85WFu031388;
+	Thu, 19 Dec 2024 15:13:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=0rLV2e
+	zYC0ftJb4q1cxvnRy/jIifNQm9OlolPti1X0c=; b=sBIXAQTIV5C329X0Iiew1B
+	ycyEZHijV3tZwhzauZSkrInC4JPdStH/Uf2CGzJXtjghLyoYB2ARVTz33K/Fo30c
+	YwaYH/1G0j7cOBAMxHx6yrPBMBVcZt5FG6Y+FeZLvB3jdHsDq1Bmi5Cl87mK9Zu7
+	fQDAyrvcJHTKHS9KRX2aKYm0Mg+GT6sPWkJ0kd6YEYjfnI1/OjC4dt6YaCpxq02P
+	E1w0UF8fEmwemFMHeYEUcNNxcyFF8Au1JQFVHo57iALi0FDJxyIAEgaOmdDn0h2Q
+	kToTN/d84YmYHrtKP/liscMtzSEMcZNNT5ArGjsWwhaDCe1TOz5hHs3tMOJKWeKA
+	==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43mfp29wn2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 19 Dec 2024 15:13:44 +0000 (GMT)
+Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4BJEZXpx025570;
+	Thu, 19 Dec 2024 15:13:43 GMT
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43mfp29wmy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 19 Dec 2024 15:13:43 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BJBds6Z014344;
+	Thu, 19 Dec 2024 15:13:43 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 43hmqydt9p-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 19 Dec 2024 15:13:43 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BJFDd2J56885678
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 19 Dec 2024 15:13:39 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5C42720043;
+	Thu, 19 Dec 2024 15:13:39 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A93F420040;
+	Thu, 19 Dec 2024 15:13:37 +0000 (GMT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com (unknown [9.39.22.218])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 19 Dec 2024 15:13:37 +0000 (GMT)
+Message-ID: <a6a2dc60f34ac353e5ea628a9ea1feba4800be7a.camel@linux.ibm.com>
+Subject: Re: [PATCH v2] xfs: add a test for atomic writes
+From: Nirjhar Roy <nirjhar@linux.ibm.com>
+To: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org
+Cc: ritesh.list@gmail.com, ojaswin@linux.ibm.com, fstests@vger.kernel.org,
+        djwong@kernel.org, zlang@kernel.org, nirjhar@linux.ibm.com
+Date: Thu, 19 Dec 2024 20:43:36 +0530
+In-Reply-To: <20241217020828.28976-1-catherine.hoang@oracle.com>
+References: <20241217020828.28976-1-catherine.hoang@oracle.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+X-Mailer: Evolution 3.28.5 (3.28.5-26.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: IhOjyn86ixhDbNG21XMsgPtNzbzgh1Yz
+X-Proofpoint-GUID: YOKPiZXib6nWdB1pIx7zBGjRNo67aqjr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
+ phishscore=0 lowpriorityscore=0 suspectscore=0 priorityscore=1501
+ adultscore=0 bulkscore=0 malwarescore=0 impostorscore=0 mlxlogscore=999
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412190120
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219504
+On Mon, 2024-12-16 at 18:08 -0800, Catherine Hoang wrote:
+> Add a test to validate the new atomic writes feature.
+> 
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  common/rc         | 14 ++++++++
+>  tests/xfs/611     | 81
+> +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/611.out |  2 ++
+Now that ext4 also has support for block atomic writes, do you think it
+appropritate to put it under generic?
+>  3 files changed, 97 insertions(+)
+>  create mode 100755 tests/xfs/611
+>  create mode 100644 tests/xfs/611.out
+> 
+> diff --git a/common/rc b/common/rc
+> index 2ee46e51..b9da749e 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -5148,6 +5148,20 @@ _require_scratch_btime()
+>  	_scratch_unmount
+>  }
+>  
+> +_require_scratch_write_atomic()
+> +{
+> +	_require_scratch
+> +	_scratch_mkfs > /dev/null 2>&1
+> +	_scratch_mount
+Minor: Do we need the _scratch_mount and _scratch_unmount? We can
+directly statx the underlying device too, right?
+> +
+> +	export STATX_WRITE_ATOMIC=0x10000
+> +	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_MNT
+> \
+> +		| grep atomic >>$seqres.full 2>&1 || \
+> +		_notrun "write atomic not supported by this filesystem"
+Are we assuming that the SCRATCH_DEV supports atomic writes here? If
+not, do you think the idea of checking if the underlying device
+supports atomic writes will be appropriate here?
 
-Mike-SPC (speedcracker@hotmail.com) changed:
+I tried running the test with a loop device (with no atomic writes
+support) and this function did not execute _notrun. The test did fail
+expectedly with "atomic write min 0, should be fs block size 4096".
+However, the test shouldn't have begun or reached this stage if the
+underlying device doesn't support atomic writes, right?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-          Component|XFS                         |Other
-     Kernel Version|6.1.92 and up               |since 6.1.92 and up
-            Product|File System                 |IO/Storage
+Maybe look at how scsi_debug is used? Tests like tests/generic/704 and
+common/scsi_debug?
+> +
+> +	_scratch_unmount
+> +}
+> +
+>  _require_inode_limits()
+>  {
+>  	if [ $(_get_free_inode $TEST_DIR) -eq 0 ]; then
+> diff --git a/tests/xfs/611 b/tests/xfs/611
+> new file mode 100755
+> index 00000000..a26ec143
+> --- /dev/null
+> +++ b/tests/xfs/611
+> @@ -0,0 +1,81 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2024 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test 611
+> +#
+> +# Validate atomic write support
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick rw
+> +
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_scratch_write_atomic
+> +
+> +test_atomic_writes()
+> +{
+> +    local bsize=$1
+> +
+> +    _scratch_mkfs_xfs -b size=$bsize >> $seqres.full
+> +    _scratch_mount
+> +    _xfs_force_bdev data $SCRATCH_MNT
+> +
+> +    testfile=$SCRATCH_MNT/testfile
+> +    touch $testfile
+> +
+> +    file_min_write=$($XFS_IO_PROG -c "statx -r -m
+> $STATX_WRITE_ATOMIC" $testfile | \
+> +        grep atomic_write_unit_min | cut -d ' ' -f 3)
+> +    file_max_write=$($XFS_IO_PROG -c "statx -r -m
+> $STATX_WRITE_ATOMIC" $testfile | \
+> +        grep atomic_write_unit_max | cut -d ' ' -f 3)
+> +    file_max_segments=$($XFS_IO_PROG -c "statx -r -m
+> $STATX_WRITE_ATOMIC" $testfile | \
+> +        grep atomic_write_segments_max | cut -d ' ' -f 3)
+> +
+Minor: A refactoring suggestion. Can we put the commands to fetch the
+atomic_write_unit_min , atomic_write_unit_max and
+atomic_write_segments_max in a function and re-use them? We are using
+these commands to get bdev_min_write/bdev_max_write as well, so a
+function might make the code look more compact. Some maybe something
+like:
 
---- Comment #3 from Mike-SPC (speedcracker@hotmail.com) ---
-Hi there,
+_get_at_wr_unit_min()
+{
+	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | grep
+atomic_write_unit_min | \
+		grep -o '[0-9]\+'
+}
 
-rechecked the newest kernel version 6.1.120.
+_get_at_wr_unit_max()
+{
+	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | grep
+atomic_write_unit_max | \
+		grep -o '[0-9]\+'
+}
+ and then,
+file_min_write=$(_get_at_wr_unit_min $testfile) and similarly for file_max_write, file_max_segments, bdev_min_write/bdev_max_write
 
-Get the same problem.
 
-Here is the kernel-backtrace:
+> +    # Check that atomic min/max = FS block size
+> +    test $file_min_write -eq $bsize || \
+> +        echo "atomic write min $file_min_write, should be fs block
+> size $bsize"
+> +    test $file_min_write -eq $bsize || \
+> +        echo "atomic write max $file_max_write, should be fs block
+> size $bsize"
+> +    test $file_max_segments -eq 1 || \
+> +        echo "atomic write max segments $file_max_segments, should
+> be 1"
+> +
+> +    # Check that we can perform an atomic write of len = FS block
+> size
+> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D 0 $bsize"
+> $testfile | \
+> +        grep wrote | awk -F'[/ ]' '{print $2}')
+is "$XFS_IO_PROG -dc pwrite -A -D 0 $bsize" $testfile actually making a
+pwritev2 syscall? 
 
-[Thu Dec 19 14:03:21 2024] ------------[ cut here ]------------
-[Thu Dec 19 14:03:21 2024] WARNING: CPU: 0 PID: 24318 at
-fs/iomap/buffered-io.c:980 iomap_file_buffered_write_punch_delalloc+0x398/0=
-x440
-[Thu Dec 19 14:03:21 2024] Modules linked in: iscsi_scst(O) scst_vdisk(O)
-scst(O) dlm quota_v2 quota_tree autofs4 tcp_bbr sch_fq udf crc_itu_t ses
-enclosure hid_generic wmi_bmof usbhid edac_mce_amd uas crc32_pclmul aesni_i=
-ntel
-hid crypto_simd usb_storage rapl bnx2 i2c_piix4 r8169 pcspkr k10temp ccp
-i2c_core sha1_generic video mpt3sas backlight wmi
-[Thu Dec 19 14:03:21 2024] CPU: 0 PID: 24318 Comm: disk014_0 Tainted: G S=
-=20=20=20=20=20=20
-  O       6.1.120_LFS_FILE01 #1
-[Thu Dec 19 14:03:21 2024] Hardware name: To Be Filled By O.E.M. X370 Pro4/=
-X370
-Pro4, BIOS P10.08 01/22/2024
-[Thu Dec 19 14:03:21 2024] EIP:
-iomap_file_buffered_write_punch_delalloc+0x398/0x440
-[Thu Dec 19 14:03:21 2024] Code: 84 8d 00 00 00 8b 45 e0 8b 40 20 83 c0 10 =
-e8
-2f 31 e0 ff 83 c4 44 89 f0 5b 5e 5f 5d e9 f5 31 8e 00 90 0f 0b e9 13 fe ff =
-ff
-90 <0f> 0b e9 fd fd ff ff 90 0f 0b e9 6b fe ff ff 90 0f 0b 8d b6 00 00
-[Thu Dec 19 14:03:21 2024] EAX: bb68e000 EBX: ffffff85 ECX: bb68f000 EDX:
-0000007b
-[Thu Dec 19 14:03:21 2024] ESI: bb68f000 EDI: 00000000 EBP: 5137fbd0 ESP:
-5137fb80
-[Thu Dec 19 14:03:21 2024] DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068 EFL=
-AGS:
-00010293
-[Thu Dec 19 14:03:21 2024] CR0: 80050033 CR2: 0175a2d0 CR3: 03d1b720 CR4:
-00350ef0
-[Thu Dec 19 14:03:21 2024] Call Trace:
-[Thu Dec 19 14:03:21 2024]  ? show_regs.cold+0x16/0x1b
-[Thu Dec 19 14:03:21 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x398/0x440
-[Thu Dec 19 14:03:21 2024]  ? __warn+0x87/0xe0
-[Thu Dec 19 14:03:21 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x398/0x440
-[Thu Dec 19 14:03:21 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x398/0x440
-[Thu Dec 19 14:03:21 2024]  ? report_bug+0xe5/0x170
-[Thu Dec 19 14:03:21 2024]  ? exc_overflow+0x60/0x60
-[Thu Dec 19 14:03:21 2024]  ? handle_bug+0x2a/0x50
-[Thu Dec 19 14:03:21 2024]  ? exc_invalid_op+0x1e/0x70
-[Thu Dec 19 14:03:21 2024]  ? handle_exception+0x101/0x101
-[Thu Dec 19 14:03:21 2024]  ? exc_overflow+0x60/0x60
-[Thu Dec 19 14:03:21 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x398/0x440
-[Thu Dec 19 14:03:21 2024]  ? exc_overflow+0x60/0x60
-[Thu Dec 19 14:03:21 2024]  ?
-iomap_file_buffered_write_punch_delalloc+0x398/0x440
-[Thu Dec 19 14:03:21 2024]  ? xfs_dax_write_iomap_end+0xa0/0xa0
-[Thu Dec 19 14:03:21 2024]  ? xfs_buffered_write_iomap_end+0x52/0xc0
-[Thu Dec 19 14:03:21 2024]  ? xfs_buffered_write_iomap_end+0xc0/0xc0
-[Thu Dec 19 14:03:21 2024]  ? iomap_iter+0xce/0x4b0
-[Thu Dec 19 14:03:21 2024]  ? xfs_dax_write_iomap_end+0xa0/0xa0
-[Thu Dec 19 14:03:21 2024]  ? iomap_file_buffered_write+0xa9/0x420
-[Thu Dec 19 14:03:21 2024]  ? xfs_file_buffered_write+0x9d/0x2e0
-[Thu Dec 19 14:03:21 2024]  ? xfs_file_write_iter+0xc9/0x100
-[Thu Dec 19 14:03:21 2024]  ? fileio_exec_async+0x25e/0x3a0 [scst_vdisk]
-[Thu Dec 19 14:03:21 2024]  ? fileio_exec_write+0x2ce/0x400 [scst_vdisk]
-[Thu Dec 19 14:03:21 2024]  ? vdev_do_job+0x36/0xe0 [scst_vdisk]
-[Thu Dec 19 14:03:21 2024]  ? fileio_exec+0x1f/0x30 [scst_vdisk]
-[Thu Dec 19 14:03:21 2024]  ? scst_do_real_exec+0x51/0x130 [scst]
-[Thu Dec 19 14:03:21 2024]  ? scst_exec_check_blocking+0xa8/0x220 [scst]
-[Thu Dec 19 14:03:21 2024]  ? scst_process_active_cmd+0x200/0x18f0 [scst]
-[Thu Dec 19 14:03:21 2024]  ? scst_cmd_thread+0x15c/0x500 [scst]
-[Thu Dec 19 14:03:21 2024]  ? prepare_to_wait_event+0x160/0x160
-[Thu Dec 19 14:03:21 2024]  ? kthread+0xd2/0x100
-[Thu Dec 19 14:03:21 2024]  ? scst_cmd_done_local+0x90/0x90 [scst]
-[Thu Dec 19 14:03:21 2024]  ? kthread_complete_and_exit+0x20/0x20
-[Thu Dec 19 14:03:21 2024]  ? ret_from_fork+0x1c/0x28
-[Thu Dec 19 14:03:21 2024] ---[ end trace 0000000000000000 ]---
+Let's look at the output below:
+(tested with latest master of xfsprogs-dev (commit 90d6da68) on
+pagesize and block size 4k (x86_64 vm)
 
-Thanks in advance and for investigation,
-Mike
+mount /dev/sdc  /mnt1/test
+touch /mnt1/test/new
+strace -f xfs_io -c "pwrite -A -D 0 4096" /mnt1/test/new
 
---=20
-You may reply to this email to add a comment.
+<last few lines>
+openat(AT_FDCWD, "/mnt1/test/new", O_RDWR) = 3
+...
+...
+pwrite64(3,
+"\315\315\315\315\315\315\315\315\315\315\315\315\315\315\315\315\315\3
+15\315\315\315\315\315\315\315\315\315\315\315\315\315\315"..., 4096,
+0) = 4096
+newfstatat(1, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x1),
+...}, AT_EMPTY_PATH) = 0
+write(1, "wrote 4096/4096 bytes at offset "..., 34wrote 4096/4096 bytes
+at offset 0
+) = 34
+write(1, "4 KiB, 1 ops; 0.0001 sec (23.819"..., 644 KiB, 1 ops; 0.0001
+sec (23.819 MiB/sec and 6097.5610 ops/sec)
+) = 64
+exit_group(0)           
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+So the issues are as follows:
+1. file /mnt1/test/new is NOT opened with O_DIRECT flag i.e, direct io
+mode which is one of the requirements for atomic write (buffered io
+doesn't support atomic write, correct me if I am wrong). 
+2. pwrite64 doesn't take the RWF_ATOMIC flag and hence I think this
+write is just a non-atomic write with no stdout output difference as
+such.
+
+Also if you look at the function 
+
+do_pwrite() in xfsprogs-dev/io/pwrite.c 
+
+static ssize_t
+do_pwrite(
+	int		fd,
+	off_t		offset,
+	long long	count,
+	size_t		buffer_size,
+	int		pwritev2_flags)
+{
+	if (!vectors)
+		return pwrite(fd, io_buffer, min(count, buffer_size),
+offset);
+
+	return do_pwritev(fd, offset, count, pwritev2_flags);
+}
+
+it will not call pwritev/pwritev2 unless we have vectors for which you
+will need -V parameter with pwrite subcommand of xfs_io. 
+
+
+So I think the correct way to do this would be the following:
+
+bytes_written=$($XFS_IO_PROGS -c "open -d $testfile" -c "pwrite -A -D
+-V 1 0 $bsize" | grep wrote | awk -F'[/ ]' '{print $2}').
+
+This also bring us to 2 more test cases that we can add:
+
+a. Atomic write with vec count > 1
+$XFS_IO_PROGS -c "open -d $testfile" -c "pwrite -A -D -V 2 0 $bsize"
+(This should fail with Invalid argument since currently iovec count is
+restricted to 1)
+
+b.
+Open a file withOUT O_DIRECT and try to perform an atomic write. This
+should fail with Operation not Supported (EOPNOTSUPP). So something
+like 
+$XFS_IO_PROGS -c "open -f $testfile" -c "pwrite -A -V 1 0 $bsize"
+
+3. It is better to use -b $bsize with pwrite else, the write might be
+spilitted into multiple atomic writes. For example try the following:
+
+$XFS_IO_PROGS -c "open -fd $testfile" -c "pwrite -A -D -V 1 0 $((
+$bsize * 2 ))" 
+The above is expected to fail as the size of the atomic write is
+greater than the limit i.e, 1 block but it will still succeed. Look at
+the strace and you will see 2 pwritev2 system calls. However the
+following will fail expectedly with -EINVAL:
+$XFS_IO_PROGS -c "open -fd $testfile" -c "pwrite -A -D -V 1 -b $((
+$bsize * 2 )) 0 $(( $bsize * 2 ))"
+
+
+
+
+> +    test $bytes_written -eq $bsize || echo "atomic write len=$bsize
+> failed"
+> +
+> +    # Check that we can perform an atomic write on an unwritten
+> block
+> +    $XFS_IO_PROG -c "falloc $bsize $bsize" $testfile
+> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D $bsize $bsize"
+> $testfile | \
+> +        grep wrote | awk -F'[/ ]' '{print $2}')
+> +    test $bytes_written -eq $bsize || echo "atomic write to
+> unwritten block failed"
+> +
+> +    # Check that we can perform an atomic write on a sparse hole
+> +    $XFS_IO_PROG -c "fpunch 0 $bsize" $testfile
+> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D 0 $bsize"
+> $testfile | \
+> +        grep wrote | awk -F'[/ ]' '{print $2}')
+> +    test $bytes_written -eq $bsize || echo "atomic write to sparse
+> hole failed"
+> +
+> +    # Reject atomic write if len is out of bounds
+> +    $XFS_IO_PROG -dc "pwrite -A -D 0 $((bsize - 1))" $testfile 2>>
+> $seqres.full && \
+> +        echo "atomic write len=$((bsize - 1)) should fail"
+> +    $XFS_IO_PROG -dc "pwrite -A -D 0 $((bsize + 1))" $testfile 2>>
+> $seqres.full && \
+> +        echo "atomic write len=$((bsize + 1)) should fail"
+Have we covered the scenario where the offset % len != 0 Should fail -
+Should fail with Invalid arguments -EINVAL. 
+
+Also do you think adding similar tests with raw writes to the
+underlying devices bypassing the fs layer will add some value? There
+are slight less strict or different rules in the block layer which IMO
+worth to be tested. Please let me know your thoughts.
+> +
+> +    _scratch_unmount
+> +}
+> +
+> +bdev_min_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC"
+> $SCRATCH_DEV | \
+> +    grep atomic_write_unit_min | cut -d ' ' -f 3)
+> +bdev_max_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC"
+> $SCRATCH_DEV | \
+> +    grep atomic_write_unit_max | cut -d ' ' -f 3)
+> +
+Similar comment before - Refactor this into a function. 
+> +for ((bsize=$bdev_min_write; bsize<=bdev_max_write; bsize*=2)); do
+> +    _scratch_mkfs_xfs_supported -b size=$bsize >> $seqres.full 2>&1
+> && \
+> +        test_atomic_writes $bsize
+> +done;
+Minor: This might fail on some archs(x86_64) if the kernel isn't
+compiled without CONFIG_TRANSPARENT_HUGEPAGE to enable block size 
+greater than 4k on x86_64. 
+
+--
+NR
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/611.out b/tests/xfs/611.out
+> new file mode 100644
+> index 00000000..b8a44164
+> --- /dev/null
+> +++ b/tests/xfs/611.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 611
+> +Silence is golden
+
