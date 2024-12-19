@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4D5B1B4253
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:30:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 098461A2541
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:30:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734636642; cv=none; b=slPqFPRsaO7m8b6t7vs0zSUFjmbtwmGHn6og8V3KBJdUO6OIr3oiyhqOMudBKLAZ7FTxdVirnoxvajVcPBznM+43185Sm1REUJ2x7X0co76Y9VorbtLOLlkxUIkZWTUUob8qdAdxFTS+dRpBSfbG/6muF8/sNKpBUZG/2yJBWKk=
+	t=1734636658; cv=none; b=ITZh+zFKkfm3vzHwqD1SMUImOggdMVyN94HwMKM7qO5XhECh7JHozH/bepEx2RBll4TOEmjoHYGxpyJ20IAxIe++Wz+fo1YS4XxgaiY3CZmn1CjIu8sqCwLF2cGlraM5Qw7Dw9MhwPjeZrAqFmQYkHsT1gWJ4dIkVz4KRcWvoqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734636642; c=relaxed/simple;
-	bh=3qEd3pNTQg2yx1GmT3pjMaDbNes2aGe8PYqvuUdK5Ow=;
+	s=arc-20240116; t=1734636658; c=relaxed/simple;
+	bh=oIERYS9eEhz17FMrRzmMBiaUQTtGOULAjlWfpkO2tLY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bTXdjH4+niAZBpZB9aOegYqM6xkB7vDfFvyDkjO7H7hsqdnpIpI0j1jSS11ulUrp02+hH/VqDcNskQLUzMm/Uygtr30iOsph8kWdhKWmkzWK7J9sUh2/OR75VvAgQeSI6iah/LGmtp4gG92BWABqZ3qhSUL6TntnzVjCKhnSwf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=id56J5of; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=F6LOlRmlRA3gXZgqjwRAlsWq6pw5HB+VXmgdQIT034GppW9bOO6Dwf+t42HKnq+tdzLt9vVV/4MWxcMhRoZ7pWITuLa/G5CQnzopbErg51oB9JTff86jfFDglwPb8mcNanzmrOp01PxjcD1uMUc9C2C69HPEbcTtdCAgiZzSZG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cnVYMFgU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="id56J5of"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBC87C4CED0;
-	Thu, 19 Dec 2024 19:30:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cnVYMFgU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64074C4CECE;
+	Thu, 19 Dec 2024 19:30:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734636641;
-	bh=3qEd3pNTQg2yx1GmT3pjMaDbNes2aGe8PYqvuUdK5Ow=;
+	s=k20201202; t=1734636657;
+	bh=oIERYS9eEhz17FMrRzmMBiaUQTtGOULAjlWfpkO2tLY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=id56J5ofFPM/t4g+FUx3h/jP3n6Zu+lOBWIewwCtMn4KtdLg8PkcapvpdmNVLv6hD
-	 4kEikY2+439CwnntzBiFaFWYAjD69FkJrLsOnSmKHeocaKYRhly/RyJK9kmPtdLP3Q
-	 UOXIjTyR9zs6tW+03D9BGoHSscEoFNCmEw2imjmOq/lEN6oV+ZuCQdpMdhjz/QhgCM
-	 SZnq5UVs9m4dCrB77jDa0lYwqK7aV5PTerXd4VljWUWKcc5hnxx6/wdL8lr9LswrwG
-	 92TkPndjppPDHQrRnh5JzZ8nusO9k7BPYrO7T2L6+/eth+K+wZv7xOBkn+qNrzLKDF
-	 zqP1usmSJ+mSQ==
-Date: Thu, 19 Dec 2024 11:30:41 -0800
-Subject: [PATCH 28/37] xfs: repair inodes that have realtime extents
+	b=cnVYMFgUNFqaDpukH5ads/ryLVTr0F67VWJPgEOZzumHzGXR9cQJFgm2E/8cqnB81
+	 uyej+RirDzfAnWszbeEU+bW+wMhXkZQuqDp6qwuoVcT0dMUFbA6A8hDIR4+BvvFe6t
+	 lfqWQKyqDV7NtkqerEVfjVJjNz2sd22TV4ESKy5RUlrOpSQ8v0Hg8SeZgACb/Vsgg2
+	 7lGlnZ5YBYyaSki342AgkNQZvNYN1IYvDtNJi6ckkjfn7E27YGaQdImzg+6zQKCShn
+	 PEakqFHTDz7qigfTobcTwTyYSjeC7Q/8P/tAo3Grv16atX/WcUG895H4hYG6T/RZaw
+	 V8iX3XUBhP2Gw==
+Date: Thu, 19 Dec 2024 11:30:56 -0800
+Subject: [PATCH 29/37] xfs: repair rmap btree inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173463580237.1571512.12513210702047581022.stgit@frogsfrogsfrogs>
+Message-ID: <173463580254.1571512.5036954939265034165.stgit@frogsfrogsfrogs>
 In-Reply-To: <173463579653.1571512.7862891421559358642.stgit@frogsfrogsfrogs>
 References: <173463579653.1571512.7862891421559358642.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,100 +45,83 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Plumb into the inode core repair code the ability to search for extents
-on realtime devices.
+Teach the inode repair code how to deal with realtime rmap btree inodes
+that won't load properly.  This is most likely moot since the filesystem
+generally won't mount without the rtrmapbt inodes being usable, but
+we'll add this for completeness.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/inode_repair.c |   58 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 57 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/inode_repair.c |   35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
 
 diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index a94f9df0ca78f6..816e81330ffc99 100644
+index 816e81330ffc99..d7e3f033b16073 100644
 --- a/fs/xfs/scrub/inode_repair.c
 +++ b/fs/xfs/scrub/inode_repair.c
-@@ -38,6 +38,8 @@
- #include "xfs_log_priv.h"
- #include "xfs_health.h"
- #include "xfs_symlink_remote.h"
-+#include "xfs_rtgroup.h"
-+#include "xfs_rtrmap_btree.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -773,17 +775,71 @@ xrep_dinode_count_ag_rmaps(
- 	return error;
+@@ -944,6 +944,34 @@ xrep_dinode_bad_bmbt_fork(
+ 	return false;
  }
  
-+/* Count extents and blocks for an inode given an rt rmap. */
-+STATIC int
-+xrep_dinode_walk_rtrmap(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*priv)
++/* Return true if this rmap-format ifork looks like garbage. */
++STATIC bool
++xrep_dinode_bad_rtrmapbt_fork(
++	struct xfs_scrub	*sc,
++	struct xfs_dinode	*dip,
++	unsigned int		dfork_size)
 +{
-+	struct xrep_inode		*ri = priv;
-+	int				error = 0;
++	struct xfs_rtrmap_root	*dfp;
++	unsigned int		nrecs;
++	unsigned int		level;
 +
-+	if (xchk_should_terminate(ri->sc, &error))
-+		return error;
++	if (dfork_size < sizeof(struct xfs_rtrmap_root))
++		return true;
 +
-+	/* We only care about this inode. */
-+	if (rec->rm_owner != ri->sc->sm->sm_ino)
-+		return 0;
++	dfp = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
++	nrecs = be16_to_cpu(dfp->bb_numrecs);
++	level = be16_to_cpu(dfp->bb_level);
 +
-+	if (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))
-+		return -EFSCORRUPTED;
++	if (level > sc->mp->m_rtrmap_maxlevels)
++		return true;
++	if (xfs_rtrmap_droot_space_calc(level, nrecs) > dfork_size)
++		return true;
++	if (level > 0 && nrecs == 0)
++		return true;
 +
-+	ri->rt_blocks += rec->rm_blockcount;
-+	ri->rt_extents++;
-+	return 0;
++	return false;
 +}
 +
-+/* Count extents and blocks for an inode from all realtime rmap data. */
-+STATIC int
-+xrep_dinode_count_rtgroup_rmaps(
-+	struct xrep_inode	*ri,
-+	struct xfs_rtgroup	*rtg)
-+{
-+	struct xfs_scrub	*sc = ri->sc;
-+	int			error;
-+
-+	error = xrep_rtgroup_init(sc, rtg, &sc->sr, XFS_RTGLOCK_RMAP);
-+	if (error)
-+		return error;
-+
-+	error = xfs_rmap_query_all(sc->sr.rmap_cur, xrep_dinode_walk_rtrmap,
-+			ri);
-+	xchk_rtgroup_btcur_free(&sc->sr);
-+	xchk_rtgroup_free(sc, &sc->sr);
-+	return error;
-+}
-+
- /* Count extents and blocks for a given inode from all rmap data. */
- STATIC int
- xrep_dinode_count_rmaps(
- 	struct xrep_inode	*ri)
+ /* Check a metadata-btree fork. */
+ STATIC bool
+ xrep_dinode_bad_metabt_fork(
+@@ -956,6 +984,8 @@ xrep_dinode_bad_metabt_fork(
+ 		return true;
+ 
+ 	switch (be16_to_cpu(dip->di_metatype)) {
++	case XFS_METAFILE_RTRMAP:
++		return xrep_dinode_bad_rtrmapbt_fork(sc, dip, dfork_size);
+ 	default:
+ 		return true;
+ 	}
+@@ -1220,6 +1250,7 @@ xrep_dinode_ensure_forkoff(
+ 	uint16_t		mode)
  {
- 	struct xfs_perag	*pag = NULL;
-+	struct xfs_rtgroup	*rtg = NULL;
- 	int			error;
- 
--	if (!xfs_has_rmapbt(ri->sc->mp) || xfs_has_realtime(ri->sc->mp))
-+	if (!xfs_has_rmapbt(ri->sc->mp))
- 		return -EOPNOTSUPP;
- 
-+	while ((rtg = xfs_rtgroup_next(ri->sc->mp, rtg))) {
-+		error = xrep_dinode_count_rtgroup_rmaps(ri, rtg);
-+		if (error) {
-+			xfs_rtgroup_rele(rtg);
-+			return error;
-+		}
-+	}
-+
- 	while ((pag = xfs_perag_next(ri->sc->mp, pag))) {
- 		error = xrep_dinode_count_ag_rmaps(ri, pag);
- 		if (error) {
+ 	struct xfs_bmdr_block	*bmdr;
++	struct xfs_rtrmap_root	*rmdr;
+ 	struct xfs_scrub	*sc = ri->sc;
+ 	xfs_extnum_t		attr_extents, data_extents;
+ 	size_t			bmdr_minsz = xfs_bmdr_space_calc(1);
+@@ -1328,6 +1359,10 @@ xrep_dinode_ensure_forkoff(
+ 		break;
+ 	case XFS_DINODE_FMT_META_BTREE:
+ 		switch (be16_to_cpu(dip->di_metatype)) {
++		case XFS_METAFILE_RTRMAP:
++			rmdr = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
++			dfork_min = xfs_rtrmap_broot_space(sc->mp, rmdr);
++			break;
+ 		default:
+ 			dfork_min = 0;
+ 			break;
 
