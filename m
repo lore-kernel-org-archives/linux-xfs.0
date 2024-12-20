@@ -1,250 +1,444 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F5E1B4F0D
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Dec 2024 19:45:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7057A70805;
+	Fri, 20 Dec 2024 05:03:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734637502; cv=none; b=OZkuUjWVKGPtkKdxlk3IqBjw7lJDZveBr3uhWrnUowcMY+zFvJNikrVPIieSAOD1W+mx/VVCqe3E64cZ/UU6gPmPx0XcqdDAWiL5+OXiFVm8k5AHd66+Shmelf65m8XhjDu6FQ5RF67TWOK9643XekWIFt9fUV4HbOSGUgq0yww=
+	t=1734670986; cv=none; b=JaPuvMFTgEwxOnI9J2QIxFR4k7HmZD9czIoGyhjlsTvKHhrZSDjy333QcCloybQJVaTIYiNLX19SBiHiUinFJlYm9SMYVG+Az8Zn3N6d9qlhOJGKPogSEOXfnizbH+AogTKzULXhabA+rgL7tclHFNGSAFzmInXoYCiaTcxs3vs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734637502; c=relaxed/simple;
-	bh=zuZpHkqboysASAemrWVpwKx/+YapZ8jcK6MSaSAzO2o=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QXn+uGXDog8njLCLcN8V2BnRvLCI6hLKbVUyJ2CdSFZKX/2hEDWRBM+nVCOMIC5eoVGHdGy0cKaJ0gHl0dFqulKuFPG4JkUhmJM3WrKOK5FpkUzkI44SVkVzc0O5p77lzBnrU9JP1T+jaqF5FRpwXZZx0RwxU6+brOE7VL9FxxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dLKQj/Ii; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734670986; c=relaxed/simple;
+	bh=KURVaPjYO+Mmh5WRNkW5c2DqooD35kvWvlSbdW6xGGE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OqcY0EUPXL2dlQrGUDkfcuIpV1HKX8WIOfMtbz+LxwtbHwPk8BM4W4qh7yTtZbQWVd/eQGgaj1BRjRY8ZT7eAuOPYbp5mbfEX0OAH/ay/bllp1RwEwIAfZVn3cwBKMm4sLi87P5rPsd9ONsChLIs//LDBMC+KA33G2G9PV2310E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=l+XmvVvK; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dLKQj/Ii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84BBEC4CECE;
-	Thu, 19 Dec 2024 19:45:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734637501;
-	bh=zuZpHkqboysASAemrWVpwKx/+YapZ8jcK6MSaSAzO2o=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dLKQj/Iiq4OlbfN28OJLHxi94yec6pLWYuA8N3IF7UYXh3nTeA2OY22fD4kCfTfmn
-	 RuN52ObuNZMzylukexI0AzKXkDXDhWdEkU4q+/1GlV2N7XofcmgUR2pi+uJSKw69Xb
-	 NLYRSJ/qlXSYgvYWSy+XSSEprPht1KKv6O+Kjk3kVDUHX6qax22B6xYlj9ioKeCmFf
-	 6N69SdqObFaDGRWEac9dkvQjde5/iJp+0Y8d124+mMqpgdGU1whLmE8jGZryWLPDnJ
-	 BfhHb5ANKAU8byZTVlKmB+pnb9ZqgA8E0IvObSqV8/0yyWyStBQ3o4OdvecpNLkQic
-	 rxQOVhh/Qvbxw==
-Date: Thu, 19 Dec 2024 11:45:01 -0800
-Subject: [PATCH 3/3] xfs_mdrestore: restore rt group superblocks to realtime
- device
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173463582943.1574879.4367794239821092582.stgit@frogsfrogsfrogs>
-In-Reply-To: <173463582894.1574879.10113776916850781634.stgit@frogsfrogsfrogs>
-References: <173463582894.1574879.10113776916850781634.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="l+XmvVvK"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BK3qSgm010678;
+	Fri, 20 Dec 2024 05:02:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=8Edl4v
+	3rdf+OYbqv/rNyquNoF+zdeNsPT6Zbx92ltDc=; b=l+XmvVvKPNYH7AobcHnTof
+	/6qWe1UiHFs2gTKYM60gbkwZBHnosP2ahFGDJGkeXAAcwm7TU/Yrpg7bL25x7OKa
+	QX+n3Qxe9SaDMuEc3hCTPETp+lspV3rEF4uq8LtwrsNDvBr+mozy+WURigqmOFsF
+	6rQ5oPdmJIbAEkUFQkeXmgH4qp/XfMRpkXbMn5mwhhUMo+CVbCgK4WlRtErbNdVh
+	zV24QA66VrDBV0G0ToQKtLmMVgxRD6Hzz2ygS6WV5vYL+DLNXCYw6VhJozwNee74
+	08fp1Ps/UwmvbowHQzeUdWiuRlZCQ9nuuud+poUotorztxTnIa0S1XRfGRw+bTyQ
+	==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43n12br82b-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Dec 2024 05:02:59 +0000 (GMT)
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4BK51QRS018276;
+	Fri, 20 Dec 2024 05:02:58 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43n12br82a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Dec 2024 05:02:58 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BK0aVLE005694;
+	Fri, 20 Dec 2024 05:02:57 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 43hnbngmr7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Dec 2024 05:02:57 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BK52sb364618848
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 20 Dec 2024 05:02:55 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 739D820040;
+	Fri, 20 Dec 2024 05:02:54 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id D7E2C2004E;
+	Fri, 20 Dec 2024 05:02:52 +0000 (GMT)
+Received: from [9.39.22.123] (unknown [9.39.22.123])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 20 Dec 2024 05:02:52 +0000 (GMT)
+Message-ID: <b6b5055f-e5ad-4e93-93b6-546584a6910a@linux.ibm.com>
+Date: Fri, 20 Dec 2024 10:32:51 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] xfs: add a test for atomic writes
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org,
+        ritesh.list@gmail.com, ojaswin@linux.ibm.com, fstests@vger.kernel.org,
+        zlang@kernel.org
+References: <20241217020828.28976-1-catherine.hoang@oracle.com>
+ <a6a2dc60f34ac353e5ea628a9ea1feba4800be7a.camel@linux.ibm.com>
+ <20241219172734.GE6160@frogsfrogsfrogs>
+Content-Language: en-US
+From: Nirjhar Roy <nirjhar@linux.ibm.com>
+In-Reply-To: <20241219172734.GE6160@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: kERnVCXEFffLOMgXRtWcdnogvgMNXECa
+X-Proofpoint-ORIG-GUID: q9eOnvsORfw0H5hN2UZXvW6P6FS3xGBA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ suspectscore=0 malwarescore=0 clxscore=1015 adultscore=0 mlxscore=0
+ phishscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999 bulkscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412200040
 
-From: Darrick J. Wong <djwong@kernel.org>
 
-Support restoring realtime device metadata to the realtime device, if
-the dumped filesystem had one.
+On 12/19/24 22:57, Darrick J. Wong wrote:
+> On Thu, Dec 19, 2024 at 08:43:36PM +0530, Nirjhar Roy wrote:
+>> On Mon, 2024-12-16 at 18:08 -0800, Catherine Hoang wrote:
+>>> Add a test to validate the new atomic writes feature.
+>>>
+>>> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+>>> ---
+>>>   common/rc         | 14 ++++++++
+>>>   tests/xfs/611     | 81
+>>> +++++++++++++++++++++++++++++++++++++++++++++++
+>>>   tests/xfs/611.out |  2 ++
+>> Now that ext4 also has support for block atomic writes, do you think it
+>> appropritate to put it under generic?
+>>>   3 files changed, 97 insertions(+)
+>>>   create mode 100755 tests/xfs/611
+>>>   create mode 100644 tests/xfs/611.out
+>>>
+>>> diff --git a/common/rc b/common/rc
+>>> index 2ee46e51..b9da749e 100644
+>>> --- a/common/rc
+>>> +++ b/common/rc
+>>> @@ -5148,6 +5148,20 @@ _require_scratch_btime()
+>>>   	_scratch_unmount
+>>>   }
+>>>   
+>>> +_require_scratch_write_atomic()
+>>> +{
+>>> +	_require_scratch
+>>> +	_scratch_mkfs > /dev/null 2>&1
+>>> +	_scratch_mount
+>> Minor: Do we need the _scratch_mount and _scratch_unmount? We can
+>> directly statx the underlying device too, right?
+> Yes, we need the scratch fs, because the filesystem might not support
+> untorn writes even if the underlying block device does.  Or it can
+> decide to constrain the supported io sizes.
+Oh, right. We need both the file system and the device to support the 
+atomic write feature.
+>
+>>> +
+>>> +	export STATX_WRITE_ATOMIC=0x10000
+>>> +	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_MNT
+>>> \
+>>> +		| grep atomic >>$seqres.full 2>&1 || \
+>>> +		_notrun "write atomic not supported by this filesystem"
+>> Are we assuming that the SCRATCH_DEV supports atomic writes here? If
+>> not, do you think the idea of checking if the underlying device
+>> supports atomic writes will be appropriate here?
+>>
+>> I tried running the test with a loop device (with no atomic writes
+>> support) and this function did not execute _notrun. The test did fail
+>> expectedly with "atomic write min 0, should be fs block size 4096".
+> Oh, yeah, awu_min==awu_max==0 should be an automatic _notrun.
+Yes.
+>
+>> However, the test shouldn't have begun or reached this stage if the
+>> underlying device doesn't support atomic writes, right?
+> _require* helpers decide if the test preconditions have been satisfied,
+> so this is exactly where the test would bail out.
+>> Maybe look at how scsi_debug is used? Tests like tests/generic/704 and
+>> common/scsi_debug?
+>>> +
+>>> +	_scratch_unmount
+>>> +}
+>>> +
+>>>   _require_inode_limits()
+>>>   {
+>>>   	if [ $(_get_free_inode $TEST_DIR) -eq 0 ]; then
+>>> diff --git a/tests/xfs/611 b/tests/xfs/611
+>>> new file mode 100755
+>>> index 00000000..a26ec143
+>>> --- /dev/null
+>>> +++ b/tests/xfs/611
+>>> @@ -0,0 +1,81 @@
+>>> +#! /bin/bash
+>>> +# SPDX-License-Identifier: GPL-2.0
+>>> +# Copyright (c) 2024 Oracle.  All Rights Reserved.
+>>> +#
+>>> +# FS QA Test 611
+>>> +#
+>>> +# Validate atomic write support
+>>> +#
+>>> +. ./common/preamble
+>>> +_begin_fstest auto quick rw
+>>> +
+>>> +_supported_fs xfs
+>>> +_require_scratch
+>>> +_require_scratch_write_atomic
+>>> +
+>>> +test_atomic_writes()
+>>> +{
+>>> +    local bsize=$1
+>>> +
+>>> +    _scratch_mkfs_xfs -b size=$bsize >> $seqres.full
+>>> +    _scratch_mount
+>>> +    _xfs_force_bdev data $SCRATCH_MNT
+>>> +
+>>> +    testfile=$SCRATCH_MNT/testfile
+>>> +    touch $testfile
+>>> +
+>>> +    file_min_write=$($XFS_IO_PROG -c "statx -r -m
+>>> $STATX_WRITE_ATOMIC" $testfile | \
+>>> +        grep atomic_write_unit_min | cut -d ' ' -f 3)
+>>> +    file_max_write=$($XFS_IO_PROG -c "statx -r -m
+>>> $STATX_WRITE_ATOMIC" $testfile | \
+>>> +        grep atomic_write_unit_max | cut -d ' ' -f 3)
+>>> +    file_max_segments=$($XFS_IO_PROG -c "statx -r -m
+>>> $STATX_WRITE_ATOMIC" $testfile | \
+>>> +        grep atomic_write_segments_max | cut -d ' ' -f 3)
+>>> +
+>> Minor: A refactoring suggestion. Can we put the commands to fetch the
+>> atomic_write_unit_min , atomic_write_unit_max and
+>> atomic_write_segments_max in a function and re-use them? We are using
+>> these commands to get bdev_min_write/bdev_max_write as well, so a
+>> function might make the code look more compact. Some maybe something
+>> like:
+>>
+>> _get_at_wr_unit_min()
+> Don't reuse another English word ("at") as an abbreviation, please.
+>
+> _atomic_write_unit_min()
+Okay.
+>
+>> {
+>> 	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | grep
+>> atomic_write_unit_min | \
+>> 		grep -o '[0-9]\+'
+>> }
+>>
+>> _get_at_wr_unit_max()
+>> {
+>> 	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | grep
+>> atomic_write_unit_max | \
+>> 		grep -o '[0-9]\+'
+>> }
+>>   and then,
+>> file_min_write=$(_get_at_wr_unit_min $testfile) and similarly for file_max_write, file_max_segments, bdev_min_write/bdev_max_write
+>>
+>>
+>>> +    # Check that atomic min/max = FS block size
+>>> +    test $file_min_write -eq $bsize || \
+>>> +        echo "atomic write min $file_min_write, should be fs block
+>>> size $bsize"
+>>> +    test $file_min_write -eq $bsize || \
+>>> +        echo "atomic write max $file_max_write, should be fs block
+>>> size $bsize"
+>>> +    test $file_max_segments -eq 1 || \
+>>> +        echo "atomic write max segments $file_max_segments, should
+>>> be 1"
+>>> +
+>>> +    # Check that we can perform an atomic write of len = FS block
+>>> size
+>>> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D 0 $bsize"
+>>> $testfile | \
+>>> +        grep wrote | awk -F'[/ ]' '{print $2}')
+>> is "$XFS_IO_PROG -dc pwrite -A -D 0 $bsize" $testfile actually making a
+>> pwritev2 syscall?
+>>
+>> Let's look at the output below:
+>> (tested with latest master of xfsprogs-dev (commit 90d6da68) on
+>> pagesize and block size 4k (x86_64 vm)
+>>
+>> mount /dev/sdc  /mnt1/test
+>> touch /mnt1/test/new
+>> strace -f xfs_io -c "pwrite -A -D 0 4096" /mnt1/test/new
+> You need to pass -d to xfs_io to get directio mode.  The test does that,
+> but your command line doesn't.
+Yes. Sorry I missed that.
+>
+>> <last few lines>
+>> openat(AT_FDCWD, "/mnt1/test/new", O_RDWR) = 3
+>> ...
+>> ...
+>> pwrite64(3,
+>> "\315\315\315\315\315\315\315\315\315\315\315\315\315\315\315\315\315\3
+>> 15\315\315\315\315\315\315\315\315\315\315\315\315\315\315"..., 4096,
+>> 0) = 4096
+> That seems like a bug though.  "pwrite -A -D -V1 0 4096"?
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Sorry, what is the bug that you are pointing out here?
+
+The command given by you i.e,  xfs_io -dc "pwrite -A -D -V1 4096" <path> 
+works fine.
+
+--
+
+NR
+
+>
+>> newfstatat(1, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x1),
+>> ...}, AT_EMPTY_PATH) = 0
+>> write(1, "wrote 4096/4096 bytes at offset "..., 34wrote 4096/4096 bytes
+>> at offset 0
+>> ) = 34
+>> write(1, "4 KiB, 1 ops; 0.0001 sec (23.819"..., 644 KiB, 1 ops; 0.0001
+>> sec (23.819 MiB/sec and 6097.5610 ops/sec)
+>> ) = 64
+>> exit_group(0)
+>>
+>> So the issues are as follows:
+>> 1. file /mnt1/test/new is NOT opened with O_DIRECT flag i.e, direct io
+>> mode which is one of the requirements for atomic write (buffered io
+>> doesn't support atomic write, correct me if I am wrong).
+>> 2. pwrite64 doesn't take the RWF_ATOMIC flag and hence I think this
+>> write is just a non-atomic write with no stdout output difference as
+>> such.
+>>
+>> Also if you look at the function
+>>
+>> do_pwrite() in xfsprogs-dev/io/pwrite.c
+>>
+>> static ssize_t
+>> do_pwrite(
+>> 	int		fd,
+>> 	off_t		offset,
+>> 	long long	count,
+>> 	size_t		buffer_size,
+>> 	int		pwritev2_flags)
+>> {
+>> 	if (!vectors)
+>> 		return pwrite(fd, io_buffer, min(count, buffer_size),
+>> offset);
+>>
+>> 	return do_pwritev(fd, offset, count, pwritev2_flags);
+>> }
+>>
+>> it will not call pwritev/pwritev2 unless we have vectors for which you
+>> will need -V parameter with pwrite subcommand of xfs_io.
+>>
+>>
+>> So I think the correct way to do this would be the following:
+>>
+>> bytes_written=$($XFS_IO_PROGS -c "open -d $testfile" -c "pwrite -A -D
+>> -V 1 0 $bsize" | grep wrote | awk -F'[/ ]' '{print $2}').
+> Agreed.
+>
+>> This also bring us to 2 more test cases that we can add:
+>>
+>> a. Atomic write with vec count > 1
+>> $XFS_IO_PROGS -c "open -d $testfile" -c "pwrite -A -D -V 2 0 $bsize"
+>> (This should fail with Invalid argument since currently iovec count is
+>> restricted to 1)
+>>
+>> b.
+>> Open a file withOUT O_DIRECT and try to perform an atomic write. This
+>> should fail with Operation not Supported (EOPNOTSUPP). So something
+>> like
+>> $XFS_IO_PROGS -c "open -f $testfile" -c "pwrite -A -V 1 0 $bsize"
+> Yeah, those are good subcases.
+>
+>> 3. It is better to use -b $bsize with pwrite else, the write might be
+>> spilitted into multiple atomic writes. For example try the following:
+>>
+>> $XFS_IO_PROGS -c "open -fd $testfile" -c "pwrite -A -D -V 1 0 $((
+>> $bsize * 2 ))"
+>> The above is expected to fail as the size of the atomic write is
+>> greater than the limit i.e, 1 block but it will still succeed. Look at
+>> the strace and you will see 2 pwritev2 system calls. However the
+>> following will fail expectedly with -EINVAL:
+>> $XFS_IO_PROGS -c "open -fd $testfile" -c "pwrite -A -D -V 1 -b $((
+>> $bsize * 2 )) 0 $(( $bsize * 2 ))"
+> Good catch.
+>
+>>
+>>
+>>> +    test $bytes_written -eq $bsize || echo "atomic write len=$bsize
+>>> failed"
+>>> +
+>>> +    # Check that we can perform an atomic write on an unwritten
+>>> block
+>>> +    $XFS_IO_PROG -c "falloc $bsize $bsize" $testfile
+>>> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D $bsize $bsize"
+>>> $testfile | \
+>>> +        grep wrote | awk -F'[/ ]' '{print $2}')
+>>> +    test $bytes_written -eq $bsize || echo "atomic write to
+>>> unwritten block failed"
+>>> +
+>>> +    # Check that we can perform an atomic write on a sparse hole
+>>> +    $XFS_IO_PROG -c "fpunch 0 $bsize" $testfile
+>>> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D 0 $bsize"
+>>> $testfile | \
+>>> +        grep wrote | awk -F'[/ ]' '{print $2}')
+>>> +    test $bytes_written -eq $bsize || echo "atomic write to sparse
+>>> hole failed"
+>>> +
+>>> +    # Reject atomic write if len is out of bounds
+>>> +    $XFS_IO_PROG -dc "pwrite -A -D 0 $((bsize - 1))" $testfile 2>>
+>>> $seqres.full && \
+>>> +        echo "atomic write len=$((bsize - 1)) should fail"
+>>> +    $XFS_IO_PROG -dc "pwrite -A -D 0 $((bsize + 1))" $testfile 2>>
+>>> $seqres.full && \
+>>> +        echo "atomic write len=$((bsize + 1)) should fail"
+>> Have we covered the scenario where the offset % len != 0 Should fail -
+>> Should fail with Invalid arguments -EINVAL.
+> I think you're right.
+>
+>> Also do you think adding similar tests with raw writes to the
+>> underlying devices bypassing the fs layer will add some value? There
+>> are slight less strict or different rules in the block layer which IMO
+>> worth to be tested. Please let me know your thoughts.
+> That should be in blktests.
+>
+>>> +
+>>> +    _scratch_unmount
+>>> +}
+>>> +
+>>> +bdev_min_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC"
+>>> $SCRATCH_DEV | \
+>>> +    grep atomic_write_unit_min | cut -d ' ' -f 3)
+>>> +bdev_max_write=$($XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC"
+>>> $SCRATCH_DEV | \
+>>> +    grep atomic_write_unit_max | cut -d ' ' -f 3)
+>>> +
+>> Similar comment before - Refactor this into a function.
+>>> +for ((bsize=$bdev_min_write; bsize<=bdev_max_write; bsize*=2)); do
+>>> +    _scratch_mkfs_xfs_supported -b size=$bsize >> $seqres.full 2>&1
+>>> && \
+>>> +        test_atomic_writes $bsize
+>>> +done;
+>> Minor: This might fail on some archs(x86_64) if the kernel isn't
+>> compiled without CONFIG_TRANSPARENT_HUGEPAGE to enable block size
+>> greater than 4k on x86_64.
+> Oh, yeah, that's a good catch.
+>
+> --D
+>
+>> --
+>> NR
+>>> +
+>>> +# success, all done
+>>> +echo Silence is golden
+>>> +status=0
+>>> +exit
+>>> diff --git a/tests/xfs/611.out b/tests/xfs/611.out
+>>> new file mode 100644
+>>> index 00000000..b8a44164
+>>> --- /dev/null
+>>> +++ b/tests/xfs/611.out
+>>> @@ -0,0 +1,2 @@
+>>> +QA output created by 611
+>>> +Silence is golden
+>>
+-- 
 ---
- man/man8/xfs_mdrestore.8  |   10 ++++++++++
- mdrestore/xfs_mdrestore.c |   47 ++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 48 insertions(+), 9 deletions(-)
-
-
-diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
-index f60e7b56ebf0d1..6f6e14e96c6a5c 100644
---- a/man/man8/xfs_mdrestore.8
-+++ b/man/man8/xfs_mdrestore.8
-@@ -8,6 +8,9 @@ .SH SYNOPSIS
- ] [
- .B \-l
- .I logdev
-+] [
-+.B \-r
-+.I rtdev
- ]
- .I source
- .I target
-@@ -17,6 +20,9 @@ .SH SYNOPSIS
- [
- .B \-l
- .I logdev
-+] [
-+.B \-r
-+.I rtdev
- ]
- .I source
- .br
-@@ -61,6 +67,10 @@ .SH OPTIONS
- In such a scenario, the user has to provide a device to which the log device
- contents from the metadump file are copied.
- .TP
-+.BI \-r " rtdev"
-+Restore realtime device metadata to this device.
-+This is only required for a metadump in v2 format.
-+.TP
- .B \-V
- Prints the version number and exits.
- .SH DIAGNOSTICS
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index c5584fec68813e..d5014981b15a68 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -28,7 +28,8 @@ struct mdrestore_ops {
- 	void (*show_info)(union mdrestore_headers *header, const char *md_file);
- 	void (*restore)(union mdrestore_headers *header, FILE *md_fp,
- 			const struct mdrestore_dev *ddev,
--			const struct mdrestore_dev *logdev);
-+			const struct mdrestore_dev *logdev,
-+			const struct mdrestore_dev *rtdev);
- };
- 
- static struct mdrestore {
-@@ -37,6 +38,7 @@ static struct mdrestore {
- 	bool			show_info;
- 	bool			progress_since_warning;
- 	bool			external_log;
-+	bool			realtime_data;
- } mdrestore;
- 
- static void
-@@ -212,7 +214,8 @@ restore_v1(
- 	union mdrestore_headers		*h,
- 	FILE				*md_fp,
- 	const struct mdrestore_dev	*ddev,
--	const struct mdrestore_dev	*logdev)
-+	const struct mdrestore_dev	*logdev,
-+	const struct mdrestore_dev	*rtdev)
- {
- 	struct xfs_metablock	*metablock;	/* header + index + blocks */
- 	__be64			*block_index;
-@@ -336,8 +339,9 @@ read_header_v2(
- 	if (!mdrestore.external_log && (compat & XFS_MD2_COMPAT_EXTERNALLOG))
- 		fatal("External Log device is required\n");
- 
--	if (h->v2.xmh_incompat_flags & cpu_to_be32(XFS_MD2_INCOMPAT_RTDEVICE))
--		fatal("Realtime device not yet supported\n");
-+	if ((h->v2.xmh_incompat_flags & cpu_to_be32(XFS_MD2_INCOMPAT_RTDEVICE)) &&
-+	    !mdrestore.realtime_data)
-+		fatal("Realtime device is required\n");
- }
- 
- static void
-@@ -346,14 +350,17 @@ show_info_v2(
- 	const char		*md_file)
- {
- 	uint32_t		compat_flags;
-+	uint32_t		incompat_flags;
- 
- 	compat_flags = be32_to_cpu(h->v2.xmh_compat_flags);
-+	incompat_flags = be32_to_cpu(h->v2.xmh_incompat_flags);
- 
--	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, %s metadata blocks,\n",
-+	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, rt device contents are %sdumped, %s metadata blocks,\n",
- 		md_file,
- 		compat_flags & XFS_MD2_COMPAT_OBFUSCATED ? "":"not ",
- 		compat_flags & XFS_MD2_COMPAT_DIRTYLOG ? "dirty":"clean",
- 		compat_flags & XFS_MD2_COMPAT_EXTERNALLOG ? "":"not ",
-+		incompat_flags & XFS_MD2_INCOMPAT_RTDEVICE ? "":"not ",
- 		compat_flags & XFS_MD2_COMPAT_FULLBLOCKS ? "full":"zeroed");
- }
- 
-@@ -390,7 +397,8 @@ restore_v2(
- 	union mdrestore_headers		*h,
- 	FILE				*md_fp,
- 	const struct mdrestore_dev	*ddev,
--	const struct mdrestore_dev	*logdev)
-+	const struct mdrestore_dev	*logdev,
-+	const struct mdrestore_dev	*rtdev)
- {
- 	struct xfs_sb		sb;
- 	struct xfs_meta_extent	xme;
-@@ -431,6 +439,11 @@ restore_v2(
- 		verify_device_size(logdev, sb.sb_logblocks, sb.sb_blocksize);
- 	}
- 
-+	if (sb.sb_rblocks > 0) {
-+		ASSERT(mdrestore.realtime_data == true);
-+		verify_device_size(rtdev, sb.sb_rblocks, sb.sb_blocksize);
-+	}
-+
- 	if (pwrite(ddev->fd, block_buffer, len, 0) < 0)
- 		fatal("error writing primary superblock: %s\n",
- 			strerror(errno));
-@@ -459,6 +472,10 @@ restore_v2(
- 			device = "log";
- 			fd = logdev->fd;
- 			break;
-+		case XME_ADDR_RT_DEVICE:
-+			device = "rt";
-+			fd = rtdev->fd;
-+			break;
- 		default:
- 			fatal("Invalid device found in metadump\n");
- 			break;
-@@ -488,7 +505,7 @@ static struct mdrestore_ops mdrestore_ops_v2 = {
- static void
- usage(void)
- {
--	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] source target\n",
-+	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] [-r rtdev] source target\n",
- 		progname);
- 	exit(1);
- }
-@@ -501,18 +518,21 @@ main(
- 	union mdrestore_headers	headers;
- 	DEFINE_MDRESTORE_DEV(ddev);
- 	DEFINE_MDRESTORE_DEV(logdev);
-+	DEFINE_MDRESTORE_DEV(rtdev);
- 	FILE			*src_f;
- 	char			*logdev_path = NULL;
-+	char			*rtdev_path = NULL;
- 	int			c;
- 
- 	mdrestore.show_progress = false;
- 	mdrestore.show_info = false;
- 	mdrestore.progress_since_warning = false;
- 	mdrestore.external_log = false;
-+	mdrestore.realtime_data = false;
- 
- 	progname = basename(argv[0]);
- 
--	while ((c = getopt(argc, argv, "gil:V")) != EOF) {
-+	while ((c = getopt(argc, argv, "gil:r:V")) != EOF) {
- 		switch (c) {
- 			case 'g':
- 				mdrestore.show_progress = true;
-@@ -524,6 +544,10 @@ main(
- 				logdev_path = optarg;
- 				mdrestore.external_log = true;
- 				break;
-+			case 'r':
-+				rtdev_path = optarg;
-+				mdrestore.realtime_data = true;
-+				break;
- 			case 'V':
- 				printf("%s version %s\n", progname, VERSION);
- 				exit(0);
-@@ -592,10 +616,15 @@ main(
- 	if (mdrestore.external_log)
- 		open_device(&logdev, logdev_path);
- 
--	mdrestore.mdrops->restore(&headers, src_f, &ddev, &logdev);
-+	/* check and open realtime device */
-+	if (mdrestore.realtime_data)
-+		open_device(&rtdev, rtdev_path);
-+
-+	mdrestore.mdrops->restore(&headers, src_f, &ddev, &logdev, &rtdev);
- 
- 	close_device(&ddev);
- 	close_device(&logdev);
-+	close_device(&rtdev);
- 
- 	if (src_f != stdin)
- 		fclose(src_f);
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
