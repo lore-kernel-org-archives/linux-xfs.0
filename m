@@ -1,71 +1,91 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C662556B8C
-	for <linux-xfs@vger.kernel.org>; Sat, 21 Dec 2024 08:08:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E671A0B08
+	for <linux-xfs@vger.kernel.org>; Sat, 21 Dec 2024 08:53:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734768538; cv=none; b=MHVkjNoin6BirwC9dDpTCJDP6fCO3ea9RWPJEuJHDAj2Ci8WY8mn8SQO+WCOHm/ov6lgoOlxKPTbC1Wg8WRw+w1lobzJC44ADWOIgHC25Oow8SBAR0A7408qbSe86+sn94HVBiHA2RyfTibd7r9g/ma46lLuiUy8DIFcTyZ4vG8=
+	t=1734771203; cv=none; b=Y5Je3CWymGqrFyDljdHtdSgTNPJI8I32TDwgI0WJsMMrO8cbVQwbUeHPUd8J8dX75/l98q8dGupXqPgSe+5y6j6Ts9rU4cMXT4BVTL/tQd8QWRRzK2mQwNyvUBhkgBExH6YntiNC5b1dvxCYqLWoNihqAKgF65+Qke/Yz8qCceg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734768538; c=relaxed/simple;
-	bh=vt6w9mQn6wR3XJA6H3Omm7f9cHOtER0lKZwxs/HfR0E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CDYngdFsH/DqeSt1LFFaAzUw9QLTypuJU6MS/E7r5Jop6aQx64G1gPsFa0eo+QG+KRZRqXzWwa5KsNcIJCbmmIhPvN/U3bC1pKLcy2rqKnz5/TCCdDX6IH7u+hAXLhJqVudv7IE4qDprGzOo3G09cMxPsMArp3+fCMY+20RmWIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CZga7cJp; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CZga7cJp"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=lwwwkrHN1VK4v4RE2dScY43pqCTKGomlzKf8wZ+axD4=; b=CZga7cJpKquuKZmpnTQIR6Ql2F
-	92DYm2wDC2zz4R68HVauDHSZjt7p5sCIVqOqO3/cp4C8ZbvINTXQcQzrMbSbBK3HkuaRM+A3brM6G
-	+Fo7ipDBIchblpnZGILaOek0q1Y06/vPCuI+5AsMpJTzi7csNlrcuRpamivBjltfRlpF/mLKfKGHr
-	PGEJzpxA8w0qzE775qEN/WXSxr9HjbR7VsWoXI6G3JBoIdzEY4mKyQGwW72Gtzs88cW0VUd1Ic7Wm
-	WWAljb0V+6aY8SpGsxlBH356azIsogmbN5Jl8HIrDNpurGY9kQH5K5pW/1uEZGKTO0SUGIVEeC6gD
-	MBBOCnrg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tOuXg-00000006iAC-0Og3;
-	Sat, 21 Dec 2024 08:08:56 +0000
-Date: Sat, 21 Dec 2024 00:08:56 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Long Li <leo.lilong@huawei.com>
-Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
-	david@fromorbit.com, yi.zhang@huawei.com, houtao1@huawei.com,
-	yangerkun@huawei.com, lonuxli.64@gmail.com
-Subject: Re: [PATCH 2/2] xfs: remove bp->b_error check in
- xfs_attr3_root_inactive
-Message-ID: <Z2Z3mLjW7KXQKexP@infradead.org>
-References: <20241221063043.106037-1-leo.lilong@huawei.com>
- <20241221063043.106037-3-leo.lilong@huawei.com>
+	s=arc-20240116; t=1734771203; c=relaxed/simple;
+	bh=3rEuzNP6YmPOCo59mB+RlNx9hU2vAGwAbcUTrOY6n2k=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=mMGfW2dVDXIGJr9lBWesdEN7Y32qW39r9hAv49CT/vOot4qs0DaNxP7YJgPJaY0h6A789tb/48rhlCERIgv27bQ5LXt3DlbZNmbRb/VpOGFZsE1TQGoDsqwiXmW8lxKStn4YAZdWhZGyTs91cFAm6J9YBcqwieMavGu9jIRu7/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-3a9d4ea9e0cso26258905ab.0
+        for <linux-xfs@vger.kernel.org>; Sat, 21 Dec 2024 00:53:21 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734771201; x=1735376001;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=u3Y13LdZmDM99CG6x5j/GoCUHORd5/wIung/neSYrBU=;
+        b=tYYcXDMmj8pTacwG7jyRuaGyGmr0zAxOPEeXkL4dxC9/I8tu/bfOWFBgkvuLPmDuNn
+         xhVMlSlHwOhmeJfeylYDcawM0S6IlzEQ6zG3Q2vYAbnYjifPOW3aJokPvPHnjvyeIBOK
+         DWLFUUOEImHwflFhArOuEs+dKtwUMP6cM6YlJ8INbZdbNZWX8rD8oNIK9Jko9Fj88Cur
+         48iTbYePbBOUR82VwA782jS+pyubxGTqgwxokYQNmMUt+WT4NyBZJu3Sm/f6wdzfV2G7
+         hwfpZleilNOq/M5N3/eX+UlTZqi7P52FDypM8t01epXbSi8YeNUUgmubqysf7PFUc9Sy
+         p+YQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUgjP3pmCl7EwI72wv0a15bR2e7cfK982uCgyr0ZYhOygxF3Zu+LDhr+Sy6iTQzd7bczuz7GS4nHdI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzuIFooEhAxrXoyiEH2pnSpCrAXP7mOFyXuFLKOq3bnkte9nTwz
+	1tH9jaihFjXKPCI7TssPOSLNDnzM8hilIO/6kTtztXW4QAFyUenBYGGpzlJJv+DOEQp7415n8Gp
+	UbX1/lSvXWefZ2XOVu3MOQAO5CYUrXI2RhGmHDo3HcYXshRo4s6chpNE=
+X-Google-Smtp-Source: AGHT+IGIGuCUwjPx8x6tATSL4m9bxGaV3v2Lj2s2wZ4O7MjSE/S9YvHqMP/jyqjJAQsmuHSRdc8YXRGxl5Yc06gVAS8WJhPK4utZ
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241221063043.106037-3-leo.lilong@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Received: by 2002:a05:6e02:1a47:b0:3a7:e732:472e with SMTP id
+ e9e14a558f8ab-3c2d1aa2beemr56112665ab.4.1734771200958; Sat, 21 Dec 2024
+ 00:53:20 -0800 (PST)
+Date: Sat, 21 Dec 2024 00:53:20 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67668200.050a0220.226966.000b.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Dec 2024)
+From: syzbot <syzbot+listb6915fcacc72c717485c@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, Dec 21, 2024 at 02:30:43PM +0800, Long Li wrote:
-> The xfs_da3_node_read earlier in the function will catch most cases of
-> incoming on-disk corruption, which makes this check mostly redundant,
-> unless someone corrupts the buffer and the AIL pushes it out to disk
-> while the buffer's unlocked.
-> 
-> In the first case we'll never reach this check, and in the second case
-> the AIL will shut down the log, at which point checking b_error becomes
-> meaningless. Remove the check to make the code consistent with most other
-> xfs_trans_get_buf() callers in XFS.
+Hello xfs maintainers/developers,
 
-Hmm. I don't really understand the commit log.  The b_error check
-is right after a call to xfs_trans_get_buf_map.  xfs_trans_get_buf_map
-either reads the buffer from disk using xfs_buf_get_map which propagates
-b_error, or finds it in the transaction, where whoever read it from
-disk should have done the same.  So I think the change looks fine,
-but I don't think the commit log really explains it very well.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
+During the period, 5 new issues were detected and 0 were fixed.
+In total, 16 issues are still open and 25 have already been fixed.
+
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 861     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
+                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+<2> 147     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<3> 90      Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<4> 12      Yes   INFO: task hung in xfs_ail_push_all_sync (3)
+                  https://syzkaller.appspot.com/bug?extid=92fbc8b664c9bbc40bf6
+<5> 11      No    possible deadlock in xfs_qm_dqrele
+                  https://syzkaller.appspot.com/bug?extid=da63448ae44acf902d11
+<6> 7       No    possible deadlock in xfs_dquot_disk_alloc
+                  https://syzkaller.appspot.com/bug?extid=0f440b139d96ada5b0fd
+<7> 5       No    BUG: unable to handle kernel paging request in xfs_destroy_mount_workqueues
+                  https://syzkaller.appspot.com/bug?extid=63340199267472536cf4
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
