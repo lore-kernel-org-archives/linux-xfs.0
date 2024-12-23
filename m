@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141E613FEE;
-	Mon, 23 Dec 2024 22:09:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFE7C13FEE
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:09:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991782; cv=none; b=Nux6+BV2wi04SFFsyndd7NHZB6QDhQ9/cknE7q4Se+aNfeOeliGhDEg8CKOl9ReT2Ap2B0J44a7q/s0bpDPpZWAvv7wttdOrpBlDvTpoWe8UXbYjnD9EX4giS4MCU8WYRT/zvJAUa7yRDwAiCWnhTWH+CUNJdLZqar56mcCDC50=
+	t=1734991798; cv=none; b=JjrJUh8mKN2XptY4WIU4zvVcCGBfjk4rQL4tY1ZRUsKJ+iVy26DYRH5kQ4igVps//5eec+VAiI3cAM4sGfxLEVvBXV4hjTdZpuKd4BS6jSNxYauPM/Fs48+l7MV437E8L09/rPmrKdxmEgQGnpk/XS8BGS8Xom8jAYLSVaXF8oo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991782; c=relaxed/simple;
-	bh=E0K+vFrbHB77I+hRarADE82t76FSKrrtTJ9fYu93Kvg=;
+	s=arc-20240116; t=1734991798; c=relaxed/simple;
+	bh=4dhF693u/tgF86WwcbR0qZVAiz+/5Qaz/z5dykKsFN4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Jh9aG9acWeGjK0Y4NJ6JdXKdnvlbN2cQyRZx1zzq1w97u3lendefZ7l5LXOoR9vFoni1Y6PRejlwm+eoI1TmIM9bd8vV8IQPSwJa3/yvPppQEzy4CmB2RQuz1tiR8c2eXWvthWakUGcKCNF6zOXdX7O5/+8tlWg2WZdeYp1FZbw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DkDZEwbs; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=emu6XoPWULlplESpZN6b3TzquE7HhvG6XyTVRTcw2n3cmhij5OSY4uYuT6XTFO/w5+LzdpE4qZv4VjOmLOKiMlXn8dkdQf6Ij0yTE9fI2nzRm/o9YNaYj+DMNd+J3v+by0S+3s7lv27wrzVJcy6NNwGAFidRI5Y+j79zfLUX7fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KVNM4ubh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DkDZEwbs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D76D1C4CED3;
-	Mon, 23 Dec 2024 22:09:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KVNM4ubh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C9A7C4CED3;
+	Mon, 23 Dec 2024 22:09:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991781;
-	bh=E0K+vFrbHB77I+hRarADE82t76FSKrrtTJ9fYu93Kvg=;
+	s=k20201202; t=1734991797;
+	bh=4dhF693u/tgF86WwcbR0qZVAiz+/5Qaz/z5dykKsFN4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DkDZEwbsWZUCkMDaBksZ2OzJAjv+kEGjb1QcHZrz0QAqbPH/8FpyDb0oTx2S3D2Pl
-	 XuqYGhirAFF2P7DP9Gl88ufgvrLd01PcOKIcCXoR/2huidUB0F+8RB9geKGpuUGCwC
-	 KG9Ynh724mg57XEwHLCdBjgZVXZxZxYn6/WrMV3N8fRNp4sE9Ymy/i9z5N8TYzVDwB
-	 ogBEx3IMQKPdQGCcJpqmzYCrR1ZsYQNtyi/p4YnHT8H1qfhtLSi7Xn1nkZf+DLYLeY
-	 bURoXNtkzWQ7lF37B7bD/Ew6b4J92zrasNxDa9SP+urHpo3OrHV/8Wh027LGRM0xIF
-	 6ri1E1OD3oqKg==
-Date: Mon, 23 Dec 2024 14:09:41 -0800
-Subject: [PATCH 44/52] xfs: remove unknown compat feature check in superblock
- write validation
+	b=KVNM4ubhHapAwyx7KyZ2H6PHJhAdu1ZWj/4kAj6HDi+zITI1sx4pLd/JZz8culrpA
+	 AMYF/9+o8i2Y7zGhPk2r8ZTxxPeF1hoVP33lwmOq4caKU1osJFfPvxgVBKbolSDzxJ
+	 zRhTs+bXJTVLqZfK+7+wtH1HuAZwg7BtGdgLucjOPSoyUgwB8CaLBsk12If0XLHh/C
+	 N2OiHPNdiLAKHEj83EKTQEAjmBsne8ShJdXqfjXzvcaQeuXoGUc4473k+7FzJTy9kI
+	 H1EEJnBHlRGYTudoerhVFnZO2+QO2Ey8q3U4pAfzLSStSTGopDLXHw/oOE69bBn8wT
+	 MyIKmox9c2LBg==
+Date: Mon, 23 Dec 2024 14:09:57 -0800
+Subject: [PATCH 45/52] xfs: fix sparse inode limits on runt AG
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: stable@vger.kernel.org, leo.lilong@huawei.com, hch@lst.de, cem@kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <173498943164.2295836.3577687751669301178.stgit@frogsfrogsfrogs>
+Cc: dchinner@redhat.com, cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173498943180.2295836.9055709735400896963.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 References: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,55 +43,83 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Long Li <leo.lilong@huawei.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: 652f03db897ba24f9c4b269e254ccc6cc01ff1b7
+Source kernel commit: 13325333582d4820d39b9e8f63d6a54e745585d9
 
-Compat features are new features that older kernels can safely ignore,
-allowing read-write mounts without issues. The current sb write validation
-implementation returns -EFSCORRUPTED for unknown compat features,
-preventing filesystem write operations and contradicting the feature's
-definition.
+The runt AG at the end of a filesystem is almost always smaller than
+the mp->m_sb.sb_agblocks. Unfortunately, when setting the max_agbno
+limit for the inode chunk allocation, we do not take this into
+account. This means we can allocate a sparse inode chunk that
+overlaps beyond the end of an AG. When we go to allocate an inode
+from that sparse chunk, the irec fails validation because the
+agbno of the start of the irec is beyond valid limits for the runt
+AG.
 
-Additionally, if the mounted image is unclean, the log recovery may need
-to write to the superblock. Returning an error for unknown compat features
-during sb write validation can cause mount failures.
+Prevent this from happening by taking into account the size of the
+runt AG when allocating inode chunks. Also convert the various
+checks for valid inode chunk agbnos to use xfs_ag_block_count()
+so that they will also catch such issues in the future.
 
-Although XFS currently does not use compat feature flags, this issue
-affects current kernels' ability to mount images that may use compat
-feature flags in the future.
-
-Since superblock read validation already warns about unknown compat
-features, it's unnecessary to repeat this warning during write validation.
-Therefore, the relevant code in write validation is being removed.
-
-Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superblock write verifier")
-Cc: stable@vger.kernel.org # v4.19+
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+Fixes: 56d1115c9bc7 ("xfs: allocate sparse inode chunks on full chunk allocation failure")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_sb.c |    7 -------
- 1 file changed, 7 deletions(-)
+ libxfs/xfs_ialloc.c |   16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 375324b99261af..87f740e6c75dce 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -323,13 +323,6 @@ xfs_validate_sb_write(
- 	 * the kernel cannot support since we checked for unsupported bits in
- 	 * the read verifier, which means that memory is corrupt.
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 2575447f92dfbb..63ce76755eb77f 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -848,7 +848,8 @@ xfs_ialloc_ag_alloc(
+ 		 * the end of the AG.
+ 		 */
+ 		args.min_agbno = args.mp->m_sb.sb_inoalignmt;
+-		args.max_agbno = round_down(args.mp->m_sb.sb_agblocks,
++		args.max_agbno = round_down(xfs_ag_block_count(args.mp,
++							pag_agno(pag)),
+ 					    args.mp->m_sb.sb_inoalignmt) -
+ 				 igeo->ialloc_blks;
+ 
+@@ -2344,9 +2345,9 @@ xfs_difree(
+ 		return -EINVAL;
+ 	}
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+-	if (agbno >= mp->m_sb.sb_agblocks)  {
+-		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
+-			__func__, agbno, mp->m_sb.sb_agblocks);
++	if (agbno >= xfs_ag_block_count(mp, pag_agno(pag))) {
++		xfs_warn(mp, "%s: agbno >= xfs_ag_block_count (%d >= %d).",
++			__func__, agbno, xfs_ag_block_count(mp, pag_agno(pag)));
+ 		ASSERT(0);
+ 		return -EINVAL;
+ 	}
+@@ -2469,7 +2470,7 @@ xfs_imap(
  	 */
--	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
--		xfs_warn(mp,
--"Corruption detected in superblock compatible features (0x%x)!",
--			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
--		return -EFSCORRUPTED;
--	}
--
- 	if (!xfs_is_readonly(mp) &&
- 	    xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
- 		xfs_alert(mp,
+ 	agino = XFS_INO_TO_AGINO(mp, ino);
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+-	if (agbno >= mp->m_sb.sb_agblocks ||
++	if (agbno >= xfs_ag_block_count(mp, pag_agno(pag)) ||
+ 	    ino != xfs_agino_to_ino(pag, agino)) {
+ 		error = -EINVAL;
+ #ifdef DEBUG
+@@ -2479,11 +2480,12 @@ xfs_imap(
+ 		 */
+ 		if (flags & XFS_IGET_UNTRUSTED)
+ 			return error;
+-		if (agbno >= mp->m_sb.sb_agblocks) {
++		if (agbno >= xfs_ag_block_count(mp, pag_agno(pag))) {
+ 			xfs_alert(mp,
+ 		"%s: agbno (0x%llx) >= mp->m_sb.sb_agblocks (0x%lx)",
+ 				__func__, (unsigned long long)agbno,
+-				(unsigned long)mp->m_sb.sb_agblocks);
++				(unsigned long)xfs_ag_block_count(mp,
++							pag_agno(pag)));
+ 		}
+ 		if (ino != xfs_agino_to_ino(pag, agino)) {
+ 			xfs_alert(mp,
 
