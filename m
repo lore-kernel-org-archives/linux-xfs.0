@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41C89192B69
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:58:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A58E192B69
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:59:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991125; cv=none; b=undjIZsG4h4b0OpIantK0fOHMMrtthpqHSX3vATvXMX9wAiDzSxGedOY2DYkpp5rz3rWFfSCyqY7A0AoVLM6I0ji19Tn3gbJAwgpTNLI/6spN4ejRcuD3rn4B+gtpqYYAt/+s14mMd90f4ewycBD6ooWunFnQhKX/IBfVn+yEx8=
+	t=1734991141; cv=none; b=hRVV8PR/XmjuRsohh4e6BGGCfmDBBBLUeNGoeD4H4akGh7UtgSd/9vJr7JEKGK8Tr0OFAQZ0phw/PZmnyGb4JnmNN6XUmzMfdlhz0lemmSatIXmy3z3P/pi+wj20kNMz0plLg0iGjwJ5EsO28x3nXr9v91If9S9qXVGNfp01Bfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991125; c=relaxed/simple;
-	bh=S6ddG994yt+beO0CI6KqzWMf6cKai5DRlTmNSVCSxwY=;
+	s=arc-20240116; t=1734991141; c=relaxed/simple;
+	bh=+gPB3NGlpKsC1ufGKfMH7tL3SdxodyIDGS9JHD3gfTk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=raxAkNZpUu0O9qXO60HXDKMhDWB12YRPVcj76MepMXaKmaDC0IuaCmunNKps25gDFj4M5k5BcCxW1J28L7iszfJG/vgKLJMulNcSSFIK1a7XlELT4cxkyJaD8belcRynr1C229M+ZLHf86MjeerOv24mvVvExD/f35L/stQgE9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WVJkLFaS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CgpRGVtotuCD5mJfXW5+YFjJBcowRarIwGKxf49U2a07UV+BWPMeIlDmLcTW4oGIdi+YnvoAHr9vwZmzTpvsLPFaXAKHHbBgZ4OxRmJOeonUWuQF+vF8t7/9671K8hk11/Nh7j7U2lu6EKTBbg7/I3Mzs34YzOOoZndlQ8QqXCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=thplwQ35; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WVJkLFaS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12FF7C4CED3;
-	Mon, 23 Dec 2024 21:58:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="thplwQ35"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A593FC4CED3;
+	Mon, 23 Dec 2024 21:59:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991125;
-	bh=S6ddG994yt+beO0CI6KqzWMf6cKai5DRlTmNSVCSxwY=;
+	s=k20201202; t=1734991140;
+	bh=+gPB3NGlpKsC1ufGKfMH7tL3SdxodyIDGS9JHD3gfTk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WVJkLFaSqvFUtDMIXboNKZ2gdRV3PzV0+14qm67oiPXr+fFyOa9uaMp2UGFahGYBq
-	 ooiUsosPpSmhqj2lFLmQTrStCdwJYcStvQMKV7wWMTaP0DYCj2B/tkDOOPWe6a1WB5
-	 dw7IL+97dtLNfkelGjYtEON6g8ATY/tDqTSSIBJh8d9njIsNtWCaCplOPatQqBIGg6
-	 KyhxLWlERAPvBYfACDDCKi4dz/nrdozpDlVulZEG01PZZ67h24JDRBwagOdgn31dxa
-	 0LzHIBTNQtz2XuWU5l8mUkV3Qzro+4FSoOOgaj0lLo21ugDUCFxbh+XgCBY4GO9A5H
-	 pK766Q7WE8VLg==
-Date: Mon, 23 Dec 2024 13:58:44 -0800
-Subject: [PATCH 02/52] xfs: define locking primitives for realtime groups
+	b=thplwQ35N0Rjy7qqFw0moXnF3Xk4K115wTznODrfx4oiOHwsXotX1P0gmtu5kpC3M
+	 8YS82MyS66iIP7hOrDgDpAwBirGqCQ/YyBoWYdgaYkWRKcVn//NZjZDrVQmO/SMqvL
+	 w4ATOi8J0kvW4Pcy9X6ipm6CsSHHhW9kF3rVrH/57tSv3SYFBjz4cvXXYzx4aCd1Ie
+	 65w1Ie+ciIN3bwLSDAYVqJHJSH8+aW9GMu3HQwDfukBVudA4UYeCGV4UXQrnqAEK8q
+	 IavSJJkqS9BqdStrpvh0ilGbltJ32coFXdPY7n2s1eLt7yfxrRgMvVykPVefsbbpwA
+	 IcUnFxCIEtPNA==
+Date: Mon, 23 Dec 2024 13:59:00 -0800
+Subject: [PATCH 03/52] xfs: add a lockdep class key for rtgroup inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498942526.2295836.7129725188366826710.stgit@frogsfrogsfrogs>
+Message-ID: <173498942541.2295836.7102479522630859326.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 References: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,110 +45,79 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 0e4875b3fb24c5bfdf685876c76713cda5a23b65
+Source kernel commit: c29237a65c8dbfade3c032763b66d495b8e8cb7a
 
-Define helper functions to lock all metadata inodes related to a
-realtime group.  There's not much to look at now, but this will become
-important when we add per-rtgroup metadata files and online fsck code
-for them.
+Add a dynamic lockdep class key for rtgroup inodes.  This will enable
+lockdep to deduce inconsistencies in the rtgroup metadata ILOCK locking
+order.  Each class can have 8 subclasses, and for now we will only have
+2 inodes per group.  This enables rtgroup order and inode order checks
+when nesting ILOCKs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rtgroup.c |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_rtgroup.h |   16 ++++++++++++++++
- 2 files changed, 65 insertions(+)
+ libxfs/xfs_rtgroup.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
 
 diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
-index 88f31384bf6961..5c8e269b62dbc4 100644
+index 5c8e269b62dbc4..ece52626584200 100644
 --- a/libxfs/xfs_rtgroup.c
 +++ b/libxfs/xfs_rtgroup.c
-@@ -147,3 +147,52 @@ xfs_update_last_rtgroup_size(
- 	xfs_rtgroup_rele(rtg);
- 	return 0;
+@@ -196,3 +196,55 @@ xfs_rtgroup_trans_join(
+ 	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
+ 		xfs_rtbitmap_trans_join(tp);
  }
 +
-+/* Lock metadata inodes associated with this rt group. */
-+void
-+xfs_rtgroup_lock(
-+	struct xfs_rtgroup	*rtg,
-+	unsigned int		rtglock_flags)
-+{
-+	ASSERT(!(rtglock_flags & ~XFS_RTGLOCK_ALL_FLAGS));
-+	ASSERT(!(rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) ||
-+	       !(rtglock_flags & XFS_RTGLOCK_BITMAP));
++#ifdef CONFIG_PROVE_LOCKING
++static struct lock_class_key xfs_rtginode_lock_class;
 +
-+	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
-+		xfs_rtbitmap_lock(rtg_mount(rtg));
-+	else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED)
-+		xfs_rtbitmap_lock_shared(rtg_mount(rtg), XFS_RBMLOCK_BITMAP);
++static int
++xfs_rtginode_ilock_cmp_fn(
++	const struct lockdep_map	*m1,
++	const struct lockdep_map	*m2)
++{
++	const struct xfs_inode *ip1 =
++		container_of(m1, struct xfs_inode, i_lock.dep_map);
++	const struct xfs_inode *ip2 =
++		container_of(m2, struct xfs_inode, i_lock.dep_map);
++
++	if (ip1->i_projid < ip2->i_projid)
++		return -1;
++	if (ip1->i_projid > ip2->i_projid)
++		return 1;
++	return 0;
 +}
 +
-+/* Unlock metadata inodes associated with this rt group. */
-+void
-+xfs_rtgroup_unlock(
-+	struct xfs_rtgroup	*rtg,
-+	unsigned int		rtglock_flags)
++static inline void
++xfs_rtginode_ilock_print_fn(
++	const struct lockdep_map	*m)
 +{
-+	ASSERT(!(rtglock_flags & ~XFS_RTGLOCK_ALL_FLAGS));
-+	ASSERT(!(rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) ||
-+	       !(rtglock_flags & XFS_RTGLOCK_BITMAP));
++	const struct xfs_inode *ip =
++		container_of(m, struct xfs_inode, i_lock.dep_map);
 +
-+	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
-+		xfs_rtbitmap_unlock(rtg_mount(rtg));
-+	else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED)
-+		xfs_rtbitmap_unlock_shared(rtg_mount(rtg), XFS_RBMLOCK_BITMAP);
++	printk(KERN_CONT " rgno=%u", ip->i_projid);
 +}
 +
 +/*
-+ * Join realtime group metadata inodes to the transaction.  The ILOCKs will be
-+ * released on transaction commit.
++ * Most of the time each of the RTG inode locks are only taken one at a time.
++ * But when committing deferred ops, more than one of a kind can be taken.
++ * However, deferred rt ops will be committed in rgno order so there is no
++ * potential for deadlocks.  The code here is needed to tell lockdep about this
++ * order.
 + */
-+void
-+xfs_rtgroup_trans_join(
-+	struct xfs_trans	*tp,
-+	struct xfs_rtgroup	*rtg,
-+	unsigned int		rtglock_flags)
++static inline void
++xfs_rtginode_lockdep_setup(
++	struct xfs_inode	*ip,
++	xfs_rgnumber_t		rgno,
++	enum xfs_rtg_inodes	type)
 +{
-+	ASSERT(!(rtglock_flags & ~XFS_RTGLOCK_ALL_FLAGS));
-+	ASSERT(!(rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED));
-+
-+	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
-+		xfs_rtbitmap_trans_join(tp);
++	lockdep_set_class_and_subclass(&ip->i_lock, &xfs_rtginode_lock_class,
++			type);
++	lock_set_cmp_fn(&ip->i_lock, xfs_rtginode_ilock_cmp_fn,
++			xfs_rtginode_ilock_print_fn);
 +}
-diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index 8872c27a9585fd..7d82eb753fd097 100644
---- a/libxfs/xfs_rtgroup.h
-+++ b/libxfs/xfs_rtgroup.h
-@@ -197,6 +197,19 @@ xfs_rtxnum_t xfs_rtgroup_extents(struct xfs_mount *mp, xfs_rgnumber_t rgno);
- 
- int xfs_update_last_rtgroup_size(struct xfs_mount *mp,
- 		xfs_rgnumber_t prev_rgcount);
-+
-+/* Lock the rt bitmap inode in exclusive mode */
-+#define XFS_RTGLOCK_BITMAP		(1U << 0)
-+/* Lock the rt bitmap inode in shared mode */
-+#define XFS_RTGLOCK_BITMAP_SHARED	(1U << 1)
-+
-+#define XFS_RTGLOCK_ALL_FLAGS	(XFS_RTGLOCK_BITMAP | \
-+				 XFS_RTGLOCK_BITMAP_SHARED)
-+
-+void xfs_rtgroup_lock(struct xfs_rtgroup *rtg, unsigned int rtglock_flags);
-+void xfs_rtgroup_unlock(struct xfs_rtgroup *rtg, unsigned int rtglock_flags);
-+void xfs_rtgroup_trans_join(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
-+		unsigned int rtglock_flags);
- #else
- static inline void xfs_free_rtgroups(struct xfs_mount *mp,
- 		xfs_rgnumber_t first_rgno, xfs_rgnumber_t end_rgno)
-@@ -212,6 +225,9 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
- 
- # define xfs_rtgroup_extents(mp, rgno)		(0)
- # define xfs_update_last_rtgroup_size(mp, rgno)	(-EOPNOTSUPP)
-+# define xfs_rtgroup_lock(rtg, gf)		((void)0)
-+# define xfs_rtgroup_unlock(rtg, gf)		((void)0)
-+# define xfs_rtgroup_trans_join(tp, rtg, gf)	((void)0)
- #endif /* CONFIG_XFS_RT */
- 
- #endif /* __LIBXFS_RTGROUP_H */
++#else
++#define xfs_rtginode_lockdep_setup(ip, rgno, type)	do { } while (0)
++#endif /* CONFIG_PROVE_LOCKING */
 
