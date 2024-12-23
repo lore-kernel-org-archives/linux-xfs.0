@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8BAA64A
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:01:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FC3238385
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:02:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991312; cv=none; b=HOC/u3gRfNtrsGOXzmopZyz9krusEh7eytbDrDSVQny/xWiE+stWzc0jM9ueW+pGuJuFumGzrhBoHmT+2ekqO685zsN7mLzGBr7UrQ7VRyHtFstgSD9TKevHWw/r98jAS7xlGfjHz8OkKxF/YIYzW1fat03McSJGH5x1b49RJfo=
+	t=1734991328; cv=none; b=hMTNktNnKY3lGhsqnrQQw++AnwM1NOb5wZhlx1j4l/4U2BkGJlRSDHMP+cUvaEGLS0lThuRyarOpbk/Q9zY6yG+vIztHTK3S0nb/joortle2VdrVPwxMmcoSlXRCGFtwsXWmGVyEI7glksRWdkgLCeAXbubYVMQsCmPh2kLDtSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991312; c=relaxed/simple;
-	bh=bp1BAVXxm46tMIwXm4EljSmq784/lJ0DzTeKRWBw9eQ=;
+	s=arc-20240116; t=1734991328; c=relaxed/simple;
+	bh=zywaIVk0do8KxnwqU/2bsefRd9Uj8iIPcUbqKE9Xfrc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RMQ3dDd8+gpyVW6aAjMPptRK7y37T1WVqeNyEm5hc3fsm4DTdnMwx3fIIRwJhJ/FbKshA5U1eFUGc9nzr+JHk14qrlUQz/tipydrE2EJhB/OJ253vY6+HlzypCul3M5aptN977KpmhWfLTp+/i/6BohXT4Xovwok+LMFakZDVBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s3g+uIF6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WyHhp9hHiI6Frz/v5DhAYgUzPwtpNySUiqbjscm/49lmJ1/ptwLpNq3MssyBC5ABbcEG4/v+KyhVzJ1OC7URYZd6wfK9eyQCUMX/irf/vAKP3WB07qjJ0ZHJlOaGYtsmvRjncTg3uVu8D7MfEZFuJsBnWoIbgRDtPapq6w9VR74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=muvZiiOu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s3g+uIF6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95FAAC4CED3;
-	Mon, 23 Dec 2024 22:01:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="muvZiiOu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 368CCC4CED3;
+	Mon, 23 Dec 2024 22:02:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991312;
-	bh=bp1BAVXxm46tMIwXm4EljSmq784/lJ0DzTeKRWBw9eQ=;
+	s=k20201202; t=1734991328;
+	bh=zywaIVk0do8KxnwqU/2bsefRd9Uj8iIPcUbqKE9Xfrc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=s3g+uIF6CQxPSH8yYdhnKizIygu6a7cEYZXmFf+z7rxMwtNQtlAz04CnUtJZ/Drpe
-	 Apj/D3rF0C/nph+OHzWBVnwfmxURSr67TS220bkKEw0DziKJl3e4PkanUfJkApPq/3
-	 yZMpZUbr0B1/xdMtit3ljXCPyU/OW6D1EzFQUBczDmCY7ynZvcqt36GsN5fxiB49pi
-	 il7L41VUBEo8DmwOnKRFZ6erAJP+m3XhlZTt1KQ2mpUkvl0TpLI59YzN23xzDYXj0b
-	 5VfbAfaHmp+0/FLnlchGtAFX0MqIb1lhNm2gcUSD3f1k2eSEohJnSBODzr2rlaUAbg
-	 MQS0gLhjTNPQw==
-Date: Mon, 23 Dec 2024 14:01:52 -0800
-Subject: [PATCH 14/52] xfs: export realtime group geometry via XFS_FSOP_GEOM
+	b=muvZiiOuoT7BCP1pjXGvIfmxKk5BgQknVQ707hFsThTkRnHYqzEDtiPeUrQeaM+m2
+	 xum0EJ+Cc/e4dbfdRvqz4QlCWa7zYRMpdcddzjJ8Wdz78DWqYsZPhtyZomhOylmONK
+	 PPLo9q7KZiqGFDi6YWih39nYsj/ASrtNSirpPHfZpYzRgmXThEuPLW7SzTqLIEo9Ip
+	 eHNDG/ZbVXaYOcdhIgLVvbij8+ZFgtHeqylMKi6RSaLPA4tR0Rvhjp4ZNMiICc3iw5
+	 gOMX0FohXYVYQpqK++tRMCY007LgJ6UazfF2u2C8rYG1cDkZv4wS7OSJsErGhy4Icd
+	 4nr/GAyySiN5A==
+Date: Mon, 23 Dec 2024 14:02:07 -0800
+Subject: [PATCH 15/52] xfs: check that rtblock extents do not break rtsupers
+ or rtgroups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498942709.2295836.10574373869363074821.stgit@frogsfrogsfrogs>
+Message-ID: <173498942724.2295836.6557717150046523104.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 References: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,47 +46,87 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 8edde94d640153d645f85b94b2e1af8872c11ac8
+Source kernel commit: 9bb512734722d2815bb79e27850dddeeff10db90
 
-Export the realtime geometry information so that userspace can query it.
+Check that rt block pointers do not point to the realtime superblock and
+that allocated rt space extents do not cross rtgroup boundaries.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |    4 +++-
- libxfs/xfs_sb.c |    5 +++++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ libxfs/xfs_types.c |   38 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 33 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index faa38a7d1eb019..5c224d03270ce9 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -187,7 +187,9 @@ struct xfs_fsop_geom {
- 	__u32		logsunit;	/* log stripe unit, bytes	*/
- 	uint32_t	sick;		/* o: unhealthy fs & rt metadata */
- 	uint32_t	checked;	/* o: checked fs & rt metadata	*/
--	__u64		reserved[17];	/* reserved space		*/
-+	__u32		rgextents;	/* rt extents in a realtime group */
-+	__u32		rgcount;	/* number of realtime groups	*/
-+	__u64		reserved[16];	/* reserved space		*/
- };
+diff --git a/libxfs/xfs_types.c b/libxfs/xfs_types.c
+index a70c0395979cf8..4e366e62eb2ae8 100644
+--- a/libxfs/xfs_types.c
++++ b/libxfs/xfs_types.c
+@@ -12,6 +12,8 @@
+ #include "xfs_bit.h"
+ #include "xfs_mount.h"
+ #include "xfs_ag.h"
++#include "xfs_rtbitmap.h"
++#include "xfs_rtgroup.h"
  
- #define XFS_FSOP_GEOM_SICK_COUNTERS	(1 << 0)  /* summary counters */
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 96b0a73682f435..2e536bc3b2090b 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1424,6 +1424,11 @@ xfs_fs_geometry(
- 		return;
  
- 	geo->version = XFS_FSOP_GEOM_VERSION_V5;
-+
-+	if (xfs_has_rtgroups(mp)) {
-+		geo->rgcount = sbp->sb_rgcount;
-+		geo->rgextents = sbp->sb_rgextents;
-+	}
+ /*
+@@ -135,18 +137,37 @@ xfs_verify_dir_ino(
  }
  
- /* Read a secondary superblock. */
+ /*
+- * Verify that an realtime block number pointer doesn't point off the
+- * end of the realtime device.
++ * Verify that a realtime block number pointer neither points outside the
++ * allocatable areas of the rtgroup nor off the end of the realtime
++ * device.
+  */
+ inline bool
+ xfs_verify_rtbno(
+ 	struct xfs_mount	*mp,
+ 	xfs_rtblock_t		rtbno)
+ {
+-	return rtbno < mp->m_sb.sb_rblocks;
++	if (rtbno >= mp->m_sb.sb_rblocks)
++		return false;
++
++	if (xfs_has_rtgroups(mp)) {
++		xfs_rgnumber_t	rgno = xfs_rtb_to_rgno(mp, rtbno);
++		xfs_rtxnum_t	rtx = xfs_rtb_to_rtx(mp, rtbno);
++
++		if (rgno >= mp->m_sb.sb_rgcount)
++			return false;
++		if (rtx >= xfs_rtgroup_extents(mp, rgno))
++			return false;
++		if (xfs_has_rtsb(mp) && rgno == 0 && rtx == 0)
++			return false;
++	}
++	return true;
+ }
+ 
+-/* Verify that a realtime device extent is fully contained inside the volume. */
++/*
++ * Verify that an allocated realtime device extent neither points outside
++ * allocatable areas of the rtgroup, across an rtgroup boundary, nor off the
++ * end of the realtime device.
++ */
+ bool
+ xfs_verify_rtbext(
+ 	struct xfs_mount	*mp,
+@@ -159,7 +180,14 @@ xfs_verify_rtbext(
+ 	if (!xfs_verify_rtbno(mp, rtbno))
+ 		return false;
+ 
+-	return xfs_verify_rtbno(mp, rtbno + len - 1);
++	if (!xfs_verify_rtbno(mp, rtbno + len - 1))
++		return false;
++
++	if (xfs_has_rtgroups(mp) &&
++	    xfs_rtb_to_rgno(mp, rtbno) != xfs_rtb_to_rgno(mp, rtbno + len - 1))
++		return false;
++
++	return true;
+ }
+ 
+ /* Calculate the range of valid icount values. */
 
