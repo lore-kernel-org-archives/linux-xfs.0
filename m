@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 426521422AB
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:45:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B56851422AB
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:45:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734990344; cv=none; b=N2VtAKZflWjGkPYNuzByD4DXnQM000AdzgZ8pLVMOzGA2YWknQbeifyORgkqLrrFSRhJmEIwTbWBYQltiG+l5daYdi3jroZ2wl4QeCATIEE13pdHllXAeeA55g0zar0bQ12ddWOg8XGWA1TV81WiR+2wQglFaqhO+3zwcyDVVnY=
+	t=1734990359; cv=none; b=Rtp4WFTL+jVkLBn7Llb0qjJ1FNb3joS0uTuhDuxqZkm0ghj0DGsySZSEKkSlUzWSsm7kuJVGagT5Xbzb5qbSNh3A5Zdtcd1WW+7YJudnnRej4dKjCpK3Nvio7ANvV+rlN1Q2bapz6vJckk+0+e+LnIscLCTmhunyGeHWAY4p2eU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734990344; c=relaxed/simple;
-	bh=dE/gX7IIpQslD7Lf/wffy5xYW2sN7a4gHVTSELyN468=;
+	s=arc-20240116; t=1734990359; c=relaxed/simple;
+	bh=f1H0S3LmJiS7L2YE6t0iHQa9jIj5Qqej1nlZUUaehSQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WrNHZJvJ1E73EYvQJQQDAR7UF4ZrkpEZ6u0RdGMMRr3Fok4FDxUROu4+ZZGbxkh0wq6l/lgxKGVVbNSMGontDP4fTCVadqd+BO99FMf943cSoepOkgOvea8ibm14ASuwIzwABdI+uU284kpL0VKu+z+y0evlJs7swvEbbccTCuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYLo0wJq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tRWGK30RtUm56v0zfDmEWmWDbhEFw9hOE0Of/YcvwFhsJ25TDIeC4JXSMlYCnDGXOxuZ7Pn2DgGuiihy4V2QLEHdtcRe/xsbDeLuM2K5Cu4zbjwbp2YDAwfqDdqrYVCYJSxJr+vHYVqC4Fw1NSCV7AzcECRRw7j25FexCWoPDcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NPivUrk+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYLo0wJq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3267C4CED3;
-	Mon, 23 Dec 2024 21:45:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NPivUrk+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E6EBC4CED3;
+	Mon, 23 Dec 2024 21:45:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734990343;
-	bh=dE/gX7IIpQslD7Lf/wffy5xYW2sN7a4gHVTSELyN468=;
+	s=k20201202; t=1734990359;
+	bh=f1H0S3LmJiS7L2YE6t0iHQa9jIj5Qqej1nlZUUaehSQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AYLo0wJqBVPuiyn59Ti6i4J+MIjWGR6QF/g1REQJ8dRtsLmJ/RlLZpvOrN7QUHDSf
-	 PC84EisLC8371sW9nh+jvLdmhOHz0dq/xhlMBmPzxIXpOYbHVIaageKUj0/T5AK8/g
-	 85CgHTT3eLV0LRu6AZniUjbBtPYgyv2AmTvXmaMz1PONU1KdnENz+vWGe0ltz/FhY/
-	 n08sX7uVIx4gMBuxRCQ7iJNarRLv0XeuvdPRNVSI8Urb7uSaoPsAPXr91hDutDq5s2
-	 J2lZRGwGcqVzVLNJLyWTnxCYcKIyyAKNkezuGlXkIUomIA3ioE7aGNqGPQE4MDVer5
-	 wfx6j3sBzvbLw==
-Date: Mon, 23 Dec 2024 13:45:43 -0800
-Subject: [PATCH 33/36] xfs: allow bulkstat to return metadata directories
+	b=NPivUrk+CvKMhU/DfWsU4Xmq8mm9ge9DWi+Dw8OMgT3qUq4CmpMA0p03CkenAwFbx
+	 3rg1EzivZ3+fTnV2JzadigshtsjRDfMBU3QJnGGg0SUehhfAOSwpYwIGpocLXaVivL
+	 kqcFdhtPtQbLZ/GQQibSkhkZZvJ/Zo7dlPBmgfuVuPLjA8S8VEb6qF6ILNtntLRIBO
+	 94d81HHtKxqzRZ8LyGb7Xo39beGcmcQWS3dFyTe4Ke1rjzvqefacmQ0xeBpZTkpuRF
+	 TpmeQExPS8I2KDnmvdVASgs7aTY2TEVfpAzMle5DsU/p+6QovjJFc3LuB1BRcdR1AW
+	 eSA+gMLgdR8Yw==
+Date: Mon, 23 Dec 2024 13:45:58 -0800
+Subject: [PATCH 34/36] xfs: adjust xfs_bmap_add_attrfork for metadir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498940448.2293042.388425970319376264.stgit@frogsfrogsfrogs>
+Message-ID: <173498940463.2293042.17206658494742067648.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 References: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,43 +45,52 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: df866c538ff098baa210b407b822818a415a6e7e
+Source kernel commit: 61b6bdb30a4bee1f3417081aedfe9e346538f897
 
-Allow the V5 bulkstat ioctl to return information about metadata
-directory files so that xfs_scrub can find and scrub them, since they
-are otherwise ordinary directories.
-
-(Metadata files of course require per-file scrub code and hence do not
-need exposure.)
+Online repair might use the xfs_bmap_add_attrfork to repair a file in
+the metadata directory tree if (say) the metadata file lacks the correct
+parent pointers.  In that case, it is not correct to check that the file
+is dqattached -- metadata files must be not have /any/ dquot attached at
+all.  Adjust the assertions appropriately.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ libxfs/xfs_attr.c |    5 ++++-
+ libxfs/xfs_bmap.c |    5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index a42c1a33691c0f..499bea4ea8067f 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -490,9 +490,17 @@ struct xfs_bulk_ireq {
-  */
- #define XFS_BULK_IREQ_NREXT64	(1U << 2)
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 150aaddf7f9fed..7567014abbe7f0 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -1003,7 +1003,10 @@ xfs_attr_add_fork(
+ 	unsigned int		blks;		/* space reservation */
+ 	int			error;		/* error return value */
  
-+/*
-+ * Allow bulkstat to return information about metadata directories.  This
-+ * enables xfs_scrub to find them for scanning, as they are otherwise ordinary
-+ * directories.
-+ */
-+#define XFS_BULK_IREQ_METADIR	(1U << 3)
-+
- #define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO |	 \
- 				 XFS_BULK_IREQ_SPECIAL | \
--				 XFS_BULK_IREQ_NREXT64)
-+				 XFS_BULK_IREQ_NREXT64 | \
-+				 XFS_BULK_IREQ_METADIR)
+-	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
++	if (xfs_is_metadir_inode(ip))
++		ASSERT(XFS_IS_DQDETACHED(ip));
++	else
++		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
  
- /* Operate on the root directory inode. */
- #define XFS_BULK_IREQ_SPECIAL_ROOT	(1)
+ 	blks = XFS_ADDAFORK_SPACE_RES(mp);
+ 
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 13cd4faa492838..99d53f9383a49a 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -1036,7 +1036,10 @@ xfs_bmap_add_attrfork(
+ 	int			error;		/* error return value */
+ 
+ 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+-	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
++	if (xfs_is_metadir_inode(ip))
++		ASSERT(XFS_IS_DQDETACHED(ip));
++	else
++		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 	ASSERT(!xfs_inode_has_attr_fork(ip));
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
