@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B2CF7462;
-	Mon, 23 Dec 2024 22:54:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79DB37462
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:54:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734994443; cv=none; b=hw7nMKUIKhP9PfVbB0Ak6pBDqJLyVe0FjiPcF1jCaxQ/VZ8N2MmyDpsyxPWLCJNBZJP4lif8YgSoZRwr0I9q9Azf1+ebWG57AmO3VmI5mNVE2QUpBe/QIYauUlCqopent1mR5uOa6iuhO5Jq1uO05zCYSQu899dup9Vyg78EU5M=
+	t=1734994461; cv=none; b=sortkr6yGzDw7x6jth1kd18Pvpd18YZGoq+OvfF3fgnDxl18wjR3OAGeebrTlCkPliTjhR9FxBjU96Gaf5dXmw+vIVPlYFxMVdUts4Af80tLR0L4gdTmKSZdUfK+52AyjmMsrMvKTccnE4l0KNANN/7LP9IiINSgxWOWiS6j90s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734994443; c=relaxed/simple;
-	bh=6UupUeon87UjQLmMzWBbAwsippmxgliIqnlXIEXICi8=;
+	s=arc-20240116; t=1734994461; c=relaxed/simple;
+	bh=5XM9eyAqCdMecumvdfR3x9tV+L4CxWKFxVCfCmI9bfk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Kzpwy/kT8395MTyQTh4Jh+J62bO3/ZkZ6IhD/D8/XwsoVy77DLsvz5UWjgfUz5NhMY45LAG0uZnI9JoSHCvVvBneKn99ECBRvp+gAViSbDfcCFjQetbRJfET1eJy8k81ykuiv2LQE8L8mFsVuEmvpRUof7zw1IrjZspsLTauFuM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hcU+l2CS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JjVP6Aa8yh9n3z7TgZtPxIe8MXoUhqBLHak325PoYG4YGLptDY/RggPYyfBvbwH0xuEQMCwVa0q9UF3T5+y4E5ygioG7/gzbQ7ckyO53ZfQdB8rtcZLEfukRw0VVhgzvssZpsv3amDRStgpeo+fEKFDsXtrvQ5z0AxOgnEtKzVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VMRqQ4aw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hcU+l2CS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F629C4CED3;
-	Mon, 23 Dec 2024 22:54:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VMRqQ4aw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FB9AC4CED3;
+	Mon, 23 Dec 2024 22:54:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734994443;
-	bh=6UupUeon87UjQLmMzWBbAwsippmxgliIqnlXIEXICi8=;
+	s=k20201202; t=1734994459;
+	bh=5XM9eyAqCdMecumvdfR3x9tV+L4CxWKFxVCfCmI9bfk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hcU+l2CSbRHttSsyupw5r7iQ7qOu16C182+dQWB9wQP5tXEvdFxZXdYnSzHN0gqev
-	 Aw1cLZdVOLuWoNI6VW1iBlSuTQ24Iqr+0lJLa3oov37CfRXTfc4Uy74F6yOnuWI3Qb
-	 87AFMneQ321BGJ1QR34OUFJ9uQiFGdgBn/Zqo5QeVXd2b0sqBWOxtg+4bVitJSdTof
-	 ZE7J3ujHykpvlB1AXEn62jJ5bHsrdT3ZQwTenrr2oEbAUYvQfw84/TSwhct3AswwBs
-	 jOGcNPAeBx7LPTlHfqxNd54stZNOaA+kqIkXxGbPmfEQUL24Zcka0qCLwat4HTEhjM
-	 hqGymNAkRykKA==
-Date: Mon, 23 Dec 2024 14:54:03 -0800
-Subject: [PATCH 2/2] xfs: release the dquot buf outside of qli_lock
+	b=VMRqQ4awljUWYwjn2fQxtqIQ9fmJ6BjAhP9FeyRNUKuAmrVD579QHV07g/kApnIfv
+	 sTEkcNRfHwcSVx80yaiVZD8cTaVUKWLPb2JSGaU3kj/Rbv+y1ATUZx9Yw6RAJnSFBw
+	 kyL1QA5tBRlR7aU5WtPpwDXljii4qnID+tAw3Khbzgt367m6BaHbugY3toY2ZJiL0c
+	 70YoZCYqQwnSGNgLpoUyAle6ATH6aMKIz7Vzy/nEO7cLXFZ/BopBxjRLZpZ3+b7yA/
+	 +hj98Fy42qlMWtmfgSw5q3tjgtb4wviLu6kX7A8fIKqefwjhsfMg//23Jm9sITi87o
+	 tBGfZcwXgBZFQ==
+Date: Mon, 23 Dec 2024 14:54:18 -0800
+Subject: [PATCH 1/8] xfs: tidy up xfs_iroot_realloc
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com,
- stable@vger.kernel.org,
- syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <173499417167.2379546.16719980703926745114.stgit@frogsfrogsfrogs>
-In-Reply-To: <173499417129.2379546.10223550496728939171.stgit@frogsfrogsfrogs>
-References: <173499417129.2379546.10223550496728939171.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173499417616.2379682.655728418659965836.stgit@frogsfrogsfrogs>
+In-Reply-To: <173499417579.2379682.13016361690239662927.stgit@frogsfrogsfrogs>
+References: <173499417579.2379682.13016361690239662927.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,71 +45,159 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Lai Yi reported a lockdep complaint about circular locking:
+Tidy up this function a bit before we start refactoring the memory
+handling and move the function to the bmbt code.
 
- Chain exists of:
-   &lp->qli_lock --> &bch->bc_lock --> &l->lock
-
-  Possible unsafe locking scenario:
-
-        CPU0                    CPU1
-        ----                    ----
-   lock(&l->lock);
-                                lock(&bch->bc_lock);
-                                lock(&l->lock);
-   lock(&lp->qli_lock);
-
-I /think/ the problem here is that xfs_dquot_attach_buf during
-quotacheck will release the buffer while it's holding the qli_lock.
-Because this is a cached buffer, xfs_buf_rele_cached takes b_lock before
-decrementing b_hold.  Other threads have taught lockdep that a locking
-dependency chain is bp->b_lock -> bch->bc_lock -> l(ru)->lock; and that
-another chain is l(ru)->lock -> lp->qli_lock.  Hence we do not want to
-take b_lock while holding qli_lock.
-
-Reported-by: syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com
-Cc: <stable@vger.kernel.org> # v6.13-rc3
-Fixes: ca378189fdfa89 ("xfs: convert quotacheck to attach dquot buffers")
-Tested-by: syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dquot.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_inode_fork.c |   83 +++++++++++++++++++---------------------
+ 1 file changed, 40 insertions(+), 43 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index f11d475898f280..576b7755b1f1fc 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1315,7 +1315,8 @@ xfs_dquot_read_buf(
- 
- /*
-  * Attach a dquot buffer to this dquot to avoid allocating a buffer during a
-- * dqflush, since dqflush can be called from reclaim context.
-+ * dqflush, since dqflush can be called from reclaim context.  Caller must hold
-+ * the dqlock.
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 1158ca48626b71..7f865479c4159f 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -382,33 +382,32 @@ xfs_iformat_attr_fork(
   */
- int
- xfs_dquot_attach_buf(
-@@ -1336,13 +1337,16 @@ xfs_dquot_attach_buf(
- 			return error;
+ void
+ xfs_iroot_realloc(
+-	xfs_inode_t		*ip,
++	struct xfs_inode	*ip,
+ 	int			rec_diff,
+ 	int			whichfork)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	int			cur_max;
+-	struct xfs_ifork	*ifp;
++	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
+ 	struct xfs_btree_block	*new_broot;
+-	int			new_max;
+-	size_t			new_size;
+ 	char			*np;
+ 	char			*op;
++	size_t			new_size;
++	short			old_size = ifp->if_broot_bytes;
++	int			cur_max;
++	int			new_max;
  
+ 	/*
+ 	 * Handle the degenerate case quietly.
+ 	 */
+-	if (rec_diff == 0) {
++	if (rec_diff == 0)
+ 		return;
+-	}
+ 
+-	ifp = xfs_ifork_ptr(ip, whichfork);
+ 	if (rec_diff > 0) {
  		/*
--		 * Attach the dquot to the buffer so that the AIL does not have
--		 * to read the dquot buffer to push this item.
-+		 * Hold the dquot buffer so that we retain our ref to it after
-+		 * detaching it from the transaction, then give that ref to the
-+		 * dquot log item so that the AIL does not have to read the
-+		 * dquot buffer to push this item.
+ 		 * If there wasn't any memory allocated before, just
+ 		 * allocate it now and get out.
  		 */
- 		xfs_buf_hold(bp);
-+		xfs_trans_brelse(tp, bp);
-+
- 		spin_lock(&qlip->qli_lock);
- 		lip->li_buf = bp;
--		xfs_trans_brelse(tp, bp);
+-		if (ifp->if_broot_bytes == 0) {
++		if (old_size == 0) {
+ 			new_size = xfs_bmap_broot_space_calc(mp, rec_diff);
+ 			ifp->if_broot = kmalloc(new_size,
+ 						GFP_KERNEL | __GFP_NOFAIL);
+@@ -422,13 +421,13 @@ xfs_iroot_realloc(
+ 		 * location.  The records don't change location because
+ 		 * they are kept butted up against the btree block header.
+ 		 */
+-		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, false);
++		cur_max = xfs_bmbt_maxrecs(mp, old_size, false);
+ 		new_max = cur_max + rec_diff;
+ 		new_size = xfs_bmap_broot_space_calc(mp, new_max);
+ 		ifp->if_broot = krealloc(ifp->if_broot, new_size,
+ 					 GFP_KERNEL | __GFP_NOFAIL);
+ 		op = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+-						     ifp->if_broot_bytes);
++						     old_size);
+ 		np = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+ 						     (int)new_size);
+ 		ifp->if_broot_bytes = (int)new_size;
+@@ -443,52 +442,50 @@ xfs_iroot_realloc(
+ 	 * if_broot buffer.  It must already exist.  If we go to zero
+ 	 * records, just get rid of the root and clear the status bit.
+ 	 */
+-	ASSERT((ifp->if_broot != NULL) && (ifp->if_broot_bytes > 0));
+-	cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, false);
++	ASSERT(ifp->if_broot != NULL && old_size > 0);
++	cur_max = xfs_bmbt_maxrecs(mp, old_size, false);
+ 	new_max = cur_max + rec_diff;
+ 	ASSERT(new_max >= 0);
+ 	if (new_max > 0)
+ 		new_size = xfs_bmap_broot_space_calc(mp, new_max);
+ 	else
+ 		new_size = 0;
+-	if (new_size > 0) {
+-		new_broot = kmalloc(new_size, GFP_KERNEL | __GFP_NOFAIL);
+-		/*
+-		 * First copy over the btree block header.
+-		 */
+-		memcpy(new_broot, ifp->if_broot,
+-			xfs_bmbt_block_len(ip->i_mount));
+-	} else {
+-		new_broot = NULL;
++	if (new_size == 0) {
++		ifp->if_broot = NULL;
++		ifp->if_broot_bytes = 0;
++		return;
  	}
- 	qlip->qli_dirty = true;
- 	spin_unlock(&qlip->qli_lock);
+ 
+ 	/*
+-	 * Only copy the keys and pointers if there are any.
++	 * Shrink the btree root by allocating a smaller object and copying the
++	 * fields from the old object to the new object.  krealloc does nothing
++	 * if we realloc downwards.
+ 	 */
+-	if (new_max > 0) {
+-		/*
+-		 * First copy the keys.
+-		 */
+-		op = (char *)xfs_bmbt_key_addr(mp, ifp->if_broot, 1);
+-		np = (char *)xfs_bmbt_key_addr(mp, new_broot, 1);
+-		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_key_t));
++	new_broot = kmalloc(new_size, GFP_KERNEL | __GFP_NOFAIL);
++	/*
++	 * First copy over the btree block header.
++	 */
++	memcpy(new_broot, ifp->if_broot, xfs_bmbt_block_len(ip->i_mount));
++
++	/*
++	 * First copy the keys.
++	 */
++	op = (char *)xfs_bmbt_key_addr(mp, ifp->if_broot, 1);
++	np = (char *)xfs_bmbt_key_addr(mp, new_broot, 1);
++	memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_key_t));
++
++	/*
++	 * Then copy the pointers.
++	 */
++	op = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1, old_size);
++	np = (char *)xfs_bmap_broot_ptr_addr(mp, new_broot, 1, (int)new_size);
++	memcpy(np, op, new_max * (uint)sizeof(xfs_fsblock_t));
+ 
+-		/*
+-		 * Then copy the pointers.
+-		 */
+-		op = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+-						     ifp->if_broot_bytes);
+-		np = (char *)xfs_bmap_broot_ptr_addr(mp, new_broot, 1,
+-						     (int)new_size);
+-		memcpy(np, op, new_max * (uint)sizeof(xfs_fsblock_t));
+-	}
+ 	kfree(ifp->if_broot);
+ 	ifp->if_broot = new_broot;
+ 	ifp->if_broot_bytes = (int)new_size;
+-	if (ifp->if_broot)
+-		ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
+-			xfs_inode_fork_size(ip, whichfork));
+-	return;
++	ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
++	       xfs_inode_fork_size(ip, whichfork));
+ }
+ 
+ 
 
