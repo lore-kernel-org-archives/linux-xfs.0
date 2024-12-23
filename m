@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA708EAF6
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:18:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452ED433D5
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:18:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992281; cv=none; b=grHcHKgoZd3fIXvkz3BRz2JoqtGWyuIQ7V+R9GeoVbaRJC4hwtrQM2qbcLZaugnuOw1bNeWlJ/g0vvH9OclOrRavpjMxccvhI3IOJYVE2yQOzdSju8MnoU44EAQ3RgmAMlLnjxUP3ORME5H/AFTQJhnbcItgrdJAeFpCUm4Apjw=
+	t=1734992297; cv=none; b=AAakeb/zaNa1x7NgLt9NmnfSGosiG4EiGr8ZdXpRUN27034CdcGAr35e7hIKpxK2NE/IFbfvV8tNGyi2cK7Msh2xK5xPo6ralbvT4O0t0wdCXFBIcGdj3oMiOhZehrMo/209DJMbabxnguaqebksim2qETJzd2X6Rf5OfmmPYLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992281; c=relaxed/simple;
-	bh=940WlDlONPGF50GHxfQtaghNTzV/9wRaZ0ua5Xp91RM=;
+	s=arc-20240116; t=1734992297; c=relaxed/simple;
+	bh=KP7Op/Q3TUsPKmAFZEnFy8TvqnYfuU6iwuo9VVj1dD0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bjkaZNxce5V4PC+meMowojQibKHpcGYvFkwI1QnLF14tiaMIOWlC/D2+/tWMR6f81BnlITsIvWL62x9yfkXW26yfACPD/UlfpoP/B2cDvLU89axmsAUDnZWdcuKKK6uzQdfbunrQTLNRDOmUINXgVbAnT21z8STXHab77n7MYqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mIofPENp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Ou9vpFPtz/KNLezFJSPA/XrlKr6k9OfgC3sEZ9LWl4m5NKt9iUQnXWBfurezkyHe5jZ5ac0xf6SLg5ylWekA90gilArdl16Bue/3tiSD/e+sC9u9HQJ/iHep2l5lzEuF7N+wbxGuN5P1A5q1MFqKf/U9OGVs9oy38raORLFZecM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SnXwUstl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mIofPENp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A335C4CED3;
-	Mon, 23 Dec 2024 22:18:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SnXwUstl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E2B4C4CED3;
+	Mon, 23 Dec 2024 22:18:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992281;
-	bh=940WlDlONPGF50GHxfQtaghNTzV/9wRaZ0ua5Xp91RM=;
+	s=k20201202; t=1734992297;
+	bh=KP7Op/Q3TUsPKmAFZEnFy8TvqnYfuU6iwuo9VVj1dD0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mIofPENpRyjzZym9UW/kjTjkADUMZQMn2rW+qHWEgrsBVlIR5GgVjnowSDxY1SpoS
-	 TKpXP+v4auXUewkq5XsYQxA1yWlLGYxY6B0FPzXE9zN4XVjGTVvOG+iqkLjgZvY+Xd
-	 rCx4aobHR9tiRC03AabXBH43r1HZ2F8G48a7h1QIQXgnxdZzwmUSeiwNxUUonJVvkl
-	 3L9c4dtoE/P0KTEqQmMEVWlxD7z/n2WBs1a9UiJdJNWgAGV5uNGtDdGen+tqTChGDd
-	 UzKkj788lP42Z+gmE2rWLzxaJfAqRbqHgBiU6eWzH+5xUE5iLD7K9HvYTbe59fEPRZ
-	 YMAYl4JhYiMEQ==
-Date: Mon, 23 Dec 2024 14:18:01 -0800
-Subject: [PATCH 24/51] xfs_db: enable the rtblock and rtextent commands for
- segmented rt block numbers
+	b=SnXwUstlA+lTGiZyriFkZ3bDpR/V5TNQQ3Paxxc1uu9UZQzzOs7aBCeeSUkg7wb0I
+	 1nu3J8omxC0mImAM21ZgoJrkGkI02rX8nNAx13kLWcHjBytMlS5NQdeeg3RXRbbezO
+	 YXTH+j0t+ECNrAyTLTf+Q+TTsSrlqr/vjSPve/j7FDi5k0NASy+CJjApcVv4chLU/z
+	 WJABKePJqlgZoVYhcXS9fAiOQfFEl1SNtd/KG68hn/n7wuHPGpiHGJY/Tt0WGfJHKR
+	 2Z7YKKFyJq987D53289epVYr1E0QS2kx4MtOj2bIvRbrsHRXQRjmU2fAtpFNxp5c4F
+	 n2+U+l6mxnM/A==
+Date: Mon, 23 Dec 2024 14:18:16 -0800
+Subject: [PATCH 25/51] xfs_db: enable rtconvert to handle segmented rtblocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498944171.2297565.5530629850666848064.stgit@frogsfrogsfrogs>
+Message-ID: <173498944186.2297565.8870209811470018728.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 References: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,90 +45,137 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that xfs_rtblock_t can be a segmented address, fix the validation in
-rtblock_f to handle the inputs correctly; and fix rtextent_f to do all
-of its conversions in linear address space.
+Now that we've turned xfs_rtblock_t into a segmented address and
+xfs_rtxnum_t into a per-rtgroup address, port the rtconvert debugger
+command to handle the unit conversions correctly.  Also add an example
+of the bitmap/summary-related conversion commands to the manpage.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/block.c |   34 +++++++++++++++++++++++++---------
- 1 file changed, 25 insertions(+), 9 deletions(-)
+ db/convert.c      |   52 ++++++++++++++++++++++++++++++++++++++--------------
+ man/man8/xfs_db.8 |   17 +++++++++++++++--
+ 2 files changed, 53 insertions(+), 16 deletions(-)
 
 
-diff --git a/db/block.c b/db/block.c
-index f197e10cd5a08d..00830a3d57e1df 100644
---- a/db/block.c
-+++ b/db/block.c
-@@ -367,10 +367,23 @@ rtblock_f(
- 		dbprintf(_("bad rtblock %s\n"), argv[1]);
- 		return 0;
- 	}
--	if (rtbno >= mp->m_sb.sb_rblocks) {
--		dbprintf(_("bad rtblock %s\n"), argv[1]);
--		return 0;
-+
-+	if (xfs_has_rtgroups(mp)) {
-+		xfs_rgnumber_t	rgno = xfs_rtb_to_rgno(mp, rtbno);
-+		xfs_rgblock_t	rgbno = xfs_rtb_to_rgbno(mp, rtbno);
-+
-+		if (rgno >= mp->m_sb.sb_rgcount ||
-+		    rgbno >= mp->m_sb.sb_rgextents * mp->m_sb.sb_rextsize) {
-+			dbprintf(_("bad rtblock %s\n"), argv[1]);
-+			return 0;
-+		}
-+	} else {
-+		if (rtbno >= mp->m_sb.sb_rblocks) {
-+			dbprintf(_("bad rtblock %s\n"), argv[1]);
-+			return 0;
-+		}
- 	}
-+
- 	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
- 	set_rt_cur(&typtab[TYP_DATA], xfs_rtb_to_daddr(mp, rtbno), blkbb,
- 			DB_RING_ADD, NULL);
-@@ -392,14 +405,17 @@ rtextent_help(void)
- /*
-  * Move the cursor to a specific location on the realtime block device given
-  * a linear address in units of realtime extents.
-+ *
-+ * NOTE: The user interface assumes a global RT extent number, while the
-+ * in-kernel rtx is per-RTG now, thus the odd conversions here.
-  */
- static int
- rtextent_f(
- 	int		argc,
- 	char		**argv)
- {
--	xfs_rtblock_t	rtbno;
--	xfs_rtxnum_t	rtx;
-+	uint64_t	rfsbno;
-+	uint64_t	rtx;
- 	char		*p;
+diff --git a/db/convert.c b/db/convert.c
+index 0c5c942150fe6f..2cdde7d05ac397 100644
+--- a/db/convert.c
++++ b/db/convert.c
+@@ -26,14 +26,14 @@
+ 	 agino_to_bytes(XFS_INO_TO_AGINO(mp, (x))))
+ #define	inoidx_to_bytes(x)	\
+ 	((uint64_t)(x) << mp->m_sb.sb_inodelog)
+-#define rtblock_to_bytes(x)	\
+-	((uint64_t)(x) << mp->m_sb.sb_blocklog)
+-#define rtx_to_rtblock(x)	\
+-	((uint64_t)(x) * mp->m_sb.sb_rextsize)
+-#define rbmblock_to_bytes(x)	\
+-	rtblock_to_bytes(rtx_to_rtblock(xfs_rbmblock_to_rtx(mp, (uint64_t)x)))
+-#define rbmword_to_bytes(x)	\
+-	rtblock_to_bytes(rtx_to_rtblock((uint64_t)(x) << XFS_NBWORDLOG))
++#define	rtblock_to_bytes(x)	\
++	(xfs_rtb_to_daddr(mp, (x)) << BBSHIFT)
++#define	rtx_to_bytes(x)		\
++	(((uint64_t)(x) * mp->m_sb.sb_rextsize) << mp->m_sb.sb_blocklog)
++#define	rbmblock_to_bytes(x)	\
++	rtx_to_bytes(xfs_rbmblock_to_rtx(mp, (x)))
++#define	rbmword_to_bytes(x)	\
++	rtx_to_bytes((uint64_t)(x) << XFS_NBWORDLOG)
  
- 	if (argc == 1) {
-@@ -408,9 +424,9 @@ rtextent_f(
- 			return 0;
- 		}
- 
--		rtbno = xfs_daddr_to_rtb(mp, iocur_top->off >> BBSHIFT);
-+		rfsbno = XFS_BB_TO_FSB(mp, iocur_top->off >> BBSHIFT);
- 		dbprintf(_("current rtextent is %lld\n"),
--				xfs_rtb_to_rtx(mp, rtbno));
-+				xfs_blen_to_rtbxlen(mp, rfsbno));
- 		return 0;
- 	}
- 	rtx = strtoull(argv[1], &p, 0);
-@@ -423,9 +439,9 @@ rtextent_f(
- 		return 0;
- 	}
- 
--	rtbno = xfs_rtbxlen_to_blen(mp, rtx);
-+	rfsbno = xfs_rtbxlen_to_blen(mp, rtx);
- 	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
--	set_rt_cur(&typtab[TYP_DATA], xfs_rtb_to_daddr(mp, rtbno),
-+	set_rt_cur(&typtab[TYP_DATA], XFS_FSB_TO_BB(mp, rfsbno),
- 			mp->m_sb.sb_rextsize * blkbb, DB_RING_ADD, NULL);
- 	return 0;
+ typedef enum {
+ 	CT_NONE = -1,
+@@ -316,7 +316,7 @@ bytevalue(ctype_t ctype, cval_t *val)
+ 	case CT_RTBLOCK:
+ 		return rtblock_to_bytes(val->rtblock);
+ 	case CT_RTX:
+-		return rtblock_to_bytes(rtx_to_rtblock(val->rtx));
++		return rtx_to_bytes(val->rtx);
+ 	case CT_RBMBLOCK:
+ 		return rbmblock_to_bytes(val->rbmblock);
+ 	case CT_RBMWORD:
+@@ -495,6 +495,32 @@ rt_daddr_to_rsuminfo(
+ 	return xfs_rtsumoffs_to_infoword(mp, rsumoff);
  }
+ 
++/* Translate an rt device disk address to be in units of realtime extents. */
++static inline uint64_t
++rt_daddr_to_rtx(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
++{
++	return XFS_BB_TO_FSBT(mp, daddr) / mp->m_sb.sb_rextsize;
++}
++
++/*
++ * Compute the offset of an rt device disk address from the start of an
++ * rtgroup and return the result in units of realtime extents.
++ */
++static inline uint64_t
++rt_daddr_to_rtgrtx(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
++{
++	uint64_t		rtx = rt_daddr_to_rtx(mp, daddr);
++
++	if (xfs_has_rtgroups(mp))
++		return rtx % mp->m_sb.sb_rgextents;
++
++	return rtx;
++}
++
+ static int
+ rtconvert_f(int argc, char **argv)
+ {
+@@ -565,17 +591,15 @@ rtconvert_f(int argc, char **argv)
+ 		v = xfs_daddr_to_rtb(mp, v >> BBSHIFT);
+ 		break;
+ 	case CT_RTX:
+-		v = xfs_daddr_to_rtb(mp, v >> BBSHIFT) / mp->m_sb.sb_rextsize;
++		v = rt_daddr_to_rtx(mp, v >> BBSHIFT);
+ 		break;
+ 	case CT_RBMBLOCK:
+ 		v = xfs_rtx_to_rbmblock(mp,
+-				xfs_rtb_to_rtx(mp,
+-					xfs_daddr_to_rtb(mp, v >> BBSHIFT)));
++				rt_daddr_to_rtgrtx(mp, v >> BBSHIFT));
+ 		break;
+ 	case CT_RBMWORD:
+ 		v = xfs_rtx_to_rbmword(mp,
+-				xfs_rtb_to_rtx(mp,
+-					xfs_daddr_to_rtb(mp, v >> BBSHIFT)));
++				rt_daddr_to_rtgrtx(mp, v >> BBSHIFT));
+ 		break;
+ 	case CT_RSUMBLOCK:
+ 		v = rt_daddr_to_rsumblock(mp, v);
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 2325ef169ddc1b..38916036d76c03 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -1239,10 +1239,23 @@ .SH COMMANDS
+ conversion type, and the type must be
+ .BR rsumlog .
+ 
+-To compute the rt bitmap block from summary file location, the type/number pairs
+-must be specified exactly in the order
++For example, these commands tell us where to look in the rt summary file for
++the number of free rtextents of length 2^21 starting in rt bitmap block 30:
++
++.B rtconvert rbmblock 30 rsumlog 21 rsumblock
++
++.B rtconvert rbmblock 30 rsumlog 21 rsuminfo
++
++To compute the rt bitmap block from summary file location, the type/number
++pairs must be specified exactly in the order
+ .BR rsumlog ", " rsuminfo ", " rsumblock .
+ 
++For example, this command tells us which block in the rt bitmap file is
++summarized by info word 809 in rt summary block 10 assuming that the
++maximum free extent length is 2^21 rtextents:
++
++.B rtconvert rsumlog 21 rsuminfo 809 rsumblock 10 rbmblock
++
+ .TP
+ .BI "sb [" agno ]
+ Set current address to SB header in allocation group
 
