@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D100E13FEE
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:10:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B99BD1AB53A;
+	Mon, 23 Dec 2024 22:10:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991828; cv=none; b=HfJpQxjjCdAc/Iupl/dAkYm/43uG4e/7lvpy2n4E/KrlTrHihvFWfNwXFJw0X9odrQLwPj9oLCC4l523mOwR+qKy638GldzhzaOR8LRR2CgswSZRB2Ho9GyIuQpOznlo0yU2QgPCCPBJqgHvDEsSzEw3tjhag3zI4AKQELiGiUg=
+	t=1734991844; cv=none; b=IJYct1sZamZk0PYU/hGcD1O6s39CZgY6UWaFv5hIwWxpry34g5jaoYlb+rA+FhBCY2P4E1sssGCiWTptVqTY5V5UniHKvTW49rqaXMMsmY0obhYAuQGy+bxv5RKjT+5UonKYyE8D5db7Yuv5bAlx7fYvOJEEVQ6kOzlbzrvmiJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991828; c=relaxed/simple;
-	bh=+O6/vjIHgrNnoxHStnuzJPvZfDaRg54qwJVe694I978=;
+	s=arc-20240116; t=1734991844; c=relaxed/simple;
+	bh=KttecI5jKLPJ/fTaZsaphDKwQ4RKhSAYqGE/zwMNCFc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Gz13oOjCveYoivUnBgYZ3JCI6WdqxIf1DVDcoHwSTs+Z7WC+07NQLf2tNSOxpqDsV4XxnTriYulxd5tf9ikCv9dVzCiwfIL2Ii+YrtdEFcDvOrKAooVWaIy1E6XERYqAvCdHnpZh28sVKxzllN1jowVJDpdREXt+ygkt2HaU9QI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CZqrMYs4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WqpSYsNtRsnGpii+YNPd59+FjxuQ+9Zi+RhL7cC8C60WDxE2LRPl0zzB0sZjzaglDu0VYOb4fMBsySklXzyHv5Co7FWEpJ3shzSacpjLI86W/bH0lxg1LUUgjGO3gXVkx/w1g/9w94dX2SK7O0ouE0+l13r5wAT8gxfRRAeRVDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YNUAn1Kh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CZqrMYs4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA5E0C4CED3;
-	Mon, 23 Dec 2024 22:10:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YNUAn1Kh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4547EC4CED3;
+	Mon, 23 Dec 2024 22:10:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991828;
-	bh=+O6/vjIHgrNnoxHStnuzJPvZfDaRg54qwJVe694I978=;
+	s=k20201202; t=1734991844;
+	bh=KttecI5jKLPJ/fTaZsaphDKwQ4RKhSAYqGE/zwMNCFc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CZqrMYs4JqKyoabuRxOuriMN5GNDFuIs+Mp50MFyLoCBGHMk+wnQ49MFiwIv+bHuH
-	 strI2tXOv/IINaDI7azx9I9lDBCr/hdccjvEhYeGXZHuVegVFKAqwcdIISCwB4Rt33
-	 cuYVPPK5tdUF5RCxnq4IfdaDROmhgdOR7bXtgAk8dGGBtA2Y1QkPAN6c/M02t8K31x
-	 ylJt/GyvZhMApqJgKeZXH+suL9YgYR378yO9f7T8fMt/nzntyCV2gQjK/MUyOU+Vze
-	 muXEvvJC1C27ooJd/8OzbRMToF37ACJ1fQxp1DfiJySEq7Sg8wV9cUX3l21Rqs9AO7
-	 yDkoudurydI9A==
-Date: Mon, 23 Dec 2024 14:10:28 -0800
-Subject: [PATCH 47/52] xfs: don't call xfs_bmap_same_rtgroup in
- xfs_bmap_add_extent_hole_delay
+	b=YNUAn1KhYNF+K9NO6UkJKul3+IAacpmVsrAlRaj21b+4Q2G+RMWcoyS8m1XUetKI/
+	 RkoPTUA/SrPzGLwnAhU5mA/3yeDi3JIWc4wPQlQlJsnefh8yDR3mBujsqRmsxvBq6I
+	 EZg+oe/fJPQDWrVCvV8yQ+LyxAEfgp5aBNWuu4SLbE7T6DO20I/PaeYH57WDqVKigm
+	 F9Whlwm3Zi7FGigDXHE3+PjzoRjFiTonla6lzaJeGacD/qb4ibeVK3WP5y3PpA+AqV
+	 CoP19Ic5Z3Ys3oyqyrh4ELfsJP9vFjgqe3rURYdhIqwBZs8fPAaaE5vJBkbjcsYatp
+	 lZEkEk/Hbig+g==
+Date: Mon, 23 Dec 2024 14:10:43 -0800
+Subject: [PATCH 48/52] xfs: return a 64-bit block count from
+ xfs_btree_count_blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, cem@kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173498943210.2295836.680604652012708875.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173498943225.2295836.6586781956533561026.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 References: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,43 +44,89 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: cc2dba08cc33daf8acd6e560957ef0e0f4d034ed
+Source kernel commit: bd27c7bcdca25ce8067ebb94ded6ac1bd7b47317
 
-xfs_bmap_add_extent_hole_delay works entirely on delalloc extents, for
-which xfs_bmap_same_rtgroup doesn't make sense.
+With the nrext64 feature enabled, it's possible for a data fork to have
+2^48 extent mappings.  Even with a 64k fsblock size, that maps out to
+a bmbt containing more than 2^32 blocks.  Therefore, this predicate must
+return a u64 count to avoid an integer wraparound that will cause scrub
+to do the wrong thing.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
+It's unlikely that any such filesystem currently exists, because the
+incore bmbt would consume more than 64GB of kernel memory on its own,
+and so far nobody except me has driven a filesystem that far, judging
+from the lack of complaints.
+
+Cc: <stable@vger.kernel.org> # v5.19
+Fixes: df9ad5cc7a5240 ("xfs: Introduce macros to represent new maximum extent counts for data/attr forks")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_bmap.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ libxfs/xfs_btree.c        |    4 ++--
+ libxfs/xfs_btree.h        |    2 +-
+ libxfs/xfs_ialloc_btree.c |    4 +++-
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 552d292bf35412..16ee7403a75f3b 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -2614,8 +2614,7 @@ xfs_bmap_add_extent_hole_delay(
- 	 */
- 	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
- 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
--	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
--	    xfs_bmap_same_rtgroup(ip, whichfork, &left, new))
-+	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
- 		state |= BMAP_LEFT_CONTIG;
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 3d870f3f4a5165..5c293ccf623336 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -5142,7 +5142,7 @@ xfs_btree_count_blocks_helper(
+ 	int			level,
+ 	void			*data)
+ {
+-	xfs_extlen_t		*blocks = data;
++	xfs_filblks_t		*blocks = data;
+ 	(*blocks)++;
  
- 	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
-@@ -2623,8 +2622,7 @@ xfs_bmap_add_extent_hole_delay(
- 	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
- 	    (!(state & BMAP_LEFT_CONTIG) ||
- 	     (left.br_blockcount + new->br_blockcount +
--	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)) &&
--	    xfs_bmap_same_rtgroup(ip, whichfork, new, &right))
-+	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
- 		state |= BMAP_RIGHT_CONTIG;
+ 	return 0;
+@@ -5152,7 +5152,7 @@ xfs_btree_count_blocks_helper(
+ int
+ xfs_btree_count_blocks(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_extlen_t		*blocks)
++	xfs_filblks_t		*blocks)
+ {
+ 	*blocks = 0;
+ 	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 3b739459ebb0f4..c5bff273cae255 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -484,7 +484,7 @@ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
+ 		xfs_btree_visit_blocks_fn fn, unsigned int flags, void *data);
  
- 	/*
+-int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
++int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_filblks_t *blocks);
+ 
+ union xfs_btree_rec *xfs_btree_rec_addr(struct xfs_btree_cur *cur, int n,
+ 		struct xfs_btree_block *block);
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 19fca9fad62b1d..4cccac145dc775 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -743,6 +743,7 @@ xfs_finobt_count_blocks(
+ {
+ 	struct xfs_buf		*agbp = NULL;
+ 	struct xfs_btree_cur	*cur;
++	xfs_filblks_t		blocks;
+ 	int			error;
+ 
+ 	error = xfs_ialloc_read_agi(pag, tp, 0, &agbp);
+@@ -750,9 +751,10 @@ xfs_finobt_count_blocks(
+ 		return error;
+ 
+ 	cur = xfs_finobt_init_cursor(pag, tp, agbp);
+-	error = xfs_btree_count_blocks(cur, tree_blocks);
++	error = xfs_btree_count_blocks(cur, &blocks);
+ 	xfs_btree_del_cursor(cur, error);
+ 	xfs_trans_brelse(tp, agbp);
++	*tree_blocks = blocks;
+ 
+ 	return error;
+ }
 
