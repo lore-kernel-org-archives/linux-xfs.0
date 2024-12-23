@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D555013FEE
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:12:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404E713FEE
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:12:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991922; cv=none; b=cQ1Ehz4UbYyVH1UYLbd+zFJjWz1YPLg5d5u7thHHii8OwAw0UmhhjBdzIW/2qsFSW/9cyA/8tbw1PywYNbmDPpdO3b8GGl0UsAflkgnw1FtO53wR8RJAlsh5fwZbu1lu9yAQz/xenTBQthiwvS58aU433bEUzgb98lR+lgR1ID0=
+	t=1734991939; cv=none; b=FPlBsoHYRE9Hbh+eVz/7iiHR63MIoRbCEqPYGJ262pb/fQoXVGmp4qYwZSX96SgFnOO3PsiCQkaGmLC6J+k2JiE5McMwiHm5MB8oLmM8HMFJAHYph8QhZgziLzsKq1CFLj+PM8oUcBnrJVihkq+S2UzkU3I+DiFBAtrBQB76Sgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991922; c=relaxed/simple;
-	bh=Av/VOQdsA7QOQsWUD36EIwCE2gr5dwxG1IaXdqKJeqE=;
+	s=arc-20240116; t=1734991939; c=relaxed/simple;
+	bh=fS4tJ6fqtIkAj0b/gMkHxHOfnKkYBcTmQPFzmU7UrTY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=egg+l71YwANrW0QJegSFFdaeM5myK7g74YEvIFDtY/5CsrJE4nDyrR6fA5sde38DIbVHM8X0wIn24Ei1xs+xzonkYDypP6UBHAjz7jyhuHQDj3lmzx3tT20qhiW/tXwOP66J70ITCyL3ay37y/ANlEZucrzy0t+rOUrYSIx5JNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kisAoHpT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=DUVAj2KjdA1kMLpFbiJi37T6JWvcXj/OAiG85qffm5R/5/oTySXMXJQtWfv27XAwCqBEQS6d0FLqEqYm4Bykv15YKo800xSRQ3JOMkBAqjl3eFPOrmnJRouh8zErBMeE6vZtTjNJ/7dZkzlrgXfStUeQ47XEy8GXiLr7rBQFncY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aES+jmra; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kisAoHpT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BFD9C4CED3;
-	Mon, 23 Dec 2024 22:12:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aES+jmra"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB483C4CED3;
+	Mon, 23 Dec 2024 22:12:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991922;
-	bh=Av/VOQdsA7QOQsWUD36EIwCE2gr5dwxG1IaXdqKJeqE=;
+	s=k20201202; t=1734991938;
+	bh=fS4tJ6fqtIkAj0b/gMkHxHOfnKkYBcTmQPFzmU7UrTY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kisAoHpTw5XBXX4aUx7V0JKEoHUAe1/p0IpEGUqi87UbzpPUcI5ANL1oPbfub1CeC
-	 TSUyIXdrUKvrcu7TRYVKl5Mr+hNFc2VoUxc16kDoltxAgDF4LeN/NPtqTrKHuw8BQR
-	 mo/ZdT0XuvKFDwKZcTOW7EV6I4TwoBJE2GWMcfa62M9wQhzxntjFH4jx+HXvOYXHIM
-	 XOizyz4U9q9nhh6dMT8JgjziRBjphZII/YMuZER+FOJN75bYxndq6jOuw0OB8rjJwz
-	 E1pYNd7Ac5Mv9RMRi6BtjstLPyBosKffX2UAUyfxGyhT8TA2Bv66bRfGTR4fudl4xz
-	 01N+69gekOHtg==
-Date: Mon, 23 Dec 2024 14:12:01 -0800
-Subject: [PATCH 01/51] libxfs: remove XFS_ILOCK_RT*
+	b=aES+jmra0ohhT0eM7oI2+X+3ZIaqGUtwcfUenXynKvTvV/OgcKa8GZv/g4bHvdkHM
+	 b+5qm52Jokk1XvvPDmFExCuSlxE/aWbmQryI4kfJ/RVQJXFPQrUA+cn5Nfe68KL1m2
+	 2SiB95rAkYl/TVsKR5sdFa+olYBb78l88vsDsBZoHhiKZz7riUHj2JoAcEpcL0jyZu
+	 cpnNE+APe6AH4oBm9pzl4F1n+XoUtxMo7jnWqZVWLD3VPV0OTttkGljEXTTWrStapo
+	 i55lHI+sc/ENMmJbJ6x4jIkKN2L64KeVfsMq2TMgeSv44dl722BLQTPkX3p+kiH/JZ
+	 ro8ww+fHez6FQ==
+Date: Mon, 23 Dec 2024 14:12:17 -0800
+Subject: [PATCH 02/51] libxfs: adjust xfs_fsb_to_db to handle segmented
+ rtblocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498943818.2297565.622589230063864691.stgit@frogsfrogsfrogs>
+Message-ID: <173498943834.2297565.8720957741513792049.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 References: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,27 +46,27 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we've centralized the realtime metadata locking routines, get
-rid of the ILOCK subclasses since we now use explicit lockdep classes.
+Update this function to handle segmented xfs_rtblock_t, just like we did
+for the kernel.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/libxfs_priv.h |    2 --
- 1 file changed, 2 deletions(-)
+ libxfs/util.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 1fc9c784b05054..dd24bdc2d169d9 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -180,8 +180,6 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- #define XFS_ERRLEVEL_LOW		1
- #define XFS_ILOCK_EXCL			0
- #define XFS_ILOCK_SHARED		0
--#define XFS_ILOCK_RTBITMAP		0
--#define XFS_ILOCK_RTSUM			0
- #define XFS_IOLOCK_EXCL			0
- #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
- #define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
+diff --git a/libxfs/util.c b/libxfs/util.c
+index ed48e2045b484b..4a9dd254083a63 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -433,7 +433,7 @@ static xfs_daddr_t
+ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+ {
+ 	if (XFS_IS_REALTIME_INODE(ip))
+-		 return XFS_FSB_TO_BB(ip->i_mount, fsb);
++		 return xfs_rtb_to_daddr(ip->i_mount, fsb);
+ 	return XFS_FSB_TO_DADDR(ip->i_mount, (fsb));
+ }
+ 
 
