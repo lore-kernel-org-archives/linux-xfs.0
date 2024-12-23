@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6421422AB
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:56:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49F7F1B395B
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:56:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734990968; cv=none; b=tvax5Nl+Drmu20+jEXKECZRO1z3QOK8v9bPSOuh81wRbkKaIZqZO4M9hQj8hqg+jAw8yLwgdNdGKWlIJ7G6pWYMBc58ass8bOYfys9HPDpM/8TeB7Y4NqUWNlwJjAWjtNq0SvsDJ7JWRTobnLBwAGA5c3Qt9joL2o3MF1zdW9yg=
+	t=1734990984; cv=none; b=YSn/YDF33G+4kZSFEakwjmQl3ZMAmfVZ5B1JZ3LLQcb94bGAp1SSlD6MlfZA7QtboZG24yx96B60BAHi7b58OQKzorIbd2AK8a2Cx60nZfEoHt2Dd8DYzwa4nTLAqJ9z/gRQQyBUxzHIm3VVwXNo3crfdiSGQvjiM6JkFO5TrDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734990968; c=relaxed/simple;
-	bh=tt5/BQJPtCEDRDcdBCtrjDfKHB55GPnka1Fc6Tgydm0=;
+	s=arc-20240116; t=1734990984; c=relaxed/simple;
+	bh=92UckHqm+r3FqG5u99FtFM3L6D0VmzLJZt/xcmLkSzA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gQLiBMv6JEgCnYL5etkjQqhbwEs+LJpjXQDOSD6ajnCSvBnLpu1gsYMQqgcb2ql58fFBWX0zPdLZwe1p0N8dh4MWlOObXid63Jd5OZDut6N9Gr9cKoMLg2VR4fQwiAYfLqXhyw6Mm4rPAxlPNoAYXgjnkNtMmTFzX3S0NZ+juQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=osLY4jg6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=haLVi+na8EvLgEFQ3pk5XBb5ZhAxJQO34fvsnj1O4jf0bm32ZULVzctQrktxlfuqA+2rdiZ+kdrKMbYyDZ/HAei7lfgdH27ZOBgc5ng5rEWmMUubh/lzuK9+7XBWjXnq3CbNize8YFeU2lAqHVCu0LSv2vQGhZm89TnmILM6jpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eSsdHjWi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="osLY4jg6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E753C4CED3;
-	Mon, 23 Dec 2024 21:56:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eSsdHjWi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22B14C4CED3;
+	Mon, 23 Dec 2024 21:56:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734990968;
-	bh=tt5/BQJPtCEDRDcdBCtrjDfKHB55GPnka1Fc6Tgydm0=;
+	s=k20201202; t=1734990984;
+	bh=92UckHqm+r3FqG5u99FtFM3L6D0VmzLJZt/xcmLkSzA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=osLY4jg62wAVyZ8x9shsXs3tpgvupE0g83iTEtrmdTvX86DKpa79oA/Mt5pPKFshD
-	 GW7hPKWomwu3TnnrsiGouSjzNkZJioTlA4wlWA/UKNasX2L0mLXbzE0IdXzOKaB8im
-	 DdOpasbB2SRWLq0QrUZACc6blOdDvvsHw5jgOz+bXjAfBeEu8UK1+BUm3kG+pEiVRi
-	 B8Wesg1rvaWvNCmlQFfFHqs0yzPfQ05IJRfmQzLKii1UTmJ10MOhUun/RvSbUsE05D
-	 eA8eKdODmXbi06ayv1ZiDxoYziCo3yhWBnr+gKGgtGYNkQItWuV/qsrxa8Fcnoyp4h
-	 NlVGClLw8vXmw==
-Date: Mon, 23 Dec 2024 13:56:08 -0800
-Subject: [PATCH 37/41] xfs_repair: drop all the metadata directory files
- during pass 4
+	b=eSsdHjWic0nLVTFHamR6a/HN/5nxNTfMnKi2GRLU5OPI6ITD/ePZatqOVLyugg40o
+	 2xU06B1ZobBLgiIUXinHtGjvQ4DzTefbDirKb+DSd1BzXi639zmuLzJ+IsnywpAgHt
+	 6UhvbkOOySSBUaQGus70g7aM9uuMhjZLRUhV0/9bFgRcnk3mV1TUJaNMCFmrm3BnVm
+	 RNsLrXNvVKtnK+qcpBB6d/Mec4Hxgvo++SoyPKQ+GpzAxK9XOZ9OpUVwrb5seWp4AR
+	 u0eXBsNapJ0E/WyP//sjnbfepdmqdABLYkbz4RelOjDQGn9menqJTm8DsGu9Nqnrml
+	 lrCMA0IAFnchw==
+Date: Mon, 23 Dec 2024 13:56:23 -0800
+Subject: [PATCH 38/41] xfs_repair: truncate and unmark orphaned metadata
+ inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498941535.2294268.3801251769353928342.stgit@frogsfrogsfrogs>
+Message-ID: <173498941551.2294268.13361852125408207098.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498940899.2294268.17862292027916012046.stgit@frogsfrogsfrogs>
 References: <173498940899.2294268.17862292027916012046.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,62 +46,89 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Drop the entire metadata directory tree during pass 4 so that we can
-reinitialize the entire tree in phase 6.  The existing metadata files
-(rtbitmap, rtsummary, quotas) will be reattached to the newly rebuilt
-directory tree.
+If an inode claims to be a metadata inode but wasn't linked in either
+directory tree, remove the attr fork and reset the data fork if the
+contents weren't regular extent mappings before moving the inode to the
+lost+found.
+
+We don't ifree the inode, because it's possible that the inode was not
+actually a metadata inode but simply got corrupted due to bitflips or
+something, and we'd rather let the sysadmin examine what's left of the
+file instead of photorec'ing it.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/dinode.c |   14 +++++++++++++-
- repair/scan.c   |    2 +-
- 2 files changed, 14 insertions(+), 2 deletions(-)
+ repair/phase6.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 8148cdbc4f10ad..2185214ac41bdf 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -656,7 +656,7 @@ _("illegal state %d in block map %" PRIu64 "\n"),
- 				break;
- 			}
- 		}
--		if (collect_rmaps) /* && !check_dups */
-+		if (collect_rmaps && !zap_metadata) /* && !check_dups */
- 			rmap_add_rec(mp, ino, whichfork, &irec);
- 		*tot += irec.br_blockcount;
- 	}
-@@ -3123,6 +3123,18 @@ _("Bad CoW extent size %u on inode %" PRIu64 ", "),
- 	 */
- 	*dirty += process_check_inode_nlink_version(dino, lino);
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 8fa2c3c8bf0419..3dd67f7e0ec051 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -853,6 +853,53 @@ mk_orphanage(
+ 	return(ino);
+ }
  
-+	/*
-+	 * The entire metadata directory tree will be rebuilt during phase 6.
-+	 * Therefore, if we're at the end of phase 4 and this is a metadata
-+	 * file, zero the ondisk inode and the incore state.
-+	 */
-+	if (check_dups && zap_metadata && !no_modify) {
-+		clear_dinode(mp, dino, lino);
-+		*dirty += 1;
-+		*used = is_free;
-+		*isa_dir = 0;
++/* Don't let metadata inode contents leak to lost+found. */
++static void
++trunc_metadata_inode(
++	struct xfs_inode	*ip)
++{
++	struct xfs_trans	*tp;
++	struct xfs_mount	*mp = ip->i_mount;
++	int			err;
++
++	err = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
++	if (err)
++		do_error(
++	_("space reservation failed (%d), filesystem may be out of space\n"),
++					err);
++
++	libxfs_trans_ijoin(tp, ip, 0);
++	ip->i_diflags2 &= ~XFS_DIFLAG2_METADATA;
++
++	switch (VFS_I(ip)->i_mode & S_IFMT) {
++	case S_IFIFO:
++	case S_IFCHR:
++	case S_IFBLK:
++	case S_IFSOCK:
++		ip->i_df.if_format = XFS_DINODE_FMT_DEV;
++		break;
++	case S_IFREG:
++		switch (ip->i_df.if_format) {
++		case XFS_DINODE_FMT_EXTENTS:
++		case XFS_DINODE_FMT_BTREE:
++			break;
++		default:
++			ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
++			ip->i_df.if_nextents = 0;
++			break;
++		}
++		break;
 +	}
 +
- 	return retval;
++	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++	err = -libxfs_trans_commit(tp);
++	if (err)
++		do_error(
++	_("truncation of metadata inode 0x%llx failed, err=%d\n"),
++				(unsigned long long)ip->i_ino, err);
++}
++
+ /*
+  * Add a parent pointer back to the orphanage for any file we're moving into
+  * the orphanage, being careful not to trip over any existing parent pointer.
+@@ -943,6 +990,9 @@ mv_orphanage(
+ 	if (err)
+ 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
  
- clear_bad_out:
-diff --git a/repair/scan.c b/repair/scan.c
-index 0fec7c222ff156..ed73de4b2477bf 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -418,7 +418,7 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
- 	numrecs = be16_to_cpu(block->bb_numrecs);
++	if (xfs_is_metadir_inode(ino_p))
++		trunc_metadata_inode(ino_p);
++
+ 	xname.type = libxfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
  
- 	/* Record BMBT blocks in the reverse-mapping data. */
--	if (check_dups && collect_rmaps) {
-+	if (check_dups && collect_rmaps && !zap_metadata) {
- 		agno = XFS_FSB_TO_AGNO(mp, bno);
- 		pthread_mutex_lock(&ag_locks[agno].lock);
- 		rmap_add_bmbt_rec(mp, ino, whichfork, bno);
+ 	if (isa_dir)  {
 
