@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2637F188596
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:16:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61D08EAF6
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:16:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992189; cv=none; b=LwModrY8Wdz8xKhXfFPEHVurwoIMqEs6DLNZGE4mnwD45qlOzu7jPV226B85bCVwqjHFmtPhj/5MUfsycjGTDpJH5fB5ht1T/0poksfV2TKzOaQiTieSo8eFKML2holbbScUZKflgiYWtY5Gu0ScqjQuwAPEJXISFX3wNOW9R5E=
+	t=1734992203; cv=none; b=eiKGiRM3ipAvEPJBPHlTMi9cfsKrw1rLECMbhosfplZTlQ+IQ5vz+SgTJDrrhoM/YXsRPP7ADXJsbmJ6caL70AM7cNA2La1eZ4Sn8KUpifnaUoAm2EeFMxCm0VJ4LIw0HSbNZemzlQ5iUXhzyEaG+4XxSNTg0jp1YL1C72sTZ4A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992189; c=relaxed/simple;
-	bh=jxQnoZdK4wjGokTLSZ64zljYKGtQmXdGS/Dluj3pl7A=;
+	s=arc-20240116; t=1734992203; c=relaxed/simple;
+	bh=8hWf2bt511VOpxcND/I7ulOgQ17rJSwgkRSg5oAMH3Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f+SZP89zELgULLZvetKnbcJ/pny8/7cokIvX4gXGlr5g9utIbOwc1XWhp5mIpKQqqmKzYxVZqXqMrEMI5XaQ0gkqHgMGfAeUh0ttkfj1/B1MqbL6T8jd2+G+C+HYK+XdavDI80QZvbYVUJSN2hO+M5bmESoDF2sYxp0i+4oMIDw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U2rn3y7n; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KvLB0O5KSYVFv+ewprEZ1spM320Ydp6Z80RsiyBUyz4NmRY/JN3DW5K97ebm10RQ8V99vNNTS3zooOynVKCOtLpYR/xr6chLIyAbjNQD+t4NsEDemHNiDUVMwwczJc+FPyUeTxQpyFk8C3ITF7sosOqpU1fP5aTkIYLs32GbjFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nD4wvKw/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U2rn3y7n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95F41C4CED3;
-	Mon, 23 Dec 2024 22:16:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nD4wvKw/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40C53C4CED3;
+	Mon, 23 Dec 2024 22:16:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992187;
-	bh=jxQnoZdK4wjGokTLSZ64zljYKGtQmXdGS/Dluj3pl7A=;
+	s=k20201202; t=1734992203;
+	bh=8hWf2bt511VOpxcND/I7ulOgQ17rJSwgkRSg5oAMH3Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=U2rn3y7nIuloZoh0ljZGBjISzblN6J8dtXRuPnbl33WcR0ipwK3yAGfbU3tEQoxPz
-	 6GmUdbMhDKbjsMdTi+sT1mn4h41H8xeKyg29Erv6TNsoF22O7XlGjdVVeQLFvMgUrp
-	 bcSjegETiiifH04/bdKsIeApkgPQc7mOVj595gB6vBbi7EnmwZKwZsLiPV/kD7Us4W
-	 0BJWK1VsnRHJHLTxOOFGsjjiesXesoZoub3VX/TWq/tpjVZdGrblEc4fYH8vlTQPv+
-	 GF/j/edaZQIa2/XJq5UFyrj4HvtElu0qa5t92U11K03e7nhNOig3hf6BBDhnMBlOPU
-	 Per3PRngN0rMA==
-Date: Mon, 23 Dec 2024 14:16:27 -0800
-Subject: [PATCH 18/51] xfs_repair: simplify rt_lock handling
+	b=nD4wvKw/W0DNy0A/oOW8tZu9nF176uULMTXvm2T4ytb0oZ0E6zHkiKsMIE45h8xDS
+	 GgDJklhD/xCI8lrvUcz8frJKMi/bnbl3+a8DwfACQYBPvl7fyRTggpi/B5jXwCuQeA
+	 UNGYWxTsrMnxo9mVyg/YfDnVYsKnUuKCu0BgLs6v6wNYEyQN4z1fwc7waZSRWiNHL+
+	 o0GysvtTSQKaxn1kbCidj3NmVYmZ/uDDTq8/DdO8w7OG2Z/ybTHtmvmurDLgPUejyr
+	 dmCOltyBnqSaquTjnxG1Pepj5pOBTWQDjhwVNt/NZ4TOwrz97XF0uYUfOOB04tAVrQ
+	 /bczmRXbm8mjA==
+Date: Mon, 23 Dec 2024 14:16:42 -0800
+Subject: [PATCH 19/51] xfs_repair: add a real per-AG bitmap abstraction
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498944080.2297565.1420503238702137131.stgit@frogsfrogsfrogs>
+Message-ID: <173498944095.2297565.9573944456076533840.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 References: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,130 +45,429 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-No need to cacheline align rt_lock if we move it next to the data
-it protects.  Also reduce the critical section to just where those
-data structures are accessed.
+Add a struct bmap that contains the btree root and the lock, and provide
+helpers for loking instead of directly poking into the data structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/dinode.c  |    6 +++---
- repair/globals.c |    1 -
- repair/globals.h |    2 +-
- repair/incore.c  |    8 ++++----
- 4 files changed, 8 insertions(+), 9 deletions(-)
+ repair/dino_chunks.c |   23 +++++-----
+ repair/dinode.c      |    6 +--
+ repair/globals.c     |    2 -
+ repair/globals.h     |    4 --
+ repair/incore.c      |  114 ++++++++++++++++++++++++++++++++------------------
+ repair/incore.h      |    3 +
+ repair/rmap.c        |    4 +-
+ repair/scan.c        |    8 ++--
+ 8 files changed, 97 insertions(+), 67 deletions(-)
 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 56c7257d3766f1..8c593da545cd7f 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -304,7 +304,7 @@ process_rt_rec(
- 	bool			zap_metadata)
- {
- 	xfs_fsblock_t		lastb;
--	int			bad;
-+	int			bad = 0;
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 0cbc498101ec72..3c650dac8a4d8e 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -132,7 +132,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 		if (check_aginode_block(mp, agno, agino) == 0)
+ 			return 0;
  
- 	/*
- 	 * check numeric validity of the extent
-@@ -338,10 +338,12 @@ _("inode %" PRIu64 " - bad rt extent overflows - start %" PRIu64 ", "
- 		return 1;
- 	}
+-		pthread_mutex_lock(&ag_locks[agno].lock);
++		lock_ag(agno);
  
-+	pthread_mutex_lock(&rt_lock);
- 	if (check_dups)
- 		bad = process_rt_rec_dups(mp, ino, irec);
- 	else
- 		bad = process_rt_rec_state(mp, ino, zap_metadata, irec);
-+	pthread_mutex_unlock(&rt_lock);
- 	if (bad)
- 		return bad;
- 
-@@ -451,10 +453,8 @@ _("zero length extent (off = %" PRIu64 ", fsbno = %" PRIu64 ") in ino %" PRIu64
+ 		state = get_bmap(agno, agbno);
+ 		switch (state) {
+@@ -167,8 +167,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 		_("inode block %d/%d multiply claimed, (state %d)\n"),
+ 				agno, agbno, state);
+ 			set_bmap(agno, agbno, XR_E_MULT);
+-			pthread_mutex_unlock(&ag_locks[agno].lock);
+-			return(0);
++			unlock_ag(agno);
++			return 0;
+ 		default:
+ 			do_warn(
+ 		_("inode block %d/%d bad state, (state %d)\n"),
+@@ -177,7 +177,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 			break;
  		}
  
- 		if (type == XR_INO_RTDATA && whichfork == XFS_DATA_FORK) {
--			pthread_mutex_lock(&rt_lock.lock);
- 			error2 = process_rt_rec(mp, &irec, ino, tot, check_dups,
- 					zap_metadata);
--			pthread_mutex_unlock(&rt_lock.lock);
- 			if (error2)
- 				return error2;
+-		pthread_mutex_unlock(&ag_locks[agno].lock);
++		unlock_ag(agno);
  
+ 		start_agino = XFS_AGB_TO_AGINO(mp, agbno);
+ 		*start_ino = XFS_AGINO_TO_INO(mp, agno, start_agino);
+@@ -424,7 +424,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	 * user data -- we're probably here as a result of a directory
+ 	 * entry or an iunlinked pointer
+ 	 */
+-	pthread_mutex_lock(&ag_locks[agno].lock);
++	lock_ag(agno);
+ 	for (cur_agbno = chunk_start_agbno;
+ 	     cur_agbno < chunk_stop_agbno;
+ 	     cur_agbno += blen)  {
+@@ -438,7 +438,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	_("inode block %d/%d multiply claimed, (state %d)\n"),
+ 				agno, cur_agbno, state);
+ 			set_bmap_ext(agno, cur_agbno, blen, XR_E_MULT);
+-			pthread_mutex_unlock(&ag_locks[agno].lock);
++			unlock_ag(agno);
+ 			return 0;
+ 		case XR_E_METADATA:
+ 		case XR_E_INO:
+@@ -450,7 +450,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 			break;
+ 		}
+ 	}
+-	pthread_mutex_unlock(&ag_locks[agno].lock);
++	unlock_ag(agno);
+ 
+ 	/*
+ 	 * ok, chunk is good.  put the record into the tree if required,
+@@ -473,8 +473,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 
+ 	set_inode_used(irec_p, agino - start_agino);
+ 
+-	pthread_mutex_lock(&ag_locks[agno].lock);
+-
++	lock_ag(agno);
+ 	for (cur_agbno = chunk_start_agbno;
+ 	     cur_agbno < chunk_stop_agbno;
+ 	     cur_agbno += blen)  {
+@@ -516,7 +515,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 			break;
+ 		}
+ 	}
+-	pthread_mutex_unlock(&ag_locks[agno].lock);
++	unlock_ag(agno);
+ 
+ 	return(ino_cnt);
+ }
+@@ -575,7 +574,7 @@ process_inode_agbno_state(
+ {
+ 	int state;
+ 
+-	pthread_mutex_lock(&ag_locks[agno].lock);
++	lock_ag(agno);
+ 	state = get_bmap(agno, agbno);
+ 	switch (state) {
+ 	case XR_E_INO:	/* already marked */
+@@ -605,7 +604,7 @@ process_inode_agbno_state(
+ 			XFS_AGB_TO_FSB(mp, agno, agbno), state);
+ 		break;
+ 	}
+-	pthread_mutex_unlock(&ag_locks[agno].lock);
++	unlock_ag(agno);
+ }
+ 
+ /*
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 8c593da545cd7f..916aadc782248f 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -540,9 +540,9 @@ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
+ 		ebno = agbno + irec.br_blockcount;
+ 		if (agno != locked_agno) {
+ 			if (locked_agno != -1)
+-				pthread_mutex_unlock(&ag_locks[locked_agno].lock);
+-			pthread_mutex_lock(&ag_locks[agno].lock);
++				unlock_ag(locked_agno);
+ 			locked_agno = agno;
++			lock_ag(locked_agno);
+ 		}
+ 
+ 		for (b = irec.br_startblock;
+@@ -663,7 +663,7 @@ _("illegal state %d in block map %" PRIu64 "\n"),
+ 	error = 0;
+ done:
+ 	if (locked_agno != -1)
+-		pthread_mutex_unlock(&ag_locks[locked_agno].lock);
++		unlock_ag(locked_agno);
+ 
+ 	if (i != *numrecs) {
+ 		ASSERT(i < *numrecs);
 diff --git a/repair/globals.c b/repair/globals.c
-index bd07a9656d193b..d97e2a8d2d6d9b 100644
+index d97e2a8d2d6d9b..30995f5298d5a1 100644
 --- a/repair/globals.c
 +++ b/repair/globals.c
-@@ -112,7 +112,6 @@ uint32_t	sb_unit;
+@@ -111,8 +111,6 @@ xfs_extlen_t	sb_inoalignmt;
+ uint32_t	sb_unit;
  uint32_t	sb_width;
  
- struct aglock	*ag_locks;
--struct aglock	rt_lock;
- 
+-struct aglock	*ag_locks;
+-
  time_t		report_interval;
  uint64_t	*prog_rpt_done;
+ 
 diff --git a/repair/globals.h b/repair/globals.h
-index ebe8d5ee132b8d..db8afabd9f0fc9 100644
+index db8afabd9f0fc9..7c2d9c56c8f8a7 100644
 --- a/repair/globals.h
 +++ b/repair/globals.h
-@@ -156,7 +156,7 @@ struct aglock {
- 	pthread_mutex_t	lock __attribute__((__aligned__(64)));
- };
- extern struct aglock	*ag_locks;
--extern struct aglock	rt_lock;
-+extern pthread_mutex_t	rt_lock;
+@@ -152,10 +152,6 @@ extern xfs_extlen_t	sb_inoalignmt;
+ extern uint32_t	sb_unit;
+ extern uint32_t	sb_width;
+ 
+-struct aglock {
+-	pthread_mutex_t	lock __attribute__((__aligned__(64)));
+-};
+-extern struct aglock	*ag_locks;
+ extern pthread_mutex_t	rt_lock;
  
  extern time_t		report_interval;
- extern uint64_t		*prog_rpt_done;
 diff --git a/repair/incore.c b/repair/incore.c
-index 06edaf0d605262..21f5b05d3e93e4 100644
+index 21f5b05d3e93e4..fb9ebee1671d4f 100644
 --- a/repair/incore.c
 +++ b/repair/incore.c
-@@ -166,6 +166,7 @@ get_bmap_ext(
+@@ -24,7 +24,25 @@
+ static int states[16] =
+ 	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
  
- static uint64_t		*rt_bmap;
- static size_t		rt_bmap_size;
-+pthread_mutex_t		rt_lock;
- 
- /* block records fit into uint64_t's units */
- #define XR_BB_UNIT	64			/* number of bits/unit */
-@@ -209,6 +210,7 @@ init_rt_bmap(
- 	if (mp->m_sb.sb_rextents == 0)
- 		return;
- 
-+	pthread_mutex_init(&rt_lock, NULL);
- 	rt_bmap_size = roundup(howmany(mp->m_sb.sb_rextents, (NBBY / XR_BB)),
- 			       sizeof(uint64_t));
- 
-@@ -226,8 +228,9 @@ free_rt_bmap(xfs_mount_t *mp)
- {
- 	free(rt_bmap);
- 	rt_bmap = NULL;
--}
-+	pthread_mutex_destroy(&rt_lock);
- 
+-static struct btree_root	**ag_bmap;
++struct bmap {
++	pthread_mutex_t		lock __attribute__((__aligned__(64)));
++	struct btree_root	*root;
++};
++static struct bmap	*ag_bmaps;
++
++void
++lock_ag(
++	xfs_agnumber_t		agno)
++{
++	pthread_mutex_lock(&ag_bmaps[agno].lock);
++}
++
++void
++unlock_ag(
++	xfs_agnumber_t		agno)
++{
++	pthread_mutex_unlock(&ag_bmaps[agno].lock);
 +}
  
- void
- reset_bmaps(xfs_mount_t *mp)
-@@ -290,7 +293,6 @@ init_bmaps(xfs_mount_t *mp)
- 		btree_init(&ag_bmap[i]);
- 		pthread_mutex_init(&ag_locks[i].lock, NULL);
- 	}
--	pthread_mutex_init(&rt_lock.lock, NULL);
+ static void
+ update_bmap(
+@@ -129,7 +147,7 @@ set_bmap_ext(
+ 	xfs_extlen_t		blen,
+ 	int			state)
+ {
+-	update_bmap(ag_bmap[agno], agbno, blen, &states[state]);
++	update_bmap(ag_bmaps[agno].root, agbno, blen, &states[state]);
+ }
  
+ int
+@@ -139,23 +157,24 @@ get_bmap_ext(
+ 	xfs_agblock_t		maxbno,
+ 	xfs_extlen_t		*blen)
+ {
++	struct btree_root	*bmap = ag_bmaps[agno].root;
+ 	int			*statep;
+ 	unsigned long		key;
+ 
+-	statep = btree_find(ag_bmap[agno], agbno, &key);
++	statep = btree_find(bmap, agbno, &key);
+ 	if (!statep)
+ 		return -1;
+ 
+ 	if (key == agbno) {
+ 		if (blen) {
+-			if (!btree_peek_next(ag_bmap[agno], &key))
++			if (!btree_peek_next(bmap, &key))
+ 				return -1;
+ 			*blen = min(maxbno, key) - agbno;
+ 		}
+ 		return *statep;
+ 	}
+ 
+-	statep = btree_peek_prev(ag_bmap[agno], NULL);
++	statep = btree_peek_prev(bmap, NULL);
+ 	if (!statep)
+ 		return -1;
+ 	if (blen)
+@@ -243,13 +262,15 @@ reset_bmaps(xfs_mount_t *mp)
+ 	ag_size = mp->m_sb.sb_agblocks;
+ 
+ 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		struct btree_root	*bmap = ag_bmaps[agno].root;
++
+ 		if (agno == mp->m_sb.sb_agcount - 1)
+ 			ag_size = (xfs_extlen_t)(mp->m_sb.sb_dblocks -
+ 				   (xfs_rfsblock_t)mp->m_sb.sb_agblocks * agno);
+ #ifdef BTREE_STATS
+-		if (btree_find(ag_bmap[agno], 0, NULL)) {
++		if (btree_find(bmap, 0, NULL)) {
+ 			printf("ag_bmap[%d] btree stats:\n", i);
+-			btree_print_stats(ag_bmap[agno], stdout);
++			btree_print_stats(bmap, stdout);
+ 		}
+ #endif
+ 		/*
+@@ -260,11 +281,10 @@ reset_bmaps(xfs_mount_t *mp)
+ 		 *	ag_hdr_block..ag_size:		XR_E_UNKNOWN
+ 		 *	ag_size...			XR_E_BAD_STATE
+ 		 */
+-		btree_clear(ag_bmap[agno]);
+-		btree_insert(ag_bmap[agno], 0, &states[XR_E_INUSE_FS]);
+-		btree_insert(ag_bmap[agno],
+-				ag_hdr_block, &states[XR_E_UNKNOWN]);
+-		btree_insert(ag_bmap[agno], ag_size, &states[XR_E_BAD_STATE]);
++		btree_clear(bmap);
++		btree_insert(bmap, 0, &states[XR_E_INUSE_FS]);
++		btree_insert(bmap, ag_hdr_block, &states[XR_E_UNKNOWN]);
++		btree_insert(bmap, ag_size, &states[XR_E_BAD_STATE]);
+ 	}
+ 
+ 	if (mp->m_sb.sb_logstart != 0) {
+@@ -276,44 +296,58 @@ reset_bmaps(xfs_mount_t *mp)
+ 	reset_rt_bmap();
+ }
+ 
++static struct bmap *
++alloc_bmaps(
++	unsigned int		nr_groups)
++{
++	struct bmap		*bmap;
++	unsigned int		i;
++
++	bmap = calloc(nr_groups, sizeof(*bmap));
++	if (!bmap)
++		return NULL;
++
++	for (i = 0; i < nr_groups; i++)  {
++		btree_init(&bmap[i].root);
++		pthread_mutex_init(&bmap[i].lock, NULL);
++	}
++
++	return bmap;
++}
++
++static void
++destroy_bmaps(
++	struct bmap		*bmap,
++	unsigned int		nr_groups)
++{
++	unsigned int		i;
++
++	for (i = 0; i < nr_groups; i++) {
++		btree_destroy(bmap[i].root);
++		pthread_mutex_destroy(&bmap[i].lock);
++	}
++
++	free(bmap);
++}
++
+ void
+-init_bmaps(xfs_mount_t *mp)
++init_bmaps(
++	struct xfs_mount	*mp)
+ {
+-	xfs_agnumber_t i;
+-
+-	ag_bmap = calloc(mp->m_sb.sb_agcount, sizeof(struct btree_root *));
+-	if (!ag_bmap)
++	ag_bmaps = alloc_bmaps(mp->m_sb.sb_agcount + mp->m_sb.sb_rgcount);
++	if (!ag_bmaps)
+ 		do_error(_("couldn't allocate block map btree roots\n"));
+ 
+-	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(struct aglock));
+-	if (!ag_locks)
+-		do_error(_("couldn't allocate block map locks\n"));
+-
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+-		btree_init(&ag_bmap[i]);
+-		pthread_mutex_init(&ag_locks[i].lock, NULL);
+-	}
+-
  	init_rt_bmap(mp);
  	reset_bmaps(mp);
-@@ -301,8 +303,6 @@ free_bmaps(xfs_mount_t *mp)
+ }
+ 
+ void
+-free_bmaps(xfs_mount_t *mp)
++free_bmaps(
++	struct xfs_mount	*mp)
  {
- 	xfs_agnumber_t i;
- 
--	pthread_mutex_destroy(&rt_lock.lock);
+-	xfs_agnumber_t i;
 -
- 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
- 		pthread_mutex_destroy(&ag_locks[i].lock);
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)
+-		pthread_mutex_destroy(&ag_locks[i].lock);
+-
+-	free(ag_locks);
+-	ag_locks = NULL;
+-
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)
+-		btree_destroy(ag_bmap[i]);
+-
+-	free(ag_bmap);
+-	ag_bmap = NULL;
++	destroy_bmaps(ag_bmaps, mp->m_sb.sb_agcount + mp->m_sb.sb_rgcount);
++	ag_bmaps = NULL;
  
+ 	free_rt_bmap(mp);
+ }
+diff --git a/repair/incore.h b/repair/incore.h
+index 07716fc4c01a05..8385043580637f 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -23,6 +23,9 @@ void		init_bmaps(xfs_mount_t *mp);
+ void		reset_bmaps(xfs_mount_t *mp);
+ void		free_bmaps(xfs_mount_t *mp);
+ 
++void		lock_ag(xfs_agnumber_t agno);
++void		unlock_ag(xfs_agnumber_t agno);
++
+ void		set_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 			     xfs_extlen_t blen, int state);
+ int		get_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 3b998a22cee10d..1c6a8691b8cb2c 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -761,12 +761,12 @@ mark_reflink_inodes(
+ 		agno = XFS_INO_TO_AGNO(mp, rciter.ino);
+ 		agino = XFS_INO_TO_AGINO(mp, rciter.ino);
+ 
+-		pthread_mutex_lock(&ag_locks[agno].lock);
++		lock_ag(agno);
+ 		irec = find_inode_rec(mp, agno, agino);
+ 		off = get_inode_offset(mp, rciter.ino, irec);
+ 		/* lock here because we might go outside this ag */
+ 		set_inode_is_rl(irec, off);
+-		pthread_mutex_unlock(&ag_locks[agno].lock);
++		unlock_ag(agno);
+ 	}
+ 	rcbag_ino_iter_stop(rcstack, &rciter);
+ }
+diff --git a/repair/scan.c b/repair/scan.c
+index ed73de4b2477bf..8b118423ce0457 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -340,7 +340,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
+ 		agno = XFS_FSB_TO_AGNO(mp, bno);
+ 		agbno = XFS_FSB_TO_AGBNO(mp, bno);
+ 
+-		pthread_mutex_lock(&ag_locks[agno].lock);
++		lock_ag(agno);
+ 		state = get_bmap(agno, agbno);
+ 		switch (state) {
+ 		case XR_E_INUSE1:
+@@ -407,7 +407,7 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
+ 				state, ino, bno);
+ 			break;
+ 		}
+-		pthread_mutex_unlock(&ag_locks[agno].lock);
++		unlock_ag(agno);
+ 	} else {
+ 		if (search_dup_extent(XFS_FSB_TO_AGNO(mp, bno),
+ 				XFS_FSB_TO_AGBNO(mp, bno),
+@@ -420,9 +420,9 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
+ 	/* Record BMBT blocks in the reverse-mapping data. */
+ 	if (check_dups && collect_rmaps && !zap_metadata) {
+ 		agno = XFS_FSB_TO_AGNO(mp, bno);
+-		pthread_mutex_lock(&ag_locks[agno].lock);
++		lock_ag(agno);
+ 		rmap_add_bmbt_rec(mp, ino, whichfork, bno);
+-		pthread_mutex_unlock(&ag_locks[agno].lock);
++		unlock_ag(agno);
+ 	}
+ 
+ 	if (level == 0) {
 
