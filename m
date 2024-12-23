@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 394171AB53A
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:13:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C266613FEE
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:13:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991986; cv=none; b=rSGn5KWR/n1mKEMaM73YQtU5xG8EjOgBr8Y6whz0KHgMlbFa5rtu0carFgRmuY3r/d/FYoI6A4OB8xWQSPMAG0ycnKgiwp28nNwVWFXDerL38AM0TaRaksevexJfvcUhoRnq5Il/LWsN0GcIJi+o9oDk16y1SwFwVH2LIv7UVYc=
+	t=1734992000; cv=none; b=XsDmmO+6dCgQ2n/HL50gkCjq6Zbg7PQFlRGXL0uMW6wSrKIvPeuiEncYiLli0POpsJohJSFfzWInsyadu3+LyvFmQFnktZEGsfNtvNlUUrpB9f31n5kfDxVW17IVaqou/lBzniGmTia1DEekiw3Vj/L8/f6YSI7VWYmroqfRbbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991986; c=relaxed/simple;
-	bh=kyjUi+7JEO1+vHOV3CwmL9k9hl+qI5tUUlFiLfGg3g4=;
+	s=arc-20240116; t=1734992000; c=relaxed/simple;
+	bh=5QYfq8ebbqKiVYePV1+9Nje+i146QwvQC96WY6BIXAY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Nd8QVQL0bwttyvm8PGcI9H3xbbo6tVtFU/mM2VLdTGSZJSpB35qkhKTxhgyJIS3xt13TEtzwwvVSHnFOoBfizAhrLZtxNVVp2h3E7oDc6gLiZYnSTcMzRL342nNQioGBunFhbhOrO5LXAOmjtRYZUZhNdBbBYPOcAsCUwOo+sBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r6J2oN9o; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=t7IOhzsfNgk/WBd/nmksMQV87BhWP7FS4jTZcVU3xL2zkmUejoVxsCvNrBu9Ugo0mb/BtD9vRIILO+zy23bOlET4QW9Xo3Nc3LOAbNQI2803MOEjM1TpMnfEFUx5h7mYrd7h9VgdWnSOZjO4sVOVuFVrB9FWYVnMQXew6kUwkn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=njm5Be1M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r6J2oN9o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B773CC4CED3;
-	Mon, 23 Dec 2024 22:13:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="njm5Be1M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A0B0C4CED3;
+	Mon, 23 Dec 2024 22:13:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991984;
-	bh=kyjUi+7JEO1+vHOV3CwmL9k9hl+qI5tUUlFiLfGg3g4=;
+	s=k20201202; t=1734992000;
+	bh=5QYfq8ebbqKiVYePV1+9Nje+i146QwvQC96WY6BIXAY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=r6J2oN9o0Heeg1Xqm1aEd9RbjbvAoDGMgElOn+lughC/Ec2ksXnklI6GlCCPxQJ/A
-	 6fUOnCS6Tw9cDgOtzhSOmOawD9FryzH+1EM/ErXdPDtqfsunzw6Kj2MWX2SLARKWlA
-	 s0/8l1+oOue3iPUcGfXaqFFjFfhjjHl+EJXlPXo+aOKC1bcivtfDa44Yi4IXJGhNEP
-	 rDqVx1IkKyvPDam8kmdYEmxMn0v3nAn4Vsc82u2JEdrtZJjqDKHWszZyRW5U9hf95b
-	 DC7Z6paYNp5DK8Hp4DcEXUlrZcTDB9uKVXjfe+MJmdpe++Mldj/czFCKR54exismXr
-	 Tgxtspomrh74g==
-Date: Mon, 23 Dec 2024 14:13:04 -0800
-Subject: [PATCH 05/51] libfrog: scrub the realtime group superblock
+	b=njm5Be1M46EQUJTPAIsSxHbuicfduP8FrgGR62mtYSH6nj4FhUhzZpiy+wspDP5Tb
+	 Ky6bf8CqVyFGTOsO7j81XZEQ6CnapjLnP0Oi18k/T2fip2fFWEWm3ICS9aIE4WEBZQ
+	 j2vypJOBe77VX7UkGnSkKgjr4X9QqZPh3RQMh3chFbPYjruD27gN/31Es2L1G5UZ2U
+	 +xuv6okzhCo4pXnDJ2QODtoGcb7EmwIDdWuS1xRovq3loY6BhNUcvbf0Z0Up/jvAS6
+	 xr00LwOcff0rHaKw9QTqsvhqbeN4S8mdPQksOeu8w6a+3djqZuYl93vZvS2cQENq0+
+	 NcUHy0+DWqFmQ==
+Date: Mon, 23 Dec 2024 14:13:19 -0800
+Subject: [PATCH 06/51] man: document the rt group geometry ioctl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498943880.2297565.13233945030751684553.stgit@frogsfrogsfrogs>
+Message-ID: <173498943895.2297565.14103923834622796991.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 References: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,102 +45,120 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable scrubbing of realtime group superblocks in xfs_scrub, and
-update the scrub ioctl documentation.
+Document the new ioctl that retrieves realtime allocation group geometry
+information.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/scrub.c                     |    5 +++++
- libfrog/scrub.h                     |    1 +
- man/man2/ioctl_xfs_scrub_metadata.2 |    9 +++++++++
- scrub/repair.c                      |    1 +
- scrub/scrub.c                       |    6 ++++++
- 5 files changed, 22 insertions(+)
+ man/man2/ioctl_xfs_rtgroup_geometry.2 |   99 +++++++++++++++++++++++++++++++++
+ 1 file changed, 99 insertions(+)
+ create mode 100644 man/man2/ioctl_xfs_rtgroup_geometry.2
 
 
-diff --git a/libfrog/scrub.c b/libfrog/scrub.c
-index b2d58c7a966b0d..e7fb8b890bc133 100644
---- a/libfrog/scrub.c
-+++ b/libfrog/scrub.c
-@@ -159,6 +159,11 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
- 		.descr	= "metadata directory paths",
- 		.group	= XFROG_SCRUB_GROUP_METAPATH,
- 	},
-+	[XFS_SCRUB_TYPE_RGSUPER] = {
-+		.name	= "rgsuper",
-+		.descr	= "realtime group superblock",
-+		.group	= XFROG_SCRUB_GROUP_RTGROUP,
-+	},
- };
- 
- const struct xfrog_scrub_descr xfrog_metapaths[XFS_SCRUB_METAPATH_NR] = {
-diff --git a/libfrog/scrub.h b/libfrog/scrub.h
-index a35d3e9c293fe5..83455c390e170a 100644
---- a/libfrog/scrub.h
-+++ b/libfrog/scrub.h
-@@ -16,6 +16,7 @@ enum xfrog_scrub_group {
- 	XFROG_SCRUB_GROUP_ISCAN,	/* metadata requiring full inode scan */
- 	XFROG_SCRUB_GROUP_SUMMARY,	/* summary metadata */
- 	XFROG_SCRUB_GROUP_METAPATH,	/* metadata directory path */
-+	XFROG_SCRUB_GROUP_RTGROUP,	/* per-rtgroup metadata */
- };
- 
- /* Catalog of scrub types and names, indexed by XFS_SCRUB_TYPE_* */
-diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
-index 1e7e327b37d226..545e3fcbac320e 100644
---- a/man/man2/ioctl_xfs_scrub_metadata.2
-+++ b/man/man2/ioctl_xfs_scrub_metadata.2
-@@ -88,6 +88,15 @@ .SH DESCRIPTION
- .BR sm_ino " and " sm_gen
- must be zero.
- 
+diff --git a/man/man2/ioctl_xfs_rtgroup_geometry.2 b/man/man2/ioctl_xfs_rtgroup_geometry.2
+new file mode 100644
+index 00000000000000..c4b0de94453558
+--- /dev/null
++++ b/man/man2/ioctl_xfs_rtgroup_geometry.2
+@@ -0,0 +1,99 @@
++.\" Copyright (c) 2022-2024 Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0-or-later
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-RTGROUP-GEOMETRY 2 2022-08-18 "XFS"
++.SH NAME
++ioctl_xfs_rtgroup_geometry \- query XFS realtime group geometry information
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
 +.PP
++.BI "int ioctl(int " fd ", XFS_IOC_RTGROUP_GEOMETRY, struct xfs_rtgroup_geometry *" arg );
++.SH DESCRIPTION
++This XFS ioctl retrieves the geometry information for a given realtime group.
++The geometry information is conveyed in a structure of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_rtgroup_geometry {
++	__u32  rg_number;
++	__u32  rg_length;
++	__u32  rg_sick;
++	__u32  rg_checked;
++	__u32  rg_flags;
++	__u32  rg_reserved[27];
++};
++.fi
++.in
 +.TP
-+.B XFS_SCRUB_TYPE_RGSUPER
-+Examine a given realtime allocation group's superblock.
-+The realtime allocation group number must be given in
-+.IR sm_agno "."
-+.IR sm_ino " and " sm_gen
-+must be zero.
-+
- .TP
- .B XFS_SCRUB_TYPE_INODE
- Examine a given inode record for obviously incorrect values and
-diff --git a/scrub/repair.c b/scrub/repair.c
-index e594e704f51503..c8cdb98de5457b 100644
---- a/scrub/repair.c
-+++ b/scrub/repair.c
-@@ -546,6 +546,7 @@ repair_item_difficulty(
- 		case XFS_SCRUB_TYPE_REFCNTBT:
- 		case XFS_SCRUB_TYPE_RTBITMAP:
- 		case XFS_SCRUB_TYPE_RTSUM:
-+		case XFS_SCRUB_TYPE_RGSUPER:
- 			ret |= REPAIR_DIFFICULTY_PRIMARY;
- 			break;
- 		}
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index bcd63eea1030a6..a2fd8d77d82be0 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -66,6 +66,9 @@ format_metapath_descr(
- 				(unsigned long long)vhead->svh_ino);
- 
- 	sc = &xfrog_metapaths[vhead->svh_ino];
-+	if (sc->group == XFROG_SCRUB_GROUP_RTGROUP)
-+		return snprintf(buf, buflen, _("rtgroup %u %s"),
-+				vhead->svh_agno, _(sc->descr));
- 	return snprintf(buf, buflen, "%s", _(sc->descr));
- }
- 
-@@ -107,6 +110,9 @@ format_scrubv_descr(
- 		return snprintf(buf, buflen, _("%s"), _(sc->descr));
- 	case XFROG_SCRUB_GROUP_METAPATH:
- 		return format_metapath_descr(buf, buflen, vhead);
-+	case XFROG_SCRUB_GROUP_RTGROUP:
-+		return snprintf(buf, buflen, _("rtgroup %u %s"),
-+				vhead->svh_agno, _(sc->descr));
- 	}
- 	return -1;
- }
++.I rg_number
++The caller must set this field to the index of the realtime group that the
++caller wishes to learn about.
++.TP
++.I rg_length
++The length of the realtime group is returned in this field, in units of
++filesystem blocks.
++.I rg_flags
++The caller can set this field to change the operational behavior of the ioctl.
++Currently no flags are defined, so this field must be zero.
++.TP
++.IR rg_reserved " and " rg_pad
++All reserved fields will be set to zero on return.
++.PP
++The fields
++.IR rg_sick " and " rg_checked
++indicate the relative health of various realtime group metadata:
++.IP \[bu] 2
++If a given sick flag is set in
++.IR rg_sick ,
++then that piece of metadata has been observed to be damaged.
++The same bit will be set in
++.IR rg_checked .
++.IP \[bu]
++If a given sick flag is set in
++.I rg_checked
++and is not set in
++.IR rg_sick ,
++then that piece of metadata has been checked and is not faulty.
++.IP \[bu]
++If a given sick flag is not set in
++.IR rg_checked ,
++then no conclusion can be made.
++.PP
++The following flags apply to these fields:
++.RS 0.4i
++.TP
++.B XFS_RTGROUP_GEOM_SICK_SUPER
++Realtime group superblock.
++.TP
++.B XFS_RTGROUP_GEOM_SICK_BITMAP
++Realtime bitmap for this group.
++.TP
++.B XFS_RTGROUP_GEOM_SICK_SUMMARY
++Realtime summary for this group.
++.RE
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EFSBADCRC
++Metadata checksum validation failed while performing the query.
++.TP
++.B EFSCORRUPTED
++Metadata corruption was encountered while performing the query.
++.TP
++.B EINVAL
++The specified realtime group number is not valid for this filesystem.
++.TP
++.B EIO
++An I/O error was encountered while performing the query.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl (2)
 
