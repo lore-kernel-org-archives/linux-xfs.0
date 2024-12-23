@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFCD838F82
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:37:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B725938F82
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:37:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734989843; cv=none; b=VwHPEGg7OQQ82eMQp5pZtm7J0bvI9Za19ByoOzgM0Swxyr9C1fqMIaSPcIRMCKpuqYVOiAg/xBg9QU9DwAUqj5bV5ebrQYSy9LRgHq0i3HzmJStdssu78JtJW0WW0nnB02i+f2H0mEybJ0RxqAiImd23VP+V4aABPQh7MWaUKxk=
+	t=1734989859; cv=none; b=u2WdF/F1iz/VNGKFn2lmFv3ZIKm+0B4OwklzEdA657lSYfbx6JxJIfMMmd9L6OCT2qsz6ZBuCDAbtY3mvGUpYq3rkzhdb1hnbIt9JNBwjhinWd2Er8D6tD3HOgJvLSAj8LZ3cE90TSws8RTmR9m4kTVnis/958CWvEYu3hBcQbY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734989843; c=relaxed/simple;
-	bh=wZ6mx4jJY7mUN1tTAgIeW+rjz9bTyNpkaT4srN8RcTg=;
+	s=arc-20240116; t=1734989859; c=relaxed/simple;
+	bh=O/Wz0WcC1u9YKeBp9fabWtKqEKGs0X5Ew6LDvOiWfUM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MlsG9J765oxu5Zg7kcnmDsWu0JrbdjcaslpzwO/NZcwNfp6LnDHz62isBH1UvMe0c/Mfqz2I/iXcPqUQuA2V0RNjU23if2PFX1iSp0uEhn1ZAgO5ev34ypm1pQVZBYu4rCwPlk7SesKsBSUdJ6AGrxXEZu//3DwKIuKoL3v0t9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZEcLxJbn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gicfV3KT3vuUEhrGOI4oVJqmPyOdDUMe5EbQw2jTqIlUKJV+kcquVDZYXT0cxIgjPqVvSDu0dKTwhzEqiZnjgfWC/xG7tTHGy3r1IXQpU0RvnO2NCvfeZsKuHz+GdDa/9vD/1NNPZEm99r4XoJhQZPBwU0fbv2VVI06kiObOM0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t/6GXJHY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZEcLxJbn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97FBAC4CED3;
-	Mon, 23 Dec 2024 21:37:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t/6GXJHY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C5B4C4CED3;
+	Mon, 23 Dec 2024 21:37:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734989843;
-	bh=wZ6mx4jJY7mUN1tTAgIeW+rjz9bTyNpkaT4srN8RcTg=;
+	s=k20201202; t=1734989859;
+	bh=O/Wz0WcC1u9YKeBp9fabWtKqEKGs0X5Ew6LDvOiWfUM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZEcLxJbnvbDUG8HsFe17PH9VIddu2IoA6k++4vP2UDx5fB1AlytOTR0GJXjTXmpKc
-	 NTJiM9fsFaKRcDX1ajTUlUdxfKsWIeGYc9OXthnB34UB5n/t1PPMGPZxmAGcJWpKhk
-	 YxrEWDOgIH9mbLXHJmGJ6yD3y6DTWmPgds+6xKRQN+PYBqtxDSD/xRYH8jV2xu8Zry
-	 exuLyJjtBvM8LRX4IbWmzbWa/OlNVyE6ZsSgplC48B8necnH8NCZixrpYlGpmIPtIS
-	 Mb5/DpHFMZ7hrrAu+2nYPuzX+0e1ar8oSxp5eou9QGJf5X0THFmbBOeJuI2c+JbrQ4
-	 CXs4urjNhWorg==
-Date: Mon, 23 Dec 2024 13:37:23 -0800
-Subject: [PATCH 01/36] xfs: remove the redundant xfs_alloc_log_agf
+	b=t/6GXJHYCe/OLskVHkhCNvrq/jta5cgsqQYuYkrw3axYMa/nBwVlYoZRR+lVRQnjg
+	 EIbFh8kP/oFMwgy4K/4w8ngAb/DAwew/hh3NMHu7I0m52JsFdDxHR0DrjpGKxDzH8c
+	 EyIXqcAs0cutLsam+eNEUiQ4BX+0bnT5w70veMiX+R04nsYjqxjIKukIJnH+5HKmxL
+	 JwwMfVdxb18JPM7YTCaP0DJC7+ojBfV1/tZBMkCVZ6NGExWjV2u8rxqDgwv/3h0f9e
+	 5PhBk8dRjtn0akhk4s7tJH+Cug5SNkAAkIr7kQTf9YtCAJ8A+tX9nDVZf1FCZhgKbX
+	 sLmx54q+dHzGg==
+Date: Mon, 23 Dec 2024 13:37:38 -0800
+Subject: [PATCH 02/36] xfs: sb_spino_align is not verified
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: leo.lilong@huawei.com, dchinner@redhat.com, cem@kernel.org, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <173498939961.2293042.2074237386773207035.stgit@frogsfrogsfrogs>
+Cc: dchinner@redhat.com, cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173498939977.2293042.9811398235690323418.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 References: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,35 +43,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Long Li <leo.lilong@huawei.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: 8b9b261594d8ef218ef4d0e732dad153f82aab49
+Source kernel commit: 59e43f5479cce106d71c0b91a297c7ad1913176c
 
-There are two invocations of xfs_alloc_log_agf in xfs_alloc_put_freelist.
-The AGF does not change between the two calls. Although this does not pose
-any practical problems, it seems like a small mistake. Therefore, fix it
-by removing the first xfs_alloc_log_agf invocation.
+It's just read in from the superblock and used without doing any
+validity checks at all on the value.
 
-Signed-off-by: Long Li <leo.lilong@huawei.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Fixes: fb4f2b4e5a82 ("xfs: add sparse inode chunk alignment superblock field")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_alloc.c |    2 --
- 1 file changed, 2 deletions(-)
+ libxfs/xfs_sb.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index f0635b17f18548..355f8ef1a872d3 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -3152,8 +3152,6 @@ xfs_alloc_put_freelist(
- 		logflags |= XFS_AGF_BTREEBLKS;
- 	}
- 
--	xfs_alloc_log_agf(tp, agbp, logflags);
--
- 	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
- 
- 	agfl_bno = xfs_buf_to_agfl_bno(agflbp);
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 0603e5087f2e46..0d98b8a344209e 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -395,6 +395,20 @@ xfs_validate_sb_common(
+ 					 sbp->sb_inoalignmt, align);
+ 				return -EINVAL;
+ 			}
++
++			if (!sbp->sb_spino_align ||
++			    sbp->sb_spino_align > sbp->sb_inoalignmt ||
++			    (sbp->sb_inoalignmt % sbp->sb_spino_align) != 0) {
++				xfs_warn(mp,
++				"Sparse inode alignment (%u) is invalid.",
++					sbp->sb_spino_align);
++				return -EINVAL;
++			}
++		} else if (sbp->sb_spino_align) {
++			xfs_warn(mp,
++				"Sparse inode alignment (%u) should be zero.",
++				sbp->sb_spino_align);
++			return -EINVAL;
+ 		}
+ 	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
+ 				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
 
