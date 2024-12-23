@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9913D1D79B3
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 23:15:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF237462
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 23:15:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734995709; cv=none; b=uGhmzA8FdtHDstKhv0kmwAlAGtpJ/pKJve9o3Wx1emcvdeLCvfuAj4O307MqFjwH1zCkBASb3m6e3wN0zmr85cHaYfLbfZqSUyg9SZQ4ZYivM5yYAkLEMF5gFkneeluUpXXZe2Pmu0yG06GZfuRLGCqYesKWeKuc9m7qxzv8XDE=
+	t=1734995725; cv=none; b=RNHhIFGpJoxk+XzCeAEPqPA10tjiNvOwrjog8ztJ8TVCj8ekuZsxXAl4AGmeGuhEDobPMeyPZ9cwW4HSLB9Dj5PSJv3kuAVUpxLXnpItD18dHM6CNQfPobnVYwpx8hk5gNumsDKbAWx6F4h7NPx3Qe/UWA/dcIKLlNnP400U2T0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734995709; c=relaxed/simple;
-	bh=YfET5qqKv8cthm8Hyiw3a6tY5ZS8Y4Bkk3pZuWIwf80=;
+	s=arc-20240116; t=1734995725; c=relaxed/simple;
+	bh=MOsOqB63rNQe8LNxWFKoqHLkh5o4DkoYQF0NnrjRxlI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KrY6Xrhcoi6igz2NxxYEF0OfUDbGEowxdtTXbTpnQ+N3Ub6OxBTuCxSKBanZFr7xmPVz2oVMuloqBVvsrlKcWT+hmP89k8FUEOzSjJ5vssTZIo5QZzD/brBD2E2HrUa2smm/IEujnEBS1r6VyfaKBJ7u2ROEPmiBFZyc1wgUT7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eD0KOD2E; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ENy8w9G3eEOTqTtJHub0hvLKMfHFsh6g0uFMPRvw+KKTljdmtIzt1ovqVYtZRNIOZYtxz9vGP/PjaK0s1ylEz77tQEMICpWlmMLljPGmiD2p7EWScFbrvyUssNbn4WEGXZLkzFyFQVqzuEkzfg5zODD/ULUXFCKPBSOUqkQs7c0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gCilpNc7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eD0KOD2E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CABBC4CED3;
-	Mon, 23 Dec 2024 23:15:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gCilpNc7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAC11C4CED3;
+	Mon, 23 Dec 2024 23:15:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734995709;
-	bh=YfET5qqKv8cthm8Hyiw3a6tY5ZS8Y4Bkk3pZuWIwf80=;
+	s=k20201202; t=1734995724;
+	bh=MOsOqB63rNQe8LNxWFKoqHLkh5o4DkoYQF0NnrjRxlI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eD0KOD2Erq94gLUGEUE9JrPeVuAAJ7aAaP4bxmQZRkIz/n9PZHAJBycA6FFyUIege
-	 ANXKPUl3QbG/nhaPLbpO66iYEYmxIXbDAO1ZaVQVkQsKBbtA5kU3535KejNrPevBMx
-	 pYnUH8OAHB4cVLL/mv28VuxYre42DQAQJqs0nkz1qilZHmXyj42Ezt8L3bpQSmLRFv
-	 mfmpp9AgaxkkPPVC+U6pEEu6BRA9jCKweP6SO/rix8IQuqDed0pIROuTN9j0X/+Fww
-	 LJsSqFTjxA8W14XE24PHzQxLfOuf1HN3PKEH4AyG5ntX4ZNUYS56ou61N6XTgVsd6s
-	 a/i61RT6Iypig==
-Date: Mon, 23 Dec 2024 15:15:08 -0800
-Subject: [PATCH 34/43] xfs: scrub the metadir path of rt refcount btree files
+	b=gCilpNc7ZDEqS9fRu4r2U9nSxjm6rUFW/LSkKnqoGec0QaaDdiSn04H4JsshHmT/9
+	 Z22c58N9FzKEB38FHaXGC1p5utUi6FHNXeZFUOhmimbmKhC4LTWcdnMSaMVLdXwWsC
+	 QeO3Nipd4otfkOlkrEosOROQ76aGKkB3WiGqdRdXw9IlORiqYLINn/LKq0S/4DHg/M
+	 1Z5pZcSQxq8T9d7yjtOAMmo0zBLraCdh8waGEs9deUHs7B1JtjF8tbjBdcDj66aSHb
+	 au2lL5eYZdNvLM6HyBduvjGe+FYAfxzYRyVf3eBBbdZA/T2rYsQYghZiLs72HznlNO
+	 zMhezcwXVxSAQ==
+Date: Mon, 23 Dec 2024 15:15:24 -0800
+Subject: [PATCH 35/43] xfs: don't flag quota rt block usage on rtreflink
+ filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173499420521.2381378.1769683116150026964.stgit@frogsfrogsfrogs>
+Message-ID: <173499420538.2381378.10745935561821867502.stgit@frogsfrogsfrogs>
 In-Reply-To: <173499419823.2381378.11636144864040727907.stgit@frogsfrogsfrogs>
 References: <173499419823.2381378.11636144864040727907.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,52 +46,28 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new XFS_SCRUB_METAPATH subtype so that we can scrub the metadata
-directory tree path to the refcount btree file for each rt group.
+Quota space usage is allowed to exceed the size of the physical storage
+when reflink is enabled.  Now that we have reflink for the realtime
+volume, apply this same logic to the rtb repair logic.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_fs.h  |    3 ++-
- fs/xfs/scrub/metapath.c |    3 +++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/quota_repair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index a4bd6a39c6ba71..2c3171262b445b 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -832,9 +832,10 @@ struct xfs_scrub_vec_head {
- #define XFS_SCRUB_METAPATH_GRPQUOTA	(6)  /* group quota */
- #define XFS_SCRUB_METAPATH_PRJQUOTA	(7)  /* project quota */
- #define XFS_SCRUB_METAPATH_RTRMAPBT	(8)  /* realtime reverse mapping */
-+#define XFS_SCRUB_METAPATH_RTREFCOUNTBT	(9)  /* realtime refcount */
- 
- /* Number of metapath sm_ino values */
--#define XFS_SCRUB_METAPATH_NR		(9)
-+#define XFS_SCRUB_METAPATH_NR		(10)
- 
- /*
-  * ioctl limits
-diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index 74d71373e7edf1..e21c16fbd15d90 100644
---- a/fs/xfs/scrub/metapath.c
-+++ b/fs/xfs/scrub/metapath.c
-@@ -22,6 +22,7 @@
- #include "xfs_attr.h"
- #include "xfs_rtgroup.h"
- #include "xfs_rtrmap_btree.h"
-+#include "xfs_rtrefcount_btree.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -249,6 +250,8 @@ xchk_setup_metapath(
- 		return xchk_setup_metapath_dqinode(sc, XFS_DQTYPE_PROJ);
- 	case XFS_SCRUB_METAPATH_RTRMAPBT:
- 		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_RMAP);
-+	case XFS_SCRUB_METAPATH_RTREFCOUNTBT:
-+		return xchk_setup_metapath_rtginode(sc, XFS_RTGI_REFCOUNT);
- 	default:
- 		return -ENOENT;
+diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+index cd51f10f29209e..8f4c8d41f3083a 100644
+--- a/fs/xfs/scrub/quota_repair.c
++++ b/fs/xfs/scrub/quota_repair.c
+@@ -233,7 +233,7 @@ xrep_quota_item(
+ 		rqi->need_quotacheck = true;
+ 		dirty = true;
  	}
+-	if (dq->q_rtb.count > mp->m_sb.sb_rblocks) {
++	if (!xfs_has_reflink(mp) && dq->q_rtb.count > mp->m_sb.sb_rblocks) {
+ 		dq->q_rtb.reserved -= dq->q_rtb.count;
+ 		dq->q_rtb.reserved += mp->m_sb.sb_rblocks;
+ 		dq->q_rtb.count = mp->m_sb.sb_rblocks;
 
