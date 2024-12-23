@@ -1,92 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E46BC188596
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:29:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E2247462
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:49:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992970; cv=none; b=r553XFpgWAy01gqKVKuyKbxmqV6XAXatP1M7UXfn3uNyEdhkRyTgBuDX6lX/zH9+F5sMG6Qrppzij8YgsqEfq0+O7NtvBuWoLiHKnApCulZWB4hzjHIBuJxBXtdwTOc0j/S0iqt9Lia56Q1PQdeDp7MFuVA7nTCuHN4BgO+u5tw=
+	t=1734994149; cv=none; b=o8ajSMIoxzzyObJgQZhhfA2N+4ZeFuvjX7rH2djCokJdMqI9v5PkRaESzc8F3GFVhAuSOfdSdBtwyC5Mf2zk4EZsGS87TlUi9kf15XmKxNAy4J/XTUo27cDGRRh1Gi+I3MJEexxd4dtx296H/xDqR4hsW/M2NidsrmlRPAMjTSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992970; c=relaxed/simple;
-	bh=9ns8deQX/6eCS6InGJY/Me5fpjqT2bzVz1nsGIlJzOo=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=Bn726w7G5cQAoqyQGjYIS2zMGGUYuUpEWs99krMvAxBjnT8cK6MCVyqQSdqu1zPxzylJAkMCC6IEfd8pbkIPlnQDTSOUwACKaWh6wbFMSOt70Pqxw4gbJZP/BrYAZddgNk3jmeV25+ahAR6EzlmoZin6J7VVon5mRF6W9qtLWeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZ7YBu1R; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734994149; c=relaxed/simple;
+	bh=3ZMmJakVPv7I9Y58ZbfOmPkVh4899kSpC2Mce87DDzw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=EwQHpm8pSvJD90E/OEPcNBH6ThVbtCk0W+qBh2W8oHRfDLrkHSGINWDIm+YytFFZtRWXKv2xknRinOk5dtzocdI2eabhVcmfwq2eCsRjmeCB5g35KMnKhTRRb3wYahEhuDtnmoeq1AjFSqTuu4LsALttXwnKoHKoIABMSySZDgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RhfFQrjM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZ7YBu1R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBC74C4CED3;
-	Mon, 23 Dec 2024 22:29:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RhfFQrjM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27C8DC4CED3;
+	Mon, 23 Dec 2024 22:49:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992969;
-	bh=9ns8deQX/6eCS6InGJY/Me5fpjqT2bzVz1nsGIlJzOo=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AZ7YBu1RsV9hvN8yccANJWMhVT8y7LmtmNL9b6J+btlz4hUMGUF52xBG22ZSUQr0+
-	 CWar6D8PXxd+VlOZp2mnUMuZTKJ1f0djJ9dtmzjTElfcunHtn2DaOHmSyN2sneBSFK
-	 QYyp9uX4nvuVZgOyGmGD7gvyM3B3yvHVhFQwIMnGJg29hJ+KwjY1uaJt6nOCmFh00I
-	 TmJQkyKQ+t0VpWCmyaMz7PE/Pb1JU/8ed1pkiO1YD31SAeF8lTMgphS2Q+Wg389Jh+
-	 /eCXNwXSxnvEQamE6+qH0beOsfaDdn2oxT4zYFbCGVIvxsV7vMMel2tCA2f7fJmpPf
-	 C8cEMMSomYLFA==
-Date: Mon, 23 Dec 2024 14:29:29 -0800
-Subject: [GIT PULL 8/8] xfsprogs: enable quota for realtime volumes
+	s=k20201202; t=1734994147;
+	bh=3ZMmJakVPv7I9Y58ZbfOmPkVh4899kSpC2Mce87DDzw=;
+	h=Date:From:To:Cc:Subject:From;
+	b=RhfFQrjM4x8EhhzmGLflr10GfS554dD95P+VQNzC8Mx9hmR3j2u8mA1iGdyU3qzC1
+	 1cta4EtRhgGnNmieJ8cLcMJA3d/7kcJxgph37s45dZJjLGluY/57Ve2R1oou8Ylt7g
+	 Ni3nNI4t134Weeh+cfuVfJnIhWxhvNtPNJHcPC5sXs1ijIepyJK4VducjLvaW5x5N4
+	 GSnNozGKzil5YoLf0mDnPkpZgzGlEUknj6oavRlNeHk3cR99nQIXYRW+iJLF6iaKxm
+	 iERZ2ktnOqmbDmou/6KRcwpbqKMmIToD2MjboLoL/+YQw912SDkzwdq5qQDqc72e0f
+	 p8Q9uNekF2xpg==
+Date: Mon, 23 Dec 2024 14:49:06 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498954736.2301496.15859444898047960022.stg-ugh@frogsfrogsfrogs>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: [PATCHBOMB for-6.14 v6.2] xfs: realtime rmap and reflink
+Message-ID: <20241223224906.GS6174@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241223212904.GQ6174@frogsfrogsfrogs>
-References: <20241223212904.GQ6174@frogsfrogsfrogs>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Hi Andrey,
+Hi Carlos,
 
-Please pull this branch with changes for xfsprogs for 6.11-rc1.
+Reviews have completed for the code that adds reverse mapping and
+reflink to the realtime device.  With these changes, the realtime volume
+finally reaches feature parity with the data device!  This is the base
+for building more functionality into xfs, such as the zoned storage
+support that Christoph posted last week.  Since we're now past 6.13-rc4,
+I seek to have these patches merged for 6.14, after spending eight years
+on development.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+Since patchbomb v6.1 I've added Christoph's review tags, and folded in
+the documentation updates requested during review.
+
+The first patchset are bug fixes for 6.13.  Could these be merged asap?
+
+The second and third patchsets are all cleanups and refactoring so that
+we can fully support having btrees rooted in an inode's data fork.  This
+is necessary because the generic btree code only supports using the
+immediate area as an internal tree node -- conversion from extents to
+bmbt format only happens when there are too many leaf records to fit in
+the immediate area.  Therefore, we need to remodel it to support storing
+records in the immediate area.  We also need to be able to reserve space
+for future btree expansion, so the second patchset enables tracking
+per-inode reservations from the free space.
+
+The fourth patchset ports reverse mapping btree to the realtime device,
+which mainly consists of constructing a btree in an inode, linking the
+inode into the metadata directory tree, and updating the log items to
+handle rt rmap update log intent items.
+
+The fifth patchset ports the refcount btree, block sharing, and copy on
+write to the realtime device.
+
+Please have a look at the git tree links for code changes:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink_2024-12-23
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-reflink_2024-12-23
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-reflink_2024-12-19
+
+(fstests is still behind because I haven't rebased atop the parallel
+fstests work)
 
 --D
-
-The following changes since commit 6ec6c38c96d4427f12e214181a1bb8547fb4c355:
-
-mkfs: add quota flags when setting up filesystem (2024-12-23 13:05:17 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/realtime-quotas_2024-12-23
-
-for you to fetch changes up to c9b7f40736bde7633a84f40cd56cf707cda9925e:
-
-mkfs: enable rt quota options (2024-12-23 13:05:17 -0800)
-
-----------------------------------------------------------------
-xfsprogs: enable quota for realtime volumes [v6.2 08/23]
-
-At some point, I realized that I've refactored enough of the quota code
-in XFS that I should evaluate whether or not quota actually works on
-realtime volumes.  It turns out that it nearly works: the only broken
-pieces are chown and delayed allocation, and reporting of project
-quotas in the statvfs output for projinherit+rtinherit directories.
-
-Fix these things and we can have realtime quotas again after 20 years.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (2):
-xfs_quota: report warning limits for realtime space quotas
-mkfs: enable rt quota options
-
-include/xqm.h   | 5 ++++-
-mkfs/xfs_mkfs.c | 6 ------
-quota/state.c   | 1 +
-3 files changed, 5 insertions(+), 7 deletions(-)
-
