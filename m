@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27E52188596;
-	Mon, 23 Dec 2024 22:28:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCC94188596
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:28:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992923; cv=none; b=AEJH9kTnMkGf2vaJKNVd0wrOtQXRO00gx8V67WGQMxTpfhgtEdaxhIEwEOul7UiCPuKYrqkF9UrhNpCP5FkyvMTF/W3vVM9IMh2kseeOcOJrL7MaQOnPQrWitHUUpTUmmuD5ppVTEYY0UiumJKWkxgZfML1IMXB2WvoDceMWFC8=
+	t=1734992938; cv=none; b=GRV4AnFWkRc3WKWkRnVXozAsWg3ekMcb4OWnomxxnC1PQuleTSdoHNKpzbr7711Htq/IVrI2Hlji78pP5AEuVFLwqM39T0quqyPzmrIbCPhwGVfFz+hUvCcZGOD4eBv4GCgiddVsxas5yQ6NrD69e55WwIwTw/LKUqaVNN061XQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992923; c=relaxed/simple;
-	bh=BKMhmsocqaQ8j1Miatar58/pD1rw0gYWFuKrEGxYFbY=;
+	s=arc-20240116; t=1734992938; c=relaxed/simple;
+	bh=lsXk95TMJNW8dcssx0aPttlh0FedxiTHKbqu2UP6LMw=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=ScRmmSgUmrgs9ka0iKx3X8H5q7Bl2I28HodFeaArydIiQZQ7aFpFfDqyJ89Bre7sfLGvEfEckagt3dKTiK7OjIWpRy9DIQQXcgQ6le3n5j8ajZ2T3t27bGeEOu72097YrdhUpfAaQOLbTlktJMDEYlxXBbRpuXRAh6MBWlYVseE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AGX9APS1; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=Im2eZ/TRd9h6+k5avQC2izI1evIsVRyksH/2SGD+nbu5hVsOi2EX51U2rWI9mBBl/e0tyFtIobLPHD6QkBqG2yMPQU5+SLPcGxlfbOqiGj4xdKHtRrX5EuCkPwrOgsKkui2MKuRsmUXV7zD+BW7h/VLL2h0T2W9gTwoc8zNtitA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTHrr660; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AGX9APS1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00130C4CED3;
-	Mon, 23 Dec 2024 22:28:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTHrr660"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935A0C4CED3;
+	Mon, 23 Dec 2024 22:28:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992923;
-	bh=BKMhmsocqaQ8j1Miatar58/pD1rw0gYWFuKrEGxYFbY=;
+	s=k20201202; t=1734992938;
+	bh=lsXk95TMJNW8dcssx0aPttlh0FedxiTHKbqu2UP6LMw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AGX9APS104VNdxcv7LumWpLmKmbQluJs/iBLWQFG+eSCRm4g4TFVj6vj4ymvNPtYJ
-	 76UaXEQWY8Ygm9yGCIhgMlzAXHiugXivMF/LURiCh9894v2rgPIaX20OgPdOk6y5og
-	 hbIrnQkb7nWTKCJwORqsbesvU7nagiHWUzFKM3V9hWcS8XITRgWTSqlqxXVjbKaFkC
-	 mqwjbpUNPErcCnqNBZqnEUWpuKLcoO4B2Q24+/fVO4dwpYr4bWluBgPyy+OBvRgC8u
-	 3xBZ+9JzZgjiesfCwdvMyiqyfIISMWgvizZzoCWkC4DAPWbXTu9suiH3uZSs6tm5IO
-	 lL3q2T5i8/7RQ==
-Date: Mon, 23 Dec 2024 14:28:42 -0800
-Subject: [GIT PULL 5/8] xfsprogs: new code for 6.13
+	b=eTHrr660rxIrdYL0D7fAokqXuQ5ZwA88PmZPjidTDkt0gykNQUmM2ki5h6GrPYJhg
+	 xe+6HgLPo1nO6a6zB0AfJMkK03PSYDMa64KJ3R7pP4QT0v+Uh8r9XLCWuGxAjpL+aP
+	 Ge3jijzZ4thALx4G77u72OoSLFoRnpWdYGt4t+o68HAjTirgURjSkeclzmzLHHuqAb
+	 3rlwQaVUU9VflfoHgBWXS0HR6n/IM2tYp4rcuxs2UE4TInkFbTAAI/Zzlipn0s4243
+	 tedo8IyF70NrOG9llSR4wfzw/QEHCuhEFsQpTaRclXeBrrDfX4mYAEXQlmTLtsY6tQ
+	 j8bTWasGU/xug==
+Date: Mon, 23 Dec 2024 14:28:58 -0800
+Subject: [GIT PULL 6/8] xfsprogs: shard the realtime section
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: brauner@kernel.org, cem@kernel.org, dan.carpenter@linaro.org, dchinner@redhat.com, hch@lst.de, jlayton@kernel.org, josef@toxicpanda.com, leo.lilong@huawei.com, linux-xfs@vger.kernel.org, rdunlap@infradead.org, stable@vger.kernel.org
-Message-ID: <173498954462.2301496.14094263333139867704.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173498954557.2301496.5119943743542526225.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,147 +53,193 @@ encounter any problems.
 
 --D
 
-The following changes since commit 513300e9565b0d446ac8e6a3a990444d766c728b:
-
-mkfs: add a utility to generate protofiles (2024-12-23 13:05:10 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/xfs-6.13-merge_2024-12-23
-
-for you to fetch changes up to 80b81c84f015ee01fed80c32184cc763ee1a655e:
+The following changes since commit 80b81c84f015ee01fed80c32184cc763ee1a655e:
 
 xfs: return from xfs_symlink_verify early on V4 filesystems (2024-12-23 13:05:13 -0800)
 
-----------------------------------------------------------------
-xfsprogs: new code for 6.13 [05/23]
+are available in the Git repository at:
 
-New code for 6.12.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/realtime-groups_2024-12-23
+
+for you to fetch changes up to be4f8d6c422045b7934b8763f013996d49627b00:
+
+mkfs: format realtime groups (2024-12-23 13:05:16 -0800)
+
+----------------------------------------------------------------
+xfsprogs: shard the realtime section [v6.2 06/23]
+
+Right now, the realtime section uses a single pair of metadata inodes to
+store the free space information.  This presents a scalability problem
+since every thread trying to allocate or free rt extents have to lock
+these files.  Solve this problem by sharding the realtime section into
+separate realtime allocation groups.
+
+While we're at it, define a superblock to be stamped into the start of
+the rt section.  This enables utilities such as blkid to identify block
+devices containing realtime sections, and avoids the situation where
+anything written into block 0 of the realtime extent can be
+misinterpreted as file data.
+
+The best advantage for rtgroups will become evident later when we get to
+adding rmap and reflink to the realtime volume, since the geometry
+constraints are the same for rt groups and AGs.  Hence we can reuse all
+that code directly.
+
+This is a very large patchset, but it catches us up with 20 years of
+technical debt that have accumulated.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Christoph Hellwig (9):
-xfs: add a xfs_bmap_free_rtblocks helper
-xfs: move RT bitmap and summary information to the rtgroup
-xfs: support creating per-RTG files in growfs
-xfs: refactor xfs_rtbitmap_blockcount
-xfs: refactor xfs_rtsummary_blockcount
-xfs: make RT extent numbers relative to the rtgroup
-xfs: add a helper to prevent bmap merges across rtgroup boundaries
-xfs: make the RT allocator rtgroup aware
-xfs: don't call xfs_bmap_same_rtgroup in xfs_bmap_add_extent_hole_delay
+Christoph Hellwig (6):
+man: document rgextents geom field
+xfs_repair: refactor phase4
+xfs_repair: simplify rt_lock handling
+xfs_repair: add a real per-AG bitmap abstraction
+xfs_db: metadump metadir rt bitmap and summary files
+xfs_scrub: cleanup fsmap keys initialization
 
-Darrick J. Wong (40):
-xfs: create incore realtime group structures
-xfs: define locking primitives for realtime groups
-xfs: add a lockdep class key for rtgroup inodes
-xfs: support caching rtgroup metadata inodes
-libfrog: add memchr_inv
-xfs: define the format of rt groups
-xfs: update realtime super every time we update the primary fs super
-xfs: export realtime group geometry via XFS_FSOP_GEOM
-xfs: check that rtblock extents do not break rtsupers or rtgroups
-xfs: add frextents to the lazysbcounters when rtgroups enabled
-xfs: record rt group metadata errors in the health system
-xfs: export the geometry of realtime groups to userspace
-xfs: add block headers to realtime bitmap and summary blocks
-xfs: encode the rtbitmap in big endian format
-xfs: encode the rtsummary in big endian format
-xfs: grow the realtime section when realtime groups are enabled
-xfs: support logging EFIs for realtime extents
-xfs: support error injection when freeing rt extents
-xfs: use realtime EFI to free extents when rtgroups are enabled
-xfs: don't merge ioends across RTGs
-xfs: scrub the realtime group superblock
-xfs: scrub metadir paths for rtgroup metadata
-xfs: mask off the rtbitmap and summary inodes when metadir in use
-xfs: create helpers to deal with rounding xfs_fileoff_t to rtx boundaries
-xfs: create helpers to deal with rounding xfs_filblks_t to rtx boundaries
-xfs: make xfs_rtblock_t a segmented address like xfs_fsblock_t
-xfs: adjust min_block usage in xfs_verify_agbno
-xfs: move the min and max group block numbers to xfs_group
-xfs: implement busy extent tracking for rtgroups
-xfs: use metadir for quota inodes
-xfs: scrub quota file metapaths
-xfs: enable metadata directory feature
-xfs: convert struct typedefs in xfs_ondisk.h
-xfs: separate space btree structures in xfs_ondisk.h
-xfs: port ondisk structure checks from xfs/122 to the kernel
-xfs: return a 64-bit block count from xfs_btree_count_blocks
-xfs: fix error bailout in xfs_rtginode_create
-xfs: update btree keys correctly when _insrec splits an inode root block
-xfs: fix sb_spino_align checks for large fsblock sizes
-xfs: return from xfs_symlink_verify early on V4 filesystems
+Darrick J. Wong (45):
+libxfs: remove XFS_ILOCK_RT*
+libxfs: adjust xfs_fsb_to_db to handle segmented rtblocks
+xfs_repair,mkfs: port to libxfs_rt{bitmap,summary}_create
+libxfs: use correct rtx count to block count conversion
+libfrog: scrub the realtime group superblock
+man: document the rt group geometry ioctl
+libxfs: port userspace deferred log item to handle rtgroups
+libxfs: implement some sanity checking for enormous rgcount
+libfrog: support scrubbing rtgroup metadata paths
+libfrog: report rt groups in output
+libfrog: add bitmap_clear
+xfs_logprint: report realtime EFIs
+xfs_repair: adjust rtbitmap/rtsummary word updates to handle big endian values
+xfs_repair: refactor offsetof+sizeof to offsetofend
+xfs_repair: improve rtbitmap discrepancy reporting
+xfs_repair: support realtime groups
+xfs_repair: find and clobber rtgroup bitmap and summary files
+xfs_repair: support realtime superblocks
+xfs_repair: repair rtbitmap and rtsummary block headers
+xfs_db: enable the rtblock and rtextent commands for segmented rt block numbers
+xfs_db: enable rtconvert to handle segmented rtblocks
+xfs_db: listify the definition of enum typnm
+xfs_db: support dumping realtime group data and superblocks
+xfs_db: support changing the label and uuid of rt superblocks
+xfs_db: enable conversion of rt space units
+xfs_db: metadump realtime devices
+xfs_db: dump rt bitmap blocks
+xfs_db: dump rt summary blocks
+xfs_db: report rt group and block number in the bmap command
+xfs_io: support scrubbing rtgroup metadata
+xfs_io: support scrubbing rtgroup metadata paths
+xfs_io: add a command to display allocation group information
+xfs_io: add a command to display realtime group information
+xfs_io: display rt group in verbose bmap output
+xfs_io: display rt group in verbose fsmap output
+xfs_mdrestore: refactor open-coded fd/is_file into a structure
+xfs_mdrestore: restore rt group superblocks to realtime device
+xfs_spaceman: report on realtime group health
+xfs_scrub: scrub realtime allocation group metadata
+xfs_scrub: check rtgroup metadata directory connections
+xfs_scrub: call GETFSMAP for each rt group in parallel
+xfs_scrub: trim realtime volumes too
+xfs_scrub: use histograms to speed up phase 8 on the realtime volume
+mkfs: add headers to realtime bitmap blocks
+mkfs: format realtime groups
 
-Dave Chinner (1):
-xfs: fix sparse inode limits on runt AG
-
-Jeff Layton (1):
-xfs: switch to multigrain timestamps
-
-Long Li (1):
-xfs: remove unknown compat feature check in superblock write validation
-
-db/block.c                  |   2 +-
-db/block.h                  |  16 -
-db/convert.c                |   1 -
-db/faddr.c                  |   1 -
-include/libxfs.h            |   2 +
-include/platform_defs.h     |  33 +++
-include/xfs_mount.h         |  30 +-
-include/xfs_trace.h         |   7 +
-include/xfs_trans.h         |   1 +
-libfrog/util.c              |  14 +
-libfrog/util.h              |   4 +
-libxfs/Makefile             |   2 +
-libxfs/init.c               |  35 ++-
-libxfs/libxfs_api_defs.h    |  16 +
-libxfs/libxfs_io.h          |   1 +
-libxfs/libxfs_priv.h        |  34 +--
-libxfs/rdwr.c               |  17 ++
-libxfs/trans.c              |  29 ++
-libxfs/util.c               |   8 +-
-libxfs/xfs_ag.c             |  22 +-
-libxfs/xfs_ag.h             |  16 +-
-libxfs/xfs_alloc.c          |  15 +-
-libxfs/xfs_alloc.h          |  12 +-
-libxfs/xfs_bmap.c           | 124 ++++++--
-libxfs/xfs_btree.c          |  33 ++-
-libxfs/xfs_btree.h          |   2 +-
-libxfs/xfs_defer.c          |   6 +
-libxfs/xfs_defer.h          |   1 +
-libxfs/xfs_dquot_buf.c      | 190 ++++++++++++
-libxfs/xfs_format.h         |  80 ++++-
-libxfs/xfs_fs.h             |  32 +-
-libxfs/xfs_group.h          |  33 +++
-libxfs/xfs_health.h         |  42 +--
-libxfs/xfs_ialloc.c         |  16 +-
-libxfs/xfs_ialloc_btree.c   |   6 +-
-libxfs/xfs_log_format.h     |   6 +-
-libxfs/xfs_ondisk.h         | 186 +++++++++---
-libxfs/xfs_quota_defs.h     |  43 +++
-libxfs/xfs_rtbitmap.c       | 405 +++++++++++++++++---------
-libxfs/xfs_rtbitmap.h       | 247 ++++++++++------
-libxfs/xfs_rtgroup.c        | 694 ++++++++++++++++++++++++++++++++++++++++++++
-libxfs/xfs_rtgroup.h        | 284 ++++++++++++++++++
-libxfs/xfs_sb.c             | 246 ++++++++++++++--
-libxfs/xfs_sb.h             |   6 +-
-libxfs/xfs_shared.h         |   4 +
-libxfs/xfs_symlink_remote.c |   4 +-
-libxfs/xfs_trans_inode.c    |   6 +-
-libxfs/xfs_trans_resv.c     |   2 +-
-libxfs/xfs_types.c          |  35 ++-
-libxfs/xfs_types.h          |   8 +-
-mkfs/proto.c                |  33 ++-
-mkfs/xfs_mkfs.c             |   8 +
-repair/dinode.c             |   4 +-
-repair/phase6.c             | 203 +++++++------
-repair/rt.c                 |  34 +--
-repair/rt.h                 |   4 +-
-56 files changed, 2728 insertions(+), 617 deletions(-)
-create mode 100644 libxfs/xfs_rtgroup.c
-create mode 100644 libxfs/xfs_rtgroup.h
+db/Makefile                           |   1 +
+db/block.c                            |  34 ++-
+db/bmap.c                             |  56 +++-
+db/command.c                          |   2 +
+db/convert.c                          | 118 +++++++-
+db/field.c                            |  20 ++
+db/field.h                            |  10 +
+db/inode.c                            |  36 ++-
+db/metadump.c                         |  59 +++-
+db/rtgroup.c                          | 154 +++++++++++
+db/rtgroup.h                          |  21 ++
+db/sb.c                               | 117 +++++++-
+db/type.c                             |  16 ++
+db/type.h                             |  32 ++-
+db/xfs_metadump.sh                    |   5 +-
+include/xfs.h                         |  15 +
+include/xfs_metadump.h                |   8 +
+io/Makefile                           |   1 +
+io/aginfo.c                           | 215 +++++++++++++++
+io/bmap.c                             |  27 +-
+io/fsmap.c                            |  22 +-
+io/init.c                             |   1 +
+io/io.h                               |   1 +
+io/scrub.c                            |  81 +++++-
+libfrog/bitmap.c                      |  25 +-
+libfrog/bitmap.h                      |   1 +
+libfrog/div64.h                       |   6 +
+libfrog/fsgeom.c                      |  24 +-
+libfrog/fsgeom.h                      |  16 ++
+libfrog/scrub.c                       |  24 +-
+libfrog/scrub.h                       |   1 +
+libfrog/util.c                        |  12 +
+libfrog/util.h                        |   1 +
+libxfs/defer_item.c                   |  73 +++--
+libxfs/init.c                         |  46 ++++
+libxfs/libxfs_api_defs.h              |   5 +
+libxfs/libxfs_priv.h                  |   8 -
+libxfs/topology.c                     |  42 +++
+libxfs/topology.h                     |   3 +
+libxfs/trans.c                        |   2 +-
+libxfs/util.c                         |   2 +-
+logprint/log_misc.c                   |   2 +
+logprint/log_print_all.c              |   8 +
+logprint/log_redo.c                   |  57 +++-
+man/man2/ioctl_xfs_fsgeometry.2       |   6 +-
+man/man2/ioctl_xfs_rtgroup_geometry.2 |  99 +++++++
+man/man2/ioctl_xfs_scrub_metadata.2   |   9 +
+man/man8/mkfs.xfs.8.in                |  31 +++
+man/man8/xfs_db.8                     |  34 ++-
+man/man8/xfs_io.8                     |  29 +-
+man/man8/xfs_mdrestore.8              |  10 +
+man/man8/xfs_metadump.8               |  11 +
+man/man8/xfs_spaceman.8               |   5 +-
+mdrestore/xfs_mdrestore.c             | 163 ++++++-----
+mkfs/proto.c                          | 139 +++++++---
+mkfs/xfs_mkfs.c                       | 281 ++++++++++++++++++-
+repair/agheader.c                     |  27 +-
+repair/agheader.h                     |  10 +
+repair/dino_chunks.c                  |  58 ++--
+repair/dinode.c                       | 162 +++++++----
+repair/dir2.c                         |  13 +-
+repair/globals.c                      |   3 -
+repair/globals.h                      |   6 +-
+repair/incore.c                       | 235 +++++++++++-----
+repair/incore.h                       |  36 ++-
+repair/incore_ext.c                   |   3 +-
+repair/phase2.c                       |  51 ++--
+repair/phase3.c                       |   4 +
+repair/phase4.c                       | 221 ++++++++-------
+repair/phase5.c                       |   2 +-
+repair/phase6.c                       | 180 +++++++++++-
+repair/rmap.c                         |   4 +-
+repair/rt.c                           | 506 +++++++++++++++++++++++++++++-----
+repair/rt.h                           |  23 ++
+repair/sb.c                           |  41 +++
+repair/scan.c                         |  36 +--
+repair/xfs_repair.c                   |  19 +-
+scrub/phase2.c                        | 124 ++++++---
+scrub/phase5.c                        |  24 +-
+scrub/phase6.c                        |  17 +-
+scrub/phase7.c                        |   7 +
+scrub/phase8.c                        |  36 ++-
+scrub/repair.c                        |   1 +
+scrub/scrub.c                         |   7 +
+scrub/scrub.h                         |  13 +-
+scrub/spacemap.c                      | 102 +++++--
+scrub/xfs_scrub.c                     |   2 +
+scrub/xfs_scrub.h                     |   1 +
+spaceman/health.c                     |  63 ++++-
+89 files changed, 3545 insertions(+), 719 deletions(-)
+create mode 100644 db/rtgroup.c
+create mode 100644 db/rtgroup.h
+create mode 100644 io/aginfo.c
+create mode 100644 man/man2/ioctl_xfs_rtgroup_geometry.2
 
