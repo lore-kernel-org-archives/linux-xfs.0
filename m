@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC431422AB
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:51:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E9821422AB
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:51:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734990687; cv=none; b=RwjM9SkgYMvnJywxMSf22AlAmvx73xveBze60NfHbgU7q2HSCieUHQiwdOZiITqYyAZOWZEenw01g9fOG7ASImhoaUBzru3zel0C0r0SGuIFhuv9s2EUnDU9DBhqN19sV4+lWn0HVIiHElL0fBZfW+I0eKS8a6ZT10obwwJnIUo=
+	t=1734990703; cv=none; b=CKFOoW+wQzh4+5BppaEhTsfzipCoYjnqJQ0CKsxwFK+0XPFlS2AZnddL+dl31diJsskg2VDgd+EoEtTQyquefgbS2LXaYg8uWCgpCJi/V5N5OaMnpyq1VuT1gCEBe4ryfvZa1CmfKdaX1DQ0Gaj5K9LMe17WQ3Ciuwdts8Pccus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734990687; c=relaxed/simple;
-	bh=dRrTkaUo7KfbtybU+pDZVmYawbYfTTNszCIPdIkxY8U=;
+	s=arc-20240116; t=1734990703; c=relaxed/simple;
+	bh=tZpDW9vlIKk3sOz7rWcXXwY5l9LLFEZkYLI03EehAac=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=H+ZZvwIzY6/u1G/NXJIDUtz49iDlBXZwsAecu2E0oKvL2pJZ5uRC2qu7h0IItDRDO0bmLbtO0KnzrWoLMhOwvEOK+4YC4H6uKnKv7Xw2hT1WX14/GOeFdVzxb/IO/+rS3oKKvBoZotucD/W4AXCVfvtZ2M+A69eZRbsjJSX+ABQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fEGYJ3O3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=X1jiWMTH03xwuWtnUwhbRu34VjVgt1Mut1DhOByVZ+3HjBmfs1hI2BsU1ZTHpRO1pbvJ4Qir69VZ1YatqT/SjCOGKt/svHVoquYmqJE9V+Oj0SB7NcSWK6e7/i4xxO/bCA1FqYRO/5pxcmRnLdpvIrTA0BP/JVagnK+DvrEMG58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GHwX4itG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fEGYJ3O3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CA86C4CED3;
-	Mon, 23 Dec 2024 21:51:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GHwX4itG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 035A3C4CED3;
+	Mon, 23 Dec 2024 21:51:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734990687;
-	bh=dRrTkaUo7KfbtybU+pDZVmYawbYfTTNszCIPdIkxY8U=;
+	s=k20201202; t=1734990703;
+	bh=tZpDW9vlIKk3sOz7rWcXXwY5l9LLFEZkYLI03EehAac=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fEGYJ3O34kZjfH7cDGT4X1Lu3tvyQhX7eWB0zPFgvbYIxeAnnosyd22JsSYhQlnVy
-	 xb0QKCGb474Orermq5JCFdf6ff1JaP1A8oqxbZhAXjvxfozMNnMTTe1Xop0CpJPc/s
-	 Rfhcn/ZCZjSGEfMnWorS2kX7kfHAnH6KCBIkmeI1kzSG6TlZx8Vcz56vzM9U4a/8t+
-	 USup377WDVkdS6jYWkRInptavowxXkujaQlbQGKdOGQ2Hehdqet0Qc/TaeoprXZhZH
-	 YuCznggGqslRjH9QsKSB9tfj34VWnzQUEIwpHR2Zmhv/nuD7b/FyR9ib0wvoQYKLoK
-	 WQbc9Q8pIjn/g==
-Date: Mon, 23 Dec 2024 13:51:26 -0800
-Subject: [PATCH 19/41] xfs_scrub: tread zero-length read verify as an IO error
+	b=GHwX4itGfBD2ZlqkHhGVVDJW3OjZxkwmIjAU6ghzKz//oxjycJMPB1LJV7kaTY6ja
+	 vbOjJeQxW55bQzZPTR++nT1GrA4Lj7KpPoR10VfyPiZTAlkzUcSkXLu2vNyZDhYUfX
+	 UnU8lDNsIdYFEDwbrnCSHn4I7HzsCV25sgVVtvtfLvXMEKkZXGRa8oy81ipiQc4dYT
+	 OpwCkfMI3iWJ1tCbHrVHrz9XW1mapv6LqF4lkgCOsxE4GZoyJMqSuVuTJibqB/KQCf
+	 /4XVYhtkqeEsKSx0KyH/Nd3yr7EFFhQOlfHvqQqqNX88MbwmO0yGMGLmjaodnS97WB
+	 0FSpCZ6m44OHw==
+Date: Mon, 23 Dec 2024 13:51:42 -0800
+Subject: [PATCH 20/41] xfs_scrub: scan metadata directories during phase 3
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498941259.2294268.12717372688725284669.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173498941274.2294268.7199394885221456745.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498940899.2294268.17862292027916012046.stgit@frogsfrogsfrogs>
 References: <173498940899.2294268.17862292027916012046.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,86 +45,163 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While doing some chaos testing on the xfs_scrub read verify code, I
-noticed that if the device under a live filesystem gets resized while
-scrub is running a media scan, reads will start returning 0.  This
-causes read_verify() to run around in an infinite loop instead of
-erroring out like it should.
+Scan metadata directories for correctness during phase 3.
 
-Cc: <linux-xfs@vger.kernel.org> # v5.3.0
-Fixes: 27464242956fac ("xfs_scrub: fix read verify disk error handling strategy")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/phase6.c      |   22 ++++++++++++++++++++++
- scrub/read_verify.c |    8 ++++++++
- 2 files changed, 30 insertions(+)
+ scrub/inodes.c |   11 ++++++++++-
+ scrub/inodes.h |    5 ++++-
+ scrub/phase3.c |    7 ++++++-
+ scrub/phase5.c |    5 ++++-
+ scrub/phase6.c |    2 +-
+ 5 files changed, 25 insertions(+), 5 deletions(-)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index a61853019e290c..54d21820a722a6 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -44,6 +44,9 @@ struct media_verify_state {
- 	struct read_verify_pool	*rvp_realtime;
- 	struct bitmap		*d_bad;		/* bytes */
- 	struct bitmap		*r_bad;		/* bytes */
-+	bool			d_trunc:1;
-+	bool			r_trunc:1;
-+	bool			l_trunc:1;
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 16c79cf495c793..3fe759e8f4867d 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -56,6 +56,7 @@ bulkstat_for_inumbers(
+ {
+ 	struct xfs_bulkstat	*bstat = breq->bulkstat;
+ 	struct xfs_bulkstat	*bs;
++	unsigned int		flags = 0;
+ 	int			i;
+ 	int			error;
+ 
+@@ -70,6 +71,9 @@ bulkstat_for_inumbers(
+ 			 strerror_r(error, errbuf, DESCR_BUFSZ));
+ 	}
+ 
++	if (breq->hdr.flags & XFS_BULK_IREQ_METADIR)
++		flags |= XFS_BULK_IREQ_METADIR;
++
+ 	/*
+ 	 * Check each of the stats we got back to make sure we got the inodes
+ 	 * we asked for.
+@@ -84,7 +88,7 @@ bulkstat_for_inumbers(
+ 
+ 		/* Load the one inode. */
+ 		error = -xfrog_bulkstat_single(&ctx->mnt,
+-				inumbers->xi_startino + i, 0, bs);
++				inumbers->xi_startino + i, flags, bs);
+ 		if (error || bs->bs_ino != inumbers->xi_startino + i) {
+ 			memset(bs, 0, sizeof(struct xfs_bulkstat));
+ 			bs->bs_ino = inumbers->xi_startino + i;
+@@ -100,6 +104,7 @@ struct scan_inodes {
+ 	scrub_inode_iter_fn	fn;
+ 	void			*arg;
+ 	unsigned int		nr_threads;
++	unsigned int		flags;
+ 	bool			aborted;
  };
  
- /* Find the fd for a given device identifier. */
-@@ -544,6 +547,13 @@ report_all_media_errors(
+@@ -158,6 +163,8 @@ alloc_ichunk(
+ 
+ 	breq = ichunk_to_bulkstat(ichunk);
+ 	breq->hdr.icount = LIBFROG_BULKSTAT_CHUNKSIZE;
++	if (si->flags & SCRUB_SCAN_METADIR)
++		breq->hdr.flags |= XFS_BULK_IREQ_METADIR;
+ 
+ 	*ichunkp = ichunk;
+ 	return 0;
+@@ -380,10 +387,12 @@ int
+ scrub_scan_all_inodes(
+ 	struct scrub_ctx	*ctx,
+ 	scrub_inode_iter_fn	fn,
++	unsigned int		flags,
+ 	void			*arg)
  {
- 	int				ret;
+ 	struct scan_inodes	si = {
+ 		.fn		= fn,
++		.flags		= flags,
+ 		.arg		= arg,
+ 		.nr_threads	= scrub_nproc_workqueue(ctx),
+ 	};
+diff --git a/scrub/inodes.h b/scrub/inodes.h
+index 9447fb56aa62e7..7a0b275e575ead 100644
+--- a/scrub/inodes.h
++++ b/scrub/inodes.h
+@@ -17,8 +17,11 @@
+ typedef int (*scrub_inode_iter_fn)(struct scrub_ctx *ctx,
+ 		struct xfs_handle *handle, struct xfs_bulkstat *bs, void *arg);
  
-+	if (vs->d_trunc)
-+		str_corrupt(ctx, ctx->mntpoint, _("data device truncated"));
-+	if (vs->l_trunc)
-+		str_corrupt(ctx, ctx->mntpoint, _("log device truncated"));
-+	if (vs->r_trunc)
-+		str_corrupt(ctx, ctx->mntpoint, _("rt device truncated"));
++/* Return metadata directories too. */
++#define SCRUB_SCAN_METADIR	(1 << 0)
 +
- 	ret = report_disk_ioerrs(ctx, ctx->datadev, vs);
- 	if (ret) {
- 		str_liberror(ctx, ret, _("walking datadev io errors"));
-@@ -663,6 +673,18 @@ remember_ioerr(
- 	struct bitmap			*tree;
- 	int				ret;
+ int scrub_scan_all_inodes(struct scrub_ctx *ctx, scrub_inode_iter_fn fn,
+-		void *arg);
++		unsigned int flags, void *arg);
  
-+	if (!length) {
-+		dev_t			dev = disk_to_dev(ctx, disk);
+ int scrub_open_handle(struct xfs_handle *handle);
+ 
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 046a42c1da8beb..c90da78439425a 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -312,6 +312,7 @@ phase3_func(
+ 	struct scrub_inode_ctx	ictx = { .ctx = ctx };
+ 	uint64_t		val;
+ 	xfs_agnumber_t		agno;
++	unsigned int		scan_flags = 0;
+ 	int			err;
+ 
+ 	err = -ptvar_alloc(scrub_nproc(ctx), sizeof(struct action_list),
+@@ -328,6 +329,10 @@ phase3_func(
+ 		goto out_ptvar;
+ 	}
+ 
++	/* Scan the metadata directory tree too. */
++	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_METADIR)
++		scan_flags |= SCRUB_SCAN_METADIR;
 +
-+		if (dev == ctx->fsinfo.fs_datadev)
-+			vs->d_trunc = true;
-+		else if (dev == ctx->fsinfo.fs_rtdev)
-+			vs->r_trunc = true;
-+		else if (dev == ctx->fsinfo.fs_logdev)
-+			vs->l_trunc = true;
-+		return;
-+	}
+ 	/*
+ 	 * If we already have ag/fs metadata to repair from previous phases,
+ 	 * we would rather not try to repair file metadata until we've tried
+@@ -338,7 +343,7 @@ phase3_func(
+ 			ictx.always_defer_repairs = true;
+ 	}
+ 
+-	err = scrub_scan_all_inodes(ctx, scrub_inode, &ictx);
++	err = scrub_scan_all_inodes(ctx, scrub_inode, scan_flags, &ictx);
+ 	if (!err && ictx.aborted)
+ 		err = ECANCELED;
+ 	if (err)
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index e1d94f9a3568b1..69b1cae5c5e2c0 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -462,6 +462,9 @@ retry_deferred_inode(
+ 	unsigned int		flags = 0;
+ 	int			error;
+ 
++	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_METADIR)
++		flags |= XFS_BULK_IREQ_METADIR;
 +
- 	tree = bitmap_for_disk(ctx, disk, vs);
- 	if (!tree) {
- 		str_liberror(ctx, ENOENT, _("finding bad block bitmap"));
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 52348274be2c25..1219efe2590182 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -245,6 +245,14 @@ read_verify(
- 					read_error);
- 			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, sz,
- 					read_error, rv->io_end_arg);
-+		} else if (sz == 0) {
-+			/* No bytes at all?  Did we hit the end of the disk? */
-+			dbg_printf("EOF %d @ %"PRIu64" %zu err %d\n",
-+					rvp->disk->d_fd, rv->io_start, sz,
-+					read_error);
-+			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, sz,
-+					read_error, rv->io_end_arg);
-+			break;
- 		} else if (sz < len) {
- 			/*
- 			 * A short direct read suggests that we might have hit
+ 	error = -xfrog_bulkstat_single(&ctx->mnt, ino, flags, &bstat);
+ 	if (error == ENOENT) {
+ 		/* Directory is gone, mark it clear. */
+@@ -772,7 +775,7 @@ _("Filesystem has errors, skipping connectivity checks."));
+ 
+ 	pthread_mutex_init(&ncs.lock, NULL);
+ 
+-	ret = scrub_scan_all_inodes(ctx, check_inode_names, &ncs);
++	ret = scrub_scan_all_inodes(ctx, check_inode_names, 0, &ncs);
+ 	if (ret)
+ 		goto out_lock;
+ 	if (ncs.aborted) {
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 54d21820a722a6..e4f26e7f1dd93e 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -578,7 +578,7 @@ report_all_media_errors(
+ 	}
+ 
+ 	/* Scan for unlinked files. */
+-	return scrub_scan_all_inodes(ctx, report_inode_loss, vs);
++	return scrub_scan_all_inodes(ctx, report_inode_loss, 0, vs);
+ }
+ 
+ /* Schedule a read-verify of a (data block) extent. */
 
