@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A77F219048A
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:45:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 426521422AB
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:45:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734990328; cv=none; b=WkzyP7RCbFP5hrdfwd+O5VrrWh3/w+9jQVk/+ZGowLHWmtI4A6FLFNvMocJb/TAh58pRT2W/hSB6ShFws3YqQ7m7N5IiW/WOl4W37rfE6bhVMd7cXX7pVGkZT9eEDdHlWpxisFoEUTxmTNdWp17bwIMT8bTnIyM1sFeSY5tmYoY=
+	t=1734990344; cv=none; b=N2VtAKZflWjGkPYNuzByD4DXnQM000AdzgZ8pLVMOzGA2YWknQbeifyORgkqLrrFSRhJmEIwTbWBYQltiG+l5daYdi3jroZ2wl4QeCATIEE13pdHllXAeeA55g0zar0bQ12ddWOg8XGWA1TV81WiR+2wQglFaqhO+3zwcyDVVnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734990328; c=relaxed/simple;
-	bh=dIwngUAllLCIFo9fuvFGhs/Z4uqBhX4bjwnojaYl6aQ=;
+	s=arc-20240116; t=1734990344; c=relaxed/simple;
+	bh=dE/gX7IIpQslD7Lf/wffy5xYW2sN7a4gHVTSELyN468=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UfSoohmVq/kNubhOHW9uNTtHCYkuk6Pywg3auDcqHagG4atcgcaPa1HtUN90heZgar6KsXrVm7FVJMYnX3M4bFpc7OOE6BxYdfAN/3degpFouPCCse7rA4F/MZRwaP6gIulu83HLjYAdxPyJk3cdTK80md/Qw/9czRb4UB+UNtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJ9KUgHS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WrNHZJvJ1E73EYvQJQQDAR7UF4ZrkpEZ6u0RdGMMRr3Fok4FDxUROu4+ZZGbxkh0wq6l/lgxKGVVbNSMGontDP4fTCVadqd+BO99FMf943cSoepOkgOvea8ibm14ASuwIzwABdI+uU284kpL0VKu+z+y0evlJs7swvEbbccTCuk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYLo0wJq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJ9KUgHS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C3F2C4CED3;
-	Mon, 23 Dec 2024 21:45:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYLo0wJq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3267C4CED3;
+	Mon, 23 Dec 2024 21:45:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734990328;
-	bh=dIwngUAllLCIFo9fuvFGhs/Z4uqBhX4bjwnojaYl6aQ=;
+	s=k20201202; t=1734990343;
+	bh=dE/gX7IIpQslD7Lf/wffy5xYW2sN7a4gHVTSELyN468=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LJ9KUgHS+z3rlHy/LzRTErPzdQCTPSpfM91GPUQYzfMd9DkXD5zlFJATCM+FWcQ2i
-	 JSyuM2HWzpfeKjIQm08amaGiM7HfhkOSwSrkjqHPwcLJgA22qNnJuYUA7/oNZw5fop
-	 HwESijbzHhGJO0rAvWpQ71b/HfFDhVscpQuz9Zl3pejPuIjedbLin2EqzzeguiNXEh
-	 /Ey5ld/eUzVhllIhA2nBrQnknAr1+vGRbp6kiBraGGIB70v5AZfJswo+3quzsQY7Er
-	 E6bHQicWGOy8FIA1dVznYJ2uKIxJhHmZl9fPJIVK+oIoVi6tRdw7/S9OriOHZXfmV5
-	 tvxtsCovrG44g==
-Date: Mon, 23 Dec 2024 13:45:27 -0800
-Subject: [PATCH 32/36] xfs: advertise metadata directory feature
+	b=AYLo0wJqBVPuiyn59Ti6i4J+MIjWGR6QF/g1REQJ8dRtsLmJ/RlLZpvOrN7QUHDSf
+	 PC84EisLC8371sW9nh+jvLdmhOHz0dq/xhlMBmPzxIXpOYbHVIaageKUj0/T5AK8/g
+	 85CgHTT3eLV0LRu6AZniUjbBtPYgyv2AmTvXmaMz1PONU1KdnENz+vWGe0ltz/FhY/
+	 n08sX7uVIx4gMBuxRCQ7iJNarRLv0XeuvdPRNVSI8Urb7uSaoPsAPXr91hDutDq5s2
+	 J2lZRGwGcqVzVLNJLyWTnxCYcKIyyAKNkezuGlXkIUomIA3ioE7aGNqGPQE4MDVer5
+	 wfx6j3sBzvbLw==
+Date: Mon, 23 Dec 2024 13:45:43 -0800
+Subject: [PATCH 33/36] xfs: allow bulkstat to return metadata directories
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498940432.2293042.4388607088123847451.stgit@frogsfrogsfrogs>
+Message-ID: <173498940448.2293042.388425970319376264.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 References: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,42 +45,43 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 688828d8f8cdf8b1b917de938a1ce86a93fdbba9
+Source kernel commit: df866c538ff098baa210b407b822818a415a6e7e
 
-Advertise the existence of the metadata directory feature; this will be
-used by scrub to decide if it needs to scan the metadir too.
+Allow the V5 bulkstat ioctl to return information about metadata
+directory files so that xfs_scrub can find and scrub them, since they
+are otherwise ordinary directories.
+
+(Metadata files of course require per-file scrub code and hence do not
+need exposure.)
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |    1 +
- libxfs/xfs_sb.c |    2 ++
- 2 files changed, 3 insertions(+)
+ libxfs/xfs_fs.h |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 860284064c5aa9..a42c1a33691c0f 100644
+index a42c1a33691c0f..499bea4ea8067f 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -242,6 +242,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* large extent counters */
- #define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE (1 << 24) /* exchange range */
- #define XFS_FSOP_GEOM_FLAGS_PARENT	(1 << 25) /* linux parent pointers */
-+#define XFS_FSOP_GEOM_FLAGS_METADIR	(1 << 26) /* metadata directories */
+@@ -490,9 +490,17 @@ struct xfs_bulk_ireq {
+  */
+ #define XFS_BULK_IREQ_NREXT64	(1U << 2)
  
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index de12edd8192e1c..4ca57d592be8fa 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1306,6 +1306,8 @@ xfs_fs_geometry(
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
- 	if (xfs_has_exchange_range(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE;
-+	if (xfs_has_metadir(mp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_METADIR;
- 	geo->rtsectsize = sbp->sb_blocksize;
- 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
++/*
++ * Allow bulkstat to return information about metadata directories.  This
++ * enables xfs_scrub to find them for scanning, as they are otherwise ordinary
++ * directories.
++ */
++#define XFS_BULK_IREQ_METADIR	(1U << 3)
++
+ #define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO |	 \
+ 				 XFS_BULK_IREQ_SPECIAL | \
+-				 XFS_BULK_IREQ_NREXT64)
++				 XFS_BULK_IREQ_NREXT64 | \
++				 XFS_BULK_IREQ_METADIR)
  
+ /* Operate on the root directory inode. */
+ #define XFS_BULK_IREQ_SPECIAL_ROOT	(1)
 
