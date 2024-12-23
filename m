@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78EC9433D5
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:21:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29983433D5
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:21:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992501; cv=none; b=lSmwZBRZCXgb80c7ndZiJ7mazZbL3mtTLzeNhLjbaDyJmDV+DRztaUrkgLHWgQqeHFbjQkhQOa5dG3bLcT5+ERf42lHOdY3eHX4Pryxl5LhSJ6UCWQw6zPW4LlNJ4loK6NbsDpxLJLTkqclf6VWFFopuyo3bCZSXwFcymdywKTg=
+	t=1734992517; cv=none; b=qV3UhMZVVWfTvRCo+rjOtPZT4aBUisMYEQoMYGTbsm4E/q80yuAeTUC/dkv0IqjXECXW/eU6rpjY9xcoJPznjR3mcmbF8r8fILahbNKV3woI9tO+dLPtsKrguN+w14mKNSceT7QgD/hOacAN3Jipww5nmL8RuNyPxIsq1Uyu/js=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992501; c=relaxed/simple;
-	bh=jTOGc5ZY9M+WbXpMlAF4wtl+oYHGruqk026jnOULdqk=;
+	s=arc-20240116; t=1734992517; c=relaxed/simple;
+	bh=fQv6lqArDLyT08eExqndvErDRhicZwQTAo6FziD93xE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IaXLBbQmd/Yqu//WxB6ZcKvVF+XodM9h59W1NPBHJpNGUxPiR/cNuwWSNbY1AtVFIh53MzBw0YS5YgjkKvX4qGLJUkc3fZmg9qKkBmivlisVEi7D3yTf1KQZqqVmeqE1LIUBQ0wO8wRingniYNRmA6HSCyJtAGfO2oylAYrpJJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2HPMnzT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lgUvNXsBbaxlYGhcHQS0jDMSBqY3Hv7L/Dy1LVHgx6tDpWwd8Mr3qWH/bWBuwDHXwnHdveE1wUdSfG3NFjB0Em0oAeNbxIYc8dtNBZDlhNv/wWG+EfMiIC87lAEh7HQMNfZo6BtlR6tuuFhzJjuWriaAgi80lB4db/mRdttthdM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qMst6EcP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2HPMnzT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52875C4CED3;
-	Mon, 23 Dec 2024 22:21:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qMst6EcP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED774C4CED3;
+	Mon, 23 Dec 2024 22:21:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992501;
-	bh=jTOGc5ZY9M+WbXpMlAF4wtl+oYHGruqk026jnOULdqk=;
+	s=k20201202; t=1734992517;
+	bh=fQv6lqArDLyT08eExqndvErDRhicZwQTAo6FziD93xE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=l2HPMnzTS8it4exWT2i4y8ve4wfSdGvD4u35FA7/UwIn7X8Yo8BLwThDxwRlljEjx
-	 K6ILHCf4juSf0Pd1oG3MbCgm6fwNyPkGPthwup8GjLvYuaDcqMabZuJQMta2J6LBQ/
-	 Zu0AwM67fQnJXo6hwY4vcGAo4qTA2gj6GQgxP6J/tDIlvYTi1DEe71M97JBWgw50S0
-	 Hf2ZEsHHsOUDkR55jqx22BwRuVYh05qP1ZWDAGsR6AiYcsqxRNbenPUztoDSncu9kW
-	 CxiG5te1jXGKRz1xpBOtTrOjhFUTR4HzvgzwS77t+Iexn/NsbJC8khKDkcJVbOqk63
-	 ifZhQGTHhDRiQ==
-Date: Mon, 23 Dec 2024 14:21:40 -0800
-Subject: [PATCH 38/51] xfs_io: add a command to display realtime group
- information
+	b=qMst6EcPlP8WWtP4/8ITflqA5RKP1PiH9vw1gTxFmVb6j7U3sYa91XiQ+vl+BXGLA
+	 odTjkSfydNkJUECKOX/pR/Vc8XrT96b8uPAngd3sFvyzNmz54NfmAhi22TKwVhzMuX
+	 U8C9qyiAnY5mdrWs7ojKzFEMTOuSjBwndLI1FQK08bnzBdjsBZKBz3MAn9IfTS3phD
+	 qb8yRgoZsp2m39Yfd/+BHwFODJpZ+Qi4zLR/MHaO8HKKge1kD0uGC65kEFph1K/xzk
+	 USRDJs85JWpZ1xdH1FLkooK/gpSVTSxmSXN5TxU3EbnQZgJ9DnhlqU9CEwmOkHk1WK
+	 IR5mt7pGGzjEg==
+Date: Mon, 23 Dec 2024 14:21:56 -0800
+Subject: [PATCH 39/51] xfs_io: display rt group in verbose bmap output
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498944385.2297565.1160370708767559300.stgit@frogsfrogsfrogs>
+Message-ID: <173498944400.2297565.10822398029490982082.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 References: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,203 +45,105 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new 'rginfo' command to xfs_io so that we can display realtime
-group geometry.
+Display the rt group number in the bmap -v output, just like we do for
+regular data files.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- io/aginfo.c       |   96 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- libfrog/fsgeom.c  |   18 ++++++++++
- libfrog/fsgeom.h  |    4 ++
- man/man8/xfs_io.8 |   13 +++++++
- 4 files changed, 131 insertions(+)
+ io/bmap.c        |   27 ++++++++++++++++++---------
+ libfrog/fsgeom.h |   12 ++++++++++++
+ 2 files changed, 30 insertions(+), 9 deletions(-)
 
 
-diff --git a/io/aginfo.c b/io/aginfo.c
-index 6cbfcb8de35523..f81986f0df4df3 100644
---- a/io/aginfo.c
-+++ b/io/aginfo.c
-@@ -14,6 +14,7 @@
- #include "libfrog/fsgeom.h"
+diff --git a/io/bmap.c b/io/bmap.c
+index 6182e1c591da18..b2f6b490528513 100644
+--- a/io/bmap.c
++++ b/io/bmap.c
+@@ -257,16 +257,18 @@ bmap_f(
+ #define	FLG_BSW		0000010	/* Not on begin of stripe width */
+ #define	FLG_ESW		0000001	/* Not on end   of stripe width */
+ 		int	agno;
+-		off_t agoff, bbperag;
++		off_t	agoff, bbperag;
+ 		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
+ 		char	rbuf[32], bbuf[32], abuf[32];
+ 		int	sunit, swidth;
  
- static cmdinfo_t aginfo_cmd;
-+static cmdinfo_t rginfo_cmd;
- 
- static int
- report_aginfo(
-@@ -111,9 +112,104 @@ static cmdinfo_t aginfo_cmd = {
- 	.help = aginfo_help,
- };
- 
-+static int
-+report_rginfo(
-+	struct xfs_fd		*xfd,
-+	xfs_rgnumber_t		rgno)
-+{
-+	struct xfs_rtgroup_geometry	rgeo = { 0 };
-+	int			ret;
-+
-+	ret = -xfrog_rtgroup_geometry(xfd->fd, rgno, &rgeo);
-+	if (ret) {
-+		xfrog_perror(ret, "rginfo");
-+		return 1;
-+	}
-+
-+	printf(_("RTG: %u\n"),		rgeo.rg_number);
-+	printf(_("Length: %u\n"),	rgeo.rg_length);
-+	printf(_("Sick: 0x%x\n"),	rgeo.rg_sick);
-+	printf(_("Checked: 0x%x\n"),	rgeo.rg_checked);
-+	printf(_("Flags: 0x%x\n"),	rgeo.rg_flags);
-+
-+	return 0;
-+}
-+
-+/* Display rtgroup status. */
-+static int
-+rginfo_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-+	unsigned long long	x;
-+	xfs_rgnumber_t		rgno = NULLRGNUMBER;
-+	int			c;
-+	int			ret = 0;
-+
-+	ret = -xfd_prepare_geometry(&xfd);
-+	if (ret) {
-+		xfrog_perror(ret, "xfd_prepare_geometry");
-+		exitcode = 1;
-+		return 1;
-+	}
-+
-+	while ((c = getopt(argc, argv, "r:")) != EOF) {
-+		switch (c) {
-+		case 'r':
-+			errno = 0;
-+			x = strtoll(optarg, NULL, 10);
-+			if (!errno && x >= NULLRGNUMBER)
-+				errno = ERANGE;
-+			if (errno) {
-+				perror("rginfo");
-+				return 1;
-+			}
-+			rgno = x;
-+			break;
-+		default:
-+			return command_usage(&rginfo_cmd);
+ 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
+ 		tot_w = MINTOT_WIDTH;
+-		if (is_rt)
+-			sunit = swidth = bbperag = 0;
+-		else {
++		if (is_rt) {
++			bbperag = bytes_per_rtgroup(&fsgeo) / BBSIZE;
++			sunit = 0;
++			swidth = 0;
++		} else {
+ 			bbperag = (off_t)fsgeo.agblocks *
+ 				  (off_t)fsgeo.blocksize / BBSIZE;
+ 			sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
+@@ -295,7 +297,7 @@ bmap_f(
+ 					(long long)(map[i + 1].bmv_block +
+ 						map[i + 1].bmv_length - 1LL));
+ 				boff_w = max(boff_w, strlen(bbuf));
+-				if (!is_rt) {
++				if (bbperag > 0) {
+ 					agno = map[i + 1].bmv_block / bbperag;
+ 					agoff = map[i + 1].bmv_block -
+ 							(agno * bbperag);
+@@ -312,13 +314,20 @@ bmap_f(
+ 					numlen(map[i+1].bmv_length, 10));
+ 			}
+ 		}
+-		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
++		if (is_rt) {
++			if (fsgeo.rgcount > 0)
++				agno_w = max(MINAG_WIDTH, numlen(fsgeo.rgcount, 10));
++			else
++				agno_w = 0;
++		} else {
++			agno_w = max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
 +		}
-+	}
-+
-+	if (rgno != NULLRGNUMBER) {
-+		ret = report_rginfo(&xfd, rgno);
-+	} else {
-+		for (rgno = 0; !ret && rgno < xfd.fsgeom.rgcount; rgno++) {
-+			ret = report_rginfo(&xfd, rgno);
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+static void
-+rginfo_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Report realtime group geometry.\n"
-+"\n"
-+" -r rgno  -- Report on the given realtime group.\n"
-+"\n"));
-+
-+}
-+
-+static cmdinfo_t rginfo_cmd = {
-+	.name = "rginfo",
-+	.cfunc = rginfo_f,
-+	.argmin = 0,
-+	.argmax = -1,
-+	.args = "[-r rgno]",
-+	.flags = CMD_NOMAP_OK,
-+	.help = rginfo_help,
-+};
-+
- void
- aginfo_init(void)
- {
- 	aginfo_cmd.oneline = _("Get XFS allocation group state.");
- 	add_command(&aginfo_cmd);
-+	rginfo_cmd.oneline = _("Get XFS realtime group state.");
-+	add_command(&rginfo_cmd);
- }
-diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-index 9c1e9a90eb1f1b..b5220d2d6ffd22 100644
---- a/libfrog/fsgeom.c
-+++ b/libfrog/fsgeom.c
-@@ -214,3 +214,21 @@ xfrog_ag_geometry(
- 		return -errno;
- 	return 0;
- }
-+
-+/*
-+ * Try to obtain a rt group's geometry.  Returns zero or a negative error code.
-+ */
-+int
-+xfrog_rtgroup_geometry(
-+	int			fd,
-+	unsigned int		rgno,
-+	struct xfs_rtgroup_geometry	*rgeo)
-+{
-+	int			ret;
-+
-+	rgeo->rg_number = rgno;
-+	ret = ioctl(fd, XFS_IOC_RTGROUP_GEOMETRY, rgeo);
-+	if (ret)
-+		return -errno;
-+	return 0;
-+}
+ 		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
+ 			_("EXT"),
+ 			foff_w, _("FILE-OFFSET"),
+ 			boff_w, is_rt ? _("RT-BLOCK-RANGE") : _("BLOCK-RANGE"),
+-			agno_w, is_rt ? "" : _("AG"),
+-			aoff_w, is_rt ? "" : _("AG-OFFSET"),
++			agno_w, is_rt ? (fsgeo.rgcount ? _("RG") : "") : _("AG"),
++			aoff_w, is_rt ? (fsgeo.rgcount ? _("RG-OFFSET") : "") : _("AG-OFFSET"),
+ 			tot_w, _("TOTAL"),
+ 			flg ? _(" FLAGS") : "");
+ 		for (i = 0; i < egcnt; i++) {
+@@ -377,7 +386,7 @@ bmap_f(
+ 						map[i + 1].bmv_length - 1LL));
+ 				printf("%4d: %-*s %-*s", i, foff_w, rbuf,
+ 					boff_w, bbuf);
+-				if (!is_rt) {
++				if (bbperag > 0) {
+ 					agno = map[i + 1].bmv_block / bbperag;
+ 					agoff = map[i + 1].bmv_block -
+ 							(agno * bbperag);
 diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
-index df2ca2a408e78a..c571ddbcfb9b70 100644
+index c571ddbcfb9b70..b851b9bbf36a58 100644
 --- a/libfrog/fsgeom.h
 +++ b/libfrog/fsgeom.h
-@@ -5,10 +5,14 @@
- #ifndef __LIBFROG_FSGEOM_H__
- #define __LIBFROG_FSGEOM_H__
+@@ -205,4 +205,16 @@ cvt_b_to_agbno(
+ 	return cvt_daddr_to_agbno(xfd, cvt_btobbt(byteno));
+ }
  
-+struct xfs_rtgroup_geometry;
++/* Return the number of bytes in an rtgroup. */
++static inline uint64_t
++bytes_per_rtgroup(
++	const struct xfs_fsop_geom	*fsgeo)
++{
++	if (!fsgeo->rgcount)
++		return 0;
 +
- void xfs_report_geom(struct xfs_fsop_geom *geo, const char *mntpoint,
- 		const char *logname, const char *rtname);
- int xfrog_geometry(int fd, struct xfs_fsop_geom *fsgeo);
- int xfrog_ag_geometry(int fd, unsigned int agno, struct xfs_ag_geometry *ageo);
-+int xfrog_rtgroup_geometry(int fd, unsigned int rgno,
-+		struct xfs_rtgroup_geometry *rgeo);
- 
- /*
-  * Structure for recording whatever observations we want about the level of
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 31c81efed8f99b..59d5ddc54dcc66 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1328,6 +1328,19 @@ .SH FILESYSTEM COMMANDS
- .I tag
- argument, displays the list of error tags available.
- Only available in expert mode and requires privileges.
++	return (uint64_t)fsgeo->rgextents * fsgeo->rtextsize *
++		fsgeo->blocksize;
++}
 +
-+.TP
-+.BI "rginfo [ \-r " rgno " ]"
-+Show information about or update the state of realtime allocation groups.
-+.RE
-+.RS 1.0i
-+.PD 0
-+.TP
-+.BI \-r
-+Act only on a specific realtime group.
-+.PD
-+.RE
-+
- .TP
- .BI "resblks [ " blocks " ]"
- Get and/or set count of reserved filesystem blocks using the
+ #endif /* __LIBFROG_FSGEOM_H__ */
 
