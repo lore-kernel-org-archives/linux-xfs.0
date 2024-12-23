@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76D1238385
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:01:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8BAA64A
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:01:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991297; cv=none; b=AK5SKYS3lBAtY6UTqOWMwq/wkwJSGSwpdPjCjAdSP2tmJJxUrnsHmzdBH6MHLb15+LDG+U0JSccP4M+M2q1jO20cebLjpeGxI4qxthah/RJeuHZnNRam+MHooPBpZijm9BgzINQ3bi049cyIixvLm2YxAzyPitf/3k9p1QBKgRY=
+	t=1734991312; cv=none; b=HOC/u3gRfNtrsGOXzmopZyz9krusEh7eytbDrDSVQny/xWiE+stWzc0jM9ueW+pGuJuFumGzrhBoHmT+2ekqO685zsN7mLzGBr7UrQ7VRyHtFstgSD9TKevHWw/r98jAS7xlGfjHz8OkKxF/YIYzW1fat03McSJGH5x1b49RJfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991297; c=relaxed/simple;
-	bh=pcB/9UTmQjkWNV9pyqkckr8ZaJ3VBHUKnBqYx67/76A=;
+	s=arc-20240116; t=1734991312; c=relaxed/simple;
+	bh=bp1BAVXxm46tMIwXm4EljSmq784/lJ0DzTeKRWBw9eQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mJE7lwesDFDRt7F1WtyKpeY/ciIhpE3hg5Lv4sdhQOczkxTQJsfPTRr/ocQAtpmo8eFxaVBYmQDv1oMdU5GeIcHCn56zTaM6OLHdS4GhXHuk3SpjCxANuanZElH9pjmX+xY3B7P2OWy+N/Wy0Z13yQMap9+9GJTkbcJnUVbqI94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gAdBHpBI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RMQ3dDd8+gpyVW6aAjMPptRK7y37T1WVqeNyEm5hc3fsm4DTdnMwx3fIIRwJhJ/FbKshA5U1eFUGc9nzr+JHk14qrlUQz/tipydrE2EJhB/OJ253vY6+HlzypCul3M5aptN977KpmhWfLTp+/i/6BohXT4Xovwok+LMFakZDVBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s3g+uIF6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gAdBHpBI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9B8CC4CED3;
-	Mon, 23 Dec 2024 22:01:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s3g+uIF6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95FAAC4CED3;
+	Mon, 23 Dec 2024 22:01:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991297;
-	bh=pcB/9UTmQjkWNV9pyqkckr8ZaJ3VBHUKnBqYx67/76A=;
+	s=k20201202; t=1734991312;
+	bh=bp1BAVXxm46tMIwXm4EljSmq784/lJ0DzTeKRWBw9eQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gAdBHpBIX9lN+byNaBYaQgXKescGXF8n3tP7kQLkkb6wxBsIpxQgnBDH5ZTw7SmGY
-	 WXrk6F6pto11CFFC9VoALdybyWHvYYkOCMV7Osr1e4c2zP43Ci799/IOZH/Oey+TFU
-	 tSgdfNL3LUzIvHuor88uUEp0W3O/KR4w6Fq+z7aGj7p8NfooQMpz8heqb2ZzwQ0Gvj
-	 uRH0fD3BjEma6foEohj9rIrsBK4ZZkPE0+v0adni8vIJcmGs2ihbsy5vA50fBjr3f4
-	 /ajHrXkSTUDbqviKy/83yxL+c3+8E5kqrx0Izh0jcEEDyMOxf/B/DRTbP3JCD6Ju/w
-	 QDmpm6OnDwMyg==
-Date: Mon, 23 Dec 2024 14:01:36 -0800
-Subject: [PATCH 13/52] xfs: update realtime super every time we update the
- primary fs super
+	b=s3g+uIF6CQxPSH8yYdhnKizIygu6a7cEYZXmFf+z7rxMwtNQtlAz04CnUtJZ/Drpe
+	 Apj/D3rF0C/nph+OHzWBVnwfmxURSr67TS220bkKEw0DziKJl3e4PkanUfJkApPq/3
+	 yZMpZUbr0B1/xdMtit3ljXCPyU/OW6D1EzFQUBczDmCY7ynZvcqt36GsN5fxiB49pi
+	 il7L41VUBEo8DmwOnKRFZ6erAJP+m3XhlZTt1KQ2mpUkvl0TpLI59YzN23xzDYXj0b
+	 5VfbAfaHmp+0/FLnlchGtAFX0MqIb1lhNm2gcUSD3f1k2eSEohJnSBODzr2rlaUAbg
+	 MQS0gLhjTNPQw==
+Date: Mon, 23 Dec 2024 14:01:52 -0800
+Subject: [PATCH 14/52] xfs: export realtime group geometry via XFS_FSOP_GEOM
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498942693.2295836.10732856198202009478.stgit@frogsfrogsfrogs>
+Message-ID: <173498942709.2295836.10574373869363074821.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 References: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,286 +45,47 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 76d3be00df91a56f7c05142ed500f8f8544d5457
+Source kernel commit: 8edde94d640153d645f85b94b2e1af8872c11ac8
 
-Every time we update parts of the primary filesystem superblock that are
-echoed in the rt superblock, we must update the rt super.  Avoid
-changing the log to support logging to the rt device by using ordered
-buffers.
+Export the realtime geometry information so that userspace can query it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/xfs_trans.h      |    1 +
- libxfs/libxfs_api_defs.h |    1 +
- libxfs/libxfs_io.h       |    1 +
- libxfs/rdwr.c            |   17 +++++++++++++
- libxfs/trans.c           |   29 ++++++++++++++++++++++
- libxfs/xfs_rtgroup.c     |   60 ++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_rtgroup.h     |    7 +++++
- libxfs/xfs_sb.c          |   14 ++++++++++-
- libxfs/xfs_sb.h          |    2 +-
- 9 files changed, 130 insertions(+), 2 deletions(-)
+ libxfs/xfs_fs.h |    4 +++-
+ libxfs/xfs_sb.c |    5 +++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
 
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index d508f8947a301c..248064019a0ab5 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -108,6 +108,7 @@ int	libxfs_trans_reserve_more(struct xfs_trans *tp, uint blocks,
- void xfs_defer_cancel(struct xfs_trans *);
- 
- struct xfs_buf *libxfs_trans_getsb(struct xfs_trans *);
-+struct xfs_buf *libxfs_trans_getrtsb(struct xfs_trans *tp);
- 
- void	libxfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void	libxfs_trans_log_inode (struct xfs_trans *, struct xfs_inode *,
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index c869a4b0a46551..50da547f8f21d4 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -324,6 +324,7 @@
- #define xfs_trans_dirty_buf		libxfs_trans_dirty_buf
- #define xfs_trans_get_buf		libxfs_trans_get_buf
- #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
-+#define xfs_trans_getrtsb		libxfs_trans_getrtsb
- #define xfs_trans_getsb			libxfs_trans_getsb
- #define xfs_trans_ichgtime		libxfs_trans_ichgtime
- #define xfs_trans_ijoin			libxfs_trans_ijoin
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 82d86f1d1b37bf..99372eb6d3d13c 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -208,6 +208,7 @@ libxfs_buf_read(
- 
- int libxfs_readbuf_verify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
- struct xfs_buf *libxfs_getsb(struct xfs_mount *mp);
-+struct xfs_buf *libxfs_getrtsb(struct xfs_mount *mp);
- extern void	libxfs_bcache_purge(struct xfs_mount *mp);
- extern void	libxfs_bcache_free(void);
- extern void	libxfs_bcache_flush(struct xfs_mount *mp);
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 7d4d93e4f094e6..35be785c435a97 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -165,6 +165,23 @@ libxfs_getsb(
- 	return bp;
- }
- 
-+struct xfs_buf *
-+libxfs_getrtsb(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_buf		*bp;
-+	int			error;
-+
-+	if (!mp->m_rtdev_targp->bt_bdev)
-+		return NULL;
-+
-+	error = libxfs_buf_read_uncached(mp->m_rtdev_targp, XFS_RTSB_DADDR,
-+			XFS_FSB_TO_BB(mp, 1), 0, &bp, &xfs_rtsb_buf_ops);
-+	if (error)
-+		return NULL;
-+	return bp;
-+}
-+
- struct kmem_cache			*xfs_buf_cache;
- 
- static struct cache_mru		xfs_buf_freelist =
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 72f26591053716..01834eff4b77ca 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -512,6 +512,35 @@ libxfs_trans_getsb(
- 	return bp;
- }
- 
-+struct xfs_buf *
-+libxfs_trans_getrtsb(
-+	struct xfs_trans	*tp)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_buf		*bp;
-+	struct xfs_buf_log_item	*bip;
-+	int			len = XFS_FSS_TO_BB(mp, 1);
-+	DEFINE_SINGLE_BUF_MAP(map, XFS_SB_DADDR, len);
-+
-+	bp = xfs_trans_buf_item_match(tp, mp->m_rtdev, &map, 1);
-+	if (bp != NULL) {
-+		ASSERT(bp->b_transp == tp);
-+		bip = bp->b_log_item;
-+		ASSERT(bip != NULL);
-+		bip->bli_recur++;
-+		trace_xfs_trans_getsb_recur(bip);
-+		return bp;
-+	}
-+
-+	bp = libxfs_getrtsb(mp);
-+	if (bp == NULL)
-+		return NULL;
-+
-+	_libxfs_trans_bjoin(tp, bp, 1);
-+	trace_xfs_trans_getsb(bp->b_log_item);
-+	return bp;
-+}
-+
- int
- libxfs_trans_read_buf_map(
- 	struct xfs_mount	*mp,
-diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
-index e294a295b3d0d8..6eabc66099dc50 100644
---- a/libxfs/xfs_rtgroup.c
-+++ b/libxfs/xfs_rtgroup.c
-@@ -561,3 +561,63 @@ const struct xfs_buf_ops xfs_rtsb_buf_ops = {
- 	.verify_write	= xfs_rtsb_write_verify,
- 	.verify_struct	= xfs_rtsb_verify_all,
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index faa38a7d1eb019..5c224d03270ce9 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -187,7 +187,9 @@ struct xfs_fsop_geom {
+ 	__u32		logsunit;	/* log stripe unit, bytes	*/
+ 	uint32_t	sick;		/* o: unhealthy fs & rt metadata */
+ 	uint32_t	checked;	/* o: checked fs & rt metadata	*/
+-	__u64		reserved[17];	/* reserved space		*/
++	__u32		rgextents;	/* rt extents in a realtime group */
++	__u32		rgcount;	/* number of realtime groups	*/
++	__u64		reserved[16];	/* reserved space		*/
  };
-+
-+/* Update a realtime superblock from the primary fs super */
-+void
-+xfs_update_rtsb(
-+	struct xfs_buf		*rtsb_bp,
-+	const struct xfs_buf	*sb_bp)
-+{
-+	const struct xfs_dsb	*dsb = sb_bp->b_addr;
-+	struct xfs_rtsb		*rsb = rtsb_bp->b_addr;
-+	const uuid_t		*meta_uuid;
-+
-+	rsb->rsb_magicnum = cpu_to_be32(XFS_RTSB_MAGIC);
-+
-+	rsb->rsb_pad = 0;
-+	memcpy(&rsb->rsb_fname, &dsb->sb_fname, XFSLABEL_MAX);
-+
-+	memcpy(&rsb->rsb_uuid, &dsb->sb_uuid, sizeof(rsb->rsb_uuid));
-+
-+	/*
-+	 * The metadata uuid is the fs uuid if the metauuid feature is not
-+	 * enabled.
-+	 */
-+	if (dsb->sb_features_incompat &
-+				cpu_to_be32(XFS_SB_FEAT_INCOMPAT_META_UUID))
-+		meta_uuid = &dsb->sb_meta_uuid;
-+	else
-+		meta_uuid = &dsb->sb_uuid;
-+	memcpy(&rsb->rsb_meta_uuid, meta_uuid, sizeof(rsb->rsb_meta_uuid));
-+}
-+
-+/*
-+ * Update the realtime superblock from a filesystem superblock and log it to
-+ * the given transaction.
-+ */
-+struct xfs_buf *
-+xfs_log_rtsb(
-+	struct xfs_trans	*tp,
-+	const struct xfs_buf	*sb_bp)
-+{
-+	struct xfs_buf		*rtsb_bp;
-+
-+	if (!xfs_has_rtsb(tp->t_mountp))
-+		return NULL;
-+
-+	rtsb_bp = xfs_trans_getrtsb(tp);
-+	if (!rtsb_bp) {
-+		/*
-+		 * It's possible for the rtgroups feature to be enabled but
-+		 * there is no incore rt superblock buffer if the rt geometry
-+		 * was specified at mkfs time but the rt section has not yet
-+		 * been attached.  In this case, rblocks must be zero.
-+		 */
-+		ASSERT(tp->t_mountp->m_sb.sb_rblocks == 0);
-+		return NULL;
-+	}
-+
-+	xfs_update_rtsb(rtsb_bp, sb_bp);
-+	xfs_trans_ordered_buf(tp, rtsb_bp);
-+	return rtsb_bp;
-+}
-diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index 6ccf31bb6bc7a7..e7679fafff8ce7 100644
---- a/libxfs/xfs_rtgroup.h
-+++ b/libxfs/xfs_rtgroup.h
-@@ -251,6 +251,11 @@ static inline const char *xfs_rtginode_path(xfs_rgnumber_t rgno,
- {
- 	return kasprintf(GFP_KERNEL, "%u.%s", rgno, xfs_rtginode_name(type));
- }
-+
-+void xfs_update_rtsb(struct xfs_buf *rtsb_bp,
-+		const struct xfs_buf *sb_bp);
-+struct xfs_buf *xfs_log_rtsb(struct xfs_trans *tp,
-+		const struct xfs_buf *sb_bp);
- #else
- static inline void xfs_free_rtgroups(struct xfs_mount *mp,
- 		xfs_rgnumber_t first_rgno, xfs_rgnumber_t end_rgno)
-@@ -269,6 +274,8 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
- # define xfs_rtgroup_lock(rtg, gf)		((void)0)
- # define xfs_rtgroup_unlock(rtg, gf)		((void)0)
- # define xfs_rtgroup_trans_join(tp, rtg, gf)	((void)0)
-+# define xfs_update_rtsb(bp, sb_bp)	((void)0)
-+# define xfs_log_rtsb(tp, sb_bp)	(NULL)
- #endif /* CONFIG_XFS_RT */
  
- #endif /* __LIBXFS_RTGROUP_H */
+ #define XFS_FSOP_GEOM_SICK_COUNTERS	(1 << 0)  /* summary counters */
 diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 3c80413b67f6ec..96b0a73682f435 100644
+index 96b0a73682f435..2e536bc3b2090b 100644
 --- a/libxfs/xfs_sb.c
 +++ b/libxfs/xfs_sb.c
-@@ -24,6 +24,7 @@
- #include "xfs_health.h"
- #include "xfs_ag.h"
- #include "xfs_rtbitmap.h"
-+#include "xfs_rtgroup.h"
+@@ -1424,6 +1424,11 @@ xfs_fs_geometry(
+ 		return;
  
- /*
-  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
-@@ -1287,10 +1288,12 @@ xfs_update_secondary_sbs(
-  */
- int
- xfs_sync_sb_buf(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	bool			update_rtsb)
- {
- 	struct xfs_trans	*tp;
- 	struct xfs_buf		*bp;
-+	struct xfs_buf		*rtsb_bp = NULL;
- 	int			error;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
-@@ -1300,6 +1303,11 @@ xfs_sync_sb_buf(
- 	bp = xfs_trans_getsb(tp);
- 	xfs_log_sb(tp);
- 	xfs_trans_bhold(tp, bp);
-+	if (update_rtsb) {
-+		rtsb_bp = xfs_log_rtsb(tp, bp);
-+		if (rtsb_bp)
-+			xfs_trans_bhold(tp, rtsb_bp);
+ 	geo->version = XFS_FSOP_GEOM_VERSION_V5;
++
++	if (xfs_has_rtgroups(mp)) {
++		geo->rgcount = sbp->sb_rgcount;
++		geo->rgextents = sbp->sb_rgextents;
 +	}
- 	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp);
- 	if (error)
-@@ -1308,7 +1316,11 @@ xfs_sync_sb_buf(
- 	 * write out the sb buffer to get the changes to disk
- 	 */
- 	error = xfs_bwrite(bp);
-+	if (!error && rtsb_bp)
-+		error = xfs_bwrite(rtsb_bp);
- out:
-+	if (rtsb_bp)
-+		xfs_buf_relse(rtsb_bp);
- 	xfs_buf_relse(bp);
- 	return error;
  }
-diff --git a/libxfs/xfs_sb.h b/libxfs/xfs_sb.h
-index 885c837559914d..999dcfccdaf960 100644
---- a/libxfs/xfs_sb.h
-+++ b/libxfs/xfs_sb.h
-@@ -15,7 +15,7 @@ struct xfs_perag;
  
- extern void	xfs_log_sb(struct xfs_trans *tp);
- extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
--extern int	xfs_sync_sb_buf(struct xfs_mount *mp);
-+extern int	xfs_sync_sb_buf(struct xfs_mount *mp, bool update_rtsb);
- extern void	xfs_sb_mount_common(struct xfs_mount *mp, struct xfs_sb *sbp);
- void		xfs_mount_sb_set_rextsize(struct xfs_mount *mp,
- 			struct xfs_sb *sbp);
+ /* Read a secondary superblock. */
 
