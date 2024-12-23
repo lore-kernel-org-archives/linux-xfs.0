@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B13187462
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:59:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B8F57462
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:59:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734994741; cv=none; b=i66sHWLZJlbbNFzE5lPx2K9SiYG7cSXRNkS39kEtXkGWaeoE9Lmht/wSudnZsL6bjVgYx48gyiQKEkmwi0DX2SxXqMf5a7rDrnmdaYY13Fa/J0s1v0GFzSNKScL8sYllCINzTYJp23m7+8YDQ71mO1vU7Tn2juNLSbHWoPbnJ/Y=
+	t=1734994756; cv=none; b=JGkX6lfiVj01OHWlIjU1Gf8jv6tBush98Xy1PdRx5SMEXiIK5U8jrY2i7TacfskSWgQWjquLh/cXLQmTMsMaZQmQ1x7HLdE5PGwZmmadKyvFwSk2VCkr9uN/iO4gn74TJ5KsMM9jD4C54119xyOn63G2IvVutQkOXYx0cyGCVRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734994741; c=relaxed/simple;
-	bh=j4/+z8XATtYC6MA0NIbY4FufmbJlL5R4ffS0qafyohc=;
+	s=arc-20240116; t=1734994756; c=relaxed/simple;
+	bh=an6JcxC2BfLPdTbFdsrJg2oWdHoyIg20skUGbVSfWtM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CgeXQtM58OfCRXbowyj/elZzbkcUfLPt8wcIv0HspiihORvWhXDzO9d4RUDpDIBevg1j5LkSORNSnT3yNDMYtUlWLq2hgZkGYa8m+/ZJ6grKQQMM+qc350cYHi/T63g9GSx7KobN47JzcvFaB4HrMKK/aJ6l06dQr1KRfmDFHrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p0opZC7r; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CjCSyZGtZg18AiaUu+Tt0URGWkYPyuaWAB2aFG2gAefYFppJQyvyAstRB4cxAIDVw2UWAj9KMIUunvpnYEVqWgWRziAd3Qy8LZkcjb21aSmUvyDv0Wzwrp96UnanzHbBbnbqwEY6ytkW+n1s9BeuKbLEazLS0VXUo0rze8kFExA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dae9ihGl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p0opZC7r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45B71C4CED3;
-	Mon, 23 Dec 2024 22:59:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dae9ihGl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDE72C4CED3;
+	Mon, 23 Dec 2024 22:59:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734994740;
-	bh=j4/+z8XATtYC6MA0NIbY4FufmbJlL5R4ffS0qafyohc=;
+	s=k20201202; t=1734994756;
+	bh=an6JcxC2BfLPdTbFdsrJg2oWdHoyIg20skUGbVSfWtM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=p0opZC7rVQmpD4bM0r4me+RQqdkWOBkvhB5o+QQApzPUBEW+G4ypiIonoNhTDvlf6
-	 6ojyFC44Wh+1rL2aomINaw2q2gqxHVX+kFvWR+i0kZ8dfFAWAiuDn6TxggLmkp5lzg
-	 XJtSEWqTGtZBnzbOlGLUTIIyiT2nunuXPqqM4we8wVXqvQZ+wtb6VqXiCAgEJlkxcd
-	 +wLaWlnoMgEmdLltxDe0lSQiKxPdI/rQQzWkLpSeIo18cCZkqu+TCYe1J/st8y9Q47
-	 BLHvznUswvBpWCIrg1gNColul6N+cq9CvXJ/reyWz3nuoV/oihh79cZO/kO7htGxhs
-	 RNgoyz+1PSOXw==
-Date: Mon, 23 Dec 2024 14:58:59 -0800
-Subject: [PATCH 09/37] xfs: support recovering rmap intent items targetting
- realtime extents
+	b=Dae9ihGlPH0egRdXmFJaAh4pKfv81UzgQCiIl0Q0wg+qN7Mt0hNHc3bF/PnJpWI1G
+	 oYAqx0r8Lmb+tYm8THA6u5rgu06V28cp/66Iyn7c6BwV/WDdBU0OE/jqw+gwuZPr0P
+	 9jg8IxYN/aqPIW8c1j7UmSd/at6ISX/rOonEecCHfoZmXQsLNmXVbMiOJBsXh8v9SV
+	 tYwVXxOEmnrVKo3I8AfJWz0m4nyK5OcQ/9HLCCTzUtqoybEutcUpxMLSBo/JhLgSgP
+	 DpkPrSQ48KgVGitln5TdzVVUDmvTTSGypgt/8o2Z5yOuAhNmyMDacYfJ5k5YVpOos/
+	 8i0tD4YD7CwHQ==
+Date: Mon, 23 Dec 2024 14:59:15 -0800
+Subject: [PATCH 10/37] xfs: pretty print metadata file types in error messages
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173499418869.2380130.18353525538860365992.stgit@frogsfrogsfrogs>
+Message-ID: <173499418886.2380130.644456235973168473.stgit@frogsfrogsfrogs>
 In-Reply-To: <173499418610.2380130.12548657506222792394.stgit@frogsfrogsfrogs>
 References: <173499418610.2380130.12548657506222792394.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,108 +45,73 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we have rmap on the realtime device and rmap intent items that
-target the realtime device, log recovery has to support remapping
-extents on the realtime volume.  Make this work.  Identify rtrmapbt
-blocks in the log correctly so that we can validate them during log
-recovery.
+Create a helper function to turn a metadata file type code into a
+printable string, and use this to complain about lockdep problems with
+rtgroup inodes.  We'll use this more in the next patch.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf_item_recover.c |    4 ++++
- fs/xfs/xfs_rmap_item.c        |   15 ++++++++++++---
- 2 files changed, 16 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_metafile.c |   18 ++++++++++++++++++
+ fs/xfs/libxfs/xfs_metafile.h |    2 ++
+ fs/xfs/libxfs/xfs_rtgroup.c  |    3 ++-
+ 3 files changed, 22 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 3d0c6402cb3634..4f2e4ea29e1f57 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -262,6 +262,9 @@ xlog_recover_validate_buf_type(
- 		case XFS_BMAP_MAGIC:
- 			bp->b_ops = &xfs_bmbt_buf_ops;
- 			break;
-+		case XFS_RTRMAP_CRC_MAGIC:
-+			bp->b_ops = &xfs_rtrmapbt_buf_ops;
-+			break;
- 		case XFS_RMAP_CRC_MAGIC:
- 			bp->b_ops = &xfs_rmapbt_buf_ops;
- 			break;
-@@ -855,6 +858,7 @@ xlog_recover_get_buf_lsn(
- 		uuid = &btb->bb_u.s.bb_uuid;
- 		break;
- 	}
-+	case XFS_RTRMAP_CRC_MAGIC:
- 	case XFS_BMAP_CRC_MAGIC:
- 	case XFS_BMAP_MAGIC: {
- 		struct xfs_btree_block *btb = blk;
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index e8caa600a95cae..89decffe76c8b5 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -459,6 +459,7 @@ xfs_rmap_update_abort_intent(
- static inline bool
- xfs_rui_validate_map(
- 	struct xfs_mount		*mp,
-+	bool				isrt,
- 	struct xfs_map_extent		*map)
- {
- 	if (!xfs_has_rmapbt(mp))
-@@ -488,6 +489,9 @@ xfs_rui_validate_map(
- 	if (!xfs_verify_fileext(mp, map->me_startoff, map->me_len))
- 		return false;
+diff --git a/fs/xfs/libxfs/xfs_metafile.c b/fs/xfs/libxfs/xfs_metafile.c
+index e151663cc9efd6..2f5f554a36d4c9 100644
+--- a/fs/xfs/libxfs/xfs_metafile.c
++++ b/fs/xfs/libxfs/xfs_metafile.c
+@@ -22,6 +22,24 @@
+ #include "xfs_error.h"
+ #include "xfs_alloc.h"
  
-+	if (isrt)
-+		return xfs_verify_rtbext(mp, map->me_startblock, map->me_len);
++static const struct {
++	enum xfs_metafile_type	mtype;
++	const char		*name;
++} xfs_metafile_type_strs[] = { XFS_METAFILE_TYPE_STR };
 +
- 	return xfs_verify_fsbext(mp, map->me_startblock, map->me_len);
++const char *
++xfs_metafile_type_str(enum xfs_metafile_type metatype)
++{
++	unsigned int	i;
++
++	for (i = 0; i < ARRAY_SIZE(xfs_metafile_type_strs); i++) {
++		if (xfs_metafile_type_strs[i].mtype == metatype)
++			return xfs_metafile_type_strs[i].name;
++	}
++
++	return NULL;
++}
++
+ /* Set up an inode to be recognized as a metadata directory inode. */
+ void
+ xfs_metafile_set_iflag(
+diff --git a/fs/xfs/libxfs/xfs_metafile.h b/fs/xfs/libxfs/xfs_metafile.h
+index 8d8f08a6071c23..95af4b52e5a75f 100644
+--- a/fs/xfs/libxfs/xfs_metafile.h
++++ b/fs/xfs/libxfs/xfs_metafile.h
+@@ -6,6 +6,8 @@
+ #ifndef __XFS_METAFILE_H__
+ #define __XFS_METAFILE_H__
+ 
++const char *xfs_metafile_type_str(enum xfs_metafile_type metatype);
++
+ /* All metadata files must have these flags set. */
+ #define XFS_METAFILE_DIFLAGS	(XFS_DIFLAG_IMMUTABLE | \
+ 				 XFS_DIFLAG_SYNC | \
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+index a79b734e70440d..9e5fdc0dc55cef 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.c
++++ b/fs/xfs/libxfs/xfs_rtgroup.c
+@@ -282,7 +282,8 @@ xfs_rtginode_ilock_print_fn(
+ 	const struct xfs_inode *ip =
+ 		container_of(m, struct xfs_inode, i_lock.dep_map);
+ 
+-	printk(KERN_CONT " rgno=%u", ip->i_projid);
++	printk(KERN_CONT " rgno=%u metatype=%s", ip->i_projid,
++			xfs_metafile_type_str(ip->i_metatype));
  }
  
-@@ -495,6 +499,7 @@ static inline void
- xfs_rui_recover_work(
- 	struct xfs_mount		*mp,
- 	struct xfs_defer_pending	*dfp,
-+	bool				isrt,
- 	const struct xfs_map_extent	*map)
- {
- 	struct xfs_rmap_intent		*ri;
-@@ -539,7 +544,9 @@ xfs_rui_recover_work(
- 	ri->ri_bmap.br_blockcount = map->me_len;
- 	ri->ri_bmap.br_state = (map->me_flags & XFS_RMAP_EXTENT_UNWRITTEN) ?
- 			XFS_EXT_UNWRITTEN : XFS_EXT_NORM;
--	ri->ri_group = xfs_group_intent_get(mp, map->me_startblock, XG_TYPE_AG);
-+	ri->ri_group = xfs_group_intent_get(mp, map->me_startblock,
-+			isrt ? XG_TYPE_RTG : XG_TYPE_AG);
-+	ri->ri_realtime = isrt;
- 
- 	xfs_defer_add_item(dfp, &ri->ri_list);
- }
-@@ -558,6 +565,7 @@ xfs_rmap_recover_work(
- 	struct xfs_rui_log_item		*ruip = RUI_ITEM(lip);
- 	struct xfs_trans		*tp;
- 	struct xfs_mount		*mp = lip->li_log->l_mp;
-+	bool				isrt = xfs_rui_item_isrt(lip);
- 	int				i;
- 	int				error = 0;
- 
-@@ -567,7 +575,7 @@ xfs_rmap_recover_work(
- 	 * just toss the RUI.
- 	 */
- 	for (i = 0; i < ruip->rui_format.rui_nextents; i++) {
--		if (!xfs_rui_validate_map(mp,
-+		if (!xfs_rui_validate_map(mp, isrt,
- 					&ruip->rui_format.rui_extents[i])) {
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 					&ruip->rui_format,
-@@ -575,7 +583,8 @@ xfs_rmap_recover_work(
- 			return -EFSCORRUPTED;
- 		}
- 
--		xfs_rui_recover_work(mp, dfp, &ruip->rui_format.rui_extents[i]);
-+		xfs_rui_recover_work(mp, dfp, isrt,
-+				&ruip->rui_format.rui_extents[i]);
- 	}
- 
- 	resv = xlog_recover_resv(&M_RES(mp)->tr_itruncate);
+ /*
 
