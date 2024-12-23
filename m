@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 667EF433D5
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:19:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63E05EAF6
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:19:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992344; cv=none; b=ZzyRlMOAfkd0fe1lPCmMDu4ic01rFHSnYtncyJu2MMDGzbr5zUwJLpF/GqrL3rrMu+lrr6CU8ZyMHsb8gJTlGYYXcnMpWTEp2SuoBdC2XqV4s5x9/nt0Is2OHbIw5yu/AHUFcgmW5kgtivI2v/+bHJIGMkyvmXmZNbbhf1FlDPw=
+	t=1734992360; cv=none; b=LKomaMR5MvPMWn+newgr+u2eiXPc+PMTJ3A3GB9doQ4TuZc80ovS+QWBU2Uqz1aj3xUNqEuaLmCINu0kZ8fLfYOYP+96ED85dDHueKmoV/ExIn34Y9W/Fo+bDerL7vXpqHUSHCR5DC/pg4/Q+z8ggFjqVa+jWS3b8eaxWXyMaNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992344; c=relaxed/simple;
-	bh=szUAwoQpH33ZyfTbGjooTag/k8w/1m+f3udSAmURlVw=;
+	s=arc-20240116; t=1734992360; c=relaxed/simple;
+	bh=UU+Xiph57lZ3DZiK3m+JoI05T7pHOSur3BCWv1hioN0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rLfOEKsGY8b417ufH2JosR5FbXVf2KpRNW1l5LFwci4/3GVcKOP4UBWdIUy3mx62OBH3if7Ii1f6IvwCV8YR8tXiCF/pzUdLNYQYBzwmQgptJIEZReN7ZWwNBs7uMGpQp2/eYYrrCQXq2oFEVCTTaS+748oPKf/tENvG6Se7VEc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AqMFUdoQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mqc648d9v5TB9hXMjhPXo/zOEIoaMoH56PMH9w1O/3lc71AGt+xZxux20ryLXShNJyM+bVCnKd15LwqOx1lJWItitgouWWsgu7GC49f6dtwRGY/nKFAE3vCNK/PXxWe7TTlmOR8LDgItTtpCexQgk19Eqz95tCn1q0tfvL5fej0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XzR/IXTY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AqMFUdoQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ACD6C4CED7;
-	Mon, 23 Dec 2024 22:19:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XzR/IXTY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB9BBC4CEDE;
+	Mon, 23 Dec 2024 22:19:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992344;
-	bh=szUAwoQpH33ZyfTbGjooTag/k8w/1m+f3udSAmURlVw=;
+	s=k20201202; t=1734992359;
+	bh=UU+Xiph57lZ3DZiK3m+JoI05T7pHOSur3BCWv1hioN0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AqMFUdoQvNYVXvCs4jjPu7qdr6QihO0RCHigd24E3RM2WOgaiQYD4CQzzDwfindH0
-	 hoewNScn9ntwCPiv5dDHr/GuO2nrWXD+VQJP73chTJCFRbPazgj9Fc5Cd+J93W0UlX
-	 sb1HEZZBgmecgMSZDKbyAyfLNcgxl4yVG38QY91hGnlBlI/vWYJgnIQZk2IxFGzYjr
-	 RWO6h5md5sZ6JZkcVG9R6G/O1zfa/S0w/7s86IVFJOtdGUy9YzoKJofga/RjG0vCfP
-	 DbSsOPvMLzsDKJ0hH6K5E5uYarIDUsqixE/K/wzx9E/cHah9pyVYqTNs7D+gT94AZo
-	 QDWEANFpHD3tw==
-Date: Mon, 23 Dec 2024 14:19:03 -0800
-Subject: [PATCH 28/51] xfs_db: support changing the label and uuid of rt
- superblocks
+	b=XzR/IXTYgVYtIqyjcFKCTezkq611D/PjLndWNlkQwGQudoKlYUyDPJFZXQz/ywnjK
+	 ztwCkb7dDXoq9LMbVmbQlFtJm3lu9K2TSNE7lUIJrr748GsvfJp1t+Oa6YLRqfTx/v
+	 d8kVr3d9CsLUUERtGKp9AQRXsFJRzRPXTfW4Gzp2QF4wWQI0PRAkYYaea1zoDEKFY4
+	 LCpPl7ow5M87n6HqTHegh01se+Wh0Ai9pP+hn1P37kBBWMcf5q2+LJk8zvhazQjku0
+	 FZH8Nb75P83Co4D0SO0oEsTdM0F/XS1X/844zdNPaRJ8a3HyLAQFwF5UgMwDXEHSft
+	 6bOhxIxQJ5sKw==
+Date: Mon, 23 Dec 2024 14:19:19 -0800
+Subject: [PATCH 29/51] xfs_db: enable conversion of rt space units
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498944232.2297565.2615155124288355078.stgit@frogsfrogsfrogs>
+Message-ID: <173498944247.2297565.6757015588226739985.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 References: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,187 +45,199 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update the label and uuid commands to change the rt superblocks along
-with the filesystem superblocks.
+Teach the xfs_db convert function about realtime extents, blocks, and
+realtime group numbers.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/sb.c |  109 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 98 insertions(+), 11 deletions(-)
+ db/convert.c      |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ man/man8/xfs_db.8 |   17 +++++++++++++
+ 2 files changed, 84 insertions(+), 1 deletion(-)
 
 
-diff --git a/db/sb.c b/db/sb.c
-index de248c10cb27f5..aa8fce6712e571 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -27,6 +27,7 @@ static int	label_f(int argc, char **argv);
- static void     label_help(void);
- static int	version_f(int argc, char **argv);
- static void     version_help(void);
-+static size_t check_label(char *label, bool can_warn);
- 
- static const cmdinfo_t	sb_cmd =
- 	{ "sb", NULL, sb_f, 0, 1, 1, N_("[agno]"),
-@@ -332,6 +333,65 @@ uuid_help(void)
- ));
- }
- 
-+static bool
-+check_rtsb(
-+	struct xfs_mount	*mp)
-+{
-+	int			error;
+diff --git a/db/convert.c b/db/convert.c
+index 2cdde7d05ac397..47d3e86fdc4ef2 100644
+--- a/db/convert.c
++++ b/db/convert.c
+@@ -34,6 +34,21 @@
+ 	rtx_to_bytes(xfs_rbmblock_to_rtx(mp, (x)))
+ #define	rbmword_to_bytes(x)	\
+ 	rtx_to_bytes((uint64_t)(x) << XFS_NBWORDLOG)
++#define	rgblock_to_bytes(x)	\
++	((uint64_t)(x) << mp->m_sb.sb_blocklog)
++#define	rgnumber_to_bytes(x)	\
++	rgblock_to_bytes((uint64_t)(x) * mp->m_groups[XG_TYPE_RTG].blocks)
 +
-+	if (!xfs_has_realtime(mp) || !xfs_has_rtsb(mp))
-+		return false;
-+
-+	push_cur();
-+	error = set_rt_cur(&typtab[TYP_RTSB], XFS_RTSB_DADDR,
-+			XFS_FSB_TO_BB(mp, 1), DB_RING_ADD, NULL);
-+	if (error == ENODEV) {
-+		/* no rt dev means we should just bail out */
-+		pop_cur();
-+		return true;
-+	}
-+
-+	pop_cur();
-+	return false;
-+}
-+
-+static int
-+update_rtsb(
++static inline xfs_rgnumber_t
++xfs_daddr_to_rgno(
 +	struct xfs_mount	*mp,
-+	uuid_t			*uuid,
-+	char			*label)
++	xfs_daddr_t		daddr)
 +{
-+	struct xfs_rtsb		*rsb;
-+	int			error;
++	if (!xfs_has_rtgroups(mp))
++		return 0;
 +
-+	if (!xfs_has_rtsb(mp) || !xfs_has_realtime(mp))
-+		return false;
++	return XFS_BB_TO_FSBT(mp, daddr) / mp->m_groups[XG_TYPE_RTG].blocks;
++}
+ 
+ typedef enum {
+ 	CT_NONE = -1,
+@@ -55,6 +70,8 @@ typedef enum {
+ 	CT_RSUMBLOCK,		/* block within rt summary */
+ 	CT_RSUMLOG,		/* log level for rtsummary computations */
+ 	CT_RSUMINFO,		/* info word within rt summary */
++	CT_RGBLOCK,		/* xfs_rgblock_t */
++	CT_RGNUMBER,		/* xfs_rgno_t */
+ 	NCTS
+ } ctype_t;
+ 
+@@ -80,6 +97,8 @@ typedef union {
+ 	xfs_fileoff_t	rbmblock;
+ 	unsigned int	rbmword;
+ 	xfs_fileoff_t	rsumblock;
++	xfs_rgnumber_t	rgnumber;
++	xfs_rgblock_t	rgblock;
+ } cval_t;
+ 
+ static uint64_t		bytevalue(ctype_t ctype, cval_t *val);
+@@ -95,7 +114,7 @@ static const char	*agnumber_names[] = { "agnumber", "agno", NULL };
+ static const char	*bboff_names[] = { "bboff", "daddroff", NULL };
+ static const char	*blkoff_names[] = { "blkoff", "fsboff", "agboff",
+ 					    NULL };
+-static const char	*rtblkoff_names[] = { "blkoff", "rtboff",
++static const char	*rtblkoff_names[] = { "blkoff", "rtboff", "rgboff",
+ 					    NULL };
+ static const char	*byte_names[] = { "byte", "fsbyte", NULL };
+ static const char	*daddr_names[] = { "daddr", "bb", NULL };
+@@ -111,6 +130,8 @@ static const char	*rbmword_names[] = { "rbmword", "rbmw", NULL };
+ static const char	*rsumblock_names[] = { "rsumblock", "rsmb", NULL };
+ static const char	*rsumlog_names[] = { "rsumlog", "rsml", NULL };
+ static const char	*rsumword_names[] = { "rsuminfo", "rsmi", NULL };
++static const char	*rgblock_names[] = { "rgblock", "rgbno", NULL };
++static const char	*rgnumber_names[] = { "rgnumber", "rgno", NULL };
+ 
+ static int		rsuminfo;
+ static int		rsumlog;
+@@ -244,6 +265,22 @@ static const ctydesc_t	ctydescs_rt[NCTS] = {
+ 		.allowed = M(RSUMBLOCK),
+ 		.names   = rsumword_names,
+ 	},
++	[CT_RGBLOCK] = {
++		.allowed = M(RGNUMBER) |
++			   M(BBOFF) |
++			   M(BLKOFF) |
++			   M(RSUMLOG),
++		.names   = rgblock_names,
++	},
++	[CT_RGNUMBER] = {
++		.allowed = M(RGBLOCK) |
++			   M(BBOFF) |
++			   M(BLKOFF) |
++			   M(RSUMLOG) |
++			   M(RBMBLOCK) |
++			   M(RBMWORD),
++		.names   = rgnumber_names,
++	},
+ };
+ 
+ static const cmdinfo_t	convert_cmd =
+@@ -331,6 +368,10 @@ bytevalue(ctype_t ctype, cval_t *val)
+ 		 * value.
+ 		 */
+ 		return 0;
++	case CT_RGBLOCK:
++		return rgblock_to_bytes(val->rgblock);
++	case CT_RGNUMBER:
++		return rgnumber_to_bytes(val->rgnumber);
+ 	case CT_NONE:
+ 	case NCTS:
+ 		break;
+@@ -437,6 +478,8 @@ convert_f(int argc, char **argv)
+ 	case CT_RSUMBLOCK:
+ 	case CT_RSUMLOG:
+ 	case CT_RSUMINFO:
++	case CT_RGBLOCK:
++	case CT_RGNUMBER:
+ 		/* shouldn't get here */
+ 		ASSERT(0);
+ 		break;
+@@ -521,6 +564,17 @@ rt_daddr_to_rtgrtx(
+ 	return rtx;
+ }
+ 
++static inline xfs_rgblock_t
++rt_daddr_to_rgbno(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
++{
++	if (!xfs_has_rtgroups(mp))
++		return 0;
 +
-+	push_cur();
-+	error = set_rt_cur(&typtab[TYP_RTSB], XFS_RTSB_DADDR,
-+			XFS_FSB_TO_BB(mp, 1), DB_RING_ADD, NULL);
-+	if (error == ENODEV) {
-+		/* no rt dev means we should just bail out */
-+		exitcode = 1;
-+		pop_cur();
-+		return 1;
-+	}
-+
-+	rsb = iocur_top->data;
-+	if (label) {
-+		size_t	len = check_label(label, false);
-+
-+		memset(&rsb->rsb_fname, 0, XFSLABEL_MAX);
-+		memcpy(&rsb->rsb_fname, label, len);
-+	}
-+	if (uuid)
-+		memcpy(&rsb->rsb_uuid, uuid, sizeof(rsb->rsb_uuid));
-+	write_cur();
-+	pop_cur();
-+
-+	return 0;
++	return XFS_BB_TO_FSBT(mp, daddr) % mp->m_groups[XG_TYPE_RTG].blocks;
 +}
 +
- static uuid_t *
- do_uuid(xfs_agnumber_t agno, uuid_t *uuid)
+ static int
+ rtconvert_f(int argc, char **argv)
  {
-@@ -376,6 +436,7 @@ do_uuid(xfs_agnumber_t agno, uuid_t *uuid)
- 	memcpy(&tsb.sb_uuid, uuid, sizeof(uuid_t));
- 	libxfs_sb_to_disk(iocur_top->data, &tsb);
- 	write_cur();
-+	memcpy(&mp->m_sb.sb_uuid, uuid, sizeof(uuid_t));
- 	return uuid;
- }
+@@ -611,6 +665,12 @@ rtconvert_f(int argc, char **argv)
+ 	case CT_RSUMINFO:
+ 		v = rt_daddr_to_rsuminfo(mp, v);
+ 		break;
++	case CT_RGBLOCK:
++		v = rt_daddr_to_rgbno(mp, v >> BBSHIFT);
++		break;
++	case CT_RGNUMBER:
++		v = xfs_daddr_to_rgno(mp, v >> BBSHIFT);
++		break;
+ 	case CT_AGBLOCK:
+ 	case CT_AGINO:
+ 	case CT_AGNUMBER:
+@@ -703,6 +763,12 @@ getvalue(char *s, ctype_t ctype, cval_t *val)
+ 	case CT_RSUMINFO:
+ 		rsuminfo = (unsigned int)v;
+ 		break;
++	case CT_RGBLOCK:
++		val->rgblock = (xfs_rgblock_t)v;
++		break;
++	case CT_RGNUMBER:
++		val->rgnumber = (xfs_rgnumber_t)v;
++		break;
+ 	case CT_NONE:
+ 	case NCTS:
+ 		/* NOTREACHED */
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 38916036d76c03..06f4464a928596 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -1162,6 +1162,16 @@ .SH COMMANDS
+ .RS 1.0i
+ .PD 0
+ .HP
++.B rgblock
++or
++.B rgbno
++(realtime block within a realtime group)
++.HP
++.B rgnumber
++or
++.B rgno
++(realtime group number)
++.HP
+ .B bboff
+ or
+ .B daddroff
+@@ -1229,6 +1239,13 @@ .SH COMMANDS
+ .RE
+ .IP
+ Only conversions that "make sense" are allowed.
++The compound form (with more than three arguments) is useful for
++conversions such as
++.B convert rgno
++.I rg
++.B rgbno
++.I rgb
++.BR rtblock .
  
-@@ -438,11 +499,18 @@ uuid_f(
- 			}
- 		}
- 
-+		if (check_rtsb(mp)) {
-+			exitcode = 1;
-+			return 0;
-+		}
-+
- 		/* clear the log (setting uuid) if it's not dirty */
- 		if (!sb_logzero(&uu))
- 			return 0;
- 
- 		dbprintf(_("writing all SBs\n"));
-+		if (update_rtsb(mp, &uu, NULL))
-+			return 1;
- 		for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
- 			if (!do_uuid(agno, &uu)) {
- 				dbprintf(_("failed to set UUID in AG %d\n"), agno);
-@@ -511,6 +579,27 @@ label_help(void)
- ));
- }
- 
-+static size_t
-+check_label(
-+	char	*label,
-+	bool	can_warn)
-+{
-+	size_t	len = strlen(label);
-+
-+	if (len > XFSLABEL_MAX) {
-+		if (can_warn)
-+			dbprintf(_("%s: truncating label length from %d to %d\n"),
-+				progname, (int)len, XFSLABEL_MAX);
-+		len = XFSLABEL_MAX;
-+	}
-+	if ( len == 2 &&
-+	     (strcmp(label, "\"\"") == 0 ||
-+	      strcmp(label, "''")   == 0 ||
-+	      strcmp(label, "--")   == 0) )
-+		label[0] = label[1] = '\0';
-+	return len;
-+}
-+
- static char *
- do_label(xfs_agnumber_t agno, char *label)
- {
-@@ -529,22 +618,13 @@ do_label(xfs_agnumber_t agno, char *label)
- 		return &lbl[0];
- 	}
- 	/* set label */
--	if ((len = strlen(label)) > sizeof(tsb.sb_fname)) {
--		if (agno == 0)
--			dbprintf(_("%s: truncating label length from %d to %d\n"),
--				progname, (int)len, (int)sizeof(tsb.sb_fname));
--		len = sizeof(tsb.sb_fname);
--	}
--	if ( len == 2 &&
--	     (strcmp(label, "\"\"") == 0 ||
--	      strcmp(label, "''")   == 0 ||
--	      strcmp(label, "--")   == 0) )
--		label[0] = label[1] = '\0';
-+	len = check_label(label, agno == 0);
- 	memset(&tsb.sb_fname, 0, sizeof(tsb.sb_fname));
- 	memcpy(&tsb.sb_fname, label, len);
- 	memcpy(&lbl[0], &tsb.sb_fname, sizeof(tsb.sb_fname));
- 	libxfs_sb_to_disk(iocur_top->data, &tsb);
- 	write_cur();
-+	memcpy(&mp->m_sb.sb_fname, &tsb.sb_fname, XFSLABEL_MAX);
- 	return &lbl[0];
- }
- 
-@@ -576,7 +656,14 @@ label_f(
- 			return 0;
- 		}
- 
-+		if (check_rtsb(mp)) {
-+			exitcode = 1;
-+			return 0;
-+		}
-+
- 		dbprintf(_("writing all SBs\n"));
-+		if (update_rtsb(mp, NULL, argv[1]))
-+			return 1;
- 		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
- 			if ((p = do_label(ag, argv[1])) == NULL) {
- 				dbprintf(_("failed to set label in AG %d\n"), ag);
+ Realtime summary file location conversions have the following rules:
+ Each info word in the rt summary file counts the number of free extents of a
 
