@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B1B12837B
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 23:10:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11B742837B
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 23:11:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734995459; cv=none; b=V2Y5FmrbYVnVTNhOj8W+HMqpObgVO2s2YDPqA06h+OhQDsJKKrhqnEw7wx/VYUAkk0zn+hRtenrp2RTNg25x38nlZivinAgI4f9st1ixTOJ9I6dx4x/5dZklG8kEi2qjmWAu5dqJGebD6AH7bP5nyE5+PHI7PaFeDUiWV76djtU=
+	t=1734995475; cv=none; b=lqyoXGXgTy7+nEH3r4S1AeUgVLzsIrTq+hIj5bAL9nenH18k2hE7M8F1FtDCkOy9Cp07qqnI83wCSGDzyHtBdAwmwpaUIAm49A0xuFTs333TebUFG6NN0X4QI8zX/YecFaVa2kPLrFOO2CPTcTgdogxwVkVykEQeAJfAfmYjk7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734995459; c=relaxed/simple;
-	bh=VqbvNoWjRQs46L5/Xu/EPUXMq6a+GB9slHXl2N51EB4=;
+	s=arc-20240116; t=1734995475; c=relaxed/simple;
+	bh=krTqPSDbEL4Uf4dmqOY5JcZGYJBUioGdHSoLVkGzkCk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nfpV+8H3/FHEZQw2VOivsg1mf1PXUph0hEFQ0Kg8B3nq5aOH+4dNQhgG61wwLHKo9/XNsmSIyJC1A0e+9ElKqmFlZ9o7yEMSZmWxgvx5M7w6Fma63JS6mP2Nd3mH53WXcDMtxyupwU7le+6CSyLuYgZgQ2WcpdScAwL3HTB7R1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YVm3uGqR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rYPJI0QhVTBczP3ub2kjGNRd767tcNQQNs3LmvfM9jgR8bl6W59l8rLe5WxFO1SZRRm/v9cD4kydE4dG7vrQ85H52KhtduPtdmmzm+L5uqiNsHWuHv8kUZaNifNjixhf4PFvoiKAGsRx4hiNPVaz3OTVWBiZPFEmkYNnMTVI2ZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C40uAoW+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YVm3uGqR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FBB1C4CED3;
-	Mon, 23 Dec 2024 23:10:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C40uAoW+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0BACC4CED3;
+	Mon, 23 Dec 2024 23:11:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734995459;
-	bh=VqbvNoWjRQs46L5/Xu/EPUXMq6a+GB9slHXl2N51EB4=;
+	s=k20201202; t=1734995474;
+	bh=krTqPSDbEL4Uf4dmqOY5JcZGYJBUioGdHSoLVkGzkCk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YVm3uGqRQ3G2l66FSJ+wgzeAs0PE8TGUKJjokkCkHYHmtpspHNYScPr/EKiL4f0Ff
-	 UVR0dH4mCq27cVqiu3LxjYZeF3x0VmKstnUMX/Ja5S0VsU/NltAPBa6Ynofymt0qxD
-	 ttWh4DQKcb5s4eol9Z6Y3pymSy58tgewBwwIUmdD9Mt+G/e6LwG26IZED7WaHsXmpD
-	 XnqkrAXGHgrCZ/dZsbPrG5N7EAwbGojP2PlpP9SDjebVvrAujBfLY1VgIO1Bb9kkwR
-	 BzFP2S6kqv45+l0YFZuOXowTKXbgfIDkO0+9FDxb1LTZqBHDNNIFkZ2Zu7mpkWenHJ
-	 GSJW/0hvfx0LA==
-Date: Mon, 23 Dec 2024 15:10:58 -0800
-Subject: [PATCH 18/43] xfs: refactor reflink quota updates
+	b=C40uAoW+Xl3yKa+rV12sWLGyltpAsprWyft3PtMspMzcYNXR4AHyHx06tcxKEiXhH
+	 leZJIxlRQoLb7tLAVpVJm7rcpwaCzmx7eaRAkIzLHd7XCp/ZA6B9yt1tATcniHwyCp
+	 MC58swUi4bUiR7VNnSZvWyUo86cEV7vlnZzWgawzYN6LXoeE7RsLHi8SrkzsBg302O
+	 XhqCwBD9b+mmhgTW4BdQp8PqIM8X3VdpBhJpXb3CVXMW17fla/mOqM9JacstII+zH4
+	 lGnGYsNucXYQFLUqWRWNoKPsB07UefCuk6DzGGIwZQBQAh0mJk1oMWUAa2cSj6tf7j
+	 l5hppJCJ2jsow==
+Date: Mon, 23 Dec 2024 15:11:14 -0800
+Subject: [PATCH 19/43] xfs: enable CoW for realtime data
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173499420248.2381378.364102620650375754.stgit@frogsfrogsfrogs>
+Message-ID: <173499420264.2381378.15207407249279111578.stgit@frogsfrogsfrogs>
 In-Reply-To: <173499419823.2381378.11636144864040727907.stgit@frogsfrogsfrogs>
 References: <173499419823.2381378.11636144864040727907.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,83 +45,99 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Hoist all quota updates for reflink into a helper function, since things
-are about to become more complicated.
+Update our write paths to support copy on write on the rt volume.  This
+works in more or less the same way as it does on the data device, with
+the major exception that we never do delalloc on the rt volume.
+
+Because we consider unwritten CoW fork staging extents to be incore
+quota reservation, we update xfs_quota_reserve_blkres to support this
+case.  Though xfs doesn't allow rt and quota together, the change is
+trivial and we shouldn't leave a logic bomb here.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_reflink.c |   37 ++++++++++++++++++++++++++++++++-----
- 1 file changed, 32 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_reflink.c |   36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 66ce29101462cd..29574b015fddc0 100644
+index 29574b015fddc0..24f545687b8730 100644
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -739,6 +739,35 @@ xfs_reflink_cancel_cow_range(
- 	return error;
- }
+@@ -439,20 +439,26 @@ xfs_reflink_fill_cow_hole(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp;
+ 	xfs_filblks_t		resaligned;
+-	xfs_extlen_t		resblks;
++	unsigned int		dblocks = 0, rblocks = 0;
+ 	int			nimaps;
+ 	int			error;
+ 	bool			found;
  
-+#ifdef CONFIG_XFS_QUOTA
-+/*
-+ * Update quota accounting for a remapping operation.  When we're remapping
-+ * something from the CoW fork to the data fork, we must update the quota
-+ * accounting for delayed allocations.  For remapping from the data fork to the
-+ * data fork, use regular block accounting.
-+ */
-+static inline void
-+xfs_reflink_update_quota(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	bool			is_cow,
-+	int64_t			blocks)
-+{
-+	unsigned int		qflag;
-+
+ 	resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+ 		imap->br_blockcount, xfs_get_cowextsz_hint(ip));
+-	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
 +	if (XFS_IS_REALTIME_INODE(ip)) {
-+		qflag = is_cow ? XFS_TRANS_DQ_DELRTBCOUNT :
-+				 XFS_TRANS_DQ_RTBCOUNT;
++		dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
++		rblocks = resaligned;
 +	} else {
-+		qflag = is_cow ? XFS_TRANS_DQ_DELBCOUNT :
-+				 XFS_TRANS_DQ_BCOUNT;
++		dblocks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
++		rblocks = 0;
 +	}
-+	xfs_trans_mod_dquot_byino(tp, ip, qflag, blocks);
-+}
-+#else
-+# define xfs_reflink_update_quota(tp, ip, is_cow, blocks)	((void)0)
-+#endif
-+
- /*
-  * Remap part of the CoW fork into the data fork.
-  *
-@@ -833,8 +862,7 @@ xfs_reflink_end_cow_extent(
- 		 */
- 		xfs_bmap_unmap_extent(tp, ip, XFS_DATA_FORK, &data);
- 		xfs_refcount_decrease_extent(tp, isrt, &data);
--		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
--				-data.br_blockcount);
-+		xfs_reflink_update_quota(tp, ip, false, -data.br_blockcount);
- 	} else if (data.br_startblock == DELAYSTARTBLOCK) {
- 		int		done;
  
-@@ -859,8 +887,7 @@ xfs_reflink_end_cow_extent(
- 	xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, &del);
+ 	xfs_iunlock(ip, *lockmode);
+ 	*lockmode = 0;
  
- 	/* Charge this new data fork mapping to the on-disk quota. */
--	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
--			(long)del.br_blockcount);
-+	xfs_reflink_update_quota(tp, ip, true, del.br_blockcount);
+-	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks, 0,
+-			false, &tp);
++	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, dblocks,
++			rblocks, false, &tp);
+ 	if (error)
+ 		return error;
  
- 	/* Remove the mapping from the CoW fork. */
- 	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-@@ -1347,7 +1374,7 @@ xfs_reflink_remap_extent(
- 		qdelta += dmap->br_blockcount;
+@@ -1212,7 +1218,7 @@ xfs_reflink_remap_extent(
+ 	struct xfs_trans	*tp;
+ 	xfs_off_t		newlen;
+ 	int64_t			qdelta = 0;
+-	unsigned int		resblks;
++	unsigned int		dblocks, rblocks, resblks;
+ 	bool			quota_reserved = true;
+ 	bool			smap_real;
+ 	bool			dmap_written = xfs_bmap_is_written_extent(dmap);
+@@ -1243,8 +1249,15 @@ xfs_reflink_remap_extent(
+ 	 * we're remapping.
+ 	 */
+ 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
++	if (XFS_IS_REALTIME_INODE(ip)) {
++		dblocks = resblks;
++		rblocks = dmap->br_blockcount;
++	} else {
++		dblocks = resblks + dmap->br_blockcount;
++		rblocks = 0;
++	}
+ 	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
+-			resblks + dmap->br_blockcount, 0, false, &tp);
++			dblocks, rblocks, false, &tp);
+ 	if (error == -EDQUOT || error == -ENOSPC) {
+ 		quota_reserved = false;
+ 		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
+@@ -1324,8 +1337,15 @@ xfs_reflink_remap_extent(
+ 	 * done.
+ 	 */
+ 	if (!quota_reserved && !smap_real && dmap_written) {
+-		error = xfs_trans_reserve_quota_nblks(tp, ip,
+-				dmap->br_blockcount, 0, false);
++		if (XFS_IS_REALTIME_INODE(ip)) {
++			dblocks = 0;
++			rblocks = dmap->br_blockcount;
++		} else {
++			dblocks = dmap->br_blockcount;
++			rblocks = 0;
++		}
++		error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks,
++				false);
+ 		if (error)
+ 			goto out_cancel;
  	}
- 
--	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, qdelta);
-+	xfs_reflink_update_quota(tp, ip, false, qdelta);
- 
- 	/* Update dest isize if needed. */
- 	newlen = XFS_FSB_TO_B(mp, dmap->br_startoff + dmap->br_blockcount);
 
