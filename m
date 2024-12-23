@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F06BD433D5
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:22:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 945E5188596
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:22:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992564; cv=none; b=Ael5X5S7Tgq+ac/3mWndfmqudCj/fwMcqLGUmXoi/XzLldykJ05x5B1qJQZmE52WTAVHTeClz7K2cv3pQKEI3mKg+esjGv/ygg3QjDFLkc+BFHOckGcl12Lzmd7Zj7oARhvJ41ivlCs0UKXeAXgPX8AVvkH0hBfxbp1Zi1GDKIw=
+	t=1734992579; cv=none; b=I4xoYTV7H+tDzL3SMYxi7Z1t5a4TCX1JJX2gDQSit/1rgO8he2t6cmpVyxVRanwiNpJ/6zN2Ab1py2ab1PwjSfnSY5t2j2ac/9ffEkahoiLLTruHsOcFtp8E2EjvAMN+ktMZptxTlSRxf/sWpak0xfw/XXsiIbNMISj0utZxtKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992564; c=relaxed/simple;
-	bh=/i2oevIs7Dsjjw+bHUqt9jcSUktc+MEVT+xqbiAtVms=;
+	s=arc-20240116; t=1734992579; c=relaxed/simple;
+	bh=yPslgJDIRCHIV79TljwiN69IKfj63KHF5QNZLRJbBdo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VDRJT4YNx39A68wf9eirinLmwk+0xe/JdHfqQ9PwSfNOv4duMdaYV13Wbjl8Tr6ZGeHMjQEW3g3WllNSwMpzMorAHFwSAaE0Z+nHRRrRu6HmPgBr7BaYQM8JW3BaNmavtCy8JXzJZYL0/09dgnLubulGY/0o3fUYk/6TLOA0Tn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uCiZ4RZz; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=cIZ5EPa6qRaqYma8Sv1zf8SevAXdEYMpqDmdcMOySnGQUUmw7OwwWQxV9oSobQfEwDefehx29nhB4L86ox8zMENsbpVvybA1Tn4ukcluTW5jdpwk0TSHBTgazhJQImvpoW05tK5s455xu3Vwpe4BHxLp2+Sb6/anSdAaRZQwedE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yf4xazSU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uCiZ4RZz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C657EC4CED3;
-	Mon, 23 Dec 2024 22:22:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yf4xazSU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71253C4CED3;
+	Mon, 23 Dec 2024 22:22:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992563;
-	bh=/i2oevIs7Dsjjw+bHUqt9jcSUktc+MEVT+xqbiAtVms=;
+	s=k20201202; t=1734992579;
+	bh=yPslgJDIRCHIV79TljwiN69IKfj63KHF5QNZLRJbBdo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uCiZ4RZzQ4LyL67DpqSEgr9mkBZpwdPhTdVn/N2RwGXcOQsaOc9d+WX56U0NwWm6N
-	 fm4xabMpcXmrZ1exMm2gJo7i5fWsxWTdfcHSwVkhP3fOEO8YqFzcxdv4RDaegaCVL5
-	 16voAMKhQgZ4zma/d7IC5UvN2TugW6re+AhoTmxXBTioz7hT4+1EPXItPvN0Qv5sns
-	 ux99Bo0nq2QtuWGGXy7+LkGgTGI5DHiUKUbqLpZXJhCOCkqLZLXYZ8kzO/AsTUS6M8
-	 PHuXJwrcrNYEevjF2YV6lX66WqwPu11KguBmO5TG8v6SX5maXlzG7saWS03EHe92aL
-	 4nJL1D6kT9pSA==
-Date: Mon, 23 Dec 2024 14:22:43 -0800
-Subject: [PATCH 42/51] xfs_mdrestore: restore rt group superblocks to realtime
- device
+	b=Yf4xazSU0J5ytiaTq4w/8Kvnu7a0rZUZJslBc+5S1oV3tFHDlv2tuwqkcHo2+6kM9
+	 pe+MV/V3VZ3TlXl4D0wkxmK7Xw7jsi+hM9d+a3/VscGrF4Rl+SeE79EVWTLQ82oi8H
+	 Uktc+LZ5YHLBRfDS+aPwyzJloR4oqlB0hjgvPFJ7duUo+aQfBBDzyQ3DD+m0vM1g2W
+	 +TA6xNwO5Tp6WtcLuGhthKA4PP2IUDr9nw/afQG8WmX0TYBqnyEzRWmoNAw7/v4BwB
+	 ww6HqokNoTk654DKNEnzqId3Sm9TctwGUp4MZMoDe8iwbm6yQDfqQeh9VKXF4FGzkR
+	 t/kwL0rVEZ3+w==
+Date: Mon, 23 Dec 2024 14:22:58 -0800
+Subject: [PATCH 43/51] xfs_spaceman: report on realtime group health
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498944446.2297565.16252646930364155778.stgit@frogsfrogsfrogs>
+Message-ID: <173498944462.2297565.5532810486834524461.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 References: <173498943717.2297565.4022811207967161638.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,207 +45,168 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Support restoring realtime device metadata to the realtime device, if
-the dumped filesystem had one.
+Add the realtime group status to the health reporting done by
+xfs_spaceman.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man8/xfs_mdrestore.8  |   10 ++++++++++
- mdrestore/xfs_mdrestore.c |   47 ++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 48 insertions(+), 9 deletions(-)
+ man/man8/xfs_spaceman.8 |    5 +++-
+ spaceman/health.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 65 insertions(+), 3 deletions(-)
 
 
-diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
-index f60e7b56ebf0d1..6f6e14e96c6a5c 100644
---- a/man/man8/xfs_mdrestore.8
-+++ b/man/man8/xfs_mdrestore.8
-@@ -8,6 +8,9 @@ .SH SYNOPSIS
- ] [
- .B \-l
- .I logdev
-+] [
-+.B \-r
-+.I rtdev
- ]
- .I source
- .I target
-@@ -17,6 +20,9 @@ .SH SYNOPSIS
- [
- .B \-l
- .I logdev
-+] [
-+.B \-r
-+.I rtdev
- ]
- .I source
- .br
-@@ -61,6 +67,10 @@ .SH OPTIONS
- In such a scenario, the user has to provide a device to which the log device
- contents from the metadump file are copied.
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+index 0d299132a7881b..7d2d1ff94eeb55 100644
+--- a/man/man8/xfs_spaceman.8
++++ b/man/man8/xfs_spaceman.8
+@@ -91,7 +91,7 @@ .SH COMMANDS
+ .BR "xfs_info" "(8)"
+ prints when querying a filesystem.
  .TP
-+.BI \-r " rtdev"
-+Restore realtime device metadata to this device.
-+This is only required for a metadump in v2 format.
+-.BI "health [ \-a agno] [ \-c ] [ \-f ] [ \-i inum ] [ \-n ] [ \-q ] [ paths ]"
++.BI "health [ \-a agno] [ \-c ] [ \-f ] [ \-i inum ] [ \-n ] [ \-q ] [ \-r rgno ] [ paths ]"
+ Reports the health of the given group of filesystem metadata.
+ .RS 1.0i
+ .PD 0
+@@ -119,6 +119,9 @@ .SH COMMANDS
+ .B \-q
+ Report only unhealthy metadata.
+ .TP
++.B \-r
++Report on the health of the given realtime group.
 +.TP
- .B \-V
- Prints the version number and exits.
- .SH DIAGNOSTICS
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index c5584fec68813e..d5014981b15a68 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -28,7 +28,8 @@ struct mdrestore_ops {
- 	void (*show_info)(union mdrestore_headers *header, const char *md_file);
- 	void (*restore)(union mdrestore_headers *header, FILE *md_fp,
- 			const struct mdrestore_dev *ddev,
--			const struct mdrestore_dev *logdev);
-+			const struct mdrestore_dev *logdev,
-+			const struct mdrestore_dev *rtdev);
+ .B paths
+ Report on the health of the files at the given path.
+ .PD
+diff --git a/spaceman/health.c b/spaceman/health.c
+index c4d570363fbbf1..4281589324cd44 100644
+--- a/spaceman/health.c
++++ b/spaceman/health.c
+@@ -132,6 +132,22 @@ static const struct flag_map ag_flags[] = {
+ 	{0},
  };
  
- static struct mdrestore {
-@@ -37,6 +38,7 @@ static struct mdrestore {
- 	bool			show_info;
- 	bool			progress_since_warning;
- 	bool			external_log;
-+	bool			realtime_data;
- } mdrestore;
- 
- static void
-@@ -212,7 +214,8 @@ restore_v1(
- 	union mdrestore_headers		*h,
- 	FILE				*md_fp,
- 	const struct mdrestore_dev	*ddev,
--	const struct mdrestore_dev	*logdev)
-+	const struct mdrestore_dev	*logdev,
-+	const struct mdrestore_dev	*rtdev)
- {
- 	struct xfs_metablock	*metablock;	/* header + index + blocks */
- 	__be64			*block_index;
-@@ -336,8 +339,9 @@ read_header_v2(
- 	if (!mdrestore.external_log && (compat & XFS_MD2_COMPAT_EXTERNALLOG))
- 		fatal("External Log device is required\n");
- 
--	if (h->v2.xmh_incompat_flags & cpu_to_be32(XFS_MD2_INCOMPAT_RTDEVICE))
--		fatal("Realtime device not yet supported\n");
-+	if ((h->v2.xmh_incompat_flags & cpu_to_be32(XFS_MD2_INCOMPAT_RTDEVICE)) &&
-+	    !mdrestore.realtime_data)
-+		fatal("Realtime device is required\n");
- }
- 
- static void
-@@ -346,14 +350,17 @@ show_info_v2(
- 	const char		*md_file)
- {
- 	uint32_t		compat_flags;
-+	uint32_t		incompat_flags;
- 
- 	compat_flags = be32_to_cpu(h->v2.xmh_compat_flags);
-+	incompat_flags = be32_to_cpu(h->v2.xmh_incompat_flags);
- 
--	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, %s metadata blocks,\n",
-+	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, rt device contents are %sdumped, %s metadata blocks,\n",
- 		md_file,
- 		compat_flags & XFS_MD2_COMPAT_OBFUSCATED ? "":"not ",
- 		compat_flags & XFS_MD2_COMPAT_DIRTYLOG ? "dirty":"clean",
- 		compat_flags & XFS_MD2_COMPAT_EXTERNALLOG ? "":"not ",
-+		incompat_flags & XFS_MD2_INCOMPAT_RTDEVICE ? "":"not ",
- 		compat_flags & XFS_MD2_COMPAT_FULLBLOCKS ? "full":"zeroed");
- }
- 
-@@ -390,7 +397,8 @@ restore_v2(
- 	union mdrestore_headers		*h,
- 	FILE				*md_fp,
- 	const struct mdrestore_dev	*ddev,
--	const struct mdrestore_dev	*logdev)
-+	const struct mdrestore_dev	*logdev,
-+	const struct mdrestore_dev	*rtdev)
- {
- 	struct xfs_sb		sb;
- 	struct xfs_meta_extent	xme;
-@@ -431,6 +439,11 @@ restore_v2(
- 		verify_device_size(logdev, sb.sb_logblocks, sb.sb_blocksize);
- 	}
- 
-+	if (sb.sb_rblocks > 0) {
-+		ASSERT(mdrestore.realtime_data == true);
-+		verify_device_size(rtdev, sb.sb_rblocks, sb.sb_blocksize);
-+	}
++static const struct flag_map rtgroup_flags[] = {
++	{
++		.mask = XFS_RTGROUP_GEOM_SICK_SUPER,
++		.descr = "superblock",
++	},
++	{
++		.mask = XFS_RTGROUP_GEOM_SICK_BITMAP,
++		.descr = "realtime bitmap",
++	},
++	{
++		.mask = XFS_RTGROUP_GEOM_SICK_SUMMARY,
++		.descr = "realtime summary",
++	},
++	{0},
++};
 +
- 	if (pwrite(ddev->fd, block_buffer, len, 0) < 0)
- 		fatal("error writing primary superblock: %s\n",
- 			strerror(errno));
-@@ -459,6 +472,10 @@ restore_v2(
- 			device = "log";
- 			fd = logdev->fd;
+ static const struct flag_map inode_flags[] = {
+ 	{
+ 		.mask = XFS_BS_SICK_INODE,
+@@ -216,6 +232,25 @@ report_ag_sick(
+ 	return 0;
+ }
+ 
++/* Report on a rt group's health. */
++static int
++report_rtgroup_sick(
++	xfs_rgnumber_t		rgno)
++{
++	struct xfs_rtgroup_geometry rgeo = { 0 };
++	char			descr[256];
++	int			ret;
++
++	ret = -xfrog_rtgroup_geometry(file->xfd.fd, rgno, &rgeo);
++	if (ret) {
++		xfrog_perror(ret, "rtgroup_geometry");
++		return 1;
++	}
++	snprintf(descr, sizeof(descr) - 1, _("rtgroup %u"), rgno);
++	report_sick(descr, rtgroup_flags, rgeo.rg_sick, rgeo.rg_checked);
++	return 0;
++}
++
+ /* Report on an inode's health. */
+ static int
+ report_inode_health(
+@@ -342,7 +377,7 @@ report_bulkstat_health(
+ 	return error;
+ }
+ 
+-#define OPT_STRING ("a:cfi:nq")
++#define OPT_STRING ("a:cfi:nqr:")
+ 
+ /* Report on health problems in XFS filesystem. */
+ static int
+@@ -352,6 +387,7 @@ health_f(
+ {
+ 	unsigned long long	x;
+ 	xfs_agnumber_t		agno;
++	xfs_rgnumber_t		rgno;
+ 	bool			default_report = true;
+ 	int			c;
+ 	int			ret;
+@@ -399,6 +435,17 @@ health_f(
+ 		case 'q':
+ 			quiet = true;
  			break;
-+		case XME_ADDR_RT_DEVICE:
-+			device = "rt";
-+			fd = rtdev->fd;
++		case 'r':
++			default_report = false;
++			errno = 0;
++			x = strtoll(optarg, NULL, 10);
++			if (!errno && x >= NULLRGNUMBER)
++				errno = ERANGE;
++			if (errno) {
++				perror("rtgroup health");
++				return 1;
++			}
 +			break;
  		default:
- 			fatal("Invalid device found in metadump\n");
+ 			return command_usage(&health_cmd);
+ 		}
+@@ -434,6 +481,12 @@ health_f(
+ 			if (ret)
+ 				return 1;
  			break;
-@@ -488,7 +505,7 @@ static struct mdrestore_ops mdrestore_ops_v2 = {
- static void
- usage(void)
- {
--	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] source target\n",
-+	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] [-r rtdev] source target\n",
- 		progname);
- 	exit(1);
- }
-@@ -501,18 +518,21 @@ main(
- 	union mdrestore_headers	headers;
- 	DEFINE_MDRESTORE_DEV(ddev);
- 	DEFINE_MDRESTORE_DEV(logdev);
-+	DEFINE_MDRESTORE_DEV(rtdev);
- 	FILE			*src_f;
- 	char			*logdev_path = NULL;
-+	char			*rtdev_path = NULL;
- 	int			c;
++		case 'r':
++			rgno = strtoll(optarg, NULL, 10);
++			ret = report_rtgroup_sick(rgno);
++			if (ret)
++				return 1;
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -455,6 +508,11 @@ health_f(
+ 			if (ret)
+ 				return 1;
+ 		}
++		for (rgno = 0; rgno < file->xfd.fsgeom.rgcount; rgno++) {
++			ret = report_rtgroup_sick(rgno);
++			if (ret)
++				return 1;
++		}
+ 		if (comprehensive) {
+ 			ret = report_bulkstat_health(NULLAGNUMBER);
+ 			if (ret)
+@@ -485,6 +543,7 @@ health_help(void)
+ " -i inum  -- Report health of a given inode number.\n"
+ " -n       -- Try to report file names.\n"
+ " -q       -- Only report unhealthy metadata.\n"
++" -r rgno  -- Report health of the given realtime group.\n"
+ " paths    -- Report health of the given file path.\n"
+ "\n"));
  
- 	mdrestore.show_progress = false;
- 	mdrestore.show_info = false;
- 	mdrestore.progress_since_warning = false;
- 	mdrestore.external_log = false;
-+	mdrestore.realtime_data = false;
- 
- 	progname = basename(argv[0]);
- 
--	while ((c = getopt(argc, argv, "gil:V")) != EOF) {
-+	while ((c = getopt(argc, argv, "gil:r:V")) != EOF) {
- 		switch (c) {
- 			case 'g':
- 				mdrestore.show_progress = true;
-@@ -524,6 +544,10 @@ main(
- 				logdev_path = optarg;
- 				mdrestore.external_log = true;
- 				break;
-+			case 'r':
-+				rtdev_path = optarg;
-+				mdrestore.realtime_data = true;
-+				break;
- 			case 'V':
- 				printf("%s version %s\n", progname, VERSION);
- 				exit(0);
-@@ -592,10 +616,15 @@ main(
- 	if (mdrestore.external_log)
- 		open_device(&logdev, logdev_path);
- 
--	mdrestore.mdrops->restore(&headers, src_f, &ddev, &logdev);
-+	/* check and open realtime device */
-+	if (mdrestore.realtime_data)
-+		open_device(&rtdev, rtdev_path);
-+
-+	mdrestore.mdrops->restore(&headers, src_f, &ddev, &logdev, &rtdev);
- 
- 	close_device(&ddev);
- 	close_device(&logdev);
-+	close_device(&rtdev);
- 
- 	if (src_f != stdin)
- 		fclose(src_f);
+@@ -495,7 +554,7 @@ static cmdinfo_t health_cmd = {
+ 	.cfunc = health_f,
+ 	.argmin = 0,
+ 	.argmax = -1,
+-	.args = "[-a agno] [-c] [-f] [-i inum] [-n] [-q] [paths]",
++	.args = "[-a agno] [-c] [-f] [-i inum] [-n] [-q] [-r rgno] [paths]",
+ 	.flags = CMD_FLAG_ONESHOT,
+ 	.help = health_help,
+ };
 
