@@ -1,75 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DCE1192B86
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:27:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA911433D5
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:27:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734992845; cv=none; b=cwUg1tmCVoPWzcYdJrhPtHZ972CJabGtjQxteiHU6DEjibzuVwxJZtXXtavh+bCX2UqAQSCqqc4etRvgrHdl+mpoJssK8bY4l6bEqP9tCHR+raHlN6/nYl/UcgU+aFDzBF2n8F1l9S4gWhyAbIEZNkIWumnRjSwzKD9CFRCX0HU=
+	t=1734992860; cv=none; b=MuPhkmnXXK4RhgdJg34qPwoM1x/EnJ/4ficFW8+r2z1ioymKessBEWozYgMcQe7MLKcVT1HxlYVq6LfSyD2lylGS7D89Pga1+dzaz5r9J7VTuo/eLRmcEySpD9EZ/xPMAhgnqGLlwsTbTaE/xVFvgN3ZqN5FSflZRFJByvE2Qt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734992845; c=relaxed/simple;
-	bh=XJSmF4kkRkz5WGRKjaWcG6fuozk2ByI7WRSPetQQgjg=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Nb70WaL3S19ZDPxy0VRaR9+oclITLjoJzOdSOgzJncIggUz8XMTIFAFfCzYuO89udKZTzj6/eTRUMeuS/KuRKHykNe7TF6HR/liUviP0dg7HTfm2nbxdGDdbSRVEh4EFrWI1ya3cWRe8XUluuU301No2NIn0Tva1j0Uz8pDhqIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G88+Nhwq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734992860; c=relaxed/simple;
+	bh=IMPtteFBW2JORIBr7BkSz7wy3ScLQMs7IAtYMxkB+NU=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
+	 References:Content-Type; b=axFSOv9bmS5LQkH8IsRGpOAc8SHnIOb6ERKguB5ddb2ABRuNS1J3Te55bCRwONCnO2lo276utJFARcY0QTs4uRL/563otaTs67TmuG9EMXCfrmDYVWlaMYCZYMiXat9DZU3+Ywbo/mQqjoTIe+BSEzNmX5aDQJQ5GFSpB6B4+jo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ApDzQzK2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G88+Nhwq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD4A3C4CED3;
-	Mon, 23 Dec 2024 22:27:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ApDzQzK2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80870C4CED3;
+	Mon, 23 Dec 2024 22:27:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734992844;
-	bh=XJSmF4kkRkz5WGRKjaWcG6fuozk2ByI7WRSPetQQgjg=;
+	s=k20201202; t=1734992860;
+	bh=IMPtteFBW2JORIBr7BkSz7wy3ScLQMs7IAtYMxkB+NU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=G88+Nhwq048bvb0GRplqlKh52DS/4tGmmqqYb6RR1F9xI5lsofhmHk/0Qfvu4ZLQQ
-	 J7PMHyc4V9z6xp4Z9APjvXIuqEUuv5rSg9lLWpxuNlf4qFJrkv0Y1rcTXS9i35rHlJ
-	 IVMAPRgODVmPjI8PfxBnQJP71P02CaLjHQUaQYOR5Qmc1/BY9Uk88qUHGseCNFFOzB
-	 cnNd5n7Q73sMZhXLBBYgNfKQkC1grrrXk6e876SazFo/XeBYgk901yl5jISWSAk8+0
-	 5frxZ3DbVazpdUJgEW7B8+M0JjdkjJlNknwxF/kJfVsUjun+7lRLnRwuQ44uoUaa0Y
-	 LJf/ndgDFqe9g==
-Date: Mon, 23 Dec 2024 14:27:24 -0800
-Subject: [PATCH 2/2] mkfs: enable rt quota options
+	b=ApDzQzK2iJassxJwmwdOlY+DrDq2Fp24rk5+UamwJ6y2iKK3d17QUAenpF69NKG0x
+	 bAbOV0aW2CmWrIZlVJtS+9YO5mKwo1tNcv+9+EfeSa3QTK0N1WNbc7uwB9LBlUg4Ee
+	 WsXn8A5SRlG22RsXFPMGVjkUpnNsMsqmXBqNDzxMxm0quILYRPbeI6N/OcNzAVwNQe
+	 qTLpNum7TBynhnVuXeBcoue4QXHUBHsijcp+lO9d2lDknUPFIx0RcWInV7LYq37MdL
+	 3pkmNe5JXaLPFEK0sA10ZJCH4YOx5XebCkTptoSogWTR/M2LXP8jCxWos67HduYkLh
+	 zBdThOA04uQAQ==
+Date: Mon, 23 Dec 2024 14:27:40 -0800
+Subject: [GIT PULL 1/8] xfsprogs: bug fixes for 6.12
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498945472.2299549.10695247805344413916.stgit@frogsfrogsfrogs>
-In-Reply-To: <173498945439.2299549.17098839803824591839.stgit@frogsfrogsfrogs>
-References: <173498945439.2299549.17098839803824591839.stgit@frogsfrogsfrogs>
+To: aalbersh@kernel.org, djwong@kernel.org
+Cc: hch@lst.de, jpalus@fastmail.com, linux-xfs@vger.kernel.org
+Message-ID: <173498954095.2301496.13379830574839883381.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <20241223212904.GQ6174@frogsfrogsfrogs>
+References: <20241223212904.GQ6174@frogsfrogsfrogs>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi Andrey,
 
-Now that the kernel supports quota and realtime devices, allow people to
-format filesystems with permanent quota options.
+Please pull this branch with changes for xfsprogs for 6.11-rc1.
+
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
+
+--D
+
+The following changes since commit 409477af604f465169be9b2cbe259fe382f052ae:
+
+xfs_io: add support for atomic write statx fields (2024-11-21 14:43:58 +0100)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/xfs-6.12-fixes_2024-12-23
+
+for you to fetch changes up to 50e3f6684fe5adb4138ec5882b316c00524a6051:
+
+man: document the -n parent mkfs option (2024-12-23 13:05:06 -0800)
+
+----------------------------------------------------------------
+xfsprogs: bug fixes for 6.12 [01/23]
+
+Bug fixes for 6.12.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- mkfs/xfs_mkfs.c |    6 ------
- 1 file changed, 6 deletions(-)
 
+----------------------------------------------------------------
+Andrey Albershteyn (1):
+xfsprogs: Release v6.12.0
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index a15c19df03a86d..956cc295489342 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2649,12 +2649,6 @@ _("cowextsize not supported without reflink support\n"));
- 		cli->sb_feat.exchrange = true;
- 	}
- 
--	if (cli->sb_feat.qflags && cli->xi->rt.name) {
--		fprintf(stderr,
--_("persistent quota flags not supported with realtime volumes\n"));
--				usage();
--	}
--
- 	/*
- 	 * Persistent quota flags requires metadir support because older
- 	 * kernels (or current kernels with old filesystems) will reset qflags
+Darrick J. Wong (2):
+xfs_repair: fix maximum file offset comparison
+man: document the -n parent mkfs option
+
+Jan Palus (1):
+man: fix ioctl_xfs_commit_range man page install
+
+VERSION                           |  2 +-
+configure.ac                      |  2 +-
+debian/changelog                  |  6 ++++++
+doc/CHANGES                       | 21 +++++++++++++++++++++
+man/man2/ioctl_xfs_commit_range.2 |  2 +-
+man/man8/mkfs.xfs.8.in            | 12 ++++++++++++
+repair/dinode.c                   |  2 +-
+repair/globals.c                  |  1 -
+repair/globals.h                  |  1 -
+repair/prefetch.c                 |  2 +-
+repair/versions.c                 |  7 +------
+11 files changed, 45 insertions(+), 13 deletions(-)
 
