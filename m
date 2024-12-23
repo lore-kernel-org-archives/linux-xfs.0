@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6659A61FFE
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:53:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5109E7462;
+	Mon, 23 Dec 2024 22:53:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734994412; cv=none; b=WNJ87mhnH5oLhdEW1ZoQ57U/n/BkUoB+d+6uCcv3N7GVpZC6mBnciQ8QlQ1j3zfLe/8pOCNNBLWQ6ke0PeLZDy0IIREKiIcxjKXhdKluydjfaybb8xdFAS0/KecjwkGVPStwF5eSWzu3pIt9Ra4DYRpHtALU/v94vBUFm7usQ8c=
+	t=1734994428; cv=none; b=J6u3/iKu5+nkdPh2FSBDLq4qfwfZAPqn+hB8WbgT3eQ8avkALAZDPjgH0+2ZX9aqRaCSNySwjvSU/Ug1oz4ss3LA7TFdL25cCD3cdwUFjYKp7WUxb4gNrsKF8fLjoB8a7nZW2vSERTc2qgnYhXn2uKhMqEBp4aRnxvF/gybpteE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734994412; c=relaxed/simple;
-	bh=auuGMsQBRM7YlZfI3tY04osP2VFtW7owdl+kBj8WcKw=;
+	s=arc-20240116; t=1734994428; c=relaxed/simple;
+	bh=HA4XOeCq2CSwB1SCiIC5hUhYTpNQNBuvaPf1ozcEFI0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=knCwLOfwsWBd6MzFGOd3tHz1f7Hwnqm7vfY6y59gIeyj0I5R8/gEhBIHrQnHkNEWdPtNaL13CWuDCyfbUij33PnU1pO55vLn5s7ux/KKLHRjFJWq88x0BOqW5LBoOa510A14hhc389Ct+GTScnvqmLhuKVKZPeJt2FZQzwMW3sc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MhcdhngA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=W1zzng+bI8yVubj8MVyqXNeQ8CKCmJtgkPIxNWIoEWnt+A3IyriBmD/xlz12nZ8V1YBuv6pFrxF96Gl2omYe/vhgNMW+mnPpFNzgII7kFt/9hlis/ayRWLGjuqyK+le6jQal3OjWzbp3iLxIhZAmbbE09MALtXNF2lykH7goKSk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kzyq8ZgR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MhcdhngA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33C1CC4CED3;
-	Mon, 23 Dec 2024 22:53:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kzyq8ZgR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB537C4CED3;
+	Mon, 23 Dec 2024 22:53:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734994412;
-	bh=auuGMsQBRM7YlZfI3tY04osP2VFtW7owdl+kBj8WcKw=;
+	s=k20201202; t=1734994427;
+	bh=HA4XOeCq2CSwB1SCiIC5hUhYTpNQNBuvaPf1ozcEFI0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MhcdhngAiEvX/0t8jBcB01DOWQrkTMGfqt0dHPH7bx4ocNeDBgWKJ6Vg3k/lOftOL
-	 eeuhWXBURwuNdirCeF8qIRRC1mWDCQdQCplkAKIfn83IwVwC/N0fhHr+mCx9pzpSg8
-	 vT1P9qtaXk8kLt30ptjI9AmAir4lzQ1ndUsbcMSYMX+5uiYY9C7AWfEECtChl/JI0A
-	 oauiZuCISSkw9vNxOSqjtMqoR0dKBAAlNsBxT2RA61cRx6+JhN666Y+KU764AfALL0
-	 hvllhrwaC1oqdk8KmAzO8MKiZXhqD7y+b8Ha/AlprL79387v9pIqptUGL7Wil41qEH
-	 P0FvUFR6GAxcg==
-Date: Mon, 23 Dec 2024 14:53:31 -0800
-Subject: [PATCHSET v6.2 5/5] xfs: reflink on the realtime device
+	b=kzyq8ZgRTBizY9y0+sFR+Re/Udipyfw6KneLAk8YjeAtx3k6fUpXB07jxZu1YG4Y+
+	 dDXHg3plqfBTOlnZzEQ8KVd/eZngOzOh7bPDSDmzY7YxAwb7vdmcYQYET/XRDX34yj
+	 O0HAh0jOCr0k+4rQ8rjJVG66UTFVT90JsdbWZ5838QAXGGQ2cLBCFUoG95haxgbPuG
+	 Z/yPQ+mQPvYZYZrxR3rQbBu5ZxDynncEhW42CGfub7i6JCvKP0S5gqwSSelnbJx1Ee
+	 vWT505mxsVubHRhHfsUe7jo4ZtclcOGb+5/UOi799vHKOcEW0cy0y+OxG+G4kUMfZO
+	 oKDRTsHTcBd/A==
+Date: Mon, 23 Dec 2024 14:53:47 -0800
+Subject: [PATCH 1/2] xfs: don't over-report free space or inodes in statvfs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173499419823.2381378.11636144864040727907.stgit@frogsfrogsfrogs>
-In-Reply-To: <20241223224906.GS6174@frogsfrogsfrogs>
-References: <20241223224906.GS6174@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, eflorac@intellique.com, hch@lst.de,
+ linux-xfs@vger.kernel.org
+Message-ID: <173499417150.2379546.487719930933042459.stgit@frogsfrogsfrogs>
+In-Reply-To: <173499417129.2379546.10223550496728939171.stgit@frogsfrogsfrogs>
+References: <173499417129.2379546.10223550496728939171.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,160 +44,79 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This patchset enables use of the file data block sharing feature (i.e.
-reflink) on the realtime device.  It follows the same basic sequence as
-the realtime rmap series -- first a few cleanups; then  introduction of
-the new btree format and inode fork format.  Next comes enabling CoW and
-remapping for the rt device; new scrub, repair, and health reporting
-code; and at the end we implement some code to lengthen write requests
-so that rt extents are always CoWed fully.
+Emmanual Florac reports a strange occurrence when project quota limits
+are enabled, free space is lower than the remaining quota, and someone
+runs statvfs:
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+  # mkfs.xfs -f /dev/sda
+  # mount /dev/sda /mnt -o prjquota
+  # xfs_quota  -x -c 'limit -p bhard=2G 55' /mnt
+  # mkdir /mnt/dir
+  # xfs_io -c 'chproj 55' -c 'chattr +P' -c 'stat -vvvv' /mnt/dir
+  # fallocate -l 19g /mnt/a
+  # df /mnt /mnt/dir
+  Filesystem      Size  Used Avail Use% Mounted on
+  /dev/sda         20G   20G  345M  99% /mnt
+  /dev/sda        2.0G     0  2.0G   0% /mnt
 
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
+I think the bug here is that xfs_fill_statvfs_from_dquot unconditionally
+assigns to f_bfree without checking that the filesystem has enough free
+space to fill the remaining project quota.  However, this is a
+longstanding behavior of xfs so it's unclear what to do here.
 
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-reflink
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-reflink
-
-xfsdocs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-reflink
+Cc: <stable@vger.kernel.org> # v2.6.18
+Fixes: 932f2c323196c2 ("[XFS] statvfs component of directory/project quota support, code originally by Glen.")
+Reported-by: Emmanuel Florac <eflorac@intellique.com>
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * xfs: prepare refcount btree cursor tracepoints for realtime
- * xfs: namespace the maximum length/refcount symbols
- * xfs: introduce realtime refcount btree ondisk definitions
- * xfs: realtime refcount btree transaction reservations
- * xfs: add realtime refcount btree operations
- * xfs: prepare refcount functions to deal with rtrefcountbt
- * xfs: add a realtime flag to the refcount update log redo items
- * xfs: support recovering refcount intent items targetting realtime extents
- * xfs: add realtime refcount btree block detection to log recovery
- * xfs: add realtime refcount btree inode to metadata directory
- * xfs: add metadata reservations for realtime refcount btree
- * xfs: wire up a new metafile type for the realtime refcount
- * xfs: refactor xfs_reflink_find_shared
- * xfs: wire up realtime refcount btree cursors
- * xfs: create routine to allocate and initialize a realtime refcount btree inode
- * xfs: update rmap to allow cow staging extents in the rt rmap
- * xfs: compute rtrmap btree max levels when reflink enabled
- * xfs: refactor reflink quota updates
- * xfs: enable CoW for realtime data
- * xfs: enable sharing of realtime file blocks
- * xfs: allow inodes to have the realtime and reflink flags
- * xfs: recover CoW leftovers in the realtime volume
- * xfs: fix xfs_get_extsz_hint behavior with realtime alwayscow files
- * xfs: apply rt extent alignment constraints to CoW extsize hint
- * xfs: enable extent size hints for CoW operations
- * xfs: check that the rtrefcount maxlevels doesn't increase when growing fs
- * xfs: report realtime refcount btree corruption errors to the health system
- * xfs: scrub the realtime refcount btree
- * xfs: cross-reference checks with the rt refcount btree
- * xfs: allow overlapping rtrmapbt records for shared data extents
- * xfs: check reference counts of gaps between rt refcount records
- * xfs: allow dquot rt block count to exceed rt blocks on reflink fs
- * xfs: detect and repair misaligned rtinherit directory cowextsize hints
- * xfs: scrub the metadir path of rt refcount btree files
- * xfs: don't flag quota rt block usage on rtreflink filesystems
- * xfs: check new rtbitmap records against rt refcount btree
- * xfs: walk the rt reference count tree when rebuilding rmap
- * xfs: capture realtime CoW staging extents when rebuilding rt rmapbt
- * xfs: online repair of the realtime refcount btree
- * xfs: repair inodes that have a refcount btree in the data fork
- * xfs: check for shared rt extents when rebuilding rt file's data fork
- * xfs: fix CoW forks for realtime files
- * xfs: enable realtime reflink
----
- fs/xfs/Makefile                      |    3 
- fs/xfs/libxfs/xfs_bmap.c             |   23 +
- fs/xfs/libxfs/xfs_btree.c            |    5 
- fs/xfs/libxfs/xfs_btree.h            |    2 
- fs/xfs/libxfs/xfs_defer.h            |    1 
- fs/xfs/libxfs/xfs_format.h           |   25 +
- fs/xfs/libxfs/xfs_fs.h               |    7 
- fs/xfs/libxfs/xfs_health.h           |    4 
- fs/xfs/libxfs/xfs_inode_buf.c        |   33 +
- fs/xfs/libxfs/xfs_inode_fork.c       |    6 
- fs/xfs/libxfs/xfs_log_format.h       |    6 
- fs/xfs/libxfs/xfs_log_recover.h      |    2 
- fs/xfs/libxfs/xfs_ondisk.h           |    2 
- fs/xfs/libxfs/xfs_refcount.c         |  276 ++++++++++--
- fs/xfs/libxfs/xfs_refcount.h         |   23 +
- fs/xfs/libxfs/xfs_rmap.c             |    7 
- fs/xfs/libxfs/xfs_rtgroup.c          |   19 +
- fs/xfs/libxfs/xfs_rtgroup.h          |   11 
- fs/xfs/libxfs/xfs_rtrefcount_btree.c |  757 +++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtrefcount_btree.h |  189 ++++++++
- fs/xfs/libxfs/xfs_rtrmap_btree.c     |   28 +
- fs/xfs/libxfs/xfs_sb.c               |    8 
- fs/xfs/libxfs/xfs_shared.h           |    7 
- fs/xfs/libxfs/xfs_trans_resv.c       |   25 +
- fs/xfs/scrub/agheader_repair.c       |    2 
- fs/xfs/scrub/bmap.c                  |   30 +
- fs/xfs/scrub/bmap_repair.c           |   21 +
- fs/xfs/scrub/common.c                |   10 
- fs/xfs/scrub/common.h                |    5 
- fs/xfs/scrub/cow_repair.c            |  180 +++++++-
- fs/xfs/scrub/health.c                |    1 
- fs/xfs/scrub/inode.c                 |   31 +
- fs/xfs/scrub/inode_repair.c          |   57 ++
- fs/xfs/scrub/metapath.c              |    3 
- fs/xfs/scrub/quota.c                 |    8 
- fs/xfs/scrub/quota_repair.c          |    2 
- fs/xfs/scrub/reap.c                  |  247 ++++++++++-
- fs/xfs/scrub/reap.h                  |    7 
- fs/xfs/scrub/refcount.c              |    2 
- fs/xfs/scrub/refcount_repair.c       |    6 
- fs/xfs/scrub/repair.c                |    6 
- fs/xfs/scrub/repair.h                |    7 
- fs/xfs/scrub/rgb_bitmap.h            |   37 ++
- fs/xfs/scrub/rmap_repair.c           |    7 
- fs/xfs/scrub/rtb_bitmap.h            |   37 ++
- fs/xfs/scrub/rtbitmap.c              |    2 
- fs/xfs/scrub/rtbitmap_repair.c       |   24 +
- fs/xfs/scrub/rtrefcount.c            |  661 +++++++++++++++++++++++++++++
- fs/xfs/scrub/rtrefcount_repair.c     |  783 ++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/rtrmap.c                |   54 ++
- fs/xfs/scrub/rtrmap_repair.c         |  103 ++++
- fs/xfs/scrub/scrub.c                 |    7 
- fs/xfs/scrub/scrub.h                 |   12 +
- fs/xfs/scrub/stats.c                 |    1 
- fs/xfs/scrub/trace.h                 |   54 +-
- fs/xfs/xfs_buf_item_recover.c        |    4 
- fs/xfs/xfs_fsmap.c                   |   25 +
- fs/xfs/xfs_fsops.c                   |    2 
- fs/xfs/xfs_health.c                  |    1 
- fs/xfs/xfs_inode_item.c              |   14 +
- fs/xfs/xfs_inode_item_recover.c      |    4 
- fs/xfs/xfs_ioctl.c                   |   21 +
- fs/xfs/xfs_log_recover.c             |    2 
- fs/xfs/xfs_mount.c                   |    5 
- fs/xfs/xfs_mount.h                   |    9 
- fs/xfs/xfs_refcount_item.c           |  240 ++++++++++
- fs/xfs/xfs_reflink.c                 |  325 ++++++++++----
- fs/xfs/xfs_reflink.h                 |    4 
- fs/xfs/xfs_rtalloc.c                 |   24 +
- fs/xfs/xfs_rtalloc.h                 |    5 
- fs/xfs/xfs_stats.c                   |    3 
- fs/xfs/xfs_stats.h                   |    1 
- fs/xfs/xfs_super.c                   |    6 
- fs/xfs/xfs_trace.h                   |  111 +++--
- 74 files changed, 4330 insertions(+), 352 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_rtrefcount_btree.c
- create mode 100644 fs/xfs/libxfs/xfs_rtrefcount_btree.h
- create mode 100644 fs/xfs/scrub/rgb_bitmap.h
- create mode 100644 fs/xfs/scrub/rtb_bitmap.h
- create mode 100644 fs/xfs/scrub/rtrefcount.c
- create mode 100644 fs/xfs/scrub/rtrefcount_repair.c
+ fs/xfs/xfs_qm_bhv.c |   27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index 847ba29630e9d8..db5b8afd9d1b97 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -32,21 +32,28 @@ xfs_fill_statvfs_from_dquot(
+ 	limit = blkres->softlimit ?
+ 		blkres->softlimit :
+ 		blkres->hardlimit;
+-	if (limit && statp->f_blocks > limit) {
+-		statp->f_blocks = limit;
+-		statp->f_bfree = statp->f_bavail =
+-			(statp->f_blocks > blkres->reserved) ?
+-			 (statp->f_blocks - blkres->reserved) : 0;
++	if (limit) {
++		uint64_t	remaining = 0;
++
++		if (limit > blkres->reserved)
++			remaining = limit - blkres->reserved;
++
++		statp->f_blocks = min(statp->f_blocks, limit);
++		statp->f_bfree = min(statp->f_bfree, remaining);
++		statp->f_bavail = min(statp->f_bavail, remaining);
+ 	}
+ 
+ 	limit = dqp->q_ino.softlimit ?
+ 		dqp->q_ino.softlimit :
+ 		dqp->q_ino.hardlimit;
+-	if (limit && statp->f_files > limit) {
+-		statp->f_files = limit;
+-		statp->f_ffree =
+-			(statp->f_files > dqp->q_ino.reserved) ?
+-			 (statp->f_files - dqp->q_ino.reserved) : 0;
++	if (limit) {
++		uint64_t	remaining = 0;
++
++		if (limit > dqp->q_ino.reserved)
++			remaining = limit - dqp->q_ino.reserved;
++
++		statp->f_files = min(statp->f_files, limit);
++		statp->f_ffree = min(statp->f_ffree, remaining);
+ 	}
+ }
+ 
 
