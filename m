@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAA9019259D
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:50:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E971C3C0C
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:50:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734990609; cv=none; b=gCtVSTyhgpSUTXzLI4XUJVCK8a76OHvtI3S+STs5//WeiC6FlHdwNQ/ZC9YOgk7S07hzm3ZHMb0B5m52TQBQOedremaDwmi/9gz3P06NxFsLMBZlIPNGv3AqVZ6E6rI685zeACfvvuMf1E1noaBb9+PJNOHcQ3dkaySZmGKyFsI=
+	t=1734990625; cv=none; b=XW2+ZHAPYIjRJG7Lrud3M50K6zXPTPN4JQ6iteSsXgNJlDqJhVgoasK3pnxTvIPCyRHPJoE+wLmptsSpvOpAJ3Ftqc1bnckYtLI+OTEMUEW+VUKtu+kmDE+aBj9eVwR1boEkaA8maX4YQvuxkSxdydtUpjG3VTFo6kvT/3xZqrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734990609; c=relaxed/simple;
-	bh=oh4eEtAFCG6K8IpP8LVr1KnIvGdWDS/2xeB9Fh5V5X0=;
+	s=arc-20240116; t=1734990625; c=relaxed/simple;
+	bh=2/qQYtXxwLeQQBf6NujhinMTFv/wz8H+mrpO1jlXooU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=URhEXsR91GuDc+2WfSC/fasPP//iFXKzTv5Ip9BIcBg1qMK5h3vM6/PadXw9zdN4sogkKBZgY8kykqbVeoNfggihOQL1Sk80+WWABYUtGp4fZH0bHJPxf/O6LyEKItMpxH69r7+T1pYKwBnr159w6TwXXmUG5Z1mWo+9bjeWdDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eqIo97XU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=K3iFW+DxVoSlO6KGyUhuFuUNgsvOofKpMASgt0xEZxAMchzJLsgR1vJOyU24SN9KPcsrIBCAFSwMpgtW4Vh0tETTj6Ij0TBWismH/prv265bf3BNwzIP/yqq9YGhBpS6H4mWXZZcd2Q3VRgKs4/eEBzu60nJWigEHjnXokUuzn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JpV/Iiok; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eqIo97XU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43901C4CED3;
-	Mon, 23 Dec 2024 21:50:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JpV/Iiok"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2A1EC4CED3;
+	Mon, 23 Dec 2024 21:50:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734990609;
-	bh=oh4eEtAFCG6K8IpP8LVr1KnIvGdWDS/2xeB9Fh5V5X0=;
+	s=k20201202; t=1734990624;
+	bh=2/qQYtXxwLeQQBf6NujhinMTFv/wz8H+mrpO1jlXooU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eqIo97XUHrJWRbrvhyNjr8WCjBxml81lLDY8d7f5fB+LwDXHIf4mUCmTHwn6WSmqz
-	 6t8cFK+dM7Mebpg8fPQKRsBQmVpk4U3F67/rGZnzD70naWja1730evY6kkMCz16AVC
-	 Jt88QY3PHgFvmAv8YLFs8Auzm4GQCkWZVmOrCxhuEzgNJLKb+oLlzaeeQH45RgFHiw
-	 zowO0yL8QZBTk9bNDbtwlwnTKm/JG89kqcpcIZ8IQ1Uj/dS1SyTmFN2N6xsbdfelWn
-	 v28OjcLWdAXGfYkK1EX2f64m8W2g9F9wWS7UZnc12ntiCpdsHvgZ2Sdnf8YLTp/M+3
-	 R1C9NQ2/Z0YuA==
-Date: Mon, 23 Dec 2024 13:50:08 -0800
-Subject: [PATCH 14/41] xfs_db: display di_metatype
+	b=JpV/IiokPHPs3RhjJVN61oUV56s6H67U9InhDpi09FDV5W0PnsxphNAXwCJfoDCVq
+	 m5QZIMHQkop1Ma3+CiXTaDGvX2Ml0Y8RUn3+8fyrwQVYqR0IZlGdnJYEedLr3ZDj+t
+	 p61uJmCCaay/VozFaBx9t5Dlyzrg2s3zZylaFOXBKOba2ogqEqPsQPG2dLbnWfxINV
+	 0Z/afDCqygS6YFF1xQ5/L2Eo8N4h0yZ6N5slsnL5eitbJFFO8rok7U1EWr4IHK1tNp
+	 cIrGd/43LtS/7t4Fa6+EWDzc8ThkMdLl1xQfUjgOccifTYX7uWhC+ubGL1fkuHgXl+
+	 3kcKKqzWr5HeA==
+Date: Mon, 23 Dec 2024 13:50:24 -0800
+Subject: [PATCH 15/41] xfs_db: drop the metadata checking code from blockget
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498941183.2294268.15927941912459455353.stgit@frogsfrogsfrogs>
+Message-ID: <173498941198.2294268.3459139823957282491.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498940899.2294268.17862292027916012046.stgit@frogsfrogsfrogs>
 References: <173498940899.2294268.17862292027916012046.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,190 +45,430 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Print the metadata file type if available.
+Drop the check subcommand and all the metadata checking code from
+xfs_db.  We haven't shipped xfs_check in xfsprogs in a decade and the
+last known user (fstests) stopped calling it back in July 2024.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/field.c |    2 +
- db/field.h |    1 +
- db/inode.c |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++-------
- db/inode.h |    2 +
- 4 files changed, 78 insertions(+), 10 deletions(-)
+ db/check.c        |  294 -----------------------------------------------------
+ man/man8/xfs_db.8 |   12 +-
+ 2 files changed, 5 insertions(+), 301 deletions(-)
 
 
-diff --git a/db/field.c b/db/field.c
-index a61ccc9ef6d072..946684415f65d3 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -212,6 +212,8 @@ const ftattr_t	ftattrtab[] = {
- 	  SI(bitsz(struct xfs_dinode)), 0, NULL, inode_core_flds },
- 	{ FLDT_DINODE_FMT, "dinode_fmt", fp_dinode_fmt, NULL,
- 	  SI(bitsz(int8_t)), 0, NULL, NULL },
-+	{ FLDT_DINODE_METATYPE, "metatype", fp_metatype, NULL,
-+	  SI(bitsz(uint16_t)), 0, NULL, NULL },
- 	{ FLDT_DINODE_U, "dinode_u", NULL, (char *)inode_u_flds, inode_u_size,
- 	  FTARG_SIZE|FTARG_OKEMPTY, NULL, inode_u_flds },
- 	{ FLDT_DINODE_V3, "dinode_v3", NULL, (char *)inode_v3_flds,
-diff --git a/db/field.h b/db/field.h
-index b1bfdbed19cea3..9746676a6c7ac9 100644
---- a/db/field.h
-+++ b/db/field.h
-@@ -95,6 +95,7 @@ typedef enum fldt	{
- 	FLDT_DINODE_A,
- 	FLDT_DINODE_CORE,
- 	FLDT_DINODE_FMT,
-+	FLDT_DINODE_METATYPE,
- 	FLDT_DINODE_U,
- 	FLDT_DINODE_V3,
- 
-diff --git a/db/inode.c b/db/inode.c
-index 0aff68083508cb..07efbb4902be08 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -25,6 +25,7 @@ static int	inode_a_offset(void *obj, int startoff, int idx);
- static int	inode_a_sfattr_count(void *obj, int startoff);
- static int	inode_core_nlinkv2_count(void *obj, int startoff);
- static int	inode_core_onlink_count(void *obj, int startoff);
-+static int	inode_core_metatype_count(void *obj, int startoff);
- static int	inode_core_projid_count(void *obj, int startoff);
- static int	inode_core_nlinkv1_count(void *obj, int startoff);
- static int	inode_core_v3_pad_count(void *obj, int startoff);
-@@ -94,6 +95,8 @@ const field_t	inode_core_flds[] = {
- 	  FLD_COUNT, TYP_NONE },
- 	{ "onlink", FLDT_UINT16D, OI(COFF(metatype)), inode_core_onlink_count,
- 	  FLD_COUNT, TYP_NONE },
-+	{ "metatype", FLDT_DINODE_METATYPE, OI(COFF(metatype)),
-+	  inode_core_metatype_count, FLD_COUNT, TYP_NONE },
- 	{ "uid", FLDT_UINT32D, OI(COFF(uid)), C1, 0, TYP_NONE },
- 	{ "gid", FLDT_UINT32D, OI(COFF(gid)), C1, 0, TYP_NONE },
- 	{ "nlinkv2", FLDT_UINT32D, OI(COFF(nlink)), inode_core_nlinkv2_count,
-@@ -247,9 +250,8 @@ static const char	*dinode_fmt_name[] =
- static const int	dinode_fmt_name_size =
- 	sizeof(dinode_fmt_name) / sizeof(dinode_fmt_name[0]);
- 
--/*ARGSUSED*/
--int
--fp_dinode_fmt(
-+static int
-+fp_enum_fmt(
- 	void			*obj,
- 	int			bit,
- 	int			count,
-@@ -257,26 +259,65 @@ fp_dinode_fmt(
- 	int			size,
- 	int			arg,
- 	int			base,
--	int			array)
-+	int			array,
-+	const char		**names,
-+	unsigned int		nr_names)
- {
- 	int			bitpos;
--	enum xfs_dinode_fmt	f;
-+	int			f;
- 	int			i;
- 
- 	for (i = 0, bitpos = bit; i < count; i++, bitpos += size) {
--		f = (enum xfs_dinode_fmt)getbitval(obj, bitpos, size, BVUNSIGNED);
-+		f = getbitval(obj, bitpos, size, BVUNSIGNED);
- 		if (array)
- 			dbprintf("%d:", i + base);
--		if (f < 0 || f >= dinode_fmt_name_size)
--			dbprintf("%d", (int)f);
-+		if (f < 0 || f >= nr_names)
-+			dbprintf("%d", f);
- 		else
--			dbprintf("%d (%s)", (int)f, dinode_fmt_name[(int)f]);
-+			dbprintf("%d (%s)", f, names[f]);
- 		if (i < count - 1)
- 			dbprintf(" ");
+diff --git a/db/check.c b/db/check.c
+index 37306bd7a6ac2d..4f7785c64f5b49 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -236,14 +236,12 @@ static void		check_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 				    int ignore_reflink);
+ static int		check_inomap(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 				     xfs_extlen_t len, xfs_ino_t c_ino);
+-static void		check_linkcounts(xfs_agnumber_t agno);
+ static int		check_range(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 				    xfs_extlen_t len);
+ static void		check_rdbmap(xfs_rfsblock_t bno, xfs_extlen_t len,
+ 				     dbm_t type);
+ static int		check_rinomap(xfs_rfsblock_t bno, xfs_extlen_t len,
+ 				      xfs_ino_t c_ino);
+-static void		check_rootdir(void);
+ static int		check_rrange(xfs_rfsblock_t bno, xfs_extlen_t len);
+ static void		check_set_dbmap(xfs_agnumber_t agno,
+ 					xfs_agblock_t agbno, xfs_extlen_t len,
+@@ -252,11 +250,6 @@ static void		check_set_dbmap(xfs_agnumber_t agno,
+ 					xfs_agblock_t c_agbno);
+ static void		check_set_rdbmap(xfs_rfsblock_t bno, xfs_extlen_t len,
+ 					 dbm_t type1, dbm_t type2);
+-static void		check_summary(void);
+-static void		checknot_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
+-				       xfs_extlen_t len, int typemask);
+-static void		checknot_rdbmap(xfs_rfsblock_t bno, xfs_extlen_t len,
+-					int typemask);
+ static void		dir_hash_add(xfs_dahash_t hash,
+ 				     xfs_dir2_dataptr_t addr);
+ static void		dir_hash_check(inodata_t *id, int v);
+@@ -323,7 +316,6 @@ static void		quota_add(xfs_dqid_t *p, xfs_dqid_t *g, xfs_dqid_t *u,
+ static void		quota_add1(qdata_t **qt, xfs_dqid_t id, int dq,
+ 				   xfs_qcnt_t bc, xfs_qcnt_t ic,
+ 				   xfs_qcnt_t rc);
+-static void		quota_check(char *s, qdata_t **qt);
+ static void		quota_init(void);
+ static void		scan_ag(xfs_agnumber_t agno);
+ static void		scan_freelist(xfs_agf_t *agf);
+@@ -376,7 +368,7 @@ static const cmdinfo_t	blockfree_cmd =
+ 	{ "blockfree", NULL, blockfree_f, 0, 0, 0,
+ 	  NULL, N_("free block usage information"), NULL };
+ static const cmdinfo_t	blockget_cmd =
+-	{ "blockget", "check", blockget_f, 0, -1, 0,
++	{ "blockget", NULL, blockget_f, 0, -1, 0,
+ 	  N_("[-s|-v] [-n] [-t] [-b bno]... [-i ino] ..."),
+ 	  N_("get block usage and check consistency"), NULL };
+ static const cmdinfo_t	blocktrash_cmd =
+@@ -826,107 +818,9 @@ blockget_f(
+ 		blist = NULL;
+ 		blist_size = 0;
  	}
- 	return 1;
+-	if (serious_error) {
++	if (serious_error)
+ 		exitcode = 2;
+-		dbprefix = oldprefix;
+-		return 0;
+-	}
+ 
+-	if (xfs_has_metadir(mp)) {
+-		dbprefix = oldprefix;
+-		return 0;
+-	}
+-
+-	check_rootdir();
+-	/*
+-	 * Check that there are no blocks either
+-	 * a) unaccounted for or
+-	 * b) bno-free but not cnt-free
+-	 */
+-	if (!tflag) {	/* are we in test mode, faking out freespace? */
+-		for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+-			checknot_dbmap(agno, 0, mp->m_sb.sb_agblocks,
+-				(1 << DBM_UNKNOWN) | (1 << DBM_FREE1));
+-	}
+-	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+-		check_linkcounts(agno);
+-	if (mp->m_sb.sb_rblocks) {
+-		checknot_rdbmap(0,
+-			(xfs_extlen_t)(mp->m_sb.sb_rextents *
+-				       mp->m_sb.sb_rextsize),
+-			1 << DBM_UNKNOWN);
+-		check_summary();
+-	}
+-	if (mp->m_sb.sb_icount != icount) {
+-		if (!sflag)
+-			dbprintf(_("sb_icount %lld, counted %lld\n"),
+-				mp->m_sb.sb_icount, icount);
+-		error++;
+-	}
+-	if (mp->m_sb.sb_ifree != ifree) {
+-		if (!sflag)
+-			dbprintf(_("sb_ifree %lld, counted %lld\n"),
+-				mp->m_sb.sb_ifree, ifree);
+-		error++;
+-	}
+-	if (mp->m_sb.sb_fdblocks != fdblocks) {
+-		if (!sflag)
+-			dbprintf(_("sb_fdblocks %lld, counted %lld\n"),
+-				mp->m_sb.sb_fdblocks, fdblocks);
+-		error++;
+-	}
+-	if (lazycount && mp->m_sb.sb_fdblocks != agf_aggr_freeblks) {
+-		if (!sflag)
+-			dbprintf(_("sb_fdblocks %lld, aggregate AGF count %lld\n"),
+-				mp->m_sb.sb_fdblocks, agf_aggr_freeblks);
+-		error++;
+-	}
+-	if (mp->m_sb.sb_frextents != frextents) {
+-		if (!sflag)
+-			dbprintf(_("sb_frextents %lld, counted %lld\n"),
+-				mp->m_sb.sb_frextents, frextents);
+-		error++;
+-	}
+-	if (mp->m_sb.sb_bad_features2 != 0 &&
+-			mp->m_sb.sb_bad_features2 != mp->m_sb.sb_features2) {
+-		if (!sflag)
+-			dbprintf(_("sb_features2 (0x%x) not same as "
+-				"sb_bad_features2 (0x%x)\n"),
+-				mp->m_sb.sb_features2,
+-				mp->m_sb.sb_bad_features2);
+-		error++;
+-	}
+-	if ((sbversion & XFS_SB_VERSION_ATTRBIT) &&
+-					!xfs_has_attr(mp)) {
+-		if (!sflag)
+-			dbprintf(_("sb versionnum missing attr bit %x\n"),
+-				XFS_SB_VERSION_ATTRBIT);
+-		error++;
+-	}
+-	if ((sbversion & XFS_SB_VERSION_QUOTABIT) &&
+-					!xfs_has_quota(mp)) {
+-		if (!sflag)
+-			dbprintf(_("sb versionnum missing quota bit %x\n"),
+-				XFS_SB_VERSION_QUOTABIT);
+-		error++;
+-	}
+-	if (!(sbversion & XFS_SB_VERSION_ALIGNBIT) &&
+-					xfs_has_align(mp)) {
+-		if (!sflag)
+-			dbprintf(_("sb versionnum extra align bit %x\n"),
+-				XFS_SB_VERSION_ALIGNBIT);
+-		error++;
+-	}
+-	if (qudo)
+-		quota_check("user", qudata);
+-	if (qpdo)
+-		quota_check("project", qpdata);
+-	if (qgdo)
+-		quota_check("group", qgdata);
+-	if (sbver_err > mp->m_sb.sb_agcount / 2)
+-		dbprintf(_("WARNING: this may be a newer XFS filesystem.\n"));
+-	if (error)
+-		exitcode = 3;
+ 	dbprefix = oldprefix;
+ 	return 0;
+ }
+@@ -1388,58 +1282,6 @@ check_inomap(
+ 	return rval;
  }
  
-+/*ARGSUSED*/
-+int
-+fp_dinode_fmt(
-+	void			*obj,
-+	int			bit,
-+	int			count,
-+	char			*fmtstr,
-+	int			size,
-+	int			arg,
-+	int			base,
-+	int			array)
-+{
-+	return fp_enum_fmt(obj, bit, count, fmtstr, size, arg, base, array,
-+			dinode_fmt_name, dinode_fmt_name_size);
-+}
-+
-+static const char	*metatype_name[] =
-+	{ "unknown", "dir", "usrquota", "grpquota", "prjquota", "rtbitmap",
-+	  "rtsummary"
-+	};
-+static const int	metatype_name_size = ARRAY_SIZE(metatype_name);
-+
-+int
-+fp_metatype(
-+	void			*obj,
-+	int			bit,
-+	int			count,
-+	char			*fmtstr,
-+	int			size,
-+	int			arg,
-+	int			base,
-+	int			array)
-+{
-+	return fp_enum_fmt(obj, bit, count, fmtstr, size, arg, base, array,
-+			metatype_name, metatype_name_size);
-+}
-+
+-static void
+-check_linkcounts(
+-	xfs_agnumber_t	agno)
+-{
+-	inodata_t	*ep;
+-	inodata_t	**ht;
+-	int		idx;
+-	char		*path;
+-
+-	ht = inodata[agno];
+-	for (idx = 0; idx < inodata_hash_size; ht++, idx++) {
+-		ep = *ht;
+-		while (ep) {
+-			if (ep->link_set != ep->link_add || ep->link_set == 0) {
+-				path = inode_name(ep->ino, NULL);
+-				if (!path && ep->link_add)
+-					path = xstrdup("?");
+-				if (!sflag || ep->ilist) {
+-					if (ep->link_add)
+-						dbprintf(_("link count mismatch "
+-							 "for inode %lld (name "
+-							 "%s), nlink %d, "
+-							 "counted %d\n"),
+-							ep->ino, path,
+-							ep->link_set,
+-							ep->link_add);
+-					else if (ep->link_set)
+-						dbprintf(_("disconnected inode "
+-							 "%lld, nlink %d\n"),
+-							ep->ino, ep->link_set);
+-					else
+-						dbprintf(_("allocated inode %lld "
+-							 "has 0 link count\n"),
+-							ep->ino);
+-				}
+-				if (path)
+-					xfree(path);
+-				error++;
+-			} else if (verbose || ep->ilist) {
+-				path = inode_name(ep->ino, NULL);
+-				if (path) {
+-					dbprintf(_("inode %lld name %s\n"),
+-						ep->ino, path);
+-					xfree(path);
+-				}
+-			}
+-			ep = ep->next;
+-		}
+-	}
+-
+-}
+-
  static int
- inode_a_bmbt_count(
- 	void			*obj,
-@@ -414,7 +455,29 @@ inode_core_onlink_count(
- 	ASSERT(startoff == 0);
- 	ASSERT(obj == iocur_top->data);
- 	dic = obj;
--	return dic->di_version >= 2;
-+	if (dic->di_version < 2)
-+		return 0;
-+	if (dic->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA))
-+		return 0;
-+	return 1;
-+}
-+
-+static int
-+inode_core_metatype_count(
-+	void			*obj,
-+	int			startoff)
-+{
-+	struct xfs_dinode	*dic;
-+
-+	ASSERT(startoff == 0);
-+	ASSERT(obj == iocur_top->data);
-+	dic = obj;
-+
-+	if (dic->di_version < 3)
-+		return 0;
-+	if (dic->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA))
-+		return 1;
-+	return 0;
+ check_range(
+ 	xfs_agnumber_t  agno,
+@@ -1556,25 +1398,6 @@ check_rinomap(
+ 	return rval;
  }
  
- static int
-diff --git a/db/inode.h b/db/inode.h
-index 31a2ebbba6a175..9e4ec1b3833716 100644
---- a/db/inode.h
-+++ b/db/inode.h
-@@ -16,6 +16,8 @@ extern const struct field	timestamp_flds[];
+-static void
+-check_rootdir(void)
+-{
+-	inodata_t	*id;
+-
+-	id = find_inode(mp->m_sb.sb_rootino, 0);
+-	if (id == NULL) {
+-		if (!sflag)
+-			dbprintf(_("root inode %lld is missing\n"),
+-				mp->m_sb.sb_rootino);
+-		error++;
+-	} else if (!id->isdir) {
+-		if (!sflag || id->ilist)
+-			dbprintf(_("root inode %lld is not a directory\n"),
+-				mp->m_sb.sb_rootino);
+-		error++;
+-	}
+-}
+-
+ static inline void
+ report_rrange(
+ 	xfs_rfsblock_t	low,
+@@ -1718,77 +1541,6 @@ get_suminfo(
+ 	return raw->old;
+ }
  
- extern int	fp_dinode_fmt(void *obj, int bit, int count, char *fmtstr,
- 			      int size, int arg, int base, int array);
-+int		fp_metatype(void *obj, int bit, int count, char *fmtstr,
-+			      int size, int arg, int base, int array);
- extern int	inode_a_size(void *obj, int startoff, int idx);
- extern void	inode_init(void);
- extern typnm_t	inode_next_type(void);
+-static void
+-check_summary(void)
+-{
+-	xfs_rfsblock_t	bno;
+-	union xfs_suminfo_raw *csp;
+-	union xfs_suminfo_raw *fsp;
+-	int		log;
+-
+-	csp = sumcompute;
+-	fsp = sumfile;
+-	for (log = 0; log < mp->m_rsumlevels; log++) {
+-		for (bno = 0;
+-		     bno < mp->m_sb.sb_rbmblocks;
+-		     bno++, csp++, fsp++) {
+-			if (csp->old != fsp->old) {
+-				if (!sflag)
+-					dbprintf(_("rt summary mismatch, size %d "
+-						 "block %llu, file: %d, "
+-						 "computed: %d\n"),
+-						log, bno,
+-						get_suminfo(mp, fsp),
+-						get_suminfo(mp, csp));
+-				error++;
+-			}
+-		}
+-	}
+-}
+-
+-static void
+-checknot_dbmap(
+-	xfs_agnumber_t	agno,
+-	xfs_agblock_t	agbno,
+-	xfs_extlen_t	len,
+-	int		typemask)
+-{
+-	xfs_extlen_t	i;
+-	char		*p;
+-
+-	if (!check_range(agno, agbno, len))
+-		return;
+-	for (i = 0, p = &dbmap[agno][agbno]; i < len; i++, p++) {
+-		if ((1 << *p) & typemask) {
+-			if (!sflag || CHECK_BLISTA(agno, agbno + i))
+-				dbprintf(_("block %u/%u type %s not expected\n"),
+-					agno, agbno + i, typename[(dbm_t)*p]);
+-			error++;
+-		}
+-	}
+-}
+-
+-static void
+-checknot_rdbmap(
+-	xfs_rfsblock_t	bno,
+-	xfs_extlen_t	len,
+-	int		typemask)
+-{
+-	xfs_extlen_t	i;
+-	char		*p;
+-
+-	if (!check_rrange(bno, len))
+-		return;
+-	for (i = 0, p = &dbmap[mp->m_sb.sb_agcount][bno]; i < len; i++, p++) {
+-		if ((1 << *p) & typemask) {
+-			if (!sflag || CHECK_BLIST(bno + i))
+-				dbprintf(_("rtblock %llu type %s not expected\n"),
+-					bno + i, typename[(dbm_t)*p]);
+-			error++;
+-		}
+-	}
+-}
+-
+ static void
+ dir_hash_add(
+ 	xfs_dahash_t		hash,
+@@ -3923,48 +3675,6 @@ quota_add1(
+ 	qt[qh] = qe;
+ }
+ 
+-static void
+-quota_check(
+-	char	*s,
+-	qdata_t	**qt)
+-{
+-	int	i;
+-	qdata_t	*next;
+-	qdata_t	*qp;
+-
+-	for (i = 0; i < QDATA_HASH_SIZE; i++) {
+-		qp = qt[i];
+-		while (qp) {
+-			next = qp->next;
+-			if (qp->count.bc != qp->dq.bc ||
+-			    qp->count.ic != qp->dq.ic ||
+-			    qp->count.rc != qp->dq.rc) {
+-				if (!sflag) {
+-					dbprintf(_("%s quota id %u, have/exp"),
+-						s, qp->id);
+-					if (qp->count.bc != qp->dq.bc)
+-						dbprintf(_(" bc %lld/%lld"),
+-							qp->dq.bc,
+-							qp->count.bc);
+-					if (qp->count.ic != qp->dq.ic)
+-						dbprintf(_(" ic %lld/%lld"),
+-							qp->dq.ic,
+-							qp->count.ic);
+-					if (qp->count.rc != qp->dq.rc)
+-						dbprintf(_(" rc %lld/%lld"),
+-							qp->dq.rc,
+-							qp->count.rc);
+-					dbprintf("\n");
+-				}
+-				error++;
+-			}
+-			xfree(qp);
+-			qp = next;
+-		}
+-	}
+-	xfree(qt);
+-}
+-
+ static void
+ quota_init(void)
+ {
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 066f124458b286..2325ef169ddc1b 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -345,7 +345,7 @@ .SH COMMANDS
+ command can be given, presumably with different arguments than the previous one.
+ .TP
+ .BI "blockget [\-npvs] [\-b " bno "] ... [\-i " ino "] ..."
+-Get block usage and check filesystem consistency.
++Get block usage.
+ The information is saved for use by a subsequent
+ .BR blockuse ", " ncheck ", or " blocktrash
+ command.
+@@ -564,11 +564,6 @@ .SH COMMANDS
+ half full.
+ .RE
+ .TP
+-.B check
+-See the
+-.B blockget
+-command.
+-.TP
+ .BI "convert " "type number" " [" "type number" "] ... " type
+ Convert from one address form to another.
+ The known
+@@ -2635,8 +2630,7 @@ .SH TYPES
+ and printable ASCII chars.
+ .SH DIAGNOSTICS
+ Many messages can come from the
+-.B check
+-.RB ( blockget )
++.B blockget
+ command.
+ If the filesystem is completely corrupt, a core dump might
+ be produced instead of the message
+@@ -2646,7 +2640,7 @@ .SH DIAGNOSTICS
+ .RE
+ .PP
+ If the filesystem is very large (has many files) then
+-.B check
++.B blockget
+ might run out of memory. In this case the message
+ .RS
+ .B out of memory
 
