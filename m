@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327B52837B
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 23:10:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22BF62837B
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 23:10:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734995428; cv=none; b=BnH9P9xcW7lcnmyHqp29QkAmv6yBGe0AxYBJzTsOejlKFPqVMW9D867yQ5ixZQEndbd5vBG6Bv9MzyHY8nR8uwrrXRE5v6SESQxSJQh+pxceAH9R7Njea5CeRC/KM94nD81RARWze4WOt/1kbHdEX3/bCBk79pqSYhVYsgi4ikI=
+	t=1734995444; cv=none; b=ngCZ4pOsUbDGyWf84q+pLyDzAAIUPYdh2r9NzufzlkzPDMZcd8qiIvZTizcFo1sjUxsd9THKBfd3pHD8g0MjNGnQZmLRfMDCvXGFDlSK+VjJdY67PlwWNcMktx8jmUcYdd4VkzDmIAb/BjG49nvpV4npuAx1sSSv4jeGXLULENI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734995428; c=relaxed/simple;
-	bh=Jtokb0PVehQconv58gAy6SaT+6s4nqyAG3KPe1xRR5A=;
+	s=arc-20240116; t=1734995444; c=relaxed/simple;
+	bh=j3L7bNVfaibxGwxiQptH4URVWyjRf1XmhjokwOyM8Ow=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=guFbq0ozan+C+/kOiuRSVeCxUquU4YJdLce8T4kBVhEv3KM0HXXPHzUcgArxtwISskKPPHt+1XpRL5uoAU/rERD5Xwvy9IrvO/cdRBfOH0bZsMNI4C/6h+JsFcM5PgXkGVfpKkJNshATLzjtCjGIJtbYnqN4loze6Qz8QbC/z8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ea33yfCC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pY/7yH/QsiddLYN67HHJcnpAmo2llpWc1IyNUTINhOAho+TGA8bKJwB+7lc8OfAzILAtq8kNwAtHTjg7o6A74KdCAaSD7tu+2ktsn1hDx1hMXs1TyVHubsLQMC3fOTvBvOo9bz6JvcYcYpQKc8hV6FHu2BHjVntzkKtxN0RZUzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WMN8+Aht; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ea33yfCC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08890C4CED3;
-	Mon, 23 Dec 2024 23:10:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WMN8+Aht"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A01EBC4CED3;
+	Mon, 23 Dec 2024 23:10:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734995428;
-	bh=Jtokb0PVehQconv58gAy6SaT+6s4nqyAG3KPe1xRR5A=;
+	s=k20201202; t=1734995443;
+	bh=j3L7bNVfaibxGwxiQptH4URVWyjRf1XmhjokwOyM8Ow=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Ea33yfCCHz6JHEHmwhuQ6cU7o/7jDHhwqNcgRIUMVflfpHXAM4q5kHo5QQM7W4cBW
-	 cS42PNGGNg+vOtQBi2OkW3l2DAdbRbOb8aCYwPWFAnmnHLluD7QF5LdTSZZZltt7LH
-	 W+zKNR0ZIZXAcA+2g4L5RBB7ieABks1Ss+fQC09kdyEEGsAopHf6l9E7eU+IJfHbbV
-	 8a4k1yyq4fJ+uQhML0xtdHPwJlDSKOq6v4Uc7yuyB+t9YJkwM5qIMsnCcnRopzRNMn
-	 vW1fLEuFg3yyGzw+xKT+hbpA5YKfDiJb8ytCBWqrkAKE2kSpohOI4EcKsOErWJD9qd
-	 JnW5gtjIWfJaA==
-Date: Mon, 23 Dec 2024 15:10:27 -0800
-Subject: [PATCH 16/43] xfs: update rmap to allow cow staging extents in the rt
- rmap
+	b=WMN8+AhtH1DW4E3uTv92Q/VvZLokXRC58xpG6xyTsdJ4kmXTH5G98OFCBSWNYGA0x
+	 k/wniI69p/RcrzqYCTEu9MhpgNOUhWHBsevNuEdsKjx4PbWvO/qCg9NNJbG7VU2//p
+	 OILSgbeWkNzypJAvN6qV9dY69w1p5Dkn7+8UCSqn0W/m28k93mTR7vAF/Ir1HQ09vm
+	 T7ZrvTPP8AZjq9U1j8x3I3i/uMcxpN4Jf9lVV7e8x4WvTg/85ys90lzUMLJsbZ/9lW
+	 bowdoTchhsz2/In4zL9pzU39Txy7TXu7krYVDA/EnCXK288e3ZiX/+JMAKf5LNp1t+
+	 WcWK27OE2QUEg==
+Date: Mon, 23 Dec 2024 15:10:43 -0800
+Subject: [PATCH 17/43] xfs: compute rtrmap btree max levels when reflink
+ enabled
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173499420214.2381378.14281983118268217253.stgit@frogsfrogsfrogs>
+Message-ID: <173499420231.2381378.6054792734002389517.stgit@frogsfrogsfrogs>
 In-Reply-To: <173499419823.2381378.11636144864040727907.stgit@frogsfrogsfrogs>
 References: <173499419823.2381378.11636144864040727907.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,32 +46,70 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't error out on CoW staging extent records when realtime reflink is
-enabled.
+Compute the maximum possible height of the realtime rmap btree when
+reflink is enabled.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rmap.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/xfs/libxfs/xfs_rtrmap_btree.c |   28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index f8415fd96cc2aa..3cdf50563fecb9 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -285,6 +285,13 @@ xfs_rtrmap_check_meta_irec(
- 		if (irec->rm_blockcount != mp->m_sb.sb_rextsize)
- 			return __this_address;
- 		return NULL;
-+	case XFS_RMAP_OWN_COW:
-+		if (!xfs_has_rtreflink(mp))
-+			return __this_address;
-+		if (!xfs_verify_rgbext(rtg, irec->rm_startblock,
-+					    irec->rm_blockcount))
-+			return __this_address;
-+		return NULL;
- 	default:
- 		return __this_address;
- 	}
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+index b90901e39e92ce..e4ec36943cb7cb 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+@@ -718,6 +718,7 @@ xfs_rtrmapbt_maxrecs(
+ unsigned int
+ xfs_rtrmapbt_maxlevels_ondisk(void)
+ {
++	unsigned long long	max_dblocks;
+ 	unsigned int		minrecs[2];
+ 	unsigned int		blocklen;
+ 
+@@ -726,8 +727,20 @@ xfs_rtrmapbt_maxlevels_ondisk(void)
+ 	minrecs[0] = xfs_rtrmapbt_block_maxrecs(blocklen, true) / 2;
+ 	minrecs[1] = xfs_rtrmapbt_block_maxrecs(blocklen, false) / 2;
+ 
+-	/* We need at most one record for every block in an rt group. */
+-	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_RGBLOCKS);
++	/*
++	 * Compute the asymptotic maxlevels for an rtrmapbt on any rtreflink fs.
++	 *
++	 * On a reflink filesystem, each block in an rtgroup can have up to
++	 * 2^32 (per the refcount record format) owners, which means that
++	 * theoretically we could face up to 2^64 rmap records.  However, we're
++	 * likely to run out of blocks in the data device long before that
++	 * happens, which means that we must compute the max height based on
++	 * what the btree will look like if it consumes almost all the blocks
++	 * in the data device due to maximal sharing factor.
++	 */
++	max_dblocks = -1U; /* max ag count */
++	max_dblocks *= XFS_MAX_CRC_AG_BLOCKS;
++	return xfs_btree_space_to_height(minrecs, max_dblocks);
+ }
+ 
+ int __init
+@@ -766,9 +779,20 @@ xfs_rtrmapbt_compute_maxlevels(
+ 	 * maximum height is constrained by the size of the data device and
+ 	 * the height required to store one rmap record for each block in an
+ 	 * rt group.
++	 *
++	 * On a reflink filesystem, each rt block can have up to 2^32 (per the
++	 * refcount record format) owners, which means that theoretically we
++	 * could face up to 2^64 rmap records.  This makes the computation of
++	 * maxlevels based on record count meaningless, so we only consider the
++	 * size of the data device.
+ 	 */
+ 	d_maxlevels = xfs_btree_space_to_height(mp->m_rtrmap_mnr,
+ 				mp->m_sb.sb_dblocks);
++	if (xfs_has_rtreflink(mp)) {
++		mp->m_rtrmap_maxlevels = d_maxlevels + 1;
++		return;
++	}
++
+ 	r_maxlevels = xfs_btree_compute_maxlevels(mp->m_rtrmap_mnr,
+ 				mp->m_groups[XG_TYPE_RTG].blocks);
+ 
 
