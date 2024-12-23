@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 884EE13FEE
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:10:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D100E13FEE
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:10:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991813; cv=none; b=QheaTMrHW3+FYdo++62VUgrebuYi9BpILREHq3TgQToqHGuMHHxyA1OTy13qFyvdrJZW9bmAweP1PyYCTQe7WwpOuvu41k5BIrS8Dl+T7pjUYS7q+XtIopXM5CfC660b/eQbWYkhTMRezTHKeezV4HdvqAZQ1gvkocYG8tccKMA=
+	t=1734991828; cv=none; b=HfJpQxjjCdAc/Iupl/dAkYm/43uG4e/7lvpy2n4E/KrlTrHihvFWfNwXFJw0X9odrQLwPj9oLCC4l523mOwR+qKy638GldzhzaOR8LRR2CgswSZRB2Ho9GyIuQpOznlo0yU2QgPCCPBJqgHvDEsSzEw3tjhag3zI4AKQELiGiUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991813; c=relaxed/simple;
-	bh=mNjEjCuFkhKyGFh6v+1A0qG1Mkn8HagsyyjHcEtC20E=;
+	s=arc-20240116; t=1734991828; c=relaxed/simple;
+	bh=+O6/vjIHgrNnoxHStnuzJPvZfDaRg54qwJVe694I978=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CHOHeM7dGaPj8a9kNcM0G1EweRNFTf91uYZS+N/eeVx2NYLrPSp3XvXCFbfROkLQ5WpeB8TPksTIYGoJeEqv76QBe4TN/NB0gVkJBznh8S+E7L1nNgqGlVFLkE/MBhnTZs17s2Mit229fi8W6pXz/nET9H6lrQT6xHBrytRmR9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pxtblP2r; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Gz13oOjCveYoivUnBgYZ3JCI6WdqxIf1DVDcoHwSTs+Z7WC+07NQLf2tNSOxpqDsV4XxnTriYulxd5tf9ikCv9dVzCiwfIL2Ii+YrtdEFcDvOrKAooVWaIy1E6XERYqAvCdHnpZh28sVKxzllN1jowVJDpdREXt+ygkt2HaU9QI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CZqrMYs4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pxtblP2r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E378C4CED3;
-	Mon, 23 Dec 2024 22:10:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CZqrMYs4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA5E0C4CED3;
+	Mon, 23 Dec 2024 22:10:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991813;
-	bh=mNjEjCuFkhKyGFh6v+1A0qG1Mkn8HagsyyjHcEtC20E=;
+	s=k20201202; t=1734991828;
+	bh=+O6/vjIHgrNnoxHStnuzJPvZfDaRg54qwJVe694I978=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pxtblP2rc5Kyfqf8b63z9MRXpVd/1iIXdx5CpGgFSPtSSIrs/DRP7i0LIqfXvulES
-	 kPN+DKvY2Nl8oCD1KT6XybZQIp0h0W9m4imRiI8WE4rXKNJy95bvOW0mldFdmjk9BH
-	 hdlRcO2H4wgj1gwc8R2fRr3ETKj4VTapa9Qhn82a6Y2ebEzpI7eqnxUhiTv2N47U8k
-	 TLbV5MNgrWK06o9MnopoSwIwlqRahalwh6XJtW/SnuYuSM07KGxPr+43G7zuQqq043
-	 HGvq0NoWxdA0rdEPTNxWD6Or/DQw4muUfA9jcYAKk7aBJbSwOoOoGwCyHItwp+sUGV
-	 A9Lz47pxnaafw==
-Date: Mon, 23 Dec 2024 14:10:12 -0800
-Subject: [PATCH 46/52] xfs: switch to multigrain timestamps
+	b=CZqrMYs4JqKyoabuRxOuriMN5GNDFuIs+Mp50MFyLoCBGHMk+wnQ49MFiwIv+bHuH
+	 strI2tXOv/IINaDI7azx9I9lDBCr/hdccjvEhYeGXZHuVegVFKAqwcdIISCwB4Rt33
+	 cuYVPPK5tdUF5RCxnq4IfdaDROmhgdOR7bXtgAk8dGGBtA2Y1QkPAN6c/M02t8K31x
+	 ylJt/GyvZhMApqJgKeZXH+suL9YgYR378yO9f7T8fMt/nzntyCV2gQjK/MUyOU+Vze
+	 muXEvvJC1C27ooJd/8OzbRMToF37ACJ1fQxp1DfiJySEq7Sg8wV9cUX3l21Rqs9AO7
+	 yDkoudurydI9A==
+Date: Mon, 23 Dec 2024 14:10:28 -0800
+Subject: [PATCH 47/52] xfs: don't call xfs_bmap_same_rtgroup in
+ xfs_bmap_add_extent_hole_delay
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: josef@toxicpanda.com, rdunlap@infradead.org, jlayton@kernel.org,
- brauner@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498943195.2295836.1992434893339325700.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, cem@kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173498943210.2295836.680604652012708875.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 References: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,52 +44,43 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Jeff Layton <jlayton@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 1cf7e834a6fb84de9d1e038d6cf4c5bd0d202ffa
+Source kernel commit: cc2dba08cc33daf8acd6e560957ef0e0f4d034ed
 
-Enable multigrain timestamps, which should ensure that there is an
-apparent change to the timestamp whenever it has been written after
-being actively observed via getattr.
+xfs_bmap_add_extent_hole_delay works entirely on delalloc extents, for
+which xfs_bmap_same_rtgroup doesn't make sense.
 
-Also, anytime the mtime changes, the ctime must also change, and those
-are now the only two options for xfs_trans_ichgtime. Have that function
-unconditionally bump the ctime, and ASSERT that XFS_ICHGTIME_CHG is
-always set.
-
-Finally, stop setting STATX_CHANGE_COOKIE in getattr, since the ctime
-should give us better semantics now.
-
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: Randy Dunlap <rdunlap@infradead.org> # documentation bits
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
-Link: https://lore.kernel.org/r/20241002-mgtime-v10-9-d1c4717f5284@kernel.org
-Signed-off-by: Christian Brauner <brauner@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_trans_inode.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ libxfs/xfs_bmap.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_trans_inode.c b/libxfs/xfs_trans_inode.c
-index 45b513bc5ceb40..90eec4d3592dea 100644
---- a/libxfs/xfs_trans_inode.c
-+++ b/libxfs/xfs_trans_inode.c
-@@ -59,12 +59,12 @@ xfs_trans_ichgtime(
- 	ASSERT(tp);
- 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 552d292bf35412..16ee7403a75f3b 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -2614,8 +2614,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
+ 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
+-	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+-	    xfs_bmap_same_rtgroup(ip, whichfork, &left, new))
++	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
  
--	tv = current_time(inode);
-+	/* If the mtime changes, then ctime must also change */
-+	ASSERT(flags & XFS_ICHGTIME_CHG);
+ 	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
+@@ -2623,8 +2622,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+ 	    (!(state & BMAP_LEFT_CONTIG) ||
+ 	     (left.br_blockcount + new->br_blockcount +
+-	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)) &&
+-	    xfs_bmap_same_rtgroup(ip, whichfork, new, &right))
++	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
+ 		state |= BMAP_RIGHT_CONTIG;
  
-+	tv = inode_set_ctime_current(inode);
- 	if (flags & XFS_ICHGTIME_MOD)
- 		inode_set_mtime_to_ts(inode, tv);
--	if (flags & XFS_ICHGTIME_CHG)
--		inode_set_ctime_to_ts(inode, tv);
- 	if (flags & XFS_ICHGTIME_ACCESS)
- 		inode_set_atime_to_ts(inode, tv);
- 	if (flags & XFS_ICHGTIME_CREATE)
+ 	/*
 
