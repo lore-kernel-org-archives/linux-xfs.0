@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6473918FC89
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:05:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC3D513FEE
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 22:05:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734991516; cv=none; b=rVUeZeSYuZFmS/cpiATld2/QDJj8r6XE9IvLMFxJpS4s0rvKKjmlHYbuEjnm7oumGm3IeXtLUJDoUFzTyICWAnGSy0pedKLCAJhL6WOelMfbsQ6oWG4Dqf9iCdRfJGE1lN0DUUJ7Ih70eql86KHPLzOxV6glzzfuu+PMzbKu3AM=
+	t=1734991531; cv=none; b=qAu8fGwzaJyxhY3NTyDfs/hRAZds/CsD4kk2xYdvqkxaqz4/mp1YqnKVm1JwR3UPF1BteYiQN3yoTQmXhdc1p5wTCylySAlUHgivs0HznFI7SYB87WWd/6St8W/DaViguRKbkqgWB9w9ty+aNe63uQ2atyE9Lx0MLeni+1ndgpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734991516; c=relaxed/simple;
-	bh=roGio/KzWUs7FMQnz/YwqKrfa10jb7uw4KuJ+3UswoQ=;
+	s=arc-20240116; t=1734991531; c=relaxed/simple;
+	bh=Kn7zZw/cAtyCXmdZ3MSG23KXQdoWqOdhiJFgrqequOc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SB+mqqFS8Q0OH7UtLubI/AiUB5oycvSS/XU1F1ZYoFWxGYlPuebiEapNpWHmrdxh/VdeHsrfq0P0dF9oTDSgsajlV2eZxYMe0ReJee+TovDKIrBJ21WwjcNLbE2RDLGL5d4y/CXsMRMPmvMN+ApOmZ+/qfWOYN9e7TVTY6KrB8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h86xZL6p; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WfT5uuAM0Psu2FMOuqrYGZ6TpCot6Ty+pLzpzWWmgzipj62K9yRPEhV9XonUgvB6g8p9ghMPJLZiF5A4S/dQjPQtj1rAPLtm1fAExOkuxnTfVq1Oc0RnVWjdhUwxsdGaizn6QGSoT6oYjlkMOC63f3LI6pr53GFvB/bCdUciwWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dBfAV5Qe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h86xZL6p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 143CAC4CED3;
-	Mon, 23 Dec 2024 22:05:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dBfAV5Qe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7B76C4CED3;
+	Mon, 23 Dec 2024 22:05:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734991516;
-	bh=roGio/KzWUs7FMQnz/YwqKrfa10jb7uw4KuJ+3UswoQ=;
+	s=k20201202; t=1734991531;
+	bh=Kn7zZw/cAtyCXmdZ3MSG23KXQdoWqOdhiJFgrqequOc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=h86xZL6pxI+m/hDjJRlzhgjvmtwPr945H7K0R6MfPt3MJa1kLl2ODzrEPHldo2kpL
-	 kqXeouyNp/gPqq+BuAoQy/FaN3Yzirbr6M3lYLfpb5L4yVbEk+ff5geQ+CFRvvxW73
-	 sb0ak9dHy1ep+0azaTFdQnvQMO7yeg/G8AcQfOjY+YN9I1AotIttFzbIKrBUnynly0
-	 Uh47iGlRA/0NbzwgtzxCniIuMU1xrcd3UkruRGfY7ey80eHMmP/nixFNU4YAqIjMIJ
-	 EuY54QJ51NlloSbROIqw4+D9+GT/0fj5JC018exCfsZkWAHFZ/In3XtfRKCDuukltH
-	 4tNSphL7dfXQA==
-Date: Mon, 23 Dec 2024 14:05:15 -0800
-Subject: [PATCH 27/52] xfs: don't merge ioends across RTGs
+	b=dBfAV5QeXPil2brjYEM4CVGBuOnna7GY9kzHMd8NPfeyOv4Ju/B1CTty+wgeK6LZ+
+	 TeFRCQ847efBbe7YPMocXWh4fRTcd8BIBEXTFKIVWPZwfuKgGQp4IKZOcIdbs/aWsB
+	 NwPs+r9BCFOx4HDLprb+wcfUGmCub8QFTqfGKHTQz4Q8jrBUnH6EWoOHUC+OS72la+
+	 abXOBt56O9C3UlbavbGtEiy2OBiaIRSEDNOQMQAIDdo2Y1X+xBodQiAafYDc4Hi0Fr
+	 UT5JCLxSK+dQqc5l6yMhIOW5EfeDPaiZ3IWxQufkh57PbS95GIiP00y1c+Dji3DA7T
+	 ZXA6+Ub+fwGvQ==
+Date: Mon, 23 Dec 2024 14:05:31 -0800
+Subject: [PATCH 28/52] xfs: make the RT allocator rtgroup aware
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498942908.2295836.15492752431407620148.stgit@frogsfrogsfrogs>
+Message-ID: <173498942923.2295836.16300361370292980640.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 References: <173498942411.2295836.4988904181656691611.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,43 +43,66 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: b91afef724710e3dc7d65a28105ffd7a4e861d69
+Source kernel commit: d162491c5459f4dd72e65b72a2c864591668ec07
 
-Unlike AGs, RTGs don't always have metadata in their first blocks, and
-thus we don't get automatic protection from merging I/O completions
-across RTG boundaries.  Add code to set the IOMAP_F_BOUNDARY flag for
-ioends that start at the first block of a RTG so that they never get
-merged into the previous ioend.
+Make the allocator rtgroup aware by either picking a specific group if
+there is a hint, or loop over all groups otherwise.  A simple rotor is
+provided to pick the placement for initial allocations.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rtgroup.h |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ libxfs/xfs_bmap.c     |   13 +++++++++++--
+ libxfs/xfs_rtbitmap.c |    6 ++++--
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index 026f34f984b32f..2ddfac9a0182f9 100644
---- a/libxfs/xfs_rtgroup.h
-+++ b/libxfs/xfs_rtgroup.h
-@@ -188,6 +188,15 @@ xfs_rtb_to_rgbno(
- 	return __xfs_rtb_to_rgbno(mp, rtbno);
- }
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index bdede0e683ae91..60310d3c1074c8 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -3145,8 +3145,17 @@ xfs_bmap_adjacent_valid(
+ 	struct xfs_mount	*mp = ap->ip->i_mount;
  
-+/* Is rtbno the start of a RT group? */
-+static inline bool
-+xfs_rtbno_is_group_start(
-+	struct xfs_mount	*mp,
-+	xfs_rtblock_t		rtbno)
-+{
-+	return (rtbno & mp->m_rgblkmask) == 0;
-+}
+ 	if (XFS_IS_REALTIME_INODE(ap->ip) &&
+-	    (ap->datatype & XFS_ALLOC_USERDATA))
+-		return x < mp->m_sb.sb_rblocks;
++	    (ap->datatype & XFS_ALLOC_USERDATA)) {
++		if (x >= mp->m_sb.sb_rblocks)
++			return false;
++		if (!xfs_has_rtgroups(mp))
++			return true;
 +
- static inline xfs_daddr_t
- xfs_rtb_to_daddr(
- 	struct xfs_mount	*mp,
++		return xfs_rtb_to_rgno(mp, x) == xfs_rtb_to_rgno(mp, y) &&
++			xfs_rtb_to_rgno(mp, x) < mp->m_sb.sb_rgcount &&
++			xfs_rtb_to_rtx(mp, x) < mp->m_sb.sb_rgextents;
++
++	}
+ 
+ 	return XFS_FSB_TO_AGNO(mp, x) == XFS_FSB_TO_AGNO(mp, y) &&
+ 		XFS_FSB_TO_AGNO(mp, x) < mp->m_sb.sb_agcount &&
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index b6874885107f09..44c801f31d5dc3 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1080,11 +1080,13 @@ xfs_rtfree_extent(
+ 	 * Mark more blocks free in the superblock.
+ 	 */
+ 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_FREXTENTS, (long)len);
++
+ 	/*
+ 	 * If we've now freed all the blocks, reset the file sequence
+-	 * number to 0.
++	 * number to 0 for pre-RTG file systems.
+ 	 */
+-	if (tp->t_frextents_delta + mp->m_sb.sb_frextents ==
++	if (!xfs_has_rtgroups(mp) &&
++	    tp->t_frextents_delta + mp->m_sb.sb_frextents ==
+ 	    mp->m_sb.sb_rextents) {
+ 		if (!(rbmip->i_diflags & XFS_DIFLAG_NEWRTBM))
+ 			rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
 
