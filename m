@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4809E18052
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:40:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02791161328
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:40:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734990031; cv=none; b=ZuEmAw4vFfsxlKO81V7lehFSjyaJFP+PJaK21Dho7vrbANGox4uZNEjxMoCKLEQib/RUwNk8CMzu3ecc6Puu3tKr60o8U5sWC536L++/3xysOXJA20LQxNlYuTJeHFh9JP+ALdXouExBi3vE8T9pz4PzwWwrzyjV1x4Xm0DNhww=
+	t=1734990047; cv=none; b=JY89GOTubbAZSZdfR0SOCHVKabpVfDDUo5ajEhe63jJQModN+wp2uJDLYK4ynjIxjjeX/HWgFQtNDOM3/0I0/Mjxc4BQ7loJksns+NfWSXxW9pHAPUcgmydFF46UqHOpmWB9zLleoEDw5dWynmkzlDt47X5fn+S5qxthAO+Ipbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734990031; c=relaxed/simple;
-	bh=ysOYdj7SJ0TcgzIM7t4KJH5hggQmaN4qBjOrMfGz70o=;
+	s=arc-20240116; t=1734990047; c=relaxed/simple;
+	bh=O5bXcWC6/erVcKzDBgZoagH7FcPwXxy1Rx73aDJtsxo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A+HXy5VFkxVo/0+MjxJJoYgmnhJGOyjYP+ppWznlTWx/50xPu2ZVX6znTEB7OrYEVMk9TRnI1TE8z/ZjrvrfpIJbYg5ASxeIE/riVzDLrdAC9+5O35A+41WieMuWOAvNxA4tXRWhVGDRFNbQIVelkLUT6J0/e9RGYgJzGrKFi40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TYvhUsvb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=spuc1O5CxkAy5Nc06TwDg/xQ9LZ3lyDq5oS4k8esuhwPvFTYqVsoZxelXrUthFhrCQdSzSfXZkft3WD9LWzrqt2vhatbbXzkQzPImQ3q6Wq9HMt4rz/Hbvhgy12JANSNQRextosaGtYoRxaJYJ8QmFn0bqVfL9KMXhbSyjV6J8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nnMrM1dg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TYvhUsvb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22B93C4CED3;
-	Mon, 23 Dec 2024 21:40:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nnMrM1dg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6F65C4CED3;
+	Mon, 23 Dec 2024 21:40:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734990031;
-	bh=ysOYdj7SJ0TcgzIM7t4KJH5hggQmaN4qBjOrMfGz70o=;
+	s=k20201202; t=1734990046;
+	bh=O5bXcWC6/erVcKzDBgZoagH7FcPwXxy1Rx73aDJtsxo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TYvhUsvbCHmqsU3bjYRdMZxFXII9zRr+Sc7APIArmtyZgbWZKvmehBqjNg+xk1f/K
-	 f9BYleNQU1V7eH9PtmGDGDWLE3V/ZejC5RDwk0pPUuq8Y7hUFut1aPi0GEKygFcjaG
-	 Ivgc6D3HGkyEavlOJ8Cwc/Orvv+Ev5rT4RUaYlr/shR/7+9zkxhpCoiSkDuBKHz3dX
-	 L9d7zTx+e7aYQ1qTKLqbGFVhbdZBrBiCAQI5d3lSDuDgc8DWnxPHgFZXIJOJvJeixn
-	 OL2Jorr5ALkClDgpJ2fO0AmhAjLAx+3FydWD/YXL9ceSXHWlKc8muZj/4pon33s1nT
-	 hrSz/VHQ7Cf0Q==
-Date: Mon, 23 Dec 2024 13:40:30 -0800
-Subject: [PATCH 13/36] xfs: split xfs_initialize_perag
+	b=nnMrM1dgQCapcbPxmhJNnVrsSnDEMqe5VvzzJu9Lgt65KgRQX18GACc69BbQ/ZY9E
+	 A0K4vej+th4A+hZME+35dQc7cCsbHqlCRd4Pf0s9WoZaFnwElV+1IboXuRvx93ZUUL
+	 74mhYK/h/okNFonAZ7XT7ICQyXQel2MZ+wR6uulWgjzqgGMer849CJgVU3Zy1MIUzd
+	 GNrC5iBcATI+JJNMJ9N0UVuEao8KqBML4ayg3YBHRC6F9m8uAXGW1mdb2cophsPfTA
+	 iu4wHO9ko9cHVXcMrtKpjp7ePjjhifleowYbuBjEZ66DodbRJFvjff5lxbc1eM4TAO
+	 NfP34Uis0+Llg==
+Date: Mon, 23 Dec 2024 13:40:46 -0800
+Subject: [PATCH 14/36] xfs: insert the pag structures into the xarray later
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173498940146.2293042.2594553624248150640.stgit@frogsfrogsfrogs>
+Message-ID: <173498940160.2293042.5173621765621797998.stgit@frogsfrogsfrogs>
 In-Reply-To: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 References: <173498939893.2293042.8029858406528247316.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,194 +45,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 201c5fa342af75adaf762fd6c63380bb8001762d
+Source kernel commit: d66496578b2a099ea453f56782f1cd2bf63a8029
 
-Factor out a xfs_perag_alloc helper that allocates a single perag
-structure.
+Cleaning up is much easier if a structure can't be looked up yet, so only
+insert the pag once it is fully set up.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_ag.c |  121 ++++++++++++++++++++++++++++++++-----------------------
- libxfs/xfs_ag.h |    4 +-
- 2 files changed, 72 insertions(+), 53 deletions(-)
+ libxfs/xfs_ag.c |   31 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 16 deletions(-)
 
 
 diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index a6b5a7d71bbf80..8809d76d496ae9 100644
+index 8809d76d496ae9..e22ce4e83f4a62 100644
 --- a/libxfs/xfs_ag.c
 +++ b/libxfs/xfs_ag.c
-@@ -270,6 +270,10 @@ xfs_agino_range(
- 	return __xfs_agino_range(mp, xfs_ag_block_count(mp, agno), first, last);
- }
+@@ -305,15 +305,6 @@ xfs_perag_alloc(
+ 	if (!pag)
+ 		return -ENOMEM;
  
-+/*
-+ * Update the perag of the previous tail AG if it has been changed during
-+ * recovery (i.e. recovery of a growfs).
-+ */
- int
- xfs_update_last_ag_size(
- 	struct xfs_mount	*mp,
-@@ -287,69 +291,57 @@ xfs_update_last_ag_size(
- 	return 0;
- }
+-	pag->pag_agno = index;
+-	pag->pag_mount = mp;
+-
+-	error = xa_insert(&mp->m_perags, index, pag, GFP_KERNEL);
+-	if (error) {
+-		WARN_ON_ONCE(error == -EBUSY);
+-		goto out_free_pag;
+-	}
+-
+ #ifdef __KERNEL__
+ 	/* Place kernel structure only init below this point. */
+ 	spin_lock_init(&pag->pag_ici_lock);
+@@ -329,10 +320,7 @@ xfs_perag_alloc(
  
--int
--xfs_initialize_perag(
-+static int
-+xfs_perag_alloc(
- 	struct xfs_mount	*mp,
--	xfs_agnumber_t		old_agcount,
--	xfs_agnumber_t		new_agcount,
--	xfs_rfsblock_t		dblocks,
--	xfs_agnumber_t		*maxagi)
-+	xfs_agnumber_t		index,
-+	xfs_agnumber_t		agcount,
-+	xfs_rfsblock_t		dblocks)
- {
- 	struct xfs_perag	*pag;
--	xfs_agnumber_t		index;
- 	int			error;
+ 	error = xfs_buf_cache_init(&pag->pag_bcache);
+ 	if (error)
+-		goto out_remove_pag;
+-
+-	/* Active ref owned by mount indicates AG is online. */
+-	atomic_set(&pag->pag_active_ref, 1);
++		goto out_defer_drain_free;
  
--	for (index = old_agcount; index < new_agcount; index++) {
--		pag = kzalloc(sizeof(*pag), GFP_KERNEL);
--		if (!pag) {
--			error = -ENOMEM;
--			goto out_unwind_new_pags;
--		}
--		pag->pag_agno = index;
--		pag->pag_mount = mp;
-+	pag = kzalloc(sizeof(*pag), GFP_KERNEL);
-+	if (!pag)
-+		return -ENOMEM;
+ 	/*
+ 	 * Pre-calculated geometry
+@@ -342,12 +330,23 @@ xfs_perag_alloc(
+ 	__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
+ 			&pag->agino_max);
  
--		error = xa_insert(&mp->m_perags, index, pag, GFP_KERNEL);
--		if (error) {
--			WARN_ON_ONCE(error == -EBUSY);
--			goto out_free_pag;
--		}
 +	pag->pag_agno = index;
 +	pag->pag_mount = mp;
++	/* Active ref owned by mount indicates AG is online. */
++	atomic_set(&pag->pag_active_ref, 1);
 +
 +	error = xa_insert(&mp->m_perags, index, pag, GFP_KERNEL);
 +	if (error) {
 +		WARN_ON_ONCE(error == -EBUSY);
-+		goto out_free_pag;
++		goto out_buf_cache_destroy;
 +	}
- 
- #ifdef __KERNEL__
--		/* Place kernel structure only init below this point. */
--		spin_lock_init(&pag->pag_ici_lock);
--		spin_lock_init(&pag->pagb_lock);
--		spin_lock_init(&pag->pag_state_lock);
--		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
--		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
--		xfs_defer_drain_init(&pag->pag_intents_drain);
--		init_waitqueue_head(&pag->pagb_wait);
--		pag->pagb_tree = RB_ROOT;
--		xfs_hooks_init(&pag->pag_rmap_update_hooks);
-+	/* Place kernel structure only init below this point. */
-+	spin_lock_init(&pag->pag_ici_lock);
-+	spin_lock_init(&pag->pagb_lock);
-+	spin_lock_init(&pag->pag_state_lock);
-+	INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
-+	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
-+	xfs_defer_drain_init(&pag->pag_intents_drain);
-+	init_waitqueue_head(&pag->pagb_wait);
-+	pag->pagb_tree = RB_ROOT;
-+	xfs_hooks_init(&pag->pag_rmap_update_hooks);
- #endif /* __KERNEL__ */
- 
--		error = xfs_buf_cache_init(&pag->pag_bcache);
--		if (error)
--			goto out_remove_pag;
-+	error = xfs_buf_cache_init(&pag->pag_bcache);
-+	if (error)
-+		goto out_remove_pag;
- 
--		/* Active ref owned by mount indicates AG is online. */
--		atomic_set(&pag->pag_active_ref, 1);
-+	/* Active ref owned by mount indicates AG is online. */
-+	atomic_set(&pag->pag_active_ref, 1);
- 
--		/*
--		 * Pre-calculated geometry
--		 */
--		pag->block_count = __xfs_ag_block_count(mp, index, new_agcount,
--				dblocks);
--		pag->min_block = XFS_AGFL_BLOCK(mp);
--		__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
--				&pag->agino_max);
--	}
-+	/*
-+	 * Pre-calculated geometry
-+	 */
-+	pag->block_count = __xfs_ag_block_count(mp, index, agcount, dblocks);
-+	pag->min_block = XFS_AGFL_BLOCK(mp);
-+	__xfs_agino_range(mp, pag->block_count, &pag->agino_min,
-+			&pag->agino_max);
- 
--	index = xfs_set_inode_alloc(mp, new_agcount);
--
--	if (maxagi)
--		*maxagi = index;
--
--	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
++
  	return 0;
  
- out_remove_pag:
-@@ -357,8 +349,35 @@ xfs_initialize_perag(
- 	pag = xa_erase(&mp->m_perags, index);
- out_free_pag:
+-out_remove_pag:
++out_buf_cache_destroy:
++	xfs_buf_cache_destroy(&pag->pag_bcache);
++out_defer_drain_free:
+ 	xfs_defer_drain_free(&pag->pag_intents_drain);
+-	pag = xa_erase(&mp->m_perags, index);
+-out_free_pag:
  	kfree(pag);
-+	return error;
-+}
-+
-+int
-+xfs_initialize_perag(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		orig_agcount,
-+	xfs_agnumber_t		new_agcount,
-+	xfs_rfsblock_t		dblocks,
-+	xfs_agnumber_t		*maxagi)
-+{
-+	xfs_agnumber_t		index;
-+	int			error;
-+
-+	if (orig_agcount >= new_agcount)
-+		return 0;
-+
-+	for (index = orig_agcount; index < new_agcount; index++) {
-+		error = xfs_perag_alloc(mp, index, new_agcount, dblocks);
-+		if (error)
-+			goto out_unwind_new_pags;
-+	}
-+
-+	*maxagi = xfs_set_inode_alloc(mp, new_agcount);
-+	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
-+	return 0;
-+
- out_unwind_new_pags:
--	xfs_free_perag_range(mp, old_agcount, index);
-+	xfs_free_perag_range(mp, orig_agcount, index);
  	return error;
  }
- 
-diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index e0f567d90debee..8787823ae37f9f 100644
---- a/libxfs/xfs_ag.h
-+++ b/libxfs/xfs_ag.h
-@@ -142,8 +142,8 @@ __XFS_AG_OPSTATE(prefers_metadata, PREFERS_METADATA)
- __XFS_AG_OPSTATE(allows_inodes, ALLOWS_INODES)
- __XFS_AG_OPSTATE(agfl_needs_reset, AGFL_NEEDS_RESET)
- 
--int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t old_agcount,
--		xfs_agnumber_t agcount, xfs_rfsblock_t dcount,
-+int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t orig_agcount,
-+		xfs_agnumber_t new_agcount, xfs_rfsblock_t dcount,
- 		xfs_agnumber_t *maxagi);
- void xfs_free_perag_range(struct xfs_mount *mp, xfs_agnumber_t first_agno,
- 		xfs_agnumber_t end_agno);
 
