@@ -1,71 +1,73 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E740D191F6F;
-	Mon, 23 Dec 2024 09:37:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2387B192B8A
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 09:43:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734946656; cv=none; b=BR1GRdQt9puDwXsIze+u87j33ONEOPpo9ytXun1C77czHtLR49SJUenkltElDUxqPDEf3g/witJQdRREZ9k0ofvJJSTCjMUeQo7awK/l2nfPnNomDZ+c+UPUaYFbtn+sIa+G7x8iVG9nnHqUyWAq+BRqnaBonQbJ2LVf9DGsd9w=
+	t=1734947000; cv=none; b=rzM88TLoI3gLZb1VxTRt2iBFe/EkWPqmv6gs/C0sm/4cyiHYDEh5sE43U0LE1Shx4hpj43k0c8HXEwTPq3vBYXvVws+rmRbQ53qlOtM+/oo7lUM/GEZELEDNDPMveeStTDon32XVAk0TFWoH0YJTdUH3l8yf1UBNMCJ5+FN3+7w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734946656; c=relaxed/simple;
-	bh=/KnTsk7S6Yu76H9hXrO4DVhCEzN86bu6m7tbJlL2Pkw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=c9ADyvY42qUXwf2uwVjXETy/jwtQEY8t8diyZWCr4us8R7dUVHlfm3TDyK8zO1ZIQxcvJygcO06Yw15DxpQoyP3MPHnRjyhImuwbHLOLwFQ3Wc4GlscmbIPutQr/E+9wrKnqd25y8UgqQ2Noe+CaaIm1WL41Uwrz9moBXojjSi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HGuEAXHQ; arc=none smtp.client-ip=209.85.210.177
+	s=arc-20240116; t=1734947000; c=relaxed/simple;
+	bh=wDO1tW8vNaRgTY4gSj5Zd7dokLz+ySdSBNTj4LgY3UA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=CM9LWsgI6dQi239UKddYinQTVcEduOx4muaYIJsQgDF/nNJDj90jWedhf5pCK15m4W2NnGfIgkbolnxRVFGzOxmqL7GG0CJzbn+sHRcUI5mmGgCBlUBaXNJHSxSgpwsyL7vHnCHC7y7TeKjv+hY6mFsDmY8eNRSpzxXhvKoyi0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GnjM4pCh; arc=none smtp.client-ip=209.85.216.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HGuEAXHQ"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-725f2f79ed9so3104176b3a.2;
-        Mon, 23 Dec 2024 01:37:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GnjM4pCh"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-2eed82ca5b4so3457265a91.2
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 01:43:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1734946654; x=1735551454; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=0ESfG79+PcZuH+MzC4lH8jD2aPNHGINgHLlNjUVjw7c=;
-        b=HGuEAXHQ8aY6SxXHkzxzl/8yLAZ6/1iEChkr+1o+KqecP5QgpDzjyakmVSk2RCIrIt
-         rHZXy+ySXYmmP1XId8KkosC6Mo8xUKlaQvv6ltw6wgq7tleMncbHkMeixKxAFQ4u7xt5
-         s+5SwDA3sa4rapJRCmiYSE4y3P5QEUoiR5UKX3BEcsKwHi82UHIDsHVO+9JxtztA3ufN
-         L+viQusAW+/2ukP0rVMJd0ykFHdLYoIbt23TtDfnREgBwxYX8Sl4yXUwtpbETdk5GaM9
-         +SZrSiwbHdJWM/4nsIgtaThoANtSnc7tX5YOkNWMIBpfm6tcK6rZQuxzWaLMdsZSZapE
-         iusw==
+        d=gmail.com; s=20230601; t=1734946997; x=1735551797; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=o7zPaUzkmvhvmtavStlS6RJm5v6XAlnwyMkzLIEpBUY=;
+        b=GnjM4pChgI4JHnNWcAfJtiw+XiyMyfLKHXQE3zQWpOK7Wu+QKo15Sl8ErLbd4/RBKY
+         XjlYL7yanScDSDPLetCBj+N15OZLF6pK8A5km79cE4PoVOzZIQiFtJ0uHiJAnvDj0go4
+         nZQn5E4zswzB1mfo07Z8WFq3OqNU9YGjtLSODhBgGjk5XKMCIeqhlo4K+N+xGEfXkv9S
+         UZ1XD95HBsIZBSA9iueD4C2iWCE+JMZYaJdF1kMXSu6L1mdOi67q43RA9nQ2iTHC+UBV
+         RyHV3O5cxTb6Kt4Putyrg6tlkU1rhpiD8QCTalbK0W8Q1sgPd7pc3FXwOA0GXLfuh0S2
+         NcJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734946654; x=1735551454;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=0ESfG79+PcZuH+MzC4lH8jD2aPNHGINgHLlNjUVjw7c=;
-        b=i53p0XP6GIPr8ZzBnGK1nhyd4BvgugGfby9FaDV7l+2k560k4s8LPnSpPgyfvA7svz
-         i2czU/3b4ltAOss2JwzybG72qMGZdVCOKYNQEvKUYDHpzsps2ZFH8XaKvnqvWO5Fj4ML
-         tu7i9oKly5fbksmyFQE/rM9hxgDOEHGQ0hqK0pcXF1XjFzIv67wmnk1zrwV9QNxYag5w
-         nXD4dDhP/Mrg587N/Z/7RTUaIOwq+tSm999OXRYNSWPccuISWhNkz3tVlEBn5pVQI7QG
-         XgFaQ8Z8KJCOgitvBd6zb2SEYAipKr9iXiVPpujlZuxu4Jd533Ky4mgTxmUr5CjegB4H
-         2LDQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUv3Bh1Hl2aK6/a6rVyB+kCRCLgr7a8liR3q6LM2UOL2jFQoQBICns36sBE9tur3/+X3Oh+kqVyypIWfJQ=@vger.kernel.org, AJvYcCVX8p3uq6oLhf4evdf44gfVcyIZ6H34mj/gRmJNivVbCp9MNjdigYyUmrySLU+mvxLGwIhGmh5VxknY@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdC+/L03lR7p6VFmNuCfFpXFZxpuC7+H6tC/mvlfk3+RRnH/wQ
-	unQQfHyt0lw+XgftpbjH54Wuk0/s9mHwGMZ/h8kcwwmQYAaZ1o9FQdawQKYL83U=
-X-Gm-Gg: ASbGncs+Q0Rl7/GPlbnk312PRYO/LMl1JgvRZ195gqFgT/CqFXnGp643zjblTcLE63Q
-	vXlPyJSvMsmJpz0oCFLu0q1laEKUth3Tvc3IB1l+OvKOLhv0/HrDCxU1Gk8XboJ4QSczVYzN6bX
-	C8KbHQOlFIL/4RjL7ROaZokdZ0G85vbAJe77cazvCyXL6vgJohYOFpEAqYDdtI1UUJHfGWXEVUw
-	/uNmML8SR8s9oQjeKarz47arpTB+U1+x5eZaQjC9e1HM3kMm4m7SIfyQLnjRrG0XDcYSBjOA0c/
-	11zbBwk=
-X-Google-Smtp-Source: AGHT+IFNR9qlTjlg1dNX4yr0XncX12ZUapQS/RnzWqqWQRakIntoz3bYLo0a/Ae2eSipeQPvkIeiuw==
-X-Received: by 2002:a05:6a00:8089:b0:728:f337:a721 with SMTP id d2e1a72fcca58-72abdd7bc30mr14348300b3a.7.1734946654066;
-        Mon, 23 Dec 2024 01:37:34 -0800 (PST)
-Received: from localhost.localdomain ([180.159.118.224])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72aad8315b8sm7466943b3a.56.2024.12.23.01.37.31
+        d=1e100.net; s=20230601; t=1734946997; x=1735551797;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=o7zPaUzkmvhvmtavStlS6RJm5v6XAlnwyMkzLIEpBUY=;
+        b=oDD/elyDsoZT2v2O+xgKj3pPBKcvoctmiiIF9lxDyR7DyHsitAfVCv/QBNPiJRChHU
+         lAEvF0HUjdPqwEGX7zpLS9V+ns4cMeMUWHLJFl+1q6O89HeUc9w/BYfwVwxj5qONcfe7
+         2GWsO7v6tXvZ52gZ1/ztaSlnDsjVI+3nCtVhVLv0ZJWnD+urNwWkzDmaQhVylosyQHRN
+         GJMZ6+ZTIZli5jBh3L03uxzLuwYqGPhcGbOZo80Sq/y6K2CDKnS2Zy7DJrLjzv3gGtM/
+         9T50/0DT3v/Cuh9zmrHAMVxFSpquW7g4m9wUbwZB4FsWiyXhosRQ3iYe5z6PQ5dMrpLo
+         dbaw==
+X-Gm-Message-State: AOJu0YzMhBGmlecT8Km/DGlttZulrMQ6U39HLb2Qh6p1OrlkoIYMe9o0
+	pPcv3yiIq8K0ZIJdfFUuz3an6upTFS2rvjkRC1cmtDtBh2DjzwUWua05lQ==
+X-Gm-Gg: ASbGncsICAH5me/UTxGKerTuFMPhhWDYvHluZ96R85+FcP7/gsqmmpl3gt9W7iNCGSo
+	3Qgn94QvKZZVAV9zQ9hGQIVftY5ZaaD62Te+OWGMjPmzKlTl4Z+cNVo0P6LVne1YTXo4j8ye0YL
+	jbXI+7ecdiaDNkkk9PpC9rOi66o4JljZ9t3IxddewOh2+9gA1XDjCR+Ur1Z1FFtdkWlN3dGvxx5
+	fiVFRQrKXjYrK4f4ahNmWprw7FVbnzoD29rOKU8oRFE2/UnovFEaq+yKHnKcCPiJ2gKDX1Q7JDo
+	fgUF1kkjj86QBw==
+X-Google-Smtp-Source: AGHT+IH6jT4JFvzAY6RnpqCrnNDJ46Xy40qPE5OxPqAyJztortF09SVVBFy5H/MrhjAP2mZZc+Ja7w==
+X-Received: by 2002:a17:90b:2dc1:b0:2ea:8d1e:a85f with SMTP id 98e67ed59e1d1-2f452e4963bmr19294143a91.17.1734946997091;
+        Mon, 23 Dec 2024 01:43:17 -0800 (PST)
+Received: from TXPENG-MC0.tencent.com ([43.132.141.24])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2f2ed644846sm10930995a91.28.2024.12.23.01.43.15
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 23 Dec 2024 01:37:33 -0800 (PST)
-From: Yafang Shao <laoar.shao@gmail.com>
-To: akpm@linux-foundation.org
-Cc: linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yafang Shao <laoar.shao@gmail.com>,
-	Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] hung_task: fix missing hung task detection for kthread in TASK_WAKEKILL state
-Date: Mon, 23 Dec 2024 17:37:22 +0800
-Message-Id: <20241223093722.78570-1-laoar.shao@gmail.com>
-X-Mailer: git-send-email 2.37.1 (Apple Git-137.1)
+        Mon, 23 Dec 2024 01:43:16 -0800 (PST)
+From: luminosity1999@gmail.com
+X-Google-Original-From: txpeng@tencent.com
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org,
+	allexjlzheng@tencent.com,
+	flyingpeng@tencent.com
+Subject: Re: [PATCH 01/42] xfs: fix low space alloc deadlock
+Date: Mon, 23 Dec 2024 17:43:12 +0800
+Message-Id: <20241223094312.39933-1-txpeng@tencent.com>
+X-Mailer: git-send-email 2.39.3 (Apple Git-146)
+In-Reply-To: <20230118224505.1964941-2-david@fromorbit.com>
+References: <20230118224505.1964941-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,94 +76,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-We recently encountered an XFS deadlock issue, which is a known problem
-resolved in the upstream kernel [0]. During the analysis of this issue, I
-observed that a kernel thread in the TASK_WAKEKILL state could not be
-detected as a hung task by the hung_task detector. The details are as
-follows:
+Suppose there are two threads doing delayed allocation and both of them
+trigger the btree splitting. Due to delayed allocation, thread A holds
+the lock of AGF 1, thread B holds the lock of AGF 3:
 
-Using the following command, I identified nine tasks stuck in the D state:
+agno(low -> high): 1  3
+                   A  B
 
-$ ps -eLo state,comm,tid,wchan  | grep ^D
-D java            4177339 xfs_buf_lock
-D kworker/93:3+xf 3025535 xfs_buf_lock
-D kworker/87:0+xf 3426612 xfs_extent_busy_flush
-D kworker/85:0+xf 3479378 xfs_buf_lock
-D kworker/91:1+xf 3584478 xfs_buf_lock
-D kworker/80:3+xf 3655680 xfs_buf_lock
-D kworker/89:0+xf 3671691 xfs_buf_lock
-D kworker/84:1+xf 3708397 xfs_buf_lock
-D kworker/81:1+xf 4005763 xfs_buf_lock
+Then both of them initiate a btree split work(AS from A and BS from B), 
+but due to memory pressure described by commit
+c85007e2e3942da1f9361e4b5a9388ea3a8dcc5b ("xfs: don't use BMBT btree
+split workers for IO completion"), the two works are processed by the 
+rescuer thread, AS first, then BS. After trying each AG with the TRYLOCK
+flag but failing all, AS retries with blocking allocation, until it
+reaches AG 3, then deadlocks there: AGF 3 lock was held by thread B, but 
+its split work BS was queued after AS and has no chance to be processed.
+Locking order is followed, but still deadlock occurs.
 
-However, the hung_task detector only reported eight of these tasks:
+We didn't actually trigger such deadlock, but encountered a similar
+hungtask reported by commit c85007e2e3942da1f9361e4b5a9388ea3a8dcc5b
+("xfs: don't use BMBT btree split workers for IO completion"). That
+commit has fixed our hungtask. But while analyzing the vmcore, we found
+there are some other btree split works queued on the rescuer thread,
+initiated from delayed allocation threads, each of which has held an AGF
+lock. That leads us to this patch and thinking about such a case.
 
-[3108840.650652] INFO: task java:4177339 blocked for more than 247779 seconds.
-[3108840.654197] INFO: task kworker/93:3:3025535 blocked for more than 248427 seconds.
-[3108840.657711] INFO: task kworker/85:0:3479378 blocked for more than 247836 seconds.
-[3108840.661483] INFO: task kworker/91:1:3584478 blocked for more than 249638 seconds.
-[3108840.664871] INFO: task kworker/80:3:3655680 blocked for more than 249638 seconds.
-[3108840.668495] INFO: task kworker/89:0:3671691 blocked for more than 249047 seconds.
-[3108840.672418] INFO: task kworker/84:1:3708397 blocked for more than 247836 seconds.
-[3108840.676175] INFO: task kworker/81:1:4005763 blocked for more than 247836 seconds.
-
-Task 3426612, although in the D state, was not reported as a hung task.
-
-I confirmed that task 3426612 remained in the D (disk sleep) state and
-experienced no context switches over a long period:
-
-$ cat /proc/3426612/status | grep -E "State:|ctxt_switches:";   \
-  sleep 60; echo "----"; \
-  cat /proc/3426612/status | grep -E "State:|ctxt_switches:"
-State:  D (disk sleep)
-voluntary_ctxt_switches:        7516
-nonvoluntary_ctxt_switches:     0
-----
-State:  D (disk sleep)
-voluntary_ctxt_switches:        7516
-nonvoluntary_ctxt_switches:     0
-
-The system's hung_task detector settings were configured as follows:
-
-  kernel.hung_task_timeout_secs = 28
-  kernel.hung_task_warnings = -1
-
-The issue lies in the handling of task state in the XFS code. Specifically,
-the thread in question (3426612) was set to the TASK_KILLABLE state in
-xfs_extent_busy_flush():
-
-  xfs_extent_busy_flush
-    prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
-
-When a task is in the TASK_WAKEKILL state (a subset of TASK_KILLABLE), the
-hung_task detector ignores it, as it assumes such tasks can be terminated.
-However, in this case, the kernel thread cannot be killed, meaning it
-effectively becomes a hung task.
-
-To address this issue, the hung_task detector should report the kthreads in
-the TASK_WAKEKILL state.
-
-Link: https://lore.kernel.org/linux-xfs/20230620002021.1038067-5-david@fromorbit.com/ [0]
-Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>
----
- kernel/hung_task.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/hung_task.c b/kernel/hung_task.c
-index c18717189f32..ed63fd84ce2e 100644
---- a/kernel/hung_task.c
-+++ b/kernel/hung_task.c
-@@ -220,8 +220,9 @@ static void check_hung_uninterruptible_tasks(unsigned long timeout)
- 		 */
- 		state = READ_ONCE(t->__state);
- 		if ((state & TASK_UNINTERRUPTIBLE) &&
-+		    (t->flags & PF_KTHREAD ||
- 		    !(state & TASK_WAKEKILL) &&
--		    !(state & TASK_NOLOAD))
-+		    !(state & TASK_NOLOAD)))
- 			check_hung_task(t, timeout);
- 	}
-  unlock:
--- 
-2.43.5
-
+So is this possible? It seems currently once queued into the rescuer
+thread, a split work has no way to know whether there is another
+concurrent split work initiator holding the lock it requires.
