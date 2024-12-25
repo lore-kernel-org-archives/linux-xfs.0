@@ -1,148 +1,169 @@
-Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com [209.85.167.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E27538DC0
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Dec 2024 05:47:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 594E3146000
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Dec 2024 12:44:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735019244; cv=none; b=X8ftRkg14Auj3ei7Q7chJObWPyvFi2o9D/rqUWJQz00F2wsMN0xXehCzLgpGDCp5STmDSUc/4gX8AYSyGoy5gNznXPdlTCbK8jtjQG5X1HP8qFV1ZRWNNiXplcJ9fJ+Iy7QLfyIsRnbtTKSM/H7aeYj7dgvnjWhqubIMHfPSEa0=
+	t=1735130703; cv=none; b=g3D82yDz7oS5TgSZ7Ns2CWwkY/C1zEDdavUmcS18W8NonXJCtInWTjl8PVuFZNLG0Ji8vC+4MoXOx+LgVfVyCMDNyRq9e24NYxjb9FjtYhvB/+agBnlDrDkVAQbpzAisN9EJOK7Yxwm4jzp62x3x4QBwOSTIcL+ikAhgG6jvT60=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735019244; c=relaxed/simple;
-	bh=9CBKXqDJ3ENZZ1N0DRIxlhlNi1Yi7g4WvJjGusN4eyU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mcgsm0bEXD6jj5UWfPeLWyLMVHo1cqoiqKWgoxC3v+FRUErAN61ceEv9xgjp6koCY1K8/YbbkeftBSzYSQQeXY2RrEDXxSHTgDRovVPqGJORlKGyMoHoEFN11ZssLiNckECbkjfscAOgGr77aDhIgtoJwV8V9VfuQZVF1Uoo8fk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cg7PV/Iu; arc=none smtp.client-ip=209.85.167.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cg7PV/Iu"
-Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-5401fb9fa03so4794068e87.1
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Dec 2024 21:47:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1735019240; x=1735624040; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jCmHS9DX6GC9rUsyCvSxvjnNqLlLFdPfsjohs9jUaQk=;
-        b=cg7PV/Iui2vqkmQRq7SvLIj6vbxQk3Bc+CAtBRbxGLKIz/lEDemkv8U3ZE8KpGWrN+
-         HD1LdYSAC52JqWgIKryg77Nztuk2+g50lkUJlAsX0J6uEZxxuxq9ezUcN4UsJmyIeqEr
-         7cOPLaRKVdoMVVKglS7JdxoNPNVujnnQgDxa7mXEgs20T1vH8YIPW5Wd9OtecAkjXvw7
-         TfW0Y2knlal7xJB7C+wKSnn1qQLk2RyfloRkVUPkg9o8HhHR8t8vZEK12fOCzJBA/1if
-         V9M/vIIB+kdJIixZTSnIPWrHtAznzKIEaKHczesysOYCAdWGJ3qIjSD+IW+6zDLTsY2h
-         EQkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1735019240; x=1735624040;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jCmHS9DX6GC9rUsyCvSxvjnNqLlLFdPfsjohs9jUaQk=;
-        b=P1R7l1UMdDNZQ0r73x23ZGATLBWaRHwksSL3hQWM+jG/qHUWHgZCkvlvD/kGt/PdNt
-         /ZHQdOiuhwokqpOnLNwZdssu3jXonf3oMFBaDi+hCa9q1ALNinblOBaukQu5v7uAtjgV
-         HRjOB4wmnyHR5+wrYGlvMniq/XIQu5pfxbaEuDgaCJWpRaYZRJmOYiy3q83XgLAonhs7
-         vx2bSQW3+43ItjvwevZxcKyEOpjGOwX3oP2xK2d6bzyXazAEB31+vY/rZrZnUiR5JXAN
-         I3VI7xWGYOpj9V6fzAaP7A3Jcn0LMlT6n37981z75VLOAPigfedRQdhrp42gj5d4jETX
-         wAOA==
-X-Gm-Message-State: AOJu0YwrXA4EosxkGYIptaqcbH7eJENr3YNjRsxbsuO8h/RPq3Sr6thZ
-	zoQ8TS85UblbHj2ODxG0gMjAkMM2mw12duLJk3rE6/6jhUK0WWUqp5555WtoauaUCEIbd5o4XHf
-	df/iGpO8Dmzq/RsxEfOG0Gfa7+hF5xxmm
-X-Gm-Gg: ASbGncvm/KZNyYDvpKON+LatNVXaDbj57ql64+TlbJDsneFP00QYOypQSaf1X3ThWom
-	5SBWRKy8iHt/Z+ozfE5VOQKQvi3VwSsCE5yexAvw=
-X-Google-Smtp-Source: AGHT+IF09C62/USPrMYI9pacZ7xQ6tPyg54gMG2w5R9E6RbwGbpvZKfuLcU9kbmtBs7lY6s+lqt5fbgd5ungO5RjTEs=
-X-Received: by 2002:a05:6512:4005:b0:541:32e5:654c with SMTP id
- 2adb3069b0e04-5422133b6d6mr6049030e87.17.1735019240202; Mon, 23 Dec 2024
- 21:47:20 -0800 (PST)
+	s=arc-20240116; t=1735130703; c=relaxed/simple;
+	bh=eBcQWH7JvkSVat9RbGeTSaPguT6hAblF+sc31njhLr8=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DOzJqSKR2SBMissyRPnUMoiDgykk2X8tCVCQGNphBAoMP9ahWC+cLZmDJDK7SjQRrVqj28tOBWkDtzvYLyobKiDY0fYlHS84EOtyi3swCgAvWsVP/fJ1wKwd7pEYuze9pVrH/oGXJX11idgOOqevDrVL/Zwlog1qdqP2l1TwV0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4YJBGn3Kwdz1kwwX;
+	Wed, 25 Dec 2024 20:42:09 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id F41621402DE;
+	Wed, 25 Dec 2024 20:44:52 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 25 Dec
+ 2024 20:44:52 +0800
+Date: Wed, 25 Dec 2024 20:41:18 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: Dave Chinner <david@fromorbit.com>
+CC: <djwong@kernel.org>, <cem@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: Re: [PATCH] xfs: fix race condition in inodegc list and cpumask
+ handling
+Message-ID: <Z2v9bgo7cGXFnR8w@localhost.localdomain>
+References: <20241125015258.2652325-1-leo.lilong@huawei.com>
+ <Z0TmLzSmLr78T8Im@dread.disaster.area>
+ <Z1FPRKXZrsAxsoZ5@localhost.localdomain>
+ <Z1fdw1odL7B8kIj-@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAN=PFfLfRFE9g_9UveWmAuc5_Pp_ihmc7x_po0e6=sTt2dynBQ@mail.gmail.com>
- <20241223215317.GR6174@frogsfrogsfrogs>
-In-Reply-To: <20241223215317.GR6174@frogsfrogsfrogs>
-From: Sai Chaitanya Mitta <mittachaitu@gmail.com>
-Date: Tue, 24 Dec 2024 11:17:08 +0530
-Message-ID: <CAN=PFfKDd=Y=14re01hY970JJNG7QCKUb6NOiZisQ0WWNmhcsw@mail.gmail.com>
-Subject: Re: Approach to quickly zeroing large XFS file (or) tool to mark XFS
- file extents as written
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <Z1fdw1odL7B8kIj-@dread.disaster.area>
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-Hi Darrick,
-            Thanks for the quick response, we are exposing XFS file (create=
-d
-through fallocate -l <size> <path>) as block device through
-SPDK bdev (https://github.com/spdk/spdk) over NVMe-oF, Now initiator will
-connect to the target and provide a block device to database applications.
-What I have observed is databases' applications are issuing flush IO post
-each/couple of writes, this flush at backend at backend translates to
-fsync (through aio/io_uring) operation on FD (which is time taking process)=
-,
-if we are doing no-op for flush IO then performance is 5x better compared t=
-o
-serving flush operation. Doing no-op for flush and if system shutdown abrup=
-tly
-then we are observing data loss (since metadata for new extents are not yet
-persistent) to overcome this data loss issue and having better performance
-below are the steps used:
-1. Created file through fallocate using FALLOC_FL_ZERO_RANGE option
-2. Explicitly zeroed file as mentioned in code (this marks all extents as
-   written and there are no metadata changes related to data [what I observ=
-ed],
-   but there are atime and mtime updates of file).
-3. Expose zeroed file to user as block device (as mentioned above).
+On Tue, Dec 10, 2024 at 05:20:51PM +1100, Dave Chinner wrote:
+> On Thu, Dec 05, 2024 at 02:59:16PM +0800, Long Li wrote:
+> > On Tue, Nov 26, 2024 at 08:03:43AM +1100, Dave Chinner wrote:
+> > 
+> > Sorry for reply so late, because I want to make the problem as clear
+> > as possible, but there are still some doubts.
+> > 
+> > > On Mon, Nov 25, 2024 at 09:52:58AM +0800, Long Li wrote:
+> > > > There is a race condition between inodegc queue and inodegc worker where
+> > > > the cpumask bit may not be set when concurrent operations occur.
+> > > 
+> > > What problems does this cause? i.e. how do we identify systems
+> > > hitting this issue?
+> > > 
+> > 
+> > I haven't encountered any actual issues, but while reviewing 62334fab4762
+> > ("xfs: use per-mount cpumask to track nonempty percpu inodegc lists"), I
+> > noticed there is a potential problem.
+> > 
+> > When the gc worker runs on a CPU other than the specified one due to
+> > loadbalancing,
+> 
+> How? inodegc is using get_cpu() to pin the task to the cpu while it
+> processes the queue and then queues the work to be run on that CPU.
+> The per-PCU inodegc queue is then processed using a single CPU
+> affine worker thread. The whole point of this setup is that
+> scheduler load balancing, etc, cannot disturb the cpu affinity of
+> the queues and the worker threads that service them.
+> 
+> How does load balancing break explicit CPU affine kernel task
+> scheduling?
 
-Using above approach if system shutdown abruptly then I am not able
-to reproduce data loss issue. So, planning to use above method to ensure
-both data integrity and better performance
+Sorry, I misunderstood earlier. The load balancing mechanisms cannot
+interfere with the CPU affinity of the queues. The inodegc workqueue
+is not of WQ_UNBOUND type, so work items typically execute on their
+designated CPUs.
 
-On Tue, Dec 24, 2024 at 3:23=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> On Mon, Dec 23, 2024 at 10:12:32PM +0530, Sai Chaitanya Mitta wrote:
-> > Hi Team,
-> >            Is there any method/tool available to explicitly mark XFS
-> > file extents as written? One approach I
-> > am aware is explicitly zeroing the entire file (this file may be even
-> > in hundreds of GB in size) through
-> > synchronous/asynchronous(aio/io_uring) mechanism but it is time taking
-> > process for large files,
-> > is there any optimization/approach we can do to explicitly zeroing
-> > file/mark extents as written?
->
-> Why do you need to mark them written?
->
-> --D
->
-> >
-> > Synchronous Approach:
-> >                     while offset < size {
-> >                         let bytes_written =3D img_file
-> >                             .write_at(&buf, offset)
-> >                             .map_err(|e| {
-> >                                 error!("Failed to zero out file: {}
-> > error: {:?}", vol_name, e);
-> >                             })?;
-> >                         if offset =3D=3D size {
-> >                             break;
-> >                         }
-> >                         offset =3D offset + bytes_written as u64;
-> >                     }
-> >                     img_file.sync_all();
-> >
-> > Asynchronous approach:
-> >                    Currently used fio with libaio as ioengine but
-> > results are almost same.
-> >
-> > --
-> > Thanks& Regards,
-> > M.Sai Chaithanya.
-> >
+However, in CPU hotplug scenarios, the CPU offline process will unbind
+workers, causing work items to execute on other CPUs. If we queue an
+inode on a CPU that's about to go offline after workqueue_offline_cpu()
+but before the CPU is actually marked offline, the following concurrent
+sequence might occur (though I haven't been able to reproduce this scenario
+in practice).
 
+From another perspective, with kernel preemption enabled, I think it's
+possible for xfs_inodegc_queue() and xfs_inodegc_worker() to race on the
+same CPU and process the same gc, potentially leading to the sequence
+mentioned below, since kernel preemption is enabled in the xfs_inodegc_worker
+context.
 
+> 
+> > it could race with xfs_inodegc_queue() processing the
+> > same struct xfs_inodegc. If xfs_inodegc_queue() adds the last inode
+> > to the gc list during this race, that inode might never be processed
+> > and reclaimed due to cpumask not set. This maybe lead to memory leaks
+> > after filesystem unmount, I'm unsure if there are other more serious
+> > implications.
+> 
+> xfs_inodegc_stop() should handle this all just fine. It removes
+> the enabled flag, then moves into a loop that should catch list adds
+> that were in progress when the enabled flag was cleared.
+> 
 
---=20
-Thanks& Regards,
-M.Sai Chaithanya.
+I don't think xfs_inodegc_stop() adequately handles this scenario. 
+xfs_inodegc_queue_all() only processes the CPUs that are set in
+mp->m_inodegc_cpumask. If a CPU's corresponding bit is not set in
+the cpumask, then any inodes waiting for gc on that CPU won't have
+a chance to be processed.
+
+Thanks,
+Long Li
+
+> > > > Current problematic sequence:
+> > > > 
+> > > >   CPU0                             CPU1
+> > > >   --------------------             ---------------------
+> > > >   xfs_inodegc_queue()              xfs_inodegc_worker()
+> > > >                                      llist_del_all(&gc->list)
+> > > >     llist_add(&ip->i_gclist, &gc->list)
+> > > >     cpumask_test_and_set_cpu()
+> > > >                                      cpumask_clear_cpu()
+> > > >                   < cpumask not set >
+> > > > 
+> > > > Fix this by moving llist_del_all() after cpumask_clear_cpu() to ensure
+> > > > proper ordering. This change ensures that when the worker thread clears
+> > > > the cpumask, any concurrent queue operations will either properly set
+> > > > the cpumask bit or have already emptied the list.
+> > > > 
+> > > > Also remove unnecessary smp_mb__{before/after}_atomic() barriers since
+> > > > the llist_* operations already provide required ordering semantics. it
+> > > > make the code cleaner.
+> > > 
+> > > IIRC, the barriers were for ordering the cpumask bitmap ops against
+> > > llist operations. There are calls elsewhere to for_each_cpu() that
+> > > then use llist_empty() checks (e.g xfs_inodegc_queue_all/wait_all),
+> > > so on relaxed architectures (like alpha) I think we have to ensure
+> > > the bitmask ops carried full ordering against the independent llist
+> > > ops themselves. i.e. llist_empty() just uses READ_ONCE, so it only
+> > > orders against other llist ops and won't guarantee any specific
+> > > ordering against against cpumask modifications.
+> > > 
+> > > I could be remembering incorrectly, but I think that was the
+> > > original reason for the barriers. Can you please confirm that the
+> > > cpumask iteration/llist_empty checks do not need these bitmask
+> > > barriers anymore? If that's ok, then the change looks fine.
+> > > 
+> > 
+> > Even on architectures with relaxed memory ordering (like alpha), I noticed
+> > that llist_add() already has full barrier semantics, so I think the 
+> > smp_mb__before_atomic barrier in xfs_inodegc_queue() can be removed.
+> 
+> Ok. Seems reasonable to remove it if everything uses full memory
+> barriers for the llist_add() operation.
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
