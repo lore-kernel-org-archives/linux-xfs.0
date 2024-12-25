@@ -1,169 +1,151 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f206.google.com (mail-il1-f206.google.com [209.85.166.206])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 594E3146000
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Dec 2024 12:44:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68024156F53
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Dec 2024 20:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.206
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735130703; cv=none; b=g3D82yDz7oS5TgSZ7Ns2CWwkY/C1zEDdavUmcS18W8NonXJCtInWTjl8PVuFZNLG0Ji8vC+4MoXOx+LgVfVyCMDNyRq9e24NYxjb9FjtYhvB/+agBnlDrDkVAQbpzAisN9EJOK7Yxwm4jzp62x3x4QBwOSTIcL+ikAhgG6jvT60=
+	t=1735159103; cv=none; b=Z3KaPl1kqVWGOZu4a3+DMBYiHyDguiKKCsfKsd8gWWS/SbNOICcf/YQNq6+tvK5p5mQLFo+fAvm5TVRwXXZGLLCh7sZJuhJfptC8Ul4f//gZYXfeXikIKjiRZv5OOHW0g6Sa0VC2+NmgR5R2az8uFppuVNGvBRBIePF1yDOPPaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735130703; c=relaxed/simple;
-	bh=eBcQWH7JvkSVat9RbGeTSaPguT6hAblF+sc31njhLr8=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DOzJqSKR2SBMissyRPnUMoiDgykk2X8tCVCQGNphBAoMP9ahWC+cLZmDJDK7SjQRrVqj28tOBWkDtzvYLyobKiDY0fYlHS84EOtyi3swCgAvWsVP/fJ1wKwd7pEYuze9pVrH/oGXJX11idgOOqevDrVL/Zwlog1qdqP2l1TwV0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4YJBGn3Kwdz1kwwX;
-	Wed, 25 Dec 2024 20:42:09 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id F41621402DE;
-	Wed, 25 Dec 2024 20:44:52 +0800 (CST)
-Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 25 Dec
- 2024 20:44:52 +0800
-Date: Wed, 25 Dec 2024 20:41:18 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Dave Chinner <david@fromorbit.com>
-CC: <djwong@kernel.org>, <cem@kernel.org>, <linux-xfs@vger.kernel.org>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: Re: [PATCH] xfs: fix race condition in inodegc list and cpumask
- handling
-Message-ID: <Z2v9bgo7cGXFnR8w@localhost.localdomain>
-References: <20241125015258.2652325-1-leo.lilong@huawei.com>
- <Z0TmLzSmLr78T8Im@dread.disaster.area>
- <Z1FPRKXZrsAxsoZ5@localhost.localdomain>
- <Z1fdw1odL7B8kIj-@dread.disaster.area>
+	s=arc-20240116; t=1735159103; c=relaxed/simple;
+	bh=XwYf7Etbhwh8H0CwAYA/kdqiZDHpG+cvWN5BuIDsisg=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=cgP1SHU8oGhOeTgyoEt6t85QKYsGwPvSENv4bDa/AdMGXFSThQ+7Ajpuk/9KJUI5DRL+NYLSLS6g3GGvmhMBbVg8W68guzQ/bqHJ5uC1WBQ+5g81EYede/xIlWPjoo+cX+qlbVL75eWOFu7f0QshVSsJFe6W8tRHsxiBJM+fvAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.206
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f206.google.com with SMTP id e9e14a558f8ab-3a9cc5c246bso55500325ab.2
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Dec 2024 12:38:21 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735159100; x=1735763900;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=uvXlSBxQuP3WgdxHp95pNR7prRI9lJmxfvG138waeMA=;
+        b=kxYVmWsMnJjfsVTQpwd9wb9jiCxWcRpxEn9SxFLP+ta0y+PZeMc7sqIJ+qbTrC6mEH
+         voEjah5fgf2l+FiayEZSoZjng1repAUiJnSEFilIfkvIME6p2Kh/z+37WkCHvy7913wc
+         HQzP5j27ajEe2Pz+j/EeOX/o6EEQz96AhcpVGAbmcPLVDW0mVYeWUPY/U/UP83zMwT/l
+         zH2ijOjZIoia1FLqHACzuwtIdJN9OfgndFzTKq3yEV6Qq6q7n8QH0u4IWPKVWFDSRgzt
+         UnXlAs8gRvs2VdsihBPWpkWiYjXa0yLCSV1N9s2EiiGzT9+XrOXja3a3m41BT1L/ReUl
+         ajRg==
+X-Forwarded-Encrypted: i=1; AJvYcCVvfVBTzIQdsysjDtPK5Ex/+R7N5R154ArlVQJncuSI8NtoUjMPLwhq2zFjSxzwqVlaiOgIimP9EOs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNF7002xKQMhEN78cw8lkuAcldNGuZ0kJ2zrjxDHVw4G0K3YhU
+	qfWDsUu42GA3DyLx5nGAxslZEydYtnRP9PtZ4vf2vykbG+3UXnXle1zDpf4l1Eq6iY2PAGypOzh
+	p3KZguo5/HdB3dOC5agqjeLK4wUDHCoUSLStqlDn567DaxHKCoivvTlM=
+X-Google-Smtp-Source: AGHT+IGjU5bR0uoFgejqjhCqy9QIVia8LF0uSIML40+Jc5Xe/xPMdr04U8xsbfZbdM8wazOt/gxBecmyu1R74BrMYQGaLvX1jYzm
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <Z1fdw1odL7B8kIj-@dread.disaster.area>
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+X-Received: by 2002:a05:6e02:1546:b0:3a7:764c:42fc with SMTP id
+ e9e14a558f8ab-3c2d5916145mr186020345ab.21.1735159100563; Wed, 25 Dec 2024
+ 12:38:20 -0800 (PST)
+Date: Wed, 25 Dec 2024 12:38:20 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <676c6d3c.050a0220.226966.0072.GAE@google.com>
+Subject: [syzbot] [xfs?] WARNING in xfs_bmapi_convert_delalloc (2)
+From: syzbot <syzbot+1fcaeac63a6a5f2cc94d@syzkaller.appspotmail.com>
+To: cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Dec 10, 2024 at 05:20:51PM +1100, Dave Chinner wrote:
-> On Thu, Dec 05, 2024 at 02:59:16PM +0800, Long Li wrote:
-> > On Tue, Nov 26, 2024 at 08:03:43AM +1100, Dave Chinner wrote:
-> > 
-> > Sorry for reply so late, because I want to make the problem as clear
-> > as possible, but there are still some doubts.
-> > 
-> > > On Mon, Nov 25, 2024 at 09:52:58AM +0800, Long Li wrote:
-> > > > There is a race condition between inodegc queue and inodegc worker where
-> > > > the cpumask bit may not be set when concurrent operations occur.
-> > > 
-> > > What problems does this cause? i.e. how do we identify systems
-> > > hitting this issue?
-> > > 
-> > 
-> > I haven't encountered any actual issues, but while reviewing 62334fab4762
-> > ("xfs: use per-mount cpumask to track nonempty percpu inodegc lists"), I
-> > noticed there is a potential problem.
-> > 
-> > When the gc worker runs on a CPU other than the specified one due to
-> > loadbalancing,
-> 
-> How? inodegc is using get_cpu() to pin the task to the cpu while it
-> processes the queue and then queues the work to be run on that CPU.
-> The per-PCU inodegc queue is then processed using a single CPU
-> affine worker thread. The whole point of this setup is that
-> scheduler load balancing, etc, cannot disturb the cpu affinity of
-> the queues and the worker threads that service them.
-> 
-> How does load balancing break explicit CPU affine kernel task
-> scheduling?
+Hello,
 
-Sorry, I misunderstood earlier. The load balancing mechanisms cannot
-interfere with the CPU affinity of the queues. The inodegc workqueue
-is not of WQ_UNBOUND type, so work items typically execute on their
-designated CPUs.
+syzbot found the following issue on:
 
-However, in CPU hotplug scenarios, the CPU offline process will unbind
-workers, causing work items to execute on other CPUs. If we queue an
-inode on a CPU that's about to go offline after workqueue_offline_cpu()
-but before the CPU is actually marked offline, the following concurrent
-sequence might occur (though I haven't been able to reproduce this scenario
-in practice).
+HEAD commit:    573067a5a685 Merge branch 'for-next/core' into for-kernelci
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
+console output: https://syzkaller.appspot.com/x/log.txt?x=16e572df980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=cd7202b56d469648
+dashboard link: https://syzkaller.appspot.com/bug?extid=1fcaeac63a6a5f2cc94d
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+userspace arch: arm64
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13a2bcf8580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=138f1fe8580000
 
-From another perspective, with kernel preemption enabled, I think it's
-possible for xfs_inodegc_queue() and xfs_inodegc_worker() to race on the
-same CPU and process the same gc, potentially leading to the sequence
-mentioned below, since kernel preemption is enabled in the xfs_inodegc_worker
-context.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/9d3b5c855aa0/disk-573067a5.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/0c06fc1ead83/vmlinux-573067a5.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/3390e59b9e4b/Image-573067a5.gz.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/0f8df572853a/mount_0.gz
 
-> 
-> > it could race with xfs_inodegc_queue() processing the
-> > same struct xfs_inodegc. If xfs_inodegc_queue() adds the last inode
-> > to the gc list during this race, that inode might never be processed
-> > and reclaimed due to cpumask not set. This maybe lead to memory leaks
-> > after filesystem unmount, I'm unsure if there are other more serious
-> > implications.
-> 
-> xfs_inodegc_stop() should handle this all just fine. It removes
-> the enabled flag, then moves into a loop that should catch list adds
-> that were in progress when the enabled flag was cleared.
-> 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+1fcaeac63a6a5f2cc94d@syzkaller.appspotmail.com
 
-I don't think xfs_inodegc_stop() adequately handles this scenario. 
-xfs_inodegc_queue_all() only processes the CPUs that are set in
-mp->m_inodegc_cpumask. If a CPU's corresponding bit is not set in
-the cpumask, then any inodes waiting for gc on that CPU won't have
-a chance to be processed.
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 7194 at fs/xfs/libxfs/xfs_bmap.c:4682 xfs_bmapi_convert_delalloc+0x101c/0x1528 fs/xfs/libxfs/xfs_bmap.c:4787
+Modules linked in:
+CPU: 0 UID: 0 PID: 7194 Comm: syz-executor144 Not tainted 6.13.0-rc3-syzkaller-g573067a5a685 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
+pstate: 80400005 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : xfs_bmapi_convert_delalloc+0x101c/0x1528 fs/xfs/libxfs/xfs_bmap.c:4787
+lr : xfs_bmapi_convert_one_delalloc fs/xfs/libxfs/xfs_bmap.c:4682 [inline]
+lr : xfs_bmapi_convert_delalloc+0x1018/0x1528 fs/xfs/libxfs/xfs_bmap.c:4787
+sp : ffff8000a1b97020
+x29: ffff8000a1b97300 x28: 1fffe0001a04140f x27: 1ffff00014372e58
+x26: ffff8000a1b972c0 x25: ffff8000a1b97750 x24: dfff800000000000
+x23: ffff0000de730000 x22: 0000000000000000 x21: 00000000fffffff5
+x20: 0000000000010003 x19: ffff0000d020a000 x18: ffff0000de7301c4
+x17: ffff80008f99d000 x16: ffff800083275834 x15: 0000000000000001
+x14: 0000000000000000 x13: 0000000000000001 x12: ffff0000d0210000
+x11: 0000000000ff0100 x10: 0000000000ff0100 x9 : 0000000000000000
+x8 : ffff0000d0210000 x7 : ffff800081f098ec x6 : 0000000000000000
+x5 : 0000000000000000 x4 : ffff8000a1b97210 x3 : ffff8000a1b97250
+x2 : 0000000000000001 x1 : 0000000000010003 x0 : 0000000000010004
+Call trace:
+ xfs_bmapi_convert_delalloc+0x101c/0x1528 fs/xfs/libxfs/xfs_bmap.c:4787 (P)
+ xfs_buffered_write_iomap_begin+0xa54/0x14f0 fs/xfs/xfs_iomap.c:1214
+ iomap_iter+0x5c4/0x1008 fs/iomap/iter.c:90
+ iomap_zero_range+0x380/0x794 fs/iomap/buffered-io.c:1441
+ xfs_zero_range+0x88/0xe8 fs/xfs/xfs_iomap.c:1499
+ xfs_setattr_size+0x30c/0xcc0 fs/xfs/xfs_iops.c:890
+ xfs_vn_setattr_size+0x138/0x15c fs/xfs/xfs_iops.c:1040
+ xfs_falloc_setsize fs/xfs/xfs_file.c:927 [inline]
+ xfs_falloc_insert_range+0x310/0x3d8 fs/xfs/xfs_file.c:981
+ xfs_file_fallocate+0x29c/0x3a0 fs/xfs/xfs_file.c:1133
+ vfs_fallocate+0x484/0x5c0 fs/open.c:327
+ ksys_fallocate fs/open.c:351 [inline]
+ __do_sys_fallocate fs/open.c:356 [inline]
+ __se_sys_fallocate fs/open.c:354 [inline]
+ __arm64_sys_fallocate+0xc0/0x110 fs/open.c:354
+ __invoke_syscall arch/arm64/kernel/syscall.c:35 [inline]
+ invoke_syscall+0x98/0x2b8 arch/arm64/kernel/syscall.c:49
+ el0_svc_common+0x130/0x23c arch/arm64/kernel/syscall.c:132
+ do_el0_svc+0x48/0x58 arch/arm64/kernel/syscall.c:151
+ el0_svc+0x54/0x168 arch/arm64/kernel/entry-common.c:744
+ el0t_64_sync_handler+0x84/0x108 arch/arm64/kernel/entry-common.c:762
+ el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:600
+irq event stamp: 104
+hardirqs last  enabled at (103): [<ffff8000841068c4>] get_random_u32+0x318/0x618 drivers/char/random.c:553
+hardirqs last disabled at (104): [<ffff80008b69c83c>] el1_dbg+0x24/0x80 arch/arm64/kernel/entry-common.c:488
+softirqs last  enabled at (72): [<ffff800080129934>] local_bh_enable+0x10/0x34 include/linux/bottom_half.h:32
+softirqs last disabled at (70): [<ffff800080129900>] local_bh_disable+0x10/0x34 include/linux/bottom_half.h:19
+---[ end trace 0000000000000000 ]---
 
-Thanks,
-Long Li
 
-> > > > Current problematic sequence:
-> > > > 
-> > > >   CPU0                             CPU1
-> > > >   --------------------             ---------------------
-> > > >   xfs_inodegc_queue()              xfs_inodegc_worker()
-> > > >                                      llist_del_all(&gc->list)
-> > > >     llist_add(&ip->i_gclist, &gc->list)
-> > > >     cpumask_test_and_set_cpu()
-> > > >                                      cpumask_clear_cpu()
-> > > >                   < cpumask not set >
-> > > > 
-> > > > Fix this by moving llist_del_all() after cpumask_clear_cpu() to ensure
-> > > > proper ordering. This change ensures that when the worker thread clears
-> > > > the cpumask, any concurrent queue operations will either properly set
-> > > > the cpumask bit or have already emptied the list.
-> > > > 
-> > > > Also remove unnecessary smp_mb__{before/after}_atomic() barriers since
-> > > > the llist_* operations already provide required ordering semantics. it
-> > > > make the code cleaner.
-> > > 
-> > > IIRC, the barriers were for ordering the cpumask bitmap ops against
-> > > llist operations. There are calls elsewhere to for_each_cpu() that
-> > > then use llist_empty() checks (e.g xfs_inodegc_queue_all/wait_all),
-> > > so on relaxed architectures (like alpha) I think we have to ensure
-> > > the bitmask ops carried full ordering against the independent llist
-> > > ops themselves. i.e. llist_empty() just uses READ_ONCE, so it only
-> > > orders against other llist ops and won't guarantee any specific
-> > > ordering against against cpumask modifications.
-> > > 
-> > > I could be remembering incorrectly, but I think that was the
-> > > original reason for the barriers. Can you please confirm that the
-> > > cpumask iteration/llist_empty checks do not need these bitmask
-> > > barriers anymore? If that's ok, then the change looks fine.
-> > > 
-> > 
-> > Even on architectures with relaxed memory ordering (like alpha), I noticed
-> > that llist_add() already has full barrier semantics, so I think the 
-> > smp_mb__before_atomic barrier in xfs_inodegc_queue() can be removed.
-> 
-> Ok. Seems reasonable to remove it if everything uses full memory
-> barriers for the llist_add() operation.
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
