@@ -1,105 +1,118 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 08F5D17591;
-	Thu, 26 Dec 2024 06:16:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A8E19750B
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Dec 2024 21:50:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735193794; cv=none; b=ZJlZ0WrnkcQVG4VeWCn84eVZVz+vqp0NlNYuf61yHpzoHIXbPsjqDLFkqyVyVSS3rtGG6NB+R4nhA7be6x54RQkHB7ST5MWsJTueU97I3ppcVjR75lPH0K1mkM9uu7hbbjo1WYpoId/dAfudZJMZcn6EGvUevP2CnlX+ACI5V6U=
+	t=1735249852; cv=none; b=afPxC6CkT1THDmrMdnWTPjqdqwdypPZD50mfWtvhp9z7P0H7mypCNHuZhHekL6Gek8QXlUz0xRqGnBWQnCukWPOSNvBdE2dw+FtuIiUu3SuZHe0zZfVIb9WlN97vlAyJRoCCUGjE7N/xebPxe4OkBZA0peKPG9IM5iDeaxsIyXI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735193794; c=relaxed/simple;
-	bh=exKKVV2NF3/SLcIV4iEezaaL2UfMDQXvxdQlUZWfaAc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PQMSJILbwiuEGjt+FTZjn+eeL7+VGgZ7PBml46o+RyErrcpzzzU+8KqfPYz7fE5kwH7KgL/2wfIgx6RggF+1Ye5WondFL7/hnvAEtKn8geXimcVTG/zvn50Of7MZLungQvcQa+KUc5/WpRm/75UqKL3qIk9xuQrF7xrO6STI6LA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=X1ecpBMl; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1735249852; c=relaxed/simple;
+	bh=dvN2lzuJjqh+PfwhVxvByHFBUi79VKH87uBl15ewL/Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y6eMZ8L/0QlPad2ZqYPru1C9/JlaWEzjM6m0We7FoJUwQNMUyxAzov8vm0Nl/yDuPhJs9+KJSqaCMMXXefGujTb0YKlVVKfK/xB0Gv1QBXm2a4FQC12wvswZdiPUuZQgJ7sE/copmp4x4E7aiS5dTAWHB12AglCRM3XW3kYq7e0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xo4KiUrA; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="X1ecpBMl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-ID:MIME-Version; bh=anRDx
-	NQ6sJd//qGP2BVP5SHVTKVSuqTV4qb7M1vi+yk=; b=X1ecpBMlNa90Vy3sIkMxS
-	0vaw4UMxLRBTz75lYticIxaYrjdPVE5VGPSJRTVeqba9A80uwsI9nJEY0w/jGTmV
-	sVIQinr8/VKCR9WvkY3fTFdQ6F8eS7DGGiyXLZCTYCrVi8otc2kDegbcgZoZydjj
-	fJ7RBmmo2mA42ABZI0JwgI=
-Received: from chi-Redmi-Book.. (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wBn392t9GxnKb_cBg--.36614S2;
-	Thu, 26 Dec 2024 14:16:14 +0800 (CST)
-From: Chi Zhiling <chizhiling@163.com>
-To: djwong@kernel.org,
-	cem@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>
-Subject: [PATCH] xfs: Remove i_rwsem lock in buffered read
-Date: Thu, 26 Dec 2024 14:16:02 +0800
-Message-ID: <20241226061602.2222985-1-chizhiling@163.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xo4KiUrA"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-21683192bf9so83721335ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Dec 2024 13:50:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1735249850; x=1735854650; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Wr9rqTNKfrszMFbe6gBAWrnjJVlbfYKXR7FEPGhqS+w=;
+        b=xo4KiUrAEfOwxADhZhzDYyLLABAR8H4FBE4L4eeUEMGygkwtq0/bxBCrovCNZ7s+fT
+         651O/DTaqqBfAZV89+khyhX5gpejEm0/tFBlCHz0lOjweXXu/SkEPYQ3j6atma60CZjm
+         gQ7ieD4JQNQhr8tTh4CBHxKTf+Zp03UkPB80taRsVWgRIKb/kIzNAw7RETA1jP2KNel3
+         wuVv4ZiiyapNOns9asM574SNTYVE10mK5S2tJcQheOrVPbOWaE8qetlhbBKGBLkIJpXD
+         Yl6H+lRvCZ1LwN0E/LAr9u44rTDzPG527No+eSlU0JQ7dlzyxXexpAKx1B8UNjfDunZ2
+         VTXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735249850; x=1735854650;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Wr9rqTNKfrszMFbe6gBAWrnjJVlbfYKXR7FEPGhqS+w=;
+        b=fEYuEbSOu+r3P0vtwWGeRbX/VqVEnK1EQqwEjdByt8deST+56zPZTOsAC7kqYJ5ar5
+         BAgRRhkPYBmiSuyUa7/f2oqx3OInoNakpFqToE4oAj68uQWbfZBKa9HmZzp/sC36Oh0G
+         ZD6R/5qcgb1JufyGvbxGmLy8DBLsfXFimdOWchhw8eb76tyJyciNdPcCMO4xkhyC0Ab9
+         OgiNhwqTvD6d4QMzPcJY76A93tBuZuvohEw55ntLXy0kOb4mP2/yr05BYHj6km2K9vht
+         /pxQcFXImZt90Sb9z+hqyzztl/omA1L2otAVhC/ojyI9fNEpx5A2kNrxhWTh1qy3isqQ
+         m7QQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX2w8rRidWynmoBovgD85SRbjM+3sV4qOfhk90KXtz2MyWb0tJK+CDm7qnvMmb7lfgzHWhboYEa5hE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6MiUnBAP2hBRWaOQQklGYRWtWkQw0/H5sT4kSS/pLSBrA+Uvl
+	ny0ZHoJ4U+dfMRNL3n8o3L63kIaVg3T98c+f2selsgADFhSKo6PKQ/g4sepZtwI=
+X-Gm-Gg: ASbGncs3BpG8V7AcaRbL6oAy7SDpGLDPwAWQPmRV7hBbvJ02VvNPL1E2rhnKey6fN07
+	Bv6/Dbib7lAmBsHyP+n6fbILSH3ykcPE6XR8AmoCkBH0hGTqA4WGVyzjx6/nl+uiEuTibZ1e+MQ
+	iLk44IMoGP9Mzvy8/urIthjRobZPofzEbgWOSWmMRjGyXUdGA7pj+Xa0qeHE3QrcDhoYlQXV2Wb
+	oZgf5WtXyKbJSq3rLnYt5cWysbdRWkONyViS9AI1AlCrUI92nJ2AQruZYmxhtwOKt/KYwLVZ+B0
+	WBbVLlzJrIhOLorQ40h0LRIqHqu/ToTB
+X-Google-Smtp-Source: AGHT+IGk9ns5G4ClaQIYPLU52mtpz4s/jiWLmd1nFPHeo5VshhGXPfY/Dpcc9wUfE+lHiV9OxDrdTw==
+X-Received: by 2002:a05:6a21:9017:b0:1e5:ddac:1eff with SMTP id adf61e73a8af0-1e5e04a0c7cmr37891986637.20.1735249850526;
+        Thu, 26 Dec 2024 13:50:50 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72aad84eb45sm13322197b3a.88.2024.12.26.13.50.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Dec 2024 13:50:49 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tQvkk-0000000Fgtb-3h8r;
+	Fri, 27 Dec 2024 08:50:46 +1100
+Date: Fri, 27 Dec 2024 08:50:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Chi Zhiling <chizhiling@163.com>
+Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z23Ptl5cAnIiKx6W@dread.disaster.area>
+References: <20241226061602.2222985-1-chizhiling@163.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBn392t9GxnKb_cBg--.36614S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF4UWFyxuF48JFyfXrWxtFb_yoW8uw1kpr
-	9xKa4rGrsrKw18Cr1fJF40ga45Kw1Ikw4DZrW0gw13XF13tr4qgrWIyF10g345K39avr4j
-	qw1xKr93CayqqFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jnzVbUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBaxjBnWds86QYdAAAsf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241226061602.2222985-1-chizhiling@163.com>
 
-From: Chi Zhiling <chizhiling@kylinos.cn>
+On Thu, Dec 26, 2024 at 02:16:02PM +0800, Chi Zhiling wrote:
+> From: Chi Zhiling <chizhiling@kylinos.cn>
+> 
+> Using an rwsem to protect file data ensures that we can always obtain a
+> completed modification. But due to the lock, we need to wait for the
+> write process to release the rwsem before we can read it, even if we are
+> reading a different region of the file. This could take a lot of time
+> when many processes need to write and read this file.
+> 
+> On the other hand, The ext4 filesystem and others do not hold the lock
+> during buffered reading, which make the ext4 have better performance in
+> that case. Therefore, I think it will be fine if we remove the lock in
+> xfs, as most applications can handle this situation.
 
-Using an rwsem to protect file data ensures that we can always obtain a
-completed modification. But due to the lock, we need to wait for the
-write process to release the rwsem before we can read it, even if we are
-reading a different region of the file. This could take a lot of time
-when many processes need to write and read this file.
+Nope.
 
-On the other hand, The ext4 filesystem and others do not hold the lock
-during buffered reading, which make the ext4 have better performance in
-that case. Therefore, I think it will be fine if we remove the lock in
-xfs, as most applications can handle this situation.
+This means that XFS loses high level serialisation of incoming IO
+against operations like truncate, fallocate, pnfs operations, etc.
 
-Without this lock, we achieve a great improvement when multi-threaded
-reading and writing. Use the following command to test:
-fio -ioengine=libaio -filename=testfile -bs=4k -rw=randrw -numjobs=16 -name="randrw"
+We've been through this multiple times before; the solution lies in
+doing the work to make buffered writes use shared locking, not
+removing shared locking from buffered reads.
 
-Before this patch:
-   READ: bw=351MiB/s (368MB/s), 21.8MiB/s-22.0MiB/s (22.9MB/s-23.1MB/s), io=8185MiB (8582MB), run=23206-23347msec
-  WRITE: bw=351MiB/s (368MB/s), 21.9MiB/s-22.1MiB/s (23.0MB/s-23.2MB/s), io=8199MiB (8597MB), run=23206-23347msec
+A couple of old discussions from the list:
 
-After this patch:
-   READ: bw=1961MiB/s (2056MB/s), 122MiB/s-125MiB/s (128MB/s-131MB/s), io=8185MiB (8582MB), run=4097-4174msec
-  WRITE: bw=1964MiB/s (2060MB/s), 123MiB/s-125MiB/s (129MB/s-131MB/s), io=8199MiB (8597MB), run=4097-4174msec
+https://lore.kernel.org/linux-xfs/CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com/
+https://lore.kernel.org/linux-xfs/20190404165737.30889-1-amir73il@gmail.com/
 
-Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
----
- fs/xfs/xfs_file.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+There are likely others - you can search for them yourself to get
+more background information.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9a435b1ff264..7d039cc3ae9e 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -279,18 +279,9 @@ xfs_file_buffered_read(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*to)
- {
--	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
--	ssize_t			ret;
--
- 	trace_xfs_file_buffered_read(iocb, to);
- 
--	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
--	if (ret)
--		return ret;
--	ret = generic_file_read_iter(iocb, to);
--	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
--
--	return ret;
-+	return generic_file_read_iter(iocb, to);
- }
- 
- STATIC ssize_t
+Fundamentally, though, removing locking from the read side is not
+the answer to this buffered write IO exclusion problem....
+
+-Dave.
 -- 
-2.43.0
-
+Dave Chinner
+david@fromorbit.com
