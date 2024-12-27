@@ -1,118 +1,94 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A8E19750B
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Dec 2024 21:50:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F9535943;
+	Fri, 27 Dec 2024 02:53:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735249852; cv=none; b=afPxC6CkT1THDmrMdnWTPjqdqwdypPZD50mfWtvhp9z7P0H7mypCNHuZhHekL6Gek8QXlUz0xRqGnBWQnCukWPOSNvBdE2dw+FtuIiUu3SuZHe0zZfVIb9WlN97vlAyJRoCCUGjE7N/xebPxe4OkBZA0peKPG9IM5iDeaxsIyXI=
+	t=1735268006; cv=none; b=CYMe5wdZVDjygrRSSL7i+0DYZLkoNTmMgdtBvbIEDVrAC6UP4gxSQ5KKmoTMo6avP6OZAf0iUwf1KnayI4qRvFS3rpLiz6BDHIKXt9QJRmN1cSiASLbMjXPK1GevDmFWk2EczaoWH5qWyBvFduVySurDTWDnGX8A8K5L9Zg0ex0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735249852; c=relaxed/simple;
-	bh=dvN2lzuJjqh+PfwhVxvByHFBUi79VKH87uBl15ewL/Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y6eMZ8L/0QlPad2ZqYPru1C9/JlaWEzjM6m0We7FoJUwQNMUyxAzov8vm0Nl/yDuPhJs9+KJSqaCMMXXefGujTb0YKlVVKfK/xB0Gv1QBXm2a4FQC12wvswZdiPUuZQgJ7sE/copmp4x4E7aiS5dTAWHB12AglCRM3XW3kYq7e0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xo4KiUrA; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xo4KiUrA"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-21683192bf9so83721335ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Dec 2024 13:50:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1735249850; x=1735854650; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Wr9rqTNKfrszMFbe6gBAWrnjJVlbfYKXR7FEPGhqS+w=;
-        b=xo4KiUrAEfOwxADhZhzDYyLLABAR8H4FBE4L4eeUEMGygkwtq0/bxBCrovCNZ7s+fT
-         651O/DTaqqBfAZV89+khyhX5gpejEm0/tFBlCHz0lOjweXXu/SkEPYQ3j6atma60CZjm
-         gQ7ieD4JQNQhr8tTh4CBHxKTf+Zp03UkPB80taRsVWgRIKb/kIzNAw7RETA1jP2KNel3
-         wuVv4ZiiyapNOns9asM574SNTYVE10mK5S2tJcQheOrVPbOWaE8qetlhbBKGBLkIJpXD
-         Yl6H+lRvCZ1LwN0E/LAr9u44rTDzPG527No+eSlU0JQ7dlzyxXexpAKx1B8UNjfDunZ2
-         VTXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1735249850; x=1735854650;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Wr9rqTNKfrszMFbe6gBAWrnjJVlbfYKXR7FEPGhqS+w=;
-        b=fEYuEbSOu+r3P0vtwWGeRbX/VqVEnK1EQqwEjdByt8deST+56zPZTOsAC7kqYJ5ar5
-         BAgRRhkPYBmiSuyUa7/f2oqx3OInoNakpFqToE4oAj68uQWbfZBKa9HmZzp/sC36Oh0G
-         ZD6R/5qcgb1JufyGvbxGmLy8DBLsfXFimdOWchhw8eb76tyJyciNdPcCMO4xkhyC0Ab9
-         OgiNhwqTvD6d4QMzPcJY76A93tBuZuvohEw55ntLXy0kOb4mP2/yr05BYHj6km2K9vht
-         /pxQcFXImZt90Sb9z+hqyzztl/omA1L2otAVhC/ojyI9fNEpx5A2kNrxhWTh1qy3isqQ
-         m7QQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX2w8rRidWynmoBovgD85SRbjM+3sV4qOfhk90KXtz2MyWb0tJK+CDm7qnvMmb7lfgzHWhboYEa5hE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6MiUnBAP2hBRWaOQQklGYRWtWkQw0/H5sT4kSS/pLSBrA+Uvl
-	ny0ZHoJ4U+dfMRNL3n8o3L63kIaVg3T98c+f2selsgADFhSKo6PKQ/g4sepZtwI=
-X-Gm-Gg: ASbGncs3BpG8V7AcaRbL6oAy7SDpGLDPwAWQPmRV7hBbvJ02VvNPL1E2rhnKey6fN07
-	Bv6/Dbib7lAmBsHyP+n6fbILSH3ykcPE6XR8AmoCkBH0hGTqA4WGVyzjx6/nl+uiEuTibZ1e+MQ
-	iLk44IMoGP9Mzvy8/urIthjRobZPofzEbgWOSWmMRjGyXUdGA7pj+Xa0qeHE3QrcDhoYlQXV2Wb
-	oZgf5WtXyKbJSq3rLnYt5cWysbdRWkONyViS9AI1AlCrUI92nJ2AQruZYmxhtwOKt/KYwLVZ+B0
-	WBbVLlzJrIhOLorQ40h0LRIqHqu/ToTB
-X-Google-Smtp-Source: AGHT+IGk9ns5G4ClaQIYPLU52mtpz4s/jiWLmd1nFPHeo5VshhGXPfY/Dpcc9wUfE+lHiV9OxDrdTw==
-X-Received: by 2002:a05:6a21:9017:b0:1e5:ddac:1eff with SMTP id adf61e73a8af0-1e5e04a0c7cmr37891986637.20.1735249850526;
-        Thu, 26 Dec 2024 13:50:50 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72aad84eb45sm13322197b3a.88.2024.12.26.13.50.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Dec 2024 13:50:49 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tQvkk-0000000Fgtb-3h8r;
-	Fri, 27 Dec 2024 08:50:46 +1100
-Date: Fri, 27 Dec 2024 08:50:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Chi Zhiling <chizhiling@163.com>
-Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-Message-ID: <Z23Ptl5cAnIiKx6W@dread.disaster.area>
-References: <20241226061602.2222985-1-chizhiling@163.com>
+	s=arc-20240116; t=1735268006; c=relaxed/simple;
+	bh=zr5TWsDcwmZy5fMMlcMkxO9AkENbekHHC4JeH0Pw4XM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=LkkNUedwN3wODcij7gfNHsmJYf9IRfl0L08J2RwhCG+dN4dEPtQB4nDNMfhommEfe/dv7t0ek2z6VihT/6b6aaY1jKpbVtHD7Yb8p7/RO5cceLq9VgtlQm2whprBFCImimvH+yH4L9c6NeJWTtEnpbRIjDUQvWoSbnIcOx7XqNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: b3a168bcc3fd11efa216b1d71e6e1362-20241227
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CTE_8B, HR_CTT_MISS
+	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN, HR_FROM_NAME
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
+	SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
+	CIE_BAD, CIE_GOOD_SPF, GTI_FG_BS, GTI_C_CI, GTI_FG_IT
+	GTI_RG_INFO, GTI_C_BU, AMN_T1, AMN_GOOD, AMN_C_TI
+	AMN_C_BU
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.41,REQID:b8f129ff-88e4-4a67-b997-7b015b64705b,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-INFO: VERSION:1.1.41,REQID:b8f129ff-88e4-4a67-b997-7b015b64705b,IP:0,URL
+	:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:-5
+X-CID-META: VersionHash:6dc6a47,CLOUDID:4713c9fcfa201ded0d0050ac64e8a49c,BulkI
+	D:241227105309K676RDA0,BulkQuantity:0,Recheck:0,SF:17|19|66|78|102,TC:nil,
+	Content:0|50,EDM:-3,IP:nil,URL:1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,C
+	OL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_ULS
+X-UUID: b3a168bcc3fd11efa216b1d71e6e1362-20241227
+X-User: xiaopei01@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <xiaopei01@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 172982060; Fri, 27 Dec 2024 10:53:07 +0800
+From: Pei Xiao <xiaopei01@kylinos.cn>
+To: djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Pei Xiao <xiaopei01@kylinos.cn>,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH] xfs: use kvmemdup() to replace kvmalloc + memcpy
+Date: Fri, 27 Dec 2024 10:53:02 +0800
+Message-Id: <1a12a05451a1fc9bc37e739a79a0ba667656ade4.1735267151.git.xiaopei01@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241226061602.2222985-1-chizhiling@163.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Dec 26, 2024 at 02:16:02PM +0800, Chi Zhiling wrote:
-> From: Chi Zhiling <chizhiling@kylinos.cn>
-> 
-> Using an rwsem to protect file data ensures that we can always obtain a
-> completed modification. But due to the lock, we need to wait for the
-> write process to release the rwsem before we can read it, even if we are
-> reading a different region of the file. This could take a lot of time
-> when many processes need to write and read this file.
-> 
-> On the other hand, The ext4 filesystem and others do not hold the lock
-> during buffered reading, which make the ext4 have better performance in
-> that case. Therefore, I think it will be fine if we remove the lock in
-> xfs, as most applications can handle this situation.
+Fix cocci warning:
+fs/xfs/libxfs/xfs_attr_leaf.c:1061:13-20: WARNING opportunity for kmemdup
 
-Nope.
+Fixes: de631e1a8b71 ("xfs: use kvmalloc for xattr buffers")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202403210204.LPPBJMhf-lkp@intel.com/
+Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-This means that XFS loses high level serialisation of incoming IO
-against operations like truncate, fallocate, pnfs operations, etc.
-
-We've been through this multiple times before; the solution lies in
-doing the work to make buffered writes use shared locking, not
-removing shared locking from buffered reads.
-
-A couple of old discussions from the list:
-
-https://lore.kernel.org/linux-xfs/CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com/
-https://lore.kernel.org/linux-xfs/20190404165737.30889-1-amir73il@gmail.com/
-
-There are likely others - you can search for them yourself to get
-more background information.
-
-Fundamentally, though, removing locking from the read side is not
-the answer to this buffered write IO exclusion problem....
-
--Dave.
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index fddb55605e0c..db45f22e89d0 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1136,8 +1136,9 @@ xfs_attr3_leaf_to_shortform(
+ 
+ 	trace_xfs_attr_leaf_to_sf(args);
+ 
+-	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+-	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
++	tmpbuffer = kvmemdup(bp->b_addr, args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
++	if (!tmpbuffer)
++		return -ENOMEM;
+ 
+ 	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
+ 	xfs_attr3_leaf_hdr_from_disk(args->geo, &ichdr, leaf);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.1
+
