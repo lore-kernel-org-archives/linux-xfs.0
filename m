@@ -1,107 +1,110 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EECC515535A;
-	Fri, 27 Dec 2024 09:08:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8A78CC147;
+	Sat, 28 Dec 2024 07:38:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735290507; cv=none; b=R5FfnpVwP92A2FFgSLcVMoxWSoaKMru6kAY8aYtyQutneb35fmO3F/XYH5SxJM+NS/gOLqOD4sPn2U9q4H3Ozjj5CDLLQ0bDTAyeuoNexpkaN34CNczM8pSSiUm0YBNcjH0pEj3txrK6gRHWXgA+ooL7SN/E49iG13T9+hjiyPc=
+	t=1735371490; cv=none; b=YyN+o0aAyYRBtq46GIhGK3h/veEKBI+cVVjtmvIlDXhXGkKWD4XkSPmE+R1fl9YTf2dPi5ufaH64RT5uCYQhAgyeo+EHB14BZZprs9FLWrGK36U85p0JUvYUVO/t3/b5FpsGikbUdenHxjjX/dlVo6piucW6d2XcfCKtRaFkPGw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735290507; c=relaxed/simple;
-	bh=7YPzXNOAmMcjNMTfwF0QqzHsTt5ktFsByK7lL3Pm4S8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tFVxIdQ1srbIW4IyqmGgj9GU8lhsXimFRoxMBk6oqhF0/4rdGxkFeE0nghG+dTnOh7Y7Z8hntGfpBqOiL69JTpwcJJZ3P2DhX6yTPLv32FJoXvCs7Gx1eeYin9CQAoYHBkNldqi+t6G0oR8sOAyVc6rmgIhIMt4w9Mm9KjkH6Cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 1b939c04c43211efa216b1d71e6e1362-20241227
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_AS_FROM, HR_TO_COUNT
-	HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED
-	SA_TRUSTED, SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS
-	DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD_SPF, GTI_FG_BS
-	GTI_C_CI, GTI_FG_IT, GTI_RG_INFO, GTI_C_BU, AMN_T1
-	AMN_GOOD, AMN_C_TI, AMN_C_BU
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:393dad88-5631-465c-92ab-2140e6b58ce1,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-10
-X-CID-INFO: VERSION:1.1.41,REQID:393dad88-5631-465c-92ab-2140e6b58ce1,IP:0,URL
-	:0,TC:0,Content:-5,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-10
-X-CID-META: VersionHash:6dc6a47,CLOUDID:e6e60fdc22d2ca928c91789fa1816d4b,BulkI
-	D:2412271708181KNXJNWW,BulkQuantity:0,Recheck:0,SF:17|19|66|78|81|82|102,T
-	C:nil,Content:0|50,EDM:-3,IP:nil,URL:1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC
-	:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_ULS,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS
-X-UUID: 1b939c04c43211efa216b1d71e6e1362-20241227
-X-User: xiaopei01@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <xiaopei01@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 189188851; Fri, 27 Dec 2024 17:08:16 +0800
-From: Pei Xiao <xiaopei01@kylinos.cn>
-To: xiaopei01@kylinos.cn
-Cc: cem@kernel.org,
-	djwong@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	lkp@intel.com
-Subject: [PATCH V2] xfs: use kmemdup() to replace kmalloc + memcpy
-Date: Fri, 27 Dec 2024 17:08:11 +0800
-Message-ID: <37bbe1eb5f72685e54abb1ee6b50eaff788ecd93.1735268963.git.xiaopei01@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <37bbe1eb5f72685e54abb1ee6b50eaff788ecd93.1735268963.git.xiaopei01@kylinos.cn>
-References: <37bbe1eb5f72685e54abb1ee6b50eaff788ecd93.1735268963.git.xiaopei01@kylinos.cn>
+	s=arc-20240116; t=1735371490; c=relaxed/simple;
+	bh=/d6Xu27rVh604n66mT74p4P2U/uXqHcBxSkGXasxhp0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=D5eemPNjZn+Tq9Lv5QjXbnM3QSLEZALcPsX6f6Si8mmTqlQJywYCmj/OeI1joRk+4Vz5FksaBfNbvPWJXum9XDVifbUmVVDYewHfQWlBhuCeXNejZ3D9nsScyR95TVRJY3rU7rHTmE10qeZCOjDEHBKVXX4XrULbFrra4Vzd/Qo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Dh3tbDFk; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Dh3tbDFk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
+	Content-Type; bh=Q4mkLH4g3jWYbhVKdZDzHwemxYyPYdetRKQlvE3jCss=;
+	b=Dh3tbDFkaM0idBpkqqinN+QBReWm8dh5LilKpqvF2GhGqVAjQlRIHS6/jjQvNd
+	9ehBYva35Cjbm9tfupNIhA7fBSw9qC4NF8/MXAq+wJR3AURg1uDzW8tjSdGCqCtV
+	UROJWUqU6k8NKaJXhZBy97aEAr6Z6iUX8BrrTjbjxpVGk=
+Received: from [192.168.5.16] (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3_yXFqm9nip7mCA--.38001S2;
+	Sat, 28 Dec 2024 15:37:41 +0800 (CST)
+Message-ID: <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com>
+Date: Sat, 28 Dec 2024 15:37:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Message-ID: <20241227090811.wHalgnDyTEImKoHt69pmSMjKlcAzWTDNwYJ9pnoJCgg@z>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+To: Dave Chinner <david@fromorbit.com>
+Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>
+References: <20241226061602.2222985-1-chizhiling@163.com>
+ <Z23Ptl5cAnIiKx6W@dread.disaster.area>
+Content-Language: en-US
+From: Chi Zhiling <chizhiling@163.com>
+In-Reply-To: <Z23Ptl5cAnIiKx6W@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wD3_yXFqm9nip7mCA--.38001S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Cw4kKF1Dtw4UKrWUAF4xJFb_yoW8uF1fpF
+	WYga1UGF4DtrWxAryDC3yxXryYq34kGFW3Crn5KrWrKr15ZFnaqrWSqF1j9ryrWr1xGrWj
+	qr429FykCFyqyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UBq2_UUUUU=
+X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiTxHDnWdvpy8xGwAAsq
 
-cocci warnings:
-    fs/xfs/libxfs/xfs_dir2.c:336:15-22: WARNING opportunity for kmemdup
 
-use kmemdup() to replace kmalloc + memcpy
 
-Fixes: 30f712c9dd69 ("libxfs: move source files")
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202412260425.O3CDUhIi-lkp@intel.com/
-Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
+On 2024/12/27 05:50, Dave Chinner wrote:
+> On Thu, Dec 26, 2024 at 02:16:02PM +0800, Chi Zhiling wrote:
+>> From: Chi Zhiling <chizhiling@kylinos.cn>
+>>
+>> Using an rwsem to protect file data ensures that we can always obtain a
+>> completed modification. But due to the lock, we need to wait for the
+>> write process to release the rwsem before we can read it, even if we are
+>> reading a different region of the file. This could take a lot of time
+>> when many processes need to write and read this file.
+>>
+>> On the other hand, The ext4 filesystem and others do not hold the lock
+>> during buffered reading, which make the ext4 have better performance in
+>> that case. Therefore, I think it will be fine if we remove the lock in
+>> xfs, as most applications can handle this situation.
+> 
+> Nope.
+> 
+> This means that XFS loses high level serialisation of incoming IO
+> against operations like truncate, fallocate, pnfs operations, etc.
+> 
+> We've been through this multiple times before; the solution lies in
+> doing the work to make buffered writes use shared locking, not
+> removing shared locking from buffered reads.
 
----
-Changes for V2:
-- Add information on how to fix
----
- fs/xfs/libxfs/xfs_dir2.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+You mean using shared locking for buffered reads and writes, right?
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 202468223bf9..24251e42bdeb 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -379,12 +379,11 @@ xfs_dir_cilookup_result(
- 					!(args->op_flags & XFS_DA_OP_CILOOKUP))
- 		return -EEXIST;
- 
--	args->value = kmalloc(len,
-+	args->value = kmemdup(name, len,
- 			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_RETRY_MAYFAIL);
- 	if (!args->value)
- 		return -ENOMEM;
- 
--	memcpy(args->value, name, len);
- 	args->valuelen = len;
- 	return -EEXIST;
- }
--- 
-2.25.1
+I think it's a great idea. In theory, write operations can be performed
+simultaneously if they write to different ranges.
+
+So we should track all the ranges we are reading or writing,
+and check whether the new read or write operations can be performed
+concurrently with the current operations.
+
+Do we have any plans to use shared locking for buffered writes?
+
+
+> 
+> A couple of old discussions from the list:
+> 
+> https://lore.kernel.org/linux-xfs/CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com/
+> https://lore.kernel.org/linux-xfs/20190404165737.30889-1-amir73il@gmail.com/
+> 
+> There are likely others - you can search for them yourself to get
+> more background information.
+
+Sorry, I didn't find those discussions earlier.
+
+> 
+> Fundamentally, though, removing locking from the read side is not
+> the answer to this buffered write IO exclusion problem....
+> 
+> -Dave.
+
+Best regards,
+Chi Zhiling
 
