@@ -1,78 +1,79 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C66158520
-	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 13:40:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FEE315B54A
+	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 13:40:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735479602; cv=none; b=V2qi5cqhcQKD+zCh18QhYp3BpFR6oArJYHKmSLOCcEE7kNlukQvKKrOnZtZTIndH9glijYU170rjF3pxE0vRK0Sgx3SiBISsCuIrxwXAez/+X+IzeahvRGHekmKRETIZEDrHgutfInO0QZlSum8AUMqbqtsSfvBtzt/SFCAe198=
+	t=1735479602; cv=none; b=jibGfv+CAlcGhkYpCsS6UQKNJysEZ5TYSMKs6EnuT3iPL7kmgkE3c30RqwmXK+IQ9apGGfHMpZU0CdoqnWMK3Uundmbd2uKlGM+n4kM/0LGG0mcUtx6Tw4oMspdNomziBNrGBhQ56/T1Se34NNRMoLalcJHUjp9a/tJ5NoA5VUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1735479602; c=relaxed/simple;
-	bh=0mNIQX8gch+qYA08sKOXBzWRU9EW8UlYCDoU1mhQ9lk=;
+	bh=h4thaH+k6JXo+/ZgSxveN7DUXvlOmoN53VohtIjiy7M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PbVMSycH+enABbsywpunkSXKtwMN0qEBXvhpBvbHrKEdZTV6wKuk/eA79SBzDkLCv9UOWewwCvFTUGdOFYMUUM6UMbXrI4aQFf+i/yLAGZ/xVNNUNoMqObK2ql3xTge6zh5vXaZzZq9y8Gk8ROVU4shZceNrooyZAFB49LqxCSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MI0bSgQc; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=mJ1xAAaiGr40Kp6tMYE+vruyPP9xF0KDyTwFssVehGN+QkuA5O11oyCJ9V+cWGYc9peDSBIxeFUIUhqEebbN5Ut4EZWcOOIB6CIJUbxnjzRfNiaCiuApXeq4luByR5g4+qN9Lj437mZ7w8nJuOV/e9cwLa5po87ePSV98iEyVdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IxaVj5PH; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MI0bSgQc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IxaVj5PH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1735479599;
+	s=mimecast20190719; t=1735479600;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=NMvYZcQ/EIYbNsIgLOjJCZcJX1yFiaquR92t12jBkMo=;
-	b=MI0bSgQcnuOYs45hCzlWFIWq1pgClhtluThf0C8CKnRa5LU6TAU8ezt9GvQr8P/7niPdc3
-	HboH6SdYOo1DlRLOokV0MkDE5PSwRadOrdUeKDRugcbeMVKDaWvUdMrOs7vmOnzo8Mumiq
-	64l8jjwsQpD1UIE6L+3F5OmE7+KAzSU=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=MWSZyb8SBRy90m1wEqbld08O/xzWXycggg1gdAQ8WZE=;
+	b=IxaVj5PHUBCp/bJNOOnPI69BxHtAlguOR+AIUtfkkhBIQ+xzqlt9u0lrEA47TSZPp319b5
+	Fix7zwKJM01bHPOvqmYzZPxbqOEulVeMTNagIRZcW56pM7Xx35w1k0v3rbZJg5qPbyF/OD
+	BUzD8V4KhOZLYapRQ2d34eKf3hE2ons=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-377-M9QLOi0hPF2wwzve6BbnMQ-1; Sun, 29 Dec 2024 08:39:58 -0500
-X-MC-Unique: M9QLOi0hPF2wwzve6BbnMQ-1
-X-Mimecast-MFC-AGG-ID: M9QLOi0hPF2wwzve6BbnMQ
-Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-aa67fcbb549so143090566b.0
+ us-mta-636-68nsGADVNKa0COjrKLsYvg-1; Sun, 29 Dec 2024 08:39:59 -0500
+X-MC-Unique: 68nsGADVNKa0COjrKLsYvg-1
+X-Mimecast-MFC-AGG-ID: 68nsGADVNKa0COjrKLsYvg
+Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-5d3f01eeef8so7495786a12.0
         for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 05:39:58 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1735479597; x=1736084397;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=NMvYZcQ/EIYbNsIgLOjJCZcJX1yFiaquR92t12jBkMo=;
-        b=oUjNYp4EvIuCrR7NiR/mR2j9U1feKtDDV5vub+GWBrE8lrumWnc/MpCX+d7F4CPW0+
-         JnYUodz0XEC63QCiPfiVzmgtNCigKsKwIljSjSRIrFV7dEa4E/Ow76VgP2IFl5+w5vV3
-         X/fcCfXl3CnyWBjem6Ez0MGHDLWLDDWyk8+wWYkB/dXKDYhN4mvvRRuCicMX88MsBTwr
-         W5C923zaAQ3hA+vJlTO934O/q9EjH7Rvaraomy3WSvsNmgt/cAQf5JWyhGvwdvImOtab
-         QlBVv8SHGNZBkamlC4AFldKL2EZC/Ectb2ublTSmdUPvQO5pI+U1forufUZnpdVEjV30
-         Telg==
-X-Gm-Message-State: AOJu0YwjzTQ7TCXTks7pRq2YKSfnS45ricWcVB0XmRSVPo9OrYXGAJg3
-	HQGBgP4AghVoEdRBDfCpk5ejs0JG5jwzes+jw5d/3WgZetO2aSY7sqzLMZVOEMvmfzyQT6rvHRX
-	TMZBMTKU/0MMtPD0cJAF7mfpYkvGAXo364efYBuYJZPIT11TANYI4GptedZecEbnIC7zZtbBqLK
-	9pE8/yfyPknY/tPKO72SVFtGvARPM5AAeetUG4mVv+
-X-Gm-Gg: ASbGncubtQDsIXBfuGb074At0xXZlQqS8//J6HF6W6gaSRmEx/lmg2Z4iWx+GUcItCj
-	SB8tYzSXxXg6WCLOYGs7tis8ea89PXOkMEzWMDKdOLkbBnWbLci4pUv8JNVHSQ/tjptSS73mxXO
-	oXnQUCwmop5P/cqHtYKC+AzGGWDIvTaT51Kvou1DqI25ANWwHZHxXVxoVcj6UhioLg9JfupxVjf
-	+qjKve3EBRFZDnuiEosWpGjNGu0mWvIqRaTL+e4DigPkVVUNhqIA85Z69E4DyFIjljIr5zSJhKO
-	EBZbOvWMTn42g5o=
-X-Received: by 2002:a17:907:7fa9:b0:aab:d8de:217e with SMTP id a640c23a62f3a-aac2c005b7amr2682807866b.26.1735479596841;
-        Sun, 29 Dec 2024 05:39:56 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHmz2YbaosdBF8itUyBBy05yAOn9Tmm0RoJJZOChFreWOe29O+s05Ttm1LbXoFO4H0vwN5nqQ==
-X-Received: by 2002:a17:907:7fa9:b0:aab:d8de:217e with SMTP id a640c23a62f3a-aac2c005b7amr2682805866b.26.1735479596366;
+        bh=MWSZyb8SBRy90m1wEqbld08O/xzWXycggg1gdAQ8WZE=;
+        b=UurCsilH2+SLhJtpBQojBe3h0T22635ptHp7NYaFp06GqTkA0gtMMVbz1Jbop0xdzy
+         hdus2xKtoJCJZdtvvsn1xLh1TNtAmP8o7syFnDLsodsKPiGbAsK+Lur2e+mdGBRX0Wrq
+         glLqwaLoBj20yk6gf7Kj+J6i3E+xjYXkqOzOgWaYho4Bg6prPE7REKj/CRSiw+qNdB3t
+         5n42Hs/GQiz5OfvAAftX/gK4PwVZ4wRYT2vz2UTLbDWILZWxP458dTnmqfq1idHq1czu
+         RM+sabbL+SI9xr7DgGgsF+Aiqq+qetQeqhViYjiexkX9Ry4aJloDmsbnIJy58qqGE0oa
+         6UKg==
+X-Gm-Message-State: AOJu0YwgYlRrgyJFSNWzDzGUIuuZdUhYUrEI7i8fuON8X7bpD+a2aqHS
+	3MHOIbyEVl/5Oi3HWMz/ePrJCcLJFZ7phPhQjeQePbcIyVZLuTbzQbafOGCRGlDcweMp3BSMmKZ
+	Kjwqhy65/4B8eEtjfN03DaDnsyGzf61dA2wQZohbRENGIYh1EGnT0WB9KtqBdHmQg8Ivp6j+VKk
+	F6EnEujctfmbn5Tyliw6Dw8qggs+KXcF4j0L8szVFN
+X-Gm-Gg: ASbGncvKPvC5/Y/tEp6p/i4Kk/kn5pg+B48fzQio0+kT87Hy6tx3uL1oAkN8yQ/DEuy
+	EyOHvsdf6Kn6KrCZpYr6AD0XTNK+DAv8NiNShhXNGsCNzR153RZLK3g/DhL3bA1jJ5LAm3Vl+Kl
+	cCxPAX0bMmlYQW3FqtEKUcNoXoaHjrl5M91fv/5Q9ZtrDvQj7qgxRDSrGug2Td3wjUMBoceZrZH
+	IJcFjgordYnZKnwtlH2imUHFMYVJaV6PWmnkeI5naHUxtxvAEEouhDexfwSNklB4oe91dpjmAk3
+	5gXiyrGr2NmxDRs=
+X-Received: by 2002:a50:cc48:0:b0:5d3:cf89:bd3e with SMTP id 4fb4d7f45d1cf-5d81de1c92cmr61739905a12.30.1735479597389;
+        Sun, 29 Dec 2024 05:39:57 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHHWl1XsEsS+k9rOlJgYZQGRexZKirN1Je8S19ny16JWOJGdelwSKeW1CZj2FtIZ80Wa5o29Q==
+X-Received: by 2002:a50:cc48:0:b0:5d3:cf89:bd3e with SMTP id 4fb4d7f45d1cf-5d81de1c92cmr61739840a12.30.1735479596981;
         Sun, 29 Dec 2024 05:39:56 -0800 (PST)
 Received: from thinky.redhat.com (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aac0f070a7bsm1355017766b.201.2024.12.29.05.39.55
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aac0f070a7bsm1355017766b.201.2024.12.29.05.39.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Dec 2024 05:39:55 -0800 (PST)
+        Sun, 29 Dec 2024 05:39:56 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	david@fromorbit.com,
-	hch@lst.de
-Subject: [PATCH 06/24] fsverity: report validation errors back to the filesystem
-Date: Sun, 29 Dec 2024 14:39:09 +0100
-Message-ID: <20241229133927.1194609-7-aalbersh@kernel.org>
+	hch@lst.de,
+	Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH 07/24] fsverity: flush pagecache before enabling verity
+Date: Sun, 29 Dec 2024 14:39:10 +0100
+Message-ID: <20241229133927.1194609-8-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241229133927.1194609-1-aalbersh@kernel.org>
 References: <20241229133350.1192387-1-aalbersh@kernel.org>
@@ -85,88 +86,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Andrey Albershteyn <aalbersh@redhat.com>
 
-Provide a new function call so that validation errors can be reported
-back to the filesystem.
+XFS uses iomap interface to write Merkle tree. The writeback
+distinguish between data and Merkle tree pages via
+XFS_VERITY_CONSTRUCTION flag set on inode. Data pages could get in a
+way in writeback path when the file is read-only and Merkle tree
+construction already started.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Flush the page cache before enabling fsverity.
+
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 ---
- fs/verity/verify.c              |  4 ++++
- include/linux/fsverity.h        | 14 ++++++++++++++
- include/trace/events/fsverity.h | 19 +++++++++++++++++++
- 3 files changed, 37 insertions(+)
+ fs/verity/enable.c | 5 +++++
+ fs/verity/verify.c | 1 +
+ 2 files changed, 6 insertions(+)
 
+diff --git a/fs/verity/enable.c b/fs/verity/enable.c
+index 1d4a6de96014..af4fcbb6363d 100644
+--- a/fs/verity/enable.c
++++ b/fs/verity/enable.c
+@@ -11,6 +11,7 @@
+ #include <linux/mount.h>
+ #include <linux/sched/signal.h>
+ #include <linux/uaccess.h>
++#include <linux/pagemap.h>
+ 
+ struct block_buffer {
+ 	u32 filled;
+@@ -374,6 +375,10 @@ int fsverity_ioctl_enable(struct file *filp, const void __user *uarg)
+ 	if (!S_ISREG(inode->i_mode))
+ 		return -EINVAL;
+ 
++	err = filemap_write_and_wait(inode->i_mapping);
++	if (err)
++		return err;
++
+ 	err = mnt_want_write_file(filp);
+ 	if (err) /* -EROFS */
+ 		return err;
 diff --git a/fs/verity/verify.c b/fs/verity/verify.c
-index 25fb795655e9..587f3a4eb34e 100644
+index 587f3a4eb34e..940f59bf3f53 100644
 --- a/fs/verity/verify.c
 +++ b/fs/verity/verify.c
-@@ -242,6 +242,10 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
- 		     data_pos, level - 1,
- 		     params->hash_alg->name, hsize, want_hash,
- 		     params->hash_alg->name, hsize, real_hash);
-+	trace_fsverity_file_corrupt(inode, data_pos, params->block_size);
-+	if (inode->i_sb->s_vop->file_corrupt)
-+		inode->i_sb->s_vop->file_corrupt(inode, data_pos,
-+				params->block_size);
- error:
- 	for (; level > 0; level--) {
- 		kunmap_local(hblocks[level - 1].addr);
-diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-index 8627b11082b0..9b79aaaa6626 100644
---- a/include/linux/fsverity.h
-+++ b/include/linux/fsverity.h
-@@ -125,6 +125,20 @@ struct fsverity_operations {
- 	 */
- 	int (*write_merkle_tree_block)(struct inode *inode, const void *buf,
- 				       u64 pos, unsigned int size);
-+
-+	/**
-+	 * Notify the filesystem that file data is corrupt.
-+	 *
-+	 * @inode: the inode being validated
-+	 * @pos: the file position of the invalid data
-+	 * @len: the length of the invalid data
-+	 *
-+	 * This function is called when fs-verity detects that a portion of a
-+	 * file's data is inconsistent with the Merkle tree, or a Merkle tree
-+	 * block needed to validate the data is inconsistent with the level
-+	 * above it.
-+	 */
-+	void (*file_corrupt)(struct inode *inode, loff_t pos, size_t len);
- };
+@@ -9,6 +9,7 @@
  
- #ifdef CONFIG_FS_VERITY
-diff --git a/include/trace/events/fsverity.h b/include/trace/events/fsverity.h
-index dab220884b89..375fdddac6a9 100644
---- a/include/trace/events/fsverity.h
-+++ b/include/trace/events/fsverity.h
-@@ -137,6 +137,25 @@ TRACE_EVENT(fsverity_verify_merkle_block,
- 		__entry->hidx)
- );
+ #include <crypto/hash.h>
+ #include <linux/bio.h>
++#include <linux/pagemap.h>
  
-+TRACE_EVENT(fsverity_file_corrupt,
-+	TP_PROTO(const struct inode *inode, loff_t pos, size_t len),
-+	TP_ARGS(inode, pos, len),
-+	TP_STRUCT__entry(
-+		__field(ino_t, ino)
-+		__field(loff_t, pos)
-+		__field(size_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->ino = inode->i_ino;
-+		__entry->pos = pos;
-+		__entry->len = len;
-+	),
-+	TP_printk("ino %lu pos %llu len %zu",
-+		(unsigned long) __entry->ino,
-+		__entry->pos,
-+		__entry->len)
-+);
-+
- #endif /* _TRACE_FSVERITY_H */
+ static struct workqueue_struct *fsverity_read_workqueue;
  
- /* This part must be outside protection */
 -- 
 2.47.0
 
