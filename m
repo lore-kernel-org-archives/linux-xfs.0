@@ -1,61 +1,60 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 725AE259497
-	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 17:55:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8DE82594AD
+	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 21:37:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735494938; cv=none; b=N85Cg4+1/fR5bc38U4oQ4mo4w/ug66l0PgfVjhWRks/SqdspUMI8oBbF3GM7LMiu1+tchaY2PX8ERUp54n402nlzn7cBp0rGc4idRdthYWuHUnVbjBbFi88dGmJ4sRCs/zLRiR+u7SeCtA/jAsiF7FP5tnGVRXDD+OIcJdVuyWo=
+	t=1735508230; cv=none; b=SJgUj8C8j3YPydKRawUu9z39DxOi1qhtE1E5sw4OeHl8CTnKIe32/JMcCZAHEwNFMZVEw73sYcgsnETnt5zTVdj/yuCGRejanNCbZnD5YcMnmIa9t6oZF5JmiO6wFmoZFJaHuLjir7mSHMolZY26Y2TdbMasOfVyx4aEbPqIRV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735494938; c=relaxed/simple;
-	bh=68EfKJS4tDBUgfuIRkH7FwfLZsp1BWHarTWhcDMOd4U=;
+	s=arc-20240116; t=1735508230; c=relaxed/simple;
+	bh=lkjkANhC5d3LLzyYaeeppWC7xhZU/mxpdSpl5dk8FkE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TG+lSCTRV70VafBGLsxGWIQDrhoVeAIkz/MrJ/nmDX3qZ4PGQXKpyabexjkzmlzotoATupufADQn1xEFMtzTcCgOzQ9Hs3ldN7KI7BMAzH5abDZjEYC+8E10HkMBrP6i5hbGbZaIOXWDHWZpUn2YhRz3ZSGPi6hE51pWEDj2aQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ixlMJSGH; arc=none smtp.client-ip=192.198.163.12
+	 Content-Type:Content-Disposition:In-Reply-To; b=HAvhZnonNjOe2W3GAoLHcBTss4yG3wc6isMUUya0nMR1MF96YS/4jQvkQzWSBrqvVhE/doiyVa+W9LmZnuQs7iejO+sv8xdD5Ykt5Z1+3g3zIS0FDhWkgrGpnBloudyyisYc53a7VjlkC0P/wn5rxoAnN2FiblVCJXm4LCfXnTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GagL09CU; arc=none smtp.client-ip=198.175.65.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ixlMJSGH"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GagL09CU"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1735494936; x=1767030936;
+  t=1735508228; x=1767044228;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=68EfKJS4tDBUgfuIRkH7FwfLZsp1BWHarTWhcDMOd4U=;
-  b=ixlMJSGH5lRuMAelK60WyLseVPg6Ek10f24kb1QswK/327He9jWr8QXM
-   8dNoMhmQVe0xktHii+B9Gaw5FAhULHBRn1oZ4N/fTUsB1ECLJv2OFkwh0
-   ncDxmejwUrb35zCmR50Gd1JBYpkaYHP14nqju4/hiN/4TPgAj2rZv9YmB
-   vDIkOz3tnPxzNjikus/SOikdnIyjbVXBU65y5xSHMHgPFV3Lq2tEX8pZs
-   ccjGpWHDe7vvOAlGk5VeyhLk85v+rn0zp+xdi6n7lwLiKGEPEo9y0scTz
-   xtO5eYFbTrGsRzLerqFw0P40KSRxVGeHZZqz3U7InDipnLSSiZZV2vIh5
-   g==;
-X-CSE-ConnectionGUID: WONFAbjyTNm9EKMxNhnBjA==
-X-CSE-MsgGUID: AeLCo6HGSQ+QtqD0cPj1Tg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11299"; a="39734349"
-X-IronPort-AV: E=Sophos;i="6.12,274,1728975600"; 
-   d="scan'208";a="39734349"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Dec 2024 09:55:36 -0800
-X-CSE-ConnectionGUID: Ufv39eOWSwW2s1o4viu9mw==
-X-CSE-MsgGUID: EAgsQH1sTp6iqMShiXGb9w==
+  bh=lkjkANhC5d3LLzyYaeeppWC7xhZU/mxpdSpl5dk8FkE=;
+  b=GagL09CUwlQ95sh+8yfChR4J2YE8cp5Cc3yeWnAeNetvzERFuClcxpP1
+   TXrDAYpCfh3J9r/vykJQ0YtbIwUieVuHPz37tjnvTcsZoqlIiDTfD9g7+
+   vHWR27XkV5kx27LhWeLmIZH5O/5Avi+nxUBHQM+d/d5iq0M1JB6JFyDT/
+   c0EC2LydB18Ds7w/A/9grYltDOZ5xdr86hTM4AEOBiKCrsyqYkEJ4qF0O
+   YvtgmrP6bLbyTDXZ8Sm8ltGe9rATPQMR8VONrlAaYhceCCe/CVTBxJYKL
+   7LcwU1/6JuP98Q4g6OvQlpJ67yuNZRMXGsY6f0aYy4iVJaZ+j+8QD78Mz
+   w==;
+X-CSE-ConnectionGUID: G4LvGkw4TsiKlg8nuYxIaA==
+X-CSE-MsgGUID: c76FDyoYSiC1TlfPA8Pvbg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11299"; a="53206724"
+X-IronPort-AV: E=Sophos;i="6.12,275,1728975600"; 
+   d="scan'208";a="53206724"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Dec 2024 13:37:08 -0800
+X-CSE-ConnectionGUID: hRJIasq+QoGoScXhfmrKLA==
+X-CSE-MsgGUID: tb/nE8cvTze3YIEhUS1eCw==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="105683657"
+X-IronPort-AV: E=Sophos;i="6.12,275,1728975600"; 
+   d="scan'208";a="101136750"
 Received: from lkp-server01.sh.intel.com (HELO d63d4d77d921) ([10.239.97.150])
-  by orviesa003.jf.intel.com with ESMTP; 29 Dec 2024 09:55:34 -0800
+  by fmviesa009.fm.intel.com with ESMTP; 29 Dec 2024 13:37:06 -0800
 Received: from kbuild by d63d4d77d921 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1tRxVi-0004rg-1m;
-	Sun, 29 Dec 2024 17:55:30 +0000
-Date: Mon, 30 Dec 2024 01:54:38 +0800
+	id 1tS0y8-0005A0-1k;
+	Sun, 29 Dec 2024 21:37:04 +0000
+Date: Mon, 30 Dec 2024 05:36:47 +0800
 From: kernel test robot <lkp@intel.com>
 To: Andrey Albershteyn <aalbersh@redhat.com>, linux-xfs@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, djwong@kernel.org,
-	david@fromorbit.com, hch@lst.de,
-	Andrey Albershteyn <aalbersh@redhat.com>
+Cc: oe-kbuild-all@lists.linux.dev, djwong@kernel.org, david@fromorbit.com,
+	hch@lst.de, Andrey Albershteyn <aalbersh@redhat.com>
 Subject: Re: [PATCH 1/2] iomap: add iomap_writepages_unbound() to write
  beyond EOF
-Message-ID: <202412300135.cvWMPZGf-lkp@intel.com>
+Message-ID: <202412300506.Upx51jzg-lkp@intel.com>
 References: <20241229133640.1193578-2-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -81,27 +80,26 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Andrey-Albershteyn/iomap-
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
 patch link:    https://lore.kernel.org/r/20241229133640.1193578-2-aalbersh%40kernel.org
 patch subject: [PATCH 1/2] iomap: add iomap_writepages_unbound() to write beyond EOF
-config: s390-randconfig-002-20241229 (https://download.01.org/0day-ci/archive/20241230/202412300135.cvWMPZGf-lkp@intel.com/config)
-compiler: clang version 15.0.7 (https://github.com/llvm/llvm-project 8dfdcc7b7bf66834a761bd8de445840ef68e4d1a)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241230/202412300135.cvWMPZGf-lkp@intel.com/reproduce)
+config: powerpc-allmodconfig (https://download.01.org/0day-ci/archive/20241230/202412300506.Upx51jzg-lkp@intel.com/config)
+compiler: powerpc64-linux-gcc (GCC) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241230/202412300506.Upx51jzg-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202412300135.cvWMPZGf-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202412300506.Upx51jzg-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
->> fs/iomap/buffered-io.c:982:23: error: use of undeclared identifier 'IOMAP_NOSIZE'
-                   if (!(iter->flags & IOMAP_NOSIZE) && (pos + written > old_size)) {
-                                       ^
-   fs/iomap/buffered-io.c:988:23: error: use of undeclared identifier 'IOMAP_NOSIZE'
-                   if (!(iter->flags & IOMAP_NOSIZE) && (old_size < pos))
-                                       ^
-   2 errors generated.
+   fs/iomap/buffered-io.c: In function 'iomap_write_iter':
+>> fs/iomap/buffered-io.c:982:37: error: 'IOMAP_NOSIZE' undeclared (first use in this function); did you mean 'IOMAP_HOLE'?
+     982 |                 if (!(iter->flags & IOMAP_NOSIZE) && (pos + written > old_size)) {
+         |                                     ^~~~~~~~~~~~
+         |                                     IOMAP_HOLE
+   fs/iomap/buffered-io.c:982:37: note: each undeclared identifier is reported only once for each function it appears in
 
 
-vim +/IOMAP_NOSIZE +982 fs/iomap/buffered-io.c
+vim +982 fs/iomap/buffered-io.c
 
    909	
    910	static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
