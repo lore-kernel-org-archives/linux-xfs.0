@@ -1,124 +1,222 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 041D4158858
-	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 13:40:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 725AE259497
+	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 17:55:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735479619; cv=none; b=sYgWBw9wrlBqhD+Xqu4tpddnX5YJQAc3t/Lw3zcg4iDf0P44J1z7BeAHeW50sGIChN5gZA4TYqdKrxEc6Pd8PMf4nAINlgm3qKDTG5ETLyJzevX9O4462/liyli4HGM0CKuipP2uU396ZlhkHk4gcDRX7eMDJAgqfioUj7wyau8=
+	t=1735494938; cv=none; b=N85Cg4+1/fR5bc38U4oQ4mo4w/ug66l0PgfVjhWRks/SqdspUMI8oBbF3GM7LMiu1+tchaY2PX8ERUp54n402nlzn7cBp0rGc4idRdthYWuHUnVbjBbFi88dGmJ4sRCs/zLRiR+u7SeCtA/jAsiF7FP5tnGVRXDD+OIcJdVuyWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735479619; c=relaxed/simple;
-	bh=YoRoL1TBFcrSncyWJhCTPMkMdg0wun7X0lTpOFQqTrM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ij5J3KY634EUlPx904F4TUehoz6OF8QDFpzF7pT5bDnDR5D4kP3bcPejQqHBo4/GftMfbyJci4oR1qo/tESvE90XRa/eiqHf1wgLgDYh57b5P+DCBLlUZxFzcXUyMzojkQg4r4Magw5AXVA7202CL75Uk2s6lTU0NeTr8wK8H/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Nl7Ztbtm; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1735494938; c=relaxed/simple;
+	bh=68EfKJS4tDBUgfuIRkH7FwfLZsp1BWHarTWhcDMOd4U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TG+lSCTRV70VafBGLsxGWIQDrhoVeAIkz/MrJ/nmDX3qZ4PGQXKpyabexjkzmlzotoATupufADQn1xEFMtzTcCgOzQ9Hs3ldN7KI7BMAzH5abDZjEYC+8E10HkMBrP6i5hbGbZaIOXWDHWZpUn2YhRz3ZSGPi6hE51pWEDj2aQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ixlMJSGH; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Nl7Ztbtm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1735479616;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=taqbHKqNQ1u6e8lcdtpbfFyqmFmBX0Dm3LL6BLSroSQ=;
-	b=Nl7ZtbtmT8kCuXLXdhnt1t20DXHT0UMKxjfVi1/HIxjVLUIBRcIezMeoySIFmoWZpF4xO/
-	qHPnM57RL/WINY3n704PDg3Ni5Ma4sDm83aWkULNheMsoiracYFN5Utm/hUeBbTIxjAjKo
-	h5/uRmSGdrRt3BfGULx7rIEKiNPdUzQ=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-197-WNJQDV5TPfmK_CDmEzlZnA-1; Sun, 29 Dec 2024 08:40:15 -0500
-X-MC-Unique: WNJQDV5TPfmK_CDmEzlZnA-1
-X-Mimecast-MFC-AGG-ID: WNJQDV5TPfmK_CDmEzlZnA
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-aa680e17f6dso627508666b.1
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 05:40:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1735479614; x=1736084414;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=taqbHKqNQ1u6e8lcdtpbfFyqmFmBX0Dm3LL6BLSroSQ=;
-        b=HdM9iqQrx3G0a1DAPDVOeUq99CjT1Co1cWFo54o9DcGIXtIZq+B74ONc2vLEXzO/pu
-         pC+lixU/q8tnL3ETO4ZRrJn+TO15gvWWdabFodoF/Zxe/tqmHEGrl12xzPUtzWQSCD+Y
-         w1aDyyxJYCLzTonekY6NIQGGKw/H2wbRODnW+2bu8kpRMlH8c2YBsNgbAl9fwYgTEKe1
-         vTYJ9kSPZ6SIYzobCrJHPDhsfd6YjTigkk0FHRhTpQk5TweX3+dBEpMoH9ONbnpMIibb
-         Iydd3JmH2+6LH3DGzjWfXFE8y4qlKtHD6d6k3e0pL6b0G9o18bxZYvsVVmmcUQDvpEa5
-         N6Xw==
-X-Gm-Message-State: AOJu0YyenGG5IIx4ugQQVmOsgcCoueNM5K15rDsccig7Y2NkgMw2yW7C
-	LZ8uu45Nlt7IeyAisbXA10AAIEoggTDCqbzWv01txaBCCi0h+wRtDHtJWOEXYQ7dy1ND6J8CRaq
-	Ig3s9FqH+YNkAs8LRivBbWfA9KYEQqbxZIPrV/u7ZRZfXjzaA4W8xB22MZbe5WpTSjmdh4rF6b6
-	UcdYgad+2KycS3J8mNrhDIKHZ1/F7RDRo1YRO0Ch+r
-X-Gm-Gg: ASbGnctHc6AKSw34k4kRas1noXNMiCjgR/KqsyinDKPzdnVWV6UaZD+It5XbJ4iHlO1
-	FLi4oo9nVnUv0ykMNGY3sg5fWrciCopb8sCmc0z/ggqLyNkaqsHLx5HDzAq3H1U4BjNeaC5ykkQ
-	q4Ce9PkEOtpZznG68qgcWLkn//JbnkOM9aE+HkgX2Gyw3J1r1LxYLKWjHFXFvA41A5ODbmqinYO
-	tmXPvJeYz11c5Yv+HRqJtBi994lLAEGIPvNR08Kgbe/OAw/6umvss5DU3lFemOyw7nPAXVJOT+V
-	o4eblqf37jGsWaE=
-X-Received: by 2002:a05:6402:1590:b0:5d0:d818:559d with SMTP id 4fb4d7f45d1cf-5d81dda6576mr79196111a12.11.1735479614439;
-        Sun, 29 Dec 2024 05:40:14 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGZaSB1sdlMJNh7UtmLHUBWOFvkI0R3B2hLOii6h/vXB1iFeL49kZCoKJdUgMolq1KMTBJc3g==
-X-Received: by 2002:a05:6402:1590:b0:5d0:d818:559d with SMTP id 4fb4d7f45d1cf-5d81dda6576mr79196057a12.11.1735479614109;
-        Sun, 29 Dec 2024 05:40:14 -0800 (PST)
-Received: from thinky.redhat.com (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aac0f070a7bsm1355017766b.201.2024.12.29.05.40.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Dec 2024 05:40:13 -0800 (PST)
-From: Andrey Albershteyn <aalbersh@redhat.com>
-X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org,
-	david@fromorbit.com,
-	hch@lst.de,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ixlMJSGH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1735494936; x=1767030936;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=68EfKJS4tDBUgfuIRkH7FwfLZsp1BWHarTWhcDMOd4U=;
+  b=ixlMJSGH5lRuMAelK60WyLseVPg6Ek10f24kb1QswK/327He9jWr8QXM
+   8dNoMhmQVe0xktHii+B9Gaw5FAhULHBRn1oZ4N/fTUsB1ECLJv2OFkwh0
+   ncDxmejwUrb35zCmR50Gd1JBYpkaYHP14nqju4/hiN/4TPgAj2rZv9YmB
+   vDIkOz3tnPxzNjikus/SOikdnIyjbVXBU65y5xSHMHgPFV3Lq2tEX8pZs
+   ccjGpWHDe7vvOAlGk5VeyhLk85v+rn0zp+xdi6n7lwLiKGEPEo9y0scTz
+   xtO5eYFbTrGsRzLerqFw0P40KSRxVGeHZZqz3U7InDipnLSSiZZV2vIh5
+   g==;
+X-CSE-ConnectionGUID: WONFAbjyTNm9EKMxNhnBjA==
+X-CSE-MsgGUID: AeLCo6HGSQ+QtqD0cPj1Tg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11299"; a="39734349"
+X-IronPort-AV: E=Sophos;i="6.12,274,1728975600"; 
+   d="scan'208";a="39734349"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Dec 2024 09:55:36 -0800
+X-CSE-ConnectionGUID: Ufv39eOWSwW2s1o4viu9mw==
+X-CSE-MsgGUID: EAgsQH1sTp6iqMShiXGb9w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="105683657"
+Received: from lkp-server01.sh.intel.com (HELO d63d4d77d921) ([10.239.97.150])
+  by orviesa003.jf.intel.com with ESMTP; 29 Dec 2024 09:55:34 -0800
+Received: from kbuild by d63d4d77d921 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tRxVi-0004rg-1m;
+	Sun, 29 Dec 2024 17:55:30 +0000
+Date: Mon, 30 Dec 2024 01:54:38 +0800
+From: kernel test robot <lkp@intel.com>
+To: Andrey Albershteyn <aalbersh@redhat.com>, linux-xfs@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, djwong@kernel.org,
+	david@fromorbit.com, hch@lst.de,
 	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH 24/24] xfs: enable ro-compat fs-verity flag
-Date: Sun, 29 Dec 2024 14:39:27 +0100
-Message-ID: <20241229133927.1194609-25-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241229133927.1194609-1-aalbersh@kernel.org>
-References: <20241229133350.1192387-1-aalbersh@kernel.org>
- <20241229133927.1194609-1-aalbersh@kernel.org>
+Subject: Re: [PATCH 1/2] iomap: add iomap_writepages_unbound() to write
+ beyond EOF
+Message-ID: <202412300135.cvWMPZGf-lkp@intel.com>
+References: <20241229133640.1193578-2-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241229133640.1193578-2-aalbersh@kernel.org>
 
-From: Andrey Albershteyn <aalbersh@redhat.com>
+Hi Andrey,
 
-Finalize fs-verity integration in XFS by making kernel fs-verity
-aware with ro-compat flag.
+kernel test robot noticed the following build errors:
 
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: add spaces]
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_format.h | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+[auto build test ERROR on brauner-vfs/vfs.all]
+[also build test ERROR on linus/master v6.13-rc4 next-20241220]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index df84c275837d..6eb10300ff31 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -374,10 +374,11 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
- #define XFS_SB_FEAT_RO_COMPAT_VERITY   (1 << 4)		/* fs-verity */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
--		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
--		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
--		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
-+		(XFS_SB_FEAT_RO_COMPAT_FINOBT	| \
-+		 XFS_SB_FEAT_RO_COMPAT_RMAPBT	| \
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK	| \
-+		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT	| \
-+		 XFS_SB_FEAT_RO_COMPAT_VERITY)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
+url:    https://github.com/intel-lab-lkp/linux/commits/Andrey-Albershteyn/iomap-add-iomap_writepages_unbound-to-write-beyond-EOF/20241229-213942
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
+patch link:    https://lore.kernel.org/r/20241229133640.1193578-2-aalbersh%40kernel.org
+patch subject: [PATCH 1/2] iomap: add iomap_writepages_unbound() to write beyond EOF
+config: s390-randconfig-002-20241229 (https://download.01.org/0day-ci/archive/20241230/202412300135.cvWMPZGf-lkp@intel.com/config)
+compiler: clang version 15.0.7 (https://github.com/llvm/llvm-project 8dfdcc7b7bf66834a761bd8de445840ef68e4d1a)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241230/202412300135.cvWMPZGf-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202412300135.cvWMPZGf-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> fs/iomap/buffered-io.c:982:23: error: use of undeclared identifier 'IOMAP_NOSIZE'
+                   if (!(iter->flags & IOMAP_NOSIZE) && (pos + written > old_size)) {
+                                       ^
+   fs/iomap/buffered-io.c:988:23: error: use of undeclared identifier 'IOMAP_NOSIZE'
+                   if (!(iter->flags & IOMAP_NOSIZE) && (old_size < pos))
+                                       ^
+   2 errors generated.
+
+
+vim +/IOMAP_NOSIZE +982 fs/iomap/buffered-io.c
+
+   909	
+   910	static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+   911	{
+   912		loff_t length = iomap_length(iter);
+   913		loff_t pos = iter->pos;
+   914		ssize_t total_written = 0;
+   915		long status = 0;
+   916		struct address_space *mapping = iter->inode->i_mapping;
+   917		size_t chunk = mapping_max_folio_size(mapping);
+   918		unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
+   919	
+   920		do {
+   921			struct folio *folio;
+   922			loff_t old_size;
+   923			size_t offset;		/* Offset into folio */
+   924			size_t bytes;		/* Bytes to write to folio */
+   925			size_t copied;		/* Bytes copied from user */
+   926			size_t written;		/* Bytes have been written */
+   927	
+   928			bytes = iov_iter_count(i);
+   929	retry:
+   930			offset = pos & (chunk - 1);
+   931			bytes = min(chunk - offset, bytes);
+   932			status = balance_dirty_pages_ratelimited_flags(mapping,
+   933								       bdp_flags);
+   934			if (unlikely(status))
+   935				break;
+   936	
+   937			if (bytes > length)
+   938				bytes = length;
+   939	
+   940			/*
+   941			 * Bring in the user page that we'll copy from _first_.
+   942			 * Otherwise there's a nasty deadlock on copying from the
+   943			 * same page as we're writing to, without it being marked
+   944			 * up-to-date.
+   945			 *
+   946			 * For async buffered writes the assumption is that the user
+   947			 * page has already been faulted in. This can be optimized by
+   948			 * faulting the user page.
+   949			 */
+   950			if (unlikely(fault_in_iov_iter_readable(i, bytes) == bytes)) {
+   951				status = -EFAULT;
+   952				break;
+   953			}
+   954	
+   955			status = iomap_write_begin(iter, pos, bytes, &folio);
+   956			if (unlikely(status)) {
+   957				iomap_write_failed(iter->inode, pos, bytes);
+   958				break;
+   959			}
+   960			if (iter->iomap.flags & IOMAP_F_STALE)
+   961				break;
+   962	
+   963			offset = offset_in_folio(folio, pos);
+   964			if (bytes > folio_size(folio) - offset)
+   965				bytes = folio_size(folio) - offset;
+   966	
+   967			if (mapping_writably_mapped(mapping))
+   968				flush_dcache_folio(folio);
+   969	
+   970			copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
+   971			written = iomap_write_end(iter, pos, bytes, copied, folio) ?
+   972				  copied : 0;
+   973	
+   974			/*
+   975			 * Update the in-memory inode size after copying the data into
+   976			 * the page cache.  It's up to the file system to write the
+   977			 * updated size to disk, preferably after I/O completion so that
+   978			 * no stale data is exposed.  Only once that's done can we
+   979			 * unlock and release the folio.
+   980			 */
+   981			old_size = iter->inode->i_size;
+ > 982			if (!(iter->flags & IOMAP_NOSIZE) && (pos + written > old_size)) {
+   983				i_size_write(iter->inode, pos + written);
+   984				iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+   985			}
+   986			__iomap_put_folio(iter, pos, written, folio);
+   987	
+   988			if (!(iter->flags & IOMAP_NOSIZE) && (old_size < pos))
+   989				pagecache_isize_extended(iter->inode, old_size, pos);
+   990	
+   991			cond_resched();
+   992			if (unlikely(written == 0)) {
+   993				/*
+   994				 * A short copy made iomap_write_end() reject the
+   995				 * thing entirely.  Might be memory poisoning
+   996				 * halfway through, might be a race with munmap,
+   997				 * might be severe memory pressure.
+   998				 */
+   999				iomap_write_failed(iter->inode, pos, bytes);
+  1000				iov_iter_revert(i, copied);
+  1001	
+  1002				if (chunk > PAGE_SIZE)
+  1003					chunk /= 2;
+  1004				if (copied) {
+  1005					bytes = copied;
+  1006					goto retry;
+  1007				}
+  1008			} else {
+  1009				pos += written;
+  1010				total_written += written;
+  1011				length -= written;
+  1012			}
+  1013		} while (iov_iter_count(i) && length);
+  1014	
+  1015		if (status == -EAGAIN) {
+  1016			iov_iter_revert(i, total_written);
+  1017			return -EAGAIN;
+  1018		}
+  1019		return total_written ? total_written : status;
+  1020	}
+  1021	
+
 -- 
-2.47.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
