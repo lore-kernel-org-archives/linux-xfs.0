@@ -1,67 +1,67 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B1BB157E99
-	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 13:40:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E623415820C
+	for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 13:40:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735479604; cv=none; b=fD/jeqCgC1V5J89vSQS9+p6MLcnqYt4k6O4g9moaux+oAIiySu05N6+ZcOAfaLlJE6Lx1/dQ/Qfg5ErWQtmbcabM2Q4YG+e/azGPTyjFInAjmMrGAs/3l9jETzxCxxTaXk5hlkYfq+fo7ZiZnJlrjEeFz3jp4AtnRvJZxj0WXtI=
+	t=1735479606; cv=none; b=KX5dz6T5QJ/SrUpHtEbphPV0X+kNplOE23vo0Pg4O6EcjYD3/JsHOhYLKGhFk1MAGy4/CsxKZ8VaSSnPOxqVv2PQttLwo0/n4rPX3q3Y1kSdcHuN1IMKwrQ+a7ntyzxhtcM6bsfzoJ7iIo+aZ/fGKd9fefynHTroXTN+gdHLwzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735479604; c=relaxed/simple;
-	bh=mL6BYOb9iVJUkzRLLHSVvoCKeUjA4pvkrdDQ5LOTecQ=;
+	s=arc-20240116; t=1735479606; c=relaxed/simple;
+	bh=SX7S02qPBMQobYOitruwdNBmCawcJJlvEKSGyl7lh5s=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jDRDaguQD95rOyGGTO3Zk+Q5LR6/WqG3Cvrm0mxOQKqUn9QFSi/aaOxeIeN2lXnV4NluMHcLuFNekdxqNyM8RhI/aYIVMwU4OFhreRto6pQbk2iT6snXsBG89zKFbvR7ArRI62gaJxi2+4Tp1zXA6kNhRZi1hqxbQU7Vlbb7UUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YdvfNroZ; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=etiuCu+fAPBjUaFWMpRC86wDrHbaOqDmB81ndcf/VVkpLCsqKHpY9OVwamYYahswL9q6OgmPqeMhOALdLb4oCKThXRLBEoVLrIb9/7JK2+j+yj1Qc7h9tahqCjb/CZyX5G9n/+0xSbUHxvm+62qIvQ3u4XvVGZiUIzYJwHK5XVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DBe+Dqs0; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YdvfNroZ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DBe+Dqs0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1735479602;
+	s=mimecast20190719; t=1735479604;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=fbfZtBhFstrJOsIWM9Coj0Xnd2Pgk7XzR+tJsEUgMS8=;
-	b=YdvfNroZKT42/jMeorVHS7v4TE38Bq77mCgZ7BRk3dYfFeGp/9cQOpLgC4ysUhqq1wq8GU
-	qUnXUlQShaY4b12L61os0KCmFTHRb29ammtFULtSEQQ/K7ZpUKWAmnsjq5GgEkAi06TnpN
-	KRVpZ6PHiux5PCGu5Fm3npxqTBBcrYU=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=f8MOnnCVLq3zKR7sisANDSKCrP8PowsY4sVfHwdkRZk=;
+	b=DBe+Dqs0OuyDzgwOz7m1SPrE3Hr6Tg/PGDjg6zC84vVrH96gzDocPY3mJ2cG7WDfq8XOwz
+	QRWg5JSKD4s6TWC26c85KLv9IJiWgiUG7LRojl/dI0i6oacB5NvRFExYmhYc+Za/9nK3lT
+	WcF8A12IDX0oO/MPCbXL/0IxKtidFmc=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-298-heJOcLq9OE-Zqqyh__x7Yw-1; Sun, 29 Dec 2024 08:40:01 -0500
-X-MC-Unique: heJOcLq9OE-Zqqyh__x7Yw-1
-X-Mimecast-MFC-AGG-ID: heJOcLq9OE-Zqqyh__x7Yw
-Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-5d3cef3ed56so6378833a12.1
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 05:40:01 -0800 (PST)
+ us-mta-283-AyubXBbZNt-VN4wzFY5TXw-1; Sun, 29 Dec 2024 08:40:02 -0500
+X-MC-Unique: AyubXBbZNt-VN4wzFY5TXw-1
+X-Mimecast-MFC-AGG-ID: AyubXBbZNt-VN4wzFY5TXw
+Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-aa6869e15ebso131640366b.1
+        for <linux-xfs@vger.kernel.org>; Sun, 29 Dec 2024 05:40:02 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1735479599; x=1736084399;
+        d=1e100.net; s=20230601; t=1735479601; x=1736084401;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fbfZtBhFstrJOsIWM9Coj0Xnd2Pgk7XzR+tJsEUgMS8=;
-        b=qrpUbQaCZ8eoWFjf0q15/MBB3y9AR/Tw9rHdyqhV+Q29sWlAmOp3jUnb/FgW5jYX4c
-         D/ol3KF1MWUna9nKk9pkGy1IqLy3DeOv3y1DeQ4oyWSffthfp3dKH5Ojc66opIUWQ71B
-         o2bXy1D8zoF3USsD7oYoKGuDUAInmRvCzuh4mWxYvMEX4L+pASJnkg8/2DuvmthOAMIw
-         dQFrO7c5FneKRdXgsGSW1YdLRmZ7V82+pGa4x/I84tLbMj4gIIPc/8wYFVynpGgvTHzi
-         UnDTnpULbAsSEtDapJWOa+95plDGAGju1QyI3SJ3OR9449BliqsnY3fy1k8yxTYWDMCh
-         F+xw==
-X-Gm-Message-State: AOJu0YxdN8l91k1662HoVnxj+foc67uE8ATPiJiecJH3xy0Bf5Wp9K/a
-	mNVeZYprJlzfbwKSdHmAaKxGR8xHhfDyqYZibbFKIJcfknt2KVtgHdJhpAAToWX/nF1aSNhqWrj
-	kcmVkC/nEcRd6oKXGsnxgr8sCi1r+fRivawwbKW92Tn7/C8yH0n+Gdq7dahJMmZjuvAWpDYGTp/
-	CXOmVwKAXOMH5TYP5E/3D5i/PU1B3w3vMs/xrSyan5
-X-Gm-Gg: ASbGnct0ilr2ukhbHKC7xBDSLgw/jleQL5LjCC2GeU/wWET9tGLeFnKTe42xIHHwhRh
-	9jZ5+aShwJ4QYvH7Dt0S1TiHv1SpP9ZUkG+Ib7Rk7kGLO09cF43U4e2esvgdXEOkpHVLzrHyk1B
-	LxKzJ2+XXSXNc3kGku5bUcBYkB72xXpX1J7Ek9vWomJsbJstdbVGGisfgybagL6GEug9RqKZQ5f
-	ZqeaL8VQCwZz+5rRFyetpzJwxtDfFxYAkCwfILBlcvJ7e/Dm/7JzzBsbTYtvSD3yTHiG1wrcXKU
-	Y4kaAX3zQ7aIhgQ=
-X-Received: by 2002:a05:6402:210a:b0:5d0:81af:4a43 with SMTP id 4fb4d7f45d1cf-5d81dc797b5mr26119239a12.0.1735479598742;
-        Sun, 29 Dec 2024 05:39:58 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFAd2c3Tuf/USZ3PhNWqa5OfWKOEIf3A/R+h++d/6gJ9DEQPd+56BVel1TgJzir5EEkPBmdHQ==
-X-Received: by 2002:a05:6402:210a:b0:5d0:81af:4a43 with SMTP id 4fb4d7f45d1cf-5d81dc797b5mr26119214a12.0.1735479598427;
-        Sun, 29 Dec 2024 05:39:58 -0800 (PST)
+        bh=f8MOnnCVLq3zKR7sisANDSKCrP8PowsY4sVfHwdkRZk=;
+        b=cc32H80Q1BQ8Uu/fCvbwHl5oOHA9BvomG9fagkPYmOjZuta041CRsanxaR22MeF3pF
+         7M57PoxTiugf8p7xAsDXd9bhGdfJat/R0gygrg6mZd3bkFgZhmhlOT3Mne3us05n1Zfd
+         /yoet/VvpFDUYoQ8/w9rAwDrQpFabkVjadsfaVTe0GloxZVbUU9EIt165BblfErFnLMI
+         Hk2lA3M37V9MOo5/pTvXV6Z982+SjYQqH3yD7lsqTEq4raRIiJpYlxUQZnXiGGQ8VZCm
+         oxpw6fdOy0/iHmNXFjfzIIiPnp2SjmpAoqJxxTvmen4CP2VRZXUQAmURUEXRbuhQ8KLy
+         TFCQ==
+X-Gm-Message-State: AOJu0YxSRgr4FPTFl7zw7gAKAIQLaoK4Or34yATXlJ+ktKjZWLiRd2Uk
+	A9KOwLp+ysfgUVTO55hxLmAb95greLdr8FjT/pQiZHPklAb1PpSGAY5l6AMRQDCsG//3CmpsWju
+	yyrb7iCLRn6Qb25owYp7h4uCfG02wxJvBLXFACe3GFeLhcNIFHME8tLHVRH/FWS8IAvgDoTmZ06
+	xxinG3vf66JC5dVHRs+4UItg4y5LxEIRWi1Kp1+URI
+X-Gm-Gg: ASbGnctMeBJJWW0PnhQyVvJOkgaV0VjnrBHHnldNNVjO9ov9t5Zu8mHuncPrYG4QFFv
+	OnXZL0xKDZEt2tZqrs3LFKzPUrMUZMytheGOM0PQG/v8zpzLE/PmuPZkW8xb+1N/z7xv3d/E+ac
+	7QIGyGghtj1P5R1lK2x3jCi9kqoHJzTmSujoCw0spVJ3YtuFFPfBaD7K0Fc1TLeP9xZWJlq6RQP
+	eTjRIHxyor6TdUBE3OiOJRoasqUkGiigt8PKYpN1ZnkIJbnnbxAjSx5mc41PN4M9nbqET/tlx5D
+	XaugfBUT5ZKVuZk=
+X-Received: by 2002:a17:906:478b:b0:aa6:950c:ae1a with SMTP id a640c23a62f3a-aac349cbbb7mr2849132566b.30.1735479601073;
+        Sun, 29 Dec 2024 05:40:01 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGW/CzGG+m2uGEjhDWG5TWb/R9IaPMNPDTOXzmJG68jutOXSUa/mBqfarwNWEMgq/CbYXTEJA==
+X-Received: by 2002:a17:906:478b:b0:aa6:950c:ae1a with SMTP id a640c23a62f3a-aac349cbbb7mr2849128666b.30.1735479600560;
+        Sun, 29 Dec 2024 05:40:00 -0800 (PST)
 Received: from thinky.redhat.com (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aac0f070a7bsm1355017766b.201.2024.12.29.05.39.57
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aac0f070a7bsm1355017766b.201.2024.12.29.05.39.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Sun, 29 Dec 2024 05:39:58 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
@@ -70,9 +70,9 @@ To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	david@fromorbit.com,
 	hch@lst.de
-Subject: [PATCH 09/24] xfs: use an empty transaction to protect xfs_attr_get from deadlocks
-Date: Sun, 29 Dec 2024 14:39:12 +0100
-Message-ID: <20241229133927.1194609-10-aalbersh@kernel.org>
+Subject: [PATCH 10/24] xfs: don't let xfs_bmap_first_unused overflow a xfs_dablk_t
+Date: Sun, 29 Dec 2024 14:39:13 +0100
+Message-ID: <20241229133927.1194609-11-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241229133927.1194609-1-aalbersh@kernel.org>
 References: <20241229133350.1192387-1-aalbersh@kernel.org>
@@ -87,43 +87,64 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-Wrap the xfs_attr_get_ilocked call in xfs_attr_get with an empty
-transaction so that we cannot livelock the kernel if someone injects a
-loop into the attr structure or the attr fork bmbt.
+The directory/xattr code uses xfs_bmap_first_unused to find a contiguous
+chunk of file range that can hold a particular value.  Unfortunately,
+file offsets are 64-bit quantities, whereas the dir/attr block number
+type (xfs_dablk_t) is a 32-bit quantity.  If an integer truncation
+occurs here, we will corrupt the file.
+
+Therefore, check for a file offset that would truncate and return EFBIG
+in that case.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ fs/xfs/libxfs/xfs_attr_remote.c | 3 +++
+ fs/xfs/libxfs/xfs_da_btree.c    | 3 +++
+ fs/xfs/libxfs/xfs_da_format.h   | 3 +++
+ 3 files changed, 9 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index e452ca55241f..3f3699e9c203 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -274,6 +274,8 @@ xfs_attr_get(
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index e90a62c61f28..2bd225b1772c 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -529,6 +529,9 @@ xfs_attr_rmt_find_hole(
+ 	if (error)
+ 		return error;
  
- 	XFS_STATS_INC(args->dp->i_mount, xs_attr_get);
- 
-+	ASSERT(!args->trans);
++	if (lfileoff > XFS_MAX_DABLK)
++		return -EFBIG;
 +
- 	if (xfs_is_shutdown(args->dp->i_mount))
- 		return -EIO;
+ 	args->rmtblkno = (xfs_dablk_t)lfileoff;
+ 	args->rmtblkcnt = blkcnt;
  
-@@ -286,8 +288,14 @@ xfs_attr_get(
- 	/* Entirely possible to look up a name which doesn't exist */
- 	args->op_flags = XFS_DA_OP_OKNOENT;
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 17d9e6154f19..6c6c7bab87fb 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2308,6 +2308,9 @@ xfs_da_grow_inode_int(
+ 	if (error)
+ 		return error;
  
-+	error = xfs_trans_alloc_empty(args->dp->i_mount, &args->trans);
-+	if (error)
-+		return error;
++	if (*bno > XFS_MAX_DABLK)
++		return -EFBIG;
 +
- 	lock_mode = xfs_ilock_attr_map_shared(args->dp);
- 	error = xfs_attr_get_ilocked(args);
-+	xfs_trans_cancel(args->trans);
-+	args->trans = NULL;
- 	xfs_iunlock(args->dp, lock_mode);
+ 	/*
+ 	 * Try mapping it in one filesystem block.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 48bebcd1e226..ee9635c04197 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -748,6 +748,9 @@ struct xfs_attr3_leafblock {
+  */
+ #define	XFS_ATTR_LEAF_NAME_ALIGN	((uint)sizeof(xfs_dablk_t))
  
- 	return error;
++/* Maximum file block offset of a directory or an xattr. */
++#define	XFS_MAX_DABLK			((xfs_dablk_t)-1U)
++
+ static inline int
+ xfs_attr3_leaf_hdr_size(struct xfs_attr_leafblock *leafp)
+ {
 -- 
 2.47.0
 
