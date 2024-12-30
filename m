@@ -1,136 +1,120 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5F07C6F06B;
-	Mon, 30 Dec 2024 02:43:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B6B88F4A;
+	Mon, 30 Dec 2024 07:18:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735526589; cv=none; b=iXsovd02/bxmJ8w6axx2Dd4BHiCtP7so1DikjaZcG5gj/CN6Mgd5nuqZlSSXFFWGF+/iYYaorXrzdSIVMvGxcNM75Lh7VjHRmAwtG72Jm2PmWEfNCs/o2SVsNVbsWRmqmxPGXmuMAQDOPYskYFNl6KDgG6fPIh3OHg8hMvVYzpg=
+	t=1735543114; cv=none; b=o8hK8JCv/InXj9qlaQaIKYNvD9C1/SJgp/akr4ORY3/Gbn7ANopQ8JjIjTBCUA4N/aQGH0wcWFb+yGXG5Pajiu8A3jotx4ZL1n456/Fu7QL7SPwIXPHNnd8IjXa+8Fq0q9f5+gFZhce2ZzFU11XjohKn2PyGtuI9pzIPQvP2fYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735526589; c=relaxed/simple;
-	bh=j9UPxJlpvxPHHozK/j1OcuSI311/PUsDOa01WO2oMok=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FCNmQAfT/BlYlsKhAJ4GBKTv6oTOabN4l1mJyrDpjpXHf9GzwycUtRWbTxNwtLLt3XPqfnvqcYhmhjjIytUJucPEwfyCxDIs1eRMH51PIcwF/g86Pcx/Y5UIMr7a/U4ZFuOFuwFeXw08728LAErVMxxhEzkzESckcBS8fDwJ3Qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ZmT/qmFo; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ZmT/qmFo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=Tq9GnCMNnxG1WV8S5jNZPc+dC713oXnisAqmZ/wwyR0=;
-	b=ZmT/qmFoDVCFYJym51NVnbUEWPOGHcQ7FNEtfMOe/cATpVSv9VfAeMZDDnFLLz
-	r/FSDUQoqO6KJWlh1waQIgl3QZ0DV0priK4iHy2I08nVBoZJcCEKHTdyfbF+JO/2
-	xhVXCwaSV47+Wdnpr+tAoOeWG9HAok+FACf292GCebyLQ=
-Received: from [10.42.12.6] (unknown [116.128.244.169])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgC3AcmMCHJn30eIHQ--.42567S2;
-	Mon, 30 Dec 2024 10:42:21 +0800 (CST)
-Message-ID: <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
-Date: Mon, 30 Dec 2024 10:42:20 +0800
+	s=arc-20240116; t=1735543114; c=relaxed/simple;
+	bh=4gDoJ+ZtTSmqpcBNyhQUwBHmZNsE/18d7ZyfuTFTsR8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=P8wlI1jiz6jndsnFMn+xaVe8nKnkWnqhCsa98CNrz1PPw/Stvqr3fgv6Y4syiv/+vIXR6NsJH6uWyHGSwuwuI8KIByT2HF5o+TiKYWEP3IYiN9i8BpoK9RzrRP+kdQCN3KyiWzweJtx6df54uIVyA6BiiQ+fAmUAt7O3Tn3Iohk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 3ffad366c67e11efa216b1d71e6e1362-20241230
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CTE_8B, HR_CTT_MISS
+	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN, HR_FROM_NAME
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
+	SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
+	OB_FP, CIE_BAD, CIE_GOOD_SPF, GTI_FG_BS, GTI_C_CI
+	GTI_FG_IT, GTI_RG_INFO, GTI_C_BU, AMN_T1, AMN_GOOD
+	AMN_C_TI, AMN_C_BU
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.41,REQID:b99129f1-3f34-4c56-ad0b-23aa6afcd0e0,IP:0,U
+	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:20
+X-CID-INFO: VERSION:1.1.41,REQID:b99129f1-3f34-4c56-ad0b-23aa6afcd0e0,IP:0,URL
+	:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:20
+X-CID-META: VersionHash:6dc6a47,CLOUDID:1fa4754afc19d7360f90239db02c312f,BulkI
+	D:241230151823KKEE82PJ,BulkQuantity:0,Recheck:0,SF:17|19|66|78|102,TC:nil,
+	Content:0|50,EDM:5,IP:nil,URL:1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,CO
+	L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_ULS
+X-UUID: 3ffad366c67e11efa216b1d71e6e1362-20241230
+X-User: xiaopei01@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <xiaopei01@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 2124759663; Mon, 30 Dec 2024 15:18:21 +0800
+From: Pei Xiao <xiaopei01@kylinos.cn>
+To: cem@kernel.org,
+	djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Pei Xiao <xiaopei01@kylinos.cn>,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH] xfs: Use refcount_t instead of atomic_t for xmi_refcount
+Date: Mon, 30 Dec 2024 15:18:16 +0800
+Message-Id: <4236d961cf3dd2413cebd56619d0f5927c8e749a.1735542858.git.xiaopei01@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-To: Dave Chinner <david@fromorbit.com>
-Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>
-References: <20241226061602.2222985-1-chizhiling@163.com>
- <Z23Ptl5cAnIiKx6W@dread.disaster.area>
- <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com>
- <Z3B48799B604YiCF@dread.disaster.area>
-Content-Language: en-US
-From: Chi Zhiling <chizhiling@163.com>
-In-Reply-To: <Z3B48799B604YiCF@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PigvCgC3AcmMCHJn30eIHQ--.42567S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxXrWDuw1DZF1kXr45JF1kKrg_yoW5uF4kpr
-	W3KaykKF4DGr4fA34qya1xX3yFqrW8K3y5ur4Fgr97Cwn8XF1SqF42vF1Y9ry8Cr1xt3Wj
-	qrWI9FZru3WDAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U20PhUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiTwLFnWdyAN3TcQAAs-
+Content-Transfer-Encoding: 8bit
 
+Use an API that resembles more the actual use of xmi_refcount.
 
+Found by cocci:
+    fs/xfs/xfs_exchmaps_item.c:57:5-24: WARNING: atomic_dec_and_test
+variation before object free at line 58.
 
-On 2024/12/29 06:17, Dave Chinner wrote:
-> On Sat, Dec 28, 2024 at 03:37:41PM +0800, Chi Zhiling wrote:
->>
->>
->> On 2024/12/27 05:50, Dave Chinner wrote:
->>> On Thu, Dec 26, 2024 at 02:16:02PM +0800, Chi Zhiling wrote:
->>>> From: Chi Zhiling <chizhiling@kylinos.cn>
->>>>
->>>> Using an rwsem to protect file data ensures that we can always obtain a
->>>> completed modification. But due to the lock, we need to wait for the
->>>> write process to release the rwsem before we can read it, even if we are
->>>> reading a different region of the file. This could take a lot of time
->>>> when many processes need to write and read this file.
->>>>
->>>> On the other hand, The ext4 filesystem and others do not hold the lock
->>>> during buffered reading, which make the ext4 have better performance in
->>>> that case. Therefore, I think it will be fine if we remove the lock in
->>>> xfs, as most applications can handle this situation.
->>>
->>> Nope.
->>>
->>> This means that XFS loses high level serialisation of incoming IO
->>> against operations like truncate, fallocate, pnfs operations, etc.
->>>
->>> We've been through this multiple times before; the solution lies in
->>> doing the work to make buffered writes use shared locking, not
->>> removing shared locking from buffered reads.
->>
->> You mean using shared locking for buffered reads and writes, right?
->>
->> I think it's a great idea. In theory, write operations can be performed
->> simultaneously if they write to different ranges.
-> 
-> Even if they overlap, the folio locks will prevent concurrent writes
-> to the same range.
-> 
-> Now that we have atomic write support as native functionality (i.e.
-> RWF_ATOMIC), we really should not have to care that much about
-> normal buffered IO being atomic. i.e. if the application wants
-> atomic writes, it can now specify that it wants atomic writes and so
-> we can relax the constraints we have on existing IO...
+Fixes: 6c08f434bd33 ("xfs: introduce a file mapping exchange log intent item")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202412260634.uSDUNyYS-lkp@intel.com/
+Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
+---
+ fs/xfs/xfs_exchmaps_item.c | 6 +++---
+ fs/xfs/xfs_exchmaps_item.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Yes, I'm not particularly concerned about whether buffered I/O is 
-atomic. I'm more concerned about the multithreading performance of 
-buffered I/O.
-
-Last week, it was mentioned that removing i_rwsem would have some 
-impacts on truncate, fallocate, and PNFS operations.
-
-(I'm not familiar with pNFS, so please correct me if I'm wrong.)
-
-My understanding is that the current i_rwsem is used to protect both
-the file's data and its size. Operations like truncate, fallocate,
-and PNFS use i_rwsem because they modify both the file's data and its 
-size. So, I'm thinking whether it's possible to use i_rwsem to protect 
-only the file's size, without protecting the file's data.
-
-So operations that modify the file's size need to be executed 
-sequentially. For example, buffered writes to the EOF, fallocate 
-operations without the "keep size" requirement, and truncate operations, 
-etc, all need to hold an exclusive lock.
-
-Other operations require a shared lock because they only need to access
-the file's size without modifying it.
-
-> 
->> So we should track all the ranges we are reading or writing,
->> and check whether the new read or write operations can be performed
->> concurrently with the current operations.
-> 
-> That is all discussed in detail in the discussions I linked.
-
-Sorry, I overlooked some details from old discussion last time.
-It seems that you are not satisfied with the effectiveness of
-range locks.
-
-
-Best regards,
-Chi Zhiling
+diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
+index 264a121c5e16..5975a16c54e3 100644
+--- a/fs/xfs/xfs_exchmaps_item.c
++++ b/fs/xfs/xfs_exchmaps_item.c
+@@ -57,8 +57,8 @@ STATIC void
+ xfs_xmi_release(
+ 	struct xfs_xmi_log_item	*xmi_lip)
+ {
+-	ASSERT(atomic_read(&xmi_lip->xmi_refcount) > 0);
+-	if (atomic_dec_and_test(&xmi_lip->xmi_refcount)) {
++	ASSERT(refcount_read(&xmi_lip->xmi_refcount) > 0);
++	if (refcount_dec_and_test(&xmi_lip->xmi_refcount)) {
+ 		xfs_trans_ail_delete(&xmi_lip->xmi_item, 0);
+ 		xfs_xmi_item_free(xmi_lip);
+ 	}
+@@ -138,7 +138,7 @@ xfs_xmi_init(
+ 
+ 	xfs_log_item_init(mp, &xmi_lip->xmi_item, XFS_LI_XMI, &xfs_xmi_item_ops);
+ 	xmi_lip->xmi_format.xmi_id = (uintptr_t)(void *)xmi_lip;
+-	atomic_set(&xmi_lip->xmi_refcount, 2);
++	refcount_set(&xmi_lip->xmi_refcount, 2);
+ 
+ 	return xmi_lip;
+ }
+diff --git a/fs/xfs/xfs_exchmaps_item.h b/fs/xfs/xfs_exchmaps_item.h
+index efa368d25d09..b8be3bca3155 100644
+--- a/fs/xfs/xfs_exchmaps_item.h
++++ b/fs/xfs/xfs_exchmaps_item.h
+@@ -38,7 +38,7 @@ struct kmem_cache;
+  */
+ struct xfs_xmi_log_item {
+ 	struct xfs_log_item		xmi_item;
+-	atomic_t			xmi_refcount;
++	refcount_t			xmi_refcount;
+ 	struct xfs_xmi_log_format	xmi_format;
+ };
+ 
+-- 
+2.25.1
 
