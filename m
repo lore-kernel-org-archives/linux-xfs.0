@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F56429415
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:47:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 348E229415
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:47:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735688863; cv=none; b=mY2XTFJmcH4HzwC+7ZBMTio+5W9KgcrMNPpkYa7cYUS6LT6isPJcit5Q2CalkHWAah2xBdR2V2TaefpHLqJMLYLeN7/xGx9DanlzMMZe+PUXGFplR3ffC1KQEcddtUCO0RoFIJe4i9UtImIU3zAIxZVFHa0nTT1M7rKQidrlkbE=
+	t=1735688879; cv=none; b=oavDYZMMSDM/qoAO8s+2BzZuRkoedKwibNS4usbGEGTV5sYVN8moE7T8NMmpx+jbH1iAHJpfC+X5QKQS9XCNRnd94trdKjHSzWkKLBDQ2xzW8hQ8drb9yJEPADbG3q9SJQptqObbmdupmgpvHQtptSFUKCINlq67BCKg7b9ZZA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735688863; c=relaxed/simple;
-	bh=SbPd8swfPJMeGGMpudiTW/TIcFWVSrXUcajeqF1HtnU=;
+	s=arc-20240116; t=1735688879; c=relaxed/simple;
+	bh=LjusH2PxP+GNtXvK1bhZVyveE0hQJrey2O7/Hu/DV7g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oOMk6RVyUpxpqHPwa9h+ZnyJVQ/wkO76F1DIDOJRQ8DHtlTFtqMPHofTaGNPW6SXbuayXHOGO0xGxcmgM1WpRitep6rh0zrPq0EemUPSvMpEimuLXXhaflNpNwZYTllUW/x43623RN1HEgp6cLDvJ7ztkso6iLmE3qSdaVDoCIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fzT05Imw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MK+gJeTilmuGBBn9FdlvO2o32VL1efgoH0kHl+Hw0INNyTLwxAcpO7M3T260LgksMmPdsu/JNH1hwyiUIjvQGtNcS4TBoCZbbxN8Ay1QCgy1qRjKQhQKciaR4X899reczeMN2/IoxwExlF6wH66akntfRl6JdzS09WYhDOmV+cs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lr29jpwa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fzT05Imw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E7BBC4CED2;
-	Tue, 31 Dec 2024 23:47:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lr29jpwa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A24B8C4CED2;
+	Tue, 31 Dec 2024 23:47:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735688863;
-	bh=SbPd8swfPJMeGGMpudiTW/TIcFWVSrXUcajeqF1HtnU=;
+	s=k20201202; t=1735688878;
+	bh=LjusH2PxP+GNtXvK1bhZVyveE0hQJrey2O7/Hu/DV7g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fzT05ImwRte+Aa49f0+DzfM9Wia2Df3xI8ATCFXhMxCVg1xd0fJFYlVVE5Fswd+b7
-	 d/+t1EWxMnrJkjR8hmcT8QzKheQ90nJt0bjNW2bpq0vxOV5edo5QqxUYdJvgzz9Eq5
-	 Q5BMEpbUqV+6IcFRkCWDpSQqm0jbZRgOAk2QWpfQbifnnNFEN2Mxo+AxSoYlM2b2Lw
-	 2NwHJxtRmz6Sop75F7Bgfkf9tUWmOhNYqJwhNmJIOkwLV+EsPCJoSxWqp8vJBoRLPl
-	 UZrYdRi6llOjdZj6+CSHFDlja9jVFcdh+UOD50w+Gv5Q7s0tKXnqOfRVHr8p1gd4zw
-	 Lkzapmd8v6AQg==
-Date: Tue, 31 Dec 2024 15:47:42 -0800
-Subject: [PATCH 11/11] spaceman: move inodes with hardlinks
+	b=Lr29jpwarFP8UpQzTwT0lgiwf8YAVETgzBXjo2NU1CuUVUyY30EZMGr+ea8+X//uR
+	 bKPB7vXfgh2uj+zXLkXAKUdq7sQOkJvX59em6zDgLX36mPYiO1puPWyJnV8SGuSYpC
+	 qapHU7MhfwXNGbG876qm0V/C0OtD40T+NKK+JpizTMua5u8Lcptigz3ZAt+Kte3E7k
+	 u9+f+sEyfiPRvgnTBlliNzOMjCgVwsl0Fq1QPBJfy/+kYc44ffLdbtFcbRP7PzGXqH
+	 pydpTurotUf6x9RR+M+cMVsxyGq2ISq/6nzXDg2gZifwCxzOqP+zXwBeDax+vgf4me
+	 qJSJUc3ZvrEnQ==
+Date: Tue, 31 Dec 2024 15:47:58 -0800
+Subject: [PATCH 01/21] xfs: create hooks for monitoring health updates
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: dchinner@redhat.com, linux-xfs@vger.kernel.org
-Message-ID: <173568778039.2709794.14611363506119987915.stgit@frogsfrogsfrogs>
-In-Reply-To: <173568777852.2709794.6356870909327619205.stgit@frogsfrogsfrogs>
-References: <173568777852.2709794.6356870909327619205.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <173568778474.2710211.1014685356160559759.stgit@frogsfrogsfrogs>
+In-Reply-To: <173568778426.2710211.10173859713748230492.stgit@frogsfrogsfrogs>
+References: <173568778426.2710211.10173859713748230492.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,350 +43,70 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-When a inode to be moved to a different AG has multiple hard links,
-we need to "move" all the hard links, too. To do this, we need to
-create temporary hardlinks to the new file, and then use rename
-exchange to swap all the hardlinks that point to the old inode
-with new hardlinks that point to the new inode.
+Create hooks for monitoring health events.
 
-We already know that an inode has hard links via the path discovery,
-and we can check it against the link count that is reported for the
-inode before we start building the link farm.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- spaceman/find_owner.c |   13 +----
- spaceman/move_inode.c |  119 +++++++++++++++++++++++++++++++++++++++++++++----
- spaceman/relocation.c |   35 ++++++++++----
- spaceman/relocation.h |    6 ++
- 4 files changed, 140 insertions(+), 33 deletions(-)
+ libxfs/xfs_health.h |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
 
-diff --git a/spaceman/find_owner.c b/spaceman/find_owner.c
-index 8e93145539a227..1984d0ee7ca5f6 100644
---- a/spaceman/find_owner.c
-+++ b/spaceman/find_owner.c
-@@ -240,7 +240,6 @@ resolve_owner_cb(
- 	struct FTW		*data)
- {
- 	struct inode_path	*ipath, *slot_ipath;
--	int			pathlen;
- 	struct inode_path	**slot;
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index b31000f7190ce5..39fef33dedc6a8 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -289,4 +289,51 @@ void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bulkstat *bs);
+ #define xfs_metadata_is_sick(error) \
+ 	(unlikely((error) == -EFSCORRUPTED || (error) == -EFSBADCRC))
  
- 	/*
-@@ -260,17 +259,9 @@ _("Failed to obtain stat(2) information from path %s. Aborting\n"),
- 	}
- 
- 	/* Allocate a new inode path and record the path in it. */
--	pathlen = strlen(path);
--	ipath = calloc(1, sizeof(*ipath) + pathlen + 1);
--	if (!ipath) {
--		fprintf(stderr,
--_("Aborting: Storing path %s for inode 0x%lx failed: %s\n"),
--			path, stat->st_ino, strerror(ENOMEM));
-+	ipath = ipath_alloc(path, stat);
-+	if (!ipath)
- 		return -ENOMEM;
--	}
--	INIT_LIST_HEAD(&ipath->path_list);
--	memcpy(&ipath->path[0], path, pathlen);
--	ipath->ino = stat->st_ino;
- 
- 	/*
- 	 * If the slot contains the inode number we just looked up, then we
-diff --git a/spaceman/move_inode.c b/spaceman/move_inode.c
-index ab3c12f5de987b..3a182929579e45 100644
---- a/spaceman/move_inode.c
-+++ b/spaceman/move_inode.c
-@@ -36,12 +36,14 @@ create_tmpfile(
- 	struct xfs_fd	*xfd,
- 	xfs_agnumber_t	agno,
- 	char		**tmpfile,
--	int		*tmpfd)
-+	int		*tmpfd,
-+	int		link_count)
- {
- 	char		name[PATH_MAX + 1];
-+	char		linkname[PATH_MAX + 1];
- 	mode_t		mask;
- 	int		fd;
--	int		i;
-+	int		i, j;
- 	int		ret;
- 
- 	/* construct tmpdir */
-@@ -105,14 +107,36 @@ create_tmpfile(
- 		fprintf(stderr, _("cannot create tmpfile: %s: %s\n"),
- 		       name, strerror(errno));
- 		ret = -errno;
-+		goto out_cleanup_dir;
- 	}
- 
-+	/* Create hard links to temporary file. */
-+	for (j = link_count; j > 1; i--) {
-+		snprintf(linkname, PATH_MAX, "%s/.spaceman/dir%d/tmpfile.%d.hardlink.%d", mnt, i, getpid(), j);
-+		ret = link(name, linkname);
-+		if (ret < 0) {
-+			fprintf(stderr, _("cannot create hardlink: %s: %s\n"),
-+			       linkname, strerror(errno));
-+			ret = -errno;
-+			goto out_cleanup_links;
-+		}
-+	}
++/*
++ * Parameters for tracking health updates.  The enum below is passed as the
++ * hook function argument.
++ */
++enum xfs_health_update_type {
++	XFS_HEALTHUP_SICK = 1,	/* runtime corruption observed */
++	XFS_HEALTHUP_CORRUPT,	/* fsck reported corruption */
++	XFS_HEALTHUP_HEALTHY,	/* fsck reported healthy structure */
++	XFS_HEALTHUP_UNMOUNT,	/* filesystem is unmounting */
++};
 +
++/* Where in the filesystem was the event observed? */
++enum xfs_health_update_domain {
++	XFS_HEALTHUP_FS = 1,	/* main filesystem */
++	XFS_HEALTHUP_AG,	/* allocation group */
++	XFS_HEALTHUP_INODE,	/* inode */
++	XFS_HEALTHUP_RTGROUP,	/* realtime group */
++};
 +
- 	/* return name and fd */
- 	(void)umask(mask);
- 	*tmpfd = fd;
- 	*tmpfile = strdup(name);
- 
- 	return 0;
++struct xfs_health_update_params {
++	/* XFS_HEALTHUP_INODE */
++	xfs_ino_t			ino;
++	uint32_t			gen;
 +
-+out_cleanup_links:
-+	for (; j <= link_count; j++) {
-+		snprintf(linkname, PATH_MAX, "%s/.spaceman/dir%d/tmpfile.%d.hardlink.%d", mnt, i, getpid(), j);
-+		unlink(linkname);
-+	}
-+	close(fd);
-+	unlink(name);
- out_cleanup_dir:
- 	snprintf(name, PATH_MAX, "%s/.spaceman", mnt);
- 	rmdir(name);
-@@ -405,21 +429,53 @@ exchange_inodes(
- 	return 0;
- }
- 
-+static int
-+exchange_hardlinks(
-+	struct inode_path	*ipath,
-+	const char		*tmpfile)
-+{
-+	char			linkname[PATH_MAX];
-+	struct inode_path	*linkpath;
-+	int			i = 2;
-+	int			ret;
++	/* XFS_HEALTHUP_AG/RTGROUP */
++	uint32_t			group;
 +
-+	list_for_each_entry(linkpath, &ipath->path_list, path_list) {
-+		if (i++ > ipath->link_count) {
-+			fprintf(stderr, "ipath link count mismatch!\n");
-+			return 0;
-+		}
++	/* XFS_SICK_* flags */
++	unsigned int			old_mask;
++	unsigned int			new_mask;
 +
-+		snprintf(linkname, PATH_MAX, "%s.hardlink.%d", tmpfile, i);
-+		ret = renameat2(AT_FDCWD, linkname,
-+				AT_FDCWD, linkpath->path, RENAME_EXCHANGE);
-+		if (ret) {
-+			fprintf(stderr,
-+		"failed to exchange hard link %s with %s: %s\n",
-+				linkname, linkpath->path, strerror(errno));
-+			return -errno;
-+		}
-+	}
-+	return 0;
-+}
++	enum xfs_health_update_domain	domain;
++};
 +
- int
- relocate_file_to_ag(
- 	const char		*mnt,
--	const char		*path,
-+	struct inode_path	*ipath,
- 	struct xfs_fd		*xfd,
- 	xfs_agnumber_t		agno)
- {
- 	int			ret;
- 	int			tmpfd = -1;
- 	char			*tmpfile = NULL;
-+	int			i;
- 
--	fprintf(stderr, "move mnt %s, path %s, agno %d\n", mnt, path, agno);
-+	fprintf(stderr, "move mnt %s, path %s, agno %d\n",
-+			mnt, ipath->path, agno);
- 
- 	/* create temporary file in agno */
--	ret = create_tmpfile(mnt, xfd, agno, &tmpfile, &tmpfd);
-+	ret = create_tmpfile(mnt, xfd, agno, &tmpfile, &tmpfd,
-+				ipath->link_count);
- 	if (ret)
- 		return ret;
- 
-@@ -444,12 +500,28 @@ relocate_file_to_ag(
- 		goto out_cleanup;
- 
- 	/* swap the inodes over */
--	ret = exchange_inodes(xfd, tmpfd, tmpfile, path);
-+	ret = exchange_inodes(xfd, tmpfd, tmpfile, ipath->path);
-+	if (ret)
-+		goto out_cleanup;
++#ifdef CONFIG_XFS_LIVE_HOOKS
++struct xfs_health_hook {
++	struct xfs_hook			health_hook;
++};
 +
-+	/* swap the hard links over */
-+	ret = exchange_hardlinks(ipath, tmpfile);
-+	if (ret)
-+		goto out_cleanup;
- 
- out_cleanup:
- 	if (ret == -1)
- 		ret = -errno;
- 
-+	/* remove old hard links */
-+	for (i = 2; i <= ipath->link_count; i++) {
-+		char linkname[PATH_MAX + 256]; // anti-warning-crap
++void xfs_health_hook_disable(void);
++void xfs_health_hook_enable(void);
 +
-+		snprintf(linkname, PATH_MAX + 256, "%s.hardlink.%d", tmpfile, i);
-+		unlink(linkname);
-+	}
++int xfs_health_hook_add(struct xfs_mount *mp, struct xfs_health_hook *hook);
++void xfs_health_hook_del(struct xfs_mount *mp, struct xfs_health_hook *hook);
++void xfs_health_hook_setup(struct xfs_health_hook *hook, notifier_fn_t mod_fn);
++#endif /* CONFIG_XFS_LIVE_HOOKS */
 +
-+	/* remove tmpfile */
- 	close(tmpfd);
- 	if (tmpfile)
- 		unlink(tmpfile);
-@@ -458,11 +530,32 @@ relocate_file_to_ag(
- 	return ret;
- }
- 
-+static int
-+build_ipath(
-+	const char		*path,
-+	struct stat		*st,
-+	struct inode_path	**ipathp)
-+{
-+	struct inode_path	*ipath;
-+
-+	*ipathp = NULL;
-+
-+	ipath = ipath_alloc(path, st);
-+	if (!ipath)
-+		return -ENOMEM;
-+
-+	/* we only move a single path with move_inode */
-+	ipath->link_count = 1;
-+	*ipathp = ipath;
-+	return 0;
-+}
-+
- static int
- move_inode_f(
- 	int			argc,
- 	char			**argv)
- {
-+	struct inode_path	*ipath = NULL;
- 	void			*fshandle;
- 	size_t			fshdlen;
- 	xfs_agnumber_t		agno = 0;
-@@ -511,24 +604,30 @@ _("Destination AG %d does not exist. Filesystem only has %d AGs\n"),
- 		goto exit_fail;
- 	}
- 
--	if (S_ISREG(st.st_mode)) {
--		ret = relocate_file_to_ag(file->fs_path.fs_dir, file->name,
--				&file->xfd, agno);
--	} else {
-+	if (!S_ISREG(st.st_mode)) {
- 		fprintf(stderr, _("Unsupported: %s is not a regular file.\n"),
- 			file->name);
- 		goto exit_fail;
- 	}
- 
-+	ret = build_ipath(file->name, &st, &ipath);
-+	if (ret)
-+		goto exit_fail;
-+
-+	ret = relocate_file_to_ag(file->fs_path.fs_dir, ipath,
-+				&file->xfd, agno);
- 	if (ret) {
- 		fprintf(stderr, _("Failed to move inode to AG %d: %s\n"),
- 			agno, strerror(-ret));
- 		goto exit_fail;
- 	}
-+	free(ipath);
- 	fshandle_destroy();
- 	return 0;
- 
- exit_fail:
-+	if (ipath)
-+		free(ipath);
- 	fshandle_destroy();
- 	exitcode = 1;
- 	return 0;
-diff --git a/spaceman/relocation.c b/spaceman/relocation.c
-index 7b125cc0ae12b0..b0960272168510 100644
---- a/spaceman/relocation.c
-+++ b/spaceman/relocation.c
-@@ -318,6 +318,30 @@ forget_reloc_ino(
- 
- static struct cmdinfo relocate_cmd;
- 
-+struct inode_path *
-+ipath_alloc(
-+	const char		*path,
-+	const struct stat	*stat)
-+{
-+	struct inode_path	*ipath;
-+	int			pathlen = strlen(path);
-+
-+	/* Allocate a new inode path and record the path in it. */
-+	ipath = calloc(1, sizeof(*ipath) + pathlen + 1);
-+	if (!ipath) {
-+		fprintf(stderr,
-+_("Failed to allocate ipath %s for inode 0x%llx failed: %s\n"),
-+			path, (unsigned long long)stat->st_ino,
-+			strerror(-errno));
-+		return NULL;
-+	}
-+	INIT_LIST_HEAD(&ipath->path_list);
-+	memcpy(&ipath->path[0], path, pathlen);
-+	ipath->ino = stat->st_ino;
-+
-+	return ipath;
-+}
-+
- static int
- relocate_targets_to_ag(
- 	const char		*mnt,
-@@ -336,15 +360,6 @@ relocate_targets_to_ag(
- 		if (!ipath)
- 			break;
- 
--		/* XXX: don't handle hard link cases yet */
--		if (ipath->link_count > 1) {
--			fprintf(stderr,
--		"FIXME! Skipping hardlinked inode at path %s\n",
--				ipath->path);
--			goto next;
--		}
--
--
- 		ret = stat(ipath->path, &st);
- 		if (ret) {
- 			fprintf(stderr, _("stat(%s) failed: %s\n"),
-@@ -367,7 +382,7 @@ relocate_targets_to_ag(
- 		}
- 
- 		/* move to destination AG */
--		ret = relocate_file_to_ag(mnt, ipath->path, &xfd, dst_agno);
-+		ret = relocate_file_to_ag(mnt, ipath, &xfd, dst_agno);
- 		xfd_close(&xfd);
- 
- 		/*
-diff --git a/spaceman/relocation.h b/spaceman/relocation.h
-index d4c71b7bb7f054..2c807aa678ec5b 100644
---- a/spaceman/relocation.h
-+++ b/spaceman/relocation.h
-@@ -43,9 +43,11 @@ struct inode_path {
-  */
- #define UNLINKED_IPATH		((struct inode_path *)1)
- 
-+struct inode_path *ipath_alloc(const char *path, const struct stat *st);
-+
- int find_relocation_targets(xfs_agnumber_t agno);
--int relocate_file_to_ag(const char *mnt, const char *path, struct xfs_fd *xfd,
--			xfs_agnumber_t agno);
-+int relocate_file_to_ag(const char *mnt, struct inode_path *ipath,
-+			struct xfs_fd *xfd, xfs_agnumber_t agno);
- int resolve_target_paths(const char *mntpt);
- 
- #endif /* XFS_SPACEMAN_RELOCATION_H_ */
+ #endif	/* __XFS_HEALTH_H__ */
 
