@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83CAA29415;
-	Tue, 31 Dec 2024 23:56:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271F71B0425;
+	Tue, 31 Dec 2024 23:56:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735689363; cv=none; b=NK2AW2yRPWarLphMDbhHYzCFBXzYphQnr+yNDJgj+HwRe8QVvRlAXc5gFhU+QPRQnKo5WNtHZ0VpZEb/8uAMlWSWf7x9yL9QZXiLJwIhk2wE2MBQrmW1YMKUIB4H4OLQQLCPvgJseSKYUTZehN8lH/TBzfJ1PzxYZ0lKq9j3tVo=
+	t=1735689379; cv=none; b=mgCNl9C2iGaUjgiPxAxcpXiKelnZLqWTqX9kOxNqeRJLCa8wdNfl6RYR3SAeURH0yf+JDlYMcJx+fJpAcjKEoSeI14h/8+Suq1N7Ey6YrTTcDr/Mg8MeOGTaaDSIz1LoXUhckHk0D0tKRI4bOD1kr1Y48H49AuVfgEb5j4PcbhA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735689363; c=relaxed/simple;
-	bh=uB8JOmHDwdjYkCWrgWDq8tUnb3XMJJpO3KF0/jpRuto=;
+	s=arc-20240116; t=1735689379; c=relaxed/simple;
+	bh=MTAlFxINu7+ChUshLMY2W2vwMia6mjozjceUaUSpvDU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VAOJw8q/rYD3W0euj0eDPuRoP7XLOOvyls4hUI2satNdAxgsCfUpAQnLtsbPYDV/dZRiBnPJCiI8Kw/jMYY5dnVmwzcrbbvoXPbMkpkq68qkxAUMNv9mEAC8oJlpG40UH9ecN+rXbfxI9u8aX8Zx7L77Q8DiyvH8wk/60i25Aa0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OdkT1KUp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ptDfkCfumL5jDuGb339HbJg+MrD9KH38RQYVfbzaTuMiJuZxbge7G868tiqwNc3vNofMawvXTce5GlGTn7ecOSaB7Nx3rlarb8QR88stHWu0iPn9vsQ+QNOznNOJjLdHaPGwIWcBU6J0JdXqvcIM0dmLutsuBwUqVRGwUn96RVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iKypfLnQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OdkT1KUp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C314C4CED7;
-	Tue, 31 Dec 2024 23:56:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iKypfLnQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3CEEC4CED2;
+	Tue, 31 Dec 2024 23:56:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735689363;
-	bh=uB8JOmHDwdjYkCWrgWDq8tUnb3XMJJpO3KF0/jpRuto=;
+	s=k20201202; t=1735689379;
+	bh=MTAlFxINu7+ChUshLMY2W2vwMia6mjozjceUaUSpvDU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OdkT1KUpM+tbT958+zOZ6pJB1hqutVX+DUS09IojiWbHSjv89Sg8xh83knXoqeDG1
-	 yFS1ilK9H/dwh6DtBpF9bwK2hQo2ZrlcXTk/OfRojrCZNInfGtZBjb+B2xk5YFEULB
-	 mHsx1tghwANxJ+KhKBq4AOzpGjkZqsGZu49K2dpVA7stInP7ASyVE9Sa7d7Gpe7ucY
-	 orRgJ8wIcJqsrcIf2bZmtTkjb6zZyentsqapcrS8qfE4s2K/5Ky445Auj01Ld8imvz
-	 6qMmdvExUhH4o+yTzH7gxLZseJ4Sc6Zv6p8ssIThWioVBpf3E5UiUBeTDdcl58xdrL
-	 JQJvFS1385dkg==
-Date: Tue, 31 Dec 2024 15:56:02 -0800
-Subject: [PATCH 1/1] xfs: test output of new FSREFCOUNTS ioctl
+	b=iKypfLnQYBtWg38i06XmCz81dD5R1+yJCm6U59x9w6802ykN6tcmzQnGz7FT7DBof
+	 nGtePwLqalBoBNF+7Ji4zbUCNYJoa0iVbTitwo0oIzLv9G8VidgLxZDLIL5ZpEF1RH
+	 pu8Abzg3mzGVmHgGVDk4IBTHQglmI0Rra5qxI4CEUSsepenz0t92zF51Aa+KH8t+qn
+	 c0TJTlRZLn5h4CRYj5+zMwC1zo4RbxPQZcQT6zay7bXdPw2NqyhkBqXIPpS8AN3A/8
+	 klxYoFRJRapURiItt/q9BLEPiM0uHsqiS8P5sr7Sxxg/W2WyoUwWLiF92LvAhn4kfy
+	 FZl9gQ7GaGcnw==
+Date: Tue, 31 Dec 2024 15:56:18 -0800
+Subject: [PATCH 1/1] xfs: test clearing of free space
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173568781944.2711934.1153725346169852598.stgit@frogsfrogsfrogs>
-In-Reply-To: <173568781929.2711934.8784820316232821491.stgit@frogsfrogsfrogs>
-References: <173568781929.2711934.8784820316232821491.stgit@frogsfrogsfrogs>
+Message-ID: <173568782420.2712030.1823307599476850196.stgit@frogsfrogsfrogs>
+In-Reply-To: <173568782405.2712030.4766560864446006648.stgit@frogsfrogsfrogs>
+References: <173568782405.2712030.4766560864446006648.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,79 +45,135 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure the cursors work properly and that refcounts are correct.
+Simple regression test for the spaceman clearspace command, which tries
+to free all the used space in some part of the filesystem.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/rc           |    4 +
- doc/group-names.txt |    1 
- tests/xfs/1921      |  164 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1921.out  |    4 +
- 4 files changed, 171 insertions(+), 2 deletions(-)
- create mode 100755 tests/xfs/1921
- create mode 100644 tests/xfs/1921.out
+ common/rc          |    5 ++++
+ tests/xfs/1400     |   52 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1400.out |    2 +
+ tests/xfs/1401     |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1401.out |    2 +
+ 5 files changed, 131 insertions(+)
+ create mode 100755 tests/xfs/1400
+ create mode 100644 tests/xfs/1400.out
+ create mode 100755 tests/xfs/1401
+ create mode 100644 tests/xfs/1401.out
 
 
 diff --git a/common/rc b/common/rc
-index e04ca50e3140c0..c45a226849ce0f 100644
+index c45a226849ce0f..d7dfb55bbbd7e1 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -2811,8 +2811,8 @@ _require_xfs_io_command()
- 		echo $testio | grep -q "Operation not supported" && \
- 			_notrun "O_TMPFILE is not supported"
+@@ -2786,6 +2786,11 @@ _require_xfs_io_command()
+ 			-c "fsync" -c "$command $blocksize $((2 * $blocksize))" \
+ 			$testfile 2>&1`
  		;;
--	"fsmap")
--		testio=`$XFS_IO_PROG -f -c "fsmap" $testfile 2>&1`
-+	"fsmap"|"fsrefcounts")
-+		testio=`$XFS_IO_PROG -f -c "$command" $testfile 2>&1`
- 		echo $testio | grep -q "Inappropriate ioctl" && \
- 			_notrun "xfs_io $command support is missing"
- 		;;
-diff --git a/doc/group-names.txt b/doc/group-names.txt
-index ed886caac058c3..b04d0180e8ec02 100644
---- a/doc/group-names.txt
-+++ b/doc/group-names.txt
-@@ -58,6 +58,7 @@ fsck			general fsck tests
- fsmap			FS_IOC_GETFSMAP ioctl
- fsproperties		Filesystem properties
- fsr			XFS free space reorganizer
-+fsrefcounts		FS_IOC_GETFSREFCOUNTS ioctl
- fuzzers			filesystem fuzz tests
- growfs			increasing the size of a filesystem
- hardlink		hardlinks
-diff --git a/tests/xfs/1921 b/tests/xfs/1921
++	"fmapfree")
++		local blocksize=$(_get_file_block_size $TEST_DIR)
++		testio=`$XFS_IO_PROG -F -f -c "$command $blocksize $((2 * $blocksize))" \
++			$testfile 2>&1`
++		;;
+ 	"fiemap")
+ 		# If 'ranged' is passed as argument then we check to see if fiemap supports
+ 		# ranged query params
+diff --git a/tests/xfs/1400 b/tests/xfs/1400
 new file mode 100755
-index 00000000000000..2d0af845767ed2
+index 00000000000000..ec3f7aec2a318a
 --- /dev/null
-+++ b/tests/xfs/1921
-@@ -0,0 +1,164 @@
++++ b/tests/xfs/1400
+@@ -0,0 +1,52 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021-2025 Oracle.  All Rights Reserved.
++# Copyright (c) 2022-2025 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 1921
++# FS QA Test 1400
 +#
-+# Populate filesystem, check that fsrefcounts -n10000 matches fsrefcounts -n1,
-+# then verify that the refcount information is consistent with the fsmap info.
++# Basic functionality testing for FALLOC_FL_MAP_FREE
 +#
 +. ./common/preamble
-+_begin_fstest auto clone fsrefcounts fsmap
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.* $TEST_DIR/a $TEST_DIR/b
-+}
++_begin_fstest auto prealloc
 +
 +. ./common/filter
 +
 +_require_scratch
-+_require_xfs_io_command "fsmap"
-+_require_xfs_io_command "fsrefcounts"
++_require_xfs_io_command "fmapfree"
 +
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
++_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs > /dev/null
++_scratch_mount >> $seqres.full
++. $tmp.mkfs
++
++testfile="$SCRATCH_MNT/$seq.txt"
++touch $testfile
++if $XFS_IO_PROG -c 'stat -v' $testfile | grep -q 'realtime'; then
++	# realtime
++	increment=$((dbsize * rtblocks / 100))
++	length=$((dbsize * rtblocks))
++else
++	# data
++	increment=$((dbsize * dblocks / 100))
++	length=$((dbsize * dblocks))
++fi
++
++free_bytes=$(stat -f -c '%f * %S' $testfile | bc)
++
++echo "free space: $free_bytes; increment: $increment; length: $length" >> $seqres.full
++
++# Map all the free space on that device, 10% at a time
++for ((start = 0; start < length; start += increment)); do
++	$XFS_IO_PROG -f -c "fmapfree $start $increment" $testfile
++done
++
++space_used=$(stat -c '%b * %B' $testfile | bc)
++
++echo "space captured: $space_used" >> $seqres.full
++$FILEFRAG_PROG -v $testfile >> $seqres.full
++
++# Did we get within 10% of the free space?
++_within_tolerance "mapfree space used" $space_used $free_bytes 10% -v
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1400.out b/tests/xfs/1400.out
+new file mode 100644
+index 00000000000000..601404d7a46856
+--- /dev/null
++++ b/tests/xfs/1400.out
+@@ -0,0 +1,2 @@
++QA output created by 1400
++mapfree space used is in range
+diff --git a/tests/xfs/1401 b/tests/xfs/1401
+new file mode 100755
+index 00000000000000..14675abd8ff985
+--- /dev/null
++++ b/tests/xfs/1401
+@@ -0,0 +1,70 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2025 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1401
++#
++# Basic functionality testing for the free space defragmenter.
++#
++. ./common/preamble
++_begin_fstest auto defrag shrinkfs
++
++. ./common/filter
++
++_notrun "XXX test is not ready yet; you need to deal with eof blocks"
++_notrun "XXX clearfree cannot move unwritten extents; does fiexchange work for this?"
++_notrun "XXX csp_buffercopy never returns if we hit eof"
++
++_require_scratch
++_require_xfs_spaceman_command "clearfree"
++
++_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs > /dev/null
++cat $tmp.mkfs >> $seqres.full
++. $tmp.mkfs
++_scratch_mount >> $seqres.full
 +
 +cpus=$(( $(src/feature -o) * 4))
 +
@@ -125,144 +181,51 @@ index 00000000000000..2d0af845767ed2
 +FSSTRESS_ARGS=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 4000 $FSSTRESS_AVOID)
 +$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full
 +
-+_scratch_cycle_mount	# flush all the background gc
++$XFS_IO_PROG -c 'stat -v' $SCRATCH_MNT >> $seqres.full
 +
-+echo "Compare fsrefcounts" | tee -a $seqres.full
-+$XFS_IO_PROG -c 'fsrefcounts -m -n 65536' $SCRATCH_MNT | grep -v 'EXT:' > $TEST_DIR/a
-+$XFS_IO_PROG -c 'fsrefcounts -m -n 1' $SCRATCH_MNT | grep -v 'EXT:' > $TEST_DIR/b
-+cat $TEST_DIR/a $TEST_DIR/b >> $seqres.full
++if $XFS_IO_PROG -c 'stat -v' $SCRATCH_MNT | grep -q 'rt-inherit'; then
++	# realtime
++	increment=$((dbsize * rtblocks / agcount))
++	length=$((dbsize * rtblocks))
++	fsmap_devarg="-r"
++else
++	# data
++	increment=$((dbsize * agsize))
++	length=$((dbsize * dblocks))
++	fsmap_devarg="-d"
++fi
 +
-+diff -uw $TEST_DIR/a $TEST_DIR/b
++echo "start: $start; increment: $increment; length: $length" >> $seqres.full
++$DF_PROG $SCRATCH_MNT >> $seqres.full
 +
-+echo "Compare fsrefcounts to fsmap" | tee -a $seqres.full
-+$XFS_IO_PROG -c 'fsmap -m -n 65536' $SCRATCH_MNT | grep -v 'EXT:' > $TEST_DIR/b
-+cat $TEST_DIR/b >> $seqres.full
++TRACE_PROG="strace -s99 -e fallocate,ioctl,openat -o $tmp.strace"
 +
-+while IFS=',' read ext major minor pstart pend owners length crap; do
-+	test "$ext" = "EXT" && continue
++for ((start = 0; start < length; start += increment)); do
++	echo "---------------------------" >> $seqres.full
++	echo "start: $start end: $((start + increment))" >> $seqres.full
++	echo "---------------------------" >> $seqres.full
 +
-+	awk_args=(-'F' ',' '-v' "major=$major" '-v' "minor=$minor" \
-+		  '-v' "pstart=$pstart" '-v' "pend=$pend" '-v' "owners=$owners")
++	fsmap_args="-vvvv $fsmap_devarg $((start / 512)) $((increment / 512))"
++	clearfree_args="-v all $start $increment"
 +
-+	if [ "$owners" -eq 1 ]; then
-+		$AWK_PROG "${awk_args[@]}" \
-+'
-+BEGIN {
-+	printf("Q:%s:%s:%s:%s:%s:\n", major, minor, pstart, pend, owners) > "/dev/stderr";
-+	next_map = -1;
-+}
-+{
-+	if ($2 != major || $3 != minor) {
-+		next;
-+	}
-+	if ($5 <= pstart) {
-+		next;
-+	}
-+
-+	printf(" A:%s:%s:%s:%s\n", $2, $3, $4, $5) > "/dev/stderr";
-+	if (next_map < 0) {
-+		if ($4 > pstart) {
-+			exit 1
-+		}
-+		next_map = $5 + 1;
-+	} else {
-+		if ($4 != next_map) {
-+			exit 1
-+		}
-+		next_map = $5 + 1;
-+	}
-+	if (next_map >= pend) {
-+		nextfile;
-+	}
-+}
-+END {
-+	exit 0;
-+}
-+' $TEST_DIR/b 2> $tmp.debug
-+		res=$?
-+	else
-+		$AWK_PROG "${awk_args[@]}" \
-+'
-+function max(a, b) {
-+	return a > b ? a : b;
-+}
-+function min(a, b) {
-+	return a < b ? a : b;
-+}
-+BEGIN {
-+	printf("Q:%s:%s:%s:%s:%s:\n", major, minor, pstart, pend, owners) > "/dev/stderr";
-+	refcount_whole = 0;
-+	aborted = 0;
-+}
-+{
-+	if ($2 != major || $3 != minor) {
-+		next;
-+	}
-+	if ($4 > pend) {
-+		nextfile;
-+	}
-+	if ($5 < pstart) {
-+		next;
-+	}
-+	if ($6 == "special_0:2") {
-+		/* unknown owner means we cannot distinguish separate owners */
-+		aborted = 1;
-+		exit 0;
-+	}
-+
-+	printf(" A:%s:%s:%s:%s -> %d\n", $2, $3, $4, $5, refcount_whole) > "/dev/stderr";
-+	if ($4 <= pstart && $5 >= pend) {
-+		/* Account for extents that span the whole range */
-+		refcount_whole++;
-+	} else {
-+		/* Otherwise track refcounts per-block as we find them */
-+		for (block = max($4, pstart); block <= min($5, pend); block++) {
-+			refcounts[block]++;
-+		}
-+	}
-+}
-+END {
-+	if (aborted) {
-+		exit 0;
-+	}
-+	deficit = owners - refcount_whole;
-+	printf(" W:%d:%d\n", owners, refcount_whole, deficit) > "/dev/stderr";
-+	if (deficit == 0) {
-+		exit 0;
-+	}
-+
-+	refcount_slivers = deficit;
-+	for (block in refcounts) {
-+		printf(" X:%s:%d\n", block, refcounts[block]) > "/dev/stderr";
-+		if (refcounts[block] != deficit) {
-+			refcount_slivers = 0;
-+		}
-+	}
-+
-+	refcount_whole += refcount_slivers;
-+	exit owners == refcount_whole ? 0 : 1;
-+}
-+' $TEST_DIR/b 2> $tmp.debug
-+		res=$?
-+	fi
-+	if [ $res -ne 0 ]; then
-+		echo "$major,$minor,$pstart,$pend,$owners not found in fsmap"
-+		cat $tmp.debug >> $seqres.full
-+		break
-+	fi
-+done < $TEST_DIR/a
++	$XFS_IO_PROG -c "fsmap $fsmap_args" $SCRATCH_MNT > $tmp.before
++	$TRACE_PROG $XFS_SPACEMAN_PROG -c "clearfree $clearfree_args" $SCRATCH_MNT &>> $seqres.full || break
++	cat $tmp.strace >> $seqres.full
++	$XFS_IO_PROG -c "fsmap $fsmap_args" $SCRATCH_MNT > $tmp.after
++	cat $tmp.before >> $seqres.full
++	cat $tmp.after >> $seqres.full
++done
 +
 +# success, all done
++echo Silence is golden
 +status=0
 +exit
-diff --git a/tests/xfs/1921.out b/tests/xfs/1921.out
+diff --git a/tests/xfs/1401.out b/tests/xfs/1401.out
 new file mode 100644
-index 00000000000000..f5ea660379bbdd
+index 00000000000000..504999381ea9a8
 --- /dev/null
-+++ b/tests/xfs/1921.out
-@@ -0,0 +1,4 @@
-+QA output created by 1921
-+Format and mount
-+Compare fsrefcounts
-+Compare fsrefcounts to fsmap
++++ b/tests/xfs/1401.out
+@@ -0,0 +1,2 @@
++QA output created by 1401
++Silence is golden
 
