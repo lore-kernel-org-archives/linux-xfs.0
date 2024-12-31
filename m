@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7622F29415
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:52:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13E7D29415
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:52:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735689160; cv=none; b=TwcOmAGuFM2kqT5gxktJQj5JWRHbu/13uUO/LnXyx78InSuUOpOFPUMpfcnzrEM8j0cStAafqImbM37NeK/9CghBc7DPQv1zgCML3tzK3zzQXikd8Z9tumewLvTG881ufGXmDHIpZetbxZ27rkoOIe05IfdKRyMv2C5fDf1T7VA=
+	t=1735689176; cv=none; b=EhEOLzGtKQwYGsmNwNNJ4tl8DX5G9Q1yRVrBz7OV+zOGe0O6LGQ4AEOfoYoMyQUJb//1P4ej/Z8GWR5L33q77pbeuN9OyzHVCYFdKdg4gTSPCi3UFuQhVMIupJfan9YfEnt1FVmiaqEilU9+Xrsr0uT3CWDB53gukTowXvlBbaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735689160; c=relaxed/simple;
-	bh=s9bc2zPQx9Gk8KOTK/NDAHWKvm/aECuECysXqFiupUI=;
+	s=arc-20240116; t=1735689176; c=relaxed/simple;
+	bh=VV+8OewEmIhVwlRjhYNNyFs9CpVvYvYUUNbCIcwhtAM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NAu6OtkR0wKeXrOHUfqKUJt7P1Ud0yAl0iy/oJu6aGeC5jPTs/ighSEiXr1+gp39D15ANx93GCNPPAnRQvuMyIxrW4MKRxUpW2KpGeH0iGiZjel4d2PfM/snmwRocfmxxFCKHk2nC28AjCVZw7XpNOhWL2jCTRR62xsqhRalCbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QMpfUWSK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JqOFdfztifL+0IiVyHw0oBZ27LAVqW3NxQFwBtxxuem89JIT0Q2C8DLqvIH69XIF3WoEtWwhn0bob75B0VX2rpGtDvPfgiVY/APJf1oIJTqek6EK7wlP7myXk2yTYwJuzvaEsg5uDtkBQDRx6fZnmKkKzTHqZwuTLPKcK+s27bE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKvAACUO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QMpfUWSK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EF8DC4CED2;
-	Tue, 31 Dec 2024 23:52:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKvAACUO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEEF0C4CED2;
+	Tue, 31 Dec 2024 23:52:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735689160;
-	bh=s9bc2zPQx9Gk8KOTK/NDAHWKvm/aECuECysXqFiupUI=;
+	s=k20201202; t=1735689175;
+	bh=VV+8OewEmIhVwlRjhYNNyFs9CpVvYvYUUNbCIcwhtAM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QMpfUWSKTcKt79BqtMemDFbzVHoNCp2J4nbv/17O0xum9u9xeOMdxXxnbyNDeqhEq
-	 Xw/McDHsAFTquXFrwxlZzXUxnDPftQkd+yq9ScuJUJA6JwYsS1+k8tZDifa4CS+e06
-	 /uF60bTtcP3Lj0NQGsbcWSP5oTRr8oOWouF+Ubl4VKOilCCdtrIu/csYQe4FyvjOq8
-	 P4aY/tFIi6566EOt2MN/qlzhNup+Tg5QreQ5p2ld0h2zGq+emyKRLA1jr7iojEWpEt
-	 JprOeL8dJMMLjSlmrgyyPTHnhydaq7xFK1RYe0upGonq58eAGC+oXrhnj4lsoxkIYv
-	 EKyUdDNfK/s8A==
-Date: Tue, 31 Dec 2024 15:52:39 -0800
-Subject: [PATCH 19/21] xfs_scrubbed: use the autofsck fsproperty to select
- mode
+	b=cKvAACUOPC3SCtV1tlN7F1F3QOWQdbiB3MiU5pQQTJYV0Yc+0pqkdqJploHK9h0F8
+	 z5yL/YQf04GkcD2cZKFgiUOIZa1YzB9BjFr4MacbzZMWykMEma5dK7SuXK0FGl8B57
+	 LtS8iqBfd6A2e1flZlUGhfmWrxQwElYdDHQYV605gGbYiv//U/ReBAOIeo5cZ8M1wi
+	 OZYYFg1BdbuiOe/MmQbMjZcqwlFm5Tew52XKfpsgKBbZ80pZ+7lx9rpc3aNAbTHEqb
+	 Ns0GP1g4w3yIJId0vQoDFGq1ES9Vdsm4qRjb/CRa7bdSxD4Y7ewidbsVV2wPB9s1NZ
+	 N0ns619w8tTgg==
+Date: Tue, 31 Dec 2024 15:52:55 -0800
+Subject: [PATCH 20/21] xfs_scrub: report media scrub failures to the kernel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173568778754.2710211.11864841620520710404.stgit@frogsfrogsfrogs>
+Message-ID: <173568778769.2710211.7691395007928091819.stgit@frogsfrogsfrogs>
 In-Reply-To: <173568778426.2710211.10173859713748230492.stgit@frogsfrogsfrogs>
 References: <173568778426.2710211.10173859713748230492.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,114 +45,56 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the xfs_scrubbed background service query the autofsck filesystem
-property to figure out which operating mode it should use.
+If the media scan finds that media have been lost, report this to the
+kernel so that the healthmon code can pass that along to xfs_scrubbed.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/xfs_scrubbed.in |   62 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 61 insertions(+), 1 deletion(-)
+ scrub/phase6.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
 
-diff --git a/scrub/xfs_scrubbed.in b/scrub/xfs_scrubbed.in
-index 90602481f64c88..2b34603cb361e2 100644
---- a/scrub/xfs_scrubbed.in
-+++ b/scrub/xfs_scrubbed.in
-@@ -573,6 +573,21 @@ def fgetpath(fd, fh = None, mountpoint = None):
- 			break
- 	return ret
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 5a1f29738680e5..b5f6f3c1d4bc63 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -671,6 +671,29 @@ clean_pool(
+ 	return ret;
+ }
  
-+# Filesystem properties
++static void
++report_ioerr_to_kernel(
++	struct scrub_ctx		*ctx,
++	struct disk			*disk,
++	uint64_t			start,
++	uint64_t			length)
++{
++	struct xfs_media_error		me = {
++		.daddr			= start,
++		.bbcount		= length,
++	};
++	dev_t				dev = disk_to_dev(ctx, disk);
 +
-+FSPROP_NAMESPACE = "trusted."
-+FSPROP_NAME_PREFIX = "xfs:"
-+FSPROP_AUTOFSCK_NAME = "autofsck"
++	if (dev == ctx->fsinfo.fs_datadev)
++		me.flags |= XFS_MEDIA_ERROR_DATADEV;
++	else if (dev == ctx->fsinfo.fs_rtdev)
++		me.flags |= XFS_MEDIA_ERROR_RTDEV;
++	else if (dev == ctx->fsinfo.fs_logdev)
++		me.flags |= XFS_MEDIA_ERROR_LOGDEV;
 +
-+def fsprop_attrname(n):
-+	'''Construct the xattr name for a filesystem property.'''
-+	return f"{FSPROP_NAMESPACE}{FSPROP_NAME_PREFIX}{n}"
++	ioctl(ctx->mnt.fd, XFS_IOC_MEDIA_ERROR, &me);
++}
 +
-+def fsprop_getstr(fd, n):
-+	'''Return the value of a filesystem property as a string.'''
-+	attrname = fsprop_attrname(n)
-+	return os.getxattr(fd, attrname).decode('utf-8')
-+
- # main program
+ /* Remember a media error for later. */
+ static void
+ remember_ioerr(
+@@ -695,6 +718,8 @@ remember_ioerr(
+ 		return;
+ 	}
  
- def health_reports(mon_fp, fh):
-@@ -731,6 +746,31 @@ def handle_event(e):
- 	elif want_repair and event['type'] == 'sick':
- 		repair_queue.submit(repair_metadata, event, fh)
- 
-+def want_repair_from_autofsck(fd):
-+	'''Determine want_repair from the autofsck filesystem property.'''
-+	global has_parent
-+	global has_rmapbt
++	report_ioerr_to_kernel(ctx, disk, start, length);
 +
-+	try:
-+		advice = fsprop_getstr(fd, FSPROP_AUTOFSCK_NAME)
-+		if advice == "repair":
-+			return True
-+		if advice == "check" or advice == "optimize":
-+			return False
-+		if advice == "none":
-+			return None
-+	except:
-+		# Any OS error (including ENODATA) or string parsing error is
-+		# treated the same as an unrecognized value.
-+		pass
-+
-+	# For an unrecognized value, log but do not fix runtime corruption if
-+	# backref metadata are enabled.  If no backref metadata are available,
-+	# the fs is too old so don't run at all.
-+	if has_rmapbt or has_parent:
-+		return False
-+	return None
-+
- def monitor(mountpoint, event_queue, **kwargs):
- 	'''Monitor the given mountpoint for health events.'''
- 	global everything
-@@ -749,6 +789,20 @@ def monitor(mountpoint, event_queue, **kwargs):
- 		# Don't care if we can't detect parent pointers or rmap
- 		print(f'{printf_prefix}: detecting fs features: {e}', file = sys.stderr)
- 
-+	# Does the sysadmin have any advice for us about whether or not to
-+	# background scrub?
-+	if want_repair is None:
-+		want_repair = want_repair_from_autofsck(fd)
-+		if want_repair is None:
-+			print(f"{mountpoint}: Disabling daemon per autofsck directive.")
-+			os.close(fd)
-+			return 0
-+		elif want_repair:
-+			print(f"{mountpoint}: Automatically repairing per autofsck directive.")
-+		else:
-+			print(f"{mountpoint}: Only logging errors per autofsck directive.")
-+
-+
- 	# Check for the backref metadata that makes repair effective.
- 	if want_repair:
- 		if not has_rmapbt:
-@@ -963,7 +1017,11 @@ def main():
- 			action = "store_true")
- 	parser.add_argument("--everything", help = "Capture all events.", \
- 			action = "store_true")
--	parser.add_argument("--repair", help = "Automatically repair corrupt metadata.", \
-+	action_group = parser.add_mutually_exclusive_group()
-+	action_group.add_argument("--repair", \
-+			help = "Automatically repair corrupt metadata.", \
-+			action = "store_true")
-+	action_group.add_argument("--autofsck", help = argparse.SUPPRESS, \
- 			action = "store_true")
- 	parser.add_argument("-V", help = "Report version and exit.", \
- 			action = "store_true")
-@@ -1004,6 +1062,8 @@ def main():
- 		everything = True
- 	if args.debug_fast:
- 		debug_fast = True
-+	if args.autofsck:
-+		want_repair = None
- 	if args.repair:
- 		want_repair = True
- 
+ 	tree = bitmap_for_disk(ctx, disk, vs);
+ 	if (!tree) {
+ 		str_liberror(ctx, ENOENT, _("finding bad block bitmap"));
 
