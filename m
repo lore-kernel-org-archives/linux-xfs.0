@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F66B29415
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:48:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A18601B0438
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:48:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735688910; cv=none; b=EtPsfGLeLUEIQwGogzl86uMyZ3TfjfiKQWQRgIM2IKGBkn55ElcLjAYE0gcsx+aleawwiLHMLU6cZaU8Gl335c2EfJXRc8RKhXknPSojDi6VE+whMPU6c+x1sxha+J7jyqpNB6IL0ajtcDDQVIroxG6ygcSawN6Dlxvk7PGG21o=
+	t=1735688925; cv=none; b=kbeV240F7tr9IlNBypug7amB2dwa+iMU5GhaaJ7V1kp94xjney3D+Px1+v28aKy+3BEKIjKx1S0YWdYANLx8L4+motXIt2BrRSReu1AAxnf8kB9RfuWL2KT4wHf4FP3f9KRxag4+ZxVed+1JGPARwF8mJJ0VpQCJ/bYTJYeaKGs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735688910; c=relaxed/simple;
-	bh=8EGJJzbC0XxVzJc7BB3Pqu3pNodKRp+heFCIKYA8HyY=;
+	s=arc-20240116; t=1735688925; c=relaxed/simple;
+	bh=0ajwX3aP3pHkycP3D1qP6bba4/io8MZyRaW2T07LiFY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=njaghgIC7yNRaDu/6A+ZMYYjAP1W4Dq8OAJuaQUyK7YQXiihyA3JG1QVd8j/O1AnZJrwMNszy1MdVl5lC/uRrTxnYzY62aZHbD4f0fOtzNKOoviYvGq43qgXL59Xwi91jM84Bi1kgbvEeWlvQzp6RXzj/QgXEt470iF7LhxDdzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kMxiEWdA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=t8iM7XjdHQzWZNdwy/UU/X61Rg8/rF2AjewFslzRa7BL34seKZGDSCE3u0CY4AeUwrnncEawqLaqURBNXbwQ4HnBPcfHAOwLEp1pK8or09ZnGJzq0rRHJPm8fPNndN97oxmkwXmXi+inyDLbkGygYVK/9j0ZTtGMgN0hlEV3dPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L1pgrVPE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kMxiEWdA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9787C4CED2;
-	Tue, 31 Dec 2024 23:48:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L1pgrVPE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78F7CC4CED2;
+	Tue, 31 Dec 2024 23:48:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735688909;
-	bh=8EGJJzbC0XxVzJc7BB3Pqu3pNodKRp+heFCIKYA8HyY=;
+	s=k20201202; t=1735688925;
+	bh=0ajwX3aP3pHkycP3D1qP6bba4/io8MZyRaW2T07LiFY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kMxiEWdAVVOvM+eyJMwDG8qWXEKry6mWi+fsYXcMkSs8QULQJpOZpbk8UrdvNAFkC
-	 ue/M+76Bc4VhzNibdNY3FxStp2h8/r0PIhd0CARbTFoZ9AsRcUcdEKRrdvwjg/2uFO
-	 KJgnifXioZdyLBhn0zzcutyBOOVkM5vCvOQfRR7xlS2YbBGpo0Efws0Mjfs1se1tO7
-	 VuFkaXcaxE1GVUHWzx8X3BGMtsi0zylBy8tNfFrwU06zXUanLb+lvo+a8YsaXXf59/
-	 p4/Mvk5G0w0zV/czf/EjO8jpBN0n05LdcdC+4m/AmDpspQWCyfzebho/pF39V60/rF
-	 rtNxtrlO65ubg==
-Date: Tue, 31 Dec 2024 15:48:29 -0800
-Subject: [PATCH 03/21] xfs: create event queuing, formatting,
- and discovery infrastructure
+	b=L1pgrVPEd+f3vxFOCt25Kxvn39P7zq8UFE0xGD0bY+guhvNL5YApM4Kj1T4YBZRb5
+	 pITw6CaLzv/oOpKKsqGKfpEcNWtE21bUmnzVAxBWqz5yAqKF9VBSJbd9CrjoV3zeyh
+	 p89aZWY5K05ag4HVWHw68nDSHmY3xWhm/BmOTiT6ubhwQcDXUfGJfq4zWCY8Zqz48Y
+	 dI2hieUN/0JJ6H3Lso8NzjyjknDqVgMOMBJHjpsRIQuDFaBTlNJHXOLHTIMQ/R9X8C
+	 H4amlQDVAaV9VkhN97FgQkHW8lmlojyuAc76YqAWwHxwOsa1VG3HyQ444SM3VOE1Wv
+	 pzPy8nQtiLhuQ==
+Date: Tue, 31 Dec 2024 15:48:45 -0800
+Subject: [PATCH 04/21] xfs: report metadata health events through healthmon
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173568778505.2710211.7052481015987415232.stgit@frogsfrogsfrogs>
+Message-ID: <173568778520.2710211.13592512550036762462.stgit@frogsfrogsfrogs>
 In-Reply-To: <173568778426.2710211.10173859713748230492.stgit@frogsfrogsfrogs>
 References: <173568778426.2710211.10173859713748230492.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,116 +45,369 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create the basic infrastructure that we need to report health events to
-userspace.  We need a compact form for recording critical information
-about an event and queueing them; a means to notice that we've lost some
-events; and a means to format the events into something that userspace
-can handle.
-
-Here, we've chosen json to export information to userspace.  The
-structured key-value nature of json gives us enormous flexibility to
-modify the schema of what we'll send to userspace because we can add new
-keys at any time.  Userspace can use whatever json parsers are available
-to consume the events and will not be confused by keys they don't
-recognize.
-
-Note that we do NOT allow sending json back to the kernel, nor is there
-any intent to do that.
+Set up a metadata health event hook so that we can send events to
+userspace as we collect information.  The unmount hook severs the weak
+reference between the health monitor and the filesystem it's monitoring;
+when this happens, we stop reporting events because there's no longer
+any point.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libxfs/xfs_fs.h                  |    8 +++++
- libxfs/xfs_healthmon.schema.json |   63 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 71 insertions(+)
- create mode 100644 libxfs/xfs_healthmon.schema.json
+ libxfs/xfs_healthmon.schema.json |  328 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 328 insertions(+)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index d1a81b02a1a3f3..d7404e6efd866d 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -1107,6 +1107,14 @@ struct xfs_health_monitor {
- 	__u64	pad2[2];	/* zeroes */
- };
- 
-+/* Return all health status events, not just deltas */
-+#define XFS_HEALTH_MONITOR_VERBOSE	(1ULL << 0)
-+
-+#define XFS_HEALTH_MONITOR_ALL		(XFS_HEALTH_MONITOR_VERBOSE)
-+
-+/* Return events in JSON format */
-+#define XFS_HEALTH_MONITOR_FMT_JSON	(1)
-+
- /*
-  * ioctl commands that are used by Linux filesystems
-  */
 diff --git a/libxfs/xfs_healthmon.schema.json b/libxfs/xfs_healthmon.schema.json
-new file mode 100644
-index 00000000000000..9772efe25f193d
---- /dev/null
+index 9772efe25f193d..154ea0228a3615 100644
+--- a/libxfs/xfs_healthmon.schema.json
 +++ b/libxfs/xfs_healthmon.schema.json
-@@ -0,0 +1,63 @@
-+{
-+	"$comment": [
-+		"SPDX-License-Identifier: GPL-2.0-or-later",
-+		"Copyright (c) 2024-2025 Oracle.  All Rights Reserved.",
-+		"Author: Darrick J. Wong <djwong@kernel.org>",
-+		"",
-+		"This schema file describes the format of the json objects",
-+		"readable from the fd returned by the XFS_IOC_HEALTHMON",
-+		"ioctl."
-+	],
-+
-+	"$schema": "https://json-schema.org/draft/2020-12/schema",
-+	"$id": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/fs/xfs/libxfs/xfs_healthmon.schema.json",
-+
-+	"title": "XFS Health Monitoring Events",
-+
-+	"$comment": "Events must be one of the following types:",
-+	"oneOf": [
+@@ -18,6 +18,18 @@
+ 	"oneOf": [
+ 		{
+ 			"$ref": "#/$events/lost"
++		},
 +		{
-+			"$ref": "#/$events/lost"
-+		}
-+	],
-+
-+	"$comment": "Simple data types are defined here.",
-+	"$defs": {
-+		"time_ns": {
-+			"title": "Time of Event",
-+			"description": "Timestamp of the event, in nanoseconds since the Unix epoch.",
++			"$ref": "#/$events/fs_metadata"
++		},
++		{
++			"$ref": "#/$events/rtgroup_metadata"
++		},
++		{
++			"$ref": "#/$events/perag_metadata"
++		},
++		{
++			"$ref": "#/$events/inode_metadata"
+ 		}
+ 	],
+ 
+@@ -27,6 +39,169 @@
+ 			"title": "Time of Event",
+ 			"description": "Timestamp of the event, in nanoseconds since the Unix epoch.",
+ 			"type": "integer"
++		},
++		"xfs_agnumber_t": {
++			"description": "Allocation group number",
++			"type": "integer",
++			"minimum": 0,
++			"maximum": 2147483647
++		},
++		"xfs_rgnumber_t": {
++			"description": "Realtime allocation group number",
++			"type": "integer",
++			"minimum": 0,
++			"maximum": 2147483647
++		},
++		"xfs_ino_t": {
++			"description": "Inode number",
++			"type": "integer",
++			"minimum": 1
++		},
++		"i_generation": {
++			"description": "Inode generation number",
 +			"type": "integer"
 +		}
 +	},
 +
-+	"$comment": "Event types are defined here.",
-+	"$events": {
-+		"lost": {
-+			"title": "Health Monitoring Events Lost",
++	"$comment": "Filesystem metadata event data are defined here.",
++	"$metadata": {
++		"status": {
++			"description": "Metadata health status",
 +			"$comment": [
-+				"Previous health monitoring events were",
-+				"dropped due to memory allocation failures",
-+				"or queue limits."
++				"One of:",
++				"",
++				" * sick:    metadata corruption discovered",
++				"            during a runtime operation.",
++				" * corrupt: corruption discovered during",
++				"            an xfs_scrub run.",
++				" * healthy: metadata object was found to be",
++				"            ok by xfs_scrub."
++			],
++			"enum": [
++				"sick",
++				"corrupt",
++				"healthy"
++			]
++		},
++		"fs": {
++			"description": [
++				"Metadata structures that affect the entire",
++				"filesystem.  Options include:",
++				"",
++				" * fscounters: summary counters",
++				" * usrquota:   user quota records",
++				" * grpquota:   group quota records",
++				" * prjquota:   project quota records",
++				" * quotacheck: quota counters",
++				" * nlinks:     file link counts",
++				" * metadir:    metadata directory",
++				" * metapath:   metadata inode paths"
++			],
++			"enum": [
++				"fscounters",
++				"grpquota",
++				"metadir",
++				"metapath",
++				"nlinks",
++				"prjquota",
++				"quotacheck",
++				"usrquota"
++			]
++		},
++		"perag": {
++			"description": [
++				"Metadata structures owned by allocation",
++				"groups on the data device.  Options include:",
++				"",
++				" * agf:        group space header",
++				" * agfl:       per-group free block list",
++				" * agi:        group inode header",
++				" * bnobt:      free space by position btree",
++				" * cntbt:      free space by length btree",
++				" * finobt:     free inode btree",
++				" * inobt:      inode btree",
++				" * rmapbt:     reverse mapping btree",
++				" * refcountbt: reference count btree",
++				" * inodes:     problems were recorded for",
++				"               this group's inodes, but the",
++				"               inodes themselves had to be",
++				"               reclaimed.",
++				" * super:      superblock"
++			],
++			"enum": [
++				"agf",
++				"agfl",
++				"agi",
++				"bnobt",
++				"cntbt",
++				"finobt",
++				"inobt",
++				"inodes",
++				"refcountbt",
++				"rmapbt",
++				"super"
++			]
++		},
++		"rtgroup": {
++			"description": [
++				"Metadata structures owned by allocation",
++				"groups on the realtime volume.  Options",
++				"include:",
++				"",
++				" * bitmap:     free space bitmap contents",
++				"               for this group",
++				" * summary:    realtime free space summary file",
++				" * rmapbt:     reverse mapping btree",
++				" * refcountbt: reference count btree",
++				" * super:      group superblock"
++			],
++			"enum": [
++				"bitmap",
++				"summary",
++				"refcountbt",
++				"rmapbt",
++				"super"
++			]
++		},
++		"inode": {
++			"description": [
++				"Metadata structures owned by file inodes.",
++				"Options include:",
++				"",
++				" * bmapbta:    attr fork",
++				" * bmapbtc:    cow fork",
++				" * bmapbtd:    data fork",
++				" * core:       inode record",
++				" * directory:  directory entries",
++				" * dirtree:    directory tree problems detected",
++				" * parent:     directory parent pointer",
++				" * symlink:    symbolic link target",
++				" * xattr:      extended attributes",
++				"",
++				"These are set when an inode record repair had",
++				"to drop the corresponding data structure to",
++				"get the inode back to a consistent state.",
++				"",
++				" * bmapbtd_zapped",
++				" * bmapbta_zapped",
++				" * directory_zapped",
++				" * symlink_zapped"
++			],
++			"enum": [
++				"bmapbta",
++				"bmapbta_zapped",
++				"bmapbtc",
++				"bmapbtd",
++				"bmapbtd_zapped",
++				"core",
++				"directory",
++				"directory_zapped",
++				"dirtree",
++				"parent",
++				"symlink",
++				"symlink_zapped",
++				"xattr"
++			]
+ 		}
+ 	},
+ 
+@@ -58,6 +233,159 @@
+ 				"time_ns",
+ 				"domain"
+ 			]
++		},
++		"fs_metadata": {
++			"title": "Filesystem-wide metadata event",
++			"description": [
++				"Health status updates for filesystem-wide",
++				"metadata objects."
 +			],
 +			"type": "object",
 +
 +			"properties": {
 +				"type": {
-+					"const": "lost"
++					"$ref": "#/$metadata/status"
 +				},
 +				"time_ns": {
 +					"$ref": "#/$defs/time_ns"
 +				},
 +				"domain": {
-+					"const": "mount"
++					"const": "fs"
++				},
++				"structures": {
++					"type": "array",
++					"items": {
++						"$ref": "#/$metadata/fs"
++					},
++					"minItems": 1
 +				}
 +			},
 +
 +			"required": [
 +				"type",
 +				"time_ns",
-+				"domain"
++				"domain",
++				"structures"
 +			]
-+		}
-+	}
-+}
++		},
++		"perag_metadata": {
++			"title": "Data device allocation group metadata event",
++			"description": [
++				"Health status updates for data device ",
++				"allocation group metadata."
++			],
++			"type": "object",
++
++			"properties": {
++				"type": {
++					"$ref": "#/$metadata/status"
++				},
++				"time_ns": {
++					"$ref": "#/$defs/time_ns"
++				},
++				"domain": {
++					"const": "perag"
++				},
++				"group": {
++					"$ref": "#/$defs/xfs_agnumber_t"
++				},
++				"structures": {
++					"type": "array",
++					"items": {
++						"$ref": "#/$metadata/perag"
++					},
++					"minItems": 1
++				}
++			},
++
++			"required": [
++				"type",
++				"time_ns",
++				"domain",
++				"group",
++				"structures"
++			]
++		},
++		"rtgroup_metadata": {
++			"title": "Realtime allocation group metadata event",
++			"description": [
++				"Health status updates for realtime allocation",
++				"group metadata."
++			],
++			"type": "object",
++
++			"properties": {
++				"type": {
++					"$ref": "#/$metadata/status"
++				},
++				"time_ns": {
++					"$ref": "#/$defs/time_ns"
++				},
++				"domain": {
++					"const": "rtgroup"
++				},
++				"group": {
++					"$ref": "#/$defs/xfs_rgnumber_t"
++				},
++				"structures": {
++					"type": "array",
++					"items": {
++						"$ref": "#/$metadata/rtgroup"
++					},
++					"minItems": 1
++				}
++			},
++
++			"required": [
++				"type",
++				"time_ns",
++				"domain",
++				"group",
++				"structures"
++			]
++		},
++		"inode_metadata": {
++			"title": "Inode metadata event",
++			"description": [
++				"Health status updates for inode metadata.",
++				"The inode and generation number describe the",
++				"file that is affected by the change."
++			],
++			"type": "object",
++
++			"properties": {
++				"type": {
++					"$ref": "#/$metadata/status"
++				},
++				"time_ns": {
++					"$ref": "#/$defs/time_ns"
++				},
++				"domain": {
++					"const": "inode"
++				},
++				"inumber": {
++					"$ref": "#/$defs/xfs_ino_t"
++				},
++				"generation": {
++					"$ref": "#/$defs/i_generation"
++				},
++				"structures": {
++					"type": "array",
++					"items": {
++						"$ref": "#/$metadata/inode"
++					},
++					"minItems": 1
++				}
++			},
++
++			"required": [
++				"type",
++				"time_ns",
++				"domain",
++				"inumber",
++				"generation",
++				"structures"
++			]
+ 		}
+ 	}
+ }
 
