@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FAC71B0421
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:55:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A7D29415
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:55:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735689332; cv=none; b=DzKwsRvs1HMnOQkXv/7pgMfwVZHRPyn6Fdrumol3c81h88z3/CMXAG4z/Kej4uqUoQn0VpxI4N15zklnMcS3JXLs4oxxn5wOBldRpy902o5x4voZwkYv2kgpQOwITwCsuFofmco+D2u8F2ak8WxdDrabwjJSykr87/DZZewhhsU=
+	t=1735689348; cv=none; b=FgqLcZhLbkoob3tCc+dK+jQf3eeBjbonxnWMOEQVqaTDkwUuRU+8YTZ1Ta3IePrwU2KBF72JKHutbSViDHlV8MdM/VwclGUdmhA/VsUt70SpNq4IxOODXAJmIJT4ty2gIl/7vfLZl9uf1xJJ4Xal3OZcfkZPX20EAZtRTERewGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735689332; c=relaxed/simple;
-	bh=yzfBUlqjSaOPjaCG0NSDV5KSqH6DRLWFFY3aTTMXITU=;
+	s=arc-20240116; t=1735689348; c=relaxed/simple;
+	bh=iW0VSLmxwouGLalyJTPjrXf3Oly3hMgfOoGGOwu7Ac4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hm9Li93YrblDvYSInBxaI48TybzOeOtTiDcF3GRLGKYldhx5u9TT8aiITzVvfnY9tJBMn5O28g4K3nFIIG1TKi8JUnwXSgf+WumPr9ERljHNBwrdEjvB6iFP3fammggEdWyTHZMhMoqCf6kQm3FjNLTTrYxva59mGBswwy6fT4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pXcO71bh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=sE8/HRJ+EGmJMpaU2J0BQzx7g3+JM79USfEwFGuZ4hDLv3EvfkRXrqua6DWbqSRDqjsO625/WUVvjQYkJ4qNFglwfeBp8q5vATSt9wQPSOLI0B4xSVavCsQlq8l9PARTpstGBVTl+x43kVbLGo2QHj7M0P7kSKQIcmxVtOPT7uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N77OdRyT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pXcO71bh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B3B9C4CED2;
-	Tue, 31 Dec 2024 23:55:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N77OdRyT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA56BC4CED2;
+	Tue, 31 Dec 2024 23:55:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735689332;
-	bh=yzfBUlqjSaOPjaCG0NSDV5KSqH6DRLWFFY3aTTMXITU=;
+	s=k20201202; t=1735689347;
+	bh=iW0VSLmxwouGLalyJTPjrXf3Oly3hMgfOoGGOwu7Ac4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pXcO71bhZgvQ27CDCqp+WuB5hsbp5zYREE2To5zPKp5OR4+h1HNl45YjE/mAjiv5l
-	 ngo4EtLPTYvleSlfQU37yPva/BOIhGK7JwtdDA4fM4A7iQc0YreCHGqiXr871MfpAo
-	 sQNUUHl30tFXNmOq1Q2KxmUTX16VY9zkDyWWd98xO5dgy3pwUHwy20oks/lJaHXMst
-	 S7c0tA9ryoN4CuGhTiY/xScrP+hnyQotPIKfzZbfxc2CV9ZavJ14grO2Xo0nE2pLNZ
-	 u3hbd49yVWYoGqRbkhI7XdX19wjlkrwKqVfsk4thiHYH2+cS8xwSHozf/uhwLU6H25
-	 SfBVT6Jqjrz5Q==
-Date: Tue, 31 Dec 2024 15:55:31 -0800
-Subject: [PATCH 09/10] xfs_repair: skip free space checks when upgrading
+	b=N77OdRyTv3wnn41dD56tZbC/J8MSXOrTBHYgRupnHFwTb8nTk6MgHlK7OodJpAGnJ
+	 qcvBFMtHrm5s7iodyko8OiVyWkX+7BuDpjGg3y2LAu8ATPkLrZu1wndvxiWctkR5bD
+	 5rm7FLCDAJ2aqj9G+c7tM+QdRIAXlakaAB6bI1A9fQYyoiM42zJEuQXep5Y2BSnRSK
+	 MmE2AFv7LXrrc370AB/P7SoAnzMZJQLfcxUu5dUJ47D9C5bBJ/Wgu/S+oNKN29rDOJ
+	 EY+cf4wOKk4v/f70qMT5PZc0QN/tLPJMZi+79dWBE8tdNKUuJl6EflLtlvub9+T7s0
+	 zM0zK1LyWw+gA==
+Date: Tue, 31 Dec 2024 15:55:47 -0800
+Subject: [PATCH 10/10] xfs_repair: allow adding rmapbt to reflink filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173568779272.2710949.2287968490226708363.stgit@frogsfrogsfrogs>
+Message-ID: <173568779287.2710949.3018758018747416020.stgit@frogsfrogsfrogs>
 In-Reply-To: <173568779121.2710949.16873326283859979950.stgit@frogsfrogsfrogs>
 References: <173568779121.2710949.16873326283859979950.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,87 +45,89 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a debug knob to disable the free space checks when upgrading a
-system.  This is extremely risky and will cause severe tire damage!!!
+New debugging knob so that I can upgrade a filesystem to have rmap
+btrees even if reflink was already enabled.  We cannot easily precompute
+the space requirements, so this is dangerous.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
  repair/globals.c    |    1 +
  repair/globals.h    |    1 +
- repair/phase2.c     |    2 ++
+ repair/phase2.c     |    3 ++-
  repair/xfs_repair.c |   11 +++++++++++
- 4 files changed, 15 insertions(+)
+ 4 files changed, 15 insertions(+), 1 deletion(-)
 
 
 diff --git a/repair/globals.c b/repair/globals.c
-index 603fea73da1654..fe9f9ac5914bb0 100644
+index fe9f9ac5914bb0..f4f1d317917183 100644
 --- a/repair/globals.c
 +++ b/repair/globals.c
-@@ -48,6 +48,7 @@ char	*rt_name;		/* Name of realtime device */
- int	rt_spec;		/* Realtime dev specified as option */
+@@ -49,6 +49,7 @@ int	rt_spec;		/* Realtime dev specified as option */
  int	convert_lazy_count;	/* Convert lazy-count mode on/off */
  int	lazy_count;		/* What to set if to if converting */
-+bool	skip_freesp_check_on_upgrade; /* do not enable */
+ bool	skip_freesp_check_on_upgrade; /* do not enable */
++bool	allow_rmapbt_upgrade_with_reflink; /* add rmapbt when reflink already on */
  bool	features_changed;	/* did we change superblock feature bits? */
  bool	add_inobtcount;		/* add inode btree counts to AGI */
  bool	add_bigtime;		/* add support for timestamps up to 2486 */
 diff --git a/repair/globals.h b/repair/globals.h
-index 9211e5e2432c9a..c660971080f7e4 100644
+index c660971080f7e4..febbbbcc81f931 100644
 --- a/repair/globals.h
 +++ b/repair/globals.h
-@@ -89,6 +89,7 @@ extern char	*rt_name;		/* Name of realtime device */
- extern int	rt_spec;		/* Realtime dev specified as option */
+@@ -90,6 +90,7 @@ extern int	rt_spec;		/* Realtime dev specified as option */
  extern int	convert_lazy_count;	/* Convert lazy-count mode on/off */
  extern int	lazy_count;		/* What to set if to if converting */
-+extern bool	skip_freesp_check_on_upgrade; /* do not enable */
+ extern bool	skip_freesp_check_on_upgrade; /* do not enable */
++extern bool	allow_rmapbt_upgrade_with_reflink; /* add rmapbt when reflink already on */
  extern bool	features_changed;	/* did we change superblock feature bits? */
  extern bool	add_inobtcount;		/* add inode btree counts to AGI */
  extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
 diff --git a/repair/phase2.c b/repair/phase2.c
-index 8dc936b572196e..780294d24c9900 100644
+index 780294d24c9900..29a406f69ca3a1 100644
 --- a/repair/phase2.c
 +++ b/repair/phase2.c
-@@ -688,6 +688,8 @@ need_check_fs_free_space(
- 	struct xfs_mount		*mp,
- 	const struct check_state	*old)
- {
-+	if (skip_freesp_check_on_upgrade)
-+		return false;
- 	if (xfs_has_finobt(mp) && !(old->features & XFS_FEAT_FINOBT))
- 		return true;
- 	if (xfs_has_reflink(mp) && !(old->features & XFS_FEAT_REFLINK))
+@@ -283,7 +283,8 @@ set_rmapbt(
+ 		exit(0);
+ 	}
+ 
+-	if (xfs_has_reflink(mp) && !add_reflink) {
++	if (xfs_has_reflink(mp) && !add_reflink &&
++	    !allow_rmapbt_upgrade_with_reflink) {
+ 		printf(
+ 	_("Reverse mapping btrees cannot be added when reflink is enabled.\n"));
+ 		exit(0);
 diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index d4101f7d2297d7..55e417201b34f7 100644
+index 55e417201b34f7..4cff11d81d6bcb 100644
 --- a/repair/xfs_repair.c
 +++ b/repair/xfs_repair.c
-@@ -46,6 +46,7 @@ enum o_opt_nums {
- 	BLOAD_LEAF_SLACK,
+@@ -47,6 +47,7 @@ enum o_opt_nums {
  	BLOAD_NODE_SLACK,
  	NOQUOTA,
-+	SKIP_FREESP_CHECK,
+ 	SKIP_FREESP_CHECK,
++	ALLOW_RMAPBT_UPGRADE_WITH_REFLINK,
  	O_MAX_OPTS,
  };
  
-@@ -59,6 +60,7 @@ static char *o_opts[] = {
- 	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
+@@ -61,6 +62,7 @@ static char *o_opts[] = {
  	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
  	[NOQUOTA]		= "noquota",
-+	[SKIP_FREESP_CHECK]	= "debug_skip_freesp_check_on_upgrade",
+ 	[SKIP_FREESP_CHECK]	= "debug_skip_freesp_check_on_upgrade",
++	[ALLOW_RMAPBT_UPGRADE_WITH_REFLINK] = "debug_allow_rmapbt_upgrade_with_reflink",
  	[O_MAX_OPTS]		= NULL,
  };
  
-@@ -323,6 +325,15 @@ process_args(int argc, char **argv)
- 				case NOQUOTA:
- 					quotacheck_skip();
+@@ -334,6 +336,15 @@ process_args(int argc, char **argv)
+ 						do_log(
+ 		_("WARNING: Allowing filesystem upgrades to proceed without free space check.  THIS MAY DESTROY YOUR FILESYSTEM!!!\n"));
  					break;
-+				case SKIP_FREESP_CHECK:
++				case ALLOW_RMAPBT_UPGRADE_WITH_REFLINK:
 +					if (!val)
 +						do_abort(
-+		_("-o debug_skip_freesp_check_on_upgrade requires a parameter\n"));
-+					skip_freesp_check_on_upgrade = (int)strtol(val, NULL, 0);
-+					if (skip_freesp_check_on_upgrade)
++		_("-o debug_allow_rmapbt_upgrade_with_reflink requires a parameter\n"));
++					allow_rmapbt_upgrade_with_reflink = (int)strtol(val, NULL, 0);
++					if (allow_rmapbt_upgrade_with_reflink)
 +						do_log(
-+		_("WARNING: Allowing filesystem upgrades to proceed without free space check.  THIS MAY DESTROY YOUR FILESYSTEM!!!\n"));
++		_("WARNING: Allowing filesystem upgrade to rmapbt when reflink enabled.  THIS MAY DESTROY YOUR FILESYSTEM!!!\n"));
 +					break;
  				default:
  					unknown('o', val);
