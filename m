@@ -1,40 +1,71 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5295F13C9C4
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 02:39:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 910E22A1BA
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 22:11:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735612750; cv=none; b=nhwJui+o9RE8lIIi0Uo4jWiUcQNPAyIlNesbyNDoXC6UQYl1CoPxxzcQGlmhkGYh4ti2J3nIo5knPwYgbxPVzUT3uelIuhhqWh5toU4fdNfYNlQxVSSwGzKNnYtiZmN+5w+o7pF+eRi3Zl2vLf+o7CUsrPXARTu18uJFEnCYzV0=
+	t=1735683095; cv=none; b=LUXGb7RGX+8mvLmSapI8rkKMq/4cXn/yg5zRAESmYI8adKKPgSwNps1wa3lCPv/g1d/nHufQJcMQ20IHvg9GJFUAAWaYygwUg6U5Qi+7tjz2ZnasCTzzbz2+1Wh7FwWlQ7bJs7rqG4AGVLquDuyvhmGUVz4EwR41fsy7cOq7QwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735612750; c=relaxed/simple;
-	bh=hSXbnmhzaUjhg5HZgrHHGvRWP022yZXfV24xLgETBHU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QEtbGOuP2PrPMWADdHdof3J9j4lag3ncdz1fp+pitUXWbXNylKFsiO8SqEhVuyhG0D3Gq2CWqN7UolZeXX+tNKKe3IVErVox9gxBnF5tgvjLA5qCsUOKiygqRAbC0oYZynJqCGxtQsY/UkZ2nqutCzOpXU3iy/77dx01R9l2txU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4YMcXv2H4bz2DjY2;
-	Tue, 31 Dec 2024 10:36:15 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 237BD180044;
-	Tue, 31 Dec 2024 10:39:06 +0800 (CST)
-Received: from huawei.com (10.175.104.67) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 31 Dec
- 2024 10:39:05 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: [PATCH 2/2] xfs: fix mount hang during primary superblock recovery failure
-Date: Tue, 31 Dec 2024 10:34:23 +0800
-Message-ID: <20241231023423.656128-3-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20241231023423.656128-1-leo.lilong@huawei.com>
-References: <20241231023423.656128-1-leo.lilong@huawei.com>
+	s=arc-20240116; t=1735683095; c=relaxed/simple;
+	bh=ZVaNg3S6UjpGf3VoDIcfaUivNWRYRH8ar0eusUvKQyo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Dt46nybJ2PmZcmKK/MO5Wexu6qTexGk8ATLXlYyND+aR/LQnI2B7m0sOg0/2ZoP4BQyPsL189/BGCxIQiBRbuYCuZgrjRkaQs2QsTXZlIWvz6XZm0taryaonsYf7UCG6LKLxpUauguwIbYxJX3dPn1PGcfZOGfu/9wwvTAZe9iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FV3/JQw8; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FV3/JQw8"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2165cb60719so139176065ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 14:11:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1735683094; x=1736287894; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZVaNg3S6UjpGf3VoDIcfaUivNWRYRH8ar0eusUvKQyo=;
+        b=FV3/JQw8zMBWHOLmRn4jXA0Es344LrOu4PYjCA4ABdfDw7GZIUd56jEt8p9QH0HjSt
+         E5ACBmXredeGz6ugZedw4+SKA99NvYbC1lTiTZaWpAO8IDd0USgcQshV61eucXdMlism
+         LujIpcLpadAqoeFd+l4AzHi+rgg2pfjclc59zx12VykrvBNfGIU9ap11N+r8B1XXihnG
+         GBgfMPO/IgnDKxWUHMdCEC6rdFmkDsTwh/J6p28fcAzDdnWKA7gAdyi1ZO47OWj8xkpy
+         eJ14t6umXUqwk6W38sfwhk/hFvkwepoARVFqd9Nnfk/Uhko49ZT49ixo20CcSf4F3WPY
+         jBIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735683094; x=1736287894;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ZVaNg3S6UjpGf3VoDIcfaUivNWRYRH8ar0eusUvKQyo=;
+        b=KivhETSnYmwDy6sQhT0okH9wa4g1Q30smL/6f6SxZGY7Uflw3bGvV/oJ2cDHuOLqi/
+         xeLtJHLwlBo1kJ234RiatkQS1sFj5ybCaAgLKxn8JaMMLzM7VpnKgLN2ZesDmU+6bPrk
+         2k/W2a/usAXH9H3X1ZDlB/snT0oirAtF1VnLEVqi12OTaW+dSsZI+XQY429hS9aUySQj
+         65ljd58ljmSYDpUGPzlkLGA7BuQJRo5hcgv3wR/s1bKQeWBYqOVSQ4teoBaKIe9+EVnl
+         yxIC6Te/zHCEqjxQqClghVZOLnf9TuHZzXnNCw2b2EB2hO7sPp2v/savqAnv8S/QwrSl
+         Z5GA==
+X-Gm-Message-State: AOJu0YynGGLnHkW7V4PFCAvkKeKpnsJMjXBy3g60wcQ3x1Ml/zfJmIiF
+	/ucmRWw1FDsPLtKXHcJR+ZEnuYwrbgayHFmKXOGNdLHS7d2YlTPV
+X-Gm-Gg: ASbGncvBY/XCfztD8W1r3ziQ7dJPZ1zQ77Nfbwo9L9dqikKzrfIh75+R1mmUz99U0Xd
+	+pVcCltrOPSgQYzlHzcVB9nvUiDDUzinNCzLJRbFZMcg+moj4uZS3ynaDSyCwFO2R238HvZ1PRb
+	C4Ipmj0mntjMD33jZ2W6Bn2+UgJRrZh4ebyvTIrFc0IuVNw2o7g/rlCl1edJQWPW0nA0osaai4h
+	KBr/ZJZz7koiE5kX7HdifNktjkTStFOYpXcSckBAA/4TCQisGln6/XVjKMgCdaJRKi66P8wfDVl
+	U18YNRrwiEYmbcA8Tu/a9PM=
+X-Google-Smtp-Source: AGHT+IFA9KCNeN1Xw/pvlyiq2Go4E1Z7nzM1WpdRVcEKxqYrhT5Klgim8x4QxdxmvP4P04GrKLxQPA==
+X-Received: by 2002:a05:6a21:8dc2:b0:1e1:ccf3:a72 with SMTP id adf61e73a8af0-1e5e07ffd40mr61162084637.28.1735683093679;
+        Tue, 31 Dec 2024 14:11:33 -0800 (PST)
+Received: from perforce2 (75-4-202-173.lightspeed.sntcca.sbcglobal.net. [75.4.202.173])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72ac3214f81sm19376795b3a.166.2024.12.31.14.11.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 31 Dec 2024 14:11:33 -0800 (PST)
+Received: by perforce2 (sSMTP sendmail emulation); Tue, 31 Dec 2024 14:11:31 -0800
+From: Marco Nelissen <marco.nelissen@gmail.com>
+To: bugzilla-daemon@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [Bug 219504] New: XFS crashes with kernel Version > 6.1.91. Perhaps Changes in kernel 6.1.92 for XFS/iomap causing the problems?
+Date: Tue, 31 Dec 2024 14:11:31 -0800
+Message-ID: <20241231221131.1058759-1-marco.nelissen@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <bug-219504-201763@https.bugzilla.kernel.org/>
+References: <bug-219504-201763@https.bugzilla.kernel.org/>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,74 +73,14 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemf500017.china.huawei.com (7.185.36.126)
 
-When mounting an image containing a log with sb modifications that require
-log replay, the mount process hang all the time and stack as follows:
-
-  [root@localhost ~]# cat /proc/557/stack
-  [<0>] xfs_buftarg_wait+0x31/0x70
-  [<0>] xfs_buftarg_drain+0x54/0x350
-  [<0>] xfs_mountfs+0x66e/0xe80
-  [<0>] xfs_fs_fill_super+0x7f1/0xec0
-  [<0>] get_tree_bdev_flags+0x186/0x280
-  [<0>] get_tree_bdev+0x18/0x30
-  [<0>] xfs_fs_get_tree+0x1d/0x30
-  [<0>] vfs_get_tree+0x2d/0x110
-  [<0>] path_mount+0xb59/0xfc0
-  [<0>] do_mount+0x92/0xc0
-  [<0>] __x64_sys_mount+0xc2/0x160
-  [<0>] x64_sys_call+0x2de4/0x45c0
-  [<0>] do_syscall_64+0xa7/0x240
-  [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
-
-During log recovery, while updating the in-memory superblock from the
-primary SB buffer, if an error is encountered, such as superblock
-corruption occurs or some other reasons, we will proceed to out_release
-and release the xfs_buf. However, this is insufficient because the
-xfs_buf's log item has already been initialized and the xfs_buf is held
-by the buffer log item as follows, the xfs_buf will not be released,
-causing the mount thread to hang.
-
-  xlog_recover_do_primary_sb_buffer
-    xlog_recover_do_reg_buffer
-      xlog_recover_validate_buf_type
-        xfs_buf_item_init(bp, mp)
-
-The solution is straightforward: we simply need to allow it to be
-handled by the normal buffer write process. The filesystem will be
-shutdown before the submission of buffer_list in xlog_do_recovery_pass(),
-ensuring the correct release of the xfs_buf.
-
-Fixes: 6a18765b54e2 ("xfs: update the file system geometry after recoverying superblock buffers")
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/xfs_buf_item_recover.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 3d0c6402cb36..ec2a42ef66ff 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -1079,7 +1079,7 @@ xlog_recover_buf_commit_pass2(
- 		error = xlog_recover_do_primary_sb_buffer(mp, item, bp, buf_f,
- 				current_lsn);
- 		if (error)
--			goto out_release;
-+			goto out_writebuf;
- 
- 		/* Update the rt superblock if we have one. */
- 		if (xfs_has_rtsb(mp) && mp->m_rtsb_bp) {
-@@ -1096,6 +1096,7 @@ xlog_recover_buf_commit_pass2(
- 		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
- 	}
- 
-+out_writebuf:
- 	/*
- 	 * Perform delayed write on the buffer.  Asynchronous writes will be
- 	 * slower when taking into account all the buffers to be flushed.
--- 
-2.39.2
-
+With the big caveat that I'm completely unfamiliar with this code, it seems
+to me the problem is that here:
+https://github.com/torvalds/linux/blame/ccb98ccef0e543c2bd4ef1a72270461957f3d8d0/mm/filemap.c#L2989
+"bsz" is a 32-bit type on 32-bit kernels, and so when it gets used later
+in that same function to mask the 64-bit "start" value with "~(bsz - 1)",
+it's effectively truncating "start" to 32 bits.
+This is more or less confirmed by the actual values of "start_byte" and
+"punch_start_byte" when that WARN_ON_ONCE in buffer-io.c triggers, with
+one being (close to) a 32-bit truncated version of the other.
+Changing bsz to a 64-bit type fixes the problem for me.
