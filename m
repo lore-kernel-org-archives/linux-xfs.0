@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C0A3189BBB;
-	Tue, 31 Dec 2024 23:35:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A3C189BBB;
+	Tue, 31 Dec 2024 23:35:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735688113; cv=none; b=Gge9JXK7pgmj9akqMru0Y5YHlRZHwUKr9BexjAblpigR7xiu9aFD1+dtllPkL6D6OKpZGN4k65qvssFawqgv5Hjo3oWdxhY0FFTlznNS5jPymzeAmybjhWg65kGL6ELoKXQEMTBVcy1pdm00SDEIxDpBmHf/ffeX3FtF+Kq32c0=
+	t=1735688128; cv=none; b=b1xJA9yQte8JqwM2NaKZB1eU6YvWYdJLNMd/oeaCmm7q1T9sHC9zHr6tLjwSDqwr719KybNBkz3km+6X5LOOQK0YXh+P3omdlxRrykdfZ8gIXnIPzyAuHewPduICSXL7YjFrsqQiHEWzVIi0kJieZDxCJTuDxOGtHYgd/lsVLLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735688113; c=relaxed/simple;
-	bh=9jAeEHzN6Xx/7oHdXTT9SDTPZYKIagGmF+79rMqQ0Ew=;
+	s=arc-20240116; t=1735688128; c=relaxed/simple;
+	bh=bLYnoSpG/KqJ5UEmSQKOe6YodwF6pVox1tYH14JOt6U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ks5UbsLNQksU2K7eCNN2AwhQTJy50cSPhFH8KiVmmh2JOlWdt35dy0InQ4goW2xmr7BEfVkwj3pqlykwmuXVx7dPfyJbbLu90aI9Y3jVxdQzm/Aeb/x4lWNvX5lFB+oDSPGxkl2ltxVSbSKmlmhH9pA4ik50tiYLkzsXplHYv8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sup69Zu8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ocgVTxIf38qM/4iK6C8S52MxiRfopd4O1BE2bPePTpObBoPUt3j38/uwEuydNuuds3mM0+KPf1OqYy4I3hyQfNLQGcbNSf6RUm8zq/3i7Rcfcz1ybeYCK+JxJTUcy6jU9jyut99bNWkBoLbREjuC67cr7NXTbK4c6g4yWSvMw+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZBXgYUZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sup69Zu8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C2A9C4CED2;
-	Tue, 31 Dec 2024 23:35:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZBXgYUZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38437C4CED2;
+	Tue, 31 Dec 2024 23:35:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735688112;
-	bh=9jAeEHzN6Xx/7oHdXTT9SDTPZYKIagGmF+79rMqQ0Ew=;
+	s=k20201202; t=1735688128;
+	bh=bLYnoSpG/KqJ5UEmSQKOe6YodwF6pVox1tYH14JOt6U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Sup69Zu8llMsnMXdN5jH9mwXDZQZJC2CqcDIFMbpXjk96XB9N66aEtDFsZnynL0xY
-	 NnRPQlfDzHla/ptnyKAeZie48vQYU5QxQvewD+f5dcGTs3+HFNVXxr/N+2HEByKCRE
-	 xVAoPaBxJklvbXC7Q9d9FO5RKIUKBJn9yM5nSdL2loVet3a8stlLy5WwoaDk1LvQok
-	 jr4tR6NIRGCThqtjSsnOULFJSh5ggHMIanlIcBxcYU0FjbltXcuQrWQBjI9eo3Q/SW
-	 DYfYUAF4TsmpvtN/Ey6OCoMotuSiVYYnbHLnpKgOuctMHY2Pa24G/qGY1TVg0ljt3c
-	 hlOWm+adujVEQ==
-Date: Tue, 31 Dec 2024 15:35:12 -0800
-Subject: [PATCHSET 2/5] fstests: defragment free space
+	b=XZBXgYUZX+/aAqL3spli7kFpCGWDHkuyHCLsV7HZ+cTA0kEH7stNqbp4TETg2RV2z
+	 K8eSIw+qLd4vbIyEntkZkyWZsLZcHHgRHw3rEq3AaEuPhUXG4jQ/MAjqAlJXpmGLPp
+	 E+dAx898ROP8f0kgj4z7I5+c6LKgw+Z8bs77XKb7B69CipEanTYCGyusAmc+4HaIYp
+	 EKC51lTyP+ZeK6bv8lhbFFtGI1PLak4DairHPHgAIzc/tvh9ALIB9GoXf3xu1+TtIk
+	 LdKY3a0YwBlMsaHGm1cSYXhfJG42S+0ARB3+h4uI0EtIzsDvznl5Ex6J1Ktt39ZXi4
+	 i3fkPv4oVBl/Q==
+Date: Tue, 31 Dec 2024 15:35:27 -0800
+Subject: [PATCHSET 3/5] fstests: capture logs from mount failures
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173568782405.2712030.4766560864446006648.stgit@frogsfrogsfrogs>
+Message-ID: <173568782724.2712126.2021149328064840091.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241231232503.GU6174@frogsfrogsfrogs>
 References: <20241231232503.GU6174@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,22 +45,9 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-These patches contain experimental code to enable userspace to defragment
-the free space in a filesystem.  Two purposes are imagined for this
-functionality: clearing space at the end of a filesystem before
-shrinking it, and clearing free space in anticipation of making a large
-allocation.
-
-The first patch adds a new fallocate mode that allows userspace to
-allocate free space from the filesystem into a file.  The goal here is
-to allow the filesystem shrink process to prevent allocation from a
-certain part of the filesystem while a free space defragmenter evacuates
-all the files from the doomed part of the filesystem.
-
-The second patch amends the online repair system to allow the sysadmin
-to forcibly rebuild metadata structures, even if they're not corrupt.
-Without adding an ioctl to move metadata btree blocks, this is the only
-way to dislodge metadata.
+Whenever a mount fails, we should capture the kernel logs for the last
+few seconds before the failure.  If the test fails, retain the log
+contents for further analysis.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -70,26 +57,46 @@ Comments and questions are, as always, welcome.
 
 --D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=defrag-freespace
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=defrag-freespace
-
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=defrag-freespace
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=capture-mount-failures
 ---
 Commits in this patchset:
- * xfs: test clearing of free space
+ * treewide: convert all $MOUNT_PROG to _mount
+ * check: capture dmesg of mount failures if test fails
 ---
- common/rc          |    5 ++++
- tests/xfs/1400     |   52 +++++++++++++++++++++++++++++++++++++++
- tests/xfs/1400.out |    2 +
- tests/xfs/1401     |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1401.out |    2 +
- 5 files changed, 131 insertions(+)
- create mode 100755 tests/xfs/1400
- create mode 100644 tests/xfs/1400.out
- create mode 100755 tests/xfs/1401
- create mode 100644 tests/xfs/1401.out
+ check                  |   22 +++++++++++++++++++++-
+ common/btrfs           |    4 ++--
+ common/dmdelay         |    2 +-
+ common/dmerror         |    2 +-
+ common/dmlogwrites     |    2 +-
+ common/overlay         |    6 +++---
+ common/rc              |   26 +++++++++++++++++++++++++-
+ common/report          |    8 ++++++++
+ tests/btrfs/075        |    2 +-
+ tests/btrfs/208        |    2 +-
+ tests/ext4/032         |    2 +-
+ tests/generic/067      |    6 +++---
+ tests/generic/085      |    2 +-
+ tests/generic/361      |    2 +-
+ tests/generic/373      |    2 +-
+ tests/generic/374      |    2 +-
+ tests/generic/409      |    6 +++---
+ tests/generic/410      |    8 ++++----
+ tests/generic/411      |    8 ++++----
+ tests/generic/589      |    8 ++++----
+ tests/overlay/005      |    4 ++--
+ tests/overlay/025      |    2 +-
+ tests/overlay/035      |    2 +-
+ tests/overlay/062      |    2 +-
+ tests/overlay/083      |    6 +++---
+ tests/overlay/086      |   12 ++++++------
+ tests/selftest/008     |   20 ++++++++++++++++++++
+ tests/selftest/008.out |    1 +
+ tests/xfs/078          |    2 +-
+ tests/xfs/149          |    4 ++--
+ tests/xfs/289          |    4 ++--
+ tests/xfs/544          |    2 +-
+ 32 files changed, 128 insertions(+), 55 deletions(-)
+ create mode 100755 tests/selftest/008
+ create mode 100644 tests/selftest/008.out
 
