@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F44B13FD72;
-	Tue, 31 Dec 2024 23:34:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C0A3189BBB;
+	Tue, 31 Dec 2024 23:35:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735688097; cv=none; b=QF/wvNPN9fJKWDz8h5qfG2oppGC38XeJqzLimFKw8u4YBfF7poYPkyQ8S5A6wvQSjuW5/WTJ0XSqG0PBYCc6lFAVklMfiMmwqbgPDexj8kHZlGmXyhWRGcaz8lmnQAyUEGxvJPiQO2QMxBsQ+exBHN/WCF+G4bWrn2HRuwcSEYs=
+	t=1735688113; cv=none; b=Gge9JXK7pgmj9akqMru0Y5YHlRZHwUKr9BexjAblpigR7xiu9aFD1+dtllPkL6D6OKpZGN4k65qvssFawqgv5Hjo3oWdxhY0FFTlznNS5jPymzeAmybjhWg65kGL6ELoKXQEMTBVcy1pdm00SDEIxDpBmHf/ffeX3FtF+Kq32c0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735688097; c=relaxed/simple;
-	bh=WbIyTS2JlFS5hyHvvUSda567BswWPeE26o/lewb4h0E=;
+	s=arc-20240116; t=1735688113; c=relaxed/simple;
+	bh=9jAeEHzN6Xx/7oHdXTT9SDTPZYKIagGmF+79rMqQ0Ew=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XWAHRQg+IprqZWdGFLY1sMkw72fELOqrYY5yr8ua6zCcDW3kdqLtJZzDiYhtQ/fOYWc+Z5ZGLsKarDEW+vsmeh0UukNqXMJcqn827PzF2EW79Yx6RoMgHcJeJnEGpdQwpmF1qt8dvZU1c7i3u2kd8cqRNhDUeMJPI1bJnAui1I0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cq00stn4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Ks5UbsLNQksU2K7eCNN2AwhQTJy50cSPhFH8KiVmmh2JOlWdt35dy0InQ4goW2xmr7BEfVkwj3pqlykwmuXVx7dPfyJbbLu90aI9Y3jVxdQzm/Aeb/x4lWNvX5lFB+oDSPGxkl2ltxVSbSKmlmhH9pA4ik50tiYLkzsXplHYv8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sup69Zu8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cq00stn4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E19D7C4CED2;
-	Tue, 31 Dec 2024 23:34:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sup69Zu8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C2A9C4CED2;
+	Tue, 31 Dec 2024 23:35:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735688097;
-	bh=WbIyTS2JlFS5hyHvvUSda567BswWPeE26o/lewb4h0E=;
+	s=k20201202; t=1735688112;
+	bh=9jAeEHzN6Xx/7oHdXTT9SDTPZYKIagGmF+79rMqQ0Ew=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Cq00stn4n4F44MGUAVnJ4VtV2wvKA2R36GwUgOMTX560erThG/zs8AnhbaHuDbAIa
-	 Zq1nPNSQRyE2RaGwEs3tezYl+USe0QXO8F5iDIY57sj7Y9rOEODNjszSUmX9mlR2oK
-	 RTt08ClSeenAUmF/crlJnwP/e0pCHmAar1Kx830AXxE2AJ6zrATQyQH2lTKjvkDYXG
-	 yuPkO27ZoWEWuBrTwldKWYthpFZn53pYuOEV7HNv9mmpPykBNIp0MsnTq1dFMnrcLV
-	 slLzYjCeqFZcEFqFPO7y3cBt9faG0hdSBRxpOcgxECQwp1MBdMOdiZAFB1XBELZ5KM
-	 2v0TNVrwhVWVw==
-Date: Tue, 31 Dec 2024 15:34:56 -0800
-Subject: [PATCHSET 1/5] fstests: functional test for refcount reporting
+	b=Sup69Zu8llMsnMXdN5jH9mwXDZQZJC2CqcDIFMbpXjk96XB9N66aEtDFsZnynL0xY
+	 NnRPQlfDzHla/ptnyKAeZie48vQYU5QxQvewD+f5dcGTs3+HFNVXxr/N+2HEByKCRE
+	 xVAoPaBxJklvbXC7Q9d9FO5RKIUKBJn9yM5nSdL2loVet3a8stlLy5WwoaDk1LvQok
+	 jr4tR6NIRGCThqtjSsnOULFJSh5ggHMIanlIcBxcYU0FjbltXcuQrWQBjI9eo3Q/SW
+	 DYfYUAF4TsmpvtN/Ey6OCoMotuSiVYYnbHLnpKgOuctMHY2Pa24G/qGY1TVg0ljt3c
+	 hlOWm+adujVEQ==
+Date: Tue, 31 Dec 2024 15:35:12 -0800
+Subject: [PATCHSET 2/5] fstests: defragment free space
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173568781929.2711934.8784820316232821491.stgit@frogsfrogsfrogs>
+Message-ID: <173568782405.2712030.4766560864446006648.stgit@frogsfrogsfrogs>
 In-Reply-To: <20241231232503.GU6174@frogsfrogsfrogs>
 References: <20241231232503.GU6174@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,9 +45,22 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Add a short functional test for the new GETFSREFCOUNTS ioctl that allows
-userspace to query reference count information for a given range of
-physical blocks.
+These patches contain experimental code to enable userspace to defragment
+the free space in a filesystem.  Two purposes are imagined for this
+functionality: clearing space at the end of a filesystem before
+shrinking it, and clearing free space in anticipation of making a large
+allocation.
+
+The first patch adds a new fallocate mode that allows userspace to
+allocate free space from the filesystem into a file.  The goal here is
+to allow the filesystem shrink process to prevent allocation from a
+certain part of the filesystem while a free space defragmenter evacuates
+all the files from the doomed part of the filesystem.
+
+The second patch amends the online repair system to allow the sysadmin
+to forcibly rebuild metadata structures, even if they're not corrupt.
+Without adding an ioctl to move metadata btree blocks, this is the only
+way to dislodge metadata.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,22 +71,25 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=report-refcounts
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=defrag-freespace
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=report-refcounts
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=defrag-freespace
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=report-refcounts
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=defrag-freespace
 ---
 Commits in this patchset:
- * xfs: test output of new FSREFCOUNTS ioctl
+ * xfs: test clearing of free space
 ---
- common/rc           |    4 +
- doc/group-names.txt |    1 
- tests/xfs/1921      |  164 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1921.out  |    4 +
- 4 files changed, 171 insertions(+), 2 deletions(-)
- create mode 100755 tests/xfs/1921
- create mode 100644 tests/xfs/1921.out
+ common/rc          |    5 ++++
+ tests/xfs/1400     |   52 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1400.out |    2 +
+ tests/xfs/1401     |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1401.out |    2 +
+ 5 files changed, 131 insertions(+)
+ create mode 100755 tests/xfs/1400
+ create mode 100644 tests/xfs/1400.out
+ create mode 100755 tests/xfs/1401
+ create mode 100644 tests/xfs/1401.out
 
