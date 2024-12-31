@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86CF91B0414
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:36:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A45913FD72
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:37:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735688206; cv=none; b=SPlPzXVLxBZjZOLjo/g2NDcMJeLKvke9h79owfrwL3DJEsPC/5RaVzY8w/H4Dh1GPDDYl2xL8TMtBg4FBcu0gXKYW8Zkv2DIU7KyWSmxygns0gYT9ErIoK05cN1UjZCilrYAQiEXl4DdGbB7Rp/oQnSfT+El4nFQ2UFKEqQ/pNM=
+	t=1735688222; cv=none; b=to5cS93vHn+gQo/S0tEkQQbxmWc/KzBlsKHc2KgsK1MetWxLopKFUeV9t6rUE4ktTxaunWlNcE3etyLhAXrm6eKw0tnauLU+reasWCJT9Lsgg+AMP3d+luKUoI/BEE6kRsgi0xIdRQPBIevbwLnt9infhSpE5m38/qgW/Oz+nRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735688206; c=relaxed/simple;
-	bh=+nsrYd7PVYe0kY71D0x1k1ooyJxWxcs9yId12i/R52g=;
+	s=arc-20240116; t=1735688222; c=relaxed/simple;
+	bh=o7PgozDMRfY/4b6Kej8xtZlyJtoloTsaUj03lEDoUpA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hDBOzDqjfMVwiw+dNwDRFF8LYh7jz3qVXRHflafogwVzIO0gq3alcCtRDwXY1SVzI+CMKrKMJr2YSgJw+YToFLsviJmrRHOacFRF+ATbyyNPDEMyNOEa8Lg48OmWFYUaKQUpwSZMkmSwaGwOCY0TF1mLUG3a0l8pYlosgLdE524=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RDeJVepm; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YEsvFH22MpO/y8hFmoxSdkCc2w/fIB/S3QKofqYUCvvPKgCd4kj9rLiF/U05PoV403H+IgVH2tLitQCpODDRSdzW3hMmiSAFnwMV/0xVADUSTcnJA3/h/ngrm0AEL/+Q3tRry26zEqMNbBYvvr/lNKIHaL769LyD7hnKpSekV74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=spAakOFu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RDeJVepm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AC88C4CED2;
-	Tue, 31 Dec 2024 23:36:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="spAakOFu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03471C4CED2;
+	Tue, 31 Dec 2024 23:37:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735688206;
-	bh=+nsrYd7PVYe0kY71D0x1k1ooyJxWxcs9yId12i/R52g=;
+	s=k20201202; t=1735688222;
+	bh=o7PgozDMRfY/4b6Kej8xtZlyJtoloTsaUj03lEDoUpA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RDeJVepm6sR6zSiBp7CgKrHLUO775JS00eyNIKijKqexkbj+6STDe1DYzARCtdZUO
-	 0StMuQJgYOoskZZmjP3L1dUCCzfNHB5k/GephcMEQyiEP6LrbQK/ctgFP4QaKrCps0
-	 muabgheVqQvVMvqYrDJa8wH9o219yUhXKKoy180Kr+TNduQib+griwXQo/hFqAK8Zg
-	 0VrbbQZoIO345Uo14y2mzNrAsNEjWA/meg3hQOC4w3HJeTNo4Hd+UfQFRfSAu0668L
-	 EAPgoN7cAwV9dN9NuOKbe1FadgxyaTXB3UtWzzjbvljAA5r8pxV6Hz/kULyJPHYHK9
-	 9fnpn1Qd05kAQ==
-Date: Tue, 31 Dec 2024 15:36:45 -0800
-Subject: [PATCH 2/5] xfs: whine to dmesg when we encounter errors
+	b=spAakOFusA5TOUlEZyBftnxTS1beJ9g0I8aca5T3s+BTP8tYHT8RFFDGhOgK9kW5p
+	 cNLdGKbaZVVic6fNj3DIR+l2IBzGAR+qAHmdvRmUvBXAJ0RwDXZRi+ISUHmbhYKahq
+	 1NFZ+SYq8WAPSrhgsSAo1oOVwuYAL2gSv8OAGKj8KiVVP7xs74wr8WGqtp6CWeuSXl
+	 X23csDKK7ocozA2f3QMp/MTxfZuQbBRUPUK4c21a9OfF5ultzOTokSFs/3PI75z1iR
+	 0WeowipHr9YtmhBj6b9ve8GS5wM5vnxcv12e2MtlObR8KBS4mnXk1QjenwIFI6G6Ql
+	 2wALlxkmfKXUg==
+Date: Tue, 31 Dec 2024 15:37:01 -0800
+Subject: [PATCH 3/5] xfs: create a noalloc mode for allocation groups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173568753356.2704399.17776811706210627113.stgit@frogsfrogsfrogs>
+Message-ID: <173568753374.2704399.9022049113109750800.stgit@frogsfrogsfrogs>
 In-Reply-To: <173568753306.2704399.16022227525226280055.stgit@frogsfrogsfrogs>
 References: <173568753306.2704399.16022227525226280055.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,652 +45,302 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Forward everything scrub whines about to dmesg.
+Create a new noalloc state for the per-AG structure that will disable
+block allocation in this AG.  We accomplish this by subtracting from
+fdblocks all the free blocks in this AG, hiding those blocks from the
+allocator, and preventing freed blocks from updating fdblocks until
+we're ready to lift noalloc mode.
+
+Note that we reduce the free block count of the filesystem so that we
+can prevent transactions from entering the allocator looking for "free"
+space that we've turned off incore.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/Kconfig         |   13 ++++++
- fs/xfs/scrub/btree.c   |   89 +++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/common.c  |  107 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h  |    1 
- fs/xfs/scrub/dabtree.c |   24 +++++++++++
- fs/xfs/scrub/inode.c   |    4 ++
- fs/xfs/scrub/scrub.c   |   40 ++++++++++++++++++
- fs/xfs/scrub/trace.c   |   22 ++++++++++
- fs/xfs/scrub/trace.h   |    2 +
- fs/xfs/xfs_globals.c   |    5 ++
- fs/xfs/xfs_sysctl.h    |    1 
- fs/xfs/xfs_sysfs.c     |   32 ++++++++++++++
- 12 files changed, 338 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c      |   60 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h      |    8 ++++++
+ fs/xfs/libxfs/xfs_ag_resv.c |   27 +++++++++++++++++--
+ fs/xfs/scrub/fscounters.c   |    3 +-
+ fs/xfs/xfs_fsops.c          |   10 ++++++-
+ fs/xfs/xfs_super.c          |    1 +
+ fs/xfs/xfs_trace.h          |   46 +++++++++++++++++++++++++++++++++
+ 7 files changed, 150 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index fffd6fffdce0f0..5700bc671a0e92 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -172,6 +172,19 @@ config XFS_ONLINE_SCRUB_STATS
- 
- 	  If unsure, say N.
- 
-+config XFS_ONLINE_SCRUB_WHINE
-+	bool "XFS online metadata verbose logging by default"
-+	default n
-+	depends on XFS_ONLINE_SCRUB
-+	help
-+	  If you say Y here, the kernel will by default log the outcomes of all
-+	  scrub and repair operations, as well as any corruptions found.  This
-+	  may slow down scrub due to printk logging overhead timers.
-+
-+	  This value can be changed by editing /sys/fs/xfs/debug/scrub_whine
-+
-+	  If unsure, say N.
-+
- config XFS_ONLINE_REPAIR
- 	bool "XFS online metadata repair support"
- 	default n
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index fe678a0438bc5c..e455eef892faec 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -11,6 +11,8 @@
- #include "xfs_mount.h"
- #include "xfs_inode.h"
- #include "xfs_btree.h"
-+#include "xfs_log_format.h"
-+#include "xfs_ag.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/btree.h"
-@@ -18,6 +20,62 @@
- 
- /* btree scrubbing */
- 
-+/* Figure out which block the btree cursor was pointing to. */
-+static inline xfs_fsblock_t
-+xchk_btree_cur_fsbno(
-+	struct xfs_btree_cur		*cur,
-+	int				level)
-+{
-+	if (level < cur->bc_nlevels && cur->bc_levels[level].bp)
-+		return XFS_DADDR_TO_FSB(cur->bc_mp,
-+				xfs_buf_daddr(cur->bc_levels[level].bp));
-+	else if (level == cur->bc_nlevels - 1 &&
-+		 cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
-+		return XFS_INO_TO_FSB(cur->bc_mp, cur->bc_ino.ip->i_ino);
-+	else if (cur->bc_group)
-+		return xfs_gbno_to_fsb(cur->bc_group, 0);
-+	return NULLFSBLOCK;
-+}
-+
-+static inline void
-+process_error_whine(
-+	struct xfs_scrub	*sc,
-+	struct xfs_btree_cur	*cur,
-+	int			level,
-+	int			*error,
-+	__u32			errflag,
-+	void			*ret_ip)
-+{
-+	xfs_fsblock_t		fsbno = xchk_btree_cur_fsbno(cur, level);
-+
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE) {
-+		xchk_whine(sc->mp, "ino 0x%llx fork %d type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x error %d errflag 0x%x ret_ip %pS",
-+				cur->bc_ino.ip->i_ino,
-+				cur->bc_ino.whichfork,
-+				xchk_type_string(sc->sm->sm_type),
-+				cur->bc_ops->name,
-+				level,
-+				cur->bc_levels[level].ptr,
-+				XFS_FSB_TO_AGNO(cur->bc_mp, fsbno),
-+				XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno),
-+				*error,
-+				errflag,
-+				ret_ip);
-+		return;
-+	}
-+
-+	xchk_whine(sc->mp, "type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x error %d errflag 0x%x ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type),
-+			cur->bc_ops->name,
-+			level,
-+			cur->bc_levels[level].ptr,
-+			XFS_FSB_TO_AGNO(cur->bc_mp, fsbno),
-+			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno),
-+			*error,
-+			errflag,
-+			ret_ip);
-+}
-+
- /*
-  * Check for btree operation errors.  See the section about handling
-  * operational errors in common.c.
-@@ -44,9 +102,13 @@ __xchk_btree_process_error(
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
-+		process_error_whine(sc, cur, level, error, errflag, ret_ip);
- 		*error = 0;
- 		fallthrough;
- 	default:
-+		if (*error)
-+			process_error_whine(sc, cur, level, error, errflag,
-+					ret_ip);
- 		if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
- 			trace_xchk_ifork_btree_op_error(sc, cur, level,
- 					*error, ret_ip);
-@@ -91,12 +153,35 @@ __xchk_btree_set_corrupt(
- {
- 	sc->sm->sm_flags |= errflag;
- 
--	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE)
-+	if (cur->bc_ops->type == XFS_BTREE_TYPE_INODE) {
-+		xfs_fsblock_t fsbno = xchk_btree_cur_fsbno(cur, level);
-+		xchk_whine(sc->mp, "ino 0x%llx fork %d type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x errflag 0x%x ret_ip %pS",
-+				cur->bc_ino.ip->i_ino,
-+				cur->bc_ino.whichfork,
-+				xchk_type_string(sc->sm->sm_type),
-+				cur->bc_ops->name,
-+				level,
-+				cur->bc_levels[level].ptr,
-+				XFS_FSB_TO_AGNO(cur->bc_mp, fsbno),
-+				XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno),
-+				errflag,
-+				ret_ip);
- 		trace_xchk_ifork_btree_error(sc, cur, level,
- 				ret_ip);
--	else
-+	} else {
-+		xfs_fsblock_t fsbno = xchk_btree_cur_fsbno(cur, level);
-+		xchk_whine(sc->mp, "type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x errflag 0x%x ret_ip %pS",
-+				xchk_type_string(sc->sm->sm_type),
-+				cur->bc_ops->name,
-+				level,
-+				cur->bc_levels[level].ptr,
-+				XFS_FSB_TO_AGNO(cur->bc_mp, fsbno),
-+				XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno),
-+				errflag,
-+				ret_ip);
- 		trace_xchk_btree_error(sc, cur, level,
- 				ret_ip);
-+	}
- }
- 
- void
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 28ad341df8eede..59c368c54a23f6 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -105,9 +105,23 @@ __xchk_process_error(
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
-+		xchk_whine(sc->mp, "type %s agno 0x%x agbno 0x%x error %d errflag 0x%x ret_ip %pS",
-+				xchk_type_string(sc->sm->sm_type),
-+				agno,
-+				bno,
-+				*error,
-+				errflag,
-+				ret_ip);
- 		*error = 0;
- 		fallthrough;
- 	default:
-+		if (*error)
-+			xchk_whine(sc->mp, "type %s agno 0x%x agbno 0x%x error %d ret_ip %pS",
-+					xchk_type_string(sc->sm->sm_type),
-+					agno,
-+					bno,
-+					*error,
-+					ret_ip);
- 		trace_xchk_op_error(sc, agno, bno, *error, ret_ip);
- 		break;
- 	}
-@@ -179,9 +193,25 @@ __xchk_fblock_process_error(
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
-+		xchk_whine(sc->mp, "ino 0x%llx fork %d type %s offset %llu error %d errflag 0x%x ret_ip %pS",
-+				sc->ip->i_ino,
-+				whichfork,
-+				xchk_type_string(sc->sm->sm_type),
-+				offset,
-+				*error,
-+				errflag,
-+				ret_ip);
- 		*error = 0;
- 		fallthrough;
- 	default:
-+		if (*error)
-+			xchk_whine(sc->mp, "ino 0x%llx fork %d type %s offset %llu error %d ret_ip %pS",
-+					sc->ip->i_ino,
-+					whichfork,
-+					xchk_type_string(sc->sm->sm_type),
-+					offset,
-+					*error,
-+					ret_ip);
- 		trace_xchk_file_op_error(sc, whichfork, offset, *error,
- 				ret_ip);
- 		break;
-@@ -253,6 +283,8 @@ xchk_set_corrupt(
- 	struct xfs_scrub	*sc)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	xchk_whine(sc->mp, "type %s ret_ip %pS", xchk_type_string(sc->sm->sm_type),
-+			__return_address);
- 	trace_xchk_fs_error(sc, 0, __return_address);
- }
- 
-@@ -264,6 +296,11 @@ xchk_block_set_corrupt(
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 	trace_xchk_block_error(sc, xfs_buf_daddr(bp), __return_address);
-+	xchk_whine(sc->mp, "type %s agno 0x%x agbno 0x%x ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type),
-+			xfs_daddr_to_agno(sc->mp, xfs_buf_daddr(bp)),
-+			xfs_daddr_to_agbno(sc->mp, xfs_buf_daddr(bp)),
-+			__return_address);
- }
- 
- #ifdef CONFIG_XFS_QUOTA
-@@ -275,6 +312,8 @@ xchk_qcheck_set_corrupt(
- 	xfs_dqid_t		id)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	xchk_whine(sc->mp, "type %s dqtype %u id %u ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type), dqtype, id, __return_address);
- 	trace_xchk_qcheck_error(sc, dqtype, id, __return_address);
- }
- #endif
-@@ -287,6 +326,11 @@ xchk_block_xref_set_corrupt(
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
- 	trace_xchk_block_error(sc, xfs_buf_daddr(bp), __return_address);
-+	xchk_whine(sc->mp, "type %s agno 0x%x agbno 0x%x ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type),
-+			xfs_daddr_to_agno(sc->mp, xfs_buf_daddr(bp)),
-+			xfs_daddr_to_agbno(sc->mp, xfs_buf_daddr(bp)),
-+			__return_address);
- }
- 
- /*
-@@ -300,6 +344,8 @@ xchk_ino_set_corrupt(
- 	xfs_ino_t		ino)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	xchk_whine(sc->mp, "ino 0x%llx type %s ret_ip %pS",
-+			ino, xchk_type_string(sc->sm->sm_type), __return_address);
- 	trace_xchk_ino_error(sc, ino, __return_address);
- }
- 
-@@ -310,6 +356,8 @@ xchk_ino_xref_set_corrupt(
- 	xfs_ino_t		ino)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	xchk_whine(sc->mp, "ino 0x%llx type %s ret_ip %pS",
-+			ino, xchk_type_string(sc->sm->sm_type), __return_address);
- 	trace_xchk_ino_error(sc, ino, __return_address);
- }
- 
-@@ -321,6 +369,12 @@ xchk_fblock_set_corrupt(
- 	xfs_fileoff_t		offset)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	xchk_whine(sc->mp, "ino 0x%llx fork %d type %s offset %llu ret_ip %pS",
-+			sc->ip->i_ino,
-+			whichfork,
-+			xchk_type_string(sc->sm->sm_type),
-+			offset,
-+			__return_address);
- 	trace_xchk_fblock_error(sc, whichfork, offset, __return_address);
- }
- 
-@@ -332,6 +386,12 @@ xchk_fblock_xref_set_corrupt(
- 	xfs_fileoff_t		offset)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	xchk_whine(sc->mp, "ino 0x%llx fork %d type %s offset %llu ret_ip %pS",
-+			sc->ip->i_ino,
-+			whichfork,
-+			xchk_type_string(sc->sm->sm_type),
-+			offset,
-+			__return_address);
- 	trace_xchk_fblock_error(sc, whichfork, offset, __return_address);
- }
- 
-@@ -345,6 +405,8 @@ xchk_ino_set_warning(
- 	xfs_ino_t		ino)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
-+	xchk_whine(sc->mp, "ino 0x%llx type %s ret_ip %pS",
-+			ino, xchk_type_string(sc->sm->sm_type), __return_address);
- 	trace_xchk_ino_warning(sc, ino, __return_address);
- }
- 
-@@ -356,6 +418,12 @@ xchk_fblock_set_warning(
- 	xfs_fileoff_t		offset)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
-+	xchk_whine(sc->mp, "ino 0x%llx fork %d type %s offset %llu ret_ip %pS",
-+			sc->ip->i_ino,
-+			whichfork,
-+			xchk_type_string(sc->sm->sm_type),
-+			offset,
-+			__return_address);
- 	trace_xchk_fblock_warning(sc, whichfork, offset, __return_address);
- }
- 
-@@ -1219,6 +1287,10 @@ xchk_iget_for_scrubbing(
- out_cancel:
- 	xchk_trans_cancel(sc);
- out_error:
-+	xchk_whine(mp, "type %s agno 0x%x agbno 0x%x error %d ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type), agno,
-+			XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino), error,
-+			__return_address);
- 	trace_xchk_op_error(sc, agno, XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
- 			error, __return_address);
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index b59cb461e096ea..1e65cd981afd49 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -976,3 +976,63 @@ xfs_ag_get_geometry(
+ 	xfs_buf_relse(agi_bp);
  	return error;
-@@ -1352,6 +1424,10 @@ xchk_should_check_xref(
- 	}
- 
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
-+	xchk_whine(sc->mp, "type %s xref error %d ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type),
-+			*error,
-+			__return_address);
- 	trace_xchk_xref_error(sc, *error, __return_address);
- 
- 	/*
-@@ -1383,6 +1459,11 @@ xchk_buffer_recheck(
- 		return;
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 	trace_xchk_block_error(sc, xfs_buf_daddr(bp), fa);
-+	xchk_whine(sc->mp, "type %s agno 0x%x agbno 0x%x ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type),
-+			xfs_daddr_to_agno(sc->mp, xfs_buf_daddr(bp)),
-+			xfs_daddr_to_agbno(sc->mp, xfs_buf_daddr(bp)),
-+			fa);
- }
- 
- static inline int
-@@ -1735,3 +1816,29 @@ xchk_inode_count_blocks(
- 	return xfs_bmap_count_blocks(sc->tp, sc->ip, whichfork, nextents,
- 			count);
  }
 +
-+/* Complain about failures... */
++/* How many blocks does this AG contribute to fdblocks? */
++xfs_extlen_t
++xfs_ag_fdblocks(
++	struct xfs_perag		*pag)
++{
++	xfs_extlen_t			ret;
++
++	ASSERT(xfs_perag_initialised_agf(pag));
++
++	ret = pag->pagf_freeblks + pag->pagf_flcount + pag->pagf_btreeblks;
++	ret -= pag->pag_meta_resv.ar_reserved;
++	ret -= pag->pag_rmapbt_resv.ar_orig_reserved;
++	return ret;
++}
++
++/*
++ * Hide all the free space in this AG.  Caller must hold both the AGI and the
++ * AGF buffers or have otherwise prevented concurrent access.
++ */
++int
++xfs_ag_set_noalloc(
++	struct xfs_perag	*pag)
++{
++	struct xfs_mount	*mp = pag_mount(pag);
++	int			error;
++
++	ASSERT(xfs_perag_initialised_agf(pag));
++	ASSERT(xfs_perag_initialised_agi(pag));
++
++	if (xfs_perag_prohibits_alloc(pag))
++		return 0;
++
++	error = xfs_dec_fdblocks(mp, xfs_ag_fdblocks(pag), false);
++	if (error)
++		return error;
++
++	trace_xfs_ag_set_noalloc(pag);
++	set_bit(XFS_AGSTATE_NOALLOC, &pag->pag_opstate);
++	return 0;
++}
++
++/*
++ * Unhide all the free space in this AG.  Caller must hold both the AGI and
++ * the AGF buffers or have otherwise prevented concurrent access.
++ */
 +void
-+xchk_whine(
-+	const struct xfs_mount	*mp,
-+	const char		*fmt,
-+	...)
++xfs_ag_clear_noalloc(
++	struct xfs_perag	*pag)
 +{
-+	struct va_format	vaf;
-+	va_list			args;
++	struct xfs_mount	*mp = pag_mount(pag);
 +
-+	if (!xfs_globals.scrub_whine)
++	if (!xfs_perag_prohibits_alloc(pag))
 +		return;
 +
-+	va_start(args, fmt);
++	xfs_add_fdblocks(mp, xfs_ag_fdblocks(pag));
 +
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	printk(KERN_INFO "XFS (%s) %pS: %pV\n", mp->m_super->s_id,
-+			__return_address, &vaf);
-+	va_end(args);
-+
-+	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
-+		xfs_stack_trace();
++	trace_xfs_ag_clear_noalloc(pag);
++	clear_bit(XFS_AGSTATE_NOALLOC, &pag->pag_opstate);
 +}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index bdcd40f0ec742c..4dc408b530153a 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -179,6 +179,7 @@ bool xchk_ilock_nowait(struct xfs_scrub *sc, unsigned int ilock_flags);
- void xchk_iunlock(struct xfs_scrub *sc, unsigned int ilock_flags);
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 1f24cfa2732172..e8fae59206d929 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -120,6 +120,7 @@ static inline xfs_agnumber_t pag_agno(const struct xfs_perag *pag)
+ #define XFS_AGSTATE_PREFERS_METADATA	2
+ #define XFS_AGSTATE_ALLOWS_INODES	3
+ #define XFS_AGSTATE_AGFL_NEEDS_RESET	4
++#define XFS_AGSTATE_NOALLOC		5
  
- void xchk_buffer_recheck(struct xfs_scrub *sc, struct xfs_buf *bp);
-+void xchk_whine(const struct xfs_mount *mp, const char *fmt, ...);
+ #define __XFS_AG_OPSTATE(name, NAME) \
+ static inline bool xfs_perag_ ## name (struct xfs_perag *pag) \
+@@ -132,6 +133,7 @@ __XFS_AG_OPSTATE(initialised_agi, AGI_INIT)
+ __XFS_AG_OPSTATE(prefers_metadata, PREFERS_METADATA)
+ __XFS_AG_OPSTATE(allows_inodes, ALLOWS_INODES)
+ __XFS_AG_OPSTATE(agfl_needs_reset, AGFL_NEEDS_RESET)
++__XFS_AG_OPSTATE(prohibits_alloc, NOALLOC)
  
+ int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t orig_agcount,
+ 		xfs_agnumber_t new_agcount, xfs_rfsblock_t dcount,
+@@ -164,6 +166,7 @@ xfs_perag_put(
+ 	xfs_group_put(pag_group(pag));
+ }
+ 
++
+ /* Active AG references */
+ static inline struct xfs_perag *
+ xfs_perag_grab(
+@@ -208,6 +211,11 @@ xfs_perag_next(
+ 	return xfs_perag_next_from(mp, pag, 0);
+ }
+ 
++/* Enable or disable allocation from an AG */
++xfs_extlen_t xfs_ag_fdblocks(struct xfs_perag *pag);
++int xfs_ag_set_noalloc(struct xfs_perag *pag);
++void xfs_ag_clear_noalloc(struct xfs_perag *pag);
++
  /*
-  * Grab the inode at @inum.  The caller must have created a scrub transaction
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index 056de4819f866d..ae64db9f0bba2b 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -47,9 +47,26 @@ xchk_da_process_error(
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		xchk_whine(sc->mp, "ino 0x%llx fork %d type %s dablk 0x%llx error %d ret_ip %pS",
-+				sc->ip->i_ino,
-+				ds->dargs.whichfork,
-+				xchk_type_string(sc->sm->sm_type),
-+				xfs_dir2_da_to_db(ds->dargs.geo,
-+					ds->state->path.blk[level].blkno),
-+				*error,
-+				__return_address);
- 		*error = 0;
- 		fallthrough;
- 	default:
-+		if (*error)
-+			xchk_whine(sc->mp, "ino 0x%llx fork %d type %s dablk 0x%llx error %d ret_ip %pS",
-+					sc->ip->i_ino,
-+					ds->dargs.whichfork,
-+					xchk_type_string(sc->sm->sm_type),
-+					xfs_dir2_da_to_db(ds->dargs.geo,
-+						ds->state->path.blk[level].blkno),
-+					*error,
-+					__return_address);
- 		trace_xchk_file_op_error(sc, ds->dargs.whichfork,
- 				xfs_dir2_da_to_db(ds->dargs.geo,
- 					ds->state->path.blk[level].blkno),
-@@ -72,6 +89,13 @@ xchk_da_set_corrupt(
- 
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 
-+	xchk_whine(sc->mp, "ino 0x%llx fork %d type %s dablk 0x%llx ret_ip %pS",
-+			sc->ip->i_ino,
-+			ds->dargs.whichfork,
-+			xchk_type_string(sc->sm->sm_type),
-+			xfs_dir2_da_to_db(ds->dargs.geo,
-+				ds->state->path.blk[level].blkno),
-+			__return_address);
- 	trace_xchk_fblock_error(sc, ds->dargs.whichfork,
- 			xfs_dir2_da_to_db(ds->dargs.geo,
- 				ds->state->path.blk[level].blkno),
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index bb3f475b63532e..a93f63b6b518ff 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -218,6 +218,10 @@ xchk_setup_inode(
- out_cancel:
- 	xchk_trans_cancel(sc);
- out_error:
-+	xchk_whine(mp, "type %s agno 0x%x agbno 0x%x error %d ret_ip %pS",
-+			xchk_type_string(sc->sm->sm_type), agno,
-+			XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino), error,
-+			__return_address);
- 	trace_xchk_op_error(sc, agno, XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
- 			error, __return_address);
- 	return error;
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 1a05c27ba47197..d3a4ddd918f621 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -639,6 +639,45 @@ xchk_scrub_create_subord(
- 	return sub;
- }
- 
-+static inline void
-+repair_outcomes(struct xfs_scrub *sc, int error)
-+{
-+	struct xfs_scrub_metadata *sm = sc->sm;
-+	const char *wut = NULL;
-+
-+	if (!xfs_globals.scrub_whine)
-+		return;
-+
-+	if (sc->flags & XREP_ALREADY_FIXED) {
-+		wut = "*** REPAIR SUCCESS";
-+		error = 0;
-+	} else if (error == -EBUSY) {
-+		wut = "??? FILESYSTEM BUSY";
-+	} else if (error == -EAGAIN) {
-+		wut = "??? REPAIR DEFERRED";
-+	} else if (error == -ECANCELED) {
-+		wut = "??? REPAIR CANCELLED";
-+	} else if (error == -EINTR) {
-+		wut = "??? REPAIR INTERRUPTED";
-+	} else if (error != -EOPNOTSUPP && error != -ENOENT) {
-+		wut = "!!! REPAIR FAILED";
-+		xfs_info(sc->mp,
-+"%s ino 0x%llx type %s agno 0x%x inum 0x%llx gen 0x%x flags 0x%x error %d",
-+				wut, XFS_I(file_inode(sc->file))->i_ino,
-+				xchk_type_string(sm->sm_type), sm->sm_agno,
-+				sm->sm_ino, sm->sm_gen, sm->sm_flags, error);
-+		return;
-+	} else {
-+		return;
-+	}
-+
-+	xfs_info_ratelimited(sc->mp,
-+"%s ino 0x%llx type %s agno 0x%x inum 0x%llx gen 0x%x flags 0x%x error %d",
-+			wut, XFS_I(file_inode(sc->file))->i_ino,
-+			xchk_type_string(sm->sm_type), sm->sm_agno, sm->sm_ino,
-+			sm->sm_gen, sm->sm_flags, error);
-+}
-+
- /* Dispatch metadata scrubbing. */
- STATIC int
- xfs_scrub_metadata(
-@@ -735,6 +774,7 @@ xfs_scrub_metadata(
- 		 * already tried to fix it, then attempt a repair.
- 		 */
- 		error = xrep_attempt(sc, &run);
-+		repair_outcomes(sc, error);
- 		if (error == -EAGAIN) {
- 			/*
- 			 * Either the repair function succeeded or it couldn't
-diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-index 2450e214103fed..4ea790e4063df7 100644
---- a/fs/xfs/scrub/trace.c
-+++ b/fs/xfs/scrub/trace.c
-@@ -58,3 +58,25 @@ xchk_btree_cur_fsbno(
+  * Per-ag geometry infomation and validation
   */
- #define CREATE_TRACE_POINTS
- #include "scrub/trace.h"
-+
-+/* xchk_whine stuff */
-+struct xchk_tstr {
-+	unsigned int	type;
-+	const char	*tag;
-+};
-+
-+static const struct xchk_tstr xchk_tstr_tags[] = { XFS_SCRUB_TYPE_STRINGS };
-+
-+const char *
-+xchk_type_string(
-+	unsigned int	type)
-+{
-+	unsigned int	i;
-+
-+	for (i = 0; i < ARRAY_SIZE(xchk_tstr_tags); i++) {
-+		if (xchk_tstr_tags[i].type == type)
-+			return xchk_tstr_tags[i].tag;
-+	}
-+
-+	return "???";
-+}
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index d7c4ced47c1567..69d9b0a336dbc5 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -115,6 +115,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RTREFCBT);
- 	{ XFS_SCRUB_TYPE_RTRMAPBT,	"rtrmapbt" }, \
- 	{ XFS_SCRUB_TYPE_RTREFCBT,	"rtrefcountbt" }
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index fb79215a509d21..fda3d7614838e7 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -74,6 +74,13 @@ xfs_ag_resv_critical(
+ 	xfs_extlen_t			avail;
+ 	xfs_extlen_t			orig;
  
-+const char *xchk_type_string(unsigned int type);
++	/*
++	 * Pretend we're critically low on reservations in this AG to scare
++	 * everyone else away.
++	 */
++	if (xfs_perag_prohibits_alloc(pag))
++		return true;
 +
- #define XFS_SCRUB_FLAG_STRINGS \
- 	{ XFS_SCRUB_IFLAG_REPAIR,		"repair" }, \
- 	{ XFS_SCRUB_OFLAG_CORRUPT,		"corrupt" }, \
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index f18fec0adf6662..f5fe896b9a8ec0 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -44,6 +44,11 @@ struct xfs_globals xfs_globals = {
- 	.pwork_threads		=	-1,	/* automatic thread detection */
- 	.larp			=	false,	/* log attribute replay */
- #endif
-+#ifdef CONFIG_XFS_ONLINE_SCRUB_WHINE
-+	.scrub_whine		=	true,
-+#else
-+	.scrub_whine		=	false,
-+#endif
+ 	switch (type) {
+ 	case XFS_AG_RESV_METADATA:
+ 		avail = pag->pagf_freeblks - pag->pag_rmapbt_resv.ar_reserved;
+@@ -116,7 +123,12 @@ xfs_ag_resv_needed(
+ 		break;
+ 	case XFS_AG_RESV_METAFILE:
+ 	case XFS_AG_RESV_NONE:
+-		/* empty */
++		/*
++		 * In noalloc mode, we pretend that all the free blocks in this
++		 * AG have been allocated.  Make this AG look full.
++		 */
++		if (xfs_perag_prohibits_alloc(pag))
++			len += xfs_ag_fdblocks(pag);
+ 		break;
+ 	default:
+ 		ASSERT(0);
+@@ -344,6 +356,8 @@ xfs_ag_resv_alloc_extent(
+ 	xfs_extlen_t			len;
+ 	uint				field;
  
- 	/*
- 	 * Leave this many record slots empty when bulk loading btrees.  By
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index 276696a07040c8..b0939ac370fba1 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -91,6 +91,7 @@ struct xfs_globals {
- 	int	mount_delay;		/* mount setup delay (secs) */
- 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
- 	bool	always_cow;		/* use COW fork for all overwrites */
-+	bool	scrub_whine;		/* noisier output from scrub */
- };
- extern struct xfs_globals	xfs_globals;
++	ASSERT(type != XFS_AG_RESV_NONE || !xfs_perag_prohibits_alloc(pag));
++
+ 	trace_xfs_ag_resv_alloc_extent(pag, type, args->len);
  
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 60cb5318fdae3c..0ce31517e3cd89 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -260,6 +260,37 @@ larp_show(
+ 	switch (type) {
+@@ -401,7 +415,14 @@ xfs_ag_resv_free_extent(
+ 		ASSERT(0);
+ 		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+-		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (int64_t)len);
++		/*
++		 * Normally we put freed blocks back into fdblocks.  In noalloc
++		 * mode, however, we pretend that there are no fdblocks in the
++		 * AG, so don't put them back.
++		 */
++		if (!xfs_perag_prohibits_alloc(pag))
++			xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS,
++					(int64_t)len);
+ 		fallthrough;
+ 	case XFS_AG_RESV_IGNORE:
+ 		return;
+@@ -414,6 +435,6 @@ xfs_ag_resv_free_extent(
+ 	/* Freeing into the reserved pool only requires on-disk update... */
+ 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_RES_FDBLOCKS, len);
+ 	/* ...but freeing beyond that requires in-core and on-disk update. */
+-	if (len > leftover)
++	if (len > leftover && !xfs_perag_prohibits_alloc(pag))
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, len - leftover);
  }
- XFS_SYSFS_ATTR_RW(larp);
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index f7258544848fcd..af69ed7733acd6 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -337,7 +337,8 @@ xchk_fscount_aggregate_agcounts(
+ 		 */
+ 		fsc->fdblocks -= pag->pag_meta_resv.ar_reserved;
+ 		fsc->fdblocks -= pag->pag_rmapbt_resv.ar_orig_reserved;
+-
++		if (xfs_perag_prohibits_alloc(pag))
++			fsc->fdblocks -= xfs_ag_fdblocks(pag);
+ 	}
+ 	if (pag)
+ 		xfs_perag_rele(pag);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 8dc2b738c911ee..150979c8333530 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -592,6 +592,14 @@ xfs_fs_unreserve_ag_blocks(
+ 	if (xfs_has_realtime(mp))
+ 		xfs_rt_resv_free(mp);
  
-+/* Logging of the outcomes of everything that scrub does */
-+STATIC ssize_t
-+scrub_whine_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	int		ret;
-+	int		val;
+-	while ((pag = xfs_perag_next(mp, pag)))
++	while ((pag = xfs_perag_next(mp, pag))) {
++		/*
++		 * Bring the AG back online because our AG hiding only exists
++		 * in-core and we need the superblock to be written out with
++		 * the super fdblocks reflecting the AGF freeblks.  Do this
++		 * before adding the per-AG reservations back to fdblocks.
++		 */
++		xfs_ag_clear_noalloc(pag);
+ 		xfs_ag_resv_free(pag);
++	}
+ }
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e1554f061376e5..099c30339e8f9d 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -336,6 +336,7 @@ xfs_set_inode_alloc(
+ 		pag = xfs_perag_get(mp, index);
+ 		if (xfs_set_inode_alloc_perag(pag, ino, max_metadata))
+ 			maxagi++;
++		clear_bit(XFS_AGSTATE_NOALLOC, &pag->pag_opstate);
+ 		xfs_perag_put(pag);
+ 	}
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 0352f432421598..dc7ffc8f8e9dea 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -4589,6 +4589,52 @@ DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_corrupt);
+ DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
+ DEFINE_INODE_CORRUPT_EVENT(xfs_inode_unfixed_corruption);
+ 
++DECLARE_EVENT_CLASS(xfs_ag_noalloc_class,
++	TP_PROTO(struct xfs_perag *pag),
++	TP_ARGS(pag),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_extlen_t, freeblks)
++		__field(xfs_extlen_t, flcount)
++		__field(xfs_extlen_t, btreeblks)
++		__field(xfs_extlen_t, meta_resv)
++		__field(xfs_extlen_t, rmap_resv)
 +
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
++		__field(unsigned long long, resblks)
++		__field(unsigned long long, resblks_avail)
++	),
++	TP_fast_assign(
++		__entry->dev = pag_mount(pag)->m_super->s_dev;
++		__entry->agno = pag_agno(pag);
++		__entry->freeblks = pag->pagf_freeblks;
++		__entry->flcount = pag->pagf_flcount;
++		__entry->btreeblks = pag->pagf_btreeblks;
++		__entry->meta_resv = pag->pag_meta_resv.ar_reserved;
++		__entry->rmap_resv = pag->pag_rmapbt_resv.ar_orig_reserved;
 +
-+	if (val < -1 || val > num_possible_cpus())
-+		return -EINVAL;
++		__entry->resblks = pag_mount(pag)->m_resblks[XC_FREE_BLOCKS].total;
++		__entry->resblks_avail = pag_mount(pag)->m_resblks[XC_FREE_BLOCKS].avail;
++	),
++	TP_printk("dev %d:%d agno 0x%x freeblks %u flcount %u btreeblks %u metaresv %u rmapresv %u resblks %llu resblks_avail %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->freeblks,
++		  __entry->flcount,
++		  __entry->btreeblks,
++		  __entry->meta_resv,
++		  __entry->rmap_resv,
++		  __entry->resblks,
++		  __entry->resblks_avail)
++);
++#define DEFINE_AG_NOALLOC_EVENT(name)	\
++DEFINE_EVENT(xfs_ag_noalloc_class, name,	\
++	TP_PROTO(struct xfs_perag *pag),	\
++	TP_ARGS(pag))
 +
-+	xfs_globals.scrub_whine = val;
++DEFINE_AG_NOALLOC_EVENT(xfs_ag_set_noalloc);
++DEFINE_AG_NOALLOC_EVENT(xfs_ag_clear_noalloc);
 +
-+	return count;
-+}
-+
-+STATIC ssize_t
-+scrub_whine_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	return sysfs_emit(buf, "%d\n", xfs_globals.scrub_whine);
-+}
-+XFS_SYSFS_ATTR_RW(scrub_whine);
-+
- STATIC ssize_t
- bload_leaf_slack_store(
- 	struct kobject	*kobject,
-@@ -319,6 +350,7 @@ static struct attribute *xfs_dbg_attrs[] = {
- 	ATTR_LIST(always_cow),
- 	ATTR_LIST(pwork_threads),
- 	ATTR_LIST(larp),
-+	ATTR_LIST(scrub_whine),
- 	ATTR_LIST(bload_leaf_slack),
- 	ATTR_LIST(bload_node_slack),
- 	NULL,
+ TRACE_EVENT(xfs_iwalk_ag_rec,
+ 	TP_PROTO(const struct xfs_perag *pag, \
+ 		 struct xfs_inobt_rec_incore *irec),
 
