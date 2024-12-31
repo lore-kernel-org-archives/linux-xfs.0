@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79AD813FD72
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:39:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2949613FD72
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:40:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735688394; cv=none; b=i7JRZvO0JyZeqMEVlZUj+MUt0yfZgyrVDdcuhnW/sSsYr2NFXmCk2IQfLDWlqTiRFtGSKbF5MlGojUEdT85ZC1H2k/dIjB10Sj5yvtJg/qeyDh+L9M7NbR24T6YiYBFy4U+00ozMJVnMUmFAvtFvbCxHOTotPdWCaHWbzBT009Y=
+	t=1735688410; cv=none; b=vDnThFQin2vvx2hli+guA1zFzW9Pun+Q9iFkCfUfH+yZRBSd4tAPRcFvkDl0zGjO3iFhdVzWZ3ADYMkYgZVTpCy4ZF+phTW6oBqBsFpVwcWB7LkikXGFJBCJ9boIWrwrEkS8RU+Nzlpw/eOL7BdcsqxgzFzIHfOUEJkdaXyNmp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735688394; c=relaxed/simple;
-	bh=Mu/xVmYiOZu6FP9uxHXeUZ3vNuoUv5PvE5WxF9nzIEQ=;
+	s=arc-20240116; t=1735688410; c=relaxed/simple;
+	bh=I6r4whCp2cVDkTqRdsyiCBt0h8QCjktMKGrZQ/Y5qGY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b5BgMZUwmcVz26CqJRx/C4XBRl8t/Fnwnehlu0clD0eX0X8rna9Wd+p3FNg5MqmT+BReiszNrr0LtAE70djVB02Fzb6YUVYxP2UuZlybJb3uA9eqQTfblDSMDrWM0e6stcGCWeQA9hS9S+RIccfGqcuqQHvPFsTiBxs2lxZCKVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WW76uK3o; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gMtoW6Qs5XVVzvMEUhKOWK35XeoeLuXUDSjAklH4KfJP/q0itO49kyc2yfMJpY/xyzGhH/f4rtLQ0RS8twfS77Wk4RDESESQREutgUC3aj3PZd8SnooEKacBiTkzs/j5XRO0/RvisRi/8Ti4kp0aC4fdX4EmQ2lfOvTKGx8vdEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2DR0qGD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WW76uK3o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51D26C4CED2;
-	Tue, 31 Dec 2024 23:39:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2DR0qGD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE745C4CED2;
+	Tue, 31 Dec 2024 23:40:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735688394;
-	bh=Mu/xVmYiOZu6FP9uxHXeUZ3vNuoUv5PvE5WxF9nzIEQ=;
+	s=k20201202; t=1735688410;
+	bh=I6r4whCp2cVDkTqRdsyiCBt0h8QCjktMKGrZQ/Y5qGY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WW76uK3oYwwFNxgvUjow1ylEluZZRRO55zfIBFxr1WeIZgzNNSW2RLtifc5PMlHFd
-	 lVM4VpxhC3BRXtKxtaOpWjqo8gzP6Sn2iBugM5780f5c4HlijSfH/c/EuI3/1b4+Zm
-	 tRzISgJqNUuK2rn4WqWfoFbb2GpLbTIbk48f1GiuYuYVMfmg3LvO0SiZ0bg+Bh+NOQ
-	 XC2EB/lkb5I4d/BXhXsGx/jSOCxaMufyzLgycObSD8A3lcYbb3Y5jtAEXQLHbLDB7e
-	 mT3xBDn4HxUUm+pSd3om67MVAZC8UFQKl0REXukXJWks3B/ONPjFun7+riOTjbAmvr
-	 xR55ukbfYMGcQ==
-Date: Tue, 31 Dec 2024 15:39:53 -0800
-Subject: [PATCH 04/16] xfs: create hooks for media errors
+	b=D2DR0qGDdthHU8PwiwAKjCG0lqiZ5VSEhWOF1Hcrl35J0Xp59UWAMhgE7HU1ZfJVD
+	 evgRq8ooLq5399rWv4yu4Ohs5mm8yf/uoGpKYEbeEkUe02BSJ9XH325CS+U5Ikg6cG
+	 UsKz7yTi1KhwhphIyrCC1dC0XXO/vXkl9PzgCH2wlmfeKf+S+Nbt6ADrgX9nEnEIjG
+	 3Apc8WbEmVFwwcFxKso2KnkYD1NO416Zf+JlWABjL5TlErNE4LRD/MLtJFajMMEA+G
+	 Y7A/KbnNu4J/i2T5aLBsPcmdufSDicadrdFP4OJYh8WTr4bP3RkYW0do65aue+yiIw
+	 DlIN1X1HAm0Og==
+Date: Tue, 31 Dec 2024 15:40:09 -0800
+Subject: [PATCH 05/16] iomap,
+ filemap: report buffered read and write io errors to the filesystem
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <173568754811.2704911.2065068508446949767.stgit@frogsfrogsfrogs>
+Message-ID: <173568754829.2704911.5583911059846056720.stgit@frogsfrogsfrogs>
 In-Reply-To: <173568754700.2704911.10879727466774074251.stgit@frogsfrogsfrogs>
 References: <173568754700.2704911.10879727466774074251.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,204 +46,125 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Set up a media error event hook so that we can send events to userspace.
+Provide a callback so that iomap can report read and write IO errors to
+the caller filesystem.  For now this is only wired up for iomap as a
+testbed for XFS.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_mount.h          |    3 ++
- fs/xfs/xfs_notify_failure.c |   86 ++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_notify_failure.h |   38 +++++++++++++++++++
- fs/xfs/xfs_super.c          |    1 +
- 4 files changed, 122 insertions(+), 6 deletions(-)
+ Documentation/filesystems/vfs.rst |    7 +++++++
+ fs/iomap/buffered-io.c            |   26 +++++++++++++++++++++++++-
+ include/linux/fs.h                |    4 ++++
+ 3 files changed, 36 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a8c81c4ccb2000..3fcfdaaf199315 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -346,6 +346,9 @@ typedef struct xfs_mount {
+diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
+index 0b18af3f954eb7..2f0ef4e1a8d340 100644
+--- a/Documentation/filesystems/vfs.rst
++++ b/Documentation/filesystems/vfs.rst
+@@ -827,6 +827,8 @@ cache in your filesystem.  The following members are defined:
+ 		int (*swap_activate)(struct swap_info_struct *sis, struct file *f, sector_t *span)
+ 		int (*swap_deactivate)(struct file *);
+ 		int (*swap_rw)(struct kiocb *iocb, struct iov_iter *iter);
++		void (*ioerror)(struct address_space *mapping, int direction,
++				loff_t pos, u64 len, int error);
+ 	};
  
- 	/* Hook to feed shutdown events to a daemon. */
- 	struct xfs_hooks	m_shutdown_hooks;
-+
-+	/* Hook to feed media error events to a daemon. */
-+	struct xfs_hooks	m_media_error_hooks;
- } xfs_mount_t;
+ ``writepage``
+@@ -1056,6 +1058,11 @@ cache in your filesystem.  The following members are defined:
+ ``swap_rw``
+ 	Called to read or write swap pages when SWP_FS_OPS is set.
  
- #define M_IGEO(mp)		(&(mp)->m_ino_geo)
-diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-index ed8d8ed42f0a2c..ea68c7e61bb585 100644
---- a/fs/xfs/xfs_notify_failure.c
-+++ b/fs/xfs/xfs_notify_failure.c
-@@ -27,6 +27,73 @@
- #include <linux/dax.h>
- #include <linux/fs.h>
++``ioerror``
++        Called to deal with IO errors during readahead or writeback.
++        This may be called from interrupt context, and without any
++        locks necessarily being held.
++
+ The File Object
+ ===============
  
-+#ifdef CONFIG_XFS_LIVE_HOOKS
-+DEFINE_STATIC_XFS_HOOK_SWITCH(xfs_media_error_hooks_switch);
-+
-+void
-+xfs_media_error_hook_disable(void)
-+{
-+	xfs_hooks_switch_off(&xfs_media_error_hooks_switch);
-+}
-+
-+void
-+xfs_media_error_hook_enable(void)
-+{
-+	xfs_hooks_switch_on(&xfs_media_error_hooks_switch);
-+}
-+
-+/* Call downstream hooks for a media error. */
-+static inline void
-+xfs_media_error_hook(
-+	struct xfs_mount		*mp,
-+	enum xfs_failed_device		fdev,
-+	xfs_daddr_t			daddr,
-+	uint64_t			bbcount,
-+	bool				pre_remove)
-+{
-+	if (xfs_hooks_switched_on(&xfs_media_error_hooks_switch)) {
-+		struct xfs_media_error_params p = {
-+			.mp		= mp,
-+			.fdev		= fdev,
-+			.daddr		= daddr,
-+			.bbcount	= bbcount,
-+			.pre_remove	= pre_remove,
-+		};
-+
-+		xfs_hooks_call(&mp->m_media_error_hooks, 0, &p);
-+	}
-+}
-+
-+/* Call the specified function during a media error. */
-+int
-+xfs_media_error_hook_add(
-+	struct xfs_mount		*mp,
-+	struct xfs_media_error_hook	*hook)
-+{
-+	return xfs_hooks_add(&mp->m_media_error_hooks, &hook->error_hook);
-+}
-+
-+/* Stop calling the specified function during a media error. */
-+void
-+xfs_media_error_hook_del(
-+	struct xfs_mount		*mp,
-+	struct xfs_media_error_hook	*hook)
-+{
-+	xfs_hooks_del(&mp->m_media_error_hooks, &hook->error_hook);
-+}
-+
-+/* Configure media error hook functions. */
-+void
-+xfs_media_error_hook_setup(
-+	struct xfs_media_error_hook	*hook,
-+	notifier_fn_t			mod_fn)
-+{
-+	xfs_hook_setup(&hook->error_hook, mod_fn);
-+}
-+#else
-+# define xfs_media_error_hook(...)		((void)0)
-+#endif /* CONFIG_XFS_LIVE_HOOKS */
-+
- struct xfs_failure_info {
- 	xfs_agblock_t		startblock;
- 	xfs_extlen_t		blockcount;
-@@ -215,6 +282,9 @@ xfs_dax_notify_logdev_failure(
- 	if (error)
- 		return error;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 86e30b56e8d41b..39782376895306 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -284,6 +284,14 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+ 	*lenp = plen;
+ }
  
-+	xfs_media_error_hook(mp, XFS_FAILED_LOGDEV, daddr, bblen,
-+			mf_flags & MF_MEM_PRE_REMOVE);
++static inline void iomap_mapping_ioerror(struct address_space *mapping,
++		int direction, loff_t pos, u64 len, int error)
++{
++	if (mapping && mapping->a_ops->ioerror)
++		mapping->a_ops->ioerror(mapping, direction, pos, len,
++				error);
++}
 +
- 	/*
- 	 * In the pre-remove case the failure notification is attempting to
- 	 * trigger a force unmount.  The expectation is that the device is
-@@ -248,17 +318,21 @@ xfs_dax_notify_dev_failure(
- 	uint64_t		bblen;
- 	struct xfs_group	*xg = NULL;
- 
-+	error = xfs_dax_translate_range(type == XG_TYPE_RTG ?
-+			mp->m_rtdev_targp : mp->m_ddev_targp,
-+			offset, len, &daddr, &bblen);
-+	if (error)
-+		return error;
-+
-+	xfs_media_error_hook(mp, type == XG_TYPE_RTG ?
-+			XFS_FAILED_RTDEV : XFS_FAILED_DATADEV,
-+			daddr, bblen, mf_flags & MF_MEM_PRE_REMOVE);
-+
- 	if (!xfs_has_rmapbt(mp)) {
- 		xfs_debug(mp, "notify_failure() needs rmapbt enabled!");
- 		return -EOPNOTSUPP;
+ static void iomap_finish_folio_read(struct folio *folio, size_t off,
+ 		size_t len, int error)
+ {
+@@ -302,6 +310,10 @@ static void iomap_finish_folio_read(struct folio *folio, size_t off,
+ 		spin_unlock_irqrestore(&ifs->state_lock, flags);
  	}
  
--	error = xfs_dax_translate_range(type == XG_TYPE_RTG ?
--			mp->m_rtdev_targp : mp->m_ddev_targp,
--			offset, len, &daddr, &bblen);
--	if (error)
--		return error;
--
- 	if (type == XG_TYPE_RTG) {
- 		start_bno = xfs_daddr_to_rtb(mp, daddr);
- 		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
-diff --git a/fs/xfs/xfs_notify_failure.h b/fs/xfs/xfs_notify_failure.h
-index 41108044d35d47..835d4af504d832 100644
---- a/fs/xfs/xfs_notify_failure.h
-+++ b/fs/xfs/xfs_notify_failure.h
-@@ -8,4 +8,42 @@
++	if (error)
++		iomap_mapping_ioerror(folio->mapping, READ,
++				folio_pos(folio) + off, len, error);
++
+ 	if (finished)
+ 		folio_end_read(folio, uptodate);
+ }
+@@ -670,11 +682,16 @@ static int iomap_read_folio_sync(loff_t block_start, struct folio *folio,
+ {
+ 	struct bio_vec bvec;
+ 	struct bio bio;
++	int ret;
  
- extern const struct dax_holder_operations xfs_dax_holder_operations;
+ 	bio_init(&bio, iomap->bdev, &bvec, 1, REQ_OP_READ);
+ 	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
+ 	bio_add_folio_nofail(&bio, folio, plen, poff);
+-	return submit_bio_wait(&bio);
++	ret = submit_bio_wait(&bio);
++	if (ret)
++		iomap_mapping_ioerror(folio->mapping, READ,
++				folio_pos(folio) + poff, plen, ret);
++	return ret;
+ }
  
-+enum xfs_failed_device {
-+	XFS_FAILED_DATADEV,
-+	XFS_FAILED_LOGDEV,
-+	XFS_FAILED_RTDEV,
-+};
-+
-+#if defined(CONFIG_XFS_LIVE_HOOKS) && defined(CONFIG_MEMORY_FAILURE) && defined(CONFIG_FS_DAX)
-+struct xfs_media_error_params {
-+	struct xfs_mount		*mp;
-+	enum xfs_failed_device		fdev;
-+	xfs_daddr_t			daddr;
-+	uint64_t			bbcount;
-+	bool				pre_remove;
-+};
-+
-+struct xfs_media_error_hook {
-+	struct xfs_hook			error_hook;
-+};
-+
-+void xfs_media_error_hook_disable(void);
-+void xfs_media_error_hook_enable(void);
-+
-+int xfs_media_error_hook_add(struct xfs_mount *mp,
-+		struct xfs_media_error_hook *hook);
-+void xfs_media_error_hook_del(struct xfs_mount *mp,
-+		struct xfs_media_error_hook *hook);
-+void xfs_media_error_hook_setup(struct xfs_media_error_hook *hook,
-+		notifier_fn_t mod_fn);
-+#else
-+struct xfs_media_error_params { };
-+struct xfs_media_error_hook { };
-+# define xfs_media_error_hook_disable()		((void)0)
-+# define xfs_media_error_hook_enable()		((void)0)
-+# define xfs_media_error_hook_add(...)		(0)
-+# define xfs_media_error_hook_del(...)		((void)0)
-+# define xfs_media_error_hook_setup(...)	((void)0)
-+#endif /* CONFIG_XFS_LIVE_HOOKS */
-+
- #endif /* __XFS_NOTIFY_FAILURE_H__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 71aa97a5d1dcaa..a49082159faae8 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -2184,6 +2184,7 @@ xfs_init_fs_context(
- 	xfs_hooks_init(&mp->m_dir_update_hooks);
- 	xfs_hooks_init(&mp->m_shutdown_hooks);
- 	xfs_hooks_init(&mp->m_health_update_hooks);
-+	xfs_hooks_init(&mp->m_media_error_hooks);
+ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+@@ -1573,6 +1590,11 @@ u32 iomap_finish_ioend_buffered(struct iomap_ioend *ioend)
  
- 	fc->s_fs_info = mp;
- 	fc->ops = &xfs_context_ops;
+ 	/* walk all folios in bio, ending page IO on them */
+ 	bio_for_each_folio_all(fi, bio) {
++		if (ioend->io_error)
++			iomap_mapping_ioerror(inode->i_mapping, WRITE,
++					folio_pos(fi.folio) + fi.offset,
++					fi.length, ioend->io_error);
++
+ 		iomap_finish_folio_write(inode, fi.folio, fi.length);
+ 		folio_count++;
+ 	}
+@@ -1881,6 +1903,8 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 
+ 	if (count)
+ 		wpc->nr_folios++;
++	if (error && !count)
++		iomap_mapping_ioerror(inode->i_mapping, WRITE, pos, 0, error);
+ 
+ 	/*
+ 	 * We can have dirty bits set past end of file in page_mkwrite path
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index b638fb1bcbc96f..9375753577025d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -438,6 +438,10 @@ struct address_space_operations {
+ 				sector_t *span);
+ 	void (*swap_deactivate)(struct file *file);
+ 	int (*swap_rw)(struct kiocb *iocb, struct iov_iter *iter);
++
++	/* Callback for dealing with IO errors during readahead or writeback */
++	void (*ioerror)(struct address_space *mapping, int direction,
++			loff_t pos, u64 len, int error);
+ };
+ 
+ extern const struct address_space_operations empty_aops;
 
