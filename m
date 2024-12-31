@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 435161B0425
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:47:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3F6E1B0425
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Dec 2024 23:47:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735688832; cv=none; b=piYMfNZKpTd4Jl/g32B5qVTOK9255SnJc+ZcBQs93WAK8mcxwql1/IvrjO3LeDORBiHztfd7zzVOHcQv/Z8QVpuhDIh1SsWwIuZs8oG621zDPpPt8ryGhVbMec4QZXGh7/9lSODR1dNO63iToz0BuKJOldMqHyBbgN9OdsXs4PY=
+	t=1735688848; cv=none; b=JTXXbe4ddadKr1IpgB3WZOFN2SpsrKmuRClnMFCYnHVGQLcm+cIQNlqP6uBQr/QJnQubMQgfOsAw4mY8enyYbmHqIhsuLblTfj1iBHdmG95RTLXLYOYhLnlpClAbeXxzyEeanxOilaKBU3DPd/FcesqLh01mfvrL4AJ9yBIgRUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735688832; c=relaxed/simple;
-	bh=nGZ/kamyUCLHyi1ECY6lZfxmMHTKO1Gup9Zj5nSqy8k=;
+	s=arc-20240116; t=1735688848; c=relaxed/simple;
+	bh=IHVX4mtHF1Z2cmiGOUmbgoniSzCpLT8LsSyAKCnGOf4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Hba2fJBpYn7/KuwMHkInf8ccHQPCQ0JaqtyYvdRBI1Gr0nueJuWR1iJWbgA9ey8kLXXX4DMMZNUDJL4ihnCW0OCc5IPrtcByTOt195v+VAnL/NZZxEY5UXNSfbB7ty3p4iODhpvZlQAQc4xZnsxlm61r5VHr3bb3KkLTSHbn0Yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SZHyPBou; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=IsDhfjFoOjwGCfSEzoVZWEt/kIv+QdjdDewOY2QvLyhucmBDitGQTzWkhaT9910yEaBBiR5rq5eeLX7dPG6snaxuOItVCSe9ZweJ92hbwdKLba7ZKM9pAQdJ0qgD8EACA4VyUBs4WxXMoKJjGU0Y3G/Sa9ONlsnfQ5pF0yfRcqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lJEFATeS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SZHyPBou"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2907C4CED2;
-	Tue, 31 Dec 2024 23:47:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lJEFATeS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 637E5C4CED2;
+	Tue, 31 Dec 2024 23:47:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735688831;
-	bh=nGZ/kamyUCLHyi1ECY6lZfxmMHTKO1Gup9Zj5nSqy8k=;
+	s=k20201202; t=1735688847;
+	bh=IHVX4mtHF1Z2cmiGOUmbgoniSzCpLT8LsSyAKCnGOf4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SZHyPBoutiinawu/S0l9guhpypHzS+5HgVkgD9pQJf7Gsuie/ilktEIlGwWjjJj0K
-	 BtBS6o61N01y9IZWq6ecu34rBbAUZPVIyNwTStZjHkBFFLuM/pPbdEHC8avaLHQvwM
-	 qdM4SZn84ttqnLI7Tm1KruoLvJHhcF37OGLQ636AVAkjPiGgrzOjjdSJUGtJM0wpFP
-	 ZH3Td92jSscoQhI/Pn4QOSoz5wSIg0JX2Ci8IB84C5Bimfm1GvLBs0JTqXV9U8+oPd
-	 PdN0Mvmdu3VaFHAgKE7pwDdnInddNHvzhOn2RuO9K0zhw77Og3PD5Pzs/HetVkB15M
-	 bI5qjw1u2SrbA==
-Date: Tue, 31 Dec 2024 15:47:11 -0800
-Subject: [PATCH 09/11] xfs_spaceman: port relocation structure to 32-bit
- systems
+	b=lJEFATeSfjyjp1mE5ViRu8tcGE+4Q8gwEMwe8a5pafO1oRHt6HzmR6CxIG4YUp9Uv
+	 RRL6q8EtABHNDo1S62+PHqU/8TeGzV5MK0tGyzKDp4M2cr5M6kOkTwM4ejsj+Bjd88
+	 8Tz4otLJYsoYCpg9tlGghXw1dAYLrtQyi/xr24+ViWXQCoZ5LCzGEudFlGA9RMxV7C
+	 lIhEjYCWsUDTMjbN0OFoE7BYKAN//4gH45O2Gj6kr6lyvYcq89yKcdR0Y9biWHGOSv
+	 a7oclcImVRYgqlplwgEijiqyunzeV/2z84Z5Hu4SzZ2oOOKnff/QM5HvkfcUox4SMt
+	 dFb6CmaK1hn7g==
+Date: Tue, 31 Dec 2024 15:47:26 -0800
+Subject: [PATCH 10/11] spaceman: relocate the contents of an AG
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <173568778008.2709794.12371752300604120680.stgit@frogsfrogsfrogs>
+Cc: dchinner@redhat.com, linux-xfs@vger.kernel.org
+Message-ID: <173568778023.2709794.3863189992037454598.stgit@frogsfrogsfrogs>
 In-Reply-To: <173568777852.2709794.6356870909327619205.stgit@frogsfrogsfrogs>
 References: <173568777852.2709794.6356870909327619205.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,313 +43,515 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-We can't use the radix tree to store relocation information on 32-bit
-systems because unsigned longs are not large enough to hold 64-bit
-inodes.  Use an avl64 tree instead.
+Shrinking a filesystem needs to first remove all the active user
+data and metadata from the AGs that are going to be lopped off the
+filesystem. Before we can do this, we have to relocate this
+information to a region of the filesystem that is going to be
+retained.
 
+We have a function to move an inode and all it's related
+information to a specific AG, we have functions to find the
+owners of all the information in an AG and we can find their paths.
+This gives us all the information we need to relocate all the
+objects in an AG we are going to remove via shrinking.
+
+Firstly we scan the AG to be emptied to find the inodes that need to
+be relocated, then we scan the directory structure to find all the
+paths to those inodes that need to be moved. Then we iterate over
+all the inodes to be moved attempting to move them to the lowest
+numbers AGs.
+
+When the destination AG fills up, we'll get ENOSPC from
+the moving code and this is a trigger to bump the destination AG and
+retry the move. If we haven't moved all the inodes and their data by
+the time the destination reaches the source AG, then the entire
+operation will fail with ENOSPC - there is not enough room in the
+filesystem to empty the selected AG in preparation for a shrink.
+
+This, once again, is not intended as an optimal or even guaranteed
+way of emptying an AG for shrink. It simply provides the basic
+algorithm and mechanisms we need to perform a shrink operation.
+Improvements and optimisations will come in time, but we can't get
+to an optimal solution without first having basic functionality in
+place.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- configure.ac          |    1 
- include/builddefs.in  |    1 
- m4/package_libcdev.m4 |   20 +++++
- spaceman/Makefile     |    4 +
- spaceman/relocation.c |  203 +++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 229 insertions(+)
+ libfrog/fsgeom.h        |   10 ++
+ man/man8/xfs_spaceman.8 |    8 ++
+ spaceman/find_owner.c   |   32 +++---
+ spaceman/init.c         |    1 
+ spaceman/move_inode.c   |    7 +
+ spaceman/relocation.c   |  234 +++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/relocation.h   |    5 +
+ spaceman/space.h        |    1 
+ 8 files changed, 280 insertions(+), 18 deletions(-)
 
 
-diff --git a/configure.ac b/configure.ac
-index 224d1d3930bf2f..1f7fec838e1239 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -212,6 +212,7 @@ fi
+diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
+index 679046077cba84..3fe642be6dc9ae 100644
+--- a/libfrog/fsgeom.h
++++ b/libfrog/fsgeom.h
+@@ -196,6 +196,16 @@ cvt_daddr_to_agno(
+ 	return cvt_bb_to_off_fsbt(xfd, daddr) / xfd->fsgeom.agblocks;
+ }
  
- AC_MANUAL_FORMAT
- AC_HAVE_LIBURCU_ATOMIC64
-+AC_USE_RADIX_TREE_FOR_INUMS
- 
- AC_CONFIG_FILES([include/builddefs])
- AC_OUTPUT
-diff --git a/include/builddefs.in b/include/builddefs.in
-index ac43b6412c8cbb..bb022c36627a72 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -114,6 +114,7 @@ CROND_DIR = @crond_dir@
- HAVE_UDEV = @have_udev@
- UDEV_RULE_DIR = @udev_rule_dir@
- HAVE_LIBURCU_ATOMIC64 = @have_liburcu_atomic64@
-+USE_RADIX_TREE_FOR_INUMS = @use_radix_tree_for_inums@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 4ef7e8f67a3ba6..9e48273250244c 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -255,3 +255,23 @@ AC_DEFUN([AC_PACKAGE_CHECK_LTO],
-     AC_SUBST(lto_cflags)
-     AC_SUBST(lto_ldflags)
-   ])
++/* Convert sparse filesystem block to AG Number */
++static inline uint32_t
++cvt_fsb_to_agno(
++	struct xfs_fd		*xfd,
++	uint64_t		fsbno)
++{
++	return fsbno >> xfd->agblklog;
++}
 +
-+#
-+# Check if the radix tree index (unsigned long) is large enough to hold a
-+# 64-bit inode number
-+#
-+AC_DEFUN([AC_USE_RADIX_TREE_FOR_INUMS],
-+  [ AC_MSG_CHECKING([if radix tree can store XFS inums])
-+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-+#include <sys/param.h>
-+#include <stdint.h>
-+#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
-+    ]], [[
-+         typedef uint64_t    xfs_ino_t;
 +
-+         BUILD_BUG_ON(sizeof(unsigned long) < sizeof(xfs_ino_t));
-+         return 0;
-+    ]])],[use_radix_tree_for_inums=yes
-+       AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
-+    AC_SUBST(use_radix_tree_for_inums)
-+  ])
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index 8980208285f610..d9d55245ffc47a 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -33,6 +33,10 @@ ifeq ($(HAVE_GETFSMAP),yes)
- CFILES += freesp.c clearfree.c
- endif
- 
-+ifeq ($(USE_RADIX_TREE_FOR_INUMS),yes)
-+LCFLAGS += -DUSE_RADIX_TREE_FOR_INUMS
-+endif
+ /* Convert sector number to AG block number. */
+ static inline uint32_t
+ cvt_daddr_to_agbno(
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+index 6fef6949aa6c8b..b6488810cfab30 100644
+--- a/man/man8/xfs_spaceman.8
++++ b/man/man8/xfs_spaceman.8
+@@ -202,9 +202,17 @@ .SH COMMANDS
+ .TP
+ .B print
+ Display a list of all open files.
++.TP
++.BI "relocate \-a agno [ \-h agno ]"
++Empty out the given allocation group by moving file data elsewhere.
++The
++.B -h
++option specifies the highest allocation group into which we can move data.
 +
- default: depend $(LTCOMMAND)
+ .TP
+ .B resolve_owner
+ Resolves space in the filesystem to file paths, maybe?
++
+ .TP
+ .B quit
+ Exit
+diff --git a/spaceman/find_owner.c b/spaceman/find_owner.c
+index 80b239f9ac5de8..8e93145539a227 100644
+--- a/spaceman/find_owner.c
++++ b/spaceman/find_owner.c
+@@ -9,10 +9,10 @@
+ #include <linux/fiemap.h>
+ #include "libfrog/fsgeom.h"
+ #include "libfrog/radix-tree.h"
+-#include "command.h"
+-#include "init.h"
+ #include "libfrog/paths.h"
+ #include <linux/fsmap.h>
++#include "command.h"
++#include "init.h"
+ #include "space.h"
+ #include "input.h"
+ #include "relocation.h"
+@@ -65,8 +65,8 @@ track_inode(
+ 	set_reloc_iflag(owner, MOVE_BLOCKS);
+ }
  
- include $(BUILDRULES)
+-static void
+-scan_ag(
++int
++find_relocation_targets(
+ 	xfs_agnumber_t		agno)
+ {
+ 	struct fsmap_head	*fsmap;
+@@ -80,8 +80,7 @@ scan_ag(
+ 	fsmap = malloc(fsmap_sizeof(NR_EXTENTS));
+ 	if (!fsmap) {
+ 		fprintf(stderr, _("%s: fsmap malloc failed.\n"), progname);
+-		exitcode = 1;
+-		return;
++		return -ENOMEM;
+ 	}
+ 
+ 	memset(fsmap, 0, sizeof(*fsmap));
+@@ -102,8 +101,7 @@ scan_ag(
+ 			fprintf(stderr, _("%s: FS_IOC_GETFSMAP [\"%s\"]: %s\n"),
+ 				progname, file->name, strerror(errno));
+ 			free(fsmap);
+-			exitcode = 1;
+-			return;
++			return -errno;
+ 		}
+ 
+ 		/* No more extents to map, exit */
+@@ -148,6 +146,7 @@ scan_ag(
+ 	}
+ 
+ 	free(fsmap);
++	return 0;
+ }
+ 
+ /*
+@@ -159,6 +158,7 @@ find_owner_f(
+ 	char			**argv)
+ {
+ 	xfs_agnumber_t		agno = -1;
++	int			ret;
+ 	int			c;
+ 
+ 	while ((c = getopt(argc, argv, "a:")) != EOF) {
+@@ -198,7 +198,9 @@ _("Filesystem at %s does not have reverse mapping enabled. Aborting.\n"),
+ 		return 0;
+ 	}
+ 
+-	scan_ag(agno);
++	ret = find_relocation_targets(agno);
++	if (ret)
++		exitcode = 1;
+ 	return 0;
+ }
+ 
+@@ -299,8 +301,8 @@ _("Aborting: Storing path %s for inode 0x%lx failed: %s\n"),
+  * This should be parallelised - pass subdirs off to a work queue, have the
+  * work queue processes subdirs, queueing more subdirs to work on.
+  */
+-static int
+-walk_mount(
++int
++resolve_target_paths(
+ 	const char	*mntpt)
+ {
+ 	int		ret;
+@@ -361,9 +363,9 @@ list_inode_paths(void)
+ 
+ 	/*
+ 	 * Any inodes remaining in the tree at this point indicate inodes whose
+-	 * paths were not found. This will be unlinked but still open inodes or
+-	 * lost inodes due to corruptions. Either way, a shrink will not succeed
+-	 * until these inodes are removed from the filesystem.
++	 * paths were not found. This will be free inodes or unlinked but still
++	 * open inodes. Either way, a shrink will not succeed until these inodes
++	 * are removed from the filesystem.
+ 	 */
+ 	idx = 0;
+ 	do {
+@@ -400,7 +402,7 @@ _("Inode list has not been populated. No inodes to resolve.\n"));
+ 		return 0;
+ 	}
+ 
+-	ret = walk_mount(file->fs_path.fs_dir);
++	ret = resolve_target_paths(file->fs_path.fs_dir);
+ 	if (ret) {
+ 		fprintf(stderr,
+ _("Failed to resolve all paths from mount point %s: %s\n"),
+diff --git a/spaceman/init.c b/spaceman/init.c
+index 8b0af14e566dc8..cfe1b96fb66cd1 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -40,6 +40,7 @@ init_commands(void)
+ 	move_inode_init();
+ 	find_owner_init();
+ 	resolve_owner_init();
++	relocate_init();
+ }
+ 
+ static int
+diff --git a/spaceman/move_inode.c b/spaceman/move_inode.c
+index b7d71ee7a46dc6..ab3c12f5de987b 100644
+--- a/spaceman/move_inode.c
++++ b/spaceman/move_inode.c
+@@ -12,6 +12,7 @@
+ #include "space.h"
+ #include "input.h"
+ #include "handle.h"
++#include "relocation.h"
+ 
+ #include <linux/fiemap.h>
+ #include <linux/falloc.h>
+@@ -404,8 +405,8 @@ exchange_inodes(
+ 	return 0;
+ }
+ 
+-static int
+-move_file_to_ag(
++int
++relocate_file_to_ag(
+ 	const char		*mnt,
+ 	const char		*path,
+ 	struct xfs_fd		*xfd,
+@@ -511,7 +512,7 @@ _("Destination AG %d does not exist. Filesystem only has %d AGs\n"),
+ 	}
+ 
+ 	if (S_ISREG(st.st_mode)) {
+-		ret = move_file_to_ag(file->fs_path.fs_dir, file->name,
++		ret = relocate_file_to_ag(file->fs_path.fs_dir, file->name,
+ 				&file->xfd, agno);
+ 	} else {
+ 		fprintf(stderr, _("Unsupported: %s is not a regular file.\n"),
 diff --git a/spaceman/relocation.c b/spaceman/relocation.c
-index 7c7d9a2b4b236f..1c0db6a1dab465 100644
+index 1c0db6a1dab465..7b125cc0ae12b0 100644
 --- a/spaceman/relocation.c
 +++ b/spaceman/relocation.c
-@@ -6,7 +6,11 @@
- 
- #include "libxfs.h"
- #include "libfrog/fsgeom.h"
-+#ifdef USE_RADIX_TREE_FOR_INUMS
- #include "libfrog/radix-tree.h"
-+#else
-+#include "libfrog/avl64.h"
-+#endif /* USE_RADIX_TREE_FOR_INUMS */
- #include "libfrog/paths.h"
- #include "command.h"
- #include "init.h"
-@@ -24,6 +28,7 @@ get_reloc_count(void)
- 	return inode_count;
+@@ -315,3 +315,237 @@ forget_reloc_ino(
+ 	free(rln);
  }
- 
-+#ifdef USE_RADIX_TREE_FOR_INUMS
- static RADIX_TREE(relocation_data, 0);
- 
- bool
-@@ -112,3 +117,201 @@ forget_reloc_ino(
- {
- 	radix_tree_delete(&relocation_data, ino);
- }
-+#else
-+struct reloc_node {
-+	struct avl64node	node;
-+	uint64_t		ino;
+ #endif /* USE_RADIX_TREE_FOR_INUMS */
++
++static struct cmdinfo relocate_cmd;
++
++static int
++relocate_targets_to_ag(
++	const char		*mnt,
++	xfs_agnumber_t		dst_agno)
++{
 +	struct inode_path	*ipath;
-+	unsigned int		flags;
-+};
++	uint64_t		idx = 0;
++	int			ret = 0;
 +
-+static uint64_t
-+reloc_start(
-+	struct avl64node	*node)
-+{
-+	struct reloc_node	*rln;
++	do {
++		struct xfs_fd	xfd = {0};
++		struct stat	st;
 +
-+	rln = container_of(node, struct reloc_node, node);
-+	return rln->ino;
++		/* lookup first relocation target */
++		ipath = get_next_reloc_ipath(idx);
++		if (!ipath)
++			break;
++
++		/* XXX: don't handle hard link cases yet */
++		if (ipath->link_count > 1) {
++			fprintf(stderr,
++		"FIXME! Skipping hardlinked inode at path %s\n",
++				ipath->path);
++			goto next;
++		}
++
++
++		ret = stat(ipath->path, &st);
++		if (ret) {
++			fprintf(stderr, _("stat(%s) failed: %s\n"),
++				ipath->path, strerror(errno));
++			goto next;
++		}
++
++		if (!S_ISREG(st.st_mode)) {
++			fprintf(stderr,
++		_("FIXME! Skipping %s: not a regular file.\n"),
++				ipath->path);
++			goto next;
++		}
++
++		ret = xfd_open(&xfd, ipath->path, O_RDONLY);
++		if (ret) {
++			fprintf(stderr, _("xfd_open(%s) failed: %s\n"),
++				ipath->path, strerror(-ret));
++			goto next;
++		}
++
++		/* move to destination AG */
++		ret = relocate_file_to_ag(mnt, ipath->path, &xfd, dst_agno);
++		xfd_close(&xfd);
++
++		/*
++		 * If the destination AG has run out of space, we do not remove
++		 * this inode from relocation data so it will be immediately
++		 * retried in the next AG. Other errors will be fatal.
++		 */
++		if (ret < 0)
++			return ret;
++next:
++		/* remove from relocation data */
++		idx = ipath->ino + 1;
++		forget_reloc_ino(ipath->ino);
++	} while (ret != -ENOSPC);
++
++	return ret;
 +}
 +
-+static uint64_t
-+reloc_end(
-+	struct avl64node	*node)
++static int
++relocate_targets(
++	const char		*mnt,
++	xfs_agnumber_t		highest_agno)
 +{
-+	struct reloc_node	*rln;
++	xfs_agnumber_t		dst_agno = 0;
++	int			ret;
 +
-+	rln = container_of(node, struct reloc_node, node);
-+	return rln->ino + 1;
++	for (dst_agno = 0; dst_agno <= highest_agno; dst_agno++) {
++		ret = relocate_targets_to_ag(mnt, dst_agno);
++		if (ret == -ENOSPC)
++			continue;
++		break;
++	}
++	return ret;
 +}
 +
-+static struct avl64ops reloc_ops = {
-+	reloc_start,
-+	reloc_end,
-+};
-+
-+static struct avl64tree_desc	relocation_data = {
-+	.avl_ops = &reloc_ops,
-+};
-+
-+bool
-+is_reloc_populated(void)
++/*
++ * Relocate all the user objects in an AG to lower numbered AGs.
++ */
++static int
++relocate_f(
++	int		argc,
++	char		**argv)
 +{
-+	return relocation_data.avl_firstino != NULL;
-+}
++	xfs_agnumber_t	target_agno = -1;
++	xfs_agnumber_t	highest_agno = -1;
++	xfs_agnumber_t	log_agno;
++	void		*fshandle;
++	size_t		fshdlen;
++	int		c;
++	int		ret;
 +
-+static inline struct reloc_node *
-+reloc_lookup(
-+	uint64_t		ino)
-+{
-+	avl64node_t		*node;
-+
-+	node = avl64_find(&relocation_data, ino);
-+	if (!node)
-+		return NULL;
-+
-+	return container_of(node, struct reloc_node, node);
-+}
-+
-+static inline struct reloc_node *
-+reloc_insert(
-+	uint64_t		ino)
-+{
-+	struct reloc_node	*rln;
-+	avl64node_t		*node;
-+
-+	rln = malloc(sizeof(struct reloc_node));
-+	if (!rln)
-+		return NULL;
-+
-+	rln->node.avl_nextino = NULL;
-+	rln->ino = ino;
-+	rln->ipath = UNLINKED_IPATH;
-+	rln->flags = 0;
-+
-+	node = avl64_insert(&relocation_data, &rln->node);
-+	if (node == NULL) {
-+		free(rln);
-+		return NULL;
++	while ((c = getopt(argc, argv, "a:h:")) != EOF) {
++		switch (c) {
++		case 'a':
++			target_agno = cvt_u32(optarg, 10);
++			if (errno) {
++				fprintf(stderr, _("bad target agno value %s\n"),
++					optarg);
++				return command_usage(&relocate_cmd);
++			}
++			break;
++		case 'h':
++			highest_agno = cvt_u32(optarg, 10);
++			if (errno) {
++				fprintf(stderr, _("bad highest agno value %s\n"),
++					optarg);
++				return command_usage(&relocate_cmd);
++			}
++			break;
++		default:
++			return command_usage(&relocate_cmd);
++		}
 +	}
 +
-+	return rln;
-+}
++	if (optind != argc)
++		return command_usage(&relocate_cmd);
 +
-+bool
-+test_reloc_iflag(
-+	uint64_t		ino,
-+	unsigned int		flag)
-+{
-+	struct reloc_node	*rln;
-+
-+	rln = reloc_lookup(ino);
-+	if (!rln)
-+		return false;
-+
-+	return rln->flags & flag;
-+}
-+
-+void
-+set_reloc_iflag(
-+	uint64_t		ino,
-+	unsigned int		flag)
-+{
-+	struct reloc_node	*rln;
-+
-+	rln = reloc_lookup(ino);
-+	if (!rln) {
-+		rln = reloc_insert(ino);
-+		if (!rln)
-+			abort();
-+		if (flag != INODE_PATH)
-+			inode_count++;
-+	}
-+	if (flag == INODE_PATH)
-+		inode_paths++;
-+
-+	rln->flags |= flag;
-+}
-+
-+#define avl_for_each_range_safe(pos, n, l, first, last) \
-+	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; \
-+			pos != (l); \
-+			pos = n, n = pos ? pos->avl_nextino : NULL)
-+
-+struct inode_path *
-+get_next_reloc_ipath(
-+	uint64_t		ino)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct reloc_node	*rln;
-+
-+	avl64_findranges(&relocation_data, ino - 1, -1ULL, &firstn, &lastn);
-+	if (firstn == NULL && lastn == NULL)
-+		return NULL;
-+
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		rln = container_of(pos, struct reloc_node, node);
-+
-+		if (rln->flags & INODE_PATH)
-+			return rln->ipath;
++	if (target_agno == -1) {
++		fprintf(stderr, _("Target AG must be specified!\n"));
++		return command_usage(&relocate_cmd);
 +	}
 +
-+	return NULL;
-+}
++	log_agno = cvt_fsb_to_agno(&file->xfd, file->xfd.fsgeom.logstart);
++	if (target_agno <= log_agno) {
++		fprintf(stderr,
++_("Target AG %d must be higher than the journal AG (AG %d). Aborting.\n"),
++			target_agno, log_agno);
++		goto out_fail;
++	}
 +
-+uint64_t
-+get_next_reloc_unlinked(
-+	uint64_t		ino)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct reloc_node	*rln;
++	if (target_agno >= file->xfd.fsgeom.agcount) {
++		fprintf(stderr,
++_("Target AG %d does not exist. Filesystem only has %d AGs\n"),
++			target_agno, file->xfd.fsgeom.agcount);
++		goto out_fail;
++	}
 +
-+	avl64_findranges(&relocation_data, ino - 1, -1ULL, &firstn, &lastn);
-+	if (firstn == NULL && lastn == NULL)
-+		return 0;
++	if (highest_agno == -1)
++		highest_agno = target_agno - 1;
 +
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		rln = container_of(pos, struct reloc_node, node);
++	if (highest_agno >= target_agno) {
++		fprintf(stderr,
++_("Highest destination AG %d must be less than target AG %d. Aborting.\n"),
++			highest_agno, target_agno);
++		goto out_fail;
++	}
 +
-+		if (!(rln->flags & INODE_PATH))
-+			return rln->ino;
++	if (is_reloc_populated()) {
++		fprintf(stderr,
++_("Relocation data populated from previous commands. Aborting.\n"));
++		goto out_fail;
++	}
++
++	/* this is so we can use fd_to_handle() later on */
++	ret = path_to_fshandle(file->fs_path.fs_dir, &fshandle, &fshdlen);
++	if (ret < 0) {
++		fprintf(stderr, _("Cannot get fshandle for mount %s: %s\n"),
++			file->fs_path.fs_dir, strerror(errno));
++		goto out_fail;
++	}
++
++	ret = find_relocation_targets(target_agno);
++	if (ret) {
++		fprintf(stderr,
++_("Failure during target discovery. Aborting.\n"));
++		goto out_fail;
++	}
++
++	ret = resolve_target_paths(file->fs_path.fs_dir);
++	if (ret) {
++		fprintf(stderr,
++_("Failed to resolve all paths from mount point %s: %s\n"),
++			file->fs_path.fs_dir, strerror(-ret));
++		goto out_fail;
++	}
++
++	ret = relocate_targets(file->fs_path.fs_dir, highest_agno);
++	if (ret) {
++		fprintf(stderr,
++_("Failed to relocate all targets out of AG %d: %s\n"),
++			target_agno, strerror(-ret));
++		goto out_fail;
 +	}
 +
 +	return 0;
++out_fail:
++	exitcode = 1;
++	return 0;
 +}
 +
-+struct inode_path **
-+get_reloc_ipath_slot(
-+	uint64_t		ino)
++static void
++relocate_help(void)
 +{
-+	struct reloc_node	*rln;
++	printf(_(
++"\n"
++"Relocate all the user data and metadata in an AG.\n"
++"\n"
++"This function will discover all the relocatable objects in a single AG and\n"
++"move them to a lower AG as preparation for a shrink operation.\n"
++"\n"
++"	-a <agno>	Allocation group to empty\n"
++"	-h <agno>	Highest target AG allowed to relocate into\n"
++"\n"));
 +
-+	rln = reloc_lookup(ino);
-+	if (!rln)
-+		return NULL;
-+
-+	return &rln->ipath;
 +}
 +
 +void
-+forget_reloc_ino(
-+	uint64_t		ino)
++relocate_init(void)
 +{
-+	struct reloc_node	*rln;
++	relocate_cmd.name = "relocate";
++	relocate_cmd.altname = "relocate";
++	relocate_cmd.cfunc = relocate_f;
++	relocate_cmd.argmin = 2;
++	relocate_cmd.argmax = 4;
++	relocate_cmd.args = "-a agno [-h agno]";
++	relocate_cmd.flags = CMD_FLAG_ONESHOT;
++	relocate_cmd.oneline = _("Relocate data in an AG.");
++	relocate_cmd.help = relocate_help;
 +
-+	rln = reloc_lookup(ino);
-+	if (!rln)
-+		return;
-+
-+	avl64_delete(&relocation_data, &rln->node);
-+	free(rln);
++	add_command(&relocate_cmd);
 +}
-+#endif /* USE_RADIX_TREE_FOR_INUMS */
+diff --git a/spaceman/relocation.h b/spaceman/relocation.h
+index f05a871915da42..d4c71b7bb7f054 100644
+--- a/spaceman/relocation.h
++++ b/spaceman/relocation.h
+@@ -43,4 +43,9 @@ struct inode_path {
+  */
+ #define UNLINKED_IPATH		((struct inode_path *)1)
+ 
++int find_relocation_targets(xfs_agnumber_t agno);
++int relocate_file_to_ag(const char *mnt, const char *path, struct xfs_fd *xfd,
++			xfs_agnumber_t agno);
++int resolve_target_paths(const char *mntpt);
++
+ #endif /* XFS_SPACEMAN_RELOCATION_H_ */
+diff --git a/spaceman/space.h b/spaceman/space.h
+index cffb1882153a18..8c2b3e5464dee6 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -41,5 +41,6 @@ extern void	health_init(void);
+ void		move_inode_init(void);
+ void		find_owner_init(void);
+ void		resolve_owner_init(void);
++void		relocate_init(void);
+ 
+ #endif /* XFS_SPACEMAN_SPACE_H_ */
 
