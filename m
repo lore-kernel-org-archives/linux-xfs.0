@@ -1,73 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f170.google.com (mail-yb1-f170.google.com [209.85.219.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D4A74503C;
-	Mon,  6 Jan 2025 19:09:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 450AC70830
+	for <linux-xfs@vger.kernel.org>; Mon,  6 Jan 2025 19:21:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736190587; cv=none; b=ikmle5aGVXKfjhUTharVXbB4eNURBITSLxNIA71vjAmCvuK+u4tZVXE9HnCw9APcM8Tg4UxB+1UNs3t+8GCKUrxedZ4WppFcuctCYSyH16rCVhQ0rv9B/yhyk7ZLRUq0zBXKNOhf30sCU6M0tf2va+TYr2gJ0NiTBIPCKkr4wfk=
+	t=1736191283; cv=none; b=VqEQ1YUKY6V/m6KhS/68jZCzttpmwBoydqMWqUDU2vidru5SB1/yeSvwOw0p8CYZH6ef/xDbO0/+25h1cITIGtG0eA0iLqAMQLpeuhC8D074fOIpKWKsC5HC6POUnK0aZr46ef+hORF4H6aP3ZIB+8Kz/9pcgIvMUKKp98F6ipA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736190587; c=relaxed/simple;
-	bh=Ac6QYRlmb9odD6NHY62q27F44hcFEpQkjnzmvs9F9tc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kEC/OZ4qjqulTiDekHVb/wwETtKDlnwZPvlrqOse+keJN+qOpj0wl3JK7M9RkdNMH7YCG7SxsmTu1jk2W6Ho+f2ecQpaimVx/tqyE3hR+kueDJPPzmvMS88f5c6QspWd+ONvWLF0SB8aXCJ2gKqCIuoDEE6bw+AeT+wLt8z3534=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jirs+SRi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1736191283; c=relaxed/simple;
+	bh=HFgdR4L/DhPOYtoofHe46i6/7trSDZVS+pEUm5fp3aI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=o1RUNFMF+JFoj0/n3j5sj4yztMbqxZEpBbN2ilMqq+Ji77JrYmjL6Cb9LYmegtqHYMvBO4Z0ODgj9spyLk1aanGZCM/ORCIG0nhc9k6bRnDA6hz8iytxPZ3E9Eb5fLmt46BpjRtY8X6hV9aE3TdsBx6e4PCXH5Q/ThOLFi7ePH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JsrE7cwE; arc=none smtp.client-ip=209.85.219.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jirs+SRi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E51A2C4CED6;
-	Mon,  6 Jan 2025 19:09:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736190587;
-	bh=Ac6QYRlmb9odD6NHY62q27F44hcFEpQkjnzmvs9F9tc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Jirs+SRi/cJIb3qGkSZSnzGhhQmbHrr/Wn/y6i5J702srWWCZtCNxdfCmJkW4E8zb
-	 vJSWGOR1rcgSmpt5Q2+JJ06O5LPM1bUmIcPG/GDsUa94w01TnBuU/vS2jKC5hhJZHY
-	 AYj2zD/fnKgcIJeVmgq39AiHLvbSOO6D4TVfdfm9exvSIrS0KKw4Z59bHWzJlEdvtS
-	 MJOprwSuqjV9trVk2AshKA8eKEWHpadwFyDKCAOqVlg0SvE/5tsW1n2DHv3X99njpv
-	 ah42n70asx67ZtIR1scW9kSHRcHAC0lAOut5sZGVcFIPo0j3Ye3gnnL8FIH5hkLBp0
-	 jLymLLxAb/Y3A==
-Date: Mon, 6 Jan 2025 11:09:46 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-	linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-man@vger.kernel.org
-Subject: Re: [PATCH] statx.2: document STATX_DIO_READ_ALIGN
-Message-ID: <20250106190946.GF6174@frogsfrogsfrogs>
-References: <20250106151607.954940-1-hch@lst.de>
- <20250106151938.GA27324@lst.de>
- <20250106174007.GD6174@frogsfrogsfrogs>
- <20250106180958.GA31325@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JsrE7cwE"
+Received: by mail-yb1-f170.google.com with SMTP id 3f1490d57ef6-e549a71dd3dso4706024276.0
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Jan 2025 11:21:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1736191281; x=1736796081; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hBPxLo3rfgysCtCfKNPRW2I+1MJGdeJ9Jvo1A4mDkR4=;
+        b=JsrE7cwEXZVppVEA0+0ljAqLq6OpYpE7XovMAFuDALziVpk08zdvxH3rN1KJulnI1U
+         HjBTYf2hqNdUBmnzCTZGqTEBaTEv4TmE673RK1daBFX8pibS6RQjmfM+eE9qVb8zz6jz
+         FtIwdTJKDhirvmcsyHxPmMoUL+Pbu200mua3cyHoIcowBRTUfMGnVAneAAmpQNGG7IoZ
+         TFWBWg+WrtOdc2+5MYJM7GmHPcAfIwpXwFe0wVegw4sQuTMcSYF+IxX3AD4mzQRpZAqh
+         sfud1ugBMo29tkINj2vGaG6zMitKlQWuOoYrKxz262/3w2Ly8WbZT4RCW1Tc7ZoVNAD4
+         x0dA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736191281; x=1736796081;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=hBPxLo3rfgysCtCfKNPRW2I+1MJGdeJ9Jvo1A4mDkR4=;
+        b=l+om4BwfiSksrueBp262yRvh8Q7IXxfvrmWOHU0REr39ypWQKiNjpFOSTmScxbtAzj
+         MJgqjjTIa/BiWRn6p1L6qmKtD4180J/qrNnCKrj+M5WvPgr1Ns0DsA/UuvwLfF+M66lc
+         04kiEe6Eu877FUQf3xY1IgaYGSJ0gEyA9RHE68TF/HW18zm78Ntd4KzshtcPiutT60ZB
+         e40utMkZM1hEv2YeYzKLNpdHVcOESDy2cqNQSge/WHZj1xlO5oI/oGuezR6Cwthu8KmM
+         qTPxJ5Q0SFRWOhdJ4rr/G0eUMTX3MM1PrQm236yhKCtgL91/cIUgeqxHYGL8k/ml+NEA
+         oXWw==
+X-Forwarded-Encrypted: i=1; AJvYcCVSYDurmQnBxR8N5iXCj0vPBGlBbqXNDM2Meh5tRX6NOEAYI2Wwi/AFHI5FdPOV5KSDpbb35HfkZ8Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw0VAZu6jUjO9g8ynjfBcwW43GxEPmAM2kcnBJOZPrVGNrRLXqD
+	17Wfu0T5Xc1386MtCYhTYmrWntg2mH5dQZRcEi1fRj36ABRr1I2GCa2Cq0+d68fQCVl/G9sx8+N
+	i0Zm2M3GLq70hNm64Ut3KriAUzlQ=
+X-Gm-Gg: ASbGncvJvXiOvweH34QGrnzJxSdKIm55K3qaUM0c0w376c+NIVIVqdiDqJgCfddD9Sy
+	zueoRTMTUgZNZuLyWpbbKecSs0MEyrPmL7LekI9spgxyuUmqKHKj/fHc61yUyVnynN/A=
+X-Google-Smtp-Source: AGHT+IG9I3giwswrJ3ZeK7yJgj1E2V1Nb2KkSGetLGW5jJ5CzMC7EHRZAz8MwBcHi6TNuI1PREpEBjh0M4AUgsIQPfg=
+X-Received: by 2002:a05:6902:1108:b0:e38:1b17:8980 with SMTP id
+ 3f1490d57ef6-e538c202572mr32559967276.4.1736191281277; Mon, 06 Jan 2025
+ 11:21:21 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250106180958.GA31325@lst.de>
+References: <20241219183237.GF6197@frogsfrogsfrogs> <vbcin7yhf7ymbt5o35clxzym3qh2irxrabkd72bnksiu2kzu7g@jzo22uocpzvv>
+In-Reply-To: <vbcin7yhf7ymbt5o35clxzym3qh2irxrabkd72bnksiu2kzu7g@jzo22uocpzvv>
+From: Leah Rumancik <leah.rumancik@gmail.com>
+Date: Mon, 6 Jan 2025 11:21:10 -0800
+X-Gm-Features: AbW1kva-efyKBV1leV7acGvEU8wuDrIglWiVL1QwGMMN1Kbt07Oqqqx4Hk1sotA
+Message-ID: <CACzhbgS9wrsxr=F9yE62hcPmNj_61fFr3u61GLCZnFD4ai5HjQ@mail.gmail.com>
+Subject: Re: Create xfs-stable@lists.linux.dev
+To: Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, helpdesk@kernel.org, "Theodore Ts'o" <tytso@mit.edu>, 
+	xfs <linux-xfs@vger.kernel.org>, Catherine Hoang <catherine.hoang@oracle.com>, 
+	Leah Rumancik <lrumancik@google.com>, Chandan Babu R <chandanbabu@kernel.org>, 
+	Carlos Maiolino <cem@kernel.org>, Amir Goldstein <amir73il@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jan 06, 2025 at 07:09:58PM +0100, Christoph Hellwig wrote:
-> On Mon, Jan 06, 2025 at 09:40:07AM -0800, Darrick J. Wong wrote:
-> > > +stx_dio_offset_align
-> > > +which must be provided by the file system.
-> > 
-> > I can't imagine a filesystem where dio_read_offset > dio_offset makes
-> > sense, but why do we need to put that in the manpage?
-> 
-> Well, to be backwards compatible to older userspace the value put into
-> stx_dio_offset_align also needs to work for reads.  Given that there
-> were questions about this in the RFC round I thought I'd mention it.
+On Fri, Dec 20, 2024 at 10:37=E2=80=AFAM Konstantin Ryabitsev
+<konstantin@linuxfoundation.org> wrote:
+>
+> On Thu, Dec 19, 2024 at 10:32:37AM -0800, Darrick J. Wong wrote:
+> > Hi there,
+> >
+> > Could we create a separate mailing list to coordinate XFS LTS
+> > stable backporting work?  There's enough traffic on the main XFS list
+> > that the LTS backports get lost in the noise, and in the future we'd
+> > like to have a place for our LTS testing robots to send automated email=
+.
+> >
+> > A large portion of the upstream xfs community do not participate in LTS
+> > work so there's no reason to blast them with all that traffic.  What do
+> > the rest of you think about this?
+>
+> Can this work be done on stable@vger.kernel.org?
 
-Ah ok then. :)
+As the xfs stable maintenance process is still evolving quite a bit,
+there will be a decent amount more traffic for xfs than for other
+subsystems. I believe the actual stable patches will still go through
+the normal stable list and the xfs-stable will mainly serve for
+discussions on xfs-specific testing requirements/patch
+selection/process questions/etc prior to actually submitting the
+patches via stable. So I think it makes sense to split this out into a
+separate list.
 
-With the other formatting nits fixed,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+(did the list get created already?)
 
---D
+- leah
 
+>
+> -K
+>
