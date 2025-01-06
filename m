@@ -1,45 +1,53 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30D4C1DF255;
-	Mon,  6 Jan 2025 17:40:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6448C13665B;
+	Mon,  6 Jan 2025 18:06:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736185208; cv=none; b=UrjzArtd7Vg3R2+rWVZY5qhmAVPP1WUVESknQbvV7H2KN+P0baysnTjN75G9C3qZbR2qU1e1B7DDs6uYmO/TRzUoylFVc+FSn8540hOAIM3VOAWP67hFWYXKqsV0wj/TucEFp5DndbQXoLSWMmDzS0dkF9ul3tq+0zByitpfDXI=
+	t=1736186800; cv=none; b=k3Uxar+zBJhbgC4UYc1NucumTe8/GAjhfbkTPauZZz/YVQhYspo+xPb3ZKYzHElXuZ/1tuDxrX4Vo5+uefH9PeYgkC0m/7GBINvsUdss5ZMuTL0jOSWa7Dq14SXht7JcDMKGd5fYwHD53bp8BJ9LXQaYd0TdN1fzQuwJE1h3lDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736185208; c=relaxed/simple;
-	bh=7W9pHS4PWpd3SS1uQabJP+wUkjf2TzWY9fHvfJnEDBs=;
+	s=arc-20240116; t=1736186800; c=relaxed/simple;
+	bh=Is5mI3NZ7iUvYxbFNyrMCBtqp8Tq7tlQP0/chDnHOuo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jwCCgswDQemtfCZJMo94yNOMLT6IBSNvuTnV8ceIs63dwINQH+eknBAkCsg4aZFsRWrSGLhy67veJ3WgOh8Kl8N8IYjVVHCrkGiaNNrH8/FrvZPaB9XbQ3IdeTxkt5M6rXvpgZccv9acpKl8Hyiyn3REbsvM7NpqMr3GHVI2JFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fc/tb42i; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=r/naW8nzYX9iJv9wAcxI55v4owAntSvjDtkIvbadq8nuxxB8HrtrA9IB7sOq4dfHozkSWzT94y0AYDOhtdiy2mINJsAg9VXqaI3ApHKlHyu2+EOK0yGhpsRKo4Dt0qlr+pndBLqiRYKgnHu4kVr76r3Lvzb77Sepl1om63AaJMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qUxY46Ks; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fc/tb42i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B34C2C4CEDF;
-	Mon,  6 Jan 2025 17:40:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736185207;
-	bh=7W9pHS4PWpd3SS1uQabJP+wUkjf2TzWY9fHvfJnEDBs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fc/tb42iPn0lxr2eEBP3jvwUDRYAFIuzsdptqvVQXGhb1+AQg5hoK/FZKbLuXSg6x
-	 4xTbVpdRz+reXHWcrcHaipcXpJakO8v5b1JEs2R4nXCH0Nc0iKBwPc1opwUj+hxYXW
-	 shkfeyPwDriIwgAXrCLLtajilkTxZMsWGQfPuTRWea0V8Uf3BWtbnJeVhCEKPH17lM
-	 PHkRmohJYstf1VQO8OtR9xJtYY2dLfaXDTVhOhSk0J6LD7/ZceKhenRUhKBlSIlSby
-	 KsTOA3gN3OyFRLOWJZyYSeA2Fl0CZhP+boljKiR24cc0maB61rupC7iAMRoaJgfdU4
-	 rBq0ir5dO8a4w==
-Date: Mon, 6 Jan 2025 09:40:07 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-	linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-man@vger.kernel.org
-Subject: Re: [PATCH] statx.2: document STATX_DIO_READ_ALIGN
-Message-ID: <20250106174007.GD6174@frogsfrogsfrogs>
-References: <20250106151607.954940-1-hch@lst.de>
- <20250106151938.GA27324@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qUxY46Ks"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Is5mI3NZ7iUvYxbFNyrMCBtqp8Tq7tlQP0/chDnHOuo=; b=qUxY46Ksvs1yZZYTqfSx7aqs2i
+	md/g1C/Fu+xkT+Ndw/T5hwQaas0fu77v6n0rVYtTIi2gkjmOc1BO6gvT5qaV6+tWdjeCm6L2FtlBH
+	Dec8pkVLtp6P3WQ41ushZLKgLbMQ30W2HXjz+67JQt9oJqEsHputXmrhYEyOSn2tlNvnRpSnyCAoP
+	Lcujubqykd9KWo04dmG2qpg+ubt+ir0w6CLJynfdd5QKUXuw1ptnNGguVa6TQ4mAGaBlAy4XYrAPP
+	tBvcZuDvKnVJztHPb+bkHnUj4SgfH9Ok6Rq18YE+5AJVNxuAOXgFqFj8KX3igTShtKUIW+7NcS9wC
+	o3vZWJig==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tUrUo-00000002Dnl-16CR;
+	Mon, 06 Jan 2025 18:06:34 +0000
+Date: Mon, 6 Jan 2025 10:06:34 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>,
+	Zhang Yi <yi.zhang@huaweicloud.com>, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	adilger.kernel@dilger.ca, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com,
+	Sai Chaitanya Mitta <mittachaitu@gmail.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH 1/2] fs: introduce FALLOC_FL_FORCE_ZERO to fallocate
+Message-ID: <Z3wbqlfoZjisbe1x@infradead.org>
+References: <20241228014522.2395187-1-yi.zhang@huaweicloud.com>
+ <20241228014522.2395187-2-yi.zhang@huaweicloud.com>
+ <Z3u-OCX86j-q7JXo@infradead.org>
+ <20250106161732.GG1284777@mit.edu>
+ <Z3wEhXakqrW4i3UC@infradead.org>
+ <20250106173133.GB6174@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,97 +56,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250106151938.GA27324@lst.de>
+In-Reply-To: <20250106173133.GB6174@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jan 06, 2025 at 04:19:38PM +0100, Christoph Hellwig wrote:
-> Document the new STATX_DIO_READ_ALIGN flag and the new
-> stx_dio_read_offset_align field guarded by it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  man/man2/statx.2 | 27 ++++++++++++++++++++++++++-
->  1 file changed, 26 insertions(+), 1 deletion(-)
-> 
-> diff --git a/man/man2/statx.2 b/man/man2/statx.2
-> index c5b5a28ec2f1..378bf363d93f 100644
-> --- a/man/man2/statx.2
-> +++ b/man/man2/statx.2
-> @@ -76,6 +76,9 @@ struct statx {
->      __u32 stx_atomic_write_unit_min;
->      __u32 stx_atomic_write_unit_max;
->      __u32 stx_atomic_write_segments_max;
-> +
-> +    /* File offset alignment for direct I/O reads */
-> +    __u32   stx_dio_read_offset_align;
->  };
->  .EE
->  .in
-> @@ -261,7 +264,7 @@ STATX_BTIME	Want stx_btime
->  STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
->  	It is deprecated and should not be used.
->  STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
-> -STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align
-> +STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align.
->  	(since Linux 6.1; support varies by filesystem)
->  STATX_MNT_ID_UNIQUE	Want unique stx_mnt_id (since Linux 6.8)
->  STATX_SUBVOL	Want stx_subvol
-> @@ -270,6 +273,8 @@ STATX_WRITE_ATOMIC	Want stx_atomic_write_unit_min,
->  	stx_atomic_write_unit_max,
->  	and stx_atomic_write_segments_max.
->  	(since Linux 6.11; support varies by filesystem)
-> +STATX_DIO_READ_ALIGN	Want stx_dio_read_offset_align.
-> +	(since Linux 6.14; support varies by filesystem)
->  .TE
->  .in
->  .P
-> @@ -467,6 +472,26 @@ This will only be nonzero if
->  .I stx_dio_mem_align
->  is nonzero, and vice versa.
->  .TP
-> +.I stx_dio_read_offset_align
-> +The alignment (in bytes) required for file offsets and I/O segment lengths for
-> +direct I/O reads
-> +.RB ( O_DIRECT )
-> +on this file.  If zero the limit in
+On Mon, Jan 06, 2025 at 09:31:33AM -0800, Darrick J. Wong wrote:
+> I think we should wire it up as a new FALLOC_FL_WRITE_ZEROES mode,
+> document very vigorously that it exists to facilitate pure overwrites
+> (specifically that it returns EOPNOTSUPP for always-cow files), and not
+> add more ioctls.
 
-manpage nit: new sentences should start on a new line.
+That goes into a similar direction to what I'd prefer.
 
-> +.I
-> +stx_dio_offset_align
-> +applies for reads as well.  If non-zero this value must be
+> (That said, doesn't BLKZEROOUT already do this for bdevs?)
 
-Here too.
-
-> +smaller than
-> +.I
-> +stx_dio_offset_align
-> +which must be provided by the file system.
-
-I can't imagine a filesystem where dio_read_offset > dio_offset makes
-sense, but why do we need to put that in the manpage?
-
-vs. "If non-zero, the filesystem must also provide stx_dio_offset_align."
-
-> +This value does not affect the memory alignent in
-
-                                         alignment
-
-> +.I stx_dio_mem_align .
-> +.IP
-> +.B STATX_DIO_READ_ALIGN
-> +.I ( stx_dio_offset_align )
-> +support by filesystem;
-> +it is supported by xfs since Linux 6.14.
-
-Aside from those bits, this looks good to me.
-
---D
-
-> +.TP
->  .I stx_subvol
->  Subvolume number of the current file.
->  .IP
-> -- 
-> 2.45.2
-> 
-> 
+Yes. But the same is true for the other fallocate modes on block
+devices.
