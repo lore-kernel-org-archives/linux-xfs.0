@@ -1,34 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A1301474A0;
-	Mon,  6 Jan 2025 15:19:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A497714A617
+	for <linux-xfs@vger.kernel.org>; Mon,  6 Jan 2025 15:42:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736176785; cv=none; b=IiAnx9lnt272SBtMlk91rVLCwXuQAKk8E1DcoNa3NvJ3QdKaN/M8lTjf1zWbT16hcFQXCRpgF/eNAzr8q3hRGBw6KOOQbrqwhbxqpA0gwaBEvP03kXpR4NRwr0olEScrItdweVNyTXy4hLml3V0O3sKQ3SdCVJDZt0v/6YvpRHI=
+	t=1736178139; cv=none; b=SChzLjq19hP1Kkv5QIAFYKHR1WW5Nyn+v0CSgzj5CF6/jeN7RT4m5TgxnuAuRMfsre8RuB8XTCom/VT422RJWg34FXoCzEB0OiwNAoL1Wsm1zSZEAcklypwFJ4+AVaF1RW3+qozhokVELZoEURZS1BlpdkIFBXqIf+tHhZV07U0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736176785; c=relaxed/simple;
-	bh=8zrCXLf6X5v1dVcJogjOZPO6npUy+5xRwpbRzC49N90=;
+	s=arc-20240116; t=1736178139; c=relaxed/simple;
+	bh=kNXBobGTpXHf9IjYkhSud4m4HZK9Lj39krGbJtUEk1g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qyql2XY532r4GiYEc2oagyexbdiFWV1xzVhT2mES/JJHh/WyPluuAi3zFxqi/tvJvlHCZsi/DeeyGzzZ4eOI4ITWv0TGM91woSKw9CIrZNaKRhfABPlLpIiZrFlgiSEuw29E4CtrTp2QMN8/RIIVBTSKHTqW/kLGZI/TRMErQb8=
+	 Content-Type:Content-Disposition:In-Reply-To; b=j+5fer/WRtfV2szhyhS7dc+Sh+roX797L5p7g7fPFO9iR+eME5/zT7KEy0bzjfVBV6Rw2TH9KcZAOpXqOxUF1Rh1vajwGqJ7eliZbReS+OK5B5sabV11BMKbjU9+ixMBLONerdAL6vqjmKNiCiCiz0pa0DJ7d0nq3P1J21KGBEA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id D493468C7B; Mon,  6 Jan 2025 16:19:38 +0100 (CET)
-Date: Mon, 6 Jan 2025 16:19:38 +0100
+	id CD94768C7B; Mon,  6 Jan 2025 16:42:12 +0100 (CET)
+Date: Mon, 6 Jan 2025 16:42:12 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-	linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-man@vger.kernel.org
-Subject: [PATCH] statx.2: document STATX_DIO_READ_ALIGN
-Message-ID: <20250106151938.GA27324@lst.de>
-References: <20250106151607.954940-1-hch@lst.de>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, david@fromorbit.com,
+	hch@lst.de, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [RFC] Directly mapped xattr data & fs-verity
+Message-ID: <20250106154212.GA27933@lst.de>
+References: <20241229133350.1192387-1-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,76 +32,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250106151607.954940-1-hch@lst.de>
+In-Reply-To: <20241229133350.1192387-1-aalbersh@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Document the new STATX_DIO_READ_ALIGN flag and the new
-stx_dio_read_offset_align field guarded by it.
+I've not looked in details through the entire series, but I still find
+all the churn for trying to force fsverity into xattrs very counter
+productive, or in fact wrong.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- man/man2/statx.2 | 27 ++++++++++++++++++++++++++-
- 1 file changed, 26 insertions(+), 1 deletion(-)
+xattrs are for relatively small variable sized items where each item
+has it's own name.  fsverity has been designed to be stored beyond
+i_size inside the file.  We're creating a lot of overhead for trying
+to map fsverity to an underlying storage concept that does not fit it
+will.  As fsverity protected files can't be written to there is no
+chance of confusing fsverity blocks with post-EOF preallocation.
 
-diff --git a/man/man2/statx.2 b/man/man2/statx.2
-index c5b5a28ec2f1..378bf363d93f 100644
---- a/man/man2/statx.2
-+++ b/man/man2/statx.2
-@@ -76,6 +76,9 @@ struct statx {
-     __u32 stx_atomic_write_unit_min;
-     __u32 stx_atomic_write_unit_max;
-     __u32 stx_atomic_write_segments_max;
-+
-+    /* File offset alignment for direct I/O reads */
-+    __u32   stx_dio_read_offset_align;
- };
- .EE
- .in
-@@ -261,7 +264,7 @@ STATX_BTIME	Want stx_btime
- STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
- 	It is deprecated and should not be used.
- STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
--STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align
-+STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align.
- 	(since Linux 6.1; support varies by filesystem)
- STATX_MNT_ID_UNIQUE	Want unique stx_mnt_id (since Linux 6.8)
- STATX_SUBVOL	Want stx_subvol
-@@ -270,6 +273,8 @@ STATX_WRITE_ATOMIC	Want stx_atomic_write_unit_min,
- 	stx_atomic_write_unit_max,
- 	and stx_atomic_write_segments_max.
- 	(since Linux 6.11; support varies by filesystem)
-+STATX_DIO_READ_ALIGN	Want stx_dio_read_offset_align.
-+	(since Linux 6.14; support varies by filesystem)
- .TE
- .in
- .P
-@@ -467,6 +472,26 @@ This will only be nonzero if
- .I stx_dio_mem_align
- is nonzero, and vice versa.
- .TP
-+.I stx_dio_read_offset_align
-+The alignment (in bytes) required for file offsets and I/O segment lengths for
-+direct I/O reads
-+.RB ( O_DIRECT )
-+on this file.  If zero the limit in
-+.I
-+stx_dio_offset_align
-+applies for reads as well.  If non-zero this value must be
-+smaller than
-+.I
-+stx_dio_offset_align
-+which must be provided by the file system.
-+This value does not affect the memory alignent in
-+.I stx_dio_mem_align .
-+.IP
-+.B STATX_DIO_READ_ALIGN
-+.I ( stx_dio_offset_align )
-+support by filesystem;
-+it is supported by xfs since Linux 6.14.
-+.TP
- .I stx_subvol
- Subvolume number of the current file.
- .IP
--- 
-2.45.2
-
+So please try to implement it just using the normal post-i_size blocks
+and everything will become a lot simpler and cleaner even if the concept
+of metadata beyond EOF might sound revolting (it still does to me to
+some extent)
