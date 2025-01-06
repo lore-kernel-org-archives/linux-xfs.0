@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A744EB676
-	for <linux-xfs@vger.kernel.org>; Mon,  6 Jan 2025 09:56:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90A6D1D9A76
+	for <linux-xfs@vger.kernel.org>; Mon,  6 Jan 2025 09:56:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736157384; cv=none; b=qG4EiC8d9vXqw/yoerBY3/0Aya7B3LKHj6La39cbA0SR/QJzsQG6edjaHttGsaHTEhWLfekQlz0i9B06GiWh50EPLzyOg4ATRN5nXb+17g5hFpIwov4Xavf1zLSxJ9eJWUhXXP9C4MkXdMLH2BncU+2inTdpUSFUNA7ek7YsR1E=
+	t=1736157387; cv=none; b=lkuAzg8i5bPj2E9FdAL79MEF/DIUkGSA9PGiVy3YTbLW5a68Z4pGG8Y1eW6U2ZUjkoJYcGoqOlPGPZfbsHwzDO1jytQ5DBk4cGV+wYGBIXGKDd8MPvolynb19h4pxYISkqgEbDJTs7PVW7Yl2JwOwG6Cj+CXGScobjfYuPm/vY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736157384; c=relaxed/simple;
-	bh=OsEB0Kz8JoZ8+uz2WL48xgaYQ8evu5ptBK60qKkEcxk=;
+	s=arc-20240116; t=1736157387; c=relaxed/simple;
+	bh=JrUBo9a6mBR+tKirfp5tcmayFMnc5u9f1E0w4bUFpyc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uz3lK9WDcbF82ObJ5EluRR/W64By9iyTg4a3mUAjRoebTnUYkliNb1TYPFFWg7zFp5Uc25p4cUG6Wl6FjIvFiyZXHPlT6azCnAGgWkmU95Pjz1dWBBxC18S6w78+82/FMsIrjaZiZfW32Npl0hy5eAV+AJMFe/oqQYfTzeY7110=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3Bli0s3N; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=X1sBkMLnnuehYGYOktlIf3iAt/tFA7+JAaXqaSqwotxXF1tOjQsXJQxa/gurcfpyaKr9VuSL4wVpLyRKuOwcTG/VlxVDPz6ZZzUQ3BQa4yz9XEks9SGCVWiJvehmmTgOtLNeyfAKE0AoCxAN035ueogqCxKrqu4TpSSop54e8uU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=p3pAJ0kV; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3Bli0s3N"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="p3pAJ0kV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=ws5mXIkIL3izsupIVy1AsPa0/+0ZJ8noCFD071mamsE=; b=3Bli0s3N1zeuD6yMcijpfl2dCa
-	4DMC1W+kcvIpLP0XtyF5glZUP2BFF6D7wxjBwnM4dFINQQ7y0KOVUccgSDzyDuFiV+BxKCt1emBnM
-	h/02HqGrsB4PHbBDyGx+5nbrxg8Aqk8tAPVK80oozxGGv6dEkiSB2FIwX1ZyB/HU+xmzht3hnPxaW
-	Ys+JP7FA0TjbjCfTxPR8ECwD2LmrZtP8PAAnbsdEebP9NiwKyrHcKJkPzfqAAmc3MnNvm4hu62p72
-	e5ueyVm/woXfAcEVbdzhG6GqDLohwhbUQ/h7YDP4Cc/JAlvqoINTyw7ULDDSUbiK0Wc8wK92WffQJ
-	RtAfaHrg==;
+	bh=NxcOHm43DeJPslqKfTjnUgd1bI3ReiNefOYdj4l4oa8=; b=p3pAJ0kVloqZM8c7vfny/mILLt
+	+cmybZzJZGIj+OpgfXXFZHZW2PRG4NDxlkDCE14mqyakO+/sJQUuTby/p221Nzg56j2f2CaqirxC+
+	7g2gMvYvzxJHlBFVby4J4XGgF0XJKCZTlKzTY4SQ5WOSiLlXeTSCPK4myYreeDECgIQhjnlmMUslT
+	hvakcGweMz/cmG2SMdzAK7QSQuMIdLml973szdmu15jXbT0LRlBB9xbe55FdAHbbu3zAPCLxzfpyB
+	+IQ+qzt+EZQ7TYYqGHUIAnEoEIuCnaM6O8UGzBZfSeUXbkFaeX3bSmP7vACfYEWgLiA9FMJbePCmT
+	0C69gjgg==;
 Received: from 2a02-8389-2341-5b80-db6b-99e8-3feb-3b4e.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:db6b:99e8:3feb:3b4e] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tUjqP-00000000lDM-4Aun;
-	Mon, 06 Jan 2025 09:56:22 +0000
+	id 1tUjqS-00000000lEj-2Yl0;
+	Mon, 06 Jan 2025 09:56:25 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 03/15] xfs: remove the incorrect comment about the b_pag field
-Date: Mon,  6 Jan 2025 10:54:40 +0100
-Message-ID: <20250106095613.847700-4-hch@lst.de>
+Subject: [PATCH 04/15] xfs: move xfs_buf_iowait out of (__)xfs_buf_submit
+Date: Mon,  6 Jan 2025 10:54:41 +0100
+Message-ID: <20250106095613.847700-5-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250106095613.847700-1-hch@lst.de>
 References: <20250106095613.847700-1-hch@lst.de>
@@ -49,26 +49,113 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The rbtree root is long gone.
+There is no good reason to pass a bool argument to wait for a buffer when
+the callers that want that can easily just wait themselves.
+
+This means the wait moves out of the extra hold of the buffer, but as the
+callers of synchronous buffer I/O need to hold a reference anyway that is
+perfectly fine.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_buf.c | 36 +++++++++++++++++-------------------
+ 1 file changed, 17 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 3d56bc7a35cc..da80399c7457 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -187,7 +187,7 @@ struct xfs_buf {
- 	int			b_io_error;	/* internal IO error state */
- 	wait_queue_head_t	b_waiters;	/* unpin waiters */
- 	struct list_head	b_list;
--	struct xfs_perag	*b_pag;		/* contains rbtree root */
-+	struct xfs_perag	*b_pag;
- 	struct xfs_mount	*b_mount;
- 	struct xfs_buftarg	*b_target;	/* buffer target (device) */
- 	void			*b_addr;	/* virtual address of buffer */
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 1927655fed13..a3484421a6d8 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -52,14 +52,8 @@ struct kmem_cache *xfs_buf_cache;
+  *	  b_lock (trylock due to inversion)
+  */
+ 
+-static int __xfs_buf_submit(struct xfs_buf *bp, bool wait);
+-
+-static inline int
+-xfs_buf_submit(
+-	struct xfs_buf		*bp)
+-{
+-	return __xfs_buf_submit(bp, !(bp->b_flags & XBF_ASYNC));
+-}
++static int xfs_buf_submit(struct xfs_buf *bp);
++static int xfs_buf_iowait(struct xfs_buf *bp);
+ 
+ static inline bool xfs_buf_is_uncached(struct xfs_buf *bp)
+ {
+@@ -797,13 +791,18 @@ _xfs_buf_read(
+ 	struct xfs_buf		*bp,
+ 	xfs_buf_flags_t		flags)
+ {
++	int			error;
++
+ 	ASSERT(!(flags & XBF_WRITE));
+ 	ASSERT(bp->b_maps[0].bm_bn != XFS_BUF_DADDR_NULL);
+ 
+ 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD | XBF_DONE);
+ 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+ 
+-	return xfs_buf_submit(bp);
++	error = xfs_buf_submit(bp);
++	if (!error && !(flags & XBF_ASYNC))
++		error = xfs_buf_iowait(bp);
++	return error;
+ }
+ 
+ /*
+@@ -978,9 +977,10 @@ xfs_buf_read_uncached(
+ 	bp->b_flags |= XBF_READ;
+ 	bp->b_ops = ops;
+ 
+-	xfs_buf_submit(bp);
+-	if (bp->b_error) {
+-		error = bp->b_error;
++	error = xfs_buf_submit(bp);
++	if (!error)
++		error = xfs_buf_iowait(bp);
++	if (error) {
+ 		xfs_buf_relse(bp);
+ 		return error;
+ 	}
+@@ -1483,6 +1483,8 @@ xfs_bwrite(
+ 			 XBF_DONE);
+ 
+ 	error = xfs_buf_submit(bp);
++	if (!error)
++		error = xfs_buf_iowait(bp);
+ 	if (error)
+ 		xfs_force_shutdown(bp->b_mount, SHUTDOWN_META_IO_ERROR);
+ 	return error;
+@@ -1698,9 +1700,8 @@ xfs_buf_iowait(
+  * holds an additional reference itself.
+  */
+ static int
+-__xfs_buf_submit(
+-	struct xfs_buf	*bp,
+-	bool		wait)
++xfs_buf_submit(
++	struct xfs_buf	*bp)
+ {
+ 	int		error = 0;
+ 
+@@ -1764,9 +1765,6 @@ __xfs_buf_submit(
+ 			xfs_buf_ioend_async(bp);
+ 	}
+ 
+-	if (wait)
+-		error = xfs_buf_iowait(bp);
+-
+ 	/*
+ 	 * Release the hold that keeps the buffer referenced for the entire
+ 	 * I/O. Note that if the buffer is async, it is not safe to reference
+@@ -2322,7 +2320,7 @@ xfs_buf_delwri_submit_buffers(
+ 			bp->b_flags |= XBF_ASYNC;
+ 			xfs_buf_list_del(bp);
+ 		}
+-		__xfs_buf_submit(bp, false);
++		xfs_buf_submit(bp);
+ 	}
+ 	blk_finish_plug(&plug);
+ 
 -- 
 2.45.2
 
