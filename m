@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D8D18641
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 06:57:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED71D199FAF
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 06:58:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736233074; cv=none; b=XC1WpBbrgXPGPi5cs8egdYfTTl9gLi6SKxyFMI6KCS2RXk+mIOpNA9Sh48lvTjHOdjtDHQET3hTfs5k3wO6u4jbQ/VTraPryVjAfMDNgGI6+db0YuURnjPYhAo4slqig9V/qV5EJWmbYXo3eb3FKpptdwO5cKjuwonCvFd4NLxo=
+	t=1736233132; cv=none; b=aqu/tGOPYeYUmwAVAMNriyaJCun8R4xr1CpXBmELKyjWlAPed8X+X1U64Ik5ecUp92BngdSBaG7WaUe7EqVRbOcvj/MAYKu6I9DsWHHkco83cGuWDaJsmGNBf4bGzkRKE+9W5XC5qDVUCPq5EZ4R0dHd8g3saglDBBNzPmqA8Ro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736233074; c=relaxed/simple;
-	bh=gjdbGLTDmWXDPYBxP5PJt7nnFMFAKVhl89DJLl0Qsa0=;
+	s=arc-20240116; t=1736233132; c=relaxed/simple;
+	bh=Rkw/s4Yp53HYn31B5/qEPTUViAdPnPJEVfskPpOIP9I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VDdkNX0a4mspqe7i4sAcHZ903ClFtrgWE45lAEDlYrQ8FlT9Unq5hfMaecmkYtUzJmDMF4dHvgg/YYbKCBCKCgcXhfF++LyL+rfUOIQpneS2fJP1m885v7FfIgGl5rkbskWPQwl/7wWw3EeQKRmMaW6Ww9TjRlAm62qcbvBesmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+xOOWT6; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Rs+/r7yXM6sw4pegAxjlocc3JVOK/c35wJ/CHR5IhnB66h2RCchE1eUQ2cgD+0faz42y23DqsUaIakNzq+9kMXc1nQyuk7QSviTuXo/nX565WVaLacK1mnYuC0x2kuqJE1bnK0ID8oQdeolCviHhqQsyRx2IgimCl/+m5W1Wv8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lW6dNONf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+xOOWT6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 380EBC4CED6;
-	Tue,  7 Jan 2025 06:57:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lW6dNONf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 901CEC4CED6;
+	Tue,  7 Jan 2025 06:58:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736233074;
-	bh=gjdbGLTDmWXDPYBxP5PJt7nnFMFAKVhl89DJLl0Qsa0=;
+	s=k20201202; t=1736233131;
+	bh=Rkw/s4Yp53HYn31B5/qEPTUViAdPnPJEVfskPpOIP9I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=T+xOOWT65xD9hShCPbWuywF8uh5znfR+XNaSjcFVyhXIkwpB4YvuNE1Am7DN1mNUv
-	 WrhKLIg5JF8PyMRW+L5z6xP91UQilTF3ZHjF+80YCv5MFFkp5MgCamUhJ41fR3VY+C
-	 MxgvV81GZ9FVzpKA/Z8HXJPLSp8Y4CLteBNm3gxUrqIbH7o5qrgvV4ab9wIOznYxnf
-	 ZiwsQOOwQSDCyz/98AElB5DXso+jSf5u7orOlXqcQTDcUUGB2m6n9rD1KtKV96+DzI
-	 LwpKmGofAr88fTZqL6C3RYo9YZKH5J1FLkuFxn0QASNtX7UoDo+e6Vsl1W86YlxsSF
-	 x3oUi6zbgsLyw==
-Date: Mon, 6 Jan 2025 22:57:53 -0800
+	b=lW6dNONfuxa8i4ThMAoSwWit2J00l7jA30Xu7m7kqj4jTFRmk+8njd1wnudDLOPnr
+	 QCT+pfeuGKHN1GPamCAq16U+Vk+tfkyp67pa+LWw72QBcLM253APkdMkUvici8aQZS
+	 5msVEsPqoLorss+gY1mLxfhp8FJGIQNycIS5kd1oJuutIh1TjvREVYaHfrYJuGoKBc
+	 YZLhg/SOA6tX6vF/cBa35UwqMjZTagSGtb+2Vi/kOJHUY4FqWm5+zMvNGvnzt//GcU
+	 zu0FLHv3nJ1QAWX6vi8H42uJJnUY5qtMaithG/fet3V5MfoXXg6gaDCHUCugz27O06
+	 XbGI25sR0PZrA==
+Date: Mon, 6 Jan 2025 22:58:51 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/15] xfs: simplify buffer I/O submission
-Message-ID: <20250107065753.GF6174@frogsfrogsfrogs>
+Subject: Re: [PATCH 15/15] xfs: add a b_iodone callback to struct xfs_buf
+Message-ID: <20250107065851.GG6174@frogsfrogsfrogs>
 References: <20250106095613.847700-1-hch@lst.de>
- <20250106095613.847700-10-hch@lst.de>
- <20250107064224.GA6174@frogsfrogsfrogs>
- <20250107064637.GA14460@lst.de>
+ <20250106095613.847700-16-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,36 +42,141 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250107064637.GA14460@lst.de>
+In-Reply-To: <20250106095613.847700-16-hch@lst.de>
 
-On Tue, Jan 07, 2025 at 07:46:37AM +0100, Christoph Hellwig wrote:
-> On Mon, Jan 06, 2025 at 10:42:24PM -0800, Darrick J. Wong wrote:
-> > So I guess b_io_remaining was the count of in-flight bios?
+On Mon, Jan 06, 2025 at 10:54:52AM +0100, Christoph Hellwig wrote:
+> Stop open coding the log item completions and instead add a callback
+> into back into the submitter.
 > 
-> Yes.  Plus a bias of 1 for the submitting context so that the
-> completion isn't run until all bios are submitted.
-> 
-> > And making a
-> > chain of bios basically just moves all that to the bio layer, so all
-> > xfs_buf needs to know is whether or not a bio is in progress, right?
-> 
-> Yes.
-> 
-> > Eerrugh, I spent quite a while trying to wrap my head around the old
-> > code when I was writing the in-memory xfs_buf support.  This is much
-> > less weird to look at...
-> > 
-> > > +	for (map = 0; map < bp->b_map_count - 1; map++) {
-> > 
-> > ...but why isn't this "map < bp->b_map_count"?
-> 
-> Because the final ("main") bio is submitted outside the loop as the
-> loop body chains the ones before to it.  I guess this should go into
-> a comment to confuse the readers a little less.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Ah, right, because we start with one bio for N maps, which means we need
-to split it N-1 times to end up with N (chained) bios, one for each map.
-
-Yes, comment please. :)
+Yeah, seems reasonable to me...
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/xfs/xfs_buf.c        | 7 ++-----
+>  fs/xfs/xfs_buf.h        | 5 +----
+>  fs/xfs/xfs_dquot.c      | 2 +-
+>  fs/xfs/xfs_inode_item.c | 2 +-
+>  fs/xfs/xfs_trans_buf.c  | 8 ++++----
+>  5 files changed, 9 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 1cf5d14d0d06..68a5148115e5 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1394,11 +1394,8 @@ xfs_buf_ioend(
+>  		if (bp->b_log_item)
+>  			xfs_buf_item_done(bp);
+>  
+> -		if (bp->b_flags & _XBF_INODES)
+> -			xfs_buf_inode_iodone(bp);
+> -		else if (bp->b_flags & _XBF_DQUOTS)
+> -			xfs_buf_dquot_iodone(bp);
+> -
+> +		if (bp->b_iodone)
+> +			bp->b_iodone(bp);
+>  	}
+>  
+>  	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD |
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index c53d27439ff2..10bf66e074a0 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -34,8 +34,6 @@ struct xfs_buf;
+>  #define XBF_WRITE_FAIL	 (1u << 7) /* async writes have failed on this buffer */
+>  
+>  /* buffer type flags for write callbacks */
+> -#define _XBF_INODES	 (1u << 16)/* inode buffer */
+> -#define _XBF_DQUOTS	 (1u << 17)/* dquot buffer */
+>  #define _XBF_LOGRECOVERY (1u << 18)/* log recovery buffer */
+>  
+>  /* flags used only internally */
+> @@ -65,8 +63,6 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ XBF_DONE,		"DONE" }, \
+>  	{ XBF_STALE,		"STALE" }, \
+>  	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+> -	{ _XBF_INODES,		"INODES" }, \
+> -	{ _XBF_DQUOTS,		"DQUOTS" }, \
+>  	{ _XBF_LOGRECOVERY,	"LOG_RECOVERY" }, \
+>  	{ _XBF_PAGES,		"PAGES" }, \
+>  	{ _XBF_KMEM,		"KMEM" }, \
+> @@ -205,6 +201,7 @@ struct xfs_buf {
+>  	unsigned int		b_offset;	/* page offset of b_addr,
+>  						   only for _XBF_KMEM buffers */
+>  	int			b_error;	/* error code on I/O */
+> +	void			(*b_iodone)(struct xfs_buf *bp);
+>  
+>  	/*
+>  	 * async write failure retry count. Initialised to zero on the first
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 78dde811ab16..e0a379729674 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -1446,7 +1446,7 @@ xfs_qm_dqflush(
+>  	 * Attach the dquot to the buffer so that we can remove this dquot from
+>  	 * the AIL and release the flush lock once the dquot is synced to disk.
+>  	 */
+> -	bp->b_flags |= _XBF_DQUOTS;
+> +	bp->b_iodone = xfs_buf_dquot_iodone;
+>  	list_add_tail(&lip->li_bio_list, &bp->b_li_list);
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 4fb2e1a6ad26..e0990a8c4007 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -185,7 +185,7 @@ xfs_inode_item_precommit(
+>  		xfs_buf_hold(bp);
+>  		spin_lock(&iip->ili_lock);
+>  		iip->ili_item.li_buf = bp;
+> -		bp->b_flags |= _XBF_INODES;
+> +		bp->b_iodone = xfs_buf_inode_iodone;
+>  		list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
+>  		xfs_trans_brelse(tp, bp);
+>  	}
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 8e886ecfd69a..53af546c0b23 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -659,7 +659,7 @@ xfs_trans_inode_buf(
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  
+>  	bip->bli_flags |= XFS_BLI_INODE_BUF;
+> -	bp->b_flags |= _XBF_INODES;
+> +	bp->b_iodone = xfs_buf_inode_iodone;
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+>  }
+>  
+> @@ -684,7 +684,7 @@ xfs_trans_stale_inode_buf(
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  
+>  	bip->bli_flags |= XFS_BLI_STALE_INODE;
+> -	bp->b_flags |= _XBF_INODES;
+> +	bp->b_iodone = xfs_buf_inode_iodone;
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+>  }
+>  
+> @@ -709,7 +709,7 @@ xfs_trans_inode_alloc_buf(
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  
+>  	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
+> -	bp->b_flags |= _XBF_INODES;
+> +	bp->b_iodone = xfs_buf_inode_iodone;
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+>  }
+>  
+> @@ -820,6 +820,6 @@ xfs_trans_dquot_buf(
+>  		break;
+>  	}
+>  
+> -	bp->b_flags |= _XBF_DQUOTS;
+> +	bp->b_iodone = xfs_buf_dquot_iodone;
+>  	xfs_trans_buf_set_type(tp, bp, type);
+>  }
+> -- 
+> 2.45.2
+> 
+> 
