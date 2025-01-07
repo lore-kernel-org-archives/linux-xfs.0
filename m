@@ -1,30 +1,49 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FCAB1DFE34
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 07:03:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56E5F197A68;
+	Tue,  7 Jan 2025 07:03:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736233410; cv=none; b=DN0OnKLuXgzkjaX5ycQqZMhaS42D899KJ4KbMfY4w2cAyhpK0zWU3iAPkTfp59zCnDMwkeIZeNo1Fnl3Gr02uzjRzIdUVsGN8cJVGWyfyeF/MbjLvO7xdp3zbnUsqvCdEe1drhtoqsuslppGawmIym8Y8WyfBtcRNhLrDBwVTAk=
+	t=1736233436; cv=none; b=tjQQuBHBX/9hFUWUktgwrF9RlEePO5A0vPtvZ+oGXHuhSiFGBeUNxGDoA8NTZ02q4narDE1hCeCEsRaSBvCVwwQQXL5At4R8ztElIE4hsWvecrx/LeYXob3JUux1xj1wAN7zeQUC2t834JxEFcwUJBPEvZ19UR/PnUzWSWQLVhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736233410; c=relaxed/simple;
-	bh=EAL/h3lrVmVlnqmzWyUO9l6+qmXKV/BksXbDIV20Aw4=;
+	s=arc-20240116; t=1736233436; c=relaxed/simple;
+	bh=xHQte6L/AwKA5hpjNm6UhPZjwQKdvizBRh0A+UFDyIg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PKU3I6ArYWHyFD96gEe7KYo/XJY5VIvxfkAe8Qd9DgBIz/nvI+3gdo1sipIuhUlXafNfBFQIF9byusyGjXkixHLUKPSX81ICFPlETOP7x1ObSnhTN89lp9uuAVmi8iynRWG5owG0kO99AetlgTQfSpwEDc2GOyHWinHkmxu9yxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id E3E5A67373; Tue,  7 Jan 2025 08:03:22 +0100 (CET)
-Date: Tue, 7 Jan 2025 08:03:22 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=ieAmiKO42GcrlleaLpJK82tQ5HXKz0j7OtWpBq/aHrZ0X/sna3MLfBzgSSDEiR0clM7+2fPv3L/8kmxRNhxs+DOU1ywaLkPvfTbCYPgDev54r5YgQD89XV/5eSmytVYn5tDda+6c4JnW7loLsMEI71Rn/h4qcSM4674X76s1o8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tip5vQQy; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tip5vQQy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB31DC4CEE0;
+	Tue,  7 Jan 2025 07:03:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736233435;
+	bh=xHQte6L/AwKA5hpjNm6UhPZjwQKdvizBRh0A+UFDyIg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tip5vQQy11mk6ukdUDJo7V0eKJYJ3iw5o3L+aIQY1CO6gzVD4NXlbJNjtaxxUpYz2
+	 qyDHqjiBmCZ5wPBGVM/Q0hO8OeEbWzQ+f7SF+/ZCP+IlsmcixiKQjilrYhhRETG14h
+	 bnJQEjU5gM5EdeKuCvdQ1O6SKWc1t6OG1ZuKZSbOL40BNRva28tbGgc+IvStBdCZZe
+	 H1LXJuOR/zetU/3KHcY5IVVeB1PKtmLJAA3rXCf7Sfq9kIuxAh0BlQJvDRsR007UFv
+	 mxz20baxB0PQveqsVTbOwi2IhWsGRc82Idv2kf70Rv4SJJvA6GqnxfLZv5YSxUeQWX
+	 AOwOEpPQQrjrA==
+Date: Mon, 6 Jan 2025 23:03:55 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: John Garry <john.g.garry@oracle.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	Hongbo Li <lihongbo22@huawei.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 14/15] xfs: move b_li_list based retry handling to
- common code
-Message-ID: <20250107070322.GA14713@lst.de>
-References: <20250106095613.847700-1-hch@lst.de> <20250106095613.847700-15-hch@lst.de> <20250107065547.GE6174@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/4] xfs: report the correct read/write dio alignment for
+ reflinked inodes
+Message-ID: <20250107070355.GH6174@frogsfrogsfrogs>
+References: <20250106151607.954940-1-hch@lst.de>
+ <20250106151607.954940-5-hch@lst.de>
+ <dd525ca1-68ff-4f6d-87a9-b0c67e592f83@oracle.com>
+ <20250107061012.GA13898@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,34 +52,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250107065547.GE6174@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250107061012.GA13898@lst.de>
 
-On Mon, Jan 06, 2025 at 10:55:47PM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 06, 2025 at 10:54:51AM +0100, Christoph Hellwig wrote:
-> > The dquot and inode version are very similar, which is expected given the
-> > overall b_li_list logic.  The differences are that the inode version also
-> > clears the XFS_LI_FLUSHING which is defined in common but only ever set
-> > by the inode item, and that the dquot version takes the ail_lock over
-> > the list iteration.  While this seems sensible given that additions and
-> > removals from b_li_list are protected by the ail_lock, log items are
-> > only added before buffer submission, and are only removed when completing
-> > the buffer, so nothing can change the list when retrying a buffer.
+On Tue, Jan 07, 2025 at 07:10:12AM +0100, Christoph Hellwig wrote:
+> On Mon, Jan 06, 2025 at 06:37:06PM +0000, John Garry wrote:
+> >> +	/*
+> >> +	 * On COW inodes we are forced to always rewrite an entire file system
+> >> +	 * block or RT extent.
+> >> +	 *
+> >> +	 * Because applications assume they can do sector sized direct writes
+> >> +	 * on XFS we fall back to buffered I/O for sub-block direct I/O in that
+> >> +	 * case.  Because that needs to copy the entire block into the buffer
+> >> +	 * cache it is highly inefficient and can easily lead to page cache
+> >> +	 * invalidation races.
+> >> +	 *
+> >> +	 * Tell applications to avoid this case by reporting the natively
+> >> +	 * supported direct I/O read alignment.
+> >
+> > Maybe I mis-read the complete comment, but did you really mean "natively 
+> > supported direct I/O write alignment"? You have been talking about writes 
+> > only, but then finally mention read alignment.
 > 
-> Heh, I think that's not quite true -- I think xfs_dquot_detach_buf
-> actually has a bug where it needs to take the buffer lock before
-> detaching the dquot from the b_li_list.  And I think kfence just whacked
-> me for that on tonight's fstests run.
+> No, this is indeed intended to talk about the different (smaller) read
+> alignment we are now reporting.  But I guess the wording is confusing
+> enough that I should improve it?
 
-Ooops :)
+How about:
 
+/*
+ * For COW inodes, we can only perform out of place writes of entire
+ * file allocation units (clusters).  For a sub-cluster directio write,
+ * we must fall back to buffered I/O to perform the RMW.  At best this
+ * is highly inefficient; at worst it leads to page cache invalidation
+ * races.  Tell applications to avoid this by reporting separately the
+ * read and (larger) write alignments.
+ */
 
-> > +	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
-> > +		set_bit(XFS_LI_FAILED, &lip->li_flags);
-> > +		clear_bit(XFS_LI_FLUSHING, &lip->li_flags);
-> 
-> Should dquot log items be setting XFS_LI_FLUSHING?
-
-That would help to avoid roundtrips into ->iop_push and thus a
-dqlock (try)lock roundtrip for them.  So it would be nice to have,
-but it's not functionally needed.
+--D
