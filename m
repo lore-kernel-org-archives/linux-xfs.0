@@ -1,30 +1,49 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FAD086347
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 16:51:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D8D41F1934;
+	Tue,  7 Jan 2025 17:12:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736268665; cv=none; b=Bg3b9Db2D+J5n3tX44slAov/gb7HriTEH2XHBVKE4OV2ChaNnYAasS6yHPPSiZNKdtJZNWCRVtNY5IyJbum8j82rF4Kp86w89ewtU2JR8d9WDUXd1HBUFhYl+BRh1dGGXfP3b2gpvG6+0XdsB55npe3/pb9QJC6jcAmMjxzX718=
+	t=1736269948; cv=none; b=afmV6zRxmD6LXepk/zl7F2c0Uc6GOU/Ha2hKTM21bsL/gElXs18xvHp7DL6SFoE+OPTpw6yybfQZpD9AVVJxXY+av+HgFI00mZYLJNGvWETvST6ooTA1tRthn3dU60QxEaCOFfkUlTSUa7Si69louTnkhqSLgpMCN/Eru0micHU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736268665; c=relaxed/simple;
-	bh=TAjzvAUBUaeScRl0hfg7U2aSBAFk6WPqYaVvV0LIU2c=;
+	s=arc-20240116; t=1736269948; c=relaxed/simple;
+	bh=zQGmR4m1juNmKAHzJCzaIF3vrl2AA/wDEkf4gcyIWpc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iihbRKl7eEPMlDY7VRJzSN1ufhNgxChkkBlMIzgLWKbxkeit5zst2d6gM9Ec6s0PnVURioEFmkNfHkA7n7h/LV1u13APAyv/eIfJeT4Rp/DY1dLaIFTQrULc4iotkf8lNGjZVC+EjaUYWsUV3lCcG14iL99QAxwfUAE4qL33qNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id BB13968CFE; Tue,  7 Jan 2025 17:50:57 +0100 (CET)
-Date: Tue, 7 Jan 2025 17:50:57 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-	djwong@kernel.org, david@fromorbit.com,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [RFC] Directly mapped xattr data & fs-verity
-Message-ID: <20250107165057.GA371@lst.de>
-References: <20241229133350.1192387-1-aalbersh@kernel.org> <20250106154212.GA27933@lst.de> <prijdbxigrvzr5xsjviohbkb3gjzrans6yqzygncqrwdacfhcu@lhc3vtgd6ecw>
+	 Content-Type:Content-Disposition:In-Reply-To; b=HA2Cj+oj/QZ/cIzDXYEXY0buZoK8mm4EKMgokGG/BgVY5wAdvqk61Lg4aLI2w3MeO/GXrVlPE/YGqGimy4w3COLd4PGPMj9Y0RoMizGLfL8B3XoQYOf4T76v8Yu2cOs6f1Zrwma59ZcUj0iHShIvULgTg0mbDrFdUXepAgerzo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SOQQp8Fx; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SOQQp8Fx"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=LIgnSGlWeykgfQyDfK6qq4VlOe3p8awfH28YrS9PAGs=; b=SOQQp8FxtNsyovWfmA9TGN1uAx
+	ur4CX0j+1hVyLnVZ645oYBBmnRuh5/mgeUV5+VZZyGaCMv3YkQI5aQX7nw6XceKSLFXzCC/5oKvyl
+	WTINeL3xfd3rNL46yWYluvcT+b08NPWwRVb22ij2eKArTZHhY9ksBiO2gOH2Rgzmn40F7lcd+cs3l
+	UzuqR+CW/cn1JjT/+R2o+6FjhzhZpqE6OINn/jyi3RqbejVPDEabxBUl7CAqTfvYb0Doc69aWlPhw
+	l2z3sroE0zMp/0EdEaSfk8do8e2c2A6vn9mQsh9XSQVO4YxW7FfjbIgHxijmnoJwqlAkpODIp4N2d
+	BIeeCcmA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tVD7u-00000005mmk-2Cl3;
+	Tue, 07 Jan 2025 17:12:22 +0000
+Date: Tue, 7 Jan 2025 09:12:22 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Chi Zhiling <chizhiling@163.com>, Dave Chinner <david@fromorbit.com>,
+	djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z31gdpNdwHYG2xY3@infradead.org>
+References: <20241226061602.2222985-1-chizhiling@163.com>
+ <Z23Ptl5cAnIiKx6W@dread.disaster.area>
+ <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com>
+ <Z3B48799B604YiCF@dread.disaster.area>
+ <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
+ <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,68 +52,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <prijdbxigrvzr5xsjviohbkb3gjzrans6yqzygncqrwdacfhcu@lhc3vtgd6ecw>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jan 06, 2025 at 09:56:51PM +0100, Andrey Albershteyn wrote:
-> On 2025-01-06 16:42:12, Christoph Hellwig wrote:
-> > I've not looked in details through the entire series, but I still find
-> > all the churn for trying to force fsverity into xattrs very counter
-> > productive, or in fact wrong.
-> 
-> Have you checked
-> 	[PATCH] xfs: direct mapped xattrs design documentation [1]?
-> It has more detailed argumentation of this approach.
+On Tue, Jan 07, 2025 at 01:13:17PM +0100, Amir Goldstein wrote:
+> The issue with atomicity of buffered I/O is the xfs has traditionally
+> provided atomicity of write vs. read (a.k.a no torn writes), which is
+> not required by POSIX standard (because POSIX was not written with
+> threads in mind) and is not respected by any other in-tree filesystem.
 
-It assumes verity must be stored in the attr fork and then justifies
-complexity by that.
+That is true for original Posix, but once Posix Threads joined the game
+the behavior was and still is required.  See "2.9.7 Thread Interactions
+with Regular File Operations" here:
 
-> > xattrs are for relatively small variable sized items where each item
-> > has it's own name.
-> 
-> Probably, but now I'm not sure that this is what I see, xattrs have
-> the whole dabtree to address all the attributes and there's
-> infrastructure to have quite a lot of pretty huge attributes.
+https://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html
 
-fsverity has a linear mapping.  The only thing you need to map it
-is the bmap btree.  Using the dabtree helps nothing with the task
-at hand, quite to the contrary it makes the task really complex.
-As seen both by the design document and the code.
-
-> Taking 1T file we will have about 1908 4k merkle tree blocks ~8Mb,
-> in comparison to file size, I see it as a pretty small set of
-> metadata.
-
-And you could easily map them using a single extent in the bmap
-btree with no overhead at all.  Or a few more if there isn't enough
-contiguous freespace.
-
-> 
-> > fsverity has been designed to be stored beyond
-> > i_size inside the file.
-> 
-> I think the only requirement coming from fs-verity in this regard is
-> that Merkle blocks are stored in Pages. This allows for PG_Checked
-> optimization. Otherwise, I think it doesn't really care where the
-> data comes from or where it is.
-
-I'm not say it's a requirement.  I'm saying it's been designed with
-that in mind.  In other words it is a very natural fit.  Mapping it
-to some kind of xattrs is not.
-
-> Yes, that's one of the arguments in the design doc, we can possibly
-> use it for mutable files in future. Not sure how feasible it is with
-> post-EOF approach.
-
-Maybe we can used it for $HANDWAVE is not a good idea.  Hash based
-verification works poorly for mutable files, so we'd rather have
-a really good argument for that.
-
-> I don't really see the advantage or much difference of storing
-> fs-verity post-i_size. Dedicating post-i_size space to fs-verity
-> dosn't seem to be much different from changing xattr format to align
-> with fs blocks, to me.
-
-It is much simpler, and more storage efficient by doing away with the
-need for the dabtree entries and your new remote-remote header.
-
+Now most Linux filesystems ignored that and got away with ignoring
+the requirement, but it still exists.
