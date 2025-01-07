@@ -1,200 +1,249 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 531C01EBFF7
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 11:36:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B532C50285;
+	Tue,  7 Jan 2025 12:13:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736249823; cv=none; b=iyqZG1kCqFrO+eOCN/1l2FLLziw3uOjz/c6zmvohV9yx1vy/rqeLYs7YTOzPGD0F0b8QfXBwj7GSvKpj1IV/unUKHrlGHw9oAGh4nkUonvHW7Fjug0VIjVDbWXMpwZ01JL60F/jFaed87n7tTxu0P+utTDV4sFjOH+svpNliJQk=
+	t=1736252013; cv=none; b=Twsn3zhMHxMWnpsDDO+zijZZmEk1MVdhQNzq6hjUxeEXQ2NN/U3snhYtDN5J6EHusAYC2YXJyT6OY5/JoylhXrHrXyfNiuuvnEL/rjwKIdW4S7RWaujtvBoSz5oPQY0RDF16OuS6PzoAD6fId3HFFhhfX1MuO/1DtNbFjCstVcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736249823; c=relaxed/simple;
-	bh=c0ykj2K/60PmyjKitp0xJUKrK4wYX/gepn1JSIYwzpo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ka1VOvv4bPbQuceoKe0x+YXgpO3MONJzkli1qVPREv/WGqAoPRoK7a3VbgWq9jUz4qip2P1bab7xWcAnJ9wJZPkTETtxhhU70+BGIFBklYtbR9M4fn6+azEMyTk/mf6K1IB52ydG3udJ5nbYinZhmiBVBKgTolnfDToE3BpmfsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Jtgof/lK; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1736252013; c=relaxed/simple;
+	bh=MMTFiCQrG7Nfv/CD6exz2tfFBJjCfvqu57qS3HC7I7g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=N4lUdxV6zPaLCxyio//AcHCfPHzfiBGfa2FA1uquhVkuwloMmtR983J0WNaxpFAYsDKuvvkRTWYDGQEvluFG2EG+nQoejd5XdI5cYC1aC4NGD5ZrlOwNI2rIycTrnWIJyqJ9RFITllhsi1VFu5jBLLCTERoEjnDE8cbaWWP//MA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JE6fko/I; arc=none smtp.client-ip=209.85.208.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Jtgof/lK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1736249819;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=EPWLOfPPpQOf9nQB18V4X5aXAnWnhoDaHH+uIltQ4Xk=;
-	b=Jtgof/lKu0Tm5zJLEbTAlesqcaGtffjwM+qeV0AhwIJ2JkSQUICatjuc10aA6Pw7iGb3WL
-	7mSEKdF3YZZ3c40PhS5LyjgYo3a5gbRjMFkI0/OykqoxxAaO2ZWk5dOeeKDWqfFF8ZlfWj
-	0zlYO7tW3u1JwvKtoeYt7U/7GOohbKw=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-556-oQZ4eR3tN9epeb8TSdOJrQ-1; Tue, 07 Jan 2025 06:36:57 -0500
-X-MC-Unique: oQZ4eR3tN9epeb8TSdOJrQ-1
-X-Mimecast-MFC-AGG-ID: oQZ4eR3tN9epeb8TSdOJrQ
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4361f371908so104772475e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Jan 2025 03:36:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JE6fko/I"
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-5d3e8f64d5dso27822132a12.3;
+        Tue, 07 Jan 2025 04:13:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1736252009; x=1736856809; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4HxPcZzpo1eELg7z9Z6OAr2+j5d4BF5/N+pEUnGJeGU=;
+        b=JE6fko/IYNIUVOYGFImKq3SkvSQGxA3FXH/iuh1wlhi2PLSFtjbTFxcPVBoUgnmu0F
+         JSO6Ye4aWaI/GyYdi5vdBRDqdT+gi5Xx9i2etBNl8IAnuGpo/G+ANzKiTN9QJZrbcI/x
+         LwJEXdH625j/iRJ5HVzugPwUCpbEvo0Dv3JzL8AfajoRy6NZfmwt8NDkeDVDaIL3eDTv
+         b3uI7xOY8XM+68TMUQszreI4jpcET6tyeqKYLml/xMMXRS5FotG6LHKd1dwHQ+noYwYX
+         hD62T0jaPXBUHWdrGQn+ad7pySlag2NmGgoUmSohdfb1Lvusw5drKzZ+IQUAByeojcy8
+         acVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736249816; x=1736854616;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:from:references:cc:to:subject:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=EPWLOfPPpQOf9nQB18V4X5aXAnWnhoDaHH+uIltQ4Xk=;
-        b=MVChXm86HrXNJ8OFY6pumycq/BJiUQMgIXdO7C2z/4dCwjb21SLbb2s0DVOBCFFVTj
-         tdhHRiSHUba8G6ZHdX1XFykfjcmcDq/3NXH0kbBqZRyx0irit9SW9krDwFzE3lJdsGfy
-         nLPPUIU+kgEwfxhZ0ltjfvfOw1Xp2OrrtfbLSzdawv4pW8vg53TSxQj05bTOw4G8lI5+
-         8rl2Z3zleRth214uWiRx2tcaB7IPzcFfAJ33BDV3K7L6IjQOknjI5IsfA+Kqp7yZVVeX
-         NrOLC1VHZ9v7KQ3le73IoylOqAJ7rvVvz92IH2k6nP5W2u6Fl/V9OZe6lYVbKgqC9tVV
-         0ANg==
-X-Forwarded-Encrypted: i=1; AJvYcCW2VpuXLuL3NC5dlzbHrJ5m/K8nAsgiEMWNUa++xH4oj2Gw2HV4fL48mYNA2+yf3nSbHbqbPVmFGOk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyj6ia5qkhXsWn4SIxEdLtPm22IAhvqkTdfmVjODqLoQ//7hFwS
-	/auZ8PX82aUj146fWb3FO8rgzywXnJKimihIvp15Roge8LaMgiEXU9aSno4srxvfk5qDvpnvHlh
-	S76lfJrB4QjGH+bKAjHp5LXozYElMUl4n7YTRHD5nFOtjl835rbmFfaA1Rw==
-X-Gm-Gg: ASbGncvdGvMM4iSZXa4C9gZ/8QzQ4H/Uc0dRD9+Uut7ng1R6lwxBI0nRJKKp5muvLeY
-	gvIPazeaetiP1May96uCY+6NjdC0M79e0VmKrO7etRROjp6BqFoRMtppaaPrV5kRdvxRG53MHgR
-	XF+/NL7F7PsRkrgkbNx9FmGfUUvdCchWUKh4B3UHWf6KBoOm6A2fb65nFRF3edsI84AnFApX18d
-	S0xqrEfsC2UM+7sgT/UwpjwZqQWtktlVxpHRQMNH3K6bO5wGVr57gPWi+j0cJJomUsclIMzvxqA
-	R4B6SNGwZYP6fibQn8DZ9MYqopI4Ulo6ssgmWQxlSvhE+bYYZcxQwSFzEd/yEFt/4dU4/sR/STS
-	rEyszkI1Y
-X-Received: by 2002:a05:6000:704:b0:385:df2c:91b5 with SMTP id ffacd0b85a97d-38a2213d33emr54453859f8f.0.1736249816132;
-        Tue, 07 Jan 2025 03:36:56 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEaT18MaorKDc8f0dPQnq8Hx4Fd5WTGife38GGjyhvgZNdMgf0zcRP1rbdU6qLK3Zfzio44ww==
-X-Received: by 2002:a05:6000:704:b0:385:df2c:91b5 with SMTP id ffacd0b85a97d-38a2213d33emr54453824f8f.0.1736249815752;
-        Tue, 07 Jan 2025 03:36:55 -0800 (PST)
-Received: from ?IPV6:2003:cb:c719:1700:56dc:6a88:b509:d3f3? (p200300cbc719170056dc6a88b509d3f3.dip0.t-ipconnect.de. [2003:cb:c719:1700:56dc:6a88:b509:d3f3])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38a1c8292f4sm51029779f8f.3.2025.01.07.03.36.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Jan 2025 03:36:55 -0800 (PST)
-Message-ID: <758c0441-2cb9-41c4-bf70-c5810726779c@redhat.com>
-Date: Tue, 7 Jan 2025 12:36:52 +0100
+        d=1e100.net; s=20230601; t=1736252009; x=1736856809;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4HxPcZzpo1eELg7z9Z6OAr2+j5d4BF5/N+pEUnGJeGU=;
+        b=R9UsrbsPmzNqw60r7uBnw9lxgUhK3q31kVLgRnrF0lw7THQxhYP/CbCruuSiSPnXYb
+         fFicmXumiJ65UCUg634aLa/nwfRkRlRumnE5pg9DixTwC+AXMBqQq+IgdzeKfOmwCnem
+         zFy4x1mPTpCv83ikx3xT342UDiGTqXazY11lLPZZoxmGZRz5oqP6hrG9SWchjNP6p8ix
+         mgc0K3flXq5brbjmIS4ub8fP/zoH1g6KlVEPnHiT2juO/hzAgDTSSzy9RJEf3jsdvcAs
+         quqccGrMpuV1UXLdbKMdwsfRMOcfCyI3PqcQ+B+Xmb1MCS/HDTrlh7LXyZXpa9Y8coVC
+         VTvA==
+X-Forwarded-Encrypted: i=1; AJvYcCX6g37J/rUyEIoveadduBTjmxYf3/VBUKiLVHskXHNOtbQgiV3lQ1TAkFZStMNUHUEbZPxdncHIBw3UnZE=@vger.kernel.org, AJvYcCXAGdmu+GZfqWdGMNDio93vV4ITIPBlBsy7IhP2SjXUVcX5ISFrVbueuQKZDezLpaoInYZBBjUKCKQy@vger.kernel.org
+X-Gm-Message-State: AOJu0YydRkwtODIMi/xgVjtj0K0qr2Sy6HUzveLOvWll0JCgh646Unw7
+	WSjvBHMxw7zCW5HJLMlk4v8QW03+WbRutreDtdbBubhThQYrGCgWFvW+onPYS9AxlSeYspo7B9W
+	NbyKez+p8iR9U+h+vjms88PAly/M=
+X-Gm-Gg: ASbGncsyc4hY8y5E+wiiDLv8dL1BMjuR/BjL6Mkt17fEiqP53+hb1qVxLaZ8DwJYXpq
+	Mpcdgqe3PPe2bnjSfTjrjPnsCjij1Iqv2CFgKFw==
+X-Google-Smtp-Source: AGHT+IH9PdXrco3vRB+YoHxhHGlVLEHsfBJKwFGavuQJYSm7ZWtqzzy6QSTnTLb8bUeKW0w63Cvu0p1XExZCOnutQkE=
+X-Received: by 2002:a50:cc43:0:b0:5d9:a55:4307 with SMTP id
+ 4fb4d7f45d1cf-5d90a554368mr13916914a12.22.1736252008575; Tue, 07 Jan 2025
+ 04:13:28 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 14/25] rmap: Add support for PUD sized mappings to rmap
-To: Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org,
- dan.j.williams@intel.com, linux-mm@kvack.org
-Cc: lina@asahilina.net, zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
- vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
- bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
- will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
- dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org,
- djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, peterx@redhat.com,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
- nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
- david@fromorbit.com
-References: <cover.425da7c4e76c2749d0ad1734f972b06114e02d52.1736221254.git-series.apopple@nvidia.com>
- <8830827577fec4c6c2a0135e338723a5b532a2ee.1736221254.git-series.apopple@nvidia.com>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- WNyWQQ==
-Organization: Red Hat
-In-Reply-To: <8830827577fec4c6c2a0135e338723a5b532a2ee.1736221254.git-series.apopple@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20241226061602.2222985-1-chizhiling@163.com> <Z23Ptl5cAnIiKx6W@dread.disaster.area>
+ <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com> <Z3B48799B604YiCF@dread.disaster.area>
+ <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
+In-Reply-To: <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 7 Jan 2025 13:13:17 +0100
+X-Gm-Features: AbW1kvbC0Yi_ZuKxC4j3s1Dtq_T106YM6UAIh3y5bWNY3VcKpAyFBb-lJ0dZD0k
+Message-ID: <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+To: Chi Zhiling <chizhiling@163.com>
+Cc: Dave Chinner <david@fromorbit.com>, djwong@kernel.org, cem@kernel.org, 
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Chi Zhiling <chizhiling@kylinos.cn>, John Garry <john.g.garry@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 07.01.25 04:42, Alistair Popple wrote:
-> The rmap doesn't currently support adding a PUD mapping of a
-> folio. This patch adds support for entire PUD mappings of folios,
-> primarily to allow for more standard refcounting of device DAX
-> folios. Currently DAX is the only user of this and it doesn't require
-> support for partially mapped PUD-sized folios so we don't support for
-> that for now.
-> 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> 
-> ---
-> 
-> Changes for v5:
->   - Fixed accounting as suggested by David.
-> 
-> Changes for v4:
-> 
->   - New for v4, split out rmap changes as suggested by David.
-> ---
->   include/linux/rmap.h | 15 ++++++++++-
->   mm/rmap.c            | 65 ++++++++++++++++++++++++++++++++++++++++++---
->   2 files changed, 76 insertions(+), 4 deletions(-)
-> 
-> diff --git a/include/linux/rmap.h b/include/linux/rmap.h
-> index 683a040..7043914 100644
-> --- a/include/linux/rmap.h
-> +++ b/include/linux/rmap.h
-> @@ -192,6 +192,7 @@ typedef int __bitwise rmap_t;
->   enum rmap_level {
->   	RMAP_LEVEL_PTE = 0,
->   	RMAP_LEVEL_PMD,
-> +	RMAP_LEVEL_PUD,
->   };
->   
->   static inline void __folio_rmap_sanity_checks(const struct folio *folio,
-> @@ -228,6 +229,14 @@ static inline void __folio_rmap_sanity_checks(const struct folio *folio,
->   		VM_WARN_ON_FOLIO(folio_nr_pages(folio) != HPAGE_PMD_NR, folio);
->   		VM_WARN_ON_FOLIO(nr_pages != HPAGE_PMD_NR, folio);
->   		break;
-> +	case RMAP_LEVEL_PUD:
-> +		/*
-> +		 * Assume that we are creating * a single "entire" mapping of the
-> +		 * folio.
+On Mon, Dec 30, 2024 at 3:43=E2=80=AFAM Chi Zhiling <chizhiling@163.com> wr=
+ote:
+>
+>
+>
+> On 2024/12/29 06:17, Dave Chinner wrote:
+> > On Sat, Dec 28, 2024 at 03:37:41PM +0800, Chi Zhiling wrote:
+> >>
+> >>
+> >> On 2024/12/27 05:50, Dave Chinner wrote:
+> >>> On Thu, Dec 26, 2024 at 02:16:02PM +0800, Chi Zhiling wrote:
+> >>>> From: Chi Zhiling <chizhiling@kylinos.cn>
+> >>>>
+> >>>> Using an rwsem to protect file data ensures that we can always obtai=
+n a
+> >>>> completed modification. But due to the lock, we need to wait for the
+> >>>> write process to release the rwsem before we can read it, even if we=
+ are
+> >>>> reading a different region of the file. This could take a lot of tim=
+e
+> >>>> when many processes need to write and read this file.
+> >>>>
+> >>>> On the other hand, The ext4 filesystem and others do not hold the lo=
+ck
+> >>>> during buffered reading, which make the ext4 have better performance=
+ in
+> >>>> that case. Therefore, I think it will be fine if we remove the lock =
+in
+> >>>> xfs, as most applications can handle this situation.
+> >>>
+> >>> Nope.
+> >>>
+> >>> This means that XFS loses high level serialisation of incoming IO
+> >>> against operations like truncate, fallocate, pnfs operations, etc.
+> >>>
+> >>> We've been through this multiple times before; the solution lies in
+> >>> doing the work to make buffered writes use shared locking, not
+> >>> removing shared locking from buffered reads.
+> >>
+> >> You mean using shared locking for buffered reads and writes, right?
+> >>
+> >> I think it's a great idea. In theory, write operations can be performe=
+d
+> >> simultaneously if they write to different ranges.
+> >
+> > Even if they overlap, the folio locks will prevent concurrent writes
+> > to the same range.
+> >
+> > Now that we have atomic write support as native functionality (i.e.
+> > RWF_ATOMIC), we really should not have to care that much about
+> > normal buffered IO being atomic. i.e. if the application wants
+> > atomic writes, it can now specify that it wants atomic writes and so
+> > we can relax the constraints we have on existing IO...
+>
+> Yes, I'm not particularly concerned about whether buffered I/O is
+> atomic. I'm more concerned about the multithreading performance of
+> buffered I/O.
 
-Misplaced " *", can likely be fixed up when applying.
+Hi Chi,
 
-Apart from that LGTM
+Sorry for joining late, I was on vacation.
+I am very happy that you have taken on this task and your timing is good,
+because  John Garry just posted his patches for large atomic writes [1].
 
-Acked-by: David Hildenbrand <david@redhat.com>
+I need to explain the relation to atomic buffered I/O, because it is not
+easy to follow it from the old discussions and also some of the discussions
+about the solution were held in-person during LSFMM2024.
 
--- 
-Cheers,
+Naturally, your interest is improving multithreading performance of
+buffered I/O, so was mine when I first posted this question [2].
 
-David / dhildenb
+The issue with atomicity of buffered I/O is the xfs has traditionally
+provided atomicity of write vs. read (a.k.a no torn writes), which is
+not required by POSIX standard (because POSIX was not written with
+threads in mind) and is not respected by any other in-tree filesystem.
 
+It is obvious that the exclusive rw lock for buffered write hurts performan=
+ce
+in the case of mixed read/write on xfs, so the question was - if xfs provid=
+es
+atomic semantics that portable applications cannot rely on, why bother
+providing these atomic semantics at all?
+
+Dave's answer to this question was that there are some legacy applications
+(database applications IIRC) on production systems that do rely on the fact
+that xfs provides this semantics and on the prerequisite that they run on x=
+fs.
+
+However, it was noted that:
+1. Those application do not require atomicity for any size of IO, they
+    typically work in I/O size that is larger than block size (e.g. 16K or =
+64K)
+    and they only require no torn writes for this I/O size
+2. Large folios and iomap can usually provide this semantics via folio lock=
+,
+    but application has currently no way of knowing if the semantics are
+    provided or not
+3. The upcoming ability of application to opt-in for atomic writes larger
+    than fs block size [1] can be used to facilitate the applications that
+    want to legacy xfs semantics and avoid the need to enforce the legacy
+    semantics all the time for no good reason
+
+Disclaimer: this is not a standard way to deal with potentially breaking
+legacy semantics, because old applications will not usually be rebuilt
+to opt-in for the old semantics, but the use case in hand is probably
+so specific, of a specific application that relies on xfs specific semantic=
+s
+that there are currently no objections for trying this solution.
+
+[1] https://lore.kernel.org/linux-xfs/20250102140411.14617-1-john.g.garry@o=
+racle.com/
+[2] https://lore.kernel.org/linux-xfs/CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3J=
+SeZR71S1dXg+2w@mail.gmail.com/
+
+>
+> Last week, it was mentioned that removing i_rwsem would have some
+> impacts on truncate, fallocate, and PNFS operations.
+>
+> (I'm not familiar with pNFS, so please correct me if I'm wrong.)
+
+You are not wrong. pNFS uses a "layout lease", which requires
+that the blockmap of the file will not be modified while the lease is held.
+but I think that block that are not mapped (i.e. holes) can be mapped
+while the lease is held.
+
+>
+> My understanding is that the current i_rwsem is used to protect both
+> the file's data and its size. Operations like truncate, fallocate,
+> and PNFS use i_rwsem because they modify both the file's data and its
+> size. So, I'm thinking whether it's possible to use i_rwsem to protect
+> only the file's size, without protecting the file's data.
+>
+
+It also protects the file's blockmap, for example, punch hole
+does not change the size, but it unmaps blocks from the blockmap,
+leading to races that could end up reading stale data from disk
+if the lock wasn't taken.
+
+> So operations that modify the file's size need to be executed
+> sequentially. For example, buffered writes to the EOF, fallocate
+> operations without the "keep size" requirement, and truncate operations,
+> etc, all need to hold an exclusive lock.
+>
+> Other operations require a shared lock because they only need to access
+> the file's size without modifying it.
+>
+
+As far as I understand, exclusive lock is not needed for non-extending
+writes, because it is ok to map new blocks.
+I guess the need for exclusive lock for extending writes is related to
+update of file size, but not 100% sure.
+Anyway, exclusive lock on extending write is widely common in other fs,
+while exclusive lock for non-extending write is unique to xfs.
+
+> >
+> >> So we should track all the ranges we are reading or writing,
+> >> and check whether the new read or write operations can be performed
+> >> concurrently with the current operations.
+> >
+> > That is all discussed in detail in the discussions I linked.
+>
+> Sorry, I overlooked some details from old discussion last time.
+> It seems that you are not satisfied with the effectiveness of
+> range locks.
+>
+
+Correct. This solution was taken off the table.
+
+I hope my explanation was correct and clear.
+If anything else is not clear, please feel free to ask.
+
+Thanks,
+Amir.
