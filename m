@@ -1,113 +1,164 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62625ECC;
-	Tue,  7 Jan 2025 02:01:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BA032594AB
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 02:02:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736215300; cv=none; b=c2er1fDxF5ScmNYY9uGnDAWU+K+7s3HzYCTTLyC0JpN2YHDxujtpMXNKN18HxSzLO2mKJRVT/eEug8HSvR2iw0vyeTPF0d2dLxsoQTj/CMxc2NVLAgPVAbZ2EqaBpCLDU8HLE59F98fZfkD9Hfez58KokFYjH4IjNzty+X2ivn0=
+	t=1736215342; cv=none; b=GfXt7Uqv4c14oTC6yiu3F3hAnwFa8ld0riCC4sK9dkBlXlOwt6tdk3YQw4OSjFHy4O1cpyPEHFGo3TqiK9z5JHLP6FdnuMFHA01idaZEY8PeMt2V8myM6NI9FLK7baVGMAD4slL7Z/lEjAocmd3ATOto7obRo+BtcM6j2hyYaDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736215300; c=relaxed/simple;
-	bh=FPu22WdP7+WPBiYHzN11L5F2QUPfxQ+hvw/96Y2we+Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=EGwR494OhMgkz88yokP6nOgy21W3ri4N2A5JDJ7Mnj2rVNWWS0eC1zvZ0Hzf6U9w9UKUU8d9G2roWy7SOGh95iDFrAA6x5CoxWlH8dMTMrKwFjPswKvtEAWOfRtYdUan8hpYwBJE7pKERH7H+rN9l85zDqK+Z9Se/n8L/+v4Amw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4YRvMQ21G4z1W3Vq;
-	Tue,  7 Jan 2025 09:57:54 +0800 (CST)
-Received: from kwepemg500008.china.huawei.com (unknown [7.202.181.45])
-	by mail.maildlp.com (Postfix) with ESMTPS id 4D8D21402DA;
-	Tue,  7 Jan 2025 10:01:34 +0800 (CST)
-Received: from [127.0.0.1] (10.174.177.71) by kwepemg500008.china.huawei.com
- (7.202.181.45) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 7 Jan
- 2025 10:01:33 +0800
-Message-ID: <0acc1709-1349-4dbb-ba3e-ae786c4b5b53@huawei.com>
-Date: Tue, 7 Jan 2025 10:01:32 +0800
+	s=arc-20240116; t=1736215342; c=relaxed/simple;
+	bh=MWlPsW9zlgRtyAC/QFD3V4UwFeOdY12frSkjpRggU5E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PiXnVAzcG8uLpfoIsSKHnyiZGXjVlONiGfACLTSMCihnaBWxT95VN7XFN8o+tHhylIl7E1ImPRw1KNzAUX2W8qA7dDMAEfNpXPMbkz4N7vSiSI+kkXWdeUTZa5Duz4PWJ+mLqYDKvOQuUPqhUXSRpLIfmys5S2Sanfcxl1Jb80Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DNgkTRFj; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DNgkTRFj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28AF6C4CED2;
+	Tue,  7 Jan 2025 02:02:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736215342;
+	bh=MWlPsW9zlgRtyAC/QFD3V4UwFeOdY12frSkjpRggU5E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DNgkTRFjM8JLm7YsymB7I0BK2O/zcMwSCl6hLyZlEsKwUUauaQFSijBhuC3dmLgDq
+	 eMI23EcMLALca0iH3/VMbCzv6RXgiMwD1i76sY21d84TRp8ZHflFGlgJCVdb0KOi0u
+	 6zUiYWGkGrwNDxIhZbKwL7iCQ9O0oUVfD8eKvoBYvhtvm2mXOl17z/5lIc2KFneBKl
+	 Xto712QGI26K282jPAiQ3pK4Ns0cp4QRJ54yhIH5Q6CdbVEA8o/G1qbgQ1YRbWQvcT
+	 ja2awvMT+z9HxMs+kkMNSGEgZYKwhuHFaSms3I/wF4vgfgX6Wzr0ZlHPsZq02vg0rI
+	 7S/BPLqTOu8MA==
+Date: Mon, 6 Jan 2025 18:02:21 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/15] xfs: move xfs_buf_iowait out of (__)xfs_buf_submit
+Message-ID: <20250107020221.GV6174@frogsfrogsfrogs>
+References: <20250106095613.847700-1-hch@lst.de>
+ <20250106095613.847700-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: =?UTF-8?B?UmU6IFtCVUcgUkVQT1JUXSBleHQ0OiDigJxlcnJvcnM9cmVtb3VudC1y?=
- =?UTF-8?B?b+KAnSBoYXMgYmVjb21lIOKAnGVycm9ycz1zaHV0ZG93buKAnT8=?=
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-	"linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Christian Brauner
-	<brauner@kernel.org>, <sunyongjian1@huawei.com>, Yang Erkun
-	<yangerkun@huawei.com>, <linux-fsdevel@vger.kernel.org>,
-	<linux-xfs@vger.kernel.org>, Baokun Li <libaokun1@huawei.com>
-References: <22d652f6-cb3c-43f5-b2fe-0a4bb6516a04@huawei.com>
- <z52ea53du2k66du24ju4yetqm72e6pvtcbwkrjf4oomw2feffq@355vymdndrxn>
- <17108cad-efa8-46b4-a320-70d7b696f75b@huawei.com>
- <umpsdxhd2dz6kgdttpm27tigrb3ytvpf3y3v73ugavgh4b5cuj@dnacioqwq4qq>
- <20250103153517.GB1284777@mit.edu> <20250103155406.GC1284777@mit.edu>
- <5eb2ad64-c6ea-45f8-9ba1-7de5c68d59aa@huawei.com>
- <20250106234956.GM6174@frogsfrogsfrogs>
-Content-Language: en-US
-From: Baokun Li <libaokun1@huawei.com>
-In-Reply-To: <20250106234956.GM6174@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemg500008.china.huawei.com (7.202.181.45)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250106095613.847700-5-hch@lst.de>
 
-On 2025/1/7 7:49, Darrick J. Wong wrote:
-> On Sat, Jan 04, 2025 at 10:41:28AM +0800, Baokun Li wrote:
->> Hi Ted,
->>
->> On 2025/1/3 23:54, Theodore Ts'o wrote:
->>> On Fri, Jan 03, 2025 at 10:35:17AM -0500, Theodore Ts'o wrote:
->>>> I don't see how setting the shutdown flag causes reads to fail.  That
->>>> was true in an early version of the ext4 patch which implemented
->>>> shutdown support, but one of the XFS developers (I don't remember if
->>>> it was Dave or Cristoph) objected because XFS did not cause the
->>>> read_pages function to fail.  Are you seeing this with an upstream
->>>> kernel, or with a patched kernel?  The upstream kernel does *not* have
->>>> the check in ext4_readpages() or ext4_read_folio() (post folio
->>>> conversion).
->>> OK, that's weird.  Testing on 6.13-rc4, I don't see the problem simulating an ext4 error:
->>>
->>> root@kvm-xfstests:~# mke2fs -t ext4 -Fq /dev/vdc
->>> /dev/vdc contains a ext4 file system
->>> 	last mounted on /vdc on Fri Jan  3 10:38:21 2025
->>> root@kvm-xfstests:~# mount -t ext4 -o errors=continue /dev/vdc /vdc
->> We are discussing "errors=remount-ro," as the title states, not the
->> continue mode. The key code leading to the behavior change is as follows,
->> therefore the continue mode is not affected.
-> Hmm.  On the one hand, XFS has generally returned EIO (or ESHUTDOWN in a
-> couple of specialty cases) when the fs has been shut down.
-Indeed, this is the intended behavior during shutdown.
->
-> OTOH XFS also doesn't have errors=remount-ro; it just dies, which I
-> think has been its behavior for a long time.
-Yes. As an aside, is there any way for xfs to determine if -EIO is
-originating from a hardware error or if the filesystem has been shutdown?
+On Mon, Jan 06, 2025 at 10:54:41AM +0100, Christoph Hellwig wrote:
+> There is no good reason to pass a bool argument to wait for a buffer when
+> the callers that want that can easily just wait themselves.
+> 
+> This means the wait moves out of the extra hold of the buffer, but as the
+> callers of synchronous buffer I/O need to hold a reference anyway that is
+> perfectly fine.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Or would you consider it useful to have the mount command display
-"shutdown" when the file system is being shut down?
-> To me, it doesn't sound unreasonable for ext* to allow reads after a
-> shutdown when errors=remount-ro since it's always had that behavior.
-Yes, a previous bug fix inadvertently changed the behavior of 
-errors=remount-ro,
-and the patch to correct this is coming.
+That's much cleaner...
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Additionally, ext4 now allows directory reads even after shutdown, is this
-expected behavior?
-> Bonus Q: do you want an errors=fail variant to shut things down fast?
->
-> --D
+--D
 
-In my opinion, I have not yet seen a scenario where the file system needs
-to be shut down after an error occurs. Therefore, using errors=remount-ro
-to prevent modifications after an error is sufficient. Of course, if
-customers have such needs, implementing this mode is also very simple.
-
-
-Thanks,
-Baokun
-
+> ---
+>  fs/xfs/xfs_buf.c | 36 +++++++++++++++++-------------------
+>  1 file changed, 17 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 1927655fed13..a3484421a6d8 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -52,14 +52,8 @@ struct kmem_cache *xfs_buf_cache;
+>   *	  b_lock (trylock due to inversion)
+>   */
+>  
+> -static int __xfs_buf_submit(struct xfs_buf *bp, bool wait);
+> -
+> -static inline int
+> -xfs_buf_submit(
+> -	struct xfs_buf		*bp)
+> -{
+> -	return __xfs_buf_submit(bp, !(bp->b_flags & XBF_ASYNC));
+> -}
+> +static int xfs_buf_submit(struct xfs_buf *bp);
+> +static int xfs_buf_iowait(struct xfs_buf *bp);
+>  
+>  static inline bool xfs_buf_is_uncached(struct xfs_buf *bp)
+>  {
+> @@ -797,13 +791,18 @@ _xfs_buf_read(
+>  	struct xfs_buf		*bp,
+>  	xfs_buf_flags_t		flags)
+>  {
+> +	int			error;
+> +
+>  	ASSERT(!(flags & XBF_WRITE));
+>  	ASSERT(bp->b_maps[0].bm_bn != XFS_BUF_DADDR_NULL);
+>  
+>  	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD | XBF_DONE);
+>  	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+>  
+> -	return xfs_buf_submit(bp);
+> +	error = xfs_buf_submit(bp);
+> +	if (!error && !(flags & XBF_ASYNC))
+> +		error = xfs_buf_iowait(bp);
+> +	return error;
+>  }
+>  
+>  /*
+> @@ -978,9 +977,10 @@ xfs_buf_read_uncached(
+>  	bp->b_flags |= XBF_READ;
+>  	bp->b_ops = ops;
+>  
+> -	xfs_buf_submit(bp);
+> -	if (bp->b_error) {
+> -		error = bp->b_error;
+> +	error = xfs_buf_submit(bp);
+> +	if (!error)
+> +		error = xfs_buf_iowait(bp);
+> +	if (error) {
+>  		xfs_buf_relse(bp);
+>  		return error;
+>  	}
+> @@ -1483,6 +1483,8 @@ xfs_bwrite(
+>  			 XBF_DONE);
+>  
+>  	error = xfs_buf_submit(bp);
+> +	if (!error)
+> +		error = xfs_buf_iowait(bp);
+>  	if (error)
+>  		xfs_force_shutdown(bp->b_mount, SHUTDOWN_META_IO_ERROR);
+>  	return error;
+> @@ -1698,9 +1700,8 @@ xfs_buf_iowait(
+>   * holds an additional reference itself.
+>   */
+>  static int
+> -__xfs_buf_submit(
+> -	struct xfs_buf	*bp,
+> -	bool		wait)
+> +xfs_buf_submit(
+> +	struct xfs_buf	*bp)
+>  {
+>  	int		error = 0;
+>  
+> @@ -1764,9 +1765,6 @@ __xfs_buf_submit(
+>  			xfs_buf_ioend_async(bp);
+>  	}
+>  
+> -	if (wait)
+> -		error = xfs_buf_iowait(bp);
+> -
+>  	/*
+>  	 * Release the hold that keeps the buffer referenced for the entire
+>  	 * I/O. Note that if the buffer is async, it is not safe to reference
+> @@ -2322,7 +2320,7 @@ xfs_buf_delwri_submit_buffers(
+>  			bp->b_flags |= XBF_ASYNC;
+>  			xfs_buf_list_del(bp);
+>  		}
+> -		__xfs_buf_submit(bp, false);
+> +		xfs_buf_submit(bp);
+>  	}
+>  	blk_finish_plug(&plug);
+>  
+> -- 
+> 2.45.2
+> 
+> 
