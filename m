@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166EB1DED66
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 06:33:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45CB486333
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Jan 2025 06:34:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736231631; cv=none; b=PmppKOrUpx4tWqQCuGHsinABX7qoVek4PmK5WPcgcXcDu2RmmXKUMBUaNnarbxulx2Lu0nRRttzbX6zcL6JKEms3wGFVQzNQcjiCN1F9iwoRJlyuLNxWaY0rM00mIp8nldiIs2VMp8aWgjMJsWo0PifxPTd+DjytQ5/nJvoV+Bk=
+	t=1736231664; cv=none; b=p2f0E3zygN4cH1GVLm5PVAV7vuLdCTYydFalqMVuJ2A54L3lsprhzeBrko2uqQVRt1yIBD9v7+8vJKjwCN4NaZSNipXvWvu6P2VqhHTaAxfd7GVxrAS4ovx/jY1ITGBjRXKuhnz1RGl93jhuEj83Q8zCw0z+tr7h+42kuX2d7gA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736231631; c=relaxed/simple;
-	bh=Uz73uQzU9yYF4ug6b5rAANfQ/se/YlkJ1Cr8HOh7MvY=;
+	s=arc-20240116; t=1736231664; c=relaxed/simple;
+	bh=F/szLSP3j/jw4eoIxcu10GNBgAvlK8lDI96Syk9zfxY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Kh0rKUM6o2DXuc08IHeOW3jflM+qNeh4sX7MrgdoCjfb6QDGYzooatruLf9X31xpByrdzjPXPifHc02qreEbLnUaz265mnbqEixF0uHyNDwRH3lHLqosho0ExptLHt/5+z7PUz4gstn4UtQPO0M0amFBmXbKvVmEzyk3484FQm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oa8xq0Ro; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iH+bnoATFWEz8iNdrAIx2rebkR8f+L4MO7W4k4DZFbHztDTBFheB7YwsjURZVjrD/jVzaSY3IaYqJpvDR4geAnA/1/D3RsuwOwZ98EmcBnrOVxBO2c7XvhgjT+oaBFIPbulZWcbb2GdDlJQQcD+C6CLQG/ypMVC5UISxDpSSdUg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=slkr5KiB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oa8xq0Ro"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0EC3C4CED6;
-	Tue,  7 Jan 2025 06:33:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="slkr5KiB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD563C4CED6;
+	Tue,  7 Jan 2025 06:34:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736231630;
-	bh=Uz73uQzU9yYF4ug6b5rAANfQ/se/YlkJ1Cr8HOh7MvY=;
+	s=k20201202; t=1736231663;
+	bh=F/szLSP3j/jw4eoIxcu10GNBgAvlK8lDI96Syk9zfxY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Oa8xq0RodMwZgTtoQdew3f2RpC3QkO7uUwNL4C8xBhQ6cgvzYTAzyJI8y2Ujhje8i
-	 V40MsZOMlZYLrD6wpuNTA2POwjpkzg81wkXEfgoUXdvwh962k0NAV21zcelASgM9qs
-	 J7LfmkJyC82dg54YB20ljeUsnsbQfXYXbwPVKQ243ir24l72LY2TduwVMpXzlSC6tZ
-	 nIRKa10qMlaXgE5Rp+Sdw14sHx3AUzBaSpJdDWyhBuWD/6oAzcyKll467FTEoLYC/J
-	 QPjTFqvrnScV7srjru72kTDdofNIHvYhvsRmbsT6MNcxeVg1XniO7IfCWjWrVXG3wy
-	 G6yJAKFftNfng==
-Date: Mon, 6 Jan 2025 22:33:50 -0800
+	b=slkr5KiBOeJMAw/tE7vp2I9wKYXl/dvtoF5g4O9c9DhLaeIrJs1+/xCIgmhtypTYM
+	 2qnfk/s2e+BGdk2S1AiIkI0JgDdfblrKD2bb5ctUuwrxDNNntGmVgOywn2ec1iMDMr
+	 Ng1gLpp5BbWXSlVHO/2YCtY0P/In5ceDI08wITsTbzaTnLM0H3HUwIF+JdPkD9A8G0
+	 lOIHLACAeffN+GZ/cCCD8rp1Nyltmt0Q1AOaY4O/jRrhluo+tbaU54dOSEJcObKFx6
+	 P3be2Oor7+Ztv4a11GcREz7+38an6yFOjeaydMY7K8DdFFHJAK82VlZ/gKVSKvsHjs
+	 YRrT9/a/n00tg==
+Date: Mon, 6 Jan 2025 22:34:23 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/15] xfs: move write verification out of
+Subject: Re: [PATCH 08/15] xfs: move in-memory buftarg handling out of
  _xfs_buf_ioapply
-Message-ID: <20250107063350.GY6174@frogsfrogsfrogs>
+Message-ID: <20250107063423.GZ6174@frogsfrogsfrogs>
 References: <20250106095613.847700-1-hch@lst.de>
- <20250106095613.847700-8-hch@lst.de>
+ <20250106095613.847700-9-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,119 +43,76 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250106095613.847700-8-hch@lst.de>
+In-Reply-To: <20250106095613.847700-9-hch@lst.de>
 
-On Mon, Jan 06, 2025 at 10:54:44AM +0100, Christoph Hellwig wrote:
-> Split the write verification logic out of _xfs_buf_ioapply into a new
-> xfs_buf_verify_write helper called by xfs_buf_submit given that it isn't
-> about applying the I/O and doesn't really fit in with the rest of
-> _xfs_buf_ioapply.
+On Mon, Jan 06, 2025 at 10:54:45AM +0100, Christoph Hellwig wrote:
+> No I/O to apply for in-memory buffers, so skip the function call
+> entirely.  Clean up the b_io_error initialization logic to allow
+> for this.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Yeah, it's useful to break up this function...
+Nice cleanup!
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf.c | 67 ++++++++++++++++++++++++++----------------------
->  1 file changed, 37 insertions(+), 30 deletions(-)
+>  fs/xfs/xfs_buf.c | 20 +++++++++-----------
+>  1 file changed, 9 insertions(+), 11 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index e48d796c786b..18e830c4e990 100644
+> index 18e830c4e990..e886605b5721 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -1615,36 +1615,6 @@ _xfs_buf_ioapply(
+> @@ -1607,12 +1607,6 @@ _xfs_buf_ioapply(
+>  	int		size;
+>  	int		i;
 >  
+> -	/*
+> -	 * Make sure we capture only current IO errors rather than stale errors
+> -	 * left over from previous use of the buffer (e.g. failed readahead).
+> -	 */
+> -	bp->b_error = 0;
+> -
 >  	if (bp->b_flags & XBF_WRITE) {
 >  		op = REQ_OP_WRITE;
-> -
-> -		/*
-> -		 * Run the write verifier callback function if it exists. If
-> -		 * this function fails it will mark the buffer with an error and
-> -		 * the IO should not be dispatched.
-> -		 */
-> -		if (bp->b_ops) {
-> -			bp->b_ops->verify_write(bp);
-> -			if (bp->b_error) {
-> -				xfs_force_shutdown(bp->b_mount,
-> -						   SHUTDOWN_CORRUPT_INCORE);
-> -				return;
-> -			}
-> -		} else if (bp->b_rhash_key != XFS_BUF_DADDR_NULL) {
-> -			struct xfs_mount *mp = bp->b_mount;
-> -
-> -			/*
-> -			 * non-crc filesystems don't attach verifiers during
-> -			 * log recovery, so don't warn for such filesystems.
-> -			 */
-> -			if (xfs_has_crc(mp)) {
-> -				xfs_warn(mp,
-> -					"%s: no buf ops on daddr 0x%llx len %d",
-> -					__func__, xfs_buf_daddr(bp),
-> -					bp->b_length);
-> -				xfs_hex_dump(bp->b_addr,
-> -						XFS_CORRUPTION_DUMP_LEN);
-> -				dump_stack();
-> -			}
-> -		}
 >  	} else {
->  		op = REQ_OP_READ;
->  		if (bp->b_flags & XBF_READ_AHEAD)
-> @@ -1693,6 +1663,36 @@ xfs_buf_iowait(
->  	return bp->b_error;
->  }
+> @@ -1624,10 +1618,6 @@ _xfs_buf_ioapply(
+>  	/* we only use the buffer cache for meta-data */
+>  	op |= REQ_META;
 >  
-> +/*
-> + * Run the write verifier callback function if it exists. If this fails, mark
-> + * the buffer with an error and do not dispatch the I/O.
-> + */
-> +static bool
-> +xfs_buf_verify_write(
-> +	struct xfs_buf		*bp)
-> +{
-> +	if (bp->b_ops) {
-> +		bp->b_ops->verify_write(bp);
-> +		if (bp->b_error)
-> +			return false;
-> +	} else if (bp->b_rhash_key != XFS_BUF_DADDR_NULL) {
-> +		/*
-> +		 * Non-crc filesystems don't attach verifiers during log
-> +		 * recovery, so don't warn for such filesystems.
-> +		 */
-> +		if (xfs_has_crc(bp->b_mount)) {
-> +			xfs_warn(bp->b_mount,
-> +				"%s: no buf ops on daddr 0x%llx len %d",
-> +				__func__, xfs_buf_daddr(bp),
-> +				bp->b_length);
-> +			xfs_hex_dump(bp->b_addr, XFS_CORRUPTION_DUMP_LEN);
-> +			dump_stack();
-> +		}
-> +	}
-> +
-> +	return true;
-> +}
-> +
->  /*
->   * Buffer I/O submission path, read or write. Asynchronous submission transfers
->   * the buffer lock ownership and the current reference to the IO. It is not
-> @@ -1751,8 +1751,15 @@ xfs_buf_submit(
->  	atomic_set(&bp->b_io_remaining, 1);
->  	if (bp->b_flags & XBF_ASYNC)
->  		xfs_buf_ioacct_inc(bp);
-> +
-> +	if ((bp->b_flags & XBF_WRITE) && !xfs_buf_verify_write(bp)) {
-> +		xfs_force_shutdown(bp->b_mount, SHUTDOWN_CORRUPT_INCORE);
+> -	/* in-memory targets are directly mapped, no IO required. */
+> -	if (xfs_buftarg_is_mem(bp->b_target))
+> -		return;
+> -
+>  	/*
+>  	 * Walk all the vectors issuing IO on them. Set up the initial offset
+>  	 * into the buffer and the desired IO size before we start -
+> @@ -1740,7 +1730,11 @@ xfs_buf_submit(
+>  	if (bp->b_flags & XBF_WRITE)
+>  		xfs_buf_wait_unpin(bp);
+>  
+> -	/* clear the internal error state to avoid spurious errors */
+> +	/*
+> +	 * Make sure we capture only current IO errors rather than stale errors
+> +	 * left over from previous use of the buffer (e.g. failed readahead).
+> +	 */
+> +	bp->b_error = 0;
+>  	bp->b_io_error = 0;
+>  
+>  	/*
+> @@ -1757,6 +1751,10 @@ xfs_buf_submit(
+>  		goto done;
+>  	}
+>  
+> +	/* In-memory targets are directly mapped, no I/O required. */
+> +	if (xfs_buftarg_is_mem(bp->b_target))
 > +		goto done;
-> +	}
 > +
 >  	_xfs_buf_ioapply(bp);
 >  
-> +done:
->  	/*
->  	 * If _xfs_buf_ioapply failed, we can get back here with only the IO
->  	 * reference we took above. If we drop it to zero, run completion so
+>  done:
 > -- 
 > 2.45.2
 > 
