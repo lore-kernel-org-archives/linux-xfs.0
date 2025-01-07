@@ -1,255 +1,146 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FE4AEEB3;
-	Mon,  6 Jan 2025 23:52:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9229E3BBC9;
+	Tue,  7 Jan 2025 00:26:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736207561; cv=none; b=lI43gSco7nvuddXxcqkoArWN/k1VATCelyX3fPGNcJbUabnrGePjtO6un0g4QtEaD5Qq3aWX12TMSJo6G2b/ebmiwf3Zbw6vEMkxV2AngzTAvEEnvTYvZn3imSvBRcAPubtizRpERrd1Nhi27WtKRIltaqR9dLl6aT6Zoxn1TY4=
+	t=1736209581; cv=none; b=ioKs+Par+/cWCfyW/mUhRYJjYzchIGuER4jve2eEIDRopMzlKgdE/bOaoKck+jR8kVu5NPjPNq5mkYoyrFXm1iKseyAnoDzmyFRMzJJ75gThtijuLisn5rktmRgpvbZ7bjL7TxKGn/FE4hnOI8bKhgrZhJcMlf+OFbQy44oDEOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736207561; c=relaxed/simple;
-	bh=8J8tRZFcCgE9EqQJabWQdRRYj6bXP/Jd+IndbbW14Hw=;
+	s=arc-20240116; t=1736209581; c=relaxed/simple;
+	bh=dMihavZXwGXrpKPs25ME8WFq7ZI/Q8skhM8Byrkfbuo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jp1W7XajnNgSQOef+JXbhvXSXj0vMu6E2Qoe5c9LX6kImcgWPpFH6CjHZRNt3lrOjPobdn8JD9GO8NwHmAuuAgkzZ8Nqfx+8k7L1AXF61PRzMV4PLpHI6ocVffGlNW17cSHKQxdyb6PQpaAL3fIqiLLLzBi2o/nMoImrIz1TnsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uG5g4idi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=pb+wmepBUGhTFEsdXGBRupqTva+ReZRu8Axj07uuSkOiRqmrmhjR5ywmt0F/pwqLUJ2wDQOaingBgk+gOoCWGZ25X0AqZ2uQl3dsyY0vvFj+HF3Y+ig0EtDhjqgfvC8KCwemRRgOI4hh5m0fEZnl9+ExjUmRWyvEWtyInQ9jcqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BF5XzXrL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uG5g4idi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D33A1C4CED2;
-	Mon,  6 Jan 2025 23:52:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BF5XzXrL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D23FC4CED2;
+	Tue,  7 Jan 2025 00:26:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736207560;
-	bh=8J8tRZFcCgE9EqQJabWQdRRYj6bXP/Jd+IndbbW14Hw=;
+	s=k20201202; t=1736209580;
+	bh=dMihavZXwGXrpKPs25ME8WFq7ZI/Q8skhM8Byrkfbuo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uG5g4idilsETQdmW5g4tl5IVuYRj4kGMI9GfcsgZH5ZfaDvfP1GfD82+G0ioav5JG
-	 meY6lgGa6GN322EudpB6N7QIW/DFeFSnCUpZtGwFVVvS+chv1asSRou7v4s1f89ePL
-	 ThUxBBDZvF6MGOu6M3Ax5D9umpxzlpgWDC90cyzIgWE+sWSw3dYuW93ckVPHx6eXQA
-	 SWVSKejM5W6cpEvfDkovfX8XpLoCoVVFG/Z8PK4bgJZQFBDmrAEFJTzI7FQWiKjmqj
-	 LmswT0Dp43w9Riqj6whggEV5dfDqUk2JlGuxCHLG65hqVpbkxZz2bnNmTl4d481Tq2
-	 A6iW29NfRrLog==
-Date: Mon, 6 Jan 2025 15:52:40 -0800
+	b=BF5XzXrLITV816ltA3tl3CbxuCnGSwi0uWpjyD53DUoEOnWitNy6IBeM5mBXLXLNx
+	 TtelTp0bfLNYQSJx6//5GNt+PEFfMcD0ZieGU+KI4RvPXPp0WmHTuT7J1kCmR+iG5q
+	 jtYGw2EvdxGkeVGyjtEoGnjXlxSoTfVyMH28pffRQq63Lc8vEIK2jxuocncAvaodzB
+	 FwL0Qhn3kO5655pgv5U9oiGmdJZ6SCLppE5Qi5OEZpcs3mxhRGuntMWZqaWWKWcwJ/
+	 jddcIffyZVHZIij/5GYgBYOvRyc1gmeKRENpzT+VQc1JVsy+sZYO/zoRPM6cej4d6o
+	 8cjPdZpjEnCdQ==
+Date: Mon, 6 Jan 2025 16:26:19 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Nirjhar Roy <nirjhar@linux.ibm.com>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] check: capture dmesg of mount failures if test fails
-Message-ID: <20250106235240.GN6174@frogsfrogsfrogs>
-References: <173568782724.2712126.2021149328064840091.stgit@frogsfrogsfrogs>
- <173568782758.2712126.12517347004514444060.stgit@frogsfrogsfrogs>
- <58cb2b57d782f48652ed86a7d7726b851e723b48.camel@linux.ibm.com>
+To: Stephen Zhang <starzhangzsd@gmail.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Zorro Lang <zlang@redhat.com>,
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>,
+	greg.marsden@oracle.com, shirley.ma@oracle.com,
+	konrad.wilk@oracle.com, fstests <fstests@vger.kernel.org>
+Subject: Re: [NYE PATCHCYCLONE] xfs: free space defrag and autonomous self
+ healing
+Message-ID: <20250107002619.GO6174@frogsfrogsfrogs>
+References: <20241231232503.GU6174@frogsfrogsfrogs>
+ <CANubcdXWHOtTW4PjJE1qjAJHEg48LS7MFc065gcQwoH7s0Ybqw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <58cb2b57d782f48652ed86a7d7726b851e723b48.camel@linux.ibm.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANubcdXWHOtTW4PjJE1qjAJHEg48LS7MFc065gcQwoH7s0Ybqw@mail.gmail.com>
 
-On Mon, Jan 06, 2025 at 04:48:34PM +0530, Nirjhar Roy wrote:
-> On Tue, 2024-12-31 at 15:56 -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Capture the kernel output after a mount failure occurs.  If the test
-> > itself fails, then keep the logging output for further diagnosis.
-> > 
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
-> >  check                  |   22 +++++++++++++++++++++-
-> >  common/rc              |   26 +++++++++++++++++++++++++-
-> >  common/report          |    8 ++++++++
-> >  tests/selftest/008     |   20 ++++++++++++++++++++
-> >  tests/selftest/008.out |    1 +
-> >  5 files changed, 75 insertions(+), 2 deletions(-)
-> >  create mode 100755 tests/selftest/008
-> >  create mode 100644 tests/selftest/008.out
-> > 
-> > 
-> > diff --git a/check b/check
-> > index 9222cd7e4f8197..a46ea1a54d78bb 100755
-> > --- a/check
-> > +++ b/check
-> > @@ -614,7 +614,7 @@ _stash_fail_loop_files() {
-> >  	local seq_prefix="${REPORT_DIR}/${1}"
-> >  	local cp_suffix="$2"
-> >  
-> > -	for i in ".full" ".dmesg" ".out.bad" ".notrun" ".core"
-> > ".hints"; do
-> > +	for i in ".full" ".dmesg" ".out.bad" ".notrun" ".core" ".hints"
-> > ".mountfail"; do
-> >  		rm -f "${seq_prefix}${i}${cp_suffix}"
-> >  		if [ -f "${seq_prefix}${i}" ]; then
-> >  			cp "${seq_prefix}${i}"
-> > "${seq_prefix}${i}${cp_suffix}"
-> > @@ -994,6 +994,7 @@ function run_section()
-> >  				      echo -n "	$seqnum -- "
-> >  			cat $seqres.notrun
-> >  			tc_status="notrun"
-> > +			rm -f "$seqres.mountfail?"
-> >  			_stash_test_status "$seqnum" "$tc_status"
-> >  
-> >  			# Unmount the scratch fs so that we can wipe
-> > the scratch
-> > @@ -1053,6 +1054,7 @@ function run_section()
-> >  		if [ ! -f $seq.out ]; then
-> >  			_dump_err "no qualified output"
-> >  			tc_status="fail"
-> > +			rm -f "$seqres.mountfail?"
-> >  			_stash_test_status "$seqnum" "$tc_status"
-> >  			continue;
-> >  		fi
-> > @@ -1089,6 +1091,24 @@ function run_section()
-> >  				rm -f $seqres.hints
-> >  			fi
-> >  		fi
-> > +
-> > +		if [ -f "$seqres.mountfail?" ]; then
-> > +			if [ "$tc_status" = "fail" ]; then
-> > +				# Let the user know if there were mount
-> > +				# failures on a test that failed
-> > because that
-> > +				# could be interesting.
-> > +				mv "$seqres.mountfail?"
-> > "$seqres.mountfail"
-> > +				_dump_err "check: possible mount
-> > failures (see $seqres.mountfail)"
-> > +				test -f $seqres.mountfail && \
-> > +					maybe_compress_logfile
-> > $seqres.mountfail $MAX_MOUNTFAIL_SIZE
-> > +			else
-> > +				# Don't retain mount failure logs for
-> > tests
-> > +				# that pass or were skipped because
-> > some tests
-> > +				# intentionally drive mount failures.
-> > +				rm -f "$seqres.mountfail?"
-> > +			fi
-> > +		fi
-> > +
-> >  		_stash_test_status "$seqnum" "$tc_status"
-> >  	done
-> >  
-> > diff --git a/common/rc b/common/rc
-> > index d7dfb55bbbd7e1..0ede68eb912440 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -204,9 +204,33 @@ _get_hugepagesize()
-> >  	awk '/Hugepagesize/ {print $2 * 1024}' /proc/meminfo
-> >  }
-> >  
-> > +# Does dmesg have a --since flag?
-> > +_dmesg_detect_since()
-> > +{
-> > +	if [ -z "$DMESG_HAS_SINCE" ]; then
-> > +		test "$DMESG_HAS_SINCE" = "yes"
-> > +		return
-> > +	elif dmesg --help | grep -q -- --since; then
-> > +		DMESG_HAS_SINCE=yes
-> > +	else
-> > +		DMESG_HAS_SINCE=no
-> > +	fi
-> > +}
-> > +
-> >  _mount()
-> >  {
-> > -    $MOUNT_PROG $*
-> > +	$MOUNT_PROG $*
-> > +	ret=$?
-> > +	if [ "$ret" -ne 0 ]; then
-> > +		echo "\"$MOUNT_PROG $*\" failed at $(date)" >>
-> > "$seqres.mountfail?"
-> > +		if _dmesg_detect_since; then
-> > +			dmesg --since '30s ago' >> "$seqres.mountfail?"
-> > +		else
-> > +			dmesg | tail -n 100 >> "$seqres.mountfail?"
-> Is it possible to grep for a mount failure message in dmesg and then
-> capture the last n lines? Do you think that will be more accurate?
+On Thu, Jan 02, 2025 at 09:37:47AM +0800, Stephen Zhang wrote:
+> Darrick J. Wong <djwong@kernel.org> 于2025年1月1日周三 07:25写道：
+> >
+> > Hi everyone,
+> >
+> > Thank you all for helping get online repair, parent pointers, and
+> > metadata directory trees, and realtime allocation groups merged this
+> > year!  We got a lot done in 2024.
+> >
+> > Having sent pull requests to Carlos for the last pieces of the realtime
+> > modernization project, I have exactly two worthwhile projects left in my
+> > development trees!  The stuff here isn't necessarily in mergeable state
+> > yet, but I still believe everyone ought to know what I'm up to.
+> >
+> > The first project implements (somewhat buggily; I never quite got back
+> > to dealing with moving eof blocks) free space defragmentation so that we
+> > can meaningfully shrink filesystems; garbage collect regions of the
+> > filesystem; or prepare for large allocations.  There's not much new
+> > kernel code other than exporting refcounts and gaining the ability to
+> > map free space.
+> >
+> > The second project initiates filesystem self healing routines whenever
+> > problems start to crop up, which means that it can run fully
+> > autonomously in the background.  The monitoring system uses some
+> > pseudo-file and seqbuf tricks that I lifted from kmo last winter.
+> >
+> > Both of these projects are largely userspace code.
+> >
+> > Also I threw in some xfs_repair code to do dangerous fs upgrades.
+> > Nobody should use these, ever.
+> >
+> > Maintainers: please do not merge, this is a dog-and-pony show to attract
+> > developer attention.
+> >
+> 
+> [Add Dave to the list]
+> 
+> Hi, Darrick and all,
+> 
+> Recently, I have been considering implementing the XFS shrink feature based
+> on the AF concept, which was mentioned in this link:
+> 
+> https://lore.kernel.org/linux-xfs/20241104014439.3786609-1-zhangshida@kylinos.cn/
+> 
+> In the lore link, it stated:
+> The rules used by AG are more about extending outwards.
+> whilst
+> The rules used by AF are more about restricting inwards.
+> 
+> where the AF concept implicitly and naturally involves the semantics of
+> compressing/shrinking(restricting).
+> 
+> AG(for xfs extend) and AF(for xfs shrink) are constructed in a symmetrical way,
+> in which it is more elegant and easier to build more complex features on it.
+> 
+> To elaborate further, for example, AG should not be seen as
+> independent entities in
+> the shrink context. That means each AG requires separate
+> managements(flags or something to indicate the state of that
+> AG/region), which would increase the system complexity compared to the
+> idea behind AF. AF views several AGs as a whole.
+> 
+> And when it comes to growfs, things start to get a little more
+> complicated, and AF
+> can handle it easily and naturally.
+> 
+> However talk is too cheap, to validate our point, we truly hope to have the
+> opportunity to participate in developing these features by integrating
+> the existing
+> infrastructure you have already established with the AF concept.
 
-Alas no, because there's no standard mount failure log message for us to
-latch onto.
+Hmm, now that's interesting -- using the AF ("allocation fencing"?)
+capability to constrain allocations to a subset of AGs, and then slowly
+rewriting files and whatnot to migrate data to other AGs.  Eventually
+you end up with an AG that's empty and therefore ready for shrink.
 
-> Also, do you think it is useful to make this 100 configurable instead
-> of hardcoding? 
-
-I suppose, but why do you need more than 100?
-
-> > +		fi
-> > +	fi
-> > +
-> > +	return $ret
-> >  }
-> >  
-> >  # Call _mount to do mount operation but also save mountpoint to
-> > diff --git a/common/report b/common/report
-> > index 0e91e481f9725a..b57697f76dafb2 100644
-> > --- a/common/report
-> > +++ b/common/report
-> > @@ -199,6 +199,7 @@ _xunit_make_testcase_report()
-> >  		local out_src="${SRC_DIR}/${test_name}.out"
-> >  		local full_file="${REPORT_DIR}/${test_name}.full"
-> >  		local dmesg_file="${REPORT_DIR}/${test_name}.dmesg"
-> > +		local
-> > mountfail_file="${REPORT_DIR}/${test_name}.mountfail"
-> >  		local outbad_file="${REPORT_DIR}/${test_name}.out.bad"
-> >  		if [ -z "$_err_msg" ]; then
-> >  			_err_msg="Test $test_name failed, reason
-> > unknown"
-> > @@ -225,6 +226,13 @@ _xunit_make_testcase_report()
-> >  			printf ']]>\n'	>>$report
-> >  			echo -e "\t\t</system-err>" >> $report
-> >  		fi
-> > +		if [ -z "$quiet" -a -f "$mountfail_file" ]; then
-> > +			echo -e "\t\t<mount-failure>" >> $report
-> > +			printf	'<![CDATA[\n' >>$report
-> > +			cat "$mountfail_file" | tr -dc
-> > '[:print:][:space:]' | encode_cdata >>$report
-> > +			printf ']]>\n'	>>$report
-> > +			echo -e "\t\t</mount-failure>" >> $report
-> > +		fi
-> >  		;;
-> >  	*)
-> >  		echo -e "\t\t<failure message=\"Unknown
-> > test_status=$test_status\" type=\"TestFail\"/>" >> $report
-> > diff --git a/tests/selftest/008 b/tests/selftest/008
-> > new file mode 100755
-> > index 00000000000000..db80ffe6f77339
-> > --- /dev/null
-> > +++ b/tests/selftest/008
-> > @@ -0,0 +1,20 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2024-2025 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 008
-> > +#
-> > +# Test mount failure capture.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest selftest
-> > +
-> > +_require_command "$WIPEFS_PROG" wipefs
-> > +_require_scratch
-> > +
-> > +$WIPEFS_PROG -a $SCRATCH_DEV
-> > +_scratch_mount &>> $seqres.full
-> Minor: Do you think adding some filtered messages from the captured
-> dmesg logs in the output will be helpful?  
-
-No, this test exists to make sure that the dmesg log is captured in
-$RESULT_DIR.  We don't care about the mount(8) output.
+That's definitely a different way to do that than what I did (add a
+"mapfree" ioctl to pin space to a file).  I'll ponder these 2 approaches
+a bit more.
 
 --D
 
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/selftest/008.out b/tests/selftest/008.out
-> > new file mode 100644
-> > index 00000000000000..aaff95f3f48372
-> > --- /dev/null
-> > +++ b/tests/selftest/008.out
-> > @@ -0,0 +1 @@
-> > +QA output created by 008
-> > 
+> Best regards,
+> Shida
 > 
+> 
+> 
+> > --D
+> >
+> > PS: I'll be back after the holidays to look at the zoned/atomic/fsverity
+> > patches.  And finally rebase fstests to 2024-12-08.
+> >
 > 
