@@ -1,129 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4B55197A87;
-	Wed,  8 Jan 2025 01:26:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 991B82C80
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Jan 2025 01:31:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736299598; cv=none; b=Y6L8EA2Ag7JDjAixRY3vQxRYEYjzZIcPm3TRTagnC4p3N1Vj2qygKsLBLD9/r27nM2XBANmY4ViOkKb2kHhma98H/hAQ1sDlxNQuBLf65w8Etvq/ntU+tNltvkA5b3/Cyaucjm6EIj+QFiqTcZkQUgcHnC9RjZd4EXeiGlH/clY=
+	t=1736299865; cv=none; b=EgvoRku0EUtmnX+V6F7ExKEBk6gjEWuF+PPjhH/MNy9RydGpmQJpIQqar3rwQLBv5eNaUfLoGgAwvbDIMNNo24f7aGHfXLRUmogWj2Jt8A7wqQnULizK3T88hN+8nt1fnPrd4KT0jCZkbRvf93iGrUiY059weDYGcXhckeWo69w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736299598; c=relaxed/simple;
-	bh=vkVjnKRqGlDlum/jA+USzPiNMSXGI7tIMAfgeioFVGg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HOqNaiI0DMBwcRJ47Swk6NNSaquArOO/7EUw9Jm7GXQzuTY4sKV10LjBijTjRyHE+dJTYaWKCnQvboZlc0/I03iiRuDSwJMavLvWSEzXXuAXaFDPHOptgVgmXBAz6PvnAaT1wR34lQ3nxxJKLgODJRLz35E+5O9AnbyjkKjVHsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2ScurNo; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2ScurNo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75705C4CEDF;
-	Wed,  8 Jan 2025 01:26:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736299597;
-	bh=vkVjnKRqGlDlum/jA+USzPiNMSXGI7tIMAfgeioFVGg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=F2ScurNoYBogXxdkW/7hiqwFoyLjYT6h2VORn4bZJ3YJJJmXqPZISBhVxBExRJWgM
-	 lPGpJhCy2u+IDD5CRQqnb5P1SqVdcN2SB/Lbk8yjpz1//QCp4nszvA4MgVJjTy42s6
-	 5h1opxiw9Asr/hEiMPX/QB+SNJIJ8Dc0h/jBFZBotAkBA1okpmLKrttsQ92LeoBD6P
-	 DuUDDTZADR8jZGTvRD1Y2ZbxYmLNNTjITdC1laXXgteP47pXxa+6mj28DB9fmVlsm7
-	 pKUz3wzJxG9cT7TgVNXccCdTrBtUxSY9iJGEAT/N4ORrriNyj03yWLsUwAUolT2SJH
-	 Ale0XYK0VL36g==
-Date: Tue, 7 Jan 2025 17:26:36 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org, cem@kernel.org,
-	dchinner@redhat.com, ritesh.list@gmail.com,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, martin.petersen@oracle.com
-Subject: Re: [PATCH v2 2/7] iomap: Add zero unwritten mappings dio support
-Message-ID: <20250108012636.GE1306365@frogsfrogsfrogs>
-References: <20241210125737.786928-1-john.g.garry@oracle.com>
- <20241210125737.786928-3-john.g.garry@oracle.com>
- <20241211234748.GB6678@frogsfrogsfrogs>
- <4d34e14f-6596-483b-86e8-d4b7e44acd9a@oracle.com>
- <20241212204007.GL6678@frogsfrogsfrogs>
- <20241213144740.GA17593@lst.de>
- <20241214005638.GJ6678@frogsfrogsfrogs>
- <20241217070845.GA19358@lst.de>
- <93eecf38-272b-426f-96ec-21939cd3fbc5@oracle.com>
+	s=arc-20240116; t=1736299865; c=relaxed/simple;
+	bh=oYl4/vJKUmX4A13KEb7QMqXfa4IWhkeFZyAeMGQNLhg=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ROhslX7wVv60BpNUnPBEEgZYv9zoI0w1bHqOrGiJDrzKiWlHu/3XrO6Na9You3rz1SmRZ/6i4ZxItWChKBkvcm/G8gaHTo7LqwYxzpPWE68SXW8pylGOF/qFrRoakhzfFWAd0Ssx0px96F0FcvhJpDllEjHPZWfQsHRy/DLEYbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4YSVj26ZHgz1JHD8;
+	Wed,  8 Jan 2025 09:30:14 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id CE8A51400CB;
+	Wed,  8 Jan 2025 09:30:59 +0800 (CST)
+Received: from localhost (10.175.112.188) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 8 Jan
+ 2025 09:30:59 +0800
+Date: Wed, 8 Jan 2025 09:26:39 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <cem@kernel.org>, <linux-xfs@vger.kernel.org>, <david@fromorbit.com>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: Re: [PATCH 1/2] xfs: correct the sb_rgcount when the disk not
+ support rt volume
+Message-ID: <Z33UT3AxCjyXIhiD@localhost.localdomain>
+References: <20241231023423.656128-1-leo.lilong@huawei.com>
+ <20241231023423.656128-2-leo.lilong@huawei.com>
+ <20250106195220.GK6174@frogsfrogsfrogs>
+ <Z30n-9IusvggTuwP@localhost.localdomain>
+ <20250108003206.GL6174@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <93eecf38-272b-426f-96ec-21939cd3fbc5@oracle.com>
+In-Reply-To: <20250108003206.GL6174@frogsfrogsfrogs>
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Wed, Dec 18, 2024 at 11:15:42AM +0000, John Garry wrote:
-> On 17/12/2024 07:08, Christoph Hellwig wrote:
-> > On Fri, Dec 13, 2024 at 04:56:38PM -0800, Darrick J. Wong wrote:
-> > > > > "If you receive -EBADMAP, then call fallocate(FALLOC_FL_MAKE_OVERWRITE)
-> > > > > to force all the mappings to pure overwrites."
-> > > > 
-> > > > Ewwwwwwwwwwwwwwwwwwwww.
-> > > > 
-> > > > That's not a sane API in any way.
+On Tue, Jan 07, 2025 at 04:32:06PM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 07, 2025 at 09:11:23PM +0800, Long Li wrote:
+> > On Mon, Jan 06, 2025 at 11:52:20AM -0800, Darrick J. Wong wrote:
+> > > On Tue, Dec 31, 2024 at 10:34:22AM +0800, Long Li wrote:
+> > > > When mounting an xfs disk that incompat with metadir and has no realtime
+> > > > subvolume, if CONFIG_XFS_RT is not enabled in the kernel, the mount will
+> > > > fail. During superblock log recovery, since mp->m_sb.sb_rgcount is greater
+> > > > than 0, updating the last rtag in-core is required, however, without
+> > > > CONFIG_XFS_RT enabled, xfs_update_last_rtgroup_size() always returns
+> > > > -EOPNOTSUPP, leading to mount failure.
 > > > 
-> > > Oh I know, I'd much rather stick to the view that block untorn writes
-> > > are a means for programs that only ever do IO in large(ish) blocks to
-> > > take advantage of a hardware feature that also wants those large
-> > > blocks.
+> > > Didn't we fix the xfs_update_last_rtgroup_size stub to return 0?
+> > > 
+> > > --D
 > > 
-> > I (vaguely) agree ith that.
+> > Indeed, when CONFIG_XFS_RT is not enabled, xfs_update_last_rtgroup_size() should
+> > return 0, as returning an error is meaningless.
 > > 
-> > > And only if the file mapping is in the correct state, and the
-> > > program is willing to *maintain* them in the correct state to get the
-> > > better performance.
+> > 1) For kernels without CONFIG_XFS_RT, mounting an image with realtime subvolume will
+> > fail at xfs_rtmount_init().
 > > 
-> > I kinda agree with that, but the maintain is a bit hard as general
-> > rule of thumb as file mappings can change behind the applications
-> > back.  So building interfaces around the concept that there are
-> > entirely stable mappings seems like a bad idea.
-> 
-> I tend to agree.
-
-As long as it's a general rule that file mappings can change even after
-whatever prep work an application tries to do, we're never going to have
-an easy time enabling any of these fancy direct-to-storage tricks like
-cpu loads and stores to pmem, or this block-untorn writes stuff.
-
+> > 2) For kernels without CONFIG_XFS_RT, mounting an image without realtime subvolume
+> > should succeed.
 > > 
-> > > I don't want xfs to grow code to write zeroes to
-> > > mapped blocks just so it can then write-untorn to the same blocks.
+> > However, in the current scenario, should sb_rgcount be initialized to 0 ? it will 
+> > consistent with metadir feature is enabled. The xfs-documentation [1] describes 
+> > sb_rgcount as follows:
 > > 
-> > Agreed.
+> > "Count of realtime groups in the filesystem, if the XFS_SB_FEAT_RO_INCOMPAT_METADIR
+> > feature is enabled. If no realtime subvolume exists, this value will be zero."
 > > 
+> > [1] https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/tree/design/XFS_Filesystem_Structure/superblock.asciidoc
 > 
-> So if we want to allow large writes over mixed extents, how to handle?
+> Ah, I see your point finally -- if there's no realtime section, then
+> there's no need to allocate any incore rtgroups, nor is there any point
+> to set sb_rgcount==1.
 > 
-> Note that some time ago we also discussed that we don't want to have a
-> single bio covering mixed extents as we cannot atomically convert all
-> unwritten extents to mapped.
-
-From https://lore.kernel.org/linux-xfs/Z3wbqlfoZjisbe1x@infradead.org/ :
-
-"I think we should wire it up as a new FALLOC_FL_WRITE_ZEROES mode,
-document very vigorously that it exists to facilitate pure overwrites
-(specifically that it returns EOPNOTSUPP for always-cow files), and not
-add more ioctls."
-
-If we added this new fallocate mode to set up written mappings, would it
-be enough to write in the programming manuals that applications should
-use it to prepare a file for block-untorn writes?  Perhaps we should
-change the errno code to EMEDIUMTYPE for the mixed mappings case.
-
-Alternately, maybe we /should/ let programs open a lease-fd on a file
-range, do their untorn writes through the lease fd, and if another
-thread does something to break the lease, then the lease fd returns EIO
-until you close it.
-
-<shrug> any thoughts?
-
---D
-
-> Thanks,
-> John
+> That said, I think the correct tags here are:
+> Cc: <stable@vger.kernel.org> # v6.13-rc1
+> Fixes: 96768e91511bfc ("xfs: define the format of rt groups")
 > 
+> because 96768e91511bfc is the commit that actually added "to->sb_rgcount
+> = 1;".
 > 
-> 
-> 
+
+Ok, thanks for point out that, In fact, xfs_grow_last_rtg() needs to be modified together,
+otherwise the growfs may be problematic. Therefore, I will release a new version.
+
+Long Li
