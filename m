@@ -1,36 +1,37 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C880E13BADF
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Jan 2025 14:12:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3EDE1FDE14;
+	Wed,  8 Jan 2025 15:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736345575; cv=none; b=XdM3EIghkbqd+ISL/lyJMx+fgN8M5i/F81wsIYR1RdyzgeYzyFHC+L8qgIoCOXO8wT10l4/Kd34Lq1B6jrkAVUimVCHgsi9rVqJ8BL0mpLZT5RvdQ6N+7bEW6NFyRJEEXzFoU/+hibD2xH9i+imodVuj6ZlYKsvMAbtNzRC87T4=
+	t=1736349516; cv=none; b=ldkGccFRx6WGQTsJyvTOXv4Y5rTfsZnHP88uTDhC5JSBp0SzbeUeYvs+E9sz0pq3dlEsKVet/FcVVwUrWIbVdy+c65H6JaojOpQEAHDvZ42XXW3Lcs/WWr6PFngFWWRBJ8Ca8qdxXNBNC2hqEBsbV3beja5lD2ooMKtL4W8uR3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736345575; c=relaxed/simple;
-	bh=RKLW3Znmg5x3eIVL8LBkhY/X7kffPpqim57WSAGA75I=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=YwHvIHJNCrC7DJ0f2x6WOUCTZB81rHRfJfqDJ554wQ/ESL2eOlt8SfKNAOt6L+r+CJZCCg/WQj0TLagiZTmafjjpc5HTKDSYAsyqlot3p8g+CZjvm2t0fZI3aBjmrEwfk8YGhy8WOnS5CCS36Hdf2USkhY7PCr2bI9W6TYnePN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G+UHWPWp; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G+UHWPWp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B90AEC4CEDF
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Jan 2025 14:12:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736345575;
-	bh=RKLW3Znmg5x3eIVL8LBkhY/X7kffPpqim57WSAGA75I=;
-	h=Date:From:To:Subject:From;
-	b=G+UHWPWpnxWvU8+ianY+4KBtDdOFA8Ce1nwLclVxi9YeQsR3FN2EtAERblMGDzeyX
-	 wCBJ0UlXOj8dyHjkMFoz5fsd3fr/VRkHSq75e9DdLsvOeBO4DNEmIjPKuV2gb0Gvbz
-	 zhqR8vpq4x8UqESQshAz9nYR5xa+xMcQWnSGG+NCfVtgshq4cROvyi2D9EsNpvTycs
-	 JgYg2Y80NP2h5CWDwTHomV87ORlkQIKapb9nXLmcu6a8IAU5tgyBD3yyy1Mfo63k1C
-	 v0DpZYtL4XZ5563K7hkbB5KuX7YTto6Rb9ZTck7dv3ytS68XDIKR1yWvzBn1Q6Decc
-	 g+7/A/fWenoBg==
-Date: Wed, 8 Jan 2025 15:12:50 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 7ee7c9b39ed3
-Message-ID: <uxartrae4n52wr3fk6phtyz2uwitoarqevytu7inktznhvsffj@elpsizgspdce>
+	s=arc-20240116; t=1736349516; c=relaxed/simple;
+	bh=OujOAdLOQ7kXdL5URXNzCkXJteiHpdwooom5ajLUb9U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZWp63xdmQIugRIpNbAYl6cR2FMrAe7JbbCXJszXIgHEMb7oAqaQMxqqmO7c00+uy1ICbyKVJTNyXzECT/iYf/IWT60WF75M0ccUt07rIVOGRU+InxexNtRk0LTKyEg1RXjEho2XAv+GuV1du8JxEwiiyxqAaHQQQ7V1XDqt8+JU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 7CC3A68BFE; Wed,  8 Jan 2025 16:18:28 +0100 (CET)
+Date: Wed, 8 Jan 2025 16:18:27 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Hongbo Li <lihongbo22@huawei.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/5] xfs: report the correct read/write dio alignment
+ for reflinked inodes
+Message-ID: <20250108151827.GA24499@lst.de>
+References: <20250108085549.1296733-1-hch@lst.de> <20250108085549.1296733-5-hch@lst.de> <571d96ad-d9fe-4c76-8f05-1e487244b388@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,31 +40,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <571d96ad-d9fe-4c76-8f05-1e487244b388@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
+On Wed, Jan 08, 2025 at 10:13:02AM +0000, John Garry wrote:
+> On 08/01/2025 08:55, Christoph Hellwig wrote:
+>> @@ -580,9 +580,24 @@ xfs_report_dioalign(
+>>   	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+>>   	struct block_device	*bdev = target->bt_bdev;
+>>   -	stat->result_mask |= STATX_DIOALIGN;
+>> +	stat->result_mask |= STATX_DIOALIGN | STATX_DIO_READ_ALIGN;
+>
+> BTW, it would be a crappy userspace which can't handle fields which it did 
+> not ask for, e.g. asked for STATX_DIOALIGN, but got  STATX_DIOALIGN and 
+> STATX_DIO_READ_ALIGN
 
-Hi folks,
-
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-7ee7c9b39ed3 xfs: don't return an error from xfs_update_last_rtgroup_size for !XFS_RT
-
-1 new commit:
-
-Christoph Hellwig (1):
-      [7ee7c9b39ed3] xfs: don't return an error from xfs_update_last_rtgroup_size for !XFS_RT
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_rtgroup.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Well, the space is marked for extension.  I don't think there ever
+was a requirement only fields asked for are reported, but if that
+feels safer I could switch to that.
