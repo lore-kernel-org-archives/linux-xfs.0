@@ -1,100 +1,129 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2DA778F24;
-	Wed,  8 Jan 2025 01:20:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4B55197A87;
+	Wed,  8 Jan 2025 01:26:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736299239; cv=none; b=FXYVrIARrd/1rNGyn44airrAKC1vqrVhLB9QkN4T15ZTmTcATQlLK0SrezVFBG2SPZDT5ML/a0YkNCvjcCXpuKew4q3lFUSd1b/8ogiyGyUpNO95XsdfHTacggOYXG/WhAc0kXNRSulxov3klK1LEhqB8HpZumSK84eZDIkWSmk=
+	t=1736299598; cv=none; b=Y6L8EA2Ag7JDjAixRY3vQxRYEYjzZIcPm3TRTagnC4p3N1Vj2qygKsLBLD9/r27nM2XBANmY4ViOkKb2kHhma98H/hAQ1sDlxNQuBLf65w8Etvq/ntU+tNltvkA5b3/Cyaucjm6EIj+QFiqTcZkQUgcHnC9RjZd4EXeiGlH/clY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736299239; c=relaxed/simple;
-	bh=IzOOzUG7AoU1E7QXJeIgLSgU3omWwrBeAwxDhmLwfRE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IdTGQSGMc6OrgRqg7MuGV47Dw6wxwxVZ/Aff9gU+gH9ryUhrrJtfCBTO7Qe0bPvLYTOvWoii2h3jyK/gNylNnfpaqQFFC7noi9DQGphae1Q06y1x0lS4qN1pWEYWGXHLlyPfNdKDJQakZWC7UHhmjBqDiyWQQTfxbzrkMyh6jzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YSVTR5J55z4f3lfJ;
-	Wed,  8 Jan 2025 09:20:11 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 174F61A092F;
-	Wed,  8 Jan 2025 09:20:33 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgBHrGDe0n1nC4RfAQ--.53048S3;
-	Wed, 08 Jan 2025 09:20:32 +0800 (CST)
-Message-ID: <f26a21c9-2520-4deb-98f5-385adc92a934@huaweicloud.com>
-Date: Wed, 8 Jan 2025 09:20:30 +0800
+	s=arc-20240116; t=1736299598; c=relaxed/simple;
+	bh=vkVjnKRqGlDlum/jA+USzPiNMSXGI7tIMAfgeioFVGg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HOqNaiI0DMBwcRJ47Swk6NNSaquArOO/7EUw9Jm7GXQzuTY4sKV10LjBijTjRyHE+dJTYaWKCnQvboZlc0/I03iiRuDSwJMavLvWSEzXXuAXaFDPHOptgVgmXBAz6PvnAaT1wR34lQ3nxxJKLgODJRLz35E+5O9AnbyjkKjVHsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2ScurNo; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2ScurNo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75705C4CEDF;
+	Wed,  8 Jan 2025 01:26:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736299597;
+	bh=vkVjnKRqGlDlum/jA+USzPiNMSXGI7tIMAfgeioFVGg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=F2ScurNoYBogXxdkW/7hiqwFoyLjYT6h2VORn4bZJ3YJJJmXqPZISBhVxBExRJWgM
+	 lPGpJhCy2u+IDD5CRQqnb5P1SqVdcN2SB/Lbk8yjpz1//QCp4nszvA4MgVJjTy42s6
+	 5h1opxiw9Asr/hEiMPX/QB+SNJIJ8Dc0h/jBFZBotAkBA1okpmLKrttsQ92LeoBD6P
+	 DuUDDTZADR8jZGTvRD1Y2ZbxYmLNNTjITdC1laXXgteP47pXxa+6mj28DB9fmVlsm7
+	 pKUz3wzJxG9cT7TgVNXccCdTrBtUxSY9iJGEAT/N4ORrriNyj03yWLsUwAUolT2SJH
+	 Ale0XYK0VL36g==
+Date: Tue, 7 Jan 2025 17:26:36 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org, cem@kernel.org,
+	dchinner@redhat.com, ritesh.list@gmail.com,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, martin.petersen@oracle.com
+Subject: Re: [PATCH v2 2/7] iomap: Add zero unwritten mappings dio support
+Message-ID: <20250108012636.GE1306365@frogsfrogsfrogs>
+References: <20241210125737.786928-1-john.g.garry@oracle.com>
+ <20241210125737.786928-3-john.g.garry@oracle.com>
+ <20241211234748.GB6678@frogsfrogsfrogs>
+ <4d34e14f-6596-483b-86e8-d4b7e44acd9a@oracle.com>
+ <20241212204007.GL6678@frogsfrogsfrogs>
+ <20241213144740.GA17593@lst.de>
+ <20241214005638.GJ6678@frogsfrogsfrogs>
+ <20241217070845.GA19358@lst.de>
+ <93eecf38-272b-426f-96ec-21939cd3fbc5@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 1/2] fs: introduce FALLOC_FL_FORCE_ZERO to fallocate
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Theodore Ts'o <tytso@mit.edu>,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
- jack@suse.cz, adilger.kernel@dilger.ca, yi.zhang@huawei.com,
- chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com,
- Sai Chaitanya Mitta <mittachaitu@gmail.com>, linux-xfs@vger.kernel.org
-References: <20241228014522.2395187-1-yi.zhang@huaweicloud.com>
- <20241228014522.2395187-2-yi.zhang@huaweicloud.com>
- <Z3u-OCX86j-q7JXo@infradead.org> <20250106161732.GG1284777@mit.edu>
- <Z3wEhXakqrW4i3UC@infradead.org> <20250106173133.GB6174@frogsfrogsfrogs>
- <b964a57a-0237-4cbd-9aae-457527a44440@huaweicloud.com>
- <Z31Za6Ma97QPHp1W@infradead.org>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <Z31Za6Ma97QPHp1W@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgBHrGDe0n1nC4RfAQ--.53048S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7JrykAF47uF1UCr47tr43Jrb_yoWDWrgE93
-	9Iqr4kAw1qqF97Aa1ayFZ8XrWxW3srGayUJry5Jw1fZF9xJa9xuF95Wr4S9F4xZF4jkr9I
-	9FsxXr4DG3WakjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbxxYFVCjjxCrM7AC8VAFwI0_Xr0_Wr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
-	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUFk
-	u4UUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <93eecf38-272b-426f-96ec-21939cd3fbc5@oracle.com>
 
-On 2025/1/8 0:42, Christoph Hellwig wrote:
-> On Tue, Jan 07, 2025 at 10:05:47PM +0800, Zhang Yi wrote:
->> Sorry. the "pure overwrites" and "always-cow files" makes me confused,
->> this is mainly used to create a new written file range, but also could
->> be used to zero out an existing range, why you mentioned it exists to
->> facilitate pure overwrites?
+On Wed, Dec 18, 2024 at 11:15:42AM +0000, John Garry wrote:
+> On 17/12/2024 07:08, Christoph Hellwig wrote:
+> > On Fri, Dec 13, 2024 at 04:56:38PM -0800, Darrick J. Wong wrote:
+> > > > > "If you receive -EBADMAP, then call fallocate(FALLOC_FL_MAKE_OVERWRITE)
+> > > > > to force all the mappings to pure overwrites."
+> > > > 
+> > > > Ewwwwwwwwwwwwwwwwwwwww.
+> > > > 
+> > > > That's not a sane API in any way.
+> > > 
+> > > Oh I know, I'd much rather stick to the view that block untorn writes
+> > > are a means for programs that only ever do IO in large(ish) blocks to
+> > > take advantage of a hardware feature that also wants those large
+> > > blocks.
+> > 
+> > I (vaguely) agree ith that.
+> > 
+> > > And only if the file mapping is in the correct state, and the
+> > > program is willing to *maintain* them in the correct state to get the
+> > > better performance.
+> > 
+> > I kinda agree with that, but the maintain is a bit hard as general
+> > rule of thumb as file mappings can change behind the applications
+> > back.  So building interfaces around the concept that there are
+> > entirely stable mappings seems like a bad idea.
 > 
-> If you're fine with writes to your file causing block allocations you
-> can already use the hole punch or preallocate fallocate modes.  No
-> need to actually send a command to the device.
+> I tend to agree.
+
+As long as it's a general rule that file mappings can change even after
+whatever prep work an application tries to do, we're never going to have
+an easy time enabling any of these fancy direct-to-storage tricks like
+cpu loads and stores to pmem, or this block-untorn writes stuff.
+
+> > 
+> > > I don't want xfs to grow code to write zeroes to
+> > > mapped blocks just so it can then write-untorn to the same blocks.
+> > 
+> > Agreed.
+> > 
 > 
-
-Okay, I misunderstood your point earlier. This is indeed prepared for
-subsequent overwrites. Thanks a lot for explaining.
-
-Thanks,
-Yi.
-
->>
->> For the "always-cow files", do you mean reflinked files? Could you
->> please give more details?
+> So if we want to allow large writes over mixed extents, how to handle?
 > 
-> reflinked files will require out of place writes for shared blocks.
-> As will anything on device mapper snapshots.  Or any file on
-> file systems that write out of place (btrfs, f2fs, nilfs2, the
-> upcoming zoned xfs mode).
-> 
+> Note that some time ago we also discussed that we don't want to have a
+> single bio covering mixed extents as we cannot atomically convert all
+> unwritten extents to mapped.
 
+From https://lore.kernel.org/linux-xfs/Z3wbqlfoZjisbe1x@infradead.org/ :
+
+"I think we should wire it up as a new FALLOC_FL_WRITE_ZEROES mode,
+document very vigorously that it exists to facilitate pure overwrites
+(specifically that it returns EOPNOTSUPP for always-cow files), and not
+add more ioctls."
+
+If we added this new fallocate mode to set up written mappings, would it
+be enough to write in the programming manuals that applications should
+use it to prepare a file for block-untorn writes?  Perhaps we should
+change the errno code to EMEDIUMTYPE for the mixed mappings case.
+
+Alternately, maybe we /should/ let programs open a lease-fd on a file
+range, do their untorn writes through the lease fd, and if another
+thread does something to break the lease, then the lease fd returns EIO
+until you close it.
+
+<shrug> any thoughts?
+
+--D
+
+> Thanks,
+> John
+> 
+> 
+> 
+> 
