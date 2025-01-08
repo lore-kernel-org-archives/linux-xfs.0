@@ -1,86 +1,67 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEAAA1A3A8A;
-	Wed,  8 Jan 2025 06:26:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CBD1A83F1
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Jan 2025 06:55:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736317606; cv=none; b=sdw7c5w1jk3Grv7tChmWpKc1XbWenygH+ChWQvUG37nb8DCUUNEf9MUuquaM2kdWnjFAiJC0+IEBGeGQzVtifuE7DjyS9zKNuEd0b8w6JFpPXGJQmXY051fgbb8w0rwBi1iwh82U4TQR9W1DGYh4TREGB+/FALB7oMhbDM07eyM=
+	t=1736319349; cv=none; b=BZ2GSpc0BcetXN62/K/tFUSkg9rTcyYaA0sQBQCDxxOghAflL12VfXw164GTmecyyHyNbcv3b1mZhr8oYFqKJPI4aDQesJ3kyvyPdpfTSzuHjIaCMHJoM4tWyMgZ7waprQqddkMbrES33tV0KQ7uzb6ALrNM9JaYh/Zx07sIzzk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736317606; c=relaxed/simple;
-	bh=ictVswVJ4mGv9GZMqt9hcwWRjSa3QIhF5THgyv+dfIc=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=NIa//bYP1dG+uyVwnJVPWbkFAlHxsV77AGeqEOX6jCUGHw6DR6Sa/GPX/xSTYXn0dKumkh7HLLIzNzsU1cUN7yGkRD0Bynbzg6dp7Kz4pw0wdax4MVOWZzVaibEiyCjt2Dpfkv+b3rougNNQf0edwLxrguU2yujS8xgSzgrgd6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=yV3mq70N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1736319349; c=relaxed/simple;
+	bh=5T3bA0bBspx7jIwkR1PQEGK0B/3v+F3iMCNC0rk/NSs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cb63VEs2DZlerkEh0ChfvvvjdixGgwhW4NE6F2osxm8SoHZXMe5crDaEnajjb4CydivCdI6bBCRpMpjSLNA9ldZONHDmteKuIwr3hLV6pLEwlfLmpb/Y24hlHUPxYTu4AcNGF48NvsytG7uzgUR4Jkdh/si0IeK0QR3ASV3Am3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jGFhWbjO; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="yV3mq70N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75956C4CED0;
-	Wed,  8 Jan 2025 06:26:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-	s=korg; t=1736317605;
-	bh=ictVswVJ4mGv9GZMqt9hcwWRjSa3QIhF5THgyv+dfIc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=yV3mq70NowsKzsNN4Ez+jnFDFJRIlhbNscdaUiVTLxZRecRmCbvgybiz9uRsrgg0n
-	 PjP3lsjSFoN3ZHe8QI2pdayWSJuwfonJJuwBr3DLAHViSi3MWsPfptWuWaWljJtEVC
-	 tmLb8vkj5Dj4ezW3MMOW7Coe5YQtHTHUai0uWSDo=
-Date: Tue, 7 Jan 2025 22:26:43 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Alistair Popple <apopple@nvidia.com>
-Cc: dan.j.williams@intel.com, linux-mm@kvack.org, lina@asahilina.net,
- zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
- vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
- bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
- will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
- dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org,
- djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, david@redhat.com,
- peterx@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
- nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
- david@fromorbit.com
-Subject: Re: [PATCH v5 00/25] fs/dax: Fix ZONE_DEVICE page reference counts
-Message-Id: <20250107222643.80d5509219d6b66c15b1b8af@linux-foundation.org>
-In-Reply-To: <cover.425da7c4e76c2749d0ad1734f972b06114e02d52.1736221254.git-series.apopple@nvidia.com>
-References: <cover.425da7c4e76c2749d0ad1734f972b06114e02d52.1736221254.git-series.apopple@nvidia.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jGFhWbjO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=sJBvk44ncbE8QZYfJbkDD0B0jsD8/ZCM83wJ1Sp0TL4=; b=jGFhWbjOCCTQfFN5+sYx6sUFbH
+	8h1QhWurpD/sG1uKpfBvqbqStxPGeJBuGs+Gu1ZX304/+XjGmRcGm/unDM1FJHN+edSjorYrEHHRc
+	bjSqd2+LXV/qFzcnQXQBhqbTrxkHbe8wCFop9JRHKR9PpWe4E+VKM7+4KaBsYAp722rrVN1Q43Fng
+	TYosFZtwy6M4uCmfc0G5fccLnmeQyOeYQNmAwUAYVhpGZVlD+L7bajutqP1iD9HxDLCgcvKmAkO9K
+	MfGUgezBXDpdR85oAb+0dxp1N9G+y6o9ToQlb7DECALsrZKdw5gyOKdeJOC1FxiDfYSvlZ/Aqvudy
+	6UYzJm6w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tVPyk-00000007Jhh-2PFr;
+	Wed, 08 Jan 2025 06:55:46 +0000
+Date: Tue, 7 Jan 2025 22:55:46 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Long Li <leo.lilong@huawei.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, david@fromorbit.com, yi.zhang@huawei.com,
+	houtao1@huawei.com, yangerkun@huawei.com, lonuxli.64@gmail.com
+Subject: Re: [PATCH 1/2] xfs: correct the sb_rgcount when the disk not
+ support rt volume
+Message-ID: <Z34hciJJXpgdoMOc@infradead.org>
+References: <20241231023423.656128-1-leo.lilong@huawei.com>
+ <20241231023423.656128-2-leo.lilong@huawei.com>
+ <20250106195220.GK6174@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250106195220.GK6174@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue,  7 Jan 2025 14:42:16 +1100 Alistair Popple <apopple@nvidia.com> wrote:
+On Mon, Jan 06, 2025 at 11:52:20AM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 31, 2024 at 10:34:22AM +0800, Long Li wrote:
+> > When mounting an xfs disk that incompat with metadir and has no realtime
+> > subvolume, if CONFIG_XFS_RT is not enabled in the kernel, the mount will
+> > fail. During superblock log recovery, since mp->m_sb.sb_rgcount is greater
+> > than 0, updating the last rtag in-core is required, however, without
+> > CONFIG_XFS_RT enabled, xfs_update_last_rtgroup_size() always returns
+> > -EOPNOTSUPP, leading to mount failure.
+> 
+> Didn't we fix the xfs_update_last_rtgroup_size stub to return 0?
 
-> Device and FS DAX pages have always maintained their own page
-> reference counts without following the normal rules for page reference
-> counting. In particular pages are considered free when the refcount
-> hits one rather than zero and refcounts are not added when mapping the
-> page.
-> 
-> Tracking this requires special PTE bits (PTE_DEVMAP) and a secondary
-> mechanism for allowing GUP to hold references on the page (see
-> get_dev_pagemap). However there doesn't seem to be any reason why FS
-> DAX pages need their own reference counting scheme.
-> 
-> By treating the refcounts on these pages the same way as normal pages
-> we can remove a lot of special checks. In particular pXd_trans_huge()
-> becomes the same as pXd_leaf(), although I haven't made that change
-> here. It also frees up a valuable SW define PTE bit on architectures
-> that have devmap PTE bits defined.
-> 
-> It also almost certainly allows further clean-up of the devmap managed
-> functions, but I have left that as a future improvment. It also
-> enables support for compound ZONE_DEVICE pages which is one of my
-> primary motivators for doing this work.
-> 
+Hmm, looks like the patch did not get merged.  I'll send a ping.
 
-https://lkml.kernel.org/r/wysuus23bqmjtwkfu3zutqtmkse3ki3erf45x32yezlrl24qto@xlqt7qducyld
-made me expect merge/build/runtime issues, however this series merges
-and builds OK on mm-unstable.  Did something change?  What's the story
-here?
-
-Oh well, it built so I'll ship it!
