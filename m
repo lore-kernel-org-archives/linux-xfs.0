@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32825259495
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Jan 2025 00:54:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 211BA28F4
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Jan 2025 00:55:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736384043; cv=none; b=amJXqLJ7/SsOlxDQiJ6p17nBxIMVhikN43V/hGn+Tz2cPXsrvia20B/r2p97qVMAmt6DSg8a/PEdSsRzXLgDbB7DfSkDFL5dG6jDuiMKWbHwQVw9E4kyPqLwtaJae8Wm0hACKWA9bpgI32rJ3TlLV8WMRgd6JotjiAgTtH9siV4=
+	t=1736384123; cv=none; b=YWF7UrcX9xMYLFtGrZJzYmh7J0VYv/98gFrLz1Y9ljJCI3g731oFezI/1RY+/ECVtm3lDbP89JHppph5NSCjjrhGfFVL8GZrQYSeWF2zUrPw6+c7CoidlkMLNOrzhnECkxagLG2nvJtw1pUUhZusXBs8SnWK4v3pezje4GSllsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736384043; c=relaxed/simple;
-	bh=cAUQ5HvYwNq6J9IAD1C45TKfB1W/JwNpEKZlcdYxg7A=;
+	s=arc-20240116; t=1736384123; c=relaxed/simple;
+	bh=JpoNJXOEzBCq50PkmR/aJ/lJigNz6JUiIQwDgsST9Rw=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=cKIXzNl+8g5ttxIRSz4M6qhW/srlRH5MVUVLHbhTegy80jEKYu7q9Uf8OV+7WDwrvIf6veyF6hcbW3mmv0cu459+pF0e9wwFWqqmNWwywgctX23XaUI64nerKRGCGKPyIUfFUnq52mkLfxiKLwHd8NCNuxl4bIlNi/MZe3aHdeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aaj5go9s; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=bm7RABp/9oE047dFXO9AaiOoq5DakrmrOE6RtHmltZPbiR0NxVr77PRyuydjLMVSHegeV5SId2ofU0JFK2hQ1PmQAh439kFJf2ag9o3RvzLGxNFnumf/RCyp2YGxoRDIalCM5cjgmC7SvxFnGn5VKHEKxBLY7DMjcR15KdwLpGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RdOw1ShK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aaj5go9s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A911DC4CED3;
-	Thu,  9 Jan 2025 00:54:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RdOw1ShK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E951FC4CED3;
+	Thu,  9 Jan 2025 00:55:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736384042;
-	bh=cAUQ5HvYwNq6J9IAD1C45TKfB1W/JwNpEKZlcdYxg7A=;
+	s=k20201202; t=1736384123;
+	bh=JpoNJXOEzBCq50PkmR/aJ/lJigNz6JUiIQwDgsST9Rw=;
 	h=Date:From:To:Cc:Subject:From;
-	b=aaj5go9sM9TYC7b49jQ0fQNjm0DTnZt3Igz6M+SZYXuuS0B2DnTvj+FKTAlKY0uyy
-	 HZD1oQC4dLr6JQpIliZciDgYRgS2Lm2aLfEc7C2rNEue5pBg+flJA6YnlAVzIXPtcd
-	 p66C6dZZ0ENI1MNAkDdMoCTEuV0EfxKuFK40VWNh4/5LnxIhaamv7mx77PiPBdT9Ah
-	 0ni2kGZ4cDcJgdMLQm6NLM38C4j7dKJh03RfbTqNIv3rU7ZzAOiF5yQW8sKW09N2Ei
-	 Znws9UjfOTjW5XJcnV087ubamZrPIOvYeBaMFjbFZzLMqhlEoCVyksn/yLERECulaL
-	 1hJHDMSPYbTPA==
-Date: Wed, 8 Jan 2025 16:54:02 -0800
+	b=RdOw1ShKUBsajuEKXZbZKdOq8OZHQApvlzEroVboiA/+3cUU26Gamg9IQ/vPg47Ua
+	 yUFbGV8Z87I2rbJ31szDQrDtTFlDm870R67iZ6YYzVnJR0mg+AOOZkn8X4qR428yy7
+	 QB7WzmPlnfqAlpgvDhH46sAQi+LKxMfUBuC5PMyl4wwkd0/elnfGxGc/54ibgrJIJz
+	 k3sVueHqmOxsKxzk1uvG8qewqtPLBc2uZDEPbh1Mk3XaVu+/s4tJ41m8pCMVJaUnfm
+	 CIQty4X337wvNeYgfcDYE5cBDwwOxT0Nl4A6cetk9Ae92QPBp9GWi6AH84gB//D7IR
+	 R9L4ovej4cp1A==
+Date: Wed, 8 Jan 2025 16:55:22 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: lock dquot buffer before detaching dquot from b_li_list
-Message-ID: <20250109005402.GH1387004@frogsfrogsfrogs>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Tom Samstag <tom.samstag@netrise.io>, xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs_db: fix multiple dblock commands
+Message-ID: <20250109005522.GI1387004@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,28 +43,63 @@ Content-Disposition: inline
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We have to lock the buffer before we can delete the dquot log item from
-the buffer's log item list.
+Tom Samstag reported that running the following sequence of commands no
+longer works quite right:
 
-Cc: <stable@vger.kernel.org> # v6.13-rc3
-Fixes: acc8f8628c3737 ("xfs: attach dquot buffer to dquot log item buffer")
+> inode [inodenum]
+> dblock 0
+> p
+> dblock 1
+> p
+> dblock 2
+> p
+> [etc]
+
+Mr. Samstag looked into the source code and discovered that the
+dblock_f is incorrectly accessing iocur_top->data outside of the
+push_cur -> set_cur_inode -> pop_cur sequence that this function uses to
+compute the type of the file data.  In other words, it's using
+whatever's on top of the stack at the start of the function.  For the
+"dblock 0" case above this is the inode, but for the "dblock 1" case
+this is the contents of file data block 0, not an inode.
+
+Fix this by relocating the check to the correct place.
+
+Reported-by: tom.samstag@netrise.io
+Tested-by: Tom Samstag <tom.samstag@netrise.io>
+Cc: <linux-xfs@vger.kernel.org> # v6.12.0
+Fixes: b05a31722f5d4c ("xfs_db: access realtime file blocks")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_dquot.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db/block.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 576b7755b1f1fc..84b69f686ba82e 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -87,8 +87,9 @@ xfs_dquot_detach_buf(
- 	}
- 	spin_unlock(&qlip->qli_lock);
- 	if (bp) {
-+		xfs_buf_lock(bp);
- 		list_del_init(&qlip->qli_item.li_bio_list);
--		xfs_buf_rele(bp);
-+		xfs_buf_relse(bp);
- 	}
- }
+diff --git a/db/block.c b/db/block.c
+index 00830a3d57e1df..2f1978c41f3094 100644
+--- a/db/block.c
++++ b/db/block.c
+@@ -246,6 +246,7 @@ dblock_f(
+ 	int		nb;
+ 	xfs_extnum_t	nex;
+ 	char		*p;
++	bool		isrt;
+ 	typnm_t		type;
  
+ 	bno = (xfs_fileoff_t)strtoull(argv[1], &p, 0);
+@@ -255,6 +256,7 @@ dblock_f(
+ 	}
+ 	push_cur();
+ 	set_cur_inode(iocur_top->ino);
++	isrt = is_rtfile(iocur_top->data);
+ 	type = inode_next_type();
+ 	pop_cur();
+ 	if (type == TYP_NONE) {
+@@ -273,7 +275,7 @@ dblock_f(
+ 	ASSERT(typtab[type].typnm == type);
+ 	if (nex > 1)
+ 		make_bbmap(&bbmap, nex, bmp);
+-	if (is_rtfile(iocur_top->data))
++	if (isrt)
+ 		set_rt_cur(&typtab[type], xfs_rtb_to_daddr(mp, dfsbno),
+ 				nb * blkbb, DB_RING_ADD,
+ 				nex > 1 ? &bbmap : NULL);
