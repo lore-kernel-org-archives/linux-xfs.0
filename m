@@ -1,102 +1,138 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D87FB2594BA;
-	Thu,  9 Jan 2025 09:43:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02529215782;
+	Thu,  9 Jan 2025 10:07:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736415802; cv=none; b=ER+8KekEBH5NY+OC0oyxwo31zgssOkp/FU377KpS41cegMT/aT7RP55pi9jWDZ640UG0YcshDdtqnsSufm0IVy0wIAsTiYIaSQcgvfOwCxrN7lvazQxDb6XFRZ1e1WLva7e1KxGnpVsts3cpIyWr/yiPMvLIa5LtyxtTTBCmYJg=
+	t=1736417268; cv=none; b=Rd33Zf7K/2exHJpHdjstDeVn0sQYD4L9veMr5KKl/qy4gYXc1egvWS3ONa0gdz617Yeqa5yBhAhXsR3EWIIAgXOeMbphXEhVukCC2tR+Q38eGcLlhL6DftyrcSu7dQNingTyUnqmsJ1oUzJUlLuC1fThEIitbuItoMBT3qI1tFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736415802; c=relaxed/simple;
-	bh=dJzcy0GOvQLcTrhV0oAhnyhYhhChLTv0pOgFK3kE9sQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mrZwHlYcNt2Dok/2mhMowgWDfj5dExbpEeL1I+hx2MSQFIF3NImVyrsxqnkkW8xnv7PhfVe5/BARHEhDUOye9k32jFsUt1lk7EdzjuPprAIgDOTXAgxvze8vZIZ59AhEUEYWFI94cu6AO1G1241wRKkaSOXgtx90j4mcGe0TjdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 25616e00ce6e11efa216b1d71e6e1362-20250109
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.45,REQID:8835ea7a-ac2c-4e93-a900-391999cf3a10,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:6493067,CLOUDID:b5c482fd05a7146d4c74f638dc25823b,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102,TC:nil,Content:0|52,EDM:
-	-3,IP:nil,URL:1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,
-	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-UUID: 25616e00ce6e11efa216b1d71e6e1362-20250109
-Received: from node4.com.cn [(10.44.16.170)] by mailgw.kylinos.cn
-	(envelope-from <xiaopei01@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 2037107913; Thu, 09 Jan 2025 17:43:14 +0800
-Received: from node4.com.cn (localhost [127.0.0.1])
-	by node4.com.cn (NSMail) with SMTP id D74F616003301;
-	Thu,  9 Jan 2025 17:43:13 +0800 (CST)
-X-ns-mid: postfix-677F9A31-8059261467
-Received: from [10.42.13.56] (unknown [10.42.13.56])
-	by node4.com.cn (NSMail) with ESMTPA id 4CEF716001CC7;
-	Thu,  9 Jan 2025 09:43:13 +0000 (UTC)
-Message-ID: <8064ea56-deb3-4097-ac6e-45afa59d8b5f@kylinos.cn>
-Date: Thu, 9 Jan 2025 17:43:12 +0800
+	s=arc-20240116; t=1736417268; c=relaxed/simple;
+	bh=JIkRbiaeXQ2UvSJ0aRFt/Z7LnI9KY+iQSjidhL0uLE8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=hJIAD9HcdkK0eR+glsgU/XyifxZhTYweH47ErgQuXOe12TwDnUZvwJX/HlrQrutZtyuhS7ArsQOJUoC2UWW0teHKU0041z9SjAc5VnQUp62a9SKDFS2yj4Pvw2eb2Eevbl4s44vLDZQK+uJ1FAMHk32fT1krAe6ug3dney7Gapg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Cd19Ywx9; arc=none smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Cd19Ywx9"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-5d3d14336f0so1054568a12.3;
+        Thu, 09 Jan 2025 02:07:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1736417265; x=1737022065; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=P6AdmypWM7NigsMdgmeaZmR8uRCYasqbBWsWjJLuSkg=;
+        b=Cd19Ywx97FztsKrUA9VHz2/Kr8KtKSJ+giCoZbP0VQBodPVFskf21m1qslCTMhX1vP
+         Y1MIbf+mJzW6cFJzayJ5uQ0iviBUaKyE74U7qTo+I8vSq/NwUV97pTuY6fBj5YQwVlCK
+         u/WClDPHi8tYuiR4fID9AfXumcgs4Zf5E3CyFIIAHA2EYq2JDyj+iPF3EFkaaAcKTpl/
+         zdlUDuSelPj54ojuk4jypO4xymuq0DRoXnRvRTAd0YqNQ0dRIbOLI64B+Cu3UOF8qfxd
+         3HMMEGPeKFR7dWYkMf+GX1TuX+V6VRN/MM+iKaqXYcn6VDCH3PaTNCNgeOH95zcQrp26
+         BGVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736417265; x=1737022065;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=P6AdmypWM7NigsMdgmeaZmR8uRCYasqbBWsWjJLuSkg=;
+        b=npiWXNE/oxopwLNtqvi6Ou8Rs3wddHU+MXb/M6OQd3qji1VtKarLXrsJ29sFCiNGdw
+         hophHQA0SHbq/qYPip3pyi3dmkngpo/WmuD43aCCfumRtXKODT+kHQF7PD7jdXMeOsFk
+         ZOBP1/qMHaWX6Dxq5p3Ag7U2SEyJGzBlNmScL6gXSRUW3wrbvTfnQiTdgXqA4JJRqtSl
+         9BLf6REnV1Cql1LkhD4+w477lZQ9gVSOtqw2RCEkUkraZ8zXs+rcSCuOc/b1IQP/4fE8
+         2rogoz2ef8NQEywkuX4XaLGY1fGBiubPHabHTRhRMNGD8ID4oZVgX94BFr04eXwzfGcY
+         192Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWnMLy1mp8XLvjcZ2EdVvlrIKfOXgJzSMb//x271qPCh6ndhHzDvx3XSLpCw1OIrF0Q2FYcMH9OchjE@vger.kernel.org, AJvYcCXyRz9Iowdc+xhtggLsjPo5ol1Uup/dKtuc2+b+7ypZtCf7SeYlUS1JhfiiTB8Xp2msolVnaR4Qj3Q7HE4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyvz+4oQXTCA5+qObzSnZgRSLM1JoT5nXeBJl0UkrKVwitZakRB
+	nn9BDz4FAZnhnAJSXdKGYDz/cEDN+Ksxb+T7BRemqCVMtNf5J5zM2G2gGXpVUt3vUUkN0oJJo/D
+	JRalHRApZQ5R9wcd3t6Y2nSwni88=
+X-Gm-Gg: ASbGnctcBWbSWYxmJAOR3imIowdeMUz5yJO5wZIffylrMdYYHEpRy9GOmyiF8KQhfT+
+	b/ASwDBcdnZa/gSVE0ZP8Xr5kVQBzTd+vH89mpQ==
+X-Google-Smtp-Source: AGHT+IFuzi3nN0knj3HDIs13nrydXRfWSadzau6Plh2LEtDniqoOjGxjWSqZz0Y92HstmwzudgaKZueAMdApMJ0lCEc=
+X-Received: by 2002:a05:6402:254d:b0:5d0:81dc:f20e with SMTP id
+ 4fb4d7f45d1cf-5d972e1c5cfmr5269174a12.17.1736417264794; Thu, 09 Jan 2025
+ 02:07:44 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: use kmemdup() to replace kmalloc + memcpy
-To: Carlos Maiolino <cem@kernel.org>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
-References: <37bbe1eb5f72685e54abb1ee6b50eaff788ecd93.1735268963.git.xiaopei01@kylinos.cn>
- <7c3kfhrtjpxrw44u44pow2un3q463w3qkiend2j374ixjqtfvb@rl33jhp7cmmu>
-From: Pei Xiao <xiaopei01@kylinos.cn>
-In-Reply-To: <7c3kfhrtjpxrw44u44pow2un3q463w3qkiend2j374ixjqtfvb@rl33jhp7cmmu>
-Content-Type: text/plain; charset=UTF-8
+References: <20241226061602.2222985-1-chizhiling@163.com> <Z23Ptl5cAnIiKx6W@dread.disaster.area>
+ <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com> <Z3B48799B604YiCF@dread.disaster.area>
+ <24b1edfc-2b78-434d-825c-89708d9589b7@163.com> <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
+ <953b0499-5832-49dc-8580-436cf625db8c@163.com> <CAOQ4uxjgGQmeid3-wa5VNy5EeOYNz+FmTAZVOtUsw+2F+x9fdQ@mail.gmail.com>
+ <dca3db30-0e8f-4387-9d4d-974def306502@oracle.com>
+In-Reply-To: <dca3db30-0e8f-4387-9d4d-974def306502@oracle.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 9 Jan 2025 11:07:32 +0100
+X-Gm-Features: AbW1kvahk4nffT7_HvPoxPWZBNd3E5RnG3GdolP_rCrPlt_Yx3wBNwznQN9OQAQ
+Message-ID: <CAOQ4uxiMiLkie03QA9ca_3ARzwg7rm31UFBo6THdVUDvr0u6fw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+To: John Garry <john.g.garry@oracle.com>
+Cc: Chi Zhiling <chizhiling@163.com>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, 
+	cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Chi Zhiling <chizhiling@kylinos.cn>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jan 8, 2025 at 1:16=E2=80=AFPM John Garry <john.g.garry@oracle.com>=
+ wrote:
+>
+>
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index c488ae26b23d0..2542f15496488 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -777,9 +777,10 @@ xfs_file_buffered_write(
+> >          ssize_t                 ret;
+> >          bool                    cleared_space =3D false;
+> >          unsigned int            iolock;
+> > +       bool                    atomic_write =3D iocb->ki_flags & IOCB_=
+ATOMIC;
+> >
+> >   write_retry:
+> > -       iolock =3D XFS_IOLOCK_EXCL;
+> > +       iolock =3D atomic_write ? XFS_IOLOCK_SHARED : XFS_IOLOCK_EXCL;
+> >          ret =3D xfs_ilock_iocb(iocb, iolock);
+> > --
+> >
+> > xfs_file_write_checks() afterwards already takes care of promoting
+> > XFS_IOLOCK_SHARED to XFS_IOLOCK_EXCL for extending writes.
+> >
+> > It is possible that XFS_IOLOCK_EXCL could be immediately demoted
+> > back to XFS_IOLOCK_SHARED for atomic_writes as done in
+> > xfs_file_dio_write_aligned().
+> >
+> > TBH, I am not sure which blockdevs support 4K atomic writes that could
+> > be used to test this.
+> >
+> > John, can you share your test setup instructions for atomic writes?
+>
+> Please note that IOCB_ATOMIC is not supported for buffered IO, so we
+> can't do this - we only support direct IO today.
 
-=E5=9C=A8 2025/1/9 17:39, Carlos Maiolino =E5=86=99=E9=81=93:
-> On Fri, Dec 27, 2024 at 11:11:13AM +0800, Pei Xiao wrote:
->> cocci warnings:
->>     fs/xfs/libxfs/xfs_dir2.c:336:15-22: WARNING opportunity for kmemdu=
-p
-> https://lore.kernel.org/all/20241217225811.2437150-4-mtodorovac69@gmail=
-.com/
+Oops. I see now.
 
-ok=EF=BC=8Cthank you, I didn't realize it was a duplicate commit.
+>
+> And supporting buffered IO has its challenges; how to handle overlapping
+> atomic writes of differing sizes sitting in the page cache is the main
+> issue which comes to mind.
+>
 
->> Fixes: 30f712c9dd69 ("libxfs: move source files")
->> Reported-by: kernel test robot <lkp@intel.com>
->> Closes: https://lore.kernel.org/oe-kbuild-all/202412260425.O3CDUhIi-lk=
-p@intel.com/
->> Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
->> ---
->>  fs/xfs/libxfs/xfs_dir2.c | 3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
->> index 202468223bf9..24251e42bdeb 100644
->> --- a/fs/xfs/libxfs/xfs_dir2.c
->> +++ b/fs/xfs/libxfs/xfs_dir2.c
->> @@ -379,12 +379,11 @@ xfs_dir_cilookup_result(
->>  					!(args->op_flags & XFS_DA_OP_CILOOKUP))
->>  		return -EEXIST;
->> =20
->> -	args->value =3D kmalloc(len,
->> +	args->value =3D kmemdup(name, len,
->>  			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_RETRY_MAYFAIL);
->>  	if (!args->value)
->>  		return -ENOMEM;
->> =20
->> -	memcpy(args->value, name, len);
->>  	args->valuelen =3D len;
->>  	return -EEXIST;
->>  }
->> --=20
->> 2.25.1
->>
->>
+How about the combination of RWF_ATOMIC | RWF_UNCACHED [1]
+Would it be easier/possible to support this considering that the write of f=
+olio
+is started before the write system call returns?
+
+Note that application that desires mutithreaded atomicity of writes vs. rea=
+ds
+will only need to opt-in for RWF_ATOMIC | RWF_UNCACHED writes, so this
+is not expected to actually break its performance by killing the read cachi=
+ng.
+
+Thanks,
+Amir.
+
+[1] https://lore.kernel.org/linux-fsdevel/20241220154831.1086649-1-axboe@ke=
+rnel.dk/
