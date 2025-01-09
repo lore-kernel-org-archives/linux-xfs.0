@@ -1,44 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 735A52206B9;
-	Thu,  9 Jan 2025 15:09:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D6CB20469B;
+	Thu,  9 Jan 2025 15:24:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736435398; cv=none; b=NDUCmk/JHtY3+x3JYl7jYvrwKGfrvM4aGsp+L42HUskKRrI8aUsR3eSFd9TzdvxhFOsEgJSpfhAn+Lvix7k4xmcaATeqFfLvM66xIExqVtzlANd/GNyrImSGgdII2MmOOswKL9JYxMezMzEd5mWnfxA5ITlLDigWny2z+pdwu0E=
+	t=1736436284; cv=none; b=rPPkVhBVLmYFT38Vx517fp5JC2E7z34nhOz6ujf1imHOPiYsm4FP3FUd75C+TiTGKjCCSmmM91z/lbA+fnSIVtk73v6hQV/GLQ97qkbuxPLKOeh7+DDrNBaXiX3MbE0nP+iX+aL3dODMeDWh6u/S+fcPYi19Zqzx/Sa163PPgtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736435398; c=relaxed/simple;
-	bh=vHZJTFgcwdf5jrTfSWYFOQqAZ1ocdmVE5Ot361BHimY=;
+	s=arc-20240116; t=1736436284; c=relaxed/simple;
+	bh=Cgj4SKDnVIxVoAkg16mjvYmaG/UVaegsKkU2/H3f3zI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j5koqYlK3LLRfWP40CYKppwnGdtaYVB/bezI4Ao1RKroyToEP8PVro4XcmDOTLyqeg5aZZ3yf+5VYK9OH1vF5bkoEkHP+AVurbx1CE8I7N4AQOeWV8+QYVImBTEFqvwp5nYgbCZq55JdSqWczwudQK26wT8LREDg+8jFNQDqJ9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uSE76wuQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tw6YB8hs7EIXwf/opIv92l++uxnsMKzOT4/F06A58BZQd4DJ1TZaOY0uCmolHgFEUEY6xW9VJjAsUZr7WeXdvwqWjTtwkaXk3QK0CsxWwl4fHaGdkCCCBNAyICsa2o4PtC4Br0pIbDP1PiJHNY8OMz5mqnbCkYgsgWWSE4H2rbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V1Z5425o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uSE76wuQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AB63C4CED2;
-	Thu,  9 Jan 2025 15:09:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V1Z5425o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25DBBC4CED2;
+	Thu,  9 Jan 2025 15:24:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736435398;
-	bh=vHZJTFgcwdf5jrTfSWYFOQqAZ1ocdmVE5Ot361BHimY=;
+	s=k20201202; t=1736436283;
+	bh=Cgj4SKDnVIxVoAkg16mjvYmaG/UVaegsKkU2/H3f3zI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=uSE76wuQ8FYfn7waDsWEUWykavgRi6DhqUFk5o2Y+ZjzU+ZaUavelk0euDJxMIVRH
-	 6IrgDh8SvLeuRYChnHSznkN1Zh3ZTEytVjGbSmbsnsRMhKnGV0khf36Ri5CipUzBhL
-	 WXb+eDkAt2ih8LiEUIrvqi6FA9eOLyhU5cbPXL47H6vhhO3Ob5TbsvZDLkWXSLPBDT
-	 TT5w/GNAPUxX+sk36lVb7V8mK1S/USbgV2a6cjmVYb5nsO4+jkFNb/HkA6XmjZCcwW
-	 R6qvX9m40jy2E9zl0uCj9XXh1cQhBGIMH6+w1QqSKRh6ArEs7jO3HzU/OIbogdp9Q3
-	 pIqB2LvrmIy3A==
+	b=V1Z5425o6M21GALwFnyU7b5Z25TxvsbgYTKJzVNP6ZqNqyhfAVzdhv6n6dH7lFj6E
+	 +fe8oHbcApI6WhuQmnyj/cdFwCUoZ9ntYi2hAfomY1rJy1tx27kueIg7IN6FN2XiBS
+	 OYtwYvfpSHIkqdERgesQaOJXxETl5Gds9yu0gBA1+z6wcsO/N26iKWgFyORMthzcwL
+	 xx1/mRoIHr9T4BlnTYWIOrnAGFy9Q8YjGIIzLUl40U8HcQHx1lJapIxy3vSMXtxDyN
+	 uLQ9IzwO4gfv22yIeesKCaHE+17D5djicPqqG8oMlhZW4cT4XuD9wOlScjXUVdkdZo
+	 1L+KvRpcP74Rg==
 From: Christian Brauner <brauner@kernel.org>
-To: Marco Nelissen <marco.nelissen@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>,
-	djwong@kernel.org,
-	linux-xfs@vger.kernel.org,
+	Jan Kara <jack@suse.cz>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Hongbo Li <lihongbo22@huawei.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	linux-nilfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iomap: avoid avoid truncating 64-bit offset to 32 bits
-Date: Thu,  9 Jan 2025 16:09:43 +0100
-Message-ID: <20250109-eishalle-sitte-b2b54d61839d@brauner>
+	linux-xfs@vger.kernel.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>
+Subject: Re: add STATX_DIO_READ_ALIGN v3
+Date: Thu,  9 Jan 2025 16:24:28 +0100
+Message-ID: <20250109-neigen-eisern-3024e1ffbde0@brauner>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250109041253.2494374-1-marco.nelissen@gmail.com>
-References: <20250109041253.2494374-1-marco.nelissen@gmail.com>
+In-Reply-To: <20250109083109.1441561-1-hch@lst.de>
+References: <20250109083109.1441561-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,19 +51,22 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1059; i=brauner@kernel.org; h=from:subject:message-id; bh=vHZJTFgcwdf5jrTfSWYFOQqAZ1ocdmVE5Ot361BHimY=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTXPzugcU/6cfd/hqYrU5TPTZ0j0lYi7PLjtf3d6Xumv F8VcUHCpKOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAixw8wMqxqrkh+3FHa5VTX 0O605HPI1cJitVjm6PyWTau2z08+tJSR4dGfTcIS31YmmiUJiadtznvC38LSEBRhMu/a9ASW8sa 5LAA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1626; i=brauner@kernel.org; h=from:subject:message-id; bh=Cgj4SKDnVIxVoAkg16mjvYmaG/UVaegsKkU2/H3f3zI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTXvzK5Unc/l+uq7//nars4kk4qeOcdiE8z2dZk72BW+ Kev8JBARykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwESYoxj+p6sFppiK5Mnn/zNW 1nNy71vllmL4SPmSnmC+qbJUaVE5I8OJwB38mldYtFsZA+rWvb+pIppf8+VygBp78jMFdf0ZVxg B
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-On Wed, 08 Jan 2025 20:11:50 -0800, Marco Nelissen wrote:
-> on 32-bit kernels, iomap_write_delalloc_scan() was inadvertently using a
-> 32-bit position due to folio_next_index() returning an unsigned long.
-> This could lead to an infinite loop when writing to an xfs filesystem.
+On Thu, 9 Jan 2025 09:31:00 +0100, Christoph Hellwig wrote:
+> [I hope that no one gets too annoyed by the rapid resends, but s we're
+>  down to comment an man page tweaks I thought I'd stick to the fast pace]
 > 
+> file systems that write out of place usually require different alignment
+> for direct I/O writes than what they can do for reads.  This series tries
+> to address this by adding yet another statx field.
 > 
+> [...]
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+Applied to the vfs-6.14.statx.dio branch of the vfs/vfs.git tree.
+Patches in the vfs-6.14.statx.dio branch should appear in linux-next soon.
 
 Please report any outstanding bugs that were missed during review in a
 new review to the original patch series allowing us to drop it.
@@ -70,7 +78,15 @@ Note that commit hashes shown below are subject to change due to rebase,
 trailer updates or similar. If in doubt, please check the listed branch.
 
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
+branch: vfs-6.14.statx.dio
 
-[1/1] iomap: avoid avoid truncating 64-bit offset to 32 bits
-      https://git.kernel.org/vfs/vfs/c/c13094b894de
+[1/5] fs: reformat the statx definition
+      https://git.kernel.org/vfs/vfs/c/8fc7e23a9bd8
+[2/5] fs: add STATX_DIO_READ_ALIGN
+      https://git.kernel.org/vfs/vfs/c/7ed6cbe0f8ca
+[3/5] xfs: cleanup xfs_vn_getattr
+      https://git.kernel.org/vfs/vfs/c/7e17483c7b15
+[4/5] xfs: report the correct read/write dio alignment for reflinked inodes
+      https://git.kernel.org/vfs/vfs/c/7422bbd03021
+[5/5] xfs: report larger dio alignment for COW inodes
+      https://git.kernel.org/vfs/vfs/c/468210ec76e1
