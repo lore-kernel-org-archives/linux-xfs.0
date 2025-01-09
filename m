@@ -1,42 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66C71474A9;
-	Thu,  9 Jan 2025 07:10:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D791A9B59
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Jan 2025 07:17:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736406655; cv=none; b=Cxtio5EumOc8bK4yWfE7DHGaftdNQ/gjXM/xDmW2IWuT/FZ4NzWwmG8qBISGonM+qhKOO++V2w69aMLvt91NNegAe7CjZESaDj6HEi6EeV76ySlPfG5r/qBTBafO/oaKunebeiQ3weH1O3lChnWQbHl3i6JCgNExtC6InTH1Ecw=
+	t=1736407039; cv=none; b=aTAlhGE0nKJku+7ZVkgs+bYGN6FdfSPBlZh/DfjH4r5M9NrFbPz27bbZovOyN+smEKY44DB2Ai4mVUAtpPlelIGuqdx9gYryBHXsfhnPNc0xlsD/bkRgqcUNGdBiwGHFs/gGtX60dv6vKLOWheeOd4C4TL/Xo7i2DqCduZ061dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736406655; c=relaxed/simple;
-	bh=EooKVarekYvXxSl8xrPACbNUrrlxLmt9yYIzpy0n1i4=;
+	s=arc-20240116; t=1736407039; c=relaxed/simple;
+	bh=N2Zaa+mZTW7mPJAijpsCQjBWqCIuqKvt5nHaS3kvBFc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QenZkoP+Ufl1t2ta56OF17mB9lVh7/ivQWXRz1nfc5hHb/8KVV2CyNXnaRt+dxxWdkWphcTajpFaKXNESD2dmJWojD5pTLdqlCALSwr1LXTfLR6Oq6R5D7nkjcXgvtZUPHJe7LKkDUuGTXJNG0YCTj72BWqq896f4EqkdjfiBvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xTZacRhJ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=oi2lWnfxJ2D0xLTQPX2knr1V5r/9KMnIQ6fwN120WZhVyDZw2KG0RajrSPzKabNfWOLbSivL5Bsx/EQGm32mIami0DXMjVerXnE8MtiGAbeAsRuYKJFvzu3Gm6RemPBnTfIWiZb3tAHSvmuZO6mW9+5V3PV2TQlkXQnjEJszlXI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dMpVF2C3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xTZacRhJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uye2VnixGES0qlXGGH1SHMA1WUeP+3tvXbdu1q2CShY=; b=xTZacRhJv+lZYYaPATX7mEJMJX
-	OTaMKCp/CXDyJs2H8O4SGqyCrQUunUyZp+YnKhCZlK5yROhpy0TB57jWDltQv26nqMS6tld3fJYlc
-	IjVngZM6Q5EAY6Rds2J4W75W4d4gzLgTApqql23fM4cHAQKrQVjk/smntyGAebFv81QWyMY8bG5so
-	Ihyw5lz22l4tBkbW63vSLFWFaR6Slyufj9lBlgBYMZLfje9bvr6TzVs5CFNBhomwCrDbo4izWOtMh
-	MAX3Uhr+/m5AeyHSuIYvOZreM99aMTv7j8ZAfSAkZeS4XPFpLVGgGUTZknjQJcTAgp+KfHB7eyapz
-	16XDfc+g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tVmgr-0000000B0Gm-01iK;
-	Thu, 09 Jan 2025 07:10:49 +0000
-Date: Wed, 8 Jan 2025 23:10:48 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/6] iomap: advance the iter directly on buffered writes
-Message-ID: <Z392eER1_ceFfMJe@infradead.org>
-References: <20241213143610.1002526-1-bfoster@redhat.com>
- <20241213143610.1002526-5-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dMpVF2C3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC1F1C4CED2;
+	Thu,  9 Jan 2025 07:17:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736407039;
+	bh=N2Zaa+mZTW7mPJAijpsCQjBWqCIuqKvt5nHaS3kvBFc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dMpVF2C3Qm3VKqGy1lSDUlBf1w87Zf59SHTXt/yoCGdZo/1H0SMoNaAvUlm/Z4BMK
+	 Ap9R6k8p0V5O7Mi9barhG8xa4TdZu0zLZDrsl3g63Lsor/zody4Zy9t2wY+DGd7d31
+	 KRYjpqVSfwtcKYBbeNKiWBrXuoPgVi10of6Zu9YHgM348GiLv9E4gXyBubzIZSLy1p
+	 B/mnapbU/4i7/r/mV68iE/maNn4oGsJRQHrRvVdCVKy+WjYdNP74IqExN9d1rH8wpN
+	 YGqVmwzxTTUpxq6M/kwWqAbYT/+lkMwMVDS346cRmv3g9QXeedO3sDWEMntVccddNV
+	 ygEicH6UW/0lQ==
+Date: Wed, 8 Jan 2025 23:17:18 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: lock dquot buffer before detaching dquot from
+ b_li_list
+Message-ID: <20250109071718.GO1306365@frogsfrogsfrogs>
+References: <20250109005402.GH1387004@frogsfrogsfrogs>
+ <Z39nxRk8AdTR3BCR@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,18 +43,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241213143610.1002526-5-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Z39nxRk8AdTR3BCR@infradead.org>
 
-On Fri, Dec 13, 2024 at 09:36:08AM -0500, Brian Foster wrote:
-> +		loff_t pos = iter->pos;
-> +		loff_t length = iomap_length(iter);
+On Wed, Jan 08, 2025 at 10:08:05PM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 08, 2025 at 04:54:02PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > We have to lock the buffer before we can delete the dquot log item from
+> > the buffer's log item list.
+> 
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> I did look a bit over how the inode items handles the equivalent
+> functionality, and AFAICS there is no direct one.  xfs_qm_dquot_isolate
+> is for shrinking the dquot LRU, which is handled through the VFS
+> for inodes.  xfs_qm_dqpurge tries to write back dirty dquots, which
+> I thought is dead code as all dirty dquots should have log
+> items and thus be handled through the log and AIL, but it seems like
+> xfs_qm_quotacheck_dqadjust dirties dquots without logging them.
+> So we'll need that for now, but I wonder if we should convert this
+> last bit of meatada to also go through our normal log mechanism
+> eventually?
 
-AFAICS we could just do away with these local variables as they should
-never get out of sync with the values in the iter.  If so I'd love to see
-that one.  If they can get out of sync and we actually need them, that
-would warrant a comment.
+What if we replace it with the one in scrub/repair_quotacheck.c? :)
 
-Otherwise this looks good to me, and the same applies to the next two
-patches.
-
+--D
