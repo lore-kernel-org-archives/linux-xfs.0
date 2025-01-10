@@ -1,73 +1,74 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B5D4202F8E
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Jan 2025 11:05:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA669205AA8
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Jan 2025 11:05:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736507122; cv=none; b=qHBP1Kxs62r19zrgPK5LuZ7cnCKwhX54n7UZYigob69V0aQQNcqDsoOLFCZ8cFSbpau8DA7xnJnXTGWSQtiWoucwB29KJuNH2XUzKVdobCnSsXIclkwfLuWc9ujW3CAH5cHXaotKYu4YI+jjVqa38tIpzAPWrYqaH7RGB2MagWU=
+	t=1736507123; cv=none; b=HcgPm3sFtU4o84eJ9jlZdRATrhcmCRPWoJAhmbz7NSrY9BWL5yaCczINNjvz9BJmWbum0tpCbYz/zJ0DOgIpswPD4JwBA86ZCyyEpuq8lpBUlT6frO7kW+Rqtt9XbogiIo1T/SOquYel+FWNmLZt8t7yH1e3N5qzFjenhqfKWBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736507122; c=relaxed/simple;
-	bh=OUvwKYh6VEZ01uR8wkG1nXSQhgfNKwaFGOPvq9wVTts=;
+	s=arc-20240116; t=1736507123; c=relaxed/simple;
+	bh=GvVxfRTpG9NHuQlcYhKEbz5tLJqKGeVwvpASR4E785w=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=iLygWN4r8Cwn1uuvZHHsxjatXz3BGoBuBNyd/3oW40s25gnbnykeZlxlCvvrYBycvqFgi0HhTsenHSgkHZ2ZgEEy95qVCnydhUvAOHZfnhxnfUdWp1wCy7+as/2gQlaQ0CYwRpwZXgPGq4CzgNoLDWM3AQ8hswjSwcFqWMw5+cE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=a8bKPL7J; arc=none smtp.client-ip=170.10.133.124
+	 In-Reply-To:To:Cc; b=iWzUWs6mmnKRjovtOYI69yL0TPHvp+8Z0mrTM9z9j+VruEb6vnAFibhmkH2JqNKpXaG1MsIqVUKZCoQ8xWJTbmK1oFSv1HQqTCJtE5gV/7VhFVJa3cD+jG2o4F7UUGyemigvV0E845VTDeBh46o+NY21cFioS/hkCky+JP9ekrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LUvPfIZr; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="a8bKPL7J"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LUvPfIZr"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1736507119;
+	s=mimecast20190719; t=1736507120;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=JSPu0e5TGhfMtbkmXCsXwBRiCajFy8txLF3yrDbRlDI=;
-	b=a8bKPL7J7uZZUGe83Ff5OiNznZ2vnPSEOyMraTVCjbwhD1nu12aK8JAPWkDb0gMRkktzI/
-	B9kSc5csYNGp/zdRJy6hEijVi6C23a2CE/YCreCIQ0PUp5fzvw+MTb4sBgMWeX1dhyPkPE
-	Eqync+wijhklwF/u85b1Cq66hDm0F7M=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=3/+9Tg1Pbx7KMuMaajlZwPzfDNRvl9QP8X4iGqp91Wg=;
+	b=LUvPfIZrpm7bThaz6dAluvaJX5w5U5cO2RngHX9TKRRx4z3l0MUN6ksxX5KcBkRrU6y4pt
+	o48YkgDNHNMiuXZpglH3+Qyy/GCoIRVs2x+yppXWirHlhEQ2TFCARk4KVFQiB4iegidiYJ
+	HgvwlfroIKc1/OIkJ4DvoP6ynXtYAf0=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-14-eNJEBeOMNSS9TiEMVvTTMA-1; Fri, 10 Jan 2025 06:05:18 -0500
-X-MC-Unique: eNJEBeOMNSS9TiEMVvTTMA-1
-X-Mimecast-MFC-AGG-ID: eNJEBeOMNSS9TiEMVvTTMA
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4362552ce62so9990375e9.0
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jan 2025 03:05:18 -0800 (PST)
+ us-mta-600-VlQH0IbVOw2nRd6jXgnmhA-1; Fri, 10 Jan 2025 06:05:19 -0500
+X-MC-Unique: VlQH0IbVOw2nRd6jXgnmhA-1
+X-Mimecast-MFC-AGG-ID: VlQH0IbVOw2nRd6jXgnmhA
+Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-385e27c5949so1145121f8f.3
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jan 2025 03:05:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736507117; x=1737111917;
+        d=1e100.net; s=20230601; t=1736507118; x=1737111918;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=JSPu0e5TGhfMtbkmXCsXwBRiCajFy8txLF3yrDbRlDI=;
-        b=QAgA92McZ3liG4KUyXrnYeGaBBPRvFgE4gquv47T2TFd902S81OIRS15+GybjOz12+
-         x7KZ5z/nKa0LZVuG84X7BoRTFDsGSSZFT6+12Q2s8bMx8/pSi9+PMv0qLIrbxGt4TtaH
-         ap7NNC8P65WPdLmfz36UL457tMOsWdhzHGF/iYFQN9xBNSPuowu11myyx3P7nWJ9odP2
-         pG6pSPMuBIkWiAtDrFZ6zA70GzuFR2EmkYjxJehrKMy8RiRIsIxozXKhY7PEjsiv7+mV
-         jXdE7SbCaPkr3LisMwPMC9sH+mn5ZR3CCO98q4ISAkUOxh4ucKJ62JdwXkgFolQivIQY
-         kFoQ==
-X-Gm-Message-State: AOJu0Yzp7ztlT6cKDEwU4vHGmbCStCrQNu/E/HWX1KyD6zk3Jo8vWFjP
-	7heoYerbXBNNVQkNaCDm0wquTImKlCvijfqmV0ekUyZfeotkU4ie97DCiE4xxKCrDH8kQd9EzrD
-	8BIlFayYOet/2Ob44aqNMN9lKdg3N6o4Bes0z32UR3VScc5iTCdzzixuZvl/kGVfeDSkApw8nDK
-	mQTFQKkNAVIL+HKY+1ZXgH2XvkJENQGfJjXRvULbGr
-X-Gm-Gg: ASbGncti6/eUPFOtwwsB59eo7ijLwnXK/n3MrElU230xY2Epq6bdGVfhv/F3hssPIHE
-	2lWGQpPMzqkfdtv1lP5EHwww0ktwerZUbeXwUNDF7aI/qqRtn0J6ks+yNCjIve63x72tvZZ05+0
-	Ou7EAg33PFiRi0kymqdMyezbkMjC38g3xqQgmgqMMWZCfTFKZfql+Hs4NkNRe/Vsc4W9aiaBfjL
-	hL3HnjOfs5pdRAxQVjtM0GteTvv7B3ZKiKZQVXbG1DPZuk2jNso9dK+xOTpjNOoue+tAJ4XMi+S
-	+gYxX3U=
-X-Received: by 2002:a05:600c:1384:b0:434:f2bf:1708 with SMTP id 5b1f17b1804b1-436e267822amr93806965e9.7.1736507116788;
-        Fri, 10 Jan 2025 03:05:16 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGsoAILKAZw7wVZTkhONLko7Rcb1HTgISeaAzZuLGLzI/RdL9WSqyjNRlrCVoUrDvcVR7JoLw==
-X-Received: by 2002:a05:600c:1384:b0:434:f2bf:1708 with SMTP id 5b1f17b1804b1-436e267822amr93806625e9.7.1736507116357;
-        Fri, 10 Jan 2025 03:05:16 -0800 (PST)
+        bh=3/+9Tg1Pbx7KMuMaajlZwPzfDNRvl9QP8X4iGqp91Wg=;
+        b=LYj3Az+apvVkKoQL4qSf0KwgfThOrdZXPTrpUWmZSk6+9Mj0Va2nYNfTXUMgpDAGzC
+         l0mjRHtbZmbgd1sAn21ZtjJ10jdVOh8e+5AqEoj11WuRWYLd/pjUARctn4hNeg6UdbRs
+         2fClqecHHWDhBnq4IEoTiQSKFFEd+gde3Q0MtorIYxM662Fn+T321ilmsbnUFVH8Z1sD
+         QiSqxW8fVkRMBuHXIPiA5sLUYoz+OuD8cnGcyrBmCiBfCmPpHnk08fRktuP6CC62q9Ff
+         7+44M+4Jc2UaCPpEmzMncTL/ifuPALrw+iwSMNIiVWgW0kgZiNrnF4LvvV3KTHg6g7Ry
+         3Vmg==
+X-Gm-Message-State: AOJu0Yy4faeOEwWwaNXUsohCQ51cIcWn4rJLBtAdVrBnS3kFRDO886JL
+	BXbXS3nBtSCoEzRbYbGUM+/OYSlC0Yxupzaux8Rm214eE1AN5LlyqPCRI8WPXFcP2qLKWmSAYGu
+	TNQ2A5el3obs8Ub4IK6XA4s2x2bdua+GicnbWqqe1RPyh0GbtEBT9HXQD/VP0ArfWj0RLcQbT1q
+	cYCicc6uYf3m0b3HBV26IoeyS4Fvdyxmb03Fmtbam3
+X-Gm-Gg: ASbGnctRd7IUX+LfwLgLobXI65NTO8WCAED8DNjKhMTlL6HqVTb5EGV3bca1ZTk61UF
+	Zq0qt/dwhbuBAMzV4w/2UxnEJ9uaM0Qq60fUB/aOkICseiE+4WXnPAjjvaAEekllVQU93nefocq
+	CoOAYz2YIAy1N4nMyxbUGt5r7YmOIr4iSZVSj2UsMXDMgfbAYdHpnRWbO+Jva2detfzuCIWQjE7
+	N6+uL1mpRNuEAr4193nRn/1pwAtW8sWl1jbPNWzIzhAekoaT709r4Ci9hLL2dTOg8EqNGiHRy6s
+	5ARbuqA=
+X-Received: by 2002:a05:6000:154a:b0:385:eeb9:a5bb with SMTP id ffacd0b85a97d-38a872de3femr9378704f8f.17.1736507117720;
+        Fri, 10 Jan 2025 03:05:17 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGuvbejlVdVr7p4kKlExFJkcl9Wt/QK5sY9Qn7LGu+S/34NvHyblocEHBuzEuvT9apKkSVTyA==
+X-Received: by 2002:a05:6000:154a:b0:385:eeb9:a5bb with SMTP id ffacd0b85a97d-38a872de3femr9378677f8f.17.1736507117251;
+        Fri, 10 Jan 2025 03:05:17 -0800 (PST)
 Received: from [127.0.0.2] (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-436e2ddcb5bsm84774835e9.23.2025.01.10.03.05.15
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-436e2ddcb5bsm84774835e9.23.2025.01.10.03.05.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Fri, 10 Jan 2025 03:05:16 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Fri, 10 Jan 2025 12:05:06 +0100
-Subject: [PATCH 1/4] release.sh: add signing and fix outdated commands
+Date: Fri, 10 Jan 2025 12:05:07 +0100
+Subject: [PATCH 2/4] release.sh: add --kup to upload release tarball to
+ kernel.org
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,83 +77,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250110-update-release-v1-1-61e40b8ffbac@kernel.org>
+Message-Id: <20250110-update-release-v1-2-61e40b8ffbac@kernel.org>
 References: <20250110-update-release-v1-0-61e40b8ffbac@kernel.org>
 In-Reply-To: <20250110-update-release-v1-0-61e40b8ffbac@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@kernel.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1903; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=OUvwKYh6VEZ01uR8wkG1nXSQhgfNKwaFGOPvq9wVTts=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0hv+vVYta/6VZn9k7eTtXtMXGYZPemuy27VI71/b5
- K15WR7tSdIdpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJhLpzvDPwHCXncVFR4n7
- PnuO152a8SF3BcvagpBrjTv3TX3n2/rkJCPD03bHptY3s/xsLpuejZ5z1SuFp2OqiPY+w8ajd34
- ob3nOCQCCQUw0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1234; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=GvVxfRTpG9NHuQlcYhKEbz5tLJqKGeVwvpASR4E785w=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0hv+vZ4875zW9b+PPsaxiLOfWeE/WcZr94utTH4H3
+ UV2cc3cq/aoo5SFQYyLQVZMkWWdtNbUpCKp/CMGNfIwc1iZQIYwcHEKwERy7zH8D1jB4XtCv2dq
+ dYbv3PmnrrEsZnMJa8tNyO6ZImmd67j3NyPDRrWTy+ekct36dXSeWesNhdffKiTP2s52e13GeFT
+ jrO1adgBTskok
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- release.sh | 29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
+ release.sh | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
 diff --git a/release.sh b/release.sh
-index 577257a354d442e1cc0a2b9381b11ffbe2f64a71..b15ed610082f34928827ab0547db944cf559cef4 100755
+index b15ed610082f34928827ab0547db944cf559cef4..a23adc47efa5163b4e0082050c266481e4051bfb 100755
 --- a/release.sh
 +++ b/release.sh
-@@ -9,6 +9,8 @@
- # configure.ac (with new version string)
- # debian/changelog (with new release entry, only for release version)
- 
-+set -e
-+
- . ./VERSION
- 
+@@ -16,6 +16,30 @@ set -e
  version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
-@@ -16,21 +18,38 @@ date=`date +"%-d %B %Y"`
+ date=`date +"%-d %B %Y"`
  
++KUP=0
++
++help() {
++	echo "$(basename) - create xfsprogs release"
++	printf "\t[--kup|-k] upload final tarball with KUP\n"
++}
++
++while [ $# -gt 0 ]; do
++	case "$1" in
++		--kup|-k)
++			KUP=1
++			;;
++		--help|-h)
++			help
++			exit 0
++			;;
++		*)
++			>&2 printf "Error: Invalid argument\n"
++			exit 1
++			;;
++		esac
++	shift
++done
++
  echo "Cleaning up"
  make realclean
-+rm -rf "xfsprogs-${version}.tar" \
-+	"xfsprogs-${version}.tar.gz" \
-+	"xfsprogs-${version}.tar.asc" \
-+	"xfsprogs-${version}.tar.sign"
+ rm -rf "xfsprogs-${version}.tar" \
+@@ -52,4 +76,11 @@ gpg \
  
- echo "Updating CHANGES"
- sed -e "s/${version}.*/${version} (${date})/" doc/CHANGES > doc/CHANGES.tmp && \
- 	mv doc/CHANGES.tmp doc/CHANGES
+ mv "xfsprogs-${version}.tar.asc" "xfsprogs-${version}.tar.sign"
  
- echo "Commiting CHANGES update to git"
--git commit -a -m "${version} release"
-+git commit --all --signoff --message="xfsprogs: Release v${version}
++if [ $KUP -eq 1 ]; then
++	kup put \
++		xfsprogs-${version}.tar.gz \
++		xfsprogs-${version}.tar.sign \
++		pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-${version}.tar.gz
++fi;
 +
-+Update all the necessary files for a v${version} release."
- 
- echo "Tagging git repository"
--git tag -a -m "${version} release" v${version}
-+git tag --annotate --sign --message="Release v${version}" v${version}
- 
- echo "Making source tarball"
- make dist
-+gunzip -k "xfsprogs-${version}.tar.gz"
- 
--#echo "Sign the source tarball"
--#gpg --detach-sign xfsprogs-${version}.tar.gz
-+echo "Sign the source tarball"
-+gpg \
-+	--detach-sign \
-+	--armor \
-+	"xfsprogs-${version}.tar"
- 
--echo "Done.  Please remember to push out tags using \"git push --tags\""
-+echo "Verify signature"
-+gpg \
-+	--verify \
-+	"xfsprogs-${version}.tar.asc"
-+
-+mv "xfsprogs-${version}.tar.asc" "xfsprogs-${version}.tar.sign"
-+
-+echo "Done. Please remember to push out tags using \"git push origin v${version}\""
+ echo "Done. Please remember to push out tags using \"git push origin v${version}\""
 
 -- 
 2.47.0
