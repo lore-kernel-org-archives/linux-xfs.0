@@ -1,205 +1,340 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 971B146B5;
-	Mon, 13 Jan 2025 02:44:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642AF433C8;
+	Mon, 13 Jan 2025 02:47:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736736242; cv=none; b=l0+ccKH/zxtsv4aTxLcNwvPP2aNYJbb7gH0LIFH4us2Ban5B8vQ4Euo7xjst8Z9mtA/lTdqmeW0LuFBJgB9ZEZRpg9NUDubuXDMVDGY9/HyTlXS2rAJXXl+ZA/gjRR2Yyf4kFY+40cEstwX1yR3HxBsstI/TunvaLvooCMGrY9o=
+	t=1736736471; cv=none; b=Qc5gBDsfMRkB9FMbn8oxKRsyafKsZzurM/ZalyvSrqrfhVART+7FAD3KCOoeBA3/fCLu8q409RZ+K2krXQ+Dtb0GckePdpZPvKsi4/aSBos/SX69qYx4s6D4is3rzVT/A+PeB8rSe+l3p4gpgLrej49esk+iILnpY2eQ3Ax0huM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736736242; c=relaxed/simple;
-	bh=qJkMcB/dqtOKiUay76G7qwi+deFFtRlZsyCI6yYGkZE=;
+	s=arc-20240116; t=1736736471; c=relaxed/simple;
+	bh=gP6Hf8DV4w/UTePON+8BvVG7kYjOiT0KO8ZCUbBNisg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ADZbVEQW26yLjKUQBp6tBGmE0uR4i7Sopk2H4sLziaJWpEui2eSAPvzOTFbnaVg6bPbYStvogQsAmzofdVIUhNYrJ12dPxJGv5GueRIt8D50RuN8aFPyf+1p4Za0LeshI9105cqiJidw4/1qMB3NdQTE/wEgyX02O4jJw3qjEj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xqa/W5N8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mtHFNouGVZlC+H0/B1rNYW//pv7oEZxVY7WarY3wL3dpdpqtT57HtMDfSoMX+MU1sNKT2zvbGUsZkLsNf8ojEnr2h+FYFwehg1VN+3CNwDqBsIIzmb1Rk+Xcqzvs5g6ykx7XV0R000WAPnJ3bO2U7B09vph2kEm/DUYxnVUSZTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FOKokPMs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xqa/W5N8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05F96C4CEDF;
-	Mon, 13 Jan 2025 02:44:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FOKokPMs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5855C4CEDF;
+	Mon, 13 Jan 2025 02:47:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736736242;
-	bh=qJkMcB/dqtOKiUay76G7qwi+deFFtRlZsyCI6yYGkZE=;
+	s=k20201202; t=1736736470;
+	bh=gP6Hf8DV4w/UTePON+8BvVG7kYjOiT0KO8ZCUbBNisg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xqa/W5N8argbdhnigCx5e+z3HKW3aehm39BZKXHG0yn/2AWNCEWxTa3cqd1ucP99l
-	 RR9bfn+L0M5GxyhT4aDAoz39eTgmWetj64zfXlz4CUlv1gQcOz7jm0UnaQARjYqwA6
-	 wCxgAB9ovSECmF/WpUZBFLySBODbwvJJMtwTWNHH8cPt0S8Sc9BVe8i7789b5BzbkS
-	 XZsJ9TSMe6/mxAHiY4zC1Ei+8pMIMwQao35PgbpFp88EOLZ6W+T2X1IOdpGAecH9Rt
-	 6BH6ynKqTBSGM63Qu8vN1DelluU4euZoXz+DxsIKnaKHIggKUIiVDNBEQX45JIJucl
-	 xV0blpgbk6mSQ==
-Date: Sun, 12 Jan 2025 18:44:01 -0800
+	b=FOKokPMsFfajbfEYx/DPjYFLRqlx6tsU9JAJwyO9Yl6QzrD5hN/rzZz0rR61g8F+p
+	 KNgYIBGaE9Cza208rccMBtJQo3udGHEdyJYl35QvZkUQfQIBnGDYxMTBjxQSBdNl6W
+	 rfvJbZkYu0OkLsuu05877EMrvG5LshP8SSGSkn/pXipItuycmvNk+AaXR6HCH+Bo8m
+	 nY+0jB3niQ+2CZZoz8UHNbwN+St82Zpzws8K8kQIloUL2RirNCeodtrow9nIeTn0Wq
+	 Z3ienwoVjtHr8LM4rdPu+pT3S7nV6JPjXLrrZcEdMLRIgiTR8CX82mo5IJU29NHsuu
+	 0XlGEOGFxd/+w==
+Date: Sun, 12 Jan 2025 18:47:50 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chi Zhiling <chizhiling@163.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-Message-ID: <20250113024401.GU1306365@frogsfrogsfrogs>
-References: <Z23Ptl5cAnIiKx6W@dread.disaster.area>
- <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com>
- <Z3B48799B604YiCF@dread.disaster.area>
- <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
- <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
- <953b0499-5832-49dc-8580-436cf625db8c@163.com>
- <20250108173547.GI1306365@frogsfrogsfrogs>
- <Z4BbmpgWn9lWUkp3@dread.disaster.area>
- <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
- <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+To: Alistair Popple <apopple@nvidia.com>
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, linux-mm@kvack.org,
+	alison.schofield@intel.com, lina@asahilina.net,
+	zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
+	vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
+	bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca,
+	catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au,
+	npiggin@gmail.com, dave.hansen@linux.intel.com, ira.weiny@intel.com,
+	willy@infradead.org, tytso@mit.edu, linmiaohe@huawei.com,
+	david@redhat.com, peterx@redhat.com, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, nvdimm@lists.linux.dev,
+	linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	jhubbard@nvidia.com, hch@lst.de, david@fromorbit.com,
+	chenhuacai@kernel.org, kernel@xen0n.name, loongarch@lists.linux.dev
+Subject: Re: [PATCH v6 05/26] fs/dax: Create a common implementation to break
+ DAX layouts
+Message-ID: <20250113024750.GV1306365@frogsfrogsfrogs>
+References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
+ <79936ac15c917f4004397027f648d4fc9c092424.1736488799.git-series.apopple@nvidia.com>
+ <20250110164438.GJ6156@frogsfrogsfrogs>
+ <lui7hffmc35dfzwxu3xyybf5pion74fbfxszfopsp6tgyt2ajq@bmpeieroavro>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+In-Reply-To: <lui7hffmc35dfzwxu3xyybf5pion74fbfxszfopsp6tgyt2ajq@bmpeieroavro>
 
-On Sun, Jan 12, 2025 at 06:05:37PM +0800, Chi Zhiling wrote:
-> On 2025/1/11 01:07, Amir Goldstein wrote:
-> > On Fri, Jan 10, 2025 at 12:28 AM Dave Chinner <david@fromorbit.com> wrote:
+On Mon, Jan 13, 2025 at 11:47:41AM +1100, Alistair Popple wrote:
+> On Fri, Jan 10, 2025 at 08:44:38AM -0800, Darrick J. Wong wrote:
+> > On Fri, Jan 10, 2025 at 05:00:33PM +1100, Alistair Popple wrote:
+> > > Prior to freeing a block file systems supporting FS DAX must check
+> > > that the associated pages are both unmapped from user-space and not
+> > > undergoing DMA or other access from eg. get_user_pages(). This is
+> > > achieved by unmapping the file range and scanning the FS DAX
+> > > page-cache to see if any pages within the mapping have an elevated
+> > > refcount.
 > > > 
-> > > On Wed, Jan 08, 2025 at 09:35:47AM -0800, Darrick J. Wong wrote:
-> > > > On Wed, Jan 08, 2025 at 03:43:04PM +0800, Chi Zhiling wrote:
-> > > > > On 2025/1/7 20:13, Amir Goldstein wrote:
-> > > > > > Dave's answer to this question was that there are some legacy applications
-> > > > > > (database applications IIRC) on production systems that do rely on the fact
-> > > > > > that xfs provides this semantics and on the prerequisite that they run on xfs.
-> > > > > > 
-> > > > > > However, it was noted that:
-> > > > > > 1. Those application do not require atomicity for any size of IO, they
-> > > > > >       typically work in I/O size that is larger than block size (e.g. 16K or 64K)
-> > > > > >       and they only require no torn writes for this I/O size
-> > > > > > 2. Large folios and iomap can usually provide this semantics via folio lock,
-> > > > > >       but application has currently no way of knowing if the semantics are
-> > > > > >       provided or not
-> > > > > 
-> > > > > To be honest, it would be best if the folio lock could provide such
-> > > > > semantics, as it would not cause any potential problems for the
-> > > > > application, and we have hope to achieve concurrent writes.
-> > > > > 
-> > > > > However, I am not sure if this is easy to implement and will not cause
-> > > > > other problems.
-> > > > 
-> > > > Assuming we're not abandoning POSIX "Thread Interactions with Regular
-> > > > File Operations", you can't use the folio lock for coordination, for
-> > > > several reasons:
-> > > > 
-> > > > a) Apps can't directly control the size of the folio in the page cache
-> > > > 
-> > > > b) The folio size can (theoretically) change underneath the program at
-> > > > any time (reclaim can take your large folio and the next read gets a
-> > > > smaller folio)
-> > > > 
-> > > > c) If your write crosses folios, you've just crossed a synchronization
-> > > > boundary and all bets are off, though all the other filesystems behave
-> > > > this way and there seem not to be complaints
-> > > > 
-> > > > d) If you try to "guarantee" folio granularity by messing with min/max
-> > > > folio size, you run the risk of ENOMEM if the base pages get fragmented
-> > > > 
-> > > > I think that's why Dave suggested range locks as the correct solution to
-> > > > this; though it is a pity that so far nobody has come up with a
-> > > > performant implementation.
+> > > This is done using two functions - dax_layout_busy_page_range() which
+> > > returns a page to wait for the refcount to become idle on. Rather than
+> > > open-code this introduce a common implementation to both unmap and
+> > > wait for the page to become idle.
 > > > 
-> > > Yes, that's a fair summary of the situation.
-> > > 
-> > > That said, I just had a left-field idea for a quasi-range lock
-> > > that may allow random writes to run concurrently and atomically
-> > > with reads.
-> > > 
-> > > Essentially, we add an unsigned long to the inode, and use it as a
-> > > lock bitmap. That gives up to 64 "lock segments" for the buffered
-> > > write. We may also need a "segment size" variable....
-> > > 
-> > > The existing i_rwsem gets taken shared unless it is an extending
-> > > write.
-> > > 
-> > > For a non-extending write, we then do an offset->segment translation
-> > > and lock that bit in the bit mask. If it's already locked, we wait
-> > > on the lock bit. i.e. shared IOLOCK, exclusive write bit lock.
-> > > 
-> > > The segments are evenly sized - say a minimum of 64kB each, but when
-> > > EOF is extended or truncated (which is done with the i_rwsem held
-> > > exclusive) the segment size is rescaled. As nothing can hold bit
-> > > locks while the i_rwsem is held exclusive, this will not race with
-> > > anything.
-> > > 
-> > > If we are doing an extending write, we take the i_rwsem shared
-> > > first, then check if the extension will rescale the locks. If lock
-> > > rescaling is needed, we have to take the i_rwsem exclusive to do the
-> > > EOF extension. Otherwise, the bit lock that covers EOF will
-> > > serialise file extensions so it can be done under a shared i_rwsem
-> > > safely.
-> > > 
-> > > This will allow buffered writes to remain atomic w.r.t. each other,
-> > > and potentially allow buffered reads to wait on writes to the same
-> > > segment and so potentially provide buffered read vs buffered write
-> > > atomicity as well.
-> > > 
-> > > If we need more concurrency than an unsigned long worth of bits for
-> > > buffered writes, then maybe we can enlarge the bitmap further.
-> > > 
-> > > I suspect this can be extended to direct IO in a similar way to
-> > > buffered reads, and that then opens up the possibility of truncate
-> > > and fallocate() being able to use the bitmap for range exclusion,
-> > > too.
-> > > 
-> > > The overhead is likely minimal - setting and clearing bits in a
-> > > bitmap, as opposed to tracking ranges in a tree structure....
-> > > 
-> > > Thoughts?
+> > > Signed-off-by: Alistair Popple <apopple@nvidia.com>
 > > 
-> > I think that's a very neat idea, but it will not address the reference
-> > benchmark.
-> > The reference benchmark I started the original report with which is similar
-> > to my understanding to the benchmark that Chi is running simulates the
-> > workload of a database writing with buffered IO.
+> > So now that Dan Carpenter has complained, I guess I should look at
+> > this...
 > > 
-> > That means a very large file and small IO size ~64K.
-> > Leaving the probability of intersecting writes in the same segment quite high.
+> > > ---
+> > > 
+> > > Changes for v5:
+> > > 
+> > >  - Don't wait for idle pages on non-DAX mappings
+> > > 
+> > > Changes for v4:
+> > > 
+> > >  - Fixed some build breakage due to missing symbol exports reported by
+> > >    John Hubbard (thanks!).
+> > > ---
+> > >  fs/dax.c            | 33 +++++++++++++++++++++++++++++++++
+> > >  fs/ext4/inode.c     | 10 +---------
+> > >  fs/fuse/dax.c       | 27 +++------------------------
+> > >  fs/xfs/xfs_inode.c  | 23 +++++------------------
+> > >  fs/xfs/xfs_inode.h  |  2 +-
+> > >  include/linux/dax.h | 21 +++++++++++++++++++++
+> > >  mm/madvise.c        |  8 ++++----
+> > >  7 files changed, 68 insertions(+), 56 deletions(-)
+> > > 
+> > > diff --git a/fs/dax.c b/fs/dax.c
+> > > index d010c10..9c3bd07 100644
+> > > --- a/fs/dax.c
+> > > +++ b/fs/dax.c
+> > > @@ -845,6 +845,39 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index)
+> > >  	return ret;
+> > >  }
+> > >  
+> > > +static int wait_page_idle(struct page *page,
+> > > +			void (cb)(struct inode *),
+> > > +			struct inode *inode)
+> > > +{
+> > > +	return ___wait_var_event(page, page_ref_count(page) == 1,
+> > > +				TASK_INTERRUPTIBLE, 0, 0, cb(inode));
+> > > +}
+> > > +
+> > > +/*
+> > > + * Unmaps the inode and waits for any DMA to complete prior to deleting the
+> > > + * DAX mapping entries for the range.
+> > > + */
+> > > +int dax_break_mapping(struct inode *inode, loff_t start, loff_t end,
+> > > +		void (cb)(struct inode *))
+> > > +{
+> > > +	struct page *page;
+> > > +	int error;
+> > > +
+> > > +	if (!dax_mapping(inode->i_mapping))
+> > > +		return 0;
+> > > +
+> > > +	do {
+> > > +		page = dax_layout_busy_page_range(inode->i_mapping, start, end);
+> > > +		if (!page)
+> > > +			break;
+> > > +
+> > > +		error = wait_page_idle(page, cb, inode);
+> > > +	} while (error == 0);
 > > 
-> > Can we do this opportunistically based on available large folios?
-> > If IO size is within an existing folio, use the folio lock and IOLOCK_SHARED
-> > if it is not, use IOLOCK_EXCL?
+> > You didn't initialize error to 0, so it could be any value.  What if
+> > dax_layout_busy_page_range returns null the first time through the loop?
+> 
+> Yes. I went down the rabbit hole of figuring out why this didn't produce a
+> compiler warning and forgot to go back and fix it. Thanks.
+>  
+> > > +
+> > > +	return error;
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(dax_break_mapping);
+> > > +
+> > >  /*
+> > >   * Invalidate DAX entry if it is clean.
+> > >   */
 > > 
-> > for a benchmark that does all buffered IO 64K aligned, wouldn't large folios
-> > naturally align to IO size and above?
+> > <I'm no expert, skipping to xfs>
 > > 
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index 42ea203..295730a 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -2715,21 +2715,17 @@ xfs_mmaplock_two_inodes_and_break_dax_layout(
+> > >  	struct xfs_inode	*ip2)
+> > >  {
+> > >  	int			error;
+> > > -	bool			retry;
+> > >  	struct page		*page;
+> > >  
+> > >  	if (ip1->i_ino > ip2->i_ino)
+> > >  		swap(ip1, ip2);
+> > >  
+> > >  again:
+> > > -	retry = false;
+> > >  	/* Lock the first inode */
+> > >  	xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
+> > > -	error = xfs_break_dax_layouts(VFS_I(ip1), &retry);
+> > > -	if (error || retry) {
+> > > +	error = xfs_break_dax_layouts(VFS_I(ip1));
+> > > +	if (error) {
+> > >  		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
+> > > -		if (error == 0 && retry)
+> > > -			goto again;
+> > 
+> > Hmm, so the retry loop has moved into xfs_break_dax_layouts, which means
+> > that we no longer cycle the MMAPLOCK.  Why was the lock cycling
+> > unnecessary?
 > 
-> Great, I think we're getting close to aligning our thoughts.
-> 
-> IMO, we shouldn't use a shared lock for write operations that are
-> larger than page size.
-> 
-> I believe the current issue is that when acquiring the i_rwsem lock,
-> we have no way of knowing the size of a large folio [1] (as Darrick
-> mentioned earlier), so we can't determine if only one large folio will
-> be written.
-> 
-> There's only one certainty: if the IO size fits within one page size,
-> it will definitely fit within one large folio.
-> 
-> So for now, we can only use IOLOCK_SHARED if we verify that the IO fits
-> within page size.
+> Because the lock cycling is already happening in the xfs_wait_dax_page()
+> callback which is called as part of the retry loop in dax_break_mapping().
 
-For filesystems that /do/ support large folios (xfs), I suppose you
-could have it tell iomap that it only took i_rwsem in shared mode; and
-then the iomap buffered write implementation could proceed if it got a
-folio covering the entire write range, or return some magic code that
-means "take i_rwsem in exclusive mode and try again".
-
-Though you're correct that we should always take IOLOCK_EXCL if the
-write size is larger than whatever the max folio size is for that file.
+Aha, good point.
 
 --D
 
-> [1]: Maybe we can find a way to obtain the size of a folio from the page
-> cache, but it might come with some performance costs.
+> > >  		return error;
+> > >  	}
+> > >  
+> > > @@ -2988,19 +2984,11 @@ xfs_wait_dax_page(
+> > >  
+> > >  int
+> > >  xfs_break_dax_layouts(
+> > > -	struct inode		*inode,
+> > > -	bool			*retry)
+> > > +	struct inode		*inode)
+> > >  {
+> > > -	struct page		*page;
+> > > -
+> > >  	xfs_assert_ilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL);
+> > >  
+> > > -	page = dax_layout_busy_page(inode->i_mapping);
+> > > -	if (!page)
+> > > -		return 0;
+> > > -
+> > > -	*retry = true;
+> > > -	return dax_wait_page_idle(page, xfs_wait_dax_page, inode);
+> > > +	return dax_break_mapping_inode(inode, xfs_wait_dax_page);
+> > >  }
+> > >  
+> > >  int
+> > > @@ -3018,8 +3006,7 @@ xfs_break_layouts(
+> > >  		retry = false;
+> > >  		switch (reason) {
+> > >  		case BREAK_UNMAP:
+> > > -			error = xfs_break_dax_layouts(inode, &retry);
+> > > -			if (error || retry)
+> > > +			if (xfs_break_dax_layouts(inode))
+> > 
+> > dax_break_mapping can return -ERESTARTSYS, right?  So doesn't this need
+> > to be:
+> > 			error = xfs_break_dax_layouts(inode);
+> > 			if (error)
+> > 				break;
+> > 
+> > Hm?
 > 
+> Right. Thanks for the review, have fixed for the next respin.
 > 
-> Thanks,
-> Chi Zhiling
+>  - Alistair
 > 
+> > --D
+> > 
+> > >  				break;
+> > >  			fallthrough;
+> > >  		case BREAK_WRITE:
+> > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > > index 1648dc5..c4f03f6 100644
+> > > --- a/fs/xfs/xfs_inode.h
+> > > +++ b/fs/xfs/xfs_inode.h
+> > > @@ -593,7 +593,7 @@ xfs_itruncate_extents(
+> > >  	return xfs_itruncate_extents_flags(tpp, ip, whichfork, new_size, 0);
+> > >  }
+> > >  
+> > > -int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
+> > > +int	xfs_break_dax_layouts(struct inode *inode);
+> > >  int	xfs_break_layouts(struct inode *inode, uint *iolock,
+> > >  		enum layout_break_reason reason);
+> > >  
+> > > diff --git a/include/linux/dax.h b/include/linux/dax.h
+> > > index 9b1ce98..f6583d3 100644
+> > > --- a/include/linux/dax.h
+> > > +++ b/include/linux/dax.h
+> > > @@ -228,6 +228,20 @@ static inline void dax_read_unlock(int id)
+> > >  {
+> > >  }
+> > >  #endif /* CONFIG_DAX */
+> > > +
+> > > +#if !IS_ENABLED(CONFIG_FS_DAX)
+> > > +static inline int __must_check dax_break_mapping(struct inode *inode,
+> > > +			    loff_t start, loff_t end, void (cb)(struct inode *))
+> > > +{
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +static inline void dax_break_mapping_uninterruptible(struct inode *inode,
+> > > +						void (cb)(struct inode *))
+> > > +{
+> > > +}
+> > > +#endif
+> > > +
+> > >  bool dax_alive(struct dax_device *dax_dev);
+> > >  void *dax_get_private(struct dax_device *dax_dev);
+> > >  long dax_direct_access(struct dax_device *dax_dev, pgoff_t pgoff, long nr_pages,
+> > > @@ -251,6 +265,13 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
+> > >  int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+> > >  int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+> > >  				      pgoff_t index);
+> > > +int __must_check dax_break_mapping(struct inode *inode, loff_t start,
+> > > +				loff_t end, void (cb)(struct inode *));
+> > > +static inline int __must_check dax_break_mapping_inode(struct inode *inode,
+> > > +						void (cb)(struct inode *))
+> > > +{
+> > > +	return dax_break_mapping(inode, 0, LLONG_MAX, cb);
+> > > +}
+> > >  int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+> > >  				  struct inode *dest, loff_t destoff,
+> > >  				  loff_t len, bool *is_same,
+> > > diff --git a/mm/madvise.c b/mm/madvise.c
+> > > index 49f3a75..1f4c99e 100644
+> > > --- a/mm/madvise.c
+> > > +++ b/mm/madvise.c
+> > > @@ -1063,7 +1063,7 @@ static int guard_install_pud_entry(pud_t *pud, unsigned long addr,
+> > >  	pud_t pudval = pudp_get(pud);
+> > >  
+> > >  	/* If huge return >0 so we abort the operation + zap. */
+> > > -	return pud_trans_huge(pudval) || pud_devmap(pudval);
+> > > +	return pud_trans_huge(pudval);
+> > >  }
+> > >  
+> > >  static int guard_install_pmd_entry(pmd_t *pmd, unsigned long addr,
+> > > @@ -1072,7 +1072,7 @@ static int guard_install_pmd_entry(pmd_t *pmd, unsigned long addr,
+> > >  	pmd_t pmdval = pmdp_get(pmd);
+> > >  
+> > >  	/* If huge return >0 so we abort the operation + zap. */
+> > > -	return pmd_trans_huge(pmdval) || pmd_devmap(pmdval);
+> > > +	return pmd_trans_huge(pmdval);
+> > >  }
+> > >  
+> > >  static int guard_install_pte_entry(pte_t *pte, unsigned long addr,
+> > > @@ -1183,7 +1183,7 @@ static int guard_remove_pud_entry(pud_t *pud, unsigned long addr,
+> > >  	pud_t pudval = pudp_get(pud);
+> > >  
+> > >  	/* If huge, cannot have guard pages present, so no-op - skip. */
+> > > -	if (pud_trans_huge(pudval) || pud_devmap(pudval))
+> > > +	if (pud_trans_huge(pudval))
+> > >  		walk->action = ACTION_CONTINUE;
+> > >  
+> > >  	return 0;
+> > > @@ -1195,7 +1195,7 @@ static int guard_remove_pmd_entry(pmd_t *pmd, unsigned long addr,
+> > >  	pmd_t pmdval = pmdp_get(pmd);
+> > >  
+> > >  	/* If huge, cannot have guard pages present, so no-op - skip. */
+> > > -	if (pmd_trans_huge(pmdval) || pmd_devmap(pmdval))
+> > > +	if (pmd_trans_huge(pmdval))
+> > >  		walk->action = ACTION_CONTINUE;
+> > >  
+> > >  	return 0;
+> > > -- 
+> > > git-series 0.9.1
+> > > 
 > 
