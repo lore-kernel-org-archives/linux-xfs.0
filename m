@@ -1,42 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CF2923ED45
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 14:12:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428A623ED45
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 14:12:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736777554; cv=none; b=aQ7M1Yokzt+D1eet8taMUGSeKL84RbPpGbUv3XoHeIQ97kGxsSxSyWIYxli0r0BtEyBGfcXgJvZWKQjJD3BVG4of9V9MFgUGuQswy8Os4SgUGjn8aJjFlYKVR/P31b/0CsFq8hQpEQOpVpQGY7Z0oSpEaBXlt2BUayQNlfOzXo8=
+	t=1736777557; cv=none; b=nc1HUxLLFjGCd9XYgx1XM5POc/BUy+dqz8cql9q4AWCayjDtJ+wD1mmDG+ef/lvLjl57ougHNe4wjHrC7vU56XsE44dsxWCBbSofpfZGfy7GIfr8fBRLGpMX2I6dCSZ7e63056rI/nw/8Yq02GO48MVWkt/GMps5AjSMXDHuL6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736777554; c=relaxed/simple;
-	bh=cyHtuDJcuHvRZ0cAG1pxxGk6zSUWkt6qr+XuvLGjzYM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tqMaP4M5kBqMdg23C5kCXaPKHMOA9eY9qiRCfRP57DRq2FFDiudWcRovmNX9/NjIih+luzLFxZhDzE9GHvB4/I1g7Hd7kqdTKjLbeFxJZXNYHdf1ids7G0g/8BECIOxhF+yeZTqklBuwMivA+5E2vjSnSkDPlJUNpFILlONp3S0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=m711dcsr; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1736777557; c=relaxed/simple;
+	bh=wC4jd7jeWFg6+old2mT71mnQoHpNnbggYf+uHXwPT70=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=bM+JVUGH60SnY2HNfPBlD7hsdC/cCE+RNQKenmtPVixUyUS8TIVk6+kb5LrEW/bja1WvIj3pEMFAK8zUGKgSt2bZeaU8pFg2RtDZhn/aM0U0bl5v1Due/tV/LeWkihFCGVNCUC5L0qTptbecd/I6eUpFiO32eP1xdJQScDLAfiE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rk0C/SHD; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m711dcsr"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rk0C/SHD"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=JX7fN98RZUQKvZVxKSqy82xM2zPXO+PVrKiBK69Hd48=; b=m711dcsrBBcg0cpJVYyAPzkHug
-	eOPWSIyaAAEkNdw/bB1ceqM+1rzdJjE4qotXjRVMd8pUyig2tRSORI6cidveqQWCxZH5kb/ZDpVnF
-	Dz3gK5RfgiujY1lXHvBqYiI6p59kwHKOi93z9iuiy1HL2KJuMarwmtrNHopgRqjyQCvwy1PdwK/kd
-	PedjAPFr5KfuQQsBg7Mt5MtNaSPWgYV+ekiasDwaFS/llnjm0d1gDZT/6FWw3xEmNKIlhKjnD7RFh
-	iblAt+Y9c0kg1jzJFpckphdRRpDyBd2KkGM4jHy9o27Q0+Hqil9xZFydnfMwt+Se+Kc5fNWg6cfAA
-	FJe9Z/og==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=4xumS3hlo3qHgZM8ODq3d34d5fNviX4Li7P0fLeORxs=; b=rk0C/SHDfYMNhEjcA5JFKpO0Ze
+	13q07+tsoIFBC32OZ/o3J4NSG/8BN2zehe2SDKvOE9A/9SQCoiGpuoUugPwQC4cCW8OJ6clxRwv2Y
+	hwTPVgh/AZlUzVTubVySROWSFvin0Y1lSAcgwyZ5OCaNS0Jaqf3sAo1oe9JPMGtp8AQ4hmDY/xX7D
+	TqtEPRmtHczoYodqotNG78bXrjbzvqnnc2ZZ7IXAbQG91jizqy9c3KFOkj2ADG44ed1q/0dOLryQJ
+	XuG2kZd8BZiSFQY9FJ0L/dzL+nddkRro8dyCjSB3i77gAFGkK4fmVvjf58Omb5IdN/UTk0Bp13L6W
+	5NVJadTg==;
 Received: from 2a02-8389-2341-5b80-b273-11c2-5421-183d.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:b273:11c2:5421:183d] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tXLB9-00000005MjH-2cx2;
-	Mon, 13 Jan 2025 14:12:31 +0000
+	id 1tXLBC-00000005Mjw-0NrR;
+	Mon, 13 Jan 2025 14:12:34 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: buffer cache cleanups v2
-Date: Mon, 13 Jan 2025 15:12:04 +0100
-Message-ID: <20250113141228.113714-1-hch@lst.de>
+Subject: [PATCH 01/15] xfs: fix a double completion for buffers on in-memory targets
+Date: Mon, 13 Jan 2025 15:12:05 +0100
+Message-ID: <20250113141228.113714-2-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20250113141228.113714-1-hch@lst.de>
+References: <20250113141228.113714-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,23 +49,37 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+__xfs_buf_submit calls xfs_buf_ioend when b_io_remaining hits zero.  For
+in-memory buftargs b_io_remaining is never incremented from it's initial
+value of 1, so this always happens.  Thus the extra call to xfs_buf_ioend
+in _xfs_buf_ioapply causes a double completion.  Fortunately
+__xfs_buf_submit is only used for synchronous reads on in-memory buftargs
+due to the peculiarities of how they work, so this is mostly harmless and
+just causes a little extra work to be done.
 
-over the holidays I dusted off some old buffer cache cleanup as the bio
-splitting in the zoned code gave me a better idea how to handle
-discontiguous buffer bio submission.  This spiraled a bit into various
-additional minor fixes and cleanups.
+Fixes: 5076a6040ca1 ("xfs: support in-memory buffer cache targets")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_buf.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Changes since v1:
- - make xfs_buf_submit return void
- - improve a comment
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 6f313fbf7669..da38c18acbba 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1657,10 +1657,8 @@ _xfs_buf_ioapply(
+ 	op |= REQ_META;
+ 
+ 	/* in-memory targets are directly mapped, no IO required. */
+-	if (xfs_buftarg_is_mem(bp->b_target)) {
+-		xfs_buf_ioend(bp);
++	if (xfs_buftarg_is_mem(bp->b_target))
+ 		return;
+-	}
+ 
+ 	/*
+ 	 * Walk all the vectors issuing IO on them. Set up the initial offset
+-- 
+2.45.2
 
-Diffstat:
- xfs_buf.c        |  511 +++++++++++++++++++------------------------------------
- xfs_buf.h        |    9 
- xfs_buf_item.h   |    5 
- xfs_dquot.c      |   14 -
- xfs_inode_item.c |   14 -
- xfs_trans_ail.c  |    9 
- xfs_trans_buf.c  |    8 
- 7 files changed, 194 insertions(+), 376 deletions(-)
