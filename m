@@ -1,30 +1,63 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6CB5714D71A;
-	Mon, 13 Jan 2025 05:59:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D250B230D17;
+	Mon, 13 Jan 2025 06:00:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736747983; cv=none; b=MpB0bz4lmd2zelzlsKXjdmdzxgqBoUm0UF8WxtvzLB+7Rv5FXEtJ0+Yt5Xg3cSYgnS381SohOJ9hL7raTuQGD+J6hI+tnOSsk2JpGPzNoNgbQivlA4fvyQv231I5aILqQdx6c3Jrr/DN8IXhSVGArUXOq+BTxHVUUQeuvsMQY+I=
+	t=1736748003; cv=none; b=J4HtBzEtmEspUq7Qw6/ii+QnsJPfLtTLrnBL2jIdicAUH49eJ5/6IkjM07fxADwQVEz8DIxV6em48VeY8Q+pPAUFt0LDYQldAeKrn+A24iYyPu7/igoo9oRTxY46t4t7Q14wYpd5OReZR/vV9tYfn89rclScXOimLGve+s1oftQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736747983; c=relaxed/simple;
-	bh=2G/4NByWtloh6LGigpj4H6okdkGe6p3mx4I6Ssp1IMg=;
+	s=arc-20240116; t=1736748003; c=relaxed/simple;
+	bh=E0+fkKArJDq7eSOEssf+MTwNUuhfAIpE7/mP7IAq7+Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QrI7dPCxw5LKzxjyExDnZmszOI+55KtYzZfA5a6KmvfdXL4kXCMuMInbLsgtPKCHEG57xtym4O45F7u+RtT1OD2BxKf/0YDG6AumknkzVPaVqNYao46zc1T2AsvYVtLplWrHOXP2o2c7DpXJ5Ep/hb5fnm5Ww34Ok/qO3JR66kc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MAhAREnn; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	 In-Reply-To:Content-Type; b=iQ99L3eS6JO5OfnwWMr8gac34nZelyqdpY7dlEXahiX/XOQf8SP84j75M2QFXM9zGJdbFJwwgWlQkhEpK0lnVKNUOxGOuTItePkM1ZYc/Qu9k7f+aGnulFaxUPODLW+feAU51Z/Kvzy6RinwsZaMeimCu1U737QOlmFzCSBE2Js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G2Gexd7F; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MAhAREnn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=U3mnQcXA4jDELFFM6LTa0H+zxgv6DNk0WZN4WCmUOYc=;
-	b=MAhAREnnJvdiRusWWX7okPTXTbe3ck7kigppD0QIssY1rJleB8nrj5vq1LqeIb
-	CTG+FVTpLU8v9JEiTAmiYcAnvZ2MT0J9lcgezAIH9X1UPKiq8XaKlKXRkqVSdoUR
-	h8CJhPFR1CI3q68ZDQqm1D/15WJQhy6OE5DPotKBeDFy4=
-Received: from [10.42.12.6] (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wD3Pzazq4RnbmpaFw--.51464S2;
-	Mon, 13 Jan 2025 13:59:16 +0800 (CST)
-Message-ID: <bbfeaf73-66f7-4a1e-b5f7-89bc23eeec61@163.com>
-Date: Mon, 13 Jan 2025 13:59:15 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G2Gexd7F"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-2ef8c012913so4860564a91.3;
+        Sun, 12 Jan 2025 22:00:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1736748001; x=1737352801; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=PPia3MKeGS5s0IMA9MWQxTciC7tZ1guiQ90y2x1iM0c=;
+        b=G2Gexd7FjDhCxDvL3vtQxGB4EFvBbiKAOrUSe0SPudXzX4Hf6WSDKaPBbGHM56sibq
+         tktI86aIRecPvbS7UAvLxevAKgqWjlAPn2AerS7jFzfUSkAy6t/xWEL8NDS/p/QUHoZd
+         F1gdzYaa6nGh3zDn7VyVUHVN1uwGt6XcMpYHlxVeFl4FdBkVHwpTubd1VRsFk6uYoqJr
+         5L2+8YmtSYSRcqCoqNQCUJ2drraR8UWzTg4QIfqmV7p3oyy2UYJ/gtRtXLPpERpLmJSV
+         8aRIkW3T3aZeafnZ33ThzSBFSnIZoYNvP4o2GruDlDLhNeQLSTTUgitGFbWZ43CGbUku
+         yWqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736748001; x=1737352801;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PPia3MKeGS5s0IMA9MWQxTciC7tZ1guiQ90y2x1iM0c=;
+        b=XaPftpfwgGw4byYK2y3a7JwWg5/DUNlI/xUs+Va6TvqHLAgIRnD6nEOWQXZtrgcpK3
+         +FWR+m2hhkcRU3Oqwt5scEtEpidMG/KoAkAGbtBR5gMO76QhQTHvqS3KnEECT4avU1ST
+         7pErdEKfGQTPY0iJd3DtaKzp6i50gpPwQ4PjxOokX/c98jVIzZTHU/XT686UAR2Zosi/
+         r4VqoiPV6erQ35WT98h+RqZeJ261rsuIVPdM5zQ5j24ccus03pfaS/PE8n259E+D0AbA
+         wQ9/8nIHB8/XIExX3B+H+esxqBbetxWbu6alCoTUlHnVlPl0vWOq12ICKc8ssZx9TGtr
+         3HMg==
+X-Forwarded-Encrypted: i=1; AJvYcCUiy5CzZlwf/QMNYV9HLcNGA9pryA/0DVONfggp+H4W61Cg9fgv023bDjFEX0ROMy+DLp4qL0Jsiz0G@vger.kernel.org, AJvYcCUvbSl20Uk6hFkHC55vnldcfGoTTtMC/F7pbZFRHqeibTDjrR77j9GB7y4OzzLtyi1IYnCoGrh6@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfmjXKgBZXubYFYlOS4sKsr9WCB7G/bTwBrzbvKkfgsbNl1a/g
+	pVtf5tu+BmwZ8XYy91hmTN6kqWTFvLcy+emVtjHH8SZQnHEZ+UCc
+X-Gm-Gg: ASbGnctGUBqfO0+gnQHl9ZlHmCz4L8N+Qc3+AGUdQ3GUWjR/jzpUc7xETqCRi4PcWo/
+	wTKsefcKXdLGDOP58CV/5/B1a6khhkEVR5m30Ag6mkjf/0XCz+5wIONK6Dzq5Vs+vB9IcUy3h5R
+	b5wLsbAxzJGP2QVDaqh/jw5ZXjjuRe7xp7pKTisdDwoD7OAaUBHGew34AtpeXPdLd0VKoTHBLSL
+	mn5+cR0XiUG0wvihHj/vzUaw/Kqr7UhUvIY72Ys5P9oLkbK7ppSAwjW4eVCxuU=
+X-Google-Smtp-Source: AGHT+IEocPo6jGCdtMtvR8MNx17eAyI6wpaUVtCw4v35D5vCJNO+gNisSCYWd1ED/o6pKhWcxF7Qiw==
+X-Received: by 2002:a17:90b:54cb:b0:2ee:863e:9fe8 with SMTP id 98e67ed59e1d1-2f548ec793fmr31215330a91.18.1736748001041;
+        Sun, 12 Jan 2025 22:00:01 -0800 (PST)
+Received: from [9.109.247.80] ([129.41.58.0])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21a9f22c991sm46466365ad.168.2025.01.12.21.59.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 12 Jan 2025 22:00:00 -0800 (PST)
+Message-ID: <1efecce4-f051-40fc-8851-e9f9c057e844@gmail.com>
+Date: Mon, 13 Jan 2025 11:29:56 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,179 +65,112 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>,
- cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chi Zhiling <chizhiling@kylinos.cn>, John Garry <john.g.garry@oracle.com>
-References: <Z23Ptl5cAnIiKx6W@dread.disaster.area>
- <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com>
- <Z3B48799B604YiCF@dread.disaster.area>
- <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
- <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
- <953b0499-5832-49dc-8580-436cf625db8c@163.com>
- <20250108173547.GI1306365@frogsfrogsfrogs>
- <Z4BbmpgWn9lWUkp3@dread.disaster.area>
- <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
- <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
- <20250113024401.GU1306365@frogsfrogsfrogs>
+Subject: Re: [PATCH] check: Fix fs specfic imports when $FSTYPE!=$OLD_FSTYPE
 Content-Language: en-US
-From: Chi Zhiling <chizhiling@163.com>
-In-Reply-To: <20250113024401.GU1306365@frogsfrogsfrogs>
+To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
+References: <f49a72d9ee4cfb621c7f3516dc388b4c80457115.1736695253.git.nirjhar.roy.lists@gmail.com>
+ <87jzazvmzh.fsf@gmail.com>
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <87jzazvmzh.fsf@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3Pzazq4RnbmpaFw--.51464S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxuFyfXw1rJF15Gw1UuryDWrg_yoWxCr1xpF
-	W5KayDKF4Dtr17AwnFvr1rXr15tryxXr47XFyrJr9FkFn0gr1SqF48t3WY9FyDZr4xJw1j
-	q3yDXFy7uF15ZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UseOXUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiTxPSnWeDiA6XUgACs2
-
-On 2025/1/13 10:44, Darrick J. Wong wrote:
-> On Sun, Jan 12, 2025 at 06:05:37PM +0800, Chi Zhiling wrote:
->> On 2025/1/11 01:07, Amir Goldstein wrote:
->>> On Fri, Jan 10, 2025 at 12:28 AM Dave Chinner <david@fromorbit.com> wrote:
->>>>
->>>> On Wed, Jan 08, 2025 at 09:35:47AM -0800, Darrick J. Wong wrote:
->>>>> On Wed, Jan 08, 2025 at 03:43:04PM +0800, Chi Zhiling wrote:
->>>>>> On 2025/1/7 20:13, Amir Goldstein wrote:
->>>>>>> Dave's answer to this question was that there are some legacy applications
->>>>>>> (database applications IIRC) on production systems that do rely on the fact
->>>>>>> that xfs provides this semantics and on the prerequisite that they run on xfs.
->>>>>>>
->>>>>>> However, it was noted that:
->>>>>>> 1. Those application do not require atomicity for any size of IO, they
->>>>>>>        typically work in I/O size that is larger than block size (e.g. 16K or 64K)
->>>>>>>        and they only require no torn writes for this I/O size
->>>>>>> 2. Large folios and iomap can usually provide this semantics via folio lock,
->>>>>>>        but application has currently no way of knowing if the semantics are
->>>>>>>        provided or not
->>>>>>
->>>>>> To be honest, it would be best if the folio lock could provide such
->>>>>> semantics, as it would not cause any potential problems for the
->>>>>> application, and we have hope to achieve concurrent writes.
->>>>>>
->>>>>> However, I am not sure if this is easy to implement and will not cause
->>>>>> other problems.
->>>>>
->>>>> Assuming we're not abandoning POSIX "Thread Interactions with Regular
->>>>> File Operations", you can't use the folio lock for coordination, for
->>>>> several reasons:
->>>>>
->>>>> a) Apps can't directly control the size of the folio in the page cache
->>>>>
->>>>> b) The folio size can (theoretically) change underneath the program at
->>>>> any time (reclaim can take your large folio and the next read gets a
->>>>> smaller folio)
->>>>>
->>>>> c) If your write crosses folios, you've just crossed a synchronization
->>>>> boundary and all bets are off, though all the other filesystems behave
->>>>> this way and there seem not to be complaints
->>>>>
->>>>> d) If you try to "guarantee" folio granularity by messing with min/max
->>>>> folio size, you run the risk of ENOMEM if the base pages get fragmented
->>>>>
->>>>> I think that's why Dave suggested range locks as the correct solution to
->>>>> this; though it is a pity that so far nobody has come up with a
->>>>> performant implementation.
->>>>
->>>> Yes, that's a fair summary of the situation.
->>>>
->>>> That said, I just had a left-field idea for a quasi-range lock
->>>> that may allow random writes to run concurrently and atomically
->>>> with reads.
->>>>
->>>> Essentially, we add an unsigned long to the inode, and use it as a
->>>> lock bitmap. That gives up to 64 "lock segments" for the buffered
->>>> write. We may also need a "segment size" variable....
->>>>
->>>> The existing i_rwsem gets taken shared unless it is an extending
->>>> write.
->>>>
->>>> For a non-extending write, we then do an offset->segment translation
->>>> and lock that bit in the bit mask. If it's already locked, we wait
->>>> on the lock bit. i.e. shared IOLOCK, exclusive write bit lock.
->>>>
->>>> The segments are evenly sized - say a minimum of 64kB each, but when
->>>> EOF is extended or truncated (which is done with the i_rwsem held
->>>> exclusive) the segment size is rescaled. As nothing can hold bit
->>>> locks while the i_rwsem is held exclusive, this will not race with
->>>> anything.
->>>>
->>>> If we are doing an extending write, we take the i_rwsem shared
->>>> first, then check if the extension will rescale the locks. If lock
->>>> rescaling is needed, we have to take the i_rwsem exclusive to do the
->>>> EOF extension. Otherwise, the bit lock that covers EOF will
->>>> serialise file extensions so it can be done under a shared i_rwsem
->>>> safely.
->>>>
->>>> This will allow buffered writes to remain atomic w.r.t. each other,
->>>> and potentially allow buffered reads to wait on writes to the same
->>>> segment and so potentially provide buffered read vs buffered write
->>>> atomicity as well.
->>>>
->>>> If we need more concurrency than an unsigned long worth of bits for
->>>> buffered writes, then maybe we can enlarge the bitmap further.
->>>>
->>>> I suspect this can be extended to direct IO in a similar way to
->>>> buffered reads, and that then opens up the possibility of truncate
->>>> and fallocate() being able to use the bitmap for range exclusion,
->>>> too.
->>>>
->>>> The overhead is likely minimal - setting and clearing bits in a
->>>> bitmap, as opposed to tracking ranges in a tree structure....
->>>>
->>>> Thoughts?
->>>
->>> I think that's a very neat idea, but it will not address the reference
->>> benchmark.
->>> The reference benchmark I started the original report with which is similar
->>> to my understanding to the benchmark that Chi is running simulates the
->>> workload of a database writing with buffered IO.
->>>
->>> That means a very large file and small IO size ~64K.
->>> Leaving the probability of intersecting writes in the same segment quite high.
->>>
->>> Can we do this opportunistically based on available large folios?
->>> If IO size is within an existing folio, use the folio lock and IOLOCK_SHARED
->>> if it is not, use IOLOCK_EXCL?
->>>
->>> for a benchmark that does all buffered IO 64K aligned, wouldn't large folios
->>> naturally align to IO size and above?
->>>
->>
->> Great, I think we're getting close to aligning our thoughts.
->>
->> IMO, we shouldn't use a shared lock for write operations that are
->> larger than page size.
->>
->> I believe the current issue is that when acquiring the i_rwsem lock,
->> we have no way of knowing the size of a large folio [1] (as Darrick
->> mentioned earlier), so we can't determine if only one large folio will
->> be written.
->>
->> There's only one certainty: if the IO size fits within one page size,
->> it will definitely fit within one large folio.
->>
->> So for now, we can only use IOLOCK_SHARED if we verify that the IO fits
->> within page size.
-> 
-> For filesystems that /do/ support large folios (xfs), I suppose you
-> could have it tell iomap that it only took i_rwsem in shared mode; and
-> then the iomap buffered write implementation could proceed if it got a
-> folio covering the entire write range, or return some magic code that
-> means "take i_rwsem in exclusive mode and try again".
-> 
-> Though you're correct that we should always take IOLOCK_EXCL if the
-> write size is larger than whatever the max folio size is for that file.
-> 
-
-I think this is a pretty good idea.
-
-I'll implement the basic functionality as soon as possible, and then we
-can discuss some details for optimization.
 
 
-Thanks,
-Chi Zhiling
+On 1/13/25 01:11, Ritesh Harjani (IBM) wrote:
+> "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+>
+>> Bug Description:
+>>
+>> _test_mount function is failing with the following error:
+>> ./common/rc: line 4716: _xfs_prepare_for_eio_shutdown: command not found
+>> check: failed to mount /dev/loop0 on /mnt1/test
+>>
+>> when the second section in local.config file is xfs and the first section
+>> is non-xfs.
+>>
+>> It can be easily reproduced with the following local.config file
+>>
+>> [s2]
+>> export FSTYP=ext4
+>> export TEST_DEV=/dev/loop0
+>> export TEST_DIR=/mnt1/test
+>> export SCRATCH_DEV=/dev/loop1
+>> export SCRATCH_MNT=/mnt1/scratch
+>>
+>> [s1]
+>> export FSTYP=xfs
+>> export TEST_DEV=/dev/loop0
+>> export TEST_DIR=/mnt1/test
+>> export SCRATCH_DEV=/dev/loop1
+>> export SCRATCH_MNT=/mnt1/scratch
+>>
+>> ./check selftest/001
+>>
+>> Root cause:
+>> When _test_mount() is executed for the second section, the FSTYPE has
+>> already changed but the new fs specific common/$FSTYP has not yet
+>> been done. Hence _xfs_prepare_for_eio_shutdown() is not found and
+>> the test run fails.
+>>
+>> Fix:
+>> call _source_specific_fs $FSTYP at the correct call site of  _test_mount()
+> You should add the Fixes: tag too. Based on your description I guess
+> this should be the tag?
+>
+> Fixes: 1a49022fab9b4 ("fstests: always use fail-at-unmount semantics for XFS")
+
+Shouldn't this be the following?
+
+commit f8e4f532f18d7517430d9849bfc042305d7f7f4d (HEAD)
+Author: Lukas Czerner <lczerner@redhat.com>
+Date:   Fri Apr 4 17:18:15 2014 +1100
+
+     check: Allow to recreate TEST_DEV
+
+     Add config option RECREATE_TEST_DEV to allow to recreate file system on
+     the TEST_DEV device. Permitted values are true and false.
+
+     If RECREATE_TEST_DEV is set to true the TEST_DEV device will be
+     unmounted and FSTYP file system will be created on it. Afterwards it
+     will be mounted to TEST_DIR again with the default, or specified mount
+     options.
+
+     Also recreate the file system if FSTYP differs from the previous
+     section.
+
+>
+> I agree with today the problem was in _test_mount(), tomorrow it could
+> be _test_mkfs, hence we could source the new FSTYP config file before
+> calling _test_mkfs().
+>
+> With the fixes tag added, please feel free to add:
+>
+> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+>
+>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>> ---
+>>   check | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/check b/check
+>> index 607d2456..8cdbb68f 100755
+>> --- a/check
+>> +++ b/check
+>> @@ -776,6 +776,7 @@ function run_section()
+>>   	if $RECREATE_TEST_DEV || [ "$OLD_FSTYP" != "$FSTYP" ]; then
+>>   		echo "RECREATING    -- $FSTYP on $TEST_DEV"
+>>   		_test_unmount 2> /dev/null
+>> +		[[ "$OLD_FSTYP" != "$FSTYP" ]] && _source_specific_fs $FSTYP
+>>   		if ! _test_mkfs >$tmp.err 2>&1
+>>   		then
+>>   			echo "our local _test_mkfs routine ..."
+>> -- 
+>> 2.34.1
+
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
