@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66071CB31D;
-	Mon, 13 Jan 2025 18:34:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8C151FA14B;
+	Mon, 13 Jan 2025 18:35:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736793278; cv=none; b=CM3494y/t3wB+gikYkm7F8mxj+ElUO6So9jDaeb7VHtCJSCzKmfhrCCtGdDZDFnVCAzIc0ZacyXiOsTHp87FGnt3lSfFbpjREZOnDEy3rrIXDdEagNJ0PXTqa3nHkQGVUrDy+8rWfUR5sDl0hpT3NSKvYJqswEP3lvMZNB6OAjM=
+	t=1736793307; cv=none; b=HEkLbnxNUejkmntW9VBjILgRIxWRabCya0Ay/nuK1e2pT9xrmBFzJdD4IX0trSIX8IFANS8uxYvanYWjDEfsPpXm8iY6K0UjoUvsy1FCVptqBst8gDswJV+LozpZGe0nvMHUX1qPe9AQtVdBcT2HNX4bfFgngIV+6MRUCooDoik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736793278; c=relaxed/simple;
-	bh=RO2K/A1WLgozdd+jk2u3+vm63ZbUdlt03BE/GIpVO9o=;
+	s=arc-20240116; t=1736793307; c=relaxed/simple;
+	bh=Ysprb739drFzTtogLb4Hu958yP+s7LORgliv06VIJlM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=p/riZjSaCjnWVk0kIBImxjf1uDemlTwoCa7Tp3lgD4s4LYwYNfyx3K1ouskG0vghD94iuCYSFvmn5CUJoqJAwSPYEWw3StFgOluj4tqP/7d1Cq0L0a65mSMO3it+gT/krm5HfPPzu6L3s+lnkwW+3wgNoG83/HQJlN4/HcquYAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C0SPg3bY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=C4S2HthaTaONW4eQGf798RmeQ/f9yzxlUDiZn/zrO731O108pM4llznF1a5XQoQcDLzzewuIx64KdbCFSe8SFN08CA5eey8M/3gQVxaxMFCA09ELQfzGCQBTDOLBaCNxJCvcShzg82bBXEmA7pssHE5zra4fKwLSyMd0ab2mWLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nb8w4+YE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C0SPg3bY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 770C1C4CED6;
-	Mon, 13 Jan 2025 18:34:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nb8w4+YE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38317C4CEE2;
+	Mon, 13 Jan 2025 18:35:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736793278;
-	bh=RO2K/A1WLgozdd+jk2u3+vm63ZbUdlt03BE/GIpVO9o=;
+	s=k20201202; t=1736793307;
+	bh=Ysprb739drFzTtogLb4Hu958yP+s7LORgliv06VIJlM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=C0SPg3bYtm9Elh+fuVa2JxAcV40PpTvb/hjhMLwpvD0jDPwyPBvHPweluUrt0EO76
-	 Nx3uh2cn12gSK1/f1SdTSfjzAN4MtH654twNWH1CLJNGmcxWQioZXijmktHcjywojH
-	 MHaozvT3D0D1QjayG08aj1C+n1zwb2lN6w0b6VsB75QXyoH8vAewZFG9FMlAoM497x
-	 fNmNLIMAcybR6p1uDz/SOq0c3BLkngrYGiEAxNpxWi9+khmyzaOU+RwiBHe2O2Er2U
-	 49joMMZKOPfPi/4dkoXA6a2lmOM9RJOhHzF8RUpABh5R3ZgJPREklIUpbGtSO1v1m2
-	 8FE+uli9mDOEw==
+	b=nb8w4+YEUJ2zLJvGt8s63F7wdhafrfaNwbOZOcBcKDnlyELsmJuuG/d55VRSiBhbO
+	 1Tjg+qCj325X22pqTEECJUWQ+MYJEVAAeSiQFri1aLUoMMhM6wf4zTQl82AlF/hbk/
+	 WkBRsL340D7auTXKWR0y/rF44/S3erZOx+JC7FT1PBxP3yBoDyw+WixlnadxBEn+20
+	 X7JQRLu0SBxhb8BsshDwulBGsQOee7XjmwPs9Hduk76tDznA4XoCGSpaX+mZfjCN8p
+	 bpLX5Be6RWJ2W/hITwfdyH1RMaI2cdrqCQOu53f3TfrU4s1OrqRGBicB7lW0IXSoMh
+	 fwysefMvCqPhQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Long Li <leo.lilong@huawei.com>,
-	Brian Foster <bfoster@redhat.com>,
+Cc: Marco Nelissen <marco.nelissen@gmail.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
 	Christian Brauner <brauner@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 04/20] iomap: pass byte granular end position to iomap_add_to_ioend
-Date: Mon, 13 Jan 2025 13:34:09 -0500
-Message-Id: <20250113183425.1783715-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 18/20] iomap: avoid avoid truncating 64-bit offset to 32 bits
+Date: Mon, 13 Jan 2025 13:34:23 -0500
+Message-Id: <20250113183425.1783715-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250113183425.1783715-1-sashal@kernel.org>
 References: <20250113183425.1783715-1-sashal@kernel.org>
@@ -52,124 +53,37 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.9
 Content-Transfer-Encoding: 8bit
 
-From: Long Li <leo.lilong@huawei.com>
+From: Marco Nelissen <marco.nelissen@gmail.com>
 
-[ Upstream commit b44679c63e4d3ac820998b6bd59fba89a72ad3e7 ]
+[ Upstream commit c13094b894de289514d84b8db56d1f2931a0bade ]
 
-This is a preparatory patch for fixing zero padding issues in concurrent
-append write scenarios. In the following patches, we need to obtain
-byte-granular writeback end position for io_size trimming after EOF
-handling.
+on 32-bit kernels, iomap_write_delalloc_scan() was inadvertently using a
+32-bit position due to folio_next_index() returning an unsigned long.
+This could lead to an infinite loop when writing to an xfs filesystem.
 
-Due to concurrent writeback and truncate operations, inode size may
-shrink. Resampling inode size would force writeback code to handle the
-newly appeared post-EOF blocks, which is undesirable. As Dave
-explained in [1]:
-
-"Really, the issue is that writeback mappings have to be able to
-handle the range being mapped suddenly appear to be beyond EOF.
-This behaviour is a longstanding writeback constraint, and is what
-iomap_writepage_handle_eof() is attempting to handle.
-
-We handle this by only sampling i_size_read() whilst we have the
-folio locked and can determine the action we should take with that
-folio (i.e. nothing, partial zeroing, or skip altogether). Once
-we've made the decision that the folio is within EOF and taken
-action on it (i.e. moved the folio to writeback state), we cannot
-then resample the inode size because a truncate may have started
-and changed the inode size."
-
-To avoid resampling inode size after EOF handling, we convert end_pos
-to byte-granular writeback position and return it from EOF handling
-function.
-
-Since iomap_set_range_dirty() can handle unaligned lengths, this
-conversion has no impact on it. However, iomap_find_dirty_range()
-requires aligned start and end range to find dirty blocks within the
-given range, so the end position needs to be rounded up when passed
-to it.
-
-LINK [1]: https://lore.kernel.org/linux-xfs/Z1Gg0pAa54MoeYME@localhost.localdomain/
-
-Signed-off-by: Long Li <leo.lilong@huawei.com>
-Link: https://lore.kernel.org/r/20241209114241.3725722-2-leo.lilong@huawei.com
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Marco Nelissen <marco.nelissen@gmail.com>
+Link: https://lore.kernel.org/r/20250109041253.2494374-1-marco.nelissen@gmail.com
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/iomap/buffered-io.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index ef0b68bccbb6..3ffd9937dd51 100644
+index 3ffd9937dd51..49da74539fb3 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1764,7 +1764,8 @@ static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos)
-  */
- static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
- 		struct writeback_control *wbc, struct folio *folio,
--		struct inode *inode, loff_t pos, unsigned len)
-+		struct inode *inode, loff_t pos, loff_t end_pos,
-+		unsigned len)
- {
- 	struct iomap_folio_state *ifs = folio->private;
- 	size_t poff = offset_in_folio(folio, pos);
-@@ -1790,8 +1791,8 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+@@ -1138,7 +1138,7 @@ static void iomap_write_delalloc_scan(struct inode *inode,
+ 				start_byte, end_byte, iomap, punch);
  
- static int iomap_writepage_map_blocks(struct iomap_writepage_ctx *wpc,
- 		struct writeback_control *wbc, struct folio *folio,
--		struct inode *inode, u64 pos, unsigned dirty_len,
--		unsigned *count)
-+		struct inode *inode, u64 pos, u64 end_pos,
-+		unsigned dirty_len, unsigned *count)
- {
- 	int error;
- 
-@@ -1816,7 +1817,7 @@ static int iomap_writepage_map_blocks(struct iomap_writepage_ctx *wpc,
- 			break;
- 		default:
- 			error = iomap_add_to_ioend(wpc, wbc, folio, inode, pos,
--					map_len);
-+					end_pos, map_len);
- 			if (!error)
- 				(*count)++;
- 			break;
-@@ -1887,11 +1888,11 @@ static bool iomap_writepage_handle_eof(struct folio *folio, struct inode *inode,
- 		 *    remaining memory is zeroed when mapped, and writes to that
- 		 *    region are not written out to the file.
- 		 *
--		 * Also adjust the writeback range to skip all blocks entirely
--		 * beyond i_size.
-+		 * Also adjust the end_pos to the end of file and skip writeback
-+		 * for all blocks entirely beyond i_size.
- 		 */
- 		folio_zero_segment(folio, poff, folio_size(folio));
--		*end_pos = round_up(isize, i_blocksize(inode));
-+		*end_pos = isize;
+ 		/* move offset to start of next folio in range */
+-		start_byte = folio_next_index(folio) << PAGE_SHIFT;
++		start_byte = folio_pos(folio) + folio_size(folio);
+ 		folio_unlock(folio);
+ 		folio_put(folio);
  	}
- 
- 	return true;
-@@ -1904,6 +1905,7 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	struct inode *inode = folio->mapping->host;
- 	u64 pos = folio_pos(folio);
- 	u64 end_pos = pos + folio_size(folio);
-+	u64 end_aligned = 0;
- 	unsigned count = 0;
- 	int error = 0;
- 	u32 rlen;
-@@ -1945,9 +1947,10 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	/*
- 	 * Walk through the folio to find dirty areas to write back.
- 	 */
--	while ((rlen = iomap_find_dirty_range(folio, &pos, end_pos))) {
-+	end_aligned = round_up(end_pos, i_blocksize(inode));
-+	while ((rlen = iomap_find_dirty_range(folio, &pos, end_aligned))) {
- 		error = iomap_writepage_map_blocks(wpc, wbc, folio, inode,
--				pos, rlen, &count);
-+				pos, end_pos, rlen, &count);
- 		if (error)
- 			break;
- 		pos += rlen;
 -- 
 2.39.5
 
