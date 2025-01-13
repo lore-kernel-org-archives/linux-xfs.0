@@ -1,176 +1,75 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D250B230D17;
-	Mon, 13 Jan 2025 06:00:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B298F231A26
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 07:12:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736748003; cv=none; b=J4HtBzEtmEspUq7Qw6/ii+QnsJPfLtTLrnBL2jIdicAUH49eJ5/6IkjM07fxADwQVEz8DIxV6em48VeY8Q+pPAUFt0LDYQldAeKrn+A24iYyPu7/igoo9oRTxY46t4t7Q14wYpd5OReZR/vV9tYfn89rclScXOimLGve+s1oftQ=
+	t=1736752375; cv=none; b=US/56WeSq6mY9a/vbVA6zpRk/05OLa3iqcT4FNvrvBcToTr3GfC0SUXWQ+OkJcDGs8MKDeZL5125XpYBCQVBhUgXYRk64ydEXP8ArmBtuPSpdBR1NM6zjrm2yDWBXhzUvkQQB8l+yrClU4h9X+TGAZfMs87NODUmCaVevcEmDdQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736748003; c=relaxed/simple;
-	bh=E0+fkKArJDq7eSOEssf+MTwNUuhfAIpE7/mP7IAq7+Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iQ99L3eS6JO5OfnwWMr8gac34nZelyqdpY7dlEXahiX/XOQf8SP84j75M2QFXM9zGJdbFJwwgWlQkhEpK0lnVKNUOxGOuTItePkM1ZYc/Qu9k7f+aGnulFaxUPODLW+feAU51Z/Kvzy6RinwsZaMeimCu1U737QOlmFzCSBE2Js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G2Gexd7F; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1736752375; c=relaxed/simple;
+	bh=wLozaj4SlbOu8BnS6Fx0NJAAN0QAbuX9qBkio9GVFks=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AEXcW9Dr/ol4oFa1JqIRMpwkMx9dGt4RD/aTwDMnW/r4Um59nasMmPmvP72EiwyyG4ChF/H97wWo6d0cqGlJE9Cd9PR+dxwJ5sxldarX70pMlkQLKsYQPk7TW9VQwzDTsXA75rw9zUbi8hKzcZrLkXviBYZn7UqUALKEEZq7tv0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FR88nlRJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G2Gexd7F"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-2ef8c012913so4860564a91.3;
-        Sun, 12 Jan 2025 22:00:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1736748001; x=1737352801; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=PPia3MKeGS5s0IMA9MWQxTciC7tZ1guiQ90y2x1iM0c=;
-        b=G2Gexd7FjDhCxDvL3vtQxGB4EFvBbiKAOrUSe0SPudXzX4Hf6WSDKaPBbGHM56sibq
-         tktI86aIRecPvbS7UAvLxevAKgqWjlAPn2AerS7jFzfUSkAy6t/xWEL8NDS/p/QUHoZd
-         F1gdzYaa6nGh3zDn7VyVUHVN1uwGt6XcMpYHlxVeFl4FdBkVHwpTubd1VRsFk6uYoqJr
-         5L2+8YmtSYSRcqCoqNQCUJ2drraR8UWzTg4QIfqmV7p3oyy2UYJ/gtRtXLPpERpLmJSV
-         8aRIkW3T3aZeafnZ33ThzSBFSnIZoYNvP4o2GruDlDLhNeQLSTTUgitGFbWZ43CGbUku
-         yWqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736748001; x=1737352801;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PPia3MKeGS5s0IMA9MWQxTciC7tZ1guiQ90y2x1iM0c=;
-        b=XaPftpfwgGw4byYK2y3a7JwWg5/DUNlI/xUs+Va6TvqHLAgIRnD6nEOWQXZtrgcpK3
-         +FWR+m2hhkcRU3Oqwt5scEtEpidMG/KoAkAGbtBR5gMO76QhQTHvqS3KnEECT4avU1ST
-         7pErdEKfGQTPY0iJd3DtaKzp6i50gpPwQ4PjxOokX/c98jVIzZTHU/XT686UAR2Zosi/
-         r4VqoiPV6erQ35WT98h+RqZeJ261rsuIVPdM5zQ5j24ccus03pfaS/PE8n259E+D0AbA
-         wQ9/8nIHB8/XIExX3B+H+esxqBbetxWbu6alCoTUlHnVlPl0vWOq12ICKc8ssZx9TGtr
-         3HMg==
-X-Forwarded-Encrypted: i=1; AJvYcCUiy5CzZlwf/QMNYV9HLcNGA9pryA/0DVONfggp+H4W61Cg9fgv023bDjFEX0ROMy+DLp4qL0Jsiz0G@vger.kernel.org, AJvYcCUvbSl20Uk6hFkHC55vnldcfGoTTtMC/F7pbZFRHqeibTDjrR77j9GB7y4OzzLtyi1IYnCoGrh6@vger.kernel.org
-X-Gm-Message-State: AOJu0YwfmjXKgBZXubYFYlOS4sKsr9WCB7G/bTwBrzbvKkfgsbNl1a/g
-	pVtf5tu+BmwZ8XYy91hmTN6kqWTFvLcy+emVtjHH8SZQnHEZ+UCc
-X-Gm-Gg: ASbGnctGUBqfO0+gnQHl9ZlHmCz4L8N+Qc3+AGUdQ3GUWjR/jzpUc7xETqCRi4PcWo/
-	wTKsefcKXdLGDOP58CV/5/B1a6khhkEVR5m30Ag6mkjf/0XCz+5wIONK6Dzq5Vs+vB9IcUy3h5R
-	b5wLsbAxzJGP2QVDaqh/jw5ZXjjuRe7xp7pKTisdDwoD7OAaUBHGew34AtpeXPdLd0VKoTHBLSL
-	mn5+cR0XiUG0wvihHj/vzUaw/Kqr7UhUvIY72Ys5P9oLkbK7ppSAwjW4eVCxuU=
-X-Google-Smtp-Source: AGHT+IEocPo6jGCdtMtvR8MNx17eAyI6wpaUVtCw4v35D5vCJNO+gNisSCYWd1ED/o6pKhWcxF7Qiw==
-X-Received: by 2002:a17:90b:54cb:b0:2ee:863e:9fe8 with SMTP id 98e67ed59e1d1-2f548ec793fmr31215330a91.18.1736748001041;
-        Sun, 12 Jan 2025 22:00:01 -0800 (PST)
-Received: from [9.109.247.80] ([129.41.58.0])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21a9f22c991sm46466365ad.168.2025.01.12.21.59.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 12 Jan 2025 22:00:00 -0800 (PST)
-Message-ID: <1efecce4-f051-40fc-8851-e9f9c057e844@gmail.com>
-Date: Mon, 13 Jan 2025 11:29:56 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FR88nlRJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18F0AC4CED6;
+	Mon, 13 Jan 2025 07:12:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736752374;
+	bh=wLozaj4SlbOu8BnS6Fx0NJAAN0QAbuX9qBkio9GVFks=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FR88nlRJ2DnVglx2RF+83KmdLnw/2WsOKAiroq5ikbN0DEPfg+Q6Gvd3N7IvDBU4h
+	 vhXpRYIShU5Z9GpOlc1qn3ux8ZN7nvcpnGhcmSC6TFDGgZ9CUoqu7HPINsJ7cmqc5M
+	 t7NDuHbiqVULU9Hpp7guP2pVyJE7RhNBG4oOv3uQTlkIC/RwLJUGtC0xeRDAlSTgY7
+	 0xmpKIHrvTPlm7mAi0Zyblj4IhffXySRlYeG58ClYVwqhMwTEXHXbYiuGXeNXtuKPN
+	 U7JrjsIuIYk9KwuwebZobW7X8enK0fEeH09ZzsLp3JlCenweNWmENHNjWgFfEZw3gN
+	 /eMN9w3Db7oqg==
+Date: Sun, 12 Jan 2025 23:12:53 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 05/15] xfs: simplify xfs_buf_delwri_pushbuf
+Message-ID: <20250113071253.GY1306365@frogsfrogsfrogs>
+References: <20250106095613.847700-1-hch@lst.de>
+ <20250106095613.847700-6-hch@lst.de>
+ <20250107020810.GW6174@frogsfrogsfrogs>
+ <20250107060656.GC13669@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] check: Fix fs specfic imports when $FSTYPE!=$OLD_FSTYPE
-Content-Language: en-US
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
- ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
-References: <f49a72d9ee4cfb621c7f3516dc388b4c80457115.1736695253.git.nirjhar.roy.lists@gmail.com>
- <87jzazvmzh.fsf@gmail.com>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <87jzazvmzh.fsf@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250107060656.GC13669@lst.de>
 
+On Tue, Jan 07, 2025 at 07:06:57AM +0100, Christoph Hellwig wrote:
+> On Mon, Jan 06, 2025 at 06:08:10PM -0800, Darrick J. Wong wrote:
+> > > -	 * after I/O completion, reuse the original list as the wait list.
+> > > -	 */
+> > > -	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
+> > > +	bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC);
+> > > +	bp->b_flags |= XBF_WRITE;
+> > > +	xfs_buf_submit(bp);
+> > 
+> > Why is it ok to ignore the return value here?  Is it because the only
+> > error path in xfs_buf_submit is the xlog_is_shutdown case, in which case
+> > the buffer ioend will have been called already and the EIO will be
+> > returned by xfs_buf_iowait?
+> 
+> A very good question to be asked to the author of the original
+> xfs_buf_delwri_submit_buffers code that this go extracted from :)
+> 
+> I think you're provided answer is correct and also implies that we
+> should either get rid of the xfs_buf_submit return value or check it
+> more consistently.
 
-On 1/13/25 01:11, Ritesh Harjani (IBM) wrote:
-> "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
->
->> Bug Description:
->>
->> _test_mount function is failing with the following error:
->> ./common/rc: line 4716: _xfs_prepare_for_eio_shutdown: command not found
->> check: failed to mount /dev/loop0 on /mnt1/test
->>
->> when the second section in local.config file is xfs and the first section
->> is non-xfs.
->>
->> It can be easily reproduced with the following local.config file
->>
->> [s2]
->> export FSTYP=ext4
->> export TEST_DEV=/dev/loop0
->> export TEST_DIR=/mnt1/test
->> export SCRATCH_DEV=/dev/loop1
->> export SCRATCH_MNT=/mnt1/scratch
->>
->> [s1]
->> export FSTYP=xfs
->> export TEST_DEV=/dev/loop0
->> export TEST_DIR=/mnt1/test
->> export SCRATCH_DEV=/dev/loop1
->> export SCRATCH_MNT=/mnt1/scratch
->>
->> ./check selftest/001
->>
->> Root cause:
->> When _test_mount() is executed for the second section, the FSTYPE has
->> already changed but the new fs specific common/$FSTYP has not yet
->> been done. Hence _xfs_prepare_for_eio_shutdown() is not found and
->> the test run fails.
->>
->> Fix:
->> call _source_specific_fs $FSTYP at the correct call site of  _test_mount()
-> You should add the Fixes: tag too. Based on your description I guess
-> this should be the tag?
->
-> Fixes: 1a49022fab9b4 ("fstests: always use fail-at-unmount semantics for XFS")
+<nod>
 
-Shouldn't this be the following?
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-commit f8e4f532f18d7517430d9849bfc042305d7f7f4d (HEAD)
-Author: Lukas Czerner <lczerner@redhat.com>
-Date:   Fri Apr 4 17:18:15 2014 +1100
-
-     check: Allow to recreate TEST_DEV
-
-     Add config option RECREATE_TEST_DEV to allow to recreate file system on
-     the TEST_DEV device. Permitted values are true and false.
-
-     If RECREATE_TEST_DEV is set to true the TEST_DEV device will be
-     unmounted and FSTYP file system will be created on it. Afterwards it
-     will be mounted to TEST_DIR again with the default, or specified mount
-     options.
-
-     Also recreate the file system if FSTYP differs from the previous
-     section.
-
->
-> I agree with today the problem was in _test_mount(), tomorrow it could
-> be _test_mkfs, hence we could source the new FSTYP config file before
-> calling _test_mkfs().
->
-> With the fixes tag added, please feel free to add:
->
-> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
->
->> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->> ---
->>   check | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/check b/check
->> index 607d2456..8cdbb68f 100755
->> --- a/check
->> +++ b/check
->> @@ -776,6 +776,7 @@ function run_section()
->>   	if $RECREATE_TEST_DEV || [ "$OLD_FSTYP" != "$FSTYP" ]; then
->>   		echo "RECREATING    -- $FSTYP on $TEST_DEV"
->>   		_test_unmount 2> /dev/null
->> +		[[ "$OLD_FSTYP" != "$FSTYP" ]] && _source_specific_fs $FSTYP
->>   		if ! _test_mkfs >$tmp.err 2>&1
->>   		then
->>   			echo "our local _test_mkfs routine ..."
->> -- 
->> 2.34.1
-
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+--D
 
