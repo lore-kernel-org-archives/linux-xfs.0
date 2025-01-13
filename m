@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B298F231A26
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 07:12:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC8FA231CA0
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 07:13:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736752375; cv=none; b=US/56WeSq6mY9a/vbVA6zpRk/05OLa3iqcT4FNvrvBcToTr3GfC0SUXWQ+OkJcDGs8MKDeZL5125XpYBCQVBhUgXYRk64ydEXP8ArmBtuPSpdBR1NM6zjrm2yDWBXhzUvkQQB8l+yrClU4h9X+TGAZfMs87NODUmCaVevcEmDdQ=
+	t=1736752411; cv=none; b=Or9LbtC0FOtL3CuafJpxfXwZBOQLVgxrbIJr2ZbmsCybm1s8x0K4Eeg3rdkgwjL7eCPwz6tMQ3TiaK6LJRL7fi+5KOHHgGFSanXFeEgqX5rjJCXg9x83A7p2VJd1FdDHCbgKmZnMXu7nuNiiUNyBeRrTcaRM9afPbycbkvaRLLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736752375; c=relaxed/simple;
-	bh=wLozaj4SlbOu8BnS6Fx0NJAAN0QAbuX9qBkio9GVFks=;
+	s=arc-20240116; t=1736752411; c=relaxed/simple;
+	bh=PElNDL8pxsA7195nDXcsrkKhwhh/+H5PaapC08PgsMk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AEXcW9Dr/ol4oFa1JqIRMpwkMx9dGt4RD/aTwDMnW/r4Um59nasMmPmvP72EiwyyG4ChF/H97wWo6d0cqGlJE9Cd9PR+dxwJ5sxldarX70pMlkQLKsYQPk7TW9VQwzDTsXA75rw9zUbi8hKzcZrLkXviBYZn7UqUALKEEZq7tv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FR88nlRJ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=gyH11ID+G9oyNGwNaVBFSPZs73fj3T7MqUq8OPm1c3LoucGI1nfYb7pjljm3S8lRDEFfDu2WhDaoHoNK9kSO0VIhCqTcox4PQRbQtY4EaHDV4xWBVuIUAsLW5JQTt9L2oF11jSUOE4sjuRpTn7jSca/2FXp74q1TRqAAePek7pQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ISI17AnU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FR88nlRJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18F0AC4CED6;
-	Mon, 13 Jan 2025 07:12:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ISI17AnU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CC70C4CED6;
+	Mon, 13 Jan 2025 07:13:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736752374;
-	bh=wLozaj4SlbOu8BnS6Fx0NJAAN0QAbuX9qBkio9GVFks=;
+	s=k20201202; t=1736752410;
+	bh=PElNDL8pxsA7195nDXcsrkKhwhh/+H5PaapC08PgsMk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FR88nlRJ2DnVglx2RF+83KmdLnw/2WsOKAiroq5ikbN0DEPfg+Q6Gvd3N7IvDBU4h
-	 vhXpRYIShU5Z9GpOlc1qn3ux8ZN7nvcpnGhcmSC6TFDGgZ9CUoqu7HPINsJ7cmqc5M
-	 t7NDuHbiqVULU9Hpp7guP2pVyJE7RhNBG4oOv3uQTlkIC/RwLJUGtC0xeRDAlSTgY7
-	 0xmpKIHrvTPlm7mAi0Zyblj4IhffXySRlYeG58ClYVwqhMwTEXHXbYiuGXeNXtuKPN
-	 U7JrjsIuIYk9KwuwebZobW7X8enK0fEeH09ZzsLp3JlCenweNWmENHNjWgFfEZw3gN
-	 /eMN9w3Db7oqg==
-Date: Sun, 12 Jan 2025 23:12:53 -0800
+	b=ISI17AnUBScQGGUBFkvKPCEi6FT8SmZWYiqJNPBgiQZ5jUIKVwkUIYTFSuoHpaYDk
+	 Rvx4WegkQJXIN7zh0Lazhr5GAsXNw0rqgApLxbpuTnEjnHacuWcBgusW+b4XbL5+py
+	 SQy+5yS3BT19cVW7/0JHuTF/7xGBKRCbQw+jFA4k7LV2gcXR/cl6KgN1UdaZjWhg1D
+	 eqstIBM5c+B2tiErgjCvygSedRn0dli+3t09AzaMUoH+MNbRfNjDPIZykA7ao1uA+p
+	 voXnsqA7T7F5utWqz+MHv3V+ZVIhM8ntoIxi2ncVhTRO+lKGw+1rekj1Ow/tgZQr3Q
+	 HQaFHFuYqY1lA==
+Date: Sun, 12 Jan 2025 23:13:29 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/15] xfs: simplify xfs_buf_delwri_pushbuf
-Message-ID: <20250113071253.GY1306365@frogsfrogsfrogs>
+Subject: Re: [PATCH 11/15] xfs: remove the extra buffer reference in
+ xfs_buf_submit
+Message-ID: <20250113071329.GZ1306365@frogsfrogsfrogs>
 References: <20250106095613.847700-1-hch@lst.de>
- <20250106095613.847700-6-hch@lst.de>
- <20250107020810.GW6174@frogsfrogsfrogs>
- <20250107060656.GC13669@lst.de>
+ <20250106095613.847700-12-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,32 +43,65 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250107060656.GC13669@lst.de>
+In-Reply-To: <20250106095613.847700-12-hch@lst.de>
 
-On Tue, Jan 07, 2025 at 07:06:57AM +0100, Christoph Hellwig wrote:
-> On Mon, Jan 06, 2025 at 06:08:10PM -0800, Darrick J. Wong wrote:
-> > > -	 * after I/O completion, reuse the original list as the wait list.
-> > > -	 */
-> > > -	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
-> > > +	bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC);
-> > > +	bp->b_flags |= XBF_WRITE;
-> > > +	xfs_buf_submit(bp);
-> > 
-> > Why is it ok to ignore the return value here?  Is it because the only
-> > error path in xfs_buf_submit is the xlog_is_shutdown case, in which case
-> > the buffer ioend will have been called already and the EIO will be
-> > returned by xfs_buf_iowait?
+On Mon, Jan 06, 2025 at 10:54:48AM +0100, Christoph Hellwig wrote:
+> Nothing touches the buffer after it has been submitted now, so the need for
+> the extra transient reference went away as well.
 > 
-> A very good question to be asked to the author of the original
-> xfs_buf_delwri_submit_buffers code that this go extracted from :)
-> 
-> I think you're provided answer is correct and also implies that we
-> should either get rid of the xfs_buf_submit return value or check it
-> more consistently.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-<nod>
+Ooops, forgot this one.
 
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
+> ---
+>  fs/xfs/xfs_buf.c | 17 +----------------
+>  1 file changed, 1 insertion(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 49df4adf0e98..352cc50aeea5 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1646,13 +1646,6 @@ xfs_buf_submit(
+>  		return -EIO;
+>  	}
+>  
+> -	/*
+> -	 * Grab a reference so the buffer does not go away underneath us. For
+> -	 * async buffers, I/O completion drops the callers reference, which
+> -	 * could occur before submission returns.
+> -	 */
+> -	xfs_buf_hold(bp);
+> -
+>  	if (bp->b_flags & XBF_WRITE)
+>  		xfs_buf_wait_unpin(bp);
+>  
+> @@ -1675,20 +1668,12 @@ xfs_buf_submit(
+>  		goto done;
+>  
+>  	xfs_buf_submit_bio(bp);
+> -	goto rele;
+> -
+> +	return 0;
+>  done:
+>  	if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
+>  		xfs_buf_ioend(bp);
+>  	else
+>  		xfs_buf_ioend_async(bp);
+> -rele:
+> -	/*
+> -	 * Release the hold that keeps the buffer referenced for the entire
+> -	 * I/O. Note that if the buffer is async, it is not safe to reference
+> -	 * after this release.
+> -	 */
+> -	xfs_buf_rele(bp);
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.45.2
+> 
+> 
