@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3189A23ED45
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 14:13:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A66BC23ED51
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 14:13:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736777584; cv=none; b=ogM0aJ6gwoRfDY8LEbOGHM5RQC3qnUgYoIFNOtJDk5oP1I5z/xHcx/RXv4fq/lc8Y9C55rObO5rbwcCwMSXOfmL2SHvX8DqtWrAezuz+7bTTrS4EPA7ceL66vv0K9Eujv8RHjME2Rcd+T9bufcCOSaoEMYFx9cC8wy072BlNAqU=
+	t=1736777587; cv=none; b=VDqRSe5onDhrwR9RURqAe0QhID+cikJO+F/vc+1klPZxP2ZZd75h28fvubp2Jg/SZVd1DXrtZN5e2xLuQyIRyKNSLhOualvYzzrSNNJGN2l0xBXRyvnaM3mS/Z/X/6KFMMWTejfr2knCTfltQtgYLv+lh8slL2cjKJW/X/K417s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736777584; c=relaxed/simple;
-	bh=Wqc0vMnXtT/bRg6DONRY9J2sSukEVCeR6YLS4Pqh4aM=;
+	s=arc-20240116; t=1736777587; c=relaxed/simple;
+	bh=b7gOS5xIZHUvFmzqQcMaXJL/bHCafbcqLoGRAlAHBAU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QAypbOe47DYT0CUgGAHJFcMZN3vBLfWTokixUwK4K6XhlvcruxOxvVI1OIDClcOw14Sztvz+3uDMRfT7tg8MJXRD5pooqVTPoj0P75vJGPMbSwAbcoJAi6bIE6kgBid3XwI5oVda/gytGejEQWrxreVLNMJPxxfv5d/hBZpIyG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=A1n6+EWJ; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=CUPfoNXZocGlg5kOWjePcQPIGYUAojXzTPNdtxmuW+LR6Y6RC2eu5wKA5lsjHomzr27mR7Jsu4RYKp3ja1AoGn/P5gdkCUGGss3qA4GgSCCgdB3yR+0dlzPmiX4WgkPgbOS5atxKNvsbhml9XGj4t4g4tcjI5LOQyiQIqvF+zt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Bzj7Svmg; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="A1n6+EWJ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Bzj7Svmg"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=rhlM+yRZ8S+UTg6OpxwzCpyGAq3ZbM+vI3mXCWOiD/g=; b=A1n6+EWJAxExR1953TE7n00hVb
-	bJ8oJ7zRvHOUe1Ec6Z7GaHemvI6avwqzdFcp/trGrbKYcRaX8GiFn290fJzZQZ8ehaJ5+JNDtftIb
-	QkEPp7Gyh5jkYFfaIFv+VCOMEVA5yfaGx/cZokN+5nan2HEOoFjMAU2f2DoYSV8rLr6K202D/wuUy
-	Sug1leojOw/Z+3RvAVghUcQxzFscH87RtYfDLN5WgEgrjaNpFU20/1kFIFd39hZjthfvjoqGyW/tF
-	wapHNHW0NVt5nDtnFYIpRxMnuhNVXhTuuEYjdFHEIdrJiSUmYSdBw8KaAZ4Wpao94Z6KMDQcvWc+b
-	TAwtR00g==;
+	bh=vHcoHAVocY4x5Duk/NaMjHBmXk2zNmKiNTDp/Yo3/E0=; b=Bzj7Svmg5Lg97sq9uRoAIrYIWc
+	fQMJGed6fb6jjGvGmCxryd+7unXCbsrCVnOWMdk+KEJtsVHX9UEjkrURRd9Zt/+bwPGYJrbb3DsqR
+	Eq6Ea9sOij1ehRkMaVXAIz6RUnB00xUxgAcla7Bq2wBAght4uvumAevITBB9s+WOE6j+G68mkQtOW
+	OlvjWj4AnHJB4DVyrX3C1sDzlHuzfbgVGbpFjQ861oClCBObzCIfcasoSmtNwDkeQffhlwTAHSdK4
+	I6+gVzTeMvBWZa4FJFy5XVoNAJfyh8Tpgmn3b2hFayLN0ZC3ciu4qfisTUD/bd2wNvjCIEVYBswSy
+	jorYFCZA==;
 Received: from 2a02-8389-2341-5b80-b273-11c2-5421-183d.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:b273:11c2:5421:183d] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tXLBe-00000005Mre-2Clf;
-	Mon, 13 Jan 2025 14:13:02 +0000
+	id 1tXLBh-00000005MsH-3p55;
+	Mon, 13 Jan 2025 14:13:06 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 10/15] xfs: move invalidate_kernel_vmap_range to xfs_buf_ioend
-Date: Mon, 13 Jan 2025 15:12:14 +0100
-Message-ID: <20250113141228.113714-11-hch@lst.de>
+Subject: [PATCH 11/15] xfs: remove the extra buffer reference in xfs_buf_submit
+Date: Mon, 13 Jan 2025 15:12:15 +0100
+Message-ID: <20250113141228.113714-12-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250113141228.113714-1-hch@lst.de>
 References: <20250113141228.113714-1-hch@lst.de>
@@ -49,42 +49,55 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Invalidating cache lines can be fairly expensive, so don't do it
-in interrupt context.  Note that in practice very few setup will
-actually do anything here as virtually indexed caches are rather
-uncommon, but we might as well move the call to the proper place
-while touching this area.
+Nothing touches the buffer after it has been submitted now, so the need for
+the extra transient reference went away as well.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_buf.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_buf.c | 16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 541e56b13869..e0a34c2aaaaf 100644
+index e0a34c2aaaaf..49d087d9ba48 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -1363,6 +1363,9 @@ xfs_buf_ioend(
- 	trace_xfs_buf_iodone(bp, _RET_IP_);
+@@ -1643,13 +1643,6 @@ xfs_buf_submit(
+ 		return;
+ 	}
  
- 	if (bp->b_flags & XBF_READ) {
-+		if (!bp->b_error && xfs_buf_is_vmapped(bp))
-+			invalidate_kernel_vmap_range(bp->b_addr,
-+					xfs_buf_vmap_len(bp));
- 		if (!bp->b_error && bp->b_ops)
- 			bp->b_ops->verify_read(bp);
- 		if (!bp->b_error)
-@@ -1492,9 +1495,6 @@ xfs_buf_bio_end_io(
- 		 XFS_TEST_ERROR(false, bp->b_mount, XFS_ERRTAG_BUF_IOERROR))
- 		xfs_buf_ioerror(bp, -EIO);
- 
--	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
--		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
+-	/*
+-	 * Grab a reference so the buffer does not go away underneath us. For
+-	 * async buffers, I/O completion drops the callers reference, which
+-	 * could occur before submission returns.
+-	 */
+-	xfs_buf_hold(bp);
 -
- 	xfs_buf_ioend_async(bp);
- 	bio_put(bio);
+ 	if (bp->b_flags & XBF_WRITE)
+ 		xfs_buf_wait_unpin(bp);
+ 
+@@ -1672,20 +1665,13 @@ xfs_buf_submit(
+ 		goto done;
+ 
+ 	xfs_buf_submit_bio(bp);
+-	goto rele;
++	return;
+ 
+ done:
+ 	if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
+ 		xfs_buf_ioend(bp);
+ 	else
+ 		xfs_buf_ioend_async(bp);
+-rele:
+-	/*
+-	 * Release the hold that keeps the buffer referenced for the entire
+-	 * I/O. Note that if the buffer is async, it is not safe to reference
+-	 * after this release.
+-	 */
+-	xfs_buf_rele(bp);
  }
+ 
+ void *
 -- 
 2.45.2
 
