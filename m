@@ -1,46 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C44B1474D3;
-	Mon, 13 Jan 2025 04:51:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A6814885D
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 04:56:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736743874; cv=none; b=N1Zv+7k4InAXsUxUpuTOQLtAVJiuQTHD70bmBi/9i0wx2iI6vpkBEX6ydFekiilng8qI335taEpMI531nxKhM0uM+k3bjYAzUR+MPgqn2b6C5PxCaYsPMJjD6EXe/0sjRE80nG7XU91Yy/AybgM6eeQjibDqz9kYQkwO5PiYyvo=
+	t=1736744182; cv=none; b=ig2scU5JypWW+CSm5woheah7m7Kdn2dg4YiGvLfI9QydiEo88du2Z//o6fPJ/rqhvUvRQ/oBStkKI9N7TbYCR7NMd4rGamcMYjgzZNhqqyI5xKEHuMcqfrl5BsxKQDyiQGIY4J+Qb7Z1gW6cpsPLlIgOh0r1dwZhjzpYWk0JF0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736743874; c=relaxed/simple;
-	bh=S63CSU21AWbKqU7Yo7WVZFz4heQJllA63bYDqczQ2PY=;
+	s=arc-20240116; t=1736744182; c=relaxed/simple;
+	bh=W5MM/9ST8BCx7WDjX8FxLSolq6T2xq/5YjNY8aT+iZw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R1atd1n5VhiUBhfQeoLeUkGjrb2wMDURLQBhkor6WfHZ8CLrTThAQEWQxpdyL2Vt0HmVcXyVnlZSFeH9FpZk1XsLswBWXbNJ3yF5uviCv1sJ9ESJTCT6Vcp7fPXjWMbiF+hMSMMUrOtaoqbXhIKanKOU3QFetJxa/sNlUjOCc6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FiuGiIeQ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=je+zgN2oUO0S8XkLU6tTZrjG/wiSTkHIvuwqD6x+pbtgQ+/weBIGv96goajR2UkLHxsTcOfs1Wpi2ROpp6ZmEgOPFxei0miGYba/IR5jSsLQH+efPwfr2VUlDVdz+NDNS/jhRzygzG/sLt1Q/dinQv6+5FLhFU+6b9lZOWQesoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AnMZewIe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FiuGiIeQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uPlsrx9ZVc0SGEC8bFQUT4ARkO7TYxXAo/m+CH2fXUw=; b=FiuGiIeQjaoixiar4vW3LHa1ky
-	unmhzXdYSwAPhKt/pjiWdO0FmlpO+RFeNNQzCVU8gYIY3xCq9k1fanSyUUXYvkUf4j++rA4BVEOHG
-	vWM7Eux4ypVyFPybLErit3Deyxt/ggatCl2nTouu8U3Cc4NWe3+4KN42V0CHZeuM9L0uM/nbb1gxu
-	g/CWziVL+Q/ecLCsHyEwgbU0FM9FdvWYA1Fcr2IwwAXYRfgLkfw7MFBv1WgKAmpZbt1f+iQLgOmWV
-	jOI8EN4AhzZv4HJDQC0A7OC5K+e9WlXreTAm1e11Gjk3cRGfnOEbDCQy8UCkkmjlAJaNRJCmXdhLl
-	kkRQAAfA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tXCPw-0000000411H-3x81;
-	Mon, 13 Jan 2025 04:51:12 +0000
-Date: Sun, 12 Jan 2025 20:51:12 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AnMZewIe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FB25C4CED6;
+	Mon, 13 Jan 2025 04:56:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736744182;
+	bh=W5MM/9ST8BCx7WDjX8FxLSolq6T2xq/5YjNY8aT+iZw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AnMZewIez0yQBzA4slbjI8E1H+RmBiqcp9ZhuZB5o7//ZZOtuTd+7ql2e4Uh52zaO
+	 +WuLWJOXL/pRkV9m8GC/vNteq8hVKMI796/vNziUgxul26YaHmzHZ20DefLb4hVFnv
+	 1wosOdLZyJkH8WDTjqaaD1Vq5fZ1hCaMz2TfFXZ7ta1UzB3loFuy+VRMrbgqlAoY1M
+	 /HKiTW1568/SJlfUqXCjVzih3ruchtnHfwN2Q0+OTc/aUMow1f7cZ1gQT5V9WfRVJA
+	 Pybxr075/vVlkG7yqax5G4yqYOLRYk63nwKvz3o74tJfiKLMLE+9HyySlJpgcn42Sp
+	 4psnZqXlnDjHA==
+Date: Sun, 12 Jan 2025 20:56:21 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFCv2 2/4] iomap: optional zero range dirty folio
- processing
-Message-ID: <Z4SbwEbcp5AlxMIv@infradead.org>
-References: <20241213150528.1003662-1-bfoster@redhat.com>
- <20241213150528.1003662-3-bfoster@redhat.com>
- <Z394x1XyN5F0fd4h@infradead.org>
- <Z4Fejwv9XmNkJEGl@bfoster>
+Subject: Re: [PATCH 1/2] xfs: check for dead buffers in xfs_buf_find_insert
+Message-ID: <20250113045621.GR1387004@frogsfrogsfrogs>
+References: <20250113042542.2051287-1-hch@lst.de>
+ <20250113042542.2051287-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,46 +43,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z4Fejwv9XmNkJEGl@bfoster>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250113042542.2051287-2-hch@lst.de>
 
-On Fri, Jan 10, 2025 at 12:53:19PM -0500, Brian Foster wrote:
-> processing.
+On Mon, Jan 13, 2025 at 05:24:26AM +0100, Christoph Hellwig wrote:
+> Commit 32dd4f9c506b ("xfs: remove a superflous hash lookup when inserting
+> new buffers") converted xfs_buf_find_insert to use
+> rhashtable_lookup_get_insert_fast and thus an operation that returns the
+> existing buffer when an insert would duplicate the hash key.  But this
+> code path misses the check for a buffer with a reference count of zero,
+> which could lead to reusing an about to be freed buffer.  Fix this by
+> using the same atomic_inc_not_zero pattern as xfs_buf_insert.
 > 
-> For example, if we have a largish dirty folio backed by an unwritten
-> extent with maybe a single block that is actually dirty, would we be
-> alright to just zero the requested portion of the folio as long as some
-> part of the folio is dirty? Given the historical ad hoc nature of XFS
-> speculative prealloc zeroing, personally I don't see that as much of an
-> issue in practice as long as subsequent reads return zeroes, but I could
-> be missing something.
+> Fixes: 32dd4f9c506b ("xfs: remove a superflous hash lookup when inserting new buffers")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-That's a very good question I haven't though about much yet.  And
-everytime I try to think of the speculative preallocations and they're
-implications my head begins to implode..
+Cc: <stable@vger.kernel.org> # v6.0
 
-> > >  static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
-> > >  {
-> > > +	if (iter->fbatch) {
-> > > +		folio_batch_release(iter->fbatch);
-> > > +		kfree(iter->fbatch);
-> > > +		iter->fbatch = NULL;
-> > > +	}
-> > 
-> > Does it make sense to free the fbatch allocation on every iteration,
-> > or should we keep the memory allocation around and only free it after
-> > the last iteration?
-> > 
+and with that added,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/xfs/xfs_buf.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> In the current implementation the existence of the fbatch is what
-> controls the folio lookup path, so we'd only want it for unwritten
-> mappings. That said, this could be done differently with a flag or
-> something that indicates whether to use the batch. Given that we release
-> the folios anyways and zero range isn't the most frequent thing, I
-> figured this keeps things simple for now. I don't really have a strong
-> preference for either approach, however.
-
-I was just worried about the overhead of allocating and freeing
-it all the time.  OTOH we probably rarely have more than a single
-extent to process with the batch right now.
-
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 6f313fbf7669..f80e39fde53b 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -664,9 +664,8 @@ xfs_buf_find_insert(
+>  		spin_unlock(&bch->bc_lock);
+>  		goto out_free_buf;
+>  	}
+> -	if (bp) {
+> +	if (bp && atomic_inc_not_zero(&bp->b_hold)) {
+>  		/* found an existing buffer */
+> -		atomic_inc(&bp->b_hold);
+>  		spin_unlock(&bch->bc_lock);
+>  		error = xfs_buf_find_lock(bp, flags);
+>  		if (error)
+> -- 
+> 2.45.2
+> 
