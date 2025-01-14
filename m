@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00B00209F4C
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Jan 2025 21:40:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCDB3209F4C
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jan 2025 21:40:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736890839; cv=none; b=YClM4LlCmxtSkFbMlbrhsMHvI75b9w5wkY9oghEeTUsh2lzsbqtjmHMmjVMbmE15/oZT5t8vbmS7y9q0SCVKTzbqdSTt1s6ONirW9z3cWTRBCqGd6oRzHquTwsFszqfw31tbjMnTmhh3IFfWyVECEJAcAJ8WiHGwthC/R5TvZJo=
+	t=1736890854; cv=none; b=ne1u+pt7baPIlWlvOocV4RuvoF8s6WQ6DY+dBDW0Ey8iWS/51fw+Pjavkg7cVOJKJdDZuZJfFfWBHQTjYMRDfJKwXraiuH9b8Wljx1VNA8dB7brC6HWpKyXD/JVRhCwzFpWGNYlr0G8KMicP5gx+TO4/XQfOO4p8IAKXUdq4uX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736890839; c=relaxed/simple;
-	bh=1YkTVmxcrDWYflgE3xalJKcOXiRcQiDlna/L6L2vvQI=;
+	s=arc-20240116; t=1736890854; c=relaxed/simple;
+	bh=/PFYCQPoSzWSiyKoSq952MkoCdedEyMzfiyWq5CdKBo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MbhtgQC2mW0fxCJYgACGTKMJOHCIi/il3JURfPAyuEgh8C9BVZ4mqKlYdl0kjnF6v5nDyHcTq7uk3xGvsHDLjiz3z8cIVPyaH+QhsDh/3OhBqOmCfDviuz9EVMPolWvhAY55iQqGuIyaA74pE8jHfJ0rVufeOWrrXySsD8i1Ek8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lETZSB1m; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=i8Jv9Dt8PiEqoTy0lbmMcDvsdbRKuBg1A+rlnHqOl9krCnBzrETNFA4OLA2H2SV3gXn4SZ7BOg+BLTRLyYKvr1+Z7wZdFEAFKhKgDopGjsCkSUQXbfB1rdooqWS/pwK2mZQWyCzu/hO+am/hqH6Io4NXqi2P7vF4LfVHvdMzK0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XiwdqT3J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lETZSB1m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89B0BC4CEDD;
-	Tue, 14 Jan 2025 21:40:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XiwdqT3J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 463A2C4CEDD;
+	Tue, 14 Jan 2025 21:40:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736890838;
-	bh=1YkTVmxcrDWYflgE3xalJKcOXiRcQiDlna/L6L2vvQI=;
+	s=k20201202; t=1736890854;
+	bh=/PFYCQPoSzWSiyKoSq952MkoCdedEyMzfiyWq5CdKBo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lETZSB1m3ugXLd+nyXgJen3+Om+/8gySxN9sx6nXacOSDildcQkjQQIYfW/z6kClr
-	 h00NoPqkrbHKyiF+40VmVb6/BoDYuhP4QS3bkm3TR6pjpSS1MsIYNcg3fQkcBPEJBW
-	 G6k6eG09HBD6MX4Vvd7TISlms1wnNj+s6yHJsbbbTw/xjmQvxj3k/m1XZ6c7jDPSWI
-	 OX7jiF7N/JmuJ3pD8m2VgGySHxPLuxrXcXbJTT/Ei54H1qCMEL3V2gvs5fd/j3f7G/
-	 LzjpCFjFvbG30xoLCpEopsVu0U3LXAlbtGGmX036RVeBRWg4XPiyTEYK4nmPTEYR9E
-	 3YWEuVpiHo53g==
-Date: Tue, 14 Jan 2025 13:40:38 -0800
-Subject: [PATCH 1/5] xfs_db: improve error message when unknown btree type
- given to btheight
+	b=XiwdqT3JykveRA2319LyMmVcTY8zD5Oq14DhGlaOX3bpZhZ8qK+AyGW1fJeOtHmYg
+	 dUN54e6QAFDWZWtmfNfOw5ZAWFh4TulAA4P2M2/herr802pSSQttqlOFSR09yXOW2E
+	 xe/sdEcdf/BlaiqdXdlvmz7y5p46UhjarGwU9NANmlB269RiE7CxZ98zkjB6H0XWD/
+	 IOTEO3yBKnzI7V+ioAYTwi9XqBK3cqkvE8oCgvQuE/8JTzJMQdlRbOeIQ8aC31P0Ep
+	 yaC0d02s5I7KJWMytDrjHrS/UCWkCR7cASg/GKTHTOJZY7H5MUd7fBhhT1QILngH67
+	 KN0w+p9/CL//w==
+Date: Tue, 14 Jan 2025 13:40:53 -0800
+Subject: [PATCH 2/5] mkfs: fix parsing of value-less -d/-l concurrency cli
+ option
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173689081897.3476119.13308060628733838470.stgit@frogsfrogsfrogs>
+Message-ID: <173689081910.3476119.11332577729920649286.stgit@frogsfrogsfrogs>
 In-Reply-To: <173689081879.3476119.15344563789813181160.stgit@frogsfrogsfrogs>
 References: <173689081879.3476119.15344563789813181160.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,42 +46,38 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I found accidentally that if you do this (note 'rmap', not 'rmapbt'):
+It's supposed to be possible to specify the -d concurrency option with
+no value in order to get mkfs calculate the agcount from the number of
+CPUs.  Unfortunately I forgot to handle that case (optarg is null) so
+mkfs crashes instead.  Fix that.
 
-xfs_db /dev/sda -c 'btheight -n 100 rmap'
-
-The program spits back "Numerical result out of range".  That's the
-result of it failing to match "rmap" against a known btree type, and
-falling back to parsing the string as if it were a btree geometry
-description.
-
-Improve this a little by checking that there's at least one semicolon in
-the string so that the error message improves to:
-
-"rmap: expected a btree geometry specification"
-
-Fixes: cb1e69c564c1e0 ("xfs_db: add a function to compute btree geometry")
+Fixes: 9338bc8b1bf073 ("mkfs: allow sizing allocation groups for concurrency")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- db/btheight.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ mkfs/xfs_mkfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/db/btheight.c b/db/btheight.c
-index 6643489c82c4c9..98165b522e4f6f 100644
---- a/db/btheight.c
-+++ b/db/btheight.c
-@@ -145,6 +145,12 @@ construct_records_per_block(
- 		}
- 	}
- 
-+	p = strchr(tag, ':');
-+	if (!p) {
-+		fprintf(stderr, _("%s: expected a btree geometry specification.\n"), tag);
-+		return -1;
-+	}
-+
- 	toktag = strdup(tag);
- 	ret = -1;
- 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 956cc295489342..deaac2044b94dd 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1722,7 +1722,7 @@ set_data_concurrency(
+ 	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
+ 	 * If this cannot be determined, fall back to the default AG geometry.
+ 	 */
+-	if (!strcmp(value, "nr_cpus"))
++	if (!value || !strcmp(value, "nr_cpus"))
+ 		optnum = 1;
+ 	else
+ 		optnum = getnum(value, opts, subopt);
+@@ -1867,7 +1867,7 @@ set_log_concurrency(
+ 	 * "nr_cpus" or 1 means set the concurrency level to the CPU count.  If
+ 	 * this cannot be determined, fall back to the default computation.
+ 	 */
+-	if (!strcmp(value, "nr_cpus"))
++	if (!value || !strcmp(value, "nr_cpus"))
+ 		optnum = 1;
+ 	else
+ 		optnum = getnum(value, opts, subopt);
 
