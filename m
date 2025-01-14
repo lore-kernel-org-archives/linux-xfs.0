@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCDB3209F4C
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Jan 2025 21:40:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4904021322A
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jan 2025 21:41:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736890854; cv=none; b=ne1u+pt7baPIlWlvOocV4RuvoF8s6WQ6DY+dBDW0Ey8iWS/51fw+Pjavkg7cVOJKJdDZuZJfFfWBHQTjYMRDfJKwXraiuH9b8Wljx1VNA8dB7brC6HWpKyXD/JVRhCwzFpWGNYlr0G8KMicP5gx+TO4/XQfOO4p8IAKXUdq4uX4=
+	t=1736890870; cv=none; b=QfB4Ma0t4KnhlCtyZhxArJAuK9o1Q0+pgOk+p9tDEzzcvmk+6LwxhABav+/9HDQRJ/yKxMiKGHqK6tuRg/1/2w2/YFf20kAIWDtYseVU4JOuBtwzseoYDFx+6J4kJrqEZJdMTmGGubOxkMKTfYmICxlkwA5FNtDfkmNxULDw4FQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736890854; c=relaxed/simple;
-	bh=/PFYCQPoSzWSiyKoSq952MkoCdedEyMzfiyWq5CdKBo=;
+	s=arc-20240116; t=1736890870; c=relaxed/simple;
+	bh=HhIakbguhjSvzIyjUQWXNglItuB2Ko8xFViSBjMk/g8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i8Jv9Dt8PiEqoTy0lbmMcDvsdbRKuBg1A+rlnHqOl9krCnBzrETNFA4OLA2H2SV3gXn4SZ7BOg+BLTRLyYKvr1+Z7wZdFEAFKhKgDopGjsCkSUQXbfB1rdooqWS/pwK2mZQWyCzu/hO+am/hqH6Io4NXqi2P7vF4LfVHvdMzK0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XiwdqT3J; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=oWuUl9E4/TCDRqfxiQvDkNy/RjWeIlqpmpRCkxWKiy5RHVmaif1av3D4yXZKlzgeD8ryWuVPe/2ayZcbVHZJT3sSMRxUEG+R5AMGB1t2YNOl0JXoPIaUa0OJAtZF2V3G+4abC4RlJ2husUWRbAhBN0cQIQRaDvQoF75Bz7jGWhg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HKB/qIaO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XiwdqT3J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 463A2C4CEDD;
-	Tue, 14 Jan 2025 21:40:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HKB/qIaO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0B6FC4CEDD;
+	Tue, 14 Jan 2025 21:41:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736890854;
-	bh=/PFYCQPoSzWSiyKoSq952MkoCdedEyMzfiyWq5CdKBo=;
+	s=k20201202; t=1736890870;
+	bh=HhIakbguhjSvzIyjUQWXNglItuB2Ko8xFViSBjMk/g8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XiwdqT3JykveRA2319LyMmVcTY8zD5Oq14DhGlaOX3bpZhZ8qK+AyGW1fJeOtHmYg
-	 dUN54e6QAFDWZWtmfNfOw5ZAWFh4TulAA4P2M2/herr802pSSQttqlOFSR09yXOW2E
-	 xe/sdEcdf/BlaiqdXdlvmz7y5p46UhjarGwU9NANmlB269RiE7CxZ98zkjB6H0XWD/
-	 IOTEO3yBKnzI7V+ioAYTwi9XqBK3cqkvE8oCgvQuE/8JTzJMQdlRbOeIQ8aC31P0Ep
-	 yaC0d02s5I7KJWMytDrjHrS/UCWkCR7cASg/GKTHTOJZY7H5MUd7fBhhT1QILngH67
-	 KN0w+p9/CL//w==
-Date: Tue, 14 Jan 2025 13:40:53 -0800
-Subject: [PATCH 2/5] mkfs: fix parsing of value-less -d/-l concurrency cli
- option
+	b=HKB/qIaODyje5V4+CKGd1ERt7bv3LByfhYIkH3x/P+I9eTbiKPXu6RoXJ0FHvDfZo
+	 XaSqEQbN/cK2nVMPLnOw/SE8E6n93DeFI3pRJffeSwrY32t/5prlyhAryJ+iIomBlM
+	 Al1DYbLVyrQv2NvpnxWzuM15RzYXVLDsr7uea7GFhVZDbTvrGgBcsMmkF10LtfJvFY
+	 iLklQ28R9l7sshpVte0gJFdvKrPb/Rs5HvXlfLuc0r13cYepWiYn/w4QtfW+JwChLs
+	 d653GQM4FHe8+WDv3My/GqUwo/RVEDgKmdOOz7QHYcoyqGPoOjFd2ytADoNFujTw30
+	 fCKIoJGlY86Jw==
+Date: Tue, 14 Jan 2025 13:41:09 -0800
+Subject: [PATCH 3/5] m4: fix statx override selection if /usr/include doesn't
+ define it
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <173689081910.3476119.11332577729920649286.stgit@frogsfrogsfrogs>
+Message-ID: <173689081926.3476119.12874616172883806766.stgit@frogsfrogsfrogs>
 In-Reply-To: <173689081879.3476119.15344563789813181160.stgit@frogsfrogsfrogs>
 References: <173689081879.3476119.15344563789813181160.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,38 +46,29 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It's supposed to be possible to specify the -d concurrency option with
-no value in order to get mkfs calculate the agcount from the number of
-CPUs.  Unfortunately I forgot to handle that case (optarg is null) so
-mkfs crashes instead.  Fix that.
+If the system headers (aka the ones in /usr/include) do not define
+struct statx at all, we need to use our internal override.  The m4 code
+doesn't handle this admittedly corner case, but let's fix it for anyone
+trying to build new xfsprogs on a decade-old distribution.
 
-Fixes: 9338bc8b1bf073 ("mkfs: allow sizing allocation groups for concurrency")
+Fixes: 409477af604f46 ("xfs_io: add support for atomic write statx fields")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ m4/package_libcdev.m4 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 956cc295489342..deaac2044b94dd 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1722,7 +1722,7 @@ set_data_concurrency(
- 	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
- 	 * If this cannot be determined, fall back to the default AG geometry.
- 	 */
--	if (!strcmp(value, "nr_cpus"))
-+	if (!value || !strcmp(value, "nr_cpus"))
- 		optnum = 1;
- 	else
- 		optnum = getnum(value, opts, subopt);
-@@ -1867,7 +1867,7 @@ set_log_concurrency(
- 	 * "nr_cpus" or 1 means set the concurrency level to the CPU count.  If
- 	 * this cannot be determined, fall back to the default computation.
- 	 */
--	if (!strcmp(value, "nr_cpus"))
-+	if (!value || !strcmp(value, "nr_cpus"))
- 		optnum = 1;
- 	else
- 		optnum = getnum(value, opts, subopt);
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 6db1177350b643..4ef7e8f67a3ba6 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -112,7 +112,7 @@ AC_DEFUN([AC_NEED_INTERNAL_STATX],
+           need_internal_statx=yes,
+           [#include <linux/stat.h>]
+         )
+-      ],,
++      ],need_internal_statx=yes,
+       [#include <linux/stat.h>]
+     )
+     AC_SUBST(need_internal_statx)
 
