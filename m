@@ -1,67 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0843922960C;
-	Tue, 14 Jan 2025 10:31:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9558D22961D
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jan 2025 10:45:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736850716; cv=none; b=KqXkjLN93+xA8ySzAOH+IYrwHi/CjfvrPDFznEFIq9UlLHlyzpyNubchTxpfQNxKNsrnX50Wb6FC0UAgpKJXw6Sm1fXexF1spgA6STYUrsvsTB59I2pFC0V71b0LdEKjOH5+p3VejRD5slBZBQM3mD7uOWm310L2OtaO28j0Zr4=
+	t=1736851552; cv=none; b=E5Yl9ZH/WfNWuVCviYgTPfuAi4345KMSKEQZLngVedqHoYCAozM5+wACSUzAMyAITk09jdVuVxNQf5a/8XxhJFdIawS+6Fvrp99KgPYwOZZ7TICosUAWj+oUZQ+Q4m/NWNegwisH3z84c69pRTfA5ajTBwLmATf7n/gYMMaraqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736850716; c=relaxed/simple;
-	bh=8UPi0vddVVw37p3+WuEper/eN9MBNy4UApOzSD1VSeM=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=PhpRbb6S3GbgimShCeFgbPG+woyoVpcMb2cHIyYXlyBSZRc8kVw87szpvdyR+d++lW0kso9pp0gDFQeXUfj99RuLPRmE8BuQ04PtYYHbcSBKgMIsLREMW5op9Iib/l0gqAzcGBH5rktwYMhjGoIat7otqQieeUMDY5a9NoV7JXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W61Pukre; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1736851552; c=relaxed/simple;
+	bh=dYsP0sVZWPBekkMGDIXlyZi+TLFVuXD+v/qKh6I6NG4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R7Nq96y5/NIQ3ovJENgXC+StwR5va5sdTszb2KrBiiLWSPHF9yEpK2k/1n6+7gfXzzupZ+JZwjyk5mmD2Jw2F36i4E6GVn6Hk0BKVKYUEZ3LoqhKNlLgNuafkhAa16LTAU+52eOntVepm+ZFXZTxJi5g48oAUA3/SkqXwk6t0jI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=twQv5+Pe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W61Pukre"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C233C4CEDD;
-	Tue, 14 Jan 2025 10:31:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="twQv5+Pe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 418EBC4CEDD;
+	Tue, 14 Jan 2025 10:45:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736850715;
-	bh=8UPi0vddVVw37p3+WuEper/eN9MBNy4UApOzSD1VSeM=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=W61PukreYQiX4FL6fH3jx1n7+PO5QdpsABzoDYPCv5+eSoxoh7WFmJnBFK6ygAS95
-	 pFcqSmOlkUyvf9QW88h64VK0bL/k7Bc5kbjXngg3oSheW2Cwi9XOJr/vfzqx0mZefo
-	 VOmO1Wu5WAiFcci8MLjnpf5QntjKnoc7+X89zdhhVSaySpLqij1hsnYiu//myCQ5r+
-	 tXEP/cNvai66O/OPyMgGWGdSH8J7fJiTGFfdWsCKZHG810UqayYafNjJTp6IX6igGZ
-	 PGSMDk2RxNSxyqvjwTq69qsUpwr6txzh7rY+HfasPSCByk46P2JHCY4KVBDJI7E2KR
-	 1/WP4KCXBOpzA==
+	s=k20201202; t=1736851552;
+	bh=dYsP0sVZWPBekkMGDIXlyZi+TLFVuXD+v/qKh6I6NG4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=twQv5+PelHi5qno8J5iACvKdZbw0+M2LnEhSklqqpBdEJ0/tlcy4uI7Puwiw5uUjv
+	 JcpI2BgeJZ7OY/OZlopGJrDSmqNtUIwrO0lvSNnv5pKRFIvOdZO8hKv04TyUfguUuO
+	 wq6kI63kmEBQd7Gerylfx7AcDAsvy08KsP9xCBYx6nkBcqlPzf9jmOGMe8v4eD4Y3F
+	 RXzLvOCPM5aCvx0lsxIZJnMR0qywOo+HwylROEIl/7pUeaoZXdC9BhhKEjX3RlCoGp
+	 lbhx7jUYCCZaL2QSPZPvGT7PlIh2NBCxXEfRWu1NOXM4KwfLc6UC1cephP7eX+j2ix
+	 3ddkHeG+tH+gQ==
+Date: Tue, 14 Jan 2025 11:45:48 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, stable@vger.kernel.org
-In-Reply-To: <173499428975.2382820.17644608915723809135.stg-ugh@frogsfrogsfrogs>
-References: <20241223224906.GS6174@frogsfrogsfrogs>
- <173499428975.2382820.17644608915723809135.stg-ugh@frogsfrogsfrogs>
-Subject: Re: [GIT PULL 4/5] xfs: realtime reverse-mapping support
-Message-Id: <173685071415.121475.12319911889394164801.b4-ty@kernel.org>
-Date: Tue, 14 Jan 2025 11:31:54 +0100
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: lock dquot buffer before detaching dquot from
+ b_li_list
+Message-ID: <bolbaetzmiqadzz4jdnz3xbugwyqnqmrskpicbvbs5ltrmfr5f@e7vvfbdb3shf>
+References: <20250109005402.GH1387004@frogsfrogsfrogs>
+ <173677158754.21511.9707589214851624907.b4-ty@kernel.org>
+ <20250113162134.GD1306365@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250113162134.GD1306365@frogsfrogsfrogs>
 
-
-On Mon, 23 Dec 2024 15:18:31 -0800, Darrick J. Wong wrote:
-> Please pull this branch with changes for xfs.
+On Mon, Jan 13, 2025 at 08:21:34AM -0800, Darrick J. Wong wrote:
+> On Mon, Jan 13, 2025 at 01:33:07PM +0100, Carlos Maiolino wrote:
+> > On Wed, 08 Jan 2025 16:54:02 -0800, Darrick J. Wong wrote:
+> > > We have to lock the buffer before we can delete the dquot log item from
+> > > the buffer's log item list.
+> > > 
+> > > 
+> > 
+> > Applied to next-rc, thanks!
+> > 
+> > [1/1] xfs: lock dquot buffer before detaching dquot from b_li_list
+> >       commit: 4e7dfb45fe08b2b54d7fe2499fab0eeaa42004ad
 > 
-> As usual, I did a test-merge with the main upstream branch as of a few
-> minutes ago, and didn't see any conflicts.  Please let me know if you
-> encounter any problems.
+> Um... you already pushed this to Linus, why is it queued again?
+> (albeit with the same commit id so I don't think it matters)
+
+I rushed to push this patch to -rc7 so I didn't end up sending a TY message to
+it. It was still on my b4 stack when I sent the last TY batch.
+
+Which reminds me I should update the message, as the TY is going after I push to
+for-next, no to next-rc :).
+
+
 > 
 > --D
 > 
-> [...]
-
-Merged, thanks!
-
-merge commit: 0d89af530c8c7591f75492e5814aa1ca4a0d26d7
-
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
-
+> > Best regards,
+> > -- 
+> > Carlos Maiolino <cem@kernel.org>
+> > 
+> > 
+> 
