@@ -1,264 +1,199 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC411FA14A;
-	Mon, 13 Jan 2025 23:42:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.10
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736811772; cv=fail; b=jFeXScRoLv4dQelxkJgvQ9RUBP3Q0LVJ/iQd5xfs9WTg9DvZgtAh4JNp1asUpBwF1oYL8op8hH9zUVzPUhaMGYPG94w5YN4pbSm3aJBo1Yavczn+IlH8fKvVxu24mS7zpaRR42UCYf8MNXlk1YpvKYUWKkx7Ut661DW5rOBz930=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736811772; c=relaxed/simple;
-	bh=6U2Kiz8UDreRWjlsqRKEwKL9eXTDkcXzIaetCpXU5pg=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=ufrY0JWvmkpGYJkAxxlSMqqwj8bCLW7RFM9x/S0ShU3t+EpgPKg8Mr6x+3vT/Of4YjkTclm8smIvx7IMefai9s0N91xTa3VSv4x68mnEchAIKsSmaU/6ljRHdKbmJWA2y3De3q7eq/sC/UlTPJ/ViwJh5PtjWRgIVAVKWtJcpjM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=J7yZEpzb; arc=fail smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43BD1C01
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Jan 2025 00:09:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1736813383; cv=none; b=JmTPcJ49VVwxm5F+ecblsQpjR+YO3XxWQ0Wwez/mozfDv0jiBMCBiVXIt0yKTR+YwrgkiyUFyJbkuuVc+ngtRhelDoCf4qty2BCM2fpn42558tzAQ5wW4NQGA/Xl/Esa3rVapUgFrnxabqUhfD/C5vGkRMbreUQQIbDYraOsYWU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1736813383; c=relaxed/simple;
+	bh=8duD0um65ze9pFKz6UfYQ4qf0fncx1lLOtE13qzU/lU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=scDJBWHfmZWptqHyrdTUxSfMUMYY8jpMyF7pjdWAXXgAWnzF2SqYbzlxcQOt3RcEqTntBkPAaytFq612dkcDIgkyMNvcxcY4S7ROvBq6Eduo1a6YT2P3ZthgJAELERHB6ox2dEkATBDaTpGCHmiTUM14s592Xo3Y8MVV2/Lf3KM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HF4n37Dd; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="J7yZEpzb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1736811771; x=1768347771;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=6U2Kiz8UDreRWjlsqRKEwKL9eXTDkcXzIaetCpXU5pg=;
-  b=J7yZEpzb/adDLkTQ/vuUQlxLFxXFTEEcFd5nNf0GN2+eWESbNoRRp03Z
-   j7Mr/mn6JCELovhmeLSrFCeEVqT43ovh7REgUq4HAB78iMD2YVIyw9RCN
-   1Plb3BQOtuGSYBCQgP8IbYbFmi9Y3L7/Er+wqGT3pazkxW1P0dxy85kHU
-   ahCLcObtan/58ZGNsEA0OXB0WysaEChUG+7GmVy0G1Xh9wpCd7x2C0LVf
-   HJUtkZ9ef1Glat8fTlckLzB/bwF4/9+2iDgEnCdmeAjhndoYjiQa802xQ
-   Vaom22KGL3lu8OhXzn8Qlzw3ewINJzaIWfrF/N94yVEWXE9EYSzlVCXGA
-   A==;
-X-CSE-ConnectionGUID: NgJeG+ZTQsij3l8wfOiUWQ==
-X-CSE-MsgGUID: AvXzrBV2Soe4wtOQD91LRw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11314"; a="48506320"
-X-IronPort-AV: E=Sophos;i="6.12,310,1728975600"; 
-   d="scan'208";a="48506320"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2025 15:42:50 -0800
-X-CSE-ConnectionGUID: 7Kay4xcESxWbGbTdxhr9HA==
-X-CSE-MsgGUID: KTNrm/tTTtSgJXM4aSquNQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,312,1728975600"; 
-   d="scan'208";a="105195891"
-Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
-  by fmviesa009.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 13 Jan 2025 15:42:49 -0800
-Received: from orsmsx603.amr.corp.intel.com (10.22.229.16) by
- ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.44; Mon, 13 Jan 2025 15:42:48 -0800
-Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
- orsmsx603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.44 via Frontend Transport; Mon, 13 Jan 2025 15:42:48 -0800
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (104.47.70.43) by
- edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.44; Mon, 13 Jan 2025 15:42:47 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pRD/JOJK7VpJa60Fwq8YFG7DDWrHenXcfS0sIpKYqCDm9+fghSTgW6DkqqeMi6cpHlOsD2oWkmhv6a9we93icGCak8frUaaRyO2GHenKNfYQ1pat8IQE0PSker8TZdTpz577eAKNeuXM7vJa/yaIdVYogegqjNG3K4l81oTGHtboS9O37vQ6MzPmBVHh1HJk97WfsFQJZZREU3zGHZ60YRjYamHehr3rrQ30fRFv9pLGFhUa0oBMGS/MMbImxDVbMzuhrfQM0jJAFmFqVBPS2+6r7UDCHTzIph4IzKlFOJG6ges1v4GUH7hpbnS2gZ1Q+PyMoAJI1w1/64wriD47GA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SJt70HYLmkyoPm8Mjsft1q2AwGWloV7NENJoQQTLMkE=;
- b=xzctCQ3eCINXjR7gi35em0eNeJX4J3yytwFeGykIaCSHegN+HEw2yqeVZgbBrZmR+ZtrX/iAT0APHpG7a6/kXBVePDp9Pr3WvQPBP/BxaNp5sRPSxWVjk7uO794hg32z98HDUFOz0eLFOv5fq8m9jKoONNG8UdGFBZWZwPlpZkb0xtMYKiswMPbMb0OKp8N3xD3Ss1K51UAPpHxfVP1M4s98jO6K2LgVUOVoK4v82mW39yRATXYRjPo4reUlt2aCinMHqg1vckKQ+vZcZa0ee9R/3LnxAAhgiJ3iHiah27RX7Byw3r+KcHZHKbcsuK9bFc21jXlFm/PKRMAS2U0ZAA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by PH7PR11MB5982.namprd11.prod.outlook.com (2603:10b6:510:1e1::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8335.18; Mon, 13 Jan
- 2025 23:42:44 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::6b05:74cf:a304:ecd8%5]) with mapi id 15.20.8335.011; Mon, 13 Jan 2025
- 23:42:44 +0000
-Date: Mon, 13 Jan 2025 15:42:39 -0800
-From: Dan Williams <dan.j.williams@intel.com>
-To: Alistair Popple <apopple@nvidia.com>, <akpm@linux-foundation.org>,
-	<dan.j.williams@intel.com>, <linux-mm@kvack.org>
-CC: <alison.schofield@intel.com>, Alistair Popple <apopple@nvidia.com>,
-	<lina@asahilina.net>, <zhang.lyra@gmail.com>,
-	<gerald.schaefer@linux.ibm.com>, <vishal.l.verma@intel.com>,
-	<dave.jiang@intel.com>, <logang@deltatee.com>, <bhelgaas@google.com>,
-	<jack@suse.cz>, <jgg@ziepe.ca>, <catalin.marinas@arm.com>, <will@kernel.org>,
-	<mpe@ellerman.id.au>, <npiggin@gmail.com>, <dave.hansen@linux.intel.com>,
-	<ira.weiny@intel.com>, <willy@infradead.org>, <djwong@kernel.org>,
-	<tytso@mit.edu>, <linmiaohe@huawei.com>, <david@redhat.com>,
-	<peterx@redhat.com>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <nvdimm@lists.linux.dev>,
-	<linux-cxl@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-	<jhubbard@nvidia.com>, <hch@lst.de>, <david@fromorbit.com>,
-	<chenhuacai@kernel.org>, <kernel@xen0n.name>, <loongarch@lists.linux.dev>
-Subject: Re: [PATCH v6 07/26] fs/dax: Ensure all pages are idle prior to
- filesystem unmount
-Message-ID: <6785a4ef988a9_20fa294d4@dwillia2-xfh.jf.intel.com.notmuch>
-References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
- <704662ae360abeb777ed00efc6f8f232a79ae4ff.1736488799.git-series.apopple@nvidia.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <704662ae360abeb777ed00efc6f8f232a79ae4ff.1736488799.git-series.apopple@nvidia.com>
-X-ClientProxiedBy: MW4PR02CA0017.namprd02.prod.outlook.com
- (2603:10b6:303:16d::24) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HF4n37Dd"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-21670dce0a7so104512795ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2025 16:09:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1736813380; x=1737418180; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=4PvNuu1s4hJpBZBc9EGTOF3JLqWN/EA3PJibkNXz5FU=;
+        b=HF4n37DdO5Y1xk2urQr4sEEy208Ii+y7VuYTIMZsX21bQKrC13A4bkgHhapo3SGcU+
+         6QntuQQFSUjty5oUClOVw2NotBWbnQoG+topOMvA+m2kfKu7A9Ibq6Rcz8moYP3IFNsi
+         qvm1T127le+i+L1ftnsvk/1Ne+l9V5FNHX5fhZ8Eo+5DeiXPH1+c/PhkgQGXQIXn158n
+         FiTnJOxMemEyXYJ5NOACRorKMiX3pMzd2A29NqtbmYdwuN6SRsF49IudsbrpDLK5xy6X
+         E+iKFmCbEEEmt6rC2vz4eB5uDCGcKXrB8tSOya522/CXkIrXIJcePy3ALYOE33q59xPH
+         5D3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736813380; x=1737418180;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4PvNuu1s4hJpBZBc9EGTOF3JLqWN/EA3PJibkNXz5FU=;
+        b=DjZacv4mwHLX6o/uv4O4rH49HPT2AvLNi8I3WLpi+ADPT30txn9nRwHVmc7MQHOU2e
+         V7xrf1rP9PHqn340s5Ip8mdp/cikWrmrSPQ22zA84lxu/9zyedafOKpm/ZWKp6vCJ4Rx
+         mstqg+oK/OOmAWNDtig8JVVarHgrWtvjuo75O87Uggha2gp3F325Er5DygigRFd3k/Z8
+         OaeOYucJ0ghVAh/Mm0wjGR1XwIi2W2nFIbI3ps9piATkRMD5PE7zqhUu7KgETZJRv+Ot
+         zAy3d7GVhc29pivchf/9OZxB6jOXhUiqP3THY1rpn5khgZ0mH+hLYkyKq3tMWFwA5EvT
+         FLag==
+X-Forwarded-Encrypted: i=1; AJvYcCX1HQzSLsMPLTlC0KHZ334CwZ498WLNEIKYHZdKYPBS2yrLjjN5ftCUK4Xp/YMu5ud3llp4EzzpwO8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz1XepngD4uBDDFtNN5ZDvTT7YAAl2leyXu1Ac0j7an3lc0hOM6
+	L1WZpJXfjknlYiMXwyf4omTTfq8I4j89IAfMdp496NBK+A9R37TsR11KKh9oSSA=
+X-Gm-Gg: ASbGncsTGzk/0Sj/hL1A+a6N48oUkZaeWUzC1X5xBpJCQhSYYt3eICtpLd/XV3uWQa5
+	Yv+wx1eUySUUV5S4z8fh7GO38eQv8pYjzqTYSsg9iZz6zbMpj+HoULd5ieZxJgB0YS9VmAwaQ2Z
+	mmw+c+mctyHBlqgeZzFyASzHkVrkbVXaWH8xDgjpBU57lVaLDqN40Y7To1PAmubFKvtVfsozKWb
+	tASRcH4Gnjqu5uhPS4P9Y258G3+QuaxJhlGGXyr/gHnScn5SkzWpnLpYgSJGRv0fqzPsi/3Dl9D
+	0DG/0Mk/abvzr/k+79YpAQ==
+X-Google-Smtp-Source: AGHT+IGfvAiS1KOlFTwtHp4rp3pE2JZ6vaJJKwQSOdSNt7t6H/H9wirlwG5RaLC2orygEQDjmeBgIg==
+X-Received: by 2002:a17:902:ecc5:b0:215:bf1b:a894 with SMTP id d9443c01a7336-21a83f76704mr350424525ad.24.1736813380177;
+        Mon, 13 Jan 2025 16:09:40 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21a9f10f019sm58773475ad.26.2025.01.13.16.09.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jan 2025 16:09:39 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tXUUy-00000005XqM-3wHD;
+	Tue, 14 Jan 2025 11:09:36 +1100
+Date: Tue, 14 Jan 2025 11:09:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Chi Zhiling <chizhiling@163.com>,
+	cem@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z4WrQJN1cbL-lZl-@dread.disaster.area>
+References: <20241226061602.2222985-1-chizhiling@163.com>
+ <Z23Ptl5cAnIiKx6W@dread.disaster.area>
+ <2ab5f884-b157-477e-b495-16ad5925b1ec@163.com>
+ <Z3B48799B604YiCF@dread.disaster.area>
+ <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
+ <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
+ <953b0499-5832-49dc-8580-436cf625db8c@163.com>
+ <20250108173547.GI1306365@frogsfrogsfrogs>
+ <Z4BbmpgWn9lWUkp3@dread.disaster.area>
+ <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|PH7PR11MB5982:EE_
-X-MS-Office365-Filtering-Correlation-Id: f076b62e-0fd6-49d6-014c-08dd342bfa02
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014|7053199007;
-X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?hjsnFPeBDgK3lJDqDJR0rXOSJ6OWH2dMwbVl1M7Jk7fevE6qzIMoZ5GOgwNH?=
- =?us-ascii?Q?yW6aVlsK1OSg7qQ98xI6Xp2kd4ukRN5t1g5NfuLYfx3wC8Epz/TlXr31ER7O?=
- =?us-ascii?Q?ToQeQgHGjxMgu4Nr+HiSSNXC1nVU8GlN+15KH7nRcWT/IuA25YBWWx8aaUqy?=
- =?us-ascii?Q?gk7RWhndufW2Qt9W7gssjn+MTLMu+siJL93R00rpNzVdpDEmlO2MD13iDcV1?=
- =?us-ascii?Q?s7MGaKiCAtE0RZTreLO2VVFK4N8r9KXXjTSAZtpIIxgGAUEUTLnDCYvFdUbk?=
- =?us-ascii?Q?1PdRNK6ll6SdoU3KdmGdqe5rCPkA4vEltLs+vQw3XNRNKs1jDpftsz0vmuRY?=
- =?us-ascii?Q?VCULJ7Uk7x9n0l8XFeqat3VqOkKKqMMsIBTC5nJTbe0nN33qEx2NCevN81yx?=
- =?us-ascii?Q?iYEw4XIKSic1G1OtPZRaRexSlcKGdkKxeIw6Tr7Olzk1K/SBknEwVnVUAIsh?=
- =?us-ascii?Q?S8vmljP4B2OmsapwJAPKWU8aiLjE6fKWPmeksw3mUESh6zp0+IoqJJY+44wM?=
- =?us-ascii?Q?iVm0we5BgC6TK0dP3aVo2U20QZ/te17GnxmqrLIh13A7U8P/YDktQ7MlZvG9?=
- =?us-ascii?Q?kdh2NZZFPoZe9E2synPPDyUKyb1WGwe68xjXJrxREBdoQ10C7rMrVbokA9SU?=
- =?us-ascii?Q?UZVi5F47BVtwsTG7uJkjeXSxJHm4URwg0ADY+iUdIYTkoFXkoqeTzUuUv4cT?=
- =?us-ascii?Q?O6lLpcMhYbKVfTRObzDwtDP7aO7iEDEvp0hd6c/RKYo+ze6bGOrg9sQ8Zejb?=
- =?us-ascii?Q?L/YI3DBWue8b6u8xXf+WyGSRw7NujyvBNIzJ+NtLOkX5rVojopX0TYwbJiB3?=
- =?us-ascii?Q?HtfU8iyaQOmn+dVZGWjA+kZX74tEGJNIgiLRl1QbLNokbSh0XtJJPURY8YE1?=
- =?us-ascii?Q?Kur2ZLghAW9628IMTAW2chKQBL2EBM4VNDOOcO4ZHxFmCMOfCs6GDje+wv+7?=
- =?us-ascii?Q?lsFc5CkcrL/P2FU715AT7ZGk4U5kTjjEJgEPLIP1L6o6pELj0CNNATs2ZUQf?=
- =?us-ascii?Q?JJngYvL9IYcIAhZ9X6799AScFmjdt9SAbYlAf+41ycelHDgat1veLfdoDkbc?=
- =?us-ascii?Q?0urHvKPmW/VaV+Ep8ZSPK9QdDldA5mU4w+PXJ3F9OhM4a+a5znPtfbZ+FEdN?=
- =?us-ascii?Q?7Mmc3UoU5fRsaWZq/sss0Z4aTFUKeRJgJMNxIgM9deGihhhhQEc8uh1kAPsD?=
- =?us-ascii?Q?Al/se1tfdrmvlpPUEyy0fcVDkCxsyGJwBdprBSJs3tThDpSVLJU2VmXvBWph?=
- =?us-ascii?Q?4lObqbjG4T7vvcE1DGlaW+18bsGuZ9QquEvWfXhLBHYGBSqLF9P1P5Ru9hVS?=
- =?us-ascii?Q?khJjYQPQHY4JnrIWMZvcTSScoc+INpiYvJkvt3teRIJ6xo+DYXHwGTwhEBpq?=
- =?us-ascii?Q?TRxVGwnb5CqgAHKxyjSFeLfryto7?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?NaE0GIdJU4HC8JCyt98il/hqiwcY6p7YOrRoXTD9NBDGuRQzY/Thb06J0/wM?=
- =?us-ascii?Q?s/4va1SteFjyT3fq5rLOsL33WCQdrzMjm+ZALqhHC/PwIq8WiGWn/sliboTG?=
- =?us-ascii?Q?LY8w/+OAZrd+zTRMf41praitxdBwtqcu7we+ffoQlpZj24HcPLdSAO7y9tbT?=
- =?us-ascii?Q?3YXxICg/rw3wgpqTtdRbPU4Yp9Yua70qflBt+n/tpSj5yG+4N5xB+zmbiUjG?=
- =?us-ascii?Q?YZksJf82EfB++ylfWmy66jzqclNIHELLw0zXLjtdxXgiv4eK2aHrXyYMpvCg?=
- =?us-ascii?Q?KzPqzgdKrEk0WAdo5JzSPszANp/amoJ2Y5gedUUjCEX4Pekagg/eNOm064bd?=
- =?us-ascii?Q?RWmjuOsN/JqAKEsx7soAMPpewGAnBRrEarS3NY1iwy3/S3GEq5X6h7VaCfCv?=
- =?us-ascii?Q?ZcO8BZhAVA012nDRePg135WLL0lp0fSBQADkX88W4RIWi+0x9hpbq9HrC88Q?=
- =?us-ascii?Q?T3EtjA02d33O0ygqWGSpvho9G5r8LRtoohW49rU7e8hPOC7j5bHBvW3la3SC?=
- =?us-ascii?Q?hH4VyvHgojClePm7sJEzUvrsxyz3vucG3vjdVdnbmg9xPzI/VuPPKfluOP29?=
- =?us-ascii?Q?iWpY9qSopWvlZPJZRpU5sFuHtx8CyzIrJiEnPfs2mFEoJaKQPdwpxlfToAn7?=
- =?us-ascii?Q?vEW5fPtrT37WHbNrtTgQ0koRTrq2wEp3AWs1RVjfOXKqIm9fDmzKJjU2x8Oi?=
- =?us-ascii?Q?/VHwVNY0oe50ckC82fA3ZHpeoNT5uSP1VTehBYCJO97DM4mF6TNzDdoykPn2?=
- =?us-ascii?Q?XlU1/VnLHssuiVjBovnUxW0OgN9oxbnVEI85xKePYvitqklUQGB8UVTApCdQ?=
- =?us-ascii?Q?OFxpOnSmo5VJb0qwJUBQ8TTvFflNV4LHRMSt5DpKCMZs5Ns250yCjVAEegPr?=
- =?us-ascii?Q?tc4a7VbhLVPqGkFVmuNycJRqlNkzximvJgjyTVav26PchIfz8xEKMuV29lcs?=
- =?us-ascii?Q?KkZqjGOpWUaIk1EjmnBozE3RveV4CY9GylTvI/mlTj8QO4yKek8YO3jN5VIg?=
- =?us-ascii?Q?KbjA81QX2yw771EV/gCIVfq2k2T5drqM1S0yOmmKKOWEhug9rk9XqsEB5bZ9?=
- =?us-ascii?Q?RljbskpqKdUNfVi7jqj65u6Qz8aianq0qHjVJks6D3qhFRvJwM1qans8aMaJ?=
- =?us-ascii?Q?La3ihwDzVRMTVn2ZqrNgAgIaodOA3E5oFCfwaJVagP/FwL7b6amHIohFMlUT?=
- =?us-ascii?Q?PSLn1KczKM1eTZWfuHyV+iX361W19LzorNw0aErAL/hhFiGSU2V0/CxbCXIg?=
- =?us-ascii?Q?nMomkGjsuGBPtQa4lkAAXs7xVX38jdq0oTUrhWAVi8H1BKT81fQV+CmR9FlR?=
- =?us-ascii?Q?yRRbZ8xW8j4oKMTEoT8LhuKGk8kSH8reWfhGtk9E2r3p/zBUN9yAi1SyHf08?=
- =?us-ascii?Q?RRK+ZtX0hMQk5QNNOkLhTUxKHk8vIVQ3n1y1lFwm7kI/1vjuPHWl+azOcGGr?=
- =?us-ascii?Q?euauXVgnQCKtYNCpwybhSv9GR1Sy5O6FX2bpw7FAx4TFD5FhaCEfm9377G9N?=
- =?us-ascii?Q?dt4Dq1E9UBQb/Hk1e8jvmGqHQQt5peZxddhHmw1HCyVdzWKpiQ5arNJeRW25?=
- =?us-ascii?Q?0EtVen5Scq3H+euNZm6o5RzStM246J5/qCgdPex+a7AGEy8zQsCRW9eAac+J?=
- =?us-ascii?Q?OA=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: f076b62e-0fd6-49d6-014c-08dd342bfa02
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jan 2025 23:42:44.0675
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: koOztr/0bQNiw0htfoM1zY0BJiffGhWwFRnCytNewfv4cJMrgijk7YmKbVo4sQ09Vfve/nPTxXfPy8OCQvqXT4U34SVQ25Iu6f7aI07j02A=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB5982
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
 
-Alistair Popple wrote:
-> File systems call dax_break_mapping() prior to reallocating file
-> system blocks to ensure the page is not undergoing any DMA or other
-> accesses. Generally this is needed when a file is truncated to ensure
-> that if a block is reallocated nothing is writing to it. However
-> filesystems currently don't call this when an FS DAX inode is evicted.
+On Fri, Jan 10, 2025 at 06:07:48PM +0100, Amir Goldstein wrote:
+> On Fri, Jan 10, 2025 at 12:28 AM Dave Chinner <david@fromorbit.com> wrote:
+> > That said, I just had a left-field idea for a quasi-range lock
+> > that may allow random writes to run concurrently and atomically
+> > with reads.
+> >
+> > Essentially, we add an unsigned long to the inode, and use it as a
+> > lock bitmap. That gives up to 64 "lock segments" for the buffered
+> > write. We may also need a "segment size" variable....
+> >
+> > The existing i_rwsem gets taken shared unless it is an extending
+> > write.
+> >
+> > For a non-extending write, we then do an offset->segment translation
+> > and lock that bit in the bit mask. If it's already locked, we wait
+> > on the lock bit. i.e. shared IOLOCK, exclusive write bit lock.
+> >
+> > The segments are evenly sized - say a minimum of 64kB each, but when
+> > EOF is extended or truncated (which is done with the i_rwsem held
+> > exclusive) the segment size is rescaled. As nothing can hold bit
+> > locks while the i_rwsem is held exclusive, this will not race with
+> > anything.
+> >
+> > If we are doing an extending write, we take the i_rwsem shared
+> > first, then check if the extension will rescale the locks. If lock
+> > rescaling is needed, we have to take the i_rwsem exclusive to do the
+> > EOF extension. Otherwise, the bit lock that covers EOF will
+> > serialise file extensions so it can be done under a shared i_rwsem
+> > safely.
+> >
+> > This will allow buffered writes to remain atomic w.r.t. each other,
+> > and potentially allow buffered reads to wait on writes to the same
+> > segment and so potentially provide buffered read vs buffered write
+> > atomicity as well.
+> >
+> > If we need more concurrency than an unsigned long worth of bits for
+> > buffered writes, then maybe we can enlarge the bitmap further.
+> >
+> > I suspect this can be extended to direct IO in a similar way to
+> > buffered reads, and that then opens up the possibility of truncate
+> > and fallocate() being able to use the bitmap for range exclusion,
+> > too.
+> >
+> > The overhead is likely minimal - setting and clearing bits in a
+> > bitmap, as opposed to tracking ranges in a tree structure....
+> >
+> > Thoughts?
 > 
-> This can cause problems when the file system is unmounted as a page
-> can continue to be under going DMA or other remote access after
-> unmount. This means if the file system is remounted any truncate or
-> other operation which requires the underlying file system block to be
-> freed will not wait for the remote access to complete. Therefore a
-> busy block may be reallocated to a new file leading to corruption.
+> I think that's a very neat idea, but it will not address the reference
+> benchmark.
+> The reference benchmark I started the original report with which is similar
+> to my understanding to the benchmark that Chi is running simulates the
+> workload of a database writing with buffered IO.
 > 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> 
-> ---
-> 
-> Changes for v5:
-> 
->  - Don't wait for pages to be idle in non-DAX mappings
-> ---
->  fs/dax.c            | 29 +++++++++++++++++++++++++++++
->  fs/ext4/inode.c     | 32 ++++++++++++++------------------
->  fs/xfs/xfs_inode.c  |  9 +++++++++
->  fs/xfs/xfs_inode.h  |  1 +
->  fs/xfs/xfs_super.c  | 18 ++++++++++++++++++
->  include/linux/dax.h |  2 ++
->  6 files changed, 73 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 7008a73..4e49cc4 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -883,6 +883,14 @@ static int wait_page_idle(struct page *page,
->  				TASK_INTERRUPTIBLE, 0, 0, cb(inode));
->  }
->  
-> +static void wait_page_idle_uninterruptible(struct page *page,
-> +					void (cb)(struct inode *),
-> +					struct inode *inode)
-> +{
-> +	___wait_var_event(page, page_ref_count(page) == 1,
-> +			TASK_UNINTERRUPTIBLE, 0, 0, cb(inode));
-> +}
-> +
->  /*
->   * Unmaps the inode and waits for any DMA to complete prior to deleting the
->   * DAX mapping entries for the range.
-> @@ -911,6 +919,27 @@ int dax_break_mapping(struct inode *inode, loff_t start, loff_t end,
->  }
->  EXPORT_SYMBOL_GPL(dax_break_mapping);
->  
-> +void dax_break_mapping_uninterruptible(struct inode *inode,
-> +				void (cb)(struct inode *))
-> +{
-> +	struct page *page;
-> +
-> +	if (!dax_mapping(inode->i_mapping))
-> +		return;
-> +
-> +	do {
-> +		page = dax_layout_busy_page_range(inode->i_mapping, 0,
-> +						LLONG_MAX);
-> +		if (!page)
-> +			break;
-> +
-> +		wait_page_idle_uninterruptible(page, cb, inode);
-> +	} while (true);
-> +
-> +	dax_delete_mapping_range(inode->i_mapping, 0, LLONG_MAX);
-> +}
-> +EXPORT_SYMBOL_GPL(dax_break_mapping_uninterruptible);
+> That means a very large file and small IO size ~64K.
+> Leaving the probability of intersecting writes in the same segment quite high.
 
-Riffing off of Darrick's feedback, how about call this
-dax_break_layout_final()?
+Likely - I recognised this granularity problem, though:
 
+| If we need more concurrency than an unsigned long worth of bits for
+| buffered writes, then maybe we can enlarge the bitmap further.
+
+We could also hash offsets into the bitmap so that offset-local IO
+hit different locks - the bit lock doesn't necessarily need to be
+range based. i.e. this is a "finer grained" lock that will typically
+increase concurrency. If we keep striving for perfect (i.e. scalable
+range locks) we're not going to improve the situation any time
+soon...
+
+> Can we do this opportunistically based on available large folios?
+> If IO size is within an existing folio, use the folio lock and IOLOCK_SHARED
+> if it is not, use IOLOCK_EXCL?
+
+The biggest problem with this is that direct IO will -not- do
+folio-by folio locking, and so folio based locking does not work for
+direct IO exclusion. Currently we get coherency against buffered
+writes by writing back or invalidation dirty folios before doing
+the DIO read/write. Because we hold the IOLOCK shared, a buffered
+write will not redirty the page cache until the DIO write has been
+submitted (and completed for non-async DIO).
+
+Hence moving to shared i_rwsem, folio-based range locking for
+buffered writes will lose all serialisation against DIO operations.
+We will lose what coherency we currently have between buffered write
+ops and DIO, and I don't think that's an acceptible trade-off.
+
+i.e. The problem with using the mapping tree for DIO coherency is,
+once again, locking overhead. If we have to insert exceptional
+entries to lock the range in the mapping tree because there is no
+folio present (for DIO to serialise against new buffered IOs), then
+we are simply back to the same exclusive tree update scalability
+problem that tree based range lock algorithms have....
+
+That's why I suggested a bitmap lock external to both buffered and
+direct IO...
+
+> for a benchmark that does all buffered IO 64K aligned, wouldn't large folios
+> naturally align to IO size and above?
+
+Maybe, but I don't think folio/mapping tree based locking is a
+workable solution. Hence the external bitmap idea...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
