@@ -1,139 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2072.outbound.protection.outlook.com [40.107.244.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BBDD232452
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2025 06:33:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736922784; cv=none; b=PuPrkkAnGN4KJErEv+hqpQbTHZwmSsRZS+4g9mQ7Zz+sO4zgZdOePil1sUmiMeeQce6r1RUinDo7t6ZJyvu8WZc7TcwuX2Ubil9f2685tWfNukRvgn7+4WmOzL5QnFTPVwypZLd+3Ywr920bT4F0WJGslRhRRWsR8xSz420hpi0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736922784; c=relaxed/simple;
-	bh=HEGWGFjg1JyCxSaZVEJFmDXPMf3XbvmShmZXlXAMzIs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AK5p0jCzKbXbTat5K2phrbQussMHFvQKNvHMV0cf219jW78/y46yWz3/3CcTDZyO7o6bolqFqtT4cZ7xqlVU8LU04EyJ+VyMwR/Sr71sfRmCBY6iVU1DzhW12V6IM2aPIXmSYqh9O2CRngrPL0jyfCnqA16ECcwPcXiOtkg2P/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qhnwn1tN; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C9131E04BE;
+	Wed, 15 Jan 2025 06:38:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.244.72
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1736923095; cv=fail; b=IaHXH6ceMDWSpvgMnb6CNIUG5FNDeNAXAg/wT8Iwc/0rOmanmSeUVrWfSmmytEElHcHM94yNidGfs4URZ7oy8Nhi+uGpg3wosZ0cfX6fx0fpjXvx8QQPXZ4g58Vlh4xAA0XBHDSTNai+jWDr6IAC49InCht0iFYBMvljRWBa0N4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1736923095; c=relaxed/simple;
+	bh=xfwx8szzA79GeMwa8YiuAiiuZ1nqyifzyyhX+crJD38=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=tUzNKmIaZ5o2DUW0ts7+KoR8ua6okWDnuDLiKwrv399HW7kkurmd3LaAX2HaB0h2tr2tcHFdGyzoe7sg9YkdYlnBXDS+LvVG4DOctUAfIQ4PECHuzhZCmh16bPBG+0kRtOaL2qiWHjbOow7qIGWnysn0gY3gRfU54vG0o/tun0Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=lenOI+IW; arc=fail smtp.client-ip=40.107.244.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qhnwn1tN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC460C4CEE2;
-	Wed, 15 Jan 2025 06:33:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736922784;
-	bh=HEGWGFjg1JyCxSaZVEJFmDXPMf3XbvmShmZXlXAMzIs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Qhnwn1tNI5mF9mshG2W1jmEerSHhRMjWUCIWEliT1YFRHGF104+CaqM0JJdpL+n3C
-	 j+NfEidUUeqa7fD/AMSLOEEaM/bAT+i9w2fRwJP0XsXvA5+u2BDImCz4FgtKRDElhL
-	 ow2oW/oR+m9uLSXq1z2ZXxxTxevEpDpx9dPXL6xOANiFs1UfcNpuw37khzzOsUdXu/
-	 0iqTmiHJME2RQB8q7sxpDlHgJQI62iSFaKbT8f/PXpMtydwYOilaHKmEBcxneeb1pu
-	 6T6spdzmMEZIt2Wi16M6tBi188frDAopcRo6+9cxu7gXIaKEJWYgNcjA96Q/u/pZ5M
-	 AubvbjYt7AZ9w==
-Date: Wed, 15 Jan 2025 07:32:59 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de
-Subject: Re: [PATCH] xfs: Prevent mounting with quotas in norecovery if
- quotacheck is needed
-Message-ID: <4hrmepee4r7hvufcpug6rlacza3eicdl4yr5euztnydofx5fmk@ccyoguaedfxn>
-References: <20250115061840.269757-1-cem@kernel.org>
- <20250115062438.GG3557553@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="lenOI+IW"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=App8UN1S3JouPiXuWxcy4mOcMHj+qn66FUEaLqqs5cUSY4Gc41FsU8GehsLkw0uVDl6lz3AruGZ61V5YGNdzgl6jQG2M+D3w9X6J8koc1wNKmNr76hq7qQJgRk085t+Cqx2Lx2drhdQFEoo+DIIdm+5kXrKFvTaNn/xECQXQjqt+G69errM3GeA7L61iRQJPSynVzPlK6l9ufuk8mRt8BkGrymBpsylTymurDvbT7W2MjmSIqdN9A/YD2FUB9BXm2mYNy4RRHymuZpAniCy9PSCwHL4QFVcLGZXFwFvXlXB9PGhCg6lODWedGP2/O4BnUgmQ7dwCbC3e2PpbMZ/w1Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Fy0hdU9kmhJfOaHknI9Qw+omeb8Gz6hFekYnxTQBmmY=;
+ b=CdGMbiiR7gCidenCwt6T3oTugdVDJfZmqpBi6y999nVLzf3pmVX0dEShWZW0cxxEm+NoMgAm/CRI2gpdyT8qOqQbn6qNo/DQbupM/zinT+a8eZD8js/lk2se5h2IGIRRPuBEuxPCPTVCGqpmac1Ln5VuvqRuOo0OySYilWX93A9w+ABydCH8ohEB9OdNRinHKd2r8WR7XLwfGmPvXso8NDw3VaNsloGwckKjtJgvvCJKOoqtdSFbebdyMg5Se9Myt6MhhzwqvIgE8rzuS2wNfVFRJEKtaf05aoXFWru7QeTumsGNAkrbD7oBIvhYOHueM0rBapqBPbYvJO4urzh6qQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Fy0hdU9kmhJfOaHknI9Qw+omeb8Gz6hFekYnxTQBmmY=;
+ b=lenOI+IWTQQXlB89D9FW/Jacu9OtATjD+1CCarUhWKPk1MuyrCWGHoRRleQDw+lRstkUbaf5u3mi+Q3X4cSbaWCbbzh62/k19qPz3B+qgGGBmFnlY7PDUq2mxRxfe747TfoKRdXPQfTOur2eo/fMOcHzdMnURTU7HHp+KFwNrwjvBNoeZXAznCmPLCOHvqIuI7ynwqJBLTAOQ0/Egly3O1qMxkyYE4uHUxBG11H+E6TpRHPij7isMAjvnMyzTVV42mfDq/7u4LncoAGLPaAvy/J8AYjHyY4IG1HoCFyVt4b4l2Kam23ooBWgzv8OPdUGzh8nyO+6X6rwCUz3VC4TVw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
+ DS7PR12MB5790.namprd12.prod.outlook.com (2603:10b6:8:75::18) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.8335.18; Wed, 15 Jan 2025 06:38:10 +0000
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe]) by DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe%7]) with mapi id 15.20.8335.017; Wed, 15 Jan 2025
+ 06:38:10 +0000
+Date: Wed, 15 Jan 2025 17:38:06 +1100
+From: Alistair Popple <apopple@nvidia.com>
+To: David Hildenbrand <david@redhat.com>
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, 
+	linux-mm@kvack.org, alison.schofield@intel.com, lina@asahilina.net, 
+	zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com, vishal.l.verma@intel.com, 
+	dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com, jack@suse.cz, 
+	jgg@ziepe.ca, catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au, 
+	npiggin@gmail.com, dave.hansen@linux.intel.com, ira.weiny@intel.com, 
+	willy@infradead.org, djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, 
+	peterx@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, nvdimm@lists.linux.dev, 
+	linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de, david@fromorbit.com, 
+	chenhuacai@kernel.org, kernel@xen0n.name, loongarch@lists.linux.dev
+Subject: Re: [PATCH v6 15/26] huge_memory: Add vmf_insert_folio_pud()
+Message-ID: <ubf5hakohi4hhmoqdxk255rwarwv3vwt7j3l5aqtznorfcxx6r@37jhsud4gjtw>
+References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
+ <60fcfaa3df47885b1df9b064ecb3d4e366fc07e7.1736488799.git-series.apopple@nvidia.com>
+ <fb1b7d1d-33da-4de1-b863-61ea8421c7fa@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fb1b7d1d-33da-4de1-b863-61ea8421c7fa@redhat.com>
+X-ClientProxiedBy: SY5PR01CA0119.ausprd01.prod.outlook.com
+ (2603:10c6:10:246::15) To DS0PR12MB7726.namprd12.prod.outlook.com
+ (2603:10b6:8:130::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250115062438.GG3557553@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|DS7PR12MB5790:EE_
+X-MS-Office365-Filtering-Correlation-Id: d0b46ec6-3147-4b7b-147c-08dd352f2d6e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|7416014|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?CWI99AWTjKNAN+yv/UKEJl6cnddjQJ8PZa0siiKvDK73GO7hWP/726bVJYIs?=
+ =?us-ascii?Q?gOXmS97+IBHsScf8VXHkBJ2xoYxVHbJEmw2uixn2zkDqT54ZDDd9itVltAKt?=
+ =?us-ascii?Q?IY+T6pmXjII5FkaZ1PWnd7eJH6v43jpsHL8dY+v9TEy1zCnLzdjazP3U9cAr?=
+ =?us-ascii?Q?ZTfNQk9Ua+wk6WrJypFHqlP8r/lXjCX59GttZ66P+ckXqme/k2DPLFtW9XpJ?=
+ =?us-ascii?Q?yowgMBfqy6QJcW0Nw8deizyAeDRpThhKBYxpVbRmXqYt0Mw5zlR9QQtwk9sj?=
+ =?us-ascii?Q?fh0t5oZEQv1pw5jaBYOqaVqBtYdqN1ZRC2gfxy+vOBLZ3NFcJ5uMUQqPUBCd?=
+ =?us-ascii?Q?FddohIVAYqoUbD1W5IGtRRgLhj23ae+nhV5kYRLrxfS/Jyf2vfiilhFjl7Tf?=
+ =?us-ascii?Q?h4VDRPkXSDg2ObxgXs8GUuhhAhTRfunC6ZGVGF1IjSi0iTGGKlIWVpVJLaZg?=
+ =?us-ascii?Q?QVT/OQr78gsKUywBGf00tMskBR7uE3acosU3khd8cp6N0o6WOEkGluirbOU5?=
+ =?us-ascii?Q?vgY2z0tqJIyqTCvKOMMVTYGhfU6Q6ISOXSPLj/rlIvD955HkBFDAM+DWBeJE?=
+ =?us-ascii?Q?yjwg1MalomR0iKMRoIgQCIl08MCS6NVnJRyfHEEZX7Z3keibUltj6lh1adV5?=
+ =?us-ascii?Q?ch1ThHeZ4NcC+SyMvXlY1x7OcNkaXnnWqSz8KaXWfRswndWrU2jz3ho/i05o?=
+ =?us-ascii?Q?xdu6dGttWmx/YQJa2D550sTeKfFVYR2s5YNwNCq7HJ7Uwv/0oV6Vn1oECeo0?=
+ =?us-ascii?Q?lUpCyAG1Qi6S3h5Rjoqsg17KuQlQFFteYwkJATIbI668FkAvtBG20YxY0XE9?=
+ =?us-ascii?Q?9b2dq2RhsNsF3V0/euW3HUQY7/DgtpNgtET5u0/fhbpU00D8kdnlgAG/mQmX?=
+ =?us-ascii?Q?LCqz6TrgHLM7SU7tRgxR3i+jmV5ZUJgCZUifNNOd3JpTJxd3anpMdXBZt8MR?=
+ =?us-ascii?Q?1K+HyNPNFXD7oJbMSDrFAliL0UdkWarfdMGuXCZZA59T6nn+/evigCSD9oBY?=
+ =?us-ascii?Q?6tmI5bKgJdF2siytsPLlTeKTd2xv4fqN7jwWHeHXR6ONyarb39xbu/IarxUc?=
+ =?us-ascii?Q?RxNB2l122l1gprVTXZbrv69OgPvmdErRtc4WdKhoVI+yptg6QSev+0EhWyAT?=
+ =?us-ascii?Q?2qeFt6g0ASzQzKqZ2VysgHDkRR2fGJmcTGqotOXwCBiYwyPos509VwMQvAY0?=
+ =?us-ascii?Q?tNR651jveB6sPeOxf7DfyfQqapaklyFEAYlac3cbJZqIiyRjWpPCIEE6QyS1?=
+ =?us-ascii?Q?7mUq9ETsZZtvZeb6BUa46j7buVcoKpdONypThVQ06UQBDKd3csECgOEZdOwL?=
+ =?us-ascii?Q?mBQKoavxohUgnwMK9lqDVONUwPibzxhJ47dR5kuKh4WpUC9z1INO9Yq67sly?=
+ =?us-ascii?Q?PQgIftQU3G/r12jAOHe8eCUqfDmG?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?PSSMzF3LlVhhkNcHBYfRms5eqCCZ83R/Iv4t4ZlKPGncblUy4vTNx+O8diCT?=
+ =?us-ascii?Q?GPVjHZ8DgGyhTRjfYHbW/pf5I7uNlj071Zjm3W3jcFKP/dy3dyhB/rPCz7AZ?=
+ =?us-ascii?Q?Vq31nl/ST30qxQAscGrLGuu4KUSFtOZkj9ThqBmCcksS0fQeN1Edhp3emlVS?=
+ =?us-ascii?Q?EguUiidQ9Dv/I/w4K2yFqrSmM9uF17NrcvXsdZVxaEwLYm2ju0dPXOBLx150?=
+ =?us-ascii?Q?7bUYUUtli5YHmluJjMOYc8/i5Ns3zXvI5DQy3eeqU+k9wLwoy5AaxHTYhxHf?=
+ =?us-ascii?Q?r0uNHmlXB3BYNFBWLuSMSb7Rmeogocima07AkWnLD80fRERg8qcLPhz2t5BP?=
+ =?us-ascii?Q?nSuFml34O4hD8Iu0Ba6WLKJHLf4BZ9ZQasWECltylHqcMeJvmfYABuhHQSXD?=
+ =?us-ascii?Q?M5Vkn5qtxJkliRO08LmmUulnfZhOMvRDYCD/1bdy2uqu4ltJPIXlJmVZOmDK?=
+ =?us-ascii?Q?HOQkewJRT3LMODupu8VmmAWNX8TElC1oucrwL6Oieapun4ay4msLULHFswFE?=
+ =?us-ascii?Q?B7Lunk+RNLX/bAmJpUBqVB5WWqWj4vpKdhyF1uFnAm2C7eTKk/BecMD5Uo3D?=
+ =?us-ascii?Q?6nC3qfBOUYUOQZ6zq9XOJjQTVpa8dC5NoRJ+XLgSuVEzm7By678Q+X3/qMak?=
+ =?us-ascii?Q?FIgq95x8IqAuI8JzA00bW7CUGjvI4q3fkR6Yc/YX4mYTnuEVRACY/OwFV0FE?=
+ =?us-ascii?Q?qZCbtAI2oOGeYPYYubqB3HEJt7XJn3kuu8RMgmsU5U9hBTnmiW7yqt89pY6L?=
+ =?us-ascii?Q?WTr5CEuN8hrmJgpyRYixgBqlbjQbxldvZWqlP6nEdD8nl44enX6G1njfirw8?=
+ =?us-ascii?Q?8PkWVC78a/bULti9+0C6tAkpBrjD8WlbaaRrU2L1sA+s1PN870nV2pq5L+Pr?=
+ =?us-ascii?Q?FWoWvc21T4TdifytOwBvWImg5A8XbYrmnril6kDUsTm4KyVQBMVxk8wcyRHb?=
+ =?us-ascii?Q?TbOuEQl+hby8Qnt1Fmo/UlLdF1rFGz9pt8pxNbBuE9N761xpYSRrDoi1TKZD?=
+ =?us-ascii?Q?Y8P9Maecf019urModJ+Nj1Ro+w4Iak9AduZO3dzO1CPgbqomaA9nKclghVrj?=
+ =?us-ascii?Q?hpyx5GUTzz6GtZDFE6xDyk0+ZqcNEgze5EdaHIfp8s5pTgMYxTlpLwSUYUv2?=
+ =?us-ascii?Q?ZpL9JzmsXRSkacCKmVl38NfMEeq/0VrAg4Zfqtgyu7yIXgCvuX3JvvYPFSP8?=
+ =?us-ascii?Q?VL2j4hEAeVUCEc8qQXsaN6btieifAj2rd6Gk2q+WcG0dP6eg9MsAmJWlhgCK?=
+ =?us-ascii?Q?Izmt1I7McvcDarGvGqayFDO/6I+zYNxjWZIgbIPD6+JhPQdpCMhC31rQbnhz?=
+ =?us-ascii?Q?iTiIeIVn1BOzQ6EcF2HpfXBP4sCud7E6Ltpke0+R4bUUWUxXBTUgQAFwWydS?=
+ =?us-ascii?Q?Jp/SUPTW4mPmRf00CYCD5/Zbn5MGpMGo3ExiD081nZve0hzDAHQnAYoRh2YT?=
+ =?us-ascii?Q?ScIOpGPGnN9i8FSEsLI83h0v6x/xkCZkOUMASGXEr1FDday8s8npF/7YAnx2?=
+ =?us-ascii?Q?2mOp5Y0UuvoviAu9xCHgN7Q4zE3/jim3wl3KMqLWD2oEcowEuehOcAEU/Re+?=
+ =?us-ascii?Q?aoQf0KjVbsK+iqanE+tKgK1woRXZgTEDIs/hNUPj?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d0b46ec6-3147-4b7b-147c-08dd352f2d6e
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jan 2025 06:38:10.1631
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0Vd/94gXzHOg8Mzdci3ULWYAXa5hLJz9+g/JLLMOzPoPQ95axF93n/ruyU3wQGXuI6B5ea1H1y51irJhvn36Sg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5790
 
-On Tue, Jan 14, 2025 at 10:24:38PM -0800, Darrick J. Wong wrote:
-> On Wed, Jan 15, 2025 at 07:18:32AM +0100, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
+On Tue, Jan 14, 2025 at 05:22:15PM +0100, David Hildenbrand wrote:
+> On 10.01.25 07:00, Alistair Popple wrote:
+> > Currently DAX folio/page reference counts are managed differently to
+> > normal pages. To allow these to be managed the same as normal pages
+> > introduce vmf_insert_folio_pud. This will map the entire PUD-sized folio
+> > and take references as it would for a normally mapped page.
 > > 
-> > Mounting a filesystem that requires quota state changing will generate a
-> > transaction.
+> > This is distinct from the current mechanism, vmf_insert_pfn_pud, which
+> > simply inserts a special devmap PUD entry into the page table without
+> > holding a reference to the page for the mapping.
 > > 
-> > We already check for a read-only device; we should do that for
-> > norecovery too.
-> > 
-> > A quotacheck on a norecovery mount, and with the right log size, will cause
-> > the mount process to hang on:
-> > 
-> > [<0>] xlog_grant_head_wait+0x5d/0x2a0 [xfs]
-> > [<0>] xlog_grant_head_check+0x112/0x180 [xfs]
-> > [<0>] xfs_log_reserve+0xe3/0x260 [xfs]
-> > [<0>] xfs_trans_reserve+0x179/0x250 [xfs]
-> > [<0>] xfs_trans_alloc+0x101/0x260 [xfs]
-> > [<0>] xfs_sync_sb+0x3f/0x80 [xfs]
-> > [<0>] xfs_qm_mount_quotas+0xe3/0x2f0 [xfs]
-> > [<0>] xfs_mountfs+0x7ad/0xc20 [xfs]
-> > [<0>] xfs_fs_fill_super+0x762/0xa50 [xfs]
-> > [<0>] get_tree_bdev_flags+0x131/0x1d0
-> > [<0>] vfs_get_tree+0x26/0xd0
-> > [<0>] vfs_cmd_create+0x59/0xe0
-> > [<0>] __do_sys_fsconfig+0x4e3/0x6b0
-> > [<0>] do_syscall_64+0x82/0x160
-> > [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> > 
-> > This is caused by a transaction running with bogus initialized head/tail
-> > 
-> > I initially hit this while running generic/050, with random log
-> > sizes, but I managed to reproduce it reliably here with the steps
-> > below:
-> > 
-> > mkfs.xfs -f -lsize=1025M -f -b size=4096 -m crc=1,reflink=1,rmapbt=1, -i
-> > sparse=1 /dev/vdb2 > /dev/null
-> > mount -o usrquota,grpquota,prjquota /dev/vdb2 /mnt
-> > xfs_io -x -c 'shutdown -f' /mnt
-> > umount /mnt
-> > mount -o ro,norecovery,usrquota,grpquota,prjquota  /dev/vdb2 /mnt
-> > 
-> > Last mount hangs up
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  fs/xfs/xfs_qm_bhv.c | 12 +++++++-----
-> >  1 file changed, 7 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-> > index 37f1230e7584..eae106ca7e1b 100644
-> > --- a/fs/xfs/xfs_qm_bhv.c
-> > +++ b/fs/xfs/xfs_qm_bhv.c
-> > @@ -97,10 +97,11 @@ xfs_qm_newmount(
-> >  	}
-> >  
-> >  	/*
-> > -	 * If the device itself is read-only, we can't allow
-> > -	 * the user to change the state of quota on the mount -
-> > -	 * this would generate a transaction on the ro device,
-> > -	 * which would lead to an I/O error and shutdown
-> > +	 * If the device itself is read-only and/or in norecovery
-> > +	 * mode, we can't allow the user to change the state of
-> > +	 * quota on the mount - this would generate a transaction
-> > +	 * on the ro device, which would lead to an I/O error and
-> > +	 * shutdown.
-> >  	 */
-> >  
-> >  	if (((uquotaondisk && !XFS_IS_UQUOTA_ON(mp)) ||
-> > @@ -109,7 +110,8 @@ xfs_qm_newmount(
-> >  	    (!gquotaondisk &&  XFS_IS_GQUOTA_ON(mp)) ||
-> >  	     (pquotaondisk && !XFS_IS_PQUOTA_ON(mp)) ||
-> >  	    (!pquotaondisk &&  XFS_IS_PQUOTA_ON(mp)))  &&
-> > -	    xfs_dev_is_read_only(mp, "changing quota state")) {
-> > +	    (xfs_dev_is_read_only(mp, "changing quota state") ||
-> > +	     xfs_has_norecovery(mp))) {
-> >  		xfs_warn(mp, "please mount with%s%s%s%s.",
-> >  			(!quotaondisk ? "out quota" : ""),
-> >  			(uquotaondisk ? " usrquota" : ""),
+> > Signed-off-by: Alistair Popple <apopple@nvidia.com>
 > 
-> The logic seems ok, but (as I mentioned in office hours this morning) I
-> wonder if we shouldn't just ignore quota entirely for a norecovery
-> mount?
-
-I gave it a thought. It might work, but, if there are no changes to be made, I
-don't see a problem in mounting with quotas and let user browse quota data.
-
+> [...]
 > 
-> I guess for metadir we also could change the message to say "don't mount
-> with any quota options" since the quota mount options are persistent now.
+> > +/**
+> > + * vmf_insert_folio_pud - insert a pud size folio mapped by a pud entry
+> > + * @vmf: Structure describing the fault
+> > + * @folio: folio to insert
+> > + * @write: whether it's a write fault
+> > + *
+> > + * Return: vm_fault_t value.
+> > + */
+> > +vm_fault_t vmf_insert_folio_pud(struct vm_fault *vmf, struct folio *folio, bool write)
+> > +{
+> > +	struct vm_area_struct *vma = vmf->vma;
+> > +	unsigned long addr = vmf->address & PUD_MASK;
+> > +	pud_t *pud = vmf->pud;
+> > +	struct mm_struct *mm = vma->vm_mm;
+> > +	spinlock_t *ptl;
+> > +
+> > +	if (addr < vma->vm_start || addr >= vma->vm_end)
+> > +		return VM_FAULT_SIGBUS;
+> > +
+> > +	if (WARN_ON_ONCE(folio_order(folio) != PUD_ORDER))
+> > +		return VM_FAULT_SIGBUS;
+> > +
+> > +	ptl = pud_lock(mm, pud);
+> > +	if (pud_none(*vmf->pud)) {
+> > +		folio_get(folio);
+> > +		folio_add_file_rmap_pud(folio, &folio->page, vma);
+> > +		add_mm_counter(mm, mm_counter_file(folio), HPAGE_PUD_NR);
+> > +	}
+> > +	insert_pfn_pud(vma, addr, vmf->pud, pfn_to_pfn_t(folio_pfn(folio)), write);
+> 
+> This looks scary at first (inserting something when not taking a reference),
+> but insert_pfn_pud() seems to handle that. A comment here would have been
+> nice.
 
-No complains about it :)
+Indeed, I will add one.
+ 
+> It's weird, though, that if there is already something else, that we only
+> WARN but don't actually return an error. So ...
+
+Note we only WARN when there is already a mapping there and we're trying to
+upgrade it to writeable. This just mimics the logic which currently exists in
+insert_pfn() and insert_pfn_pmd().
+
+The comment in insert_pfn() sheds more light:
+
+                        /*
+                         * For read faults on private mappings the PFN passed
+                         * in may not match the PFN we have mapped if the
+                         * mapped PFN is a writeable COW page.  In the mkwrite
+                         * case we are creating a writable PTE for a shared
+                         * mapping and we expect the PFNs to match. If they
+                         * don't match, we are likely racing with block
+                         * allocation and mapping invalidation so just skip the
+                         * update.
+                         */
+
+> > +	spin_unlock(ptl);
+> > +
+> > +	return VM_FAULT_NOPAGE;
+> 
+> I assume always returning VM_FAULT_NOPAGE, even when something went wrong,
+> is the right thing to do?
+
+Yes, I think so. I guess in the WARN case we could return something like
+VM_FAULT_SIGBUS to kill the application, but the existing vmf_insert_*()
+functions don't currently do that so I think that would be a separate clean-up.
+
+> Apart from that LGTM.
+> 
+> 
+> -- 
+> Cheers,
+> 
+> David / dhildenb
+> 
