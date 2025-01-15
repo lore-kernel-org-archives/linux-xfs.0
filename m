@@ -1,77 +1,62 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53BA81D63C9
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2025 19:52:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18A0741C6C;
+	Wed, 15 Jan 2025 20:09:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736970739; cv=none; b=GVKg83jygcimg7m0mEz45Z1u6R4EA6rRrUkm2ICjKsnf/ekvyxC5g8Q6uDSZP3JvV+QcFyjLo/gEB1Y/xoT/wKYPoKZpURkdZjV/AkcYLwyH5/zq6eUjcDvJuVy/QMtLJU2JGYIBVloid3qxER/fnb8hqSnV1qC9NVraAyDJgZ0=
+	t=1736971764; cv=none; b=Ugk8Sn60d88ZwIRtxXFxN9GqYNeH8uIn37gL0zRAEcahsH5nFqDTvV7NgiAsBPuZLjxjrwLlJ4BuaimIWoIbPkqHsicf7IhPkpC4AATy9vnX4BwxIhP/DoefvR8pvm5pnFfQe6wbxJjNG4fZxlCdYTDZs5E4p190X3DM9Kmtt3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736970739; c=relaxed/simple;
-	bh=yONHGbUTahj+XrObv/UIGGwZuOcdk2uL9AI/CFnzB/w=;
+	s=arc-20240116; t=1736971764; c=relaxed/simple;
+	bh=HKd2BYN0EJzvcqr3Xx3Vueop4tDJh+K1d/v1F43ixq4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DQL2Z46XqxOaNg+v3X07Xgl6dRHUmlZpnB1jdhX3t6d34JM7MweZrAP266jMKg/iZ77sPC4Z7XkOMLO4L4bdb5Tb1++6o1YLEmJv56TxyMokb6VCkeNY3c3C2mZesnpzZvhALQaqOugmavTkgnp3ilo4Prar5j5zn28ecFxL21M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=JcbxXkhV; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=F+7M0zhdOZYP7EiMMdSTCIIHeLWGUSjl0nVr22SUUpTfU7CqYtGUMJn7Yr/9Wuv5NZkBF8nHl8jkPPqzGNUyYrVM5kkuGWWlAbeSn4pjcmiufAU1kobl2B1hyOCXYZnbnhNyJXI4432ukG5t+FKqs3w9ojeXauizxUQjwprfUz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mMh7oPcJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="JcbxXkhV"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-218c8aca5f1so1854635ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2025 11:52:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1736970737; x=1737575537; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=0VqveMYCq0eRALEG0hCd1Pr3K4Tua5ddZX00MrZ56nw=;
-        b=JcbxXkhVtyEStKMY90g9gDqRBRdJairKdd5eAmS1Uo5ViHnmG7IMma7lKqB+OXBu6i
-         6+4XqJ/9HuRjcAdhXbHDDeyN/M7biw6MLAZRjTkm7UAPjpAhNsO6pfiso2foau7UOMGe
-         NZm+06x0I75ReDaD+BMlqMVWEuXW5FDjgCEL76WFfyht/U8L42IaeccQpdRa26QIrcwE
-         IOV/rwrWgFfM5nQIlfVRjjL4vaeOt3JN8tLyAQ+vcBEMbsPOrqfWAxnRSsbu7MoTOtXj
-         nntfcL0zpD0bXGFI1dn47wF4uBMJ8gw4l/eUs5usFlMRHX+HoRD8LWbQV0Z09dLH1mq9
-         Hi4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736970737; x=1737575537;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0VqveMYCq0eRALEG0hCd1Pr3K4Tua5ddZX00MrZ56nw=;
-        b=Zt2S3JoWA79PVIcihX1BZ+5p0mxiiOcndXRPSs0UTgWAv6/H2pCvy8nbmzjwyNhEL0
-         zscWCTWADMmsmBS8PkVcxSx2XnPgLae/O2ODubE8Q7ehHl+N8fUiw/fP1GQHLLR7Wirv
-         ahRGEHDsrOjVm2aekFMTrfL/hR5HWkeyIotScC8aQHD75qWv4mhdLGn3GNfdhiVSfIL1
-         XT9/Z/4mzYavxd/YeDLwJAD56Xa/vZgRvShvBfkm8w8wM2x29kTUr78LeHRWND5prLsw
-         uHEiaW6sYNbiAlHMeRM7wgbS9GQv4iQiFesB+dAwar+yfuGaDYsB3yUOak6aG46cig40
-         L1Og==
-X-Forwarded-Encrypted: i=1; AJvYcCV4nW88PJQ2jc0qgVd6je+ty0DSf39m37iLzYVMh8jxeoPxYsOu4lpQ2dVwEYugGY1mY398/fDZKAY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyDztiJlZbPrSr7c+bqsibLPKJgcePbyeUL5KiKMZlJ4gkaQnk+
-	zFN9itLi1GoRTIz4joeKUoTJEcfDcj9zrgpZVPHnBBd3eq2rqTF7MTWkqR64sk4RIL5kH+jbHoE
-	n
-X-Gm-Gg: ASbGnctkgzXYrTLDGrCjfp4089+mbYja4e5u85KItsSWN7+ROv5fLJIdl3xh4fNYNk+
-	dl4/e9SjRVf5+L2qFoTAxs2aDbGsfkJmlR5SVBKuPcDlWpV/TYSdxBtJd6MX7lmkgLiu0nhGfSR
-	Sxmm10Y9iDKQgZwTYYDRDZGM+DQQvA9ss39XChn2cC2TFlYuA0TLnuiz25I0pxGv5X+kiIuIRMx
-	zZLbDPFVcYW+dbhAgDhlhzO2AQFMKqOUV01CzT78HGu9KiOC6zcYHS62EoT3EedsLZTtJk8TqtT
-	/DVYeQbJ5KjMmwdsFO8QWZwHemMiLvBO
-X-Google-Smtp-Source: AGHT+IFEfJMq5Dd0X1cVhtovGCGL83TJumRQJDWJnf+4bUvBVrrTL6DhwlG4lAN0Po0x2a5yPUMfeQ==
-X-Received: by 2002:a05:6a21:38b:b0:1e0:c50c:9842 with SMTP id adf61e73a8af0-1e88d361a43mr54722805637.31.1736970737692;
-        Wed, 15 Jan 2025 11:52:17 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72d4056d5aesm9573865b3a.43.2025.01.15.11.52.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jan 2025 11:52:17 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tY9R0-00000006IoV-1Ltx;
-	Thu, 16 Jan 2025 06:52:14 +1100
-Date: Thu, 16 Jan 2025 06:52:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Jinliang Zheng <alexjlzheng@gmail.com>
-Cc: dchinner@redhat.com, djwong@kernel.org, cem@kernel.org,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: Re: [RESEND PATCH v3] xfs: fix the entry condition of exact EOF
- block allocation optimization
-Message-ID: <Z4gR7u9WBnyApKQV@dread.disaster.area>
-References: <20250115123525.134269-1-alexjlzheng@tencent.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mMh7oPcJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9A6BC4CED1;
+	Wed, 15 Jan 2025 20:09:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736971763;
+	bh=HKd2BYN0EJzvcqr3Xx3Vueop4tDJh+K1d/v1F43ixq4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mMh7oPcJEGeeR1CbLFNvT6sYm/PkFQwDWfBsQ90yztglpZ3/YZEBVnarQ1AC7szWo
+	 7TIaoC/5Ds9yuqwsCSv511HrZQrz9DYKTCs5teywBQChtbtwCLdUU15B57wDXyESFf
+	 A/x13wKP5lj3nSG+MtRjOv+yVwR6g+BlMg1RaQLmyhmo5lqJ4XKmsH9giN7zUcgT0G
+	 JjdlmRxxbsFDdoqRPMfd7BNNsEMs0mR8Cyqj/oCkFnsbRsTmQflWeOU3bRrVWJH9mq
+	 wFz46x9sk38sYnuYTKWOXCW+bAgDPbIH7khSU1whNzE/e3Hn5P+2qU6Lun6bUVc/Ly
+	 lJaxe0RpKwpyA==
+Date: Wed, 15 Jan 2025 20:09:21 +0000
+From: Wei Liu <wei.liu@kernel.org>
+To: Joel Granados <joel.granados@kernel.org>
+Cc: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
+	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+	linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+	xen-devel@lists.xenproject.org, linux-aio@kvack.org,
+	linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
+	codalist@coda.cs.cmu.edu, linux-mm@kvack.org,
+	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
+	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+	io-uring@vger.kernel.org, bpf@vger.kernel.org,
+	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
+	linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+	Song Liu <song@kernel.org>,
+	"Steven Rostedt (Google)" <rostedt@goodmis.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Jani Nikula <jani.nikula@intel.com>,
+	Corey Minyard <cminyard@mvista.com>, Wei Liu <wei.liu@kernel.org>
+Subject: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
+Message-ID: <Z4gV8QNnafm-iCC4@liuwe-devbox-debian-v2>
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,31 +65,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250115123525.134269-1-alexjlzheng@tencent.com>
+In-Reply-To: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
 
-On Wed, Jan 15, 2025 at 08:35:25PM +0800, Jinliang Zheng wrote:
-> When we call create(), lseek() and write() sequentially, offset != 0
-> cannot be used as a judgment condition for whether the file already
-> has extents.
-> 
-> Furthermore, when xfs_bmap_adjacent() has not given a better blkno,
-> it is not necessary to use exact EOF block allocation.
-> 
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> ---
-> Changelog:
-> - V3: use ap->eof to mark whether to use the EXACT allocation algorithm
-> - V2: https://lore.kernel.org/linux-xfs/Z1I74KeyZRv2pBBT@dread.disaster.area/
-> - V1: https://lore.kernel.org/linux-xfs/ZyFJm7xg7Msd6eVr@dread.disaster.area/T/#t
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
+On Fri, Jan 10, 2025 at 03:16:08PM +0100, Joel Granados wrote:
+[...]
+> diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
+> index 7a35c82976e0..9453f0c26f2a 100644
+> --- a/drivers/hv/hv_common.c
+> +++ b/drivers/hv/hv_common.c
+> @@ -141,7 +141,7 @@ static int sysctl_record_panic_msg = 1;
+>   * sysctl option to allow the user to control whether kmsg data should be
+>   * reported to Hyper-V on panic.
+>   */
+> -static struct ctl_table hv_ctl_table[] = {
+> +static const struct ctl_table hv_ctl_table[] = {
+>  	{
+>  		.procname	= "hyperv_record_panic_msg",
+>  		.data		= &sysctl_record_panic_msg,
 
-Looks fine.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Acked-by: Wei Liu <wei.liu@kernel.org>
