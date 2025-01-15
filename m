@@ -1,75 +1,87 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4707E1D88BE
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2025 20:54:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F32EF1D61B7
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2025 21:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736974470; cv=none; b=SGYyEabbFxqQOkd9ZnsuRpXKCBwZpTOJrebOUKoQ79heznmJ5NaIJLjcPkCM6x23F8JWxSjw554dKo+5jG/k8TWo2Xb8QSBOwS3eGP89skihO0uAMcE2udO5v7YETKQ31fdsgoq5B4t7J7Kc9jLJ1WhzN5xbScuXPt5XJT3jHew=
+	t=1736977287; cv=none; b=n0pxijYHLXbgG8RRkYHXjtV6K8oKvdtV6YR7gyWOHbp+IdqlnOuMtSg1SF8EGnEU0T6b1iCtSoc69C+IrhuPyW+kCAuGySiO+hvgCEfpLy1+ZV6W6s+BomnAjZWQVnC8H2DIy+FiPmy3GvVDuWw8RWntePx6uI6SgTZzxzmb3gQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736974470; c=relaxed/simple;
-	bh=SmJO5HEPey5x2X0CmeJGvemj40V2g6AgCT0+y8CQ9UE=;
+	s=arc-20240116; t=1736977287; c=relaxed/simple;
+	bh=UnypkakFh9Sy4d5cl/pyyfhYnwQ3OSP4C3p6B5y8KRg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rrjxW+HpK3ZiojcdWhy6pQ2k4MQzop4fvvUFni7Cq61yRA4vviAaZmhYkttc6zvyLG6f4cwl+FIbe7ycEhJKH2PihRMbVjWucoyYZ9ILZmwftDMcB7brKr5pvjvER3sTvxmrZksWNuSgy0oVQOB+4G3ZsuujmrNIZRUJm95pvZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=koI3VepX; arc=none smtp.client-ip=209.85.214.172
+	 Content-Type:Content-Disposition:In-Reply-To; b=J5NWD+uwQ0IpYDTLxjp0WADF4ewSR+mDLgNJegtB7wJR59XU+pHNw3NniTyYADmtT8diprNo06LkysQokDDSlFIEVvjDVbS0UGJtVTFIv2s150T6CvuFzXb/cTUQYg5FIzTbn8FC7/4gDoNjl9T2CCg71LC75RZ2QQ0+LTmEB/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wUSTFnKp; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="koI3VepX"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-216426b0865so2228155ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2025 12:54:29 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wUSTFnKp"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2167141dfa1so4767405ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2025 13:41:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1736974468; x=1737579268; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1736977285; x=1737582085; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ghIgydIqFwsC9U2pw8XOauniIphjLqLpglSfb+LVT2o=;
-        b=koI3VepXl9Ci7M0O9ujRsIQTVzG0XSPKttGnBUzbKoG+W+nn+s3VF5tvbcWYoIhAJc
-         aN4ldqIc1mWAlwTm4/AJLhS+gjFubL2gOggLp3RpQZqdTpybUfATrtvhIXBLOX8NFn/M
-         FhaSeETmMFIUnMaepDUuhcnG/W2ZsCK9ASdZ6pYY7m4zttC+3N3/iiMJOz5dI7VByXNC
-         7idnRK+VPrmNFX8NDKhvZ1Frg17eEXMbrS5qhnm966nIoa6aqIPmpW3r1WFKrxpOE1St
-         dUFwEIa+7ZRe80YoGfab1jIus8x5fpZixc0ssG8V158F3rRxfrYxptYrCWErEkDD/Sfh
-         JHgg==
+        bh=+7RqsypsFMbQh8it8gHq1oAn4Wjjku2FuWrarD2dysU=;
+        b=wUSTFnKpwFW1j3+RLuTMqK/nurhxzk7BOy2etItpFScXGmCwXG4H4C/KvDhFm6imIX
+         JJ+8ejav1ExoROFcbWQUKbGe01fgT4aoNzdUyDKEzQn3+373UWPUyox4UO2rVFiKVBIO
+         iue0daOCuXOdkh/HQapxUgmywoiwOLrtXyXqLj0cD+zi9TJS/htcZDkoB6JDxULh3f/9
+         36hE7FoT2ZocyPJl3QIFwQpmu8dbXF57wQFnLqv5uWS9S+BbT0doMCGUs8QAu6EhjtWE
+         wFOxj2pmfPiRU14tTsphqk5nytfN2rEJpeyi++T9vDj39Xn9n4JGMmvjODM3CEOG6GV7
+         6z2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736974468; x=1737579268;
+        d=1e100.net; s=20230601; t=1736977285; x=1737582085;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ghIgydIqFwsC9U2pw8XOauniIphjLqLpglSfb+LVT2o=;
-        b=cZHh0I66bza3yxGNsn8/mPYnqYFUUZMvtZ2tbMFujbQsn+g4GmVsVb1zDwMKmKTau1
-         BFXfc2+OwhEK9eAIocPtoeKwSo6peKwQiPIi3RSbw8GzDqiR7JLiDH608V7N7B0wkoKT
-         jzRVsSV7hQPx1YF0GeUP2wHvkwWpKTrDNnVa5DEvmpLHuH2mLMwZfhmA7eJNq6yZl9ZK
-         lvmJ5Nuw98B1Y/Sii9QQNuZ3GkpfDAsrwZq3f7u+TuTGEEbCM/dxC9ckjK9cLb1GHJPb
-         P/vESl3dTKjAfH5/lZczygXLgR7bqZUhYfPNSZkhw6toiW4z08Owz0+O20wrDn8zjcay
-         0jCw==
-X-Forwarded-Encrypted: i=1; AJvYcCXzBtVQiMsjmaNkh4Fr/3r+8Y2CKov2rFXsP/ylJdB0TlFomv2OD7Ps8ifJPB7AvcJU8UnduW3lAlI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxKbi/9bFc7dk/EvRg1o9HEvEJBjLHGr6XsqI55Ly4Q71fuj5cy
-	6cES3nrdH1FlB6mzL19ltAPnA4tdCZBKTvq/vUB5/YF1F3OifMciDt31zwTANJk=
-X-Gm-Gg: ASbGncu1yDIYp2BFNWmI+hPDIat59Djmdqz+GOeboK/w7hAfJeY1+DUYL8JzHPcBbA6
-	Kdw7Dwvhnxd+chpsy/iTMEPe3NzRJKFFyy3GtgxVZUewiSj2BjuQ8teqJuLmG8B8T7xEsnArgt7
-	6+rWTjxnhExxzxwp7U+i0vYwX6tKqQesxkY47e70WYNLNUTt8gOe1gnY3C/zQgwldT7fitNTujo
-	Mz2qP24SMjmIHEpGmHzwZ1UTF1oI4gJGTRZLmSEt4wtc6Z3hfUlaXfkncJbE8AvyTITqVodGSlA
-	IJlsFAoNeBfmpPelSOFSdQ==
-X-Google-Smtp-Source: AGHT+IFD+wB1XRuYKVi9v0ce634qHRE/4BVz7sMFHJQLAEK5xLBcLUWmke434hOpPeiVz/Mxsst+6w==
-X-Received: by 2002:a17:90b:1f8b:b0:2ee:bf84:4fe8 with SMTP id 98e67ed59e1d1-2f548f1d44cmr42217681a91.30.1736974468573;
-        Wed, 15 Jan 2025 12:54:28 -0800 (PST)
+        bh=+7RqsypsFMbQh8it8gHq1oAn4Wjjku2FuWrarD2dysU=;
+        b=Hnjs8v9mldUzbI1i1g0bX98fHMQPk7gNEDl6rzjgqgPIyj+INcB8FnuEO+1pPMd7Uu
+         sKoH8jV8ApwESu7u8OG3vEF4ip3m2+Mp0CQAyR4L18rFqeMRRe2sM2WW8cB3SQiUW4V7
+         uL2cuXkFb08Vu+KVav4UCjF/Cte1XPxXu2EBhLKIGz4EqtyDaEZSsx69q39NrSoLTiGB
+         4AB/V9GbYvHyCvvm7j4MTtvFtrAk/4QCjzLtwfPEL2q22Ji5Wk9ySkLcss+2VKTVxsY8
+         gjjKjhi9JElWWzcRosDq3Df1QiNyCQIeLop/bOhdB3gQ6h+d8kjX+dLEx4cU8KfFghRD
+         RgkA==
+X-Forwarded-Encrypted: i=1; AJvYcCVIE+NR+pNRzw3hk+o0B1HUAgMNlOuaPIUGBm9X3EQUYSKGqyKx+dNcvqjhgHIqQGa9096ybHQrQOc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7Xp05vnLQGnePXdd+pXMB9sPLJriw7VqTp8ptNN2tUZd7aMp7
+	v64YuacErFvpJoMl9Op40LXGipfw3ELe8q9IT646Zmn7JKGbm/zpAtoPzqwYPDs=
+X-Gm-Gg: ASbGncueMIdafvkakVqS1nDvl3wmh4QGmIg3CadlTNplEL71fZmpnpyWRPxKpxC6Y3S
+	uzDtBVjAzTrTUBB2nbIsBrPhB2xTA60FAg0wmjfqm39IX7YfWL9gpITsFFHyXYv8MhAsndHv8mG
+	+PHTQkUei1gq78vSnYr1SqZsITxa1TgJWMXETgpXaN9VU8lUonvx0uFWNblyT+vUNYcm3970IaA
+	1Hh74PA+UYrV1K3szFH9i1IriJQ2DfNccyfFXCN8WGSCeRAU5RNbJMUIfQpeQURVKbIZ4zr16hS
+	Mn51gf+1qjsOefGNETwrBA==
+X-Google-Smtp-Source: AGHT+IEF9DsGk/eqKSv91kWaf6atrZs2CIMnQO1CTfN7kM9Vq3qR1ckQCkXdRiuQgz0CIbhZuVJZJw==
+X-Received: by 2002:a17:902:cecf:b0:216:5cc8:44e7 with SMTP id d9443c01a7336-21bf0d31063mr66954335ad.25.1736977285271;
+        Wed, 15 Jan 2025 13:41:25 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2f72c2c2e71sm1808527a91.35.2025.01.15.12.54.28
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21a9f219aefsm86190185ad.107.2025.01.15.13.41.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jan 2025 12:54:28 -0800 (PST)
+        Wed, 15 Jan 2025 13:41:24 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tYAPB-00000006Jtu-30m1;
-	Thu, 16 Jan 2025 07:54:25 +1100
-Date: Thu, 16 Jan 2025 07:54:25 +1100
+	id 1tYB8b-00000006Kqt-449P;
+	Thu, 16 Jan 2025 08:41:21 +1100
+Date: Thu, 16 Jan 2025 08:41:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Jinliang Zheng <alexjlzheng@gmail.com>
-Cc: alexjlzheng@tencent.com, chandan.babu@oracle.com, djwong@kernel.org,
-	flyingpeng@tencent.com, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: using mutex instead of semaphore for xfs_buf_lock()
-Message-ID: <Z4gggRH0QBALn68W@dread.disaster.area>
-References: <Z4cBRufxcp5izFWC@dread.disaster.area>
- <20250115120521.115047-1-alexjlzheng@tencent.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Chi Zhiling <chizhiling@163.com>,
+	Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chi Zhiling <chizhiling@kylinos.cn>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z4grgXw2iw0lgKqD@dread.disaster.area>
+References: <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
+ <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
+ <953b0499-5832-49dc-8580-436cf625db8c@163.com>
+ <20250108173547.GI1306365@frogsfrogsfrogs>
+ <Z4BbmpgWn9lWUkp3@dread.disaster.area>
+ <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
+ <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+ <20250113024401.GU1306365@frogsfrogsfrogs>
+ <Z4UX4zyc8n8lGM16@bfoster>
+ <Z4dNyZi8YyP3Uc_C@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,72 +90,82 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250115120521.115047-1-alexjlzheng@tencent.com>
+In-Reply-To: <Z4dNyZi8YyP3Uc_C@infradead.org>
 
-On Wed, Jan 15, 2025 at 08:05:21PM +0800, Jinliang Zheng wrote:
-> On Wed, 15 Jan 2025 11:28:54 +1100, Dave Chinner wrote:
-> > On Fri, Dec 20, 2024 at 01:16:29AM +0800, Jinliang Zheng wrote:
-> > > xfs_buf uses a semaphore for mutual exclusion, and its count value
-> > > is initialized to 1, which is equivalent to a mutex.
-> > > 
-> > > However, mutex->owner can provide more information when analyzing
-> > > vmcore, making it easier for us to identify which task currently
-> > > holds the lock.
-> > 
-> > However, the buffer lock also protects the buffer state and contents
-> > whilst IO id being performed and it *is not owned by any task*.
-> > 
-> > A single lock cycle for a buffer can pass through multiple tasks
-> > before being unlocked in a different task to that which locked it:
-> > 
-> > p0			<intr>			<kworker>
-> > xfs_buf_lock()
-> > ...
-> > <submitted for async io>
-> > <wait for IO completion>
-> > 		.....
-> > 			<io completion>
-> > 			queued to workqueue
-> > 		.....
-> > 						perform IO completion
-> > 						xfs_buf_unlock()
-> > 
-> > 
-> > IOWs, the buffer lock here prevents any other task from accessing
-> > and modifying the contents/state of the buffer until the IO in
-> > flight is completed. i.e. the buffer contents are guaranteed to be
-> > stable during write IO, and unreadable when uninitialised during
-> > read IO....
+On Tue, Jan 14, 2025 at 09:55:21PM -0800, Christoph Hellwig wrote:
+> On Mon, Jan 13, 2025 at 08:40:51AM -0500, Brian Foster wrote:
+> > Sorry if this is out of left field as I haven't followed the discussion
+> > closely, but I presumed one of the reasons Darrick and Christoph raised
+> > the idea of using the folio batch thing I'm playing around with on zero
+> > range for buffered writes would be to acquire and lock all targeted
+> > folios up front. If so, would that help with what you're trying to
+> > achieve here? (If not, nothing to see here, move along.. ;).
 > 
-> Yes.
+> I mostly thought about acquiring, as locking doesn't really have much
+> batching effects.  That being said, no that you got the idea in my mind
+> here's my early morning brainfart on it:
 > 
-> > 
-> > i.e. the locking model used by xfs_buf objects is incompatible with
-> > the single-owner-task critical section model implemented by
-> > mutexes...
-> > 
-> 
-> Yes, from a model perspective.
-> 
-> This patch is proposed for two reasons:
-> 1. The maximum count of the xfs_buf->b_sema is 1, which means that only one
->    kernel code path can hold it at the same time. From this perspective,
->    changing it to mutex will not have any functional impact.
-> 2. When troubleshooting the hungtask of xfs, sometimes it is necessary to
->    locate who has acquired the lock. Although, as you said, xfs_buf->b_sema
->    will flow to other kernel code paths after being down(), it is also helpful
->    to know which kernel code path locked it first.
-> 
-> Haha, that's just my thought. If you think there is really no need to know who
-> called the down() on xfs_buf->b_sema, please just ignore this patch.
+> Let's ignore DIRECT I/O for the first step.  In that case lookup /
+> allocation and locking all folios for write before copying data will
+> remove the need for i_rwsem in the read and write path.  In a way that
+> sounds perfect, and given that btrfs already does that (although in a
+> very convoluted way) we know it's possible.
 
-We are rejecting the patch because it's fundamentally broken, not
-because we don't want debugging visibility.
+Yes, this seems like a sane, general approach to allowing concurrent
+buffered writes (and reads).
 
-If you want to track what task locked a semaphore, then that should
-be added to the semaphore implementation. Changing the XFS locking
-implementation is not the solution to the problem you are trying to
-solve.
+> But direct I/O throws a big monkey wrench here as already mentioned by
+> others.  Now one interesting thing some file systems have done is
+> to serialize buffered against direct I/O, either by waiting for one
+> to finish, or by simply forcing buffered I/O when direct I/O would
+> conflict. 
+
+Right. We really don't want to downgrade to buffered IO if we can
+help it, though.
+
+> It's easy to detect outstanding direct I/O using i_dio_count
+> so buffered I/O could wait for that, and downgrading to buffered I/O
+> (potentially using the new uncached mode from Jens) if there are any
+> pages on the mapping after the invalidation also sounds pretty doable.
+
+It's much harder to sanely serialise DIO against buffered writes
+this way, because i_dio_count only forms a submission barrier in
+conjunction with the i_rwsem being held exclusively. e.g. ongoing
+DIO would result in the buffered write being indefinitely delayed.
+
+I think the model and method that bcachefs uses is probably the best
+way to move forward - the "two-state exclusive shared" lock which it
+uses to do buffered vs direct exclusion is a simple, easy way to
+handle this problem. The same-state shared locking fast path is a
+single atomic cmpxchg operation, so it has neglible extra overhead
+compared to using a rwsem in the shared DIO fast path.
+
+The lock also has non-owner semantics, so DIO can take it during
+submission and then drop it during IO completion. This solves the
+problem we currently use the i_rwsem and
+inode_dio_{start,end/wait}() to solve (i.e. create a DIO submission
+barrier and waiting for all existing DIO to drain).
+
+IOWs, a two-state shared lock provides the mechanism to allow DIO
+to be done without holding the i_rwsem at all, as well as being able
+to elide two atomic operations per DIO to track in-flight DIOs.
+
+We'd get this whilst maintaining buffered/DIO coherency without
+adding any new overhead to the DIO path, and allow concurrent
+buffered reads and writes that have their atomicity defined by the
+batched folio locking strategy that Brian is working on...
+
+This only leaves DIO coherency issues with mmap() based IO as an
+issue, but that's a problem for a different day...
+
+> I don't really have time to turn this hand waving into, but maybe we 
+> should think if it's worthwhile or if I'm missing something important.
+
+If people are OK with XFS moving to exclusive buffered or DIO
+submission model, then I can find some time to work on the
+converting the IO path locking to use a two-state shared lock in
+preparation for the batched folio stuff that will allow concurrent
+buffered writes...
 
 -Dave.
 -- 
