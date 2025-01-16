@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 944B1158520;
-	Thu, 16 Jan 2025 23:23:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C3F2158520;
+	Thu, 16 Jan 2025 23:24:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737069833; cv=none; b=qIYTrF0siUZ/1lhXb1TJARrs0sKJfaX6B/UQZ1r3VfhJO02uLxyd3tnX6bbae5984ngupsyAZVvYebL2z7ksJn777IudClw1K69rsaU4bVW6gA7NHrsNZ50w7fTfViGH2s5xk7kGdJNJwNIAy5hdut6ch3aP6pB77BjYdTukUGY=
+	t=1737069851; cv=none; b=kB++5/Y9izaceoUk5Gd3w3kQOJ8IBJoMsG0wuryAWrcn/z5qoJQv0cT1qil4hkDVRf4RiEV0grxnfJmv+LXcr8+nIc3r6pe4PANuEULX+h3ldjZZ3K/t8XO2mDLbjjhljBux4MN7WwSRweeh3V9a2OWHw9lE0pLLDomreyOXyIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737069833; c=relaxed/simple;
-	bh=6tfuUPx6BxM7R7NPrC8c1ZGZ1AfS2LSQfGEHwzERMBs=;
+	s=arc-20240116; t=1737069851; c=relaxed/simple;
+	bh=rnBLUakr8b0CFZJURjl9maeTohunlVSlFBlca+Gh98c=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Z1kvIvUuCrX0CktVIqKzZlD1eCs4R9fZnZMLI5KNnYgvOH/JlDQ9yATBk7BLa42YtTWY2gj359wHtO/BoHT34lyUFyNLJ6GDCDajwYrAPHYhMP/9BeThTqL5J5b6mbK+HXxNtHLimoi8e2RCtuj9fDeex/73Ltimzdzc2M5GqO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VcnOn/GS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=sH9zoCS9yrVmUYxSCg3d032mKfKA+zMB2cO2D4lAsagxm3EPein7OLAPaNDWMAmBMk4rkkw0+UXgXjDzrQXGAMacyK0xY47g+5ZaZefQrwiL5uy+XRG+hxKx5z2UB7pQixm9Om79XmJ4podNfwOP8K8/GTbp6z6JqiUlSNnJpVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VVoRMoF1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VcnOn/GS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30B7BC4CED6;
-	Thu, 16 Jan 2025 23:23:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VVoRMoF1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CABDAC4CED6;
+	Thu, 16 Jan 2025 23:24:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737069833;
-	bh=6tfuUPx6BxM7R7NPrC8c1ZGZ1AfS2LSQfGEHwzERMBs=;
+	s=k20201202; t=1737069848;
+	bh=rnBLUakr8b0CFZJURjl9maeTohunlVSlFBlca+Gh98c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VcnOn/GSUFAkVrKQjaI0rtPMXJMzoIp0J5nbtzcq6d4tgP1yk8rhkhgeSIWix8The
-	 tqDFKFvHjusTki0W0ouyrrBe4ucv4AWaML4kmGorX+UrUSk6oyHoCdyzEZF2s/xeEu
-	 mEi9z/CFBgCdhzGcs/JiMk7fJ9WATjZQjWaT9HzPx7+qDWiuQAfhDps9jJwDdVgZ1x
-	 MIKPki+NPb+uUBc0TmeHnvZtP5kzapapg94s0ce8BLyw9Fh7v9uRoRGW27dcsVf1g5
-	 q9fCUsu8bKGgdB/QPDrebuSxuRskA3Gpfs7pQvVou+e2B03d4qeDDhgPZHNus5MbP7
-	 Im3ixuKXQ/uOg==
-Date: Thu, 16 Jan 2025 15:23:50 -0800
-Subject: [PATCHSET 2/7] fstests: fix logwrites zeroing
+	b=VVoRMoF1M+M3ol/02cMVJo+s2+N12SsdEFSyei0jHQE6evepLgFfO6TUHYVim7Hlh
+	 9Yf2x/utgkPfhcvfsSmsT6HPg2GSeNjsNSG/gq9k6YH2m1R8GjmDCFVpSGzHz85dpa
+	 woGeAWzVgr2nuopqtahF9TGLGeuFe57F8WSE9XgDTEVyJvMToi9e8LYdX6yR5Yu61C
+	 0ZNRyhZmQMRFXESV2hGToqI29KlpxDZBt7X0nhR3mILuagd2/2YkK2llU/nOAl3QPR
+	 lM8ScarCut7YwNK5exHJ/9fx5IQYQeAMf4wkjEZxjINToJfzTPIsWhC+wLAx/ww0gq
+	 kpfXIB/+Fay2g==
+Date: Thu, 16 Jan 2025 15:24:08 -0800
+Subject: [PATCHSET v6.2 3/7] fstests: enable metadir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706974730.1928123.3781657849818195379.stgit@frogsfrogsfrogs>
+Message-ID: <173706975151.1928284.10657631623674241763.stgit@frogsfrogsfrogs>
 In-Reply-To: <20250116232151.GH3557695@frogsfrogsfrogs>
 References: <20250116232151.GH3557695@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,57 +45,111 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This patchset attempts to fix the behavior of the logwrites replay tests
-when running on XFS.  In short, the logwrites code logs every write made
-to a block device and can set tags at arbitrary points in that log.  The
-replay tests then erase the block device and replay up to those tags,
-and then invoke the filesystem to see if it can recover the filesystem.
-
-However, the logwrites replay has long had subtle problems.  XFS log
-recovery won't replay a metadata block from the log if the ondisk block
-has a newer log sequence number (LSNs), which rests on the assumption
-that ondisk filesystem metadata do not have LSNs greater than that of
-the head of the log.  This is not true if we're replaying to a point in
-the past, so log recovery fails to produce a consistent filesystem.
-
-The logwrites replay code works around this issue by erasing the block
-device before replaying.  Unfortunately, it uses BLKDISCARD, which has
-never guaranteed the results of a read after the discard completes.
-Some devices return zeroes, others do nothing.  This inconsistency has
-been worked around by installing the one block device that guarantees
-that reads after a mass discard always return zeros -- dm-thinp.
-
-Unfortunately that leaves a subtle landmine for test authors.  If their
-filesystem's recovery doesn't behave like XFS's then they might not need
-thinp.  If it does, it's all too easy to write a broken testcase.
-
-Fix this whole situation by adding a warning to the logwrites setup code
-if the block device is not known to guarantee that reads after discard
-returns zeroes; fix the replay program to use BLKZEROOUT so that the
-block device is zeroed before replay begins; and then fix the logwrites
-setup to tell the replay program that it can use BLKDISCARD for the
-devices where we know that will work, because discard is much faster
-than writing zeroes.
+Adjust fstests as needed to support the XFS metadata directory feature,
+and add some new tests for online fsck and fuzz testing of the ondisk
+metadata.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
 
-With a bit of luck, this should all go splendidly.
+This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
 --D
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=metadir
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadir
+
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=logwrites-fix-zeroing
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=metadir
+
+xfsdocs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=metadir
 ---
 Commits in this patchset:
- * logwrites: warn if we don't think read after discard returns zeroes
- * logwrites: use BLKZEROOUT if it's available
- * logwrites: only use BLKDISCARD if we know discard zeroes data
+ * various: fix finding metadata inode numbers when metadir is enabled
+ * xfs/{030,033,178}: forcibly disable metadata directory trees
+ * common/repair: patch up repair sb inode value complaints
+ * xfs/206: update for metadata directory support
+ * xfs/{050,144,153,299,330}: update quota reports to handle metadir trees
+ * xfs/509: adjust inumbers accounting for metadata directories
+ * xfs: create fuzz tests for metadata directories
+ * xfs/163: bigger fs for metadir
+ * xfs/122: disable this test for any codebase that knows about metadir
+ * scrub: race metapath online fsck with fsstress
+ * xfs: test metapath repairs
 ---
- common/dmlogwrites          |   39 ++++++++++++++++++++++++++++++++++++++-
- src/log-writes/log-writes.c |   10 ++++++++++
- src/log-writes/log-writes.h |    1 +
- src/log-writes/replay-log.c |    8 ++++++++
- 4 files changed, 57 insertions(+), 1 deletion(-)
+ common/filter      |    7 ++-
+ common/repair      |    4 ++
+ common/xfs         |  100 +++++++++++++++++++++++++++++++++++++++++++-
+ tests/xfs/007      |   16 ++++---
+ tests/xfs/030      |    1 
+ tests/xfs/033      |    1 
+ tests/xfs/050      |    5 ++
+ tests/xfs/122      |    6 +++
+ tests/xfs/153      |    5 ++
+ tests/xfs/1546     |   34 +++++++++++++++
+ tests/xfs/1546.out |    4 ++
+ tests/xfs/1547     |   34 +++++++++++++++
+ tests/xfs/1547.out |    4 ++
+ tests/xfs/1548     |   34 +++++++++++++++
+ tests/xfs/1548.out |    4 ++
+ tests/xfs/1549     |   35 +++++++++++++++
+ tests/xfs/1549.out |    4 ++
+ tests/xfs/1550     |   34 +++++++++++++++
+ tests/xfs/1550.out |    4 ++
+ tests/xfs/1551     |   34 +++++++++++++++
+ tests/xfs/1551.out |    4 ++
+ tests/xfs/1552     |   34 +++++++++++++++
+ tests/xfs/1552.out |    4 ++
+ tests/xfs/1553     |   35 +++++++++++++++
+ tests/xfs/1553.out |    4 ++
+ tests/xfs/163      |    2 -
+ tests/xfs/178      |    1 
+ tests/xfs/1874     |  119 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1874.out |   19 ++++++++
+ tests/xfs/1892     |   66 +++++++++++++++++++++++++++++
+ tests/xfs/1892.out |    2 +
+ tests/xfs/1893     |   67 +++++++++++++++++++++++++++++
+ tests/xfs/1893.out |    2 +
+ tests/xfs/206      |    1 
+ tests/xfs/299      |    1 
+ tests/xfs/330      |    6 ++-
+ tests/xfs/509      |   23 +++++++++-
+ tests/xfs/529      |    5 +-
+ tests/xfs/530      |    6 +--
+ tests/xfs/739      |    9 +---
+ tests/xfs/740      |    9 +---
+ tests/xfs/741      |    9 +---
+ tests/xfs/742      |    9 +---
+ tests/xfs/743      |    9 +---
+ tests/xfs/744      |    9 +---
+ tests/xfs/745      |    9 +---
+ tests/xfs/746      |    9 +---
+ 47 files changed, 765 insertions(+), 78 deletions(-)
+ create mode 100755 tests/xfs/1546
+ create mode 100644 tests/xfs/1546.out
+ create mode 100755 tests/xfs/1547
+ create mode 100644 tests/xfs/1547.out
+ create mode 100755 tests/xfs/1548
+ create mode 100644 tests/xfs/1548.out
+ create mode 100755 tests/xfs/1549
+ create mode 100644 tests/xfs/1549.out
+ create mode 100755 tests/xfs/1550
+ create mode 100644 tests/xfs/1550.out
+ create mode 100755 tests/xfs/1551
+ create mode 100644 tests/xfs/1551.out
+ create mode 100755 tests/xfs/1552
+ create mode 100644 tests/xfs/1552.out
+ create mode 100755 tests/xfs/1553
+ create mode 100644 tests/xfs/1553.out
+ create mode 100755 tests/xfs/1874
+ create mode 100644 tests/xfs/1874.out
+ create mode 100755 tests/xfs/1892
+ create mode 100644 tests/xfs/1892.out
+ create mode 100755 tests/xfs/1893
+ create mode 100644 tests/xfs/1893.out
 
