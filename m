@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39A73232438;
-	Thu, 16 Jan 2025 23:27:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05B2158520;
+	Thu, 16 Jan 2025 23:27:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070036; cv=none; b=OPV7KBmo0glB1arbWxk3CMZWSuSq9X8jBZO8qhh6rR3OSdrvKVDD6+Hzy8gzTFisZc/Ox3ialdOF2ZL/jcfIx1fsbZt5edxFYp5C3ROwWFTbuVgBZ/uGqlCiXEeIy0lP6IcUbqzQKe4/rucCXQsS6evI11lhMuACZZvTB3I2q9k=
+	t=1737070051; cv=none; b=Gr+SAEP9BLsyHEW79VQ73Z12FAcbrizEqkXPLinI2zdWqYpFyhljyEhatIl0ihvEK2Jxia6yqeQCYCKsco1qADUjFZGdHVoF4A95omwAKRfkjpwuds3wn6bGtwLEJVo5n9mrjStdH7cs978EeZEBk/iRgN/r7FipOJywnx5WOTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070036; c=relaxed/simple;
-	bh=oMzGVeg4ZdgtOWYLq0T6ROEUmRySL652sqQCJMoVQ1M=;
+	s=arc-20240116; t=1737070051; c=relaxed/simple;
+	bh=4ojFym6rL0NvIG7GN6s36EqDy1wFfRBh8l1I+PrhDRg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qaXrDiAfvS+o05b73k3e6GDkTNwtoDanDZyn1AAxRVBLZ4cIlV32iBIvWEhZdUcJ3R28XWUE689xGmFMh3FyLvValZoTbsi/gJi3998ximqdVMpIk3j6zTRAmVw9GDuVHr8traCXVH1hF+rPATlcbkh7UG1kJV6TD0KH6BCqguw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iwT1tyHX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rMPw0Wqkwo6Ue92iiA97BKjEMKV7fcWLbybKVMzLlzlpt5MPI8dw2tTLpRngo+lPERbioyUMSYW+VOtGedJCC5Rf4A98yjdQU0+Pvr5r8YENOxwgz763W27RhJThIDZ8eDCf0uW/8ZfmzXgFSm6n8ca+maAKqCwAE27IG65UqhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MMGnBj+I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iwT1tyHX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1086BC4CED6;
-	Thu, 16 Jan 2025 23:27:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MMGnBj+I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A65F3C4CED6;
+	Thu, 16 Jan 2025 23:27:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070036;
-	bh=oMzGVeg4ZdgtOWYLq0T6ROEUmRySL652sqQCJMoVQ1M=;
+	s=k20201202; t=1737070051;
+	bh=4ojFym6rL0NvIG7GN6s36EqDy1wFfRBh8l1I+PrhDRg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iwT1tyHXkxOSbJLJObSW6aNUg0PX1frwi8hAIalRvZyvzqN5tH5ur0vGvjU6KeA8x
-	 ddNhvgJtpYyYluQNv2H79THAauonYtKZTav4kWADA9KKbNOrfIKxW/LsZtDHe6WMiG
-	 I5/38GDFszh+hNWZMNXlBGbNA4ZtzkBhzCiB+tWLqxgsZFTPxqPIaPa6vMgrrQz3QK
-	 qYdjslYl3dSf9mLPqYBWjM5ewk8jf6nvdRkr6cB2PqAOqrK74aCDCXbZe96PmWS0sM
-	 Wevx8k0NVUbM9rappgL+VQwOnw9CAwCOT45bYXSamCVSRR7XqPtzZI6NH5no2jUqGh
-	 e8q6Y7L7uBYYQ==
-Date: Thu, 16 Jan 2025 15:27:15 -0800
-Subject: [PATCH 08/23] common: fix pkill by running test program in a separate
- session
+	b=MMGnBj+IHvzBPJl6LDN0MSI2SQ3mvcnfUofRywf/mtoZx0X+fDtp5rS5yctD6gniG
+	 MS8rUDURTo873U/du2+bwaTwIfyvuOfJLZ7xlazIhoni2Y/ViaYmd+13+HiFUg5cgL
+	 d7poPV47Ar5Tf7C/y2HHxWXygpJWm5WncNkceefJslQqMWJyC1jHYicn+X7n2W9q0L
+	 qWfYUULaoOsOGePGLAzlV/kakHGcryrUXc8xGC0Uo4vPBSIW8Ywh6g9T3qZOi15TVx
+	 zB1RHw+oSSExcpqSVBET/lcmzr9a21BIlJc2FWvxuDDVnq/pYPWCW4INXJqPUf5vAG
+	 LcblLT1iYD4FQ==
+Date: Thu, 16 Jan 2025 15:27:31 -0800
+Subject: [PATCH 09/23] unmount: resume logging of stdout and stderr for
+ filtering
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706974197.1927324.9208284704325894988.stgit@frogsfrogsfrogs>
+Message-ID: <173706974213.1927324.1385565534988725161.stgit@frogsfrogsfrogs>
 In-Reply-To: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,259 +46,207 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Run each test program with a separate session id so that we can tell
-pkill to kill all processes of a given name, but only within our own
-session id.  This /should/ suffice to run multiple fstests on the same
-machine without one instance shooting down processes of another
-instance.
+There's a number of places where a test program calls a variant of
+_unmount but then pipes the output through a _filter script or
+something.  The new _unmount helper redirects stdout and stderr to
+seqres.full, which means that those error messages (some of which are
+encoded in the golden outputs) are suppressed.  This leads to test
+regressions in generic/050 and other places, so let's resume logging.
 
-This fixes a general problem with using "pkill --parent" -- if the
-process being targeted is not a direct descendant of the bash script
-calling pkill, then pkill will not do anything.  The scrub stress tests
-make use of multiple background subshells, which is how a ^C in the
-parent process fails to result in fsx/fsstress being killed.
-
-This is necessary to fix SOAK_DURATION runtime constraints for all the
-scrub stress tests.  However, there is a cost -- the test program no
-longer runs with the same controlling tty as ./check, which means that
-^Z doesn't work and SIGINT/SIGQUIT are set to SIG_IGN.  IOWs, if a test
-wants to kill its subprocesses, it must use another signal such as
-SIGPIPE.  Fortunately, bash doesn't whine about children dying due to
-fatal signals if the children run in a different session id.
-
-I also explored alternate designs, and this was the least unsatisfying:
-
-a) Setting the process group didn't work because background subshells
-are assigned a new group id.
-
-b) Constraining the pkill/pgrep search to a cgroup could work, but we'd
-have to set up a cgroup in which to run the fstest.
-
-c) Putting test subprocesses in a systemd sub-scope and telling systemd
-to kill the sub-scope could work because ./check can already use it to
-ensure that all child processes of a test are killed.  However, this is
-an *optional* feature, which means that we'd have to require systemd.
-
-d) Constraining the pkill/pgrep search to a particular mount namespace
-could work, but we already have tests that set up their own mount
-namespaces, which means the constrained pgrep will not find all child
-processes of a test.
-
-e) Constraining to any other type of namespace (uts, pid, etc) might not
-work because those namespaces might not be enabled.
-
-f) Revert check-parallel and go back to one fstests instance per system.
-Zorro already chose not to revert.
-
-So.  Change _run_seq to create a the ./$seq process with a new session
-id, update _su calls to use the same session as the parent test, update
-all the pkill sites to use a wrapper so that we only target processes
-created by *this* instance of fstests, and update SIGINT to SIGPIPE.
+This also undoes all the changes that removed /dev/null redirection of
+unmount calls.
 
 Cc: <fstests@vger.kernel.org> # v2024.12.08
-Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
+Fixes: 4c6bc4565105e6 ("fstests: clean up mount and unmount operations")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- check             |   33 ++++++++++++++++++++++++++++-----
- common/fuzzy      |   17 ++++++++---------
- common/rc         |   12 ++++++++++--
- tests/generic/310 |    6 +++---
- tests/generic/561 |    2 +-
- 5 files changed, 50 insertions(+), 20 deletions(-)
+ check             |   10 ++++++++--
+ common/quota      |    2 +-
+ common/rc         |   21 +++++++++++++++++++--
+ tests/generic/050 |    2 +-
+ tests/generic/085 |    2 +-
+ tests/generic/361 |    4 ++--
+ tests/generic/590 |    2 +-
+ tests/generic/746 |    2 +-
+ tests/xfs/149     |    2 +-
+ tests/xfs/530     |    2 +-
+ 10 files changed, 36 insertions(+), 13 deletions(-)
 
 
 diff --git a/check b/check
-index 607d2456e6a1fe..bafe48bf12db67 100755
+index bafe48bf12db67..126a77441d700d 100755
 --- a/check
 +++ b/check
-@@ -698,18 +698,41 @@ _adjust_oom_score -500
- # systemd doesn't automatically remove transient scopes that fail to terminate
- # when systemd tells them to terminate (e.g. programs stuck in D state when
- # systemd sends SIGKILL), so we use reset-failed to tear down the scope.
-+#
-+# Use setsid to run the test program with a separate session id so that we
-+# can pkill only the processes started by this test.
- _run_seq() {
--	local cmd=(bash -c "test -w ${OOM_SCORE_ADJ} && echo 250 > ${OOM_SCORE_ADJ}; exec ./$seq")
-+	local cmd=(bash -c "test -w ${OOM_SCORE_ADJ} && echo 250 > ${OOM_SCORE_ADJ}; exec setsid bash ./$seq")
+@@ -1026,8 +1026,8 @@ function run_section()
  
- 	if [ -n "${HAVE_SYSTEMD_SCOPES}" ]; then
- 		local unit="$(systemd-escape "fs$seq").scope"
- 		systemctl reset-failed "${unit}" &> /dev/null
--		systemd-run --quiet --unit "${unit}" --scope "${cmd[@]}"
-+		systemd-run --quiet --unit "${unit}" --scope "${cmd[@]}" &
-+		CHILDPID=$!
-+		wait
- 		res=$?
-+		unset CHILDPID
- 		systemctl stop "${unit}" &> /dev/null
- 		return "${res}"
- 	else
--		"${cmd[@]}"
-+		# bash won't run the SIGINT trap handler while there are
-+		# foreground children in a separate session, so we must run
-+		# the test in the background and wait for it.
-+		"${cmd[@]}" &
-+		CHILDPID=$!
-+		wait
-+		unset CHILDPID
-+	fi
-+}
+ 		if [ $sts -ne 0 ]; then
+ 			_dump_err_cont "[failed, exit status $sts]"
+-			_test_unmount 2>> $seqres.full
+-			_scratch_unmount 2>> $seqres.full
++			_test_unmount 2> /dev/null
++			_scratch_unmount 2> /dev/null
+ 			rm -f ${RESULT_DIR}/require_test*
+ 			rm -f ${RESULT_DIR}/require_scratch*
+ 			# Even though we failed, there may be something interesting in
+@@ -1113,6 +1113,12 @@ function run_section()
+ 		_stash_test_status "$seqnum" "$tc_status"
+ 	done
+ 
++	# Reset these three variables so that unmount output doesn't get
++	# written to $seqres.full of the last test to run.
++	seq="check.$$"
++	check="$RESULT_BASE/check"
++	seqres="$check"
 +
-+_kill_seq() {
-+	if [ -n "$CHILDPID" ]; then
-+		# SIGPIPE will kill all the children (including fsstress)
-+		# without bash logging fatal signal termination messages to the
-+		# console
-+		pkill -PIPE --session "$CHILDPID"
-+		wait
-+		unset CHILDPID
- 	fi
- }
+ 	sect_stop=`_wallclock`
+ 	interrupt=false
+ 	_wrapup
+diff --git a/common/quota b/common/quota
+index 8688116c6547a9..4dad9b79a27a7f 100644
+--- a/common/quota
++++ b/common/quota
+@@ -274,7 +274,7 @@ _choose_prid()
  
-@@ -718,9 +741,9 @@ _prepare_test_list
- fstests_start_time="$(date +"%F %T")"
- 
- if $OPTIONS_HAVE_SECTIONS; then
--	trap "_summary; exit \$status" 0 1 2 3 15
-+	trap "_kill_seq; _summary; exit \$status" 0 1 2 3 15
- else
--	trap "_wrapup; exit \$status" 0 1 2 3 15
-+	trap "_kill_seq; _wrapup; exit \$status" 0 1 2 3 15
- fi
- 
- function run_section()
-diff --git a/common/fuzzy b/common/fuzzy
-index 0a2d91542b561e..772ce7ddcff6d8 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -891,7 +891,7 @@ __stress_xfs_scrub_loop() {
- 	local runningfile="$2"
- 	local scrub_startat="$3"
- 	shift; shift; shift
--	local sigint_ret="$(( $(kill -l SIGINT) + 128 ))"
-+	local signal_ret="$(( $(kill -l SIGPIPE) + 128 ))"
- 	local scrublog="$tmp.scrub"
- 
- 	while __stress_scrub_running "$scrub_startat" "$runningfile"; do
-@@ -901,8 +901,8 @@ __stress_xfs_scrub_loop() {
- 	while __stress_scrub_running "$end" "$runningfile"; do
- 		_scratch_scrub "$@" &> $scrublog
- 		res=$?
--		if [ "$res" -eq "$sigint_ret" ]; then
--			# Ignore SIGINT because the cleanup function sends
-+		if [ "$res" -eq "$signal_ret" ]; then
-+			# Ignore SIGPIPE because the cleanup function sends
- 			# that to terminate xfs_scrub
- 			res=0
- 		fi
-@@ -1173,13 +1173,11 @@ _scratch_xfs_stress_scrub_cleanup() {
- 	rm -f "$runningfile"
- 	echo "Cleaning up scrub stress run at $(date)" >> $seqres.full
- 
--	# Send SIGINT so that bash won't print a 'Terminated' message that
--	# distorts the golden output.
- 	echo "Killing stressor processes at $(date)" >> $seqres.full
--	_kill_fsstress
--	pkill -INT --parent $$ xfs_io >> $seqres.full 2>&1
--	pkill -INT --parent $$ fsx >> $seqres.full 2>&1
--	pkill -INT --parent $$ xfs_scrub >> $seqres.full 2>&1
-+	_pkill --echo -PIPE fsstress >> $seqres.full 2>&1
-+	_pkill --echo -PIPE xfs_io >> $seqres.full 2>&1
-+	_pkill --echo -PIPE fsx >> $seqres.full 2>&1
-+	_pkill --echo -PIPE xfs_scrub >> $seqres.full 2>&1
- 
- 	# Tests are not allowed to exit with the scratch fs frozen.  If we
- 	# started a fs freeze/thaw background loop, wait for that loop to exit
-@@ -1209,6 +1207,7 @@ _scratch_xfs_stress_scrub_cleanup() {
- 	# Wait for the remaining children to exit.
- 	echo "Waiting for children to exit at $(date)" >> $seqres.full
- 	wait
-+	echo "Children exited as of $(date)" >> $seqres.full
- 
- 	# Ensure the scratch fs is also writable before we exit.
- 	if [ -n "$__SCRUB_STRESS_REMOUNT_LOOP" ]; then
+ _qmount()
+ {
+-    _scratch_unmount
++    _scratch_unmount >/dev/null 2>&1
+     _try_scratch_mount || _fail "qmount failed"
+     # xfs doesn't need these setups and quotacheck even fails on xfs
+     # redirect the output to $seqres.full for debug purpose and ignore results
 diff --git a/common/rc b/common/rc
-index 459be11c11c405..d143ba36265c6c 100644
+index d143ba36265c6c..9e34c301b0deb0 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -30,6 +30,12 @@ _test_sync()
- 	_sync_fs $TEST_DIR
+@@ -480,11 +480,28 @@ _scratch_mount_idmapped()
  }
  
-+# Kill only the test processes started by this test
-+_pkill()
-+{
-+	pkill --session 0 "$@"
-+}
-+
- # Common execution handling for fsstress invocation.
- #
- # We need per-test fsstress binaries because of the way fsstress forks and
-@@ -69,7 +75,7 @@ _kill_fsstress()
- 	if [ -n "$_FSSTRESS_PID" ]; then
- 		# use SIGPIPE to avoid "Killed" messages from bash
- 		echo "killing $_FSSTRESS_BIN" >> $seqres.full
--		pkill -PIPE $_FSSTRESS_BIN >> $seqres.full 2>&1
-+		_pkill -PIPE $_FSSTRESS_BIN >> $seqres.full 2>&1
- 		_wait_for_fsstress
- 		return $?
- 	fi
-@@ -2740,9 +2746,11 @@ _require_user_exists()
- 	[ "$?" == "0" ] || _notrun "$user user not defined."
- }
- 
-+# Run all non-root processes in the same session as the root.  Believe it or
-+# not, passing $SHELL in this manner works both for "su" and "su -c cmd".
- _su()
+ # Unmount the filesystem based on the directory or device passed.
++# Log everything that happens to seqres.full, and use BASHPID because
++# background subshells have the same $$ as the parent but not the same
++# $BASHPID.
+ _unmount()
  {
--	su "$@"
-+	su --session-command $SHELL "$@"
+-	local args="$*"
++	local outlog="$tmp.$BASHPID.umount"
++	local errlog="$tmp.$BASHPID.umount.err"
+ 
+-	$UMOUNT_PROG $args >> $seqres.full 2>&1
++	rm -f "$outlog" "$errlog"
++	$UMOUNT_PROG "$@" 2> "$errlog" > "$outlog"
++	local res="${PIPESTATUS[0]}"
++
++	if [ -s "$outlog" ]; then
++		cat "$outlog" >> $seqres.full
++		cat "$outlog"
++	fi
++	if [ -s "$errlog" ]; then
++		cat "$errlog" >> $seqres.full
++		>&2 cat "$errlog"
++	fi
++	rm -f "$outlog" "$errlog"
++	return $res
  }
  
- # check if a user exists and is able to execute commands.
-diff --git a/tests/generic/310 b/tests/generic/310
-index 52babfdc803a21..570cc5f3859548 100755
---- a/tests/generic/310
-+++ b/tests/generic/310
-@@ -29,7 +29,7 @@ _begin_fstest auto
+ _scratch_unmount()
+diff --git a/tests/generic/050 b/tests/generic/050
+index 8e9456db279003..affb072df5969f 100755
+--- a/tests/generic/050
++++ b/tests/generic/050
+@@ -89,7 +89,7 @@ _try_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
+ 
+ # expects an error, so open code the unmount
+ echo "unmounting read-only filesystem"
+-$UMOUNT_PROG $SCRATCH_DEV 2>&1 | _filter_scratch | _filter_ending_dot
++_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
+ 
+ #
+ # This is the way out if the underlying device really is read-only.
+diff --git a/tests/generic/085 b/tests/generic/085
+index 7671a36ab9524f..d3fa10be9ccace 100755
+--- a/tests/generic/085
++++ b/tests/generic/085
+@@ -29,7 +29,7 @@ cleanup_dmdev()
+ 	fi
+ 	# in case it's still suspended and/or mounted
+ 	$DMSETUP_PROG resume $lvdev >> $seqres.full 2>&1
+-	_unmount -q $SCRATCH_MNT
++	_unmount -q $SCRATCH_MNT >/dev/null 2>&1
+ 	_dmsetup_remove $node
+ }
+ 
+diff --git a/tests/generic/361 b/tests/generic/361
+index e2b7984361e87c..b584af47540020 100755
+--- a/tests/generic/361
++++ b/tests/generic/361
+@@ -16,7 +16,7 @@ _begin_fstest auto quick
  # Override the default cleanup function.
  _cleanup()
  {
--	pkill -9 $seq.t_readdir > /dev/null 2>&1
-+	_pkill -9 $seq.t_readdir > /dev/null 2>&1
- 	wait
- 	rm -rf $TEST_DIR/tmp
+-	_unmount $fs_mnt
++	_unmount $fs_mnt &>> /dev/null
+ 	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
+ 	cd /
  	rm -f $tmp.*
-@@ -83,7 +83,7 @@ _test_read()
+@@ -54,7 +54,7 @@ $XFS_IO_PROG -fc "pwrite 0 520m" $fs_mnt/testfile >>$seqres.full 2>&1
+ # remount should not hang
+ $MOUNT_PROG -o remount,ro $fs_mnt >>$seqres.full 2>&1
+ 
+-_unmount $fs_mnt
++_unmount $fs_mnt &>/dev/null
+ _destroy_loop_device $loop_dev
+ unset loop_dev
+ 
+diff --git a/tests/generic/590 b/tests/generic/590
+index 1adeef4c2ad52c..ba1337a856f15d 100755
+--- a/tests/generic/590
++++ b/tests/generic/590
+@@ -15,7 +15,7 @@ _begin_fstest auto prealloc preallocrw
+ # Override the default cleanup function.
+ _cleanup()
  {
- 	 $TEST_DIR/$seq.t_readdir_1 $SEQ_DIR > /dev/null 2>&1 &
- 	sleep $RUN_TIME
--	pkill -PIPE $seq.t_readdir_1
-+	_pkill -PIPE $seq.t_readdir_1
- 	wait
+-	_scratch_unmount
++	_scratch_unmount &>/dev/null
+ 	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
+ 	cd /
+ 	rm -f $tmp.*
+diff --git a/tests/generic/746 b/tests/generic/746
+index ba8ed25e845776..6f02b1cc354782 100755
+--- a/tests/generic/746
++++ b/tests/generic/746
+@@ -223,7 +223,7 @@ while read line; do
+ done < $fiemap_after
+ echo "done."
  
- 	check_kernel_bug
-@@ -97,7 +97,7 @@ _test_lseek()
- 	$TEST_DIR/$seq.t_readdir_2 $SEQ_DIR > /dev/null 2>&1 &
- 	readdir_pid=$!
- 	sleep $RUN_TIME
--	pkill -PIPE $seq.t_readdir_2
-+	_pkill -PIPE $seq.t_readdir_2
- 	wait
+-_unmount $loop_mnt
++_unmount $loop_mnt &>/dev/null
+ _destroy_loop_device $loop_dev
+ unset loop_dev
  
- 	check_kernel_bug
-diff --git a/tests/generic/561 b/tests/generic/561
-index afe727ac56cbd9..b260aaf16c9256 100755
---- a/tests/generic/561
-+++ b/tests/generic/561
-@@ -40,7 +40,7 @@ function end_test()
- 	# stop duperemove running
- 	if [ -e $dupe_run ]; then
- 		rm -f $dupe_run
--		pkill $dedup_bin >/dev/null 2>&1
-+		_pkill $dedup_bin >/dev/null 2>&1
- 		wait $dedup_pids
- 		rm -f $dedup_prog
- 	fi
+diff --git a/tests/xfs/149 b/tests/xfs/149
+index 9a96f82ede1761..28dfc7f04c1773 100755
+--- a/tests/xfs/149
++++ b/tests/xfs/149
+@@ -22,7 +22,7 @@ loop_symlink=$TEST_DIR/loop_symlink.$$
+ # Override the default cleanup function.
+ _cleanup()
+ {
+-    _unmount $mntdir
++    _unmount $mntdir &>/dev/null
+     [ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
+     rmdir $mntdir
+     rm -f $loop_symlink
+diff --git a/tests/xfs/530 b/tests/xfs/530
+index d0d0e2665070f8..95ab32f1e1f828 100755
+--- a/tests/xfs/530
++++ b/tests/xfs/530
+@@ -116,7 +116,7 @@ done
+ echo "Check filesystem"
+ _check_scratch_fs
+ 
+-_scratch_unmount
++_scratch_unmount &> /dev/null
+ _destroy_loop_device $rt_loop_dev
+ unset rt_loop_dev
+ 
 
