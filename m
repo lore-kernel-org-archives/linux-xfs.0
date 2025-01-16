@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05B2158520;
-	Thu, 16 Jan 2025 23:27:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2436158520;
+	Thu, 16 Jan 2025 23:27:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070051; cv=none; b=Gr+SAEP9BLsyHEW79VQ73Z12FAcbrizEqkXPLinI2zdWqYpFyhljyEhatIl0ihvEK2Jxia6yqeQCYCKsco1qADUjFZGdHVoF4A95omwAKRfkjpwuds3wn6bGtwLEJVo5n9mrjStdH7cs978EeZEBk/iRgN/r7FipOJywnx5WOTU=
+	t=1737070067; cv=none; b=krTxJPbEVUdvPnmINUbRfdP4pMcKA6aL45DN6s9CKdIJniuyVSUPJudMCs+jqsj6Fw6hgIwgKhBM0MHsTXoB+BuTgOvRuudUoWm8W8YeDQ5DZxx9YQgVXsxOstsuSnmcK9hv/a4dQ/omWqAevWXQuhTfzs4+zrGPF+tsUrLh4Vw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070051; c=relaxed/simple;
-	bh=4ojFym6rL0NvIG7GN6s36EqDy1wFfRBh8l1I+PrhDRg=;
+	s=arc-20240116; t=1737070067; c=relaxed/simple;
+	bh=z8/t7g12G3jvoVSPtvzo/jYuh8mMrxA863C0HdXkXmc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rMPw0Wqkwo6Ue92iiA97BKjEMKV7fcWLbybKVMzLlzlpt5MPI8dw2tTLpRngo+lPERbioyUMSYW+VOtGedJCC5Rf4A98yjdQU0+Pvr5r8YENOxwgz763W27RhJThIDZ8eDCf0uW/8ZfmzXgFSm6n8ca+maAKqCwAE27IG65UqhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MMGnBj+I; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=dzkIwBJw4BrA0kdW9vDR2ccpcBe45M1h2d5FnIJVPVFydrq15qvHMrd3P3CNGJP0gqr0OOFLFgEvDEUWFgg4EYmDfowEZhGit8K2g97zTWEuhFnsG+gCUWd96iV2WMXDMNTN7VI+gXKV8HLARkqF8wiS2iw0jPR9jm/DzdcKiZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZmwXxU6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MMGnBj+I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A65F3C4CED6;
-	Thu, 16 Jan 2025 23:27:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZmwXxU6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46CC9C4CED6;
+	Thu, 16 Jan 2025 23:27:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070051;
-	bh=4ojFym6rL0NvIG7GN6s36EqDy1wFfRBh8l1I+PrhDRg=;
+	s=k20201202; t=1737070067;
+	bh=z8/t7g12G3jvoVSPtvzo/jYuh8mMrxA863C0HdXkXmc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MMGnBj+IHvzBPJl6LDN0MSI2SQ3mvcnfUofRywf/mtoZx0X+fDtp5rS5yctD6gniG
-	 MS8rUDURTo873U/du2+bwaTwIfyvuOfJLZ7xlazIhoni2Y/ViaYmd+13+HiFUg5cgL
-	 d7poPV47Ar5Tf7C/y2HHxWXygpJWm5WncNkceefJslQqMWJyC1jHYicn+X7n2W9q0L
-	 qWfYUULaoOsOGePGLAzlV/kakHGcryrUXc8xGC0Uo4vPBSIW8Ywh6g9T3qZOi15TVx
-	 zB1RHw+oSSExcpqSVBET/lcmzr9a21BIlJc2FWvxuDDVnq/pYPWCW4INXJqPUf5vAG
-	 LcblLT1iYD4FQ==
-Date: Thu, 16 Jan 2025 15:27:31 -0800
-Subject: [PATCH 09/23] unmount: resume logging of stdout and stderr for
- filtering
+	b=OZmwXxU6qXfs5S6EX2IsYVFiZEOZkRWKSs4sVSNIzRq2a8DgWPWX7q/TGUCCErEhF
+	 DDZ1eP0sSSj5u1+A62UZI6TiSIFNkEIlzez0F7btvGckbKplrNGSNV5T2USTYL4hwS
+	 YA/Lc1Rs9R84FvkLKiMfIHG4cheqVH6uU4vqoLClq3WXRnhPwyqc2FPu+QL/CycnI1
+	 7rrEebV8efdK4+H9xHr/YyGfBg9MF7vK8bq2LUpE2aY3Ljtm5myrCtk4X45cSGe/uy
+	 W/ulBDHI/DZpgaSYHPgO0GCTEasub5yLoY1qC8nuAym2D4/jsWt3EJDiz/8uJZEqnJ
+	 6VuVJ78FLEQiQ==
+Date: Thu, 16 Jan 2025 15:27:46 -0800
+Subject: [PATCH 10/23] mkfs: don't hardcode log size
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706974213.1927324.1385565534988725161.stgit@frogsfrogsfrogs>
+Message-ID: <173706974228.1927324.17714311358227511791.stgit@frogsfrogsfrogs>
 In-Reply-To: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,207 +45,143 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There's a number of places where a test program calls a variant of
-_unmount but then pipes the output through a _filter script or
-something.  The new _unmount helper redirects stdout and stderr to
-seqres.full, which means that those error messages (some of which are
-encoded in the golden outputs) are suppressed.  This leads to test
-regressions in generic/050 and other places, so let's resume logging.
+Commit 000813899afb46 hardcoded a log size of 256MB into xfs/501,
+xfs/502, and generic/530.  This seems to be an attempt to reduce test
+run times by increasing the log size so that more background threads can
+run in parallel.  Unfortunately, this breaks a couple of my test
+configurations:
 
-This also undoes all the changes that removed /dev/null redirection of
-unmount calls.
+ - External logs smaller than 256MB
+ - Internal logs where the AG size is less than 256MB
+
+For example, here's seqres.full from a failed xfs/501 invocation:
+
+** mkfs failed with extra mkfs options added to " -m metadir=2,autofsck=1,uquota,gquota,pquota, -d rtinherit=1," by test 501 **
+** attempting to mkfs using only test 501 options: -l size=256m **
+size 256m specified for log subvolume is too large, maximum is 32768 blocks
+<snip>
+mount -ortdev=/dev/sdb4 -ologdev=/dev/sdb2 /dev/sda4 /opt failed
+umount: /dev/sda4: not mounted.
+
+Note that there's some formatting error here, so we jettison the entire
+rt configuration to force the log size option, but then mount fails
+because we didn't edit out the rtdev option there too.
+
+Fortunately, mkfs.xfs already /has/ a few options to try to improve
+parallelism in the filesystem by avoiding contention on the log grant
+heads by scaling up the log size.  These options are aware of log and AG
+size constraints so they won't conflict with other geometry options.
+
+Use them.
 
 Cc: <fstests@vger.kernel.org> # v2024.12.08
-Fixes: 4c6bc4565105e6 ("fstests: clean up mount and unmount operations")
+Fixes: 000813899afb46 ("fstests: scale some tests for high CPU count sanity")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- check             |   10 ++++++++--
- common/quota      |    2 +-
- common/rc         |   21 +++++++++++++++++++--
- tests/generic/050 |    2 +-
- tests/generic/085 |    2 +-
- tests/generic/361 |    4 ++--
- tests/generic/590 |    2 +-
- tests/generic/746 |    2 +-
- tests/xfs/149     |    2 +-
- tests/xfs/530     |    2 +-
- 10 files changed, 36 insertions(+), 13 deletions(-)
+ common/rc         |   27 +++++++++++++++++++++++++++
+ tests/generic/530 |    6 +-----
+ tests/generic/531 |    6 +-----
+ tests/xfs/501     |    2 +-
+ tests/xfs/502     |    2 +-
+ 5 files changed, 31 insertions(+), 12 deletions(-)
 
 
-diff --git a/check b/check
-index bafe48bf12db67..126a77441d700d 100755
---- a/check
-+++ b/check
-@@ -1026,8 +1026,8 @@ function run_section()
- 
- 		if [ $sts -ne 0 ]; then
- 			_dump_err_cont "[failed, exit status $sts]"
--			_test_unmount 2>> $seqres.full
--			_scratch_unmount 2>> $seqres.full
-+			_test_unmount 2> /dev/null
-+			_scratch_unmount 2> /dev/null
- 			rm -f ${RESULT_DIR}/require_test*
- 			rm -f ${RESULT_DIR}/require_scratch*
- 			# Even though we failed, there may be something interesting in
-@@ -1113,6 +1113,12 @@ function run_section()
- 		_stash_test_status "$seqnum" "$tc_status"
- 	done
- 
-+	# Reset these three variables so that unmount output doesn't get
-+	# written to $seqres.full of the last test to run.
-+	seq="check.$$"
-+	check="$RESULT_BASE/check"
-+	seqres="$check"
-+
- 	sect_stop=`_wallclock`
- 	interrupt=false
- 	_wrapup
-diff --git a/common/quota b/common/quota
-index 8688116c6547a9..4dad9b79a27a7f 100644
---- a/common/quota
-+++ b/common/quota
-@@ -274,7 +274,7 @@ _choose_prid()
- 
- _qmount()
- {
--    _scratch_unmount
-+    _scratch_unmount >/dev/null 2>&1
-     _try_scratch_mount || _fail "qmount failed"
-     # xfs doesn't need these setups and quotacheck even fails on xfs
-     # redirect the output to $seqres.full for debug purpose and ignore results
 diff --git a/common/rc b/common/rc
-index d143ba36265c6c..9e34c301b0deb0 100644
+index 9e34c301b0deb0..885669beeb5e26 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -480,11 +480,28 @@ _scratch_mount_idmapped()
+@@ -689,6 +689,33 @@ _test_cycle_mount()
+     _test_mount
  }
  
- # Unmount the filesystem based on the directory or device passed.
-+# Log everything that happens to seqres.full, and use BASHPID because
-+# background subshells have the same $$ as the parent but not the same
-+# $BASHPID.
- _unmount()
- {
--	local args="$*"
-+	local outlog="$tmp.$BASHPID.umount"
-+	local errlog="$tmp.$BASHPID.umount.err"
- 
--	$UMOUNT_PROG $args >> $seqres.full 2>&1
-+	rm -f "$outlog" "$errlog"
-+	$UMOUNT_PROG "$@" 2> "$errlog" > "$outlog"
-+	local res="${PIPESTATUS[0]}"
++# Are there mkfs options to try to improve concurrency?
++_scratch_mkfs_concurrency_options()
++{
++	local nr_cpus="$(( $1 * LOAD_FACTOR ))"
 +
-+	if [ -s "$outlog" ]; then
-+		cat "$outlog" >> $seqres.full
-+		cat "$outlog"
-+	fi
-+	if [ -s "$errlog" ]; then
-+		cat "$errlog" >> $seqres.full
-+		>&2 cat "$errlog"
-+	fi
-+	rm -f "$outlog" "$errlog"
-+	return $res
- }
- 
- _scratch_unmount()
-diff --git a/tests/generic/050 b/tests/generic/050
-index 8e9456db279003..affb072df5969f 100755
---- a/tests/generic/050
-+++ b/tests/generic/050
-@@ -89,7 +89,7 @@ _try_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
- 
- # expects an error, so open code the unmount
- echo "unmounting read-only filesystem"
--$UMOUNT_PROG $SCRATCH_DEV 2>&1 | _filter_scratch | _filter_ending_dot
-+_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- 
- #
- # This is the way out if the underlying device really is read-only.
-diff --git a/tests/generic/085 b/tests/generic/085
-index 7671a36ab9524f..d3fa10be9ccace 100755
---- a/tests/generic/085
-+++ b/tests/generic/085
-@@ -29,7 +29,7 @@ cleanup_dmdev()
- 	fi
- 	# in case it's still suspended and/or mounted
- 	$DMSETUP_PROG resume $lvdev >> $seqres.full 2>&1
--	_unmount -q $SCRATCH_MNT
-+	_unmount -q $SCRATCH_MNT >/dev/null 2>&1
- 	_dmsetup_remove $node
- }
- 
-diff --git a/tests/generic/361 b/tests/generic/361
-index e2b7984361e87c..b584af47540020 100755
---- a/tests/generic/361
-+++ b/tests/generic/361
-@@ -16,7 +16,7 @@ _begin_fstest auto quick
- # Override the default cleanup function.
- _cleanup()
++	case "$FSTYP" in
++	xfs)
++		# If any concurrency options are already specified, don't
++		# compute our own conflicting ones.
++		echo "$SCRATCH_OPTIONS $MKFS_OPTIONS" | \
++			grep -q 'concurrency=' &&
++			return
++
++		local sections=(d r)
++
++		# -l concurrency does not work with external logs
++		test _has_logdev || sections+=(l)
++
++		for section in "${sections[@]}"; do
++			$MKFS_XFS_PROG -$section concurrency=$nr_cpus 2>&1 | \
++				grep -q "unknown option -$section" ||
++				echo "-$section concurrency=$nr_cpus "
++		done
++		;;
++	esac
++}
++
+ _scratch_mkfs_options()
  {
--	_unmount $fs_mnt
-+	_unmount $fs_mnt &>> /dev/null
- 	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
- 	cd /
- 	rm -f $tmp.*
-@@ -54,7 +54,7 @@ $XFS_IO_PROG -fc "pwrite 0 520m" $fs_mnt/testfile >>$seqres.full 2>&1
- # remount should not hang
- $MOUNT_PROG -o remount,ro $fs_mnt >>$seqres.full 2>&1
+     _scratch_options mkfs
+diff --git a/tests/generic/530 b/tests/generic/530
+index f2513156a920e8..7413840476b588 100755
+--- a/tests/generic/530
++++ b/tests/generic/530
+@@ -25,11 +25,7 @@ _require_test_program "t_open_tmpfiles"
+ # For XFS, pushing 50000 unlinked inode inactivations through a small xfs log
+ # can result in bottlenecks on the log grant heads, so try to make the log
+ # larger to reduce runtime.
+-if [ "$FSTYP" = "xfs" ] && ! _has_logdev; then
+-    _scratch_mkfs "-l size=256m" >> $seqres.full 2>&1
+-else
+-    _scratch_mkfs >> $seqres.full 2>&1
+-fi
++_scratch_mkfs $(_scratch_mkfs_concurrency_options 32) >> $seqres.full 2>&1
+ _scratch_mount
  
--_unmount $fs_mnt
-+_unmount $fs_mnt &>/dev/null
- _destroy_loop_device $loop_dev
- unset loop_dev
+ # Set ULIMIT_NOFILE to min(file-max / 2, 50000 files per LOAD_FACTOR)
+diff --git a/tests/generic/531 b/tests/generic/531
+index ed6c3f91153ecc..3ba2790c923464 100755
+--- a/tests/generic/531
++++ b/tests/generic/531
+@@ -23,11 +23,7 @@ _require_test_program "t_open_tmpfiles"
  
-diff --git a/tests/generic/590 b/tests/generic/590
-index 1adeef4c2ad52c..ba1337a856f15d 100755
---- a/tests/generic/590
-+++ b/tests/generic/590
-@@ -15,7 +15,7 @@ _begin_fstest auto prealloc preallocrw
- # Override the default cleanup function.
- _cleanup()
- {
--	_scratch_unmount
-+	_scratch_unmount &>/dev/null
- 	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
- 	cd /
- 	rm -f $tmp.*
-diff --git a/tests/generic/746 b/tests/generic/746
-index ba8ed25e845776..6f02b1cc354782 100755
---- a/tests/generic/746
-+++ b/tests/generic/746
-@@ -223,7 +223,7 @@ while read line; do
- done < $fiemap_after
- echo "done."
+ # On high CPU count machines, this runs a -lot- of create and unlink
+ # concurrency. Set the filesytsem up to handle this.
+-if [ $FSTYP = "xfs" ]; then
+-	_scratch_mkfs "-d agcount=32" >> $seqres.full 2>&1
+-else
+-	_scratch_mkfs >> $seqres.full 2>&1
+-fi
++_scratch_mkfs $(_scratch_mkfs_concurrency_options 32) >> $seqres.full 2>&1
+ _scratch_mount
  
--_unmount $loop_mnt
-+_unmount $loop_mnt &>/dev/null
- _destroy_loop_device $loop_dev
- unset loop_dev
+ # Try to load up all the CPUs, two threads per CPU.
+diff --git a/tests/xfs/501 b/tests/xfs/501
+index 678c51b52948c5..4b29ef97d36c1a 100755
+--- a/tests/xfs/501
++++ b/tests/xfs/501
+@@ -33,7 +33,7 @@ _require_xfs_sysfs debug/log_recovery_delay
+ _require_scratch
+ _require_test_program "t_open_tmpfiles"
  
-diff --git a/tests/xfs/149 b/tests/xfs/149
-index 9a96f82ede1761..28dfc7f04c1773 100755
---- a/tests/xfs/149
-+++ b/tests/xfs/149
-@@ -22,7 +22,7 @@ loop_symlink=$TEST_DIR/loop_symlink.$$
- # Override the default cleanup function.
- _cleanup()
- {
--    _unmount $mntdir
-+    _unmount $mntdir &>/dev/null
-     [ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
-     rmdir $mntdir
-     rm -f $loop_symlink
-diff --git a/tests/xfs/530 b/tests/xfs/530
-index d0d0e2665070f8..95ab32f1e1f828 100755
---- a/tests/xfs/530
-+++ b/tests/xfs/530
-@@ -116,7 +116,7 @@ done
- echo "Check filesystem"
- _check_scratch_fs
+-_scratch_mkfs "-l size=256m" >> $seqres.full 2>&1
++_scratch_mkfs $(_scratch_mkfs_concurrency_options 32) >> $seqres.full 2>&1
+ _scratch_mount
  
--_scratch_unmount
-+_scratch_unmount &> /dev/null
- _destroy_loop_device $rt_loop_dev
- unset rt_loop_dev
+ # Set ULIMIT_NOFILE to min(file-max / 2, 30000 files per LOAD_FACTOR)
+diff --git a/tests/xfs/502 b/tests/xfs/502
+index 10b0017f6b2eb2..df3e7bcb17872d 100755
+--- a/tests/xfs/502
++++ b/tests/xfs/502
+@@ -23,7 +23,7 @@ _require_xfs_io_error_injection "iunlink_fallback"
+ _require_scratch
+ _require_test_program "t_open_tmpfiles"
+ 
+-_scratch_mkfs "-l size=256m" | _filter_mkfs 2> $tmp.mkfs > /dev/null
++_scratch_mkfs $(_scratch_mkfs_concurrency_options 32) | _filter_mkfs 2> $tmp.mkfs > /dev/null
+ cat $tmp.mkfs >> $seqres.full
+ . $tmp.mkfs
  
 
