@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EDF1DD0DC;
-	Thu, 16 Jan 2025 23:39:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4316C242D63;
+	Thu, 16 Jan 2025 23:40:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070786; cv=none; b=uXPLPWFA4rxa7MMgAyUC45jN2PbVBUzmajT84kP1GRkRbcOMACud5Phr6rBP/NF4IiU8d++7Lo6js4F4AAHlJti91hU3ZfHufbu8YtCUnoZY+WzI5ucRXkaFQ2RQ1lfn4Dethq0S1lOVtUfIXeNe942b42xZ4nFD2KhE1tOqj4k=
+	t=1737070802; cv=none; b=cPuEUeNfMNAjhKFw3ZFm6k0cjGHYy/kbs4wRBEiH3rGNHYyj30myNKca7O4kVlC2R9lZRawwbceDzHmBloX5e95+BT+L/i2r0BInrpffKl3nZ0rR8/h/bUTafMI5XzozYKbvYrZG7o9I8nBdEBzdMSA6sMxCNvmvUFsFPlf0Q6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070786; c=relaxed/simple;
-	bh=w6dIgeKRjwm3Vghr7v4q+97adtTn5YBPv0s5fU0jEf0=;
+	s=arc-20240116; t=1737070802; c=relaxed/simple;
+	bh=iOcmpA6NfbNU8cGfVMPwlGizx7FzknUbe5JqLReHqOk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=brN3ysAVqEhgOh63HfQOzpZOQdlarXKO4rbSKZps/2KmwtqbftI6F7zRGHzvpwXSZn5K9vhT+huhLoc4LM6GaLvGLYHBPRzTL0McMpVS6peXoRMIrPgbsY9wLj4nrgjResypEH6p9n/OmOMGmcSwvIuS6Z72NhfVbdLnl9YGWTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GRlHFQTn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UQM/zcylGbpO9fo21LuQRJT5BvFG2z1r0JytWBwYbj+/J5/EVi3Iag7DJAjJoGldJIA2jQE8s8yGU8A+yUGlOYEdxjDbnpoZr6xdonjQj1TnUHMicBI/ZImHTtxCcAvm6P4E2f4nkRnDUx3rp0dbMhaKf543Vz8KoPF6frhWtLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WOuygvQy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GRlHFQTn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6869FC4CED6;
-	Thu, 16 Jan 2025 23:39:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WOuygvQy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09177C4CED6;
+	Thu, 16 Jan 2025 23:40:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070786;
-	bh=w6dIgeKRjwm3Vghr7v4q+97adtTn5YBPv0s5fU0jEf0=;
+	s=k20201202; t=1737070802;
+	bh=iOcmpA6NfbNU8cGfVMPwlGizx7FzknUbe5JqLReHqOk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=GRlHFQTnc5wwtviepwk4SkpH7/pth25C5jQ1jyO+pKnCPYN41rU89cycUc/pcuMoI
-	 H/gL7Cv5dSb0hFJ63nxHwqAqs3U1nSnX76meqw/gTJSEzd8x3lfktPxykvkSnErUGy
-	 Dk0adMZTvS4UbwCDXROWMLQWNVyL1gnisoYLUfqOwxlx2zRISP9TYz5utu3wFA9EDe
-	 yOhaZWU9EgH+b4MXPbbVAXiiJppoAQMM2KV40gZ7xNUd7ojn5n7R5EuAmOHmbgluKM
-	 GnBTHzIius6LcdbVQ2kaZwWV4dilE3cIM7aF+q3xNcWFztN4nhyXbOXwSoXQFjgl9B
-	 neE68l2RFaxTQ==
-Date: Thu, 16 Jan 2025 15:39:46 -0800
-Subject: [PATCH 4/4] xfs: fix tests for persistent qflags
+	b=WOuygvQyK21oU0g92OuwICF8h6vAqn51+SrdjG7JHX04pxGtqNgfnPLn0Y7RvN6Gb
+	 SNqJmEPzr9DAgV3ufQfGp9I/8dk2n5ImHDtWOrViUevdaJdjcCBlB+OfBwpZQ8F1AH
+	 ryaiSGmAdTyLyUbg9oPStf7oTmpgpnbN+DOVxlZbz/ZF7U9R3tOPHH08PiswkHaePZ
+	 asr7DAPOelmm+fyUWyvejtw3EMbV8YsE4YM61Oks8+gjKJiym9Z31TNFoW7PoYQ09+
+	 D+ycN1vIio3u84PB4WK9pHUExzuqyzKeVXZ9yGEAFmTD5zhHw5gw+gSSTg13VU8hGT
+	 1jktjdWyFvLNQ==
+Date: Thu, 16 Jan 2025 15:40:01 -0800
+Subject: [PATCH 1/3] common: enable testing of realtime quota when supported
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706976698.1929311.10218997705149048736.stgit@frogsfrogsfrogs>
-In-Reply-To: <173706976640.1929311.7118885570179440699.stgit@frogsfrogsfrogs>
-References: <173706976640.1929311.7118885570179440699.stgit@frogsfrogsfrogs>
+Message-ID: <173706977075.1931302.14612584705333190739.stgit@frogsfrogsfrogs>
+In-Reply-To: <173706977056.1931302.2974286403286751639.stgit@frogsfrogsfrogs>
+References: <173706977056.1931302.2974286403286751639.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,195 +45,158 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix the tests that now break with persistent quota flags.
+If the kernel advertises realtime quota support, test it.
+
+However, this has a plot twist -- because rt quota only works if the xfs
+is formatted with rtgroups, we have to mount a filesystem to see if
+rtquota is actually supported.  Since it's time consuming to format and
+mount the scratch filesystem, we'll assume that the test and scratch
+fses have the same support.
+
+This will cause problems if one sets SCRATCH_RTDEV but not TEST_RTDEV.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/quota              |    1 +
- common/rc                 |    1 +
- common/xfs                |    3 +++
- tests/xfs/007             |    2 +-
- tests/xfs/096             |    1 +
- tests/xfs/096.out         |    2 +-
- tests/xfs/106             |    2 +-
- tests/xfs/116             |   13 ++++++++++++-
- tests/xfs/116.cfg         |    1 +
- tests/xfs/116.out.default |    0 
- tests/xfs/116.out.metadir |    3 +++
- tests/xfs/152             |    2 +-
- tests/xfs/263             |    1 +
- tests/xfs/263.out         |    2 +-
- 14 files changed, 28 insertions(+), 6 deletions(-)
- create mode 100644 tests/xfs/116.cfg
- rename tests/xfs/{116.out => 116.out.default} (100%)
- create mode 100644 tests/xfs/116.out.metadir
+ common/populate |   10 ++++++---
+ common/quota    |   20 +++---------------
+ common/xfs      |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 72 insertions(+), 20 deletions(-)
 
 
+diff --git a/common/populate b/common/populate
+index 9c3d49efebb3a4..41f5941070efc8 100644
+--- a/common/populate
++++ b/common/populate
+@@ -245,9 +245,13 @@ _populate_xfs_qmount_option()
+ 	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+ 		# No quota support
+ 		return
+-	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ]; then
+-		# Quotas not supported on rt filesystems
+-		return
++	elif [ "${USE_EXTERNAL}" = "yes" ] && [ -n "${SCRATCH_RTDEV}" ]; then
++		# We have not mounted the scratch fs, so we can only check
++		# rtquota support from the test fs.  Skip the quota options if
++		# the test fs does not have an rt section.
++		test -n "${TEST_RTDEV}" || return
++		_xfs_kmod_supports_rtquota || return
++		_xfs_test_supports_rtquota || return
+ 	elif [ -z "${XFS_QUOTA_PROG}" ]; then
+ 		# xfs quota tools not installed
+ 		return
 diff --git a/common/quota b/common/quota
-index 4dad9b79a27a7f..4ef0d4775067ee 100644
+index 4ef0d4775067ee..6735d0fec48991 100644
 --- a/common/quota
 +++ b/common/quota
-@@ -312,6 +312,7 @@ _qmount_option()
- 		-e 's/grpjquota=[^, ]*/QUOTA/g' \
- 		-e 's/\bpquota/QUOTA/g'    \
- 		-e 's/prjquota/QUOTA/g'    \
-+		-e 's/noquota/QUOTA/g'     \
- 		-e 's/quota/QUOTA/g'       \
- 		-e 's/uqnoenforce/QUOTA/g' \
- 		-e 's/gqnoenforce/QUOTA/g' \
-diff --git a/common/rc b/common/rc
-index 25eb13ab2c5a48..824fc061e84a99 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3721,6 +3721,7 @@ _get_os_name()
- _link_out_file_named()
+@@ -23,12 +23,7 @@ _require_quota()
+ 	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+ 	    _notrun "Installed kernel does not support XFS quotas"
+         fi
+-	if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
+-	    _notrun "Quotas not supported on realtime test device"
+-	fi
+-	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
+-	    _notrun "Quotas not supported on realtime scratch device"
+-	fi
++	_require_xfs_rtquota_if_rtdev
+ 	;;
+     *)
+ 	_notrun "disk quotas not supported by this filesystem type: $FSTYP"
+@@ -44,12 +39,7 @@ _require_xfs_quota()
  {
- 	test -n "$seqfull" || _fail "need to set seqfull"
-+	test -r "$seqfull.cfg" || _fail "need $seqfull.cfg"
+     $here/src/feature -q $TEST_DEV
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support XFS quota"
+-    if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
+-	_notrun "Quotas not supported on realtime test device"
+-    fi
+-    if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
+-	_notrun "Quotas not supported on realtime scratch device"
+-    fi
++    _require_xfs_rtquota_if_rtdev
+     [ -n "$XFS_QUOTA_PROG" ] || _notrun "XFS quota user tools not installed"
+ }
  
- 	local features=$2
- 	local suffix=$(FEATURES="$features" perl -e '
+@@ -153,11 +143,7 @@ _require_prjquota()
+     fi
+     $here/src/feature -P $_dev
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
+-    if [ "$USE_EXTERNAL" = yes ]; then
+-	if [ -n "$TEST_RTDEV" -o -n "$SCRATCH_RTDEV" ]; then
+-	    _notrun "Project quotas not supported on realtime filesystem"
+-	fi
+-    fi
++    test "$FSTYP" = "xfs" && _require_xfs_rtquota_if_rtdev
+ }
+ 
+ #
 diff --git a/common/xfs b/common/xfs
-index 0f29d5c5a6b963..32a048b15efc04 100644
+index 32a048b15efc04..282fd7b931c3ad 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -1710,6 +1710,9 @@ _xfs_filter_mkfs()
- 		print STDERR "ldev=\"$1\"\nlbsize=$2\nlblocks=$3\nlversion=$4\n";
- 		print STDOUT "log      =LDEV bsize=XXX blocks=XXX\n";
- 	}
-+	if (/^\s+=\s+exchange=(\d+)\s+metadir=(\d+)/) {
-+		print STDERR "exchange=$1\nmetadir=$2\n\n";
-+	}
- 	if (/^\s+=\s+sectsz=(\d+)\s+sunit=(\d+) blks/) {
- 		print STDERR "logsectsz=$1\nlogsunit=$2\n\n";
- 	}
-diff --git a/tests/xfs/007 b/tests/xfs/007
-index e35a069f9bd5c5..4721bc832b3fe4 100755
---- a/tests/xfs/007
-+++ b/tests/xfs/007
-@@ -47,7 +47,7 @@ do_test()
- 	# This takes care of newer kernels where quotaoff clears the superblock
- 	# quota enforcement flags but doesn't shut down accounting.
- 	_scratch_unmount
--	_qmount_option ""
-+	_qmount_option "noquota"
- 	_scratch_mount
- 
- 	rm_commands=(-x -c "remove -$off_opts")
-diff --git a/tests/xfs/096 b/tests/xfs/096
-index 57a05a8ffefbd1..f1f5d562d4fa18 100755
---- a/tests/xfs/096
-+++ b/tests/xfs/096
-@@ -28,6 +28,7 @@ function option_string()
- 	if [ "$((VAL & 4))" -ne "0" ]; then OPT=prjquota,${OPT}; fi;
- 	if [ "$((VAL & 2))" -ne "0" ]; then OPT=grpquota,${OPT}; fi;
- 	if [ "$((VAL & 1))" -ne "0" ]; then OPT=usrquota,${OPT}; fi;
-+	if [ "$VAL" = "0" ]; then OPT=noquota; fi;
- 	echo $OPT
+@@ -2079,3 +2079,65 @@ _require_xfs_scratch_metadir()
+ 		_scratch_unmount
+ 	fi
  }
- 
-diff --git a/tests/xfs/096.out b/tests/xfs/096.out
-index 1deb7a8c302374..20f68d3870c4a0 100644
---- a/tests/xfs/096.out
-+++ b/tests/xfs/096.out
-@@ -1,5 +1,5 @@
- QA output created by 096
--== Options: rw ==
-+== Options: noquota ==
- == Options: usrquota,rw ==
- User quota state on SCRATCH_MNT (SCRATCH_DEV)
-   Accounting: ON
-diff --git a/tests/xfs/106 b/tests/xfs/106
-index 066efef1181b8a..10cbd1052bbc89 100755
---- a/tests/xfs/106
-+++ b/tests/xfs/106
-@@ -155,7 +155,7 @@ test_off()
- {
- 	echo "turning quota off by remounting"
- 	_scratch_unmount
--	_qmount_option ""
-+	_qmount_option "noquota"
- 	_qmount
- }
- 
-diff --git a/tests/xfs/116 b/tests/xfs/116
-index c5e7508f8862ed..3ef6f5ddfdb2d6 100755
---- a/tests/xfs/116
-+++ b/tests/xfs/116
-@@ -23,7 +23,18 @@ _require_xfs_quota
- # Only mount with the quota options we specify below
- _qmount_option "defaults"
- 
--_scratch_mkfs >/dev/null 2>&1
-+_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+. $tmp.mkfs
-+cat $tmp.mkfs >> $seqres.full
 +
-+# link correct .out file, see $seqfull.cfg
-+seqfull=$0
-+if [ "$metadir" = 1 ]; then
-+	_link_out_file_named $seqfull.out "metadir"
-+else
-+	_link_out_file_named $seqfull.out
-+fi
++# Does the xfs kernel module support realtime quota?
++_xfs_kmod_supports_rtquota() {
++	local xqmfile="/proc/fs/xfs/xqm"
 +
- _scratch_mount "-o uquota"
- _scratch_unmount
- _scratch_xfs_db -r -c sb -c print  | grep qflags
-diff --git a/tests/xfs/116.cfg b/tests/xfs/116.cfg
-new file mode 100644
-index 00000000000000..571f542faef97d
---- /dev/null
-+++ b/tests/xfs/116.cfg
-@@ -0,0 +1 @@
-+metadir: metadir
-diff --git a/tests/xfs/116.out b/tests/xfs/116.out.default
-similarity index 100%
-rename from tests/xfs/116.out
-rename to tests/xfs/116.out.default
-diff --git a/tests/xfs/116.out.metadir b/tests/xfs/116.out.metadir
-new file mode 100644
-index 00000000000000..3a58fb919b1e39
---- /dev/null
-+++ b/tests/xfs/116.out.metadir
-@@ -0,0 +1,3 @@
-+QA output created by 116
-+qflags = 0x7
-+qflags = 0x7
-diff --git a/tests/xfs/152 b/tests/xfs/152
-index 6c052cbc9b31f5..94428b35d22a87 100755
---- a/tests/xfs/152
-+++ b/tests/xfs/152
-@@ -194,7 +194,7 @@ test_off()
- {
- 	echo "checking off command (type=$type)"
- 	_scratch_unmount
--	_qmount_option ""
-+	_qmount_option "noquota"
- 	_qmount
- }
- 
-diff --git a/tests/xfs/263 b/tests/xfs/263
-index aedbc4795296d3..83ec8b959fa9de 100755
---- a/tests/xfs/263
-+++ b/tests/xfs/263
-@@ -27,6 +27,7 @@ function option_string()
- 	if [ "$((VAL & 4))" -ne "0" ]; then OPT=prjquota,${OPT}; fi;
- 	if [ "$((VAL & 2))" -ne "0" ]; then OPT=grpquota,${OPT}; fi;
- 	if [ "$((VAL & 1))" -ne "0" ]; then OPT=usrquota,${OPT}; fi;
-+	if [ "$VAL" = "0" ]; then OPT=noquota; fi;
- 	echo $OPT
- }
- 
-diff --git a/tests/xfs/263.out b/tests/xfs/263.out
-index 64c1a5876cfa24..8682eee2680728 100644
---- a/tests/xfs/263.out
-+++ b/tests/xfs/263.out
-@@ -1,5 +1,5 @@
- QA output created by 263
--== Options: rw ==
-+== Options: noquota ==
- == Options: usrquota,rw ==
- User quota state on SCRATCH_MNT (SCRATCH_DEV)
-   Accounting: ON
++	test -e "$xqmfile" || modprobe xfs
++	test -e "$xqmfile" || return 1
++
++	grep -q -w rtquota "$xqmfile"
++}
++
++# Does this mounted filesystem support realtime quota?  This is the only way
++# to check that the fs really supports it because the kernel ignores quota
++# mount options for pre-rtgroups realtime filesystems.
++_xfs_fs_supports_rtquota() {
++	local mntpt="$1"
++	local dev="$2"
++	local rtdev="$3"
++
++	test -d "$mntpt" || \
++		echo "_xfs_fs_supports_rtquota needs a mountpoint"
++	test "$USE_EXTERNAL" == "yes" || \
++		echo "_xfs_fs_supports_rtquota needs USE_EXTERNAL=yes"
++	test -n "$rtdev" || \
++		echo "_xfs_fs_supports_rtquota needs an rtdev"
++
++	$here/src/feature -U $dev || \
++		$here/src/feature -G $dev || \
++		$here/src/feature -P $dev
++}
++
++# Do we support realtime quotas on the (mounted) test filesystem?
++_xfs_test_supports_rtquota() {
++	_xfs_fs_supports_rtquota "$TEST_DIR" "$TEST_DEV" "$TEST_RTDEV"
++}
++
++# Do we support realtime quotas on the (mounted) scratch filesystem?
++_xfs_scratch_supports_rtquota() {
++	_xfs_fs_supports_rtquota "$SCRATCH_MNT" "$SCRATCH_DEV" "$SCRATCH_RTDEV"
++}
++
++# Make sure that we're set up for realtime quotas if external rt devices are
++# configured.  The test filesystem has to be mounted before each test, so we
++# can check that quickly, and we make the bold assumption that the same will
++# apply to any scratch fs that might be created.
++_require_xfs_rtquota_if_rtdev() {
++	test "$USE_EXTERNAL" = "yes" || return
++
++	if [ -n "$TEST_RTDEV$SCRATCH_RTDEV" ]; then
++		_xfs_kmod_supports_rtquota || \
++			_notrun "Kernel driver does not support rt quota"
++	fi
++
++	if [ -n "$TEST_RTDEV" ]; then
++		_xfs_test_supports_rtquota || \
++			_notrun "Quotas not supported on realtime device"
++	fi
++
++	if [ -n "$SCRATCH_RTDEV" ] && [ -z "$TEST_RTDEV" ]; then
++		_notrun "Quotas probably not supported on realtime scratch device; set TEST_RTDEV"
++	fi
++}
 
