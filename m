@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E45471DE4C3;
-	Thu, 16 Jan 2025 23:31:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBA2C248BC5;
+	Thu, 16 Jan 2025 23:31:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070271; cv=none; b=FQTMNQfbXxtrIT9Jq9zDBgiElS8qga7ZzbTL0+F2LudRhpqEY4+ASiM88/ZXqGYyuMf9DcUzjEFsMDM4vitHJf5NvVPGle6rPhak7ZNRq0yDFT5ngrW6ndQpgnIZKCshSWHC3w+K8US6ZAobrjWJsN6DOmZIdcw/Fo4U0nhTzpY=
+	t=1737070286; cv=none; b=sUYycudf7GeVKiHeLgKNMRJu9yQ4lltEMrMSC+qqj/sNMYjM2Kbt4gaT9Q6aKSLFkbRHVHh5izJo40rQQfA5uFTxoffNixl/bba9UJ0rmeCGx95/mmU2bXaKz/AjV95jwiZenWo7/sHXoVnfyqtPmoHOrleindAzyEaJ+p6Z+R0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070271; c=relaxed/simple;
-	bh=O4Cyfmf1PiUsgG1Ck2sttsvWEKF9xt3iM267UnUXtB8=;
+	s=arc-20240116; t=1737070286; c=relaxed/simple;
+	bh=vY1gfLO5bZF2Cl00vzdm0c5onlHSrw/mq5Hnh/8rccw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jRN09Sdn4+FZABx+LuxHM4fp7docvrfXMFylYB9iRpePmdL83hVC5DV73h9d/sjmv37QLx52Ycgx+F/zMDaSVJMDu82uX8OS5SW3xGbWtGMZNNz4g79bSWx0LchTi21mrqs+kI+Jh2zdsdKn581qXhKfYCDr7URrGOlPrea6zLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y6CgiXhU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ZhmLjqgoaWURyVF04H5yDXWMMZWwObcluBHkedklCTTy5OxXFYenNxS0Ho6msf5vpjF6K46w13EQlwVfR3RxVIm3+/UrXXqKf/vpruE9wmZ0ZeLOtgnfrJXqjv4ozchh8QKnd6z2YFwkDSBCCLx7jYmGSrBpfE5lxQmmMpOuDpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GeaF3Hxq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y6CgiXhU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B57AC4CED6;
-	Thu, 16 Jan 2025 23:31:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GeaF3Hxq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E71CC4CED6;
+	Thu, 16 Jan 2025 23:31:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070270;
-	bh=O4Cyfmf1PiUsgG1Ck2sttsvWEKF9xt3iM267UnUXtB8=;
+	s=k20201202; t=1737070286;
+	bh=vY1gfLO5bZF2Cl00vzdm0c5onlHSrw/mq5Hnh/8rccw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Y6CgiXhUC40qT/J05W0ktfZrZMEUZqJXARG9O8WUAshT1It9dIKMNtvxaAWqRvpDM
-	 0extf7HdSaC5xavgFDMTTH9e/UNoNyJDQNzZSKodW9bBBSOR4rboUPPz8Ku8wFSAOe
-	 X+j7OBxAvCg0rGH68WsNNBxOzAhdb+HOZhx32cPCGDQK1+Ayz2CCj1EHSm9eY3lJQ/
-	 BCvdliPalNhRxlu1Bgj+mbim9oF0cdePcUg4wYzkfCGikkjaQBuFKyfYxPqy3eaIcf
-	 plH7i9da0/saFid9dIB779IyJOsGKh/NIBY/CcNgoQ3AWrcp2wRB4S6BojHtighzfn
-	 5n39DLDoiHnkg==
-Date: Thu, 16 Jan 2025 15:31:09 -0800
-Subject: [PATCH 23/23] build: initialize stack variables to zero by default
+	b=GeaF3HxqeLai1Z3CsKs7kjPrmg6pG5DQOuE/xR6Uav3nee2eNjxxXRgcc2uHFipgU
+	 1lJjSbzKHG3DScHi1FZd3NQJ3CuCqKabCT1hNtnNm35YCwvBhr2gyxta2Y4tZKkAFI
+	 +ObWrzVOuJFP6YZkU5p7WSeXStdoc9taUZtb5z2XjkSYTwPHQ9uHZ7DF895ieidzNK
+	 oHh7UhQ8LpQizNcnBBZ5QUE2fOlu52NKiu0UXQtR5tWaDNFSG4O2USl2wD3Mo1cC4/
+	 PZVVKS8kvcJuKA8sbi+yBMrJ81UHV6gsf62asvtp+oiBQs3bEZx2NZD/eoPC6dbGpw
+	 NPQIr4q5keolw==
+Date: Thu, 16 Jan 2025 15:31:25 -0800
+Subject: [PATCH 1/3] logwrites: warn if we don't think read after discard
+ returns zeroes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706974423.1927324.17566007446431552196.stgit@frogsfrogsfrogs>
-In-Reply-To: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
-References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
+Message-ID: <173706974749.1928123.12633707385824957220.stgit@frogsfrogsfrogs>
+In-Reply-To: <173706974730.1928123.3781657849818195379.stgit@frogsfrogsfrogs>
+References: <173706974730.1928123.3781657849818195379.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,74 +46,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Newer versions of gcc and clang can include the ability to zero stack
-variables by default.  Let's enable it so that we (a) reduce the risk of
-writing stack contents to disk somewhere and (b) try to reduce
-unpredictable program behavior based on random stack contents.  The
-kernel added this 6 years ago, so I think it's mature enough for
-fstests.
+The logwrites replay program expects that it can issue a DISCARD against
+the block device passed to _log_writes_init and that will cause all
+subsequent reads to return zeroes.  This is required for correct log
+recovery on filesystems such as XFS that skip recovering buffers if
+newer ones are found on disk.
+
+Unfortunately, there's no way to discover if a device's discard
+implementation actually guarantees zeroes.  There used to be a sysfs
+knob keyed to an allowlist, but it is now hardwired to return 0.  So
+either we need a magic device that does discard-and-zero, or we need to
+do the zeroing ourselves.  The logwrites program does its own zeroing if
+there is no discard support, and some tests do their own zeroing.
+
+The only devices we know to work reliably are the software defined ones
+that are provided by the kernel itself -- which means dm-thinp.  Warn if
+we have a device that supports discard that isn't thinp and the test
+fails.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- configure.ac          |    1 +
- include/builddefs.in  |    3 ++-
- m4/package_libcdev.m4 |   14 ++++++++++++++
- 3 files changed, 17 insertions(+), 1 deletion(-)
+ common/dmlogwrites |   31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
 
-diff --git a/configure.ac b/configure.ac
-index c81411e735a90d..f3c8c643f0eb9e 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -72,6 +72,7 @@ AC_HAVE_NFTW
- AC_HAVE_RLIMIT_NOFILE
- AC_NEED_INTERNAL_XFS_IOC_EXCHANGE_RANGE
- AC_HAVE_FICLONE
-+AC_HAVE_TRIVIAL_AUTO_VAR_INIT
+diff --git a/common/dmlogwrites b/common/dmlogwrites
+index a27e1966a933a6..96101d53c38b4a 100644
+--- a/common/dmlogwrites
++++ b/common/dmlogwrites
+@@ -59,6 +59,35 @@ _require_log_writes_dax_mountopt()
+ 	fi
+ }
  
- AC_CHECK_FUNCS([renameat2])
- AC_CHECK_FUNCS([reallocarray])
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7274cde8d0814c..5b5864278682a4 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -76,6 +76,7 @@ NEED_INTERNAL_XFS_IOC_EXCHANGE_RANGE = @need_internal_xfs_ioc_exchange_range@
- HAVE_FICLONE = @have_ficlone@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
-+SANITIZER_CFLAGS += @autovar_init_cflags@
- 
- ifeq ($(PKG_PLATFORM),linux)
- PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 $(GCCFLAGS)
-@@ -90,7 +91,7 @@ GCFLAGS = $(OPTIMIZER) $(DEBUG) $(CPPFLAGS) \
- 	-I$(TOPDIR)/include -DVERSION=\"$(PKG_VERSION)\"
- 
- # Global, Platform, Local CFLAGS
--CFLAGS += $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
-+CFLAGS += $(GCFLAGS) $(PCFLAGS) $(LCFLAGS) $(SANITIZER_CFLAGS)
- 
- include $(TOPDIR)/include/buildmacros
- 
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index a0d50f4d9b68e4..ed8fe6e32ae00a 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -72,3 +72,17 @@ AC_DEFUN([AC_HAVE_FICLONE],
-        AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
-     AC_SUBST(have_ficlone)
-   ])
++_log_writes_check_bdev()
++{
++	local sysfs="/sys/block/$(_short_dev $1)"
 +
-+# Check if we have -ftrivial-auto-var-init=zero
-+AC_DEFUN([AC_HAVE_TRIVIAL_AUTO_VAR_INIT],
-+  [ AC_MSG_CHECKING([if C compiler supports zeroing automatic vars])
-+    OLD_CFLAGS="$CFLAGS"
-+    TEST_CFLAGS="-ftrivial-auto-var-init=zero"
-+    CFLAGS="$CFLAGS $TEST_CFLAGS"
-+    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
-+        [AC_MSG_RESULT([yes])]
-+        [autovar_init_cflags=$TEST_CFLAGS],
-+        [AC_MSG_RESULT([no])])
-+    CFLAGS="${OLD_CFLAGS}"
-+    AC_SUBST(autovar_init_cflags)
-+  ])
++	# Some filesystems (e.g. XFS) optimize log recovery by assuming that
++	# they can elide replay of metadata blocks if the block has a higher
++	# log serial number than the transaction being recovered.  This is a
++	# problem if the filesystem log contents can go back in time, which is
++	# what the logwrites replay program does.
++	#
++	# The logwrites replay program begins by erasing the block device's
++	# contents.  This can be done very quickly with DISCARD provided the
++	# device guarantees that all reads after a DISCARD return zeroes, or
++	# very slowly by writing zeroes to the device.  Fast is preferable, but
++	# there's no longer any way to detect that DISCARD actually unmaps
++	# zeroes, so warn the user about this requirement if the test happens
++	# to fail.
++
++	# No discard support means the logwrites will do its own zeroing
++	test "$(cat "$sysfs/queue/discard_max_bytes")" -eq 0 && return
++
++	# dm-thinp guarantees that reads after discards return zeroes
++	dmsetup status "$blkdev" 2>/dev/null | grep -q '^0.* thin ' && return
++
++	echo "HINT: $blkdev doesn't guarantee that reads after DISCARD will return zeroes" >> $seqres.hints
++	echo "      This is required for correct journal replay on some filesystems (e.g. xfs)" >> $seqres.hints
++	echo >> $seqres.hints
++}
++
+ # Set up a dm-log-writes device
+ #
+ # blkdev: the specified target device
+@@ -84,6 +113,8 @@ _log_writes_init()
+ 	LOGWRITES_NAME=logwrites-test
+ 	LOGWRITES_DMDEV=/dev/mapper/$LOGWRITES_NAME
+ 	LOGWRITES_TABLE="0 $BLK_DEV_SIZE log-writes $blkdev $LOGWRITES_DEV"
++
++	_log_writes_check_bdev "$blkdev"
+ 	_dmsetup_create $LOGWRITES_NAME --table "$LOGWRITES_TABLE" || \
+ 		_fail "failed to create log-writes device"
+ }
 
