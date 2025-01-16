@@ -1,74 +1,61 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 367044414
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 06:03:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80D7142659;
+	Thu, 16 Jan 2025 06:52:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737007421; cv=none; b=FyBCyIcx0ppwOL3g+rL/rsSwVGXN6hF5A7cZ4aH/4Jv451RF6VqnP2ru9qoX+kSwL7x7LXGMlGzbD46Fgp3ny3XgFFtWEbNvIP4ankEC9xj8htNDTkexRH8vTAGrZ9tyfjDYLmSqpDBnlh0OPdiGKCT9qxx8oPNbJt7bouCimcE=
+	t=1737010357; cv=none; b=ldGI3ZRpebS7ZvFVOnmhUaQHJ95dIr9li0S0pt0rFeMlilyaM8fKlV00rnTDomtkRJecCKHi/MGdVGzNlqTf/OC/dIh8iXELNGMBlt5YDlCQ8VbxFD4iWR5Qec5XCTFdVz1N1XY3ZWUMwuetSYKZ6TurNR3X67nCNpb4B6tWcfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737007421; c=relaxed/simple;
-	bh=WZdb+0v/3vilt8JGveXXz97/coZ61+8GVKQuLtYgoe8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pfymy0XZ5XiRjVhaZQ4lW80A6NKDTesdTxHcDxXQwb5YWH0yISr0HEper7xhkWUg3QaaxRVBXsEsr+LGH625SPG96pOwparHPd24VCcqMnzqcTMzoyXzwllT6vX3oSwt3a8MItwwiD6uamkYnIyit+OznBuSbsn8TYrJXRP/Lvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zdGkrFy0; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1737010357; c=relaxed/simple;
+	bh=KNezwoRZeW5VMIIh6/hRXjNmXq9JA6/AmC+sLP5tvxU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qORxybBq8t6ErxVk78KnFOrkNSDN0uRHIBSbiOQmIA0+5bE/fBe8UM5n7mtpmx878JjkB7BAqFQdeK6z/rdlAwtOItHo2wwmmIJ2bXP0RhJV95YpmuG/om3AK7U2f36a1udEx/lYnz+toi3YK2SWuqJ4+l2BQtpJ5Fm5LyTk0qc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zdGkrFy0"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=bpMR1pYG1TGtGW6f2qMRWpnJGAoyQu9k1P57/kOez/s=; b=zdGkrFy0HMtTl9XTI1SMh+ieyw
-	DR8HOzliVMfome3petqEeKdfoAr1WACpKvdgzmngR/WV83l0rBKPfNVZh4s+0YRWApGpzmf66dMgn
-	odOcF8EWOZittSGZgHMY3ry6Sgba/dT8s48JihD2/s2QfVZO5rg82Wp0kRpQHNNTNwpDC4c1eNMbT
-	a0sISlRW2Mq6G/zJtvm5lIR5Jf5+6uJFf00zxBRTrmihCbRCXrKa4s/b4ujxKYZpEMqoxla4PIzOW
-	svsssUMcwDrsuvBb8Yu/4zeqOz7bTKRUBHFbVvXTUDPv/+s3+UQEUOhoBH9ZMn/B5FL7Os49Rm770
-	9R0h+XLQ==;
-Received: from 2a02-8389-2341-5b80-1199-69ad-3684-6d55.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:1199:69ad:3684:6d55] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tYIyg-0000000DvCM-4B9X;
-	Thu, 16 Jan 2025 06:03:39 +0000
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 3CFC268D15; Thu, 16 Jan 2025 07:52:26 +0100 (CET)
+Date: Thu, 16 Jan 2025 07:52:25 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: remove an out of data comment in _xfs_buf_alloc
-Date: Thu, 16 Jan 2025 07:03:35 +0100
-Message-ID: <20250116060335.87426-1-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>,
+	John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
+	cem@kernel.org, dchinner@redhat.com, hch@lst.de,
+	ritesh.list@gmail.com, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	martin.petersen@oracle.com
+Subject: Re: [PATCH 1/4] iomap: Lift blocksize restriction on atomic writes
+Message-ID: <20250116065225.GA25695@lst.de>
+References: <20241204154344.3034362-1-john.g.garry@oracle.com> <20241204154344.3034362-2-john.g.garry@oracle.com> <Z1C9IfLgB_jDCF18@dread.disaster.area> <3ab6000e-030d-435a-88c3-9026171ae9f1@oracle.com> <Z1IX2dFida3coOxe@dread.disaster.area> <20241212013433.GC6678@frogsfrogsfrogs> <Z4Xq6WuQpVOU7BmS@dread.disaster.area> <20250114235726.GA3566461@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250114235726.GA3566461@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-There hasn't been anything like an io_length for a long time.
+On Tue, Jan 14, 2025 at 03:57:26PM -0800, Darrick J. Wong wrote:
+> Ok, let's do that then.  Just to be clear -- for any RWF_ATOMIC direct
+> write that's correctly aligned and targets a single mapping in the
+> correct state, we can build the untorn bio and submit it.  For
+> everything else, prealloc some post EOF blocks, write them there, and
+> exchange-range them.
+> 
+> Tricky questions: How do we avoid collisions between overlapping writes?
+> I guess we find a free file range at the top of the file that is long
+> enough to stage the write, and put it there?  And purge it later?
+> 
+> Also, does this imply that the maximum file size is less than the usual
+> 8EB?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index dc219678003c..af3945bf7d94 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -241,11 +241,6 @@ _xfs_buf_alloc(
- 	bp->b_mount = target->bt_mount;
- 	bp->b_flags = flags;
- 
--	/*
--	 * Set length and io_length to the same value initially.
--	 * I/O routines should use io_length, which will be the same in
--	 * most cases but may be reset (e.g. XFS recovery).
--	 */
- 	error = xfs_buf_get_maps(bp, nmaps);
- 	if (error)  {
- 		kmem_cache_free(xfs_buf_cache, bp);
--- 
-2.45.2
+I think literally using the exchrange code for anything but an
+initial prototype is a bad idea for the above reasons.  If we go
+beyond proving this is possible you'd want a version of exchrange
+where the exchange partners is not a file mapping, but a cow staging
+record.
 
