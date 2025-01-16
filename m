@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB0D31F1504;
-	Thu, 16 Jan 2025 23:31:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75FA41F1506;
+	Thu, 16 Jan 2025 23:32:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070318; cv=none; b=Oex6ju688f6+Tveja4a8GhL1xmN3iv3PQic7aYZuahb9OxHGBJKH0rtYdtskt2rIPyu1FTWgBK8zmfYAzQz4f9+JHDAaAl/lBV3/Sg0G6enf/PIV+rr72gPKPdar6OqFzFwx5XQLSFbteGwbu75uMRfsZyUQjVEfSSD/CsLhBko=
+	t=1737070333; cv=none; b=bdtn5RE5DGBX5xKbltRzXa0S2CC1PDYIsQpY577mOunbkb86y+RHVKzlMnhEQDVGz7vxbhoyFyPvOdS/PVXQOi5Ky/Vcua4nAvvrYwFoYPHJ06KHCuufPabqBIZHE/Si8pSh5DR+iKtr7c0WjMJGA4+ii7Mn+Hdn8coE+ZJSoQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070318; c=relaxed/simple;
-	bh=TsSMnjKtE+SIRtkHK/xoJs0IUyUvd3znhcLf9lWRSY0=;
+	s=arc-20240116; t=1737070333; c=relaxed/simple;
+	bh=jWTgIPZulYRTdqG8E1uS+mbp2fiKKtVNN0C5jVOQFFw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ic13BXvhmSBUqJgcsSIb6XMhaf3Amv58ggxnqHgLf10ssdvMYuJceJ6BGf6DfHKqyQPQ/+JlU95bxX8adSU0Vt0Xk7B/OYu/qJkeZzdiUexg78IJqXtjja32igWTPs5hd6i40JiCG0F79Tf3US9P7RTeTGwt6aLtM3y+a06k76k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ItmYSmff; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QDuaW/PfiX4fOiTtzeI/zbRFupajfj5cEWLqr5r9O/FPnZ9nW5TmTIJKRRjK9DfIuavpdeGWBYFhQhzHqxp/M6PYYxtbW66IfINFsNe8wEkft3rNipD4O7sWj673hc4E6URymn4siHf1NvjzAiisqALtvU+Gq/SdDYG33DjgYcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=id4+aG2k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ItmYSmff"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5070AC4CED6;
-	Thu, 16 Jan 2025 23:31:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="id4+aG2k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF023C4CED6;
+	Thu, 16 Jan 2025 23:32:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070317;
-	bh=TsSMnjKtE+SIRtkHK/xoJs0IUyUvd3znhcLf9lWRSY0=;
+	s=k20201202; t=1737070333;
+	bh=jWTgIPZulYRTdqG8E1uS+mbp2fiKKtVNN0C5jVOQFFw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ItmYSmff9bbDPOcSFog0K7t1rg8OoRpt0K+zkHJmaLU+levQhs0Njp3Z98/MxXXJ7
-	 +NQuwkO9dhO0c/fnA9OjGPJaq5gjYQhZoPNdgvyqTEqIjb/P/O6RD8zumBPLxGiMXx
-	 qdgUU8GiWc+T0h6asnM1KxrcBDZ4yJd3nZ5OUAfhVpdOOj5UZE14cnkk+cH/TZ89pR
-	 Ezu0SULtwAep6cZ1UVuO+I6fkkG4gcDLujp7JR0o0tc25KO/TqhE3FtaJ0i6+cgiep
-	 9LMVs8dD58gCpuX5kesgH24fwtkNyFgO0Vi24FJCqhQTOgfbGDfNqm93JR77OhmvBj
-	 kRoZIQ9+/We2w==
-Date: Thu, 16 Jan 2025 15:31:56 -0800
-Subject: [PATCH 3/3] logwrites: only use BLKDISCARD if we know discard zeroes
- data
+	b=id4+aG2kfoNsaFdn70CKQTs5cf2EaLR7F7sgWvI07/x55z730RnLe5dNF/SYXEMXp
+	 cZLxMZ8Um+xwG9rb4rantZqxK0Ps5QxOo9bEKzIiQTYPzRNCEZfVxj6DAIvRaxQqr5
+	 4VkARkKr+xebt+7/FOoID1anxJGpIqs1fuhJoRJx2qfrlQRQh5JftPWY98nc0Ydesi
+	 f/dnEKHP81jnOUA8u/bfLblfH7wAiJr39USoGJTCqKXyuDwAVSam2itp/0nb0LwEHZ
+	 Wl/V/ERpokA2+PrOmBmYI7UBtjR9N/38TnJeiQOdUbCY7KJFn418i8cm1Nu6YynvYU
+	 t/3f1rzIaJcOw==
+Date: Thu, 16 Jan 2025 15:32:12 -0800
+Subject: [PATCH 01/11] various: fix finding metadata inode numbers when
+ metadir is enabled
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706974778.1928123.15171471070777684986.stgit@frogsfrogsfrogs>
-In-Reply-To: <173706974730.1928123.3781657849818195379.stgit@frogsfrogsfrogs>
-References: <173706974730.1928123.3781657849818195379.stgit@frogsfrogsfrogs>
+Message-ID: <173706975181.1928284.18198198372285762402.stgit@frogsfrogsfrogs>
+In-Reply-To: <173706975151.1928284.10657631623674241763.stgit@frogsfrogsfrogs>
+References: <173706975151.1928284.10657631623674241763.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,104 +46,304 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Building off the checks established in the previous patch, only enable
-the use of BLKDISCARD if we know that the logwrites device guarantees
-that reads after a discard return zeroes.
+There are a number of tests that use xfs_db to examine the contents of
+metadata inodes to check correct functioning.  The logic is scattered
+everywhere and won't work with metadata directory trees, so make a
+shared helper to find these inodes.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/dmlogwrites          |   10 ++++++++--
- src/log-writes/replay-log.c |    8 ++++++++
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ common/xfs    |   21 +++++++++++++++++++--
+ tests/xfs/007 |   16 +++++++++-------
+ tests/xfs/529 |    5 ++---
+ tests/xfs/530 |    6 ++----
+ tests/xfs/739 |    9 ++-------
+ tests/xfs/740 |    9 ++-------
+ tests/xfs/741 |    9 ++-------
+ tests/xfs/742 |    9 ++-------
+ tests/xfs/743 |    9 ++-------
+ tests/xfs/744 |    9 ++-------
+ tests/xfs/745 |    9 ++-------
+ tests/xfs/746 |    9 ++-------
+ 12 files changed, 48 insertions(+), 72 deletions(-)
 
 
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index 96101d53c38b4a..fbc8beb5ce597e 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -81,7 +81,10 @@ _log_writes_check_bdev()
- 	test "$(cat "$sysfs/queue/discard_max_bytes")" -eq 0 && return
+diff --git a/common/xfs b/common/xfs
+index c68bd6d7c773ac..092b3dc6f3bdc5 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1406,7 +1406,7 @@ _scratch_get_bmx_prefix() {
  
- 	# dm-thinp guarantees that reads after discards return zeroes
--	dmsetup status "$blkdev" 2>/dev/null | grep -q '^0.* thin ' && return
-+	if dmsetup status "$blkdev" 2>/dev/null | grep -q '^0.* thin '; then
-+		LOGWRITES_REPLAY_ARGS+=(--discard-zeroes-data)
-+		return
+ _scratch_get_iext_count()
+ {
+-	local ino=$1
++	local selector=$1
+ 	local whichfork=$2
+ 	local field=""
+ 
+@@ -1421,7 +1421,7 @@ _scratch_get_iext_count()
+ 			return 1
+ 	esac
+ 
+-	_scratch_xfs_get_metadata_field $field "inode $ino"
++	_scratch_xfs_get_metadata_field $field "$selector"
+ }
+ 
+ #
+@@ -1891,3 +1891,20 @@ _wipe_xfs_properties()
+ 		setfattr --remove="$name" "$1"
+ 	done
+ }
++
++# Return the xfs_db selector for a superblock-rooted metadata file on the
++# scratch filesystem.  The sole argument is the name of the field within the
++# superblock.  This helper cannot be used to find files under the metadata
++# directory tree.
++_scratch_xfs_find_metafile()
++{
++	local metafile="$1"
++	local sb_field
++
++	sb_field="$(_scratch_xfs_get_sb_field "$metafile")"
++	if echo "$sb_field" | grep -q -w 'not found'; then
++		return 1
 +	fi
++	echo "inode $sb_field"
++	return 0
++}
+diff --git a/tests/xfs/007 b/tests/xfs/007
+index 2535f04cac36a5..e35a069f9bd5c5 100755
+--- a/tests/xfs/007
++++ b/tests/xfs/007
+@@ -21,6 +21,11 @@ _require_xfs_quota
+ _scratch_mkfs_xfs | _filter_mkfs > /dev/null 2> $tmp.mkfs
+ . $tmp.mkfs
  
- 	echo "HINT: $blkdev doesn't guarantee that reads after DISCARD will return zeroes" >> $seqres.hints
- 	echo "      This is required for correct journal replay on some filesystems (e.g. xfs)" >> $seqres.hints
-@@ -110,6 +113,7 @@ _log_writes_init()
- 		BLK_DEV_SIZE=$((length / blksz))
- 	fi
++get_qfile_nblocks() {
++	local selector="$(_scratch_xfs_find_metafile "$1")"
++	_scratch_xfs_db -c "$selector" -c "p core.nblocks"
++}
++
+ do_test()
+ {
+ 	qino_1=$1
+@@ -30,12 +35,9 @@ do_test()
+ 	echo "*** umount"
+ 	_scratch_unmount
  
-+	LOGWRITES_REPLAY_ARGS=()
- 	LOGWRITES_NAME=logwrites-test
- 	LOGWRITES_DMDEV=/dev/mapper/$LOGWRITES_NAME
- 	LOGWRITES_TABLE="0 $BLK_DEV_SIZE log-writes $blkdev $LOGWRITES_DEV"
-@@ -161,7 +165,8 @@ _log_writes_replay_log()
- 	[ $? -ne 0 ] && _fail "mark '$_mark' does not exist"
+-	QINO_1=`_scratch_xfs_get_sb_field $qino_1`
+-	QINO_2=`_scratch_xfs_get_sb_field $qino_2`
+-
+ 	echo "*** Usage before quotarm ***"
+-	_scratch_xfs_db -c "inode $QINO_1" -c "p core.nblocks"
+-	_scratch_xfs_db -c "inode $QINO_2" -c "p core.nblocks"
++	get_qfile_nblocks $qino_1
++	get_qfile_nblocks $qino_2
  
- 	$here/src/log-writes/replay-log --log $LOGWRITES_DEV --replay $_blkdev \
--		--end-mark $_mark >> $seqres.full 2>&1
-+		--end-mark $_mark "${LOGWRITES_REPLAY_ARGS[@]}" \
-+		>> $seqres.full 2>&1
- 	[ $? -ne 0 ] && _fail "replay failed"
+ 	_qmount
+ 	echo "*** turn off $off_opts quotas"
+@@ -65,8 +67,8 @@ do_test()
+ 	_scratch_unmount
+ 
+ 	echo "*** Usage after quotarm ***"
+-	_scratch_xfs_db -c "inode $QINO_1" -c "p core.nblocks"
+-	_scratch_xfs_db -c "inode $QINO_2" -c "p core.nblocks"
++	get_qfile_nblocks $qino_1
++	get_qfile_nblocks $qino_2
  }
  
-@@ -231,6 +236,7 @@ _log_writes_replay_log_range()
- 	echo "=== replay to $end ===" >> $seqres.full
- 	$here/src/log-writes/replay-log -vv --log $LOGWRITES_DEV \
- 		--replay $blkdev --limit $(($end + 1)) \
-+		"${LOGWRITES_REPLAY_ARGS[@]}" \
- 		>> $seqres.full 2>&1
- 	[ $? -ne 0 ] && _fail "replay failed"
- }
-diff --git a/src/log-writes/replay-log.c b/src/log-writes/replay-log.c
-index 968c82ab64a9ad..e07401f63af573 100644
---- a/src/log-writes/replay-log.c
-+++ b/src/log-writes/replay-log.c
-@@ -18,6 +18,7 @@ enum option_indexes {
- 	FIND,
- 	NUM_ENTRIES,
- 	NO_DISCARD,
-+	DISCARD_ZEROES_DATA,
- 	FSCK,
- 	CHECK,
- 	START_MARK,
-@@ -37,6 +38,7 @@ static struct option long_options[] = {
- 	{"find", no_argument, NULL, 0},
- 	{"num-entries", no_argument, NULL, 0},
- 	{"no-discard", no_argument, NULL, 0},
-+	{"discard-zeroes-data", no_argument, NULL, 0},
- 	{"fsck", required_argument, NULL, 0},
- 	{"check", required_argument, NULL, 0},
- 	{"start-mark", required_argument, NULL, 0},
-@@ -155,6 +157,7 @@ int main(int argc, char **argv)
- 	int ret;
- 	int print_num_entries = 0;
- 	int discard = 1;
-+	int use_kernel_discard = 0;
- 	enum log_replay_check_mode check_mode = 0;
+ # Test user and group first
+diff --git a/tests/xfs/529 b/tests/xfs/529
+index 14bdd2eebf7047..aab8668c76f46c 100755
+--- a/tests/xfs/529
++++ b/tests/xfs/529
+@@ -161,9 +161,8 @@ done
+ _scratch_unmount >> $seqres.full
  
- 	while ((c = getopt_long(argc, argv, "v", long_options,
-@@ -242,6 +245,9 @@ int main(int argc, char **argv)
- 		case NO_DISCARD:
- 			discard = 0;
- 			break;
-+		case DISCARD_ZEROES_DATA:
-+			use_kernel_discard = 1;
-+			break;
- 		case FSCK:
- 			fsck_command = strdup(optarg);
- 			if (!fsck_command) {
-@@ -299,6 +305,8 @@ int main(int argc, char **argv)
+ echo "Verify uquota inode's extent count"
+-uquotino=$(_scratch_xfs_get_metadata_field 'uquotino' 'sb 0')
+-
+-nextents=$(_scratch_get_iext_count $uquotino data || \
++selector="$(_scratch_xfs_find_metafile uquotino)"
++nextents=$(_scratch_get_iext_count "$selector" data || \
+ 		   _fail "Unable to obtain inode fork's extent count")
+ if (( $nextents > 10 )); then
+ 	echo "Extent count overflow check failed: nextents = $nextents"
+diff --git a/tests/xfs/530 b/tests/xfs/530
+index 95ab32f1e1f828..4a41127e3b820f 100755
+--- a/tests/xfs/530
++++ b/tests/xfs/530
+@@ -102,10 +102,8 @@ _scratch_unmount >> $seqres.full
  
- 	if (!discard)
- 		log->flags |= LOG_IGNORE_DISCARD;
-+	if (!use_kernel_discard)
-+		log->flags |= LOG_DISCARD_NOT_SUPP;
+ echo "Verify rbmino's and rsumino's extent count"
+ for rtino in rbmino rsumino; do
+-	ino=$(_scratch_xfs_get_metadata_field $rtino "sb 0")
+-	echo "$rtino = $ino" >> $seqres.full
+-
+-	nextents=$(_scratch_get_iext_count $ino data || \
++	selector="$(_scratch_xfs_find_metafile "$rtino")"
++	nextents=$(_scratch_get_iext_count "$selector" data || \
+ 			_fail "Unable to obtain inode fork's extent count")
+ 	if (( $nextents > 10 )); then
+ 		echo "Extent count overflow check failed: nextents = $nextents"
+diff --git a/tests/xfs/739 b/tests/xfs/739
+index 52c90b91b218df..5fd6caa5bce2f8 100755
+--- a/tests/xfs/739
++++ b/tests/xfs/739
+@@ -25,13 +25,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
  
- 	log->start_sector = start_sector;
- 	log->end_sector = end_sector;
+ echo "Fuzz rtbitmap"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.bitmap')
+-else
+-	path=('sb' 'addr rbmino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'online' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rbmino)"
++_scratch_xfs_fuzz_metadata '' 'online' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+ # success, all done
+diff --git a/tests/xfs/740 b/tests/xfs/740
+index fb616a16362a6c..c8990034773b32 100755
+--- a/tests/xfs/740
++++ b/tests/xfs/740
+@@ -25,13 +25,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.summary')
+-else
+-	path=('sb' 'addr rsumino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'online' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rsumino)"
++_scratch_xfs_fuzz_metadata '' 'online' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+ # success, all done
+diff --git a/tests/xfs/741 b/tests/xfs/741
+index ea1c2d98516fdb..96c2315c524311 100755
+--- a/tests/xfs/741
++++ b/tests/xfs/741
+@@ -25,13 +25,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtbitmap"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.bitmap')
+-else
+-	path=('sb' 'addr rbmino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'offline' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rbmino)"
++_scratch_xfs_fuzz_metadata '' 'offline' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+ # success, all done
+diff --git a/tests/xfs/742 b/tests/xfs/742
+index bbc186f8472b64..301ae7b9574320 100755
+--- a/tests/xfs/742
++++ b/tests/xfs/742
+@@ -25,13 +25,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.summary')
+-else
+-	path=('sb' 'addr rsumino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'offline' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rsumino)"
++_scratch_xfs_fuzz_metadata '' 'offline' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+ # success, all done
+diff --git a/tests/xfs/743 b/tests/xfs/743
+index 8021d7ecdc9009..039624f711c0a6 100755
+--- a/tests/xfs/743
++++ b/tests/xfs/743
+@@ -26,13 +26,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtbitmap"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.bitmap')
+-else
+-	path=('sb' 'addr rbmino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'both' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rbmino)"
++_scratch_xfs_fuzz_metadata '' 'both' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+ # success, all done
+diff --git a/tests/xfs/744 b/tests/xfs/744
+index 0e719dcebf03d2..13f63b9ceb1756 100755
+--- a/tests/xfs/744
++++ b/tests/xfs/744
+@@ -26,13 +26,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.summary')
+-else
+-	path=('sb' 'addr rsumino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'both' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rsumino)"
++_scratch_xfs_fuzz_metadata '' 'both' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+ # success, all done
+diff --git a/tests/xfs/745 b/tests/xfs/745
+index 3549ad08772c2c..56a6d58ef9f4ca 100755
+--- a/tests/xfs/745
++++ b/tests/xfs/745
+@@ -25,13 +25,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtbitmap"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.bitmap')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.bitmap')
+-else
+-	path=('sb' 'addr rbmino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'none' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rbmino)"
++_scratch_xfs_fuzz_metadata '' 'none' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+ # success, all done
+diff --git a/tests/xfs/746 b/tests/xfs/746
+index 5afc71ad19c6e6..935b2e5acba5d4 100755
+--- a/tests/xfs/746
++++ b/tests/xfs/746
+@@ -25,13 +25,8 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-is_metadir=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime/0.summary')
+-if [ -n "$is_metadir" ]; then
+-	path=('path -m /realtime/0.summary')
+-else
+-	path=('sb' 'addr rsumino')
+-fi
+-_scratch_xfs_fuzz_metadata '' 'none' "${path[@]}" 'dblock 0' >> $seqres.full
++path="$(_scratch_xfs_find_metafile rsumino)"
++_scratch_xfs_fuzz_metadata '' 'none' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+ # success, all done
 
