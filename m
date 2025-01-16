@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE7691D5AA8
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 21:38:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B70A81B0F30
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 21:39:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737063528; cv=none; b=UL9duoazUfz1xywqjDu2xFc+8o6iAqr8nF/kZ9gDyJW81tFSaLEjtQpkm83aMFBHiHohfnVzSMHN56VSQg0IpuDhDXIRopdz0ascbbktSJYUHOrjhhZv+rQDN33/Yh2SnqMM4sReLC1I9HqyWVwWmfEC6XhCaYVdL7c1rDne0zE=
+	t=1737063543; cv=none; b=OYBtmVNjl4+ytJ1xRc5Q5X+y06VXu5UvtXF2fDiAiuSgpixKgK0p/WWEpz7yKR2WCJTSqeCIuIiYTpprhuYekB36UEn6ILYX06GkahntpGKOZhL/sWX4yGnctX7TubWsaVFcyStN/nMzPkoIC6NbT3S3dei4PAG6/jj+4VyirFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737063528; c=relaxed/simple;
-	bh=Q8PKJt5gyx6h6/8FjkYbbDi8qxgzKHJi55ZBo6yNwKk=;
+	s=arc-20240116; t=1737063543; c=relaxed/simple;
+	bh=mz61MqxE1RzwA/m4v8O8qX8H3KKZ0Y6kvkaCxAoAY/A=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hK6hCp5U7T5s2ClfMmL3wh2sqLgiFfGIKm4aJlRDnOe89WTTeXRo87v2CKB0o5F+mgmVSFz/nl9f16opzQw8ebeptocpbz28gn9Hn+f1MrPFpBQDzQtVDD1rdSTtqus64r8xgxcXFM+CEfTsnCpRmrbZYHFkIiohNwhknUJVl2U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CzJz2N/T; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GH6a4Z3Gsdp3lPwFyn14//FPnzSBW5thNH/wWdLvqQhcyP33UtDcxk/7CuSvnOQ/wyYcjDmcftb+J72EXASUkUw7PPs2KZIC4UKsoQdplnQQBNlcjzw6VlMODo1ICh5MzlKD2JhrlY4yvRVpObxdk6tr54EX6QaIQHM7KoRwZVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YwDGR9Ey; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CzJz2N/T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A87BC4CED6;
-	Thu, 16 Jan 2025 21:38:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YwDGR9Ey"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A088C4CED6;
+	Thu, 16 Jan 2025 21:39:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737063527;
-	bh=Q8PKJt5gyx6h6/8FjkYbbDi8qxgzKHJi55ZBo6yNwKk=;
+	s=k20201202; t=1737063543;
+	bh=mz61MqxE1RzwA/m4v8O8qX8H3KKZ0Y6kvkaCxAoAY/A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CzJz2N/Tt1tXQlaID08v7ECxNa6HDGMsAmbImXXbT61tH7srT6ZhAOBr76Hz5kTxW
-	 6+1D2C6yy3BqZkG/KE7omIs0flvkaWohh5FrUm6mhxkFBaNb3WpHQ2AeHsdEF1gZV1
-	 6qqnh8PrK2p9nfDsDAS7A3kZfInbhOgxW0xfaTaXALFBdpyR555GQZK2NzofJx18Ys
-	 VKL5D5hie/CddAYtictt1hxjkstiDXxb+VXp1KuX5QHXceXzTbeFb6FHuJvRS1HY0u
-	 vI3zPlaHffInsbC/6BWiB2L1P+nBiqJ1F8Pdpral4xvkrYeAwUmRM3jEmr1l9U3HFZ
-	 6dk7LOz1d5Grw==
-Date: Thu, 16 Jan 2025 13:38:46 -0800
-Subject: [PATCH 1/8] xfs_db: fix multiple dblock commands
+	b=YwDGR9EyKHCfbCTNsjhPUBuCXUu5JGTzIGLQSgyrIVdbIn8IwGfxs5qaOiCNGJsaF
+	 9SIwaQoc3qydKc4eMT8CZD51vNZ9sShY3kDTLuqBcd3EpmZZ5+yzbwYReFPuI6WQUN
+	 WJDyppbrc8cGfqfqVGnjrQAZevVb1nWVqxvV7kMJPdorOG3YGYCewDgBl/ozA8DmzV
+	 TIEgEp7AUylShDTVbJ4/8xbYmTV/zQ37RWRZaeJKTJ2seT4oDoli5dMmaFDtuo0sQA
+	 jiV6h1Px/A19xnJWYmG3zEVuojlqMy0ZiUfVsV1E/QQRN2zMtuJcfzyXZox+/4410k
+	 rMEcKc4Cr3jCg==
+Date: Thu, 16 Jan 2025 13:39:02 -0800
+Subject: [PATCH 2/8] xfs_repair: don't obliterate return codes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: tom.samstag@netrise.io, tom.samstag@netrise.io, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <173706332222.1823674.15603891144443245230.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173706332237.1823674.4750925735232214007.stgit@frogsfrogsfrogs>
 In-Reply-To: <173706332198.1823674.17512820639050359555.stgit@frogsfrogsfrogs>
 References: <173706332198.1823674.17512820639050359555.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,66 +45,28 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Tom Samstag reported that running the following sequence of commands no
-longer works quite right:
+Don't clobber error here, it's err2 that's the temporary variable.
 
-> inode [inodenum]
-> dblock 0
-> p
-> dblock 1
-> p
-> dblock 2
-> p
-> [etc]
-
-Mr. Samstag looked into the source code and discovered that the
-dblock_f is incorrectly accessing iocur_top->data outside of the
-push_cur -> set_cur_inode -> pop_cur sequence that this function uses to
-compute the type of the file data.  In other words, it's using
-whatever's on top of the stack at the start of the function.  For the
-"dblock 0" case above this is the inode, but for the "dblock 1" case
-this is the contents of file data block 0, not an inode.
-
-Fix this by relocating the check to the correct place.
-
-Reported-by: tom.samstag@netrise.io
-Tested-by: Tom Samstag <tom.samstag@netrise.io>
-Cc: <linux-xfs@vger.kernel.org> # v6.12.0
-Fixes: b05a31722f5d4c ("xfs_db: access realtime file blocks")
+Coverity-id: 1637363
+Fixes: b790ab2a303d58 ("xfs_repair: support quota inodes in the metadata directory")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/block.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ repair/quotacheck.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/db/block.c b/db/block.c
-index 00830a3d57e1df..2f1978c41f3094 100644
---- a/db/block.c
-+++ b/db/block.c
-@@ -246,6 +246,7 @@ dblock_f(
- 	int		nb;
- 	xfs_extnum_t	nex;
- 	char		*p;
-+	bool		isrt;
- 	typnm_t		type;
+diff --git a/repair/quotacheck.c b/repair/quotacheck.c
+index 8c7339b267d8e6..7953144c3f416b 100644
+--- a/repair/quotacheck.c
++++ b/repair/quotacheck.c
+@@ -691,7 +691,7 @@ discover_quota_inodes(
+ 	err2 = mark_quota_inode(tp, dp, XFS_DQTYPE_GROUP);
+ 	if (err2 && !error)
+ 		error = err2;
+-	error = mark_quota_inode(tp, dp, XFS_DQTYPE_PROJ);
++	err2 = mark_quota_inode(tp, dp, XFS_DQTYPE_PROJ);
+ 	if (err2 && !error)
+ 		error = err2;
  
- 	bno = (xfs_fileoff_t)strtoull(argv[1], &p, 0);
-@@ -255,6 +256,7 @@ dblock_f(
- 	}
- 	push_cur();
- 	set_cur_inode(iocur_top->ino);
-+	isrt = is_rtfile(iocur_top->data);
- 	type = inode_next_type();
- 	pop_cur();
- 	if (type == TYP_NONE) {
-@@ -273,7 +275,7 @@ dblock_f(
- 	ASSERT(typtab[type].typnm == type);
- 	if (nex > 1)
- 		make_bbmap(&bbmap, nex, bmp);
--	if (is_rtfile(iocur_top->data))
-+	if (isrt)
- 		set_rt_cur(&typtab[type], xfs_rtb_to_daddr(mp, dfsbno),
- 				nb * blkbb, DB_RING_ADD,
- 				nex > 1 ? &bbmap : NULL);
 
