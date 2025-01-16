@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFB551547FE;
-	Thu, 16 Jan 2025 23:26:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 085FB1547FE;
+	Thu, 16 Jan 2025 23:26:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737069989; cv=none; b=ne2SfrFnFDquY1yvuIFEUNHC2bxwJn/dJdMy/M1Xt1h5btw/toS8fxv+fUx2E4zIARsugnOEh0mw4JbKfjFf7CEzp7R5EPxcu2ILDwTdeEWnxVhG92yfWj/UsBF4sG52RNANnNFwb5/wG9+MNJfE7ob2xj0xhlVQM6JhZwwwFmU=
+	t=1737070005; cv=none; b=szCryJ2hIAhySDFCqdz5hufYuKr41vn66aOG2ZszDqd4I5aujfljY8TN1Leh4j4Og6Go8SXP8kK9j2I9sz0KG6Vi4fDE4VQ9CzS2VXhpKiXpI3FOUkr/G6H98zMULzxWmSSDtWvvnuZhV8oIdAwAYAY7v+8G8yW9aqCJ3QNI5J8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737069989; c=relaxed/simple;
-	bh=T++MOsGoUnXx0+b9ACIWM05pta1tT/sMx5uB5k/yE6c=;
+	s=arc-20240116; t=1737070005; c=relaxed/simple;
+	bh=dm3+4pF3hh29oXOtz5V2tVKTeh6e8UX6hmXyRyzSKzY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=X5wZ6cvKjRutlx0Hc7R6/wxqv/I00W03cLAyb+myzwb2wAsYcMIbxo5JFOAgg0IBdpKn3aNyZ+VN2y01D137I4kYgyVjoi5n4u1SyEkw/LfGozB8ufH28o/X/LWBH4CJ3ftZ0S0uY/k58DEln3f05Kar5EmkFfpCut555qQVbIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c8p9CiCq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Y1ICqKDaFPp7cuoEOyP9FHutLQTNYgYw/4SxHVERRpsym3RemEt5+rSubL4HYd6ozhGpdLDMMWvlV3chet5DJBOS9D3AFlC8xvb7go7tLhyV96UCauKjnin80Ipql2PYIsucf2wGZtyMfGdVS2Gp6nxd6Hz7POIxOvyMPClWB9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pAZTH4Ue; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c8p9CiCq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47A70C4CED6;
-	Thu, 16 Jan 2025 23:26:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pAZTH4Ue"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1860C4CEDD;
+	Thu, 16 Jan 2025 23:26:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737069989;
-	bh=T++MOsGoUnXx0+b9ACIWM05pta1tT/sMx5uB5k/yE6c=;
+	s=k20201202; t=1737070004;
+	bh=dm3+4pF3hh29oXOtz5V2tVKTeh6e8UX6hmXyRyzSKzY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=c8p9CiCq0ryCyuKryfbt0bbha1yhyhhoeGoPoWmQHIQU3Kwx2NkSfrH3fk+6+PjW4
-	 g2N/0TaY/HIV1WPpCIyxmBwdxVBfrHIafsv89xYs5A35Ujy5CbfwVR+nrsdRE9/+b/
-	 el4jtBVC7rOBU86EeWzTvGT2x3INR+WCHw37R87E0JW1yuYpYxSOWwTqaW4+V/1ncU
-	 8ciyB6c6B4WfTWVp7stieWQr/C2xS4WIRu+YWcuj7WV0s4RNxmNWfFOZYH+Bkl9ECA
-	 E4rbC7aY0saWWgd/8GVFDen7GquYQYqJmRXXWHclb+QbojSRuw33zIvzQda4PbhPzT
-	 3weO4bpLi4bmQ==
-Date: Thu, 16 Jan 2025 15:26:28 -0800
-Subject: [PATCH 05/23] generic/019: don't fail if fio crashes while shutting
- down
+	b=pAZTH4UeNzIrQ2rsFefBL07b6l7CWkEc9EJv0NvPXEbIu0EEzFSNFuk8z/8Q6TBPh
+	 zYilv+WkOdqhSnBpDFsaNIjXjSny5jnGYkr6wwNzP80CCy0A3khM+O+yHuaMVt6Fng
+	 W0b98ceMsbIZd1BDOiz26cnSaRX1g7Vs8lQfhdhZiCnouZTfR9BenuZ+c22ZvVnVON
+	 2zp+zTQCs6tzC2gWaxmEdC8+b7svWhi16BWHCaoo8cybRzIeafOd1opuM2pWT9GBoG
+	 hjOuLLbXREcRx+LpmXQHqHg7HDuzZaRjZKICCxhPTKCHA881jRjPlVyEgpueypPIru
+	 P6BcCHWDSMneg==
+Date: Thu, 16 Jan 2025 15:26:44 -0800
+Subject: [PATCH 06/23] fuzzy: do not set _FSSTRESS_PID when exercising fsx
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706974152.1927324.14222114120134004551.stgit@frogsfrogsfrogs>
+Message-ID: <173706974167.1927324.3074850676975765263.stgit@frogsfrogsfrogs>
 In-Reply-To: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,63 +45,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-My system (Debian 12) has fio 3.33.  Once in a while, fio crashes while
-shutting down after it receives a SIGBUS on account of the filesystem
-going down.  This causes the test to fail with:
+If we're not running fsstress as the scrub exerciser, don't set
+_FSSTRESS_PID because the _kill_fsstress call in the cleanup function
+will think that it has to wait for a nonexistant fsstress process.
+This fixes the problem of xfs/565 runtime increasing from 30s to 800s
+because it tries to kill a nonexistent "565.fsstress" process and then
+waits for the fsx loop control process, which hasn't been sent any
+signals.
 
-generic/019       - output mismatch (see /var/tmp/fstests/generic/019.out.bad)
-    --- tests/generic/019.out   2024-02-28 16:20:24.130889521 -0800
-    +++ /var/tmp/fstests/generic/019.out.bad    2025-01-03 15:00:35.903564431 -0800
-    @@ -5,5 +5,6 @@
-
-     Start fio..
-     Force SCRATCH_DEV device failure
-    +/tmp/fstests/tests/generic/019: line 112: 90841 Segmentation fault      $FIO_PROG $fio_config >> $seqres.full 2>&1
-     Make SCRATCH_DEV device operable again
-     Disallow global fail_make_request feature
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/019.out /var/tmp/fstests/generic/019.out.bad'  to see the entire diff)
-
-because the wait command will dutifully report fatal signals that kill
-the fio process.  Unfortunately, a core dump shows that we blew up in
-some library's exit handler somewhere:
-
-(gdb) where
-#0  unlink_chunk (p=p@entry=0x55b31cb9a430, av=0x7f8b4475ec60 <main_arena>) at ./malloc/malloc.c:1628
-#1  0x00007f8b446222ff in _int_free (av=0x7f8b4475ec60 <main_arena>, p=0x55b31cb9a430, have_lock=<optimized out>, have_lock@entry=0) at ./malloc/malloc.c:4603
-#2  0x00007f8b44624f1f in __GI___libc_free (mem=<optimized out>) at ./malloc/malloc.c:3385
-#3  0x00007f8b3a71cf0e in ?? () from /lib/x86_64-linux-gnu/libtasn1.so.6
-#4  0x00007f8b4426447c in ?? () from /lib/x86_64-linux-gnu/libgnutls.so.30
-#5  0x00007f8b4542212a in _dl_call_fini (closure_map=closure_map@entry=0x7f8b44465620) at ./elf/dl-call_fini.c:43
-#6  0x00007f8b4542581e in _dl_fini () at ./elf/dl-fini.c:114
-#7  0x00007f8b445ca55d in __run_exit_handlers (status=0, listp=0x7f8b4475e820 <__exit_funcs>, run_list_atexit=run_list_atexit@entry=true, run_dtors=run_dtors@entry=true)
-    at ./stdlib/exit.c:116
-#8  0x00007f8b445ca69a in __GI_exit (status=<optimized out>) at ./stdlib/exit.c:146
-#9  0x00007f8b445b3251 in __libc_start_call_main (main=main@entry=0x55b319278e10 <main>, argc=argc@entry=2, argv=argv@entry=0x7ffec6f8b468) at ../sysdeps/nptl/libc_start_call_main.h:74
-#10 0x00007f8b445b3305 in __libc_start_main_impl (main=0x55b319278e10 <main>, argc=2, argv=0x7ffec6f8b468, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>,
-    stack_end=0x7ffec6f8b458) at ../csu/libc-start.c:360
-#11 0x000055b319278ed1 in _start ()
-
-This isn't a filesystem failure, so mask this by shovelling the output
-to seqres.full.
-
+Cc: <fstests@vger.kernel.org> # v2024.12.08
+Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/generic/019 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ common/fuzzy |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/generic/019 b/tests/generic/019
-index bed916b53f98e5..676ff27dab8062 100755
---- a/tests/generic/019
-+++ b/tests/generic/019
-@@ -109,7 +109,7 @@ _workout()
- 	    _fail "failed: still able to perform integrity fsync on $SCRATCH_MNT"
+diff --git a/common/fuzzy b/common/fuzzy
+index 534e91dedbbb43..0a2d91542b561e 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -1392,7 +1392,11 @@ _scratch_xfs_stress_scrub() {
  
- 	_kill_fsstress
--	wait $fio_pid
-+	wait $fio_pid &>> $seqres.full # old fio can crash on EIO, ignore segfault reporting
- 	unset fio_pid
+ 	"__stress_scrub_${exerciser}_loop" "$end" "$runningfile" \
+ 			"$remount_period" "$stress_tgt" &
+-	_FSSTRESS_PID=$!
++	# The loop is a background process, so _FSSTRESS_PID is set in that
++	# child.  Unfortunately, this process doesn't know about it.  Therefore
++	# we need to set _FSSTRESS_PID ourselves so that cleanup tries to kill
++	# fsstress.
++	test "${exerciser}" = "fsstress" && _FSSTRESS_PID=$!
  
- 	# We expect that broken FS still can be umounted
+ 	if [ -n "$freeze" ]; then
+ 		__stress_scrub_freeze_loop "$end" "$runningfile" &
 
