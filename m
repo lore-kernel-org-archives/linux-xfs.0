@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE0C132103
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 16:53:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5034137932
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 16:58:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737046434; cv=none; b=DaajF32uEbqbwyWLL0iX4txKkl7Djr5TqGigV6lrLCR/AKv246gWuaRbTCzs5zV1ulQKacFspIG/sJ53VB0fa3IRepqNPDDRGTi3jsmo3cQf60ongU35qpmauRr2wiPncLtA565bWK7ROlyd+naL1I8DycNe/bEcU28Ny+/j/Oo=
+	t=1737046730; cv=none; b=XxBZ5qb0GNYBlqfuCa2WyQBBv7nugbEeZG7aecgJQGAfLGouAc8huUTnEK5U6dAV44HQF6mPk02c5P2fzs7nB4lkVszrx8H5ijL95986ZSzL4TL2qZtl/4GeJn3vqdPMLcDF8oeMExSmdCDQdFyLjv23qTdH3AnZ4Uh+FOO3nvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737046434; c=relaxed/simple;
-	bh=PXAcKpWyouPZpkOHv4NXffYZsxWD6ILYyWXrP/34Gho=;
+	s=arc-20240116; t=1737046730; c=relaxed/simple;
+	bh=Tkfr5HgW6x+wUwjWTuUi4SgqdN3nXXsOoRmJnf+5euY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WOXXpiYh1g1D+UJG/r+GkHA8Em5W1usGoWO7tKEGoQ092cmU/ffMXVXEXCqj506N5IAQWWBqYVEQzIW6hLYSG40oZLRyK3gERtqubytsd0EZ5yZfG64dwc0WUU3Jw5jFmekShyJ2E8/vgSuYG2sFdxrMhQ4Ihd3oOaegCsVHOpY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sFFenXjM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=O6TzUaA6KJeLSIFb6pmx9Nbj2QQzMcbBsX3cILOHj47qYogs8OKfODVOkUH0OfbRCA9VX0ApY9NMqm9fDtO4qtvNIDf5k5tWCcsMMtY8MB4uPSYUCcpjZsfWlPspf8y30Kt5RQNK4GfkA4Ps7jY3r1FNpT6juolFbEmvhYSnjlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HDY5jqga; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sFFenXjM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7124DC4CED6;
-	Thu, 16 Jan 2025 16:53:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HDY5jqga"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57BCAC4CED6;
+	Thu, 16 Jan 2025 16:58:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737046433;
-	bh=PXAcKpWyouPZpkOHv4NXffYZsxWD6ILYyWXrP/34Gho=;
+	s=k20201202; t=1737046730;
+	bh=Tkfr5HgW6x+wUwjWTuUi4SgqdN3nXXsOoRmJnf+5euY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sFFenXjMVfFhagC5UKHkYrJnvqFYWzyuBsnB9H+4KxkMFCd+RHpfkB06aXojzNg/b
-	 OA3VE+c+e2+T8NUqOyVcsosro405FQeVC7JiFyDrrM7Ec6/bDEsAUGCUiVoPew0ZmQ
-	 VvV22pkw1rbrwVlVdYmQ/krV6X9D5IiyzTZ675Z8G5s1Tv6OOvELlugajffkDPk5Tr
-	 RtpZ4UHwdNtnUnNcgxRw7SXkvjIIjs+H18KECodtKwcUQ++ua99GlFWx732NHNXFdc
-	 Kt1EWI9m7HoVmrD5nsIuwbKfDQneIJt7gHSCGEoBPRiTqZuhF4EUacv4Mb2EfMk+qm
-	 fgsui/iF19wqQ==
-Date: Thu, 16 Jan 2025 08:53:52 -0800
+	b=HDY5jqga0eJQccjq1jNpLYr+ZHMUbnk/WTJR8IC/K01PElSXtwETgqud88zJym+qo
+	 4X6yMAqj8kyhB7k00kbyPu0cJbMjX4LrSlokkuVIZcAlVJYANA9PzQlveRgCtIyl6H
+	 DnUZDJkohmkXvjwC2czSUQY3M3e29Cc1DfxOd+KviXk9ZhJYxVxfWyapldesyGOoB8
+	 uFDT8icv2eiO+RF5KpYJoCzIA02zSHzKc7kPmJ313HWsNMQHFxVEI/4D+zMyuPeoT1
+	 W7NtsXK453m/nXJToo1k+YYD1Zxi+FAPr6tzvuSE7Ru6euiCTBV8QEfO6sDKKfAu9k
+	 naZHhXmt0Z1EA==
+Date: Thu, 16 Jan 2025 08:58:49 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libxfs: Remove pointless crc flag check from
- xfs_agfl_verify
-Message-ID: <20250116165352.GG3566461@frogsfrogsfrogs>
-References: <20250116163304.492079-1-cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: remove an out of data comment in _xfs_buf_alloc
+Message-ID: <20250116165849.GH3566461@frogsfrogsfrogs>
+References: <20250116060335.87426-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,43 +41,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250116163304.492079-1-cem@kernel.org>
+In-Reply-To: <20250116060335.87426-1-hch@lst.de>
 
-On Thu, Jan 16, 2025 at 05:32:56PM +0100, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On Thu, Jan 16, 2025 at 07:03:35AM +0100, Christoph Hellwig wrote:
+> There hasn't been anything like an io_length for a long time.
 > 
-> Just a small clean up.
-> xfs_agfl_verify() is only called from xfs_agfl_{read,write}_verify()
-> helpers.
-> Both of them already check if crc is enabled, there seems to be no
-> reason for checking for it again.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-...but it does get called via ->verify_struct, which in turn is called
-by online fsck and buffer log item "precommit" if
-CONFIG_XFS_DEBUG_EXPENSIVE=y, so please don't remove this check.
+Yep, that old comment doesn't make much sense anymore
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_alloc.c | 3 ---
->  1 file changed, 3 deletions(-)
+>  fs/xfs/xfs_buf.c | 5 -----
+>  1 file changed, 5 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 3d33e17f2e5c..619e6d6570f8 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -787,9 +787,6 @@ xfs_agfl_verify(
->  	__be32		*agfl_bno = xfs_buf_to_agfl_bno(bp);
->  	int		i;
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index dc219678003c..af3945bf7d94 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -241,11 +241,6 @@ _xfs_buf_alloc(
+>  	bp->b_mount = target->bt_mount;
+>  	bp->b_flags = flags;
 >  
-> -	if (!xfs_has_crc(mp))
-> -		return NULL;
-> -
->  	if (!xfs_verify_magic(bp, agfl->agfl_magicnum))
->  		return __this_address;
->  	if (!uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid))
+> -	/*
+> -	 * Set length and io_length to the same value initially.
+> -	 * I/O routines should use io_length, which will be the same in
+> -	 * most cases but may be reset (e.g. XFS recovery).
+> -	 */
+>  	error = xfs_buf_get_maps(bp, nmaps);
+>  	if (error)  {
+>  		kmem_cache_free(xfs_buf_cache, bp);
 > -- 
-> 2.47.1
+> 2.45.2
 > 
 > 
