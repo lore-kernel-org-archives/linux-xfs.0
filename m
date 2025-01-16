@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D0AC158520;
-	Thu, 16 Jan 2025 23:34:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDF721F153D;
+	Thu, 16 Jan 2025 23:34:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070474; cv=none; b=lt8SPmMBUGy5P0B6B0giBwSJwtNSU3GMGqY1EP2Pze8P8kzeQaV2MuwDI2hOMRo1JAkFSIrHrapKqxpChqaWEdkcvaMFObNf0Mjgv23KybtWjh4rOcn13M8UqOP9RmwsceFSrC8EKWSsq9P+xpwB1IQreM8EUye04a27wgVFsGM=
+	t=1737070489; cv=none; b=LLXZTn/L8ZU8w9WQHA1TERkThJLkoi1okcnQfWA0aRhJ5B7rRIwngOH0S/TLxiuQwj18dM40NAjmyY2jiipFcZ74LM7HXbN6G+3MZJLFxBDbE/V61ahWNevsD4AUSPr2rPPI1VGuaxTCYSkZCbK6H/gBYdMh3s9MEYutND4bvlM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070474; c=relaxed/simple;
-	bh=cTN8QDFyMHsSG76d6Uok+F1oLjzK7k8DgxwBZ+h+YXA=;
+	s=arc-20240116; t=1737070489; c=relaxed/simple;
+	bh=RlRxkb1fN1VvV9kTiHv/S/NWBIPfSDuW4PTCPAiPijE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NkDcvM4iSETdQ90QgQ1+bPhm0ml95kei/qC/of+QUsefc1GQL7DDLDyGmTrXbCkTA2c3asoK4Z7nrk8Gbjm6ddlkieyHj1V3rz4AQ6mtkfIRMq7p35km/DfCfmEK5P986krECn+CbIDv0d/hPv4NBWS5kj+5Fvo6kYlE262mDss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DqGqZyUX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gjVHqUhhHnEE67CcRoNsnDXi2CkXf5j/MhCh1GxoAUucdwijQs9TTwxD2VgJ5ASHVfUb1hKp0otNGY4ccSSrFzD72zzf25YTBWLPWlUU7nelfz1ErVjVDwFMxeY7l01WzK23IIuJ3QYqDn86ZpOsRUYy9Nv8TcLz8V3ACoTWEf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SyOLUncC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DqGqZyUX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14A81C4CED6;
-	Thu, 16 Jan 2025 23:34:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SyOLUncC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4F17C4CED6;
+	Thu, 16 Jan 2025 23:34:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070474;
-	bh=cTN8QDFyMHsSG76d6Uok+F1oLjzK7k8DgxwBZ+h+YXA=;
+	s=k20201202; t=1737070489;
+	bh=RlRxkb1fN1VvV9kTiHv/S/NWBIPfSDuW4PTCPAiPijE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DqGqZyUXLFdRw7yMxLig0OVdZRCGP1tPr8ugWozQ41aFsZ+YxW8/POD+g80yevdes
-	 46rV98UgykmKNsB2YnQcr8l939E+yE8H/LMPWCDx6Wli40B1f6/KER9B5KOO5PrKhT
-	 FuDzUJeeAT8tvgdu+9ITCMiKHAcpLhK+O/HUFscYCWgDDA1dib09wU0p3VpdGxd8Zl
-	 3NFMe7KK9IkhfWaiTn/bpus2cx8sk/2Igm4tU51LCJmAli8VtFeycpuHyMuVDeTZ4J
-	 9LgnKZU68UZ+MltbIOPdSgnWSZawVMxmqlC5Fs2QsKHEmIf2Bv2QVBslWTkQvSuDFJ
-	 pg9vIRlTQjXog==
-Date: Thu, 16 Jan 2025 15:34:33 -0800
-Subject: [PATCH 10/11] scrub: race metapath online fsck with fsstress
+	b=SyOLUncCIGj/cJ+ivObNoU4XN22C9B0FrR1BFJ4pqMeZehK52O5yMd5XqTX44e6RF
+	 pYNyAuJrgPA/KxAlUuOC86um+0mpoaoyqGghktMo1Vk64ggW1n6z2rTufuLME2ICYb
+	 SxBG2rtSGOKbZ6lbZFo0kKrZSj61u75Tw5f6Qxcwm/qK7rU5dZYz+Li2wAh5IWYZMS
+	 3FJW76BC2gHJ1fgXhHQTxzUXNtIm2mWbUf8hwRbrfOBiZ5izrIWJtLPuphs/zO5sBx
+	 BPfUxpB9krBW6btDBQ9v+Fd+17rgXqxzN9tH2PFqVYRzfwq5x8U9gccmjzPBHZQW6T
+	 2UxuMG6Pw/4iA==
+Date: Thu, 16 Jan 2025 15:34:49 -0800
+Subject: [PATCH 11/11] xfs: test metapath repairs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706975320.1928284.12262575850185873579.stgit@frogsfrogsfrogs>
+Message-ID: <173706975335.1928284.10620285969077946573.stgit@frogsfrogsfrogs>
 In-Reply-To: <173706975151.1928284.10657631623674241763.stgit@frogsfrogsfrogs>
 References: <173706975151.1928284.10657631623674241763.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,195 +45,165 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a pair of new tests to exercise fsstress vs. metapath repairs.
+Functional testing for metadir path checking and repairs.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/xfs         |    3 ++
- tests/xfs/1892     |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1892.out |    2 ++
- tests/xfs/1893     |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1893.out |    2 ++
- 5 files changed, 140 insertions(+)
- create mode 100755 tests/xfs/1892
- create mode 100644 tests/xfs/1892.out
- create mode 100755 tests/xfs/1893
- create mode 100644 tests/xfs/1893.out
+ tests/xfs/1874     |  119 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1874.out |   19 ++++++++
+ 2 files changed, 138 insertions(+)
+ create mode 100755 tests/xfs/1874
+ create mode 100644 tests/xfs/1874.out
 
 
-diff --git a/common/xfs b/common/xfs
-index 1c5daaa977aef1..b8e24c2e0ce8fe 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1664,6 +1664,9 @@ _xfs_filter_mkfs()
- 	if (/^realtime\s+=([\w|\/.-]+)\s+extsz=(\d+)\s+blocks=(\d+), rtextents=(\d+)/) {
- 		print STDERR "rtdev=$1\nrtextsz=$2\nrtblocks=$3\nrtextents=$4\n";
- 		print STDOUT "realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX\n";
-+	}
-+	if (/^\s+=\s+rgcount=(\d+)\s+rgsize=(\d+) extents/) {
-+		print STDERR "rgcount=$1\nrgextents=$2\n";
- 	}'
- }
- 
-diff --git a/tests/xfs/1892 b/tests/xfs/1892
+diff --git a/tests/xfs/1874 b/tests/xfs/1874
 new file mode 100755
-index 00000000000000..13310353564554
+index 00000000000000..2e1af9222fa0bf
 --- /dev/null
-+++ b/tests/xfs/1892
-@@ -0,0 +1,66 @@
++++ b/tests/xfs/1874
+@@ -0,0 +1,119 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024-2025 Oracle.  All Rights Reserved.
++# Copyright (c) 2023-2025 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 1892
++# FS QA Test 1874
 +#
-+# Race fsstress and metadata directory tree path corruption detector for a
-+# while to see if we crash or livelock.
-+#
-+. ./common/preamble
-+_begin_fstest scrub fsstress_scrub
-+
-+_cleanup() {
-+	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-+	cd /
-+	rm -r -f $tmp.*
-+}
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
-+. ./common/xfs
-+
-+_require_scratch
-+_require_xfs_stress_scrub
-+
-+_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+. $tmp.mkfs
-+_scratch_mount
-+
-+verbs=()
-+
-+try_verb()
-+{
-+	$XFS_IO_PROG -x -c "scrub metapath $*" "$SCRATCH_MNT" 2>&1
-+}
-+
-+# Metapath verbs that don't require arguments
-+for v in quotadir usrquota grpquota prjquota rtdir; do
-+	testio=$(try_verb "$v")
-+	test -z "$testio" && verbs+=("$v")
-+done
-+
-+# Metapath verbs that take a rt group number
-+for ((rgno = 0; rgno < rgcount; rgno++)); do
-+	for v in rtbitmap rtsummary rtrmapbt rtrefcbt; do
-+		testio=$(try_verb "$v" "$rgno")
-+		test -z "$testio" && verbs+=("$v $rgno")
-+	done
-+done
-+test "${#verbs[@]}" -gt 0 || _notrun "no metapath verbs detected"
-+
-+args=()
-+for v in "${verbs[@]}"; do
-+	args+=("scrub metapath $v")
-+done
-+
-+echo "${verbs[@]}" >> $seqres.full
-+_scratch_xfs_stress_scrub "${args[@]}"
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/1892.out b/tests/xfs/1892.out
-new file mode 100644
-index 00000000000000..afc84c43ed2dcc
---- /dev/null
-+++ b/tests/xfs/1892.out
-@@ -0,0 +1,2 @@
-+QA output created by 1892
-+Silence is golden
-diff --git a/tests/xfs/1893 b/tests/xfs/1893
-new file mode 100755
-index 00000000000000..d06687fa2a1087
---- /dev/null
-+++ b/tests/xfs/1893
-@@ -0,0 +1,67 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024-2025 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1893
-+#
-+# Race fsstress and metadata directory tree path repair for a while to see if
-+# we crash or livelock.
++# Functional test of using online repair to fix metadir paths.
 +#
 +. ./common/preamble
-+_begin_fstest online_repair fsstress_online_repair
++_begin_fstest auto online_repair
 +
-+_cleanup() {
-+	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-+	cd /
-+	rm -r -f $tmp.*
-+}
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
 +. ./common/filter
-+. ./common/fuzzy
 +. ./common/inject
-+. ./common/xfs
++. ./common/fuzzy
++. ./common/quota
 +
++_require_xfs_db_command "link"
++_require_xfs_db_command "unlink"
 +_require_scratch
 +_require_xfs_stress_online_repair
 +
-+_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+. $tmp.mkfs
-+_scratch_mount
++prepare_fs() {
++	# Format filesystem
++	_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
++	_scratch_mount
 +
-+verbs=()
++	_require_xfs_has_feature "$SCRATCH_MNT" rmapbt
++	_require_xfs_has_feature "$SCRATCH_MNT" realtime
++	_require_xfs_has_feature "$SCRATCH_MNT" metadir
++	_require_xfs_has_feature "$SCRATCH_MNT" parent
 +
-+try_verb()
-+{
-+	$XFS_IO_PROG -x -c "repair metapath $*" "$SCRATCH_MNT" 2>&1 | \
-+		sed -e '/did not need repair/d'
++	root_inum="$(stat -c '%i' $SCRATCH_MNT)"
++	__stress_scrub_check_commands "%dir%" '' '' 'scrub metapath'
++	_scratch_unmount
++
++	# Stash the /rtgroups inode number and gen
++	rt_metadir_inum=$(_scratch_xfs_get_metadata_field v3.inumber 'path -m /rtgroups')
++	rt_metadir_gen=$(_scratch_xfs_get_metadata_field core.gen 'path -m /rtgroups')
++
++	# Stash the /rtgroups/0.rmap inode number and gen
++	rbm_inum=$(_scratch_xfs_get_metadata_field v3.inumber 'path -m /rtgroups/0.rmap')
++	rbm_gen=$(_scratch_xfs_get_metadata_field core.gen 'path -m /rtgroups/0.rmap')
++
++	# Fuzz parent pointer in rtgroup 0 rmap file
++	_scratch_xfs_db -x \
++		-c 'path -m /rtgroups/0.rmap' \
++		-c "write -d a.sfattr.list[0].parent_dir.inumber $root_inum" >> $seqres.full
 +}
 +
-+# Metapath verbs that don't require arguments
-+for v in quotadir usrquota grpquota prjquota rtdir; do
-+	testio=$(try_verb "$v")
-+	test -z "$testio" && verbs+=("$v")
-+done
++simple_online_repair() {
++	echo "check /rtgroups dir" | _tee_kernlog
++	$XFS_IO_PROG -c "scrub directory $rt_metadir_inum $rt_metadir_gen" $SCRATCH_MNT
 +
-+# Metapath verbs that take a rt group number
-+for ((rgno = 0; rgno < rgcount; rgno++)); do
-+	for v in rtbitmap rtsummary; do
-+		testio=$(try_verb "$v" "$rgno")
-+		test -z "$testio" && verbs+=("$v $rgno")
-+	done
-+done
-+test "${#verbs[@]}" -gt 0 || _notrun "no metapath verbs detected"
++	echo "check /rtgroups/0.rmap pptr" | _tee_kernlog
++	$XFS_IO_PROG -c "scrub parent $rbm_inum $rbm_gen" $SCRATCH_MNT
 +
-+args=()
-+for v in "${verbs[@]}"; do
-+	args+=("repair metapath $v")
-+done
++	echo "check /rtgroups/0.rmap metapath" | _tee_kernlog
++	$XFS_IO_PROG -c "scrub metapath rtrmapbt 0" $SCRATCH_MNT
 +
-+echo "${verbs[@]}" >> $seqres.full
-+_scratch_xfs_stress_online_repair "${args[@]}"
++	echo "check nlinks" | _tee_kernlog
++	$XFS_IO_PROG -c "scrub nlinks" $SCRATCH_MNT
 +
++	# Destroying a metadir path (e.g. /rtgroups/0.rmap) cannot be done
++	# offline because then the mount will fail.  Hence we must use a
++	# specific sequence of online repairs to remove the metadir path link.
++	# Only then can we use the metapath scrubber to restore the link.
++
++	# Force repair the parent directory.  Since /rtgroups/0.rmap has a bad
++	# parent pointer, the "0.rmap" entry in /rtgroups will not be created.
++	echo "fix /rtgroups dir" | _tee_kernlog
++	$XFS_IO_PROG -x -c "repair -R directory $rt_metadir_inum $rt_metadir_gen" $SCRATCH_MNT
++
++	# Force repair the parent pointer.  Since the "0.rmap" entry in
++	# /rtgroups no longer exists and no other directories count the
++	# rtgroup 0 rmap as a parent, this will fail cross-referencing after
++	# the repair.
++	echo "fix /rtgroups/0.rmap pptr" | _tee_kernlog
++	$XFS_IO_PROG -x -c "repair -R parent $rbm_inum $rbm_gen" $SCRATCH_MNT
++
++	# Now that we've completely erased the /rtgroups/0.rmap path, check
++	# that the link is indeed lost, and restore the link.
++	echo "fix /rtgroups/0.rmap metapath" | _tee_kernlog
++	$XFS_IO_PROG -x -c "repair metapath rtrmapbt 0" $SCRATCH_MNT
++
++	# Make sure we're not missing any link count
++	echo "fix nlinks" | _tee_kernlog
++	$XFS_IO_PROG -x -c "repair nlinks" $SCRATCH_MNT
++}
++
++echo Part 1: Use raw ioctls to detect the error and fix it.
++prepare_fs
++_scratch_mount
++simple_online_repair
++_check_scratch_fs
++_scratch_unmount
++
++echo Part 2: Use xfs_scrub to detect the error and fix it.
++prepare_fs
++_scratch_mount
++echo "fix with xfs_scrub" | _tee_kernlog
++_scratch_scrub &>> $seqres.full
++echo "xfs_scrub returned $?" >> $seqres.full
++_check_scratch_fs
++_scratch_unmount
++
++echo Part 3: Use xfs_repair to detect the error and fix it.
++prepare_fs
++echo "fix with xfs_repair" | _tee_kernlog
++echo repair?? >> $seqres.full
++_scratch_xfs_repair &>> $seqres.full
++echo "xfs_repair returned $?" >> $seqres.full
++_scratch_mount
++_check_scratch_fs
++_scratch_unmount
++
++echo "done with test" | _tee_kernlog
 +# success, all done
-+echo Silence is golden
 +status=0
 +exit
-diff --git a/tests/xfs/1893.out b/tests/xfs/1893.out
+diff --git a/tests/xfs/1874.out b/tests/xfs/1874.out
 new file mode 100644
-index 00000000000000..64d6b1b2bcd09e
+index 00000000000000..ff4497363d8063
 --- /dev/null
-+++ b/tests/xfs/1893.out
-@@ -0,0 +1,2 @@
-+QA output created by 1893
-+Silence is golden
++++ b/tests/xfs/1874.out
+@@ -0,0 +1,19 @@
++QA output created by 1874
++Part 1: Use raw ioctls to detect the error and fix it.
++check /rtgroups dir
++Corruption detected during cross-referencing.
++check /rtgroups/0.rmap pptr
++Corruption detected during cross-referencing.
++check /rtgroups/0.rmap metapath
++check nlinks
++fix /rtgroups dir
++fix /rtgroups/0.rmap pptr
++Corruption remains.
++Corruption still detected during cross-referencing.
++fix /rtgroups/0.rmap metapath
++fix nlinks
++Part 2: Use xfs_scrub to detect the error and fix it.
++fix with xfs_scrub
++Part 3: Use xfs_repair to detect the error and fix it.
++fix with xfs_repair
++done with test
 
