@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7DC1F5608;
-	Thu, 16 Jan 2025 23:36:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75FC81F5608;
+	Thu, 16 Jan 2025 23:36:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070583; cv=none; b=QQ4rTt5BVfFcjnpj1q9YJHvTdNH9PCYkpRdwOdwnVlU3Q903cbzVaE0qhW0pMzHs43Hv9UeMdNsk9jVMFYIP3cpauni2v5y0yhXmay9tb7vnlAjNvx0RzKWokHvPZW9ob3TVIrEBQUjxyseP3zWVD3CAh+WpnIA+76KoNQu7Rzw=
+	t=1737070599; cv=none; b=B7BmwGBWgsl3VjV7Cv8U1cGbZhdDjgwsJ1HtJLDctpSrcG4xl4mCs3715zwUXblM8x1laEutB8dgutbqEif5XkyYlZTbUssZYlbNdbyUb+t4apFw4NUf7s4KyLONmeS3ZpleUx0XcQnJxmvI/0pm/T/tc03lZR/R+ULXFnqe4RY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070583; c=relaxed/simple;
-	bh=Iw4t699RvEK0soPcLHfWcXPINGsWZ3+yX52nmWR2sb4=;
+	s=arc-20240116; t=1737070599; c=relaxed/simple;
+	bh=w9l5oe9KrYAocr3lXFRNF6FqOuQwVPQ9y4X2JWHYETc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UklgDgQ7//KCE1EEP9bq8TWm0Wu+dJYjDQUdo70g0ClcHXstEhmsOgprMnTs/VgYF5H/wVKIpmH3LiyWjOEkcK39m/fyAaNK4yUdpf7Uoitd8UEX+0z36mhp6SJl0dvosgNzIZdGIFxjUY78xpdGx/1LOdkBLYXJ2uuMXVA9vVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HEGuruDL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=dToNRGY02qjT0NGejR/MfIIdMVRjjqKIAmbYEam2q5mpgzE0gWOIXx9djz2dkUVGN7DnU8h2wHFTUhr+V0cC98YWmn9psyHnbHsIV3FkprHZuMj5PHdV7La18rOLun/Ee5xuIha6RnaQX9Vn97SM9qiLBcL9OL+PPqG9rVa8es8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dXmVPKgq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HEGuruDL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 661A0C4CED6;
-	Thu, 16 Jan 2025 23:36:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dXmVPKgq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03F77C4CEDD;
+	Thu, 16 Jan 2025 23:36:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070583;
-	bh=Iw4t699RvEK0soPcLHfWcXPINGsWZ3+yX52nmWR2sb4=;
+	s=k20201202; t=1737070599;
+	bh=w9l5oe9KrYAocr3lXFRNF6FqOuQwVPQ9y4X2JWHYETc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HEGuruDLvZ8wjCdls6mFhpOCW25uIFd/0wSN4vgSIRl96wFXosN5Tn58wXnFfZiQV
-	 Uf7vsdYkCNwgUm/yscJzyInNM0iS/0fSLhl2va2yeQ1e0yonMU89XzqqyqNBrw1IZa
-	 oBibSiNdrGQmztKeUuPzrp+RqMtLT2eWFulX4m7IBQlNFX/UgTYwJ4fUmJDNSU0qk/
-	 nnmRHI3pHIcakLcZfV4kgIk0xaeRl3AQ5xI/nv9vChSqJpgCkoRWFca2lC9EzY5JYU
-	 D5CIiMlQRQlEXbihpsALWtU5LPYN1xzM/nu1Df2LdV/y/vkDvtBXsEK19t0YByMb9d
-	 3nJ3Cxpg10ZBg==
-Date: Thu, 16 Jan 2025 15:36:22 -0800
-Subject: [PATCH 05/14] common/populate: use metadump v2 format by default for
- fs metadata snapshots
+	b=dXmVPKgqT+38MgjPqbDAdOUOvUp1vQbTngNPN3IdYBUucdKTtYDWXTi1wMXA5bAq7
+	 x8+aJSEtaq68IlHJql9sbqZ5hUi7qGRdRZyowpWg/RZAT+PMl6CCyeTi7+TgwPYPwY
+	 bO62N1+brPPcIyheKQQ0pKSaKBRs0sTXXs3/Vg9fRxueA1bL0kN47Bb5wcRj/0k6F5
+	 trywLnx+ngrnBU2ZReruXHin2PTwNopAuHbzOEhE3v2pSHCY2too5G4kvityyOrSQ6
+	 RZW5MbFATZ4ESX6lcsF3WiITN6T0tot0gFs8iNn36DRl/mCwszd201HZ7hJawexEEt
+	 BG0IpMWGE5btg==
+Date: Thu, 16 Jan 2025 15:36:38 -0800
+Subject: [PATCH 06/14] punch-alternating: detect xfs realtime files with large
+ allocation units
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706976139.1928798.13803844705915710708.stgit@frogsfrogsfrogs>
+Message-ID: <173706976155.1928798.1174262523504222244.stgit@frogsfrogsfrogs>
 In-Reply-To: <173706976044.1928798.958381010294853384.stgit@frogsfrogsfrogs>
 References: <173706976044.1928798.958381010294853384.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,47 +46,126 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're snapshotting filesystem metadata after creating a populated
-filesystem, force the creation of metadump v2 files by default to
-exercise the new format, since xfs_metadump continues to use the v1
-format unless told otherwise.
+For files on the XFS realtime volume, it's possible that the file
+allocation unit (aka the minimum size we have to punch to deallocate
+file blocks) could be greater than a single fs block.  This utility
+assumed that it's always possible to punch a single fs block, but for
+these types of files, all that does is zeroes the page cache.  While
+that's what most *user applications* want, fstests uses punching to
+fragment file mapping metadata and/or fragment free space, so adapt this
+test for that purpose by detecting realtime files.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/populate |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ src/punch-alternating.c |   28 +++++++++++++++++++++++++++-
+ tests/xfs/114           |    4 ++++
+ tests/xfs/146           |    2 +-
+ tests/xfs/187           |    3 ++-
+ tests/xfs/341           |    4 ++--
+ 5 files changed, 36 insertions(+), 5 deletions(-)
 
 
-diff --git a/common/populate b/common/populate
-index 65fbd19b30e4e1..96fc13875df503 100644
---- a/common/populate
-+++ b/common/populate
-@@ -55,7 +55,12 @@ __populate_fail() {
- 	case "$FSTYP" in
- 	xfs)
- 		_scratch_unmount
--		_scratch_xfs_metadump "$metadump" -a -o
-+
-+		mdargs=('-a' '-o')
-+		test "$(_xfs_metadump_max_version)" -gt 1 && \
-+			mdargs+=('-v' '2')
-+
-+		_scratch_xfs_metadump "$metadump" "${mdargs[@]}"
- 		;;
- 	ext4)
- 		_scratch_unmount
-@@ -1043,8 +1048,12 @@ _scratch_populate_save_metadump()
- 		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
- 			logdev=$SCRATCH_LOGDEV
+diff --git a/src/punch-alternating.c b/src/punch-alternating.c
+index 18dd215197db2b..d2bb4b6a2276c9 100644
+--- a/src/punch-alternating.c
++++ b/src/punch-alternating.c
+@@ -20,6 +20,28 @@ void usage(char *cmd)
+ 	exit(1);
+ }
  
-+		mdargs=('-a' '-o')
-+		test "$(_xfs_metadump_max_version)" -gt 1 && \
-+			mdargs+=('-v' '2')
++/* Compute the file allocation unit size for an XFS file. */
++static int detect_xfs_alloc_unit(int fd)
++{
++	struct fsxattr fsx;
++	struct xfs_fsop_geom fsgeom;
++	int ret;
 +
- 		_xfs_metadump "$metadump_file" "$SCRATCH_DEV" "$logdev" \
--				compress -a -o
-+				compress "${mdargs[@]}"
- 		res=$?
- 		;;
- 	"ext2"|"ext3"|"ext4")
++	ret = ioctl(fd, XFS_IOC_FSGEOMETRY, &fsgeom);
++	if (ret)
++		return -1;
++
++	ret = ioctl(fd, XFS_IOC_FSGETXATTR, &fsx);
++	if (ret)
++		return -1;
++
++	ret = fsgeom.blocksize;
++	if (fsx.fsx_xflags & XFS_XFLAG_REALTIME)
++		ret *= fsgeom.rtextsize;
++
++	return ret;
++}
++
+ int main(int argc, char *argv[])
+ {
+ 	struct stat	s;
+@@ -82,7 +104,11 @@ int main(int argc, char *argv[])
+ 		goto err;
+ 
+ 	sz = s.st_size;
+-	blksz = sf.f_bsize;
++	c = detect_xfs_alloc_unit(fd);
++	if (c > 0)
++		blksz = c;
++	else
++		blksz = sf.f_bsize;
+ 
+ 	mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
+ 	for (offset = start_offset * blksz;
+diff --git a/tests/xfs/114 b/tests/xfs/114
+index 510d31a4028598..f764cad73babb7 100755
+--- a/tests/xfs/114
++++ b/tests/xfs/114
+@@ -47,6 +47,10 @@ $XFS_IO_PROG -f \
+ 	-c "pwrite -S 0x68 -b 1048576 0 $len2" \
+ 	$SCRATCH_MNT/f2 >> $seqres.full
+ 
++# The arguments to punch-alternating must be specified in units of file
++# allocation units, so we divide the argument by $file_blksz.  We already
++# verified that $blksz is congruent with $file_blksz, so the fpunch parameters
++# will always align with the file allocation unit.
+ $here/src/punch-alternating -o $((16 * blksz / file_blksz)) \
+ 	-s $((blksz / file_blksz)) \
+ 	-i $((blksz * 2 / file_blksz)) \
+diff --git a/tests/xfs/146 b/tests/xfs/146
+index b6f4c2bd093d45..1cd7076d2426ee 100755
+--- a/tests/xfs/146
++++ b/tests/xfs/146
+@@ -67,7 +67,7 @@ _xfs_force_bdev realtime $SCRATCH_MNT
+ # Allocate some stuff at the start, to force the first falloc of the ouch file
+ # to happen somewhere in the middle of the rt volume
+ $XFS_IO_PROG -f -c 'falloc 0 64m' "$SCRATCH_MNT/b"
+-$here/src/punch-alternating -i $((rextblks * 2)) -s $((rextblks)) "$SCRATCH_MNT/b"
++$here/src/punch-alternating "$SCRATCH_MNT/b"
+ 
+ avail="$(df -P "$SCRATCH_MNT" | awk 'END {print $4}')"1
+ toobig="$((avail * 2))"
+diff --git a/tests/xfs/187 b/tests/xfs/187
+index 56a9adc164eab2..1d32d702f629c9 100755
+--- a/tests/xfs/187
++++ b/tests/xfs/187
+@@ -130,7 +130,8 @@ $XFS_IO_PROG -f -c "truncate $required_sz" -c "falloc 0 $remap_sz" $SCRATCH_MNT/
+ # Punch out every other extent of the last two sections, to fragment free space.
+ frag_sz=$((remap_sz * 3))
+ punch_off=$((bigfile_sz - frag_sz))
+-$here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / fsbsize)) -i $((rtextsize_blks * 2)) -s $rtextsize_blks
++rtextsize_bytes=$((fsbsize * rtextsize_blks))
++$here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / rtextsize_bytes))
+ 
+ # Make sure we have some free rtextents.
+ free_rtx=$(_xfs_statfs_field "$SCRATCH_MNT" statfs.f_bavail)
+diff --git a/tests/xfs/341 b/tests/xfs/341
+index 6e25549b2b3d08..9b12febf8d5c49 100755
+--- a/tests/xfs/341
++++ b/tests/xfs/341
+@@ -41,8 +41,8 @@ len=$((blocks * rtextsz))
+ echo "Create some files"
+ $XFS_IO_PROG -f -R -c "falloc 0 $len" -c "pwrite -S 0x68 -b 1048576 0 $len" $SCRATCH_MNT/f1 >> $seqres.full
+ $XFS_IO_PROG -f -R -c "falloc 0 $len" -c "pwrite -S 0x68 -b 1048576 0 $len" $SCRATCH_MNT/f2 >> $seqres.full
+-$here/src/punch-alternating -i $((2 * rtextsz_blks)) -s $rtextsz_blks $SCRATCH_MNT/f1 >> "$seqres.full"
+-$here/src/punch-alternating -i $((2 * rtextsz_blks)) -s $rtextsz_blks $SCRATCH_MNT/f2 >> "$seqres.full"
++$here/src/punch-alternating $SCRATCH_MNT/f1 >> "$seqres.full"
++$here/src/punch-alternating $SCRATCH_MNT/f2 >> "$seqres.full"
+ echo garbage > $SCRATCH_MNT/f3
+ ino=$(stat -c '%i' $SCRATCH_MNT/f3)
+ _scratch_unmount
 
