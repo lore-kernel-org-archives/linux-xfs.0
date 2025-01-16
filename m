@@ -1,133 +1,112 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id ECB1170809;
-	Thu, 16 Jan 2025 01:38:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC59813D279;
+	Thu, 16 Jan 2025 04:36:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736991534; cv=none; b=c3gyl5ROfD/Wtr7ZjjnGAKF8cou6dHZTl8c8e6aoA/mN+qYM5a87/xCcjmXPnOZh+LnFkCn/HVxVXEK0FsFWTSO4Fzuss+NClL0oaO0X0+lXtaIAecXLwEmjaVd6LVS0rFEPBGVHbt0VntPCBG37/b1ogVXTvpffTHt9jpmqkTg=
+	t=1737002213; cv=none; b=d/xZgsh7HCYrBy0ZlEtUVcj7lbPsqkeGfIlWt9pYm9IPb6n6k8LtWOXU4HxZFkNGd1wuPZaT2PsFf/+GcAh3lUw8FRLguONQ5pdkkWciQdaGnBxGhrEIX4nXYpqW/DZhP9Ga8EuNjCdfqBYCkEGpzVF4qU1lu7+3IETiaVn96Vk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736991534; c=relaxed/simple;
-	bh=tvVuE4yBvCl2VErz5jZod8vmWl/hwjYIhx6AsK8fzLQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s11CTmY4T3urhsPS3XTXDZtuCdTxPdw3UpusQLNw9mjh0i7HvlZVV2VYz+60c5m7F31Up1hg1xHouDdODwbEuN/4HD6GgPmuqV8UAx9XxkDKWhLhjOeiQzKHFEGOHBkHN/mMRoAq2cL4D5iR4ap5jYgMg2x//RerXmK0ncDWEIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=X5Z1skfN; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1737002213; c=relaxed/simple;
+	bh=BUsnXrC0OwahI/SAZiU/B4GBZPTH+PURZNofczUcauc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KeQqWUwyZLWh8G3v+dyEDHqhoH9+zbsFlac4Wknks1Ae2abRcGeJGZdzW/Ynw0h53GpW87yHj6erFb3utbnd9hVax30scrlPNhDrdrwJ/3Vw0UxDCIZpdPMix95oJ0zTDCb10CDueooE4lC1Usswvy/2Yv34Q8FLjfTb4ewANSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cgc3Dwfb; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="X5Z1skfN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=d175bTPAmGUNGazj6bhua7UJQ8KazlERVdzEjxnF1ps=;
-	b=X5Z1skfNVU0vrpgRPAHBbRcNTv1e8Fj6VqIDka92SnQBp3yNu16/HMqvgwBt2h
-	4YSFt5R4sqB9mDwf0UrLU5Z4iSl3WPutFXmav+3LcXrTNwzkUlfdRDpw9Pd4E6wG
-	M49pjZUowfQJ/lmvqzNfahs2R5Ea4Z4UN1v/FTkpM6+58=
-Received: from [10.42.12.6] (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wA3F+QSY4hnwJ+MGQ--.37478S2;
-	Thu, 16 Jan 2025 09:38:27 +0800 (CST)
-Message-ID: <43a586fb-5cee-4668-b15e-f75b294a243a@163.com>
-Date: Thu, 16 Jan 2025 09:38:26 +0800
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cgc3Dwfb"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Uw+7f+/8nKbSWyT7Kufr7lW5iijsltyiMajTInwHBTc=; b=cgc3DwfbQMUVQ5rKp9BlXZWc+b
+	piXLgCWeNMpfmn0GwJoXVlqv2QpZaeO+mK+gPxvUhRjDL+ibt5+g1GMXJsBiB1o0ZX25UrrvkL5k4
+	maXohC1K4uYEE8g+9+zhIc70egxIiK7lEj3aqadx5d1iLM0OKDKlkkmAWLt5rNs8oOjEWObrYjKSX
+	sAfUFyex3+uzeZz8jOZ8WWPulpa9xBrxpdXus0QjgkZsanNhJzT8M2Z7RvV90dZEJym874gxi8BXq
+	AH+8aby5ttPRoxdQTIdbVB5iGjJAVgWxu9WdWdT4wfC4orGYuvRf1tDit9VpDMmR6nLtpPM973L/j
+	dkcAzTsw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tYHce-0000000Do8R-10jG;
+	Thu, 16 Jan 2025 04:36:48 +0000
+Date: Wed, 15 Jan 2025 20:36:48 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Brian Foster <bfoster@redhat.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Chi Zhiling <chizhiling@163.com>,
+	Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chi Zhiling <chizhiling@kylinos.cn>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z4iM4IJj53g-mbGV@infradead.org>
+References: <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
+ <953b0499-5832-49dc-8580-436cf625db8c@163.com>
+ <20250108173547.GI1306365@frogsfrogsfrogs>
+ <Z4BbmpgWn9lWUkp3@dread.disaster.area>
+ <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
+ <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+ <20250113024401.GU1306365@frogsfrogsfrogs>
+ <Z4UX4zyc8n8lGM16@bfoster>
+ <Z4dNyZi8YyP3Uc_C@infradead.org>
+ <Z4grgXw2iw0lgKqD@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] xfs_logprint: Fix super block buffer interpretation
- issue
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chi Zhiling <chizhiling@kylinos.cn>, Dave Chinner <david@fromorbit.com>,
- Christoph Hellwig <hch@lst.de>
-References: <20241013042952.2367585-1-chizhiling@163.com>
- <20250116003350.GD3566461@frogsfrogsfrogs>
-Content-Language: en-US
-From: Chi Zhiling <chizhiling@163.com>
-In-Reply-To: <20250116003350.GD3566461@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wA3F+QSY4hnwJ+MGQ--.37478S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWw47KFW8uw4DKFWxKr4DJwb_yoW5XF43pF
-	1fGa42yrWDA345G347ZFZ0yr15XwnxJryDGrsIyryrZr98JFWayry7C348CrZI93ykGF4Y
-	yr90kr909F1qva7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UTHqxUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiKQrWnWeIYgQWdwAAsA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z4grgXw2iw0lgKqD@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On 2025/1/16 08:33, Darrick J. Wong wrote:
-> On Sun, Oct 13, 2024 at 12:29:52PM +0800, Chi Zhiling wrote:
->> From: Chi Zhiling <chizhiling@kylinos.cn>
->>
->> When using xfs_logprint to interpret the buffer of the super block, the
->> icount will always be 6360863066640355328 (0x5846534200001000). This is
->> because the offset of icount is incorrect, causing xfs_logprint to
->> misinterpret the MAGIC number as icount.
->> This patch fixes the offset value of the SB counters in xfs_logprint.
->>
->> Before this patch:
->> icount: 6360863066640355328  ifree: 5242880  fdblks: 0  frext: 0
->>
->> After this patch:
->> icount: 10240  ifree: 4906  fdblks: 37  frext: 0
->>
->> Suggested-by: Darrick J. Wong <djwong@kernel.org>
->> Suggested-by: Dave Chinner <david@fromorbit.com>
->> Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->> ---
->>   logprint/log_misc.c | 17 +++++------------
+On Thu, Jan 16, 2025 at 08:41:21AM +1100, Dave Chinner wrote:
+> > to finish, or by simply forcing buffered I/O when direct I/O would
+> > conflict. 
 > 
-> Hmm, I don't think this ever got merged...
-> 
-> but shouldn't log_print_all.c also get fixed?  I think it has the same
-> pointer arithmetic problem that could be replaced by get_unaligned_be64
-> calls just like you did below.
+> Right. We really don't want to downgrade to buffered IO if we can
+> help it, though.
 
-Indeed, the same issue also exists in log_print_all.c. I will fix it in
-the next push.
+Of course we never want it.  But if we do have invalidation failures
+and thus still folios in the page cache it might the least bad of
+all the bad options.
 
-Thanks,
-Chi Zhiling
+> It's much harder to sanely serialise DIO against buffered writes
+> this way, because i_dio_count only forms a submission barrier in
+> conjunction with the i_rwsem being held exclusively. e.g. ongoing
+> DIO would result in the buffered write being indefinitely delayed.
+
+Or any other exclusive lock taken by all submitters, yes.
+
+> I think the model and method that bcachefs uses is probably the best
+> way to move forward - the "two-state exclusive shared" lock which it
+> uses to do buffered vs direct exclusion is a simple, easy way to
+> handle this problem. The same-state shared locking fast path is a
+> single atomic cmpxchg operation, so it has neglible extra overhead
+> compared to using a rwsem in the shared DIO fast path.
+
+NFS and ocfs2 have been doing this for about two decades as well.
+
+> This only leaves DIO coherency issues with mmap() based IO as an
+> issue, but that's a problem for a different day...
+
+I think it's a generally unsolveable problem that we can just whack
+enough to make it good enough in practice for the few workloads that
+matter.
 
 > 
-> --D
+> > I don't really have time to turn this hand waving into, but maybe we 
+> > should think if it's worthwhile or if I'm missing something important.
 > 
->>   1 file changed, 5 insertions(+), 12 deletions(-)
->>
->> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
->> index 8e86ac34..803e4d2f 100644
->> --- a/logprint/log_misc.c
->> +++ b/logprint/log_misc.c
->> @@ -282,22 +282,15 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
->>   		if (be32_to_cpu(head->oh_len) < 4*8) {
->>   			printf(_("Out of space\n"));
->>   		} else {
->> -			__be64		 a, b;
->> +			struct xfs_dsb	*dsb = (struct xfs_dsb *) *ptr;
->>   
->>   			printf("\n");
->> -			/*
->> -			 * memmove because *ptr may not be 8-byte aligned
->> -			 */
->> -			memmove(&a, *ptr, sizeof(__be64));
->> -			memmove(&b, *ptr+8, sizeof(__be64));
->>   			printf(_("icount: %llu  ifree: %llu  "),
->> -			       (unsigned long long) be64_to_cpu(a),
->> -			       (unsigned long long) be64_to_cpu(b));
->> -			memmove(&a, *ptr+16, sizeof(__be64));
->> -			memmove(&b, *ptr+24, sizeof(__be64));
->> +			       (unsigned long long) get_unaligned_be64(dsb->sb_icount),
->> +			       (unsigned long long) get_unaligned_be64(dsb->sb_ifree));
->>   			printf(_("fdblks: %llu  frext: %llu\n"),
->> -			       (unsigned long long) be64_to_cpu(a),
->> -			       (unsigned long long) be64_to_cpu(b));
->> +			       (unsigned long long) get_unaligned_be64(dsb->sb_fdblocks),
->> +			       (unsigned long long) get_unaligned_be64(dsb->sb_frextents));
->>   		}
->>   		super_block = 0;
->>   	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGI_MAGIC) {
->> -- 
->>
->> 2.43.0
->>
->>
+> If people are OK with XFS moving to exclusive buffered or DIO
+> submission model, then I can find some time to work on the
+> converting the IO path locking to use a two-state shared lock in
+> preparation for the batched folio stuff that will allow concurrent
+> buffered writes...
+
+This does sound fine to me, but it's hard to judge without seeing
+a prototype and results based on it.
 
