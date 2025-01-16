@@ -1,60 +1,68 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA0322ACCF
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 14:12:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A2C1DE2B9
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 14:21:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737036755; cv=none; b=mgY7bOo1HsOYI3j1UGmm573dssfCKsKBX61XpcepDYBqpIOp3W0dbci8gwE1HQl4937HJBor7CU5rwpsjRZukXDAJ9vOQKjBzX+S7mq3tDDJB2N/nPBYCLBE2zzHd8KNTq3Ydrx9XJm8R3pX7jZ4mIBjIHbv/incE732H6HcEcQ=
+	t=1737037321; cv=none; b=BK1cO9ZpWnJtqvsJdaKr+XxwAqBz5BVUF5AVgD562ZBHeOFe3H1VzxJSzEEbuKvPm3WqOoDK3pGHwAcOfgl5jyY3gwe6DdBJIMiSCkAVxpkPCSa5K6W0yAZ5IgeNlzmENz1/+aWVWZQu/wN8zm2CdGttobKyOy0+jz9c434nYO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737036755; c=relaxed/simple;
-	bh=oRtFi8McpCxVVsyZleMs0GMtACqZkHAyjdFnsbDBZQk=;
+	s=arc-20240116; t=1737037321; c=relaxed/simple;
+	bh=mCw18u2J6qPjqZ+8x4vbOPTeiIF0IlEEGCCGLoE77y4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R4PEhQ+zZKWyTH3xVBx/m3AWrUdvln3aMJ6WiQE+MtyR76cY6ZZ8Qt4EXmS3hMP/VzF2V9Wp8y63nLRXneSpbwe1L8UL2163QPOUW44Bdhb71YtTy7i4uKrxKBm9Fr6dxck5zRZOAZjbCoNG0plyHX3fFMgMaW5bRqo/WBsbiz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=H7e6xByO; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=loYITNqS4Xs2XrmzKi24YozX22ZJFCQGjtp2RP6hmtawBAWaBnGXA9qVzMvEtIDiSd/L7YvCc2af7CIPv6D5SUaTPEVxqSeU5NwMnSk+hhZ1Zn98lban1tinkn7NfcfZwdLfYnIFW50XUcvtGjK1GqDG8HK1SBRHal6EOQnHWyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BRgqG7zI; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H7e6xByO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BRgqG7zI"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1737036752;
+	s=mimecast20190719; t=1737037318;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=dbWlw8NVg/axutqw+0j5popL7IrrTmwSvM9kB1WHeaI=;
-	b=H7e6xByOHgtnYfVbk9NF4efTjlz2eyt+iI4ScCgZk1uItR5FnK1E3VC9HLnoBL2BZNBHxv
-	XSrPAs6ZVf+n01njF+z/w/4jDlg44XfUhiDiffosKgSd2F9hMMh+9Nrxs8CFQN5nj1uuyQ
-	DsHnJ7VkRlHJWFIZ+DqnGWP4ZrZ5H7A=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+	bh=tp7+GNNEsMl5oBvFWsGmcrfew9326ftMjsVHomAf348=;
+	b=BRgqG7zIOCtEpjoIp7ac97R7dAdfEPRWiVuJiI9BrIYXkdOqktlfd2vUIzBx7eTCVnictU
+	9zz+xsRS1effa8c3PPxM+FqSicvzuUi5a1xRbY2quoUTd3MaAD5ftJrpkytyfbx/SizETy
+	6GWR8WA9gxTUad6sgIeEyh81HTzO5d8=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-631-fwybAtCwNFOwZ8zFI9-9hg-1; Thu,
- 16 Jan 2025 09:12:26 -0500
-X-MC-Unique: fwybAtCwNFOwZ8zFI9-9hg-1
-X-Mimecast-MFC-AGG-ID: fwybAtCwNFOwZ8zFI9-9hg
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-418-vg9s_JarObKFLM4j5hafSw-1; Thu,
+ 16 Jan 2025 09:21:52 -0500
+X-MC-Unique: vg9s_JarObKFLM4j5hafSw-1
+X-Mimecast-MFC-AGG-ID: vg9s_JarObKFLM4j5hafSw
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3683F1910B28;
-	Thu, 16 Jan 2025 14:12:17 +0000 (UTC)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AD3BC1955DA7;
+	Thu, 16 Jan 2025 14:21:49 +0000 (UTC)
 Received: from bfoster (unknown [10.22.80.118])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6C7341955F10;
-	Thu, 16 Jan 2025 14:12:16 +0000 (UTC)
-Date: Thu, 16 Jan 2025 09:14:28 -0500
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 258111955F10;
+	Thu, 16 Jan 2025 14:21:46 +0000 (UTC)
+Date: Thu, 16 Jan 2025 09:23:59 -0500
 From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFCv2 2/4] iomap: optional zero range dirty folio
- processing
-Message-ID: <Z4kURGvOPFX_yDU-@bfoster>
-References: <20241213150528.1003662-1-bfoster@redhat.com>
- <20241213150528.1003662-3-bfoster@redhat.com>
- <Z394x1XyN5F0fd4h@infradead.org>
- <Z4Fejwv9XmNkJEGl@bfoster>
- <Z4SbwEbcp5AlxMIv@infradead.org>
- <Z4UkBfnm5kSdYdv3@bfoster>
- <Z4dL8PzrIN1NuyZF@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Chi Zhiling <chizhiling@163.com>,
+	Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chi Zhiling <chizhiling@kylinos.cn>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z4kWf4oCHNd86Hkd@bfoster>
+References: <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
+ <953b0499-5832-49dc-8580-436cf625db8c@163.com>
+ <20250108173547.GI1306365@frogsfrogsfrogs>
+ <Z4BbmpgWn9lWUkp3@dread.disaster.area>
+ <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
+ <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+ <20250113024401.GU1306365@frogsfrogsfrogs>
+ <Z4UX4zyc8n8lGM16@bfoster>
+ <Z4dNyZi8YyP3Uc_C@infradead.org>
+ <Z4grgXw2iw0lgKqD@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -63,32 +71,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z4dL8PzrIN1NuyZF@infradead.org>
+In-Reply-To: <Z4grgXw2iw0lgKqD@dread.disaster.area>
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue, Jan 14, 2025 at 09:47:28PM -0800, Christoph Hellwig wrote:
-> On Mon, Jan 13, 2025 at 09:32:37AM -0500, Brian Foster wrote:
-> > In turn, this means that extending write zero range would have either
-> > physically zeroed delalloc extents or skipped unwritten blocks,
-> > depending on the situation. Personally, I don't think it really matters
-> > which as there is no real guarantee that "all blocks not previously
-> > written to are unwritten," for example, but rather just that "all blocks
-> > not written to return zeroes on read."
+On Thu, Jan 16, 2025 at 08:41:21AM +1100, Dave Chinner wrote:
+> On Tue, Jan 14, 2025 at 09:55:21PM -0800, Christoph Hellwig wrote:
+> > On Mon, Jan 13, 2025 at 08:40:51AM -0500, Brian Foster wrote:
+...
 > 
-> Yes.
+> > I don't really have time to turn this hand waving into, but maybe we 
+> > should think if it's worthwhile or if I'm missing something important.
 > 
-> > For that reason, I'm _hoping_
-> > that we can keep this simple and just deal with some potential spurious
-> > zeroing on folios that are already dirty, but I'm open to arguments
-> > against that.
-> 
-> I can't see one.  But we really should fine a way to write all this
-> including the arguments for an again down.
+> If people are OK with XFS moving to exclusive buffered or DIO
+> submission model, then I can find some time to work on the
+> converting the IO path locking to use a two-state shared lock in
+> preparation for the batched folio stuff that will allow concurrent
+> buffered writes...
 > 
 
-Indeed. If the first non-rfc pass ultimately makes this tradeoff, I'll
-plan to document the behavior in the code and the reasoning and
-tradeoffs in the commit log so it can be reviewed.
+Ack to this, FWIW. I think this is a natural/logical approach,
+prototyping and whatnot notwithstanding.
 
 Brian
+
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
