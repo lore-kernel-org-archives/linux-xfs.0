@@ -1,143 +1,95 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1DEE1197A7F;
-	Thu, 16 Jan 2025 09:10:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 978CF1D9A50
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 09:17:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737018656; cv=none; b=D9HyNk80u6qhWf4r3liLejj5lRLQCtWOyP2Njp0eeeadk9oE++iW3fvng0iLef8/1jF8mDDqNFoeZY4wFHv05Y6cRqKnCBLdEvzITcdm41/cMYLeM2Q8qQ44ghoYkuPzVPN2gWVEIX5GZzw09XdW52PuoNgb5p9J7FBE1fdCAb8=
+	t=1737019057; cv=none; b=HcOjU4KrCfYGm94UE2QECo6Ql63w0ica7Gwt78keF0uZG1TBEwZhdWRjuRreKGI3uMJsGXtVaG/tN06xtwv1K0ccgJSbwq4GBOvdmMj1zEbYn8cNMzwI7LOGozZY+yuJ6cU7cd8ONt7JHNE/Z342qzKCpSkiqfRKmU2Qfn3yxOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737018656; c=relaxed/simple;
-	bh=O5ornF5BgnVQpbi8z/ibFN+eop0j21Vrindf1ebLtjY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kHg/T8lflPapw/X3MZsqIjS+/DJft8uY+K+s3xnAv8Xqa6F8soEyX2orZ3MmLG33woPC45CIwbyhLJ8Rf4qtZQdlt1/6KmYkxwzwaaum7549KmM/fxKMTn3xt99C31QFFNCen5XRExHBW3HFBGPF5KP8oHX7u2tzygPqYtMACjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=UsQFeGoD; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1737019057; c=relaxed/simple;
+	bh=KsdCMS3wnD148j5LMN+FHgIDcbri7wF433CzpWNeDEA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=tPrwJDbt3GMR08jEak3JMYbxZvOvKXLvz4C7RP9wBUKGY7PhUjSsQUssBNof4CIF3FaFa5UXjiIUB0UXfXBiz2Ice6ql2rSnIPigqu7W0FvQFLVrdEbP4kilbocoskguIERumlcMK7ZO2MPQK0F7sBZCqDUS3o5P3iO0q0q39sw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G9NvW80Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="UsQFeGoD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-ID:MIME-Version; bh=cQZ7J
-	JVHmlG/sf06wZJr6CJHru1AMn9agI2xuZr/lVI=; b=UsQFeGoDhzZtXEQXXWWgf
-	W5PRauRYIu7LNBLoT8JITk8fNlwvbFoKNvjxOoyBOq6xIkf2rNs2uvAvX4BQlTnm
-	HlC7EtvVyorOCRhGofQBz5UGFbyBR3zniYVk7QSMWYoIR05PRP2+7uMj1baMvzk9
-	LMhYPDOJ3v98G9m/H111c0=
-Received: from chi-Redmi-Book.. (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wDX6P3tzIhnVp0iGQ--.6546S2;
-	Thu, 16 Jan 2025 17:10:06 +0800 (CST)
-From: Chi Zhiling <chizhiling@163.com>
-To: djwong@kernel.org,
-	cem@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>,
-	Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v5] xfs_logprint: Fix super block buffer interpretation issue
-Date: Thu, 16 Jan 2025 17:09:39 +0800
-Message-ID: <20250116090939.570792-1-chizhiling@163.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G9NvW80Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47CFEC4CED6;
+	Thu, 16 Jan 2025 09:17:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737019057;
+	bh=KsdCMS3wnD148j5LMN+FHgIDcbri7wF433CzpWNeDEA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=G9NvW80YEG3FrXb+rXAMlS2uLNdowIJqYTTaGdFZSmHQ20wObCFlrn+b59ShC6hZ+
+	 VHYCBbh/k4zE+G6thzuS39y7RoJAIuHa3anuXyuavMEXdD2kPiSsdulxMXToRPEGD3
+	 5mq/AWbDfFLca/m91gd/EljDzCc5tCu11VfX+8aQ2+3+j+Q8pq4wLgpTFPTzXfic6F
+	 rbruhJZQrPGW1Shl8yPHU9CXp1s6SzFHOdDjVLb6gyZ2Prc79ALDz7QaPBf4EMoHOt
+	 R+TEe+8nM+ji5ppYk/4GUQ99MZIyrQuEse5vchx3lujsUFF2kI9GKRrR8bUOCZTo1e
+	 GY5brSsaI8Pxw==
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+In-Reply-To: <20250113141228.113714-1-hch@lst.de>
+References: <20250113141228.113714-1-hch@lst.de>
+Subject: Re: buffer cache cleanups v2
+Message-Id: <173701905597.373819.596117184604981082.b4-ty@kernel.org>
+Date: Thu, 16 Jan 2025 10:17:35 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDX6P3tzIhnVp0iGQ--.6546S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGry5ZFW7Jr1fur4rGF1kAFb_yoW5Kr1rpF
-	1fKa4jqrZxZ34ag343ZrWjvwn5KwnxJrZrGrZFyr1rZr98AF1avrZrAa4rAFy5C3ykXF4Y
-	yryYgFyq9r4DuFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jno7tUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBaxnWnWeIw5K1QAAAsy
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-From: Chi Zhiling <chizhiling@kylinos.cn>
+On Mon, 13 Jan 2025 15:12:04 +0100, Christoph Hellwig wrote:
+> over the holidays I dusted off some old buffer cache cleanup as the bio
+> splitting in the zoned code gave me a better idea how to handle
+> discontiguous buffer bio submission.  This spiraled a bit into various
+> additional minor fixes and cleanups.
+> 
+> Changes since v1:
+>  - make xfs_buf_submit return void
+>  - improve a comment
+> 
+> [...]
 
-When using xfs_logprint to interpret the buffer of the super block, the
-icount will always be 6360863066640355328 (0x5846534200001000). This is
-because the offset of icount is incorrect, causing xfs_logprint to
-misinterpret the MAGIC number as icount.
-This patch fixes the offset value of the SB counters in xfs_logprint.
+Applied to for-next, thanks!
 
-Before this patch:
-icount: 6360863066640355328  ifree: 5242880  fdblks: 0  frext: 0
+[01/15] xfs: fix a double completion for buffers on in-memory targets
+        commit: cbd6883ed8662073031a32f1294cdf53c8ec24a4
+[02/15] xfs: remove the incorrect comment above xfs_buf_free_maps
+        commit: 83e9c69dcf18bff12ed205423b91e1e1ae316998
+[03/15] xfs: remove the incorrect comment about the b_pag field
+        commit: 411ff3f7386a93d6170dbc067e3965ad472f11c6
+[04/15] xfs: move xfs_buf_iowait out of (__)xfs_buf_submit
+        commit: 05b5968f33a9fccabc5cb6672afd3ce2367db99b
+[05/15] xfs: simplify xfs_buf_delwri_pushbuf
+        commit: eb43b0b5cab885a9a76f5edb57020ad03eaf82b2
+[06/15] xfs: remove xfs_buf_delwri_submit_buffers
+        commit: 72842dbc2b81c4a43203b47b1d4c1ec2aa508020
+[07/15] xfs: move write verification out of _xfs_buf_ioapply
+        commit: 0195647abaac92f5dbd2799f64d19f316fd97b7a
+[08/15] xfs: move in-memory buftarg handling out of _xfs_buf_ioapply
+        commit: 8db65d312b5757fd70591382a800336dcbf091af
+[09/15] xfs: simplify buffer I/O submission
+        commit: fac69ec8cd743f509129deb5feae9e3f9ebc2cc8
+[10/15] xfs: move invalidate_kernel_vmap_range to xfs_buf_ioend
+        commit: 5c82a471c2b71357f6319f6ec34d20691969a6ba
+[11/15] xfs: remove the extra buffer reference in xfs_buf_submit
+        commit: 6dca5abb3d10e27e919e5344ac07e057f443c318
+[12/15] xfs: always complete the buffer inline in xfs_buf_submit
+        commit: 819f29cc7be6a9d949e017ca3f5ccc772a80daef
+[13/15] xfs: simplify xfsaild_resubmit_item
+        commit: 46eba93d4f582dce63dfdf506a6f2edf8f1787c8
+[14/15] xfs: move b_li_list based retry handling to common code
+        commit: 4f1aefd13e94bbf027f87befb2e2206ca73a5e7f
+[15/15] xfs: add a b_iodone callback to struct xfs_buf
+        commit: 4e35be63c4ad880c3dba12a287a0ea196541258e
 
-After this patch:
-icount: 10240  ifree: 4906  fdblks: 37  frext: 0
-
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
----
- logprint/log_misc.c      | 17 +++++------------
- logprint/log_print_all.c | 22 ++++++++++------------
- 2 files changed, 15 insertions(+), 24 deletions(-)
-
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 8e86ac34..973bc90c 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -282,22 +282,15 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
- 		if (be32_to_cpu(head->oh_len) < 4*8) {
- 			printf(_("Out of space\n"));
- 		} else {
--			__be64		 a, b;
-+			struct xfs_dsb	*dsb = (struct xfs_dsb *) *ptr;
- 
- 			printf("\n");
--			/*
--			 * memmove because *ptr may not be 8-byte aligned
--			 */
--			memmove(&a, *ptr, sizeof(__be64));
--			memmove(&b, *ptr+8, sizeof(__be64));
- 			printf(_("icount: %llu  ifree: %llu  "),
--			       (unsigned long long) be64_to_cpu(a),
--			       (unsigned long long) be64_to_cpu(b));
--			memmove(&a, *ptr+16, sizeof(__be64));
--			memmove(&b, *ptr+24, sizeof(__be64));
-+			       (unsigned long long) get_unaligned_be64(&dsb->sb_icount),
-+			       (unsigned long long) get_unaligned_be64(&dsb->sb_ifree));
- 			printf(_("fdblks: %llu  frext: %llu\n"),
--			       (unsigned long long) be64_to_cpu(a),
--			       (unsigned long long) be64_to_cpu(b));
-+			       (unsigned long long) get_unaligned_be64(&dsb->sb_fdblocks),
-+			       (unsigned long long) get_unaligned_be64(&dsb->sb_frextents));
- 		}
- 		super_block = 0;
- 	} else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGI_MAGIC) {
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index a4a5e41f..cd5fccce 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -91,22 +91,20 @@ xlog_recover_print_buffer(
- 		len = item->ri_buf[i].i_len;
- 		i++;
- 		if (blkno == 0) { /* super block */
-+			struct xfs_dsb  *dsb = (struct xfs_dsb *)p;
-+
- 			printf(_("	SUPER Block Buffer:\n"));
- 			if (!print_buffer)
- 				continue;
--		       printf(_("              icount:%llu ifree:%llu  "),
--			       (unsigned long long)
--				       be64_to_cpu(*(__be64 *)(p)),
--			       (unsigned long long)
--				       be64_to_cpu(*(__be64 *)(p+8)));
--		       printf(_("fdblks:%llu  frext:%llu\n"),
--			       (unsigned long long)
--				       be64_to_cpu(*(__be64 *)(p+16)),
--			       (unsigned long long)
--				       be64_to_cpu(*(__be64 *)(p+24)));
-+			printf(_("              icount:%llu ifree:%llu  "),
-+				(unsigned long long) get_unaligned_be64(&dsb->sb_icount),
-+				(unsigned long long) get_unaligned_be64(&dsb->sb_ifree));
-+			printf(_("fdblks:%llu  frext:%llu\n"),
-+				(unsigned long long) get_unaligned_be64(&dsb->sb_fdblocks),
-+				(unsigned long long) get_unaligned_be64(&dsb->sb_frextents));
- 			printf(_("		sunit:%u  swidth:%u\n"),
--			       be32_to_cpu(*(__be32 *)(p+56)),
--			       be32_to_cpu(*(__be32 *)(p+60)));
-+				get_unaligned_be32(&dsb->sb_unit),
-+				get_unaligned_be32(&dsb->sb_width));
- 		} else if (be32_to_cpu(*(__be32 *)p) == XFS_AGI_MAGIC) {
- 			int bucket, buckets;
- 			agi = (xfs_agi_t *)p;
+Best regards,
 -- 
-2.43.0
+Carlos Maiolino <cem@kernel.org>
 
