@@ -1,145 +1,94 @@
-Received: from mitropoulos.debian.org (mitropoulos.debian.org [194.177.211.212])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAF741DE2AD
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 13:18:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.177.211.212
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA0322ACCF
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Jan 2025 14:12:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737033515; cv=none; b=XHKWaa/5sephnJsAVksnc+gwSQjZuG2SvJFLqVUGIVGvpcfuv9tHtpnZa8Niy/HV/lvNbqVt93w/Ye7gG9Cct+d/8gMeGzptwXsBi48LoEMKPX03wCFcjnXQVNEhQAkB5npLNbQG0a0fP0foTsluC8sGSSycnyNqhLy/AKL/HrE=
+	t=1737036755; cv=none; b=mgY7bOo1HsOYI3j1UGmm573dssfCKsKBX61XpcepDYBqpIOp3W0dbci8gwE1HQl4937HJBor7CU5rwpsjRZukXDAJ9vOQKjBzX+S7mq3tDDJB2N/nPBYCLBE2zzHd8KNTq3Ydrx9XJm8R3pX7jZ4mIBjIHbv/incE732H6HcEcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737033515; c=relaxed/simple;
-	bh=dxSPitmFCtvwr/C9BnMXgejRuDL9H8xQcWqPk19N6fM=;
-	h=From:To:MIME-Version:Subject:Content-Type:Message-Id:Date; b=i4knS4/7aQCABGAeaoIl33/AKniAhNN/D4ZG30HnhUGSPGmMRpEgK3O/KzTKXaVA4a4eJjmHMqO21/Zmf+M2TCUv6Dte287eAefmAW8UKUIw9DSNLjBvMDQ0ePJ5HKqKXQ0uVx+iAavoldQQYy4RoHQVZmNBNZ/mdt9bBzgP8NE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=OrOd7qUE; arc=none smtp.client-ip=194.177.211.212
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
+	s=arc-20240116; t=1737036755; c=relaxed/simple;
+	bh=oRtFi8McpCxVVsyZleMs0GMtACqZkHAyjdFnsbDBZQk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R4PEhQ+zZKWyTH3xVBx/m3AWrUdvln3aMJ6WiQE+MtyR76cY6ZZ8Qt4EXmS3hMP/VzF2V9Wp8y63nLRXneSpbwe1L8UL2163QPOUW44Bdhb71YtTy7i4uKrxKBm9Fr6dxck5zRZOAZjbCoNG0plyHX3fFMgMaW5bRqo/WBsbiz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=H7e6xByO; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="OrOd7qUE"
-Received: from [192.91.235.231] (port=58380 helo=fasolo.debian.org)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-	by mitropoulos.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1tYPlQ-001N8D-Ng
-	for linux-xfs@vger.kernel.org; Thu, 16 Jan 2025 13:18:24 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Content-Type:
-	Subject:MIME-Version:To:From:Reply-To:Cc:Content-Transfer-Encoding:Content-ID
-	:Content-Description:In-Reply-To:References;
-	bh=FW8g3AeAsbZnVrpkmbEA5kGqqN+z0LF5w4IJY+h+JUY=; b=OrOd7qUExg5Wc7AvDSTk2ScxhV
-	0P+BCXLOpDb2tiMK1kdd8CQrcr5HxJQlDxq9QYlEgcwdNS+jCDmskvCH846QcUoCqr19fjYcQAbQE
-	VmT+vdNtbXyldET2q4bMjNRiTNkotJfiSc6I43OJLCeM2JoPKdXNDK+m1b/fBN/+s6NRCJI8v9pKJ
-	4ri6IbebIGw9wxsVwHglQ0QcE1TDNByIklpYVZQT1zI/QaGb+N4WZNvhGOtrmCJtENhiulxmtyQlC
-	h6EfmOTk3NfC8qCbDaVv+NKc2+bSntYJ3k5b69IN+kWoSmb8NpXweD2r8vaqq1imSN6hWG+e/B+BO
-	ZYbe4mUA==;
-Received: from dak by fasolo.debian.org with local (Exim 4.94.2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1tYPlM-00DaWv-5f; Thu, 16 Jan 2025 13:18:20 +0000
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To: Anibal Monsalve Salazar <anibal@debian.org>,
- XFS Development Team <linux-xfs@vger.kernel.org>
-X-DAK: dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsdump
-Debian: DAK
-Debian-Changes: xfsdump_3.2.0-2_source.changes
-Debian-Source: xfsdump
-Debian-Version: 3.2.0-2
-Debian-Architecture: source
-Debian-Suite: unstable
-Debian-Archive-Action: accept
-Precedence: bulk
-Auto-Submitted: auto-generated
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H7e6xByO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1737036752;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dbWlw8NVg/axutqw+0j5popL7IrrTmwSvM9kB1WHeaI=;
+	b=H7e6xByOHgtnYfVbk9NF4efTjlz2eyt+iI4ScCgZk1uItR5FnK1E3VC9HLnoBL2BZNBHxv
+	XSrPAs6ZVf+n01njF+z/w/4jDlg44XfUhiDiffosKgSd2F9hMMh+9Nrxs8CFQN5nj1uuyQ
+	DsHnJ7VkRlHJWFIZ+DqnGWP4ZrZ5H7A=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-631-fwybAtCwNFOwZ8zFI9-9hg-1; Thu,
+ 16 Jan 2025 09:12:26 -0500
+X-MC-Unique: fwybAtCwNFOwZ8zFI9-9hg-1
+X-Mimecast-MFC-AGG-ID: fwybAtCwNFOwZ8zFI9-9hg
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3683F1910B28;
+	Thu, 16 Jan 2025 14:12:17 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.118])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6C7341955F10;
+	Thu, 16 Jan 2025 14:12:16 +0000 (UTC)
+Date: Thu, 16 Jan 2025 09:14:28 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFCv2 2/4] iomap: optional zero range dirty folio
+ processing
+Message-ID: <Z4kURGvOPFX_yDU-@bfoster>
+References: <20241213150528.1003662-1-bfoster@redhat.com>
+ <20241213150528.1003662-3-bfoster@redhat.com>
+ <Z394x1XyN5F0fd4h@infradead.org>
+ <Z4Fejwv9XmNkJEGl@bfoster>
+ <Z4SbwEbcp5AlxMIv@infradead.org>
+ <Z4UkBfnm5kSdYdv3@bfoster>
+ <Z4dL8PzrIN1NuyZF@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: xfsdump_3.2.0-2_source.changes ACCEPTED into unstable
-Content-Type: multipart/signed; micalg="pgp-sha256";
- protocol="application/pgp-signature";
- boundary="===============3745622071988500178=="
-Message-Id: <E1tYPlM-00DaWv-5f@fasolo.debian.org>
-Date: Thu, 16 Jan 2025 13:18:20 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z4dL8PzrIN1NuyZF@infradead.org>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
---===============3745622071988500178==
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jan 14, 2025 at 09:47:28PM -0800, Christoph Hellwig wrote:
+> On Mon, Jan 13, 2025 at 09:32:37AM -0500, Brian Foster wrote:
+> > In turn, this means that extending write zero range would have either
+> > physically zeroed delalloc extents or skipped unwritten blocks,
+> > depending on the situation. Personally, I don't think it really matters
+> > which as there is no real guarantee that "all blocks not previously
+> > written to are unwritten," for example, but rather just that "all blocks
+> > not written to return zeroes on read."
+> 
+> Yes.
+> 
+> > For that reason, I'm _hoping_
+> > that we can keep this simple and just deal with some potential spurious
+> > zeroing on folios that are already dirty, but I'm open to arguments
+> > against that.
+> 
+> I can't see one.  But we really should fine a way to write all this
+> including the arguments for an again down.
+> 
 
-Thank you for your contribution to Debian.
+Indeed. If the first non-rfc pass ultimately makes this tradeoff, I'll
+plan to document the behavior in the code and the reasoning and
+tradeoffs in the commit log so it can be reviewed.
 
+Brian
 
-
-Accepted:
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Format: 1.8
-Date: Thu, 16 Jan 2025 10:53:24 +1100
-Source: xfsdump
-Architecture: source
-Version: 3.2.0-2
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Anibal Monsalve Salazar <anibal@debian.org>
-Changes:
- xfsdump (3.2.0-2) unstable; urgency=3Dmedium
- .
-   * Standards-Version: 4.7.0
- .
-   [ Zixing Liu <zixing.liu@canonical.com> ]
-   * debain/compat: 7 -> 13 and also switches to use debhelper's
-     autoreconf template, this makes the build script respect build flags
-     and also without overriding the hand-written config.h.in file
-     (LP: #2073548).
-Checksums-Sha1:
- 1ec09561aaac301ece04fcdfa90b17fe429d7726 1869 xfsdump_3.2.0-2.dsc
- 8b24d71ef6303f0583dc0d711c979c9e1b2ca4da 5392 xfsdump_3.2.0-2.debian.tar.xz
- 36597b34d7fb9b55b53d2af2c4f4e460e5b4664f 7217 xfsdump_3.2.0-2_amd64.buildinfo
-Checksums-Sha256:
- 4dcd9d416946606e29a620e7ff2e7dbffd3f11917ee00d181f77e16feedb5a9b 1869 xfsdum=
-p_3.2.0-2.dsc
- ac8cfd76cfb597262168f6e082a7f49da177de3b78c74f763645bb610dba3e4a 5392 xfsdum=
-p_3.2.0-2.debian.tar.xz
- 3088ad6fe650c42ff2abc3248ed88a9e18047f5d6b69b2be89d33946efad6dbb 7217 xfsdum=
-p_3.2.0-2_amd64.buildinfo
-Files:
- 254bbf0848f8044bae5fcbb9df799f31 1869 admin optional xfsdump_3.2.0-2.dsc
- fba97d88172e27352732176f86be0e0b 5392 admin optional xfsdump_3.2.0-2.debian.=
-tar.xz
- 9117ba3fdabc1ec03ea2542f3e945402 7217 admin optional xfsdump_3.2.0-2_amd64.b=
-uildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEExgRcgTiHt3wt/5elfFas/pR4l9gFAmeIS2IACgkQfFas/pR4
-l9gqIw//a+FvBpE/QXAvXzieTH3RIu2QcQtmgN8Ha3yvmsXklsrCHU4guB+O7krd
-oCnQ50TsVJmRkFXDOKJnrQkyG+95jK9bxpFpGTd+UGK9U4jQbGEW7MsHRo6g/XYN
-GkldjpcTxbh6g6uPPpJafDnhtSjnwKzAn2yKQSdaNVkhhxBozS3EBDKOymeX7Ghm
-AHovn56SSxp7KxmpPjltHL6ET8eEx4DXPs/vzlsSyIQKhoausgEzIOsdllgbwTMP
-yUsXotZBld/g2mTonTzqHEdWurvfFM7PnA3S/IS0foobO9ZtKl6Ce6hH/tgL5Mqj
-THCe7T+3sHYun19Zel7KQI5JGoAwsECd8fA4phZe20/7SMT8XYvmObMfyMHPmnzU
-HC9VikpVeHt2NAeKgJNEEpAy/8H42vLYdhh+lGRNG5XRTwfSZj1PJ+owKb3wgt8V
-owyI9Mn0lTJG9UuZ19uKAuIuIAsxwfXyw5+LpjkQWxc7uoyro9XsR0KS9EpcglvZ
-hfFgirJIHw4PUh662qZ/fKy+dBMwlyPSzKw/S3uwEzhkVQPoiaUXZE8qo47nGUFr
-CQ22gQhR+P/PGlqCSJ3BTOUhvVZUJ9aaSkOKQfWsSLIGCsgh1Lg5+Jb3S06nHq+d
-Ol845CnNUl4EAcWJ26sDHCyKNpO36ubqmWlnL0B9Ca0qUuGroLs=3D
-=3De5n+
------END PGP SIGNATURE-----
-
-
---===============3745622071988500178==
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTziqJOuF8J+ZI8pJSb9qggYcy5IQUCZ4kHHAAKCRCb9qggYcy5
-IXguAP9p0RgPcdCKCRHE1ZWLgtRUdh9vlpSqYAt+4lwdlB0eqAD6A1NawDBoPUHT
-HigcyFjvFfsnhPq/FcpYCUb5swcDrg8=
-=BEfa
------END PGP SIGNATURE-----
-
---===============3745622071988500178==--
