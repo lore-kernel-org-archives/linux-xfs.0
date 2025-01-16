@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 531BF158520;
-	Thu, 16 Jan 2025 23:28:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD84A158520;
+	Thu, 16 Jan 2025 23:28:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737070083; cv=none; b=ILmaNMzYJLSQmJEiZGb9cmdQak/WNhyCBcWYEmrpV/1V+ySbSjthh/TPOXgqVssdNzq1HZcTpcLFDNLO9yIMOLiTqK2FH0LeEoohziMEkBwm4TGhV2uKTItnsI8zeSYCqAc9j1N9qU32t3dH/IqXAbgZWzg1kThSNlfOLv9Bx00=
+	t=1737070098; cv=none; b=NCti7dZnwXchHG3VPf7UJCQMzzD6oCPtoW4QGCOm9I+FOpgBs1tJan1u44m1IDKVq4fLSOwHHZU+VPo4ZbxJwmaD+2IUqASeH34Nff2lSbJVu2C9jNDQnPD52Fh48RxytwkbEjx9SSP6iOi7eUXfUft90grD8QgPRoVcwn7rSk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737070083; c=relaxed/simple;
-	bh=SF1mBj/m9kWKItneW0c2xDO8rz/3FsnINM96FO/7Y0I=;
+	s=arc-20240116; t=1737070098; c=relaxed/simple;
+	bh=Wl5xP6xhB0gBa5dsBogm+FnTOOsgy8OUUTBBbUunl4Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sMJ5kbsiZPt0SYrp5RbRMitD06TC6cR8dc4NPKj9fa4xZnGTipRr/k/bfUWuAH3WJjAlGoxHLfuMlN7R76lcD2EmdUjO2+daih5dEkAil9zhbGnRmDNEuSfmlfr/9/mhcdKOakLQW6iaXISNW8qwd/xUfCwIW9SU+BdpVZKHT6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R12rnhOB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TtVOVC9RsdDqQTzj/DvkmI90c3JezN7sOlpa7Cdekrn0AtFySgwJv1fS4/MPZ8SMxbu9Ph3Go79Og6BYgDd+yx6NBSKV47T5Fjv1MoOn3BsJ4/m2LsAaTgEf4VROHZcbH8IL0ut0/YusfYkLW3NZ7bxTZgrM4pX3YNgzz/jPjic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GKKZJ048; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R12rnhOB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E11A5C4CED6;
-	Thu, 16 Jan 2025 23:28:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GKKZJ048"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7772DC4CED6;
+	Thu, 16 Jan 2025 23:28:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737070082;
-	bh=SF1mBj/m9kWKItneW0c2xDO8rz/3FsnINM96FO/7Y0I=;
+	s=k20201202; t=1737070098;
+	bh=Wl5xP6xhB0gBa5dsBogm+FnTOOsgy8OUUTBBbUunl4Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=R12rnhOB0kD7UxXvn1rQ22l67zOvSptQjVVDBgNEJfVRkJaJOCVZxVUtYRLmxTV6H
-	 Klz31mGJVR2IBrB4dDikkoOI32CNbnsrV8BuixOyNymRxdrXHCrnEdrm2rwavYens5
-	 Kf0UQf5TUr1OWbZRqcw70pL+rxg/bNzc1nFEEgvjYPEg+PMQ5Xs5I7F1jxcgFeN5M2
-	 2d+dClvYkRYCX48IZuOQrd7CFDJytY+0oG0UdiFDCtG4oXU9UWVv9tpU1cTG93Moks
-	 GMrMmSRHZ4USqVs5k5Xv+aso319b66JUtSB1g99x3ab/7J/q5KFs3p1Kx7i1+aAeq3
-	 sD9KKnkJ6u08g==
-Date: Thu, 16 Jan 2025 15:28:02 -0800
-Subject: [PATCH 11/23] common/xfs: find loop devices for non-blockdevs passed
- to _prepare_for_eio_shutdown
+	b=GKKZJ048gMhKlvbcP7wb6a2ddRvL9RarX3Tlq9lssLkmaaQKSH+3UMG2gmXCJNfjJ
+	 lFg9U3PN7kfj0y2zT2NkUs0DQhc2fIyHGoSWP1xiiAG1JxwETkosvFpRcVaSdlB49/
+	 OQn1MwKCsWaiTK36l4RCKTxGEd5mbcfLaYL1k0Htgnjsq1EIhvQTqtf7toAQ+baqhj
+	 VQiGlZAgQ01YzZSGG3D9k1bpDKMPrVX9kB+UtfPzAsML8sT73nnekCNQp0bxUBG0x4
+	 aICMdxp7lQdopwEq/ywy5lvwa/rNTMymaCBOuMa+BvgCDYHvVlR4zGU+nny9Y+f/K0
+	 181NYd0RYowZA==
+Date: Thu, 16 Jan 2025 15:28:18 -0800
+Subject: [PATCH 12/23] preamble: fix missing _kill_fsstress
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173706974243.1927324.9105721327110864014.stgit@frogsfrogsfrogs>
+Message-ID: <173706974258.1927324.7737993478703584623.stgit@frogsfrogsfrogs>
 In-Reply-To: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,89 +45,55 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs/336 does this somewhat sketchy thing where it mdrestores into a
-regular file, and then does this to validate the restored metadata:
+Commit 8973af00ec212f added a _kill_fsstress to the standard _cleanup
+function.  However, if something breaks during test program
+initialization before it gets to sourcing common/rc, then you get
+failures that look like this:
 
-SCRATCH_DEV=$TEST_DIR/image _scratch_mount
+ --- /tmp/fstests/tests/generic/556.out  2024-09-25 12:09:52.938797554 -0700
+ +++ /var/tmp/fstests/generic/556.out.bad        2025-01-04 22:34:01.268327003 -0800
+ @@ -1,16 +1,3 @@
+  QA output created by 556
+ -SCRATCH_MNT/basic Casefold
+ -SCRATCH_MNT/basic
+ -SCRATCH_MNT/casefold_flag_removal Casefold
+ -SCRATCH_MNT/casefold_flag_removal Casefold
+ -SCRATCH_MNT/flag_inheritance/d1/d2/d3 Casefold
+ -SCRATCH_MNT/symlink/ind1/TARGET
+ -mv: 'SCRATCH_MNT/rename/rename' and 'SCRATCH_MNT/rename/RENAME' are the same file
+ -# file: SCRATCH_MNT/xattrs/x
+ -user.foo="bar"
+ -
+ -# file: SCRATCH_MNT/xattrs/x/f1
+ -user.foo="bar"
+ -
+ -touch: 'SCRATCH_MNT/strict/corac'$'\314\247\303': Invalid argument
+ -touch: 'SCRATCH_MNT/strict/cora'$'\303\247\303': Invalid argument
+ +./tests/generic/556: 108: common/config: Syntax error: "&" unexpected
+ +./tests/generic/556: 10: _kill_fsstress: not found
 
-Unfortunately, commit 1a49022fab9b4d causes the following regression:
-
- --- /tmp/fstests/tests/xfs/336.out      2024-11-12 16:17:36.733447713 -0800
- +++ /var/tmp/fstests/xfs/336.out.bad    2025-01-04 19:10:39.861871114 -0800
- @@ -5,4 +5,5 @@ Create big file
-  Explode the rtrmapbt
-  Create metadump file
-  Restore metadump
- -Check restored fs
- +Usage: _set_fs_sysfs_attr <mounted_device> <attr> <content>
- +(see /var/tmp/fstests/xfs/336.full for details)
-
-This is due to the fact that SCRATCH_DEV is temporarily reassigned to
-the regular file.  That path is passed straight through _scratch_mount
-to _xfs_prepare_for_eio_shutdown, but that helper _fails because the
-"dev" argument isn't actually a path to a block device.
-
-Fix this by detecting non-bdevs and finding (we hope) the loop device
-that was created to handle the mount.  While we're at it, have the
-helper return the exit code from mount, not _prepare_for_eio_shutdown.
+It's that last line that's unnecessary.  Fix this by checking for the
+presence of a _kill_fsstress before invoking it.
 
 Cc: <fstests@vger.kernel.org> # v2024.12.08
-Fixes: 1a49022fab9b4d ("fstests: always use fail-at-unmount semantics for XFS")
+Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/rc  |    8 ++++++++
- common/xfs |    6 ++++++
- 2 files changed, 14 insertions(+)
+ common/preamble |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/common/rc b/common/rc
-index 885669beeb5e26..4419cfc3188374 100644
---- a/common/rc
-+++ b/common/rc
-@@ -441,6 +441,7 @@ _try_scratch_mount()
- 	[ $mount_ret -ne 0 ] && return $mount_ret
- 	_idmapped_mount $SCRATCH_DEV $SCRATCH_MNT
- 	_prepare_for_eio_shutdown $SCRATCH_DEV
-+	return $mount_ret
- }
- 
- # mount scratch device with given options and _fail if mount fails
-@@ -658,6 +659,7 @@ _test_mount()
-     [ $mount_ret -ne 0 ] && return $mount_ret
-     _idmapped_mount $TEST_DEV $TEST_DIR
-     _prepare_for_eio_shutdown $TEST_DEV
-+    return $mount_ret
- }
- 
- _test_unmount()
-@@ -4469,6 +4471,12 @@ _destroy_loop_device()
- 	losetup -d $dev || _fail "Cannot destroy loop device $dev"
- }
- 
-+# Find the loop bdev for a given file, if there is one.
-+_find_loop_device()
-+{
-+	losetup --list -n -O NAME -j "$1"
-+}
-+
- _scale_fsstress_args()
+diff --git a/common/preamble b/common/preamble
+index 78e45d522f482c..0c9ee2e0377dd5 100644
+--- a/common/preamble
++++ b/common/preamble
+@@ -7,7 +7,7 @@
+ # Standard cleanup function.  Individual tests can override this.
+ _cleanup()
  {
-     local args=""
-diff --git a/common/xfs b/common/xfs
-index 0417a40adba3e2..c68bd6d7c773ac 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1110,6 +1110,12 @@ _xfs_prepare_for_eio_shutdown()
- 	local dev="$1"
- 	local ctlfile="error/fail_at_unmount"
- 
-+	# Is this a regular file?  Check if there's a loop device somewhere.
-+	# Hopefully that lines up with a mounted filesystem.
-+	if [ ! -b "$dev" ]; then
-+		dev=$(_find_loop_device "$1" | tail -n 1)
-+	fi
-+
- 	# Once we enable IO errors, it's possible that a writer thread will
- 	# trip over EIO, cancel the transaction, and shut down the system.
- 	# This is expected behavior, so we need to remove the "Internal error"
+-	_kill_fsstress
++	command -v _kill_fsstress &>/dev/null && _kill_fsstress
+ 	cd /
+ 	rm -r -f $tmp.*
+ }
 
