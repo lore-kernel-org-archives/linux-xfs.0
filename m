@@ -1,50 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5569B1AAA1A;
-	Fri, 17 Jan 2025 18:49:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37654187550;
+	Fri, 17 Jan 2025 20:21:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737139775; cv=none; b=nFKflwpUmqvKUpGx9uiBiYCYKmr7TEx7KIgjuHftz/CI6VZkUTLOZB/ulC/4Bviw7kmDrge89P4ssW2bbb1Lel6M69K4YvbkiA9fOfi6nzKwJcIM0CxqXxMXWOaFJZpkZcf+TPH248uJfj4Vi4+Gdu5GgHEAVlOAM70EKXJ244I=
+	t=1737145273; cv=none; b=VakgUhN7MQUE7GdTYQuYvLA7FtE6NUc+ctm+kJw54TtPEQTYx4FJfuzyD8sVmYP+zZG1L47XUpQd6owDZKtz+PqcaI8stfKKMfSb0SFnyUr/e00DNgqxaCUVCSRKG2JMew0Me5W4w9+X9CQGFOWgJ4vwE0IWT9NTpQlLrXT+1MA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737139775; c=relaxed/simple;
-	bh=zDdwjxZU/sF8rw75zRI/8i1HXIyyWGHyARyxnUpsYsM=;
+	s=arc-20240116; t=1737145273; c=relaxed/simple;
+	bh=ROGQL94JJBV0KRhHzTN8QBzxRtcA0Nf5b5bj344qzLs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FJAzRrPov9H/aLaNNQbrU/h/yUp9LQlYQdGZ9pqPunJTuM3DN1RgrvsNpqpRAR+rRISC8zlwrygJYQc2GdhhYczLV7a1mltzwu11u7zYAEoZKugDzPZOqLqti8scJXD5O29zVNVnJgg5yWAdm4IwUcjxtEn/PgdhCrc7RZemvLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhxoB819; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=lP7/3DdwyK+WbdryLg1Im3i0H+4NB4CJhvcHUZTBTi+4qOgwISmwW2iH+qX1slS8xYfxb4dwsDVDZkdRnrkdQUBjkuV3Mo+DpLe81E2V8RCU+o1bSN+yNoZvwcoh44rUrmB65SFscRcaYT07BAmUkDdzxYPwd7ro+OZZoLPZMy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ivx4PVLh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhxoB819"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB947C4CEDD;
-	Fri, 17 Jan 2025 18:49:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ivx4PVLh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 973A9C4CEDD;
+	Fri, 17 Jan 2025 20:21:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737139774;
-	bh=zDdwjxZU/sF8rw75zRI/8i1HXIyyWGHyARyxnUpsYsM=;
+	s=k20201202; t=1737145272;
+	bh=ROGQL94JJBV0KRhHzTN8QBzxRtcA0Nf5b5bj344qzLs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fhxoB8196SJnzt8YHfRBi11hGbdssLESTCTL7/QcpsiKdwkh3XTs8k8oB2foRwFxz
-	 jewgRuzP7Bwt/1940pxoKSbI+UKZGvngWsy7EjDDtZoibl/TJFfunOFBixqn1sQOPg
-	 In2yQzNs1cSy5ZxDUytJGAWGVLeMbNXGoJ0frmQ2TH4YlqaqxtM1iH+ZPVyHWUtNmn
-	 b9YgR4IdvRUFdc1MRy0CI1VCI8O1yhUG3ua6beiIS/jdPWyrb7r3yAfVw7bWi9tTyf
-	 n1ZgQWLK5Eh3hyTxordQ4spwgCMSOJ9xbWJ6uTR/reLdWjo3BWMaMi8Zc7OF//nwmg
-	 SGIyOeS23SWmQ==
-Date: Fri, 17 Jan 2025 10:49:34 -0800
+	b=Ivx4PVLh7h2Q0UqMKxmRkBm5loPXAEio0SvK/FSvHIFEwDQDZVHE5oyFqnCA/ol8h
+	 cKcsEqjC7Vre1XXhoAdngnm22VpcKyd9jvjo84ty00DNJYtoniCGVJvUVPjUnh/TeT
+	 aNT5XpGCq3VMn2M1vYJRsjDZn8I8l6BautNG6utwYxNpcP6dVleekQiEEUwvWhyXqE
+	 C1L/XAzjJ8c7d0SoVXaoR0ZY2EUepbMghiNh8M9erao17PBEsinYMobyKjw39w/g1g
+	 yVp15TbpDb7xUhaobrksTMTmkDM/GK34jvHOuWSpe8PpBFKBRjBMo+y7oxVXVmwdSt
+	 3ZIXXeAZZ+XTA==
+Date: Fri, 17 Jan 2025 12:21:12 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>,
-	John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
-	cem@kernel.org, dchinner@redhat.com, ritesh.list@gmail.com,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, martin.petersen@oracle.com
-Subject: Re: [PATCH 1/4] iomap: Lift blocksize restriction on atomic writes
-Message-ID: <20250117184934.GI1611770@frogsfrogsfrogs>
-References: <20241204154344.3034362-1-john.g.garry@oracle.com>
- <20241204154344.3034362-2-john.g.garry@oracle.com>
- <Z1C9IfLgB_jDCF18@dread.disaster.area>
- <3ab6000e-030d-435a-88c3-9026171ae9f1@oracle.com>
- <Z1IX2dFida3coOxe@dread.disaster.area>
- <20241212013433.GC6678@frogsfrogsfrogs>
- <Z4Xq6WuQpVOU7BmS@dread.disaster.area>
- <20250114235726.GA3566461@frogsfrogsfrogs>
- <20250116065225.GA25695@lst.de>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+	ronnie sahlberg <ronniesahlberg@gmail.com>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	linux-fsdevel@vger.kernel.org, linux-cifs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Steve French <sfrench@samba.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Immutable vs read-only for Windows compatibility
+Message-ID: <20250117202112.GH3561231@frogsfrogsfrogs>
+References: <cf0b8342-8a4b-4485-a5d1-0da20e6d14e7@oracle.com>
+ <20250114211050.iwvxh7fon7as7sty@pali>
+ <0659dfe1-e160-40fd-b95a-5d319ca3504f@oracle.com>
+ <20250114215350.gkc2e2kcovj43hk7@pali>
+ <CAN05THSXjmVtvYdFLB67kKOwGN5jsAiihtX57G=HT7fBb62yEw@mail.gmail.com>
+ <20250114235547.ncqaqcslerandjwf@pali>
+ <20250114235925.GC3561231@frogsfrogsfrogs>
+ <CAOQ4uxjj3XUNh6p3LLp_4YCJQ+cQHu7dj8uM3gCiU61L3CQRpA@mail.gmail.com>
+ <20250117173900.GN3557553@frogsfrogsfrogs>
+ <CAOQ4uxhh1LDz5zXzqFENPhJ9k851AL3E7Xc2d7pSVVYX4Fu9Jw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,42 +57,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250116065225.GA25695@lst.de>
+In-Reply-To: <CAOQ4uxhh1LDz5zXzqFENPhJ9k851AL3E7Xc2d7pSVVYX4Fu9Jw@mail.gmail.com>
 
-On Thu, Jan 16, 2025 at 07:52:25AM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 14, 2025 at 03:57:26PM -0800, Darrick J. Wong wrote:
-> > Ok, let's do that then.  Just to be clear -- for any RWF_ATOMIC direct
-> > write that's correctly aligned and targets a single mapping in the
-> > correct state, we can build the untorn bio and submit it.  For
-> > everything else, prealloc some post EOF blocks, write them there, and
-> > exchange-range them.
-> > 
-> > Tricky questions: How do we avoid collisions between overlapping writes?
-> > I guess we find a free file range at the top of the file that is long
-> > enough to stage the write, and put it there?  And purge it later?
-> > 
-> > Also, does this imply that the maximum file size is less than the usual
-> > 8EB?
+On Fri, Jan 17, 2025 at 07:46:30PM +0100, Amir Goldstein wrote:
+> > > Looking at the FILE_ATTRIBUTE_* flags defined in SMB protocol
+> > >  (fs/smb/common/smb2pdu.h) I wonder how many of them will be
+> > > needed for applications beyond the obvious ones that were listed.
+> >
+> > Well they only asked for seven of them. ;)
+> >
+> > I chatted with Ted about this yesterday, and ... some of the attributes
+> > (like read only) imply that you'd want the linux server to enforce no
+> > writing to the file; some like archive seem a little superfluous since
+> > on linux you can compare cmtime from the backup against what's in the
+> > file now; and still others (like hidden/system) might just be some dorky
+> > thing that could be hidden in some xattr because a unix filesystem won't
+> > care.
+> >
+> > And then there are other attrs like "integrity stream" where someone
+> > with more experience with windows would have to tell me if fsverity
+> > provides sufficient behaviors or not.
+> >
+> > But maybe we should start by plumbing one of those bits in?  I guess the
+> > gross part is that implies an ondisk inode format change or (gross)
+> > xattr lookups in the open path.
+> >
 > 
-> I think literally using the exchrange code for anything but an
-> initial prototype is a bad idea for the above reasons.  If we go
-> beyond proving this is possible you'd want a version of exchrange
-> where the exchange partners is not a file mapping, but a cow staging
-> record.
+> I may be wrong, but I think there is a confusion in this thread.
+> I don't think that Pali was looking for filesystems to implement
+> storing those attributes. I read his email as a request to standardize
+> a user API to get/set those attributes for the filesystems that
+> already support them and possibly for vfs to enforce some of them
+> (e.g. READONLY) in generic code.
+> 
+> Nevertheless, I understand the confusion because I know there
+> is also demand for storing those attributes by file servers in a
+> standard way and for vfs to respect those attributes on the host.
+> 
+> Full disclosure - I have an out of tree xfs patch that implements
+> ioctls XFS_IOC_[GS]ETDOSATTRAT and stashes these
+> attributes in the unused di_dmevmask space.
 
-The trouble is that the br_startoff attribute of cow staging mappings
-aren't persisted on disk anywhere, which is why exchange-range can't
-handle the cow fork.  You could open an O_TMPFILE and swap between the
-two files, though that gets expensive per-io unless you're willing to
-stash that temp file somewhere.
+[cc linux-xfs]
 
-At this point I think we should slap the usual EXPERIMENTAL warning on
-atomic writes through xfs and let John land the simplest multi-fsblock
-untorn write support, which only handles the corner case where all the
-stars are <cough> aligned; and then make an exchange-range prototype
-and/or all the other forcealign stuff.
-
-(Lifting in smaller pieces sounds a lot better than having John carry
-around an increasingly large patchset...)
+Urrrrk, please don't fork the xfs ondisk format!
 
 --D
+
+> Compared to the smb server alternative of storing those attributes
+> as xattrs on the server, this saves a *lot* of IO in an SMB file browsing
+> workload, where most of the inodes have large (ACL) xattrs that do
+> not fit into the inode, because SMB protocol needs to return
+> those attributes in a response to READDIR(PLUSPLUS), so
+> it needs to read all the external xattr blocks.
+> 
+> So yeh, I would love to have proper support in xfs...
+> 
+> Thanks,
+> Amir.
+> 
