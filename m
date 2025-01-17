@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E119F166F3D;
-	Fri, 17 Jan 2025 18:29:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5569B1AAA1A;
+	Fri, 17 Jan 2025 18:49:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737138587; cv=none; b=tS7Z97iQH9TrTlkrOfFJDp+BqIQB0hyQyHnd7kdDniHod4UMQHd5d19w3pYeAImSahuEnhiQ8EfwAyq/3jQ1nlXGLTuJa42vTqflgadKnZPn2TXOnRdOwq1bIC6j3kYCCQJCR0vWiC7Z2snxHxcRZl6LsF7hXDj+7jaGOeljM44=
+	t=1737139775; cv=none; b=nFKflwpUmqvKUpGx9uiBiYCYKmr7TEx7KIgjuHftz/CI6VZkUTLOZB/ulC/4Bviw7kmDrge89P4ssW2bbb1Lel6M69K4YvbkiA9fOfi6nzKwJcIM0CxqXxMXWOaFJZpkZcf+TPH248uJfj4Vi4+Gdu5GgHEAVlOAM70EKXJ244I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737138587; c=relaxed/simple;
-	bh=vPiJ1zoVNCjg0h2CznQ0UgJouAXELt7xZY9Fh151V38=;
+	s=arc-20240116; t=1737139775; c=relaxed/simple;
+	bh=zDdwjxZU/sF8rw75zRI/8i1HXIyyWGHyARyxnUpsYsM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f3KQ8y2MAh53zhnZmIl7uTOJNnJODyJZEOVlHexNXb8B94bsxMb1O+BlL/NA7whwSzvpFBNFc3WSGpt1XMtMmtxHiWGQLGc2MBjDOsXg5nl0Xt6r803e6R4TNyqsH+P3qF5FAeS9StiOu3cX0sGo/PkNnrM8uuwpkMWiwY9mX/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lST5Pkkt; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FJAzRrPov9H/aLaNNQbrU/h/yUp9LQlYQdGZ9pqPunJTuM3DN1RgrvsNpqpRAR+rRISC8zlwrygJYQc2GdhhYczLV7a1mltzwu11u7zYAEoZKugDzPZOqLqti8scJXD5O29zVNVnJgg5yWAdm4IwUcjxtEn/PgdhCrc7RZemvLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhxoB819; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lST5Pkkt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 532AEC4CEE3;
-	Fri, 17 Jan 2025 18:29:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhxoB819"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB947C4CEDD;
+	Fri, 17 Jan 2025 18:49:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737138586;
-	bh=vPiJ1zoVNCjg0h2CznQ0UgJouAXELt7xZY9Fh151V38=;
+	s=k20201202; t=1737139774;
+	bh=zDdwjxZU/sF8rw75zRI/8i1HXIyyWGHyARyxnUpsYsM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lST5PkktozMAzz8qxAZVQCwfOavw5m6hW2HqaTATuiaJiKIk9u+U8WghZ+Y16gt4/
-	 CzqkXPDW1G5UGoKEwyccsiSZAVTwuCt3SCeWsJDy7bKaP53+8cAVxpjZvpaDHc4+T2
-	 aBlxNlsiyMWe0Zx2S36i3ZtFIWbUXL2ceVIN2TkHDu0KiqApsp9V7wWFHtNcY+KO9w
-	 QPxthcoUHWhlPIm7qZfXO1JfG/NXbaUep0YGBHdyLSsPvX31RJ3cBsGWOm2K7C0J9j
-	 CRV03aFqgEzZ1wMdTdQ4E/ZX1h6fG7BjfQXRJNpu1JOuEihKvEupQeGUZKXX/F10us
-	 wA4mBScD4jxpw==
-Date: Fri, 17 Jan 2025 10:29:45 -0800
+	b=fhxoB8196SJnzt8YHfRBi11hGbdssLESTCTL7/QcpsiKdwkh3XTs8k8oB2foRwFxz
+	 jewgRuzP7Bwt/1940pxoKSbI+UKZGvngWsy7EjDDtZoibl/TJFfunOFBixqn1sQOPg
+	 In2yQzNs1cSy5ZxDUytJGAWGVLeMbNXGoJ0frmQ2TH4YlqaqxtM1iH+ZPVyHWUtNmn
+	 b9YgR4IdvRUFdc1MRy0CI1VCI8O1yhUG3ua6beiIS/jdPWyrb7r3yAfVw7bWi9tTyf
+	 n1ZgQWLK5Eh3hyTxordQ4spwgCMSOJ9xbWJ6uTR/reLdWjo3BWMaMi8Zc7OF//nwmg
+	 SGIyOeS23SWmQ==
+Date: Fri, 17 Jan 2025 10:49:34 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, brauner@kernel.org, cem@kernel.org,
-	dchinner@redhat.com, hch@lst.de, ritesh.list@gmail.com,
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>,
+	John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
+	cem@kernel.org, dchinner@redhat.com, ritesh.list@gmail.com,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-kernel@vger.kernel.org, martin.petersen@oracle.com
 Subject: Re: [PATCH 1/4] iomap: Lift blocksize restriction on atomic writes
-Message-ID: <20250117182945.GH1611770@frogsfrogsfrogs>
+Message-ID: <20250117184934.GI1611770@frogsfrogsfrogs>
 References: <20241204154344.3034362-1-john.g.garry@oracle.com>
  <20241204154344.3034362-2-john.g.garry@oracle.com>
  <Z1C9IfLgB_jDCF18@dread.disaster.area>
@@ -43,7 +44,7 @@ References: <20241204154344.3034362-1-john.g.garry@oracle.com>
  <20241212013433.GC6678@frogsfrogsfrogs>
  <Z4Xq6WuQpVOU7BmS@dread.disaster.area>
  <20250114235726.GA3566461@frogsfrogsfrogs>
- <01e781da-0798-4de6-ad03-6099f15f308e@oracle.com>
+ <20250116065225.GA25695@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,54 +53,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <01e781da-0798-4de6-ad03-6099f15f308e@oracle.com>
+In-Reply-To: <20250116065225.GA25695@lst.de>
 
-On Fri, Jan 17, 2025 at 10:26:34AM +0000, John Garry wrote:
-> On 14/01/2025 23:57, Darrick J. Wong wrote:
-> > > i.e. RWF_ATOMIC as implemented by a COW capable filesystem should
-> > > always be able to succeed regardless of IO alignment. In these
-> > > situations, the REQ_ATOMIC block layer offload to the hardware is a
-> > > fast path that is enabled when the user IO and filesystem extent
-> > > alignment matches the constraints needed to do a hardware atomic
-> > > write.
-> > > 
-> > > In all other cases, we implement RWF_ATOMIC something like
-> > > always-cow or prealloc-beyond-eof-then-xchg-range-on-io-completion
-> > > for anything that doesn't correctly align to hardware REQ_ATOMIC.
-> > > 
-> > > That said, there is nothing that prevents us from first implementing
-> > > RWF_ATOMIC constraints as "must match hardware requirements exactly"
-> > > and then relaxing them to be less stringent as filesystems
-> > > implementations improve. We've relaxed the direct IO hardware
-> > > alignment constraints multiple times over the years, so there's
-> > > nothing that really prevents us from doing so with RWF_ATOMIC,
-> > > either. Especially as we have statx to tell the application exactly
-> > > what alignment will get fast hardware offloads...
+On Thu, Jan 16, 2025 at 07:52:25AM +0100, Christoph Hellwig wrote:
+> On Tue, Jan 14, 2025 at 03:57:26PM -0800, Darrick J. Wong wrote:
 > > Ok, let's do that then.  Just to be clear -- for any RWF_ATOMIC direct
 > > write that's correctly aligned and targets a single mapping in the
 > > correct state, we can build the untorn bio and submit it.  For
 > > everything else, prealloc some post EOF blocks, write them there, and
 > > exchange-range them.
-> 
-> I have some doubt about this, but I may be misunderstanding the concept:
-> 
-> So is there any guarantee that what we write into is aligned (after the
-> exchange-range routine)? If not, surely every subsequent write with
-> RWF_ATOMIC to that logical range will require this exchange-range routine
-> until we get something aligned (and correct granularity) - correct?
-
-Correct, you'd still need forcealign to make sure that the new
-allocations for exchange-range are aligned to awumin.
-
---D
-
-> I know that getting unaligned blocks continuously is unlikely, unless a
-> heavily fragmented disk. However, databases prefer guaranteed performance
-> (which HW offload gives).
-> 
-> We can use extszhint to hint at granularity, but that does not help with
-> alignment (AFAIK).
-> 
 > > 
 > > Tricky questions: How do we avoid collisions between overlapping writes?
 > > I guess we find a free file range at the top of the file that is long
@@ -107,8 +69,26 @@ allocations for exchange-range are aligned to awumin.
 > > 
 > > Also, does this imply that the maximum file size is less than the usual
 > > 8EB?
-> > 
-> > (There's also the question about how to do this with buffered writes,
-> > but I guess we could skip that for now.)
 > 
-> 
+> I think literally using the exchrange code for anything but an
+> initial prototype is a bad idea for the above reasons.  If we go
+> beyond proving this is possible you'd want a version of exchrange
+> where the exchange partners is not a file mapping, but a cow staging
+> record.
+
+The trouble is that the br_startoff attribute of cow staging mappings
+aren't persisted on disk anywhere, which is why exchange-range can't
+handle the cow fork.  You could open an O_TMPFILE and swap between the
+two files, though that gets expensive per-io unless you're willing to
+stash that temp file somewhere.
+
+At this point I think we should slap the usual EXPERIMENTAL warning on
+atomic writes through xfs and let John land the simplest multi-fsblock
+untorn write support, which only handles the corner case where all the
+stars are <cough> aligned; and then make an exchange-range prototype
+and/or all the other forcealign stuff.
+
+(Lifting in smaller pieces sounds a lot better than having John carry
+around an increasingly large patchset...)
+
+--D
