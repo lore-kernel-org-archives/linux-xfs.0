@@ -1,116 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f177.google.com (mail-vk1-f177.google.com [209.85.221.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 959B835968;
-	Sat, 18 Jan 2025 20:14:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD321E531
+	for <linux-xfs@vger.kernel.org>; Sat, 18 Jan 2025 23:51:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737231250; cv=none; b=GZ4hYx3dmuYp0roUio+ZHa8y9UJgyMs7U86RuTYjRH3/E6fUGcsw6khSU6/T643jSZjzG2j+/I+ZDwYMkMt58LXQvyAo6smLbF8TdfOkPf9qKQcODluvbte5T91fhNqyS5D94bmdVLvLk0UacN9jxdEXqtcrVuZUAHfLvur4IcU=
+	t=1737244299; cv=none; b=JzDjrR1iWBL54vlMjK3TuyFFkpEpm5lTtpLohZGcEWEusGIAkkCxbgGvqHhTan5jfzCKwG4lk9YeQZ+GRVb3mHfIvPnhYhb80s8yEO276c9FiDo5BzjQRbt3nopOhjlukQQ/gmW04fByQVE98ZQLWduzVwsPfroEywhx1WQPu2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737231250; c=relaxed/simple;
-	bh=fHHMr+HKXqQlRFCd+l7fLRsf+3H9anWso/9OIjYa0Qg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=txfNQOftNYKKw1eYu2cHBpB0928+Jf5krSCNycrBNV8IaGIum4JE7mSjCdhk9JZzKmntwCB7MOdW1uhjdT53IMlgsziy5qD8VTBGIT1FIVgMhUy2GAG/JbylSbiAgBLeqL03MaJR3A6Dr3delKHXar0Znk8subNmEa9U5pL9VT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ugKIbNRm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1737244299; c=relaxed/simple;
+	bh=soxmDpfsPRHjfp1Jyg8H4xyhMjTUxeXfJE8FbhFGqRo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=mrMcelba6MIUeWBidqz6K3LU4RlAl84I7X+fggXJ+/0Y1+oQudBN4FNRyCebJ4xdJKBQHNMk1Ranw/lAnTq/sl5zGPvx2d2zfM8FeSdge5GYzWn+iMW7Kl/ie7prk0s2zkoa0L+OYBhRSwinbOwXm3MzOIGkz+VUxsVO/qdGsfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Psu0+HJ4; arc=none smtp.client-ip=209.85.221.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugKIbNRm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED38CC4CED1;
-	Sat, 18 Jan 2025 20:14:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737231250;
-	bh=fHHMr+HKXqQlRFCd+l7fLRsf+3H9anWso/9OIjYa0Qg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ugKIbNRm22aBExz1R1jPLD3NFRp9CPvsZmmJa8uvEBU95w4GgE0JR+MgztEdRLBi0
-	 T2m6K4xM7vpxPMocYOIuHfY66F2rzQ5cbI/Q20qxp0Vi3Y76ez2nu26nVncikKrCaA
-	 SQRIqY/CBH+pPTn1NAy0yp87gN4KPVh6X0d+Nvb/NWz4v6vhKLsMMGSRn8x4tG4dqx
-	 hg0lhfHQgsDcwC7KriQ9kkI0v8/IWPGDK7CXW7C84ma5/fPMe/6l56QX9KJJfumZA3
-	 yK01vZAjlTNzA1S5bpl/wGHcYlCR+3q6hISmQ9he0DEEFNr+ux9fGPiHc/nbkrSVxu
-	 CCFI3hpvVNOHQ==
-Date: Sat, 18 Jan 2025 12:14:09 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] fstests: workaround for gcc-15
-Message-ID: <20250118201409.GR3557553@frogsfrogsfrogs>
-References: <20250117043709.2941857-1-zlang@kernel.org>
- <20250117172736.GG1611770@frogsfrogsfrogs>
- <20250118143214.gcrqvwfa4jnkawyj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Psu0+HJ4"
+Received: by mail-vk1-f177.google.com with SMTP id 71dfb90a1353d-5161d5b8650so932137e0c.3
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jan 2025 15:51:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1737244296; x=1737849096; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=soxmDpfsPRHjfp1Jyg8H4xyhMjTUxeXfJE8FbhFGqRo=;
+        b=Psu0+HJ4bxImEIuvckzahJEJnXMHB76ZJNyw00inJRmKqOHjEaBn/5x6S1le2A3/pQ
+         OZEsBFf55NCKpb9GBQx0+o5QevYYI8rGDeWLoy5xPgnyHSe+UMDwN85rJbE23ogfeMmF
+         vCObSk6L+7/UsFfdfAFEQhwvKIumJUde8ETdspRB4SwPmpm+jvd3cYYK48L7ju9D5HY0
+         5rcU5IWuX+bzE+OiUiUlRk5kNr3h2fKLW1jcZa0X3Mh2+mwP04gaXafjW4S6H3dnj3le
+         R3yfkpY+6x+d7ExGN2+aKS9w1DOglL/7KpqLbk6kqoKTlfElNoC5Gv+YGZ+PIXhrpgWh
+         nOJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737244296; x=1737849096;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=soxmDpfsPRHjfp1Jyg8H4xyhMjTUxeXfJE8FbhFGqRo=;
+        b=Bd0JDBZ1+VNltyi2xcjsaXF79iT26oDR2XcxXt3R1ya+dxy3h/5a6gqp2OjwTmScE+
+         noH5R5auii0A3FY3AgUw5gftobkpSCyegnSSiNGZMkoS1z0mxmIkVvLbVOF1dFCP0B6T
+         pZH0PI2EA8YaAK6K8krnR8yeiCrrN/YlOHHbE/oBCE+vjXm+ZPWwUNB0+FgC4ru0hUJK
+         VS7vq/BPeEbXicwS0FjCyX3w0Uuc4IJokJWI+mXpXystPds11uR6rMM9qfnyZxnqWkWc
+         KVuyCj13QthXDvln2YjT32zFmWBI4PbJep7YoXUxLyoS/AUTj1Zq0zi3GA3S+lCSj7x5
+         waiA==
+X-Gm-Message-State: AOJu0YxneLdMd8U/5noTLclMjCdeBZ1peCKFjJZT7dRELLIc+JaTXY+0
+	wp8b2DjrIeNAOOxwuUTJkaUIHZipaO+625OHm+1BJvS/Exz7mWZNuU+7yNgIdfxZCGC/xs81lfI
+	vSalcejbqBnxq5ptR4Y+p2xZ0lJI=
+X-Gm-Gg: ASbGnct2jMpYGfJHYg4ZzIeebSSAliGQxMwacxJzlB10a1+AQzccR/KdEcwKnvlLR6h
+	6CubHwg2gBvOaaWmfiGaI8XNzfYXhkiTJWnxJa7vkTni4NQlt7Q==
+X-Google-Smtp-Source: AGHT+IGwHznCWPCMEtKzz1qYgJaLAWBAMHAuQBOOHG7z9p33G2GNsuh4gWJMyoBHj0Fo6hK1zzGKEu5a0Hx0ei27G0g=
+X-Received: by 2002:a67:e70d:0:b0:4b2:cc94:187a with SMTP id
+ ada2fe7eead31-4b690bb130fmr6898268137.1.1737244296437; Sat, 18 Jan 2025
+ 15:51:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250118143214.gcrqvwfa4jnkawyj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <bug-219504-201763@https.bugzilla.kernel.org/> <bug-219504-201763-n9qDuhTcDb@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-219504-201763-n9qDuhTcDb@https.bugzilla.kernel.org/>
+From: Marco Nelissen <marco.nelissen@gmail.com>
+Date: Sat, 18 Jan 2025 15:51:25 -0800
+X-Gm-Features: AbW1kvZ4m7mLf0cmDdWA2MC-4xSU-c9DlGIT7jXHRZtxhS8w5xIbC-E4XNGc_9g
+Message-ID: <CAH2+hP5mkAR4LXfMRONd0KfMq4yWRHS2CRoAZtGnmqVhJ2dKdg@mail.gmail.com>
+Subject: Re: [Bug 219504] iomap/buffered-io/XFS crashes with kernel Version >
+ 6.1.91. Perhaps Changes in kernel 6.1.92 (and up) for XFS/iomap causing the problems?
+To: bugzilla-daemon@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Jan 18, 2025 at 10:32:14PM +0800, Zorro Lang wrote:
-> On Fri, Jan 17, 2025 at 09:27:36AM -0800, Darrick J. Wong wrote:
-> > On Fri, Jan 17, 2025 at 12:37:09PM +0800, Zorro Lang wrote:
-> > > GCC-15 does a big change, it changes the default language version for
-> > > C compilation from -std=gnu17 to -std=gnu23. That cause lots of "old
-> > > style" C codes hit build errors. On the other word, current xfstests
-> > > can't be used with GCC-15. So -std=gnu17 can help that.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@kernel.org>
-> > > ---
-> > > 
-> > > Hi,
-> > > 
-> > > I send this patch just for talking about this issue. The upcoming gcc-15
-> > > does lots of changes, a big change is using C23 by default:
-> > > 
-> > >   https://gcc.gnu.org/gcc-15/porting_to.html
-> > > 
-> > > xfstests has many old style C codes, they hard to be built with gcc-15.
-> > > So we have to either add -std=$old_version (likes this patch), or port
-> > > the code to C23.
-> > > 
-> > > This patch is just a workaround (and a reminder for someone might hit
-> > > this issue with gcc-15 too). If you have any good suggestions or experience
-> > > (for this kind of issue) to share, feel free to reply.
-> > 
-> > -std=gnu11 to match the kernel and xfsprogs?
-> 
-> So you prefer using a settled "-std=xxx" to changing codes to match "gnu23"?
+On Sat, Jan 18, 2025 at 6:00=E2=80=AFAM <bugzilla-daemon@kernel.org> wrote:
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D219504
+>
+> --- Comment #6 from Mike-SPC (speedcracker@hotmail.com) ---
+> I am experiencing the same issue on a 32-bit system when using Kernel ver=
+sion
+> 6.1.92 and above.
+>
+> As a non-programmer, I find this problem challenging to address independe=
+ntly.
+>
+> It would be greatly appreciated if a fix could be provided in the form of=
+ a
+> patch. Could the maintainers consider releasing one?
 
-Only gcc 14 and 15 support gnu23, which will break the builds on ancient
-distros such as Debian 12 and RHEL9.  Also, there's the human cost that
-now fs developers have to know /two/ C dialects -- gnu11 for the kernel,
-and gnu23 for fstests.
-
-So yes, I prefer using -std=gnu11 for better consistency and tooling
-support.
-
---D
-
-> > 
-> > --D
-> > 
-> > > Thanks,
-> > > Zorro
-> > > 
-> > >  include/builddefs.in | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/include/builddefs.in b/include/builddefs.in
-> > > index 5b5864278..ef124bb87 100644
-> > > --- a/include/builddefs.in
-> > > +++ b/include/builddefs.in
-> > > @@ -75,7 +75,7 @@ HAVE_RLIMIT_NOFILE = @have_rlimit_nofile@
-> > >  NEED_INTERNAL_XFS_IOC_EXCHANGE_RANGE = @need_internal_xfs_ioc_exchange_range@
-> > >  HAVE_FICLONE = @have_ficlone@
-> > >  
-> > > -GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
-> > > +GCCFLAGS = -funsigned-char -fno-strict-aliasing -std=gnu17 -Wall
-> > >  SANITIZER_CFLAGS += @autovar_init_cflags@
-> > >  
-> > >  ifeq ($(PKG_PLATFORM),linux)
-> > > -- 
-> > > 2.47.1
-> > > 
-> > > 
-> > 
-> 
+There are patches for 2 separate 32-bit issues, both of which are in linux-=
+next,
+though only one of them appears to have been selected for 6.1, 6.6 and 6.12=
+.
+These patches are:
+https://lore.kernel.org/linux-xfs/20250102190540.1356838-1-marco.nelissen@g=
+mail.com/
+https://lore.kernel.org/linux-xfs/20250109041253.2494374-1-marco.nelissen@g=
+mail.com/
