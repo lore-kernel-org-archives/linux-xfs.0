@@ -1,72 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41E8F537E9
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 06:40:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 693751922FD
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 08:14:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737355238; cv=none; b=Jg2PSH5N8EU6Xi5Us3fTkVtAfFsIN9rcp88pHpQrSeida/f6HKfYhjl45CGGZopFo6+2tfLdKxpowOD0pzYPgGQmmcmHu68e2awPArZ7/BvCEooccZyMXfb1vmeUUNbF2wEVmqMGqJa6+R8hMSIhnyLhA06GcrxDtrZhnNqHh9Q=
+	t=1737360866; cv=none; b=RlSKJ2yOu+49ME16c3qJfMsIR5xynd4LI1LuoLuvGj7Xdq6urqIgyhSno88dUhMtpdFdESQdkzNfYdN8oRFgWQ2yID9UVlVJQVPJnWKIFaVe+BlkvsVDQgS2UwhMNMPLxnzyQwD4MpJ5qj5ZcHSMhik7HvwIy7Fiah/X2ts3Udc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737355238; c=relaxed/simple;
-	bh=Ncj5ZkrVXC6mAQCAF796PSsNjqvuqtSThiSQmi+pliw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=J+ZB0UA99oR1lguRL9676dcK/2apXVzU2k0z+JvqGWsjJtxQSqGusPxQnZ7Zc+8JOagYU8hnxmIuu9SxBTWvsAzL2tBZIE/a4pkBVeEqyCsSS6lbC6F9/i/GTtIfI+mrC6BlaNP5iShesk7ByHicX5rW64DcocsN+J5pWBYskYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=klxwdj8i; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="klxwdj8i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1396C4CEDD;
-	Mon, 20 Jan 2025 06:40:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737355237;
-	bh=Ncj5ZkrVXC6mAQCAF796PSsNjqvuqtSThiSQmi+pliw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=klxwdj8i+xNt3WVhO1mTNLivJiMmiWuGPdq4DvwVmczJ4EoNaT5/jIKB3S49nETJH
-	 zMB8IDYSKdWXYxDpWsvpkjbsACWP3bv+L3pLzGl8P4GqxyFcC7LLdoRY6AyfnfaxF0
-	 f9BxhFDH8sOYeLN7RZCbEIhS8nb2NdPLiIgi+iVvASauId7Gg2mr+uc0WmNmFqSL8v
-	 Ulz3TDGLpw3ofL4LHJbvjSCn2b1Lo9/6wENZqRkC6rUgbwrDzBAapxMCeTmun8KaPE
-	 Y7ftgf1RsTDgoqwTvMMZsGrUl0CzDQ9Dw0NFj3vWbS7K4sQM3RLDp+R3ooH78xl4CD
-	 ZAcd9/uqQfz8A==
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
- Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-In-Reply-To: <20250116060151.87164-1-hch@lst.de>
-References: <20250116060151.87164-1-hch@lst.de>
-Subject: Re: fix buffer refcount races v2
-Message-Id: <173735523458.885751.15154722931791171006.b4-ty@kernel.org>
-Date: Mon, 20 Jan 2025 07:40:34 +0100
+	s=arc-20240116; t=1737360866; c=relaxed/simple;
+	bh=MGWhmJX8lqcL8FHLyjgiYEi4RcN9+x8nAITWycT0GrA=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Tlk2j6SUnctk+jN1WQW4TlF2WSV13Z6fqNJ1rrUX0I7l5Ed5xWmQkRCtjhsGbBHTZN2lQQxqm+lycUPLQl0lyiARPWTBHH65TDZWbnErC7Eg8bCd/7cYkYBotlJvsQrUldb3kF/lGrEm3C8xKsYd4xNWlk+jbDnEi2TGE3YVLP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3ce7aec7368so28177845ab.3
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 00:14:25 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737360864; x=1737965664;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RN1ut9YyCo2w4BXnWeLtqFWW7U3TJDnt7DX4lyG/g8I=;
+        b=j59GqETLVolYroEVY4rabi2C2EZMB8v+QaYgVrXuMw03vGSj2wQw8TFecKMe8Ef8ZO
+         a6Z0AeLA0vrVIyF5xL6yVW7HHz5Y8jOdoexzQ/kfbKb/a/YomVqjRu4XhOWCBDlf368t
+         9UXasRWphJ/i5cnAExh2VbCaVdbiN5ttjlbxmIx7oiAjY19wu0gRLXbWN9wi7lrrOgZ6
+         fxOSI+QeGReegxrBEnaNExkwkbIE0GYQjIYlaoSsAnn4l4cF6tJov4LhfwSKQnCioRJx
+         5oMWQDgbYgkVDdF33Bwu7f4IrKTu7Eb2RLRnm1IypnbXVN2s10MuKhXzINiqU6Y6tDV3
+         LyBg==
+X-Forwarded-Encrypted: i=1; AJvYcCWjx0FbNuWk3s6TEK1DyhQYOu9dbBdXuOZGJ7qRR4sCuUfQTWc/nwZfKomhOZBzHrsckjny9HeXURo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6u2x6K6gOAgcMSNDmjVjFiXIr1ttL/P3QdzuvYVzQHYGHHAOi
+	bXxlYGXzxEx3k9EwJoF7KOITwtriHmOGSjGHFsDNlIsAHngv//mNqCQXbwBceMHjxGJFcRB+iDn
+	+bBPmg5WBfYMiRv2xo2gTdaTf6xqBfCsW9J6AsuPzaZrKvwnT198xMxg=
+X-Google-Smtp-Source: AGHT+IEKbMjpUP7xpxnhzjNY/y4799s3MIuJrwstmv8bH5JSWww9izFxnXI5z72j/11NoPhyMm1NrVodvj03f5xf8Qz+tllyNL4d
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+X-Received: by 2002:a05:6e02:260f:b0:3ce:8693:728e with SMTP id
+ e9e14a558f8ab-3cf743c97e5mr102503965ab.3.1737360864597; Mon, 20 Jan 2025
+ 00:14:24 -0800 (PST)
+Date: Mon, 20 Jan 2025 00:14:24 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <678e05e0.050a0220.303755.0070.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Jan 2025)
+From: syzbot <syzbot+list7e7905dfe65ae535d3b2@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 16 Jan 2025 07:01:40 +0100, Christoph Hellwig wrote:
-> this series fixes two races in buffer refcount handling, that I've
-> so far not actually seen in real life, but only found while reading
-> through the buffer cache code to understand some of the stranger looking
-> locking decisions.
-> 
-> One can cause a buffer about to be freed to be returned from
-> xfs_buf_insert.  I think this one is extremely unlikely to be hit,
-> as it requires the buffer to not be present for the initial lookup,
-> but already being evicted when trying to add the new buffer.  But
-> at least the fix is trivial.
-> 
-> [...]
+Hello xfs maintainers/developers,
 
-Applied to for-next, thanks!
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-[1/2] xfs: check for dead buffers in xfs_buf_find_insert
-      commit: 07eae0fa67ca4bbb199ad85645e0f9dfaef931cd
-[2/2] xfs: fix buffer lookup vs release race
-      commit: ee10f6fcdb961e810d7b16be1285319c15c78ef6
+During the period, 3 new issues were detected and 0 were fixed.
+In total, 18 issues are still open and 25 have already been fixed.
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+Some of the still happening issues:
 
+Ref Crashes Repro Title
+<1> 6194    Yes   possible deadlock in xfs_dquot_detach_buf
+                  https://syzkaller.appspot.com/bug?extid=3126ab3db03db42e7a31
+<2> 865     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
+                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+<3> 177     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<4> 92      Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<5> 10      No    possible deadlock in xfs_dquot_disk_alloc
+                  https://syzkaller.appspot.com/bug?extid=0f440b139d96ada5b0fd
+<6> 6       No    BUG: unable to handle kernel paging request in xfs_destroy_mount_workqueues
+                  https://syzkaller.appspot.com/bug?extid=63340199267472536cf4
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
