@@ -1,76 +1,74 @@
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA17014B945
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 04:37:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C243F1898F2
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 04:37:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737434243; cv=none; b=SxRKpvFXilW82C/4u7jgGjSLlChM1tk/yrD5ib0+7xJ0BEAaveODpIxbaR75qc/7K4veaTcE6V/3qDPtYYoD9behxVZd5Toa5x0Q8bkdZRpY3gmviVGpfND9WfiEwU0yD+P+VnN4bmD3NQblZxuxgEHUFQUUcfIQtnYSqBU3YiE=
+	t=1737434276; cv=none; b=jRRK0tTFWHTzH+L6gDcl/U0OsQ732uXMItj60lTnH1eIZgxSem9QT6Bqkmj9Z7DjRtjqPfDga6naBCuYcE5Z+GQACHPuUUrxUNeIsly0zzmsO9AWHuklW5hb94uzz2MfyjIBvfMoUEXUb/121k3D2+J/p018XGotgASFFK4pTxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737434243; c=relaxed/simple;
-	bh=lmrEYvcnXNDrc5z0lcB4aVXFx1V6FuacUpWd6Jq9B5E=;
+	s=arc-20240116; t=1737434276; c=relaxed/simple;
+	bh=8OlPF81GtW+haeVNBajnVshiiytFy9dhH3EfEcV6ozg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MkXCoqBc1JhjQhbmzahh7VXUchJ+KAZhCqbWc4FG91bO7hkg5tdVCyiyPbDI+rFeYpnAwMI3GHrrqXeRXR5DC1K79rCt2BbwKryRFcWkYXFT2gFIN9ZwaoKMN/dZPvtL3EBLvBCWbmhZeIkc3IAVpM2+J03tbcNvVsjND32OEyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=sJ4Y6AHM; arc=none smtp.client-ip=209.85.216.53
+	 Content-Type:Content-Disposition:In-Reply-To; b=bzqrSr6vbAZCUSYAKW/e0/CBX85BM+8b2L7Gw1uhjgNVW8wEwtK/eQWg1/GnJGCMg18FRR7Gn3Es7/q+1LuMdHmmLT7q2jEgovjMBWJpgGmv6mzHoAo9L/4JvoWDhnwbGS7egohXrTCaJCb8lT70iN5bn0LRQ+Y/1jzIoST1t6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=z/QAckl5; arc=none smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="sJ4Y6AHM"
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2f441791e40so6686814a91.3
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 20:37:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="z/QAckl5"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2166022c5caso81855565ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 20:37:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737434240; x=1738039040; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737434274; x=1738039074; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=mwYJWpSVjfV80PDTAtmAfxMabJ93HYW8usRB8k0r750=;
-        b=sJ4Y6AHM6RzEY7is8JhWVbEXX4sqcf6EooGfo5a2u4mMFIu3oACQo4t7LHTN0APnX9
-         Xb3WXpIbIa/Bv0zwLq/kGMYKPt3VAZBWwTqDBZtJcq14Xfk0N7gHunn/MunctelKCAaL
-         /YiKDv5vdNiUPFgNq3yk/Qirm5a0LENDimbuCxoRkkbxJSg7l4zEFozCk6aUFlKSQ3ju
-         S7EtevDCXG5oKuxjFbSaEk7FiGHQFwcytbgHq7hDmYdheP6Zz+pLAUN8LeRC4Xtc+MnG
-         6FFoVJmKC7vW0SWcPQ3ih+Wyq4ww/tHAa25G2QKmYYvdNoFLrpHhJAaVM1rZLgpRim9I
-         ROQA==
+        bh=9jpi/sxdFX+CtpSIqZXZHd2S6z76106XCibW+Y420Ec=;
+        b=z/QAckl5w9+jSMPXXiopy4RxYHhlbKAP0M1oweyr1LRWjJbs5ud8lJbwVWq8Oehrw7
+         l8GVv3chyFWSdOD0nvQqJeCQhbDtgGuqQV/Rdcfs6H0LXJ0wak84L+Hg+JAwIHUGWFTq
+         lIFfkY+6VuOULajqADK6Tl/b8l6aOrcvVxprTtNPtHvj+KVG0+XiTc5IOFmO1JWZ9+iB
+         geBk20TgtS6/tW3dJ1djgbxSlYi2BIvMg2HQo3k3BvX7N/IEvFI71neaaxxXeDphIHuk
+         ZmO/VqrGwyLMQ4j9UFDp960gSdGm4w3/2702kVqxC3F+z9m3hsB36PXYzmxYwq7e1pAi
+         DOPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737434240; x=1738039040;
+        d=1e100.net; s=20230601; t=1737434274; x=1738039074;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=mwYJWpSVjfV80PDTAtmAfxMabJ93HYW8usRB8k0r750=;
-        b=or5gt4Dk5N8LCLLdJh5hAKvRJEYiKXT2QzICU5BVJHJlq95MMRhM5Py69mfbT2wr9b
-         NnGjeo3txEusC5GygDYHJlo37xcna5LAUh+GjXSyCkdBAlKjYESkta5RltOWF7mrNugQ
-         3uzQmiVHuNXimpjtvgzOjuNhEmF4Mm61gqVLdGBOvfDL8SbvoCwI6cDHGrPUa2vlh+fe
-         AwM5appp22ZlviWv/YXNEgJeh0lfCwckV+ZNRruWLNWe1HWekouQh2FEkOfKGPXy9zIZ
-         9qO/MN/SGA6fpeHmI3RODUvvSrh1u4lMLbe6ZVzYiJCBoe5iU4vm1Gx3QYwS0d7T2xR6
-         IMCA==
-X-Forwarded-Encrypted: i=1; AJvYcCVLAVacpGez5malWIyj87vfQQ8zoLzAYkcQOvz/yvyxUEe34rpU8aXoq2BotBSdQxF0ooWmQYqJFbM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzF+PlltH3akgUyeNuQ4BbfYXXVQn49/bR5xm85Bu1BvKIiLq8s
-	YWg6yc1Q9jIFnEGrIgslMJa7cWNXEacDVMQgkbbiD9T42+ApCH0XBPqGZ/64Dgow9+tC2+AqL+9
-	v
-X-Gm-Gg: ASbGncsLeWHETcdmCYFXcwkkToVAhaf9FNhadmwxb9eHeMvt5vFTwtRnANTTrHB0Iwq
-	odBy301m3V88FgLNp2IJ3VknMBkiLo1iyfN2AMuXdW3+id1pGeWnedk487dOTZVtaN7foc7YC0S
-	zNMRS6XtTNRTQBNZFXNwJ3TBsiltNTAL3+YVYErxkypBgysqK/mwIHQf3hai09TzVw6TqXhVXso
-	Zk9jfRyO4BKZesdqoRPzctRfDcmyJ6pqCq+eSIPO4tbRoxr+JeQNm8sBdn0tNHZM9oD2wQacqPP
-	wrCGr9ek4nRJJTYJzDVWqdwIhqS6YdbMEIToqU4D3gT7Lg==
-X-Google-Smtp-Source: AGHT+IGEFLNaE3nphpOTmY39cPmXRDrsR9aRwGSHT/LY4/55DiyuaKbgqEvON6IQH+NvLZ9VImrJWw==
-X-Received: by 2002:a05:6a00:84f:b0:725:df1a:288 with SMTP id d2e1a72fcca58-72dafaf8ab3mr27252632b3a.24.1737434240001;
-        Mon, 20 Jan 2025 20:37:20 -0800 (PST)
+        bh=9jpi/sxdFX+CtpSIqZXZHd2S6z76106XCibW+Y420Ec=;
+        b=IqNQsMbPO5kA9D276U3piey2xoRnUtsvTo2UMBYWBmlKxfus5e+la23viM1CTx90CT
+         knw/2Wc/+Pm5dZRVbovMcX/ymrwZTc/kHRzV58oyumkMK4Af8PjiDeFdfPEGorgC5YDo
+         Xr93mZZoj1OCEDNznrPkSGU230VlOp3ruIOtBnJc/krw23PNBqTXb7JNn6MYdMh/rRL5
+         S4OFPz5gE+kYu35FxD43FT/8UvrH0F6l3qN0oqWSfChO23EWLdTS/glpu1l/RsRcpg5J
+         cQ9M2NksAlLkH09ry1AKE7nwEXlKUFE0V90+z5Qc2QkfweSJpSf6vcI2o6uV/tdco/tK
+         Stvw==
+X-Forwarded-Encrypted: i=1; AJvYcCWaJbOyaDAHJYjUtaKrE+J7bolp2rwplLGFfQ4ZJPDm8tXe9hoz44E50c/x/wpgQafMwcX34ZS8tfI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YznulHYIjLQ33+P0cSQMyajNVIVfbZXDzmQHSJYnRK6JZB9mtO+
+	UmbcubaWG380shF1DiICXPiSiO5/jbj61FPJew4xih6HJFAVKegXzK6t/qe0Q90=
+X-Gm-Gg: ASbGncv9IZPnCp19sRHaRJYmrAon5XtaRfZFUCcwD4EOyBCYRkk66YVTHsglSCOsrdu
+	o92LeSmP0vgggIjSdO68jFlPKSK5cfpx3xCbh1qDU1Gt3IqY4L/rBn7QK0YYp7CI3q19b5/S1+E
+	8KW5KNwHYSPcUdu9LZYRFgX0qrMDHEx33zr3fruvSdu+QXyio1aeuynzeYw1IlaWOcd4H+LnUKa
+	SmsEzMxQ1IQKaXQjPoBWCSQdHd3cmpJ8r1dUiHabT3DPhBPdr1h1Eh5ZEeN8kY3Gi7fNGEYrEaY
+	nqgYoGFkb8iYUm8K8NRz13fW0yNmu6G9iWs=
+X-Google-Smtp-Source: AGHT+IH5wviTB2AbJq2TCOjP0gSwJ7RSxjLmwHTZl9PD1W4uKJk8p9eNG/m7lvyZtJIoEOj2XuKFzQ==
+X-Received: by 2002:a17:902:ebce:b0:21c:15b3:e3a8 with SMTP id d9443c01a7336-21c355b78d9mr215678675ad.37.1737434274054;
+        Mon, 20 Jan 2025 20:37:54 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72dab816412sm8146299b3a.66.2025.01.20.20.37.19
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2d3d7d98sm68938805ad.177.2025.01.20.20.37.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jan 2025 20:37:19 -0800 (PST)
+        Mon, 20 Jan 2025 20:37:53 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1ta60r-00000008Wmt-07Ow;
-	Tue, 21 Jan 2025 15:37:17 +1100
-Date: Tue, 21 Jan 2025 15:37:17 +1100
+	id 1ta61P-00000008Wn7-29TX;
+	Tue, 21 Jan 2025 15:37:51 +1100
+Date: Tue, 21 Jan 2025 15:37:51 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/23] common/xfs: find loop devices for non-blockdevs
- passed to _prepare_for_eio_shutdown
-Message-ID: <Z48kffpLwUr1xMmT@dread.disaster.area>
+Subject: Re: [PATCH 12/23] preamble: fix missing _kill_fsstress
+Message-ID: <Z48knyv7dpNUsELU@dread.disaster.area>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
- <173706974243.1927324.9105721327110864014.stgit@frogsfrogsfrogs>
+ <173706974258.1927324.7737993478703584623.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,76 +77,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173706974243.1927324.9105721327110864014.stgit@frogsfrogsfrogs>
+In-Reply-To: <173706974258.1927324.7737993478703584623.stgit@frogsfrogsfrogs>
 
-On Thu, Jan 16, 2025 at 03:28:02PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 16, 2025 at 03:28:18PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> xfs/336 does this somewhat sketchy thing where it mdrestores into a
-> regular file, and then does this to validate the restored metadata:
+> Commit 8973af00ec212f added a _kill_fsstress to the standard _cleanup
+> function.  However, if something breaks during test program
+> initialization before it gets to sourcing common/rc, then you get
+> failures that look like this:
 > 
-> SCRATCH_DEV=$TEST_DIR/image _scratch_mount
-
-That's a canonical example of what is called "stepping on a
-landmine".
-
-We validate that the SCRATCH_DEV is a block device at the start of
-check and each section it reads and runs (via common/config), and
-then make the assumption in all the infrastructure that SCRATCH_DEV
-always points to a valid block device.
-
-Now we have one new test that overwrites SCRATCH_DEV temporarily
-with a file and so we have to add checks all through the
-infrastructure to handle this one whacky test?
-
-> Unfortunately, commit 1a49022fab9b4d causes the following regression:
+>  --- /tmp/fstests/tests/generic/556.out  2024-09-25 12:09:52.938797554 -0700
+>  +++ /var/tmp/fstests/generic/556.out.bad        2025-01-04 22:34:01.268327003 -0800
+>  @@ -1,16 +1,3 @@
+>   QA output created by 556
+>  -SCRATCH_MNT/basic Casefold
+>  -SCRATCH_MNT/basic
+>  -SCRATCH_MNT/casefold_flag_removal Casefold
+>  -SCRATCH_MNT/casefold_flag_removal Casefold
+>  -SCRATCH_MNT/flag_inheritance/d1/d2/d3 Casefold
+>  -SCRATCH_MNT/symlink/ind1/TARGET
+>  -mv: 'SCRATCH_MNT/rename/rename' and 'SCRATCH_MNT/rename/RENAME' are the same file
+>  -# file: SCRATCH_MNT/xattrs/x
+>  -user.foo="bar"
+>  -
+>  -# file: SCRATCH_MNT/xattrs/x/f1
+>  -user.foo="bar"
+>  -
+>  -touch: 'SCRATCH_MNT/strict/corac'$'\314\247\303': Invalid argument
+>  -touch: 'SCRATCH_MNT/strict/cora'$'\303\247\303': Invalid argument
+>  +./tests/generic/556: 108: common/config: Syntax error: "&" unexpected
+>  +./tests/generic/556: 10: _kill_fsstress: not found
 > 
->  --- /tmp/fstests/tests/xfs/336.out      2024-11-12 16:17:36.733447713 -0800
->  +++ /var/tmp/fstests/xfs/336.out.bad    2025-01-04 19:10:39.861871114 -0800
->  @@ -5,4 +5,5 @@ Create big file
->   Explode the rtrmapbt
->   Create metadump file
->   Restore metadump
->  -Check restored fs
->  +Usage: _set_fs_sysfs_attr <mounted_device> <attr> <content>
->  +(see /var/tmp/fstests/xfs/336.full for details)
+> It's that last line that's unnecessary.  Fix this by checking for the
+> presence of a _kill_fsstress before invoking it.
 > 
-> This is due to the fact that SCRATCH_DEV is temporarily reassigned to
-> the regular file.  That path is passed straight through _scratch_mount
-> to _xfs_prepare_for_eio_shutdown, but that helper _fails because the
-> "dev" argument isn't actually a path to a block device.
+> Cc: <fstests@vger.kernel.org> # v2024.12.08
+> Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  common/preamble |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/common/preamble b/common/preamble
+> index 78e45d522f482c..0c9ee2e0377dd5 100644
+> --- a/common/preamble
+> +++ b/common/preamble
+> @@ -7,7 +7,7 @@
+>  # Standard cleanup function.  Individual tests can override this.
+>  _cleanup()
+>  {
+> -	_kill_fsstress
+> +	command -v _kill_fsstress &>/dev/null && _kill_fsstress
+>  	cd /
+>  	rm -r -f $tmp.*
+>  }
 
-_scratch_mount assumes that SCRATCH_DEV points to a valid block
-device. xfs/336 is the problem here, not the code that assumes
-SCRATCH_DEV points to a block device....
+Looks fine.
 
-Why are these hacks needed? Why can't _xfs_verify_metadumps()
-loopdev usage be extended to handle the new rt rmap code that this
-test is supposed to be exercising? 
-
-> Fix this by detecting non-bdevs and finding (we hope) the loop device
-> that was created to handle the mount. 
-
-What loop device? xfs/336 doesn't use loop devices at all.
-
-Oh, this is assuming that mount will silently do a loopback mount
-when passed a file rather than a block device. IOWs, it's relying on
-some third party to do the loop device creation and hence allow it
-to be mounted.
-
-IOWs, this change is addressing a landmine by adding another
-landmine.
-
-I really think that xfs/336 needs to be fixed - one off test hacks
-like this, while they may work, only make modifying and maintaining
-the fstests infrastructure that much harder....
-
-> While we're at it, have the
-> helper return the exit code from mount, not _prepare_for_eio_shutdown.
-
-That should be a separate patch.
-
--Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
