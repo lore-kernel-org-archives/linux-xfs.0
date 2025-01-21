@@ -1,74 +1,75 @@
 Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6D091741D2
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 03:07:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642F94689
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 03:12:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737428868; cv=none; b=QSrgEg9YPtKYQAXZzAKMKPOmOofuBeqQEZKCGEyK3DA5drFjN6axPsn5IZrTojV1WLOR107p/+n4fytN/03Ae2xRPt4sWOpE1YelxSUwnJFzjh1KVXUdUontRRM2Ot8Ru5tQzaQtyQRfi1suQWHoxb+mE0fSYmCNv6Kmq9JgT9k=
+	t=1737429130; cv=none; b=faPQqj6CquzCP9LnIukHsOeAIE88+ABNTlWyxctqbdfViMWULWNVO/asLAQMRO/gRsPerNoMkwNryjc7zPrcFw7jy9KZhY8XaFd62I6MSap/rExf/Q0JxGsa6wIKXF2WLGnmfmVna7ahYO1OQSIsRWYWCOH8SUlIUvzBmh7ar+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737428868; c=relaxed/simple;
-	bh=IjlDQfxtiQVJshX4wXvuAvrMx77lhm95qcMClmjBiDY=;
+	s=arc-20240116; t=1737429130; c=relaxed/simple;
+	bh=jdBB3WcVAlLDR104nU0eZfrdYAP0wQ3R+T5Q0viMPx8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XnGTFCNa0BBDokXTCiKve7dNmrfbB2I7XOW7b/EtRpvFV4IZQWvWN7+BTZhyClJZCiZGxl0xHD7QP+1u/4wpTPkx5VrZXIiQoijYF+f07XIZ/Ow4c3tP5UmHixuPsuq10Ih0tqXv+Mj9N4KsLqhBgVTCZUQvj+T8smaQg+fLMjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=I9DO33pc; arc=none smtp.client-ip=209.85.216.53
+	 Content-Type:Content-Disposition:In-Reply-To; b=J1JB7wxPYYElc9bNRhanL+MqPIdgT879vTyEEMlAwAin2s+FtMTO9DMIiiUhX0zRtGFM9CLCZ96XBevq9tF2JeBfppxxegIuDVryEN+/ray8T0DGux5MVfAC4V1xHumUtWWVdLI5jpsfpLAQWnj3GypAOgmcrjl0O1rA3z0oIfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=SZaWHE6H; arc=none smtp.client-ip=209.85.216.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="I9DO33pc"
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2f78a4ca5deso4311111a91.0
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 19:07:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="SZaWHE6H"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2f13acbe29bso9427456a91.1
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 19:12:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737428866; x=1738033666; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737429128; x=1738033928; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hLH9RAv+PPTcoZMSX37ngbTEd5kOaW60Tl1D7RHZ+aA=;
-        b=I9DO33pc9ECuhDXYFOzFPBF3xIon4rCLh5I7FXHEQK0Ufha2sSTqNxHUebT9URvWJP
-         CUJuEBisUozrIsfhpnXMgMW7U8qhYZCK8ZVipEowdA+ENQKOhNfloid1wHifgrehae3w
-         qo6ARSl8eMKB+y5nR/nOC/hVBBfff85MtgPo8zDGQ8fR2kCAbAFWc/wQAOYNf3ggo5iX
-         TBV0h4iB3MK54YVXwtrfPLvM+bErhwYIip6gT/xY3TT4/kLgD7mRi6DJCNB5vskqQlId
-         o0QNaySG+R/Kk9buKBcExnmGUmUWTcpY3BobNMkvTsleP3GlsGzUvPU18PZFFnyjbZ+b
-         JZoQ==
+        bh=2yfEyLgrQXxbc3ohBQkJp6FXL5SmdHTuhNk/dbJkOBA=;
+        b=SZaWHE6HIFRCBq+m7fGj9yH+XVvRevJk2B/pq/VSLIVWsUzzr/T2gfY9Ck8nsS6iPJ
+         WFPKJu+GZsowqrWCn8kS8xzpa9o8IaD92ER46kQYnHNyd3W/J3R+7nzc9iwPGumib9Fc
+         FM4WyCNh/oRCAiXALTFR/jZRk7rf18E9uNFFf35tcF/Q06AOV5a6xqIXkOZqfBVhHt1j
+         UXfhZneCElshanZ7DvPSe9xk6uY0TjiXWQjHvlamBb2RdttwN7wfvYt9hItxHszlWQZ7
+         UtOi2vIgc394rQLvbh+s7Cxp52uzjL39NkLO0BXduMdS04VlN18HTOHyPHbfIU+7JD4t
+         ApBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737428866; x=1738033666;
+        d=1e100.net; s=20230601; t=1737429128; x=1738033928;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hLH9RAv+PPTcoZMSX37ngbTEd5kOaW60Tl1D7RHZ+aA=;
-        b=H4oMVlQB9/EtEgh8THs9sbFc4e0WrLoT2KsyXlej6WlfzxBq1A/fJMm44oKexmhLMB
-         /hQ8RKzvyMELI6I0ilaa1Yu9fXYUQ6PaaVtoUJch7MsLOR7UhKOvHYXVwQoUcGhKh7yh
-         pUqQ6Hyx5XCDVqkGxptlIO/FxpwH0Dh4cPB9gZNprHlvNFPrIXi9Zt4LlMABIMlSwKLp
-         gmU+0xUNNcKRkqacGFGRzypk/YWzZFTWCcEGQn5jACfffF1cDmbF3dcE/tbHGeKgqgxR
-         L0DlpibSdJFOnXani8ms0dQIgWJzxUJsZFZx7q4yE0CQ98PZezHioa7cFTKhYjK/yKCY
-         0qIQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWOKzyIMJF6OF9zsC33LbIp0//uzvKioNIq39KrhIpTVloL8PNCWnjeOQTt16mFwQJe7FwEhHPpru0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwDOnQK1QxhMwKTKeJq82ieEg4+FF1i6wIXsv9qQ7XY8D2T0txz
-	V08fwf6fNKve3c6OXj4BdS6LVrKOd2KAggeQwUQRFl+TZyNBRAIiOICRKjqPPtA=
-X-Gm-Gg: ASbGncs+cmcK/cZXd7ooOzgVciRlSRVNmVp0rNtXpobbcFS/UwW8GKYDZ99MCS70OQm
-	H5M9ibomIX0XOOX27YQ2IG6DxB+zflbzjymuA9r6ZYYN0DipWdPogcAozKcimGIO1X9W/1GhcMV
-	aP6ClQ5w9re7Df74d3aZtv8QQ2vE/hDhbxgZqc3s2g75t4Vxgi4ZZQ9rUW+QbXIy6L/O8CETy8R
-	L8QMwuyPKDkIK0MN8qIQm/RdS0zi9L2B+gma5/vA67SEAoYGel+tdQfDpEhXvrjp0b2NjYew+N1
-	BjNitwUJeKijFzlR7jqmTVSJSMEUvL3AH+s=
-X-Google-Smtp-Source: AGHT+IF13jNl6vhCyls2i9XtFI/8eagSd5sBdsn2VMvWVDLROf7o4cxLGGgXEyX6kzF2zni+4/WbgQ==
-X-Received: by 2002:a17:90b:3a08:b0:2ee:dcf6:1c77 with SMTP id 98e67ed59e1d1-2f782c9cb1emr24150522a91.16.1737428865964;
-        Mon, 20 Jan 2025 19:07:45 -0800 (PST)
+        bh=2yfEyLgrQXxbc3ohBQkJp6FXL5SmdHTuhNk/dbJkOBA=;
+        b=ByacqW4nw2Pp5IAbUBmDHd9n+hjENq3udAELu4p4hV6eAGrLY4aZPdQoeo/BCFUdwB
+         HM7pOEMpw7qQ7Rd342dqhugGwDG1jNLw0U2ya4PRRCeP2j5Tiozhm8iyMkv0Hc14RzXQ
+         NSshiuuRH0dsMsZBAUYh3/AnMJqvZlVMfV1oVukNNRSoWFCx6agKJHBd6vv3r+WSsCwY
+         iRniDUTk70vY7wedGe2f+498NSnZODziMR/jJe/0nylQaJku04YXgFhsCVEIKLr6HnYq
+         AEPvdRD7DYw6ETNwr4l+WFvspnShRmGSPpq5PkCCQBBDwMUNRhsAZsRNTMdhrp6rNIba
+         CWkw==
+X-Forwarded-Encrypted: i=1; AJvYcCWlnlmIGPfqmqzT5cDC/xHWN66mgYJL5Z7xvLFSGzi7VGKEOmt27i3OF6RDRhRfeZAQJux7K/upSnA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxxCTWDEXxOI0A4XCikPD5IToSFqzjf+bf7HYNvXQTOvUgSHue0
+	IMNjbQKk7czc123VUxsrKPDSbYMH1IYpODAYrn5FPtRvjluUPiYf+0NjrrFw5P8=
+X-Gm-Gg: ASbGncsE0g9Lkasi5jk3rZGuYf0kdaKXLwdrNBKUJ9NoGaW36q1WWy14VhjM/B08Z66
+	oQ0lOpjzzpAAd/U4DI7nhrAyNQ1mKKIK9kownsanP24rbkTCgMPk1G/WaARyamzBxyiwdWu7Ru2
+	iT3KSs64iDAo4zpisIfeQVizqrnmQEPloWB1t5AfWjhgWEHLWgtbjPmaNjvkf07zkHd+4A/iqJb
+	fxXG1uBnIjr8SnRzqyGe1zGp9NGIxz1xvZf0UXjjpweYmEVlHUvFibg5GpteY5mUG3pLWJA5MEt
+	WVhq4VjB7Pc62t/A9/TN8WjSbqiuuduvkL8=
+X-Google-Smtp-Source: AGHT+IHhDHA/SNMmcNQAqXF/msD8RfM1bIYsgz6TlE2GwXTSan708AdG1E2mDRK7LyN6NVGe3rUYvA==
+X-Received: by 2002:a05:6a00:3a09:b0:725:41c4:dbc7 with SMTP id d2e1a72fcca58-72db1b605e4mr25046126b3a.4.1737429128586;
+        Mon, 20 Jan 2025 19:12:08 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2f7762acd92sm8448579a91.44.2025.01.20.19.07.45
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72dab9c8e37sm7827143b3a.119.2025.01.20.19.12.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jan 2025 19:07:45 -0800 (PST)
+        Mon, 20 Jan 2025 19:12:08 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1ta4cB-00000008VAN-1IhW;
-	Tue, 21 Jan 2025 14:07:43 +1100
-Date: Tue, 21 Jan 2025 14:07:43 +1100
+	id 1ta4gP-00000008VDT-3NyC;
+	Tue, 21 Jan 2025 14:12:05 +1100
+Date: Tue, 21 Jan 2025 14:12:05 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/23] metadump: fix cleanup for v1 metadump testing
-Message-ID: <Z48Pf_6AvrXIzTyM@dread.disaster.area>
+Subject: Re: [PATCH 04/23] generic/482: _run_fsstress needs the test
+ filesystem
+Message-ID: <Z48QhXVLqwCO0KIQ@dread.disaster.area>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
- <173706974122.1927324.15053204612789959097.stgit@frogsfrogsfrogs>
+ <173706974137.1927324.11572571998972107262.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,28 +78,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173706974122.1927324.15053204612789959097.stgit@frogsfrogsfrogs>
+In-Reply-To: <173706974137.1927324.11572571998972107262.stgit@frogsfrogsfrogs>
 
-On Thu, Jan 16, 2025 at 03:25:57PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 16, 2025 at 03:26:13PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> In commit ce79de11337e38, the metadump v2 tests were updated to leave
-> the names of loop devices in some global variables so that the cleanup
-> method can find them and remove the loop devices.  Inexplicably, the
-> metadump v1 test function was not upgraded.  Do so now.
+> The test filesystem is now a hard dependency of _run_fsstress because
+> the latter copies the fsstress binary to a different name on the test
+> filesystem:
+> 
+> generic/482       - output mismatch (see /var/tmp/fstests/generic/482.out.bad)
+>     --- tests/generic/482.out   2024-02-28 16:20:24.262888854 -0800
+>     +++ /var/tmp/fstests/generic/482.out.bad    2025-01-03 15:00:43.107625116 -0800
+>     @@ -1,2 +1,3 @@
+>      QA output created by 482
+>     +cp: cannot create regular file '/mnt/482.fsstress': Read-only file system
+>      Silence is golden
+>     ...
+>     (Run 'diff -u /tmp/fstests/tests/generic/482.out /var/tmp/fstests/generic/482.out.bad'  to see the entire diff)
 
-Probably because the xfsprogs version I was using defaulted to v2
-formats and so I didn't notice I hadn't converted the v1 format
-code.
+Ah, because I hadn't added dm-logwrite support to check-parallel
+this test wasn't being run....
 
+However, this patch doesn't need to exist - this dependency is
+removed  later in the series by using the changes to use a unique
+session ID for each test and so the fsstress binary doesn't need to
+be rename. The change in this patch is then reverted....
+
+I'd just drop this patch (and the later revert).
+
+-Dave.
+
+> 
 > Cc: <fstests@vger.kernel.org> # v2024.12.08
-> Fixes: ce79de11337e38 ("fstests: clean up loop device instantiation")
+> Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  common/metadump |   14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>  tests/generic/482 |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> 
+> diff --git a/tests/generic/482 b/tests/generic/482
+> index 8c114ee03058c6..0efc026a160040 100755
+> --- a/tests/generic/482
+> +++ b/tests/generic/482
+> @@ -68,7 +68,6 @@ lowspace=$((1024*1024 / 512))		# 1m low space threshold
+>  
+>  # Use a thin device to provide deterministic discard behavior. Discards are used
+>  # by the log replay tool for fast zeroing to prevent out-of-order replay issues.
+> -_test_unmount
+>  _dmthin_init $devsize $devsize $csize $lowspace
+>  _log_writes_init $DMTHIN_VOL_DEV
+>  _log_writes_mkfs >> $seqres.full 2>&1
+> 
+> 
+> 
 
 -- 
 Dave Chinner
