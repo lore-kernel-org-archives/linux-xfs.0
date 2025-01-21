@@ -1,75 +1,74 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CCB01B808
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 03:12:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14E111B808
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 03:13:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737429163; cv=none; b=o5D3aqeks9RPkSUSfP68SFCNUh/F8BoKBeGAYt3npNxl8jyTjFltFI+TSLf2JtVKiLN5zZtHnuAeG0avs+IlXgcX3qIOxma1aF9ySqfiCFatB023zaWQOkuI2j47MVkFjOoEEcTzdCbN0UTCYOGh60Jmlh7ndbI2OhEkrCDa92M=
+	t=1737429193; cv=none; b=mhBIuizeJ0wViSIuSMLSy14g7zsrAhhu8NC1Em3jbRTB2kUlTDPS8ykt+K4Z1sTdLkqeDQSxjh2gd2DkTViB0CtC2qpvKyAl91meIeuG4S7ATQq0h3bdrxqI4UjqhYpU2kxcRn1ZDbTv5YYFimIr48X9iKu3oqNOzJX9SO5l6lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737429163; c=relaxed/simple;
-	bh=tvpEwhsEdzNbeXkgEKkfvIfOZAl8IuNqZBVhewwKTr0=;
+	s=arc-20240116; t=1737429193; c=relaxed/simple;
+	bh=Jt1qrsYnrFKo3qyOZSGS86VLMEbrpWC2Z7gbEPW5JuU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uShZrQBVBYRgCrst/nE32y1cK5QL0/7LUT7SwpMvR3AvVUtk8Hvor5ontUtzZw2ifXHlG1oFYYhAWYCNbIm+AP8v+YVgLQhcPyByw8YvvhBtGfv/5NNcXc61uY1C8hvLBLUs6N6KIKSpql1RWbKhVGpsJOGuZ7R6oPkzBFbVCmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=u9CaEkrL; arc=none smtp.client-ip=209.85.214.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=OprGHX8VuiEpN1wiBYZaFDc09sZ+DkeYE/Gpl2EgTa8KaT6qsUA2SoNFYUfum9XM3qO4ehzwm7AKzPvN65l6GI9oOWXSZFEoIYaIR9Z6TLf7lpKq9spSUQcK9JaVY/4wgXwQhjdLGzDhhYhxJTvzl1DBSdQ/6BjoXsltVh2WZzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=LLjqCow5; arc=none smtp.client-ip=209.85.216.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="u9CaEkrL"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-21680814d42so83253765ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 19:12:42 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="LLjqCow5"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2ee9a780de4so6496943a91.3
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 19:13:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737429162; x=1738033962; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737429191; x=1738033991; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7+vkBMDJ3nJL+cOp3+IPRsJr5TcdIL0qyzrFk3x1JIc=;
-        b=u9CaEkrLBIeXtLdKR+g2JjyKQAuC7GBUMSa9A+80F9efGzgS/9sWxvvnsH/9HS6M4L
-         hbHVbRttQHS4zQL604x+4R15ethHCC/GlIcFIKPxhusWx0vqnp+csIsR2TObrBllSHCW
-         nmlw3V6uqaNkhEyHlE/YPQfqK4MVG1dzehvcnTBUn7t2d0qhmYiwM3opbLGOMmX7yMAD
-         KVyWq1eYPukBxZfBtMZ7mcPyZPCXyqYpNeC/bPPXso+0j6s3ReD6DwQfde7NjNm3RfuE
-         SLWKLFFUrvgi37vXgURBtxrsIkXZVnMhjXLnrdLIKG5dfVe+wFczHYrEIdkSMGIuQutC
-         jpPw==
+        bh=D3eFsJv1yMkw5wZx9VHrhoVD7BDSdw8GpTeTu+vdZs8=;
+        b=LLjqCow5yA8kQt5uDzRVm2bb2paaYa8H3CWgWP1Bmh9hJTTT/5TTxDcRuLk8u63Xrq
+         vLRAKNuZpJuYsDHI4IgIj/Gx8l1jOHkNzVh9ua00R4SHjS22WadJOeJUBvikSV0c7hJL
+         K+mc9q38pnWBxsZK5RGovf1zc0UnTZTCXRRCm6/0hHjzW0LLJs6AeuqCWSTAFYifufvt
+         MKZ9Wg/oq6Y5sGoTPYe4fZLncQFpc1zpr3OMsC0KdzxVksj5lA6e2Jqn3MdBz+aVMMRY
+         Dvvl5P0U1CQjpZuOKUqT/77mIBG4rjeQrJ2PWHL+U5K8XeS5WrhA+1vt0R8Egophi2lQ
+         hvaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737429162; x=1738033962;
+        d=1e100.net; s=20230601; t=1737429191; x=1738033991;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7+vkBMDJ3nJL+cOp3+IPRsJr5TcdIL0qyzrFk3x1JIc=;
-        b=g40LWZWEN57WIt1Zv/qYoJBAVsrgbrx8SpRoV6stzFU9JSzihhnrou/6PRnOYL5cs5
-         +m6vvOElfYwdX7y6UgiY8GUgiaOfYc8owD/t6Xsz3FFd0o5NkImE0LA/63ZCfNtsbgNW
-         6uY7dGtSS+73sx9woy0PO01uCnfXscFbu4mnsl4SDi8tAYT181nSYZYLrggjA5e4buDc
-         pn3QmWCU7mpoxZn80nSgwe2Gdio7LD12SEF8jeCm4Kqpxraxqi2C0VU//H8BJDxzlwlG
-         awfxTNyUROmSkkTOmd4QXEaaTs7Q6WYnn3sELHFIqDSoQb8OwMlLBx31JTjDF59CO2FG
-         B/tw==
-X-Forwarded-Encrypted: i=1; AJvYcCV+DI2QWJawjWHdlQCM1kM+YW92fN8Qhtjyo9VxsXH1LuKfMFNorWjCiM0Q5TqW24LZZiTDuLwSQx8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yysh1fyV8xqDnu1l+5oNuvZBGhSIJiAZ5CGHoxjsbRSDaLOJUah
-	jOT1iMiTpxSkl/JsQYC78ajbMkRe8lrV2rTSuNX8Wx0EIp0qfvnzU3D2s2G55vk=
-X-Gm-Gg: ASbGncvLGY03ovn7Q0mG1HLc98tsNh2eSsYKW71we49MdU96q+SYxMwOxBYlsU4Ucpw
-	I/QvQy8I+hHbyHt+bicG9eJRI5BvVO0hLaxXWTpe5PkWmo62TM4yyjhKpltGYxnN13hQqtc3bsD
-	9V5CcZYAAyPj59Bxf6vM07EnRXzPb3w1SbBsHN47OxP/aoGEJvkfCnb+gBM0ZfpS1rYSraHqRSO
-	Aj+NFW8iWs7r9JdBTIBLYoou5dHvIF8yyeF5tTfH66fALkAoGdycoI6LoESciu4gkBvGaZQ5c1P
-	8sQ6KysiMPCSaCeRFVSOEqPCCwgleyEm6yQ=
-X-Google-Smtp-Source: AGHT+IGVclWoHV11LetKGs3oF5rs9605WVQmttif0csWu59P5kHjS5yglmJljQVCeEYkOlMWmJOgQw==
-X-Received: by 2002:a17:902:e743:b0:215:a039:738 with SMTP id d9443c01a7336-21c352de481mr256554995ad.5.1737429161635;
-        Mon, 20 Jan 2025 19:12:41 -0800 (PST)
+        bh=D3eFsJv1yMkw5wZx9VHrhoVD7BDSdw8GpTeTu+vdZs8=;
+        b=gQodLV6S1En4USlNikuUlHpD4NuL+J/BLk4jcnPpTGWF8xChiExerVRGNwCVliLYHS
+         Guj1Vq3gkQzgPj03czKil08O1G1Ee0oR6abdloCYI0fKvWWwmt9LduzyumhJ/r1jaSf1
+         9G9EQY3bWzQpSl+S0NT03S+b05LBh3GTBBzo+Wv+YlY47whlT+OjOduTQX5YjPb8s5Dm
+         QdDNBjIXb2pGPwVjiGD21mimSqDWt/wYWFO/WuoJ7XHfOsCucKPAhGuHpQ2+uCHCOIiL
+         i5Y7fk+Va5rBORxdCl/oNgu7BbJPyVbPnkeXPoA6qRURapsYyaeNnFk6dm2RRmshPT4v
+         kXsQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWqCdBidP1QLX4tB7TzH9rWav4fvY6cP2w1G11/i4PcYosbhsJq++z15j7KJOs5reG0YqHCYYO3hck=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwFs1FehTicaZ5Wdu6UU7EGUQrs+tWnzIu5ryQbO1LjUZrCbI/a
+	smK01MKr77S1kzSbynh2j58cUlJf+eNaFcjh+Wf9AHNcQNW87g/gcjXHBzG2RN8=
+X-Gm-Gg: ASbGncubNlqvW2zob76a80Hx4qqiSVKxBguuBSzj0g8vwp5DQQu91ys9OEp2WwFMiOG
+	vGv3LJaxvbcjE2joDadvPznTDUBdiOp1Yt1WYKIwTw3o7z0S3NNnXE5aORqwDbaWiKtoZ80v6+s
+	PZ5EJAraPZER5jiUAmKfZ2F3ZMafqnPxFFW64OVyrwO8rQ3qE7xMYvz0qmYkYF19CVfb0RNTirv
+	hk9MTRdNp7S23wmD69mJOabhXTgqEmTq5pAR6SrxgSeDJrye8gOWczrY2etgV2lNSmMDoak+ZB7
+	qSsZrwpO8/vtFSf9UR4OtCFubzO56koaLs4=
+X-Google-Smtp-Source: AGHT+IEjXFXUByp/QJRgGNSGPJeQQAFNhs5sIg1sfosk5hFjcKA8V55Q+99B3xbE9EWONISlrFViKA==
+X-Received: by 2002:a05:6a00:4089:b0:726:41e:b313 with SMTP id d2e1a72fcca58-72dafa68ecemr21946793b3a.16.1737429191285;
+        Mon, 20 Jan 2025 19:13:11 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2d3d989fsm68028975ad.181.2025.01.20.19.12.41
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72daba48d61sm7924739b3a.126.2025.01.20.19.13.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jan 2025 19:12:41 -0800 (PST)
+        Mon, 20 Jan 2025 19:13:10 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1ta4gw-00000008VDg-2pKB;
-	Tue, 21 Jan 2025 14:12:38 +1100
-Date: Tue, 21 Jan 2025 14:12:38 +1100
+	id 1ta4hQ-00000008VEL-1J2h;
+	Tue, 21 Jan 2025 14:13:08 +1100
+Date: Tue, 21 Jan 2025 14:13:08 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/23] generic/019: don't fail if fio crashes while
- shutting down
-Message-ID: <Z48QpvLQCgbu6-pr@dread.disaster.area>
+Subject: Re: [PATCH 06/23] fuzzy: do not set _FSSTRESS_PID when exercising fsx
+Message-ID: <Z48QxDWM2VTzeGyw@dread.disaster.area>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
- <173706974152.1927324.14222114120134004551.stgit@frogsfrogsfrogs>
+ <173706974167.1927324.3074850676975765263.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,54 +77,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173706974152.1927324.14222114120134004551.stgit@frogsfrogsfrogs>
+In-Reply-To: <173706974167.1927324.3074850676975765263.stgit@frogsfrogsfrogs>
 
-On Thu, Jan 16, 2025 at 03:26:28PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 16, 2025 at 03:26:44PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> My system (Debian 12) has fio 3.33.  Once in a while, fio crashes while
-> shutting down after it receives a SIGBUS on account of the filesystem
-> going down.  This causes the test to fail with:
+> If we're not running fsstress as the scrub exerciser, don't set
+> _FSSTRESS_PID because the _kill_fsstress call in the cleanup function
+> will think that it has to wait for a nonexistant fsstress process.
+> This fixes the problem of xfs/565 runtime increasing from 30s to 800s
+> because it tries to kill a nonexistent "565.fsstress" process and then
+> waits for the fsx loop control process, which hasn't been sent any
+> signals.
 > 
-> generic/019       - output mismatch (see /var/tmp/fstests/generic/019.out.bad)
->     --- tests/generic/019.out   2024-02-28 16:20:24.130889521 -0800
->     +++ /var/tmp/fstests/generic/019.out.bad    2025-01-03 15:00:35.903564431 -0800
->     @@ -5,5 +5,6 @@
+> Cc: <fstests@vger.kernel.org> # v2024.12.08
+> Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  common/fuzzy |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 > 
->      Start fio..
->      Force SCRATCH_DEV device failure
->     +/tmp/fstests/tests/generic/019: line 112: 90841 Segmentation fault      $FIO_PROG $fio_config >> $seqres.full 2>&1
->      Make SCRATCH_DEV device operable again
->      Disallow global fail_make_request feature
->     ...
->     (Run 'diff -u /tmp/fstests/tests/generic/019.out /var/tmp/fstests/generic/019.out.bad'  to see the entire diff)
 > 
-> because the wait command will dutifully report fatal signals that kill
-> the fio process.  Unfortunately, a core dump shows that we blew up in
-> some library's exit handler somewhere:
-> 
-> (gdb) where
-> #0  unlink_chunk (p=p@entry=0x55b31cb9a430, av=0x7f8b4475ec60 <main_arena>) at ./malloc/malloc.c:1628
-> #1  0x00007f8b446222ff in _int_free (av=0x7f8b4475ec60 <main_arena>, p=0x55b31cb9a430, have_lock=<optimized out>, have_lock@entry=0) at ./malloc/malloc.c:4603
-> #2  0x00007f8b44624f1f in __GI___libc_free (mem=<optimized out>) at ./malloc/malloc.c:3385
-> #3  0x00007f8b3a71cf0e in ?? () from /lib/x86_64-linux-gnu/libtasn1.so.6
-> #4  0x00007f8b4426447c in ?? () from /lib/x86_64-linux-gnu/libgnutls.so.30
-> #5  0x00007f8b4542212a in _dl_call_fini (closure_map=closure_map@entry=0x7f8b44465620) at ./elf/dl-call_fini.c:43
-> #6  0x00007f8b4542581e in _dl_fini () at ./elf/dl-fini.c:114
-> #7  0x00007f8b445ca55d in __run_exit_handlers (status=0, listp=0x7f8b4475e820 <__exit_funcs>, run_list_atexit=run_list_atexit@entry=true, run_dtors=run_dtors@entry=true)
->     at ./stdlib/exit.c:116
-> #8  0x00007f8b445ca69a in __GI_exit (status=<optimized out>) at ./stdlib/exit.c:146
-> #9  0x00007f8b445b3251 in __libc_start_call_main (main=main@entry=0x55b319278e10 <main>, argc=argc@entry=2, argv=argv@entry=0x7ffec6f8b468) at ../sysdeps/nptl/libc_start_call_main.h:74
-> #10 0x00007f8b445b3305 in __libc_start_main_impl (main=0x55b319278e10 <main>, argc=2, argv=0x7ffec6f8b468, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>,
->     stack_end=0x7ffec6f8b458) at ../csu/libc-start.c:360
-> #11 0x000055b319278ed1 in _start ()
-> 
-> This isn't a filesystem failure, so mask this by shovelling the output
-> to seqres.full.
+> diff --git a/common/fuzzy b/common/fuzzy
+> index 534e91dedbbb43..0a2d91542b561e 100644
+> --- a/common/fuzzy
+> +++ b/common/fuzzy
+> @@ -1392,7 +1392,11 @@ _scratch_xfs_stress_scrub() {
+>  
+>  	"__stress_scrub_${exerciser}_loop" "$end" "$runningfile" \
+>  			"$remount_period" "$stress_tgt" &
+> -	_FSSTRESS_PID=$!
+> +	# The loop is a background process, so _FSSTRESS_PID is set in that
+> +	# child.  Unfortunately, this process doesn't know about it.  Therefore
+> +	# we need to set _FSSTRESS_PID ourselves so that cleanup tries to kill
+> +	# fsstress.
+> +	test "${exerciser}" = "fsstress" && _FSSTRESS_PID=$!
 
-looks fine.
+Yup, looks fine.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
