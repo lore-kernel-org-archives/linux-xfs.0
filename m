@@ -1,74 +1,74 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBF3C185955
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 04:57:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5BCD14900F
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 05:03:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737435449; cv=none; b=YGwrFTGAteD3qYuImxUwiOtnTozK2zVauVcdARsjPp8ioTWN+ofqfyKPfVcIZXe8KWdtficfyGLqwUybQgIyPYlSUmGY3heOyKAvAX4ojZxDo/QM6Wg7H6lUsKs6zGpj1g01aTviD01xp0WMVoGthlCkM3RLrdaTbp21q3rUYeo=
+	t=1737435809; cv=none; b=UbW6jajq8zY2/fC3A6GB0tOh5g4fAgJsQZIsLtwaxikMnuURPOgItaLzDqrzzWHTlShFYafa79FG1/jVWUC8nAurUibU/A/ao9Dm22I++q2OynRv0qpxyYf/p6DRFINLrueXRB4/1bXRiI2XaXHCEz51lKv8xea5njlr2J0Rf00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737435449; c=relaxed/simple;
-	bh=LzvpGy2HNylNqYLESYhqcy8f4XRjmR0j3QvxMkvSXsY=;
+	s=arc-20240116; t=1737435809; c=relaxed/simple;
+	bh=ZMcUWLe2vhiNFzMxYYrp7vY0tQ7cIeyVVzNL8Yl8xLI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sojcyJ8tmp0PWmPI678swMOiv3HKkuv2Mu3Vwiblk+yAF/G9XGGSIaee2A9gEvaxb3oT3BlvrR1ZGw9UgQez3Y++ECuXOeG3GjWf90CpMUnau1rzJboHALQKSZUjtk445SpJFZ0frhRB2ISmOjMUDnS3Dt9Nqt/+cUtGJopxeYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ikATPIqf; arc=none smtp.client-ip=209.85.216.43
+	 Content-Type:Content-Disposition:In-Reply-To; b=m1Y6GfAKoz8qyy32UTCZmhp+8aCNBAK3FwpfSxg2R2ksUuPhLzzZ0kDTEduUy4r6rzGXDdFcoMmT25njwodM6FIvmbi1TNPs1xGmbm0Hit7gySjbaroODgWCCPijz4oQmHjrvsbm5QD8Om+P9OQMmjFLlXRUgrdck0xkByE8O38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=E+k7Q36F; arc=none smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ikATPIqf"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-2ee50ffcf14so9535359a91.0
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 20:57:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="E+k7Q36F"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2ef760a1001so8927519a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Jan 2025 21:03:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737435446; x=1738040246; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737435807; x=1738040607; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=NaRd5BEXgLjUdSaPBhNbMRK8odD+++vFhADndLtd+k0=;
-        b=ikATPIqf/VBJi2jHsAgiT+Sulg37Hna4OCZSsEWE0OIOu92rHGPEmek89nBozSKxgz
-         F89Ezclc2GuT0z9tD5qcdCo95/7OMsyPoF1JT+RUTNDMNrXvUeuc1MRDWxn/YHD+LKP2
-         IG+2fW5KbHDJ5kyEFb5pu5hpV+eM8z0bw+39LjzQi/RkF22JA8Uac/AjSvlcTglGkDsB
-         u1gwqcEbKloVdljCwiBgz79QkVrl3suEW1V2VdkPco6d949cPUBA1VJprY9CrDBVJhG4
-         HhaK5uwDW6+/8XuHzGBqr2FZpedjuUPk2MjYx0NzCOBBaujCKcq8HmGF0FJWms9mnxzO
-         EYMg==
+        bh=vq0/pZFHEMm3bw50HzyaxJ8uHJSIqPuVE2JnMstXwJw=;
+        b=E+k7Q36Fj9X2k8VwCgZr4+aPb+ojEGnFiz1GL9VZ2biJpONlY14QTgwYqbePAOuDnp
+         BDEkXAjYPy7XQg9cbD5Z+d3fso8DIof4VAspCdu3XH4SDd9iEuW2Ky03TE2JIaBzgmRI
+         vXt55s6B7q2/aGKPR4bJVie9szT1ZH1fL3P0xdGTlLVvaHHzhJEky4bEI2PHBX7uoDok
+         +7FsVS6OXP5SmGWTBE2qJUbwZyJgDfXfE4Ek6pGuizb4io0oJG9ABeRHlHzPGLNde3lr
+         2VlOfv/Ie2xjyFa7n0abTdAcN6RyXksKF4cIZKofD5OhZVylNVzsg121atb78yfTKuEL
+         0Zfg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737435446; x=1738040246;
+        d=1e100.net; s=20230601; t=1737435807; x=1738040607;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=NaRd5BEXgLjUdSaPBhNbMRK8odD+++vFhADndLtd+k0=;
-        b=EmURDfNJKlTYQPS7CZ3u2pgn+z7YaWHWHAxveFHJNChrbo46allF86MgFof+h2kfkX
-         LNvI46DKw1TXrhlq972nkClmOwWeNoBr+KSFIzy/IM/FkvgbHOfNQuVfe5wb5xRselsK
-         YHT9Q+UoF8WXVCbeY4IrW7g9pEMlZ+N47UVt23HS1o27U8ZAPgw0BOICqpnWAKLdWbNz
-         Ce3ctIVvkfBIXmnFJqG7UW5jvr1KzPO7/mCimucW/JFXJygWBoHbpheS5DQ1oy+QlvC7
-         UFydJFyojjZBxvtE35q3qXD5uMXRy8PmyxYSn22FHz/kcw7b/n+SMV136Prw0SDHj8Gg
-         i4Bg==
-X-Forwarded-Encrypted: i=1; AJvYcCV5KUeuguTR6bggz5X6yohAnumgZh12KWfMwCs8ttwuQsYQllAUn584NHeCk3WV8iYny2gNS6CePZc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyEQsqZYiZQ5K40BFzMULtGpCpdSn0zJmusHlzMcfiBhg5KJHgt
-	zsEawfDNd7FyAX2tyxx1xdkQyIsthBXbhLCs+h9vkzrbsRrsT8qUyXznNUyn3pM=
-X-Gm-Gg: ASbGncusiZmitpcOVHaXRb2crXg6D3OkzmoCaWMZtGigiUKYuAtmclF68wnSTx/VMUJ
-	IPhE/9naIIs601gppw3CcCSLu9wl+PhNGKSuzRU/NdASzPxXIWoOjXBSJDP/0YI+0n1d21XEWc4
-	DFEsr4co+9ChTydYtdA0vIF2fMzgkSM/dQkCrm/wQEmIPEuRpAtPpNIIWwh74DYj47J+NU/sgl2
-	fJ3zx6pJSY7uUuicAu9Lq9WLg4AcJSVlLO0lV2/NVdRytu29tfMbvO9LXlDU7cBa1fxfISTngcX
-	zb9/NhGuVoiZsDI2ZCtJlcKvUCq1v0OwyeY=
-X-Google-Smtp-Source: AGHT+IHhUqsc5fp8YYPRrWEpYufjZNCM5fX19GmjtVEHcajApdFhV8lx2dEjw5EYrDkpAuYMz/bKFg==
-X-Received: by 2002:a05:6a00:4c87:b0:729:1c0f:b94e with SMTP id d2e1a72fcca58-72db1b6524bmr21997706b3a.6.1737435445976;
-        Mon, 20 Jan 2025 20:57:25 -0800 (PST)
+        bh=vq0/pZFHEMm3bw50HzyaxJ8uHJSIqPuVE2JnMstXwJw=;
+        b=RYjo181sGxFqZi83WP7ZDSP9ZV2/TSyzGSz3UBXLQb8DUpEQfdR5XPKoA0zo+tUTL9
+         ysKvN0ngtuq3PuA0gcGm81wLkXvuwLddE69NU4MigA/OGWxemfFmecIqkLKR6DpZTZAJ
+         NFhaLODsxB2qI+OzK85Dw5wj8+aXoWwxFSYJ2PF+m0BW2oSSwiquNu4ABmKpqJtDUZdF
+         4c9cdN3yDP82hMwgan6KHRo3QHfbmMIVNQ7i9GXuNog6/o0vbd2pQoCYrIpmvjqXSdrE
+         0jBsZqq1XCoc3Z0c7jwY/BCoaaYuIppCw8LJUwf9OuLHM8mwobs33sEynmRqhfQ/V8pk
+         sXEg==
+X-Forwarded-Encrypted: i=1; AJvYcCXJz6oripolqAv/kojCPHetHfN4IIp1LOXK0+CNsex560kNxfHxd1PNPTLmE1POhjTvdN58fT7vLZ8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyib4/hHv6Oi877w1AFjwPg9GBN6PjuzyLCCNroWDZz0fX/5lo8
+	IShnDHhIJcpfpt5gO7zlYwlUiXvShgTcTcZH7ZtSzBOrz8NrC1/JptkH9SirxBg=
+X-Gm-Gg: ASbGncsJwKVH0XSXghLa992IdsvjsER8aBkInZN0YpMbRrVIhcA7/c38j6LuJ1lO4BR
+	mLQMP4nbZcg+f5wxjbshbrZKafoy0JlEER7bxpJzA1OvJD0H5NpeNj67N39K36vcvEB5Cd1v8aV
+	JLX6M6zoCH/xkIU+q5utCo6y0GkARQk4keVSDeUY15GONFVXQkQ2qjWfU7WgVLwTym1u1Ec/ABs
+	RaF3rZYVAiF8TnsfGs+hriZB4EBpQznnzbjxEpeEYw+GujZJ7PbnRmM9xnMy7E0gHGhXdVz48jy
+	sxayCw6nqXk0evl8NkNBpON8gqODR5YniLs=
+X-Google-Smtp-Source: AGHT+IG0/nKAnyugvvljotZMVPOKeoU5aIIa4D0875uQI2s9T8aJYIrHpWjV1MYZ9gjdjP52Jmv6OA==
+X-Received: by 2002:a17:90b:3d45:b0:2ee:c91a:acf7 with SMTP id 98e67ed59e1d1-2f782c4bddfmr22980234a91.4.1737435807021;
+        Mon, 20 Jan 2025 21:03:27 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72dab8155e5sm8098496b3a.54.2025.01.20.20.57.25
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2f77611a162sm8765220a91.2.2025.01.20.21.03.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jan 2025 20:57:25 -0800 (PST)
+        Mon, 20 Jan 2025 21:03:26 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1ta6KJ-00000008XAi-0E4i;
-	Tue, 21 Jan 2025 15:57:23 +1100
-Date: Tue, 21 Jan 2025 15:57:23 +1100
+	id 1ta6Q7-00000008XHo-42md;
+	Tue, 21 Jan 2025 16:03:23 +1100
+Date: Tue, 21 Jan 2025 16:03:23 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/23] generic/650: revert SOAK DURATION changes
-Message-ID: <Z48pM9GEhp9P_VLX@dread.disaster.area>
+Subject: Re: [PATCH 14/23] generic/032: fix pinned mount failure
+Message-ID: <Z48qm4BG6tlp5nCa@dread.disaster.area>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
- <173706974273.1927324.11899201065662863518.stgit@frogsfrogsfrogs>
+ <173706974288.1927324.17585931341351454094.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,45 +77,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173706974273.1927324.11899201065662863518.stgit@frogsfrogsfrogs>
+In-Reply-To: <173706974288.1927324.17585931341351454094.stgit@frogsfrogsfrogs>
 
-On Thu, Jan 16, 2025 at 03:28:33PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 16, 2025 at 03:28:49PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Prior to commit 8973af00ec21, in the absence of an explicit
-> SOAK_DURATION, this test would run 2500 fsstress operations each of ten
-> times through the loop body.  On the author's machines, this kept the
-> runtime to about 30s total.  Oddly, this was changed to 30s per loop
-> body with no specific justification in the middle of an fsstress process
-> management change.
+> generic/032 now periodically fails with:
+> 
+>  --- /tmp/fstests/tests/generic/032.out	2025-01-05 11:42:14.427388698 -0800
+>  +++ /var/tmp/fstests/generic/032.out.bad	2025-01-06 18:20:17.122818195 -0800
+>  @@ -1,5 +1,7 @@
+>   QA output created by 032
+>   100 iterations
+>  -000000 cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  >................<
+>  -*
+>  -100000
+>  +umount: /opt: target is busy.
+>  +mount: /opt: /dev/sda4 already mounted on /opt.
+>  +       dmesg(1) may have more information after failed mount system call.
+>  +cycle mount failed
+>  +(see /var/tmp/fstests/generic/032.full for details)
+> 
+> The root cause of this regression is the _syncloop subshell.  This
+> background process runs _scratch_sync, which is actually an xfs_io
+> process that calls syncfs on the scratch mount.
+> 
+> Unfortunately, while the test kills the _syncloop subshell, it doesn't
+> actually kill the xfs_io process.  If the xfs_io process is in D state
+> running the syncfs, it won't react to the signal, but it will pin the
+> mount.  Then the _scratch_cycle_mount fails because the mount is pinned.
+> 
+> Prior to commit 8973af00ec212f the _syncloop ran sync(1) which avoided
+> pinning the scratch filesystem.
 
-I'm pretty sure that was because when you run g/650 on a machine
-with 64p, the number of ops performed on the filesystem is
-nr_cpus * 2500 * nr_loops.
+How does running sync(1) prevent this? they run the same kernel
+code, so I'm a little confused as to why this is a problem caused
+by using the syncfs() syscall rather than the sync() syscall...
 
-In that case, each loop was taking over 90s to run, so the overall
-runtime was up in the 15-20 minute mark. I wanted to cap the runtime
-of each loop to min(nr_ops, SOAK_DURATION) so that it ran in about 5
-minutes in the worst case i.e. (nr_loops * SOAK_DURATION).
+> Fix this by pgrepping for the xfs_io process and killing and waiting for
+> it if necessary.
 
-I probably misunderstood how -n nr_ops vs --duration=30 interact;
-I expected it to run until either were exhausted, not for duration
-to override nr_ops as implied by this:
+Change looks fine, though.
 
-> On the author's machine, this explodes the runtime from ~30s to 420s.
-> Put things back the way they were.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Yeah, OK, that's exactly waht keep_running() does - duration
-overrides nr_ops.
-
-Ok, so keeping or reverting the change will simply make different
-people unhappy because of the excessive runtime the test has at
-either ends of the CPU count spectrum - what's the best way to go
-about providing the desired min(nr_ops, max loop time) behaviour?
-Do we simply cap the maximum process count to keep the number of ops
-down to something reasonable (e.g. 16), or something else?
-
--Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
