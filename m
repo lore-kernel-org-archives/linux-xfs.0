@@ -1,74 +1,76 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 908E31F5435
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 21:32:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A9F61B87F3
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 22:05:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737495168; cv=none; b=MIezZLVwwsLkZ5Y28sQ+58oKWQ/BubF3TqRW9rV10EdixC+3l05HQ7Na9Ix1na+elJwg0sx62CZBrPsERcZWBN1AWVhCURpmU6mWqA2jhyRoMCrM2iMaUT91oYVazPLq0iBlZm4aTw9n4W7MmvfVQFylTRxpTnpLRbpm05n5JKg=
+	t=1737497124; cv=none; b=UEiktEuI/AQ3vkUiNjwMo5Q+hbLxmN3loGihgdGLiMe9opVLuc/mxzz1drkhyExols665ESCvYJuOJcHsAAKBKxKlVDlWVWvRTG1GmtbgpR4qFg//DrY5Q+O8DeIY75SumS7vp5Y3xUoVXLqNhP9v1fLUOwdGDNzmQ4ZdiuG7tE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737495168; c=relaxed/simple;
-	bh=mZGQJ9qM9wL0AF6hn+07vaoj8R7Cyv/0eyy1hrPErQo=;
+	s=arc-20240116; t=1737497124; c=relaxed/simple;
+	bh=JxkSA1+o9o9ouuhpNx9UTa7SOc8NvrSPsLX/KynJQdY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bgWjM92IbU5pWdO/TYm1YErLLpWEd5c8x5iXp/F0+c3CPh/xBrkuxRlJ6+rY2njuv/qyDnCg5/WcZdca/4LyCceHcyqeJpMqhVgWfmafTHzQSxSVgXsUiFEPttlu9nOen6YclTS598vCLzfelZL4QkM1pNkT40UYs4wkMcV/mWE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xqeSI5y5; arc=none smtp.client-ip=209.85.214.171
+	 Content-Type:Content-Disposition:In-Reply-To; b=IGzXymjFX2fUjCJ01a0M9jtCOUawY1aLeG2HmAgLrZx0xM5/3Pak54atldm1qljkpBvNJuj5DMkEiwDxVOBwNfDw274TQDsI8gGxCub6qjnlU9BqbKBwwaXg/leJK4/1+mUxxTT4Pkxf0gK7nLmv5yo0nDrRVRT7wfale8sYU/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RFCzPo8+; arc=none smtp.client-ip=209.85.216.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xqeSI5y5"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-216426b0865so106152795ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 13:32:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RFCzPo8+"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-2ef6c56032eso8015085a91.2
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 14:05:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737495166; x=1738099966; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737497122; x=1738101922; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2z+VO5hBqe82IWhQkgPhbx9IkjfSZEcveJavbqToXmw=;
-        b=xqeSI5y52hy5Z1JLFHl55tNig1DPoUoTCx57o7UED/Ob47rFKLfDW7rRxk+8SBCvQM
-         KVt4i4y2K31QsCLVMDmMsX0ireQimG9YYjrT/JWVXlu8Ad3klDWG5ipNIw9jas22VvUx
-         6Yszd160KPfLH1MyZU1Or/8NPzlLvsJPrcClliRogeMFIj+0zutPsqyDNeiI9IshIB49
-         uzirfitDycnHPINjvwBoK/LcwMMy4JB5RP4uKtBn+yqDwE4MyIf6n6yjmnpHxs+mD1vB
-         NH+zbQTD7n56YZ5ugtcFz4C1CMAwvnUtEKiUGMiwyUtxrvOwnvjlsdZorNcS+g6mIFpQ
-         /RLA==
+        bh=4e8+Mj3cRgobogPNAclKWWgs48AdKLwKCVXRuVShalY=;
+        b=RFCzPo8+BFs4rCpDEPOR7ZJlmknbkuoM3HIqdyGfL5lnMhhpqI2VtwUk8R66YdcJCc
+         dicOq9TWV19NNO9Eq/JWfs79OImjbyDmr95wIZu6DWKDd2lOI/eLe69pq36B5xtTFKac
+         LY9hdocdWePwLQpcRqAsrkmn91tyk4byQnYypHrx7Z7AH4IwBDkvC9WVK18huS5Hx36K
+         7tZOusUc7WKU2AHUXUq1B7wJb7e0qf+M7d37zYHgxaOQFSaoC2uKYyQXRW3nFCxIpwao
+         RCNBgqsatEud7ChK/ZA8+EnA8sHQ2ItLU7wCJ68/rGwx27igb5e/30jRRbRU21Gs39Lc
+         gv7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737495166; x=1738099966;
+        d=1e100.net; s=20230601; t=1737497122; x=1738101922;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2z+VO5hBqe82IWhQkgPhbx9IkjfSZEcveJavbqToXmw=;
-        b=Z6fFG6ixVOLe19qyuOw+zxpRCNz//Din33tUCZ9UGnCukOAIbqp5M7pneO1o3UJ7Ue
-         Q1h8AWBJiSRpa0hmwoEr2rrzCTW9U33tN3uO/mORI0+IGf65mHkyLdrQtz/9Q4c6C9K6
-         fD1TOBfMsO8/gkcnLas/6sUL2KDMjte4qae8NUMVOlB5a0b0ldlmT01Qe1f+keyjg7Os
-         brZjAtHz9WnhV9LltLDpxOd0nbPWt/vlrMyzYxRiknMSsZGLG7Cd8V01aXS4UCqVOLTA
-         7u+bdVLs2kCC2rCzzdObGlJAJZgDGpPWfW7XxqVgrPYgeSfXhl178pd3hcYB7bV54Xiy
-         NF8A==
-X-Forwarded-Encrypted: i=1; AJvYcCWnYW4FkHZWwBJKRoo8LPsnLm6jFPe24SJpEBKmeAX/MxiO+cld9X6h7gkM2FJZrkC33noMbDbBpy0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzxy+dMYMgZwEnjkawf1GxTlS/pCDPFrTiriENpQj0EN9ID9CRg
-	rGStPSh5DO7QGFrjsXc4EVOXCC5xmF/mYHOXQ5zmwly5vrAXj3n7ilIJKAjz9N8=
-X-Gm-Gg: ASbGncsZFSb6K8PX2/kPWz9vQcKEiVEzSn5Rr0n7dUBDuJA7FSk9YFer9H+SxSKUWrk
-	CYDXAaRfrygmINFjpZe16UxnNox1UuYJoo4ifNcwOfh7kdolaGVt+GCQNJPSeAq6wKvqvhcvhCh
-	qXjvB6Zgb7PkynkbE65cFqIlhxHxE1ITDXFhtiJt3H6dnAQ8OCWyfkZtjV/rSJ+zIZkEgQ2IIQu
-	Nay6R4qp29GoB3FpERTWiedUqoMB1ld2ClAuE7jcqwqu3rY1z6X5Q6zHzTlBt/B0CRYZE6YrwIC
-	UURFdNhQcMddn6oCm+nVJZ6ZVP+61vsxNBlGv5RMtQwvnA==
-X-Google-Smtp-Source: AGHT+IGZEznLQ5Um+JBR6TKG957+zkA76vrcTibAAOp+k631ZLhJk3i6dSnSnD1MtqWUOKH6iUYyqw==
-X-Received: by 2002:a17:902:dacb:b0:215:5ea2:6543 with SMTP id d9443c01a7336-21c35546dcbmr293502835ad.28.1737495165826;
-        Tue, 21 Jan 2025 13:32:45 -0800 (PST)
+        bh=4e8+Mj3cRgobogPNAclKWWgs48AdKLwKCVXRuVShalY=;
+        b=DtjjSEMTAibzK+ZJEQdYVtUoo4AjQ71ff4fobdnr8bC49ttcrdAEdRLByXnEcERQpE
+         fRNCv1bkIzZlMj5Ym5HiryL1XVyj6aGLaQiDJ9bAeUlDFlMeM2pz8inovqN87Ktr4euR
+         egWOYHo22nSzrSF+vUT4NFmQmNcCGmIWttOZDLB3xfCpQBDH5FY+Ihgm2tsVCnsa/5us
+         w+qyX+iBlmULWmhh0HSU4473uPc7YeJgjDOFZ0WGssd1QMNdUuGnfGf3gmuVyFLULtLz
+         HirpquWSYFHaWUFa50375iIISirss5rFyuxo0ImCTenhxT6ny+y2bxaj+6FEVZF/iZel
+         7u9g==
+X-Forwarded-Encrypted: i=1; AJvYcCU20ti7MlnN7QpBgwZ8bJ1FUPwud68JPALpj75fovYIP7Yay1+JhRERfKen7KMYsc3w6FyjIf6tSeU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0ibb+xOkYJXLesw1qwDOGYQU0hUgRsagMbzwHbXmLtZK9D20E
+	3iv0dT6iZfpDOF5MRw3IVPRy15aknmldDYyfOOxMJCaOxQMs6buDvAgeJThuVtA=
+X-Gm-Gg: ASbGnctBZZLcd+U+44xZhjnzIUvTGGaeL7nm3RdWWOayPweDsmHvDJhOAqPSq2ELVKB
+	r8AbE1NU3jsntDQixxDZ5I3+Q4k55d2aSEtxj/7qaQvkTK9diiE+tDgYd4Ur+NAZX5Fi47NKcww
+	hCYX1cxRuOCv4YtS4w73M7Rc7j2juKD9ZH2MqjCSUqqpEww0USB49WaJfe/o68t2VGomPyP3QNp
+	rgbKagQpKHYvluzBacLXlcjSfWarghtwoyzcqIgwlP+++ATgtO+ThqRtUaxqbpuq3wFpX3OmTob
+	dIcm2cdzwxcBohypxJjdVCcvqrqA20WQVB5durBLG86oRA==
+X-Google-Smtp-Source: AGHT+IGdmW5oc8V4toK1cTqRN4u+7FrMe8moGwAsy1AeGmD6BVgcsyMf6IFWMbfklN0hSdOv9CDeRg==
+X-Received: by 2002:a05:6a00:2444:b0:727:d55e:4bee with SMTP id d2e1a72fcca58-72daf92b010mr26192289b3a.1.1737497121988;
+        Tue, 21 Jan 2025 14:05:21 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2d403e3bsm83156705ad.238.2025.01.21.13.32.45
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72daba48cd0sm9724753b3a.131.2025.01.21.14.05.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jan 2025 13:32:45 -0800 (PST)
+        Tue, 21 Jan 2025 14:05:21 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1taLrW-00000008p1b-3Nxf;
-	Wed, 22 Jan 2025 08:32:42 +1100
-Date: Wed, 22 Jan 2025 08:32:42 +1100
+	id 1taMN4-00000008pb2-2u1Q;
+	Wed, 22 Jan 2025 09:05:18 +1100
+Date: Wed, 22 Jan 2025 09:05:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: xfs_repair after data corruption (not caused by xfs, but by
- failing nvme drive)
-Message-ID: <Z5ASeoYWtPxi7RDt@dread.disaster.area>
-References: <20250120-hackbeil-matetee-905d32a04215@brauner>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com, hch@lst.de,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 10/23] mkfs: don't hardcode log size
+Message-ID: <Z5AaHkvdwqHKpPyO@dread.disaster.area>
+References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
+ <173706974228.1927324.17714311358227511791.stgit@frogsfrogsfrogs>
+ <Z48bYVRvWt-wPmUz@dread.disaster.area>
+ <20250121124430.GA3809348@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,56 +79,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250120-hackbeil-matetee-905d32a04215@brauner>
+In-Reply-To: <20250121124430.GA3809348@mit.edu>
 
-On Mon, Jan 20, 2025 at 04:15:00PM +0100, Christian Brauner wrote:
-> Hey,
+On Tue, Jan 21, 2025 at 07:44:30AM -0500, Theodore Ts'o wrote:
+> On Tue, Jan 21, 2025 at 02:58:25PM +1100, Dave Chinner wrote:
+> > > +# Are there mkfs options to try to improve concurrency?
+> > > +_scratch_mkfs_concurrency_options()
+> > > +{
+> > > +	local nr_cpus="$(( $1 * LOAD_FACTOR ))"
+> > 
+> > caller does not need to pass a number of CPUs. This function can
+> > simply do:
+> > 
+> > 	local nr_cpus=$(getconf _NPROCESSORS_CONF)
+> > 
+> > And that will set concurrency to be "optimal" for the number of CPUs
+> > in the machine the test is going to run on. That way tests don't
+> > need to hard code some number that is going to be too large for
+> > small systems and to small for large systems...
 > 
-> so last week I got a nice surprise when my (relatively new) nvme drive
-> decided to tell me to gf myself. I managed to recover by now and get
-> pull requests out and am back in a working state.
-....
+> Hmm, but is this the right thing if you are using check-parallel?
 
-> I honestly am just curious why xfs_repair fails to validate any
-> superblocks.
+Yes. The whole point of check-parallel is to run the tests in such a
+way as to max out the resources of the test machine for the entire
+test run. Everything that can be run concurrently should be run
+concurrently, and we should not be cutting down on the concurrency
+just because we are running check-parallel.
 
-Ditto. It should be doing the same checks as the runtime validation
-code...
+> If
+> you are running multiple tests that are all running some kind of load
+> or stress-testing antagonist at the same time, then having 3x to 5x
+> the number of necessary antagonist threads is going to unnecessarily
+> slow down the test run, which goes against the original goal of what
+> we were hoping to achieve with check-parallel.
 
-> This is the splat I get when mounting without norecovery,ro:
-> 
-> [88222.149672] XFS (dm-4): Mounting V5 Filesystem 80526d30-90c7-4347-9d9e-333db3f5353b
-> [88222.632954] XFS (dm-4): Starting recovery (logdev: internal)
-> [88224.056721] XFS (dm-4): Metadata CRC error detected at xfs_agfl_read_verify+0xa5/0x120 [xfs], xfs_agfl block 0xeb6f603
-> [88224.057319] XFS (dm-4): Unmount and run xfs_repair
-> [88224.057328] XFS (dm-4): First 128 bytes of corrupted metadata buffer:
-> [88224.057338] 00000000: f1 80 cf 13 6c 73 aa 39 55 20 29 5c 2a ca ee 9a  ....ls.9U )\*...
-> [88224.057346] 00000010: 5a 0f 56 de ff da 93 5a 95 f2 01 ff 9f e7 6f 86  Z.V....Z......o.
-> [88224.057353] 00000020: dc 90 f4 ad 8b 7c 6d 47 87 1d b6 47 80 25 d0 d5  .....|mG...G.%..
-> [88224.057359] 00000030: da 36 1c f4 ee 22 e0 f4 b4 19 9a 74 bf d2 7d 49  .6...".....t..}I
-> [88224.057366] 00000040: 2e 1c 0d 62 a9 93 7b c0 53 b5 52 b7 eb 58 d3 52  ...b..{.S.R..X.R
-> [88224.057371] 00000050: fc 4b 13 cc 42 c7 36 88 1d 52 28 ef c7 20 cb 39  .K..B.6..R(.. .9
-> [88224.057377] 00000060: f7 db 9a 83 2c eb 23 52 b3 1a 85 bb d6 5e ff 4b  ....,.#R.....^.K
-> [88224.057383] 00000070: c3 3d 88 a6 dd bf ab 2a 94 1d 2d 19 6c b5 d1 e5  .=.....*..-.l...
+There are tests that run a thousand concurrent fsstress processes -
+check-parallel still runs all those thousand fsstress processes.
 
-Yeah, that's garbage.
+> How many tests are you currently able to run in parallel today,
 
-> With xfs_metadump I get:
-> 
-> > sudo xfs_metadump /dev/mapper/dm-sdd4 xfs_corrupt.metadump                                    
-> 
-> Superblock has bad magic number 0xa604f4c6. Not an XFS filesystem?
-> Metadata CRC error detected at 0x55d6d5e1c553, xfs_agfl block 0xeb6f603/0x200
+All of them if I wanted. Default is to run one test per CPU at a
+time, but also to allow tests that use concurrency to maximise it.
 
-That might be complaining about a secondary superblock, not the
-primary. That would explain why it mounts...
+> and
+> what's the ultimate goal?
 
-> I can generate a metadump image if that's helpful and there's interest
-> in looking into this. But as I said, I've recovered so I don't want to
-> waste your time.
+My initial goal was to maximise the utilisation of the machine when
+testing XFS. If I can't max out a 64p server with 1.5 million
+IOPS/7GB/s IO and 64GB RAM with check-parallel, then check-parallel
+is not running enough tests in parallel.
 
-I'd like to have a look at the metadump image of the broken fs if
-you've still got it.
+Right now with 64 runner threads (one per CPU), I'm seeing an
+average utilisation across the whole auto group XFS test run of:
+
+-50 CPUs
+- 2.5GB/s IO @ 30k IOPS
+- 40GB RAM
+
+The utilisation on ext4 is much lower and runtimes are much longer
+for (as yet) unknown reasons. Concurrent fsstress loads, in
+particular, appear to run much slower on ext4 than XFS...
+
+> We could have some kind of antagonist load
+> which is shared across multiple tests, but it's not clear to me that
+> it's worth the complexity.
+
+Yes, that's the plan further down the track - stuff like background
+CPU hotplug (instead of a test that specifically runs hotplug with
+fsstress that takes about 5 minutes to run), cache dropping to add
+memory reclaim during tests, etc
+
+> (And note that it's not just fs and cpu
+> load antagonistsw; there could also be memory stress antagonists, where
+> having multiple antagonists could lead to OOM kills...)
+
+Yes, I eventually plan to use the src/usemem.c memory locker to
+create changing levels of background memory stress to the test
+runs...
+
+Right now "perturbations" are exercised as a side effect of random
+tests performing these actions. I want to make them controllable by
+check-parallel so we can exercise the system functionality across
+the entire range of correctness tests we have, not just an isolated
+test case.
+
+IOWs, the whole point of check-parallel is to make use of large
+machines to stress the whole OS at the same time as we are testing
+for filesystem behavioural correctness.
+
+I also want to do it in as short a time period as possible - outside
+of dedicated QE environments, I don't beleive that long running
+stress tests actually provide value for the machine time they
+consume. i.e. returns rapidly diminish because stress tests
+cover 99.99% of the code paths they are going to exercise in the
+first few minutes of running.
+
+Yes, letting them run for longer will -eventually- cover rarely
+travelled code paths, but for developers, CI systems and
+first/second level QE verification of bug fixes we don't need
+extended stress tests.
+
+Further, when we run fstests in the normal way, we never cover
+things like memory reclaim racing against unmount, freeze, sync,
+etc. And we never cover them when the system is under extremely
+heavy load running multiple GB/s of IO whilst CPU hotplug is running
+whilst the scheduler is running at nearly a million context
+switches/s, etc.
+
+That's exactly the sort of loads that check-parallel is generating
+on a machine just running the correctness tests in parallel. It
+combines correctness testing with a dynamic, stressful environment,
+and it runs the tests -fast-. The coverage I get in a single 10
+minute auto-group run of check-parallel is -much higher- than I get
+in a single auto-group run of check that takes 4 hours on the same
+hardware to complete....
 
 -Dave.
 -- 
