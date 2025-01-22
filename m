@@ -1,43 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE49E1E502;
-	Wed, 22 Jan 2025 04:37:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCEE91487FE
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 05:21:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737520654; cv=none; b=DkgJVl2oLyA2R4iJuMZQaPRS22Tgs92chVv7ScZpznSp/AzvCRNUq600RO5uOCaRqpf2WKKW3m0XHmd9j7OluS7bMJUumt4yWfxAWC9xVMxz1coBSVG3t6y1BrhPmZCz0IiVzZzd0sxbYYuvfQnIYDA/Xifqwr81t8p1yNSO6Xg=
+	t=1737523312; cv=none; b=dR16w/P6/R2giBkt68iBRg1FptQb9ZDnZafb9phtg50V7NPopolXN/uuoNdkKBAeHdpF45QlW9p54oEZ4tawwz3vmxhafSnOSI+adBkvghnJuuwsCLl9QAJKtiUb+2aFpoMKHmTcKYTnlc/U0dOHzK7jnTjeOkvHUt3HhDohVv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737520654; c=relaxed/simple;
-	bh=LYItRc0FGDvpPH4Jald9un5qcTEgJmKFYLqR8g40yjw=;
+	s=arc-20240116; t=1737523312; c=relaxed/simple;
+	bh=UTWz/bmCZZYU1LZ5ZRhUUvhP/HBZNLGpxFRpB0lxiEU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mf/oodjbY8lEcRjGT6aS4rqTkmuPT80oM7wB/VNi9xPSRV9e+XoVBgRNiWfuW96eU6rDdmKyQv/NiiG5vIme33NM1R2dwULjCImEgmREbOPh9KX0I7DuN6IX0aW+CHuYcb8qmdL8DXP7VfNbysAmaYKCLxu8RM748GA8YF/V5r0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G+acQBvw; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fvsvWBV4IAuk1JeAsd8AhkKlD8lO42LS+Zp6lGj7/qB2XP+ZPaBx1JmjbNqBq8byvayMnCluAf8y6day6Kytntvn7V27TeMWflNgkZZep8sjit8Jhuu2FJIud0LRWoKaV9XOIm1Z+J8+tBtWtG9pHrqumTcisuiy8YHTJDywB/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=VeXyLt5j; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G+acQBvw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55D2DC4CED6;
-	Wed, 22 Jan 2025 04:37:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737520653;
-	bh=LYItRc0FGDvpPH4Jald9un5qcTEgJmKFYLqR8g40yjw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=G+acQBvw7TitG6zNtWuJ6pQI3XtDeuFiUg46r7k1AolNOy0bJ/ymWK0I6PAqYkduz
-	 dWec+/FluaIG9GeWijc3w6CKH1mXUtLOqTrT9+hsttJRM7vpmgMj1I7ciae2lr/e63
-	 MAUOMRIKocr1/GORut09waVSfZjDh+hXXizdOy/1rppSyaarot7oeLntOjhoHV8ZYD
-	 +8kBoaGKsg1CoN8P0R+spTlW5ldh9Mpk4Qm2bPximCjbI27dwXbRHfzSfrIBA6n1Bl
-	 MIepIAQOJfjxrFx92qKGGtpDLbaqABsmqSKhmC/BiMKl0XGuFzw7iVJWXrktfuQL0c
-	 Vb7hLztbqc5ag==
-Date: Tue, 21 Jan 2025 20:37:32 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="VeXyLt5j"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2156e078563so85341715ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 21:21:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737523310; x=1738128110; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=HWK2P/XHD1Mf2BaG5j25AIwyCS/6y2CV9rzh02z6IvQ=;
+        b=VeXyLt5jT92mv/tUBFEjnvmNHID3DExtEVYNMwdv5j5jdHnk1z3XSsjMf8FIZ+6hcp
+         SMdHQaK9SX1W1fQ3ur4aNhq76xnxG+l/LjOXjPrVCTuKWLWv+pg+LXOEsnhthRhIYUSI
+         adZQpcETP8b8OxG5Sj8d8/ViW3IQw+1VYse2OwhEQtyTwMJvDVyGsbjEMrR3aMFg4/xI
+         wo7/8h6ZtG1SlmwGXTWmEvoC88zaJL2X8xzPuKRUdyMfb/ovIaP6yVdop6g8EXIcfyZn
+         0H72DliHgheZqpCR8xPPJf5hWj4m/qDi7HuBZ15sgbvc/RjC32oX8bLbB/nwiO+zX9zc
+         41Sw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737523310; x=1738128110;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=HWK2P/XHD1Mf2BaG5j25AIwyCS/6y2CV9rzh02z6IvQ=;
+        b=I/8pGBHvIElyrLQxRnI74MwMKWGNZvdRcOrikYSAFJzmajszr6KzrkDwiC4qLXRoRt
+         KKvR99nyOM0QLLrTcWEZBPIetJfPO02DPHse5bA0Z3h0zVqtxdlf9P2dFVcepdTgyJc6
+         11BLNfEw2oRHIonnZ0e+C4mXCjHVnVnxksNTD8ycpV9NrrQfJppKkFnyLiYz420KElbz
+         j2CnnflV/J7Unx8ex94qYjYc91Gz4ge4JoSOXt+Z8l9dxoGrMwiNDnsXsN6I+qTORKtZ
+         U0yNhtcctXGpZFRpe3E+EorMXNnzKrrdvdf24+N3dv1jbygbF4kTtNazVFmgz3P3K9kz
+         cktg==
+X-Forwarded-Encrypted: i=1; AJvYcCVH3+WEMcwSKccXxCv60dNPkYscoNdR9SlY3sD0AO91C2+kIy7WYyT3QmbBiRLU3qdVkpl4D1lOeVs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6pNKKo5ML+8KwdqF76VG7yIkgML/vrKw5+42r7+Glr0nLBKvm
+	VObeRuyHsNJT/1zyZgOeSiCuDjc4wM+zleLaN8GLsfnwfda5MhR7glbKQ3QAG5KTOvMwuU3DDvE
+	G
+X-Gm-Gg: ASbGncvy2j3trFSBxeXJr7SteKYFuUH3L2duEsoQKoOaoYMd6O6jOpNCoAXRp1AXFNG
+	Wzb0OixLX31G0sJVZJ3FyzEHD545oJr/Xd4bCrjT3/L2oofB537/54jHGLzabcHPlcfsQTwqhko
+	lE+XNgF07XJ+S9xNsZF+1Dg2ttxbn+WEvcyGsknGX74tDZ8BEdhheXAQ8QT/IU8uRcy0eKojfGI
+	a9B18FLudfVa4o6UyqguGRwDlE3HoZJWmqN2XCs5yQ6b5qGi4qe9j+S2DWrFcUDSvBis0Ly+kjC
+	rBZTS3ZKqu0eS1SfWcuhGkdEdCJyJPQlQ20O0cCxO86yww==
+X-Google-Smtp-Source: AGHT+IH5R7pj8qLDenAoga+QJkWuqr4FgKHgan+NZCtM4+EprtmjwkKltMGWrn6lPQVE8Nw/9oijbg==
+X-Received: by 2002:a17:902:d501:b0:20c:9821:6998 with SMTP id d9443c01a7336-21c352c798emr356015375ad.10.1737523309911;
+        Tue, 21 Jan 2025 21:21:49 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2cea0531sm88261955ad.24.2025.01.21.21.21.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jan 2025 21:21:49 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1taTBS-00000008xQR-3036;
+	Wed, 22 Jan 2025 16:21:46 +1100
+Date: Wed, 22 Jan 2025 16:21:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/23] generic/650: revert SOAK DURATION changes
-Message-ID: <20250122043732.GY1611770@frogsfrogsfrogs>
+Subject: Re: [PATCH 11/23] common/xfs: find loop devices for non-blockdevs
+ passed to _prepare_for_eio_shutdown
+Message-ID: <Z5CAaq-SN96RSvfZ@dread.disaster.area>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
- <173706974273.1927324.11899201065662863518.stgit@frogsfrogsfrogs>
- <Z48pM9GEhp9P_VLX@dread.disaster.area>
- <20250122034944.GS1611770@frogsfrogsfrogs>
- <Z5BwGzOfPaSzXyQ3@dread.disaster.area>
+ <173706974243.1927324.9105721327110864014.stgit@frogsfrogsfrogs>
+ <Z48kffpLwUr1xMmT@dread.disaster.area>
+ <20250122040542.GV1611770@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,105 +81,180 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z5BwGzOfPaSzXyQ3@dread.disaster.area>
+In-Reply-To: <20250122040542.GV1611770@frogsfrogsfrogs>
 
-On Wed, Jan 22, 2025 at 03:12:11PM +1100, Dave Chinner wrote:
-> On Tue, Jan 21, 2025 at 07:49:44PM -0800, Darrick J. Wong wrote:
-> > On Tue, Jan 21, 2025 at 03:57:23PM +1100, Dave Chinner wrote:
-> > > On Thu, Jan 16, 2025 at 03:28:33PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > Prior to commit 8973af00ec21, in the absence of an explicit
-> > > > SOAK_DURATION, this test would run 2500 fsstress operations each of ten
-> > > > times through the loop body.  On the author's machines, this kept the
-> > > > runtime to about 30s total.  Oddly, this was changed to 30s per loop
-> > > > body with no specific justification in the middle of an fsstress process
-> > > > management change.
+On Tue, Jan 21, 2025 at 08:05:42PM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 21, 2025 at 03:37:17PM +1100, Dave Chinner wrote:
+> > On Thu, Jan 16, 2025 at 03:28:02PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
 > > > 
-> > > I'm pretty sure that was because when you run g/650 on a machine
-> > > with 64p, the number of ops performed on the filesystem is
-> > > nr_cpus * 2500 * nr_loops.
-> > 
-> > Where does that happen?
-> > 
-> > Oh, heh.  -n is the number of ops *per process*.
-> 
-> Yeah, I just noticed another case of this:
-> 
-> Ten slowest tests - runtime in seconds:
-> generic/750 559
-> generic/311 486
-> .....
-> 
-> generic/750 does:
-> 
-> nr_cpus=$((LOAD_FACTOR * 4))
-> nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
-> fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus)
-> 
-> So the actual load factor increase is exponential:
-> 
-> Load factor	nr_cpus		nr_ops		total ops
-> 1		4		100k		400k
-> 2		8		200k		1.6M
-> 3		12		300k		3.6M
-> 4		16		400k		6.4M
-> 
-> and so on.
-> 
-> I suspect that there are other similar cpu scaling issues
-> lurking across the many fsstress tests...
-> 
-> > > > On the author's machine, this explodes the runtime from ~30s to 420s.
-> > > > Put things back the way they were.
+> > > xfs/336 does this somewhat sketchy thing where it mdrestores into a
+> > > regular file, and then does this to validate the restored metadata:
 > > > 
-> > > Yeah, OK, that's exactly waht keep_running() does - duration
-> > > overrides nr_ops.
-> > > 
-> > > Ok, so keeping or reverting the change will simply make different
-> > > people unhappy because of the excessive runtime the test has at
-> > > either ends of the CPU count spectrum - what's the best way to go
-> > > about providing the desired min(nr_ops, max loop time) behaviour?
-> > > Do we simply cap the maximum process count to keep the number of ops
-> > > down to something reasonable (e.g. 16), or something else?
+> > > SCRATCH_DEV=$TEST_DIR/image _scratch_mount
 > > 
-> > How about running fsstress with --duration=3 if SOAK_DURATION isn't set?
-> > That should keep the runtime to 30 seconds or so even on larger
-> > machines:
+> > That's a canonical example of what is called "stepping on a
+> > landmine".
+> 
+> 60% of fstests is written in bash, all of it is a friggin land mine
+> because bash totally lets us do variable substitution at any time, and
+> any time you make a change you have to exhaustively test the whole mess
+> to make sure nothing broke...
+
+Yes, I know, which is why the moment I saw xfs/336 I called it out -
+it has never run on my machines, ever...
+
+> (Yeah, I hate bash)
+
+Not a great fan of it myself. But it's no worse than other scripting
+languages that use JIT based syntax checking from the "if it wasn't
+run it ain't tested" perspective.
+
+> > We validate that the SCRATCH_DEV is a block device at the start of
+> > check and each section it reads and runs (via common/config), and
+> > then make the assumption in all the infrastructure that SCRATCH_DEV
+> > always points to a valid block device.
+> 
+> We do?
+
+fstests configurations for block based filesystems have always been
+based on block devices and mount points, not image files. 
+
+Yes, you can pass an image file to XFS utilities and they will do
+the right thing, but not all filesystems or all the infrastructure
+in fstests can handle an image file masquerading as a device.
+
+I certainly didn't expect it.....
+
+> Can you point me to the sentence in doc/ that says this
+> explicitly? 
+
+fstests is woefully under-documented - especially when it comes to
+configuration constraints and behaviours - so I doubt it is actually
+specified anywhere. AFAIA it has never been raised in discussion
+for a long time (not since we added network filesystem support a
+long time ago, IIRC)
+
+However, the code is pretty explicit - common/config is responsible
+for setting up and validating the runtime config before any test can
+run. All test and scratch devices are passed through this
+validation:
+
+_check_device()
+{
+        local name=$1
+        local dev_needed=$2
+        local dev=$3
+
+        if [ -z "$dev" ]; then
+                if [ "$dev_needed" == "required" ]; then
+                        _fatal "common/config: $name is required but not defined!"
+                fi
+                return 0
+        fi
+
+        if [ -b "$dev" ] || ( echo $dev | grep -qE ":|//" ); then
+                # block device or a network url
+                return 0
+	fi
+
+	case "$FSTYP" in
+        9p|fuse|tmpfs|virtiofs|afs)
+	.....
+	*)
+                _fatal "common/config: $name ($dev) is not a block device or a network filesystem"
+        esac
+}
+....
+
+Basically, it says that all the test and scratch devices (including
+the external ones) must be either a block device, a network URL, or
+a string that the specific filesystem under test must recognise and
+accept (e.g. a directory for overlay filesystems). Otherwise fstests
+will fail to run with an explicit error message that says:
+
+	<device> is not a block device or network filesystem
+
+Nowhere in this config validation process does fstests consider
+image files as a valid device configuration for a block based
+filesystem.
+
+If we need to do stuff with a image files, we have the
+infrastructure to create loop devices and then operate directly on
+that dynamic loop device(s) (e.g. _mkfs_dev, _mount, _unmount,
+_check_xfs_filesystem, etc) that are created.
+
+> There's nothing I can find in the any docs and
+> _try_scratch_mount does not check SCRATCH_DEV is a bdev for XFS.
+
+That's because it's validated before we start running tests and the
+assumption is that nobody is screwing with SCRATCH_DEV in a way
+that makes it behave vastly differently.
+
+Consider what it means to have to do runtime checking of the
+device validity in common code before we do anything with the
+device. We'd have to sprinkle _check_device calls -everywhere-.
+
+We'd also have to check logdev and rtdev variables if USE_EXTERNAL
+is set, too.
+
+That's not a viable development strategy, nor is it a maintainable
+solution to the issue at hand. It's far simpler to fix one test not
+to use this trick than it is to declare "nobody can trust TEST_DEV
+or SCRATCH_DEV to be a valid block device" and have to handle that
+everywhere those variables are used...
+
+> That needs to be documented.
+
+Sure.
+
+> > > Fix this by detecting non-bdevs and finding (we hope) the loop device
+> > > that was created to handle the mount. 
 > > 
-> > if [ -n "$SOAK_DURATION" ]; then
-> > 	test "$SOAK_DURATION" -lt 10 && SOAK_DURATION=10
-> > 	fsstress_args+=(--duration="$((SOAK_DURATION / 10))")
-> > else
-> > 	# run for 3s per iteration max for a default runtime of ~30s.
-> > 	fsstress_args+=(--duration=3)
-> > fi
+> > What loop device? xfs/336 doesn't use loop devices at all.
+> > 
+> > Oh, this is assuming that mount will silently do a loopback mount
+> > when passed a file rather than a block device. IOWs, it's relying on
+> > some third party to do the loop device creation and hence allow it
+> > to be mounted.
+> > 
+> > IOWs, this change is addressing a landmine by adding another
+> > landmine.
 > 
-> Yeah, that works for me.
+> Some would say that mount adding the ability to set up a loop dev was
+> itself *avoiding* a landmine from 90s era util-linux.
+
+True.
+
+But in the case of fstests we explicitly create loop
+devices so that we don't have to play whacky games to find the
+random loop device that mount magically creates when you pass it a
+file.
+
+Making all the image file and loop device usage consistent across
+all of fstests was part of the infrastructure changes in my initial
+check-parallel patchset. This was necessary because killing tests
+with ctrl-c would randomly leave dangling mounts and loop devices
+because many tests did not have _cleanup routines to tear down
+mounts that auto-created loop devices or clean up loop
+devices they created themselves properly.
+
+Part of those changes was fixing up the mess in some XFS tests
+where that mixed loop device and image file based operations
+interchangably. I didn't notice x/336 because it wasn't
+running on my test system and so didn't attempt to fix it at the
+same time...
+
+> > I really think that xfs/336 needs to be fixed - one off test hacks
+> > like this, while they may work, only make modifying and maintaining
+> > the fstests infrastructure that much harder....
 > 
-> As a rainy day project, perhaps we should look to convert all the
-> fsstress invocations to be time bound rather than running a specific
-> number of ops. i.e. hard code nr_ops=<some huge number> in
-> _run_fstress_bg() and the tests only need to define parallelism and
-> runtime.
+> Yeah, it'll get cleaned up for the rtrmap fstests merge.
 
-I /think/ the only ones that do that are generic/1220 generic/476
-generic/642 generic/750.  I could drop the nr_cpus term from the nr_ops
-calculation.
+Thanks!
 
-> This would make the test runtimes more deterministic across machines
-> with vastly different capabilities and and largely make "test xyz is
-> slow on my test machine" reports largely go away.
-> 
-> Thoughts?
+-Dave.
 
-I'm fine with _run_fsstress injecting --duration=30 if no other duration
-argument is passed in.
-
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+-- 
+Dave Chinner
+david@fromorbit.com
