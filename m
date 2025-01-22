@@ -1,50 +1,76 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF3E8467
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 04:09:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98AD51487C1
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 04:12:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737518944; cv=none; b=cUkWkf3nps2RDdytSzaXLMZGYSHAsLANrxQ++/zy2jkv3G9TSlVMzHw4nKOqUqEfh/GZ1skH+zr9ofBKQfdctk6MMlEVBuC7kh/x55BJdiuRe99kRt5FIUPFme6LRy+d/fmkHX2NP6HzYSVmgND4cf9+2Rm6Yz9Uwt/YReW/BKM=
+	t=1737519137; cv=none; b=OXIAb8Rr6yLk8kT1vdbHwvv/RdXrI74RcK0uF6/nN3Gg0kYCPOO6glFsFLYWT/7NZck6ArG+0E6gY5Ank+MrU8ekOeYPK/lqwxVlkaTzfwui8li2VXeAWM9MgsjKqGpSSt4F1+qVU/bjYrXdkPFYXzJbhmwf46qqBdJyQFRUYZk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737518944; c=relaxed/simple;
-	bh=IVrSh50+C0FBL/f3KxRmJuxRgxVx3mZs/eYAgvcY8fg=;
+	s=arc-20240116; t=1737519137; c=relaxed/simple;
+	bh=P9Ov4Px9oBRh9XzWojXq/K6uJD+gCDAt93LjuA4QWwY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gLJIbky9UoiIVPZJq/UwU6iqPbCu4LCKkuJybk7mH6odXUpDlBTbmGtj0TUYv0pQh/uM+7ro7x4RCpLy22Rvm18XHDKh+PcjxnLJyHTGVu83dkifavAznbYhn/j9MxrayrkKHKAD0NMP2cyw+0Q+ztp840iHPeNv0KvS6Z+ntx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=FG8wH0O7; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	 Content-Type:Content-Disposition:In-Reply-To; b=C3WnjWe+ZgpB1NSDpCSPsF7MfZVQeY7Qw5tA3nICgdx5UqZ6+7LEfl1uR7/bE1kuOxtqEv067yJikABJSzSSvsucvA447s9FSdIwBbcGsw1KxbugMKHJuXWA7RoZ0CZJosvjWO4h7euiB6k0rFaYvCTasoH1nAYNn3fmfjhCuWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=1+mbwipv; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="FG8wH0O7"
-Received: from cwcc.thunk.org (pool-173-48-114-200.bstnma.fios.verizon.net [173.48.114.200])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 50M48dRY014584
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 23:08:40 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1737518921; bh=RjDEG3m3fQmhCtSZSRO4bvePvCBpsgjy3qwcNmtv9Hk=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=FG8wH0O7TIX3RA2+OmNS8sntMkqI7JSAjc+Nvws8IflhF68qEWwTv28M17lgiAooO
-	 D7a8I0GBqUzlc/tt8jJRNES3qv66CU1wPROjHGLZcQC6omR2nchP9B+tJeL54XraHs
-	 pgcT+2fWiGKekfnvEsGEVqSZRKX2SVe8jbKGa2/UJn2zclhQB3TBx3JrA2WwoxpCFg
-	 EpQhoduvnDc5uJmQ7ucCp+d/MMvU+d7zJBvpYItBRILTcOuBntUnQ0ud32wATxcvA3
-	 aR/6EJ6xk2x2OKNO74SG4f0mT5Lg9ynkImXrBNWELAUoXS8Y+2V5KFxI0uRKe+hEMp
-	 C8EE2X36uWpFQ==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-	id 6615115C01A1; Tue, 21 Jan 2025 23:08:39 -0500 (EST)
-Date: Tue, 21 Jan 2025 23:08:39 -0500
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com, hch@lst.de,
-        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1+mbwipv"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2167141dfa1so8204575ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 20:12:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737519135; x=1738123935; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=PFVZB5FaMISWLHki7WyPInxNBUdbkD5mHv69/3iDKn4=;
+        b=1+mbwipv4eczwKvGdzls/CLJMAgh/kdAhu53ZcrohBhUD1DRSV3iHKdo6ZFHRSf+Mn
+         JvYw96vACvcqVYssoSpk7Z+eG49oyEAKcaoVV7mgvAd3fRZBPU/WYl45bbUgGz0JIu/f
+         yPUjdwK2O5TyVK5q/8GdLL4D7xrqyRfdIO+I+155FjLhx84eQ+jM+n9EZIMB2gqjqKd5
+         Sex3slfpCFvsf/lmaCWIgLSiMyffjaY+tGFP5XX4fdEjN5Nb8j7SJgWJ/de5EN9ECsHs
+         r3JND2pCWq5Vf/9ZnE/u/DnPoLiw6xAgrQT+1RaCca01H64eRg6ImqvTq3400N86gGeg
+         fa7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737519135; x=1738123935;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PFVZB5FaMISWLHki7WyPInxNBUdbkD5mHv69/3iDKn4=;
+        b=ARvoO/HS/1fIY9P35/0S/0IJwyhD/JUCEszr7ZRV3c/ERWhC52vowaovV8KSxSi475
+         7yPUxBDx5u1V6jpJrGG5zllT5ZwAcpJaKl9FUg6jmyF4TDPN5tiVUO4FhHwa0HwStCO/
+         AWelipDxJ+knNze4GT39F1q/lViZ/grhpI5aIDZksfI0zxjMZkPoe2+xgrSE10n9tXWt
+         qv3sXu3FaLm2FSCFzThcA25B3C18ixmEwmCeiZ6ghfXhVQnhinLLOI9ddIYQsr3XlT3c
+         UQBWyS7O13Sd1qlnow6oZbsGyLZbMLHf9zolu+AUEYi8QXDYQGtRgqEGhZSpM9tpNQ3x
+         c37w==
+X-Forwarded-Encrypted: i=1; AJvYcCVgeh+r+ZZqXwWs28Tv4PcT2fkMwhGCGMdUOEhqpNiHFu5JFAqLxWS4gRJznqG4yqJxTjirM3dXS+E=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzOLrCqn//FG6SM1NubPxsX7Viojhyr0u5DfrK3vHbTNwRZQwq1
+	cwRlNElRieifv/WM91Ps0X+I2x1O4TH4PtoY2iw0wTKpgpR8cvxgjTFAX4GsG/c=
+X-Gm-Gg: ASbGncsv+UViNQCoDpsg32tIO0NSRS70Pp82zGoTYatMiVw616EIQWPhreo0iGhNFQ8
+	Ff4AD8krDECXWaubJqiGMabBT5+JurwrTMD6RPWS02EvzINyRdvdnlbkpQqFifogphmqYCiD1O5
+	hLxz7B227IDQv8GO+2qRjDCyagMwKGWzU3qCAvERviFSKQ2KQ9brMdXThHwzrc/qu5oHs46TPun
+	Yie24JclDPfngCYoaXONMy6uoi1FbudvT35hEqOYjaqbZ/eKH1OU1Pmz4bMNQdcSgdrLeSt0ELx
+	7syQT0Z01AZGcIfiXawE8kdpBukYekcYSG7Qky7ULwbQSQ==
+X-Google-Smtp-Source: AGHT+IGSx2HrbJNxcB3zckZw7AwAGwNRu9wF7Dy+Al4+oPC8JWG59ZhasBfDOoI5PNWsRso2L2allA==
+X-Received: by 2002:a17:902:db08:b0:215:7287:67bb with SMTP id d9443c01a7336-21c35b16c8cmr326689165ad.0.1737519134736;
+        Tue, 21 Jan 2025 20:12:14 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2d42b8e1sm86277325ad.250.2025.01.21.20.12.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jan 2025 20:12:14 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1taS67-00000008wGg-1C57;
+	Wed, 22 Jan 2025 15:12:11 +1100
+Date: Wed, 22 Jan 2025 15:12:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 13/23] generic/650: revert SOAK DURATION changes
-Message-ID: <20250122040839.GD3761769@mit.edu>
+Message-ID: <Z5BwGzOfPaSzXyQ3@dread.disaster.area>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
  <173706974273.1927324.11899201065662863518.stgit@frogsfrogsfrogs>
  <Z48pM9GEhp9P_VLX@dread.disaster.area>
- <20250121130027.GB3809348@mit.edu>
- <Z5AclEe71PIikAnH@dread.disaster.area>
+ <20250122034944.GS1611770@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,66 +79,94 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z5AclEe71PIikAnH@dread.disaster.area>
+In-Reply-To: <20250122034944.GS1611770@frogsfrogsfrogs>
 
-On Wed, Jan 22, 2025 at 09:15:48AM +1100, Dave Chinner wrote:
-> check-parallel on my 64p machine runs the full auto group test in
-> under 10 minutes.
+On Tue, Jan 21, 2025 at 07:49:44PM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 21, 2025 at 03:57:23PM +1100, Dave Chinner wrote:
+> > On Thu, Jan 16, 2025 at 03:28:33PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Prior to commit 8973af00ec21, in the absence of an explicit
+> > > SOAK_DURATION, this test would run 2500 fsstress operations each of ten
+> > > times through the loop body.  On the author's machines, this kept the
+> > > runtime to about 30s total.  Oddly, this was changed to 30s per loop
+> > > body with no specific justification in the middle of an fsstress process
+> > > management change.
+> > 
+> > I'm pretty sure that was because when you run g/650 on a machine
+> > with 64p, the number of ops performed on the filesystem is
+> > nr_cpus * 2500 * nr_loops.
 > 
-> i.e. if you have a typical modern server (64-128p, 256GB RAM and a
-> couple of NVMe SSDs), then check-parallel allows a full test run in
-> the same time that './check -g smoketest' will run....
+> Where does that happen?
+> 
+> Oh, heh.  -n is the number of ops *per process*.
 
-Interesting.  I would have thought that even with NVMe SSD's, you'd be
-I/O speed constrained, especially given that some of the tests
-(especially the ENOSPC hitters) can take quite a lot of time to fill
-the storage device, even if they are using fallocate.
+Yeah, I just noticed another case of this:
 
-How do you have your test and scratch devices configured?
+Ten slowest tests - runtime in seconds:
+generic/750 559
+generic/311 486
+.....
 
-> Yes, and I've previously made the point about how check-parallel
-> changes the way we should be looking at dev-test cycles. We no
-> longer have to care that auto group testing takes 4 hours to run and
-> have to work around that with things like smoketest groups. If you
-> can run the whole auto test group in 10-15 minutes, then we don't
-> need "quick", "smoketest", etc to reduce dev-test cycle time
-> anymore...
+generic/750 does:
 
-Well, yes, if the only consideration is test run time latency.
+nr_cpus=$((LOAD_FACTOR * 4))
+nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
+fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus)
 
-I can think of two off-setting considerations.  The first is if you
-care about cost.  The cheapest you can get a 64 CPU, 24 GiB VM on
-Google Cloud is $3.04 USD/hour (n1-stndard-64 in a Iowa data center),
-so ten minutes of run time is about 51 cents USD (ignoring the storage
-costs).  Not bad.  But running xfs/4k on the auto group on an
-e2-standard-2 VM takes 3.2 hours; but the e2-standard-2 VM is much
-cheaper, coming in at $0.087651 USD/ hour.  So that translates to 28
-cents for the VM, and that's not taking into account the fact you
-almost certainly much more expensive, high-performance storge to
-support the 64 CPU VM.  So if you don't care about time to run
-completion (for example, if I'm monitoring the 5.15, 6.1, 6.6, and
-6.12 LTS LTS rc git trees, and kicking off a build whenever Greg or
-Sasha updates them), using a serialized xfstests is going to be
-cheaper because you can use less expensive cloud resources.
+So the actual load factor increase is exponential:
 
-The second concern is that for certain class of failures (UBSAN,
-KCSAN, Lockdep, RCU soft lockups, WARN_ON, BUG_ON, and other
-panics/OOPS), if you are runnig 64 tests in parllel it might not be
-obvious which test caused the failure.  Today, even if the test VM
-crashes or hangs, I can have test manager (which runs on a e2-small VM
-costing $0.021913 USD/hour and can manage dozens of test VM's all at the
-same time), can restart the test VM, and we know which test is at at
-fault, and we mark that a particular test with the Junit XML status of
-"error" (as distinct from "success" or "failure").  If there are 64
-test runs in parallel, if I wanted to have automated recovery if the
-test appliance hangs or crashes, life gets a lot more complicated.....
-I suppose we could have the human (or test automation) try run each
-individual test that had been running at the time of the crash but
-that's a lot more complicated, and what if the tests pass when run
-once at a time?  I guess we should happen that check-parallel found a
-bug that plain check didn't find, but the human being still has to
-root cause the failure.
+Load factor	nr_cpus		nr_ops		total ops
+1		4		100k		400k
+2		8		200k		1.6M
+3		12		300k		3.6M
+4		16		400k		6.4M
 
-Cheers,
+and so on.
 
-						- Ted
+I suspect that there are other similar cpu scaling issues
+lurking across the many fsstress tests...
+
+> > > On the author's machine, this explodes the runtime from ~30s to 420s.
+> > > Put things back the way they were.
+> > 
+> > Yeah, OK, that's exactly waht keep_running() does - duration
+> > overrides nr_ops.
+> > 
+> > Ok, so keeping or reverting the change will simply make different
+> > people unhappy because of the excessive runtime the test has at
+> > either ends of the CPU count spectrum - what's the best way to go
+> > about providing the desired min(nr_ops, max loop time) behaviour?
+> > Do we simply cap the maximum process count to keep the number of ops
+> > down to something reasonable (e.g. 16), or something else?
+> 
+> How about running fsstress with --duration=3 if SOAK_DURATION isn't set?
+> That should keep the runtime to 30 seconds or so even on larger
+> machines:
+> 
+> if [ -n "$SOAK_DURATION" ]; then
+> 	test "$SOAK_DURATION" -lt 10 && SOAK_DURATION=10
+> 	fsstress_args+=(--duration="$((SOAK_DURATION / 10))")
+> else
+> 	# run for 3s per iteration max for a default runtime of ~30s.
+> 	fsstress_args+=(--duration=3)
+> fi
+
+Yeah, that works for me.
+
+As a rainy day project, perhaps we should look to convert all the
+fsstress invocations to be time bound rather than running a specific
+number of ops. i.e. hard code nr_ops=<some huge number> in
+_run_fstress_bg() and the tests only need to define parallelism and
+runtime.
+
+This would make the test runtimes more deterministic across machines
+with vastly different capabilities and and largely make "test xyz is
+slow on my test machine" reports largely go away.
+
+Thoughts?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
