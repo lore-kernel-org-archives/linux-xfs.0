@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4EAC1B87F1
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 06:55:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3035914F9F9
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 06:59:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737528911; cv=none; b=TrRoZymnpwOCh5kV+Cooh6Qyj+yXto3bNbkUsvFspLRpaEwewP8ZvkTNRKfUIqCZewgll0VHqjJI40G7XyfIOObvi+0HJsZ/59G/yinaC0Q6vCOWOTqRNbQVy9c9ReqTOKq2/t7RiqVi8sfn4PIdC+0Jtf5RQsIq0E3XvG/xU0g=
+	t=1737529193; cv=none; b=IispzM9QhsshLXgtiQIP6obA3hdJC6F15bEQQ62ClWXkjGPaYRvuCgEccXM/LG9AUUhYiuJQMfz3CcJTFxEVPNSjSwSB++cXsnHX7rzRW9931oIlB/FNd0+J2pjezK3A+d2aqDERWSVK8yzilOD1R4ajhx82Xc+LUbqB/ukqjCY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737528911; c=relaxed/simple;
-	bh=gSMMAD+vHpCtKbb0wJ9fZ47RpakSwnK3RW8VQdFmJm8=;
+	s=arc-20240116; t=1737529193; c=relaxed/simple;
+	bh=mKQF16JI5f0bk/OQVRBD165B8T4LCdYYdfUIkdl5VmQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=usJzWHOPEa11v7YzurXcfzibr7UV4prCAv40da66pDM5paUGYhFTGW8Z3TdhbLUF+KB8kh398QDrOvIvy3T/wuPv60wK98Vw62KOyGWD2tJPBv167gbZZdGesIApHBq3xDeEVtPrfQudRWP4xVPgH/q4utNJI/fySbg3uQ4YRyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2SqA7sa; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=oKLGnNhiqTkD89MVH9+CY76pRUBRNeVYv1QSbwLKAXFGx0B4XVl8UK5IqWhQQEvdAGm3LpJkfIf9KrcuzmCKObV7WRQ0tKiy63gsjgGBojsepskhYmo/C3CkUGQEPcQ2e56baQBwCS81kdA1d6V50oWq9UMBUYXfGd/cMV99SBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SHfDVHE2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2SqA7sa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30A17C4CED6;
-	Wed, 22 Jan 2025 06:55:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SHfDVHE2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EE49C4CEE2;
+	Wed, 22 Jan 2025 06:59:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737528911;
-	bh=gSMMAD+vHpCtKbb0wJ9fZ47RpakSwnK3RW8VQdFmJm8=;
+	s=k20201202; t=1737529192;
+	bh=mKQF16JI5f0bk/OQVRBD165B8T4LCdYYdfUIkdl5VmQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=D2SqA7say7MvzfT/ZbwD+/pa43E0Tr3Rkn04DHEXZx0W7nsjAO3DjDqVC2cyv9XAw
-	 UlXxOaVf6Gb9E2px+FUheUwxwbS4b20FSLGoag4QPof5pcY2p8M4tt+u7/gNaVr2zR
-	 GtIRlL2TDtpMCanDvxKfLAGPevWQJnAk+oQmn2M7nIUscQ0sAF4NB9iehdhbiP/Mzz
-	 624uhZ+gLEHmp6bB3e1IowuHLDb3IE5VTi1K0aNr6ZkoePuYGcApNH9vW4G/MlqtsO
-	 TuDthcyrJ64cgOcf6oknDgG6sIEN8QTxMd2VAN2saYm3k1mM301vCIuYqNqkTThQak
-	 Hnabez1rzGxnA==
-Date: Tue, 21 Jan 2025 22:55:10 -0800
+	b=SHfDVHE2gO6FoqDR2g4gfg/0EMtcH+IxMctumRzAoClixb92lgFtHV3mJKBE1KcZ7
+	 nCdcVmIefu7T/6QMIsVrZP5ug+crp7SaTIwkxfOmUcY2dO66QMeV+uXJvrglBVyk8p
+	 Cd8o1j+MWDWwwEDOyN1LWsK/7ZMpdCTbaRbjKtapJlyK0Xk4NcVO1B56UBVBlpVAkP
+	 NS7O8vpWYCmQ0E2uCnYrLCWJi4PJJstMnCImZEXkk2UphrznkYACA2SYtKzW0NwS6b
+	 y+r1D/E87VhgTRT0hdYiksxJ4MyYzXYk0oZCHIENcRVwtnxOybBbY+14/EFJw0ToSr
+	 OCHp04zF9bs3A==
+Date: Tue, 21 Jan 2025 22:59:51 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, amir73il@gmail.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: don't call remap_verify_area with sb write
- protection held
-Message-ID: <20250122065510.GA1611770@frogsfrogsfrogs>
-References: <20250122054321.910578-1-hch@lst.de>
+To: liuhuan01@kylinos.cn
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1] mkfs: fix the issue of maxpct set to 0 not taking
+ effect
+Message-ID: <20250122065951.GB1611770@frogsfrogsfrogs>
+References: <20250122053505.156729-1-liuhuan01@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,173 +42,98 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250122054321.910578-1-hch@lst.de>
+In-Reply-To: <20250122053505.156729-1-liuhuan01@kylinos.cn>
 
-On Wed, Jan 22, 2025 at 06:43:21AM +0100, Christoph Hellwig wrote:
-> The XFS_IOC_EXCHANGE_RANGE ioctl with the XFS_EXCHANGE_RANGE_TO_EOF flag
-> operates on a range bounded by the end of the file.  This means the
-> actual amount of blocks exchanged is derived from the inode size, which
-> is only stable with the IOLOCK (i_rwsem) held.  Do that, it currently
-> calls remap_verify_area from inside the sb write protection which nests
-> outside the IOLOCK.  But this makes fsnotify_file_area_perm which is
-> called from remap_verify_area unhappy when the kernel is built with
-> lockdep and the recently added CONFIG_FANOTIFY_ACCESS_PERMISSIONS
-> option.
+On Wed, Jan 22, 2025 at 01:35:05PM +0800, liuhuan01@kylinos.cn wrote:
+> From: liuh <liuhuan01@kylinos.cn>
 > 
-> Fix this by always calling remap_verify_area before taking the write
-> protection, and passing a 0 size to remap_verify_area similar to
-> the FICLONE/FICLONERANGE ioctls when they are asked to clone until
-> the file end.
+> It does not take effect when maxpct is specified as 0.
 > 
-> (Note: the size argument gets passed to fsnotify_file_area_perm, but
-> then isn't actually used there).
+> Firstly, the man mkfs.xfs shows that setting maxpct to 0 means that all of the filesystem can become inode blocks.
+> However, when using mkfs.xfs and specifying maxpct = 0, the result is not as expected.
+> 	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
+> 	data     =                       bsize=4096   blocks=262144, imaxpct=25
+>         	 =                       sunit=0      swidth=0 blks
 > 
-> Fixes: 9a64d9b3109d ("xfs: introduce new file range exchange ioctl")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> The reason is that the judging condition will never succeed when specifying maxpct = 0. As a result, the default algorithm was applied.
+>     cfg->imaxpct = cli->imaxpct;
+>     if (cfg->imaxpct)
+>         return;
+> It's important that maxpct can be set to 0 within the kernel xfs code.
+> 
+> The result with patch:
+> 	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
+> 	data     =                       bsize=4096   blocks=262144, imaxpct=0
+>         	 =                       sunit=0      swidth=0 blks
+> 
+> Signed-off-by: liuh <liuhuan01@kylinos.cn>
+> ---
+>  mkfs/xfs_mkfs.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 956cc295..6f0275d2 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1034,13 +1034,14 @@ struct cli_params {
+>  	int	proto_slashes_are_spaces;
+>  	int	data_concurrency;
+>  	int	log_concurrency;
+> +	int	imaxpct;
+> +	int	imaxpct_using_default;
+>  
+>  	/* parameters where 0 is not a valid value */
+>  	int64_t	agcount;
+>  	int64_t	rgcount;
+>  	int	inodesize;
+>  	int	inopblock;
+> -	int	imaxpct;
 
-I shudder to think of what happens if security_file_permission tries
-to take i_rwsem in the old _TO_EOF case -- that sounds like a livelock
-vector.  How about:
+Why not set imaxpct to -1 when we initialize cfg in main() and then do
+something like this in calculate_imaxpct():
 
-Cc: <stable@vger.kernel.org> # v6.10
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+	if (cli->imaxpct >= 0) {
+		cfg->imaxpct = cli->imaxpct;
+		return;
+	}
+
+	/* existing 5% - 25% default calculation */
+
+Instead of declaring extra variables?
+
+Also, regression test needed here...
 
 --D
 
-> ---
->  fs/xfs/xfs_exchrange.c | 71 ++++++++++++++++--------------------------
->  1 file changed, 27 insertions(+), 44 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
-> index f340a2015c4c..0b41bdfecdfb 100644
-> --- a/fs/xfs/xfs_exchrange.c
-> +++ b/fs/xfs/xfs_exchrange.c
-> @@ -329,22 +329,6 @@ xfs_exchrange_mappings(
->   * successfully but before locks are dropped.
->   */
+>  	int	lsectorsize;
+>  	uuid_t	uuid;
 >  
-> -/* Verify that we have security clearance to perform this operation. */
-> -static int
-> -xfs_exchange_range_verify_area(
-> -	struct xfs_exchrange	*fxr)
-> -{
-> -	int			ret;
-> -
-> -	ret = remap_verify_area(fxr->file1, fxr->file1_offset, fxr->length,
-> -			true);
-> -	if (ret)
-> -		return ret;
-> -
-> -	return remap_verify_area(fxr->file2, fxr->file2_offset, fxr->length,
-> -			true);
-> -}
-> -
->  /*
->   * Performs necessary checks before doing a range exchange, having stabilized
->   * mutable inode attributes via i_rwsem.
-> @@ -355,11 +339,13 @@ xfs_exchange_range_checks(
->  	unsigned int		alloc_unit)
+> @@ -1826,6 +1827,7 @@ inode_opts_parser(
+>  		break;
+>  	case I_MAXPCT:
+>  		cli->imaxpct = getnum(value, opts, subopt);
+> +		cli->imaxpct_using_default = false;
+>  		break;
+>  	case I_PERBLOCK:
+>  		cli->inopblock = getnum(value, opts, subopt);
+> @@ -3835,7 +3837,7 @@ calculate_imaxpct(
+>  	struct cli_params	*cli)
 >  {
->  	struct inode		*inode1 = file_inode(fxr->file1);
-> +	loff_t			size1 = i_size_read(inode1);
->  	struct inode		*inode2 = file_inode(fxr->file2);
-> +	loff_t			size2 = i_size_read(inode2);
->  	uint64_t		allocmask = alloc_unit - 1;
->  	int64_t			test_len;
->  	uint64_t		blen;
-> -	loff_t			size1, size2, tmp;
-> +	loff_t			tmp;
->  	int			error;
->  
->  	/* Don't touch certain kinds of inodes */
-> @@ -368,24 +354,25 @@ xfs_exchange_range_checks(
->  	if (IS_SWAPFILE(inode1) || IS_SWAPFILE(inode2))
->  		return -ETXTBSY;
->  
-> -	size1 = i_size_read(inode1);
-> -	size2 = i_size_read(inode2);
-> -
->  	/* Ranges cannot start after EOF. */
->  	if (fxr->file1_offset > size1 || fxr->file2_offset > size2)
->  		return -EINVAL;
->  
-> -	/*
-> -	 * If the caller said to exchange to EOF, we set the length of the
-> -	 * request large enough to cover everything to the end of both files.
-> -	 */
->  	if (fxr->flags & XFS_EXCHANGE_RANGE_TO_EOF) {
-> +		/*
-> +		 * If the caller said to exchange to EOF, we set the length of
-> +		 * the request large enough to cover everything to the end of
-> +		 * both files.
-> +		 */
->  		fxr->length = max_t(int64_t, size1 - fxr->file1_offset,
->  					     size2 - fxr->file2_offset);
-> -
-> -		error = xfs_exchange_range_verify_area(fxr);
-> -		if (error)
-> -			return error;
-> +	} else {
-> +		/*
-> +		 * Otherwise we require both ranges to end within EOF.
-> +		 */
-> +		if (fxr->file1_offset + fxr->length > size1 ||
-> +		    fxr->file2_offset + fxr->length > size2)
-> +			return -EINVAL;
->  	}
+>  	cfg->imaxpct = cli->imaxpct;
+> -	if (cfg->imaxpct)
+> +	if (!cli->imaxpct_using_default)
+>  		return;
 >  
 >  	/*
-> @@ -401,15 +388,6 @@ xfs_exchange_range_checks(
->  	    check_add_overflow(fxr->file2_offset, fxr->length, &tmp))
->  		return -EINVAL;
+> @@ -4891,6 +4893,7 @@ main(
+>  		.data_concurrency = -1, /* auto detect non-mechanical storage */
+>  		.log_concurrency = -1, /* auto detect non-mechanical ddev */
+>  		.autofsck = FSPROP_AUTOFSCK_UNSET,
+> +		.imaxpct_using_default = true,
+>  	};
+>  	struct mkfs_params	cfg = {};
 >  
-> -	/*
-> -	 * We require both ranges to end within EOF, unless we're exchanging
-> -	 * to EOF.
-> -	 */
-> -	if (!(fxr->flags & XFS_EXCHANGE_RANGE_TO_EOF) &&
-> -	    (fxr->file1_offset + fxr->length > size1 ||
-> -	     fxr->file2_offset + fxr->length > size2))
-> -		return -EINVAL;
-> -
->  	/*
->  	 * Make sure we don't hit any file size limits.  If we hit any size
->  	 * limits such that test_length was adjusted, we abort the whole
-> @@ -747,6 +725,7 @@ xfs_exchange_range(
->  {
->  	struct inode		*inode1 = file_inode(fxr->file1);
->  	struct inode		*inode2 = file_inode(fxr->file2);
-> +	loff_t			check_len = fxr->length;
->  	int			ret;
->  
->  	BUILD_BUG_ON(XFS_EXCHANGE_RANGE_ALL_FLAGS &
-> @@ -779,14 +758,18 @@ xfs_exchange_range(
->  		return -EBADF;
->  
->  	/*
-> -	 * If we're not exchanging to EOF, we can check the areas before
-> -	 * stabilizing both files' i_size.
-> +	 * If we're exchanging to EOF we can't calculate the length until taking
-> +	 * the iolock.  Pass a 0 length to remap_verify_area similar to the
-> +	 * FICLONE and FICLONERANGE ioctls that support cloning to EOF as well.
->  	 */
-> -	if (!(fxr->flags & XFS_EXCHANGE_RANGE_TO_EOF)) {
-> -		ret = xfs_exchange_range_verify_area(fxr);
-> -		if (ret)
-> -			return ret;
-> -	}
-> +	if (fxr->flags & XFS_EXCHANGE_RANGE_TO_EOF)
-> +		check_len = 0;
-> +	ret = remap_verify_area(fxr->file1, fxr->file1_offset, check_len, true);
-> +	if (ret)
-> +		return ret;
-> +	ret = remap_verify_area(fxr->file2, fxr->file2_offset, check_len, true);
-> +	if (ret)
-> +		return ret;
->  
->  	/* Update cmtime if the fd/inode don't forbid it. */
->  	if (!(fxr->file1->f_mode & FMODE_NOCMTIME) && !IS_NOCMTIME(inode1))
 > -- 
-> 2.45.2
+> 2.43.0
 > 
 > 
