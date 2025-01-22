@@ -1,58 +1,57 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63E132EAE6;
-	Wed, 22 Jan 2025 06:05:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9837214A619;
+	Wed, 22 Jan 2025 06:08:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737525944; cv=none; b=ATYJG8dNNBygWIz811VJ2DD275yDzR97Yc1Op6QrC+sGfDa3DgMsSLlnjw/O8Pv6MbBSPINS1pkAH/nqfFNKL97aWcmb5VZUKcgLBV9E8Pk5GGi34KI7/ySbyvG4TX3fdVeq25ODIfNqEY9zp6Gcu2TLeWL8Be2q9H7cZBtke+g=
+	t=1737526093; cv=none; b=BKA6bSlJnUC9tKDLMXKvzKiMjTwKHFuFeveg8zh9OMgLibaVWHKbpQzGjYWxuyoLg7rL2XR55KNBcmryQYt06BsKuA0fxFayYO/sQUjCboejY1/kWhddu4+G4jo37E74BiWcJe+rznuCPQV8thorUveRMRHF7onRSIW9/OUBv2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737525944; c=relaxed/simple;
-	bh=C8xb2q2wb/qdNRvZ0IIAZ7pc/kza8Ocaz92/GhCLNwI=;
+	s=arc-20240116; t=1737526093; c=relaxed/simple;
+	bh=KjJMs8fHVwKHv6OEfexa9LSO1lfvBeAQDSndd5UClnU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YdC2DYT2z1HKxtOqsP4e66ZHaE5tYjzqY6I9S1WqoYtF275zrp9xY82hC52hKkqehXtSfq1DnQ12VGHyqIfZQSAT1q0kiwIuxh6kDhCaohkRS8a9IWU/0MuRivgqxNECCM+incxTKOXo17dCOlPiNBE3MOGcZJltncM9hBqi0tI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hDP9PhoZ; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sjz1lFrdk9L1z0IcgPzdI4QvjcDQ6EJUh6VY9Acj3Tz2nBDOS7Pqw9yKYze0rdEDzWZx7GO5JaJ+NfSixWcjQolnTOh6gkvORuRoms76soo6V4dBvcjF1YF088MNxWD8uOPM0+i6FgQgjwCel9vkGYzJMJWBP0ncakTnKMVBbZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lGzK/p2a; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hDP9PhoZ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lGzK/p2a"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=3c8fMqRFp7W4ULSrZsyUXZR7MWnLpaFuVa0XgO+nrMw=; b=hDP9PhoZChUBnCxrL+JSAFsrWX
-	/P+Dbvdoc7eyiClKSj8lwaqnsubYlmbrZ6odfGTnbtuwv37WZdODDe7ByFOYTn10igIu5tSJEglpm
-	/65H80ETFBmMyQDZ8BNX8lWA9S7F5Uq4+svVIQXs1t+mgXuijJsJCJ9Tuj4isTO3VidloFkendZTn
-	HEKVnMTo4oRAH8iNABuprQ0bW92KR5cej8YwmcimXvyDZVpiMdaTcI1KRKTx90os2GPj7Me7uk6w9
-	Vknc21524ThrgQDVw26dMdkv7xgZyQbHwVMD8EKI0Bc4GQiyrZ4caWrUkNoE/vfErnIdZmEQyDrTf
-	rLkhjRqQ==;
+	bh=esCE0uoIt2v9CGg9foXrw4Ks2MQtiIQdLM2LCx2319Y=; b=lGzK/p2ahqdQfJRAUt7dvNrjBT
+	EE99qi+u4vGdUSqzRVDlyfSdNdrsE5XWjNtTrt9jMn0FKoxFo4yhnWHD9tH6vTkftD5fKyGfD5t4W
+	wN90pWOopUXJlQda8fnOAFANxzYGUqSCGImm3zFWR2mKHjsg+Sl0fiDsKj+vf4xbjSKRN/Kmmv4JQ
+	6DBURcXUYx5d1FyDzDs0T3vzM3F07HKxaWCkc3+L4AGr83PC8UxNomi8PR81qwdbeKNX8twJsCZoe
+	xvx2SwgvJrne01qzvO3mleqSkGCwCYgiVojWtN+pKO8ZNvSJe7Ps5LDlB+rDHLH/371/kBjj4E8fB
+	IVeTEPAg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1taTrw-00000009SGL-1UrO;
-	Wed, 22 Jan 2025 06:05:40 +0000
-Date: Tue, 21 Jan 2025 22:05:40 -0800
+	id 1taTuM-00000009STs-08pS;
+	Wed, 22 Jan 2025 06:08:10 +0000
+Date: Tue, 21 Jan 2025 22:08:10 -0800
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Amir Goldstein <amir73il@gmail.com>,
-	Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-	ronnie sahlberg <ronniesahlberg@gmail.com>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org, linux-cifs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Steve French <sfrench@samba.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Immutable vs read-only for Windows compatibility
-Message-ID: <Z5CKtOwB8ZsbX4N4@infradead.org>
-References: <20250114211050.iwvxh7fon7as7sty@pali>
- <0659dfe1-e160-40fd-b95a-5d319ca3504f@oracle.com>
- <20250114215350.gkc2e2kcovj43hk7@pali>
- <CAN05THSXjmVtvYdFLB67kKOwGN5jsAiihtX57G=HT7fBb62yEw@mail.gmail.com>
- <20250114235547.ncqaqcslerandjwf@pali>
- <20250114235925.GC3561231@frogsfrogsfrogs>
- <CAOQ4uxjj3XUNh6p3LLp_4YCJQ+cQHu7dj8uM3gCiU61L3CQRpA@mail.gmail.com>
- <20250117173900.GN3557553@frogsfrogsfrogs>
- <CAOQ4uxhh1LDz5zXzqFENPhJ9k851AL3E7Xc2d7pSVVYX4Fu9Jw@mail.gmail.com>
- <20250117202112.GH3561231@frogsfrogsfrogs>
+	Christoph Hellwig <hch@infradead.org>,
+	Brian Foster <bfoster@redhat.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Chi Zhiling <chizhiling@163.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chi Zhiling <chizhiling@kylinos.cn>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z5CLSmrBvp66WHPP@infradead.org>
+References: <20250108173547.GI1306365@frogsfrogsfrogs>
+ <Z4BbmpgWn9lWUkp3@dread.disaster.area>
+ <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
+ <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+ <20250113024401.GU1306365@frogsfrogsfrogs>
+ <Z4UX4zyc8n8lGM16@bfoster>
+ <Z4dNyZi8YyP3Uc_C@infradead.org>
+ <Z4grgXw2iw0lgKqD@dread.disaster.area>
+ <CAOQ4uxjRi9nagj4JVXMFoz0MXP_2YA=bgvoiDqStiHpFpK+tsQ@mail.gmail.com>
+ <Z4rXY2-fx_59nywH@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,18 +60,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250117202112.GH3561231@frogsfrogsfrogs>
+In-Reply-To: <Z4rXY2-fx_59nywH@dread.disaster.area>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Jan 17, 2025 at 12:21:12PM -0800, Darrick J. Wong wrote:
-> > Full disclosure - I have an out of tree xfs patch that implements
-> > ioctls XFS_IOC_[GS]ETDOSATTRAT and stashes these
-> > attributes in the unused di_dmevmask space.
-> 
-> [cc linux-xfs]
-> 
-> Urrrrk, please don't fork the xfs ondisk format!
+On Sat, Jan 18, 2025 at 09:19:15AM +1100, Dave Chinner wrote:
+> And, quite frankly, the fact the bcachefs solution also covers AIO
+> DIO in flight (which i_rwsem based locking does not!) means it is a
+> more robust solution than trying to rely on racy i_dio_count hacks
+> and folio residency in the page cache...
 
-Yeah, adding your own bits to any file system on-disk format is a huge
-no-go.
+The original i_rwsem (still i_iolock then) scheme did that, but the
+core locking maintainers asked us to remove the non-owner unlocks,
+so I did that.  It turns out later we got officially sanctioned
+non-owner unlocks, so we could have easily add this back.  I did that
+5 years ago, but reception was lukewarm:
 
+http://git.infradead.org/?p=users/hch/xfs.git;a=shortlog;h=refs/heads/i_rwsem-non_owner
