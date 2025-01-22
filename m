@@ -1,260 +1,137 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCEE91487FE
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 05:21:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C411D17D355
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 05:35:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737523312; cv=none; b=dR16w/P6/R2giBkt68iBRg1FptQb9ZDnZafb9phtg50V7NPopolXN/uuoNdkKBAeHdpF45QlW9p54oEZ4tawwz3vmxhafSnOSI+adBkvghnJuuwsCLl9QAJKtiUb+2aFpoMKHmTcKYTnlc/U0dOHzK7jnTjeOkvHUt3HhDohVv8=
+	t=1737524143; cv=none; b=ZC5/AxpQYuc72SFdlu/mScHWVz+u7xJZQnMV5Rgf/Wryly3MLLe4B386vkz4CWipH0CT/RES0rBGF2HTCzRQtYsGdOHdBJHL4cjIw7VTYBw9EbgJUEQxX5xjH/IB/HBk6DSVPn5MpKhGqxnw7UduWveQkGU8cKAQoZVgAXv7SH8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737523312; c=relaxed/simple;
-	bh=UTWz/bmCZZYU1LZ5ZRhUUvhP/HBZNLGpxFRpB0lxiEU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fvsvWBV4IAuk1JeAsd8AhkKlD8lO42LS+Zp6lGj7/qB2XP+ZPaBx1JmjbNqBq8byvayMnCluAf8y6day6Kytntvn7V27TeMWflNgkZZep8sjit8Jhuu2FJIud0LRWoKaV9XOIm1Z+J8+tBtWtG9pHrqumTcisuiy8YHTJDywB/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=VeXyLt5j; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="VeXyLt5j"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2156e078563so85341715ad.2
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Jan 2025 21:21:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737523310; x=1738128110; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HWK2P/XHD1Mf2BaG5j25AIwyCS/6y2CV9rzh02z6IvQ=;
-        b=VeXyLt5jT92mv/tUBFEjnvmNHID3DExtEVYNMwdv5j5jdHnk1z3XSsjMf8FIZ+6hcp
-         SMdHQaK9SX1W1fQ3ur4aNhq76xnxG+l/LjOXjPrVCTuKWLWv+pg+LXOEsnhthRhIYUSI
-         adZQpcETP8b8OxG5Sj8d8/ViW3IQw+1VYse2OwhEQtyTwMJvDVyGsbjEMrR3aMFg4/xI
-         wo7/8h6ZtG1SlmwGXTWmEvoC88zaJL2X8xzPuKRUdyMfb/ovIaP6yVdop6g8EXIcfyZn
-         0H72DliHgheZqpCR8xPPJf5hWj4m/qDi7HuBZ15sgbvc/RjC32oX8bLbB/nwiO+zX9zc
-         41Sw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737523310; x=1738128110;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HWK2P/XHD1Mf2BaG5j25AIwyCS/6y2CV9rzh02z6IvQ=;
-        b=I/8pGBHvIElyrLQxRnI74MwMKWGNZvdRcOrikYSAFJzmajszr6KzrkDwiC4qLXRoRt
-         KKvR99nyOM0QLLrTcWEZBPIetJfPO02DPHse5bA0Z3h0zVqtxdlf9P2dFVcepdTgyJc6
-         11BLNfEw2oRHIonnZ0e+C4mXCjHVnVnxksNTD8ycpV9NrrQfJppKkFnyLiYz420KElbz
-         j2CnnflV/J7Unx8ex94qYjYc91Gz4ge4JoSOXt+Z8l9dxoGrMwiNDnsXsN6I+qTORKtZ
-         U0yNhtcctXGpZFRpe3E+EorMXNnzKrrdvdf24+N3dv1jbygbF4kTtNazVFmgz3P3K9kz
-         cktg==
-X-Forwarded-Encrypted: i=1; AJvYcCVH3+WEMcwSKccXxCv60dNPkYscoNdR9SlY3sD0AO91C2+kIy7WYyT3QmbBiRLU3qdVkpl4D1lOeVs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6pNKKo5ML+8KwdqF76VG7yIkgML/vrKw5+42r7+Glr0nLBKvm
-	VObeRuyHsNJT/1zyZgOeSiCuDjc4wM+zleLaN8GLsfnwfda5MhR7glbKQ3QAG5KTOvMwuU3DDvE
-	G
-X-Gm-Gg: ASbGncvy2j3trFSBxeXJr7SteKYFuUH3L2duEsoQKoOaoYMd6O6jOpNCoAXRp1AXFNG
-	Wzb0OixLX31G0sJVZJ3FyzEHD545oJr/Xd4bCrjT3/L2oofB537/54jHGLzabcHPlcfsQTwqhko
-	lE+XNgF07XJ+S9xNsZF+1Dg2ttxbn+WEvcyGsknGX74tDZ8BEdhheXAQ8QT/IU8uRcy0eKojfGI
-	a9B18FLudfVa4o6UyqguGRwDlE3HoZJWmqN2XCs5yQ6b5qGi4qe9j+S2DWrFcUDSvBis0Ly+kjC
-	rBZTS3ZKqu0eS1SfWcuhGkdEdCJyJPQlQ20O0cCxO86yww==
-X-Google-Smtp-Source: AGHT+IH5R7pj8qLDenAoga+QJkWuqr4FgKHgan+NZCtM4+EprtmjwkKltMGWrn6lPQVE8Nw/9oijbg==
-X-Received: by 2002:a17:902:d501:b0:20c:9821:6998 with SMTP id d9443c01a7336-21c352c798emr356015375ad.10.1737523309911;
-        Tue, 21 Jan 2025 21:21:49 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2cea0531sm88261955ad.24.2025.01.21.21.21.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jan 2025 21:21:49 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1taTBS-00000008xQR-3036;
-	Wed, 22 Jan 2025 16:21:46 +1100
-Date: Wed, 22 Jan 2025 16:21:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/23] common/xfs: find loop devices for non-blockdevs
- passed to _prepare_for_eio_shutdown
-Message-ID: <Z5CAaq-SN96RSvfZ@dread.disaster.area>
-References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
- <173706974243.1927324.9105721327110864014.stgit@frogsfrogsfrogs>
- <Z48kffpLwUr1xMmT@dread.disaster.area>
- <20250122040542.GV1611770@frogsfrogsfrogs>
+	s=arc-20240116; t=1737524143; c=relaxed/simple;
+	bh=jrnt/ZIV+Kn9IY+B+ExGau000cp4MYYyhyUrmm6cTag=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=g4WblvoxEU31inRpYeGkQlUgtuTManozY9+yQ6i4nty2wo67Augz16FpvBC741NUHELAXKWNwzbpEuRcxGGNc3zdEpNnM9Trk0wQQVhocIsZ+tXzMtr1quS7nbQ8WSMC7LMJSIej0TqUi060OhTNiaFMp626SjxKoc7b0RpxbOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: b006944ad88211efa216b1d71e6e1362-20250122
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
+	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
+	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
+	HR_TO_NO_NAME, IP_UNTRUSTED, SRC_UNTRUSTED, IP_LOWREP, SRC_LOWREP
+	DN_TRUSTED, SRC_TRUSTED, SA_TRUSTED, SA_EXISTED, SPF_NOPASS
+	DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF
+	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_T1, AMN_GOOD
+	AMN_C_TI, AMN_C_BU, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.45,REQID:455d11e0-bade-429d-8f00-a28206a810df,IP:10,
+	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:30
+X-CID-INFO: VERSION:1.1.45,REQID:455d11e0-bade-429d-8f00-a28206a810df,IP:10,UR
+	L:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:30
+X-CID-META: VersionHash:6493067,CLOUDID:7547a915e95b49dcee1e3233b20a74b5,BulkI
+	D:250122111345HPZY64K4,BulkQuantity:1,Recheck:0,SF:17|19|25|38|45|66|78|10
+	2,TC:nil,Content:0|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:40,QS:nil,BEC
+	:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
+X-UUID: b006944ad88211efa216b1d71e6e1362-20250122
+X-User: liuhuan01@kylinos.cn
+Received: from localhost.localdomain [(123.53.36.254)] by mailgw.kylinos.cn
+	(envelope-from <liuhuan01@kylinos.cn>)
+	(Generic MTA)
+	with ESMTP id 232966728; Wed, 22 Jan 2025 13:35:28 +0800
+From: liuhuan01@kylinos.cn
+To: david@fromorbit.com,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	liuh <liuhuan01@kylinos.cn>
+Subject: [PATCH v1] mkfs: fix the issue of maxpct set to 0 not taking effect
+Date: Wed, 22 Jan 2025 13:35:05 +0800
+Message-Id: <20250122053505.156729-1-liuhuan01@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250122040542.GV1611770@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 21, 2025 at 08:05:42PM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 21, 2025 at 03:37:17PM +1100, Dave Chinner wrote:
-> > On Thu, Jan 16, 2025 at 03:28:02PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > xfs/336 does this somewhat sketchy thing where it mdrestores into a
-> > > regular file, and then does this to validate the restored metadata:
-> > > 
-> > > SCRATCH_DEV=$TEST_DIR/image _scratch_mount
-> > 
-> > That's a canonical example of what is called "stepping on a
-> > landmine".
-> 
-> 60% of fstests is written in bash, all of it is a friggin land mine
-> because bash totally lets us do variable substitution at any time, and
-> any time you make a change you have to exhaustively test the whole mess
-> to make sure nothing broke...
+From: liuh <liuhuan01@kylinos.cn>
 
-Yes, I know, which is why the moment I saw xfs/336 I called it out -
-it has never run on my machines, ever...
+It does not take effect when maxpct is specified as 0.
 
-> (Yeah, I hate bash)
+Firstly, the man mkfs.xfs shows that setting maxpct to 0 means that all of the filesystem can become inode blocks.
+However, when using mkfs.xfs and specifying maxpct = 0, the result is not as expected.
+	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
+	data     =                       bsize=4096   blocks=262144, imaxpct=25
+        	 =                       sunit=0      swidth=0 blks
 
-Not a great fan of it myself. But it's no worse than other scripting
-languages that use JIT based syntax checking from the "if it wasn't
-run it ain't tested" perspective.
+The reason is that the judging condition will never succeed when specifying maxpct = 0. As a result, the default algorithm was applied.
+    cfg->imaxpct = cli->imaxpct;
+    if (cfg->imaxpct)
+        return;
+It's important that maxpct can be set to 0 within the kernel xfs code.
 
-> > We validate that the SCRATCH_DEV is a block device at the start of
-> > check and each section it reads and runs (via common/config), and
-> > then make the assumption in all the infrastructure that SCRATCH_DEV
-> > always points to a valid block device.
-> 
-> We do?
+The result with patch:
+	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
+	data     =                       bsize=4096   blocks=262144, imaxpct=0
+        	 =                       sunit=0      swidth=0 blks
 
-fstests configurations for block based filesystems have always been
-based on block devices and mount points, not image files. 
+Signed-off-by: liuh <liuhuan01@kylinos.cn>
+---
+ mkfs/xfs_mkfs.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Yes, you can pass an image file to XFS utilities and they will do
-the right thing, but not all filesystems or all the infrastructure
-in fstests can handle an image file masquerading as a device.
-
-I certainly didn't expect it.....
-
-> Can you point me to the sentence in doc/ that says this
-> explicitly? 
-
-fstests is woefully under-documented - especially when it comes to
-configuration constraints and behaviours - so I doubt it is actually
-specified anywhere. AFAIA it has never been raised in discussion
-for a long time (not since we added network filesystem support a
-long time ago, IIRC)
-
-However, the code is pretty explicit - common/config is responsible
-for setting up and validating the runtime config before any test can
-run. All test and scratch devices are passed through this
-validation:
-
-_check_device()
-{
-        local name=$1
-        local dev_needed=$2
-        local dev=$3
-
-        if [ -z "$dev" ]; then
-                if [ "$dev_needed" == "required" ]; then
-                        _fatal "common/config: $name is required but not defined!"
-                fi
-                return 0
-        fi
-
-        if [ -b "$dev" ] || ( echo $dev | grep -qE ":|//" ); then
-                # block device or a network url
-                return 0
-	fi
-
-	case "$FSTYP" in
-        9p|fuse|tmpfs|virtiofs|afs)
-	.....
-	*)
-                _fatal "common/config: $name ($dev) is not a block device or a network filesystem"
-        esac
-}
-....
-
-Basically, it says that all the test and scratch devices (including
-the external ones) must be either a block device, a network URL, or
-a string that the specific filesystem under test must recognise and
-accept (e.g. a directory for overlay filesystems). Otherwise fstests
-will fail to run with an explicit error message that says:
-
-	<device> is not a block device or network filesystem
-
-Nowhere in this config validation process does fstests consider
-image files as a valid device configuration for a block based
-filesystem.
-
-If we need to do stuff with a image files, we have the
-infrastructure to create loop devices and then operate directly on
-that dynamic loop device(s) (e.g. _mkfs_dev, _mount, _unmount,
-_check_xfs_filesystem, etc) that are created.
-
-> There's nothing I can find in the any docs and
-> _try_scratch_mount does not check SCRATCH_DEV is a bdev for XFS.
-
-That's because it's validated before we start running tests and the
-assumption is that nobody is screwing with SCRATCH_DEV in a way
-that makes it behave vastly differently.
-
-Consider what it means to have to do runtime checking of the
-device validity in common code before we do anything with the
-device. We'd have to sprinkle _check_device calls -everywhere-.
-
-We'd also have to check logdev and rtdev variables if USE_EXTERNAL
-is set, too.
-
-That's not a viable development strategy, nor is it a maintainable
-solution to the issue at hand. It's far simpler to fix one test not
-to use this trick than it is to declare "nobody can trust TEST_DEV
-or SCRATCH_DEV to be a valid block device" and have to handle that
-everywhere those variables are used...
-
-> That needs to be documented.
-
-Sure.
-
-> > > Fix this by detecting non-bdevs and finding (we hope) the loop device
-> > > that was created to handle the mount. 
-> > 
-> > What loop device? xfs/336 doesn't use loop devices at all.
-> > 
-> > Oh, this is assuming that mount will silently do a loopback mount
-> > when passed a file rather than a block device. IOWs, it's relying on
-> > some third party to do the loop device creation and hence allow it
-> > to be mounted.
-> > 
-> > IOWs, this change is addressing a landmine by adding another
-> > landmine.
-> 
-> Some would say that mount adding the ability to set up a loop dev was
-> itself *avoiding* a landmine from 90s era util-linux.
-
-True.
-
-But in the case of fstests we explicitly create loop
-devices so that we don't have to play whacky games to find the
-random loop device that mount magically creates when you pass it a
-file.
-
-Making all the image file and loop device usage consistent across
-all of fstests was part of the infrastructure changes in my initial
-check-parallel patchset. This was necessary because killing tests
-with ctrl-c would randomly leave dangling mounts and loop devices
-because many tests did not have _cleanup routines to tear down
-mounts that auto-created loop devices or clean up loop
-devices they created themselves properly.
-
-Part of those changes was fixing up the mess in some XFS tests
-where that mixed loop device and image file based operations
-interchangably. I didn't notice x/336 because it wasn't
-running on my test system and so didn't attempt to fix it at the
-same time...
-
-> > I really think that xfs/336 needs to be fixed - one off test hacks
-> > like this, while they may work, only make modifying and maintaining
-> > the fstests infrastructure that much harder....
-> 
-> Yeah, it'll get cleaned up for the rtrmap fstests merge.
-
-Thanks!
-
--Dave.
-
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 956cc295..6f0275d2 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1034,13 +1034,14 @@ struct cli_params {
+ 	int	proto_slashes_are_spaces;
+ 	int	data_concurrency;
+ 	int	log_concurrency;
++	int	imaxpct;
++	int	imaxpct_using_default;
+ 
+ 	/* parameters where 0 is not a valid value */
+ 	int64_t	agcount;
+ 	int64_t	rgcount;
+ 	int	inodesize;
+ 	int	inopblock;
+-	int	imaxpct;
+ 	int	lsectorsize;
+ 	uuid_t	uuid;
+ 
+@@ -1826,6 +1827,7 @@ inode_opts_parser(
+ 		break;
+ 	case I_MAXPCT:
+ 		cli->imaxpct = getnum(value, opts, subopt);
++		cli->imaxpct_using_default = false;
+ 		break;
+ 	case I_PERBLOCK:
+ 		cli->inopblock = getnum(value, opts, subopt);
+@@ -3835,7 +3837,7 @@ calculate_imaxpct(
+ 	struct cli_params	*cli)
+ {
+ 	cfg->imaxpct = cli->imaxpct;
+-	if (cfg->imaxpct)
++	if (!cli->imaxpct_using_default)
+ 		return;
+ 
+ 	/*
+@@ -4891,6 +4893,7 @@ main(
+ 		.data_concurrency = -1, /* auto detect non-mechanical storage */
+ 		.log_concurrency = -1, /* auto detect non-mechanical ddev */
+ 		.autofsck = FSPROP_AUTOFSCK_UNSET,
++		.imaxpct_using_default = true,
+ 	};
+ 	struct mkfs_params	cfg = {};
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.43.0
+
