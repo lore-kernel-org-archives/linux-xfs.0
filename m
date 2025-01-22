@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E30C4170A30;
-	Wed, 22 Jan 2025 07:02:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90346170A30;
+	Wed, 22 Jan 2025 07:05:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737529334; cv=none; b=IrueUvSTs82RLXrpPMdYv3ExFWifTqwilCACRcY2jHpa9+uGXDn/mVIafVrRafkdCCMeV9vEkAGWbCYfom4sMYMAVdUowIdcE9yW5iWHiG3AZBHgbTiKOCV3kfht4F1Ulu68Ctx8/mBuA3pLJmeDZn0a/pyE43RmCyp+vPZpWY4=
+	t=1737529521; cv=none; b=U/FVr9wehOw5s9cvBkmoXsgSzX5EPWxEl6GvnPqMWmPOktski+X6C30BLTXLzPqsFnlpd4Adt3FRlaeheYncx0WZxn4mcuwSHgwcaJhxTMxFCnk65l/dY92RqYXBVRjDdS+xjWPVzravgd8AVfwZlJ6uaW1xM/Vk8dAw+5hQovg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737529334; c=relaxed/simple;
-	bh=E8DKODeyKKi8YQv0D18OmMB6E9G1CrG2xBoE1zyCAXE=;
+	s=arc-20240116; t=1737529521; c=relaxed/simple;
+	bh=dmaN1PyI3doIGcfzfnWK+IjDV2PLESEQIR64XSz/+aw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AKreA/09BYvbmLo/BnQWrxpBMlwhGB/6px8INrgEg0xx2XgkC7k6+wKlzozBgfCbDv4YdDEtJM+AWl96/by33C46lRHyfvqLxTDGuKz8lQthMQ5QxAWIGFCKw/qkDXaAfCEXyZ6O2Jk8fN+aF0/weld3DJ9C2oPWwO1QbGGKGEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iLQkn1m+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DfNprEyI/FSzoUtVJpLqlGQW+fOm/EqY766jQxrE3fisAhg1ZGNJm4sIbsUg0TUKLq3iFqyxaP50hEbyYNfLqXsNYWAQ8D5/5Ec6+Z0AD8WUWpAknsICuGZVwhCGIps7QuotQ6IGIqB8rvFS/fDUGtPIKoSAdNDQ6qnEV9QS6R4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iQKTNtye; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iLQkn1m+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53E76C4CED6;
-	Wed, 22 Jan 2025 07:02:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iQKTNtye"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E926CC4CED6;
+	Wed, 22 Jan 2025 07:05:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737529333;
-	bh=E8DKODeyKKi8YQv0D18OmMB6E9G1CrG2xBoE1zyCAXE=;
+	s=k20201202; t=1737529521;
+	bh=dmaN1PyI3doIGcfzfnWK+IjDV2PLESEQIR64XSz/+aw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iLQkn1m+IXD/UcwHAxXykVjpnZC1tagNPHzqTTVLXEmbD+fOLBNkQqQMt0f2Lks1v
-	 MPG3aUgTFSTatnV/ISznzUcA9CyWOJEBjIoRMvFxrxEKSsiiNeg6K3/5imXqbDbhQw
-	 MMOTO33UZdKJbI41NHZmEbcd9N3wSksmB2BehMOR9UKOQiBSnsWk4mncvzG9gT8+9h
-	 Z6EsWDS4pOG9Qm8dppvSVs2lIYsOE2+6QXA/l7DJU574LUmG9GsGUC2tDy6iwxgThn
-	 qQNrGZwN0OzbY1oyW9ocqDH6SmFkY6NCMHeXy3N6i4XMV61p5hKinLW0RoCe8SdIcH
-	 jR3pppWYJLRcg==
-Date: Tue, 21 Jan 2025 23:02:12 -0800
+	b=iQKTNtyexPHvUfP/xLJER2rb1TFx87NJGBt4/FSv2sT3YVyZCTppWU/am+40XH8t0
+	 ifst/bMG682rBOmqLH3rJupw+NceWB5YxadRi/ikTVsYXuuC0Fp1zPF90griUQVp0P
+	 U/5RqD0c7+0u68Nz/3Xfwu2alXtR15Pv1zbDyNRkwtGXn7BAzAX0lnlYpnwlpxeJpz
+	 TzUfpxwCKMkFA7wb+bi0cut5vAj5R2B4Wow5WSnJMO+GYQdoxLtdm8aGneK+U4/N+g
+	 zhJnDnFeBQ8X1QE84OmRIPyIQ/b1m2/6gPfGzFoFrbrgjsNMFv2dSe5qXnoMa5fFRu
+	 /AUKWbWQDjM7w==
+Date: Tue, 21 Jan 2025 23:05:20 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, zlang@redhat.com, hch@lst.de,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/23] generic/650: revert SOAK DURATION changes
-Message-ID: <20250122070212.GC1611770@frogsfrogsfrogs>
+Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 08/23] common: fix pkill by running test program in a
+ separate session
+Message-ID: <20250122070520.GD1611770@frogsfrogsfrogs>
 References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
- <173706974273.1927324.11899201065662863518.stgit@frogsfrogsfrogs>
- <Z48pM9GEhp9P_VLX@dread.disaster.area>
- <20250121130027.GB3809348@mit.edu>
- <Z5AclEe71PIikAnH@dread.disaster.area>
- <20250122040839.GD3761769@mit.edu>
- <Z5CJy195Fh36NNHN@dread.disaster.area>
+ <173706974197.1927324.9208284704325894988.stgit@frogsfrogsfrogs>
+ <Z48UWiVlRmaBe3cY@dread.disaster.area>
+ <20250122042400.GX1611770@frogsfrogsfrogs>
+ <Z5CLUbj4qbXCBGAD@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,112 +47,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z5CJy195Fh36NNHN@dread.disaster.area>
+In-Reply-To: <Z5CLUbj4qbXCBGAD@dread.disaster.area>
 
-On Wed, Jan 22, 2025 at 05:01:47PM +1100, Dave Chinner wrote:
-> On Tue, Jan 21, 2025 at 11:08:39PM -0500, Theodore Ts'o wrote:
-> > On Wed, Jan 22, 2025 at 09:15:48AM +1100, Dave Chinner wrote:
-> > > check-parallel on my 64p machine runs the full auto group test in
-> > > under 10 minutes.
+On Wed, Jan 22, 2025 at 05:08:17PM +1100, Dave Chinner wrote:
+> On Tue, Jan 21, 2025 at 08:24:00PM -0800, Darrick J. Wong wrote:
+> > On Tue, Jan 21, 2025 at 02:28:26PM +1100, Dave Chinner wrote:
+> > > On Thu, Jan 16, 2025 at 03:27:15PM -0800, Darrick J. Wong wrote:
+> > > > c) Putting test subprocesses in a systemd sub-scope and telling systemd
+> > > > to kill the sub-scope could work because ./check can already use it to
+> > > > ensure that all child processes of a test are killed.  However, this is
+> > > > an *optional* feature, which means that we'd have to require systemd.
 > > > 
-> > > i.e. if you have a typical modern server (64-128p, 256GB RAM and a
-> > > couple of NVMe SSDs), then check-parallel allows a full test run in
-> > > the same time that './check -g smoketest' will run....
+> > > ... requiring systemd was somewhat of a show-stopper for testing
+> > > older distros.
 > > 
-> > Interesting.  I would have thought that even with NVMe SSD's, you'd be
-> > I/O speed constrained, especially given that some of the tests
-> > (especially the ENOSPC hitters) can take quite a lot of time to fill
-> > the storage device, even if they are using fallocate.
+> > Isn't RHEL7 the oldest one at this point?  And it does systemd.  At this
+> > point the only reason I didn't go full systemd is out of consideration
+> > for Devuan, since they probably need QA.
 > 
-> You haven't looked at how check-parallel works, have you? :/
+> I have no idea what is out there in distro land vs what fstests
+> "supports". All I know is that there are distros out there that
+> don't use systemd.
 > 
-> > How do you have your test and scratch devices configured?
-> 
-> Please go and read the check-parallel script. It does all the
-> per-runner process test and scratch device configuration itself
-> using loop devices.
-> 
-> > > Yes, and I've previously made the point about how check-parallel
-> > > changes the way we should be looking at dev-test cycles. We no
-> > > longer have to care that auto group testing takes 4 hours to run and
-> > > have to work around that with things like smoketest groups. If you
-> > > can run the whole auto test group in 10-15 minutes, then we don't
-> > > need "quick", "smoketest", etc to reduce dev-test cycle time
-> > > anymore...
-> > 
-> > Well, yes, if the only consideration is test run time latency.
-> 
-> Sure.
-> 
-> > I can think of two off-setting considerations.  The first is if you
-> > care about cost.
-> 
-> Which I really don't care about.
-> 
-> That's something for a QE organisation to worry about, and it's up
-> to them to make the best use of the tools they have within the
-> budget they have.
-> 
-> > The second concern is that for certain class of failures (UBSAN,
-> > KCSAN, Lockdep, RCU soft lockups, WARN_ON, BUG_ON, and other
-> > panics/OOPS), if you are runnig 64 tests in parllel it might not be
-> > obvious which test caused the failure.
-> 
-> Then multiple tests will fail with the same dmesg error, but it's
-> generally pretty clear which of the tests caused it. Yes, it's a bit
-> more work to isolate the specific test, but it's not hard or any
-> different to how a test failure is debugged now.
-> 
-> If you want to automate such failures, then my process is to grep
-> the log files for all the tests that failed with a dmesg error then
-> run them again using check instead of check-parallel.  Then I get
-> exactly which test generated the dmesg output without having to put
-> time into trying to work out which test triggered the failure.
-> 
-> > Today, even if the test VM
-> > crashes or hangs, I can have test manager (which runs on a e2-small VM
-> > costing $0.021913 USD/hour and can manage dozens of test VM's all at the
-> > same time), can restart the test VM, and we know which test is at at
-> > fault, and we mark that a particular test with the Junit XML status of
-> > "error" (as distinct from "success" or "failure").  If there are 64
-> > test runs in parallel, if I wanted to have automated recovery if the
-> > test appliance hangs or crashes, life gets a lot more complicated.....
-> 
-> Not really. Both dmesg and the results files will have tracked all
-> the tests inflight when the system crashes, so it's just an extra
-> step to extract all those tests and run them again using check
-> and/or check-parallel to further isolate which test caused the
-> failure....
+> It feels like poor form to prevent generic filesystem QA
+> infrastructure from running on those distros by making an avoidable
+> choice to tie the infrastructure exclusively to systemd-based
+> functionality....
 
-That reminds me to go see if ./check actually fsyncs the state and
-report files and whatnot between tests, so that we have a better chance
-of figuring out where exactly fstests blew up the machine.
+Agreed, though at some point after these bugfixes are merged I'll see if
+I can build on the existing "if you have systemd then ___ else here's
+your shabby opencoded version" logic in fstests to isolate the ./checks
+from each other a little better.  It'd be kinda nice if we could
+actually just put them in something resembling a modernish container,
+albeit with the same underlying fs.
 
-(Luckily xfs is stable enough I haven't had a machine explode in quite
-some time, good job everyone! :))
+<shrug> Anyone else interested in that?
 
 --D
 
-> I'm sure this could be automated eventually, but that's way down my
-> priority list right now.
-> 
-> > I suppose we could have the human (or test automation) try run each
-> > individual test that had been running at the time of the crash but
-> > that's a lot more complicated, and what if the tests pass when run
-> > once at a time?  I guess we should happen that check-parallel found a
-> > bug that plain check didn't find, but the human being still has to
-> > root cause the failure.
-> 
-> Yes. This is no different to a test that is flakey or compeltely
-> fails when run serially by check multiple times. You still need a
-> human to find the root cause of the failure.
-> 
-> Nobody is being forced to change their tooling or processes to use
-> check-parallel if they don't want or need to. It is an alternative
-> method for running the tests within the fstests suite - if using
-> check meets your needs, there is no reason to use check-parallel or
-> even care that it exists...
-> 
 > -Dave.
 > -- 
 > Dave Chinner
