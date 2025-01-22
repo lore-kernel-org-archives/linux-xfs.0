@@ -1,86 +1,85 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05647185B62
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 23:35:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9CED1CAA94
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 23:51:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737588960; cv=none; b=CaVflA7bCMOzW6SsEWyDilXq+t58lkBoTq1ovJnyDu90jVO6EfxMRN2wt+HsjE2iX1tZ6yKG489inwPDCssFthIjta7/zBj4PiL2AE/idwzD5o62UlXG4Co/1c2sMCXsdksc8MBYOi3BTkFfO0U2/H0VtyGdko22Og00l+pmWjU=
+	t=1737589901; cv=none; b=OGQvm41M/bRLxep590KL0cwK5rnIBOJb1SphMVfk13TWYXczRlZiLxFgrrMfXNSlPPfaLTPq3L0rwnauchhz5fTneDIqWokzqmHm9NvSKk9aCW3z1HZRZaXlfEg2aeL5lcSbwR4hDbkJpNnU9kwh4asRoXDQNHXzFQIbz7HtMdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737588960; c=relaxed/simple;
-	bh=IUIZ7amWJcDTh/AOG8Asjr28ffYWJP9MY3y3xx/ttk0=;
+	s=arc-20240116; t=1737589901; c=relaxed/simple;
+	bh=eGyA3rqoqd93cwyl2S8laa78snBew5qe12qSM3/if9I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Hvr0u/nklqS3NazWkp842h8BuI8Fs5suxcz+OOeUWhAf0P2bBw1cEQcQejaxFUhqD/J8/NmA596iiCmaQKFEQBR+QtNTNBElLcDBFRa1nENCUIWKkPB/ezSIxselqcDdevL9WBXZPYRfTCo+ndHDBguK/c3gv4ZKn9jQxiCTGag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RWC0V26/; arc=none smtp.client-ip=209.85.214.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=XpOUvnOWpErf+/VyGn5tXdp6AcczGYJ4ID8VPHjSjkegVJTuZ8OQ38CQgmrJcyY/H+Vx8QFWq1ctVOe+zEkb2lp5dqCK8BJaBn+Oae83NQQ/DU8o/y4EA2aQOZ4tnli39GN3WaIM9EqWovwZeW40oFb/7lkuSCcH39wDh1o6+Ng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ll0q/DmU; arc=none smtp.client-ip=209.85.214.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RWC0V26/"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-21bc1512a63so4417925ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 15:35:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ll0q/DmU"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2166022c5caso3628005ad.2
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 15:51:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737588957; x=1738193757; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737589899; x=1738194699; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PQIZKSNd8OQ+CuQJmCwdgXHO6+w/Fkh8ODeAu97iHYY=;
-        b=RWC0V26/viuMgjUV9RjNHAlGBbW3+e9hZ5mxpW6JewuU0QessC014Z5DZmVqWfv05I
-         M3xWYt3sGprnPb9Rp4igillDaqU+rsHtEEqmw3Cy1RbNIfv28ZpdVh81GIVn9n8Exdme
-         rrSe7JXQkiJfFaiybvS3VLSlmUWio7oEgO5FV93xgc7oQUfUplG0+N05MGkBQ1MNZqfd
-         18YjdEjvdm1RKnb0NPry+JlhdGrMpEjSDIsbrKP1doCSiqfGxXyqxWQgQX18twykJHxk
-         HFGVBq8oLUx+WDcwq2M0eVwo90f9cmijlZFzKRBEw0B/BzsmTjYcsYG3vcqo1sqrHXLB
-         W0bg==
+        bh=CR+WSCo7rNY6An/Jr/D/lBMugrGIQSBj95/AQbGzEws=;
+        b=ll0q/DmUqAwQgzmwylfUOP15kXQOJGX9txIC/fk7vIBACtzNT1z7Hh0OM92fSsL+O+
+         MisJcySLzV7gV/HXa7Ohts94n2u5SU6G8Ld3+jUkKn9bI/YPiZb8F7/mQ4w9ZfRJhlKp
+         zUcyZSE8und3UUmhXtcknXtA6zVEnz5GFzJkuIic4+IZ3KOpdyq4VxwDLfbIj8Nt69a0
+         CUPtas/TDfHZXfl0wGLbr5N2NHC/WZE4M1Bfp+DfCFgZ3GBEQ7v+UllyB+/9aK8M2W64
+         /X5gmlvzTTxh/Zfs/fY5GLJnE1HZ15l2HYkgNjo4HGsu8Ie1x9ar7HrWSP/y36wWZTET
+         papw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737588957; x=1738193757;
+        d=1e100.net; s=20230601; t=1737589899; x=1738194699;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=PQIZKSNd8OQ+CuQJmCwdgXHO6+w/Fkh8ODeAu97iHYY=;
-        b=KM1jWNJhMHAXfo6K1me5iMLol9jxyl5fsHEzjmNmL8wBjk4x6Z/Z/oJFIPp8ZyZV7k
-         LCfMU2BNDGJz2VHGs/enFL4VT43AQevyjnfLn5vRGH1ZpCg3d6ca7RidtQACu6eQN2yr
-         1smuG9I4hzfTIQKdTa7RsauTgbyD9TdjALo8/kmKasRlJ2yfeCB/w9B83AtLI90lHG/S
-         Pslrt85shNC3HAmRBnn281zOPkZ6C2tW8LkxdOuQfju66x8SYzPINktrgJYetabH0GpX
-         Cs0ucdeMy7evTsCyX5iL8nEKkGDw7NCfSNtLdipH1Wo8awSWlv/2f+VHvr6cmcdL7sgJ
-         8BTw==
-X-Forwarded-Encrypted: i=1; AJvYcCUsjfcoHqJvAkP1FeXWO+bHweROV7IynVMimBKHRCLzqcqO6WNM/37C924kWJg8mqDWkROpPCoeH7w=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3SnZbZhX2O/09XDsR6x2BeRubls0u8NRCjhzVkJCZniP00xhT
-	AwXn3NOysvwX4hcoKTL3Gl2LdOfIHc+KR/grZqQvHxaMymvEOyegta1yzUpR8a0=
-X-Gm-Gg: ASbGncvMd7KFpfPrPsv6wGIp5EeSDKaYvKD8/AQtVfCMsSfn2qfi0h/79BYaexfZgrZ
-	GxLlZ/5EtjCWEtcVMCniLv1D15QQB1SZ2f8GyiE4pAGB6dC4nKeen2IEh8+uxiUoeH5mpDvOJ9r
-	EiVK3/4rroKhXU5yKGI11VoqIcf6B1BAXHaJmNQS/4fL7FCpkwRNjcqqjSrrmZou2zrmJ/0WIMi
-	6snt/UFNPAeyjHDGoCIBMMelbWPc51XVRxMjrFN+zpCl1HaYfO1a4JEHakm6J1LAjBuM6WJJLeX
-	lrYHHriIuzGXTTgjxi3Ci4F0cvcL1bF/rX0=
-X-Google-Smtp-Source: AGHT+IEbIemosPcPMqz4QUqnOq5Y3a04UAxJv4Gi5UG/0jI/jDEkwZvs5Q/7Vdqfmtw4fKwGDPsy3w==
-X-Received: by 2002:a05:6a20:4312:b0:1e0:cf39:846a with SMTP id adf61e73a8af0-1eb2159019emr38319317637.29.1737588957316;
-        Wed, 22 Jan 2025 15:35:57 -0800 (PST)
+        bh=CR+WSCo7rNY6An/Jr/D/lBMugrGIQSBj95/AQbGzEws=;
+        b=v7SHETR7RZR+gxd14CIJoYrvQ9olSDu7Qs+CVpRxJX6EgMhmnRJFIJQM43rNHwGmWM
+         We35edmnM2cFAB8FTbWtT/gj70xaN5tnElJsGksx+jg0C3mPhRM/prOdHIC+Gpb47gNY
+         2828iJ05hMbZCDUvhb8+xpCNuvo/FcKGA1pbD2ACsW8gxeN1o6o1wktQlgoePJxLVvpl
+         l+FejC+9NtGRAvaFhQmNMWZCDj+UgNJeftsAANwDKUKKq5yC/O4DZU9vBgEakxatfMW9
+         t89HsWci80TR4eFQBzgTaKkFxpGyIDyJKt1B6rgklK8cxU6XPYVRPOjx4pPehEpFICS9
+         pgSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXREURmX6dLAQ/ddbH1SwfxMRjfO0RaXTbtnD7xCxBnK4VKflM3a0TAJUPCVVua0/ep41AE6shB1Y8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyI/BKIhSRiVNQlLi3NyP1dx2HOJgG7U+e2kOm5lK0nNWaReB3c
+	eUzBCZsCDLxROlG65zgSNNDEpuOHdZkvusPpcVaI0sayciw1Y0g2Bps6TEaNvTM=
+X-Gm-Gg: ASbGncuffF2qqdvkIXVxqz1v54m1QOU1v0gyizkEFz13V8A/55fePiAGEj1aGV7qlj6
+	rNmcMgpGSwY/X2J/FawvoaPAAUSJNU1QzqddB8sQbun5jQ9BPC3K9W56Uysp1PI+l7i/dL7m4tK
+	D1E9QyrLK+mXo6d2x4mJ5LsSdbjJgGdjCCjyrogV/CvcDEl2QRicNgXUXTWSrUh6RcwDOjJTiMR
+	LDt8GbZIRMPgG4pE7hS9g83H4ydKg0RynI3/ds4KpuTxhqCyklkKLCHsnZw1tJj2P3YfNYiLieH
+	6LUb7ViOD4R/CsMqYe1x5BDDyJ1d1V56WKlDE5R8jMaHcA==
+X-Google-Smtp-Source: AGHT+IHaMy+6xBIMYG0uehZ3fvKU97NG0GIFdN8l4dmBBBi9bUHzdTceyQ6RVgjQiPgM5S1jdX6YCA==
+X-Received: by 2002:a17:902:ce0c:b0:21c:e34:c8c3 with SMTP id d9443c01a7336-21c35540560mr416546775ad.24.1737589898928;
+        Wed, 22 Jan 2025 15:51:38 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72dab9c8dc4sm11899720b3a.94.2025.01.22.15.35.56
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2d42cb87sm100450515ad.254.2025.01.22.15.51.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Jan 2025 15:35:56 -0800 (PST)
+        Wed, 22 Jan 2025 15:51:38 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1takGI-00000009HCE-0jDL;
-	Thu, 23 Jan 2025 10:35:54 +1100
-Date: Thu, 23 Jan 2025 10:35:54 +1100
+	id 1takVT-00000009HMD-2x8v;
+	Thu, 23 Jan 2025 10:51:35 +1100
+Date: Thu, 23 Jan 2025 10:51:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, Brian Foster <bfoster@redhat.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Chi Zhiling <chizhiling@163.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-Message-ID: <Z5GA2rm9wg6xCQTs@dread.disaster.area>
-References: <Z4BbmpgWn9lWUkp3@dread.disaster.area>
- <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
- <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
- <20250113024401.GU1306365@frogsfrogsfrogs>
- <Z4UX4zyc8n8lGM16@bfoster>
- <Z4dNyZi8YyP3Uc_C@infradead.org>
- <Z4grgXw2iw0lgKqD@dread.disaster.area>
- <CAOQ4uxjRi9nagj4JVXMFoz0MXP_2YA=bgvoiDqStiHpFpK+tsQ@mail.gmail.com>
- <Z4rXY2-fx_59nywH@dread.disaster.area>
- <Z5CLSmrBvp66WHPP@infradead.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+	brauner@kernel.org, cem@kernel.org, dchinner@redhat.com,
+	ritesh.list@gmail.com, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	martin.petersen@oracle.com
+Subject: Re: [PATCH 1/4] iomap: Lift blocksize restriction on atomic writes
+Message-ID: <Z5GEh0XA3Nt_4K2f@dread.disaster.area>
+References: <Z1C9IfLgB_jDCF18@dread.disaster.area>
+ <3ab6000e-030d-435a-88c3-9026171ae9f1@oracle.com>
+ <Z1IX2dFida3coOxe@dread.disaster.area>
+ <20241212013433.GC6678@frogsfrogsfrogs>
+ <Z4Xq6WuQpVOU7BmS@dread.disaster.area>
+ <20250114235726.GA3566461@frogsfrogsfrogs>
+ <20250116065225.GA25695@lst.de>
+ <20250117184934.GI1611770@frogsfrogsfrogs>
+ <20250122064247.GA31374@lst.de>
+ <0c0753fb-8a35-42a6-8698-b141b1e561ca@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -89,33 +88,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z5CLSmrBvp66WHPP@infradead.org>
+In-Reply-To: <0c0753fb-8a35-42a6-8698-b141b1e561ca@oracle.com>
 
-On Tue, Jan 21, 2025 at 10:08:10PM -0800, Christoph Hellwig wrote:
-> On Sat, Jan 18, 2025 at 09:19:15AM +1100, Dave Chinner wrote:
-> > And, quite frankly, the fact the bcachefs solution also covers AIO
-> > DIO in flight (which i_rwsem based locking does not!) means it is a
-> > more robust solution than trying to rely on racy i_dio_count hacks
-> > and folio residency in the page cache...
+On Wed, Jan 22, 2025 at 10:45:34AM +0000, John Garry wrote:
+> On 22/01/2025 06:42, Christoph Hellwig wrote:
+> > On Fri, Jan 17, 2025 at 10:49:34AM -0800, Darrick J. Wong wrote:
+> > > The trouble is that the br_startoff attribute of cow staging mappings
+> > > aren't persisted on disk anywhere, which is why exchange-range can't
+> > > handle the cow fork.  You could open an O_TMPFILE and swap between the
+> > > two files, though that gets expensive per-io unless you're willing to
+> > > stash that temp file somewhere.
+> > 
+> > Needing another inode is better than trying to steal ranges from the
+> > actual inode we're operating on.  But we might just need a different
+> > kind of COW staging for that.
+> > 
+> > > 
+> > > At this point I think we should slap the usual EXPERIMENTAL warning on
+> > > atomic writes through xfs and let John land the simplest multi-fsblock
+> > > untorn write support, which only handles the corner case where all the
+> > > stars are <cough> aligned; and then make an exchange-range prototype
+> > > and/or all the other forcealign stuff.
+> > 
+> > That is the worst of all possible outcomes.  Combing up with an
+> > atomic API that fails for random reasons only on aged file systems
+> > is literally the worst thing we can do.  NAK.
+> > 
+> > 
 > 
-> The original i_rwsem (still i_iolock then) scheme did that, but the
-> core locking maintainers asked us to remove the non-owner unlocks,
-> so I did that.  It turns out later we got officially sanctioned
-> non-owner unlocks, so we could have easily add this back.  I did that
-> 5 years ago, but reception was lukewarm:
+> I did my own quick PoC to use CoW for misaligned blocks atomic writes
+> fallback.
 > 
-> http://git.infradead.org/?p=users/hch/xfs.git;a=shortlog;h=refs/heads/i_rwsem-non_owner
+> I am finding that the block allocator is often giving misaligned blocks wrt
+> atomic write length, like this:
 
-I have no issues with the concept - I have always thought that
-holding the IOLOCK to completion was how the IO locking should work
-(like we do with the xfs_buf semaphore). The i_dio_count submission
-barrier solution was a necessary hack because rwsems did not work
-the way we needed to use them.
+Of course - I'm pretty sure this needs force-align to ensure that
+the large allocated extent is aligned to file offset and hardware
+atomic write alignment constraints....
 
-What I didn't like about the proposal above was the implementation
-(i.e. the encoding of rwsem semantics in the iomap dio API and
-implementation), but there was never any followup that addressed the
-issues that were raised.....
+> Since we are not considering forcealign ATM, can we still consider some
+> other alignment hint to the block allocator? It could be similar to how
+> stripe alignment is handled.
+
+Perhaps we should finish off the the remaining bits needed to make
+force-align work everywhere before going any further?
+
+> Some other thoughts:
+> - I am not sure what atomic write unit max we would now use.
+
+What statx exposes should be the size/alignment for hardware offload
+to take place (i.e. no change), regardless of what the filesystem
+can do software offloads for. i.e. like statx->stx_blksize is the
+"preferred block size for efficient IO", the atomic write unit
+information is the "preferred atomic write size and alignment for
+efficient IO", not the maximum sizes supported...
+
+> - Anything written back with CoW/exchange range will need FUA to ensure that
+> the write is fully persisted.
+
+I don't think so. The journal commit for the exchange range
+operation will issue a cache flush before the journal IO is
+submitted. that will make the new data stable before the first
+xchgrange transaction becomes stable.
+
+Hence we get the correct data/metadata ordering on stable storage
+simply by doing the exchange-range operation at data IO completion.
+This the same data/metadata ordering semantics that unwritten extent
+conversion is based on....
 
 -Dave.
 -- 
