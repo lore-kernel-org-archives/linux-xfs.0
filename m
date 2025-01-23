@@ -1,138 +1,373 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2859D20F97F
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2025 14:36:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A935155742;
+	Thu, 23 Jan 2025 18:38:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737642984; cv=none; b=Jxhk7oVHVPiQt3noNGrvsJv2gDOkWmU7SwWhJLsQwhEVv5AhzcFzWxkoTJUW2hTlvsVTihB9IV40QHCv7Ga20K4w9dK8vpGMlRyZwHrwjTF5WiThZaGJlxAncXhXCBfsW9jeRYgdTwcDO56p0QCqmOh89gW9J0yimi2u4k6dT3Y=
+	t=1737657530; cv=none; b=DAOIUJ43ihgVnoA1JfIetPyS/6qJz1/w2HqBvd9t1QNEyRBTqeWiRms3Fr+BSDkJvT/P/Pap2jTVE0BeLgElu9PVxfewC32OpOxewl9CaM0hxV4JliOdXa3iF2ZJQq+nG+3KkhoPLzfCS2E9nIRHooawsHqxBmLET6qOKUu5AFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737642984; c=relaxed/simple;
-	bh=9i78HgaR/K/uMGzsfQEExs0vNgdAY2XGMLXVMvQedVI=;
+	s=arc-20240116; t=1737657530; c=relaxed/simple;
+	bh=B8vf/GvZ4RuLNQA5YcmbIFPuvvC/A/niNdym549ins8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oadyOh8PCmkQ40sb6LDLM6aGXqDqiJJWpF87lExhY/nCFqLJOeVhyK2ZTmRhmZvrF1+hydzRoy9Vs3ItLeGNM2UdimKYy+DU+6g9RgHbrKLSY6cEkiWe+lSc60cbC3OHr3H5QxoVL+tt2XoPGuk/tXk56loK5OdbfRpOcmGnApQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=KCp+WVt5; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	 Content-Type:Content-Disposition:In-Reply-To; b=diZR4d+tjrm3pUsS9JKvkQ7I+2F79V92Zk2ww9QyOnwDjkrGX/WscBzeqOglihCI+elnpfx2DXkA8fzmXfsVT1MptvQNNjG6x39ZGNjxGHQo3aM3DehnjE3I8TACpWyNcA4EnlEhdsof/40bRY2q9c5eqPLOYbXEwSX+N0q7+d8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iUFIIBZ4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="KCp+WVt5"
-Received: from cwcc.thunk.org (pool-173-48-111-161.bstnma.fios.verizon.net [173.48.111.161])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 50NEa8je031371
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 Jan 2025 09:36:11 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1737642971; bh=m+K3D6TC8qqwGD93r0vzX6DXE876S+ae4UVvkyiPN10=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=KCp+WVt5LZLvxKU99vF4RW15EVntQFF0WOHuUhnaB9Mx3tbUEuAT+ZBMkCE7QL6a8
-	 UAEXBXWauBervjFyyVD+8x+1cYluh6YqGmOp1xJLR9Q47wHPJDE2eIS/apgb0/r0Yo
-	 XM015xVDDJ0RyhQj4Bic8cmbAMwkmAqWdMCPfwhDJ/QOXaZ9ytpCZwQpatB7k5IF4C
-	 bTiT3mltqQWNQCnwSBbtt7+Lwrx1NSlu6Ss2P2o4q3qHmreqeFEOe69Jf5GIZJtT2K
-	 n2x12JnHC8yHJ4/zUTtPDkWS1FYBifdjiIrsFFEC5vG67CHuTWge98VojwJU+myiBc
-	 +opRrUKoqroOA==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-	id BB17715C011B; Thu, 23 Jan 2025 09:36:08 -0500 (EST)
-Date: Thu, 23 Jan 2025 09:36:08 -0500
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: =?utf-8?B?5p2O5rqi5p6X?= <liyilin22@mail.sdu.edu.cn>
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: Security Vulnerability Report: Cross-filesystem ACL Permissions
- Issue in Different File Systems (EXT4, XFS, NTFS, etc.)
-Message-ID: <20250123143608.GC3875121@mit.edu>
-References: <ADQA5wAlItaWspfgpQyP3qot.1.1737622470288.Hmail.202217060@mail.sdu.edu.cn>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iUFIIBZ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 962CAC4CEDF;
+	Thu, 23 Jan 2025 18:38:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737657529;
+	bh=B8vf/GvZ4RuLNQA5YcmbIFPuvvC/A/niNdym549ins8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iUFIIBZ4wb/Vq8GlMLdnAcyiV9v9HbbjCJ/UxhvZksSx1yI8NTYj0V4DZRwMII16B
+	 mh/r+yGOSSL/OlyOLXHVnjAQgWJZ45/HOo4k9jkCj/wRS3+NAesPvgbM9yoGTnueb0
+	 sI5qPyQvohoielhw9EF4n1nO9EUWz1YC6c6wxB/Iu21DR2XjInPWByAb7Y24YK8UpN
+	 F1xsxBLt2kRtGCax5dSuLLKjQrHW/ULFIXg/bhcxOYh4gxkrr5aEPm1KfUpucGK1ke
+	 Oe1P+rHfTFEEKUvL2EhT4im3C5tSYyyvj/2w97AFnt+eg9G/bROZ8fIGSlOLOSAuZu
+	 2Yks00JxLdpog==
+Date: Thu, 23 Jan 2025 10:38:48 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: torvalds@linux-foundation.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: xfs: new code for 6.14 (needs [GIT PULL]?)
+Message-ID: <20250123183848.GF1611770@frogsfrogsfrogs>
+References: <i6yf5ledzs4qdt5zhrpg7nz5neyygktthupap6uulpuojcx7un@phdanup4alqb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ADQA5wAlItaWspfgpQyP3qot.1.1737622470288.Hmail.202217060@mail.sdu.edu.cn>
+In-Reply-To: <i6yf5ledzs4qdt5zhrpg7nz5neyygktthupap6uulpuojcx7un@phdanup4alqb>
 
-On Thu, Jan 23, 2025 at 04:54:30PM +0800, 李溢林 wrote:
-> I am writing to report a security vulnerability related to
-> cross-filesystem permissions management that I have discovered. This
-> issue appears to impact filesystems like EXT4 and XFS, and it could
-> potentially lead to unauthorized access of sensitive data during the
-> migration of files between different filesystems with varying
-> permission models.
->
-> The vulnerability arises when a file with Access Control List (ACL)
-> restrictions, created in a file system that supports ACL (e.g., EXT4
-> or XFS), is moved or copied to a file system that does not support
-> ACL (e.g., FAT32 or NTFS). During this migration, the ACLs are lost,
-> and the file's permissions fall back to default settings on the
-> target file system, which may allow unauthorized users to access the
-> file.
+Hey everyone,
 
-What is your proposal for how to address this?  I'm not really sure
-I'd call it a "vulnerability", per se.  If the user is relying on a
-particular ACL to deny access using negative access, and they copy the
-file somewhere that doesn't support Posix ACL's, this is the natural
-and expected effect.
+It's been a couple of days and this PR hasn't been merged yet.  Is there
+a reason to delay the merge, or is it simply that the mail was missing
+the usual "[GIT PULL]" tag in the subject line and it didn't get
+noticed?
 
-There are plenty of ways this could happen beyond the one that you've
-describe.  For example, they could copy the file to a file system that
-doesn't support ACL's at all (such as say a FAT file system).  They
-could create a tar file.  They could use rsync or scp to copy the
-directory hierarcy, etc.
+--D
 
-Further, I'll note that NFS (sometimes fondly referred to by security
-folks as "No File Security") relies on the client asserting the user
-id accessing the file.  (Yes, in theory NFS could use Kerberos or
-GSSAPI to provide user-level authentication, but in practice, this is
-**extremely** rare.)  Furthermore, the system administration policies
-of the client might very well be different from the server.  For
-example, users might have physical access to the client, making it
-trivially possible to gain root, where as the server might be in a
-locked machine room.
-
-For example, consider how we used Kerberos authentcation, NFS, and the
-fact that users could trvially get root on their local clients[1] at
-MIT Project Atenna back in the late 1980's.
-
-[1] https://minnie.tuhs.org/mailman3/hyperkitty/list/tuhs@tuhs.org/thread/QB6D2L2RGO5C3BYT45RSEXKLICQYGOSF/#RYYRCWE247SEU7TGN7IPATYK3GZHGX36
-
-
-I'll also note that in general, the scenario assumes that files are
-accessile via local file access as well as remotely over some kind of
-remote file accesss (e.g., CIFS or NFS).  Don't do that.  If you are
-trying to supply access to legacy Windows machines using CIFS, then
-access the files from Linux using CIFS as well, and then rely solely
-on the Windows ACL model.  Otherwise, even if the files aren't getting
-copied, the access checks when the files are access locally are
-different from when they are accessed via some kind of remote access
-protocol, whether it's a remote file system like NFS, or something
-like WEBDAV.
-
-
-> This issue is critical when files are transferred between file
-> systems with incompatible ACL implementations, particularly in
-> multi-user or shared environments. I have tested this behavior on
-> multiple systems, and it is clear that moving files between file
-> systems with different ACL models leads to unintended permission
-> changes.
-
-I the user is copying it from a file hiearchy using Posix ACL, to a
-different file system hierarchy, then how is that different from the
-"security vulnerability" where the user copies it to a USB thumb
-drive, and then takes the USB thumb drive out, and hands it to a spy?
-Oh, noes!!!
-
-Fundamentally, if you don't trust the user (either because they might
-be malicious, or because they are incompetent), Discretionary Access
-Controls (DAC) are not going to help you.  This is why Mandatory
-Access Controls (MAC) were invented.  Of course, MAC's are extremely
-painful to use, and so in practice almost no one tries to use MAC
-today.  Military organizations might use it if they have unlimited
-budget, but even there, it's often easier to have separate systems for
-unclassified informations and for classified information, and you
-control physical access via armed guards and the signs saying "Deadly
-Force is Authorized".  :-)
-
-Cheers,
-
-					- Ted
+On Tue, Jan 21, 2025 at 02:09:27PM +0100, Carlos Maiolino wrote:
+> 
+> Hi Linus,
+> 
+> could you please pull the patches below?
+> 
+> This pull request are mostly focused on the implementation of reflink
+> and reverse-mapping support for XFS's real-time devices.
+> This also includes several bugfixes.
+> 
+> The patches are in linux-next for a few days already, and a trial
+> merge just now, against your TOT didn't show any conflicts.
+> 
+> Thanks,
+> Carlos.
+> 
+> The following changes since commit 111d36d6278756128b7d7fab787fdcbf8221cd98:
+> 
+>   xfs: lock dquot buffer before detaching dquot from b_li_list (2025-01-10 10:12:48 +0100)
+> 
+> are available in the Git repository at:
+> 
+>   git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-merge-6.14
+> 
+> for you to fetch changes up to ee10f6fcdb961e810d7b16be1285319c15c78ef6:
+> 
+>   xfs: fix buffer lookup vs release race (2025-01-16 10:19:59 +0100)
+> 
+> ----------------------------------------------------------------
+> New XFS code for 6.14
+> 
+> * Implement reflink support for the realtime device
+> * Implement reverse-mapping support for the realtime device
+> * Several bug fixes and cleanups
+> 
+> Signed-off-by: Carlos Maiolino <cem@kernel.org>
+> 
+> ----------------------------------------------------------------
+> Carlos Maiolino (5):
+>       Merge tag 'xfs-6.13-fixes_2024-12-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into for-next
+>       Merge tag 'btree-ifork-records_2024-12-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into for-next
+>       Merge tag 'reserve-rt-metadata-space_2024-12-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into for-next
+>       Merge tag 'realtime-rmap_2024-12-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into for-next
+>       Merge tag 'realtime-reflink_2024-12-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into for-next
+> 
+> Christoph Hellwig (25):
+>       xfs: refactor xfs_reflink_find_shared
+>       xfs: mark xfs_dir_isempty static
+>       xfs: remove XFS_ILOG_NONCORE
+>       xfs: remove the t_magic field in struct xfs_trans
+>       xfs: fix the comment above xfs_discard_endio
+>       xfs: don't take m_sb_lock in xfs_fs_statfs
+>       xfs: refactor xfs_fs_statfs
+>       xfs: constify feature checks
+>       xfs: fix a double completion for buffers on in-memory targets
+>       xfs: remove the incorrect comment above xfs_buf_free_maps
+>       xfs: remove the incorrect comment about the b_pag field
+>       xfs: move xfs_buf_iowait out of (__)xfs_buf_submit
+>       xfs: simplify xfs_buf_delwri_pushbuf
+>       xfs: remove xfs_buf_delwri_submit_buffers
+>       xfs: move write verification out of _xfs_buf_ioapply
+>       xfs: move in-memory buftarg handling out of _xfs_buf_ioapply
+>       xfs: simplify buffer I/O submission
+>       xfs: move invalidate_kernel_vmap_range to xfs_buf_ioend
+>       xfs: remove the extra buffer reference in xfs_buf_submit
+>       xfs: always complete the buffer inline in xfs_buf_submit
+>       xfs: simplify xfsaild_resubmit_item
+>       xfs: move b_li_list based retry handling to common code
+>       xfs: add a b_iodone callback to struct xfs_buf
+>       xfs: check for dead buffers in xfs_buf_find_insert
+>       xfs: fix buffer lookup vs release race
+> 
+> Darrick J. Wong (91):
+>       xfs: don't over-report free space or inodes in statvfs
+>       xfs: tidy up xfs_iroot_realloc
+>       xfs: release the dquot buf outside of qli_lock
+>       xfs: refactor the inode fork memory allocation functions
+>       xfs: make xfs_iroot_realloc take the new numrecs instead of deltas
+>       xfs: make xfs_iroot_realloc a bmap btree function
+>       xfs: tidy up xfs_bmap_broot_realloc a bit
+>       xfs: hoist the node iroot update code out of xfs_btree_new_iroot
+>       xfs: hoist the node iroot update code out of xfs_btree_kill_iroot
+>       xfs: add some rtgroup inode helpers
+>       xfs: prepare rmap btree cursor tracepoints for realtime
+>       xfs: prepare to reuse the dquot pointer space in struct xfs_inode
+>       xfs: simplify the xfs_rmap_{alloc,free}_extent calling conventions
+>       xfs: support storing records in the inode core root
+>       xfs: allow inode-based btrees to reserve space in the data device
+>       xfs: introduce realtime rmap btree ondisk definitions
+>       xfs: realtime rmap btree transaction reservations
+>       xfs: add realtime rmap btree operations
+>       xfs: prepare rmap functions to deal with rtrmapbt
+>       xfs: add a realtime flag to the rmap update log redo items
+>       xfs: support recovering rmap intent items targetting realtime extents
+>       xfs: pretty print metadata file types in error messages
+>       xfs: support file data forks containing metadata btrees
+>       xfs: add realtime reverse map inode to metadata directory
+>       xfs: add metadata reservations for realtime rmap btrees
+>       xfs: wire up a new metafile type for the realtime rmap
+>       xfs: wire up rmap map and unmap to the realtime rmapbt
+>       xfs: create routine to allocate and initialize a realtime rmap btree inode
+>       xfs: wire up getfsmap to the realtime reverse mapping btree
+>       xfs: check that the rtrmapbt maxlevels doesn't increase when growing fs
+>       xfs: report realtime rmap btree corruption errors to the health system
+>       xfs: allow queued realtime intents to drain before scrubbing
+>       xfs: scrub the realtime rmapbt
+>       xfs: cross-reference realtime bitmap to realtime rmapbt scrubber
+>       xfs: cross-reference the realtime rmapbt
+>       xfs: scan rt rmap when we're doing an intense rmap check of bmbt mappings
+>       xfs: scrub the metadir path of rt rmap btree files
+>       xfs: walk the rt reverse mapping tree when rebuilding rmap
+>       xfs: online repair of realtime file bmaps
+>       xfs: repair inodes that have realtime extents
+>       xfs: repair rmap btree inodes
+>       xfs: online repair of realtime bitmaps for a realtime group
+>       xfs: support repairing metadata btrees rooted in metadir inodes
+>       xfs: online repair of the realtime rmap btree
+>       xfs: create a shadow rmap btree during realtime rmap repair
+>       xfs: hook live realtime rmap operations during a repair operation
+>       xfs: don't shut down the filesystem for media failures beyond end of log
+>       xfs: react to fsdax failure notifications on the rt device
+>       xfs: enable realtime rmap btree
+>       xfs: prepare refcount btree cursor tracepoints for realtime
+>       xfs: namespace the maximum length/refcount symbols
+>       xfs: introduce realtime refcount btree ondisk definitions
+>       xfs: realtime refcount btree transaction reservations
+>       xfs: add realtime refcount btree operations
+>       xfs: prepare refcount functions to deal with rtrefcountbt
+>       xfs: add a realtime flag to the refcount update log redo items
+>       xfs: support recovering refcount intent items targetting realtime extents
+>       xfs: add realtime refcount btree block detection to log recovery
+>       xfs: add realtime refcount btree inode to metadata directory
+>       xfs: add metadata reservations for realtime refcount btree
+>       xfs: wire up a new metafile type for the realtime refcount
+>       xfs: wire up realtime refcount btree cursors
+>       xfs: create routine to allocate and initialize a realtime refcount btree inode
+>       xfs: update rmap to allow cow staging extents in the rt rmap
+>       xfs: compute rtrmap btree max levels when reflink enabled
+>       xfs: refactor reflink quota updates
+>       xfs: enable CoW for realtime data
+>       xfs: enable sharing of realtime file blocks
+>       xfs: allow inodes to have the realtime and reflink flags
+>       xfs: recover CoW leftovers in the realtime volume
+>       xfs: fix xfs_get_extsz_hint behavior with realtime alwayscow files
+>       xfs: apply rt extent alignment constraints to CoW extsize hint
+>       xfs: enable extent size hints for CoW operations
+>       xfs: check that the rtrefcount maxlevels doesn't increase when growing fs
+>       xfs: report realtime refcount btree corruption errors to the health system
+>       xfs: scrub the realtime refcount btree
+>       xfs: cross-reference checks with the rt refcount btree
+>       xfs: allow overlapping rtrmapbt records for shared data extents
+>       xfs: check reference counts of gaps between rt refcount records
+>       xfs: allow dquot rt block count to exceed rt blocks on reflink fs
+>       xfs: detect and repair misaligned rtinherit directory cowextsize hints
+>       xfs: scrub the metadir path of rt refcount btree files
+>       xfs: don't flag quota rt block usage on rtreflink filesystems
+>       xfs: check new rtbitmap records against rt refcount btree
+>       xfs: walk the rt reference count tree when rebuilding rmap
+>       xfs: capture realtime CoW staging extents when rebuilding rt rmapbt
+>       xfs: online repair of the realtime refcount btree
+>       xfs: repair inodes that have a refcount btree in the data fork
+>       xfs: check for shared rt extents when rebuilding rt file's data fork
+>       xfs: fix CoW forks for realtime files
+>       xfs: enable realtime reflink
+> 
+> Long Li (4):
+>       xfs: fix mount hang during primary superblock recovery failure
+>       xfs: clean up xfs_end_ioend() to reuse local variables
+>       xfs: remove redundant update for ticket->t_curr_res in xfs_log_ticket_regrant
+>       xfs: remove bp->b_error check in xfs_attr3_root_inactive
+> 
+> Mirsad Todorovac (1):
+>       xfs/libxfs: replace kmalloc() and memcpy() with kmemdup()
+> 
+>  fs/xfs/Makefile                      |    6 +
+>  fs/xfs/libxfs/xfs_ag_resv.c          |    3 +
+>  fs/xfs/libxfs/xfs_attr.c             |    4 +-
+>  fs/xfs/libxfs/xfs_bmap.c             |   34 +-
+>  fs/xfs/libxfs/xfs_bmap_btree.c       |  111 ++++
+>  fs/xfs/libxfs/xfs_bmap_btree.h       |    3 +
+>  fs/xfs/libxfs/xfs_btree.c            |  411 +++++++++++---
+>  fs/xfs/libxfs/xfs_btree.h            |   28 +-
+>  fs/xfs/libxfs/xfs_btree_mem.c        |    1 +
+>  fs/xfs/libxfs/xfs_btree_staging.c    |   10 +-
+>  fs/xfs/libxfs/xfs_defer.h            |    2 +
+>  fs/xfs/libxfs/xfs_dir2.c             |    9 +-
+>  fs/xfs/libxfs/xfs_dir2.h             |    1 -
+>  fs/xfs/libxfs/xfs_errortag.h         |    4 +-
+>  fs/xfs/libxfs/xfs_exchmaps.c         |    4 +-
+>  fs/xfs/libxfs/xfs_format.h           |   51 +-
+>  fs/xfs/libxfs/xfs_fs.h               |   10 +-
+>  fs/xfs/libxfs/xfs_health.h           |    6 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c        |   65 ++-
+>  fs/xfs/libxfs/xfs_inode_fork.c       |  201 +++----
+>  fs/xfs/libxfs/xfs_inode_fork.h       |    6 +-
+>  fs/xfs/libxfs/xfs_log_format.h       |   16 +-
+>  fs/xfs/libxfs/xfs_log_recover.h      |    4 +
+>  fs/xfs/libxfs/xfs_metadir.c          |    4 +
+>  fs/xfs/libxfs/xfs_metafile.c         |  223 ++++++++
+>  fs/xfs/libxfs/xfs_metafile.h         |   13 +
+>  fs/xfs/libxfs/xfs_ondisk.h           |    4 +
+>  fs/xfs/libxfs/xfs_refcount.c         |  278 +++++++--
+>  fs/xfs/libxfs/xfs_refcount.h         |   23 +-
+>  fs/xfs/libxfs/xfs_rmap.c             |  178 ++++--
+>  fs/xfs/libxfs/xfs_rmap.h             |   12 +-
+>  fs/xfs/libxfs/xfs_rtbitmap.c         |    2 +-
+>  fs/xfs/libxfs/xfs_rtbitmap.h         |    9 +
+>  fs/xfs/libxfs/xfs_rtgroup.c          |   74 ++-
+>  fs/xfs/libxfs/xfs_rtgroup.h          |   58 +-
+>  fs/xfs/libxfs/xfs_rtrefcount_btree.c |  757 +++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_rtrefcount_btree.h |  189 +++++++
+>  fs/xfs/libxfs/xfs_rtrmap_btree.c     | 1035 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_rtrmap_btree.h     |  210 +++++++
+>  fs/xfs/libxfs/xfs_sb.c               |   14 +
+>  fs/xfs/libxfs/xfs_shared.h           |   21 +
+>  fs/xfs/libxfs/xfs_trans_resv.c       |   37 +-
+>  fs/xfs/libxfs/xfs_trans_space.h      |   13 +
+>  fs/xfs/libxfs/xfs_types.h            |    7 +
+>  fs/xfs/scrub/agheader_repair.c       |    2 +-
+>  fs/xfs/scrub/alloc_repair.c          |    5 +-
+>  fs/xfs/scrub/bmap.c                  |  126 ++++-
+>  fs/xfs/scrub/bmap_repair.c           |  148 ++++-
+>  fs/xfs/scrub/common.c                |  170 +++++-
+>  fs/xfs/scrub/common.h                |   26 +-
+>  fs/xfs/scrub/cow_repair.c            |  180 +++++-
+>  fs/xfs/scrub/health.c                |    2 +
+>  fs/xfs/scrub/inode.c                 |   41 +-
+>  fs/xfs/scrub/inode_repair.c          |  193 ++++++-
+>  fs/xfs/scrub/metapath.c              |    6 +
+>  fs/xfs/scrub/newbt.c                 |   42 ++
+>  fs/xfs/scrub/newbt.h                 |    1 +
+>  fs/xfs/scrub/quota.c                 |    8 +-
+>  fs/xfs/scrub/quota_repair.c          |    2 +-
+>  fs/xfs/scrub/reap.c                  |  288 +++++++++-
+>  fs/xfs/scrub/reap.h                  |    9 +
+>  fs/xfs/scrub/refcount.c              |    2 +-
+>  fs/xfs/scrub/refcount_repair.c       |    6 +-
+>  fs/xfs/scrub/repair.c                |  197 +++++++
+>  fs/xfs/scrub/repair.h                |   24 +
+>  fs/xfs/scrub/rgb_bitmap.h            |   37 ++
+>  fs/xfs/scrub/rgsuper.c               |    6 +-
+>  fs/xfs/scrub/rmap_repair.c           |   91 ++-
+>  fs/xfs/scrub/rtb_bitmap.h            |   37 ++
+>  fs/xfs/scrub/rtbitmap.c              |   77 ++-
+>  fs/xfs/scrub/rtbitmap.h              |   55 ++
+>  fs/xfs/scrub/rtbitmap_repair.c       |  451 ++++++++++++++-
+>  fs/xfs/scrub/rtrefcount.c            |  661 ++++++++++++++++++++++
+>  fs/xfs/scrub/rtrefcount_repair.c     |  783 +++++++++++++++++++++++++
+>  fs/xfs/scrub/rtrmap.c                |  323 +++++++++++
+>  fs/xfs/scrub/rtrmap_repair.c         | 1006 +++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/rtsummary.c             |   17 +-
+>  fs/xfs/scrub/rtsummary_repair.c      |    3 +-
+>  fs/xfs/scrub/scrub.c                 |   18 +-
+>  fs/xfs/scrub/scrub.h                 |   28 +-
+>  fs/xfs/scrub/stats.c                 |    2 +
+>  fs/xfs/scrub/tempexch.h              |    2 +-
+>  fs/xfs/scrub/tempfile.c              |   21 +-
+>  fs/xfs/scrub/trace.c                 |    1 +
+>  fs/xfs/scrub/trace.h                 |  280 ++++++++-
+>  fs/xfs/xfs_aops.c                    |    2 +-
+>  fs/xfs/xfs_attr_inactive.c           |    5 -
+>  fs/xfs/xfs_buf.c                     |  606 ++++++++------------
+>  fs/xfs/xfs_buf.h                     |   11 +-
+>  fs/xfs/xfs_buf_item.h                |    5 -
+>  fs/xfs/xfs_buf_item_recover.c        |   19 +-
+>  fs/xfs/xfs_discard.c                 |    2 +-
+>  fs/xfs/xfs_dquot.c                   |   26 +-
+>  fs/xfs/xfs_dquot.h                   |    3 +
+>  fs/xfs/xfs_drain.c                   |   20 +-
+>  fs/xfs/xfs_drain.h                   |    7 +-
+>  fs/xfs/xfs_error.c                   |    3 +
+>  fs/xfs/xfs_exchrange.c               |    3 +
+>  fs/xfs/xfs_fsmap.c                   |  193 ++++++-
+>  fs/xfs/xfs_fsops.c                   |   30 +
+>  fs/xfs/xfs_health.c                  |    2 +
+>  fs/xfs/xfs_inode.c                   |   19 +-
+>  fs/xfs/xfs_inode.h                   |   16 +-
+>  fs/xfs/xfs_inode_item.c              |   30 +-
+>  fs/xfs/xfs_inode_item_recover.c      |   48 +-
+>  fs/xfs/xfs_ioctl.c                   |   21 +-
+>  fs/xfs/xfs_log.c                     |    2 -
+>  fs/xfs/xfs_log_recover.c             |    4 +
+>  fs/xfs/xfs_mount.c                   |   14 +
+>  fs/xfs/xfs_mount.h                   |   25 +-
+>  fs/xfs/xfs_notify_failure.c          |  230 +++++---
+>  fs/xfs/xfs_notify_failure.h          |   11 +
+>  fs/xfs/xfs_qm.c                      |   10 +-
+>  fs/xfs/xfs_qm_bhv.c                  |   26 +-
+>  fs/xfs/xfs_quota.h                   |    5 -
+>  fs/xfs/xfs_refcount_item.c           |  240 +++++++-
+>  fs/xfs/xfs_reflink.c                 |  321 ++++++++---
+>  fs/xfs/xfs_reflink.h                 |    4 +-
+>  fs/xfs/xfs_rmap_item.c               |  216 ++++++-
+>  fs/xfs/xfs_rtalloc.c                 |  121 +++-
+>  fs/xfs/xfs_rtalloc.h                 |   20 +
+>  fs/xfs/xfs_stats.c                   |    5 +-
+>  fs/xfs/xfs_stats.h                   |    3 +
+>  fs/xfs/xfs_super.c                   |  142 +++--
+>  fs/xfs/xfs_super.h                   |    1 -
+>  fs/xfs/xfs_trace.h                   |  270 ++++++---
+>  fs/xfs/xfs_trans.c                   |    6 +-
+>  fs/xfs/xfs_trans.h                   |    1 -
+>  fs/xfs/xfs_trans_ail.c               |    9 +-
+>  fs/xfs/xfs_trans_buf.c               |    8 +-
+>  fs/xfs/xfs_trans_dquot.c             |    8 +-
+>  131 files changed, 10861 insertions(+), 1440 deletions(-)
+>  create mode 100644 fs/xfs/libxfs/xfs_rtrefcount_btree.c
+>  create mode 100644 fs/xfs/libxfs/xfs_rtrefcount_btree.h
+>  create mode 100644 fs/xfs/libxfs/xfs_rtrmap_btree.c
+>  create mode 100644 fs/xfs/libxfs/xfs_rtrmap_btree.h
+>  create mode 100644 fs/xfs/scrub/rgb_bitmap.h
+>  create mode 100644 fs/xfs/scrub/rtb_bitmap.h
+>  create mode 100644 fs/xfs/scrub/rtrefcount.c
+>  create mode 100644 fs/xfs/scrub/rtrefcount_repair.c
+>  create mode 100644 fs/xfs/scrub/rtrmap.c
+>  create mode 100644 fs/xfs/scrub/rtrmap_repair.c
+>  create mode 100644 fs/xfs/xfs_notify_failure.h
+> 
