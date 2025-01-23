@@ -1,160 +1,217 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9CED1CAA94
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 23:51:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FEA617741
+	for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2025 01:16:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737589901; cv=none; b=OGQvm41M/bRLxep590KL0cwK5rnIBOJb1SphMVfk13TWYXczRlZiLxFgrrMfXNSlPPfaLTPq3L0rwnauchhz5fTneDIqWokzqmHm9NvSKk9aCW3z1HZRZaXlfEg2aeL5lcSbwR4hDbkJpNnU9kwh4asRoXDQNHXzFQIbz7HtMdk=
+	t=1737595015; cv=none; b=NfqlO5ZTupGPEFDdiBBpFg6AHSLbXMTqWkMCjgD9EfBdRJqVTYt3NuGO3198sSvQ+pkJ4uBF7R4v/LY3JoSQK7AfV+KyoQePM/s4wMGG3HNiEL8e2OfgzaRW7RD7bId6iMcD8D6oD1SIeQyobdJz1uDeOsRtYorhe5DyX+PH/aA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737589901; c=relaxed/simple;
-	bh=eGyA3rqoqd93cwyl2S8laa78snBew5qe12qSM3/if9I=;
+	s=arc-20240116; t=1737595015; c=relaxed/simple;
+	bh=D+/JKEUX4/Ti+zOWqlKUKxssxjCtUcI2akEQ1e9xGhk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XpOUvnOWpErf+/VyGn5tXdp6AcczGYJ4ID8VPHjSjkegVJTuZ8OQ38CQgmrJcyY/H+Vx8QFWq1ctVOe+zEkb2lp5dqCK8BJaBn+Oae83NQQ/DU8o/y4EA2aQOZ4tnli39GN3WaIM9EqWovwZeW40oFb/7lkuSCcH39wDh1o6+Ng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ll0q/DmU; arc=none smtp.client-ip=209.85.214.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=GyR8vrtn4IRf7ZOPRQ0Ab+GtbxWjkmPZAp7uF9lhuJQ37HVkVEQ7rGaLaLjHQ8itvJ8WQjCRsdepX+Vt7X9edaYhRW7lVcMLKCNutqwuqEZ/SztWQaEifC2ncOOxinGAT2HcFiM9zJiXsZlz+8+xn+8Cw0YC4j/PrrDwIWkIsGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=itWR9YRi; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ll0q/DmU"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2166022c5caso3628005ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 15:51:39 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="itWR9YRi"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2163b0c09afso5582805ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2025 17:16:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737589899; x=1738194699; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=CR+WSCo7rNY6An/Jr/D/lBMugrGIQSBj95/AQbGzEws=;
-        b=ll0q/DmUqAwQgzmwylfUOP15kXQOJGX9txIC/fk7vIBACtzNT1z7Hh0OM92fSsL+O+
-         MisJcySLzV7gV/HXa7Ohts94n2u5SU6G8Ld3+jUkKn9bI/YPiZb8F7/mQ4w9ZfRJhlKp
-         zUcyZSE8und3UUmhXtcknXtA6zVEnz5GFzJkuIic4+IZ3KOpdyq4VxwDLfbIj8Nt69a0
-         CUPtas/TDfHZXfl0wGLbr5N2NHC/WZE4M1Bfp+DfCFgZ3GBEQ7v+UllyB+/9aK8M2W64
-         /X5gmlvzTTxh/Zfs/fY5GLJnE1HZ15l2HYkgNjo4HGsu8Ie1x9ar7HrWSP/y36wWZTET
-         papw==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1737595013; x=1738199813; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=uOySAqkA0Wj07XwpNX3LEIcrqbMjcIdSNbiLlCR+nSc=;
+        b=itWR9YRiTTN18veAsycQR2RAc7GzDepYzSp30mFmDfV96UIW51qBjl+E43EKtY0hq+
+         i/umJJgkbL0zURrRiKEGXTTXp6F/3qtGSTb+ylQ+PSBvcvvG+iODaAXb9KwaKzNgOs3I
+         dwtNPYkuEmznxe0JlL2QJAHJqVbMJJyvwiqJvnSCbaN8aukH9e1/wDZeykG+I96WPV9D
+         hhJNJv4fgu2tJiw8regJ/jnlsLpFLR0ncFgPGU3I+l+C3zK9bBISQ2WNniJhm91iUDTS
+         sVNr+I2rKUHYCmQeNw7m3QlUEAWmmVSCHd6E+UooXZ+arcQrBWfi1QpLI5lcZhi24NSc
+         d5iw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737589899; x=1738194699;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CR+WSCo7rNY6An/Jr/D/lBMugrGIQSBj95/AQbGzEws=;
-        b=v7SHETR7RZR+gxd14CIJoYrvQ9olSDu7Qs+CVpRxJX6EgMhmnRJFIJQM43rNHwGmWM
-         We35edmnM2cFAB8FTbWtT/gj70xaN5tnElJsGksx+jg0C3mPhRM/prOdHIC+Gpb47gNY
-         2828iJ05hMbZCDUvhb8+xpCNuvo/FcKGA1pbD2ACsW8gxeN1o6o1wktQlgoePJxLVvpl
-         l+FejC+9NtGRAvaFhQmNMWZCDj+UgNJeftsAANwDKUKKq5yC/O4DZU9vBgEakxatfMW9
-         t89HsWci80TR4eFQBzgTaKkFxpGyIDyJKt1B6rgklK8cxU6XPYVRPOjx4pPehEpFICS9
-         pgSQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXREURmX6dLAQ/ddbH1SwfxMRjfO0RaXTbtnD7xCxBnK4VKflM3a0TAJUPCVVua0/ep41AE6shB1Y8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyI/BKIhSRiVNQlLi3NyP1dx2HOJgG7U+e2kOm5lK0nNWaReB3c
-	eUzBCZsCDLxROlG65zgSNNDEpuOHdZkvusPpcVaI0sayciw1Y0g2Bps6TEaNvTM=
-X-Gm-Gg: ASbGncuffF2qqdvkIXVxqz1v54m1QOU1v0gyizkEFz13V8A/55fePiAGEj1aGV7qlj6
-	rNmcMgpGSwY/X2J/FawvoaPAAUSJNU1QzqddB8sQbun5jQ9BPC3K9W56Uysp1PI+l7i/dL7m4tK
-	D1E9QyrLK+mXo6d2x4mJ5LsSdbjJgGdjCCjyrogV/CvcDEl2QRicNgXUXTWSrUh6RcwDOjJTiMR
-	LDt8GbZIRMPgG4pE7hS9g83H4ydKg0RynI3/ds4KpuTxhqCyklkKLCHsnZw1tJj2P3YfNYiLieH
-	6LUb7ViOD4R/CsMqYe1x5BDDyJ1d1V56WKlDE5R8jMaHcA==
-X-Google-Smtp-Source: AGHT+IHaMy+6xBIMYG0uehZ3fvKU97NG0GIFdN8l4dmBBBi9bUHzdTceyQ6RVgjQiPgM5S1jdX6YCA==
-X-Received: by 2002:a17:902:ce0c:b0:21c:e34:c8c3 with SMTP id d9443c01a7336-21c35540560mr416546775ad.24.1737589898928;
-        Wed, 22 Jan 2025 15:51:38 -0800 (PST)
+        d=1e100.net; s=20230601; t=1737595013; x=1738199813;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uOySAqkA0Wj07XwpNX3LEIcrqbMjcIdSNbiLlCR+nSc=;
+        b=lhHQEmW4H1R6gQuWb5T/bK54paTIhnq8n468V5kHagULxvsNuIE4kVkTK99PDOjZ+j
+         KCQWP6pJ1jdBt39hAvKAZEwjDMXPUBIn8HwbfnagcQMNCnXiVx2eYX9Gjfl0C5bw5bOF
+         a5c2QkoY0YiCu39dVfoqkaWaMTl+hV2rV5p6QQE+NHzCMtXkDWm6nrsXwxZKd6gnuCXL
+         C00BzrBZNZLs9HqUEwjGp6L2VsjCFQrpOD2NP9L2HoofBvHzhYjh98BUHJsErXaOMFWw
+         GvT9EmxL3+cHnmdPMljfHG7vLxrft2I9dFGahTVgnPn8t1My+FcaB4t58UifaXHa6URc
+         7AFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV/jDcm+3wpFyw8ptoGmC5vbxY5SA6lT0lKWgTHy+QZZVQVT36JFngpqK7VX2SbYXkErct/E9VFdWc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwcHJPuf4SNHdMd6/4aUtlrzys3+8sS7O6xSQXjPU20wicjow2V
+	x4QdwWvKg8iAONVv8QXGu+9EBpgPtKyLqoIoi9HO8AA0NLWwbgZUHvT8sD+G05M=
+X-Gm-Gg: ASbGnctxP8cvE61hL3fowWsF2ITS1vdNClru+4CA34OXvNTVAjBmpiab+JKMCzJ51GZ
+	5XxVAKtnvmmm/vp0usFIENDIh3LQrF4lrVeaBDfbIhfrlp7UCxqqFwkaT1OfrIcdocjPBnW8ZPZ
+	4zxDxfLGQy6vnuKienAgVmPIemw+2qPks6GlbrNW2Bd/zDIRYv6oZIfbgkwp2KLhFDLIOPISM6m
+	KBsvSDmJTW+LtbopAmy5ijyNXJlay2OlZVYNsNE/GpxQfswYwFMBPzJdJZa13VC9312AS7D9LfN
+	4lTo9/JEwG5sRyw6UEzEzxj/WQSlk7QHj873EFsN9EfLKw==
+X-Google-Smtp-Source: AGHT+IER4ZfGCCqw+AByljs1/V3/LXMmw8pSXA5FNZZ0ZK7tnPRvuefKLjmSeutk+0spkglhaaZe0A==
+X-Received: by 2002:a17:902:f546:b0:215:72a7:f39f with SMTP id d9443c01a7336-21c355b78f5mr357867565ad.36.1737595013447;
+        Wed, 22 Jan 2025 17:16:53 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2d42cb87sm100450515ad.254.2025.01.22.15.51.38
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2d3e0df9sm102798575ad.196.2025.01.22.17.16.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Jan 2025 15:51:38 -0800 (PST)
+        Wed, 22 Jan 2025 17:16:52 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1takVT-00000009HMD-2x8v;
-	Thu, 23 Jan 2025 10:51:35 +1100
-Date: Thu, 23 Jan 2025 10:51:35 +1100
+	id 1talpy-00000009Iu8-0n1f;
+	Thu, 23 Jan 2025 12:16:50 +1100
+Date: Thu, 23 Jan 2025 12:16:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	brauner@kernel.org, cem@kernel.org, dchinner@redhat.com,
-	ritesh.list@gmail.com, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH 1/4] iomap: Lift blocksize restriction on atomic writes
-Message-ID: <Z5GEh0XA3Nt_4K2f@dread.disaster.area>
-References: <Z1C9IfLgB_jDCF18@dread.disaster.area>
- <3ab6000e-030d-435a-88c3-9026171ae9f1@oracle.com>
- <Z1IX2dFida3coOxe@dread.disaster.area>
- <20241212013433.GC6678@frogsfrogsfrogs>
- <Z4Xq6WuQpVOU7BmS@dread.disaster.area>
- <20250114235726.GA3566461@frogsfrogsfrogs>
- <20250116065225.GA25695@lst.de>
- <20250117184934.GI1611770@frogsfrogsfrogs>
- <20250122064247.GA31374@lst.de>
- <0c0753fb-8a35-42a6-8698-b141b1e561ca@oracle.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 08/23] common: fix pkill by running test program in a
+ separate session
+Message-ID: <Z5GYgjYL_9LecSb9@dread.disaster.area>
+References: <173706974044.1927324.7824600141282028094.stgit@frogsfrogsfrogs>
+ <173706974197.1927324.9208284704325894988.stgit@frogsfrogsfrogs>
+ <Z48UWiVlRmaBe3cY@dread.disaster.area>
+ <20250122042400.GX1611770@frogsfrogsfrogs>
+ <Z5CLUbj4qbXCBGAD@dread.disaster.area>
+ <20250122070520.GD1611770@frogsfrogsfrogs>
+ <Z5C9mf2yCgmZhAXi@dread.disaster.area>
+ <20250122214609.GE1611770@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <0c0753fb-8a35-42a6-8698-b141b1e561ca@oracle.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250122214609.GE1611770@frogsfrogsfrogs>
 
-On Wed, Jan 22, 2025 at 10:45:34AM +0000, John Garry wrote:
-> On 22/01/2025 06:42, Christoph Hellwig wrote:
-> > On Fri, Jan 17, 2025 at 10:49:34AM -0800, Darrick J. Wong wrote:
-> > > The trouble is that the br_startoff attribute of cow staging mappings
-> > > aren't persisted on disk anywhere, which is why exchange-range can't
-> > > handle the cow fork.  You could open an O_TMPFILE and swap between the
-> > > two files, though that gets expensive per-io unless you're willing to
-> > > stash that temp file somewhere.
-> > 
-> > Needing another inode is better than trying to steal ranges from the
-> > actual inode we're operating on.  But we might just need a different
-> > kind of COW staging for that.
-> > 
+On Wed, Jan 22, 2025 at 01:46:09PM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 22, 2025 at 08:42:49PM +1100, Dave Chinner wrote:
+> > On Tue, Jan 21, 2025 at 11:05:20PM -0800, Darrick J. Wong wrote:
+> > > On Wed, Jan 22, 2025 at 05:08:17PM +1100, Dave Chinner wrote:
+> > > > On Tue, Jan 21, 2025 at 08:24:00PM -0800, Darrick J. Wong wrote:
+> > > > > On Tue, Jan 21, 2025 at 02:28:26PM +1100, Dave Chinner wrote:
+> > > > > > On Thu, Jan 16, 2025 at 03:27:15PM -0800, Darrick J. Wong wrote:
+> > > > > > > c) Putting test subprocesses in a systemd sub-scope and telling systemd
+> > > > > > > to kill the sub-scope could work because ./check can already use it to
+> > > > > > > ensure that all child processes of a test are killed.  However, this is
+> > > > > > > an *optional* feature, which means that we'd have to require systemd.
+> > > > > > 
+> > > > > > ... requiring systemd was somewhat of a show-stopper for testing
+> > > > > > older distros.
+> > > > > 
+> > > > > Isn't RHEL7 the oldest one at this point?  And it does systemd.  At this
+> > > > > point the only reason I didn't go full systemd is out of consideration
+> > > > > for Devuan, since they probably need QA.
+> > > > 
+> > > > I have no idea what is out there in distro land vs what fstests
+> > > > "supports". All I know is that there are distros out there that
+> > > > don't use systemd.
+> > > > 
+> > > > It feels like poor form to prevent generic filesystem QA
+> > > > infrastructure from running on those distros by making an avoidable
+> > > > choice to tie the infrastructure exclusively to systemd-based
+> > > > functionality....
 > > > 
-> > > At this point I think we should slap the usual EXPERIMENTAL warning on
-> > > atomic writes through xfs and let John land the simplest multi-fsblock
-> > > untorn write support, which only handles the corner case where all the
-> > > stars are <cough> aligned; and then make an exchange-range prototype
-> > > and/or all the other forcealign stuff.
+> > > Agreed, though at some point after these bugfixes are merged I'll see if
+> > > I can build on the existing "if you have systemd then ___ else here's
+> > > your shabby opencoded version" logic in fstests to isolate the ./checks
+> > > from each other a little better.  It'd be kinda nice if we could
+> > > actually just put them in something resembling a modernish container,
+> > > albeit with the same underlying fs.
 > > 
-> > That is the worst of all possible outcomes.  Combing up with an
-> > atomic API that fails for random reasons only on aged file systems
-> > is literally the worst thing we can do.  NAK.
+> > Agreed, but I don't think we need to depend on systemd for that,
+> > either.
 > > 
+> > > <shrug> Anyone else interested in that?
 > > 
+> > check-parallel has already started down that road with the
+> > mount namespace isolation it uses for the runner tasks via
+> > src/nsexec.c.
+> > 
+> > My plan has been to factor more of the check test running code
+> > (similar to what I did with the test list parsing) so that the
+> > check-parallel can iterate sections itself and runners can execute
+> > individual tests directly, rather than bouncing them through check
+> > to execute a set of tests serially. Then check-parallel could do
+> > whatever it needed to isolate individual tests from each other and
+> > nothing in check would need to change.
+> > 
+> > Now I'm wondering if I can just run each runner's check instance
+> > in it's own private PID namespace as easily as I'm running them in
+> > their own private mount namespace...
+> > 
+> > Hmmm - looks like src/nsexec.c can create new PID namespaces via
+> > the "-p" option. I haven't used that before - I wonder if that's a
+> > better solution that using per-test session IDs to solve the pkill
+> > --parent problem? Something to look into in the morning....
 > 
-> I did my own quick PoC to use CoW for misaligned blocks atomic writes
-> fallback.
+> I tried that -- it appears to work, but then:
 > 
-> I am finding that the block allocator is often giving misaligned blocks wrt
-> atomic write length, like this:
+> # ./src/nsexec -p bash
+> Current time: Wed Jan 22 13:43:33 PST 2025; Terminal: /dev/pts/0
+> # ps
+> fatal library error, lookup self
+> # 
 
-Of course - I'm pretty sure this needs force-align to ensure that
-the large allocated extent is aligned to file offset and hardware
-atomic write alignment constraints....
+That looks like a bug in whatever distro you are using - it works
+as it should here on a recent debian unstable userspace.
 
-> Since we are not considering forcealign ATM, can we still consider some
-> other alignment hint to the block allocator? It could be similar to how
-> stripe alignment is handled.
+Note, however, that ps will show all processes in both the parent
+and the child namespace the shell is running on because the contents
+of /proc are the same for both.
 
-Perhaps we should finish off the the remaining bits needed to make
-force-align work everywhere before going any further?
+However, because we are also using private mount namespaces for the
+check process, pid_namespaces(7) tells us:
 
-> Some other thoughts:
-> - I am not sure what atomic write unit max we would now use.
+/proc and PID namespaces
 
-What statx exposes should be the size/alignment for hardware offload
-to take place (i.e. no change), regardless of what the filesystem
-can do software offloads for. i.e. like statx->stx_blksize is the
-"preferred block size for efficient IO", the atomic write unit
-information is the "preferred atomic write size and alignment for
-efficient IO", not the maximum sizes supported...
+       A /proc filesystem shows (in the /proc/pid directories) only
+       processes visible in the PID namespace of the process that
+       performed the mount, even if the /proc filesystem is viewed
+       from processes in other namespaces.
 
-> - Anything written back with CoW/exchange range will need FUA to ensure that
-> the write is fully persisted.
+       After creating a new PID namespace, it is useful for the
+       child to change its root directory and mount a new procfs
+       instance at /proc so that tools  such  as  ps(1) work
+>>>    correctly.  If a new mount namespace is simultaneously
+>>>    created by including CLONE_NEWNS in the flags argument of
+>>>    clone(2) or unshare(2), then it isn't necessary to change the
+>>>    root directory: a new procfs instance can be mounted directly
+>>>    over /proc.
 
-I don't think so. The journal commit for the exchange range
-operation will issue a cache flush before the journal IO is
-submitted. that will make the new data stable before the first
-xchgrange transaction becomes stable.
+       From a shell, the command to mount /proc is:
 
-Hence we get the correct data/metadata ordering on stable storage
-simply by doing the exchange-range operation at data IO completion.
-This the same data/metadata ordering semantics that unwritten extent
-conversion is based on....
+           $ mount -t proc proc /proc
+
+       Calling readlink(2) on the path /proc/self yields the process
+       ID of the caller in the PID namespace of the procfs mount
+       (i.e., the PID name‐ space of the process that mounted the
+       procfs).  This can be useful for introspection purposes, when
+       a process wants to discover its  PID  in other namespaces.
+
+This appears to give us an environment that only shows the processes
+within the current PID namespace:
+
+$ sudo src/nsexec -p -m bash
+# mount -t proc proc /proc
+# ps waux
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   7384  3744 pts/1    S    11:55   0:00 bash
+root          72  0.0  0.0   8300  3736 pts/1    R+   12:04   0:00 ps waux
+# pstree -N pid
+[4026538173]
+bash───pstree
+#
+
+Yup, there we go - we have full PID isolation for this shell.
+
+OK, I suspect this is a better way to proceed for check-parallel than
+to need session IDs for individual tests and wrappers for
+pgrep/pkill/pidwait. Let me see what breaks when I use this.....
 
 -Dave.
 -- 
