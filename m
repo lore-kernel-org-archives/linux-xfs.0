@@ -1,163 +1,149 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7CD0A1DB13B;
-	Fri, 24 Jan 2025 07:59:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D550F1DB134;
+	Fri, 24 Jan 2025 08:53:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737705546; cv=none; b=sE7iIFhysSYQ//XD2mkmEYeJTEPFSwjsTHrOUN7VSPNauMf0DWE1PkYAoQejJL19IEQj5zAuJDmrHfotAz56usAVCxGwY8tXllbvQKZNPFTFkqZ4JYd0eRZSu2KkP2LIlPWlM5jE2kcb8MSI/fJagSQLvN1ZmH6Ai6Ig3Romkvg=
+	t=1737708787; cv=none; b=V9xCda4drsteLxjsKu/Ykgzsng647JqJkyxT5AV6XgBIohrMPivf8arsnRn/NOV0Jy6snxi3sGxgj++IRSzJVqoAPBDCHj/YY0gJYT0JRRIq28x7bW+RbDL+NO7dqg2dirh/J1J8iZ/YfWSsucGAy80i5jM7+y/5B4nRzjDHq+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737705546; c=relaxed/simple;
-	bh=+JMCLgX+cCsCLfya232eGxLISOuKUHrGIchgNS9cYFQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Vd1FniTpwKeEIp4oWXDeJAFTL0Tbl2CVGdSKBP3/DkA74s/gIqauHd+BdFddWnLmoUXteBScVwbR3Urq47zntEhNJ/o/Hr+4Vdn8GJl7wqQXw4myjd1DGFvRtO2VupsZI41cGpGE8K+yX8ibdhXl7NbycTaFaGysdO339uVf5cM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ClOWQGoP; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1737708787; c=relaxed/simple;
+	bh=FL0e58rRFCvhM1qtTdMAcpnBPN6srK7m5MmE+mGNm78=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BDdNHNXIKpbklN+I61lcVbxDa30BVOLtwfuupuOZ50gz/1j8biM9r2sIMQOdYdAqAEVZT6fszQpg4SqtN3uLAJyKC6d7MHIrc2pFnsj3E0V+gyc0K7EvQcCQmOn1M7SBh58GVT6OctCfttVQD6bQjK5eM9+BoL/2njGtx1AY4EU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sBt5czsZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ClOWQGoP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=k7BNiZeauamU+zOH+F0kigT/sIVaaMlFeJsEK7tin/Q=;
-	b=ClOWQGoPVKI8HI4pQFKuxRUqxZuMUQaZe3BTWAFYX5wxcEsGRS983E/5/n22v7
-	jWTigMLm8dKzBWTD6uR0JFpXmxQFK69k7FiLAjbnYsGcavISFywDXDOjYdG/3Wip
-	gpNXQnjceRUQVjgju/6enIyyWBTyZaHyhH9VzzhEnZcdg=
-Received: from [10.42.12.6] (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wD3n8X3R5NnY7WvIA--.54671S2;
-	Fri, 24 Jan 2025 15:57:43 +0800 (CST)
-Message-ID: <3d657be2-3cca-49b5-b967-5f5740d86c6e@163.com>
-Date: Fri, 24 Jan 2025 15:57:43 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sBt5czsZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBC80C4CED2;
+	Fri, 24 Jan 2025 08:53:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737708787;
+	bh=FL0e58rRFCvhM1qtTdMAcpnBPN6srK7m5MmE+mGNm78=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=sBt5czsZC5Gu/tt0MOFh/hbiIWrj/LK9iaUDON28FjgrthlJVsUyTfwzeJ8qXL65B
+	 KbBhKqt3CVTCmbKU5dmUzPwBUvcEORuPpveUITyXFRD6SKJGLD3/zqN0+nNuUQG5TH
+	 c1dGNDMW9ThF3yf0/+GTcSZcq5IXnNVgiuMqYziyVWk6yil6SIy+9wxxT/jxe1Ek6B
+	 ElLDtgCIymaj2ZfaNIN6THSmVFJ5pAZIG19uqvWuELheF4AZGsqSuUq0xLU0Qxibli
+	 OdQhEKu9gCRcuzreQteNdTeOl8NnnqrS2LXB0rOeOgX7ovsrSC90PzOhZyrrAQUxyQ
+	 ck3QBvyMssqVw==
+Date: Fri, 24 Jan 2025 09:53:02 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org
+Subject: Re: xfs_repair after data corruption (not caused by xfs, but by
+ failing nvme drive)
+Message-ID: <20250124-geldkassette-fotowettbewerb-3440f8527f7b@brauner>
+References: <20250120-hackbeil-matetee-905d32a04215@brauner>
+ <Z5FqAgxiLbqI6gmz@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>,
- Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chi Zhiling <chizhiling@kylinos.cn>, John Garry <john.g.garry@oracle.com>
-References: <24b1edfc-2b78-434d-825c-89708d9589b7@163.com>
- <CAOQ4uxgUZuMXpe3DX1dO58=RJ3LLOO1Y0XJivqzB_4A32tF9vA@mail.gmail.com>
- <953b0499-5832-49dc-8580-436cf625db8c@163.com>
- <20250108173547.GI1306365@frogsfrogsfrogs>
- <Z4BbmpgWn9lWUkp3@dread.disaster.area>
- <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
- <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
- <20250113024401.GU1306365@frogsfrogsfrogs> <Z4UX4zyc8n8lGM16@bfoster>
- <Z4dNyZi8YyP3Uc_C@infradead.org> <Z4grgXw2iw0lgKqD@dread.disaster.area>
-Content-Language: en-US
-From: Chi Zhiling <chizhiling@163.com>
-In-Reply-To: <Z4grgXw2iw0lgKqD@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD3n8X3R5NnY7WvIA--.54671S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxur43AF47ZrWkGr1rKr1UGFg_yoWrZFW5pF
-	WrKasxKr4DKrWkZ3s29w4xXa48Zws3Jr43GF98Xr1kuay5WFySqF4ktw1YyrWDAr4xtr4j
-	vrWUZ34fCas0vFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UeuWJUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBoRbenWeTQj1JjgAAs4
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <Z5FqAgxiLbqI6gmz@dread.disaster.area>
 
-On 2025/1/16 05:41, Dave Chinner wrote:
-> On Tue, Jan 14, 2025 at 09:55:21PM -0800, Christoph Hellwig wrote:
->> On Mon, Jan 13, 2025 at 08:40:51AM -0500, Brian Foster wrote:
->>> Sorry if this is out of left field as I haven't followed the discussion
->>> closely, but I presumed one of the reasons Darrick and Christoph raised
->>> the idea of using the folio batch thing I'm playing around with on zero
->>> range for buffered writes would be to acquire and lock all targeted
->>> folios up front. If so, would that help with what you're trying to
->>> achieve here? (If not, nothing to see here, move along.. ;).
->>
->> I mostly thought about acquiring, as locking doesn't really have much
->> batching effects.  That being said, no that you got the idea in my mind
->> here's my early morning brainfart on it:
->>
->> Let's ignore DIRECT I/O for the first step.  In that case lookup /
->> allocation and locking all folios for write before copying data will
->> remove the need for i_rwsem in the read and write path.  In a way that
->> sounds perfect, and given that btrfs already does that (although in a
->> very convoluted way) we know it's possible.
+On Thu, Jan 23, 2025 at 08:58:26AM +1100, Dave Chinner wrote:
+> On Mon, Jan 20, 2025 at 04:15:00PM +0100, Christian Brauner wrote:
+> > Hey,
+> > 
+> > so last week I got a nice surprise when my (relatively new) nvme drive
+> > decided to tell me to gf myself. I managed to recover by now and get
+> > pull requests out and am back in a working state.
+> > 
+> > I had to reboot and it turned out that my LUKS encrypted xfs filesystem
+> > got corrupted. I booted a live image and did a ddrescue to an external
+> > drive in the hopes of recovering the things that hadn't been backed up
+> > and also I didn't want to have to go and setup my laptop again.
+> > 
+> > The xfs filesystem was mountable with:
+> > 
+> > mount -t xfs -o norecovery,ro /dev/mapper/dm4 /mnt
+> > 
+> > and I was able to copy out everything without a problem.
+> > 
+> > However, I was curious whether xfs_repair would get me anything and so I
+> > tried it (with and without the -L option and with and without the -o
+> > force_geometry option).
+> > 
+> > What was surprising to me is that xfs_repair failed at the first step
+> > finding a usable superblock:
+> > 
+> > > sudo xfs_repair /dev/mapper/dm-sdd4
+> > Phase 1 - find and verify superblock...
+> > couldn't verify primary superblock - not enough secondary superblocks with matching geometry !!!
+> > 
+> > attempting to find secondary superblock...
+> > ..found candidate secondary superblock...
+> > unable to verify superblock, continuing...
+> > ....found candidate secondary superblock...
+> > unable to verify superblock, continuing...
 > 
-> Yes, this seems like a sane, general approach to allowing concurrent
-> buffered writes (and reads).
+> Yeah, so it's a 4 AG filesystem so it has 1 primary superblock and 2
+> secondary superblocks. Two of the 3 secondary superblocks are trash,
+> and repair needs 2 of the secondary superblocks to match the primary
+> for it to validate the primary as a good superblock.
 > 
->> But direct I/O throws a big monkey wrench here as already mentioned by
->> others.  Now one interesting thing some file systems have done is
->> to serialize buffered against direct I/O, either by waiting for one
->> to finish, or by simply forcing buffered I/O when direct I/O would
->> conflict.
+> xfs_repair considers this situation as "too far gone to reliably
+> repair" and so aborts.
 > 
-> Right. We really don't want to downgrade to buffered IO if we can
-> help it, though.
+> I did notice a pattern to the corruption, though. while sb 1 is
+> trashed, the adjacent sector (agf 1) is perfectly fine. So is agi 1.
+> But then agfl 1 is trash. But then the first filesystem block after
+> these (a free space btree block) is intact. In the case of sb 3,
+> it's just a single sector that is gone.
 > 
->> It's easy to detect outstanding direct I/O using i_dio_count
->> so buffered I/O could wait for that, and downgrading to buffered I/O
->> (potentially using the new uncached mode from Jens) if there are any
->> pages on the mapping after the invalidation also sounds pretty doable.
+> To find if there were any other metadata corruptions, I copied the
+> primary superblock over the corrupted one in AG 1:
 > 
-> It's much harder to sanely serialise DIO against buffered writes
-> this way, because i_dio_count only forms a submission barrier in
-> conjunction with the i_rwsem being held exclusively. e.g. ongoing
-> DIO would result in the buffered write being indefinitely delayed.
+> xfs_db> sb 1
+> Superblock has bad magic number 0xa604f4c6. Not an XFS filesystem?
+> xfs_db> daddr
+> datadev daddr is 246871552
+> xfs_db> q
+> $ dd if=t.img of=t.img oseek=246871552 bs=512 count=1 conv=notrunc
+> ...
 > 
-> I think the model and method that bcachefs uses is probably the best
-> way to move forward - the "two-state exclusive shared" lock which it
-> uses to do buffered vs direct exclusion is a simple, easy way to
-> handle this problem. The same-state shared locking fast path is a
-> single atomic cmpxchg operation, so it has neglible extra overhead
-> compared to using a rwsem in the shared DIO fast path.
+> and then ran repair on it again. This time repair ran (after zeroing
+> the log) and there were no corruptions other than what I'd expect
+> from zeroing the log (e.g. unlinked inode lists were populated,
+> some free space mismatches, etc).
 > 
-> The lock also has non-owner semantics, so DIO can take it during
-> submission and then drop it during IO completion. This solves the
-> problem we currently use the i_rwsem and
-> inode_dio_{start,end/wait}() to solve (i.e. create a DIO submission
-> barrier and waiting for all existing DIO to drain).
+> Hence there doesn't appear to be any other metadata corruptions
+> outside of the 3 bad sectors already identified. Two of those
+> sectors were considered critical by repair, hence it's failure.
 > 
-> IOWs, a two-state shared lock provides the mechanism to allow DIO
-> to be done without holding the i_rwsem at all, as well as being able
-> to elide two atomic operations per DIO to track in-flight DIOs.
+> What I suspect happened is that the drive lost the first page that
+> data was ever written to - mkfs lays down the AG headers first, so
+> there is every chance that the FTL has put them in the same physical
+> page. the primary superblock, all the AGI, AGF and AGFL headers get
+> rewritten all the time, so the current versions of them will be
+> immediately moved to some other page. hence if the original page is
+> lost, the contents of those sectors will still be valid. However,
+> the superblocks never get rewritten, so only they get lost.
 > 
-> We'd get this whilst maintaining buffered/DIO coherency without
-> adding any new overhead to the DIO path, and allow concurrent
-> buffered reads and writes that have their atomicity defined by the
-> batched folio locking strategy that Brian is working on...
+> Journal recovery failed on the AGFL sector in AG 1 that was also
+> corrupted - that had been rewritten many times, so it's possible
+> that the drive lost multiple flash pages. It is also possible that
+> garbage collection had recently relocated the secondary superblocks
+> and that AGFL into the same page and that was lost. This is only
+> speculation, though.
+
+Thanks for taking the time to look into this!
+
 > 
-> This only leaves DIO coherency issues with mmap() based IO as an
-> issue, but that's a problem for a different day...
+> That said, Christian, I wouldn't trust any of the recovered data to
+> be perfectly intact - there's every chance random files have random
 
-When I try to implement those features, I think we could use exclusive
-locks for RWF_APPEND writes, and shared locks for other writes.
+Yes, I think I'm fine with that risk. The data I recovered is strictly
+from /home/ so at least I won't have to worry about some system library
+being corrupted.
 
-The reason is that concurrent operations are also possible for extended
-writes if there is no overlap in the regions being written.
-So there is no need to determine whether it is an extended write in
-advance.
+> data corruption in them. Even though the filesystem was recovered,
+> it is worth checking the validity of the data as much as you can...
 
-As for why an exclusive lock is needed for append writes, it's because
-we don't want the EOF to be modified during the append write.
-
-The code is like that:
-+       if (iocb->ki_flags & IOCB_APPEND)
-+               iolock = XFS_IOLOCK_EXCL;
-+       else
-+               iolock = XFS_IOLOCK_SHARED;
-
-
-If we use exclusive locks for all extended writes, we need to check if
-it is an extended write before acquiring the lock, but this value could
-become outdated if we do not hold the lock.
-
-So if we do an extended write,
-we might need to follow this process:
-
-1. Get read lock.
-2. Check if it is an extended write.
-3. Release read lock.
-4. Get write lock.
-5. Do the write operation.
-
-
-Thanks,
-Chi Zhiling
-
+Fwiw, xfs did a great job here. I was very happy how it behaved even
+though that drive was shot to hell!
