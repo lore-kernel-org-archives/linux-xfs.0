@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB101D7E31
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2025 21:36:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67FC71D7E47
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2025 21:37:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738013795; cv=none; b=Y0HgYD8g67G7P9UAgtFBXxZ7jSTR70Ex9Qo//OTjhUpHu6CqoE9mqxpd6h3BXbzSZlTJYtaIEzSSIpk/XZoP/k98rfENewe/3oIZvNDBdeyPkzuVuHyoO30LI/kIg+dAdBFb6EtMgjaetuRrxQjs4Gztcq1nk2zQlcdlbI04kDs=
+	t=1738013865; cv=none; b=FYOMuuD9zRPmoOKmE5e298yN8cl/HIOzINZXphwExds+LH/FGRab8+80aCRpL2U0hTdg2SmPhHI/gRKXkgqVPFE1FiVdbaJu0a+p8piLQmdqC3K1jXgYFZSKatFh6UdIcFDQsteODt529Bf1HziwakYOO4wJtdmJFoVcivB682g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738013795; c=relaxed/simple;
-	bh=iKaZMKP7+odSOYjqN0idLV75zfw6DKwDuqeUpcez4U0=;
+	s=arc-20240116; t=1738013865; c=relaxed/simple;
+	bh=DPTLQB/EXwTXShCO1vpPkKYl2QSljKxLumdA6RUuH0Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QOx6aHZ3nVsfsOcOuWWD2CUX4hWQwRrKNmOAn2Gv7TUg5UrZQTHqIpl05jDK3HVdS9oXyYH08XpR9pUfiPnJKGY/pEOfScpzSadE7V1BXoz9YavJgJftmQy18bIok+nx1wVAn51jplpAYOoyIapQwCQ+ra+McnHly3A8OB8xWkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UMAN5S77; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q6C2htnEt9ybYaZuue1spxzptuLgvgo16EfdzgPVItFOP/JaDyiImqUhAQ2oaZKTPSlPD/KQ9ljUF5PMYGY2EVAXWlpteb7La0WEUmna+OWzovalfzAN9B84udHn/4ysx5rDUu1FpeQI//P3nRdr6p/QkWwhxeQjW/i2sPZ1rHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bz0h5lZf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UMAN5S77"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E9E1C4CED2;
-	Mon, 27 Jan 2025 21:36:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bz0h5lZf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6492C4CED2;
+	Mon, 27 Jan 2025 21:37:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738013795;
-	bh=iKaZMKP7+odSOYjqN0idLV75zfw6DKwDuqeUpcez4U0=;
+	s=k20201202; t=1738013864;
+	bh=DPTLQB/EXwTXShCO1vpPkKYl2QSljKxLumdA6RUuH0Y=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UMAN5S773yNTW+80ye4TtEObkyTdbIdcV1kyLRqdtMpiHyPzgU3KlYkGdsNtRw6Bh
-	 vchHkNJW6TdZkgw9oJ6UAAuDlhgkURzBSOzFbjcbrYJpTzzuAcLfmXQ1e/TRs21Jnx
-	 8lZyEDM5aEgb/Sy6ktGPZjtU/6l1zjfKqUD0PWjrkLWqndsb1uSXlsgIFwB62bqV1q
-	 Tnr+JsUUgipHBUFBa97R6/RcwnXv2Jx9bbYw8U6RFMJvbOVgO/hTjhporpvGIU88ny
-	 T6XFHiQQB5JX7occxxrwCBtvKRlerEPzP4aKtaBYmbNpmuA+B3EJTKN37DPyHQkoz/
-	 VdrDk0JIWbtGQ==
-Date: Mon, 27 Jan 2025 13:36:34 -0800
+	b=bz0h5lZf031pEJt2niXMgpdY8wYNhQJfAC0oQDe3Ig3xYfDx6+2SU1Be/y4//lyP4
+	 3JZM4hCM37ykGaZfzeGW1nCAn+v9f6uHAHsBTWXJZ0Td9rXo2ItyOpqlhXhpF34aHt
+	 YNs8HzEPNYhT2w4VeXaLiFgOwZTTRaLonU7W5RHoU2Bu++/a/J2icV4zLZfv8iEx8j
+	 QrlYPYvXtoDbcXi69wucuagcA+VWYKqnSTjhfPKFFd7HeD9sJ9ONhcYILWBdgXxwQv
+	 qTvJEa7BK0OaXHz459kMFuswDoVyK1kMQAVXonOjRb5YJ7Vw1VGl2KWYbHENvX140s
+	 Q9shyEEN12rBQ==
+Date: Mon, 27 Jan 2025 13:37:44 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, hch@lst.de
-Subject: [PATCH v2] xfs_scrub_all.timer: don't run if /var/lib/xfsprogs is
- readonly
-Message-ID: <20250127213634.GJ1611770@frogsfrogsfrogs>
-References: <20250122020025.GL1611770@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] mkfs: use a default sector size that is also suitable
+ for the rtdev
+Message-ID: <20250127213744.GK1611770@frogsfrogsfrogs>
+References: <20250127135403.525965-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,96 +42,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250122020025.GL1611770@frogsfrogsfrogs>
+In-Reply-To: <20250127135403.525965-1-hch@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 27, 2025 at 02:54:03PM +0100, Christoph Hellwig wrote:
+> When creating a filesytem where the data device has a sector size
+> smalle than that of the RT device without further options, mkfs
+> currently fails with:
+> 
+> mkfs.xfs: error - cannot set blocksize 512 on block device $RTDEV: Invalid argument
+> 
+> This is because XFS sets the sector size based on logical block size
+> of the data device, but not that of the RT device.  Change the code
+> so that is uses the larger of the two values.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The xfs_scrub_all program wants to write a state file into the package
-state dir to keep track of how recently it performed a media scan.
-Don't allow the systemd timer to run if that path isn't writable.
+That makes sense to me.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Cc: <linux-xfs@vger.kernel.org> # v6.10.0
-Fixes: 267ae610a3d90f ("xfs_scrub_all: enable periodic file data scrubs automatically")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
-v2: add some comments to timer file
----
- scrub/Makefile               |    6 +++++-
- scrub/xfs_scrub_all.timer    |   16 ----------------
- scrub/xfs_scrub_all.timer.in |   23 +++++++++++++++++++++++
- 3 files changed, 28 insertions(+), 17 deletions(-)
- delete mode 100644 scrub/xfs_scrub_all.timer
- create mode 100644 scrub/xfs_scrub_all.timer.in
+--D
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 1e1109048c2a83..934b9062651bf1 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -108,10 +108,14 @@ endif
- # Automatically trigger a media scan once per month
- XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_INTERVAL=1mo
- 
--LDIRT = $(XFS_SCRUB_ALL_PROG) $(XFS_SCRUB_FAIL_PROG) *.service *.cron
-+LDIRT = $(XFS_SCRUB_ALL_PROG) $(XFS_SCRUB_FAIL_PROG) *.service *.cron xfs_scrub_all.timer
- 
- default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(XFS_SCRUB_FAIL_PROG) $(OPTIONAL_TARGETS)
- 
-+xfs_scrub_all.timer: xfs_scrub_all.timer.in $(builddefs)
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@pkg_state_dir@|$(PKG_STATE_DIR)|g" < $< > $@
-+
- xfs_scrub_all: xfs_scrub_all.in $(builddefs)
- 	@echo "    [SED]    $@"
- 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
-diff --git a/scrub/xfs_scrub_all.timer b/scrub/xfs_scrub_all.timer
-deleted file mode 100644
-index f0c557fc380391..00000000000000
---- a/scrub/xfs_scrub_all.timer
-+++ /dev/null
-@@ -1,16 +0,0 @@
--# SPDX-License-Identifier: GPL-2.0-or-later
--#
--# Copyright (C) 2018-2024 Oracle.  All Rights Reserved.
--# Author: Darrick J. Wong <djwong@kernel.org>
--
--[Unit]
--Description=Periodic XFS Online Metadata Check for All Filesystems
--
--[Timer]
--# Run on Sunday at 3:10am, to avoid running afoul of DST changes
--OnCalendar=Sun *-*-* 03:10:00
--RandomizedDelaySec=60
--Persistent=true
--
--[Install]
--WantedBy=timers.target
-diff --git a/scrub/xfs_scrub_all.timer.in b/scrub/xfs_scrub_all.timer.in
-new file mode 100644
-index 00000000000000..a6bde69e947e23
---- /dev/null
-+++ b/scrub/xfs_scrub_all.timer.in
-@@ -0,0 +1,23 @@
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+#
-+# Copyright (C) 2018-2025 Oracle.  All Rights Reserved.
-+# Author: Darrick J. Wong <djwong@kernel.org>
-+
-+[Unit]
-+Description=Periodic XFS Online Metadata Check for All Filesystems
-+
-+# The xfs_scrub_all program records the last time that it performed a media
-+# scan in @pkg_state_dir@.  If this path is not writable, the program
-+# aborts and systemd records this as a failure.  Disable the timer if the path
-+# is not writable.  This should be an uncommon situation since most
-+# readonly-root systems set that up to be writable (and possibly volatile).
-+ConditionPathIsReadWrite=@pkg_state_dir@
-+
-+[Timer]
-+# Run on Sunday at 3:10am, to avoid running afoul of DST changes
-+OnCalendar=Sun *-*-* 03:10:00
-+RandomizedDelaySec=60
-+Persistent=true
-+
-+[Install]
-+WantedBy=timers.target
+> ---
+>  mkfs/xfs_mkfs.c | 16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 6cc7e6439ca1..0627af81da37 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2368,7 +2368,9 @@ validate_sectorsize(
+>  		 * advertised sector size of the device.  We use the physical
+>  		 * sector size unless the requested block size is smaller
+>  		 * than that, then we can use logical, but warn about the
+> -		 * inefficiency.
+> +		 * inefficiency.  If the file system has a RT device, the
+> +		 * sectorsize needs to be the maximum of the data and RT
+> +		 * device.
+>  		 *
+>  		 * Some architectures have a page size > XFS_MAX_SECTORSIZE.
+>  		 * In that case, a ramdisk or persistent memory device may
+> @@ -2378,8 +2380,18 @@ validate_sectorsize(
+>  			ft->data.physical_sector_size =
+>  				ft->data.logical_sector_size;
+>  		}
+> -
+>  		cfg->sectorsize = ft->data.physical_sector_size;
+> +
+> +		if (cli->xi->rt.name) {
+> +			if (ft->rt.physical_sector_size > XFS_MAX_SECTORSIZE) {
+> +				ft->rt.physical_sector_size =
+> +					ft->rt.logical_sector_size;
+> +			}
+> +
+> +			if (cfg->sectorsize < ft->rt.physical_sector_size)
+> +				cfg->sectorsize = ft->rt.physical_sector_size;
+> +		}
+> +
+>  		if (cfg->blocksize < cfg->sectorsize &&
+>  		    cfg->blocksize >= ft->data.logical_sector_size) {
+>  			fprintf(stderr,
+> -- 
+> 2.45.2
+> 
+> 
