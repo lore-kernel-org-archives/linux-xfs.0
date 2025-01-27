@@ -1,207 +1,175 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 619D022619
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2025 18:31:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4E5F55887
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2025 20:19:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738002690; cv=none; b=Udjti74vdTnBOYfkRR9dKdbpDk1VskA27khbDJ23OS4euXFvik3on8UV6KDSl7E4uOgfI+wLdOiiyxy7+Q+p8E8M2drPmQUUFLF+dAGwmTbInhChFXZUiXVq1egkgkZuRkyIH6wCHns3ddgKy4ZTlflrALaQ/l/I9lL5CiNAVtM=
+	t=1738009158; cv=none; b=KyNHiLKepmeo0C/vYMJWv3u4gMPbIAT45GF+15UJunWGX5blKTviwN41ZAbluBO+L+HK7WNzF/uX3R2rAptyEO9JaTSyJIU1YFHKWwD2y1T1Jpt6SqY6wROc/JVSeBaJdvbbRcmLdwjl/+mwXijWnMaAEXZyMOXjgzxaLdWu74A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738002690; c=relaxed/simple;
-	bh=W+b2+5/MlM9qIb7ZAqnKPWjaHUGe93XUAru4A+7akC8=;
-	h=Date:From:To:cc:Subject:Message-ID:MIME-Version:Content-Type; b=BdLbw/mw/nROyNWs7XiCrxNmzPvOhMUOVdQ3vdIGqz2dksQrS/VmfuEjwz4TDftCIDBmsdN1xp3cfZEn016afl9GEyrzzOc2L4//D4K7Zt3Ydt60ot4Si5NVhiYE28nU6QdSxV4c+/a7k3hj73wTovp0O2yOV8RpCHyA3n7YxWc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=U31JDM8x; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1738009158; c=relaxed/simple;
+	bh=FDkaA9lWqCe3vW28bpeEIRlUrNoFQoVdSrvtUF9r4gw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R2+x9esybvpxHeSP2FV/foP+gp4Pk4K7VCd7R2IoB2VJ6wpEa9COfVpguc0VJwHW+k0BTLbFzhPPnTJb47mib4Z/xYFZ+km3U0meCEyXT8nB9URwgDPZ18AzjN4XTlGPtyWOaoVaeuMYTtGaDGleb4hSPZW4V/hdVfewiIlj/aI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=uTwC51Dg; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U31JDM8x"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738002687;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=ld6jwfYkPG2h3Pxn8mi5J+r3XcAhWTAlFM6emMAjLh0=;
-	b=U31JDM8x8ynvQXQ7Lkg0o7zpsA2PaEombHYMPFhveaI9cfN1OnXEAjtegDzyKTyPL1oW5n
-	BcQQFr655J9eqYFawSsMpJzyTH59FJVkj3Ue/7REAgIOYLrJ5LQzx22QvXFrHld/mvkND2
-	nhymQiQ8jTyPK0yvLMboRiggiNRGNuA=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-637-URGuUqr5N0CZriYFH2EHdw-1; Mon, 27 Jan 2025 13:31:26 -0500
-X-MC-Unique: URGuUqr5N0CZriYFH2EHdw-1
-X-Mimecast-MFC-AGG-ID: URGuUqr5N0CZriYFH2EHdw
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4361a8fc3bdso23254915e9.2
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2025 10:31:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="uTwC51Dg"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2167141dfa1so86532965ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2025 12:19:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738009155; x=1738613955; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=DLXSe9bd1YyYFGUEbHiR1SYedwEh5gFVIduEyseql4Q=;
+        b=uTwC51DgdISqHAUitmUTZKWHO8ZVnfNlhaVLVoMTeIKvcVNtJI1CieHBnRfGyEavNz
+         tfRkqYxUB3TiWyh3nYcOH0fsNqi8wJmGWfBCm059hSZdphaFuLw/T95a9bPI4YNzmFBu
+         PWb3wGPybJfVnjLmRR6y1ok1rzdWDuYDa8x6eCGLPiibzi97Nc+xorwTEFWlR9oCGtDL
+         cF2hMy0zG9NF/8oa57KdCuMsqFTVcRy1KLHKikJz8DY7yFFycJvR0qdD6BcDhmBtcIF2
+         2Ac5oCDRyivaajAvwv2AwwQKeG9WMINX1i4AdGDiwy/RAL6LBmO7Vd4flsu3t6xSdVDD
+         hkhw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738002684; x=1738607484;
-        h=mime-version:message-id:subject:cc:to:from:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ld6jwfYkPG2h3Pxn8mi5J+r3XcAhWTAlFM6emMAjLh0=;
-        b=bFOHYdoTc5kLKcwAPtHvnUCCDHyPIyOJIsjh/tqFRrvjEP7xuVlpeQPyhonpyGIWge
-         NBk4X4cNb1LMhVKd4u2rQPewEJhIM51Ic8PfvneujMIcCUbSrUjfwcP9uTwStRr3NTuf
-         g4p4zEQhwpHr8Uw91pn9TF8taM4xjOCwZepzrUFzDeQ/Oxh15lZkPOtIwFhRYRrqOlBN
-         o+PI8d7taVj45Hq9B5z/htBveicUJrVbB9PhvSzL2tK6kimQpaXXBIEycXmy7+R17fcd
-         EtOWbUqkXnZs8eQlx05JeKik15Bj6iT2r/vYdbGUdzIu4iVVSRVxihCqiNFl+rXBQadC
-         SjDQ==
-X-Gm-Message-State: AOJu0Yztwf1xYf8g97v1+AAqiSitQ5bcqhR3TfFl1gc/LboqofBEHqC1
-	FWRFrkGfyb4dwD1RusMFojvGqYVurefEz9pMjY583aQ0Ar9yPV9lP/BCTRvWNSpSSbdGTbSOz/T
-	0hDiI3daGCFImT/cQNF2KaAnECHwiWxHkhreCt0TpJgCc41MI/hn61rdvx2zGP1vTkFkztChWJv
-	bZNBDoOcvU41ggMagxAtmUCo9uLVJe/7wb0fbxG+c=
-X-Gm-Gg: ASbGnctZ517IjA7eCOm7wQtryU8mOsJqoOXClp3mNPZjhQsOnnVuLrLekhwHdPoujQI
-	a4tE/ybBzWu9kQ1UyyXCk4et9OLg0JiD0hAYYsh4BQDmqSKE8NKbPA4hsNtjyodpnWnK32Z/w2j
-	7By9UuQfk2XRcIDvKm/zkvbkkpTHPeB6quxz55YjPlkriEwHu2DJF+dw7bdev+JMB2CTFmAdUV1
-	7ISq4v8a5IsUFbNwnKtCeuKcIQPTWA5IJTZwoMIrXkr/yB6YRkAhCaEvo4AQrcnkyg3M6UkmhUz
-	lfItM+DcykGrG2mdeQSRpWHn4rGVOBVdSIlIfE1sdQxbvN8KmGwdDA==
-X-Received: by 2002:a05:600c:3114:b0:436:1aa6:b8ee with SMTP id 5b1f17b1804b1-438913bfe72mr401595575e9.2.1738002683763;
-        Mon, 27 Jan 2025 10:31:23 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGYcTDaP0A5ZJ1TmUuRR2fLGzRFMY4mtgyLLVqvmJCwAQOllD+m7YbIYKl6N8VndkAfdCs2Hw==
-X-Received: by 2002:a05:600c:3114:b0:436:1aa6:b8ee with SMTP id 5b1f17b1804b1-438913bfe72mr401593895e9.2.1738002681489;
-        Mon, 27 Jan 2025 10:31:21 -0800 (PST)
-Received: from rh (p200300f6af3cbe008169428bb185d3c4.dip0.t-ipconnect.de. [2003:f6:af3c:be00:8169:428b:b185:d3c4])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-438d4724562sm13760235e9.28.2025.01.27.10.31.21
+        d=1e100.net; s=20230601; t=1738009155; x=1738613955;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DLXSe9bd1YyYFGUEbHiR1SYedwEh5gFVIduEyseql4Q=;
+        b=irZC8JWDXEx5R3xgXZbFQL1evRhv6dUXa3sYBqXhvwceUNKFbhfR0jM3DE4hUgbqkc
+         iQq41HAq+zpRiUnoiNxKxYLtg/UiNtkD/AfxMti9Soe/OIafNGLJC8JrNKQDzoAx7KSP
+         pDRwy6zTHio6f1zsqtCvOdH3PcaZGKUvWPpsinx1SaUzqoV2/VAgfyU9MMdo9MAwjVbu
+         l6wC/dLs5IMwRj45FJIpCTTQxDFcuijeajed9Ec3Eucwfp3MfYKZH90Oosl5twkWCnKI
+         OGM64f/GP/VEZL8T6ORf5e7wLRNxaL3jsn6SPDokKJYiqCd2o1fB6ec5AjaqtpYfbjBo
+         laqg==
+X-Forwarded-Encrypted: i=1; AJvYcCVkknvilKsA289rzbKIaeA2ipf7oQkFh/cn+akOS2PiYXc27XrfUfZWDgdTquS3CMI1NrGHzC6vzvM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyZObj/9s6cpSpmV3yWCiN8UOskvO25kZ3G9JN2G4dVLUr9DjeK
+	Ko2i6JLXbet5bB97jLO0ubI6xDCLSDnMQUm6743F9oOq0jVOWIylwKpf1dFkqaI=
+X-Gm-Gg: ASbGncuEwnsnkgHf7q9HC89i59egRPu91u7oBvqO63OMv9mfkB4iW+NH4LVXbtUCqMh
+	gKSyr/XXuUqtc+L0I30aScPWdRvnpiQKIh+BGIvI85lTUdYF8tXSOo5lHhFEoHehjMadt9tOaYO
+	kuY5U6xfHjkV/eiSu3c5AzKMCsriVKkZjSO7NtjQxCmBIwoofuKY3psYqSjJogl+0JpcLxRBhTp
+	ejeJB7YanRzzagOjIrcsvkXsr7GIl+sHyF+nm+EM34M6W04KyXP22BdPWF28fXUghDQlQMuZFpm
+	Ifn0VA78VY57w+JdfDBaq5APFKkmTbc7OnEsKJPCUCoDYUCgHX4IdBsu
+X-Google-Smtp-Source: AGHT+IGa+gI4PYfROBcyoFhX6RhQcH9Tx0oOSn2BgUW/k1/BNZVb/iSiNBkqtP8omV05emRPRQvS5A==
+X-Received: by 2002:a17:902:ced2:b0:215:ae61:27ca with SMTP id d9443c01a7336-21dcc57d128mr8348905ad.26.1738009155162;
+        Mon, 27 Jan 2025 12:19:15 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21da414142asm68027515ad.148.2025.01.27.12.19.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jan 2025 10:31:21 -0800 (PST)
-Date: Mon, 27 Jan 2025 19:31:20 +0100 (CET)
-From: Sebastian Ott <sebott@redhat.com>
-To: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>
-Subject: xfs lockup 
-Message-ID: <9b091e22-3599-973f-d740-c804f43c71ca@redhat.com>
+        Mon, 27 Jan 2025 12:19:14 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tcVZf-0000000BIhl-2UYH;
+	Tue, 28 Jan 2025 07:19:11 +1100
+Date: Tue, 28 Jan 2025 07:19:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, djwong@kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, "Lai, Yi" <yi1.lai@linux.intel.com>
+Subject: Re: [PATCH] xfs: remove xfs_buf_cache.bc_lock
+Message-ID: <Z5fqPyqU4KTSMGyh@dread.disaster.area>
+References: <20250127150539.601009-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250127150539.601009-1-hch@lst.de>
 
-Hej,
+On Mon, Jan 27, 2025 at 04:05:39PM +0100, Christoph Hellwig wrote:
+> xfs_buf_cache.bc_lock serializes adding buffers to and removing them from
+> the hashtable.  But as the rhashtable code already uses fine grained
+> internal locking for inserts and removals the extra protection isn't
+> actually required.
+> 
+> It also happens to fix a lock order inversion vs b_lock added by the
+> recent lookup race fix.
+> 
+> Fixes: ee10f6fcdb96 ("xfs: fix buffer lookup vs release race")
+> Reported-by: "Lai, Yi" <yi1.lai@linux.intel.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_buf.c | 20 ++++++++------------
+>  fs/xfs/xfs_buf.h |  1 -
+>  2 files changed, 8 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index d1d4a0a22e13..1fffa2990bd9 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -41,8 +41,7 @@ struct kmem_cache *xfs_buf_cache;
+>   *
+>   * xfs_buf_rele:
+>   *	b_lock
+> - *	  pag_buf_lock
+> - *	    lru_lock
+> + *	  lru_lock
+>   *
+>   * xfs_buftarg_drain_rele
+>   *	lru_lock
+> @@ -502,7 +501,6 @@ int
+>  xfs_buf_cache_init(
+>  	struct xfs_buf_cache	*bch)
+>  {
+> -	spin_lock_init(&bch->bc_lock);
+>  	return rhashtable_init(&bch->bc_hash, &xfs_buf_hash_params);
+>  }
+>  
+> @@ -652,17 +650,20 @@ xfs_buf_find_insert(
+>  	if (error)
+>  		goto out_free_buf;
+>  
+> -	spin_lock(&bch->bc_lock);
+> +	/* The new buffer keeps the perag reference until it is freed. */
+> +	new_bp->b_pag = pag;
+> +
+> +	rcu_read_lock();
+>  	bp = rhashtable_lookup_get_insert_fast(&bch->bc_hash,
+>  			&new_bp->b_rhash_head, xfs_buf_hash_params);
+>  	if (IS_ERR(bp)) {
+> +		rcu_read_unlock();
+>  		error = PTR_ERR(bp);
+> -		spin_unlock(&bch->bc_lock);
+>  		goto out_free_buf;
+>  	}
+>  	if (bp && xfs_buf_try_hold(bp)) {
+>  		/* found an existing buffer */
+> -		spin_unlock(&bch->bc_lock);
+> +		rcu_read_unlock();
+>  		error = xfs_buf_find_lock(bp, flags);
+>  		if (error)
+>  			xfs_buf_rele(bp);
 
-I just ran into a deadlock on arm - is this a known issue?
+Ok, so now we can get racing inserts, which means this can find
+the buffer that has just been inserted by another thread in this
+same function. Or, indeed, and xfs_buf_lookup() call. What prevents
+those racing tasks from using this buffer before the task that
+inserted it can use it?
 
-watchdog: BUG: soft lockup - CPU#27 stuck for 26s! [git:4023]
-Modules linked in: tls qrtr rfkill sunrpc mlx5_ib ib_uverbs cdc_eem usbnet mii acpi_ipmi ib_core ipmi_ssif arm_spe_pmu ipmi_devintf ipmi_msghandler arm_cmn arm_dmc62>
-irq event stamp: 1277
-hardirqs last  enabled at (1277): [<ffff80007ca5d248>] xfs_buf_get_map+0xe70/0x1108 [xfs]
-hardirqs last disabled at (1276): [<ffff80007ca5d1f4>] xfs_buf_get_map+0xe1c/0x1108 [xfs]
-softirqs last  enabled at (36): [<ffff800080018f2c>] fpsimd_restore_current_state+0x3c/0xd8
-softirqs last disabled at (34): [<ffff800080018efc>] fpsimd_restore_current_state+0xc/0xd8
-CPU: 27 UID: 0 PID: 4023 Comm: git Not tainted 6.13.0+ #202
-Hardware name: HPE ProLiant RL300 Gen11/ProLiant RL300 Gen11, BIOS 1.50 12/18/2023
-pstate: 00400009 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-pc : queued_spin_lock_slowpath+0x78/0x4f0
-lr : do_raw_spin_lock+0xb4/0x128
-sp : ffff8000cc133210
-x29: ffff8000cc133210 x28: ffff800082d7a478 x27: ffff07ffe074fa60
-x26: ffff07ffe074faa0 x25: ffff07ffe074f800 x24: ffff80007ca5db24
-x23: ffff07ff92f0c200 x22: 0000000080000001 x21: ffff07ff92f0c288
-x20: ffff80007ca5cb8c x19: ffff07ff92f0c288 x18: 00000000fffffffd
-x17: 675f6675625f7366 x16: 78203a7461202c7d x15: ffff8000cc132668
-x14: 0000000000000000 x13: ffff8000cc13285b x12: ffff087d3e9c0000
-x11: 0000000000000001 x10: 0000000000000001 x9 : ffff80008017360c
-x8 : c0000000ffff7fff x7 : ffff800083ceddb0 x6 : 00000000002bffa8
-x5 : ffff087d3e9bffa8 x4 : ffff8000cc134000 x3 : ffff08011cd92ec0
-x2 : 00000000dead4ead x1 : 0000000000000000 x0 : 0000000000000001
-Call trace:
-  queued_spin_lock_slowpath+0x78/0x4f0 (P)
-  do_raw_spin_lock+0xb4/0x128
-  _raw_spin_lock+0x58/0x70
-  xfs_buf_get_map+0x7b4/0x1108 [xfs]
-  xfs_buf_read_map+0x54/0x2f8 [xfs]
-  xfs_trans_read_buf_map+0x1cc/0x510 [xfs]
-  xfs_imap_to_bp+0x5c/0xc8 [xfs]
-  xfs_iget+0x3dc/0x10f8 [xfs]
-  xfs_lookup+0xf4/0x208 [xfs]
-  xfs_vn_lookup+0x5c/0x98 [xfs]
-  __lookup_slow+0xb4/0x168
-  walk_component+0xe0/0x1a0
-  path_lookupat+0x80/0x1b0
-  filename_lookup+0xb0/0x1b8
-  vfs_statx+0x74/0xd8
-  vfs_fstatat+0x6c/0xe0
-  __do_sys_newfstatat+0x48/0x78
-  __arm64_sys_newfstatat+0x28/0x38
+I think that the the buffer lock being initialised to "held" and
+b_hold being initialised to 1 make this all work correctly, but
+comments that explicitly spell out why RCU inserts are safe
+(both in xfs_buf_alloc() for the init values and here) would be
+appreciated.
 
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 7e73663c5d4a..3b4ed42e11c0 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -80,7 +80,6 @@ typedef unsigned int xfs_buf_flags_t;
+>  #define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
+>  
+>  struct xfs_buf_cache {
+> -	spinlock_t		bc_lock;
+>  	struct rhashtable	bc_hash;
+>  };
 
-Lockdep also complained:
+At this point, the struct xfs_buf_cache structure can go away,
+right?  (separate patch and all that...)
 
-======================================================
-WARNING: possible circular locking dependency detected
-6.13.0+ #202 Not tainted
-------------------------------------------------------
-git/4023 is trying to acquire lock:
-ffff07ff92f0c2a0 (&bp->b_lock){+.+.}-{3:3}, at: xfs_buf_get_map+0x7b4/0x1108 [xfs]
-
-but task is already holding lock:
-ffff07ffe074fa78 (&bch->bc_lock){+.+.}-{3:3}, at: xfs_buf_get_map+0x5c4/0x1108 [xfs]
-
-which lock already depends on the new lock.
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&bch->bc_lock){+.+.}-{3:3}:
-        _raw_spin_lock+0x50/0x70
-        xfs_buf_rele+0x140/0xa70 [xfs]
-        xfs_trans_brelse+0xc8/0x210 [xfs]
-        xfs_imap_lookup+0x15c/0x1b8 [xfs]
-        xfs_imap+0x18c/0x330 [xfs]
-        xfs_iget+0x3a8/0x10f8 [xfs]
-        xfs_mountfs+0x540/0xad0 [xfs]
-        xfs_fs_fill_super+0x5b4/0x9f0 [xfs]
-        get_tree_bdev_flags+0x13c/0x1e8
-        get_tree_bdev+0x1c/0x30
-        xfs_fs_get_tree+0x20/0x38 [xfs]
-        vfs_get_tree+0x30/0x100
-        path_mount+0x414/0xb88
-        __arm64_sys_mount+0x258/0x338
-        invoke_syscall+0x70/0x100
-        el0_svc_common.constprop.0+0xc8/0xf0
-        do_el0_svc+0x24/0x38
-        el0_svc+0x50/0x1b8
-        el0t_64_sync_handler+0x10c/0x138
-        el0t_64_sync+0x19c/0x1a0
-
--> #0 (&bp->b_lock){+.+.}-{3:3}:
-        __lock_acquire+0x12ec/0x1ee8
-        lock_acquire+0x1ac/0x368
-        _raw_spin_lock+0x50/0x70
-        xfs_buf_get_map+0x7b4/0x1108 [xfs]
-        xfs_buf_read_map+0x54/0x2f8 [xfs]
-        xfs_trans_read_buf_map+0x1cc/0x510 [xfs]
-        xfs_imap_to_bp+0x5c/0xc8 [xfs]
-        xfs_iget+0x3dc/0x10f8 [xfs]
-        xfs_lookup+0xf4/0x208 [xfs]
-        xfs_vn_lookup+0x5c/0x98 [xfs]
-        __lookup_slow+0xb4/0x168
-        walk_component+0xe0/0x1a0
-        path_lookupat+0x80/0x1b0
-        filename_lookup+0xb0/0x1b8
-        vfs_statx+0x74/0xd8
-        vfs_fstatat+0x6c/0xe0
-        __do_sys_newfstatat+0x48/0x78
-        __arm64_sys_newfstatat+0x28/0x38
-        invoke_syscall+0x70/0x100
-        el0_svc_common.constprop.0+0x48/0xf0
-        do_el0_svc+0x24/0x38
-        el0_svc+0x50/0x1b8
-        el0t_64_sync_handler+0x10c/0x138
-        el0t_64_sync+0x19c/0x1a0
-
-other info that might help us debug this:
-
-  Possible unsafe locking scenario:
-
-        CPU0                    CPU1
-        ----                    ----
-   lock(&bch->bc_lock);
-                                lock(&bp->b_lock);
-                                lock(&bch->bc_lock);
-   lock(&bp->b_lock);
-
-  *** DEADLOCK ***
-
-
-Seems reproducible. Kernel was at 9c5968db9e625019a0ee5226c7eebef5519d366a
-plus some unrelated patches.
-
-Sebastian
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
