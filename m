@@ -1,43 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A2445789D;
-	Tue, 28 Jan 2025 10:57:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6575319F40A
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 10:57:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738061869; cv=none; b=H+ZtSKHYW/wXARzr6j2ukUqnat7kKDd5SlL0zI33KMc/7wydY4QvoaEsdnn0lPRkHPdHoGzIkBni3ijNtObdlGRtwDb1ve4MZrI/VRBilmnT2S49nX0hU1yKNh8rFKO6fnW1Bu97m75mEfwIE61vo4FnhqJbJNzKSuS7z+yMKwY=
+	t=1738061870; cv=none; b=X+ywfJtiFFJTRbPk6AZOTEGv2KHu1kW5pRAAeDBSqToia0lnxChCG+bOFuvzHX5FKxacCjn2x0qjWhksx7Pw8QjM4XUHyJDijq780kD1nRAbmw6XpbjQNFhJ8hZhQSyR2ZD0fwms7IjtbekEsOpsgHg0grzfUCzPukHEj6LSIK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738061869; c=relaxed/simple;
-	bh=OHze50Q3DWl+LePefiX+gCqYSbz7UcQdSf7eE0RkVoQ=;
+	s=arc-20240116; t=1738061870; c=relaxed/simple;
+	bh=lyhjVKsszZ3t72sKhn6Tuzegl3MWw51Uz2yHwNX1G2Y=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Cmn5AdHr6k4i3hucr0xeAVQed+pCF14ZNJVSj9nZUbbRE7g6LVpF+83ukwtV2XkjnlXH7WRlTpT4NOgy6oqEnYMzglgtNscURPP5O8wxpeggvUYgaIfdBwplyqMv7yykvfijTMJRS8byNOoYHE/9DmUt+dwZzubnRnz77N/zxEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HL5o4ctX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QOtAGSnsvQuNnAN/zkpSRGcx1COV78MrbZ6BGp99FJblrXqaWGlRWjR5/RZc+WUtbeyZF9qucwkIEvt5E3OH54ehkAf2b16WX89ddGYByGFAxQF0yuDXjIFp0sh8kHV03bZQwJawmi3qTqHOozsKaK48fVPdcve3adxTLo1PVoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ejaalx6u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HL5o4ctX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C22C5C4CED3;
-	Tue, 28 Jan 2025 10:57:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ejaalx6u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22F3EC4CEE3;
+	Tue, 28 Jan 2025 10:57:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738061868;
-	bh=OHze50Q3DWl+LePefiX+gCqYSbz7UcQdSf7eE0RkVoQ=;
+	s=k20201202; t=1738061869;
+	bh=lyhjVKsszZ3t72sKhn6Tuzegl3MWw51Uz2yHwNX1G2Y=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=HL5o4ctXEG+zPVdIgNVn4auQHb4xWmcV0Ecj4y9nCGN/8nFD47bTNSc3TO+TrdfoQ
-	 8ExXVEl+v9wq4Sqx6s7NcvK5hzDrqbhiUaH+v79O8HWOLzB7qKUBfSdy1Ef1YdIhdS
-	 t8LmFHavihg3HF8vvJYwigQoZQu56Do+bplWS25e0bxx68KJRxR8F3W92pKB5G7kHz
-	 n+Fr8+y4hsPvl445cKIE8HgQug+J0P5IuK2V4EZFLbX71R4Z+0W9NA2ZwaqWnjZeIb
-	 kyFNHD3BJOUUqI0trsozITJlfhs7kI9L5ygAU4Yq644XdRV12QBo1+WauzWPNduDYG
-	 UXVNbEtoMsc+Q==
+	b=ejaalx6uO+Pt9qE+4pmuK0/lFEfMGE1miCA4ZLxQQbdWdtHA/Co5/teVxD7l81VYt
+	 BvtJfwg4i24GZtSIFVbkEKAHgeAfShN4NnNWPV4b0QcUoaewHVFjRRqNPAqhlWY7+Y
+	 X4EnczPZkW8Xj84PJOHEYauxVIbna9lVJrh65Qh8DlY5fTLwk3BD+SXbHuazpVAWfd
+	 p+i0rUGIHdGCS2uZLCjHd5PquziouLJqjfEZnaa/I1f94gPm8w4fvp6m9oj5LQtW+8
+	 VkeAbVhhjmWCaq7vYIbiqXOulCQ04vh9K7fhHKEpEGsyJJvfUh+G6VzTUwdwtxLVl/
+	 2tr+jNbsaH+Tg==
 From: Carlos Maiolino <cem@kernel.org>
-To: dchinner@redhat.com, djwong@kernel.org, 
- Jinliang Zheng <alexjlzheng@gmail.com>
-Cc: chandanbabu@kernel.org, linux-xfs@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Jinliang Zheng <alexjlzheng@tencent.com>, 
- Dave Chinner <david@fromorbit.com>
-In-Reply-To: <20250115123525.134269-1-alexjlzheng@tencent.com>
-References: <20250115123525.134269-1-alexjlzheng@tencent.com>
-Subject: Re: [RESEND PATCH v3] xfs: fix the entry condition of exact EOF
- block allocation optimization
-Message-Id: <173806186643.500545.9968635452635594761.b4-ty@kernel.org>
-Date: Tue, 28 Jan 2025 11:57:46 +0100
+To: Christoph Hellwig <hch@lst.de>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org
+In-Reply-To: <20250116060335.87426-1-hch@lst.de>
+References: <20250116060335.87426-1-hch@lst.de>
+Subject: Re: [PATCH] xfs: remove an out of data comment in _xfs_buf_alloc
+Message-Id: <173806186885.500545.4547055805305781797.b4-ty@kernel.org>
+Date: Tue, 28 Jan 2025 11:57:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,20 +44,15 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Wed, 15 Jan 2025 20:35:25 +0800, Jinliang Zheng wrote:
-> When we call create(), lseek() and write() sequentially, offset != 0
-> cannot be used as a judgment condition for whether the file already
-> has extents.
+On Thu, 16 Jan 2025 07:03:35 +0100, Christoph Hellwig wrote:
+> There hasn't been anything like an io_length for a long time.
 > 
-> Furthermore, when xfs_bmap_adjacent() has not given a better blkno,
-> it is not necessary to use exact EOF block allocation.
 > 
-> [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: fix the entry condition of exact EOF block allocation optimization
-      commit: 915175b49f65d9edeb81659e82cbb27b621dbc17
+[1/1] xfs: remove an out of data comment in _xfs_buf_alloc
+      commit: 89841b23809f5fb12cbead142204064739fef25a
 
 Best regards,
 -- 
