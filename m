@@ -1,125 +1,114 @@
-Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8637E1D6DB5
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 15:43:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3D0A1422A8
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 17:35:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738079006; cv=none; b=dVKAp0TYCy1N3PySlRWBgudzkDDi5GhSeKJGTkGOoW2zU+WDUVRZM0sOtyDcaDMyeN/+g588PXhP3hqzt09f1Ddcwc8SMC88gK8uIob6qGhXlGAvyg0JyAphHHmSCDKhs3OfxPEwaG4Wnu7CwddAEtvZm/Drk0pRUzRqz1+fIwg=
+	t=1738085760; cv=none; b=m6O0IVpu2BJMFYOd4f6TodL4kUaa8JUW+tFBubLGLxq647pPDuEsN3W7KjMrK4cM9xNCwP1PP9SybpE0GxTBd/dIqjv4dlMwXfxcBeW9HvNFXZc9HqL3mucVri87ltOY2EwVBSKH1FVeL0zGYHkAalhXC+T0civt3yTrxAmWRwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738079006; c=relaxed/simple;
-	bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OMt+AABMPuVgu7ja5s1rp9eLS84Yh5NYyPLm0iPu7GsIbZ0f2vnK3d0oRfBQjVxiRBWBIYpAVVinACgPqtmNY8+3IgWwGUmgbMhg9iqPcSYFTJB3ZtzjJqzGBXpVvTOcsVZodRINwFeSS/c9F8ewctDNEojiQX+Su0l1OzcCsQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=ZzdR8vdI; arc=none smtp.client-ip=209.85.219.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
+	s=arc-20240116; t=1738085760; c=relaxed/simple;
+	bh=lKmCWmP2Al9dUNBPQBlMaTZyQecMqNQRbOhqsHjM34I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f3f4sdMHNkTtpWXtzxpmCk1SuwRKvoFgZGsBOnPFWVg42BH6/y1ASu/w3JFA/jeimKg5N9aJbBdiwj0dMBv0UDMPF01UkM3XCNrY+DcHdgwRQs5D9o2debdvw26V59yXyJ0NhT/yWifs62QlQdB9n79cHIvW1iKl3DYAMU31eK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TF+xXGao; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="ZzdR8vdI"
-Received: by mail-yb1-f171.google.com with SMTP id 3f1490d57ef6-e549b0f8d57so9734987276.3
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 07:43:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore.com; s=google; t=1738079001; x=1738683801; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
-        b=ZzdR8vdIiohnoZ4hKdRsx8vjUSASU/72vdBDURxTPxW6Y5y+xqJe1XFJv37MN3/RSh
-         1N9DWACiMe42Ssr+6RyacQYB0mKZF7r9X4dw06gLm3TJ5kXU+QA6Pwxa8XDIazhEp8C0
-         9uU7YdXy5cLi0N5EPxtYGd6vErWsFg/mLsK5lwXF/VP7H3vmwwe2R2U45ytaFkUMk6Za
-         lp6jed/BVTI9FjvFUI0MN7HYChc3iERhjHp52qu+iW++/bUjLH+wfDW2Jw7AJF6Rr/MJ
-         y67AxGiMWpozGojGCejMex/pBvJsfQOTerwdd08tOqwT12ksmB/+EE0jtUDQTB2nY1qi
-         QFbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738079001; x=1738683801;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
-        b=uM+0Ux2PQTqism/KIXNWukdZRq/m3xp1IvEGO07opt4V7d80kIO4MrBUN36mlK7vbz
-         pQ5jRNY6mKak2rQWG27JlVum7qlhIWfBu4aF7OBR3qCYVjICoDJjm33YQDMDaaIOvjC6
-         VgSX0SSHz/D+bnIgi4yGZaKLZkgxjlaQ7PJOV+7hd5gK1+TRJzun9KkfhjkFm1JqQQVp
-         8ZWUIr8tursbIEEq4qFPrjsO+RmaYFIFZZgGT7ys0zb0UwlL4HV+rYXwT0wx1biFRJQC
-         vhD7iHjz5cJnv7chPoLU59YI1J0jgzolmRqb8AE6a8c5MxUxCbDuxko//yNt+5oqMeJG
-         y6PQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVHhlNxk2A72msHg0G2liLmCFdiBqwKUmGnOyvBFLfs0a/2xXApDeSllO7bssvFiX+EbKfQ27SePBk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwHIKUGvPdvyXe+FQ6BeDwjrnOUe+uAcmj4PTWVEEF8CrE0fIys
-	NuYGuHd8f20Z69B4+Tw5bSj5Lr8NHtT9MgimuxktBYBcU3s9zr3fJVB3Z/kS/CVa85K3jOR65TU
-	vDl/upi7kNlkqaINI/pbiAqooY/di1YVdxxGY
-X-Gm-Gg: ASbGncuuSL2BP23h7uLMxhQVSlCvrs70sjH1ragtO+ucWP+nPNTW9oI2a7UEInHJp4R
-	O+UW0oakOAxDqA/JaRB4IKAvNpMUOO2cYS9bnJ5SBW4P6i2fpRKAQ85KR7mxgHHrjarxXnG8=
-X-Google-Smtp-Source: AGHT+IGuLqrmdoXiE8apV7tzhOJZ5Xm1OF/NxWm8Kjkh7RMoG05FR1MdO9WMx2ebniwyt0o5rEC0Jv+xP432BtVJDY0=
-X-Received: by 2002:a05:690c:4d02:b0:6ef:6646:b50a with SMTP id
- 00721157ae682-6f6eb6b2881mr361409457b3.20.1738079001445; Tue, 28 Jan 2025
- 07:43:21 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TF+xXGao"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F92DC4CED3;
+	Tue, 28 Jan 2025 17:35:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738085759;
+	bh=lKmCWmP2Al9dUNBPQBlMaTZyQecMqNQRbOhqsHjM34I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TF+xXGaosB9O6UPakmHOgpu5IIzPSCp9raMsug0UN7/7tdKA9Gngk7+eTSe+dhGPr
+	 jcyjdVTaY6+vMBpQxvkqrUGQ001FiNjseLVq/clplUoeCs2/ZTWZhlc5i9wJ/8NyEd
+	 h+k1EJ1yb9Yh1j+VlMxM6yUyX7GqSzdG5HOVaUtMJBDaOhFc3pqzT9cyrAyBIgIap2
+	 OMMRNZHreWBoldYJCRHeeQeUeMWXqWOyJv9QIdMvb9GizarzpY1hs2pzHhNiD3Dg0x
+	 u/ypNWMzaE/6jZ06XJ/Vu5C05d4Zu+Mp1KB35PCBmw1C2M3OhqmzfKyWZIYIplTlU6
+	 2jfxjivQ2dlVQ==
+Date: Tue, 28 Jan 2025 09:35:58 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v2 2/7] release.sh: add --kup to upload release tarball
+ to kernel.org
+Message-ID: <20250128173558.GL1611770@frogsfrogsfrogs>
+References: <20250122-update-release-v2-0-d01529db3aa5@kernel.org>
+ <20250122-update-release-v2-2-d01529db3aa5@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
- <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
- <nslqrapp4v3rknjgtfk4cg64ha7rewrrg24aslo2e5jmxfwce5@t4chrpuk632k>
- <CAMj1kXEZPe8zk7s67SADK9wVH3cfBup-sAZSC6_pJyng9QT7aw@mail.gmail.com>
- <f4lfo2fb7ajogucsvisfd5sg2avykavmkizr6ycsllcrco4mo3@qt2zx4zp57zh>
- <87jzag9ugx.fsf@intel.com> <Z5epb86xkHQ3BLhp@casper.infradead.org> <u2fwibsnbfvulxj6adigla6geiafh2vuve4hcyo4vmeytwjl7p@oz6xonrq5225>
-In-Reply-To: <u2fwibsnbfvulxj6adigla6geiafh2vuve4hcyo4vmeytwjl7p@oz6xonrq5225>
-From: Paul Moore <paul@paul-moore.com>
-Date: Tue, 28 Jan 2025 10:43:10 -0500
-X-Gm-Features: AWEUYZkHRaUuCTQsu1U9C5jhigmIE9c2_8OmkE_i2Qv7ILXtAaTfDLC5EcLBZNk
-Message-ID: <CAHC9VhQnB_bsQaezBfAcA0bE7Zoc99QXrvO1qjpHA-J8+_doYg@mail.gmail.com>
-Subject: Re: Re: Re: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
-To: Joel Granados <joel.granados@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>, Jani Nikula <jani.nikula@intel.com>, 
-	Ard Biesheuvel <ardb@kernel.org>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	=?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>, 
-	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, 
-	dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
-	linux-hyperv@vger.kernel.org, linux-rdma@vger.kernel.org, 
-	linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-serial@vger.kernel.org, xen-devel@lists.xenproject.org, 
-	linux-aio@kvack.org, linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev, 
-	codalist@coda.cs.cmu.edu, linux-mm@kvack.org, linux-nfs@vger.kernel.org, 
-	ocfs2-devel@lists.linux.dev, fsverity@lists.linux.dev, 
-	linux-xfs@vger.kernel.org, io-uring@vger.kernel.org, bpf@vger.kernel.org, 
-	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org, 
-	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com, 
-	linux-security-module@vger.kernel.org, keyrings@vger.kernel.org, 
-	Song Liu <song@kernel.org>, "Steven Rostedt (Google)" <rostedt@goodmis.org>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Corey Minyard <cminyard@mvista.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250122-update-release-v2-2-d01529db3aa5@kernel.org>
 
-On Tue, Jan 28, 2025 at 6:22=E2=80=AFAM Joel Granados <joel.granados@kernel=
-.org> wrote:
-> On Mon, Jan 27, 2025 at 03:42:39PM +0000, Matthew Wilcox wrote:
-> > On Mon, Jan 27, 2025 at 04:55:58PM +0200, Jani Nikula wrote:
-> > > You could have static const within functions too. You get the rodata
-> > > protection and function local scope, best of both worlds?
-> >
-> > timer_active is on the stack, so it can't be static const.
-> >
-> > Does this really need to be cc'd to such a wide distribution list?
-> That is a very good question. I removed 160 people from the original
-> e-mail and left the ones that where previously involved with this patch
-> and left all the lists for good measure. But it seems I can reduce it
-> even more.
->
-> How about this: For these treewide efforts I just leave the people that
-> are/were involved in the series and add two lists: linux-kernel and
-> linux-hardening.
->
-> Unless someone screams, I'll try this out on my next treewide.
+On Wed, Jan 22, 2025 at 04:01:28PM +0100, Andrey Albershteyn wrote:
+> Add kup support so that the maintainer can push the newly formed
+> release tarballs to kernel.org.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-I'm not screaming about it :) but anything that touches the LSM,
-SELinux, or audit code (or matches the regex in MAINTAINERS) I would
-prefer to see on the associated mailing list.
+Looks good now,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
---=20
-paul-moore.com
+--D
+
+> ---
+>  release.sh | 31 +++++++++++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
+> 
+> diff --git a/release.sh b/release.sh
+> index b15ed610082f34928827ab0547db944cf559cef4..b036c3241b3f67bfb2435398e6a17ea4c6a6eebe 100755
+> --- a/release.sh
+> +++ b/release.sh
+> @@ -16,6 +16,30 @@ set -e
+>  version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
+>  date=`date +"%-d %B %Y"`
+>  
+> +KUP=0
+> +
+> +help() {
+> +	echo "$(basename) - create xfsprogs release"
+> +	printf "\t[--kup|-k] upload final tarball with KUP\n"
+> +}
+> +
+> +while [ $# -gt 0 ]; do
+> +	case "$1" in
+> +		--kup|-k)
+> +			KUP=1
+> +			;;
+> +		--help|-h)
+> +			help
+> +			exit 0
+> +			;;
+> +		*)
+> +			>&2 printf "Error: Invalid argument\n"
+> +			exit 1
+> +			;;
+> +		esac
+> +	shift
+> +done
+> +
+>  echo "Cleaning up"
+>  make realclean
+>  rm -rf "xfsprogs-${version}.tar" \
+> @@ -52,4 +76,11 @@ gpg \
+>  
+>  mv "xfsprogs-${version}.tar.asc" "xfsprogs-${version}.tar.sign"
+>  
+> +if [ $KUP -eq 1 ]; then
+> +	kup put \
+> +		xfsprogs-${version}.tar.gz \
+> +		xfsprogs-${version}.tar.sign \
+> +		pub/linux/utils/fs/xfs/xfsprogs/
+> +fi;
+> +
+>  echo "Done. Please remember to push out tags using \"git push origin v${version}\""
+> 
+> -- 
+> 2.47.0
+> 
+> 
