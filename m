@@ -1,34 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 93D351F78E6;
-	Tue, 28 Jan 2025 18:22:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 55DEC1F8695;
+	Tue, 28 Jan 2025 18:22:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738088526; cv=none; b=qMBPJsMKjK1pq5L1+e3eJVCXguIvb5se9t+S+j/L458543BAhdIMygqp4v6T0qJBDDTqfmPuf+uorLseusFzPADt2KczgtW8xCP8aKY01+RTeQar711LPIJysFgMMgIeDBBy8PQpgyokMxyv+XZQo9pDV/2RtjGx7bR9lEl0y1c=
+	t=1738088526; cv=none; b=bQSxsHSmgpH9W4QhFDV6wJZECauGLU1LmwwUoYS9jcfruJs8/ybNQwCHtxTJm/wLmlZPKIFiXyF8erJCfM+EDNayv4+u9te9i6VC0VKcfMm16S1CVpU3UOZQAGx8Ft79Wmj3EPNoqKyYzBHnGQdwTSfG3v62GKPSbQPgbXg+uIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738088526; c=relaxed/simple;
-	bh=CLfhMWMTls81fldJlgdOHYuSb53h9V9zAXCK22tn3uE=;
+	bh=KJMzKtLgUjkdiRLa5HitUr7Wx/UXOJQ27K9oYkXSQt8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=XnjjS/NSjR1y3mM3R7IyCDuuoixov41sonUhcjmfVqVFCacoLRlFs+EfMoFbjWdeVIvKJeTzeuhN/ITJHjHn22La1SmwgRlYsHMTafAOQoA2HkWQ+VC8d3VDS+T0iYYIun8LFew8e7shTXNunqRfGOUnWc0sooK3KoW0BIUytFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=ZOuwdqaZ; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=QKLO50ePNnmGE1Ed3XJSH8CeT2Hu5pBdqr3LVS3Vxgovyx4N2SnNllayTLIL5UCBj8TRSfyePbgIlSmobS+Tlwf9VeGf/3RfBhGdkJlasEZpQ7mfG9IeSkYo2/WeEsIL/j6F+rsqWKv50rmEJWriBCh5OEFzol8hC4gMzHdA0MA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=q+xwP6Cl; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="ZOuwdqaZ"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="q+xwP6Cl"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 7B8912037183;
+	by linux.microsoft.com (Postfix) with ESMTPSA id C24F42037187;
 	Tue, 28 Jan 2025 10:21:59 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7B8912037183
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C24F42037187
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1738088519;
-	bh=VqcHpB+vyGTp1RMX3+WFTH5f5bCj+Q9J8OolxUskrKo=;
+	bh=kdMVzzkgTOOmufQV39efQmOyjkxwKqjsv6zrS4rXQDA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=ZOuwdqaZhug0KNQQ21Ohb30BhgvBJyo55qHRaa7MGqCb8wONCvj3jN/bLp9sKWWM6
-	 8bC+bT63Hpx0+HHlZCeQeaR75fGVzJRRwDfMPixaFz8dfRqI1843e4U/m+evk1P+Me
-	 /+O0qMwZndCMTYuy618bWJRmYRUItE1KI26PeEM4=
+	b=q+xwP6ClPU9Ft8nUZaAm0N07V7hTj7HoQgpntSqU7xz/FSC1uyq8yI9vSrWHQTVoJ
+	 PSX32EpAjhCmTdNfYRkq0EvtpfRW1IfUg+fLiSx95EzydAGIAXQme2d6mFML8NbA9f
+	 CPhNataDz2TgSPTNZMYPFDRtUHD77vCxTnf0vsIo=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 28 Jan 2025 18:21:59 +0000
-Subject: [PATCH 14/16] platform/x86/amd/pmf: convert timeouts to
- secs_to_jiffies()
+Date: Tue, 28 Jan 2025 18:22:01 +0000
+Subject: [PATCH 16/16] RDMA/bnxt_re: convert timeouts to secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +36,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-14-9a6ecf0b2308@linux.microsoft.com>
+Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-16-9a6ecf0b2308@linux.microsoft.com>
 References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -98,23 +97,22 @@ expression E;
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/platform/x86/amd/pmf/acpi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/infiniband/hw/bnxt_re/qplib_rcfw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/platform/x86/amd/pmf/acpi.c b/drivers/platform/x86/amd/pmf/acpi.c
-index dd5780a1d06e1dc979fcff5bafd6729bc4937eab..6b7effe80b78b7389b320ee65fa5d2373f782a2f 100644
---- a/drivers/platform/x86/amd/pmf/acpi.c
-+++ b/drivers/platform/x86/amd/pmf/acpi.c
-@@ -220,7 +220,8 @@ static void apmf_sbios_heartbeat_notify(struct work_struct *work)
- 	if (!info)
- 		return;
+diff --git a/drivers/infiniband/hw/bnxt_re/qplib_rcfw.c b/drivers/infiniband/hw/bnxt_re/qplib_rcfw.c
+index 17e62f22683b14a3571188e25fe0df3cbf1d8360..b1a18c9cb7f6c248548bc38fcb98781a3030a1b6 100644
+--- a/drivers/infiniband/hw/bnxt_re/qplib_rcfw.c
++++ b/drivers/infiniband/hw/bnxt_re/qplib_rcfw.c
+@@ -160,7 +160,7 @@ static int __wait_for_resp(struct bnxt_qplib_rcfw *rcfw, u16 cookie)
+ 		wait_event_timeout(cmdq->waitq,
+ 				   !crsqe->is_in_used ||
+ 				   test_bit(ERR_DEVICE_DETACHED, &cmdq->flags),
+-				   msecs_to_jiffies(rcfw->max_timeout * 1000));
++				   secs_to_jiffies(rcfw->max_timeout));
  
--	schedule_delayed_work(&dev->heart_beat, msecs_to_jiffies(dev->hb_interval * 1000));
-+	schedule_delayed_work(&dev->heart_beat,
-+			      secs_to_jiffies(dev->hb_interval));
- 	kfree(info);
- }
- 
+ 		if (!crsqe->is_in_used)
+ 			return 0;
 
 -- 
 2.43.0
