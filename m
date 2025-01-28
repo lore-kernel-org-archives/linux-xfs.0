@@ -1,172 +1,140 @@
-Received: from mout.web.de (mout.web.de [212.227.17.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9855255887;
-	Tue, 28 Jan 2025 21:02:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D1411E50E;
+	Tue, 28 Jan 2025 21:23:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738098164; cv=none; b=BMNRC8H3iK95KZ6QQRmoVEJ2idqDjZpsW+HpUwRdqvZQZgH2z3q4pIcaO6OCWJ1aKTFphRfWpvjHkffyQchjzSyfXh91IkJYdT6KrHfys0JenNEvJdCk/q1gm3lBGphUPo1+7ywTy0GVCheIeNkiMJrveaVK80B/HBKcZ+6VFak=
+	t=1738099401; cv=none; b=D9w9o83ZoXmcqLdiFQ+b/+vZNPT7GnQOnt4ORm5kJi2VPcZSfZU9LOP6XeKiNs9BRDvZ9dgpuTo7sZqP4eMJWi1OPzHZl8VPCe/lBn6bFDpQpBUHNZ0eIElGefOfdujqz1/jRZD1XmS+0yT/U2WVjmMW949yinn/fhd8tu4vP/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738098164; c=relaxed/simple;
-	bh=mfMB/kOJwWCWBi7AtFus1i5A8KKc2SzYD9VfPPB6/Bk=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=fuYgz03dOehmWdW6aKYsAV8FxZ6PcsyruP+zj9JmsWnoLrjv9cc1NTWMmbrEkxHxIRCQ11YROer0V6iPt87GlJIXijEfWShyEyXoG2kKD5VcGhYYOH1s/rRBx/a6XznfPyQESmNKgZ8V6Lt3XzbMz1opliLSw/IWZLV2l1DLE5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=lugd+JEl; arc=none smtp.client-ip=212.227.17.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1738099401; c=relaxed/simple;
+	bh=gOQmA0Rye0xiWq+32RnWrCq9X5R1jL0JBKEgmsBH6ls=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ussb0KLjTRdbUG9jADAPN9crcKm7+3YF/x8B3LCANeCdjiZyoYK3Bp8KWQWWvDsYkIyuN20LvaFHACkNiD24DDPrkjs9up2qDnfpbbfIrb3lMx/0LJUOo1pBGT23yo/NX31h5Nf68lgWQ3vklGpER4zhgZ2cQBZhMXyddh8uwfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K5JKMXvQ; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="lugd+JEl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1738098159; x=1738702959; i=markus.elfring@web.de;
-	bh=3umHLMGrcLo5C0gV5DfFSpcRm6HAQK73Bd3Y1mC2uB4=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=lugd+JElfIBEVWJEly/xpiC37xATW6N6QL/mFXzaImqmdRiGu9El4suaNDc5SBIJ
-	 f7yuPAtB4XVuylj3u7G5BczelJ5/emDxHQ30PDVNcC9rtRKBhqRseJy6OASoL+Iq9
-	 ArcQ3FyUW9yd6zl6HvZ2Xlf0WV4HKCmnClbV719vvUnC+rm0ypbfdtPwsGGbVAZnj
-	 WkCAfzZcvm0TYZkxsVNFrodDO6tQZu6OcvhdWzOTgMDymVvgzqDR+mTdyiZV8tA4+
-	 QU/te2bbCzVTLcIj2amNj5TwWzdApX4spmArstqfs3lmriJ7U+3XkJ3feVPqxmnLX
-	 mxBXcCqystTm/wZ5ww==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.70.40]) by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1Mi4z5-1szA8E0tNZ-00bwwr; Tue, 28
- Jan 2025 22:02:39 +0100
-Message-ID: <565fb1db-3618-4636-8820-1ca77dad07a2@web.de>
-Date: Tue, 28 Jan 2025 22:02:29 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K5JKMXvQ"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-38a8b17d7a7so3327945f8f.2;
+        Tue, 28 Jan 2025 13:23:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738099398; x=1738704198; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=J+ozDEHLmcNO1CX9NQGjZ1iJcEKvr2B2drcZGRWN3qw=;
+        b=K5JKMXvQGLC7rywdBdZUFbITemcaQ8yYqDnx3QTvdoamcCr+toSrMI51vWz9JfyWIb
+         NpggDHO1u5UXbkfDfstruypNMCOcZ4FRsGnd2jSI5amCQFA7YuzRNi4+OqgPm80EbwRt
+         +vnxXoJYpWAIirFQeJjnH8SSRvroqF9QqjLsZEdm4ObHcHKlC1b+MqKoxP5IIBnXaHIJ
+         G0m28V6u2jeF368DfcF8KwLdQNtwr9a9pf9wj3y/un0+nXy7bTwIPHBZOvWp2tVR6YZl
+         Uu6mQgX0S0llOo8Wrm9Jre1M+uEwWZGcSTZ1raJjeMS+P3dt98mCWKn1N/eKVHTKm6ko
+         brKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738099398; x=1738704198;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=J+ozDEHLmcNO1CX9NQGjZ1iJcEKvr2B2drcZGRWN3qw=;
+        b=qUsUTeIQopMa4n2lv1nLrYaszFA88HrTBNCd1MyRnHr228wXIxPoABcg2eZiBamjHj
+         Ff6GrXkpx3RCstM2Y2fY6Ixa3ETYqZqupudGBl5VhYuxb7BTdCKAj8wa+HWLXYgUHB1j
+         u7exyTE+iZV2SXvc6RtLVfzO5L7giSuxbOOzdSHU8CJXitXwxSH3PPCYrgh8ZNaio3jL
+         nrJ9aULUuU3ZVDZR3KIC2rZPJ+RLEbLB8YgnLl4nqCr3f5eRQ5WTua3Vut7mdLY6b4gg
+         xkxAJj9u6BnK/MlIOMGk8LZaqsBXBcywoiq03Jkda1sfe6rnN5WIFYmAd31rJy+Fwl0J
+         OM5A==
+X-Forwarded-Encrypted: i=1; AJvYcCURIC6GIwPXA+6bL+m8cdgfOUj7c1X7fQNE6/mAOEzaReKhDy0udgRFRgCSX0/1iYFg4NYklimPah2P@vger.kernel.org, AJvYcCXdp3acASIv96vJS8+bkUlqrjyeO0glsbwd53xv+DDP+rwbOx6HezDdwVIt5QPXhrt1ACo3wapQJcMl4aw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx4ri26ZrROyL80eGfAQVpHfUVP6NL3fTPOGP9zv9szybPFDF48
+	qs8QKrb4UKAqz291fkA1VrNGyrZY7KgvKl1pkMw2zVf+flKp/acG
+X-Gm-Gg: ASbGncuQZYAwWa/B6Km5JVZnBU8WQqPqLsQ4E4PLKdcXKdyJ21VaZPJjGuN6blz1jp2
+	eN/ttLnyzg35Dd1U7OilJXJy49loxGmo2jr8/GRJYLAm4OoPlpybrrVOfILSuPVlPUdGWlUxW2c
+	VUF9165MNj283DfW4bfwas3WdRjO7cflYlwDrgaPeBqYEfWgF7v+X+8nPDeS8Vy1Tp05kjB1D+e
+	C1awaon22HpwhcgRQXPzEptRMbe1NCMO3ec7oCet0L932J7lfqC25Aw3toNeX85aaUIoICDZMw/
+	ral6ty7Oh6hnefCQz3fH9CQGYqX2xE07hVnv+fxf0sWZvnajLwE+lw==
+X-Google-Smtp-Source: AGHT+IElxSj78erTqKNboOKXrQDQLzu3b2HCeCAk99SIcXOKzPp0pTWv0Bv8VelLQaqgTg0doT/Eug==
+X-Received: by 2002:a5d:6d88:0:b0:38a:4b8b:c57a with SMTP id ffacd0b85a97d-38c5209351bmr575281f8f.44.1738099397665;
+        Tue, 28 Jan 2025 13:23:17 -0800 (PST)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38c2a188a85sm14843998f8f.44.2025.01.28.13.23.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jan 2025 13:23:17 -0800 (PST)
+Date: Tue, 28 Jan 2025 21:23:15 +0000
+From: David Laight <david.laight.linux@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Chi Zhiling <chizhiling@163.com>,
+ Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>,
+ Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Chi Zhiling
+ <chizhiling@kylinos.cn>, John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <20250128212316.2bba477e@pumpkin>
+In-Reply-To: <Z5hn_cRb_cLzHX4Z@infradead.org>
+References: <20250108173547.GI1306365@frogsfrogsfrogs>
+	<Z4BbmpgWn9lWUkp3@dread.disaster.area>
+	<CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
+	<d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+	<20250113024401.GU1306365@frogsfrogsfrogs>
+	<Z4UX4zyc8n8lGM16@bfoster>
+	<Z4dNyZi8YyP3Uc_C@infradead.org>
+	<Z4grgXw2iw0lgKqD@dread.disaster.area>
+	<3d657be2-3cca-49b5-b967-5f5740d86c6e@163.com>
+	<Z5fxTdXq3PtwEY7G@dread.disaster.area>
+	<Z5hn_cRb_cLzHX4Z@infradead.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Easwar Hariharan <eahariha@linux.microsoft.com>, cocci@inria.fr
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org,
- linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
- linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org,
- ceph-devel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
- dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
- imx@lists.linux.dev, kernel@pengutronix.de,
- linux-arm-kernel@lists.infradead.org,
- Andrew Morton <akpm@linux-foundation.org>, Carlos Maiolino <cem@kernel.org>,
- Chris Mason <clm@fb.com>, Christoph Hellwig <hch@lst.de>,
- Damien Le Moal <dlemoal@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
- David Sterba <dsterba@suse.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
- Dongsheng Yang <dongsheng.yang@easystack.cn>,
- Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>,
- Hans de Goede <hdegoede@redhat.com>,
- Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- James Smart <james.smart@broadcom.com>, Jaroslav Kysela <perex@perex.cz>,
- Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
- Josef Bacik <josef@toxicpanda.com>, Julia Lawall <Julia.Lawall@inria.fr>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Ilya Dryomov <idryomov@gmail.com>,
- Kalesh Anakkur Purayil <kalesh-anakkur.purayil@broadcom.com>,
- Keith Busch <kbusch@kernel.org>, Leon Romanovsky <leon@kernel.org>,
- Mark Brown <broonie@kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Nicolas Palix <nicolas.palix@imag.fr>, Niklas Cassel <cassel@kernel.org>,
- Oded Gabbay <ogabbay@kernel.org>, Ricardo Ribalda <ribalda@google.com>,
- Sagi Grimberg <sagi@grimberg.me>, Sascha Hauer <s.hauer@pengutronix.de>,
- Sebastian Reichel <sre@kernel.org>,
- Selvin Xavier <selvin.xavier@broadcom.com>, Shawn Guo <shawnguo@kernel.org>,
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Takashi Iwai <tiwai@suse.com>,
- Victor Gambier <victor.gambier@inria.fr>, Xiubo Li <xiubli@redhat.com>,
- Yaron Avizrat <yaron.avizrat@intel.com>
-References: <20250128-converge-secs-to-jiffies-part-two-v1-1-9a6ecf0b2308@linux.microsoft.com>
-Subject: Re: [PATCH 01/16] coccinelle: misc: secs_to_jiffies: Patch
- expressions too
-Content-Language: en-GB
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-1-9a6ecf0b2308@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:iHXXXI1GgZe21qv8LaB36WZ2Vsbh+30ctHdeuhjL58pow7ObI/n
- WkL1BRfcGc3xPTE7WTH/8blOzYTn9sr9kmiu0JlwbK+4b714M1NEuSxTjO0wec15e2/vSDy
- uDaoXgXEnc15+k7LwhSrDlieAakHXlujaBdoTKMERuZeGqcF/lr7wB/BevoNLo+FU7wzIqQ
- aOajvgo+YHQHBAbcH9fBg==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:rl1+EWWMtaU=;EqS9WTtqlVexMZSa5Jv6osEpxMn
- hvF5ExxFi69MshCqN0iCQJ9CsPgR4dRizBjf15Nun4PB2G1xVTkt8gPKouGwCsVTv8Wm+WqU2
- TfM0O0GAReZpmFXq82LdrG2sTl+5GS7MW/XeczWoOvfmlQZGUTxAeiabHe982tQ5sjQ7pvBjj
- b6JYk30LAwHaptKVJlAyYDTQrNqQmKm1fInHh1R0BqLWD7yAbmIhzOgsGDyapCyRzZ/6L58Kd
- qMLJCmj8kp6OcGrtC6qyfn6vENJ3sKXUzDCjeFjZsblLj6AZqVFqPaGkr3WDBvgVlzknwCsuL
- dTDBwwDzhXWZDpsnaBHnS8iI6b9y60B0/WwOzfqaZ2vol6lFD69SHUFtYn0ZgHvwiCZm9xktA
- JWX2pS3My9yJ+hVoYQ8Roh/du8QDa/Pm1AN3y4siXvV4Vd2p4r7avPuVYF89xPfhqeOiCUyim
- 74txrmxIhNJtDI2TJ2SHQYS2r1gUY8+ioCwT2SsVmzxEdV795ccbiiKzw3KT1teQ1CRIhkeZF
- k+me759e21qqFhzCA+W+kKa3oNrQvnrx3MFGbr/WoIwLxlyqLG25aVhqwuWvn7yyDaFQ60QKw
- tMPxLX6+iV8IWzhIUyb4CtEkcgWiVVNm59osGitJw6HZJgsmDNDR4zs4DWL+Q5VGOpmwSVC0x
- Q+nvkt0/jEV6wgWG8uEad4c+rNAUrw9rtdYU5HViYfJzdE2v/knRfZBUzOkgi6O5iMZtJ3Lxi
- rKMYnBh+OfDHRaOKzTHuD/jxsBh2wri3J7QnuWvzCczLpsppJHq+CGdZvNevnxIcUGmYGqYZs
- K5WU8xokNX6ip+Z6iQRZjHliRbfF3LPa1bz58C8lLJ8UJMr2uicwiVhyCmJXfhfnTsF1UEjV3
- 2Bjsxn/TOrbOtdszIeVMV7ChLFk0OwufgZxaGxw/3gOyHaPOUZ3Mz/eBUr3BiSQtFPFl4bvd4
- GwFqEoazTKVX6f87q5CL/ThpkFTHi+muon/dhBj6NFEXz0Vk7JlO2YBAbv+PnanDfW0BCvaKH
- DuZIBZebVIcC++l0MdC0iSdO+kNr3TXnRpRd2Pyhqn0qD+C8W+jzV6x520UF9whVDkCQlAjr8
- R1OTygelS4A8CdLcvmF1P6DSPVs1dfnOMm4gzJp4/NcmbxhgSRgtg23Df90/CTB3FnVaeTOWC
- m6owGzbKvieq3OLAkE+SPXE4/jRQF+NmzzaRCayhBpQ==
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-> Teach the script to suggest conversions for timeout patterns where the
-> arguments to msecs_to_jiffies() are expressions as well.
+On Mon, 27 Jan 2025 21:15:41 -0800
+Christoph Hellwig <hch@infradead.org> wrote:
 
-I propose to take another look at implementation details for such a script=
- variant
-according to the semantic patch language.
+> On Tue, Jan 28, 2025 at 07:49:17AM +1100, Dave Chinner wrote:
+> > > As for why an exclusive lock is needed for append writes, it's because
+> > > we don't want the EOF to be modified during the append write.  
+> > 
+> > We don't care if the EOF moves during the append write at the
+> > filesystem level. We set kiocb->ki_pos = i_size_read() from
+> > generic_write_checks() under shared locking, and if we then race
+> > with another extending append write there are two cases:
+> > 
+> > 	1. the other task has already extended i_size; or
+> > 	2. we have two IOs at the same offset (i.e. at i_size).
+> > 
+> > In either case, we don't need exclusive locking for the IO because
+> > the worst thing that happens is that two IOs hit the same file
+> > offset. IOWs, it has always been left up to the application
+> > serialise RWF_APPEND writes on XFS, not the filesystem.  
+> 
+> I disagree.  O_APPEND (RWF_APPEND is just the Linux-specific
+> per-I/O version of that) is extensively used for things like
+> multi-thread loggers where you have multiple threads doing O_APPEND
+> writes to a single log file, and they expect to not lose data
+> that way.  The fact that we currently don't do that for O_DIRECT
+> is a bug, which is just papered over that barely anyone uses
+> O_DIRECT | O_APPEND as that's not a very natural use case for
+> most applications (in fact NFS got away with never allowing it
+> at all).  But extending racy O_APPEND to buffered writes would
+> break a lot of applications.
+
+It is broken in windows :-)
+You get two writes to the same file offset and then (IIRC) two advances of EOF
+(usually) giving a block of '\0' bytes in the file.
+
+You might get away with doing an atomic update of EOF and then writing
+into the gap.
+But you have to decide what to do if there is a seg fault on the user buffer
+It could be a multi-TB write from an mmap-ed file (maybe even over NFS) that
+hits a disk read error.
+
+Actually I suspect that if you let the two writes proceed in parallel you can't
+let later ones complete first.
+If the returns are sequenced a write can then be redone if an earlier write
+got shortened.
+
+	David
 
 
-=E2=80=A6
-> +++ b/scripts/coccinelle/misc/secs_to_jiffies.cocci
-> @@ -11,12 +11,22 @@
->
->  virtual patch
-=E2=80=A6
-> -@depends on patch@ constant C; @@
-> +@depends on patch@
-> +expression E;
-> +@@
->
-> -- msecs_to_jiffies(C * MSEC_PER_SEC)
-> -+ secs_to_jiffies(C)
-> +-msecs_to_jiffies
-> ++secs_to_jiffies
-> + (E
-> +- * \( 1000 \| MSEC_PER_SEC \)
-> + )
-
-1. I do not see a need to keep an SmPL rule for the handling of constants
-   (or literals) after the suggested extension for expressions.
-
-2. I find it nice that you indicate an attempt to make the shown SmPL code
-   a bit more succinct.
-   Unfortunately, further constraints should be taken better into account
-   for the current handling of isomorphisms (and corresponding SmPL disjun=
-ctions).
-   Thus I would find an SmPL rule (like the following) more appropriate.
-
-@adjustment@
-expression e;
-@@
--msecs_to_jiffies
-+secs_to_jiffies
- (
-(
--e * 1000
-|
--e * MSEC_PER_SEC
-)
-+e
- )
-
-
-3. It seems that you would like to support only a single operation mode so=
- far.
-   This system aspect can trigger further software development challenges.
-
-
-Regards,
-Markus
