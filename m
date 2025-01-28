@@ -1,126 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BF1E19D8A3;
-	Tue, 28 Jan 2025 18:09:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id F2A411B040E;
+	Tue, 28 Jan 2025 18:21:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738087760; cv=none; b=KN6kyU8bRfXBZfEBuzBBmilRxvWXuZPAB2t4sNMikpLWEy8hshN87kwWFB8bAPox/zADQPTWYUcaJyH0MigSDBM5JO1X3apKBOhOLMFj1wp3oS3CkrDCRFB+u/2XSm4Zb5at1ib3+hpjaCWDYlmNPbtPg56VObCEYo8wOA9IU5s=
+	t=1738088519; cv=none; b=fjXo6ARyHRjpEv5+fwPpoIil7BgOxxmnmi0LnvisazEsrfGTosFyYc69ksQjA5y7V0hCKLNw9n7v1r16ngAb/5vX+1RagV6l+FO0HS3aBw4bWN2TWpLaxtJpiEWwiQf7OGTnWO8aLRvw6LYcXkJUB2U5gUdxfphQKMzTzlDup5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738087760; c=relaxed/simple;
-	bh=SVuRAKrEYM0EwMU7+SMzQ47TKOh8QUlWlV+JksNN9Gk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fTpoza02cJw/qIrrB+Rb5y8BEnYEVBZehNmBNOSIf7FXllVp8T9q+SvO5kDUN/lr8tZEnDq8SUI9g6qqxKwRknQgZ445Fi4FSwMW+MJ0R8MDLcxygOFBlQdxgeeT2W+tByiBm59kMhrgKGjMxpk3mU+d4J71o4A3GobgOkk4J88=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=COcbf1XD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738088519; c=relaxed/simple;
+	bh=sHSV1VeTK4GqSPaEADJvEkDZCJZ38hJL0yKDoC4Uqao=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=ONYJFT5ZwSxKjIxoakPd2yH0nFIxQW3+nAnM+XCto6/hjkt+8C9GT12r/2BI89dik1hb8Hny0dQSEO++h0V/oGWpz5rNQSd15V2KqDoKVdo50XdnNqrwQqCFFzMBNNU94RCh04HIPD1mqZU8aOgz3Fy8kR+YeGGDPHdj+a3Js/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=rbsRgRXs; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="COcbf1XD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83A13C4CED3;
-	Tue, 28 Jan 2025 18:09:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738087757;
-	bh=SVuRAKrEYM0EwMU7+SMzQ47TKOh8QUlWlV+JksNN9Gk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=COcbf1XDAMwGgLLdNEdtsw1Fxy4XmM1yNA0PSDIH3EgPS4A5YZHxcrNplWIM+e0eZ
-	 O7u2vZ0x0aeo7GfxmGljZ8TbdgXglqdTNV6HrjXcslib6uBehaQhVJJyIF89HV7Z4a
-	 dY60fslABEy8KK0by+n+kQUpqFhmUt9SVXo5iZmJN8DIkdcdXGMaCtAen+lbr1w7tb
-	 AqS6AId3xszA/B5TGE3bV1w6Axu1v51wyaGyCiP5lo2Ttpkdbdgq+4JVIuncZ2d9Te
-	 W2yrVvKxunmwtUu/SNdBr85znv2IzrYAG949MVf1ECy7QQ0uFEyUnC6YwS2JyIQB7A
-	 sx633M2nSSDVQ==
-Date: Tue, 28 Jan 2025 10:09:17 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, zlang@kernel.org
-Subject: Re: [PATCH v2] check: Fix fs specfic imports when
- $FSTYPE!=$OLD_FSTYPE
-Message-ID: <20250128180917.GA3561257@frogsfrogsfrogs>
-References: <3b980d028a8ae1496c13ebe3a6685fbc472c5bc0.1738040386.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="rbsRgRXs"
+Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 5C2E02037175;
+	Tue, 28 Jan 2025 10:21:57 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 5C2E02037175
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1738088517;
+	bh=DWnZxqt2SesB4Fck6kqsaU204yIBxTyh+Yo+gWHnxew=;
+	h=From:Subject:Date:To:Cc:From;
+	b=rbsRgRXsDhgQ49qwzz8O9F+b3CIaPu+u/u5bFNXstLiqFfaEZgC1iIU54pEJ4SCC9
+	 qXRUrwxGkFwK11MEhKH4r7I0e/4uhHl3G7yCK3E3A4G+YwxkrF4Z/N40iZHmQckLfV
+	 +mfJ829accGVQ64/iuqsqnpCIMIptrmhiAA8pmnE=
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Subject: [PATCH 00/16] Converge on using secs_to_jiffies() part two
+Date: Tue, 28 Jan 2025 18:21:45 +0000
+Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3b980d028a8ae1496c13ebe3a6685fbc472c5bc0.1738040386.git.nirjhar.roy.lists@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIADogmWcC/x2NMQrDMAwAvxI0VxAbE0O/UjoYV2qUwQ6SSQshf
+ 6/oeDfcnWCkQgb36QSlQ0x6cwi3Cepa2ptQXs4Q55hCDBlrbwepe6NqODpuwuwF3IsOHJ+OnNI
+ ccikLLxm8syuxfP+Px/O6fgSSOflzAAAA
+X-Change-ID: 20241217-converge-secs-to-jiffies-part-two-f44017aa6f67
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+ Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
+ James Smart <james.smart@broadcom.com>, 
+ Dick Kennedy <dick.kennedy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
+ Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
+ Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
+ Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>, 
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+ Hans de Goede <hdegoede@redhat.com>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
+ Selvin Xavier <selvin.xavier@broadcom.com>, 
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
+Cc: cocci@inria.fr, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, 
+ Easwar Hariharan <eahariha@linux.microsoft.com>
+X-Mailer: b4 0.14.2
 
-On Tue, Jan 28, 2025 at 05:00:22AM +0000, Nirjhar Roy (IBM) wrote:
-> Bug Description:
-> 
-> _test_mount function is failing with the following error:
-> ./common/rc: line 4716: _xfs_prepare_for_eio_shutdown: command not found
-> check: failed to mount /dev/loop0 on /mnt1/test
-> 
-> when the second section in local.config file is xfs and the first section
-> is non-xfs.
-> 
-> It can be easily reproduced with the following local.config file
-> 
-> [s2]
-> export FSTYP=ext4
-> export TEST_DEV=/dev/loop0
-> export TEST_DIR=/mnt1/test
-> export SCRATCH_DEV=/dev/loop1
-> export SCRATCH_MNT=/mnt1/scratch
-> 
-> [s1]
-> export FSTYP=xfs
-> export TEST_DEV=/dev/loop0
-> export TEST_DIR=/mnt1/test
-> export SCRATCH_DEV=/dev/loop1
-> export SCRATCH_MNT=/mnt1/scratch
-> 
-> ./check selftest/001
-> 
-> Root cause:
-> When _test_mount() is executed for the second section, the FSTYPE has
-> already changed but the new fs specific common/$FSTYP has not yet
-> been done. Hence _xfs_prepare_for_eio_shutdown() is not found and
-> the test run fails.
-> 
-> Fix:
-> Remove the additional _test_mount in check file just before ". commom/rc"
-> since ". commom/rc" is already sourcing fs specific imports and doing a
-> _test_mount.
-> 
-> Fixes: 1a49022fab9b4 ("fstests: always use fail-at-unmount semantics for XFS")
-> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> ---
->  check | 12 +++---------
->  1 file changed, 3 insertions(+), 9 deletions(-)
-> 
-> diff --git a/check b/check
-> index 607d2456..5cb4e7eb 100755
-> --- a/check
-> +++ b/check
-> @@ -784,15 +784,9 @@ function run_section()
->  			status=1
->  			exit
->  		fi
-> -		if ! _test_mount
+This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+either use the multiply pattern of either of:
+- msecs_to_jiffies(N*1000) or
+- msecs_to_jiffies(N*MSEC_PER_SEC)
 
-Don't we want to _test_mount the newly created filesystem still?  But
-perhaps after sourcing common/rc ?
+where N is a constant or an expression, to avoid the multiplication.
 
---D
+The conversion is made with Coccinelle with the secs_to_jiffies() script
+in scripts/coccinelle/misc. Attention is paid to what the best change
+can be rather than restricting to what the tool provides.
 
-> -		then
-> -			echo "check: failed to mount $TEST_DEV on $TEST_DIR"
-> -			status=1
-> -			exit
-> -		fi
-> -		# TEST_DEV has been recreated, previous FSTYP derived from
-> -		# TEST_DEV could be changed, source common/rc again with
-> -		# correct FSTYP to get FSTYP specific configs, e.g. common/xfs
-> +		# Previous FSTYP derived from TEST_DEV could be changed, source
-> +		# common/rc again with correct FSTYP to get FSTYP specific configs,
-> +		# e.g. common/xfs
->  		. common/rc
->  		_prepare_test_list
->  	elif [ "$OLD_TEST_FS_MOUNT_OPTS" != "$TEST_FS_MOUNT_OPTS" ]; then
-> -- 
-> 2.34.1
-> 
-> 
+Andrew has kindly agreed to take the series through mm.git modulo the
+patches maintainers want to pick through their own trees.
+
+This series is based on next-20250128
+
+Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+
+* https://lore.kernel.org/all/20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com/
+
+---
+Easwar Hariharan (16):
+      coccinelle: misc: secs_to_jiffies: Patch expressions too
+      scsi: lpfc: convert timeouts to secs_to_jiffies()
+      accel/habanalabs: convert timeouts to secs_to_jiffies()
+      ALSA: ac97: convert timeouts to secs_to_jiffies()
+      btrfs: convert timeouts to secs_to_jiffies()
+      rbd: convert timeouts to secs_to_jiffies()
+      libceph: convert timeouts to secs_to_jiffies()
+      libata: zpodd: convert timeouts to secs_to_jiffies()
+      xfs: convert timeouts to secs_to_jiffies()
+      power: supply: da9030: convert timeouts to secs_to_jiffies()
+      nvme: convert timeouts to secs_to_jiffies()
+      spi: spi-fsl-lpspi: convert timeouts to secs_to_jiffies()
+      spi: spi-imx: convert timeouts to secs_to_jiffies()
+      platform/x86/amd/pmf: convert timeouts to secs_to_jiffies()
+      platform/x86: thinkpad_acpi: convert timeouts to secs_to_jiffies()
+      RDMA/bnxt_re: convert timeouts to secs_to_jiffies()
+
+ .../accel/habanalabs/common/command_submission.c   |  2 +-
+ drivers/accel/habanalabs/common/debugfs.c          |  2 +-
+ drivers/accel/habanalabs/common/device.c           |  2 +-
+ drivers/accel/habanalabs/common/habanalabs_drv.c   |  2 +-
+ drivers/ata/libata-zpodd.c                         |  3 +--
+ drivers/block/rbd.c                                |  6 +++---
+ drivers/infiniband/hw/bnxt_re/qplib_rcfw.c         |  2 +-
+ drivers/nvme/host/core.c                           |  6 ++----
+ drivers/platform/x86/amd/pmf/acpi.c                |  3 ++-
+ drivers/platform/x86/thinkpad_acpi.c               |  2 +-
+ drivers/power/supply/da9030_battery.c              |  3 +--
+ drivers/scsi/lpfc/lpfc_init.c                      |  4 ++--
+ drivers/scsi/lpfc/lpfc_scsi.c                      | 12 +++++------
+ drivers/scsi/lpfc/lpfc_sli.c                       | 24 ++++++++--------------
+ drivers/scsi/lpfc/lpfc_vport.c                     |  2 +-
+ drivers/spi/spi-fsl-lpspi.c                        |  2 +-
+ drivers/spi/spi-imx.c                              |  2 +-
+ fs/btrfs/disk-io.c                                 |  6 +++---
+ fs/xfs/xfs_icache.c                                |  2 +-
+ fs/xfs/xfs_sysfs.c                                 |  7 +++----
+ net/ceph/ceph_common.c                             | 10 ++++-----
+ net/ceph/osd_client.c                              |  3 +--
+ scripts/coccinelle/misc/secs_to_jiffies.cocci      | 22 ++++++++++++++------
+ sound/pci/ac97/ac97_codec.c                        |  3 +--
+ 24 files changed, 63 insertions(+), 69 deletions(-)
+---
+base-commit: 9a87ce288fe30f268b3a598422fe76af9bb2c2d2
+change-id: 20241217-converge-secs-to-jiffies-part-two-f44017aa6f67
+
+Best regards,
+-- 
+Easwar Hariharan <eahariha@linux.microsoft.com>
+
