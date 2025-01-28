@@ -1,34 +1,34 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C33CC1DE8AB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3575A1D9694;
 	Tue, 28 Jan 2025 18:21:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738088520; cv=none; b=h+x2cbP7LOiTUqitwVDGDCX0DTT8KxNA3KBw9zeeRHZkrye8Le7G634X25sMv07GSO4jOZLF395AcwsMuET8gBIBxVPsn/Dd/JhQtTjePXSdLlo3+2QOm2UtSbqgHFdA9WN2cwk8MHUHjC5AN+3shz41JanU2bVxcMb01F49Ntk=
+	t=1738088521; cv=none; b=IxBW2hecuTvSM5K9p0y1VsyLPbJCaIGLxCyjzQ9NF23f+sW7kpAAa4N4y6INcA07dWLVtzYih5XZAKDlgmP1jD98yfWrG3xmg5sLgvPtwNPN6U/h/EQYTyKvPtboYAQTgAqyk5w7BlDjXM/iDh7dgNEOBXKuXbbzuE5zoXb4qV8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738088520; c=relaxed/simple;
-	bh=68Gbg2fhfS8FvSFYnoSmzDDd5lhuvGiyxTI1Zb29nr0=;
+	s=arc-20240116; t=1738088521; c=relaxed/simple;
+	bh=i1gF+KzTeeLc+I/VqC4kKiZ7dNaJzjT1GEHojaiXSI4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=FVYM1gmPxwQYzzbT0B3jPl7kdBH0ngMMtV/6OK3y7pvtSuNcyHzc6PS3oT4CDoftJ8Wi+vPsm6LePGGeEUjHFElbj5heMs5DIlcION36+C9NjJHsflsH8aecoGbkmefYhB8YZhAbZHMkIrA7wIhFzMWkzEPVoHspyVwToGHY+tM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=FaJCMhXq; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=saDJ12eOsiE6VnDtDTgNkKFvrtX9iSeZUcxYs38T0x27JaPrG7h2lHoI9yGah8ej3FpGz5Aj97JiBCfqKQXQKodxzcpD5U8eTojLx4pvIZeXZYEs1DWsJuG6466rQOc4mX2v+yl5I4q///iJplBRGsXkZrXbFaUlc0D5oxlOYYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=MpuX2sNp; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="FaJCMhXq"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="MpuX2sNp"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id C988B2037179;
+	by linux.microsoft.com (Postfix) with ESMTPSA id 82D962037176;
 	Tue, 28 Jan 2025 10:21:57 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C988B2037179
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 82D962037176
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1738088517;
-	bh=NnK20PmZCF3Ily6Bk4PfjyKx9tsw9Ltz3kRT5x7zGKM=;
+	bh=rV0pV6uCo+L2WatPjWritu1rnlahIFpB3WVk2Ubag/g=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=FaJCMhXqnOBKCZK58/aDFyxpugTwuUI0zorVbM17ln8zh2Kidcw4dLV6kvgQrvjgC
-	 0NTPud50z5k1yBSbcBf+9ThgyXzP902+ENnzRWcvFd3c3gCBEPcZA9Zr7F3/Xti+Lp
-	 3eGcpMelp4xFNnrE38aQ+AoRxDphqgUTWgfcQdRE=
+	b=MpuX2sNpGSPCvn8+X9FT8BIYX1CfONbQBAPmYcXzwcby57+iq8EKvUSw9yit4i+7h
+	 dPFF//UAxR4uzIgeiuRZT3KuJxDL9DDxO1Shj3JGkr9ECePLei7FWUPWNCb9Vm85BJ
+	 TYvfPkoReBWVf1lpVq62IZLjI7cVTJ7HW4ILEEko=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 28 Jan 2025 18:21:48 +0000
-Subject: [PATCH 03/16] accel/habanalabs: convert timeouts to
- secs_to_jiffies()
+Date: Tue, 28 Jan 2025 18:21:46 +0000
+Subject: [PATCH 01/16] coccinelle: misc: secs_to_jiffies: Patch expressions
+ too
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-3-9a6ecf0b2308@linux.microsoft.com>
+Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-1-9a6ecf0b2308@linux.microsoft.com>
 References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -79,83 +79,47 @@ Cc: cocci@inria.fr, linux-kernel@vger.kernel.org,
  Easwar Hariharan <eahariha@linux.microsoft.com>
 X-Mailer: b4 0.14.2
 
-Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-secs_to_jiffies().  As the value here is a multiple of 1000, use
-secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
-
-This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-the following Coccinelle rules:
-
-@depends on patch@
-expression E;
-@@
-
--msecs_to_jiffies
-+secs_to_jiffies
- (E
-- * \( 1000 \| MSEC_PER_SEC \)
- )
+Teach the script to suggest conversions for timeout patterns where the
+arguments to msecs_to_jiffies() are expressions as well.
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/accel/habanalabs/common/command_submission.c | 2 +-
- drivers/accel/habanalabs/common/debugfs.c            | 2 +-
- drivers/accel/habanalabs/common/device.c             | 2 +-
- drivers/accel/habanalabs/common/habanalabs_drv.c     | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ scripts/coccinelle/misc/secs_to_jiffies.cocci | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/accel/habanalabs/common/command_submission.c b/drivers/accel/habanalabs/common/command_submission.c
-index 59823e3c3bf7a4fafc0b112fd7b4b2209149973c..dee487724918554c24c3e78df4e8715dd1c73acd 100644
---- a/drivers/accel/habanalabs/common/command_submission.c
-+++ b/drivers/accel/habanalabs/common/command_submission.c
-@@ -2586,7 +2586,7 @@ int hl_cs_ioctl(struct drm_device *ddev, void *data, struct drm_file *file_priv)
- 		cs_seq = args->in.seq;
+diff --git a/scripts/coccinelle/misc/secs_to_jiffies.cocci b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+index 8bbb2884ea5db939c63fd4513cf5ca8c977aa8cb..ab9880d239f7d2a8d56a481a2710369e1082e16e 100644
+--- a/scripts/coccinelle/misc/secs_to_jiffies.cocci
++++ b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+@@ -11,12 +11,22 @@
  
- 	timeout = flags & HL_CS_FLAGS_CUSTOM_TIMEOUT
--			? msecs_to_jiffies(args->in.timeout * 1000)
-+			? secs_to_jiffies(args->in.timeout)
- 			: hpriv->hdev->timeout_jiffies;
+ virtual patch
  
- 	switch (cs_type) {
-diff --git a/drivers/accel/habanalabs/common/debugfs.c b/drivers/accel/habanalabs/common/debugfs.c
-index ca7677293a55822f703a3a1cbf947c4c44fdc569..4b391807e5f2e2a2570a38b9dfdf6be4299dbfb6 100644
---- a/drivers/accel/habanalabs/common/debugfs.c
-+++ b/drivers/accel/habanalabs/common/debugfs.c
-@@ -1403,7 +1403,7 @@ static ssize_t hl_timeout_locked_write(struct file *f, const char __user *buf,
- 		return rc;
+-@depends on patch@ constant C; @@
++@depends on patch@
++constant C;
++@@
  
- 	if (value)
--		hdev->timeout_jiffies = msecs_to_jiffies(value * 1000);
-+		hdev->timeout_jiffies = secs_to_jiffies(value);
- 	else
- 		hdev->timeout_jiffies = MAX_SCHEDULE_TIMEOUT;
+-- msecs_to_jiffies(C * 1000)
+-+ secs_to_jiffies(C)
++-msecs_to_jiffies
+++secs_to_jiffies
++ (C
++- * \( 1000 \| MSEC_PER_SEC \)
++ )
  
-diff --git a/drivers/accel/habanalabs/common/device.c b/drivers/accel/habanalabs/common/device.c
-index 30277ae410d4b742ffb7bddc35498564ff96fe62..68eebed3b050f72f81e55b86da869b56b4cdeadf 100644
---- a/drivers/accel/habanalabs/common/device.c
-+++ b/drivers/accel/habanalabs/common/device.c
-@@ -2091,7 +2091,7 @@ int hl_device_cond_reset(struct hl_device *hdev, u32 flags, u64 event_mask)
- 	dev_dbg(hdev->dev, "Device is going to be hard-reset in %u sec unless being released\n",
- 		hdev->device_release_watchdog_timeout_sec);
- 	schedule_delayed_work(&hdev->device_release_watchdog_work.reset_work,
--				msecs_to_jiffies(hdev->device_release_watchdog_timeout_sec * 1000));
-+				secs_to_jiffies(hdev->device_release_watchdog_timeout_sec));
- 	hdev->reset_info.watchdog_active = 1;
- out:
- 	spin_unlock(&hdev->reset_info.lock);
-diff --git a/drivers/accel/habanalabs/common/habanalabs_drv.c b/drivers/accel/habanalabs/common/habanalabs_drv.c
-index 596c52e8aa266bf48e2be45e719adb202604577b..0035748f3228246da235f227b2cf3939d64af350 100644
---- a/drivers/accel/habanalabs/common/habanalabs_drv.c
-+++ b/drivers/accel/habanalabs/common/habanalabs_drv.c
-@@ -386,7 +386,7 @@ static int fixup_device_params(struct hl_device *hdev)
- 	hdev->fw_comms_poll_interval_usec = HL_FW_STATUS_POLL_INTERVAL_USEC;
+-@depends on patch@ constant C; @@
++@depends on patch@
++expression E;
++@@
  
- 	if (tmp_timeout)
--		hdev->timeout_jiffies = msecs_to_jiffies(tmp_timeout * MSEC_PER_SEC);
-+		hdev->timeout_jiffies = secs_to_jiffies(tmp_timeout);
- 	else
- 		hdev->timeout_jiffies = MAX_SCHEDULE_TIMEOUT;
- 
+-- msecs_to_jiffies(C * MSEC_PER_SEC)
+-+ secs_to_jiffies(C)
++-msecs_to_jiffies
+++secs_to_jiffies
++ (E
++- * \( 1000 \| MSEC_PER_SEC \)
++ )
 
 -- 
 2.43.0
