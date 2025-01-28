@@ -1,55 +1,40 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C3C4315F
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 17:57:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 231361DE4C8
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 18:01:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738087025; cv=none; b=uZgWlylqR/tJjLx7h9PEEPd6i87mWoKrywNFKgnmdWPYGhQ3vmOdUFZuJ8sIbL8ecHgkc/f+vY7ew4vRk8z3TF5co/+g4O8tsSIMGsX2jIHyzo3JV0CyWn5+PzVziSTWz3y6jk31W6KnIZ3P4d+HDBstdwFPrV9K5x9WiTwlAbc=
+	t=1738087265; cv=none; b=EIjq8N6hrbAwIBtZsg3yCEGyQ1Ti/PAdI8TsfMbqY/zujrnMEDHe/kjXYcgSTtGf/gd4vc003fHGECJy2T1WJAM5D3fqp0HYO53DxumEnfJ6I2zcSVa8gLtBOVm5PzwcRzVSDgm3KvJVRLfiLF8bB5h0jdABASqbsaENM+pm3pY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738087025; c=relaxed/simple;
-	bh=bqo/f4KOeEu70x09sbwjCLOoL4y8IE677pL9B41drLw=;
+	s=arc-20240116; t=1738087265; c=relaxed/simple;
+	bh=NPFi3h5erle99MK4Bt51nOOznA4UEXy9bwSQYhETYmM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tmqU5+tivRQjko3t3rOymB2m2ZJYMzUkrQeqHA0rS3NKE9/MH9tLzckx+YB1TnsiAESzwSQUnprNun5OAb/+L21mlNOoCL9VBDr7eUZ6zT08gIYZrCAiUAzMI0cHupPlCF1DRxoeq1YTSEmy12wZPVXvu6Dq/io5C4wrL6k3ZfM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Zib/B+pI; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=N8nTtT2mxwUSMW50H4C2U6ZoHp3rmn4F6lot2dD55BvmA99twNvO5pSAMdO8YymDR81UmhRMScy0QXWEd80wSz2xsGL5MaUA/IA4B7wRzk4rHT0wrf1vUGjLjY3F07PYNaCb/bT7n3R1imWI3THzG6SkFuJ4pIEiX2l3/pQYCSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ABuCPUkg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Zib/B+pI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738087022;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Atyyl7qbwygGo2BM9ZwbTcnDUCO9u7XINYpNimiJjNg=;
-	b=Zib/B+pIuDp+hxctCEZVfAfGUN9IG20B5Z4RcIB1OsOcQ/4AsdIYPJPpUDLLwuUIEQPzE6
-	B5ODuyWPYQwtraklgx9OyZX1mWXP8aG7ZCzt+1fG7FPHonEr7f5Ip6RTb+y9r3u7M9sZzz
-	dLltETRqlmu0H+KMoHitG2an0XQEBDw=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-315-8X8ud5u3PD65UZVwYqdJCw-1; Tue,
- 28 Jan 2025 12:56:58 -0500
-X-MC-Unique: 8X8ud5u3PD65UZVwYqdJCw-1
-X-Mimecast-MFC-AGG-ID: 8X8ud5u3PD65UZVwYqdJCw
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AEACE1801887;
-	Tue, 28 Jan 2025 17:56:57 +0000 (UTC)
-Received: from bfoster (unknown [10.22.80.118])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E96A5195608E;
-	Tue, 28 Jan 2025 17:56:56 +0000 (UTC)
-Date: Tue, 28 Jan 2025 12:59:09 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 6/7] iomap: advance the iter directly on unshare range
-Message-ID: <Z5ka7TYWr7Y9TrYO@bfoster>
-References: <20250122133434.535192-1-bfoster@redhat.com>
- <20250122133434.535192-7-bfoster@redhat.com>
- <Z5htdTPrS58_QKsc@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ABuCPUkg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83366C4CED3;
+	Tue, 28 Jan 2025 18:01:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738087264;
+	bh=NPFi3h5erle99MK4Bt51nOOznA4UEXy9bwSQYhETYmM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ABuCPUkgm76SMzZD2opMBArn9JKNmNj2h1EiNi5iMqMjuJn7kJbQMWXb5Nh1QjIIv
+	 bnRL3XIFNrYPE9FcNyFlnpmAVukqDhJzCQCuHmpP32AyRBfYwtFL7i4wH08WqyTYUE
+	 7s4xJtmueID1773MK70YA9MRgYY+XxJpWLeXhOfIGK3zuD26PVp49KdlKIL4L6guSb
+	 g9iXxC82uUu9+xyfZBoqsas1RiKmpYX9ILVxRR76eRcW0Cps6snPh3t03teyzRLEKR
+	 jcoxNtXN/hAtcgUzIdckmihmk1R5r3iOU90FzTTfQMEPjC0Z6Rrf3hBAkSyiW8n4xU
+	 XtK/H17yRa2vw==
+Date: Tue, 28 Jan 2025 10:01:04 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v2 7/7] release.sh: use git-contributors to --cc
+ contributors
+Message-ID: <20250128180104.GQ1611770@frogsfrogsfrogs>
+References: <20250122-update-release-v2-0-d01529db3aa5@kernel.org>
+ <20250122-update-release-v2-7-d01529db3aa5@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -58,56 +43,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z5htdTPrS58_QKsc@infradead.org>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+In-Reply-To: <20250122-update-release-v2-7-d01529db3aa5@kernel.org>
 
-On Mon, Jan 27, 2025 at 09:39:01PM -0800, Christoph Hellwig wrote:
-> On Wed, Jan 22, 2025 at 08:34:33AM -0500, Brian Foster wrote:
-> > +	size_t bytes = iomap_length(iter);
+On Wed, Jan 22, 2025 at 04:01:33PM +0100, Andrey Albershteyn wrote:
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> ---
+>  release.sh | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> > +		bytes = min_t(u64, SIZE_MAX, bytes);
+> diff --git a/release.sh b/release.sh
+> index 723806beb05761da06d971460ee15c97d2d0d5b1..e5ae3a8f2f1c601c2e8803b9d899712b567fbbfe 100755
+> --- a/release.sh
+> +++ b/release.sh
+> @@ -166,5 +166,6 @@ echo "Done. Please remember to push out tags and the branch."
+>  printf "\tgit push origin v${version} master\n"
+>  if [ -n "$LAST_HEAD" ]; then
+>  	echo "Command to send ANNOUNCE email"
+> -	printf "\tneomutt -H $mail_file\n"
+> +	cc="$(./tools/git-contributors.py $LAST_HEAD.. --delimiter ' -c ')"
+
+You could also do:
+
+Cc: $(./tools/git-contributors.py $LAST_HEAD.. --delimiter ' ')
+
+in the mail_file generation, right after you generate the To: line,
+which would eliminate the user having to do a messy cut and paste of a
+very long command line:
+
+	neomutt -H /tmp/fubar -c root@localhost -c postmaster@localhost -c ...
+
+something like this:
+
+cat << EOF > $mail_file
+To: linux-xfs@vger.kernel.org
+Cc: $(./tools/git-contributors.py $LAST_HEAD.. --delimiter ' ')
+Subject: [ANNOUNCE] xfsprogs $(git describe --abbrev=0) released
+
+Hi folks,
+ENDL
+
+--D
+
+> +	printf "\tneomutt -H $mail_file -c $cc\n"
+>  fi
 > 
-> bytes needs to be a u64 for the min logic to work on 32-bit systems.
+> -- 
+> 2.47.0
 > 
-
-Err.. I think there's another bug here. I changed iomap_iter_advance()
-to return s64 so it could return length or an error, but never changed
-bytes over from size_t.
-
-But that raises another question. I'd want bytes to be s64 here to
-support the current factoring, but iomap_length() returns a u64. In
-poking around a bit I _think_ this is practically safe because the high
-level operations are bound by loff_t (int64_t), so IIUC that means we
-shouldn't actually see a length that doesn't fit in s64.
-
-That said, that still seems a bit grotty. Perhaps one option could be to
-tweak iomap_length() to return something like this:
-
-	min_t(u64, SSIZE_MAX, end);
-
-... to at least makes things explicit.
-
-Another option could be to rework advance back to something like:
-
-	int iomap_iter_advance(..., u64 *count);
-
-... but where it returns 0 or -EIO and advances/updates *count directly.
-That would mean I'd have to tweak some of the loop factoring and lift
-out the error passthru assignment logic from iomap_iter(). The latter
-doesn't seem like a big deal. It's mostly pointless after these changes.
-I'd guess the (i.e. iomap_file_unshare()) loop logic would look more
-like:
-
-	do {
-		...
-		ret = iomap_iter_advance(iter, &bytes);
-	} while (!ret && bytes > 0);
-
-	return ret;
-
-Hmm.. now that I write it out that doesn't seem so bad. It does clean up
-the return path a bit. I think I'll play around with that, but let me
-know if there are other thoughts or ideas..
-
-Brian
-
+> 
