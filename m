@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 442B81A072C;
-	Tue, 28 Jan 2025 10:57:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E15E51A0BF1
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 10:57:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738061875; cv=none; b=Vz478ILL2I3C9SB32fZuVWPV4x9ALCD5k5f0g9dDWYAA1lnd9CZnTTWAI7EJDFwpQRN8SSOu3oUjQxYmiYIL6Sw5l8FwjSERlmvDND6y4MUYBK1a8CKa9lB3rbER6VJFJuVLDmX+BeXBDFQJ6gaKGO5BDuaj/kCj3+/AVLM/9Hs=
+	t=1738061877; cv=none; b=KocG4tLawWDdC/V7wVFA3gIgRppIJq011NFy3EyzinaJQr4QoAIBntb9PJPuMerEPjjO+0KYxbBbOPOEd/3wD8QZFK4AvGIg3GHzccPVQIC8/AeSs344FIN/oepZSzwm5IitIfVKunStt3ZmdJ+52jDVdv66tcHuujjDrjyUqTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738061875; c=relaxed/simple;
-	bh=lFxdvN90zFk2ZyFiU4DFSBcvhRkEe5LKdZHcde4F94g=;
+	s=arc-20240116; t=1738061877; c=relaxed/simple;
+	bh=UstsEpGaEHGCFgaXAJx6pWjSiFEflNKG+uM6sOqVWHY=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=lpNKQ8BSpzbvPudTWzk7hjH3RHDZqWJxf/QRv1ezu9vgJGUiFvP54GLmTlCDtG+thF8Hmw9pvr9vBdY7FU9z5Y6L8tQ8zLVpzSEEX8k3XysnQcEWutegDUa+AdmwTY8cEYFkAdM/q/81ItZjMWxcmLSz8ay7wPR5EqJlyzQPH6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y8sWM7Qf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WfiBbCRVSEUnbiFELrK1MRcnFr1jIoanN8vOobGnGA7tgFfS+QK1oQNhFEGrXEdwsZT5yG6lUiKRaZj/jQKR1Uht/4J5dHCjfoNNKm+rfL9VmswFcTXfwg00/EXzpsjb8EnaR0zKtumXeGoxQsr1VCzV+tl+aErntdrLYJK2y/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cOS/fpeT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y8sWM7Qf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8615BC4CEE3;
-	Tue, 28 Jan 2025 10:57:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cOS/fpeT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F271C4CED3;
+	Tue, 28 Jan 2025 10:57:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738061874;
-	bh=lFxdvN90zFk2ZyFiU4DFSBcvhRkEe5LKdZHcde4F94g=;
+	s=k20201202; t=1738061876;
+	bh=UstsEpGaEHGCFgaXAJx6pWjSiFEflNKG+uM6sOqVWHY=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=Y8sWM7Qfu+iaf/GBjSi1eyRgdBnEoSRvAOje9jULAvf5GFJ1yK5jpakkgYvVD7dbW
-	 +qHwmXHPWqzkDFxtpFm82xfNLN4+243vfqI0q6CTn5tyixaAblADszRTVBSb5asCGH
-	 MZiB7lcvFcP48065zddrzGB2YkPVX58W75QUzTiAWKnjZriKfUIKC2N5XE/HQjCend
-	 YsrBFU1wHoGADUqXJdWHWC7gYDGKpsIHEF1ikfanIardiY8RiRaddIQgwXkqjzywhW
-	 rFd/7mxo2UGhXzgzrOrubLhIaN66RipbTmVfKJchVn9z8ScSdTz8mgjFLrMYUgKXut
-	 AapniEge9dv4A==
+	b=cOS/fpeTbDwOi7DoGNb0WLcRfb40LfilJk6XNJsCdEw6Sm8kHf6rOvsUfi8N0pqTk
+	 5pDgIhWO/gx+z+Xekl60+FXiXcV5OEZtKafbBTw1OAUb8hj3GmO1EHJ8k2EqQM8gps
+	 m5Fs8OmN0+gCX+kLwBKUA1R3n1rjEGkhO/c5IzrL7ISPqQjI7L33EgRXavGdibc0Gj
+	 haXk3RSN4UIIp1Waj67pxC33idST0NbCfIHhpugN+6Lq91n9lkybctl/R686qJLH9q
+	 SqPsewA3LnJi8X26U6+sobZ5h+TRaqmFm04G3A9RoesWp0X1/VsVx5dkIN5mANZQ/G
+	 KJk8BRuoLN42w==
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J . Wong" <djwong@kernel.org>, 
- Wentao Liang <vulab@iscas.ac.cn>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org
-In-Reply-To: <20250124034510.672-1-vulab@iscas.ac.cn>
-References: <20250124034510.672-1-vulab@iscas.ac.cn>
-Subject: Re: [PATCH v2] xfs: Add error handling for
- xfs_reflink_cancel_cow_range
-Message-Id: <173806187325.500545.9001168827368063176.b4-ty@kernel.org>
-Date: Tue, 28 Jan 2025 11:57:53 +0100
+To: Christoph Hellwig <hch@lst.de>
+Cc: djwong@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org, 
+ "Lai, Yi" <yi1.lai@linux.intel.com>, Carlos Maiolino <cmaiolino@redhat.com>
+In-Reply-To: <20250128052315.663868-1-hch@lst.de>
+References: <20250128052315.663868-1-hch@lst.de>
+Subject: Re: [PATCH v2] xfs: remove xfs_buf_cache.bc_lock
+Message-Id: <173806187500.500545.1535852127701117070.b4-ty@kernel.org>
+Date: Tue, 28 Jan 2025 11:57:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,20 +45,21 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Fri, 24 Jan 2025 11:45:09 +0800, Wentao Liang wrote:
-> In xfs_inactive(), xfs_reflink_cancel_cow_range() is called
-> without error handling, risking unnoticed failures and
-> inconsistent behavior compared to other parts of the code.
+On Tue, 28 Jan 2025 06:22:58 +0100, Christoph Hellwig wrote:
+> xfs_buf_cache.bc_lock serializes adding buffers to and removing them from
+> the hashtable.  But as the rhashtable code already uses fine grained
+> internal locking for inserts and removals the extra protection isn't
+> actually required.
 > 
-> Fix this issue by adding an error handling for the
-> xfs_reflink_cancel_cow_range(), improving code robustness.
+> It also happens to fix a lock order inversion vs b_lock added by the
+> recent lookup race fix.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: Add error handling for xfs_reflink_cancel_cow_range
-      commit: 26b63bee2f6e711c5a169997fd126fddcfb90848
+[1/1] xfs: remove xfs_buf_cache.bc_lock
+      commit: a9ab28b3d21aec6d0f56fe722953e20ce470237b
 
 Best regards,
 -- 
