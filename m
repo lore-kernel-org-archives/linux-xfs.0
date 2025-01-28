@@ -1,33 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C4CE71DEFE3;
-	Tue, 28 Jan 2025 18:21:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7A84E1F1520;
+	Tue, 28 Jan 2025 18:22:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738088522; cv=none; b=s2TWS+uOeiL2SZpzW/GicEfcAAV2w3yvcMhUWsL1ci2iU8MkQKNwkpJVvOSqFeWFlABRoiix8qbTpWs5o/3ahn6wAzbvHVNp7WDh4WOVw0207hL4+/C6Nijzn0YSqjwXGyYjgxv92/XRLoEJfQcukto5C5s6qJz0fHS794gfaro=
+	t=1738088523; cv=none; b=NL5fd4Uqe+htyN5+ZZ35wMrSDFj6lVwvdCz5MRSKcndCkYhQF8sYmyb5o9cdbv2mLm9qcxGxBVlhc2RUnzu9iRa6pbbFVQLFy9GI1QWDN1io+vvU1jrx4BBNImkE17mRDpvXsZtJqiAnogXLmCL6JBzxgxTTejOZyJVzgiXaQXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738088522; c=relaxed/simple;
-	bh=UsUwkjA8cNb2PcchDqY2QvKjXirKtHPuHHZCi+z/zFw=;
+	s=arc-20240116; t=1738088523; c=relaxed/simple;
+	bh=OLA3A56uD0O5H9QiRTUKVuZZklZoijvOUfZpIkvjlIU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=czXQ+lIKwIgcZ4cGFTQqIqrNc+SHhpJN20+bFqvR+0Dq9TtWDufSFmJ3fcT59o+MpaDBplriZo4sV02KhCbx8YvDgifV45OQ7eqWAFK5nUfi8yWtVS6C60YXrdKiCfXNIEAhpt+S1J/L8UM51Do2JU1obA+gxjcXWIaTCAxmFUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=LxxdIayM; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=BIXkyK24lyRrqkysp7RxuOk26knqdhxRvcWC/8FmVHMIwBZJQ/c5EoW6NhuJATaU8D46J+XqESMs0GbcakJL6c27upXs8t5ryRvQYXsVME7C0994ui2t6l/hCKocZMXr319pPxUawwp3/ldfGQ3SjNz3jJC/cDpuZPCkSx87Wxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=bCWdmC5s; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="LxxdIayM"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="bCWdmC5s"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 1D482203717B;
+	by linux.microsoft.com (Postfix) with ESMTPSA id B64E5203717F;
 	Tue, 28 Jan 2025 10:21:58 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 1D482203717B
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com B64E5203717F
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1738088518;
-	bh=CFb4XrnDSERyLmvQoVXwUxR+JwVzCZvuuqJLbnh8AHY=;
+	bh=u7OiaBq0jFk7FcA2dC+mPjTQmMAI3oiqK6Ljbdu99Zo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=LxxdIayMSyUMAUeZUUnUyY3SQxVmwYY5Yyy03OWU22J18lbSyq7bmmWrhs+09j8qK
-	 AdDxUAv3Opt8Wt6axGPYWRpk6/ENme+ZBSlX8IppgdX/yiYG+JdoRJjp8kHw8DUyuj
-	 x3rFLX3PefulMBej9H+RgFZR+bApgqLL7hw3/Tgc=
+	b=bCWdmC5sK+KGAbHIQs99+gR3I9KkUGPk8kFlcCfGOtNz5+PxpeUtS30nO0JF6Kkrh
+	 4YdwJAnsnMu3a7zDoviG7hWlukFPfHmJucfdR4tFHFcqEK2OJWxup5PGk5ZafTVcpE
+	 UzK+XoLAiEFwEnVWfbUT/XAsd53WZnxAQJy+FV1o=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 28 Jan 2025 18:21:50 +0000
-Subject: [PATCH 05/16] btrfs: convert timeouts to secs_to_jiffies()
+Date: Tue, 28 Jan 2025 18:21:54 +0000
+Subject: [PATCH 09/16] xfs: convert timeouts to secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,7 +36,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-5-9a6ecf0b2308@linux.microsoft.com>
+Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
 References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -97,34 +97,48 @@ expression E;
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- fs/btrfs/disk-io.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_icache.c | 2 +-
+ fs/xfs/xfs_sysfs.c  | 7 +++----
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index f09db62e61a1b0e2b8b319f9605883fe0c86cf9d..ed2772d2791997b1e1d15e71d01d818b325f5173 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -1568,7 +1568,7 @@ static int transaction_kthread(void *arg)
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 7b6c026d01a1fc020a41a678964cdbf7a8113323..7a1feb8dc21f6f71d04f88de866e5a95925e0c54 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -230,7 +230,7 @@ xfs_blockgc_queue(
+ 	rcu_read_lock();
+ 	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
+ 		queue_delayed_work(mp->m_blockgc_wq, &pag->pag_blockgc_work,
+-				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
++				   secs_to_jiffies(xfs_blockgc_secs));
+ 	rcu_read_unlock();
+ }
  
- 	do {
- 		cannot_commit = false;
--		delay = msecs_to_jiffies(fs_info->commit_interval * 1000);
-+		delay = secs_to_jiffies(fs_info->commit_interval);
- 		mutex_lock(&fs_info->transaction_kthread_mutex);
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 60cb5318fdae3cc246236fd988b4749df57f8bfc..eed0f28afe97ead762a9539e45f292db7d0d0c4a 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -568,8 +568,8 @@ retry_timeout_seconds_store(
+ 	if (val == -1)
+ 		cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
+ 	else {
+-		cfg->retry_timeout = msecs_to_jiffies(val * MSEC_PER_SEC);
+-		ASSERT(msecs_to_jiffies(val * MSEC_PER_SEC) < LONG_MAX);
++		cfg->retry_timeout = secs_to_jiffies(val);
++		ASSERT(secs_to_jiffies(val) < LONG_MAX);
+ 	}
+ 	return count;
+ }
+@@ -686,8 +686,7 @@ xfs_error_sysfs_init_class(
+ 		if (init[i].retry_timeout == XFS_ERR_RETRY_FOREVER)
+ 			cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
+ 		else
+-			cfg->retry_timeout = msecs_to_jiffies(
+-					init[i].retry_timeout * MSEC_PER_SEC);
++			cfg->retry_timeout = secs_to_jiffies(init[i].retry_timeout);
+ 	}
+ 	return 0;
  
- 		spin_lock(&fs_info->trans_lock);
-@@ -1583,9 +1583,9 @@ static int transaction_kthread(void *arg)
- 		    cur->state < TRANS_STATE_COMMIT_PREP &&
- 		    delta < fs_info->commit_interval) {
- 			spin_unlock(&fs_info->trans_lock);
--			delay -= msecs_to_jiffies((delta - 1) * 1000);
-+			delay -= secs_to_jiffies(delta - 1);
- 			delay = min(delay,
--				    msecs_to_jiffies(fs_info->commit_interval * 1000));
-+				    secs_to_jiffies(fs_info->commit_interval));
- 			goto sleep;
- 		}
- 		transid = cur->transid;
 
 -- 
 2.43.0
