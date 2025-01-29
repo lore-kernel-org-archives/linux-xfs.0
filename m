@@ -1,144 +1,184 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC2E82CA9;
-	Wed, 29 Jan 2025 13:13:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF72853A7;
+	Wed, 29 Jan 2025 16:03:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738156389; cv=none; b=PyFzC6kJ0jFowwD0nfgvsJ7ZZYxmaOnstxAaMY7iyEboxMcQuTEAv9FOOTgaL3DqsiTonJ4J77pZa1hEjrBVvFJUfnpWJTjXWdqYRGALTgduEE5c85PDYxd/CoFojB03+0NNsqD97xzar5ptK2/oIZbc+QhIXqQEOXwsEBMOdmE=
+	t=1738166581; cv=none; b=lrJcl0TXR3ckWLyrZxNPMerTXvPteEz3ByRN2vmshyXz88jS1K92//9Z6lNGlQTr1rOMVAUHoj/O+BKQSP+fPqzP6RZ2o1s+DJ8psAvFkgLMkjBhFIRuWJvHXBb0cMz2LjInYtzVfq0B9PcKRNqZnbqks0xiQ4fhaYonhl/afng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738156389; c=relaxed/simple;
-	bh=uWLMAkjiPxmd0IZ1cdFsHKZZFguDfleylm6v197BRzQ=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=ARMhNx1n9bES05kDWAepJ5y3q8rZYyi8p/4J8ZHrvQvT0EdpWvQfAQH1xqZo/87qDwRYT59eiSHTwVf7gcz2QxCNsu5Z7DxUThGsGNhsbMgLX+mswDSCUesSq1KyMaBY1fxIWD4dnZ7o/k0De5FAp3xhlzu4Ob1ycJU+VBKCveY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SxBm5goJ; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1738166581; c=relaxed/simple;
+	bh=n7RRE34Y/nYRpXOp/8WNy/heEVTd+pE5XQIcq2Nwvgk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mUc+WK0Qr75KlMn78e+a/M29ZJa2hT7WfCBYwA5FYBRjOKrVgZHHdghcqWZMOEr/1Hd2mJY5BUJ6N9IzGxEJSjApjcbt7Dc4jQgMQQxnkP8gfSt9v4e7SEdGXrXxYwV/c1542tWTeuaOz7Nvi5mL/h1cpDptVIUMTWTzDJAoQhk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G1RGNuc7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SxBm5goJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738156388; x=1769692388;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=uWLMAkjiPxmd0IZ1cdFsHKZZFguDfleylm6v197BRzQ=;
-  b=SxBm5goJ+drv5/j21Nr5L4bB4AiKSLqdl2lYsm1T+xntrZBkeN0w8M1G
-   F4+NyhAgrsl+fxFpq7CVKVv5bZ5TG8R2r9ALR7mZHn8ifAxDjViTWF9n2
-   Qfeq1wtGoBTmk2U4tQ7WMchq3EE+X/8v1H0sOUbLglOQs+gH1LZTe1tFI
-   rw9aLIelfb6Pk4CJOaoZdF+4IhUiy0K/KB7NE5qfaBpzkCHW714QRBeEk
-   Q+7U1kkK2AckCQsce2i90njW9G8nEXxHkKqoPxYUtVpVSotop9EE/u155
-   b1Aa+BuhHplKP3brftgSYN4fRO8fdv0S49WLNBP0cF4ag6En7yfknR6NS
-   A==;
-X-CSE-ConnectionGUID: Xq1YKzuARa+e19SIixMJMQ==
-X-CSE-MsgGUID: baOTcUmERJ+Zx4XQgK+dTw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11329"; a="56203313"
-X-IronPort-AV: E=Sophos;i="6.13,243,1732608000"; 
-   d="scan'208";a="56203313"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2025 05:13:06 -0800
-X-CSE-ConnectionGUID: VQdEsMXqR8qBKjmeEKbOAw==
-X-CSE-MsgGUID: O+KtZNkvRJq7JgLfGnW4VQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="113646751"
-Received: from ettammin-mobl2.ger.corp.intel.com (HELO localhost) ([10.245.245.222])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2025 05:12:52 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 29 Jan 2025 15:12:49 +0200 (EET)
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-cc: Andrew Morton <akpm@linux-foundation.org>, 
-    Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
-    Julia Lawall <Julia.Lawall@inria.fr>, 
-    Nicolas Palix <nicolas.palix@imag.fr>, 
-    James Smart <james.smart@broadcom.com>, 
-    Dick Kennedy <dick.kennedy@broadcom.com>, 
-    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-    Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
-    David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
-    Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
-    Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
-    Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-    "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
-    Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-    Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
-    Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
-    Sascha Hauer <s.hauer@pengutronix.de>, 
-    Pengutronix Kernel Team <kernel@pengutronix.de>, 
-    Fabio Estevam <festevam@gmail.com>, 
-    Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
-    Hans de Goede <hdegoede@redhat.com>, 
-    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
-    Selvin Xavier <selvin.xavier@broadcom.com>, 
-    Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
-    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-    cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>, 
-    linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-    linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-    ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
-    linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
-    linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
-    linux-spi@vger.kernel.org, imx@lists.linux.dev, 
-    linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-    ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH 14/16] platform/x86/amd/pmf: convert timeouts to
- secs_to_jiffies()
-In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-14-9a6ecf0b2308@linux.microsoft.com>
-Message-ID: <e8207616-6079-be0d-d482-6577616a4cc7@linux.intel.com>
-References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com> <20250128-converge-secs-to-jiffies-part-two-v1-14-9a6ecf0b2308@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G1RGNuc7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64D76C4CED1;
+	Wed, 29 Jan 2025 16:03:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738166580;
+	bh=n7RRE34Y/nYRpXOp/8WNy/heEVTd+pE5XQIcq2Nwvgk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=G1RGNuc70KgInSzahi5fOD+gEUrXSvVSPPI2lHmHb7Y7mKQHDmLF0gYvdQdxbwvA2
+	 VfJemOUG1SIUK/Td9UCImOMvyzjWc7czLhK8Sd2FD9gNd5tV8KrHFSeiaUHOo1d+Da
+	 Y8bjeVeiWmF+4xZgvgKBcq1gkoPXoxTbwae40NKkkEAA7NYyaKdiDm/BZdepO5rAFD
+	 OSAjhE2SKGNecb79fYY64smZSyjUHWv9UCM692CQ95tmmEy17LgOyInIlqxpFlL9y5
+	 NNg4dmQmSemqg9GZQORLag7jSkr6awuIi3TLMsX1Iuul2YE/Iw93gSTswNdrVU/Xr8
+	 xUab2EJpD6TtA==
+Date: Wed, 29 Jan 2025 08:02:59 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, zlang@kernel.org
+Subject: Re: [PATCH v2] check: Fix fs specfic imports when
+ $FSTYPE!=$OLD_FSTYPE
+Message-ID: <20250129160259.GT3557553@frogsfrogsfrogs>
+References: <3b980d028a8ae1496c13ebe3a6685fbc472c5bc0.1738040386.git.nirjhar.roy.lists@gmail.com>
+ <20250128180917.GA3561257@frogsfrogsfrogs>
+ <f89b6b40-8dce-4378-ba56-cf7f29695bdb@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f89b6b40-8dce-4378-ba56-cf7f29695bdb@gmail.com>
 
-On Tue, 28 Jan 2025, Easwar Hariharan wrote:
-
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
+On Wed, Jan 29, 2025 at 04:48:10PM +0530, Nirjhar Roy (IBM) wrote:
 > 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
+> On 1/28/25 23:39, Darrick J. Wong wrote:
+> > On Tue, Jan 28, 2025 at 05:00:22AM +0000, Nirjhar Roy (IBM) wrote:
+> > > Bug Description:
+> > > 
+> > > _test_mount function is failing with the following error:
+> > > ./common/rc: line 4716: _xfs_prepare_for_eio_shutdown: command not found
+> > > check: failed to mount /dev/loop0 on /mnt1/test
+> > > 
+> > > when the second section in local.config file is xfs and the first section
+> > > is non-xfs.
+> > > 
+> > > It can be easily reproduced with the following local.config file
+> > > 
+> > > [s2]
+> > > export FSTYP=ext4
+> > > export TEST_DEV=/dev/loop0
+> > > export TEST_DIR=/mnt1/test
+> > > export SCRATCH_DEV=/dev/loop1
+> > > export SCRATCH_MNT=/mnt1/scratch
+> > > 
+> > > [s1]
+> > > export FSTYP=xfs
+> > > export TEST_DEV=/dev/loop0
+> > > export TEST_DIR=/mnt1/test
+> > > export SCRATCH_DEV=/dev/loop1
+> > > export SCRATCH_MNT=/mnt1/scratch
+> > > 
+> > > ./check selftest/001
+> > > 
+> > > Root cause:
+> > > When _test_mount() is executed for the second section, the FSTYPE has
+> > > already changed but the new fs specific common/$FSTYP has not yet
+> > > been done. Hence _xfs_prepare_for_eio_shutdown() is not found and
+> > > the test run fails.
+> > > 
+> > > Fix:
+> > > Remove the additional _test_mount in check file just before ". commom/rc"
+> > > since ". commom/rc" is already sourcing fs specific imports and doing a
+> > > _test_mount.
+> > > 
+> > > Fixes: 1a49022fab9b4 ("fstests: always use fail-at-unmount semantics for XFS")
+> > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > > ---
+> > >   check | 12 +++---------
+> > >   1 file changed, 3 insertions(+), 9 deletions(-)
+> > > 
+> > > diff --git a/check b/check
+> > > index 607d2456..5cb4e7eb 100755
+> > > --- a/check
+> > > +++ b/check
+> > > @@ -784,15 +784,9 @@ function run_section()
+> > >   			status=1
+> > >   			exit
+> > >   		fi
+> > > -		if ! _test_mount
+> > Don't we want to _test_mount the newly created filesystem still?  But
+> > perhaps after sourcing common/rc ?
+> > 
+> > --D
 > 
-> @depends on patch@
-> expression E;
-> @@
+> common/rc calls init_rc() in the end and init_rc() already does a
+> _test_mount. _test_mount after sourcing common/rc will fail, won't it? Does
+> that make sense?
 > 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
+> init_rc()
+> {
+>     # make some further configuration checks here
+>     if [ "$TEST_DEV" = ""  ]
+>     then
+>         echo "common/rc: Error: \$TEST_DEV is not set"
+>         exit 1
+>     fi
 > 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
-> ---
->  drivers/platform/x86/amd/pmf/acpi.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>     # if $TEST_DEV is not mounted, mount it now as XFS
+>     if [ -z "`_fs_type $TEST_DEV`" ]
+>     then
+>         # $TEST_DEV is not mounted
+>         if ! _test_mount
+>         then
+>             echo "common/rc: retrying test device mount with external set"
+>             [ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
+>             if ! _test_mount
+>             then
+>                 echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
+>                 exit 1
+>             fi
+>         fi
+>     fi
+> ...
+
+ahahahaha yes it does.
+
+/commit message reading comprehension fail, sorry about that.
+
+Though now that you point it out, should check elide the init_rc call
+about 12 lines down if it re-sourced common/rc ?
+
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> ...
 > 
-> diff --git a/drivers/platform/x86/amd/pmf/acpi.c b/drivers/platform/x86/amd/pmf/acpi.c
-> index dd5780a1d06e1dc979fcff5bafd6729bc4937eab..6b7effe80b78b7389b320ee65fa5d2373f782a2f 100644
-> --- a/drivers/platform/x86/amd/pmf/acpi.c
-> +++ b/drivers/platform/x86/amd/pmf/acpi.c
-> @@ -220,7 +220,8 @@ static void apmf_sbios_heartbeat_notify(struct work_struct *work)
->  	if (!info)
->  		return;
->  
-> -	schedule_delayed_work(&dev->heart_beat, msecs_to_jiffies(dev->hb_interval * 1000));
-> +	schedule_delayed_work(&dev->heart_beat,
-> +			      secs_to_jiffies(dev->hb_interval));
->  	kfree(info);
->  }
-
-Hi,
-
-So you made the line shorter but still added the newline char for some 
-reason even if the original didn't have one?? Please don't enforce 80 
-chars limit with patches like this.
-
--- 
- i.
-
+> --NR
+> 
+> 
+> 
+> > 
+> > > -		then
+> > > -			echo "check: failed to mount $TEST_DEV on $TEST_DIR"
+> > > -			status=1
+> > > -			exit
+> > > -		fi
+> > > -		# TEST_DEV has been recreated, previous FSTYP derived from
+> > > -		# TEST_DEV could be changed, source common/rc again with
+> > > -		# correct FSTYP to get FSTYP specific configs, e.g. common/xfs
+> > > +		# Previous FSTYP derived from TEST_DEV could be changed, source
+> > > +		# common/rc again with correct FSTYP to get FSTYP specific configs,
+> > > +		# e.g. common/xfs
+> > >   		. common/rc
+> > >   		_prepare_test_list
+> > >   	elif [ "$OLD_TEST_FS_MOUNT_OPTS" != "$TEST_FS_MOUNT_OPTS" ]; then
+> > > -- 
+> > > 2.34.1
+> > > 
+> > > 
+> -- 
+> Nirjhar Roy
+> Linux Kernel Developer
+> IBM, Bangalore
+> 
