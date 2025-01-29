@@ -1,140 +1,92 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D1411E50E;
-	Tue, 28 Jan 2025 21:23:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFFC543166;
+	Wed, 29 Jan 2025 00:16:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738099401; cv=none; b=D9w9o83ZoXmcqLdiFQ+b/+vZNPT7GnQOnt4ORm5kJi2VPcZSfZU9LOP6XeKiNs9BRDvZ9dgpuTo7sZqP4eMJWi1OPzHZl8VPCe/lBn6bFDpQpBUHNZ0eIElGefOfdujqz1/jRZD1XmS+0yT/U2WVjmMW949yinn/fhd8tu4vP/s=
+	t=1738109807; cv=none; b=ofv9nweN/Unhza8ODLA/fSuHdda1p+DXhE523b/yp/k7zUNza6/CTuCcCaA7ZxUikgEn7PryvTLKZIwlc4xnbvCjWfnar6+D9GeT9shVnok7hIdjjguYjMJda68R6Bd/BJvgW1hkrY+545Nwx0mnOMBoUJR/oExBqV60GY6zX80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738099401; c=relaxed/simple;
-	bh=gOQmA0Rye0xiWq+32RnWrCq9X5R1jL0JBKEgmsBH6ls=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ussb0KLjTRdbUG9jADAPN9crcKm7+3YF/x8B3LCANeCdjiZyoYK3Bp8KWQWWvDsYkIyuN20LvaFHACkNiD24DDPrkjs9up2qDnfpbbfIrb3lMx/0LJUOo1pBGT23yo/NX31h5Nf68lgWQ3vklGpER4zhgZ2cQBZhMXyddh8uwfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K5JKMXvQ; arc=none smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1738109807; c=relaxed/simple;
+	bh=zZU6hynWCHp+6F/RCQmfqyOYkRbiqQZ0uQFQk367ytg=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=AeI2jjTOyzblWUgseBqsS4twqul6hxxLOzsNmtxWsBmQfrO132FEEf19nWxg/xk4CjJ/TQmWHqPc2unJvqvj4Ly0V13xd4XbehliYvkN3jUxIBz4PeI0EvXrNSJd9RcfmJ+KEFr7kgg0Ed2USPBCVjAFOEqXe6IuOGeoHCTyj9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=AS2j4JP5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K5JKMXvQ"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-38a8b17d7a7so3327945f8f.2;
-        Tue, 28 Jan 2025 13:23:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738099398; x=1738704198; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=J+ozDEHLmcNO1CX9NQGjZ1iJcEKvr2B2drcZGRWN3qw=;
-        b=K5JKMXvQGLC7rywdBdZUFbITemcaQ8yYqDnx3QTvdoamcCr+toSrMI51vWz9JfyWIb
-         NpggDHO1u5UXbkfDfstruypNMCOcZ4FRsGnd2jSI5amCQFA7YuzRNi4+OqgPm80EbwRt
-         +vnxXoJYpWAIirFQeJjnH8SSRvroqF9QqjLsZEdm4ObHcHKlC1b+MqKoxP5IIBnXaHIJ
-         G0m28V6u2jeF368DfcF8KwLdQNtwr9a9pf9wj3y/un0+nXy7bTwIPHBZOvWp2tVR6YZl
-         Uu6mQgX0S0llOo8Wrm9Jre1M+uEwWZGcSTZ1raJjeMS+P3dt98mCWKn1N/eKVHTKm6ko
-         brKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738099398; x=1738704198;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=J+ozDEHLmcNO1CX9NQGjZ1iJcEKvr2B2drcZGRWN3qw=;
-        b=qUsUTeIQopMa4n2lv1nLrYaszFA88HrTBNCd1MyRnHr228wXIxPoABcg2eZiBamjHj
-         Ff6GrXkpx3RCstM2Y2fY6Ixa3ETYqZqupudGBl5VhYuxb7BTdCKAj8wa+HWLXYgUHB1j
-         u7exyTE+iZV2SXvc6RtLVfzO5L7giSuxbOOzdSHU8CJXitXwxSH3PPCYrgh8ZNaio3jL
-         nrJ9aULUuU3ZVDZR3KIC2rZPJ+RLEbLB8YgnLl4nqCr3f5eRQ5WTua3Vut7mdLY6b4gg
-         xkxAJj9u6BnK/MlIOMGk8LZaqsBXBcywoiq03Jkda1sfe6rnN5WIFYmAd31rJy+Fwl0J
-         OM5A==
-X-Forwarded-Encrypted: i=1; AJvYcCURIC6GIwPXA+6bL+m8cdgfOUj7c1X7fQNE6/mAOEzaReKhDy0udgRFRgCSX0/1iYFg4NYklimPah2P@vger.kernel.org, AJvYcCXdp3acASIv96vJS8+bkUlqrjyeO0glsbwd53xv+DDP+rwbOx6HezDdwVIt5QPXhrt1ACo3wapQJcMl4aw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx4ri26ZrROyL80eGfAQVpHfUVP6NL3fTPOGP9zv9szybPFDF48
-	qs8QKrb4UKAqz291fkA1VrNGyrZY7KgvKl1pkMw2zVf+flKp/acG
-X-Gm-Gg: ASbGncuQZYAwWa/B6Km5JVZnBU8WQqPqLsQ4E4PLKdcXKdyJ21VaZPJjGuN6blz1jp2
-	eN/ttLnyzg35Dd1U7OilJXJy49loxGmo2jr8/GRJYLAm4OoPlpybrrVOfILSuPVlPUdGWlUxW2c
-	VUF9165MNj283DfW4bfwas3WdRjO7cflYlwDrgaPeBqYEfWgF7v+X+8nPDeS8Vy1Tp05kjB1D+e
-	C1awaon22HpwhcgRQXPzEptRMbe1NCMO3ec7oCet0L932J7lfqC25Aw3toNeX85aaUIoICDZMw/
-	ral6ty7Oh6hnefCQz3fH9CQGYqX2xE07hVnv+fxf0sWZvnajLwE+lw==
-X-Google-Smtp-Source: AGHT+IElxSj78erTqKNboOKXrQDQLzu3b2HCeCAk99SIcXOKzPp0pTWv0Bv8VelLQaqgTg0doT/Eug==
-X-Received: by 2002:a5d:6d88:0:b0:38a:4b8b:c57a with SMTP id ffacd0b85a97d-38c5209351bmr575281f8f.44.1738099397665;
-        Tue, 28 Jan 2025 13:23:17 -0800 (PST)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38c2a188a85sm14843998f8f.44.2025.01.28.13.23.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jan 2025 13:23:17 -0800 (PST)
-Date: Tue, 28 Jan 2025 21:23:15 +0000
-From: David Laight <david.laight.linux@gmail.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, Chi Zhiling <chizhiling@163.com>,
- Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>,
- Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Chi Zhiling
- <chizhiling@kylinos.cn>, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-Message-ID: <20250128212316.2bba477e@pumpkin>
-In-Reply-To: <Z5hn_cRb_cLzHX4Z@infradead.org>
-References: <20250108173547.GI1306365@frogsfrogsfrogs>
-	<Z4BbmpgWn9lWUkp3@dread.disaster.area>
-	<CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
-	<d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
-	<20250113024401.GU1306365@frogsfrogsfrogs>
-	<Z4UX4zyc8n8lGM16@bfoster>
-	<Z4dNyZi8YyP3Uc_C@infradead.org>
-	<Z4grgXw2iw0lgKqD@dread.disaster.area>
-	<3d657be2-3cca-49b5-b967-5f5740d86c6e@163.com>
-	<Z5fxTdXq3PtwEY7G@dread.disaster.area>
-	<Z5hn_cRb_cLzHX4Z@infradead.org>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="AS2j4JP5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 994C4C4CED3;
+	Wed, 29 Jan 2025 00:16:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1738109806;
+	bh=zZU6hynWCHp+6F/RCQmfqyOYkRbiqQZ0uQFQk367ytg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=AS2j4JP5RIAisJwaJPGo5rdD+WQkiOVOSd2qjWS7o62PB/KfGo+AtIeEIRlVi8ca4
+	 DcFpL5pMszZR4AoEDS94lZdMmpR+YhI7fvUGwBGQGj85DpwI7Ag5fgschNnRNtAEJ5
+	 EXSOU+Vpu5p468XbHO3vy3GdYQe6R4CubgmVMLqk=
+Date: Tue, 28 Jan 2025 16:16:43 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay
+ <ogabbay@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix
+ <nicolas.palix@imag.fr>, James Smart <james.smart@broadcom.com>, Dick
+ Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Jaroslav Kysela <perex@perex.cz>, Takashi
+ Iwai <tiwai@suse.com>, Chris Mason <clm@fb.com>, Josef Bacik
+ <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Ilya Dryomov
+ <idryomov@gmail.com>, Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens
+ Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>, Damien Le Moal
+ <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Carlos Maiolino
+ <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel
+ <sre@kernel.org>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig
+ <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Frank Li
+ <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>, Shawn Guo
+ <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix
+ Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Hans de Goede
+ <hdegoede@redhat.com>, Ilpo =?ISO-8859-1?Q?J=E4rvinen?=
+ <ilpo.jarvinen@linux.intel.com>, Henrique de Moraes Holschuh
+ <hmh@hmh.eng.br>, Selvin Xavier <selvin.xavier@broadcom.com>, Kalesh AP
+ <kalesh-anakkur.purayil@broadcom.com>, Jason Gunthorpe <jgg@ziepe.ca>, Leon
+ Romanovsky <leon@kernel.org>, cocci@inria.fr, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-spi@vger.kernel.org, imx@lists.linux.dev,
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org,
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH 00/16] Converge on using secs_to_jiffies() part two
+Message-Id: <20250128161643.289d9fe705ef2fdba0b82a52@linux-foundation.org>
+In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Mon, 27 Jan 2025 21:15:41 -0800
-Christoph Hellwig <hch@infradead.org> wrote:
+On Tue, 28 Jan 2025 18:21:45 +0000 Easwar Hariharan <eahariha@linux.microsoft.com> wrote:
 
-> On Tue, Jan 28, 2025 at 07:49:17AM +1100, Dave Chinner wrote:
-> > > As for why an exclusive lock is needed for append writes, it's because
-> > > we don't want the EOF to be modified during the append write.  
-> > 
-> > We don't care if the EOF moves during the append write at the
-> > filesystem level. We set kiocb->ki_pos = i_size_read() from
-> > generic_write_checks() under shared locking, and if we then race
-> > with another extending append write there are two cases:
-> > 
-> > 	1. the other task has already extended i_size; or
-> > 	2. we have two IOs at the same offset (i.e. at i_size).
-> > 
-> > In either case, we don't need exclusive locking for the IO because
-> > the worst thing that happens is that two IOs hit the same file
-> > offset. IOWs, it has always been left up to the application
-> > serialise RWF_APPEND writes on XFS, not the filesystem.  
+> This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+> either use the multiply pattern of either of:
+> - msecs_to_jiffies(N*1000) or
+> - msecs_to_jiffies(N*MSEC_PER_SEC)
 > 
-> I disagree.  O_APPEND (RWF_APPEND is just the Linux-specific
-> per-I/O version of that) is extensively used for things like
-> multi-thread loggers where you have multiple threads doing O_APPEND
-> writes to a single log file, and they expect to not lose data
-> that way.  The fact that we currently don't do that for O_DIRECT
-> is a bug, which is just papered over that barely anyone uses
-> O_DIRECT | O_APPEND as that's not a very natural use case for
-> most applications (in fact NFS got away with never allowing it
-> at all).  But extending racy O_APPEND to buffered writes would
-> break a lot of applications.
+> where N is a constant or an expression, to avoid the multiplication.
+> 
+> The conversion is made with Coccinelle with the secs_to_jiffies() script
+> in scripts/coccinelle/misc. Attention is paid to what the best change
+> can be rather than restricting to what the tool provides.
+> 
+> Andrew has kindly agreed to take the series through mm.git modulo the
+> patches maintainers want to pick through their own trees.
 
-It is broken in windows :-)
-You get two writes to the same file offset and then (IIRC) two advances of EOF
-(usually) giving a block of '\0' bytes in the file.
-
-You might get away with doing an atomic update of EOF and then writing
-into the gap.
-But you have to decide what to do if there is a seg fault on the user buffer
-It could be a multi-TB write from an mmap-ed file (maybe even over NFS) that
-hits a disk read error.
-
-Actually I suspect that if you let the two writes proceed in parallel you can't
-let later ones complete first.
-If the returns are sequenced a write can then be redone if an earlier write
-got shortened.
-
-	David
-
+I added patches 2-16 to mm.git.  If any of these later get merged into
+a subsystem tree, Stephen will tell us and I'll drop the mm.git copy.
 
