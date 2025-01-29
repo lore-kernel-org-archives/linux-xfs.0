@@ -1,143 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29842176FB0;
-	Wed, 29 Jan 2025 06:27:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19E11195980;
+	Wed, 29 Jan 2025 07:25:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738132063; cv=none; b=cniOJtudTc1YDj8AJ0wZ8nPqosoQs3jmcOw/QAlAE6Rdlpa0IoXe6rfjmQUsXGoIIMpKE5rB1/czlo68MvPhOAIA1ZvFWVTWCCaQS0miSngOB7m6LDlfFVpMBLM8xRqQylTB149/Z3MbfbQqxL08tfGndtqQFx47badtQg0X/tk=
+	t=1738135554; cv=none; b=T+vsfBG31YzGtZtA8OxZDbAIZe3NWyE3uUHb14rcmz7pDbs9Osc1FAgjJ5QRXLw2c9qRrXl6F47SHqU13n6STY2mukKWCG4uWKFPC+aZIonEypj5VxRiBblJldSrL+6QeMp1mMWaSRev5D7B9WXIpTuZqi5D2GwuTXaYEzUeF0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738132063; c=relaxed/simple;
-	bh=BcheDkbF7i4plK077EE5fx0I+7LaoMSZmCvmiRwCLWc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qP+y1JYHovCjyi9sK70N/J1fhOdvICAJIL1jb+UZQNeAjCxsyv6OC13eWlgDMxi6rxthxaT6xMyn3Jgo/nFvO4dsDYAELRTfLDThRRor/9GAA4oDi9YI1oR54TmXx8qS9tnKAeWxz+rIb/Pu/08XMDUcySRe8nG9aUQAY5fML9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tYXlaTpf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738135554; c=relaxed/simple;
+	bh=4JBF85Zs9KaxqNCFNgY/rPgQFpwcL3Ebz5n/QO89MiE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=sqYKbptQovCJKiPhIW5STUQIBTd0RiCm9WydLhRSy3IKZIbK430nv1Ok102IL3NJ6mZimtgiP7LKkizECXbGUzoB7KLtaYztzN3z7w2FQpdKrj2o02sgjAoMCPhtU+8nve/4+IKqJRSzh478cI20JD/kvffp3NJXpcD4IrNba+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=DTK1w3FK; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tYXlaTpf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E108EC4CED3;
-	Wed, 29 Jan 2025 06:27:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738132062;
-	bh=BcheDkbF7i4plK077EE5fx0I+7LaoMSZmCvmiRwCLWc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tYXlaTpf1UHLxCOLY2b71oBs1Z8jmc+k88hDg4mxgy9BfVh5FaZFJ0sctqiMaUJa3
-	 0ERjR88O2sKxLaXENNFiYXgW5V6EWANwLybrlRdZ0uAueHnvFc/luTGhJJHi5qSyHf
-	 Qhwk4n5jqTURqvwR6zUdrtKBktKuVAQJmisiNKpSZSSK6LJmo4zYOOzg6tSFgxCsOc
-	 Qfzb+Ch4Hp08uSkL1c1h9vCW8n/kbD+KUJVXjOVTrDcLl+peTbMx/iozRX16+XGbqx
-	 LmxLOokGigU1zjIvh0goqBVkjBWqvL4YDcg+yxNUApdR5ACop75NXb+fT4J9+7jnPJ
-	 KRVcLrP4/YQHg==
-Date: Wed, 29 Jan 2025 07:27:24 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
-	Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
-	James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Chris Mason <clm@fb.com>, 
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
-	Ilya Dryomov <idryomov@gmail.com>, Dongsheng Yang <dongsheng.yang@easystack.cn>, 
-	Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
-	Hans de Goede <hdegoede@redhat.com>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Selvin Xavier <selvin.xavier@broadcom.com>, 
-	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Leon Romanovsky <leon@kernel.org>, cocci@inria.fr, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-sound@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-spi@vger.kernel.org, imx@lists.linux.dev, 
-	linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-	ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH 09/16] xfs: convert timeouts to secs_to_jiffies()
-Message-ID: <kywszbmxtm27rlgaefr6xus6l4bpdiouqqe72px7ml72hh4ozc@5orjtzsbg75s>
-References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
- <JZGx8kYNWP54f9cEViEKZlR6sGGADv31K4TOPtwvyeoDEFkRKICiFaQy04EvZtsQtc44Zozh76mkch2s8rz7mQ==@protonmail.internalid>
- <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="DTK1w3FK"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50T182xM004391;
+	Wed, 29 Jan 2025 07:25:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pp1; bh=NIDXbg18OyHP1gFKi5SUPDUnZ2WN
+	oeOS0qgz/HD55Vk=; b=DTK1w3FKtRyhWQWGX3RFfDyLb6ak63NZsp1EUpSYZ5La
+	+auUqFeMYQYzHm6VtzE0HsdPkt3tDkm5nYb8RRoBFqx77LVqI0yBOh8ZwDYiFqq0
+	640Ku5GT0R3TLISEDqEZs4rRVNsP5LHTEU0f1OFtA3Jq3lRlpQRgysqd97Ut0tzP
+	qj+UOkuwE+tSxR0rWB7f/f3PsZ/12QTx1FF+HbnsKFQVu0SyCawptqwSzeE8BENl
+	I5Qq0eU4MoYP/6StFc2daU9IYX8gV+MWUHlQIIOwp4th+Ev1CxjDqmiHjJj9UXya
+	+IP+QDcM+8qR3pz67hoMSPXKrhxzw4kM6gWxIL4nRw==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44fad9h77w-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 29 Jan 2025 07:25:36 +0000 (GMT)
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 50T7Pasn032314;
+	Wed, 29 Jan 2025 07:25:36 GMT
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44fad9h77t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 29 Jan 2025 07:25:36 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 50T3eJ0C003929;
+	Wed, 29 Jan 2025 07:25:35 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 44da9sfn3w-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 29 Jan 2025 07:25:35 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 50T7PXdl28836382
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 29 Jan 2025 07:25:33 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 61A7E20147;
+	Wed, 29 Jan 2025 07:06:22 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B403720142;
+	Wed, 29 Jan 2025 07:06:19 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.249])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed, 29 Jan 2025 07:06:19 +0000 (GMT)
+Date: Wed, 29 Jan 2025 12:36:17 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        John Garry <john.g.garry@oracle.com>, djwong@kernel.org,
+        dchinner@redhat.com, hch@lst.de, ritesh.list@gmail.com, jack@suse.cz,
+        tytso@mit.edu, linux-ext4@vger.kernel.org
+Subject: [LSF/MM/BPF TOPIC] extsize and forcealign design in filesystems for
+ atomic writes
+Message-ID: <Z5nTaQgLGdD6hSvL@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: gBDvXuIxcj5RtuTo3-b1whqsV7cso6al
+X-Proofpoint-ORIG-GUID: pEIdI2Jweu3_2AWmB1jJv_qXQLHHZPmK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-28_04,2025-01-27_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
+ lowpriorityscore=0 bulkscore=0 phishscore=0 mlxlogscore=999 spamscore=0
+ priorityscore=1501 suspectscore=0 clxscore=1011 mlxscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2501290056
 
-On Tue, Jan 28, 2025 at 06:21:54PM +0000, Easwar Hariharan wrote:
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
-> 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
-> 
-> @depends on patch@
-> expression E;
-> @@
-> 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
-> 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
-> ---
->  fs/xfs/xfs_icache.c | 2 +-
->  fs/xfs/xfs_sysfs.c  | 7 +++----
->  2 files changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 7b6c026d01a1fc020a41a678964cdbf7a8113323..7a1feb8dc21f6f71d04f88de866e5a95925e0c54 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -230,7 +230,7 @@ xfs_blockgc_queue(
->  	rcu_read_lock();
->  	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
->  		queue_delayed_work(mp->m_blockgc_wq, &pag->pag_blockgc_work,
-> -				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
-> +				   secs_to_jiffies(xfs_blockgc_secs));
->  	rcu_read_unlock();
->  }
-> 
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 60cb5318fdae3cc246236fd988b4749df57f8bfc..eed0f28afe97ead762a9539e45f292db7d0d0c4a 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -568,8 +568,8 @@ retry_timeout_seconds_store(
->  	if (val == -1)
->  		cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
->  	else {
-> -		cfg->retry_timeout = msecs_to_jiffies(val * MSEC_PER_SEC);
-> -		ASSERT(msecs_to_jiffies(val * MSEC_PER_SEC) < LONG_MAX);
-> +		cfg->retry_timeout = secs_to_jiffies(val);
-> +		ASSERT(secs_to_jiffies(val) < LONG_MAX);
->  	}
->  	return count;
->  }
-> @@ -686,8 +686,7 @@ xfs_error_sysfs_init_class(
->  		if (init[i].retry_timeout == XFS_ERR_RETRY_FOREVER)
->  			cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
->  		else
-> -			cfg->retry_timeout = msecs_to_jiffies(
-> -					init[i].retry_timeout * MSEC_PER_SEC);
-> +			cfg->retry_timeout = secs_to_jiffies(init[i].retry_timeout);
->  	}
->  	return 0;
+Greetings,
 
-Looks fine to me.
+I would like to submit a proposal to discuss the design of extsize and
+forcealign and various open questions around it.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+ ** Background **
 
-> 
-> 
-> --
-> 2.43.0
-> 
-> 
+Modern NVMe/SCSI disks with atomic write capabilities can allow writes to a
+multi-KB range on disk to go atomically. This feature has a wide variety of use
+cases especially for databases like mysql and postgres that can leverage atomic
+writes to gain significant performance. However, in order to enable atomic
+writes on Linux, the underlying disk may have some size and alignment
+constraints that the upper layers like filesystems should follow. extsize with
+forcealign is one of the ways filesystems can make sure the IO submitted to the
+disk adheres to the atomic writes constraints.
+
+extsize is a hint to the FS to allocate extents at a certian logical alignment
+and size. forcealign builds on this by forcing the allocator to enforce the
+alignment guarantees for physical blocks as well, which is essential for atomic
+writes.
+
+ ** Points of discussion **
+
+Extsize hints feature is already supported by XFS [1] with forcealign still
+under development and discussion [2]. After taking a look at ext4's multi-block
+allocator design, supporting extsize with forcealign can be done in ext4 as
+well. There is a RFC proposed which adds support for extsize hints feature in
+ext4 [3]. However there are some caveats and deviations from XFS design. With
+these in mind, I would like to propose LSFMM topic on:
+
+ * exact semantics of extsize w/ forcealign which can bring a consistent
+   interface among ext4 and xfs and possibly any other FS that plans to
+   implement them in the future.
+
+ * Documenting how forcealign with extsize should behave with various FS
+   operations like fallocate, truncate, punch hole, insert/collapse range etc 
+
+ * Implementing extsize with delayed allocation and the challenges there.
+
+ * Discussing tooling support of forcealign like how are we planning to maintain
+   block alignment gurantees during fsck, resize and other times where we might
+   need to move blocks around?
+
+ * Documenting any areas where FSes might differ in their implementations of the
+   same. Example, ext4 doesn't plan to support non power of 2 extsizes whereas
+   XFS has support for that.
+
+Hopefully this discussion will be relevant in defining consistent semantics for
+extsize hints and forcealign which might as well come useful for other FS
+developers too.
+
+Thoughts and suggestions are welcome.
+
+References:
+[1] https://man7.org/linux/man-pages/man2/ioctl_xfs_fsgetxattr.2.html
+[2] https://lore.kernel.org/linux-xfs/20240813163638.3751939-1-john.g.garry@oracle.com/
+[3] https://lore.kernel.org/linux-ext4/cover.1733901374.git.ojaswin@linux.ibm.com/
+
+Regards,
+ojaswin
