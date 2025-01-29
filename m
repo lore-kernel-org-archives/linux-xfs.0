@@ -1,117 +1,131 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CAF71E231D;
-	Wed, 29 Jan 2025 18:17:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 18A0C194AD1;
+	Wed, 29 Jan 2025 21:03:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738174676; cv=none; b=KjZv1lDFjiP2dkj5eBn+oC8wlmy7S9vCDhryMw2XjtWz0VEp3xM2nxWk4a1G+MLsE6Is1GXjEbgNfF1Iul9MxIRwdAifQe5Ilk255DCntStiKr7jbTSwQd75WYgEBX8sGSp0K1n/0z5yOdA+SwiAkj5qQ1tRe+V73FTUG8dlbdE=
+	t=1738184639; cv=none; b=iqXScunONgiNMwtPXJWqFWoxCswuc+i9MaH4v1tStpQ7FRKjUmm0Pxm8+U0+ppKCy923BhxnqT2at2r8BTKxdEqTp1bnp79htTRKvMKxG0f5Pd9/3HGUdm1M4D+RSYuAe8SpA+q2ieCPeLbAelkrvCXgTjFnHvlwdParb8RwLIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738174676; c=relaxed/simple;
-	bh=Hk50vFeQpYvObpB97CiiwSn4PpFmEbUPkBXYfgNIvTs=;
-	h=Subject:To:Cc:From:Date:References:In-Reply-To:Message-Id; b=s7PSnmzwXtSJyl/sMu5frmcTScrIhqvQrHKeh1FXQviQNuxvZMbTmKnUOdBXsryMhrjSA1shJ9hS2FJsp+wTKTJUW9x7LpKZbZYVQ8wS89qXeySlwvs9t5F8xk7V34zao1xOSaNutupoeW0IQvXYJ+j9AI70t+yEBGRxKcMuWqQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QXa+/qWQ; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1738184639; c=relaxed/simple;
+	bh=EsYz53Al9cDMt+LJZ12iOWeqRoB03Is/uiVHJBAKxPs=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=BZc+/O8yiOc62L9cJbuootJUxhPyNTgFd8JuyYdOU0kXvBEsPhylS2xqlxrwkK+4po+Mc276fW+Vqjl7EnjgIY/ItpdPJZFNsUU2m9K5C10fK1KQikJ+HXLZ4hN8MQvKkQi8IK0gTmoD6Q+LOesDIcZ7a9qHN4OqiLw6/mhH/Hs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=mY3mAkZd; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QXa+/qWQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738174675; x=1769710675;
-  h=subject:to:cc:from:date:references:in-reply-to:
-   message-id;
-  bh=Hk50vFeQpYvObpB97CiiwSn4PpFmEbUPkBXYfgNIvTs=;
-  b=QXa+/qWQYsn4rZ/tA8KKdVtuSJc9Yq8BxC+kUt3Hf5ct9s/658Y8Rlig
-   cSILHzBP9PsfIhzrYiyDdKcfUBjZaEI9VFYb84FZauXpw4/mpLXih7uOR
-   9Yp5X73I8AlIQa3SfRkmeArx2zuNP3Zou3WmjwK+qTNZREm9vcm+Uumgp
-   V79YdOpMp2QQ/GBt2IQ5UN5amxz9R9rTfS/tv63KD41CLy8cTVr66bVnt
-   eoo84ry3deDN7RyItmcg+jkzs/AT+d7z8xC1DaulS4mfu6oRLUezj8w7N
-   8RB6z7lUfFrh3smCKvRUzEDNqXuYMKt3HB9P0bYHovlAL7DX3INfvBKOs
-   Q==;
-X-CSE-ConnectionGUID: h2GXtnxBRZy1IxIlRUc1uQ==
-X-CSE-MsgGUID: nrfLazYMRiCkcmVEt/Wuxg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11330"; a="38963260"
-X-IronPort-AV: E=Sophos;i="6.13,244,1732608000"; 
-   d="scan'208";a="38963260"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2025 10:17:54 -0800
-X-CSE-ConnectionGUID: HC18c4gKT0mRme/zoCGBCw==
-X-CSE-MsgGUID: XSURPr9BTAOZvctmvN1GRA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,244,1732608000"; 
-   d="scan'208";a="109660686"
-Received: from davehans-spike.ostc.intel.com (HELO localhost.localdomain) ([10.165.164.11])
-  by fmviesa010.fm.intel.com with ESMTP; 29 Jan 2025 10:17:53 -0800
-Subject: [PATCH 2/7] iomap: Move prefaulting out of hot write path
-To: linux-kernel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,Ted Ts'o <tytso@mit.edu>,Christian Brauner <brauner@kernel.org>,Darrick J. Wong <djwong@kernel.org>,Matthew Wilcox (Oracle) <willy@infradead.org>,Al Viro <viro@zeniv.linux.org.uk>,linux-fsdevel@vger.kernel.org,Dave Hansen <dave.hansen@linux.intel.com>,linux-xfs@vger.kernel.org
-From: Dave Hansen <dave.hansen@linux.intel.com>
-Date: Wed, 29 Jan 2025 10:17:53 -0800
-References: <20250129181749.C229F6F3@davehans-spike.ostc.intel.com>
-In-Reply-To: <20250129181749.C229F6F3@davehans-spike.ostc.intel.com>
-Message-Id: <20250129181753.3927F212@davehans-spike.ostc.intel.com>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="mY3mAkZd"
+Received: from [100.65.161.47] (unknown [20.236.11.29])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 4FFDA2109A5E;
+	Wed, 29 Jan 2025 13:03:55 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4FFDA2109A5E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1738184637;
+	bh=O+JFGGFluQhzEspwlwz6aXkZ7QKW4DjxL6knEN3myoo=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=mY3mAkZdBwX5JW6v0rHOcPwixnNpeCwrI5i6lioeivoGl5PeSwTfMHOmjED6AV41/
+	 5wIYfQa9MecJKhXc6T7//bDDoOB4BG1MPO3Miu2pGAWJwBcdsKKFOS1hzy+NN34ovy
+	 jA6uxIox2R9YzB3PKnfuI/uqwUCqDlg2DifBsbMw=
+Message-ID: <dd0358b1-7c8a-4c9e-88c5-2e1db69a3a35@linux.microsoft.com>
+Date: Wed, 29 Jan 2025 13:03:57 -0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay
+ <ogabbay@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>,
+ Nicolas Palix <nicolas.palix@imag.fr>, James Smart
+ <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+ David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+ Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+ Selvin Xavier <selvin.xavier@broadcom.com>,
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ eahariha@linux.microsoft.com, cocci@inria.fr, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-spi@vger.kernel.org, imx@lists.linux.dev,
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org,
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH 06/16] rbd: convert timeouts to secs_to_jiffies()
+To: Andrew Morton <akpm@linux-foundation.org>,
+ Ilya Dryomov <idryomov@gmail.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+ <20250128-converge-secs-to-jiffies-part-two-v1-6-9a6ecf0b2308@linux.microsoft.com>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-6-9a6ecf0b2308@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 1/28/2025 10:21 AM, Easwar Hariharan wrote:
+> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> secs_to_jiffies().  As the value here is a multiple of 1000, use
+> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
+> 
+> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+> the following Coccinelle rules:
+> 
+> @depends on patch@
+> expression E;
+> @@
+> 
+> -msecs_to_jiffies
+> +secs_to_jiffies
+> (E
+> - * \( 1000 \| MSEC_PER_SEC \)
+> )
+> 
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+> ---
+>  drivers/block/rbd.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
 
-From: Dave Hansen <dave.hansen@linux.intel.com>
+<snip>
 
-Prefaulting the write source buffer incurs an extra userspace access
-in the common fast path. Make iomap_write_iter() consistent with
-generic_perform_write(): only touch userspace an extra time when
-copy_folio_from_iter_atomic() has failed to make progress.
+> @@ -6283,9 +6283,9 @@ static int rbd_parse_param(struct fs_parameter *param,
+>  		break;
+>  	case Opt_lock_timeout:
+>  		/* 0 is "wait forever" (i.e. infinite timeout) */
+> -		if (result.uint_32 > INT_MAX / 1000)
+> +		if (result.uint_32 > INT_MAX)
+>  			goto out_of_range;
+> -		opt->lock_timeout = msecs_to_jiffies(result.uint_32 * 1000);
+> +		opt->lock_timeout = secs_to_jiffies(result.uint_32);
+>  		break;
+>  	case Opt_pool_ns:
+>  		kfree(pctx->spec->pool_ns);
+> 
 
-Signed-off-by: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Christian Brauner <brauner@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
----
+Hi Ilya, Dongsheng, Jens, others,
 
- b/fs/iomap/buffered-io.c |   24 +++++++++---------------
- 1 file changed, 9 insertions(+), 15 deletions(-)
+Could you please review this hunk and confirm the correct range check
+here? I figure this is here because of the multiplier to
+msecs_to_jiffies() and therefore unneeded after the conversion. If so, I
+noticed patch 07 has similar range checks that I neglected to fix and
+can do in a v2.
 
-diff -puN fs/iomap/buffered-io.c~iomap-postfault fs/iomap/buffered-io.c
---- a/fs/iomap/buffered-io.c~iomap-postfault	2025-01-29 09:03:32.179361299 -0800
-+++ b/fs/iomap/buffered-io.c	2025-01-29 09:03:32.187361965 -0800
-@@ -937,21 +937,6 @@ retry:
- 		if (bytes > length)
- 			bytes = length;
- 
--		/*
--		 * Bring in the user page that we'll copy from _first_.
--		 * Otherwise there's a nasty deadlock on copying from the
--		 * same page as we're writing to, without it being marked
--		 * up-to-date.
--		 *
--		 * For async buffered writes the assumption is that the user
--		 * page has already been faulted in. This can be optimized by
--		 * faulting the user page.
--		 */
--		if (unlikely(fault_in_iov_iter_readable(i, bytes) == bytes)) {
--			status = -EFAULT;
--			break;
--		}
--
- 		status = iomap_write_begin(iter, pos, bytes, &folio);
- 		if (unlikely(status)) {
- 			iomap_write_failed(iter->inode, pos, bytes);
-@@ -1005,6 +990,15 @@ retry:
- 				bytes = copied;
- 				goto retry;
- 			}
-+			/*
-+			 * 'folio' is now unlocked and faults on it can be
-+			 * handled. Ensure forward progress by trying to
-+			 * fault it in now.
-+			 */
-+			if (fault_in_iov_iter_readable(i, bytes) == bytes) {
-+				status = -EFAULT;
-+				break;
-+			}
- 		} else {
- 			pos += written;
- 			total_written += written;
-_
+Thanks,
+Easwar (he/him)
