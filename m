@@ -1,56 +1,68 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 547F97FD;
-	Wed, 29 Jan 2025 05:20:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783AA7FD;
+	Wed, 29 Jan 2025 05:21:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738128025; cv=none; b=PfYRhBS4ok4m1YirJAnOFY7rEsxt3BKv44JYqT1vuLevA0SbFns0rkymKfxmkJVZS6is37O1Qd0fs0/kfZ/nQ7c+KHQPwOLQttCxEilZxSIvQqq+ra4+/ccDOK5faYsHZ6Rk4YG8XMMiJmKFc7Pnvcuj8+Yh7AW+bXOZET7Zl20=
+	t=1738128079; cv=none; b=lf3yaGbRDIUsZvz2XocGVUOn4a2Fwbl6R3NkEt3yEg4guQcZH9n8F2TOGjtcoBBpYwYbQvNfk+FQz8ohTRORLoYC0hKwe2xATP+d3elEb9EsFTC0ULxWke5XaQNpDkaCX6IIbNlfeD9QtlyW62NQHChyOLe/qkfFxiP0yYm+Emw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738128025; c=relaxed/simple;
-	bh=39z95OPRIENXf5VgwRqZYyEr3zgdt9bbB/B8oAJq8k0=;
+	s=arc-20240116; t=1738128079; c=relaxed/simple;
+	bh=ACIYfpK3sqEuBM7DUH4EwFypm+EtJKmU+sY1LGf0wCE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JLSxe6c5/3wUQnUapLtw02sx4XE9Ld0wO5ADTCEavd7qNvAyipIxAlR3Fxq5nWa0Zennac0vSLW9T3pJW0uwLxtpt/JcgU7rGOc0m/a60hjeiHR8j6I5zVU32cItSGyTmds0n01HtVdfHD51vgRJxZ+XnyZcuJ3pj7fjSFC7CBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AdqwePKH; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AdqwePKH"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=C1DEMUgMUBIHIyTKPUNGpnalEfSYZ49CqTbR7nmTSzg=; b=AdqwePKHBbInO0AyMqMrCRTSeC
-	l5uGeYHDyXIz8uNKOnIaL46tVFv4Zkm8TShUMoWrS2G6A4qw2hDMxfgJSz8CKchM+YiH3fJjFNOT9
-	frwTjgY0e6jSPPIMbcffp0ZW82VlORTqXxBbRIjaGgNLu9lVZBMvrmqtHL5qhl71qhj4hzoCQOdei
-	dcFxpbo6+VtHyT+VMXSBiMqhYLdEvZpMpS4LsotRJXswcdSXic7/GKmaMrt/MSneYNVOGIIrI+XSE
-	+lihZVckwKWpLqNGL1QrwR+r9cwgwCSLJQxAm0XXeWtO1EoAQrCwUOzVhrstC7GmQhbLXvgEIgldg
-	0w67mr5g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1td0Us-00000006LLr-3Pg0;
-	Wed, 29 Jan 2025 05:20:18 +0000
-Date: Tue, 28 Jan 2025 21:20:18 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Chi Zhiling <chizhiling@163.com>,
-	Brian Foster <bfoster@redhat.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=XzB4l3Qk9HKsHNTDnEabH71WT0KdWAQ+PCgJ/uXger4eAKk3qhlSyD+LbvbiJNgLkniIBL1pYTuF0OpaDvzoT6i9u2Xs3IDEkfpQdis5tT1eWN1vRwIIULuEm435OumKfsWOWJ0mJ1a+B3lm9YysXXibuYC2G4525ICWBGjaKSc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 77CD368BEB; Wed, 29 Jan 2025 06:21:08 +0100 (CET)
+Date: Wed, 29 Jan 2025 06:21:08 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Yaron Avizrat <yaron.avizrat@intel.com>,
+	Oded Gabbay <ogabbay@kernel.org>,
+	Julia Lawall <Julia.Lawall@inria.fr>,
+	Nicolas Palix <nicolas.palix@imag.fr>,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+	David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+	Dongsheng Yang <dongsheng.yang@easystack.cn>,
+	Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
-Message-ID: <Z5m6kqmdUcLVNa9m@infradead.org>
-References: <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
- <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
- <20250113024401.GU1306365@frogsfrogsfrogs>
- <Z4UX4zyc8n8lGM16@bfoster>
- <Z4dNyZi8YyP3Uc_C@infradead.org>
- <Z4grgXw2iw0lgKqD@dread.disaster.area>
- <3d657be2-3cca-49b5-b967-5f5740d86c6e@163.com>
- <Z5fxTdXq3PtwEY7G@dread.disaster.area>
- <Z5hn_cRb_cLzHX4Z@infradead.org>
- <Z5l9ieD8zkCQYHFV@dread.disaster.area>
+	Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Selvin Xavier <selvin.xavier@broadcom.com>,
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	cocci@inria.fr, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-spi@vger.kernel.org, imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	platform-driver-x86@vger.kernel.org,
+	ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH 09/16] xfs: convert timeouts to secs_to_jiffies()
+Message-ID: <20250129052108.GB28513@lst.de>
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com> <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,30 +71,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z5l9ieD8zkCQYHFV@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jan 29, 2025 at 11:59:53AM +1100, Dave Chinner wrote:
-> Sure, but we don't think we need full file offset-scope IO exclusion
-> to solve that problem.  We can still safely do concurrent writes
-> within EOF to occur whilst another buffered append write is doing
-> file extension work.
+On Tue, Jan 28, 2025 at 06:21:54PM +0000, Easwar Hariharan wrote:
+>  		else
+> -			cfg->retry_timeout = msecs_to_jiffies(
+> -					init[i].retry_timeout * MSEC_PER_SEC);
+> +			cfg->retry_timeout = secs_to_jiffies(init[i].retry_timeout);
 
-Sure.  The previous mail just sounded like you'd want to do away
-with exclusion for assigning the offset.
+This messes up the formatting by introducing an overly long line.
 
-> IOWs, where we really need to get to is a model that allows
-> concurrent buffered IO at all times, except for the case where IO
-> operations that change the inode size need to serialise against
-> other similar operations (e.g. other EOF extending IOs, truncate,
-> etc).
-> 
-> Hence I think we can largely ignore O_APPEND for the
-> purposes of prototyping shared buffered IO and getting rid of the
-> IOLOCK from the XFS IO path. I may end up re-using the i_rwsem as
-> a "EOF modification" serialisation mechanism for O_APPEND and
-> extending writes in general, but I don't think we need a general
-> write IO exclusion mechanism for this...
-
-That might be a chance to also fix O_DIRECT while we're at it..
-
+Otherwise the change looks fine.
