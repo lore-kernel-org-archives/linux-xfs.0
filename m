@@ -1,142 +1,134 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139472FB6
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2025 16:38:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5B7A01FC8;
+	Wed, 29 Jan 2025 17:12:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738168688; cv=none; b=A66d/l4Uv3ZwchH51dWPhpwzh0AUae5nC2iPa3JBvzeGUGlRIrQFIad6lVs4ER3NeV2eIrc4l3Syb5ZeGuDgu4i+Yjibg3R/EBaufC2l058vHoirWtrYFIIkRMbxQoKqYQ+DNpDP5HxDPf+qCwdNHGPPHapXkftBiR37ubo1KLo=
+	t=1738170744; cv=none; b=mEZWOGTAyj7lLdqfjQsyNwYsvBWFVGuuadLWvd7pqMtQeR8z1b/a41++2w6N4P3gfK7wyJgbWPMcO6d1Ote31LobFFLgmHBKsjZmeAPjxsSM/xPZj3ZUxeoaQdhvx+OK5/QDTb+ndqOxhO6ZvN5GwcSijcSwbJZOj8HA90STGKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738168688; c=relaxed/simple;
-	bh=9dnc3UMvxcDakfSi+aJSsnweYWtWFWzzL9kZlBCaaq0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J/wdvNarkZ+AYZICEEUZ5XNBMB0CL4tnjorYXKc+IKKahvZdPRYRSya8S0ldfaTuQra6+0RiiWHCuYxa//3zpEhkeR1lLAcRFSKBWZJ0pUM9Si25Xcxy4yIJVXPSO737ywI06C0pEW/Br2Zuz4HWJb7ZZyltSBkM9U/WMUPH4Io=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=b/+hzN/i; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1738170744; c=relaxed/simple;
+	bh=oKInIs80fHAFlAQ60VYFUV3zyOcN3MDJrxPHxOZnX7U=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=eS6yPgc/lKnZxjbSO/d8pm9Qhs5dGvoSts7VM5CZH6YUfE5f99nt9zPpe3ORI1xdr6XhJ7MNh15/1jmNi5nfuNqiTSHpkEAeBFhSfH5CH7xXZNSRrA1rCSeTj8rReBHSYFCV7egQJdx/2Ce2b8PfgwF3HTVp10T4CmCSmbEniP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=KF5CYJEM; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="b/+hzN/i"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738168684;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3Z6UCBpCPDZaJfs4ehOINBVWWzvORi86h6BNKWsa5pk=;
-	b=b/+hzN/iNHHc/pWCxiHAPeHCVWJ5mi/lsu57nqUrjmsiIArxFco+YqhtW2PkQToG9xdV9k
-	0lZ4MVzkfgTA4Yc9IU3hY9rK9lnXKIBo/l7Gj4X4+a1hqCAjqGEwQPp6Uhp3rhltU1oyBp
-	NqP2YOZwQUMOpOmxFmaQ/48l8HxtaKM=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-643-zuEqlgkAMWSE40G5DR1JcQ-1; Wed,
- 29 Jan 2025 11:38:03 -0500
-X-MC-Unique: zuEqlgkAMWSE40G5DR1JcQ-1
-X-Mimecast-MFC-AGG-ID: zuEqlgkAMWSE40G5DR1JcQ
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 56A5F1956056;
-	Wed, 29 Jan 2025 16:38:02 +0000 (UTC)
-Received: from bfoster (unknown [10.22.80.113])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7C6AF1955BE3;
-	Wed, 29 Jan 2025 16:38:00 +0000 (UTC)
-Date: Wed, 29 Jan 2025 11:40:13 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 6/7] iomap: advance the iter directly on unshare range
-Message-ID: <Z5pZ7d3hhvP6S-Qj@bfoster>
-References: <20250122133434.535192-1-bfoster@redhat.com>
- <20250122133434.535192-7-bfoster@redhat.com>
- <Z5htdTPrS58_QKsc@infradead.org>
- <Z5ka7TYWr7Y9TrYO@bfoster>
- <Z5nC-n2EsEQcmm6X@infradead.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="KF5CYJEM"
+Received: from [100.65.130.94] (unknown [20.236.10.163])
+	by linux.microsoft.com (Postfix) with ESMTPSA id B361C203F2DF;
+	Wed, 29 Jan 2025 09:12:15 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com B361C203F2DF
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1738170737;
+	bh=dNRZE1wRPI3+cVzpq2MiJyQrXak+KjxySL05qBZwi3I=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=KF5CYJEMAg7wD96ahKvWhkAFA05d2EUsKiRjXm+SrhlcieyjVvtYaExuKNZLJq+g2
+	 aBFGl/Q/OmH+pg7BhR5kfVvugzt2v4vFfmJ8RuG1opp/VMgS23ja3qFHYzfub/yGXl
+	 hPpNsGrrOx1WOoNEIOcsOUJA+IETCxANclm3bUSY=
+Message-ID: <fae29f46-2971-4cab-a54a-f1780abbadda@linux.microsoft.com>
+Date: Wed, 29 Jan 2025 09:12:18 -0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Cc: eahariha@linux.microsoft.com, Andrew Morton <akpm@linux-foundation.org>,
+ Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>,
+ Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>,
+ James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
+ Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>,
+ Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
+ Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+ Selvin Xavier <selvin.xavier@broadcom.com>,
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>,
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-spi@vger.kernel.org, imx@lists.linux.dev,
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org,
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH 14/16] platform/x86/amd/pmf: convert timeouts to
+ secs_to_jiffies()
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+ <20250128-converge-secs-to-jiffies-part-two-v1-14-9a6ecf0b2308@linux.microsoft.com>
+ <e8207616-6079-be0d-d482-6577616a4cc7@linux.intel.com>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <e8207616-6079-be0d-d482-6577616a4cc7@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Z5nC-n2EsEQcmm6X@infradead.org>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue, Jan 28, 2025 at 09:56:10PM -0800, Christoph Hellwig wrote:
-> On Tue, Jan 28, 2025 at 12:59:09PM -0500, Brian Foster wrote:
-> > But that raises another question. I'd want bytes to be s64 here to
-> > support the current factoring, but iomap_length() returns a u64. In
-> > poking around a bit I _think_ this is practically safe because the high
-> > level operations are bound by loff_t (int64_t), so IIUC that means we
-> > shouldn't actually see a length that doesn't fit in s64.
-> > 
-> > That said, that still seems a bit grotty. Perhaps one option could be to
-> > tweak iomap_length() to return something like this:
-> > 
-> > 	min_t(u64, SSIZE_MAX, end);
-> > 
-> > ... to at least makes things explicit.
+On 1/29/2025 5:12 AM, Ilpo JÃ¤rvinen wrote:
+> On Tue, 28 Jan 2025, Easwar Hariharan wrote:
 > 
-> Yeah.  I'm actually not sure why went want to support 64-bit ranges.
-> I don't even remember if this comes from Dave's really first version
-> or was my idea, but in hindsight just sticking to ssize_t bounds
-> would have been smarter.
+>> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+>> secs_to_jiffies().  As the value here is a multiple of 1000, use
+>> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
+>>
+>> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+>> the following Coccinelle rules:
+>>
+>> @depends on patch@
+>> expression E;
+>> @@
+>>
+>> -msecs_to_jiffies
+>> +secs_to_jiffies
+>> (E
+>> - * \( 1000 \| MSEC_PER_SEC \)
+>> )
+>>
+>> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+>> ---
+>>  drivers/platform/x86/amd/pmf/acpi.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/platform/x86/amd/pmf/acpi.c b/drivers/platform/x86/amd/pmf/acpi.c
+>> index dd5780a1d06e1dc979fcff5bafd6729bc4937eab..6b7effe80b78b7389b320ee65fa5d2373f782a2f 100644
+>> --- a/drivers/platform/x86/amd/pmf/acpi.c
+>> +++ b/drivers/platform/x86/amd/pmf/acpi.c
+>> @@ -220,7 +220,8 @@ static void apmf_sbios_heartbeat_notify(struct work_struct *work)
+>>  	if (!info)
+>>  		return;
+>>  
+>> -	schedule_delayed_work(&dev->heart_beat, msecs_to_jiffies(dev->hb_interval * 1000));
+>> +	schedule_delayed_work(&dev->heart_beat,
+>> +			      secs_to_jiffies(dev->hb_interval));
+>>  	kfree(info);
+>>  }
 > 
-
-Ok, thanks.
-
-> > I'd guess the (i.e. iomap_file_unshare()) loop logic would look more
-> > like:
-> > 
-> > 	do {
-> > 		...
-> > 		ret = iomap_iter_advance(iter, &bytes);
-> > 	} while (!ret && bytes > 0);
-> > 
-> > 	return ret;
-> > 
-> > Hmm.. now that I write it out that doesn't seem so bad. It does clean up
-> > the return path a bit. I think I'll play around with that, but let me
-> > know if there are other thoughts or ideas..
+> Hi,
 > 
-> Given that all the kernel read/write code mixes up bytes and negative
-> return values I think doing that in iomap is also fine.  But you are
-> deeper into the code right now, and if you think splitting the errno
-> and bytes is cleaner that sounds perfectly fine to me as well.  In
-> general not overloading a single return value with two things tends
-> to lead to cleaner code.
-> 
-
-Eh, I like the factoring that the combined return allows better, but I
-don't want to get too clever and introduce type issues and whatnot in
-the middle of these patches if I can help it. From what I see so far the
-change to split out the error return uglifies things slightly in
-iomap_iter(), but the flipside is that with the error check lifted out
-the advance call from iomap_iter() can go away completely once
-everything is switched over.
-
-So if we do go with the int return for now (still testing), I might
-revisit a change back to a combined s64 return (perhaps along with the
-iomap_length() tweak above) in the future as a standalone cleanup when
-this is all more settled and I have more mental bandwidth to think about
-it. Thanks for the input.
-
-> Although the above sniplet (I´m not sure how representative it is
-> anyway) would be a bit nicer as the slightly more verbose version
-> below:
-> 
-> 	do {
-> 		...
-> 		ret = iomap_iter_advance(iter, &bytes);
-> 		if (ret)
-> 			return ret;
-> 	} while (bytes > 0);
+> So you made the line shorter but still added the newline char for some 
+> reason even if the original didn't have one?? Please don't enforce 80 
+> chars limit with patches like this.
 > 
 
-Ack.
+Sorry about that, I can fix that in v2.
 
-Brian
+Thanks for the review!
 
+- Easwar (he/him)
