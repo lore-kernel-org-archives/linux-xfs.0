@@ -1,45 +1,83 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A8935672;
-	Wed, 29 Jan 2025 05:58:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63EC014F6C
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2025 06:06:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738130282; cv=none; b=DADDwbDAHroQPgSCcKGRlvMabVIRc0Q+kQqrHY/6DwkbevPsuuc8AaoAjjRmw6lbrZOyIabQ2H1yXhclgZ3OiGSN2FcIaGKpEGck9kTWZtCCvgk3/j+QXijTBi+9fARGendU5grWrdkXD6TiMOIgE5Ff1xrEYB0HisG40rKfVsE=
+	t=1738130819; cv=none; b=BXBIrd7gFyXG5I6dTSocciKaIQ5knYO7mDDj2oStmB/P0x/Z8Kaeu07DXiWdY33FzEEy6UP3eFp1lBH+UbwgtNSw9Z93Lj70d/V4Y5VKhJuGw6C/ImTly/6YmGhzTUIf8q8Eq+0HrcZqzVcM7M7GA0LYUbec9l8ru+3lrVcK4WA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738130282; c=relaxed/simple;
-	bh=GHNG3adl692Cf6SW4BBKbp5ahd9TK8YGHsz/NZaGyZo=;
+	s=arc-20240116; t=1738130819; c=relaxed/simple;
+	bh=Taa73zJhSXOuB2KmDli7srsvGbZ70bw+kofesNjGJR0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jt1jmuTxYCGpyjwLtY+RT5XgCd5xwz8P7trnsez3ErlIY4WSOrEsPpeHTEkhDKIghWgLbWOk8KdyTh6Nrx9wux2eaGx6JfmiPbhRdY1MSXeLoHkLICIcrCcJdoZ/x2JeekZiuMrKtG3QI550Y8gIoY4N53Hj55YFSr3n/HSSMw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dR0n0Oe9; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=pH5SsPMqvMUw3nt8u3xuCIHLoonmg2nWhUN5jNQy54sVTKt+gBYkmVfES/czaiOVPaFScAStrlExEdtgla3q8ZZ/XPVAicULar5SHpfBXpdx7E8hZHo08YhdHVbNK4ADJgNQAeeXDZIz/2pl7Q+diggMMiKvKS5qa/dquiwQGFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RD3gJcgr; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dR0n0Oe9"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=p0taJwY+HtXBJGJLPETjY7zF7GHiL0ers9a6T8lh+FU=; b=dR0n0Oe9TkxRhjIChyaIeSFseS
-	xNavW3VBvt39wQ2UIuH3n3oqFHTMjqxhb1XKOJk8hBqdprQ+BGms+tteVJ/uLfHj6S8pblbPSqJQS
-	rHdotVzFKt21jnE1x2aXaCXgFAZDbi9kxuMdYLATTmXV1TyGpFSx23YKMH+mH75K06L8KFM/XUeiA
-	JrGmlJNMVX68d1b1t+NVon2clbCf5uDGdR+mY35PMcx2EZduofroh/c7aaGvEtXZEUjV0NCLkPpOc
-	FEe25Yf8aoToF+krknNFF8EemkS7SUiQHK90+vAoCDkuucIF7Mk0hayjNR5Px+yTSSvO83faLOJqZ
-	6BzFXDeQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1td15M-00000006NVT-27Zt;
-	Wed, 29 Jan 2025 05:58:00 +0000
-Date: Tue, 28 Jan 2025 21:58:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RD3gJcgr"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-21661be2c2dso110447255ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 22:06:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738130816; x=1738735616; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=05h+/zAx3Q++Rgdg0SMjBS/g37mGzexiku0BsuXqWMM=;
+        b=RD3gJcgrFCTGCS73LZeUc7tuVRa6EFNRrJCanIunuA+KnPiw8VqRmTDInAS76lgtal
+         mde3yTnRzIp/caerIj/Q/IlakG4U1ksYbQDq5/jTg1bSfwnh/rpzCjCehZEdb1VhIZ7C
+         ar2DCPF6Vzl+4tVi96+Bo0khWhFVtj+MMkoEndHu0X9WpsTcaYXR/Lppa88Tuej3Swue
+         9yQPYo6j9hMXgXIKrgjIagTecvpeCVtllsPn5fuwdxkjq+gsjgaFGdT/76tYXpAlA607
+         2Ag3G6+d+Rxwoh9VDSL2Kh5s16/AUEQFjmlhpHzW6hPrSi2YMSNYy2+295rIRb+s63Yv
+         ecEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738130816; x=1738735616;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=05h+/zAx3Q++Rgdg0SMjBS/g37mGzexiku0BsuXqWMM=;
+        b=D+DqixWngycaL8mLwW3OVW+2izSdh7G/GoQ1giqfLuaYAVs+qOYYVSTO7bgnyTp0ns
+         IfJq6MLGSYbvBaYvwNBLZmauTV1eWE7fFPVMH3b2v2QJYSekfRmUpLwv4dpZ5Xm9RccO
+         y2t7YJO5+5CmTN9GPJ0ufWD1g1dbIXQ3cUGrIIm733uFYTAGlMeyrSeT6j7lPuN7eZc9
+         3O3AImONXe4ZKDO2dueBu4/JuvP/Ggn0P1x7o+BabPjywEY4OI3ZPFGWsQ5PrSiPw9Br
+         OOZ7f4BGoyMc3p5m5/M2I5cY2Cu9Fd9wVgfCq60cKmEqt/qYkVCWyYUYoSaxfvICsvpB
+         2pvQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU2AaAsAw3Prz2J3UVyICI2OYqN/HUA/0S/UI2AhGxqNfbgI9nwr/w99u9fq8yHrns+iEobGplHeU0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxeAN2qLOnUH6IMWAeXAnWOck6fkEEvnyeHpEpjRUMX3Q6LEVVT
+	/uHT5X3728ZxiqRbzCfLs/TMHZ5NMXilgUpiSAuQ/z5sgeEdKUBPFkDN0+Hmrts=
+X-Gm-Gg: ASbGnctuk72/70N1eQTWlTjGAsLfBs+11TJaSmFtW8Cvp7znUB+8KxoF2huKYhzGZtm
+	DziWl93GFJtszunZcIFMsrNd/HKISnR3NO6x7u3FAJb/nffnteSSr+5gSoUSiFSaBpYpO3yC+vU
+	1OtdBvBNSmWVfg5zXphpVrTpOGynuhx9yE60Khe2XyOqAtiskrNL8QUA6OJ+36IC03m2+9DL7MI
+	Gq7OiTkVd8YbgbBqnrRwBp85Kz2OSyhw9/bqwmYeHsiKUTSXmNLK6NtFgo57FgBN+qchOjFQwmr
+	JSWuxs2NTVBm8TBSlwdJauJyp6FQ8VLuaUA4VfHWek2VimEsk6r5pEnglVG/5p38/WY=
+X-Google-Smtp-Source: AGHT+IHo44f8AuO3eN0dp/9kstSL1hVKmS3/23zY92XcOH3JBc0ajEZU6Kd37qLBxjnslfuTEnRnrg==
+X-Received: by 2002:a17:902:da86:b0:215:6b4c:89fa with SMTP id d9443c01a7336-21dd7c4e3aamr21414375ad.8.1738130816607;
+        Tue, 28 Jan 2025 22:06:56 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21da4141e2dsm92284865ad.124.2025.01.28.22.06.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jan 2025 22:06:56 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1td1Dw-0000000BtEr-381K;
+	Wed, 29 Jan 2025 17:06:52 +1100
+Date: Wed, 29 Jan 2025 17:06:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 6/7] iomap: advance the iter directly on unshare range
-Message-ID: <Z5nDaK6OoGnQdoU2@infradead.org>
-References: <20250122133434.535192-1-bfoster@redhat.com>
- <20250122133434.535192-7-bfoster@redhat.com>
- <Z5htdTPrS58_QKsc@infradead.org>
- <Z5jiR8vjG7MT3Psv@bfoster>
+Subject: Re: [PATCH 08/23] common: fix pkill by running test program in a
+ separate session
+Message-ID: <Z5nFfCD8Km_A3AnA@dread.disaster.area>
+References: <20250122042400.GX1611770@frogsfrogsfrogs>
+ <Z5CLUbj4qbXCBGAD@dread.disaster.area>
+ <20250122070520.GD1611770@frogsfrogsfrogs>
+ <Z5C9mf2yCgmZhAXi@dread.disaster.area>
+ <20250122214609.GE1611770@frogsfrogsfrogs>
+ <Z5GYgjYL_9LecSb9@dread.disaster.area>
+ <Z5heaj-ZsL_rBF--@dread.disaster.area>
+ <20250128072352.GP3557553@frogsfrogsfrogs>
+ <Z5lAek54UK8mdFs-@dread.disaster.area>
+ <20250129031313.GV3557695@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,21 +86,93 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z5jiR8vjG7MT3Psv@bfoster>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250129031313.GV3557695@frogsfrogsfrogs>
 
-On Tue, Jan 28, 2025 at 08:57:27AM -0500, Brian Foster wrote:
-> And the analogous change in the next patch for zero range (unwritten &&
-> !range_dirty) as well.
+On Tue, Jan 28, 2025 at 07:13:13PM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 29, 2025 at 07:39:22AM +1100, Dave Chinner wrote:
+> > On Mon, Jan 27, 2025 at 11:23:52PM -0800, Darrick J. Wong wrote:
+> > > On Tue, Jan 28, 2025 at 03:34:50PM +1100, Dave Chinner wrote:
+> > > > On Thu, Jan 23, 2025 at 12:16:50PM +1100, Dave Chinner wrote:
+> > > > 4. /tmp is still shared across all runner instances so all the
+> > > > 
+> > > >    concurrent runners dump all their tmp files in /tmp. However, the
+> > > >    runners no longer have unique PIDs (i.e. check runs as PID 3 in
+> > > >    all runner instaces). This means using /tmp/tmp.$$ as the
+> > > >    check/test temp file definition results is instant tmp file name
+> > > >    collisions and random things in check and tests fail.  check and
+> > > >    common/preamble have to be converted to use `mktemp` to provide
+> > > >    unique tempfile name prefixes again.
+> > > > 
+> > > > 5. Don't forget to revert the parent /proc mount back to shared
+> > > >    after check has finished running (or was aborted).
+> > > > 
+> > > > I think with this (current prototype patch below), we can use PID
+> > > > namespaces rather than process session IDs for check-parallel safe
+> > > > process management.
+> > > > 
+> > > > Thoughts?
+> > > 
+> > > Was about to go to bed, but can we also start a new mount namespace,
+> > > create a private (or at least non-global) /tmp to put files into, and
+> > > then each test instance is isolated from clobbering the /tmpfiles of
+> > > other ./check instances *and* the rest of the system?
+> > 
+> > We probably can. I didn't want to go down that rat hole straight
+> > away, because then I'd have to make a decision about what to mount
+> > there. One thing at a time....
+> > 
+> > I suspect that I can just use a tmpfs filesystem for it - there's
+> > heaps of memory available on my test machines and we don't use /tmp
+> > to hold large files, so that should work fine for me.  However, I'm
+> > a little concerned about what will happen when testing under memory
+> > pressure situations if /tmp needs memory to operate correctly.
+> > 
+> > I'll have a look at what is needed for private tmpfs /tmp instances
+> > to work - it should work just fine.
+> > 
+> > However, if check-parallel has taught me anything, it is that trying
+> > to use "should work" features on a modern system tends to mean "this
+> > is a poorly documented rat-hole that with many dead-ends that will
+> > be explored before a working solution is found"...
 > 
-> Finally, I'm still working through converting the rest of the ops to use
-> iomap_iter_advance(), but I was thinking about renaming iter.processed
-> to iter.status as a final step. Thoughts on a rename in general or on
-> the actual name?
+> <nod> I'm running an experiment overnight with the following patch to
+> get rid of the session id grossness.  AFAICT it can also be used by
+> check-parallel to start its subprocesses in separate pid namespaces,
+> though I didn't investigate thoroughly.
 
-Yeah, having a processed with either a count or status has proven to
-not be the greatest design ever, and once that is gone picking a better
-name is a good idea.  status sounds fine.  The variables tend to be
-name error or err, maybe that's a little better than status?  I don't
-really care strongly either way.
+I don't think check-parallel needs to start each check instance in
+it's own PID namespace - it's the tests themselves that need the
+isolation from each other.
 
+However, the check instances require a private mount namespace, as
+they mount and unmount test/scratch devices themselves and we do not
+want other check instances seeing those mounts.
+
+Hence I think the current check-parallel code doing mount namespace
+isolation as it already does should work with this patch enabling
+per-test process isolation inside check itself.
+
+> I'm also not sure it's required for check-helper to unmount the /proc
+> that it creates; merely exiting seems to clean everything up? <shrug>
+
+Yeah, I think tearing down the mount namespace (i.e. exiting the
+process that nsexec created) drops the last active reference to the
+mounts inside the private namespace and so it gets torn down that
+way.
+
+So from my perspective, I think your check-helper namespace patch is
+a good improvement and I'll build/fix anything I come across on top
+of it. Once your series of fixes goes in, I'll rebase all the stuff
+I've got on top it and go from there...
+
+> I also tried using systemd-nspawn to run fstests inside a "container"
+> but very quickly discovered that you can't pass block devices to the
+> container which makes fstests pretty useless for testing real scsi
+> devices. :/
+
+Yet another dead-end in the poorly sign-posted rat-hole, eh?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
