@@ -1,206 +1,203 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93C741CAB3;
-	Wed, 29 Jan 2025 09:47:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E3F19DF60;
+	Wed, 29 Jan 2025 11:18:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738144024; cv=none; b=nwoMF9/YuZQIW6mkx4xw89czMem5HtKo+SNZi8LEppW1aPnBU6kJMIrnK42kryYfa9OUvLUvuhOn/vPaq20bj5Q9dEJrhhKPBY6lloXj9ic+DxJd3d6nS3ggcKQ7Wtb8hRvehBIhUm8n/RBB8uHrkVZ7CseTc5ushPfoarbzNc4=
+	t=1738149497; cv=none; b=K8OkXfWL9xAkxr2MUK34bhJ2K8QhlczvQYqwZW7ccf3ZOtGAwsjY5PRYezycalnilktfc9Ec6TzHlbrkyOrt7fek0jluwrRc6SY9ZT8SfNiBg+iyCkXeSWrycobCBlyUUEQR3mFk1DBIgkQzAyAUX00eEPshlDkinVtfk0lvK/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738144024; c=relaxed/simple;
-	bh=2tmtqzDlpvJYjOhymjjxXT2d5hZdqgkkSfR6apUc4LU=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FqE/gwuVPySoE0WXAd2B3AmCF0OFoHbiceZE5nNcQU1543krnjXCSjXM5JpltQqGcP4Ww7iHcLUWlZf/PZ6VdLgNkN3SxnRDbLc4X1vBhJUxyFUnJmts/45la1LSg5cUwFr41mdkbuACjTTxjlOAVHG8rd1BoUm7GqtvXmfAa8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=i5Mwxy/R; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=pmRhPydC; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=i5Mwxy/R; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=pmRhPydC; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1738149497; c=relaxed/simple;
+	bh=3p3h1pv8J2c1FvL/X/lc339oqDdxtJN9pJ0h+9Y1QoE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fi4w3j7nV6880X1ZPqyVgnsUoWdkyy/ywUbJPYOuasoQdsfNxNa8X44q8mpEHRjU4oW0oCTriZaUABRdeUU5bKEKIESBIisx3mkjGv7KAj5qiOKcEBRjNsksWI1nTTARvhM+B4DhhErOcrPvs5WlK/2oksoMFnSb4Gyj8MSyJDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H2bJC//X; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="i5Mwxy/R";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="pmRhPydC";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="i5Mwxy/R";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="pmRhPydC"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id BC3B51F365;
-	Wed, 29 Jan 2025 09:46:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1738144014; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5GnOF+VEY7TThX1eeQY6brGBNSRNv8obohwk3AJ667M=;
-	b=i5Mwxy/RNBFOPwFWyefOclI67Mfl4LeClU7BnbzMU2Z49ioZnnFhEdIes2aDRWIG5Qpb0p
-	rLBunYuvEC7qM4x5OkOhkaKWeK+V8WjsDgKTMLf0D51Ecutz5uFtjpJqDsgAbMqJDTQ7GK
-	s83Yq9bri99hD1Q5u+s3qZtg9o5bDOg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1738144014;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5GnOF+VEY7TThX1eeQY6brGBNSRNv8obohwk3AJ667M=;
-	b=pmRhPydCZ+RgrhzOPZu1wdQVPJGdMmu2lFLf4y8etatrnARzlhrJMUPMdZgyI5WSug4evo
-	LP9tmUY05JKAOgCQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="i5Mwxy/R";
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=pmRhPydC
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1738144014; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5GnOF+VEY7TThX1eeQY6brGBNSRNv8obohwk3AJ667M=;
-	b=i5Mwxy/RNBFOPwFWyefOclI67Mfl4LeClU7BnbzMU2Z49ioZnnFhEdIes2aDRWIG5Qpb0p
-	rLBunYuvEC7qM4x5OkOhkaKWeK+V8WjsDgKTMLf0D51Ecutz5uFtjpJqDsgAbMqJDTQ7GK
-	s83Yq9bri99hD1Q5u+s3qZtg9o5bDOg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1738144014;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5GnOF+VEY7TThX1eeQY6brGBNSRNv8obohwk3AJ667M=;
-	b=pmRhPydCZ+RgrhzOPZu1wdQVPJGdMmu2lFLf4y8etatrnARzlhrJMUPMdZgyI5WSug4evo
-	LP9tmUY05JKAOgCQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6489C137DB;
-	Wed, 29 Jan 2025 09:46:53 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id C9NOFw35mWf7LAAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Wed, 29 Jan 2025 09:46:53 +0000
-Date: Wed, 29 Jan 2025 10:46:53 +0100
-Message-ID: <87o6zq6jg2.wl-tiwai@suse.de>
-From: Takashi Iwai <tiwai@suse.de>
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,	Yaron Avizrat
- <yaron.avizrat@intel.com>,	Oded Gabbay <ogabbay@kernel.org>,	Julia Lawall
- <Julia.Lawall@inria.fr>,	Nicolas Palix <nicolas.palix@imag.fr>,	James Smart
- <james.smart@broadcom.com>,	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,	Jaroslav Kysela
- <perex@perex.cz>,	Takashi Iwai <tiwai@suse.com>,	Chris Mason <clm@fb.com>,
-	Josef Bacik <josef@toxicpanda.com>,	David Sterba <dsterba@suse.com>,	Ilya
- Dryomov <idryomov@gmail.com>,	Dongsheng Yang <dongsheng.yang@easystack.cn>,
-	Jens Axboe <axboe@kernel.dk>,	Xiubo Li <xiubli@redhat.com>,	Damien Le Moal
- <dlemoal@kernel.org>,	Niklas Cassel <cassel@kernel.org>,	Carlos Maiolino
- <cem@kernel.org>,	"Darrick J. Wong" <djwong@kernel.org>,	Sebastian Reichel
- <sre@kernel.org>,	Keith Busch <kbusch@kernel.org>,	Christoph Hellwig
- <hch@lst.de>,	Sagi Grimberg <sagi@grimberg.me>,	Frank Li
- <Frank.Li@nxp.com>,	Mark Brown <broonie@kernel.org>,	Shawn Guo
- <shawnguo@kernel.org>,	Sascha Hauer <s.hauer@pengutronix.de>,	Pengutronix
- Kernel Team <kernel@pengutronix.de>,	Fabio Estevam <festevam@gmail.com>,
-	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,	Hans de Goede
- <hdegoede@redhat.com>,	Ilpo =?ISO-8859-1?Q?J=E4rvinen?=
- <ilpo.jarvinen@linux.intel.com>,	Henrique de Moraes Holschuh
- <hmh@hmh.eng.br>,	Selvin Xavier <selvin.xavier@broadcom.com>,	Kalesh AP
- <kalesh-anakkur.purayil@broadcom.com>,	Jason Gunthorpe <jgg@ziepe.ca>,	Leon
- Romanovsky <leon@kernel.org>,	cocci@inria.fr,
-	linux-kernel@vger.kernel.org,	linux-scsi@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,	linux-sound@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,	ceph-devel@vger.kernel.org,
-	linux-block@vger.kernel.org,	linux-ide@vger.kernel.org,
-	linux-xfs@vger.kernel.org,	linux-pm@vger.kernel.org,
-	linux-nvme@lists.infradead.org,	linux-spi@vger.kernel.org,
-	imx@lists.linux.dev,	linux-arm-kernel@lists.infradead.org,
-	platform-driver-x86@vger.kernel.org,	ibm-acpi-devel@lists.sourceforge.net,
-	linux-rdma@vger.kernel.org
-Subject: Re: [PATCH 04/16] ALSA: ac97: convert timeouts to secs_to_jiffies()
-In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-4-9a6ecf0b2308@linux.microsoft.com>
-References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
-	<20250128-converge-secs-to-jiffies-part-two-v1-4-9a6ecf0b2308@linux.microsoft.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/27.2 Mule/6.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H2bJC//X"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2165cb60719so118851415ad.0;
+        Wed, 29 Jan 2025 03:18:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738149495; x=1738754295; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Un8YIu7U0rtJz4Eo1iyAOAUXT9TJl6lo48bWaNY04aM=;
+        b=H2bJC//XtcJVsLS+KFcY+uyjtkjzNjEzJCS1ql7gNjQ51XTIR1qN80fiI/PWZNR5nE
+         8tsX3z2OCVpViX3Z0pIpVgolTQF+Xve1B0q4Lm9MVHy84bc9MYBAPhxDxdlpNM4EnvMW
+         HY4W3Mz0+XCWvlL/3tSeOSP1ux7toOSHC6p6e6MPXMS4qWLIwwOpdY+dQWh5G2CO70Tb
+         X+q+1m3X7mw6SPgP78tgHPYrNHqsHul48DYuv5sLmXz5gPhd7TUyUPTkTTaNYanNIFhw
+         e8K2tTvloPShynBTMoeXDNuIZrg1Ukae2vGOwy11YprpxHsxebBL2pGO2dO1OEHFuvw5
+         3HRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738149495; x=1738754295;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Un8YIu7U0rtJz4Eo1iyAOAUXT9TJl6lo48bWaNY04aM=;
+        b=wVk50iBPG7RNgaPD1YFtq5YwlVuAA2svwuweMpmho5/7sNyqVNWTwrN/+9hfnoBmqI
+         d/MYS5hMLBfVdkTsKRX/aOaX20cKBjTFqi49jhev4saT5GG8HK5NQbDFKBEjPg/Y4kx5
+         2+Cg0MTM43sQQt7EKb0Gnin0B9mm/muFAhvEjM7iJLgWWwwdRJz/AGz9PQ2yrJLnOog1
+         Dbwfj18Wa8EvegHexavB6JEIgqDP4ru/Y+Wy9+XNiwrDijOFOkd2HO1F5l4O2kGz4wyD
+         p7IyxeHog58y9NJDFRWqi+jZ7ble0MBnohn7OrZbkc+OU5QR0dgDfsmMDA9eodpn4kAa
+         U68Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWQwa/zgCfHy+Fv3hZiRO+2wVUN9zvNo/s2XmZAM+xz8ozUbwuexKRB4+MbdPvHNK7f2dDr84CLoOkv@vger.kernel.org, AJvYcCWURY5QHx1GGDl/FGv1IzTeYlT9MbjWgpc+ZfCJVedLdGpEPY/xFnEQ2njl9o6cdc4KhBvJ6IY6eTqg@vger.kernel.org
+X-Gm-Message-State: AOJu0YzWmXy5QAlvwZsBA6WA4MkZXuP6bl5OZ3yeRe91RSB1TeLINjyH
+	H9DMVCjhBZPEuvDyiO7i+iMBMCyh0DdEj3A+uwBBOPevX7HAi6c1
+X-Gm-Gg: ASbGncv1/lVesGw1fzGZV9NkBrfFggl59n1uwBxl1T8I74LKx720Yd+PUjPf+88VRRY
+	z/pKAI39LOnn53PcgFzmTic6O7DDh2OvRHPvge/Dls6oplN4+q/OV1k6qXuEnYQD8HAwcnHOJHP
+	Dt0FM0e37QuuMB4wXuL3DG5tA9kxBDVbp6UFF0gSYd/0zdkT9/hu6TyRVSQOq81lvp2kXtylRjz
+	8xtJuZGstODPoBE3x8XygKCdJhPVdHLWRXwbQsyp0c7qJ14J81Jgef+FSh5ioVQpSma1mL0+zS7
+	39I0hWwd1Ejo7JQjLa/Aj9I/QQ==
+X-Google-Smtp-Source: AGHT+IE6klJTaPcpMVmemdGT4vOgBrAoJYfuYSn5suFG18ptZMLljZUmln7aZrcWmztBr0zyNCkJng==
+X-Received: by 2002:a05:6a21:8dca:b0:1e1:96d9:a7db with SMTP id adf61e73a8af0-1ed7a49a283mr5323402637.4.1738149495306;
+        Wed, 29 Jan 2025 03:18:15 -0800 (PST)
+Received: from [192.168.0.120] ([49.205.33.247])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72f8a6b324bsm11243492b3a.62.2025.01.29.03.18.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 29 Jan 2025 03:18:14 -0800 (PST)
+Message-ID: <f89b6b40-8dce-4378-ba56-cf7f29695bdb@gmail.com>
+Date: Wed, 29 Jan 2025 16:48:10 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-Rspamd-Queue-Id: BC3B51F365
-X-Spam-Score: -2.01
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-2.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_CONTAINS_FROM(1.00)[];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[linux-foundation.org,intel.com,kernel.org,inria.fr,imag.fr,broadcom.com,HansenPartnership.com,oracle.com,perex.cz,suse.com,fb.com,toxicpanda.com,gmail.com,easystack.cn,kernel.dk,redhat.com,lst.de,grimberg.me,nxp.com,pengutronix.de,amd.com,linux.intel.com,hmh.eng.br,ziepe.ca,vger.kernel.org,lists.freedesktop.org,lists.infradead.org,lists.linux.dev,lists.sourceforge.net];
-	RCVD_TLS_ALL(0.00)[];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCPT_COUNT_GT_50(0.00)[59];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
-
-On Tue, 28 Jan 2025 19:21:49 +0100,
-Easwar Hariharan wrote:
-> 
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
-> 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
-> 
-> @depends on patch@
-> expression E;
-> @@
-> 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
-> 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
-
-Acked-by: Takashi Iwai <tiwai@suse.de>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] check: Fix fs specfic imports when
+ $FSTYPE!=$OLD_FSTYPE
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ zlang@kernel.org
+References: <3b980d028a8ae1496c13ebe3a6685fbc472c5bc0.1738040386.git.nirjhar.roy.lists@gmail.com>
+ <20250128180917.GA3561257@frogsfrogsfrogs>
+Content-Language: en-US
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <20250128180917.GA3561257@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
-thanks,
+On 1/28/25 23:39, Darrick J. Wong wrote:
+> On Tue, Jan 28, 2025 at 05:00:22AM +0000, Nirjhar Roy (IBM) wrote:
+>> Bug Description:
+>>
+>> _test_mount function is failing with the following error:
+>> ./common/rc: line 4716: _xfs_prepare_for_eio_shutdown: command not found
+>> check: failed to mount /dev/loop0 on /mnt1/test
+>>
+>> when the second section in local.config file is xfs and the first section
+>> is non-xfs.
+>>
+>> It can be easily reproduced with the following local.config file
+>>
+>> [s2]
+>> export FSTYP=ext4
+>> export TEST_DEV=/dev/loop0
+>> export TEST_DIR=/mnt1/test
+>> export SCRATCH_DEV=/dev/loop1
+>> export SCRATCH_MNT=/mnt1/scratch
+>>
+>> [s1]
+>> export FSTYP=xfs
+>> export TEST_DEV=/dev/loop0
+>> export TEST_DIR=/mnt1/test
+>> export SCRATCH_DEV=/dev/loop1
+>> export SCRATCH_MNT=/mnt1/scratch
+>>
+>> ./check selftest/001
+>>
+>> Root cause:
+>> When _test_mount() is executed for the second section, the FSTYPE has
+>> already changed but the new fs specific common/$FSTYP has not yet
+>> been done. Hence _xfs_prepare_for_eio_shutdown() is not found and
+>> the test run fails.
+>>
+>> Fix:
+>> Remove the additional _test_mount in check file just before ". commom/rc"
+>> since ". commom/rc" is already sourcing fs specific imports and doing a
+>> _test_mount.
+>>
+>> Fixes: 1a49022fab9b4 ("fstests: always use fail-at-unmount semantics for XFS")
+>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>> ---
+>>   check | 12 +++---------
+>>   1 file changed, 3 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/check b/check
+>> index 607d2456..5cb4e7eb 100755
+>> --- a/check
+>> +++ b/check
+>> @@ -784,15 +784,9 @@ function run_section()
+>>   			status=1
+>>   			exit
+>>   		fi
+>> -		if ! _test_mount
+> Don't we want to _test_mount the newly created filesystem still?  But
+> perhaps after sourcing common/rc ?
+>
+> --D
 
-Takashi
+common/rc calls init_rc() in the end and init_rc() already does a 
+_test_mount. _test_mount after sourcing common/rc will fail, won't it? 
+Does that make sense?
+
+init_rc()
+{
+     # make some further configuration checks here
+     if [ "$TEST_DEV" = ""  ]
+     then
+         echo "common/rc: Error: \$TEST_DEV is not set"
+         exit 1
+     fi
+
+     # if $TEST_DEV is not mounted, mount it now as XFS
+     if [ -z "`_fs_type $TEST_DEV`" ]
+     then
+         # $TEST_DEV is not mounted
+         if ! _test_mount
+         then
+             echo "common/rc: retrying test device mount with external set"
+             [ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
+             if ! _test_mount
+             then
+                 echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
+                 exit 1
+             fi
+         fi
+     fi
+...
+
+...
+
+--NR
 
 
-> ---
->  sound/pci/ac97/ac97_codec.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/sound/pci/ac97/ac97_codec.c b/sound/pci/ac97/ac97_codec.c
-> index 6e710dce5c6068ec20c2da751b6f5372ad1df211..88ac37739b7653f69af430dd0163f5ab4ddf0d0c 100644
-> --- a/sound/pci/ac97/ac97_codec.c
-> +++ b/sound/pci/ac97/ac97_codec.c
-> @@ -2461,8 +2461,7 @@ int snd_ac97_update_power(struct snd_ac97 *ac97, int reg, int powerup)
->  		 * (for avoiding loud click noises for many (OSS) apps
->  		 *  that open/close frequently)
->  		 */
-> -		schedule_delayed_work(&ac97->power_work,
-> -				      msecs_to_jiffies(power_save * 1000));
-> +		schedule_delayed_work(&ac97->power_work, secs_to_jiffies(power_save));
->  	else {
->  		cancel_delayed_work(&ac97->power_work);
->  		update_power_regs(ac97);
-> 
-> -- 
-> 2.43.0
-> 
+
+>
+>> -		then
+>> -			echo "check: failed to mount $TEST_DEV on $TEST_DIR"
+>> -			status=1
+>> -			exit
+>> -		fi
+>> -		# TEST_DEV has been recreated, previous FSTYP derived from
+>> -		# TEST_DEV could be changed, source common/rc again with
+>> -		# correct FSTYP to get FSTYP specific configs, e.g. common/xfs
+>> +		# Previous FSTYP derived from TEST_DEV could be changed, source
+>> +		# common/rc again with correct FSTYP to get FSTYP specific configs,
+>> +		# e.g. common/xfs
+>>   		. common/rc
+>>   		_prepare_test_list
+>>   	elif [ "$OLD_TEST_FS_MOUNT_OPTS" != "$TEST_FS_MOUNT_OPTS" ]; then
+>> -- 
+>> 2.34.1
+>>
+>>
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
+
