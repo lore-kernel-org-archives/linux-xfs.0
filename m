@@ -1,38 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B68C1802B
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2025 00:48:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B2B17E473
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2025 00:59:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738111707; cv=none; b=tlid2F15vUH/fqopTRp13OBj2hQnrtrYBx36woJXrmdhQlyD6y8KHC8tb2fyS0wnJlsStz8Mva0+D5G4KFftV6nllXarLZFZWxpLAjI83GW1kZcFRYl9YG9HQzSsjIF7lQUcaaShPTrqLOnhIxeZWqxq1RwmbEJh1gwv8v3NIEc=
+	t=1738112399; cv=none; b=FudqQNVAi322rIErXs80vrcCES8tOghGa3gwgCpf1XJrwrUpDbQymXxpWLilgy31ZXcd4Jws0zkG/KrwvizJTdkElC3/G666bHZ73jiBEWdLvQx8uLk5FoX68GBvNPvsbfWpFs0FJoElQ5HMFlmMM9n/jkIdtpauRXp0/LSckKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738111707; c=relaxed/simple;
-	bh=5VTjb0fcl4docsrHic7onz2t385hHokZ1o4H1CSB5oY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Uk6kYnGB5xCRmNBdDtrNToQ7YUqlKILQ5BzVxpbcQq3mJTjydLA+VcFe4aa1/YuR+s3YWl15A+kTVcZqaVopiowQT0TOfEgnfy+SMCWQPwh/y4rdyaZEkoiRBpFLEZa5CBeFB14YIhzEGCBeVm1ak243XTDcNPApxcIv3AJQ6Rc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AeRJ49hI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738112399; c=relaxed/simple;
+	bh=WqVTtsXX7bPMeMdCybZgI8wYK3qsNrpNuBgQgREfkJo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SwiAlpLdKV46B968CF4DK+Jy0HR1p3IfB0hC5Ivb++cw9hq91m3LMkvaUWGcxfVIPHdmXzkDaVKq25xgt6FZ1vuDerVcTDPbv0+pnVV2w8gnPBrxUcdGK67u0QNYXJv/+mYy8eSecEiMS89II7kJ5jwT4z7tvqQiPFOeXyepDiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=j3/OlMDO; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AeRJ49hI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBEA0C4CED3;
-	Wed, 29 Jan 2025 00:48:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738111706;
-	bh=5VTjb0fcl4docsrHic7onz2t385hHokZ1o4H1CSB5oY=;
-	h=Date:From:To:Cc:Subject:From;
-	b=AeRJ49hIJQZpVI1ds695BqkiTnQU49um9+q5JvuJ7Cv3agGmqFEmatjKmFZVQrv9I
-	 eOTEOraoYhA1dXCX9tQxMe8SCbQx6AYTVa9kExvsHB0B0Szgg5LBQL3SM4C0VeLgPJ
-	 Xrh0N5TLyspkw2F48CwJVSknnTZPy6upgQrpl2+pGJW+IvOI0CkrW4xQ+qkJL5p0XS
-	 xzaYz9JGit6m3i/2Y9nkbHIwdQwMrSUmAXsIQwOGoN7qqxz7VExJiZILjtFn60HH+c
-	 WyByfa0qR3IzWyjD5OQ0fsiF5zBBYSAG7dZDW+pLXBI0O6uH6+6wwOIlvE9tdMT1ZZ
-	 w4DqeW0OpFhlA==
-Date: Tue, 28 Jan 2025 16:48:26 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, hch@lst.de
-Subject: [PATCH] xfs_repair: require zeroed quota/rt inodes in metadir
- superblocks
-Message-ID: <20250129004826.GS1611770@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="j3/OlMDO"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2efded08c79so8843841a91.0
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2025 16:59:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738112397; x=1738717197; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=elwhvKi666iQFEb/LwJj0lI81yVVHHbgLDJ2x+b/F4w=;
+        b=j3/OlMDOv7PQPjIFCaMQeiNQvcMKWzps0AOdybAbQftPAk8YGyHO71uqLImlTzLyo2
+         Bh+Iu+V0mstXm/BgO2gzLE2PVCfjEqYA0u9H2NziA/7P3tdpTf61S2tHp0Hfn7TP7N9p
+         gpHyRyc/S84QIbfQ3bSxJeo7870wr597ZLFtbPNQVKogto8WpVudeXwmx7Z8ntbzMrUG
+         5uNckDfiawr6AGtW3qxtls11l1cvjTvMjy33hHsjwmX3YAK98tz9/rBv+MR8gVBgPe8I
+         bIqQBWgibY2ahHxKI8BPO7rsKEdID/eADPKg/A+++2eNuY9Zd8Y3IF5dzCKr2y2WHaS5
+         k9Bg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738112397; x=1738717197;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=elwhvKi666iQFEb/LwJj0lI81yVVHHbgLDJ2x+b/F4w=;
+        b=j9K4UwU8UYkutTE/OPDyUXbY2RdX5S9+wmZLqkhHz72n7/wU61pWA91aMru8VjFu/H
+         xafKxTJOfO0VlzQraC0Udlye2KbrsBMKWZ/xPhZtE3yyud8i9h+yy7FaU+Ar+D8xsQ9D
+         dceOvUnaAtRaAbWpHEVBDrH507ELVM7Dzbq4jJMpgAQbd7i/c3Si+v8A/fW/JuHjADf7
+         Z72XRtS6Qsh7t6098F6GYPyiUhaRwEWrKNtRei/naDuGJPPgeaon1X/SslVe8fc1aA8b
+         tlOSf9tl2l5klcLJbMC2YtnELzZ8vHFuL6e4EjMmF8u09rSw9u6mUlp2T98lhBRQ+y1m
+         /JxA==
+X-Forwarded-Encrypted: i=1; AJvYcCUv5jRWobPC7LcRicLSAWu/dEQWO4nZC5zV2Gbd/gUsJg+fs/OwfJ7tNWbDI4LtLtBObvgxpRdrvK4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyge6sANPKLRMsIf08nUJh/Iabl8q/8JqyWBNlvhQ54C2aqEQdL
+	vTNk1NCN4cIFIHn3bPXRT1HANcIPD/U9+4RimJ7pV1rU9YG++TQ5vx7N+XHrGZQ=
+X-Gm-Gg: ASbGnctNGX1+l9ooRC54A1yMIvkTb+uE0TnyRXQRuJrfwOUZs4KkDvrlpqMX8E0NEuw
+	KhhYQ/oGvtEv3sCbpldAb6RbsY1svqKnFUfS5zPiTQ2w5JjEoAG/UvwIsx/jjuOOFYESRqnYgMP
+	Xbfniv7NXQ5rZFE7t8y1vCawrkjNECiNuXGC0mNFMrgZF+6LYstxKdNYMsbLOwUU4V5AWkf1e6F
+	l0RLYGFHjnetsVQDQEBBEH+5/nPRSFMyh4P+jRmsazwtKLcNVIRHJAOwGuWCncoz92G42XClYLM
+	jO5ZC24LqtcESTtFt7o8J8DSXn/p+DXMWm5ML28jbtJ6XzuRUMtjGtBdveNjbUOUHYk=
+X-Google-Smtp-Source: AGHT+IGiueVtR3L81+IT9PByKRYjSPvZvEl4bE48jUqsFpSQQjSQYfTP1OMLvMIzMiHkpNimWngMpQ==
+X-Received: by 2002:a05:6a00:3927:b0:729:c7b:9385 with SMTP id d2e1a72fcca58-72fd0be5439mr1777197b3a.6.1738112396790;
+        Tue, 28 Jan 2025 16:59:56 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72f8a6b3f86sm10285657b3a.67.2025.01.28.16.59.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jan 2025 16:59:56 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tcwQr-0000000Bnoj-1TQ9;
+	Wed, 29 Jan 2025 11:59:53 +1100
+Date: Wed, 29 Jan 2025 11:59:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chi Zhiling <chizhiling@163.com>, Brian Foster <bfoster@redhat.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chi Zhiling <chizhiling@kylinos.cn>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: Remove i_rwsem lock in buffered read
+Message-ID: <Z5l9ieD8zkCQYHFV@dread.disaster.area>
+References: <Z4BbmpgWn9lWUkp3@dread.disaster.area>
+ <CAOQ4uxjTXjSmP6usT0Pd=NYz8b0piSB5RdKPm6+FAwmKcK4_1w@mail.gmail.com>
+ <d99bb38f-8021-4851-a7ba-0480a61660e4@163.com>
+ <20250113024401.GU1306365@frogsfrogsfrogs>
+ <Z4UX4zyc8n8lGM16@bfoster>
+ <Z4dNyZi8YyP3Uc_C@infradead.org>
+ <Z4grgXw2iw0lgKqD@dread.disaster.area>
+ <3d657be2-3cca-49b5-b967-5f5740d86c6e@163.com>
+ <Z5fxTdXq3PtwEY7G@dread.disaster.area>
+ <Z5hn_cRb_cLzHX4Z@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,89 +89,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <Z5hn_cRb_cLzHX4Z@infradead.org>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 27, 2025 at 09:15:41PM -0800, Christoph Hellwig wrote:
+> On Tue, Jan 28, 2025 at 07:49:17AM +1100, Dave Chinner wrote:
+> > > As for why an exclusive lock is needed for append writes, it's because
+> > > we don't want the EOF to be modified during the append write.
+> > 
+> > We don't care if the EOF moves during the append write at the
+> > filesystem level. We set kiocb->ki_pos = i_size_read() from
+> > generic_write_checks() under shared locking, and if we then race
+> > with another extending append write there are two cases:
+> > 
+> > 	1. the other task has already extended i_size; or
+> > 	2. we have two IOs at the same offset (i.e. at i_size).
+> > 
+> > In either case, we don't need exclusive locking for the IO because
+> > the worst thing that happens is that two IOs hit the same file
+> > offset. IOWs, it has always been left up to the application
+> > serialise RWF_APPEND writes on XFS, not the filesystem.
+> 
+> I disagree.  O_APPEND (RWF_APPEND is just the Linux-specific
+> per-I/O version of that) is extensively used for things like
+> multi-thread loggers where you have multiple threads doing O_APPEND
+> writes to a single log file, and they expect to not lose data
+> that way.
 
-If metadata directory trees are enabled, the superblock inode pointers
-to quota and rt free space metadata must all be zero.  The only inode
-pointers in the superblock are sb_rootino and sb_metadirino.
+Sure, but we don't think we need full file offset-scope IO exclusion
+to solve that problem.  We can still safely do concurrent writes
+within EOF to occur whilst another buffered append write is doing
+file extension work.
 
-Found by running xfs/418.
+IOWs, where we really need to get to is a model that allows
+concurrent buffered IO at all times, except for the case where IO
+operations that change the inode size need to serialise against
+other similar operations (e.g. other EOF extending IOs, truncate,
+etc).
 
-Fixes: b790ab2a303d58 ("xfs_repair: support quota inodes in the metadata directory")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
-Note: I found this omission while reading the fuzz tests results, and
-it's a fix for new code in 6.13.  Could we please get this in before
-the release of xfsprogs 6.13?
----
- repair/agheader.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+Hence I think we can largely ignore O_APPEND for the
+purposes of prototyping shared buffered IO and getting rid of the
+IOLOCK from the XFS IO path. I may end up re-using the i_rwsem as
+a "EOF modification" serialisation mechanism for O_APPEND and
+extending writes in general, but I don't think we need a general
+write IO exclusion mechanism for this...
 
-diff --git a/repair/agheader.c b/repair/agheader.c
-index 89a23a869a02e4..327ba041671f9f 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -319,6 +319,51 @@ check_v5_feature_mismatch(
- 	return XR_AG_SB_SEC;
- }
- 
-+static inline int
-+require_zeroed_ino(
-+	struct xfs_mount	*mp,
-+	__be64			*inop,
-+	const char		*tag,
-+	xfs_agnumber_t		agno,
-+	int			do_bzero)
-+{
-+	if (*inop == 0)
-+		return 0;
-+	if (!no_modify)
-+		*inop = 0;
-+	if (do_bzero)
-+		return XR_AG_SB_SEC;
-+
-+	do_warn(_("non-zero %s inode field in superblock %d\n"),
-+			tag, agno);
-+	return XR_AG_SB;
-+}
-+
-+/* With metadir, quota and rt metadata inums in the sb must all be zero. */
-+static int
-+check_pre_metadir_sb_inodes(
-+	struct xfs_mount	*mp,
-+	struct xfs_buf		*sbuf,
-+	xfs_agnumber_t		agno,
-+	int			do_bzero)
-+{
-+	struct xfs_dsb		*dsb = sbuf->b_addr;
-+	int			rval = 0;
-+
-+	rval |= require_zeroed_ino(mp, &dsb->sb_uquotino,
-+			_("user quota"), agno, do_bzero);
-+	rval |= require_zeroed_ino(mp, &dsb->sb_gquotino,
-+			_("group quota"), agno, do_bzero);
-+	rval |= require_zeroed_ino(mp, &dsb->sb_pquotino,
-+			_("project quota"), agno, do_bzero);
-+
-+	rval |= require_zeroed_ino(mp, &dsb->sb_rbmino,
-+			_("realtime bitmap"), agno, do_bzero);
-+	rval |= require_zeroed_ino(mp, &dsb->sb_rsumino,
-+			_("realtime summary"), agno, do_bzero);
-+	return rval;
-+}
-+
- /*
-  * quota inodes and flags in secondary superblocks are never set by mkfs.
-  * However, they could be set in a secondary if a fs with quotas was growfs'ed
-@@ -509,7 +554,9 @@ secondary_sb_whack(
- 			rval |= XR_AG_SB_SEC;
- 	}
- 
--	if (!xfs_has_metadir(mp))
-+	if (xfs_has_metadir(mp))
-+		rval |= check_pre_metadir_sb_inodes(mp, sbuf, i, do_bzero);
-+	else
- 		rval |= secondary_sb_quota(mp, sbuf, sb, i, do_bzero);
- 
- 	/*
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
