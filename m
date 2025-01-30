@@ -1,116 +1,178 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mout.web.de (mout.web.de [212.227.17.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AF1E139B
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2025 09:41:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90CD41BBBEB;
+	Thu, 30 Jan 2025 11:02:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738230115; cv=none; b=lcJGnPT/V95MXroGdZW+otls6zuaXbM/Yavre+SQRl1egDxZgFtDc9vaOvva0qK2lmUyaNjWIaNA56xY1pAiKAxpRropnCGWyJxZM5Xd5CSVpH0WWFwu0Wf/dgAzMx7pmQASfoGSNc26oONrQbAwXUKcLrkVfY/gzJ9QzMkgwyI=
+	t=1738234974; cv=none; b=ZeUiHC77fuy5nYFZgD2XnveM+mKQy/yCKL+HBduwG1kBfny3xbFV6rk9cKOdfbqIKQ+56o7EZc+bc42DgnU3+WJrNI8UtYKPLGWJwYnjyh5bE0WX92Ya6bYNOoQ7VRjpMGJCviPce7j3t13o1/jJjgVQNsXf6VGl96XX5xaZuGY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738230115; c=relaxed/simple;
-	bh=GifRgyEjPFTmNN4CKTZOGYRYm5B3lNJDYf1qbqYegtc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Q2V+396YL4XtfejLPUWjZZP1ds0/Slr4jxqRvCxAGmCSn5P27FlZ6usxw8hevucapprP/3F/eOoSdnU4YgCsxf+7cYw0T3jvdpSrz7k6lhmxw6Yc5t0irGv+jD4nlbuFjaeUVWWxYNeDu4mov/wqKrUDT5tpje9IBX+d8vxZUdk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L2XAEB31; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1738234974; c=relaxed/simple;
+	bh=+t4JrvrPiLsj7bfb840h38pFA44a5hm5mtWmRSYdCpU=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=bR9un1CPdwQMvRHOQ9+Dffxe0SW8y6ttVU0BOlVjrd4n0l7DJOC+s+7voBwTmqlgsQ+opwzVkRiVDWwFa7LtDUCOg6PDuHAxaQKMu1lbsb6EuSpKadqbRNBYac9dK7gh+ky9RR7L/8e8Ynv9x0CdpqrZQucUxlk7AmxV2vU9ols=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=EbrlbQSA; arc=none smtp.client-ip=212.227.17.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L2XAEB31"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738230112;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=fqru2r2HtviwaCobeGd7AsiYbjvhjrqb7DdR7DCqE4k=;
-	b=L2XAEB31uBQoJZrP0QvJwLb80mO3kJe3nqhOJH0b5Y9EWYAHLNxZJOm7IqfqnTNjO3bioq
-	qWDzg6Fkuy8Mj23ztqbf1kCCQ9p9gZ8NSLL6YWGKTwqr94/VjQXdtouOWTagyTXzvplxCM
-	fVDBs3Ik8i8QFHWRJEdKiaIJlpzEPfg=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-49-oset3bYpPbqysSDivvrxxw-1; Thu, 30 Jan 2025 04:41:50 -0500
-X-MC-Unique: oset3bYpPbqysSDivvrxxw-1
-X-Mimecast-MFC-AGG-ID: oset3bYpPbqysSDivvrxxw
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-aa68fd5393cso57836966b.0
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2025 01:41:50 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738230109; x=1738834909;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fqru2r2HtviwaCobeGd7AsiYbjvhjrqb7DdR7DCqE4k=;
-        b=kVp9eyI17AoE4YPDhQgIF7MDKpgG0HCuTAqn8IxU8vsaJw55IoDX7p/Uf1s1YHeaLF
-         SAx1nnq9IZR6Uccvle4QWRpswy+iinUlb3v8lPrQnCwDFxH039ENnbtvt8I15tODmV5X
-         fmdaI8h6BHw4vdsAi+OFoOIxXOkdFZJIjmZtCi9cJATrW2OdJ0rc9l0APz0O7ClA0Lfc
-         qMVk4N7+2LYcOdsAZfoeWJLbvYiGGED2LP3LRsAlcw3yX56SX/BntGAFw5ZyAdeEO5OC
-         0omA2Kd6zHVaNn7c5QeiaYpPlLunoukp3meAL21v/OBED3UNMH4KF1mjEDlLFHwz+GEK
-         Vnvg==
-X-Gm-Message-State: AOJu0YwLYR1y1F4tKLJbSyLiZvzYuzwQ+uQzYcxysWpAcCkcpVqR92E6
-	d8/r/D32Y/+VB+Nrkymg1hodGuQoqVUn1rpBhTeqmZ/PPEU05cMdNT7rhUdsHsO6iaj8PfQ8pXA
-	kf9bEa22hsqU5JAsCMIgxUZDbEoAmvffQgD8w+9eVBORTRBNG6PLJZosAJjlHT1QIxa4lyy9JY8
-	wHrxW6X/a9K+PzjnC2iDSwfYbOdsxIz1SGjchb2u7Y
-X-Gm-Gg: ASbGncuHw5Noyh0ohAhksYONwr5TUcbCl5uPZzahbhjar2Uv3RAXy81KMwQ6WXeoYbg
-	hgvXPplFMZucFAbupcYSYZz0FzA8VIoT0ZmlS+YE0RoKxLIx3LrTsEMUQzadNuFFHJFwqI87REE
-	fuYjsmC14DJn8u2wNp2Zv6trDDgkeBIXZ8xExFf6tQ9uN+U6VEKYhHKSzVkydv3RbOoBkigjtPj
-	rxUTqJZvzk2RMoV7ReFg5U4VEeUX68zDvDNJo/50UUvMgNXK7Zlk/IiKNhCFoLnw8JNTRwAi6pL
-	AF6suJj/co4//4CTKTo2NwRD
-X-Received: by 2002:a17:907:3f92:b0:ab6:b9d9:818d with SMTP id a640c23a62f3a-ab6e0a02f84mr303759266b.0.1738230109246;
-        Thu, 30 Jan 2025 01:41:49 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFUXTcesHzgxbOhu1zvztzjJKEwGqwrKAD4yKmnDCPNIKY58JjwHrAfIb1Z/5CyxNcDI1rrUA==
-X-Received: by 2002:a17:907:3f92:b0:ab6:b9d9:818d with SMTP id a640c23a62f3a-ab6e0a02f84mr303756866b.0.1738230108847;
-        Thu, 30 Jan 2025 01:41:48 -0800 (PST)
-Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab6e47cf8casm92166166b.59.2025.01.30.01.41.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jan 2025 01:41:48 -0800 (PST)
-Date: Thu, 30 Jan 2025 10:41:46 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: djwong@kernel.org, hch@lst.de
-Subject: [ANNOUNCE] xfsprogs: for-next updated to ca10888d51a5
-Message-ID: <hyemutprbcw2glr4meibcl2kh32hc7nmvf5od7laedrz6c2yxh@5z2zkufawkxl>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="EbrlbQSA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1738234870; x=1738839670; i=markus.elfring@web.de;
+	bh=+t4JrvrPiLsj7bfb840h38pFA44a5hm5mtWmRSYdCpU=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=EbrlbQSAj+f38PA8703tTZaMiR4ayuD9Qrvyd9QGYqJH7YthbOq//pBZda9lk8L/
+	 8Z/bzqm9AcXAMhwbS7RdUkARLZ8bEvd0EdUhD+FRE9AbkWXJxoHLcoT2yUZDnoAru
+	 AEpVtrhhTX6gwbMUeKZ3owYdgRazmCSF+8S1sKEY3QoZ9646CKqHg5lS86sDrdRD4
+	 GAbkiHBdMvF1FSVgBio0MksJCA2Iu2Q6DHWn+Yg3/3vqeK/pNqvYcFMKTRC3o8uWh
+	 KgSWCXjJhP+JBxslKqGd0a2lz6i0DAbUIk83mJ6VEQvNIYUmrFpRTTuGrXGp53KWW
+	 cqA7/eN/08snJD7Q9w==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.70.40]) by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MIya8-1tsDzY10Di-00Lbns; Thu, 30
+ Jan 2025 12:01:10 +0100
+Message-ID: <e06cb7f5-7aa3-464c-a8a1-2c7b9b6a29eb@web.de>
+Date: Thu, 30 Jan 2025 12:01:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+To: cocci@inria.fr, kernel-janitors@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-pm@vger.kernel.org,
+ linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-sound@vger.kernel.org, linux-spi@vger.kernel.org,
+ linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+ platform-driver-x86@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ ibm-acpi-devel@lists.sourceforge.net, imx@lists.linux.dev,
+ kernel@pengutronix.de, linux-arm-kernel@lists.infradead.org,
+ Andrew Morton <akpm@linux-foundation.org>, Carlos Maiolino <cem@kernel.org>,
+ Chris Mason <clm@fb.com>, Christoph Hellwig <hch@lst.de>,
+ Damien Le Moal <dlemoal@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+ David Sterba <dsterba@suse.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>,
+ Easwar Hariharan <eahariha@linux.microsoft.com>,
+ Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+ James Bottomley <James.Bottomley@HansenPartnership.com>,
+ James Smart <james.smart@broadcom.com>, Jaroslav Kysela <perex@perex.cz>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
+ Josef Bacik <josef@toxicpanda.com>, Julia Lawall <Julia.Lawall@inria.fr>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Ilya Dryomov <idryomov@gmail.com>,
+ Kalesh Anakkur Purayil <kalesh-anakkur.purayil@broadcom.com>,
+ Keith Busch <kbusch@kernel.org>, Leon Romanovsky <leon@kernel.org>,
+ Mark Brown <broonie@kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nicolas Palix <nicolas.palix@imag.fr>, Niklas Cassel <cassel@kernel.org>,
+ Oded Gabbay <ogabbay@kernel.org>, Ricardo Ribalda <ribalda@google.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Sascha Hauer <s.hauer@pengutronix.de>,
+ Sebastian Reichel <sre@kernel.org>,
+ Selvin Xavier <selvin.xavier@broadcom.com>, Shawn Guo <shawnguo@kernel.org>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Takashi Iwai <tiwai@suse.com>,
+ Victor Gambier <victor.gambier@inria.fr>, Xiubo Li <xiubli@redhat.com>,
+ Yaron Avizrat <yaron.avizrat@intel.com>
+References: <20250128-converge-secs-to-jiffies-part-two-v1-1-9a6ecf0b2308@linux.microsoft.com>
+Subject: Re: [PATCH 01/16] coccinelle: misc: secs_to_jiffies: Patch
+ expressions too
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-1-9a6ecf0b2308@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V03:K1:MEBO0GsSQ1SMY/zsPX1U6svBkJN6BjoZlGAGaEjdoAIc7rC0MTJ
+ jMCDSnzW+JUiBx0jWaw4axa0ASi7RKu+znCfMa+5DA/GZz89brkDkAWXkPNY1Ii+WKoCg2M
+ 6p6JIXEbQugmQdBp3V5wVA0hm/aJde6kKUDnCeJpidqtVh0kGmNtl+sNaqnuL+ZhzFG6g5Z
+ yt9wjcSDL8KRKPEOFFBUw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:PCsLlrQ8lfw=;SoOTgoPi1u3ddphFfFnJ4K80Ey1
+ LhQV5NN3S1upZ+kQWRf5X13xSqfZszqJAWQG1OpVuCmo6tpVtGTWgh7ad8U9WwKa6cxbghVrt
+ NekQpjR/Dsev5s67AnEX8ThdDcbbfKvRw5T8fgaGslTYv3XceDxH2g+ZINh1g5Zl1a5Kb7tUy
+ iHsXRJsmGMh72moAwMl2T0JX0Ldu9mm36L7zjNeIOX0Xh1EcbDwPTnBvWT5Jmf/TZjjTD915z
+ wkMwvyKEhqv+ILIT2NmQNRENiOP1N2A5cNBwL7S6RvzS4B2b6TETCM6HSXEgzk4eBq/cjFYJ7
+ Ta/beBAeX/x1vlhieJ7zCgVJ/DjpXSnLIakxsKLFsTqznw+ifPF4fJli2HnMVo9sGRnRMWTrl
+ qkRACaZwBVl2ReKWA6Ylw6VqlTKMT2hF2oCiSA6SNHSwnqWCdtkKT3MwrASEpsgRd1t3m2qrg
+ dzBxkwY3Iqvyla51ZhZ4KeRRsMYftkVOD06V/LWAUsGh3adVyfNfo1rFkiXbs8oaQXw9Ja6tZ
+ RzPDki+nrGeKxCzQaenUyiA48SLrGJ61YEiLCyUiil3FCYQCPBx6oGNf2hTXlPwkPSrMnvfyk
+ yvQjlFy7DS+9l6YMcPoT4oJhRV5HGFbKwznZ3oL4+T60BN/ekmSzbtefb+GOhIG+4+ywk54uP
+ mTXT8J21gH5qaPIaPiannqZ/nmjWeakTcPkk/rVwdP3tmwDxSgnRKkzPj2UadACH+VKlM8JrQ
+ lfxiv25g7Br2uvZqXG/3Mkq5j8BPnzef0ZEvV00FZ4lN2l35qROKiS4KNw+Oa2MExwmkZF8N0
+ Me4UosI1FbMOonU2tpnvT5R9FbJv2h1tIMF/XYUdA7G6V3mY01f2O3g0W60Gd1Z/onfWiWTsC
+ vsuTuJ7TZfE6AwrUs1WQ/Wi8E1So2MZdkmeUagRZY0DoLytG1bmL84SvJIdb8h4sdAVK3EONn
+ 3chVYtWWI+cM+cz3Whj1giWzBTzyQOpKjx+HZcaRA80KQWJ5iUExiJkz11n/ptAWXabZtwVr1
+ IIfHoUKeT2WT8pACVlj4x3gvqIClbPKbcGWhs4epE3uD2mR9gqFM8fCUfkHNngYTCZq6z5Did
+ d50IILddgQEvH7rjWs9K2n3wFTct4+ajCi45dnopg2wTz/Oma2Lt3tO8Qenl6l70EogpyLyCN
+ iMoxPpi5Wclpw/Kc+5YCXrWUIzzUatEenh+mkeiB0/g==
 
-Hello.
+> Teach the script to suggest conversions for timeout patterns where the
+> arguments to msecs_to_jiffies() are expressions as well.
 
-The xfsprogs for-next branch, located at:
+Does anything hinder to benefit any more from a source code analysis approach
+(like the following by the extended means of the semantic patch language)?
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
 
-Has just been updated.
+// SPDX-License-Identifier: GPL-2.0
+/// Simplify statements by using a known wrapper macro.
+/// Replace selected msecs_to_jiffies() calls by secs_to_jiffies().
+//
+// Keywords: wrapper macro conversion secs seconds jiffies
+// Confidence: High
+// Options: --no-includes --include-headers
 
-Patches often get missed, so if your outstanding patches are properly reviewed on
-the list and not included in this update, please let me know.
+virtual context, patch, report, org
 
-The new head of the for-next branch is commit:
+@depends on context@
+expression e;
+@@
+*msecs_to_jiffies
+ (
+(e * 1000
+|e * MSEC_PER_SEC
+)
+ )
 
-ca10888d51a51ccb8ef02c9182c554eee4493aac
+@depends on patch@
+expression e;
+@@
+-msecs_to_jiffies
++secs_to_jiffies
+ (
+(
+-e * 1000
+|
+-e * MSEC_PER_SEC
+)
++e
+ )
 
-3 new commits:
+@x depends on org || report@
+expression e;
+position p;
+@@
+ msecs_to_jiffies@p
+ (
+(e * 1000
+|e * MSEC_PER_SEC
+)
+ )
 
-Christoph Hellwig (1):
-      [c988ff56258a] mkfs: use a default sector size that is also suitable for the rtdev
+@script:python depends on org@
+p << x.p;
+@@
+coccilib.org.print_todo(p[0], "WARNING: opportunity for secs_to_jiffies()")
 
-Darrick J. Wong (2):
-      [ff12f3956648] xfs_scrub_all.timer: don't run if /var/lib/xfsprogs is readonly
-      [ca10888d51a5] xfs_repair: require zeroed quota/rt inodes in metadir superblocks
+@script:python depends on report@
+p << x.p;
+@@
+coccilib.report.print_report(p[0], "WARNING: opportunity for secs_to_jiffies()")
 
-Code Diffstat:
 
- mkfs/xfs_mkfs.c              | 16 +++++++++++++--
- repair/agheader.c            | 49 +++++++++++++++++++++++++++++++++++++++++++-
- scrub/Makefile               |  6 +++++-
- scrub/xfs_scrub_all.timer    | 16 ---------------
- scrub/xfs_scrub_all.timer.in | 23 +++++++++++++++++++++
- 5 files changed, 90 insertions(+), 20 deletions(-)
- delete mode 100644 scrub/xfs_scrub_all.timer
- create mode 100644 scrub/xfs_scrub_all.timer.in
-
--- 
-- Andrey
-
+Regards,
+Markus
