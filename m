@@ -1,131 +1,116 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 18A0C194AD1;
-	Wed, 29 Jan 2025 21:03:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AF1E139B
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2025 09:41:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738184639; cv=none; b=iqXScunONgiNMwtPXJWqFWoxCswuc+i9MaH4v1tStpQ7FRKjUmm0Pxm8+U0+ppKCy923BhxnqT2at2r8BTKxdEqTp1bnp79htTRKvMKxG0f5Pd9/3HGUdm1M4D+RSYuAe8SpA+q2ieCPeLbAelkrvCXgTjFnHvlwdParb8RwLIQ=
+	t=1738230115; cv=none; b=lcJGnPT/V95MXroGdZW+otls6zuaXbM/Yavre+SQRl1egDxZgFtDc9vaOvva0qK2lmUyaNjWIaNA56xY1pAiKAxpRropnCGWyJxZM5Xd5CSVpH0WWFwu0Wf/dgAzMx7pmQASfoGSNc26oONrQbAwXUKcLrkVfY/gzJ9QzMkgwyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738184639; c=relaxed/simple;
-	bh=EsYz53Al9cDMt+LJZ12iOWeqRoB03Is/uiVHJBAKxPs=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=BZc+/O8yiOc62L9cJbuootJUxhPyNTgFd8JuyYdOU0kXvBEsPhylS2xqlxrwkK+4po+Mc276fW+Vqjl7EnjgIY/ItpdPJZFNsUU2m9K5C10fK1KQikJ+HXLZ4hN8MQvKkQi8IK0gTmoD6Q+LOesDIcZ7a9qHN4OqiLw6/mhH/Hs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=mY3mAkZd; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1738230115; c=relaxed/simple;
+	bh=GifRgyEjPFTmNN4CKTZOGYRYm5B3lNJDYf1qbqYegtc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=Q2V+396YL4XtfejLPUWjZZP1ds0/Slr4jxqRvCxAGmCSn5P27FlZ6usxw8hevucapprP/3F/eOoSdnU4YgCsxf+7cYw0T3jvdpSrz7k6lhmxw6Yc5t0irGv+jD4nlbuFjaeUVWWxYNeDu4mov/wqKrUDT5tpje9IBX+d8vxZUdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L2XAEB31; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="mY3mAkZd"
-Received: from [100.65.161.47] (unknown [20.236.11.29])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 4FFDA2109A5E;
-	Wed, 29 Jan 2025 13:03:55 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4FFDA2109A5E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1738184637;
-	bh=O+JFGGFluQhzEspwlwz6aXkZ7QKW4DjxL6knEN3myoo=;
-	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
-	b=mY3mAkZdBwX5JW6v0rHOcPwixnNpeCwrI5i6lioeivoGl5PeSwTfMHOmjED6AV41/
-	 5wIYfQa9MecJKhXc6T7//bDDoOB4BG1MPO3Miu2pGAWJwBcdsKKFOS1hzy+NN34ovy
-	 jA6uxIox2R9YzB3PKnfuI/uqwUCqDlg2DifBsbMw=
-Message-ID: <dd0358b1-7c8a-4c9e-88c5-2e1db69a3a35@linux.microsoft.com>
-Date: Wed, 29 Jan 2025 13:03:57 -0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L2XAEB31"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738230112;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=fqru2r2HtviwaCobeGd7AsiYbjvhjrqb7DdR7DCqE4k=;
+	b=L2XAEB31uBQoJZrP0QvJwLb80mO3kJe3nqhOJH0b5Y9EWYAHLNxZJOm7IqfqnTNjO3bioq
+	qWDzg6Fkuy8Mj23ztqbf1kCCQ9p9gZ8NSLL6YWGKTwqr94/VjQXdtouOWTagyTXzvplxCM
+	fVDBs3Ik8i8QFHWRJEdKiaIJlpzEPfg=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-49-oset3bYpPbqysSDivvrxxw-1; Thu, 30 Jan 2025 04:41:50 -0500
+X-MC-Unique: oset3bYpPbqysSDivvrxxw-1
+X-Mimecast-MFC-AGG-ID: oset3bYpPbqysSDivvrxxw
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-aa68fd5393cso57836966b.0
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2025 01:41:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738230109; x=1738834909;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fqru2r2HtviwaCobeGd7AsiYbjvhjrqb7DdR7DCqE4k=;
+        b=kVp9eyI17AoE4YPDhQgIF7MDKpgG0HCuTAqn8IxU8vsaJw55IoDX7p/Uf1s1YHeaLF
+         SAx1nnq9IZR6Uccvle4QWRpswy+iinUlb3v8lPrQnCwDFxH039ENnbtvt8I15tODmV5X
+         fmdaI8h6BHw4vdsAi+OFoOIxXOkdFZJIjmZtCi9cJATrW2OdJ0rc9l0APz0O7ClA0Lfc
+         qMVk4N7+2LYcOdsAZfoeWJLbvYiGGED2LP3LRsAlcw3yX56SX/BntGAFw5ZyAdeEO5OC
+         0omA2Kd6zHVaNn7c5QeiaYpPlLunoukp3meAL21v/OBED3UNMH4KF1mjEDlLFHwz+GEK
+         Vnvg==
+X-Gm-Message-State: AOJu0YwLYR1y1F4tKLJbSyLiZvzYuzwQ+uQzYcxysWpAcCkcpVqR92E6
+	d8/r/D32Y/+VB+Nrkymg1hodGuQoqVUn1rpBhTeqmZ/PPEU05cMdNT7rhUdsHsO6iaj8PfQ8pXA
+	kf9bEa22hsqU5JAsCMIgxUZDbEoAmvffQgD8w+9eVBORTRBNG6PLJZosAJjlHT1QIxa4lyy9JY8
+	wHrxW6X/a9K+PzjnC2iDSwfYbOdsxIz1SGjchb2u7Y
+X-Gm-Gg: ASbGncuHw5Noyh0ohAhksYONwr5TUcbCl5uPZzahbhjar2Uv3RAXy81KMwQ6WXeoYbg
+	hgvXPplFMZucFAbupcYSYZz0FzA8VIoT0ZmlS+YE0RoKxLIx3LrTsEMUQzadNuFFHJFwqI87REE
+	fuYjsmC14DJn8u2wNp2Zv6trDDgkeBIXZ8xExFf6tQ9uN+U6VEKYhHKSzVkydv3RbOoBkigjtPj
+	rxUTqJZvzk2RMoV7ReFg5U4VEeUX68zDvDNJo/50UUvMgNXK7Zlk/IiKNhCFoLnw8JNTRwAi6pL
+	AF6suJj/co4//4CTKTo2NwRD
+X-Received: by 2002:a17:907:3f92:b0:ab6:b9d9:818d with SMTP id a640c23a62f3a-ab6e0a02f84mr303759266b.0.1738230109246;
+        Thu, 30 Jan 2025 01:41:49 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFUXTcesHzgxbOhu1zvztzjJKEwGqwrKAD4yKmnDCPNIKY58JjwHrAfIb1Z/5CyxNcDI1rrUA==
+X-Received: by 2002:a17:907:3f92:b0:ab6:b9d9:818d with SMTP id a640c23a62f3a-ab6e0a02f84mr303756866b.0.1738230108847;
+        Thu, 30 Jan 2025 01:41:48 -0800 (PST)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab6e47cf8casm92166166b.59.2025.01.30.01.41.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Jan 2025 01:41:48 -0800 (PST)
+Date: Thu, 30 Jan 2025 10:41:46 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: djwong@kernel.org, hch@lst.de
+Subject: [ANNOUNCE] xfsprogs: for-next updated to ca10888d51a5
+Message-ID: <hyemutprbcw2glr4meibcl2kh32hc7nmvf5od7laedrz6c2yxh@5z2zkufawkxl>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay
- <ogabbay@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>,
- Nicolas Palix <nicolas.palix@imag.fr>, James Smart
- <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
- Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
- David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
- Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
- Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>,
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
- Hans de Goede <hdegoede@redhat.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
- Selvin Xavier <selvin.xavier@broadcom.com>,
- Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
- eahariha@linux.microsoft.com, cocci@inria.fr, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-spi@vger.kernel.org, imx@lists.linux.dev,
- linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org,
- ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH 06/16] rbd: convert timeouts to secs_to_jiffies()
-To: Andrew Morton <akpm@linux-foundation.org>,
- Ilya Dryomov <idryomov@gmail.com>,
- Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
- ceph-devel@vger.kernel.org, linux-block@vger.kernel.org
-References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
- <20250128-converge-secs-to-jiffies-part-two-v1-6-9a6ecf0b2308@linux.microsoft.com>
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Content-Language: en-US
-In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-6-9a6ecf0b2308@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 1/28/2025 10:21 AM, Easwar Hariharan wrote:
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
-> 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
-> 
-> @depends on patch@
-> expression E;
-> @@
-> 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
-> 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
-> ---
->  drivers/block/rbd.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
+Hello.
 
-<snip>
+The xfsprogs for-next branch, located at:
 
-> @@ -6283,9 +6283,9 @@ static int rbd_parse_param(struct fs_parameter *param,
->  		break;
->  	case Opt_lock_timeout:
->  		/* 0 is "wait forever" (i.e. infinite timeout) */
-> -		if (result.uint_32 > INT_MAX / 1000)
-> +		if (result.uint_32 > INT_MAX)
->  			goto out_of_range;
-> -		opt->lock_timeout = msecs_to_jiffies(result.uint_32 * 1000);
-> +		opt->lock_timeout = secs_to_jiffies(result.uint_32);
->  		break;
->  	case Opt_pool_ns:
->  		kfree(pctx->spec->pool_ns);
-> 
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
 
-Hi Ilya, Dongsheng, Jens, others,
+Has just been updated.
 
-Could you please review this hunk and confirm the correct range check
-here? I figure this is here because of the multiplier to
-msecs_to_jiffies() and therefore unneeded after the conversion. If so, I
-noticed patch 07 has similar range checks that I neglected to fix and
-can do in a v2.
+Patches often get missed, so if your outstanding patches are properly reviewed on
+the list and not included in this update, please let me know.
 
-Thanks,
-Easwar (he/him)
+The new head of the for-next branch is commit:
+
+ca10888d51a51ccb8ef02c9182c554eee4493aac
+
+3 new commits:
+
+Christoph Hellwig (1):
+      [c988ff56258a] mkfs: use a default sector size that is also suitable for the rtdev
+
+Darrick J. Wong (2):
+      [ff12f3956648] xfs_scrub_all.timer: don't run if /var/lib/xfsprogs is readonly
+      [ca10888d51a5] xfs_repair: require zeroed quota/rt inodes in metadir superblocks
+
+Code Diffstat:
+
+ mkfs/xfs_mkfs.c              | 16 +++++++++++++--
+ repair/agheader.c            | 49 +++++++++++++++++++++++++++++++++++++++++++-
+ scrub/Makefile               |  6 +++++-
+ scrub/xfs_scrub_all.timer    | 16 ---------------
+ scrub/xfs_scrub_all.timer.in | 23 +++++++++++++++++++++
+ 5 files changed, 90 insertions(+), 20 deletions(-)
+ delete mode 100644 scrub/xfs_scrub_all.timer
+ create mode 100644 scrub/xfs_scrub_all.timer.in
+
+-- 
+- Andrey
+
