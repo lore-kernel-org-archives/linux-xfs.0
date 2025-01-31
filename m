@@ -1,99 +1,196 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 15F231CD215;
-	Fri, 31 Jan 2025 17:59:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 258901369BB
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 19:17:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738346391; cv=none; b=bg5Vydx/PTNDD9sWSHGgVOMwPoG7gqDEM/hIABUbBqr9JPmuuwYkbV83QwcS13ThMcap48CHdgnjbDO+EVov55Axsd4ZQAJf/TFNMsQzdTVOUOLoCGftnHobysV7Lg2TQephBGDtI2q/vlFnU13CvF2kPqdfqbzf0CyssrrnFOs=
+	t=1738351032; cv=none; b=dzi8Y8xDn9WiZ3yuvPiSpHTRW3Z9WvM27B/OOQ86x8N8DxPQfXfRKpAsuoSRvkTtHN7C3kE8Fm1sgpLmdazFVABDLFM/u8Kpj+eynzoNAzDl6VLA+ysynAym6svRoNlJ+H+SEvPzjWZ6ZBFcEO4xkPhsY9kTnCPdG7m0UHybjnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738346391; c=relaxed/simple;
-	bh=nXWT8j2G/uzLN64vLb7vwc1laXXA983XpXlI9rAJRa0=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=hNaHd8h3x29MzTxcZOLrfL4SAk+AT7CUcfVGUV39cYv2koPJzpzjTOALUIy3BAM5e/M/VaOrkWDY0dqYYmBxnuJ90nEY7KNQy7EdlrAtHQNHE6zBzEYTFRJf2AGIcxuGarx+V2J/TIGBpLxcBmE/FFAfnDsgFvBl5Futst+PDf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=a6dw5Bmq; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1738351032; c=relaxed/simple;
+	bh=HGKgCrD34eiQimlf4+cvDNwfNb/2Dei0o6sRjf0UFG8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HyvbvtkIjPNMJAFJD3PIkzlX0atjIW6yPdXEt4wSjQBmBtHZ5hYy+UnyHwr6KmAxC2kUL96iBvDDML4EKvBcXEov5kQGt81bdP82BYeQvz9z06NU4bl636wSY3IyZm42biQMPKt4DCbTiUcZcdgvDOMo6W+xH512pbv7howLQpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OtRPh+/m; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="a6dw5Bmq"
-Received: from [100.65.234.206] (unknown [20.236.10.66])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 24E8E210C322;
-	Fri, 31 Jan 2025 09:59:49 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 24E8E210C322
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1738346389;
-	bh=XPbYcf6qzF2DMTTNx2lFPYl4W5TcffizNhSxUduMC2A=;
-	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
-	b=a6dw5BmqI18cQBFdJlYBMKyx5kbRldsQWBROTSkbGpDQ1utLrBFCv8LtYHmT3tuk6
-	 48NhnQjeEmR83rgegD+5CWd2uoJDbmYi26BZVc4lubYeduw5r0ipF7IkGiDRUIMUji
-	 Vo+/gmn0Nz6YZlI7SOf3Cp1KOiFDrRed7ezz+VdQ=
-Message-ID: <3bdffe1d-9355-4fad-8d4e-6526c094e3a3@linux.microsoft.com>
-Date: Fri, 31 Jan 2025 09:59:50 -0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OtRPh+/m"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738351029;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kBP2ejv55jQWoe5lkaW4/iObWJ65jHHcwOH2JS5+DwU=;
+	b=OtRPh+/mDsfxSaTWBOIZLr7wtGboUEzdysdGMYmtS5XYXOPhKcayUkLywagOHPNDYwxvMD
+	s6JlwnV5Onc/7C7MioW7oS6Kr7YFaIe99npmilWndE3OAGN161XNvQHK67b4lmosa/Jbgo
+	h44qj2wl8heY6weG7xGLrB56Id8Uq20=
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
+ [209.85.166.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-108-KTm_KHApPIasH6iI4DLFkw-1; Fri, 31 Jan 2025 14:17:07 -0500
+X-MC-Unique: KTm_KHApPIasH6iI4DLFkw-1
+X-Mimecast-MFC-AGG-ID: KTm_KHApPIasH6iI4DLFkw
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3a81764054aso1398435ab.2
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 11:17:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738351027; x=1738955827;
+        h=content-transfer-encoding:mime-version:organization:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=kBP2ejv55jQWoe5lkaW4/iObWJ65jHHcwOH2JS5+DwU=;
+        b=nThRa9fTv9RNirQjT3WuWSRuLGI5hVNrfao7kaRLFgSLjA3kWgzFO9sniCxYBaMync
+         uPQP4EobCr5F90wud709aJgksd47FYayn1VvJ+XEofGM2QMn7AYWhE6F0hjoXKZHbzz7
+         FR6qkhT47uaa0CepQiWU0TQ5cPwEkfbN43TwGnQ8H+wA7FFgqwN6Kb6jyZkULN4Qn3gG
+         vW6isV3eX37cOgS9O2dgKpyYgWLAJ5ZutbGA+UqZOZp3r09NT6QsV2bC0DFyWySviW1N
+         xURBovWZXpdr9WA4IzJ0X4O1xqdQ2IUVTTNvPPmzC+4bG7LXbbcbydtZ67AY3GyLRsde
+         6bUw==
+X-Forwarded-Encrypted: i=1; AJvYcCUf9kD8701l4ZMf/uqSARpqNeYL5WXRKaEiYynKelKzEfNROT6bOneLh8RlklFmApxOU0OIXinifP8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwPk4xJ/RHWJo2dKzXnNVw5DQtH25BZmhJ08rbtYw/GqLVTRGp
+	VBheBmxtcm5w/q5Fbw6mOdzig9WnQPRWNSt694W3Ir1tQLMSMzahnr1wEBS0BdsdGJsuSmXsRGr
+	k0vtPTFp0+9xeU44r++X4XdEfny3Ad7kgiraiP/szWTHHTonNIG09I4XZ6Q==
+X-Gm-Gg: ASbGncuRt+cqCWbrlhoSQDyEmo1tdkOpAMYgizSYctYfYOVWaoTufbSqnat8g+jEdXe
+	a9A8wbSqOHiGobwN7rAKeamIwagyfsZwbBCkjOFAJWMPmJH+pFuYhez7gf9zjcUV0jzylGVfA63
+	71R1397gtj7elLIFbSxdlXDZ3RZsXLHEzDR2W7UTJlMCOs5CwWFrwHLN619aHVRwpnbxi88aowx
+	yQvla5CjyVoNhAzOoeyu+fSedcTS8ATPQ+uHsaClD9Ty3FFGTtcCGWCXT8jEE0PxG5P3pPHKFFn
+	kj+KfBV5
+X-Received: by 2002:a05:6602:6082:b0:854:a5e8:3294 with SMTP id ca18e2360f4ac-854a5e83361mr193247739f.3.1738351027032;
+        Fri, 31 Jan 2025 11:17:07 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH+Yzd6ZzAd6b5E6xmRCqs2veqaIHe5aVhmKvgpoGadfX/Fj5zXiz2QAdx8dJsDaTaRDEZ/zA==
+X-Received: by 2002:a05:6602:6082:b0:854:a5e8:3294 with SMTP id ca18e2360f4ac-854a5e83361mr193245939f.3.1738351026674;
+        Fri, 31 Jan 2025 11:17:06 -0800 (PST)
+Received: from redhat.com ([38.15.36.11])
+        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-854a15d0413sm100237339f.8.2025.01.31.11.17.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 31 Jan 2025 11:17:06 -0800 (PST)
+Date: Fri, 31 Jan 2025 12:17:03 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
+ amir73il@gmail.com, brauner@kernel.org, torvalds@linux-foundation.org,
+ viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+ linux-ext4@vger.kernel.org, Peter Xu <peterx@redhat.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Subject: [REGRESSION] Re: [PATCH v8 15/19] mm: don't allow huge faults for
+ files with pre content watches
+Message-ID: <20250131121703.1e4d00a7.alex.williamson@redhat.com>
+In-Reply-To: <9035b82cff08a3801cef3d06bbf2778b2e5a4dba.1731684329.git.josef@toxicpanda.com>
+References: <cover.1731684329.git.josef@toxicpanda.com>
+	<9035b82cff08a3801cef3d06bbf2778b2e5a4dba.1731684329.git.josef@toxicpanda.com>
+Organization: Red Hat
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: eahariha@linux.microsoft.com, Jiri Slaby <jirislaby@kernel.org>,
- David Laight <david.laight.linux@gmail.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- Anna-Maria Behnsen <anna-maria@linutronix.de>,
- Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
- Miguel Ojeda <ojeda@kernel.org>, open list <linux-kernel@vger.kernel.org>,
- stable@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
- kernel test robot <lkp@intel.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] jiffies: Cast to unsigned long for secs_to_jiffies()
- conversion
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-References: <20250130184320.69553-1-eahariha@linux.microsoft.com>
- <20250130201417.32b0a86f@pumpkin>
- <9ae171e2-1a36-4fe1-8a9f-b2b776e427a0@kernel.org>
- <CAMuHMdUNjKJ0CFw+i1qgVsHO2LU6uOqkAq5iGL0EZyCtrfzM=A@mail.gmail.com>
- <47098c16-2cf3-44bc-985a-07eb2a225698@linux.microsoft.com>
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Content-Language: en-US
-In-Reply-To: <47098c16-2cf3-44bc-985a-07eb2a225698@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On 1/31/2025 9:55 AM, Easwar Hariharan wrote:
-> On 1/31/2025 12:10 AM, Geert Uytterhoeven wrote:
->> Hi Jiri,
->>
->> CC linux-xfs
->>
->> On Fri, 31 Jan 2025 at 08:05, Jiri Slaby <jirislaby@kernel.org> wrote:
->>> On 30. 01. 25, 21:14, David Laight wrote:
->>>> On Thu, 30 Jan 2025 18:43:17 +0000
->>>> Easwar Hariharan <eahariha@linux.microsoft.com> wrote:
->>>>
->>>>> While converting users of msecs_to_jiffies(), lkp reported that some
->>>>> range checks would always be true because of the mismatch between the
->>>>> implied int value of secs_to_jiffies() vs the unsigned long
->>>>> return value of the msecs_to_jiffies() calls it was replacing. Fix this
->>>>> by casting secs_to_jiffies() values as unsigned long.
->>>>
->>>> Surely 'unsigned long' can't be the right type ?
->>>> It changes between 32bit and 64bit systems.
->>>> Either it is allowed to wrap - so should be 32bit on both,
->>>> or wrapping is unexpected and it needs to be 64bit on both.
->>>
->>> But jiffies are really ulong.
->>
->> That's a good reason to make the change.
->> E.g. msecs_to_jiffies() does return unsigned long.
->>
->> Note that this change may cause fall-out, e.g.
->>
->>     int val = 5.
->>
->>     pr_debug("timeout = %u jiffies\n", secs_to_jiffies(val));
->>                         ^^
->>                         must be changed to %lu
 
-That was wrong even before the conversion to secs_to_jiffies() (or this
-patch) because as Jiri says, jiffies are ulong.
+20bf82a898b6 ("mm: don't allow huge faults for files with pre content watches")
 
-<snip>
+This breaks huge_fault support for PFNMAPs that was recently added in
+v6.12 and is used by vfio-pci to fault device memory using PMD and PUD
+order mappings.  Thanks,
 
-- Easwar (he/him)
+Alex
+
+
+On Fri, 15 Nov 2024 10:30:28 -0500
+Josef Bacik <josef@toxicpanda.com> wrote:
+
+> There's nothing stopping us from supporting this, we could simply pass
+> the order into the helper and emit the proper length.  However currently
+> there's no tests to validate this works properly, so disable it until
+> there's a desire to support this along with the appropriate tests.
+> 
+> Reviewed-by: Christian Brauner <brauner@kernel.org>
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> ---
+>  mm/memory.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/mm/memory.c b/mm/memory.c
+> index bdf77a3ec47b..843ad75a4148 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -78,6 +78,7 @@
+>  #include <linux/ptrace.h>
+>  #include <linux/vmalloc.h>
+>  #include <linux/sched/sysctl.h>
+> +#include <linux/fsnotify.h>
+>  
+>  #include <trace/events/kmem.h>
+>  
+> @@ -5637,8 +5638,17 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
+>  static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
+>  {
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	if (vma_is_anonymous(vma))
+>  		return do_huge_pmd_anonymous_page(vmf);
+> +	/*
+> +	 * Currently we just emit PAGE_SIZE for our fault events, so don't allow
+> +	 * a huge fault if we have a pre content watch on this file.  This would
+> +	 * be trivial to support, but there would need to be tests to ensure
+> +	 * this works properly and those don't exist currently.
+> +	 */
+> +	if (fsnotify_file_has_pre_content_watches(file))
+> +		return VM_FAULT_FALLBACK;
+>  	if (vma->vm_ops->huge_fault)
+>  		return vma->vm_ops->huge_fault(vmf, PMD_ORDER);
+>  	return VM_FAULT_FALLBACK;
+> @@ -5648,6 +5658,7 @@ static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
+>  static inline vm_fault_t wp_huge_pmd(struct vm_fault *vmf)
+>  {
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	const bool unshare = vmf->flags & FAULT_FLAG_UNSHARE;
+>  	vm_fault_t ret;
+>  
+> @@ -5662,6 +5673,9 @@ static inline vm_fault_t wp_huge_pmd(struct vm_fault *vmf)
+>  	}
+>  
+>  	if (vma->vm_flags & (VM_SHARED | VM_MAYSHARE)) {
+> +		/* See comment in create_huge_pmd. */
+> +		if (fsnotify_file_has_pre_content_watches(file))
+> +			goto split;
+>  		if (vma->vm_ops->huge_fault) {
+>  			ret = vma->vm_ops->huge_fault(vmf, PMD_ORDER);
+>  			if (!(ret & VM_FAULT_FALLBACK))
+> @@ -5681,9 +5695,13 @@ static vm_fault_t create_huge_pud(struct vm_fault *vmf)
+>  #if defined(CONFIG_TRANSPARENT_HUGEPAGE) &&			\
+>  	defined(CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD)
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	/* No support for anonymous transparent PUD pages yet */
+>  	if (vma_is_anonymous(vma))
+>  		return VM_FAULT_FALLBACK;
+> +	/* See comment in create_huge_pmd. */
+> +	if (fsnotify_file_has_pre_content_watches(file))
+> +		return VM_FAULT_FALLBACK;
+>  	if (vma->vm_ops->huge_fault)
+>  		return vma->vm_ops->huge_fault(vmf, PUD_ORDER);
+>  #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+> @@ -5695,12 +5713,16 @@ static vm_fault_t wp_huge_pud(struct vm_fault *vmf, pud_t orig_pud)
+>  #if defined(CONFIG_TRANSPARENT_HUGEPAGE) &&			\
+>  	defined(CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD)
+>  	struct vm_area_struct *vma = vmf->vma;
+> +	struct file *file = vma->vm_file;
+>  	vm_fault_t ret;
+>  
+>  	/* No support for anonymous transparent PUD pages yet */
+>  	if (vma_is_anonymous(vma))
+>  		goto split;
+>  	if (vma->vm_flags & (VM_SHARED | VM_MAYSHARE)) {
+> +		/* See comment in create_huge_pmd. */
+> +		if (fsnotify_file_has_pre_content_watches(file))
+> +			goto split;
+>  		if (vma->vm_ops->huge_fault) {
+>  			ret = vma->vm_ops->huge_fault(vmf, PUD_ORDER);
+>  			if (!(ret & VM_FAULT_FALLBACK))
+
