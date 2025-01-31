@@ -1,186 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 823B9145A18
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 10:03:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A05519D06E
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 12:48:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738317790; cv=none; b=l7ZdAn7RhFsQnsPUfZJ7omIvVba47V7iztQBy1JVMuv4Kou355he0jsU7dzq3ey3YFWAd3Le5pQ72mH3L7KdZSWLWYGvj2cGCUjs7cAT1DuMqvYcksi8tufb8r3Xc5eeQBbfv/yYVyn9e3JsGHy1Rbcfm/4Ke2cV48krCTpK5UU=
+	t=1738327685; cv=none; b=sTYCtGq0uK4A78TN/NHhGH28eJ44cAs31i1YYK0zxVqUOdKfGqL+qkw0xGvMsgDl9lS2t4ogmBRCgdy3UuFK7ocunB6mxwekwA8y58DEny7H8jZSM+uSgKeDszjywilY8De1vNtjVgpy4EksLB/ar5PaEPmEkO7eexP9l5Ckkhk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738317790; c=relaxed/simple;
-	bh=8tIodsSnIYFm2dgdTno8oqll+yBPH6oCuL80TL2Ze5E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lWENc6ZoqKuRpoe9R+PPHJwLt0rhx0xU5x2jpIG9mP5wiWCS49hOb/ShCMbIwJmxHJbppaU5gm6tmHCL8uwzvG7IeZzrAOe5Vq0eLtsLFOOZc6MK1449oJUx+iz3Ydd1ZV+Q6gEgEZaEadAmP9GQ8vMZoopym8mxhTKV5oGNlHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZSw8w9nG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738327685; c=relaxed/simple;
+	bh=M4LO6+nnIx8UAWOEdBwZznCS68qgeWrvHpY4GRiaBe0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bT2lP5gqFTPBqf5rasU/J+dpNNRKi6RzNgbuqw0xfPvmhDJaxnnxINor4pMjw26DzkQDCS1xYNcK0/iwdgcrhqsTnHYtKqa8ENDykrdqoBcXNQojORYVFsVbIb7Y3wTteF5rmW+RXWcs+99CqNHdHS3ghRzRyHLXI7yAE3qtc+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZczaUkU9; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZSw8w9nG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DB1FC4CED1;
-	Fri, 31 Jan 2025 10:03:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738317790;
-	bh=8tIodsSnIYFm2dgdTno8oqll+yBPH6oCuL80TL2Ze5E=;
-	h=From:To:Cc:Subject:Date:From;
-	b=ZSw8w9nGDc3IoNfih5eweGdON2EjOp9VYqZ6fW9Tx4wei8OTFnqdhIaiacQvKZbEM
-	 OiAhTrSKL0WdM0cWUNQceG5UlMFEAGtJ72e/d3VAm8BYweaTJxX35Hui/cxjnExHW2
-	 NryXZ/lTsDcKR0HqZkUiGyaLyk45WaLt9mkmI6py5UslQpwXBjpRSECSRaamUfkb4+
-	 cIpevJ6mPFGbuhBCmPziPReCLu5eloTyPQBTnbbbYjjs87qokBcQhV82SWtRJv5mDB
-	 45oO6mDQgH6VC20myNR3CrsZqcWDoBJHiVollc5ULLphdhasVDNtok+Y4IQKNxX8aL
-	 kMRCH+b9HGucw==
-From: cem@kernel.org
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	djwong@kernel.org,
-	david@fromorbit.com,
-	dchinner@redhat.com,
-	hch@lst.de
-Subject: [PATCH V2] xfs: Do not allow norecovery mount with quotacheck
-Date: Fri, 31 Jan 2025 11:02:54 +0100
-Message-ID: <20250131100302.15430-1-cem@kernel.org>
-X-Mailer: git-send-email 2.48.1
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZczaUkU9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738327682;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=79Vuhr4adK9IKEekWMGE25OkYxlpklLPg9ZITgjg6XQ=;
+	b=ZczaUkU95toQc9AcexgzWGq+pwGW3nD21oYFpPWSWsa/7DLZRs8NEQQG+mdYVX2sNy+oQJ
+	lx12Ngb47PvrAMgu+Rm8oXcHny6ua5oEDJPV1UXsXeNYgkhyYaJxdp200wD6K+06/iKBqp
+	5q/65ifLCvi/M8AnjIgCJl8k6BD448Q=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-294-XNJeTXPxNOSdAS6LaAY2OA-1; Fri,
+ 31 Jan 2025 07:47:58 -0500
+X-MC-Unique: XNJeTXPxNOSdAS6LaAY2OA-1
+X-Mimecast-MFC-AGG-ID: XNJeTXPxNOSdAS6LaAY2OA
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5A93C19560B4;
+	Fri, 31 Jan 2025 12:47:57 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.113])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 905C519560A3;
+	Fri, 31 Jan 2025 12:47:56 +0000 (UTC)
+Date: Fri, 31 Jan 2025 07:50:08 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 3/7] iomap: refactor iter and advance continuation
+ logic
+Message-ID: <Z5zHAEJ6BEBdVHWB@bfoster>
+References: <20250130170949.916098-1-bfoster@redhat.com>
+ <20250130170949.916098-4-bfoster@redhat.com>
+ <Z5yE419RpS52yTbq@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <Z5yE419RpS52yTbq@infradead.org>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-From: Carlos Maiolino <cem@kernel.org>
+On Fri, Jan 31, 2025 at 12:08:03AM -0800, Christoph Hellwig wrote:
+> On Thu, Jan 30, 2025 at 12:09:44PM -0500, Brian Foster wrote:
+> > In preparation for future changes and more generic use of
+> > iomap_iter_advance(), lift the high level iter continuation logic
+> > out of iomap_iter_advance() into the caller. Also add some comments
+> > and rework iomap_iter() to jump straight to ->iomap_begin() on the
+> > first iteration.
+> 
+> It took me a bit to reoncile the commit log with the changes.
+> 
+> What this does is:
+> 
+>  1) factor out a iomap_iter_reset_iomap caller from iomap_iter_advance
+>  2) pass an explicit count to iomap_iter_advance instead of derіving
+>     it from iter->processed inside of iomap_iter_advance
+>  3) only call iomap_iter_advance condititional on iter->iomap.length,
+>     and thus skipping the code that is now in iomap_iter_reset_iomap
+>     when iter->iomap.length is 0.
+> 
+> All this looks fine, although I wonder why we didn't do 3) before and
+> if there is a risk of a regression for some weird corner case.
+> 
+> I hate nitpicking too much, but maybe split the three steps into
+> separate patches so that 3) is clearly documented and can be bisected
+> if problems arise?
+> 
+> 
 
-Mounting a filesystem that requires quota state changing will generate a
-transaction.
+No problem. I originally had this split up, then combined some of it
+because the changes seemed trivial, then I think it became a little too
+convoluted again. I think I should be able to split this back up into
+two or three incremental patches..
 
-We already check for a read-only device; we should do that for
-norecovery too.
-
-A quotacheck on a norecovery mount, and with the right log size, will cause
-the mount process to hang on:
-
-[<0>] xlog_grant_head_wait+0x5d/0x2a0 [xfs]
-[<0>] xlog_grant_head_check+0x112/0x180 [xfs]
-[<0>] xfs_log_reserve+0xe3/0x260 [xfs]
-[<0>] xfs_trans_reserve+0x179/0x250 [xfs]
-[<0>] xfs_trans_alloc+0x101/0x260 [xfs]
-[<0>] xfs_sync_sb+0x3f/0x80 [xfs]
-[<0>] xfs_qm_mount_quotas+0xe3/0x2f0 [xfs]
-[<0>] xfs_mountfs+0x7ad/0xc20 [xfs]
-[<0>] xfs_fs_fill_super+0x762/0xa50 [xfs]
-[<0>] get_tree_bdev_flags+0x131/0x1d0
-[<0>] vfs_get_tree+0x26/0xd0
-[<0>] vfs_cmd_create+0x59/0xe0
-[<0>] __do_sys_fsconfig+0x4e3/0x6b0
-[<0>] do_syscall_64+0x82/0x160
-[<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
-
-This is caused by a transaction running with bogus initialized head/tail
-
-I initially hit this while running generic/050, with random log
-sizes, but I managed to reproduce it reliably here with the steps
-below:
-
-mkfs.xfs -f -lsize=1025M -f -b size=4096 -m crc=1,reflink=1,rmapbt=1, -i
-sparse=1 /dev/vdb2 > /dev/null
-mount -o usrquota,grpquota,prjquota /dev/vdb2 /mnt
-xfs_io -x -c 'shutdown -f' /mnt
-umount /mnt
-mount -o ro,norecovery,usrquota,grpquota,prjquota  /dev/vdb2 /mnt
-
-Last mount hangs up
-
-As we add yet another validation if quota state is changing, this also
-add a new helper named xfs_qm_validate(), factoring the quota state
-changes out of xfs_qm_newmount() to reduce cluttering within it.
-
-As per Darrick suggestion, add a new, different  warning message if
-metadir is enabled.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
----
-
-Changelog V1->V2:
-	- Issue a different warn message in case metadir is enabled
-	- Factour out quota state validator code to a new helper
-	- Change patch subject to reduce length
-
-
- fs/xfs/xfs_qm_bhv.c | 55 ++++++++++++++++++++++++++++++++-------------
- 1 file changed, 39 insertions(+), 16 deletions(-)
-
-diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-index 37f1230e7584..a6a7870401c3 100644
---- a/fs/xfs/xfs_qm_bhv.c
-+++ b/fs/xfs/xfs_qm_bhv.c
-@@ -78,6 +78,28 @@ xfs_qm_statvfs(
- 	}
- }
- 
-+STATIC int
-+xfs_qm_validate(
-+	xfs_mount_t	*mp,
-+	uint		uqd,
-+	uint		gqd,
-+	uint		pqd)
-+{
-+	int state;
-+
-+	/* Is quota state changing? */
-+	state = ((uqd && !XFS_IS_UQUOTA_ON(mp)) ||
-+		(!uqd &&  XFS_IS_UQUOTA_ON(mp)) ||
-+		 (gqd && !XFS_IS_GQUOTA_ON(mp)) ||
-+		(!gqd &&  XFS_IS_GQUOTA_ON(mp)) ||
-+		 (pqd && !XFS_IS_PQUOTA_ON(mp)) ||
-+		(!pqd &&  XFS_IS_PQUOTA_ON(mp)));
-+
-+	return  state &&
-+		(xfs_dev_is_read_only(mp, "changing quota state") ||
-+		xfs_has_norecovery(mp));
-+}
-+
- int
- xfs_qm_newmount(
- 	xfs_mount_t	*mp,
-@@ -97,24 +119,25 @@ xfs_qm_newmount(
- 	}
- 
- 	/*
--	 * If the device itself is read-only, we can't allow
--	 * the user to change the state of quota on the mount -
--	 * this would generate a transaction on the ro device,
--	 * which would lead to an I/O error and shutdown
-+	 * If the device itself is read-only and/or in norecovery
-+	 * mode, we can't allow the user to change the state of
-+	 * quota on the mount - this would generate a transaction
-+	 * on the ro device, which would lead to an I/O error and
-+	 * shutdown.
- 	 */
- 
--	if (((uquotaondisk && !XFS_IS_UQUOTA_ON(mp)) ||
--	    (!uquotaondisk &&  XFS_IS_UQUOTA_ON(mp)) ||
--	     (gquotaondisk && !XFS_IS_GQUOTA_ON(mp)) ||
--	    (!gquotaondisk &&  XFS_IS_GQUOTA_ON(mp)) ||
--	     (pquotaondisk && !XFS_IS_PQUOTA_ON(mp)) ||
--	    (!pquotaondisk &&  XFS_IS_PQUOTA_ON(mp)))  &&
--	    xfs_dev_is_read_only(mp, "changing quota state")) {
--		xfs_warn(mp, "please mount with%s%s%s%s.",
--			(!quotaondisk ? "out quota" : ""),
--			(uquotaondisk ? " usrquota" : ""),
--			(gquotaondisk ? " grpquota" : ""),
--			(pquotaondisk ? " prjquota" : ""));
-+	if (xfs_qm_validate(mp, uquotaondisk,
-+			    gquotaondisk, pquotaondisk)) {
-+
-+		if (xfs_has_metadir(mp))
-+			xfs_warn(mp,
-+			       "metadir enabled, please mount withouth quotas");
-+		else
-+			xfs_warn(mp, "please mount with%s%s%s%s.",
-+				(!quotaondisk ? "out quota" : ""),
-+				(uquotaondisk ? " usrquota" : ""),
-+				(gquotaondisk ? " grpquota" : ""),
-+				(pquotaondisk ? " prjquota" : ""));
- 		return -EPERM;
- 	}
- 
--- 
-2.48.1
+Brian
 
