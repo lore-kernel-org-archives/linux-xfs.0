@@ -1,141 +1,186 @@
-Received: from mail-vk1-f169.google.com (mail-vk1-f169.google.com [209.85.221.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7406632;
-	Fri, 31 Jan 2025 08:10:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 823B9145A18
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 10:03:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738311041; cv=none; b=S1yMmKKLqUXWC6M3MtFfGYNodr9oQkBmk8F13PS28QjWr2spc9IeUjnvem94/OKXxRIm0jXTr19fnv0bPrJM03bG/08Pz740hPA9qJJiWyo2ftA+ZmJYgKRvxjgWel+2FODOn7MK63pSyJr/g8VqnZTD1SRVvJqxitCxMmKP5a4=
+	t=1738317790; cv=none; b=l7ZdAn7RhFsQnsPUfZJ7omIvVba47V7iztQBy1JVMuv4Kou355he0jsU7dzq3ey3YFWAd3Le5pQ72mH3L7KdZSWLWYGvj2cGCUjs7cAT1DuMqvYcksi8tufb8r3Xc5eeQBbfv/yYVyn9e3JsGHy1Rbcfm/4Ke2cV48krCTpK5UU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738311041; c=relaxed/simple;
-	bh=azq4241KBIoteF/dlzxdcQE0ndXrUM97e5MNEw+dTgw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=H27MI2BL6uiZG6hRqep88kwnu9kIzwJIARvaglCVg5PJWGfhLnqiLroM2bsqF/tqhX6AIonHMFWdota70RDplz3okRkAHrACZ6eZVxvYoUgtugnkjuseWtD5nAiCoEJ7gEIZimx0zXKtNbBYqLrfhPGLaFDywWUKGigiyUaBDao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f169.google.com with SMTP id 71dfb90a1353d-5189105c5f5so1083299e0c.0;
-        Fri, 31 Jan 2025 00:10:39 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738311038; x=1738915838;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=RkkmP4DS+2e9gLiuNJWw+nBuoXMD1/OBDb6T5snhw8g=;
-        b=aRAyw7HdZXi64fXEMpvZs7pNqwlsHu7VWXcPiCu1qmMOiGzVTFl01LsJJMmJCtawN8
-         LykCU2dAhba2wgwFd2UM2ym556u+l46K+4EfjxiU4dJBPi75h67UDbuewXCu7zEpWBjH
-         Yc4JZ2iCP1Q15uI2UoAqVcrrIL43MFiGfnMC0ZpABF5GEyXE2XYPj966ySbfHMQiVy+Q
-         wn3f88VzYTgduni4UFKOUCs3LgKQHZyRCSz7DYxP1G+tcGtV50NTuRSF6nWYUEDVFzdM
-         y8el90KpErW/yjdodnhCFXhyDY+jL1t3mm6qAhmk8JdFnv2SIGsQs9lvO9Z9P1NU3yZb
-         xa0g==
-X-Forwarded-Encrypted: i=1; AJvYcCUG9FnDIVcvIxr0f/O11jXRGQ7VFg8NqiAHeKpry4afP/mIf7ozUjSweD1dND17oRjbhHAJpSX6MNj/@vger.kernel.org, AJvYcCWnHiDFxaeXftqTds5oMrVmfHK9PbAIue6U+w1yp0C2isvNo292vonUupmmRMYaOTnb6At77HwNc+iu6mg=@vger.kernel.org, AJvYcCXP3Fp/En5sufPwAgSxjk5jvciW93hqbj2iDluAUVeRDjoQHZkDdgYNo1G0aLrjjRTK4T0tnYLN@vger.kernel.org
-X-Gm-Message-State: AOJu0YyXqxse061SwKIFh3da7BOq3N7GcGwPNnpMczyDc7zjnCePX/v4
-	h81+Zy+zYDUd2ooAmcpW/pJTqvYu4eKpdUKMtG7IcxBFdYd+9ss44da2QidzPZU=
-X-Gm-Gg: ASbGnctHNN5OH7w/NLxVCSz9LRtlcernHHnbI+xTm/gwWmmv9v7M7k6fYuQZtUecyaE
-	vOHGPYRGCWbaT42kUGSQZzJDYrBj4Vs+yZxp4jmr3Pznda3KSMogR1pQ7x73OR5YmpLGzNDGZ+y
-	S8sgj1uwCH4V5boHops0GOBt/4H5skzIv+WrpB46Rs4wvdWR5iIrlMcVTt+vPTTys+d6j1+KtyR
-	lpd+dD6n750HUNXfk9vSV/3HY+KD5OsdCZBqzXjrkNyHQIvkNYhfoXU3HTFIBs6ZYD7SgfVJf+T
-	JEtfol0OPSSX4f3LhnUsqW1P2Feku68ITLHEEv9nK4XwnXC3xeNOKA==
-X-Google-Smtp-Source: AGHT+IFMZCxCdyeODfF2pSSnn44P6r7PsL7s8v/YCMrMP5AVrRyqrwQjVcKiAaXGjo91fUKWtMqRGw==
-X-Received: by 2002:a05:6122:54b:b0:518:91b3:5e37 with SMTP id 71dfb90a1353d-51e9e43e687mr9303547e0c.5.1738311037901;
-        Fri, 31 Jan 2025 00:10:37 -0800 (PST)
-Received: from mail-vs1-f52.google.com (mail-vs1-f52.google.com. [209.85.217.52])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-51eb1c3ca03sm448209e0c.24.2025.01.31.00.10.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 31 Jan 2025 00:10:37 -0800 (PST)
-Received: by mail-vs1-f52.google.com with SMTP id ada2fe7eead31-4b2c0a7ef74so1002723137.2;
-        Fri, 31 Jan 2025 00:10:37 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVTHtbP/FU3qSJBYnhwFb7Dm2zm9xq4ndvQJDSXLAd5HCQfw/yk8rLQrrlrFLsOAnGqUAtBYclWU0r/@vger.kernel.org, AJvYcCXLOJOy9SdeKbeEHry2DziPNCYvgS2ovzQ/ai2362DQ1Uhx+T07cEH8KIrP4nDADccJVKF0qpjX@vger.kernel.org, AJvYcCXNmoYxGirwpenDyOl4drn9nPS3Yp6gDOgb3E5S9lugO9yVhnuU8YSfkq0j7aP+wjPCW+5ytmLFJQPIGgA=@vger.kernel.org
-X-Received: by 2002:a05:6102:4bc7:b0:4b1:1eb5:8ee5 with SMTP id
- ada2fe7eead31-4b9a5300df8mr8729115137.25.1738311037486; Fri, 31 Jan 2025
- 00:10:37 -0800 (PST)
+	s=arc-20240116; t=1738317790; c=relaxed/simple;
+	bh=8tIodsSnIYFm2dgdTno8oqll+yBPH6oCuL80TL2Ze5E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lWENc6ZoqKuRpoe9R+PPHJwLt0rhx0xU5x2jpIG9mP5wiWCS49hOb/ShCMbIwJmxHJbppaU5gm6tmHCL8uwzvG7IeZzrAOe5Vq0eLtsLFOOZc6MK1449oJUx+iz3Ydd1ZV+Q6gEgEZaEadAmP9GQ8vMZoopym8mxhTKV5oGNlHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZSw8w9nG; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZSw8w9nG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DB1FC4CED1;
+	Fri, 31 Jan 2025 10:03:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738317790;
+	bh=8tIodsSnIYFm2dgdTno8oqll+yBPH6oCuL80TL2Ze5E=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ZSw8w9nGDc3IoNfih5eweGdON2EjOp9VYqZ6fW9Tx4wei8OTFnqdhIaiacQvKZbEM
+	 OiAhTrSKL0WdM0cWUNQceG5UlMFEAGtJ72e/d3VAm8BYweaTJxX35Hui/cxjnExHW2
+	 NryXZ/lTsDcKR0HqZkUiGyaLyk45WaLt9mkmI6py5UslQpwXBjpRSECSRaamUfkb4+
+	 cIpevJ6mPFGbuhBCmPziPReCLu5eloTyPQBTnbbbYjjs87qokBcQhV82SWtRJv5mDB
+	 45oO6mDQgH6VC20myNR3CrsZqcWDoBJHiVollc5ULLphdhasVDNtok+Y4IQKNxX8aL
+	 kMRCH+b9HGucw==
+From: cem@kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org,
+	djwong@kernel.org,
+	david@fromorbit.com,
+	dchinner@redhat.com,
+	hch@lst.de
+Subject: [PATCH V2] xfs: Do not allow norecovery mount with quotacheck
+Date: Fri, 31 Jan 2025 11:02:54 +0100
+Message-ID: <20250131100302.15430-1-cem@kernel.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250130184320.69553-1-eahariha@linux.microsoft.com>
- <20250130201417.32b0a86f@pumpkin> <9ae171e2-1a36-4fe1-8a9f-b2b776e427a0@kernel.org>
-In-Reply-To: <9ae171e2-1a36-4fe1-8a9f-b2b776e427a0@kernel.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Fri, 31 Jan 2025 09:10:25 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUNjKJ0CFw+i1qgVsHO2LU6uOqkAq5iGL0EZyCtrfzM=A@mail.gmail.com>
-X-Gm-Features: AWEUYZnzRpnttETHOvwV06xiq0h3GhjNbcJkQ7hh1AEarCDsz4Oe4dyjuIMFsLU
-Message-ID: <CAMuHMdUNjKJ0CFw+i1qgVsHO2LU6uOqkAq5iGL0EZyCtrfzM=A@mail.gmail.com>
-Subject: Re: [PATCH] jiffies: Cast to unsigned long for secs_to_jiffies() conversion
-To: Jiri Slaby <jirislaby@kernel.org>
-Cc: David Laight <david.laight.linux@gmail.com>, 
-	Easwar Hariharan <eahariha@linux.microsoft.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Anna-Maria Behnsen <anna-maria@linutronix.de>, 
-	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>, Miguel Ojeda <ojeda@kernel.org>, 
-	open list <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, 
-	Andrew Morton <akpm@linux-foundation.org>, kernel test robot <lkp@intel.com>, 
-	linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi Jiri,
+From: Carlos Maiolino <cem@kernel.org>
 
-CC linux-xfs
+Mounting a filesystem that requires quota state changing will generate a
+transaction.
 
-On Fri, 31 Jan 2025 at 08:05, Jiri Slaby <jirislaby@kernel.org> wrote:
-> On 30. 01. 25, 21:14, David Laight wrote:
-> > On Thu, 30 Jan 2025 18:43:17 +0000
-> > Easwar Hariharan <eahariha@linux.microsoft.com> wrote:
-> >
-> >> While converting users of msecs_to_jiffies(), lkp reported that some
-> >> range checks would always be true because of the mismatch between the
-> >> implied int value of secs_to_jiffies() vs the unsigned long
-> >> return value of the msecs_to_jiffies() calls it was replacing. Fix this
-> >> by casting secs_to_jiffies() values as unsigned long.
-> >
-> > Surely 'unsigned long' can't be the right type ?
-> > It changes between 32bit and 64bit systems.
-> > Either it is allowed to wrap - so should be 32bit on both,
-> > or wrapping is unexpected and it needs to be 64bit on both.
->
-> But jiffies are really ulong.
+We already check for a read-only device; we should do that for
+norecovery too.
 
-That's a good reason to make the change.
-E.g. msecs_to_jiffies() does return unsigned long.
+A quotacheck on a norecovery mount, and with the right log size, will cause
+the mount process to hang on:
 
-Note that this change may cause fall-out, e.g.
+[<0>] xlog_grant_head_wait+0x5d/0x2a0 [xfs]
+[<0>] xlog_grant_head_check+0x112/0x180 [xfs]
+[<0>] xfs_log_reserve+0xe3/0x260 [xfs]
+[<0>] xfs_trans_reserve+0x179/0x250 [xfs]
+[<0>] xfs_trans_alloc+0x101/0x260 [xfs]
+[<0>] xfs_sync_sb+0x3f/0x80 [xfs]
+[<0>] xfs_qm_mount_quotas+0xe3/0x2f0 [xfs]
+[<0>] xfs_mountfs+0x7ad/0xc20 [xfs]
+[<0>] xfs_fs_fill_super+0x762/0xa50 [xfs]
+[<0>] get_tree_bdev_flags+0x131/0x1d0
+[<0>] vfs_get_tree+0x26/0xd0
+[<0>] vfs_cmd_create+0x59/0xe0
+[<0>] __do_sys_fsconfig+0x4e3/0x6b0
+[<0>] do_syscall_64+0x82/0x160
+[<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-    int val = 5.
+This is caused by a transaction running with bogus initialized head/tail
 
-    pr_debug("timeout = %u jiffies\n", secs_to_jiffies(val));
-                        ^^
-                        must be changed to %lu
+I initially hit this while running generic/050, with random log
+sizes, but I managed to reproduce it reliably here with the steps
+below:
 
-More importantly, I doubt this change is guaranteed to fix the
-reported issue.  The code[*] in retry_timeout_seconds_store() does:
+mkfs.xfs -f -lsize=1025M -f -b size=4096 -m crc=1,reflink=1,rmapbt=1, -i
+sparse=1 /dev/vdb2 > /dev/null
+mount -o usrquota,grpquota,prjquota /dev/vdb2 /mnt
+xfs_io -x -c 'shutdown -f' /mnt
+umount /mnt
+mount -o ro,norecovery,usrquota,grpquota,prjquota  /dev/vdb2 /mnt
 
-    int val;
-    ...
-    if (val < -1 || val > 86400)
-            return -EINVAL;
-    ...
-    if (val != -1)
-            ASSERT(secs_to_jiffies(val) < LONG_MAX);
+Last mount hangs up
 
-As HZ is a known (rather small) constant, and val is range-checked
-before, the compiler can still devise that the condition is always true.
-So I think that assertion should just be removed.
+As we add yet another validation if quota state is changing, this also
+add a new helper named xfs_qm_validate(), factoring the quota state
+changes out of xfs_qm_newmount() to reduce cluttering within it.
 
-[*] Before commit b524e0335da22473 ("xfs: convert timeouts to
-    secs_to_jiffies()"), which was applied to the MM tree only 3
-    days ago, the code used msecs_to_jiffies() * MSEC_PER_SEC,
-    which is more complex than a simple multiplication, and harder for
-    the compiler to analyze statically, thus not triggering the warning
-    that easily...
+As per Darrick suggestion, add a new, different  warning message if
+metadir is enabled.
 
-Gr{oetje,eeting}s,
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+---
 
-                        Geert
+Changelog V1->V2:
+	- Issue a different warn message in case metadir is enabled
+	- Factour out quota state validator code to a new helper
+	- Change patch subject to reduce length
 
+
+ fs/xfs/xfs_qm_bhv.c | 55 ++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 39 insertions(+), 16 deletions(-)
+
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index 37f1230e7584..a6a7870401c3 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -78,6 +78,28 @@ xfs_qm_statvfs(
+ 	}
+ }
+ 
++STATIC int
++xfs_qm_validate(
++	xfs_mount_t	*mp,
++	uint		uqd,
++	uint		gqd,
++	uint		pqd)
++{
++	int state;
++
++	/* Is quota state changing? */
++	state = ((uqd && !XFS_IS_UQUOTA_ON(mp)) ||
++		(!uqd &&  XFS_IS_UQUOTA_ON(mp)) ||
++		 (gqd && !XFS_IS_GQUOTA_ON(mp)) ||
++		(!gqd &&  XFS_IS_GQUOTA_ON(mp)) ||
++		 (pqd && !XFS_IS_PQUOTA_ON(mp)) ||
++		(!pqd &&  XFS_IS_PQUOTA_ON(mp)));
++
++	return  state &&
++		(xfs_dev_is_read_only(mp, "changing quota state") ||
++		xfs_has_norecovery(mp));
++}
++
+ int
+ xfs_qm_newmount(
+ 	xfs_mount_t	*mp,
+@@ -97,24 +119,25 @@ xfs_qm_newmount(
+ 	}
+ 
+ 	/*
+-	 * If the device itself is read-only, we can't allow
+-	 * the user to change the state of quota on the mount -
+-	 * this would generate a transaction on the ro device,
+-	 * which would lead to an I/O error and shutdown
++	 * If the device itself is read-only and/or in norecovery
++	 * mode, we can't allow the user to change the state of
++	 * quota on the mount - this would generate a transaction
++	 * on the ro device, which would lead to an I/O error and
++	 * shutdown.
+ 	 */
+ 
+-	if (((uquotaondisk && !XFS_IS_UQUOTA_ON(mp)) ||
+-	    (!uquotaondisk &&  XFS_IS_UQUOTA_ON(mp)) ||
+-	     (gquotaondisk && !XFS_IS_GQUOTA_ON(mp)) ||
+-	    (!gquotaondisk &&  XFS_IS_GQUOTA_ON(mp)) ||
+-	     (pquotaondisk && !XFS_IS_PQUOTA_ON(mp)) ||
+-	    (!pquotaondisk &&  XFS_IS_PQUOTA_ON(mp)))  &&
+-	    xfs_dev_is_read_only(mp, "changing quota state")) {
+-		xfs_warn(mp, "please mount with%s%s%s%s.",
+-			(!quotaondisk ? "out quota" : ""),
+-			(uquotaondisk ? " usrquota" : ""),
+-			(gquotaondisk ? " grpquota" : ""),
+-			(pquotaondisk ? " prjquota" : ""));
++	if (xfs_qm_validate(mp, uquotaondisk,
++			    gquotaondisk, pquotaondisk)) {
++
++		if (xfs_has_metadir(mp))
++			xfs_warn(mp,
++			       "metadir enabled, please mount withouth quotas");
++		else
++			xfs_warn(mp, "please mount with%s%s%s%s.",
++				(!quotaondisk ? "out quota" : ""),
++				(uquotaondisk ? " usrquota" : ""),
++				(gquotaondisk ? " grpquota" : ""),
++				(pquotaondisk ? " prjquota" : ""));
+ 		return -EPERM;
+ 	}
+ 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+2.48.1
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
