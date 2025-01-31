@@ -1,205 +1,243 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6D61E8823
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 16:18:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A881E3DD6;
+	Fri, 31 Jan 2025 16:24:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738340287; cv=none; b=kRFszw2rbjrONCDByrlqUcbYa06+jlu/UalgjNnG0Fyw5yayzceoxzrEJ0GNqIFR7J2vZIjlI7wUcxfx23SoLjz+KSXIHlLZWNGm+OxvhC7Y8qHkiGfshiFSctRc8ZgA7WL4RP1B1yEtptDn3TIUO8N/VncvvkCyLFWpn43SNyc=
+	t=1738340698; cv=none; b=i+R/l1fVlNz4vd4+QaibUwXNE7Sl2l6JCbEZTC4aFORnK12+gkEGqB9dbVS5fUuwrfXELI90DTKXbwbUFU1qsMkTuQbOuRsKTKc9IENt1ML9HtUZK/atvWZO0fvCHaYEFG0SebL/z1Hjzu9PjI5V09Bzk39eTDnBjZ7LPJqe72c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738340287; c=relaxed/simple;
-	bh=2GMBmAduAL7aSFpKMBSGm66nuzGFc5YDo7FgAR0knkc=;
+	s=arc-20240116; t=1738340698; c=relaxed/simple;
+	bh=rxv/0PwD9wBAo2UfeAdPGZR8B0ZNGqibx3vkhB6mlTA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TvX5zDE+0z2TDb9zMWINrelS93HW3dTSgFX6DD6fiGsQV/Owk+d89rK7sg+RFL9r/MwXNthXdu9pV7BDJXNLq9bg2I8HgqDNT1YyoNgjOZi5u8fi7Z5GtgZGWEnozq9xytAZFe17D9JDJhZqS+AuxHxqLCS+RZGrJR94W5mP8eE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H6psn2Fi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=K0da6Eb5Qadkx+cO6SqJWmXQMrWDNtK/6XG0RAy7ipSxD6+s8EeI3lE9pEZMvCKbn8vQe1WEZY322P3RMKVSCD92myn435x84k2FlwlyigKy+ZHXHKCT9gOxd1oOHIZotQrLS1GIRCYkwZjHub2bWWtpWsO6JoK/7e7wgquDM18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nxgjED/Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H6psn2Fi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 014B2C4CED3;
-	Fri, 31 Jan 2025 16:18:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nxgjED/Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9CFC4CED1;
+	Fri, 31 Jan 2025 16:24:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738340287;
-	bh=2GMBmAduAL7aSFpKMBSGm66nuzGFc5YDo7FgAR0knkc=;
+	s=k20201202; t=1738340697;
+	bh=rxv/0PwD9wBAo2UfeAdPGZR8B0ZNGqibx3vkhB6mlTA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=H6psn2Fixz3+X1Bsb6axch4tfevTIjZc0j5vNnRGTbf9bROgKm54NhQrmvDj6NPFI
-	 pRn3UMGDvpjF3MRjVw6DOALjko42HQIfjS0nnniXVrLA98jNVh3T/LiRLAlrtHdB84
-	 3l9D8RUhq6oTex5cPduXDXBq3w6eP4glG4FuFP7eEZBtcAvuPkN4tEN6DmJy+Uicxo
-	 F6yLzbHIRAineDMIOJz5rZAFVy6Dq/syfNemPTTp6DBlUEZ8yddBqmP8gcfxMebBTP
-	 UxBXWoPqDWJx+6W1az+YxOk1GkP3SxTHOgnDo3RDbjKidoC38TUbxMfUQublfAYO0S
-	 V642LknaRxxdQ==
-Date: Fri, 31 Jan 2025 08:18:06 -0800
+	b=nxgjED/Y/v/r66vaLxmVe2MLuJRyce+uE0MjBjcOuIGlhUMXVwaBLOehPnADffG0U
+	 C1NmeRtQ5rTdCNzk6wg5wgkvCGo8QgbdyrNt5stt0vc1K/e8DDRW0ACrXLQIvHQWyj
+	 t0CYyQ52Q+VrZTuRefg1nW5eBouhxzT1qcW0IE0GrfE0/ynwrcWywLgdzUxUwS/SVo
+	 PIun99uikxWJDZEj72EBxS2GfR+vxNGuPI2bOmtFBY+YQDFB+64Mi4Xcnyy8rwx0EO
+	 SgpVaAq5i68Rq0j/8p/TzNS6/WzeOLsf/Kw7cfT24fEy4JAl1POpiA8Ajh7JSkKje+
+	 OZACgax84w5fA==
+Date: Fri, 31 Jan 2025 08:24:57 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, dchinner@redhat.com,
-	hch@lst.de
-Subject: Re: [PATCH V2] xfs: Do not allow norecovery mount with quotacheck
-Message-ID: <20250131161806.GU1611770@frogsfrogsfrogs>
-References: <20250131100302.15430-1-cem@kernel.org>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, zlang@kernel.org
+Subject: Re: [PATCH v2] check: Fix fs specfic imports when
+ $FSTYPE!=$OLD_FSTYPE
+Message-ID: <20250131162457.GV1611770@frogsfrogsfrogs>
+References: <3b980d028a8ae1496c13ebe3a6685fbc472c5bc0.1738040386.git.nirjhar.roy.lists@gmail.com>
+ <20250128180917.GA3561257@frogsfrogsfrogs>
+ <f89b6b40-8dce-4378-ba56-cf7f29695bdb@gmail.com>
+ <20250129160259.GT3557553@frogsfrogsfrogs>
+ <dfbd2895-e29a-4e25-bbc6-a83826d14878@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20250131100302.15430-1-cem@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <dfbd2895-e29a-4e25-bbc6-a83826d14878@gmail.com>
 
-On Fri, Jan 31, 2025 at 11:02:54AM +0100, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On Fri, Jan 31, 2025 at 06:49:50PM +0530, Nirjhar Roy (IBM) wrote:
 > 
-> Mounting a filesystem that requires quota state changing will generate a
-> transaction.
+> On 1/29/25 21:32, Darrick J. Wong wrote:
+> > On Wed, Jan 29, 2025 at 04:48:10PM +0530, Nirjhar Roy (IBM) wrote:
+> > > On 1/28/25 23:39, Darrick J. Wong wrote:
+> > > > On Tue, Jan 28, 2025 at 05:00:22AM +0000, Nirjhar Roy (IBM) wrote:
+> > > > > Bug Description:
+> > > > > 
+> > > > > _test_mount function is failing with the following error:
+> > > > > ./common/rc: line 4716: _xfs_prepare_for_eio_shutdown: command not found
+> > > > > check: failed to mount /dev/loop0 on /mnt1/test
+> > > > > 
+> > > > > when the second section in local.config file is xfs and the first section
+> > > > > is non-xfs.
+> > > > > 
+> > > > > It can be easily reproduced with the following local.config file
+> > > > > 
+> > > > > [s2]
+> > > > > export FSTYP=ext4
+> > > > > export TEST_DEV=/dev/loop0
+> > > > > export TEST_DIR=/mnt1/test
+> > > > > export SCRATCH_DEV=/dev/loop1
+> > > > > export SCRATCH_MNT=/mnt1/scratch
+> > > > > 
+> > > > > [s1]
+> > > > > export FSTYP=xfs
+> > > > > export TEST_DEV=/dev/loop0
+> > > > > export TEST_DIR=/mnt1/test
+> > > > > export SCRATCH_DEV=/dev/loop1
+> > > > > export SCRATCH_MNT=/mnt1/scratch
+> > > > > 
+> > > > > ./check selftest/001
+> > > > > 
+> > > > > Root cause:
+> > > > > When _test_mount() is executed for the second section, the FSTYPE has
+> > > > > already changed but the new fs specific common/$FSTYP has not yet
+> > > > > been done. Hence _xfs_prepare_for_eio_shutdown() is not found and
+> > > > > the test run fails.
+> > > > > 
+> > > > > Fix:
+> > > > > Remove the additional _test_mount in check file just before ". commom/rc"
+> > > > > since ". commom/rc" is already sourcing fs specific imports and doing a
+> > > > > _test_mount.
+> > > > > 
+> > > > > Fixes: 1a49022fab9b4 ("fstests: always use fail-at-unmount semantics for XFS")
+> > > > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > > > > ---
+> > > > >    check | 12 +++---------
+> > > > >    1 file changed, 3 insertions(+), 9 deletions(-)
+> > > > > 
+> > > > > diff --git a/check b/check
+> > > > > index 607d2456..5cb4e7eb 100755
+> > > > > --- a/check
+> > > > > +++ b/check
+> > > > > @@ -784,15 +784,9 @@ function run_section()
+> > > > >    			status=1
+> > > > >    			exit
+> > > > >    		fi
+> > > > > -		if ! _test_mount
+> > > > Don't we want to _test_mount the newly created filesystem still?  But
+> > > > perhaps after sourcing common/rc ?
+> > > > 
+> > > > --D
+> > > common/rc calls init_rc() in the end and init_rc() already does a
+> > > _test_mount. _test_mount after sourcing common/rc will fail, won't it? Does
+> > > that make sense?
+> > > 
+> > > init_rc()
+> > > {
+> > >      # make some further configuration checks here
+> > >      if [ "$TEST_DEV" = ""  ]
+> > >      then
+> > >          echo "common/rc: Error: \$TEST_DEV is not set"
+> > >          exit 1
+> > >      fi
+> > > 
+> > >      # if $TEST_DEV is not mounted, mount it now as XFS
+> > >      if [ -z "`_fs_type $TEST_DEV`" ]
+> > >      then
+> > >          # $TEST_DEV is not mounted
+> > >          if ! _test_mount
+> > >          then
+> > >              echo "common/rc: retrying test device mount with external set"
+> > >              [ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
+> > >              if ! _test_mount
+> > >              then
+> > >                  echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
+> > >                  exit 1
+> > >              fi
+> > >          fi
+> > >      fi
+> > > ...
+> > ahahahaha yes it does.
+> > 
+> > /commit message reading comprehension fail, sorry about that.
+> > 
+> > Though now that you point it out, should check elide the init_rc call
+> > about 12 lines down if it re-sourced common/rc ?
 > 
-> We already check for a read-only device; we should do that for
-> norecovery too.
-> 
-> A quotacheck on a norecovery mount, and with the right log size, will cause
-> the mount process to hang on:
-> 
-> [<0>] xlog_grant_head_wait+0x5d/0x2a0 [xfs]
-> [<0>] xlog_grant_head_check+0x112/0x180 [xfs]
-> [<0>] xfs_log_reserve+0xe3/0x260 [xfs]
-> [<0>] xfs_trans_reserve+0x179/0x250 [xfs]
-> [<0>] xfs_trans_alloc+0x101/0x260 [xfs]
-> [<0>] xfs_sync_sb+0x3f/0x80 [xfs]
-> [<0>] xfs_qm_mount_quotas+0xe3/0x2f0 [xfs]
-> [<0>] xfs_mountfs+0x7ad/0xc20 [xfs]
-> [<0>] xfs_fs_fill_super+0x762/0xa50 [xfs]
-> [<0>] get_tree_bdev_flags+0x131/0x1d0
-> [<0>] vfs_get_tree+0x26/0xd0
-> [<0>] vfs_cmd_create+0x59/0xe0
-> [<0>] __do_sys_fsconfig+0x4e3/0x6b0
-> [<0>] do_syscall_64+0x82/0x160
-> [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> 
-> This is caused by a transaction running with bogus initialized head/tail
-> 
-> I initially hit this while running generic/050, with random log
-> sizes, but I managed to reproduce it reliably here with the steps
-> below:
-> 
-> mkfs.xfs -f -lsize=1025M -f -b size=4096 -m crc=1,reflink=1,rmapbt=1, -i
-> sparse=1 /dev/vdb2 > /dev/null
-> mount -o usrquota,grpquota,prjquota /dev/vdb2 /mnt
-> xfs_io -x -c 'shutdown -f' /mnt
-> umount /mnt
-> mount -o ro,norecovery,usrquota,grpquota,prjquota  /dev/vdb2 /mnt
-> 
-> Last mount hangs up
-> 
-> As we add yet another validation if quota state is changing, this also
-> add a new helper named xfs_qm_validate(), factoring the quota state
-> changes out of xfs_qm_newmount() to reduce cluttering within it.
-> 
-> As per Darrick suggestion, add a new, different  warning message if
-> metadir is enabled.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Signed-off-by: Carlos Maiolino <cem@kernel.org>
-> ---
-> 
-> Changelog V1->V2:
-> 	- Issue a different warn message in case metadir is enabled
-> 	- Factour out quota state validator code to a new helper
-> 	- Change patch subject to reduce length
+> Yes, it should. init_rc() is getting called twice when common/rc is getting
+> re-sourced. Maybe I can do like
 > 
 > 
->  fs/xfs/xfs_qm_bhv.c | 55 ++++++++++++++++++++++++++++++++-------------
->  1 file changed, 39 insertions(+), 16 deletions(-)
+> if $RECREATE_TEST_DEV || [ "$OLD_FSTYP" != "$FSTYP" ]; then
 > 
-> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-> index 37f1230e7584..a6a7870401c3 100644
-> --- a/fs/xfs/xfs_qm_bhv.c
-> +++ b/fs/xfs/xfs_qm_bhv.c
-> @@ -78,6 +78,28 @@ xfs_qm_statvfs(
->  	}
->  }
->  
-> +STATIC int
-> +xfs_qm_validate(
+>     <...>
+> 
+>     . common/rc # changes in this patch
+> 
+>     <...>
+> 
+> elif [ "$OLD_TEST_FS_MOUNT_OPTS" != "$TEST_FS_MOUNT_OPTS" ]; then
+> 
+>     ...
+> 
+>     init_rc() # explicitly adding an init_rc() for this condition
+> 
+> else
+> 
+>     init_rc() # # explicitly adding an init_rc() for all other conditions.
+> This will prevent init_rc() from getting called twice during re-sourcing
+> common/rc
+> 
+> fi
+> 
+> What do you think?
 
-This validates ... what exactly?
+Sounds fine as a mechanical change, but I wonder, should calling init_rc
+be explicit?  There are not so many places that source common/rc:
 
-Oh, it validates that we can actually make the state change.
+$ git grep 'common/rc'
+check:362:if ! . ./common/rc; then
+check:836:              . common/rc
+common/preamble:52:     . ./common/rc
+soak:7:. ./common/rc
+tests/generic/749:18:. ./common/rc
 
-xfs_qm_validate_state_change(), perhaps ?
+(I filtered out the non-executable matches)
 
-> +	xfs_mount_t	*mp,
+I think the call in generic/749 is unnecessary and I don't know what
+soak does.  But that means that one could insert an explicit call to
+init_rc at line 366 and 837 in check and at line 53 in common/preamble,
+and we can clean up one more of those places where sourcing a common/
+file actually /does/ something quietly under the covers.
 
-Please don't introduce more typedef usage.
-
-	struct xfs_mount	*mp,
-
-> +	uint		uqd,
-> +	uint		gqd,
-> +	uint		pqd)
-> +{
-> +	int state;
-> +
-> +	/* Is quota state changing? */
-> +	state = ((uqd && !XFS_IS_UQUOTA_ON(mp)) ||
-> +		(!uqd &&  XFS_IS_UQUOTA_ON(mp)) ||
-> +		 (gqd && !XFS_IS_GQUOTA_ON(mp)) ||
-> +		(!gqd &&  XFS_IS_GQUOTA_ON(mp)) ||
-> +		 (pqd && !XFS_IS_PQUOTA_ON(mp)) ||
-> +		(!pqd &&  XFS_IS_PQUOTA_ON(mp)));
-> +
-> +	return  state &&
-> +		(xfs_dev_is_read_only(mp, "changing quota state") ||
-> +		xfs_has_norecovery(mp));
-> +}
-> +
->  int
->  xfs_qm_newmount(
->  	xfs_mount_t	*mp,
-> @@ -97,24 +119,25 @@ xfs_qm_newmount(
->  	}
->  
->  	/*
-> -	 * If the device itself is read-only, we can't allow
-> -	 * the user to change the state of quota on the mount -
-> -	 * this would generate a transaction on the ro device,
-> -	 * which would lead to an I/O error and shutdown
-> +	 * If the device itself is read-only and/or in norecovery
-> +	 * mode, we can't allow the user to change the state of
-> +	 * quota on the mount - this would generate a transaction
-> +	 * on the ro device, which would lead to an I/O error and
-> +	 * shutdown.
->  	 */
->  
-> -	if (((uquotaondisk && !XFS_IS_UQUOTA_ON(mp)) ||
-> -	    (!uquotaondisk &&  XFS_IS_UQUOTA_ON(mp)) ||
-> -	     (gquotaondisk && !XFS_IS_GQUOTA_ON(mp)) ||
-> -	    (!gquotaondisk &&  XFS_IS_GQUOTA_ON(mp)) ||
-> -	     (pquotaondisk && !XFS_IS_PQUOTA_ON(mp)) ||
-> -	    (!pquotaondisk &&  XFS_IS_PQUOTA_ON(mp)))  &&
-> -	    xfs_dev_is_read_only(mp, "changing quota state")) {
-> -		xfs_warn(mp, "please mount with%s%s%s%s.",
-> -			(!quotaondisk ? "out quota" : ""),
-> -			(uquotaondisk ? " usrquota" : ""),
-> -			(gquotaondisk ? " grpquota" : ""),
-> -			(pquotaondisk ? " prjquota" : ""));
-> +	if (xfs_qm_validate(mp, uquotaondisk,
-> +			    gquotaondisk, pquotaondisk)) {
-> +
-> +		if (xfs_has_metadir(mp))
-> +			xfs_warn(mp,
-> +			       "metadir enabled, please mount withouth quotas");
-
-"metadir enabled, please mount without any quota mount options"
+(Unless the maintainer is ok with the status quo...?)
 
 --D
 
-> +		else
-> +			xfs_warn(mp, "please mount with%s%s%s%s.",
-> +				(!quotaondisk ? "out quota" : ""),
-> +				(uquotaondisk ? " usrquota" : ""),
-> +				(gquotaondisk ? " grpquota" : ""),
-> +				(pquotaondisk ? " prjquota" : ""));
->  		return -EPERM;
->  	}
->  
+> 
+> > 
+> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> > 
+> > --D
+> > 
+> > > ...
+> > > 
+> > > --NR
+> > > 
+> > > 
+> > > 
+> > > > > -		then
+> > > > > -			echo "check: failed to mount $TEST_DEV on $TEST_DIR"
+> > > > > -			status=1
+> > > > > -			exit
+> > > > > -		fi
+> > > > > -		# TEST_DEV has been recreated, previous FSTYP derived from
+> > > > > -		# TEST_DEV could be changed, source common/rc again with
+> > > > > -		# correct FSTYP to get FSTYP specific configs, e.g. common/xfs
+> > > > > +		# Previous FSTYP derived from TEST_DEV could be changed, source
+> > > > > +		# common/rc again with correct FSTYP to get FSTYP specific configs,
+> > > > > +		# e.g. common/xfs
+> > > > >    		. common/rc
+> > > > >    		_prepare_test_list
+> > > > >    	elif [ "$OLD_TEST_FS_MOUNT_OPTS" != "$TEST_FS_MOUNT_OPTS" ]; then
+> > > > > -- 
+> > > > > 2.34.1
+> > > > > 
+> > > > > 
+> > > -- 
+> > > Nirjhar Roy
+> > > Linux Kernel Developer
+> > > IBM, Bangalore
+> > > 
 > -- 
-> 2.48.1
+> Nirjhar Roy
+> Linux Kernel Developer
+> IBM, Bangalore
 > 
 > 
