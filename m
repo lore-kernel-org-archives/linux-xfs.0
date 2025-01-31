@@ -1,41 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5A31E3DEF
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 16:27:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8ACC13213E;
+	Fri, 31 Jan 2025 16:54:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738340839; cv=none; b=gIF9Fqevd5k07GlLZwUi9OSd8zvnJau10MLaKKSMgWdso/yPcNVXOnOAJcqqYDAznYWcFRKnooZfMBTuQEjhGjVqMfWAZefecTqVWnm0ovw5ioLtX2NC4btumYhw+RyRCr4A4cuznaNBmfwzmSJc3LpwXvvAADca4VYE0mrSEGo=
+	t=1738342474; cv=none; b=XbVwwXli3qb7IFJ0TDYQNRflCRw66/DlyHdJ8DsWWFsBjwHdLGKiqh3fzuelkxFUExKrl0jhMyK05+tBx0EPAxe9cDbSs6XvmLr9bXP3b2TK3S7o7gD8is7NalKR0k5/K33PPeAyTAqLjxHxjVfeo2zTRMdM4Ri3nuCIHeykUjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738340839; c=relaxed/simple;
-	bh=dtU3sxEnVvbyldeuyQdn1Kkmw5t5fisuqMXg6psYWpk=;
+	s=arc-20240116; t=1738342474; c=relaxed/simple;
+	bh=7Hl3GljDjAhtN6pmOcEy1UlbVLzmS0WmXIW/DQQ3PiI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HRjNS5QeoLZFSYiFV/FW2OIbKObrtMzIFy63ffEkTe8tKCUerRPsdVI66OK91OovEqoEN+1cxKBMFxq9x/gVjXjQdLr3di14CbICHIDW808lU1FBQOkxr9dUES2GJ/4QfhsQOtJElddR8d2XGFG67GqXJTgl4STpPsWGt4ciQPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=im8bLcSD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=vDuGJPaKg0xArXY+lsKRwmAUFEzsDmHjUJjwTR9OEpuqQdZcdg9bGHRFuQ63CmecSx1ReKnTlpcBZZJhY7Vj3qPIsXZySzP10dcbAHg2COO/JatGfQYSHSwsySOLh4mjNvHr4StoaOoUa+Csl6IQVBhMoMUlIEawxtMDp9CD/RY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZJy6y91; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="im8bLcSD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E063C4CED3;
-	Fri, 31 Jan 2025 16:27:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZJy6y91"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1622C4CED3;
+	Fri, 31 Jan 2025 16:54:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738340839;
-	bh=dtU3sxEnVvbyldeuyQdn1Kkmw5t5fisuqMXg6psYWpk=;
+	s=k20201202; t=1738342473;
+	bh=7Hl3GljDjAhtN6pmOcEy1UlbVLzmS0WmXIW/DQQ3PiI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=im8bLcSDWDgjlT0W/0LJgRTOIAc4OOl5W9zTiA5C5egXAk5u2iUoLufQrtqCdHCbA
-	 wX5VE3/8aVHUriyTNZFxd4mMYXC9ZtMrztkW7TDMR+FhstOGdsIjRWwddY3Pr24H7f
-	 T7G8KEOgBKu/7RcMABFODvF8hQ0rKAW/6ErTZlNiLoDrfBMeBC152IDpBvmWpEYhyn
-	 7NcN4gPOzz6FYnb9xgGQ1ZPW8lVW6JXB3b/NB6has/U+lq5rVhUYJlHT4mrBlelxep
-	 bI9D670o5iCF1WXhRC0neth3zmjBWTN2ggqDxTuRVYv68vXV5i2VVqGJ3zxPTweTJr
-	 fbp8ITymlSFNg==
-Date: Fri, 31 Jan 2025 17:27:13 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, dchinner@redhat.com, 
-	hch@lst.de
-Subject: Re: [PATCH V2] xfs: Do not allow norecovery mount with quotacheck
-Message-ID: <p37aojs3slqjn4ob566fgpdiknbifn65cileh3tj63e5yimj4d@xcqzxue3d3px>
-References: <20250131100302.15430-1-cem@kernel.org>
- <cIPmaW81e_qUtSjwffZo769u2On8_AgVFWj5kiyM1w_JAXFIg21QhWWwe0D5QYZJySJThy8z00AaIxdldNdOkg==@protonmail.internalid>
- <20250131161806.GU1611770@frogsfrogsfrogs>
+	b=AZJy6y91Vv1HZtJR8WflihFkJ/rqTfbZ1FKuyaSEsO+rRESNkufWToIr8vsIyAHPn
+	 iwrqhMfTwhvqTIbu+//DqynolEY2R0aLQFRbOcBoKCiJ2Ty/5vAWrVr613mMbUtPPu
+	 kFfrYqU5XYVpxevgUR0q2B5wmXt9IsyUPoLZYNYeMhMw6gHiC9uXwgyap60f3S73H4
+	 Fx+/dvKi/JkmRKx+wjGdYX1Rk84gtiELgf+Bn0Uq+VMCB3DkLMxmlcJvzNRU1beS2r
+	 NWCfBhVu7I+3u2eKAXDNofdgeG9l8XlbCva8bcmzs1OOZXdNlcbR5RyIHLSD4xCDom
+	 fOgS0LcUDS1mQ==
+Date: Fri, 31 Jan 2025 08:54:31 -0800
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: hare@suse.de, dave@stgolabs.net, david@fromorbit.com, djwong@kernel.org,
+	kbusch@kernel.org, john.g.garry@oracle.com, hch@lst.de,
+	ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
+Subject: Re: [PATCH 0/5] fs/buffer: strack reduction on async read
+Message-ID: <Z50AR0RKSKmsumFN@bombadil.infradead.org>
+References: <20241218022626.3668119-1-mcgrof@kernel.org>
+ <Z2MrCey3RIBJz9_E@casper.infradead.org>
+ <Z2OEmALBGB8ARLlc@bombadil.infradead.org>
+ <Z2OYRkpRcUFIOFog@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,176 +49,182 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250131161806.GU1611770@frogsfrogsfrogs>
+In-Reply-To: <Z2OYRkpRcUFIOFog@casper.infradead.org>
 
-On Fri, Jan 31, 2025 at 08:18:06AM -0800, Darrick J. Wong wrote:
-> On Fri, Jan 31, 2025 at 11:02:54AM +0100, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> >
-> > Mounting a filesystem that requires quota state changing will generate a
-> > transaction.
-> >
-> > We already check for a read-only device; we should do that for
-> > norecovery too.
-> >
-> > A quotacheck on a norecovery mount, and with the right log size, will cause
-> > the mount process to hang on:
-> >
-> > [<0>] xlog_grant_head_wait+0x5d/0x2a0 [xfs]
-> > [<0>] xlog_grant_head_check+0x112/0x180 [xfs]
-> > [<0>] xfs_log_reserve+0xe3/0x260 [xfs]
-> > [<0>] xfs_trans_reserve+0x179/0x250 [xfs]
-> > [<0>] xfs_trans_alloc+0x101/0x260 [xfs]
-> > [<0>] xfs_sync_sb+0x3f/0x80 [xfs]
-> > [<0>] xfs_qm_mount_quotas+0xe3/0x2f0 [xfs]
-> > [<0>] xfs_mountfs+0x7ad/0xc20 [xfs]
-> > [<0>] xfs_fs_fill_super+0x762/0xa50 [xfs]
-> > [<0>] get_tree_bdev_flags+0x131/0x1d0
-> > [<0>] vfs_get_tree+0x26/0xd0
-> > [<0>] vfs_cmd_create+0x59/0xe0
-> > [<0>] __do_sys_fsconfig+0x4e3/0x6b0
-> > [<0>] do_syscall_64+0x82/0x160
-> > [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> >
-> > This is caused by a transaction running with bogus initialized head/tail
-> >
-> > I initially hit this while running generic/050, with random log
-> > sizes, but I managed to reproduce it reliably here with the steps
-> > below:
-> >
-> > mkfs.xfs -f -lsize=1025M -f -b size=4096 -m crc=1,reflink=1,rmapbt=1, -i
-> > sparse=1 /dev/vdb2 > /dev/null
-> > mount -o usrquota,grpquota,prjquota /dev/vdb2 /mnt
-> > xfs_io -x -c 'shutdown -f' /mnt
-> > umount /mnt
-> > mount -o ro,norecovery,usrquota,grpquota,prjquota  /dev/vdb2 /mnt
-> >
-> > Last mount hangs up
-> >
-> > As we add yet another validation if quota state is changing, this also
-> > add a new helper named xfs_qm_validate(), factoring the quota state
-> > changes out of xfs_qm_newmount() to reduce cluttering within it.
-> >
-> > As per Darrick suggestion, add a new, different  warning message if
-> > metadir is enabled.
-> >
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > Signed-off-by: Carlos Maiolino <cem@kernel.org>
-> > ---
-> >
-> > Changelog V1->V2:
-> > 	- Issue a different warn message in case metadir is enabled
-> > 	- Factour out quota state validator code to a new helper
-> > 	- Change patch subject to reduce length
-> >
-> >
-> >  fs/xfs/xfs_qm_bhv.c | 55 ++++++++++++++++++++++++++++++++-------------
-> >  1 file changed, 39 insertions(+), 16 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-> > index 37f1230e7584..a6a7870401c3 100644
-> > --- a/fs/xfs/xfs_qm_bhv.c
-> > +++ b/fs/xfs/xfs_qm_bhv.c
-> > @@ -78,6 +78,28 @@ xfs_qm_statvfs(
-> >  	}
-> >  }
-> >
-> > +STATIC int
-> > +xfs_qm_validate(
+On Thu, Dec 19, 2024 at 03:51:34AM +0000, Matthew Wilcox wrote:
+> On Wed, Dec 18, 2024 at 06:27:36PM -0800, Luis Chamberlain wrote:
+> > On Wed, Dec 18, 2024 at 08:05:29PM +0000, Matthew Wilcox wrote:
+> > > On Tue, Dec 17, 2024 at 06:26:21PM -0800, Luis Chamberlain wrote:
+> > > > This splits up a minor enhancement from the bs > ps device support
+> > > > series into its own series for better review / focus / testing.
+> > > > This series just addresses the reducing the array size used and cleaning
+> > > > up the async read to be easier to read and maintain.
+> > > 
+> > > How about this approach instead -- get rid of the batch entirely?
+> > 
+> > Less is more! I wish it worked, but we end up with a null pointer on
+> > ext4/032 (and indeed this is the test that helped me find most bugs in
+> > what I was working on):
 > 
-> This validates ... what exactly?
+> Yeah, I did no testing; just wanted to give people a different approach
+> to consider.
 > 
-> Oh, it validates that we can actually make the state change.
+> > [  106.034851] BUG: kernel NULL pointer dereference, address: 0000000000000000
+> > [  106.046300] RIP: 0010:end_buffer_async_read_io+0x11/0x90
+> > [  106.047819] Code: f2 ff 0f 1f 80 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 53 48 8b 47 10 48 89 fb 48 8b 40 18 <48> 8b 00 f6 40 0d 40 74 0d 0f b7 00 66 25 00 f0 66 3d 00 80 74 09
 > 
-> xfs_qm_validate_state_change(), perhaps ?
+> That decodes as:
+> 
+>    5:	53                   	push   %rbx
+>    6:	48 8b 47 10          	mov    0x10(%rdi),%rax
+>    a:	48 89 fb             	mov    %rdi,%rbx
+>    d:	48 8b 40 18          	mov    0x18(%rax),%rax
+>   11:*	48 8b 00             	mov    (%rax),%rax		<-- trapping instruction
+>   14:	f6 40 0d 40          	testb  $0x40,0xd(%rax)
+> 
+> 6: bh->b_folio
+> d: b_folio->mapping
+> 11: mapping->host
+> 
+> So folio->mapping is NULL.
+> 
+> Ah, I see the problem.  end_buffer_async_read() uses the buffer_async_read
+> test to decide if all buffers on the page are uptodate or not.  So both
+> having no batch (ie this patch) and having a batch which is smaller than
+> the number of buffers in the folio can lead to folio_end_read() being
+> called prematurely (ie we'll unlock the folio before finishing reading
+> every buffer in the folio).
 
-Yeah, I thought the name would be too big, but indeed looks decent
+But:
 
-> 
-> > +	xfs_mount_t	*mp,
-> 
-> Please don't introduce more typedef usage.
+a) all batched buffers are locked in the old code, we only unlock
+   the currently evaluated buffer, the buffers from our pivot are locked
+   and should also have the async flag set. That fact that buffers ahead
+   should have the async flag set should prevent from calling
+   folio_end_read() prematurely as I read the code, no?
 
-Ditto, my bad, will fix.
+b) In the case we're evaluting the last buffer, we can unlock and call
+   folio_end_read(), but that seems fine given the previous batch work
+   was in charge of finding candidate buffers which need a read, so in
+   this case there should be no pending read.
 
-> 
-> 	struct xfs_mount	*mp,
-> 
-> > +	uint		uqd,
-> > +	uint		gqd,
-> > +	uint		pqd)
-> > +{
-> > +	int state;
-> > +
-> > +	/* Is quota state changing? */
-> > +	state = ((uqd && !XFS_IS_UQUOTA_ON(mp)) ||
-> > +		(!uqd &&  XFS_IS_UQUOTA_ON(mp)) ||
-> > +		 (gqd && !XFS_IS_GQUOTA_ON(mp)) ||
-> > +		(!gqd &&  XFS_IS_GQUOTA_ON(mp)) ||
-> > +		 (pqd && !XFS_IS_PQUOTA_ON(mp)) ||
-> > +		(!pqd &&  XFS_IS_PQUOTA_ON(mp)));
-> > +
-> > +	return  state &&
-> > +		(xfs_dev_is_read_only(mp, "changing quota state") ||
-> > +		xfs_has_norecovery(mp));
-> > +}
-> > +
-> >  int
-> >  xfs_qm_newmount(
-> >  	xfs_mount_t	*mp,
-> > @@ -97,24 +119,25 @@ xfs_qm_newmount(
-> >  	}
-> >
-> >  	/*
-> > -	 * If the device itself is read-only, we can't allow
-> > -	 * the user to change the state of quota on the mount -
-> > -	 * this would generate a transaction on the ro device,
-> > -	 * which would lead to an I/O error and shutdown
-> > +	 * If the device itself is read-only and/or in norecovery
-> > +	 * mode, we can't allow the user to change the state of
-> > +	 * quota on the mount - this would generate a transaction
-> > +	 * on the ro device, which would lead to an I/O error and
-> > +	 * shutdown.
-> >  	 */
-> >
-> > -	if (((uquotaondisk && !XFS_IS_UQUOTA_ON(mp)) ||
-> > -	    (!uquotaondisk &&  XFS_IS_UQUOTA_ON(mp)) ||
-> > -	     (gquotaondisk && !XFS_IS_GQUOTA_ON(mp)) ||
-> > -	    (!gquotaondisk &&  XFS_IS_GQUOTA_ON(mp)) ||
-> > -	     (pquotaondisk && !XFS_IS_PQUOTA_ON(mp)) ||
-> > -	    (!pquotaondisk &&  XFS_IS_PQUOTA_ON(mp)))  &&
-> > -	    xfs_dev_is_read_only(mp, "changing quota state")) {
-> > -		xfs_warn(mp, "please mount with%s%s%s%s.",
-> > -			(!quotaondisk ? "out quota" : ""),
-> > -			(uquotaondisk ? " usrquota" : ""),
-> > -			(gquotaondisk ? " grpquota" : ""),
-> > -			(pquotaondisk ? " prjquota" : ""));
-> > +	if (xfs_qm_validate(mp, uquotaondisk,
-> > +			    gquotaondisk, pquotaondisk)) {
-> > +
-> > +		if (xfs_has_metadir(mp))
-> > +			xfs_warn(mp,
-> > +			       "metadir enabled, please mount withouth quotas");
-> 
-> "metadir enabled, please mount without any quota mount options"
+So I don't see how we yet can call folio_end_read() prematurely.
 
-Thanks for the review, V3 soon.
+We do however unlock the buffer in end_buffer_async_read(), but in case
+of an inconsistency we simply bail on the loop, and since we only called
+end_buffer_async_read() in case of the buffer being up to date, the only
+iconsistency we check for is if (!buffer_uptodate(tmp)) in which case
+the folio_end_read() will be called but without a success being annoted.
 
+> Once the folio is unlocked, it can be truncated.  That's a second-order
+> problem, but it's the one your test happened to hit.
+> 
+> 
+> This should fix the problem; we always have at least one BH held in
+> the submission path with the async_read flag set, so
+> end_buffer_async_read() will not end it prematurely.
 
-> 
-> --D
-> 
-> > +		else
-> > +			xfs_warn(mp, "please mount with%s%s%s%s.",
-> > +				(!quotaondisk ? "out quota" : ""),
-> > +				(uquotaondisk ? " usrquota" : ""),
-> > +				(gquotaondisk ? " grpquota" : ""),
-> > +				(pquotaondisk ? " prjquota" : ""));
-> >  		return -EPERM;
-> >  	}
-> >
-> > --
-> > 2.48.1
-> >
-> >
-> 
+But this alternative does not call end_buffer_async_read(), in fact
+we only call folio_end_read() in case of no pending reads being needed.
+
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index cc8452f60251..fd2633e4a5d2 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -2361,9 +2361,9 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
+>  {
+>  	struct inode *inode = folio->mapping->host;
+>  	sector_t iblock, lblock;
+> -	struct buffer_head *bh, *head, *arr[MAX_BUF_PER_PAGE];
+> +	struct buffer_head *bh, *head, *prev = NULL;
+>  	size_t blocksize;
+> -	int nr, i;
+> +	int i;
+>  	int fully_mapped = 1;
+>  	bool page_error = false;
+>  	loff_t limit = i_size_read(inode);
+> @@ -2380,7 +2380,6 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
+>  	iblock = div_u64(folio_pos(folio), blocksize);
+>  	lblock = div_u64(limit + blocksize - 1, blocksize);
+>  	bh = head;
+> -	nr = 0;
+>  	i = 0;
+>  
+>  	do {
+> @@ -2411,40 +2410,33 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
+>  			if (buffer_uptodate(bh))
+>  				continue;
+>  		}
+> -		arr[nr++] = bh;
+> +
+> +		lock_buffer(bh);
+> +		if (buffer_uptodate(bh)) {
+> +			unlock_buffer(bh);
+> +			continue;
+> +		}
+> +
+> +		mark_buffer_async_read(bh);
+> +		if (prev)
+> +			submit_bh(REQ_OP_READ, prev);
+> +		prev = bh;
+>  	} while (i++, iblock++, (bh = bh->b_this_page) != head);
+>  
+>  	if (fully_mapped)
+>  		folio_set_mappedtodisk(folio);
+>  
+> -	if (!nr) {
+> -		/*
+> -		 * All buffers are uptodate or get_block() returned an
+> -		 * error when trying to map them - we can finish the read.
+> -		 */
+> -		folio_end_read(folio, !page_error);
+> -		return 0;
+> -	}
+> -
+> -	/* Stage two: lock the buffers */
+> -	for (i = 0; i < nr; i++) {
+> -		bh = arr[i];
+> -		lock_buffer(bh);
+> -		mark_buffer_async_read(bh);
+> -	}
+> -
+>  	/*
+> -	 * Stage 3: start the IO.  Check for uptodateness
+> -	 * inside the buffer lock in case another process reading
+> -	 * the underlying blockdev brought it uptodate (the sct fix).
+> +	 * All buffers are uptodate or get_block() returned an error
+> +	 * when trying to map them - we must finish the read because
+> +	 * end_buffer_async_read() will never be called on any buffer
+> +	 * in this folio.
+
+Do we want to keep mentioning end_buffer_async_read() here?
+
+>  	 */
+> -	for (i = 0; i < nr; i++) {
+> -		bh = arr[i];
+> -		if (buffer_uptodate(bh))
+> -			end_buffer_async_read(bh, 1);
+> -		else
+> -			submit_bh(REQ_OP_READ, bh);
+> -	}
+> +	if (prev)
+> +		submit_bh(REQ_OP_READ, prev);
+> +	else
+> +		folio_end_read(folio, !page_error);
+> +
+>  	return 0;
+
+Becuase we only call folio_end_read() in the above code in case we had
+no pending read IO determined. In case we had to at least issue one read
+for one buffer we never call folio_end_read(). We didn't before unless
+we ran into a race where a pending batched read coincided with a read
+being issued and updating our buffer by chance, and we determined we
+either completed that read fine or with an error.
+
+Reason I'm asking these things is I'm trying to determine if there was
+an issue before we're trying to fix other than the simplification with
+the new un-batched strategy. I don't see it yet. If we're fixing
+something here, it is still a bit obscure to me and I'd like to make
+sure we document it properly.
+
+  Luis
