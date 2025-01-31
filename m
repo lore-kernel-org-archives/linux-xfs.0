@@ -1,119 +1,136 @@
-Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E7FE1EE7AA
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 20:00:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B22631487E9;
+	Fri, 31 Jan 2025 22:01:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738353619; cv=none; b=k89cKmowYH0EKjd67URWH+17jTjvuePqg+ZRvtXpaxa46HQHeCgrDIhBUA1qDPe5U72JrvQNzTGOOihHSo72JdH8VGLw86zCOH3KwdaJi3ASG4q26lxgPva7/SCgpkQx4QZWy8r7S9fPXh57r8W/uz0qgfAGiAXVetfJWRnvFQo=
+	t=1738360917; cv=none; b=kRSVRg2sPd4j0Wf/2wFDSy1+NGA4Z84fXiANfJHWL8veVbPYgTKj0jRLu+5XjOOugGSxHD4nPKpAVvswOYHJuksEhq0+rcqMODTpSDkV2zLjJR2G3+nSmQ94ZfHDjUYdKqjhiVYEPq3wluUGyJbKn9pAVcpGgiQGdrZHhRGuX6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738353619; c=relaxed/simple;
-	bh=mESJj9WNZAGhoP88PwXyk6SgSBIq1RXBtiH16frMzTc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nsR8YXCFiFM7+az30j7lNWXP0rgFr+xN8BG8WA1YMO7hwSb/h/0L8tRu7J8XQ5FWaS4auHs5ucXfqgID4hQThWiLopfoEZT7nIeo6ymjZqFLyfbA/fGcKnxPxU7kUt/w6GCFHNl63ORFqnB/of/85AiyhBU/X+ltv5v0nTFdLR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=dPlLFIfM; arc=none smtp.client-ip=209.85.218.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1738360917; c=relaxed/simple;
+	bh=zEpNeN4bQXMDPRiwVYQP12A4ynlqLCsRv9yIAZkiocg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EKh9qhMwGSbaTJCArZN+1nwODMWdef2A0OpnNvbb1vvktivODk8HhAfTWr6QjUPKxd6Bcr1oGbszqEtQDl/q1X1NqXoH3sxh+QmSxqBz5eWGFKKKjbSZRaEpjT6sRXC8iF8rkF4rbvFClzayv4g97e0zCssnfeB48QJBDS1TSzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cqC6Lzbi; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="dPlLFIfM"
-Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-ab698eae2d9so469255166b.0
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 12:00:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1738353615; x=1738958415; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=1VEMyzp2lsoEGf8wTQK/Tt97K6OMqjZreNFMoOiXZ5E=;
-        b=dPlLFIfM+G/lEDPwPrinoJPSTGpf/quSRFWlHZwLTfO2iIdxA1VWUpZebWr1yuf6iz
-         BdarU7DO0Hb/S0/QgTkLF6DNa6P/F7NxRb4FSHpoGRZw37Dc9Ya+o+M6mn6SCk0kcGCH
-         7L39NJQjtPl8SwHIqLDrbq7guSpa8Iyio6i90=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738353615; x=1738958415;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=1VEMyzp2lsoEGf8wTQK/Tt97K6OMqjZreNFMoOiXZ5E=;
-        b=GdwRjm+vpnkqlRC22UpgbQnKV5Yjk5UqHp4PpBW1YzNie4huAm7xYiZLavHEfASygb
-         ntZMb+jwUQHNiHqBuQEvLHnJEEXIRpc6MdeOoZooDmuC8sHRn9kNWO2x4Aq+FXUnwuTy
-         Hhzgha5fP6hZHIh6rO1sXn0MrBCIdElIa/e0MkEB77kKsCGzStCe3mv1h7Mo5ljSFUDB
-         1f9FwOmGOfS8efbtDlQVL19npPUyFZQD68EcnySq1dz3I+Defm8gp2PJ3teNTAQzlLo4
-         SHndIUlI+MgQkAhuzWnEKg1LLvm0HeF5QA1aod3PLVpQZ1414eYHKh0hqjnhN7bdEZ+1
-         LuVw==
-X-Forwarded-Encrypted: i=1; AJvYcCWBs/bbyghX/xk5Ahmmn+f0TJByo8ihhvLLe+LzTR0nH34pzvgqQbUnBIR8MKWlnafSZPKgbECxdgU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YycsQIc9uYgKa6NbCtyAHVDIYffS8bmH1rPmx5CU1to+HqbBxXp
-	hYsuLX+VX6pemWYBnRhmxzeeYxaxd005HgjJGxqckL1syztJuDdzCOXpMVeHBAScaEEyfgx5imQ
-	w/DE=
-X-Gm-Gg: ASbGncs8acxX7xNDEQwu4kZKM979WrAGXCHuPBhWh/eCCrCRr+TqZqiUF3bZxpGE74g
-	A4GUij5qob+hpWLCDWaGDEmo1cPZjR1Ym3Ouqlhz0bD3mCicqRTE245WyaSpW38hHEgFtD0x7wE
-	sU1Ui0OMsRdi+pjaxuZoIIK2jBC0tdiC3a7dobC/jjv8HfVXLf914ELmoHFISl5Fs44nO7zVAa0
-	XawGgFqwSMFvpuMwNrMVzFcQo+923oHdF7ZYEdEWAaZ3ENRe/FDUfk+o0SwrsKgGVB4Y+BnMwpB
-	4zms7XcAiV8D/ui2rX2HG/cJU/JYA+V/1Ei3pW3LAqmeP1KHJ1hzdtlwcCNXKCf2ew==
-X-Google-Smtp-Source: AGHT+IFTpDbIG7YXEow9Y27fbSumwBXW731rZCHlnvMosbGKmyrEJaNoTxCYra1iBRPxd6OI2RmTXw==
-X-Received: by 2002:a17:907:7254:b0:aab:9342:290d with SMTP id a640c23a62f3a-ab6cfc857ffmr1374593966b.8.1738353614070;
-        Fri, 31 Jan 2025 12:00:14 -0800 (PST)
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com. [209.85.208.49])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab6e4a318fasm342021266b.134.2025.01.31.12.00.12
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 31 Jan 2025 12:00:12 -0800 (PST)
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-5db6890b64eso4378628a12.3
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2025 12:00:12 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUnoMurAKmK/l3DlCQhfnXjFOQaEYb2EGjYEgDJkN8OlPb+yTFXCYUQCuwB1NIR/g/rm9cFMic4E0c=@vger.kernel.org
-X-Received: by 2002:a05:6402:2709:b0:5da:1448:43f5 with SMTP id
- 4fb4d7f45d1cf-5dc5effcc33mr12325224a12.31.1738353612239; Fri, 31 Jan 2025
- 12:00:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cqC6Lzbi"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=R5v3Vp8tsw1LE/lxKen0G1myY0wqF26imHFfjT4SmXY=; b=cqC6LzbiijGTbh/tgJBpGzZD6w
+	RgljOVnsa/poOlHqwhg+1K5UbvltHwAVrRsp/XzoAgwPctDvlqRtcIU3Vt13pryrPmMqBOwB5VRTK
+	8niKO0DUEbLSO/gmesV4IPh4O/MiwfMe02g82j6NnIEVOYpOcVXEYAoFSw9t/NbVakrMof+NdjO2t
+	4Ze1IxToitidCy8cCcW+qQcq8H01itmjNMqpULSP1V00XQqKqV4coLdnKOs9hbO6Zy2d2KhT+Lqz0
+	vtzFPCHrdozxjxEUbUVsbRMxZr3lHac0gKWehVCRGYcpwel2qgK/MNwUV3YnpkHB9mkOEjhTLB+ky
+	CmjRPJSg==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tdz58-0000000FCc3-1I5f;
+	Fri, 31 Jan 2025 22:01:46 +0000
+Date: Fri, 31 Jan 2025 22:01:46 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: hare@suse.de, dave@stgolabs.net, david@fromorbit.com, djwong@kernel.org,
+	kbusch@kernel.org, john.g.garry@oracle.com, hch@lst.de,
+	ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
+Subject: Re: [PATCH 0/5] fs/buffer: strack reduction on async read
+Message-ID: <Z51ISh2YAlwoLo5h@casper.infradead.org>
+References: <20241218022626.3668119-1-mcgrof@kernel.org>
+ <Z2MrCey3RIBJz9_E@casper.infradead.org>
+ <Z2OEmALBGB8ARLlc@bombadil.infradead.org>
+ <Z2OYRkpRcUFIOFog@casper.infradead.org>
+ <Z50AR0RKSKmsumFN@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1731684329.git.josef@toxicpanda.com> <9035b82cff08a3801cef3d06bbf2778b2e5a4dba.1731684329.git.josef@toxicpanda.com>
- <20250131121703.1e4d00a7.alex.williamson@redhat.com>
-In-Reply-To: <20250131121703.1e4d00a7.alex.williamson@redhat.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 31 Jan 2025 11:59:56 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wjMPZ7htPTzxtF52-ZPShfFOQ4R-pHVxLO+pfOW5avC4Q@mail.gmail.com>
-X-Gm-Features: AWEUYZmJHVy_un_wj0EXjvnXlSLyiKtpaVCBTRVD7w7Khb3Vui_AFXvwFXKGqO4
-Message-ID: <CAHk-=wjMPZ7htPTzxtF52-ZPShfFOQ4R-pHVxLO+pfOW5avC4Q@mail.gmail.com>
-Subject: Re: [REGRESSION] Re: [PATCH v8 15/19] mm: don't allow huge faults for
- files with pre content watches
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	jack@suse.cz, amir73il@gmail.com, brauner@kernel.org, viro@zeniv.linux.org.uk, 
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-ext4@vger.kernel.org, Peter Xu <peterx@redhat.com>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z50AR0RKSKmsumFN@bombadil.infradead.org>
 
-On Fri, 31 Jan 2025 at 11:17, Alex Williamson
-<alex.williamson@redhat.com> wrote:
->
-> 20bf82a898b6 ("mm: don't allow huge faults for files with pre content watches")
->
-> This breaks huge_fault support for PFNMAPs that was recently added in
-> v6.12 and is used by vfio-pci to fault device memory using PMD and PUD
-> order mappings.
+On Fri, Jan 31, 2025 at 08:54:31AM -0800, Luis Chamberlain wrote:
+> On Thu, Dec 19, 2024 at 03:51:34AM +0000, Matthew Wilcox wrote:
+> > On Wed, Dec 18, 2024 at 06:27:36PM -0800, Luis Chamberlain wrote:
+> > > On Wed, Dec 18, 2024 at 08:05:29PM +0000, Matthew Wilcox wrote:
+> > > > On Tue, Dec 17, 2024 at 06:26:21PM -0800, Luis Chamberlain wrote:
+> > > > > This splits up a minor enhancement from the bs > ps device support
+> > > > > series into its own series for better review / focus / testing.
+> > > > > This series just addresses the reducing the array size used and cleaning
+> > > > > up the async read to be easier to read and maintain.
+> > > > 
+> > > > How about this approach instead -- get rid of the batch entirely?
+> > > 
+> > > Less is more! I wish it worked, but we end up with a null pointer on
+> > > ext4/032 (and indeed this is the test that helped me find most bugs in
+> > > what I was working on):
+> > 
+> > Yeah, I did no testing; just wanted to give people a different approach
+> > to consider.
+> > 
+> > > [  106.034851] BUG: kernel NULL pointer dereference, address: 0000000000000000
+> > > [  106.046300] RIP: 0010:end_buffer_async_read_io+0x11/0x90
+> > > [  106.047819] Code: f2 ff 0f 1f 80 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 53 48 8b 47 10 48 89 fb 48 8b 40 18 <48> 8b 00 f6 40 0d 40 74 0d 0f b7 00 66 25 00 f0 66 3d 00 80 74 09
+> > 
+> > That decodes as:
+> > 
+> >    5:	53                   	push   %rbx
+> >    6:	48 8b 47 10          	mov    0x10(%rdi),%rax
+> >    a:	48 89 fb             	mov    %rdi,%rbx
+> >    d:	48 8b 40 18          	mov    0x18(%rax),%rax
+> >   11:*	48 8b 00             	mov    (%rax),%rax		<-- trapping instruction
+> >   14:	f6 40 0d 40          	testb  $0x40,0xd(%rax)
+> > 
+> > 6: bh->b_folio
+> > d: b_folio->mapping
+> > 11: mapping->host
+> > 
+> > So folio->mapping is NULL.
+> > 
+> > Ah, I see the problem.  end_buffer_async_read() uses the buffer_async_read
+> > test to decide if all buffers on the page are uptodate or not.  So both
+> > having no batch (ie this patch) and having a batch which is smaller than
+> > the number of buffers in the folio can lead to folio_end_read() being
+> > called prematurely (ie we'll unlock the folio before finishing reading
+> > every buffer in the folio).
+> 
+> But:
+> 
+> a) all batched buffers are locked in the old code, we only unlock
+>    the currently evaluated buffer, the buffers from our pivot are locked
+>    and should also have the async flag set. That fact that buffers ahead
+>    should have the async flag set should prevent from calling
+>    folio_end_read() prematurely as I read the code, no?
 
-Surely only for content watches?
+I'm sure you know what you mean by "the old code", but I don't.
 
-Which shouldn't be a valid situation *anyway*.
+If you mean "the code in 6.13", here's what it does:
 
-IOW, there must be some unrelated bug somewhere: either somebody is
-allowed to set a pre-content match on a special device.
+        tmp = bh;
+        do {
+                if (!buffer_uptodate(tmp))
+                        folio_uptodate = 0;
+                if (buffer_async_read(tmp)) {
+                        BUG_ON(!buffer_locked(tmp));
+                        goto still_busy;
+                }
+                tmp = tmp->b_this_page;
+        } while (tmp != bh);
+        folio_end_read(folio, folio_uptodate);
 
-That should be disabled by the whole
+so it's going to cycle around every buffer on the page, and if it finds
+none which are marked async_read, it'll call folio_end_read().
+That's fine in 6.13 because in stage 2, all buffers which are part of
+this folio are marked as async_read.
 
-        /*
-         * If there are permission event watchers but no pre-content event
-         * watchers, set FMODE_NONOTIFY | FMODE_NONOTIFY_PERM to indicate that.
-         */
+In your patch, you mark every buffer _in the batch_ as async_read
+and then submit the entire batch.  So if they all complete before you
+mark the next bh as being uptodate, it'll think the read is complete
+and call folio_end_read().
 
-thing in file_set_fsnotify_mode() which only allows regular files and
-directories to be notified on.
-
-Or, alternatively, that check for huge-fault disabling is just
-checking the wrong bits.
-
-Or - quite possibly - I am missing something obvious?
-
-             Linus
