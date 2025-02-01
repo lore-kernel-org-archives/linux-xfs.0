@@ -1,145 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 830B81EF01;
-	Sat,  1 Feb 2025 14:38:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C6C9208A9;
+	Sat,  1 Feb 2025 16:53:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738420711; cv=none; b=SAxZW/9TROlCUVQPc9m2Gh5AJBnneGy38kg+xtKqwkczy/H6NNz0g41XQ7OHPHKJNdkVw9z+YUCQFS9f/XMrMAOP1fA1ZvxqJ5i0239f3dJwl5htFEjniIFNwBwWzHkTUk/ccAWk+lR7HJVQT2mcMgnvO0UJUQS4xRmDwkOZULI=
+	t=1738428840; cv=none; b=MhSDETU2kE/AjQ4XbZ4pwPOWVTCOeQUa5hCaVZWPSC0nhdCskVc/BIVJ1PsGuldueu4Ib8Ku0bMpDAzzG7dZTw+X5ecUip0ThhYa7EpfvcGrGfJCxm/107wGGQLHnisxfd0pkVN75iVnh8IHQs20DrmM25uIbYiJCbigFQcSpug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738420711; c=relaxed/simple;
-	bh=QiSjG7TvkKqWoaD2aBFrVJnxmPFyXLRgqp8pz0gLUzc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sir0E/nrq4GSzZD1K/Hr6zwMS/KFWTY1dUzg66F2NSymciBIC/Dk2lrojlTz7m7+gl1d94Tn5Hbqy7kGuWhFy8Y6RXdR8gjaIuPHamkSz81OufFhZUR0YnhKe57Ji6VagnGsAMGEXGCUG1I1b9+bD2pycFFwZnfOWvMgSxf3uFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WHVcnBTq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738428840; c=relaxed/simple;
+	bh=EpQjIwpiqwLbhZDDirRysP8q/HUWGCIYpEHuKsU2DTg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=E5RJMTwUAO7DXr7PBryUxYtjEwvV8NYc/Xns2O0Y+dSRU6aqRJCYYSE8Y3tVnDlMAEbKEA4pXp49KJ2P8ZdO3J0A22cU1D+u0fOOo8mNilQcFDQslvLmE5md+Kns91NNnCC9+zOS9oM6BnQjFCIsyysoUptQD3W9NqCMS4lVKj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=nszgTuo/; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WHVcnBTq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81966C4CED3;
-	Sat,  1 Feb 2025 14:38:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738420710;
-	bh=QiSjG7TvkKqWoaD2aBFrVJnxmPFyXLRgqp8pz0gLUzc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WHVcnBTqerPHgxQCTpImKkHSbu00uWLYWvzmwAtGSlEM5YJZsz+IONl1JAUXaAYeS
-	 UJ9kApP54ppYFtkOEdEpcq3q/cMh6HuYR1mHH/xKj/oPfQVrOmFtSrd8PKELMi9ZKd
-	 aMt49gIWUhJubrKpeqIdvzW/w1uO2UpMYnZh0EB8fqF0FzQhG/nkrRTh0n3uupqhJX
-	 GL6/bojxTFS3yFivQGFxojQ/70DT1M5BSJIYxKerpN3FTZplWkma3sNKC0V8QcHgvv
-	 06dPyDUVaBQCjxiqI0K2TaqPFoWFtdm50CRElJU5ocUYzDcQzY+iGG0rhGd7AyrKNH
-	 jwF5lZf/kuiTQ==
-Date: Sat, 1 Feb 2025 15:38:20 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Peter Xu <peterx@redhat.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
-	Alex Williamson <alex.williamson@redhat.com>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, 
-	linux-fsdevel@vger.kernel.org, jack@suse.cz, amir73il@gmail.com, viro@zeniv.linux.org.uk, 
-	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-ext4@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Subject: Re: [REGRESSION] Re: [PATCH v8 15/19] mm: don't allow huge faults
- for files with pre content watches
-Message-ID: <20250201-legehennen-klopfen-2ab140dc0422@brauner>
-References: <cover.1731684329.git.josef@toxicpanda.com>
- <9035b82cff08a3801cef3d06bbf2778b2e5a4dba.1731684329.git.josef@toxicpanda.com>
- <20250131121703.1e4d00a7.alex.williamson@redhat.com>
- <CAHk-=wjMPZ7htPTzxtF52-ZPShfFOQ4R-pHVxLO+pfOW5avC4Q@mail.gmail.com>
- <Z512mt1hmX5Jg7iH@x1.local>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="nszgTuo/"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 511DS93K010152;
+	Sat, 1 Feb 2025 16:53:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:message-id:mime-version:subject:to; s=
+	pp1; bh=dNGVTebc8on0ImUIEjF3PdUCyfFNtktTD0RQty9whBI=; b=nszgTuo/
+	cFjttmP6xB+b6eO1skhflXOG4NCzT3c81T5zXvxZOPqMqY/kvQclxVhT0n5SWtvx
+	J+H5fWB8vxAofO6+t2nVMfZyXNM8gm6C8uKKVP6uMhkMpgMsOx2110ShE5QzQQub
+	Pc9cciK+xMjIO4M+0LL4LjZU5SNLkXx1uQjj5GuMtMJzzZwMjS0Bt0tGT4trHjdo
+	6XinAQ52qkh/bZ7TX0hjYHb4KEt7bkA1S/41PSb/1Kt8x7AqL7rpl3TQIhu7mfDV
+	+tph3uqhd9baGQW8dkZyBH41iwpgxbp60cmZ8m8ZI2xT+JhIl0tXeABz/AHJzKdx
+	MCNv59/iozaL0w==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44hd8k1hyu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 01 Feb 2025 16:53:40 +0000 (GMT)
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 511GreP6026762;
+	Sat, 1 Feb 2025 16:53:40 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44hd8k1hys-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 01 Feb 2025 16:53:39 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 511FwGaW008671;
+	Sat, 1 Feb 2025 16:53:38 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 44hdawswh7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 01 Feb 2025 16:53:38 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 511Gra7C37749188
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 1 Feb 2025 16:53:36 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8764F2006A;
+	Sat,  1 Feb 2025 16:53:36 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B750120067;
+	Sat,  1 Feb 2025 16:53:33 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.17.225])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Sat,  1 Feb 2025 16:53:33 +0000 (GMT)
+Date: Sat, 1 Feb 2025 22:23:29 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        djwong@kernel.org, dchinner@redhat.com, ritesh.list@gmail.com,
+        jack@suse.cz, tytso@mit.edu, linux-ext4@vger.kernel.org,
+        nirjhar.roy.lists@gmail.com, zlang@kernel.org
+Subject: [LSF/MM/BPF TOPIC] xfstests: Centralizing filesystem configs and
+ device configs
+Message-ID: <Z55RXUKB5O5l8QjM@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z512mt1hmX5Jg7iH@x1.local>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: gtMQaCfMySc79GNShiqDKBnCXXY9E1Q8
+X-Proofpoint-GUID: fk5DmC9NxPP_CQ7sH2pdR8zYwdtJXnCK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-01_07,2025-01-31_02,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
+ lowpriorityscore=0 phishscore=0 impostorscore=0 mlxscore=0 clxscore=1015
+ malwarescore=0 priorityscore=1501 bulkscore=0 mlxlogscore=999 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2501170000
+ definitions=main-2502010143
 
-On Fri, Jan 31, 2025 at 08:19:22PM -0500, Peter Xu wrote:
-> On Fri, Jan 31, 2025 at 11:59:56AM -0800, Linus Torvalds wrote:
-> > On Fri, 31 Jan 2025 at 11:17, Alex Williamson
-> > <alex.williamson@redhat.com> wrote:
-> > >
-> > > 20bf82a898b6 ("mm: don't allow huge faults for files with pre content watches")
-> > >
-> > > This breaks huge_fault support for PFNMAPs that was recently added in
-> > > v6.12 and is used by vfio-pci to fault device memory using PMD and PUD
-> > > order mappings.
-> > 
-> > Surely only for content watches?
-> > 
-> > Which shouldn't be a valid situation *anyway*.
-> > 
-> > IOW, there must be some unrelated bug somewhere: either somebody is
-> > allowed to set a pre-content match on a special device.
-> > 
-> > That should be disabled by the whole
-> > 
-> >         /*
-> >          * If there are permission event watchers but no pre-content event
-> >          * watchers, set FMODE_NONOTIFY | FMODE_NONOTIFY_PERM to indicate that.
-> >          */
-> > 
-> > thing in file_set_fsnotify_mode() which only allows regular files and
-> > directories to be notified on.
-> > 
-> > Or, alternatively, that check for huge-fault disabling is just
-> > checking the wrong bits.
-> > 
-> > Or - quite possibly - I am missing something obvious?
-> 
-> Is it possible that we have some paths got overlooked in setting up the
-> fsnotify bits in f_mode? Meanwhile since the default is "no bit set" on
-> those bits, I think it means FMODE_FSNOTIFY_HSM() can always return true on
-> those if overlooked..
-> 
-> One thing to mention is, /dev/vfio/* are chardevs, however the PCI bars are
-> not mmap()ed from these fds - whatever under /dev/vfio/* represents IOMMU
-> groups rather than the device fd itself.
-> 
-> The app normally needs to first open the IOMMU group fd under /dev/vfio/*,
-> then using VFIO ioctl(VFIO_GROUP_GET_DEVICE_FD) to get the device fd, which
-> will be the mmap() target, instead of the ones under /dev.
+Greetings,
 
-Ok, but those "device fds" aren't really device fds in the sense that
-they are character fds. They are regular files afaict from:
+This proposal is on behalf of Me, Nirjhar and Ritesh. We would like to submit
+a proposal on centralizing filesystem and device configurations within xfstests
+and maybe a further discussion on some of the open ideas listed by Ted here [3].
+More details are mentioned below.
 
-vfio_device_open_file(struct vfio_device *device)
+** Background ** 
+There was a discussion last year at LSFMM [1] about creating a central fs-config
+store, that can then be used by anyone for testing different FS
+features/configurations. This can also bring an awareness among other developers
+and testers on what is being actively maintained by FS maintainers. We recently
+posted an RFC [2] for centralizing filesystem configuration which is under
+review. The next step we are considering is to centralize device configurations
+within xfstests itself. In line with this, Ted also suggested a similar idea (in
+point A) [3], where he proposed specifying the device size for the TEST and
+SCRATCH devices to reduce costs (especially when using cloud infrastructure) and
+improve the overall runtime of xfstests.
 
-(Well, it's actually worse as anon_inode_getfile() files don't have any
-mode at all but that's beside the point.)?
+Recently Dave introduced a feature [4] to run the xfs and generic tests in
+parallel. This patch creates the TEST and SCRATCH devices at runtime without
+requiring them to be specified in any config file. However, at this stage, the
+automatic device initialization appears to be somewhat limited. We believe that
+centralizing device configuration could help enhance this functionality as well.
 
-In any case, I think you're right that such files would (accidently?)
-qualify for content watches afaict. So at least that should probably get
-FMODE_NONOTIFY.
+** Proposal ** 
+We would like to propose a discussion at LSFMM on two key features: central
+fsconfig and central device-config within xfstests. We can explore how the
+fsconfig feature can be utilized, and by then, we aim to have a PoC for central
+device-config feature, which we think can also be discussed in more detail. At
+this point, we are hoping to get a PoC working with loop devices by default. It
+will be good to hear from other developers, maintainers, and testers about their
+thoughts and suggestions on these two features.
 
-> 
-> I checked, those device fds were allocated from vfio_device_open_file()
-> within the ioctl, which internally uses anon_inode_getfile().  I don't see
-> anywhere in that path that will set the fanotify bits..
-> 
-> Further, I'm not sure whether some callers of alloc_file() can also suffer
+Additionally, we would like to thank Ted for listing several features he uses in
+his custom kvm-xfstests and gce-xfstests [3]. If there is an interest in further
+reducing the burden of maintaining custom test scripts and wrappers around
+xfstests, we can also discuss essential features that could be integrated
+directly into xfstests, whether from Ted's list or suggestions from others.
 
-Sidenote, mm/memfd.c should pretty please rename alloc_file() to
-memfd_alloc_file() or something. That would be great because
-alloc_file() is a local fs/file_table.c helper and grepping for it is
-confusing as I first thought someone made alloc_file() available outside
-of fs/file_table.c
+Thoughts and suggestions are welcome.
 
-> from similar issue, because at least memfd_create() syscall also uses the
-> API, which (hopefully?) would used to allow THPs for shmem backed memfds on
-> aligned mmap()s, but not sure whether it'll also wrongly trigger the
-> FALLBACK path similarly in create_huge_pmd() just like vfio's VMAs.  I
-> didn't verify it though, nor did I yet check more users.
-> 
-> So I wonder whether we should setup the fanotify bits in at least
-> alloc_file() too (to FMODE_NONOTIFY?).
-> 
-> I'm totally not familiar with fanotify, and it's a bit late to try verify
-> anything (I cannot quickly find my previous huge pfnmap setup, so setup
-> those will also take time..). but maybe above can provide some clues for
-> others..
-> 
-> Thanks,
-> 
-> -- 
-> Peter Xu
-> 
+** References **
+[1] https://lore.kernel.org/all/87h6h4sopf.fsf@doe.com/
+[2] https://lore.kernel.org/all/9a6764237b900f40e563d8dee2853f1430245b74.1736496620.git.nirjhar.roy.lists@gmail.com/
+[3] https://lore.kernel.org/all/20250110163859.GB1514771@mit.edu/
+[4] https://lore.kernel.org/all/20241127045403.3665299-1-david@fromorbit.com/
