@@ -1,66 +1,57 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15AEDBA3D
-	for <linux-xfs@vger.kernel.org>; Sun,  2 Feb 2025 00:58:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 650D32AD11;
+	Sun,  2 Feb 2025 07:46:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738457929; cv=none; b=YfJCwzHE01ThvkFlp96bUM7yF7CdEFGZ/4AwbmHSKzd2+sgJ6EtqSefnz3mRgDZsJ49TMn9JcA1wTHfe+eJfQjiZ1bK1F/zhcOuXi8XQ6ab7N3hiJJMSSvoEoGS4nlRCjgO07OV8gAdZWdAfRNAIh2WJ9p2i+y8xL65/7XpXgrc=
+	t=1738482397; cv=none; b=gTm70PEQW+zLQrzBs2aB8BHT71QyXKozaTW85IKqHeC3k1znONtQqGlNRMDCMwUTNa+Ek6sMMYnbRkeVQ6DZG82VdV70NFXi48td93aNwIn6D7dVk2WYxc5bMhol1zEaJUsBzkzZ/Pl0CihYVEO1yzqiRjXRNSrV93srAhIARGY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738457929; c=relaxed/simple;
-	bh=wTdxQSHNowLLmMobvaMcMprIsVZ+/hyqVnL+ii8pks8=;
+	s=arc-20240116; t=1738482397; c=relaxed/simple;
+	bh=KPpRZb+XkmZNS30akoEPKssE6STRgNhMrtLh9sGnrZE=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HjI7xRe7UAJEVtMT9DVf6dQyHfvpDgwMdrJxkTc3S3Dsf9gVK6l3NOQ32UddTPRy0oXAT/J9ybsxSoe1MoT4r5jSWqtmfZUEnBx/onJNOmPUtraEhIL/yTMLEaPNKGPXKH9237bpc+UgXoSsUTtwGer4C39NRNObWz2+os5smHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=H4YWNiKu; arc=none smtp.client-ip=209.85.218.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	 To:Cc:Content-Type; b=W0A+wxVm+LQxCpC6jeQOJ/IARrqAjjEskTEqbNASQew2ktzibf6ktLMYJN7z6BHKFgMYJ0k3d6LYCh0eWcjyydQi9RktHXofRX51DKAebay2CpXWqjU6F62fNzse01P6Cdwe5cjpvD4qCVOaw4dtd5v2GNLpMSVRiiZWLnstjsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ela7RF0y; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="H4YWNiKu"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-ab2aea81cd8so576699466b.2
-        for <linux-xfs@vger.kernel.org>; Sat, 01 Feb 2025 16:58:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ela7RF0y"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5d3d479b1e6so4657104a12.2;
+        Sat, 01 Feb 2025 23:46:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1738457925; x=1739062725; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=0i2RBA9AG5RGJ2Y4fhUq4YhT8DGp5O3OFexnsh+308w=;
-        b=H4YWNiKuJxm7svy3nGYkMeVz4s6fiiRqKR9K6yesIcZ8SCOeHWSIpWS7qZTeTjQ0/q
-         e49p3+AVTZkDA7yy3/Ezviqv1XRWr7GUHH3BeCQ+iNfzl6NcgrDJ/mogP8OCfk0+3nFf
-         xhJ2ve+ua06Mk3vSASa4cDdNAi3rvKeXcN79U=
+        d=gmail.com; s=20230601; t=1738482392; x=1739087192; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dkf3AnYzxtjJolWV6YY/aOb67PW9FbaNoOwrFtKSVa0=;
+        b=ela7RF0yzFdSU3B0b25LHsH53kcaAbCxaaStqIgqjcVaSgS+hkBcmtnQVNhaMUGsgQ
+         8qe+6xr6bruDbpzbgndT5mJ2K1Q2zVOAOO6z+2rgV+lG7ckUoqMqGgoGGimuMR+v0Mef
+         90vwH19LhWbEnod00OE+MNkWl+kKavcj5xs410vTGVmLiMRGhA1xaYXjhzH3IvTg7ONS
+         Y19dzIDcKm1hkLchGzu6FtkhS0ANBvQugw59YMQKh29dW28Wh0jvym41cN+QZVIXV70x
+         5xKwTW3+/qSDjSuijVbSVChxoM8ttohixz1sWJD/x7vN6jLo7Q6tSn08r+cslLHdBy45
+         HQiw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738457925; x=1739062725;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=0i2RBA9AG5RGJ2Y4fhUq4YhT8DGp5O3OFexnsh+308w=;
-        b=Jv4gQlImidoSU8fPFTUuW8kHXgu8tiOmYiWobBcz+nsDrTKduv+9nfSY5G9OIoAIIl
-         06hwr2nG+LuDrAm91Yzbnh0TF4SpVkqnPzJLsJHmR1ixf69jKjvobioa5fx4ASM7ZHsv
-         VkXRQGUIhhvJRsOSTbm5xw1fsUAxmJzJXg9ScjrOWeGYLuc4OUhI8rF55nNZOplI86oz
-         qn3f3ck7eGFwYVf4JlDpij6+e+CSPKp/o7vMRYc+4KKCTHiJahZk7dt6yXjyuE52KInC
-         aw+exTwGPoPX2ARXji3SvRewfF6f5FKWvsLOdNqUn4yrjQ/Zc9GPMvTQTLF2LnZ4n+rX
-         WSug==
-X-Forwarded-Encrypted: i=1; AJvYcCVqKjU6LHlFABuGs4Qn6WqzE91VG9oItYTUUDafXfdp+fjJapc8BDuqqvpl2NL73j6VQrNphue8K00=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwRk10soPCJ1w+nW0lV9dzo+KvepgtsQkORxaTezdetoQ5FY2dk
-	/GLuHZgSjDB6o3ZSBHBNQiEnVKVE1IsuSf+6eQQzSP3Oq0jLvpz0TOva0gAWsH6wP64KgbT6jwR
-	2pd+AkQ==
-X-Gm-Gg: ASbGncsUsrtCyewCNqvdjyEhRJTq3XxCprxygjUqCNOU4oDYzCnYwRfD06rqCseiC4m
-	SJy17w5Wbd6VPyjnWhjNuycV5prsx3MojD5QchosfkPpgENzo9wRKZ9pBgAaPNzG6rSCxtoKQGt
-	JbUKKXltAVOJNFLS0ObEnjWsq3un2jt8MBo/TcBXD8sdRST9c3W42CPK1mliXypOPqjIlECR8jj
-	mf3BOwjFh047qytbq5Yg0JF6HE13wvozcq22bXzi5ututtMxGiCnXoHob59geIc4gU1UX7R6G0x
-	x1iWmwysVGwtDzE3ZBXLYPVnu8cDJBcaUxf0fypJpy2Gb5VC3rJkGheodxdCeEXCTg==
-X-Google-Smtp-Source: AGHT+IFaxOQQVqxvH6iHErLov7tGrTKoeP/NeD1lPexxgLzHDObPCcshb8sg2OLlKn/BXxKkRjTLZA==
-X-Received: by 2002:a17:907:72ca:b0:ab6:cdb1:cc6f with SMTP id a640c23a62f3a-ab6cfcc6ef7mr1795149766b.2.1738457925131;
-        Sat, 01 Feb 2025 16:58:45 -0800 (PST)
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com. [209.85.208.43])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab6e47f1dcasm503350066b.79.2025.02.01.16.58.43
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 01 Feb 2025 16:58:44 -0800 (PST)
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-5d3cf094768so5867293a12.0
-        for <linux-xfs@vger.kernel.org>; Sat, 01 Feb 2025 16:58:43 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCX7ft587Ay/lS+p3nZeKN/6ni8Qe7SLSi0qvJl6AqY3QL5suDiCiM7xMIEw/48y7RIpsdav/gET/Z0=@vger.kernel.org
-X-Received: by 2002:a05:6402:50ca:b0:5d9:a55:42ef with SMTP id
- 4fb4d7f45d1cf-5dc5efc4586mr20023222a12.17.1738457922880; Sat, 01 Feb 2025
- 16:58:42 -0800 (PST)
+        d=1e100.net; s=20230601; t=1738482392; x=1739087192;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=dkf3AnYzxtjJolWV6YY/aOb67PW9FbaNoOwrFtKSVa0=;
+        b=Qa9iESBX6giZIH7iwcIW8HzzKcVPEkKzeD92omtqEvT+DACZdLuXnLyIxnZxoJbv2j
+         DSp0lL8hCbIbq0epcS+SO/dLJNjF2MsNISHjRFtqW0XPu+ATzJErA7IrVOmzcJSuJjhp
+         8R1WIdJ9AfETCOfoY/j+eMAjRKkhA6kTrDDPZSQyhwFP30m9e/bHd43ASsRldcR7fa/9
+         IA3+Dp6g772RN/ByOM6Otmg7K5eTZnmgIBLn8XdnzL4wLE5QUKGRW1GfgRGf5RADhgso
+         LA07BQuXGzjSG2XdENADk0WcuAfStlKqvN6dbadMV/TM96rGrmtR84uYHNaLu7HX/m2y
+         iQlQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU4/L9njha5Jf3psuZM1e/XtKrDVCjT7t+bb2ukJXbnvOjhdXSOND81UOk8py2MA/O9vFKAfHZ3+bAZ@vger.kernel.org, AJvYcCVTRZC9hw2URcc+ylKCEngkcqcf1aKffiTh7HXeGhMGVLw2pvfKlk7eUFconVQjdYYRebN7e4KYoEwWSMbW@vger.kernel.org, AJvYcCVbr/wVtvwxhb7kpE25ptcI1IH0TcffA1iV97B5MWNxrPq7MZGnmZlWnQNiZBRiQv5egEtjBdkx/cyanQ==@vger.kernel.org, AJvYcCWGyroGzw0PKsyGv2bJy5E2wEtSSUpvHsbDjX6U4g8mq+Fsqb3Qtb2R9K8u4WFFa9ZVXcFbsFrHG8MKrZ0=@vger.kernel.org, AJvYcCXMbAxHTX4XrcrrQLzJLxGsFDhS6EYk6whLVcEuWXyvbOI4PFadm2xxluesyhhMk0R6RBX29ojpuwI6ivrrFQ==@vger.kernel.org, AJvYcCXdW9rq9pGchahllYJT9xklgcJ3iwKkSidgrybvPLlslUU0xy7lSXJ387/YmpIDkMYq34M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzwpmsYKgurM12REUK1EEOtKF1f6+Hb26KNK7+TolFO3bfqkEou
+	d6nX0SE+qrm9W2/fT7hsgkEdmA4uN5jf3inckgA+Rr+zYbgj4sg4paH3jjFjJj7ouvZ6Ce0T+im
+	I+E2ksl+oXYlq+4+tX+wgOoKUmQs=
+X-Gm-Gg: ASbGncvesWoAWUZa584b7MLzr1V/D3qNWW8E1mtBiFkr/El3FzIldee3nYtDpf/vUsl
+	w89P+ykFj0To1gVbvdCdCPgTdL697xCntAqdJnw1uG+yxJ+U49XbUcvFHXzHcYCHQYT8wpJMA
+X-Google-Smtp-Source: AGHT+IE25ioY+88Ad0dzyJ05zZTY4tUCHqGHqVeBxZbL7pLFQn1rxv9eQSShAxQEMVL/CmIeX9bb7tDeZctmbYTQTWc=
+X-Received: by 2002:a05:6402:274e:b0:5d0:9054:b119 with SMTP id
+ 4fb4d7f45d1cf-5dc5efec007mr41206927a12.21.1738482392164; Sat, 01 Feb 2025
+ 23:46:32 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,43 +61,72 @@ MIME-Version: 1.0
 References: <cover.1731684329.git.josef@toxicpanda.com> <9035b82cff08a3801cef3d06bbf2778b2e5a4dba.1731684329.git.josef@toxicpanda.com>
  <20250131121703.1e4d00a7.alex.williamson@redhat.com> <CAHk-=wjMPZ7htPTzxtF52-ZPShfFOQ4R-pHVxLO+pfOW5avC4Q@mail.gmail.com>
  <Z512mt1hmX5Jg7iH@x1.local> <20250201-legehennen-klopfen-2ab140dc0422@brauner>
-In-Reply-To: <20250201-legehennen-klopfen-2ab140dc0422@brauner>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 1 Feb 2025 16:58:26 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wi2pThSVY=zhO=ZKxViBj5QCRX-=AS2+rVknQgJnHXDFg@mail.gmail.com>
-X-Gm-Features: AWEUYZkrc1rbpsukghJrnBMXjfiiupnnm33djYsyEN114ENNjNC4tG_tthCj53k
-Message-ID: <CAHk-=wi2pThSVY=zhO=ZKxViBj5QCRX-=AS2+rVknQgJnHXDFg@mail.gmail.com>
+ <CAHk-=wi2pThSVY=zhO=ZKxViBj5QCRX-=AS2+rVknQgJnHXDFg@mail.gmail.com>
+In-Reply-To: <CAHk-=wi2pThSVY=zhO=ZKxViBj5QCRX-=AS2+rVknQgJnHXDFg@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sun, 2 Feb 2025 08:46:21 +0100
+X-Gm-Features: AWEUYZnttHbNcopdkTaXe70ba9wJmxOXrUavrKaCPbqgXlhsWsN9pWLAIjMYcbA
+Message-ID: <CAOQ4uxjVTir-mmx05zh231BpEN1XbXpooscZyfNUYmVj32-d3w@mail.gmail.com>
 Subject: Re: [REGRESSION] Re: [PATCH v8 15/19] mm: don't allow huge faults for
  files with pre content watches
-To: Christian Brauner <brauner@kernel.org>
-Cc: Peter Xu <peterx@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, 
-	Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-fsdevel@vger.kernel.org, 
-	jack@suse.cz, amir73il@gmail.com, viro@zeniv.linux.org.uk, 
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Christian Brauner <brauner@kernel.org>, Peter Xu <peterx@redhat.com>, 
+	Alex Williamson <alex.williamson@redhat.com>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, 
+	linux-fsdevel@vger.kernel.org, jack@suse.cz, viro@zeniv.linux.org.uk, 
 	linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, 
 	linux-ext4@vger.kernel.org, 
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, 1 Feb 2025 at 06:38, Christian Brauner <brauner@kernel.org> wrote:
+On Sun, Feb 2, 2025 at 1:58=E2=80=AFAM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 >
-> Ok, but those "device fds" aren't really device fds in the sense that
-> they are character fds. They are regular files afaict from:
+> On Sat, 1 Feb 2025 at 06:38, Christian Brauner <brauner@kernel.org> wrote=
+:
+> >
+> > Ok, but those "device fds" aren't really device fds in the sense that
+> > they are character fds. They are regular files afaict from:
+> >
+> > vfio_device_open_file(struct vfio_device *device)
+> >
+> > (Well, it's actually worse as anon_inode_getfile() files don't have any
+> > mode at all but that's beside the point.)?
+> >
+> > In any case, I think you're right that such files would (accidently?)
+> > qualify for content watches afaict. So at least that should probably ge=
+t
+> > FMODE_NONOTIFY.
 >
-> vfio_device_open_file(struct vfio_device *device)
+> Hmm. Can we just make all anon_inodes do that? I don't think you can
+> sanely have pre-content watches on anon-inodes, since you can't really
+> have access to them to _set_ the content watch from outside anyway..
 >
-> (Well, it's actually worse as anon_inode_getfile() files don't have any
-> mode at all but that's beside the point.)?
+> In fact, maybe do it in alloc_file_pseudo()?
 >
-> In any case, I think you're right that such files would (accidently?)
-> qualify for content watches afaict. So at least that should probably get
-> FMODE_NONOTIFY.
 
-Hmm. Can we just make all anon_inodes do that? I don't think you can
-sanely have pre-content watches on anon-inodes, since you can't really
-have access to them to _set_ the content watch from outside anyway..
+The problem is that we cannot set FMODE_NONOTIFY -
+we tried that once but it regressed some workloads watching
+write on pipe fd or something.
 
-In fact, maybe do it in alloc_file_pseudo()?
+and the no-pre-content is a flag combination (to save FMODE_ flags)
+which makes things a bit messy.
 
-Amir / Josef?
+We could try to initialize f_mode to FMODE_NONOTIFY_PERM
+for anon_inode, which opts out of both permission and pre-content
+events and leaves the legacy inotify workloads unaffected.
 
-              Linus
+But, then code like this will not do the right thing:
+
+        /* We refuse fsnotify events on ptmx, since it's a shared resource =
+*/
+        filp->f_mode |=3D FMODE_NONOTIFY;
+
+We will need to convert all those to use a helper.
+I am traveling today so will be able to look closer tomorrow.
+
+Jan,
+
+What do you think?
+
+Amir.
