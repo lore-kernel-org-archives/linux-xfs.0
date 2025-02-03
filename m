@@ -1,87 +1,214 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766E71FF7B4
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Feb 2025 22:32:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0E59212B02
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Feb 2025 22:39:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738621967; cv=none; b=uRSFAW1bTjlqB9ehi8ex3+N7TV889t4TLk+oowgbFWds/aOmRKh72kGF/aYe4uSADBQ1+n4J4UBLqFcAKnsVUvCL9euO1EHPwpu1tnri0YLoOkXVi2HRLUP0sOFI+zeJ1b95PdCcQrJXZjE0m586h0tnROtRjmfXDdZ79hFEfWk=
+	t=1738622368; cv=none; b=s5kEYcgA2s38bDAmJPl+glkq0A+bwSi+jAbojiofV5VafSs7XM9qhhe1eCgN1fIr6OUooyIXNvlLd8udZ42/1aqHJvKl4jlATiVaLa8uq21JVAIVQUWfyK0s/0u3EKaWbHFPKPrUIkKf5DOyG0PSmmnr3w3jWIaANwTF7/0azIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738621967; c=relaxed/simple;
-	bh=RTj+tTx1A1k/t42wFBp0nwP/9na8DDa4damqmCYjd+g=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=puPjfn/g/SXwzolzrJaC6UWGHniXE1KQuTYy2iKfwcgHyVsLNinYcA1hoL/Cnf3L2wwztfIC0HSmTil1AvLG+ybs086lkUI0dhVSmFHKAZU39qQeMapT10u2AVDJYpiuKPT5DRskOwcD3B2W6XfNJ0Kz8/7HuchamTVq1IOSKF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=REuzD+yg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738622368; c=relaxed/simple;
+	bh=K1VNqIvXyYYBViLsvU7jTEwkBNtEo6tSllkcYykAnC4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LRiil2jJKVWVD9vmHaKJJNRNkU8BOTGkwcfa+y6BochFjB1na+MO3/GnGJYUBLwKfl+A3wyGTGUHNyrnSEpiqeZJq1iegM7qOzbb6nMMRBfGTuO0TYj0hBissdHeJ8vLbFCJI/93GZdDMAi6hqVslwPLxiZW6iZdNUgjCDx56j8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=hFlAdqE0; arc=none smtp.client-ip=209.85.216.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="REuzD+yg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7D5AC4CED2;
-	Mon,  3 Feb 2025 22:32:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738621966;
-	bh=RTj+tTx1A1k/t42wFBp0nwP/9na8DDa4damqmCYjd+g=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=REuzD+yg7QkzS4QkCa+W9ZcHYiUGFQRT/2Ed7t5ti/l6KbMQHgOKupKmuPWGOkD9e
-	 CDzgScRUL5XI8QJZ3oS7Z4oUvnHxf5AG0f3jdUuynm0in/sX6U0uYLD4j72+x/FTEy
-	 /HGfPD0PtfRHm68Envuqf7556FyYMd5a+cnS8PboSYZSj1npPpMET00ymY2Nq2UNou
-	 TyPksUh5FUJpicE+lqChIDbSdMjKtrCYnSELDoRpk7HrCR53SJMMB/LOETuUrPcWrE
-	 YOEAqSHdGeZjkaATfNFcjogdnUvzRaEl1JhOREc4uqv1JNo8tNOPc9Bbg0DF54INVL
-	 X2HpIKwjfGQdw==
-Date: Mon, 03 Feb 2025 14:32:46 -0800
-Subject: [GIT PULL] xfs: bug fixes for 6.14
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: , david.flynn@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173862194217.2448987.122994949207801411.stg-ugh@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="hFlAdqE0"
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-2f78a4ca5deso6342819a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Feb 2025 14:39:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738622365; x=1739227165; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7KpVGyJ2q1bc5O6QMLcMEUWtGlTAt/NvAxettw3RvKg=;
+        b=hFlAdqE0Ps+xBkFt/kwvpqEmDliL7EctUd/lDWrFGs76+zatNRa050WXpvHmGvp/lW
+         lzXS+vE3Xrngsrv5Ais3d9tXAHJlivO1592p0Wucl8P5hd4Vu0KuL8Wn50wpwQHWqwij
+         pnAQ5892Q6/5uG5MnhlLvAoOYH10UlfQ89VAhVhoZbDOMWpEXZz/cpSJlCfC864pURqH
+         e7Z4BlE5pe8TTi8/Zq04avhEDMyTfmTVVayxLYqw7OjXt7PG10Cy8JJFbm2WpNYZnwNq
+         Cyhk4kXMTz105AI5BKxMgpUgj5EMOUTOFa7izZgfR0WXQyJ2R5FrnFkicFuOaEjKicZd
+         0iIQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738622365; x=1739227165;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7KpVGyJ2q1bc5O6QMLcMEUWtGlTAt/NvAxettw3RvKg=;
+        b=GDVT/py9v2T9ahtgtMzk0ZMwRDIYOV+7okCvvogl2Ms+qNS9PRr3TPsA578JoLDJKs
+         oU9SlxWxKUJ1HDnCQXhamZHXlXM1c1abWLjhxSehnHVupPr2FdCLonFXdQ5qc04vRjYu
+         yC36IrYr8r+wQreGWIjp1XUZ6P6gB08qwD2N+IHrFxwL+vzfrmk1v+OD2arEZRoCYrcK
+         98pX3fMp10iXkZilgQsOa5k8LXhRisjMvEpjDqW0vfMgVCunNdaukapkCLvUhvaWGTFW
+         fmtmU49S74BHGahpFBeavaPeopCABonR7xW98JcqefE6RmQai1GfmFDboySeDXySSugz
+         91Qg==
+X-Forwarded-Encrypted: i=1; AJvYcCXM7x4ap5q13lzXnXr9TNMxZt1RpqntTJRvxhhmeLTil1H5NiYcFYFotfBdL65M+qpKH8PyOO/nTdw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxaYYZ0PZ4+z0sGv4mXAspTzUG5PGQj7UWRwZycnWaTbAaIXHiK
+	+kTtzqSvs92ZfhawqXKd4J3X/gUEqkBzt2OtEk91I9s8MqiJ3UQRYq+pd1VzZWY=
+X-Gm-Gg: ASbGncvAQ8C3v8uEdrtnJtMyHRgVFjdehB6hzr1qAgGpCN8ZIJ64ZMaULKOmpkb03+g
+	ZU0d24l1mJc1mXaH3MXbC35lC6MrWd3ebry+ZO8OkwGqO5rre1tJdHVt6c2k7K4kQT0WTw7qs/Y
+	5VRTAxoJ8zdkOBgPJpXMo6QN4ofACcOKRAWsQXDhbOJlcsQTYkVsJv16Vz+e4xyeEF3VBuAk4Ac
+	trnDqBn3zpFIjDV9EkcOm2TpruAOTDiFyYrQnBBcK1WaNG4kZZCKn301MD2oSPa3DEH0qeKlRvh
+	tk+bPTpyi9+uOUnOEX8ECxoiOg5Pr9e6FXe3fi6SBVkgpUs7C7wiZupY0wkrpAKWJdI=
+X-Google-Smtp-Source: AGHT+IEPTrAiWBg1qg9Pn7U4MfER2lZWbpMPOOLGPLK2BHWop9OkWWimId0qcnZrm79vDgsDbkrIXg==
+X-Received: by 2002:a17:90b:524a:b0:2ee:5691:774e with SMTP id 98e67ed59e1d1-2f83ab8baf8mr37128948a91.2.1738622364086;
+        Mon, 03 Feb 2025 14:39:24 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21de32ebabasm82038825ad.129.2025.02.03.14.39.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Feb 2025 14:39:23 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tf567-0000000EGx6-3IMd;
+	Tue, 04 Feb 2025 09:39:19 +1100
+Date: Tue, 4 Feb 2025 09:39:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, djwong@kernel.org,
+	dchinner@redhat.com, ritesh.list@gmail.com, jack@suse.cz,
+	tytso@mit.edu, linux-ext4@vger.kernel.org,
+	nirjhar.roy.lists@gmail.com, zlang@kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] xfstests: Centralizing filesystem configs and
+ device configs
+Message-ID: <Z6FFlxFEPfJT0h_P@dread.disaster.area>
+References: <Z55RXUKB5O5l8QjM@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <173862180286.2446958.14882849425955853980.stgit@frogsfrogsfrogs>
-References: <173862180286.2446958.14882849425955853980.stgit@frogsfrogsfrogs>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z55RXUKB5O5l8QjM@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 
-Hi Carlos,
+On Sat, Feb 01, 2025 at 10:23:29PM +0530, Ojaswin Mujoo wrote:
+> Greetings,
+> 
+> This proposal is on behalf of Me, Nirjhar and Ritesh. We would like to submit
+> a proposal on centralizing filesystem and device configurations within xfstests
+> and maybe a further discussion on some of the open ideas listed by Ted here [3].
+> More details are mentioned below.
+> 
+> ** Background ** 
+> There was a discussion last year at LSFMM [1] about creating a central fs-config
+> store, that can then be used by anyone for testing different FS
+> features/configurations. This can also bring an awareness among other developers
+> and testers on what is being actively maintained by FS maintainers. We recently
+> posted an RFC [2] for centralizing filesystem configuration which is under
+> review. The next step we are considering is to centralize device configurations
+> within xfstests itself. In line with this, Ted also suggested a similar idea (in
+> point A) [3], where he proposed specifying the device size for the TEST and
+> SCRATCH devices to reduce costs (especially when using cloud infrastructure) and
+> improve the overall runtime of xfstests.
+> 
+> Recently Dave introduced a feature [4] to run the xfs and generic tests in
+> parallel. This patch creates the TEST and SCRATCH devices at runtime without
+> requiring them to be specified in any config file. However, at this stage, the
+> automatic device initialization appears to be somewhat limited. We believe that
+> centralizing device configuration could help enhance this functionality as well.
 
-Please pull this branch with changes for xfs for 6.14-rc2.
+Right, the point of check-parallel is to take away the need to
+specify devices completely.  I've already added support for the
+LOGWRITES_DEV, and I'm in the process of adding LOGDEV and RTDEV
+support for both test and scratch devices. At this point, the need
+for actual actual device specification in the config files goes
+away.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+What I am expecting to need is a set of fields that specify the
+*size* of the devices so that the hard-coded image file sizes in
+the check-parallel script go away.
 
---D
+From there, I intend to have check-parallel iterate config file run
+sections itself, rather than have it run them internally to check.
+That way check is only ever invoked by check-parallel with all the
+devices completely set up.
 
-The following changes since commit 0a08238acfbaeb7d3605a5bec623ed1bc88734eb:
+Hence a typical host independent config file would look like:
 
-Merge tag 'xfs-fixes-6.14-rc2' of git://git.kernel.org/pub/scm/fs/xfs/xfs-linux (2025-02-03 08:51:24 -0800)
+TEST_DEV_SIZE=10g
+TEST_RTDEV_size=10g
+TEST_LOGDEV_SIZE=128m
+SCRATCH_DEV_SIZE=20g
+SCRATCH_RTDEV_size=20g
+SCRATCH_LOGDEV_SIZE=512m
+LOGWRITES_DEV_SIZE=2g
 
-are available in the Git repository at:
+[xfs]
+FSTYP=xfs
+MKFS_OPTIONS="-b size=4k"
+TEST_FS_MOUNT_OPTIONS=
+MOUNT_OPTIONS=
+USE_EXTERNAL=
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fixes-6.14_2025-02-03
+[xfs-rmapbt]
+MKFS_OPTIONS="-b size=4k -m rmapbt=1"
 
-for you to fetch changes up to 0ab5a2b9378babf743da4467b448f84ba6110f0b:
+[xfs-noreflink]
+MKFS_OPTIONS="-b size=4k -m reflink=0"
 
-xfs: fix data fork format filtering during inode repair (2025-02-03 14:29:15 -0800)
+[xfs-n64k]
+MKFS_OPTIONS="-b size=4k -n size=64k"
 
-----------------------------------------------------------------
-xfs: bug fixes for 6.14
+[xfs-ext]
+MKFS_OPTIONS="-b size=4k"
+USE_EXTERNAL=yes
 
-Here are a couple of bugfixes for 6.14.
+[ext4]
+FSTYP="ext4"
+MKFS_OPTIONS=
+USE_EXTERNAL=
 
-With a bit of luck, this should all go splendidly.
+[btrfs]
+FSTYP="btrfs"
+.....
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-----------------------------------------------------------------
-Darrick J. Wong (2):
-xfs: fix online repair probing when CONFIG_XFS_ONLINE_REPAIR=n
-xfs: fix data fork format filtering during inode repair
+IOWs, all that is different from system to system is the device size
+setup. The actual config sections under test (e.g. [xfs]) never need
+to change from host to host, nor environment to environment. i.e.
+"xfs-n64k" runs the same config filesystem test on every system,
+everywhere...
 
-fs/xfs/scrub/common.h       |  5 -----
-fs/xfs/scrub/inode_repair.c | 12 ++++++++++--
-fs/xfs/scrub/repair.h       | 11 ++++++++++-
-fs/xfs/scrub/scrub.c        | 12 ++++++++++++
-4 files changed, 32 insertions(+), 8 deletions(-)
+> ** Proposal ** 
+> We would like to propose a discussion at LSFMM on two key features: central
 
+I'm not going to be at LSFMM, so please discuss this on the list via
+email as we'd normally do so. LSFMM discussions are exclusionary
+whilst, OTOH, the mailing list is inclusive...
+
+> fsconfig and central device-config within xfstests. We can explore how the
+> fsconfig feature can be utilized, and by then, we aim to have a PoC for central
+> device-config feature, which we think can also be discussed in more detail. At
+> this point, we are hoping to get a PoC working with loop devices by default. It
+> will be good to hear from other developers, maintainers, and testers about their
+> thoughts and suggestions on these two features.
+
+I don't really see a need for a new centralised config setup. With
+the above, we can acheived a "zero-config" goal with the existing
+config file formats and infrastructure. All that we need to do is
+update the default config file in the repo to contain a section for
+each of the "standard" test configs we want to define....
+
+> Additionally, we would like to thank Ted for listing several features he uses in
+> his custom kvm-xfstests and gce-xfstests [3]. If there is an interest in further
+> reducing the burden of maintaining custom test scripts and wrappers around
+> xfstests, we can also discuss essential features that could be integrated
+> directly into xfstests, whether from Ted's list or suggestions from others.
+
+On of my goals with check-parallel is to completely remove the need
+for end users to configure fstests. i.e. all you need to do is point
+it at a directory, tell it which filesystem to test, and it "just
+runs" with all the defaults that come direct from the fstests
+repository...
+
+It is also worth keeping in mind that check-parallel can be run with
+a single runner thread, in which case a single check instance runs
+all tests serially. i.e. we can make check-parallel emulate existing
+check behaviour exactly, except it uses all the
+auto-config/auto-setup stuff that comes along with check-parallel...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
