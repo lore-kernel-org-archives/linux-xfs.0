@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34F7A20B814
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Feb 2025 17:19:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F89220E320
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Feb 2025 17:20:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738603172; cv=none; b=h4iXtKvtJ8ExvGGX/NSIvNYFxdqFqlldID7afe0I0mJ/DS2te4OS+UmH1I28JvdRrG5RVxnr5oVi1wZJFCWBdiUUWAareYZGTAtyfM7obxZVogR/biFv9TyPNdPmoTvVl+lSQxLZzgI7Bi8fk6Bc3ZNr7l9L5nQqHBNxZn6OaXg=
+	t=1738603208; cv=none; b=H7Esp7LrVxzOgUAyMGwf4vRWhIsRJZmQKh54QQSBXlNisf7GTNT8EVAcMly3LEPlcp6vWvplzCUBX0QLHJm69awlaWnuFOb0eBDiq9KxE53OUT0dLuGyuYIx8EAQW7W+xOseOlGQwuHNKLidbUQX9Ur/PVqoC66XNxQCYWo5oic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738603172; c=relaxed/simple;
-	bh=y649eFD2uKHXaQ1jxkumqPfhYEMhlXhiOulG4XWssvM=;
+	s=arc-20240116; t=1738603208; c=relaxed/simple;
+	bh=nL+AxjKxVuk08jSXWH+bZzvVrgcVlKuCIVKGG0kloEM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g3v/hu26n5WdnCMVv0WqgCq2k1b76vqJ/U/85k9LJPBujaA0ou8eOVG9L+7ysD4TnTuYkUo+mX9BXSj9ReWU3p5aW1K2DFPbvpu//hZFPGRHbRl84nG1goVzwloWUAkNt4A7A/1SsaQWvzJuMOvtsQ47IEwZMevetgFu7VF9Tto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tQuTGrMi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ns9duvXiPiRN7UxjBlseoiOO060XvccpCkucrH+vwe5A2mTrR8aeZLg7Av7K3dNfFQmgbM7QSBQUtD8T+KieovnC/QMIm8o2WCGGJSL1bVJZ/v4yjgenS2hhgQkWYhHTAJqmkwFkjjQ43dCPCl0ihSgr7YQ0p0ocl+Kih3ksFTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pGeTrnyW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tQuTGrMi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ECF8C4CED2;
-	Mon,  3 Feb 2025 17:19:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pGeTrnyW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73EF7C4CEE3;
+	Mon,  3 Feb 2025 17:20:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738603171;
-	bh=y649eFD2uKHXaQ1jxkumqPfhYEMhlXhiOulG4XWssvM=;
+	s=k20201202; t=1738603207;
+	bh=nL+AxjKxVuk08jSXWH+bZzvVrgcVlKuCIVKGG0kloEM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tQuTGrMi49sYfoJ63Kiv1ntJ//e7wLRCOBXij1hKm4l9GYaveOEvX/bS4g5XSr4+E
-	 zR27ramzrxktc5jlLoQ9so/3r2IFX44poOoUPIbwk3nQRmyb2dchEN3muKYeM1zpny
-	 TXlRl+e8vDimF230/MkeitL9Ozs6PmJHL71RcJqGIIfN8b7+dXmJwDvDuih7sjbSLB
-	 6gIhRvWTE+1nEcTEkbiSDZa1f7avzGi8LdT7C64oqMR6L6Pn7SUFiJrDBLEtIxFc0F
-	 bGnPqeq1FEfpHn/j7ZT7rHETmU9zzYQ0MGPCoEKRUC9q4VPoXxngE0tuMxLTBm40BT
-	 pgQUir54J4gPg==
-Date: Mon, 3 Feb 2025 09:19:30 -0800
+	b=pGeTrnyWXSO+aZ/o1KAf3xJW4qtUj1tOlLE0kSd9X7WUf3bkSiWLnliuHKnirGm2b
+	 bj/JZU0ugKGYnlFqvJE3gkE+8HDyxfKOyDhRzG8FVcm17kUYTF4+eCQVLJ8yIFQrUp
+	 UG7Y058ma0ZJSxlE8kDQELrNAMhWj997ctt3BEL7HUBt4bvU7pTuE6Xvl8/xaMWE81
+	 qFD2W8RyJkNDRwCkO/3YZESnNPPhkgRQAqxUtbtW7FhN4zZ8rmJ3U7iTgT1/BN1y0o
+	 fb8yrrPzjF7jaDci7oqrhIot73ZXWh7voXA5xYspNf82aD91M+hbuLE+tINTrAmXnA
+	 EgP5YYLFLEH/g==
+Date: Mon, 3 Feb 2025 09:20:06 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] iomap: make buffered writes work with RWF_DONTCACHE
-Message-ID: <20250203171930.GA134532@frogsfrogsfrogs>
-References: <20250203163425.125272-1-axboe@kernel.dk>
- <20250203163425.125272-2-axboe@kernel.dk>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, dchinner@redhat.com,
+	hch@lst.de
+Subject: Re: [PATCH V3] xfs: Do not allow norecovery mount with quotacheck
+Message-ID: <20250203172006.GA134507@frogsfrogsfrogs>
+References: <20250203130513.213225-1-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,93 +42,149 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250203163425.125272-2-axboe@kernel.dk>
+In-Reply-To: <20250203130513.213225-1-cem@kernel.org>
 
-On Mon, Feb 03, 2025 at 09:32:38AM -0700, Jens Axboe wrote:
-> Add iomap buffered write support for RWF_DONTCACHE. If RWF_DONTCACHE is
-> set for a write, mark the folios being written as uncached. Then
-> writeback completion will drop the pages. The write_iter handler simply
-> kicks off writeback for the pages, and writeback completion will take
-> care of the rest.
+On Mon, Feb 03, 2025 at 02:04:57PM +0100, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> This still needs the user of the iomap buffered write helpers to call
-> folio_end_dropbehind_write() upon successful issue of the writes.
-
-I thought iomap calls folio_end_writeback, which cares of that?  So xfs
-doesn't itself have to call folio_end_dropbehind_write?
-
-> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> ---
->  fs/iomap/buffered-io.c | 4 ++++
->  include/linux/iomap.h  | 1 +
->  2 files changed, 5 insertions(+)
+> Mounting a filesystem that requires quota state changing will generate a
+> transaction.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d303e6c8900c..ea863c3cf510 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -603,6 +603,8 @@ struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len)
->  
->  	if (iter->flags & IOMAP_NOWAIT)
->  		fgp |= FGP_NOWAIT;
-> +	if (iter->flags & IOMAP_DONTCACHE)
-> +		fgp |= FGP_DONTCACHE;
->  	fgp |= fgf_set_order(len);
->  
->  	return __filemap_get_folio(iter->inode->i_mapping, pos >> PAGE_SHIFT,
-> @@ -1034,6 +1036,8 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
->  
->  	if (iocb->ki_flags & IOCB_NOWAIT)
->  		iter.flags |= IOMAP_NOWAIT;
-> +	if (iocb->ki_flags & IOCB_DONTCACHE)
-> +		iter.flags |= IOMAP_DONTCACHE;
->  
->  	while ((ret = iomap_iter(&iter, ops)) > 0)
->  		iter.processed = iomap_write_iter(&iter, i);
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 75bf54e76f3b..26b0dbe23e62 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -183,6 +183,7 @@ struct iomap_folio_ops {
->  #define IOMAP_DAX		0
->  #endif /* CONFIG_FS_DAX */
->  #define IOMAP_ATOMIC		(1 << 9)
-> +#define IOMAP_DONTCACHE		(1 << 10)
+> We already check for a read-only device; we should do that for
+> norecovery too.
+> 
+> A quotacheck on a norecovery mount, and with the right log size, will cause
+> the mount process to hang on:
+> 
+> [<0>] xlog_grant_head_wait+0x5d/0x2a0 [xfs]
+> [<0>] xlog_grant_head_check+0x112/0x180 [xfs]
+> [<0>] xfs_log_reserve+0xe3/0x260 [xfs]
+> [<0>] xfs_trans_reserve+0x179/0x250 [xfs]
+> [<0>] xfs_trans_alloc+0x101/0x260 [xfs]
+> [<0>] xfs_sync_sb+0x3f/0x80 [xfs]
+> [<0>] xfs_qm_mount_quotas+0xe3/0x2f0 [xfs]
+> [<0>] xfs_mountfs+0x7ad/0xc20 [xfs]
+> [<0>] xfs_fs_fill_super+0x762/0xa50 [xfs]
+> [<0>] get_tree_bdev_flags+0x131/0x1d0
+> [<0>] vfs_get_tree+0x26/0xd0
+> [<0>] vfs_cmd_create+0x59/0xe0
+> [<0>] __do_sys_fsconfig+0x4e3/0x6b0
+> [<0>] do_syscall_64+0x82/0x160
+> [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> 
+> This is caused by a transaction running with bogus initialized head/tail
+> 
+> I initially hit this while running generic/050, with random log
+> sizes, but I managed to reproduce it reliably here with the steps
+> below:
+> 
+> mkfs.xfs -f -lsize=1025M -f -b size=4096 -m crc=1,reflink=1,rmapbt=1, -i
+> sparse=1 /dev/vdb2 > /dev/null
+> mount -o usrquota,grpquota,prjquota /dev/vdb2 /mnt
+> xfs_io -x -c 'shutdown -f' /mnt
+> umount /mnt
+> mount -o ro,norecovery,usrquota,grpquota,prjquota  /dev/vdb2 /mnt
+> 
+> Last mount hangs up
+> 
+> As we add yet another validation if quota state is changing, this also
+> add a new helper named xfs_qm_validate_state_change(), factoring the
+> quota state changes out of xfs_qm_newmount() to reduce cluttering
+> within it.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-This needs a mention in the iomap documentation.  If the patch below
-accurately summarizes what it does nowadays, then you can add it to the
-series with a:
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Looks good to me now,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-index b0d0188a095e55..7b91546750f59e 100644
---- a/Documentation/filesystems/iomap/design.rst
-+++ b/Documentation/filesystems/iomap/design.rst
-@@ -352,6 +352,11 @@ operations:
-    ``IOMAP_NOWAIT`` is often set on behalf of ``IOCB_NOWAIT`` or
-    ``RWF_NOWAIT``.
- 
-+ * ``IOMAP_DONTCACHE`` is set when the caller wishes to perform a
-+   buffered file I/O and would like the kernel to drop the pagecache
-+   after the I/O completes, if it isn't already being used by another
-+   thread.
-+
- If it is necessary to read existing file contents from a `different
- <https://lore.kernel.org/all/20191008071527.29304-9-hch@lst.de/>`_
- device or address range on a device, the filesystem should return that
-diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
-index 2c7f5df9d8b037..584ff549f9a659 100644
---- a/Documentation/filesystems/iomap/operations.rst
-+++ b/Documentation/filesystems/iomap/operations.rst
-@@ -131,6 +131,8 @@ These ``struct kiocb`` flags are significant for buffered I/O with iomap:
- 
-  * ``IOCB_NOWAIT``: Turns on ``IOMAP_NOWAIT``.
- 
-+ * ``IOCB_DONTCACHE``: Turns on ``IOMAP_DONTCACHE``.
-+
- Internal per-Folio State
- ------------------------
- 
+> ---
+> 
+> Changelog V2 -> V3:
+> 	- Update helper name
+> 	- Update metadir warn message
+> 	- Don't use typedef for xfs_mount
+> 
+>  fs/xfs/xfs_qm_bhv.c | 55 ++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 39 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+> index 37f1230e7584..245d754f382a 100644
+> --- a/fs/xfs/xfs_qm_bhv.c
+> +++ b/fs/xfs/xfs_qm_bhv.c
+> @@ -78,6 +78,28 @@ xfs_qm_statvfs(
+>  	}
+>  }
+>  
+> +STATIC int
+> +xfs_qm_validate_state_change(
+> +	struct xfs_mount	*mp,
+> +	uint			uqd,
+> +	uint			gqd,
+> +	uint			pqd)
+> +{
+> +	int state;
+> +
+> +	/* Is quota state changing? */
+> +	state = ((uqd && !XFS_IS_UQUOTA_ON(mp)) ||
+> +		(!uqd &&  XFS_IS_UQUOTA_ON(mp)) ||
+> +		 (gqd && !XFS_IS_GQUOTA_ON(mp)) ||
+> +		(!gqd &&  XFS_IS_GQUOTA_ON(mp)) ||
+> +		 (pqd && !XFS_IS_PQUOTA_ON(mp)) ||
+> +		(!pqd &&  XFS_IS_PQUOTA_ON(mp)));
+> +
+> +	return  state &&
+> +		(xfs_dev_is_read_only(mp, "changing quota state") ||
+> +		xfs_has_norecovery(mp));
+> +}
+> +
+>  int
+>  xfs_qm_newmount(
+>  	xfs_mount_t	*mp,
+> @@ -97,24 +119,25 @@ xfs_qm_newmount(
+>  	}
+>  
+>  	/*
+> -	 * If the device itself is read-only, we can't allow
+> -	 * the user to change the state of quota on the mount -
+> -	 * this would generate a transaction on the ro device,
+> -	 * which would lead to an I/O error and shutdown
+> +	 * If the device itself is read-only and/or in norecovery
+> +	 * mode, we can't allow the user to change the state of
+> +	 * quota on the mount - this would generate a transaction
+> +	 * on the ro device, which would lead to an I/O error and
+> +	 * shutdown.
+>  	 */
+>  
+> -	if (((uquotaondisk && !XFS_IS_UQUOTA_ON(mp)) ||
+> -	    (!uquotaondisk &&  XFS_IS_UQUOTA_ON(mp)) ||
+> -	     (gquotaondisk && !XFS_IS_GQUOTA_ON(mp)) ||
+> -	    (!gquotaondisk &&  XFS_IS_GQUOTA_ON(mp)) ||
+> -	     (pquotaondisk && !XFS_IS_PQUOTA_ON(mp)) ||
+> -	    (!pquotaondisk &&  XFS_IS_PQUOTA_ON(mp)))  &&
+> -	    xfs_dev_is_read_only(mp, "changing quota state")) {
+> -		xfs_warn(mp, "please mount with%s%s%s%s.",
+> -			(!quotaondisk ? "out quota" : ""),
+> -			(uquotaondisk ? " usrquota" : ""),
+> -			(gquotaondisk ? " grpquota" : ""),
+> -			(pquotaondisk ? " prjquota" : ""));
+> +	if (xfs_qm_validate_state_change(mp, uquotaondisk,
+> +			    gquotaondisk, pquotaondisk)) {
+> +
+> +		if (xfs_has_metadir(mp))
+> +			xfs_warn(mp,
+> +		"metadir enabled, please mount without any quota mount options");
+> +		else
+> +			xfs_warn(mp, "please mount with%s%s%s%s.",
+> +				(!quotaondisk ? "out quota" : ""),
+> +				(uquotaondisk ? " usrquota" : ""),
+> +				(gquotaondisk ? " grpquota" : ""),
+> +				(pquotaondisk ? " prjquota" : ""));
+>  		return -EPERM;
+>  	}
+>  
+> -- 
+> 2.48.1
+> 
+> 
