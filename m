@@ -1,179 +1,103 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DE8B1FFC5F;
-	Mon,  3 Feb 2025 09:43:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D8571FBE89
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Feb 2025 10:03:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738575827; cv=none; b=ExeEMWq82VXU3m42rBPLiNlfHyFgKnnm2IeMB7qLsBvVpDBT/4gopVx5og5gtgDXOkEvxSPRHZwnaD2mvIL94O6CqbgY1sZtBo9bnyE281K2eC5fZuFmqa1Op8A5idaFhadPZSWHvyuZt8t8E/FYZj7RPWxoQ9ANE3sVDJ5D4yI=
+	t=1738577026; cv=none; b=KUvdjc5GODrjlX53wYiByjoRnUI0u2+poo3XHnwkpUhKK32j7LQ6Q7OboG3TFk4eZ7GXVljhaqtVjhrXWBJnMWAX0bjv9Iqw/q4JaMrpSexT0Anedfk790kmJUWGpDQ3WyMMmFNgKIt2Q2YGWnO7d5wvojene8JgXB1gBBHIb9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738575827; c=relaxed/simple;
-	bh=dCXeVt8dRfbqbGCPB6sMufQYJnUBcCFfMLj5eq+b8vk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gqCm3qeDWd3nBfgp8VCI/sTD68N/y1a05QszJdh+64p3rCRlvyKUP7SbaHAdUU1xrvGOEQ6FJbGTADSOXYcv0FWdxYejZCG+VcviRjAhJSMNtNzLoDa4r+dSC/Ml7KSn0w1YO9iZxMBe+RS0WkfhsMV5kxvl6N+x4zvIJSZXi50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4Ljqzspb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1738577026; c=relaxed/simple;
+	bh=dJtyYaE5RV/NoVmikQgUg3FuTO0N9jcGXMVnOUHv7IY=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=dnKtHqzeWUlF2MaIfcG+4msy7e+9SHsKp+R5/eJ529Y696gMRJI3ak37R/WAHtiKszOzY5UQMyXRmjmPcAlKUeyk8Kbm3HfvAfJGHi2k7KVndVwQbi8LIK6X1EkXnrsGb+xI08bBp7KaY74i9XX0E7tCFmUzMvVmAmAv+IC3fFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vAV7QzcK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4Ljqzspb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=8sfW3RXcNW2wYU3qaS4CmyxX4fJw7263JCYLxDjNqIM=; b=4LjqzspbiHr0LX8gKdzlN7Mo7a
-	zH/Ibi9sX70MS7OzjAWWcWtB9xsn0sWWZbi+8SGPIdDDOWrUaIBdoHUnZZPWQLFyHu7ykiai9DSli
-	XDUDR2l+TqLmxWf/9fMe/APmYpXSNtY1ZwFlGzv0BrfV3WWLFq/00Z/FZ/pdqpYzMMZ5+5oxFUvN8
-	sHt4JSK1jN82koHs1aLfwXIvKpdLUNwDZsXuXHLIXfp0Nn2ABjXp4K62BtalUURngdQs01Mu4zwx4
-	i5AbIRVEXybAOLbwu25E+hUtXX7e4gBiUqenJOk1Wb+0EZjkaUXi7lze3t2xI/IVEzFO6Y43N89Vs
-	IGzyVxpQ==;
-Received: from 2a02-8389-2341-5b80-b79f-eb9e-0b40-3aae.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:b79f:eb9e:b40:3aae] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1teszY-0000000F1kl-34oe;
-	Mon, 03 Feb 2025 09:43:45 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Kanchan Joshi <joshi.k@samsung.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-	Qu Wenruo <wqu@suse.com>,
-	Goldwyn Rodrigues <rgoldwyn@suse.com>,
-	linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 7/7] xfs: implement block-metadata based data checksums
-Date: Mon,  3 Feb 2025 10:43:11 +0100
-Message-ID: <20250203094322.1809766-8-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250203094322.1809766-1-hch@lst.de>
-References: <20250203094322.1809766-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vAV7QzcK"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D0C1AC4CEE8
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Feb 2025 10:03:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738577025;
+	bh=dJtyYaE5RV/NoVmikQgUg3FuTO0N9jcGXMVnOUHv7IY=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=vAV7QzcKfMF5QKYzjkD0WzeugkJo9TLBSk+2S2PQeazZexUEwzXz4tAv0WZiWH8QD
+	 IKCJrsUqaYJhMRbmsMMyK4Vad9sU+I/6030vypZRgAy+Ed+X0TmYpPBP9/5XQKZASA
+	 gQL7f5gr1Z+Ki//tY/9RboaA/JtTAUa4MXN+iZhSo34gby7J1JoGYvZcKA7OLCFmwa
+	 oyLL2D+A/VmFVSdYF0Ca3+DoUkl+txN7mY8CcJsl4U1BuU+0ukA3dunpSuTne689s5
+	 7sGAGyZc9XXWTUc0cfBEdNDU00jRjdnrM2ilC1vYRj+8kZBhyhNj5eGy33Zhj8NktU
+	 Zg1+sgge3pPWg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id C8F53C41606; Mon,  3 Feb 2025 10:03:45 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-xfs@vger.kernel.org
+Subject: [Bug 219504] iomap/buffered-io/XFS crashes with kernel Version >
+ 6.1.91. Perhaps Changes in kernel 6.1.92 (and up) for XFS/iomap causing the
+ problems?
+Date: Mon, 03 Feb 2025 10:03:45 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: speedcracker@hotmail.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: CODE_FIX
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_status resolution
+Message-ID: <bug-219504-201763-CUe1AHXpQS@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-219504-201763@https.bugzilla.kernel.org/>
+References: <bug-219504-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This is a quick hack to demonstrate how data checksumming can be
-implemented when it can be stored in the out of line metadata for each
-logical block.  It builds on top of the previous PI infrastructure
-and instead of generating/verifying protection information it simply
-generates and verifies a crc32c checksum and stores it in the non-PI
-metadata.  It misses a feature bit in the superblock, checking that
-enough size is available in the metadata and many other things.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D219504
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_data_csum.c | 79 ++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 76 insertions(+), 3 deletions(-)
+Mike-SPC (speedcracker@hotmail.com) changed:
 
-diff --git a/fs/xfs/xfs_data_csum.c b/fs/xfs/xfs_data_csum.c
-index d9d3620654b1..862388803398 100644
---- a/fs/xfs/xfs_data_csum.c
-+++ b/fs/xfs/xfs_data_csum.c
-@@ -14,6 +14,73 @@
- #include <linux/blk-integrity.h>
- #include <linux/bio-integrity.h>
- 
-+static inline void *xfs_csum_buf(struct bio *bio)
-+{
-+	return bvec_virt(bio_integrity(bio)->bip_vec);
-+}
-+
-+static inline __le32
-+xfs_data_csum(
-+	void			*data,
-+	unsigned int		len)
-+{
-+	return xfs_end_cksum(crc32c(XFS_CRC_SEED, data, len));
-+}
-+
-+static void
-+__xfs_data_csum_generate(
-+	struct bio		*bio)
-+{
-+	unsigned int		ssize = bdev_logical_block_size(bio->bi_bdev);
-+	__le32			*csum_buf = xfs_csum_buf(bio);
-+	struct bvec_iter_all	iter;
-+	struct bio_vec		*bv;
-+	int			c = 0;
-+
-+	bio_for_each_segment_all(bv, bio, iter) {
-+		void		*p;
-+		unsigned int	off;
-+
-+		p = bvec_kmap_local(bv);
-+		for (off = 0; off < bv->bv_len; off += ssize)
-+			csum_buf[c++] = xfs_data_csum(p + off, ssize);
-+		kunmap_local(p);
-+	}
-+}
-+
-+static int
-+__xfs_data_csum_verify(
-+	struct bio		*bio,
-+	struct xfs_inode	*ip,
-+	xfs_off_t		file_offset)
-+{
-+	unsigned int		ssize = bdev_logical_block_size(bio->bi_bdev);
-+	__le32			*csum_buf = xfs_csum_buf(bio);
-+	int			c = 0;
-+	struct bvec_iter_all	iter;
-+	struct bio_vec		*bv;
-+
-+	bio_for_each_segment_all(bv, bio, iter) {
-+		void		*p;
-+		unsigned int	off;
-+
-+		p = bvec_kmap_local(bv);
-+		for (off = 0; off < bv->bv_len; off += ssize) {
-+			if (xfs_data_csum(p + off, ssize) != csum_buf[c++]) {
-+				kunmap_local(p);
-+				xfs_warn(ip->i_mount,
-+"checksum mismatch at inode 0x%llx offset %lld",
-+					ip->i_ino, file_offset);
-+				return -EFSBADCRC;
-+			}
-+			file_offset += ssize;
-+		}
-+		kunmap_local(p);
-+	}
-+
-+	return 0;
-+}
-+
- void *
- xfs_data_csum_alloc(
- 	struct bio		*bio)
-@@ -53,11 +120,14 @@ xfs_data_csum_generate(
- {
- 	struct blk_integrity	*bi = blk_get_integrity(bio->bi_bdev->bd_disk);
- 
--	if (!bi || !bi->csum_type)
-+	if (!bi)
- 		return;
- 
- 	xfs_data_csum_alloc(bio);
--	blk_integrity_generate(bio);
-+	if (!bi->csum_type)
-+		__xfs_data_csum_generate(bio);
-+	else
-+		blk_integrity_generate(bio);
- }
- 
- int
-@@ -67,7 +137,10 @@ xfs_data_csum_verify(
- 	struct bio		*bio = &ioend->io_bio;
- 	struct blk_integrity	*bi = blk_get_integrity(bio->bi_bdev->bd_disk);
- 
--	if (!bi || !bi->csum_type)
-+	if (!bi)
- 		return 0;
-+	if (!bi->csum_type)
-+		return __xfs_data_csum_verify(&ioend->io_bio,
-+				XFS_I(ioend->io_inode), ioend->io_offset);
- 	return blk_integrity_verify_all(bio, ioend->io_sector);
- }
--- 
-2.45.2
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |CODE_FIX
 
+--- Comment #9 from Mike-SPC (speedcracker@hotmail.com) ---
+>(In reply to marco.nelissen from comment #7)
+> On Sat, Jan 18, 2025 at 6:00=E2=80=AFAM <bugzilla-daemon@kernel.org> wrot=
+e:
+
+> There are patches for 2 separate 32-bit issues, both of which are in
+> linux-next,
+> though only one of them appears to have been selected for 6.1, 6.6 and 6.=
+12.
+> These patches are:
+> https://lore.kernel.org/linux-xfs/20250102190540.1356838-1-marco.
+> nelissen@gmail.com/
+> https://lore.kernel.org/linux-xfs/20250109041253.2494374-1-marco.
+> nelissen@gmail.com/
+
+Hi there,
+
+I've tested the latest kernel (6.1.128) and it works like it should be. :)=
+=20
+Thanks again for investigation and fixing the bug.
+
+Regards,
+Mike
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
