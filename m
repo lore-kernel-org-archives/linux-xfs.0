@@ -1,85 +1,167 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9FA5717C9F1;
-	Mon,  3 Feb 2025 20:42:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C2E71D5159;
+	Mon,  3 Feb 2025 21:19:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738615353; cv=none; b=ISB3sM9xdT4mfXljl7grzd3FusWM7jzE7So/2iPlOnnMTcK22P+9TCn09uKqXfFJEFdCa8PRxX+Ok15HZNfeSDY8xDG0Mwm8mnRHBOpawnvJ3eWRbPDk0kacsBF/Ar+ElAyr2tdvYpi5RA7Bwsx4Bo5/NX9vJ+RYmK6YDb79PtE=
+	t=1738617576; cv=none; b=iXgQg4xCpSAd/QThsJFWPgvui3QkIawazEcq2cPLNpWZeWRuiqTzdeFcK/KKgXRmLN2Reoi53N9J4MRr92MqZWnAsZ7nqOdXIny2HtDpUJLHb7Z0nhK6vmhtJKhFLALHGu8hBOVvixK3Lir7if4Pb7SDEnaOLEPsivUrXVISNYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738615353; c=relaxed/simple;
-	bh=Iu6wnHsyLCNQdkmLTXy/FM4BG/7x+N4mvMN1Zrvhxrc=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=XqmWIsqHXWJns3nwfBlITpgseVsBhPJ5KS2vNdMlFacZTDQVI3OrLclbQfW0wywoAPDhjFzWD2CPXtvFbfEAxauMyw2Kq4ZdxfMvd2VDsQpz5ILG652fTF/+r+V8ImJJ3I3JSfwXx464/Fb/645KSCcxdnkKTmb3H3Tf7+gmXxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=AnduH1Wg; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1738617576; c=relaxed/simple;
+	bh=ofj6JP1j6Y98Ose9xyS7S3SdHxczj7+yv4cnT8ALfhw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TKTuiuGpzVOBh1Dmzbws5NPGBxWbbUZoprisnpLR3uYp3J5NMmAra56Xptd067Un8wDa5HkgjpbPOA4VpC96wpfSArU1zBXTj3r2P1rd7lMh9BNRQ7ceVCJx2Ev0LklG/MV0VEqOL/xHjcxEJWirmZnMUoC+XXhCdCxUbM8DJbM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z4DBgFuy; arc=none smtp.client-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="AnduH1Wg"
-Received: from [100.65.3.132] (unknown [20.236.10.163])
-	by linux.microsoft.com (Postfix) with ESMTPSA id ACFFA20BCAF2;
-	Mon,  3 Feb 2025 12:42:30 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com ACFFA20BCAF2
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1738615351;
-	bh=uCnmbS+l4SVliYD61OoKU2p2xCGadch80XW9/XVbniQ=;
-	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
-	b=AnduH1WgJdvR4wX5269FS/zbXk5FZRl9BGFfUkGrPiiZofWBwRYQI6QpswAJf4SFR
-	 /byZ9O61zA6+iVC7lKeNe1J0NxEjzBd/KdVGg/8/fRQYTOPdGSSpK/QvBt/BqoSdmW
-	 Ji5+zneX3m1tPKj8iG9X2HU2Pys/jQmT6o6h/fp0=
-Message-ID: <34a36725-6efd-43fe-9e23-19b14814b6af@linux.microsoft.com>
-Date: Mon, 3 Feb 2025 12:42:36 -0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z4DBgFuy"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-2ee8aa26415so8446300a91.1;
+        Mon, 03 Feb 2025 13:19:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738617574; x=1739222374; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=E1RprFycDuHJldRn/ezrS+F5IM4jHFkaXUl211fTz08=;
+        b=Z4DBgFuykrZqDu1upZJ84eRLEMqLfFKX/p8Ue4Bt3alKw64qkzVBSfgHnFDYNSR4Pm
+         Ttkm6F75KIX5misHMBY4EHbwf8BPPYI4IE06iCzFAQAZk8gPAigau7bDQmT70Ahcfbmh
+         qHl67eu/+a7nB1hBb9MyIENHHgOX5VKvDaUGaCTAZzuD7Cg+MIe9SB90dp6qXVovb0Gu
+         ymZswTHlpw75FlMKqwOfDUvos/aK3ZzSaPnodIcSmZtMj7GRectKgSmhphM+BqXcScm5
+         LjtP45aLtqdjsiKDE+AOV2Sj90RwMvWEZvH/qUMjb9vAaLbM+t+YUEr7eodgMh1bLeLo
+         J/GA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738617574; x=1739222374;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=E1RprFycDuHJldRn/ezrS+F5IM4jHFkaXUl211fTz08=;
+        b=jeO/QL3x+2GbXR984ZBzqVfLkyhNzyKQRvHIrODjUGlvICPSBETdt+rfABgo56y1gZ
+         r210AJbYDiUEHROM+9Ackp4Wf6LRQzOp3QPJ/8XIskx9qlyFaf4ooQ4t52OoBDX+K4sY
+         Fvfs/M3QGrSZL2DeZIkaIBVOwMSQBnBA6m3kMk1SUt0+sNmn2Oq8/NzgJF5J7vckJQ7H
+         ZaS8RUDxF320PujJOz6MqVU3J+WUTYmGNlB1ZFvn0YNx1BNBQHlO956NSwG6d3NEUZ1M
+         SjOWn3nM8ht2OoGq7LBgOkYCK4h7NB56lWN0MS4MPkxvFJ9j1YGLH+RA2CAXTGz6r7+w
+         JTww==
+X-Forwarded-Encrypted: i=1; AJvYcCUJpe3ycE+G6sip/Dz20D682kGflFR3mKSBiLkRiiVJastzU05Dg6Fa6hk2+JeIOz4YgFwN8mY5JhxnrMw=@vger.kernel.org, AJvYcCULfmGoMI0QBvWeqGZ5v1fbvZ/vnXU2xrODroYCp8rV4y8GaQIPWKI2MqT4PynvhFbLAVqn9gFET8Cp7A==@vger.kernel.org, AJvYcCUdekDuxZgEFzXSpphBDQRoPkkefDgZRqdEopSBOrBtFSTsp72lay3/c+/l5uM3p7vM4n71rrnvk8sQ8iA=@vger.kernel.org, AJvYcCV4bj0n81xB+tYZw/illWJdbRSNR2w83zW+KfPO7//S6JJl1Pj93eNg4m1GxztlOV5lV4vteNSQ7gZkNg==@vger.kernel.org, AJvYcCVFQyQj+7TEr7T+jZFoGcQyyXESPKljizShOBGfb0ypdnufH9VPZ7f6LUyC9JTvwEB9Ma6EjBo+WFGe@vger.kernel.org, AJvYcCVIqofbX745Us/vOLeigmClTYtKFg9STRQmzoW8SwOLkYxey7A82vktd/NEIVhye3c6+PMM++4AsjvmnSM=@vger.kernel.org, AJvYcCVmFm4MxsMoylNE4tKEPiU0fqaLiJRIp6AilynKGdZD9nTlbdo41UJ0UHYgVsm3qQ6a3GDng0vPt2XD@vger.kernel.org, AJvYcCWKVHdaVzta6WsTGcU4oNgTegxlD8TKP5zn9BK44Oxvm7cp8hFA8C0TqyN9XH08Z8TEtrhm27kUEQVd@vger.kernel.org, AJvYcCWmQQenG4bnnOcy3lVw+BxPBM7PKEv/F1UfPbcrKvu2gZ8wpuV7ltQEubyEN+FmsRLvmHqt4E1nMsI=@vger.kernel.org, AJvYcCX1aQy4lxshEe0P9tYftRsWGvThJVX/ZMPMPpe6KxbceJUyAr50IONQNEYuLsMvVVoKso58+6ZPRTl8@vger.kernel.org, AJvYcCXBnWUGrvZZrWnUn2D0Rxg1t7fgp/ghTiHFlqKMSt0TCYPjvIeofyDG7/XC3Q7pXvOz01YDABprXOUK2MTZNSaeDu3l+A==@vger.kernel.org, AJvYcCXuNT1kngL+byCHKiB+uAy67tygETz8kqTV8QsTm0Zcc4TX9MhuGEhEZtOFihwchSPS/2YJGMheZErHqv/o@vger.kernel.org
+X-Gm-Message-State: AOJu0YxYnCRY+jMAfk8JzXNQ5wlzlPfUIzlNI9tmNgFDz9glsQgIGziC
+	ChHolYga5JsbVztE4TFLnXnPzl6QsPL1s/sp+bzH8VXiMpmjn9wl/xQ8dE8iLENwxtzB668cgKu
+	wLDB8ZwS1gT4Kjwizv+XMURBFfLo=
+X-Gm-Gg: ASbGncvA4/hiQFF1O/D6wMn+3b4gKQaESvApR1hJ54ApFW85I6VQEzBvTbnR6gXuUMW
+	AY3/ewbQHwH5br3Yx9P7hfs58uY419Tr+wi3fTKQe54jqWcrlncvKtaxKsCGunFIeRb7wbbQv
+X-Google-Smtp-Source: AGHT+IG/z3EJhnf9SR0K4H9KlI981FGgmyEgJkvQWHpkkih0UJEnWjGg3KJxlOWE94AU8gGejkz3MNO9Uh3+nXXaTBI=
+X-Received: by 2002:a17:90b:5146:b0:2ea:3f34:f18d with SMTP id
+ 98e67ed59e1d1-2f83abdebdfmr37965262a91.10.1738617574433; Mon, 03 Feb 2025
+ 13:19:34 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Subject: Re: [PATCH] jiffies: Cast to unsigned long for secs_to_jiffies()
- conversion
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: eahariha@linux.microsoft.com, Jiri Slaby <jirislaby@kernel.org>,
- David Laight <david.laight.linux@gmail.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- Anna-Maria Behnsen <anna-maria@linutronix.de>,
- Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
- Miguel Ojeda <ojeda@kernel.org>, open list <linux-kernel@vger.kernel.org>,
- stable@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
- kernel test robot <lkp@intel.com>, linux-xfs <linux-xfs@vger.kernel.org>
-References: <20250130184320.69553-1-eahariha@linux.microsoft.com>
- <20250130201417.32b0a86f@pumpkin>
- <9ae171e2-1a36-4fe1-8a9f-b2b776e427a0@kernel.org>
- <CAMuHMdUNjKJ0CFw+i1qgVsHO2LU6uOqkAq5iGL0EZyCtrfzM=A@mail.gmail.com>
- <47098c16-2cf3-44bc-985a-07eb2a225698@linux.microsoft.com>
-Content-Language: en-US
-In-Reply-To: <47098c16-2cf3-44bc-985a-07eb2a225698@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+ <20250128-converge-secs-to-jiffies-part-two-v1-6-9a6ecf0b2308@linux.microsoft.com>
+ <dd0358b1-7c8a-4c9e-88c5-2e1db69a3a35@linux.microsoft.com>
+In-Reply-To: <dd0358b1-7c8a-4c9e-88c5-2e1db69a3a35@linux.microsoft.com>
+From: Ilya Dryomov <idryomov@gmail.com>
+Date: Mon, 3 Feb 2025 22:19:23 +0100
+X-Gm-Features: AWEUYZmGyX5TH9PuhG1vFlJR4zNh-9wcNWLcslfb_ZiDi-fTNv4o-akZqj7ScMc
+Message-ID: <CAOi1vP_UTjuF5y5oEVquk45udBZ41WqxQpHufD5oK2wbQkobhA@mail.gmail.com>
+Subject: Re: [PATCH 06/16] rbd: convert timeouts to secs_to_jiffies()
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dongsheng Yang <dongsheng.yang@easystack.cn>, 
+	Jens Axboe <axboe@kernel.dk>, ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+	Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+	Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
+	James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Jaroslav Kysela <perex@perex.cz>, 
+	Takashi Iwai <tiwai@suse.com>, Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+	David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>, 
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
+	Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
+	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
+	Fabio Estevam <festevam@gmail.com>, Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+	Hans de Goede <hdegoede@redhat.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Selvin Xavier <selvin.xavier@broadcom.com>, 
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Leon Romanovsky <leon@kernel.org>, cocci@inria.fr, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+	linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+	ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 1/31/2025 9:55 AM, Easwar Hariharan wrote:
-> On 1/31/2025 12:10 AM, Geert Uytterhoeven wrote:
+On Wed, Jan 29, 2025 at 10:03=E2=80=AFPM Easwar Hariharan
+<eahariha@linux.microsoft.com> wrote:
+>
+> On 1/28/2025 10:21 AM, Easwar Hariharan wrote:
+> > Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> > secs_to_jiffies().  As the value here is a multiple of 1000, use
+> > secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplicati=
+on.
+> >
+> > This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci w=
+ith
+> > the following Coccinelle rules:
+> >
+> > @depends on patch@
+> > expression E;
+> > @@
+> >
+> > -msecs_to_jiffies
+> > +secs_to_jiffies
+> > (E
+> > - * \( 1000 \| MSEC_PER_SEC \)
+> > )
+> >
+> > Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+> > ---
+> >  drivers/block/rbd.c | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+>
+> <snip>
+>
+> > @@ -6283,9 +6283,9 @@ static int rbd_parse_param(struct fs_parameter *p=
+aram,
+> >               break;
+> >       case Opt_lock_timeout:
+> >               /* 0 is "wait forever" (i.e. infinite timeout) */
+> > -             if (result.uint_32 > INT_MAX / 1000)
+> > +             if (result.uint_32 > INT_MAX)
+> >                       goto out_of_range;
+> > -             opt->lock_timeout =3D msecs_to_jiffies(result.uint_32 * 1=
+000);
+> > +             opt->lock_timeout =3D secs_to_jiffies(result.uint_32);
+> >               break;
+> >       case Opt_pool_ns:
+> >               kfree(pctx->spec->pool_ns);
+> >
+>
+> Hi Ilya, Dongsheng, Jens, others,
+>
+> Could you please review this hunk and confirm the correct range check
+> here? I figure this is here because of the multiplier to
+> msecs_to_jiffies() and therefore unneeded after the conversion. If so, I
 
-<snip>
+Hi Easwar,
 
->>
->> More importantly, I doubt this change is guaranteed to fix the
->> reported issue.  The code[*] in retry_timeout_seconds_store() does:
->>
->>     int val;
->>     ...
->>     if (val < -1 || val > 86400)
->>             return -EINVAL;
->>     ...
->>     if (val != -1)
->>             ASSERT(secs_to_jiffies(val) < LONG_MAX);
->>
->> As HZ is a known (rather small) constant, and val is range-checked
->> before, the compiler can still devise that the condition is always true.
->> So I think that assertion should just be removed.
->>
+I'm not sure why INT_MAX / 1000 was used for an option which is defined
+as fsparam_u32 and accessed through result.uint_32, but yes, this check
+appears to be unneeded after the conversion to me.
 
-Following the lkp instructions to repro the issue, with this patch, the
-compiler does not continue reporting that the condition is always true.
-This patch is sufficient IMHO, without needing to remove the assert.
+> noticed patch 07 has similar range checks that I neglected to fix and
+> can do in a v2.
 
-- Easwar (he/him)
+Go ahead but note that two of them also reject 0 -- that part needs to
+stay ;)
+
+Thanks,
+
+                Ilya
