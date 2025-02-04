@@ -1,54 +1,54 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9618E21CA0D
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 13:28:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA8E21CA15
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 13:28:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738675717; cv=none; b=XWm9/PO/EaUo2TcBiA8msVICBiESkCWP7Kvm0812LChV7IC9ttKOsDeqBnqMok9C1rODYDh4ThRiQ4kp57N+iXoBo6PcOFOO1QJqGdEouUlFZuZcclS+hQrEQOqCve4vRdts8aXW0kpRZZ0s7sNMvYavyng8LbVkJC2oMZ5ZlhA=
+	t=1738675718; cv=none; b=UscdNLvK07aX2hBIFvjZyhrjZfg8w4EpK2TUu3RXwuuQWnKYQXf+x7e0w6a+972syJxEm8MXMeshS7TfQUrMqZ1S1MWrdx4EqYhj6hVMXXWBLgGzV7SKEVGPvkiklrkr2LCdKOPTrxa+Kmzm+8AIv6+B9FiazZL6Jfq5KuCPjug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738675717; c=relaxed/simple;
-	bh=zraEEfNQ3ArGB0nGvfMFCm3U1T176Q7X/YF0k1f5JkY=;
+	s=arc-20240116; t=1738675718; c=relaxed/simple;
+	bh=Kdz/56mDCbmYD0YG89VTqRwBDxd/kcACpINoojLnKdY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CNNrlcSKssS+YvfSFIduM+oaqoldmKstKJRiPFjt7ytGzeFBfJZ0tYBqfVQ6CqaRLUV0RK/yUdJnX8uvlykDidFGUh5RDwycin2z041hr2N4fHHTcmx4u44pjTEnEy8TFLVosvPQVJD91mrWTt/9ZTFQq1ktWE+2VhoRnvt+rsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cf3HIXM0; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=inQth66TkXGh5X1buhlnhRvdhoqoB4bKtJCoWK7Q65zWQk5HqJW0DNMSa9QtlDYj65snVXD1tMhAw+kY4c7w3AdcOqM93uDS0uv5ZV5Mdi+e58VpDWPg6mRzZMEjrFryhlydxbivVBmDnaWM2L6BaA71gLS04Ee+y7seRTEks+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fzQJ+ehH; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cf3HIXM0"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fzQJ+ehH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738675714;
+	s=mimecast20190719; t=1738675715;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=f7DdODgECWcSB3qyzQ5ca2LfaMHp0/sX+MHStd0UA4Y=;
-	b=cf3HIXM05mEt98m4pwYgvIn4xlZQahRvAruubpg73rX27swcT5JzvjfovVP5kEbcdFWMsk
-	Y5xDpCvg9z70iQW6ghz4irmXIw7QaZOHG/0jVcssqzgMVQpjhQeLQnbV2M4H0qQvK7pVSf
-	9ZqECtu3oL5L7tbvU+I7Fjz3Lx8/gQY=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+	bh=WMVMy45A1WyesgW+SjJGtcOKsPdojtcP73swmOalVws=;
+	b=fzQJ+ehHPhIX43BzaFbZMG+qQA25IfjxiQF2kHY80/CIovO1BKUaUkl2CfUA3TQz5Y/Fv2
+	KLLMITbY7MEiDJK6IO4kRSI8Xx+ybX1eymnxLwGH2X2hObyU9aURAPfuETmr3+j5XQQ683
+	9BXjh9Jvn2gGnBxyD+yG4MSph4NV6Og=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-538-jmdsCxMCOQeR-amGVh-ovw-1; Tue,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-271-bZcji3FzOmWt6hzSVZ4vmQ-1; Tue,
  04 Feb 2025 08:28:31 -0500
-X-MC-Unique: jmdsCxMCOQeR-amGVh-ovw-1
-X-Mimecast-MFC-AGG-ID: jmdsCxMCOQeR-amGVh-ovw
+X-MC-Unique: bZcji3FzOmWt6hzSVZ4vmQ-1
+X-Mimecast-MFC-AGG-ID: bZcji3FzOmWt6hzSVZ4vmQ
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8CF311956087;
-	Tue,  4 Feb 2025 13:28:30 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.88.48])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C18E619560AD;
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7E8FE19560AF;
 	Tue,  4 Feb 2025 13:28:29 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.88.48])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B7EB719560AD;
+	Tue,  4 Feb 2025 13:28:28 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v4 10/10] iomap: advance the iter directly on zero range
-Date: Tue,  4 Feb 2025 08:30:44 -0500
-Message-ID: <20250204133044.80551-11-bfoster@redhat.com>
+Subject: [PATCH v4 09/10] iomap: advance the iter directly on unshare range
+Date: Tue,  4 Feb 2025 08:30:43 -0500
+Message-ID: <20250204133044.80551-10-bfoster@redhat.com>
 In-Reply-To: <20250204133044.80551-1-bfoster@redhat.com>
 References: <20250204133044.80551-1-bfoster@redhat.com>
 Precedence: bulk
@@ -61,29 +61,33 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Modify zero range to advance the iter directly. Replace the local pos
-and length calculations with direct advances and loop based on iter
-state instead.
+Modify unshare range to advance the iter directly. Replace the local
+pos and length calculations with direct advances and loop based on
+iter state instead.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ fs/iomap/buffered-io.c | 23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index f953bf66beb1..ec227b45f3aa 100644
+index 678c189faa58..f953bf66beb1 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1345,17 +1345,16 @@ static inline int iomap_zero_iter_flush_and_stale(struct iomap_iter *i)
- 
- static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+@@ -1267,20 +1267,19 @@ EXPORT_SYMBOL_GPL(iomap_write_delalloc_release);
+ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
  {
+ 	struct iomap *iomap = &iter->iomap;
 -	loff_t pos = iter->pos;
 -	loff_t length = iomap_length(iter);
 -	loff_t written = 0;
 +	u64 bytes = iomap_length(iter);
 +	int status;
+ 
+ 	if (!iomap_want_unshare_iter(iter))
+-		return length;
++		return iomap_iter_advance(iter, &bytes);
  
  	do {
  		struct folio *folio;
@@ -95,44 +99,29 @@ index f953bf66beb1..ec227b45f3aa 100644
  
 +		bytes = min_t(u64, SIZE_MAX, bytes);
  		status = iomap_write_begin(iter, pos, bytes, &folio);
- 		if (status)
+ 		if (unlikely(status))
  			return status;
-@@ -1376,14 +1375,14 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		if (WARN_ON_ONCE(!ret))
- 			return -EIO;
+@@ -1298,14 +1297,14 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+ 
+ 		cond_resched();
  
 -		pos += bytes;
--		length -= bytes;
 -		written += bytes;
+-		length -= bytes;
+-
+ 		balance_dirty_pages_ratelimited(iter->inode->i_mapping);
 -	} while (length > 0);
+ 
+-	return written;
 +		status = iomap_iter_advance(iter, &bytes);
 +		if (status)
 +			break;
 +	} while (bytes > 0);
- 
- 	if (did_zero)
- 		*did_zero = true;
--	return written;
++
 +	return status;
  }
  
  int
-@@ -1436,11 +1435,14 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 
- 		if (srcmap->type == IOMAP_HOLE ||
- 		    srcmap->type == IOMAP_UNWRITTEN) {
--			loff_t proc = iomap_length(&iter);
-+			s64 proc;
- 
- 			if (range_dirty) {
- 				range_dirty = false;
- 				proc = iomap_zero_iter_flush_and_stale(&iter);
-+			} else {
-+				u64 length = iomap_length(&iter);
-+				proc = iomap_iter_advance(&iter, &length);
- 			}
- 			iter.processed = proc;
- 			continue;
 -- 
 2.48.1
 
