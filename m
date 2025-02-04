@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52CFB25A62C;
-	Tue,  4 Feb 2025 21:24:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FCFF25A62C;
+	Tue,  4 Feb 2025 21:24:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738704248; cv=none; b=PwL+X/luSxOuCrSOlokeciX2u28UKgru0jnykJu0tC4LsUUA+VAPqOnckAIyoq3kxXTsXQ5L5e6+eYjMGpPQaNryZAySQk0j94NhqhTKX1/336OYOGkoWcPy14K1M0k4qQHtALScKJNWJxCwc59/FjrpoKpwps5GClAptT+vX6U=
+	t=1738704263; cv=none; b=LfH0uldciYTu+VdRDNj1XawVkU07O86JgcXx0EG2er9LbtWUojWi2FX4zgsZZOXS6lp+rlovpghPFBDs6LcrKe4myrdwSsdSv8aOEbi8g03ePF550K2u8s3eVVkAcTR5SMAIYvk/g5fdQOuPCqL6ffH/zqPYNddvkcIFGocak6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738704248; c=relaxed/simple;
-	bh=U/jyyv06WLvJmnFiBAWiu2U0Pb74Gro9PTw8xbHKoE0=;
+	s=arc-20240116; t=1738704263; c=relaxed/simple;
+	bh=TU+b8xnNHHQDCl8mXZVwDmk7NrFQje3B92kBrjzEyBA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iis9RO/BxerRMjlTHNZyOfUAqy9F8aJbLwgvytDFUwA0YRZGMSJV5raNPiqXGsAC2uLvcEb6IX7QjoiEAxzwYeH6io/RHSo9s3eWhfPTSxnYqXZ2eYeYtnbpILnx9ZZQ9v44DIl41b4aJVvM5rNrHNzqDXH+AfcrXvI8RBd5C1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a9A0Mw07; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ox7s0Ix6xhRIfBj6VwCG1spOxJp5zY2REeFM9hG6AeUltwgn5+1LXeVobworHGhoRS7t2fI0ghVq4shM+EUO5ZuCsjHgEzBN25W1Vf0Ii8hP+D1jhakzji0tRyo4R3xlF8RaKtzZFO+B020MUGgFO9I6KmtEleVxpz9on6IT7bk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kJ369szr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a9A0Mw07"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6FFAC4CEDF;
-	Tue,  4 Feb 2025 21:24:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kJ369szr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55B0AC4CEDF;
+	Tue,  4 Feb 2025 21:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738704247;
-	bh=U/jyyv06WLvJmnFiBAWiu2U0Pb74Gro9PTw8xbHKoE0=;
+	s=k20201202; t=1738704263;
+	bh=TU+b8xnNHHQDCl8mXZVwDmk7NrFQje3B92kBrjzEyBA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=a9A0Mw0745PXZJQcSna4r5s/P9qCf/zXgc2nV9oJgEESwYcQ9Bk6Mr+4fg7wIHByz
-	 bPt8Z+plUOtm7qwPXHPhcTBltBAMQVQYdhqTY2vTGX9KmUrNLE8lMeH5zpwDKRZJma
-	 Hqe+xYugmlFE6Cxh3xH8Hzf8437FezMpBNv8WkIH24nZr7jOT/Xri8/VyZy36+98ZZ
-	 tn/SCSXyLj/Q64qToqmi+CI8QpRIqhmXRC8UR2aYDw17LvkUtJE9qTMCwY/bLe/F5p
-	 hOrW/2G5QQooja3V5n86ImvSLN31nbRPRo9ud+oQF1Q+qe11iaM2BftiShidbFVHDQ
-	 mpkQ6uoYEWyqQ==
-Date: Tue, 04 Feb 2025 13:24:07 -0800
-Subject: [PATCH 07/34] common/dump: don't replace pids arbitrarily
+	b=kJ369szrhveygTc+bIQV1Ss2Noy9LSpEWzz+UBuPdOKiyU5T3XryVlkqYqPLvhpXt
+	 wYWKkfU16RuRYygYYH/YeDW51QvNehfbB5o3vhYe6+KBXC0/xH0bEIYoG5UE/87tHu
+	 uKtim1p2nYBWewpib4xGSK+W5mk6CHfN79qrWbdXM45weyS2vEbBZuxNCDRVPUWQKm
+	 +QjmHUT7SaemLKlGXzOy/Ml/5XMJ0J6CYIQH0Q8cmQVNtjvHdVPRmpUoFPhow2J1sB
+	 hAaqqZvAGdITzyvLOLZmHCTEs3Z3VfvGywMMpx69hD9LrL4GQw1oVWjqLwR/6iFUkz
+	 +CkMaH8FFO9+g==
+Date: Tue, 04 Feb 2025 13:24:22 -0800
+Subject: [PATCH 08/34] common/populate: correct the parent pointer name
+ creation formulae
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173870406214.546134.16846124942782280576.stgit@frogsfrogsfrogs>
+Message-ID: <173870406230.546134.368446131039029732.stgit@frogsfrogsfrogs>
 In-Reply-To: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,34 +46,47 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In the next patch we'll run tests in a pid namespace, which means that
-the test process will have a very low pid.  This low pid situation
-causes problems with the dump tests because they unconditionally replace
-it with the word "PID", which causes unnecessary test failures.
+The formulae used to compute the number of parent pointers that we have
+to create in a child file in order to generate a particular xattr
+structure are not even close to correct -- the first one needs a bit of
+adjustment, but the second one is way off and creates far too many
+files.
 
-Initially I was going to fix it by bracketing the regexp with a
-whitespace/punctuation/eol/sol detector, but then I decided to remove it
-see how many sheep came barreling through.  None did, so I removed it
-entirely.  The commit adding it (linked below) was not insightful at
-all.
+Fix the computation, and document where the magic numbers come from.
 
-Fixes: 19beb54c96e363 ("Extra filtering as part of IRIX/Linux xfstests reconciliation for dump.")
+Cc: <fstests@vger.kernel.org> # v2024.06.27
+Fixes: 0c02207d61af9a ("populate: create hardlinks for parent pointers")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/dump |    1 -
- 1 file changed, 1 deletion(-)
+ common/populate |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
 
-diff --git a/common/dump b/common/dump
-index 3761c16100d808..6dcd6250c33147 100644
---- a/common/dump
-+++ b/common/dump
-@@ -907,7 +907,6 @@ _dir_filter()
-     -e "s#$SCRATCH_MNT#SCRATCH_MNT#g"       \
-     -e "s#$dump_sdir#DUMP_SUBDIR#g"   \
-     -e "s#$restore_sdir#RESTORE_SUBDIR#g" \
--    -e "s#$$#PID#g" \
-     -e "/Only in SCRATCH_MNT: .use_space/d" \
-     -e "s#$RESULT_DIR/##g" \
+diff --git a/common/populate b/common/populate
+index 4cf9c0691956a3..c907e04efd0ea9 100644
+--- a/common/populate
++++ b/common/populate
+@@ -473,13 +473,18 @@ _scratch_xfs_populate() {
+ 		__populate_create_dir "${SCRATCH_MNT}/PPTRS" 1 '' \
+ 			--hardlink --format "two_%d"
+ 
+-		# Create one xattr leaf block of parent pointers
+-		nr="$((blksz * 2 / 16))"
++		# Create one xattr leaf block of parent pointers.  The name is
++		# 8 bytes and, the handle is 12 bytes, which rounds up to 24
++		# bytes per record, plus xattr structure overhead.
++		nr="$((blksz / 24))"
+ 		__populate_create_dir "${SCRATCH_MNT}/PPTRS" ${nr} '' \
+ 			--hardlink --format "many%04d"
+ 
+-		# Create multiple xattr leaf blocks of large parent pointers
+-		nr="$((blksz * 16 / 16))"
++		# Create multiple xattr leaf blocks of large parent pointers.
++		# The name is 256 bytes and the handle is 12 bytes, which
++		# rounds up to 272 bytes per record, plus xattr structure
++		# overhead.
++		nr="$((blksz * 2 / 272))"
+ 		__populate_create_dir "${SCRATCH_MNT}/PPTRS" ${nr} '' \
+ 			--hardlink --format "y%0254d"
  
 
