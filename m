@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29D6825A62C;
-	Tue,  4 Feb 2025 21:27:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7156725A62C;
+	Tue,  4 Feb 2025 21:28:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738704468; cv=none; b=k2exyDV0sBhNE6WxuoUT6mSzDk/1keGpXRPg/zLcsbXyz+0ZX2JJusp1TYbAfS4C8rKQY7RMVfLtuXTwdpnEAeN6PdmclJzxMAGXYqS8UVlamzT7Ip7+zCp5v+78nnvlRU5iZAmUpmv/CNoP17h+dJ/mElbAn20OE1Aph601xlg=
+	t=1738704483; cv=none; b=XUrvUHAFXO0TbvUWJiHNw5TsPge7Hoc1La21sOfJOfFwwF2hJnLcZQi0cbNgQB365dEKizMaXEkdbcegePCupzf4F/m581gajpEBhTtcoRxPiwhe6K1NQhoOw97x90ATZensgcOgKWZ0VcN07tCiqnyBIUZUed8DwkSsRJTlRVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738704468; c=relaxed/simple;
-	bh=mq3sMa07Noxd8Z3iThwHHbLVrhD5GaJ7XMiK/0+IeUc=;
+	s=arc-20240116; t=1738704483; c=relaxed/simple;
+	bh=gp1onK8uvfEuThJc4YpVSq1SKLm9J/oDr1p28llFw9U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YF6txtEW8cf6LqY5AIzLyAijIQTZUfGwZkSihrOd8VM7X1XhqWVy/AYRKrUdZ5npqGojd8Rdf2op8PqLHBIQkCHu5EZV65gfKqxV0qZRAwxpsYLRNYY/vmuej4WnzzkjNoWJvvqblf4u8skFGOLW4BQrwNpFhZ1RUl7gkaWu71s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OkwE1fks; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=i97NPbeOWGluNCKa4ehPwTkfdcb+UJygHrqKjDE/3DaLO5Mg85Y8/3756m0hJSoTmSkbQRsPxFRiQ+WwX6Im+AYfDTT7y68tw2fCgW0G5150MgMwNPfPx/OgfuS6TsRPGgaQGbCTlxlWLyJp9B5oAyU4wRLbD/7R9JAmnS+NnPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=koTR3jK9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OkwE1fks"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BE6EC4CEDF;
-	Tue,  4 Feb 2025 21:27:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="koTR3jK9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46816C4CEDF;
+	Tue,  4 Feb 2025 21:28:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738704467;
-	bh=mq3sMa07Noxd8Z3iThwHHbLVrhD5GaJ7XMiK/0+IeUc=;
+	s=k20201202; t=1738704483;
+	bh=gp1onK8uvfEuThJc4YpVSq1SKLm9J/oDr1p28llFw9U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OkwE1fkscgFc57K1peIMxKjlH6//4VDIYqLTX63ggpBTqOJ0nk3tHvtbkVJHi8ObN
-	 sruXket3L7j6T4wogfoQSI+m9YIM+p7LXtTPBqdj885HSKv8b2zoJ8qVVAZvJqXxNO
-	 DhKj+rV7jWmSb7oSMFqHhL4Tk+/vEjN7+ZbfxiFy18J/Wu+nF0NkyLZmTeRwGl8Ikh
-	 9R5OQcJkhuPzqqQAlse08V9niPteii91aAvxl5xoGse/MpAHOjgFk+z3i5bKmWhvcI
-	 DMa5PUuhHL3Pnq6PjgFGFsOe4y3tvL71xw2EM4Oc2hiC0kA8KN7iWREX61h1CnLnB9
-	 ug2RfJDNfa7Dg==
-Date: Tue, 04 Feb 2025 13:27:47 -0800
-Subject: [PATCH 21/34] preamble: fix missing _kill_fsstress
+	b=koTR3jK9pMfkZdkiB5WetBG2Hfm39sEr2WeYcYG4g3KlRZcxk0I/upmoO8YoD0u8R
+	 C/fukTr0Gaq7TXUs86SxnxaXS9zLctPK9fE2F8pH0doa/H/vMAYwBDpn6YRjuuK5I5
+	 7Gi+XGaMh0mKZYcI+seLFIMX0HaQbFONQcryp1AdhOBgBEjj6RjbaUMfp1HI61EXmV
+	 dhvsa+L37f6efDpiPL9zHq1y4PodWR/m/qR5vL/23XpWxmpdxRLEBCQfFVK1JBYFSm
+	 pS4s6tpp4WmjFHwK6TFsCWEIsyHbfP1PajaOpv3enVlHV79bq+e86ppHj72llqJnIY
+	 RHnHUHkQBnZOg==
+Date: Tue, 04 Feb 2025 13:28:02 -0800
+Subject: [PATCH 22/34] generic/650: revert SOAK DURATION changes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: dchinner@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173870406426.546134.16007107332827987550.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173870406442.546134.7449017953421049612.stgit@frogsfrogsfrogs>
 In-Reply-To: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,56 +45,41 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Commit 8973af00ec212f added a _kill_fsstress to the standard _cleanup
-function.  However, if something breaks during test program
-initialization before it gets to sourcing common/rc, then you get
-failures that look like this:
+Prior to commit 8973af00ec21, in the absence of an explicit
+SOAK_DURATION, this test would run 2500 fsstress operations each of ten
+times through the loop body.  On the author's machines, this kept the
+runtime to about 30s total.  Oddly, this was changed to 30s per loop
+body with no specific justification in the middle of an fsstress process
+management change.
 
- --- /tmp/fstests/tests/generic/556.out  2024-09-25 12:09:52.938797554 -0700
- +++ /var/tmp/fstests/generic/556.out.bad        2025-01-04 22:34:01.268327003 -0800
- @@ -1,16 +1,3 @@
-  QA output created by 556
- -SCRATCH_MNT/basic Casefold
- -SCRATCH_MNT/basic
- -SCRATCH_MNT/casefold_flag_removal Casefold
- -SCRATCH_MNT/casefold_flag_removal Casefold
- -SCRATCH_MNT/flag_inheritance/d1/d2/d3 Casefold
- -SCRATCH_MNT/symlink/ind1/TARGET
- -mv: 'SCRATCH_MNT/rename/rename' and 'SCRATCH_MNT/rename/RENAME' are the same file
- -# file: SCRATCH_MNT/xattrs/x
- -user.foo="bar"
- -
- -# file: SCRATCH_MNT/xattrs/x/f1
- -user.foo="bar"
- -
- -touch: 'SCRATCH_MNT/strict/corac'$'\314\247\303': Invalid argument
- -touch: 'SCRATCH_MNT/strict/cora'$'\303\247\303': Invalid argument
- +./tests/generic/556: 108: common/config: Syntax error: "&" unexpected
- +./tests/generic/556: 10: _kill_fsstress: not found
-
-It's that last line that's unnecessary.  Fix this by checking for the
-presence of a _kill_fsstress before invoking it.
+On the author's machine, this explodes the runtime from ~30s to 420s.
+Put things back the way they were.
 
 Cc: <fstests@vger.kernel.org> # v2024.12.08
 Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- common/preamble |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/generic/650 |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/common/preamble b/common/preamble
-index 78e45d522f482c..0c9ee2e0377dd5 100644
---- a/common/preamble
-+++ b/common/preamble
-@@ -7,7 +7,7 @@
- # Standard cleanup function.  Individual tests can override this.
- _cleanup()
- {
--	_kill_fsstress
-+	command -v _kill_fsstress &>/dev/null && _kill_fsstress
- 	cd /
- 	rm -r -f $tmp.*
- }
+diff --git a/tests/generic/650 b/tests/generic/650
+index 60f86fdf518961..2e051b73156842 100755
+--- a/tests/generic/650
++++ b/tests/generic/650
+@@ -68,11 +68,11 @@ test "$nr_cpus" -gt 1024 && nr_cpus="$nr_hotplug_cpus"
+ fsstress_args+=(-p $nr_cpus)
+ if [ -n "$SOAK_DURATION" ]; then
+ 	test "$SOAK_DURATION" -lt 10 && SOAK_DURATION=10
++	fsstress_args+=(--duration="$((SOAK_DURATION / 10))")
+ else
+-	# run for 30s per iteration max
+-	SOAK_DURATION=300
++	# run for 3s per iteration max for a default runtime of ~30s.
++	fsstress_args+=(--duration=3)
+ fi
+-fsstress_args+=(--duration="$((SOAK_DURATION / 10))")
+ 
+ nr_ops=$((2500 * TIME_FACTOR))
+ fsstress_args+=(-n $nr_ops)
 
