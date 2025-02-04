@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3C7E25A62C;
-	Tue,  4 Feb 2025 21:24:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3CE425A62C;
+	Tue,  4 Feb 2025 21:24:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738704279; cv=none; b=mpbKIrsPR7Do8So+vtDWGRUFaMrBjN98LRKZE6ffVYUzFKUvdlwA06fIV3RS3vVnRdw3UKiQ9fLjgS73oa6WMQqTCVzZKmw5yM6melVNJsDxhzVRe/zJLTYtOD0eHe01nZRGvOUs5dUGVNAwHIcwwlyyxxeGgE+u9Ku9TaHoz+o=
+	t=1738704295; cv=none; b=MSqDsQ/QxAHvDbzQrHfhkjJDi6KqxuJytMeEeSTtO/uqA1O3r/Pjm53I8nRjkbw09s0H1y8y38t3PD+bvWTEvq+ayDNwFxxctnJvCRtcVc5Ugw0+jZ8Gn+aI5H6esxld1gutNWwlmgMlcdWLIZEDE/YLDi8JxQnnZnJTw6N4kto=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738704279; c=relaxed/simple;
-	bh=o4Of/TxPwP7SvPDyS7EdxG+c4czZOUxh+TvEBh8lrXo=;
+	s=arc-20240116; t=1738704295; c=relaxed/simple;
+	bh=4HjplVCgeYQi5ocD2+1OZjGtXMoEEzYoCoWp4ZPkwQI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qnbv0KPDbKoiQV0ggoTJSho/CSDsha0lrghp11S7o24Dx8oBwRKyrxum+6o2324Q7ajkQv+b/VFYSsFjGBFvOzOlgMnzQvtPTAD8IsC7BZqnRVuypUu8mxH02DEjlkEvpowSiZ0251uiAJz4t7OFMpKegZi9rK8SYScNFACbvEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jf47yrhl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pScAbZ4SctyHkMYUJPlEC44ID/cB51MuOYTzdLZFLipGBQZoJniL7A+Mnlabem0G4DoqLlgxFTC4qUTKHq3tg3oMpf3zlpLgxXllIoKnf2amXeMJ+1vpeUY+ZjnwmIm3ce51q00pjtg8KOQPyBVg94wBauqhPSq0yH28Ngr5ruY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7Ra2XTj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jf47yrhl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13E71C4CEDF;
-	Tue,  4 Feb 2025 21:24:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7Ra2XTj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA22EC4CEDF;
+	Tue,  4 Feb 2025 21:24:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738704279;
-	bh=o4Of/TxPwP7SvPDyS7EdxG+c4czZOUxh+TvEBh8lrXo=;
+	s=k20201202; t=1738704294;
+	bh=4HjplVCgeYQi5ocD2+1OZjGtXMoEEzYoCoWp4ZPkwQI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jf47yrhl2tROaIKjPZpQsr/8Csw0pv9hjm7RtwbakEg5zR80G6/yqRZE0twJYjAG8
-	 w4ErgR5f4DYni+OQ8v/0h7rnBRN/gQvi0/REpBctzJjtodg4kjEno94P1V2t+pSRx8
-	 CzCtrnuKcDfFCssHtNiH6MMHcmLBxZkvfsoPhz8+ORr2iqEEsY1ky/lK8aJWpS2X4o
-	 9S5eJlN33vjpL6ghl0Fbv3RDS24pYKHIcgQ9IDKtyNkvuCzfT8m7KSd7Gc/laKv62O
-	 qM23LSsLuMEI+n/gO38DaGm433CiDiFgNy06Hn6ptRmv51h6qX78OKv0v0rFdLvF1m
-	 TQpZqwaru5TFg==
-Date: Tue, 04 Feb 2025 13:24:38 -0800
-Subject: [PATCH 09/34] generic/759,760: fix MADV_COLLAPSE detection and
- inclusion
+	b=Q7Ra2XTjjIEklrVq4dLgFLRp4EAHbT8D9rlBTggMh+BjaBnuT3NSf228vxogodAIk
+	 3ftmeViTjK0caTZZOGWqQD1+nvGno9Nx32Mgp4JIwFViNSnrs3haCUrCVFzXuuc6kQ
+	 Gs+wPENTlkTfUv49pymih/wzpMB+MZ2KtsOSu/j6hzg3xFzIPRvLF4uRXWTsJPuAo0
+	 vS2Sy9Sc4iD6hGgHZJCy8keaLubj90cEr3xu7CM0fY/SjiHsN3Ybwqs6RfbQuI6wDc
+	 wSnoAJCBdqF0IawAwzQS4NVTSJz4Pxgz06muZ4CYCcSD9aSksEUbBGzJKOmTjnj6Rl
+	 27l7uk0hIwQ/w==
+Date: Tue, 04 Feb 2025 13:24:54 -0800
+Subject: [PATCH 10/34] generic/759,760: skip test if we can't set up a
+ hugepage for IO
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: joannelkoong@gmail.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173870406245.546134.16199144509178485405.stgit@frogsfrogsfrogs>
+Message-ID: <173870406261.546134.13417439080603539599.stgit@frogsfrogsfrogs>
 In-Reply-To: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,86 +46,145 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On systems with "old" C libraries such as glibc 2.36 in Debian 12, the
-MADV_COLLAPSE flag might not be defined in any of the header files
-pulled in by sys/mman.h, which means that the fsx binary might not get
-built with any of the MADV_COLLAPSE code.  If the kernel supports THP,
-the test will fail with:
+On an arm64 VM with 64k base pages and a paltry 8G of RAM, this test
+will frequently fail like this:
 
->  QA output created by 760
->  fsx -N 10000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
-> -fsx -N 10000 -o 8192 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
-> -fsx -N 10000 -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
-> +mapped writes DISABLED
-> +MADV_COLLAPSE not supported. Can't support -h
+>  QA output created by 759
+>  fsx -N 10000 -l 500000 -h
+> -fsx -N 10000 -o 8192 -l 500000 -h
+> -fsx -N 10000 -o 128000 -l 500000 -h
+> +Seed set to 1
+> +madvise collapse for buf: Cannot allocate memory
+> +init_hugepages_buf failed for good_buf: Cannot allocate memory
 
-Fix both tests to detect fsx binaries that don't support MADV_COLLAPSE,
-then fix fsx.c to include the mman.h from the kernel headers (aka
-linux/mman.h) so that we can actually test IOs to and from THPs if the
-kernel is newer than the rest of userspace.
+This system has a 512MB hugepage size, which means that there's a good
+chance that memory is so fragmented that we won't be able to create a
+huge page (in 1/16th the available DRAM).  Create a _run_hugepage_fsx
+helper that will detect this situation at the start of the test and skip
+it, having refactored run_fsx into a properly namespaced version that
+won't exit the test on failure.
 
 Cc: <fstests@vger.kernel.org> # v2025.02.02
 Cc: joannelkoong@gmail.com
 Fixes: 627289232371e3 ("generic: add tests for read/writes from hugepages-backed buffers")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/rc         |    5 +++++
- ltp/fsx.c         |    1 +
- tests/generic/759 |    1 +
- tests/generic/760 |    1 +
- 4 files changed, 8 insertions(+)
+ common/rc         |   34 ++++++++++++++++++++++++++++++----
+ ltp/fsx.c         |    6 ++++--
+ tests/generic/759 |    6 +++---
+ tests/generic/760 |    6 +++---
+ 4 files changed, 40 insertions(+), 12 deletions(-)
 
 
 diff --git a/common/rc b/common/rc
-index 07646927bad523..b7736173e6e839 100644
+index b7736173e6e839..4005db776309f3 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -4976,6 +4976,11 @@ _get_page_size()
- 	echo $(getconf PAGE_SIZE)
+@@ -4982,20 +4982,46 @@ _require_hugepage_fsx()
+ 		_notrun "fsx binary does not support MADV_COLLAPSE"
  }
  
-+_require_hugepage_fsx()
-+{
-+	$here/ltp/fsx -N 0 -h $TEST_DIR 2>&1 | grep -q 'MADV_COLLAPSE not supported' && \
-+		_notrun "fsx binary does not support MADV_COLLAPSE"
-+}
- 
- run_fsx()
+-run_fsx()
++_run_fsx()
  {
+-	echo fsx $@
++	echo "fsx $*"
+ 	local args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
+ 	set -- $here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk
+ 	echo "$@" >>$seqres.full
+ 	rm -f $TEST_DIR/junk
+ 	"$@" 2>&1 | tee -a $seqres.full >$tmp.fsx
+-	if [ ${PIPESTATUS[0]} -ne 0 ]; then
++	local res=${PIPESTATUS[0]}
++	if [ $res -ne 0 ]; then
+ 		cat $tmp.fsx
+ 		rm -f $tmp.fsx
+-		exit 1
++		return $res
+ 	fi
+ 	rm -f $tmp.fsx
++	return 0
++}
++
++# Run fsx with -h(ugepage buffers).  If we can't set up a hugepage then skip
++# the test, but if any other error occurs then exit the test.
++_run_hugepage_fsx() {
++	_run_fsx "$@" -h &> $tmp.hugepage_fsx
++	local res=$?
++	if [ $res -eq 103 ]; then
++		# According to the MADV_COLLAPSE manpage, these three errors
++		# can happen if the kernel could not collapse a collection of
++		# pages into a single huge page.
++		grep -q -E ' for hugebuf: (Cannot allocate memory|Device or resource busy|Resource temporarily unavailable)' $tmp.hugepage_fsx && \
++			_notrun "Could not set up huge page for test"
++	fi
++	cat $tmp.hugepage_fsx
++	rm -f $tmp.hugepage_fsx
++	test $res -ne 0 && exit 1
++	return 0
++}
++
++# run fsx or exit the test
++run_fsx()
++{
++	_run_fsx || exit 1
+ }
+ 
+ _require_statx()
 diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 634c496ffe9317..cf9502a74c17a7 100644
+index cf9502a74c17a7..d1b0f245582b31 100644
 --- a/ltp/fsx.c
 +++ b/ltp/fsx.c
-@@ -20,6 +20,7 @@
- #include <strings.h>
- #include <sys/file.h>
- #include <sys/mman.h>
-+#include <linux/mman.h>
- #include <sys/uio.h>
- #include <stdbool.h>
- #ifdef HAVE_ERR_H
+@@ -2974,13 +2974,15 @@ init_hugepages_buf(unsigned len, int hugepage_size, int alignment, long *buf_siz
+ 
+ 	ret = posix_memalign(&buf, hugepage_size, size);
+ 	if (ret) {
+-		prterr("posix_memalign for buf");
++		/* common/rc greps this error message */
++		prterr("posix_memalign for hugebuf");
+ 		return NULL;
+ 	}
+ 	memset(buf, '\0', size);
+ 	ret = madvise(buf, size, MADV_COLLAPSE);
+ 	if (ret) {
+-		prterr("madvise collapse for buf");
++		/* common/rc greps this error message */
++		prterr("madvise collapse for hugebuf");
+ 		free(buf);
+ 		return NULL;
+ 	}
 diff --git a/tests/generic/759 b/tests/generic/759
-index 6c74478aa8a0e0..a7dec155056abc 100755
+index a7dec155056abc..49c02214559a55 100755
 --- a/tests/generic/759
 +++ b/tests/generic/759
-@@ -13,6 +13,7 @@ _begin_fstest rw auto quick
- 
- _require_test
+@@ -15,9 +15,9 @@ _require_test
  _require_thp
-+_require_hugepage_fsx
+ _require_hugepage_fsx
  
- run_fsx -N 10000            -l 500000 -h
- run_fsx -N 10000  -o 8192   -l 500000 -h
+-run_fsx -N 10000            -l 500000 -h
+-run_fsx -N 10000  -o 8192   -l 500000 -h
+-run_fsx -N 10000  -o 128000 -l 500000 -h
++_run_hugepage_fsx -N 10000            -l 500000
++_run_hugepage_fsx -N 10000  -o 8192   -l 500000
++_run_hugepage_fsx -N 10000  -o 128000 -l 500000
+ 
+ status=0
+ exit
 diff --git a/tests/generic/760 b/tests/generic/760
-index c71a196222ad3b..4781a8d1eec4ec 100755
+index 4781a8d1eec4ec..f270636e56a377 100755
 --- a/tests/generic/760
 +++ b/tests/generic/760
-@@ -14,6 +14,7 @@ _begin_fstest rw auto quick
- _require_test
- _require_odirect
- _require_thp
-+_require_hugepage_fsx
- 
+@@ -19,9 +19,9 @@ _require_hugepage_fsx
  psize=`$here/src/feature -s`
  bsize=`$here/src/min_dio_alignment $TEST_DIR $TEST_DEV`
+ 
+-run_fsx -N 10000            -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
+-run_fsx -N 10000  -o 8192   -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
+-run_fsx -N 10000  -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
++_run_hugepage_fsx -N 10000            -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
++_run_hugepage_fsx -N 10000  -o 8192   -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
++_run_hugepage_fsx -N 10000  -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
+ 
+ status=0
+ exit
 
