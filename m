@@ -1,127 +1,74 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA8E21CA15
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 13:28:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D17821517F;
+	Tue,  4 Feb 2025 13:47:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738675718; cv=none; b=UscdNLvK07aX2hBIFvjZyhrjZfg8w4EpK2TUu3RXwuuQWnKYQXf+x7e0w6a+972syJxEm8MXMeshS7TfQUrMqZ1S1MWrdx4EqYhj6hVMXXWBLgGzV7SKEVGPvkiklrkr2LCdKOPTrxa+Kmzm+8AIv6+B9FiazZL6Jfq5KuCPjug=
+	t=1738676833; cv=none; b=hSzHv1DiKtPRgNzrEBiSSrkIlCaHgUExDcYpyWCh8S30A/E5RzGE1jylJHsPIFdW0L0iQzV/8+c9OFVF0FJvLel2faGVec/Eej0XzggaOzURSgHZTxq6JwFUuIJX9RVgSkdELtIhyxAWDU6B7pm0da0F5TQQFQc/XaGoTD3HB04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738675718; c=relaxed/simple;
-	bh=Kdz/56mDCbmYD0YG89VTqRwBDxd/kcACpINoojLnKdY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=inQth66TkXGh5X1buhlnhRvdhoqoB4bKtJCoWK7Q65zWQk5HqJW0DNMSa9QtlDYj65snVXD1tMhAw+kY4c7w3AdcOqM93uDS0uv5ZV5Mdi+e58VpDWPg6mRzZMEjrFryhlydxbivVBmDnaWM2L6BaA71gLS04Ee+y7seRTEks+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fzQJ+ehH; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1738676833; c=relaxed/simple;
+	bh=6Naro2S2YtYNyi9jSZQxTHKviwXfveZD6BhjN6kleS4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LPXvG1FDUOrrAdDbFVYO1aTLyIzPcy47zgcRrEl3hvRiGvYulmMqM1liH/K8Tf6uPaNsNDw7l8c+AzaRaWd4o2ktCltgHx5AXMzIwXpAxPr5/hG7Xpi0D+kQsBtYos2y7RkRg7AODJHNqmLM7z1ytBnKjOS5PFo+vj9JEqkgkKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VW0iAcOe; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fzQJ+ehH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738675715;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=WMVMy45A1WyesgW+SjJGtcOKsPdojtcP73swmOalVws=;
-	b=fzQJ+ehHPhIX43BzaFbZMG+qQA25IfjxiQF2kHY80/CIovO1BKUaUkl2CfUA3TQz5Y/Fv2
-	KLLMITbY7MEiDJK6IO4kRSI8Xx+ybX1eymnxLwGH2X2hObyU9aURAPfuETmr3+j5XQQ683
-	9BXjh9Jvn2gGnBxyD+yG4MSph4NV6Og=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-271-bZcji3FzOmWt6hzSVZ4vmQ-1; Tue,
- 04 Feb 2025 08:28:31 -0500
-X-MC-Unique: bZcji3FzOmWt6hzSVZ4vmQ-1
-X-Mimecast-MFC-AGG-ID: bZcji3FzOmWt6hzSVZ4vmQ
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7E8FE19560AF;
-	Tue,  4 Feb 2025 13:28:29 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.88.48])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B7EB719560AD;
-	Tue,  4 Feb 2025 13:28:28 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v4 09/10] iomap: advance the iter directly on unshare range
-Date: Tue,  4 Feb 2025 08:30:43 -0500
-Message-ID: <20250204133044.80551-10-bfoster@redhat.com>
-In-Reply-To: <20250204133044.80551-1-bfoster@redhat.com>
-References: <20250204133044.80551-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VW0iAcOe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=BJ9+BszIOx09MEga1tesbN83E+W6kAf+GSIza1SIthQ=; b=VW0iAcOeKmjlryZbA4n930tkdy
+	SsL6Pbc+5XBG+0U8xJvQlmt0iPjwYBYapAG0a6KQNluOHyBSW9Vxv3HzrrYd8FTlMNhjnSWHz1BeK
+	9X2LVxU1kCO2jfWh0a2CSHzhIiMSDVnteJqZAryX3C6+/HmPgYOyTOe613laVlGb7uCmrmZC07RvH
+	itfLRUBKwSIKRFnldZ7AYeTZRkwyHH4kRY3NbC08gqVhIKehz5oDhaHnaz+N1/5J3XftoQA3FHnP2
+	BPInOP/gCR5sUzF9+F3ng03Wd381xq1MRm/dWsaXBvk4ydv547iiee+mQoTq8fZS2hVffgCbRff6R
+	k+Y/3Grg==;
+Received: from 2a02-8389-2341-5b80-c653-ac45-db09-df54.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:c653:ac45:db09:df54] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tfJGg-00000000ZcK-12ey;
+	Tue, 04 Feb 2025 13:47:10 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: zlang@kernel.org,
+	djwong@kernel.org
+Cc: fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH 1/2] xfs/614: query correct direct I/O alignment
+Date: Tue,  4 Feb 2025 14:46:54 +0100
+Message-ID: <20250204134707.2018526-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Modify unshare range to advance the iter directly. Replace the local
-pos and length calculations with direct advances and loop based on
-iter state instead.
+When creating XFS file systems on files, mkfs will query the file system
+for the minimum alignment, which can be larger than that of the
+underlying device.  Do the same to link the right output file.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ tests/xfs/614 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 678c189faa58..f953bf66beb1 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1267,20 +1267,19 @@ EXPORT_SYMBOL_GPL(iomap_write_delalloc_release);
- static loff_t iomap_unshare_iter(struct iomap_iter *iter)
- {
- 	struct iomap *iomap = &iter->iomap;
--	loff_t pos = iter->pos;
--	loff_t length = iomap_length(iter);
--	loff_t written = 0;
-+	u64 bytes = iomap_length(iter);
-+	int status;
+diff --git a/tests/xfs/614 b/tests/xfs/614
+index 0f8952e50b9a..06cc2384f38c 100755
+--- a/tests/xfs/614
++++ b/tests/xfs/614
+@@ -26,7 +26,7 @@ _require_loop
+ $MKFS_XFS_PROG 2>&1 | grep -q concurrency || \
+ 	_notrun "mkfs does not support concurrency options"
  
- 	if (!iomap_want_unshare_iter(iter))
--		return length;
-+		return iomap_iter_advance(iter, &bytes);
+-test_dev_lbasize=$(blockdev --getss $TEST_DEV)
++test_dev_lbasize=$($here/src/min_dio_alignment $TEST_DIR $TEST_DEV)
+ seqfull=$0
+ _link_out_file "lba${test_dev_lbasize}"
  
- 	do {
- 		struct folio *folio;
--		int status;
- 		size_t offset;
--		size_t bytes = min_t(u64, SIZE_MAX, length);
-+		loff_t pos = iter->pos;
- 		bool ret;
- 
-+		bytes = min_t(u64, SIZE_MAX, bytes);
- 		status = iomap_write_begin(iter, pos, bytes, &folio);
- 		if (unlikely(status))
- 			return status;
-@@ -1298,14 +1297,14 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
- 
- 		cond_resched();
- 
--		pos += bytes;
--		written += bytes;
--		length -= bytes;
--
- 		balance_dirty_pages_ratelimited(iter->inode->i_mapping);
--	} while (length > 0);
- 
--	return written;
-+		status = iomap_iter_advance(iter, &bytes);
-+		if (status)
-+			break;
-+	} while (bytes > 0);
-+
-+	return status;
- }
- 
- int
 -- 
-2.48.1
+2.45.2
 
