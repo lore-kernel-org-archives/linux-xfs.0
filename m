@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902D425A62C;
-	Tue,  4 Feb 2025 21:25:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D733525A62C;
+	Tue,  4 Feb 2025 21:25:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738704327; cv=none; b=BuzXda+kNIeK5LSJV814/Oic8JgzPfaQvcIdSm+z4GEzZY4XGRD31y11AfhuJATkt89jyrSoh3wLXtXkOai3KntFWr1/JvKIPQfsG2071CVa6ERhPeEPyF2KTroFyYUSgP1wTlitypcfj98oeWduvNH0Om+xkqyJlqXfbKK8yaw=
+	t=1738704342; cv=none; b=l830KEX5VIj6NmSdndI7vPzvURsywfZ8mndMOO3AxMkPi8WEx2IcK/0jn2VTW6u2Qkl8VsH2WxHR+oopnpJjVtaCKBnSZysSkksaQnoBvhMZYmib2TBbP/wnh5BLKRPiwDihkyzUYjoozNaCtwFD6JCFYGDkj/a6EeBCJRHa2ZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738704327; c=relaxed/simple;
-	bh=5sW3PbflipYe+Ixk+i0fHX8L/kGxpEXhz4Kk1EEq5iM=;
+	s=arc-20240116; t=1738704342; c=relaxed/simple;
+	bh=wjhmYWvvKeHv5Nnsv89yI1WM0LNLpm2sMgPNkrbR+FM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YL+EOv04JJeyuntLGBFYgy79Yg2Il9JQAI/92CzNclgT0Bec2aK8PSfxX9UGe6ZSIYWCrz/rk5FzfmUZvOVEUS5pdywVdMCQA/VuRLwB3QtAq9Uawvpuml7wdMd806aeuumEMO+FNxuFjqE+rJVyU6gTdInEthQm4Dhou1cpUdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eI06jYHq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=crwP3mF8llhWXmNLqmlmFFMV18BiZw5jkxWmcJ3NdvBA/tWIjs53wFOGeZtAlesSOlBz9qQZ3I8rI4nRyWfoU4Zi+wJeAPhk7fwHWINxMIAW4qv8NxHNxBvNm76P7v5o66/JQ23C2X3nvO/hak2097E7H9HjwUHNxe8rwYE2BAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IwZlpdiv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eI06jYHq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14F42C4CEE3;
-	Tue,  4 Feb 2025 21:25:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IwZlpdiv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF503C4CEDF;
+	Tue,  4 Feb 2025 21:25:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738704327;
-	bh=5sW3PbflipYe+Ixk+i0fHX8L/kGxpEXhz4Kk1EEq5iM=;
+	s=k20201202; t=1738704342;
+	bh=wjhmYWvvKeHv5Nnsv89yI1WM0LNLpm2sMgPNkrbR+FM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eI06jYHqvp1MnVY2r2qNgSUo2GyGNPGR4Dc0kB4WV56v2PpAIf082JmwzpI38JuRI
-	 vdDIp1YZJ6C3ywKm5hG3fKxjhDRs/3AW+5rWjQMLkg6vssLjmSzUU1n1KOfsYE9rCg
-	 FLKLlOrTOWQCX3KSNjXtZAB6Mc3T17KuWzhTPURytQWEF1rMt0RjTB/IX9ZqAwY7vN
-	 o53Tuk2jPiC5S9/qhVHaDf/Tk63KLuUBBhiz1m775wp7KTdmEOBBvyWtHNjxltV229
-	 cubbPfEXQJnhVkDXS5iFXPEFzO4iWqwg7m3hUc5B7N1UiLMAPrT0lG1ICB0nz0rCzX
-	 wVe3hdzLGIcBw==
-Date: Tue, 04 Feb 2025 13:25:26 -0800
-Subject: [PATCH 12/34] fuzzy: kill subprocesses with SIGPIPE, not SIGINT
+	b=IwZlpdivC8wkh0Wf+j6U/qOREd67eQsXZkLMZjVSt541rV997nawVi+TPdv9s/4uu
+	 w0kjoRF5FfwvO+nR7meoa5KTybcyFblufsKplnPBpNMmYyY4PAAVBHf+QP2o6v12Dq
+	 xPjaH7TvxyobIgnS/TCVp3d25GBh4cyJjBo9oj9hWFGzYykSB6dlQo4EeZ3JivjkPX
+	 owDAPplvCMcWquDHA3kEQ3QREULIf4uH+osLVPV/QoOTs3AFw9I9WVisCTsV93HWVH
+	 PziiJAF3eBSPABpmNylC+jadE/kCbbBr9a97ZR9e4OzKRpWIR5qrdl+hSuOirkIChr
+	 X3+anT8v/H0Iw==
+Date: Tue, 04 Feb 2025 13:25:42 -0800
+Subject: [PATCH 13/34] common/rc: hoist pkill to a helper function
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173870406291.546134.15020436171673463354.stgit@frogsfrogsfrogs>
+Message-ID: <173870406306.546134.16510101936129304399.stgit@frogsfrogsfrogs>
 In-Reply-To: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,64 +45,85 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The next patch in this series fixes various issues with the recently
-added fstests process isolation scheme by running each new process in a
-separate process group session.  Unfortunately, the processes in the
-session are created with SIGINT ignored by default because they are not
-attached to the controlling terminal.  Therefore, switch the kill signal
-to SIGPIPE because that is usually fatal and not masked by default.
+Create a helper function to wrap pkill in preparation for the next
+patch.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/fuzzy |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ common/rc         |    8 +++++++-
+ tests/generic/310 |    6 +++---
+ tests/generic/561 |    2 +-
+ 3 files changed, 11 insertions(+), 5 deletions(-)
 
 
-diff --git a/common/fuzzy b/common/fuzzy
-index 0a2d91542b561e..6d390d4efbd3da 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -891,7 +891,7 @@ __stress_xfs_scrub_loop() {
- 	local runningfile="$2"
- 	local scrub_startat="$3"
- 	shift; shift; shift
--	local sigint_ret="$(( $(kill -l SIGINT) + 128 ))"
-+	local signal_ret="$(( $(kill -l SIGPIPE) + 128 ))"
- 	local scrublog="$tmp.scrub"
+diff --git a/common/rc b/common/rc
+index 9a6f7dce613e62..2b56d6de9c9cb1 100644
+--- a/common/rc
++++ b/common/rc
+@@ -30,6 +30,12 @@ _test_sync()
+ 	_sync_fs $TEST_DIR
+ }
  
- 	while __stress_scrub_running "$scrub_startat" "$runningfile"; do
-@@ -902,7 +902,7 @@ __stress_xfs_scrub_loop() {
- 		_scratch_scrub "$@" &> $scrublog
- 		res=$?
- 		if [ "$res" -eq "$sigint_ret" ]; then
--			# Ignore SIGINT because the cleanup function sends
-+			# Ignore SIGPIPE because the cleanup function sends
- 			# that to terminate xfs_scrub
- 			res=0
- 		fi
-@@ -1173,13 +1173,11 @@ _scratch_xfs_stress_scrub_cleanup() {
- 	rm -f "$runningfile"
- 	echo "Cleaning up scrub stress run at $(date)" >> $seqres.full
- 
--	# Send SIGINT so that bash won't print a 'Terminated' message that
--	# distorts the golden output.
- 	echo "Killing stressor processes at $(date)" >> $seqres.full
- 	_kill_fsstress
--	pkill -INT --parent $$ xfs_io >> $seqres.full 2>&1
--	pkill -INT --parent $$ fsx >> $seqres.full 2>&1
--	pkill -INT --parent $$ xfs_scrub >> $seqres.full 2>&1
-+	_pkill --echo -PIPE xfs_io >> $seqres.full 2>&1
-+	_pkill --echo -PIPE fsx >> $seqres.full 2>&1
-+	_pkill --echo -PIPE xfs_scrub >> $seqres.full 2>&1
- 
- 	# Tests are not allowed to exit with the scratch fs frozen.  If we
- 	# started a fs freeze/thaw background loop, wait for that loop to exit
-@@ -1209,6 +1207,7 @@ _scratch_xfs_stress_scrub_cleanup() {
- 	# Wait for the remaining children to exit.
- 	echo "Waiting for children to exit at $(date)" >> $seqres.full
++# Kill only the processes started by this test.
++_pkill()
++{
++	pkill "$@"
++}
++
+ # Common execution handling for fsstress invocation.
+ #
+ # We need per-test fsstress binaries because of the way fsstress forks and
+@@ -69,7 +75,7 @@ _kill_fsstress()
+ 	if [ -n "$_FSSTRESS_PID" ]; then
+ 		# use SIGPIPE to avoid "Killed" messages from bash
+ 		echo "killing $_FSSTRESS_BIN" >> $seqres.full
+-		pkill -PIPE $_FSSTRESS_BIN >> $seqres.full 2>&1
++		_pkill -PIPE $_FSSTRESS_BIN >> $seqres.full 2>&1
+ 		_wait_for_fsstress
+ 		return $?
+ 	fi
+diff --git a/tests/generic/310 b/tests/generic/310
+index 52babfdc803a21..570cc5f3859548 100755
+--- a/tests/generic/310
++++ b/tests/generic/310
+@@ -29,7 +29,7 @@ _begin_fstest auto
+ # Override the default cleanup function.
+ _cleanup()
+ {
+-	pkill -9 $seq.t_readdir > /dev/null 2>&1
++	_pkill -9 $seq.t_readdir > /dev/null 2>&1
  	wait
-+	echo "Children exited as of $(date)" >> $seqres.full
+ 	rm -rf $TEST_DIR/tmp
+ 	rm -f $tmp.*
+@@ -83,7 +83,7 @@ _test_read()
+ {
+ 	 $TEST_DIR/$seq.t_readdir_1 $SEQ_DIR > /dev/null 2>&1 &
+ 	sleep $RUN_TIME
+-	pkill -PIPE $seq.t_readdir_1
++	_pkill -PIPE $seq.t_readdir_1
+ 	wait
  
- 	# Ensure the scratch fs is also writable before we exit.
- 	if [ -n "$__SCRUB_STRESS_REMOUNT_LOOP" ]; then
+ 	check_kernel_bug
+@@ -97,7 +97,7 @@ _test_lseek()
+ 	$TEST_DIR/$seq.t_readdir_2 $SEQ_DIR > /dev/null 2>&1 &
+ 	readdir_pid=$!
+ 	sleep $RUN_TIME
+-	pkill -PIPE $seq.t_readdir_2
++	_pkill -PIPE $seq.t_readdir_2
+ 	wait
+ 
+ 	check_kernel_bug
+diff --git a/tests/generic/561 b/tests/generic/561
+index afe727ac56cbd9..b260aaf16c9256 100755
+--- a/tests/generic/561
++++ b/tests/generic/561
+@@ -40,7 +40,7 @@ function end_test()
+ 	# stop duperemove running
+ 	if [ -e $dupe_run ]; then
+ 		rm -f $dupe_run
+-		pkill $dedup_bin >/dev/null 2>&1
++		_pkill $dedup_bin >/dev/null 2>&1
+ 		wait $dedup_pids
+ 		rm -f $dedup_prog
+ 	fi
 
