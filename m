@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BBDC25A62C;
-	Tue,  4 Feb 2025 21:29:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E93A6215765;
+	Tue,  4 Feb 2025 21:30:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738704593; cv=none; b=F7Vb3E5/+pv68THofhk+dKC8M7KOuiQyjtwXpfGVQAldUIE9nkritZ5mdL2RBxUfv+TKzzFqSzfHCAwq7bl26aiqh85mUgplNHE6nOregqOsOguihDqPHg3PQiJ3IRzmXI4NEAcL6Bw/oSU72fII3H3LEFvhZFVUWqbrsJlQvHw=
+	t=1738704609; cv=none; b=Vks0tCS+yVaj8FRnRSiccHRLY5/TckfMvVJ57E5NvyNe0QMXEAlSKsZEQloVLq+juQ5qDiEe7f+BAepDUOEaoTlzHUz38Wix4QvGhmDJUjf2YvB+NL+beEK48cMU8nzabYnD3mzCblVYQxMNmDirPYdTPo+OmD9VJ8afoxpeS/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738704593; c=relaxed/simple;
-	bh=At3Bxfr7sSrI/qpBYHOXD7YiHX585/7ELYh3rNmWhwQ=;
+	s=arc-20240116; t=1738704609; c=relaxed/simple;
+	bh=g5abhxL9Inf7+E51bS1OdMsDLZ9aa8FW85EzynjhvVI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lpflRdabfYTSHw6kWQ8HrmOT1cko2fuUAFLtS4Pxa2yXOJh4pQDBuaEzYXCCN3KVKjDM2j1DFKIHmpjwhLkVVDuddKtanfaHk1fSEe2t2EyZRA+TxxJAeQgpAJY2cxfKwKTn6/31hzT1nNQ8kBtkHyt9yK25FDpD1jDUeOztVbo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RRlzMQUN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VLFjOlVwKc2r1PNjTz34RiGTk05fXo1tu+ecJa2q6p/Jc7w1S35U8MoEqGQRQzSwZx3DAfZvuUJw9uoSiBX4T0jaZVXTNx+HLj+HOAU5YoI+gQYm2VAcyWRDq6raOf5jfq8C+7lQFNtKGM+E01G2HnBBl9h/4l7KaVW499wK7q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EVzRZ8tc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RRlzMQUN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1FB1C4CEDF;
-	Tue,  4 Feb 2025 21:29:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EVzRZ8tc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A789C4CEDF;
+	Tue,  4 Feb 2025 21:30:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738704592;
-	bh=At3Bxfr7sSrI/qpBYHOXD7YiHX585/7ELYh3rNmWhwQ=;
+	s=k20201202; t=1738704608;
+	bh=g5abhxL9Inf7+E51bS1OdMsDLZ9aa8FW85EzynjhvVI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RRlzMQUNddenD3QuNhsPtpOJnJ6ACfV5BOvJrMqLBhyWnh/b11Otp9n8xo0PszYq/
-	 PiPYSeRbhfwCEd/ttq4viMXWvYSzXi1M8srMkB6H6Jue/LCEV72qDOSOM6lfzZCvKV
-	 auosbPap3+8+gXbFFJXB8DkcQ4KXSzTEWCgcQlKmPWlaSUJEVdfhhbQmAEOMZqLWwX
-	 ZkQLcxFvwiESL6taYjW6njV62/W5d+gSqJF1eUmgAoKSDlRru2VP2T3UiPs9GeI8X+
-	 bRPgGs8R/dALuvaZnuIOYChj6jXcOc7T5K+JIV8n/DIP97GdHnBBwcBsrznkxalmVG
-	 dKGpLjiBDLivQ==
-Date: Tue, 04 Feb 2025 13:29:52 -0800
-Subject: [PATCH 29/34] fsstress: fix a memory leak
+	b=EVzRZ8tckQWdZwbwwy774ZnYuSBUL9upjHnLWadKEf1B+nvuaXS1mlEJNO11YFT1a
+	 X6CDfC9LnrVg4fNgASNSMkInh+jfcqvgovHjXWOAvsfslXWemTQbN3oUGtwCZl2qMF
+	 e1VEjrvRiYDsJFAw6Vl40FDH9Z0LxhCqd4ag/hsgWphEA9vKoDZwK2HGzvvI9pg6Vb
+	 SJEcoAzTktVLnFZB+jHCFikjNU+GHjzd/gkkLjmwJOYQHSNgcNO6bMKRRZWq9Kiy3t
+	 rw28sEHgI/hj0M+8kR31PTttKxzrkiCaWmn+5Wmxyc+ipS0SnpZMGaWtzIW5mIfRaQ
+	 bk7gLUtsl3CZg==
+Date: Tue, 04 Feb 2025 13:30:07 -0800
+Subject: [PATCH 30/34] fsx: fix leaked log file pointer
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173870406549.546134.4341905130116308600.stgit@frogsfrogsfrogs>
+Message-ID: <173870406564.546134.12817088521328536453.stgit@frogsfrogsfrogs>
 In-Reply-To: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,25 +45,28 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Someone forgot to free the iovec that readv_f allocates.
+Fix a resource leaks in fsx, where we fail to close the fsx logfile,
+because the C library could have some buffered contents that aren't
+flushed when the program terminates.  glibc seems to do this for us, but
+I wouldn't be so sure about the others.
 
-Fixes: 80499d8f5f251e ("fsstress: new writev and readv operations test")
+Fixes: 3f742550dfed84 ("fsx: add support for recording operations to a file")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- ltp/fsstress.c |    1 +
+ ltp/fsx.c |    1 +
  1 file changed, 1 insertion(+)
 
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 9e8eaa6d8656da..14c29921e8b0f8 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -4652,6 +4652,7 @@ readv_f(opnum_t opno, long r)
- 	}
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index d1b0f245582b31..163b9453b5418b 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -3489,6 +3489,7 @@ main(int argc, char **argv)
+ 	if (recordops)
+ 		logdump();
  
- 	e = readv(fd, iov, iovcnt) < 0 ? errno : 0;
-+	free(iov);
- 	free(buf);
- 	if (v)
- 		printf("%d/%lld: readv %s%s [%lld,%d,%d] %d\n",
++	fclose(fsxlogf);
+ 	exit(0);
+ 	return 0;
+ }
 
