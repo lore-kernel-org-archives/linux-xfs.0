@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F29C1509BD;
-	Tue,  4 Feb 2025 18:52:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF601509BD;
+	Tue,  4 Feb 2025 18:53:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738695176; cv=none; b=pZMQSJnArYQqHBgnGZy+1WjBgp7w/HGgdoqO30x+msyJalzzhSkGXka9GniyOeS7YAtSE7OPYgQzuaCbAX41Yosd901GxP8fINRCP89hhFd56tkttc8DgXvYKnoFOJ8P2UUOeox1eIcs9kYVdJ+BxmcwQThye5AKxfS8Nz8Aqwk=
+	t=1738695192; cv=none; b=RKZIHxKdVs1YpuWKgwvWkcL9i9pIa+twJsxcLq+To8hv6/oNzZvCGFcJZ5fGeKMEqq1yqcxPJIKlF+xHQEkdVu+g+xGzKL0bykIRZTEJgSXOZLiPHFltlqvo+/esrQrIy0tcd2SylWg+m4gs4kFZSTAFj1EWHznACYhxtonP6Fc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738695176; c=relaxed/simple;
-	bh=r9ooug+6bHmoFnShBawHmpfF+W3kdGVHfQI5KyCnVwo=;
+	s=arc-20240116; t=1738695192; c=relaxed/simple;
+	bh=4ZECNobaFzxt9Or5NvV4cggnExEAX6q3z1LlwRVSvnM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SOGWZiAM7qTeEuD/k1eo6vnf0Oja4CGSN87naQhlYudpGGmY91M6Q7KrC1JoZocOtZC0ARhLaY++n4grX0TzMa2Wcs5gsXd+8QaZR/j37OxeCGu+OyhMI1dajZwVPjY3w0nlWGkWtun00hwpMhClU8AbN7F+7lJVQuox1uUj7wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=baJJQ1Km; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=btRiQcjZjMPxMPzrox00EV7hx0yEHC0IBLM4OHuQtkEAAU0hLInwY/ItGNtYe5vB1cxCXiR0EkOsE3W0KG8o+gPXy4QK6JLJga3NJwsqHIrkvt3p4tPN2hN/3kPr/fMSqDeYVmMgHO0WtkmLgkCF/MP72R1UkjQs7xGilKmNQmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PbDatvY1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="baJJQ1Km"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDBB7C4CEDF;
-	Tue,  4 Feb 2025 18:52:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PbDatvY1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 615FAC4CEDF;
+	Tue,  4 Feb 2025 18:53:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738695175;
-	bh=r9ooug+6bHmoFnShBawHmpfF+W3kdGVHfQI5KyCnVwo=;
+	s=k20201202; t=1738695191;
+	bh=4ZECNobaFzxt9Or5NvV4cggnExEAX6q3z1LlwRVSvnM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=baJJQ1Kmxsl/EyXVI7XGOmW1qKNhZRqtIvMvi/0LtS5Au6/lDpa6GGxR1JzMiolaG
-	 TFff/45+zjWsxNAglvNJ6hlDdFBAztWdh70b1p3QbBeb6Yj0lT5nfa9xoQVdl2rK1I
-	 w5g5CsVB0hqEFyWMRDvW6iPN8Q7b0PaiR08WHT0WBknGV4q045B8IWDLOjTP9hDuu7
-	 vfaskgf0v9MGfdN9Oeba7A5dOcnZdH64xhUay6WYHHHQ30FCuguUYK3mfxt1bGqz3n
-	 6LZO5mKLpYA51K+zQtj1ozsZU1eGkH7OPdNtzCRqnYiw3fYaXnFoI8tl+ENHBJiCwN
-	 fHXQitT1y7yvg==
-Date: Tue, 04 Feb 2025 10:52:55 -0800
-Subject: [PATCH 07/10] xfs: convert quotacheck to attach dquot buffers
+	b=PbDatvY1XMpTO2LfyTV1wW7IqhCgJ63r4cVUm88fNPr8Y8Cj7/xju7JEzyp5VYdCL
+	 8/qojpewIDTmdeQrR3fWXLBLXjgIePtpi+RZu0WppgwtdfVXOzK+voqiHPbbmUheFW
+	 ENq6TT99TSsfSoGacKrJAJzdEHe7v5Btv3E9NEYOFy3JCQCEAnx0Ot70wZWBDjma7J
+	 9j2DDPvTcpD2e4b1tQgTUeY7R8DUF4YxUEWivdUkQ1vEn2R2Tw4iC0L02f+l1EUW6e
+	 nMWUkNkLGhE2jnqeToSKzEC8s+tz6f+Wvepr6kWAZpQ4W9SSU9ppmTIOIjfS0BW3SO
+	 vpjSmkcP3mkDQ==
+Date: Tue, 04 Feb 2025 10:53:10 -0800
+Subject: [PATCH 08/10] xfs: don't over-report free space or inodes in statvfs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, xfs-stable@lists.linux.dev, linux-xfs@vger.kernel.org
-Cc: hch@lst.de, stable@vger.kernel.org
-Message-ID: <173869499456.410229.12921580388979906629.stgit@frogsfrogsfrogs>
+Cc: eflorac@intellique.com, hch@lst.de, stable@vger.kernel.org
+Message-ID: <173869499472.410229.11902558198274628697.stgit@frogsfrogsfrogs>
 In-Reply-To: <173869499323.410229.9898612619797978336.stgit@frogsfrogsfrogs>
 References: <173869499323.410229.9898612619797978336.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,131 +45,79 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-commit ca378189fdfa890a4f0622f85ee41b710bbac271 upstream
+commit 4b8d867ca6e2fc6d152f629fdaf027053b81765a upstream
 
-Now that we've converted the dquot logging machinery to attach the dquot
-buffer to the li_buf pointer so that the AIL dqflush doesn't have to
-allocate or read buffers in a reclaim path, do the same for the
-quotacheck code so that the reclaim shrinker dqflush call doesn't have
-to do that either.
+Emmanual Florac reports a strange occurrence when project quota limits
+are enabled, free space is lower than the remaining quota, and someone
+runs statvfs:
 
-Cc: <stable@vger.kernel.org> # v6.12
-Fixes: 903edea6c53f09 ("mm: warn about illegal __GFP_NOFAIL usage in a more appropriate location and manner")
+  # mkfs.xfs -f /dev/sda
+  # mount /dev/sda /mnt -o prjquota
+  # xfs_quota  -x -c 'limit -p bhard=2G 55' /mnt
+  # mkdir /mnt/dir
+  # xfs_io -c 'chproj 55' -c 'chattr +P' -c 'stat -vvvv' /mnt/dir
+  # fallocate -l 19g /mnt/a
+  # df /mnt /mnt/dir
+  Filesystem      Size  Used Avail Use% Mounted on
+  /dev/sda         20G   20G  345M  99% /mnt
+  /dev/sda        2.0G     0  2.0G   0% /mnt
+
+I think the bug here is that xfs_fill_statvfs_from_dquot unconditionally
+assigns to f_bfree without checking that the filesystem has enough free
+space to fill the remaining project quota.  However, this is a
+longstanding behavior of xfs so it's unclear what to do here.
+
+Cc: <stable@vger.kernel.org> # v2.6.18
+Fixes: 932f2c323196c2 ("[XFS] statvfs component of directory/project quota support, code originally by Glen.")
+Reported-by: Emmanuel Florac <eflorac@intellique.com>
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dquot.c |    9 +++------
- fs/xfs/xfs_dquot.h |    2 --
- fs/xfs/xfs_qm.c    |   18 +++++++++++++-----
- 3 files changed, 16 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_qm_bhv.c |   27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index bba1387dfa42dc..d2b06ca2ec7a9c 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1278,11 +1278,10 @@ xfs_qm_dqflush_check(
-  * Requires dquot flush lock, will clear the dirty flag, delete the quota log
-  * item from the AIL, and shut down the system if something goes wrong.
-  */
--int
-+static int
- xfs_dquot_read_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_dquot	*dqp,
--	xfs_buf_flags_t		xbf_flags,
- 	struct xfs_buf		**bpp)
- {
- 	struct xfs_mount	*mp = dqp->q_mount;
-@@ -1290,10 +1289,8 @@ xfs_dquot_read_buf(
- 	int			error;
- 
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, dqp->q_blkno,
--				   mp->m_quotainfo->qi_dqchunklen, xbf_flags,
-+				   mp->m_quotainfo->qi_dqchunklen, 0,
- 				   &bp, &xfs_dquot_buf_ops);
--	if (error == -EAGAIN)
--		return error;
- 	if (xfs_metadata_is_sick(error))
- 		xfs_dquot_mark_sick(dqp);
- 	if (error)
-@@ -1327,7 +1324,7 @@ xfs_dquot_attach_buf(
- 		struct xfs_buf	*bp = NULL;
- 
- 		spin_unlock(&qlip->qli_lock);
--		error = xfs_dquot_read_buf(tp, dqp, 0, &bp);
-+		error = xfs_dquot_read_buf(tp, dqp, &bp);
- 		if (error)
- 			return error;
- 
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index aad483fc08b8c3..bd7bfd9e402e5b 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -204,8 +204,6 @@ void xfs_dquot_to_disk(struct xfs_disk_dquot *ddqp, struct xfs_dquot *dqp);
- #define XFS_DQ_IS_DIRTY(dqp)	((dqp)->q_flags & XFS_DQFLAG_DIRTY)
- 
- void		xfs_qm_dqdestroy(struct xfs_dquot *dqp);
--int		xfs_dquot_read_buf(struct xfs_trans *tp, struct xfs_dquot *dqp,
--				xfs_buf_flags_t flags, struct xfs_buf **bpp);
- int		xfs_qm_dqflush(struct xfs_dquot *dqp, struct xfs_buf *bp);
- void		xfs_qm_dqunpin_wait(struct xfs_dquot *dqp);
- void		xfs_qm_adjust_dqtimers(struct xfs_dquot *d);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 10fa44165ea16d..3212b5bf3fb3c6 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -146,13 +146,13 @@ xfs_qm_dqpurge(
- 		 * We don't care about getting disk errors here. We need
- 		 * to purge this dquot anyway, so we go ahead regardless.
- 		 */
--		error = xfs_dquot_read_buf(NULL, dqp, XBF_TRYLOCK, &bp);
-+		error = xfs_dquot_use_attached_buf(dqp, &bp);
- 		if (error == -EAGAIN) {
- 			xfs_dqfunlock(dqp);
- 			dqp->q_flags &= ~XFS_DQFLAG_FREEING;
- 			goto out_unlock;
- 		}
--		if (error)
-+		if (!bp)
- 			goto out_funlock;
- 
- 		/*
-@@ -474,8 +474,8 @@ xfs_qm_dquot_isolate(
- 		/* we have to drop the LRU lock to flush the dquot */
- 		spin_unlock(lru_lock);
- 
--		error = xfs_dquot_read_buf(NULL, dqp, XBF_TRYLOCK, &bp);
--		if (error) {
-+		error = xfs_dquot_use_attached_buf(dqp, &bp);
-+		if (!bp || error == -EAGAIN) {
- 			xfs_dqfunlock(dqp);
- 			goto out_unlock_dirty;
- 		}
-@@ -1132,6 +1132,10 @@ xfs_qm_quotacheck_dqadjust(
- 		return error;
- 	}
- 
-+	error = xfs_dquot_attach_buf(NULL, dqp);
-+	if (error)
-+		return error;
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index a11436579877d5..410a2a9c18ec52 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -26,21 +26,28 @@ xfs_fill_statvfs_from_dquot(
+ 	limit = dqp->q_blk.softlimit ?
+ 		dqp->q_blk.softlimit :
+ 		dqp->q_blk.hardlimit;
+-	if (limit && statp->f_blocks > limit) {
+-		statp->f_blocks = limit;
+-		statp->f_bfree = statp->f_bavail =
+-			(statp->f_blocks > dqp->q_blk.reserved) ?
+-			 (statp->f_blocks - dqp->q_blk.reserved) : 0;
++	if (limit) {
++		uint64_t	remaining = 0;
 +
- 	trace_xfs_dqadjust(dqp);
- 
- 	/*
-@@ -1311,9 +1315,13 @@ xfs_qm_flush_one(
- 		goto out_unlock;
++		if (limit > dqp->q_blk.reserved)
++			remaining = limit - dqp->q_blk.reserved;
++
++		statp->f_blocks = min(statp->f_blocks, limit);
++		statp->f_bfree = min(statp->f_bfree, remaining);
++		statp->f_bavail = min(statp->f_bavail, remaining);
  	}
  
--	error = xfs_dquot_read_buf(NULL, dqp, XBF_TRYLOCK, &bp);
-+	error = xfs_dquot_use_attached_buf(dqp, &bp);
- 	if (error)
- 		goto out_unlock;
-+	if (!bp) {
-+		error = -EFSCORRUPTED;
-+		goto out_unlock;
-+	}
+ 	limit = dqp->q_ino.softlimit ?
+ 		dqp->q_ino.softlimit :
+ 		dqp->q_ino.hardlimit;
+-	if (limit && statp->f_files > limit) {
+-		statp->f_files = limit;
+-		statp->f_ffree =
+-			(statp->f_files > dqp->q_ino.reserved) ?
+-			 (statp->f_files - dqp->q_ino.reserved) : 0;
++	if (limit) {
++		uint64_t	remaining = 0;
++
++		if (limit > dqp->q_ino.reserved)
++			remaining = limit - dqp->q_ino.reserved;
++
++		statp->f_files = min(statp->f_files, limit);
++		statp->f_ffree = min(statp->f_ffree, remaining);
+ 	}
+ }
  
- 	error = xfs_qm_dqflush(dqp, bp);
- 	if (!error)
 
