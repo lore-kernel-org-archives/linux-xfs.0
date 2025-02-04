@@ -1,41 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBE03213E71;
-	Tue,  4 Feb 2025 19:30:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C4ED219A66
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 19:45:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738697457; cv=none; b=N7UOHGeIj7XDPQ/KwpLeutNnVEI/dOgdqhIi5mokHkNN9Mq+IULA+mAf+6AXr7YOUeutPZP/emWUv+hqyZDB4pi1T1kso+qVghsEMub2LCPJ3jVfeYQNKMED9FXRkY0uq1j6DeuYw+WhEPhw12QT8jB+ZbYVOPaVuGzTw+jrW/U=
+	t=1738698360; cv=none; b=pQznrMwB2kgdmmnVsPR0TUFXbpszX8KlrU7x5jbcJGaqHei7KEud7Tyo/YWiJeZVUs5NhprbOTr/Nu9bCJHr+jaG3qvPwuuqjE5CnZXBXawEx3HN5f25uP2Azn0tf09XxtQSiJkxlo5zqLhO5TuT1VT1agPo5lqU0vtueU75PUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738697457; c=relaxed/simple;
-	bh=wK/ICJs34ylxLkSuB4ky/HA7vGnRT0untt070y2Lh9Q=;
+	s=arc-20240116; t=1738698360; c=relaxed/simple;
+	bh=VwnTmfzAWVgSqpQSRE8nhjRaR6xj8a7kTfkzXYECGyI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=idUkAxuak4CB0Pd3Lz08QlzsQKdRuleJm8cmLwnCsbET4evPJNx5MNFl4tXUj9L5iKHF0D//V1GxcGJYO/G9CEHG29kE7DHvJYcFhZevIN8QltI9UGYHtYFbVGmET+uXznGp7G8R31u/ab0DU9E6FtjxDYgKRmT7/GX/ajqDUDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKoWgeEP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=S9yRrG89bZFamCLQkbXXE3/laVnZgavl20H1eUN1NYNuMlu8hnYOtnLKZDrUuWCrcKyJfaO6WxeIX8/9/woPCatmk96KWhqXTeorSu2oy6DogevUStVlHZHPOThrnvpYjedb7MbDGYu6d5qmYlP4AKJjWE3u61qJ5ga6mMDqQMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EwTqpqpC; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKoWgeEP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36325C4CEE3;
-	Tue,  4 Feb 2025 19:30:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738697457;
-	bh=wK/ICJs34ylxLkSuB4ky/HA7vGnRT0untt070y2Lh9Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BKoWgeEPlXw+CYh6iWv0K48F5D25b+mymjMrbmYZLG2Bw1NOQacYznHbdNFb3HdKt
-	 /HQ24A3WJUZmDIwdsCUeP/taFmWC97qtqF3qZr8S/kyhM1TmP+1q5yqskAa3MbsUra
-	 FqfNwlNsNxtFzMHPTFe+tanItG05kyQGiqX7vyFaS9ErI9WURxlQfY9x8i2fxvBTEY
-	 eHeGMN4oocK4XdDTx26+4kVmMW9l5itDeAg2gMDbQyZLSbJR3MdFC6RSdZJjPM23gA
-	 Bg2b5tdjOgmtmz+wPdUINijqrGIv2yD+r18z5LA0a/7rMpH1c17DclBnQiCze/oGjX
-	 LHVlpEizxYN+w==
-Date: Tue, 4 Feb 2025 11:30:56 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EwTqpqpC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738698357;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XKrV5HR+6Foo9Cd0LXegC7lzeoB1C0C7f5Uj0RB30OE=;
+	b=EwTqpqpCBjkLQZ35ujvGtc5FYdOXzB0jVF1W6oq3mJHccbe0e2jXoZ45P44husu+WtqzBH
+	MtDQShoyf/7bpOtSuYtnHkPyUXoz4V8+lCwx4GYD815+4Wxj2qeoWxu8dtwqpRH/A00MC5
+	aR8kQ6AtI/ZUOQOpHUj5lBhvx0CZKPY=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-651-_k3BDQWiM8mnXGu3OlbG6A-1; Tue,
+ 04 Feb 2025 14:45:52 -0500
+X-MC-Unique: _k3BDQWiM8mnXGu3OlbG6A-1
+X-Mimecast-MFC-AGG-ID: _k3BDQWiM8mnXGu3OlbG6A
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AF51D1801F17;
+	Tue,  4 Feb 2025 19:45:51 +0000 (UTC)
+Received: from bfoster (unknown [10.22.88.48])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9AE6E195608E;
+	Tue,  4 Feb 2025 19:45:50 +0000 (UTC)
+Date: Tue, 4 Feb 2025 14:48:16 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH v4 02/10] iomap: split out iomap check and reset logic
  from iter advance
-Message-ID: <20250204193056.GD21808@frogsfrogsfrogs>
+Message-ID: <Z6JvACJuZbktb_8X@bfoster>
 References: <20250204133044.80551-1-bfoster@redhat.com>
  <20250204133044.80551-3-bfoster@redhat.com>
+ <20250204193056.GD21808@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,114 +60,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250204133044.80551-3-bfoster@redhat.com>
+In-Reply-To: <20250204193056.GD21808@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue, Feb 04, 2025 at 08:30:36AM -0500, Brian Foster wrote:
-> In preparation for more granular iomap_iter advancing, break out
-> some of the logic associated with higher level iteration from
-> iomap_advance_iter(). Specifically, factor the iomap reset code into
-> a separate helper and lift the iomap.length check into the calling
-> code, similar to how ->iomap_end() calls are handled.
+On Tue, Feb 04, 2025 at 11:30:56AM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 04, 2025 at 08:30:36AM -0500, Brian Foster wrote:
+> > In preparation for more granular iomap_iter advancing, break out
+> > some of the logic associated with higher level iteration from
+> > iomap_advance_iter(). Specifically, factor the iomap reset code into
+> > a separate helper and lift the iomap.length check into the calling
+> > code, similar to how ->iomap_end() calls are handled.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/iomap/iter.c | 49 ++++++++++++++++++++++++++-----------------------
+> >  1 file changed, 26 insertions(+), 23 deletions(-)
+> > 
+> > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> > index 3790918646af..731ea7267f27 100644
+> > --- a/fs/iomap/iter.c
+> > +++ b/fs/iomap/iter.c
+> > @@ -7,6 +7,13 @@
+> >  #include <linux/iomap.h>
+> >  #include "trace.h"
+> >  
+> > +static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
+> > +{
+> > +	iter->processed = 0;
+> > +	memset(&iter->iomap, 0, sizeof(iter->iomap));
+> > +	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
+> > +}
+> > +
+> >  /*
+> >   * Advance to the next range we need to map.
+> >   *
+> > @@ -14,32 +21,24 @@
+> >   * processed - it was aborted because the extent the iomap spanned may have been
+> >   * changed during the operation. In this case, the iteration behaviour is to
+> >   * remap the unprocessed range of the iter, and that means we may need to remap
+> > - * even when we've made no progress (i.e. iter->processed = 0). Hence the
+> > - * "finished iterating" case needs to distinguish between
+> > - * (processed = 0) meaning we are done and (processed = 0 && stale) meaning we
+> > - * need to remap the entire remaining range.
+> > + * even when we've made no progress (i.e. count = 0). Hence the "finished
+> > + * iterating" case needs to distinguish between (count = 0) meaning we are done
+> > + * and (count = 0 && stale) meaning we need to remap the entire remaining range.
+> >   */
+> > -static inline int iomap_iter_advance(struct iomap_iter *iter)
+> > +static inline int iomap_iter_advance(struct iomap_iter *iter, s64 count)
+> >  {
+> >  	bool stale = iter->iomap.flags & IOMAP_F_STALE;
+> >  	int ret = 1;
+> >  
+> > -	/* handle the previous iteration (if any) */
+> > -	if (iter->iomap.length) {
+> > -		if (iter->processed < 0)
+> > -			return iter->processed;
+> > -		if (WARN_ON_ONCE(iter->processed > iomap_length(iter)))
+> > -			return -EIO;
+> > -		iter->pos += iter->processed;
+> > -		iter->len -= iter->processed;
+> > -		if (!iter->len || (!iter->processed && !stale))
+> > -			ret = 0;
+> > -	}
+> > +	if (count < 0)
+> > +		return count;
+> > +	if (WARN_ON_ONCE(count > iomap_length(iter)))
+> > +		return -EIO;
+> > +	iter->pos += count;
+> > +	iter->len -= count;
+> > +	if (!iter->len || (!count && !stale))
+> > +		ret = 0;
+> >  
+> > -	/* clear the per iteration state */
+> > -	iter->processed = 0;
+> > -	memset(&iter->iomap, 0, sizeof(iter->iomap));
+> > -	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/iter.c | 49 ++++++++++++++++++++++++++-----------------------
->  1 file changed, 26 insertions(+), 23 deletions(-)
+> Are there any consequences to not resetting the iter if
+> iter->iomap.length is zero?  I think the answer is "no" because callers
+> are supposed to initialize the iter with zeroes and filesystems are
+> never supposed to return zero-length iomaps from ->begin_iomap, right?
 > 
-> diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-> index 3790918646af..731ea7267f27 100644
-> --- a/fs/iomap/iter.c
-> +++ b/fs/iomap/iter.c
-> @@ -7,6 +7,13 @@
->  #include <linux/iomap.h>
->  #include "trace.h"
->  
-> +static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
-> +{
-> +	iter->processed = 0;
-> +	memset(&iter->iomap, 0, sizeof(iter->iomap));
-> +	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
-> +}
-> +
->  /*
->   * Advance to the next range we need to map.
->   *
-> @@ -14,32 +21,24 @@
->   * processed - it was aborted because the extent the iomap spanned may have been
->   * changed during the operation. In this case, the iteration behaviour is to
->   * remap the unprocessed range of the iter, and that means we may need to remap
-> - * even when we've made no progress (i.e. iter->processed = 0). Hence the
-> - * "finished iterating" case needs to distinguish between
-> - * (processed = 0) meaning we are done and (processed = 0 && stale) meaning we
-> - * need to remap the entire remaining range.
-> + * even when we've made no progress (i.e. count = 0). Hence the "finished
-> + * iterating" case needs to distinguish between (count = 0) meaning we are done
-> + * and (count = 0 && stale) meaning we need to remap the entire remaining range.
->   */
-> -static inline int iomap_iter_advance(struct iomap_iter *iter)
-> +static inline int iomap_iter_advance(struct iomap_iter *iter, s64 count)
->  {
->  	bool stale = iter->iomap.flags & IOMAP_F_STALE;
->  	int ret = 1;
->  
-> -	/* handle the previous iteration (if any) */
-> -	if (iter->iomap.length) {
-> -		if (iter->processed < 0)
-> -			return iter->processed;
-> -		if (WARN_ON_ONCE(iter->processed > iomap_length(iter)))
-> -			return -EIO;
-> -		iter->pos += iter->processed;
-> -		iter->len -= iter->processed;
-> -		if (!iter->len || (!iter->processed && !stale))
-> -			ret = 0;
-> -	}
-> +	if (count < 0)
-> +		return count;
-> +	if (WARN_ON_ONCE(count > iomap_length(iter)))
-> +		return -EIO;
-> +	iter->pos += count;
-> +	iter->len -= count;
-> +	if (!iter->len || (!count && !stale))
-> +		ret = 0;
->  
-> -	/* clear the per iteration state */
-> -	iter->processed = 0;
-> -	memset(&iter->iomap, 0, sizeof(iter->iomap));
-> -	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
 
-Are there any consequences to not resetting the iter if
-iter->iomap.length is zero?  I think the answer is "no" because callers
-are supposed to initialize the iter with zeroes and filesystems are
-never supposed to return zero-length iomaps from ->begin_iomap, right?
+That matches my understanding..
 
-If the answers are "no" and "yes" then
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
->  	return ret;
->  }
->  
-> @@ -82,10 +81,14 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
->  			return ret;
->  	}
->  
-> +	/* advance and clear state from the previous iteration */
->  	trace_iomap_iter(iter, ops, _RET_IP_);
-> -	ret = iomap_iter_advance(iter);
-> -	if (ret <= 0)
-> -		return ret;
-> +	if (iter->iomap.length) {
-> +		ret = iomap_iter_advance(iter, iter->processed);
-> +		iomap_iter_reset_iomap(iter);
-> +		if (ret <= 0)
-> +			return ret;
-> +	}
->  
->  	ret = ops->iomap_begin(iter->inode, iter->pos, iter->len, iter->flags,
->  			       &iter->iomap, &iter->srcmap);
-> -- 
-> 2.48.1
+> If the answers are "no" and "yes" then
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 > 
+
+Thanks.
+
+Brian
+
+> --D
 > 
+> >  	return ret;
+> >  }
+> >  
+> > @@ -82,10 +81,14 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
+> >  			return ret;
+> >  	}
+> >  
+> > +	/* advance and clear state from the previous iteration */
+> >  	trace_iomap_iter(iter, ops, _RET_IP_);
+> > -	ret = iomap_iter_advance(iter);
+> > -	if (ret <= 0)
+> > -		return ret;
+> > +	if (iter->iomap.length) {
+> > +		ret = iomap_iter_advance(iter, iter->processed);
+> > +		iomap_iter_reset_iomap(iter);
+> > +		if (ret <= 0)
+> > +			return ret;
+> > +	}
+> >  
+> >  	ret = ops->iomap_begin(iter->inode, iter->pos, iter->len, iter->flags,
+> >  			       &iter->iomap, &iter->srcmap);
+> > -- 
+> > 2.48.1
+> > 
+> > 
+> 
+
