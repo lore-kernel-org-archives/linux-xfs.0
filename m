@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A74A204F7F;
-	Tue,  4 Feb 2025 19:52:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D3A4158558
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 19:59:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738698742; cv=none; b=IQPjN9ZLxz7EbGbwRLf7zGasupX2gosPIeM7QNcCwR5jkLeOZN0Fnne8zlMOy3ktRgoBRPkEeVEfmgGTe4embFqTK2tjIxLACz+GQpJMtycPAROL1xA0n3f4q/lGQbbQ2gj03cjMgeo+FIdZ/EsCJ8p10zKKt4zhf1fZ+U0NzHk=
+	t=1738699164; cv=none; b=COQ7CsG00o0uoD965MboGszT0v9q3ljYnHMlI4YlSWQas2GD0L9zGHOweTkMb7UZNn/E29JsUwF4lPT07Dyxqz6TwH8I0iqybwLZc5HEW6yRRiWFQKuJnUuw0JiFjzyGzTfG320J/i4ioB4Am8i2zB4cdLE6pkA6NVttb4drNTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738698742; c=relaxed/simple;
-	bh=8wzxGNV7ip+iLOJg7XVsZXSg2+EaqkKL3tac0+ZElt8=;
+	s=arc-20240116; t=1738699164; c=relaxed/simple;
+	bh=X2Iy/G3kJZCaDEB9xA8MUD/VlpJM0GlHqv/Z0WxV+L4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FCe0RAnM8cZHlWkq8B3VqCgZvpV/OplQwbq9+6eN9WMPaSeyT5f2BYWESqUAJjDCnZhB/6fBqA86h4QFFO93uxmvm/gVRJR4S5t2VcG22sfOGsWPSRMHE+pbvrw9wusp2fiOzN50KORfeyUwBU/mGIfIRCqXCn22uy9N9OYv+lY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oArsMZp8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=latjypvMvoPXmejydB1aL40Xw5M/Q4V4YeA4NYCk8nhH64EriZaBlrg0bVko4SyHHvsvdyCAiid9msS3hQgw7+eH5oxbTSG1jvwsqB1SdXVYQLbA092t0N9jOfKXY2L+ZXfji7DJ0BwfqgPfUlCzTGoQkh6WSgsmse3cP3oE4ak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rBes6uTv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oArsMZp8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99E8CC4CEDF;
-	Tue,  4 Feb 2025 19:52:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rBes6uTv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBEFCC4CEDF;
+	Tue,  4 Feb 2025 19:59:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738698741;
-	bh=8wzxGNV7ip+iLOJg7XVsZXSg2+EaqkKL3tac0+ZElt8=;
+	s=k20201202; t=1738699164;
+	bh=X2Iy/G3kJZCaDEB9xA8MUD/VlpJM0GlHqv/Z0WxV+L4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oArsMZp8DbMBUI+0tBWPNWxsceM1lcKE9Fr6RBtgHGS0xKQORURpfuHRe+5U0Lwrh
-	 2OOHKonQDbI4EVUQtOER1TZalHXV7c60aHK1ZHrwH5KZuZLYvjgJRHkNZQsw8g+Ghx
-	 o2pmqzNuEWB2wclWNoB/KalXnrdh232jBGsowFBkmUZNRV4TpNaKvELcjxLOr73Xa2
-	 LEVI7ZclqKjfXO85NVkySdleO9iP+HeICZTThLhn40awh2OiY+uqgQRHk21Azisn0T
-	 cJmpiJY810r/HDK3dfjzgqW0xlACO2d0LJ/PAPjOUuQrEZFiCu4PtnIeLd5BAf1Dtv
-	 f9d8S5IZZPh7Q==
-Date: Tue, 4 Feb 2025 11:52:20 -0800
+	b=rBes6uTveyTqzJ94Ywk3Qomg6avvxsfkMr5kRfNhqtG3pwWEEDaYEhGN1GNP6elRC
+	 OHQCQE77k4ta1fXUTZOyjOD8yhyzolumYsMHKOMZ+5gYFtvc+Id4yshm+z3HDWtRoK
+	 d+6hWBdOla0Lz0cJhV3isILmDw5IkJLgD5cIXNsr6RaD0gh5s2ABcD+tUNg/31on0J
+	 WpuNktpWVt3V7yeg5cVlWcjtY5lUnMBn7rEsxgBJEGKqnF8LpJunIotJDZh+DX9vmT
+	 foo7a2JEYc4+pkCE1w2ZQccJx/64yjPL7hvBXLMl7WOtR+YXwzFbyfjG5rY37GKPNH
+	 beR4j8IK1tPDQ==
+Date: Tue, 4 Feb 2025 11:59:23 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 05/10] iomap: lift iter termination logic from
- iomap_iter_advance()
-Message-ID: <20250204195220.GE21808@frogsfrogsfrogs>
-References: <20250204133044.80551-1-bfoster@redhat.com>
- <20250204133044.80551-6-bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Lukas Herbolt <lukas@herbolt.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: do not check NEEDSREPAIR if ro,norecovery mount.
+Message-ID: <20250204195923.GF21808@frogsfrogsfrogs>
+References: <20250203085513.79335-1-lukas@herbolt.com>
+ <20250203085513.79335-2-lukas@herbolt.com>
+ <20250203222652.GG134507@frogsfrogsfrogs>
+ <0e383591-7023-47bb-a202-2277e2d4f7ad@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,104 +45,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250204133044.80551-6-bfoster@redhat.com>
+In-Reply-To: <0e383591-7023-47bb-a202-2277e2d4f7ad@sandeen.net>
 
-On Tue, Feb 04, 2025 at 08:30:39AM -0500, Brian Foster wrote:
-> The iter termination logic in iomap_iter_advance() is only needed by
-> iomap_iter() to determine whether to proceed with the next mapping
-> for an ongoing operation. The old logic sets ret to 1 and then
-> terminates if the operation is complete (iter->len == 0) or the
-> previous iteration performed no work and the mapping has not been
-> marked stale. The stale check exists to allow operations to
-> retry the current mapping if an inconsistency has been detected.
+On Tue, Feb 04, 2025 at 11:55:00AM -0600, Eric Sandeen wrote:
+> On 2/3/25 4:26 PM, Darrick J. Wong wrote:
+> > On Mon, Feb 03, 2025 at 09:55:13AM +0100, Lukas Herbolt wrote:
+> >> If there is corrutpion on the filesystem andxfs_repair
+> >> fails to repair it. The last resort of getting the data
+> >> is to use norecovery,ro mount. But if the NEEDSREPAIR is
+> >> set the filesystem cannot be mounted. The flag must be
+> >> cleared out manually using xfs_db, to get access to what
+> >> left over of the corrupted fs.
+> >>
+> >> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> >> ---
+> >>  fs/xfs/xfs_super.c | 8 ++++++--
+> >>  1 file changed, 6 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> >> index 394fdf3bb535..c2566dcc4f88 100644
+> >> --- a/fs/xfs/xfs_super.c
+> >> +++ b/fs/xfs/xfs_super.c
+> >> @@ -1635,8 +1635,12 @@ xfs_fs_fill_super(
+> >>  #endif
+> >>  	}
+> >>  
+> >> -	/* Filesystem claims it needs repair, so refuse the mount. */
+> >> -	if (xfs_has_needsrepair(mp)) {
+> >> +	/*
+> >> +	 * Filesystem claims it needs repair, so refuse the mount unless
+> >> +	 * norecovery is also specified, in which case the filesystem can
+> >> +	 * be mounted with no risk of further damage.
+> >> +	 */
+> >> +	if (xfs_has_needsrepair(mp) && !xfs_has_norecovery(mp)) {
+> > 
+> > I think a better way to handle badly damaged filesystems is for us to
+> > provide a means to extract directory trees in userspace, rather than
+> > making the user take the risk of mounting a known-bad filesystem.
+> > I've a draft of an xfs_db subcommand for doing exactly that and will
+> > share for xfsprogs 6.14.
 > 
-> To further genericize iomap_iter_advance(), lift the termination
-> logic into iomap_iter() and update the former to return success (0)
-> or an error code. iomap_iter() continues on successful advance and
-> non-zero iter->len or otherwise terminates in the no progress (and
-> not stale) or error cases.
+> I think whether a userspace extractor is better or not depends on the
+> usecase. I suppose there's some truth that a NEEDSREPAIR filesystem is
+> "known bad" but we already suffer the risk of "unknown bad" filesystems
+> today. (Or for that matter, the fact that we allow "norecovery" today,
+> which also guarantees a mount of an inconsistent filesystem.)
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/iomap/iter.c | 21 +++++++++++++--------
->  1 file changed, 13 insertions(+), 8 deletions(-)
+> "Something is wrong with this filesystem, let's mount it readonly and
+> copy off the data" is a pretty time-tested approach, I think, hampered
+> only by the fairly recent addition of NEEDSREPAIR.
 > 
-> diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-> index fcc8d75dd22f..04bd39ee5d47 100644
-> --- a/fs/iomap/iter.c
-> +++ b/fs/iomap/iter.c
-> @@ -27,17 +27,11 @@ static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
->   */
->  static inline int iomap_iter_advance(struct iomap_iter *iter, s64 count)
->  {
-> -	bool stale = iter->iomap.flags & IOMAP_F_STALE;
-> -	int ret = 1;
-> -
->  	if (WARN_ON_ONCE(count > iomap_length(iter)))
->  		return -EIO;
->  	iter->pos += count;
->  	iter->len -= count;
-> -	if (!iter->len || (!count && !stale))
-> -		ret = 0;
-> -
-> -	return ret;
-> +	return 0;
->  }
->  
->  static inline void iomap_iter_done(struct iomap_iter *iter)
-> @@ -69,6 +63,7 @@ static inline void iomap_iter_done(struct iomap_iter *iter)
->   */
->  int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
->  {
-> +	bool stale = iter->iomap.flags & IOMAP_F_STALE;
->  	int ret;
->  
->  	trace_iomap_iter(iter, ops, _RET_IP_);
-> @@ -89,8 +84,18 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
->  		return iter->processed;
->  	}
->  
-> -	/* advance and clear state from the previous iteration */
-> +	/*
-> +	 * Advance the iter and clear state from the previous iteration. Use
-> +	 * iter->len to determine whether to continue onto the next mapping.
-> +	 * Explicitly terminate in the case where the current iter has not
-> +	 * advanced at all (i.e. no work was done for some reason) unless the
-> +	 * mapping has been marked stale and needs to be reprocessed.
-> +	 */
->  	ret = iomap_iter_advance(iter, iter->processed);
-> +	if (!ret && iter->len > 0)
-> +		ret = 1;
-> +	if (ret > 0 && !iter->processed && !stale)
+> a userspace scrape-the-device tool may well be useful for some, but
+> I don't think that vs. this kernelspace option needs to be an either/or
+> decision.
 
-How can ret be greater than zero here other than the previous line
-setting it?  I /think/ this is the same as:
-
-	if (!ret && iter->len > 0) {
-		if (iter->processed || stale)
-			ret = 1;
-	}
-
-but then I wonder if it's really necessary to reset the iter state on
-error, or if we've finished the whole thing, or if we've done no work
-and didn't set STALE?  What do you think about:
-
-	ret = iomap_iter_advance(...);
-	if (ret || !iter->len)
-		return ret;
-	if (!iter->processed && !stale)
-		return 0;
-
-	iomap_iter_reset_iomap(iter);
-	ret = ops->iomap_begin(...);
+Fair enough; it's not like we have a tool today that can extract
+directory trees from an unmountable filesystem.  Do you want to rvb this
+one, then?
 
 --D
 
-> +		ret = 0;
->  	iomap_iter_reset_iomap(iter);
->  	if (ret <= 0)
->  		return ret;
-> -- 
-> 2.48.1
+> Thanks,
+> 
+> -Eric
+> 
+> > --D
+> > 
+> >>  		xfs_warn(mp, "Filesystem needs repair.  Please run xfs_repair.");
+> >>  		error = -EFSCORRUPTED;
+> >>  		goto out_free_sb;
+> >> -- 
+> >> 2.48.1
+> >>
+> >>
+> > 
 > 
 > 
