@@ -1,33 +1,33 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4089521C182;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D72721C19D;
 	Tue,  4 Feb 2025 23:12:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738710736; cv=none; b=Dw9r7lRlhzqZ4kT/8YfOGj5d1we8ddfJqB/S3EateJg0BdBlnBqAdEWWXbfD4futlvFk1GhJZvghesi1GR/7XLUTK8WOJpq9hWlKIKIa/DMfU7vKAUPWJCFZKZGgy9pQkY3oE8awuHIaFh7dHjcoQMI1sSA5z4utvi2Dnar7MGQ=
+	t=1738710736; cv=none; b=MoViqw5t9fwYOq1AU//lgx4Sq2hGJU00BpgOMexCOtA/A1L+ZzKl5awI0eKAUXvzbD+VPjuHxbrvNgJLX4dOd1RJ/eBobLKplb6SSA7NX4j+xTZeVL7xpH4GgV7siJQFqz2HBI1dhlJXfQ6LWKhL90HpzzV713YBI88AbqybDxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738710736; c=relaxed/simple;
-	bh=HbYBj5rAZfZP5YdThJ5y7bQrat0JXHXg5QPwfqhiCLw=;
+	bh=zt97TGl2KF08+WytHpTHgv7Zf2m36wjwZhA67iwywMg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IuM4D5LgEzs7YK08a9od2he8VNfPJ10Of6AQl1Zt8ll/8Zl4KYk/CUAJuwtg8wqGF7IS8NbTHRY7ChhJHAKEMxdelLsqSswMTvb6hQxmQdkLpgePAGREMTYOUWr5AsdJxVd2vDec082ZwXkkCQnb03zPFlczFXYh4ZWDGdcX4n0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Y7kbPbrZ; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=MBrANGt0gS3s34EJ/GyEdHkkOh8903l4ankLxeojvYr2rVEJPQbOYugCOLUb3G5obGzzFFAFwh0VearaesBhR6hILRAB7aXJuI8YWjgY9baT7dzel5MJhLdzgZBRZXIepCNpAJN1YYcBxct+JBsSkfu2TpnkccZIjmTAWl4risM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IHtFMQGC; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y7kbPbrZ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IHtFMQGC"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=BqAmEHN/NB4fRpClNavDgsxh4n8ElEwRbJC+1e1GTe8=; b=Y7kbPbrZWUV0UxwwKcM89Dh4Cv
-	4dxa4VsxyQWeZvEu4hKO19mk9Oahn1gL/beoB8rGrrXjF6u0/dChAjDktCPfvzCpmcH4tRI8pz9MG
-	A3Y2ewRHNTTYqRWySxth22/RQPFoYLru4nRX05nafsuR7gb19uX8vZLDt0wZsslpTJi7N/SKPgiyL
-	Os4lK9jtkE6l8Ai4GI0oZfoXiZPFY4MbnfNhlsT1hHbSp0reE/ZrsEY3yWe85OVnH9RX0IhEg9wVW
-	bVkvsCsUGGXielAB07u++sxl65h/dSO9scBeUGQQn1NgEqw4rgbP0GvNTnctfEc9KpiGA85cCl8ll
-	ymPxZ9Yg==;
+	bh=dx9mRi5amWVcM0ecsur6IbVdNelNNovE80LuaqvVo+c=; b=IHtFMQGC1lK7B131euedd45YPt
+	nvZXb+Eg/WELScuPXyzcOvYG5gWjU1eXe++DWyQ+PqIpGdRMjXPlrkWuXofu9nDbHrNeXRzYrzPpH
+	sYemqQLRrwX9oSG97zypNzZd1Z0nKV2MhFdmFsi2SRLxWUw7R66nAHOcgFB8KEi1u2Q14RXLCmv0q
+	71XJQ0YgjmH6eipR2q3wHm8hoYFC61FAadJWvmI6TPp0Rf5otCojled0yolTsPGl3yosS0jCJwNb9
+	1ZKv0Oqq+F+DsKYrgflgR1rtAAqpBL/9Iwj9Vt5eTq5STdHZjtIZ+XK1owFLcZBUz1HOv/ZphMXaU
+	U/pJyBtQ==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tfS5T-00000001nhW-1oc0;
+	id 1tfS5T-00000001nhQ-1MeY;
 	Tue, 04 Feb 2025 23:12:11 +0000
 From: Luis Chamberlain <mcgrof@kernel.org>
 To: hare@suse.de,
@@ -47,10 +47,11 @@ Cc: john.g.garry@oracle.com,
 	p.raghav@samsung.com,
 	da.gomez@samsung.com,
 	kernel@pankajraghav.com,
-	mcgrof@kernel.org
-Subject: [PATCH v2 6/8] block/bdev: enable large folio support for large logical block sizes
-Date: Tue,  4 Feb 2025 15:12:07 -0800
-Message-ID: <20250204231209.429356-7-mcgrof@kernel.org>
+	mcgrof@kernel.org,
+	Hannes Reinecke <hare@kernel.org>
+Subject: [PATCH v2 3/8] fs/mpage: avoid negative shift for large blocksize
+Date: Tue,  4 Feb 2025 15:12:04 -0800
+Message-ID: <20250204231209.429356-4-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250204231209.429356-1-mcgrof@kernel.org>
 References: <20250204231209.429356-1-mcgrof@kernel.org>
@@ -63,37 +64,40 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-From: Hannes Reinecke <hare@suse.de>
+From: Hannes Reinecke <hare@kernel.org>
 
-Call mapping_set_folio_min_order() when modifying the logical block
-size to ensure folios are allocated with the correct size.
+For large blocksizes the number of block bits is larger than PAGE_SHIFT,
+so use instead use folio_pos(folio) >> blkbits to calculate the sector
+number. This is required to enable large folios with buffer-heads.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@kernel.org>
 ---
- block/bdev.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/mpage.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/bdev.c b/block/bdev.c
-index 9d73a8fbf7f9..8aadf1f23cb4 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -148,6 +148,8 @@ static void set_init_blocksize(struct block_device *bdev)
- 		bsize <<= 1;
- 	}
- 	BD_INODE(bdev)->i_blkbits = blksize_bits(bsize);
-+	mapping_set_folio_min_order(BD_INODE(bdev)->i_mapping,
-+				    get_order(bsize));
- }
+diff --git a/fs/mpage.c b/fs/mpage.c
+index 82aecf372743..a3c82206977f 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -181,7 +181,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 	if (folio_buffers(folio))
+ 		goto confused;
  
- int set_blocksize(struct file *file, int size)
-@@ -169,6 +171,7 @@ int set_blocksize(struct file *file, int size)
- 	if (inode->i_blkbits != blksize_bits(size)) {
- 		sync_blockdev(bdev);
- 		inode->i_blkbits = blksize_bits(size);
-+		mapping_set_folio_min_order(inode->i_mapping, get_order(size));
- 		kill_bdev(bdev);
- 	}
- 	return 0;
+-	block_in_file = (sector_t)folio->index << (PAGE_SHIFT - blkbits);
++	block_in_file = folio_pos(folio) >> blkbits;
+ 	last_block = block_in_file + args->nr_pages * blocks_per_page;
+ 	last_block_in_file = (i_size_read(inode) + blocksize - 1) >> blkbits;
+ 	if (last_block > last_block_in_file)
+@@ -527,7 +527,7 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
+ 	 * The page has no buffers: map it to disk
+ 	 */
+ 	BUG_ON(!folio_test_uptodate(folio));
+-	block_in_file = (sector_t)folio->index << (PAGE_SHIFT - blkbits);
++	block_in_file = folio_pos(folio) >> blkbits;
+ 	/*
+ 	 * Whole page beyond EOF? Skip allocating blocks to avoid leaking
+ 	 * space.
 -- 
 2.45.2
 
