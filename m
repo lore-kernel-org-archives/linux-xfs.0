@@ -1,36 +1,29 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE44A1C3BEE
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Feb 2025 23:41:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4FF125A624
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 04:53:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738626084; cv=none; b=UIoDrlOCFQREZinaAHAVMhoG1EfU3/n+5JQX692mrVLApe+BSz0IL4Blz2j+0DRcXJf6IELjJjUWUti5Qq70qy96TjwXgzZlzxC4FhN0CAaeshirAOQukER52Y94bSn9Z81QPhvrd7TKaeGdpE6QhVj8V7L+NSwpKnKjimH727U=
+	t=1738644808; cv=none; b=BKPOGQBL+ShGdvk8qhf9jaDmY5ruBKhUkAu/d7G/QC5irbj/hZ64W//oGJuJecA7oIKYHvVWu50+Adj8iOQdP5hCv0vlP5Uv+LPqBBJho+yH0Ap8kiQdLMHGuSdv6wZZfp6/uFHQzpb890ZwHgg/rI8Fd04Sos6csVzEHyserhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738626084; c=relaxed/simple;
-	bh=B15fdMiJFovihKCIsXgqLuKOXES1AY/U0rjBAsXSEHc=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Y9/B5+h8GsnRwsOAVorlhjeeakfFn06mgXX428NhWlXdRHubL0H1wsdY5a836q4ZFBNo51ruiFMlfwDSJ3eVAqJ/rJn1/+kEyYL0sjoyOdwAdsH6ahJb8FfpBnRBMWaDqsYCPOyhaDvpfmF69hIPBy7//VBx5EbCYj9WFhx6apI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dDBoujMO; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dDBoujMO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 602A9C4CEE0;
-	Mon,  3 Feb 2025 23:41:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738626083;
-	bh=B15fdMiJFovihKCIsXgqLuKOXES1AY/U0rjBAsXSEHc=;
-	h=Date:From:To:Subject:From;
-	b=dDBoujMO9LizJrP6TA5r/EUZv7MXIUpgWPFzYRrP7QGrHxicGPC7CaRu9PcEoStrh
-	 Ei3N/ijtCHZDMozYIJ6Y8R5XGjgW4os3mJIWVo62iTkhddwfaWZgNwEWvEuuT+Db0/
-	 CYNvzcEN1vn8yJuOuBTvNaHr4FIfw71/1ma9jPnYXoTamzrpGsd2OFFvViM5HCqn3s
-	 9McahzNJjdz5fveKYYgP9CQJdDEoUl6WH0c16AggrEJHH7x/VgPkvDKhfNM+SRGk5S
-	 mOD5MVAH+oQ13/81HgjfvWksWnSLtln3vdqS9nCyXPtPtEdTGa2b1rMUkEFSkHduV8
-	 Vzlx0Bz2ZkmiA==
-Date: Mon, 3 Feb 2025 15:41:22 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: xfs <linux-xfs@vger.kernel.org>, grub-devel@gnu.org
-Subject: [PATCH] fs/xfs: add new superblock features added in Linux 6.12/6.13
-Message-ID: <20250203234122.GH134507@frogsfrogsfrogs>
+	s=arc-20240116; t=1738644808; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WBJn6nABOYrfG40z4DI+0Yy5tpKr8qHV8PG5V4Wn9weqNwbgulMf4z272XVfSzWsdbPggKYlURvSee+Ft8eT9rTTutW9uSKXDfD3zK72m2kOcqX67VKKHvvGJ1ASG7ZNRdWjqJu7GN0qT0/acL9CH7CByw3b1YJOb77g2Exym/U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 8D37868AFE; Tue,  4 Feb 2025 05:53:20 +0100 (CET)
+Date: Tue, 4 Feb 2025 05:53:20 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] mkfs: fix file size setting when interpreting a
+ protofile
+Message-ID: <20250204045320.GA28103@lst.de>
+References: <173862239029.2460098.9677559939449638172.stgit@frogsfrogsfrogs> <173862239048.2460098.9569795439422233357.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,57 +32,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <173862239048.2460098.9569795439422233357.stgit@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Darrick J. Wong <djwong@kernel.org>
+Looks good:
 
-The Linux port of XFS added a few new features in 2024.  The existing
-grub driver doesn't attempt to read or write any of the new metadata, so
-all three can be added to the incompat allowlist.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- grub-core/fs/xfs.c |   17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
-
-diff --git a/grub-core/fs/xfs.c b/grub-core/fs/xfs.c
-index 8e02ab4a301424..5d809a770a1576 100644
---- a/grub-core/fs/xfs.c
-+++ b/grub-core/fs/xfs.c
-@@ -89,6 +89,9 @@ GRUB_MOD_LICENSE ("GPLv3+");
- #define XFS_SB_FEAT_INCOMPAT_BIGTIME    (1 << 3)        /* large timestamps */
- #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)       /* needs xfs_repair */
- #define XFS_SB_FEAT_INCOMPAT_NREXT64 (1 << 5)           /* large extent counters */
-+#define XFS_SB_FEAT_INCOMPAT_EXCHRANGE  (1 << 6)        /* exchangerange supported */
-+#define XFS_SB_FEAT_INCOMPAT_PARENT     (1 << 7)        /* parent pointers */
-+#define XFS_SB_FEAT_INCOMPAT_METADIR    (1 << 8)        /* metadata dir tree */
- 
- /*
-  * Directory entries with ftype are explicitly handled by GRUB code.
-@@ -98,6 +101,15 @@ GRUB_MOD_LICENSE ("GPLv3+");
-  *
-  * We do not currently verify metadata UUID, so it is safe to read filesystems
-  * with the XFS_SB_FEAT_INCOMPAT_META_UUID feature.
-+ *
-+ * We do not currently replay the log, so it is safe to read filesystems
-+ * with the XFS_SB_FEAT_INCOMPAT_EXCHRANGE feature.
-+ *
-+ * We do not currently read directory parent pointers, so it is safe to read
-+ * filesystems with the XFS_SB_FEAT_INCOMPAT_EXCHRANGE feature.
-+ *
-+ * We do not currently look at realtime or quota metadata, so it is safe to
-+ * read filesystems with the XFS_SB_FEAT_INCOMPAT_METADIR feature.
-  */
- #define XFS_SB_FEAT_INCOMPAT_SUPPORTED \
- 	(XFS_SB_FEAT_INCOMPAT_FTYPE | \
-@@ -105,7 +117,10 @@ GRUB_MOD_LICENSE ("GPLv3+");
- 	 XFS_SB_FEAT_INCOMPAT_META_UUID | \
- 	 XFS_SB_FEAT_INCOMPAT_BIGTIME | \
- 	 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
--	 XFS_SB_FEAT_INCOMPAT_NREXT64)
-+	 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
-+	 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
-+	 XFS_SB_FEAT_INCOMPAT_PARENT | \
-+	 XFS_SB_FEAT_INCOMPAT_METADIR)
- 
- struct grub_xfs_sblock
- {
