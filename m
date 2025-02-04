@@ -1,44 +1,39 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B5420F082;
-	Tue,  4 Feb 2025 13:52:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2241215F7F;
+	Tue,  4 Feb 2025 17:07:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738677142; cv=none; b=NRimx7IkMmQn7y4JspLM/91ZeDADu82/326pupAWJeU4falYihUMMNG0rvlnBt2PPx4lvlQqTuOoMbCBrEVtFsVUZKVb1YUcgI2ygtUfg77/Web0ZOl1OKpdclY1OTlLUgIM1ykgcpJrgrqgJrItl3e4AqAuC54TBzxQOGPb6sk=
+	t=1738688836; cv=none; b=NpZ4pLBnnlmFnz649s7sJID4v2lG3687l4CrJnc4wQ8C8Vq0wYmlU2Y2IpZe7Ah7JAOhJP+4WXtAsaWuPrqacIzB208JxYP9qAnj71F+sw56nptUvjTYDVjLGk3HFxzymuqhxlPyubnogo1s2xaeUHVrEPsDd/f9VzEp5upWEaI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738677142; c=relaxed/simple;
-	bh=+u3PJ3n4vtianVg++VLIdp4pPq/B3pd5HBYoE34jXe0=;
+	s=arc-20240116; t=1738688836; c=relaxed/simple;
+	bh=9Hg/eiCRPrt/4/HLlNAhCaoVuSYGka3YuMP4xpja/rQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SiTsQT9homsVuPUvQBKJ0mpbbrKZ4ZN+tRWENioFAul49BJwWifqmBD0pJ+zTIU3+7pHZSD2sLjm6vvI3KMUEPDUiTZvo82suWet9+WTM+fC5uVjW9keUTvPYklZsjd/vMkQgPYkc7Yf+rosqH00XQeYb5Menm6mhvlIdYfkULs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pz1tAwAo; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ivw08hEnwaI8DS7G6EF9qskVJ5EPtg89ylVBeoN8eC1MSwIX3ONNZgCxdEMdGYqYHuXbu6dH7hgZeZiPnWytBQ/WlTmlzGcloQdXtODxnr528Ra6VR40EgZlUEdr7wMt1hysfC6B0/6F4eyKeUVMhXcocjd8jCKy8zXY/jVPeuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pa8FooVW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pz1tAwAo"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=2+2zrRchWJ6H6lBKOLtgMf6PPiecKPnQft+8NfpjXcw=; b=pz1tAwAo5rlVsgwWwji+6qlvH7
-	VWGv8KCbJt4agxxKt9R8vQjFh5JtpeTrt+KK86Rnpss589bGKxEMBWQWSO4JbXTTiN1yvVelW/a+y
-	kh6uYpA76YrJ0r9YJvUOfV1ByUjbktqgpRbbT2FPsiX0a9WllDWwkLVRLwebBc/NduaBSqXivQ/fq
-	lH55PCPndG9KsfOmAq8w8dXyK2Ah7MoWAZeUVnnlazTOUxbwORMG9c1z1efkYd16jaKWHW9T3mUFn
-	PGIivwpN1vRrQD3sEsfUxjchiiABXiO7RosV/2FEku18JxwN041HwC89+gjBAJw/txONXqdAXQTNz
-	rzr0GNbQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tfJLg-00000000acS-1VRR;
-	Tue, 04 Feb 2025 13:52:20 +0000
-Date: Tue, 4 Feb 2025 05:52:20 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 06/10] iomap: export iomap_iter_advance() and return
- remaining length
-Message-ID: <Z6IblMMbjCONHPDj@infradead.org>
-References: <20250204133044.80551-1-bfoster@redhat.com>
- <20250204133044.80551-7-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pa8FooVW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58691C4CEDF;
+	Tue,  4 Feb 2025 17:07:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738688835;
+	bh=9Hg/eiCRPrt/4/HLlNAhCaoVuSYGka3YuMP4xpja/rQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Pa8FooVWpxuQ3KsFTStLkXheJL52GKiuIaeoP8HGDsDG2orrJROP+AlaCG+GcyEUw
+	 0rBFdOiDBf3yw+3LxSry6eystaYmuVGL3VGKWko4FFYAhfUWZpDQLM14zoO/Wy0CEr
+	 R0GtX7tFPTKpSHV3kSpcNaH2jY/bOQ2m1xm1cuXkx6O1j3F/2zhly3Fn1Z1dO+ulih
+	 6bja05EgDuRJYJEG6H2KDT+lxV9D4cy7dazLvoHDLbVyklqcQGzpaHJ2XeDYVRrEXP
+	 dMZzOCWZoDPD3dzBNoU1+3yZP8g/U97KIt3I93UJPWT7c6JNsXiD7d+xXwwmfU2dH6
+	 5Xqf2WoE7WUBw==
+Date: Tue, 4 Feb 2025 09:07:14 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs/614: remove the _require_loop call
+Message-ID: <20250204170714.GC21799@frogsfrogsfrogs>
+References: <20250204134707.2018526-1-hch@lst.de>
+ <20250204134707.2018526-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,18 +42,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250204133044.80551-7-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250204134707.2018526-2-hch@lst.de>
 
-On Tue, Feb 04, 2025 at 08:30:40AM -0500, Brian Foster wrote:
-> As a final step for generic iter advance, export the helper and
-> update it to return the remaining length of the current iteration
-> after the advance. This will usually be 0 in the iomap_iter() case,
-> but will be useful for the various operations that iterate on their
-> own and will be updated to advance as they progress.
+On Tue, Feb 04, 2025 at 02:46:55PM +0100, Christoph Hellwig wrote:
+> This test only creates file system images as regular files, but never
+> actually uses the kernel loop driver.  Remove the extra requirement.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Normally we use export for adding EXPORT_SYMBOL*, so the subject
-confused me a bit.  The patch itself looks good, though:
+Oh, heh, yeah, loopdev not necessary!
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
 
+> ---
+>  tests/xfs/614 | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/tests/xfs/614 b/tests/xfs/614
+> index 06cc2384f38c..f2ea99edb342 100755
+> --- a/tests/xfs/614
+> +++ b/tests/xfs/614
+> @@ -22,7 +22,6 @@ _cleanup()
+>  
+>  
+>  _require_test
+> -_require_loop
+>  $MKFS_XFS_PROG 2>&1 | grep -q concurrency || \
+>  	_notrun "mkfs does not support concurrency options"
+>  
+> -- 
+> 2.45.2
+> 
+> 
