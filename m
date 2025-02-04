@@ -1,82 +1,74 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2337B2066CB
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 20:12:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CF24204589
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Feb 2025 20:18:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738699967; cv=none; b=KsJk04IJ5HXcsK0R732KKvs1FUQiTgSWpTTat32+syQ0XQQLgr3CaRUaKPEsfnBQWj7scuQvZ1VSLcoKpyu4QVE7R/MjShQR0T1hwtxNVZV23j41E2Se5P/GjaP80+hBX78uA4bBMS1Uia5GTAm6YzHIebW5TcGBt4ULEUhaGGw=
+	t=1738700290; cv=none; b=VOqsGr1t26a9tDYQq8JIXKAh8xlDjTjxt13T53WLyPVoDIi9jdXSIQKOLy60pK9xOLOIn/MRV+36x8LvJ3eI/kpYTuGz6fsSTrqcQr4tz53p16YxtnJPtDxA62THBZ2nuWv00LUzRfaawQI8NzoXFDo160gzEt6pPzjZdVVYvwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738699967; c=relaxed/simple;
-	bh=gp/qKcceCIBFhzJB5w2WTr0ubjDqbrZuAp3vz+nOqwA=;
+	s=arc-20240116; t=1738700290; c=relaxed/simple;
+	bh=2jLtBenL7WlBxHovSeDK7T58wmEFnClnl2AVWMk6G18=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OJGTBSmQXwP0H1BMdUv0Xmud+tMEEeFAShbISIJkCk4fZkgSiGGmdSQiM73vjy7+bTqZlTCP64TTK1nBQxYAOhSzDKrHtu7rQF4iEfnANaDyvancBHnJIjw6OzQyfdLOR6YbZiAeR6HEEgbJayAkFQZxscRKfKoRA83q1T8y8Kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=uJpmLWw8; arc=none smtp.client-ip=209.85.214.173
+	 Content-Type:Content-Disposition:In-Reply-To; b=q1qFyJdgZa1wFxdbmfMze7K3NqrEGXee8kFJZf3hWrf03eOFyKyEoY/t2A6mept/4L7TBAh9s3eQIGgiAAS3QhNDZ+GJSLWsMr8Ri97OrzQwwc23JJkpq6UI0+A+RDyjhBSNRmfkjHCyLzROl7YejuimPrm8w/GeS1LvZbqDpgU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=TkbpX6s7; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="uJpmLWw8"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2165cb60719so110436955ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 12:12:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="TkbpX6s7"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2167141dfa1so2780685ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 12:18:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738699965; x=1739304765; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738700288; x=1739305088; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=JZakwx3hIZttBtHScOUEbEcec/nTeRPJ+CdcAVEs9PQ=;
-        b=uJpmLWw8WyXFev/F2MCx3TLRcnZUZFgRL/0hINC6MC9aFSdmKG6jY//phnFTEIc9yg
-         pYIIjOjUhaVzXBM6ter9gw06xjuVGfGystmBCf+mSMojsF+Qze8YWyXM58WntTtS9aAS
-         CkZmwlaazJfMzcg+EOvO6nV4BVV9sjvn9h7HZGrnMOzPjOz8mS7MIEAS4DTzObzgXM9E
-         vpEwcH+6e/yWjFLpYHoq4EQYMfqK8vIOMesBFCEU/67qipLEDUr+wcVPkEaFoukO+/mR
-         HqrxQzLywy/brjDPAxcJiC6gIHanUd14CXgvG4j7WO2HWVrxf6qRZ+ybUMafTQarfLQt
-         4NlQ==
+        bh=GU5zB96qYN+FRV6k4yCrX41hpPxDKTLz+R7SItDxUlM=;
+        b=TkbpX6s7SUBT1DHYN61kXiZ1Sv7newXvM7ykSDQQwksfjESyu9Xo1oceTAKm3T1ZiG
+         QtGxMDgS7ggkkOz/pE+Ep41qD8h91sW8X3WGcruidpB2eXZBLnh5EO2koGIBXRlDTDta
+         N6nZItjENRYM/yrUmqM4AQkZJs9A+rA3DjYj9tDqlQU1IFXSRjtBkS1lOO9FtFozCetX
+         bDxDf+4wWwpN3G1+r8vyprlhBVY0fXpvwuurvnDRJCdNelKhJGFxP5rFNJ8rDCEweo6a
+         +8ph6t4zEmIHsZtf8CCm28upr8NDTU1QHOTGTgV+cAJSVQnm8dX6DMzasLInchrGl5yt
+         5zRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738699965; x=1739304765;
+        d=1e100.net; s=20230601; t=1738700288; x=1739305088;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=JZakwx3hIZttBtHScOUEbEcec/nTeRPJ+CdcAVEs9PQ=;
-        b=S09dpfChXMsgp1looErko/NlmBYOI1xJzGHNUVmYtUkDg63mpuAAnWAx8lFzPwTsnv
-         PcX4sNl3mJrBY2/V4jYZzBiwgZh+sEawAF2gTKqKhusC0Kq7yTRFiwGagkazZYHgAtY7
-         yBzO6aG7x/wBwRDYPALJ1Z6Dyjt6fu/CwcGVd/5pB/I10UrtKoeh68qFjCK6duSuBvAs
-         /Vr3JyvrWySHO7q0isAHZjqPmO+oS7ftuTIVnm3HDbPvKn3M3bDv+h9JV7sBD/SbJfT3
-         dIq/N7BdaRkjpc3k8icXSqUlAR/COumnThenHUUcep7PVWfI1FTQb85fvyiCuA1Stfkz
-         qVYQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXeJAzVCKi0I9qSHckpy4koEri4KIZ49bL38pbzQeir8naVDDhxd1pta+5/Zn86o7W5BL4wAFXJMTQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKMhK2/OQLSeN/Rx0UV6okDL34kapw+LqPeCp6HZVq0Wvz0amV
-	8JAQ5tANFVow8kKOik8bJVovViycdhwKNFSG7AoIeZePZFPDxm9xulpiirC/bsI=
-X-Gm-Gg: ASbGncu0p9AxSY6m7sLlODbg41/xUq2v8kAdek+Tlt/8Kic4fHaPNwVcOrw1SYnU0g2
-	DDvO8nHFzyvfZn7dXeFfq8epp0dqlF2HGiDBm4yqzGOg/rhwTtIzl45IHl2DPgMPwoZZHxEDr78
-	L1KxVpTBbQkY7OHhHPGaQoSjstz73bRxuG0M8I/CwG2dyeuv9OCAgWHleH52ZJV9ZGIF8SEqqR3
-	NmNTJwVHEVWqYDqKm5Bk/1wwR3ziavAFZPKtvkmeUarbA8xi26Bu5aB+XQqbwMIVAyI1QAJXUEQ
-	x9B/YKT75D/y2+Tm8jz3IELJ4ttPgq2tjkmhXkDbzctk1kRMO976qJmjtHaI8tQhlfA=
-X-Google-Smtp-Source: AGHT+IGwLEGhvYlXmhivElW8iATNfxvrwUqd0N+S0un/akZ8NPdnmS/kHtUzgFQDwkzSpzERucIPaw==
-X-Received: by 2002:a05:6a21:9011:b0:1e8:a14a:7b67 with SMTP id adf61e73a8af0-1ede88ad432mr106482637.26.1738699965334;
-        Tue, 04 Feb 2025 12:12:45 -0800 (PST)
+        bh=GU5zB96qYN+FRV6k4yCrX41hpPxDKTLz+R7SItDxUlM=;
+        b=NlIedudvmTzgIGT0EZJVywDDdrPwq0m6rzMlbr20KvKEuacB/6qBMgJSlQVIAj5/U/
+         2G7QKaKmNVK4vU9uUSVoIi/p04NrbjysI3XHEpPh4Q5cVpOtPbj9VNPsvgpxttGAVS/B
+         hpc2eme4H4QDobdLtbeH91nnsWoasDQ8TdLfqPLAW+QydbbiBbK3DTSRXJLXWgEjdDod
+         j/3ijeKmF2qCu/QF9ghdSfQeqeTonMfLi1/LI8YI8HTJuILg/9FaQQ0HU+H06VBtll6A
+         lvMpYlAJmF1EF3I8SBCzM9KLN1xbKnEWiob8wWktyqjEVSCgnF/f+yqqy0u5KsJM6Ffc
+         rVfw==
+X-Forwarded-Encrypted: i=1; AJvYcCVLQxPhlisekhz2E474jJhqBx/VWxNdYmQ1Ch2hJwlti08Nd4ailFLaj5mA5wfQYzKqdmU/zUh2T0o=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyQBe8wlGAPCdjSBA/TDJ5fI9tRgEe3IdZUoLhS7gbAvuaU0gyF
+	tZ9rIFWf/krAZrxMhzNzPJP6VVS/2imCxyOU3lIePP1NsNNckx6QMONuYNnE1H+G/PaIxncnzHN
+	1
+X-Gm-Gg: ASbGncvi+1mHlfU2a6xqdebciwxpaTE1bz4KfTAsPI8XRLr6IQrb67v7hm/BvVY2s3L
+	NmakX1LajgO3BazP9BMKQAOUs9F6mk1aDpILnRGTrbvLHcZRvVSzoIkdYqmXzkOXi3rMh8Nldmu
+	H7VXF6HiQtk42BYqPO4Xhog+dAufreXKUL+Tz10G3sSlVZoWRF2AQQr7R6kjgXh6Nx+/eucHFrl
+	BFDkfwrNjm2nIrbczt60HOrwFbvP56oFsUbHVaCra5vRuoP1nfzJAGX1eerkp6kvfwE39QA0HLR
+	IYDapFH4PigQv7PaB2ucsZtHCF3KRJvKgDTHS9CKV+hEuvCp+7rTTxxbZ2+fQtq3pLk=
+X-Google-Smtp-Source: AGHT+IEMgSD9trnuioVinMvhHC3ES+FE9T8T3czMXt9iSS8JbaTH/Nw8tHIrrnD7TJrUQ4TRc/19BA==
+X-Received: by 2002:a05:6a20:6f88:b0:1e1:9e9f:ae4 with SMTP id adf61e73a8af0-1ede8302a6cmr424782637.13.1738700288392;
+        Tue, 04 Feb 2025 12:18:08 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-acebe384685sm10442964a12.17.2025.02.04.12.12.44
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe69cdd20sm11337032b3a.135.2025.02.04.12.18.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Feb 2025 12:12:44 -0800 (PST)
+        Tue, 04 Feb 2025 12:18:07 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tfPHl-0000000EeLL-1z56;
-	Wed, 05 Feb 2025 07:12:41 +1100
-Date: Wed, 5 Feb 2025 07:12:41 +1100
+	id 1tfPMy-0000000EePH-3iu2;
+	Wed, 05 Feb 2025 07:18:04 +1100
+Date: Wed, 5 Feb 2025 07:18:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	lsf-pc@lists.linux-foundation.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, djwong@kernel.org,
-	dchinner@redhat.com, hch@lst.de, ritesh.list@gmail.com,
-	jack@suse.cz, tytso@mit.edu, linux-ext4@vger.kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] extsize and forcealign design in filesystems
- for atomic writes
-Message-ID: <Z6J0uZdSqv3gJEbA@dread.disaster.area>
-References: <Z5nTaQgLGdD6hSvL@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <35939b19-088b-450e-8fa6-49165b95b1d3@oracle.com>
- <Z5pRzML2jkjL01F5@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <e00bac5d-5b6c-4763-8a76-e128f34dee12@oracle.com>
- <Z53JVhAzF9s1qJcr@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <4a492767-ee83-469c-abd1-484d0e3b46cb@oracle.com>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: do not check NEEDSREPAIR if ro,norecovery mount.
+Message-ID: <Z6J1_MVxHbTW3v1B@dread.disaster.area>
+References: <20250203085513.79335-1-lukas@herbolt.com>
+ <20250203085513.79335-2-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -85,82 +77,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4a492767-ee83-469c-abd1-484d0e3b46cb@oracle.com>
+In-Reply-To: <20250203085513.79335-2-lukas@herbolt.com>
 
-On Tue, Feb 04, 2025 at 12:20:25PM +0000, John Garry wrote:
-> On 01/02/2025 07:12, Ojaswin Mujoo wrote:
+On Mon, Feb 03, 2025 at 09:55:13AM +0100, Lukas Herbolt wrote:
+> If there is corrutpion on the filesystem andxfs_repair
+> fails to repair it. The last resort of getting the data
+> is to use norecovery,ro mount. But if the NEEDSREPAIR is
+> set the filesystem cannot be mounted. The flag must be
+> cleared out manually using xfs_db, to get access to what
+> left over of the corrupted fs.
 > 
-> Hi Ojaswin,
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
+>  fs/xfs/xfs_super.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 > 
-> > > For my test case, I am trying 16K atomic writes with 4K FS block size, so I
-> > > expect the software fallback to not kick in often after running the system
-> > > for a while (as eventually we will get an aligned allocations). I am
-> > > concerned of prospect of heavily fragmented files, though.
-> > Yes that's true, if the FS is up long enough there is bound to be
-> > fragmentation eventually which might make it harder for extsize to
-> > get the blocks.
-> > 
-> > With software fallback, there's again the point that many FSes will need
-> > some sort of COW/exchange_range support before they can support anything
-> > like that.
-> > 
-> > Although I;ve not looked at what it will take to add that to
-> > ext4 but I'm assuming it will not be trivial at all.
-> 
-> Sure, but then again you may not have issues with getting forcealign support
-> accepted for ext4. However, I would have thought that bigalloc was good
-> enough to use initially.
-> 
-> > 
-> > > > I agree that forcealign is not the only way we can have atomic writes
-> > > > work but I do feel there is value in having forcealign for FSes and
-> > > > hence we should have a discussion around it so we can get the interface
-> > > > right.
-> > > > 
-> > > I thought that the interface for forcealign according to the candidate xfs
-> > > implementation was quite straightforward. no?
-> > As mentioned in the original proposal, there are still a open problems
-> > around extsize and forcealign.
-> > 
-> > - The allocation and deallocation semantics are not completely clear to
-> > 	me for example we allow operations like unaligned punch_hole but not
-> > 	unaligned insert and collapse range, and I couldn't see that
-> > 	documented anywhere.
-> 
-> For xfs, we were imposing the same restrictions as which we have for
-> rtextsize > 1.
-> 
-> If you check the following:
-> https://lore.kernel.org/linux-xfs/20240813163638.3751939-9-john.g.garry@oracle.com/
-> 
-> You can see how the large allocunit value is affected by forcealign, and
-> then check callers of xfs_is_falloc_aligned() -> xfs_inode_alloc_unitsize()
-> to see how this affects some fallocate modes.
-> 
-> > 
-> > - There are challenges in extsize with delayed allocation as well as how
-> > 	the tooling should handle forcealigned inodes.
-> 
-> Yeah, maybe. I was only testing my xfs forcealign solution for dio (and no
-> delayed alloc).
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 394fdf3bb535..c2566dcc4f88 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1635,8 +1635,12 @@ xfs_fs_fill_super(
+>  #endif
+>  	}
+>  
+> -	/* Filesystem claims it needs repair, so refuse the mount. */
+> -	if (xfs_has_needsrepair(mp)) {
+> +	/*
+> +	 * Filesystem claims it needs repair, so refuse the mount unless
+> +	 * norecovery is also specified, in which case the filesystem can
+> +	 * be mounted with no risk of further damage.
+> +	 */
+> +	if (xfs_has_needsrepair(mp) && !xfs_has_norecovery(mp)) {
+>  		xfs_warn(mp, "Filesystem needs repair.  Please run xfs_repair.");
+>  		error = -EFSCORRUPTED;
+>  		goto out_free_sb;
 
-XFS turns off delalloc when extsize hints are set. See
-xfs_buffered_write_iomap_begin() - it starts with:
+Look fine. I've had to hack around this with xfs_db when testing
+(broken) xfs_repair mods a couple of times myself...
 
-	/* we can't use delayed allocations when using extent size hints */
-        if (xfs_get_extsz_hint(ip))
-                return xfs_direct_write_iomap_begin(inode, offset, count,
-                                flags, iomap, srcmap);
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-and so it treats the allocation like a direct IO write and so
-force-align should work with buffered writes as expected.
-
-This delalloc constraint is a historic relic in XFS - now that we
-use unwritten extents for delalloc we -could- use delalloc with
-extsize hints; it just requires the delalloc extents to be aligned
-to extsize hints.
-
--Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
