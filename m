@@ -1,73 +1,73 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA7502F43
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:51:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78A13747F
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:54:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738716681; cv=none; b=KsLuJFtztPiC0IPN4L1k+rc1JyAyApXbHlyPMcHk9b2/vPJZr6wiSN56HMxoO2VSe2wedew83ym8OvWE6ys1NNMW5BxPQcPRNYhmTiOKR6IX8/2zeknD/xhocaXwlgixyHhEIfMxMUoNKWvVMxn8hcA5FQTEC9wQC6tcGZE5Opc=
+	t=1738716845; cv=none; b=SvD971ik2krTYp+8R/VBN3qKX2ETEMQr7EuyN/lgrtVCIzF9b2CIAUJAZwvP5JbkKMooAZnPR2duAxjAopsk4ZanPy/f2Utld1M0MBHFNoeM/5G2j+WY6w7eAs03yM0yjZdAJYCvc/0jxah7CMs901WPJNYL+PUCE9cmuqNdOXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738716681; c=relaxed/simple;
-	bh=/AtgtQ8IPhd7L68CwGyGLaeZIglXYsQBPfmdEkxGx6U=;
+	s=arc-20240116; t=1738716845; c=relaxed/simple;
+	bh=+/yXL1wJjz02eN3Kdm9jfohg/apEqr1UJyYMFxthR5U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YU+mfUImd6TKnjBBti5XmqDIdaSbPX8TsV3+evYkdfe0ZRaLxgXxJr04eFi70/NQGZdqpuAmAvOCVDHqh9NKOVSYY/idb+bC4PNnFgJuJEQ7AfjjoLnZRd+eQ8nF5vkaa/W6vtFeVYSrIWe8fufBFjrHWc57WlnnJQL6cmaHFGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=bvyKkb+j; arc=none smtp.client-ip=209.85.214.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=auzIn9QcyKwkp4VXlmGU2w/FgRPzJs1Q5tYSIdYIKqWMGI17eIJfkSrhMb7osTUsz3NpUxzsHymBVbw2T77SgGYhl5ZuqmnRnh/K8TXnEH4W3Y2VPuuHjOCIFHz10AvG3PyR68Y0b2/1puAIAjoN7w5yDx+yi6b1t5ZCpaEPanM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=qlup3tLQ; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="bvyKkb+j"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-21ddab8800bso88621985ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:51:19 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="qlup3tLQ"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2161eb95317so110721405ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:54:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738716679; x=1739321479; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738716844; x=1739321644; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PAsnY+nlDO3nRpSeeGhgqs8qS4Uvut1OrISgkBK4P7o=;
-        b=bvyKkb+jMwr3p3BLfsOljexGxg0V1BITZpPi6AY/EaNyn0QCo3San6aov5v/9FMvPj
-         +2itRpV0k7dypWnm4Tqsik8ZB5HYpg+5HRBUceVzXvLyULhlF2RbDgtzH5hPpVUwPLmB
-         WIrbcHqTM2e3vPkEnnv9pUC1YvynBdElI2llgxx2fs4iWGedRgt0AxcJ5gzDqDWt29PL
-         VnwSzZLyC76WYGZDiwmbxdlEtdBiiNHr3CahiPuKCzUlq16d8Qov4kqIw2Nx3BWnN4Hz
-         tBXa5OyWI6CX2uVcI99fGUrCYD1OuzMM8Rhhcs9JFhBh3QgHFF5gbHHW/i42r2GCVPa9
-         ZB4Q==
+        bh=5WPDP7sJdW1xJL8Urv0i9q5ki8dF4HNWDbOOYdyAh0o=;
+        b=qlup3tLQ3poHgmpm9B7AuJYUeg/boBLd1R8aPFzSlK1bPDbEQMIHyj6bHaxA8NkAus
+         9tf5xTrsGWBvivMY1wz/+Pf4ReIQGcXYiNR6vn/uqOYjw5kqx08KBbX0If2PtTIv6NUE
+         yLD2vfRO0DpB4MtMUaGWLNj94MnOP4QQ2ofjmzQlqYUQsuP1p+K2RuVLOY+7hWDGVCxt
+         mh7Jp/DgL89FcJmLuu3y4ZnfCuXVS6UQdqKLV9DI/Ad8K4VoTxNbJmBW8u+HRwWOzlQL
+         Xj426MGRjZjwF9sUJz8Qq2Z04g5KsheZyvGqt8DIxkVeA7LZB+HZV/4+iUrQ6ZUVqLLu
+         GI9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738716679; x=1739321479;
+        d=1e100.net; s=20230601; t=1738716844; x=1739321644;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=PAsnY+nlDO3nRpSeeGhgqs8qS4Uvut1OrISgkBK4P7o=;
-        b=aRAmRts0wAkMoLIhl6eNnl7hoWvol/EZG4Av4i2TIwsu8mHH6u76hS7TdbPPfag5Ca
-         u8YQQfS1dXZt2BgzsatSrn2ivVqvMT8/h8e/syQ7xPS3sRl47VLYTLXAJFRR0f+eUC/3
-         16yyOn6K4kPYzvzGM1UzNag7IQQjWgxatqjfBvAJYqQ5lvdWh7Ff25R6EyRfkFncE3Vm
-         A4b+dLUH7Uq0wzsmt6phwAof/fvS4SUAXxrwKQP86jyVYOK97cHEsUl0gy2DfjveQsl4
-         3p+HeouIjDK3Bx1fjFzFR4jQKz+/VlpqNcUHOm6fMccRV79lTKp/sIYmpqKxbiIPBt6N
-         AkYg==
-X-Forwarded-Encrypted: i=1; AJvYcCUS4qEO9sDjCUUxjdvyGmD5Yo4sl2qmRCozEM5RcxR6UQLPkfctqoQkGN8abF4xMQlZGx1lM7jYlQM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZ6gB5W+6sRoFOZYYmGlsYM8XL0z4iB7ZiNCRrcct9inDRSuce
-	LEF18XpF6ImWtCXW/dClav7iwWygV6V5rbq0uWTSeePQuOrryxTHpTu6SqCfMo4=
-X-Gm-Gg: ASbGncvf0W0HClpvsoaLpbyoFQuMfkmeSg9Ilth3p8cuuvc0/4eKgZTAd94dpjjKuSw
-	WRD/EmxNAVI2kXE+KaFoyss7DR1dysno+Sihl13BUrOk4qLpAi1t0072+AGY5ODbpyuakizLt6B
-	e9tHc+u4zXmVe2kmpi1LdWJzJJ/GtVHFfg2sGf5sekaGMeIFp0/yn3usrJFu8KnDytftoEeGIkR
-	nBSBQk+Zp76zwPKWjs1EYzjP+4B7m8SVM2dAwmFfA8WZcfyguSVUeXq8ZwVhwbbtFjQxWGwYlyb
-	rDwnzEA9SXbIQZtMGtsaedW/u31l5TlV249hk87CspwWnkCvE+vX+M7K
-X-Google-Smtp-Source: AGHT+IHDxx96xJS7XiJBfUdwibT+jxahT16cifX6K0m2MkrcGOtIWJ4SzFbaX07lUyeEkPfCX44+Rw==
-X-Received: by 2002:a17:903:440b:b0:206:9a3f:15e5 with SMTP id d9443c01a7336-21f17edda66mr11902215ad.32.1738716679146;
-        Tue, 04 Feb 2025 16:51:19 -0800 (PST)
+        bh=5WPDP7sJdW1xJL8Urv0i9q5ki8dF4HNWDbOOYdyAh0o=;
+        b=sYjGltGhH5jtRgwCZtWXAVZ4qN9FAMcbh23hEfBbXrha8MnkcwsIjgqX/f/LsO690E
+         65/+zucg4YNITOYnub6vidKEUy74kSXngXN0OsDAyqI4sDmVYnqckKJ2lCceAkXGeXWN
+         j10lG/6AAVp2r/6rXnM/vbyv1e60+ih0OsOttYBajQEDo0bwuEwsWVnV0VCxyYK65pXB
+         eYxBJhM6LCNuJAFGrlpDdBn2CFeo9a92WrJA9niIPPPTuJlCzhKgaPeC4ftQimruY60H
+         YlxYsUcYyzxW1tURMJocaGndCQycDazFDIYsTVgeWsahZ821WDI7vuQNHnHLQmUsso8y
+         8sYw==
+X-Forwarded-Encrypted: i=1; AJvYcCX02hPaCBt7EVOaucm078WLE0bWfFfMoYmZQdxh2mkAEwtzbfGJYgCkE9CslHMJIaGF/kLDKHx5Mps=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxlhBNARV7j7MTYjy+bUScXQAW348hsM+HMfw0Rd/WY17VjrAPW
+	t3b9e+rb5uFjW+pQJ81xUOF8xnDLyH5Rhb8N1JHsKOxgBPstMjZH8kII1WIQmb4=
+X-Gm-Gg: ASbGnctm7GwK8mG/xnY40SMWWO+NTA8vB57kiQ2SlHCFDAODhlUpXjuPvCvKSrsAsEN
+	utTM+tU47HZ1oLao1KQBWM4zSAZeCAQdsr8rUz0IE9Z/B16QFl1Bg7gX7No3DYVOsMf4NizHRle
+	TtecTD2OrqqXVTNuaKYkXxgPUGRMZ01KFTDEl3s87xa3okGqWLXfdbR0VMbvA2A8Tb5l8d5c9vT
+	tY8A/dlv45akERau7Ilw/OjZ/T0f5qc01RTTV9L4tBeuwCzqshjiUapBeFC6deqbQMtQZ44dI2f
+	L4XgMdlHqIt9weP2TAjmd5i06uqhXTzW51Q2ZfkN7hMW3MihFt1F04IP
+X-Google-Smtp-Source: AGHT+IEt8BHfdLB1kFIXC6sxuzMiU8rE28EguFSG/rsOx2Vu09UfWIviVCPiXWtqDz2h95NhKkPZ5A==
+X-Received: by 2002:a05:6a20:9d8f:b0:1e1:bd5b:b82a with SMTP id adf61e73a8af0-1ede88d589cmr1640894637.40.1738716843703;
+        Tue, 04 Feb 2025 16:54:03 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21de31f5c72sm103563805ad.66.2025.02.04.16.51.18
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-acec0477a9dsm10661363a12.50.2025.02.04.16.54.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Feb 2025 16:51:18 -0800 (PST)
+        Tue, 04 Feb 2025 16:54:03 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tfTdM-0000000EjTG-2ZtR;
-	Wed, 05 Feb 2025 11:51:16 +1100
-Date: Wed, 5 Feb 2025 11:51:16 +1100
+	id 1tfTg0-0000000EjUm-1fay;
+	Wed, 05 Feb 2025 11:54:00 +1100
+Date: Wed, 5 Feb 2025 11:54:00 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 28/34] fix _require_scratch_duperemove ordering
-Message-ID: <Z6K2BJlaFve5mcjk@dread.disaster.area>
+Subject: Re: [PATCH 29/34] fsstress: fix a memory leak
+Message-ID: <Z6K2qJO0cHZu0gmB@dread.disaster.area>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
- <173870406534.546134.14642160815740463828.stgit@frogsfrogsfrogs>
+ <173870406549.546134.4341905130116308600.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,32 +76,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173870406534.546134.14642160815740463828.stgit@frogsfrogsfrogs>
+In-Reply-To: <173870406549.546134.4341905130116308600.stgit@frogsfrogsfrogs>
 
-On Tue, Feb 04, 2025 at 01:29:36PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 04, 2025 at 01:29:52PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Zorro complained that generic/559 stopped working, and I noticed that
-> the duperemove invocation in the _require_scratch_duperemove function
-> would fail with:
+> Someone forgot to free the iovec that readv_f allocates.
 > 
->  Error 2: No such file or directory while getting path to file /opt/file1. Skipping.
->  Error 2: No such file or directory while getting path to file /opt/file2. Skipping.
->  No dedupe candidates found.
->  Gathering file list...
-> 
-> The cause of this is the incorrect placement of _require_scratch_dedupe
-> after a _scratch_mount.  _require_scratch_dedupe formats, mounts, tests,
-> and unmounts the scratch filesystem, which means that it should not come
-> between a _scratch_mount call and code that uses $SCRATCH_MNT.
-> 
-> Cc: <fstests@vger.kernel.org> # v2024.12.22
-> Fixes: 3b9f5fc7d7d853 ("common: call _require_scratch_dedupe from _require_scratch_duperemove")
+> Fixes: 80499d8f5f251e ("fsstress: new writev and readv operations test")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  ltp/fsstress.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> 
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index 9e8eaa6d8656da..14c29921e8b0f8 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -4652,6 +4652,7 @@ readv_f(opnum_t opno, long r)
+>  	}
+>  
+>  	e = readv(fd, iov, iovcnt) < 0 ? errno : 0;
+> +	free(iov);
+>  	free(buf);
+>  	if (v)
+>  		printf("%d/%lld: readv %s%s [%lld,%d,%d] %d\n",
 
-Looks good.
+looks good - writev_f() frees the iov, so this now matches.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
