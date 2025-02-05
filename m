@@ -1,73 +1,73 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0643D27468
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:45:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 739BB747F
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:50:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738716320; cv=none; b=ojYurdNDaM+b7ZADH8f6FVLDA/mZ7Wi1B+Xaqg65dGuE9ZY+xc+1cN/YGbl08eYBRUxuuS0tDIRoNdQxDzItzKPs7FgG7f23PLjkIwkBw8Tz2lMnzhVLPJ5pcRW/Xl2bIqQzE8nukhlThwJNRNiDwBimNp4qO7jgiVhJpnRl730=
+	t=1738716658; cv=none; b=LazesQWtHX+y25mV8lXxePqHlJaoKOVHafhfq5X47CU91WvFdSJhpXJJiPFd0HlcuMPc4vXXHIw27MQXt+q6jiCJJ30Ox6E4GhngpVGLToXepZ3Rmm6JcYvJlcmU1wEnNK81oWVnUbxIAENTgjh0eQSCLMUNPv8M7RIDwhiEAiY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738716320; c=relaxed/simple;
-	bh=JnzRfT8Pl6m5C05+NLm82M5ZyuQ3MSUrRC8I2RGV8JM=;
+	s=arc-20240116; t=1738716658; c=relaxed/simple;
+	bh=cc1ya+JqHRjR6Yd8BvuLTxB3mF5z69Uh/ICe+TNYFtY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j1nWATgxeYCFQ1feQShw9zpJDNE7PJXMb0AjVWwweDX2ZNafF5XidOERKYKsmBPYFiVkTRLZM0SsKRnS9mxnbqizRJsMiPScX2F4vshz6Fi8jQIMlMtc3o00x+Umi6AaQGP9tvzhks8zHGDB7IYVfn43+eKZV0y+mLvtIpzLeqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=MwqC9I+K; arc=none smtp.client-ip=209.85.214.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=incfu0ncj2MXiGj6SUj+tiseQW9B03oRWyJehav8DIYIXLGc3xeDTKQCY70Fdu4C7ewJCitiu9IPGyWkmigRHeMRDwMhZl3VqNDHyeNu5AkzBAm+ahFK7F+6u354AiHs+KrnYnYoTzILKqZhUGiQNK/ud+w/NlpA99zhr1Qgtwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RcJAS7SK; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="MwqC9I+K"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-21f169e9595so4522965ad.2
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:45:18 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RcJAS7SK"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-21ddab8800bso88619175ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:50:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738716318; x=1739321118; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738716656; x=1739321456; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qfhhPB8LfKNXn/Xk/9Go0pNeibPdkH9oO7F8BYqN4Vs=;
-        b=MwqC9I+KC8yX/iAQf+F1RCc3X9eWycNso3DNrJ8TV4JEx44zoNmi5GBhlhMYYL0IaZ
-         w72Lt8u79M/sK/ZfYB6dbYaNgl5/0J91AH7rt0VdgG/2BLWNSFenj2GiSYsoNqWEQq0V
-         4Tuy2Zfb9ly48A7UjzoHMzYv6adczdbDSQy8BNsAyvkyCAW3w0vN4kE0Lu7VdMWvUaY2
-         0WqooIqrPUoxT8x+2FWYL1pQWgxLdr9l97oQAlJ4CtXJ+5GE+8c3YQWk6jmYZqV5U9Nm
-         GPfhRVgZE6Kvf7fd7YrRndkfFkC1rTaHYz+oeQHVK6Fcz8JmZGMhfoqOA00X01Y4TY/l
-         S83A==
+        bh=x+f5ut8aHtaaUOEA0SL9/VL3SCKIsv78snAXNCivK40=;
+        b=RcJAS7SKYWyiqHPZR8a1GKkM/roWENv3tS690LDRhLmuyHjtGbPi35Vd89xpqVPKr3
+         s95ksVNacPqNMLhk8A5wP7Qul6OocJCmykUL1JFGfuOhSzOeAwWOqj1NQOBcMKn58NgY
+         3oo1yRTa7s/GNmMuA4zzwnUFavBSPZRZnY9rqxT75x3e3g2bnf2h7E5J5RNdsxB7pOhf
+         TlT2iZbl1596/KvaGTw4zLGLQeXSa75n4dtd274y55ZKzjOFFltdHGNa0wxKxtNHaqYZ
+         D1MAOXhSwcoXh/mMN4a2Dp9cHIbaUcfeR5vbay+zIGLGMoFfyF6Z3gmL/9btSOpM5KcZ
+         E3NQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738716318; x=1739321118;
+        d=1e100.net; s=20230601; t=1738716656; x=1739321456;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=qfhhPB8LfKNXn/Xk/9Go0pNeibPdkH9oO7F8BYqN4Vs=;
-        b=wMsJ3t0K0DWpcDv6PVx2Pe2v+2UK9Bx1o9XFA8YQPvGdn1QehsMGG9O84ptpQUyiCJ
-         QBQFGn3xrrzI5Itn8JNRsh6xBozCgr/xblGsUSTHoiVjMfl8l/Qc2unfWiDImy30u4mB
-         PrYzpsTZQjiPrg28u1tSLOd4YyHHz+cuQa7IxiJE8Vs9TlgXnzjZ1aXKIfkynRrY00Gk
-         XV2nd/u0AGCSChzBW7QYL5OzA7naDlqHIoiGUn/W2xv8z3A3EuiFmtcH7aTnDmiYZGsy
-         jpn/8TNz9iB1nRFUVzPZ0zAlTgamhJe474oYxe99UypfzZ0nd8SK/z10aTHQqQlmrugu
-         dOpw==
-X-Forwarded-Encrypted: i=1; AJvYcCWUn0KJtKsVK1WmgpL8GtKjxjMyYqJy6Y4tO7kWOu/xRCIX0z6mQ2OfCKiAbMrHEKg62OHYSWlPG3c=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw+pcxVQlTZvAYjeeO/kK8G0cC4A0PfbQobvCpmCmqxawaFMhME
-	zUWcO45Xu7uSerExq1pakQDywwOJlb1SsKX5MUaGCV2KQADU1ng1LZkdE5DNJoU=
-X-Gm-Gg: ASbGncvGeFTro8aMC03JWwFvgCQVQNM8MOzHgGUuE59pejX+kVVhOosLzP7nzKkInln
-	ThYBP9QquQHE2nobEhDVr053zXIcaO/OxLachVY9x6vaXBcPzfMOvvp5iPGLikWxsLvIyGeHb/Z
-	EsucN8xCzci6YN4t0Vanb5CXBBpC9yAc61v29NlvPXYdqoOAl3pjjhRZSe+FqORcmhUCobRx6TZ
-	eF8+tDjIFltcM8F08LWUAN9S0hX5YQmUKMyL00whKApEiHFspLsRjzuBYl7s63lTIm1kHhc7jWC
-	ry8/OrufAPhki+whVm+juQk+g0gOepKpybeCxkxMdwwsh2lA1qIZ+1W8
-X-Google-Smtp-Source: AGHT+IHedJP8mu5dcs/0rul82v9NDa6bM1ra0dx55AilFfnDW4pRgDmtkz1+X1B3WVTuWxJS68Afog==
-X-Received: by 2002:a05:6a00:3a1d:b0:725:f1b1:cb9f with SMTP id d2e1a72fcca58-7303520e7f3mr1553553b3a.20.1738716318132;
-        Tue, 04 Feb 2025 16:45:18 -0800 (PST)
+        bh=x+f5ut8aHtaaUOEA0SL9/VL3SCKIsv78snAXNCivK40=;
+        b=WfVX3aI3Ny6dTon+6Fqh+gsyQ2NCKU48pF5ga0joL2eLpM0aBWk4aoEnHiBlEPZWzD
+         4lXUQDUw97Aqt4ycTjPicKiEQ8UeOc1i7SQGVxmSUfE7sDkMRL8EFl/ZGvTI65n9mMOY
+         dd7F0DUS03CbY8ViVqsA7MLUD3z3PlgnAaBLDpFvweP3fbHQT4JC8yN9YRqFQBHtmW1k
+         rPgZesay7c7gdJThmBcgHmTXXwquEUqbRt9ne6Jq9Uss6EQWQQdKfoEwlGPyPJ6XLAdJ
+         nqoS6AHpDU7O8macoOWzmeDth6XgMpuTbPzjxD/JZBqwKHoEDb5p0t4BKdGO+XBduFQg
+         Xacg==
+X-Forwarded-Encrypted: i=1; AJvYcCVc3ZawIR72Vp7XoBh4YxnB0DPDSG2XiL42wdJbK+yG+crvhvWjEpi3IjKJS9+0CW9s2OHdQhUy7I8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6TqYYvgvqwLDC6sGnF4SNeX4/Qbgbm6SSnqGYvyH4CLwNy72e
+	tcjVoELT8fBup/6ruTwfbvNV6zPeeVyUCztFb1jezGFNoc5hzGv59cbIyvdGaW8=
+X-Gm-Gg: ASbGnctUo55oHAm3FqrkNlj9X+oVvPQj02sQ6HN60zbF9vqEEBugODtj/scHV1hnn/z
+	XZBiQyjPtmDzVmEFsQfJJbxd2axSCKzf4M0/u8Rh+WFSyVyKV8/MeHmI9eT6W1cpnYL6G8Nt4C6
+	LJ1p/fubVfjafibYGnrOf0ENR9NdIltx43lIngxhMApfwWpr8qMBOCe/x3m7kxoJMb9O2yfGUNs
+	ENrLJN4pRWODys7lihxijRevnqwhS1exMjBnxq0WwgWyYnRPhYe1yqNTRB6eZTOYsJg1YuSOp2E
+	ZeEXC8R1+2tGDND84qczdzpTpjgHm5hN4BadfA6zrHNFRXcRuOzKH97x
+X-Google-Smtp-Source: AGHT+IEFF8diM7izccRmRM0P6rk++fEognlyJxR98HocO7nILywRorgG547wh9OlTJsSJGRO4V7ASg==
+X-Received: by 2002:a17:903:252:b0:21c:fb6:7c52 with SMTP id d9443c01a7336-21f17f02051mr11770265ad.45.1738716656729;
+        Tue, 04 Feb 2025 16:50:56 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe69ba428sm11559290b3a.94.2025.02.04.16.45.17
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21f1668800fsm3615135ad.158.2025.02.04.16.50.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Feb 2025 16:45:17 -0800 (PST)
+        Tue, 04 Feb 2025 16:50:56 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tfTXX-0000000EjP9-2YCR;
-	Wed, 05 Feb 2025 11:45:15 +1100
-Date: Wed, 5 Feb 2025 11:45:15 +1100
+	id 1tfTcy-0000000EjSa-3q5w;
+	Wed, 05 Feb 2025 11:50:52 +1100
+Date: Wed, 5 Feb 2025 11:50:52 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 26/34] fuzzy: always stop the scrub fsstress loop on error
-Message-ID: <Z6K0m8emjZCWFl3F@dread.disaster.area>
+Subject: Re: [PATCH 27/34] fuzzy: port fsx and fsstress loop to use --duration
+Message-ID: <Z6K17JRSyAy4_RQI@dread.disaster.area>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
- <173870406503.546134.2486707064611332584.stgit@frogsfrogsfrogs>
+ <173870406519.546134.6155766711303511656.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,24 +76,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173870406503.546134.2486707064611332584.stgit@frogsfrogsfrogs>
+In-Reply-To: <173870406519.546134.6155766711303511656.stgit@frogsfrogsfrogs>
 
-On Tue, Feb 04, 2025 at 01:29:05PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 04, 2025 at 01:29:20PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Always abort the non-remount scrub fsstress loop in
-> __stress_scrub_fsstress_loop if fsstress returns a nonzero exit code.
-> 
-> Cc: <fstests@vger.kernel.org> # v2023.01.15
-> Fixes: 20df87599f66d0 ("fuzzy: make scrub stress loop control more robust")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  common/fuzzy |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+> Quite a while ago, I added --duration= arguments to fsx and fsstress,
+> and apparently I forgot to update the scrub stress loops to use them.
+> Replace the usage of timeout(1) for the remount_period versions of the
+> loop to clean up that code; and convert the non-remount loop so that
+> they don't run over time.
 
-Looks fine.
+....
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> @@ -1115,7 +1124,8 @@ __stress_scrub_fsstress_loop() {
+>  			# anything.
+>  			test "$mode" = "rw" && __stress_scrub_clean_scratch && continue
+>  
+> -			_run_fsstress_bg $args $rw_arg >> $seqres.full
+> +			duration=$(___stress_scrub_duration "$end" "$remount_period")
+> +			_run_fsstress_bg $duration $args $rw_arg >> $seqres.full
+>  			sleep $remount_period
+>  			_kill_fsstress
+
+Why does this need to run fsstress in the background any more? If it
+is only going to run for $remount_period, then run it in the
+foreground and get rid of the sleep/kill that stopped it after
+$remount_period. i.e. doesn't this:
+
+-			_run_fsstress_bg $args $rw_arg >> $seqres.full
++			duration=$(___stress_scrub_duration "$end" "$remount_period")
++			_run_fsstress $duration $args $rw_arg >> $seqres.full
+-			sleep $remount_period
+-			_kill_fsstress
+
+do the same thing, only cleaner?
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
