@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 392EB1FCF5B
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 18:24:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A8A31FC7E7;
+	Wed,  5 Feb 2025 18:49:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738779842; cv=none; b=KJssuygRtvn8TFanRI4nT9ly4EeFG7JclTFzEVSy1BoxcS9XFK4N47Ck0ND/P5NRdGpL8RdBGjZwiFCrRHnN7HY8h/RitnbUe/E/6luKTv+7iqjjJKClbzSXBbjMeylXY7cg4x2n16Wkwc2uNq6jzB199aIwYXJZutEa9E1kwPc=
+	t=1738781377; cv=none; b=ARkIb2Ou4TFzBRc59Ut5Jig+kVFomL0ZNptETXpP7Ebr/rmQv+3l2/Y/U4uIX/pF29c2h07gE57qCpagRWvAnBqT4ECniALoB0FIQ9HKmuIerSarOE5QrxPrt6SyD7xz0lyGC4zvmpQoKtlH81ehy2XUFUb4QPEYAqcZnd5jIVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738779842; c=relaxed/simple;
-	bh=m8C9h0sps9UCHZwueqdkQmEiCF+Qvtt59ODkB7qS5mI=;
+	s=arc-20240116; t=1738781377; c=relaxed/simple;
+	bh=cdZeGk4+G7SauNEPMezV/u40YR7lktPg457PxB+uXDQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M/fmlhDJZOim/5RfYPtO3yXBXiF47KYvbjZ2135mCpZ85KXM+VBZKoH0PjFD73hy1Jzxffoc2ib6v01jnxmb9P9Kk4Fxi2BcykDyA9ahkct04FVLN3pRfc04hPvf86EifFAxfBbb88FinZ8dQkP8pzI3fzFywAnpznr+nyFOBKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tHb9p5nz; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=kcEno3NtoWedS7qwXkXhyh7NbI0DW8XRLNPrJQrpIS3eohVjXgzGo41zRD0F7fHbdOkvwzB2Kuab9rKmXYKBMiPJO2QVsZdZI6Q6i4RungCBwVYvOTBh/sHLlQ7GiG3bvfbIJ5J9YGziGTNqsN5JDaMwdU3nyr0KMYM0njLpOmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dbN5Su7v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tHb9p5nz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0160C4CED1;
-	Wed,  5 Feb 2025 18:24:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dbN5Su7v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F31F2C4CED1;
+	Wed,  5 Feb 2025 18:49:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738779841;
-	bh=m8C9h0sps9UCHZwueqdkQmEiCF+Qvtt59ODkB7qS5mI=;
+	s=k20201202; t=1738781377;
+	bh=cdZeGk4+G7SauNEPMezV/u40YR7lktPg457PxB+uXDQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tHb9p5nzV9h+ObEF4s2Y5Cj56pgRMkBHrp0lNavpVDstdP9aSV5JB2BCnlgX4PezI
-	 U4sn8yys0pNbC59vfgd8mbNdEhj9f5mSrhvCJli12Y5C6rXiNSsfBEkBsyLwStXUFc
-	 h0aPbOEvGbdnW46yKw4x+Z5dzrpY6Z0Wo1l+1t4tXlN1VDZ34JyxmZXeUWiGQnLCvN
-	 88sH4soqtqrl7tNpz58pKxRk7wnh5Vhc+rJEPolDteiH4KWsM1JhcBTGYbUxW5jWjL
-	 kTBM0Y75p5hSrh3+ncRyHr6SNo94CLP/NUQ5ktc3Wz92sSgNStsFtLVky1DoLaj7l/
-	 Q9FgqZtqVX5UA==
-Date: Wed, 5 Feb 2025 10:24:01 -0800
+	b=dbN5Su7vE6i4LxvcNxVQpAr+c+9tlbvuzcIRo+ghAnMHGGxNNZ/AC8jFnXmFPi2Ad
+	 rGMefHhzJbziqWuJza748++KnYYP2KILRNiy+QnQpT1yUgUUB01D37jV81wBrkcDwY
+	 rjzHtSgsuZ91abdXn0rW4VqowuWXrUzWNRH6a2B5uI4apbTD8kQwRQPnrDU1lFiAxa
+	 5xwKRZ3VuQAWyjUnSa+2mawyLleszjEgjHu/OguiAG8K20mMiWWfA3Rux/UAqpN2ft
+	 Im1mq4wSFOXEbGwWEaKs3F0Hagq/MzMjTvr2+QTHM8uPzuxzUc/Gc2SqYsglhHTP8m
+	 Z1HjAbE/lk7mQ==
+Date: Wed, 5 Feb 2025 10:49:36 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Zorro Lang <zlang@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: rename xfs_iomap_swapfile_activate to
- xfs_vm_swap_activate
-Message-ID: <20250205182401.GK21808@frogsfrogsfrogs>
-References: <20250205162813.2249154-1-hch@lst.de>
- <20250205162813.2249154-3-hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v5 01/10] iomap: factor out iomap length helper
+Message-ID: <20250205184936.GL21808@frogsfrogsfrogs>
+References: <20250205135821.178256-1-bfoster@redhat.com>
+ <20250205135821.178256-2-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,51 +43,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250205162813.2249154-3-hch@lst.de>
+In-Reply-To: <20250205135821.178256-2-bfoster@redhat.com>
 
-On Wed, Feb 05, 2025 at 05:28:01PM +0100, Christoph Hellwig wrote:
-> Match the method name and the naming convention or address_space
-> operations.
+On Wed, Feb 05, 2025 at 08:58:12AM -0500, Brian Foster wrote:
+> In preparation to support more granular iomap iter advancing, factor
+> the pos/len values as parameters to length calculation.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index c792297aa0a3..fc492a1724c3 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -681,7 +681,7 @@ xfs_vm_readahead(
->  }
->  
->  static int
-> -xfs_iomap_swapfile_activate(
-> +xfs_vm_swap_activate(
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Hee hee.
+Looks ok,
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->  	struct swap_info_struct		*sis,
->  	struct file			*swap_file,
->  	sector_t			*span)
-> @@ -717,11 +717,11 @@ const struct address_space_operations xfs_address_space_operations = {
->  	.migrate_folio		= filemap_migrate_folio,
->  	.is_partially_uptodate  = iomap_is_partially_uptodate,
->  	.error_remove_folio	= generic_error_remove_folio,
-> -	.swap_activate		= xfs_iomap_swapfile_activate,
-> +	.swap_activate		= xfs_vm_swap_activate,
->  };
+> ---
+>  include/linux/iomap.h | 23 +++++++++++++++++++----
+>  1 file changed, 19 insertions(+), 4 deletions(-)
+> 
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 75bf54e76f3b..f5ca71ac2fa2 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -231,18 +231,33 @@ struct iomap_iter {
+>  int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops);
 >  
->  const struct address_space_operations xfs_dax_aops = {
->  	.writepages		= xfs_dax_writepages,
->  	.dirty_folio		= noop_dirty_folio,
-> -	.swap_activate		= xfs_iomap_swapfile_activate,
-> +	.swap_activate		= xfs_vm_swap_activate,
->  };
+>  /**
+> - * iomap_length - length of the current iomap iteration
+> + * iomap_length_trim - trimmed length of the current iomap iteration
+>   * @iter: iteration structure
+> + * @pos: File position to trim from.
+> + * @len: Length of the mapping to trim to.
+>   *
+> - * Returns the length that the operation applies to for the current iteration.
+> + * Returns a trimmed length that the operation applies to for the current
+> + * iteration.
+>   */
+> -static inline u64 iomap_length(const struct iomap_iter *iter)
+> +static inline u64 iomap_length_trim(const struct iomap_iter *iter, loff_t pos,
+> +		u64 len)
+>  {
+>  	u64 end = iter->iomap.offset + iter->iomap.length;
+>  
+>  	if (iter->srcmap.type != IOMAP_HOLE)
+>  		end = min(end, iter->srcmap.offset + iter->srcmap.length);
+> -	return min(iter->len, end - iter->pos);
+> +	return min(len, end - pos);
+> +}
+> +
+> +/**
+> + * iomap_length - length of the current iomap iteration
+> + * @iter: iteration structure
+> + *
+> + * Returns the length that the operation applies to for the current iteration.
+> + */
+> +static inline u64 iomap_length(const struct iomap_iter *iter)
+> +{
+> +	return iomap_length_trim(iter, iter->pos, iter->len);
+>  }
+>  
+>  /**
 > -- 
-> 2.45.2
+> 2.48.1
 > 
 > 
