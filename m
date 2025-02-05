@@ -1,56 +1,57 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8645211A0B
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 20:23:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8719C1D6DD4
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 20:25:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738787040; cv=none; b=Tf9DHY/IA0EZ47CgypvMF6KXUCyo/50Uz9MT7UcarGvHU6xKKxPYVSPgv+wAqSeXdjnwMqF50vE0QQT7LWEQzyKqVMyUo0ZJ9cs5DJ6chmqPum/9emQb/fHNCb59k+eraQjD+bFR4PbU0NN1JmQCwDWynBYBZFmNpQIYPI/RWcM=
+	t=1738787114; cv=none; b=RLMego7fuzyQtcPsn/clP4XrDrq/Jg667xvfCK5lpCUQ9jgvssl8iuFnsAlHLJAk26d1PFGMXxyaRUy3nWNw+5pGdG2iA1fXVmXLs2xDga7/fTJYbquS2/jHjuFHouHhnjI7BKhqokvFNdVdpORcEpxU7l0rp8gMrkEaR8Y+n4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738787040; c=relaxed/simple;
-	bh=tHkUhIPhE3VeHoXxBvQZsaaBg3RXB43QfetKq3ISqZU=;
+	s=arc-20240116; t=1738787114; c=relaxed/simple;
+	bh=y/2NvVX2i0xJu8eDUkHz/Cnr+Ovxo5e6swckZfHCzZc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZA9Jc2kI7LspPlm2tmYCOmWYoTEs8Zaj61Cqe2pxITo8v4J+issTTBrDtTJsEYuoxUdNSa74haLvPI0zFoZyS/urGHD+u9S5WjyE2LaDPQGuZ4Xhtxxd1/TLPxwMLQagNlihqP9i3cqh+Mb38FCHi6OZdEaj39nYdBMGogZvkeE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=B2qjZeuh; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=kNe4rpMSbMXrDWQQ/67lVNchVaNiZW8wcem9eaEA6ZdOCPjS/TLp+yp3r28w+vqgOiStty2ZiIe50HWbREEvtzbLS/6cL3RrHC/EUUtsDEelsEJRxUjcIdQR7zvE+lyr/DoJLM/aG3+jp1VLkR/dYaebRjpLghWQ0vNNF2obaDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XpDlkrJC; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="B2qjZeuh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XpDlkrJC"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738787037;
+	s=mimecast20190719; t=1738787111;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=KMsDWoYNJ51FU3ENt2+m2uMzfE5oWYP336jqZ2X6VjY=;
-	b=B2qjZeuhrWbNy/GiXifwI70L7rFAFTdGb/FgN2PEQHyRmjBCO3gkXexEjlgjN/awF5rqGH
-	GOJ1xztXNhIwNMbL6vl4GcLa1O1mG0MbLjZeEx2k0s/QNAsgahPbDVvwii73nOGbCc8TS3
-	6TyrOOfBEAISrdcJ3Tj/oijmwn2ClM8=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	bh=LKWUKlQeFRtrc/aYAbNT7uztxfgG+kxou6xZ6sInWHw=;
+	b=XpDlkrJCYR4RIIl5b1cSPf8ovbo6OzjG0m6IGZx2UMtdzE//U6wfYRhVQRAytTjEDTrbu0
+	67LS5wy0/DolMiTi1/e9k9/jpmlEHMSnlbw7N/lscCVciXKbx6s5/uNcAcceSUFLdBFIx/
+	ME37Y9ATzeKbVo9Cue8h59iUE69hyCM=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-288-4Fm7eMmmPW6uaX4VAMIvPg-1; Wed,
- 05 Feb 2025 15:23:52 -0500
-X-MC-Unique: 4Fm7eMmmPW6uaX4VAMIvPg-1
-X-Mimecast-MFC-AGG-ID: 4Fm7eMmmPW6uaX4VAMIvPg
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-296-dDgkHZ3WPti2h2Grg5w-UA-1; Wed,
+ 05 Feb 2025 15:25:08 -0500
+X-MC-Unique: dDgkHZ3WPti2h2Grg5w-UA-1
+X-Mimecast-MFC-AGG-ID: dDgkHZ3WPti2h2Grg5w-UA
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 63F5B1956086;
-	Wed,  5 Feb 2025 20:23:51 +0000 (UTC)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3F9301956089;
+	Wed,  5 Feb 2025 20:25:07 +0000 (UTC)
 Received: from bfoster (unknown [10.22.88.48])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4E2691800267;
-	Wed,  5 Feb 2025 20:23:50 +0000 (UTC)
-Date: Wed, 5 Feb 2025 15:26:12 -0500
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0B1AB1800570;
+	Wed,  5 Feb 2025 20:25:05 +0000 (UTC)
+Date: Wed, 5 Feb 2025 15:27:31 -0500
 From: Brian Foster <bfoster@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v5 07/10] iomap: support incremental iomap_iter advances
-Message-ID: <Z6PJZDMzWNtE2Qrq@bfoster>
+Subject: Re: [PATCH v5 09/10] iomap: advance the iter directly on unshare
+ range
+Message-ID: <Z6PJs8RvbcfNJNcC@bfoster>
 References: <20250205135821.178256-1-bfoster@redhat.com>
- <20250205135821.178256-8-bfoster@redhat.com>
- <20250205191016.GQ21808@frogsfrogsfrogs>
+ <20250205135821.178256-10-bfoster@redhat.com>
+ <20250205191610.GS21808@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,158 +60,97 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250205191016.GQ21808@frogsfrogsfrogs>
+In-Reply-To: <20250205191610.GS21808@frogsfrogsfrogs>
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Wed, Feb 05, 2025 at 11:10:16AM -0800, Darrick J. Wong wrote:
-> On Wed, Feb 05, 2025 at 08:58:18AM -0500, Brian Foster wrote:
-> > The current iomap_iter iteration model reads the mapping from the
-> > filesystem, processes the subrange of the operation associated with
-> > the current mapping, and returns the number of bytes processed back
-> > to the iteration code. The latter advances the position and
-> > remaining length of the iter in preparation for the next iteration.
+On Wed, Feb 05, 2025 at 11:16:10AM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 05, 2025 at 08:58:20AM -0500, Brian Foster wrote:
+> > Modify unshare range to advance the iter directly. Replace the local
+> > pos and length calculations with direct advances and loop based on
+> > iter state instead.
 > > 
-> > At the _iter() handler level, this tends to produce a processing
-> > loop where the local code pulls the current position and remaining
-> > length out of the iter, iterates it locally based on file offset,
-> > and then breaks out when the associated range has been fully
-> > processed.
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/iomap/buffered-io.c | 23 +++++++++++------------
+> >  1 file changed, 11 insertions(+), 12 deletions(-)
 > > 
-> > This works well enough for current handlers, but upcoming
-> > enhancements require a bit more flexibility in certain situations.
-> > Enhancements for zero range will lead to a situation where the
-> > processing loop is no longer a pure ascending offset walk, but
-> > rather dictated by pagecache state and folio lookup. Since folio
-> > lookup and write preparation occur at different levels, it is more
-> > difficult to manage position and length outside of the iter.
-> > 
-> > To provide more flexibility to certain iomap operations, introduce
-> > support for incremental iomap_iter advances from within the
-> > operation itself. This allows more granular advances for operations
-> > that might not use the typical file offset based walk.
-> > 
-> > Note that the semantics for operations that use incremental advances
-> > is slightly different than traditional operations. Operations that
-> > advance the iter directly are expected to return success or failure
-> > (i.e. 0 or negative error code) in iter.processed rather than the
-> > number of bytes processed.
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 678c189faa58..f953bf66beb1 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -1267,20 +1267,19 @@ EXPORT_SYMBOL_GPL(iomap_write_delalloc_release);
+> >  static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+> >  {
+> >  	struct iomap *iomap = &iter->iomap;
+> > -	loff_t pos = iter->pos;
+> > -	loff_t length = iomap_length(iter);
+> > -	loff_t written = 0;
+> > +	u64 bytes = iomap_length(iter);
+> > +	int status;
+> >  
+> >  	if (!iomap_want_unshare_iter(iter))
+> > -		return length;
+> > +		return iomap_iter_advance(iter, &bytes);
+> >  
+> >  	do {
+> >  		struct folio *folio;
+> > -		int status;
+> >  		size_t offset;
+> > -		size_t bytes = min_t(u64, SIZE_MAX, length);
+> > +		loff_t pos = iter->pos;
 > 
-> I think this needs to be documented in the code comments for @processed
-> in iomap.h:
-> 
->   * @processed: The iteration loop body should set this to a negative
->   *     errno if an error occurs during processing; zero if it advanced
->   *     the iter itself with iomap_iter_advance; or the number of bytes
->   *     processed if it needs iomap_iter to advance the iter.
+> Do we still need the local variable here?
 > 
 
-Note that this would be shortlived content re: my previous comments on
-the advance going away, but sure I can change it.
+Technically no.. Christoph brought up something similar in earlier
+versions re: the pos/len variables (here and in subsequent patches) but
+I'm leaving it like this for now because the folio batch work (which is
+the impetus for this series) further refactors and removes much of this.
+
+For example, pos gets pushed down into the write begin path so it can
+manage state between the next folio in a provided batch and the current
+position of the iter itself. So this pos code goes away from
+unshare_iter() completely and this patch is just moving things one step
+in that direction.
+
+> Otherwise looks right to me, so
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> 
+
+Thanks.
 
 Brian
 
 > --D
 > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/iomap/iter.c       | 32 +++++++++++++++++++++++++-------
-> >  include/linux/iomap.h |  3 +++
-> >  2 files changed, 28 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-> > index cdba24dbbfd7..9273ef36d5ae 100644
-> > --- a/fs/iomap/iter.c
-> > +++ b/fs/iomap/iter.c
-> > @@ -35,6 +35,8 @@ static inline void iomap_iter_done(struct iomap_iter *iter)
-> >  	WARN_ON_ONCE(iter->iomap.offset + iter->iomap.length <= iter->pos);
-> >  	WARN_ON_ONCE(iter->iomap.flags & IOMAP_F_STALE);
+> >  		bool ret;
 > >  
-> > +	iter->iter_start_pos = iter->pos;
+> > +		bytes = min_t(u64, SIZE_MAX, bytes);
+> >  		status = iomap_write_begin(iter, pos, bytes, &folio);
+> >  		if (unlikely(status))
+> >  			return status;
+> > @@ -1298,14 +1297,14 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+> >  
+> >  		cond_resched();
+> >  
+> > -		pos += bytes;
+> > -		written += bytes;
+> > -		length -= bytes;
+> > -
+> >  		balance_dirty_pages_ratelimited(iter->inode->i_mapping);
+> > -	} while (length > 0);
+> >  
+> > -	return written;
+> > +		status = iomap_iter_advance(iter, &bytes);
+> > +		if (status)
+> > +			break;
+> > +	} while (bytes > 0);
 > > +
-> >  	trace_iomap_iter_dstmap(iter->inode, &iter->iomap);
-> >  	if (iter->srcmap.type != IOMAP_HOLE)
-> >  		trace_iomap_iter_srcmap(iter->inode, &iter->srcmap);
-> > @@ -58,6 +60,8 @@ static inline void iomap_iter_done(struct iomap_iter *iter)
-> >  int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
-> >  {
-> >  	bool stale = iter->iomap.flags & IOMAP_F_STALE;
-> > +	ssize_t advanced = iter->processed > 0 ? iter->processed : 0;
-> > +	u64 olen = iter->len;
-> >  	s64 processed;
-> >  	int ret;
+> > +	return status;
+> >  }
 > >  
-> > @@ -66,11 +70,22 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
-> >  	if (!iter->iomap.length)
-> >  		goto begin;
-> >  
-> > +	/*
-> > +	 * If iter.processed is zero, the op may still have advanced the iter
-> > +	 * itself. Calculate the advanced and original length bytes based on how
-> > +	 * far pos has advanced for ->iomap_end().
-> > +	 */
-> > +	if (!advanced) {
-> > +		advanced = iter->pos - iter->iter_start_pos;
-> > +		olen += advanced;
-> > +	}
-> > +
-> >  	if (ops->iomap_end) {
-> > -		ret = ops->iomap_end(iter->inode, iter->pos, iomap_length(iter),
-> > -				iter->processed > 0 ? iter->processed : 0,
-> > -				iter->flags, &iter->iomap);
-> > -		if (ret < 0 && !iter->processed)
-> > +		ret = ops->iomap_end(iter->inode, iter->iter_start_pos,
-> > +				iomap_length_trim(iter, iter->iter_start_pos,
-> > +						  olen),
-> > +				advanced, iter->flags, &iter->iomap);
-> > +		if (ret < 0 && !advanced)
-> >  			return ret;
-> >  	}
-> >  
-> > @@ -81,8 +96,11 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
-> >  	}
-> >  
-> >  	/*
-> > -	 * Advance the iter and clear state from the previous iteration. Use
-> > -	 * iter->len to determine whether to continue onto the next mapping.
-> > +	 * Advance the iter and clear state from the previous iteration. This
-> > +	 * passes iter->processed because that reflects the bytes processed but
-> > +	 * not yet advanced by the iter handler.
-> > +	 *
-> > +	 * Use iter->len to determine whether to continue onto the next mapping.
-> >  	 * Explicitly terminate in the case where the current iter has not
-> >  	 * advanced at all (i.e. no work was done for some reason) unless the
-> >  	 * mapping has been marked stale and needs to be reprocessed.
-> > @@ -90,7 +108,7 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
-> >  	ret = iomap_iter_advance(iter, &processed);
-> >  	if (!ret && iter->len > 0)
-> >  		ret = 1;
-> > -	if (ret > 0 && !iter->processed && !stale)
-> > +	if (ret > 0 && !advanced && !stale)
-> >  		ret = 0;
-> >  	iomap_iter_reset_iomap(iter);
-> >  	if (ret <= 0)
-> > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> > index f304c602e5fe..0135a7f8dd83 100644
-> > --- a/include/linux/iomap.h
-> > +++ b/include/linux/iomap.h
-> > @@ -211,6 +211,8 @@ struct iomap_ops {
-> >   *	calls to iomap_iter().  Treat as read-only in the body.
-> >   * @len: The remaining length of the file segment we're operating on.
-> >   *	It is updated at the same time as @pos.
-> > + * @iter_start_pos: The original start pos for the current iomap. Used for
-> > + *	incremental iter advance.
-> >   * @processed: The number of bytes processed by the body in the most recent
-> >   *	iteration, or a negative errno. 0 causes the iteration to stop.
-> >   * @flags: Zero or more of the iomap_begin flags above.
-> > @@ -221,6 +223,7 @@ struct iomap_iter {
-> >  	struct inode *inode;
-> >  	loff_t pos;
-> >  	u64 len;
-> > +	loff_t iter_start_pos;
-> >  	s64 processed;
-> >  	unsigned flags;
-> >  	struct iomap iomap;
+> >  int
 > > -- 
 > > 2.48.1
 > > 
