@@ -1,144 +1,206 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2069.outbound.protection.outlook.com [40.107.237.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F72525A649;
-	Wed,  5 Feb 2025 08:12:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738743132; cv=none; b=YBSfmRutLpgNX3ze0d9ueqHR/jgJNhx2IUq8RkKnBlWZ+BIXFfjYrLxW7CwaHwduiGQGoQVVd0Zzr9NK+2fwmpEXAxBwIBq/V2PpU5CcQznvTZ+mg9v+KnqoRKe+Smjf/zvFul2tIoVmW6tPrMe9yD/Eo5pgKK96kkBZYGsRReA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738743132; c=relaxed/simple;
-	bh=vqb+CeQ/IYB+0ih7mm3e6b24feL9gHtNHWhBHwPYW/M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bpUlSFpfaiFyfoyBV84R0Zrc3F5BHpgIgnnD48TADhNIPDvFnkwsz/qhsGMZfedo5Y70JC9XnV9TCdM0G+/3HnQ0oQU3nmDPfhgKz7FRdHB1FC6D1oSIwMMmgfuYp2ilAcljP2XRrOU8MI8/Q7Kc65diGgf1ipc8VbLs+YrW2Jw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o1gfh63t; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A77951D7985;
+	Wed,  5 Feb 2025 09:57:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.237.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1738749434; cv=fail; b=M8/FYWOxE+KMqfDCRr0EgEmE1YpAUp+iUq1uE+5j/xgoZK02nMTpX+mvqMJvL4tGkSHZ03daP0ejvfZnYEiDfCcSW2KrrJV9dIHDG8k3g3fnSe6SITuVBGOHkpyttLa4JaRBQt0Dd/P1SzSTaQDg++wPN9L72E+LDicLYvDJKSQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1738749434; c=relaxed/simple;
+	bh=QNSh5L2fEDmdAo/O/sKrS6NZ/Gxtqn53w899DKXTCaY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=mCMbREf4wWdpwCM/MLD54uTODGKWUoWvUD8Yu3SuT4JHudm95MqzbnPtojYnkvJHb84wyLDIXss5vbyVudzpXfkEPAuc2PncmEWt4VFHaQovf3W01OUK+kWUwJLGJ96ARqdRnWY4zL1TBjNwOx/rI4X4nS4sZ85XByRrAKpxHhU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=FnmZmu8B; arc=fail smtp.client-ip=40.107.237.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o1gfh63t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B65E7C4CED1;
-	Wed,  5 Feb 2025 08:12:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738743131;
-	bh=vqb+CeQ/IYB+0ih7mm3e6b24feL9gHtNHWhBHwPYW/M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=o1gfh63tOw8utC54jAr3x2qKCfWBnnGbkfYUtwHIQoK8S5I+6vsB5bwqBrjRnuCHa
-	 TEjtBxY4WZtSdPTWs8/LnIUANDjPD2ZESGg/Pr9lYIdHJKhujaUMvajraJsxzHfTIe
-	 SyE0J/ZHfcjLXjN0L+A6g+CPwJdH71sq6sOifaE65HHipCPsZSpQH7ofBOXjJpYLMq
-	 pq3K10BgtdCn4ZnVserx00sP2hIPy6DWuPT6EHVSsutKJu/iIEzheCScDIABrxE9UG
-	 G75oDb0AHtMA1MGFD4iSSYD/oo8bf7CX/e9thrGV9/ONz/XXK+wIo7C0S1ScxAM62U
-	 Bu/5FZi2AqbjA==
-Date: Wed, 5 Feb 2025 09:12:07 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Catherine Hoang <catherine.hoang@oracle.com>
-Cc: xfs-stable@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6.6 CANDIDATE 00/24] xfs backports for 6.6.y (from 6.12)
-Message-ID: <ucnnyrtkfv2rn5bxv6q7en4zekwhksgfxs7wr35m6lk7lwdi4m@xhkswa4a4jvg>
-References: <RXFziXyTkkJs02L8mR-Um70po2IisADFkG9XGfYFGhNPh-xy7gNJ_tSvG1ZYBchOAp07owM1mgnBRF1Iw0-TzQ==@protonmail.internalid>
- <20250205030732.29546-1-catherine.hoang@oracle.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="FnmZmu8B"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rafh5Jo1UfYL5caUZF6Ta+eq3yY299lClMZQIEgLD7b+7iv/3fIOQ8C/uePP/fvIOZmOAZ/IMGjrUE2GCqohCZOBTGkoZkRBl/SFoFXsA3G8VmfvmS7wsyTTcQfHQg92zRuqHiDu9PWSj//quCtOmUl6SvWiUCsKgv+SKZqyem/Q6TjllGYl7RA7n03yFiSw0/UqTUCowFARKZbjDKuZuPY8Xklkvw2OzOcgWtg4ygjrRXUlcHxB45l9sxdMcsu2lXTEm5GzmcgW0teikpKcIjnt6zaeWs8Ud4izBN5yo7GxYk/Xx5KjLvfULdsI6eoDAx6cBM9aNQNTqSIBGRqY9w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=grPYgrP2PfVseSkeQapVot285mLBlOsOOywlh757IFI=;
+ b=XfarXO1R+ELNeATdk9viY9oRYrs4LruElDzKREt0hEFvvsTeW2DUf4QQ6pOy2OMLGh2LaVsvCKvjirzl1Mw4HIo+VTT34To1SbYkJ5RMZSa+R1tRDOEEXye1tpwtSazTvWhiPrLYFdbTzLFqIXtxh0W8pTkbYC+xntx4+iOCNxkeFRTrz7g4hh09ExM481wZ2hANqdE4WW5+bPfrL5azvMaTlZ9JZts2zo+MpcBu0ltLlIlCXaiNg67NRKlGQngAlhC/ZrjsBh82RGzeK965EiRCHERZS8reDvlZSisyYpxm+S/L8LanrTuFAE1PQZPDx4wNdJg5cfxKfhoM9OEDvQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=grPYgrP2PfVseSkeQapVot285mLBlOsOOywlh757IFI=;
+ b=FnmZmu8BjJE7pna2zqSJMO/7TCusasmRIEkEBnhKMhxmEOW0yE5+6a5OuQFPAecsVFPF3D0EXcTEyG7dxK/qI9e1k5i2ry3mHby+tzKmovBN2Wh6S94GrzWRvozz9ogiVILDAVsnYcamos+h8TuMSeIiQUXF52xgBAAam6qAdKv80jrzkla11Ix7rSP5xluyZloteUczoGDydIm8LfYAUWRiWBKeBdoAiOqjG15MyQAaDLMe+PAQCoFfbhMpOCQCopMXNEepqf8nAz7D0rbsseA/CaWSR0ZtCqGyK4m5TGQkuSv2pUwz+oSG3uamPA0IbKMUHDoDc7ZuAjD9vMS2ZA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
+ SN7PR12MB7933.namprd12.prod.outlook.com (2603:10b6:806:342::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8398.25; Wed, 5 Feb
+ 2025 09:57:09 +0000
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe]) by DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe%7]) with mapi id 15.20.8398.025; Wed, 5 Feb 2025
+ 09:57:09 +0000
+Date: Wed, 5 Feb 2025 20:57:04 +1100
+From: Alistair Popple <apopple@nvidia.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
+	alison.schofield@intel.com, lina@asahilina.net, zhang.lyra@gmail.com, 
+	gerald.schaefer@linux.ibm.com, vishal.l.verma@intel.com, dave.jiang@intel.com, 
+	logang@deltatee.com, bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, 
+	catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com, 
+	dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org, djwong@kernel.org, 
+	tytso@mit.edu, linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, nvdimm@lists.linux.dev, 
+	linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de, david@fromorbit.com, 
+	chenhuacai@kernel.org, kernel@xen0n.name, loongarch@lists.linux.dev
+Subject: Re: [PATCH v6 23/26] mm: Remove pXX_devmap callers
+Message-ID: <hhaj4zghiwsuuisctlydmixgxxlo3jb2vcylkeaq4gl4dcmu7i@oj6bpk2obgux>
+References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
+ <78cb5dce28a7895cc606e76b8e072efe18e24de1.1736488799.git-series.apopple@nvidia.com>
+ <6786b209929e2_20f32945c@dwillia2-xfh.jf.intel.com.notmuch>
+ <af6btaxeeodhvqrmjmdmz7vx2f7fvnavepyhweisagl2boitr6@77pwrvms66hg>
+ <67a2652083600_2d2c2942f@dwillia2-xfh.jf.intel.com.notmuch>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <67a2652083600_2d2c2942f@dwillia2-xfh.jf.intel.com.notmuch>
+X-ClientProxiedBy: SY5P300CA0047.AUSP300.PROD.OUTLOOK.COM
+ (2603:10c6:10:1fe::14) To DS0PR12MB7726.namprd12.prod.outlook.com
+ (2603:10b6:8:130::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250205030732.29546-1-catherine.hoang@oracle.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|SN7PR12MB7933:EE_
+X-MS-Office365-Filtering-Correlation-Id: 74222a29-0d26-4a65-b132-08dd45cb746b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?bsKjSsaT7CfLhlkvC+NTLcmVuPRtyy2PsrzMyYxBITPJHTu1PX+d+EymxT5E?=
+ =?us-ascii?Q?mPj666vW6oeX2rGXaIucKbN87nEnTHt9mI3GOYu6TXZ2pW3lpOd92gYpJ+kG?=
+ =?us-ascii?Q?8JDpsnFGu4r7tQ+UhDOvXEtoi8VhjhqNXTjOuhKppsPOLdCFVguLYTWq5mN5?=
+ =?us-ascii?Q?SgGUq7IiVNhxPSNq+AqFeun6ufLY0t0ye3lc/HmFPD0BffM2rBpq5zQG0r6x?=
+ =?us-ascii?Q?NGm+a7rQYNY5A6AdkWJDwm6GVJvZF4/McKyeCW6YFm0LVr1mTYApUZMgcG7J?=
+ =?us-ascii?Q?KBEsZE8C1sDIrZJWRLzCOk4ZyEcCtLNuqJoN84n2z3cS56Kt4mB9O28NnemY?=
+ =?us-ascii?Q?EDMHS3PMvHCwqJfUda0a/Aky02x1yDftKa+vvs6fpYddbY6O1joxwrTweWUJ?=
+ =?us-ascii?Q?CJ5IwiVfJmpmudB12rkXS2qn0BZdjA8uNTFSP/SjX2v+KgfEvguaOZE0NyRV?=
+ =?us-ascii?Q?ibWTHFnPL/d2DAtdSg9re+KP9T23GCr6nsTBRjxon1G8Ke+t1tkxAh2uxndl?=
+ =?us-ascii?Q?5q9lom+ShmbHwGe86r/zQXxVdKa7x8AoRYpjbXXkYjScxGMeWUFCberM9wSt?=
+ =?us-ascii?Q?JQi+kTtQ0OIQC2Uw0zTbHfLLc8XfluWPSCxgvbnfac821kX2OIktbukPrK98?=
+ =?us-ascii?Q?NSG7r//Zqn+wqNZEXHxNrOyOINMx54+9y0g+edAbm36Okvbdb/ROYb/vAY6+?=
+ =?us-ascii?Q?xQetbD9Tr1u280likCr/+iOkSEtab5RolD/NR+6ArjDDH8JVrj76/uB0FNlz?=
+ =?us-ascii?Q?Kg13rT4CsQXs8zhHIkG4ngNqaYO+qTN2GxcHc3eYC5d1Zvzg8TbHBjzW8nwU?=
+ =?us-ascii?Q?l+22eVG9JA01nwoDQL3HXjybkUH05BYRC6Nb/+RGTiyP8+kLqkRguoeIfwRm?=
+ =?us-ascii?Q?PRA9mESNBEVMBZl9DTGl4+5F/aKfU4oeLNAalKOtKpKygx9StPfJ07fp3BcV?=
+ =?us-ascii?Q?cDEJN0ywCLSv5ZUfqgXnhO/y2lwsaad6pxJk2LauFFXzVZhhSQl8i8Kri68Y?=
+ =?us-ascii?Q?+rli7ySFspGFvx1JMfwQgRVp9RoEoIHsnQBqjbBO++gLEayI3TX7Z8YrVPBD?=
+ =?us-ascii?Q?NQ+w9hMreLH2d05DYp87LmY06GANsGYqcfnJlh1ixZoGJp5ZsXFfFQAmWbtd?=
+ =?us-ascii?Q?UbARk1a/44ulXEGJnny/Gz3HJJluMfV75OVXm5d0WNLKC5zCd+0/Rl/J/0pK?=
+ =?us-ascii?Q?DYIsqssnNuK0s+6ArzEZcSoR6//s2SBoE+NFFuTV3RDW2/g3fOp3yjqDjkwb?=
+ =?us-ascii?Q?D2FCS5Fyppfj3BxTp1cI+/KsTeIauauqAKOAE7RmMNIXrbw3fmy3TUuLRGLG?=
+ =?us-ascii?Q?iFVIBZcUFRKKPYrweQVX+MWSYlHn2Lc5Wkbqt85vDRyY0YHftDso2b98Cn8J?=
+ =?us-ascii?Q?Z2rt9X1o1sZM7YFF/t+lLiFUW75y?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?4+ojzHKJ/S0XNdAM8sjxaxVtBLHaVPGdo6b4XhcJmvaYsdw0ywG70Fs2HH7K?=
+ =?us-ascii?Q?ugaWjNMDC7jNK2SLhd30Tn2f44MAN1NcFMbagSISFm5Z/SzLDBhsKlG/CbQL?=
+ =?us-ascii?Q?8JHlo3eX21JYiibWFyqwrRDCn4ukKaGg7EfvB2Na/xsO1oK0plK42sCkT8jQ?=
+ =?us-ascii?Q?wOmkJEUW5gm3Qr1fkRNmTJZVoc/xd56vnBchyLXa89eOypFBfoah/PgHS8DS?=
+ =?us-ascii?Q?bpGPMdhc7BIYtOlIuekMv57srpUWWENz+Lis94w9k4knE7ZoEltIWvO0UsvW?=
+ =?us-ascii?Q?To2Aal52naf2FdcmHQ6/hp+GwXswLP9CFVYNCqhtHyrpqMfvQSrk0ZZXjOMh?=
+ =?us-ascii?Q?tHsHCFulsk7LBaYVHI4cICt9Ah0uHQsAdm/Ocs+dOYC1xy0HhrhzDfdHXTwf?=
+ =?us-ascii?Q?CJe5pCHW2IOOE/LNiyJ2IB80q5YwodoOd+FBKONXkuAYNWFLzfEsey0PJlmB?=
+ =?us-ascii?Q?yC5WdVRzmvYpMpjRYpeseCWJBGBaG23rDesN3niS8hLGD3szc40hVBT3pYpz?=
+ =?us-ascii?Q?KkmGo2pLzN1sa8r1g1dQxrTE5z/n5xPpyv3mtDZJoBrIMjQIwNiVHsVNx9eY?=
+ =?us-ascii?Q?YqeQdVww0mPp55l27s3Zh8JJuMVAj2BUL7L6V6uCO+TLGCWrjTvKXmCOQvc1?=
+ =?us-ascii?Q?SeI0O4ahkOzt0m4CeLeZueW/jZ3X3G41dp97jZUgB0IRQFMMISTgQInjF8sC?=
+ =?us-ascii?Q?NL8g5eAlUr38vGOVWB2DPQkVAKN1bLRmGjX86tPeigYuz+/XwtDrx0xdkC2o?=
+ =?us-ascii?Q?+71xxPCA/C/ia9aBC/ALsBZidae0qQXp15Bol5S1Op6f/t7n6lco2bzwvZSc?=
+ =?us-ascii?Q?4OlGZsGgwVSSt6DEs2a7qy8NlG87TgOOinPb5hEedfk/RBEdyIjInROTNX+6?=
+ =?us-ascii?Q?OSf4P2u63kJ+xv/kddkNo4jXEDpi0ZGMlMTbpNik3sS9wWPVVhbvFrGqI8HE?=
+ =?us-ascii?Q?8mL4nDJc1LbVDSX4EnELOrjis3PF7Qg73jsnc2CDu7eOfyoyUcLM+49vt/gN?=
+ =?us-ascii?Q?45OE5z2DbnzPjrLZSQ231O339moX89mkEjbVqsKRbk+z9tr3QGfWGXQJyG0P?=
+ =?us-ascii?Q?F6LGwfA1DLtdNuoU0+FLgyRAwzNauEsLgFK/xIyMJlFzPvAfIKRWl84o9uUm?=
+ =?us-ascii?Q?2XHBgd9DmNwONwZTV9TBBl/wA1QSTztMZYw2p8RmEQ+y9ZsTyXqU8YJnSyBt?=
+ =?us-ascii?Q?sVfpQDuudRX9RNkXxnX2qdK4qhpl+nosIXw21GhJmMx4TJS1bKsQlRsIPKFK?=
+ =?us-ascii?Q?deptG60qwhPVJJYjDPwwAfBp8uT6thkYoIuyKuPfLoM1FJXxgyvvR239AyUi?=
+ =?us-ascii?Q?YqPzl5GYD2q1BpHam/ZraVLoZUg31Ixp45YvvzzBTTjPC4r3iHekp6sJOo9s?=
+ =?us-ascii?Q?O4rUB7aBpNBb1XHn8JzMHiVk9kEI49ZH4CVAtXF9YTQAnqcUlssE1HttfYtJ?=
+ =?us-ascii?Q?c+CtFS2Rz9O2DAq7sUqkz1GUEYu3Py8GLvF/txnhd8RNdM5pIkxhcBbnJoEy?=
+ =?us-ascii?Q?PcNm0XhNsDvGZWjM+V5WKBuFVS8EIIoybbnet/FIuFgb/NTwPSNWgh4XRRbh?=
+ =?us-ascii?Q?yWWCqxtO6hxu7xWUperk6QvQ8UB56KZ4ZncJZORn?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 74222a29-0d26-4a65-b132-08dd45cb746b
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Feb 2025 09:57:09.3851
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xK5j159XZUiFW9XMaIV4CfOWkNJvKbkk65Ub5AgKbhIHcytPeM/vbTz3sg8KJydnnCNS3gwiQ0oDVLfjmPbdtg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7933
 
-On Tue, Feb 04, 2025 at 07:07:08PM -0800, Catherine Hoang wrote:
-> Hi all,
+On Tue, Feb 04, 2025 at 11:06:08AM -0800, Dan Williams wrote:
+> Alistair Popple wrote:
+> > On Tue, Jan 14, 2025 at 10:50:49AM -0800, Dan Williams wrote:
+> > > Alistair Popple wrote:
+> > > > The devmap PTE special bit was used to detect mappings of FS DAX
+> > > > pages. This tracking was required to ensure the generic mm did not
+> > > > manipulate the page reference counts as FS DAX implemented it's own
+> > > > reference counting scheme.
+> > > > 
+> > > > Now that FS DAX pages have their references counted the same way as
+> > > > normal pages this tracking is no longer needed and can be
+> > > > removed.
+> > > > 
+> > > > Almost all existing uses of pmd_devmap() are paired with a check of
+> > > > pmd_trans_huge(). As pmd_trans_huge() now returns true for FS DAX pages
+> > > > dropping the check in these cases doesn't change anything.
+> > > > 
+> > > > However care needs to be taken because pmd_trans_huge() also checks that
+> > > > a page is not an FS DAX page. This is dealt with either by checking
+> > > > !vma_is_dax() or relying on the fact that the page pointer was obtained
+> > > > from a page list. This is possible because zone device pages cannot
+> > > > appear in any page list due to sharing page->lru with page->pgmap.
+> > > 
+> > > While the patch looks straightforward I think part of taking "care" in
+> > > this case is to split it such that any of those careful conversions have
+> > > their own bisect point in the history.
+> > > 
+> > > Perhaps this can move to follow-on series to not blow up the patch count
+> > > of the base series? ...but first want to get your reaction to splitting
+> > > for bisect purposes.
+> > 
+> > TBH I don't feel too strongly about it - I suppose it would make it easier to
+> > bisect to the specific case we weren't careful enough about. However I think if
+> > a bug is bisected to this particular patch it would be relatively easy based on
+> > the context of the bug to narrow it down to a particular file or two.
+> > 
+> > I do however feel strongly about whether or not that should be done in a
+> > follow-on series :-)
+> > 
+> > Rebasing such a large series has already become painful and error prone enough
+> > so if we want to split this change up it will definitely need to be a separate
+> > series done once the rest of this has been merged. So I could be pursaded to
+> > roll this and the pfn_t removal (as that depends on devmap going away) together.
+> > 
+> > Let me know what you think.
 > 
-> This series contains backports for 6.6 from the 6.12 release. Tested on
-> 30 runs of kdevops with the following configurations:
+> I tend to think that there's never any regrets for splitting a patch
+> along lines of risk. I am fine with keeping that in this series if that
+> makes things easier.
 
-Hi Catherine.
-
-I believe the idea of xfs-stable creation was exactly to not flood linux-xfs
-with LTS kernel backports?
-
-It's not a big deal, but IIRC, the whole idea of xfs-stable was to reduce
-linux-xfs traffic. If we keep Cc'ing both lists on those backports, xfs-stable
-kind of lose its meaning?
-
-Cheers,
-Carlos
-
-> 
-> 1. CRC
-> 2. No CRC (512 and 4k block size)
-> 3. Reflink (1K and 4k block size)
-> 4. Reflink without rmapbt
-> 5. External log device
-> 
-> Andrew Kreimer (1):
->   xfs: fix a typo
-> 
-> Brian Foster (2):
->   xfs: skip background cowblock trims on inodes open for write
->   xfs: don't free cowblocks from under dirty pagecache on unshare
-> 
-> Chi Zhiling (1):
->   xfs: Reduce unnecessary searches when searching for the best extents
-> 
-> Christoph Hellwig (15):
->   xfs: assert a valid limit in xfs_rtfind_forw
->   xfs: merge xfs_attr_leaf_try_add into xfs_attr_leaf_addname
->   xfs: return bool from xfs_attr3_leaf_add
->   xfs: distinguish extra split from real ENOSPC from
->     xfs_attr3_leaf_split
->   xfs: distinguish extra split from real ENOSPC from
->     xfs_attr_node_try_addname
->   xfs: fold xfs_bmap_alloc_userdata into xfs_bmapi_allocate
->   xfs: don't ifdef around the exact minlen allocations
->   xfs: call xfs_bmap_exact_minlen_extent_alloc from xfs_bmap_btalloc
->   xfs: support lowmode allocations in xfs_bmap_exact_minlen_extent_alloc
->   xfs: pass the exact range to initialize to xfs_initialize_perag
->   xfs: update the file system geometry after recoverying superblock
->     buffers
->   xfs: error out when a superblock buffer update reduces the agcount
->   xfs: don't use __GFP_RETRY_MAYFAIL in xfs_initialize_perag
->   xfs: update the pag for the last AG at recovery time
->   xfs: streamline xfs_filestream_pick_ag
-> 
-> Darrick J. Wong (2):
->   xfs: validate inumber in xfs_iget
->   xfs: fix a sloppy memory handling bug in xfs_iroot_realloc
-> 
-> Ojaswin Mujoo (1):
->   xfs: Check for delayed allocations before setting extsize
-> 
-> Uros Bizjak (1):
->   xfs: Use try_cmpxchg() in xlog_cil_insert_pcp_aggregate()
-> 
-> Zhang Zekun (1):
->   xfs: Remove empty declartion in header file
-> 
->  fs/xfs/libxfs/xfs_ag.c         |  47 ++++----
->  fs/xfs/libxfs/xfs_ag.h         |   6 +-
->  fs/xfs/libxfs/xfs_alloc.c      |   9 +-
->  fs/xfs/libxfs/xfs_alloc.h      |   4 +-
->  fs/xfs/libxfs/xfs_attr.c       | 190 ++++++++++++++-------------------
->  fs/xfs/libxfs/xfs_attr_leaf.c  |  40 +++----
->  fs/xfs/libxfs/xfs_attr_leaf.h  |   2 +-
->  fs/xfs/libxfs/xfs_bmap.c       | 140 ++++++++----------------
->  fs/xfs/libxfs/xfs_da_btree.c   |   5 +-
->  fs/xfs/libxfs/xfs_inode_fork.c |  10 +-
->  fs/xfs/libxfs/xfs_rtbitmap.c   |   2 +
->  fs/xfs/xfs_buf_item_recover.c  |  70 ++++++++++++
->  fs/xfs/xfs_filestream.c        |  96 ++++++++---------
->  fs/xfs/xfs_fsops.c             |  18 ++--
->  fs/xfs/xfs_icache.c            |  39 ++++---
->  fs/xfs/xfs_inode.c             |   2 +-
->  fs/xfs/xfs_inode.h             |   5 +
->  fs/xfs/xfs_ioctl.c             |   4 +-
->  fs/xfs/xfs_log.h               |   1 -
->  fs/xfs/xfs_log_cil.c           |  11 +-
->  fs/xfs/xfs_log_recover.c       |   9 +-
->  fs/xfs/xfs_mount.c             |   4 +-
->  fs/xfs/xfs_reflink.c           |   3 +
->  fs/xfs/xfs_reflink.h           |  19 ++++
->  24 files changed, 375 insertions(+), 361 deletions(-)
-> 
-> --
-> 2.39.3
-> 
-> 
+Yes, that is a reaonable point of view. You will notice I dropped these
+clean-ups in my latest repost as I intend to post them as a separate clean-up
+series to be applied on top of this one. My hope would be the clean up series
+would also make it into v6.15.
