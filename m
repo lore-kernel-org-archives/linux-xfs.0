@@ -1,75 +1,73 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7943173
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:07:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFCE6163
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:09:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738714053; cv=none; b=cVIhsQYVewLTt02yEayl+mRilpeX2llSnnGt+mK6uiW8cygGZDw/uLQNuROVz+Sa6jMO0vUpuJzX4408ccjol1QulVa0ladLWQFW3+YA4+wRIQktns6VhtNhgnf7QcNx8+mpcRjImSI8SWesZ5LWb8kghHbrnn3Rf1eyraJPLJY=
+	t=1738714146; cv=none; b=Z59zEiHm/d5bWL+prPSMuU1t4XD2y/GYQCIFbC6o3GOgACD7SSziNYSxbYpcFVM2BKXc9gCODJQydErDlumrL3HuY2+aTX9kptkIlFy7qsdmDTb+gaYnGUo2+lB/j6oLGBV4mGBC+3BF+LIB8eB0aTgxjctLS+nmLFn6NcCV7qY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738714053; c=relaxed/simple;
-	bh=ANtLj6RIbWy6XzHdQEw3GfN8T4f5//7k96FZf/3F7So=;
+	s=arc-20240116; t=1738714146; c=relaxed/simple;
+	bh=DlxSGXZU0DWaOR8mpKXyWlkBQrLiAdDhmztPP7zY+KY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N2eR01lgHzjOOuVAVV/hUatjCgeryJYbg5ZJkXhPpD0DiOQzzW5t6/OntMDBLWKUyCZGAY2lPU9H3wGS0Ux4H7MpLE1x1AyL/2IzCsJ0AZsPFC6YZo6Gsi+KHa0nlZBn/MPSLbryDwvQUKSclbpdM3FV3Kwzk/RhwK+BSMvZfL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rCAxfnHv; arc=none smtp.client-ip=209.85.214.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=kYvh5zP/1BIcjhWTJfblVd7wSxOcnnwGwW/hSm1XVqIKQLcqUfpKdyBoiUJwVMj1WZ5BYAeTUvfSQjnNqB4sp3Fu0QWDr+y7W7pIZruotXWAzv46iMY4UsJZpQhp8+DFLwkETLN7DrAzoZff/dom3xDl9ltwHbRyBzLY3imsrNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=07drgkKR; arc=none smtp.client-ip=209.85.216.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rCAxfnHv"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-21644aca3a0so144875935ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:07:30 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="07drgkKR"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-2f9d3d0f55dso1256839a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:09:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738714050; x=1739318850; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738714144; x=1739318944; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8fj0rH4qbIkbkk6TgTl2qCvtRslxxK8xPGVrgdKhZjE=;
-        b=rCAxfnHvPdR0vo3kXcxfW/zLi3c+XXf0pRtyiw9+f2xzHD1biIB3L7yeTsZRiUqMT2
-         1jBuufEuRqWaRXkylKDpOxXmrWBY2lW0EaaLSuIRRkLspDJ2YFhWngiluELFrP2HWKUL
-         tifgmfKUMy+9t1WSGmPIjhoQCsFKLjs0HeegqHYBOQZ4SBlCyyQu/8traO04ohfBHJx3
-         l6+cmBeFk4Uqw2UbJlmVd6mNPsdq2gdD5R6Ov8GhMIyF5ETinZZFwPB5AZg6bxBfghE1
-         nJyP4jUpwlhNUeSwiEimu17ax9kyoSiaJ0yaVjD5odJxY6N7l2oUjwNCFLObp3/nfVRP
-         WmXQ==
+        bh=uYQa5iksrp/AjhZ2SgU2sWhfZ2J+sJFerGxdTl91K2I=;
+        b=07drgkKRqRC0YwUrGkh+DJz6rC3qB6Y9xoPBvXvO70sMgvwuaC7+hNWeJOoSn5m99g
+         3nR0g6kYyTmdtqgihj/ri7Di5v2D2BnEFR4YPnxCRR1dfNS6iOnWJ8I1NrzPAKPcmNEF
+         8ffmKFO1xn5hQzAmr8zwuTCDP4L6HHP+3os6q9oK8bEwSYgOMBevWPrdLrlEU3q0IN3p
+         79BwTAfxXJGKm+3qV5C1YyzTIBexElcmVWQfRkZDbAp+hMlpuPPoz/xK3NlFNgu7O3Xr
+         PwIZFD/HoU+hROgAuEPzcUm+hEivel4CR7ez8BwnrDJiu2mWhnpG5ooc3ToHmlfpSKv6
+         +o4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738714050; x=1739318850;
+        d=1e100.net; s=20230601; t=1738714144; x=1739318944;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=8fj0rH4qbIkbkk6TgTl2qCvtRslxxK8xPGVrgdKhZjE=;
-        b=dKW+Qg0hfXkMRy7eY4ijC/dw7J7jVW5Urt+uaqP11imRtDmDfaEEmSrj/F+0Y0+uQ6
-         5v2QJncPMMn6gsHB81G40xdkbD/S2UR49C1k2fS0Lnc6rfDg1Etgy+1JDuN0BI0pTWNs
-         zefzpSYnxeX15FhsH3Eeq4QoR7KXgky+F7gJppW13neCda3oF5Ro5c07P7U+gQcIwoNU
-         ya5P6o1O+OVMn1WL9pQBb+tMBYt7L3z7rzcROgNY+7F1pxkVoCw8jQ8eWUagOXyN8mc2
-         niDJiNG2TUoYXQf/VooLhvm8A6NO00WdymZgycSULRMPtWTsBHOt6u+6UYql22AOBB/j
-         721g==
-X-Forwarded-Encrypted: i=1; AJvYcCUkQ/rfZBFRlDwKwoTPYYep/MiXbQS5lvF7dijmDPy0dbdNAMkIO0JKyLQ112mMr+XZe6ggL4MIP1Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyLbQE7edg+VgVPYA9cElOxqTZCVrpZodLUro0PdLQYdalQ3YJP
-	8QzuevShTkQ49UPhKlDKt2Uc9uQVcoLGuyscP5YRML5xORObRqJ0qqiCh+K4ShyqEjqVMRedSWD
-	F
-X-Gm-Gg: ASbGncvscYEn7fPW9PZXZ+CXS+rllfuOERqg2iBLB0pvR3wMv0mwgvoMjcoc+6jc7kY
-	5/Fo+qAaIbBaDLA7A4/7fMU2f+KIHghlii8SiT8AlNrzAWaGjqCxzEv8+0P9amTxyKZFgwYNuO6
-	jy9oEROQhJsdsKPz+h6CJ7xHtaZHyxGbybWJ27K5waqrhiHGT8U85FN5VHwyrJBO3FdNb2EUIRy
-	L46A5FvBaY7i1lDQh25JH8MZLQF6l8JLHxkjR/XzXRGPnEfUexYzRpY1xQlWDIVYNVcnQu4BhI0
-	ZBAJCdgOwxK6b5wuAMexD68fU3JxpNTwjR1vzSSpl1gzne7haOSoQYJf
-X-Google-Smtp-Source: AGHT+IHdE2VVS12iE2YllVRBGqqkFrNxzGLqng7/tVH3iPmFSttAe7R4c7qJJmfD+/aCeMdUxJNKCg==
-X-Received: by 2002:a17:903:8c4:b0:215:a3fd:61f5 with SMTP id d9443c01a7336-21f17dde0c8mr12110915ad.5.1738714050013;
-        Tue, 04 Feb 2025 16:07:30 -0800 (PST)
+        bh=uYQa5iksrp/AjhZ2SgU2sWhfZ2J+sJFerGxdTl91K2I=;
+        b=JuiyfxV1m6u6yfV2c707plTsJr1/9jlZNZKr3kEoxR6K6E7VpdRK/Ulv8+xjCtXK7H
+         VAKFEbp9iNSNEnNH/nkFkGNzfU8+9ScOyDWyJo6AaRUkGB+LwpCfmmVLC8T74QzqUxHc
+         HuwaCofMGQkYqeU5waNSlSF5c+bSKfQVhzx0/mi6/lkpXAZuubKPqUYQxCVVy8MVSAOB
+         1nOEaDfeXZ7iJdSS5WiByuu3cS0ms+03tRsXt4e6zpenBdZ2D+hG1AvzB17jlq42y2GO
+         p2mMA037FFhNOOlo5Yl5WAksJMPD+Y4FQXZfG2Mqt6VRU7g7v8naiPqYYxRy202tEWWp
+         ezfw==
+X-Forwarded-Encrypted: i=1; AJvYcCUYFm0taGfASzjTZAM1RtyKYoMMw1AmJq68WNheFsk6y124jbCpG/jYLLxorw/UUmzb5j81Dn/IfvY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOdDCcEr9Mm2P9W4CYKaGF8QULKGFZ9WJjp64U1KNkx9w8XFAb
+	nab+mVnblqNvCh/P0IWNSKfznGbF2tH8/ggHlWndgfnUI12Dce4ojdcFRsqB12E=
+X-Gm-Gg: ASbGnct8dS3cmAeMDqnyDUQ25e18lkfJH41K0MF7u5EpqjVznGgnRDhT0c9uNe7oJOp
+	Zznk5oM5+r79oZPKjY01kSMKbs0q3yZpZ9Nw8H303flw/dpYei4yl211MvdKs9UMEbYoDhmM/EX
+	lPQqv2EtWu5+/e/7LPHwus6m8m+Y/gtfiQPT9oio3X2hMdiN58+1z/JC22m6tJXGpiRV3FdmX4q
+	J1uU2VdlCyj0tTR7llyka8CmjlMVaXVp4qZg79eZYlEXm9uLH40E9Nx1dktsSiBNdDgFqXmH+uS
+	j2Y/HGflrXAg+eXFLwmQb16bZKFYBA9cxY/rfiMYTjxaN6PKv7JH1G8E
+X-Google-Smtp-Source: AGHT+IF1nTgQm/3zR702eOCluilvUQRBDi7woD+dIuPFWUp5+iYLkJaePkAZZsHIqqwx/+84D+IQPg==
+X-Received: by 2002:a05:6a00:114a:b0:725:e057:c3de with SMTP id d2e1a72fcca58-7303521441cmr1328278b3a.23.1738714144338;
+        Tue, 04 Feb 2025 16:09:04 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21de31f6f74sm102391075ad.67.2025.02.04.16.07.29
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe653fa85sm10975781b3a.77.2025.02.04.16.09.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Feb 2025 16:07:29 -0800 (PST)
+        Tue, 04 Feb 2025 16:09:03 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tfSww-0000000EikI-2nFd;
-	Wed, 05 Feb 2025 11:07:26 +1100
-Date: Wed, 5 Feb 2025 11:07:26 +1100
+	id 1tfSyT-0000000Eilg-38Kc;
+	Wed, 05 Feb 2025 11:09:01 +1100
+Date: Wed, 5 Feb 2025 11:09:01 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/34] common/rc: revert recursive unmount in
- _clear_mount_stack
-Message-ID: <Z6KrvoW3kgLJeZuP@dread.disaster.area>
+Subject: Re: [PATCH 07/34] common/dump: don't replace pids arbitrarily
+Message-ID: <Z6KsHTzj1meFDVAF@dread.disaster.area>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
- <173870406199.546134.3521494633346683975.stgit@frogsfrogsfrogs>
+ <173870406214.546134.16846124942782280576.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,91 +76,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173870406199.546134.3521494633346683975.stgit@frogsfrogsfrogs>
+In-Reply-To: <173870406214.546134.16846124942782280576.stgit@frogsfrogsfrogs>
 
-On Tue, Feb 04, 2025 at 01:23:51PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 04, 2025 at 01:24:07PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Zorro complained about the following regression in generic/589 that I
-> can't reproduce here on Debian 12:
-....
-
-> > Orignal _clear_mount_stack trys to umount all of them. But Dave gave -R option to
-> > umount command, so
-> >   `umount -R /mnt/test/589-dst/201227_mpC` and `umount -R /mnt/test/589-src/201227_mpA`
-> > already umount /mnt/test/589-dst and /mnt/test/589-src. recursively.
-> > Then `umount -R /mnt/test/589-dst` shows "not mounted".
+> In the next patch we'll run tests in a pid namespace, which means that
+> the test process will have a very low pid.  This low pid situation
+> causes problems with the dump tests because they unconditionally replace
+> it with the word "PID", which causes unnecessary test failures.
 > 
-> I /think/ this is a result of commit 4c6bc4565105e6 performing this
-> "conversion" in _clear_mount_stack:
+> Initially I was going to fix it by bracketing the regexp with a
+> whitespace/punctuation/eol/sol detector, but then I decided to remove it
+> see how many sheep came barreling through.  None did, so I removed it
+> entirely.  The commit adding it (linked below) was not insightful at
+> all.
 > 
-> -		$UMOUNT_PROG $MOUNTED_POINT_STACK
-> +		_unmount -R $MOUNTED_POINT_STACK
-> 
-> This is not a 1:1 conversion here -- previously there was no
-> -R(ecursive) unmount option, and now there is.  It looks as though
-> umount parses /proc/self/mountinfo to figure out what to unmount, and
-> maybe on Zorro's system it balks if the argument passed is not present
-> in that file?  Debian 12's umount doesn't care.
-
-Ah, I think I added that whilst trying to work out the weird
-shenanigans that the mount namespace cloning that these tests did
-caused. It was cloning a shared mount namespace that many tests
-interacted and so any changes to the mount namespace inside that
-test were visible everywhere.
-
-If two of these mount namespace tests ran at the same time, they
-stepped on each other and they failed to unmount their own stack
-cleanly because of "mount busy at unmount" errors. This would then
-cascade into other test failures because the test/scratch devices
-couldn't be unmounted.
-
-The fix I came up with was to run a recursive unmount for the stack,
-which seemed to clear all the mounts the test made regardless of
-whatever other test could see them. It didn't through any errors on
-my test machines (debian unstable) so I promptly forgot about it.
-
-> Regardless, there was no justification for this change in behavior that
-> was buried in what is otherwise a hoist patch, so revert it.  The author
-> can resubmit the change with proper documentation.
-
-I suspect that changes made later on (i.e. private mount namespaces
-per runner instance) fixed the underlying namespace interaction
-problem and made the recursive unmount unnecessary. The lack of
-errors from it meant I likely forgot about it before I posted the
-initial RFC that was merged...
-
-> 
-> Cc: <fstests@vger.kernel.org> # v2024.12.08
-> Fixes: 4c6bc4565105e6 ("fstests: clean up mount and unmount operations")
+> Fixes: 19beb54c96e363 ("Extra filtering as part of IRIX/Linux xfstests reconciliation for dump.")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  common/rc |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  common/dump |    1 -
+>  1 file changed, 1 deletion(-)
 > 
 > 
-> diff --git a/common/rc b/common/rc
-> index 4658e3b8be747f..07646927bad523 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -334,7 +334,7 @@ _put_mount()
->  _clear_mount_stack()
->  {
->  	if [ -n "$MOUNTED_POINT_STACK" ]; then
-> -		_unmount -R $MOUNTED_POINT_STACK
-> +		_unmount $MOUNTED_POINT_STACK
->  	fi
->  	MOUNTED_POINT_STACK=""
->  }
+> diff --git a/common/dump b/common/dump
+> index 3761c16100d808..6dcd6250c33147 100644
+> --- a/common/dump
+> +++ b/common/dump
+> @@ -907,7 +907,6 @@ _dir_filter()
+>      -e "s#$SCRATCH_MNT#SCRATCH_MNT#g"       \
+>      -e "s#$dump_sdir#DUMP_SUBDIR#g"   \
+>      -e "s#$restore_sdir#RESTORE_SUBDIR#g" \
+> -    -e "s#$$#PID#g" \
+>      -e "/Only in SCRATCH_MNT: .use_space/d" \
+>      -e "s#$RESULT_DIR/##g" \
 
-<tests>
-
-That doesn't appear to cause any problems on my current
-check-parallel stack, so I think the above explains how it got
-there.
+Looks fine, if it causes problems further down the line then we can
+implement a better filter.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 -- 
 Dave Chinner
 david@fromorbit.com
