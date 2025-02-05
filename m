@@ -1,73 +1,73 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 904D2227B85
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:40:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BE03227B85
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 00:43:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738716057; cv=none; b=HWFPiYRg2mv4MrCfGE+8Xyzffa1uzUoay+7J2hRxMmpS+zEG8twdCcdlKW/yZUE08IHSgz4pCVznAn+XF1XhFxoxxoPZ3SAANdsZVClgaLpY+pg4AP4TAablX1KbHZD84PJszCJUc2onq81UvfrngnX8czCWHdWNslkRrCnoGYw=
+	t=1738716181; cv=none; b=GH6zGw4v5qOxeXNAoQOgx8M/yCWvfxctWDuBIT12qIi2SAKtG05N3EEu+ZzLsLwfWsNOFqSmx9PhnaYwY4pxWH/w7j+m+s9M4T9UiCyzkRhjtl8rzqsfdvyQA20Iz5oELYyIG4y1f8POBu3HUlAGM26g3//qRJ811mhrOVYi9s4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738716057; c=relaxed/simple;
-	bh=YN3+HnQn2NejvimYU3LpKaNu+zbenPR2dEZbFkEn+HA=;
+	s=arc-20240116; t=1738716181; c=relaxed/simple;
+	bh=P33HhQ5exX3hjmIscmxenCivfShCBFK3LSbU3lC5VV4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hPt6M9cpQDyji3t2a8l91BVd8DiCHxyDKwX/h+S5pGILHOzgqIxkPYlyxwArXFHkrVTAey1VHEr58lWgIyn/g7gAOYmOiHnWAL72d+3U2V/ZTLVXWZcvPTRZvDiw/nBKIFokMZ8HGR91o+Pgvtl1p37pIz6/IXNlxFgpm4gsI44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=F6BwvSXp; arc=none smtp.client-ip=209.85.214.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=nSdPL7sfo9NwsmwyU6sT7cUx8/prEBTbUTiSLckLRFGhQxoFbCuccIBDFC20tH9P0VjDK7jwlhWE8pCaQxSd8BZ7ddqVDcCCrYGcR6geJiyKQfBIgflMzP/xlq/ElYeVJ7cFJS9tVllwwLPEMWt02PDUm4GAkUxxQMH4ZEw0Tg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=gWVSL5Bb; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="F6BwvSXp"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-21654fdd5daso108417855ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:40:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="gWVSL5Bb"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-21669fd5c7cso113621115ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Feb 2025 16:43:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738716055; x=1739320855; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738716179; x=1739320979; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cqPW76/W/hk1LhmC1dcBZb8i0N5+TPsumQm1aV5x6t0=;
-        b=F6BwvSXpqmXNqWckoZe6WqHjoWcKzp8wBSsRGcXkXyen6anGAzob/fj5MJ0NusND+c
-         xnAaZohVi9T1OkBI1NA18ts2RCKAx2GaG273BWnYPw88Na2msKjN0AtivSS5bEG2Zl95
-         N21lv23KFBa2Htt2HrQLDWSTpnojp6hpzgWA4neh115Y8KqJ7nnVvH2V4h3dUqxBnJv2
-         XefDNE5O8O1ERiDNu3qr0Wp1YwkBfZrfjY9yL/7J/VmsISS+Vzt54+rqEk7jOUGv7jVR
-         j/uckxAOWzYbvW4r2tn52DPqGVnjKdHYZFGHgfU46TDCZenfQAYV/8XqvlM1KnVOWdtz
-         xCCg==
+        bh=/5kg3H6HL8o754rBW0YOFr5SCx8c7RwYcIDPTGJAHUY=;
+        b=gWVSL5BbkgBEfsNcOahET6vDJUCg0GBKRECcv+6/ZXO4q9ekMKlRvPayydDSKLdz5x
+         o5TaXvQKLogOxUsxKTqXWRPIVS7oP5uQVEpqlBbR692AnvKFIRJSv8aHLo4Jj3yPBgg8
+         tOazNj87409eqOzwVl+enDfiS/v1s5UM3InCPLT4D2YiT+DiUzT4962PJLzrTRVmhHj1
+         DyF8ZRYLnw+Ka7BdCjl08oUhlHjq+JiOw4e3hv0evUPRQNkQ78hInFamcSsLqs/cgBDb
+         ZzEznzi6pvsVCtKxAhaZo7qBZC4guHXv1y/cI7A729QCqmLyEUiul6nTDPOq8jXFuJrW
+         mePg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738716055; x=1739320855;
+        d=1e100.net; s=20230601; t=1738716179; x=1739320979;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=cqPW76/W/hk1LhmC1dcBZb8i0N5+TPsumQm1aV5x6t0=;
-        b=tfcv8oRa+yrKtgzoGK7BIj2TEbFPwnru+NeIekcF4uUHiFtxafMQAmE6xwnvfyijOd
-         rH0gDUB/NOSUtevceBM9OVm9tnRSXltdpbFEwEyEc+XVwSG8UPyFfjldhuY296Wl8kUP
-         dX1QH46pdT5dXcAVHUN6cH/QgmvB7GJzCVss16goBpZcAvEQpQHqTMu2FFO3svU2eI5Y
-         rEWDhpkLm2OrMSzX4W4ZKO8+DrMAy/kGLyYmC5zlrNrdTB2r7UAPXsbEaIr9BuKHi6lE
-         QnTTO/HANIRnlxLC/Q1MjI7ARKKg/dYNc6SP6WzK4cmKfAXkRGCPqMToR4x9ZgxnKynH
-         bwfg==
-X-Forwarded-Encrypted: i=1; AJvYcCU+M7ZMuyoc8fFK1DPzrl9k5Iq9vKm1LOoey6f25nyxYfNW+Ptrt26H5JLcJ0ya3ZLVkHQSEcfEmvY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwHsB4zdOl7oyT4Qq/HCdYhhCLDiBRxWlpk41Vfhq28ip8QcKpF
-	b6WspHJdt+vsDOQuUUCj8SSgrE9ymZ76SVoNis8H1GF+/WM5LgXldumzG8p+OaU=
-X-Gm-Gg: ASbGnctcqfa8DglJoLv9nCwI2OFWUnarWlzq/ap/PnklV/OZPaUyEN29Q1PAxIxBW9l
-	Ho2Bi/R2hXEaaOUI4ulW9NUJ8TUTZxHMG2AMr92544xBGXDONAB+ZxoSq8sqLyOUp0ejrN/J6So
-	Zs7hycGbsbXtxh1kMqrWzjVJwCg601cg3z2i3O+Bji6+tUbTJrNU+jST+GthYauB2yFnEHUW1/c
-	c4vVv59oCpTrgVQilQ2FQeyYLY1gMzM9cfg4LfrMmfARJAFiD9VJbxJscmmwwOEECxkQsu5j1k/
-	EEOKFryRNCiAaE+9XpRI9oYkjvpj+C1U8wgFXpTcS5UNrDpvAL8k0vLj
-X-Google-Smtp-Source: AGHT+IGaDDo97z+At67026Hz1JTKlODOrMD6FoRl+fq2lze2FUcwq2WBOJ3fIceehSwJVfBy7t+fMA==
-X-Received: by 2002:a17:902:ec8f:b0:216:7926:8d69 with SMTP id d9443c01a7336-21f17f2f955mr12675835ad.47.1738716054802;
-        Tue, 04 Feb 2025 16:40:54 -0800 (PST)
+        bh=/5kg3H6HL8o754rBW0YOFr5SCx8c7RwYcIDPTGJAHUY=;
+        b=YgShRwszzwtIgBMQNEO2UDo274lX6E6TW5zNdWWVn02QloP6Tgo6K9+MO9/PB3YSu6
+         CO7oGstmQmlmYKO7ImWHj2GbAD+w/WzQ3+2YAWKX9vyE6SBLTQgZRe/z0ER5J0qTGp7q
+         DL83eUxU+ChjAXybByvEtcECD5VCGZd7IcT3xv6dUIzkYa0poEWwsuSIsKytfO/fhoR/
+         QE4ggQ+qG3piMocuMV+gwBd/9bZzHbBQFJbXz3gtHgG5n9l6VPt8pGfTIRP7PkZsAJFB
+         4c/2LviBJ+RDFF6Tg8ijQWVyBvTneVeAA6rc7BGBFxUbMhLk0DE5LUpiLphRmBHZ/5E5
+         rB/w==
+X-Forwarded-Encrypted: i=1; AJvYcCX9r6sISCGG5MM/iTzpiwcdQwXxdCyB8nmD40dezo9hNfvGBWh+rgLr3FPGfl1oLnKsS2nLLlRf038=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzGwRLv94VfT+L5IjchATk22kXfig/Arnhti6K666n5I0xwmL/4
+	nSNMQLsF6ljPA3DziDgXglLA/3Vc4738pDruAvZrj1FHU2atn2iuOL6BeBg05/c=
+X-Gm-Gg: ASbGncupPoa4jnG3BGrCF/mSL+2I8ks0yjqjk0iF1mWGkHvaA4q6QV6j1IBuDe9D0tM
+	ljtJB1UrdH/opOZHo9kwYZv1oe0E9aRtHalzpwkJIdwe9yEobuFsxCRznn88GI5G0APvQuxMQg5
+	UEP7hNbvbmAwdZaYThJY/SSI60KD8HDVdWG8HDXQIRA53GZ/w3qIO0+EKh/iU6AZ6DZW6FA+cbX
+	OrtwpnvPcEKe0oxtLqvPLZ3abTiHfvL+++34udSbui8hBhqHScqNVyaHnXvChNziKXDPkIe08W6
+	xf6HAONnDt9OPNeyFmlaqarp9mbfROTNCr4/8IhPZkBSSzfSah83SAve
+X-Google-Smtp-Source: AGHT+IGxUiOieMp79uApguEYeIuDLJwOd2I8PSClu9Pv4EGVwRv3e62vJxfnZTpJXrSof2sMrWqx/A==
+X-Received: by 2002:a17:902:ced2:b0:21c:15b3:e3a8 with SMTP id d9443c01a7336-21f17f031bamr11512035ad.37.1738716179570;
+        Tue, 04 Feb 2025 16:42:59 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21de331ea14sm102972975ad.212.2025.02.04.16.40.54
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21de32ea5bbsm103699705ad.150.2025.02.04.16.42.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Feb 2025 16:40:54 -0800 (PST)
+        Tue, 04 Feb 2025 16:42:59 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tfTTI-0000000EjLS-16IQ;
-	Wed, 05 Feb 2025 11:40:52 +1100
-Date: Wed, 5 Feb 2025 11:40:52 +1100
+	id 1tfTVI-0000000EjMs-37WQ;
+	Wed, 05 Feb 2025 11:42:56 +1100
+Date: Wed, 5 Feb 2025 11:42:56 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 19/34] mkfs: don't hardcode log size
-Message-ID: <Z6KzlEjfe-QmlY4u@dread.disaster.area>
+Subject: Re: [PATCH 20/34] common/rc: return mount_ret in _try_scratch_mount
+Message-ID: <Z6K0EF-wHqwN-68X@dread.disaster.area>
 References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
- <173870406396.546134.3531267570648312988.stgit@frogsfrogsfrogs>
+ <173870406411.546134.11968180503485222405.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,44 +76,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173870406396.546134.3531267570648312988.stgit@frogsfrogsfrogs>
+In-Reply-To: <173870406411.546134.11968180503485222405.stgit@frogsfrogsfrogs>
 
-On Tue, Feb 04, 2025 at 01:27:15PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 04, 2025 at 01:27:31PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Commit 000813899afb46 hardcoded a log size of 256MB into xfs/501,
-> xfs/502, and generic/530.  This seems to be an attempt to reduce test
-> run times by increasing the log size so that more background threads can
-> run in parallel.  Unfortunately, this breaks a couple of my test
-> configurations:
+> Make the _try_scratch_mount and _test_mount helpers return the exit code
+> from mount, not _prepare_for_eio_shutdown.
 > 
->  - External logs smaller than 256MB
->  - Internal logs where the AG size is less than 256MB
-> 
-> For example, here's seqres.full from a failed xfs/501 invocation:
-> 
-> ** mkfs failed with extra mkfs options added to " -m metadir=2,autofsck=1,uquota,gquota,pquota, -d rtinherit=1," by test 501 **
-> ** attempting to mkfs using only test 501 options: -l size=256m **
-> size 256m specified for log subvolume is too large, maximum is 32768 blocks
-> <snip>
-> mount -ortdev=/dev/sdb4 -ologdev=/dev/sdb2 /dev/sda4 /opt failed
-> umount: /dev/sda4: not mounted.
-> 
-> Note that there's some formatting error here, so we jettison the entire
-> rt configuration to force the log size option, but then mount fails
-> because we didn't edit out the rtdev option there too.
-> 
-> Fortunately, mkfs.xfs already /has/ a few options to try to improve
-> parallelism in the filesystem by avoiding contention on the log grant
-> heads by scaling up the log size.  These options are aware of log and AG
-> size constraints so they won't conflict with other geometry options.
-> 
-> Use them.
+> Cc: <fstests@vger.kernel.org> # v2024.12.08
+> Fixes: 1a49022fab9b4d ("fstests: always use fail-at-unmount semantics for XFS")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Good solution to the problem.
+Ack, missed that. Though:
+
+> ---
+>  common/rc |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> 
+> diff --git a/common/rc b/common/rc
+> index 03603a5198e3b6..56b4e7e018a8e0 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -440,6 +440,7 @@ _try_scratch_mount()
+>  	[ $mount_ret -ne 0 ] && return $mount_ret
+>  	_idmapped_mount $SCRATCH_DEV $SCRATCH_MNT
+>  	_prepare_for_eio_shutdown $SCRATCH_DEV
+> +	return $mount_ret
+
+These could just be 'return 0' because we've already checked
+for $mount_ret being non-zero.
+
+Regardless, it gives the same result, so:
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 -- 
 Dave Chinner
 david@fromorbit.com
