@@ -1,177 +1,112 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54BD1519B5
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 13:03:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7A1814F9E7
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 13:56:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738760612; cv=none; b=AS2+YD5nUhya2InRbaVoVsDQltjcd7+v65h6AHZVmcHiYQxeVseMWIYZhick34dhLQE2ugn4Ne8DNUS65g5HIJI3fqTbBL18F94I3K/VIE1HGXdBQwOzUUzaRAmGFP/kmq35jkIKaVaDc9ffIbCFI4Apt6YMnJbgEjeHReklzqg=
+	t=1738763763; cv=none; b=osbPqGVxfl9Sp3KV6AalZpThjZcraBvJ5lW746kdSKI2tRJ8urjQ5CLyO30YIYsru9qTFqiEK4isFYx9HylNYsOmzhMf9q6XN2A+Aqywws4OW41IQc1dokidFjqXMOSdAaGlDlCdGeUkEUNzRUGTXniDsg9Qp+eU0a1veijvT9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738760612; c=relaxed/simple;
-	bh=BOSJf1U+Nbg5gigVlZ2hnJt3nIMlCZrCwGGWsGl4xAg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KTXcg3exXwdYDYV36DuUYR6rhHRelAllgYWyzrkIqupBFzy3xu8efUMUj61FqxZpard5uIXwqYWyHU6Gnwh9qf3qJwfaY0jn9LpoNN/znYP6DOoXS4N4c6nC2ty8QXc3YWWz8Ts4Er9x6anmRl1H4a2XSioQoDU4EvE3fW+s/IE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SskGHrcb; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1738763763; c=relaxed/simple;
+	bh=2Ku6GWXzeUooEpQ9fmvwzHly+vx9YMnpXoXU1yLWkjc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sojXz1pH4jygWO7p79D/cqYlmJ0YdxCsmwo2lQsn7lHWzoeosFtie2WO7b6Ad4o5g/T9AsvjgFyrMeTPexxDC9pCAjeerT/oiqKSWNNZDuBRfMdi/R3AVCJWPfCON7tNmmPPGslJYlhnIO3/k485Lyp6GM7gYgFbNWRmrM+R1pM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OMBbXJo4; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SskGHrcb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OMBbXJo4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1738760609;
+	s=mimecast20190719; t=1738763759;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=l83Dw368hueJll8PyntCW0Nb5bpCWlX4zt8mq3uaKys=;
-	b=SskGHrcbqNMVAl919YFlC7a0Zs7HnfdxlAdY3WSUFdxZy1zw28w6qer3FvybI0qcHNJhM8
-	fIJQ3c1oG2k9153mZZDHv4ixPlGCdxUKsI4HIoLav/CgTwbhg/CFRHg2SfAVAuZyppEyrF
-	ILmMy7vBgaU+G97/KyXOZB03vSzXUKU=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=UE0Mu82ZO57A+buR7Qcmk9UKgElNJhuOTuZastYMajk=;
+	b=OMBbXJo41FssTGv6okDWjYnozFTWtCDaQKNYKIISwhRO7cqAKD9V+u2bR110/UoFRTIIg3
+	dB0O8zkGykFN9hOt+5E6sykKmvi3nq93fhE6wd0gR0WCZbLmpMNYrGtdSYMcsmls5c/Ai1
+	E+/9CRnYysIYMEDpnbGdHSOh5Q5W+WM=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-491-1l4K9GaVMGO1d3Se1A4h_Q-1; Wed,
- 05 Feb 2025 08:03:26 -0500
-X-MC-Unique: 1l4K9GaVMGO1d3Se1A4h_Q-1
-X-Mimecast-MFC-AGG-ID: 1l4K9GaVMGO1d3Se1A4h_Q
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-452-i2SRAXqwNIuU760jdVXhfA-1; Wed,
+ 05 Feb 2025 08:55:56 -0500
+X-MC-Unique: i2SRAXqwNIuU760jdVXhfA-1
+X-Mimecast-MFC-AGG-ID: i2SRAXqwNIuU760jdVXhfA
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5FC961801A0D;
-	Wed,  5 Feb 2025 13:03:19 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.22.80.186])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 72B8C3000197;
-	Wed,  5 Feb 2025 13:03:15 +0000 (UTC)
-Received: by fedora.redhat.com (Postfix, from userid 1000)
-	id A724B6AA37D; Wed,  5 Feb 2025 08:03:13 -0500 (EST)
-Date: Wed, 5 Feb 2025 08:03:13 -0500
-From: Vivek Goyal <vgoyal@redhat.com>
-To: Alistair Popple <apopple@nvidia.com>
-Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, linux-mm@kvack.org,
-	alison.schofield@intel.com, lina@asahilina.net,
-	zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
-	vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
-	bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca,
-	catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au,
-	npiggin@gmail.com, dave.hansen@linux.intel.com, ira.weiny@intel.com,
-	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
-	linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
-	david@fromorbit.com, chenhuacai@kernel.org, kernel@xen0n.name,
-	loongarch@lists.linux.dev, Hanna Czenczek <hreitz@redhat.com>,
-	German Maglione <gmaglione@redhat.com>
-Subject: Re: [PATCH v6 01/26] fuse: Fix dax truncate/punch_hole fault path
-Message-ID: <Z6NhkR8ZEso4F-Wx@redhat.com>
-References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
- <bfae590045c7fc37b7ccef10b9cec318012979fd.1736488799.git-series.apopple@nvidia.com>
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 79BE918004A7;
+	Wed,  5 Feb 2025 13:55:55 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.88.48])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E88413000197;
+	Wed,  5 Feb 2025 13:55:53 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH v5 00/10] iomap: incremental per-operation iter advance
+Date: Wed,  5 Feb 2025 08:58:11 -0500
+Message-ID: <20250205135821.178256-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bfae590045c7fc37b7ccef10b9cec318012979fd.1736488799.git-series.apopple@nvidia.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Fri, Jan 10, 2025 at 05:00:29PM +1100, Alistair Popple wrote:
-> FS DAX requires file systems to call into the DAX layout prior to unlinking
-> inodes to ensure there is no ongoing DMA or other remote access to the
-> direct mapped page. The fuse file system implements
-> fuse_dax_break_layouts() to do this which includes a comment indicating
-> that passing dmap_end == 0 leads to unmapping of the whole file.
-> 
-> However this is not true - passing dmap_end == 0 will not unmap anything
-> before dmap_start, and further more dax_layout_busy_page_range() will not
-> scan any of the range to see if there maybe ongoing DMA access to the
-> range. Fix this by passing -1 for dmap_end to fuse_dax_break_layouts()
-> which will invalidate the entire file range to
-> dax_layout_busy_page_range().
+Hi all,
 
-Hi Alistair,
+Here's v5 of the incremental iter advance series. The only change here
+is to fix a transient factoring bug in the split up of the
+iter_advance() rework that occurred in v4.
 
-Thanks for fixing DAX related issues for virtiofs. I am wondering how are
-you testing DAX with virtiofs. AFAIK, we don't have DAX support in Rust
-virtiofsd. C version of virtiofsd used to have out of the tree patches
-for DAX. But C version got deprecated long time ago.
+Thoughts, reviews, flames appreciated.
 
-Do you have another implementation of virtiofsd somewhere else which
-supports DAX and allows for testing DAX related changes?
+Brian
 
-Thanks
-Vivek
+v5:
+- Fixed refactoring bug in v4 by pulling 'processed' local var into
+  patch 4.
+v4: https://lore.kernel.org/linux-fsdevel/20250204133044.80551-1-bfoster@redhat.com/
+- Reordered patches 1 and 2 to keep iter advance cleanups together.
+- Split patch 3 from v3 into patches 3-6.
+v3: https://lore.kernel.org/linux-fsdevel/20250130170949.916098-1-bfoster@redhat.com/
+- Code style and comment fixups.
+- Variable type fixups and rework of iomap_iter_advance() to return
+  error/length separately.
+- Advance the iter on unshare and zero range skip cases instead of
+  returning length.
+v2: https://lore.kernel.org/linux-fsdevel/20250122133434.535192-1-bfoster@redhat.com/
+- More refactoring of iomap_iter[_advance]() logic. Lifted out iter
+  continuation and stale logic and improved comments.
+- Renamed some poorly named helpers and variables.
+- Return remaining length for current iter from _iter_advance() and use
+  appropriately.
+v1: https://lore.kernel.org/linux-fsdevel/20241213143610.1002526-1-bfoster@redhat.com/
+- Reworked and fixed a bunch of functional issues.
+RFC: https://lore.kernel.org/linux-fsdevel/20241125140623.20633-1-bfoster@redhat.com/
 
-> 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> Co-developed-by: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> Fixes: 6ae330cad6ef ("virtiofs: serialize truncate/punch_hole and dax fault path")
-> Cc: Vivek Goyal <vgoyal@redhat.com>
-> 
-> ---
-> 
-> Changes for v6:
-> 
->  - Original patch had a misplaced hunk due to a bad rebase.
->  - Reworked fix based on Dan's comments.
-> ---
->  fs/fuse/dax.c  | 1 -
->  fs/fuse/dir.c  | 2 +-
->  fs/fuse/file.c | 4 ++--
->  3 files changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
-> index 9abbc2f..455c4a1 100644
-> --- a/fs/fuse/dax.c
-> +++ b/fs/fuse/dax.c
-> @@ -681,7 +681,6 @@ static int __fuse_dax_break_layouts(struct inode *inode, bool *retry,
->  			0, 0, fuse_wait_dax_page(inode));
->  }
->  
-> -/* dmap_end == 0 leads to unmapping of whole file */
->  int fuse_dax_break_layouts(struct inode *inode, u64 dmap_start,
->  				  u64 dmap_end)
->  {
-> diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-> index 0b2f856..bc6c893 100644
-> --- a/fs/fuse/dir.c
-> +++ b/fs/fuse/dir.c
-> @@ -1936,7 +1936,7 @@ int fuse_do_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
->  	if (FUSE_IS_DAX(inode) && is_truncate) {
->  		filemap_invalidate_lock(mapping);
->  		fault_blocked = true;
-> -		err = fuse_dax_break_layouts(inode, 0, 0);
-> +		err = fuse_dax_break_layouts(inode, 0, -1);
->  		if (err) {
->  			filemap_invalidate_unlock(mapping);
->  			return err;
-> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> index 082ee37..cef7a8f 100644
-> --- a/fs/fuse/file.c
-> +++ b/fs/fuse/file.c
-> @@ -253,7 +253,7 @@ static int fuse_open(struct inode *inode, struct file *file)
->  
->  	if (dax_truncate) {
->  		filemap_invalidate_lock(inode->i_mapping);
-> -		err = fuse_dax_break_layouts(inode, 0, 0);
-> +		err = fuse_dax_break_layouts(inode, 0, -1);
->  		if (err)
->  			goto out_inode_unlock;
->  	}
-> @@ -2890,7 +2890,7 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,
->  	inode_lock(inode);
->  	if (block_faults) {
->  		filemap_invalidate_lock(inode->i_mapping);
-> -		err = fuse_dax_break_layouts(inode, 0, 0);
-> +		err = fuse_dax_break_layouts(inode, 0, -1);
->  		if (err)
->  			goto out;
->  	}
-> -- 
-> git-series 0.9.1
-> 
+Brian Foster (10):
+  iomap: factor out iomap length helper
+  iomap: split out iomap check and reset logic from iter advance
+  iomap: refactor iomap_iter() length check and tracepoint
+  iomap: lift error code check out of iomap_iter_advance()
+  iomap: lift iter termination logic from iomap_iter_advance()
+  iomap: export iomap_iter_advance() and return remaining length
+  iomap: support incremental iomap_iter advances
+  iomap: advance the iter directly on buffered writes
+  iomap: advance the iter directly on unshare range
+  iomap: advance the iter directly on zero range
+
+ fs/iomap/buffered-io.c |  67 +++++++++++++--------------
+ fs/iomap/iter.c        | 102 ++++++++++++++++++++++++++---------------
+ include/linux/iomap.h  |  27 +++++++++--
+ 3 files changed, 119 insertions(+), 77 deletions(-)
+
+-- 
+2.48.1
 
