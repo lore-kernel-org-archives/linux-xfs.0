@@ -1,99 +1,177 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6860134AC;
-	Wed,  5 Feb 2025 12:46:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54BD1519B5
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 13:03:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738759580; cv=none; b=YV0gJ44iPUQ2QqFAflXmC33ZitpdMlp9q6iieENPCMEz0U2Zq96UiiKBtVu31QwYIlXGA/8YHfzUfLYjVHvO2TTTjCKrKALVjQCj63kfqCQdFJ0fPBVyV5b7oNhYNz1YA5rMCFR7HVm+TZXhK9VGyX95JCQ7JjLEVDHo0lCwQbg=
+	t=1738760612; cv=none; b=AS2+YD5nUhya2InRbaVoVsDQltjcd7+v65h6AHZVmcHiYQxeVseMWIYZhick34dhLQE2ugn4Ne8DNUS65g5HIJI3fqTbBL18F94I3K/VIE1HGXdBQwOzUUzaRAmGFP/kmq35jkIKaVaDc9ffIbCFI4Apt6YMnJbgEjeHReklzqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738759580; c=relaxed/simple;
-	bh=NONtCIzOsZibfn4obslt99o703S+2fn0pEmYJ2C2XuQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uSHhz8Am4NqlscmOUcELC0C19FuUATSU3E8xLWKNz9gJlujqJMbzTFzBwKQxPXwARrjTGDwpU5sAS6Rzf+iqrID+8B7gnrDe9Uk08Zj8zJwm/e+j0psAU3Y1ay4i9/qYC+k3qhyKiJvst30XTKP8aVzhVywzvUaqfApwesL7RFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=huTUuWR2; arc=none smtp.client-ip=209.85.218.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1738760612; c=relaxed/simple;
+	bh=BOSJf1U+Nbg5gigVlZ2hnJt3nIMlCZrCwGGWsGl4xAg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KTXcg3exXwdYDYV36DuUYR6rhHRelAllgYWyzrkIqupBFzy3xu8efUMUj61FqxZpard5uIXwqYWyHU6Gnwh9qf3qJwfaY0jn9LpoNN/znYP6DOoXS4N4c6nC2ty8QXc3YWWz8Ts4Er9x6anmRl1H4a2XSioQoDU4EvE3fW+s/IE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SskGHrcb; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="huTUuWR2"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-ab7515df1faso301257866b.2;
-        Wed, 05 Feb 2025 04:46:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738759576; x=1739364376; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+7S5DjpvLROuAlYE9IrzCBPIi5ghuA3vjGjETG9ZuKU=;
-        b=huTUuWR2HUKS0q+eAPi7hrcsl8cu0ME1HW5YcSbCbmI1vTUlS01Ny6FIP1NcUic281
-         T3uD0yG4fqQACu7W47MIO9KZia5rj9UzFQz8LTPbST8IGtXQj5LVfJiaBuRuNMsJwb2u
-         lXDWKLmLBpBMvUrLPbCr8TUbBGwMiBmY7iJW4TxTI/l0AesPYBFOrkfG0joPHBw7wwpH
-         PnfzSv8O15R+Wvgn0VvLWXifIjhEzZAgDHqwNo29NDswal+vA+96JKo7wlrKZ7u9NZvG
-         wFbgaWi1T/KBSfHHs+NzJ7uNeXuXdWfyf2YoHS6POwPosra29u0fUZAyrj9CX/v9AMDm
-         QqnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738759576; x=1739364376;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+7S5DjpvLROuAlYE9IrzCBPIi5ghuA3vjGjETG9ZuKU=;
-        b=M6q2+Lt5bnofIjYWXMcaHWEKEpCDX615ylehcicSlWUTTnH3NIOmSZLT/yEs9YA237
-         1rePxaEp+EYshWFMpY5Y/aKaQ/109CM/eRtotzI/XapbIIGbdXlrOX8mmamHd5sxEVSl
-         e4FGT2wpsH6ysk1g09kYA7piNH+DVh0N4IsXUxiEQ9L4VHlCvWm98Vp12vaGiYnXHiCw
-         q76NivNwQcwRbpy5yjLqED94z9R8657+UV6dH2qRKEKsVT4K5f3qi7Z419gHMQfQd4UU
-         e7+8K1SK9spZymztX7s+lXesUNvtEo5O/xwTRCoTtqeoxPLLu/LfY7EddP7srR40IxU0
-         WLLw==
-X-Forwarded-Encrypted: i=1; AJvYcCV/KDtdvQcxurKBJ1Ni+qNpbZn3koaIeJ6F32GM2pwSAZSq2Nd+5Yl2XfNrUw34wBWZap67hDbfX9t1@vger.kernel.org, AJvYcCWRcgf6AHHi/CTfIMh7v+dSlMNnOMVIhFzcqF8urkvDeZoEmER2xh2gwUBT0mx8IK2mSWo+YUoE@vger.kernel.org
-X-Gm-Message-State: AOJu0YzgCR/z2ZWwAzutoCjl08sfnRLU1kiBH9T62xgN/eydSWhIKsy8
-	U7ZeWg+kzmFb/+v5X4FaEhwLBrflSu5pJCBp7WLpecxl5OsbUlNqggk72pGSW4r+Stg+vzezW0E
-	DEAejrlChC3menB11wH17u0kjI5jW/Z3l
-X-Gm-Gg: ASbGncshrlaIXS3snFATOQMsvHeNop4rO8LKcKhK8V1syP3QW9m6ueIZdmZuWDVi3In
-	BmfRCcoZjT+HK3Q0y0F/AvkaCV+LDs6yDnBYauwvqW5FyR/7+vBWqy4WYsa8VCaEVWNhGFYqe
-X-Google-Smtp-Source: AGHT+IFlrBQPzyiMqCa9XCUu9R6B1iVTQeXQwgO7Vkss7TKYigz3mjyzX+JtmaiuvQazoZy0qEL3kEO4ZWYL8M/wiSo=
-X-Received: by 2002:a17:907:971c:b0:aa6:7091:1e91 with SMTP id
- a640c23a62f3a-ab75e24bf1emr264410866b.11.1738759575517; Wed, 05 Feb 2025
- 04:46:15 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SskGHrcb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738760609;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=l83Dw368hueJll8PyntCW0Nb5bpCWlX4zt8mq3uaKys=;
+	b=SskGHrcbqNMVAl919YFlC7a0Zs7HnfdxlAdY3WSUFdxZy1zw28w6qer3FvybI0qcHNJhM8
+	fIJQ3c1oG2k9153mZZDHv4ixPlGCdxUKsI4HIoLav/CgTwbhg/CFRHg2SfAVAuZyppEyrF
+	ILmMy7vBgaU+G97/KyXOZB03vSzXUKU=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-491-1l4K9GaVMGO1d3Se1A4h_Q-1; Wed,
+ 05 Feb 2025 08:03:26 -0500
+X-MC-Unique: 1l4K9GaVMGO1d3Se1A4h_Q-1
+X-Mimecast-MFC-AGG-ID: 1l4K9GaVMGO1d3Se1A4h_Q
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5FC961801A0D;
+	Wed,  5 Feb 2025 13:03:19 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.22.80.186])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 72B8C3000197;
+	Wed,  5 Feb 2025 13:03:15 +0000 (UTC)
+Received: by fedora.redhat.com (Postfix, from userid 1000)
+	id A724B6AA37D; Wed,  5 Feb 2025 08:03:13 -0500 (EST)
+Date: Wed, 5 Feb 2025 08:03:13 -0500
+From: Vivek Goyal <vgoyal@redhat.com>
+To: Alistair Popple <apopple@nvidia.com>
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, linux-mm@kvack.org,
+	alison.schofield@intel.com, lina@asahilina.net,
+	zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
+	vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
+	bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca,
+	catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au,
+	npiggin@gmail.com, dave.hansen@linux.intel.com, ira.weiny@intel.com,
+	willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
+	linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
+	david@fromorbit.com, chenhuacai@kernel.org, kernel@xen0n.name,
+	loongarch@lists.linux.dev, Hanna Czenczek <hreitz@redhat.com>,
+	German Maglione <gmaglione@redhat.com>
+Subject: Re: [PATCH v6 01/26] fuse: Fix dax truncate/punch_hole fault path
+Message-ID: <Z6NhkR8ZEso4F-Wx@redhat.com>
+References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
+ <bfae590045c7fc37b7ccef10b9cec318012979fd.1736488799.git-series.apopple@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
-In-Reply-To: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 5 Feb 2025 13:46:04 +0100
-X-Gm-Features: AWEUYZnm8JyU7ZiVa2U-nlQwwRrJcXkaUxWIGO3Gc-6flJXl7EWbzkhstcJaDtM
-Message-ID: <CAOQ4uxhuBzcdccttNfHWPGPe-17nHWmEXgE00=THO8_gbMbHJg@mail.gmail.com>
-Subject: Re: [PATCHSET v2] fstests: random fixes for v2025.02.02
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, dchinner@redhat.com, joannelkoong@gmail.com, 
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bfae590045c7fc37b7ccef10b9cec318012979fd.1736488799.git-series.apopple@nvidia.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Tue, Feb 4, 2025 at 10:22=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> Hi all,
->
-> This is an unusually large set of bug fixes for fstests.  The first 20
-> patches in this patchset are corrections for that RFC series.
->
-> The most significant change is that I made ./check run each test with
-> its own Unix process session id.  This means that a test can use pkill
-> to kill all of its own subprocesses, without killing anyone else's
-> subprocesses.  I wasn't completely sold on that approach, but it works
-> for me.  A better approach is to run each test in a separate pid and
-> mount namespace, but then kernel support for that becomes a hard
-> requirement.  Both approaches seems to work for check and
-> check-parallel, though I've not tested that all that much.
->
-> Note: I am /not/ happy about Dave's RFC going straight to for-next
-> without even a complete review right before everyone went on PTO for
-> several weeks for xmas/solar new year.  But in the interests of getting
-> QA back on line for myself and everyone else who's having problems, here
-> it is.
+On Fri, Jan 10, 2025 at 05:00:29PM +1100, Alistair Popple wrote:
+> FS DAX requires file systems to call into the DAX layout prior to unlinking
+> inodes to ensure there is no ongoing DMA or other remote access to the
+> direct mapped page. The fuse file system implements
+> fuse_dax_break_layouts() to do this which includes a comment indicating
+> that passing dmap_end == 0 leads to unmapping of the whole file.
+> 
+> However this is not true - passing dmap_end == 0 will not unmap anything
+> before dmap_start, and further more dax_layout_busy_page_range() will not
+> scan any of the range to see if there maybe ongoing DMA access to the
+> range. Fix this by passing -1 for dmap_end to fuse_dax_break_layouts()
+> which will invalidate the entire file range to
+> dax_layout_busy_page_range().
 
-Thank you!!!
+Hi Alistair,
 
-Amir.
+Thanks for fixing DAX related issues for virtiofs. I am wondering how are
+you testing DAX with virtiofs. AFAIK, we don't have DAX support in Rust
+virtiofsd. C version of virtiofsd used to have out of the tree patches
+for DAX. But C version got deprecated long time ago.
+
+Do you have another implementation of virtiofsd somewhere else which
+supports DAX and allows for testing DAX related changes?
+
+Thanks
+Vivek
+
+> 
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> Co-developed-by: Dan Williams <dan.j.williams@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Fixes: 6ae330cad6ef ("virtiofs: serialize truncate/punch_hole and dax fault path")
+> Cc: Vivek Goyal <vgoyal@redhat.com>
+> 
+> ---
+> 
+> Changes for v6:
+> 
+>  - Original patch had a misplaced hunk due to a bad rebase.
+>  - Reworked fix based on Dan's comments.
+> ---
+>  fs/fuse/dax.c  | 1 -
+>  fs/fuse/dir.c  | 2 +-
+>  fs/fuse/file.c | 4 ++--
+>  3 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
+> index 9abbc2f..455c4a1 100644
+> --- a/fs/fuse/dax.c
+> +++ b/fs/fuse/dax.c
+> @@ -681,7 +681,6 @@ static int __fuse_dax_break_layouts(struct inode *inode, bool *retry,
+>  			0, 0, fuse_wait_dax_page(inode));
+>  }
+>  
+> -/* dmap_end == 0 leads to unmapping of whole file */
+>  int fuse_dax_break_layouts(struct inode *inode, u64 dmap_start,
+>  				  u64 dmap_end)
+>  {
+> diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+> index 0b2f856..bc6c893 100644
+> --- a/fs/fuse/dir.c
+> +++ b/fs/fuse/dir.c
+> @@ -1936,7 +1936,7 @@ int fuse_do_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+>  	if (FUSE_IS_DAX(inode) && is_truncate) {
+>  		filemap_invalidate_lock(mapping);
+>  		fault_blocked = true;
+> -		err = fuse_dax_break_layouts(inode, 0, 0);
+> +		err = fuse_dax_break_layouts(inode, 0, -1);
+>  		if (err) {
+>  			filemap_invalidate_unlock(mapping);
+>  			return err;
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index 082ee37..cef7a8f 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -253,7 +253,7 @@ static int fuse_open(struct inode *inode, struct file *file)
+>  
+>  	if (dax_truncate) {
+>  		filemap_invalidate_lock(inode->i_mapping);
+> -		err = fuse_dax_break_layouts(inode, 0, 0);
+> +		err = fuse_dax_break_layouts(inode, 0, -1);
+>  		if (err)
+>  			goto out_inode_unlock;
+>  	}
+> @@ -2890,7 +2890,7 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,
+>  	inode_lock(inode);
+>  	if (block_faults) {
+>  		filemap_invalidate_lock(inode->i_mapping);
+> -		err = fuse_dax_break_layouts(inode, 0, 0);
+> +		err = fuse_dax_break_layouts(inode, 0, -1);
+>  		if (err)
+>  			goto out;
+>  	}
+> -- 
+> git-series 0.9.1
+> 
+
