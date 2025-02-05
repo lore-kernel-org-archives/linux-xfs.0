@@ -1,75 +1,76 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED97B1DAC81
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 21:08:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B3B0214A73
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2025 21:13:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738789701; cv=none; b=tnTBOu1UZPIDWMQf0KWDRFDtDWbBFTM6P+VEZqgYLPCAmwaiAAwrzWYpdWokqWKWxtmLjTNd/bz6FTSvKmsMqUK9XkDNJOYdLAki6VODCHFl0DFRBYSHnNhkKe2A7R8E4zADPlRlOj2J8xlhWB0e9UlaN+0I1IxM9BzqUeh1T24=
+	t=1738790024; cv=none; b=m7Mx6sGaPrZi4p+ORnT8Bwx/GqfKDChh2aTUdkxXyLT/QGgxE/KjPMWpHxOf2kRLXQcmtFbJMFD4qHk0JT4bHDSxd74lKtoMB1EMyAM5pifWjwH5BQ/Cf4Br3FNZu0eisRa0MMd1XmvqOZMLnCuG2RlVwKmDyx4OifRlCc7BI+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738789701; c=relaxed/simple;
-	bh=7zMIula4ZZk2Nld/KtfeNMJzLibNye9bCucFP60U/Rs=;
+	s=arc-20240116; t=1738790024; c=relaxed/simple;
+	bh=ho8HADNRzF9kUQpnLLOZO5Qgx0/gFmGprNXyMnSU+rw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lij5/yIImIc+EE+TIwd3AjFEjul4xtUs/7byup7nrbXxli89v8VAOqaUs/RrD0CyMfL6t7+D0Zd4WRfXpZVqYq2U5j9vtVOdF7y/53W8vOuXArW8OlHleG6yDL/522WZQsZPJDjnCcRpG85zxd1W1kiTLne7wac9Z9SP5/ss+Cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=lHSEBLFw; arc=none smtp.client-ip=209.85.216.44
+	 Content-Type:Content-Disposition:In-Reply-To; b=QmKunFsAHwqVbELnqFFfEdBeY3J0WB23viLEU6HZ+ajclC4S5lTO4+U5/B0pSNYc1sC2RhdyGVGycD1tSVkB2pF17HMs2ebKFvJjuEDBkZw2O4+CfnuRea9gzoXNsml8pHp2GrWPDimBxAHXvuEDK77Me8++L9DVf8HepLQ/bH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HOGvImEA; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="lHSEBLFw"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-2ee9a780de4so197391a91.3
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Feb 2025 13:08:18 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HOGvImEA"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-216728b1836so5081315ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Feb 2025 13:13:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738789698; x=1739394498; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1738790020; x=1739394820; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=3FeaigpjY4Cq4IKCT8DoDgC3FsX/z24sdMawiy09k78=;
-        b=lHSEBLFw1B0QC51SShG2J/JqPp8esCL3QJEzJqtdgQoit4P/YLupwU9c8/Uo6351nN
-         X0E815QirdbNIT8DNY/GTM9nfxLefVyRlUlpQkFQyT6Y2+tcX3hS420mHitQaUd6jyIH
-         rSHYql560MsiXEwuRxVfHE0eucEfP3mtV3UDaJC1F2TvvNXTYu0Obz2Sums0mN33MN6r
-         hT/y2TeGEI0nZZBqZKvYYM/Qw6eYPKn8XKsfVjM9AS+WgDwvVXhyYon8XXHu3Rt3ZCb5
-         XSg0iV0yPGdBHDkSdC9+DiS88Q3Oc8q1GlJOYkCx9GYYLhfC6UsgJ7C910i9wIZ581MR
-         ufLQ==
+        bh=57335S6mpHTrZHgMlox7oo8dpO4CvdNzpGIpMwj9RE0=;
+        b=HOGvImEAijwBsMqzY0yZogwuCa1dcT5ftwywMU5H8lxh69ckBitMHmUuoCW6iskhSr
+         PEZ8YObgotUfTeDAkB3Fxtw0A6yQ8tjYYtJ2ieZJi0WyQwyNtVFzDmsvW7hyY3ab5MhK
+         G6svkcjIIF2rIZ7Vd96/5a9voW0X1VsatA8iJBdI5HKIlDQa+u58BRkq4eUCKkvlxduf
+         Cy8o9QdLLBOS4g/L21NutVSZjzsX63C4HDmZ9LforgyKUA+LzSqTdsYe52vsdtJhs6+g
+         m1S8JIIZzRahTRNJXAfw0aekimkwFFZtNM3wbZJr6Bw77xyPnOesjVJzyG2w1zHqha3t
+         dWOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738789698; x=1739394498;
+        d=1e100.net; s=20230601; t=1738790020; x=1739394820;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3FeaigpjY4Cq4IKCT8DoDgC3FsX/z24sdMawiy09k78=;
-        b=d4UUrqPsGeQMA2fYu6JYXRHc1Oo3KlW1V7vbjobKV+i4NsAyEKqpwWrJDmUzquy2BQ
-         1WP1fQGg92Nf6mWVmpxbbQFBZ5hBDoTIMtwRfj5TCrdIiCMhDI3oh9UFyN3hxzRSwQeo
-         yEXYyn9c20Jc9TO0eg6+AUu87/Y5dVd9a0Epz1mFFkZAZw/PGBkqcakcL9Hk9YTs9RCv
-         zdewDpQ4drCUFugOOxd6ziPbflfiij50sGnhHRY+TIia6cYWeuzJoL9dfE10KhLkXrZB
-         aIjAEiiaeiJiDD/xCaEwW7D91R4EJJVyPDnjD5RCMW9t7DfjzXEvAmQPBiv0iKRnuRDD
-         4jGQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX88hEWr3MeoV/XC2qlNU/IQIW1UWs6Vcn3IjV7AfTBEY6fzXetg0hajS+KmTtw9yW4pfc+8dHdkmo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwZDdDKHeof9TDt30kaQu5NHEDv8p9Z10mlCeXpKgOE8Arf6Gt4
-	h4VaBHjPYzW//I1Tl5S+WTkzjotDipqxnCfHNkmE5XOWqjKXgqVWMtDUTtv+vZmvePFBTpZD8ci
-	P
-X-Gm-Gg: ASbGncsNmOVZhqUh5ysyJDdp/8digHrDSHu/AhmjbFqPLRkffS21INuisceWqp07IoL
-	Fr3kcvERGBUDbszFWddBNtgPi3x4kWhXDNiEpVqqWQBlXF4jQTuUycAKU/u9i71VUNsQlUdACeR
-	LsOhgTZMjwHc43ag4B3vLuYIggsW2Q8zjPrDpfHDU62Sj99L8ZcAOAMjl+IVCuTbpAutFqCXlJi
-	ISuLeKWHS0JkbUnWIIr+rtZv3PrpJsLkvdZHttfs8LVwPHRWxvt0kvbC527MxULvdCaH09zfPnP
-	CCjbhJIFp10RXuqAAspdMsJ2c0OuFPXOESgCjfIzC56QrtJ/QmI8TUj/uNXIgssitig=
-X-Google-Smtp-Source: AGHT+IHAoPu2e0YEEqRf2PZaYqDcd7uJ34Mu9ma2YgSKpOeUG3xCouHEhUwmU8X5tsEP8MBIgvSuow==
-X-Received: by 2002:a05:6a00:3991:b0:728:e2cc:bfd6 with SMTP id d2e1a72fcca58-730351dd5d3mr6730846b3a.18.1738789697651;
-        Wed, 05 Feb 2025 13:08:17 -0800 (PST)
+        bh=57335S6mpHTrZHgMlox7oo8dpO4CvdNzpGIpMwj9RE0=;
+        b=EzZFVRvHNqpg7aL2B/G0jfv5/vUB3VA4JQUK0cACOdCydFyrYMTLLU65GRwnOnOqzM
+         4B7GtiQh2wB2xzEXDS6P+jfe0pgoyIf8dmYSSj2AcWEd5hhO5VD/ERFW6jcW42iJnJb8
+         J0vhsGHDQtxb9rTAX8SaV/bfJ1nbyRTLcpkNbig2tV8V8jHyCI9NkJ4rRPkGxEHmv1fm
+         2AqzFKz9SfyVxeC97mJhHRjrEDqBDyZKU2kGBoKJYEF63pkDFCU8ZdYosJJYENAWEq1x
+         6IQezz5V2VkE/o33huWck5PVKFEDA4MuLEWNf8eJFyfF13hii9G2AF6d0Wiz2IUBJR+r
+         anQg==
+X-Forwarded-Encrypted: i=1; AJvYcCWn5XUHCZlGWT7WwJFEpF93B2NuAnctaSCZFuLY3FIb2hUio4qpMxgg/EkGFTPtHoodQNyib2sgO1Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJlZqj7fzvxovvnzjaTLAisd7LRGOhQ9/LNKPH3307phsg8/3o
+	2WzJbTtVpWqmf87Ost8GMsWTZLexwt7IsHjeld/H1Er5XkPWleXlmP1awU97LaentesnNzrvknb
+	v
+X-Gm-Gg: ASbGncuxiZbWZzqeQONysCUcjiDL/qYcp5Bw1RvwMEch1V8IhALUZ7WFznXwQVzaE+m
+	ALAxFYhJZyKj8GfA2WqtIcXQV6KvTkLdsfncrrcf0SQejaplPIxSMMXaeV4wuIRt6r8Bc9l9gVh
+	/KbqlxPVTlosZ3PcszC94iKaW0xRNchgQbNRaWb9mNQG7/pVGR3E0oyW8elAbAywdyee3Q6qOxd
+	/F4OCZ+1UjR2L82iO+rdz4L9xCqb+fm8gPuvYQvzaNEdS0jnz2UL/lCuIQssL19ICDHCE8iILBW
+	fpKQafFqgsMh0g4nPT8URq2nGaRmeA/F/YV4xvsAvOI8UzyZQh5s5NyC
+X-Google-Smtp-Source: AGHT+IF2BsThX+mdEviygmn+ZP39V0wH6HsDdie/ol0M/7CJS8zgFcPiDfpf5OwpuP5tH1o0RlSHVQ==
+X-Received: by 2002:a17:902:d4c7:b0:216:779a:d5f3 with SMTP id d9443c01a7336-21f17e45b8amr65935985ad.14.1738790020624;
+        Wed, 05 Feb 2025 13:13:40 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe631bfa5sm12901050b3a.9.2025.02.05.13.08.17
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2f9e1e40ab8sm2059259a91.42.2025.02.05.13.13.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Feb 2025 13:08:17 -0800 (PST)
+        Wed, 05 Feb 2025 13:13:40 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1tfmd4-0000000F5nz-2700;
-	Thu, 06 Feb 2025 08:08:14 +1100
-Date: Thu, 6 Feb 2025 08:08:14 +1100
+	id 1tfmiG-0000000F5rF-2SVA;
+	Thu, 06 Feb 2025 08:13:36 +1100
+Date: Thu, 6 Feb 2025 08:13:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	Zorro Lang <zlang@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: flush inodegc before swapon
-Message-ID: <Z6PTPoYfyn-1-hHr@dread.disaster.area>
-References: <20250205162813.2249154-1-hch@lst.de>
- <20250205162813.2249154-2-hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 15/34] check: run tests in a private pid/mount namespace
+Message-ID: <Z6PUgAIQ6qYM3Zgt@dread.disaster.area>
+References: <173870406063.546134.14070590745847431026.stgit@frogsfrogsfrogs>
+ <173870406337.546134.5825194290554919668.stgit@frogsfrogsfrogs>
+ <Z6KyrG6jatCgmUiD@dread.disaster.area>
+ <20250205180048.GH21799@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,74 +79,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250205162813.2249154-2-hch@lst.de>
+In-Reply-To: <20250205180048.GH21799@frogsfrogsfrogs>
 
-On Wed, Feb 05, 2025 at 05:28:00PM +0100, Christoph Hellwig wrote:
-> Fix the brand new xfstest that tries to swapon on a recently unshared
-> file and use the chance to document the other bit of magic in this
-> function.
-
-You haven't documented the magic at all - I have no clue what the
-bug being fixed is nor how adding an inodegc flush fixes anything
-to do with swap file activation....
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c | 18 +++++++++++++++++-
->  1 file changed, 17 insertions(+), 1 deletion(-)
+On Wed, Feb 05, 2025 at 10:00:48AM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 05, 2025 at 11:37:00AM +1100, Dave Chinner wrote:
+> > On Tue, Feb 04, 2025 at 01:26:13PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > As mentioned in the previous patch, trying to isolate processes from
+> > > separate test instances through the use of distinct Unix process
+> > > sessions is annoying due to the many complications with signal handling.
+> > > 
+> > > Instead, we could just use nsexec to run the test program with a private
+> > > pid namespace so that each test instance can only see its own processes;
+> > > and private mount namespace so that tests writing to /tmp cannot clobber
+> > > other tests or the stuff running on the main system.
+> > > 
+> > > However, it's not guaranteed that a particular kernel has pid and mount
+> > > namespaces enabled.  Mount (2.4.19) and pid (2.6.24) namespaces have
+> > > been around for a long time, but there's no hard requirement for the
+> > > latter to be enabled in the kernel.  Therefore, this bugfix slips
+> > > namespace support in alongside the session id thing.
+> > > 
+> > > Declaring CONFIG_PID_NS=n a deprecated configuration and removing
+> > > support should be a separate conversation, not something that I have to
+> > > do in a bug fix to get mainline QA back up.
+> > > 
+> > > Cc: <fstests@vger.kernel.org> # v2024.12.08
+> > > Fixes: 8973af00ec212f ("fstests: cleanup fsstress process management")
+> > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > > ---
+> > >  check               |   34 +++++++++++++++++++++++-----------
+> > >  common/rc           |   12 ++++++++++--
+> > >  src/nsexec.c        |   18 +++++++++++++++---
+> > >  tests/generic/504   |   15 +++++++++++++--
+> > >  tools/run_seq_pidns |   28 ++++++++++++++++++++++++++++
+> > >  5 files changed, 89 insertions(+), 18 deletions(-)
+> > >  create mode 100755 tools/run_seq_pidns
+> > 
+> > Same question as for session ids - is this all really necessary (or
+> > desired) if check-parallel executes check in it's own private PID
+> > namespace?
+> > 
+> > If so, then the code is fine apart from the same nit about
+> > tools/run_seq_pidns - call it run_pidns because this helper will
+> > also be used by check-parallel to run check in it's own private
+> > mount and PID namespaces...
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 69b8c2d1937d..c792297aa0a3 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -21,6 +21,7 @@
->  #include "xfs_error.h"
->  #include "xfs_zone_alloc.h"
->  #include "xfs_rtgroup.h"
-> +#include "xfs_icache.h"
->  
->  struct xfs_writepage_ctx {
->  	struct iomap_writepage_ctx ctx;
-> @@ -685,7 +686,22 @@ xfs_iomap_swapfile_activate(
->  	struct file			*swap_file,
->  	sector_t			*span)
->  {
-> -	sis->bdev = xfs_inode_buftarg(XFS_I(file_inode(swap_file)))->bt_bdev;
-> +	struct xfs_inode		*ip = XFS_I(file_inode(swap_file));
-> +
-> +	/*
-> +	 * Ensure inode GC has finished to remove unmapped extents, as the
-> +	 * reflink bit is only cleared once all previously shared extents
-> +	 * are unmapped.  Otherwise swapon could incorrectly fail on a
-> +	 * very recently unshare file.
-> +	 */
-> +	xfs_inodegc_flush(ip->i_mount);
+> I prefer to name it tools/run_privatens since it creates more than just
+> a pid namespace.
 
-The comment doesn't explains what this actually fixes. Inodes that
-are processed by inodegc *must* be unreferenced by the VFS, so it
-is not clear exactly what this is actually doing.
+I'm fine with that. It was only the "seq" part of the name that
+triggered me.
 
-I'm guessing that the test in question is doing something like this:
+> At some point we might even decide to privatize more
+> namespaces (e.g. do we want a private network namespace for nfs?) and I
+> don't want this to become lsfmmbpfbbq'd, as it were.
 
-	file2 = clone(file1)
-	unlink(file1)
-	swapon(file2)
-
-and so the swap file activation is racing with the background
-inactivation and extent removal of file1?
-
-But in that case, the extents are being removed from file1, and at
-no time does that remove the reflink bit on file2. i.e. even if the
-inactivation of file1 results in all the extents in file2 no longer
-being shared, that only results in refcountbt updates and it does
-not get propagated back to file2's inode. i.e. file2 will still be
-marked as a reflink file containing shared extents.
-
-So I'm kinda clueless as to what this change is actually
-doing/fixing because the comments and commit message do not describe
-the bug that is being fixed, nor how the change fixes that bug.
+*nod*
 
 -Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
