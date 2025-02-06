@@ -1,36 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56534239572
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 17:29:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AFDB4C8E;
+	Thu,  6 Feb 2025 17:30:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738862998; cv=none; b=ZUt9APA465u9zUW2573DbZh5knnXOrciwuHTRXzb3Rj5dMBtZC4cIobO8bEPo8Kd7szzmdtPM9DY73CmQPDkVXuPrTM57tCscRaz7LtfYOaxbnoIQ2sUV0NBNI0wIF56lgd/zyjQERNS82OpYuzM2MYhC51OLFX591/c6NLqLKg=
+	t=1738863040; cv=none; b=Gydf51VjfGaBHxUBmzhjht6o7ZTMsZmvDXBcp+4lp6YYSg6BiNCb3PVOhW044E//o7EiAAfcq6sNCaT0eBK2j/yQLOEZ8719JpqByMbebsRlwZ7010eGmZN5UB3o8iF+S8sMJ7PuSOfNIAQr1gtQ9WD8hols3ZYg2M6suOAwPWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738862998; c=relaxed/simple;
-	bh=MIDtZR1y3PjzaKr8zcfl8tq8955XS77PLHuHA9Uwmrw=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=mV5yhmJ+vtye7/7XSO9qRRfgF/3Q/WwtJ7/xNexZSp4hnohWTCWlHlTnP0c/QyctxVc8g8yQp1PXeZWdecuhyq9ALldnsc8GuJ7dDvd0gK8MMpfL1+DoC22MwFHeX75QEY2pmDj6r+MhOrpFGSdWWSY2zv1x0XhEbdkGKPHJccc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PMtI4xHN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738863040; c=relaxed/simple;
+	bh=fMnGPXellcATsoTgTEpcZXWkCawqhY4ZsZLOxIxgcjY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kLSDczLtPYkGYWhpJSO9s9cAM6SatLL1C5pZ4uL+/w5sEbUONDRoQH3qrimYk3wXzjZs+rPhKHBf9oBFX2si6GuTydOAdyyEqNNuuQodnS8u39hFAZfTqKnAXS7fwwGjQ+mVaijP6RzlschTU3D4y3US73fNU3/x100/c7gGGT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R2VgB/Zh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PMtI4xHN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DCECC4CEDD
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 17:29:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R2VgB/Zh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19022C4CEDD;
+	Thu,  6 Feb 2025 17:30:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738862997;
-	bh=MIDtZR1y3PjzaKr8zcfl8tq8955XS77PLHuHA9Uwmrw=;
-	h=Date:From:To:Subject:From;
-	b=PMtI4xHNMUbedrPPj15cDT0GFffjceh91hvO7w+ISqtZ1snsH1/osAgnZlhs/+LA6
-	 TKrFOpHqENKHfP5IbHihfCzRSQfBNlgL8sGfwKKkonCclobstr20WGf6kymBM60UXv
-	 hDWfiUxYSTlmr/PiapYYna0bTqr9Ht3uNmYg21LBAqhm8jNrIfsgEN+H4+Z586ppHV
-	 oARh41prKHVgvKGZPsIQkOQSvaVEJVWj9Mu7o1+aloUmKaw/N4fTrb3xeObf/vIYc4
-	 aw3Qh6Y6yTAIrPyNayv9YBvP2T9L0YowgOuKxEArCbacD4rD3U8HEuf1UZlyM92NrK
-	 K1zSqMZQUGDSg==
-Date: Thu, 6 Feb 2025 18:29:54 +0100
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfsprogs: for-next updated to eff7226942a5
-Message-ID: <idd4ndguasosi677snbxkytfbnuqm2qw4nbbhzl6w3kagwv4ki@bgn4i3yxiukr>
+	s=k20201202; t=1738863039;
+	bh=fMnGPXellcATsoTgTEpcZXWkCawqhY4ZsZLOxIxgcjY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=R2VgB/ZhyftJcPwSE47rRZLndJn/gjdZBfdSAa/NV79MAmkUE+QB3pwlCQrh90ibR
+	 DWiSGHzMdTZyIe7U46vwDWayl2XxUYiUEBQKd5smb6M+wLnRrYxzDvBKrAP9pkta63
+	 umbqy5w2cHEooBsTl6qnWJTNe0F22m32N5DOPySu/bqwnPNFosq58UG4ThkKShAoQe
+	 +3i4hdZOo53rOhiKCfRtEsyNmZsR36qJugxZx6LuJihnY7XmtfwKnJPsAZJbvrZndH
+	 FK1zl3gx0c+rIzXCVF4X8a9/DoQoE2gWU3b89n5R0R91uWOKo+lrMjgrrLniFLQZ9p
+	 SU8prm5jrnNSg==
+Date: Thu, 6 Feb 2025 09:30:37 -0800
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Matthew Wilcox <willy@infradead.org>, dave@stgolabs.net,
+	david@fromorbit.com, djwong@kernel.org, kbusch@kernel.org,
+	john.g.garry@oracle.com, hch@lst.de, ritesh.list@gmail.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, p.raghav@samsung.com, da.gomez@samsung.com,
+	kernel@pankajraghav.com
+Subject: Re: [PATCH v2 1/8] fs/buffer: simplify block_read_full_folio() with
+ bh_offset()
+Message-ID: <Z6Txvdewl2m8NRRo@bombadil.infradead.org>
+References: <20250204231209.429356-1-mcgrof@kernel.org>
+ <20250204231209.429356-2-mcgrof@kernel.org>
+ <1b211dd3-a45d-4a2e-aa2a-e0d3e302d4ca@suse.de>
+ <Z6PgGccx6Uz-Jum6@casper.infradead.org>
+ <13223185-5c5e-4c52-b7ab-00155b5ebd86@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,34 +52,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <13223185-5c5e-4c52-b7ab-00155b5ebd86@suse.de>
 
-Hello.
+On Thu, Feb 06, 2025 at 08:17:32AM +0100, Hannes Reinecke wrote:
+> On 2/5/25 23:03, Matthew Wilcox wrote:
+> > On Wed, Feb 05, 2025 at 05:18:20PM +0100, Hannes Reinecke wrote:
+> > > One wonders: shouldn't we use plugging here to make I/O more efficient?
+> > 
+> > Should we plug at a higher level?
+> > 
+> > Opposite question: What if getblk() needs to do a read (ie ext2 indirect
+> > block)?
+> 
+> Ah, that. Yes, plugging on higher level would be a good idea.
+> (And can we check for nested plugs? _Should_ we check for nested plugs?)
 
-The xfsprogs for-next branch, located at:
+I think given the discussion less is more for now, and if we really want
+this we can add it later. Thoughts?
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
-
-Has just been updated.
-
-Patches often get missed, so if your outstanding patches are properly reviewed on
-the list and not included in this update, please let me know.
-
-The new head of the for-next branch is commit:
-
-eff7226942a59fc78e8ecd7577657c30ed0cf9a8
-
-3 new commits:
-
-Darrick J. Wong (3):
-      [a62ea4ad9cac] mkfs: fix file size setting when interpreting a protofile
-      [a9d781ec5505] xfs_protofile: fix mode formatting error
-      [eff7226942a5] xfs_protofile: fix device number encoding
-
-Code Diffstat:
-
- mkfs/proto.c          | 5 +----
- mkfs/xfs_protofile.in | 4 ++--
- 2 files changed, 3 insertions(+), 6 deletions(-)
-
--- 
-- Andrey
+  Luis
