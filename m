@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39BF72417CA
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:58:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1B92417CA
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:59:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882732; cv=none; b=szQEXJYOzoBpq6klCTLDUnnooFLStZ4KC/4jJ6n/oMs2KN6uRw7VMv9dIN53zdonvEe5Y6W03DeNtifs5rRWyI2wTfMVVj7wZ1GeGe4lieVHI38lQg8ta0yApjZwfzMiUArYyCPXz4nkk9a19jvt+3MqvUoCJ0gI3gNE7KVVzF4=
+	t=1738882747; cv=none; b=ChbMNqe7LeJ4rhhGzTnN/CqbhDR/TspaGMMBUh9reO5kY+cEf5aq6PKKsWX28vU+11hMWtZCN5NFF+JQ6clIq7bbDDlsLdTd2ZT7HTRsYkDEc1RthpuyQLQT8YDjKq9VIJoSKd7mrMGmfKC8bapnszlKiAbAm1K4D02r7TDrpqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882732; c=relaxed/simple;
-	bh=qoy2NNl35N1xqgpuYFJXMBIkZv6ESGy/uF0yWBljZg4=;
+	s=arc-20240116; t=1738882747; c=relaxed/simple;
+	bh=f6RldL/JDT0hNZNrxFZq+1iMC7iRtjXMKx3HL07lYxg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r2F/0EHJlkX/CrXPu4hnGIkxxnqnbaOUt8Tk8aMI6Xa1+AxfpD1e04mqx3MxK40cUC+0vF8lVzc4WBlAKl6t0FJRNpFqXnipSTsMVVnmny7vs18bSBeCOx92teKi9Q9QXzpblp0/JJdSezdN5COM6GbcEARW77j5ERID0kyt/d4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MZ78ZYNL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=fGyx7w6Be99Hk/H6mR1Cala2uBQ6qDspjPEZJe9hy+C2oEUlgkwQni439T9F7aAXCYsBx4dIXMVSJAFy/FJXLZZvlBqwfX7xhk9V8YJFCys8OgiIK2gxkyOps+kPdyvbzQtsPAxIDQUR+au4/7bjNM5Zkp1JGYf4R/22jLA0Jvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HR+RWwud; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MZ78ZYNL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A25B1C4CEDD;
-	Thu,  6 Feb 2025 22:58:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HR+RWwud"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BB2DC4CEDD;
+	Thu,  6 Feb 2025 22:59:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882731;
-	bh=qoy2NNl35N1xqgpuYFJXMBIkZv6ESGy/uF0yWBljZg4=;
+	s=k20201202; t=1738882747;
+	bh=f6RldL/JDT0hNZNrxFZq+1iMC7iRtjXMKx3HL07lYxg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MZ78ZYNLU1tIorGFNEathUtRcz6SJYLL9rHXxe71IygICTqmsRrA2cI3srtznZ1kX
-	 fTISrDyg6sBVGYMYi/owj69vqIJAOvGDrPPU0ZIq6E3u2PMB6zfrF3C2foUcKvtcNF
-	 6CZ3Dwl/cikC05LM66jaUQvRrjSFaxU4HBJNH+nTOg1b8Aw1wJgih5obfcJkkn586+
-	 UmchhEhURqgcLf/tMWLEV7fIAfMGtju3zlU4YMFFuEI+K4Rclp3b/uFLFKmEIB+qws
-	 Rjo7nQlPaxpf3JPFWKIL9iQKE5bzRoNJ0f3R657S7wauovAFRgyC5PLItMXrvLN4ge
-	 Pf7rhdii72dHQ==
-Date: Thu, 06 Feb 2025 14:58:51 -0800
-Subject: [PATCH 08/22] xfs_db: copy the realtime refcount btree
+	b=HR+RWwudODRZIDAtS4X/NC3j0w9Tr10anainT6KDo45pthikH9D/VPFasGV/JZ5aU
+	 HIWyatiUrgJo6cxfke9D3Mtnrk0F+mkE8lxcaJfXMbruBpHKX2iz8oMSRsKkj1vFPi
+	 t+rkfMUsu8NwBvz+3b2qtyQkwAiiduhqCbSv1ElkodBwj6htudSyZqXICfmVUFWdmU
+	 hE/oviN9gIi7qVXvsszyB4ej12Ato6r0QtRsz4anNIZsBykWFn14mKydbEh1gwclTK
+	 k2kgFrmvGnCK9HJZSEGYHITqoqaTQS5ZOo0RMWzimUeFGLzXF9BeIitXxehHoPknNb
+	 RZ6PqyBFgwoXg==
+Date: Thu, 06 Feb 2025 14:59:06 -0800
+Subject: [PATCH 09/22] xfs_db: add rtrefcount reservations to the rgresv
+ command
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888089055.2741962.11135146687529271423.stgit@frogsfrogsfrogs>
+Message-ID: <173888089070.2741962.16480973892880802520.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 References: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,151 +46,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Copy the realtime refcountbt when we're metadumping the filesystem.
+Report rt refcount btree reservations in the rgresv subcommand output.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- db/metadump.c |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 114 insertions(+)
+ db/info.c                |   13 +++++++++++++
+ libxfs/libxfs_api_defs.h |    1 +
+ 2 files changed, 14 insertions(+)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index aa946746cdfa68..3e00e6de817752 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -710,6 +710,55 @@ copy_refcount_btree(
- 	return scan_btree(agno, root, levels, TYP_REFCBT, agf, scanfunc_refcntbt);
- }
+diff --git a/db/info.c b/db/info.c
+index ce6f358420a79d..6ad3e23832faa3 100644
+--- a/db/info.c
++++ b/db/info.c
+@@ -202,6 +202,19 @@ print_rgresv_info(
  
-+static int
-+scanfunc_rtrefcbt(
-+	struct xfs_btree_block	*block,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno,
-+	int			level,
-+	typnm_t			btype,
-+	void			*arg)
-+{
-+	xfs_rtrefcount_ptr_t	*pp;
-+	int			i;
-+	int			numrecs;
-+
-+	if (level == 0)
-+		return 1;
-+
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+	if (numrecs > mp->m_rtrefc_mxr[1]) {
-+		if (metadump.show_warnings)
-+			print_warning("invalid numrecs (%u) in %s block %u/%u",
-+				numrecs, typtab[btype].name, agno, agbno);
-+		return 1;
-+	}
-+
-+	pp = xfs_rtrefcount_ptr_addr(block, 1, mp->m_rtrefc_mxr[1]);
-+	for (i = 0; i < numrecs; i++) {
-+		xfs_agnumber_t	pagno;
-+		xfs_agblock_t	pbno;
-+
-+		pagno = XFS_FSB_TO_AGNO(mp, get_unaligned_be64(&pp[i]));
-+		pbno = XFS_FSB_TO_AGBNO(mp, get_unaligned_be64(&pp[i]));
-+
-+		if (pbno == 0 || pbno > mp->m_sb.sb_agblocks ||
-+		    pagno > mp->m_sb.sb_agcount) {
-+			if (metadump.show_warnings)
-+				print_warning("invalid block number (%u/%u) "
-+						"in inode %llu %s block %u/%u",
-+						pagno, pbno,
-+						(unsigned long long)metadump.cur_ino,
-+						typtab[btype].name, agno, agbno);
-+			continue;
-+		}
-+		if (!scan_btree(pagno, pbno, level, btype, arg,
-+				scanfunc_rtrefcbt))
-+			return 0;
-+	}
-+	return 1;
-+}
-+
- /* filename and extended attribute obfuscation routines */
+ 	ask += libxfs_rtrmapbt_calc_reserves(mp);
  
- struct name_ent {
-@@ -2437,6 +2486,69 @@ process_rtrmap(
- 	return 1;
- }
++	/* rtrefcount */
++	error = -libxfs_rtginode_load(rtg, XFS_RTGI_REFCOUNT, tp);
++	if (error) {
++		dbprintf(_("Cannot load rtgroup %u refcount inode, error %d\n"),
++			rtg_rgno(rtg), error);
++		goto out_rele_dp;
++	}
++	if (rtg_refcount(rtg))
++		used += rtg_refcount(rtg)->i_nblocks;
++	libxfs_rtginode_irele(&rtg->rtg_inodes[XFS_RTGI_REFCOUNT]);
++
++	ask += libxfs_rtrefcountbt_calc_reserves(mp);
++
+ 	printf(_("rtg %d: dblocks: %llu fdblocks: %llu reserved: %llu used: %llu"),
+ 			rtg_rgno(rtg),
+ 			(unsigned long long)mp->m_sb.sb_dblocks,
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 87a598f346f86a..7ce10c408de1a0 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -320,6 +320,7 @@
+ #define xfs_rtgroup_get			libxfs_rtgroup_get
+ #define xfs_rtgroup_put			libxfs_rtgroup_put
  
-+static int
-+process_rtrefc(
-+	struct xfs_dinode	*dip)
-+{
-+	int			whichfork = XFS_DATA_FORK;
-+	struct xfs_rtrefcount_root *dib =
-+		(struct xfs_rtrefcount_root *)XFS_DFORK_PTR(dip, whichfork);
-+	int			level = be16_to_cpu(dib->bb_level);
-+	int			nrecs = be16_to_cpu(dib->bb_numrecs);
-+	typnm_t			btype = TYP_RTREFCBT;
-+	int			maxrecs;
-+	xfs_rtrefcount_ptr_t	*pp;
-+	int			i;
-+
-+	if (level > mp->m_rtrefc_maxlevels) {
-+		if (metadump.show_warnings)
-+			print_warning("invalid level (%u) in inode %lld %s "
-+					"root", level,
-+					(unsigned long long)metadump.cur_ino,
-+					typtab[btype].name);
-+		return 1;
-+	}
-+
-+	if (level == 0)
-+		return 1;
-+
-+	maxrecs = libxfs_rtrefcountbt_droot_maxrecs(
-+			XFS_DFORK_SIZE(dip, mp, whichfork),
-+			false);
-+	if (nrecs > maxrecs) {
-+		if (metadump.show_warnings)
-+			print_warning("invalid numrecs (%u) in inode %lld %s "
-+					"root", nrecs,
-+					(unsigned long long)metadump.cur_ino,
-+					typtab[btype].name);
-+		return 1;
-+	}
-+
-+	pp = xfs_rtrefcount_droot_ptr_addr(dib, 1, maxrecs);
-+	for (i = 0; i < nrecs; i++) {
-+		xfs_agnumber_t	ag;
-+		xfs_agblock_t	bno;
-+
-+		ag = XFS_FSB_TO_AGNO(mp, get_unaligned_be64(&pp[i]));
-+		bno = XFS_FSB_TO_AGBNO(mp, get_unaligned_be64(&pp[i]));
-+
-+		if (bno == 0 || bno > mp->m_sb.sb_agblocks ||
-+				ag > mp->m_sb.sb_agcount) {
-+			if (metadump.show_warnings)
-+				print_warning("invalid block number (%u/%u) "
-+						"in inode %llu %s root", ag,
-+						bno,
-+						(unsigned long long)metadump.cur_ino,
-+						typtab[btype].name);
-+			continue;
-+		}
-+
-+		if (!scan_btree(ag, bno, level, btype, NULL, scanfunc_rtrefcbt))
-+			return 0;
-+	}
-+	return 1;
-+}
-+
- static int
- process_inode_data(
- 	struct xfs_dinode	*dip)
-@@ -2483,6 +2595,8 @@ process_inode_data(
- 		switch (be16_to_cpu(dip->di_metatype)) {
- 		case XFS_METAFILE_RTRMAP:
- 			return process_rtrmap(dip);
-+		case XFS_METAFILE_RTREFCOUNT:
-+			return process_rtrefc(dip);
- 		default:
- 			return 1;
- 		}
++#define xfs_rtrefcountbt_calc_reserves	libxfs_rtrefcountbt_calc_reserves
+ #define xfs_rtrefcountbt_droot_maxrecs	libxfs_rtrefcountbt_droot_maxrecs
+ #define xfs_rtrefcountbt_maxlevels_ondisk	libxfs_rtrefcountbt_maxlevels_ondisk
+ #define xfs_rtrefcountbt_maxrecs	libxfs_rtrefcountbt_maxrecs
 
