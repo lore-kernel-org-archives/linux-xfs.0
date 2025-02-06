@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61EA41CEAD6
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:37:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DF1023C380
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:37:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738881432; cv=none; b=foA6qhN17zYwur4hcjhMCE1K0SzQK5zLMFWlJoO9HyL8EeFx3MJ1uhZVgsKu7BjJTi3G8IYEIc7Kj/EpKhXpbIAkN3CxzdIWB1awH67arP6n8ToXreMCY9vUq0LlfcWzguaHSkVtp+pLEhtRd+9kfbSWyYqCTKz042xPFyklLtM=
+	t=1738881448; cv=none; b=C+PSBHRQjBKbO23iDlsOFkPLz/w79XbAuqdGRiOid+4knoY4mLaxGcfgHEIjS6liWwlvInV+cJCz4pQfGIajOuw6c/8w6XDq2u/YRo5x0Qlev37Yu95ynVwqkI3i+ju/2DQLB5lCidMJoDE755Pmb2ZGTmN6+9fhZwNx8Lrt8O8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738881432; c=relaxed/simple;
-	bh=LLCiPFRGht8BHKqENXW3TpY3LW54bG+ni0PsbECy3SY=;
+	s=arc-20240116; t=1738881448; c=relaxed/simple;
+	bh=NL4DkrPh9tZxYmFq7mytVcWwgJdk23SbfsPmKmDtQoM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s1CZaDMMEw/+1ijQFSBaYo3H76azgG8UZKe4QVpdWICUAu5rUeYUbzgYsIj/b+73aCPUjwNa9N2CBvXdNDkAqtSH4Y+BtiRS9S2VmElY3cfy8KJTc/kEZED7idfDFSBYrBr2rvANVUSJ4UJurih+zIApedB2STc2i99ZcK1Wb/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KySIyD0b; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mKVHNimdPkwJNU5onZP2yg7dTctil3rwDN08rjDh37jU3vUJzcw4JgkQghydo7xxbu76ofVm3HA1+KaXO71VYHHlzlN56wHPDWeUvGslPfnAkGw1siBzrPONnr7JuJx1oBl9CeGRO8GksRNLX+Y/31+hkAmCdkcY/g4XVPwG42M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ECIVxGpH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KySIyD0b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37AE7C4CEDD;
-	Thu,  6 Feb 2025 22:37:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ECIVxGpH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D38EDC4CEDD;
+	Thu,  6 Feb 2025 22:37:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738881432;
-	bh=LLCiPFRGht8BHKqENXW3TpY3LW54bG+ni0PsbECy3SY=;
+	s=k20201202; t=1738881447;
+	bh=NL4DkrPh9tZxYmFq7mytVcWwgJdk23SbfsPmKmDtQoM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=KySIyD0b/KAuA2OIX6gVonFRyg2NLfIQPiFm0WWtl+toH1D2IPfBbrNGc3lcTwhZR
-	 CwNvMxbhKP/Whd4STbkJtuHg5pXnOkWbaNOYMSisT1ftm7+oCVljXzxI9+aCB3j8b5
-	 9HJQvkGHPU0IhkPxLqcwlv78bCb9GF4FHIobkdebq3RHv0x21o7wSRfiuyaQhppseX
-	 sbTYoeHxqOckH8MOGAuVOA72QwDBhekk6lK+BoTzyEu1iVjkqaIOhgwnsLUBf3kEvr
-	 SJFLTel/SAiyshahhQrbcFX1UJlLCCn3R1rlXve+yxPcXrHGhcakqrNNz09a9hML7P
-	 ZR605DVbwWSfw==
-Date: Thu, 06 Feb 2025 14:37:11 -0800
-Subject: [PATCH 08/56] xfs: add some rtgroup inode helpers
+	b=ECIVxGpHJi35A0ZokLAXJV/pYB7qekvbkp8VhVmJrIhmd9npE3UCS3xVxwcgxbu0s
+	 M3yDtaUURGkHK2yt7jOAtOXUCMsbDy43iq12zRC3ioHnc8Z7t3LTnaTeBtt5DxfwbJ
+	 YdBjpJTug+Cq+2WI/t3McI7Ruqt/5v6fs+i0sqVEWihdbZDvNJuuViVC3shAg645gv
+	 gvpZhqqG5t5r91WjmztafSYbPooEJOCBobf2eJFTLzdWml04epaZ9DJlcOIPY257LC
+	 W9Lu9263ZIfyCc9mXZMGhJTD+DgQZ9CrLcM2SY0Kubb972iTqSTDzCWr/GeAwogooF
+	 /eLbxAka39ITg==
+Date: Thu, 06 Feb 2025 14:37:27 -0800
+Subject: [PATCH 09/56] xfs: prepare to reuse the dquot pointer space in struct
+ xfs_inode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888086913.2739176.3890025606862047722.stgit@frogsfrogsfrogs>
+Message-ID: <173888086929.2739176.3113945891228463785.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 References: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,116 +46,54 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: af32541081ed6b6ad49b1ea38b5128cb319841b0
+Source kernel commit: 84140a96cf7a5b5b48b862a79c8322aa220ce591
 
-Create some simple helpers to reduce the amount of typing whenever we
-access rtgroup inodes.  Conversion was done with this spatch and some
-minor reformatting:
+Files participating in the metadata directory tree are not accounted to
+the quota subsystem.  Therefore, the i_[ugp]dquot pointers in struct
+xfs_inode are never used and should always be NULL.
 
-@@
-expression rtg;
-@@
-
-- rtg->rtg_inodes[XFS_RTGI_BITMAP]
-+ rtg_bitmap(rtg)
-
-@@
-expression rtg;
-@@
-
-- rtg->rtg_inodes[XFS_RTGI_SUMMARY]
-+ rtg_summary(rtg)
-
-and the CLI command:
-
-$ spatch --sp-file /tmp/moo.cocci --dir fs/xfs/ --use-gitgrep --in-place
+In the next patch we want to add a u64 count of fs blocks reserved for
+metadata btree expansion, but we don't want every inode in the fs to pay
+the memory price for this feature.  The intent is to union those three
+pointers with the u64 counter, but for that to work we must guard
+against all access to the dquot pointers for metadata files.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rtbitmap.c |    2 +-
- libxfs/xfs_rtgroup.c  |   18 ++++++++----------
- libxfs/xfs_rtgroup.h  |   10 ++++++++++
- 3 files changed, 19 insertions(+), 11 deletions(-)
+ libxfs/xfs_attr.c |    4 +---
+ libxfs/xfs_bmap.c |    4 +---
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
 
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index b439fb3c20709f..689d5844b8bd09 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -1050,7 +1050,7 @@ xfs_rtfree_extent(
- 	xfs_rtxlen_t		len)	/* length of extent freed */
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
--	struct xfs_inode	*rbmip = rtg->rtg_inodes[XFS_RTGI_BITMAP];
-+	struct xfs_inode	*rbmip = rtg_bitmap(rtg);
- 	struct xfs_rtalloc_args	args = {
- 		.mp		= mp,
- 		.tp		= tp,
-diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
-index aaaec2a1cef9e5..e422a7bc41a55e 100644
---- a/libxfs/xfs_rtgroup.c
-+++ b/libxfs/xfs_rtgroup.c
-@@ -194,10 +194,10 @@ xfs_rtgroup_lock(
- 		 * Lock both realtime free space metadata inodes for a freespace
- 		 * update.
- 		 */
--		xfs_ilock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_EXCL);
--		xfs_ilock(rtg->rtg_inodes[XFS_RTGI_SUMMARY], XFS_ILOCK_EXCL);
-+		xfs_ilock(rtg_bitmap(rtg), XFS_ILOCK_EXCL);
-+		xfs_ilock(rtg_summary(rtg), XFS_ILOCK_EXCL);
- 	} else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) {
--		xfs_ilock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_SHARED);
-+		xfs_ilock(rtg_bitmap(rtg), XFS_ILOCK_SHARED);
- 	}
- }
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 7567014abbe7f0..4b985e054ff84c 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -1003,9 +1003,7 @@ xfs_attr_add_fork(
+ 	unsigned int		blks;		/* space reservation */
+ 	int			error;		/* error return value */
  
-@@ -212,10 +212,10 @@ xfs_rtgroup_unlock(
- 	       !(rtglock_flags & XFS_RTGLOCK_BITMAP));
+-	if (xfs_is_metadir_inode(ip))
+-		ASSERT(XFS_IS_DQDETACHED(ip));
+-	else
++	if (!xfs_is_metadir_inode(ip))
+ 		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
  
- 	if (rtglock_flags & XFS_RTGLOCK_BITMAP) {
--		xfs_iunlock(rtg->rtg_inodes[XFS_RTGI_SUMMARY], XFS_ILOCK_EXCL);
--		xfs_iunlock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_EXCL);
-+		xfs_iunlock(rtg_summary(rtg), XFS_ILOCK_EXCL);
-+		xfs_iunlock(rtg_bitmap(rtg), XFS_ILOCK_EXCL);
- 	} else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) {
--		xfs_iunlock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_SHARED);
-+		xfs_iunlock(rtg_bitmap(rtg), XFS_ILOCK_SHARED);
- 	}
- }
+ 	blks = XFS_ADDAFORK_SPACE_RES(mp);
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index fcb400bc768c2f..41cfadb51f4937 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -1036,9 +1036,7 @@ xfs_bmap_add_attrfork(
+ 	int			error;		/* error return value */
  
-@@ -233,10 +233,8 @@ xfs_rtgroup_trans_join(
- 	ASSERT(!(rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED));
+ 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+-	if (xfs_is_metadir_inode(ip))
+-		ASSERT(XFS_IS_DQDETACHED(ip));
+-	else
++	if (!xfs_is_metadir_inode(ip))
+ 		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 	ASSERT(!xfs_inode_has_attr_fork(ip));
  
- 	if (rtglock_flags & XFS_RTGLOCK_BITMAP) {
--		xfs_trans_ijoin(tp, rtg->rtg_inodes[XFS_RTGI_BITMAP],
--				XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, rtg->rtg_inodes[XFS_RTGI_SUMMARY],
--				XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, rtg_bitmap(rtg), XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, rtg_summary(rtg), XFS_ILOCK_EXCL);
- 	}
- }
- 
-diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index 2d7822644efff0..2e145ea2de8007 100644
---- a/libxfs/xfs_rtgroup.h
-+++ b/libxfs/xfs_rtgroup.h
-@@ -64,6 +64,16 @@ static inline xfs_rgnumber_t rtg_rgno(const struct xfs_rtgroup *rtg)
- 	return rtg->rtg_group.xg_gno;
- }
- 
-+static inline struct xfs_inode *rtg_bitmap(const struct xfs_rtgroup *rtg)
-+{
-+	return rtg->rtg_inodes[XFS_RTGI_BITMAP];
-+}
-+
-+static inline struct xfs_inode *rtg_summary(const struct xfs_rtgroup *rtg)
-+{
-+	return rtg->rtg_inodes[XFS_RTGI_SUMMARY];
-+}
-+
- /* Passive rtgroup references */
- static inline struct xfs_rtgroup *
- xfs_rtgroup_get(
 
