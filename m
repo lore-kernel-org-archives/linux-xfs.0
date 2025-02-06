@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CBBA2417E3
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:59:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76EDD2417EA
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 23:00:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882794; cv=none; b=NAUsqOK7wFv68JvR/irmE3a+n3tiamY/qZJSSqBsAmuxx5EldoBlF5Squa0NRPKckUurLF9+JKyDF653jIsTsoqC8u974fIpx0bTVbH8/XW5paOIh6kb/YSWAKrEwCJYT4weDDKiIvwlKqFz24ZCdPFilXAxeTZKm+MrT3vXNig=
+	t=1738882811; cv=none; b=NK07kggJuAb1pQCdKeRgrEZP6cJo4u82deeoLXeHtOO9z/51O8BkHq2xlQxY1yGGdQ/+iUpXsUY3MejeMELx+5L1x81YNNI5M4FODtno6minZyvcOhzi+xLM+3Y0YcNBX4RCmQvhS75lzdlQwr0JfqobLpdAvyDYb3E0/IX/U8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882794; c=relaxed/simple;
-	bh=9H2LtOiRbq/J+02nVXkMD+zoQ+XDkhS3g4kQr4eCT0g=;
+	s=arc-20240116; t=1738882811; c=relaxed/simple;
+	bh=VpwfUgYL2uM7O5yMtjsc1b+/o7boGpg2n+o0G9AXVpY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ts02OlkLlV3d6THXEEH0EqZyuv/aZK+Z0U1km47Q7ndMOLEluqeFrTsLu3hJvpZ5QnqQnWrMTHwEgtqtHa2tXeCbpd7ZGIEVJ9i2vnSH/rLzjfm9XVUFo0U80q6FeNx3pMhR1qAAKYQHdSA/k6qe587FkrRXJPBFLOdnUHFEVgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BU3gbFiS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hHLaFZdrvbqlXNBWhNytJGRXDA60KenXPoXjnGdycZPmiRzb4076hFd5nHkTFF8MA5ob95TnIJXmvV8+uNk1zzjQw1mR79voR9n1GwQbsS4edxyGNZ/2v3pMvWO9FZqBPUwj5eaESVkMPxksoRcTFybeNxjPeCEuJvhjbEHEvC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T8D8EaXB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BU3gbFiS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34334C4CEE7;
-	Thu,  6 Feb 2025 22:59:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T8D8EaXB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D28D9C4CEE0;
+	Thu,  6 Feb 2025 23:00:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882794;
-	bh=9H2LtOiRbq/J+02nVXkMD+zoQ+XDkhS3g4kQr4eCT0g=;
+	s=k20201202; t=1738882809;
+	bh=VpwfUgYL2uM7O5yMtjsc1b+/o7boGpg2n+o0G9AXVpY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BU3gbFiSKOHN5C2ta0i1nbYsWeN73Jg05xH4RdTL9aX5vA/x4jwy9EwIAd/f34+Ay
-	 4X8LTtnzXKjqgDJkSitqXgPUmVVVoHNIRr9jaoA6tr3YyrBBu6Sco9FFA7jKxzyCGC
-	 whlf9ay0LZj7uDLouUdghdBuvtVKpXjjNVvfEUGMdv69YvJJ8bmkwipfdSJ1EGKXAr
-	 0zPrEcLWb4b+BH03PaJ4IM8ijRb7cfsYPArFf1l+kP72wvvkoOL9r1hSMUhhtsWTzO
-	 42rgkbLOKU3o5fKBrgtZJeV8a+aUws92iR7slADg7Ui3qWRKKSXq0aKtYTZ/gNRMj7
-	 1LO+BIKRPPg8A==
-Date: Thu, 06 Feb 2025 14:59:53 -0800
-Subject: [PATCH 12/22] xfs_repair: use realtime refcount btree data to check
- block types
+	b=T8D8EaXBIFcPf1hZe00mGBUizydwXZF/g/3zvV6E+xiUYB2yAw1NQRVCXoYqn20uy
+	 lEBqgrY+KmfBI/sdWbps8ErWz7SGxIgtdIDZ35azBDH44/MzHZENZ2E+DRdcGzcck7
+	 TROFsFnsHzZQVmi1ai+6xPcxnwuXsQh4zvhcfFqJ7br/Daulozhe9lWCjf/hbW39Tf
+	 BIkPQmt/9QaLYKxCTZALAvHUlzVtkiZ8MCxM27CbT3R+aBgTV9CElH/vTH8XSCtjZS
+	 zBmlUe0aokL3nYRkBIp7OamvxG8CVzHxE2gdpOGC8/wMWCs67bFgkpb2Qd6eI4PfBb
+	 yGnjzh7LucyLw==
+Date: Thu, 06 Feb 2025 15:00:09 -0800
+Subject: [PATCH 13/22] xfs_repair: find and mark the rtrefcountbt inode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888089116.2741962.13761732561620436172.stgit@frogsfrogsfrogs>
+Message-ID: <173888089131.2741962.15415300047895957138.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 References: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,619 +45,243 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use the realtime refcount btree to pre-populate the block type information
-so that when repair iterates the primary metadata, we can confirm the
-block type.
+Make sure that we find the realtime refcountbt inode and mark it
+appropriately, just in case we find a rogue inode claiming to
+be an rtrefcount, or just plain garbage in the superblock field.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    1 
- repair/dinode.c          |  154 +++++++++++++++++++++++
- repair/rt.h              |    4 +
- repair/scan.c            |  314 +++++++++++++++++++++++++++++++++++++++++++++-
- repair/scan.h            |   33 +++++
- 5 files changed, 500 insertions(+), 6 deletions(-)
+ repair/dino_chunks.c |   11 +++++++++++
+ repair/dinode.c      |   49 +++++++++++++++++++++++++++++++++++++++++--------
+ repair/dir2.c        |    5 +++++
+ repair/incore.h      |    1 +
+ repair/rmap.c        |    5 ++++-
+ repair/rmap.h        |    2 +-
+ repair/scan.c        |    8 ++++----
+ 7 files changed, 67 insertions(+), 14 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 7ce10c408de1a0..0dc6f0350dd0f6 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -394,6 +394,7 @@
- #define xfs_verify_fsbext		libxfs_verify_fsbext
- #define xfs_verify_fsbno		libxfs_verify_fsbno
- #define xfs_verify_ino			libxfs_verify_ino
-+#define xfs_verify_rgbno		libxfs_verify_rgbno
- #define xfs_verify_rtbno		libxfs_verify_rtbno
- #define xfs_zero_extent			libxfs_zero_extent
- 
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 8c5387cdf4ea52..250985ec264ead 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -1036,6 +1036,17 @@ process_inode_chunk(
+ 	_("would clear rtgroup rmap inode %" PRIu64 "\n"),
+ 						ino);
+ 				}
++			} else if (is_rtrefcount_inode(ino)) {
++				refcount_avoid_check(mp);
++				if (!no_modify)  {
++					do_warn(
++	_("cleared rtgroup refcount inode %" PRIu64 "\n"),
++						ino);
++				} else  {
++					do_warn(
++	_("would clear rtgroup refcount inode %" PRIu64 "\n"),
++						ino);
++				}
+ 			} else if (!no_modify)  {
+ 				do_warn(_("cleared inode %" PRIu64 "\n"),
+ 					ino);
 diff --git a/repair/dinode.c b/repair/dinode.c
-index 3995584a364771..ac5db8b0ea4392 100644
+index ac5db8b0ea4392..3260df94511ed2 100644
 --- a/repair/dinode.c
 +++ b/repair/dinode.c
-@@ -308,6 +308,8 @@ _("bad state in rt extent map %" PRIu64 "\n"),
- 			break;
- 		case XR_E_INUSE:
- 		case XR_E_MULT:
-+			if (xfs_has_rtreflink(mp))
-+				break;
- 			set_rtbmap(ext, XR_E_MULT);
- 			break;
- 		case XR_E_FREE1:
-@@ -382,6 +384,8 @@ _("data fork in rt inode %" PRIu64 " found rt metadata extent %" PRIu64 " in rt
- 			return 1;
- 		case XR_E_INUSE:
- 		case XR_E_MULT:
-+			if (xfs_has_rtreflink(mp))
-+				break;
- 			do_warn(
- _("data fork in rt inode %" PRIu64 " claims used rt extent %" PRIu64 "\n"),
- 				ino, b);
-@@ -1083,6 +1087,149 @@ _("bad rtrmap btree ptr 0x%" PRIx64 " in ino %" PRIu64 "\n"),
- 	return suspect ? 1 : 0;
+@@ -181,6 +181,9 @@ clear_dinode(
+ 
+ 	if (is_rtrmap_inode(ino_num))
+ 		rmap_avoid_check(mp);
++
++	if (is_rtrefcount_inode(ino_num))
++		refcount_avoid_check(mp);
  }
  
-+/*
-+ * return 1 if inode should be cleared, 0 otherwise
-+ */
-+static int
-+process_rtrefc(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t			agno,
-+	xfs_agino_t			ino,
-+	struct xfs_dinode		*dip,
-+	int				type,
-+	int				*dirty,
-+	xfs_rfsblock_t			*tot,
-+	uint64_t			*nex,
-+	blkmap_t			**blkmapp,
-+	int				check_dups)
-+{
-+	struct refc_priv		priv = { .nr_blocks = 0 };
-+	struct xfs_rtrefcount_root	*dib;
-+	xfs_rtrefcount_ptr_t		*pp;
-+	struct xfs_refcount_key		*kp;
-+	struct xfs_refcount_rec		*rp;
-+	char				*forkname = get_forkname(XFS_DATA_FORK);
-+	xfs_rgblock_t			oldkey, key;
-+	xfs_ino_t			lino;
-+	xfs_fsblock_t			bno;
-+	size_t				droot_sz;
-+	int				i;
-+	int				level;
-+	int				numrecs;
-+	int				dmxr;
-+	int				suspect = 0;
-+	int				error;
-+
-+	/* We rebuild the rtrefcountbt, so no need to process blocks again. */
-+	if (check_dups) {
-+		*tot = be64_to_cpu(dip->di_nblocks);
-+		return 0;
-+	}
-+
-+	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-+
-+	/*
-+	 * This refcount btree inode must be a metadata inode reachable via
-+	 * /rtgroups/$rgno.refcount in the metadata directory tree.
-+	 */
-+	if (!(dip->di_flags2 & be64_to_cpu(XFS_DIFLAG2_METADATA))) {
-+		do_warn(
-+_("rtrefcount inode %" PRIu64 " not flagged as metadata\n"),
-+			lino);
-+		return 1;
-+	}
-+
-+	if (!is_rtrefcount_inode(lino)) {
-+		do_warn(
-+_("could not associate refcount inode %" PRIu64 " with any rtgroup\n"),
-+			lino);
-+		return 1;
-+	}
-+
-+	priv.rgno = metafile_rgnumber(dip);
-+
-+	dib = (struct xfs_rtrefcount_root *)XFS_DFORK_PTR(dip, XFS_DATA_FORK);
-+	*tot = 0;
-+	*nex = 0;
-+
-+	level = be16_to_cpu(dib->bb_level);
-+	numrecs = be16_to_cpu(dib->bb_numrecs);
-+
-+	if (level > mp->m_rtrefc_maxlevels) {
-+		do_warn(
-+_("bad level %d in inode %" PRIu64 " rtrefcount btree root block\n"),
-+			level, lino);
-+		return 1;
-+	}
-+
-+	/*
-+	 * use rtroot/dfork_dsize since the root block is in the data fork
-+	 */
-+	droot_sz = xfs_rtrefcount_droot_space_calc(level, numrecs);
-+	if (droot_sz > XFS_DFORK_SIZE(dip, mp, XFS_DATA_FORK)) {
-+		do_warn(
-+_("computed size of rtrefcountbt root (%zu bytes) is greater than space in "
-+	  "inode %" PRIu64 " %s fork\n"),
-+				droot_sz, lino, forkname);
-+		return 1;
-+	}
-+
-+	if (level == 0) {
-+		rp = xfs_rtrefcount_droot_rec_addr(dib, 1);
-+		error = process_rtrefc_reclist(mp, rp, numrecs,
-+				&priv, "rtrefcountbt root");
-+		if (error) {
-+			refcount_avoid_check();
-+			return 1;
-+		}
-+		return 0;
-+	}
-+
-+	dmxr = libxfs_rtrefcountbt_droot_maxrecs(
-+			XFS_DFORK_SIZE(dip, mp, XFS_DATA_FORK), false);
-+	pp = xfs_rtrefcount_droot_ptr_addr(dib, 1, dmxr);
-+
-+	/* check for in-order keys */
-+	for (i = 0; i < numrecs; i++)  {
-+		kp = xfs_rtrefcount_droot_key_addr(dib, i + 1);
-+
-+		key = be32_to_cpu(kp->rc_startblock);
-+		if (i == 0) {
-+			oldkey = key;
-+			continue;
-+		}
-+		if (key < oldkey) {
-+			do_warn(
-+_("out of order key %u in rtrefcount root ino %" PRIu64 "\n"),
-+				i, lino);
-+			suspect++;
-+			continue;
-+		}
-+		oldkey = key;
-+	}
-+
-+	/* probe keys */
-+	for (i = 0; i < numrecs; i++)  {
-+		bno = get_unaligned_be64(&pp[i]);
-+
-+		if (!libxfs_verify_fsbno(mp, bno))  {
-+			do_warn(
-+_("bad rtrefcount btree ptr 0x%" PRIx64 " in ino %" PRIu64 "\n"),
-+				bno, lino);
-+			return 1;
-+		}
-+
-+		if (scan_lbtree(bno, level, scan_rtrefcbt,
-+				type, XFS_DATA_FORK, lino, tot, nex, blkmapp,
-+				NULL, 0, 1, check_dups, XFS_RTREFC_CRC_MAGIC,
-+				&priv, &xfs_rtrefcountbt_buf_ops))
-+			return 1;
-+	}
-+
-+	*tot = priv.nr_blocks;
-+	return suspect ? 1 : 0;
-+}
-+
  /*
-  * return 1 if inode should be cleared, 0 otherwise
-  */
-@@ -1883,6 +2030,7 @@ check_dinode_mode_format(
- 		case XFS_DINODE_FMT_META_BTREE:
- 			switch (be16_to_cpu(dinoc->di_metatype)) {
- 			case XFS_METAFILE_RTRMAP:
-+			case XFS_METAFILE_RTREFCOUNT:
- 				return 0;
- 			default:
- 				return -1;
-@@ -2333,6 +2481,11 @@ process_inode_data_fork(
- 					totblocks, nextents, dblkmap,
- 					check_dups);
- 			break;
-+		case XFS_METAFILE_RTREFCOUNT:
-+			err = process_rtrefc(mp, agno, ino, dino, type, dirty,
-+					totblocks, nextents, dblkmap,
-+					check_dups);
-+			break;
- 		default:
- 			do_error(
-  _("unknown meta btree type %d, ino %" PRIu64 " (mode = %d)\n"),
-@@ -2406,6 +2559,7 @@ _("would have tried to rebuild inode %"PRIu64" data fork\n"),
- 		case XFS_DINODE_FMT_META_BTREE:
- 			switch (be16_to_cpu(dino->di_metatype)) {
- 			case XFS_METAFILE_RTRMAP:
-+			case XFS_METAFILE_RTREFCOUNT:
- 				err = 0;
- 				break;
- 			default:
-diff --git a/repair/rt.h b/repair/rt.h
-index 13558706e4ec15..e4f3d5d9af3188 100644
---- a/repair/rt.h
-+++ b/repair/rt.h
-@@ -33,6 +33,10 @@ static inline bool is_rtrmap_inode(xfs_ino_t ino)
- {
- 	return is_rtgroup_inode(ino, XFS_RTGI_RMAP);
- }
-+static inline bool is_rtrefcount_inode(xfs_ino_t ino)
-+{
-+	return is_rtgroup_inode(ino, XFS_RTGI_REFCOUNT);
-+}
+@@ -1139,14 +1142,27 @@ _("rtrefcount inode %" PRIu64 " not flagged as metadata\n"),
+ 		return 1;
+ 	}
  
- void mark_rtgroup_inodes_bad(struct xfs_mount *mp, enum xfs_rtg_inodes type);
- bool rtgroup_inodes_were_bad(enum xfs_rtg_inodes type);
-diff --git a/repair/scan.c b/repair/scan.c
-index 7980795e3a6f9f..21fa9018800c77 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1745,12 +1745,6 @@ _("bad %s btree ptr 0x%llx in ino %" PRIu64 "\n"),
+-	if (!is_rtrefcount_inode(lino)) {
+-		do_warn(
+-_("could not associate refcount inode %" PRIu64 " with any rtgroup\n"),
+-			lino);
+-		return 1;
+-	}
+-
++	/*
++	 * If this rtrefcount file claims to be from an rtgroup that actually
++	 * exists, check that inode discovery actually found it.  Note that
++	 * we can have stray rtrefcount files from failed growfsrt operations.
++	 */
+ 	priv.rgno = metafile_rgnumber(dip);
++	if (priv.rgno < mp->m_sb.sb_rgcount) {
++		if (type != XR_INO_RTREFC) {
++			do_warn(
++_("rtrefcount inode %" PRIu64 " was not found in the metadata directory tree\n"),
++				lino);
++			return 1;
++		}
++
++		if (!is_rtrefcount_inode(lino)) {
++			do_warn(
++_("could not associate refcount inode %" PRIu64 " with any rtgroup\n"),
++				lino);
++			return 1;
++		}
++	}
+ 
+ 	dib = (struct xfs_rtrefcount_root *)XFS_DFORK_PTR(dip, XFS_DATA_FORK);
+ 	*tot = 0;
+@@ -1179,7 +1195,7 @@ _("computed size of rtrefcountbt root (%zu bytes) is greater than space in "
+ 		error = process_rtrefc_reclist(mp, rp, numrecs,
+ 				&priv, "rtrefcountbt root");
+ 		if (error) {
+-			refcount_avoid_check();
++			refcount_avoid_check(mp);
+ 			return 1;
+ 		}
+ 		return 0;
+@@ -2143,6 +2159,9 @@ process_check_metadata_inodes(
+ 	if (is_rtrmap_inode(lino))
+ 		return process_check_rt_inode(mp, dinoc, lino, type, dirty,
+ 				XR_INO_RTRMAP, _("realtime rmap btree"));
++	if (is_rtrefcount_inode(lino))
++		return process_check_rt_inode(mp, dinoc, lino, type, dirty,
++				XR_INO_RTREFC, _("realtime refcount btree"));
  	return 0;
  }
  
--struct refc_priv {
--	struct xfs_refcount_irec	last_rec;
--	xfs_agblock_t			nr_blocks;
--};
--
--
- static void
- scan_refcbt(
- 	struct xfs_btree_block	*block,
-@@ -1990,6 +1984,314 @@ _("extent (%u/%u) len %u claimed, state is %d\n"),
+@@ -2253,6 +2272,18 @@ _("found inode %" PRIu64 " claiming to be a rtrmapbt file, but rmapbt is disable
+ 		}
+ 		break;
+ 
++	case XR_INO_RTREFC:
++		/*
++		 * if we have no refcountbt, any inode claiming
++		 * to be a real-time file is bogus
++		 */
++		if (!xfs_has_reflink(mp)) {
++			do_warn(
++_("found inode %" PRIu64 " claiming to be a rtrefcountbt file, but reflink is disabled\n"), lino);
++			return 1;
++		}
++		break;
++
+ 	default:
+ 		break;
+ 	}
+@@ -3453,6 +3484,8 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 			type = XR_INO_PQUOTA;
+ 		else if (is_rtrmap_inode(lino))
+ 			type = XR_INO_RTRMAP;
++		else if (is_rtrefcount_inode(lino))
++			type = XR_INO_RTREFC;
+ 		else
+ 			type = XR_INO_DATA;
+ 		break;
+diff --git a/repair/dir2.c b/repair/dir2.c
+index af00b2d8d6c852..a80160afaea5cf 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -282,6 +282,9 @@ process_sf_dir2(
+ 		} else if (is_rtrmap_inode(lino)) {
+ 			junkit = 1;
+ 			junkreason = _("realtime rmap");
++		} else if (is_rtrefcount_inode(lino)) {
++			junkit = 1;
++			junkreason = _("realtime refcount");
+ 		} else if ((irec_p = find_inode_rec(mp,
+ 					XFS_INO_TO_AGNO(mp, lino),
+ 					XFS_INO_TO_AGINO(mp, lino))) != NULL) {
+@@ -761,6 +764,8 @@ process_dir2_data(
+ 			clearreason = _("metadata directory root");
+ 		} else if (is_rtrmap_inode(ent_ino)) {
+ 			clearreason = _("realtime rmap");
++		} else if (is_rtrefcount_inode(ent_ino)) {
++			clearreason = _("realtime refcount");
+ 		} else {
+ 			irec_p = find_inode_rec(mp,
+ 						XFS_INO_TO_AGNO(mp, ent_ino),
+diff --git a/repair/incore.h b/repair/incore.h
+index 4add12615e0a04..57019148f588c3 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -242,6 +242,7 @@ int		count_bcnt_extents(xfs_agnumber_t);
+ #define XR_INO_GQUOTA	13		/* group quota inode */
+ #define XR_INO_PQUOTA	14		/* project quota inode */
+ #define XR_INO_RTRMAP	15		/* realtime rmap */
++#define XR_INO_RTREFC	16		/* realtime refcount */
+ 
+ /* inode allocation tree */
+ 
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 85a65048db9afc..e39c74cc7b44f7 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -1699,8 +1699,11 @@ init_refcount_cursor(
+  * Disable the refcount btree check.
+  */
+ void
+-refcount_avoid_check(void)
++refcount_avoid_check(
++	struct xfs_mount	*mp)
+ {
++	if (xfs_has_rtgroups(mp))
++		mark_rtgroup_inodes_bad(mp, XFS_RTGI_REFCOUNT);
+ 	refcbt_suspect = true;
+ }
+ 
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 23859bf6c2ad42..c0984d97322861 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -41,7 +41,7 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
+ uint64_t refcount_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern int init_refcount_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
+-extern void refcount_avoid_check(void);
++extern void refcount_avoid_check(struct xfs_mount *mp);
+ void check_refcounts(struct xfs_mount *mp, xfs_agnumber_t agno);
+ 
+ extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
+diff --git a/repair/scan.c b/repair/scan.c
+index 21fa9018800c77..86565ebb9f2faf 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1980,7 +1980,7 @@ _("extent (%u/%u) len %u claimed, state is %d\n"),
+ 	libxfs_perag_put(pag);
+ out:
+ 	if (suspect)
+-		refcount_avoid_check();
++		refcount_avoid_check(mp);
  	return;
  }
  
-+
-+int
-+process_rtrefc_reclist(
-+	struct xfs_mount	*mp,
-+	struct xfs_refcount_rec	*rp,
-+	int			numrecs,
-+	struct refc_priv	*refc_priv,
-+	const char		*name)
-+{
-+	struct xfs_rtgroup	*rtg;
-+	xfs_rgnumber_t		rgno = refc_priv->rgno;
-+	xfs_rtblock_t		lastblock = 0;
-+	int			state;
-+	int			suspect = 0;
-+	int			i;
-+
-+	rtg = libxfs_rtgroup_get(mp, rgno);
-+	if (!rtg) {
-+		if (numrecs) {
-+			do_warn(
-+_("no rt group 0x%x but %d rtrefcount records\n"),
-+					rgno, numrecs);
-+			suspect++;
-+		}
-+
-+		return suspect;
-+	}
-+
-+	for (i = 0; i < numrecs; i++) {
-+		enum xfs_refc_domain	domain;
-+		xfs_rgblock_t		b, rgbno, end;
-+		xfs_extlen_t		len;
-+		xfs_nlink_t		nr;
-+
-+		b = rgbno = be32_to_cpu(rp[i].rc_startblock);
-+		len = be32_to_cpu(rp[i].rc_blockcount);
-+		nr = be32_to_cpu(rp[i].rc_refcount);
-+
-+		if (b & XFS_REFC_COWFLAG) {
-+			domain = XFS_REFC_DOMAIN_COW;
-+			rgbno &= ~XFS_REFC_COWFLAG;
-+		} else {
-+			domain = XFS_REFC_DOMAIN_SHARED;
-+		}
-+
-+		if (domain == XFS_REFC_DOMAIN_COW && nr != 1) {
-+			do_warn(
-+_("leftover rt CoW extent has incorrect refcount in record %u of %s\n"),
-+					i, name);
-+			suspect++;
-+		}
-+		if (nr == 1) {
-+			if (domain != XFS_REFC_DOMAIN_COW) {
-+				do_warn(
-+_("leftover rt CoW extent has invalid startblock in record %u of %s\n"),
-+					i, name);
-+				suspect++;
-+			}
-+		}
-+		end = rgbno + len;
-+
-+		if (!libxfs_verify_rgbno(rtg, rgbno)) {
-+			do_warn(
-+_("invalid start block %llu in record %u of %s\n"),
-+					(unsigned long long)b, i, name);
-+			suspect++;
-+			continue;
-+		}
-+
-+		if (len == 0 || end <= rgbno ||
-+		    !libxfs_verify_rgbno(rtg, end - 1)) {
-+			do_warn(
-+_("invalid length %llu in record %u of %s\n"),
-+					(unsigned long long)len, i, name);
-+			suspect++;
-+			continue;
-+		}
-+
-+		if (nr < 2 || nr > XFS_REFC_REFCOUNT_MAX) {
-+			do_warn(
-+_("invalid rt reference count %u in record %u of %s\n"),
-+					nr, i, name);
-+			suspect++;
-+			continue;
-+		}
-+
-+		if (nr == 1) {
-+			xfs_rgblock_t		b;
-+			xfs_extlen_t		blen;
-+
-+			for (b = rgbno; b < end; b += len) {
-+				state = get_bmap_ext(rgno, b, end, &blen, true);
-+				blen = min(blen, len);
-+
-+				switch (state) {
-+				case XR_E_UNKNOWN:
-+				case XR_E_COW:
-+					do_warn(
-+_("leftover CoW rtextent (%llu)\n"),
-+						(unsigned long long)rgbno);
-+					set_bmap_ext(rgno, b, len, XR_E_FREE,
-+							true);
-+					break;
-+				default:
-+					do_warn(
-+_("rtextent (%llu) claimed, state is %d\n"),
-+						(unsigned long long)rgbno, state);
-+					break;
-+				}
-+				suspect++;
-+			}
-+		}
-+
-+		if (b && b <= lastblock) {
-+			do_warn(_(
-+"out-of-order %s btree record %d (%llu %llu) in %s\n"),
-+					name, i, (unsigned long long)b,
-+					(unsigned long long)len, name);
-+			suspect++;
-+		} else {
-+			lastblock = end - 1;
-+		}
-+
-+		/* Is this record mergeable with the last one? */
-+		if (refc_priv->last_rec.rc_domain == domain &&
-+		    refc_priv->last_rec.rc_startblock +
-+		    refc_priv->last_rec.rc_blockcount == rgbno &&
-+		    refc_priv->last_rec.rc_refcount == nr) {
-+			do_warn(
-+_("record %d of %s tree should be merged with previous record\n"),
-+					i, name);
-+			suspect++;
-+			refc_priv->last_rec.rc_blockcount += len;
-+		} else {
-+			refc_priv->last_rec.rc_domain = domain;
-+			refc_priv->last_rec.rc_startblock = rgbno;
-+			refc_priv->last_rec.rc_blockcount = len;
-+			refc_priv->last_rec.rc_refcount = nr;
-+		}
-+
-+		/* XXX: probably want to mark the reflinked areas? */
-+	}
-+
-+	libxfs_rtgroup_put(rtg);
-+	return suspect;
-+}
-+
-+int
-+scan_rtrefcbt(
-+	struct xfs_btree_block		*block,
-+	int				level,
-+	int				type,
-+	int				whichfork,
-+	xfs_fsblock_t			fsbno,
-+	xfs_ino_t			ino,
-+	xfs_rfsblock_t			*tot,
-+	uint64_t			*nex,
-+	struct blkmap			**blkmapp,
-+	bmap_cursor_t			*bm_cursor,
-+	int				suspect,
-+	int				isroot,
-+	int				check_dups,
-+	int				*dirty,
-+	uint64_t			magic,
-+	void				*priv)
-+{
-+	const char			*name = "rtrefcount";
-+	char				rootname[256];
-+	int				i;
-+	xfs_rtrefcount_ptr_t		*pp;
-+	struct xfs_refcount_rec	*rp;
-+	struct refc_priv		*refc_priv = priv;
-+	int				hdr_errors = 0;
-+	int				numrecs;
-+	int				state;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			agbno;
-+	int				error;
-+
-+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+
-+	if (magic != XFS_RTREFC_CRC_MAGIC) {
-+		name = "(unknown)";
-+		hdr_errors++;
-+		suspect++;
-+		goto out;
-+	}
-+
-+	if (be32_to_cpu(block->bb_magic) != magic) {
-+		do_warn(_("bad magic # %#x in %s btree block %d/%d\n"),
-+				be32_to_cpu(block->bb_magic), name, agno,
-+				agbno);
-+		hdr_errors++;
-+		if (suspect)
-+			goto out;
-+	}
-+
-+	if (be16_to_cpu(block->bb_level) != level) {
-+		do_warn(_("expected level %d got %d in %s btree block %d/%d\n"),
-+				level, be16_to_cpu(block->bb_level), name,
-+				agno, agbno);
-+		hdr_errors++;
-+		if (suspect)
-+			goto out;
-+	}
-+
-+	refc_priv->nr_blocks++;
-+
-+	/*
-+	 * Check for btree blocks multiply claimed.  We're going to regenerate
-+	 * the btree anyway, so mark the blocks as metadata so they get freed.
-+	 */
-+	state = get_bmap(agno, agbno);
-+	if (!(state == XR_E_UNKNOWN || state == XR_E_INUSE1))  {
-+		do_warn(
-+_("%s btree block claimed (state %d), agno %d, agbno %d, suspect %d\n"),
-+				name, state, agno, agbno, suspect);
-+		goto out;
-+	}
-+	set_bmap(agno, agbno, XR_E_METADATA);
-+
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+	if (level == 0) {
-+		if (numrecs > mp->m_rtrefc_mxr[0])  {
-+			numrecs = mp->m_rtrefc_mxr[0];
-+			hdr_errors++;
-+		}
-+		if (isroot == 0 && numrecs < mp->m_rtrefc_mnr[0])  {
-+			numrecs = mp->m_rtrefc_mnr[0];
-+			hdr_errors++;
-+		}
-+
-+		if (hdr_errors) {
-+			do_warn(
-+	_("bad btree nrecs (%u, min=%u, max=%u) in %s btree block %u/%u\n"),
-+					be16_to_cpu(block->bb_numrecs),
-+					mp->m_rtrefc_mnr[0],
-+					mp->m_rtrefc_mxr[0], name, agno, agbno);
-+			suspect++;
-+		}
-+
-+		rp = xfs_rtrefcount_rec_addr(block, 1);
-+		snprintf(rootname, 256, "%s btree block %u/%u", name, agno,
-+				agbno);
-+		error = process_rtrefc_reclist(mp, rp, numrecs, refc_priv,
-+				rootname);
-+		if (error)
-+			suspect++;
-+		goto out;
-+	}
-+
-+	/*
-+	 * interior record
-+	 */
-+	pp = xfs_rtrefcount_ptr_addr(block, 1, mp->m_rtrefc_mxr[1]);
-+
-+	if (numrecs > mp->m_rtrefc_mxr[1])  {
-+		numrecs = mp->m_rtrefc_mxr[1];
-+		hdr_errors++;
-+	}
-+	if (isroot == 0 && numrecs < mp->m_rtrefc_mnr[1])  {
-+		numrecs = mp->m_rtrefc_mnr[1];
-+		hdr_errors++;
-+	}
-+
-+	/*
-+	 * don't pass bogus tree flag down further if this block
-+	 * looked ok.  bail out if two levels in a row look bad.
-+	 */
-+	if (hdr_errors)  {
-+		do_warn(
-+	_("bad btree nrecs (%u, min=%u, max=%u) in %s btree block %u/%u\n"),
-+				be16_to_cpu(block->bb_numrecs),
-+				mp->m_rtrefc_mnr[1], mp->m_rtrefc_mxr[1], name,
-+				agno, agbno);
-+		if (suspect)
-+			goto out;
-+		suspect++;
-+	} else if (suspect) {
-+		suspect = 0;
-+	}
-+
-+	for (i = 0; i < numrecs; i++)  {
-+		xfs_fsblock_t		pbno = be64_to_cpu(pp[i]);
-+
-+		if (!libxfs_verify_fsbno(mp, pbno)) {
-+			do_warn(
-+	_("bad btree pointer (%u) in %sbt block %u/%u\n"),
-+					agbno, name, agno, agbno);
-+			suspect++;
-+			return 0;
-+		}
-+
-+		scan_lbtree(pbno, level, scan_rtrefcbt, type, whichfork, ino,
-+				tot, nex, blkmapp, bm_cursor, suspect, 0,
-+				check_dups, magic, refc_priv,
-+				&xfs_rtrefcountbt_buf_ops);
-+	}
-+out:
-+	if (suspect) {
-+		refcount_avoid_check();
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * The following helpers are to help process and validate individual on-disk
-  * inode btree records. We have two possible inode btrees with slightly
-diff --git a/repair/scan.h b/repair/scan.h
-index a624c882734c77..1643a2397aeaf5 100644
---- a/repair/scan.h
-+++ b/repair/scan.h
-@@ -100,4 +100,37 @@ int scan_rtrmapbt(
- 	uint64_t		magic,
- 	void			*priv);
+@@ -2285,7 +2285,7 @@ _("%s btree block claimed (state %d), agno %d, agbno %d, suspect %d\n"),
+ 	}
+ out:
+ 	if (suspect) {
+-		refcount_avoid_check();
++		refcount_avoid_check(mp);
+ 		return 1;
+ 	}
  
-+struct refc_priv {
-+	struct xfs_refcount_irec	last_rec;
-+	xfs_agblock_t			nr_blocks;
-+	xfs_rgnumber_t			rgno;
-+};
-+
-+int
-+process_rtrefc_reclist(
-+	struct xfs_mount	*mp,
-+	struct xfs_refcount_rec	*rp,
-+	int			numrecs,
-+	struct refc_priv	*refc_priv,
-+	const char		*name);
-+
-+int
-+scan_rtrefcbt(
-+	struct xfs_btree_block	*block,
-+	int			level,
-+	int			type,
-+	int			whichfork,
-+	xfs_fsblock_t		bno,
-+	xfs_ino_t		ino,
-+	xfs_rfsblock_t		*tot,
-+	uint64_t		*nex,
-+	struct blkmap		**blkmapp,
-+	bmap_cursor_t		*bm_cursor,
-+	int			suspect,
-+	int			isroot,
-+	int			check_dups,
-+	int			*dirty,
-+	uint64_t		magic,
-+	void			*priv);
-+
- #endif /* _XR_SCAN_H */
+@@ -3148,7 +3148,7 @@ validate_agf(
+ 		if (levels == 0 || levels > mp->m_refc_maxlevels) {
+ 			do_warn(_("bad levels %u for refcountbt root, agno %d\n"),
+ 				levels, agno);
+-			refcount_avoid_check();
++			refcount_avoid_check(mp);
+ 		}
+ 
+ 		bno = be32_to_cpu(agf->agf_refcount_root);
+@@ -3166,7 +3166,7 @@ validate_agf(
+ 		} else {
+ 			do_warn(_("bad agbno %u for refcntbt root, agno %d\n"),
+ 				bno, agno);
+-			refcount_avoid_check();
++			refcount_avoid_check(mp);
+ 		}
+ 	}
+ 
 
