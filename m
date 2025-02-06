@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1B92417CA
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:59:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F1B62417CA
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:59:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882747; cv=none; b=ChbMNqe7LeJ4rhhGzTnN/CqbhDR/TspaGMMBUh9reO5kY+cEf5aq6PKKsWX28vU+11hMWtZCN5NFF+JQ6clIq7bbDDlsLdTd2ZT7HTRsYkDEc1RthpuyQLQT8YDjKq9VIJoSKd7mrMGmfKC8bapnszlKiAbAm1K4D02r7TDrpqw=
+	t=1738882763; cv=none; b=Eumgi28Y46cAtsXl//SubypBqo43Gz3oqMSV7/oozCMxAMBJjD/odC5k7no/FvyJanvOVdDfDdPPA1brEzvPTaOymYFWPYhwSvENkZvmYRb3TWSjh6YfrCOlM6TbFOX/7hJxyT+0yR6zr+zlof2jHeGuvgInkj98JCRuqvZUr5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882747; c=relaxed/simple;
-	bh=f6RldL/JDT0hNZNrxFZq+1iMC7iRtjXMKx3HL07lYxg=;
+	s=arc-20240116; t=1738882763; c=relaxed/simple;
+	bh=8wAjtw1BgcgBlJwtKxLngsGeYn0QtP3sZsu15hyP6LE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fGyx7w6Be99Hk/H6mR1Cala2uBQ6qDspjPEZJe9hy+C2oEUlgkwQni439T9F7aAXCYsBx4dIXMVSJAFy/FJXLZZvlBqwfX7xhk9V8YJFCys8OgiIK2gxkyOps+kPdyvbzQtsPAxIDQUR+au4/7bjNM5Zkp1JGYf4R/22jLA0Jvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HR+RWwud; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XnMrdJAFDQu1UfxIGg4uyIoZsZq7MMk58yYl0pFYN4snqHx6uFffrbqusDByaVdGnLqeMCK9xCc3UvvW5pjZUVLJjAFVzLEJ3R6CZj6N5ejxMqS9Nx19xki37vNoYXrDcUxeDB4nObZUdETVcw9NcoZaNjk0IrIx//ual/8mXDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hwEBWOTA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HR+RWwud"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BB2DC4CEDD;
-	Thu,  6 Feb 2025 22:59:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hwEBWOTA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDCAEC4CEDD;
+	Thu,  6 Feb 2025 22:59:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882747;
-	bh=f6RldL/JDT0hNZNrxFZq+1iMC7iRtjXMKx3HL07lYxg=;
+	s=k20201202; t=1738882763;
+	bh=8wAjtw1BgcgBlJwtKxLngsGeYn0QtP3sZsu15hyP6LE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HR+RWwudODRZIDAtS4X/NC3j0w9Tr10anainT6KDo45pthikH9D/VPFasGV/JZ5aU
-	 HIWyatiUrgJo6cxfke9D3Mtnrk0F+mkE8lxcaJfXMbruBpHKX2iz8oMSRsKkj1vFPi
-	 t+rkfMUsu8NwBvz+3b2qtyQkwAiiduhqCbSv1ElkodBwj6htudSyZqXICfmVUFWdmU
-	 hE/oviN9gIi7qVXvsszyB4ej12Ato6r0QtRsz4anNIZsBykWFn14mKydbEh1gwclTK
-	 k2kgFrmvGnCK9HJZSEGYHITqoqaTQS5ZOo0RMWzimUeFGLzXF9BeIitXxehHoPknNb
-	 RZ6PqyBFgwoXg==
-Date: Thu, 06 Feb 2025 14:59:06 -0800
-Subject: [PATCH 09/22] xfs_db: add rtrefcount reservations to the rgresv
- command
+	b=hwEBWOTAC3Y+NMPam/uTZLvrmZsR2jxkawrp7dLz+CMV/XnirxZ2GQd3BHEzEek/I
+	 ZmzxPP0AauLxhLGiaZ3w/cNdQ3HGYrD8Y2d/EzH+OqTOx/jNXVeJgdRuL5hsIb71Dc
+	 FyRYFm2snWLmOrAZDbe/MWW4x0zCJW1MgWy8hkf06Ie46u5meBYZobHQ8se82/DEBa
+	 uO7YW+ZBLV2/+R33pTrYEavVxzggCJ4YuV8V6+GhReRYnCrZJgmk6Yw13u46MV/5MV
+	 bnxk3lU+yyo6K6kcUN+fWTAdPYHu4NTWPG8Dh6fdv2En1z/DQ09i/8Y6fDwZs98sCH
+	 IssqErVN8ar7A==
+Date: Thu, 06 Feb 2025 14:59:22 -0800
+Subject: [PATCH 10/22] xfs_spaceman: report health of the realtime refcount
+ btree
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888089070.2741962.16480973892880802520.stgit@frogsfrogsfrogs>
+Message-ID: <173888089085.2741962.7445820399757044454.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 References: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,49 +46,40 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Report rt refcount btree reservations in the rgresv subcommand output.
+Report the health of the realtime reference count btree.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- db/info.c                |   13 +++++++++++++
- libxfs/libxfs_api_defs.h |    1 +
- 2 files changed, 14 insertions(+)
+ spaceman/health.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 
-diff --git a/db/info.c b/db/info.c
-index ce6f358420a79d..6ad3e23832faa3 100644
---- a/db/info.c
-+++ b/db/info.c
-@@ -202,6 +202,19 @@ print_rgresv_info(
+diff --git a/spaceman/health.c b/spaceman/health.c
+index 5774d609a28de3..efe2a7261de5c4 100644
+--- a/spaceman/health.c
++++ b/spaceman/health.c
+@@ -47,6 +47,11 @@ static bool has_rtrmapbt(const struct xfs_fsop_geom *g)
+ 	return g->rtblocks > 0 && (g->flags & XFS_FSOP_GEOM_FLAGS_RMAPBT);
+ }
  
- 	ask += libxfs_rtrmapbt_calc_reserves(mp);
- 
-+	/* rtrefcount */
-+	error = -libxfs_rtginode_load(rtg, XFS_RTGI_REFCOUNT, tp);
-+	if (error) {
-+		dbprintf(_("Cannot load rtgroup %u refcount inode, error %d\n"),
-+			rtg_rgno(rtg), error);
-+		goto out_rele_dp;
-+	}
-+	if (rtg_refcount(rtg))
-+		used += rtg_refcount(rtg)->i_nblocks;
-+	libxfs_rtginode_irele(&rtg->rtg_inodes[XFS_RTGI_REFCOUNT]);
++static bool has_rtreflink(const struct xfs_fsop_geom *g)
++{
++	return g->rtblocks > 0 && (g->flags & XFS_FSOP_GEOM_FLAGS_REFLINK);
++}
 +
-+	ask += libxfs_rtrefcountbt_calc_reserves(mp);
-+
- 	printf(_("rtg %d: dblocks: %llu fdblocks: %llu reserved: %llu used: %llu"),
- 			rtg_rgno(rtg),
- 			(unsigned long long)mp->m_sb.sb_dblocks,
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 87a598f346f86a..7ce10c408de1a0 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -320,6 +320,7 @@
- #define xfs_rtgroup_get			libxfs_rtgroup_get
- #define xfs_rtgroup_put			libxfs_rtgroup_put
+ struct flag_map {
+ 	unsigned int		mask;
+ 	bool			(*has_fn)(const struct xfs_fsop_geom *g);
+@@ -156,6 +161,11 @@ static const struct flag_map rtgroup_flags[] = {
+ 		.descr = "realtime reverse mappings btree",
+ 		.has_fn = has_rtrmapbt,
+ 	},
++	{
++		.mask = XFS_RTGROUP_GEOM_SICK_REFCNTBT,
++		.descr = "realtime reference count btree",
++		.has_fn = has_rtreflink,
++	},
+ 	{0},
+ };
  
-+#define xfs_rtrefcountbt_calc_reserves	libxfs_rtrefcountbt_calc_reserves
- #define xfs_rtrefcountbt_droot_maxrecs	libxfs_rtrefcountbt_droot_maxrecs
- #define xfs_rtrefcountbt_maxlevels_ondisk	libxfs_rtrefcountbt_maxlevels_ondisk
- #define xfs_rtrefcountbt_maxrecs	libxfs_rtrefcountbt_maxrecs
 
