@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25F9823C380
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:39:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B62226196
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:40:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738881589; cv=none; b=kSHfnqn4MDjUUJW/QS9RZzuvRCgFg9q10uf1qHkCvPCSnG+SixMKy6j7XNd6rD4d7W8rfPYf9HwfEYl6GsqzUFkC5lZIx8uk0Be6j2R1eyoSG/EsvecVO1f5IVCnT0x4rFXUl3rGDAkDhUW9v+ZAhzRE9Fx5fwjypzZbJMkkcww=
+	t=1738881604; cv=none; b=K9rU5eVbGEk7b5dxdKoT3gz5xTILKmTyQARrh3kx7fYPpNcKMpjZxq6+cQBIQvhpqYqhK6Ay4CDfqqq1X9mENlCM0oiZAOdxXb+54nbmFQdIynre8C3IitiLeLYhzDFwmt330sArn3ACu79zHvkFCuyWAnqpzQ1+ZZLqDsASMOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738881589; c=relaxed/simple;
-	bh=PxFGfrtLnpbjGVs/E6XB0jMYVmPyRpIR8Et4FEswRBY=;
+	s=arc-20240116; t=1738881604; c=relaxed/simple;
+	bh=ncOzjixC6T7tlTlb/vr6pTa0iIqfn1Fs22Xy7PXZGs4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aI5SAggF45RsPOcBM1e+IXPgX/frG+ACpRmlPzncfDzXd1QI7hSNG/K32e+Bw5K2PdblYWZSq+vuU44i4RKcGh6uN4ltZPDhkj0V8+b7fFBL0/QJWl+D82axskix3qTrl2Zcb8ZCZ9DVhSwn8ZquG93FHhClVUXe1WwC5W793Jw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YU8DJYKH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=J7fkcaKLgYTSrpX97eLBwjZJ2Rs6Uv8shlZH/VjJGl5Ty5U09d19B9kS4p1nY/b0LJp0vNL3xvql25PRS0VGZ9audVz3w7RFZJHl6fgdX7JlEy9kM36UF2Do2iVuba0Os3qtHlw0oxxBHHpKqZZNxdAfKyAg1v5lNUig8rKBmmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fvHR5x1x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YU8DJYKH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9648DC4CEDD;
-	Thu,  6 Feb 2025 22:39:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fvHR5x1x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35DBCC4CEDD;
+	Thu,  6 Feb 2025 22:40:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738881588;
-	bh=PxFGfrtLnpbjGVs/E6XB0jMYVmPyRpIR8Et4FEswRBY=;
+	s=k20201202; t=1738881604;
+	bh=ncOzjixC6T7tlTlb/vr6pTa0iIqfn1Fs22Xy7PXZGs4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YU8DJYKHhwzpbhsx+xZjb9kLZg/rt++nRKV/GHPj+AY57T620u20tgch3IVbXdwWS
-	 hijuYfX3jjWp99rYekzjeX8xL2oqbbPP5RgqXFbm3akbstHhPLGB47NkWYhJp2qO5b
-	 OPnaOsLXeDljxDM7t1wGpD/zkXWVlltChprVhomovQRMRpOJBzWvnhJ6/GBCHEoDkz
-	 suyyYLnoh/zkCit+68BdYAUdbUjDTU7GWF+f/Z1u1ByI1hZYgsoZBGVookXkT2/GS5
-	 tov8n4xWhhyuORDMkxXZISBirjiYA8n+xYwEeBqQilaPH17lHvGJloJWnmo9hSQcCq
-	 oVmBJvHQ5cJrA==
-Date: Thu, 06 Feb 2025 14:39:48 -0800
-Subject: [PATCH 18/56] xfs: pretty print metadata file types in error messages
+	b=fvHR5x1xVzuPxJZ/EL2YVaNKXUAQ+3A2naD53ND6BXnm99y2O9xmu6n/ced1hOU/2
+	 Tr+hXy0hGVhoaqcIk4b7Xwk2aNr/ZxmXdDKdl0aV65qe3/AM0ZppprCGUQIRXJqrDP
+	 XgWm+kQcbghUHJiKcwR6/X/1OrJbrCXScRQMl19v17NxB+vClDifiuvYBqB1cWRwbf
+	 x6aKao5eq7SHefx9r8btjpwmJoa82jHyxchjp06kv6tKBS1Dl3AI+4ob0LLKeRT2zR
+	 prDjZK7g4lrr+WAjBq4LaPNo5ern7hazWXUROE7IGXNMrr+V/aSLf4EYApO6/ZXrNK
+	 Y2Yn63WLa4qBw==
+Date: Thu, 06 Feb 2025 14:40:03 -0800
+Subject: [PATCH 19/56] xfs: support file data forks containing metadata btrees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888087067.2739176.7226564621742819045.stgit@frogsfrogsfrogs>
+Message-ID: <173888087082.2739176.8945352228485275485.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 References: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,75 +45,136 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 219ee99d3673ded7abbc13ddd4d7847e92661e2c
+Source kernel commit: 702c90f451622384d6c65897b619f647704b06a9
 
-Create a helper function to turn a metadata file type code into a
-printable string, and use this to complain about lockdep problems with
-rtgroup inodes.  We'll use this more in the next patch.
+Create a new fork format type for metadata btrees.  This fork type
+requires that the inode is in the metadata directory tree, and only
+applies to the data fork.  The actual type of the metadata btree itself
+is determined by the di_metatype field.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_metafile.c |   18 ++++++++++++++++++
- libxfs/xfs_metafile.h |    2 ++
- libxfs/xfs_rtgroup.c  |    3 ++-
- 3 files changed, 22 insertions(+), 1 deletion(-)
+ libxfs/xfs_format.h     |    6 ++++--
+ libxfs/xfs_inode_buf.c  |   23 ++++++++++++++++++++---
+ libxfs/xfs_inode_fork.c |   19 +++++++++++++++++++
+ 3 files changed, 43 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/xfs_metafile.c b/libxfs/xfs_metafile.c
-index 7f673d706aada8..4488e38a87345a 100644
---- a/libxfs/xfs_metafile.c
-+++ b/libxfs/xfs_metafile.c
-@@ -20,6 +20,24 @@
- #include "xfs_errortag.h"
- #include "xfs_alloc.h"
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 469fc7afa591b4..41ea4283c43cb4 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -997,7 +997,8 @@ enum xfs_dinode_fmt {
+ 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
+ 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
+ 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
+-	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
++	XFS_DINODE_FMT_UUID,		/* added long ago, but never used */
++	XFS_DINODE_FMT_META_BTREE,	/* metadata btree */
+ };
  
-+static const struct {
-+	enum xfs_metafile_type	mtype;
-+	const char		*name;
-+} xfs_metafile_type_strs[] = { XFS_METAFILE_TYPE_STR };
-+
-+const char *
-+xfs_metafile_type_str(enum xfs_metafile_type metatype)
-+{
-+	unsigned int	i;
-+
-+	for (i = 0; i < ARRAY_SIZE(xfs_metafile_type_strs); i++) {
-+		if (xfs_metafile_type_strs[i].mtype == metatype)
-+			return xfs_metafile_type_strs[i].name;
-+	}
-+
-+	return NULL;
-+}
-+
- /* Set up an inode to be recognized as a metadata directory inode. */
- void
- xfs_metafile_set_iflag(
-diff --git a/libxfs/xfs_metafile.h b/libxfs/xfs_metafile.h
-index 8d8f08a6071c23..95af4b52e5a75f 100644
---- a/libxfs/xfs_metafile.h
-+++ b/libxfs/xfs_metafile.h
-@@ -6,6 +6,8 @@
- #ifndef __XFS_METAFILE_H__
- #define __XFS_METAFILE_H__
- 
-+const char *xfs_metafile_type_str(enum xfs_metafile_type metatype);
-+
- /* All metadata files must have these flags set. */
- #define XFS_METAFILE_DIFLAGS	(XFS_DIFLAG_IMMUTABLE | \
- 				 XFS_DIFLAG_SYNC | \
-diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
-index e422a7bc41a55e..b9da90c5062dc1 100644
---- a/libxfs/xfs_rtgroup.c
-+++ b/libxfs/xfs_rtgroup.c
-@@ -279,7 +279,8 @@ xfs_rtginode_ilock_print_fn(
- 	const struct xfs_inode *ip =
- 		container_of(m, struct xfs_inode, i_lock.dep_map);
- 
--	printk(KERN_CONT " rgno=%u", ip->i_projid);
-+	printk(KERN_CONT " rgno=%u metatype=%s", ip->i_projid,
-+			xfs_metafile_type_str(ip->i_metatype));
- }
+ #define XFS_INODE_FORMAT_STR \
+@@ -1005,7 +1006,8 @@ enum xfs_dinode_fmt {
+ 	{ XFS_DINODE_FMT_LOCAL,		"local" }, \
+ 	{ XFS_DINODE_FMT_EXTENTS,	"extent" }, \
+ 	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
+-	{ XFS_DINODE_FMT_UUID,		"uuid" }
++	{ XFS_DINODE_FMT_UUID,		"uuid" }, \
++	{ XFS_DINODE_FMT_META_BTREE,	"meta_btree" }
  
  /*
+  * Max values for extnum and aextnum.
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 98482cb4948284..10ce2e34969d99 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -438,6 +438,16 @@ xfs_dinode_verify_fork(
+ 		if (di_nextents > max_extents)
+ 			return __this_address;
+ 		break;
++	case XFS_DINODE_FMT_META_BTREE:
++		if (!xfs_has_metadir(mp))
++			return __this_address;
++		if (!(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA)))
++			return __this_address;
++		switch (be16_to_cpu(dip->di_metatype)) {
++		default:
++			return __this_address;
++		}
++		break;
+ 	default:
+ 		return __this_address;
+ 	}
+@@ -457,6 +467,10 @@ xfs_dinode_verify_forkoff(
+ 		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
+ 			return __this_address;
+ 		break;
++	case XFS_DINODE_FMT_META_BTREE:
++		if (!xfs_has_metadir(mp) || !xfs_has_parent(mp))
++			return __this_address;
++		fallthrough;
+ 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
+ 	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
+ 	case XFS_DINODE_FMT_BTREE:
+@@ -634,9 +648,6 @@ xfs_dinode_verify(
+ 	if (mode && nextents + naextents > nblocks)
+ 		return __this_address;
+ 
+-	if (nextents + naextents == 0 && nblocks != 0)
+-		return __this_address;
+-
+ 	if (S_ISDIR(mode) && nextents > mp->m_dir_geo->max_extents)
+ 		return __this_address;
+ 
+@@ -740,6 +751,12 @@ xfs_dinode_verify(
+ 			return fa;
+ 	}
+ 
++	/* metadata inodes containing btrees always have zero extent count */
++	if (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK) != XFS_DINODE_FMT_META_BTREE) {
++		if (nextents + naextents == 0 && nblocks != 0)
++			return __this_address;
++	}
++
+ 	return NULL;
+ }
+ 
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index d6bbff85ffba8e..b66dc4ad0f52ef 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -265,6 +265,12 @@ xfs_iformat_data_fork(
+ 			return xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
+ 		case XFS_DINODE_FMT_BTREE:
+ 			return xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
++		case XFS_DINODE_FMT_META_BTREE:
++			switch (ip->i_metatype) {
++			default:
++				break;
++			}
++			fallthrough;
+ 		default:
+ 			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
+ 					dip, sizeof(*dip), __this_address);
+@@ -599,6 +605,19 @@ xfs_iflush_fork(
+ 		}
+ 		break;
+ 
++	case XFS_DINODE_FMT_META_BTREE:
++		ASSERT(whichfork == XFS_DATA_FORK);
++
++		if (!(iip->ili_fields & brootflag[whichfork]))
++			break;
++
++		switch (ip->i_metatype) {
++		default:
++			ASSERT(0);
++			break;
++		}
++		break;
++
+ 	default:
+ 		ASSERT(0);
+ 		break;
 
