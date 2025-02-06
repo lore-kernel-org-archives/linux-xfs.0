@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C1382417FF
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:48:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E29AF23AE90
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:49:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882138; cv=none; b=EaJIkNoBnZZp7BTRbwEFqq3R/aTQzq+TmqUL1XV9XJrEu7WFRzZ3eyFmtFsNHTYGxXTRK4qQzV+77iVAs+kviAftNgGIbRBKWXhcK5UlmaBOKCkGJQ7n81Bcx7u/r5umFjNJTTdrownBCcwxZhHPrIFb/WMZkTgpyGFr7FiSjXc=
+	t=1738882154; cv=none; b=r9BqX3XU10oSwMiCTPMJfXtTZNo1CvngfptjNr3//Zx2s895Fwd/SdOTms8NKg34VEzgUTA5POetn3rSmLroVbLloRLAG+G+/SaElhM84+Ga1RLvUXUxOuQjNhbTdpnbfyrEpb85KDHnT7QFmOVo74UIXluOj7iPN42GPdXi9KA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882138; c=relaxed/simple;
-	bh=3wusq3VQDxKRnv5ZaPP+AkPpKzPQ6a/uVZY2Ab7MoRs=;
+	s=arc-20240116; t=1738882154; c=relaxed/simple;
+	bh=PA7tOg/RHQO4svBcFa2YhefHC3fbKNGND21vlhj1ZnM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MiMv4xeh7997fRhDQh68+qeBmef23vZIhHEtLlt+YNSWvww8bNB+vCpzxJf/fvaCOtPiTSGyOXAI3eo+Ng4J8WzaPSzSdinKUSjX/MKn376BFKN76kKre3iz2no07l2LwoHRRJr4f+H/0RrDGYka9gaBrsVILY2TsXAc+KbT6WQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jIKSdgYT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=CErRWkjYPQ2MxzPmap5K/2TBJBet7M2vXPku0xTdR2uUlAG90zBt8CkNt0qI5Z2Y8OsfZLZneNxChOhIcQ/gJ2vIgjVvhCdWdUYPI/AfwPC3Hpgtj5f8hCMVwxOWdtjaXBFIqepUlmfXKYCS25bUj1kKmodTv8GXtWWMGY6e6Rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DP6vGJh5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jIKSdgYT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4343C4CEDF;
-	Thu,  6 Feb 2025 22:48:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DP6vGJh5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55316C4CEDD;
+	Thu,  6 Feb 2025 22:49:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882137;
-	bh=3wusq3VQDxKRnv5ZaPP+AkPpKzPQ6a/uVZY2Ab7MoRs=;
+	s=k20201202; t=1738882153;
+	bh=PA7tOg/RHQO4svBcFa2YhefHC3fbKNGND21vlhj1ZnM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jIKSdgYTrb7BT0DxYIXO6poN7uMm+fPrHKDWPT/oh/lb9Q8gci5u9ZpQ71GYrbmlh
-	 Y0HRVoz8skVeSwfG1yNHGyMwhiEx4daRcehJTiaDkCBXf/Hj7DVe6yJi3TOXpqgYVa
-	 1qqzV64WyyVIBZk/YJBt5kc83nrSSxdvi2HrHYJevbPsw3XOZACb4OQHo0oLmARDQT
-	 Hf5Y995D4tq/7VltR7G1CLOc/4j0yKHoOvmlw7dUgTSrgwsNX03vxVQxw0Xh5kzZeq
-	 WqVJnrRouIFYtPjIgwV5Y/G2XjjdSjSI7cqkJywl2Lv48XOta6SLPO1E+S/7eD2CQF
-	 uKccWdEr0ocFg==
-Date: Thu, 06 Feb 2025 14:48:57 -0800
-Subject: [PATCH 53/56] xfs: mark xfs_dir_isempty static
+	b=DP6vGJh5+ebjI/u0U7fAuzFA31USn3PbkEwD6CLn9nJOBdEFsqWnu8PmDk3db5tYH
+	 EVboB2xrxirgt0WOuToQ+IguVAEqfrurN9qGLrZdONucHU2g6JgINdU64LQ0kXGDQO
+	 /TFPab+yNqZOaro3bqeqdOi7PqL2/mqpVHU6swMeNNPSS3Nrm/OSUYBpW6xX6U1F66
+	 IevyEZpF044Pdfo5K8cG1i2Q2F8JxzMv1/GwjTi4M0kLQCp8v1QFdyrrq49FHeJThq
+	 dtWaAz07YfbpOogBN+sI4hpdOanrhCjYHwBmIzbJmBPqxH0a7JpKcidC3e5bm9nBD/
+	 hWemOy3naClpg==
+Date: Thu, 06 Feb 2025 14:49:12 -0800
+Subject: [PATCH 54/56] xfs: remove XFS_ILOG_NONCORE
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888087605.2739176.6385277999824081377.stgit@frogsfrogsfrogs>
+Message-ID: <173888087620.2739176.15928074738306981453.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 References: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,54 +45,33 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 23ebf63925989adbe4c4277c8e9b04e0a37f6005
+Source kernel commit: 415dee1e06da431f3d314641ceecb9018bb6fa53
 
-And return bool instead of a boolean condition as int.
+XFS_ILOG_NONCORE is not used in the kernel code or xfsprogs, remove it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_dir2.c |    6 +++---
- libxfs/xfs_dir2.h |    1 -
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ libxfs/xfs_log_format.h |    6 ------
+ 1 file changed, 6 deletions(-)
 
 
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 0b026d5f55d0fd..29e64603d4ae82 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -196,7 +196,7 @@ xfs_da_unmount(
- /*
-  * Return 1 if directory contains only "." and "..".
+diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
+index ec7157eaba5f68..a472ac2e45d0d8 100644
+--- a/libxfs/xfs_log_format.h
++++ b/libxfs/xfs_log_format.h
+@@ -359,12 +359,6 @@ struct xfs_inode_log_format_32 {
   */
--int
-+static bool
- xfs_dir_isempty(
- 	xfs_inode_t	*dp)
- {
-@@ -204,9 +204,9 @@ xfs_dir_isempty(
+ #define XFS_ILOG_IVERSION	0x8000
  
- 	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	if (dp->i_disk_size == 0)	/* might happen during shutdown. */
--		return 1;
-+		return true;
- 	if (dp->i_disk_size > xfs_inode_data_fork_size(dp))
--		return 0;
-+		return false;
- 	sfp = dp->i_df.if_data;
- 	return !sfp->count;
- }
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index 576068ed81fac2..a6594a5a941d9f 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -58,7 +58,6 @@ extern void xfs_dir_startup(void);
- extern int xfs_da_mount(struct xfs_mount *mp);
- extern void xfs_da_unmount(struct xfs_mount *mp);
+-#define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+-				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
+-				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
+-				 XFS_ILOG_ABROOT | XFS_ILOG_DOWNER | \
+-				 XFS_ILOG_AOWNER)
+-
+ #define	XFS_ILOG_DFORK		(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+ 				 XFS_ILOG_DBROOT)
  
--extern int xfs_dir_isempty(struct xfs_inode *dp);
- extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_inode *pdp);
- extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
 
