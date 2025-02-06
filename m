@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6D232417C2
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:55:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F30222417C2
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:55:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882544; cv=none; b=uTKTyPm3Lfb09zsutzmalzhyONBFGhl8jGOqrfhQUw4uDeoSZmLTIeSrzKxO4DYZCuLSFneZLeTexphDlmTml83r6ZsFwxDYecAS0OlB7iu9X27iNcDDOeMIKWlDP8QyKQQ52hYKkDf/UcuxRGn84H7pceKXCV3LCFZ0QynYEbw=
+	t=1738882560; cv=none; b=PLbEETfpoDE7GXyniu5Izm7ND4xJ4DFYdZWYXOytRymD2QWMSE7Ff/k6upAWAA76duJmmhZqlgzchm8wubJODpo5jmCWGP2lBJhBhh1a9jc1MfKj1dFsQIXt/NIkCyL/86NEEv1ANC240YlM13wLFXZ61YmlAUty2SXLFG8es4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882544; c=relaxed/simple;
-	bh=d/2NK6Ngfr/vCc7VVdpTnnSK+BFmPYQWGUEIJakjkL4=;
+	s=arc-20240116; t=1738882560; c=relaxed/simple;
+	bh=JQpTnQQ1o3qvsJwOG8Dd6fzx2wR/t3VHQMW0Cqxi33o=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=vC94emfvdpv1l5tL2nGBWeRXmtisIEzBpK/aOD7nDZOioQkwHDbVUVKIcjyKpm0ypLa9N2t+zK93bqIQTVQcMvXr+K4n6mAOwVHfVDRW1NmDn/32Ht2cXm6auHSi1IpQxsMSn2jR983JhS8dVz2cdpLnZWxFneDVYLS8KIPKbi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PIiXcWsG; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=aYAFfevGtIFnulNoFdgyhyN+v9KrDQgBCKofXkObWLYA20TVZNtl2ZTj1YcC1i1mPjNEycrY6IHijZaH7voAjLpmDaGFlOsA7Iqzk7fJcNeLR4Ef6U6io6gXfN/7k8BzmtZjfWbBisBYsbid2qKqw4ZmPCJav6cyBtdDVeJL/Fs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AwmC3qkt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PIiXcWsG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B332C4CEDD;
-	Thu,  6 Feb 2025 22:55:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AwmC3qkt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1DDEC4CEDF;
+	Thu,  6 Feb 2025 22:55:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882544;
-	bh=d/2NK6Ngfr/vCc7VVdpTnnSK+BFmPYQWGUEIJakjkL4=;
+	s=k20201202; t=1738882559;
+	bh=JQpTnQQ1o3qvsJwOG8Dd6fzx2wR/t3VHQMW0Cqxi33o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PIiXcWsGRHilSw60NmWl4WDQUvLXdOA/n3IPhfqSpMvVsx/36j9L6RgrEZYqmk6nt
-	 78fCkv+lyz2S06aY/2KScCYKd6KEJRTr8YM8ufJtJVIaRsKIO41tic1u209FwwNsI1
-	 TAw6FIWlnACHt13yrGuQ7hh6XmID4J2U6QKwYd2hsCJnyo5bTn+8yVvOPQFgG9pmxg
-	 tAR9P25bfRFozYPXQ5rABgBgm/lmO2gFMdyG0W+A/JSY6EAFKQBDtZosbszHaxk87b
-	 W/AwGT4Un7LXDQsdaHxHWr5YU44+tXK3eXbYs9QelubT2YO3yah9GmOvzMwsq6gmTW
-	 jZ9wRPoePFMBg==
-Date: Thu, 06 Feb 2025 14:55:43 -0800
-Subject: [PATCH 23/27] xfs_repair: rebuild the bmap btree for realtime files
+	b=AwmC3qktp7yufBElr2S5tZK8alazC4/sAfaMWmfpxhKs3AHt50ewcZ1ZLuwylqEDt
+	 8guZgnsLRcBDJWp1C9HAgGVYt+3itTDaAhGV2CS04z3CiVWidoifhzozKLuzkcH0TT
+	 i/dxP0tKXYI7CGqfW6IVx4itSkZz4kJdhMuTppSacZw7BoJ6Xpo9bDEmhZeUrFmSfV
+	 y4GweIfKB0ohvH3xc2BXcGfDkqSdAthUsZLFDDOiafj31CMlzX8h2h8axIZ5U1VlxQ
+	 xa9ct4+L0dw+L7DfN5CeZGYia3OrUtHXXD9zTXUVVfCqgG7sNUKbGT4+OHhrTN8JAd
+	 hKKQE2abNCwYw==
+Date: Thu, 06 Feb 2025 14:55:59 -0800
+Subject: [PATCH 24/27] xfs_repair: reserve per-AG space while rebuilding rt
+ metadata
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888088448.2741033.9119599638346403244.stgit@frogsfrogsfrogs>
+Message-ID: <173888088464.2741033.2066305894736213498.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
 References: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,149 +46,104 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use the realtime rmap btree information to rebuild an inode's data fork
-when appropriate.
+Realtime metadata btrees can consume quite a bit of space on a full
+filesystem.  Since the metadata are just regular files, we need to
+make the per-AG reservations to avoid overfilling any of the AGs while
+rebuilding metadata.  This avoids the situation where a filesystem comes
+straight from repair and immediately trips over not having enough space
+in an AG.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- repair/bmap_repair.c |  109 ++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 105 insertions(+), 4 deletions(-)
+ include/libxfs.h |    1 +
+ repair/phase6.c  |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
 
-diff --git a/repair/bmap_repair.c b/repair/bmap_repair.c
-index 7e7c2a39f5724b..5d1f639be81ff4 100644
---- a/repair/bmap_repair.c
-+++ b/repair/bmap_repair.c
-@@ -209,6 +209,101 @@ xrep_bmap_scan_ag(
- 	return error;
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 79f8e1ff03d3f5..82b34b9d81c3a7 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -101,6 +101,7 @@ struct iomap;
+ #include "xfs_rtgroup.h"
+ #include "xfs_rtbitmap.h"
+ #include "xfs_rtrmap_btree.h"
++#include "xfs_ag_resv.h"
+ 
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 2ddfd0526767e0..30ea19fda9fd87 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -3540,10 +3540,41 @@ reset_quota_metadir_inodes(
+ 	libxfs_irele(dp);
  }
  
-+/* Check for any obvious errors or conflicts in the file mapping. */
-+STATIC int
-+xrep_bmap_check_rtfork_rmap(
-+	struct repair_ctx		*sc,
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec)
++static int
++reserve_ag_blocks(
++	struct xfs_mount	*mp)
 +{
-+	/* xattr extents are never stored on realtime devices */
-+	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
-+		return EFSCORRUPTED;
++	struct xfs_perag	*pag = NULL;
++	int			error = 0;
++	int			err2;
 +
-+	/* bmbt blocks are never stored on realtime devices */
-+	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+		return EFSCORRUPTED;
++	mp->m_finobt_nores = false;
 +
-+	/* Data extents for non-rt files are never stored on the rt device. */
-+	if (!XFS_IS_REALTIME_INODE(sc->ip))
-+		return EFSCORRUPTED;
++	while ((pag = xfs_perag_next(mp, pag))) {
++		err2 = -libxfs_ag_resv_init(pag, NULL);
++		if (err2 && !error)
++			error = err2;
++	}
 +
-+	/* Check the file offsets and physical extents. */
-+	if (!xfs_verify_fileext(sc->mp, rec->rm_offset, rec->rm_blockcount))
-+		return EFSCORRUPTED;
-+
-+	/* Check that this fits in the rt volume. */
-+	if (!xfs_verify_rgbext(to_rtg(cur->bc_group), rec->rm_startblock,
-+				rec->rm_blockcount))
-+		return EFSCORRUPTED;
-+
-+	return 0;
-+}
-+
-+/* Record realtime extents that belong to this inode's fork. */
-+STATIC int
-+xrep_bmap_walk_rtrmap(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*priv)
-+{
-+	struct xrep_bmap		*rb = priv;
-+	int				error = 0;
-+
-+	/* Skip extents which are not owned by this inode and fork. */
-+	if (rec->rm_owner != rb->sc->ip->i_ino)
-+		return 0;
-+
-+	error = xrep_bmap_check_rtfork_rmap(rb->sc, cur, rec);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Record all blocks allocated to this file even if the extent isn't
-+	 * for the fork we're rebuilding so that we can reset di_nblocks later.
-+	 */
-+	rb->nblocks += rec->rm_blockcount;
-+
-+	/* If this rmap isn't for the fork we want, we're done. */
-+	if (rb->whichfork == XFS_DATA_FORK &&
-+	    (rec->rm_flags & XFS_RMAP_ATTR_FORK))
-+		return 0;
-+	if (rb->whichfork == XFS_ATTR_FORK &&
-+	    !(rec->rm_flags & XFS_RMAP_ATTR_FORK))
-+		return 0;
-+
-+	return xrep_bmap_from_rmap(rb, rec->rm_offset, rec->rm_startblock,
-+			rec->rm_blockcount,
-+			rec->rm_flags & XFS_RMAP_UNWRITTEN);
-+}
-+
-+/*
-+ * Scan the realtime reverse mappings to build the new extent map.  The rt rmap
-+ * inodes must be loaded from disk explicitly here, since we have not yet
-+ * validated the metadata directory tree but do not wish to throw away user
-+ * data unnecessarily.
-+ */
-+STATIC int
-+xrep_bmap_scan_rt(
-+	struct xrep_bmap	*rb,
-+	struct xfs_rtgroup	*rtg)
-+{
-+	struct repair_ctx	*sc = rb->sc;
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_inode	*ip = rtg_rmap(rtg);
-+	struct xfs_btree_cur	*cur;
-+	int			error;
-+
-+	/* failed to load the rtdir inode? */
-+	if (!xfs_has_rtrmapbt(mp) || !ip)
-+		return ENOENT;
-+
-+	cur = libxfs_rtrmapbt_init_cursor(sc->tp, rtg);
-+	error = -libxfs_rmap_query_all(cur, xrep_bmap_walk_rtrmap, rb);
-+	libxfs_btree_del_cursor(cur, error);
 +	return error;
 +}
 +
- /*
-  * Collect block mappings for this fork of this inode and decide if we have
-  * enough space to rebuild.  Caller is responsible for cleaning up the list if
-@@ -219,8 +314,18 @@ xrep_bmap_find_mappings(
- 	struct xrep_bmap	*rb)
++static void
++unreserve_ag_blocks(
++	struct xfs_mount	*mp)
++{
++	struct xfs_perag	*pag = NULL;
++
++	while ((pag = xfs_perag_next(mp, pag)))
++		libxfs_ag_resv_free(pag);
++}
++
+ void
+ phase6(xfs_mount_t *mp)
  {
- 	struct xfs_perag	*pag = NULL;
-+	struct xfs_rtgroup	*rtg = NULL;
- 	int			error;
+ 	ino_tree_node_t		*irec;
++	bool			reserve_perag;
++	int			error;
+ 	int			i;
  
-+	/* Iterate the rtrmaps for extents. */
-+	while ((rtg = xfs_rtgroup_next(rb->sc->mp, rtg))) {
-+		error = xrep_bmap_scan_rt(rb, rtg);
+ 	parent_ptr_init(mp);
+@@ -3588,6 +3619,17 @@ phase6(xfs_mount_t *mp)
+ 		do_warn(_("would reinitialize metadata root directory\n"));
+ 	}
+ 
++	reserve_perag = xfs_has_realtime(mp) && !no_modify;
++	if (reserve_perag) {
++		error = reserve_ag_blocks(mp);
 +		if (error) {
-+			libxfs_rtgroup_put(rtg);
-+			return error;
++			if (error != ENOSPC)
++				do_warn(
++	_("could not reserve per-AG space to rebuild realtime metadata"));
++			reserve_perag = false;
 +		}
 +	}
 +
- 	/* Iterate the rmaps for extents. */
- 	while ((pag = xfs_perag_next(rb->sc->mp, pag))) {
- 		error = xrep_bmap_scan_ag(rb, pag);
-@@ -570,10 +675,6 @@ xrep_bmap_check_inputs(
- 		return EINVAL;
- 	}
+ 	if (xfs_has_rtgroups(mp))
+ 		reset_rt_metadir_inodes(mp);
+ 	else
+@@ -3596,6 +3638,9 @@ phase6(xfs_mount_t *mp)
+ 	if (xfs_has_metadir(mp) && xfs_has_quota(mp) && !no_modify)
+ 		reset_quota_metadir_inodes(mp);
  
--	/* Don't know how to rebuild realtime data forks. */
--	if (XFS_IS_REALTIME_INODE(sc->ip))
--		return EOPNOTSUPP;
--
- 	return 0;
- }
++	if (reserve_perag)
++		unreserve_ag_blocks(mp);
++
+ 	mark_standalone_inodes(mp);
  
+ 	do_log(_("        - traversing filesystem ...\n"));
 
