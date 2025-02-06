@@ -1,145 +1,90 @@
-Received: from mail.marcansoft.com (marcansoft.com [212.63.210.85])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D661ACECD;
-	Thu,  6 Feb 2025 19:57:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.63.210.85
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B195A1A76AE
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 20:13:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738871843; cv=none; b=RW6zNys1xaITrcp3REhdfhQQXRcbmq67TZ4YGxA2g+tWygbq/dUwVFbBGAYyL8QRBD7iHh11onlxxCcBov/7APUd/fnS/HEWZuqaqXJQhfzuRkTR7rrC3lK3UQ3tJJXNWE/derVftwNKwbO8sMfv/qKSOcwMf3r+wq/nl8DAAzg=
+	t=1738872832; cv=none; b=eQ0TVHKDHpFU28ULT1J6M9NVD73S+UEaOpILzwqaAQUD68yLJMM+4o9VeSMxYiwVn5vaijawX0Sm9OWDNTJ8X4tl1SCjSCXXeqTdL/Vw1sy2YNMKQIAg7Br83xAn3DJisHyVUgkbjhZwDOQWa6QnIryLmMk0QMQ36dtY4KAr7+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738871843; c=relaxed/simple;
-	bh=E+lU6r2Gicb6SJrSYXFHxoENYWrJPQXqghLrsfBIZ0E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fQ2ZziU/34fyxAz04TzRxRsnXB6eLdpmGYaFncbZ7Dkf9fGrOuGG2zHWddv5bKte+ojw87xJZZWX8WpLRwRpxBdLd1FWbYeoN8ZKKUH74hiJdYgpNIOPtzxZoGciked2PKgXVLXhCssMPOWQg7N94gHKXJJFx37JVTwrUpm4H9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=asahilina.net; spf=pass smtp.mailfrom=asahilina.net; dkim=pass (2048-bit key) header.d=asahilina.net header.i=@asahilina.net header.b=NCRCOX62; arc=none smtp.client-ip=212.63.210.85
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=asahilina.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asahilina.net
+	s=arc-20240116; t=1738872832; c=relaxed/simple;
+	bh=rmfTfv9AtBAcA2kucdvtJZwQvc2MNreedMFZxSzz3sc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WS8lWi9vFKtlKT7UNvA8FVjeVsThBZZdX4rtmihPRfIR8y5U7t4GLplyW5Vum/TUJFC7XhxNH8H8pBcTceeRFrS0nx8CZhE5XQzE1SvcRIa+fB7Gz8rvTu841OnmdQXNtXJplUdmge/14Ih5fw495b/MH2fEQvBVgvvX3TS3kkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OOdJ9ulp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=asahilina.net header.i=@asahilina.net header.b="NCRCOX62"
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
-	(No client certificate requested)
-	(Authenticated sender: lina@asahilina.net)
-	by mail.marcansoft.com (Postfix) with ESMTPSA id BEC3E43A93;
-	Thu,  6 Feb 2025 19:57:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=asahilina.net;
-	s=default; t=1738871838;
-	bh=E+lU6r2Gicb6SJrSYXFHxoENYWrJPQXqghLrsfBIZ0E=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=NCRCOX62cpd8AaeYgG4rxET2H1BdW5ASoApszzfwGbbwxcAi8JWEtWH7VKPS0yNrU
-	 KFiGoOBJTGUiBY398SaWyKoOkkxLQKgcKB++A5vdRnKurYaFamwfuqDeD4Li0V7/BD
-	 ZFbnXCZIVstHri09WyTDk3rsvei3iqp3Wv88gFpTjboT5hk1QReVygK8DNbS1rAE5e
-	 ZVYOfzgP+exVnyyAMksacexFZh5ai5B5OIZuRLE+1hNKKzMmVYnbjvHmFUsKLTJapX
-	 sqeFezTN1APVg2wUKlFuAfP0pLwgdEGNsgDxRLidt+apRNe3K3Tef2DzbQ48tGi6XJ
-	 h0XYECuYgyX9w==
-Message-ID: <2f4728be-3a0d-4bc3-ab11-6b1e2e3fbc6e@asahilina.net>
-Date: Fri, 7 Feb 2025 04:57:13 +0900
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OOdJ9ulp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EFE3C4CEDD;
+	Thu,  6 Feb 2025 20:13:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738872832;
+	bh=rmfTfv9AtBAcA2kucdvtJZwQvc2MNreedMFZxSzz3sc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OOdJ9ulpeHLJmMEnux5cR9eRDnaO9bVCEDli2UGA9/aDXO+hLAEOyzpwiJCyb8mIe
+	 NlaJWISyOEdGwZSNdxzX8Gx/gdeQN0hjEewn/Q3GgW94ls1SEFKBVXPF9XTKeZd6mf
+	 9RQz5uHoDyx2Je01EKee0bKIwBPkCPUFWDajNRatvxFyQAP4srjl+CxLYAknM7zv1U
+	 5H6xZY3nLVyQyQ3ZsItd2ZsbD1XP2ce8amUMGeL8X/8MtIBKaOXx0jfFkhD0amlxUj
+	 Fh0H10wY2iYW9cnRpyG7tSNwZMQ4l81Aa+/l9SwvGc1HqsaaAYmRDyyYwsN8nVCKUO
+	 z1YqoOYAPGkQw==
+Date: Thu, 6 Feb 2025 12:13:51 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/43] xfs: skip always_cow inodes in
+ xfs_reflink_trim_around_shared
+Message-ID: <20250206201351.GH21808@frogsfrogsfrogs>
+References: <20250206064511.2323878-1-hch@lst.de>
+ <20250206064511.2323878-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 01/26] fuse: Fix dax truncate/punch_hole fault path
-To: Dan Williams <dan.j.williams@intel.com>, Vivek Goyal <vgoyal@redhat.com>,
- Alistair Popple <apopple@nvidia.com>, Sergio Lopez Pascual <slp@redhat.com>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org,
- alison.schofield@intel.com, zhang.lyra@gmail.com,
- gerald.schaefer@linux.ibm.com, vishal.l.verma@intel.com,
- dave.jiang@intel.com, logang@deltatee.com, bhelgaas@google.com,
- jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com, will@kernel.org,
- mpe@ellerman.id.au, npiggin@gmail.com, dave.hansen@linux.intel.com,
- ira.weiny@intel.com, willy@infradead.org, djwong@kernel.org, tytso@mit.edu,
- linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
- nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
- david@fromorbit.com, chenhuacai@kernel.org, kernel@xen0n.name,
- loongarch@lists.linux.dev, Hanna Czenczek <hreitz@redhat.com>,
- German Maglione <gmaglione@redhat.com>
-References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
- <bfae590045c7fc37b7ccef10b9cec318012979fd.1736488799.git-series.apopple@nvidia.com>
- <Z6NhkR8ZEso4F-Wx@redhat.com>
- <67a3fde7da328_2d2c2942b@dwillia2-xfh.jf.intel.com.notmuch>
- <A1E3C5B2-CCD8-41BA-BBC8-E8338C18D485@asahilina.net>
- <67a5111b2f805_2d2c29448@dwillia2-xfh.jf.intel.com.notmuch>
-Content-Language: en-US
-From: Asahi Lina <lina@asahilina.net>
-In-Reply-To: <67a5111b2f805_2d2c29448@dwillia2-xfh.jf.intel.com.notmuch>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250206064511.2323878-5-hch@lst.de>
 
-On 2/7/25 4:44 AM, Dan Williams wrote:
-> Asahi Lina wrote:
->> Hi,
->>
->> On February 6, 2025 1:10:15 AM GMT+01:00, Dan Williams <dan.j.williams@intel.com> wrote:
->>> Vivek Goyal wrote:
->>>> On Fri, Jan 10, 2025 at 05:00:29PM +1100, Alistair Popple wrote:
->>>>> FS DAX requires file systems to call into the DAX layout prior to unlinking
->>>>> inodes to ensure there is no ongoing DMA or other remote access to the
->>>>> direct mapped page. The fuse file system implements
->>>>> fuse_dax_break_layouts() to do this which includes a comment indicating
->>>>> that passing dmap_end == 0 leads to unmapping of the whole file.
->>>>>
->>>>> However this is not true - passing dmap_end == 0 will not unmap anything
->>>>> before dmap_start, and further more dax_layout_busy_page_range() will not
->>>>> scan any of the range to see if there maybe ongoing DMA access to the
->>>>> range. Fix this by passing -1 for dmap_end to fuse_dax_break_layouts()
->>>>> which will invalidate the entire file range to
->>>>> dax_layout_busy_page_range().
->>>>
->>>> Hi Alistair,
->>>>
->>>> Thanks for fixing DAX related issues for virtiofs. I am wondering how are
->>>> you testing DAX with virtiofs. AFAIK, we don't have DAX support in Rust
->>>> virtiofsd. C version of virtiofsd used to have out of the tree patches
->>>> for DAX. But C version got deprecated long time ago.
->>>>
->>>> Do you have another implementation of virtiofsd somewhere else which
->>>> supports DAX and allows for testing DAX related changes?
->>>
->>> I have personally never seen a virtiofs-dax test. It sounds like you are
->>> saying we can deprecate that support if there are no longer any users.
->>> Or, do you expect that C-virtiofsd is alive in the ecosystem?
->>
->> I accidentally replied offlist, but I wanted to mention that libkrun
->> supports DAX and we use it in muvm. It's a critical part of x11bridge
->> functionality, since it uses DAX to share X11 shm fences between X11
->> clients in the VM and the XWayland server on the host, which only
->> works if the mmaps are coherent.
+On Thu, Feb 06, 2025 at 07:44:20AM +0100, Christoph Hellwig wrote:
+> xfs_reflink_trim_around_shared tries to find shared blocks in the
+> refcount btree.  Always_cow inodes don't have that tree, so don't
+> bother.
 > 
-> Ah, good to hear. It would be lovely to integrate an muvm smoketest
-> somewhere in https://github.com/pmem/ndctl/tree/main/test so that we
-> have early warning on potential breakage.
+> For the existing always_cow code this is a minor optimization.  For
+> the upcoming zoned code that can do COW without the rtreflink code it
+> avoids triggering a NULL pointer dereference.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I think you'll probably want a smoke test using libkrun directly, since
-muvm is quite application-specific. It's really easy to write a quick C
-file to call into libkrun and spin up a VM.
+Hmm.  So this is to support doing COW on non-reflink zoned filesystems?
+How then do we protect the refcount intent log items from being replayed
+on an oler kernel?  Are they effectively protected by the zoned feature
+bit XFS_SB_FEAT_INCOMPAT_ZONED?
 
-If it's supposed to test an arbitrary kernel though, I'm not sure what
-the test setup would look like. You'd need to run it on a host (whose
-kernel is mostly irrelevant) and then use libkrun to spin up a VM with a
-guest, which then runs the test. libkrun normally uses a bundled kernel
-though (shipped as libkrunfw), we'd need to add an API to specify an
-external kernel binary I guess?
+If so then
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-I'm happy to help with that, but I'll need to know a bit more about the
-intended usage first. I *think* most of the scaffolding for running
-arbitrary kernels is already planned, since there was some talk of
-running the host kernel as the guest kernel, so this wouldn't add much
-work on top of that.
+--D
 
-I definitely have a few tests in mind if we do put this together, since
-I know of one or two things that are definitely broken in DAX upstream
-right now (which I *think* this series fixes but I never got around to
-testing it...).
-
-Cc: slp for libkrun.
-
-~~ Lina
-
+> ---
+>  fs/xfs/xfs_reflink.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 59f7fc16eb80..3e778e077d09 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -235,7 +235,7 @@ xfs_reflink_trim_around_shared(
+>  	int			error = 0;
+>  
+>  	/* Holes, unwritten, and delalloc extents cannot be shared */
+> -	if (!xfs_is_cow_inode(ip) || !xfs_bmap_is_written_extent(irec)) {
+> +	if (!xfs_is_reflink_inode(ip) || !xfs_bmap_is_written_extent(irec)) {
+>  		*shared = false;
+>  		return 0;
+>  	}
+> -- 
+> 2.45.2
+> 
+> 
