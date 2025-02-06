@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF8E237711
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:51:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85BF23AE65
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:52:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882310; cv=none; b=WZLLRPewUD8StlEPyXcXbC31Czq6/HpPVsWT3XigIzO2s2uS0Cf5kOAG+EvRhuYwVE76vkfEUM1qbESBMyhTzbZkW9fRRhUkOYCAZNHJ4owQGQnfR68DsCnmwRLdvu0TBdBJXIdAaqbDc03reOI/lmJatPflVz685DC5m+kz0HI=
+	t=1738882325; cv=none; b=EDKVhWk+tdgCQRSkwbCHVv92nRfpASBq3hnDdC7vcWhMBn1mBXgdj7ZCsZ5F8reblVRVv2u8VI+CJHMOW1f4L7iGqb+hBw3sz+HL1nubTzoHjCJZy4F9hVhR8++wmlMLeK6OqQm7Qj3673txW7lo03PmdqpHDNeOxbzpaEsKUNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882310; c=relaxed/simple;
-	bh=zmVOTi6pY/U+jx4QcESAizugxO0vRQ2r+bxWLCWxBD8=;
+	s=arc-20240116; t=1738882325; c=relaxed/simple;
+	bh=I5x0kj5mYNwBHiI6Zx2ipHy0Qe6TDUrWEvkU86FeIrc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B7pbzSlr3VtLNatmiOuQ/Fep0C+Hu6ZSEQoNM8etrHimF4Y6DNsKVudHhwXsAkui3EhVLq9ks/P1F4uMRrErzlIVNZmmZGQbASfsHa4JqCr/6X8r1TnwmSO3pDWqzZJfSTgnNZfeSymIx6rTc+pWcaD5617xyLD8Dqvp64vI0tA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hFfzF40I; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nqYGNO2jQlfh5CpjrJCCQoLvAZIsJWM383uegl8n7czyDkrv4IGoCVaNRKsayE3R2CDgxg7WJ2qdRzyV5NuqdPX4iEV08gDitb36UFfrVY4BDR7Ifzym8D0Z0Fi6bpucCQLn3sEMtAMchEXiyWe+ubkrFdCUtpGPMAdI8ZXvxoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rMvduAmC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hFfzF40I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C2C9C4CEDD;
-	Thu,  6 Feb 2025 22:51:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rMvduAmC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E7ADC4CEE0;
+	Thu,  6 Feb 2025 22:52:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882309;
-	bh=zmVOTi6pY/U+jx4QcESAizugxO0vRQ2r+bxWLCWxBD8=;
+	s=k20201202; t=1738882325;
+	bh=I5x0kj5mYNwBHiI6Zx2ipHy0Qe6TDUrWEvkU86FeIrc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hFfzF40Iic0S5q9yaKJ3sDGCViyvL8KVYqxoHOZNLS0/zU+JMpTGfapoDI//Nb9qx
-	 JDJPL8NWnEoklFdpWgUSRszXd8YGXitemE1LqsWs43s4APgqxOo2UT227tLzQWivKP
-	 Tux0SM04GJuS1046fpJR62HkPZePV0nExfOQoJQzN0Np0EBlqmoz5ST+VCtMVWSAda
-	 6gfJQM32NJxHAbOZ6mT0W6b2uM4Ddf107MIMYp0cqC1cBoa2iDKWway9dXoV5H/VDW
-	 C0+MmythnLV6YdCMTtE8mNcJgT/R4657cPww2pX5ckVpmlFTg6H9bB21HclW5rayuU
-	 m0Y3NopYiGL+Q==
-Date: Thu, 06 Feb 2025 14:51:49 -0800
-Subject: [PATCH 08/27] xfs_db: support the realtime rmapbt
+	b=rMvduAmCGkn6Sz/AfW/8qGBnEA3HDfsPqVuW3ua3+oxrW3tjlkwlnb7qj9jHxceXy
+	 yzpI4NOYV/T9ii911p1Z+cqg7iJJIddGmEkNKXqm10j3CYTLKXvMa+7kEy/GZmEe1i
+	 P6kZFOprybXOVu7Bj23Er3A0+iGLu0yODa3PkV92qTgYVjbNHn1qBA2oelWDH5FDWX
+	 RNSpz5ZSHatsxARuYE3M+j5EE06m739ZoEW8emFPgFmN1UAJvgeBRapqSkdJBEMhFK
+	 BEzkdhT3VhXxrM5aVWj8+kYZCQmekOobpYFGmpAcGTKDagoMUetp9Rizxb+4NRd7E0
+	 VRauPPGca9E0Q==
+Date: Thu, 06 Feb 2025 14:52:04 -0800
+Subject: [PATCH 09/27] xfs_db: copy the realtime rmap btree
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888088218.2741033.7947778465817978960.stgit@frogsfrogsfrogs>
+Message-ID: <173888088234.2741033.11666132944549575171.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
 References: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,157 +45,157 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Wire up various parts of xfs_db for realtime rmap support so that we can
-dump the btree contents.
+Copy the realtime rmapbt when we're metadumping the filesystem.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- db/btblock.c             |    3 ++
- db/btdump.c              |   63 ++++++++++++++++++++++++++++++++++++++++++++++
- db/btheight.c            |    5 ++++
- libxfs/libxfs_api_defs.h |    1 +
- man/man8/xfs_db.8        |    3 +-
- 5 files changed, 74 insertions(+), 1 deletion(-)
+ db/metadump.c |  120 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 120 insertions(+)
 
 
-diff --git a/db/btblock.c b/db/btblock.c
-index 5cad166278d98b..70f6c3f6aedde5 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -147,6 +147,9 @@ block_to_bt(
- 	case TYP_RMAPBT:
- 		magic = crc ? XFS_RMAP_CRC_MAGIC : 0;
- 		break;
-+	case TYP_RTRMAPBT:
-+		magic = crc ? XFS_RTRMAP_CRC_MAGIC : 0;
-+		break;
- 	case TYP_REFCBT:
- 		magic = crc ? XFS_REFC_CRC_MAGIC : 0;
- 		break;
-diff --git a/db/btdump.c b/db/btdump.c
-index 81642cde2b6d8f..55301d25de10cd 100644
---- a/db/btdump.c
-+++ b/db/btdump.c
-@@ -441,6 +441,66 @@ dump_dabtree(
- 	return ret;
+diff --git a/db/metadump.c b/db/metadump.c
+index 4f4b4f8a39a551..aa946746cdfa68 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -589,6 +589,55 @@ copy_rmap_btree(
+ 	return scan_btree(agno, root, levels, TYP_RMAPBT, agf, scanfunc_rmapbt);
  }
  
-+static bool
-+is_btree_inode(void)
-+{
-+	struct xfs_dinode	*dip = iocur_top->data;
-+
-+	return dip->di_format == XFS_DINODE_FMT_META_BTREE;
-+}
-+
 +static int
-+dump_btree_inode(
-+	bool			dump_node_blocks)
++scanfunc_rtrmapbt(
++	struct xfs_btree_block	*block,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	int			level,
++	typnm_t			btype,
++	void			*arg)
 +{
-+	char			*prefix;
-+	struct xfs_dinode	*dip = iocur_top->data;
-+	struct xfs_rtrmap_root	*rtrmap;
-+	int			level;
++	xfs_rtrmap_ptr_t	*pp;
++	int			i;
 +	int			numrecs;
-+	int			ret;
 +
-+	switch (be16_to_cpu(dip->di_metatype)) {
-+	case XFS_METAFILE_RTRMAP:
-+		prefix = "u3.rtrmapbt";
-+		rtrmap = (struct xfs_rtrmap_root *)XFS_DFORK_DPTR(dip);
-+		level = be16_to_cpu(rtrmap->bb_level);
-+		numrecs = be16_to_cpu(rtrmap->bb_numrecs);
-+		break;
-+	default:
-+		dbprintf("Unknown metadata inode btree type %u\n",
-+				be16_to_cpu(dip->di_metatype));
-+		return 0;
++	if (level == 0)
++		return 1;
++
++	numrecs = be16_to_cpu(block->bb_numrecs);
++	if (numrecs > mp->m_rtrmap_mxr[1]) {
++		if (metadump.show_warnings)
++			print_warning("invalid numrecs (%u) in %s block %u/%u",
++				numrecs, typtab[btype].name, agno, agbno);
++		return 1;
 +	}
 +
-+	if (numrecs == 0)
-+		return 0;
-+	if (level > 0) {
-+		if (dump_node_blocks) {
-+			ret = eval("print %s.keys", prefix);
-+			if (ret)
-+				goto err;
-+			ret = eval("print %s.ptrs", prefix);
-+			if (ret)
-+				goto err;
++	pp = xfs_rtrmap_ptr_addr(block, 1, mp->m_rtrmap_mxr[1]);
++	for (i = 0; i < numrecs; i++) {
++		xfs_agnumber_t	pagno;
++		xfs_agblock_t	pbno;
++
++		pagno = XFS_FSB_TO_AGNO(mp, get_unaligned_be64(&pp[i]));
++		pbno = XFS_FSB_TO_AGBNO(mp, get_unaligned_be64(&pp[i]));
++
++		if (pbno == 0 || pbno > mp->m_sb.sb_agblocks ||
++		    pagno > mp->m_sb.sb_agcount) {
++			if (metadump.show_warnings)
++				print_warning("invalid block number (%u/%u) "
++						"in inode %llu %s block %u/%u",
++						pagno, pbno,
++						(unsigned long long)metadump.cur_ino,
++						typtab[btype].name, agno, agbno);
++			continue;
 +		}
-+		ret = eval("addr %s.ptrs[1]", prefix);
-+		if (ret)
-+			goto err;
-+		ret = dump_btree_long(dump_node_blocks);
-+	} else {
-+		ret = eval("print %s.recs", prefix);
++		if (!scan_btree(pagno, pbno, level, btype, arg,
++				scanfunc_rtrmapbt))
++			return 0;
 +	}
-+	if (ret)
-+		goto err;
-+
-+	ret = eval("pop");
-+	return ret;
-+err:
-+	eval("pop");
-+	return ret;
++	return 1;
 +}
 +
  static int
- btdump_f(
- 	int		argc,
-@@ -488,8 +548,11 @@ btdump_f(
- 		return dump_btree_short(iflag);
- 	case TYP_BMAPBTA:
- 	case TYP_BMAPBTD:
-+	case TYP_RTRMAPBT:
- 		return dump_btree_long(iflag);
- 	case TYP_INODE:
-+		if (is_btree_inode())
-+			return dump_btree_inode(iflag);
- 		return dump_inode(iflag, aflag);
- 	case TYP_ATTR:
- 		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
-diff --git a/db/btheight.c b/db/btheight.c
-index 0456af08b39edf..31dff1c924a2e0 100644
---- a/db/btheight.c
-+++ b/db/btheight.c
-@@ -53,6 +53,11 @@ struct btmap {
- 		.maxlevels	= libxfs_rmapbt_maxlevels_ondisk,
- 		.maxrecs	= libxfs_rmapbt_maxrecs,
- 	},
-+	{
-+		.tag		= "rtrmapbt",
-+		.maxlevels	= libxfs_rtrmapbt_maxlevels_ondisk,
-+		.maxrecs	= libxfs_rtrmapbt_maxrecs,
-+	},
- };
+ scanfunc_refcntbt(
+ 	struct xfs_btree_block	*block,
+@@ -2325,6 +2374,69 @@ process_exinode(
+ 			nex);
+ }
  
- static void
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index fcbcaaa11f1025..cf88656946ab1b 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -311,6 +311,7 @@
- #define xfs_rtfree_blocks		libxfs_rtfree_blocks
- #define xfs_update_rtsb			libxfs_update_rtsb
- #define xfs_rtrmapbt_droot_maxrecs	libxfs_rtrmapbt_droot_maxrecs
-+#define xfs_rtrmapbt_maxlevels_ondisk	libxfs_rtrmapbt_maxlevels_ondisk
- #define xfs_rtrmapbt_maxrecs		libxfs_rtrmapbt_maxrecs
++static int
++process_rtrmap(
++	struct xfs_dinode	*dip)
++{
++	int			whichfork = XFS_DATA_FORK;
++	struct xfs_rtrmap_root	*dib =
++		(struct xfs_rtrmap_root *)XFS_DFORK_PTR(dip, whichfork);
++	xfs_rtrmap_ptr_t	*pp;
++	int			level = be16_to_cpu(dib->bb_level);
++	int			nrecs = be16_to_cpu(dib->bb_numrecs);
++	typnm_t			btype = TYP_RTRMAPBT;
++	int			maxrecs;
++	int			i;
++
++	if (level > mp->m_rtrmap_maxlevels) {
++		if (metadump.show_warnings)
++			print_warning("invalid level (%u) in inode %lld %s "
++					"root", level,
++					(unsigned long long)metadump.cur_ino,
++					typtab[btype].name);
++		return 1;
++	}
++
++	if (level == 0)
++		return 1;
++
++	maxrecs = libxfs_rtrmapbt_droot_maxrecs(
++			XFS_DFORK_SIZE(dip, mp, whichfork),
++			false);
++	if (nrecs > maxrecs) {
++		if (metadump.show_warnings)
++			print_warning("invalid numrecs (%u) in inode %lld %s "
++					"root", nrecs,
++					(unsigned long long)metadump.cur_ino,
++					typtab[btype].name);
++		return 1;
++	}
++
++	pp = xfs_rtrmap_droot_ptr_addr(dib, 1, maxrecs);
++	for (i = 0; i < nrecs; i++) {
++		xfs_agnumber_t	ag;
++		xfs_agblock_t	bno;
++
++		ag = XFS_FSB_TO_AGNO(mp, get_unaligned_be64(&pp[i]));
++		bno = XFS_FSB_TO_AGBNO(mp, get_unaligned_be64(&pp[i]));
++
++		if (bno == 0 || bno > mp->m_sb.sb_agblocks ||
++				ag > mp->m_sb.sb_agcount) {
++			if (metadump.show_warnings)
++				print_warning("invalid block number (%u/%u) "
++						"in inode %llu %s root", ag,
++						bno,
++						(unsigned long long)metadump.cur_ino,
++						typtab[btype].name);
++			continue;
++		}
++
++		if (!scan_btree(ag, bno, level, btype, NULL, scanfunc_rtrmapbt))
++			return 0;
++	}
++	return 1;
++}
++
+ static int
+ process_inode_data(
+ 	struct xfs_dinode	*dip)
+@@ -2366,6 +2478,14 @@ process_inode_data(
  
- #define xfs_sb_from_disk		libxfs_sb_from_disk
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index ddbabe36b5fc41..83a8734d3c0b47 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -535,8 +535,9 @@ .SH COMMANDS
- .IR finobt ,
- .IR bmapbt ,
- .IR refcountbt ,
-+.IR rmapbt ,
- and
--.IR rmapbt .
-+.IR rtrmapbt .
- The magic value
- .I all
- can be used to walk through all btree types.
+ 	case XFS_DINODE_FMT_BTREE:
+ 		return process_btinode(dip, XFS_DATA_FORK);
++
++	case XFS_DINODE_FMT_META_BTREE:
++		switch (be16_to_cpu(dip->di_metatype)) {
++		case XFS_METAFILE_RTRMAP:
++			return process_rtrmap(dip);
++		default:
++			return 1;
++		}
+ 	}
+ 	return 1;
+ }
 
