@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 925E9240609
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:48:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C1382417FF
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:48:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882122; cv=none; b=isaSeiRRwG4rSRkgkKQFKyXSYCUSSBnIeKwOGmQP6XYyeLSSM7+evo9RbufVhptLZAsGp5PyPJC2lGRlNiwDs9JeGvosoi7Z2RC059yi7/kYpDU/Jc9rFX3ww4ifTibah72VAMCIp66JC9jvq9qPJbeyNhTqAitjKcOvucFO/9U=
+	t=1738882138; cv=none; b=EaJIkNoBnZZp7BTRbwEFqq3R/aTQzq+TmqUL1XV9XJrEu7WFRzZ3eyFmtFsNHTYGxXTRK4qQzV+77iVAs+kviAftNgGIbRBKWXhcK5UlmaBOKCkGJQ7n81Bcx7u/r5umFjNJTTdrownBCcwxZhHPrIFb/WMZkTgpyGFr7FiSjXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882122; c=relaxed/simple;
-	bh=lKSR+Zx0oBUpom942tjJ4DAfdWzSTEkG+jreXOz7KJE=;
+	s=arc-20240116; t=1738882138; c=relaxed/simple;
+	bh=3wusq3VQDxKRnv5ZaPP+AkPpKzPQ6a/uVZY2Ab7MoRs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WMGtj62jocaPpt2mzPYpW9DPLaPQyr1oAkV1lpsHwpNUeNY0A3IlQT8+WerF9wLJ24Qt/vbnWk8pzjB68z/J8nm9z2SnZNbAYgInm8iUHqqxHgddw7ZSztDtsTuNsFVSIqiuvryxSfHDp9yU4x+n4goBPm8DWdKRUyPMbBPphSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A/M9X02m; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MiMv4xeh7997fRhDQh68+qeBmef23vZIhHEtLlt+YNSWvww8bNB+vCpzxJf/fvaCOtPiTSGyOXAI3eo+Ng4J8WzaPSzSdinKUSjX/MKn376BFKN76kKre3iz2no07l2LwoHRRJr4f+H/0RrDGYka9gaBrsVILY2TsXAc+KbT6WQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jIKSdgYT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A/M9X02m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07889C4CEFB;
-	Thu,  6 Feb 2025 22:48:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jIKSdgYT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4343C4CEDF;
+	Thu,  6 Feb 2025 22:48:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882122;
-	bh=lKSR+Zx0oBUpom942tjJ4DAfdWzSTEkG+jreXOz7KJE=;
+	s=k20201202; t=1738882137;
+	bh=3wusq3VQDxKRnv5ZaPP+AkPpKzPQ6a/uVZY2Ab7MoRs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=A/M9X02mCDbNBOOS4YiyhAfnLgt19KFGf85koI2maTfCosFNg/WCvUkyqYhtx5hh9
-	 6QdD4vIChlx516AEncK4BquINn23dY/70KdOQ/xXzFKzZ7O0Y0Sc07EpxfcAlI2N20
-	 t4B0IKx1tI+5lr1AW3wvncAeeOQbNdXNX/RICRGxSJ1KCvDrCQeZfAPktOGJ9YduM8
-	 eSyQsY1VEep4V76980HWyB50iNYc8OD883PzJqWIIy63HM9042llTle+OoDbyyWePU
-	 sHScfql1yjyi+VIU5aI+lJSVrJvXVAx3KCODCAaT4LIMNx2IYhQFRARlqm4r4lMtLr
-	 oZZir/VQT0QEA==
-Date: Thu, 06 Feb 2025 14:48:41 -0800
-Subject: [PATCH 52/56] xfs: fix the entry condition of exact EOF block
- allocation optimization
+	b=jIKSdgYTrb7BT0DxYIXO6poN7uMm+fPrHKDWPT/oh/lb9Q8gci5u9ZpQ71GYrbmlh
+	 Y0HRVoz8skVeSwfG1yNHGyMwhiEx4daRcehJTiaDkCBXf/Hj7DVe6yJi3TOXpqgYVa
+	 1qqzV64WyyVIBZk/YJBt5kc83nrSSxdvi2HrHYJevbPsw3XOZACb4OQHo0oLmARDQT
+	 Hf5Y995D4tq/7VltR7G1CLOc/4j0yKHoOvmlw7dUgTSrgwsNX03vxVQxw0Xh5kzZeq
+	 WqVJnrRouIFYtPjIgwV5Y/G2XjjdSjSI7cqkJywl2Lv48XOta6SLPO1E+S/7eD2CQF
+	 uKccWdEr0ocFg==
+Date: Thu, 06 Feb 2025 14:48:57 -0800
+Subject: [PATCH 53/56] xfs: mark xfs_dir_isempty static
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: david@fromorbit.com, alexjlzheng@tencent.com, dchinner@redhat.com,
- cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888087590.2739176.17272257539984473516.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <173888087605.2739176.6385277999824081377.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 References: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,56 +43,56 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Jinliang Zheng <alexjlzheng@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 915175b49f65d9edeb81659e82cbb27b621dbc17
+Source kernel commit: 23ebf63925989adbe4c4277c8e9b04e0a37f6005
 
-When we call create(), lseek() and write() sequentially, offset != 0
-cannot be used as a judgment condition for whether the file already
-has extents.
+And return bool instead of a boolean condition as int.
 
-Furthermore, when xfs_bmap_adjacent() has not given a better blkno,
-it is not necessary to use exact EOF block allocation.
-
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_bmap.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ libxfs/xfs_dir2.c |    6 +++---
+ libxfs/xfs_dir2.h |    1 -
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 1f7326acbf7cb2..07c553d924237b 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -3557,12 +3557,12 @@ xfs_bmap_btalloc_at_eof(
- 	int			error;
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 0b026d5f55d0fd..29e64603d4ae82 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -196,7 +196,7 @@ xfs_da_unmount(
+ /*
+  * Return 1 if directory contains only "." and "..".
+  */
+-int
++static bool
+ xfs_dir_isempty(
+ 	xfs_inode_t	*dp)
+ {
+@@ -204,9 +204,9 @@ xfs_dir_isempty(
  
- 	/*
--	 * If there are already extents in the file, try an exact EOF block
--	 * allocation to extend the file as a contiguous extent. If that fails,
--	 * or it's the first allocation in a file, just try for a stripe aligned
--	 * allocation.
-+	 * If there are already extents in the file, and xfs_bmap_adjacent() has
-+	 * given a better blkno, try an exact EOF block allocation to extend the
-+	 * file as a contiguous extent. If that fails, or it's the first
-+	 * allocation in a file, just try for a stripe aligned allocation.
- 	 */
--	if (ap->offset) {
-+	if (ap->eof) {
- 		xfs_extlen_t	nextminlen = 0;
+ 	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
+ 	if (dp->i_disk_size == 0)	/* might happen during shutdown. */
+-		return 1;
++		return true;
+ 	if (dp->i_disk_size > xfs_inode_data_fork_size(dp))
+-		return 0;
++		return false;
+ 	sfp = dp->i_df.if_data;
+ 	return !sfp->count;
+ }
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index 576068ed81fac2..a6594a5a941d9f 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -58,7 +58,6 @@ extern void xfs_dir_startup(void);
+ extern int xfs_da_mount(struct xfs_mount *mp);
+ extern void xfs_da_unmount(struct xfs_mount *mp);
  
- 		/*
-@@ -3730,7 +3730,8 @@ xfs_bmap_btalloc_best_length(
- 	int			error;
- 
- 	ap->blkno = XFS_INO_TO_FSB(args->mp, ap->ip->i_ino);
--	xfs_bmap_adjacent(ap);
-+	if (!xfs_bmap_adjacent(ap))
-+		ap->eof = false;
- 
- 	/*
- 	 * Search for an allocation group with a single extent large enough for
+-extern int xfs_dir_isempty(struct xfs_inode *dp);
+ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_inode *pdp);
+ extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
 
