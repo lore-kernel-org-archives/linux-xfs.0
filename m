@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAFAB23C380
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:36:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61EA41CEAD6
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:37:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738881416; cv=none; b=IntIl74sn3Fz3vXhtF2Xa5yke9Co2+00O7AEEyUQp3lNepkPuc4fEm8vJZVyuWufRki/WuGeI+kZGYXvKG/L8+46nAZEjUmyC29vB/oZGy0/2/PvgjUnj4PxbTG0c6s++tksLuQg5xcJ2fLekBuEMw0/+C4LRYeYAcvFm9Se3Y4=
+	t=1738881432; cv=none; b=foA6qhN17zYwur4hcjhMCE1K0SzQK5zLMFWlJoO9HyL8EeFx3MJ1uhZVgsKu7BjJTi3G8IYEIc7Kj/EpKhXpbIAkN3CxzdIWB1awH67arP6n8ToXreMCY9vUq0LlfcWzguaHSkVtp+pLEhtRd+9kfbSWyYqCTKz042xPFyklLtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738881416; c=relaxed/simple;
-	bh=eDDW89B5yZOHjaxft97iqzjRNWLI0xdKVncBVG9p+i0=;
+	s=arc-20240116; t=1738881432; c=relaxed/simple;
+	bh=LLCiPFRGht8BHKqENXW3TpY3LW54bG+ni0PsbECy3SY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fRC4CZz4KIjQy4cSc39CxhT3fYS0BIgEA9Uat8aaPbUmpjYPqPFwt85glyoqd+ZPtmfxciwXcp0wRcAA8FrW8boCgfExpYzZADr6N8/uiWUmBTMdduAXU6W1C6ghY8V4iw0LSThVN01f725GsFmLynrqkyV+EwVhwFKmJp6x4Wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uqOcOJli; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=s1CZaDMMEw/+1ijQFSBaYo3H76azgG8UZKe4QVpdWICUAu5rUeYUbzgYsIj/b+73aCPUjwNa9N2CBvXdNDkAqtSH4Y+BtiRS9S2VmElY3cfy8KJTc/kEZED7idfDFSBYrBr2rvANVUSJ4UJurih+zIApedB2STc2i99ZcK1Wb/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KySIyD0b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uqOcOJli"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99B22C4CEDD;
-	Thu,  6 Feb 2025 22:36:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KySIyD0b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37AE7C4CEDD;
+	Thu,  6 Feb 2025 22:37:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738881416;
-	bh=eDDW89B5yZOHjaxft97iqzjRNWLI0xdKVncBVG9p+i0=;
+	s=k20201202; t=1738881432;
+	bh=LLCiPFRGht8BHKqENXW3TpY3LW54bG+ni0PsbECy3SY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uqOcOJli6vixBPE6mJ6vAKsromzuVWuSAjx7BcyWzQutz/DE0tuZlZbZmbCFzcpVO
-	 YFqU898k0c/BlrTEPY8Z0BFalZOYQb8UCk9yfsnmQXhYlJtxr07dkJ7VHCLjLNBEsm
-	 /Xlj/8+K884HTjSYdcusxUz7ki+NJtws4m84gQJbspbfiUTwcdnJndwub/UxM82EHM
-	 kfxbxVhbhI4YFtRZUdvK3EK1ReB5+GB45kYdjb/NXlVxMQC3kFZd6uM1/MzIeCzvXZ
-	 p5XJF8z8EEIW38fFJS5utIeCHwAHrSHtgYwWlmM9tX+gXwhyCRbeFMDS/KpZcrs1Mh
-	 lO6Yp757TSfJQ==
-Date: Thu, 06 Feb 2025 14:36:56 -0800
-Subject: [PATCH 07/56] xfs: hoist the node iroot update code out of
- xfs_btree_kill_iroot
+	b=KySIyD0b/KAuA2OIX6gVonFRyg2NLfIQPiFm0WWtl+toH1D2IPfBbrNGc3lcTwhZR
+	 CwNvMxbhKP/Whd4STbkJtuHg5pXnOkWbaNOYMSisT1ftm7+oCVljXzxI9+aCB3j8b5
+	 9HJQvkGHPU0IhkPxLqcwlv78bCb9GF4FHIobkdebq3RHv0x21o7wSRfiuyaQhppseX
+	 sbTYoeHxqOckH8MOGAuVOA72QwDBhekk6lK+BoTzyEu1iVjkqaIOhgwnsLUBf3kEvr
+	 SJFLTel/SAiyshahhQrbcFX1UJlLCCn3R1rlXve+yxPcXrHGhcakqrNNz09a9hML7P
+	 ZR605DVbwWSfw==
+Date: Thu, 06 Feb 2025 14:37:11 -0800
+Subject: [PATCH 08/56] xfs: add some rtgroup inode helpers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888086898.2739176.16949257047259822288.stgit@frogsfrogsfrogs>
+Message-ID: <173888086913.2739176.3890025606862047722.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 References: <173888086703.2739176.18069262351115926535.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,143 +45,116 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 505248719fcbf2c76594fe2ef293680d97fe426c
+Source kernel commit: af32541081ed6b6ad49b1ea38b5128cb319841b0
 
-In preparation for allowing records in an inode btree root, hoist the
-code that copies keyptrs from an existing node child into the root block
-to a separate function.  Remove some unnecessary conditionals and clean
-up a few function calls in the new function.  Note that this change
-reorders the ->free_block call with respect to the change in bc_nlevels
-to make it easier to support inode root leaf blocks in the next patch.
+Create some simple helpers to reduce the amount of typing whenever we
+access rtgroup inodes.  Conversion was done with this spatch and some
+minor reformatting:
+
+@@
+expression rtg;
+@@
+
+- rtg->rtg_inodes[XFS_RTGI_BITMAP]
++ rtg_bitmap(rtg)
+
+@@
+expression rtg;
+@@
+
+- rtg->rtg_inodes[XFS_RTGI_SUMMARY]
++ rtg_summary(rtg)
+
+and the CLI command:
+
+$ spatch --sp-file /tmp/moo.cocci --dir fs/xfs/ --use-gitgrep --in-place
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_btree.c |   84 +++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 57 insertions(+), 27 deletions(-)
+ libxfs/xfs_rtbitmap.c |    2 +-
+ libxfs/xfs_rtgroup.c  |   18 ++++++++----------
+ libxfs/xfs_rtgroup.h  |   10 ++++++++++
+ 3 files changed, 19 insertions(+), 11 deletions(-)
 
 
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 87a3ed5fc7517c..2d1b42d5270db8 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -3724,6 +3724,60 @@ xfs_btree_insert(
- 	return error;
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index b439fb3c20709f..689d5844b8bd09 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1050,7 +1050,7 @@ xfs_rtfree_extent(
+ 	xfs_rtxlen_t		len)	/* length of extent freed */
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_inode	*rbmip = rtg->rtg_inodes[XFS_RTGI_BITMAP];
++	struct xfs_inode	*rbmip = rtg_bitmap(rtg);
+ 	struct xfs_rtalloc_args	args = {
+ 		.mp		= mp,
+ 		.tp		= tp,
+diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
+index aaaec2a1cef9e5..e422a7bc41a55e 100644
+--- a/libxfs/xfs_rtgroup.c
++++ b/libxfs/xfs_rtgroup.c
+@@ -194,10 +194,10 @@ xfs_rtgroup_lock(
+ 		 * Lock both realtime free space metadata inodes for a freespace
+ 		 * update.
+ 		 */
+-		xfs_ilock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_EXCL);
+-		xfs_ilock(rtg->rtg_inodes[XFS_RTGI_SUMMARY], XFS_ILOCK_EXCL);
++		xfs_ilock(rtg_bitmap(rtg), XFS_ILOCK_EXCL);
++		xfs_ilock(rtg_summary(rtg), XFS_ILOCK_EXCL);
+ 	} else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) {
+-		xfs_ilock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_SHARED);
++		xfs_ilock(rtg_bitmap(rtg), XFS_ILOCK_SHARED);
+ 	}
  }
  
-+/*
-+ * Move the keyptrs from a child node block to the root block.
-+ *
-+ * Since the keyptr size does not change, all we have to do is increase the
-+ * tree height, copy the keyptrs to the new internal node (cblock), shrink
-+ * the root, and copy the pointers there.
-+ */
-+STATIC int
-+xfs_btree_demote_node_child(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_btree_block	*cblock,
-+	int			level,
-+	int			numrecs)
+@@ -212,10 +212,10 @@ xfs_rtgroup_unlock(
+ 	       !(rtglock_flags & XFS_RTGLOCK_BITMAP));
+ 
+ 	if (rtglock_flags & XFS_RTGLOCK_BITMAP) {
+-		xfs_iunlock(rtg->rtg_inodes[XFS_RTGI_SUMMARY], XFS_ILOCK_EXCL);
+-		xfs_iunlock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_EXCL);
++		xfs_iunlock(rtg_summary(rtg), XFS_ILOCK_EXCL);
++		xfs_iunlock(rtg_bitmap(rtg), XFS_ILOCK_EXCL);
+ 	} else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) {
+-		xfs_iunlock(rtg->rtg_inodes[XFS_RTGI_BITMAP], XFS_ILOCK_SHARED);
++		xfs_iunlock(rtg_bitmap(rtg), XFS_ILOCK_SHARED);
+ 	}
+ }
+ 
+@@ -233,10 +233,8 @@ xfs_rtgroup_trans_join(
+ 	ASSERT(!(rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED));
+ 
+ 	if (rtglock_flags & XFS_RTGLOCK_BITMAP) {
+-		xfs_trans_ijoin(tp, rtg->rtg_inodes[XFS_RTGI_BITMAP],
+-				XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, rtg->rtg_inodes[XFS_RTGI_SUMMARY],
+-				XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, rtg_bitmap(rtg), XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, rtg_summary(rtg), XFS_ILOCK_EXCL);
+ 	}
+ }
+ 
+diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
+index 2d7822644efff0..2e145ea2de8007 100644
+--- a/libxfs/xfs_rtgroup.h
++++ b/libxfs/xfs_rtgroup.h
+@@ -64,6 +64,16 @@ static inline xfs_rgnumber_t rtg_rgno(const struct xfs_rtgroup *rtg)
+ 	return rtg->rtg_group.xg_gno;
+ }
+ 
++static inline struct xfs_inode *rtg_bitmap(const struct xfs_rtgroup *rtg)
 +{
-+	struct xfs_btree_block	*block;
-+	union xfs_btree_key	*ckp;
-+	union xfs_btree_key	*kp;
-+	union xfs_btree_ptr	*cpp;
-+	union xfs_btree_ptr	*pp;
-+	int			i;
-+	int			error;
-+
-+	/*
-+	 * Adjust the root btree node size and the record count to match the
-+	 * doomed child so that we can copy the keyptrs ahead of changing the
-+	 * tree shape.
-+	 */
-+	block = cur->bc_ops->broot_realloc(cur, numrecs);
-+
-+	xfs_btree_set_numrecs(block, numrecs);
-+	ASSERT(block->bb_numrecs == cblock->bb_numrecs);
-+
-+	/* Copy keys from the doomed block. */
-+	kp = xfs_btree_key_addr(cur, 1, block);
-+	ckp = xfs_btree_key_addr(cur, 1, cblock);
-+	xfs_btree_copy_keys(cur, kp, ckp, numrecs);
-+
-+	/* Copy pointers from the doomed block. */
-+	pp = xfs_btree_ptr_addr(cur, 1, block);
-+	cpp = xfs_btree_ptr_addr(cur, 1, cblock);
-+	for (i = 0; i < numrecs; i++) {
-+		error = xfs_btree_debug_check_ptr(cur, cpp, i, level - 1);
-+		if (error)
-+			return error;
-+	}
-+	xfs_btree_copy_ptrs(cur, pp, cpp, numrecs);
-+
-+	/* Decrease tree height, adjusting the root block level to match. */
-+	cur->bc_levels[level - 1].bp = NULL;
-+	be16_add_cpu(&block->bb_level, -1);
-+	cur->bc_nlevels--;
-+	return 0;
++	return rtg->rtg_inodes[XFS_RTGI_BITMAP];
 +}
 +
- /*
-  * Try to merge a non-leaf block back into the inode root.
-  *
-@@ -3739,10 +3793,6 @@ xfs_btree_kill_iroot(
- 	struct xfs_inode	*ip = cur->bc_ino.ip;
- 	struct xfs_btree_block	*block;
- 	struct xfs_btree_block	*cblock;
--	union xfs_btree_key	*kp;
--	union xfs_btree_key	*ckp;
--	union xfs_btree_ptr	*pp;
--	union xfs_btree_ptr	*cpp;
- 	struct xfs_buf		*cbp;
- 	int			level;
- 	int			numrecs;
-@@ -3750,7 +3800,6 @@ xfs_btree_kill_iroot(
- #ifdef DEBUG
- 	union xfs_btree_ptr	ptr;
- #endif
--	int			i;
- 
- 	ASSERT(cur->bc_ops->type == XFS_BTREE_TYPE_INODE);
- 	ASSERT(cur->bc_nlevels > 1);
-@@ -3790,35 +3839,16 @@ xfs_btree_kill_iroot(
- 	ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
- #endif
- 
--	block = cur->bc_ops->broot_realloc(cur, numrecs);
--
--	block->bb_numrecs = be16_to_cpu(numrecs);
--	ASSERT(block->bb_numrecs == cblock->bb_numrecs);
--
--	kp = xfs_btree_key_addr(cur, 1, block);
--	ckp = xfs_btree_key_addr(cur, 1, cblock);
--	xfs_btree_copy_keys(cur, kp, ckp, numrecs);
--
--	pp = xfs_btree_ptr_addr(cur, 1, block);
--	cpp = xfs_btree_ptr_addr(cur, 1, cblock);
--
--	for (i = 0; i < numrecs; i++) {
--		error = xfs_btree_debug_check_ptr(cur, cpp, i, level - 1);
--		if (error)
--			return error;
--	}
--
--	xfs_btree_copy_ptrs(cur, pp, cpp, numrecs);
-+	error = xfs_btree_demote_node_child(cur, cblock, level, numrecs);
-+	if (error)
-+		return error;
- 
- 	error = xfs_btree_free_block(cur, cbp);
- 	if (error)
- 		return error;
- 
--	cur->bc_levels[level - 1].bp = NULL;
--	be16_add_cpu(&block->bb_level, -1);
- 	xfs_trans_log_inode(cur->bc_tp, ip,
- 		XFS_ILOG_CORE | xfs_ilog_fbroot(cur->bc_ino.whichfork));
--	cur->bc_nlevels--;
- out0:
- 	return 0;
- }
++static inline struct xfs_inode *rtg_summary(const struct xfs_rtgroup *rtg)
++{
++	return rtg->rtg_inodes[XFS_RTGI_SUMMARY];
++}
++
+ /* Passive rtgroup references */
+ static inline struct xfs_rtgroup *
+ xfs_rtgroup_get(
 
