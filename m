@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F30222417C2
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:55:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 089AB2417C2
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 22:56:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882560; cv=none; b=PLbEETfpoDE7GXyniu5Izm7ND4xJ4DFYdZWYXOytRymD2QWMSE7Ff/k6upAWAA76duJmmhZqlgzchm8wubJODpo5jmCWGP2lBJhBhh1a9jc1MfKj1dFsQIXt/NIkCyL/86NEEv1ANC240YlM13wLFXZ61YmlAUty2SXLFG8es4M=
+	t=1738882577; cv=none; b=RWNMy+OmklPWY+zmgQxZuDj1nmf6WduZLUlTZ7IMXCbVP1QalmRxjtAIkZ8l7LEJamFWs0YS8ANdqp/YO5j40HdzRewKsYi1Cf/MyqkmWb2YGd1Xj5WYzt2ixPM8O20yigoK9IE7NwX9zleoJVaasNTzHNZvzz283S3nDwjFR10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882560; c=relaxed/simple;
-	bh=JQpTnQQ1o3qvsJwOG8Dd6fzx2wR/t3VHQMW0Cqxi33o=;
+	s=arc-20240116; t=1738882577; c=relaxed/simple;
+	bh=CyuAJ9CPsPHyGwUH/7oXh2nQiXX1a/48gMByVJTDrXw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aYAFfevGtIFnulNoFdgyhyN+v9KrDQgBCKofXkObWLYA20TVZNtl2ZTj1YcC1i1mPjNEycrY6IHijZaH7voAjLpmDaGFlOsA7Iqzk7fJcNeLR4Ef6U6io6gXfN/7k8BzmtZjfWbBisBYsbid2qKqw4ZmPCJav6cyBtdDVeJL/Fs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AwmC3qkt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jjO6sKHD/ob7k7kdLbWJoQYrKsFzzvRBLQr+goWzwC+KNfU28nn64sr+hlNTt4/uad9MZ/nkfLlexkOU5S2lkcUd8XDJbhd+gk+DMuzufkwW2N+WkGF/3asGZ203i7H5PGcC+PplsO+EddhoJA3vOnotP38mmqGojrnOr17R9IQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TWuTNHAA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AwmC3qkt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1DDEC4CEDF;
-	Thu,  6 Feb 2025 22:55:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TWuTNHAA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F717C4CEDD;
+	Thu,  6 Feb 2025 22:56:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882559;
-	bh=JQpTnQQ1o3qvsJwOG8Dd6fzx2wR/t3VHQMW0Cqxi33o=;
+	s=k20201202; t=1738882575;
+	bh=CyuAJ9CPsPHyGwUH/7oXh2nQiXX1a/48gMByVJTDrXw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AwmC3qktp7yufBElr2S5tZK8alazC4/sAfaMWmfpxhKs3AHt50ewcZ1ZLuwylqEDt
-	 8guZgnsLRcBDJWp1C9HAgGVYt+3itTDaAhGV2CS04z3CiVWidoifhzozKLuzkcH0TT
-	 i/dxP0tKXYI7CGqfW6IVx4itSkZz4kJdhMuTppSacZw7BoJ6Xpo9bDEmhZeUrFmSfV
-	 y4GweIfKB0ohvH3xc2BXcGfDkqSdAthUsZLFDDOiafj31CMlzX8h2h8axIZ5U1VlxQ
-	 xa9ct4+L0dw+L7DfN5CeZGYia3OrUtHXXD9zTXUVVfCqgG7sNUKbGT4+OHhrTN8JAd
-	 hKKQE2abNCwYw==
-Date: Thu, 06 Feb 2025 14:55:59 -0800
-Subject: [PATCH 24/27] xfs_repair: reserve per-AG space while rebuilding rt
- metadata
+	b=TWuTNHAABB0ioEM9QzNtPgJ9iQ1tnDbz/mjLVsdSReaXaMM8buH16vT8hu4j1QyjN
+	 W6pagrHGCu0UkTaD+2aZKlQaxjTeueB5+oZfGcT7ng386MTXR7jD1UBaVmNwyquBMx
+	 t0or7jbX3MTXy7Q0mN1XujUwiCi2R9Wlsgjq726Rr/F6Sze3yfottbI3/KeW49w8TC
+	 Of0lj94/55PiR26uMm6ABzuJ+VCSGYGqSqNtE+hAzkKYo65XL7pBcP54nEUfYF7h/u
+	 xxmPi5WwbqFrjS5pcfi3cQ41R1wPItAwcDzG/QcOswKB3Wnb+eujYhIbVE6fCM8Wuu
+	 F3fnVV6fgwrYQ==
+Date: Thu, 06 Feb 2025 14:56:15 -0800
+Subject: [PATCH 25/27] xfs_logprint: report realtime RUIs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888088464.2741033.2066305894736213498.stgit@frogsfrogsfrogs>
+Message-ID: <173888088479.2741033.18274174802899432825.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
 References: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,104 +45,121 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Realtime metadata btrees can consume quite a bit of space on a full
-filesystem.  Since the metadata are just regular files, we need to
-make the per-AG reservations to avoid overfilling any of the AGs while
-rebuilding metadata.  This avoids the situation where a filesystem comes
-straight from repair and immediately trips over not having enough space
-in an AG.
+Decode the RUI format just enough to report if an RUI targets the
+realtime device or not.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- include/libxfs.h |    1 +
- repair/phase6.c  |   45 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+)
+ logprint/log_misc.c      |    2 ++
+ logprint/log_print_all.c |    8 ++++++++
+ logprint/log_redo.c      |   24 +++++++++++++++++++-----
+ 3 files changed, 29 insertions(+), 5 deletions(-)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 79f8e1ff03d3f5..82b34b9d81c3a7 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -101,6 +101,7 @@ struct iomap;
- #include "xfs_rtgroup.h"
- #include "xfs_rtbitmap.h"
- #include "xfs_rtrmap_btree.h"
-+#include "xfs_ag_resv.h"
- 
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 2ddfd0526767e0..30ea19fda9fd87 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -3540,10 +3540,41 @@ reset_quota_metadir_inodes(
- 	libxfs_irele(dp);
- }
- 
-+static int
-+reserve_ag_blocks(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_perag	*pag = NULL;
-+	int			error = 0;
-+	int			err2;
-+
-+	mp->m_finobt_nores = false;
-+
-+	while ((pag = xfs_perag_next(mp, pag))) {
-+		err2 = -libxfs_ag_resv_init(pag, NULL);
-+		if (err2 && !error)
-+			error = err2;
-+	}
-+
-+	return error;
-+}
-+
-+static void
-+unreserve_ag_blocks(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_perag	*pag = NULL;
-+
-+	while ((pag = xfs_perag_next(mp, pag)))
-+		libxfs_ag_resv_free(pag);
-+}
-+
- void
- phase6(xfs_mount_t *mp)
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 8336f26e093310..aaa9598616a308 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -1014,12 +1014,14 @@ xlog_print_record(
+ 					be32_to_cpu(op_head->oh_len));
+ 			break;
+ 		    }
++		    case XFS_LI_RUI_RT:
+ 		    case XFS_LI_RUI: {
+ 			skip = xlog_print_trans_rui(&ptr,
+ 					be32_to_cpu(op_head->oh_len),
+ 					continued);
+ 			break;
+ 		    }
++		    case XFS_LI_RUD_RT:
+ 		    case XFS_LI_RUD: {
+ 			skip = xlog_print_trans_rud(&ptr,
+ 					be32_to_cpu(op_head->oh_len));
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index ed5f234975ccad..56e765d64f2df4 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -422,9 +422,11 @@ xlog_recover_print_logitem(
+ 	case XFS_LI_ATTRI:
+ 		xlog_recover_print_attri(item);
+ 		break;
++	case XFS_LI_RUD_RT:
+ 	case XFS_LI_RUD:
+ 		xlog_recover_print_rud(item);
+ 		break;
++	case XFS_LI_RUI_RT:
+ 	case XFS_LI_RUI:
+ 		xlog_recover_print_rui(item);
+ 		break;
+@@ -498,6 +500,12 @@ xlog_recover_print_item(
+ 	case XFS_LI_RUI:
+ 		printf("RUI");
+ 		break;
++	case XFS_LI_RUD_RT:
++		printf("RUD_RT");
++		break;
++	case XFS_LI_RUI_RT:
++		printf("RUI_RT");
++		break;
+ 	case XFS_LI_CUD:
+ 		printf("CUD");
+ 		break;
+diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+index 41e7c94a52dc21..a0cc558499ae0b 100644
+--- a/logprint/log_redo.c
++++ b/logprint/log_redo.c
+@@ -274,6 +274,7 @@ xlog_print_trans_rui(
+ 	uint			src_len,
+ 	int			continued)
  {
- 	ino_tree_node_t		*irec;
-+	bool			reserve_perag;
-+	int			error;
- 	int			i;
- 
- 	parent_ptr_init(mp);
-@@ -3588,6 +3619,17 @@ phase6(xfs_mount_t *mp)
- 		do_warn(_("would reinitialize metadata root directory\n"));
++	const char		*item_name = "RUI?";
+ 	struct xfs_rui_log_format	*src_f, *f = NULL;
+ 	uint			dst_len;
+ 	uint			nextents;
+@@ -318,8 +319,14 @@ xlog_print_trans_rui(
+ 		goto error;
  	}
  
-+	reserve_perag = xfs_has_realtime(mp) && !no_modify;
-+	if (reserve_perag) {
-+		error = reserve_ag_blocks(mp);
-+		if (error) {
-+			if (error != ENOSPC)
-+				do_warn(
-+	_("could not reserve per-AG space to rebuild realtime metadata"));
-+			reserve_perag = false;
-+		}
+-	printf(_("RUI:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
+-		f->rui_size, f->rui_nextents, (unsigned long long)f->rui_id);
++	switch (f->rui_type) {
++	case XFS_LI_RUI:	item_name = "RUI"; break;
++	case XFS_LI_RUI_RT:	item_name = "RUI_RT"; break;
 +	}
 +
- 	if (xfs_has_rtgroups(mp))
- 		reset_rt_metadir_inodes(mp);
- 	else
-@@ -3596,6 +3638,9 @@ phase6(xfs_mount_t *mp)
- 	if (xfs_has_metadir(mp) && xfs_has_quota(mp) && !no_modify)
- 		reset_quota_metadir_inodes(mp);
++	printf(_("%s:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
++			item_name, f->rui_size, f->rui_nextents,
++			(unsigned long long)f->rui_id);
  
-+	if (reserve_perag)
-+		unreserve_ag_blocks(mp);
+ 	if (continued) {
+ 		printf(_("RUI extent data skipped (CONTINUE set, no space)\n"));
+@@ -359,6 +366,7 @@ xlog_print_trans_rud(
+ 	char				**ptr,
+ 	uint				len)
+ {
++	const char			*item_name = "RUD?";
+ 	struct xfs_rud_log_format	*f;
+ 	struct xfs_rud_log_format	lbuf;
+ 
+@@ -371,11 +379,17 @@ xlog_print_trans_rud(
+ 	 */
+ 	memmove(&lbuf, *ptr, min(core_size, len));
+ 	f = &lbuf;
 +
- 	mark_standalone_inodes(mp);
++	switch (f->rud_type) {
++	case XFS_LI_RUD:	item_name = "RUD"; break;
++	case XFS_LI_RUD_RT:	item_name = "RUD_RT"; break;
++	}
++
+ 	*ptr += len;
+ 	if (len >= core_size) {
+-		printf(_("RUD:  #regs: %d	                 id: 0x%llx\n"),
+-			f->rud_size,
+-			(unsigned long long)f->rud_rui_id);
++		printf(_("%s:  #regs: %d	                 id: 0x%llx\n"),
++				item_name, f->rud_size,
++				(unsigned long long)f->rud_rui_id);
  
- 	do_log(_("        - traversing filesystem ...\n"));
+ 		/* don't print extents as they are not used */
+ 
 
