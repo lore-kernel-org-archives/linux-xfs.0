@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93E4B2417C0
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 23:02:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1082E2417C0
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 23:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882938; cv=none; b=ZC4A4VgPVKmPgpbMgcgAXJcBWaZO2UBQQpILE3JvoLkDR3vfKjgrpCdLXzBfhoTfmzMsel5U7KGjxkYJLIfw60P71rwlavfxXM9QC82dmK5swyD2gNOOyCq9cKdzZXrss+mW7CPERj4wsOOikCHFAVyfD2h/gZzCC9VcDB8zg50=
+	t=1738882952; cv=none; b=m8zoEf8NYFJUXRq8go7LPAaJ7VFMHSJmPAseFTuUk43WyNOs779xXkIzlk4Sn0f4Og8XbsXUnr8twK091aH7NAp/OPX1Iz4yzffKJvsfdRbdoKwWTbWzlFZvOro655oVPUctESX8JcV/obPcyumGLgYFrxN9PfBFG6VDabH+FYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882938; c=relaxed/simple;
-	bh=MnFSh/sNeWPOgNrthk8YXp1LwOhPjso8VqYSVcIuUCA=;
+	s=arc-20240116; t=1738882952; c=relaxed/simple;
+	bh=ezEdjI0Akf98Ov87OqmRFfGjguFgGatB6JhHtp+jkWI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cHnzmZVSUHFVvV2Q3d41slnC3kFe2EscBpfMext6/Tq5sGyKDBWbH6lkxkD5xv20otmJfeuZEklyShQ/7sZ7/ib0GjLydsAyxmziVkcNdC+B1/OQ+rJNZq5sS+wH55RIvexN/e62j5goVzrsrzJppOW3W2Ba6W+Sw+b6Wl4Is9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SIY6Vfwt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Zl71k6hkYdRZh5MhwMceKKRURzmrJuD2Ad3Hdkwb/+Oc6HvvpIFjN2158d1hN2DJw84PhcgAYzx3YEFZM10W2L/u9XMpZ9S/FxYgAYhOZ5vcV+pI+82gQDrLh7qpEsGPXqHI8m/45/fQ7vuhaPOuotZFp0fBJwKIBNBfwq2s8SE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ae9xZ7Fr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SIY6Vfwt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06B73C4CEDD;
-	Thu,  6 Feb 2025 23:02:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ae9xZ7Fr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93F50C4CEDF;
+	Thu,  6 Feb 2025 23:02:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738882935;
-	bh=MnFSh/sNeWPOgNrthk8YXp1LwOhPjso8VqYSVcIuUCA=;
+	s=k20201202; t=1738882950;
+	bh=ezEdjI0Akf98Ov87OqmRFfGjguFgGatB6JhHtp+jkWI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SIY6Vfwtoum0H2Z75FH+NAlSa5Hbqym+LzQ4Vs8OB3fbjuPsvj5OLHUx4hEQg5Txc
-	 iccZfBQtalWma0RBEmrFpDJMTAVF8RM2tmxx5EUqCe4+OimzxPHtqpOagvihChSifC
-	 PzepVi93ISslbiQ/u8FO36zO7kmCq3h93Og77SkPie+qz3garrAGogNTq2ryrVyjMq
-	 gcASZksDpBLlGY5vWNh5mZl4FPL5wem+qECadpbZwEj7WpRLfFCveDrVJpQVFP5121
-	 1XjlMl/Q3t92s5De1r1xqxvodzrynbZZE5xzevrHiBr1YoCCpxNc9284EUDpch8OZa
-	 mhrgtxtQkMlkg==
-Date: Thu, 06 Feb 2025 15:02:14 -0800
-Subject: [PATCH 21/22] mkfs: validate CoW extent size hint when rtinherit is
- set
+	b=Ae9xZ7FrLucOirau8GE9ziw6jwLvN66SMqx+iMINYFNznPgANWUdUjcsVT0xx8IUt
+	 mSGI3iX50G0AgA7FgjKobvVJUOOcxkWWtHJ6SI5Isj1W8zxwMqt/25v0y1Qpgyqk0z
+	 kTx7NRSex2QM+z7UfQdR13DDIWXd1BiFSHlI+/CRK+WwZICAyN6Qthibhwejdme7Zn
+	 yIVT8l315Zy+QQMsaLeOHwf66EzTDNr8loxWhgCmJgNaXrX7LWJxTheKREH2x9fDDZ
+	 g4HqE1OS+/EbIAMD3OB9YK2mZMTlh9mlSSrkW50bNHjDLlDOFK32G3dYf0nzox5b2m
+	 TaoLbV4EQSJXA==
+Date: Thu, 06 Feb 2025 15:02:30 -0800
+Subject: [PATCH 22/22] mkfs: enable reflink on the realtime device
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <173888089253.2741962.7311263148977317330.stgit@frogsfrogsfrogs>
+Message-ID: <173888089269.2741962.12417664592407560122.stgit@frogsfrogsfrogs>
 In-Reply-To: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 References: <173888088900.2741962.15299153246552129567.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,53 +45,143 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Extent size hints exist to nudge the behavior of the file data block
-allocator towards trying to make aligned allocations.  Therefore, it
-doesn't make sense to allow a hint that isn't a multiple of the
-fundamental allocation unit for a given file.
-
-This means that if the sysadmin is formatting with rtinherit set on the
-root dir, validate_cowextsize_hint needs to check the hint value on a
-simulated realtime file to make sure that it's correct.  This hasn't
-been necessary in the past since one cannot have a CoW hint without a
-reflink filesystem, and we previously didn't allow rt reflink
-filesystems.
+Allow the creation of filesystems with both reflink and realtime volumes
+enabled.  For now we don't support a realtime extent size > 1.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ libxfs/init.c            |    4 +--
+ libxfs/libxfs_api_defs.h |    1 +
+ mkfs/xfs_mkfs.c          |   63 ++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 60 insertions(+), 8 deletions(-)
 
 
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 00bd46a6013e28..5b45ed3472762c 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -305,9 +305,9 @@ rtmount_init(
+ 	if (mp->m_sb.sb_rblocks == 0)
+ 		return 0;
+ 
+-	if (xfs_has_reflink(mp)) {
++	if (xfs_has_reflink(mp) && mp->m_sb.sb_rextsize > 1) {
+ 		fprintf(stderr,
+-	_("%s: Reflink not compatible with realtime device. Please try a newer xfsprogs.\n"),
++	_("%s: Reflink not compatible with realtime extent size > 1. Please try a newer xfsprogs.\n"),
+ 				progname);
+ 		return -1;
+ 	}
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 66cbb34f05a48f..530feef2a47db8 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -323,6 +323,7 @@
+ #define xfs_rtrefcountbt_absolute_maxlevels	libxfs_rtrefcountbt_absolute_maxlevels
+ #define xfs_rtrefcountbt_calc_reserves	libxfs_rtrefcountbt_calc_reserves
+ #define xfs_rtrefcountbt_calc_size		libxfs_rtrefcountbt_calc_size
++#define xfs_rtrefcountbt_calc_reserves	libxfs_rtrefcountbt_calc_reserves
+ #define xfs_rtrefcountbt_commit_staged_btree	libxfs_rtrefcountbt_commit_staged_btree
+ #define xfs_rtrefcountbt_create		libxfs_rtrefcountbt_create
+ #define xfs_rtrefcountbt_droot_maxrecs	libxfs_rtrefcountbt_droot_maxrecs
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c8042261328171..9239109434d748 100644
+index 9239109434d748..c794f918573f91 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -2985,6 +2985,26 @@ _("illegal CoW extent size hint %lld, must be less than %u.\n"),
- 				min(XFS_MAX_BMBT_EXTLEN, mp->m_sb.sb_agblocks / 2));
- 		usage();
+@@ -2671,12 +2671,36 @@ _("inode btree counters not supported without finobt support\n"));
  	}
+ 
+ 	if (cli->xi->rt.name) {
+-		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
+-			fprintf(stderr,
+-_("reflink not supported with realtime devices\n"));
+-			usage();
++		if (cli->rtextsize && cli->sb_feat.reflink) {
++			if (cli_opt_set(&mopts, M_REFLINK)) {
++				fprintf(stderr,
++_("reflink not supported on realtime devices with rt extent size specified\n"));
++				usage();
++			}
++			cli->sb_feat.reflink = false;
++		}
++		if (cfg->blocksize < XFS_MIN_RTEXTSIZE && cli->sb_feat.reflink) {
++			if (cli_opt_set(&mopts, M_REFLINK)) {
++				fprintf(stderr,
++_("reflink not supported on realtime devices with blocksize %d < %d\n"),
++						cli->blocksize,
++						XFS_MIN_RTEXTSIZE);
++				usage();
++			}
++			cli->sb_feat.reflink = false;
++		}
++		if (!cli->sb_feat.metadir && cli->sb_feat.reflink) {
++			if (cli_opt_set(&mopts, M_REFLINK) &&
++			    cli_opt_set(&mopts, M_METADIR)) {
++				fprintf(stderr,
++_("reflink not supported on realtime devices without metadir feature\n"));
++				usage();
++			} else if (cli_opt_set(&mopts, M_REFLINK)) {
++				cli->sb_feat.metadir = true;
++			} else {
++				cli->sb_feat.reflink = false;
++			}
+ 		}
+-		cli->sb_feat.reflink = false;
+ 
+ 		if (!cli->sb_feat.metadir && cli->sb_feat.rmapbt) {
+ 			if (cli_opt_set(&mopts, M_RMAPBT) &&
+@@ -2874,6 +2898,19 @@ validate_rtextsize(
+ 			usage();
+ 		}
+ 		cfg->rtextblocks = (xfs_extlen_t)(rtextbytes >> cfg->blocklog);
++	} else if (cli->sb_feat.reflink && cli->xi->rt.name) {
++		/*
++		 * reflink doesn't support rt extent size > 1FSB yet, so set
++		 * an extent size of 1FSB.  Make sure we still satisfy the
++		 * minimum rt extent size.
++		 */
++		if (cfg->blocksize < XFS_MIN_RTEXTSIZE) {
++			fprintf(stderr,
++		_("reflink not supported on rt volume with blocksize %d\n"),
++				cfg->blocksize);
++			usage();
++		}
++		cfg->rtextblocks = 1;
+ 	} else {
+ 		/*
+ 		 * If realtime extsize has not been specified by the user,
+@@ -2905,6 +2942,12 @@ validate_rtextsize(
+ 		}
+ 	}
+ 	ASSERT(cfg->rtextblocks);
 +
-+	/*
-+	 * If the value is to be passed on to realtime files, revalidate with
-+	 * a realtime file so that we know the hint and flag that get passed on
-+	 * to realtime files will be correct.
-+	 */
-+	if (!(cli->fsx.fsx_xflags & FS_XFLAG_RTINHERIT))
-+		return;
-+
-+	fa = libxfs_inode_validate_cowextsize(mp, cli->fsx.fsx_cowextsize,
-+			S_IFREG, XFS_DIFLAG_REALTIME, flags2);
-+
-+	if (fa) {
++	if (cli->sb_feat.reflink && cfg->rtblocks > 0 && cfg->rtextblocks > 1) {
 +		fprintf(stderr,
-+_("illegal CoW extent size hint %lld, must be less than %u and a multiple of %u. %p\n"),
-+				(long long)cli->fsx.fsx_cowextsize,
-+				min(XFS_MAX_BMBT_EXTLEN, mp->m_sb.sb_agblocks / 2),
-+				mp->m_sb.sb_rextsize, fa);
++_("reflink not supported on realtime with extent sizes > 1\n"));
 +		usage();
 +	}
  }
  
- /* Complain if this filesystem is not a supported configuration. */
+ /* Validate the incoming extsize hint. */
+@@ -5087,11 +5130,19 @@ check_rt_meta_prealloc(
+ 		error = -libxfs_metafile_resv_init(rtg_rmap(rtg), ask);
+ 		if (error)
+ 			prealloc_fail(mp, error, ask, _("realtime rmap btree"));
++
++		ask = libxfs_rtrefcountbt_calc_reserves(mp);
++		error = -libxfs_metafile_resv_init(rtg_refcount(rtg), ask);
++		if (error)
++			prealloc_fail(mp, error, ask,
++					_("realtime refcount btree"));
+ 	}
+ 
+ 	/* Unreserve the realtime metadata reservations. */
+-	while ((rtg = xfs_rtgroup_next(mp, rtg)))
++	while ((rtg = xfs_rtgroup_next(mp, rtg))) {
+ 		libxfs_metafile_resv_free(rtg_rmap(rtg));
++		libxfs_metafile_resv_free(rtg_refcount(rtg));
++	}
+ 
+ 	/* Unreserve the per-AG reservations. */
+ 	while ((pag = xfs_perag_next(mp, pag)))
 
