@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD1DB4C8E
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 06:45:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3D1A158525
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Feb 2025 06:45:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738824319; cv=none; b=Wbn3YAcucs55cBssV04olwhHMv280ojyYYEA/7o/VvyXNTLvXKLE01gQGQb2+ziA7maYnOkWZfd9xB1LN+XXiBlNROtrTh9AYJinNsw5zfoV5qmvcMtDscDsILe9/kZnr2dkK5EOsApZ5U5Rl+b+M7jGaBx/SAtd8OYTVNIGjQM=
+	t=1738824320; cv=none; b=g3PFY2KvDBPLmvi6KWezB2oFrxgbBqU77sqpPceuCOGf91D0ljleeW9kbSgNbKuT0boqzQKHssn44AnEF429CO5ytCHhZ59XPkiWgCpot0V6MzJh6AsPCd/GkKjffgfa5Wk/QqLxwtA3nSLF9Ikewv+lEiHsWMpvEXbNVso/vpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738824319; c=relaxed/simple;
-	bh=ObDYaB+1uNt1C/Ay8s8BWHJmRkCiK3XUdfX3UqZsBVQ=;
+	s=arc-20240116; t=1738824320; c=relaxed/simple;
+	bh=H7NJOZASmaHp/yFweRqvJktvqMAvAwewCHx4hXQk/Ig=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YAv55KdtMu2SMLlAgcwV5ySIiGHaOuWC6juS0+q2wGaQU+cqYiu2qebTdNLFUbiyOMeLrvTBT3BurGgc5rbufAtBKdoeUXJ1jgGbC4Rj7ibOWlvQePyQtUFGd7T5rsBdzgie4WWIynRpIL/TnBLai6H6MthiuohPvzIB64v68Ec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nu+JDp6U; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Ao+KAckYAMJoOiXgYwzTyFc+YCuy22OJSWZ054knUmSEMJws1oBqusInfe0YmegGki3YNcKxlHuMKklKLePCs8mJnqq1hy8z/mYxu74yezNXAQCtqzR+0LTRHy4zdceIdf5P1u6QTYbjvIlx2U6j0C3eBzx8cDhClEATlN9zD+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zE+fZnz1; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nu+JDp6U"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zE+fZnz1"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=qDXhJqhjXYFHV/KYqTJbdj7jPmL99wIsSPxRmGxedWs=; b=nu+JDp6U39CZOx8iX9A9akBYaH
-	zRo8mvA0NNbQnZcbOm1tVdwTQCTNkvNwCOVuEJT8YjKdtIAqG2RbP5qNPRlt3csFIOO7MQyKodGrC
-	UNWdfSSRHxDabgfcE92kZP0a74hEW7VQf/3QX5wjBg+WQogtVbGER/5KmLj9cD1nyk9etUxDLUQlN
-	fy+XuG9AIhDYch77WEwuBLlrtQmWU5p3wXvqWv/OoxMsRfO9gGmgAH4nMTRF7Rc1MvSESpLEgyO3W
-	W9+7I114V1igqiQkCcoUjrgz0vfauso9+zV+ZjhMjmqsecyCb7FhdSDK2sXiawLzMZpqqfK9cWR7s
-	aiE2hSeQ==;
+	bh=cb365wOMtx88hhbd0L0O7xwRDA03zOJ6O/Y5qrSwiBs=; b=zE+fZnz1RxLYDysXWuTK5QwC7d
+	hfW+0UEJTWlZEdQD7yBAFXsM03KJhVnpKLwGdMJ2gIMYdwvxIIVewbS9NBxbtYC33GSuAv7o8Elcj
+	d5UW+53w8M1CGx3yHepBJlxW5qZHefMsRaqlyf+HS+lWscnzukR+/QUZuwX2y0Iet3x49WmrI7kQX
+	98U/Mg1KTjuM6A7GD2WrxkSPuCSPzKaq+opjSCUoA2epQnK8nuuFuzr4yUNLJyh6vIDWbbJ0vfV+P
+	yMiLAvXDlTnq2NF47ROc8Yg/a+oQj8PHhBAt9DWDlkHo13Rg+cjGHQ8d8xm75hAHA29CU35WvVzQR
+	ZyK1fVpA==;
 Received: from 2a02-8389-2341-5b80-9d5d-e9d2-4927-2bd6.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9d5d:e9d2:4927:2bd6] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tfvdT-00000005Q3k-3qVd;
-	Thu, 06 Feb 2025 06:45:16 +0000
+	id 1tfvdW-00000005Q4H-0zM1;
+	Thu, 06 Feb 2025 06:45:18 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 01/43] xfs: factor out a xfs_rt_check_size helper
-Date: Thu,  6 Feb 2025 07:44:17 +0100
-Message-ID: <20250206064511.2323878-2-hch@lst.de>
+Subject: [PATCH 02/43] xfs: add a rtg_blocks helper
+Date: Thu,  6 Feb 2025 07:44:18 +0100
+Message-ID: <20250206064511.2323878-3-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250206064511.2323878-1-hch@lst.de>
 References: <20250206064511.2323878-1-hch@lst.de>
@@ -50,119 +50,45 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a helper to check that the last block of a RT device is readable
-to share the code between mount and growfs.  This also adds the mount
-time overflow check to growfs and improves the error messages.
+Shortcut dereferencing the xg_block_count field in the generic group
+structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c | 62 ++++++++++++++++++++++----------------------
- 1 file changed, 31 insertions(+), 31 deletions(-)
+ fs/xfs/libxfs/xfs_rtgroup.c | 2 +-
+ fs/xfs/libxfs/xfs_rtgroup.h | 5 +++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index d8e6d073d64d..bc18b694db75 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1248,6 +1248,34 @@ xfs_grow_last_rtg(
- 			mp->m_sb.sb_rgextents;
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+index d84d32f1b48f..97aad8967149 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.c
++++ b/fs/xfs/libxfs/xfs_rtgroup.c
+@@ -270,7 +270,7 @@ xfs_rtgroup_get_geometry(
+ 	/* Fill out form. */
+ 	memset(rgeo, 0, sizeof(*rgeo));
+ 	rgeo->rg_number = rtg_rgno(rtg);
+-	rgeo->rg_length = rtg_group(rtg)->xg_block_count;
++	rgeo->rg_length = rtg_blocks(rtg);
+ 	xfs_rtgroup_geom_health(rtg, rgeo);
+ 	return 0;
+ }
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index 03f39d4e43fc..9c7e03f913cb 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -66,6 +66,11 @@ static inline xfs_rgnumber_t rtg_rgno(const struct xfs_rtgroup *rtg)
+ 	return rtg->rtg_group.xg_gno;
  }
  
-+/*
-+ * Read in the last block of the RT device to make sure it is accessible.
-+ */
-+static int
-+xfs_rt_check_size(
-+	struct xfs_mount	*mp,
-+	xfs_rfsblock_t		last_block)
++static inline xfs_rgblock_t rtg_blocks(const struct xfs_rtgroup *rtg)
 +{
-+	xfs_daddr_t		daddr = XFS_FSB_TO_BB(mp, last_block);
-+	struct xfs_buf		*bp;
-+	int			error;
-+
-+	if (XFS_BB_TO_FSB(mp, daddr) != last_block) {
-+		xfs_warn(mp, "RT device size overflow: %llu != %llu",
-+			XFS_BB_TO_FSB(mp, daddr), last_block);
-+		return -EFBIG;
-+	}
-+
-+	error = xfs_buf_read_uncached(mp->m_rtdev_targp, daddr,
-+			XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
-+	if (error)
-+		xfs_warn(mp, "cannot read last RT device sector (%lld)",
-+				last_block);
-+	else
-+		xfs_buf_relse(bp);
-+	return error;
++	return rtg->rtg_group.xg_block_count;
 +}
 +
- /*
-  * Grow the realtime area of the filesystem.
-  */
-@@ -1259,7 +1287,6 @@ xfs_growfs_rt(
- 	xfs_rgnumber_t		old_rgcount = mp->m_sb.sb_rgcount;
- 	xfs_rgnumber_t		new_rgcount = 1;
- 	xfs_rgnumber_t		rgno;
--	struct xfs_buf		*bp;
- 	xfs_agblock_t		old_rextsize = mp->m_sb.sb_rextsize;
- 	int			error;
- 
-@@ -1302,15 +1329,10 @@ xfs_growfs_rt(
- 	error = xfs_sb_validate_fsb_count(&mp->m_sb, in->newblocks);
- 	if (error)
- 		goto out_unlock;
--	/*
--	 * Read in the last block of the device, make sure it exists.
--	 */
--	error = xfs_buf_read_uncached(mp->m_rtdev_targp,
--				XFS_FSB_TO_BB(mp, in->newblocks - 1),
--				XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
-+
-+	error = xfs_rt_check_size(mp, in->newblocks - 1);
- 	if (error)
- 		goto out_unlock;
--	xfs_buf_relse(bp);
- 
- 	/*
- 	 * Calculate new parameters.  These are the final values to be reached.
-@@ -1444,10 +1466,6 @@ int				/* error */
- xfs_rtmount_init(
- 	struct xfs_mount	*mp)	/* file system mount structure */
+ static inline struct xfs_inode *rtg_bitmap(const struct xfs_rtgroup *rtg)
  {
--	struct xfs_buf		*bp;	/* buffer for last block of subvolume */
--	xfs_daddr_t		d;	/* address of last block of subvolume */
--	int			error;
--
- 	if (mp->m_sb.sb_rblocks == 0)
- 		return 0;
- 	if (mp->m_rtdev_targp == NULL) {
-@@ -1458,25 +1476,7 @@ xfs_rtmount_init(
- 
- 	mp->m_rsumblocks = xfs_rtsummary_blockcount(mp, &mp->m_rsumlevels);
- 
--	/*
--	 * Check that the realtime section is an ok size.
--	 */
--	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
--	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
--		xfs_warn(mp, "realtime mount -- %llu != %llu",
--			(unsigned long long) XFS_BB_TO_FSB(mp, d),
--			(unsigned long long) mp->m_sb.sb_rblocks);
--		return -EFBIG;
--	}
--	error = xfs_buf_read_uncached(mp->m_rtdev_targp,
--					d - XFS_FSB_TO_BB(mp, 1),
--					XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
--	if (error) {
--		xfs_warn(mp, "realtime device size check failed");
--		return error;
--	}
--	xfs_buf_relse(bp);
--	return 0;
-+	return xfs_rt_check_size(mp, mp->m_sb.sb_rblocks - 1);
- }
- 
- static int
+ 	return rtg->rtg_inodes[XFS_RTGI_BITMAP];
 -- 
 2.45.2
 
