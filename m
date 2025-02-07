@@ -1,42 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B9E63D
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 05:22:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88E3153A7
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 05:24:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738905771; cv=none; b=OMcClfxJGaR77ne/YOnIqPXfAl11CjeRnFkISRKQ1j5ka8zd1sY70bWqzPGPRlo/EZVWcTnoSpZfY3ikEK1TTb0ufr6/m9nR1sazvrmECASa5sHQ2knd6hq+fZZdvEqIYy88rd9FShesTsys8VjXapsU5vToHb/4fRzOoGwPeAY=
+	t=1738905893; cv=none; b=FxzUrigoW622MhhfSCGq8QVxkHNyxLANiC8x9bEJsC5kxzxzuDPTClFbtHrTIqFZVN3uriLyt0iREGS24UyItkLTEjtvJEdvjxS9+kzFB1MiH/FtPYAsoUvTrNFKnBSwoiyCgZGi4IdW72v+n3xIq4Bh0lyd0oxeZurX+TlY/do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738905771; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1738905893; c=relaxed/simple;
+	bh=SJ5Q/dlicCbTYrHX6sJWWJ2g3LbKEV999Wx3LTWQm+w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rZnRf1BIWhfSLqgG0QUoaPAeWAa3nbr53BqD+Ka1x+ktxB8jtUikzYHgIJc01s1OgQrMgptVjpYUFY2qwQU8DSkSu4HXM02v9kr81yTstgnKTi6VOf4DPMc1na1NwVog60NBGL7IRIbcwPToBk/Z5UPh0JGTV/phTBdU9cufvyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jOED2HHb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZhVzXXgq2CIjCed4N9BtgIdsG9LkJb/MYzVytJw8lsIhSJpJYQs/JYtp0wkMm8Ci0FWuEtqrl2iDh+c97ZRNdd2CM+ZF5FQhA0dbpTGuGQ+cHoTcMVPlIs2br06vXN7G5xTq7tDhCTqx2AnLitsHBDbVd1Vuifq8EvbjPqpeVLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VFovZPxP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jOED2HHb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=jOED2HHbn6YznWUyAQ/wL4Lqpo
-	hSaRMz6oWw+YawzcyKbgQhJf5on72nIIIoyhfnUjFJwx7wDW28ig6J3rV4I6e/QtiX7pr7LWKkOh8
-	KARAPO1y1Kq6BYjjHJ0uYKkoA32Ck1zDh4MNVpMfsn92MmSCCJ3O5JLiJnkkkpeQcUnv11J5ANTEy
-	caZuE7RIvrtiOzGDL2H6eI8vNZrv4kG3iiEUV7ULplpGXjnUJvVd8ifpPM1ywdp/dPJM72PpMmCVC
-	N9EX87MLG4CkE4eeUmvNEiABKEjJjUMridyFmReHzG4GpUKoFPUiD5V/47c8Z+QUa8hzf1HB1pTj6
-	bcazBiaQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tgGpF-00000008MQh-3JWU;
-	Fri, 07 Feb 2025 05:22:49 +0000
-Date: Thu, 6 Feb 2025 21:22:49 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VFovZPxP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5FA7C4CED1;
+	Fri,  7 Feb 2025 05:24:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738905893;
+	bh=SJ5Q/dlicCbTYrHX6sJWWJ2g3LbKEV999Wx3LTWQm+w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VFovZPxPL7PADYxm0BbwdlySis4V4EytliyDJk/TpSz0MWpHrbk6lAoINZQPWRPfb
+	 k5tKMGIQjwPGj6EVuaF01emEHXyOHLRGJsjRMvpkTfBgC6qIi2uV+zYwBCg0oNI6hG
+	 ZEaaR0xFoQ2hV/2rSTiXeHLP1pCPbdz0GlB8LsGdQLzxmPQEBBAs+x8zqJICFhd3TA
+	 Q1oSe63j4InQLpP1ib4c3KSOHX05QD5DkLFSGHZwbtNuxOsrFUBO0R7zEGg5o6e3wh
+	 FUqK0f4QgaxgQ6hy8Tb9J0S7pnOU1h282k4oaQYNoZZt6K0Gv987WlDhKwg4EDdGLv
+	 INtom6oLaOjrw==
+Date: Thu, 6 Feb 2025 21:24:52 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/27] xfs_repair: refactor realtime inode check
-Message-ID: <Z6WYqVI-7zVKr8nf@infradead.org>
+Subject: Re: [PATCH 11/27] xfs_db: add an rgresv command
+Message-ID: <20250207052452.GU21808@frogsfrogsfrogs>
 References: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
- <173888088356.2741033.18413230775534572246.stgit@frogsfrogsfrogs>
+ <173888088264.2741033.15457962498927616155.stgit@frogsfrogsfrogs>
+ <Z6WX53R-pw979lxG@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,10 +43,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173888088356.2741033.18413230775534572246.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Z6WX53R-pw979lxG@infradead.org>
 
-Looks good:
+On Thu, Feb 06, 2025 at 09:19:35PM -0800, Christoph Hellwig wrote:
+> On Thu, Feb 06, 2025 at 02:52:36PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Create a command to dump rtgroup btree space reservations.
+> 
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Btw, for rthinreit=1 file systems a command to dump the availale
+> freepace and the data device would also be really helpful.  But
+> I guess that's more a thing for the kernel as an ioctl that works
+> on the life file system.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+We could report the reservations via the existing ag/rg/fs geometry
+ioctls.
 
+--D
