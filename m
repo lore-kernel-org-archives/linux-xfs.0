@@ -1,93 +1,69 @@
-Received: from unicom145.biz-email.net (unicom145.biz-email.net [210.51.26.145])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FDFA1A2C0B;
-	Fri,  7 Feb 2025 07:36:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.51.26.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 676811AAA32
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 09:12:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738913770; cv=none; b=iWrvLgfmCklD69UHfV5cX4SNB56akciEwm/vCEEfWKBlaXXpz+mPU9Lsn+9EAiNYTGQ2UfMHtliIp8YtQR99SePNiNyLLZaWfCspSbfILLZ2M8lCqMm6ZfbecIZx9+/4xIHzEk/LfF5Kw1psLCrQG9Y8VfGNZnlEuYwplzXzfDE=
+	t=1738919530; cv=none; b=Cwb3rm6HkRZxhhi004eZBx9fUnvHzc1dxNxPFBf6JPYWfwb9RtoCKiafaUqtesU6QlHZ1FXxVBz0IRb7uDG2aIdlDLoNA9ZgVHhvm74sCNK2sOzUMnMDrbTMa92a5AJ3yJ1GKwpZ/J7V3bc9vt2lvSsCmGFtB9xgwygKrCphSBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738913770; c=relaxed/simple;
-	bh=KP0xPlJQnncOfGBLdKus6e0ffsRrhdP0K7kpQJEhrmk=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EnO9dCmmhiwM167qlyJiz9kUicDTAIl7pobJ4JEX38sdB65W/VYpuXLlq5bm5s/2kbZjlO5hK+3+qM0QyGcVJ5wAW+twYGBcZyQ74MCAo4h+LSeUGulPOiCTR3lrfpv74ETBF8u+oruGKrqavCEtQ4xqLB86Wzw/wOfGUuS1Wlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com; spf=pass smtp.mailfrom=inspur.com; arc=none smtp.client-ip=210.51.26.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inspur.com
-Received: from unicom145.biz-email.net
-        by unicom145.biz-email.net ((D)) with ASMTP (SSL) id EZP00148;
-        Fri, 07 Feb 2025 15:34:48 +0800
-Received: from jtjnmail201607.home.langchao.com (10.100.2.7) by
- jtjnmail201609.home.langchao.com (10.100.2.9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Fri, 7 Feb 2025 15:34:47 +0800
-Received: from locahost.localdomain (10.94.12.190) by
- jtjnmail201607.home.langchao.com (10.100.2.7) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Fri, 7 Feb 2025 15:34:47 +0800
-From: Charles Han <hanchunchao@inspur.com>
-To: <mkl@pengutronix.de>, <manivannan.sadhasivam@linaro.org>,
-	<thomas.kopp@microchip.com>, <mailhol.vincent@wanadoo.fr>, <robh@kernel.org>,
-	<krzk+dt@kernel.org>, <conor+dt@kernel.org>, <cem@kernel.org>,
-	<djwong@kernel.org>, <corbet@lwn.net>
-CC: <linux-can@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, Charles Han <hanchunchao@inspur.com>
-Subject: [v2] Documentation: Remove repeated word in docs
-Date: Fri, 7 Feb 2025 15:34:29 +0800
-Message-ID: <20250207073433.23604-1-hanchunchao@inspur.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1738919530; c=relaxed/simple;
+	bh=2xZzTJIdCX7nhqoraOnp82AnS4LKXy7B/kuIrGHdAdA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IkuMNMsfq0ayu7SCQlqWm0apDgNV+D+nN5MzolhJ9HVSIalvoF77VVlBLMTGpyWRhRBcvu31QeUF45gz+eEU0dKfo5CayaG4zKLHumP3AogI1pjZ/Sx7P7JaPVLZs/0zxghfcbMP7nVJhsKrAFpo/5yBx7OipJPpHWRtIRXaxIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OyktFdSr; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OyktFdSr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4794FC4CEE2;
+	Fri,  7 Feb 2025 09:12:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738919529;
+	bh=2xZzTJIdCX7nhqoraOnp82AnS4LKXy7B/kuIrGHdAdA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OyktFdSrgTdODy1oZ4Z4fiiAwtp0tJuBN7LiHu+SbfWDlv/8wdek7vxVdxc26UwqS
+	 2zpjaxNpU9h+bkoKfI1in+sYUc/sjFtHKYWZqRNx2b+1WrhF+YhtDks8BTt+6L9SyN
+	 FKSiF6DfScz4OTBjZ7CYs1XbI9zLm2bAOmS+vSp5r5xNibneZYZlnZTO+fNrHlFto9
+	 gfu3LL5xol5lQ8ATldNKjz2rV1mbmnG4oA5PZDS+vL4YZ9QsxjkL87QwuPSZ7Jj4Jy
+	 ItQVy59k+H7dC7ZU8id9cTUbAj64BtXZq3QF5ChtmtENRWQDbuyOQkFbPpNo4Qe6g5
+	 XYNVfrgItFbDg==
+Date: Fri, 7 Feb 2025 10:12:07 +0100
+From: Daniel Gomez <da.gomez@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>, 
+	Luis Chamberlain <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Daniel Gomez <da.gomez@samsung.com>, 
+	Pankaj Raghav <p.raghav@samsung.com>, gost.dev@samsung.com
+Subject: Re: [PATCH] mkfs: use stx_blksize for dev block size by default
+Message-ID: <xqv4zn3atz47a4iowk75tf6sjslyo2pqgj4qpcb6vsmvezwcaz@fade7dldiul4>
+References: <20250206-min-io-default-blocksize-v1-1-2312e0bb8809@samsung.com>
+ <20250206222716.GB21808@frogsfrogsfrogs>
+ <Z6U8tAQ3AKMKIlWs@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: Jtjnmail201617.home.langchao.com (10.100.2.17) To
- jtjnmail201607.home.langchao.com (10.100.2.7)
-tUid: 20252071534487ca61296d0d4a6ca2047d9cd90f405c0
-X-Abuse-Reports-To: service@corp-email.com
-Abuse-Reports-To: service@corp-email.com
-X-Complaints-To: service@corp-email.com
-X-Report-Abuse-To: service@corp-email.com
+In-Reply-To: <Z6U8tAQ3AKMKIlWs@bombadil.infradead.org>
 
-Remove the repeated word "to" docs.
+On Thu, Feb 06, 2025 at 02:50:28PM +0100, Luis Chamberlain wrote:
+> On Thu, Feb 06, 2025 at 02:27:16PM -0800, Darrick J. Wong wrote:
+> > Now you've decreased the default blocksize to 512 on sda, and md0 gets
+> > an impossible 512k blocksize.  Also, disrupting the default 4k blocksize
+> > will introduce portability problems with distros that aren't yet
+> > shipping 6.12.
+> 
+> Our default should be 4k, and to address the later we should sanity
+> check and user an upper limit of what XFS supports, 64k.
 
-Signed-off-by: Charles Han <hanchunchao@inspur.com>
----
- .../devicetree/bindings/net/can/microchip,mcp251xfd.yaml      | 2 +-
- Documentation/filesystems/xfs/xfs-online-fsck-design.rst      | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+To clarify, the patch addresses the cases described above. It sets mkfs.xfs's
+default block size to the device’s reported minimum I/O size (via stx_blksize),
+clamping the value between 4k and 64k: if the reported size is less than 4k, 4k
+is used, and if it exceeds 64k (XFS_MAX_BLOCKSIZE), 64k is applied.
 
-diff --git a/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml b/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml
-index 2a98b26630cb..c155c9c6db39 100644
---- a/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml
-+++ b/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml
-@@ -40,7 +40,7 @@ properties:
- 
-   microchip,rx-int-gpios:
-     description:
--      GPIO phandle of GPIO connected to to INT1 pin of the MCP251XFD, which
-+      GPIO phandle of GPIO connected to INT1 pin of the MCP251XFD, which
-       signals a pending RX interrupt.
-     maxItems: 1
- 
-diff --git a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-index 12aa63840830..e231d127cd40 100644
---- a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-+++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-@@ -4521,8 +4521,8 @@ Both online and offline repair can use this strategy.
- | For this second effort, the ondisk parent pointer format as originally   |
- | proposed was ``(parent_inum, parent_gen, dirent_pos) → (dirent_name)``.  |
- | The format was changed during development to eliminate the requirement   |
--| of repair tools needing to to ensure that the ``dirent_pos`` field       |
--| always matched when reconstructing a directory.                          |
-+| of repair tools needing to ensure that the ``dirent_pos`` field always   |
-+| matched when reconstructing a directory.                                 |
- |                                                                          |
- | There were a few other ways to have solved that problem:                 |
- |                                                                          |
--- 
-2.43.0
-
+> 
+> Thoughts?
+> 
+>  Luis
