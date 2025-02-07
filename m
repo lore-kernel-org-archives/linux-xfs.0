@@ -1,100 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E70D819D072
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 19:26:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D95A19D072;
+	Fri,  7 Feb 2025 19:27:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738956383; cv=none; b=EhzVPj0Ktf0tdcFlDst8W7Jqxoe+sraDZWhFg3Ug5Om7/8HGuJZVnQ0MSNf8HImCAGIm2hhmVn7UOcBps+ETM6X38sRdIDlLwMhsNQprWH+q2P/K/P/Fyzz3PnmUm9Qd/Jw1jOurtJAjcUr6Csvy21NiwaKz4y8GmJdITW9waEg=
+	t=1738956438; cv=none; b=fHSn8FaAkJY2O84shT6R2kVJw71EMDHO33wBM036QlGl6nGEhxKndQM0nPaldWzIpD6Xi+cmeOSputsE/kzVKfOBnaTH6Qx7E4AspYnk5vArtAExBOUUJslCEWI0SSJaL1UOojT3gN2hfu6dKIsE2l7PJI3kr3oVU7RQ7tfAH3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738956383; c=relaxed/simple;
-	bh=gUIbyIg2bkUiMFRkWR1gViIk2Dq+MWNA7wv1c6OC4lM=;
+	s=arc-20240116; t=1738956438; c=relaxed/simple;
+	bh=z3xoqMMMda5suYBfxMjs8okCGL2VmRVbOHMyyMa1JQ0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j2SRE6uE0Z62+bJBOggfIndQGbd51DTvkb8EMWGPCd5vV93EwM+hyeS0b7OMGdxahG7iorvA7U//hyEt+PvQjzkspu3eewFcpud5hcDFsIezc32t9RHVqNyORKR+DuZ99kZYAbapUHI1nx5ezSHRyDUms+fyu0NeSnb889bmrys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IgSpNPXk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uRL5sTUAncRqvrXotSHXoqnsejH7JVXjYHG9W6iZtFmWuZYP3/ES2QiWNXoUkXiUXJy+xDej0Ivb6AI3VCU5DyjOm0xz5SvB7Q/iBfdZoQLWGBLHQlzlzF2aFDmQDRlLXXSsrNR0kXqW2hdT5yrxwSnv9K52PpdHT4xqyZ0bNO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V1bPf6WD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IgSpNPXk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D9ABC4CED1;
-	Fri,  7 Feb 2025 19:26:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V1bPf6WD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BDAEC4CED1;
+	Fri,  7 Feb 2025 19:27:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738956382;
-	bh=gUIbyIg2bkUiMFRkWR1gViIk2Dq+MWNA7wv1c6OC4lM=;
+	s=k20201202; t=1738956436;
+	bh=z3xoqMMMda5suYBfxMjs8okCGL2VmRVbOHMyyMa1JQ0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IgSpNPXkM9ksBiuVksxNmzSZUzqK1agfpiuVPsd7D4byPcOLG4rnYYMjLg32JNeAM
-	 qlSYKEg4NdhxxsU9Vu497Ogq9AImDLsEQ+YdVTy0xaayubgvGZ9kxzL+zDmUOv6c6f
-	 f7P2PGq+R/RciRQpATcs4tduUXjw3ncwnsTELIN4RAi86rs0VpBrpQ5dmQu5zFEmuN
-	 kxN0n8dZ4HM2RSswSVQBVO5FCZibzEtvNlTQr0gISldDbxg6rXfd/P456X6QIocEjm
-	 kGUNOMUaHTzsyOIISyjMggWMNCkUp0oEtiCv7QMKFOOwjWj2+FyH8lF9DgCh41Oc8X
-	 BtBbjgzZRAl2w==
-Date: Fri, 7 Feb 2025 11:26:20 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: da.gomez@kernel.org, linux-xfs@vger.kernel.org,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Pankaj Raghav <p.raghav@samsung.com>, gost.dev@samsung.com
-Subject: Re: [PATCH] mkfs: use stx_blksize for dev block size by default
-Message-ID: <Z6ZeXJc3jw-kHKGa@bombadil.infradead.org>
-References: <20250206-min-io-default-blocksize-v1-1-2312e0bb8809@samsung.com>
- <20250206222716.GB21808@frogsfrogsfrogs>
+	b=V1bPf6WD+16FbN25mSO538u8+JyfrvrUYMFBwmykVz3aUbgEncUBzbYNd3gf3QeBl
+	 GuzHblBcl0pHb3tUZMQTk/fU+88eLgx59uB++3axxI29X/kWtHSIypyo3NYm5CfchE
+	 3HmCouqzkQAkRl0AOZU60bMh/9WPSfooPWaa7D+NdAFF26jxYv7/mgo4kbfMHPz9gh
+	 v60aSkqdz7qx07i+IeishQDnQRAIBVh6E/S+9MEg496syVTFQzzyR+kVcrZOR+256I
+	 UpsqUtXgVOixvOwqjtOmjpyS3lrM01aiQUYA/1uf8yg7njNu7j7ihw5OWmfdj/iNfe
+	 YNVUkJsqLY09w==
+Date: Fri, 7 Feb 2025 11:27:15 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: xfs-stable@lists.linux.dev, linux-xfs@vger.kernel.org,
+	syzbot+3126ab3db03db42e7a31@syzkaller.appspotmail.com,
+	eflorac@intellique.com, hch@lst.de, cem@kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCHSET RFC 6.12] xfs: bug fixes for 6.12.y LTS
+Message-ID: <20250207192715.GU21799@frogsfrogsfrogs>
+References: <173869499323.410229.9898612619797978336.stgit@frogsfrogsfrogs>
+ <2025020556-bagful-cosmos-2a72@gregkh>
+ <20250205155634.GG21808@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250206222716.GB21808@frogsfrogsfrogs>
+In-Reply-To: <20250205155634.GG21808@frogsfrogsfrogs>
 
-On Thu, Feb 06, 2025 at 02:27:16PM -0800, Darrick J. Wong wrote:
-> NAME                     MIN-IO
-> sda                         512
-> ├─sda1                      512
-> ├─sda2                      512
-> │ └─node0.boot              512
-> ├─sda3                      512
-> │ └─node0.swap              512
-> └─sda4                      512
->   └─node0.lvm               512
->     └─node0-root            512
-> sdb                        4096
-> └─sdb1                     4096
-> nvme1n1                     512
-> └─md0                    524288
->   └─node0.raid           524288
->     └─node0_raid-storage 524288
-> nvme0n1                     512
-> └─md0                    524288
->   └─node0.raid           524288
->     └─node0_raid-storage 524288
-> nvme2n1                     512
-> └─md0                    524288
->   └─node0.raid           524288
->     └─node0_raid-storage 524288
-> nvme3n1                     512
-> └─md0                    524288
->   └─node0.raid           524288
->     └─node0_raid-storage 524288
+On Wed, Feb 05, 2025 at 07:56:34AM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 05, 2025 at 06:55:19AM +0100, Greg KH wrote:
+> > On Tue, Feb 04, 2025 at 10:51:15AM -0800, Darrick J. Wong wrote:
+> > > Hi all,
+> > > 
+> > > Here's a bunch of bespoke hand-ported bug fixes for 6.12 LTS.
+> > > 
+> > > If you're going to start using this code, I strongly recommend pulling
+> > > from my git trees, which are linked below.
+> > > 
+> > > With a bit of luck, this should all go splendidly.
+> > > Comments and questions are, as always, welcome.
+> > 
+> > Should we take these into the next stable release, or do you want us to
+> > wait a bit?
+> 
+> Let's wait a day or two to see if anyone has objections, and then I'll
+> send this series again without the RFC tag.  Already I think I see that
+> the first patch needs a cc:stable tag to capture the version.
 
-Can you try this for each of these:
+Ok, it's been three days and nobody objected.  I'll send a proper
+patchset with backports shortly.
 
-stat --print=%o 
+--D
 
-I believe that without that new patch I posted [0] you will get 4 KiB
-here. Then the blocksize passed won't be the min-io until that patch
-gets applied.
-
-The above is:
-
-statx(AT_FDCWD, "/dev/nvme0n1", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW|AT_NO_AUTOMOUNT, 0,
-{stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0,
-stx_mode=S_IFBLK|0660, stx_size=0, ...}) = 0
-
-So if we use this instead at mkfs, then even older kernels will get 4
-KiB, and if distros want to automatically lift the value at mkfs, they
-could cherry pick that simple patch.
-
-[0] https://lkml.kernel.org/r/20250204231209.429356-9-mcgrof@kernel.org
-
-  Luis
+> --D
+> 
+> > thanks,
+> > 
+> > greg k-h
+> > 
+> 
