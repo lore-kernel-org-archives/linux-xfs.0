@@ -1,42 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19C7FD26D
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 06:00:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1246B14830F
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 06:07:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738908023; cv=none; b=i+dN2rmwrXxI0KFMbTyimkTbISwmDZSvoKF7xpwsQDJMvhD0x7o7UwGvQGI6HEiWoNtnfnG4ayZuu5boTJhkXmeBeKthqTlyobLKvqjYswt6LblPJfOdE9VzXfuILrHRQUu5xwNwCZa6MorydG77t4xqerW64MFE4HIwEmCg5Z4=
+	t=1738908438; cv=none; b=Y+h6JvGfsGtJAEvK+LzGlX1VvN8y/3G+wGLg/AwxD8WXl56p2nQooe5L2Sltc/rtxenZ0m+AT2DYgHAAyPhBkDt5jLtcPRxAQSBYDxzbT93UcWnOCZvQ4Xhz3JDbB/kA7qYHdNUk6WAaGhzGS9DV+BPo1Rf1TRp3mYosAwInfwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738908023; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1738908438; c=relaxed/simple;
+	bh=dB0YnFzUZJ1zDU03vNA9c+oAL8n1jiBMRqme8+QKqSk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ezjzZZ2OTtO/GQyv26VAo4GOzGmC+vpGh8rOu/wT7PO5zWuvEDeQ1/GQ+hMmY8yxBVgPaYZkWszufDvViULinKiG1U+JsmlOzVhNBxkiVHinSxZnDX+cU3JP1WD8HCJzPMJEd/zp959bvcGqxXpb3Xrcyip9Z/C+y+C4KkEZRkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=i+zC79VW; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=YvkUCOaIuFO4y8rZNMWQ/0di6TrleVSEIN+unaMvCvO7bLsxe2MANtzDfg+OGnQe9um6fcybwBJkxhyGsUbbttr+omvQFWsirHgyM9eYvxivpIXK38kB6qp6YUC9DBC+BwdgZ//LCMJTcIQ+PtNx4816ijeaGZoJdekvHo0qYi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lTjPyocN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="i+zC79VW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=i+zC79VWEy0poixzunlvQBKvZE
-	LLEKj2kJInik0hGp+Y6CuL4GMBoUBnjwjbVIrQSMSmyFzdulOt/jKwwPVzjIfFEmf2FxidfugkYnw
-	bblvpuptblesWKhLb75s5zEYDH+6i1o0xUQB7EaUgNGu8DTaTDtEpk1cwolj2WhAy/QLPTN7ya3cY
-	EGtUR201Okp70ta7FRg6hd/2kOZiCpIMRI9SRBzXH679ftQOsnHpwDkx3/N5ob7SS66qouwOQApuK
-	GgPvgC8F3Y3q/40UJlgo9nSfHerIwkFj3b/kFsZTbh6IOPUEzFnwxOSzOQGrQe+ptFF/w4AjMMBLB
-	sjupA34A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tgHPZ-00000008RQh-2Dbx;
-	Fri, 07 Feb 2025 06:00:21 +0000
-Date: Thu, 6 Feb 2025 22:00:21 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lTjPyocN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 345C0C4CED1;
+	Fri,  7 Feb 2025 06:07:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738908437;
+	bh=dB0YnFzUZJ1zDU03vNA9c+oAL8n1jiBMRqme8+QKqSk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lTjPyocNI9ZzPvNpts3zTyoXu6D9UwybX1ttXKTXLGa7Z0+FSSDjHybjaSX8o764m
+	 R4Do5I423TUXrTqqbQokyryugS4hpJCQQO5UEYruCUf6sOdJLx65N9z/wphxnK64Hp
+	 uTcZyPA9ZizjJkR1j3QTJ3njU2YNZO6adQkYuIC1ySAxpHLlcTQJ296wtZmPdO615I
+	 eVZ/pkhaDZG7y5tXNiHRrhYxxPjGCDAndn+ZS1aMe9HqBSA/MzCzw489mDiRkXslTR
+	 Z6Q7B3561HX6iAQT0cyBr0HAsj50UZbpjbIpVMhUqWt1FGVgTEObiTiOxuJ4I0ZFRs
+	 e84AiLWoFdkBQ==
+Date: Thu, 6 Feb 2025 22:07:16 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 27/27] mkfs: create the realtime rmap inode
-Message-ID: <Z6WhdQBlJMkK3KyI@infradead.org>
+Subject: Re: [PATCH 26/27] mkfs: add some rtgroup inode helpers
+Message-ID: <20250207060716.GV21808@frogsfrogsfrogs>
 References: <173888088056.2741033.17433872323468891160.stgit@frogsfrogsfrogs>
- <173888088511.2741033.12591731083152285550.stgit@frogsfrogsfrogs>
+ <173888088495.2741033.10645836020741372245.stgit@frogsfrogsfrogs>
+ <Z6WhUgZj8I3Ql4gO@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,10 +43,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173888088511.2741033.12591731083152285550.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Z6WhUgZj8I3Ql4gO@infradead.org>
 
-Looks good:
+On Thu, Feb 06, 2025 at 09:59:46PM -0800, Christoph Hellwig wrote:
+> On Thu, Feb 06, 2025 at 02:56:30PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Create some simple helpers to reduce the amount of typing whenever we
+> > access rtgroup inodes.  Conversion was done with this spatch and some
+> > minor reformatting:
+> 
+> Shouldn't this just be folded into the patch adding the line touched?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Yeah, I'll do go that.
 
+--D
