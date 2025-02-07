@@ -1,42 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83D6847F4A
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 04:34:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A521D47F4A
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 04:35:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738902878; cv=none; b=FJerOMPVDXWNnSV3enLrKYO30e2f9x26b6GAptSPGqCY6aTCguBoj9py2uHppY31A+o5BzfFLHuIOIvVhNUsCfEyLVcWP1ICPRnl5Q0q4b7QQggd8OPu/p5272vIt0OpCiGPkz8fBu/x0GPjmElUBpcN2xr1KsUyAnP+bI58N7M=
+	t=1738902936; cv=none; b=e2ZyzdW2u0dO9JIQwlKdUcuUoSWK8rZGVvIiaYXL/U69Y8dDB+HpPkb3j92iEfWUdWJjMD849LadDi0icK+SV7uIc2scEAU2Yd+Ev8zSH0KrL893EbibJa57TLr4hfI9uR5hUHXR/2HOIyDK5NzCRog1I5qbJBMsc1bpXSnZ1gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738902878; c=relaxed/simple;
-	bh=tUt4EfyuK1g9HkIPQIpfaXa4VlnyNoTMZcmI/amaC+0=;
+	s=arc-20240116; t=1738902936; c=relaxed/simple;
+	bh=jEJFao4/bEYnGWQGMQ9XzZCGjLsIx/k7RfouiLuJeDI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pQsnjySsxIyecYSbqOmile7UOjV25MvZC/4mIgY6MhaNN9HhBvgrtGV072dbrBSue1j6Jmvt4ZkrXaMtYAbLYSpvawv44OU0RHh+90GlJjNe4J4HzKEgTi+NUrp/LehVPR6StUifUF/OkBtGDKWQnAzmi2ljnMGhlgE+pJbrIq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=N3UPqQr9; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=ElqdlvoSoGPh9VRet7ybdnChuOSIaNlJ0wmYiz4EwL2xT8tC+hrBMdzWM9TPihSkHm2qILb161tY8t3AlP2n7EP1NNSkzkKucOh0ODYb6ZLitG3YPWa0R+mw6thiXkggwfpr1+a75qAW4ANYjfSwYiI1E0h7Z/P7L+JElZFFyv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nPUr2M0t; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N3UPqQr9"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nPUr2M0t"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=1LRfiu5R4EXr9x5QdT9yHjcMguuU08mLS5nvKrqiOdw=; b=N3UPqQr9ydGbgVAjV5KoqS8jsO
-	2irwqHaWktEXzLUu/hvS48BTkfELVyVs0wSg1FBGr2o3UWPz9+a0Z0KLH0CwnYw7NZujkKqKR2VHu
-	lNglBSInpvJND5WjIFZlfYwnCoHAzSj6QSPyK25B+UDJgj6eRY64L1MZLirfwve/2lT/Sgr7TwPo7
-	ix1Mo6KwKZyYUhgLZ6xWEizF08KoBzHCB5215OveOiHdjAIAzBIgKRTcggv0lgfV5GxfoVWmUa1S4
-	fudsSUaqKKI4vzzoWleQu/VHAebaQtOR0Rw+/3MsduQJVvfiRsa4T+79HWNtDxirWFB82iYyNdTvX
-	g11H0wUQ==;
+	bh=dOwjIQkHSe6gaYZ1Y7Tl185cjWmw9TASiKe8ZEaeADo=; b=nPUr2M0tMbHZFbsfkEQrGY4vxA
+	Mr0WzDB6OxD4aGA4a1rUW5IprxA7T647VZD7yL+v/GgdumaOqymReHjQdO3w2oE7UytLzApDn2WyO
+	/RfA3l8ICdK/YZCnlt42x+lVWwoM6CVONSUKVoAmDRga1J2/Yr8vkp3Gj/wA/hMZ4L3IIqVyIwcGR
+	uBejDBy0uxWNHjt6A79Q5XmlDjHsTtogbr6aogrUe08hOEjkwd2AZOCW4xGhEIARk3ZyGrX40KhcF
+	8rpnircW9khgJpRsCiajjkHVx4B/nB2+4xPbfLQNskCXe3bbhzTKy6bN0OVRUJJmkotkshVjmO9L/
+	aW/txm7w==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tgG4a-00000008Ip4-3YSZ;
-	Fri, 07 Feb 2025 04:34:36 +0000
-Date: Thu, 6 Feb 2025 20:34:36 -0800
+	id 1tgG5W-00000008It2-0bwd;
+	Fri, 07 Feb 2025 04:35:34 +0000
+Date: Thu, 6 Feb 2025 20:35:34 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/17] libfrog: wrap handle construction code
-Message-ID: <Z6WNXCVEyAIyBCrd@infradead.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 05/17] xfs_scrub: don't report data loss in unlinked
+ inodes twice
+Message-ID: <Z6WNljC0UV4LbxPB@infradead.org>
 References: <173888086034.2738568.15125078367450007162.stgit@frogsfrogsfrogs>
- <173888086121.2738568.17449625667584946105.stgit@frogsfrogsfrogs>
+ <173888086136.2738568.12499263697186080933.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,22 +46,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173888086121.2738568.17449625667584946105.stgit@frogsfrogsfrogs>
+In-Reply-To: <173888086136.2738568.12499263697186080933.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Feb 06, 2025 at 02:31:41PM -0800, Darrick J. Wong wrote:
+On Thu, Feb 06, 2025 at 02:31:57PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Clean up all the open-coded logic to construct a file handle from a
-> fshandle and some bulkstat/parent pointer information.  The new
-> functions are stashed in a private header file to avoid leaking the
-> details of xfs_handle construction in the public libhandle headers.
+> If parent pointers are enabled, report_ioerr_fsmap will report lost file
+> data and xattrs for all files, having used the parent pointer ioctls to
+> generate the path of the lost file.  For unlinked files, the path lookup
+> will fail, but we'll report the inumber of the file that lost data.
 
-So creating a handle from bulkstat is a totally normal thing to do
-for xfs-aware applications.  I'd much rathe see this in libhandle
-than hiding it away.
+Maybe also add this to the code as a comment?
 
-> +		handle_from_fshandle(&handle, file->fshandle, file->fshandle_len);
+Otherwise looks good:
 
-Nit: overly long line.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
