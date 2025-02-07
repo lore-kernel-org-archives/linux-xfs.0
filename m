@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08BC517E4
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 00:54:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2D8C13D8A0
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 01:02:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738889650; cv=none; b=jL4lO3+TyZ97ZxznpLSMSLYUX1Gir/8DD/yJ9/es/jkmy+T9+ThtMTrvn/d73x+Ci2L35B1JMFa1CWoBMR3jKVXpPDQnSWeaEGMtir8HPq0QZTG9tZjfS9RPAczVjqinijQ8CC1x/IZrk3fi2teI7tvMT9CTvaTWJh5mRYWQXtY=
+	t=1738890145; cv=none; b=cp+htSt/dHkA74xSXVc+pKNWACHX1ZH4nVkHM2NY8CSOVOQ3JniMeynVGmSMXEAdNlmeicKKas0YEr808l732+jaRvZg5/nlKjACGUqvbhzBgtXrgIZQvov9fbTIAyWR44KKFZj1z9Gk2KO1QG3xIiflg4LEZ31uF/wx5Hcx5gc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738889650; c=relaxed/simple;
-	bh=tOp4P+jO9SqrewElH6BY95rPFxFkJyhT/Jl1ksCMzuM=;
+	s=arc-20240116; t=1738890145; c=relaxed/simple;
+	bh=4hsR6Tc+xssF0IDtmruDOtby6sWZD+8U3GYAS7XqVSs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DlKIjqF/1j8YWB71PWd5sJoj4UYZiUBaUuQx1UWRPzRznGga5oBKU5kDHpjNRDem7GkSmtsUOu3QWkqi93rV0vQBPzitmIQZklfjRMaN0DycPFmEvWnaL8DYjxOyB99shDvExgU2GFiHGAOr6ep7325OQySQ/+DrPsx+vWgy7vI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BVaDafRE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=l4ssPK8tiiUBkiX4hSFH0ozlfhwJp2adT1nKxpAwveocjk22yiFZBLx+FdokJ9cvhCwIlF4OPBAE7ir4xXq5STbLk7l/ne5ihIXmpaPrfFya04xU+5olk1jjphbCd+EFCci2FCDwMwiYkq/73r95wG7/BZv5/qJGhFupGBglPOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nue6g9rI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BVaDafRE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD7E3C4CEDD;
-	Fri,  7 Feb 2025 00:54:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nue6g9rI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12155C4CEE0;
+	Fri,  7 Feb 2025 01:02:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738889649;
-	bh=tOp4P+jO9SqrewElH6BY95rPFxFkJyhT/Jl1ksCMzuM=;
+	s=k20201202; t=1738890145;
+	bh=4hsR6Tc+xssF0IDtmruDOtby6sWZD+8U3GYAS7XqVSs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BVaDafREYlOzs/BLgzaMqllTnLGBCaY9g2xdXgEvYuilyV2e3cizdVdX/P9CQ+537
-	 8ZMKK/Hz+v91bM0JmAbyy/U339PMTpqr83zubr97B7y0zeUTOeSgfgFki9RhV7wLMp
-	 m5UX+RpR2xo/nBhtpuz4/bFuxFVBjty8V/pHA//KPeMc+Mka+CbCGgIvXgFZNHGEcK
-	 g4tMcUBsK3lfaRzj5fg+1/fM9YOhy0Q1Q7vQ9xj+/a2Ckr9k6TX1Hp6Iu1wjjLDwyb
-	 X2C9yl0PiDkL5OVHLtaheGocQC5Yo/t9BhI+wjafUFhQ29qW/JmDQ3EpOs1svtFo6v
-	 iRL93owsWU4iA==
-Date: Thu, 6 Feb 2025 16:54:09 -0800
+	b=Nue6g9rIBsjlH9S/BaDFDKWddG4zgRHiQ9dvc6K3vtuOHZ5On8KoyrqwZ0Opzx6eC
+	 HnD9v/bnnbVRbRAlTFGmuMjEcbmRtwrajeRZw76xv0e+eSu9m01il1MO2tlW4w0uco
+	 X7MtbDXBSQGbJ0seArWD97KWEm5eOhzzjpBmfnZAIdwBEXkKRkXBXB3Jht4PkRCZzo
+	 EhV7rnI8PBUcQCdoUI2nYm9Pwaf2rxlBDaUw+qQnkdDynhgfiwy3N0KPHmgbNSMOR9
+	 8L3DMpJ0JwEaYDQ05ffD4JvG/y1mQ1XNwyZHOZ8CcqWZsLm4vYz3OXcUjZQgNEuDm8
+	 YOkp8xtCSJOjQ==
+Date: Thu, 6 Feb 2025 17:02:24 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 42/43] xfs: contain more sysfs code in xfs_sysfs.c
-Message-ID: <20250207005409.GE21808@frogsfrogsfrogs>
+Subject: Re: [PATCH 41/43] xfs: export zone stats in /proc/*/mountstats
+Message-ID: <20250207010224.GF21808@frogsfrogsfrogs>
 References: <20250206064511.2323878-1-hch@lst.de>
- <20250206064511.2323878-43-hch@lst.de>
+ <20250206064511.2323878-42-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,197 +43,196 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250206064511.2323878-43-hch@lst.de>
+In-Reply-To: <20250206064511.2323878-42-hch@lst.de>
 
-On Thu, Feb 06, 2025 at 07:44:58AM +0100, Christoph Hellwig wrote:
-> Extend the error sysfs initialization helper to include the neighbouring
-> attributes as well.
+On Thu, Feb 06, 2025 at 07:44:57AM +0100, Christoph Hellwig wrote:
+> From: Hans Holmberg <hans.holmberg@wdc.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Add the per-zone life time hint and the used block distribution
+> for fully written zones, grouping reclaimable zones in fixed-percentage
+> buckets spanning 0..9%, 10..19% and full zones as 100% used as well as a
+> few statistics about the zone allocator and open and reclaimable zones
+> in /proc/*/mountstats.
 
-This looks like a pretty simple rearrangement...
+I'm kinda surprised you didn't export this via sysfs, but then
+remembered that Greg has strict rules against tabular data and whatnot.
+
+> This gives good insight into data fragmentation and data placement
+> success rate.
+
+I hope it's worth exporting a bunch of stringly-structured data. ;)
+
+Past me would've asked if we could just export some json and let
+userspace pick that up, but today me learned about the horrors of json
+and how it represents integers, stumbling over trailing commas, etc.
+
+Is any of this getting wired up into a zone-top tool?
+The /proc dump looks ok to me...
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Co-developed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_mount.c | 29 ++++++-----------------------
->  fs/xfs/xfs_sysfs.c | 35 ++++++++++++++++++++++++++++-------
->  fs/xfs/xfs_sysfs.h |  5 ++---
->  3 files changed, 36 insertions(+), 33 deletions(-)
+>  fs/xfs/Makefile         |   1 +
+>  fs/xfs/xfs_super.c      |   4 ++
+>  fs/xfs/xfs_zone_alloc.h |   1 +
+>  fs/xfs/xfs_zone_info.c  | 105 ++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 111 insertions(+)
+>  create mode 100644 fs/xfs/xfs_zone_info.c
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 7dbdf9e5529c..a62791c2b2fe 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -768,27 +768,15 @@ xfs_mountfs(
->  	/* enable fail_at_unmount as default */
->  	mp->m_fail_unmount = true;
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index e38838409271..5bf501cf8271 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -140,6 +140,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+>  xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o \
+>  				   xfs_zone_alloc.o \
+>  				   xfs_zone_gc.o \
+> +				   xfs_zone_info.o \
+>  				   xfs_zone_space_resv.o
 >  
-> -	super_set_sysfs_name_id(mp->m_super);
-> -
-> -	error = xfs_sysfs_init(&mp->m_kobj, &xfs_mp_ktype,
-> -			       NULL, mp->m_super->s_id);
-> -	if (error)
-> -		goto out;
-> -
-> -	error = xfs_sysfs_init(&mp->m_stats.xs_kobj, &xfs_stats_ktype,
-> -			       &mp->m_kobj, "stats");
-> +	error = xfs_mount_sysfs_init(mp);
->  	if (error)
-> -		goto out_remove_sysfs;
-> +		goto out_remove_scrub_stats;
->  
->  	xchk_stats_register(mp->m_scrub_stats, mp->m_debugfs);
->  
-> -	error = xfs_error_sysfs_init(mp);
-> -	if (error)
-> -		goto out_remove_scrub_stats;
-> -
->  	error = xfs_errortag_init(mp);
->  	if (error)
-> -		goto out_remove_error_sysfs;
-> +		goto out_remove_sysfs;
->  
->  	error = xfs_uuid_mount(mp);
->  	if (error)
-> @@ -1151,13 +1139,10 @@ xfs_mountfs(
->  	xfs_uuid_unmount(mp);
->   out_remove_errortag:
->  	xfs_errortag_del(mp);
-> - out_remove_error_sysfs:
-> -	xfs_error_sysfs_del(mp);
-> + out_remove_sysfs:
-> +	xfs_mount_sysfs_del(mp);
->   out_remove_scrub_stats:
->  	xchk_stats_unregister(mp->m_scrub_stats);
-> -	xfs_sysfs_del(&mp->m_stats.xs_kobj);
-> - out_remove_sysfs:
-> -	xfs_sysfs_del(&mp->m_kobj);
->   out:
->  	return error;
->  }
-> @@ -1234,10 +1219,8 @@ xfs_unmountfs(
->  	xfs_free_rtgroups(mp, 0, mp->m_sb.sb_rgcount);
->  	xfs_free_perag_range(mp, 0, mp->m_sb.sb_agcount);
->  	xfs_errortag_del(mp);
-> -	xfs_error_sysfs_del(mp);
->  	xchk_stats_unregister(mp->m_scrub_stats);
-> -	xfs_sysfs_del(&mp->m_stats.xs_kobj);
-> -	xfs_sysfs_del(&mp->m_kobj);
-> +	xfs_mount_sysfs_del(mp);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 60cb5318fdae..c3bd7dff229d 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -69,7 +69,7 @@ static struct attribute *xfs_mp_attrs[] = {
->  };
->  ATTRIBUTE_GROUPS(xfs_mp);
->  
-> -const struct kobj_type xfs_mp_ktype = {
-> +static const struct kobj_type xfs_mp_ktype = {
->  	.release = xfs_sysfs_release,
->  	.sysfs_ops = &xfs_sysfs_ops,
->  	.default_groups = xfs_mp_groups,
-> @@ -702,39 +702,58 @@ xfs_error_sysfs_init_class(
->  }
->  
->  int
-> -xfs_error_sysfs_init(
-> +xfs_mount_sysfs_init(
->  	struct xfs_mount	*mp)
+>  xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 134859a3719d..877332ffd84b 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1262,6 +1262,10 @@ xfs_fs_show_stats(
+>  	struct seq_file		*m,
+>  	struct dentry		*root)
 >  {
->  	int			error;
->  
-> +	super_set_sysfs_name_id(mp->m_super);
+> +	struct xfs_mount	*mp = XFS_M(root->d_sb);
 > +
-> +	/* .../xfs/<dev>/ */
-> +	error = xfs_sysfs_init(&mp->m_kobj, &xfs_mp_ktype,
-> +			       NULL, mp->m_super->s_id);
-> +	if (error)
-> +		return error;
-> +
-> +	/* .../xfs/<dev>/stats/ */
-> +	error = xfs_sysfs_init(&mp->m_stats.xs_kobj, &xfs_stats_ktype,
-> +			       &mp->m_kobj, "stats");
-> +	if (error)
-> +		goto out_remove_fsdir;
-> +
->  	/* .../xfs/<dev>/error/ */
->  	error = xfs_sysfs_init(&mp->m_error_kobj, &xfs_error_ktype,
->  				&mp->m_kobj, "error");
->  	if (error)
-> -		return error;
-> +		goto out_remove_stats_dir;
->  
-> +	/* .../xfs/<dev>/error/fail_at_unmount */
->  	error = sysfs_create_file(&mp->m_error_kobj.kobject,
->  				  ATTR_LIST(fail_at_unmount));
->  
->  	if (error)
-> -		goto out_error;
-> +		goto out_remove_error_dir;
->  
->  	/* .../xfs/<dev>/error/metadata/ */
->  	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
->  				"metadata", &mp->m_error_meta_kobj,
->  				xfs_error_meta_init);
->  	if (error)
-> -		goto out_error;
-> +		goto out_remove_error_dir;
->  
+> +	if (xfs_has_zoned(mp) && IS_ENABLED(CONFIG_XFS_RT))
+> +		xfs_zoned_show_stats(m, mp);
 >  	return 0;
->  
-> -out_error:
-> +out_remove_error_dir:
->  	xfs_sysfs_del(&mp->m_error_kobj);
-> +out_remove_stats_dir:
-> +	xfs_sysfs_del(&mp->m_stats.xs_kobj);
-> +out_remove_fsdir:
-> +	xfs_sysfs_del(&mp->m_kobj);
->  	return error;
 >  }
 >  
->  void
-> -xfs_error_sysfs_del(
-> +xfs_mount_sysfs_del(
->  	struct xfs_mount	*mp)
->  {
->  	struct xfs_error_cfg	*cfg;
-> @@ -749,6 +768,8 @@ xfs_error_sysfs_del(
->  	}
->  	xfs_sysfs_del(&mp->m_error_meta_kobj);
->  	xfs_sysfs_del(&mp->m_error_kobj);
-> +	xfs_sysfs_del(&mp->m_stats.xs_kobj);
-> +	xfs_sysfs_del(&mp->m_kobj);
->  }
+> diff --git a/fs/xfs/xfs_zone_alloc.h b/fs/xfs/xfs_zone_alloc.h
+> index 1269390bfcda..ecf39106704c 100644
+> --- a/fs/xfs/xfs_zone_alloc.h
+> +++ b/fs/xfs/xfs_zone_alloc.h
+> @@ -44,6 +44,7 @@ void xfs_mark_rtg_boundary(struct iomap_ioend *ioend);
 >  
->  struct xfs_error_cfg *
-> diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-> index 148893ebfdef..1622fe80ad3e 100644
-> --- a/fs/xfs/xfs_sysfs.h
-> +++ b/fs/xfs/xfs_sysfs.h
-> @@ -7,7 +7,6 @@
->  #ifndef __XFS_SYSFS_H__
->  #define __XFS_SYSFS_H__
+>  uint64_t xfs_zoned_default_resblks(struct xfs_mount *mp,
+>  		enum xfs_free_counter ctr);
+> +void xfs_zoned_show_stats(struct seq_file *m, struct xfs_mount *mp);
 >  
-> -extern const struct kobj_type xfs_mp_ktype;	/* xfs_mount */
->  extern const struct kobj_type xfs_dbg_ktype;	/* debug */
->  extern const struct kobj_type xfs_log_ktype;	/* xlog */
->  extern const struct kobj_type xfs_stats_ktype;	/* stats */
-> @@ -53,7 +52,7 @@ xfs_sysfs_del(
->  	wait_for_completion(&kobj->complete);
->  }
->  
-> -int	xfs_error_sysfs_init(struct xfs_mount *mp);
-> -void	xfs_error_sysfs_del(struct xfs_mount *mp);
-> +int	xfs_mount_sysfs_init(struct xfs_mount *mp);
-> +void	xfs_mount_sysfs_del(struct xfs_mount *mp);
->  
->  #endif	/* __XFS_SYSFS_H__ */
+>  #ifdef CONFIG_XFS_RT
+>  int xfs_mount_zones(struct xfs_mount *mp);
+> diff --git a/fs/xfs/xfs_zone_info.c b/fs/xfs/xfs_zone_info.c
+> new file mode 100644
+> index 000000000000..7ba0a5931c99
+> --- /dev/null
+> +++ b/fs/xfs/xfs_zone_info.c
+> @@ -0,0 +1,105 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2023-2025 Christoph Hellwig.
+> + * Copyright (c) 2024-2025, Western Digital Corporation or its affiliates.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_rtgroup.h"
+> +#include "xfs_zone_alloc.h"
+> +#include "xfs_zone_priv.h"
+> +
+> +static const char xfs_write_hint_shorthand[6][16] = {
+> +	"NOT_SET", "NONE", "SHORT", "MEDIUM", "LONG", "EXTREME"};
+> +
+> +static inline const char *
+> +xfs_write_hint_to_str(
+> +	uint8_t			write_hint)
+> +{
+> +	if (write_hint > WRITE_LIFE_EXTREME)
+> +		return "UNKNOWN";
+> +	return xfs_write_hint_shorthand[write_hint];
+> +}
+> +
+> +static void
+> +xfs_show_open_zone(
+> +	struct seq_file		*m,
+> +	struct xfs_open_zone	*oz)
+> +{
+> +	seq_printf(m, "\t  zone %d, wp %u, written %u, used %u, hint %s\n",
+> +		rtg_rgno(oz->oz_rtg),
+> +		oz->oz_write_pointer, oz->oz_written,
+> +		rtg_rmap(oz->oz_rtg)->i_used_blocks,
+> +		xfs_write_hint_to_str(oz->oz_write_hint));
+> +}
+> +
+> +static void
+> +xfs_show_full_zone_used_distribution(
+> +	struct seq_file         *m,
+> +	struct xfs_mount        *mp)
+> +{
+> +	struct xfs_zone_info	*zi = mp->m_zone_info;
+> +	unsigned int		reclaimable = 0, full, i;
+> +
+> +	spin_lock(&zi->zi_used_buckets_lock);
+> +	for (i = 0; i < XFS_ZONE_USED_BUCKETS; i++) {
+> +		unsigned int entries = zi->zi_used_bucket_entries[i];
+> +
+> +		seq_printf(m, "\t  %2u..%2u%%: %u\n",
+> +				i * (100 / XFS_ZONE_USED_BUCKETS),
+> +				(i + 1) * (100 / XFS_ZONE_USED_BUCKETS) - 1,
+> +				entries);
+> +		reclaimable += entries;
+> +	}
+> +	spin_unlock(&zi->zi_used_buckets_lock);
+> +
+> +	full = mp->m_sb.sb_rgcount;
+> +	if (zi->zi_open_gc_zone)
+> +		full--;
+> +	full -= zi->zi_nr_open_zones;
+> +	full -= atomic_read(&zi->zi_nr_free_zones);
+> +	full -= reclaimable;
+> +
+> +	seq_printf(m, "\t     100%%: %u\n", full);
+> +}
+> +
+> +void
+> +xfs_zoned_show_stats(
+> +	struct seq_file		*m,
+> +	struct xfs_mount	*mp)
+> +{
+> +	struct xfs_zone_info	*zi = mp->m_zone_info;
+> +	struct xfs_open_zone	*oz;
+> +
+> +	seq_puts(m, "\n");
+> +
+> +	seq_printf(m, "\tuser free RT blocks: %lld\n",
+> +		xfs_sum_freecounter(mp, XC_FREE_RTEXTENTS));
+> +	seq_printf(m, "\treserved free RT blocks: %lld\n",
+> +		mp->m_resblks[XC_FREE_RTEXTENTS].avail);
+> +	seq_printf(m, "\tuser available RT blocks: %lld\n",
+> +		xfs_sum_freecounter(mp, XC_FREE_RTAVAILABLE));
+> +	seq_printf(m, "\treserved available RT blocks: %lld\n",
+> +		mp->m_resblks[XC_FREE_RTAVAILABLE].avail);
+> +	seq_printf(m, "\tRT reservations required: %d\n",
+> +		!list_empty_careful(&zi->zi_reclaim_reservations));
+> +	seq_printf(m, "\tRT GC required: %d\n",
+> +		xfs_zoned_need_gc(mp));
+> +
+> +	seq_printf(m, "\tfree zones: %d\n", atomic_read(&zi->zi_nr_free_zones));
+> +	seq_puts(m, "\topen zones:\n");
+> +	spin_lock(&zi->zi_open_zones_lock);
+> +	list_for_each_entry(oz, &zi->zi_open_zones, oz_entry)
+> +		xfs_show_open_zone(m, oz);
+> +	if (zi->zi_open_gc_zone) {
+> +		seq_puts(m, "\topen gc zone:\n");
+> +		xfs_show_open_zone(m, zi->zi_open_gc_zone);
+> +	}
+> +	spin_unlock(&zi->zi_open_zones_lock);
+> +	seq_puts(m, "\tused blocks distribution (fully written zones):\n");
+> +	xfs_show_full_zone_used_distribution(m, mp);
+> +}
 > -- 
 > 2.45.2
 > 
