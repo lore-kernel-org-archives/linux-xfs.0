@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49524194A67
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 04:27:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A7F9232392
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Feb 2025 04:28:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738902427; cv=none; b=U6CpEK/iLp8FiKydjbais8/I7ZuDPc0+SB9NzYjUxepnx/WwJYKz7MYYICV/pEJNiMdZItSMrvm0ZXDc/wMPnXcNjFIEPty2nJiFFoHZMVwxRRzUBff8A8irScU080sGpcNWxtnPL6+U90AfUkN5a/ZwdRCus+uXDN5ZvlSrD/g=
+	t=1738902524; cv=none; b=KunHlVuQ54Cn5EF84UbdpLr1CQGYExATRSTWMzX5qWSNZVQg39aV7gXAEt4l4V6qhRyJNKboqeSWHo1PIXOH0TacJOnUnBf9+uGYZwBihz5JbZG1/j9qBFX1b/1/WHJ5Qw96wnUJHhWqjgCjDPDNWaE2Itl5mE/t/U7mRvvwVP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738902427; c=relaxed/simple;
-	bh=VyMJVJpKP5ZhjJEtIQiusfE96+rL4nOiZ0C/5MK7QqE=;
+	s=arc-20240116; t=1738902524; c=relaxed/simple;
+	bh=zPycE+jh2bBcj6BuOrxxqoZ05YwBOq8EiNaH2HikBCY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XL8W+wxnK/fhdzxKcb/65P/0RDbmY8LfRHoF0NlWnaLoV2aQeNYMfOWSTpaTJ/UPrs/wN8JG7y6FvUHwCu5nJAEbCSk8rS440KuZAaBsZPUCu6JxMI36/1HYH0i4XV/Fyt7J6lT75nVp8yWtzKlSEqdt20vbDBq8C89LJ8yHzn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B+uW7A8Y; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=pRbpp6CgFC/FYHVmCa11K3nxJE+IBam6kDYpxWB4RIbphrrx5rdAVX8dHcGPK21mdWd8KqNTf+k/Pc9gGvMvvAmhcqlcstPcsFaa9YX+dGyUp06TsuPH44ybMfUkuLTj8gqRBfsFUnzAZuUMF/P0DEx/bJyD1jQzE2EamRrBfjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QIkEaM3l; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B+uW7A8Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C988C4CED1;
-	Fri,  7 Feb 2025 04:27:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QIkEaM3l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA7DDC4CED1;
+	Fri,  7 Feb 2025 04:28:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738902425;
-	bh=VyMJVJpKP5ZhjJEtIQiusfE96+rL4nOiZ0C/5MK7QqE=;
+	s=k20201202; t=1738902520;
+	bh=zPycE+jh2bBcj6BuOrxxqoZ05YwBOq8EiNaH2HikBCY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=B+uW7A8Yco3oAB/7dPpxcJ+NChqfN7CiYMyQV6QaAXXoBeuLi8rg90aNU65LVWf9j
-	 px9MqKIxA2/7Ny7dCrLytZsUBLvilZjn262lcQQw6ROVs5Ai7NXdAMQ/x3jXnwfJ0S
-	 B2cz+ON6jGmVp9l37mFmwqCCyozd3nsT8sahbJrd2kmOgqLc03kHWOJ2BcOtlitWZ9
-	 i/lZLEPf0WuALljoAszBRrXLELntRv8JZc2+rgVzgCBhhdyPx8oR8U0Jt6dwAZNSHX
-	 1A80zEO4fCzmUnfmT1sUu9vFslWmFTxcpGx9it+iY6E0WC2h2ijrktiPVubIleQfR5
-	 U9DXdDHugsEDw==
-Date: Thu, 6 Feb 2025 20:27:04 -0800
+	b=QIkEaM3lqxs5xjhAQ2PSd2O3Wy5soqzGVXIGN5QEhLRoTcvutHSbIKpMAygiFDaOH
+	 h0dF45DkmsSRWKECGYpj00lqPc+IXQyC5USthcPdgxJlfw+8rVvotZxDO0iHfi561Q
+	 qo4e4lbHAK8vys7G93izWWFbKtTVWNgNTBO0i5IwiRqmjKbndPbhReQTj1xFLITyIo
+	 doQV+I3qlBKHy+5lyTg9s9Ni+zRgoPs5m5lB276NSroIEWycl6lzlQFMoKIiuBEvg5
+	 kduI7gvanhD4+YKqq/1lA5wEVXj7BJQOA8uiN9M0ZSTWsxg+GXl4QKhF9uczPPqvN1
+	 ko5+EI/OQ7tgg==
+Date: Thu, 6 Feb 2025 20:28:40 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 43/43] xfs: export max_open_zones in sysfs
-Message-ID: <20250207042704.GJ21808@frogsfrogsfrogs>
+Subject: Re: [PATCH 06/43] xfs: generalize the freespace and reserved blocks
+ handling
+Message-ID: <20250207042840.GK21808@frogsfrogsfrogs>
 References: <20250206064511.2323878-1-hch@lst.de>
- <20250206064511.2323878-44-hch@lst.de>
- <20250207005259.GD21808@frogsfrogsfrogs>
- <20250207042345.GG5467@lst.de>
+ <20250206064511.2323878-7-hch@lst.de>
+ <20250206212942.GT21808@frogsfrogsfrogs>
+ <20250207042155.GF5467@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,29 +46,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250207042345.GG5467@lst.de>
+In-Reply-To: <20250207042155.GF5467@lst.de>
 
-On Fri, Feb 07, 2025 at 05:23:45AM +0100, Christoph Hellwig wrote:
-> On Thu, Feb 06, 2025 at 04:52:59PM -0800, Darrick J. Wong wrote:
-> > On Thu, Feb 06, 2025 at 07:44:59AM +0100, Christoph Hellwig wrote:
-> > > Add a zoned group with an attribute for the maximum number of open zones.
-> > > This allows querying the open zones for data placement tests, or also
-> > > for placement aware applications that are in control of the entire
-> > > file system.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Feb 07, 2025 at 05:21:55AM +0100, Christoph Hellwig wrote:
+> On Thu, Feb 06, 2025 at 01:29:42PM -0800, Darrick J. Wong wrote:
+> > > Use helpers to access the freespace counters everywhere intead of
+> > > poking through the abstraction by using the percpu_count helpers
+> > > directly.  This also switches the flooring of the frextents counter
+> > > to 0 in statfs for the rthinherit case to a manual min_t call to match
+> > > the handling of the fdblocks counter for normal file systems.
 > > 
-> > It occurs to me -- what happens to all this zoned code if you build
-> > without RT support?
+> > It might've been nice to split the m_resblk and the freecounter wrapping
+> > into two smaller patches, but I can also see that it makes sense to do
+> > both together.
 > 
-> Where this code is all of it, or the sysfs support here?
+> So you want separate patches for the percpu counters and reservations?
+> I could look into that, but I'm not sure it really helps understanding
+> the logic.
 
-Both, but mostly the sysfs stuff here. :)
+Yeah, it would more help the part of my brain that reviews mechanical
+changes by storing up to about 4 X -> Y transitions and making sure
+that's the only thing I see in the patch.  Once I go above 4 my brain
+fills up and I have to start paging like Windows 95.
 
-> In general the code is keyed off IS_ENABLED(CONFIG_XFS_RT) wherever
-> possible.  But the sysfs code here is missing that, so it should
-> be added.
+> But thinking about it we should probably have one array
+> of structures with the percpu counters and reservations anyway, so
+> if I redo this anyway I might be able to split it up a little more.
 
-<nod>
+Might be useful, particularly if it gets the two counters away from each
+other on a busy filesystem.
 
 --D
