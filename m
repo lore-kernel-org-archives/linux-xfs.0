@@ -1,210 +1,195 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from NAM02-BN1-obe.outbound.protection.outlook.com (mail-bn1nam02on2078.outbound.protection.outlook.com [40.107.212.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CF461F3B89
-	for <linux-xfs@vger.kernel.org>; Sat,  8 Feb 2025 17:05:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739034350; cv=none; b=GjBKD6E2NH6yQQYlizRjbtETqXmmBzlfKp0UPZJJKmswPOQDQM26Em8HgXXD1k6pgHpZGRFMuhDyZLp9xZSKiLzamxZkVbd4V2Sb1enOPY67lPk1f3hLobgzRYRUUmrGqPc5sjdYesC00L6GlyKJNt33ctZ0uf01bfOQ00wtzs8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739034350; c=relaxed/simple;
-	bh=o5q2jWMgeIZopzW3ykNhW/gGfsOb/MIY2FUC9jDWGTg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Disposition:MIME-Version; b=MGq7hE0a/Nc5oJyqGX7B96z/7+gKavqAIDOw8hWzIpjQjEcTh6gyTRyO9ErAR7Ix0PpoAJ48mFevxBhvHA2ZsqGddvn99HfaK3Y+tI9OvVCKx76vioFYEtAdoHqZbrs55m5BwcU6ET4pyBbOuIsB9qJsMjHtkpe3zgRPaWD8+eg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Sd7UHXm4; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E6614B08A;
+	Sun,  9 Feb 2025 23:35:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.212.78
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739144147; cv=fail; b=pRkcUgZEpNnupDfXyPVNcqGAyMK6568fVuDeenFt0I4/OP51xyotHorfQVvFJM1BSDaae2S7+SY7NvvlBdujIZs98eAyxlKuGrt1sgv6458R7sHioi3esveIwiac9XufsGD4I1dYQwGMRySycHSOjFNvwNqaD+0oQgsjm4Oy1Qk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739144147; c=relaxed/simple;
+	bh=c2fEmCjUA0TQPxvPEKs8KpvEfEdQRuw19IXDXnu0+AI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=IOFcYlwSmQq/wL5vVcNlubxIu+GYypNj473aymLE2Wen5zCKGHFT56KWJt8GOfCIgZoBQk2hOz7fvxbP3JJG49pPg4kPp6kanb6vwZ0dFCYonkMnrDObADb0wXGnoiMyyZKpcR3rZuXFAifUtQsYwpXxg3b9uoCiY+cgmbkylQU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=AWbcZzF9; arc=fail smtp.client-ip=40.107.212.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Sd7UHXm4"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 518FFPus008356
-	for <linux-xfs@vger.kernel.org>; Sat, 8 Feb 2025 17:05:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=+TEAaa
-	uXMY7wpCZmsy50sq9H7W+7zT7DvX88A//fmOY=; b=Sd7UHXm4rH/Kojl0fdy6b1
-	Jzph0ImAcZpRPTnRXmhkJIWAo946cbDIue5b206pVoKjQghInP5+hRgYlXop3y4q
-	g/Y5kHXDdTLtjGvdluioGWrPuY32hONgtgp7TxF0mbaAmdNqDK6y9U5jG3Jo1KcT
-	aPaD5ziTdGibH48rvCISG3ztF3jIgybUOMI2R7JFhFwuwUk2ziIj8D4ba8Zrnm46
-	AGSFxTllK/YG/aow28AGksAPa2or/nqwbfFItnDyItLCiLlTL64sL+hYJEwvsTX1
-	I02kAzFwFKthxvs0VnP3maKYi2qxmYCBEubjnegrcgA8zoHoeVWW+apjp0tGszPg
-	==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44p11q1trc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-	for <linux-xfs@vger.kernel.org>; Sat, 08 Feb 2025 17:05:47 +0000 (GMT)
-Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 518H5lD3015717
-	for <linux-xfs@vger.kernel.org>; Sat, 8 Feb 2025 17:05:47 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44p11q1tr6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 08 Feb 2025 17:05:46 +0000 (GMT)
-Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 518H5kwA015706;
-	Sat, 8 Feb 2025 17:05:46 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44p11q1tr3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 08 Feb 2025 17:05:46 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 518BkQ3Q005254;
-	Sat, 8 Feb 2025 17:05:45 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 44j05kggtu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 08 Feb 2025 17:05:45 +0000
-Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 518H5hit59703720
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 8 Feb 2025 17:05:43 GMT
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id B10522009C;
-	Sat,  8 Feb 2025 17:05:43 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A2EBD20099;
-	Sat,  8 Feb 2025 17:05:40 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.21.61])
-	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Sat,  8 Feb 2025 17:05:40 +0000 (GMT)
-Date: Sat, 8 Feb 2025 22:35:34 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, djwong@kernel.org, dchinner@redhat.com,
-        hch@lst.de, ritesh.list@gmail.com, jack@suse.cz, tytso@mit.edu,
-        linux-ext4@vger.kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] extsize and forcealign design in filesystems
- for atomic writes
-Message-ID: <Z6eO3k4SG6TIA12p@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <Z5nTaQgLGdD6hSvL@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <35939b19-088b-450e-8fa6-49165b95b1d3@oracle.com>
- <Z5pRzML2jkjL01F5@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <e00bac5d-5b6c-4763-8a76-e128f34dee12@oracle.com>
- <Z53JVhAzF9s1qJcr@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <4a492767-ee83-469c-abd1-484d0e3b46cb@oracle.com>
- <Z6WjSJ9EbBt3qbIp@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <e86ed85f-6941-44ef-96a5-0ca15faaec1d@oracle.com>
-In-Reply-To: <e86ed85f-6941-44ef-96a5-0ca15faaec1d@oracle.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: kBl63ZGhraqqAKDOqGG8T4-2oVrCBzrU
-X-Proofpoint-ORIG-GUID: 1IKzLiu8Yj-iH9MHJHCmAHUbNVWpt2X6
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="AWbcZzF9"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Ydslxx6D0K7oIvicwlFr/zMkf6MVV+c9jy5M8S/Ji8b2ynoGNHrPM+QY03Mzp3WtGdZ+b3SiCFxLV2g3GligS3pDQw2s+cPzIPm4cKNUEBmm+Qvy+AApEVNQkvR7BV6JPnxAeKX78sEBROleChasESFx7BVevtnikx4Q+siYVdqh3mPG/luvkPTE8cGfYC+x1d/xZozDscJArHbPVfx7mn8aJJNwKSng7m94rfZboTDadYwHt0PGqCc8AHY3gdpIGBNXOvuzPf9Kd9pmNHzyWC8jN9GADFZaLsBQTGDuUpsIJBTkId667KElh+m0xRqI4udCfksLJG33kjVBdjzuvQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RQTkoXlLWvzGTmDQMcZPGJnDbOoTMlLaKU7mfTe5CYA=;
+ b=Vvr5jtcvz2N+x6cv1iqwdYgWilnOlNJhSnzcIBi4hXWp9eDBA056c6gaZuiEOq5b5HTUr2nuDjsg1wQRFuTTJ9pYchtQVFEQQ33FcetHpeScD2qiW0lfJCDSpoNQgnDzJE7mJ79i7PA24BMymhZC6lp48jWgqatijjsuc89Yuu/UjbZJgHDX+BhQUflOSP/LmiI/2K6Epv+fA3RcprstaPR3kRpIn8RJPO7Hw4YOlKpKMmeA1G7S1BA442O60B234E1cUFygskZRQftgpOvSLii5ZiKC2Y7DcDoTNZvl2iUGpffTYNco+qKVLps7Oma9fZNhm8j9DLTNv3ObpLchdw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RQTkoXlLWvzGTmDQMcZPGJnDbOoTMlLaKU7mfTe5CYA=;
+ b=AWbcZzF9lK4hXXH7H35X38/z6nRfUTlOlz2TOwfKW8HtvHf1ENIZToST4lI6Z4YjbbqHawe4hIexZJ63WiSvgf8ZGW1SGNU7jCZlpnZYtslqNwX4EWi8wHtyLE6nPYkWSmIrj3YD5gqnXnVvaV2hcrLmjHOvXVGFwdrScXPKytZ3v8ahedvLyrAbr9lZ9hbM5QYHec9XuVU8m9/kINRmT4tQVYvgNMjvtEgpToLZldNxnmkxARPdw4yyhjjy6Q3QfnOKT7hCklkslHGsR2b8RD4CqOHV/GPDMMTYdANMO1ZYzaYZ0ThEIAoL7TG6Pua/2+p4QFqncfqVQct8rQzkxQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
+ DS0PR12MB6464.namprd12.prod.outlook.com (2603:10b6:8:c4::5) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.8422.15; Sun, 9 Feb 2025 23:35:42 +0000
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe]) by DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::953f:2f80:90c5:67fe%7]) with mapi id 15.20.8422.015; Sun, 9 Feb 2025
+ 23:35:40 +0000
+Date: Mon, 10 Feb 2025 10:35:35 +1100
+From: Alistair Popple <apopple@nvidia.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
+	alison.schofield@intel.com, lina@asahilina.net, zhang.lyra@gmail.com, 
+	gerald.schaefer@linux.ibm.com, vishal.l.verma@intel.com, dave.jiang@intel.com, 
+	logang@deltatee.com, bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, 
+	catalin.marinas@arm.com, will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com, 
+	dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org, djwong@kernel.org, 
+	tytso@mit.edu, linmiaohe@huawei.com, david@redhat.com, peterx@redhat.com, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, nvdimm@lists.linux.dev, 
+	linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de, david@fromorbit.com, 
+	chenhuacai@kernel.org, kernel@xen0n.name, loongarch@lists.linux.dev
+Subject: Re: [PATCH v6 21/26] fs/dax: Properly refcount fs dax pages
+Message-ID: <y2uilkilpl4k5snzxntt4x62z4d3mumxqyog3gy3zrey3jewuz@x3ftslqihoil>
+References: <cover.11189864684e31260d1408779fac9db80122047b.1736488799.git-series.apopple@nvidia.com>
+ <b2175bb80d5be44032da2e2944403d97b48e2985.1736488799.git-series.apopple@nvidia.com>
+ <6785db6bdd17d_20fa294fc@dwillia2-xfh.jf.intel.com.notmuch>
+ <zbvq7pr2v7zkaghxda2d3bnyt64kicyxuwart6jt5cbtm7a2tr@nkursuyanyoe>
+ <67a59f0f7832c_2d1e294fa@dwillia2-xfh.jf.intel.com.notmuch>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <67a59f0f7832c_2d1e294fa@dwillia2-xfh.jf.intel.com.notmuch>
+X-ClientProxiedBy: SYBPR01CA0205.ausprd01.prod.outlook.com
+ (2603:10c6:10:16::25) To DS0PR12MB7726.namprd12.prod.outlook.com
+ (2603:10b6:8:130::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-02-08_06,2025-02-07_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- lowpriorityscore=0 spamscore=0 suspectscore=0 malwarescore=0 adultscore=0
- phishscore=0 bulkscore=0 impostorscore=0 mlxlogscore=999
- priorityscore=1501 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=2 engine=8.19.0-2501170000 definitions=main-2502080143
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|DS0PR12MB6464:EE_
+X-MS-Office365-Filtering-Correlation-Id: 653b3e5d-9b6f-45b4-b85f-08dd49627681
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?/RdVMZG+bmXjNksHgrBHcdy738bNYHywwjd9mPQl8n4TgFMgbvlusl8SWN/v?=
+ =?us-ascii?Q?Ga0tJc0TBHksquIiF+Bt6tyZxvHnN+HQoy/DCMVF7/bJI/JY+/R/sjqh/wdr?=
+ =?us-ascii?Q?F++TlHjX6f0S7OYP8mg5aN1MhszwQpTBnQr/cfFv6XMwc/Cvr/xF/6bd8We4?=
+ =?us-ascii?Q?5HnVKKU3suWNqdGnqzZyAeWPS8EkVIn+TZ1E4KIyv0tpbol/7b61z417eQ85?=
+ =?us-ascii?Q?yBnnRJ50AqxbbpjhvTDuoa4LTrat8RH5QMnqUxxoBSQHI+M8fdmiF9nEI/x4?=
+ =?us-ascii?Q?l8wVjIUxtoORvs22cGezE3Xkbno56pYy7gbUNbtbAod4K2iJuLKFBzVWW5d3?=
+ =?us-ascii?Q?4lRJYgMYzvP7MSdzCtM542jFgylvN1+JOFUXB9XLnzYy3LGK0rcIbMBnhZTe?=
+ =?us-ascii?Q?cZI4dt6k5Pltva0PyMD98/M4t/o0BheujShlj/PgOX0uZY8qm8vcp7xGOIg8?=
+ =?us-ascii?Q?/jHRJ+EynWZ3Ome7R+iZozwuj0x42YNNUw+ZdNiKuSHeZ2KQmLavv/fl+45H?=
+ =?us-ascii?Q?Q419SJ9OHj0kyMZIpu1T0hRogdGNe50TAxN6ylmgXQvwDi2QJ2rWbd53i4oh?=
+ =?us-ascii?Q?n32ksdYBfosvBb1M1+4A8hSJCMz2lcWqpQjy+NzORDb0arR6cKZeitwZdFuX?=
+ =?us-ascii?Q?gdEkQ6Qk5sJn+LGKVkUHuGMSsm7qdH2KU77Ef8Mb0Q2vyPMoVdKUmPpkJKZR?=
+ =?us-ascii?Q?0sJUQD5w8Fh8r4oSoBs4vHhvxIjYsucREEjSjEAPUmpdbazqsxDlzkIblFUe?=
+ =?us-ascii?Q?wNfIpQy3eXV7QxzFPIvtWcKzc+CDvsySO2o/WjeVkLY1jmYEvqTY2uXW++dp?=
+ =?us-ascii?Q?7syCTgBIWIqajD5oPkF8FeBh9/QebIzBMC4I4U9t2KTRA1RV+AYVh1WMqcPr?=
+ =?us-ascii?Q?yIgLT5Q/feiWPOV1pfx0sVW5156aSUgnKMympk+CmNhjk/fdkr7esp+z1QvL?=
+ =?us-ascii?Q?P8T8XOfy6goUYa5o7gFbP+2pus/325Jx1QeXHsR8wIl59rKyhsoDenuhrqoa?=
+ =?us-ascii?Q?QUSQgJSCacVexhSdIl8nO2dYxOstqdGiCjw5rJ6Fve6l1bIK0QNy9tLDtW6w?=
+ =?us-ascii?Q?Imid3L5PCblDDBzf6LMvx+kKxNTW1x4rU7MSeAFR2H4WM/7b1vMdEPxt/4U9?=
+ =?us-ascii?Q?znlbW3Vmu8FUIIHJM7I/hEYMfkNlaId/TO8qKTI/04Jd7zCiQDyuYeD+NnKM?=
+ =?us-ascii?Q?yC1bnpVJbVvhtgc2GRcM10+D4RpAh6WpZwYT4GF/J9sE6lIRUwirv2GuZu0J?=
+ =?us-ascii?Q?JgdKDuje/yAtdEUdeRPS7silLMYCb3UIO1UvgEEQu4CjnLHkBzW1GKdUs97c?=
+ =?us-ascii?Q?gbH95lyrjcPE/+aQyAwxnsHj86G4g8e/089nOTnyGqhzyLi7W1eZww0rvqx4?=
+ =?us-ascii?Q?es6iV0lLLkdh21Hy6T4D3kWOHS75?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?D5X8FxttLxLQ321QhCDIKXrhO1VIYJgl8Vngx9GONhcnrnJuPj99h4EupFLG?=
+ =?us-ascii?Q?pewdZP5CEFR1EUV/4b1HeSUGwGBqAk8zDj5J3zh87kVvlk6wKwBwiOd89qfW?=
+ =?us-ascii?Q?ot6Cspd4t3ScymfCZC17cxW5TlaswZ5OL3LUZ8P5XsyzT6FrzjFZpcC+xT6x?=
+ =?us-ascii?Q?ETBJVghGKQSEsOOP/MwUmopuNSymwUrs4lxV36creKiaJWw75ysc2TAAX1Ki?=
+ =?us-ascii?Q?74pHnCg1u6mtW6ownm1oi+mna1E54m1FOdPAQ2+1bW1QAKoWxUxfFcu+BCVy?=
+ =?us-ascii?Q?Avr/vl+vziUcEe3cKpMPXHbWOWI8GR5Hl/PBj//pIs2gRVYmu4FoI/zSvlrQ?=
+ =?us-ascii?Q?Q1Efv9gYlwLVszwMmU0LmtyvkUTJTcUPu+um9dtb6lPKlsKAEJaTxHZIiQhL?=
+ =?us-ascii?Q?zmqCyVjxNBwzxGNCsdEeV8V2WhWdAJr2XeucV8p+/zglaikc1SVZ4hxBwdN/?=
+ =?us-ascii?Q?sSQDIhol3gG5EBvLIcgpJyEb6YWpeZrsTcjS8a7/nEgKMnoqJ3u2MVvMztC2?=
+ =?us-ascii?Q?vrSBchJz1kHZRc08+e2q9au218klLt7UcLOfMOPaOoquTKQMlWnWCVu/vg35?=
+ =?us-ascii?Q?cq3Gel41b6IvG5CkjH8ndjPavN8HuY7R9YkvCP1igwyHtNku1scVaNO5mUIM?=
+ =?us-ascii?Q?dio3KafV50hjttiG1Y4AAI6lTmh0jjayPcQyWJvfbDUXbT0sDWMnGC+b6mxe?=
+ =?us-ascii?Q?UtOeMa+hb83zCiIxp6/TDZlRo9lG1710hfMq1t/r4V4z+tua9SaIKSDZzu6X?=
+ =?us-ascii?Q?SwG8VT+upCHozTAkbwvmnTw1kuC5Et2EPh5lSAyiWC1hc9psDVhijWUahdEz?=
+ =?us-ascii?Q?pfqZ3uB13yP9KxMDNBJuhNHpL6oZgOAWiY7zjG7wSNYJdO59ISVei7InukoF?=
+ =?us-ascii?Q?D4O2H/cjAbcHaf+U3H1HiycPW44yTHgX2jCuDSt5EPGUV0VWZG9fQf43DIiB?=
+ =?us-ascii?Q?cQP8ebNqvng/lqIT67OTVYIELfh9fo7+bpZMmMUg/sTuguw4s4tik81ehhUk?=
+ =?us-ascii?Q?38P7ex9xl8GQELsofjtbHMA1IW7v7tB+2XV8ze6yAK0cjD2Vrp47TR7kyl4D?=
+ =?us-ascii?Q?Kv8uaWY+Rw8TCgKbZW958NkOp83tHnPL6x4wg9mriz2EqmxP9F++FbwfwsT0?=
+ =?us-ascii?Q?cjDqxtggszaBRZXuhSAU3WBUKRzMPbAbEKWdtzP8OFXv85uBPJjJ9z84arIM?=
+ =?us-ascii?Q?mU2ovJ5jGl7EA8NXp6140FtuYPkEAlIaxw4RACm1VHwQ4iP1ebdSrGXKXQF4?=
+ =?us-ascii?Q?V+xAlbY7X24/RE2l/RlIeUzc6271UVsn2sq9tK2SlLOn6/hAj/UuaoEHiC2Z?=
+ =?us-ascii?Q?XOM9jjkiyKGp/4TArRsCOo9IrxwjBaI//r2VqJWbIje9UngIyEWWsRLaJ97k?=
+ =?us-ascii?Q?9n4PBzw5HUqY/0F8CbTuHoKz/0yXQf+KSkIg2FHNxOFKapz9YLXuuopGR0zY?=
+ =?us-ascii?Q?JkXaXz4Cre2WfL2hYmnl5jrGErmXIIny5sMHrqHUZ/AN3v1MVnXdmPi13xbj?=
+ =?us-ascii?Q?OOZqiJaZmut6xPBGUxmUz0BCxfxEeJbcc3aByiHjP2TKtkVktzDQnU1xfykc?=
+ =?us-ascii?Q?xPVfyjLVnVa6AztiInwEc30HhIYUVZtpux9+DBN/?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 653b3e5d-9b6f-45b4-b85f-08dd49627681
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2025 23:35:40.2096
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Vi2g87gCeu5dWYEMg2cHR7DQFaXnebvK5/Vz0gJSRQTusr1SemD5AGwuXQkupA/oqF2Tl9XqFBLiSehrsyZ+aQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6464
 
-On Fri, Feb 07, 2025 at 12:01:32PM +0000, John Garry wrote:
->=20
-> > Yes, bigalloc is indeed good enough as a start but yes eventually
-> > something like forcealign will be beneficial as not everyone prefers an
-> > FS-wide cluster-size allocation granularity.
-> >=20
-> > We do have a patch for atomic writes with bigalloc that was sent way
-> > back in mid 2024 but then we went into the same discussion of mixed
-> > mapping[1].
-> >=20
-> > Hmm I think it might be time to revisit that and see if we can do
-> > something better there.
-> >=20
-> > [1] https://lore.kernel.org/linux-ext4/37baa9f4c6c2994df7383d8b719078a5=
-27e521b9.1729825985.git.ritesh.list@gmail.com/=20
->=20
-> Feel free to pick up the iomap patches I had for zeroing when trying to
-> atomic write mixed mappings - that's in my v3 series IIRC.
+On Thu, Feb 06, 2025 at 09:50:07PM -0800, Dan Williams wrote:
+> Alistair Popple wrote:
+> > On Mon, Jan 13, 2025 at 07:35:07PM -0800, Dan Williams wrote:
+> > > Alistair Popple wrote:
+> > 
+> > [...]
+> > 
+> > > ...and here is that aformentioned patch:
+> > 
+> > This patch is different from what you originally posted here:
+> > https://yhbt.net/lore/linux-s390/172721874675.497781.3277495908107141898.stgit@dwillia2-xfh.jf.intel.com/
+> > 
+> > > -- 8< --
+> > > Subject: dcssblk: Mark DAX broken, remove FS_DAX_LIMITED support
+> > > 
+> > > From: Dan Williams <dan.j.williams@intel.com>
+> > > 
+> > > The dcssblk driver has long needed special case supoprt to enable
+> > > limited dax operation, so called CONFIG_FS_DAX_LIMITED. This mode
+> > > works around the incomplete support for ZONE_DEVICE on s390 by forgoing
+> > > the ability of dax-mapped pages to support GUP.
+> > > 
+> > > Now, pending cleanups to fsdax that fix its reference counting [1] depend on
+> > > the ability of all dax drivers to supply ZONE_DEVICE pages.
+> > > 
+> > > To allow that work to move forward, dax support needs to be paused for
+> > > dcssblk until ZONE_DEVICE support arrives. That work has been known for
+> > > a few years [2], and the removal of "pte_devmap" requirements [3] makes the
+> > > conversion easier.
+> > > 
+> > > For now, place the support behind CONFIG_BROKEN, and remove PFN_SPECIAL
+> > > (dcssblk was the only user).
+> > 
+> > Specifically it no longer removes PFN_SPECIAL. Was this intentional? Or should I
+> > really have picked up the original patch from the mailing list?
+> 
+> I think this patch that only removes the dccsblk usage of PFN_SPECIAL is
+> sufficient. Leave the rest to the pfn_t cleanup.
 
-Thanks I'll give it a try.
->=20
-> But you might still get some push back on them...
-
-Right, it would be good if we all can come to a consensus of what to do
-if an FS wants to implement something like forcealign for atomic writes
-but does not have a way to implement software fallback. As I see, we
-seem to be 2 (un)popular options:
-
-1. Reject atomic writes on mixed mappings. This is not user space
-friendly but simplest to implement
-
-2. Zero out the unwritten part of the mapping and convert to a single
-   mapping before performing the IO.
-
-All options have their shortcomings but I think 2 is still okay. I
-believe thats the path we've taken in the latest XFS patches right.
-
->=20
-> > >=20
-> > > >=20
-> > > > > > I agree that forcealign is not the only way we can have atomic =
-writes
-> > > > > > work but I do feel there is value in having forcealign for FSes=
- and
-> > > > > > hence we should have a discussion around it so we can get the i=
-nterface
-> > > > > > right.
-> > > > > >=20
-> > > > > I thought that the interface for forcealign according to the cand=
-idate xfs
-> > > > > implementation was quite straightforward. no?
-> > > > As mentioned in the original proposal, there are still a open probl=
-ems
-> > > > around extsize and forcealign.
-> > > >=20
-> > > > - The allocation and deallocation semantics are not completely clea=
-r to
-> > > > 	me for example we allow operations like unaligned punch_hole but n=
-ot
-> > > > 	unaligned insert and collapse range, and I couldn't see that
-> > > > 	documented anywhere.
-> > >=20
-> > > For xfs, we were imposing the same restrictions as which we have for
-> > > rtextsize > 1.
-> > >=20
-> > > If you check the following:
-> > > https://lore.kernel.org/linux-xfs/20240813163638.3751939-9-john.g.gar=
-ry@oracle.com/=20
-> > >=20
-> > > You can see how the large allocunit value is affected by forcealign, =
-and
-> > > then check callers of xfs_is_falloc_aligned() -> xfs_inode_alloc_unit=
-size()
-> > > to see how this affects some fallocate modes.
-> >=20
-> > True, but it's something that just implicitly happens when we use
-> > forcealign. I eventually found out while testing forcealign with
-> > different operations but such things can come as a surprise to users
-> > especially when we support some operations to be unaligned and then
-> > reject some other similar ones.
-> >=20
-> > punch_hole/collapse_range is just an example and yes it might not be
-> > very important to support unaligned collapse range but in the long run
-> > it would be good to have these things documented/discussed.
->=20
-> Maybe the man pages can be documented for forcealign/rtextsize > 1 punch
-> holes/collapse behaviour - at a quick glance, I could not see anything.
-
-Yep sounds good.
-
-> Indeed, I am not sure how bigalloc affects punch holes/collapse range
-> either.
-
-Yeah, I think even bigalloc has the similar behavior of disallowing
-unaligned insert/collapse ranges but allowing punch hole.=20
->=20
-> Thanks,
-> John
-
-Regards,
-ojaswin
+Makes sense. I noticed it when rebaing the pfn_t cleanup because previously it
+did remove PFN_SPECIAL so was just wondering if it was intentional. I will add
+a patch removing PFN_SPECIAL to the pfn_t/pXX_devmap cleanup series I'm writing
+now.
