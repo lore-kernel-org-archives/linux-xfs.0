@@ -1,73 +1,73 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BEC425E47E
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2025 18:43:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE54257420
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2025 18:45:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739213010; cv=none; b=dJDIUqI9KMwYaK5R+CVPWAXMqzfsqX5HUP+0xUAMY1KnCgtr0IItttbVfVTsJ9M0M2UvWQZVh0gwAuU7P3tse79CFj1GXh+gSdqoSqBjAZIiRfXKFmcJ4g5iBf2MDZJrDaw2ZGOsEzdxjF7dRBeomogIWyb+iFqHAtKCc31Drz4=
+	t=1739213118; cv=none; b=ahE7sfD0oHUEeKh7VMFgeDCc022p+WQex3Fyhc0Hrv/bnYMYJR6pdWB2psKlPkDI3Zusue2CZ25le7/KEkwfllgv/HouxfotnOFH60V0kRmly4XZM6dul5HAoloFSOf6PkvhvWZXI9OjZhV9IM4U2VNvcBUylbP/vYTHDCC/PHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739213010; c=relaxed/simple;
-	bh=9Jl7Y6/T/ZwlfQk+GM7pxBzgJeex8ck2OrzDzPmY47U=;
+	s=arc-20240116; t=1739213118; c=relaxed/simple;
+	bh=zaU4bsQzGEUFJkkRyBDEFO5HRaR53OVXhrJKky23YWM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mWSc/nuJOnI0rSkCOnT2dC6J840Mb5DPRqTmPnwIoMVQlCSm16B2ZiqWuMWsWoXh74g3HdqmA0r7C2dXnIBkCT+/ra3NJp0SD+YTiauzFdM+Fh7qSMbbANJ1iMleTzSVmgbuqwhaLgOcvDRKnQh1xqxXRaIhKvtQhCKaE1/GyH8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=igTIMuiw; arc=none smtp.client-ip=170.10.133.124
+	 In-Reply-To:Content-Type; b=JGlA1R8FrTlH8zRXacZzTv+LDmNdDr7Mbzv0Y3w1ucYPExWROFh5Cm4wZwBEjPIDNM7VjTx1Q9dhGTzWU5fQf44blM2xwesgqr0NoJYpB1DpqBrTRf5B5jX4HV5BssldXbJbxFxKR/zP3lQIQ9FLek1I+jrXXbpjXIODQrRegVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SVNbldM4; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="igTIMuiw"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SVNbldM4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1739213007;
+	s=mimecast20190719; t=1739213115;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=HyPCciy90tVW6T2lcHcuWFhDLKyw85xuvM/qhIPk9VI=;
-	b=igTIMuiwl3wIhJ5uWJe2j1RMDWe9DzrhjQoKHAoRBL9S7BBJpFNFeIAIdaNdA/3Ppz/lZG
-	o5xqR9KwQrckVNZIoXYA9IVWY4jPWd+T2WB9r2CadcQ9FouzMTXEYf6pn/Y6wxceMeJcjN
-	R6V1darc5zFpzVgMNdCJey1UgnxVFNI=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=KSceIq+QW6QfAQSxFrhFP3CSjeVr/8tSdt+enYDxg60=;
+	b=SVNbldM4wwu/t97ErQfoCwqhA1QeLW3eHAr2WygoP9yu/5hBWAg8NddK7gL42wveboEou0
+	NlBjNedXkuGBq3nuDKmAmo9lgER6FGbuc87x9msszrRS9TTki0kb9PyXkrn44vRmFKyZXh
+	QppMZ3YQY9eUCbrPlaTEPs9ywlOg2Y0=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-626-IgBgwAcSNQGrqbMFLJ71Hg-1; Mon, 10 Feb 2025 13:43:26 -0500
-X-MC-Unique: IgBgwAcSNQGrqbMFLJ71Hg-1
-X-Mimecast-MFC-AGG-ID: IgBgwAcSNQGrqbMFLJ71Hg
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4392fc6bd21so9566025e9.1
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2025 10:43:26 -0800 (PST)
+ us-mta-187-017LWkP2N2Guyo2pCWu8jw-1; Mon, 10 Feb 2025 13:45:14 -0500
+X-MC-Unique: 017LWkP2N2Guyo2pCWu8jw-1
+X-Mimecast-MFC-AGG-ID: 017LWkP2N2Guyo2pCWu8jw
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-43943bd1409so9386895e9.3
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2025 10:45:14 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739213005; x=1739817805;
+        d=1e100.net; s=20230601; t=1739213113; x=1739817913;
         h=content-transfer-encoding:in-reply-to:organization:autocrypt
          :content-language:from:references:cc:to:subject:user-agent
          :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=HyPCciy90tVW6T2lcHcuWFhDLKyw85xuvM/qhIPk9VI=;
-        b=qGyXImF1+wmdCBtBIMYAXLjDLQ7nJj9rxZDyXGDQ27HJfsT/xgMG73ZDklndfMW/8H
-         xmu47ZJQaxsYlFtVvkLtZ/BKJX4dvRhdeBnyLr4LbPQGMVuIAGhCi5A1FcqYpONCvtkW
-         3Gfmd8gt+OhtVkJ2MJykzzyE0r2+ILK3Loyxy5t0N6mM0sp9I3XGC8pUMOg3MGmS7jbN
-         vSckmUS4UvUEgoG+Af5zOYHiFHF8T706hwlxyeHQyK14hvfEiqU7VEhB/aaAzelqjsGG
-         fwlxDoYt9K7WlJ0xY/WPXJYgIu/bqrRUPbRX5T3lrEOEwIZIOPrEMd7X3aUq/2ASnZSk
-         tAbQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVIIgxqySbtza3D6FYcX/tZnujMRPdVem0kTF3EqJvBA/tdSxzTkg2OjTN6Hj99hOPYK7G5qS03nn0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4fObjXCqhQolEYzz5TLWNsZ0q/jKJdBAf974aVR56ctkUBDIL
-	jqMeOunxi72jjToZEPPmg5oY2mtyNsdSmy0v878hEIV2gN13xyYEOdEEZr/a153Oj/t6lnOpi0F
-	3a1j9XqmYwYlYwMwkmow1/zdDotXbhHUa2M8IPhKbpL97hIgNl8HPlhh6lg==
-X-Gm-Gg: ASbGncvO09XPmtV6ziXAOdKWbl1XHpHj4pOsepfCQkZvf7y68+XnLfOFfEZYp6YjSOt
-	qknxQCSFdA9e2skFCxWDbsnFeGan9cud4L+c2ZZQz/gN5PPULa9DtOCN78txiolTBli3D0sV5yT
-	5cDj47IuVhOzwQZ1NEwRwg1Yy4gmwSYoGbaivuD+LxPZFzo+4RV1agh+1615/KYWuQuBruvrEbd
-	CpyKRNnRmh8lvmEqnFzLwwt95qMMHaGlL9sDZ5uR6wbBLt0lEnBrond2JRUn/y7I69WMaHkaafY
-	ZYmXI0sTLek5Qk+21rQGx/IH3PTHX7r8B/Dh9oKCnMfm6aIBP5LD5SyJ366vYLaYoBaYHaHcPx1
-	x9V+S3uJcHyyMT0Rl+XqTGlfL0m0ENgSY
-X-Received: by 2002:a05:600c:1c25:b0:439:41dd:c066 with SMTP id 5b1f17b1804b1-43941ddc1f0mr58352175e9.31.1739213005111;
-        Mon, 10 Feb 2025 10:43:25 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGzpaPXHrmO8a6oz7FN6p5yKvrmK4zLskiJi4ioSu4niVqT7krVP8gCmrI1SDPa3yDqdwKozQ==
-X-Received: by 2002:a05:600c:1c25:b0:439:41dd:c066 with SMTP id 5b1f17b1804b1-43941ddc1f0mr58351885e9.31.1739213004744;
-        Mon, 10 Feb 2025 10:43:24 -0800 (PST)
+        bh=KSceIq+QW6QfAQSxFrhFP3CSjeVr/8tSdt+enYDxg60=;
+        b=lPQ00vxlOZBYwX1lpWlSwQKF0yD/je9cmqRRd8ArTWJNe08TvSZObWfq1xAFSETeVk
+         FW1bGHLIJARPqXjKUXQsaCP+uXCnHMcEnOpHwPH6bWUmHheRoFv7v8cdva9bYTF94o83
+         +DRAZwHZDO0BhMZUoWg44yBRNQ6ndrycWBD34VUXobeHg4kzk5xDUvgPuPEoA0im/m7n
+         uDewzHbF2LuAJOXWp1EVTNBgwepUJontBC5x47s8j3JN9aPM41bjyAHbNQjNIM+9pfoK
+         qIrtIiEr4nOMyylsAQ8Lc7d6v6XmTgbxefas3l4ktNgBQmmw/cBgcZYbBluM55EsWLIX
+         mb+w==
+X-Forwarded-Encrypted: i=1; AJvYcCW+96zmf8LIqDgNsJqHx24QPxy0XHw2D+YPouIEQgSy8dAqgmndeY19+Ibqau8n9upKMwpDotpEFiM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyARSE4OANKtzMMay0mFC8/pcKmACxXqyKvoGxz13QJjTXNQ/EG
+	ujn2YcpfnZ8G1OUl0TtIXLfk1zQCpWpiSWNhaG2EkBWOBVdPofT40Ouj/8I2zzS/N6ANShIjBJU
+	cxH8pG72WkY666Xl3yFMYufcoxEgCqCqPjhbpiszAe9ji2q+kD0PNLhZeyg==
+X-Gm-Gg: ASbGncuu7D/EOiaSA78tiNRELeXgOdYfz+VGo1h8RMjqcAmCD/O64+zYczsOgadjBdh
+	NjUb13ldh+oPkZojOJ/yWTdcVzuj9lSejHw6Pt5abWtvXzlrFtI9w6QcHdVS3++pAiDMkMq/lET
+	woxn9PFFDFRamf/uUf03jJnwdQbfEqWXgg7OEnW3zU3dwqorIo488hK1hkL2ozV1rYOz7F2WYKr
+	13FIHb0mHREYyS2Acd/qzmM6eMKZgirTJR9Z/sd4zQJphdsgNlzgNOJWrkPaqO3e4krPyaFRWzy
+	r8Z3Ekhzku3c2gffZXgrX2bgAeP6pTyR3f45tmCZCu0uh3fpXZIdEcsQVIv11eqAcyjZ5yXEnFr
+	Gd2+vS78LgnfOHozy5W1uJeyVszHeuyr8
+X-Received: by 2002:a05:600c:4f89:b0:439:4b9e:45fc with SMTP id 5b1f17b1804b1-4394b9e4883mr19868595e9.4.1739213113276;
+        Mon, 10 Feb 2025 10:45:13 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IG1DW8uYaNIQGndHHpAaZ/R379l1WaaDggkqsZF2ysLByrh9c9rDZgcYBCPGohQqt0EwrYjTg==
+X-Received: by 2002:a05:600c:4f89:b0:439:4b9e:45fc with SMTP id 5b1f17b1804b1-4394b9e4883mr19868135e9.4.1739213112852;
+        Mon, 10 Feb 2025 10:45:12 -0800 (PST)
 Received: from ?IPV6:2003:cb:c734:b800:12c4:65cd:348a:aee6? (p200300cbc734b80012c465cd348aaee6.dip0.t-ipconnect.de. [2003:cb:c734:b800:12c4:65cd:348a:aee6])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38dbde1dfaesm13124217f8f.90.2025.02.10.10.43.21
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4391dc9ffd8sm151856745e9.10.2025.02.10.10.45.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 Feb 2025 10:43:23 -0800 (PST)
-Message-ID: <ff5af15f-8f9b-4ddf-88d2-5bab52449399@redhat.com>
-Date: Mon, 10 Feb 2025 19:43:20 +0100
+        Mon, 10 Feb 2025 10:45:11 -0800 (PST)
+Message-ID: <afff4368-9401-4943-b802-1b15bdcf5aaa@redhat.com>
+Date: Mon, 10 Feb 2025 19:45:09 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,7 +75,7 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 15/20] huge_memory: Add vmf_insert_folio_pud()
+Subject: Re: [PATCH v7 16/20] huge_memory: Add vmf_insert_folio_pmd()
 To: Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org,
  dan.j.williams@intel.com, linux-mm@kvack.org
 Cc: Alison Schofield <alison.schofield@intel.com>, lina@asahilina.net,
@@ -93,7 +93,7 @@ Cc: Alison Schofield <alison.schofield@intel.com>, lina@asahilina.net,
  david@fromorbit.com, chenhuacai@kernel.org, kernel@xen0n.name,
  loongarch@lists.linux.dev
 References: <cover.472dfc700f28c65ecad7591096a1dc7878ff6172.1738709036.git-series.apopple@nvidia.com>
- <ef0f8d6a6fd340531613c351c99c98fd6f94ad93.1738709036.git-series.apopple@nvidia.com>
+ <9f10e88441f3cb26eff6be0c9ef5997844c8c24e.1738709036.git-series.apopple@nvidia.com>
 From: David Hildenbrand <david@redhat.com>
 Content-Language: en-US
 Autocrypt: addr=david@redhat.com; keydata=
@@ -141,27 +141,41 @@ Autocrypt: addr=david@redhat.com; keydata=
  jPrnvUsUUsjRoRNJjKKA/REq+sAnhkNPPZ/NNMjaZ5b8Tovi8C0tmxiCHaQYqj7G2rgnT0kt
  WNyWQQ==
 Organization: Red Hat
-In-Reply-To: <ef0f8d6a6fd340531613c351c99c98fd6f94ad93.1738709036.git-series.apopple@nvidia.com>
+In-Reply-To: <9f10e88441f3cb26eff6be0c9ef5997844c8c24e.1738709036.git-series.apopple@nvidia.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 04.02.25 23:48, Alistair Popple wrote:
-> Currently DAX folio/page reference counts are managed differently to
-> normal pages. To allow these to be managed the same as normal pages
-> introduce vmf_insert_folio_pud. This will map the entire PUD-sized folio
-> and take references as it would for a normally mapped page.
+> Currently DAX folio/page reference counts are managed differently to normal
+> pages. To allow these to be managed the same as normal pages introduce
+> vmf_insert_folio_pmd. This will map the entire PMD-sized folio and take
+> references as it would for a normally mapped page.
 > 
-> This is distinct from the current mechanism, vmf_insert_pfn_pud, which
-> simply inserts a special devmap PUD entry into the page table without
+> This is distinct from the current mechanism, vmf_insert_pfn_pmd, which
+> simply inserts a special devmap PMD entry into the page table without
 > holding a reference to the page for the mapping.
 > 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> It is not currently useful to implement a more generic vmf_insert_folio()
+> which selects the correct behaviour based on folio_order(). This is because
+> PTE faults require only a subpage of the folio to be PTE mapped rather than
+> the entire folio. It would be possible to add this context somewhere but
+> callers already need to handle PTE faults and PMD faults separately so a
+> more generic function is not useful.
 > 
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
 
-Nit: patch subject should start with "mm/huge_memory:"
+Nit: patch subject ;)
 
-Acked-by: David Hildenbrand <david@redhat.com>
+> 
+> ---
+> 
+> Changes for v7:
+> 
+>   - Fix bad pgtable handling for PPC64 (Thanks Dan and Dave)
+
+Is it? ;) insert_pfn_pmd() still doesn't consume a "pgtable_t *"
+
+But maybe I am missing something ...
 
 -- 
 Cheers,
