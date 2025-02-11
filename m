@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9846A262D0B
-	for <linux-xfs@vger.kernel.org>; Tue, 11 Feb 2025 18:59:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45597261594
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Feb 2025 19:09:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739300380; cv=none; b=RMkj284+dSjwtpe2QhBHyIb/7JEOI8KfICzAYf6R3x3XvMBmT5nR309IAa8PwUbz/gsoNX/I+ZUVqMCVeyymYqkYfu9h89V7S9TsSg+AIjFe8B7Hi3s2d4rv1rYEfPvKd5CWUZdzHGDtylpKwfaqcVprpdibuYfJGiVRA2b1SJ0=
+	t=1739300990; cv=none; b=m/aWXcrEiYuTTpTqy1qkVlhK0Ro1Qjk6pGFLipVgwRLOa4eToMC4TdnZn5zIQuTrnD6CWtIvym7RMbBCk1AjPxlHBmmtxzxDkloMN7s6O+44MCEfHJrk6VYIonFSxV23R2l6tnn4RKMLtynEWUTA9qRsqGtYAZjgT4Vl+KVxhyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739300380; c=relaxed/simple;
-	bh=vbaMCIUooZ6cHY/ueqJSTmKvrKvsSnmq/f+dwjcR6Yc=;
+	s=arc-20240116; t=1739300990; c=relaxed/simple;
+	bh=kHlk44ejz4nHFwJsq3U5wG5Ojuaemd2J59hk0t6eKCE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d/K9dtzKFTI+kismBYd6ipC+e/NNZdI+ELd5KeniuX06mHDuuR0YCsQZwYdIp/GLVrBaBkuXLOY6DZL0g2NhhMVxmx9SNAuJMje0h9fZwWahlD0/wLUxn7uuWo94qjD4uAiztPLzDAyiNjch32SX9arhtFT4WwXz3rracVr0Pb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NMpaHyQ2; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mjaOf4NOk03WKrfE8ahItqJzzKfuu7Ux8J6bHzdyKvoClPcvqgKP3kvfh5tfqGPLgkahN5g9eQ2SbvSz45L1Z3qwbmJXdRBPZE1ACk9x6DmZRlrUvSJ06yXqv7ABn8B0F5Hzkj1+W5BPqYiWaZvQdCmWFlk6tJ2zJVpe2zk/j08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y+GetweM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NMpaHyQ2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07B8DC4CEE4;
-	Tue, 11 Feb 2025 18:59:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y+GetweM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A792AC4CEDD;
+	Tue, 11 Feb 2025 19:09:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739300380;
-	bh=vbaMCIUooZ6cHY/ueqJSTmKvrKvsSnmq/f+dwjcR6Yc=;
+	s=k20201202; t=1739300989;
+	bh=kHlk44ejz4nHFwJsq3U5wG5Ojuaemd2J59hk0t6eKCE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NMpaHyQ2OpKuZRa++zZYYdsaulPvx0EvpKARCxpq5TMii8iScYqp29SD1erEuIltb
-	 hdM7XKk3W+7PRZihJcp67WLzcCwClX6CTwNXVlZhHpstfSNc1y4L2qsx0omANNQzfq
-	 9eSi1XEH9Nnha4lZG2Pykms08Dy1f51U8zPN+V1ptGgCU8K9ZcE0FR5ZRURxWY8BSN
-	 LyAQr4hISDY0krok0JIqI0FW6B12ACcSmUjCxb+3d1a0mJvtI71TaikgSL4KsPcVYT
-	 /HrLiiVitMgTSGmmTLbFBt2a3nv+qf7cYWpj81nknQqTf7Vb11JfxDkvx7GEl4CSRi
-	 +gjd9+BbP7V/g==
-Date: Tue, 11 Feb 2025 10:59:39 -0800
+	b=Y+GetweMOT/kIslteun/W4N4BL9kMkx99Y2PgJhI8gyabkMdpPE1YxMVYgt1XoJhb
+	 /ZtDEl9pKNuk3IDU2CQkt4RTiWe/XD7luVH5uAQDrhjII83IDkAo0fNiL7JKvQNc3e
+	 PB7abcJds5PeivVzFHHfQSznwoEr5W6GyuZuV2x8Mpo7In8XgTh1oE+F5eS4cdNwRA
+	 5xBNFc7UZP8ICarUIso6Him8KRgBBCM4BeTN+msdo+sm4PN5nDkoC3Afy5tJhEmy3T
+	 9vHjJ+6inVQnxZ6LJEOVH1fcOdJAMORal7RE2pDbXBGNYJLpUXPR7q4JUStBLcEKYd
+	 9I4ngXhiy8nSw==
+Date: Tue, 11 Feb 2025 11:09:49 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH v3 6/8] git-contributors: make revspec required and
- shebang fix
-Message-ID: <20250211185939.GE21808@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 8/8] release.sh: add -f to generate for-next update
+ email
+Message-ID: <20250211190949.GF21808@frogsfrogsfrogs>
 References: <20250211-update-release-v3-0-7b80ae52c61f@kernel.org>
- <20250211-update-release-v3-6-7b80ae52c61f@kernel.org>
+ <20250211-update-release-v3-8-7b80ae52c61f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,46 +43,164 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250211-update-release-v3-6-7b80ae52c61f@kernel.org>
+In-Reply-To: <20250211-update-release-v3-8-7b80ae52c61f@kernel.org>
 
-On Tue, Feb 11, 2025 at 06:26:58PM +0100, Andrey Albershteyn wrote:
-> Without default value script will show help instead of just hanging
-> waiting for input on stdin.
-> 
-> Shebang fix for system with different python location than the
-> /usr/bin one.
+On Tue, Feb 11, 2025 at 06:27:00PM +0100, Andrey Albershteyn wrote:
+> Add --for-next/-f to generate ANNOUNCE email for for-next branch
+> update. This doesn't require new commit/tarball/tags, so skip it.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 > ---
->  tools/git-contributors.py | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+>  release.sh | 92 ++++++++++++++++++++++++++++++++++++++++----------------------
+>  1 file changed, 59 insertions(+), 33 deletions(-)
 > 
-> diff --git a/tools/git-contributors.py b/tools/git-contributors.py
-> index 83bbe8ce0ee1dcbd591c6d3016d553fac2a7d286..628d6d0b4d8795e10b1317fa6fc91c6b98b21f3e 100755
-> --- a/tools/git-contributors.py
-> +++ b/tools/git-contributors.py
-> @@ -1,4 +1,4 @@
-> -#!/usr/bin/python3
-> +#!/usr/bin/env python3
+> diff --git a/release.sh b/release.sh
+> index 3d272aebdb1fe7a3b47689b9dc129a26d6a9eb20..863c2c5e061b73e232c0bb01e879a115b6dd55bb 100755
+> --- a/release.sh
+> +++ b/release.sh
+> @@ -14,12 +14,14 @@ set -e
+>  KUP=0
+>  COMMIT=1
+>  LAST_HEAD=""
+> +FOR_NEXT=0
 >  
->  # List all contributors to a series of git commits.
->  # Copyright(C) 2025 Oracle, All Rights Reserved.
-> @@ -71,8 +71,7 @@ class find_developers(object):
+>  help() {
+>  	echo "$(basename) - create xfsprogs release"
+>  	printf "\t[--kup|-k] upload final tarball with KUP\n"
+>  	printf "\t[--no-commit|-n] don't create release commit\n"
+>  	printf "\t[--last-head|-l] commit of the last release\n"
+> +	printf "\t[--for-next|-f] generate announce email for for-next update\n"
+>  }
 >  
->  def main():
->      parser = argparse.ArgumentParser(description = "List email addresses of contributors to a series of git commits.")
-> -    parser.add_argument("revspec", nargs = '?', default = None, \
-> -            help = "git revisions to process.")
-> +    parser.add_argument("revspec", help = "git revisions to process.")
+>  update_version() {
+> @@ -42,6 +44,48 @@ update_version() {
+>  	sed -i "1s/^/xfsprogs (${version}-1) unstable; urgency=low\n/" ./debian/changelog
+>  }
+>  
+> +prepare_mail() {
 
-Might want to get rid of the "read patch from stdin" code if you're not
-going to accept that anymore.
+Hoisting this to a function probably ought to be done in the patch that
+adds the email message body creation in the first place, so that the
+changes for --for-next are more obvious.
+
+The end result looks ok at least, so
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->      parser.add_argument("--delimiter", type = str, default = '\n', \
->              help = "Separate each email address with this string.")
->      args = parser.parse_args()
+> +	branch="$1"
+> +	mail_file=$(mktemp)
+> +	if [ -n "$LAST_HEAD" ]; then
+> +		if [ $branch == "master" ]; then
+> +			reason="$(git describe --abbrev=0 $branch) released"
+> +		else
+> +			reason="for-next updated to $(git log --oneline --format="%h" -1 $branch)"
+> +		fi;
+> +		cat << EOF > $mail_file
+> +To: linux-xfs@vger.kernel.org
+> +Cc: $(./tools/git-contributors.py $LAST_HEAD..$branch --delimiter ' ')
+> +Subject: [ANNOUNCE] xfsprogs: $reason
+> +
+> +Hi folks,
+> +
+> +The xfsprogs $branch branch in repository at:
+> +
+> +	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> +
+> +has just been updated.
+> +
+> +Patches often get missed, so if your outstanding patches are properly reviewed
+> +on the list and not included in this update, please let me know.
+> +
+> +The for-next branch has also been updated to match the state of master.
+> +
+> +The new head of the $branch branch is commit:
+> +
+> +$(git log --oneline --format="%H" -1 $branch)
+> +
+> +New commits:
+> +
+> +$(git shortlog --format="[%h] %s" $LAST_HEAD..$branch)
+> +
+> +Code Diffstat:
+> +
+> +$(git diff --stat --summary -C -M $LAST_HEAD..$branch)
+> +EOF
+> +	fi
+> +}
+> +
+>  while [ $# -gt 0 ]; do
+>  	case "$1" in
+>  		--kup|-k)
+> @@ -54,6 +98,9 @@ while [ $# -gt 0 ]; do
+>  			LAST_HEAD=$2
+>  			shift
+>  			;;
+> +		--for-next|-f)
+> +			FOR_NEXT=1
+> +			;;
+>  		--help|-h)
+>  			help
+>  			exit 0
+> @@ -66,6 +113,17 @@ while [ $# -gt 0 ]; do
+>  	shift
+>  done
+>  
+> +if [ $FOR_NEXT -eq 1 ]; then
+> +	echo "Push your for-next branch:"
+> +	printf "\tgit push origin for-next:for-next\n"
+> +	prepare_mail "for-next"
+> +	if [ -n "$LAST_HEAD" ]; then
+> +		echo "Command to send ANNOUNCE email"
+> +		printf "\tneomutt -H $mail_file\n"
+> +	fi
+> +	exit 0
+> +fi
+> +
+>  if [ -z "$EDITOR" ]; then
+>  	EDITOR=$(command -v vi)
+>  fi
+> @@ -128,39 +186,7 @@ if [ $KUP -eq 1 ]; then
+>  		pub/linux/utils/fs/xfs/xfsprogs/
+>  fi;
+>  
+> -mail_file=$(mktemp)
+> -if [ -n "$LAST_HEAD" ]; then
+> -	cat << EOF > $mail_file
+> -To: linux-xfs@vger.kernel.org
+> -Cc: $(./tools/git-contributors.py $LAST_HEAD.. --delimiter ' ')
+> -Subject: [ANNOUNCE] xfsprogs $(git describe --abbrev=0) released
+> -
+> -Hi folks,
+> -
+> -The xfsprogs repository at:
+> -
+> -	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> -
+> -has just been updated.
+> -
+> -Patches often get missed, so if your outstanding patches are properly reviewed
+> -on the list and not included in this update, please let me know.
+> -
+> -The for-next branch has also been updated to match the state of master.
+> -
+> -The new head of the master branch is commit:
+> -
+> -$(git log --oneline --format="%H" -1)
+> -
+> -New commits:
+> -
+> -$(git shortlog --format="[%h] %s" $LAST_HEAD..HEAD)
+> -
+> -Code Diffstat:
+> -
+> -$(git diff --stat --summary -C -M $LAST_HEAD..HEAD)
+> -EOF
+> -fi
+> +prepare_mail "master"
+>  
+>  echo ""
+>  echo "Done. Please remember to push out tags and the branch."
 > 
 > -- 
 > 2.47.2
