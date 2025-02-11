@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5BD1E5734
-	for <linux-xfs@vger.kernel.org>; Tue, 11 Feb 2025 08:44:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBC691F03EE
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Feb 2025 08:44:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739263475; cv=none; b=YKjPx66c6kSoGvn5YIRlJTV9ftsUmVPw/npGEFLR7qZaqL60Fd0QByEB4wSuaYQzStO6EqJOA0BIgvd0NO2TUPGiFe+yBBSMnAqZvrFCGrt2Fdv0CyPzBjxU0Fkj/lbSVVyGqDJ3Lq8fVs4ACKCWqRQO5poFGE034dT5eEZ8mVA=
+	t=1739263477; cv=none; b=cS4RDTR7izrMGIUVqqiUL2x16tjsPxok+PnsN3WYYpOF7jjXQcdjPB4tPqidnZJMOmRbxDZMPgiOTMnOVCAEwzOdRR4pHMoJhdMslqryYj+NX1llWLFshdpd/fGS4RS6xSPg/M9BRU7atyzk/dUAMtFMa1fJybtD6X9NPmivB+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739263475; c=relaxed/simple;
-	bh=qFH9RDcsFM9nSnIJZ8IefXefB7BfOTiq7sFkBt6/KsY=;
+	s=arc-20240116; t=1739263477; c=relaxed/simple;
+	bh=DULCZe2riRLMeAEZLXid5mt2Ws2PaFmQ/9tpEDfOluw=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=FnfH8OyfFFJWUZ3uCDrMlkvi2fIoP/yaQtj5sD2To3n94wek+xcGowhf/N7DgDT9UogzJjV2JoyR2L7VaK5KaqnxlQ4+1OhPEDOMhY0LBJg22YvXuKm2aZkttAP57ulVGJku+suup4K/NyU9MiD8B2vWlGSi4Faz3dCjB7S/SHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SfAz9dmn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Wy+ejrBPGc4+2TFDuRSuC9Y/EtSub/ovCi9rv5vcOVu9eVQEbSkwsg/CTF9TElJXtWYwsDKTH0MatBjUOYdc3yVOXZSAmOLZwvltNRNhNx3p0AVDU5XzND4BoEQtEJ4jUY0kVcBawmBnkoBPDaS2/UI1gzY+lpgPD5qVPJvhEuQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dfQY3daj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SfAz9dmn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7408FC4CEE6;
-	Tue, 11 Feb 2025 08:44:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dfQY3daj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4825C4CEDD;
+	Tue, 11 Feb 2025 08:44:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739263475;
-	bh=qFH9RDcsFM9nSnIJZ8IefXefB7BfOTiq7sFkBt6/KsY=;
+	s=k20201202; t=1739263477;
+	bh=DULCZe2riRLMeAEZLXid5mt2Ws2PaFmQ/9tpEDfOluw=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=SfAz9dmnIfosyqN0ypqTxt7RYm54XFBfabhjxD+14LEe5VGa49pf+8jgm4yCVx9SX
-	 kfAXvIgQ+SECK14q+3ZDL9HSJLgCloegCH5drGfavF52Z+xE55Dy0wpV+ZECEZhC0Z
-	 75BBMZPfyQa2IEV3agT1ntB22mPM0c581gnicPiHPwhSj8eR4559zkORY3Or5thaMG
-	 UHfpd2WgssWHcfdeOqr0tfNf+yGZwuA38/JbRY6GpldLbU4UzalOSAGyyYLDv5o9Lo
-	 t/dzFx4UU7QtAY0r7W5zcDUXyJUqgps+a4B723hCLtHUj3SSk2bQ+nHbCF2qTop3zP
-	 DXxRTv1LnGfaw==
+	b=dfQY3daj6xlGxz6fCq+cxokyay+GVUEPg/cpOnGqwbsFuSnI/efWwHhfY7mblapbM
+	 aluSxnKBRykSyc/s3fFuLtW+RYx9TYy6OuoelHvEmEUUefq1ujBLSt3mT5+V89Nzkc
+	 aoTJXbJGTzsbjpWdszbQSs1bCvEjsf1tYTLQ2ANqn6j1Tpj9EHvic23ivIxIBynNN1
+	 +pH8liVVl6XfAdmTttNfd7zbMfFa4dIBuS3bkTBylwfdIE7WwvtWmMOrGY605qGCP0
+	 8bnRwuo9bNwuovvl03nJN1qshzCFRI55FpwBIKHnlgN0ereTco90sCeEH0Qvs929zR
+	 P6CFobsTMkdVw==
 From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, Lukas Herbolt <lukas@herbolt.com>
-Cc: linux-xfs@vger.kernel.org
-In-Reply-To: <20250203085513.79335-2-lukas@herbolt.com>
-References: <20250203085513.79335-1-lukas@herbolt.com>
- <20250203085513.79335-2-lukas@herbolt.com>
-Subject: Re: [PATCH 1/1] xfs: do not check NEEDSREPAIR if ro,norecovery
- mount.
-Message-Id: <173926347418.43797.13489123950896413284.b4-ty@kernel.org>
-Date: Tue, 11 Feb 2025 09:44:34 +0100
+To: linux-xfs@vger.kernel.org, cem@kernel.org
+Cc: djwong@kernel.org, david@fromorbit.com, dchinner@redhat.com, hch@lst.de
+In-Reply-To: <20250203130513.213225-1-cem@kernel.org>
+References: <20250203130513.213225-1-cem@kernel.org>
+Subject: Re: [PATCH V3] xfs: Do not allow norecovery mount with quotacheck
+Message-Id: <173926347551.43797.14508478442986566587.b4-ty@kernel.org>
+Date: Tue, 11 Feb 2025 09:44:35 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,20 +44,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Mon, 03 Feb 2025 09:55:13 +0100, Lukas Herbolt wrote:
-> If there is corrutpion on the filesystem andxfs_repair
-> fails to repair it. The last resort of getting the data
-> is to use norecovery,ro mount. But if the NEEDSREPAIR is
-> set the filesystem cannot be mounted. The flag must be
-> cleared out manually using xfs_db, to get access to what
-> left over of the corrupted fs.
+On Mon, 03 Feb 2025 14:04:57 +0100, cem@kernel.org wrote:
+> Mounting a filesystem that requires quota state changing will generate a
+> transaction.
+> 
+> We already check for a read-only device; we should do that for
+> norecovery too.
+> 
+> A quotacheck on a norecovery mount, and with the right log size, will cause
+> the mount process to hang on:
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: do not check NEEDSREPAIR if ro,norecovery mount.
-      commit: 263b984ae26bbc320581d2872a125bc305bea0b8
+[1/1] xfs: Do not allow norecovery mount with quotacheck
+      commit: 18df3ca14c34e9fd6e12189a24238a12b064fbac
 
 Best regards,
 -- 
