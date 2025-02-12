@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77E111DA612;
-	Wed, 12 Feb 2025 03:33:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C12111DA60D;
+	Wed, 12 Feb 2025 03:33:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739331198; cv=none; b=kVwZ4qkG2nYVrHcrPyzRx7zvbybQm20L6hgDGU3oKOIrHLmhZ16BfUwmPTc5WkM0v5pbFK1AjMTBW9UaT0lcw7RUFqrbwv1PWItiZBCRwQ/v1K/hYi+u5hssQbBqiX22uYiIVC6qQh4KiLdqkwljb8bWfqI3EVJ+y62LBlRy4ag=
+	t=1739331213; cv=none; b=gshFAlBCZZA4yFcboAk3RXjRnacvk87mo5sE5hOFB8sxWxrFsprB0kJCwMemjAjwFLEplWzHbxEtG99F4Lt6IQAe6MuVOs9wSYTHSgX1YMBDqUdY+JUaECndyriIWxF0H773IzcJXpZZkwmYT4TjwPVkAr7RAevNJmEau7wqt4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739331198; c=relaxed/simple;
-	bh=6e08DndLyaeeaZPTE3xuTmL/uOAaHR1QIHtNbiZ4ZTk=;
+	s=arc-20240116; t=1739331213; c=relaxed/simple;
+	bh=HvBL9lQnbuwT8lvofrZL8CkMKbF3KpfRL/GyQ/5EQVI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jo8QugWJ1GreIbLeL/yYVJDD+yCYxMb+muEmwXpoAmkJHAcnvCCe30EhjCsfefq6JMZYBLY0ieo9Wklel9JWRhKdBkUX7GfDy6oM3gHbhndXhNfoHsTUjn5Sh/GP+Zx5SBLP3JmY53+ECs4MC4EqJx93fZVfOUKh3FGGElB5zxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N9Mlr89o; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=FW8GIP+XhDcTS62VyuqJkPD6Ht59n5CSKHC1K2cyK9QGYHBOyOnEUgqKBkE45BYUgaXaaO0QPoUuqsBt2S0xn1oZ5KR6EJJk10sg2uMyDLAJLpSly1dKRHU9JbkgBOF3a7QPn0Ah0AixAa2aPiqkvDUKRFBqXzENbe8qzn9TOgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IgHw15rG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N9Mlr89o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2C02C4CEDF;
-	Wed, 12 Feb 2025 03:33:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IgHw15rG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9745FC4CEDF;
+	Wed, 12 Feb 2025 03:33:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739331198;
-	bh=6e08DndLyaeeaZPTE3xuTmL/uOAaHR1QIHtNbiZ4ZTk=;
+	s=k20201202; t=1739331213;
+	bh=HvBL9lQnbuwT8lvofrZL8CkMKbF3KpfRL/GyQ/5EQVI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=N9Mlr89o/gWd7J3R9jz+fYxeDBsxQsG5eBcZ4hAyeoJ5GRJvlA/He3eFpruCRr0Wt
-	 Cl+kvFMH1DSVgkMm7c6iBP7PsYRU8X2Af1qRWzp4oJVnhVvAxvlZdCaALT23g9M09x
-	 +irEBPW9zh8haFXZlm36wqj2InauVFt0lcJPFtM19Uzf1UWmdT9rqJQgjNevhsx5Fp
-	 g3Ik2yv35RLWTXed8u2nOmy0sxRxAAaeqNopxx0kDCyv+FRHX7lM23TU21PoxV0Hvx
-	 I9urIldPNnBjwJNOq/x4Uk9TbVj2VAktTz4EwiOKVhmNrfCljECP8PZRZZ257TmZQO
-	 Tvi5Q5zcVCF7w==
-Date: Tue, 11 Feb 2025 19:33:17 -0800
-Subject: [PATCH 10/34] generic/759,760: skip test if we can't set up a
- hugepage for IO
+	b=IgHw15rGggD5sVB4onOCHNPoeTxThkJfM3v2C0O3dZI78umPaJ3E36ToCsObnt5aC
+	 Ut933acN1hVitxsptdAhKJV2RIVvuHlHffRTl/fikkgOdu8IQ7M3g7OVi3W/hTmtS0
+	 mIHuCQLWvzp+Gap0wwQ0McRaf+abbAmqrwLCUlRxJKDY1radH1Fjoh/sApwWt5PIUY
+	 6bqLWAdax1coSO28eE6ZMp8qiBJb+/eUSstQeymztTLVnUo+N8hapOe4oip8vgWJSY
+	 Jf6EUruDBf3iLdvXlDrsfoLF8X8fnlwl65EOAR98GAZBH5ZJZaSxLYXi7A/Y+HEFKk
+	 FavCRq4wIbp5w==
+Date: Tue, 11 Feb 2025 19:33:33 -0800
+Subject: [PATCH 11/34] common/rc: create a wrapper for the su command
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: joannelkoong@gmail.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173933094507.1758477.425979019420266054.stgit@frogsfrogsfrogs>
+Cc: dchinner@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <173933094522.1758477.12387047280540953149.stgit@frogsfrogsfrogs>
 In-Reply-To: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,145 +45,845 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On an arm64 VM with 64k base pages and a paltry 8G of RAM, this test
-will frequently fail like this:
+Create a _su wrapper around the su command so that the next patch can
+fix all the pkill isolation code so that this test can only kill
+processes started for this test.
 
->  QA output created by 759
->  fsx -N 10000 -l 500000 -h
-> -fsx -N 10000 -o 8192 -l 500000 -h
-> -fsx -N 10000 -o 128000 -l 500000 -h
-> +Seed set to 1
-> +madvise collapse for buf: Cannot allocate memory
-> +init_hugepages_buf failed for good_buf: Cannot allocate memory
-
-This system has a 512MB hugepage size, which means that there's a good
-chance that memory is so fragmented that we won't be able to create a
-huge page (in 1/16th the available DRAM).  Create a _run_hugepage_fsx
-helper that will detect this situation at the start of the test and skip
-it, having refactored run_fsx into a properly namespaced version that
-won't exit the test on failure.
-
-Cc: <fstests@vger.kernel.org> # v2025.02.02
-Cc: joannelkoong@gmail.com
-Fixes: 627289232371e3 ("generic: add tests for read/writes from hugepages-backed buffers")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- common/rc         |   34 ++++++++++++++++++++++++++++++----
- ltp/fsx.c         |    6 ++++--
- tests/generic/759 |    6 +++---
- tests/generic/760 |    6 +++---
- 4 files changed, 40 insertions(+), 12 deletions(-)
+ common/rc         |    9 +++++++--
+ tests/generic/093 |    2 +-
+ tests/generic/125 |    2 +-
+ tests/generic/128 |    2 +-
+ tests/generic/193 |   36 ++++++++++++++++++------------------
+ tests/generic/230 |   14 +++++++-------
+ tests/generic/231 |    2 +-
+ tests/generic/233 |    2 +-
+ tests/generic/270 |    4 ++--
+ tests/generic/314 |    2 +-
+ tests/generic/327 |    2 +-
+ tests/generic/328 |    4 ++--
+ tests/generic/355 |    2 +-
+ tests/generic/453 |    6 +++---
+ tests/generic/514 |    2 +-
+ tests/generic/573 |    2 +-
+ tests/generic/600 |    2 +-
+ tests/generic/601 |    2 +-
+ tests/generic/603 |   10 +++++-----
+ tests/generic/673 |    2 +-
+ tests/generic/674 |    2 +-
+ tests/generic/675 |    2 +-
+ tests/generic/680 |    2 +-
+ tests/generic/681 |    2 +-
+ tests/generic/682 |    2 +-
+ tests/generic/683 |    2 +-
+ tests/generic/684 |    2 +-
+ tests/generic/685 |    2 +-
+ tests/generic/686 |    2 +-
+ tests/generic/687 |    2 +-
+ tests/generic/688 |    2 +-
+ tests/generic/691 |    8 ++++----
+ tests/generic/721 |   10 +++++-----
+ tests/generic/726 |    2 +-
+ tests/generic/727 |    2 +-
+ tests/xfs/720     |    2 +-
+ tests/xfs/795     |    2 +-
+ tests/xfs/803     |    2 +-
+ 38 files changed, 82 insertions(+), 77 deletions(-)
 
 
 diff --git a/common/rc b/common/rc
-index b7736173e6e839..36e270abbc082a 100644
+index 36e270abbc082a..1266f0307a4d7c 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -4982,20 +4982,46 @@ _require_hugepage_fsx()
- 		_notrun "fsx binary does not support MADV_COLLAPSE"
+@@ -2726,6 +2726,11 @@ _require_user_exists()
+ 	[ "$?" == "0" ] || _notrun "$user user not defined."
  }
  
--run_fsx()
-+_run_fsx()
- {
--	echo fsx $@
-+	echo "fsx $*"
- 	local args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
- 	set -- $here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk
- 	echo "$@" >>$seqres.full
- 	rm -f $TEST_DIR/junk
- 	"$@" 2>&1 | tee -a $seqres.full >$tmp.fsx
--	if [ ${PIPESTATUS[0]} -ne 0 ]; then
-+	local res=${PIPESTATUS[0]}
-+	if [ $res -ne 0 ]; then
- 		cat $tmp.fsx
- 		rm -f $tmp.fsx
--		exit 1
-+		return $res
- 	fi
- 	rm -f $tmp.fsx
-+	return 0
-+}
-+
-+# Run fsx with -h(ugepage buffers).  If we can't set up a hugepage then skip
-+# the test, but if any other error occurs then exit the test.
-+_run_hugepage_fsx() {
-+	_run_fsx "$@" -h &> $tmp.hugepage_fsx
-+	local res=$?
-+	if [ $res -eq 103 ]; then
-+		# According to the MADV_COLLAPSE manpage, these three errors
-+		# can happen if the kernel could not collapse a collection of
-+		# pages into a single huge page.
-+		grep -q -E ' for hugebuf: (Cannot allocate memory|Device or resource busy|Resource temporarily unavailable)' $tmp.hugepage_fsx && \
-+			_notrun "Could not set up huge page for test"
-+	fi
-+	cat $tmp.hugepage_fsx
-+	rm -f $tmp.hugepage_fsx
-+	test $res -ne 0 && exit 1
-+	return 0
-+}
-+
-+# run fsx or exit the test
-+run_fsx()
++_su()
 +{
-+	_run_fsx "$@" || exit 1
++	su "$@"
++}
++
+ # check if a user exists and is able to execute commands.
+ # Uses 'fsgqa' user as default.
+ #
+@@ -2736,7 +2741,7 @@ _require_user()
+ 		qa_user=$1
+ 	fi
+ 	_require_user_exists $qa_user
+-	echo /bin/true | su $qa_user
++	echo /bin/true | _su $qa_user
+ 	[ "$?" == "0" ] || _notrun "$qa_user cannot execute commands."
  }
  
- _require_statx()
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index cf9502a74c17a7..d1b0f245582b31 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -2974,13 +2974,15 @@ init_hugepages_buf(unsigned len, int hugepage_size, int alignment, long *buf_siz
+@@ -2798,7 +2803,7 @@ s,^\s*$,,;
  
- 	ret = posix_memalign(&buf, hugepage_size, size);
- 	if (ret) {
--		prterr("posix_memalign for buf");
-+		/* common/rc greps this error message */
-+		prterr("posix_memalign for hugebuf");
- 		return NULL;
- 	}
- 	memset(buf, '\0', size);
- 	ret = madvise(buf, size, MADV_COLLAPSE);
- 	if (ret) {
--		prterr("madvise collapse for buf");
-+		/* common/rc greps this error message */
-+		prterr("madvise collapse for hugebuf");
- 		free(buf);
- 		return NULL;
- 	}
-diff --git a/tests/generic/759 b/tests/generic/759
-index a7dec155056abc..49c02214559a55 100755
---- a/tests/generic/759
-+++ b/tests/generic/759
-@@ -15,9 +15,9 @@ _require_test
- _require_thp
- _require_hugepage_fsx
+ _user_do()
+ {
+-	echo $1 | su -s /bin/bash $qa_user 2>&1 | _filter_user_do
++	echo $1 | _su -s /bin/bash $qa_user 2>&1 | _filter_user_do
+ }
  
--run_fsx -N 10000            -l 500000 -h
--run_fsx -N 10000  -o 8192   -l 500000 -h
--run_fsx -N 10000  -o 128000 -l 500000 -h
-+_run_hugepage_fsx -N 10000            -l 500000
-+_run_hugepage_fsx -N 10000  -o 8192   -l 500000
-+_run_hugepage_fsx -N 10000  -o 128000 -l 500000
+ _require_xfs_io_command()
+diff --git a/tests/generic/093 b/tests/generic/093
+index c4e866da1c18eb..047cc821e0e608 100755
+--- a/tests/generic/093
++++ b/tests/generic/093
+@@ -62,7 +62,7 @@ chmod ugo+w $TEST_DIR
+ # don't use $here/src/writemod, as we're running it as a regular user, and
+ # $here may contain path component that a regular user doesn't have search
+ # permission
+-su $qa_user -c "src/writemod $file" | filefilter
++_su $qa_user -c "src/writemod $file" | filefilter
+ cat $file
  
+ # success, all done
+diff --git a/tests/generic/125 b/tests/generic/125
+index e2bc5fa125da6e..011a51e8fa21c2 100755
+--- a/tests/generic/125
++++ b/tests/generic/125
+@@ -32,7 +32,7 @@ chmod a+rw $TESTFILE
+ 
+ # don't use $here/src/ftrunc, as we're running it as a regular user, and $here
+ # may contain path component that a regular user doesn't have search permission
+-su $qa_user -c "./src/ftrunc -f $TESTFILE"
++_su $qa_user -c "./src/ftrunc -f $TESTFILE"
+ 
+ if [ "$?" != "0" ];  then
+     echo src/ftrunc returned non 0 status!
+diff --git a/tests/generic/128 b/tests/generic/128
+index f931ca0639687b..5a497cdea7382b 100755
+--- a/tests/generic/128
++++ b/tests/generic/128
+@@ -26,7 +26,7 @@ cp "$(type -P ls)" $SCRATCH_MNT
+ chmod 700 $SCRATCH_MNT/nosuid
+ chmod 4755 $SCRATCH_MNT/ls
+ 
+-su -s/bin/bash - $qa_user -c "$SCRATCH_MNT/ls $SCRATCH_MNT/nosuid >/dev/null 2>&1"
++_su -s/bin/bash - $qa_user -c "$SCRATCH_MNT/ls $SCRATCH_MNT/nosuid >/dev/null 2>&1"
+ if [ $? -eq 0 ] ; then
+ 	echo "Error: we shouldn't be able to ls the directory"
+ fi
+diff --git a/tests/generic/193 b/tests/generic/193
+index d251d3a5c4f8ee..ba557428f77b9c 100755
+--- a/tests/generic/193
++++ b/tests/generic/193
+@@ -69,17 +69,17 @@ echo
+ _create_files
+ 
+ echo "user: chown root owned file to qa_user (should fail)"
+-su ${qa_user} -c "chown ${qa_user} $test_root" 2>&1 | _filter_files
++_su ${qa_user} -c "chown ${qa_user} $test_root" 2>&1 | _filter_files
+ 
+ echo "user: chown root owned file to root (should fail)"
+-su ${qa_user} -c "chown root $test_root" 2>&1 | _filter_files
++_su ${qa_user} -c "chown root $test_root" 2>&1 | _filter_files
+ 
+ echo "user: chown qa_user owned file to qa_user (should succeed)"
+-su ${qa_user} -c "chown ${qa_user} $test_user"
++_su ${qa_user} -c "chown ${qa_user} $test_user"
+ 
+ # this would work without _POSIX_CHOWN_RESTRICTED
+ echo "user: chown qa_user owned file to root (should fail)"
+-su ${qa_user} -c "chown root $test_user" 2>&1 | _filter_files
++_su ${qa_user} -c "chown root $test_user" 2>&1 | _filter_files
+ 
+ _cleanup_files
+ 
+@@ -93,19 +93,19 @@ echo
+ _create_files
+ 
+ echo "user: chgrp root owned file to root (should fail)"
+-su ${qa_user} -c "chgrp root $test_root" 2>&1 | _filter_files
++_su ${qa_user} -c "chgrp root $test_root" 2>&1 | _filter_files
+ 
+ echo "user: chgrp qa_user owned file to root (should fail)"
+-su ${qa_user} -c "chgrp root $test_user" 2>&1 | _filter_files
++_su ${qa_user} -c "chgrp root $test_user" 2>&1 | _filter_files
+ 
+ echo "user: chgrp root owned file to qa_user (should fail)"
+-su ${qa_user} -c "chgrp ${qa_user} $test_root" 2>&1 | _filter_files
++_su ${qa_user} -c "chgrp ${qa_user} $test_root" 2>&1 | _filter_files
+ 
+ echo "user: chgrp qa_user owned file to qa_user (should succeed)"
+-su ${qa_user} -c "chgrp ${qa_user} $test_user"
++_su ${qa_user} -c "chgrp ${qa_user} $test_user"
+ 
+ #echo "user: chgrp qa_user owned file to secondary group (should succeed)"
+-#su ${qa_user} -c "chgrp ${group2} $test_user"
++#_su ${qa_user} -c "chgrp ${group2} $test_user"
+ 
+ _cleanup_files
+ 
+@@ -119,10 +119,10 @@ echo
+ _create_files
+ 
+ echo "user: chmod a+r on qa_user owned file (should succeed)"
+-su ${qa_user} -c "chmod a+r $test_user"
++_su ${qa_user} -c "chmod a+r $test_user"
+ 
+ echo "user: chmod a+r on root owned file (should fail)"
+-su ${qa_user} -c "chmod a+r $test_root" 2>&1 | _filter_files
++_su ${qa_user} -c "chmod a+r $test_root" 2>&1 | _filter_files
+ 
+ #
+ # Setup a file owned by the qa_user, but with a group ID that
+@@ -143,7 +143,7 @@ chown ${qa_user}:root $test_user
+ chmod g+s $test_user
+ 
+ # and let the qa_user change permission bits
+-su ${qa_user} -c "chmod a+w $test_user"
++_su ${qa_user} -c "chmod a+w $test_user"
+ stat -c '%A' $test_user
+ 
+ #
+@@ -220,7 +220,7 @@ echo "with no exec perm"
+ echo frobnozzle >> $test_user
+ chmod ug+s $test_user
+ echo -n "before: "; stat -c '%A' $test_user
+-su ${qa_user} -c "echo > $test_user"
++_su ${qa_user} -c "echo > $test_user"
+ echo -n "after:  "; stat -c '%A' $test_user
+ 
+ echo "with user exec perm"
+@@ -228,7 +228,7 @@ echo frobnozzle >> $test_user
+ chmod ug+s $test_user
+ chmod u+x $test_user
+ echo -n "before: "; stat -c '%A' $test_user
+-su ${qa_user} -c "echo > $test_user"
++_su ${qa_user} -c "echo > $test_user"
+ echo -n "after:  "; stat -c '%A' $test_user
+ 
+ echo "with group exec perm"
+@@ -237,7 +237,7 @@ chmod ug+s $test_user
+ chmod g+x $test_user
+ chmod u-x $test_user
+ echo -n "before: "; stat -c '%A' $test_user
+-su ${qa_user} -c "echo > $test_user"
++_su ${qa_user} -c "echo > $test_user"
+ echo -n "after:  "; stat -c '%A' $test_user
+ 
+ echo "with user+group exec perm"
+@@ -245,7 +245,7 @@ echo frobnozzle >> $test_user
+ chmod ug+s $test_user
+ chmod ug+x $test_user
+ echo -n "before: "; stat -c '%A' $test_user
+-su ${qa_user} -c "echo > $test_user"
++_su ${qa_user} -c "echo > $test_user"
+ echo -n "after:  "; stat -c '%A' $test_user
+ 
+ #
+@@ -258,10 +258,10 @@ echo
+ _create_files
+ 
+ echo "user: touch qa_user file (should succeed)"
+-su ${qa_user} -c "touch $test_user"
++_su ${qa_user} -c "touch $test_user"
+ 
+ echo "user: touch root file (should fail)"
+-su ${qa_user} -c "touch $test_root" 2>&1 | _filter_files
++_su ${qa_user} -c "touch $test_root" 2>&1 | _filter_files
+ 
+ _cleanup_files
+ 
+diff --git a/tests/generic/230 b/tests/generic/230
+index ba95fbe725ad28..18e20f4b2e9439 100755
+--- a/tests/generic/230
++++ b/tests/generic/230
+@@ -33,13 +33,13 @@ test_enforcement()
+ 	echo "--- initiating IO..." >>$seqres.full
+ 	# Firstly fit below block soft limit
+ 	echo "Write 225 blocks..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' -c fsync \
++	_su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' -c fsync \
+ 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Secondly overcome block soft limit
+ 	echo "Rewrite 250 blocks plus 1 byte..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' -c fsync \
++	_su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' -c fsync \
+ 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+@@ -49,14 +49,14 @@ test_enforcement()
+ 	# scratch device that may leed to grace time exceed.
+ 	setquota -$type $qa_user -T $grace $grace $SCRATCH_MNT 2>/dev/null
+ 	echo "Write 250 blocks..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE))' -c fsync \
++	_su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE))' -c fsync \
+ 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Now sleep for grace time and check that softlimit got enforced
+ 	sleep $((grace+1))
+ 	echo "Write 1 block..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
++	_su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
+ 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+@@ -65,7 +65,7 @@ test_enforcement()
+ 	# space reservations on XFS
+ 	setquota -$type $qa_user 0 0 3 5 $SCRATCH_MNT
+ 	echo "Touch 3+4"
+-	su $qa_user -c "touch $SCRATCH_MNT/file3 $SCRATCH_MNT/file4" \
++	_su $qa_user -c "touch $SCRATCH_MNT/file3 $SCRATCH_MNT/file4" \
+ 		2>&1 >>$seqres.full | _filter_scratch | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Try to exceed inode hardlimit
+@@ -74,14 +74,14 @@ test_enforcement()
+ 	# scratch device that may leed to grace time exceed.
+ 	setquota -$type $qa_user -T $grace $grace $SCRATCH_MNT 2>/dev/null
+ 	echo "Touch 5+6"
+-	su $qa_user -c "touch $SCRATCH_MNT/file5 $SCRATCH_MNT/file6" \
++	_su $qa_user -c "touch $SCRATCH_MNT/file5 $SCRATCH_MNT/file6" \
+ 		2>&1 >>$seqres.full | _filter_scratch | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Wait and check grace time enforcement
+ 	rm -f $SCRATCH_MNT/file5 >>$seqres.full 2>&1
+ 	sleep $((grace+1))
+ 	echo "Touch 5"
+-	su $qa_user -c "touch $SCRATCH_MNT/file5" 2>&1 >>$seqres.full |
++	_su $qa_user -c "touch $SCRATCH_MNT/file5" 2>&1 >>$seqres.full |
+ 		_filter_scratch | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	echo "--- completed IO ($type)" >>$seqres.full
+diff --git a/tests/generic/231 b/tests/generic/231
+index ef3ea45d45d736..8dda926d875e88 100755
+--- a/tests/generic/231
++++ b/tests/generic/231
+@@ -24,7 +24,7 @@ _fsx()
+ 	for (( i = 1; i <= $tasks; i++ )); do
+ 		SEED=$RANDOM
+ 		echo "ltp/fsx $FSX_ARGS -S $SEED $SCRATCH_MNT/fsx_file$i" >>$seqres.full
+-		su $qa_user -c "ltp/fsx $FSX_ARGS -S $SEED \
++		_su $qa_user -c "ltp/fsx $FSX_ARGS -S $SEED \
+ 			$FSX_AVOID $SCRATCH_MNT/fsx_file$i" >$tmp.output$i 2>&1 &
+ 	done
+ 
+diff --git a/tests/generic/233 b/tests/generic/233
+index b4c804ff217fbb..df67b39092b7cb 100755
+--- a/tests/generic/233
++++ b/tests/generic/233
+@@ -43,7 +43,7 @@ _fsstress()
+ 	# temporarily.
+ 	ulimit -l unlimited
+ 	echo "fsstress $args" >> $seqres.full
+-	if ! su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $seqres.full | _filter_num
++	if ! _su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $seqres.full | _filter_num
+ 	then
+ 		echo "    fsstress $args returned $?"
+ 		cat $tmp.out | tee -a $seqres.full
+diff --git a/tests/generic/270 b/tests/generic/270
+index 342ac8b5d3d963..d74971bb535239 100755
+--- a/tests/generic/270
++++ b/tests/generic/270
+@@ -37,14 +37,14 @@ _workout()
+ 	# io_uring_queue_init fail on ENOMEM, set max locked memory to unlimited
+ 	# temporarily.
+ 	ulimit -l unlimited
+-	su $qa_user -c "$_FSSTRESS_PROG $args" > /dev/null 2>&1 &
++	_su $qa_user -c "$_FSSTRESS_PROG $args" > /dev/null 2>&1 &
+ 	_FSSTRESS_PID=$!
+ 
+ 	echo "Run dd writers in parallel"
+ 	for ((i=0; i < num_iterations; i++))
+ 	do
+ 		# File will be opened with O_TRUNC each time
+-		su $qa_user -c "dd if=/dev/zero \
++		_su $qa_user -c "dd if=/dev/zero \
+ 			of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M " \
+ 			>> $seqres.full 2>&1
+ 		sleep $enospc_time
+diff --git a/tests/generic/314 b/tests/generic/314
+index 5fbc6424de3ab4..65f7f9d9619f2e 100755
+--- a/tests/generic/314
++++ b/tests/generic/314
+@@ -27,7 +27,7 @@ chown $qa_user:12345 $TEST_DIR/$seq-dir
+ chmod 2775 $TEST_DIR/$seq-dir
+ 
+ # Make subdir
+-su $qa_user -c "umask 022; mkdir $TEST_DIR/$seq-dir/subdir"
++_su $qa_user -c "umask 022; mkdir $TEST_DIR/$seq-dir/subdir"
+ 
+ # Subdir should have inherited sgid
+ _ls_l $TEST_DIR/$seq-dir/ | grep -v total | _filter_test_dir | awk '{print $1,$NF}'
+diff --git a/tests/generic/327 b/tests/generic/327
+index 2323e1e6a12ec8..18cfcd1f655bd7 100755
+--- a/tests/generic/327
++++ b/tests/generic/327
+@@ -47,7 +47,7 @@ _report_quota_blocks $SCRATCH_MNT
+ echo "Try to reflink again"
+ touch $testdir/file3
+ chown $qa_user $testdir/file3
+-su $qa_user -c "cp --reflink=always -f $testdir/file1 $testdir/file3" 2>&1 | _filter_scratch
++_su $qa_user -c "cp --reflink=always -f $testdir/file1 $testdir/file3" 2>&1 | _filter_scratch
+ _report_quota_blocks $SCRATCH_MNT
+ 
+ # success, all done
+diff --git a/tests/generic/328 b/tests/generic/328
+index 7071ded259ddb3..fa33bdb78dba12 100755
+--- a/tests/generic/328
++++ b/tests/generic/328
+@@ -47,12 +47,12 @@ setquota -u $qa_user 0 1024 0 0 $SCRATCH_MNT
+ _report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Try to dio write the whole file"
+-su $qa_user -c '$XFS_IO_PROG -d -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
++_su $qa_user -c '$XFS_IO_PROG -d -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
+ 	_filter_xfs_io_error
+ _report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Try to write the whole file"
+-su $qa_user -c '$XFS_IO_PROG -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
++_su $qa_user -c '$XFS_IO_PROG -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
+ 	_filter_xfs_io_error
+ _report_quota_blocks $SCRATCH_MNT
+ 
+diff --git a/tests/generic/355 b/tests/generic/355
+index b0f8fc45d2b5f4..6b4f7ebae86405 100755
+--- a/tests/generic/355
++++ b/tests/generic/355
+@@ -22,7 +22,7 @@ rm -f $testfile
+ 
+ do_io()
+ {
+-	su $qa_user -c "$XFS_IO_PROG -d -c 'pwrite 0 4k' $testfile" \
++	_su $qa_user -c "$XFS_IO_PROG -d -c 'pwrite 0 4k' $testfile" \
+ 		>>$seqres.full
+ }
+ 
+diff --git a/tests/generic/453 b/tests/generic/453
+index b7e686f37100da..04945ad1085b2d 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -196,7 +196,7 @@ setf "job offer\xef\xb9\x92pdf" "small full stop"
+ setf "job offer\xef\xbc\x8epdf" "fullwidth full stop"
+ setf "job offer\xdc\x81pdf" "syriac supralinear full stop"
+ setf "job offer\xdc\x82pdf" "syriac sublinear full stop"
+-setf "job offer\xea\x93\xb8pdf" "lisu letter tone mya ti"
++setf "job offer\xea\x93\xb8pdf" "li_su letter tone mya ti"
+ setf "job offer.pdf" "actual period"
+ 
+ # encoding hidden tag characters in filenames to create confusing names
+@@ -270,7 +270,7 @@ testf "job offer\xef\xb9\x92pdf" "small full stop"
+ testf "job offer\xef\xbc\x8epdf" "fullwidth full stop"
+ testf "job offer\xdc\x81pdf" "syriac supralinear full stop"
+ testf "job offer\xdc\x82pdf" "syriac sublinear full stop"
+-testf "job offer\xea\x93\xb8pdf" "lisu letter tone mya ti"
++testf "job offer\xea\x93\xb8pdf" "li_su letter tone mya ti"
+ testf "job offer.pdf" "actual period"
+ 
+ testf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
+@@ -307,7 +307,7 @@ if _check_xfs_scrub_does_unicode "$SCRATCH_MNT" "$SCRATCH_DEV"; then
+ 		grep -q "job offer.xef.xbc.x8epdf" $tmp.scrub || echo "No complaints about fullwidth full stop?"
+ 		grep -q "job offer.xdc.x81pdf" $tmp.scrub || echo "No complaints about syriac supralinear full stop?"
+ 		grep -q "job offer.xdc.x82pdf" $tmp.scrub || echo "No complaints about syriac sublinear full stop?"
+-		grep -q "job offer.xea.x93.xb8pdf" $tmp.scrub || echo "No complaints about lisu letter tone mya ti?"
++		grep -q "job offer.xea.x93.xb8pdf" $tmp.scrub || echo "No complaints about li_su letter tone mya ti?"
+ 		grep -q "job offer.*could be confused with" $tmp.scrub || echo "No complaints about confusing job offers?"
+ 		grep -q "job offer.xe2.x80.xa4.xe2.x80.x8dpdf" $tmp.scrub || echo "No complaints about one dot leader with invisible space?"
+ 		grep -q "llamapirate" $tmp.scrub || echo "No complaints about hidden llm instructions in filenames?"
+diff --git a/tests/generic/514 b/tests/generic/514
+index 7f3d9c16cb70a4..a2086a255c77c6 100755
+--- a/tests/generic/514
++++ b/tests/generic/514
+@@ -21,7 +21,7 @@ _scratch_mount
+ 
+ chmod a+rwx $SCRATCH_MNT
+ $XFS_IO_PROG -f -c "pwrite -S 0x18 0 1m" $SCRATCH_MNT/foo >>$seqres.full
+-su -s/bin/bash - $qa_user -c "ulimit -f 64 ; $XFS_IO_PROG -f -c \"reflink $SCRATCH_MNT/foo\" $SCRATCH_MNT/bar" >> $seqres.full 2>&1
++_su -s/bin/bash - $qa_user -c "ulimit -f 64 ; $XFS_IO_PROG -f -c \"reflink $SCRATCH_MNT/foo\" $SCRATCH_MNT/bar" >> $seqres.full 2>&1
+ 
+ sz="$(_get_filesize $SCRATCH_MNT/bar)"
+ if [ "$sz" -ne 0 ] && [ "$sz" -ne 65536 ]; then
+diff --git a/tests/generic/573 b/tests/generic/573
+index b310fccbddda56..d3f3296cb6bafa 100755
+--- a/tests/generic/573
++++ b/tests/generic/573
+@@ -56,7 +56,7 @@ $CHATTR_PROG -i $fsv_file
+ _fsv_scratch_begin_subtest "FS_IOC_MEASURE_VERITY doesn't require root"
+ _fsv_create_enable_file $fsv_file >> $seqres.full
+ chmod 444 $fsv_file
+-su $qa_user -c "$FSVERITY_PROG measure $fsv_file" >> $seqres.full
++_su $qa_user -c "$FSVERITY_PROG measure $fsv_file" >> $seqres.full
+ 
+ # success, all done
  status=0
- exit
-diff --git a/tests/generic/760 b/tests/generic/760
-index 4781a8d1eec4ec..f270636e56a377 100755
---- a/tests/generic/760
-+++ b/tests/generic/760
-@@ -19,9 +19,9 @@ _require_hugepage_fsx
- psize=`$here/src/feature -s`
- bsize=`$here/src/min_dio_alignment $TEST_DIR $TEST_DEV`
+diff --git a/tests/generic/600 b/tests/generic/600
+index 43f75376a10efc..31c832251ebb6f 100755
+--- a/tests/generic/600
++++ b/tests/generic/600
+@@ -33,7 +33,7 @@ setquota -t -u 0 1 $SCRATCH_MNT
+ # Soft inode limit 1, hard limit 5
+ setquota -u $qa_user 0 0 1 5 $SCRATCH_MNT
+ # Run qa user over soft limit and go over grace period
+-su $qa_user -c "touch $SCRATCH_MNT/file1 $SCRATCH_MNT/file2"
++_su $qa_user -c "touch $SCRATCH_MNT/file1 $SCRATCH_MNT/file2"
+ sleep 3
+ # Extend grace to now + 100s
+ now=`date +%s`
+diff --git a/tests/generic/601 b/tests/generic/601
+index 78b6a4aaa13748..320ac0c758b766 100755
+--- a/tests/generic/601
++++ b/tests/generic/601
+@@ -42,7 +42,7 @@ $XFS_QUOTA_PROG -x -c "timer -u -i -d 1" $SCRATCH_MNT
+ # Soft inode limit 1, hard limit 5
+ $XFS_QUOTA_PROG -x -c "limit -u isoft=1 ihard=5 $qa_user" $SCRATCH_MNT
+ # Run qa user over soft limit and go over grace period
+-su $qa_user -c "touch $SCRATCH_MNT/file1 $SCRATCH_MNT/file2"
++_su $qa_user -c "touch $SCRATCH_MNT/file1 $SCRATCH_MNT/file2"
+ sleep 3
+ # Extend grace to now + 100s
+ now=`date +%s`
+diff --git a/tests/generic/603 b/tests/generic/603
+index 2a75cf9e022750..b199f801a8f03f 100755
+--- a/tests/generic/603
++++ b/tests/generic/603
+@@ -66,13 +66,13 @@ test_grace()
+ 	echo "--- Test block quota ---"
+ 	# Firstly fit below block soft limit
+ 	echo "Write 225 blocks..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' \
++	_su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' \
+ 		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+ 	# Secondly overcome block soft limit
+ 	echo "Rewrite 250 blocks plus 1 byte, over the block softlimit..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' \
++	_su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' \
+ 		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+@@ -81,7 +81,7 @@ test_grace()
+ 	# Now sleep enough grace time and check that softlimit got enforced
+ 	sleep $((bgrace + 1))
+ 	echo "Try to write 1 one more block after grace..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
++	_su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
+ 		$dir/file2" 2>&1 >>$seqres.full | _filter_xfs_io_error | \
+ 		filter_enospc_edquot $type | tee -a $seqres.full
+ 	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+@@ -91,7 +91,7 @@ test_grace()
+ 	# space reservations on XFS
+ 	setquota -$type $qa_user 0 0 3 100 $SCRATCH_MNT 
+ 	echo "Create 2 more files, over the inode softlimit..."
+-	su $qa_user -c "touch $dir/file3 $dir/file4" 2>&1 >>$seqres.full | \
++	_su $qa_user -c "touch $dir/file3 $dir/file4" 2>&1 >>$seqres.full | \
+ 		_filter_scratch | tee -a $seqres.full
+ 	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Reset grace time here, make below grace time test more accurate
+@@ -99,7 +99,7 @@ test_grace()
+ 	# Wait and check grace time enforcement
+ 	sleep $((igrace+1))
+ 	echo "Try to create one more inode after grace..."
+-	su $qa_user -c "touch $dir/file5" 2>&1 >>$seqres.full | \
++	_su $qa_user -c "touch $dir/file5" 2>&1 >>$seqres.full | \
+ 		filter_enospc_edquot $type | _filter_scratch | \
+ 		tee -a $seqres.full
+ 	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+diff --git a/tests/generic/673 b/tests/generic/673
+index 8f6def9c78881a..6c54ade81f0cec 100755
+--- a/tests/generic/673
++++ b/tests/generic/673
+@@ -39,7 +39,7 @@ commit_and_check() {
  
--run_fsx -N 10000            -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
--run_fsx -N 10000  -o 8192   -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
--run_fsx -N 10000  -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
-+_run_hugepage_fsx -N 10000            -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
-+_run_hugepage_fsx -N 10000  -o 8192   -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
-+_run_hugepage_fsx -N 10000  -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
+ 	local cmd="$XFS_IO_PROG -c 'reflink $SCRATCH_MNT/b 0 0 1m' $SCRATCH_MNT/a"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/674 b/tests/generic/674
+index 1b711f27f39ed1..41fbdeb7d9eb17 100755
+--- a/tests/generic/674
++++ b/tests/generic/674
+@@ -42,7 +42,7 @@ commit_and_check() {
  
- status=0
- exit
+ 	local cmd="$XFS_IO_PROG -c 'dedupe $SCRATCH_MNT/b 0 0 1m' $SCRATCH_MNT/a"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/675 b/tests/generic/675
+index e66de84b546a25..87dfbdfe278dd2 100755
+--- a/tests/generic/675
++++ b/tests/generic/675
+@@ -44,7 +44,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c 'reflink $SCRATCH_MNT/b 0 0 1m' $SCRATCH_MNT/a"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/680 b/tests/generic/680
+index 07048db5cc39a9..1a418fa3b61b0b 100755
+--- a/tests/generic/680
++++ b/tests/generic/680
+@@ -38,7 +38,7 @@ chmod 0644 $localfile
+ cp $here/src/splice2pipe $tmp.splice2pipe
+ # Test unprivileged user's privilege escalation
+ echo "Test unprivileged user:"
+-su ${qa_user} -c "$tmp.splice2pipe $localfile 1 AAAAAAAABBBBBBBB"
++_su ${qa_user} -c "$tmp.splice2pipe $localfile 1 AAAAAAAABBBBBBBB"
+ _hexdump $localfile
+ 
+ # success, all done
+diff --git a/tests/generic/681 b/tests/generic/681
+index aef54205d26f3a..dc4252013fc058 100755
+--- a/tests/generic/681
++++ b/tests/generic/681
+@@ -55,7 +55,7 @@ ls -sld $scratchdir  >> $seqres.full
+ echo "fail quota" >> $seqres.full
+ for ((i = 0; i < dirents; i++)); do
+ 	name=$(printf "y%0254d" $i)
+-	su - "$qa_user" -c "ln $scratchfile $scratchdir/$name" 2>&1 | \
++	_su - "$qa_user" -c "ln $scratchfile $scratchdir/$name" 2>&1 | \
+ 		_filter_scratch | sed -e 's/y[0-9]*/yXXX/g'
+ 	test "${PIPESTATUS[0]}" -ne 0 && break
+ done
+diff --git a/tests/generic/682 b/tests/generic/682
+index 3572af173cbe63..6914a549dc0975 100755
+--- a/tests/generic/682
++++ b/tests/generic/682
+@@ -65,7 +65,7 @@ echo "fail quota" >> $seqres.full
+ for ((i = 0; i < dirents; i++)); do
+ 	name=$(printf "y%0254d" $i)
+ 	ln $scratchfile $stagedir/$name
+-	su - "$qa_user" -c "mv $stagedir/$name $scratchdir/$name" 2>&1 | \
++	_su - "$qa_user" -c "mv $stagedir/$name $scratchdir/$name" 2>&1 | \
+ 		_filter_scratch | _filter_mv_output
+ 	test "${PIPESTATUS[0]}" -ne 0 && break
+ done
+diff --git a/tests/generic/683 b/tests/generic/683
+index cc9a9786bde4bf..883905da5f9082 100755
+--- a/tests/generic/683
++++ b/tests/generic/683
+@@ -49,7 +49,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/684 b/tests/generic/684
+index 2ca036fe518050..9cdfe4ab4f4463 100755
+--- a/tests/generic/684
++++ b/tests/generic/684
+@@ -49,7 +49,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/685 b/tests/generic/685
+index de07a798a68594..5567255032e1c7 100755
+--- a/tests/generic/685
++++ b/tests/generic/685
+@@ -49,7 +49,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/686 b/tests/generic/686
+index fc6761fe61a91e..a3fa8e060aeab6 100755
+--- a/tests/generic/686
++++ b/tests/generic/686
+@@ -49,7 +49,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/687 b/tests/generic/687
+index 82dce88b85ef6d..0c4b09d29fe5e6 100755
+--- a/tests/generic/687
++++ b/tests/generic/687
+@@ -49,7 +49,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c '$command $start $end' $junk_file"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/688 b/tests/generic/688
+index e491d5cf30af23..77db29461415b3 100755
+--- a/tests/generic/688
++++ b/tests/generic/688
+@@ -51,7 +51,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c 'falloc 0 64k' $junk_file"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/691 b/tests/generic/691
+index f33d6edf18a1d1..30ae4a1e384a05 100755
+--- a/tests/generic/691
++++ b/tests/generic/691
+@@ -75,11 +75,11 @@ exercise()
+ 	setquota -${type} -t 86400 86400 $SCRATCH_MNT
+ 	repquota -v -${type} $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+ 	# Exceed the soft quota limit a bit at first
+-	su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 2m' -c fsync ${file}.0" >>$seqres.full
++	_su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 2m' -c fsync ${file}.0" >>$seqres.full
+ 	# Write more data more times under soft quota limit exhausted condition,
+ 	# but not reach hard limit. To make sure each write won't trigger EDQUOT.
+ 	for ((i=1; i<=100; i++));do
+-		su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.$i" >>$seqres.full
++		_su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.$i" >>$seqres.full
+ 		if [ $? -ne 0 ];then
+ 			echo "Unexpected error (type=$type)!"
+ 			break
+@@ -89,9 +89,9 @@ exercise()
+ 
+ 	# As we've tested soft limit, now exceed the hard limit and give it a
+ 	# test in passing.
+-	su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 100m' -c fsync ${file}.hard.0" 2>&1 >/dev/null | filter_quota $type
++	_su $qa_user -c "$XFS_IO_PROG -f -t -c 'pwrite 0 100m' -c fsync ${file}.hard.0" 2>&1 >/dev/null | filter_quota $type
+ 	for ((i=1; i<=10; i++));do
+-		su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.hard.$i" 2>&1 | filter_quota $type
++		_su "$qa_user" -c "$XFS_IO_PROG -f -c 'pwrite 0 1m' -c fsync ${file}.hard.$i" 2>&1 | filter_quota $type
+ 	done
+ }
+ 
+diff --git a/tests/generic/721 b/tests/generic/721
+index a9565f18917831..75d5063c2d1701 100755
+--- a/tests/generic/721
++++ b/tests/generic/721
+@@ -52,7 +52,7 @@ cmd="$XFS_IO_PROG \
+ 	-c 'pwrite -S 0x60 44k 55k -b 1m' \
+ 	-c 'commitupdate -q' \
+ 	\"$dir/a\""
+-su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
++_su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
+ 
+ filesnap "after commit" $dir/a
+ echo
+@@ -67,7 +67,7 @@ cmd="$XFS_IO_PROG \
+ 	-c 'pwrite -S 0x60 0 55k' \
+ 	-c 'commitupdate -q' \
+ 	\"$dir/a\""
+-su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
++_su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
+ 
+ filesnap "after shorten commit" $dir/a
+ echo
+@@ -81,7 +81,7 @@ cmd="$XFS_IO_PROG \
+ 	-c \"pwrite -S 0x60 0 $(( (blksz * nrblks) + 37373 ))\" \
+ 	-c 'commitupdate -q' \
+ 	\"$dir/a\""
+-su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
++_su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
+ 
+ filesnap "after lengthen commit" $dir/a
+ echo
+@@ -96,7 +96,7 @@ cmd="$XFS_IO_PROG \
+ 	-c 'pwrite -S 0x60 44k 55k -b 1m' \
+ 	-c 'cancelupdate' \
+ 	\"$dir/a\""
+-su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
++_su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
+ 
+ filesnap "after cancel" $dir/a
+ echo
+@@ -115,7 +115,7 @@ cmd="$XFS_IO_PROG \
+ 	-c 'pwrite -S 0x61 22k 11k -b 1m' \
+ 	-c 'commitupdate -q' \
+ 	\"$dir/a\""
+-su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
++_su -s /bin/bash -c "$cmd" $qa_user 2>&1 | _filter_xfs_io | _filter_test_dir
+ 
+ filesnap "after fail commit" $dir/a
+ echo
+diff --git a/tests/generic/726 b/tests/generic/726
+index 131ac5b503e1a4..d2a2a2cebe522e 100755
+--- a/tests/generic/726
++++ b/tests/generic/726
+@@ -46,7 +46,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c 'startupdate' -c 'pwrite -S 0x57 0 1m' -c 'commitupdate' $SCRATCH_MNT/a"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/generic/727 b/tests/generic/727
+index ee7ed9760a165a..9551e47cb13b06 100755
+--- a/tests/generic/727
++++ b/tests/generic/727
+@@ -54,7 +54,7 @@ commit_and_check() {
+ 
+ 	local cmd="$XFS_IO_PROG -c 'startupdate' -c 'pwrite -S 0x57 0 1m' -c 'commitupdate' $SCRATCH_MNT/a"
+ 	if [ -n "$user" ]; then
+-		su - "$user" -c "$cmd" >> $seqres.full
++		_su - "$user" -c "$cmd" >> $seqres.full
+ 	else
+ 		$SHELL -c "$cmd" >> $seqres.full
+ 	fi
+diff --git a/tests/xfs/720 b/tests/xfs/720
+index f928cc43d3bc54..68a6c7f6e2d584 100755
+--- a/tests/xfs/720
++++ b/tests/xfs/720
+@@ -61,7 +61,7 @@ $XFS_QUOTA_PROG -x -c 'report -u' $SCRATCH_MNT >> $seqres.full
+ 
+ # Fail at appending the file as qa_user to ensure quota enforcement works
+ echo "fail quota" >> $seqres.full
+-su - "$qa_user" -c "$XFS_IO_PROG -c 'pwrite 10g 1' $scratchfile" >> $seqres.full
++_su - "$qa_user" -c "$XFS_IO_PROG -c 'pwrite 10g 1' $scratchfile" >> $seqres.full
+ $XFS_QUOTA_PROG -x -c 'report -u' $SCRATCH_MNT >> $seqres.full
+ 
+ # success, all done
+diff --git a/tests/xfs/795 b/tests/xfs/795
+index 5a67f02ec92eca..217f96092a4c42 100755
+--- a/tests/xfs/795
++++ b/tests/xfs/795
+@@ -63,7 +63,7 @@ $XFS_QUOTA_PROG -x -c 'report -u' $SCRATCH_MNT >> $seqres.full
+ echo "fail quota" >> $seqres.full
+ for ((i = 0; i < dirents; i++)); do
+ 	name=$(printf "y%0254d" $i)
+-	su - "$qa_user" -c "ln $scratchfile $scratchdir/$name" 2>&1 | \
++	_su - "$qa_user" -c "ln $scratchfile $scratchdir/$name" 2>&1 | \
+ 		_filter_scratch | sed -e 's/y[0-9]*/yXXX/g'
+ 	test "${PIPESTATUS[0]}" -ne 0 && break
+ done
+diff --git a/tests/xfs/803 b/tests/xfs/803
+index e3277181b41af0..4e5a58c4a3328e 100755
+--- a/tests/xfs/803
++++ b/tests/xfs/803
+@@ -88,7 +88,7 @@ echo set too long value
+ $XFS_IO_PROG -c "setfsprops $propname=$longpropval" $TEST_DIR
+ 
+ echo not enough permissions
+-su - "$qa_user" -c "$XFS_IO_PROG -c \"setfsprops $propname=$propval\" $TEST_DIR" 2>&1 | _filter_test_dir
++_su - "$qa_user" -c "$XFS_IO_PROG -c \"setfsprops $propname=$propval\" $TEST_DIR" 2>&1 | _filter_test_dir
+ 
+ echo "*** DB TEST ***"
+ 
 
