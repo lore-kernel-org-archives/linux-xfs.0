@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773091E766F;
-	Wed, 12 Feb 2025 03:32:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C6E51DDA1B;
+	Wed, 12 Feb 2025 03:32:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739331136; cv=none; b=YOi4c/WnPzbEQgn85YG2C0EZ5S+/JbUeG4ZQBoasaPWKZSqAXuppaXWmXq5FqgV3smBKGnDnJmq0d4jYafViyxSb3prCDWGSYNLYpFxQ63+xckC4HNLJMSOfO8sm7V+0GdrBoYXpJ9WhjSjH8xchLVbGT4N4iXmVVrcQmN9pi08=
+	t=1739331151; cv=none; b=eUIv6W135wPiSOcRMzFYspsVfK1ugKWjzMBZ3X7/FFra6Sf+k3vPhng4eOTWGwx5ElVP02aOJL4nzR/ml/cEcl3+AJbXYIBLBh0fj7bmYW4zhtzr7oarXVUVfUHz8bhbDyCQ01r9dsZXA2ckqK33jhAEwN+i7O8TkAjitDNbdi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739331136; c=relaxed/simple;
-	bh=tsYskbEKM0ZpkngKnTqGzDf656K9u8CPVDIhgx1Jhmg=;
+	s=arc-20240116; t=1739331151; c=relaxed/simple;
+	bh=8Se6yxokSnj6EWTqOripk2jIabIyG0rLTCS0st/KCkY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ckQDXAU/rZVdEXjtMp2DpIENDCTx7eQgxBg/gusLr1yYfrf8ZxsT6Az+5aIqdbKTHM2nWpCyCetciqwWF97yPCBbY/6Nb+xyNYATvx0fv2kL309R+khNIn1jcxYAXf2KQn+nv/b0/eFM9QEmgQVqsYVzyNeFO9wg2kh1eR6nr1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=upVHhlSY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pc5g3fLW6ZrZrTkkuebMc6HCcgUdjtcN7c9n6yh2lSsrGDe5bcml3u8myawTkwele6eL4LBNMI7qECyR6G4M1hbYf/YF5zFE9t2lSGkv/weoimCoTpezl61N8dOlR8GcvMOp24BHnLipexuFXeCPthKEHkqV+6Zqhe8louHLUC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AIN0smgP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="upVHhlSY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8EAEC4CEDF;
-	Wed, 12 Feb 2025 03:32:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AIN0smgP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05CA8C4CEE4;
+	Wed, 12 Feb 2025 03:32:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739331134;
-	bh=tsYskbEKM0ZpkngKnTqGzDf656K9u8CPVDIhgx1Jhmg=;
+	s=k20201202; t=1739331151;
+	bh=8Se6yxokSnj6EWTqOripk2jIabIyG0rLTCS0st/KCkY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=upVHhlSY0VIbqtbhBjbzLFyveJOAejRjY/zYr+yAo1bQmyf635j0Cj74JqTmeVNZ2
-	 x6vE62OMs2vX3apILc54uKUOjipNCVTS5joUXtF/8tDiZHzNKHLfSYMFXIJhctd97q
-	 WAtQqN9vy/wjw6x8IDI4CqY6VCrdwa+T9YsgMFhlSL/Lu96v0uUnJ+wMVlxBpb1gj8
-	 HqxfHuwr6S3p1Rn1t5/4Z2x7XfR+Db9GfI5wfkjOr9C3Jwk6LaLqpgwBJf9gDaY35N
-	 aqz/z1iKVwHbcH/abWEQgbY3ZcmrhoC19WvmW+Mte9YnRyvlNrd6iu9etXnYdci7bW
-	 BAEGfBAg7O5jA==
-Date: Tue, 11 Feb 2025 19:32:14 -0800
-Subject: [PATCH 06/34] common/rc: revert recursive unmount in
- _clear_mount_stack
+	b=AIN0smgPU19daiQxtDZacniEV48MKZn8Mkz6QuyHLYD3QKL76klniHpOpXEWSTsAW
+	 AZ8ti0sHBeHko6VgCJZHmw2r5M4K8dZxwmrutTknxzXlXFmKtGWOlyNkOMnex7+FUK
+	 H0dUaiPUcvAKPESLoxQqioG5QrWRR2MaI2vSZCN3yiAWkV2gPzf1TFxyo7GW1GkT3M
+	 uq0wi1c051xWZcXKx21UpRU5+N05ePfV4qsgzOsJH3tkhsxJFkM6QCvJ1BLSs6T8sJ
+	 Y8Rh2VWD23dHSE/pXyy3hF83meSO6Cew/8W3QqblBnwUx551eDMh4Jf9TMIpcsLVHb
+	 E5+pG8lKtyu1A==
+Date: Tue, 11 Feb 2025 19:32:30 -0800
+Subject: [PATCH 07/34] common/dump: don't replace pids arbitrarily
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: dchinner@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173933094446.1758477.509311653788264022.stgit@frogsfrogsfrogs>
+Message-ID: <173933094462.1758477.11155194081302898676.stgit@frogsfrogsfrogs>
 In-Reply-To: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,88 +45,35 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Zorro complained about the following regression in generic/589 that I
-can't reproduce here on Debian 12:
+In the next patch we'll run tests in a pid namespace, which means that
+the test process will have a very low pid.  This low pid situation
+causes problems with the dump tests because they unconditionally replace
+it with the word "PID", which causes unnecessary test failures.
 
->  --- /dev/fd/63  2025-01-08 19:53:49.621421512 -0500
->  +++ generic/589.out.bad 2025-01-08 19:53:49.244099127 -0500
->  @@ -30,6 +30,7 @@
->   mpC SCRATCH_DEV
->   mpC SCRATCH_DEV
->   ======
->  +umount: /mnt/xfstests/test/589-dst: not mounted
->
-> It fails on generic/589 -> end_test -> _clear_mount_stack
->
->   ...
->   + end_test
->   + _clear_mount_stack
->   + '[' -n '/mnt/test/589-dst/201227_mpC /mnt/test/589-src/201227_mpA /mnt/test/589-dst /mnt/test/589-dst /mnt/test/589-src' ']'
->   + _unmount -R /mnt/test/589-dst/201227_mpC /mnt/test/589-src/201227_mpA /mnt/test/589-dst /mnt/test/589-dst /mnt/test/589-src
->   + local outlog=/tmp/201227.201227.umount
->   + local errlog=/tmp/201227.201227.umount.err
->   + rm -f /tmp/201227.201227.umount /tmp/201227.201227.umount.err
->   + /usr/bin/umount -R /mnt/test/589-dst/201227_mpC /mnt/test/589-src/201227_mpA /mnt/test/589-dst /mnt/test/589-dst /mnt/test/589-src
->   + local res=1
->   + '[' -s /tmp/201227.201227.umount ']'
->   + '[' -s /tmp/201227.201227.umount.err ']'
->   + cat /tmp/201227.201227.umount.err
->   + cat /tmp/201227.201227.umount.err
->   umount: /mnt/test/589-dst: not mounted
->
-> The _get_mount already save all mount points into MOUNTED_POINT_STACK,
-> MOUNTED_POINT_STACK="/mnt/test/589-dst/201227_mpC /mnt/test/589-src/201227_mpA /mnt/test/589-dst /mnt/test/589-dst /mnt/test/589-src"
->
-> '-/mnt/test                                     /dev/sda5                                xfs        rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=256,noquota
->   |-/mnt/test/589-src                           /dev/sda6                                xfs        rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=256,noquota
->   | '-/mnt/test/589-src/223262_mpA              /dev/sda6                                xfs        rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=256,noquota
->   '-/mnt/test/589-dst                           /dev/sda6                                xfs        rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=256,noquota
->     |-/mnt/test/589-dst                         /dev/sda6                                xfs        rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=256,noquota
->     | '-/mnt/test/589-dst/223262_mpC            /dev/sda6                                xfs        rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=256,noquota
->     '-/mnt/test/589-dst/223262_mpC              /dev/sda6                                xfs        rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=64k,sunit=128,swidth=256,noquota
->
-> Orignal _clear_mount_stack trys to umount all of them. But Dave gave -R option to
-> umount command, so
->   `umount -R /mnt/test/589-dst/201227_mpC` and `umount -R /mnt/test/589-src/201227_mpA`
-> already umount /mnt/test/589-dst and /mnt/test/589-src. recursively.
-> Then `umount -R /mnt/test/589-dst` shows "not mounted".
+Initially I was going to fix it by bracketing the regexp with a
+whitespace/punctuation/eol/sol detector, but then I decided to remove it
+see how many sheep came barreling through.  None did, so I removed it
+entirely.  The commit adding it (linked below) was not insightful at
+all.
 
-I /think/ this is a result of commit 4c6bc4565105e6 performing this
-"conversion" in _clear_mount_stack:
-
--		$UMOUNT_PROG $MOUNTED_POINT_STACK
-+		_unmount -R $MOUNTED_POINT_STACK
-
-This is not a 1:1 conversion here -- previously there was no
--R(ecursive) unmount option, and now there is.  It looks as though
-umount parses /proc/self/mountinfo to figure out what to unmount, and
-maybe on Zorro's system it balks if the argument passed is not present
-in that file?  Debian 12's umount doesn't care.
-
-Regardless, there was no justification for this change in behavior that
-was buried in what is otherwise a hoist patch, so revert it.  The author
-can resubmit the change with proper documentation.
-
-Cc: <fstests@vger.kernel.org> # v2024.12.08
-Fixes: 4c6bc4565105e6 ("fstests: clean up mount and unmount operations")
+Fixes: 19beb54c96e363 ("Extra filtering as part of IRIX/Linux xfstests reconciliation for dump.")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- common/rc |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ common/dump |    1 -
+ 1 file changed, 1 deletion(-)
 
 
-diff --git a/common/rc b/common/rc
-index 4658e3b8be747f..07646927bad523 100644
---- a/common/rc
-+++ b/common/rc
-@@ -334,7 +334,7 @@ _put_mount()
- _clear_mount_stack()
- {
- 	if [ -n "$MOUNTED_POINT_STACK" ]; then
--		_unmount -R $MOUNTED_POINT_STACK
-+		_unmount $MOUNTED_POINT_STACK
- 	fi
- 	MOUNTED_POINT_STACK=""
- }
+diff --git a/common/dump b/common/dump
+index 3761c16100d808..6dcd6250c33147 100644
+--- a/common/dump
++++ b/common/dump
+@@ -907,7 +907,6 @@ _dir_filter()
+     -e "s#$SCRATCH_MNT#SCRATCH_MNT#g"       \
+     -e "s#$dump_sdir#DUMP_SUBDIR#g"   \
+     -e "s#$restore_sdir#RESTORE_SUBDIR#g" \
+-    -e "s#$$#PID#g" \
+     -e "/Only in SCRATCH_MNT: .use_space/d" \
+     -e "s#$RESULT_DIR/##g" \
+ 
 
