@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CAFE271839;
-	Wed, 12 Feb 2025 03:31:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D16DC1D86E6;
+	Wed, 12 Feb 2025 03:31:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739331088; cv=none; b=PR3+gGpZJ8X+UuYQNpXddOI1/GII63un7iZPs/7RWbVr+z1xpeelfLS8YckTpkiKEhzvB4PjFP2B2SpmlNnotAswTNHjiMwhda4jG9yOFfNGDz1V81AGgGTyqR1px94W6Vb8GZ78KrsCbtaf9ohLz+MTG1rYqLNCX7XMuZtGIjs=
+	t=1739331103; cv=none; b=TIWKsPqkUUjgRwnKy0Ncc8Vh7DVGFHRl6oOyRN3fTCASOqPqUNPUjCi6gddyQ2j/+qBC/BI3BkW146HNS9BUHlFQJyrGG+VccOMR1pfX5xaob0ARYKJ8Hw7YXR9PYKMq+DcowGRf0OpKchgT80XPN6Y8Y2lRRnIUd3ldv7YR5dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739331088; c=relaxed/simple;
-	bh=4Vo3B1NoJiPb9nFIR2rlIEtOJQFxP3eMgT4R8v4e5o8=;
+	s=arc-20240116; t=1739331103; c=relaxed/simple;
+	bh=/2n+oEdRStjDZApaIexzeFtFcgjKHP56PTxV6YD1OXQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IwEuJdU8ogzKMIx5FlA1R+YEjWenOBZPOc1lk9edznsGcJbzuB0a5r7aYsqfjgQJaY2Zj0y+2OmjDwghAtX07vOclcpBhTutyiELOChpt1lvTrD2TvJtH2KbWq8FQr8YLj2XSjj5N09G0D8funyn21aFSNfBMqrGM75PIzOs4XA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iVF03VkT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Kimkf+K3ORB/0DyC3bztQRmAMY9mBLKTp9jxVhmCIs8lxnmlvnY+YKUIL4ghCtjszezpLyBnWXBV4sfRZDGA1hK8mNOu4dXnjyHHgPrvlaOLkiv4WspRHF+EYHDhMz3R2u+lhzxVICSokUJf9BviEL+JPkri67JJUdg4MFeEdUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mEI/4p2j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iVF03VkT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0234C4CEDF;
-	Wed, 12 Feb 2025 03:31:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mEI/4p2j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C219C4CEE4;
+	Wed, 12 Feb 2025 03:31:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739331088;
-	bh=4Vo3B1NoJiPb9nFIR2rlIEtOJQFxP3eMgT4R8v4e5o8=;
+	s=k20201202; t=1739331103;
+	bh=/2n+oEdRStjDZApaIexzeFtFcgjKHP56PTxV6YD1OXQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iVF03VkT5vA+M9LnPv5F1YMeou2Z878h5jT85/3F9y77QQY2NCZrn0SLE1QFMDEpv
-	 qfDHQ8gV9zheKoDaJLbzxm6RtYk1r2o11FaXj6gP7JeZD9IPgjiyd/TgV67SJiDOxI
-	 S6cS6SwXH3/Xv8wVDYbfmZI9O2TR0QCN/8HiLbBEumJIReDw0NS5wZRNqP+AE5x8GD
-	 MYaluftHNuC+pPDXak6iBdWr3rybF7ccQZg6+KvKmKFdK7HRARIGsk546Q3N83r/7f
-	 cRz0WhO8AsHe3EvAkDFostwjvENvUNgSRt6c/TdlByfVKeafbwK8Vj5P3WcKGKg/K4
-	 iz+VPGtGZOXhA==
-Date: Tue, 11 Feb 2025 19:31:27 -0800
-Subject: [PATCH 03/34] metadump: fix cleanup for v1 metadump testing
+	b=mEI/4p2jqhW5voLFL2G5AI7FT9epVF9XPhcIBIBCo02k+j2UKLaYeZ7OOtjKC7AJT
+	 b7CbFahsQrdcC2ecGwO0ScJ/2fg5dh1Xe5Z03SEmWnObP9hNRuEkUEPNESyPnSB+If
+	 Qy48S7V8Sqy+i20Nv7eIA9FNaF54v1Z+1T8JrEiHlZR4Y4iFArLqdJ5eeck1GhwluI
+	 NVaIl18FJFg5HFY8UWFRcU2PJr17zdHbqjN1W3/5NlMUQbsk2m13AAhpj+vv/nmrsr
+	 yK5xy+IY4gn/Qtatk5rZvCKG7v65utocPf+FzfWkmo4Z/CiUMaa2k+5nj3W2k5qfkm
+	 3bPB6xXG13JaQ==
+Date: Tue, 11 Feb 2025 19:31:43 -0800
+Subject: [PATCH 04/34] generic/019: don't fail if fio crashes while shutting
+ down
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: dchinner@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173933094400.1758477.17916073142035868763.stgit@frogsfrogsfrogs>
+Message-ID: <173933094415.1758477.15609327294422681469.stgit@frogsfrogsfrogs>
 In-Reply-To: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,56 +46,64 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In commit ce79de11337e38, the metadump v2 tests were updated to leave
-the names of loop devices in some global variables so that the cleanup
-method can find them and remove the loop devices.  Inexplicably, the
-metadump v1 test function was not upgraded.  Do so now.
+My system (Debian 12) has fio 3.33.  Once in a while, fio crashes while
+shutting down after it receives a SIGBUS on account of the filesystem
+going down.  This causes the test to fail with:
 
-Cc: <fstests@vger.kernel.org> # v2024.12.08
-Fixes: ce79de11337e38 ("fstests: clean up loop device instantiation")
+generic/019       - output mismatch (see /var/tmp/fstests/generic/019.out.bad)
+    --- tests/generic/019.out   2024-02-28 16:20:24.130889521 -0800
+    +++ /var/tmp/fstests/generic/019.out.bad    2025-01-03 15:00:35.903564431 -0800
+    @@ -5,5 +5,6 @@
+
+     Start fio..
+     Force SCRATCH_DEV device failure
+    +/tmp/fstests/tests/generic/019: line 112: 90841 Segmentation fault      $FIO_PROG $fio_config >> $seqres.full 2>&1
+     Make SCRATCH_DEV device operable again
+     Disallow global fail_make_request feature
+    ...
+    (Run 'diff -u /tmp/fstests/tests/generic/019.out /var/tmp/fstests/generic/019.out.bad'  to see the entire diff)
+
+because the wait command will dutifully report fatal signals that kill
+the fio process.  Unfortunately, a core dump shows that we blew up in
+some library's exit handler somewhere:
+
+(gdb) where
+#0  unlink_chunk (p=p@entry=0x55b31cb9a430, av=0x7f8b4475ec60 <main_arena>) at ./malloc/malloc.c:1628
+#1  0x00007f8b446222ff in _int_free (av=0x7f8b4475ec60 <main_arena>, p=0x55b31cb9a430, have_lock=<optimized out>, have_lock@entry=0) at ./malloc/malloc.c:4603
+#2  0x00007f8b44624f1f in __GI___libc_free (mem=<optimized out>) at ./malloc/malloc.c:3385
+#3  0x00007f8b3a71cf0e in ?? () from /lib/x86_64-linux-gnu/libtasn1.so.6
+#4  0x00007f8b4426447c in ?? () from /lib/x86_64-linux-gnu/libgnutls.so.30
+#5  0x00007f8b4542212a in _dl_call_fini (closure_map=closure_map@entry=0x7f8b44465620) at ./elf/dl-call_fini.c:43
+#6  0x00007f8b4542581e in _dl_fini () at ./elf/dl-fini.c:114
+#7  0x00007f8b445ca55d in __run_exit_handlers (status=0, listp=0x7f8b4475e820 <__exit_funcs>, run_list_atexit=run_list_atexit@entry=true, run_dtors=run_dtors@entry=true)
+    at ./stdlib/exit.c:116
+#8  0x00007f8b445ca69a in __GI_exit (status=<optimized out>) at ./stdlib/exit.c:146
+#9  0x00007f8b445b3251 in __libc_start_call_main (main=main@entry=0x55b319278e10 <main>, argc=argc@entry=2, argv=argv@entry=0x7ffec6f8b468) at ../sysdeps/nptl/libc_start_call_main.h:74
+#10 0x00007f8b445b3305 in __libc_start_main_impl (main=0x55b319278e10 <main>, argc=2, argv=0x7ffec6f8b468, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>,
+    stack_end=0x7ffec6f8b458) at ../csu/libc-start.c:360
+#11 0x000055b319278ed1 in _start ()
+
+This isn't a filesystem failure, so mask this by shovelling the output
+to seqres.full.
+
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- common/metadump |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ tests/generic/019 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/common/metadump b/common/metadump
-index 493f8b6379dc0b..a4ec9a7f921acf 100644
---- a/common/metadump
-+++ b/common/metadump
-@@ -61,7 +61,6 @@ _xfs_verify_metadump_v1()
- 	local metadump_file="$XFS_METADUMP_FILE"
- 	local version=""
- 	local data_img="$XFS_METADUMP_IMG.data"
--	local data_loop
+diff --git a/tests/generic/019 b/tests/generic/019
+index bed916b53f98e5..676ff27dab8062 100755
+--- a/tests/generic/019
++++ b/tests/generic/019
+@@ -109,7 +109,7 @@ _workout()
+ 	    _fail "failed: still able to perform integrity fsync on $SCRATCH_MNT"
  
- 	# Force v1 if we detect v2 support
- 	if [[ $MAX_XFS_METADUMP_FORMAT > 1 ]]; then
-@@ -75,18 +74,19 @@ _xfs_verify_metadump_v1()
- 	SCRATCH_DEV=$data_img _scratch_xfs_mdrestore $metadump_file
+ 	_kill_fsstress
+-	wait $fio_pid
++	wait $fio_pid &>> $seqres.full # old fio can crash on EIO, ignore segfault reporting
+ 	unset fio_pid
  
- 	# Create loopdev for data device so we can mount the fs
--	data_loop=$(_create_loop_device $data_img)
-+	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
- 
- 	# Mount fs, run an extra test, fsck, and unmount
--	SCRATCH_DEV=$data_loop _scratch_mount
-+	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV _scratch_mount
- 	if [ -n "$extra_test" ]; then
--		SCRATCH_DEV=$data_loop $extra_test
-+		SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV $extra_test
- 	fi
--	SCRATCH_DEV=$data_loop _check_xfs_scratch_fs
--	SCRATCH_DEV=$data_loop _scratch_unmount
-+	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV _check_xfs_scratch_fs
-+	_unmount $METADUMP_DATA_LOOP_DEV
- 
- 	# Tear down what we created
--	_destroy_loop_device $data_loop
-+	_destroy_loop_device $METADUMP_DATA_LOOP_DEV
-+	unset METADUMP_DATA_LOOP_DEV
- 	rm -f $data_img
- }
- 
+ 	# We expect that broken FS still can be umounted
 
