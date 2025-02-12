@@ -1,77 +1,68 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5E4F4FA;
-	Wed, 12 Feb 2025 12:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A488F209F4B
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 13:08:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739364144; cv=none; b=KXzNTUafju/3dz97R+6D8kZ7mGNiFtyQOTSxZAb4g7JHFEr/8WfC6iv3dcH6b5UfXqS4Eupg1/EyG9Y67zB7CsYTZBgCo6kjy0Rwj6WdKHkmu4QrJ8/3TWE++a0NCqfQ6zeAmNQTlYSDY9F0jAP6xaoIuEghEXXug0ZLhm3v6jw=
+	t=1739365685; cv=none; b=JO4N4Iyb1jdYbbsK6ebTldty7EEF2VP1SRC/WQhha2vLUTN2zx0uWFErkaZiywvaF3rwotNpCvihhvvwabJGQOk/WGndqQ+1kAmUBny61ckC49vou0LagABXgOjzsApbXi+7r3U4RSxvJnuQrbkaCHfvN7MxnCkRxqtkq7EfwIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739364144; c=relaxed/simple;
-	bh=c4LVZDb8JVr8gzjdz7Z5FYQBjgYEm1csVXr4bPtjWAI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EUQXJHpmoYdZRHHAtd0rkVFusj1iGizZotQ/cJmllwmvaC38CZigTH7c22qMtLViMLOWl8IWl49n5C2iJGxC0/hvJVtTJpEhL6iMjH6CvAYr+lpq4VmK7awB8SEiVxZEJCZDxyFgv2T7SpP+1K1y1Ar0696Z9OhOKR+ZBcUrTO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Qd++t8Uu; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1739365685; c=relaxed/simple;
+	bh=Xlz7lh5nb4tKA4hMucrgKfSq16jZXHPDVgIo0xXrdQ8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=Y5IYVwQtTYyD4PLb1jaE7DNzoUI7POyV9f0033XxGB7W2/5W1F5BC0pz56pkMQejS38hzxQzi3KdF7/m5qxwlYPkxU5uWWKjAD3VKv2DeFazLJTsiIKx8zy9U5nVG+0Rax7sSRvE0ph1AcPf3M4jL5njCpcIb/pI97EKHCKYjn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=SoMnpL3+; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qd++t8Uu"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-21fa56e1583so51136085ad.3;
-        Wed, 12 Feb 2025 04:42:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1739364142; x=1739968942; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ILSZ2TlqgYiobcvK/I9xuSSgxNUMr42iC2d9uSuSt7I=;
-        b=Qd++t8UuYk1DT9SlqbY8qOYmtSTrvJ1Uloz7WKEuGqBoixX2ETIDahwAjIir76Woaf
-         TRk2z7dribKBeo0dGEaJJSDJewhuVbpitJrQi7+oPkASDarvjbKsS2/eBvMQFie3CdoF
-         64aOMlRk0O3qRqBG/IQLMhtLKLJNS1bwQ1/WoNJgUf6hmeQxqPjI4pJ/adyy7T+xkNnU
-         Sq20Bfesu7Ej0TGDe2+9rrx4gfEevD4Q0G7tlhcz7w4MdeSsBxqdBi7zukd0Q6gfjRY/
-         UY4XBIs2Zim0M1YV3HJaRDcpyrLQHvFWok0C7FLkienPaDQkn1AnuwJdnxMdFlrYBIjF
-         wp6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739364142; x=1739968942;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ILSZ2TlqgYiobcvK/I9xuSSgxNUMr42iC2d9uSuSt7I=;
-        b=wQZ6qUElP0rnKG9f6qAEdudNff7g8lJZHT6vF/YGVp7o123Ux45fnT8qSLGnwwim71
-         J6O5v7F7QS8+v/QX568ZBsoqtBGJ02FeIYAXaR3XxaZS+AYngnRM0TMFNN6hXUSaNXyb
-         U1Joy67k/ImOvdmMGkjLADqwAsdDA4PenqW+c1kZ9B37rVA9AJTc1REWCnRNtZz4C1HS
-         xiEnhdPRoKVu9IAYDx+zgMm9q0oB1/J80ULHVINEpRbO6yRpCFfYLUXrdncsVt31umj4
-         qo+CeZP4RVOzjv4+7qbUMXUKC+XivoITxC9RqcUaIgbhJdrRd3pD3PBw3At5cUjUGPf7
-         p32Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWQXKjKxuLntvufFNfA+3VvvG4PYCJIXN3cyIOXy6j2u5uU0AooBNXs8CwMQUxQhYPp5Pq0UEUdYQs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwaktHbq1T+Xtnf/4BwLMGZP5PQYbzQNGn7dbce+ix6TBBHoCie
-	cvmg9IYq6n4vemNLZmPtSn71t3HJmqRbXRsan0E+Mkm41Tjgctet7oGEOg==
-X-Gm-Gg: ASbGncupQ++u37E4zfICiOjVg8k/8jsnKFkwIVcH6f8udOsnrTPrM7jguDgvhnwIhyc
-	FgyjRcXPumtXnkYTvFaznvTZIAObKa13Lr8BCeBnQ9K1rP15aBK4OFKWVL5XrXMqGIqQI20ik8/
-	0Mdb0iotznBYLXJzu/39B9aDB859pa9vLAmdXNCDXYwuDOn1BrHK7BDnjdi2Y2e+UIjHfNec0zK
-	HWqyD+qolPqjZw9GmW8Vg2hsilojaWRNZ4gDGYx5iyRdRK9HszW8t+cuOiQSfVD0cn2HPi6prgK
-	5hENC8CoZUsD3XNt2SU=
-X-Google-Smtp-Source: AGHT+IGM+SqfUDe3ENV6cVog26MQlu4xZNnjizXEHulc8DtoyP5PpHxCk/S5BgUAPlSSD+TthibbSg==
-X-Received: by 2002:a05:6a21:6d97:b0:1ed:a4e2:89cf with SMTP id adf61e73a8af0-1ee5c7dbec0mr5369352637.27.1739364142385;
-        Wed, 12 Feb 2025 04:42:22 -0800 (PST)
-Received: from citest-1.. ([49.205.33.247])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ad53d0c0c19sm6468484a12.57.2025.02.12.04.42.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Feb 2025 04:42:22 -0800 (PST)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	zlang@kernel.org,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v1 3/3] xfs: Add a testcase to check remount with noattr2 on a v5 xfs
-Date: Wed, 12 Feb 2025 12:39:58 +0000
-Message-Id: <de61a54dcf5f7240d971150cb51faf0038d3d835.1739363803.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1739363803.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1739363803.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="SoMnpL3+"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250212130755epoutp045b73746b37970c7db2fe607881fe3ad4~jd93Qp-Xh1861818618epoutp04g
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 13:07:55 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250212130755epoutp045b73746b37970c7db2fe607881fe3ad4~jd93Qp-Xh1861818618epoutp04g
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1739365675;
+	bh=kgwjPTJeDp+dDmaPIcMkbT3oy9GS8B0AWN3rKWEtzaU=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=SoMnpL3+6bg3oMwbL4zKoUbMAou3/ZhXpjcDDgf7J0ogv5MQbTUDSEtgizznw0ego
+	 qWMOCQdE9XYTn04ah9/wY6gtIqz8DChCmKQDQPMcMidN66yPnM0w8HXm7xChAcqftq
+	 70pCzpdaTflKcZVefqR2EENLpekHDrUxydQAuTt8=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+	20250212130755epcas5p21568f3e10b8b94889e5a0ddc5bb5a821~jd92tgxN11394313943epcas5p2S;
+	Wed, 12 Feb 2025 13:07:55 +0000 (GMT)
+Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.180]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4YtJWs3nLwz4x9Pw; Wed, 12 Feb
+	2025 13:07:53 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	3C.04.19710.92D9CA76; Wed, 12 Feb 2025 22:07:53 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+	20250212104507epcas5p18722b26bd022151979418508eae99065~jcBLs-P-T1039910399epcas5p1M;
+	Wed, 12 Feb 2025 10:45:07 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250212104507epsmtrp1dc77ed69ffc94892e6b9022d7f864de7~jcBLsLQUl0677306773epsmtrp1s;
+	Wed, 12 Feb 2025 10:45:07 +0000 (GMT)
+X-AuditID: b6c32a44-363dc70000004cfe-53-67ac9d296b0e
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	19.36.18949.3BB7CA76; Wed, 12 Feb 2025 19:45:07 +0900 (KST)
+Received: from localhost.localdomain (unknown [107.99.41.245]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250212104505epsmtip2112d1f4ce9e93a19b821fd17dd30191f~jcBJjOjo41728317283epsmtip2X;
+	Wed, 12 Feb 2025 10:45:05 +0000 (GMT)
+From: Kundan Kumar <kundan.kumar@samsung.com>
+To: david@fromorbit.com, mcgrof@kernel.org, jack@suse.cz, hch@lst.de
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	anuj20.g@samsung.com, axboe@kernel.dk, clm@meta.com, willy@infradead.org,
+	gost.dev@samsung.com, vishak.g@samsung.com, amir73il@gmail.com,
+	brauner@kernel.org, Kundan Kumar <kundan.kumar@samsung.com>
+Subject: [RFC 0/3] Parallelizing filesystem writeback
+Date: Wed, 12 Feb 2025 16:06:31 +0530
+Message-Id: <20250212103634.448437-1-kundan.kumar@samsung.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,74 +70,122 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAJsWRmVeSWpSXmKPExsWy7bCmuq7m3DXpBqenSlpcWLea0aJpwl9m
+	i9V3+9ksXh/+xGix5ZK9xZZj9xgtbh7YyWSxcvVRJovZ05uZLLZ++cpqsWfvSRaLXX92sFvc
+	mPCU0eL8rDnsFr9/zGFz4Pc4tUjCY+esu+wem1doeVw+W+qxaVUnm8fumw1sHucuVnj0bVnF
+	6HFmwRF2j8+b5AK4orJtMlITU1KLFFLzkvNTMvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22V
+	XHwCdN0yc4BeUFIoS8wpBQoFJBYXK+nb2RTll5akKmTkF5fYKqUWpOQUmBToFSfmFpfmpevl
+	pZZYGRoYGJkCFSZkZ2zb+JO14IJYRUfLDfYGxq+CXYycHBICJhIzru9g7WLk4hAS2M0osW7x
+	JzYI5xOjxOf7D1ggnG+MEt0fjjLDtCxdcoQdIrGXUeLT8jaols+MEu9/dQA5HBxsAroSP5pC
+	QRpEBFwkDi3vA9vBLNDJJPF+6w42kISwgKnEo4XLmUBsFgFViV2fdjOC2LwCdhJvWo+yQGyT
+	l5h56Ts7RFxQ4uTMJ2BxZqB489bZzCBDJQSWckhcubefDaLBRWLS44dQzcISr45vYYewpSRe
+	9rdB2dkShxo3MEHYJRI7jzRAxe0lWk/1M4M8wCygKbF+lz5EWFZi6ql1TBB7+SR6fz+BauWV
+	2DEPxlaTmPNuKtRaGYmFl2ZAxT0kpj+5zApiCwnEStzfN4d5AqP8LCTvzELyziyEzQsYmVcx
+	SqYWFOempyabFhjmpZbDYzY5P3cTIzgpa7nsYLwx/5/eIUYmDsZDjBIczEoivBLT1qQL8aYk
+	VlalFuXHF5XmpBYfYjQFhvFEZinR5HxgXsgriTc0sTQwMTMzM7E0NjNUEudt3tmSLiSQnliS
+	mp2aWpBaBNPHxMEp1cDk7fL+wMW1M6XvqtVt+pv2aL7k0xm/9X2+nw9ZNl3Eha38+BXBwvhb
+	lUePzX2xXzShRuzchKTIW7fz7KS8mh6bi2580z/TgcWDo39PceLUzokvPtxiKT0ctpmXZydn
+	5uJJeVcilbUZvuZq9b0JeLFiC8uXzuajFpXa76QWzDggIp3T6J7u1yKwMFDR+jCnvprX0T3R
+	XUs5Z73Ve37wn5hC1wIRjyNWc2uuzdONLdxwUkf27C4OY+87kkmTeBU4xAJNtEOtnDa/mnDM
+	lZXX9oOw0KrbqmVZD+pMnrHp/HwdoCUTpT31itzSiWd+SX1OLj94ynrZXJV9f7NK07csfxJ9
+	jFHiBmuhm2HQfLES7j4lluKMREMt5qLiRADyNp2WUwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrNLMWRmVeSWpSXmKPExsWy7bCSvO7m6jXpBvN3KltcWLea0aJpwl9m
+	i9V3+9ksXh/+xGix5ZK9xZZj9xgtbh7YyWSxcvVRJovZ05uZLLZ++cpqsWfvSRaLXX92sFvc
+	mPCU0eL8rDnsFr9/zGFz4Pc4tUjCY+esu+wem1doeVw+W+qxaVUnm8fumw1sHucuVnj0bVnF
+	6HFmwRF2j8+b5AK4orhsUlJzMstSi/TtErgytm38yVpwQayio+UGewPjV8EuRk4OCQETiaVL
+	jrB3MXJxCAnsZpT4vO4qE0RCRmL33Z2sELawxMp/z6GKPjJKrPi4CMjh4GAT0JX40RQKUiMi
+	4CVxcdMHsBpmgelMElO2nGcHSQgLmEo8WrgcbCiLgKrErk+7GUFsXgE7iTetR1kgFshLzLz0
+	nR0iLihxcuYTsDgzULx562zmCYx8s5CkZiFJLWBkWsUomVpQnJueW2xYYJSXWq5XnJhbXJqX
+	rpecn7uJERwfWlo7GPes+qB3iJGJg/EQowQHs5IIr8nCFelCvCmJlVWpRfnxRaU5qcWHGKU5
+	WJTEeb+97k0REkhPLEnNTk0tSC2CyTJxcEo1MKlxz231Eju2gVuPQ6Ln+0HeB5//Xi515J7k
+	e/56DN/znRmSifeKfL03lj2S3fn5gFP+jx8OTwU1tdiv/Km1Lp8vOG1hTS3XgjqR9nv/JdJs
+	1Rc+PmxfnxuTXuU6+aDZRs61px0OP9XZprNyaZpOp+DD12cyslcduLJgql1c5+lVsttZquJU
+	IxMcilt7NPStcn8yRhqK1d/a63V8ntqxw91rj0mLGl7YtP/dIQ/nJ687tRYyPDCxdPIQE4w6
+	Iv0555ekt+QTvawTgassb6usO6sl+drdyZUtIO7jspsqEzZenhCl8Vi2lN1qj/fEPxrnnKYH
+	RN67mCeRmZOwrMxtUeNJ6aC/S3YFB6xSW3XXX4mlOCPRUIu5qDgRAHsiSkH+AgAA
+X-CMS-MailID: 20250212104507epcas5p18722b26bd022151979418508eae99065
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250212104507epcas5p18722b26bd022151979418508eae99065
+References: <CGME20250212104507epcas5p18722b26bd022151979418508eae99065@epcas5p1.samsung.com>
 
-This testcase reproduces the following bug:
-Bug:
-mount -o remount,noattr2 <device> <mount_point> succeeds
-unexpectedly on a v5 xfs when CONFIG_XFS_SUPPORT_V4 is set.
+This RFC is an attempt to share a POC for our LSFMM'25[0] proposal.
+We initially prepared it based on the percpu writeback context design.
+But based on feedback received initially, we moved towards a more
+FS-geometry aware design. The patches are still clumsy, and there is
+softlockup issue while running fstests as well(mentioned below).
+Yet, we would like to gather feedback which will help in ironing
+out the infra.
 
-Ideally the above mount command should always fail with a v5 xfs
-filesystem irrespective of whether CONFIG_XFS_SUPPORT_V4 is set
-or not.
+Kernel tree:
+https://github.com/SamsungDS/linux/tree/priv/pw/rfc
 
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- tests/xfs/634     | 35 +++++++++++++++++++++++++++++++++++
- tests/xfs/634.out |  3 +++
- 2 files changed, 38 insertions(+)
- create mode 100755 tests/xfs/634
- create mode 100644 tests/xfs/634.out
+Design
+==========================
+- A new "wb_ctx" structure is introduced that represents a writeback
+  context/thread.
+  A new "wb_ctx_list" field is introduced in bdi_writeback that describes
+  a wb_ctx array, which gets initialized during wb_init.
 
-diff --git a/tests/xfs/634 b/tests/xfs/634
-new file mode 100755
-index 00000000..dc153047
---- /dev/null
-+++ b/tests/xfs/634
-@@ -0,0 +1,35 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>.  All Rights Reserved.
-+#
-+# FS QA Test 634
-+#
-+# This test checks that mounting and remounting a v5 xfs filesystem with
-+# noattr2 fails. Currently, this test will pass with CONFIG_XFS_SUPPORT_V4=n but
-+# with CONFIG_XFS_SUPPORT_V4=y, this will fail i.e, mount -o remount,noattr2
-+# command succeeds incorrectly.
-+#
-+. ./common/preamble
-+. ./common/filter
-+
-+_begin_fstest auto quick mount
-+_require_scratch
-+# Import common functions.
-+
-+_fixed_by_kernel_commit xxxx \
-+	""
-+_require_scratch_xfs_v5
-+_scratch_mkfs -m crc=1 > $seqres.full 2>&1 ||
-+	_notrun "need an xfs v5 filesystem"
-+_scratch_mount "-o noattr2" |& grep -iq "fail" && \
-+	echo "mount failed successfully"
-+_scratch_mount
-+! _scratch_remount noattr2 >> $seqres.full 2>&1 && \
-+	echo "remount failed successfully"
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-+status=0
-+exit
-diff --git a/tests/xfs/634.out b/tests/xfs/634.out
-new file mode 100644
-index 00000000..8a98c05c
---- /dev/null
-+++ b/tests/xfs/634.out
-@@ -0,0 +1,3 @@
-+QA output created by 634
-+mount failed successfully
-+remount failed successfully
+- Writeback handling is modified to use "wb_ctx_list[0]" writeback
+  context, so it continues to remain single threaded.
+
+- In xfs, during AG initialization, we try to assign a different writeback
+  context to each AG from the wb_ctx_list.
+
+- During writeback, a "get_wb_ctx" handler is introduced in
+  super_operations to fetch the writeback context from the inode, which
+  gets used for writeback handling. Currently this handler is implemented
+  only by xfs, so writeback handling is parallelized (per AG) for xfs
+  only. It can be easily extended to other filesystems.
+
+Discussion
+==========================
+- Design for API that would be used for deciding the number of writeback
+  contexts by FS (suggested by Dave).
+
+TBDs
+==========================
+- Need to explore cgroup related writeback handling.
+
+- Add a list_lock field in struct wb_ctx for protecting pctx_b_* lists.
+  Currently there is a "bdi_writeback->list_lock" for protecting per
+  writeback context list.
+
+- Ability to create writeback contexts dynamically. Currently, NR_WB_CTX
+  number of writeback contexts are present in bdi_writeback and get
+  initialized during wb_init.
+
+Testing
+==========================
+- Encountered a softlockup issue while running fstests (test generic/051).
+  Investigating the same.
+
+[0] https://lore.kernel.org/all/20250129102627.161448-1-kundan.kumar@samsung.com/
+
+
+Kundan Kumar (3):
+  writeback: add parallel writeback infrastructure
+  fs: modify writeback infra to work with wb_ctx
+  xfs: use the parallel writeback infra per AG
+
+ fs/fs-writeback.c                | 507 ++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_ag.c           |  16 +
+ fs/xfs/libxfs/xfs_ag.h           |   1 +
+ fs/xfs/xfs_super.c               |  20 ++
+ include/linux/backing-dev-defs.h |  67 +++-
+ include/linux/backing-dev.h      |  34 ++-
+ include/linux/fs.h               |   1 +
+ mm/backing-dev.c                 |  68 +++--
+ mm/page-writeback.c              |  82 ++---
+ 9 files changed, 551 insertions(+), 245 deletions(-)
+
+
+base-commit: 57d357a7663c4025c68ae07974b679d84e2d5d1a
 -- 
-2.34.1
+2.25.1
 
