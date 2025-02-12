@@ -1,71 +1,72 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01CD227180B;
-	Wed, 12 Feb 2025 18:31:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 908EE134A8;
+	Wed, 12 Feb 2025 18:40:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739385086; cv=none; b=lmb99a8GVNtYpKblBSNuAwFROsr7LWtyU90K0bXTrb/9qmmyrmpkYGVAQiPv9aHxeunywqDtn6HoQeixOCcohpYbKGTcor2Hr4vMOYsA32x5XHv8BEYkkYYJQa29Koym3+Gn9c0W0hXFIuHKJocsSDT4TVIunBqbqA+HQPLqnj8=
+	t=1739385604; cv=none; b=k90U7180GOUcd9eYNaQGi3XzDmX7BN8Gz0HSwyoKLgAjcRo8dCIps72lLpPAeI9r7W6drCm92xA41+C7Lgz4gNqe2JrVFPv8jFAWV60oHrLLfS/a3umyb9NHqjaRv/gk8Me+XwgQJtcCNgAu4M4jhm5e12mWAuaMrmKgzE1l1+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739385086; c=relaxed/simple;
-	bh=whHmJxLlmHZe3eoL8ODIdqmfo12n5YdUmAgqoTcVN6k=;
+	s=arc-20240116; t=1739385604; c=relaxed/simple;
+	bh=LP+SGmGCxPBCMOab2K0KFqZ0io2BfeFA9iaFb9gKQ6E=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XInoi+UG+Rlyf0oy8h+oMNPbzuBh4VI86BwEOISccb85LZhE3e6rUu+4q7Id0PDay45jkuik3EwqxB6pAIZeddGF1fR0ap7yhZSSNxOlU5HxSuRxrsphJ+dLqEh5l7um0vk4h/fgNs1fmDzyhPhEC5ReDGk3ZmZ6gvE09tn6lVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PzYCT4tr; arc=none smtp.client-ip=209.85.160.175
+	 To:Cc:Content-Type; b=GZIkzWnjXqX3943cpXzapeh1TPEcpwFimPVeg9xs17yoiIZBkCaYfBs76eFjUAnoMQWQBG3lzcmucYKYOihC6gzrqmexYSrKkbegfsaSVeBumQWEc1wN7FNC8PM7etSS1TqKkT2wwxR6ECFA2NIvwZSE90bSUeIt57UN0iAC77A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DOGqZq3h; arc=none smtp.client-ip=209.85.160.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PzYCT4tr"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-4719768caf7so28283751cf.3;
-        Wed, 12 Feb 2025 10:31:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DOGqZq3h"
+Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-47196e33b43so32460881cf.1;
+        Wed, 12 Feb 2025 10:40:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1739385084; x=1739989884; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1739385601; x=1739990401; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=awfLidEoU16uBciKu7RZVBnSTAH8ZmdZhG2jJUtXbOY=;
-        b=PzYCT4trWpH0pubC+tSKTRntRxlf3IjDuoB0i8N6DHaho2bV2rTeQXayTH2EqEP22G
-         JLscHC+8VRmyQMES1qeSm51YwEk6Hmu5rcjIrMIaUt5BSLm/rIbsdC+OCRGPglW+z1yJ
-         Az726C0pqs3+6SywHo+5WV6Iwr3RBG+9jdOFCgRRdIxOAC+HfDn5X2jux8Lm9iUWlnZg
-         b6AH2QnjrHOI7d0CtiBI5rURuGgpPnQadD9UjP3b7ls4fp51MjfosFXGzYaqDQV8GQDJ
-         Ujo+93fET2p6+F31TR43Y7k+z4e7h8x61MkFzocHgm/rFu04kc8WRU11d7MTavRhrgWU
-         32hg==
+        bh=+lh6NXkkBQKx4PXR+oYH9IGfimfXkrrE5NqMbDycTiY=;
+        b=DOGqZq3hrUFy09f/BbjQrSXXqwHmmwb7xSe6ITeI1uVSaKcQ81/FqyXqe1Y9rSeTL5
+         Ztr2JKGb6ok4VCwzUZ1fM4hCVa88rSNPjjLRgfAvoGfh6Qrgq/7U9Wjwq6Z9yO9Y1anH
+         M4nvsgR2AxG8cvSm53OI+hplAidP35H3RBYP2WjWLaWEg4ZSfbOXfGWDrgW+2cD6q+ME
+         r1rzZRZPzMVy1bYFvTZ67rWi6IA15YvD0ZMpI1Faswrj1fRsrQCKH1am8sWL/JQj30BS
+         4yXHN0uUskuX9QPTMCDN2PpjG/zlSAIVAvJss31PUOI0GdvCs84l8t5NC/Z0kAwJYzNH
+         sMLg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739385084; x=1739989884;
+        d=1e100.net; s=20230601; t=1739385601; x=1739990401;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=awfLidEoU16uBciKu7RZVBnSTAH8ZmdZhG2jJUtXbOY=;
-        b=LZQTeAOviEv2e3DCQLkCyyNJm5DZHl85h8cBS6Q9fMehS8654QFWWRu95TckYK4Hmz
-         bVtQlQB5d7Fx464N+N68r2/ZXDrARKg8veZrvvyPpf6J4+YzS7m8xALIQHCK25kNvam1
-         KqqHhwxdSBINJ4l231fd2Ssa8pTwr7cYUohFQTkWsC2zvLZ8iDg1HoBrQft4/dw/HQLi
-         fRJdqdhD4TdmpDpbUDR2pYOq0PkIaCv3LPsqo1DTHnRSKbrO48zwWgK0mvGaEMQ8EHbj
-         IpdkWRNOWoNPbpCNVC/T+mVaqfs1lyWUExmfiyFt69IWpnJuHH4Xh4alySqNIFko8GdN
-         D83A==
-X-Forwarded-Encrypted: i=1; AJvYcCUDTJsk5tfr7aXzf1nPxCGYq+DRIfNKhty3NEF0NS5bEUPBWXy+dZSVWNckxqOC2tXFf+PB5714@vger.kernel.org, AJvYcCWiiP4h4P8wZSLIcW8L9/8M8kCl5zoFEkjyOu3H/x2122+e58fAdMenWfaLFpHLa5zxbgSnUjlr6klQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YyPaYcfdG4OZd7NRoPRiE9il9Nbsawdcn2c3KOzzanG+shJ13Ss
-	rzN1mDV24LoBg+Xvj1j9CWA/JG94RHOAzxvuh+2V1RscFSNMLewm73Qri4aEIMDTeu572t80lnx
-	llmNisxwd982oiuKej7POrMCODdAGF9I9
-X-Gm-Gg: ASbGncsiZBOqyg/olEB305rjrCL07RgbsIADsqLfKl7+VVX5aK4yv01seFsQng50yBf
-	I53yRqBwH5gOr5cOTT17t7oGG9zSYDSPPthmomHo9hWnOJYp8Yqr94quYnMW0tixKlrayPOBxT2
-	QwWOXlZQHnZU0=
-X-Google-Smtp-Source: AGHT+IEyy4XIkiGLj6Qt2gnC9U9cQ4upLpl+MLkiyjEe0Hfw1zBPS/y8PvZAsieG8HTOd+CmHzabWKxMwnWIRz9FbR8=
-X-Received: by 2002:a05:622a:418e:b0:471:bd5e:d5dd with SMTP id
- d75a77b69052e-471bd5ed804mr21243151cf.16.1739385083698; Wed, 12 Feb 2025
- 10:31:23 -0800 (PST)
+        bh=+lh6NXkkBQKx4PXR+oYH9IGfimfXkrrE5NqMbDycTiY=;
+        b=ZiJCFduZA/lhGk285X+9iQRv/Y1JG9+6qiSOUit7Le1CuIbyrWu5Jid6HwCBWNovZ6
+         QS046g1XEslAPtzS4Oxlo6WDyfyUqnXjhaCFZDW79sORkHS7tt9+TS8qJeQ3daJL6OSY
+         lARqJWUrnWJtHy20B3ovDDqtSunyOLH9FAp3HD0xZ3g7rFEbjPWkdau1GyNohFw8Gc01
+         3UpQ+nUGLn34DezQEsmgfzhqxu3YA34SjNCVESBdRURSZtyKjXOLZfzyLvF7Tu7JrpGz
+         B7N2CZ7X4Pgro3ctam2PZh18aSP731Zerlp/cbCsRjnQ48GdrleNnbCmPX+cXkWGl/QV
+         OQKQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUIEfjnrUlIUB6Uns9mf7xoS+RiGw0MbyhxgGf7+mjkIG/BYN2YhDdCvG0TUiKSgzsPnuxGx6A/G0aU@vger.kernel.org, AJvYcCW/sVBfEzU2zGRHAzibga/Ja9Tp3b/ZTRYyCPrbYLuaOFX2mYnbBZ5eI2gVgaBHrtMPqZVj7R1J@vger.kernel.org
+X-Gm-Message-State: AOJu0YyRVeUYJZE5WYWxUi1uDEu3p8v/55EqREKAk+CtDXDMOfxoohZ1
+	KkFYvFr/Yohs2+7UlFPXbAwgpBLKj6+CrYDxUBckGOS65KXh6KlX0ifv4YPGdkPJg84RxGkjrpi
+	CpOhbNIdretIdY5FplfuXpfFnOmo=
+X-Gm-Gg: ASbGncutSZwf/rM9fw5XLMw+a307tLdpTfDGwVk6mjQQigUMK+5KzS1k/310hT26way
+	o9vu6rqGsNR1rOlddsQ/RRo/7iXPiIaCHtYOMlDzFY4hk5e4JUMhV+YMYtTjGGCb3sn5ZXCr3hQ
+	P9aVIUYgWqEoM=
+X-Google-Smtp-Source: AGHT+IGimR44K+Dzc2hx14D5lef3D+BfqrfZ+C31VdtR0ycCjHXc9u9xfvi3W5xOhjnVmoA7RMkhsK+SPHEPWa9+gyM=
+X-Received: by 2002:ac8:6f10:0:b0:471:bbdb:9f4c with SMTP id
+ d75a77b69052e-471bbdba02amr28811521cf.30.1739385601283; Wed, 12 Feb 2025
+ 10:40:01 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs> <173933094492.1758477.14479485917819478634.stgit@frogsfrogsfrogs>
-In-Reply-To: <173933094492.1758477.14479485917819478634.stgit@frogsfrogsfrogs>
+References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs> <173933094507.1758477.425979019420266054.stgit@frogsfrogsfrogs>
+In-Reply-To: <173933094507.1758477.425979019420266054.stgit@frogsfrogsfrogs>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 12 Feb 2025 10:31:13 -0800
-X-Gm-Features: AWEUYZkecs6pyIy4xGOvusDpwdvdUnpE33Dmd46b-dJVIHzVLNyColq2yNohlnQ
-Message-ID: <CAJnrk1aH9PO8jrqp9TsKquUgW0Shp-1Qrf5AyGGYH0FAa7HKeQ@mail.gmail.com>
-Subject: Re: [PATCH 09/34] generic/759,760: fix MADV_COLLAPSE detection and inclusion
+Date: Wed, 12 Feb 2025 10:39:50 -0800
+X-Gm-Features: AWEUYZnBz97NVS59sn9_mnZ_3YvExL_5LBmmJmnCdkxLZOTTd8q9HKP-kqkdUF4
+Message-ID: <CAJnrk1YM_t=_UoyWhLJHQ0x=wWX5pW6x+WQZq5kAY7MWuk06nw@mail.gmail.com>
+Subject: Re: [PATCH 10/34] generic/759,760: skip test if we can't set up a
+ hugepage for IO
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
@@ -76,24 +77,23 @@ On Tue, Feb 11, 2025 at 7:33=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
 >
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> On systems with "old" C libraries such as glibc 2.36 in Debian 12, the
-> MADV_COLLAPSE flag might not be defined in any of the header files
-> pulled in by sys/mman.h, which means that the fsx binary might not get
-> built with any of the MADV_COLLAPSE code.  If the kernel supports THP,
-> the test will fail with:
+> On an arm64 VM with 64k base pages and a paltry 8G of RAM, this test
+> will frequently fail like this:
 >
-> >  QA output created by 760
-> >  fsx -N 10000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
-> > -fsx -N 10000 -o 8192 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
-> > -fsx -N 10000 -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -=
-h
-> > +mapped writes DISABLED
-> > +MADV_COLLAPSE not supported. Can't support -h
+> >  QA output created by 759
+> >  fsx -N 10000 -l 500000 -h
+> > -fsx -N 10000 -o 8192 -l 500000 -h
+> > -fsx -N 10000 -o 128000 -l 500000 -h
+> > +Seed set to 1
+> > +madvise collapse for buf: Cannot allocate memory
+> > +init_hugepages_buf failed for good_buf: Cannot allocate memory
 >
-> Fix both tests to detect fsx binaries that don't support MADV_COLLAPSE,
-> then fix fsx.c to include the mman.h from the kernel headers (aka
-> linux/mman.h) so that we can actually test IOs to and from THPs if the
-> kernel is newer than the rest of userspace.
+> This system has a 512MB hugepage size, which means that there's a good
+> chance that memory is so fragmented that we won't be able to create a
+> huge page (in 1/16th the available DRAM).  Create a _run_hugepage_fsx
+> helper that will detect this situation at the start of the test and skip
+> it, having refactored run_fsx into a properly namespaced version that
+> won't exit the test on failure.
 >
 > Cc: <fstests@vger.kernel.org> # v2025.02.02
 > Cc: joannelkoong@gmail.com
@@ -101,67 +101,149 @@ h
 -backed buffers")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
+Thanks for adding this.
+
 Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
 
 > ---
->  common/rc         |    5 +++++
->  ltp/fsx.c         |    1 +
->  tests/generic/759 |    1 +
->  tests/generic/760 |    1 +
->  4 files changed, 8 insertions(+)
+>  common/rc         |   34 ++++++++++++++++++++++++++++++----
+>  ltp/fsx.c         |    6 ++++--
+>  tests/generic/759 |    6 +++---
+>  tests/generic/760 |    6 +++---
+>  4 files changed, 40 insertions(+), 12 deletions(-)
 >
 >
 > diff --git a/common/rc b/common/rc
-> index 07646927bad523..b7736173e6e839 100644
+> index b7736173e6e839..36e270abbc082a 100644
 > --- a/common/rc
 > +++ b/common/rc
-> @@ -4976,6 +4976,11 @@ _get_page_size()
->         echo $(getconf PAGE_SIZE)
+> @@ -4982,20 +4982,46 @@ _require_hugepage_fsx()
+>                 _notrun "fsx binary does not support MADV_COLLAPSE"
 >  }
 >
-> +_require_hugepage_fsx()
-> +{
-> +       $here/ltp/fsx -N 0 -h $TEST_DIR 2>&1 | grep -q 'MADV_COLLAPSE not=
- supported' && \
-> +               _notrun "fsx binary does not support MADV_COLLAPSE"
-> +}
->
->  run_fsx()
+> -run_fsx()
+> +_run_fsx()
 >  {
+> -       echo fsx $@
+> +       echo "fsx $*"
+>         local args=3D`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZ=
+E / $psize /g"`
+>         set -- $here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk
+>         echo "$@" >>$seqres.full
+>         rm -f $TEST_DIR/junk
+>         "$@" 2>&1 | tee -a $seqres.full >$tmp.fsx
+> -       if [ ${PIPESTATUS[0]} -ne 0 ]; then
+> +       local res=3D${PIPESTATUS[0]}
+> +       if [ $res -ne 0 ]; then
+>                 cat $tmp.fsx
+>                 rm -f $tmp.fsx
+> -               exit 1
+> +               return $res
+>         fi
+>         rm -f $tmp.fsx
+> +       return 0
+
+I think this could also be further simplified to
+
+if [$res -ne 0]; then
+    cat $tmp.fsx
+fi
+rm -rf $tmp.fsx
+return $res
+
+
+> +}
+> +
+> +# Run fsx with -h(ugepage buffers).  If we can't set up a hugepage then =
+skip
+> +# the test, but if any other error occurs then exit the test.
+> +_run_hugepage_fsx() {
+> +       _run_fsx "$@" -h &> $tmp.hugepage_fsx
+> +       local res=3D$?
+> +       if [ $res -eq 103 ]; then
+> +               # According to the MADV_COLLAPSE manpage, these three err=
+ors
+> +               # can happen if the kernel could not collapse a collectio=
+n of
+> +               # pages into a single huge page.
+> +               grep -q -E ' for hugebuf: (Cannot allocate memory|Device =
+or resource busy|Resource temporarily unavailable)' $tmp.hugepage_fsx && \
+> +                       _notrun "Could not set up huge page for test"
+> +       fi
+> +       cat $tmp.hugepage_fsx
+> +       rm -f $tmp.hugepage_fsx
+> +       test $res -ne 0 && exit 1
+> +       return 0
+> +}
+> +
+> +# run fsx or exit the test
+> +run_fsx()
+> +{
+> +       _run_fsx "$@" || exit 1
+>  }
+>
+>  _require_statx()
 > diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index 634c496ffe9317..cf9502a74c17a7 100644
+> index cf9502a74c17a7..d1b0f245582b31 100644
 > --- a/ltp/fsx.c
 > +++ b/ltp/fsx.c
-> @@ -20,6 +20,7 @@
->  #include <strings.h>
->  #include <sys/file.h>
->  #include <sys/mman.h>
-> +#include <linux/mman.h>
->  #include <sys/uio.h>
->  #include <stdbool.h>
->  #ifdef HAVE_ERR_H
+> @@ -2974,13 +2974,15 @@ init_hugepages_buf(unsigned len, int hugepage_siz=
+e, int alignment, long *buf_siz
+>
+>         ret =3D posix_memalign(&buf, hugepage_size, size);
+>         if (ret) {
+> -               prterr("posix_memalign for buf");
+> +               /* common/rc greps this error message */
+> +               prterr("posix_memalign for hugebuf");
+>                 return NULL;
+>         }
+>         memset(buf, '\0', size);
+>         ret =3D madvise(buf, size, MADV_COLLAPSE);
+>         if (ret) {
+> -               prterr("madvise collapse for buf");
+> +               /* common/rc greps this error message */
+> +               prterr("madvise collapse for hugebuf");
+>                 free(buf);
+>                 return NULL;
+>         }
 > diff --git a/tests/generic/759 b/tests/generic/759
-> index 6c74478aa8a0e0..a7dec155056abc 100755
+> index a7dec155056abc..49c02214559a55 100755
 > --- a/tests/generic/759
 > +++ b/tests/generic/759
-> @@ -13,6 +13,7 @@ _begin_fstest rw auto quick
->
->  _require_test
+> @@ -15,9 +15,9 @@ _require_test
 >  _require_thp
-> +_require_hugepage_fsx
+>  _require_hugepage_fsx
 >
->  run_fsx -N 10000            -l 500000 -h
->  run_fsx -N 10000  -o 8192   -l 500000 -h
+> -run_fsx -N 10000            -l 500000 -h
+> -run_fsx -N 10000  -o 8192   -l 500000 -h
+> -run_fsx -N 10000  -o 128000 -l 500000 -h
+> +_run_hugepage_fsx -N 10000            -l 500000
+> +_run_hugepage_fsx -N 10000  -o 8192   -l 500000
+> +_run_hugepage_fsx -N 10000  -o 128000 -l 500000
+>
+>  status=3D0
+>  exit
 > diff --git a/tests/generic/760 b/tests/generic/760
-> index c71a196222ad3b..4781a8d1eec4ec 100755
+> index 4781a8d1eec4ec..f270636e56a377 100755
 > --- a/tests/generic/760
 > +++ b/tests/generic/760
-> @@ -14,6 +14,7 @@ _begin_fstest rw auto quick
->  _require_test
->  _require_odirect
->  _require_thp
-> +_require_hugepage_fsx
->
+> @@ -19,9 +19,9 @@ _require_hugepage_fsx
 >  psize=3D`$here/src/feature -s`
 >  bsize=3D`$here/src/min_dio_alignment $TEST_DIR $TEST_DEV`
+>
+> -run_fsx -N 10000            -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -=
+W -h
+> -run_fsx -N 10000  -o 8192   -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -=
+W -h
+> -run_fsx -N 10000  -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -=
+W -h
+> +_run_hugepage_fsx -N 10000            -l 500000 -r PSIZE -t BSIZE -w BSI=
+ZE -Z -R -W
+> +_run_hugepage_fsx -N 10000  -o 8192   -l 500000 -r PSIZE -t BSIZE -w BSI=
+ZE -Z -R -W
+> +_run_hugepage_fsx -N 10000  -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSI=
+ZE -Z -R -W
+>
+>  status=3D0
+>  exit
 >
