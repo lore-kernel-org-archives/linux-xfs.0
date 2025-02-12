@@ -1,114 +1,250 @@
-Received: from fout-a7-smtp.messagingengine.com (fout-a7-smtp.messagingengine.com [103.168.172.150])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63E6F13C9B3
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 08:17:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.150
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BCBE20ADC7
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 11:16:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739348245; cv=none; b=DK14VALxEggih5GkeJPCi2WANaX72UnjXVsW66jbFSPbbQBS2T8Rn7PG1wjTw++Yrl5N1vjC316PsSqAsuhgyOO9mp+mUBIuLVAycMsvSuaRu+VPjQJe+egRuusTGPb2AXYCn5mE5QePSbGgKt0StdzrQFKQAgh44R0pKLiAGWI=
+	t=1739359014; cv=none; b=AjB+/m5mrBB5aPphav6zTkamybXQ7wksPehMmGjUYBKZvZpwAMU7Nde+nILFiCJv1OvxAXS3av6awvWdufQ+UMJ/6UW0aMB1RHSS9teZwXaEtSenuBrg9aOM0FpHFDQcarxbDU/58lRR3cTGiXPzXYjhV2QMppdsCPQ9hClKE9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739348245; c=relaxed/simple;
-	bh=9Ajt+F3BAWaHerxMDeQTh/SHVxBxatCvYCb6eBCGFn4=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=hILFgMzLaQw+/K65yWa4PYMRfidZtTjMUr399NkTPwQb6sLp7UzxFrQb4TC7quZ+Nim4SEtIhSkRa6rjGUaWcPuyMp59g9CPOh3luJ8lvyPj8ByPE/uRkh7zuI9fWQ/NJ1Nv+EO+Z//OPSFhsA8S/LYHMQiWwoGmO621kSbE+oE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alyssa.is; spf=pass smtp.mailfrom=alyssa.is; dkim=pass (2048-bit key) header.d=alyssa.is header.i=@alyssa.is header.b=UHUWZyCi; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=zj33Cmmj; arc=none smtp.client-ip=103.168.172.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alyssa.is
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alyssa.is
+	s=arc-20240116; t=1739359014; c=relaxed/simple;
+	bh=/Hmic873PViIBmjbX3eJTmSLd/0IuCygH3adUr7rNXU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YyNoSmQizdqCInLTRiFex0Q5UYP8+48BnHp6vS85Ac0/cncYcT6q9X7SKSNfVQkLf5G4Gi+incRXpXm4bXVeetUvbp27ga/VujH6DRHg1vkcJsHEQ9vPGvbhk0YyMauBZMof+Hh5FoaXnpvCHqD5GJ5XyPfC7roie7hVUVuq/rY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hcA1CEIz; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alyssa.is header.i=@alyssa.is header.b="UHUWZyCi";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="zj33Cmmj"
-Received: from phl-compute-08.internal (phl-compute-08.phl.internal [10.202.2.48])
-	by mailfout.phl.internal (Postfix) with ESMTP id 4A8FB13809C6
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 03:17:18 -0500 (EST)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-08.internal (MEProxy); Wed, 12 Feb 2025 03:17:18 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alyssa.is; h=cc
-	:content-transfer-encoding:content-type:date:date:from:from
-	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
-	:to; s=fm2; t=1739348238; x=1739434638; bh=VrKsbHMZABL83IKzrvn7H
-	W1GAe3Gd8Ij46KZdpDTg0Y=; b=UHUWZyCieYvTTc4t+L2C6nKbeV2UmYyWJYLpT
-	4tHzbqTuHlnYOb8+VBYxmd0UGPw0kxSo2ue4RNe3k1dC4toPkuWcD2XxaeunxqHN
-	Ka9R9WjrbD8Pw7hBme+KRVD7FQOBgozjA5XobcihOlqG4jWKO0GlNyyKTR3/s27Y
-	oZ3/5/qTFu9ABq7+qOaJ9JzpH14Q6pPfrF4MeSNC4DXNGVFO18K4cco0aDBGNFP9
-	ncjZ2mnzlYEG9OoRVm8EK324XtqLSwZETPVsQykWUMWcZfdJwHwOG9a8HVavBc2V
-	Ar0LiL9dBvqMafHaRywyyqGfUoHV/dnREna+leViIyEWcqOWw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:content-transfer-encoding:content-type
-	:date:date:feedback-id:feedback-id:from:from:in-reply-to
-	:message-id:mime-version:reply-to:subject:subject:to:to
-	:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1739348238; x=1739434638; bh=VrKsbHMZABL83IKzrvn7HW1GAe3Gd8Ij46K
-	ZdpDTg0Y=; b=zj33CmmjBSlvRashYEQ15Ph9RX5sk9OujdhJt+mgRmQ2Oxzpa5P
-	44VP7OdN6zgEScE0oAVWWrBIpsUBKtxwtxwajskQAIPGsiZ3sYVR0KfmDluSUF08
-	+vnOEBxGLJjpCo9UL1AY1rmVY3r9t66iJxgWIK68RXsW/ysmlXgtzuvQQc2NhHKW
-	Jj6utmfjUUKXHAM/u64mCcgkj2aXIKfBgEi7AoRBZ6m8q19KDNr+1nwQVe+KmZGI
-	QsWKTuPhOrt6OKuf97cStZ8fDMokJ1tDDcdj+M8m1BdnEciuTo9aJbbpCzIBuC1P
-	z+wFGDuJ/iB0eN9ND3X36df+fQyNixXTDCw==
-X-ME-Sender: <xms:DVmsZ0rCSBDOnippjd65rQeAfOfF9mTXYLFbMLGgydLrhvpzlW5rAQ>
-    <xme:DVmsZ6pRt91aJi_ICRzhOi8CdOcCHodDUiIF_srwK56JTIif59ar_gUcz0zdvfjue
-    bSswSzQRu3ukqkJSA>
-X-ME-Received: <xmr:DVmsZ5PZhMYNOZsDf28ng3FJVGTMQTM3Uak5vsrUXs3_ltU1YOooIo5wHEkaBPckOI4HpSURwAQ3sKE0cfG0r9z3nAM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdegfeefjecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpggftfghnshhusghstghrihgsvgdp
-    uffrtefokffrpgfnqfghnecuuegrihhlohhuthemuceftddtnecunecujfgurhephffvuf
-    ffkffoggfgsedtkeertdertddtnecuhfhrohhmpeetlhihshhsrgcutfhoshhsuceohhhi
-    segrlhihshhsrgdrihhsqeenucggtffrrghtthgvrhhnpeeihefhveevheelhffhgfehtd
-    dtueeufeevveegffdvleefteegtedtkeefteekveenucffohhmrghinhepfhgvughorhgr
-    phhrohhjvggtthdrohhrghenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmh
-    grihhlfhhrohhmpehhihesrghlhihsshgrrdhishdpnhgspghrtghpthhtohepuddpmhho
-    uggvpehsmhhtphhouhhtpdhrtghpthhtoheplhhinhhugidqgihfshesvhhgvghrrdhkvg
-    hrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:DVmsZ74hcjRZxZC44OQQt-IhRWhyPFueCe17OMj2Cy5xLgghDE_cVA>
-    <xmx:DVmsZz7WVPqASaqmj_spxdBj-BC-bk_o6eBlDcVH0K8xvkPPrUG88w>
-    <xmx:DVmsZ7iIqZTSec5qJS2gMA_Gv8hfm1hIR8Z8fq7_D2rdP5K7PTQ4Uw>
-    <xmx:DVmsZ94XQqmiWoSf17pQ0P5pGKaDkcUg7XxfjKaZQdWHF_107bmlRw>
-    <xmx:DlmsZ9RmeKMG-_gvG4CBaAV322hjvNg--gdfxyIgV2Oacd96lNvABgvw>
-Feedback-ID: i12284293:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA for
- <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 03:17:17 -0500 (EST)
-Received: by sf.qyliss.net (Postfix, from userid 1000)
-	id 95F9F4B9908F; Wed, 12 Feb 2025 09:17:15 +0100 (CET)
-From: Alyssa Ross <hi@alyssa.is>
-To: linux-xfs@vger.kernel.org
-Subject: [PATCH xfsprogs] configure: additionally get icu-uc from pkg-config
-Date: Wed, 12 Feb 2025 09:16:49 +0100
-Message-ID: <20250212081649.3502717-1-hi@alyssa.is>
-X-Mailer: git-send-email 2.47.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hcA1CEIz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1739359012;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=awFjy1hx2p7IODKUb+VcKnx6TZ3CdIOmyYRqbfcJGNc=;
+	b=hcA1CEIz2oXkZBQ+4BLsaM9nmJh0jrvQVW8nbrQJv3B3EQLLK0RgCK2FCDiBRYGiy2dHrz
+	8olgDjT6JDt5Twf3i9EdnaG3fmaaOrkClf+tcQXfXMtCZuIMdu6NJ/2d+exWvn31nikbbC
+	IoJfZn9XzJsplL0vXuE9PIfTLxE2VAA=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-332-OiJlS0XtMjmytCam18FaQg-1; Wed, 12 Feb 2025 06:16:50 -0500
+X-MC-Unique: OiJlS0XtMjmytCam18FaQg-1
+X-Mimecast-MFC-AGG-ID: OiJlS0XtMjmytCam18FaQg
+Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-5d90b88322aso5996771a12.3
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 03:16:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739359009; x=1739963809;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=awFjy1hx2p7IODKUb+VcKnx6TZ3CdIOmyYRqbfcJGNc=;
+        b=hLjnMzonANoNIAVKz3HOJ63vl+Yjopm7AAC/yzGWQ7kWYNI29EvtJpBfJyrV7z0kH5
+         3nxVSxBdnZPTqCfU0FTDca+rGUt/Wbz0Hc1eXiVqmfXx4gZ5MTcGs1TLKQiI/LfeJygJ
+         JosipdhhCAu+ewec2LaGkRKWcxEz5oh134SoIiSU4UFIhV4zF3tcl+f1Xn2eQn7h0Clk
+         LnQKB7bnc+LN0kdQb2dcsZhxgHgjpdKRAXgmjdcGPvj2aetP8ISwSDT8IAo4jkLu+mLI
+         6OmVC7wwKSwjlKwBLOiIqSy/HATwk9ivFq2yrt8sgpHE8yHLXNXB8v/H2KpHm9j1yImf
+         CyMg==
+X-Gm-Message-State: AOJu0YzQw1PtygGiN1YGeYyapW4H0iIVKTCmALts/usUVJA92YnOAMlG
+	1mMQqqJPjYQIPNT0DcbUBFeGBR8PL5D2sYG7BDMUVmub5BhWTdfec0M4cDO9S/eVP6VtGH7ihXT
+	rjxtuB2PV3Fcqtm57XWAV8DnON/1ZLrzOpJWYWyXRvxmouDar6nbNt5G+1IlwdoW9xtY=
+X-Gm-Gg: ASbGncv51WHQDaYDMTxEMKZxmydu/tvc/tJmUUhVqu0SN7ePi/Zx9pzopx81H/m+wxS
+	0IHLgOdRRTtPMOf7kZpPt5ahRqoH7of5xoM4w8dLPXbX1AN+D5iTzyqxgGMhVM/GwVMtICEq25k
+	tGecFWZelqAJx/QWXpNj9bOQiRG4PnOlbdu3iMxLPq3bF//J9GuMG0zDkz6DN4h1QzjMdmn8syA
+	8ENMkDCjjuP/m5tspZgerfoUEFQJg1GSrMKdTN9d2ustVtFZ7fwzBIVA3YlfoazYuCSMG7X5z9X
+	h5PuUicfUsHRhK/2MmSJ8rDT
+X-Received: by 2002:a05:6402:2106:b0:5dc:5e4b:3e21 with SMTP id 4fb4d7f45d1cf-5deadda3237mr2304023a12.9.1739359009130;
+        Wed, 12 Feb 2025 03:16:49 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGWIl514/xcDZXaCA3zGOlKRX5JYu4L2Cn7MQ6IRSpFLthoJD0920tbRuX4xivfGKeeAjRgkw==
+X-Received: by 2002:a05:6402:2106:b0:5dc:5e4b:3e21 with SMTP id 4fb4d7f45d1cf-5deadda3237mr2304000a12.9.1739359008625;
+        Wed, 12 Feb 2025 03:16:48 -0800 (PST)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5dcf1b734e5sm11486017a12.5.2025.02.12.03.16.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Feb 2025 03:16:48 -0800 (PST)
+Date: Wed, 12 Feb 2025 12:16:46 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v3 5/8] Add git-contributors script to notify about merges
+Message-ID: <rzlzwjixwg7i442ohupcovrtol4awuhwusdm6uwx36jphf4sqy@2qx3yccpkqba>
+References: <20250211-update-release-v3-0-7b80ae52c61f@kernel.org>
+ <20250211-update-release-v3-5-7b80ae52c61f@kernel.org>
+ <20250211185804.GD21808@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250211185804.GD21808@frogsfrogsfrogs>
 
-This fixes the following build error with icu 76, also seen by
-Fedora[1]:
+On 2025-02-11 10:58:04, Darrick J. Wong wrote:
+> On Tue, Feb 11, 2025 at 06:26:57PM +0100, Andrey Albershteyn wrote:
+> > Add python script used to collect emails over all changes merged in
+> > the next release.
+> > 
+> > CC: Darrick J. Wong <djwong@kernel.org>
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> > ---
+> >  tools/git-contributors.py | 94 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 94 insertions(+)
+> > 
+> > diff --git a/tools/git-contributors.py b/tools/git-contributors.py
+> > new file mode 100755
+> > index 0000000000000000000000000000000000000000..83bbe8ce0ee1dcbd591c6d3016d553fac2a7d286
+> > --- /dev/null
+> > +++ b/tools/git-contributors.py
+> > @@ -0,0 +1,94 @@
+> > +#!/usr/bin/python3
+> > +
+> > +# List all contributors to a series of git commits.
+> > +# Copyright(C) 2025 Oracle, All Rights Reserved.
+> > +# Licensed under GPL 2.0 or later
+> > +
+> > +import re
+> > +import subprocess
+> > +import io
+> > +import sys
+> > +import argparse
+> > +import email.utils
+> > +
+> > +DEBUG = False
+> > +
+> > +def backtick(args):
+> > +    '''Generator function that yields lines of a program's stdout.'''
+> > +    if DEBUG:
+> > +        print(' '.join(args))
+> > +    p = subprocess.Popen(args, stdout = subprocess.PIPE)
+> > +    for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
+> > +        yield line
+> > +
+> > +class find_developers(object):
+> > +    def __init__(self):
+> > +        tags = '%s|%s|%s|%s|%s|%s|%s|%s' % (
+> > +            'signed-off-by',
+> > +            'acked-by',
+> > +            'cc',
+> > +            'reviewed-by',
+> > +            'reported-by',
+> > +            'tested-by',
+> > +            'suggested-by',
+> > +            'reported-and-tested-by')
+> > +        # some tag, a colon, a space, and everything after that
+> > +        regex1 = r'^(%s):\s+(.+)$' % tags
+> > +
+> > +        self.r1 = re.compile(regex1, re.I)
+> > +
+> > +    def run(self, lines):
+> > +        addr_list = []
+> > +
+> > +        for line in lines:
+> > +            l = line.strip()
+> > +
+> > +            # emailutils can handle abominations like:
+> > +            #
+> > +            # Reviewed-by: Bogus J. Simpson <bogus@simpson.com>
+> > +            # Reviewed-by: "Bogus J. Simpson" <bogus@simpson.com>
+> > +            # Reviewed-by: bogus@simpson.com
+> > +            # Cc: <stable@vger.kernel.org> # v6.9
+> > +            # Tested-by: Moo Cow <foo@bar.com> # powerpc
+> > +            m = self.r1.match(l)
+> > +            if not m:
+> > +                continue
+> > +            (name, addr) = email.utils.parseaddr(m.expand(r'\g<2>'))
+> > +
+> > +            # This last split removes anything after a hash mark,
+> > +            # because someone could have provided an improperly
+> > +            # formatted email address:
+> > +            #
+> > +            # Cc: stable@vger.kernel.org # v6.19+
+> > +            #
+> > +            # emailutils doesn't seem to catch this, and I can't
+> > +            # fully tell from RFC2822 that this isn't allowed.  I
+> > +            # think it is because dtext doesn't forbid spaces or
+> > +            # hash marks.
+> > +            addr_list.append(addr.split('#')[0])
+> 
+> I think it's the case that the canonical stable cc tag format for kernel
+> patches as provided by the stable kernel process rules document:
+> 
+> Cc: <stable@vger.kernel.org> # vX.Y
+> 
+> is not actually actually rfc5322 compliant, so strings like that break
+> Python's emailutils parsers.  parseaddr() completely chokes on this, and
+> retuns name=='' and addr=='', because the only thing that can come after
+> the address portion are whitespace, EOL, or a comma followed by more
+> email addresses.  There's definitely not supposed to be an octothorpe
+> followed by even more text.
+> 
+> In the end I let myself be nerdsniped with even more string parsing bs,
+> and this loop body is the result:
+> 
+> 		l = line.strip()
+> 
+> 		# First, does this line match any of the headers we
+> 		# know about?
+> 		m = self.r1.match(l)
+> 		if not m:
+> 			continue
+> 
+> 		# The split removes everything after an octothorpe
+> 		# (hash mark), because someone could have provided an
+> 		# improperly formatted email address:
+> 		#
+> 		# Cc: stable@vger.kernel.org # v6.19+
+> 		#
+> 		# This, according to my reading of RFC5322, is allowed
+> 		# because octothorpes can be part of atom text.
+> 		# However, it is interepreted as if there weren't any
+> 		# whitespace ("stable@vger.kernel.org#v6.19+").  The
+> 		# grammar allows for this form, even though this is not
+> 		# a correct Internet domain name.
+> 		#
+> 		# Worse, if you follow the format specified in the
+> 		# kernel's SubmittingPatches file:
+> 		#
+> 		# Cc: <stable@vger.kernel.org> # v6.9
+> 		#
+> 		# emailutils will not know how to parse this, and
+> 		# returns empty strings.  I think this is because the
+> 		# angle-addr specification allows only whitespace
+> 		# between the closing angle bracket and the CRLF.
+> 		#
+> 		# Hack around both problems by ignoring everything
+> 		# after an octothorpe, no matter where it occurs in the
+> 		# string.  If someone has one in their name or the
+> 		# email address, too bad.
+> 		a = m.expand(r'\g<2>').split('#')[0]
+> 
+> 		# emailutils can extract email addresses from headers
+> 		# that roughly follow the destination address field
+> 		# format:
+> 		#
+> 		# Reviewed-by: Bogus J. Simpson <bogus@simpson.com>
+> 		# Reviewed-by: "Bogus J. Simpson" <bogus@simpson.com>
+> 		# Reviewed-by: bogus@simpson.com
+> 		# Tested-by: Moo Cow <foo@bar.com>
+> 		#
+> 		# Use it to extract the email address, because we don't
+> 		# care about the display name.
+> 		(name, addr) = email.utils.parseaddr(a)
+> 		addr_list.append(addr)
+> 
+> <shrug> but maybe we should try that on a few branches first before
+> committing to this string parsing mess ... ?  Not that this is any less
+> stupid than the previous version I shared out. :(
 
-	/nix/store/9g4gsby96w4cx1i338kplaap0x37apdf-binutils-2.43.1/bin/ld: unicrash.o: undefined reference to symbol 'uiter_setString_76'
-	/nix/store/9g4gsby96w4cx1i338kplaap0x37apdf-binutils-2.43.1/bin/ld: /nix/store/jbnm36wq89c7iws6xx6xvv75h0drv48x-icu4c-76.1/lib/libicuuc.so.76: error adding symbols: DSO missing from command line
-	collect2: error: ld returned 1 exit status
-	make[2]: *** [../include/buildrules:65: xfs_scrub] Error 1
-	make[1]: *** [include/buildrules:35: scrub] Error 2
+Can we just drop anything with 'stable@'? These are patches from
+libxfs syncs, do they have any value for stable@ list?
 
-Link: https://src.fedoraproject.org/rpms/xfsprogs/c/624b0fdf7b2a31c1a34787b04e791eee47c97340 [1]
-Signed-off-by: Alyssa Ross <hi@alyssa.is>
----
- m4/package_icu.m4 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But the change is still make sense if anyone uses hash mark for
+something else, I will apply your change.
 
-diff --git a/m4/package_icu.m4 b/m4/package_icu.m4
-index 3ccbe0cc..6b89c874 100644
---- a/m4/package_icu.m4
-+++ b/m4/package_icu.m4
-@@ -1,5 +1,5 @@
- AC_DEFUN([AC_HAVE_LIBICU],
--  [ PKG_CHECK_MODULES([libicu], [icu-i18n], [have_libicu=yes], [have_libicu=no])
-+  [ PKG_CHECK_MODULES([libicu], [icu-i18n icu-uc], [have_libicu=yes], [have_libicu=no])
-     AC_SUBST(have_libicu)
-     AC_SUBST(libicu_CFLAGS)
-     AC_SUBST(libicu_LIBS)
-
-base-commit: 90d6da68ee54e6d4ef99eca4a82cac6036a34b00
 -- 
-2.47.0
+- Andrey
 
