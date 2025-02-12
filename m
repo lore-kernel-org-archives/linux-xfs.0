@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6938271839;
-	Wed, 12 Feb 2025 03:31:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CAFE271839;
+	Wed, 12 Feb 2025 03:31:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739331072; cv=none; b=qTRb+rXe6dnZPtUb6Z2mJ9TKMddLBicENFO8OTv+I+k3jSLHojTpdAeoo8jsMUxUE+bqp4WYHvKHnqq5ZPXKQS8+mX10Ry29fwjAHxL3/sFLyb5cyzbmRCmSvgNmhOcY/tuZBAFO2yMOJm1zKVjiH+JycsR7yw6BWaTaPbGxO1o=
+	t=1739331088; cv=none; b=PR3+gGpZJ8X+UuYQNpXddOI1/GII63un7iZPs/7RWbVr+z1xpeelfLS8YckTpkiKEhzvB4PjFP2B2SpmlNnotAswTNHjiMwhda4jG9yOFfNGDz1V81AGgGTyqR1px94W6Vb8GZ78KrsCbtaf9ohLz+MTG1rYqLNCX7XMuZtGIjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739331072; c=relaxed/simple;
-	bh=O7UsdjRvd3ikrleJoJT87R/+CCyi8FbeYmU5NyFUu68=;
+	s=arc-20240116; t=1739331088; c=relaxed/simple;
+	bh=4Vo3B1NoJiPb9nFIR2rlIEtOJQFxP3eMgT4R8v4e5o8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fY9lDspkaXNiqpGgHGHJcrjWFJ+zNbQWLSioS6yWw3US0+X8vlLs6kMDjG24eLcCwYesi9G62dxGOrxiyNYdoet5taw5oyhXpXkUzzg7Wh41ucKf14ELboIVc/WFUb0Q4kcx8Xxozun8Oo5aePMCvPHAzIed3nyJhpX5dDX7PWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T1wdDRI1; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=IwEuJdU8ogzKMIx5FlA1R+YEjWenOBZPOc1lk9edznsGcJbzuB0a5r7aYsqfjgQJaY2Zj0y+2OmjDwghAtX07vOclcpBhTutyiELOChpt1lvTrD2TvJtH2KbWq8FQr8YLj2XSjj5N09G0D8funyn21aFSNfBMqrGM75PIzOs4XA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iVF03VkT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T1wdDRI1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 242B4C4CEDF;
-	Wed, 12 Feb 2025 03:31:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iVF03VkT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0234C4CEDF;
+	Wed, 12 Feb 2025 03:31:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739331072;
-	bh=O7UsdjRvd3ikrleJoJT87R/+CCyi8FbeYmU5NyFUu68=;
+	s=k20201202; t=1739331088;
+	bh=4Vo3B1NoJiPb9nFIR2rlIEtOJQFxP3eMgT4R8v4e5o8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=T1wdDRI1Yi8msycWFWliOq3ubTom16GoP+zCt5rbusj+fDL91ZK0S9OF0+mrGKgqd
-	 +4oqDE+BBKRH9ohfRqGd/tzG0ZGx05YBL2sW6ckVWSljAzTJXIqZhdYU0kl+tnifQe
-	 CGSCPxHxnHEkjybhDhRH+4GDWBxMHBjU5rM/zPQonXkUG/75AVph5RSFp9WYrF+WEf
-	 05Vdx1AYz+D6pSG94cAq9XQ+seIt6SKv7aj2ERSwmv6PTxN/32tuhhCmvUBD2vJEMj
-	 4HeN9o6W7I8ye2pDMBhwTqFwOWrwJYP1rCdLwgBn9g/d//VSN5KGtrdJ15X42oXlw3
-	 Tov2Jb/Hppwew==
-Date: Tue, 11 Feb 2025 19:31:11 -0800
-Subject: [PATCH 02/34] metadump: make non-local function variables more
- obvious
+	b=iVF03VkT5vA+M9LnPv5F1YMeou2Z878h5jT85/3F9y77QQY2NCZrn0SLE1QFMDEpv
+	 qfDHQ8gV9zheKoDaJLbzxm6RtYk1r2o11FaXj6gP7JeZD9IPgjiyd/TgV67SJiDOxI
+	 S6cS6SwXH3/Xv8wVDYbfmZI9O2TR0QCN/8HiLbBEumJIReDw0NS5wZRNqP+AE5x8GD
+	 MYaluftHNuC+pPDXak6iBdWr3rybF7ccQZg6+KvKmKFdK7HRARIGsk546Q3N83r/7f
+	 cRz0WhO8AsHe3EvAkDFostwjvENvUNgSRt6c/TdlByfVKeafbwK8Vj5P3WcKGKg/K4
+	 iz+VPGtGZOXhA==
+Date: Tue, 11 Feb 2025 19:31:27 -0800
+Subject: [PATCH 03/34] metadump: fix cleanup for v1 metadump testing
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: dchinner@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173933094384.1758477.15976165381123294095.stgit@frogsfrogsfrogs>
+Message-ID: <173933094400.1758477.17916073142035868763.stgit@frogsfrogsfrogs>
 In-Reply-To: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,83 +45,53 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In _xfs_verify_metadump_v2(), we want to set up some loop devices,
-record the names of those loop devices, and then leave the variables in
-the global namespace so that _xfs_cleanup_verify_metadump can dispose of
-them.
-
-Elsewhere in fstests the convention for global variables is to put them
-in all caps to make it obvious that they're global and not local
-variables, so do that here too.
+In commit ce79de11337e38, the metadump v2 tests were updated to leave
+the names of loop devices in some global variables so that the cleanup
+method can find them and remove the loop devices.  Inexplicably, the
+metadump v1 test function was not upgraded.  Do so now.
 
 Cc: <fstests@vger.kernel.org> # v2024.12.08
 Fixes: ce79de11337e38 ("fstests: clean up loop device instantiation")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- common/metadump |   28 +++++++++++++---------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
+ common/metadump |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 
 diff --git a/common/metadump b/common/metadump
-index 3aa7adf76da4bb..493f8b6379dc0b 100644
+index 493f8b6379dc0b..a4ec9a7f921acf 100644
 --- a/common/metadump
 +++ b/common/metadump
-@@ -25,8 +25,8 @@ _xfs_cleanup_verify_metadump()
- 	test -n "$XFS_METADUMP_FILE" && rm -f "$XFS_METADUMP_FILE"
- 
- 	if [ -n "$XFS_METADUMP_IMG" ]; then
--		[ -b "$md_data_loop_dev" ] && _destroy_loop_device $md_data_loop_dev
--		[ -b "$md_log_loop_dev" ] && _destroy_loop_device $md_log_loop_dev
-+		[ -b "$METADUMP_DATA_LOOP_DEV" ] && _destroy_loop_device $METADUMP_DATA_LOOP_DEV
-+		[ -b "$METADUMP_LOG_LOOP_DEV" ] && _destroy_loop_device $METADUMP_LOG_LOOP_DEV
- 		for img in "$XFS_METADUMP_IMG"*; do
- 			test -e "$img" && rm -f "$img"
- 		done
-@@ -100,9 +100,7 @@ _xfs_verify_metadump_v2()
+@@ -61,7 +61,6 @@ _xfs_verify_metadump_v1()
  	local metadump_file="$XFS_METADUMP_FILE"
- 	local version="-v 2"
+ 	local version=""
  	local data_img="$XFS_METADUMP_IMG.data"
 -	local data_loop
- 	local log_img=""
--	local log_loop
  
- 	# Capture metadump, which creates metadump_file
- 	_scratch_xfs_metadump $metadump_file $metadump_args $version
-@@ -118,27 +116,27 @@ _xfs_verify_metadump_v2()
- 		_scratch_xfs_mdrestore $metadump_file
+ 	# Force v1 if we detect v2 support
+ 	if [[ $MAX_XFS_METADUMP_FORMAT > 1 ]]; then
+@@ -75,18 +74,19 @@ _xfs_verify_metadump_v1()
+ 	SCRATCH_DEV=$data_img _scratch_xfs_mdrestore $metadump_file
  
  	# Create loopdev for data device so we can mount the fs
--	md_data_loop_dev=$(_create_loop_device $data_img)
+-	data_loop=$(_create_loop_device $data_img)
 +	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
  
- 	# Create loopdev for log device if we recovered anything
--	test -s "$log_img" && md_log_loop_dev=$(_create_loop_device $log_img)
-+	test -s "$log_img" && METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
- 
  	# Mount fs, run an extra test, fsck, and unmount
--	SCRATCH_DEV=$md_data_loop_dev SCRATCH_LOGDEV=$md_log_loop_dev _scratch_mount
-+	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV _scratch_mount
+-	SCRATCH_DEV=$data_loop _scratch_mount
++	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV _scratch_mount
  	if [ -n "$extra_test" ]; then
--		SCRATCH_DEV=$md_data_loop_dev SCRATCH_LOGDEV=$md_log_loop_dev $extra_test
-+		SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV $extra_test
+-		SCRATCH_DEV=$data_loop $extra_test
++		SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV $extra_test
  	fi
--	SCRATCH_DEV=$md_data_loop_dev SCRATCH_LOGDEV=$md_log_loop_dev _check_xfs_scratch_fs
--	_unmount $md_data_loop_dev
-+	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV _check_xfs_scratch_fs
+-	SCRATCH_DEV=$data_loop _check_xfs_scratch_fs
+-	SCRATCH_DEV=$data_loop _scratch_unmount
++	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV _check_xfs_scratch_fs
 +	_unmount $METADUMP_DATA_LOOP_DEV
  
  	# Tear down what we created
--	if [ -b "$md_log_loop_dev" ]; then
--		_destroy_loop_device $md_log_loop_dev
--		unset md_log_loop_dev
-+	if [ -b "$METADUMP_LOG_LOOP_DEV" ]; then
-+		_destroy_loop_device $METADUMP_LOG_LOOP_DEV
-+		unset METADUMP_LOG_LOOP_DEV
- 		rm -f $log_img
- 	fi
--	_destroy_loop_device $md_data_loop_dev
--	unset md_data_loop_dev
+-	_destroy_loop_device $data_loop
 +	_destroy_loop_device $METADUMP_DATA_LOOP_DEV
 +	unset METADUMP_DATA_LOOP_DEV
  	rm -f $data_img
