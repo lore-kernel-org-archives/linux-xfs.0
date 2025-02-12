@@ -1,41 +1,76 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BAFF201025
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 21:29:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 333681FF1DF
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 21:47:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739395776; cv=none; b=NB2vEPOSP+L42y8mXmSvAXNzr8GHKsW8KXQNTIvoL73vbXfItzVaTmMSAecsIwQ8XIUMXh5CAb5mjL4r++jvVk4r0EhPSZVmMMtCSHdaU7PROw4MH5RLVCzhr/l1jcjRXqUvmmVdQ8hJ8LI00mSz+m8+Slqdxji54YYXry0VZh8=
+	t=1739396830; cv=none; b=EDLc815TWBoSIFBWey3LNkGHbldUibdb75vQK/IRegZk52KKZpCm/xmCIQwx+V1vuAxu2viBCWbwy1tv1V5vxmJbXilVtkEvsTj4OMvId5nSAikqGMYD7B6UIDe/Ru4EBRpfLwN6jVQtg6BvLb5kKQunXV4qKzHbh8yJf3F8SDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739395776; c=relaxed/simple;
-	bh=Tz6QoWm1j/BLQtUCh61qLrUZSojkBSngwEYs6uJpWrY=;
+	s=arc-20240116; t=1739396830; c=relaxed/simple;
+	bh=Lnq4FTvbanMJRWO9UU2Sh2ynk+Qtj7WbE2EyQGFzh1U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eAYjoO9ojc48IxOdZPgkWLsju5ak/OTQhX7cuEJp23us1mCGU2XEnVOcCjRSIWKVlf7reL3fVgg5/CnCF8LlmXNsm2sH53R6oa255uLyQKXv8ttatF589Vcb4yxUDCUXftpaj6rX3u+yuva6/x56rRQFoPZBBX2QPihi4JoK3LU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GGWKH4wH; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z76kXus3W8I8RfyFp5Ryir5LoG64Q6H0LvEoEnPU5WB3dPmfzN2pwYxogQkHN8YS6kJOFcW+xjZssA1boy1+4qMyjivAImIJNfkOhSNdlG+1xmlZjbncD3VFJiF5aTF6lsNorVYTZhjiq3LUabI790ovmAPTDUnZtTgwiBCPwOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=pGLy+gkJ; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GGWKH4wH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFD36C4CEDF;
-	Wed, 12 Feb 2025 21:29:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739395775;
-	bh=Tz6QoWm1j/BLQtUCh61qLrUZSojkBSngwEYs6uJpWrY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GGWKH4wHsruI4raB471OWCMYeG6wWnwPK404ZkhMxAZrm0Ig3dT+HQEYaOgdr0U3h
-	 fonM4zhfI5o9gE1fj9W0MIMamPPboeug/XdnEQ++mWf2nSKJpW2sUZrYWkYF7E4dVs
-	 s1uZUX7knK9vUTKl3+qofa3uw9agqNS7rEY6y7evnQfFc6308YjcxNDL6Wx9M//LBK
-	 5c93nb+Sg7BC8PQXgm+V6uBQiNQ4WkUrVZvk+hk01AZJOsMXlFQrZI8mx0qS/QwjNa
-	 dWpRzaDEOPntxoj/oo90p24JHHJIt/WpMGnAPHLwG5TJ2hV1NaKqT+2LErkIoDFM9n
-	 8EM2S84l+vpJQ==
-Date: Wed, 12 Feb 2025 13:29:35 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH v3 5/8] Add git-contributors script to notify about merges
-Message-ID: <20250212212935.GL21808@frogsfrogsfrogs>
-References: <20250211-update-release-v3-0-7b80ae52c61f@kernel.org>
- <20250211-update-release-v3-5-7b80ae52c61f@kernel.org>
- <20250211185804.GD21808@frogsfrogsfrogs>
- <rzlzwjixwg7i442ohupcovrtol4awuhwusdm6uwx36jphf4sqy@2qx3yccpkqba>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="pGLy+gkJ"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-220d132f16dso2261505ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 13:47:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1739396828; x=1740001628; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gWgH6BRH4uvfdvHvSNKEFUnHAT9O3jpVoaM4yCHjsD8=;
+        b=pGLy+gkJFeRS2FAYEdguWi+vIRuxJiZ3CMyiVGUGQWRToFyeiHI8IyIZ/Tkr98NWm5
+         Sy5POiZhB4kS96WXqeX3hWrCv/pUBTSDeV8XW7pgp66W/jQ/ZjptoWiYJ7+GW+vLuHVv
+         /Auke5v+98+6I/f8Waya5yhyd6Qwg+BpFfbYuCDwqSk2hYuDbC1XHMgVE3m7vmGQlUR3
+         +y1sNCQmZiO99toHXHg+w9TiSmHPSRucPPsnOng0RhHtcSlU2nOKZGPaM10PLdTomzEr
+         2AXqCxc0WbKaag+prVlnoZxVlgnGKuhrW5+OvEOq6/ogyE0qnXqpTbZIkt8XxFZHgtzZ
+         lovA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739396828; x=1740001628;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gWgH6BRH4uvfdvHvSNKEFUnHAT9O3jpVoaM4yCHjsD8=;
+        b=uchGU3NVb2BaMyLdSAdOEZJd4j1nZFSa8UoztYloKPRsS09aaHqdoyQhxnvGhlYzMm
+         BvkN+yd9U2BgPQ5PVy3szntgTwZEq3EjNIZ8HGVcXeQERifWBmTzsy88bdnxdkwirUDV
+         6NgIkOKXjI2ZYSRXCaNYnDzAocEeNxv+JJ/qruC2+SHdL+uhPk2EfnF9kENR9WlquL7R
+         gAN303p27W1wSFwWz3dW4SbJ25AP9Hrefabt+1eBxgycuLWWsztlDu9uH5UOu1kS+RWK
+         TfoRsIJKF4aS9cgWVZ9IHQwhOC31HbFb4qPKcaDwMM7+HaAlRGrPTq4v2C8IL5vlGlFN
+         +69A==
+X-Forwarded-Encrypted: i=1; AJvYcCVHRLfMvo0/3Y+UCQugaqo/7RXTZsO3UqXO6dxnF8U0svsYohU41UjG/RtmiGObWaHkW5z67aU1nEc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YziVUN127W2qSY4US0+RWO/stxznfoZcsOvZpsNPC4Yr4+rF1sn
+	XOj/oKxxgXR/fyyR8BNHHvzPWEgclxNGRubUqBk8myXbbAp5MDwkJ4eoOZlzZRE=
+X-Gm-Gg: ASbGncva62Sk5A+iM0RSPH3HmtYqcouFz3Il/oDxubg6OCXjY7OTE4oI6lvdYDKzsB5
+	5oi4VerVKu/UOMi1TM8cTgu/LRdneZeuYzVpMyGwHBt+S2/bJ6CYa4KeQ2Q3IU1G/th26eDjLHL
+	zrGGMzrnHNYX2j9CkMTRoi+O6OXO3oo4QIqLgEmsjmjHXHee3m/e6SjIbs28y9JiHAGsFaVBmCE
+	K6VgnZsv7pwMtZQS+WVu8eQ5pJCwTk24FGpOHloS4DVfAcfjEsQ61swIJGdZA06nR3Y72Q6szGT
+	BIxNx/c+lixxpTEV3x03BD9WmkqYDj3nQK7HLR4XRsnJ0ZgYGFRK5dYb
+X-Google-Smtp-Source: AGHT+IFvEo1sLDGK43eislHv14UxDSjw3KRGdmZi4jemDh6x9pT6qVEWn8GmLa/4wvn4h+SozAZ8GA==
+X-Received: by 2002:a17:902:e5cc:b0:21f:3e2d:7d58 with SMTP id d9443c01a7336-220bbad65b4mr69397715ad.13.1739396828519;
+        Wed, 12 Feb 2025 13:47:08 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-220d545c8d1sm177145ad.113.2025.02.12.13.47.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Feb 2025 13:47:08 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tiKZV-00000000Rxy-2gAy;
+	Thu, 13 Feb 2025 08:47:05 +1100
+Date: Thu, 13 Feb 2025 08:47:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
+Subject: Re: [PATCH v1 3/3] xfs: Add a testcase to check remount with noattr2
+ on a v5 xfs
+Message-ID: <Z60W2U8raqzRKYdy@dread.disaster.area>
+References: <cover.1739363803.git.nirjhar.roy.lists@gmail.com>
+ <de61a54dcf5f7240d971150cb51faf0038d3d835.1739363803.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,186 +79,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <rzlzwjixwg7i442ohupcovrtol4awuhwusdm6uwx36jphf4sqy@2qx3yccpkqba>
+In-Reply-To: <de61a54dcf5f7240d971150cb51faf0038d3d835.1739363803.git.nirjhar.roy.lists@gmail.com>
 
-On Wed, Feb 12, 2025 at 12:16:46PM +0100, Andrey Albershteyn wrote:
-> On 2025-02-11 10:58:04, Darrick J. Wong wrote:
-> > On Tue, Feb 11, 2025 at 06:26:57PM +0100, Andrey Albershteyn wrote:
-> > > Add python script used to collect emails over all changes merged in
-> > > the next release.
-> > > 
-> > > CC: Darrick J. Wong <djwong@kernel.org>
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> > > ---
-> > >  tools/git-contributors.py | 94 +++++++++++++++++++++++++++++++++++++++++++++++
-> > >  1 file changed, 94 insertions(+)
-> > > 
-> > > diff --git a/tools/git-contributors.py b/tools/git-contributors.py
-> > > new file mode 100755
-> > > index 0000000000000000000000000000000000000000..83bbe8ce0ee1dcbd591c6d3016d553fac2a7d286
-> > > --- /dev/null
-> > > +++ b/tools/git-contributors.py
-> > > @@ -0,0 +1,94 @@
-> > > +#!/usr/bin/python3
-> > > +
-> > > +# List all contributors to a series of git commits.
-> > > +# Copyright(C) 2025 Oracle, All Rights Reserved.
-> > > +# Licensed under GPL 2.0 or later
-> > > +
-> > > +import re
-> > > +import subprocess
-> > > +import io
-> > > +import sys
-> > > +import argparse
-> > > +import email.utils
-> > > +
-> > > +DEBUG = False
-> > > +
-> > > +def backtick(args):
-> > > +    '''Generator function that yields lines of a program's stdout.'''
-> > > +    if DEBUG:
-> > > +        print(' '.join(args))
-> > > +    p = subprocess.Popen(args, stdout = subprocess.PIPE)
-> > > +    for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
-> > > +        yield line
-> > > +
-> > > +class find_developers(object):
-> > > +    def __init__(self):
-> > > +        tags = '%s|%s|%s|%s|%s|%s|%s|%s' % (
-> > > +            'signed-off-by',
-> > > +            'acked-by',
-> > > +            'cc',
-> > > +            'reviewed-by',
-> > > +            'reported-by',
-> > > +            'tested-by',
-> > > +            'suggested-by',
-> > > +            'reported-and-tested-by')
-> > > +        # some tag, a colon, a space, and everything after that
-> > > +        regex1 = r'^(%s):\s+(.+)$' % tags
-> > > +
-> > > +        self.r1 = re.compile(regex1, re.I)
-> > > +
-> > > +    def run(self, lines):
-> > > +        addr_list = []
-> > > +
-> > > +        for line in lines:
-> > > +            l = line.strip()
-> > > +
-> > > +            # emailutils can handle abominations like:
-> > > +            #
-> > > +            # Reviewed-by: Bogus J. Simpson <bogus@simpson.com>
-> > > +            # Reviewed-by: "Bogus J. Simpson" <bogus@simpson.com>
-> > > +            # Reviewed-by: bogus@simpson.com
-> > > +            # Cc: <stable@vger.kernel.org> # v6.9
-> > > +            # Tested-by: Moo Cow <foo@bar.com> # powerpc
-> > > +            m = self.r1.match(l)
-> > > +            if not m:
-> > > +                continue
-> > > +            (name, addr) = email.utils.parseaddr(m.expand(r'\g<2>'))
-> > > +
-> > > +            # This last split removes anything after a hash mark,
-> > > +            # because someone could have provided an improperly
-> > > +            # formatted email address:
-> > > +            #
-> > > +            # Cc: stable@vger.kernel.org # v6.19+
-> > > +            #
-> > > +            # emailutils doesn't seem to catch this, and I can't
-> > > +            # fully tell from RFC2822 that this isn't allowed.  I
-> > > +            # think it is because dtext doesn't forbid spaces or
-> > > +            # hash marks.
-> > > +            addr_list.append(addr.split('#')[0])
-> > 
-> > I think it's the case that the canonical stable cc tag format for kernel
-> > patches as provided by the stable kernel process rules document:
-> > 
-> > Cc: <stable@vger.kernel.org> # vX.Y
-> > 
-> > is not actually actually rfc5322 compliant, so strings like that break
-> > Python's emailutils parsers.  parseaddr() completely chokes on this, and
-> > retuns name=='' and addr=='', because the only thing that can come after
-> > the address portion are whitespace, EOL, or a comma followed by more
-> > email addresses.  There's definitely not supposed to be an octothorpe
-> > followed by even more text.
-> > 
-> > In the end I let myself be nerdsniped with even more string parsing bs,
-> > and this loop body is the result:
-> > 
-> > 		l = line.strip()
-> > 
-> > 		# First, does this line match any of the headers we
-> > 		# know about?
-> > 		m = self.r1.match(l)
-> > 		if not m:
-> > 			continue
-> > 
-> > 		# The split removes everything after an octothorpe
-> > 		# (hash mark), because someone could have provided an
-> > 		# improperly formatted email address:
-> > 		#
-> > 		# Cc: stable@vger.kernel.org # v6.19+
-> > 		#
-> > 		# This, according to my reading of RFC5322, is allowed
-> > 		# because octothorpes can be part of atom text.
-> > 		# However, it is interepreted as if there weren't any
-> > 		# whitespace ("stable@vger.kernel.org#v6.19+").  The
-> > 		# grammar allows for this form, even though this is not
-> > 		# a correct Internet domain name.
-> > 		#
-> > 		# Worse, if you follow the format specified in the
-> > 		# kernel's SubmittingPatches file:
-> > 		#
-> > 		# Cc: <stable@vger.kernel.org> # v6.9
-> > 		#
-> > 		# emailutils will not know how to parse this, and
-> > 		# returns empty strings.  I think this is because the
-> > 		# angle-addr specification allows only whitespace
-> > 		# between the closing angle bracket and the CRLF.
-> > 		#
-> > 		# Hack around both problems by ignoring everything
-> > 		# after an octothorpe, no matter where it occurs in the
-> > 		# string.  If someone has one in their name or the
-> > 		# email address, too bad.
-> > 		a = m.expand(r'\g<2>').split('#')[0]
-> > 
-> > 		# emailutils can extract email addresses from headers
-> > 		# that roughly follow the destination address field
-> > 		# format:
-> > 		#
-> > 		# Reviewed-by: Bogus J. Simpson <bogus@simpson.com>
-> > 		# Reviewed-by: "Bogus J. Simpson" <bogus@simpson.com>
-> > 		# Reviewed-by: bogus@simpson.com
-> > 		# Tested-by: Moo Cow <foo@bar.com>
-> > 		#
-> > 		# Use it to extract the email address, because we don't
-> > 		# care about the display name.
-> > 		(name, addr) = email.utils.parseaddr(a)
-> > 		addr_list.append(addr)
-> > 
-> > <shrug> but maybe we should try that on a few branches first before
-> > committing to this string parsing mess ... ?  Not that this is any less
-> > stupid than the previous version I shared out. :(
-> 
-> Can we just drop anything with 'stable@'? These are patches from
-> libxfs syncs, do they have any value for stable@ list?
+On Wed, Feb 12, 2025 at 12:39:58PM +0000, Nirjhar Roy (IBM) wrote:
+> This testcase reproduces the following bug:
+> Bug:
+> mount -o remount,noattr2 <device> <mount_point> succeeds
+> unexpectedly on a v5 xfs when CONFIG_XFS_SUPPORT_V4 is set.
 
-None at all; we should probably make libxfs-apply filter those out.
+AFAICT, this is expected behaviour. Remount intentionally ignores
+options that cannot be changed.
 
-> But the change is still make sense if anyone uses hash mark for
-> something else, I will apply your change.
+> Ideally the above mount command should always fail with a v5 xfs
+> filesystem irrespective of whether CONFIG_XFS_SUPPORT_V4 is set
+> or not.
 
-<shrug> I've occasionally seen people leave trailers such as:
+No, we cannot fail remount when invalid options are passed to the
+kernel by the mount command for historical reasons. i.e. the mount
+command has historically passed invalid options to the kernel on
+remount, but expects the kernel to apply just the new options that
+they understand and ignore the rest without error.
 
-Acked-by: "Cowmoo Userguy" <cow@user.com> # xfs
+i.e. to keep compatibility with older userspace, we cannot fail a
+remount because userspace passed an option the kernel does not
+understand or cannot change.
 
-On treewide changes, so I think we should handle hashmarks correctly
-even if we rip out the stable@vger cc's.
+Hence, in this case, XFS emits a deprecation warning for the noattr2
+mount option on remount (because it is understood), then ignores
+because it it isn't a valid option that remount can change.
 
---D
-
-> 
-> -- 
-> - Andrey
-> 
-> 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
