@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 788DE271839;
-	Wed, 12 Feb 2025 03:38:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4430271839;
+	Wed, 12 Feb 2025 03:39:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739331526; cv=none; b=JoJD93RguOy/VmHQiz7lqVDwzV/KYMaIm8I2iy2E0ADYvsbGG5mmGgFdS00tkcZM5YJTR2Fz/OEa2cDfl8jXEZxdP5kRLFm+4PfZt44fzMiviJ6p8gf29heg0q3o+n0vgf5JN3q9P7VfYH9I3jRgWnDHYTG+28Xojy4GbJWtuw4=
+	t=1739331541; cv=none; b=fb0cGkFDe9m/AH/k4vXVhoBYf3dN7CRal7xahlqfZoOBY2nuxSoTV3jHBZEOelNq7yMQ8T+TqMlcczVLtBxGjJx15jCrIj+vvpLIhbArXuXBuPN02SyC3FYgd/s77tJUIPN6gCXw7B1azL6QxcpNwsI8zguLdkvOjwWbhUPjTyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739331526; c=relaxed/simple;
-	bh=ULpbBe52ry67K5EfFU1S2pj23M5/Hyl/23q+Pfm2XgI=;
+	s=arc-20240116; t=1739331541; c=relaxed/simple;
+	bh=RL6FioP+uYWr7OQkW6jY+H2nPZnogWHf+FxOF0UrEJY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HgBH7H00L5d1Nf07rM7025yzvfIf/9ScYNv3pV5utlCXzUd+YqB1sWn9EwuBva0a/Xl1pYsLfTljDaWc+6OQsN2nhXnlHjhY95fTFC375LvTwnZnO7OcWD5K01o0GQmY9qz9I3wnhO7iigGtNZ4u0EAGqp+3pPvEXONZQY4bd6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gPrIMau6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SEEm9Ntt2hpOfiy/K/pZDLvxXdtxj1UPW3GpK5RAxU469zO/VKzHuXEc7FNtSvB3LJOXLZuykC3V7UayHgil6pfm5p4itu6pUZyNekJ1p4spcv73cxPQU8Aoec1S2rQfVBBL2CxmJL3EP7Q/ke2VFcTY0TehlBkAawbeBoPlsVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=grr7gBAz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gPrIMau6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4B71C4CEDF;
-	Wed, 12 Feb 2025 03:38:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="grr7gBAz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FD8AC4CEDF;
+	Wed, 12 Feb 2025 03:39:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739331525;
-	bh=ULpbBe52ry67K5EfFU1S2pj23M5/Hyl/23q+Pfm2XgI=;
+	s=k20201202; t=1739331541;
+	bh=RL6FioP+uYWr7OQkW6jY+H2nPZnogWHf+FxOF0UrEJY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gPrIMau6edsQ6Op88yTN2AN4oi4PaZCW3vtRzXfw6PiPxysS4Zihu4mA2pXgeqW++
-	 2GYml9XzsliRQ5898iCFCM+qAsq3X7OpPOdPmnkSH4sxssirQ4/T5O2eSFxPinCpY9
-	 PcprSjwhhb2l5dyLm9PLbhAr/T/HGaATOrcm5cd3t1o/xHRXhhJ0bKncSaOO1oI6Lw
-	 +e/+MXo1tseHE8wviYfgFsD7JqTGDKxcs/H+Pt5jMUur/7255vxs8Y2Wc+H30M92KZ
-	 a1ntUHkW1gEGo7igc4hNhfBOaCY2cIWrrbYBa4NO0eXa4ZYLmY/1R1+oJfrehZQLeL
-	 Mx3AwHAs8LbUA==
-Date: Tue, 11 Feb 2025 19:38:45 -0800
-Subject: [PATCH 31/34] misc: don't put nr_cpus into the fsstress -n argument
+	b=grr7gBAzQ0hHZ0oB+5YH8/vX9dAl+V9rFysLO2Chjw9o6QwMrT6rcMV7S+RoUXrpj
+	 9+vBQ8FnmqTeB49sR5/IcyhbEVMlFenJgvlyl2U7MeJV5plxB/K6bD8+oZUeJpuUKt
+	 PZwTbZmdBme1vqlFzdPOYNvpn9d/biHTPjY6v1M6PUtU/vBmBJf2yC41uH+UhbGs+i
+	 gjOmTq3RgrGRdKMnNGfpcZyctezb2JX0zrcqxByiVkKakZTUDLITiyhCwYJP2poZCN
+	 9wkQm/RwOOpWlwMxvbpazclGL6si3ZZY50E4LUnnnUcrLWFoO9Grkz7bfwTUKTAwi4
+	 Yks+KMqwyZW2Q==
+Date: Tue, 11 Feb 2025 19:39:01 -0800
+Subject: [PATCH 32/34] common/config: add $here to FSSTRESS_PROG
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: dchinner@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <173933094828.1758477.8612152730597674505.stgit@frogsfrogsfrogs>
+Message-ID: <173933094844.1758477.496172113293722060.stgit@frogsfrogsfrogs>
 In-Reply-To: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,56 +45,28 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-fsstress -n is the number of fs operations per process, not the total
-number of operations.  There's no need to factor nr_cpus into the -n
-argument because that causes excess runtime as core count increases.
+In general we're supposed to specify full paths to fstests binaries with
+$here so that subtests can change the current working directory without
+issues.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- tests/generic/476 |    2 +-
- tests/generic/642 |    2 +-
- tests/generic/750 |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ common/config |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/tests/generic/476 b/tests/generic/476
-index 4537fcd77d2f07..13979127245c77 100755
---- a/tests/generic/476
-+++ b/tests/generic/476
-@@ -18,7 +18,7 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
+diff --git a/common/config b/common/config
+index 77f3fc153eb731..ae9aa3f4b0b8fc 100644
+--- a/common/config
++++ b/common/config
+@@ -128,7 +128,7 @@ export MOUNT_PROG="$(type -P mount)"
+ export UMOUNT_PROG="$(type -P umount)"
+ [ "$UMOUNT_PROG" = "" ] && _fatal "umount not found"
  
- nr_cpus=$((LOAD_FACTOR * 4))
--nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
-+nr_ops=$((25000 * TIME_FACTOR))
- fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus)
- test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
+-export FSSTRESS_PROG="./ltp/fsstress"
++export FSSTRESS_PROG="$here/ltp/fsstress"
+ [ ! -x $FSSTRESS_PROG ] && _fatal "fsstress not found or executable"
  
-diff --git a/tests/generic/642 b/tests/generic/642
-index 4b92a9c181d49c..3c418aaa32bd23 100755
---- a/tests/generic/642
-+++ b/tests/generic/642
-@@ -20,7 +20,7 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- nr_cpus=$((LOAD_FACTOR * 4))
--nr_ops=$((70000 * nr_cpus * TIME_FACTOR))
-+nr_ops=$((70000 * TIME_FACTOR))
- 
- args=('-z' '-S' 'c')
- 
-diff --git a/tests/generic/750 b/tests/generic/750
-index 5c54a5c7888f1d..a0828b50f3c7e4 100755
---- a/tests/generic/750
-+++ b/tests/generic/750
-@@ -37,7 +37,7 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- nr_cpus=$((LOAD_FACTOR * 4))
--nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
-+nr_ops=$((25000 * TIME_FACTOR))
- fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus)
- test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
- 
+ export PERL_PROG="$(type -P perl)"
 
