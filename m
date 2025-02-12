@@ -1,74 +1,40 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DDB81FF5EA
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 21:01:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D618C201018;
+	Wed, 12 Feb 2025 21:06:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739394101; cv=none; b=FsG+ncRcz2HF+RkqY+6C3reU/GLNRhpDjUWU2Triu7d9CQEQsLzjQVH1So66XKJJI+jbHPZmHkFXGiQZ7f2IKNfqqhd7O59aJGpe7PDq9ii5u1wNch/R6BmJgEoB4VtrfLVmBCzYe1DvlmU61whAoNJ7yIWzM49OCAJjP4m8VFI=
+	t=1739394372; cv=none; b=Ax9Kr52CXVM+Ki8xU3E8iEFY3YoD6bmHqBN7g+4p8YF2yutTA8ZkJXX7QaSW0xDgDyz8oqG8gHXsPUNi6V/Xb/Vw1DFqQmxbeZHC6V/S6XV9C79pZtu9Q3RqwYkClVqeO1zg3Hmui59Lc+026NcCE5EoVPokImvlmJBNsf+A3m4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739394101; c=relaxed/simple;
-	bh=1VyAEiQDS2q9VkRGK+qwT+LU5/8emzrXoHFxIXPyBLU=;
+	s=arc-20240116; t=1739394372; c=relaxed/simple;
+	bh=kjvRLO5npKcpJ3A3vEjixEOPis2d3acjOFa6cM0pDA4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=II98ZtLDl04lcu77B+TEgc0CjgnxpJLwv7aNw7+nbRipqcxGYek0bsZbfHW8kENHYi446/W7u77RZeodEqg4bFm4SRTPKQcIg3qjX2BvD7RKAMVnLyVbXlx46xtSL2JfaqNEyZgxsOjO/6HIpdxGp8I5f3qDpeVNRbgYah0swY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=dXkaMLAi; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=aGwwC4S5jgL0GpH5crleH6tIxgXqhJYU8hVzHkABk0XtdgrlJUxGAoX28C+Sv0j045JMOwVoZKcD7ZN8cIUVG1QBgbUeJXQeMRpJ2qQ2C7eAThnxwSi3qQBw5K5IqQtW2WGTrVCCpZfJhIWn6QTua/nZoICr3aHRkPJT3t+NU48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gy+zsUsE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="dXkaMLAi"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-21f6d2642faso2848505ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 13:01:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1739394099; x=1739998899; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=JIR6zZ2LFfRJBDmVHzXDNp6ZFUCOkYJZeyqW+eFjzG8=;
-        b=dXkaMLAiRFcefsSibZnHaWvEIsJnViDbvC4+W3iGzjZxhcLZT4Cxe9mWzWgjiuzIND
-         pTpmDbiquuCq58KfFGME0uGDvFmed2973V033u3wJi/ySi37h5jmL1YUM1z5Rr8i04w2
-         wplHBC7pIoG0Lk0bMH6HlqJmMRVPjyQ+Hn6+T/BkLm48GEE9nYa5wDRLEahW8H4BqG9s
-         ST/IBhVE2F275QdgOJJStNBhB+ZUrtQPxAfv1NvpXyZdO9tiBrScpH9LaCrXO8NL/B6x
-         rJV/69IrpGRA/1aduMAnSxhGQ0R4WQ+dASBSFD4HmwSBAUghZmpnOjHUHMfNxEfIt4ME
-         os0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739394099; x=1739998899;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JIR6zZ2LFfRJBDmVHzXDNp6ZFUCOkYJZeyqW+eFjzG8=;
-        b=p5CHpPuJjZWWxUj0vbEGGE+lvendjcc2WD+AsaDkIBtqsPaiF+WXRJBi8T3l0yef2S
-         iaN6WbPcUhJjEyOA5ps3EwWOKaTJNWtNZRIVfBelYHp+NPYZz1XCQD1awHEPPwxGREO/
-         nFRjTfNS98cWzixxFoy9PV03N4yKCh45XhCBovjUzTgdYQhCYgYc5zE0jHcnNN2x6qN4
-         6g+LYlMRXpVZabTkK8oIm077H2QkuHZOuBHb1PS1sfsqezZO6DJMdTYBR/sxfhRfuTxd
-         B26DKCHsSOaQhsz3WJRvTDB9rYs8nkrv22hhMrNoSjjw+/T06UX/xLhvckGo73XJhABD
-         c7nA==
-X-Forwarded-Encrypted: i=1; AJvYcCUVJcKg28JkzSrY1apmTzH/rCJ9SsbTby3cR5NF3QlDEVgaviVITI7MpDJZsU2tkpDxeKCmcaQk3Mw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxWA1P+6WNB6bU43TkBYBIQJmBKLGEO/hC9jjYQDBqfICJmnz/z
-	s8QBKkzfQUMPK3Sxmx7KCTa+RdVjs21SVLNhxgPoaw27Q7V1byPQOLvl12lf694=
-X-Gm-Gg: ASbGnctrdSud/Hjnz3EACaE8EEzxLfTK7UNEEDrIdssFPCgMcwt3m/eVaSd/pFcFPuh
-	Sfwni5wVMsDeiZcwkZpy4sHMX5kDibqprFUJmw6sp0vqxHwxQ2Z5H7FKa/2iyLuU3SQj38DYPAb
-	XjfSb9Vs4sglCD/xBm2rK0n0TdnxsA/sLEcIhF8hEvXs0WiJ6qLpZmyEpXfOu6eOHE8vNiuudu6
-	Mx0SfNuzXlfIe3OK66UsdMXDx3GgfYrLT9ftUkPzy4P/6X9J8qshUF3gMwLUMm+n5tQUjyl/sHx
-	c12sSMpvtUCBkbl1vAbgA866ZhRZ22aCcSSfaseGkBwsg4bB08BxNOIJ9IqObLcRuFo=
-X-Google-Smtp-Source: AGHT+IFZQ+UkMOepNiqiOeT5081AklEp/hOZMtQlwn6wyDVLQoiCCEa+ujVvRZhLWXYZgNe74j04vQ==
-X-Received: by 2002:a05:6a21:482:b0:1ee:668f:4230 with SMTP id adf61e73a8af0-1ee668f42e9mr5152871637.33.1739394099547;
-        Wed, 12 Feb 2025 13:01:39 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ad6019204c5sm4418595a12.60.2025.02.12.13.01.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Feb 2025 13:01:39 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tiJrU-00000000RG6-1CPB;
-	Thu, 13 Feb 2025 08:01:36 +1100
-Date: Thu, 13 Feb 2025 08:01:36 +1100
-From: Dave Chinner <david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gy+zsUsE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48A4FC4CEDF;
+	Wed, 12 Feb 2025 21:06:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739394371;
+	bh=kjvRLO5npKcpJ3A3vEjixEOPis2d3acjOFa6cM0pDA4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Gy+zsUsEBW398zqE8HB0pVujP3WkYZqrrbe862qL6eFsd4hBedbNacFdd/p4FM9Cq
+	 WjuyIqZdixT7h3s08punal2d/snY5H6BwlQgBMALwXkg40hNCWBqQ5KHNT5BSJFKXY
+	 WxlTWKKvlZvhqOrS2AD0iJtaUAKvRV7a051WXPHgx2zLJz4Dc3RkA0g6f19diGFHLF
+	 cxVz3+W9i8iLy1IVvY+2fTiiCubXqPnri7QJfF6ytOXMhm7EyTJ6lBgTGdtz3igH/w
+	 3nkzCTBDHzIXEP+UrzimquhxgqCXOLEG29iKn/etyEaiGdG26DdTTXsZ3xjstqDwzX
+	 Z4fpFucmCneRA==
+Date: Wed, 12 Feb 2025 13:06:10 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
 Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
 	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
+	ojaswin@linux.ibm.com, zlang@kernel.org
 Subject: Re: [PATCH v1 1/3] xfs/539: Skip noattr2 remount option on v5
  filesystems
-Message-ID: <Z60MMI3mbC9ou6rC@dread.disaster.area>
+Message-ID: <20250212210610.GY21799@frogsfrogsfrogs>
 References: <cover.1739363803.git.nirjhar.roy.lists@gmail.com>
  <8704e5bd46d9f8dc37cec2781104704fa7213aa3.1739363803.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
@@ -86,19 +52,69 @@ On Wed, Feb 12, 2025 at 12:39:56PM +0000, Nirjhar Roy (IBM) wrote:
 > for default options (attr2, noikeep) and warnings are
 > printed for non default options (noattr2, ikeep). Remount
 > with noattr2 fails on a v5 filesystem, so skip the mount option.
+> 
+> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> ---
+>  tests/xfs/539 | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/xfs/539 b/tests/xfs/539
+> index b9bb7cc1..58eead67 100755
+> --- a/tests/xfs/539
+> +++ b/tests/xfs/539
+> @@ -42,7 +42,8 @@ echo "Silence is golden."
+>  
+>  # Skip old kernels that did not print the warning yet
+>  log_tag
+> -_scratch_mkfs > $seqres.full 2>&1
+> +is_v5=true
+> +_scratch_mkfs |& grep -q "crc=0" && is_v5=false >> $seqres.full 2>&1
 
-Why do we care if remount succeeds or fails? That's not what the
-test is exercising.
+Usually we do this with something more like:
 
-i.e. We are testing to see if the appropriate deprecation warning
-for a deprecated mount option has been issued or not, and that
-should happen regardless of whether the mount option is valid or not
-for the given filesysetm format....
+_scratch_mkfs | _filter_mkfs >>$seqres.full 2>$tmp.mkfs
+. $tmp.mkfs
 
-Hence I don't see any reason for changing the test to exclude
-noattr2 testing on v5 filesystems...
+if [ $_fs_has_crcs -eq 1 ]; then
+	# v5 stuff
+else
+	# v4 stuff
+endif
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  _scratch_mount -o attr2
+>  _scratch_unmount
+>  check_dmesg_for_since_tag "XFS: attr2 mount option is deprecated" || \
+> @@ -60,8 +61,13 @@ for VAR in {attr2,noikeep}; do
+>  		echo "Should not be able to find deprecation warning for $VAR"
+>  done
+>  for VAR in {noattr2,ikeep}; do
+> +	if [[ "$VAR" == "noattr2" ]] && $is_v5; then
+> +		echo "remount with noattr2 will fail in v5 filesystem. Skip" \
+> +			>> $seqres.full
+> +		continue
+
+/me wonders if it'd be cleaner to do:
+
+VARS=(ikeep)
+test $_fs_has_crcs -eq 0 && VARS+=(noattr2)
+
+for VAR in "${VARS[@]}"; do
+	...
+done
+
+> +	fi
+>  	log_tag
+> -	_scratch_remount $VAR
+> +    _scratch_remount $VAR >> $seqres.full 2>&1
+
+Nit: Indentation.
+
+--D
+
+>  	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
+>  		echo "Could not find deprecation warning for $VAR"
+>  done
+> -- 
+> 2.34.1
+> 
+> 
