@@ -1,105 +1,167 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE2E82144AC;
-	Wed, 12 Feb 2025 15:52:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01CD227180B;
+	Wed, 12 Feb 2025 18:31:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739375540; cv=none; b=AjXHYf99SFoq7ix6ET7PEy94GyodRO0/zZ6MFQx3B++/+dastu4zgGcVYDYApyR8yyZFwKCfSpWTMOpoq08v0MnjcBEcm7Zi5VfNoddQEFzBwy23KcvXCh4oNC/RmOS+ZLDK9DoWHJSTG2kiPrTZ1qeLBKhsSHpOOqEiPVSAf10=
+	t=1739385086; cv=none; b=lmb99a8GVNtYpKblBSNuAwFROsr7LWtyU90K0bXTrb/9qmmyrmpkYGVAQiPv9aHxeunywqDtn6HoQeixOCcohpYbKGTcor2Hr4vMOYsA32x5XHv8BEYkkYYJQa29Koym3+Gn9c0W0hXFIuHKJocsSDT4TVIunBqbqA+HQPLqnj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739375540; c=relaxed/simple;
-	bh=c3Tu89L+KJo16ao9W2MrspSO/mqAGsaemYKOxVD/mdQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DDo+ZACCdj55dUInE1ymYLHFEn5d/Wh1g/+0H9vViR/oY7Q3/p6L9NN4o+0w6hTsn/TNSY3BJKclWvZtg9KwB+vMWQIqdOU3c4z+kxoKUSbbzsQl0L5+v4DOrwSFF1QlJfz+MMpIBTZ8yzYDU/aLOqzArDJqW6X6o+VQTMIAWKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d4BKCsEw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739385086; c=relaxed/simple;
+	bh=whHmJxLlmHZe3eoL8ODIdqmfo12n5YdUmAgqoTcVN6k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XInoi+UG+Rlyf0oy8h+oMNPbzuBh4VI86BwEOISccb85LZhE3e6rUu+4q7Id0PDay45jkuik3EwqxB6pAIZeddGF1fR0ap7yhZSSNxOlU5HxSuRxrsphJ+dLqEh5l7um0vk4h/fgNs1fmDzyhPhEC5ReDGk3ZmZ6gvE09tn6lVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PzYCT4tr; arc=none smtp.client-ip=209.85.160.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d4BKCsEw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1DB6C4CEDF;
-	Wed, 12 Feb 2025 15:52:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739375538;
-	bh=c3Tu89L+KJo16ao9W2MrspSO/mqAGsaemYKOxVD/mdQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=d4BKCsEwuWWxFxJXYWEvEAmVGskTKRvyTftFAmVdH1AokBwS7L48C4WkZky2c8Gpv
-	 vcDnis5gm/mWLnskTrKffqvUMbetHb7ex2PeeairgkKfBpi6YSCItfFwL8GREqvmU+
-	 k7c5iIOaHpATt13gvdGoSw50Hfz+uPAj5/hqTvHDq3MDGmyemaFKf7PwZwH96vlq7r
-	 ZNQssnj4+LdeGfjQmXXDyidRvtglYOlutbJxxaDumsKW56yd08WIi0LiZnzgjOXgjH
-	 EnwN76K+BdImtjz39LWY4y212uWvblfa4vktNrd6jqWQSEwpZ6aJMBMfBWYGSEfxcB
-	 KxlrHqDmg6SSw==
-Date: Wed, 12 Feb 2025 16:52:10 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, 
-	David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: Fixes tag needs some work in the xfs tree
-Message-ID: <lculratuqh5wkeb4q3s2zaev74tmnucr4hxqnobuv5gtad66ee@sv3q5n6mj2tw>
-References: <20250212082141.26dc0ad8@canb.auug.org.au>
- <IJGnrm5IKQjzYceF-ZqQJWYf1MhS5dgP1FweES9-blWJn4yorc-dlXKH44IOzWL_R-COTvB7QAa6u2OPkTU9lw==@protonmail.internalid>
- <20250211223159.GF3028674@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PzYCT4tr"
+Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-4719768caf7so28283751cf.3;
+        Wed, 12 Feb 2025 10:31:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739385084; x=1739989884; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=awfLidEoU16uBciKu7RZVBnSTAH8ZmdZhG2jJUtXbOY=;
+        b=PzYCT4trWpH0pubC+tSKTRntRxlf3IjDuoB0i8N6DHaho2bV2rTeQXayTH2EqEP22G
+         JLscHC+8VRmyQMES1qeSm51YwEk6Hmu5rcjIrMIaUt5BSLm/rIbsdC+OCRGPglW+z1yJ
+         Az726C0pqs3+6SywHo+5WV6Iwr3RBG+9jdOFCgRRdIxOAC+HfDn5X2jux8Lm9iUWlnZg
+         b6AH2QnjrHOI7d0CtiBI5rURuGgpPnQadD9UjP3b7ls4fp51MjfosFXGzYaqDQV8GQDJ
+         Ujo+93fET2p6+F31TR43Y7k+z4e7h8x61MkFzocHgm/rFu04kc8WRU11d7MTavRhrgWU
+         32hg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739385084; x=1739989884;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=awfLidEoU16uBciKu7RZVBnSTAH8ZmdZhG2jJUtXbOY=;
+        b=LZQTeAOviEv2e3DCQLkCyyNJm5DZHl85h8cBS6Q9fMehS8654QFWWRu95TckYK4Hmz
+         bVtQlQB5d7Fx464N+N68r2/ZXDrARKg8veZrvvyPpf6J4+YzS7m8xALIQHCK25kNvam1
+         KqqHhwxdSBINJ4l231fd2Ssa8pTwr7cYUohFQTkWsC2zvLZ8iDg1HoBrQft4/dw/HQLi
+         fRJdqdhD4TdmpDpbUDR2pYOq0PkIaCv3LPsqo1DTHnRSKbrO48zwWgK0mvGaEMQ8EHbj
+         IpdkWRNOWoNPbpCNVC/T+mVaqfs1lyWUExmfiyFt69IWpnJuHH4Xh4alySqNIFko8GdN
+         D83A==
+X-Forwarded-Encrypted: i=1; AJvYcCUDTJsk5tfr7aXzf1nPxCGYq+DRIfNKhty3NEF0NS5bEUPBWXy+dZSVWNckxqOC2tXFf+PB5714@vger.kernel.org, AJvYcCWiiP4h4P8wZSLIcW8L9/8M8kCl5zoFEkjyOu3H/x2122+e58fAdMenWfaLFpHLa5zxbgSnUjlr6klQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YyPaYcfdG4OZd7NRoPRiE9il9Nbsawdcn2c3KOzzanG+shJ13Ss
+	rzN1mDV24LoBg+Xvj1j9CWA/JG94RHOAzxvuh+2V1RscFSNMLewm73Qri4aEIMDTeu572t80lnx
+	llmNisxwd982oiuKej7POrMCODdAGF9I9
+X-Gm-Gg: ASbGncsiZBOqyg/olEB305rjrCL07RgbsIADsqLfKl7+VVX5aK4yv01seFsQng50yBf
+	I53yRqBwH5gOr5cOTT17t7oGG9zSYDSPPthmomHo9hWnOJYp8Yqr94quYnMW0tixKlrayPOBxT2
+	QwWOXlZQHnZU0=
+X-Google-Smtp-Source: AGHT+IEyy4XIkiGLj6Qt2gnC9U9cQ4upLpl+MLkiyjEe0Hfw1zBPS/y8PvZAsieG8HTOd+CmHzabWKxMwnWIRz9FbR8=
+X-Received: by 2002:a05:622a:418e:b0:471:bd5e:d5dd with SMTP id
+ d75a77b69052e-471bd5ed804mr21243151cf.16.1739385083698; Wed, 12 Feb 2025
+ 10:31:23 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250211223159.GF3028674@frogsfrogsfrogs>
+References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs> <173933094492.1758477.14479485917819478634.stgit@frogsfrogsfrogs>
+In-Reply-To: <173933094492.1758477.14479485917819478634.stgit@frogsfrogsfrogs>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 12 Feb 2025 10:31:13 -0800
+X-Gm-Features: AWEUYZkecs6pyIy4xGOvusDpwdvdUnpE33Dmd46b-dJVIHzVLNyColq2yNohlnQ
+Message-ID: <CAJnrk1aH9PO8jrqp9TsKquUgW0Shp-1Qrf5AyGGYH0FAa7HKeQ@mail.gmail.com>
+Subject: Re: [PATCH 09/34] generic/759,760: fix MADV_COLLAPSE detection and inclusion
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Feb 11, 2025 at 02:31:59PM -0800, Darrick J. Wong wrote:
-> On Wed, Feb 12, 2025 at 08:21:41AM +1100, Stephen Rothwell wrote:
-> > Hi all,
-> >
-> > In commit
-> >
-> >   bc0651d93a7b ("xfs: fix online repair probing when CONFIG_XFS_ONLINE_REPAIR=n")
-> >
-> > Fixes tag
-> >
-> >   Fixes: 48a72f60861f79 ("xfs: don't complain about unfixed metadata when repairs were injected")
-> >
-> > has these problem(s):
-> >
-> >   - Subject does not match target commit subject
-> >     Just use
-> >         git log -1 --format='Fixes: %h ("%s")'
-> >
-> > maybe you meant
-> >
-> > Fixes: 48a72f60861f ("xfs: refactor repair forcing tests into a repair.c helper")
-> >
-> > or
-> >
-> > Fixes: 8336a64eb75c ("xfs: don't complain about unfixed metadata when repairs were injected")
-> 
-> Yes, 8336a64eb75c.
-> 
-> This patch has been on the list for a month now, and nobody complained.
-> Probably because people aren't good at distinguishing one sequence of
-> hexadecimal from another.
-> 
-> Could we /please/ have a bot to warn about these annotation problems
-> when patches are on the list for review, rather than a month later after
-> it finally enters for-next, without any of the authors, reviewers, or
-> maintainers having noticed?
-> 
-> Maybe the rest of you are all excellent at this, and I should just fuck
-> off and quit.
-> 
+On Tue, Feb 11, 2025 at 7:33=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> On systems with "old" C libraries such as glibc 2.36 in Debian 12, the
+> MADV_COLLAPSE flag might not be defined in any of the header files
+> pulled in by sys/mman.h, which means that the fsx binary might not get
+> built with any of the MADV_COLLAPSE code.  If the kernel supports THP,
+> the test will fail with:
+>
+> >  QA output created by 760
+> >  fsx -N 10000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
+> > -fsx -N 10000 -o 8192 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -h
+> > -fsx -N 10000 -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W -=
+h
+> > +mapped writes DISABLED
+> > +MADV_COLLAPSE not supported. Can't support -h
+>
+> Fix both tests to detect fsx binaries that don't support MADV_COLLAPSE,
+> then fix fsx.c to include the mman.h from the kernel headers (aka
+> linux/mman.h) so that we can actually test IOs to and from THPs if the
+> kernel is newer than the rest of userspace.
+>
+> Cc: <fstests@vger.kernel.org> # v2025.02.02
+> Cc: joannelkoong@gmail.com
+> Fixes: 627289232371e3 ("generic: add tests for read/writes from hugepages=
+-backed buffers")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-FWIW, I've been working on some scripts to better validate patches, but lacks me
-some time, also, a bot would be indeed the best approach.
+Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
 
-I don't plan to validate patches until I pull them in, and this will usually
-happen way after the patches hit the list. So, Darrick's suggestion to get these
-problems early, won't be fixed during integration.
-
-
-> --D
-> 
-> > --
-> > Cheers,
-> > Stephen Rothwell
-> 
-> 
+> ---
+>  common/rc         |    5 +++++
+>  ltp/fsx.c         |    1 +
+>  tests/generic/759 |    1 +
+>  tests/generic/760 |    1 +
+>  4 files changed, 8 insertions(+)
+>
+>
+> diff --git a/common/rc b/common/rc
+> index 07646927bad523..b7736173e6e839 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4976,6 +4976,11 @@ _get_page_size()
+>         echo $(getconf PAGE_SIZE)
+>  }
+>
+> +_require_hugepage_fsx()
+> +{
+> +       $here/ltp/fsx -N 0 -h $TEST_DIR 2>&1 | grep -q 'MADV_COLLAPSE not=
+ supported' && \
+> +               _notrun "fsx binary does not support MADV_COLLAPSE"
+> +}
+>
+>  run_fsx()
+>  {
+> diff --git a/ltp/fsx.c b/ltp/fsx.c
+> index 634c496ffe9317..cf9502a74c17a7 100644
+> --- a/ltp/fsx.c
+> +++ b/ltp/fsx.c
+> @@ -20,6 +20,7 @@
+>  #include <strings.h>
+>  #include <sys/file.h>
+>  #include <sys/mman.h>
+> +#include <linux/mman.h>
+>  #include <sys/uio.h>
+>  #include <stdbool.h>
+>  #ifdef HAVE_ERR_H
+> diff --git a/tests/generic/759 b/tests/generic/759
+> index 6c74478aa8a0e0..a7dec155056abc 100755
+> --- a/tests/generic/759
+> +++ b/tests/generic/759
+> @@ -13,6 +13,7 @@ _begin_fstest rw auto quick
+>
+>  _require_test
+>  _require_thp
+> +_require_hugepage_fsx
+>
+>  run_fsx -N 10000            -l 500000 -h
+>  run_fsx -N 10000  -o 8192   -l 500000 -h
+> diff --git a/tests/generic/760 b/tests/generic/760
+> index c71a196222ad3b..4781a8d1eec4ec 100755
+> --- a/tests/generic/760
+> +++ b/tests/generic/760
+> @@ -14,6 +14,7 @@ _begin_fstest rw auto quick
+>  _require_test
+>  _require_odirect
+>  _require_thp
+> +_require_hugepage_fsx
+>
+>  psize=3D`$here/src/feature -s`
+>  bsize=3D`$here/src/min_dio_alignment $TEST_DIR $TEST_DEV`
+>
