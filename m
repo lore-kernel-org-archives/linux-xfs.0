@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D618C201018;
-	Wed, 12 Feb 2025 21:06:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27F7202F99
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2025 21:20:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739394372; cv=none; b=Ax9Kr52CXVM+Ki8xU3E8iEFY3YoD6bmHqBN7g+4p8YF2yutTA8ZkJXX7QaSW0xDgDyz8oqG8gHXsPUNi6V/Xb/Vw1DFqQmxbeZHC6V/S6XV9C79pZtu9Q3RqwYkClVqeO1zg3Hmui59Lc+026NcCE5EoVPokImvlmJBNsf+A3m4=
+	t=1739395218; cv=none; b=mrYDq3KMglGGoWpPUML4zOJ8h3VD+YTG9mwLa+llrAHVPXNbzmsZG9BN8/SXKyFUF8YAc+jbUlsHRms6u50O9+MnxPboLtsx9zP5L8OJ2hjKK0++cp01M+sX7x08/fuw4hx+0p2WWtOysDRKtdEtWkKtM3Uk+VQ1T5JyispBubU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739394372; c=relaxed/simple;
-	bh=kjvRLO5npKcpJ3A3vEjixEOPis2d3acjOFa6cM0pDA4=;
+	s=arc-20240116; t=1739395218; c=relaxed/simple;
+	bh=rBLQ/xBNNogSjz/XH7knmHpqbrwXgJEWEak/5azmV7Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aGwwC4S5jgL0GpH5crleH6tIxgXqhJYU8hVzHkABk0XtdgrlJUxGAoX28C+Sv0j045JMOwVoZKcD7ZN8cIUVG1QBgbUeJXQeMRpJ2qQ2C7eAThnxwSi3qQBw5K5IqQtW2WGTrVCCpZfJhIWn6QTua/nZoICr3aHRkPJT3t+NU48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gy+zsUsE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=k5H+MTTUuUT3q85d4AMHef0NwuDU34+smmLxE/FFNL0vRchIkrGc2lw+Z26npE5QXwIaktDjspYc6rU6eYLFalPO8mA8XtifctntCRdKp8j8qDPz8Jk1gzYvSWAOY/TgOLHMerwoN1vdbuIQC7bgR78d/9bl0qBefvwVVypBvOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m04Zcuku; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gy+zsUsE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48A4FC4CEDF;
-	Wed, 12 Feb 2025 21:06:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m04Zcuku"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27CDEC4CEE5;
+	Wed, 12 Feb 2025 21:20:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739394371;
-	bh=kjvRLO5npKcpJ3A3vEjixEOPis2d3acjOFa6cM0pDA4=;
+	s=k20201202; t=1739395218;
+	bh=rBLQ/xBNNogSjz/XH7knmHpqbrwXgJEWEak/5azmV7Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Gy+zsUsEBW398zqE8HB0pVujP3WkYZqrrbe862qL6eFsd4hBedbNacFdd/p4FM9Cq
-	 WjuyIqZdixT7h3s08punal2d/snY5H6BwlQgBMALwXkg40hNCWBqQ5KHNT5BSJFKXY
-	 WxlTWKKvlZvhqOrS2AD0iJtaUAKvRV7a051WXPHgx2zLJz4Dc3RkA0g6f19diGFHLF
-	 cxVz3+W9i8iLy1IVvY+2fTiiCubXqPnri7QJfF6ytOXMhm7EyTJ6lBgTGdtz3igH/w
-	 3nkzCTBDHzIXEP+UrzimquhxgqCXOLEG29iKn/etyEaiGdG26DdTTXsZ3xjstqDwzX
-	 Z4fpFucmCneRA==
-Date: Wed, 12 Feb 2025 13:06:10 -0800
+	b=m04ZcukuzCpLfe+6s160PvV4rK8PiPIF7SrNi8eSfKdivINJzPSp0300IlxK4ib45
+	 FJOXSTN3d9qrQlOPlO1/a0hfT9STjrUr0R098qVaa47/ItpZOfCHDYYilHHhAGnkam
+	 e7mokVUs1EWMzCZTz/KQmst16N3fZMMxT38ldi1g72wQZDgrcygRk5ofTXmYYN87du
+	 qA6Zujt5i8axTixeSqCQkSRJUv3GogCviGyfgqjYiYyyIuk6OZel6qbKnv3q7DxOOW
+	 NnhFMXIh9tuNDj/4HqYdRWGFbmNj4G9g70qLgf6jdK7j6A0e+KrOumwE4JTtCIJrrG
+	 Q0zK4AS6oj7+A==
+Date: Wed, 12 Feb 2025 13:20:17 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, zlang@kernel.org
-Subject: Re: [PATCH v1 1/3] xfs/539: Skip noattr2 remount option on v5
- filesystems
-Message-ID: <20250212210610.GY21799@frogsfrogsfrogs>
-References: <cover.1739363803.git.nirjhar.roy.lists@gmail.com>
- <8704e5bd46d9f8dc37cec2781104704fa7213aa3.1739363803.git.nirjhar.roy.lists@gmail.com>
+To: Alyssa Ross <hi@alyssa.is>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH xfsprogs] configure: additionally get icu-uc from
+ pkg-config
+Message-ID: <20250212212017.GK21808@frogsfrogsfrogs>
+References: <20250212081649.3502717-1-hi@alyssa.is>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,76 +42,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8704e5bd46d9f8dc37cec2781104704fa7213aa3.1739363803.git.nirjhar.roy.lists@gmail.com>
+In-Reply-To: <20250212081649.3502717-1-hi@alyssa.is>
 
-On Wed, Feb 12, 2025 at 12:39:56PM +0000, Nirjhar Roy (IBM) wrote:
-> This test is to verify that repeated warnings are not printed
-> for default options (attr2, noikeep) and warnings are
-> printed for non default options (noattr2, ikeep). Remount
-> with noattr2 fails on a v5 filesystem, so skip the mount option.
+On Wed, Feb 12, 2025 at 09:16:49AM +0100, Alyssa Ross wrote:
+> This fixes the following build error with icu 76, also seen by
+> Fedora[1]:
 > 
-> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> ---
->  tests/xfs/539 | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
+> 	/nix/store/9g4gsby96w4cx1i338kplaap0x37apdf-binutils-2.43.1/bin/ld: unicrash.o: undefined reference to symbol 'uiter_setString_76'
+> 	/nix/store/9g4gsby96w4cx1i338kplaap0x37apdf-binutils-2.43.1/bin/ld: /nix/store/jbnm36wq89c7iws6xx6xvv75h0drv48x-icu4c-76.1/lib/libicuuc.so.76: error adding symbols: DSO missing from command line
+> 	collect2: error: ld returned 1 exit status
+> 	make[2]: *** [../include/buildrules:65: xfs_scrub] Error 1
+> 	make[1]: *** [include/buildrules:35: scrub] Error 2
 > 
-> diff --git a/tests/xfs/539 b/tests/xfs/539
-> index b9bb7cc1..58eead67 100755
-> --- a/tests/xfs/539
-> +++ b/tests/xfs/539
-> @@ -42,7 +42,8 @@ echo "Silence is golden."
->  
->  # Skip old kernels that did not print the warning yet
->  log_tag
-> -_scratch_mkfs > $seqres.full 2>&1
-> +is_v5=true
-> +_scratch_mkfs |& grep -q "crc=0" && is_v5=false >> $seqres.full 2>&1
+> Link: https://src.fedoraproject.org/rpms/xfsprogs/c/624b0fdf7b2a31c1a34787b04e791eee47c97340 [1]
+> Signed-off-by: Alyssa Ross <hi@alyssa.is>
 
-Usually we do this with something more like:
+Interesting that this pulls in libicuuc just fine without including
+icu-uc.pc, at least on Debian 12:
 
-_scratch_mkfs | _filter_mkfs >>$seqres.full 2>$tmp.mkfs
-. $tmp.mkfs
+$ grep LIBICU_LIBS build-x86_64/
+build-x86_64/include/builddefs:222:LIBICU_LIBS = -licui18n -licuuc -licudata
 
-if [ $_fs_has_crcs -eq 1 ]; then
-	# v5 stuff
-else
-	# v4 stuff
-endif
+Debian sid has the same icu 76 and (AFAICT) it still pulls in the
+dependency:
 
->  _scratch_mount -o attr2
->  _scratch_unmount
->  check_dmesg_for_since_tag "XFS: attr2 mount option is deprecated" || \
-> @@ -60,8 +61,13 @@ for VAR in {attr2,noikeep}; do
->  		echo "Should not be able to find deprecation warning for $VAR"
->  done
->  for VAR in {noattr2,ikeep}; do
-> +	if [[ "$VAR" == "noattr2" ]] && $is_v5; then
-> +		echo "remount with noattr2 will fail in v5 filesystem. Skip" \
-> +			>> $seqres.full
-> +		continue
+Name: icu-i18n
+Requires: icu-uc
 
-/me wonders if it'd be cleaner to do:
+Is there something different in Fedora nowadays?
 
-VARS=(ikeep)
-test $_fs_has_crcs -eq 0 && VARS+=(noattr2)
-
-for VAR in "${VARS[@]}"; do
-	...
-done
-
-> +	fi
->  	log_tag
-> -	_scratch_remount $VAR
-> +    _scratch_remount $VAR >> $seqres.full 2>&1
-
-Nit: Indentation.
+I'm not opposed to this change, I'm wondering why there's a build
+failure and how adding it explicitly to AC_HAVE_LIBICU fixes it.
 
 --D
 
->  	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
->  		echo "Could not find deprecation warning for $VAR"
->  done
+> ---
+>  m4/package_icu.m4 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/m4/package_icu.m4 b/m4/package_icu.m4
+> index 3ccbe0cc..6b89c874 100644
+> --- a/m4/package_icu.m4
+> +++ b/m4/package_icu.m4
+> @@ -1,5 +1,5 @@
+>  AC_DEFUN([AC_HAVE_LIBICU],
+> -  [ PKG_CHECK_MODULES([libicu], [icu-i18n], [have_libicu=yes], [have_libicu=no])
+> +  [ PKG_CHECK_MODULES([libicu], [icu-i18n icu-uc], [have_libicu=yes], [have_libicu=no])
+>      AC_SUBST(have_libicu)
+>      AC_SUBST(libicu_CFLAGS)
+>      AC_SUBST(libicu_LIBS)
+> 
+> base-commit: 90d6da68ee54e6d4ef99eca4a82cac6036a34b00
 > -- 
-> 2.34.1
+> 2.47.0
 > 
 > 
