@@ -1,73 +1,73 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C577F24BC1F
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 20:16:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC8424BBEB
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 20:16:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739477766; cv=none; b=FViYE9mMQKxbPfF7pPsevvkTkWx/mdP57sTmmyzR6/QkGqYFmnNBt2Te1VfhDBn43rzbv7pU+NZ0w+3zl/V/tokUYWp/Gfgd4JHMmqxsUTecDa2gd9XvhkESK64zNHcnVuG8zGSRkGX1vkH5biqfrIEmc28Nxb27HEXwPj3B4kQ=
+	t=1739477767; cv=none; b=i1YWAilapGU8lLpBCHZupQ3l2b3NTLHq73pQgQfY5HQ8iIG2sCKPAwcpG7IZdBKBf5Bz0MHv8Lk5P6OtaE7rMw8Xv3krI4ysi2M4F3+LkDj6O33uIXAcogjLN7KQk7ik3aJyr5ubigTB8ISbdLfP564A9Yrn+vE2qJm9ZiX1ZRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739477766; c=relaxed/simple;
-	bh=em41zXomO0jL9kZk0F8GUYFuiu2onzUI7wqVleP04iE=;
+	s=arc-20240116; t=1739477767; c=relaxed/simple;
+	bh=HU9n5NvoPomLXLF6LgaJXXpRdjxvBbILUZwTjWna110=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RYsfeh9e+Zo+hexRaNBNDoeNaUOMlaop3jaxA+Hq08DLNtM/M/qbHt7/FQOIjZGW9fBNzxUhY4wQFAkZTx59U5IvGEiWWk4qiKmQwOa6aAg5jNdFmdka5w99oUbzaPYDCH10CmHlBUDwHRQHNjXi97q85wy8zlHPidUyCe5EF7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Um/lgZEq; arc=none smtp.client-ip=170.10.133.124
+	 In-Reply-To:To:Cc; b=suwa/Q2zmYX/ZuyX2VmLeG1kGoqRGNfecY50Oqcnqa7bjGGe/WXLXDimpXTjdEvR8BWoOUbxV4/BAU5Rs105Vo41sv5yFwUVwrzM/X3qES+gEK2NLx+r0SW29a3YS77vwKT6N3p27tA4vRnTtG+2RDcFl+3BTHYMa0/wFa0fZAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=chGRVmMd; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Um/lgZEq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="chGRVmMd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1739477763;
+	s=mimecast20190719; t=1739477764;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=EVF6Djswvdycv30ceiXMOHnHpXzJo3+aaqOC0QnjsTc=;
-	b=Um/lgZEqYHFlMBGz2Sv5QVHiIoM6qMt6bwLIBpviFdTtLbsHRFmwgIv6eN5dGD5nlpd+JU
-	4qsX6/p/kNT8tt3aMPzLAyLIdCBX9VxTsN9OITAT4CCPaFrkSkGJq4qzE79T4NFkuRrywz
-	cMp4LPovWhsfzf048g0QqdgxVk3aIBc=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=8Dwzp/NU0ujGgiL6wnczWrvsNXVl+Zg+N3jt2/uSQpM=;
+	b=chGRVmMdTChEbsr1XP2AI742OjPCW7t0u6kLBIg2fEJm9K+VwkmE/5FSk2CYpG5v2j/OF5
+	+KB764oV39ZryXTnBTwG0uvzuo90PpSbktl9wyEZsQuXsxoLorYZ8V1ccsICYjh2OHKVc9
+	KzOuawu/mJzZRtiGherdrfCm1G9M0hg=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-614-iu27gUF7On61JC85HfHKGg-1; Thu, 13 Feb 2025 15:16:02 -0500
-X-MC-Unique: iu27gUF7On61JC85HfHKGg-1
-X-Mimecast-MFC-AGG-ID: iu27gUF7On61JC85HfHKGg
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-38dc88ed7e6so993812f8f.1
+ us-mta-624-GLIgAOWUNCikjQJKrPY9lw-1; Thu, 13 Feb 2025 15:16:03 -0500
+X-MC-Unique: GLIgAOWUNCikjQJKrPY9lw-1
+X-Mimecast-MFC-AGG-ID: GLIgAOWUNCikjQJKrPY9lw
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4395f1c4366so7130045e9.3
         for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 12:16:02 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1739477761; x=1740082561;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=EVF6Djswvdycv30ceiXMOHnHpXzJo3+aaqOC0QnjsTc=;
-        b=UFTJeBtmF/12DX4PQbebEWQxq6g6N81iggsaHTRP213hE9nGfgh9z4YdHnjlzmWtQG
-         G1katQboGePeMMZytsS7aJBgcacGb5RCq/zRo4PzN8QlJYH3JodJOBc+DEQzuNKFyowQ
-         UbJ3g596BP23D2nT7R2lDFrLpJXogjkIo8TRfPcKF2HfRnfoe7ZpfWh1BytarKtoHBkL
-         znzY7UnXmXU/MOoC7Hut4YGdVyQC2neLUxh7WqrP1Fkp3rhVFab9BklOR6eBvp8LskEV
-         s4TwpF8yvKFlRF1DBKyBaDwOD2xDqQTFpgfPboU1mKQfXXfljzllKGkJwrmrEvRzpJ04
-         Epbw==
-X-Gm-Message-State: AOJu0YxKyi3T1zDMU8C6WPbGlubD+OHYKKxX0grlUqpbi8UFBAQf43CJ
-	XS3D6Z8CocSUaREZzldHT4IfnOk78nNmrdRUenP4msZ7RGEoXWCR87H+UbFyIHYyLYWkYc/nnJ3
-	ZdJZWlKUNhuhmoKU2gXdgJBMkFH3IKGOfrmBI2nUO9gGhl246i2xdBJwJO4UtQVfC
-X-Gm-Gg: ASbGnctQq2KBgI/cYkUrVIUcck+BxOhRRoumg89WkLvIzqppIIZdYWDgu21P+bda9wO
-	cE8LZpNAtUr1oEVxlGxSpNZTopdZBac79ndDZfUKKYgtBVnsQo0t5wawc+5nGcSk8yeOQzDjSL5
-	1hbUxYvWuOQvIlYFsrfNkpbWuGmKvzyQQ6QKlHYtz28kmcuQZaaFGFvuCphA+/WhYbWyWtmBy2x
-	sQY+tU25/zXqYvb3PKt+dwwK+eUm/XkdWif/dkwKJwYyre9XsKU/YImuq+zNWOkqIHwqNV4S0ss
-	QqxfpZluDTqphxAT5kf5SIAhbUgdrMo=
-X-Received: by 2002:a05:6000:12c6:b0:38e:d026:820 with SMTP id ffacd0b85a97d-38f244e539dmr6025598f8f.16.1739477760687;
-        Thu, 13 Feb 2025 12:16:00 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IH48FHFs9EFXlbhNx/RhYE6UHH12tO14eGSYBkVE2YT1VxqYOeYrtcsExZDvcpHOk3w54IxWQ==
-X-Received: by 2002:a05:6000:12c6:b0:38e:d026:820 with SMTP id ffacd0b85a97d-38f244e539dmr6025576f8f.16.1739477760212;
+        bh=8Dwzp/NU0ujGgiL6wnczWrvsNXVl+Zg+N3jt2/uSQpM=;
+        b=Gfax9DWv49ZV0d1Vakp+dXIf+efusX95ShJ58vCYX5PdIWCtA/WsBymmtTiV+t/yr1
+         dsv8hPUQZr0weF2DbM1kdlpqH6bQMkXe1WWL9Ax4CmGpKFaU9UsT2VLeOJWHKluR2Vte
+         2jj74G2+GtrJ7zlXHjmVrf8UALW5JmsFWduWhtChJLLvW49rAAg7X3L36gxMHykMOz3g
+         nxr/ICYC8eOwVTIl+DJAeVQtXn9FpkdtIUTIl8TTfZArPq2fYtplKR4jI6lBlrQZVyZj
+         /7CUz9/89TZb3GznWjwkzHDW6SQ8EkTMNliG7h55oN2eoPYSJ4e7xD7U6wocpuJLDvUa
+         dTbA==
+X-Gm-Message-State: AOJu0YyDSu2TKrKBYBIBoIPGLUC1Hvff6itZAf8+Tiomq47al3cJXr5Y
+	NadkMMBlqwrItVNLs4jnHy4XCXiaXxfHA9XA+iK1DS+O/In/Lj8U4/Vn45sMZtlSKXr93z4xAzo
+	83hVB30RD/fsqDW8qjb4G7Q5klDET8g47l383lBy4PdGkrdSqYkY6qiyxbcaAaKiD
+X-Gm-Gg: ASbGncvthtrruwNnmUf2Zu/8Y4xaQQq/gHe5O5fkT7DrEDfRThabJGJDxv+2Xtz36Kq
+	mFSMhI0I0HHBqQXNqqUFBlVEWYiB8zADroIyzpU2lno8LfuTCWWNwNsWqcV6Nr3oJPu4/xVQCOI
+	IejWe+sO2+XtcUW9PGLWEVm3PKT4O9ZCOMtX5rRnNXkBETLL9FCmEtkDouMc3CPKqkjXeRWAGew
+	n7nlvio0tUnVQ/JqmIpsO7UsV6Hk8uipSIsiZ8SrTB/2FQxymtDc9yfYtLarFMUFQqFvAOds0+N
+	bEO0n5S0Trvoeo7EMvdWf4VDxxQt17k=
+X-Received: by 2002:a05:600c:4f89:b0:439:57a3:4fd6 with SMTP id 5b1f17b1804b1-4395817a64emr100052755e9.13.1739477761341;
+        Thu, 13 Feb 2025 12:16:01 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGTyGHFgC18k8AdMXVtrdqPD79w/7OMnLDUqEbZyZU9x7wrmEYsQ1xIxqk0/nMvKfx05pfs/Q==
+X-Received: by 2002:a05:600c:4f89:b0:439:57a3:4fd6 with SMTP id 5b1f17b1804b1-4395817a64emr100052485e9.13.1739477760917;
         Thu, 13 Feb 2025 12:16:00 -0800 (PST)
 Received: from [127.0.0.2] (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4395a06d237sm57520895e9.21.2025.02.13.12.15.58
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4395a06d237sm57520895e9.21.2025.02.13.12.16.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Feb 2025 12:15:59 -0800 (PST)
+        Thu, 13 Feb 2025 12:16:00 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Thu, 13 Feb 2025 21:14:25 +0100
-Subject: [PATCH v4 03/10] release.sh: update version files make commit
- optional
+Date: Thu, 13 Feb 2025 21:14:26 +0100
+Subject: [PATCH v4 04/10] Add git-contributors script to notify about
+ merges
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,152 +76,140 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250213-update-release-v4-3-c06883a8bbd6@kernel.org>
+Message-Id: <20250213-update-release-v4-4-c06883a8bbd6@kernel.org>
 References: <20250213-update-release-v4-0-c06883a8bbd6@kernel.org>
 In-Reply-To: <20250213-update-release-v4-0-c06883a8bbd6@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: "Darrick J. Wong" <djwong@kernel.org>, 
  Andrey Albershteyn <aalbersh@kernel.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3840; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=em41zXomO0jL9kZk0F8GUYFuiu2onzUI7wqVleP04iE=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0tcF/UpkKw7dbLkr5mhp4eZnMlWvjql4TJZ+839qJ
- l9Q16yPVus6SlkYxLgYZMUUWdZJa01NKpLKP2JQIw8zh5UJZAgDF6cATMRpFiPDVlEDoRtb85cF
- PvshPHHGs/V6bxUPnpXtu7voeZSOS/HPjYwMO/iUJyfei7l0pbpVqXNGQU7mh1CuOdxNSVdTsoJ
- 5e43ZAPUMSGQ=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4032; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=HU9n5NvoPomLXLF6LgaJXXpRdjxvBbILUZwTjWna110=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0tcF/ZrzJci+Pa/dTEreK7XL6uW2mfaHmX62/Mh5W
+ jutwcbrzZaOUhYGMS4GWTFFlnXSWlOTiqTyjxjUyMPMYWUCGcLAxSkAEzlgz8jQy7LI+LR6e5Cj
+ zU1bgbvJ4VU8yuL6urPUfmWnh7hM2bWHkeGQ/8br+/5pOB803WdZFb2xr4v76U+ntBo5x4aM+Ff
+ frvIAAD8NRsI=
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
 
-Based on ./VERSION script updates all other files. For
-./doc/changelog script asks maintainer to fill it manually as not
-all changes goes into changelog.
+Add python script used to collect emails over all changes merged in
+the next release.
 
---no-commit|-n flag is handy when something got into the version commit
-and need to be changed manually. Then ./release.sh -c will use fixed
-history
-
+CC: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- release.sh | 75 ++++++++++++++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 58 insertions(+), 17 deletions(-)
+ tools/git-contributors.py | 101 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 101 insertions(+)
 
-diff --git a/release.sh b/release.sh
-index b036c3241b3f67bfb2435398e6a17ea4c6a6eebe..c3f74bc8dc587a40d867dd22e1e4c6e4aabb8997 100755
---- a/release.sh
-+++ b/release.sh
-@@ -11,16 +11,33 @@
- 
- set -e
- 
--. ./VERSION
--
--version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
--date=`date +"%-d %B %Y"`
--
- KUP=0
-+COMMIT=1
- 
- help() {
- 	echo "$(basename) - create xfsprogs release"
- 	printf "\t[--kup|-k] upload final tarball with KUP\n"
-+	printf "\t[--no-commit|-n] don't create release commit\n"
-+}
+diff --git a/tools/git-contributors.py b/tools/git-contributors.py
+new file mode 100755
+index 0000000000000000000000000000000000000000..70ac8abb26c8ce65de336c5ae48abcfee39508b2
+--- /dev/null
++++ b/tools/git-contributors.py
+@@ -0,0 +1,101 @@
++#!/usr/bin/python3
 +
-+update_version() {
-+	echo "Updating version files"
-+	# doc/CHANGES
-+	header="xfsprogs-${version} ($(date +'%d %b %Y'))"
-+	sed -i "1s/^/$header\n\t<TODO list user affecting changes>\n\n/" doc/CHANGES
-+	$EDITOR doc/CHANGES
++# List all contributors to a series of git commits.
++# Copyright(C) 2025 Oracle, All Rights Reserved.
++# Licensed under GPL 2.0 or later
 +
-+	# ./configure.ac
-+	CONF_AC="AC_INIT([xfsprogs],[${version}],[linux-xfs@vger.kernel.org])"
-+	sed -i "s/^AC_INIT.*/$CONF_AC/" ./configure.ac
++import re
++import subprocess
++import io
++import sys
++import argparse
++import email.utils
 +
-+	# ./debian/changelog
-+	sed -i "1s/^/\n/" ./debian/changelog
-+	sed -i "1s/^/ -- Nathan Scott <nathans@debian.org>  `date -R`\n/" ./debian/changelog
-+	sed -i "1s/^/\n/" ./debian/changelog
-+	sed -i "1s/^/  * New upstream release\n/" ./debian/changelog
-+	sed -i "1s/^/\n/" ./debian/changelog
-+	sed -i "1s/^/xfsprogs (${version}-1) unstable; urgency=low\n/" ./debian/changelog
- }
- 
- while [ $# -gt 0 ]; do
-@@ -28,6 +45,9 @@ while [ $# -gt 0 ]; do
- 		--kup|-k)
- 			KUP=1
- 			;;
-+		--no-commit|-n)
-+			COMMIT=0
-+			;;
- 		--help|-h)
- 			help
- 			exit 0
-@@ -40,6 +60,36 @@ while [ $# -gt 0 ]; do
- 	shift
- done
- 
-+if [ -z "$EDITOR" ]; then
-+	EDITOR=$(command -v vi)
-+fi
++DEBUG = False
 +
-+if [ $COMMIT -eq 1 ]; then
-+	if git diff --exit-code ./VERSION > /dev/null; then
-+		$EDITOR ./VERSION
-+	fi
-+fi
++def backtick(args):
++    '''Generator function that yields lines of a program's stdout.'''
++    if DEBUG:
++        print(' '.join(args))
++    p = subprocess.Popen(args, stdout = subprocess.PIPE)
++    for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
++        yield line
 +
-+. ./VERSION
++class find_developers(object):
++    def __init__(self):
++        tags = '%s|%s|%s|%s|%s|%s|%s|%s' % (
++            'signed-off-by',
++            'acked-by',
++            'cc',
++            'reviewed-by',
++            'reported-by',
++            'tested-by',
++            'suggested-by',
++            'reported-and-tested-by')
++        # some tag, a colon, a space, and everything after that
++        regex1 = r'^(%s):\s+(.+)$' % tags
 +
-+version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
-+date=`date +"%-d %B %Y"`
++        self.r1 = re.compile(regex1, re.I)
 +
-+if [ $COMMIT -eq 1 ]; then
-+	update_version
++    def run(self, lines):
++        addr_list = []
 +
-+	git diff --color=always | less -r
-+	[[ "$(read -e -p 'All good? [Y/n]> '; echo $REPLY)" == [Nn]* ]] && exit 0
++        for line in lines:
++            l = line.strip()
 +
-+	echo "Commiting new version update to git"
-+	git commit --all --signoff --message="xfsprogs: Release v${version}
++            # emailutils can handle abominations like:
++            #
++            # Reviewed-by: Bogus J. Simpson <bogus@simpson.com>
++            # Reviewed-by: "Bogus J. Simpson" <bogus@simpson.com>
++            # Reviewed-by: bogus@simpson.com
++            # Cc: <stable@vger.kernel.org> # v6.9
++            # Tested-by: Moo Cow <foo@bar.com> # powerpc
++            m = self.r1.match(l)
++            if not m:
++                continue
++            (name, addr) = email.utils.parseaddr(m.expand(r'\g<2>'))
 +
-+Update all the necessary files for a v${version} release."
++            # This last split removes anything after a hash mark,
++            # because someone could have provided an improperly
++            # formatted email address:
++            #
++            # Cc: stable@vger.kernel.org # v6.19+
++            #
++            # emailutils doesn't seem to catch this, and I can't
++            # fully tell from RFC2822 that this isn't allowed.  I
++            # think it is because dtext doesn't forbid spaces or
++            # hash marks.
++            addr_list.append(addr.split('#')[0])
 +
-+	echo "Tagging git repository"
-+	git tag --annotate --sign --message="Release v${version}" v${version}
-+fi
++        return sorted(set(addr_list))
 +
- echo "Cleaning up"
- make realclean
- rm -rf "xfsprogs-${version}.tar" \
-@@ -47,17 +97,6 @@ rm -rf "xfsprogs-${version}.tar" \
- 	"xfsprogs-${version}.tar.asc" \
- 	"xfsprogs-${version}.tar.sign"
- 
--echo "Updating CHANGES"
--sed -e "s/${version}.*/${version} (${date})/" doc/CHANGES > doc/CHANGES.tmp && \
--	mv doc/CHANGES.tmp doc/CHANGES
--
--echo "Commiting CHANGES update to git"
--git commit --all --signoff --message="xfsprogs: Release v${version}
--
--Update all the necessary files for a v${version} release."
--
--echo "Tagging git repository"
--git tag --annotate --sign --message="Release v${version}" v${version}
- 
- echo "Making source tarball"
- make dist
-@@ -83,4 +122,6 @@ if [ $KUP -eq 1 ]; then
- 		pub/linux/utils/fs/xfs/xfsprogs/
- fi;
- 
--echo "Done. Please remember to push out tags using \"git push origin v${version}\""
-+echo ""
-+echo "Done. Please remember to push out tags and the branch."
-+printf "\tgit push origin v${version} master:master master:for-next\n"
++def main():
++    global DEBUG
++
++    parser = argparse.ArgumentParser(description = "List email addresses of contributors to a series of git commits.")
++    parser.add_argument("revspec", nargs = '?', default = None, \
++            help = "git revisions to process.")
++    parser.add_argument("--separator", type = str, default = '\n', \
++            help = "Separate each email address with this string.")
++    parser.add_argument('--debug', action = 'store_true', default = False, \
++            help = argparse.SUPPRESS)
++    args = parser.parse_args()
++
++    if args.debug:
++        DEBUG = True
++
++    fd = find_developers()
++    if args.revspec:
++        # read git commits from repo
++        contributors = fd.run(backtick(['git', 'log', '--pretty=medium',
++                  args.revspec]))
++    else:
++        # read patch from stdin
++        contributors = fd.run(sys.stdin.readlines())
++
++    print(args.separator.join(sorted(contributors)))
++    return 0
++
++if __name__ == '__main__':
++    sys.exit(main())
++
 
 -- 
 2.47.2
