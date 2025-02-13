@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C45701714B7
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 22:08:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65AB21714B7
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 22:09:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739484490; cv=none; b=tih/NwP9BPFjwqKpfaIJyNPLTbtxRvkAHF/seOMuJAXEr9uh0FPs9pSGOlwhSV7qvUUsvQaPrmnEMvjQ3nSHQq+yy4orkbo70I29qpOc4xN6PHHdbIssH8HET+5Ru8y5mqIYiV8C4yyetpTaCsoc6vvRssu92WLrx2eaEfGF4Ys=
+	t=1739484584; cv=none; b=UjK3W+uMz5yyNLD/KmC6eSBT1XGT6Wvp9YshVL9Yx6smSDluHwUffPzklJhI1CoNYzXvptQ+ApHvZRRggv8nDessSex8op+8Kc/77E4pMDbSJmApOWFoEDxudsBdbxThapiNgAwTeTz4BmbHY/WA5veazmi3U6Je9isMdP3pgag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739484490; c=relaxed/simple;
-	bh=aLXO1ymjosr1ArxVj1FCe8OA1WnI+7mCwCTtFYBrWlM=;
+	s=arc-20240116; t=1739484584; c=relaxed/simple;
+	bh=Hi3NK4iYW7xpf2B4mszrJvgMJ7+Y+HuW7bltBKqMZ4k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YMFGiafmPW02w65pFAg369rAMeLbgKjTP9/mLxx3vmcnFsZNvBDV4TbCbb6Wv8VxpHC/duOU+X7d3M6Qen3p2Uk2fi2rxOXw1uoTRI4NWNgEajE/JJBHWS7lcECr/AGNgYrhz1m31+RYE5VWKWDnTvs/OE20tmvQDmA1JpzaAYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y+At3/se; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Surv30RgqTeH79KZsbxjL8Jkjgb/LgbSBuftM9Wc+GKqDl/qJ6oAznhJzXCAIxhXIe7UZUeCrjKydshZsaLwHPyi9kz9Wk5afmnhbJX7vzbFf/rUeO9hFqIp5X3ks170d13TjPO4DOzMfP/J55kyfBRdXsJ5MmlkdGRSEmrUHpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gUNKdQOG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y+At3/se"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95F90C4CED1;
-	Thu, 13 Feb 2025 22:08:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gUNKdQOG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2D57C4CED1;
+	Thu, 13 Feb 2025 22:09:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739484490;
-	bh=aLXO1ymjosr1ArxVj1FCe8OA1WnI+7mCwCTtFYBrWlM=;
+	s=k20201202; t=1739484583;
+	bh=Hi3NK4iYW7xpf2B4mszrJvgMJ7+Y+HuW7bltBKqMZ4k=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y+At3/seOWZu/dBds2X5rILgw1O0Gp1OncI4DQbR7WPvFWsc0Sr7Ry1ac1Gy92qzJ
-	 docrVofWAurHSitEq4D4TPNFcFkOKTvqO2yQshx9aEj0CWC9ZyFs0A9mQdyEzPZ02y
-	 YXbYmUwyR/gvk8/rb4pm6FO674VOTmx35gxEqSOyGGX0s2htL4IVTJFAcGNNI9eQLq
-	 fozkmaonvhj5FdhDpB6EUy0SLTPaYKvb66qMpYpLA4Qhw9TwSuOEn3kQ4MDNKrqSFz
-	 vkIrefql08WpguSZFUwibF8dT2w5sNbuD7h23gglp3ZpH88Wy8LMpqaBZrbR0DHO7L
-	 yreFZKuHZMC+A==
-Date: Thu, 13 Feb 2025 14:08:09 -0800
+	b=gUNKdQOGUCTx0jNxBXfsbNSMjsQJmbr4hT4fTOPF9u9sz30fygCPD9MUY4mhvmbcz
+	 pVUB3dvQ3b4wX4YdRCtrARp84fqRgNL7VEKF0dyC8+W5Gkax6l4BS+8ERMJzGPDEJL
+	 RSH6prhMPr3J4O+Ri5QLYEZTWQccmkmEzzxVUAJndIPxngSIviPRI6xNO6qXz2e3ZR
+	 GqR67/Xfka5iRg6V88EwwELMNBPf5YxBJ651FiWNq4iM+EuybyixR0sZK5UqeV6ZSs
+	 X8chPUCCQXh7Mu50hZA0AK4brxmCoQWrhsgscsOZK9VP6cHWVWhiP5tbRFUDMHlq80
+	 lL7duJFPsORjw==
+Date: Thu, 13 Feb 2025 14:09:43 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 22/43] xfs: add the zoned space allocator
-Message-ID: <20250213220809.GT21808@frogsfrogsfrogs>
+Subject: Re: [PATCH 23/43] xfs: add support for zoned space reservations
+Message-ID: <20250213220943.GU21808@frogsfrogsfrogs>
 References: <20250206064511.2323878-1-hch@lst.de>
- <20250206064511.2323878-23-hch@lst.de>
- <20250207173942.GZ21808@frogsfrogsfrogs>
- <20250213051448.GC17582@lst.de>
+ <20250206064511.2323878-24-hch@lst.de>
+ <20250207175231.GA21808@frogsfrogsfrogs>
+ <20250213051749.GD17582@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,63 +45,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250213051448.GC17582@lst.de>
+In-Reply-To: <20250213051749.GD17582@lst.de>
 
-On Thu, Feb 13, 2025 at 06:14:48AM +0100, Christoph Hellwig wrote:
-> On Fri, Feb 07, 2025 at 09:39:42AM -0800, Darrick J. Wong wrote:
-> > > +	/* XXX: this is a little verbose, but let's keep it for now */
-> > > +	xfs_info(mp, "using zone %u (%u)",
-> > > +		 rtg_rgno(oz->oz_rtg), zi->zi_nr_open_zones);
+On Thu, Feb 13, 2025 at 06:17:49AM +0100, Christoph Hellwig wrote:
+> On Fri, Feb 07, 2025 at 09:52:31AM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 06, 2025 at 07:44:39AM +0100, Christoph Hellwig wrote:
+> > > For zoned file systems garbage collection (GC) has to take the iolock
+> > > and mmaplock after moving data to a new place to synchronize with
+> > > readers.  This means waiting for garbage collection with the iolock can
+> > > deadlock.
+> > > 
+> > > To avoid this, the worst case required blocks have to be reserved before
+> > > taking the iolock, which is done using a new RTAVAILABLE counter that
+> > > tracks blocks that are free to write into and don't require garbage
 > > 
-> > Should this XXX become a tracepoint?
-> > 
-> > > +	trace_xfs_zone_activate(oz->oz_rtg);
+> > Wasn't that in the last patch?  Should this sentence move there?
 > 
-> The tracepoint is just below, but yes - this obviously was left as a
-> canary in the coalmine to check if anyone actually reviews the code :)
+> The last patch added the counter, it really should be here.  Let me
+> reshuffle the patches a bit to make that happen.
 > 
-> > > +	if (xfs_is_shutdown(mp))
-> > > +		goto out_error;
+> > > +	if (flags & XFS_ZR_NOWAIT)
+> > > +		return -EAGAIN;
 > > > +
-> > > +	/*
-> > > +	 * If we don't have a cached zone in this write context, see if the
-> > > +	 * last extent before the one we are writing points of an active zone.
+> > > +	spin_lock(&zi->zi_reservation_lock);
+> > > +	list_add_tail(&reservation.entry, &zi->zi_reclaim_reservations);
 > > 
-> > "...writing points *to the end* of an active zone" ?
+> > I think you're supposed to have initialized reservation.entry already.
 > 
-> We only really care about the same zone.  Even if that doesn't create a
-> contiguous extent, it means the next GC cycle will make it contiguous.
-> But even before that the locality is kinda useful at least on HDD.
-> 
-> There's still grammar issues, though which I've fixed up.
-> 
-> > 
-> > > +	 * If so, just continue writing to it.
-> > > +	 */
-> > > +	if (!*oz && ioend->io_offset)
-> > > +		*oz = xfs_last_used_zone(ioend);
-> > 
-> > Also, why not return oz instead of passing it out via double pointer?
-> 
-> I remember going back and forth a few times.  Let me give it a try to
-> see how it works out this time.
-> 
-> > > +	mp->m_zone_info = xfs_alloc_zone_info(mp);
-> > > +	if (!mp->m_zone_info)
-> > > +		return -ENOMEM;
-> > > +
-> > > +	xfs_info(mp, "%u zones of %u blocks size (%u max open)",
-> > > +		 mp->m_sb.sb_rgcount, mp->m_groups[XG_TYPE_RTG].blocks,
-> > > +		 mp->m_max_open_zones);
-> > 
-> > Tracepoint?
-> 
-> I think this actually pretty usueful mount time information in the
-> kernel log.  But if you mean a trace point on top of the message and
-> not instead I can look into it.
+> What do you mean with that?
 
-Yeah, I like to just set up ftrace for 'xfs_zone*' and see what falls
-out of a test run, instead of pulling in printk and then having to
-filter out a bunch of other stuff. :)
+I think the reservation was declared to be initialized as zeroes, but
+there was never an INIT_LIST_HEAD(&reservation.entry) to set the
+pointers to each other?
+
+> > > +	int				error;
+> > > +
+> > > +	ASSERT(ac->reserved_blocks == 0);
+> > > +	ASSERT(ac->open_zone == NULL);
+> > > +
+> > > +	error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
+> > > +			flags & XFS_ZR_RESERVED);
+> > > +	if (error == -ENOSPC && (flags & XFS_ZR_GREEDY) && count_fsb > 1)
+> > > +		error = xfs_zoned_reserve_extents_greedy(ip, &count_fsb, flags);
+> > 
+> > Overly long line.
+> 
+> It's exactly 80 characters :)
+
+There are two things I'm bad at: off by one errors.
 
 --D
