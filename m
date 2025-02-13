@@ -1,43 +1,29 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76B16207A19;
-	Thu, 13 Feb 2025 07:00:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BE7020B80F
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 08:35:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739430024; cv=none; b=AnOk1Uv6xFawQDT+7qRJ9OHgdlaetX09fIIZpmytoj9bJHMrSSI0QnlAxfkQdRS+9YkxZ5rWsMWwgCMq5GwWlILEKQNmkPECY3W3n4SDnjTO3pMkUXG1xEozD2O1BF52tfvlgyYlH8S9aD5eQaavuLGSnKUFcQ2n/asifpYP+Fw=
+	t=1739435747; cv=none; b=POKcDNXNeqYHMKUrVIadGWLAf+b57zo3IZZu8AxPWOPHLlYoNGKBHjatlfuVIju+QPOG64dBNCHicJO9DiJp3ZN1Yf9iGWaasBfhTQJ1Oz1Hm12boyLrGMFWywSRCHZw7SURg1+G3RbXzYvRaGfV5gdYq7lhI1ce9yHsi/ohim4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739430024; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1739435747; c=relaxed/simple;
+	bh=RVIlVmxySQC8ehBzl3NFUV0LYo3/yZVS5Vuywsda/WI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WnodzKENOTu4YNzYr49OtMN4DGOXQRMmJH0N9i8B59a9gEYz884HGO3GSeb3xyObiycRbSgu1/tMit6l0ZiMPl2TaUFpMjBamuonWBtRtbAcRO5pY9WSvsKp/VjZMrazltGC0YF9Zs6OXA4McCdqdc1CyETKTwwdYyUDc9Kl7W4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GkGDqwJX; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GkGDqwJX"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=GkGDqwJXS8+8DzM6k6I3vayhcL
-	QqIXhrrqrhQhDpzXLOrKoi95EaF+TQ87ZGIWGq8mNhTMhS0OYIOc90L6R9Bzb9YsnQkej7Yswnrav
-	Lgb3ImoAAhbta3zqJi6jaGxsdc6MVNCV5FT44tt4+9zd67719a4Hg9lKzmflRBDCiV5vA0uHuXB7E
-	2s5gvvszUM/P9NKaxq3MxU5ZhxZlDC7DTsZAGVtCQmn7wnC+d3w7GAh/63Q1+UdGGvx+knLhJpfjk
-	r2F5WQGyaJS4/mqMB6xxjlXlcfVISxYGm6HxQvtbNvh/RoraltVwok3nN5Jj4/7iNhsfg9bmv9isR
-	4Wa/F1cQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tiTCw-0000000A1vr-476K;
-	Thu, 13 Feb 2025 07:00:22 +0000
-Date: Wed, 12 Feb 2025 23:00:22 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 10/10] iomap: rename iomap_iter processed field to status
-Message-ID: <Z62YhodXxh65UD8s@infradead.org>
-References: <20250212135712.506987-1-bfoster@redhat.com>
- <20250212135712.506987-11-bfoster@redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=akeStLKIJ4tE8KvNbfcf26JQRjDavq2BcdU7fExTKQLrqSZmNr78Pv5qD0AyS2Fv+GowsLkW8TFY278z66Q9Rzg59nNKEaSBwgVCOVPHFhwdniekaoln16DFQoHXbVUgAUq0LgyxpID6hOaKqFhm/kOkon0cM8Fs+ORb2d7UOY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id CA8A768AFE; Thu, 13 Feb 2025 09:35:40 +0100 (CET)
+Date: Thu, 13 Feb 2025 09:35:40 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 22/43] xfs: add the zoned space allocator
+Message-ID: <20250213083540.GA26831@lst.de>
+References: <20250206064511.2323878-1-hch@lst.de> <20250206064511.2323878-23-hch@lst.de> <20250207173942.GZ21808@frogsfrogsfrogs> <20250213051448.GC17582@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,10 +32,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250212135712.506987-11-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250213051448.GC17582@lst.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Thu, Feb 13, 2025 at 06:14:48AM +0100, Christoph Hellwig wrote:
+> > > +	if (!*oz && ioend->io_offset)
+> > > +		*oz = xfs_last_used_zone(ioend);
+> > 
+> > Also, why not return oz instead of passing it out via double pointer?
+> 
+> I remember going back and forth a few times.  Let me give it a try to
+> see how it works out this time.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Looking into this, the callers treat the open_zone structure as a
+context, an passing in the address makes this much nicer.  If you don't
+like all the double pointer dereference operators we could add a new
+context structure that just has a pointer to the open zone as syntactic
+sugar.  And writing this down I think I like the idea, that makes it much
+more clear what is done here, even if it generates the same code.
 
