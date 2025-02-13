@@ -1,46 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E9A32063F7
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 04:10:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47BCC205AD2
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 04:20:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739419809; cv=none; b=qJNMhu8sKStuhjmWhNDk2CR27ircqzRdNdneT+oajs1P+S6oOsTPCYoQ05IfjRHVo0EftVjM/9XxOMvXKGvnpbqDOKJecehuL0Dy4vO6P+4TD41TXX9+0DNYvLMftku9kJenhkPI3lT5q3Gbl6PN2FIuqA77GKoAuGwU8bldz4s=
+	t=1739420421; cv=none; b=rlKbsXEjSMiB9w4rcKopfjGNYoC5+7Q15t64cexiTYt48xltJr+yGg2dW7PkT2+bednzQjzhMxgxN9F1QHmPMyWuHAwZDlNeEBxeZCxWgyaIlj9qppIhHhv45xpc5v9jLtT4wJmosLwpCgzw+GBZ+vjSh3JAiRD2nLiFOQ08/20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739419809; c=relaxed/simple;
-	bh=eqHP2bbPqo0yO+1608WZnZGgf3sxtJxvl8DGiXoa7D4=;
+	s=arc-20240116; t=1739420421; c=relaxed/simple;
+	bh=3Iw+jJwteF6GAVL0Rbi492rn/cIfPSjfeh28BGa61CQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hBU+FtNXfoC0JJT+74SDKFoklitVVvWfr6Yd/xvbx25Il3wEHUurGEqa94ZfT1vjGaQUhlywnYXJSw6wjoBh2nn1vBVRMu54GJWxvpEOYYwyueK+1agjPzuCClRpA2A9OSoglqkAirIFSfutz4CDk8uSoRQs1u0t1XOze+l6wgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Lc5NTNAY; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=BHt40ZnUVWEB38Ga66V7rjH7zQLQk4xkfGBUgoXtEnNS0vooc4/7Dj6pWNCizfx7Do1VroB6xNDEiFy3vxB6eagAzwQX7Fjk7XVjKSk/29tuXF3atIdFyaMLzrnWtwgei9HygeteQwkMuZDjg6dfZDJO68XhA8wo1s+mymBR2xQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q+Nez9HE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Lc5NTNAY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uNAb0yngkcJXnUir7fCiaik2vrziwizQfog84tONl18=; b=Lc5NTNAYyT9IVAYlCm1iqxIZKz
-	Czn5wrDT/gdohHOh+V02Grn4pHidnsxjYgsg0ysNRp++AhiJRT06MrmubYTfT5Bz1OFoMbbPdrGwi
-	+c7UxUvsw4/PC+cGk9hXrPpP28Mr7kIjPh4ctz5RyEp+CBsJTiUHJsvuFSz3JFjN3YrgzEwZBXzOQ
-	5fSH6R8+C/4RFipTtFcwm8/SnrB+v5TA7Am2F+QwDtLc3tdghusxub5uMQCY9kFPylEPzNnIGft23
-	r7ffqUCrzuV07bhuVB0Oxa4qihvHrTYqCZpXelIkM+FUQVK4f5ri3z0AOwJZ9Ia0GYIGnAyeXizj2
-	HMB/1OCg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tiQY8-00000009g7k-4AMg;
-	Thu, 13 Feb 2025 04:10:04 +0000
-Date: Wed, 12 Feb 2025 20:10:04 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Daniel Gomez <da.gomez@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Pankaj Raghav <p.raghav@samsung.com>, gost.dev@samsung.com
-Subject: Re: [PATCH] mkfs: use stx_blksize for dev block size by default
-Message-ID: <Z61wnFLUGz6d_WSh@infradead.org>
-References: <20250206-min-io-default-blocksize-v1-1-2312e0bb8809@samsung.com>
- <Z6WMXlJrgIIbgNV7@infradead.org>
- <323gt6bngrysa3i6nzgih6golhs3wovawnn5chjcrkegajinw7@fxdjlji5xbxb>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q+Nez9HE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6C51C4CEE4;
+	Thu, 13 Feb 2025 04:20:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739420420;
+	bh=3Iw+jJwteF6GAVL0Rbi492rn/cIfPSjfeh28BGa61CQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Q+Nez9HEuFe8KpjkjWmUkdaDwFnSVbVJLPbbQF+QZbvVFq4ODboSiXcsTHKbNlF6P
+	 dsXjYII/ISo/j6aNfr5r1Yr104G3nTsM3IMIdcc5gg1/ZoAWFI6W9rTHgwF6nKKWRi
+	 +WGwiocD6rULsKQ1BinJfOW5chzvDLTn52zq6IWkyDgg6oZlXzjv0V8AzIJvhjr8Ti
+	 mHzbf0BwYkwGLMcj8acfWzmW0HIDw0RNlQfQux8vmmBQcGvdreuIZao5Hk4cks3Dhc
+	 oOp9y/xU+WpVvAoOa61jEJ5Sfw1Xi6MmAQ+u7iJhDPKtZwdxRa5iUXKANg35LWy1zF
+	 Ajx+3TmcumBMQ==
+Date: Wed, 12 Feb 2025 20:20:20 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/17] libfrog: wrap handle construction code
+Message-ID: <20250213042020.GO21808@frogsfrogsfrogs>
+References: <173888086034.2738568.15125078367450007162.stgit@frogsfrogsfrogs>
+ <173888086121.2738568.17449625667584946105.stgit@frogsfrogsfrogs>
+ <Z6WNXCVEyAIyBCrd@infradead.org>
+ <20250207044922.GR21808@frogsfrogsfrogs>
+ <20250207170002.GW21808@frogsfrogsfrogs>
+ <Z61voxnKjM5izf45@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,33 +46,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <323gt6bngrysa3i6nzgih6golhs3wovawnn5chjcrkegajinw7@fxdjlji5xbxb>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Z61voxnKjM5izf45@infradead.org>
 
-On Fri, Feb 07, 2025 at 11:04:06AM +0100, Daniel Gomez wrote:
-> > > performance in the stx_blksize field of the statx data structure. This
-> > > change updates the current default 4 KiB block size for all devices
-> > > reporting a minimum I/O larger than 4 KiB, opting instead to query for
-> > > its advertised minimum I/O value in the statx data struct.
-> > 
-> > UUuh, no.  Larger block sizes have their use cases, but this will
-> > regress performance for a lot (most?) common setups.  A lot of
-> > device report fairly high values there, but say increasing the
+On Wed, Feb 12, 2025 at 08:05:55PM -0800, Christoph Hellwig wrote:
+> On Fri, Feb 07, 2025 at 09:00:02AM -0800, Darrick J. Wong wrote:
+> > Which is much more verbose code, and right now it exists to handle an
+> > exceptional condition that is not possible.  If someone outside of
+> > xfsprogs would like this sort of functionality in libhandle I'm all for
+> > adding it, but with zero demand from external users, I prefer to keep
+> > things simple.
 > 
-> Are these devices reporting the correct value?
+> Ok, let's keep things simple then for now.  If we need an external
+> version we can still add it late.  And for the future reads curious
+> about this maybe add this explanation to the commit?
 
-Who defines what "correct" means to start with?
+Sounds good, I'll amend the commit message and repost.
 
-> As I mentioned in my
-> discussion with Darrick, matching the minimum_io_size with the "fs
-> fundamental blocksize" actually allows to avoid RMW operations (when
-> using the default path in mkfs.xfs and the value reported is within
-> boundaries).
-
-At least for buffered I/O it does not remove RMW operations at all,
-it just moves them up.
-
-And for plenty devices the min_io size might be set to larger than
-LBA size, but the device is still reasonably efficient at handling
-smaller I/O (e.g. because it has power loss protection and stages
-writes in powerfail protected memory).
+--D
