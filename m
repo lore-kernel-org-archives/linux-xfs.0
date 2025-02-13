@@ -1,147 +1,140 @@
-Received: from fhigh-b2-smtp.messagingengine.com (fhigh-b2-smtp.messagingengine.com [202.12.124.153])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5ED820CCE3
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 09:39:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.153
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E73820B21A;
+	Thu, 13 Feb 2025 10:00:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739439576; cv=none; b=N6Y5r1LndGeZKIWY5k0ZI9qAQ59vmyd0OvHX07AvDe3MQdTK5Yt8rbnuHFkC6H9+E8EI2Z1Vdy+euwP4yIyVHaL8LXTODpp0sf8HHwn2GE0H/ZW2zy0jRMF7qmFv1ZEP4/zrhvHhp0OGmYr0GneivKRwmz2ONtPMSdND/+S9Rgs=
+	t=1739440857; cv=none; b=p/4Mgy22phYc2C2Z7zJfVOG5G7uwJtQyhJZuHkrL+dC3XYkTOr8pLFYJUn5qU9l17PwfPquniIMVcLrVMS5ZeA4lZVwu7+TJ83s2GRe7TH4UymtKI5WGN1dMWg84XcNlnbwEPLNjY6dbxRmLVVR2aqZhCffgj7cGYD/qeuIFKrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739439576; c=relaxed/simple;
-	bh=RKRelYBNL2VJmlRIekvsp+NOn32b4s+tByiibepJWgY=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=PxwnKYQYmEC0YrPPMTSzIcb10W8y4Bg7g8TbkHCGIg5CkfWQ0bI234xaGFeZUUM+mKtlDeIkDnc3QJVw5UzV7RVd/9reMw+gOrsuoZZ6npmyznclXI+KPhwGsInfYRm08TPMH5H6YU3vpQUu/RDbPKY6ZMWBKPid3jDKTiS3PwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alyssa.is; spf=pass smtp.mailfrom=alyssa.is; dkim=pass (2048-bit key) header.d=alyssa.is header.i=@alyssa.is header.b=FpydGxW8; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=nMtUAKs8; arc=none smtp.client-ip=202.12.124.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alyssa.is
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alyssa.is
+	s=arc-20240116; t=1739440857; c=relaxed/simple;
+	bh=kRL6Kyh553VKDx/mLqwSVeYdsSULTxJAUXdoiY3kwX4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WYk4ajAPg7Po+yraRHPL//6MsiGrjdZLB9icxnSl14nZxDQswUBVVoeD++k1xwunRnNhaIYANt8MLQZzzgX4mWmHEw91prf/7vAXttiD0XOTiXP84+/hQC1T6sK++DmdAJmE+qlWAgfjaQXm8y/v7oK87ELq2v8yc1Iqb0Ok8zY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PlG/G8Hy; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alyssa.is header.i=@alyssa.is header.b="FpydGxW8";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="nMtUAKs8"
-Received: from phl-compute-02.internal (phl-compute-02.phl.internal [10.202.2.42])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id A27C425401A8;
-	Thu, 13 Feb 2025 04:39:32 -0500 (EST)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-02.internal (MEProxy); Thu, 13 Feb 2025 04:39:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alyssa.is; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm2; t=1739439572; x=1739525972; bh=BTfguNd4+R
-	epbvqVBMWubzsyYNKDoJg1Xye8D+/naRo=; b=FpydGxW870lZdeJWsi9OU5X6kZ
-	iRDFnLHuYJCE4HR/vktKkWv1jdJ0a0Akaz7hPIfWxWk6zh+welGmqZWfLP4K6eqa
-	kz4AqHuodGMX6h0GIEATDcYXsb7wLntcJZKKPXBE9vJMlJ65OliDvCVTi2R9Mjkq
-	+8Pz01CIBJw5OWUG/Ho8Bzm3o7iYhTjrA/QfY9Q8FLTYkQksJFD8q8ugDDkGAC4r
-	qGTCOmwEif6eJGt3/ftWZfGbbYvhphHupRQZeba/M4ytTqU4toW8XfDKvjlwxJBe
-	ySK9RJJ9xQnyPxxd0tThn8Kl/gxNxKUOPi0XStH+I9o1ze2IdsWIXWo1pp7A==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1739439572; x=1739525972; bh=BTfguNd4+RepbvqVBMWubzsyYNKDoJg1Xye
-	8D+/naRo=; b=nMtUAKs8EQEweM2a/Xaw0Hzr+6X+P8l2hMa8bWeo2c/qg6gXhA4
-	dS4D+x6bQp7Y9AlsnFTsxDsn8hhVGRDSfbu3bH01jfdfbhEFZ0t0AxL7gqWaU5IU
-	RKG+uE7YJTUKyqGQOp8efj3EVpuSeWxjgoaiCjZsEZVC0nHD+5ywJN2A/XznwvHS
-	sqsp+p0ow7meK7NB9dWISO7KoYy28oCqefaH3ZHLciBA84ldfk5GBQUl7RsOVj7l
-	A7ArLMbMWASK1o8mbEBOwu+XSUIlZjoyYqz+i9DAf7dsS65obBHNYxG8FBWhLOCG
-	q7/BVN2CLmovYe8ThF6AsBq+2KTdquACbrw==
-X-ME-Sender: <xms:1L2tZ8laQnbqvyQLNC5ypvNTjeayHNjRyN3afax8CgMwVXLAEBXZXA>
-    <xme:1L2tZ71ZEz-Cy8szVqtY4dQSrtNzkpiFe8ruM4uFj3Octu3_dGIEn_hikah7K2uZ0
-    Iv5NmhSSlMR_5EGZw>
-X-ME-Received: <xmr:1L2tZ6pbedWsXGABtWdAgQo6pZnPCd09BlXny34yfseZLnsOsyIGTNRyI0PEQVL0EVGkgeE_iQRSr3-2kcdhwJMSTZI>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdegieeggecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpggftfghnshhusghstghrihgsvgdp
-    uffrtefokffrpgfnqfghnecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivg
-    hnthhsucdlqddutddtmdenucfjughrpefhvfevufgjfhffkfggtgesghdtreertddttden
-    ucfhrhhomheptehlhihsshgrucftohhsshcuoehhihesrghlhihsshgrrdhisheqnecugg
-    ftrfgrthhtvghrnhepkefgtddvudeikeeuudelgefhhfejudfgteeigffgtddvgfdutddt
-    gfejueduteeinecuffhomhgrihhnpehfvgguohhrrghprhhojhgvtghtrdhorhhgnecuve
-    hluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhephhhisegrlhih
-    shhsrgdrihhspdhnsggprhgtphhtthhopedvpdhmohguvgepshhmthhpohhuthdprhgtph
-    htthhopegujhifohhngheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidq
-    gihfshesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:1L2tZ4kvoh47jm35lLXSVSvz3Mu3tAlJXP4kxBRjhH5WbUNOQlq27g>
-    <xmx:1L2tZ60XU565s-5P23OiGfepuP50p9rRkQ7B3cUMW8hY1-5zvT5KSw>
-    <xmx:1L2tZ_seCWvGBWSifbXoaYuZsPDYxjKMuU9xp7bUKsOoA3HDRP14xw>
-    <xmx:1L2tZ2VEuXBu5CB2NeUwfddvxjJiq-2s2ncdEGTtIJ0Cr8_ZWH8J4g>
-    <xmx:1L2tZ4CNNqB0eQkCTtsiDl3ynGxUZ_X3TfmkZVXRkFxZM0fBh1VIkKmX>
-Feedback-ID: i12284293:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 13 Feb 2025 04:39:31 -0500 (EST)
-Received: by sf.qyliss.net (Postfix, from userid 1000)
-	id E051A4E0D50E; Thu, 13 Feb 2025 10:39:30 +0100 (CET)
-From: Alyssa Ross <hi@alyssa.is>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH xfsprogs] configure: additionally get icu-uc from
- pkg-config
-In-Reply-To: <877c5u6vdu.fsf@alyssa.is>
-References: <20250212081649.3502717-1-hi@alyssa.is>
- <20250212212017.GK21808@frogsfrogsfrogs> <877c5u6vdu.fsf@alyssa.is>
-Date: Thu, 13 Feb 2025 10:39:29 +0100
-Message-ID: <8734gi6v5a.fsf@alyssa.is>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PlG/G8Hy"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-21f40deb941so15123635ad.2;
+        Thu, 13 Feb 2025 02:00:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739440855; x=1740045655; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=3P9zNL4ihHY9juY4bEAnbKKWnWiyNUurGP120I8NfBU=;
+        b=PlG/G8Hyh44hEu7WlcJcncEVeRvNr6sqAl1npCaskHf+tpE/bt8dXSlb2kOgXVoCt+
+         jxuB+NqELyID+mEv04jF3tGVRPqjdGdOnIrgOlx+5olY6oeA0WlwQyU+2AS4DUwbDRsK
+         dqcGm81hx4F27uZI9Jb/c5lOAdWmuWslG1F8TKG8u0FYcDD9Qw167X0fsbWxxeAgW21G
+         VCKKa3JeHhO9T9Bbd+j6c5aqZ86pHVWlnXu1O+R0B6lS/1cBJANtswk2AAHiNZfsfdGA
+         c0WBFuwHr0Qml2U50kZgUc+Gjyv/7NMHzTGgX2lr8WaSovzAwaV4GpI+LakKfNTYNdtd
+         DjpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739440855; x=1740045655;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3P9zNL4ihHY9juY4bEAnbKKWnWiyNUurGP120I8NfBU=;
+        b=Rr9Ant5qRl9cYVybgcfyyWolILzRvdOCsFkby6+gQIFyVC86OvYsP53eMo09fOwodV
+         JCcXWOa0Io++5UBUDbNaWsIukLNfRTingyQoLXHtIcy32O31P1k2r1EKfGs2qX6Lazmv
+         mA+QgA0wygISxjGVwzd/DmdLoZsKFRw7Q8EtUdIw4evXgYZxjq1Fl5GJ/oxyL1Jil7ys
+         6iNULgTjAGoCmYwqqHYAM9Q74uqU0RNzedJwpZwdSW2utlxt/7kCuki+AlCNoPlp5oUt
+         ZoDYmXIyjPauj3v/rrCkWcxRw4t3Td7xAKKAsZ5XsDS/wv5ImvnAys4lJf//5trVl1tf
+         4+uw==
+X-Forwarded-Encrypted: i=1; AJvYcCWSWo4APxTWUzoMOC4REawNfUIeLuDQQXCc+8yn7bplUAsrFP3rigUbb3Vz2eR4sY4OvQPaTYVzSg65@vger.kernel.org, AJvYcCWwa5Rk4cpx3BLlbOkWdoFrv4c6Mhp4IntDTDAp/VIxTdYNHTBD9RVZaz4CJLqIdC2mBCP6MoeEKBUz@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywn19sr7XceJ832XGqh6zBP4LgOMstEpdJKBxeTXmZ4cFXC7n9b
+	TVqB+EJ7R+A7/YDqW9cnEghUK9YZx4pboaubD3RKebFkDbU5sqg7
+X-Gm-Gg: ASbGncu0KoATie50Tb/rLPaUs/Ks+dR8enWHDgufMOr7CqfD1dRurlSi/Ew8XJB+BQY
+	29Nj0xNvL4WGPy5z5gR7gnI884rMb4kyMwPqRNkEZzIHq2MD/I0bKyftUoL9zwMr1MSKGwSStgL
+	sswHFXLDqpSJ32DpOHMw/3E+wXnUTBDDbKYUFdHsTIHJQv+6S+DAAfIxmavyUYi28o/XKQ7vFKB
+	SO53KNP9FmV/EyqXPlo+dwQFBsyvtGoIDvXQrF7w2BbFHwKydNqFm0DVfI7pTUAQZv0qUKGMvAN
+	qVcUBDASkWhadHqujVrGRAh0WA==
+X-Google-Smtp-Source: AGHT+IHroTG+cAWh+aiuCKZP0IeC6sxXeDOJDrhhpcsamnqf28wbiLaRulLy5RNvn47zqPhwnM3Xyw==
+X-Received: by 2002:a17:902:e807:b0:220:e1e6:4472 with SMTP id d9443c01a7336-220e1e6474fmr8600405ad.13.1739440855192;
+        Thu, 13 Feb 2025 02:00:55 -0800 (PST)
+Received: from [192.168.0.120] ([49.205.33.247])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-220d556d4e3sm8988135ad.175.2025.02.13.02.00.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 13 Feb 2025 02:00:54 -0800 (PST)
+Message-ID: <b43e4cd9-d8aa-4cc0-a5ff-35f2e0553682@gmail.com>
+Date: Thu, 13 Feb 2025 15:30:50 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 3/3] xfs: Add a testcase to check remount with noattr2
+ on a v5 xfs
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ djwong@kernel.org, zlang@kernel.org
+References: <cover.1739363803.git.nirjhar.roy.lists@gmail.com>
+ <de61a54dcf5f7240d971150cb51faf0038d3d835.1739363803.git.nirjhar.roy.lists@gmail.com>
+ <Z60W2U8raqzRKYdy@dread.disaster.area>
+Content-Language: en-US
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <Z60W2U8raqzRKYdy@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-Alyssa Ross <hi@alyssa.is> writes:
-
-> "Darrick J. Wong" <djwong@kernel.org> writes:
+On 2/13/25 03:17, Dave Chinner wrote:
+> On Wed, Feb 12, 2025 at 12:39:58PM +0000, Nirjhar Roy (IBM) wrote:
+>> This testcase reproduces the following bug:
+>> Bug:
+>> mount -o remount,noattr2 <device> <mount_point> succeeds
+>> unexpectedly on a v5 xfs when CONFIG_XFS_SUPPORT_V4 is set.
+> AFAICT, this is expected behaviour. Remount intentionally ignores
+> options that cannot be changed.
 >
->> On Wed, Feb 12, 2025 at 09:16:49AM +0100, Alyssa Ross wrote:
->>> This fixes the following build error with icu 76, also seen by
->>> Fedora[1]:
->>>=20
->>> 	/nix/store/9g4gsby96w4cx1i338kplaap0x37apdf-binutils-2.43.1/bin/ld: un=
-icrash.o: undefined reference to symbol 'uiter_setString_76'
->>> 	/nix/store/9g4gsby96w4cx1i338kplaap0x37apdf-binutils-2.43.1/bin/ld: /n=
-ix/store/jbnm36wq89c7iws6xx6xvv75h0drv48x-icu4c-76.1/lib/libicuuc.so.76: er=
-ror adding symbols: DSO missing from command line
->>> 	collect2: error: ld returned 1 exit status
->>> 	make[2]: *** [../include/buildrules:65: xfs_scrub] Error 1
->>> 	make[1]: *** [include/buildrules:35: scrub] Error 2
->>>=20
->>> Link: https://src.fedoraproject.org/rpms/xfsprogs/c/624b0fdf7b2a31c1a34=
-787b04e791eee47c97340 [1]
->>> Signed-off-by: Alyssa Ross <hi@alyssa.is>
->>
->> Interesting that this pulls in libicuuc just fine without including
->> icu-uc.pc, at least on Debian 12:
->>
->> $ grep LIBICU_LIBS build-x86_64/
->> build-x86_64/include/builddefs:222:LIBICU_LIBS =3D -licui18n -licuuc -li=
-cudata
->>
->> Debian sid has the same icu 76 and (AFAICT) it still pulls in the
->> dependency:
->>
->> Name: icu-i18n
->> Requires: icu-uc
+>> Ideally the above mount command should always fail with a v5 xfs
+>> filesystem irrespective of whether CONFIG_XFS_SUPPORT_V4 is set
+>> or not.
+> No, we cannot fail remount when invalid options are passed to the
+> kernel by the mount command for historical reasons. i.e. the mount
+> command has historically passed invalid options to the kernel on
+> remount, but expects the kernel to apply just the new options that
+> they understand and ignore the rest without error.
 >
-> I don't know too much about Debian, so I might be doing something wrong,
-> but when I looked in a fresh Debian Sid container I see a libicu-dev
-> package that's still on 72.1-6, a libicu76 package, but no libicu76
-> package.  I'm not sure there's currently a package that installs the
-> icu-i18n.pc from ICU 76?
+> i.e. to keep compatibility with older userspace, we cannot fail a
+> remount because userspace passed an option the kernel does not
+> understand or cannot change.
+>
+> Hence, in this case, XFS emits a deprecation warning for the noattr2
+> mount option on remount (because it is understood), then ignores
+> because it it isn't a valid option that remount can change.
 
-Here I meant "no libicu75-dev package".
+Thank you, Dave, for the background. This was really helpful. So just to 
+confirm the behavior of mount - remount with noattr2 (or any other 
+invalid option) should always pass irrespective of whether 
+CONFIG_XFS_SUPPORT_V4 is set or not, correct?
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+This is the behavior that I have observed with CONFIG_XFS_SUPPORT_V4=n 
+on v5 xfs:
 
------BEGIN PGP SIGNATURE-----
+$ mount -o "remount,noattr2" /dev/loop0 /mnt1/test
+mount: /mnt1/test: mount point not mounted or bad option.
+$ echo "$?"
+32
 
-iHUEARYKAB0WIQRV/neXydHjZma5XLJbRZGEIw/wogUCZ6290QAKCRBbRZGEIw/w
-oj1kAP9owutT+weWUXLVNn22YGPFXpMEMUTQRuSsrZ73IYoDLwEAo5q4QdNRzbK4
-f6WbHUA1Bx4p2Y0oa9CnaIPXBTpzFgA=
-=ceaU
------END PGP SIGNATURE-----
---=-=-=--
+With this test, I am also parallelly working on a kernel fix to make the 
+behavior of remount with noattr2 same irrespective of the 
+CONFIG_XFS_SUPPORT_V4's value, and I was under the impression that it 
+should always fail. But, it seems like it should always pass (silently 
+ignoring the invalid mount options) and the failure when 
+CONFIG_XFS_SUPPORT_V4=n is a bug. Is my understanding correct?
+
+--NR
+
+>
+> -Dave.
+
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
+
