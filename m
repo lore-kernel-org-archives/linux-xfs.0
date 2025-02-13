@@ -1,222 +1,1276 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1717C23F406
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 13:03:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739451817; cv=fail; b=k36eFu2XbfzwrJI8bneWgLz4IVQhHe0tjDIREuDDUtF59RM1RYCYgFlniz9u1ySwVqguy/7KYTOLC9cqvelQFtFJgdeqfTyn8XgfwMxeHxDnL6vsTg79NcLniwAjSqxC7RFAJpYeR0iZDzucRG3YaM+FoHpHbFtRl0MwvPAL4Jg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739451817; c=relaxed/simple;
-	bh=wPMAaHhVV0/3RtPQrDR4r+QqPZDSlBEGUX5K7rQnCH8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KKgWnm4+Ot5j/QN4e7DezyJmHAh5lKaBuKq6sDE/sT0NORmvFOoW/mr3WqyWZyRmEFgriUdzoEwgl0G6rTsi/L5QukAM3mW5qxjVkpziHYvE4dVgXLOCH1pySpESmwurwz2XcxsODd2ebeeocwwKnc2sSlDodPm/ohgiSxL9COs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=oM+I1HMv; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=L5CGL4iK; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AE7322170F
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 13:25:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739453136; cv=none; b=vAMsVl18nGjf2nTfx6/hLmEPKd7UdVhtll2XhHCZjz8S26GTr6slJM/uJuyezoybB7WOkfdTeCoDnxd8zVZnnVfluOpopHfTZ3F63Uo8qLwng9MQ2fV1IIJJ1/IulcO5S4Sb9YmN/H5h+CgnD7HCVwYVHrX9FKbYKaSxyPv1ubw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739453136; c=relaxed/simple;
+	bh=Em8JVyUg1qazqu1voqYz/kkg/QW5mzIi2E5hyPo1R8w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UtY7w8EYYgKhUUN4L9il+oiZdZ0MqmYOIgM19CFep0DMRo72xI2Su8jeX98F09r1HVHecme+rNa26zXNRWpT/fM+totwpGYVMDg/pZJ4HEu02b7HVYM0yiUsRRR85YRMbNpYafia+jCd9qUMy8ySrQon9wayQjzIyl6ZJsaGyYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fXwEPikA; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="oM+I1HMv";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="L5CGL4iK"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1739451816; x=1770987816;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=wPMAaHhVV0/3RtPQrDR4r+QqPZDSlBEGUX5K7rQnCH8=;
-  b=oM+I1HMvOC7YVckYJ0mlKJJf++tfuvNAyTFDHq6H1ZAOHh2iyKjOCEce
-   pybYE1ahwEljTmofaQhyUxRL56Jl2lbEyqgCy79E+vDsKF6DX7Si2a2Js
-   l5VEGKkl2CyhM+XTsgIvH6iLWCNV0oEVPprL7/cBZfQm0UJex4kTjB5x/
-   9v8BemzX/Eb0Cju1qJlTycsoEc+E650ZS5EOrQtBQBw1EvwQXspafkt/s
-   /mJJWWnaXVqISJH9FjHHhWf+M3pNqn+4zbnEtdhW/PJyD5Ssk5nuSmxVP
-   hA+qL0b8wU8amStIMdUXo+w11dF+rRvzsvXidD9ccRpIlaki6MMSS5v8+
-   A==;
-X-CSE-ConnectionGUID: 5Kxj8OCwSEOyyikGdAj6PA==
-X-CSE-MsgGUID: mBXTZ0pOQoWdEV1/k/5mEQ==
-X-IronPort-AV: E=Sophos;i="6.13,282,1732550400"; 
-   d="scan'208";a="38165890"
-Received: from mail-bl0pr05cu006.outbound1701.protection.outlook.com (HELO BL0PR05CU006.outbound.protection.outlook.com) ([40.93.2.9])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Feb 2025 21:03:34 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dQz3yL1h3S0MN+JVU0ouwtBnQ/J8DLNOwfzb/I+aYe+bTI9Si5Xo4Fc6DhQdD23VrTLjLi7eM9JfEnJmLuIEkV4jnCOrfLFNVSuuXl6e2nZi69nUP4Q3afIDxBYQ0sQnnVSuVrssAadPhNNHjKQ12NN4PrtPsZ9SV8REMbeQr4uw3YZ0lvTVhGptmGU1dC3QFjMQgqXWgKHIyg1dX46xSam3ifA8W2gYpgtUjbaQfWV97dBCwcyeLlX2qHlBZTLXkge8EerzZrrWDpc7sB7HA8NehtVBTDroy+bd+IfA1ZdiNxMppI2pwoUcrf181cEJ1njL8zbebxhRaSUdZ2ncLg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wPMAaHhVV0/3RtPQrDR4r+QqPZDSlBEGUX5K7rQnCH8=;
- b=BSP5ol8cjTN9mySDI67Z2/JQpzXEtllOP/2VgS97bKmOkXf8ov3+uYtsRk2/t5R/H3DpLOdmvBzUK2Ubi44ATJEQxMkQrdVSybjtEyjfTQ0CbZZng+HbAFu9SZ8fdb6f+yr7pwUGyyJBFkH9CE5zcOxkKZ20O4prolJAASiIVh+MPG/gmNS4vDHs5UwOrOx+W9eZs2psD29HGuynRSGxeYZGeqqkQK1HBB52cKzVXs7dKcsuyAXSU6HUaQ26qJmuHz53Acm0rCQqJ3YwD/WEm8FklVzMXIFK2l8yh/N32Li4KSu0vsnLrdQbf9Jt36XKLjoIQOA513BtdsHNaMggdg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wPMAaHhVV0/3RtPQrDR4r+QqPZDSlBEGUX5K7rQnCH8=;
- b=L5CGL4iKNWzNnrCSsOL9jHSrQtL/gnCK4JOlNLSrV3Of1DTGvEAQBD0VgPxw9eYAJ83bigavRHAtgIpgRgJ5p4u4+4yY8ex7gc+iSPSFDgPnqLpC+h1IGKf23O+lOfxiDXte1Ob9e/JSa6sX3N3OTSQ4XnE94t5r7napJBRXS4c=
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com (2603:10b6:510:236::8)
- by SJ2PR04MB8780.namprd04.prod.outlook.com (2603:10b6:a03:537::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8445.13; Thu, 13 Feb
- 2025 13:03:32 +0000
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b]) by PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b%7]) with mapi id 15.20.8445.013; Thu, 13 Feb 2025
- 13:03:32 +0000
-From: Hans Holmberg <Hans.Holmberg@wdc.com>
-To: "Darrick J. Wong" <djwong@kernel.org>, hch <hch@lst.de>
-CC: Carlos Maiolino <cem@kernel.org>, "linux-xfs@vger.kernel.org"
-	<linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 39/43] xfs: support write life time based data placement
-Thread-Topic: [PATCH 39/43] xfs: support write life time based data placement
-Thread-Index: AQHbeGMNUHBiCs4vP0Oy/NKo2p6w/rNC2QIAgADad4CAAP82gIAAi+YA
-Date: Thu, 13 Feb 2025 13:03:31 +0000
-Message-ID: <25ded64f-281d-4bc6-9984-1b5c14c2a052@wdc.com>
-References: <20250206064511.2323878-1-hch@lst.de>
- <20250206064511.2323878-40-hch@lst.de>
- <20250212002726.GG21808@frogsfrogsfrogs>
- <c909769d-866d-46fe-98fd-951df055772f@wdc.com>
- <20250213044247.GH3028674@frogsfrogsfrogs>
-In-Reply-To: <20250213044247.GH3028674@frogsfrogsfrogs>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH7PR04MB8755:EE_|SJ2PR04MB8780:EE_
-x-ms-office365-filtering-correlation-id: 5e389db6-6a9b-4f46-21bd-08dd4c2ed151
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|376014|366016|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?cTBWVGpOUWdiTGRlYVozVmlSSFA4QVhKOEgyd1dncXM2MTFiRExkNzlqYXhl?=
- =?utf-8?B?aWEzRDlTbXNGelRYTSszMGJ2MHNMQ2liVm9FWVJEN0hlSlNxUXl5OUlxZUNZ?=
- =?utf-8?B?UkFGaXZ4M1gxVmpvMElNYW5XMENzQUFCV2lCeXV6QXhCTXRERExGR2hPMVZR?=
- =?utf-8?B?RkJTbmZVOWwvdERWaGFPNDZOQzhHc1QxNnAwRlNBL09kSXEwNEpaY2FlazF1?=
- =?utf-8?B?cWN2MDNUQWcrbUo2YnVIVHhLN0prZ2dMNGoxZVlqVzY2TXQyV2UzcVFyUWVY?=
- =?utf-8?B?M1FlZEt0ZkMrdU1BeVpmVktqQ29lQ0VheENuYUd3b2w5blZaMndhYmdHaDVF?=
- =?utf-8?B?UTFUQW5Lc3crUGx5dVAwSEQwaEU3OCsyNHR1d1VCYk9odklWdk9HVUU5bWkw?=
- =?utf-8?B?a3FPZkRjOXVGeEFqVWF0U285TjFQeWkzTjA4Z3pNRGdnemRnemRpTWhhTVd3?=
- =?utf-8?B?MW4xVDNhU3FiZ1krM0ZOSVErTlI4L1BlSWt3U00rWDB2TXBJb0ptSlppVVB6?=
- =?utf-8?B?VUVSMVNHQTlTMHkrQ2l0ZG0wNWZkbzZCUStlb084SXh0S05jVlo5Y0M2bEVH?=
- =?utf-8?B?QXlQTHdxMzQ4V2pIREFlNElIZHJrbjJ0dzRreHd1SllyTUlSbHRvM0RxeHhZ?=
- =?utf-8?B?QUlIeUxtVkIxRE04L0NnN045Vlg4Q0QwVGxOdlN0ekVUbEpkeldlb3JWT1l6?=
- =?utf-8?B?dml6d3RuUWt3K05sOVZaTXlONE9FY0QvN2l2Wkl3Z1MyVGt0aWRlaDZ1enY1?=
- =?utf-8?B?SC96UVBOVzJWOXRLak5UV3NJdVZOcjVYQTgraDByVVBZOE95bjhmWmxrSTFG?=
- =?utf-8?B?MmtJaDVyS2cvWUlpakM0LzdSNy8xZDVnNllsMHowSEhRWnB2aitqV0hPTzZS?=
- =?utf-8?B?L3lXVnVrT3Qwdm4rSEpLQUhUbyt6dUpKK2lpTDArcklETjdvUVQyZ2JTL3RO?=
- =?utf-8?B?QjBqVG1kOTJQZm5jY2tCK1ZJbmZ5emZuOEhXM1dOVzVwalJLUkdNSVRHbXVs?=
- =?utf-8?B?V2J2c3dSbytuYkUwcVhnazAvbU1VeFllNU92Q2p5NmdkR2o1YUE5QkptRTlm?=
- =?utf-8?B?L051Z3hmUUdnNVk5cU1qZ3VDYXUwYVV3MEdVK0dsVmhJcVZVVXF1aFBHaTkw?=
- =?utf-8?B?azhORVVrRmJCVDlNaW5HNG1HRFU4MzBIdldzMndacUdwY1NxT1NGSVpMSk5n?=
- =?utf-8?B?blRKU2lFUkllL1lOSzFYVGZxbG94d1lOSXQ3SjhhaGVvWlltSEF2ZlpRQ1hO?=
- =?utf-8?B?RjRkVUtOSWduY3VmSDEzVG9wcTJxdXlVZEdhNE9WeE8wakxmYXFGdlNpemM5?=
- =?utf-8?B?WEFhSGJnbmUxZlB2aFVaRVEvMjQxMStSakxYOUxja0J0djBIMk9aODZEUmtv?=
- =?utf-8?B?VGFRY3c1bVZYMk1FRmN1dGF0R2xTMzhBQ0R5TjY0ZWFtRWlLK1hERlFTdXZB?=
- =?utf-8?B?NmVickpDK1d2OFY4dk1qRUR2bjQ0TTVlcWpTVjRuWndFRThsUVhIWTJjaVJR?=
- =?utf-8?B?OE9OZXpQM09jZEsyMkNCREdWOTJxZ1dTWVVlZ1IwK1VoeVRKeGNIU293SHN2?=
- =?utf-8?B?dzdwQ3IzNVBoY002VUsreFlQZ1hFTStrNERKTk9QMXhyNngyVE1yL2JxbWVV?=
- =?utf-8?B?Q1lCTWFEZUhNQmZ4WUxPVktaSkg1VEE3dURrN2RDdFYvYkhLWHVmT0VoUlVx?=
- =?utf-8?B?Q3ZHQlFQNURlOVJiWnZEeEJuZ2srZjMrRTNmVW9qdnU3WjdFZjBrSTNrSTh6?=
- =?utf-8?B?bTBscmJnOTRxSnVVeEFxOTRiUzI3NlJMOFY1Sm5BUVlkdWcveTBXM3dqVXFi?=
- =?utf-8?B?SFVxeHFvN1RibFhnVE44ZjU4Z3VsWTNjMCtmL05ob2dhVkRNNmQrQUFwajhp?=
- =?utf-8?B?cGtvSXhrdDVocVViR0tjbUFvdHpCTTRpRENPODRUYWNmR2hiKzBheHQ0a3lS?=
- =?utf-8?Q?4CXKjikEhDEjiMUhJ9K5hHf4U6YjUiUj?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR04MB8755.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?bXN0Q3N0T2JDeGFJWTFWY05icnI2ZXI2b2tmSXdXVzRkRmd0Sk9WN1pqcy9J?=
- =?utf-8?B?UTllcDVSV1RUcWZjeVJGeTQ2dEQ2VFk2TnpzM0NBenhmakpodU9jc2lRazFp?=
- =?utf-8?B?KytzWng3cXkzSk5rQkRVMWUwOHVEOVp3UElRUlFNRVowZjh3cFY4ZjhEdTZM?=
- =?utf-8?B?MXdNR2l4WE1xNnVrWVRCYnhQZ1F3d0orM2s5RTB5b2dpdG5lUW1EVEtOSEtZ?=
- =?utf-8?B?dnUzdG5lSVU2ZzlFNzJwN3RFTExZaUF2M0I4MnhPeEljbHhudis4TG5QNmVm?=
- =?utf-8?B?QVBhckFKb2xQZWJtQk1VTGtXekc5U2lOdVV6dkNUMER1amRVMngrUDNaSFR0?=
- =?utf-8?B?eVFqalN5S1ZjRC9YK3FIRGN3REJqL3hLWEgycFBzQU91bVNQK0hGNXdzWS9R?=
- =?utf-8?B?Um54YzFMbTlOSlYyN0oyZGpTRExEYTNEZURodHV4b05wQXNmWU9IWjdWSGNU?=
- =?utf-8?B?b1NBd2RJV0h0NzNDNEdtdUQ0aXRiWGhHajlaWlB4VWNFM1htZFNDYlVNN0xr?=
- =?utf-8?B?eXdFR2RsWE1NZm15Nm1IeGh1UnlsZExPWjdZbjd5U2RqRjhEQi9CbWp0RU1J?=
- =?utf-8?B?RTYwS2xZUzdEeSs4YklPTy9pRWY4ai93QVk3eVlDb0NaSkwyOFlVYjFvQ2U5?=
- =?utf-8?B?MEJJVEQwTTBtMk1vOWxxRURLbDg4d016WFRFdFlmVWtKd01LekJMaTd2U293?=
- =?utf-8?B?R3ZjdzR4dHVEcERYYnRVbDYvLzBCVjhSeDVqWXlRQUVBN1hGa1FpbXN6NDl4?=
- =?utf-8?B?dVNQRjQ0NXNsV3lsbFIzMDBWUWJaQkV5YVdKWE9ubzIzaXhSZmYvWmcvRnFr?=
- =?utf-8?B?Z2gyNmx2MDVUWUxaTUlxOHRoZHU5N2pMNlF6cEFIQjAvMGovZjUzb09jM0Vh?=
- =?utf-8?B?RnNxUy8vN3ZTV1RQUDQvQkZMN01aTU1MR1d1QU1RZGdYbUlDZ1UrMytYTzVk?=
- =?utf-8?B?aW4vZUkyRm14Qko3RTVyQTJzVkJTZHdxWlhHcUl1NlZieWg3TGRVTkZXd3Fq?=
- =?utf-8?B?bUZUMXN2MXJqYlZmOUVKOW5xY09GZGZXNXo0V0dsU1FyWC9HcjhOanExVTdy?=
- =?utf-8?B?QXJRSDJUUXlhZkFJb3prZk5QNWR4M0JQZHNBaHEyRjlvUG1qeUk0dmNUaW9j?=
- =?utf-8?B?WjJ1ZCsvcWlFYlgxUGJiNUlsdEV6R3RyVng3QUhVYXIxSlN1NUVLUkdPT2VS?=
- =?utf-8?B?WVFYeHA0RWhvejl6U24yN3RmKzcxRXJ0SkhJejBweTRRK0wxb256RndJMFdv?=
- =?utf-8?B?VkZ2MGlYTzlPWUkram9zS01aYTBKaDBXWkdFd3FxaE0rNWtDVm8yRTg2WWdq?=
- =?utf-8?B?Slg1ejhtdjBQVFYrRGRheXdDSkFGZGFrT0NJWXVhbFlwNk5LaXQvODVEMnp1?=
- =?utf-8?B?T0ZWWmU2QW9aVVg3NXJzZERWSmFoNlM0YWJKbm9sd01WdGx2UC94Y01TMjZQ?=
- =?utf-8?B?QXNhOWh5Zi96TWNvaXhsZ1NxT09waTJVcE9MRFdIaTZSM2w3bnpqWEdWd1d2?=
- =?utf-8?B?U2pjS3FYZTdpU0Z2cUpWZlc2czVBalI1aHFFZFIxUzNuWmFyRTBBMUZMcDQ0?=
- =?utf-8?B?a2txQWJXbDExZTJkRjBtQnZSbkpnNHZhQ0dKaVM1bFVPbU9vUFJmQzNPZ3ZV?=
- =?utf-8?B?UjlaK25DdHM3YkFaZi95VTRFUWtSRHN5Tlo2dDZta2dKUGN5WHRZYVh2d2hk?=
- =?utf-8?B?UVlOazZkSldaMzhMRENaL0dWNDdPRGI0WnEvL0pRUER6NGU3MDlkbm9xUUQ2?=
- =?utf-8?B?RjMrcU0xdkZnYXgrRzZESU12YzE4ZUd3bG4zZy9zMC9Ib2tpcWI3OW1nTmd4?=
- =?utf-8?B?MTVIMUJtc0p3M1QzcXZFbDNWQUJMK0JpSldBdDFGczlGRmt4OHBOeElqdTMz?=
- =?utf-8?B?QlNOSXdYUEgyK0dFNkszTTNGdTAreGxBZTkxL1Q1YmRXUjYweWNjcEQ5bjVq?=
- =?utf-8?B?Q0l1TWlSQ2hWWkVjdnFnTXdVa0xabHBGYTdCOThHSXVZQ3ZhdUZMYjlCRFAz?=
- =?utf-8?B?NnEycWRlZndaeE1RTzI3ekxpWXc0WU1aUzZDaTg4RlAzNFNsYXhRMmZKYm9H?=
- =?utf-8?B?dU0yVFJVUzh1Rkt6cDM5aEc5cm93ajFlSHkyZW53bDZPVlFmYzQ4dTJFNDhp?=
- =?utf-8?B?RjZsTGFIVG5BbjVUc0tOZndNSVJZMjA2Q3lFU2NBZlgxOEtZM3hpU3pFZ1pi?=
- =?utf-8?B?Z3c9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <73D195B3FBCE534681BF89BCB5678C92@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fXwEPikA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1739453132;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=t3npb1c7mjxixx+81VDSwaJDM6S4F0RS4c/pvUxz+Ug=;
+	b=fXwEPikAnG2jg1YlmhDEoWpSDmpfPcCN0LYQXXaYpctsKj8587zIUPwoxnRxjyvyAdriIx
+	OXjgwICcVcfc/BcG/Uxmz9wK6CiduJz1eeKXmlY+LzxTu2NbE9TomFlsGMPi43FgsFnykA
+	uIZuGPBdnyK3e40nE+ufos1GuwAuo30=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-499-ArDJdaIxM_SLa8gNZFKUtQ-1; Thu, 13 Feb 2025 08:25:30 -0500
+X-MC-Unique: ArDJdaIxM_SLa8gNZFKUtQ-1
+X-Mimecast-MFC-AGG-ID: ArDJdaIxM_SLa8gNZFKUtQ
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-ab7fb530829so122574666b.0
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 05:25:30 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739453129; x=1740057929;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=t3npb1c7mjxixx+81VDSwaJDM6S4F0RS4c/pvUxz+Ug=;
+        b=kRN7YvkbCgkKltLN05Mch+l8djPlTE0VNhhq7RGYBGH531ifAEM3ivOzuJLl9Ozn2X
+         z0C56ntt5KHM1eFCRetuIVyFKObiIHlJHEEoMoGVGlnOnyPMUuJeiR1GwgDNmLjhtBve
+         jq+CvJ837QVIWAPA8NI5GrWh1KdDGKCZN2MeaPKaTLQnuAr2PHLU97523Z2o0aycOJji
+         K/R8/4SxGcduwXUPRyh4rOlVddFyL2Gx0Ix5YSOnLlqBDC/t5k9TJfHHwVGFoRgltp5B
+         QR7YeXwN0P/HAXUPUsFEOegU1EUcX6TQ4wJS7cQBzDXk6ifmgwDx/lyEmulTwz4f4jyq
+         1hUw==
+X-Forwarded-Encrypted: i=1; AJvYcCWCZjxNkPBtwoUPLhgcQ1tVISUvSe8eEhANaU/TmoAPeP1NbSjhYv8LcuZOS/5CEb0TupTlC80YkS4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywque9YVoOn4HSpzhEez77DDSO3z4a5F/tJslpcVRGnrRGEABU/
+	Gb5VVVUtmNM4PQSAK/ZdhHCQVY7AmlS/OotlwgNnEuKZp0OFa/S0cfTA6/cml7BAyNIKmCs0itH
+	av6imEIU5FSdrADNs9LlW7UkfuDHB4JFtGpeCp83XbhMnW+qxLmIDIuOh
+X-Gm-Gg: ASbGncsh9NRvChYWKHTUJWuqmfvkdf5cxVI40M66JmZdX5DcpKS5hdzslAWqqonWTmB
+	SrBoqkiQfLPDnpPAs2SZMLYf6wKKVl0P4Z3mp6lXBGQ40niqnVWDh60CQLQsFuXC2U8gL3uiwbr
+	13UU22bo7gmfx6V3h7/fXYp6pREHi31hIyfD/YJhzTnidnRABVV94Wl7gybAI6qfqmovX681jlg
+	Mfa3G9dm+tNvLxZ86yV3BVEUCaOmAoMzQiBekQ/FXecQANg6G96iQ+uXZ0REZYl+z/aMa1FNDGv
+	gqXbLNSgCqhOviYVtnDLynAk
+X-Received: by 2002:a17:907:7b87:b0:aae:b259:ef63 with SMTP id a640c23a62f3a-ab7f33d6d30mr801700766b.34.1739453128806;
+        Thu, 13 Feb 2025 05:25:28 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEEnXuG5F8oBC+Lj63KpPl01oGss9LG/T4rkcHhvMQAFFEliVRlxCaDv+ETq3mWwsSN6dYmYw==
+X-Received: by 2002:a17:907:7b87:b0:aae:b259:ef63 with SMTP id a640c23a62f3a-ab7f33d6d30mr801695366b.34.1739453128059;
+        Thu, 13 Feb 2025 05:25:28 -0800 (PST)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aba5339dec3sm131806466b.157.2025.02.13.05.25.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Feb 2025 05:25:27 -0800 (PST)
+Date: Thu, 13 Feb 2025 14:25:25 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs_db: add command to copy directory trees out of
+ filesystems
+Message-ID: <rgy4lpfzxej7u2cbkoh55xdaov2mg7wcovqqc3ygir2yx7gz43@hzm67i7hq32n>
+References: <173888089597.2742734.4600497543125166516.stgit@frogsfrogsfrogs>
+ <173888089664.2742734.11946589861684958797.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	MFSufHjyRings3b4rafYiU67DrefiaCll2oqen8WyShYPSJci6lnJ267W2QOb4NkogzgkOwaWFMNZr8KRHeLwXeC/thwZwxNy1zFyl+Q/8M8rRUWNYbrKuGoKNCkfefDgqlA9dLEJdq5lN+aOJ6dzh9KeRJDcgjx7L5rqFpF9a/lgFNlJ05TfE+x3JW/fFKOGCqUEVWy5LUY1m3jKKGY3FqIP0sGtKQdUTHWteinrj0lpcgCAF4r+Skc7QjIlLD8ovg6vkjJaT4ZEJR+ZsyOy+xav1qN2zmwSuXlFiD2G+EwZ1Akrxnv3fZX/j6yDGeBbiXT28WwsvYSEw1PiHfcgfVXBznOARRPb5s4BpNBzM79Iyy64tcaMQYtB4blK7fdE9y0AoZTZ8LwU74fwOyTnJGTA+NxnOi/3seST5NxlFJ0mwH368iIMVyI27wq1ovcOxMWefYnyktC9UHe489qEBF8Fol7gecFAJPEr75N1xe3XcbDj5FTzbgvmxSJzg6F6kUz8Ed9RAYVPxZ+8D9vFGYMftYgz/N8NSlAclVZ5inFtnTZy9jBc9IwKnbnt+zzUBnHVbyb1PQekTGV8COxo79bnxDxpSVDZ+BUoc9B6OzRYbAW9xN7N+nQjzj2onNc
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR04MB8755.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5e389db6-6a9b-4f46-21bd-08dd4c2ed151
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2025 13:03:32.0068
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: FfnEUkx9p3zyyy75A4tECVd2zI11AAL5/qOy8ZA/AGGFSI6VZlhCZevYez3BjvoJ9nGJPyrEGQZTACA6ee5flg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR04MB8780
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <173888089664.2742734.11946589861684958797.stgit@frogsfrogsfrogs>
 
-T24gMTMvMDIvMjAyNSAwNTo0MiwgRGFycmljayBKLiBXb25nIHdyb3RlOg0KPiBPbiBXZWQsIEZl
-YiAxMiwgMjAyNSBhdCAwMToyOToyMVBNICswMDAwLCBIYW5zIEhvbG1iZXJnIHdyb3RlOg0KPj4g
-T24gMTIvMDIvMjAyNSAwMToyNywgRGFycmljayBKLiBXb25nIHdyb3RlOg0KPj4+IE9uIFRodSwg
-RmViIDA2LCAyMDI1IGF0IDA3OjQ0OjU1QU0gKzAxMDAsIENocmlzdG9waCBIZWxsd2lnIHdyb3Rl
-Og0KPj4+PiBGcm9tOiBIYW5zIEhvbG1iZXJnIDxoYW5zLmhvbG1iZXJnQHdkYy5jb20+DQo+Pj4+
-DQo+Pj4+IEFkZCBhIGZpbGUgd3JpdGUgbGlmZSB0aW1lIGRhdGEgcGxhY2VtZW50IGFsbG9jYXRp
-b24gc2NoZW1lIHRoYXQgYWltcyB0bw0KPj4+PiBtaW5pbWl6ZSBmcmFnbWVudGF0aW9uIGFuZCB0
-aGVyZWJ5IHRvIGRvIHR3byB0aGluZ3M6DQo+Pj4+DQo+Pj4+ICBhKSBzZXBhcmF0ZSBmaWxlIGRh
-dGEgdG8gZGlmZmVyZW50IHpvbmVzIHdoZW4gcG9zc2libGUuDQo+Pj4+ICBiKSBjb2xvY2F0ZSBm
-aWxlIGRhdGEgb2Ygc2ltaWxhciBsaWZlIHRpbWVzIHdoZW4gZmVhc2libGUuDQo+Pj4+DQo+Pj4+
-IFRvIGdldCBiZXN0IHJlc3VsdHMsIGF2ZXJhZ2UgZmlsZSBzaXplcyBzaG91bGQgYWxpZ24gd2l0
-aCB0aGUgem9uZQ0KPj4+PiBjYXBhY2l0eSB0aGF0IGlzIHJlcG9ydGVkIHRocm91Z2ggdGhlIFhG
-U19JT0NfRlNHRU9NRVRSWSBpb2N0bC4NCj4+Pj4NCj4+Pj4gRm9yIFJvY2tzREIgdXNpbmcgbGV2
-ZWxlZCBjb21wYWN0aW9uLCB0aGUgbGlmZXRpbWUgaGludHMgY2FuIGltcHJvdmUNCj4+Pj4gdGhy
-b3VnaHB1dCBmb3Igb3ZlcndyaXRlIHdvcmtsb2FkcyBhdCA4MCUgZmlsZSBzeXN0ZW0gdXRpbGl6
-YXRpb24gYnkNCj4+Pj4gfjEwJS4NCj4+Pg0KPj4+IFRoZSBjb2RlIGNoYW5nZXMgbG9vayBtb3N0
-bHkgb2ssIGJ1dCBob3cgZG9lcyBpdCBkbyBhdCA0MCUgdXRpbGl6YXRpb24/DQo+Pj4gOTklPyAg
-RG9lcyBpdCByZWR1Y2UgdGhlIGFtb3VudCBvZiByZWxvY2F0aW9uIHdvcmsgdGhhdCB0aGUgZ2Mg
-bXVzdCBkbz8NCj4+DQo+PiBUaGUgaW1wcm92ZW1lbnQgaW4gZGF0YSBwbGFjZW1lbnQgZWZmaWNp
-ZW5jeSB3aWxsIGFsd2F5cyBiZSB0aGVyZSwNCj4+IHJlZHVjaW5nIHRoZSBudW1iZXIgb2YgYmxv
-Y2tzIHJlcXVpcmluZyByZWxvY2F0aW9uIGJ5IEdDLCBidXQgdGhlIGltcGFjdA0KPj4gb24gcGVy
-Zm9ybWFuY2UgdmFyaWVzIGRlcGVuZGluZyBvbiBob3cgZnVsbCB0aGUgZmlsZSBzeXN0ZW0gaXMu
-DQo+Pg0KPj4gQXQgNDAlIHV0aWxpemF0aW9uIHRoZXJlIGlzIGFsbW9zdCBubyBnYXJiYWdlIGNv
-bGxlY3Rpb24gZ29pbmcgb24sIHNvIHRoZQ0KPj4gaW1wYWN0IG9uIHRocm91Z2hwdXQgaXMgbm90
-IHNpZ25pZmljYW50LiBBdCA5OSUgdGhlIGVmZmVjdHMgb2YgYmV0dGVyDQo+PiBkYXRhIHBsYWNl
-bWVudCBzaG91bGQgYmUgaGlnaGVyLg0KPiANCj4gPG5vZD4gV291bGQgeW91IG1pbmQgcGFzdGlu
-ZyB0aGF0IGludG8gdGhlIGNvbW1pdCBtZXNzYWdlPw0KPiANCg0KVGhhdCBzb3VuZHMgbGlrZSBn
-b29kIGlkZWEuIENocmlzdG9waDogY291bGQgeW91IGZvbGQgaW4gdGhlIGFib3ZlIGxpbmVzDQpp
-bnRvIHRoZSBjb21taXQgbWVzc2FnZSBmb3IgdGhlIG5leHQgaXRlcmF0aW9uIG9mIHRoZSBzZXJp
-ZXM/DQooT3IgZG8geW91IHdhbnQgYW4gdXBkYXRlZCBwYXRjaD8pDQoNCg0KDQo=
+On 2025-02-06 15:03:32, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Aheada of deprecating V4 support in the kernel, let's give people a way
+> to extract their files from a filesystem without needing to mount.
+> 
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  db/Makefile              |    3 
+>  db/command.c             |    1 
+>  db/command.h             |    1 
+>  db/namei.c               |    5 
+>  db/namei.h               |   18 +
+>  db/rdump.c               |  999 ++++++++++++++++++++++++++++++++++++++++++++++
+
+Should rdump show progress? I suppose this will be rarely used/one
+time use backup command, I can see the log of all of the files
+restored being quite handy. Or maybe silent by default but with flag
+like -l restore.log. Also, without any errors on huge filesystem it
+would be helpful to see if it's working
+
+Otherwise, looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
+
+>  libxfs/libxfs_api_defs.h |    2 
+>  man/man8/xfs_db.8        |   26 +
+>  8 files changed, 1052 insertions(+), 3 deletions(-)
+>  create mode 100644 db/namei.h
+>  create mode 100644 db/rdump.c
+> 
+> 
+> diff --git a/db/Makefile b/db/Makefile
+> index 02eeead25b49d0..e36e775eee6021 100644
+> --- a/db/Makefile
+> +++ b/db/Makefile
+> @@ -45,6 +45,7 @@ HFILES = \
+>  	logformat.h \
+>  	malloc.h \
+>  	metadump.h \
+> +	namei.h \
+>  	obfuscate.h \
+>  	output.h \
+>  	print.h \
+> @@ -64,7 +65,7 @@ CFILES = $(HFILES:.h=.c) \
+>  	convert.c \
+>  	info.c \
+>  	iunlink.c \
+> -	namei.c \
+> +	rdump.c \
+>  	timelimit.c
+>  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+>  
+> diff --git a/db/command.c b/db/command.c
+> index 1b46c3fec08a0e..15bdabbcb7d728 100644
+> --- a/db/command.c
+> +++ b/db/command.c
+> @@ -145,4 +145,5 @@ init_commands(void)
+>  	timelimit_init();
+>  	iunlink_init();
+>  	bmapinflate_init();
+> +	rdump_init();
+>  }
+> diff --git a/db/command.h b/db/command.h
+> index 2c2926afd7b516..21419bbe65bfeb 100644
+> --- a/db/command.h
+> +++ b/db/command.h
+> @@ -36,3 +36,4 @@ extern void		timelimit_init(void);
+>  extern void		namei_init(void);
+>  extern void		iunlink_init(void);
+>  extern void		bmapinflate_init(void);
+> +extern void		rdump_init(void);
+> diff --git a/db/namei.c b/db/namei.c
+> index 6f277a65ed91ac..2586e0591c2357 100644
+> --- a/db/namei.c
+> +++ b/db/namei.c
+> @@ -14,6 +14,7 @@
+>  #include "fprint.h"
+>  #include "field.h"
+>  #include "inode.h"
+> +#include "namei.h"
+>  
+>  /* Path lookup */
+>  
+> @@ -144,7 +145,7 @@ path_navigate(
+>  }
+>  
+>  /* Walk a directory path to an inode and set the io cursor to that inode. */
+> -static int
+> +int
+>  path_walk(
+>  	xfs_ino_t	rootino,
+>  	const char	*path)
+> @@ -493,7 +494,7 @@ list_leafdir(
+>  }
+>  
+>  /* Read the directory, display contents. */
+> -static int
+> +int
+>  listdir(
+>  	struct xfs_trans	*tp,
+>  	struct xfs_inode	*dp,
+> diff --git a/db/namei.h b/db/namei.h
+> new file mode 100644
+> index 00000000000000..05c384bc9a6c35
+> --- /dev/null
+> +++ b/db/namei.h
+> @@ -0,0 +1,18 @@
+> +// SPDX-License-Identifier: GPL-2.0-or-later
+> +/*
+> + * Copyright (c) 2025 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <djwong@kernel.org>
+> + */
+> +#ifndef DB_NAMEI_H_
+> +#define DB_NAMEI_H_
+> +
+> +int path_walk(xfs_ino_t rootino, const char *path);
+> +
+> +typedef int (*dir_emit_t)(struct xfs_trans *tp, struct xfs_inode *dp,
+> +		xfs_dir2_dataptr_t off, char *name, ssize_t namelen,
+> +		xfs_ino_t ino, uint8_t dtype, void *private);
+> +
+> +int listdir(struct xfs_trans *tp, struct xfs_inode *dp, dir_emit_t dir_emit,
+> +		void *private);
+> +
+> +#endif /* DB_NAMEI_H_ */
+> diff --git a/db/rdump.c b/db/rdump.c
+> new file mode 100644
+> index 00000000000000..1e31b40a072bdc
+> --- /dev/null
+> +++ b/db/rdump.c
+> @@ -0,0 +1,999 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2025 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <djwong@kernel.org>
+> + */
+> +#include "libxfs.h"
+> +#include "command.h"
+> +#include "output.h"
+> +#include "init.h"
+> +#include "io.h"
+> +#include "namei.h"
+> +#include "type.h"
+> +#include "input.h"
+> +#include "faddr.h"
+> +#include "fprint.h"
+> +#include "field.h"
+> +#include "inode.h"
+> +#include "listxattr.h"
+> +#include <sys/xattr.h>
+> +#include <linux/xattr.h>
+> +
+> +static bool strict_errors;
+> +
+> +/* file attributes that we might have lost */
+> +#define LOST_OWNER		(1U << 0)
+> +#define LOST_MODE		(1U << 1)
+> +#define LOST_TIME		(1U << 2)
+> +#define LOST_SOME_FSXATTR	(1U << 3)
+> +#define LOST_FSXATTR		(1U << 4)
+> +#define LOST_XATTR		(1U << 5)
+> +
+> +static unsigned int lost_mask;
+> +
+> +static void
+> +rdump_help(void)
+> +{
+> +	dbprintf(_(
+> +"\n"
+> +" Recover files out of the filesystem into a directory.\n"
+> +"\n"
+> +" Options:\n"
+> +"   -s      -- Fail on errors when reading content from the filesystem.\n"
+> +"   paths   -- Copy only these paths.  If no paths are given, copy everything.\n"
+> +"   destdir -- The destination into which files are recovered.\n"
+> +	));
+> +}
+> +
+> +struct destdir {
+> +	int	fd;
+> +	char	*path;
+> +	char	*sep;
+> +};
+> +
+> +struct pathbuf {
+> +	size_t	len;
+> +	char	path[PATH_MAX + 1];
+> +};
+> +
+> +static int rdump_file(struct xfs_trans *tp, xfs_ino_t ino,
+> +		const struct destdir *destdir, struct pathbuf *pbuf);
+> +
+> +static inline unsigned int xflags2getflags(const struct fsxattr *fa)
+> +{
+> +	unsigned int	ret = 0;
+> +
+> +	if (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)
+> +		ret |= FS_IMMUTABLE_FL;
+> +	if (fa->fsx_xflags & FS_XFLAG_APPEND)
+> +		ret |= FS_APPEND_FL;
+> +	if (fa->fsx_xflags & FS_XFLAG_SYNC)
+> +		ret |= FS_SYNC_FL;
+> +	if (fa->fsx_xflags & FS_XFLAG_NOATIME)
+> +		ret |= FS_NOATIME_FL;
+> +	if (fa->fsx_xflags & FS_XFLAG_NODUMP)
+> +		ret |= FS_NODUMP_FL;
+> +	if (fa->fsx_xflags & FS_XFLAG_DAX)
+> +		ret |= FS_DAX_FL;
+> +	if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
+> +		ret |= FS_PROJINHERIT_FL;
+> +	return ret;
+> +}
+> +
+> +/* Copy common file attributes to this fd */
+> +static int
+> +rdump_fileattrs_fd(
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf,
+> +	int			fd)
+> +{
+> +	struct fsxattr		fsxattr = {
+> +		.fsx_extsize	= ip->i_extsize,
+> +		.fsx_projid	= ip->i_projid,
+> +		.fsx_cowextsize	= ip->i_cowextsize,
+> +		.fsx_xflags	= xfs_ip2xflags(ip),
+> +	};
+> +	int			ret;
+> +
+> +	ret = fchmod(fd, VFS_I(ip)->i_mode & ~S_IFMT);
+> +	if (ret) {
+> +		if (errno == EPERM)
+> +			lost_mask |= LOST_MODE;
+> +		else
+> +			dbprintf(_("%s%s%s: fchmod %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	ret = fchown(fd, i_uid_read(VFS_I(ip)), i_gid_read(VFS_I(ip)));
+> +	if (ret) {
+> +		if (errno == EPERM)
+> +			lost_mask |= LOST_OWNER;
+> +		else
+> +			dbprintf(_("%s%s%s: fchown %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	ret = ioctl(fd, XFS_IOC_FSSETXATTR, &fsxattr);
+> +	if (ret) {
+> +		unsigned int	getflags = xflags2getflags(&fsxattr);
+> +
+> +		/* try to use setflags if the target is not xfs */
+> +		if (errno == EOPNOTSUPP || errno == ENOTTY) {
+> +			lost_mask |= LOST_SOME_FSXATTR;
+> +			ret = ioctl(fd, FS_IOC_SETFLAGS, &getflags);
+> +		}
+> +
+> +		if (errno == EOPNOTSUPP || errno == EPERM || errno == ENOTTY)
+> +			lost_mask |= LOST_FSXATTR;
+> +		else
+> +			dbprintf(_("%s%s%s: fssetxattr %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/* Copy common file attributes to this path */
+> +static int
+> +rdump_fileattrs_path(
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf)
+> +{
+> +	int			ret;
+> +
+> +	ret = fchmodat(destdir->fd, pbuf->path, VFS_I(ip)->i_mode & ~S_IFMT,
+> +			AT_SYMLINK_NOFOLLOW);
+> +	if (ret) {
+> +		/* fchmodat on a symlink is not supported */
+> +		if (errno == EPERM || errno == EOPNOTSUPP)
+> +			lost_mask |= LOST_MODE;
+> +		else
+> +			dbprintf(_("%s%s%s: fchmodat %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	ret = fchownat(destdir->fd, pbuf->path, i_uid_read(VFS_I(ip)),
+> +			i_gid_read(VFS_I(ip)), AT_SYMLINK_NOFOLLOW);
+> +	if (ret) {
+> +		if (errno == EPERM)
+> +			lost_mask |= LOST_OWNER;
+> +		else
+> +			dbprintf(_("%s%s%s: fchownat %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	/* XXX cannot copy fsxattrs */
+> +
+> +	return 0;
+> +}
+> +
+> +/* Copy access and modification timestamps to this fd. */
+> +static int
+> +rdump_timestamps_fd(
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf,
+> +	int			fd)
+> +{
+> +	struct timespec		times[2] = {
+> +		[0] = {
+> +			.tv_sec  = inode_get_atime_sec(VFS_I(ip)),
+> +			.tv_nsec = inode_get_atime_nsec(VFS_I(ip)),
+> +		},
+> +		[1] = {
+> +			.tv_sec  = inode_get_mtime_sec(VFS_I(ip)),
+> +			.tv_nsec = inode_get_mtime_nsec(VFS_I(ip)),
+> +		},
+> +	};
+> +	int			ret;
+> +
+> +	/* XXX cannot copy ctime or btime */
+> +
+> +	ret = futimens(fd, times);
+> +	if (ret) {
+> +		if (errno == EPERM)
+> +			lost_mask |= LOST_TIME;
+> +		else
+> +			dbprintf(_("%s%s%s: futimens %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/* Copy access and modification timestamps to this path. */
+> +static int
+> +rdump_timestamps_path(
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf)
+> +{
+> +	struct timespec		times[2] = {
+> +		[0] = {
+> +			.tv_sec  = inode_get_atime_sec(VFS_I(ip)),
+> +			.tv_nsec = inode_get_atime_nsec(VFS_I(ip)),
+> +		},
+> +		[1] = {
+> +			.tv_sec  = inode_get_mtime_sec(VFS_I(ip)),
+> +			.tv_nsec = inode_get_mtime_nsec(VFS_I(ip)),
+> +		},
+> +	};
+> +	int			ret;
+> +
+> +	/* XXX cannot copy ctime or btime */
+> +
+> +	ret = utimensat(destdir->fd, pbuf->path, times, AT_SYMLINK_NOFOLLOW);
+> +	if (ret) {
+> +		if (errno == EPERM)
+> +			lost_mask |= LOST_TIME;
+> +		else
+> +			dbprintf(_("%s%s%s: utimensat %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +struct copyxattr {
+> +	const struct destdir	*destdir;
+> +	const struct pathbuf	*pbuf;
+> +	int			fd;
+> +	char			name[XATTR_NAME_MAX + 1];
+> +	char			value[XATTR_SIZE_MAX];
+> +};
+> +
+> +/* Copy one extended attribute */
+> +static int
+> +rdump_xattr(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	unsigned int		attr_flags,
+> +	const unsigned char	*name,
+> +	unsigned int		namelen,
+> +	const void		*value,
+> +	unsigned int		valuelen,
+> +	void			*priv)
+> +{
+> +	const char		*nsp;
+> +	struct copyxattr	*cx = priv;
+> +	const size_t		remaining = sizeof(cx->name);
+> +	ssize_t			added;
+> +	int			ret;
+> +
+> +	if (attr_flags & XFS_ATTR_PARENT)
+> +		return 0;
+> +
+> +	/* Format xattr name */
+> +	if (attr_flags & XFS_ATTR_ROOT)
+> +		nsp = XATTR_TRUSTED_PREFIX;
+> +	else if (attr_flags & XFS_ATTR_SECURE)
+> +		nsp = XATTR_SECURITY_PREFIX;
+> +	else
+> +		nsp = XATTR_USER_PREFIX;
+> +	added = snprintf(cx->name, remaining, "%s.%.*s", nsp, namelen, name);
+> +	if (added > remaining) {
+> +		dbprintf(_("%s%s%s: ran out of space formatting xattr name\n"),
+> +				cx->destdir->path, cx->destdir->sep,
+> +				cx->pbuf->path);
+> +		return strict_errors ? ECANCELED : 0;
+> +	}
+> +
+> +	/* Retrieve xattr value if needed */
+> +	if (valuelen > 0 && !value) {
+> +		struct xfs_da_args	args = {
+> +			.trans		= tp,
+> +			.dp		= ip,
+> +			.geo		= mp->m_attr_geo,
+> +			.owner		= ip->i_ino,
+> +			.attr_filter	= attr_flags & XFS_ATTR_NSP_ONDISK_MASK,
+> +			.namelen	= namelen,
+> +			.name		= name,
+> +			.value		= cx->value,
+> +			.valuelen	= valuelen,
+> +		};
+> +
+> +		ret = -libxfs_attr_rmtval_get(&args);
+> +		if (ret) {
+> +			dbprintf(_("%s: reading xattr \"%.*s\" value %s\n"),
+> +					cx->pbuf->path, namelen, name,
+> +					strerror(ret));
+> +			return strict_errors ? ECANCELED : 0;
+> +		}
+> +	}
+> +
+> +	ret = fsetxattr(cx->fd, cx->name, cx->value, valuelen, 0);
+> +	if (ret) {
+> +		if (ret == EOPNOTSUPP)
+> +			lost_mask |= LOST_XATTR;
+> +		else
+> +			dbprintf(_("%s%s%s: fsetxattr \"%.*s\" %s\n"),
+> +					cx->destdir->path, cx->destdir->sep,
+> +					cx->pbuf->path, namelen, name,
+> +					strerror(errno));
+> +		if (strict_errors)
+> +			return ECANCELED;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/* Copy extended attributes */
+> +static int
+> +rdump_xattrs(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf,
+> +	int			fd)
+> +{
+> +	struct copyxattr	*cx;
+> +	int			ret;
+> +
+> +	cx = calloc(1, sizeof(struct copyxattr));
+> +	if (!cx) {
+> +		dbprintf(_("%s%s%s: allocating xattr buffer %s\n"),
+> +				destdir->path, destdir->sep, pbuf->path,
+> +				strerror(errno));
+> +		return 1;
+> +	}
+> +	cx->destdir = destdir;
+> +	cx->pbuf = pbuf;
+> +	cx->fd = fd;
+> +
+> +	ret = xattr_walk(tp, ip, rdump_xattr, cx);
+> +	if (ret && ret != ECANCELED) {
+> +		dbprintf(_("%s%s%s: listxattr %s\n"), destdir->path,
+> +				destdir->sep, pbuf->path, strerror(errno));
+> +		if (strict_errors)
+> +			return 1;
+> +	}
+> +
+> +	free(cx);
+> +	return 0;
+> +}
+> +
+> +struct copydirent {
+> +	const struct destdir	*destdir;
+> +	struct pathbuf		*pbuf;
+> +	int			fd;
+> +};
+> +
+> +/* Copy a directory entry. */
+> +static int
+> +rdump_dirent(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*dp,
+> +	xfs_dir2_dataptr_t	off,
+> +	char			*name,
+> +	ssize_t			namelen,
+> +	xfs_ino_t		ino,
+> +	uint8_t			dtype,
+> +	void			*private)
+> +{
+> +	struct copydirent	*cd = private;
+> +	size_t			oldlen = cd->pbuf->len;
+> +	const size_t		remaining = PATH_MAX + 1 - oldlen;
+> +	ssize_t			added;
+> +	int			ret;
+> +
+> +	/* Negative length means name is null-terminated */
+> +	if (namelen < 0)
+> +		namelen = -namelen;
+> +
+> +	/* Ignore dot and dotdot */
+> +	if (namelen == 1 && name[0] == '.')
+> +		return 0;
+> +	if (namelen == 2 && name[0] == '.' && name[1] == '.')
+> +		return 0;
+> +
+> +	if (namelen > FILENAME_MAX) {
+> +		dbprintf(_("%s%s%s: %s\n"),
+> +				cd->destdir->path, cd->destdir->sep,
+> +				cd->pbuf->path, strerror(ENAMETOOLONG));
+> +		return strict_errors ? ECANCELED : 0;
+> +	}
+> +
+> +	added = snprintf(&cd->pbuf->path[oldlen], remaining, "%s%.*s",
+> +			oldlen ? "/" : "", (int)namelen, name);
+> +	if (added > remaining) {
+> +		dbprintf(_("%s%s%s: ran out of space formatting file name\n"),
+> +				cd->destdir->path, cd->destdir->sep,
+> +				cd->pbuf->path);
+> +		return strict_errors ? ECANCELED : 0;
+> +	}
+> +
+> +	cd->pbuf->len += added;
+> +	ret = rdump_file(tp, ino, cd->destdir, cd->pbuf);
+> +	cd->pbuf->len = oldlen;
+> +	cd->pbuf->path[oldlen] = 0;
+> +	return ret;
+> +}
+> +
+> +/* Copy a directory */
+> +static int
+> +rdump_directory(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*dp,
+> +	const struct destdir	*destdir,
+> +	struct pathbuf		*pbuf)
+> +{
+> +	struct copydirent	*cd;
+> +	int			ret, ret2;
+> +
+> +	cd = calloc(1, sizeof(struct copydirent));
+> +	if (!cd) {
+> +		dbprintf(_("%s%s%s: %s\n"), destdir->path, destdir->sep,
+> +				pbuf->path, strerror(errno));
+> +		return 1;
+> +	}
+> +	cd->destdir = destdir;
+> +	cd->pbuf = pbuf;
+> +
+> +	if (pbuf->len) {
+> +		/*
+> +		 * If path is non-empty, we want to create a child somewhere
+> +		 * underneath the target directory.
+> +		 */
+> +		ret = mkdirat(destdir->fd, pbuf->path, 0600);
+> +		if (ret && errno != EEXIST) {
+> +			dbprintf(_("%s%s%s: %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +			goto out_cd;
+> +		}
+> +
+> +		cd->fd = openat(destdir->fd, pbuf->path,
+> +				O_RDONLY | O_DIRECTORY);
+> +		if (cd->fd < 0) {
+> +			dbprintf(_("%s%s%s: %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +			ret = 1;
+> +			goto out_cd;
+> +		}
+> +	} else {
+> +		/*
+> +		 * If path is empty, then we're copying the children of a
+> +		 * directory into the target directory.
+> +		 */
+> +		cd->fd = destdir->fd;
+> +	}
+> +
+> +	ret = rdump_fileattrs_fd(dp, destdir, pbuf, cd->fd);
+> +	if (ret && strict_errors)
+> +		goto out_close;
+> +
+> +	if (xfs_inode_has_attr_fork(dp)) {
+> +		ret = rdump_xattrs(tp, dp, destdir, pbuf, cd->fd);
+> +		if (ret && strict_errors)
+> +			goto out_close;
+> +	}
+> +
+> +	ret = listdir(tp, dp, rdump_dirent, cd);
+> +	if (ret && ret != ECANCELED) {
+> +		dbprintf(_("%s%s%s: readdir %s\n"), destdir->path,
+> +				destdir->sep, pbuf->path, strerror(ret));
+> +		if (strict_errors)
+> +			goto out_close;
+> +	}
+> +
+> +	ret = rdump_timestamps_fd(dp, destdir, pbuf, cd->fd);
+> +	if (ret && strict_errors)
+> +		goto out_close;
+> +
+> +	ret = 0;
+> +
+> +out_close:
+> +	if (cd->fd != destdir->fd) {
+> +		ret2 = close(cd->fd);
+> +		if (ret2) {
+> +			if (!ret)
+> +				ret = ret2;
+> +			dbprintf(_("%s%s%s: %s\n"), destdir->path,
+> +					destdir->sep, pbuf->path,
+> +					strerror(errno));
+> +		}
+> +	}
+> +
+> +out_cd:
+> +	free(cd);
+> +	return ret;
+> +}
+> +
+> +/* Copy file data */
+> +static int
+> +rdump_regfile_data(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf,
+> +	int			fd)
+> +{
+> +	struct xfs_bmbt_irec	irec = { };
+> +	struct xfs_buftarg	*btp;
+> +	int			nmaps;
+> +	off_t			pos = 0;
+> +	const off_t		isize = ip->i_disk_size;
+> +	int			ret;
+> +
+> +	if (XFS_IS_REALTIME_INODE(ip))
+> +		btp = ip->i_mount->m_rtdev_targp;
+> +	else
+> +		btp = ip->i_mount->m_ddev_targp;
+> +
+> +	for (;
+> +	     pos < isize;
+> +	     pos = XFS_FSB_TO_B(mp, irec.br_startoff + irec.br_blockcount)) {
+> +		struct xfs_buf	*bp;
+> +		off_t		buf_pos;
+> +		off_t		fd_pos;
+> +		xfs_fileoff_t	off = XFS_B_TO_FSBT(mp, pos);
+> +		xfs_filblks_t	max_read = XFS_B_TO_FSB(mp, 1048576);
+> +		xfs_daddr_t	daddr;
+> +		size_t		count;
+> +
+> +		nmaps = 1;
+> +		ret = -libxfs_bmapi_read(ip, off, max_read, &irec, &nmaps, 0);
+> +		if (ret) {
+> +			dbprintf(_("%s: %s\n"), pbuf->path, strerror(ret));
+> +			if (strict_errors)
+> +				return 1;
+> +			continue;
+> +		}
+> +		if (!nmaps)
+> +			break;
+> +
+> +		if (!xfs_bmap_is_written_extent(&irec))
+> +			continue;
+> +
+> +		fd_pos = XFS_FSB_TO_B(mp, irec.br_startoff);
+> +		if (XFS_IS_REALTIME_INODE(ip))
+> +			daddr =  xfs_rtb_to_daddr(mp, irec.br_startblock);
+> +		else
+> +			daddr = XFS_FSB_TO_DADDR(mp, irec.br_startblock);
+> +
+> +		ret = -libxfs_buf_read_uncached(btp, daddr,
+> +				XFS_FSB_TO_BB(mp, irec.br_blockcount), 0, &bp,
+> +				NULL);
+> +		if (ret) {
+> +			dbprintf(_("%s: reading pos 0x%llx %s\n"), pbuf->path,
+> +					fd_pos, strerror(ret));
+> +			if (strict_errors)
+> +				return 1;
+> +			continue;
+> +		}
+> +
+> +		count = XFS_FSB_TO_B(mp, irec.br_blockcount);
+> +		if (fd_pos + count > isize)
+> +			count = isize - fd_pos;
+> +
+> +		buf_pos = 0;
+> +		while (count > 0) {
+> +			ssize_t	written;
+> +
+> +			written = pwrite(fd, bp->b_addr + buf_pos, count,
+> +					fd_pos);
+> +			if (written < 0) {
+> +				libxfs_buf_relse(bp);
+> +				dbprintf(_("%s%s%s: writing pos 0x%llx %s\n"),
+> +						destdir->path, destdir->sep,
+> +						pbuf->path, fd_pos,
+> +						strerror(errno));
+> +				return 1;
+> +			}
+> +			if (!written) {
+> +				libxfs_buf_relse(bp);
+> +				dbprintf(
+> + _("%s%s%s: wrote zero at pos 0x%llx %s\n"),
+> +						destdir->path, destdir->sep,
+> +						pbuf->path, fd_pos);
+> +				return 1;
+> +			}
+> +
+> +			fd_pos += written;
+> +			buf_pos += written;
+> +			count -= written;
+> +		}
+> +
+> +		libxfs_buf_relse(bp);
+> +	}
+> +
+> +	ret = ftruncate(fd, isize);
+> +	if (ret) {
+> +		dbprintf(_("%s%s%s: setting file length 0x%llx %s\n"),
+> +				destdir->path, destdir->sep, pbuf->path,
+> +				isize, strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/* Copy a regular file */
+> +static int
+> +rdump_regfile(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf)
+> +{
+> +	int			fd;
+> +	int			ret, ret2;
+> +
+> +	fd = openat(destdir->fd, pbuf->path, O_RDWR | O_CREAT | O_TRUNC, 0600);
+> +	if (fd < 0) {
+> +		dbprintf(_("%s%s%s: %s\n"), destdir->path, destdir->sep,
+> +				pbuf->path, strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	ret = rdump_fileattrs_fd(ip, destdir, pbuf, fd);
+> +	if (ret && strict_errors)
+> +		goto out_close;
+> +
+> +	if (xfs_inode_has_attr_fork(ip)) {
+> +		ret = rdump_xattrs(tp, ip, destdir, pbuf, fd);
+> +		if (ret && strict_errors)
+> +			goto out_close;
+> +	}
+> +
+> +	ret = rdump_regfile_data(tp, ip, destdir, pbuf, fd);
+> +	if (ret && strict_errors)
+> +		goto out_close;
+> +
+> +	ret = rdump_timestamps_fd(ip, destdir, pbuf, fd);
+> +	if (ret && strict_errors)
+> +		goto out_close;
+> +
+> +out_close:
+> +	ret2 = close(fd);
+> +	if (ret2) {
+> +		if (!ret)
+> +			ret = ret2;
+> +		dbprintf(_("%s%s%s: %s\n"), destdir->path, destdir->sep,
+> +				pbuf->path, strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +/* Copy a symlink */
+> +static int
+> +rdump_symlink(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf)
+> +{
+> +	char			target[XFS_SYMLINK_MAXLEN + 1];
+> +	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
+> +	unsigned int		targetlen = ip->i_disk_size;
+> +	int			ret;
+> +
+> +	if (ifp->if_format == XFS_DINODE_FMT_LOCAL) {
+> +		memcpy(target, ifp->if_data, targetlen);
+> +	} else {
+> +		ret = -libxfs_symlink_remote_read(ip, target);
+> +		if (ret) {
+> +			dbprintf(_("%s: %s\n"), pbuf->path, strerror(ret));
+> +			return strict_errors ? 1 : 0;
+> +		}
+> +	}
+> +	target[targetlen] = 0;
+> +
+> +	ret = symlinkat(target, destdir->fd, pbuf->path);
+> +	if (ret) {
+> +		dbprintf(_("%s%s%s: %s\n"), destdir->path, destdir->sep,
+> +				pbuf->path, strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	ret = rdump_fileattrs_path(ip, destdir, pbuf);
+> +	if (ret && strict_errors)
+> +		goto out;
+> +
+> +	ret = rdump_timestamps_path(ip, destdir, pbuf);
+> +	if (ret && strict_errors)
+> +		goto out;
+> +
+> +	ret = 0;
+> +out:
+> +	return ret;
+> +}
+> +
+> +/* Copy a special file */
+> +static int
+> +rdump_special(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	const struct destdir	*destdir,
+> +	const struct pathbuf	*pbuf)
+> +{
+> +	const unsigned int	major = IRIX_DEV_MAJOR(VFS_I(ip)->i_rdev);
+> +	const unsigned int	minor = IRIX_DEV_MINOR(VFS_I(ip)->i_rdev);
+> +	int			ret;
+> +
+> +	ret = mknodat(destdir->fd, pbuf->path, VFS_I(ip)->i_mode & S_IFMT,
+> +			makedev(major, minor));
+> +	if (ret) {
+> +		dbprintf(_("%s%s%s: %s\n"), destdir->path, destdir->sep,
+> +				pbuf->path, strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	ret = rdump_fileattrs_path(ip, destdir, pbuf);
+> +	if (ret && strict_errors)
+> +		goto out;
+> +
+> +	ret = rdump_timestamps_path(ip, destdir, pbuf);
+> +	if (ret && strict_errors)
+> +		goto out;
+> +
+> +	ret = 0;
+> +out:
+> +	return ret;
+> +}
+> +
+> +/* Dump some kind of file. */
+> +static int
+> +rdump_file(
+> +	struct xfs_trans	*tp,
+> +	xfs_ino_t		ino,
+> +	const struct destdir	*destdir,
+> +	struct pathbuf		*pbuf)
+> +{
+> +	struct xfs_inode	*ip;
+> +	int			ret;
+> +
+> +	ret = -libxfs_iget(mp, tp, ino, 0, &ip);
+> +	if (ret) {
+> +		dbprintf(_("%s: %s\n"), pbuf->path, strerror(ret));
+> +		return strict_errors ? ret : 0;
+> +	}
+> +
+> +	switch(VFS_I(ip)->i_mode & S_IFMT) {
+> +	case S_IFDIR:
+> +		ret = rdump_directory(tp, ip, destdir, pbuf);
+> +		break;
+> +	case S_IFREG:
+> +		ret = rdump_regfile(tp, ip, destdir, pbuf);
+> +		break;
+> +	case S_IFLNK:
+> +		ret = rdump_symlink(tp, ip, destdir, pbuf);
+> +		break;
+> +	default:
+> +		ret = rdump_special(tp, ip, destdir, pbuf);
+> +		break;
+> +	}
+> +
+> +	libxfs_irele(ip);
+> +	return ret;
+> +}
+> +
+> +/* Copy one path out of the filesystem. */
+> +static int
+> +rdump_path(
+> +	struct xfs_mount	*mp,
+> +	bool			sole_path,
+> +	const char		*path,
+> +	const struct destdir	*destdir)
+> +{
+> +	struct xfs_trans	*tp;
+> +	struct pathbuf		*pbuf;
+> +	const char		*basename;
+> +	ssize_t			pathlen = strlen(path);
+> +	int			ret = 1;
+> +
+> +	/* Set up destination path data */
+> +	if (pathlen > PATH_MAX) {
+> +		dbprintf(_("%s: %s\n"), path, strerror(ENAMETOOLONG));
+> +		return 1;
+> +	}
+> +
+> +	pbuf = calloc(1, sizeof(struct pathbuf));
+> +	if (!pbuf) {
+> +		dbprintf(_("allocating path buf: %s\n"), strerror(errno));
+> +		return 1;
+> +	}
+> +	basename = strrchr(path, '/');
+> +	if (basename) {
+> +		pbuf->len = pathlen - (basename + 1 - path);
+> +		memcpy(pbuf->path, basename + 1, pbuf->len);
+> +	} else {
+> +		pbuf->len = pathlen;
+> +		memcpy(pbuf->path, path, pbuf->len);
+> +	}
+> +	pbuf->path[pbuf->len] = 0;
+> +
+> +	/* Dump the inode referenced. */
+> +	if (pathlen) {
+> +		ret = path_walk(mp->m_sb.sb_rootino, path);
+> +		if (ret) {
+> +			dbprintf(_("%s: %s\n"), path, strerror(ret));
+> +			return 1;
+> +		}
+> +
+> +		if (sole_path) {
+> +			struct xfs_dinode	*dip = iocur_top->data;
+> +
+> +			/*
+> +			 * If this is the only path to copy out and it's a dir,
+> +			 * then we can copy the children directly into the
+> +			 * target.
+> +			 */
+> +			if (S_ISDIR(be16_to_cpu(dip->di_mode))) {
+> +				pbuf->len = 0;
+> +				pbuf->path[0] = 0;
+> +			}
+> +		}
+> +	} else {
+> +		set_cur_inode(mp->m_sb.sb_rootino);
+> +	}
+> +
+> +	ret = -libxfs_trans_alloc_empty(mp, &tp);
+> +	if (ret) {
+> +		dbprintf(_("allocating state: %s\n"), strerror(ret));
+> +		goto out_pbuf;
+> +	}
+> +
+> +	ret = rdump_file(tp, iocur_top->ino, destdir, pbuf);
+> +	libxfs_trans_cancel(tp);
+> +out_pbuf:
+> +	free(pbuf);
+> +	return ret;
+> +}
+> +
+> +static int
+> +rdump_f(
+> +	int		argc,
+> +	char		*argv[])
+> +{
+> +	struct destdir	destdir;
+> +	int		i;
+> +	int		c;
+> +	int		ret;
+> +
+> +	lost_mask = 0;
+> +	strict_errors = false;
+> +	while ((c = getopt(argc, argv, "s")) != -1) {
+> +		switch (c) {
+> +		case 's':
+> +			strict_errors = true;
+> +			break;
+> +		default:
+> +			rdump_help();
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	if (argc < optind + 1) {
+> +		dbprintf(
+> + _("Must supply destination directory.\n"));
+> +		return 0;
+> +	}
+> +
+> +	/* Create and open destination directory */
+> +	destdir.path = argv[argc - 1];
+> +	ret = mkdir(destdir.path, 0755);
+> +	if (ret && errno != EEXIST) {
+> +		dbprintf(_("%s: %s\n"), destdir.path, strerror(errno));
+> +		exitcode = 1;
+> +		return 0;
+> +	}
+> +
+> +	if (destdir.path[0] == 0) {
+> +		dbprintf(
+> + _("Destination dir must be at least one character.\n"));
+> +		exitcode = 1;
+> +		return 0;
+> +	}
+> +
+> +	if (destdir.path[strlen(destdir.path) - 1] != '/')
+> +		destdir.sep = "/";
+> +	else
+> +		destdir.sep = "";
+> +	destdir.fd = open(destdir.path, O_DIRECTORY | O_RDONLY);
+> +	if (destdir.fd < 0) {
+> +		dbprintf(_("%s: %s\n"), destdir.path, strerror(errno));
+> +		exitcode = 1;
+> +		return 0;
+> +	}
+> +
+> +	if (optind == argc - 1) {
+> +		/* no dirs given, just do the whole fs */
+> +		push_cur();
+> +		ret = rdump_path(mp, false, "", &destdir);
+> +		pop_cur();
+> +		if (ret)
+> +			exitcode = 1;
+> +		goto out_close;
+> +	}
+> +
+> +	for (i = optind; i < argc - 1; i++) {
+> +		size_t	len = strlen(argv[i]);
+> +
+> +		/* trim trailing slashes */
+> +		while (len && argv[i][len - 1] == '/')
+> +			len--;
+> +		argv[i][len] = 0;
+> +
+> +		push_cur();
+> +		ret = rdump_path(mp, argc == optind + 2, argv[i], &destdir);
+> +		pop_cur();
+> +
+> +		if (ret) {
+> +			exitcode = 1;
+> +			if (strict_errors)
+> +				break;
+> +		}
+> +	}
+> +
+> +out_close:
+> +	ret = close(destdir.fd);
+> +	if (ret) {
+> +		dbprintf(_("%s: %s\n"), destdir.path, strerror(errno));
+> +		exitcode = 1;
+> +	}
+> +
+> +	if (lost_mask & LOST_OWNER)
+> +		dbprintf(_("%s: some uid/gid could not be set\n"),
+> +				destdir.path);
+> +	if (lost_mask & LOST_MODE)
+> +		dbprintf(_("%s: some file modes could not be set\n"),
+> +				destdir.path);
+> +	if (lost_mask & LOST_TIME)
+> +		dbprintf(_("%s: some timestamps could not be set\n"),
+> +				destdir.path);
+> +	if (lost_mask & LOST_SOME_FSXATTR)
+> +		dbprintf(_("%s: some xfs file attr bits could not be set\n"),
+> +				destdir.path);
+> +	if (lost_mask & LOST_FSXATTR)
+> +		dbprintf(_("%s: some xfs file attrs could not be set\n"),
+> +				destdir.path);
+> +	if (lost_mask & LOST_XATTR)
+> +		dbprintf(_("%s: some extended xattrs could not be set\n"),
+> +				destdir.path);
+> +
+> +	return 0;
+> +}
+> +
+> +static struct cmdinfo rdump_cmd = {
+> +	.name		= "rdump",
+> +	.cfunc		= rdump_f,
+> +	.argmin		= 0,
+> +	.argmax		= -1,
+> +	.canpush	= 0,
+> +	.args		= "[-s] [paths...] dest_directory",
+> +	.help		= rdump_help,
+> +};
+> +
+> +void
+> +rdump_init(void)
+> +{
+> +	rdump_cmd.oneline = _("recover files out of a filesystem");
+> +	add_command(&rdump_cmd);
+> +}
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 530feef2a47db8..14a67c8c24dd7e 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -47,6 +47,7 @@
+>  #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
+>  #define xfs_attr_namecheck		libxfs_attr_namecheck
+>  #define xfs_attr_removename		libxfs_attr_removename
+> +#define xfs_attr_rmtval_get		libxfs_attr_rmtval_get
+>  #define xfs_attr_set			libxfs_attr_set
+>  #define xfs_attr_sethash		libxfs_attr_sethash
+>  #define xfs_attr_sf_firstentry		libxfs_attr_sf_firstentry
+> @@ -353,6 +354,7 @@
+>  #define xfs_sb_version_to_features	libxfs_sb_version_to_features
+>  #define xfs_symlink_blocks		libxfs_symlink_blocks
+>  #define xfs_symlink_hdr_ok		libxfs_symlink_hdr_ok
+> +#define xfs_symlink_remote_read		libxfs_symlink_remote_read
+>  #define xfs_symlink_write_target	libxfs_symlink_write_target
+>  
+>  #define xfs_trans_add_item		libxfs_trans_add_item
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 08f38f37ca01cc..2a9322560584b0 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -1132,6 +1132,32 @@ .SH COMMANDS
+>  Exit
+>  .BR xfs_db .
+>  .TP
+> +.BI "rdump [-s] [" "paths..." "] " "destination_dir"
+> +Recover the files given by the
+> +.B path
+> +arguments by copying them of the filesystem into the directory specified in
+> +.BR destination_dir .
+> +
+> +If the
+> +.B -s
+> +option is specified, errors are fatal.
+> +By default, read errors are ignored in favor of recovering as much data from
+> +the filesystem as possible.
+> +
+> +If zero
+> +.B paths
+> +are specified, the entire filesystem is dumped.
+> +If only one
+> +.B path
+> +is specified and it is a directory, the children of that directory will be
+> +copied directly to the destination.
+> +If multiple
+> +.B paths
+> +are specified, each file is copied into the directory as a new child.
+> +
+> +If possible, sparse holes, xfs file attributes, and extended attributes will be
+> +preserved.
+> +.TP
+>  .BI "rgresv [" rgno ]
+>  Displays the per-rtgroup reservation size, and per-rtgroup
+>  reservation usage for a given realtime allocation group.
+> 
+
+-- 
+- Andrey
+
