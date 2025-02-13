@@ -1,30 +1,43 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C62E86325
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 05:39:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D717EADC;
+	Thu, 13 Feb 2025 06:50:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739425190; cv=none; b=oh8vJtQTfuCZeVCZqiEsw++ToeuP3c1To1xGzRT7fVS1hT7dAw4PwI1WnV09nx1AXDjCR/IYoUL7IkC/gRitkK/Z+o8Pn7uikdwA3fJc2LQhbjnL6qr+Zpp5LRRAnpaeDrumZsAB7Z/rn+6CyK4r1XnUYFfynnWbXgE5+wO6yNU=
+	t=1739429414; cv=none; b=Tgje58THWCDDuzqgc4ylhJsFRziyrIMF8wfbmuxY5ab/wXkgPHZ6zOGp19UO/CEaEKETaeJFN4P2qgGKJxPF4FqofmmOIKZ7xOP0b4usaDJzbfvDYvZJhEZMQ7hHGOwmbnqDWvaC+psWPUh5/Es8pzaTe/IxEbzxJ9IHmhEetf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739425190; c=relaxed/simple;
-	bh=2y1tMnX7zngvSL29/ZlX2OVD5ZMBr5c/4v554MP9RBw=;
+	s=arc-20240116; t=1739429414; c=relaxed/simple;
+	bh=zLlalgvnPlPl79Pj4q3EdUNwzxP11KfmHvMaKmr3Q/E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cneqlrm0nZRCvAQD2CBkMVa/Ax5HXA4ALQh34ZZTA/2nxZn6NH2lHtmRGp0+yVv+VeN7EktFwqooESlbkQGn/viJU8telKJQu5L4C2lu0bjrgONnO3L2j3ws34uQmk7HjX06e3FBzXnvIFIGEpAyk9QdRMdrdJmmCzIG3nlMya4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3F20967373; Thu, 13 Feb 2025 06:39:44 +0100 (CET)
-Date: Thu, 13 Feb 2025 06:39:43 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 25/43] xfs: implement buffered writes to zoned RT
- devices
-Message-ID: <20250213053943.GA18867@lst.de>
-References: <20250206064511.2323878-1-hch@lst.de> <20250206064511.2323878-26-hch@lst.de> <20250212005405.GH21808@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=qrz0ylUeQlWKHyhIXPiuYiCksckm46qZuxmfzYccmolbjpuNepQB3OexOGJ4/TN6V80W90EBpfx38kpjnyRhaoFmG/IGGSUKGw9M5x6ZR2t4mqFbZP52VtpAVn/6M4MsDQCE5xtG+pD3n4VbklvIYQWrDP7m3rb8bV1RlBZ9k/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=x99Z+VOv; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="x99Z+VOv"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=rS0Zr3qHL+nTaU3fg6ZrpT0K/XiaxWPKoH/sIaK/eEU=; b=x99Z+VOvliCIQvvVKtQ0DIamoA
+	muTCcrYz0G5p/y69w69R1TXBE3SyErGXrSbihv5q1MmzajUbgFyDUAGxdvq+9bQkGjIadzIHHGLVZ
+	YqRL3X68yFlf5rPx6EH+HZt4MTNPcd3V+GlG7JRnLbItRVoirMd6OZJOjI6H6w630QpFGKxJsW0bz
+	c4u+FEtg54I8amrWW8EbjPWy3M5itglBr9/oXHzDjo/iVv85/g/ldwIIVgNLWm50AUBPVAEly82Ja
+	yI91joYQQugc/EMrkrMB1zzYiUoWz9dw0n17WJ3wbryDy64mHz1bcg4JCExsY+uqrCNQ/PhBRwHkc
+	mwA2Rnlg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tiT36-00000009zhO-07rZ;
+	Thu, 13 Feb 2025 06:50:12 +0000
+Date: Wed, 12 Feb 2025 22:50:12 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	"Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 01/10] iomap: advance the iter directly on buffered read
+Message-ID: <Z62WJACaaAP2oH1S@infradead.org>
+References: <20250212135712.506987-1-bfoster@redhat.com>
+ <20250212135712.506987-2-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,111 +46,92 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250212005405.GH21808@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250212135712.506987-2-bfoster@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Feb 11, 2025 at 04:54:05PM -0800, Darrick J. Wong wrote:
-> Why do we reserve space *before* taking the iolock?  The non-zoned write
-> path reserves space through the transaction while holding the iolock.
-> Regular write attempts will drop the iolock on ENOSPC to push the
-> garbage collectors; why is this any different?
+On Wed, Feb 12, 2025 at 08:57:03AM -0500, Brian Foster wrote:
+> iomap buffered read advances the iter via iter.processed. To
+> continue separating iter advance from return status, update
+> iomap_readpage_iter() to advance the iter instead of returning the
+> number of bytes processed. In turn, drop the offset parameter and
+> sample the updated iter->pos at the start of the function. Update
+> the callers to loop based on remaining length in the current
+> iteration instead of number of bytes processed.
 > 
-> Is it because of the way the garbage collector works backwards from the
-> rmap to figure out what space to move?  And since the gc starts with a
-> zone and only then takes IOLOCKs, so must we?
-
-Sorta.  GC stats based on a zone/rtgroup and then moves data elewhere.
-It only takes the iolock in the I/O completion path thanks the
-opportunistic write trick that only commit the write if the previous
-location hasn't changed.  If we now have the same inode waiting for
-space with the iolock held we very clearly deadlock there.
-generic/747 was written to test this.
-
-> > (aka i_rwsem) already held, so a hacky deviation from the above
-> > scheme is needed.  In this case the space reservations is called with
-> > the iolock held, but is required not to block and can dip into the
-> > reserved block pool.  This can lead to -ENOSPC when truncating a
-> > file, which is unfortunate.  But fixing the calling conventions in
-> > the VFS is probably much easier with code requiring it already in
-> > mainline.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/iomap/buffered-io.c | 44 +++++++++++++++++++-----------------------
+>  1 file changed, 20 insertions(+), 24 deletions(-)
 > 
-> It /would/ be a lot more flexible if the rest of the filesystem could
-> provide its own locking like we do for read/write paths.
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index ec227b45f3aa..44a366736289 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -366,12 +366,12 @@ static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
+>  		pos >= i_size_read(iter->inode);
+>  }
+>  
+> -static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+> -		struct iomap_readpage_ctx *ctx, loff_t offset)
+> +static loff_t iomap_readpage_iter(struct iomap_iter *iter,
+> +		struct iomap_readpage_ctx *ctx)
+>  {
+>  	const struct iomap *iomap = &iter->iomap;
+> -	loff_t pos = iter->pos + offset;
+> -	loff_t length = iomap_length(iter) - offset;
+> +	loff_t pos = iter->pos;
+> +	loff_t length = iomap_length(iter);
+>  	struct folio *folio = ctx->cur_folio;
+>  	struct iomap_folio_state *ifs;
+>  	loff_t orig_pos = pos;
+> @@ -438,25 +438,22 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+>  	 * we can skip trailing ones as they will be handled in the next
+>  	 * iteration.
+>  	 */
+> -	return pos - orig_pos + plen;
+> +	length = pos - orig_pos + plen;
+> +	return iomap_iter_advance(iter, &length);
 
-I've look into fixing this in the VFS.  Not entirely trivial but I'll
-hopefully get to it in the next few merge windows.  The big problem
-is that currently truncate as a data operation is overlayed onto
-->setattr which also does tons of other things, so that will have to
-be sorted first.
+At this point orig_pos should orig_pos should always be just iter->pos
+and we could trivially drop the variable, right?
 
-> >  	struct xfs_writepage_ctx wpc = { };
-> > +	int			error;
-> >  
-> > -	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-> > +	xfs_iflags_clear(ip, XFS_ITRUNCATED);
-> > +	if (xfs_is_zoned_inode(ip)) {
-> > +		struct xfs_zoned_writepage_ctx xc = { };
-> 
-> I wonder if we could reduce stack usage here by declaring an onstack
-> union of the two writepage_ctx objects?
+> -static loff_t iomap_read_folio_iter(const struct iomap_iter *iter,
+> +static loff_t iomap_read_folio_iter(struct iomap_iter *iter,
+>  		struct iomap_readpage_ctx *ctx)
+>  {
+> -	struct folio *folio = ctx->cur_folio;
+> -	size_t offset = offset_in_folio(folio, iter->pos);
+> -	loff_t length = min_t(loff_t, folio_size(folio) - offset,
+> -			      iomap_length(iter));
+> -	loff_t done, ret;
+> -
+> -	for (done = 0; done < length; done += ret) {
+> -		ret = iomap_readpage_iter(iter, ctx, done);
+> -		if (ret <= 0)
+> +	loff_t ret;
+> +
+> +	while (iomap_length(iter)) {
+> +		ret = iomap_readpage_iter(iter, ctx);
+> +		if (ret)
+>  			return ret;
 
-I'll check if the compiler doesn't already do the right thing, but
-if not just using and if / else should do the work in a cleaner way.
+This looks so much nicer!
 
-> > +	/*
-> > +	 * For zoned file systems, zeroing the first and last block of a hole
-> > +	 * punch requires allocating a new block to rewrite the remaining data
-> > +	 * and new zeroes out of place.  Get a reservations for those before
-> > +	 * taking the iolock.  Dip into the reserved pool because we are
-> > +	 * expected to be able to punch a hole even on a completely full
-> > +	 * file system.
-> > +	 */
-> > +	if (xfs_is_zoned_inode(ip) &&
-> > +	    (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE |
-> > +		     FALLOC_FL_COLLAPSE_RANGE))) {
-> 
-> Are we expected to be able to zero-range/collapse-range even on a
-> completely full filesystem as well?
+> -static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
+> +static loff_t iomap_readahead_iter(struct iomap_iter *iter,
+>  		struct iomap_readpage_ctx *ctx)
+>  {
+> -	loff_t length = iomap_length(iter);
+> -	loff_t done, ret;
+> +	loff_t ret;
+>  
+> -	for (done = 0; done < length; done += ret) {
+> +	while (iomap_length(iter) > 0) {
 
-I think there's a few xfstests that do at least.
+iomap_length can't really be negative, so we could just drop the "> 0"
+here.  Or if you think it's useful add it in the other loop above to
+be consistent.
 
-> > +	 *  3) another thread does direct I/O on the range that the write fault
-> > +	 *     happened on, which causes writeback of the dirty data.
-> > +	 *  4) this then set the stale flag, which cuts the current iomap
-> > +	 *     iteration short, causing the new call to ->iomap_begin that gets
-> > +	 *     us here again, but now without a sufficient reservation.
-> > +	 *
-> > +	 * This is a very unusual I/O pattern, and nothing but generic/095 is
-> > +	 * known to hit it. There's not really much we can do here, so turn this
-> > +	 * into a short write.
-> 
-> So... buffered write racing with a directio write /and/ a write fault
-> all collide?  Heh.
+Otherwise looks good:
 
-Yeah, funky xfstests :)  Note that we might be able to fix this by
-only adding a delalloc reservation at the same time as dirtying the
-folios.  In the current code that would be very nasy, but with the
-infrastructure for the folio based bufferd write locking discussed
-a while i might be more feasible.
-
-> > +	 * Normally xfs_zoned_space_reserve is supposed to be called outside the
-> > +	 * IOLOCK.  For truncate we can't do that since ->setattr is called with
-> > +	 * it already held by the VFS.  So for now chicken out and try to
-> > +	 * allocate space under it.
-> > +	 *
-> > +	 * To avoid deadlocks this means we can't block waiting for space, which
-> > +	 * can lead to spurious -ENOSPC if there are no directly available
-> > +	 * blocks.  We mitigate this a bit by allowing zeroing to dip into the
-> > +	 * reserved pool, but eventually the VFS calling convention needs to
-> > +	 * change.
-> 
-> I wonder, why isn't this a problem for COWing a shared EOF block when we
-> increase the file size slightly?
-
-The problem being that we need a space allocation for a write?  Well,
-we'll need a space allocation for every write in an out of tree write
-file system.  But -ENOSPC (or SIGBUS for the lovers of shared mmap
-based I/O :)) on writes is very much expected.  On truncate a lot less
-so.  In fact not dipping into the reserved pool here for example breaks
-rocksdb workloads.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
