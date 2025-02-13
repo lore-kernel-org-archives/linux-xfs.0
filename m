@@ -1,197 +1,133 @@
-Received: from mail-il1-f207.google.com (mail-il1-f207.google.com [209.85.166.207])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8383266B64
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 22:14:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.207
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B91E19DF61
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 22:27:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739484870; cv=none; b=ZUTSfJuKtz1Al7cAcjs8Gpy6eVfBEpuC7dzLy0bSLIxbnWfvt1geqMie8ufx5NELE5Szhx1JH9zZ+TRaC2vXOAHtAng+za4iltnIBlmaA7sRG+fmyqCqAt9Y1heXGcxyJDD1zGB3bpZ/J4BlvWlegoXn0GXcn+xi6R3XxLAcXgA=
+	t=1739485635; cv=none; b=PNXBYL0NeM9GSSS4rnbPXkTMqwuJoiIfnC28o6WbA4T8pdDcn6QPcikwKG2BJswLWxmjY8eXMv2RqjgHnb518Ki9M7ykDt38/Mlib4eN5VqQOxuWko63ls/6qaMq+FJJkePf0QwwLOmpVQ/RCHc5kvvM2XLOwi6K4Psd2ibEkFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739484870; c=relaxed/simple;
-	bh=qQmmrVKod3bXQds4Y/uXH3GZLfunEBvtfmeu9i7pcZg=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=YRKgvSYMEvXt+ZJuUBNRCD4LNNphd2QrK0YgwLZPiVux4SQh0gHG2xU70pEa1vnQFEToEWCCAJxV97wsIa9CB9ZsGdAMJ3+JksIBh+ItVcZ6Dvm2vswWohGGwus2CbK46q+VUcyZ6JWFHkw8bVkXpjgel5kqfaAEIw/0dJo0pXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.207
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f207.google.com with SMTP id e9e14a558f8ab-3d054d79dacso23197855ab.2
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 14:14:28 -0800 (PST)
+	s=arc-20240116; t=1739485635; c=relaxed/simple;
+	bh=mPMd4Df4AEqF0bsWWMuX9j7Gu/e4Falf0GXCM60hoSs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I0xdxsYOEVkrNkgrx05kynOBLam/sCuHxAykyhHwCv9XbazJ5PpuywXNXz55fgSSZTH2yQrWdhnmjPnkvJ+UVMObBV+p09SrCVgUqIQguvpnE59aV5qcmqgO/oYKtXpuyxzbhlI79BlzpXnaKDInXTj3MoLJD2dN6fuiYOLIJD4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AAgtLIbz; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AAgtLIbz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1739485632;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9KSrI6Csl64WLmSHeUMW4B2EeOwa/3+V/peYpzGzslw=;
+	b=AAgtLIbzfv9lFzTdbUrvyj05Lfy4aHwp0FfYYAQz2GT/bnP8zP4CEeDryEJwjfPfcdSeqX
+	/4uosY9XUb40GySt/GtkvK5AxVxbWX1WADWTRt/MQMIndJWibcs76jJonlIUPxk1w4tA3P
+	S5CBeJ6wAru/FxUObZwsRqjWtR3zANs=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-295-hc5OTJQ4P2WJgUSZ4CObsw-1; Thu, 13 Feb 2025 17:27:11 -0500
+X-MC-Unique: hc5OTJQ4P2WJgUSZ4CObsw-1
+X-Mimecast-MFC-AGG-ID: hc5OTJQ4P2WJgUSZ4CObsw_1739485630
+Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-5ded3946ff9so1262468a12.3
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 14:27:10 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739484868; x=1740089668;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=TUvhmPawN8wBETYwgobCSF8bOQtOloFAxM6asofpf1Y=;
-        b=lb1AnOhiEFlgRpbbOLi3eDO8rrxQq4llBTjPt+GKD3vjQiPmyaWBYpk1yQRFQH04lL
-         AXQwfV72jJZQMcpl4klT3HUHNh5gmaUjXJ8sGBB0DDT9NSflIHfrzS/DANLttn+OiFP4
-         UztIpEZom2HhQzny1eEJFHGd+uUmuqvkbXLlH6GyLtSBbhhsQz9PYwjsTKouEW8WaGNC
-         b6YdsfX9XTKpg/0akPQ8XaLYQA7nIY+812grnkX6AaOu87AFymbvb/HrrC3zL7oMenKZ
-         mjqJxAh7TUUYT0QHbwB1yRRLUS/ZiDMr53O0lHyzlJHkWElaAucpaPq4RBKtZMII4kxj
-         dl3A==
-X-Forwarded-Encrypted: i=1; AJvYcCX4aYOWLC2opeCbfdWmIq/S6qUI0bHKsidvONAbMrRLCGYfc6hFi7CONlW1mfdihQ9bhFQRasnLAMQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyrRms3+kTYagpO0hJIGmb1tBHKcTPz+0pFVz2mUYr0Q4ZtbhJe
-	cR/l8UJBDiREK6mKz2VccRl49hmVoBBegcYJXdsPrnksQIwh2wSm5OP2WaI2enEZxN29OLTbBkq
-	paAmAU9DQkd6CHDBcDQJ0wA8sov+M0ulLdZbHtog5BI9srERlf2DTMFw=
-X-Google-Smtp-Source: AGHT+IFFzi9wox96CFHLNr0fETzH8YGeWd71Ou8Xy6Zg6YXIE3xwL8uuT+DKV/OcY+pe7EkCmt6mH5hREQxA64vFLJpUwCYRda1Y
+        d=1e100.net; s=20230601; t=1739485630; x=1740090430;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9KSrI6Csl64WLmSHeUMW4B2EeOwa/3+V/peYpzGzslw=;
+        b=UDpkO2F/fM1PPjWsiLwoTT2Ih/jqlukX42uJF/tpJxAwUDY+WU6JlBBq90JRKrf7PC
+         OAGYlz3dCSWqOsZLeebv/xdH4CKVeEzwXHtjig86xm/l0wFz1U7+geLcyaFPy6JOR23z
+         K6MDl3fIo8PjMeUZdYAA5yC1abVgOb4y1zgYJqn+M2aur7+Wo+k78HjoTktUaeYTnjkf
+         05h2LCT91zOH5F5o4bsU2BpKiO5FgIWz+DP7V2Gq4oI3Mrz877FWgUNt8YTpZG6bhdfo
+         unqCBc57i8U3+MA48mO2AtB5RXijTdJiJZFvoFqbAvi2GjWlNIgbwLFab/dqsCti/hb7
+         +DEg==
+X-Gm-Message-State: AOJu0Yw2t4pFqUvhq9sGETFmWmXYFdf3WZ8CZDrxgHRxNG/SZBM3KJ5h
+	CMZV8/KJY8Ktz3bbA19Cs98hURvgXnjcq9iG7qViP2+Jhta4/yW1vnAcm9+T7DsirW8QZrG50EZ
+	kf+Tzd1jVhuLWaesOZ6la82yxxUVqcFWJMu0xwJDs9bKsGoiIuXRriSuf
+X-Gm-Gg: ASbGnct/kwTrTzoh2b/asCieKZ4snf+Ttvmmy6hpQIyixZigayLEon8SFXvRBINKd9y
+	94M4rngL1s+hx+fVLetfkZJ3BCHJq33m+UPVuqBir689YY7Arlz/bRkBwOU9+xgbcEoqfKtUxSz
+	ECN/EZ1KCMKM/L2f6r9Obe87wVruGMsrUDzQsXtFAFWhNC0qqXyXvxLzPu67/WMg15kJvKWYZBB
+	X/xar55uFMBjhs5Abx09nggkshKngFhnapWkIE6ayxeiOgOV20fK1wT05QoUNvIvWPraQ3ImFEL
+	yG9hEYJsIf8LURAk5l+4Go5g
+X-Received: by 2002:a17:906:d542:b0:ab7:85a4:fb01 with SMTP id a640c23a62f3a-ab7f3391afemr954832566b.16.1739485629765;
+        Thu, 13 Feb 2025 14:27:09 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFCQcl2dcOQV15Y/pvWNErjC+1zbQ6U1eJjbVWl/svaK4Id6VkROsHjXJD//7+inuBTMZs29w==
+X-Received: by 2002:a17:906:d542:b0:ab7:85a4:fb01 with SMTP id a640c23a62f3a-ab7f3391afemr954831566b.16.1739485629368;
+        Thu, 13 Feb 2025 14:27:09 -0800 (PST)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aba53398364sm211585466b.128.2025.02.13.14.27.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Feb 2025 14:27:08 -0800 (PST)
+Date: Thu, 13 Feb 2025 23:27:06 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v4 09/10] libxfs-apply: drop Cc: to stable release list
+Message-ID: <2yzj7wrqodq7d5tt6mcj2yrplgf3kwt34ewl2y3rpcizan4gzb@rj6b2agkbhre>
+References: <20250213-update-release-v4-0-c06883a8bbd6@kernel.org>
+ <20250213-update-release-v4-9-c06883a8bbd6@kernel.org>
+ <20250213214541.GQ21808@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1521:b0:3d0:4b3d:75ce with SMTP id
- e9e14a558f8ab-3d17d13690bmr69400955ab.17.1739484868095; Thu, 13 Feb 2025
- 14:14:28 -0800 (PST)
-Date: Thu, 13 Feb 2025 14:14:28 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <67ae6ec4.050a0220.21dd3.0027.GAE@google.com>
-Subject: [syzbot] [iomap?] kernel BUG in folio_end_writeback (2)
-From: syzbot <syzbot+29566bbfe6b64b944865@syzkaller.appspotmail.com>
-To: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250213214541.GQ21808@frogsfrogsfrogs>
 
-Hello,
+On 2025-02-13 13:45:41, Darrick J. Wong wrote:
+> On Thu, Feb 13, 2025 at 09:14:31PM +0100, Andrey Albershteyn wrote:
+> > These Cc: tags are intended for kernel commits which need to be
+> > backported to stable kernels. Maintainers of stable kernel aren't
+> > interested in xfsprogs syncs.
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> > ---
+> >  tools/libxfs-apply | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+> > index 097a695f942bb832c2fb1456a0fd8c28c025d1a6..e9672e572d23af296dccfe6499eda9b909f44afd 100755
+> > --- a/tools/libxfs-apply
+> > +++ b/tools/libxfs-apply
+> > @@ -254,6 +254,7 @@ fixup_header_format()
+> >  		}
+> >  		/^Date:/ { date_seen=1; next }
+> >  		/^difflib/ { next }
+> > +		/[Cc]{2}: <?stable@vger.kernel.org>?.*/ { next }
+> 
+> You might want to ignore the angle brackets, because some people do:
 
-syzbot found the following issue on:
+The ? does that :) One or zero of <>
 
-HEAD commit:    69b54314c975 Merge tag 'kbuild-fixes-v6.14' of git://git.k..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=1643abdf980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=1909f2f0d8e641ce
-dashboard link: https://syzkaller.appspot.com/bug?extid=29566bbfe6b64b944865
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> 
+> Cc: stable@vger.kernel.org
+> 
+> which is valid rfc822 even if SubmittingPatches says not to do that.
+> Annoyingly, other parts of the documentation lay that out as an example.
+> 
+> 		/[Cc]{2}:.*stable@vger.kernel.org/ { next }
+> 
+> <shrug>
+> 
+> --D
+> 
+> >  
+> >  		// {
+> >  			if (date_seen == 0)
+> > 
+> > -- 
+> > 2.47.2
+> > 
+> > 
+> 
 
-Unfortunately, I don't have any reproducer for this issue yet.
+-- 
+- Andrey
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7feb34a89c2a/non_bootable_disk-69b54314.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/e32e396b49c9/vmlinux-69b54314.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/30d7fe7e4148/bzImage-69b54314.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+29566bbfe6b64b944865@syzkaller.appspotmail.com
-
-page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x54600
-flags: 0x4fff00000000000(node=1|zone=1|lastcpupid=0x7ff)
-raw: 04fff00000000000 ffffea000134ad48 ffffea0001518048 0000000000000000
-raw: 0000000000000000 0000000000000000 00000000ffffffff 0000000000000000
-page dumped because: VM_BUG_ON_PAGE(page_ref_count(page) == 0)
-page_owner tracks the page as freed
-page last allocated via order 0, migratetype Movable, gfp_mask 0x153c4a(GFP_NOFS|__GFP_HIGHMEM|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_HARDWALL|__GFP_MOVABLE|__GFP_WRITE), pid 5324, tgid 5323 (syz.0.0), ts 71600359556, free_ts 71965749654
- set_page_owner include/linux/page_owner.h:32 [inline]
- post_alloc_hook+0x1f4/0x240 mm/page_alloc.c:1551
- prep_new_page mm/page_alloc.c:1559 [inline]
- get_page_from_freelist+0x365c/0x37a0 mm/page_alloc.c:3477
- __alloc_frozen_pages_noprof+0x292/0x710 mm/page_alloc.c:4739
- alloc_pages_mpol+0x311/0x660 mm/mempolicy.c:2270
- alloc_frozen_pages_noprof mm/mempolicy.c:2341 [inline]
- alloc_pages_noprof+0x121/0x190 mm/mempolicy.c:2361
- folio_alloc_noprof+0x1e/0x30 mm/mempolicy.c:2371
- filemap_alloc_folio_noprof+0xe1/0x540 mm/filemap.c:1019
- __filemap_get_folio+0x438/0xae0 mm/filemap.c:1970
- iomap_get_folio fs/iomap/buffered-io.c:608 [inline]
- __iomap_get_folio fs/iomap/buffered-io.c:754 [inline]
- iomap_write_begin+0x4d3/0x1990 fs/iomap/buffered-io.c:797
- iomap_write_iter fs/iomap/buffered-io.c:955 [inline]
- iomap_file_buffered_write+0x6ea/0x11c0 fs/iomap/buffered-io.c:1039
- xfs_file_buffered_write+0x2cd/0xb20 fs/xfs/xfs_file.c:792
- new_sync_write fs/read_write.c:586 [inline]
- vfs_write+0xacf/0xd10 fs/read_write.c:679
- ksys_write+0x18f/0x2b0 fs/read_write.c:731
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-page last free pid 5324 tgid 5323 stack trace:
- reset_page_owner include/linux/page_owner.h:25 [inline]
- free_pages_prepare mm/page_alloc.c:1127 [inline]
- free_unref_folios+0xe40/0x18b0 mm/page_alloc.c:2707
- folios_put_refs+0x76c/0x860 mm/swap.c:994
- folio_batch_release include/linux/pagevec.h:101 [inline]
- truncate_inode_pages_range+0xe65/0x10e0 mm/truncate.c:387
- xfs_flush_unmap_range+0xb8/0xd0 fs/xfs/xfs_bmap_util.c:820
- xfs_reflink_remap_prep+0x5fe/0x720
- xfs_file_remap_range+0x287/0x910 fs/xfs/xfs_file.c:1210
- vfs_copy_file_range+0xc07/0x14f0 fs/read_write.c:1584
- __do_sys_copy_file_range fs/read_write.c:1670 [inline]
- __se_sys_copy_file_range+0x3fa/0x600 fs/read_write.c:1637
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-------------[ cut here ]------------
-kernel BUG at ./include/linux/mm.h:1153!
-Oops: invalid opcode: 0000 [#1] PREEMPT SMP KASAN NOPTI
-CPU: 0 UID: 0 PID: 1037 Comm: kworker/u4:7 Not tainted 6.14.0-rc1-syzkaller-00276-g69b54314c975 #0
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
-Workqueue: loop0 loop_workfn
-RIP: 0010:put_page_testzero include/linux/mm.h:1153 [inline]
-RIP: 0010:folio_put_testzero include/linux/mm.h:1159 [inline]
-RIP: 0010:folio_put include/linux/mm.h:1488 [inline]
-RIP: 0010:folio_end_writeback+0x603/0x650 mm/filemap.c:1655
-Code: 45 c7 ff 4c 89 ef 48 c7 c6 60 d7 13 8c e8 a5 5a 11 00 90 0f 0b e8 4d 45 c7 ff 4c 89 ef 48 c7 c6 a0 d6 13 8c e8 8e 5a 11 00 90 <0f> 0b e8 36 45 c7 ff 4c 89 ef 48 c7 c6 e0 d3 13 8c e8 77 5a 11 00
-RSP: 0018:ffffc900025bf430 EFLAGS: 00010246
-RAX: 4a021b16b8d5f700 RBX: 0000000000000000 RCX: 0000000000000001
-RDX: dffffc0000000000 RSI: ffffffff8c0aa680 RDI: 0000000000000001
-RBP: dffffc0000000000 R08: ffffffff942f994f R09: 1ffffffff285f329
-R10: dffffc0000000000 R11: fffffbfff285f32a R12: 0000000000000000
-R13: ffffea0001518000 R14: 1ffffd40002a3000 R15: ffffea0001518034
-FS:  0000000000000000(0000) GS:ffff88801fc00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000400000000040 CR3: 00000000124d6000 CR4: 0000000000352ef0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- iomap_finish_folio_write fs/iomap/buffered-io.c:1533 [inline]
- iomap_finish_ioend+0x462/0x6b0 fs/iomap/buffered-io.c:1561
- blk_update_request+0x5e5/0x1160 block/blk-mq.c:983
- blk_mq_end_request+0x3e/0x70 block/blk-mq.c:1145
- loop_handle_cmd drivers/block/loop.c:1946 [inline]
- loop_process_work+0x1bc8/0x21c0 drivers/block/loop.c:1964
- process_one_work kernel/workqueue.c:3236 [inline]
- process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3317
- worker_thread+0x870/0xd30 kernel/workqueue.c:3398
- kthread+0x7a9/0x920 kernel/kthread.c:464
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:148
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:put_page_testzero include/linux/mm.h:1153 [inline]
-RIP: 0010:folio_put_testzero include/linux/mm.h:1159 [inline]
-RIP: 0010:folio_put include/linux/mm.h:1488 [inline]
-RIP: 0010:folio_end_writeback+0x603/0x650 mm/filemap.c:1655
-Code: 45 c7 ff 4c 89 ef 48 c7 c6 60 d7 13 8c e8 a5 5a 11 00 90 0f 0b e8 4d 45 c7 ff 4c 89 ef 48 c7 c6 a0 d6 13 8c e8 8e 5a 11 00 90 <0f> 0b e8 36 45 c7 ff 4c 89 ef 48 c7 c6 e0 d3 13 8c e8 77 5a 11 00
-RSP: 0018:ffffc900025bf430 EFLAGS: 00010246
-RAX: 4a021b16b8d5f700 RBX: 0000000000000000 RCX: 0000000000000001
-RDX: dffffc0000000000 RSI: ffffffff8c0aa680 RDI: 0000000000000001
-RBP: dffffc0000000000 R08: ffffffff942f994f R09: 1ffffffff285f329
-R10: dffffc0000000000 R11: fffffbfff285f32a R12: 0000000000000000
-R13: ffffea0001518000 R14: 1ffffd40002a3000 R15: ffffea0001518034
-FS:  0000000000000000(0000) GS:ffff88801fc00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000400000000040 CR3: 00000000124d6000 CR4: 0000000000352ef0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
