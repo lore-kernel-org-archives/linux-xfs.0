@@ -1,29 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D8671EA90
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 05:17:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 145CA1E48A
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2025 05:22:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739423876; cv=none; b=VKsaF32UGdc6Zgna5TCBioanKNEwKkmPuwrOrbbbxMEeIuR9YGH+wMjRjw8vRJ2IypmyngyuYyNjKrdmzaOGfvlCMx1V22yqjmYiiC4p9ScMryFJ+/COKZyN1fVA7h5M4T1lzutONSC/gKKyDjb19ueMoGC/LpClc9o/lG4PmVs=
+	t=1739424147; cv=none; b=iLhRV8G7zJIzUBn/G0nIZR64+aPS78BMDNDdntciOP9bdk/IYgaZJuK20NLnm45EDdBvU+dBnLoza9/hilgbJ1ioXdIy8xV8im+CCSrPrH/lN+fNoF0BHYfrdfPeg2xjUDMkmdgOAogxKV3GT7O6+Y6LA1PwM/3aPzLzbeCP4+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739423876; c=relaxed/simple;
-	bh=gAoJ7RAk905aaRgIBwglf3ScO2SPlWDFx+sWoxxuK40=;
+	s=arc-20240116; t=1739424147; c=relaxed/simple;
+	bh=J2vkeQAXNtWxwPhoX790wUCD4Oxoo6Kujnfucipe8Oc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ejR0G7nArnkfknp6camsnw/ZigA3hvACxAwSzY4AZ7kyFwQwyZwt1FE9OG/sIT2nH+0fRwr6lZOvw05ggty4gXSr7ZssfQQcstu3USxZYdjPMnKU9QKs2cFx97XfBOoO88oIA+3HWSj1bX0liM1pLLA2YqeAI8IL75tMQJ+FeK0=
+	 Content-Type:Content-Disposition:In-Reply-To; b=Alinn3TZSkq+UeirXLeGOfFtr7PZyLv4imQoGzMCcga6ZRtHHqFGPC4TRc0Q4EwIxu/NeCFSqo6YOxXrmLmGCC7SpcnyAcF+YU2JpA210nPKK0HTEFIi6MOByMnHUcKdbj2SMLz4W5SkzufPXZTk8V+i+x6EHYw0I9CXVi4GjDQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id AB8A967373; Thu, 13 Feb 2025 06:17:49 +0100 (CET)
-Date: Thu, 13 Feb 2025 06:17:49 +0100
+	id 9C92967373; Thu, 13 Feb 2025 06:22:21 +0100 (CET)
+Date: Thu, 13 Feb 2025 06:22:21 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 23/43] xfs: add support for zoned space reservations
-Message-ID: <20250213051749.GD17582@lst.de>
-References: <20250206064511.2323878-1-hch@lst.de> <20250206064511.2323878-24-hch@lst.de> <20250207175231.GA21808@frogsfrogsfrogs>
+Subject: Re: [PATCH 24/43] xfs: implement zoned garbage collection
+Message-ID: <20250213052221.GE17582@lst.de>
+References: <20250206064511.2323878-1-hch@lst.de> <20250206064511.2323878-25-hch@lst.de> <20250207183350.GB21808@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,46 +32,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250207175231.GA21808@frogsfrogsfrogs>
+In-Reply-To: <20250207183350.GB21808@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Feb 07, 2025 at 09:52:31AM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 06, 2025 at 07:44:39AM +0100, Christoph Hellwig wrote:
-> > For zoned file systems garbage collection (GC) has to take the iolock
-> > and mmaplock after moving data to a new place to synchronize with
-> > readers.  This means waiting for garbage collection with the iolock can
-> > deadlock.
-> > 
-> > To avoid this, the worst case required blocks have to be reserved before
-> > taking the iolock, which is done using a new RTAVAILABLE counter that
-> > tracks blocks that are free to write into and don't require garbage
+On Fri, Feb 07, 2025 at 10:33:50AM -0800, Darrick J. Wong wrote:
+> > +	spin_lock_init(&zi->zi_used_buckets_lock);
+> > +	for (i = 0; i < XFS_ZONE_USED_BUCKETS; i++) {
+> > +		zi->zi_used_bucket_bitmap[i] =
+> > +				bitmap_zalloc(mp->m_sb.sb_rgcount, GFP_KERNEL);
 > 
-> Wasn't that in the last patch?  Should this sentence move there?
+> I wonder how long until this becomes a scalability problem, on my device
+> with 131k zones, this is a 16k contiguous allocation.
 
-The last patch added the counter, it really should be here.  Let me
-reshuffle the patches a bit to make that happen.
+This should probably be a kvmalloc allocation, I'll see if we want
+to open code it or add a new helper.  16k should be fine at mount
+time, but the devices aren't going get smaller in the next years.
 
-> > +	if (flags & XFS_ZR_NOWAIT)
-> > +		return -EAGAIN;
+> > +		return false;
 > > +
-> > +	spin_lock(&zi->zi_reservation_lock);
-> > +	list_add_tail(&reservation.entry, &zi->zi_reclaim_reservations);
+> > +	xfs_info(mp, "reclaiming zone %d, used: %u/%u, bucket: %u",
+> > +		rtg_rgno(victim_rtg), rtg_rmap(victim_rtg)->i_used_blocks,
+> > +		rtg_blocks(victim_rtg), bucket);
 > 
-> I think you're supposed to have initialized reservation.entry already.
-
-What do you mean with that?
-
-> > +	int				error;
-> > +
-> > +	ASSERT(ac->reserved_blocks == 0);
-> > +	ASSERT(ac->open_zone == NULL);
-> > +
-> > +	error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
-> > +			flags & XFS_ZR_RESERVED);
-> > +	if (error == -ENOSPC && (flags & XFS_ZR_GREEDY) && count_fsb > 1)
-> > +		error = xfs_zoned_reserve_extents_greedy(ip, &count_fsb, flags);
+> Tracepoint?
 > 
-> Overly long line.
+> > +	trace_xfs_zone_reclaim(victim_rtg);
 
-It's exactly 80 characters :)
+Here :), but yes, the printk is probably too noisy for the default
+build even if it's really useful for debugging.
 
