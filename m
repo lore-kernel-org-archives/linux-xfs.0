@@ -1,44 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78BC817E;
-	Fri, 14 Feb 2025 21:11:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06B371C861D;
+	Fri, 14 Feb 2025 21:12:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739567479; cv=none; b=ZOP8TiCuu3AATIWA9A9bW9GsaDNslJqQwLl06GrMDig5bPDO3EVe5W+CPBZVSL1VdMguR3Qyg59sVig7R034FeChZvYtOI+aLRhHESgHjNpdyRG/IqPNFuWyUptKIrpJQO8zvRBgaJwRv5Kw1DSxGQHUbanb+emq9MU+UeDqbNY=
+	t=1739567544; cv=none; b=AaQ61BTkEc7CY9a9f+x0mtWymPaY5v9AC9K501DI4joKVS26xl6sL+Cy5nY17KF+qIxghgE3AdydTuzawW14aMi1noz+PvMqvdLFpwIwsUVkQzVsWo/2bE2g7XgJRw7nFQLv5MgjHxnqSTbn9vPod5pZ5yRId3GXkAkBof8oGqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739567479; c=relaxed/simple;
-	bh=aMKlA6SNZr7Rwd3DklKPWlU6Pes9nxzl9UA0eWjK2JI=;
+	s=arc-20240116; t=1739567544; c=relaxed/simple;
+	bh=4S7tJobB4PKXGlizQaG5akxNUt6bPNk899FxQq2I+KI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uX9iCqG4lhk0epjxLWdWrynqNJpnFiwz9eczcMuaZgvjwOpGfrgx1QHJGu1HWFIzpHXsbZAsD5zUZF93zf1kNYu3rONWH0B3emqCk6JtgpfuicTgSXlTxb/1287I7aywZhiGbjE20wULW9ToDkTm6vb5BcsZEF4D/o0l3YVjmS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l9NSoqyO; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=KmbxR/eXgy6S6ZX3xrB8i48hhV6m8sWFeoiH5FaOLaGSXKMYL+BJmQpix6LQW5EHstLeI5+dViv4r1kWwogDTHaY2wZwOAYL++BnWxx4BkkkxZBCpqjRURe0uUiYBTxPw+snOiH48//HqD6jc77AwZQCp7WhZa2uPunHBn0GURg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bSSCHUQk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l9NSoqyO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFEE6C4CED1;
-	Fri, 14 Feb 2025 21:11:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bSSCHUQk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79FEDC4CED1;
+	Fri, 14 Feb 2025 21:12:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739567478;
-	bh=aMKlA6SNZr7Rwd3DklKPWlU6Pes9nxzl9UA0eWjK2JI=;
+	s=k20201202; t=1739567543;
+	bh=4S7tJobB4PKXGlizQaG5akxNUt6bPNk899FxQq2I+KI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=l9NSoqyORmD9S8/2hj7I9XzK55F6ikNrrlgtP7HVtizU6ipD6g9i6Ij7geZNNnBw1
-	 j+RKqFioviVrtaHzgKQXRunEcH5lBIN4d12NNO+OSdFaG3cfN3uSACeKJOeIFsfGVz
-	 oYWQrfFPBl4RslRw4MJRqRH5BbMwTT48XZ3IRJGQR9jRowK9cFppECv2eOcPbhSJ5J
-	 xVThFIVejBJFWb8gQ6Bbe//YKWCCX8IGO8PCu7TlGZPzcd9clg0+L6wjwXHWSkvgr5
-	 a41siuuKoBsS0bz+nMDL83Mh1SGfEfi/JucGjNLFIN3KEIAcNbsFZniHqA8PodDuY5
-	 w/oPJKF3WyjVQ==
-Date: Fri, 14 Feb 2025 13:11:18 -0800
+	b=bSSCHUQktVAgSJceF9suKsvYDiEdJApRtjT58HbWw3qopMOVKwWIAJpjH6y4mVTpG
+	 i5rdFGUcFuuJiyUjos4d/bwNwmYupIttRRr2jy4KBWGxkoRnA1A3Mg3FD1aQtR2WJi
+	 a6oMvdbvNPYbyP5FcekQXwZxGybVmiqFZZ52psEQrGfYAr+tMIq/kOGouQKUP2camU
+	 ojYF3EvmYlIARnY1uAZI7ZOFuqht9uWwjuHhtj2eHoQb3LY0f+3UyY46+g8yhvId/i
+	 W+w54Mnn7Q32ShPsA1MDS6uspoFvwaXaS1TWx3/1MMHeGJWexVY/lncrvaLtObtaQ0
+	 HnnYy0hc4+xOQ==
+Date: Fri, 14 Feb 2025 13:12:22 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Zorro Lang <zlang@redhat.com>, dchinner@redhat.com,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 14/34] common: fix pkill by running test program in a
- separate session
-Message-ID: <20250214211118.GD21799@frogsfrogsfrogs>
+To: zlang@redhat.com
+Cc: dchinner@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH 13.99/34] tools: add a Makefile separate session
+Message-ID: <20250214211222.GE21799@frogsfrogsfrogs>
 References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
  <173933094569.1758477.13105816499921786298.stgit@frogsfrogsfrogs>
- <20250214173406.pf6j5pbb3ccoypui@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20250214175644.GN3028674@frogsfrogsfrogs>
- <20250214205031.GA509210@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,43 +42,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250214205031.GA509210@mit.edu>
+In-Reply-To: <173933094569.1758477.13105816499921786298.stgit@frogsfrogsfrogs>
 
-On Fri, Feb 14, 2025 at 03:50:31PM -0500, Theodore Ts'o wrote:
-> On Fri, Feb 14, 2025 at 09:56:44AM -0800, Darrick J. Wong wrote:
-> > > The tools/ directory never be installed into /var/lib/xfstests. If someone runs
-> > > xfstests after `make install`, all tests will be failed due to:
-> > > 
-> > >   Failed to find executable ./tools/run_setsid: No such file or directory
-> > 
-> > Urrrk, yeah, I didn't realize that tools/ doesn't have a Makefile,
-> > therefore nothing from there get installed.  Three options:
-> > 
-> > 1) Add a tools/Makefile and an install target
-> > 2) Update the top level Makefile's install target to install the two
-> >    scripts
-> > 3) Move tools/run_* to the top level and (2)
-> 
-> Looking at tools, it seems like there are a couple of different
-> categories of scripts in the directory.  Some are useful to people who
-> are developing fstests (mkgroupfile, nextid, mvtest); some are useful
-> when debugging a test failure (dm-logwrite-replay); some are useful
-> only to xfs developers (ag-wipe, db-walk).
-> 
-> And to this we are adding utility programs that would be used during a
-> test execution.
-> 
-> I wonder if we should split out these scripts into different
-> directories?
+From: Darrick J. Wong <djwong@kernel.org>
 
-I chatted with zorro on irc, who proposed doing (2) so he could finally
-merge all these fixes, and getting back to any other discussions later.
-I'll send the additional patch and minor tweaks to patches 14 and 15
-shortly.
+Add a Makefile to the tools/ directory so that we can put helper scripts
+in there and have them installed at make install time.  The makefile
+comes from a conversation that Zorro and I had over IRC, hence the RH
+copyright.
 
---D
+Suggested-by: Zorro Lang <zlang@kernel.org>
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ Makefile       |    2 +-
+ tools/Makefile |   17 +++++++++++++++++
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+ create mode 100644 tools/Makefile
 
-> 
-> 	  	       	      	    	- Ted
-> 				
-> 
+diff --git a/Makefile b/Makefile
+index d4b77c1cd17787..e2e47ffc2e6e07 100644
+--- a/Makefile
++++ b/Makefile
+@@ -40,7 +40,7 @@ LDIRT += $(SRCTAR)
+ endif
+ 
+ LIB_SUBDIRS = include lib
+-TOOL_SUBDIRS = ltp src m4 common
++TOOL_SUBDIRS = ltp src m4 common tools
+ 
+ SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS) $(TESTS_DIR)
+ 
+diff --git a/tools/Makefile b/tools/Makefile
+new file mode 100644
+index 00000000000000..3ee532a7e563a9
+--- /dev/null
++++ b/tools/Makefile
+@@ -0,0 +1,17 @@
++#
++# Copyright (c) 2025 Red Hat Inc.  All Rights Reserved.
++#
++
++TOPDIR = ..
++include $(TOPDIR)/include/builddefs
++
++TOOLS_DIR = tools
++
++include $(BUILDRULES)
++
++default:
++
++install: default
++	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/$(TOOLS_DIR)
++
++install-dev install-lib:
