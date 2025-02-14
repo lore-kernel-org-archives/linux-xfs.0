@@ -1,89 +1,188 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f176.google.com (mail-vk1-f176.google.com [209.85.221.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C494275401
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Feb 2025 08:44:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62EF6221D9A
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Feb 2025 08:46:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739522641; cv=none; b=snnUvv3p0z/ns8RJPzArCFztH+0mQE9aLIbCkxI3asuJu3vjeeQkp2wAy4ip7KsDn51uTYTbCC9s+uaOUyIBmvN570Hh9uA6uHztZGMLLHVq35kTosCGO3k3p19BjKMuigtr8w0sewNIcT1nW0s+DOIuxRyLBu6zd539n6CiF3g=
+	t=1739522789; cv=none; b=uzYmCrLDmK5/si8ImqpH2s/1KJUkmrtQ8QDn5oG50Ct510QZjMCm0IVoTrjAlpsk24Rt/sQWF7X+4Dmm8rvj3c/LAlmolnqn21D941N532Dcmj0IpacsaOoXWnqCWuJvmDg0Gyn8Tk3EJNB3l4cH4L56jfE3T3OrAoQhsqFrm+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739522641; c=relaxed/simple;
-	bh=f9iXJxbNqMhFk13UbpLbRmO4zc6JznRDc82AcCdtqV4=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=dofRrd1Y4h70pre5z6U3iy6Zls/iKY6NXBah/agbq2IuX1aUu2I0KT/bfW53f3ui4z5w68Vrm792a3JcViB8f64o3+9ZO3+RFtMTTQk5GVM7N1Kv8a4YnWaHkHUQUobSbnNe3Wcb0ieIL+yU8CADWhDH447OUuN3M+1edVYQIZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g3Q6E7oL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739522789; c=relaxed/simple;
+	bh=DaapRn/iW7Nn3mWXq/1zNU2x1WmgQpD91mDAIchYOno=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=e0pyGfx7i63mravadnfOp2jVPv0Qw642MuPOAVYndoiBSAQSFQwgxtFHbmfAiSsA6/IhvMEb7klB5aEgSkjXPZwiKYLzFD5EU20gXM6NSYIdxJak7akUvM52JCU39Dg/O8ntJEkz6XOiTrbkoXvKYqbtUvNeNLXyAHMamAanDZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=mRR1CKAB; arc=none smtp.client-ip=209.85.221.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g3Q6E7oL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72BEBC4CED1
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Feb 2025 08:44:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739522641;
-	bh=f9iXJxbNqMhFk13UbpLbRmO4zc6JznRDc82AcCdtqV4=;
-	h=Date:From:To:Subject:From;
-	b=g3Q6E7oLY/olQiZmVAtpneJomszfddYr/64sE2qwSfC7kYrptC8zDbofTvotI/bkM
-	 WqkYZk0kmnHOFnvZiXFGxSBNbHsEmWnR4iqdjkawn23R+8byzvFnS1RlbDvT6M525u
-	 217mXvc3hFhEde/3+5SYscKIIXyTPo9n9CVx1E08KmGdQG2VEU4bG8p2z7vnsF4gpE
-	 0jMxrwpBZJlrMxMg5xuEgk61L9qF0eamvWJDphg9DTCpc7lLZY54MFMHspO+cYhYzJ
-	 Ti16vpvgloxeQtUoxc2XkTOgfuGWLJFrblpZq1XSmE3qqFHLItIm79B6otm4PWM9db
-	 cVLPwiI4cQBjw==
-Date: Fri, 14 Feb 2025 09:43:56 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next *REBASED* to 2d873efd174b
-Message-ID: <avxz3qh3j3bm4nrhjcrgwrmhkbbkv57vwplhivsnuot7uq6hqn@tv3oc6vpkxg4>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mRR1CKAB"
+Received: by mail-vk1-f176.google.com with SMTP id 71dfb90a1353d-52067a2ca31so975784e0c.0
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Feb 2025 00:46:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1739522785; x=1740127585; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=s/SpVrueRYoLO67L8eIIkV6jzrQYHfIk1nopkq7+ltQ=;
+        b=mRR1CKABP2MCEa4qcB5AWjHEhB9x81OVQR2pLhPKP/4IT5sSa1fRSUaF3TrFwDvWCM
+         BPrJAg+JyC6A5MsDVLE3g0UXr1TtuQlnJK/ODRZhsLGDLjY6eScloqDPGz8UCfT0X1WE
+         TeFu9cmZxikMC/k1tkUPUAkmtlbG1RzWKBpNILF28etIsTtx/X/M5e54Ea5MQB1lgm96
+         nT/jLcScWOKPnLgld/iXBiZhSFnF4AGDhfiOsdXQTQiUTxp6Z3ucp8cdEmmN/hwptzQl
+         KdEiTllQOsCI3wYLod0ks3+OPLzK0BrUhAYAAABvce91wzJUhE3AN1krpSXsld6vQGRj
+         XDfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739522785; x=1740127585;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=s/SpVrueRYoLO67L8eIIkV6jzrQYHfIk1nopkq7+ltQ=;
+        b=Ye+YOLwINsOLfjqs4DWsJTe1tJJHGrIG15VE+9kZRP6wK/JyOhOTi0jCvbNI2k3nQd
+         /Jp5iPdykFSZ/1z4xITIBr5est9BZzkGpWTu0WspNnXyj/ndHBYYPU0WYekuTwnm5QnM
+         J+UxhAOv0w0cuT0eLLG+lOkLFj3M/39vQisV0zrwyI8/OFvwAfg1OHT+yzxQL5tqq5yI
+         QOKgM8E2JP9iowbckphiZt88fX/XzamOjWmItwwzJghw7mGI4EO4mclOm5XvylPP27Tg
+         Akp2BWLyxcEQnCvOWqwzKJDY3ybCzV8YTK0x7uJixc4N2EU/p0LyYEb21I04zmh8OjBL
+         4mNA==
+X-Forwarded-Encrypted: i=1; AJvYcCWUZzuL86vkf+YoAgMBveWyP/vquc3YiHRaNW8hxDCoyY5nCzsTVVdmCidE/v/mVv0+m3JLbj+I97k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxFD1yb5N3EN6bB/BMzxJVfCWEbKz4OrLtdHwfOO/RAFK/6MzBW
+	bMt1yotNESFXe5q3XNj35AQ8U3amFO7P458mEPAcmcYCcACHq92pR42u2Rykok5L01M8XcohRU3
+	76O+zFVuHPtadB2tpVdoJToOJCm0crkWJNToxQA==
+X-Gm-Gg: ASbGnctAEIbZY/FV+fMS/V9dsSiOGBZOK2vuhErikSeGgv1yU06bbeVdQPUD2rsrOwN
+	lPmD/+c/+i06DGCopmTBUBJKEkgMXnL3ENqug6m0hqEUxAGbf27V8uZcpQ9KEcNFgMcRvoylUOz
+	I4o6PZIBSHW/ZriM3/VpuBlbWqKBRRgJg=
+X-Google-Smtp-Source: AGHT+IEmsJZT+jXKj4JBRFBmsWO8P+p3scpYQLSYSd7oc2CaHyRP52nyDmef7v9VG3cRCZJx74tDbUVT3Hl5ru2KBmM=
+X-Received: by 2002:a05:6122:2028:b0:520:3d87:5cdb with SMTP id
+ 71dfb90a1353d-52067c9792amr8941602e0c.9.1739522785112; Fri, 14 Feb 2025
+ 00:46:25 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20250213142436.408121546@linuxfoundation.org>
+In-Reply-To: <20250213142436.408121546@linuxfoundation.org>
+From: Naresh Kamboju <naresh.kamboju@linaro.org>
+Date: Fri, 14 Feb 2025 14:16:13 +0530
+X-Gm-Features: AWEUYZmYXnFVTFbZ3xpIYpccIn9qqsxnpqLJJ2bHanM_Ra-e0XbxIu6KOWpiedk
+Message-ID: <CA+G9fYuVj+rhFPLshE_RKfBMyMvKiHaDzPttZ1FeqqeJHOnSbQ@mail.gmail.com>
+Subject: Re: [PATCH 6.12 000/422] 6.12.14-rc1 review
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, patches@lists.linux.dev, 
+	linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, 
+	akpm@linux-foundation.org, linux@roeck-us.net, shuah@kernel.org, 
+	patches@kernelci.org, lkft-triage@lists.linaro.org, pavel@denx.de, 
+	jonathanh@nvidia.com, f.fainelli@gmail.com, sudipm.mukherjee@gmail.com, 
+	srw@sladewatkins.net, rwarsow@gmx.de, conor@kernel.org, hargar@microsoft.com, 
+	broonie@kernel.org, Arnd Bergmann <arnd@arndb.de>, 
+	Dan Carpenter <dan.carpenter@linaro.org>, Anders Roxell <anders.roxell@linaro.org>, 
+	linux-xfs@vger.kernel.org, chandan.babu@oracle.com, 
+	"Darrick J. Wong" <djwong@kernel.org>, Long Li <leo.lilong@huawei.com>, 
+	Wentao Liang <vulab@iscas.ac.cn>
+Content-Type: text/plain; charset="UTF-8"
+
+On Thu, 13 Feb 2025 at 20:02, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> This is the start of the stable review cycle for the 6.12.14 release.
+> There are 422 patches in this series, all will be posted as a response
+> to this one.  If anyone has any issues with these being applied, please
+> let me know.
+>
+> Responses should be made by Sat, 15 Feb 2025 14:23:11 +0000.
+> Anything received after that time might be too late.
+>
+> The whole patch series can be found in one patch at:
+>         https://www.kernel.org/pub/linux/kernel/v6.x/stable-review/patch-6.12.14-rc1.gz
+> or in the git tree and branch at:
+>         git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git linux-6.12.y
+> and the diffstat can be found below.
+>
+> thanks,
+>
+> greg k-h
+
+Regressions on the arm64, powerpc builds failed with gcc-8/13 and clang
+on the Linux stable-rc 6.12.14-rc1.
+
+Build regression: arm, powerpc, fs/xfs/xfs_trans.c too few arguments
+
+Good: v6.12.13
+Bad:  6.12.14-rc1 (v6.12.13-423-gfb9a4bb2450b)
+
+Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
+
+* arm, build
+  - clang-19-davinci_all_defconfig
+  - clang-nightly-davinci_all_defconfig
+  - gcc-13-davinci_all_defconfig
+  - gcc-8-davinci_all_defconfig
+
+* powerpc, build
+  - clang-19-defconfig
+  - clang-19-ppc64e_defconfig
+  - clang-nightly-allyesconfig
+  - clang-nightly-defconfig
+  - clang-nightly-lkftconfig-hardening
+  - clang-nightly-lkftconfig-lto-full
+  - clang-nightly-lkftconfig-lto-thing
+  - clang-nightly-ppc64e_defconfig
+  - gcc-13-defconfig
+  - gcc-13-lkftconfig-hardening
+  - gcc-13-ppc64e_defconfig
+  - gcc-8-defconfig
+  - gcc-8-lkftconfig-hardening
+  - gcc-8-ppc64e_defconfig
+  - korg-clang-19-lkftconfig-hardening
+  - korg-clang-19-lkftconfig-lto-full
+  - korg-clang-19-lkftconfig-lto-thing
 
 
-Hi folks,
+## Build log arm and powerpc
+fs/xfs/xfs_trans.c:843:33: error: too few arguments provided to
+function-like macro invocation
+  843 |         xfs_trans_apply_dquot_deltas(tp);
+      |                                        ^
+fs/xfs/xfs_quota.h:169:9: note: macro 'xfs_trans_apply_dquot_deltas'
+defined here
+  169 | #define xfs_trans_apply_dquot_deltas(tp, a)
+      |         ^
+fs/xfs/xfs_trans.c:843:2: error: use of undeclared identifier
+'xfs_trans_apply_dquot_deltas'; did you mean
+'xfs_trans_apply_sb_deltas'?
+  843 |         xfs_trans_apply_dquot_deltas(tp);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |         xfs_trans_apply_sb_deltas
+fs/xfs/xfs_trans.c:475:1: note: 'xfs_trans_apply_sb_deltas' declared here
+  475 | xfs_trans_apply_sb_deltas(
+      | ^
+fs/xfs/xfs_trans.c:843:2: warning: expression result unused [-Wunused-value]
+  843 |         xfs_trans_apply_dquot_deltas(tp);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning and 2 errors generated.
 
-The for-next branch of the xfs-linux repository at:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+## Source
+* kernel version: 6.12.14-rc1
+* git tree: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git
+* git sha: fb9a4bb2450b6b0f073a493bd6a1f54f231413e9
+* git describe: v6.12.13-423-gfb9a4bb2450b
+* Project details:
+https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6.12.y/build/v6.12.13-423-gfb9a4bb2450b
 
-has just been *REBASED*.
+## Build
+* build link: https://storage.tuxsuite.com/public/linaro/lkft/builds/2szXNYzJaqUDby0ajsj9cBcVrPY/
+* build log: https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6.12.y/build/v6.12.13-423-gfb9a4bb2450b/testrun/27280977/suite/build/test/clang-19-davinci_all_defconfig/log
+* build history:
+https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6.12.y/build/v6.12.13-423-gfb9a4bb2450b/testrun/27280977/suite/build/test/clang-19-davinci_all_defconfig/history/
+* test details:
+https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6.12.y/build/v6.12.13-423-gfb9a4bb2450b/testrun/27280977/suite/build/test/clang-19-davinci_all_defconfig/
+* kernel config: arm-clang-19-davinci_all_defconfig and gcc-8-ppc64e_defconfig
+* architectures: arm, powerpc
+* toolchain version: clang and gcc
 
-This has no patch changes from the previous state, the rebase was needed to fix
-a tag in one of the patches. No code changes.
+## Steps to reproduce
+# tuxmake --runtime podman --target-arch arm --toolchain clang-19
+--kconfig davinci_all_defconfig LLVM=1 LLVM_IAS=1
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-2d873efd174b xfs: flush inodegc before swapon
-
-6 new commits:
-
-Carlos Maiolino (1):
-      [9f0902091c33] xfs: Do not allow norecovery mount with quotacheck
-
-Christoph Hellwig (2):
-      [3cd6a8056f5a] xfs: rename xfs_iomap_swapfile_activate to xfs_vm_swap_activate
-      [2d873efd174b] xfs: flush inodegc before swapon
-
-Darrick J. Wong (2):
-      [66314e9a57a0] xfs: fix online repair probing when CONFIG_XFS_ONLINE_REPAIR=n
-      [6e33017c3276] xfs: fix data fork format filtering during inode repair
-
-Lukas Herbolt (1):
-      [9e00163c3167] xfs: do not check NEEDSREPAIR if ro,norecovery mount.
-
-Code Diffstat:
-
- fs/xfs/scrub/common.h       |  5 -----
- fs/xfs/scrub/inode_repair.c | 12 ++++++++--
- fs/xfs/scrub/repair.h       | 11 ++++++++-
- fs/xfs/scrub/scrub.c        | 12 ++++++++++
- fs/xfs/xfs_aops.c           | 41 +++++++++++++++++++++++++++++----
- fs/xfs/xfs_qm_bhv.c         | 55 ++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_super.c          |  8 +++++--
- 7 files changed, 114 insertions(+), 30 deletions(-)
+--
+Linaro LKFT
+https://lkft.linaro.org
