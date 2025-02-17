@@ -1,147 +1,233 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85E96229B30;
-	Mon, 17 Feb 2025 17:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E4E238D3B
+	for <linux-xfs@vger.kernel.org>; Mon, 17 Feb 2025 19:58:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739813398; cv=none; b=JieAAfIvLkdNzlOkyST126ER+xlHkC2w7AHHanT/BfUv/svbHtzpc7G6bRCoP63F5nZjNyfaeO2EctmKZhzWDoo7LYqEsenHxVrgaeqox5+qpHlCLD6zls3KMdTS6kMhN87QmxCfZ1JvMCtgzgKH2KMXQGo2NmTF+8Jo/2/UNoA=
+	t=1739822331; cv=none; b=ice2IeRO6xK22ED3ORAOrhAXFRdYg05nT7vNzSalaDnhu2PgfyHv7zEWxRTn6vhS7zEf6qmr1GD2u9TH0R81WJ67m99rTXBp/IPKgnQcDx/V1B0S9+JSvtNLzN+pRZCZaWU1c+UVeCeS7VzLcFFvqV4qj5nrh4aNvr4Am2YWVl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739813398; c=relaxed/simple;
-	bh=ENc2XqVvYlCGkGRqVkpA8jhlZmEYwp5yvr2cmI2EhcE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MSMFsCjt72ZteJxsGnb8kHTNfHkdwbqficM/YnB2UvjYQrZB4fSGZ4DjoHzbIsj03/dZ1MnF1wasaO9QRNBe6gwTOt+3BroHvB2hmvDt6GueOSIFx13fyEGOxtZj/t4ECcV1bF6wz8pl4Vr1uMbr1fdr+WghCDgInJx3UM6dRVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Csiw52hR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739822331; c=relaxed/simple;
+	bh=H7EXqVyyi+kLT8T3AFWH4gU/uM442cOf8FS+Ncb8NkM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JzmBbCHJZJzKt8pEA0L+TYooYyJVJ/ngb0lIp1W2AxtB52bJcizt1Nn2nMfyWP82Ug1F6gyngc+/9WY9K0/+9wOpp7mxw94vm3jXJxXF0zMItc7EqvxawCRXjTWM31e2xSrcYsFEMvYqXtkyGJSpkvEZEfd3bq7S6DLgIRllsLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XEv90QqL; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Csiw52hR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1A49C4CEE4;
-	Mon, 17 Feb 2025 17:29:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739813397;
-	bh=ENc2XqVvYlCGkGRqVkpA8jhlZmEYwp5yvr2cmI2EhcE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Csiw52hR0xI8lT/OKTWo8OJ2EZXA6SdTcH5cAgDRWPJ5sMfa8h2adh1bzEkosfttB
-	 CF2dkwo4vupGdy8AO/p/RjibMOVdhheo3fCigoZIkAYFR5bk4ETZozo9LpLLUBldAj
-	 L8bK/YccMLl9cpPdA0GsO0P6zGO6x8AxCRK2sH/1+yvtx70NyD50TP2iQIx3O2yC3a
-	 ER3/z/ZJ72wQd03D8ZSVJBpBdDFk5QnG8VYtcq6NspShMy+iWigwDZSZprFZDfwer5
-	 C2Acv2BHHUkIdAs6Ny+svA3LDQg4+1kO3JHNeZJZ5nwVAf679bNBfjHd4QU3MDJgWY
-	 GQ7c+LAIAVmVw==
-Date: Mon, 17 Feb 2025 09:29:57 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Lorenz Brun <lorenz@monogon.tech>
-Cc: stable@vger.kernel.org, regressions@lists.linux.dev,
-	linux-xfs@vger.kernel.org
-Subject: Re: [REGRESSION] xfs kernel panic
-Message-ID: <20250217172957.GB21808@frogsfrogsfrogs>
-References: <CAJMi0nTHX0inFxme=xnJf23c8=w0bAf7LfiT=YNpmU-zVnUR+Q@mail.gmail.com>
- <CAJMi0nTbyi6VGTmmZ43wYWwJWur0XPtuswZ_5UaXB+S6Z=Mo6A@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XEv90QqL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1739822328;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=NlktFKbt7fWOri2OGRbyYiQR64jGh1ap4Xy3JViDRMo=;
+	b=XEv90QqLiwNBMjF1S27daonlXuEOOLHs7NrLdcZ852Eyi1X0g2ufVb6bYGyDj1wuiNUSyK
+	OOBPeN7XymK/ge0Rmg+nO6mu7L5GXaisEI3ml3V4pcEkt4r95P8NqsEYp/9GUtEx4L6ur7
+	MgBXpRf8Wjsgw/9gagCKLkl9aewXYac=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-259-Uy4Ax3y8NWC0pS78u-NJtQ-1; Mon, 17 Feb 2025 14:58:46 -0500
+X-MC-Unique: Uy4Ax3y8NWC0pS78u-NJtQ-1
+X-Mimecast-MFC-AGG-ID: Uy4Ax3y8NWC0pS78u-NJtQ_1739822326
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-38f44be93a8so748837f8f.1
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Feb 2025 11:58:46 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739822325; x=1740427125;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:from:references:cc:to:subject:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=NlktFKbt7fWOri2OGRbyYiQR64jGh1ap4Xy3JViDRMo=;
+        b=QiCPXws4BinABwmPGTBQXl7kkp+qwOJbZLmyz0C9Wn8kIyL3mm6R8Xa0wV7gnMxi7x
+         53ZgR+K6xnlm8h/xois8vAtA8Z0qyAZyklYsrkYUsIbAtpVOY9bC20TGofM3pkoKFHbt
+         pC9kkvAkBHhWla824QBoC7rHh6FUVsfAsva7k11lhAmM6V8L3teXWe4WUZ/NBVN7K7rJ
+         qeYtypl2Rc3cd3r96y/M6Et+KfzmVBV+uW3NKLeioDoKygontkAZBCicySmCbw34etfO
+         2LKja7SFQceAX8OAZzfjWDrwfdLYadnivZNWs0avvGfIrZ1tqrBcbVZkISxSi1vacbgm
+         MYJA==
+X-Forwarded-Encrypted: i=1; AJvYcCXTcmsNwUJCa7AyfaJYoYGXjnf9lL5BA1LUMI5DwoRfH+gqbv0DPYaJgYQcW0KijKn729F3CMd4d3k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwrxL/jQIrZgvIhNmuYV6n4TvSBaCFb8Bw7Q8o4RClDUSLqYJLi
+	mnn6rPnIjQBxG7XnVWzNZdPQHhZhoT8j3cakyFieeqT2yCozc4AmQ5VyqBl8FYpyrl0Dj4mhPZC
+	MdcJIL6+Wpas4h/QG6m5HzduJFTAnpu10u4ahk4CAq/ZyWK0iuy+Tw7IPow==
+X-Gm-Gg: ASbGncsLpS0v7pTLn1PfS0l7Tp9Wb+2gxYeocQRtjEJvINaX/bzRpxLLb6+zvvIobfM
+	fCnbCGHwxxswlOEBHFQKwlBKo7kL6EKnujWdoLryBiTL+K8pM0GFDL587+IeWP97oCT1VLffCdB
+	yoHzuspyupr6UCMmoKCkVR8v5VKi+z3PKjeGHDzhi4sIokMqF3EvpevLs7AZOjIBZTEyY1YJVeM
+	f49hNvlGQudYAW8OEVwt78KFMzeL/N/Jq73lOGtNAuR+oMQcTG4D3sVChABNKqt/O20PaiiVPjH
+	KqIbFOca7EBM8CjA531COcB3ihF4pETf/hKugTJHSeDm04NqefxjFXqCma8PcW0BibgULQI7FRX
+	NlokUZCQyRbBOGR+qwnk8PIEk9h23TQ==
+X-Received: by 2002:a5d:4a43:0:b0:38f:3392:9fd8 with SMTP id ffacd0b85a97d-38f33f2cb57mr8062650f8f.18.1739822325470;
+        Mon, 17 Feb 2025 11:58:45 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGmnf+EH+x2w9Z3amJyvk4I4a5QL1krZ5SQiXGUsJvRabwqfhUp4vd7zVPxaXWLqtKKNwXS0Q==
+X-Received: by 2002:a5d:4a43:0:b0:38f:3392:9fd8 with SMTP id ffacd0b85a97d-38f33f2cb57mr8062617f8f.18.1739822325081;
+        Mon, 17 Feb 2025 11:58:45 -0800 (PST)
+Received: from ?IPV6:2003:cb:c739:900:900f:3c9e:2f7b:5d0a? (p200300cbc7390900900f3c9e2f7b5d0a.dip0.t-ipconnect.de. [2003:cb:c739:900:900f:3c9e:2f7b:5d0a])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38f258b4118sm13425148f8f.18.2025.02.17.11.58.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 17 Feb 2025 11:58:43 -0800 (PST)
+Message-ID: <519c6ef7-ca56-4aac-8e43-f75b17353d66@redhat.com>
+Date: Mon, 17 Feb 2025 20:58:38 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJMi0nTbyi6VGTmmZ43wYWwJWur0XPtuswZ_5UaXB+S6Z=Mo6A@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 16/20] huge_memory: Add vmf_insert_folio_pmd()
+To: Alistair Popple <apopple@nvidia.com>
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, linux-mm@kvack.org,
+ Alison Schofield <alison.schofield@intel.com>, lina@asahilina.net,
+ zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
+ vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
+ bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
+ will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
+ dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org,
+ djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, peterx@redhat.com,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+ nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
+ david@fromorbit.com, chenhuacai@kernel.org, kernel@xen0n.name,
+ loongarch@lists.linux.dev
+References: <cover.472dfc700f28c65ecad7591096a1dc7878ff6172.1738709036.git-series.apopple@nvidia.com>
+ <9f10e88441f3cb26eff6be0c9ef5997844c8c24e.1738709036.git-series.apopple@nvidia.com>
+ <afff4368-9401-4943-b802-1b15bdcf5aaa@redhat.com>
+ <6mmjoe27y63cfe5cycqje63gehgumod3bp7zzgvpz7qehgfuv4@uomvqgizba2m>
+From: David Hildenbrand <david@redhat.com>
+Content-Language: en-US
+Autocrypt: addr=david@redhat.com; keydata=
+ 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
+ WNyWQQ==
+Organization: Red Hat
+In-Reply-To: <6mmjoe27y63cfe5cycqje63gehgumod3bp7zzgvpz7qehgfuv4@uomvqgizba2m>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Feb 17, 2025 at 05:27:33PM +0100, Lorenz Brun wrote:
-> Am Mo., 17. Feb. 2025 um 16:00 Uhr schrieb Lorenz Brun <lorenz@monogon.tech>:
-> >
-> > Hi everyone,
-> >
-> > Linux 6.12.14 (released today) contains a regression for XFS, causing
-> > a kernel panic after just a few seconds of working with a
-> > freshly-created (xfsprogs 6.9) XFS filesystem. I have not yet bisected
-> > this because I wanted to get this report out ASAP but I'm going to do
-> > that now. There are multiple associated stack traces, but all of them
-> > have xfs_buf_offset as the faulting function.
-> >
-> > Example backtrace:
-> > [   31.745932] BUG: kernel NULL pointer dereference, address: 0000000000000098
-> > [   31.746590] #PF: supervisor read access in kernel mode
-> > [   31.747072] #PF: error_code(0x0000) - not-present page
-> > [   31.747537] PGD 5bee067 P4D 5bee067 PUD 5bef067 PMD 0
-> > [   31.748016] Oops: Oops: 0000 [#1] PREEMPT SMP NOPTI
-> > [   31.748459] CPU: 0 UID: 0 PID: 116 Comm: xfsaild/vda4 Not tainted
-> > 6.12.14-metropolis #1 9b2470be3d7713b818a3236e4a2804dd9cbef735
-> > [   31.749490] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),
-> > BIOS 0.0.0 02/06/2015
-> > [   31.750340] RIP: 0010:xfs_buf_offset+0x9/0x50
-> > [   31.750823] Code: 08 5b e9 8a 2c c4 00 66 2e 0f 1f 84 00 00 00 00
-> > 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 66 0f 1f 00 0f 1f
-> > 44 00 00 <48> 8b 87 98 00 00 00 48 85 c0 75 2e 48 8b 87 00 01 00 00 48
-> > 89 f2
-> > [   31.752775] RSP: 0018:ffffbf50c07abdb8 EFLAGS: 00010246
-> > [   31.753343] RAX: 0000000000000002 RBX: ffff9c0985817d58 RCX: 0000000000000016
-> > [   31.754103] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-> > [   31.754734] RBP: 0000000000000000 R08: ffff9c09fb704000 R09: 00000000e0be9fc4
-> > [   31.755396] R10: 0000000000000000 R11: ffff9c0985827df8 R12: ffff9c09fb57ff58
-> > [   31.756078] R13: ffff9c0985817eb0 R14: ffff9c09fb704000 R15: ffff9c0985817f00
-> > [   31.756764] FS:  0000000000000000(0000) GS:ffff9c09fc000000(0000)
-> > knlGS:0000000000000000
-> > [   31.757529] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [   31.758041] CR2: 0000000000000098 CR3: 0000000005b70000 CR4: 0000000000350ef0
-> > [   31.758696] Call Trace:
-> > [   31.758940]  <TASK>
-> > [   31.759172]  ? __die+0x56/0x97
-> > [   31.759473]  ? page_fault_oops+0x15c/0x2d0
-> > [   31.759853]  ? exc_page_fault+0x4c5/0x790
-> > [   31.760237]  ? asm_exc_page_fault+0x26/0x30
-> > [   31.760637]  ? xfs_buf_offset+0x9/0x50
-> > [   31.761002]  ? srso_return_thunk+0x5/0x5f
-> > [   31.761409]  xfs_qm_dqflush+0xd0/0x350
-> > [   31.761799]  xfs_qm_dquot_logitem_push+0xe9/0x140
-> > [   31.762253]  xfsaild+0x347/0xa10
-> > [   31.762567]  ? srso_return_thunk+0x5/0x5f
-> > [   31.762952]  ? srso_return_thunk+0x5/0x5f
-> > [   31.763325]  ? __pfx_xfsaild+0x10/0x10
-> > [   31.763665]  kthread+0xd2/0x100
-> > [   31.763985]  ? __pfx_kthread+0x10/0x10
-> > [   31.764342]  ret_from_fork+0x34/0x50
-> > [   31.764675]  ? __pfx_kthread+0x10/0x10
-> > [   31.765029]  ret_from_fork_asm+0x1a/0x30
-> > [   31.765408]  </TASK>
-> > [   31.765618] Modules linked in: kvm_amd
-> > [   31.765978] CR2: 0000000000000098
-> > [   31.766297] ---[ end trace 0000000000000000 ]---
-> > [   32.371004] RIP: 0010:xfs_buf_offset+0x9/0x50
-> > [   32.371453] Code: 08 5b e9 8a 2c c4 00 66 2e 0f 1f 84 00 00 00 00
-> > 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 66 0f 1f 00 0f 1f
-> > 44 00 00 <48> 8b 87 98 00 00 00 48 85 c0 75 2e 48 8b 87 00 01 00 00 48
-> > 89 f2
-> > [   32.373133] RSP: 0018:ffffbf50c07abdb8 EFLAGS: 00010246
-> > [   32.373611] RAX: 0000000000000002 RBX: ffff9c0985817d58 RCX: 0000000000000016
-> > [   32.374275] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-> > [   32.374921] RBP: 0000000000000000 R08: ffff9c09fb704000 R09: 00000000e0be9fc4
-> > [   32.375720] R10: 0000000000000000 R11: ffff9c0985827df8 R12: ffff9c09fb57ff58
-> > [   32.376376] R13: ffff9c0985817eb0 R14: ffff9c09fb704000 R15: ffff9c0985817f00
-> > [   32.377027] FS:  0000000000000000(0000) GS:ffff9c09fc000000(0000)
-> > knlGS:0000000000000000
-> > [   32.377761] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [   32.378292] CR2: 0000000000000098 CR3: 0000000005b70000 CR4: 0000000000350ef0
-> > [   32.378940] Kernel panic - not syncing: Fatal exception
-> > [   32.379492] Kernel Offset: 0x2a600000 from 0xffffffff81000000
-> > (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
-> >
-> > #regzbot introduced: v6.12.13..v6.12.14
-> >
-> > Regards,
-> > Lorenz
+On 17.02.25 05:29, Alistair Popple wrote:
+> On Mon, Feb 10, 2025 at 07:45:09PM +0100, David Hildenbrand wrote:
+>> On 04.02.25 23:48, Alistair Popple wrote:
+>>> Currently DAX folio/page reference counts are managed differently to normal
+>>> pages. To allow these to be managed the same as normal pages introduce
+>>> vmf_insert_folio_pmd. This will map the entire PMD-sized folio and take
+>>> references as it would for a normally mapped page.
+>>>
+>>> This is distinct from the current mechanism, vmf_insert_pfn_pmd, which
+>>> simply inserts a special devmap PMD entry into the page table without
+>>> holding a reference to the page for the mapping.
+>>>
+>>> It is not currently useful to implement a more generic vmf_insert_folio()
+>>> which selects the correct behaviour based on folio_order(). This is because
+>>> PTE faults require only a subpage of the folio to be PTE mapped rather than
+>>> the entire folio. It would be possible to add this context somewhere but
+>>> callers already need to handle PTE faults and PMD faults separately so a
+>>> more generic function is not useful.
+>>>
+>>> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+>>
+>> Nit: patch subject ;)
+>>
+>>>
+>>> ---
+>>>
+>>> Changes for v7:
+>>>
+>>>    - Fix bad pgtable handling for PPC64 (Thanks Dan and Dave)
+>>
+>> Is it? ;) insert_pfn_pmd() still doesn't consume a "pgtable_t *"
+>>
+>> But maybe I am missing something ...
 > 
-> Hi everyone,
+> At a high-level all I'm trying to do (perhaps badly) is pull the ptl locking one
+> level up the callstack.
 > 
-> I root-caused this to 5808d420 ("xfs: attach dquot buffer to dquot log
-> item buffer"), but needs reverting of the 3 follow-up commits
-> (d331fc15, ee6984a2 and 84307caf) as well as they depend on the broken
-> one. With that 6.12.14 passes our test suite again. Reproduction
-> should be rather easy by just creating a fresh filesystem, mounting
-> with "prjquota" and performing I/O.
-
-Known bug, will patch soon.
-
---D
-
-> Regards,
-> Lorenz
+> As far as I can tell the pgtable is consumed here:
 > 
+> static int insert_pfn_pmd(struct vm_area_struct *vma, unsigned long addr,
+> 		pmd_t *pmd, pfn_t pfn, pgprot_t prot, bool write,
+> 		pgtable_t pgtable)
+> 
+> [...]
+> 
+> 	if (pgtable) {
+> 		pgtable_trans_huge_deposit(mm, pmd, pgtable);
+> 		mm_inc_nr_ptes(mm);
+> 		pgtable = NULL;
+> 	}
+> 
+> [...]
+> 
+> 	return 0;
+> 
+> Now I can see I failed to clean up the useless pgtable = NULL asignment, which
+> is confusing because I'm not trying to look at pgtable in the caller (ie.
+> vmf_insert_pfn_pmd()/vmf_insert_folio_pmd()) to determine if it needs freeing.
+> So I will remove this assignment.
+
+Ahhh, yes, the "pgtable = NULL" confused me, so I was looking for a 
+"pgtable_t *pgtable" being passed instead, that we could manipulate.
+
+> 
+> Instead callers just look at the return code from insert_pfn_pmd() - if there
+> was an error pgtable_trans_huge_deposit(pgtable) wasn't called and if the caller
+> passed a pgtable it should be freed. Otherwise if insert_pfn_pmd() succeeded
+> then callers can assume the pgtable was consumed by pgtable_trans_huge_deposit()
+> and therefore should not be freed.
+> 
+> Hopefully that all makes sense, but maybe I've missed something obvious too...
+
+Yes, you assume that if insert_pfn_pmd() succeeds, the table was 
+consumed, otherwise it must be freed.
+
+Thanks!
+
+Acked-by: David Hildenbrand <david@redhat.com>
+
+-- 
+Cheers,
+
+David / dhildenb
+
