@@ -1,233 +1,184 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E4E238D3B
-	for <linux-xfs@vger.kernel.org>; Mon, 17 Feb 2025 19:58:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FE641A0BFD
+	for <linux-xfs@vger.kernel.org>; Mon, 17 Feb 2025 21:31:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739822331; cv=none; b=ice2IeRO6xK22ED3ORAOrhAXFRdYg05nT7vNzSalaDnhu2PgfyHv7zEWxRTn6vhS7zEf6qmr1GD2u9TH0R81WJ67m99rTXBp/IPKgnQcDx/V1B0S9+JSvtNLzN+pRZCZaWU1c+UVeCeS7VzLcFFvqV4qj5nrh4aNvr4Am2YWVl8=
+	t=1739827922; cv=none; b=JgINOSKE2o4UM5n3vxKPvFIK3eyrL78iCBipy3VdpB+U2q3DwvE6y+8n1wiuimZj4BOxBz0m6RZ9V2bvHDDVtaZLp1PpNZUjHm855SrSd3oKX9tL7gKMadydCqgS5SkFIN/YhOYfcjMuaoo0tnMegk5H8UAcaM3I4JVE2C5ccvY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739822331; c=relaxed/simple;
-	bh=H7EXqVyyi+kLT8T3AFWH4gU/uM442cOf8FS+Ncb8NkM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JzmBbCHJZJzKt8pEA0L+TYooYyJVJ/ngb0lIp1W2AxtB52bJcizt1Nn2nMfyWP82Ug1F6gyngc+/9WY9K0/+9wOpp7mxw94vm3jXJxXF0zMItc7EqvxawCRXjTWM31e2xSrcYsFEMvYqXtkyGJSpkvEZEfd3bq7S6DLgIRllsLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XEv90QqL; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1739827922; c=relaxed/simple;
+	bh=5Z3w6D6rLKLuQ6zEjNL6ikv+CipM0JHOZMCbXFfqNBQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z9JLnzs3CcJ4Yrnof3ZVjljeoaxjOKTDsUiyPRpHhlzZnU2eFDaOFcFZsMfLvu4FfzODxpWBOb7uqUBHdAughEDfdujT53BxmI9Y1xd/6y2tLReAc2BL+K1Ndmrr6iNB14hwg746gF6UvmcFygbfIcJWqGa853ydvoUQdugSBP0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=iSnbtykA; arc=none smtp.client-ip=209.85.216.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XEv90QqL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1739822328;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=NlktFKbt7fWOri2OGRbyYiQR64jGh1ap4Xy3JViDRMo=;
-	b=XEv90QqLiwNBMjF1S27daonlXuEOOLHs7NrLdcZ852Eyi1X0g2ufVb6bYGyDj1wuiNUSyK
-	OOBPeN7XymK/ge0Rmg+nO6mu7L5GXaisEI3ml3V4pcEkt4r95P8NqsEYp/9GUtEx4L6ur7
-	MgBXpRf8Wjsgw/9gagCKLkl9aewXYac=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-259-Uy4Ax3y8NWC0pS78u-NJtQ-1; Mon, 17 Feb 2025 14:58:46 -0500
-X-MC-Unique: Uy4Ax3y8NWC0pS78u-NJtQ-1
-X-Mimecast-MFC-AGG-ID: Uy4Ax3y8NWC0pS78u-NJtQ_1739822326
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-38f44be93a8so748837f8f.1
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Feb 2025 11:58:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="iSnbtykA"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2fc3fa00323so5063140a91.3
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Feb 2025 13:31:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1739827919; x=1740432719; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=QhTfy1/ybvgYfqGEX8d/5gFaFMopC4YNbC7hGVBL/4c=;
+        b=iSnbtykAPgeoaamX/D5Xv39Q6ZYYIHEVE4zgMl66cwZvyQ48oaYzC/IgKLS86w/HD5
+         CKBcfACcqxE79g5417jqRYfPLcOSB6GqY0F0IGgHXLJSrAsw+pHW+/BrFDI6sARK9/gu
+         Ykml65dgc1/utgt1Fmn5RhHyRVJuUcEvZU3xJchUB3WXLYnbSu+ReTOwGxknLjjSZHeX
+         98GJwsv/gTKG2lH8c9qcf91n5QTxQQ0DqQEQLYYDOqXZmgxu6lKi/Skz8q+fHbi/IGsU
+         A5VQDVfWr3DZcIo3115AKKu7y5dD6S6IG87n4slcw011eIp41wnUCyXKCC04ss9B4jwe
+         KEEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739822325; x=1740427125;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:from:references:cc:to:subject:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=NlktFKbt7fWOri2OGRbyYiQR64jGh1ap4Xy3JViDRMo=;
-        b=QiCPXws4BinABwmPGTBQXl7kkp+qwOJbZLmyz0C9Wn8kIyL3mm6R8Xa0wV7gnMxi7x
-         53ZgR+K6xnlm8h/xois8vAtA8Z0qyAZyklYsrkYUsIbAtpVOY9bC20TGofM3pkoKFHbt
-         pC9kkvAkBHhWla824QBoC7rHh6FUVsfAsva7k11lhAmM6V8L3teXWe4WUZ/NBVN7K7rJ
-         qeYtypl2Rc3cd3r96y/M6Et+KfzmVBV+uW3NKLeioDoKygontkAZBCicySmCbw34etfO
-         2LKja7SFQceAX8OAZzfjWDrwfdLYadnivZNWs0avvGfIrZ1tqrBcbVZkISxSi1vacbgm
-         MYJA==
-X-Forwarded-Encrypted: i=1; AJvYcCXTcmsNwUJCa7AyfaJYoYGXjnf9lL5BA1LUMI5DwoRfH+gqbv0DPYaJgYQcW0KijKn729F3CMd4d3k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwrxL/jQIrZgvIhNmuYV6n4TvSBaCFb8Bw7Q8o4RClDUSLqYJLi
-	mnn6rPnIjQBxG7XnVWzNZdPQHhZhoT8j3cakyFieeqT2yCozc4AmQ5VyqBl8FYpyrl0Dj4mhPZC
-	MdcJIL6+Wpas4h/QG6m5HzduJFTAnpu10u4ahk4CAq/ZyWK0iuy+Tw7IPow==
-X-Gm-Gg: ASbGncsLpS0v7pTLn1PfS0l7Tp9Wb+2gxYeocQRtjEJvINaX/bzRpxLLb6+zvvIobfM
-	fCnbCGHwxxswlOEBHFQKwlBKo7kL6EKnujWdoLryBiTL+K8pM0GFDL587+IeWP97oCT1VLffCdB
-	yoHzuspyupr6UCMmoKCkVR8v5VKi+z3PKjeGHDzhi4sIokMqF3EvpevLs7AZOjIBZTEyY1YJVeM
-	f49hNvlGQudYAW8OEVwt78KFMzeL/N/Jq73lOGtNAuR+oMQcTG4D3sVChABNKqt/O20PaiiVPjH
-	KqIbFOca7EBM8CjA531COcB3ihF4pETf/hKugTJHSeDm04NqefxjFXqCma8PcW0BibgULQI7FRX
-	NlokUZCQyRbBOGR+qwnk8PIEk9h23TQ==
-X-Received: by 2002:a5d:4a43:0:b0:38f:3392:9fd8 with SMTP id ffacd0b85a97d-38f33f2cb57mr8062650f8f.18.1739822325470;
-        Mon, 17 Feb 2025 11:58:45 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGmnf+EH+x2w9Z3amJyvk4I4a5QL1krZ5SQiXGUsJvRabwqfhUp4vd7zVPxaXWLqtKKNwXS0Q==
-X-Received: by 2002:a5d:4a43:0:b0:38f:3392:9fd8 with SMTP id ffacd0b85a97d-38f33f2cb57mr8062617f8f.18.1739822325081;
-        Mon, 17 Feb 2025 11:58:45 -0800 (PST)
-Received: from ?IPV6:2003:cb:c739:900:900f:3c9e:2f7b:5d0a? (p200300cbc7390900900f3c9e2f7b5d0a.dip0.t-ipconnect.de. [2003:cb:c739:900:900f:3c9e:2f7b:5d0a])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38f258b4118sm13425148f8f.18.2025.02.17.11.58.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 17 Feb 2025 11:58:43 -0800 (PST)
-Message-ID: <519c6ef7-ca56-4aac-8e43-f75b17353d66@redhat.com>
-Date: Mon, 17 Feb 2025 20:58:38 +0100
+        d=1e100.net; s=20230601; t=1739827919; x=1740432719;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QhTfy1/ybvgYfqGEX8d/5gFaFMopC4YNbC7hGVBL/4c=;
+        b=Tsu4hbTQVuifXgyMxGizcFg+ticrLeZEgSpMCyNvwap32Z/C68xUOTLbRtJH7wWOKP
+         2kSzeM8Qcabmh7vyOAaOyxB0WzQjsYoIxwxaWe8X2w+JZUGcfUyoulOBrG5JYKxzkr4d
+         hf46zDKHNUEt6rYpT4hJDRS0VuSWCOpMsSaOXxfD5W96OKrxQaVNjh0zGWclD9LTrQft
+         YwEj8bOjP0BE/orjf/F3ybTCPUOTqXaMWJ7MqedsEzZWuRgijudoeZkNHMx6/KXrq0zv
+         bjqrSvhnAMJ2KrGCSytfnE7S657dRQlbBGw+RvUSzRDfDJh5u3qII/lsby5lRBQxS1rF
+         nraw==
+X-Forwarded-Encrypted: i=1; AJvYcCXRIQXyGLkuuvh82Yq9U7kpjmAg3lYlpkb4Mmj06FIxqPKU0FOBwRj2XlP0hyuWAwEJutYyj9JpF4A=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxyhTbf5Rwq+x/FqURxmvXTgbBbUrqddZcLOIy9RZDFNEWVTrgd
+	cHyME+iKSLW1YgplGyZZAOEoJmMxFjvByWS1l7bF4oZe1a+OoMDFmCE73GmLMSI=
+X-Gm-Gg: ASbGncsE6yocsywdfPDOO3RBA/EwLNoXG6v6oJKWCizq2dGzC5rHxpfwbE+zAnoGddz
+	oFpo/8655ICIjWJsmTlX22RwI+apoA2W9hh2OOXoa7IvZNHKCMb5uSXd8KV63yDLspt2BDUnBf3
+	fAk1qr9uqmdurH3HrZOHr59ZJEJN7oHpunecd3Q6gVwPLgCb24RIJg9ClBQiFv0FSnKXdkvJrOy
+	9ZBZ26cQ4D2mTsVAA2psd5zVY3L209sROUo0UcYV2u+rW16I5L4NFDI8gebpiaGXJ5gHGo2sQvR
+	aAxfI1hdIS7l+JXwBlRyUlo/Fw5hMCvkdfqLJRZ5vv08psZBEsUTDM6YQq9NL23FbGo=
+X-Google-Smtp-Source: AGHT+IGWbBJAtL2UtKSWCS6Jd9Ns/0Md8Y1s79IB++xb28sgasLU0+0/qaH46F3zNCw25wym7QqlJQ==
+X-Received: by 2002:a17:90b:3b4b:b0:2ee:fdf3:390d with SMTP id 98e67ed59e1d1-2fc4115087fmr15333822a91.31.1739827918683;
+        Mon, 17 Feb 2025 13:31:58 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-220d53491d4sm76091525ad.4.2025.02.17.13.31.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 Feb 2025 13:31:58 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tk8iZ-00000002XxN-2C1Y;
+	Tue, 18 Feb 2025 08:31:55 +1100
+Date: Tue, 18 Feb 2025 08:31:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Yunsheng Lin <linyunsheng@huawei.com>
+Cc: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>,
+	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+	Jeffle Xu <jefflexu@linux.alibaba.com>,
+	Sandeep Dhavale <dhavale@google.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jesper Dangaard Brouer <hawk@kernel.org>,
+	Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Simon Horman <horms@kernel.org>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+	Luiz Capitulino <luizcap@redhat.com>,
+	Mel Gorman <mgorman@techsingularity.net>, kvm@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	netdev@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [RFC] mm: alloc_pages_bulk: remove assumption of populating only
+ NULL elements
+Message-ID: <Z7Oqy2j4xew7FW9Z@dread.disaster.area>
+References: <20250217123127.3674033-1-linyunsheng@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 16/20] huge_memory: Add vmf_insert_folio_pmd()
-To: Alistair Popple <apopple@nvidia.com>
-Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, linux-mm@kvack.org,
- Alison Schofield <alison.schofield@intel.com>, lina@asahilina.net,
- zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
- vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
- bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
- will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
- dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org,
- djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, peterx@redhat.com,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
- nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
- david@fromorbit.com, chenhuacai@kernel.org, kernel@xen0n.name,
- loongarch@lists.linux.dev
-References: <cover.472dfc700f28c65ecad7591096a1dc7878ff6172.1738709036.git-series.apopple@nvidia.com>
- <9f10e88441f3cb26eff6be0c9ef5997844c8c24e.1738709036.git-series.apopple@nvidia.com>
- <afff4368-9401-4943-b802-1b15bdcf5aaa@redhat.com>
- <6mmjoe27y63cfe5cycqje63gehgumod3bp7zzgvpz7qehgfuv4@uomvqgizba2m>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- WNyWQQ==
-Organization: Red Hat
-In-Reply-To: <6mmjoe27y63cfe5cycqje63gehgumod3bp7zzgvpz7qehgfuv4@uomvqgizba2m>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250217123127.3674033-1-linyunsheng@huawei.com>
 
-On 17.02.25 05:29, Alistair Popple wrote:
-> On Mon, Feb 10, 2025 at 07:45:09PM +0100, David Hildenbrand wrote:
->> On 04.02.25 23:48, Alistair Popple wrote:
->>> Currently DAX folio/page reference counts are managed differently to normal
->>> pages. To allow these to be managed the same as normal pages introduce
->>> vmf_insert_folio_pmd. This will map the entire PMD-sized folio and take
->>> references as it would for a normally mapped page.
->>>
->>> This is distinct from the current mechanism, vmf_insert_pfn_pmd, which
->>> simply inserts a special devmap PMD entry into the page table without
->>> holding a reference to the page for the mapping.
->>>
->>> It is not currently useful to implement a more generic vmf_insert_folio()
->>> which selects the correct behaviour based on folio_order(). This is because
->>> PTE faults require only a subpage of the folio to be PTE mapped rather than
->>> the entire folio. It would be possible to add this context somewhere but
->>> callers already need to handle PTE faults and PMD faults separately so a
->>> more generic function is not useful.
->>>
->>> Signed-off-by: Alistair Popple <apopple@nvidia.com>
->>
->> Nit: patch subject ;)
->>
->>>
->>> ---
->>>
->>> Changes for v7:
->>>
->>>    - Fix bad pgtable handling for PPC64 (Thanks Dan and Dave)
->>
->> Is it? ;) insert_pfn_pmd() still doesn't consume a "pgtable_t *"
->>
->> But maybe I am missing something ...
-> 
-> At a high-level all I'm trying to do (perhaps badly) is pull the ptl locking one
-> level up the callstack.
-> 
-> As far as I can tell the pgtable is consumed here:
-> 
-> static int insert_pfn_pmd(struct vm_area_struct *vma, unsigned long addr,
-> 		pmd_t *pmd, pfn_t pfn, pgprot_t prot, bool write,
-> 		pgtable_t pgtable)
-> 
-> [...]
-> 
-> 	if (pgtable) {
-> 		pgtable_trans_huge_deposit(mm, pmd, pgtable);
-> 		mm_inc_nr_ptes(mm);
-> 		pgtable = NULL;
-> 	}
-> 
-> [...]
-> 
-> 	return 0;
-> 
-> Now I can see I failed to clean up the useless pgtable = NULL asignment, which
-> is confusing because I'm not trying to look at pgtable in the caller (ie.
-> vmf_insert_pfn_pmd()/vmf_insert_folio_pmd()) to determine if it needs freeing.
-> So I will remove this assignment.
+On Mon, Feb 17, 2025 at 08:31:23PM +0800, Yunsheng Lin wrote:
+> As mentioned in [1], it seems odd to check NULL elements in
+> the middle of page bulk allocating, and it seems caller can
+> do a better job of bulk allocating pages into a whole array
+> sequentially without checking NULL elements first before
+> doing the page bulk allocation.
+....
 
-Ahhh, yes, the "pgtable = NULL" confused me, so I was looking for a 
-"pgtable_t *pgtable" being passed instead, that we could manipulate.
+IMO, the new API is a poor one, and you've demonstrated it clearly
+in this patch.
 
-> 
-> Instead callers just look at the return code from insert_pfn_pmd() - if there
-> was an error pgtable_trans_huge_deposit(pgtable) wasn't called and if the caller
-> passed a pgtable it should be freed. Otherwise if insert_pfn_pmd() succeeded
-> then callers can assume the pgtable was consumed by pgtable_trans_huge_deposit()
-> and therefore should not be freed.
-> 
-> Hopefully that all makes sense, but maybe I've missed something obvious too...
+.....
 
-Yes, you assume that if insert_pfn_pmd() succeeds, the table was 
-consumed, otherwise it must be freed.
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 15bb790359f8..9e1ce0ab9c35 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -377,16 +377,17 @@ xfs_buf_alloc_pages(
+>  	 * least one extra page.
+>  	 */
+>  	for (;;) {
+> -		long	last = filled;
+> +		long	alloc;
+>  
+> -		filled = alloc_pages_bulk(gfp_mask, bp->b_page_count,
+> -					  bp->b_pages);
+> +		alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - refill,
+> +					 bp->b_pages + refill);
+> +		refill += alloc;
+>  		if (filled == bp->b_page_count) {
+>  			XFS_STATS_INC(bp->b_mount, xb_page_found);
+>  			break;
+>  		}
+>  
+> -		if (filled != last)
+> +		if (alloc)
+>  			continue;
 
-Thanks!
+You didn't even compile this code - refill is not defined
+anywhere.
 
-Acked-by: David Hildenbrand <david@redhat.com>
+Even if it did complile, you clearly didn't test it. The logic is
+broken (what updates filled?) and will result in the first
+allocation attempt succeeding and then falling into an endless retry
+loop.
 
+i.e. you stepped on the API landmine of your own creation where
+it is impossible to tell the difference between alloc_pages_bulk()
+returning "memory allocation failed, you need to retry" and
+it returning "array is full, nothing more to allocate". Both these
+cases now return 0.
+
+The existing code returns nr_populated in both cases, so it doesn't
+matter why alloc_pages_bulk() returns with nr_populated != full, it
+is very clear that we still need to allocate more memory to fill it.
+
+The whole point of the existing API is to prevent callers from
+making stupid, hard to spot logic mistakes like this. Forcing
+callers to track both empty slots and how full the array is itself,
+whilst also constraining where in the array empty slots can occur
+greatly reduces both the safety and functionality that
+alloc_pages_bulk() provides. Anyone that has code that wants to
+steal a random page from the array and then refill it now has a heap
+more complex code to add to their allocator wrapper.
+
+IOWs, you just demonstrated why the existing API is more desirable
+than a highly constrained, slightly faster API that requires callers
+to get every detail right. i.e. it's hard to get it wrong with the
+existing API, yet it's so easy to make mistakes with the proposed
+API that the patch proposing the change has serious bugs in it.
+
+-Dave.
 -- 
-Cheers,
-
-David / dhildenb
-
+Dave Chinner
+david@fromorbit.com
