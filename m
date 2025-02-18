@@ -1,101 +1,121 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69AFF22B8DB
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 08:36:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6246522AE4E;
+	Tue, 18 Feb 2025 09:16:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739867795; cv=none; b=f6X/2WUHBmeFntzk4UJCb3q1uuGjqTDvjiRENdi8eqybNqAEZKDTgiPmF9NdOgPhRnLurM2umrzzSXnOPhC7ejiFrQ3g9eoMJiXd7fKMpwEWS8eWnt6Qskj38rGv1nSPT+M3D2PkibklVQiVw/Oj4xqDSuWx/OilsemEiT1+tpM=
+	t=1739870167; cv=none; b=TjVib/fdEUuJ8q3fgeY2oog1cZ4bd7muRGaIKLmAsSboe2M9hOxeKI2dui7/kng0H2YSoDZYHKskaRq9hnD8FcuX9Nh0JiYR0X3DX265X/9JvrXwt9ycMF+iU7PcLQ71HTfMEG42Wo92odNtn9C+mx+5mdDGVbX92xNYTMoiEjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739867795; c=relaxed/simple;
-	bh=Evw8ea2IITCLJhUaRVyu+0up8Ohy5CyKrPBiSBudg9Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MMCW0Jzs5Ncm8zUyAkixj4C0j8LHUAme/NWScn+CRkHNG1tHXK+HF4LjekytPDsNKs6MsYCbHCkcSoH5Wb4XLhYC2bfORSXnVQf/SY+x49OgbEOMW+ua1sXIyejv+fbV007A4M3tnMJRJ0MEMh6MliNCEYbwA796yjpxIPz8zZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=K8+/jhWZ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K8+/jhWZ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=kSdthDIet6IpMOYDOG3pdsi48quFrcMrtZAZLjqiuMg=; b=K8+/jhWZxmt4zdvPDpkJXVDswc
-	E/Zsm2dXJxjyfmcieIxKT4IsbGI1FMhdTSb9jjxg1DImMHsfzfXoGrY+b9/W2Y3/+9pZOJU1LR29m
-	PCA4O1Uptp5fsokSJiMf9wpvo13WiURERBV9eXN2hLAbMea70m1qRd/AYeMatGX0l0h2QPVLL5hQX
-	VijP5siGS03QBE14FVGq99vpHcZmKuAw3HK30mZnJzLZd+12gXwXJmKzxANzuhf2K55HshqlJL7IE
-	TGqayflyFl3ODYq/2jqdx65zP5lXojRp95U8SwdZ3+aUjrAp28sGItiWY+PlANKaedbgbQ503k3SY
-	MP+eda0w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tkJ5l-00000007JGQ-2uL2;
-	Tue, 18 Feb 2025 08:36:33 +0000
-Date: Tue, 18 Feb 2025 00:36:33 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs_db: add command to copy directory trees out of
- filesystems
-Message-ID: <Z7RGkVLW13HPXAb-@infradead.org>
-References: <173888089597.2742734.4600497543125166516.stgit@frogsfrogsfrogs>
- <173888089664.2742734.11946589861684958797.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1739870167; c=relaxed/simple;
+	bh=Z7vfeOXnRzH2MUW83NJ1BOZujFaF7BTid+tQ6g1426k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ZlcHEK4MQ2xfYBeE0nkwjxhFpMZklpq2fgS6VeIl73CTHpIzZFATFdcJ4DR3s8xfVDyBNqRkwvy+IQFPEprETr9M74HAsgcK1eNX49hJhkSujkc6qGlq4ZHioWDKGczohqo4pMvEvNTgFzUXYv5pj2iRxb5joR4BWkXbbS4K9vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Yxv141mCDz1wn7M;
+	Tue, 18 Feb 2025 17:12:08 +0800 (CST)
+Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
+	by mail.maildlp.com (Postfix) with ESMTPS id 46C8E180214;
+	Tue, 18 Feb 2025 17:16:02 +0800 (CST)
+Received: from [10.67.120.129] (10.67.120.129) by
+ dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 18 Feb 2025 17:16:01 +0800
+Message-ID: <cc6fc730-e5f4-485b-b0b6-ec70374b3ab1@huawei.com>
+Date: Tue, 18 Feb 2025 17:16:00 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <173888089664.2742734.11946589861684958797.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC] mm: alloc_pages_bulk: remove assumption of populating only
+ NULL elements
+To: Chuck Lever <chuck.lever@oracle.com>, Yishai Hadas <yishaih@nvidia.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Shameer Kolothum
+	<shameerali.kolothum.thodi@huawei.com>, Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>, Josef
+ Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Gao Xiang
+	<xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>,
+	Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>, Jesper Dangaard Brouer
+	<hawk@kernel.org>, Ilias Apalodimas <ilias.apalodimas@linaro.org>, "David S.
+ Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
+ Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman
+	<horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>, Anna Schumaker
+	<anna@kernel.org>, Jeff Layton <jlayton@kernel.org>, Neil Brown
+	<neilb@suse.de>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
+	<Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>
+CC: Luiz Capitulino <luizcap@redhat.com>, Mel Gorman
+	<mgorman@techsingularity.net>, <kvm@vger.kernel.org>,
+	<virtualization@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-btrfs@vger.kernel.org>, <linux-erofs@lists.ozlabs.org>,
+	<linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>, <netdev@vger.kernel.org>,
+	<linux-nfs@vger.kernel.org>
+References: <20250217123127.3674033-1-linyunsheng@huawei.com>
+ <abc3ae0b-620a-4e4a-8dd8-f8e7d3764b3a@oracle.com>
+Content-Language: en-US
+From: Yunsheng Lin <linyunsheng@huawei.com>
+In-Reply-To: <abc3ae0b-620a-4e4a-8dd8-f8e7d3764b3a@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemf200006.china.huawei.com (7.185.36.61)
 
-On Thu, Feb 06, 2025 at 03:03:32PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On 2025/2/17 22:20, Chuck Lever wrote:
+> On 2/17/25 7:31 AM, Yunsheng Lin wrote:
+>> As mentioned in [1], it seems odd to check NULL elements in
+>> the middle of page bulk allocating,
 > 
-> Aheada of deprecating V4 support in the kernel, let's give people a way
-> to extract their files from a filesystem without needing to mount.
+> I think I requested that check to be added to the bulk page allocator.
+> 
+> When sending an RPC reply, NFSD might release pages in the middle of
 
-So I've wanted a userspace file access for a while, but if we deprecate
-the v4 support in the kernel that will propagte to libxfs quickly,
-and this code won't help you with v4 file systems either.  So I don't
-think the rationale here seems very good.
+It seems there is no usage of the page bulk allocation API in fs/nfsd/
+or fs/nfs/, which specific fs the above 'NFSD' is referring to?
 
->  extern void		bmapinflate_init(void);
-> +extern void		rdump_init(void);
+> the rq_pages array, marking each of those array entries with a NULL
+> pointer. We want to ensure that the array is refilled completely in this
+> case.
+> 
 
-No need for the extern.
+I did some researching, it seems you requested that in [1]?
+It seems the 'holes are always at the start' for the case in that
+discussion too, I am not sure if the case is referring to the caller
+in net/sunrpc/svc_xprt.c? If yes, it seems caller can do a better
+job of bulk allocating pages into a whole array sequentially without
+checking NULL elements first before doing the page bulk allocation
+as something below:
 
-> +	/* XXX cannot copy fsxattrs */
++++ b/net/sunrpc/svc_xprt.c
+@@ -663,9 +663,10 @@ static bool svc_alloc_arg(struct svc_rqst *rqstp)
+                pages = RPCSVC_MAXPAGES;
+        }
 
-Should this be fixed first?  Or document in a full sentence comment
-explaining why it can't should not be?
+-       for (filled = 0; filled < pages; filled = ret) {
+-               ret = alloc_pages_bulk(GFP_KERNEL, pages, rqstp->rq_pages);
+-               if (ret > filled)
++       for (filled = 0; filled < pages; filled += ret) {
++               ret = alloc_pages_bulk(GFP_KERNEL, pages - filled,
++                                      rqstp->rq_pages + filled);
++               if (ret)
+                        /* Made progress, don't sleep yet */
+                        continue;
 
-> +		[1] = {
-> +			.tv_sec  = inode_get_mtime_sec(VFS_I(ip)),
-> +			.tv_nsec = inode_get_mtime_nsec(VFS_I(ip)),
-> +		},
-> +	};
-> +	int			ret;
-> +
-> +	/* XXX cannot copy ctime or btime */
+@@ -674,7 +675,7 @@ static bool svc_alloc_arg(struct svc_rqst *rqstp)
+                        set_current_state(TASK_RUNNING);
+                        return false;
+                }
+-               trace_svc_alloc_arg_err(pages, ret);
++               trace_svc_alloc_arg_err(pages, filled);
+                memalloc_retry_wait(GFP_KERNEL);
+        }
+        rqstp->rq_page_end = &rqstp->rq_pages[pages];
 
-Same for this and others.
 
-> +	/* Format xattr name */
-> +	if (attr_flags & XFS_ATTR_ROOT)
-> +		nsp = XATTR_TRUSTED_PREFIX;
-> +	else if (attr_flags & XFS_ATTR_SECURE)
-> +		nsp = XATTR_SECURITY_PREFIX;
-> +	else
-> +		nsp = XATTR_USER_PREFIX;
-
-Add a self-cotained helper for this?  I'm pretty sure we do this
-translation in a few places.
-
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		btp = ip->i_mount->m_rtdev_targp;
-> +	else
-> +		btp = ip->i_mount->m_ddev_targp;
-
-Should be move xfs_inode_buftarg from kernel code to common code?
-
+1. https://lkml.iu.edu/hypermail/linux/kernel/2103.2/09060.html
