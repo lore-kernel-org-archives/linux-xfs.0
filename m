@@ -1,86 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22A64232368
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 08:18:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFE3C14A614
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 08:30:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739866731; cv=none; b=X5NqAwjGi1W5Mdr67OXgCvmnxLlHq3ip8ThuGRBbbbLJAg4EG8EbHntTI9l0yD9cjxAameI7pv+IU441qeNMcfluScY3sJo0z2hp8BOQBLu6fJGkr2O9BA2Db7JjTpI8JjLDn3qhExSUDaj9AM3X1FIiPJneKUpOipDm7xXkakk=
+	t=1739867462; cv=none; b=mwueaNVSIwMGiE27V8eNA8ycA75vimv42irXDIIoZPgWCynvXRfY0Klz/NF9uzmv4aCHfEfZaks5oS6xiPBk+lUDV4SS5YUTwSRSsJK3kIPc9QXWXgP9RMH6N0RvciBdS0zmJ6DlzxOB8RBaMI7OUgvqBMUIfrFi6RfZNTNWyt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739866731; c=relaxed/simple;
-	bh=7/DX8HN3rWf4QRwYNksfMwFMCU5cDeW7CkFS9cPAnKM=;
+	s=arc-20240116; t=1739867462; c=relaxed/simple;
+	bh=9VtGtvfK+7UzennBQPH/y8QET6S4ivcT3jIgw948x2w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mi4SbeqhI/DfGFDMc70LO2c7+alSn1EDTppCP+DUKDwrSnKs8OTpbQzc7tBNlXXfILqUwlXSf3RL1NilsxGnYzfThFuTgQEqorjB3bcMFl+dqfB4hXez2+AomTeWfF9jw4u5v6Rzi/QfSh+2WY6f8+hJO97/jR3xmAXlFiAbviM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lwA0OUWk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=SotVARPD8xM3thV+3xpsxB4Xpo2BULOuPn0EL93Tt6aP0CU13IwzEHr10shWKJ2VEUvlNN6LnSscAT2KhQhfbjhOJLDc6nk3jSUzAaIPMs0VcDp4RT/IpLqbKdZiKZXQsViENgt8p93njfciL4BVCrNKpO5MpS11BYLFagsNKu0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Ft+YSrGL; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lwA0OUWk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 880BFC4CEE4;
-	Tue, 18 Feb 2025 08:18:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739866730;
-	bh=7/DX8HN3rWf4QRwYNksfMwFMCU5cDeW7CkFS9cPAnKM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lwA0OUWkMtJVqu8CI8bTqwrz6DZ8hZBtqR7eRsrlZKfSwJFe5e3klJ/37gdGKXnxB
-	 iH5qsFj4N7zg6adwpVpnvU4vbBwBO5YExtoawr+ToPZHmLJMss3F8IWKxSC6VNGqFg
-	 gtFi4By35JzQRc3bP/0bNsFmB64t451EvNu2VUUtndEmpEVcdU2GLRVOuFkFyj09h2
-	 YYvWivPu4bwBFdjWuhAGilIsjYr+ZICmVsM/tx75Q2Ubv1d8mR7FV2Myd2CHX69x1u
-	 1Epj5PDvZfp9AAxIYyBlbTSU+XzAMKgIYVZUK2vPg5kXscGRtcT17EaPCU9SplbKLs
-	 102t1tYX7GiiQ==
-Date: Tue, 18 Feb 2025 09:18:46 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Pavel Reichl <preichl@redhat.com>
-Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfsprogs: Fix mismatched return type of filesize()
-Message-ID: <xtoocdorovfnttkgtuq6qkzaazqtszlnaa6voiphh6ofnri2w6@agad5vuhxtmx>
-References: <-uT7HOcTG_xe8v8U0_5OQg6ll9vJyYEFQeSs_2FwUHujx116vYRcX2iovzoJvkN8K9zDDmQxQWB6H1CDLiOVdw==@protonmail.internalid>
- <20250217155043.78452-1-preichl@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ft+YSrGL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=yOTi56SfhhNFwDe4d/KIll5p8ktrPz80A3kxdYRZp/c=; b=Ft+YSrGLOphknqITOuLEzPx47O
+	YTwUWx8RlDw6aphRneoX5VgYQxblMA8TxZQAiLI4J7nip25xQfydQIX2+21x+Jw4pJCKDie0pOuhd
+	J2+S5secjUFGm2EyyLFVptS5csbx+j6zEiPhtkQbcPtuQ4degWhlRvtOpl1e6/jhlDfH5FDpul1Ua
+	ngBQDqpGotWTb0fHNEVD2//2tpBKkv3OM8A7VQjLcietMlE9813KuFMgDK1qtyNu6eZkaw43NB0n8
+	wrf9aLCBCY1xrY1DOA7tFH4dEKyIDe8GtUWCL1XQcMNIJZaO4OUkwlMpFhvgjbqtrv+b7Y+0tEDIH
+	K1abrh0Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tkJ0L-00000007ILX-0aTn;
+	Tue, 18 Feb 2025 08:30:57 +0000
+Date: Tue, 18 Feb 2025 00:30:57 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Daniel Gomez <da.gomez@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Pankaj Raghav <p.raghav@samsung.com>, gost.dev@samsung.com
+Subject: Re: [PATCH] mkfs: use stx_blksize for dev block size by default
+Message-ID: <Z7RFQQoC5J7Dl6HC@infradead.org>
+References: <20250206-min-io-default-blocksize-v1-1-2312e0bb8809@samsung.com>
+ <Z6WMXlJrgIIbgNV7@infradead.org>
+ <323gt6bngrysa3i6nzgih6golhs3wovawnn5chjcrkegajinw7@fxdjlji5xbxb>
+ <Z61wnFLUGz6d_WSh@infradead.org>
+ <hljsp2xn24z4hjebmrgluwcwvqokt2f6apcuuyd7z3xgfitagh@gk3wr4oh4xrt>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250217155043.78452-1-preichl@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <hljsp2xn24z4hjebmrgluwcwvqokt2f6apcuuyd7z3xgfitagh@gk3wr4oh4xrt>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Feb 17, 2025 at 04:50:43PM +0100, Pavel Reichl wrote:
-> The function filesize() was declared with a return type of 'long' but
-> defined with 'off_t'. This mismatch caused build issues due to type
-> incompatibility.
-> 
-> This commit updates the declaration to match the definition, ensuring
-> consistency and preventing potential compilation errors.
-> 
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+On Thu, Feb 13, 2025 at 02:26:37PM +0100, Daniel Gomez wrote:
+> That's a good question. The stx_blksize field description indicates the value
+> should be referring to the fs block size that avoids RMW.
 
-Looks good, perhaps add:
+One that is optimal, the RMW is an example.  This what Posix says:
 
-Fixes: 73fb78e5ee8 ("mkfs: support copying in large or sparse files")
+blksize_t st_blksize    A file system-specific preferred I/O block size 
+                        for this object. In some file system types, this 
+			may vary from file to file. 
 
-?
+> So I think, if devices report high values in stx_blksize, it is either because
+> smaller values than the reported one cause RMW or they are incorrectly reporting
+> a value in the wrong statx field.
 
-Otherwise,
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Or it is just more efficient.  E.g. on NFS or XFS you'll get fairly
+big values.
 
-> ---
->  mkfs/proto.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 6dd3a200..981f5b11 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -20,7 +20,7 @@ static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
->  static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
->  static int newregfile(char **pp, char **fname);
->  static void rtinit(xfs_mount_t *mp);
-> -static long filesize(int fd);
-> +static off_t filesize(int fd);
->  static int slashes_are_spaces;
-> 
->  /*
-> --
-> 2.48.1
-> 
-> 
+> The commit I refer in the commit message maps the minimum_io_size reported by
+> the block layer with stx_blksize.
+
+Yes, and that was my question again - minimum_io_size for block
+devices is specified even more handwavy.
+
+In other words I'm really sceptical this is going to be a net win.
+To win me over you'll need to show a improvement over a wide variety
+of devіces and workloads.
