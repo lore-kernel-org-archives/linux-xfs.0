@@ -1,105 +1,42 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB6E31AAA1F
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 21:14:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACFE6286290;
+	Tue, 18 Feb 2025 21:17:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739913277; cv=none; b=LIubz3jFDxpDeJvkMzR9UR9WsQy+xaKWfJm7ekbExtGd6IWkdUS6IenJBC71jK4BzMxAsrvn/pOUn0pHh47WLFVyTqA6PYl/U743dlZcXEnr0Abd6HSFF/ut7yxDf3R5IYpIRW+mQzqo4/IeqhGgoaC7dgawdFyskhW3eHmYqS0=
+	t=1739913456; cv=none; b=lvl9Ony3LlW6tQ+LBJibSD6Vcx1X2JtUkXfqD4HJs2re/43ZVX3QrLtfwd6JSNP/eqVwGWzIGP7ewyvKzifDGo3NJl4/26ZJYl249NwDbk1Zud1+8dCIVv+bmzf7EkXp4nLlZeLI84bIqSc0Q7iSQutl38eXZe82uDM8Qmz9f88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739913277; c=relaxed/simple;
-	bh=oGy55IJcEGgdNiLxbkXY33fp8cTKqWt1BWnOffz4MJM=;
+	s=arc-20240116; t=1739913456; c=relaxed/simple;
+	bh=HkIWvkYGE/V7XciTvQmYheI9uh784b/5Zjsju9HRg/M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SfrkPXucd5vVpAFEz3Yjip/eXEddqlxKwHpCJ8//15EwhuF76T0Zy1ATmsxT6k8PR1gfAcB+XIZ79DHP4vfiwk4nY6Vwf1hbnrn0ez3F0808NKSUyMqq9cPAbnI0Q2clf7I5PM48wsVgmYxh4mb6amu5P1kyuausD+cPSCOZjQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=zX4fDzmJ; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=tOWF6GkKJitwh5VGMvnL7DbSPoXPVdcV+Ay9QBKCYflkddLJrxOt0LfSTBN52x0xIPCFXHzmKTfv+4NtPO2cIOlstvsi+TTtl1gqezf27re3Fp6piqIR0NBRBvtUV6lf9rdkq1BH9P8WELLEHyUrXcox6Vo4CsCyQkxdjvKmHps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j/zf/iuP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="zX4fDzmJ"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-220bfdfb3f4so121353825ad.2
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 13:14:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1739913273; x=1740518073; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=i/TFjjFVKbDA3nMhW4Nd4g/ebT5hNi/7fITiKNmhUzM=;
-        b=zX4fDzmJf8D3IULJy+9ORjlF9LToVRyBLuE84gl+G8m+Ts4ZSYvbYsLztE09+FfYhF
-         MD8Dsj7cy4xJmTVNsO+dE2gXiDSbgO7tEoXIu7wQl7VW67l3dBAlQxmEO1KGLSNT+obn
-         mgwF5SWNyovCACiopowquMcQAEbntciPJQpQmalkOLFH1mOFOajOXl+5VYNKjq2LM2xo
-         ZhOpXI9tHP+0y2g9BLoFgpAuXgcOuqow8VX7Dy8/VHeu7WUgH1rs5jlQOj/5sbpGkeBt
-         yfLmubUErFF//vGT+rOKzQaXkTTHQ1qVNyO0Yx47UosSny+hfW9O+PR4u6XWibPUvr8f
-         1+Zw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739913273; x=1740518073;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=i/TFjjFVKbDA3nMhW4Nd4g/ebT5hNi/7fITiKNmhUzM=;
-        b=g5OX3+SUNBDi0GjhIAd1qRAh1vFKag2YON2tkhPYdTRDn+73L56iaSKNqiG6NAUHtt
-         YHTMxwCL470nagMMz0tY9v27PTiPolrzSRgauJOaypfemqt52ypsNnWEvD6ry0gUU0V/
-         6U8nLsy3wTxmg6j9H29aI6LuF5lQMzrmOZqv9C9JOYKsR9f8zaK+6owTRQVHaXDiOFUh
-         iAYd8vHrJC6wk6TT0D9QIDIkbUqCYmNhpvCLL4Eulkf/hiRITn0uynGgZsRT/AlI+Ms9
-         gBpYEx3PJ694CnS20d/x3GeIvk9WrJP0G2buyrKqe+AaTNvZuspxUFqIwuWrs3cKGBiL
-         RIow==
-X-Forwarded-Encrypted: i=1; AJvYcCV09WXqqhOCFy4IS44flw+zyGb/IzuwkeTuftca5818IFokZTVv6aAnu0hR2ocYG793ueg/3w1NJwg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywpx5lRNg+V9tmcwaDs8DAilPNr9nLr7zfBDivic0A5UJcFYPWc
-	CrKmsX4/7J69OMqNcVN2R2569oY9FUL6oK+/fyAAGCVAKeBPEpIFVhnszV3x573aiKF3mHnCPx6
-	ZH+U=
-X-Gm-Gg: ASbGncvtJ1JckCBEHGQm0rJIb+aQkfRUsym3h/pcn/nG3liBS9DfF8Y0vxYDKtymg3T
-	b8ffx4yLGEnibQgHAQm+su861r/qRXZY3ufgE6o62WhRESwVloCuWPlLxSzdzWfBbmZCHGxJupN
-	duIs5LtFCknyVJYdcJeGBhzwqMCSwFdQDIf1d7edt8wC/IxMSmKGVVyN9vpNsrjaWI/ktNR0zT0
-	Y4qLVWlitOtMn4E6puxGg98RVVnm+W/ah782AUStM6VafamJ4Szr4qI9X1GRFqZ5SvmKx9O15UX
-	NTYaOzWg/IAmyuXWllvPVG0/aiDL1sAhjbedHaK+XsuIQ+B3lzTJEdGtOp60aJEwxpw=
-X-Google-Smtp-Source: AGHT+IE4cq05OkjYUSAgnZzqAzKf40dxIlYKr7v+HOFdczvTt57phu0weZ5JY1SWVHQCE16yV/OTUA==
-X-Received: by 2002:a17:902:d50e:b0:221:337:4862 with SMTP id d9443c01a7336-2217086de01mr12977035ad.15.1739913273049;
-        Tue, 18 Feb 2025 13:14:33 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-220d5348f34sm93829725ad.10.2025.02.18.13.14.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Feb 2025 13:14:32 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tkUvF-00000002xpK-2NTA;
-	Wed, 19 Feb 2025 08:14:29 +1100
-Date: Wed, 19 Feb 2025 08:14:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Yunsheng Lin <linyunsheng@huawei.com>
-Cc: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>,
-	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jesper Dangaard Brouer <hawk@kernel.org>,
-	Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-	Luiz Capitulino <luizcap@redhat.com>,
-	Mel Gorman <mgorman@techsingularity.net>, kvm@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	netdev@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [RFC] mm: alloc_pages_bulk: remove assumption of populating only
- NULL elements
-Message-ID: <Z7T4NZAn4wD_DLTl@dread.disaster.area>
-References: <20250217123127.3674033-1-linyunsheng@huawei.com>
- <Z7Oqy2j4xew7FW9Z@dread.disaster.area>
- <cf270a65-c9fa-453a-b7a0-01708063f73e@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j/zf/iuP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EF7DC4CEE2;
+	Tue, 18 Feb 2025 21:17:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739913456;
+	bh=HkIWvkYGE/V7XciTvQmYheI9uh784b/5Zjsju9HRg/M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=j/zf/iuPU+aRpmzu/aRBGUXdbZz6i5F02BeohWtg0ZZpAc7EulVSLjWdea7RVcval
+	 S/kx02bX1k1ZXF27VIhFZbIq0hRrkC5TrdDctkHFBaQGe3IxubjQdzONy2/eoO6Qhi
+	 o6ZgqcYMBdl/51g44pLUhy41A6ucKrTQENXUZF34S8nlnfZgJrUEfr01KjK8EFhIAC
+	 fpO8gg1mcy9YDwDkM126cvyQmkZ8rwRkmYdpPy03HZrHUCQP8kQSK+Gt+AfjnwwNqt
+	 hysfopJ0E2rkowaVR0Lu3iaZ9FqxWmI0kgHRRNQcmpHktRMJ94H0VGJLA890bG2TPU
+	 IKI59XzkYpiTg==
+Date: Tue, 18 Feb 2025 13:17:35 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Lorenz Brun <lorenz@monogon.tech>
+Cc: gregkh@linuxfoundation.org, stable@vger.kernel.org,
+	regressions@lists.linux.dev, linux-xfs@vger.kernel.org
+Subject: Re: [REGRESSION] xfs kernel panic
+Message-ID: <20250218211735.GR3028674@frogsfrogsfrogs>
+References: <CAJMi0nTHX0inFxme=xnJf23c8=w0bAf7LfiT=YNpmU-zVnUR+Q@mail.gmail.com>
+ <CAJMi0nTbyi6VGTmmZ43wYWwJWur0XPtuswZ_5UaXB+S6Z=Mo6A@mail.gmail.com>
+ <20250217172957.GB21808@frogsfrogsfrogs>
+ <CAJMi0nRtfzLASwT0MTJY1vxdyS+KCHezA-Hc9ugCrPJ-6uZL9w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -108,144 +45,162 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cf270a65-c9fa-453a-b7a0-01708063f73e@huawei.com>
+In-Reply-To: <CAJMi0nRtfzLASwT0MTJY1vxdyS+KCHezA-Hc9ugCrPJ-6uZL9w@mail.gmail.com>
 
-On Tue, Feb 18, 2025 at 05:21:27PM +0800, Yunsheng Lin wrote:
-> On 2025/2/18 5:31, Dave Chinner wrote:
+On Tue, Feb 18, 2025 at 09:50:24PM +0100, Lorenz Brun wrote:
+> Thanks everyone, with that patch (now included in 6.12.15) the bug is fixed.
 > 
-> ...
+> I'm also curious how that commit ended up in stable without the
+> already-pushed bug fix? It even has the right "Fixes" tag. Not blaming
+> anyone, nothing bad happened, this all got caught in tests as it
+> should but how does the process work?
+
+Normally I start by writing a bug fix in my dev tree that targets the
+latest Linus tree, a stable Cc, and a Fixes: tag pointing to the broken
+commit.  For really trivial fixes the patch goes in LTS after it lands
+in Linus' tree.
+
+This one was more complex -- the xfs quota logging code would try to
+read a dquot buffer when pushing the log.  Log pushes can happen during
+reclaim context, which presents deadlock opportunities.  IOWs I had to
+redesign how logging mechanism worked and let it soak for a bit.
+
+In the end, there were a cluster of fixes that weren't trivially
+backportable to 6.12.  When that patchset passed fstests I portd them to
+my 6.12 LTS branch with a placeholder "commit XXX upstream" tag.
+
+Later I sent a pull request to the upstream xfs maintainer (cem) to pull
+things in from my dev branch.  When he did, I changed the XXX to the
+commit id in his for-next branch because in the majority of cases that's
+what gets pushed to Linus.
+
+In this case cem noticed the same build failure and rebased his branch
+to fix the bad #define, thus changing the commit id.  I forgot to update
+the "commit YYY upstream" line in my LTS branch and pushed it to Greg.
+
+Normally everything runs through a homebrew checkpatch script that
+contains the expected pile of regular expressions and other crap taped
+together to try to ensure some semblance of data quality amongst the
+freeform pointers to commits and humans in the commit message.  XFS
+people don't use scripts/checkpatch.pl because most of us agree that it
+whines about too many things that none of us actually care about; and
+doesn't check many of the attribution and review things that we really
+do care about.
+
+Unfortunately I hadn't ever gotten around to updating that script to
+walk the "commit YYY upstream" pointer to check that YYY was a real
+commit in linux.git.  That would have caught this and any other for-next
+edits.  It's fixed now.
+
+Annoyingly it seems that there are no tools to automate the checking of
+off-repo commit ids so I wrote my own.  Maybe it's time to throw my
+checkpatch at the list to try to stop this "each maintainer writes their
+own scripts" insanity.  Wish me luck.
+
+--D
+
+> Regards,
+> Lorenz
 > 
-> > .....
-> > 
-> >> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> >> index 15bb790359f8..9e1ce0ab9c35 100644
-> >> --- a/fs/xfs/xfs_buf.c
-> >> +++ b/fs/xfs/xfs_buf.c
-> >> @@ -377,16 +377,17 @@ xfs_buf_alloc_pages(
-> >>  	 * least one extra page.
-> >>  	 */
-> >>  	for (;;) {
-> >> -		long	last = filled;
-> >> +		long	alloc;
-> >>  
-> >> -		filled = alloc_pages_bulk(gfp_mask, bp->b_page_count,
-> >> -					  bp->b_pages);
-> >> +		alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - refill,
-> >> +					 bp->b_pages + refill);
-> >> +		refill += alloc;
-> >>  		if (filled == bp->b_page_count) {
-> >>  			XFS_STATS_INC(bp->b_mount, xb_page_found);
-> >>  			break;
-> >>  		}
-> >>  
-> >> -		if (filled != last)
-> >> +		if (alloc)
-> >>  			continue;
-> > 
-> > You didn't even compile this code - refill is not defined
-> > anywhere.
-> > 
-> > Even if it did complile, you clearly didn't test it. The logic is
-> > broken (what updates filled?) and will result in the first
-> > allocation attempt succeeding and then falling into an endless retry
-> > loop.
-> 
-> Ah, the 'refill' is a typo, it should be 'filled' instead of 'refill'.
-> The below should fix the compile error:
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -379,9 +379,9 @@ xfs_buf_alloc_pages(
->         for (;;) {
->                 long    alloc;
-> 
-> -               alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - refill,
-> -                                        bp->b_pages + refill);
-> -               refill += alloc;
-> +               alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - filled,
-> +                                        bp->b_pages + filled);
-> +               filled += alloc;
->                 if (filled == bp->b_page_count) {
->                         XFS_STATS_INC(bp->b_mount, xb_page_found);
->                         break;
-> 
-> > 
-> > i.e. you stepped on the API landmine of your own creation where
-> > it is impossible to tell the difference between alloc_pages_bulk()
-> > returning "memory allocation failed, you need to retry" and
-> > it returning "array is full, nothing more to allocate". Both these
-> > cases now return 0.
-> 
-> As my understanding, alloc_pages_bulk() will not be called when
-> "array is full" as the above 'filled == bp->b_page_count' checking
-> has ensured that if the array is not passed in with holes in the
-> middle for xfs.
-
-You miss the point entirely. Previously, alloc_pages_bulk() would
-return a value that would tell us the array is full, even if we
-call it with a full array to begin with.
-
-Now it fails to tell us that the array is full, and we have to track
-that precisely ourselves - it is impossible to tell the difference
-between "array is full" and "allocation failed". Not being able to
-determine from the allocation return value whether the array is
-ready for use or whether another go-around to fill it is needed is a
-very poor API choice, regardless of anything else.
-
-You've already demonstrated this: tracking array usage in every
-caller is error-prone and much harder to get right than just having
-alloc_pages_bulk() do everything for us.
-
-> > The existing code returns nr_populated in both cases, so it doesn't
-> > matter why alloc_pages_bulk() returns with nr_populated != full, it
-> > is very clear that we still need to allocate more memory to fill it.
-> 
-> I am not sure if the array will be passed in with holes in the
-> middle for the xfs fs as mentioned above, if not, it seems to be
-> a typical use case like the one in mempolicy.c as below:
-> 
-> https://elixir.bootlin.com/linux/v6.14-rc1/source/mm/mempolicy.c#L2525
-
-That's not "typical" usage. That is implementing "try alloc" fast
-path that avoids memory reclaim with a slow path fallback to fill
-the rest of the array when the fast path fails.
-
-No other users of alloc_pages_bulk() is trying to do this.
-
-Indeed, it looks somewhat pointless to do this here (i.e. premature
-optimisation!), because the only caller of
-alloc_pages_bulk_mempolicy_noprof() has it's own fallback slowpath
-for when alloc_pages_bulk() can't fill the entire request.
-
-> > IOWs, you just demonstrated why the existing API is more desirable
-> > than a highly constrained, slightly faster API that requires callers
-> > to get every detail right. i.e. it's hard to get it wrong with the
-> > existing API, yet it's so easy to make mistakes with the proposed
-> > API that the patch proposing the change has serious bugs in it.
-> 
-> IMHO, if the API is about refilling pages for the only NULL elements,
-> it seems better to add a API like refill_pages_bulk() for that, as
-> the current API seems to be prone to error of not initializing the
-> array to zero before calling alloc_pages_bulk().
-
-How is requiring a well defined initial state for API parameters
-"error prone"?  What code is failing to do the well known, defined
-initialisation before calling alloc_pages_bulk()?
-
-Allowing uninitialised structures in an API (i.e. unknown initial
-conditions) means we cannot make assumptions about the structure
-contents within the API implementation.  We cannot assume that all
-variables are zero on the first use, nor can we assume that anything
-that is zero has a valid state.
-
-Again, this is poor API design - structures passed to interfaces
--should- have a well defined initial state, either set by a *_init()
-function or by defining the initial state to be all zeros (i.e. via
-memset, kzalloc, etc).
-
-Performance and speed is not an excuse for writing fragile, easy to
-break code and APIs.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Am Mo., 17. Feb. 2025 um 18:29 Uhr schrieb Darrick J. Wong <djwong@kernel.org>:
+> >
+> > On Mon, Feb 17, 2025 at 05:27:33PM +0100, Lorenz Brun wrote:
+> > > Am Mo., 17. Feb. 2025 um 16:00 Uhr schrieb Lorenz Brun <lorenz@monogon.tech>:
+> > > >
+> > > > Hi everyone,
+> > > >
+> > > > Linux 6.12.14 (released today) contains a regression for XFS, causing
+> > > > a kernel panic after just a few seconds of working with a
+> > > > freshly-created (xfsprogs 6.9) XFS filesystem. I have not yet bisected
+> > > > this because I wanted to get this report out ASAP but I'm going to do
+> > > > that now. There are multiple associated stack traces, but all of them
+> > > > have xfs_buf_offset as the faulting function.
+> > > >
+> > > > Example backtrace:
+> > > > [   31.745932] BUG: kernel NULL pointer dereference, address: 0000000000000098
+> > > > [   31.746590] #PF: supervisor read access in kernel mode
+> > > > [   31.747072] #PF: error_code(0x0000) - not-present page
+> > > > [   31.747537] PGD 5bee067 P4D 5bee067 PUD 5bef067 PMD 0
+> > > > [   31.748016] Oops: Oops: 0000 [#1] PREEMPT SMP NOPTI
+> > > > [   31.748459] CPU: 0 UID: 0 PID: 116 Comm: xfsaild/vda4 Not tainted
+> > > > 6.12.14-metropolis #1 9b2470be3d7713b818a3236e4a2804dd9cbef735
+> > > > [   31.749490] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),
+> > > > BIOS 0.0.0 02/06/2015
+> > > > [   31.750340] RIP: 0010:xfs_buf_offset+0x9/0x50
+> > > > [   31.750823] Code: 08 5b e9 8a 2c c4 00 66 2e 0f 1f 84 00 00 00 00
+> > > > 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 66 0f 1f 00 0f 1f
+> > > > 44 00 00 <48> 8b 87 98 00 00 00 48 85 c0 75 2e 48 8b 87 00 01 00 00 48
+> > > > 89 f2
+> > > > [   31.752775] RSP: 0018:ffffbf50c07abdb8 EFLAGS: 00010246
+> > > > [   31.753343] RAX: 0000000000000002 RBX: ffff9c0985817d58 RCX: 0000000000000016
+> > > > [   31.754103] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+> > > > [   31.754734] RBP: 0000000000000000 R08: ffff9c09fb704000 R09: 00000000e0be9fc4
+> > > > [   31.755396] R10: 0000000000000000 R11: ffff9c0985827df8 R12: ffff9c09fb57ff58
+> > > > [   31.756078] R13: ffff9c0985817eb0 R14: ffff9c09fb704000 R15: ffff9c0985817f00
+> > > > [   31.756764] FS:  0000000000000000(0000) GS:ffff9c09fc000000(0000)
+> > > > knlGS:0000000000000000
+> > > > [   31.757529] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > [   31.758041] CR2: 0000000000000098 CR3: 0000000005b70000 CR4: 0000000000350ef0
+> > > > [   31.758696] Call Trace:
+> > > > [   31.758940]  <TASK>
+> > > > [   31.759172]  ? __die+0x56/0x97
+> > > > [   31.759473]  ? page_fault_oops+0x15c/0x2d0
+> > > > [   31.759853]  ? exc_page_fault+0x4c5/0x790
+> > > > [   31.760237]  ? asm_exc_page_fault+0x26/0x30
+> > > > [   31.760637]  ? xfs_buf_offset+0x9/0x50
+> > > > [   31.761002]  ? srso_return_thunk+0x5/0x5f
+> > > > [   31.761409]  xfs_qm_dqflush+0xd0/0x350
+> > > > [   31.761799]  xfs_qm_dquot_logitem_push+0xe9/0x140
+> > > > [   31.762253]  xfsaild+0x347/0xa10
+> > > > [   31.762567]  ? srso_return_thunk+0x5/0x5f
+> > > > [   31.762952]  ? srso_return_thunk+0x5/0x5f
+> > > > [   31.763325]  ? __pfx_xfsaild+0x10/0x10
+> > > > [   31.763665]  kthread+0xd2/0x100
+> > > > [   31.763985]  ? __pfx_kthread+0x10/0x10
+> > > > [   31.764342]  ret_from_fork+0x34/0x50
+> > > > [   31.764675]  ? __pfx_kthread+0x10/0x10
+> > > > [   31.765029]  ret_from_fork_asm+0x1a/0x30
+> > > > [   31.765408]  </TASK>
+> > > > [   31.765618] Modules linked in: kvm_amd
+> > > > [   31.765978] CR2: 0000000000000098
+> > > > [   31.766297] ---[ end trace 0000000000000000 ]---
+> > > > [   32.371004] RIP: 0010:xfs_buf_offset+0x9/0x50
+> > > > [   32.371453] Code: 08 5b e9 8a 2c c4 00 66 2e 0f 1f 84 00 00 00 00
+> > > > 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 66 0f 1f 00 0f 1f
+> > > > 44 00 00 <48> 8b 87 98 00 00 00 48 85 c0 75 2e 48 8b 87 00 01 00 00 48
+> > > > 89 f2
+> > > > [   32.373133] RSP: 0018:ffffbf50c07abdb8 EFLAGS: 00010246
+> > > > [   32.373611] RAX: 0000000000000002 RBX: ffff9c0985817d58 RCX: 0000000000000016
+> > > > [   32.374275] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+> > > > [   32.374921] RBP: 0000000000000000 R08: ffff9c09fb704000 R09: 00000000e0be9fc4
+> > > > [   32.375720] R10: 0000000000000000 R11: ffff9c0985827df8 R12: ffff9c09fb57ff58
+> > > > [   32.376376] R13: ffff9c0985817eb0 R14: ffff9c09fb704000 R15: ffff9c0985817f00
+> > > > [   32.377027] FS:  0000000000000000(0000) GS:ffff9c09fc000000(0000)
+> > > > knlGS:0000000000000000
+> > > > [   32.377761] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > [   32.378292] CR2: 0000000000000098 CR3: 0000000005b70000 CR4: 0000000000350ef0
+> > > > [   32.378940] Kernel panic - not syncing: Fatal exception
+> > > > [   32.379492] Kernel Offset: 0x2a600000 from 0xffffffff81000000
+> > > > (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+> > > >
+> > > > #regzbot introduced: v6.12.13..v6.12.14
+> > > >
+> > > > Regards,
+> > > > Lorenz
+> > >
+> > > Hi everyone,
+> > >
+> > > I root-caused this to 5808d420 ("xfs: attach dquot buffer to dquot log
+> > > item buffer"), but needs reverting of the 3 follow-up commits
+> > > (d331fc15, ee6984a2 and 84307caf) as well as they depend on the broken
+> > > one. With that 6.12.14 passes our test suite again. Reproduction
+> > > should be rather easy by just creating a fresh filesystem, mounting
+> > > with "prjquota" and performing I/O.
+> >
+> > Known bug, will patch soon.
+> >
+> > --D
+> >
+> > > Regards,
+> > > Lorenz
+> > >
