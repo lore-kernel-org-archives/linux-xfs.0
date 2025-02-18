@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5528522B5AB
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 08:13:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9B222B8A9
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 08:13:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739866424; cv=none; b=KceTlzuaVcQ04d6UNjxtrsZ62UFEyH80lJTR8T+9ftcb+E6uSYNW4EDWQ4MkGs3RJhyLzYP55xfV7KCfhERtXlKZ6EoiTcAE/lKH/J9GMX2sz8KAs19rbR4ZS2ratN8NuAZ0zPEWwXUtMYRqc/pLIvL72MPRpfDGOvvfWYfJVqM=
+	t=1739866428; cv=none; b=tJ885RkpxLqQutVdz9Sp//hnYO/gJ9x1LO9sKSIT5TAhDBMTSTyQhz4Ih8OZL/hLdEWLflMvdNg9kvJ0Xlt+GnRGOV4sRARBNzIx5Mn9ie64f7xUIV89KRnX9S+Gpwaqi6VSf8IAjmADXTPaNu44KrFNysrImHmlFBvgwHhzN1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739866424; c=relaxed/simple;
-	bh=gf61VA3kKiuQalLMvc81bKE1rxINulWhNzf0yq4EuC0=;
+	s=arc-20240116; t=1739866428; c=relaxed/simple;
+	bh=9FR5O3Zf40DoRs02j42WH/1fuALbmK7Ki9JIEs7mwD8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=vCHlj07Nx0VJlFyLVYqgknn6RIzgnBZqYban9xPPf07Yz4qxwES+O/CEQNHXZIZWc2eYrqCi7NAVp73ygAiAGxgFjU7pdfcaX+knHZQDsl9UpJVx7BLdtnbVcYyMC70ELID74FuipvbmlQyI/ikxLKt6TueIW2VYMneoeeAx4MI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=njIHG68n; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=eQepqeYQONDF0Nm65YF/g78hB+nACDLykXrjntUsiV8lGYiGlv3n1ZI0bPFS4uH+sE5H0JAvsOgsi/kkfZSSHbDrLCiN2BADoIbNQCOJFjS7EnTTGr65nZcgE3vf02WZrHYUbT4Fx0b+sr5KCq+4ZQ5d1XKBnqVKCP+i4OwyZ4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xIHk5N41; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="njIHG68n"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xIHk5N41"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=zAJu7XSeJHzXPYrwarkJRRkb0aeESFLhH2O6hSp0pB0=; b=njIHG68nuoh/DCm0510HLgwr5V
-	G4DTZIzrlvUNgAZs0JcLpdCLKEZL+VKy3WWlcFOhjwL3CzEKTD8Z80yFVaYgpeWXCNxclwHwreHGs
-	jaWueiosB+nGStsH7wA4YOqZXubpJc6WQMm4Lx/dVHnSeNGx9RCU/aGUjjUmB9ATfNsLWQlEfXDy/
-	X1I56Zkgi027FZ0ByWD5ZryG51EzG/++HNOUGOZR61B+8T8gzD6M/2Fb+1XyaT1NhtaCBVk1oDeRK
-	OwOFa/uQyOkI2S/nf66Qx4KypEuT2xOXrDFaUlykqooC3NCGI0CN6Z4KIoMsJjAPZAj67uG8k+ARt
-	dt6d8liQ==;
+	bh=Z4g3kKDYAfcy3DLUAUmQHLlacdPtbIqAo/d4L5lGXVw=; b=xIHk5N41yNMIDc7qB3P1Ys/TGj
+	s95MqNDPdFlOBXUzDMz+5K+cjQ7C/gnlK2egSse1dYWZuk2paPjQ1Dqxmz3pNXP1Xj+QSqoBAOmJB
+	WP3SpaDuTCT2J4q+izcHvltxYQTbhSUwcmYQiiX2/rEDZhd1qLEBUjUEQ7VSpK0k33/XBOHmj7t/2
+	pUbjM5tVx5ico8ys5/VsGrskalUAt5p81wWVdm1kKpdY/I57totJyVSRfSE4Y2Xl5tFx7HZgf9D+V
+	wSimJa5PJBEUnwo/hGkfSh849SzU4jztOQAUmfpl6gzWsIHhhhsCaTSOchJv4EY2IxnHmt4rBTUqs
+	4FrpkTUw==;
 Received: from 2a02-8389-2341-5b80-8ced-6946-2068-0fcd.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:8ced:6946:2068:fcd] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tkIje-00000007CmO-2nSC;
-	Tue, 18 Feb 2025 08:13:43 +0000
+	id 1tkIjh-00000007CnP-2fZ7;
+	Tue, 18 Feb 2025 08:13:46 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 35/45] xfs: enable fsmap reporting for internal RT devices
-Date: Tue, 18 Feb 2025 09:10:38 +0100
-Message-ID: <20250218081153.3889537-36-hch@lst.de>
+Subject: [PATCH 36/45] xfs: disable reflink for zoned file systems
+Date: Tue, 18 Feb 2025 09:10:39 +0100
+Message-ID: <20250218081153.3889537-37-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250218081153.3889537-1-hch@lst.de>
 References: <20250218081153.3889537-1-hch@lst.de>
@@ -50,181 +50,34 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-File system with internal RT devices are a bit odd in that we need
-to report AGs and RGs.  To make this happen use separate synthetic
-fmr_device values for the different sections instead of the dev_t
-mapping used by other XFS configurations.
-
-The data device is reported as file system metadata before the
-start of the RGs for the synthetic RT fmr_device.
+While the zoned on-disk format supports reflinks, the GC code currently
+always unshares reflinks when moving blocks to new zones, thus making the
+feature unusuable.  Disable reflinks until the GC code is refcount aware.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_fs.h |  9 +++++
- fs/xfs/xfs_fsmap.c     | 80 +++++++++++++++++++++++++++++++++---------
- 2 files changed, 72 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_super.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 5e66fb2b2cc7..12463ba766da 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -1082,6 +1082,15 @@ struct xfs_rtgroup_geometry {
- #define XFS_IOC_COMMIT_RANGE	     _IOW ('X', 131, struct xfs_commit_range)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b6426f5c8b51..4ea7150692dd 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1829,6 +1829,13 @@ xfs_fs_fill_super(
+ 			goto out_filestream_unmount;
+ 		}
  
-+/*
-+ * Devices supported by a single XFS file system.  Reported in fsmaps fmr_device
-+ * when using internal RT devices.
-+ */
-+enum xfs_device {
-+	XFS_DEV_DATA	= 1,
-+	XFS_DEV_LOG	= 2,
-+	XFS_DEV_RT	= 3,
-+};
- 
- #ifndef HAVE_BBMACROS
- /*
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 917d4d0e51b3..a4bc1642fe56 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -879,17 +879,39 @@ xfs_getfsmap_rtdev_rmapbt(
- 	struct xfs_mount		*mp = tp->t_mountp;
- 	struct xfs_rtgroup		*rtg = NULL;
- 	struct xfs_btree_cur		*bt_cur = NULL;
-+	xfs_daddr_t			rtstart_daddr;
- 	xfs_rtblock_t			start_rtb;
- 	xfs_rtblock_t			end_rtb;
- 	xfs_rgnumber_t			start_rg, end_rg;
- 	uint64_t			eofs;
- 	int				error = 0;
- 
--	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart + mp->m_sb.sb_rblocks);
- 	if (keys[0].fmr_physical >= eofs)
- 		return 0;
--	start_rtb = xfs_daddr_to_rtb(mp, keys[0].fmr_physical);
--	end_rtb = xfs_daddr_to_rtb(mp, min(eofs - 1, keys[1].fmr_physical));
-+
-+	rtstart_daddr = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart);
-+	if (keys[0].fmr_physical < rtstart_daddr) {
-+		struct xfs_fsmap_irec		frec = {
-+			.owner			= XFS_RMAP_OWN_FS,
-+			.len_daddr		= rtstart_daddr,
-+		};
-+
-+		/* Adjust the low key if we are continuing from where we left off. */
-+		if (keys[0].fmr_length > 0) {
-+			info->low_daddr = keys[0].fmr_physical + keys[0].fmr_length;
-+			return 0;
++		if (xfs_has_zoned(mp)) {
++			xfs_alert(mp,
++	"reflink not compatible with zoned RT device!");
++			error = -EINVAL;
++			goto out_filestream_unmount;
 +		}
 +
-+		/* Fabricate an rmap entry for space occupied by the data dev */
-+		error = xfs_getfsmap_helper(tp, info, &frec);
-+		if (error)
-+			return error;
-+	}
-+
-+	start_rtb = xfs_daddr_to_rtb(mp, rtstart_daddr + keys[0].fmr_physical);
-+	end_rtb = xfs_daddr_to_rtb(mp, rtstart_daddr +
-+			min(eofs - 1, keys[1].fmr_physical));
- 
- 	info->missing_owner = XFS_FMR_OWN_FREE;
- 
-@@ -1004,22 +1026,40 @@ xfs_getfsmap_rtdev_rmapbt(
- }
- #endif /* CONFIG_XFS_RT */
- 
-+static uint32_t
-+xfs_getfsmap_device(
-+	struct xfs_mount	*mp,
-+	enum xfs_device		dev)
-+{
-+	if (mp->m_sb.sb_rtstart)
-+		return dev;
-+
-+	switch (dev) {
-+	case XFS_DEV_DATA:
-+		return new_encode_dev(mp->m_ddev_targp->bt_dev);
-+	case XFS_DEV_LOG:
-+		return new_encode_dev(mp->m_logdev_targp->bt_dev);
-+	case XFS_DEV_RT:
-+		if (!mp->m_rtdev_targp)
-+			break;
-+		return new_encode_dev(mp->m_rtdev_targp->bt_dev);
-+	}
-+
-+	return -1;
-+}
-+
- /* Do we recognize the device? */
- STATIC bool
- xfs_getfsmap_is_valid_device(
- 	struct xfs_mount	*mp,
- 	struct xfs_fsmap	*fm)
- {
--	if (fm->fmr_device == 0 || fm->fmr_device == UINT_MAX ||
--	    fm->fmr_device == new_encode_dev(mp->m_ddev_targp->bt_dev))
--		return true;
--	if (mp->m_logdev_targp &&
--	    fm->fmr_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
--		return true;
--	if (mp->m_rtdev_targp &&
--	    fm->fmr_device == new_encode_dev(mp->m_rtdev_targp->bt_dev))
--		return true;
--	return false;
-+	return fm->fmr_device == 0 ||
-+		fm->fmr_device == UINT_MAX ||
-+		fm->fmr_device == xfs_getfsmap_device(mp, XFS_DEV_DATA) ||
-+		fm->fmr_device == xfs_getfsmap_device(mp, XFS_DEV_LOG) ||
-+		(mp->m_rtdev_targp &&
-+		 fm->fmr_device == xfs_getfsmap_device(mp, XFS_DEV_RT));
- }
- 
- /* Ensure that the low key is less than the high key. */
-@@ -1126,7 +1166,7 @@ xfs_getfsmap(
- 	/* Set up our device handlers. */
- 	memset(handlers, 0, sizeof(handlers));
- 	handlers[0].nr_sectors = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
--	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
-+	handlers[0].dev = xfs_getfsmap_device(mp, XFS_DEV_DATA);
- 	if (use_rmap)
- 		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
- 	else
-@@ -1134,7 +1174,7 @@ xfs_getfsmap(
- 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
- 		handlers[1].nr_sectors = XFS_FSB_TO_BB(mp,
- 						       mp->m_sb.sb_logblocks);
--		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
-+		handlers[1].dev = xfs_getfsmap_device(mp, XFS_DEV_LOG);
- 		handlers[1].fn = xfs_getfsmap_logdev;
- 	}
- #ifdef CONFIG_XFS_RT
-@@ -1144,7 +1184,7 @@ xfs_getfsmap(
- 	 */
- 	if (mp->m_rtdev_targp && (use_rmap || !xfs_has_zoned(mp))) {
- 		handlers[2].nr_sectors = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
--		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
-+		handlers[2].dev = xfs_getfsmap_device(mp, XFS_DEV_RT);
- 		if (use_rmap)
- 			handlers[2].fn = xfs_getfsmap_rtdev_rmapbt;
- 		else
-@@ -1234,7 +1274,13 @@ xfs_getfsmap(
- 
- 	if (tp)
- 		xfs_trans_cancel(tp);
--	head->fmh_oflags = FMH_OF_DEV_T;
-+
-+	/*
-+	 * For internal RT device we need to report different synthetic devices
-+	 * for a single physical device, and thus can't report the actual dev_t.
-+	 */
-+	if (!mp->m_sb.sb_rtstart)
-+		head->fmh_oflags = FMH_OF_DEV_T;
- 	return error;
- }
- 
+ 		if (xfs_globals.always_cow) {
+ 			xfs_info(mp, "using DEBUG-only always_cow mode.");
+ 			mp->m_always_cow = true;
 -- 
 2.45.2
 
