@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F4F8AD21;
-	Wed, 19 Feb 2025 01:03:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42A2A286292;
+	Wed, 19 Feb 2025 01:04:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739927035; cv=none; b=tar5Uf+Q/G9l6kedAQuJ33oqaT1RwqsWDhQoUsxLn7zu+J5KXLfRdfEiFKJH+NVEsPzGI+G3mPJAJeAsNBbWufbocQFl8e5nROiFBXzy+1+9kInEs2TWTVQhyEZpNSWoCUjtwVQOtR5vLggqe81cHIl/sjFlSQWrbECK0p1wS0o=
+	t=1739927051; cv=none; b=W7opprIE+5mOgN/9DY3zzehVeoYyp5olmm4MYzlZ1AtbYE/AYZPzYuKI3G9z77mktWbkeS1MpsKpX4i8flohs2FGICOIFK9IESU+soaa6JjiTg2l5U6dmC9vcGAEctRsc7EjiPuMSYvZKGF2flJE9dZCh2qtkuSUGk9B9yJ9AvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739927035; c=relaxed/simple;
-	bh=A99kF8ioYajMwS1mu7hQfDV/O1xCoyRtAdMXY9lr2GE=;
+	s=arc-20240116; t=1739927051; c=relaxed/simple;
+	bh=IPqf58z3ilpr7OBmvohUlIYNeo8nO4Jd4Y26NkjM2ag=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JBIffvW2tWYbOrOHxlU8XXOjg/wQ6xJhmJbdQfWy930hbpaxAEkw/hybcY/tClYxAx4tuWvM10qnDtmVN2Ypkl8vCGVWY0oOI/pWVOICwulfgSpUCRcImRw14I7B7fn9pRDuSCcpKTB1g2Bh2skYWrMAILLA0FSv9XrKJEixw7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T8na3AgF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=K71OiTv/MP2HIdYPx3O6bXixv7tGqj3zNdUtngS7AuEMWLN6snonae5Y3YemKyDqgz3AbiRMQeLnXaVH05qxBk4GJu5Eo3XxscqVyWpswK5bIh+FxQTkojREaJOJzN9y2CSmFFscE8meY3fI0ghBQah2WSMQINsVBhtOQQyLVyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lnRirYSO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T8na3AgF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 656F4C4CEE2;
-	Wed, 19 Feb 2025 01:03:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lnRirYSO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1037FC4CEE2;
+	Wed, 19 Feb 2025 01:04:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739927035;
-	bh=A99kF8ioYajMwS1mu7hQfDV/O1xCoyRtAdMXY9lr2GE=;
+	s=k20201202; t=1739927051;
+	bh=IPqf58z3ilpr7OBmvohUlIYNeo8nO4Jd4Y26NkjM2ag=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=T8na3AgFPsgYn8wlm/xlgwC79JDEElfrxBEB+zh2vS1vDGg/kWfXA4oaOaeF42O46
-	 1Bn/UsZrh69+EZgryAAQzqimEr6N7OfOUPOS6PIZq6yxrIZ/TZ7ysc07GIy7rctpkW
-	 3UsBcFAaDeHBV4IDE9cI8gifbQksYxIRdEMfO54oi0sudaq7JGRB2Jd9ha1IMQl1f7
-	 TgLxuLo+q8jDQ6hpSzOA2KQ1AFBiOVp7C+XNgI/+qtGox1MK/vJn1Jdmo7JKajKxre
-	 DzP7vrfWTwRP4Jh2/XbNPQ8qzaqOnrBBxabVSwI0w27NicGGLrBfCc0ikgbgj5gnaT
-	 x73zTxHBYwFMA==
-Date: Tue, 18 Feb 2025 17:03:55 -0800
-Subject: [PATCH 01/13] xfs: fix tests that try to access the realtime rmap
- inode
+	b=lnRirYSOcviZV9eG1W3qRQS3sd96vJ+HvEAKoSRs2V0Nr9W7Rbvbt2uQAyHq06hTh
+	 IMOEcgeohOfd1ETLjv82o+cBAn7fDLD72hD+6wsPFgZbrKk+n7lVDGmAIvlpXiwWaC
+	 byhuTNH+9xe5Ya7hlejdx7fgpBx7X9h7zd6z2ief1Nc0qbM0AmDCQeY83H6vp0XAzn
+	 iQdh+pSbd1ScEuouQdqLs3K0/eICQ0lcPA4/1kz9+tqIOa7xF+MWhZDO4zw+LFBHgW
+	 2fFij++lixEdqVxQF6U+KPI+60wfG3jccm/HhVSYay+25G9KGq7ZAWfOdaACnJZ8Bl
+	 FTzIUAflWFN4g==
+Date: Tue, 18 Feb 2025 17:04:10 -0800
+Subject: [PATCH 02/13] xfs/336: port to common/metadump
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992591131.4080556.9851417940463513539.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
+ fstests@vger.kernel.org
+Message-ID: <173992591149.4080556.17871153207427090752.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
 References: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,300 +46,125 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The realtime rmap tests were added to fstests a long time ago.  Since
-they were added, we decided to create a metadata file directory
-structure instead of adding more fields to the superblock.  Therefore,
-fix all the tests that try to access these paths.
+xfs/336 does this somewhat sketchy thing where it mdrestores into a
+regular file, and then does this to validate the restored metadata:
 
-While we're at it, fix xfs/409 to run the *online* scrub program like
-it's supposed to.  xfs/408 is the fuzzer for xfs_repair testing.
+SCRATCH_DEV=$TEST_DIR/image _scratch_mount
 
+Unfortunately, commit 1a49022fab9b4d causes the following regression:
+
+ --- /tmp/fstests/tests/xfs/336.out      2024-11-12 16:17:36.733447713 -0800
+ +++ /var/tmp/fstests/xfs/336.out.bad    2025-01-04 19:10:39.861871114 -0800
+ @@ -5,4 +5,5 @@ Create big file
+  Explode the rtrmapbt
+  Create metadump file
+  Restore metadump
+ -Check restored fs
+ +Usage: _set_fs_sysfs_attr <mounted_device> <attr> <content>
+ +(see /var/tmp/fstests/xfs/336.full for details)
+
+This is due to the fact that SCRATCH_DEV is temporarily reassigned to
+the regular file.  That path is passed straight through _scratch_mount
+to _xfs_prepare_for_eio_shutdown, but that helper _fails because the
+"dev" argument isn't actually a path to a block device.
+
+Fix this by porting it to the new common/metadump code that we merged
+last year.
+
+Cc: <fstests@vger.kernel.org> # v2024.12.08
+Fixes: 1a49022fab9b4d ("fstests: always use fail-at-unmount semantics for XFS")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/xfs        |   41 +++++++++++++++++++++++++++++++++++++++++
- tests/xfs/122.out |    1 -
- tests/xfs/333     |   43 -------------------------------------------
- tests/xfs/333.out |    6 ------
- tests/xfs/337     |    2 +-
- tests/xfs/338     |   30 +++++++++++++++++++++++++-----
- tests/xfs/339     |    5 +++--
- tests/xfs/340     |   25 ++++++++++++++++++++-----
- tests/xfs/341     |    2 +-
- tests/xfs/342     |    4 ++--
- 10 files changed, 93 insertions(+), 66 deletions(-)
- delete mode 100755 tests/xfs/333
- delete mode 100644 tests/xfs/333.out
+ tests/xfs/336     |   34 +++++++++++-----------------------
+ tests/xfs/336.out |    4 +---
+ 2 files changed, 12 insertions(+), 26 deletions(-)
 
 
-diff --git a/common/xfs b/common/xfs
-index adad37ea0710e0..1a0ececde39422 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -2135,3 +2135,44 @@ _require_xfs_rtquota_if_rtdev() {
- 		_notrun "Quotas probably not supported on realtime scratch device; set TEST_RTDEV"
- 	fi
+diff --git a/tests/xfs/336 b/tests/xfs/336
+index 3f85429ea77ee6..61bc08d3cc818f 100755
+--- a/tests/xfs/336
++++ b/tests/xfs/336
+@@ -9,21 +9,22 @@
+ . ./common/preamble
+ _begin_fstest auto rmap realtime metadump prealloc
+ 
+-# Override the default cleanup function.
+ _cleanup()
+ {
+ 	cd /
+-	rm -rf "$tmp".* $metadump_file
++	rm -rf "$tmp".*
++	_xfs_cleanup_verify_metadump
  }
-+
-+# Resolve a metadata directory tree path and return the inode number.
-+_scratch_metadir_lookup() {
-+	local res="$(_scratch_xfs_db -c "ls -i -m $1")"
-+	test "${PIPESTATUS[0]}" -eq 0 && echo "$res"
-+}
-+
-+# Figure out which directory entry we have to change to update the rtrmap
-+# inode pointer.  The last line of output is inumber field within a metadata
-+# object; any previous lines are the accessor commands that must be fed to
-+# xfs_db to get to the correct directory block.
-+_scratch_find_rt_metadir_entry() {
-+	local sfkey="$(_scratch_xfs_db -c 'path -m /rtgroups' -c print | \
-+		grep "\"$1\"" | \
-+		sed -e 's/.name.*$//g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' )"
-+	if [ -n "$sfkey" ]; then
-+		echo 'path -m /rtgroups'
-+		_scratch_xfs_db -c 'path -m /rtgroups' -c print | \
-+			grep "${sfkey}.inumber" | awk '{print $1}'
-+		return 0
-+	fi
-+
-+	local size=$(_scratch_xfs_db -c 'path -m /rtgroups' -c 'print core.size' | awk '{print $3}')
-+	local blksz=$(_scratch_xfs_db -c 'sb 0' -c 'print blocksize' | awk '{print $3}')
-+	local dirblklog=$(_scratch_xfs_db -c 'sb 0' -c 'print dirblklog' | awk '{print $3}')
-+	local dirblksz=$((blksz << dirblklog ))
-+	for ((fileoff = 0; fileoff < (size / dirblksz); fileoff++)); do
-+		local dbkey="$(_scratch_xfs_db -c 'path -m /rtgroups' -c "dblock $fileoff" -c 'print' | \
-+			grep "\"$1\"" | \
-+			sed -e 's/.name.*$//g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' )"
-+		if [ -n "$dbkey" ]; then
-+			echo 'path -m /rtgroups'
-+			echo "dblock $fileoff"
-+			_scratch_xfs_db -c 'path -m /rtgroups' -c "dblock $fileoff" -c print | \
-+				grep "${dbkey}.inumber" | awk '{print $1}'
-+			return 0
-+		fi
-+	done
-+
-+	return 1
-+}
-diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index 4dc7d7d0a3602b..ec5028621a8e75 100644
---- a/tests/xfs/122.out
-+++ b/tests/xfs/122.out
-@@ -44,7 +44,6 @@ offsetof(xfs_sb_t, sb_rextents) = 24
- offsetof(xfs_sb_t, sb_rextsize) = 80
- offsetof(xfs_sb_t, sb_rextslog) = 125
- offsetof(xfs_sb_t, sb_rootino) = 56
--offsetof(xfs_sb_t, sb_rrmapino) = 264
- offsetof(xfs_sb_t, sb_rsumino) = 72
- offsetof(xfs_sb_t, sb_sectlog) = 121
- offsetof(xfs_sb_t, sb_sectsize) = 102
-diff --git a/tests/xfs/333 b/tests/xfs/333
-deleted file mode 100755
-index f68f2f01320420..00000000000000
---- a/tests/xfs/333
-+++ /dev/null
-@@ -1,43 +0,0 @@
--#! /bin/bash
--# SPDX-License-Identifier: GPL-2.0
--# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
--#
--# FS QA Test No. 333
--#
--# Set rrmapino to another inode on an non-rt rmap fs and see if repair fixes it.
--#
--. ./common/preamble
--_begin_fstest auto quick rmap realtime
--
+ 
 -# Import common functions.
--. ./common/filter
--
--_require_xfs_scratch_rmapbt
--_disable_dmesg_check
--
--rm -f "$seqres.full"
--
--unset SCRATCH_RTDEV
--
--echo "Format and mount"
--_scratch_mkfs > "$seqres.full" 2>&1
--rrmapino="$(_scratch_xfs_db -c 'sb 0' -c 'p rrmapino' 2>&1)"
--test "${rrmapino}" = "field rrmapino not found" && _notrun "realtime rmapbt not supported"
--_scratch_mount
--
--echo "Create some files"
--$XFS_IO_PROG -f -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f1 >> $seqres.full
--$XFS_IO_PROG -f -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f2 >> $seqres.full
--echo garbage > $SCRATCH_MNT/f3
--ino=$(stat -c '%i' $SCRATCH_MNT/f3)
--_scratch_unmount
--
--echo "Corrupt fs"
--_scratch_xfs_db -x -c 'sb 0' -c "write rrmapino $ino" >> $seqres.full
--_try_scratch_mount 2>&1 | _filter_error_mount
--
--echo "Test done, mount should have failed"
--
--# success, all done
--status=0
--exit
-diff --git a/tests/xfs/333.out b/tests/xfs/333.out
-deleted file mode 100644
-index b3c698750f8fb1..00000000000000
---- a/tests/xfs/333.out
-+++ /dev/null
-@@ -1,6 +0,0 @@
--QA output created by 333
--Format and mount
--Create some files
--Corrupt fs
--mount: Structure needs cleaning
--Test done, mount should have failed
-diff --git a/tests/xfs/337 b/tests/xfs/337
-index 2ba508044ba16b..64429347fcba70 100755
---- a/tests/xfs/337
-+++ b/tests/xfs/337
-@@ -51,7 +51,7 @@ echo "+ check fs"
- _scratch_xfs_repair -n >> $seqres.full 2>&1 || echo "xfs_repair should not fail"
+ . ./common/filter
++. ./common/metadump
  
- echo "+ corrupt image"
--_scratch_xfs_db -x -c "sb" -c "addr rrmapino" -c "addr u3.rtrmapbt.ptrs[1]" \
-+_scratch_xfs_db -x -c "path -m /rtgroups/0.rmap" -c "addr u3.rtrmapbt.ptrs[1]" \
- 	-c "stack" -c "blocktrash -x 4096 -y 4096 -n 8 -3 -z" \
- 	>> $seqres.full 2>&1
+ _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
+ _require_realtime
+ _require_xfs_scratch_rmapbt
+ _require_test_program "punch-alternating"
+ _require_xfs_io_command "falloc"
++_xfs_setup_verify_metadump
  
-diff --git a/tests/xfs/338 b/tests/xfs/338
-index 9648c9df485223..713a808dc8e3da 100755
---- a/tests/xfs/338
-+++ b/tests/xfs/338
-@@ -27,13 +27,33 @@ $XFS_IO_PROG -f -R -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f2 >> $seqres.full
- _scratch_unmount
+ rm -f "$seqres.full"
  
- echo "Corrupt fs"
--_scratch_xfs_db -x -c 'sb 0' -c 'addr rrmapino' \
--	-c 'write core.nlinkv2 0' -c 'write core.mode 0' -c 'sb 0' \
--	-c 'write rrmapino 0' >> $seqres.full
--_try_scratch_mount >> $seqres.full 2>&1 && echo "mount should have failed"
-+readarray -t rtrmap_path < <(_scratch_find_rt_metadir_entry 0.rmap)
-+
-+rtrmap_accessors=()
-+rtrmap_path_len="${#rtrmap_path[@]}"
-+for ((i = 0; i < rtrmap_path_len - 1; i++)); do
-+	rtrmap_accessors+=(-c "${rtrmap_path[i]}")
-+done
-+rtrmap_entry="${rtrmap_path[rtrmap_path_len - 1]}"
-+test -n "$rtrmap_entry" || _fail "Could not find rtrmap metadir entry?"
-+
-+_scratch_xfs_db -x -c 'path -m /rtgroups/0.rmap' \
-+	-c 'write core.nlinkv2 0' -c 'write core.mode 0' \
-+	"${rtrmap_accessors[@]}" \
-+	-c "print $rtrmap_entry" \
-+	-c "write -d $rtrmap_entry 0" >> $seqres.full
-+if _try_scratch_mount >> $seqres.full 2>&1; then
-+       echo "mount should have failed"
-+       _scratch_unmount
-+else
-+	# If the verifiers are working properly, the mount will fail because
-+	# we fuzzed the metadata root directory.  This causes loud complaints
-+	# to dmesg, so we want to ignore those.
-+	_disable_dmesg_check
-+fi
- 
- echo "Repair fs"
--_scratch_unmount 2>&1 | _filter_scratch
-+_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- _repair_scratch_fs >> $seqres.full 2>&1
- 
- echo "Try to create more files (again)"
-diff --git a/tests/xfs/339 b/tests/xfs/339
-index 4dabe43ff298fc..caadf87987e433 100755
---- a/tests/xfs/339
-+++ b/tests/xfs/339
-@@ -29,7 +29,8 @@ ln $SCRATCH_MNT/f3 $SCRATCH_MNT/f4
- _scratch_unmount
- 
- echo "Corrupt fs"
--rrmapino=`_scratch_xfs_get_sb_field rrmapino`
-+rrmapino=$(_scratch_metadir_lookup /rtgroups/0.rmap)
-+test -n "$rrmapino" || _fail "Could not find rtrmap inode?"
- _scratch_xfs_set_metadata_field "u3.sfdir3.list[3].inumber.i4" $rrmapino \
- 	'sb 0' 'addr rootino' >> $seqres.full
+@@ -34,16 +35,13 @@ cat $tmp.mkfs > "$seqres.full" 2>&1
  _scratch_mount
-@@ -41,7 +42,7 @@ echo "Try to create more files"
- $XFS_IO_PROG -f -R -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f5 >> $seqres.full 2>&1
+ blksz="$(_get_file_block_size $SCRATCH_MNT)"
  
- echo "Repair fs"
--_scratch_unmount 2>&1 | _filter_scratch
-+_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- _repair_scratch_fs >> $seqres.full 2>&1
+-metadump_file=$TEST_DIR/${seq}_metadump
+-rm -rf $metadump_file
+-
+ echo "Create a three-level rtrmapbt"
+-# inode core size is at least 176 bytes; btree header is 56 bytes;
+-# rtrmap record is 32 bytes; and rtrmap key/pointer are 56 bytes.
++# inode core size is at least 176 bytes; btree block header is 64 bytes;
++# rtrmap record is 24 bytes; and rtrmap key/pointer are 48 bytes.
+ i_core_size="$(_xfs_get_inode_core_bytes $SCRATCH_MNT)"
+-i_ptrs=$(( (isize - i_core_size) / 56 ))
+-bt_ptrs=$(( (blksz - 56) / 56 ))
+-bt_recs=$(( (blksz - 56) / 32 ))
++i_ptrs=$(( (isize - i_core_size) / 48 ))
++bt_ptrs=$(( (blksz - 64) / 48 ))
++bt_recs=$(( (blksz - 64) / 24 ))
  
- echo "Try to create more files (again)"
-diff --git a/tests/xfs/340 b/tests/xfs/340
-index 248d3233c94ed3..c4a23bcb1cfe70 100755
---- a/tests/xfs/340
-+++ b/tests/xfs/340
-@@ -29,16 +29,31 @@ ino=$(stat -c '%i' $SCRATCH_MNT/f3)
+ blocks=$((i_ptrs * bt_ptrs * bt_recs))
+ _require_fs_space $SCRATCH_MNT $(( (2 * blocks * blksz) * 5 / 4096 ))
+@@ -56,20 +54,10 @@ $XFS_IO_PROG -f -R -c "falloc 0 $len" -c "pwrite -S 0x68 -b 1048576 0 $len" $SCR
+ echo "Explode the rtrmapbt"
+ $here/src/punch-alternating $SCRATCH_MNT/f1 >> "$seqres.full"
+ $here/src/punch-alternating $SCRATCH_MNT/f2 >> "$seqres.full"
+-_scratch_cycle_mount
+-
+-echo "Create metadump file"
  _scratch_unmount
+-_scratch_xfs_metadump $metadump_file -a -o
  
- echo "Corrupt fs"
--rrmapino=$(_scratch_xfs_get_sb_field rrmapino)
--_scratch_xfs_db -x -c "inode $rrmapino" \
-+readarray -t rtrmap_path < <(_scratch_find_rt_metadir_entry 0.rmap)
-+
-+rtrmap_accessors=()
-+rtrmap_path_len="${#rtrmap_path[@]}"
-+for ((i = 0; i < rtrmap_path_len - 1; i++)); do
-+	rtrmap_accessors+=(-c "${rtrmap_path[i]}")
-+done
-+rtrmap_entry="${rtrmap_path[rtrmap_path_len - 1]}"
-+test -n "$rtrmap_entry" || _fail "Could not find rtrmap metadir entry?"
-+
-+rrmapino=$(_scratch_metadir_lookup /rtgroups/0.rmap)
-+test -n "$rrmapino" || _fail "Could not find rtrmap inode?"
-+_scratch_xfs_db -x -c "path -m /rtgroups/0.rmap" \
- 	-c 'write core.format 2' -c 'write core.size 0' \
--	-c 'write core.nblocks 0' -c 'sb 0' -c 'addr rootino' \
-+	-c 'write core.nblocks 0' \
-+	-c 'sb 0' -c 'addr rootino' \
-+	-c "print u3.sfdir3.list[2].inumber" \
- 	-c "write u3.sfdir3.list[2].inumber.i4 $rrmapino" \
--	-c 'sb 0' -c "write rrmapino $ino" >> $seqres.full
-+	"${rtrmap_accessors[@]}" \
-+	-c "print $rtrmap_entry" \
-+	-c "write $rtrmap_entry $ino" >> $seqres.full
- _try_scratch_mount >> $seqres.full 2>&1 && echo "mount should have failed"
+-# Now restore the obfuscated one back and take a look around
+-echo "Restore metadump"
+-SCRATCH_DEV=$TEST_DIR/image _scratch_xfs_mdrestore $metadump_file
+-SCRATCH_DEV=$TEST_DIR/image _scratch_mount
+-SCRATCH_DEV=$TEST_DIR/image _scratch_unmount
+-
+-echo "Check restored fs"
+-_check_scratch_fs $TEST_DIR/image
++echo "Test metadump"
++_xfs_verify_metadumps '-a -o'
  
- echo "Repair fs"
--_scratch_unmount 2>&1 | _filter_scratch
-+_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- _repair_scratch_fs >> $seqres.full 2>&1
- 
- echo "Try to create more files (again)"
-diff --git a/tests/xfs/341 b/tests/xfs/341
-index 9b12febf8d5c49..e9aea42f429ffd 100755
---- a/tests/xfs/341
-+++ b/tests/xfs/341
-@@ -51,7 +51,7 @@ echo "Corrupt fs"
- fsbno=$(_scratch_xfs_db -c "inode $ino" -c 'bmap' | grep 'flag 0' | head -n 1 | \
- 	sed -e 's/^.*startblock \([0-9]*\) .*$/\1/g')
- 
--_scratch_xfs_db -x -c 'sb 0' -c 'addr rrmapino' \
-+_scratch_xfs_db -x -c 'path -m /rtgroups/0.rmap' \
- 	-c "write u3.rtrmapbt.ptrs[1] $fsbno" -c 'p' >> $seqres.full
- _scratch_mount
- 
-diff --git a/tests/xfs/342 b/tests/xfs/342
-index 5c0e916dbe32ac..3bf353dd79b29b 100755
---- a/tests/xfs/342
-+++ b/tests/xfs/342
-@@ -45,9 +45,9 @@ ino=$(stat -c '%i' $SCRATCH_MNT/f3)
- _scratch_unmount
- 
- echo "Corrupt fs"
--_scratch_xfs_db -c 'sb 0' -c 'addr rrmapino' -c 'p u3.rtrmapbt.ptrs[1]' >> $seqres.full
-+_scratch_xfs_db -c 'path -m /rtgroups/0.rmap' -c 'p u3.rtrmapbt.ptrs[1]' >> $seqres.full
- 
--fsbno=$(_scratch_xfs_db -c 'sb 0' -c 'addr rrmapino' \
-+fsbno=$(_scratch_xfs_db -c 'path -m /rtgroups/0.rmap' \
- 	-c 'p u3.rtrmapbt.ptrs[1]' | sed -e 's/^.*://g')
- _scratch_xfs_db -x -c "inode $ino" -c "write u3.bmx[0].startblock $fsbno" >> $seqres.full
- _scratch_mount
+ # success, all done
+ status=0
+diff --git a/tests/xfs/336.out b/tests/xfs/336.out
+index aa61973da3e844..aeaffcbbbbd13b 100644
+--- a/tests/xfs/336.out
++++ b/tests/xfs/336.out
+@@ -3,6 +3,4 @@ Format and mount
+ Create a three-level rtrmapbt
+ Create big file
+ Explode the rtrmapbt
+-Create metadump file
+-Restore metadump
+-Check restored fs
++Test metadump
 
