@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D77B1EEE0;
-	Wed, 19 Feb 2025 01:02:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D152A14375D;
+	Wed, 19 Feb 2025 01:02:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926924; cv=none; b=m715mGHDZMY7g2WSlZOu76YZlgeNsDwC9mAbwMRZj00gRsTPg1fnw7rrBjZsVFNagXIt1ktE4LHZtOZLW91MblplBUUVP9lKhE7lSYC7FRrfH8vt2yk7E5ZwnHGqZrK5RAylZA5YyXoM3wuuyge9RPMngbTykxFLw+iXVwnnQpI=
+	t=1739926939; cv=none; b=fkrwmPCUjlydLNLKPNgylJJCFWBFC/okawW5I02uouLkEtxujvY8cf7vOtXAC3bZYK2TOhhBNC+/6EZf3cG6QVvmLXBusNWEKWD4Mi7UhwFJ2SGT0WVJqF+QhtqheCWf/RfebjLGKepoPd7A5d/NFjgjJtBIcw2VIOqJVq/U2CQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926924; c=relaxed/simple;
-	bh=pBGTiPERqBTZQGPZV4lr3zgi/bGwSg3uR8OeQo4YDKY=;
+	s=arc-20240116; t=1739926939; c=relaxed/simple;
+	bh=v0rTaWJCm8wqV+ua902nwh/+OI2d6hx3DxBHOWCRrCY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HIIXbO4st4yh14l/gMR5axIXdgQQ5h7WjemZEGbu6aPksm4J4sx/1BpwEjIWDgMdZKcAyiiBub/NjWLMCPhwcjEztCz0Foj/OfysfBy9DJWZv0Imcnym7ITm2pP/VemRZHzIhkP0Qdw993MPzSIgiQAhYbhb4yBETchINnkCaL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CLjbTlVv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HgjHE/o7Skjz1bV0yfXFEzEh9Hw+NKxzGkjcck1HJ/z98rETnWdZQp7mvUaLZQqbknXWxiwsx9J+5SPxzkdTeHMMJPWsxTUUI3qt0n3p7voO5s5bviZxUw+AvI2e8T7tAmPrTI1CPs1vphx7VZHdHAtyJiI35c312rQfZNVPvWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AB/8o1gZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CLjbTlVv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E1F4C4CEE2;
-	Wed, 19 Feb 2025 01:02:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AB/8o1gZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6DC7C4CEE6;
+	Wed, 19 Feb 2025 01:02:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926924;
-	bh=pBGTiPERqBTZQGPZV4lr3zgi/bGwSg3uR8OeQo4YDKY=;
+	s=k20201202; t=1739926939;
+	bh=v0rTaWJCm8wqV+ua902nwh/+OI2d6hx3DxBHOWCRrCY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CLjbTlVvCw5AfefIYulSO8/qtTBFZVusAqlaCq7TL1JNxdjWjEMwCSr4uF/llg7BW
-	 rgtnViJGi8QAiQSikCk/56dhhqcw3KeEcg9dyOjYN0kyHSmNQdMLYghA7rOZVzhdBH
-	 JeTHw4uWUxJSiw3c/ChEwff4zS6t7aFjikrHFN28pmsOQPq7pX6ARTws/0oN8qh0mR
-	 PQGHdksYK610JjZ9vCu4D+rN2pm3kS1KPt/XjhKK14cT2I61Ajd3568lIS6WMcldH4
-	 gHq0uSn2UWWmJV3W3xUA42bHgvKOYSuC9jLh7RoErQyk063tJoIlk0rl0bycGwRU2c
-	 ItFUjhunyB80w==
-Date: Tue, 18 Feb 2025 17:02:03 -0800
-Subject: [PATCH 2/4] xfs: test persistent quota flags
+	b=AB/8o1gZqtjyygDpz6PX0DjCgdBCuZTKMbABTi1up4ZDv6Of92+Up24DejrnsvQ+n
+	 fXgsezbPF/Yt1he7Z/11aqz6l+18rudPUDOee11AZ0Al7xudjYlS6Hb3ttCPPyy0kj
+	 x+tqzQdbHW+Pfx5af2gk14I+S37H6RRKMmC5nBwoSgYaqj14Oh9ZKf6xotegxg/Uss
+	 itCb5QaEHi73XSLOfrjPvu0pRNW31Me5jvYJI2HpsQiW5i0fiCPiXn+iCR3xXjuARc
+	 JPHPiavOL24MdxkkNnGyjo+N8UBIJakZTRUnwbxHNseAaDkNhkZhgwUSyUwP3h0Va5
+	 8X092GdCDNSkQ==
+Date: Tue, 18 Feb 2025 17:02:19 -0800
+Subject: [PATCH 3/4] xfs: fix quota detection in fuzz tests
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992589878.4080063.13008930042280912515.stgit@frogsfrogsfrogs>
+Message-ID: <173992589897.4080063.9479673215974446416.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992589825.4080063.11871287620731205179.stgit@frogsfrogsfrogs>
 References: <173992589825.4080063.11871287620731205179.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,322 +45,219 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Test the persistent quota flags that come with the metadir feature.
+With metadir, quota options persist until they are changed by mount
+options.  Therefore, we can set the quota flags in MKFS_OPTIONS and
+needn't supply them in MOUNT_OPTIONS.  Unfortunately, this means that we
+cannot grep the MOUNT_OPTIONS anymore; we must mount the fs and run
+src/feature to determine if quotas are enabled.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/generic/563  |    8 ++-
- tests/xfs/1891     |  128 +++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1891.out |  147 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 282 insertions(+), 1 deletion(-)
- create mode 100755 tests/xfs/1891
- create mode 100644 tests/xfs/1891.out
+ tests/xfs/425 |    5 ++++-
+ tests/xfs/426 |    5 ++++-
+ tests/xfs/427 |    5 ++++-
+ tests/xfs/428 |    5 ++++-
+ tests/xfs/429 |    5 ++++-
+ tests/xfs/430 |    5 ++++-
+ tests/xfs/487 |    5 ++++-
+ tests/xfs/488 |    5 ++++-
+ tests/xfs/489 |    5 ++++-
+ tests/xfs/779 |    5 ++++-
+ tests/xfs/780 |    5 ++++-
+ tests/xfs/781 |    5 ++++-
+ 12 files changed, 48 insertions(+), 12 deletions(-)
 
 
-diff --git a/tests/generic/563 b/tests/generic/563
-index 95a928fba5627e..89a71aa44938ea 100755
---- a/tests/generic/563
-+++ b/tests/generic/563
-@@ -96,7 +96,13 @@ smajor=$((0x`stat -L -c %t $loop_dev`))
- sminor=$((0x`stat -L -c %T $loop_dev`))
+diff --git a/tests/xfs/425 b/tests/xfs/425
+index 7ad53f97a6940c..77f86bcc398312 100755
+--- a/tests/xfs/425
++++ b/tests/xfs/425
+@@ -23,7 +23,10 @@ _require_quota
  
- _mkfs_dev $loop_dev >> $seqres.full 2>&1
--_mount $loop_dev $SCRATCH_MNT || _fail "mount failed"
-+if [ $FSTYP = "xfs" ]; then
-+	# Writes to the quota file are captured in cgroup metrics on XFS, so
-+	# we require that quota is not enabled at all.
-+	_mount $loop_dev -o noquota $SCRATCH_MNT || _fail "mount failed"
-+else
-+	_mount $loop_dev $SCRATCH_MNT || _fail "mount failed"
-+fi
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
++
++_scratch_mount
++$here/src/feature -U $SCRATCH_DEV || _notrun "user quota disabled"
++_scratch_unmount
  
- blksize=$(_get_block_size "$SCRATCH_MNT")
+ _scratch_xfs_set_quota_fuzz_ids
  
-diff --git a/tests/xfs/1891 b/tests/xfs/1891
-new file mode 100755
-index 00000000000000..7db94e0976527e
---- /dev/null
-+++ b/tests/xfs/1891
-@@ -0,0 +1,128 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024-2025 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 1891
-+#
-+# Functionality test for persistent quota accounting and enforcement flags in
-+# XFS when metadata directories are enabled.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick quota
+diff --git a/tests/xfs/426 b/tests/xfs/426
+index 53bfd0d637fcb5..80f572eb8068a2 100755
+--- a/tests/xfs/426
++++ b/tests/xfs/426
+@@ -23,7 +23,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
 +
-+. ./common/filter
-+. ./common/quota
-+
-+$MKFS_XFS_PROG 2>&1 | grep -q 'uquota' || \
-+	_notrun "mkfs does not support uquota option"
-+
-+_require_scratch
-+_require_xfs_quota
-+
-+filter_quota_state() {
-+	sed -e 's/Inode: #[0-9]\+/Inode #XXX/g' \
-+	    -e '/max warnings:/d' \
-+	    -e '/Blocks grace time:/d' \
-+	    -e '/Inodes grace time:/d' \
-+		| _filter_scratch
-+}
-+
-+qerase_mkfs_options() {
-+	echo "$MKFS_OPTIONS" | sed \
-+		-e 's/uquota//g' \
-+		-e 's/gquota//g' \
-+		-e 's/pquota//g' \
-+		-e 's/uqnoenforce//g' \
-+		-e 's/gqnoenforce//g' \
-+		-e 's/pqnoenforce//g' \
-+		-e 's/,,*/,/g'
-+}
-+
-+confirm() {
-+	echo "$MOUNT_OPTIONS" | grep -E -q '(qnoenforce|quota)' && \
-+		echo "saw quota mount options"
-+	_scratch_mount
-+	$XFS_QUOTA_PROG -x -c "state -ugp" $SCRATCH_MNT | filter_quota_state
-+	_check_xfs_scratch_fs
-+	_scratch_unmount
-+}
-+
-+ORIG_MOUNT_OPTIONS="$MOUNT_OPTIONS"
-+MKFS_OPTIONS="$(qerase_mkfs_options)"
-+
-+echo "Test 0: formatting a subset"
-+_scratch_mkfs -m uquota,gqnoenforce &>> $seqres.full
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option	# blank out quota options
-+confirm
-+
-+echo "Test 1: formatting"
-+_scratch_mkfs -m uquota,gquota,pquota &>> $seqres.full
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option	# blank out quota options
-+confirm
-+
-+echo "Test 2: only grpquota"
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option grpquota
-+confirm
-+
-+echo "Test 3: repair"
-+_scratch_xfs_repair &>> $seqres.full || echo "repair failed?"
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option	# blank out quota options
-+confirm
-+
-+echo "Test 4: weird options"
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option pqnoenforce,uquota
-+confirm
-+
-+echo "Test 5: simple recovery"
-+_scratch_mkfs -m uquota,gquota,pquota &>> $seqres.full
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option	# blank out quota options
-+echo "$MOUNT_OPTIONS" | grep -E -q '(qnoenforce|quota)' && \
-+	echo "saw quota mount options"
 +_scratch_mount
-+$XFS_QUOTA_PROG -x -c "state -ugp" $SCRATCH_MNT | filter_quota_state
-+touch $SCRATCH_MNT/a
-+_scratch_shutdown -v -f >> $seqres.full
-+echo shutdown
++$here/src/feature -U $SCRATCH_DEV || _notrun "user quota disabled"
 +_scratch_unmount
-+confirm
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/427 b/tests/xfs/427
+index 38de1360af6262..48b8d5e935abfe 100755
+--- a/tests/xfs/427
++++ b/tests/xfs/427
+@@ -23,7 +23,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
 +
-+echo "Test 6: simple recovery with mount options"
-+_scratch_mkfs -m uquota,gquota,pquota &>> $seqres.full
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option	# blank out quota options
-+echo "$MOUNT_OPTIONS" | grep -E -q '(qnoenforce|quota)' && \
-+	echo "saw quota mount options"
 +_scratch_mount
-+$XFS_QUOTA_PROG -x -c "state -ugp" $SCRATCH_MNT | filter_quota_state
-+touch $SCRATCH_MNT/a
-+_scratch_shutdown -v -f >> $seqres.full
-+echo shutdown
++$here/src/feature -G $SCRATCH_DEV || _notrun "group quota disabled"
 +_scratch_unmount
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option gqnoenforce
-+confirm
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/428 b/tests/xfs/428
+index e112ccf84646c1..f87f0a98bae3e9 100755
+--- a/tests/xfs/428
++++ b/tests/xfs/428
+@@ -23,7 +23,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
 +
-+echo "Test 7: user quotaoff recovery"
-+_scratch_mkfs -m uquota,gquota,pquota &>> $seqres.full
-+MOUNT_OPTIONS="$ORIG_MOUNT_OPTIONS"
-+_qmount_option	# blank out quota options
-+echo "$MOUNT_OPTIONS" | grep -E -q '(qnoenforce|quota)' && \
-+	echo "saw quota mount options"
 +_scratch_mount
-+$XFS_QUOTA_PROG -x -c "state -ugp" $SCRATCH_MNT | filter_quota_state
-+touch $SCRATCH_MNT/a
-+$XFS_QUOTA_PROG -x -c 'off -u' $SCRATCH_MNT
-+_scratch_shutdown -v -f >> $seqres.full
-+echo shutdown
++$here/src/feature -G $SCRATCH_DEV || _notrun "group quota disabled"
 +_scratch_unmount
-+confirm
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/429 b/tests/xfs/429
+index ded8c3944a2648..426e716aa079bf 100755
+--- a/tests/xfs/429
++++ b/tests/xfs/429
+@@ -23,7 +23,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
 +
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1891.out b/tests/xfs/1891.out
-new file mode 100644
-index 00000000000000..7e8894088042bb
---- /dev/null
-+++ b/tests/xfs/1891.out
-@@ -0,0 +1,147 @@
-+QA output created by 1891
-+Test 0: formatting a subset
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode: N/A
-+Test 1: formatting
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Test 2: only grpquota
-+saw quota mount options
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Test 3: repair
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Test 4: weird options
-+saw quota mount options
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Test 5: simple recovery
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+shutdown
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Test 6: simple recovery with mount options
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+shutdown
-+saw quota mount options
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: OFF
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Test 7: user quotaoff recovery
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+shutdown
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: OFF
-+  Inode #XXX (1 blocks, 1 extents)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: ON
-+  Inode #XXX (1 blocks, 1 extents)
++_scratch_mount
++$here/src/feature -P $SCRATCH_DEV || _notrun "project quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/430 b/tests/xfs/430
+index 3e6527851069a9..b3a2c6dd1a5f6a 100755
+--- a/tests/xfs/430
++++ b/tests/xfs/430
+@@ -23,7 +23,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
++
++_scratch_mount
++$here/src/feature -P $SCRATCH_DEV || _notrun "project quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/487 b/tests/xfs/487
+index 0a5403a25dfd82..809a4c6fd621cd 100755
+--- a/tests/xfs/487
++++ b/tests/xfs/487
+@@ -24,7 +24,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
++
++_scratch_mount
++$here/src/feature -U $SCRATCH_DEV || _notrun "user quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/488 b/tests/xfs/488
+index 0e67889f26f7a0..a8144c9ce39b91 100755
+--- a/tests/xfs/488
++++ b/tests/xfs/488
+@@ -24,7 +24,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
++
++_scratch_mount
++$here/src/feature -G $SCRATCH_DEV || _notrun "group quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/489 b/tests/xfs/489
+index ef65525c224764..cb24b444bcc919 100755
+--- a/tests/xfs/489
++++ b/tests/xfs/489
+@@ -24,7 +24,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
++
++_scratch_mount
++$here/src/feature -P $SCRATCH_DEV || _notrun "project quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/779 b/tests/xfs/779
+index acce522995c693..e1e44c1928c67b 100755
+--- a/tests/xfs/779
++++ b/tests/xfs/779
+@@ -25,7 +25,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
++
++_scratch_mount
++$here/src/feature -U $SCRATCH_DEV || _notrunn "user quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/780 b/tests/xfs/780
+index efcbeb8e147353..ebd25f8a13bab4 100755
+--- a/tests/xfs/780
++++ b/tests/xfs/780
+@@ -25,7 +25,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
++
++_scratch_mount
++$here/src/feature -G $SCRATCH_DEV || _notrun "group quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
+diff --git a/tests/xfs/781 b/tests/xfs/781
+index 09d63bfeceb6e7..49920cd1215ec1 100755
+--- a/tests/xfs/781
++++ b/tests/xfs/781
+@@ -25,7 +25,10 @@ _require_quota
+ 
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+-echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
++
++_scratch_mount
++$here/src/feature -P $SCRATCH_DEV || _notrun "project quota disabled"
++_scratch_unmount
+ 
+ _scratch_xfs_set_quota_fuzz_ids
+ 
 
