@@ -1,230 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEA001DFE1;
-	Wed, 19 Feb 2025 01:09:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A51B8C0B
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 03:50:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739927347; cv=none; b=Z7A5o8vrFma5s4PCD+v7gxEeLGQpWA2YW5bq8f13VYNwUVfOBVyaGPb8foNB7SKsTqjuD7xZyB/tqE/aN88BfgvaqOHGePLP9mO8WYki7b85I+8ccbv6vaS64AYGnO8G+d0yIY8pfoTFkLP1PzDiER9PaiHdOCu9Fs7apGicJno=
+	t=1739937019; cv=none; b=frzceF0Ty5vD7qxGUi+uCd0+Jzg2AdiP/pmROTuzxMuKsPLRTBGKgH/a51lrEgpiBE0tPudpsc1rdAi1LC9A9BiorbSm3HNMoJFWhslAMKs7gEQcFRDjI6Rv+NTw0wnJ5Ri9bq4wb1Id5dfpO0A9eAYEBGsRYnaxRFdglT0GE5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739927347; c=relaxed/simple;
-	bh=oV2/YZxntInAHxJi1yvW6fVV28EawJ2PeZ1fJIK0qy8=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DrtCZdfy1HcUlDMqmuxhEFgPZoW86SKZwYbe0HFKFZQ+2K7jrJCp94TNww904g8lcAk2XCrbDZ/4EKea3qTep5imwpKXy0E3anfqb5T2r2ZGb139sQWjA9/wOoSTAPxzUjsBYWBbrKuH52hB8irNMtMl1ZEE4oWhFShFB+sGMXY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZWOZGtSx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739937019; c=relaxed/simple;
+	bh=lZ8DMLY9tyujUKKqaPOAcAPbIB95xR34kLdjUI+kiYw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=AD053t/pisnqY+qnibo3qysBCxp/6J7tplTkCOTnH4gimwr0rLTerTtQB98hmBT2wC5r5Qg5xdw1AD+BqxSI5MP9NDcgx/YmGaWEvT2dO04sAIFbR3RqR6rTs34GbAAE5Hx4eai0xDEKTPOChW2PDD5EEDuJgzc6neUjCxpxOqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=uGXWiJxB; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZWOZGtSx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BF94C4CEE6;
-	Wed, 19 Feb 2025 01:09:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739927347;
-	bh=oV2/YZxntInAHxJi1yvW6fVV28EawJ2PeZ1fJIK0qy8=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZWOZGtSxFJJneX2np/TR4TRbqb801e8/tptLZQcas9WNJ8zPq7nU4sh3m2tNdTG9U
-	 Lydwg0y2GvlWyRzu+qVXkhdvT5kZqfTtapK44ex8zdrpALP4h4yhYvYeH0q56gKjrx
-	 DaYih2JjxPYs1EVF9cxI8HReHg1RzpvE3pjBfJ4nx3Wbda2U6dzeb12MoQBGBpnNX0
-	 smx1bwnLnilEhS4Yysnke6EUZuyDkBlpHmuB9S8hu3PPl6FH5l364hjp1S5+8kCE+o
-	 x9faptUBVKkDhkMHPewmepVakBeDk2R8gv4y718d/4OOT+cGIK3Dq+HUbAJgIe22AW
-	 11AhTKY2R7Vhg==
-Date: Tue, 18 Feb 2025 17:09:07 -0800
-Subject: [PATCH 1/1] xfs: test filesystem recovery with rdump
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992592231.4081406.4124909331519241647.stgit@frogsfrogsfrogs>
-In-Reply-To: <173992592211.4081406.17974627498372247228.stgit@frogsfrogsfrogs>
-References: <173992592211.4081406.17974627498372247228.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="uGXWiJxB"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2210d92292eso98396515ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2025 19:50:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1739937017; x=1740541817; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=GlGI1fVkm3fWgDOljww8mTi1QqSX9/+PKnaUqaMb2dQ=;
+        b=uGXWiJxBKQHny5lKphZ/q6XYck6GgezPK5I+re6ETW+WEzbvYlOzysxZE9qpQ8FJDn
+         xBJj3WOoE39xKQY0t8xqFS6orwmcgk77PmS6Vn022b5OhOZmMETPV/PROz1SQATwPU9g
+         H0ZV5uiFS7oUcEpspCzHRYcJKp0g5ZD+jX+visgPEdrpi0e0uP8wTLfxv/TKrdaPnVY1
+         4DFE8yfo0/3BPHheutv1vl1hrk7ol4LMHz30/Id8W2X/HXCj9LKlFB2FRCK5g1QRw/Jg
+         70r67Hz2CJG3CgV+DnewufR5I9nzdqYLKaikxaK++jUhBs59mEKNI07piqr+eXJ7DEHl
+         PxiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739937017; x=1740541817;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=GlGI1fVkm3fWgDOljww8mTi1QqSX9/+PKnaUqaMb2dQ=;
+        b=QK1C7IPS0f2FIxnCBugXcKlhDHkfAjTw65azoyFgSymS0zmNcR//9CLc6mzws2xp0/
+         AMkv2dxiOtrjGmpdG2ZUTPvRXEJy5cGpTIjWdimw4Tmn4jzdqWjtkrtQJ065sIlNwptD
+         3mJKHHr5GGcuCHw3sZs5hKZw8Bhzsn++x5sPUzehfGJXQbiKXTSA3ovn/gkb+yCmaGeB
+         6ZEGP8pYYw88Um2TOUdtGLMxadrrv6a5T3LJd6rOIPeI4BL2y4oAVneshbmYTRjmnCXZ
+         SfAPdVPRWNI0+e3VhOGjh/in3xy5su4tNuDjB3cexgBVxm4E7oL1aqTZ95z7tEjA/0oc
+         Nu1Q==
+X-Gm-Message-State: AOJu0YwGjp/GB1AzzUsrZ7JTWHNPSpH9aIK784/CzkLc6icFWDQy5RlX
+	qt0Cr4F8jjfXtqmzetNyrJ0Ka7dzR/ZyoPu8lX882xVr/FC1jTyFcckcRxGfqMKTOTTaVXkUD5l
+	Q
+X-Gm-Gg: ASbGncuEpcHlJm4J5o9+JX+Vt1fg3T6D9tfdzDF0G52I0I+8NjdpKSFdXLveyMdZ/s2
+	K9M/QDFV/CNAmG9Gio7dDrzBNay/nS7e6GSljG0ycdooMWhLHLnLJpOR3cwlt7UojkbDlSOFQEz
+	pPPKJXtjdDYudb3O6uXQG15iQX6G5lCiclLtd56eZ8f84gBUPR2B7Z5g8TvFFiHdq0T5lWO1hlZ
+	29lI6Kdg/Uu3MuLaZkrDmxgmsBCaK4iSWcbaiLaEZwx2F+pmVczA30s1FYlgUYkhBh0R9wMBXK4
+	khtt9MSQg3oJqCKcbI1BK7gOT6PHk+pgVqVIV9etHuaMIheZvCkoRfGPRvHxXfeR3Pc=
+X-Google-Smtp-Source: AGHT+IFq9wzGOK5yGAAqKAjilMRh8WTxi/DiWt25mKAbtFUsWsX005VRsSKcrSRNr1NWeClpIovVxw==
+X-Received: by 2002:a05:6a21:6d85:b0:1ee:d17a:d63d with SMTP id adf61e73a8af0-1eed4e52f71mr3101266637.4.1739937017282;
+        Tue, 18 Feb 2025 19:50:17 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-adb586187a5sm9988771a12.38.2025.02.18.19.50.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Feb 2025 19:50:16 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tkb6D-0000000353r-38g1;
+	Wed, 19 Feb 2025 14:50:13 +1100
+Date: Wed, 19 Feb 2025 14:50:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-mm@kvack.org, willy@infradead.org
+Subject: [regression 6.14-rc2 + xfs-for-next] Bad page state at unmount
+Message-ID: <Z7VU9QX8MrmZVSrU@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-Test how well we can dump a fully populated filesystem's contents.
+I hit this running check-parallel a moment ago:
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/xfs/1895     |  153 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1895.out |    6 ++
- 2 files changed, 159 insertions(+)
- create mode 100755 tests/xfs/1895
- create mode 100644 tests/xfs/1895.out
+[80180.074658] BUG: Bad page cache in process umount  pfn:7655f4
+[80180.077259] page: refcount:9 mapcount:1 mapping:00000000ecd1b54a index:0x0 pfn:0x7655f4
+[80180.080573] head: order:2 mapcount:4 entire_mapcount:0 nr_pages_mapped:4 pincount:0
+[80180.083615] memcg:ffff888104f36000
+[80180.084977] aops:xfs_address_space_operations ino:84
+[80180.087175] flags: 0x17ffffc000016d(locked|referenced|uptodate|lru|active|head|node=0|zone=2|lastcpupid=0x1fffff)
+[80180.091380] raw: 0017ffffc000016d ffffea001745c648 ffffea0012b1da08 ffff8891726dae98
+[80180.094469] raw: 0000000000000000 0000000000000000 0000000900000000 ffff888104f36000
+[80180.097740] head: 0017ffffc000016d ffffea001745c648 ffffea0012b1da08 ffff8891726dae98
+[80180.100988] head: 0000000000000000 0000000000000000 0000000900000000 ffff888104f36000
+[80180.104129] head: 0017ffffc0000202 ffffea001d957d01 ffffffff00000003 0000000000000004
+[80180.107232] head: 0000000000000004 0000000000000000 0000000000000000 0000000000000000
+[80180.110338] page dumped because: still mapped when deleted
+[80180.112755] CPU: 32 UID: 0 PID: 832271 Comm: umount Not tainted 6.14.0-rc2-dgc+ #302
+[80180.112757] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[80180.112760] Call Trace:
+[80180.112763]  <TASK>
+[80180.112766]  dump_stack_lvl+0x3d/0xa0
+[80180.112773]  dump_stack+0x10/0x17
+[80180.112775]  filemap_unaccount_folio+0x151/0x1e0
+[80180.112779]  delete_from_page_cache_batch+0x61/0x2f0
+[80180.112787]  truncate_inode_pages_range+0x122/0x3e0
+[80180.112807]  truncate_inode_pages_final+0x40/0x50
+[80180.112809]  evict+0x1af/0x310
+[80180.112817]  evict_inodes+0x66/0xc0
+[80180.112818]  generic_shutdown_super+0x3c/0x160
+[80180.112821]  kill_block_super+0x1b/0x40
+[80180.112823]  xfs_kill_sb+0x12/0x30
+[80180.112824]  deactivate_locked_super+0x38/0x100
+[80180.112826]  deactivate_super+0x41/0x50
+[80180.112828]  cleanup_mnt+0x9f/0x160
+[80180.112830]  __cleanup_mnt+0x12/0x20
+[80180.112831]  task_work_run+0x89/0xb0
+[80180.112833]  resume_user_mode_work+0x4f/0x60
+[80180.112836]  syscall_exit_to_user_mode+0x76/0xb0
+[80180.112838]  do_syscall_64+0x74/0x130
+[80180.112840]  ? exc_page_fault+0x62/0xc0
+[80180.112841]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+....
+[80180.131293] BUG: Bad page cache in process umount  pfn:4ac768
+[80180.131296] page: refcount:9 mapcount:1 mapping:00000000ecd1b54a index:0x4 pfn:0x4ac768
+[80180.131299] head: order:2 mapcount:4 entire_mapcount:0 nr_pages_mapped:4 pincount:0
+[80180.131301] memcg:ffff888104f36000
+[80180.131302] aops:xfs_address_space_operations ino:84
+[80180.218440] flags: 0x17ffffc000016d(locked|referenced|uptodate|lru|active|head|node=0|zone=2|lastcpupid=0x1fffff)
+[80180.222779] raw: 0017ffffc000016d ffffea001d957d08 ffffea000d980b08 ffff8891726dae98
+[80180.226376] raw: 0000000000000004 0000000000000000 0000000900000000 ffff888104f36000
+[80180.229546] head: 0017ffffc000016d ffffea001d957d08 ffffea000d980b08 ffff8891726dae98
+[80180.232954] head: 0000000000000004 0000000000000000 0000000900000000 ffff888104f36000
+[80180.232956] head: 0017ffffc0000202 ffffea0012b1da01 ffffffff00000003 0000000000000004
+[80180.232958] head: 0000000500000004 0000000000000000 0000000000000000 0000000000000000
+[80180.232958] page dumped because: still mapped when deleted
+[80180.232961] CPU: 32 UID: 0 PID: 832271 Comm: umount Tainted: G    B              6.14.0-rc2-dgc+ #302
+[80180.232965] Tainted: [B]=BAD_PAGE
+.....
+[80180.233052] BUG: Bad page cache in process umount  pfn:36602c
+[80180.241951] page: refcount:9 mapcount:1 mapping:00000000ecd1b54a index:0x8 pfn:0x36602c
+[80180.241955] head: order:2 mapcount:4 entire_mapcount:0 nr_pages_mapped:4 pincount:0
+[80180.241957] memcg:ffff888104f36000
+[80180.241958] aops:xfs_address_space_operations ino:84
+[80180.241961] flags: 0x17ffffc000016d(locked|referenced|uptodate|lru|active|head|node=0|zone=2|lastcpupid=0x1fffff)
+[80180.241965] raw: 0017ffffc000016d ffffea0012b1da08 ffffea000d585508 ffff8891726dae98
+[80180.241966] raw: 0000000000000008 0000000000000000 0000000900000000 ffff888104f36000
+[80180.241967] head: 0017ffffc000016d ffffea0012b1da08 ffffea000d585508 ffff8891726dae98
+[80180.241969] head: 0000000000000008 0000000000000000 0000000900000000 ffff888104f36000
+[80180.241970] head: 0017ffffc0000202 ffffea000d980b01 ffffffff00000003 0000000000000004
+[80180.241971] head: 0000000500000004 0000000000000000 0000000000000000 0000000000000000
+[80180.241972] page dumped because: still mapped when deleted
+[80180.241974] CPU: 32 UID: 0 PID: 832271 Comm: umount Tainted: G    B              6.14.0-rc2-dgc+ #302
+[80180.241976] Tainted: [B]=BAD_PAGE
 
+I don't know which fstest triggered it, but this is a new failure
+that I haven't seen before. It looks like 3 consecutive order-2
+folios on the same mapping all have the same problem....
 
-diff --git a/tests/xfs/1895 b/tests/xfs/1895
-new file mode 100755
-index 00000000000000..18b534d328e9fd
---- /dev/null
-+++ b/tests/xfs/1895
-@@ -0,0 +1,153 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 1895
-+#
-+# Populate a XFS filesystem, ensure that rdump can "recover" the contents to
-+# another directory, and compare the contents.
-+#
-+. ./common/preamble
-+_begin_fstest auto scrub
-+
-+_cleanup()
-+{
-+	command -v _kill_fsstress &>/dev/null && _kill_fsstress
-+	cd /
-+	test -e "$testfiles" && rm -r -f $testfiles
-+}
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+_require_xfs_db_command "rdump"
-+_require_test
-+_require_scratch
-+_require_scrub
-+_require_populate_commands
-+
-+make_md5()
-+{
-+	(cd $1 ; find . -type f -print0 | xargs -0 md5sum) > $tmp.md5.$2
-+}
-+
-+cmp_md5()
-+{
-+	(cd $1 ; md5sum --quiet -c $tmp.md5.$2)
-+}
-+
-+make_stat()
-+{
-+	# columns:	raw mode in hex,
-+	# 		major rdev for special
-+	# 		minor rdev for special
-+	# 		uid of owner
-+	# 		gid of owner
-+	# 		file type
-+	# 		total size
-+	# 		mtime
-+	# 		name
-+	# We can't directly control directory sizes so filter them.
-+	# Too many things can bump (or not) atime so don't test that.
-+	(cd $1 ; find . -print0 |
-+		xargs -0 stat -c '%f %t:%T %u %g %F %s %Y %n' |
-+		sed -e 's/ directory [1-9][0-9]* / directory SIZE /g' |
-+		sort) > $tmp.stat.$2
-+}
-+
-+cmp_stat()
-+{
-+	diff -u $tmp.stat.$1 $tmp.stat.$2
-+}
-+
-+make_stat_files() {
-+	for file in "${FILES[@]}"; do
-+		find "$1/$file" -print0 | xargs -0 stat -c '%f %t:%T %u %g %F %s %Y %n'
-+	done | sed \
-+		-e 's/ directory [1-9][0-9]* / directory SIZE /g' \
-+		-e "s| $1| DUMPDIR|g" \
-+		| sort > $tmp.stat.files.$2
-+}
-+
-+cmp_stat_files()
-+{
-+	diff -u $tmp.stat.files.$1 $tmp.stat.files.$2
-+}
-+
-+make_stat_dir() {
-+	find "$1" -print0 | \
-+		xargs -0 stat -c '%f %t:%T %u %g %F %s %Y %n' | sed \
-+		-e 's/ directory [1-9][0-9]* / directory SIZE /g' \
-+		-e "s| $1| DUMPDIR|g" \
-+		| sort > $tmp.stat.dir.$2
-+}
-+
-+cmp_stat_dir()
-+{
-+	diff -u $tmp.stat.dir.$1 $tmp.stat.dir.$2
-+}
-+
-+FILES=(
-+	"/S_IFDIR.FMT_INLINE"
-+	"/S_IFBLK"
-+	"/S_IFCHR"
-+	"/S_IFLNK.FMT_LOCAL"
-+	"/S_IFIFO"
-+	"/S_IFDIR.FMT_INLINE/00000001"
-+	"/ATTR.FMT_EXTENTS_REMOTE3K"
-+	"/S_IFREG.FMT_EXTENTS"
-+	"/S_IFREG.FMT_BTREE"
-+	"/BNOBT"
-+	"/S_IFDIR.FMT_BLOCK"
-+)
-+DIR="/S_IFDIR.FMT_LEAF"
-+
-+testfiles=$TEST_DIR/$seq
-+mkdir -p $testfiles
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+_scratch_mount
-+
-+_run_fsstress -n 500 -d $SCRATCH_MNT/newfiles
-+
-+make_stat $SCRATCH_MNT before
-+make_md5 $SCRATCH_MNT before
-+make_stat_files $SCRATCH_MNT before
-+make_stat_dir $SCRATCH_MNT/$DIR before
-+_scratch_unmount
-+
-+echo "Recover filesystem"
-+dumpdir1=$testfiles/rdump
-+dumpdir2=$testfiles/sdump
-+dumpdir3=$testfiles/tdump
-+rm -r -f $dumpdir1 $dumpdir2 $dumpdir3
-+
-+# as of linux 6.12 fchownat does not work on symlinks
-+_scratch_xfs_db -c "rdump / $dumpdir1" | sed -e '/could not be set/d'
-+_scratch_xfs_db -c "rdump ${FILES[*]} $dumpdir2" | sed -e '/could not be set/d'
-+_scratch_xfs_db -c "rdump $DIR $dumpdir3" | sed -e '/could not be set/d'
-+
-+echo "Check file contents"
-+make_stat $dumpdir1 after
-+cmp_stat before after
-+cmp_md5 $dumpdir1 before
-+
-+echo "Check selected files contents"
-+make_stat_files $dumpdir2 after
-+cmp_stat_files before after
-+
-+echo "Check single dir extraction contents"
-+make_stat_dir $dumpdir3 after
-+cmp_stat_dir before after
-+
-+# remount so we can check this fs
-+_scratch_mount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1895.out b/tests/xfs/1895.out
-new file mode 100644
-index 00000000000000..de639ed3fc7e38
---- /dev/null
-+++ b/tests/xfs/1895.out
-@@ -0,0 +1,6 @@
-+QA output created by 1895
-+Format and populate
-+Recover filesystem
-+Check file contents
-+Check selected files contents
-+Check single dir extraction contents
+The kernel was a post 6.14-rc2 kernel with linux-xfs/for-next merged
+into it. I'm going to update the kernel to TOT to see if this
+reproduces again, but I've only seen this once in dozens of tests
+runs on this kernel, so....
 
+Has anyone seen something similar or have any ideas where to look?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
