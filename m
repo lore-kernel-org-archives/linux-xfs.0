@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 444B881724;
-	Wed, 19 Feb 2025 00:58:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3818485C5E;
+	Wed, 19 Feb 2025 00:59:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926736; cv=none; b=ZRfOVcyVq0h4TsnaexgTLM2qCqCH+Toq5eHs1By9WycE4z+qda+53Kh4eprRxRmQnKFXMrVvk4R2zZnZROLpqRj1/odfzeb+JTfTVibEtZ2QSvKapka1oADxb9ThIoloUgD32jN92PQSrxeK8kE/Sl0tNpD2+oQ+0ky9fAfjkoE=
+	t=1739926752; cv=none; b=UD2zPF24CdzUnDxpHo4+xNKVtLW+BmmRCM8S7XzywQJfIum232u0HnUiTE7NcCXQUzj6BeOScKJL+mMK95wwjqhFTUYRyHV+C5RzvR8+LIuLsdH9/NL7lg5huKYvLYTlzhPlRRSk0wssujS/1dZtvqBybsdzE8SIWIGzU5npk2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926736; c=relaxed/simple;
-	bh=ofR2nfAv6ZdrOoUdpGDrZifQWcILDaZXQ3B7wGvAI/k=;
+	s=arc-20240116; t=1739926752; c=relaxed/simple;
+	bh=znBTG2CrkipuWwoJUrB+iX0KUhqPI741QQj79rwL078=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Nw9VSP80TJr+6kATusXhvZrarxJirSXyyt57IZ4H8wGiaj64wiyc2pKIdvlygNmy7IncapLiSLCrb3doXcNgixGFMbZTlYCVA0U8xd415V3Wwgnu0rpGM/WAO8pQeJwjOcK1JWnW0kHSRN5y+pIXTIozHQclKsOtu+BlUL/pM6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e+ZbsAKi; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ukZituuiqrWM+e7qwSPbrLo+euXc/BSt2I0pDavCAQrVDXXB1wvOHMQwCCTpm1Z+u/OcIuuhDWNfQXWrOuZvK2hxQ3USHILDktOjoFYz4C1uQDsB8N6kVSnAYk3bHPd/BP6kyd4vjBEbLOw8dnOhoDBVv6YO5ZrZltFk2ogB0Is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k0s4ZtEX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e+ZbsAKi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1572AC4CEE2;
-	Wed, 19 Feb 2025 00:58:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k0s4ZtEX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5EF0C4CEE2;
+	Wed, 19 Feb 2025 00:59:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926736;
-	bh=ofR2nfAv6ZdrOoUdpGDrZifQWcILDaZXQ3B7wGvAI/k=;
+	s=k20201202; t=1739926751;
+	bh=znBTG2CrkipuWwoJUrB+iX0KUhqPI741QQj79rwL078=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=e+ZbsAKi3bU3Juewi29FkhRAEJZSb6SfBkWBZ6HSOl/ALC95v9s7dHDt4vLTV2U+k
-	 O6b6v6XE8+Ak0by/f0PWMUIHlIBKP4To5VmnMLziP2sXMVF1zLWOLfd1o1VlNVGgRi
-	 OpeO8XRL85tjxshbrFVb/StQ4SujsaFZdmLl/fXBMo7jbJZKcx8JXDCQMitbmOr8D+
-	 6PawGWG3i+MeP8WgZIP8HPa+Bd0KjaQgFa7KrcMQjvUz9+kxwP7Y6kmk5TjCCfTcSR
-	 1ZX+9gwRLP4hQKd7+J5rSns0EzeFyl1krQX2XXzTbAJA6vAhGEfE7fqQIpYTsI1r4p
-	 V866YEksmSzGQ==
-Date: Tue, 18 Feb 2025 16:58:55 -0800
-Subject: [PATCH 05/15] common/ext4: reformat external logs during mdrestore
- operations
+	b=k0s4ZtEXtvVoX4yz8B39dd0wCeuL7Zxbi4Zo6mqAoVKwNmzn32qz7DRSAzoC97ReB
+	 HWYheA2ew/LP2WjSXJCOqi8smTy5v0rUY0RHXGGSgijr4c5NZikIMVM8mLwrUM+LRw
+	 0ZbsfNK/V5V8Z/mtaXFuNe0VMeNY4pT3ajDpW68IA70iRSC6Lk13eYoosQCxgA+bcq
+	 +QhUm9FoRA1EqW7/CFjHhVSCpkaYScANwhDPAk0oqeFX+OWsLiHHSJjV4iFt14k7dI
+	 S7IzJC/PicFOpSjADchCLGf5YTfsYDwtU8Ic/1NZBnpJxIXziT6EYfNkPW9esD4VYs
+	 +Mc4E3SZJ7AAQ==
+Date: Tue, 18 Feb 2025 16:59:11 -0800
+Subject: [PATCH 06/15] common/populate: use metadump v2 format by default for
+ fs metadata snapshots
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992589272.4079457.17538661785920086668.stgit@frogsfrogsfrogs>
+Message-ID: <173992589290.4079457.11127255945217928255.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 References: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,84 +46,47 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The e2image file format doesn't support the capture of external log
-devices, which means that mdrestore ought to reformat the external log
-to get the restored filesystem to work again.  The common/populate code
-could already do this, so push it to the common ext4 helper.
-
-While we're at it, fix the uncareful usage of SCRATCH_LOGDEV in the
-populate code.
+When we're snapshotting filesystem metadata after creating a populated
+filesystem, force the creation of metadump v2 files by default to
+exercise the new format, since xfs_metadump continues to use the v1
+format unless told otherwise.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/ext4     |   17 ++++++++++++++++-
- common/populate |   18 +++++-------------
- 2 files changed, 21 insertions(+), 14 deletions(-)
+ common/populate |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
 
-diff --git a/common/ext4 b/common/ext4
-index 13921bb8165a4d..e1b336d3d20cba 100644
---- a/common/ext4
-+++ b/common/ext4
-@@ -134,7 +134,8 @@ _ext4_mdrestore()
- {
- 	local metadump="$1"
- 	local device="$2"
--	shift; shift
-+	local logdev="$3"
-+	shift; shift; shift
- 	local options="$@"
- 
- 	# If we're configured for compressed dumps and there isn't already an
-@@ -148,6 +149,20 @@ _ext4_mdrestore()
- 	test -r "$metadump" || return 1
- 
- 	$E2IMAGE_PROG $options -r "${metadump}" "${SCRATCH_DEV}"
-+	res=$?
-+	test $res -ne 0 && return $res
-+
-+	# ext4 cannot e2image external logs, so we have to reformat the log
-+	# device to match the restored fs
-+	if [ "${logdev}" != "none" ]; then
-+		local fsuuid="$($DUMPE2FS_PROG -h "${SCRATCH_DEV}" 2>/dev/null | \
-+				grep 'Journal UUID:' | \
-+				sed -e 's/Journal UUID:[[:space:]]*//g')"
-+		$MKFS_EXT4_PROG -O journal_dev "${logdev}" \
-+				-F -U "${fsuuid}"
-+		res=$?
-+	fi
-+	return $res
- }
- 
- # this test requires the ext4 kernel support crc feature on scratch device
 diff --git a/common/populate b/common/populate
-index e6804cbc6114ba..32dc5275e2debd 100644
+index 32dc5275e2debd..9fc1ee32bd490d 100644
 --- a/common/populate
 +++ b/common/populate
-@@ -1034,20 +1034,12 @@ _scratch_populate_restore_cached() {
- 		return $?
+@@ -55,7 +55,12 @@ __populate_fail() {
+ 	case "$FSTYP" in
+ 	xfs)
+ 		_scratch_unmount
+-		_scratch_xfs_metadump "$metadump" -a -o
++
++		mdargs=('-a' '-o')
++		test "$(_xfs_metadump_max_version)" -gt 1 && \
++			mdargs+=('-v' '2')
++
++		_scratch_xfs_metadump "$metadump" "${mdargs[@]}"
+ 		;;
+ 	ext4)
+ 		_scratch_unmount
+@@ -1056,8 +1061,12 @@ _scratch_populate_save_metadump()
+ 		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+ 			logdev=$SCRATCH_LOGDEV
+ 
++		mdargs=('-a' '-o')
++		test "$(_xfs_metadump_max_version)" -gt 1 && \
++			mdargs+=('-v' '2')
++
+ 		_xfs_metadump "$metadump_file" "$SCRATCH_DEV" "$logdev" \
+-				compress -a -o
++				compress "${mdargs[@]}"
+ 		res=$?
  		;;
  	"ext2"|"ext3"|"ext4")
--		_ext4_mdrestore "${metadump}" "${SCRATCH_DEV}"
--		ret=$?
--		test $ret -ne 0 && return $ret
-+		local logdev=none
-+		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-+			logdev=$SCRATCH_LOGDEV
- 
--		# ext4 cannot e2image external logs, so we have to reformat
--		# the scratch device to match the restored fs
--		if [ -n "${SCRATCH_LOGDEV}" ]; then
--			local fsuuid="$($DUMPE2FS_PROG -h "${SCRATCH_DEV}" 2>/dev/null | \
--					grep 'Journal UUID:' | \
--					sed -e 's/Journal UUID:[[:space:]]*//g')"
--			$MKFS_EXT4_PROG -O journal_dev "${SCRATCH_LOGDEV}" \
--					-F -U "${fsuuid}"
--		fi
--		return 0
-+		_ext4_mdrestore "${metadump}" "${SCRATCH_DEV}" "${logdev}"
-+		return $?
- 		;;
- 	esac
- 	return 1
 
