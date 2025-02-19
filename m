@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B75E418E1A;
-	Wed, 19 Feb 2025 00:51:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADB9D18C345;
+	Wed, 19 Feb 2025 00:51:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926298; cv=none; b=P3HNb/aRLxywpAmdNd8pvZYO//oOOsTxgBe7KNlNgEty22DOt+N2VBHx8WExmn/+iL0PY+V9wVnSqTXP1g0CFTilRaPmmaQNYg2JZT05NlYrjj81u3clAYNkQlV747ht26g9R+cTcjTRBWuQ/GfDJHfENBUcwUwn5NecRAv8VBY=
+	t=1739926314; cv=none; b=jXRE0a4/l2nSJubRkIxcL7cug6VBM0Ujo6JUGKNDqim1WpWUnJuAQrDxjhuyxbvvSjLKhf8GT7ViMfx+ctNHWrlOkqbPMVdtnRqs6/CjQeE9fzaFYygpB7W9/IgTwQ2vYTlJyZSfkJzxdxBGGtElumMcaMW7lS+mcrHkJuT0uTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926298; c=relaxed/simple;
-	bh=2r1dFfs5THTNKTA1EiczZG+u8oKcttKnXSPasO54JNU=;
+	s=arc-20240116; t=1739926314; c=relaxed/simple;
+	bh=y5UjTnzGD+CQAU20GqBeIqVfkQXzJhvv3k+gykG96I4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PtB4ikCVi0bAMSIJtNALDGy4E3vcP76uvcH95BAJ9nWFbeU5BidHuv7kQ9prSEc/XMaKySU9vCuHltXqxPix0WA13bpg0dVXLBDQaTW8YzwgZW6HZf1TRzltm1jgZLFmd62E3Awot/tlPV9cxEZGzRvFho3sKcE7Nl+mTMleBrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CkFGzlTQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HHmVWLY/au1QfVQm85SAcl6FiL29MX2kQDppFuuu+N85CYshgovk8vRhtWx6vZnyxVWJq+KKlF0veBNO9QmfiCY+oyaz8vOzXDAB2oZ2BzsS/5PCzUsyLDcAj9aPiYLKjTqgrq+f9gBycoxMy5p3fQW5mFjGv3XMMJVjH3Gglyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q1KD4arQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CkFGzlTQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 274ABC4CEE2;
-	Wed, 19 Feb 2025 00:51:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q1KD4arQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C7FEC4CEE2;
+	Wed, 19 Feb 2025 00:51:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926298;
-	bh=2r1dFfs5THTNKTA1EiczZG+u8oKcttKnXSPasO54JNU=;
+	s=k20201202; t=1739926314;
+	bh=y5UjTnzGD+CQAU20GqBeIqVfkQXzJhvv3k+gykG96I4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CkFGzlTQ2THERSBj9iI3SQ5TifFCIIAmIPkbaWyvOTmCWqJ9ZEi5vriU15VzDrQT8
-	 KOy4RpzUpSusz5CJ84sblahF1LwCeEV85vsh4ch2gwXBWrCn1i/BX412cWkhtT8vXu
-	 8MY4s959OF0vfr7Xi7YWm8JqH7ltPuH/pB+Vnsb3HNVgqe0+HkuBw4UU9LUwNkyRXp
-	 Kfc64TOr+AWhGDsOJQRWYhdxuj99eZSj7vQPSscl2GY7h5aVvyxNutc1RCaQRl41Wn
-	 3lrB8jLUWxqDdNER9QWxeB19hgjS7lsSp185KYH2GfKVShhqSJhpXMo6EcDaoXJ+Ht
-	 Uql+rddeAhXUw==
-Date: Tue, 18 Feb 2025 16:51:37 -0800
-Subject: [PATCH 05/12] misc: rename the dangerous_norepair group to
- fuzzers_norepair
+	b=q1KD4arQG7U4kVekKtuKynIMBZkFcZmE8k2F/ZgTP9YwNpEcsm3UMaX4UyL6q35JD
+	 n0B799DhDSMJuxTx+rcpAuJxtRhorN7UTJOR1Rhxq/3jtTEonfzP9Uv1J2ru4usRzL
+	 jELMa8y89r4HWQ4F82sadea6rC7O51fyMNAmE+XTe3GqL6TyRzGR74OVvu2z1d5w9C
+	 CMBowHwTIMAXVkfzSaOm8fPfm29tJUlUrhdFrtBkxpTmCcAe4y/cjkvfFWug141fyr
+	 5+IC/0c+xuCzkBf3plQF+Wskh99/53J0O72EN0QQfYIYmMQmfrJ6NyVV0eZKkfRPey
+	 t65O7SA/fhp3A==
+Date: Tue, 18 Feb 2025 16:51:53 -0800
+Subject: [PATCH 06/12] misc: fix misclassification of xfs_repair fuzz tests
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992587496.4078254.14824377885868657428.stgit@frogsfrogsfrogs>
+Message-ID: <173992587514.4078254.13210003661775451613.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
 References: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,636 +45,628 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I've been running the norepair fuzzers (aka the verifier checks) for
-most of the time that online fsck has been in development, and I haven't
-seen any of the VMs crash in a couple of years.  I think it's time that
-these tests stopped hiding behind the "dangerous" label.
+All the tests in the "fuzzers_repair" group actually test xfs_repair,
+not scrub.  Therefore, we should remove them all from 'dangerous_scrub'
+and put them in the 'repair' group.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- doc/group-names.txt |    2 +-
- tests/xfs/453       |    2 +-
- tests/xfs/454       |    2 +-
- tests/xfs/455       |    2 +-
- tests/xfs/456       |    2 +-
- tests/xfs/457       |    2 +-
- tests/xfs/458       |    2 +-
- tests/xfs/459       |    2 +-
- tests/xfs/460       |    2 +-
- tests/xfs/461       |    2 +-
- tests/xfs/462       |    2 +-
- tests/xfs/463       |    2 +-
- tests/xfs/464       |    2 +-
- tests/xfs/465       |    2 +-
- tests/xfs/466       |    2 +-
- tests/xfs/467       |    2 +-
- tests/xfs/468       |    2 +-
- tests/xfs/469       |    2 +-
- tests/xfs/470       |    2 +-
- tests/xfs/471       |    2 +-
- tests/xfs/472       |    2 +-
- tests/xfs/473       |    2 +-
- tests/xfs/474       |    2 +-
- tests/xfs/475       |    2 +-
- tests/xfs/476       |    2 +-
- tests/xfs/477       |    2 +-
- tests/xfs/478       |    2 +-
- tests/xfs/479       |    2 +-
- tests/xfs/480       |    2 +-
- tests/xfs/481       |    2 +-
- tests/xfs/482       |    2 +-
- tests/xfs/483       |    2 +-
- tests/xfs/484       |    2 +-
- tests/xfs/485       |    2 +-
- tests/xfs/486       |    2 +-
- tests/xfs/487       |    2 +-
- tests/xfs/488       |    2 +-
- tests/xfs/489       |    2 +-
- tests/xfs/498       |    2 +-
- tests/xfs/735       |    2 +-
- tests/xfs/738       |    2 +-
- tests/xfs/745       |    2 +-
- tests/xfs/746       |    2 +-
- tests/xfs/788       |    2 +-
+ tests/xfs/350 |    2 +-
+ tests/xfs/352 |    2 +-
+ tests/xfs/354 |    2 +-
+ tests/xfs/356 |    2 +-
+ tests/xfs/358 |    2 +-
+ tests/xfs/360 |    2 +-
+ tests/xfs/362 |    2 +-
+ tests/xfs/364 |    2 +-
+ tests/xfs/366 |    2 +-
+ tests/xfs/368 |    2 +-
+ tests/xfs/370 |    2 +-
+ tests/xfs/372 |    2 +-
+ tests/xfs/374 |    2 +-
+ tests/xfs/376 |    2 +-
+ tests/xfs/378 |    2 +-
+ tests/xfs/380 |    2 +-
+ tests/xfs/382 |    2 +-
+ tests/xfs/384 |    2 +-
+ tests/xfs/386 |    2 +-
+ tests/xfs/388 |    2 +-
+ tests/xfs/390 |    2 +-
+ tests/xfs/392 |    2 +-
+ tests/xfs/394 |    2 +-
+ tests/xfs/396 |    2 +-
+ tests/xfs/398 |    2 +-
+ tests/xfs/400 |    2 +-
+ tests/xfs/402 |    2 +-
+ tests/xfs/404 |    2 +-
+ tests/xfs/406 |    2 +-
+ tests/xfs/408 |    2 +-
+ tests/xfs/410 |    2 +-
+ tests/xfs/412 |    2 +-
+ tests/xfs/414 |    2 +-
+ tests/xfs/416 |    2 +-
+ tests/xfs/418 |    2 +-
+ tests/xfs/425 |    2 +-
+ tests/xfs/427 |    2 +-
+ tests/xfs/429 |    2 +-
+ tests/xfs/496 |    2 +-
+ tests/xfs/734 |    2 +-
+ tests/xfs/737 |    2 +-
+ tests/xfs/741 |    2 +-
+ tests/xfs/742 |    2 +-
+ tests/xfs/785 |    2 +-
  44 files changed, 44 insertions(+), 44 deletions(-)
 
 
-diff --git a/doc/group-names.txt b/doc/group-names.txt
-index 8e1a62331738bb..9fb72e65f2a63e 100644
---- a/doc/group-names.txt
-+++ b/doc/group-names.txt
-@@ -31,7 +31,6 @@ copy_range		copy_file_range syscall
- copyup			overlayfs copyup
- dangerous		dangerous test that can crash the system
- dangerous_fuzzers	fuzzers that can crash your computer
--dangerous_norepair	fuzzers to evaluate kernel metadata verifiers
- dangerous_scrub		fuzzers to evaluate xfs_scrub checking
- dangerous_selftest	selftests that crash/hang
- data			data loss checkers
-@@ -57,6 +56,7 @@ fsstress_online_repair	race fsstress and xfs_scrub online repair
- fsstress_scrub		race fsstress and xfs_scrub checking
- fuzzers_bothrepair	fuzzers to evaluate xfs_scrub + xfs_repair repair
- fuzzers			filesystem fuzz tests
-+fuzzers_norepair	fuzzers to evaluate kernel metadata verifiers
- fuzzers_online_repair	fuzzers to evaluate xfs_scrub online repair
- fuzzers_repair		fuzzers to evaluate xfs_repair offline repair
- growfs			increasing the size of a filesystem
-diff --git a/tests/xfs/453 b/tests/xfs/453
-index d586f79dd838ee..c005454f835262 100755
---- a/tests/xfs/453
-+++ b/tests/xfs/453
+diff --git a/tests/xfs/350 b/tests/xfs/350
+index 99596dc81c2160..ec49cc8d149094 100755
+--- a/tests/xfs/350
++++ b/tests/xfs/350
 @@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/454 b/tests/xfs/454
-index 828b2d93aa6408..36b5746e80b2ee 100755
---- a/tests/xfs/454
-+++ b/tests/xfs/454
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/455 b/tests/xfs/455
-index c5d05b26cd94d3..05e9cc3d7e57a1 100755
---- a/tests/xfs/455
-+++ b/tests/xfs/455
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/456 b/tests/xfs/456
-index 3b2291570af786..d1cc3d9a2c1b0d 100755
---- a/tests/xfs/456
-+++ b/tests/xfs/456
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/457 b/tests/xfs/457
-index 41b51fb607528c..cc4867a619f569 100755
---- a/tests/xfs/457
-+++ b/tests/xfs/457
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/458 b/tests/xfs/458
-index fff31ce9b14c83..fbb27213591a76 100755
---- a/tests/xfs/458
-+++ b/tests/xfs/458
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/459 b/tests/xfs/459
-index b55899aed107e1..384a699d8018ce 100755
---- a/tests/xfs/459
-+++ b/tests/xfs/459
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/460 b/tests/xfs/460
-index d67ae555f48e3e..5ca6a34594ba2c 100755
---- a/tests/xfs/460
-+++ b/tests/xfs/460
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/461 b/tests/xfs/461
-index 7609ce9b080552..d1f6adfe639538 100755
---- a/tests/xfs/461
-+++ b/tests/xfs/461
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/462 b/tests/xfs/462
-index 0831f8e963a26d..bd891d330a3ecf 100755
---- a/tests/xfs/462
-+++ b/tests/xfs/462
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/463 b/tests/xfs/463
-index cbfd9c3c693f3d..184e827f5327e2 100755
---- a/tests/xfs/463
-+++ b/tests/xfs/463
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/464 b/tests/xfs/464
-index 71ce355726c001..f82762c7e14222 100755
---- a/tests/xfs/464
-+++ b/tests/xfs/464
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/465 b/tests/xfs/465
-index 30c472459be043..2384b1b1d0fab7 100755
---- a/tests/xfs/465
-+++ b/tests/xfs/465
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/466 b/tests/xfs/466
-index 4a470c90805c80..523d20727a3046 100755
---- a/tests/xfs/466
-+++ b/tests/xfs/466
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/467 b/tests/xfs/467
-index d64a7bb8cebcdf..1c0fe8e06458a4 100755
---- a/tests/xfs/467
-+++ b/tests/xfs/467
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/468 b/tests/xfs/468
-index fa501e402b8029..8bc6bb87c76be8 100755
---- a/tests/xfs/468
-+++ b/tests/xfs/468
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/469 b/tests/xfs/469
-index 20fdb78dc5f430..810e1b1d409d33 100755
---- a/tests/xfs/469
-+++ b/tests/xfs/469
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/470 b/tests/xfs/470
-index 52be985b3bb59d..dfb9b2edd7bd36 100755
---- a/tests/xfs/470
-+++ b/tests/xfs/470
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/471 b/tests/xfs/471
-index 6b72b80a8f440a..e3bdee5257ec68 100755
---- a/tests/xfs/471
-+++ b/tests/xfs/471
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/472 b/tests/xfs/472
-index 0ec3335ed9166d..74168fb4bf675c 100755
---- a/tests/xfs/472
-+++ b/tests/xfs/472
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/473 b/tests/xfs/473
-index 12924aee262b46..c51e93743b60da 100755
---- a/tests/xfs/473
-+++ b/tests/xfs/473
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/474 b/tests/xfs/474
-index d3c073524c73b3..f01f8935a033a1 100755
---- a/tests/xfs/474
-+++ b/tests/xfs/474
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/475 b/tests/xfs/475
-index 06317ee2a516bd..acd9d433583e9e 100755
---- a/tests/xfs/475
-+++ b/tests/xfs/475
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/476 b/tests/xfs/476
-index dd2fbf4dab3b51..da8fbe3487ce2d 100755
---- a/tests/xfs/476
-+++ b/tests/xfs/476
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/477 b/tests/xfs/477
-index fccd4f56a2ac62..ec0db3a3fff59a 100755
---- a/tests/xfs/477
-+++ b/tests/xfs/477
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/478 b/tests/xfs/478
-index 5909bd496c1232..2cf5d669c07638 100755
---- a/tests/xfs/478
-+++ b/tests/xfs/478
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/479 b/tests/xfs/479
-index e59726ef1ceab3..f4388ae2ec1f47 100755
---- a/tests/xfs/479
-+++ b/tests/xfs/479
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/480 b/tests/xfs/480
-index e5a1fa96a26e97..5dc2982e3d52fd 100755
---- a/tests/xfs/480
-+++ b/tests/xfs/480
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/481 b/tests/xfs/481
-index bc36beeec657fa..43eb14aafb2903 100755
---- a/tests/xfs/481
-+++ b/tests/xfs/481
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair realtime
-+_begin_fstest dangerous_fuzzers fuzzers_norepair realtime
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/482 b/tests/xfs/482
-index 66e44efd1a5192..2b08b9aab2bb01 100755
---- a/tests/xfs/482
-+++ b/tests/xfs/482
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair realtime
-+_begin_fstest dangerous_fuzzers fuzzers_norepair realtime
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/483 b/tests/xfs/483
-index 5225a18a7149f0..da19812ec955e8 100755
---- a/tests/xfs/483
-+++ b/tests/xfs/483
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/484 b/tests/xfs/484
-index ef768df8c09d7f..865fcc6c859f0b 100755
---- a/tests/xfs/484
-+++ b/tests/xfs/484
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/485 b/tests/xfs/485
-index f3dbc4f6644647..d82a39a809fc5e 100755
---- a/tests/xfs/485
-+++ b/tests/xfs/485
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/486 b/tests/xfs/486
-index 8ee65c0cb8ee64..4bdcef8f87d2ff 100755
---- a/tests/xfs/486
-+++ b/tests/xfs/486
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/487 b/tests/xfs/487
-index 8bd646ed908b39..0a5403a25dfd82 100755
---- a/tests/xfs/487
-+++ b/tests/xfs/487
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/488 b/tests/xfs/488
-index c58d21e2208589..0e67889f26f7a0 100755
---- a/tests/xfs/488
-+++ b/tests/xfs/488
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/489 b/tests/xfs/489
-index b9df871a236d7e..ef65525c224764 100755
---- a/tests/xfs/489
-+++ b/tests/xfs/489
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/498 b/tests/xfs/498
-index f4671519453bc1..f8580e2b912857 100755
---- a/tests/xfs/498
-+++ b/tests/xfs/498
-@@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
  
  _register_cleanup "_cleanup" BUS
  
-diff --git a/tests/xfs/735 b/tests/xfs/735
-index 04bbcc5cb9aa99..861763b3db8bd8 100755
---- a/tests/xfs/735
-+++ b/tests/xfs/735
+diff --git a/tests/xfs/352 b/tests/xfs/352
+index 9da8db57b83250..d672a5c0d0bece 100755
+--- a/tests/xfs/352
++++ b/tests/xfs/352
 @@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_norepair
-+_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
  
  _register_cleanup "_cleanup" BUS
  
-diff --git a/tests/xfs/738 b/tests/xfs/738
-index 32f12a70b3097e..f432607075ca91 100755
---- a/tests/xfs/738
-+++ b/tests/xfs/738
+diff --git a/tests/xfs/354 b/tests/xfs/354
+index 645b8152223ef3..bed0c5d70bf170 100755
+--- a/tests/xfs/354
++++ b/tests/xfs/354
 @@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_norepair
-+_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
  
  _register_cleanup "_cleanup" BUS
  
-diff --git a/tests/xfs/745 b/tests/xfs/745
-index d139aeefdd8a37..38a858e8cffd0a 100755
---- a/tests/xfs/745
-+++ b/tests/xfs/745
+diff --git a/tests/xfs/356 b/tests/xfs/356
+index 5d6497a1867918..bc8a7cc90e621a 100755
+--- a/tests/xfs/356
++++ b/tests/xfs/356
 @@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
+ # Use xfs_repair to fix the corruption.
+ #
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_norepair realtime
-+_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair realtime
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
  
  _register_cleanup "_cleanup" BUS
  
-diff --git a/tests/xfs/746 b/tests/xfs/746
-index 696d024532982a..e81d4f93a9059f 100755
---- a/tests/xfs/746
-+++ b/tests/xfs/746
+diff --git a/tests/xfs/358 b/tests/xfs/358
+index 4fab6e72c4226f..f2345928ce7d74 100755
+--- a/tests/xfs/358
++++ b/tests/xfs/358
 @@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
- 
+ # Use xfs_repair to fix the corruption.
+ #
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_norepair realtime
-+_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair realtime
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
  
  _register_cleanup "_cleanup" BUS
  
-diff --git a/tests/xfs/788 b/tests/xfs/788
-index 46438eabafd008..0864823a9e35d4 100755
---- a/tests/xfs/788
-+++ b/tests/xfs/788
+diff --git a/tests/xfs/360 b/tests/xfs/360
+index 7385506824d7d1..0b423a934af16e 100755
+--- a/tests/xfs/360
++++ b/tests/xfs/360
 @@ -8,7 +8,7 @@
- # Do not fix the filesystem, to test metadata verifiers.
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/362 b/tests/xfs/362
+index f1678aee1ea0ce..a95ecfb6165c08 100755
+--- a/tests/xfs/362
++++ b/tests/xfs/362
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/364 b/tests/xfs/364
+index aa5acbe2a07b3f..63e344240ff6d9 100755
+--- a/tests/xfs/364
++++ b/tests/xfs/364
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/366 b/tests/xfs/366
+index 2f28810cc3da03..9f32361306b927 100755
+--- a/tests/xfs/366
++++ b/tests/xfs/366
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/368 b/tests/xfs/368
+index 75046e4a9cad47..f30fcd2f3263f0 100755
+--- a/tests/xfs/368
++++ b/tests/xfs/368
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/370 b/tests/xfs/370
+index 16e444f8da9d3c..6f59757174bc41 100755
+--- a/tests/xfs/370
++++ b/tests/xfs/370
+@@ -9,7 +9,7 @@
+ # Use xfs_repair to repair the problems.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/372 b/tests/xfs/372
+index 0599c9b830a27b..2f2010b36a9e53 100755
+--- a/tests/xfs/372
++++ b/tests/xfs/372
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/374 b/tests/xfs/374
+index 0d69129f1652c7..8237bc1665b3a5 100755
+--- a/tests/xfs/374
++++ b/tests/xfs/374
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/376 b/tests/xfs/376
+index fe47b00bcc33d5..80e19f56d2b911 100755
+--- a/tests/xfs/376
++++ b/tests/xfs/376
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/378 b/tests/xfs/378
+index c2d37e7125c307..3eeb0e99429213 100755
+--- a/tests/xfs/378
++++ b/tests/xfs/378
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/380 b/tests/xfs/380
+index bd3c2cdc136495..45cbea8f391a9a 100755
+--- a/tests/xfs/380
++++ b/tests/xfs/380
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/382 b/tests/xfs/382
+index 85a612c18c3d6f..9ee2ca0a987855 100755
+--- a/tests/xfs/382
++++ b/tests/xfs/382
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/384 b/tests/xfs/384
+index 45d235a8347c85..a22768c800f9c0 100755
+--- a/tests/xfs/384
++++ b/tests/xfs/384
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/386 b/tests/xfs/386
+index 9b3023ad2b3af6..1e73a5978093cb 100755
+--- a/tests/xfs/386
++++ b/tests/xfs/386
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/388 b/tests/xfs/388
+index 2e1eb7f13de44a..de8ce74bb92edd 100755
+--- a/tests/xfs/388
++++ b/tests/xfs/388
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/390 b/tests/xfs/390
+index 4969bf66105513..d6449d291cb971 100755
+--- a/tests/xfs/390
++++ b/tests/xfs/390
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/392 b/tests/xfs/392
+index 619665f8e3aa38..a2e749d24323b2 100755
+--- a/tests/xfs/392
++++ b/tests/xfs/392
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/394 b/tests/xfs/394
+index fd6a3330c31b60..aa2dee3644d5d2 100755
+--- a/tests/xfs/394
++++ b/tests/xfs/394
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/396 b/tests/xfs/396
+index a7bcaa4a86ea2b..a49ef5b95ccfb6 100755
+--- a/tests/xfs/396
++++ b/tests/xfs/396
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/398 b/tests/xfs/398
+index 1b91347c4edb1e..1d6d6ba9e9adc8 100755
+--- a/tests/xfs/398
++++ b/tests/xfs/398
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/400 b/tests/xfs/400
+index 01f59b1b471f68..5465baea2939d4 100755
+--- a/tests/xfs/400
++++ b/tests/xfs/400
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/402 b/tests/xfs/402
+index 2bb4fc9c23bb1e..981fb5f5e4aa73 100755
+--- a/tests/xfs/402
++++ b/tests/xfs/402
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/404 b/tests/xfs/404
+index 075a788a66e638..074803ed8023e7 100755
+--- a/tests/xfs/404
++++ b/tests/xfs/404
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/406 b/tests/xfs/406
+index 9815090c9db335..7a6e8bdb535237 100755
+--- a/tests/xfs/406
++++ b/tests/xfs/406
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
++_begin_fstest dangerous_fuzzers repair fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/408 b/tests/xfs/408
+index 1e1a7a7336c093..3c7d16f0e6c6b7 100755
+--- a/tests/xfs/408
++++ b/tests/xfs/408
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
++_begin_fstest dangerous_fuzzers repair fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/410 b/tests/xfs/410
+index 78da6cb4f2fec5..257ed295f330a4 100755
+--- a/tests/xfs/410
++++ b/tests/xfs/410
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/412 b/tests/xfs/412
+index ba1eb482276782..98a28001780646 100755
+--- a/tests/xfs/412
++++ b/tests/xfs/412
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/414 b/tests/xfs/414
+index 18ed8343eb4e4f..80f83be4dba192 100755
+--- a/tests/xfs/414
++++ b/tests/xfs/414
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/416 b/tests/xfs/416
+index 68094b841fcace..0d87c4116c05ea 100755
+--- a/tests/xfs/416
++++ b/tests/xfs/416
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/418 b/tests/xfs/418
+index 41ec77041f0d4d..0f5cb7a93c6fef 100755
+--- a/tests/xfs/418
++++ b/tests/xfs/418
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/425 b/tests/xfs/425
+index 6108e19c0b5650..7ad53f97a6940c 100755
+--- a/tests/xfs/425
++++ b/tests/xfs/425
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/427 b/tests/xfs/427
+index c19c02f4ee3374..38de1360af6262 100755
+--- a/tests/xfs/427
++++ b/tests/xfs/427
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/429 b/tests/xfs/429
+index eeb35945ec20d1..ded8c3944a2648 100755
+--- a/tests/xfs/429
++++ b/tests/xfs/429
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/496 b/tests/xfs/496
+index af1a636faa6049..63205b7b31d97f 100755
+--- a/tests/xfs/496
++++ b/tests/xfs/496
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/734 b/tests/xfs/734
+index 3fe41ac2fe80ea..232ac4264bc33d 100755
+--- a/tests/xfs/734
++++ b/tests/xfs/734
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/737 b/tests/xfs/737
+index 0e35bbe340ea73..edfcf7e336ba44 100755
+--- a/tests/xfs/737
++++ b/tests/xfs/737
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/741 b/tests/xfs/741
+index da0805273bd255..ea1c2d98516fdb 100755
+--- a/tests/xfs/741
++++ b/tests/xfs/741
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
  
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_norepair
-+_begin_fstest dangerous_fuzzers fuzzers_norepair
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
++_begin_fstest dangerous_fuzzers repair fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/742 b/tests/xfs/742
+index d699aa10c68f6a..bbc186f8472b64 100755
+--- a/tests/xfs/742
++++ b/tests/xfs/742
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ 
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
++_begin_fstest dangerous_fuzzers repair fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/785 b/tests/xfs/785
+index f3707c730f31ac..5610a5df5b9e1f 100755
+--- a/tests/xfs/785
++++ b/tests/xfs/785
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
++_begin_fstest dangerous_fuzzers repair fuzzers_repair
  
  _register_cleanup "_cleanup" BUS
  
