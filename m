@@ -1,44 +1,42 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB0621B81DC;
-	Wed, 19 Feb 2025 05:51:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FDB1B4154
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 05:53:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739944269; cv=none; b=KbSHn+3KV0z9fFCuilAzyYAlxPMlQ7BnY4N2eihJE8iNZ5evja3ODDS4j0KIIqIgPFBA5Ft5d35tfcF74dCXHnqdNqNTOxYBe/MiBff/MK9NzKyA/rOkF8IS7vKnd7dvSe/6Hbt6JLShR3/6WsHw/kL3kglPKJUMh4iufJ3j7Xc=
+	t=1739944404; cv=none; b=BRTkWeDMqbxN8O4Huuanp22JDFYRTYgzy2zsJ9D+9ntWZkOlFWl7cU57uHtGiKWZrZT7qEzaNZWNjBlId0e1XhbXDg6KUyd6LQe1LV3qO7yxhhYfh32b2nCZMZRkIDzFhjN7qT71kuYW1iT457sIR/ijvc1DCUqxlLrzQ7iYIhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739944269; c=relaxed/simple;
-	bh=AL/7oMbK88WVyq54aOcxQLCU1SQpmnppab7GiB2dzH0=;
+	s=arc-20240116; t=1739944404; c=relaxed/simple;
+	bh=Ih9jlS3Hxnj/EWQ6Er/5WsJftMBQL76Pcl+viH2akqA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aocImoKY7OgiurfbKAcCSGVtfTU6BasyQ+Cre1Ko3G27XZoN3WH+Sk56DJbT/fxU/NaPQIhdm2YWUEcDhgE2m+KVw9gBYi5YYkARUNMfxt8LN3b7QqJbyElrwxRZ5TPnYKDb2lsLVGv82L7KxOORGgFzbIbTE0IlOILwpnicr+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yW+loH5n; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=PxgtHTgxYnRsyC2zniLjI60xv6wA4HbTOtNNvPZ5h0pJR/VeIqBTUed/5iSkBEfN6mjEYonacu47i2pkVL8Bf14NbwMIghvk/q4QvLcA3nPhSSUKCLNGXQHJKWY8tktTKqrfQid1J99OMYcDIO7ZD17Hx9Qy2DTh9cL6q2LLHDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EWp3Ndem; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yW+loH5n"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=AVYcYzLmlC904RztyQdQaAfxLgw1clUOsrCz9wn3haw=; b=yW+loH5nbUIZ+f5UEgLX9Uy5H7
-	CxnduKNmjdMKT8Dy8u/zICUV6GDu1QFUN/KgIr6bAHVvuokxC4/LBxypVj3ma9TsWWYqbmq96yA3V
-	x18f8BUMo9B6WAudAgy/PB88M5C2RjHok7TlqCfHKUG6dK8fZ+pEAiMioJjTwxC7SCtcZOWXUwQmh
-	L8TPZ+50aXFz6Fqx7Ua914hWNFlZZM3FmbbtvP6IvX/bglpEU5gn5o0or+JJSjIua4S9x9keOh5fn
-	n5bxN8ArOuteIXmeYi+Pv8eWECLGmBN1PUbTOla6IRN8gQzbJ4HhR+M9ARYnaixU2vlqZ1Fi/KJJf
-	sGPh8/2g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tkczC-0000000AxIs-0stI;
-	Wed, 19 Feb 2025 05:51:06 +0000
-Date: Tue, 18 Feb 2025 21:51:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, hch@lst.de,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] dio_writeback_race: align the directio buffer to
- base page size
-Message-ID: <Z7VxSgR8mOUMcQGd@infradead.org>
-References: <173992586604.4077946.15594107181131531344.stgit@frogsfrogsfrogs>
- <173992586646.4077946.4152131666050168978.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EWp3Ndem"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9031DC4CED1;
+	Wed, 19 Feb 2025 05:53:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739944403;
+	bh=Ih9jlS3Hxnj/EWQ6Er/5WsJftMBQL76Pcl+viH2akqA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EWp3NdemrvKr3Jgo/PF9lUOIj0gAg+dE1e+K/yVP4rFlIrCiNE99qLAX9SW4MUCWF
+	 cjapr7qf1YVFi1l5wXDsNAnIxrMgXaNGt4AwS1ipo2PqYuJKrgAk7zG/mh6BB4DnNt
+	 Mapb+l3ytUziniF9BbUH0Kg/Asuv+X47XIMbFIwJFLd+9FKYKv395olWqJw8aJ434Q
+	 lCm2c5sD+S1Jw3hRBAtcayb3BwaQKYCdEC4R+jJEXleghFVKtqN84qVAWdkbN9+zwE
+	 ULTUN1XMbclXgiZ6oECy5TzrpHkAVyjCEeu0tBVKbSSHwFeSBZQ1n2oYowAFP0sxP3
+	 4wfJaGM/CJ79Q==
+Date: Tue, 18 Feb 2025 21:53:23 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] mkfs,xfs_repair: don't pass a daddr as the flags
+ argument
+Message-ID: <20250219055323.GU3028674@frogsfrogsfrogs>
+References: <20250219040813.GL21808@frogsfrogsfrogs>
+ <20250219053717.GD10173@lst.de>
+ <20250219054515.GT3028674@frogsfrogsfrogs>
+ <20250219054851.GA10520@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,20 +45,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173992586646.4077946.4152131666050168978.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250219054851.GA10520@lst.de>
 
-On Tue, Feb 18, 2025 at 04:49:31PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Feb 19, 2025 at 06:48:51AM +0100, Christoph Hellwig wrote:
+> On Tue, Feb 18, 2025 at 09:45:15PM -0800, Darrick J. Wong wrote:
+> > > The patch itself looks fine, although I don't really see the point in
+> > > the xfsprogs-only xfs_buf_set_daddr (including the current two callers).
+> > 
+> > Eh, yeah.  Want me to resend with those bits cut out?
 > 
-> There's no need to align the memory buffer for the direcio write to the
-> file allocation unit size; base page size will do.  This fixes the
-> following error when generic/761 is run against an XFS rt filesystem
-> with a 28k rtextsize:
+> As long as the helper is around there's probably no reason not to use
+> it.  Removing it would probably pair pretty well with passing a daddr
+> to xfs_get_buf_uncached.  Or maybe killing xfs_{get,read}_buf_uncached
+> entirely in favor of just using xfs_buf_oneshot more..
 
-Note that in theory even just the memory alignment reported by
-statx / XFS_IOC_DIOINFO is enough, but I don't see how reducing the
-alignment futher would benefit us much here.
+<nod> I think I'd rather rid of it entirely and fix the _uncached API to
+take a daddr.  It's not like we can't pass in DADDR_NULL if we *really*
+don't know where it's going.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
+--D
