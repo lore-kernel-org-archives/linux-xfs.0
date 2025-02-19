@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3952B46B8;
-	Wed, 19 Feb 2025 01:04:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6CE286292;
+	Wed, 19 Feb 2025 01:04:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739927067; cv=none; b=Yh2tXHm4kWIA70eCrBbcqk6PNLUGyP35EuIqGit4HfVW+3zFGL6ZCVG8lgGW56n5ZFfacMb1k56Yj/DGhBcLr4xyvibZP8wH29fSojxVZH3UWYQNY+hMIOHYv8KT/gwyjw1smVwePKFA5m0BKVTuKg1ucf4qQDs9A3rkFm8fU6s=
+	t=1739927082; cv=none; b=LZ4pZ2QeyszVfeHqM8HR2LAITTRY2/V2ChQd3i34O5P21VrbTKZ8I+1X16Z+pA2RtnTW+kjAo0YF5IqTNXRHGh/t7vf52kQyFwCa4OH+qAWUGJ93vGaNQcaziQRcf7YdHVPvo3TIwKOwnouk6eJmlgAYY5FqVBPh8zfKLH4zhsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739927067; c=relaxed/simple;
-	bh=h7g65ya5mmyPcqZEz07VTn3VcYc6Ouf+4KWupov03/U=;
+	s=arc-20240116; t=1739927082; c=relaxed/simple;
+	bh=Yk3T6iB+jUswyvSovc+Vb8HrmLsT2R0Gr/UMpW3hEwU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q7CZcpfPH8mCXMyLWEEUB+e1VCUI7MRuiptaTbrLZkc5zKSPTEO/T2s9QT/YAhralAK6YEt0MmWd8cVUhmg2QQdxafKNxrboyknh8lF7gXb4pssjAfBxjYZtO4LpRMgjKWt0xYRjwnI3DNT6fOnCPuJW6IPOMqpGawXCmhxeZqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LyxpC8Ib; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kHGPAvEEu4H/NIdpNH7PMmqi9bLFNFmvTWsnwb5fuVSr//BLRr8dIyDaOxDNdt8IcM38de6lk6adJSticilY4oCDPM2d8kQFSO0Xm37CDQzHIMi/fph4Nz4DqXGb/VjUMDTnSHAqN23y5JIsDaOsRSui4SavEht0SONvO8r8eDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hb/S+9g/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LyxpC8Ib"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0615C4CEE2;
-	Wed, 19 Feb 2025 01:04:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hb/S+9g/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ECDFC4CEE2;
+	Wed, 19 Feb 2025 01:04:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739927066;
-	bh=h7g65ya5mmyPcqZEz07VTn3VcYc6Ouf+4KWupov03/U=;
+	s=k20201202; t=1739927082;
+	bh=Yk3T6iB+jUswyvSovc+Vb8HrmLsT2R0Gr/UMpW3hEwU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LyxpC8IbKlZqfUZuhCQtNoemDf70S34AlVbqO5QDX28mRe5CNHwrXOU3L52Gtr8/4
-	 wNXE6j4IkY7b8v0oX9XHYsjYulOuzirAz+g82GfyAJ8sT0PvxmOz896nSc4/1LWxBI
-	 U3R3p7iRdcLMyvCZY/9WotqWUpHxewdBuuAV4S4vexiT8FBLesDThzRprWLo1yryol
-	 W0VtePI6QvAu8g0TNuUlmF9gDAlsJ/ibUpdZEw3S8YO8aTWhu/huZmnjDmcOaT2wXd
-	 +CI/r1xT4Q4HIMqo1z61HrNW7qYH31rBVkfJ/euCCEuoVYeJdBP3PwobiGHKxansqW
-	 UbbBadaBs+8ig==
-Date: Tue, 18 Feb 2025 17:04:26 -0800
-Subject: [PATCH 03/13] fuzz: for fuzzing the rtrmapbt,
- find the path to the rt rmap btree file
+	b=hb/S+9g/WqePClQ2Qg9ASQY16V02oVt5n2AMdEAL1zlQFBpNyc7UI3y8wTgGel4Oi
+	 HmHVtXuCfkhiKO7pes6vSq0ZQJAHz9AxVtWxjK2NO9MxsZhjlDiwvBp6C1seyI3AUo
+	 WAc4A37EY5rqJfxaPNpCQt0PxYnEOH753CmGYJ6LjjMvGy1D4bcMn/vA8Giy15Arva
+	 UD72jlT/v+yeB6uXuSi8TZBLYqsj0+0pfLMFFpvS1lZPMYjgmnb/QYMzLns3gHve/O
+	 26m+umUgqa1S78R8GgT3yBAN8hYkFtlhRmQGCRzHEpis8isrHJWkje8h8PUOhbdM9o
+	 JhuJeCZSUeehQ==
+Date: Tue, 18 Feb 2025 17:04:41 -0800
+Subject: [PATCH 04/13] xfs: race fsstress with realtime rmap btree scrub and
+ repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992591168.4080556.16741355731984742368.stgit@frogsfrogsfrogs>
+Message-ID: <173992591186.4080556.3392046573752829715.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
 References: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,199 +46,202 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The fs population code creates a realtime rmap btree in /some/ realtime
-group with at least two levels.  This rmapbt file isn't necessarily the
-one for group 0, so we need to find it programmatically.
+Race checking and rebuilding realtime rmap btrees with fsstress.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/xfs    |   33 +++++++++++++++++++++++++++++++++
- tests/xfs/406 |    6 ++++--
- tests/xfs/407 |    6 ++++--
- tests/xfs/408 |    7 +++++--
- tests/xfs/409 |    7 +++++--
- tests/xfs/481 |    6 ++++--
- tests/xfs/482 |    7 +++++--
- 7 files changed, 60 insertions(+), 12 deletions(-)
+ tests/xfs/1817     |   39 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1817.out |    2 ++
+ tests/xfs/1821     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1821.out |    2 ++
+ tests/xfs/1857     |   39 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1857.out |    2 ++
+ tests/xfs/1893     |    2 +-
+ 7 files changed, 130 insertions(+), 1 deletion(-)
+ create mode 100755 tests/xfs/1817
+ create mode 100644 tests/xfs/1817.out
+ create mode 100755 tests/xfs/1821
+ create mode 100644 tests/xfs/1821.out
+ create mode 100755 tests/xfs/1857
+ create mode 100644 tests/xfs/1857.out
 
 
-diff --git a/common/xfs b/common/xfs
-index 1a0ececde39422..1be8cbf1c563d9 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1827,6 +1827,39 @@ _scratch_xfs_find_agbtree_height() {
- 	return 1
- }
- 
-+# Find us the path to the inode containing a realtime btree with a specific
-+# height.
-+_scratch_xfs_find_rgbtree_height() {
-+	local bt_type="$1"
-+	local bt_height="$2"
-+	local rgcount=$(_xfs_mount_rgcount $SCRATCH_DEV)
-+	local path
-+	local path_format
-+	local bt_prefix
+diff --git a/tests/xfs/1817 b/tests/xfs/1817
+new file mode 100755
+index 00000000000000..501aa2c8611196
+--- /dev/null
++++ b/tests/xfs/1817
+@@ -0,0 +1,39 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2025 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1817
++#
++# Race fsstress and rtrmapbt scrub for a while to see if we crash or livelock.
++#
++. ./common/preamble
++_begin_fstest scrub fsstress_scrub
 +
-+	case "${bt_type}" in
-+	"rmap")
-+		path_format="/rtgroups/%u.rmap"
-+		bt_prefix="u3.rtrmapbt"
-+		;;
-+	*)
-+		_fail "Don't know about rt btree ${bt_type}"
-+		;;
-+	esac
-+
-+	for ((rgno = 0; rgno < rgcount; rgno++)); do
-+		path="$(printf "${path_format}" "${rgno}")"
-+		bt_level=$(_scratch_xfs_db -c "path -m ${path}" -c "p ${bt_prefix}.level" | awk '{print $3}')
-+		# "level" is the actual level within the btree
-+		if [ "${bt_level}" -eq "$((bt_height - 1))" ]; then
-+			echo "${path}"
-+			return 0
-+		fi
-+	done
-+
-+	return 1
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
 +}
++_register_cleanup "_cleanup" BUS
 +
- _require_xfs_mkfs_atomicswap()
- {
- 	# atomicswap can be activated on rmap or reflink filesystems.
-diff --git a/tests/xfs/406 b/tests/xfs/406
-index 7a6e8bdb535237..0219f4a2f2562e 100755
---- a/tests/xfs/406
-+++ b/tests/xfs/406
-@@ -24,10 +24,12 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
--inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'sb 0' 'addr rrmapino')
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rtrmapbt"
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
- 
- echo "Fuzz rtrmapbt recs"
--_scratch_xfs_fuzz_metadata '' 'offline' 'sb 0' 'addr rrmapino' "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline' "path -m $path" "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
- echo "Done fuzzing rtrmapbt recs"
- 
- # success, all done
-diff --git a/tests/xfs/407 b/tests/xfs/407
-index 035578b97b4793..1eff49218a86bf 100755
---- a/tests/xfs/407
-+++ b/tests/xfs/407
-@@ -24,10 +24,12 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
--inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'sb 0' 'addr rrmapino')
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 1)" || \
-+	_fail "could not find two-level rtrmapbt"
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
- 
- echo "Fuzz rtrmapbt recs"
--_scratch_xfs_fuzz_metadata '' 'online' 'sb 0' 'addr rrmapino' "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online' "path -m $path" "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
- echo "Done fuzzing rtrmapbt recs"
- 
- # success, all done
-diff --git a/tests/xfs/408 b/tests/xfs/408
-index 3c7d16f0e6c6b7..1d41fd0923ae4a 100755
---- a/tests/xfs/408
-+++ b/tests/xfs/408
-@@ -4,7 +4,7 @@
- #
- # FS QA Test No. 408
- #
--# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
-+# Populate a XFS filesystem and fuzz every rtrmapbt key/pointer field.
- # Use xfs_repair to fix the corruption.
- #
- . ./common/preamble
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rtrmapbt"
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
 +
- echo "Fuzz rtrmapbt keyptrs"
--_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' 'sb 0' 'addr rrmapino' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' "path -m $path" >> $seqres.full
- echo "Done fuzzing rtrmapbt keyptrs"
- 
- # success, all done
-diff --git a/tests/xfs/409 b/tests/xfs/409
-index f3885e56010daa..f863b3bd4530ce 100755
---- a/tests/xfs/409
-+++ b/tests/xfs/409
-@@ -4,7 +4,7 @@
- #
- # FS QA Test No. 409
- #
--# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
-+# Populate a XFS filesystem and fuzz every rtrmapbt key/pointer field.
- # Use xfs_scrub to fix the corruption.
- #
- . ./common/preamble
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rtrmapbt"
++_require_realtime
++_require_scratch
++_require_xfs_stress_scrub
 +
- echo "Fuzz rtrmapbt keyptrs"
--_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' 'sb 0' 'addr rrmapino' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'online' "path -m $path" >> $seqres.full
- echo "Done fuzzing rtrmapbt keyptrs"
- 
- # success, all done
-diff --git a/tests/xfs/481 b/tests/xfs/481
-index 43eb14aafb2903..a3010a76177957 100755
---- a/tests/xfs/481
-+++ b/tests/xfs/481
-@@ -25,10 +25,12 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
--inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'sb 0' 'addr rrmapino')
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rtrmapbt"
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
- 
- echo "Fuzz rtrmapbt recs"
--_scratch_xfs_fuzz_metadata '' 'none' 'sb 0' 'addr rrmapino' "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none' "path -m $path" "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
- echo "Done fuzzing rtrmapbt recs"
- 
- # success, all done
-diff --git a/tests/xfs/482 b/tests/xfs/482
-index 2b08b9aab2bb01..d0386448564b7c 100755
---- a/tests/xfs/482
-+++ b/tests/xfs/482
-@@ -4,7 +4,7 @@
- #
- # FS QA Test No. 482
- #
--# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
-+# Populate a XFS filesystem and fuzz every rtrmapbt key/pointer field.
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
-@@ -25,8 +25,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rtrmapbt"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_require_xfs_has_feature "$SCRATCH_MNT" realtime
++_require_xfs_has_feature "$SCRATCH_MNT" rmapbt
++_xfs_force_bdev realtime $SCRATCH_MNT
 +
- echo "Fuzz rtrmapbt keyptrs"
--_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' 'sb 0' 'addr rrmapino' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' "path -m $path" >> $seqres.full
- echo "Done fuzzing rtrmapbt keyptrs"
++_scratch_xfs_stress_scrub -s "scrub rtrmapbt %rgno%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/1817.out b/tests/xfs/1817.out
+new file mode 100644
+index 00000000000000..525ec14ed0f057
+--- /dev/null
++++ b/tests/xfs/1817.out
+@@ -0,0 +1,2 @@
++QA output created by 1817
++Silence is golden
+diff --git a/tests/xfs/1821 b/tests/xfs/1821
+new file mode 100755
+index 00000000000000..3104dc7d9e5f37
+--- /dev/null
++++ b/tests/xfs/1821
+@@ -0,0 +1,45 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2025 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1821
++#
++# Race fsstress and realtime bitmap repair for a while to see if we crash or
++# livelock.
++#
++. ./common/preamble
++_begin_fstest online_repair fsstress_online_repair
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++_require_realtime
++_require_scratch
++_require_xfs_stress_online_repair
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_require_xfs_has_feature "$SCRATCH_MNT" realtime
++_xfs_force_bdev realtime $SCRATCH_MNT
++
++if _xfs_has_feature "$SCRATCH_MNT" rtgroups; then
++	_scratch_xfs_stress_online_repair -s "repair rtbitmap %rgno%"
++elif xfs_io -c 'help scrub' | grep -q rgsuper; then
++	_scratch_xfs_stress_online_repair -s "repair rtbitmap 0"
++else
++	_scratch_xfs_stress_online_repair -s "repair rtbitmap"
++fi
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/1821.out b/tests/xfs/1821.out
+new file mode 100644
+index 00000000000000..0f18ad5d88ca70
+--- /dev/null
++++ b/tests/xfs/1821.out
+@@ -0,0 +1,2 @@
++QA output created by 1821
++Silence is golden
+diff --git a/tests/xfs/1857 b/tests/xfs/1857
+new file mode 100755
+index 00000000000000..d07559f3974062
+--- /dev/null
++++ b/tests/xfs/1857
+@@ -0,0 +1,39 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2025 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1857
++#
++# Race fsstress and rtrmapbt repair for a while to see if we crash or livelock.
++#
++. ./common/preamble
++_begin_fstest online_repair fsstress_online_repair
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++_require_realtime
++_require_scratch
++_require_xfs_stress_online_repair
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_require_xfs_has_feature "$SCRATCH_MNT" realtime
++_require_xfs_has_feature "$SCRATCH_MNT" rmapbt
++_xfs_force_bdev realtime $SCRATCH_MNT
++
++_scratch_xfs_stress_online_repair -s "repair rtrmapbt %rgno%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/1857.out b/tests/xfs/1857.out
+new file mode 100644
+index 00000000000000..b51ffd3f6cdd53
+--- /dev/null
++++ b/tests/xfs/1857.out
+@@ -0,0 +1,2 @@
++QA output created by 1857
++Silence is golden
+diff --git a/tests/xfs/1893 b/tests/xfs/1893
+index d06687fa2a1087..1f04da0028a12a 100755
+--- a/tests/xfs/1893
++++ b/tests/xfs/1893
+@@ -46,7 +46,7 @@ done
  
- # success, all done
+ # Metapath verbs that take a rt group number
+ for ((rgno = 0; rgno < rgcount; rgno++)); do
+-	for v in rtbitmap rtsummary; do
++	for v in rtbitmap rtsummary rtrmapbt; do
+ 		testio=$(try_verb "$v" "$rgno")
+ 		test -z "$testio" && verbs+=("$v $rgno")
+ 	done
 
