@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 316BE1B6CF5
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 18:44:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1429A1E4AB
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 18:49:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739990652; cv=none; b=mamd7n/8U9LWzOPdmDDLfr0NW1feYJqO7DLLjQlWMrPEAWVJh+VJSGd36TmkkBmzg/4AQy/7K9I8OxsPHCZ7Gc9Fk17khMMO55gJbAow0hyo9d+EfcQTnwiSY8TO5gdciT75Xe4SzjszGdjC9ZQ4MLmMOIij3PZZwjZTGAkhBNA=
+	t=1739990986; cv=none; b=vB/Cz9AJ+1YTboHq+7pLfAJDr9AborDAhZFtJi7WEHYYtq2qn662sv1Kiw/WdGLvE672sUmgZezYdgbJZhJTdJMg85BSaKsHIdTzvM5B6466sm5aQiHfeVdxZoXBj2noHk3lnrLKjFhwEei3GJLE37MShbaWjvBFMcr4BKxjv98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739990652; c=relaxed/simple;
-	bh=9K3niY4cW4OhIo3HAhlAoRcm9131qCJ0gZFyxIVz8DM=;
+	s=arc-20240116; t=1739990986; c=relaxed/simple;
+	bh=Xk08VBtyspXK7Vqo45g0Tir9hq84+bXIMDoelNWtaNk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AbKZGJTUO9Ii0RdCuh299oS13U0T6z/nrPqj9ukSdYqX9oITmWj/Tsxh/8PPkcORiXSURiEQ53X+gGwb/GOfE1TM6lc1Kn7WRtie70T7j21uo5WZI7XRM3eO23JhedCwo4l7VB/eE1DOnBM244Iijy6DSbUFLPmXOM8D5mYMFGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yf1I9Uk1; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=vA8N8QBngPtLwOtSurgXYVl5u/nZ57DawrHdPPBHL0Q8i3ZV5cselrg3vAFhJ/SdDV4/wba4eYjO++rGB/TAM5DIlgn+NN1W9KQEFxUlYKcm2OZAOtMHLSIHaB6dTbk7BnXFnxNY7aENSmDD1ydNPmjIph/w+sujEpcU3VxpCFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H1Z1Z37k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yf1I9Uk1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 906D0C4CED1;
-	Wed, 19 Feb 2025 18:44:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H1Z1Z37k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8385BC4CED1;
+	Wed, 19 Feb 2025 18:49:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739990651;
-	bh=9K3niY4cW4OhIo3HAhlAoRcm9131qCJ0gZFyxIVz8DM=;
+	s=k20201202; t=1739990985;
+	bh=Xk08VBtyspXK7Vqo45g0Tir9hq84+bXIMDoelNWtaNk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Yf1I9Uk1hZbdlJdhN6ssBi1+/bqRip4NaSlsYt78JAurmkNTJuC1ZEyoK5h/qixIM
-	 Z/v/kFw1ANfIPpxPXm1TG+KYL5MfZtaUg2ypPTP9I8vUOJJ8AcGQLuIJztVb4Ov4Jo
-	 S4QuTjAYIgz4wpVRC9Rm4o0cZpob1U5sZgHHhLvLdKNav102o7YtHL1SVCxNFicDDJ
-	 wjQi1AOIbaN7i3lceTe/9Bxku2PeeidTyvGSS6y48FFKaa5aPCRdmD7Cbk0DVDef+B
-	 ZqnlrRH+kVI9SK9c+9JqNMacPSSIZ2CpWvkeGehqywMujhOfPSTbGEA5CAYssF0QIq
-	 HgKD2afdmvqDw==
-Date: Wed, 19 Feb 2025 10:44:11 -0800
+	b=H1Z1Z37kUWdzvuY9HqozQHuGtUHyVKocQ3opYW3okyBXjU72cbL8VUHzcfbfe6wcL
+	 h7umVePYvVRaRKG1CoSXdWJva4hgKYwbRA8JSO8+qLiPTMMd5qAgXNQVzr9KjGqF2+
+	 oBai/IWrjfgGNjf4qTAK2GtLODJqt8ayzzoDn7jtCPc/uv01Up/8KwpZcHjG69NaI0
+	 q10lS/rGHS2Gu+8HFuE84lKM1qBcMbAIr/zIOC/f6YinkUn4XGJbMwZWCBlfpEyEQY
+	 HdbFtout9wYXAi38CjpJGmuEG/xQIsmvA3ttPpoioXPmwVkc1ruH8qPTlddqT4Xc8M
+	 UIKMlNn6IG+CA==
+Date: Wed, 19 Feb 2025 10:49:45 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/45] xfs: make metabtree reservations global
-Message-ID: <20250219184411.GT21808@frogsfrogsfrogs>
+Subject: Re: [PATCH 41/45] xfs: support write life time based data placement
+Message-ID: <20250219184945.GU21808@frogsfrogsfrogs>
 References: <20250218081153.3889537-1-hch@lst.de>
- <20250218081153.3889537-8-hch@lst.de>
+ <20250218081153.3889537-42-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,706 +43,456 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250218081153.3889537-8-hch@lst.de>
+In-Reply-To: <20250218081153.3889537-42-hch@lst.de>
 
-On Tue, Feb 18, 2025 at 09:10:10AM +0100, Christoph Hellwig wrote:
-> Currently each metabtree inode has it's own space reservation to ensure
-> it can be expanded to the maximum size, mirroring what is done for the
-> AG-based btrees.  But unlike the AG-based btrees the metabtree inodes
-> aren't restricted to allocate from a single AG but can use free space
-> form the entire file system.  And unlike AG-based btrees where the
-> required reservation shrinks with the available free space due to this,
-> the metabtree reservations for the rtrmap and rtfreflink trees are not
-> bound in any way by the data device free space as they track RT extent
-> allocations.  This is not very efficient as it requires a large number
-> of blocks to be set aside that can't be used at all by other btrees.
+On Tue, Feb 18, 2025 at 09:10:44AM +0100, Christoph Hellwig wrote:
+> From: Hans Holmberg <hans.holmberg@wdc.com>
 > 
-> Switch to a model that uses a global pool instead in preparation for
-> reducing the amount of reserved space, which now also removes the
-> overloading of the i_nblocks field for metabtree inodes, which would
-> create problems if metabtree inodes every had a big enough xattr fork
-
-                                      ever
-
-> to require xattr blocks outside the inode.
+> Add a file write life time data placement allocation scheme that aims to
+> minimize fragmentation and thereby to do two things:
 > 
+>  a) separate file data to different zones when possible.
+>  b) colocate file data of similar life times when feasible.
+> 
+> To get best results, average file sizes should align with the zone
+> capacity that is reported through the XFS_IOC_FSGEOMETRY ioctl.
+> 
+> This improvement in data placement efficiency reduces the number of
+> blocks requiring relocation by GC, and thus decreases overall write
+> amplification.  The impact on performance varies depending on how full
+> the file system is.
+> 
+> For RocksDB using leveled compaction, the lifetime hints can improve
+> throughput for overwrite workloads at 80% file system utilization by
+> ~10%, but for lower file system utilization there won't be as much
+> benefit in application performance as there is less need for garbage
+> collection to start with.
+> 
+> Lifetime hints can be disabled using the nolifetime mount option.
+> 
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-With that fixed,
+I appreciate the extra information in the commit message!
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_metafile.c | 164 ++++++++++++++++++++++-------------
->  fs/xfs/libxfs/xfs_metafile.h |   6 +-
->  fs/xfs/scrub/repair.c        |  28 +++---
->  fs/xfs/xfs_fsops.c           |  19 ++--
->  fs/xfs/xfs_inode.h           |  16 +---
->  fs/xfs/xfs_mount.h           |   9 ++
->  fs/xfs/xfs_reflink.c         |  12 +--
->  fs/xfs/xfs_rtalloc.c         |  43 +--------
->  fs/xfs/xfs_rtalloc.h         |   5 --
->  fs/xfs/xfs_super.c           |   1 +
->  fs/xfs/xfs_trace.h           |  23 ++---
->  11 files changed, 155 insertions(+), 171 deletions(-)
+>  fs/xfs/xfs_mount.h      |   2 +
+>  fs/xfs/xfs_super.c      |  15 +++++
+>  fs/xfs/xfs_zone_alloc.c | 130 +++++++++++++++++++++++++++++++++++-----
+>  fs/xfs/xfs_zone_gc.c    |   4 +-
+>  fs/xfs/xfs_zone_priv.h  |   9 ++-
+>  5 files changed, 141 insertions(+), 19 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_metafile.c b/fs/xfs/libxfs/xfs_metafile.c
-> index 7625e694eb8d..88f011750add 100644
-> --- a/fs/xfs/libxfs/xfs_metafile.c
-> +++ b/fs/xfs/libxfs/xfs_metafile.c
-> @@ -21,6 +21,9 @@
->  #include "xfs_errortag.h"
->  #include "xfs_error.h"
->  #include "xfs_alloc.h"
-> +#include "xfs_rtgroup.h"
-> +#include "xfs_rtrmap_btree.h"
-> +#include "xfs_rtrefcount_btree.h"
->  
->  static const struct {
->  	enum xfs_metafile_type	mtype;
-> @@ -74,12 +77,11 @@ xfs_metafile_clear_iflag(
->  }
->  
->  /*
-> - * Is the amount of space that could be allocated towards a given metadata
-> - * file at or beneath a certain threshold?
-> + * Is the metafile reservations at or beneath a certain threshold?
->   */
->  static inline bool
->  xfs_metafile_resv_can_cover(
-> -	struct xfs_inode	*ip,
-> +	struct xfs_mount	*mp,
->  	int64_t			rhs)
->  {
->  	/*
-> @@ -88,43 +90,38 @@ xfs_metafile_resv_can_cover(
->  	 * global free block count.  Take care of the first case to avoid
->  	 * touching the per-cpu counter.
->  	 */
-> -	if (ip->i_delayed_blks >= rhs)
-> +	if (mp->m_metafile_resv_avail >= rhs)
->  		return true;
->  
->  	/*
->  	 * There aren't enough blocks left in the inode's reservation, but it
->  	 * isn't critical unless there also isn't enough free space.
->  	 */
-> -	return xfs_compare_freecounter(ip->i_mount, XC_FREE_BLOCKS,
-> -			rhs - ip->i_delayed_blks, 2048) >= 0;
-> +	return xfs_compare_freecounter(mp, XC_FREE_BLOCKS,
-> +			rhs - mp->m_metafile_resv_avail, 2048) >= 0;
->  }
->  
->  /*
-> - * Is this metadata file critically low on blocks?  For now we'll define that
-> - * as the number of blocks we can get our hands on being less than 10% of what
-> - * we reserved or less than some arbitrary number (maximum btree height).
-> + * Is the metafile reservation critically low on blocks?  For now we'll define
-> + * that as the number of blocks we can get our hands on being less than 10% of
-> + * what we reserved or less than some arbitrary number (maximum btree height).
->   */
->  bool
->  xfs_metafile_resv_critical(
-> -	struct xfs_inode	*ip)
-> +	struct xfs_mount	*mp)
->  {
-> -	uint64_t		asked_low_water;
-> +	ASSERT(xfs_has_metadir(mp));
->  
-> -	if (!ip)
-> -		return false;
-> -
-> -	ASSERT(xfs_is_metadir_inode(ip));
-> -	trace_xfs_metafile_resv_critical(ip, 0);
-> +	trace_xfs_metafile_resv_critical(mp, 0);
->  
-> -	if (!xfs_metafile_resv_can_cover(ip, ip->i_mount->m_rtbtree_maxlevels))
-> +	if (!xfs_metafile_resv_can_cover(mp, mp->m_rtbtree_maxlevels))
->  		return true;
->  
-> -	asked_low_water = div_u64(ip->i_meta_resv_asked, 10);
-> -	if (!xfs_metafile_resv_can_cover(ip, asked_low_water))
-> +	if (!xfs_metafile_resv_can_cover(mp,
-> +			div_u64(mp->m_metafile_resv_target, 10)))
->  		return true;
->  
-> -	return XFS_TEST_ERROR(false, ip->i_mount,
-> -			XFS_ERRTAG_METAFILE_RESV_CRITICAL);
-> +	return XFS_TEST_ERROR(false, mp, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
->  }
->  
->  /* Allocate a block from the metadata file's reservation. */
-> @@ -133,22 +130,24 @@ xfs_metafile_resv_alloc_space(
->  	struct xfs_inode	*ip,
->  	struct xfs_alloc_arg	*args)
->  {
-> +	struct xfs_mount	*mp = ip->i_mount;
->  	int64_t			len = args->len;
->  
->  	ASSERT(xfs_is_metadir_inode(ip));
->  	ASSERT(args->resv == XFS_AG_RESV_METAFILE);
->  
-> -	trace_xfs_metafile_resv_alloc_space(ip, args->len);
-> +	trace_xfs_metafile_resv_alloc_space(mp, args->len);
->  
->  	/*
->  	 * Allocate the blocks from the metadata inode's block reservation
->  	 * and update the ondisk sb counter.
->  	 */
-> -	if (ip->i_delayed_blks > 0) {
-> +	mutex_lock(&mp->m_metafile_resv_lock);
-> +	if (mp->m_metafile_resv_avail > 0) {
->  		int64_t		from_resv;
->  
-> -		from_resv = min_t(int64_t, len, ip->i_delayed_blks);
-> -		ip->i_delayed_blks -= from_resv;
-> +		from_resv = min_t(int64_t, len, mp->m_metafile_resv_avail);
-> +		mp->m_metafile_resv_avail -= from_resv;
->  		xfs_mod_delalloc(ip, 0, -from_resv);
->  		xfs_trans_mod_sb(args->tp, XFS_TRANS_SB_RES_FDBLOCKS,
->  				-from_resv);
-> @@ -175,6 +174,9 @@ xfs_metafile_resv_alloc_space(
->  		xfs_trans_mod_sb(args->tp, field, -len);
->  	}
->  
-> +	mp->m_metafile_resv_used += args->len;
-> +	mutex_unlock(&mp->m_metafile_resv_lock);
-> +
->  	ip->i_nblocks += args->len;
->  	xfs_trans_log_inode(args->tp, ip, XFS_ILOG_CORE);
->  }
-> @@ -186,26 +188,33 @@ xfs_metafile_resv_free_space(
->  	struct xfs_trans	*tp,
->  	xfs_filblks_t		len)
->  {
-> +	struct xfs_mount	*mp = ip->i_mount;
->  	int64_t			to_resv;
->  
->  	ASSERT(xfs_is_metadir_inode(ip));
-> -	trace_xfs_metafile_resv_free_space(ip, len);
-> +
-> +	trace_xfs_metafile_resv_free_space(mp, len);
->  
->  	ip->i_nblocks -= len;
->  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  
-> +	mutex_lock(&mp->m_metafile_resv_lock);
-> +	mp->m_metafile_resv_used -= len;
-> +
->  	/*
->  	 * Add the freed blocks back into the inode's delalloc reservation
->  	 * until it reaches the maximum size.  Update the ondisk fdblocks only.
->  	 */
-> -	to_resv = ip->i_meta_resv_asked - (ip->i_nblocks + ip->i_delayed_blks);
-> +	to_resv = mp->m_metafile_resv_target -
-> +		(mp->m_metafile_resv_used + mp->m_metafile_resv_avail);
->  	if (to_resv > 0) {
->  		to_resv = min_t(int64_t, to_resv, len);
-> -		ip->i_delayed_blks += to_resv;
-> +		mp->m_metafile_resv_avail += to_resv;
->  		xfs_mod_delalloc(ip, 0, to_resv);
->  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_RES_FDBLOCKS, to_resv);
->  		len -= to_resv;
->  	}
-> +	mutex_unlock(&mp->m_metafile_resv_lock);
->  
->  	/*
->  	 * Everything else goes back to the filesystem, so update the in-core
-> @@ -215,61 +224,96 @@ xfs_metafile_resv_free_space(
->  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, len);
->  }
->  
-> -/* Release a metadata file's space reservation. */
-> +static void
-> +__xfs_metafile_resv_free(
-> +	struct xfs_mount	*mp)
-> +{
-> +	if (mp->m_metafile_resv_avail) {
-> +		xfs_mod_sb_delalloc(mp, -(int64_t)mp->m_metafile_resv_avail);
-> +		xfs_add_fdblocks(mp, mp->m_metafile_resv_avail);
-> +	}
-> +	mp->m_metafile_resv_avail = 0;
-> +	mp->m_metafile_resv_used = 0;
-> +	mp->m_metafile_resv_target = 0;
-> +}
-> +
-> +/* Release unused metafile space reservation. */
->  void
->  xfs_metafile_resv_free(
-> -	struct xfs_inode	*ip)
-> +	struct xfs_mount	*mp)
->  {
-> -	/* Non-btree metadata inodes don't need space reservations. */
-> -	if (!ip || !ip->i_meta_resv_asked)
-> +	if (!xfs_has_metadir(mp))
->  		return;
->  
-> -	ASSERT(xfs_is_metadir_inode(ip));
-> -	trace_xfs_metafile_resv_free(ip, 0);
-> +	trace_xfs_metafile_resv_free(mp, 0);
->  
-> -	if (ip->i_delayed_blks) {
-> -		xfs_mod_delalloc(ip, 0, -ip->i_delayed_blks);
-> -		xfs_add_fdblocks(ip->i_mount, ip->i_delayed_blks);
-> -		ip->i_delayed_blks = 0;
-> -	}
-> -	ip->i_meta_resv_asked = 0;
-> +	mutex_lock(&mp->m_metafile_resv_lock);
-> +	__xfs_metafile_resv_free(mp);
-> +	mutex_unlock(&mp->m_metafile_resv_lock);
->  }
->  
-> -/* Set up a metadata file's space reservation. */
-> +/* Set up a metafile space reservation. */
->  int
->  xfs_metafile_resv_init(
-> -	struct xfs_inode	*ip,
-> -	xfs_filblks_t		ask)
-> +	struct xfs_mount	*mp)
->  {
-> +	struct xfs_rtgroup	*rtg = NULL;
-> +	xfs_filblks_t		used = 0, target = 0;
->  	xfs_filblks_t		hidden_space;
-> -	xfs_filblks_t		used;
-> -	int			error;
-> +	int			error = 0;
->  
-> -	if (!ip || ip->i_meta_resv_asked > 0)
-> +	if (!xfs_has_metadir(mp))
->  		return 0;
->  
-> -	ASSERT(xfs_is_metadir_inode(ip));
-> +	/*
-> +	 * Free any previous reservation to have a clean slate.
-> +	 */
-> +	mutex_lock(&mp->m_metafile_resv_lock);
-> +	__xfs_metafile_resv_free(mp);
-> +
-> +	/*
-> +	 * Currently the only btree metafiles that require reservations are the
-> +	 * rtrmap and the rtrefcount.  Anything new will have to be added here
-> +	 * as well.
-> +	 */
-> +	while ((rtg = xfs_rtgroup_next(mp, rtg))) {
-> +		if (xfs_has_rtrmapbt(mp)) {
-> +			used += rtg_rmap(rtg)->i_nblocks;
-> +			target += xfs_rtrmapbt_calc_reserves(mp);
-> +		}
-> +		if (xfs_has_rtreflink(mp)) {
-> +			used += rtg_refcount(rtg)->i_nblocks;
-> +			target += xfs_rtrefcountbt_calc_reserves(mp);
-> +		}
-> +	}
-> +
-> +	if (!target)
-> +		goto out_unlock;
->  
->  	/*
-> -	 * Space taken by all other metadata btrees are accounted on-disk as
-> +	 * Space taken by the per-AG metadata btrees are accounted on-disk as
->  	 * used space.  We therefore only hide the space that is reserved but
->  	 * not used by the trees.
->  	 */
-> -	used = ip->i_nblocks;
-> -	if (used > ask)
-> -		ask = used;
-> -	hidden_space = ask - used;
-> +	if (used > target)
-> +		target = used;
-> +	hidden_space = target - used;
->  
-> -	error = xfs_dec_fdblocks(ip->i_mount, hidden_space, true);
-> +	error = xfs_dec_fdblocks(mp, hidden_space, true);
->  	if (error) {
-> -		trace_xfs_metafile_resv_init_error(ip, error, _RET_IP_);
-> -		return error;
-> +		trace_xfs_metafile_resv_init_error(mp, 0);
-> +		goto out_unlock;
->  	}
->  
-> -	xfs_mod_delalloc(ip, 0, hidden_space);
-> -	ip->i_delayed_blks = hidden_space;
-> -	ip->i_meta_resv_asked = ask;
-> +	xfs_mod_sb_delalloc(mp, hidden_space);
-> +
-> +	mp->m_metafile_resv_target = target;
-> +	mp->m_metafile_resv_used = used;
-> +	mp->m_metafile_resv_avail = hidden_space;
-> +
-> +	trace_xfs_metafile_resv_init(mp, target);
->  
-> -	trace_xfs_metafile_resv_init(ip, ask);
-> -	return 0;
-> +out_unlock:
-> +	mutex_unlock(&mp->m_metafile_resv_lock);
-> +	return error;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_metafile.h b/fs/xfs/libxfs/xfs_metafile.h
-> index 95af4b52e5a7..ae6f9e779b98 100644
-> --- a/fs/xfs/libxfs/xfs_metafile.h
-> +++ b/fs/xfs/libxfs/xfs_metafile.h
-> @@ -26,13 +26,13 @@ void xfs_metafile_clear_iflag(struct xfs_trans *tp, struct xfs_inode *ip);
->  /* Space reservations for metadata inodes. */
->  struct xfs_alloc_arg;
->  
-> -bool xfs_metafile_resv_critical(struct xfs_inode *ip);
-> +bool xfs_metafile_resv_critical(struct xfs_mount *mp);
->  void xfs_metafile_resv_alloc_space(struct xfs_inode *ip,
->  		struct xfs_alloc_arg *args);
->  void xfs_metafile_resv_free_space(struct xfs_inode *ip, struct xfs_trans *tp,
->  		xfs_filblks_t len);
-> -void xfs_metafile_resv_free(struct xfs_inode *ip);
-> -int xfs_metafile_resv_init(struct xfs_inode *ip, xfs_filblks_t ask);
-> +void xfs_metafile_resv_free(struct xfs_mount *mp);
-> +int xfs_metafile_resv_init(struct xfs_mount *mp);
->  
->  /* Code specific to kernel/userspace; must be provided externally. */
->  
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 3b5288d3ef4e..c2705c3cba0d 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -1386,11 +1386,12 @@ int
->  xrep_reset_metafile_resv(
->  	struct xfs_scrub	*sc)
->  {
-> -	struct xfs_inode	*ip = sc->ip;
-> +	struct xfs_mount	*mp = sc->mp;
->  	int64_t			delta;
->  	int			error;
->  
-> -	delta = ip->i_nblocks + ip->i_delayed_blks - ip->i_meta_resv_asked;
-> +	delta = mp->m_metafile_resv_used + mp->m_metafile_resv_avail -
-> +		mp->m_metafile_resv_target;
->  	if (delta == 0)
->  		return 0;
->  
-> @@ -1401,11 +1402,11 @@ xrep_reset_metafile_resv(
->  	if (delta > 0) {
->  		int64_t		give_back;
->  
-> -		give_back = min_t(uint64_t, delta, ip->i_delayed_blks);
-> +		give_back = min_t(uint64_t, delta, mp->m_metafile_resv_avail);
->  		if (give_back > 0) {
-> -			xfs_mod_delalloc(ip, 0, -give_back);
-> -			xfs_add_fdblocks(ip->i_mount, give_back);
-> -			ip->i_delayed_blks -= give_back;
-> +			xfs_mod_sb_delalloc(mp, -give_back);
-> +			xfs_add_fdblocks(mp, give_back);
-> +			mp->m_metafile_resv_avail -= give_back;
->  		}
->  
->  		return 0;
-> @@ -1413,24 +1414,23 @@ xrep_reset_metafile_resv(
->  
->  	/*
->  	 * Not enough reservation; try to take some blocks from the filesystem
-> -	 * to the metadata inode.  @delta is negative here, so invert the sign.
-> +	 * to the metabtree reservation.
->  	 */
-> -	delta = -delta;
-> -	error = xfs_dec_fdblocks(sc->mp, delta, true);
-> +	delta = -delta; /* delta is negative here, so invert the sign. */
-> +	error = xfs_dec_fdblocks(mp, delta, true);
->  	while (error == -ENOSPC) {
->  		delta--;
->  		if (delta == 0) {
->  			xfs_warn(sc->mp,
-> -"Insufficient free space to reset space reservation for inode 0x%llx after repair.",
-> -					ip->i_ino);
-> +"Insufficient free space to reset metabtree reservation after repair.");
->  			return 0;
->  		}
-> -		error = xfs_dec_fdblocks(sc->mp, delta, true);
-> +		error = xfs_dec_fdblocks(mp, delta, true);
->  	}
->  	if (error)
->  		return error;
->  
-> -	xfs_mod_delalloc(ip, 0, delta);
-> -	ip->i_delayed_blks += delta;
-> +	xfs_mod_sb_delalloc(mp, delta);
-> +	mp->m_metafile_resv_avail += delta;
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index f055aebe4c7a..b2c733791011 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -24,6 +24,7 @@
->  #include "xfs_rtalloc.h"
->  #include "xfs_rtrmap_btree.h"
->  #include "xfs_rtrefcount_btree.h"
-> +#include "xfs_metafile.h"
->  
->  /*
->   * Write new AG headers to disk. Non-transactional, but need to be
-> @@ -561,15 +562,13 @@ xfs_fs_reserve_ag_blocks(
->  		return error;
->  	}
->  
-> -	if (xfs_has_realtime(mp)) {
-> -		err2 = xfs_rt_resv_init(mp);
-> -		if (err2 && err2 != -ENOSPC) {
-> -			xfs_warn(mp,
-> -		"Error %d reserving realtime metadata reserve pool.", err2);
-> -			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> -		}
-> +	err2 = xfs_metafile_resv_init(mp);
-> +	if (err2 && err2 != -ENOSPC) {
-> +		xfs_warn(mp,
-> +	"Error %d reserving realtime metadata reserve pool.", err2);
-> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  
-> -		if (err2 && !error)
-> +		if (!error)
->  			error = err2;
->  	}
->  
-> @@ -585,9 +584,7 @@ xfs_fs_unreserve_ag_blocks(
->  {
->  	struct xfs_perag	*pag = NULL;
->  
-> -	if (xfs_has_realtime(mp))
-> -		xfs_rt_resv_free(mp);
-> -
-> +	xfs_metafile_resv_free(mp);
->  	while ((pag = xfs_perag_next(mp, pag)))
->  		xfs_ag_resv_free(pag);
->  }
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index c08093a65352..1648dc5a8068 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -25,19 +25,9 @@ struct xfs_dquot;
->  typedef struct xfs_inode {
->  	/* Inode linking and identification information. */
->  	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
-> -	union {
-> -		struct {
-> -			struct xfs_dquot *i_udquot;	/* user dquot */
-> -			struct xfs_dquot *i_gdquot;	/* group dquot */
-> -			struct xfs_dquot *i_pdquot;	/* project dquot */
-> -		};
-> -
-> -		/*
-> -		 * Space that has been set aside to accomodate expansions of a
-> -		 * metadata btree rooted in this file.
-> -		 */
-> -		uint64_t	i_meta_resv_asked;
-> -	};
-> +	struct xfs_dquot	*i_udquot;	/* user dquot */
-> +	struct xfs_dquot	*i_gdquot;	/* group dquot */
-> +	struct xfs_dquot	*i_pdquot;	/* project dquot */
->  
->  	/* Inode location stuff */
->  	xfs_ino_t		i_ino;		/* inode number (agno/agino)*/
 > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 579eaf09157d..bbcf01555947 100644
+> index 181b9bcff2cb..b34a496081db 100644
 > --- a/fs/xfs/xfs_mount.h
 > +++ b/fs/xfs/xfs_mount.h
-> @@ -273,6 +273,11 @@ typedef struct xfs_mount {
->  	atomic_t		m_agirotor;	/* last ag dir inode alloced */
->  	atomic_t		m_rtgrotor;	/* last rtgroup rtpicked */
+> @@ -373,6 +373,7 @@ typedef struct xfs_mount {
+>  #define XFS_FEAT_ZONED		(1ULL << 29)	/* zoned RT device */
 >  
-> +	struct mutex		m_metafile_resv_lock;
-> +	uint64_t		m_metafile_resv_target;
-> +	uint64_t		m_metafile_resv_used;
-> +	uint64_t		m_metafile_resv_avail;
-> +
->  	/* Memory shrinker to throttle and reprioritize inodegc */
->  	struct shrinker		*m_inodegc_shrinker;
->  	/*
-> @@ -747,5 +752,9 @@ int xfs_add_incompat_log_feature(struct xfs_mount *mp, uint32_t feature);
->  bool xfs_clear_incompat_log_features(struct xfs_mount *mp);
->  void xfs_mod_delalloc(struct xfs_inode *ip, int64_t data_delta,
->  		int64_t ind_delta);
-> +static inline void xfs_mod_sb_delalloc(struct xfs_mount *mp, int64_t delta)
-> +{
-> +	percpu_counter_add(&mp->m_delalloc_blks, delta);
-> +}
+>  /* Mount features */
+> +#define XFS_FEAT_NOLIFETIME	(1ULL << 47)	/* disable lifetime hints */
+>  #define XFS_FEAT_NOATTR2	(1ULL << 48)	/* disable attr2 creation */
+>  #define XFS_FEAT_NOALIGN	(1ULL << 49)	/* ignore alignment */
+>  #define XFS_FEAT_ALLOCSIZE	(1ULL << 50)	/* user specified allocation size */
+> @@ -428,6 +429,7 @@ __XFS_HAS_FEAT(large_extent_counts, NREXT64)
+>  __XFS_HAS_FEAT(exchange_range, EXCHANGE_RANGE)
+>  __XFS_HAS_FEAT(metadir, METADIR)
+>  __XFS_HAS_FEAT(zoned, ZONED)
+> +__XFS_HAS_FEAT(nolifetime, NOLIFETIME)
 >  
->  #endif	/* __XFS_MOUNT_H__ */
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 59f7fc16eb80..b21cb0d36dd4 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1207,15 +1207,9 @@ xfs_reflink_ag_has_free_space(
->  	if (!xfs_has_rmapbt(mp))
->  		return 0;
->  	if (XFS_IS_REALTIME_INODE(ip)) {
-> -		struct xfs_rtgroup	*rtg;
-> -		xfs_rgnumber_t		rgno;
-> -
-> -		rgno = xfs_rtb_to_rgno(mp, fsb);
-> -		rtg = xfs_rtgroup_get(mp, rgno);
-> -		if (xfs_metafile_resv_critical(rtg_rmap(rtg)))
-> -			error = -ENOSPC;
-> -		xfs_rtgroup_put(rtg);
-> -		return error;
-> +		if (xfs_metafile_resv_critical(mp))
-> +			return -ENOSPC;
-> +		return 0;
->  	}
->  
->  	agno = XFS_FSB_TO_AGNO(mp, fsb);
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 489aab923c9b..4e5e9142457f 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1376,8 +1376,7 @@ xfs_growfs_rt(
->  			error = error2;
->  
->  		/* Reset the rt metadata btree space reservations. */
-> -		xfs_rt_resv_free(mp);
-> -		error2 = xfs_rt_resv_init(mp);
-> +		error2 = xfs_metafile_resv_init(mp);
->  		if (error2 && error2 != -ENOSPC)
->  			error = error2;
->  	}
-> @@ -1523,46 +1522,6 @@ xfs_rtalloc_reinit_frextents(
->  	return 0;
->  }
->  
-> -/* Free space reservations for rt metadata inodes. */
-> -void
-> -xfs_rt_resv_free(
-> -	struct xfs_mount	*mp)
-> -{
-> -	struct xfs_rtgroup	*rtg = NULL;
-> -	unsigned int		i;
-> -
-> -	while ((rtg = xfs_rtgroup_next(mp, rtg))) {
-> -		for (i = 0; i < XFS_RTGI_MAX; i++)
-> -			xfs_metafile_resv_free(rtg->rtg_inodes[i]);
-> -	}
-> -}
-> -
-> -/* Reserve space for rt metadata inodes' space expansion. */
-> -int
-> -xfs_rt_resv_init(
-> -	struct xfs_mount	*mp)
-> -{
-> -	struct xfs_rtgroup	*rtg = NULL;
-> -	xfs_filblks_t		ask;
-> -	int			error = 0;
-> -
-> -	while ((rtg = xfs_rtgroup_next(mp, rtg))) {
-> -		int		err2;
-> -
-> -		ask = xfs_rtrmapbt_calc_reserves(mp);
-> -		err2 = xfs_metafile_resv_init(rtg_rmap(rtg), ask);
-> -		if (err2 && !error)
-> -			error = err2;
-> -
-> -		ask = xfs_rtrefcountbt_calc_reserves(mp);
-> -		err2 = xfs_metafile_resv_init(rtg_refcount(rtg), ask);
-> -		if (err2 && !error)
-> -			error = err2;
-> -	}
-> -
-> -	return error;
-> -}
-> -
->  /*
->   * Read in the bmbt of an rt metadata inode so that we never have to load them
->   * at runtime.  This enables the use of shared ILOCKs for rtbitmap scans.  Use
-> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-> index 0d95b29092c9..78a690b489ed 100644
-> --- a/fs/xfs/xfs_rtalloc.h
-> +++ b/fs/xfs/xfs_rtalloc.h
-> @@ -34,9 +34,6 @@ int					/* error */
->  xfs_rtmount_inodes(
->  	struct xfs_mount	*mp);	/* file system mount structure */
->  
-> -void xfs_rt_resv_free(struct xfs_mount *mp);
-> -int xfs_rt_resv_init(struct xfs_mount *mp);
-> -
->  /*
->   * Grow the realtime area of the filesystem.
->   */
-> @@ -65,8 +62,6 @@ xfs_rtmount_init(
->  }
->  # define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (-ENOSYS))
->  # define xfs_rtunmount_inodes(m)
-> -# define xfs_rt_resv_free(mp)				((void)0)
-> -# define xfs_rt_resv_init(mp)				(0)
->  
->  static inline int
->  xfs_growfs_check_rtgeom(const struct xfs_mount *mp,
+>  static inline bool xfs_has_rtgroups(const struct xfs_mount *mp)
+>  {
 > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 366837e71eeb..fc6aab21adc4 100644
+> index aac50bdd629c..6ae2a3937791 100644
 > --- a/fs/xfs/xfs_super.c
 > +++ b/fs/xfs/xfs_super.c
-> @@ -2094,6 +2094,7 @@ xfs_init_fs_context(
->  	for (i = 0; i < XG_TYPE_MAX; i++)
->  		xa_init(&mp->m_groups[i].xa);
->  	mutex_init(&mp->m_growlock);
-> +	mutex_init(&mp->m_metafile_resv_lock);
->  	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
->  	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
->  	mp->m_kobj.kobject.kset = xfs_kset;
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index cdaf8fdf6310..71ecef86a56a 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -5605,11 +5605,10 @@ DEFINE_METADIR_EVENT(xfs_metadir_lookup);
->  /* metadata inode space reservations */
+> @@ -111,6 +111,7 @@ enum {
+>  	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+>  	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+>  	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum, Opt_max_open_zones,
+> +	Opt_lifetime, Opt_nolifetime,
+>  };
 >  
->  DECLARE_EVENT_CLASS(xfs_metafile_resv_class,
-> -	TP_PROTO(struct xfs_inode *ip, xfs_filblks_t len),
-> -	TP_ARGS(ip, len),
-> +	TP_PROTO(struct xfs_mount *mp, xfs_filblks_t len),
-> +	TP_ARGS(mp, len),
->  	TP_STRUCT__entry(
->  		__field(dev_t, dev)
-> -		__field(xfs_ino_t, ino)
->  		__field(unsigned long long, freeblks)
->  		__field(unsigned long long, reserved)
->  		__field(unsigned long long, asked)
-> @@ -5617,19 +5616,15 @@ DECLARE_EVENT_CLASS(xfs_metafile_resv_class,
->  		__field(unsigned long long, len)
->  	),
->  	TP_fast_assign(
-> -		struct xfs_mount *mp = ip->i_mount;
-> -
->  		__entry->dev = mp->m_super->s_dev;
-> -		__entry->ino = ip->i_ino;
->  		__entry->freeblks = xfs_sum_freecounter_raw(mp, XC_FREE_BLOCKS);
-> -		__entry->reserved = ip->i_delayed_blks;
-> -		__entry->asked = ip->i_meta_resv_asked;
-> -		__entry->used = ip->i_nblocks;
-> +		__entry->reserved = mp->m_metafile_resv_avail;
-> +		__entry->asked = mp->m_metafile_resv_target;
-> +		__entry->used = mp->m_metafile_resv_used;
->  		__entry->len = len;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx freeblks %llu resv %llu ask %llu used %llu len %llu",
-> +	TP_printk("dev %d:%d freeblks %llu resv %llu ask %llu used %llu len %llu",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> -		  __entry->ino,
->  		  __entry->freeblks,
->  		  __entry->reserved,
->  		  __entry->asked,
-> @@ -5638,14 +5633,14 @@ DECLARE_EVENT_CLASS(xfs_metafile_resv_class,
->  )
->  #define DEFINE_METAFILE_RESV_EVENT(name) \
->  DEFINE_EVENT(xfs_metafile_resv_class, name, \
-> -	TP_PROTO(struct xfs_inode *ip, xfs_filblks_t len), \
-> -	TP_ARGS(ip, len))
-> +	TP_PROTO(struct xfs_mount *mp, xfs_filblks_t len), \
-> +	TP_ARGS(mp, len))
->  DEFINE_METAFILE_RESV_EVENT(xfs_metafile_resv_init);
->  DEFINE_METAFILE_RESV_EVENT(xfs_metafile_resv_free);
->  DEFINE_METAFILE_RESV_EVENT(xfs_metafile_resv_alloc_space);
->  DEFINE_METAFILE_RESV_EVENT(xfs_metafile_resv_free_space);
->  DEFINE_METAFILE_RESV_EVENT(xfs_metafile_resv_critical);
-> -DEFINE_INODE_ERROR_EVENT(xfs_metafile_resv_init_error);
-> +DEFINE_METAFILE_RESV_EVENT(xfs_metafile_resv_init_error);
+>  static const struct fs_parameter_spec xfs_fs_parameters[] = {
+> @@ -156,6 +157,8 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+>  	fsparam_flag("dax",		Opt_dax),
+>  	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
+>  	fsparam_u32("max_open_zones",	Opt_max_open_zones),
+> +	fsparam_flag("lifetime",	Opt_lifetime),
+> +	fsparam_flag("nolifetime",	Opt_nolifetime),
+>  	{}
+>  };
 >  
->  #ifdef CONFIG_XFS_RT
->  TRACE_EVENT(xfs_growfs_check_rtgeom,
+> @@ -184,6 +187,7 @@ xfs_fs_show_options(
+>  		{ XFS_FEAT_LARGE_IOSIZE,	",largeio" },
+>  		{ XFS_FEAT_DAX_ALWAYS,		",dax=always" },
+>  		{ XFS_FEAT_DAX_NEVER,		",dax=never" },
+> +		{ XFS_FEAT_NOLIFETIME,		",nolifetime" },
+>  		{ 0, NULL }
+>  	};
+>  	struct xfs_mount	*mp = XFS_M(root->d_sb);
+> @@ -1091,6 +1095,11 @@ xfs_finish_flags(
+>  "max_open_zones mount option only supported on zoned file systems.");
+>  			return -EINVAL;
+>  		}
+> +		if (mp->m_features & XFS_FEAT_NOLIFETIME) {
+> +			xfs_warn(mp,
+> +"nolifetime mount option only supported on zoned file systems.");
+> +			return -EINVAL;
+> +		}
+>  	}
+>  
+>  	return 0;
+> @@ -1478,6 +1487,12 @@ xfs_fs_parse_param(
+>  	case Opt_max_open_zones:
+>  		parsing_mp->m_max_open_zones = result.uint_32;
+>  		return 0;
+> +	case Opt_lifetime:
+> +		parsing_mp->m_features &= ~XFS_FEAT_NOLIFETIME;
+> +		return 0;
+> +	case Opt_nolifetime:
+> +		parsing_mp->m_features |= XFS_FEAT_NOLIFETIME;
+> +		return 0;
+>  	default:
+>  		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
+>  		return -EINVAL;
+> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> index 7537ad4c51d1..379112eebd70 100644
+> --- a/fs/xfs/xfs_zone_alloc.c
+> +++ b/fs/xfs/xfs_zone_alloc.c
+> @@ -423,6 +423,7 @@ static struct xfs_open_zone *
+>  xfs_init_open_zone(
+>  	struct xfs_rtgroup	*rtg,
+>  	xfs_rgblock_t		write_pointer,
+> +	enum rw_hint		write_hint,
+>  	bool			is_gc)
+>  {
+>  	struct xfs_open_zone	*oz;
+> @@ -433,6 +434,7 @@ xfs_init_open_zone(
+>  	oz->oz_rtg = rtg;
+>  	oz->oz_write_pointer = write_pointer;
+>  	oz->oz_written = write_pointer;
+> +	oz->oz_write_hint = write_hint;
+>  	oz->oz_is_gc = is_gc;
+>  
+>  	/*
+> @@ -452,6 +454,7 @@ xfs_init_open_zone(
+>  struct xfs_open_zone *
+>  xfs_open_zone(
+>  	struct xfs_mount	*mp,
+> +	enum rw_hint		write_hint,
+>  	bool			is_gc)
+>  {
+>  	struct xfs_zone_info	*zi = mp->m_zone_info;
+> @@ -464,12 +467,13 @@ xfs_open_zone(
+>  		return NULL;
+>  
+>  	set_current_state(TASK_RUNNING);
+> -	return xfs_init_open_zone(to_rtg(xg), 0, is_gc);
+> +	return xfs_init_open_zone(to_rtg(xg), 0, write_hint, is_gc);
+>  }
+>  
+>  static struct xfs_open_zone *
+>  xfs_try_open_zone(
+> -	struct xfs_mount	*mp)
+> +	struct xfs_mount	*mp,
+> +	enum rw_hint		write_hint)
+>  {
+>  	struct xfs_zone_info	*zi = mp->m_zone_info;
+>  	struct xfs_open_zone	*oz;
+> @@ -486,7 +490,7 @@ xfs_try_open_zone(
+>  	 */
+>  	zi->zi_nr_open_zones++;
+>  	spin_unlock(&zi->zi_open_zones_lock);
+> -	oz = xfs_open_zone(mp, false);
+> +	oz = xfs_open_zone(mp, write_hint, false);
+>  	spin_lock(&zi->zi_open_zones_lock);
+>  	if (!oz) {
+>  		zi->zi_nr_open_zones--;
+> @@ -509,16 +513,78 @@ xfs_try_open_zone(
+>  	return oz;
+>  }
+>  
+> +/*
+> + * For data with short or medium lifetime, try to colocated it into an
+> + * already open zone with a matching temperature.
+> + */
+> +static bool
+> +xfs_colocate_eagerly(
+> +	enum rw_hint		file_hint)
+> +{
+> +	switch (file_hint) {
+> +	case WRITE_LIFE_MEDIUM:
+> +	case WRITE_LIFE_SHORT:
+> +	case WRITE_LIFE_NONE:
+> +		return true;
+> +	default:
+> +		return false;
+> +	}
+> +}
+> +
+> +static bool
+> +xfs_good_hint_match(
+> +	struct xfs_open_zone	*oz,
+> +	enum rw_hint		file_hint)
+> +{
+> +	switch (oz->oz_write_hint) {
+> +	case WRITE_LIFE_LONG:
+> +	case WRITE_LIFE_EXTREME:
+> +		/* colocate long and extreme */
+> +		if (file_hint == WRITE_LIFE_LONG ||
+> +		    file_hint == WRITE_LIFE_EXTREME)
+> +			return true;
+> +		break;
+> +	case WRITE_LIFE_MEDIUM:
+> +		/* colocate medium with medium */
+> +		if (file_hint == WRITE_LIFE_MEDIUM)
+> +			return true;
+> +		break;
+> +	case WRITE_LIFE_SHORT:
+> +	case WRITE_LIFE_NONE:
+> +	case WRITE_LIFE_NOT_SET:
+> +		/* colocate short and none */
+> +		if (file_hint <= WRITE_LIFE_SHORT)
+> +			return true;
+> +		break;
+> +	}
+> +	return false;
+> +}
+> +
+>  static bool
+>  xfs_try_use_zone(
+>  	struct xfs_zone_info	*zi,
+> -	struct xfs_open_zone	*oz)
+> +	enum rw_hint		file_hint,
+> +	struct xfs_open_zone	*oz,
+> +	bool			lowspace)
+>  {
+>  	if (oz->oz_write_pointer == rtg_blocks(oz->oz_rtg))
+>  		return false;
+> +	if (!lowspace && !xfs_good_hint_match(oz, file_hint))
+> +		return false;
+>  	if (!atomic_inc_not_zero(&oz->oz_ref))
+>  		return false;
+>  
+> +	/*
+> +	 * If we have a hint set for the data, use that for the zone even if
+> +	 * some data was written already without any hint set, but don't change
+> +	 * the temperature after that as that would make little sense without
+> +	 * tracking per-temperature class written block counts, which is
+> +	 * probably overkill anyway.
+> +	 */
+> +	if (file_hint != WRITE_LIFE_NOT_SET &&
+> +	    oz->oz_write_hint == WRITE_LIFE_NOT_SET)
+> +		oz->oz_write_hint = file_hint;
+> +
+>  	/*
+>  	 * If we couldn't match by inode or life time we just pick the first
+>  	 * zone with enough space above.  For that we want the least busy zone
+> @@ -533,14 +599,16 @@ xfs_try_use_zone(
+>  
+>  static struct xfs_open_zone *
+>  xfs_select_open_zone_lru(
+> -	struct xfs_zone_info	*zi)
+> +	struct xfs_zone_info	*zi,
+> +	enum rw_hint		file_hint,
+> +	bool			lowspace)
+>  {
+>  	struct xfs_open_zone	*oz;
+>  
+>  	lockdep_assert_held(&zi->zi_open_zones_lock);
+>  
+>  	list_for_each_entry(oz, &zi->zi_open_zones, oz_entry)
+> -		if (xfs_try_use_zone(zi, oz))
+> +		if (xfs_try_use_zone(zi, file_hint, oz, lowspace))
+>  			return oz;
+>  
+>  	cond_resched_lock(&zi->zi_open_zones_lock);
+> @@ -549,20 +617,28 @@ xfs_select_open_zone_lru(
+>  
+>  static struct xfs_open_zone *
+>  xfs_select_open_zone_mru(
+> -	struct xfs_zone_info	*zi)
+> +	struct xfs_zone_info	*zi,
+> +	enum rw_hint		file_hint)
+>  {
+>  	struct xfs_open_zone	*oz;
+>  
+>  	lockdep_assert_held(&zi->zi_open_zones_lock);
+>  
+>  	list_for_each_entry_reverse(oz, &zi->zi_open_zones, oz_entry)
+> -		if (xfs_try_use_zone(zi, oz))
+> +		if (xfs_try_use_zone(zi, file_hint, oz, false))
+>  			return oz;
+>  
+>  	cond_resched_lock(&zi->zi_open_zones_lock);
+>  	return NULL;
+>  }
+>  
+> +static inline enum rw_hint xfs_inode_write_hint(struct xfs_inode *ip)
+> +{
+> +	if (xfs_has_nolifetime(ip->i_mount))
+> +		return WRITE_LIFE_NOT_SET;
+> +	return VFS_I(ip)->i_write_hint;
+> +}
+> +
+>  /*
+>   * Try to pack inodes that are written back after they were closed tight instead
+>   * of trying to open new zones for them or spread them to the least recently
+> @@ -586,6 +662,7 @@ static inline bool xfs_zoned_pack_tight(struct xfs_inode *ip)
+>  static struct xfs_open_zone *
+>  xfs_select_zone_nowait(
+>  	struct xfs_mount	*mp,
+> +	enum rw_hint		write_hint,
+>  	bool			pack_tight)
+>  {
+>  	struct xfs_zone_info	*zi = mp->m_zone_info;
+> @@ -594,20 +671,38 @@ xfs_select_zone_nowait(
+>  	if (xfs_is_shutdown(mp))
+>  		return NULL;
+>  
+> +	/*
+> +	 * Try to fill up open zones with matching temperature if available.  It
+> +	 * is better to try to co-locate data when this is favorable, so we can
+> +	 * activate empty zones when it is statistically better to separate
+> +	 * data.
+> +	 */
+>  	spin_lock(&zi->zi_open_zones_lock);
+> -	if (pack_tight)
+> -		oz = xfs_select_open_zone_mru(zi);
+> +	if (xfs_colocate_eagerly(write_hint))
+> +		oz = xfs_select_open_zone_lru(zi, write_hint, false);
+> +	else if (pack_tight)
+> +		oz = xfs_select_open_zone_mru(zi, write_hint);
+>  	if (oz)
+>  		goto out_unlock;
+>  
+>  	/*
+>  	 * See if we can open a new zone and use that.
+>  	 */
+> -	oz = xfs_try_open_zone(mp);
+> +	oz = xfs_try_open_zone(mp, write_hint);
+>  	if (oz)
+>  		goto out_unlock;
+>  
+> -	oz = xfs_select_open_zone_lru(zi);
+> +	/*
+> +	 * Try to colocate cold data with other cold data if we failed to open a
+> +	 * new zone for it.
+> +	 */
+> +	if (write_hint != WRITE_LIFE_NOT_SET &&
+> +	    !xfs_colocate_eagerly(write_hint))
+> +		oz = xfs_select_open_zone_lru(zi, write_hint, false);
+> +	if (!oz)
+> +		oz = xfs_select_open_zone_lru(zi, WRITE_LIFE_NOT_SET, false);
+> +	if (!oz)
+> +		oz = xfs_select_open_zone_lru(zi, WRITE_LIFE_NOT_SET, true);
+>  out_unlock:
+>  	spin_unlock(&zi->zi_open_zones_lock);
+>  	return oz;
+> @@ -616,19 +711,20 @@ xfs_select_zone_nowait(
+>  static struct xfs_open_zone *
+>  xfs_select_zone(
+>  	struct xfs_mount	*mp,
+> +	enum rw_hint		write_hint,
+>  	bool			pack_tight)
+>  {
+>  	struct xfs_zone_info	*zi = mp->m_zone_info;
+>  	DEFINE_WAIT		(wait);
+>  	struct xfs_open_zone	*oz;
+>  
+> -	oz = xfs_select_zone_nowait(mp, pack_tight);
+> +	oz = xfs_select_zone_nowait(mp, write_hint, pack_tight);
+>  	if (oz)
+>  		return oz;
+>  
+>  	for (;;) {
+>  		prepare_to_wait(&zi->zi_zone_wait, &wait, TASK_UNINTERRUPTIBLE);
+> -		oz = xfs_select_zone_nowait(mp, pack_tight);
+> +		oz = xfs_select_zone_nowait(mp, write_hint, pack_tight);
+>  		if (oz)
+>  			break;
+>  		schedule();
+> @@ -706,6 +802,7 @@ xfs_zone_alloc_and_submit(
+>  {
+>  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> +	enum rw_hint		write_hint = xfs_inode_write_hint(ip);
+>  	bool			pack_tight = xfs_zoned_pack_tight(ip);
+>  	unsigned int		alloc_len;
+>  	struct iomap_ioend	*split;
+> @@ -723,7 +820,7 @@ xfs_zone_alloc_and_submit(
+>  		*oz = xfs_last_used_zone(ioend);
+>  	if (!*oz) {
+>  select_zone:
+> -		*oz = xfs_select_zone(mp, pack_tight);
+> +		*oz = xfs_select_zone(mp, write_hint, pack_tight);
+>  		if (!*oz)
+>  			goto out_error;
+>  	}
+> @@ -861,7 +958,8 @@ xfs_init_zone(
+>  		struct xfs_open_zone *oz;
+>  
+>  		atomic_inc(&rtg_group(rtg)->xg_active_ref);
+> -		oz = xfs_init_open_zone(rtg, write_pointer, false);
+> +		oz = xfs_init_open_zone(rtg, write_pointer, WRITE_LIFE_NOT_SET,
+> +				false);
+>  		list_add_tail(&oz->oz_entry, &zi->zi_open_zones);
+>  		zi->zi_nr_open_zones++;
+>  
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index 0e1c39f2aaba..c5136ea9bb1d 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -547,7 +547,7 @@ xfs_zone_gc_select_target(
+>  
+>  	ASSERT(zi->zi_nr_open_zones <=
+>  		mp->m_max_open_zones - XFS_OPEN_GC_ZONES);
+> -	oz = xfs_open_zone(mp, true);
+> +	oz = xfs_open_zone(mp, WRITE_LIFE_NOT_SET, true);
+>  	if (oz)
+>  		trace_xfs_zone_gc_target_opened(oz->oz_rtg);
+>  	spin_lock(&zi->zi_open_zones_lock);
+> @@ -1117,7 +1117,7 @@ xfs_zone_gc_mount(
+>  	    zi->zi_nr_open_zones == mp->m_max_open_zones)
+>  		oz = xfs_zone_gc_steal_open(zi);
+>  	else
+> -		oz = xfs_open_zone(mp, true);
+> +		oz = xfs_open_zone(mp, WRITE_LIFE_NOT_SET, true);
+>  	if (!oz) {
+>  		xfs_warn(mp, "unable to allocate a zone for gc");
+>  		error = -EIO;
+> diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
+> index f6c76d751a49..ab696975a993 100644
+> --- a/fs/xfs/xfs_zone_priv.h
+> +++ b/fs/xfs/xfs_zone_priv.h
+> @@ -26,6 +26,12 @@ struct xfs_open_zone {
+>  	 */
+>  	xfs_rgblock_t		oz_written;
+>  
+> +	/*
+> +	 * Write hint (data temperature) assigned to this zone, or
+> +	 * WRITE_LIFE_NOT_SET if none was set.
+> +	 */
+> +	enum rw_hint		oz_write_hint;
+> +
+>  	/*
+>  	 * Is this open zone used for garbage collection?  There can only be a
+>  	 * single open GC zone, which is pointed to by zi_open_gc_zone in
+> @@ -100,7 +106,8 @@ struct xfs_zone_info {
+>  
+>  };
+>  
+> -struct xfs_open_zone *xfs_open_zone(struct xfs_mount *mp, bool is_gc);
+> +struct xfs_open_zone *xfs_open_zone(struct xfs_mount *mp,
+> +		enum rw_hint write_hint, bool is_gc);
+>  
+>  int xfs_zone_gc_reset_sync(struct xfs_rtgroup *rtg);
+>  bool xfs_zoned_need_gc(struct xfs_mount *mp);
 > -- 
 > 2.45.2
 > 
