@@ -1,55 +1,55 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15E6A211710
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 17:48:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F213214A73
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 17:48:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739987310; cv=none; b=hHSinNgdX9C1A3OJgcp/tBkvoSRR0tDe/88CNscu5hSP7NgC1qODZoE0ZsV+e5eyJPNdBBsFb9UX2ABM7gxD0VVwxoOeA7spa4h2eLqwIQYMsTXLLsSuDWudVWCCr+O0KPZSu8Ol3Y4Dwk7+kJmYFxV8mu5TwtQ5hwrCjY/yz5k=
+	t=1739987312; cv=none; b=XZyFgpKf/X/wNzRtoHDInnMQEMXtkWaech2YSapvUNW/60WH3m/mCJudbnd7/CxVM0samkkBBgzKa4bxjMlNyGiBBOF3g9/saAPlQxbhJEJR89rb3uiYfyYXW/ve5PtoM2pHP+MfSMpOdIj/jXgosL65s7e29rwLwYlraoTsapU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739987310; c=relaxed/simple;
-	bh=z1wU4VDX2qCqWOZ3745I9ikm1ya8n/vDS2yykKLsqEo=;
+	s=arc-20240116; t=1739987312; c=relaxed/simple;
+	bh=GoHjFvzmT9sH6k0ZHTXkT0G25TK/y9BELlxCNrppSSQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=glL83KX2JQxu5mr2O0CKOSGgItBVflpolDN2ryb/9JhuJurgVDAaYm63dBmgwHAjBgkNNJtu3oc/DxdimOhOnO1KLDBUaU5FnHK3PIEAd+Sua+MUfITRizJwNexX74K+3W5O2la/4qX+IFtEtUL1fcdXk2VAcsHLo3P/Br2Xc2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UyvI87o3; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=E+bCFxNE/Iio0C7rGhv/qkgRDWxPvdeGj/pNEDjKMFB7oiVdExYTR6OOWYw45y+u2R1PbZszK+rNktMTyXOs28luXNene+AKp7HKdxmKUtDD6LnCeTG4oiI0nvwedmYnBLkjDdNFiDL9dOSpj1gAoXPOlmhAvt4OBUh51YU1zh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NFH1i4m+; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UyvI87o3"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NFH1i4m+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1739987308;
+	s=mimecast20190719; t=1739987310;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rL7LCQFuNuAIzwOfoCJYdDQeaFnb9s6wkmgFuWzSkk4=;
-	b=UyvI87o3vdJtx9RQxldQMIBmk3/92RWvhoJTUEDDp5h2giB7eazMTseBW0l389Ibxd+r1W
-	yYLoF/ws6z/g34lEQ7CEd+0e8ZPQtnYE1gNqEzY3WN+jdxjZsA/45LotGS57+UY6WhqnGs
-	h2FqyVeKMt/ksEw61Ok7TCBTcX+lYBY=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+	bh=LNPbtf78IxpBXi8oE3XIQQMlZojHKy/TsMJyCqFBQ2s=;
+	b=NFH1i4m+3msk8hf+O7/JtwKpDMjT9GoaQ/sGk+PyT5HxuKPCFx6AbQ7u6Kcbd+b5puW7Zh
+	RltRDMOgxTZpWG7zUtaGNfYDUWfJgqabeVuscVXXsCSNvjyC00TjSC+xbU95p4ou0wq9qJ
+	mngaLY9YUWcAmnVDB9H51dCH07BlDWo=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-122-wPTJySdLOqGkZ4HYTahoXQ-1; Wed,
- 19 Feb 2025 12:48:24 -0500
-X-MC-Unique: wPTJySdLOqGkZ4HYTahoXQ-1
-X-Mimecast-MFC-AGG-ID: wPTJySdLOqGkZ4HYTahoXQ_1739987303
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-226-Sh8qybB1N_WqXr7XJrWZow-1; Wed,
+ 19 Feb 2025 12:48:25 -0500
+X-MC-Unique: Sh8qybB1N_WqXr7XJrWZow-1
+X-Mimecast-MFC-AGG-ID: Sh8qybB1N_WqXr7XJrWZow_1739987301
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 917FF180087D;
-	Wed, 19 Feb 2025 17:48:23 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1D294180087D;
+	Wed, 19 Feb 2025 17:48:21 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.88.79])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9D4761800D96;
-	Wed, 19 Feb 2025 17:48:22 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0E8ED1800359;
+	Wed, 19 Feb 2025 17:48:19 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>,
 	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v2 08/12] dax: advance the iomap_iter on dedupe range
-Date: Wed, 19 Feb 2025 12:50:46 -0500
-Message-ID: <20250219175050.83986-9-bfoster@redhat.com>
+Subject: [PATCH v2 06/12] dax: advance the iomap_iter on zero range
+Date: Wed, 19 Feb 2025 12:50:44 -0500
+Message-ID: <20250219175050.83986-7-bfoster@redhat.com>
 In-Reply-To: <20250219175050.83986-1-bfoster@redhat.com>
 References: <20250219175050.83986-1-bfoster@redhat.com>
 Precedence: bulk
@@ -62,80 +62,85 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Advance the iter on successful dedupe. Dedupe range uses two iters
-and iterates so long as both have outstanding work, so
-correspondingly this needs to advance both on each iteration. Since
-dax_range_compare_iter() now returns status instead of a byte count,
-update the variable name in the caller as well.
+Update the DAX zero range iomap iter handler to advance the iter
+directly. Advance by the full length in the hole/unwritten case, or
+otherwise advance incrementally in the zeroing loop. In either case,
+return 0 or an error code for success or failure.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/dax.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ fs/dax.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index c0fbab8c66f7..c8c0d81122ab 100644
+index 139e299e53e6..f4d8c8c10086 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -2001,12 +2001,13 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf, unsigned int order,
- }
- EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
- 
--static loff_t dax_range_compare_iter(struct iomap_iter *it_src,
-+static int dax_range_compare_iter(struct iomap_iter *it_src,
- 		struct iomap_iter *it_dest, u64 len, bool *same)
+@@ -1358,13 +1358,12 @@ static s64 dax_zero_iter(struct iomap_iter *iter, bool *did_zero)
  {
- 	const struct iomap *smap = &it_src->iomap;
- 	const struct iomap *dmap = &it_dest->iomap;
- 	loff_t pos1 = it_src->pos, pos2 = it_dest->pos;
-+	u64 dest_len;
- 	void *saddr, *daddr;
- 	int id, ret;
+ 	const struct iomap *iomap = &iter->iomap;
+ 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+-	loff_t pos = iter->pos;
+ 	u64 length = iomap_length(iter);
+-	s64 written = 0;
++	s64 ret;
  
-@@ -2014,7 +2015,7 @@ static loff_t dax_range_compare_iter(struct iomap_iter *it_src,
+ 	/* already zeroed?  we're done. */
+ 	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+-		return length;
++		return iomap_iter_advance(iter, &length);
  
- 	if (smap->type == IOMAP_HOLE && dmap->type == IOMAP_HOLE) {
- 		*same = true;
--		return len;
-+		goto advance;
- 	}
+ 	/*
+ 	 * invalidate the pages whose sharing state is to be changed
+@@ -1372,33 +1371,35 @@ static s64 dax_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 	 */
+ 	if (iomap->flags & IOMAP_F_SHARED)
+ 		invalidate_inode_pages2_range(iter->inode->i_mapping,
+-					      pos >> PAGE_SHIFT,
+-					      (pos + length - 1) >> PAGE_SHIFT);
++				iter->pos >> PAGE_SHIFT,
++				(iter->pos + length - 1) >> PAGE_SHIFT);
  
- 	if (smap->type == IOMAP_HOLE || dmap->type == IOMAP_HOLE) {
-@@ -2037,7 +2038,13 @@ static loff_t dax_range_compare_iter(struct iomap_iter *it_src,
- 	if (!*same)
- 		len = 0;
- 	dax_read_unlock(id);
--	return len;
+ 	do {
++		loff_t pos = iter->pos;
+ 		unsigned offset = offset_in_page(pos);
+-		unsigned size = min_t(u64, PAGE_SIZE - offset, length);
+ 		pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
+-		long rc;
+ 		int id;
+ 
++		length = min_t(u64, PAGE_SIZE - offset, length);
 +
-+advance:
-+	dest_len = len;
-+	ret = iomap_iter_advance(it_src, &len);
-+	if (!ret)
-+		ret = iomap_iter_advance(it_dest, &dest_len);
+ 		id = dax_read_lock();
+-		if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
+-			rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
++		if (IS_ALIGNED(pos, PAGE_SIZE) && length == PAGE_SIZE)
++			ret = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
+ 		else
+-			rc = dax_memzero(iter, pos, size);
++			ret = dax_memzero(iter, pos, length);
+ 		dax_read_unlock(id);
+ 
+-		if (rc < 0)
+-			return rc;
+-		pos += size;
+-		length -= size;
+-		written += size;
++		if (ret < 0)
++			return ret;
++
++		ret = iomap_iter_advance(iter, &length);
++		if (ret)
++			return ret;
+ 	} while (length > 0);
+ 
+ 	if (did_zero)
+ 		*did_zero = true;
+-	return written;
 +	return ret;
- 
- out_unlock:
- 	dax_read_unlock(id);
-@@ -2060,15 +2067,15 @@ int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- 		.len		= len,
- 		.flags		= IOMAP_DAX,
- 	};
--	int ret, compared = 0;
-+	int ret, status;
- 
- 	while ((ret = iomap_iter(&src_iter, ops)) > 0 &&
- 	       (ret = iomap_iter(&dst_iter, ops)) > 0) {
--		compared = dax_range_compare_iter(&src_iter, &dst_iter,
-+		status = dax_range_compare_iter(&src_iter, &dst_iter,
- 				min(src_iter.len, dst_iter.len), same);
--		if (compared < 0)
-+		if (status < 0)
- 			return ret;
--		src_iter.processed = dst_iter.processed = compared;
-+		src_iter.processed = dst_iter.processed = status;
- 	}
- 	return ret;
  }
+ 
+ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
 -- 
 2.48.1
 
