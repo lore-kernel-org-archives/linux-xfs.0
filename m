@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FB4E25757;
-	Wed, 19 Feb 2025 00:47:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B1528DD0;
+	Wed, 19 Feb 2025 00:47:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926045; cv=none; b=bILe+JNzWwrjOX7Md+gPX8sbahYISSqSrbEfZAkLqHCSWPxij9k8QP5L3n4kBa+f3qFaUAb4LMY2fxtz+6hKpEUNnXDHPKG4SJrTPHwWIUQ0Pl5a6Etv78EMJGqtls+kxx6XsVWzgO4RjnLdgqQRYP+wNHyW2R/cTV2Fz6YBJlc=
+	t=1739926062; cv=none; b=mHrqNThdOMgMyDJf7P8maRZq0mvhp5Rdrz+rM/E9dPc4AIn6VETjImyghj1l4aHeRXB5IPYAPLWjmz3TZNTprnUzz+Gv7hW3qaP/FePQDJu+1bBt37g+j3FqMoFDitHcMaR6ezlQ3oBN4B/ZzhAIlYyqM9mxz5UgyFkQ94ILfWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926045; c=relaxed/simple;
-	bh=IV6ghAzcv7S6ueMAA+pPUjGzvEyBuWPBJOL8xtyyUbc=;
+	s=arc-20240116; t=1739926062; c=relaxed/simple;
+	bh=hzePJna68kwsS8iSgk7DCf+cK++f5ojyD76UV4uJK0Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qh0XlJKop+jGdHfTvK+odi72tYaKkPBMoZMyo3Pxq2VeoeB0wTzSzfpeFVsj1JC85Dmt4Oaxb4ilMILOYml+6Zh2ps9OrVvQlxq3rqVCD4i6CgUMfGJYzu+9Jire8L9UrvhSbpF5k8ntX8635sbRCvm+D8PuTPNNyi3+3t+oqpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fK9B2yce; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QY9NZp8p4fMqu30Bu5opI2byb9p9Xu7Pz/CRjbz/mQ7xu5YRAGXJ6GkKwkGgKK1Gp2jV+KQchhUxjzxpSTRmeDHuKwFmNB7GNP1s+bjT4CmuGtLLi7LddHMfX3dWdbMAfkcvYZjS6gd86w0uhbIoXxfINcdYmHlo9JLw+OxUVB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KBJsayNp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fK9B2yce"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D8DEC4CEE2;
-	Wed, 19 Feb 2025 00:47:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KBJsayNp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71980C4CEE2;
+	Wed, 19 Feb 2025 00:47:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926045;
-	bh=IV6ghAzcv7S6ueMAA+pPUjGzvEyBuWPBJOL8xtyyUbc=;
+	s=k20201202; t=1739926062;
+	bh=hzePJna68kwsS8iSgk7DCf+cK++f5ojyD76UV4uJK0Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fK9B2ycelhbZy/pDM2NEyZk12eL8YCsA/vMMPETS6egCQX1Mt7TMUmL9//xkbtxHg
-	 ns/frC2OR01iQpJZ9SPHxRR4YPiFLYnJaJOUNTRObrYw/hI2jFmXbcr4QgIgAc/Mom
-	 6O0KUVuv8Ial0HqlmyJJ72Uuqir4+7YXD+1GNhtApGmFvlEfEuUyI7S/tQt803G+8U
-	 jqC0BobOtthZSshgDeTE1MVz9juRTtrZqtggEu8FPsx2Uw3wTV/C73p/cRyDrjkxM4
-	 ZbeELami+FbjTqFMzzcGTp75/7+ZmTI5IjPHLppCfJmyOUxH4YCHeik3DPNa1XfqSW
-	 Bx5ADcdqKtEEg==
-Date: Tue, 18 Feb 2025 16:47:25 -0800
-Subject: [PATCHSET v6.4 06/12] fstests: shard the realtime section
+	b=KBJsayNpIdWFmiquJI5mH/55F1GAH4UJy6D+xRwO7vunrc2TInma5ieiFXB3c+ldM
+	 b9HxzTVFMEZeT8PFxUC26hto5I6wu/VcD7NrtIxy1NnFK/JnDfRtJvtcMGqut5tHkh
+	 zr5xLDIlIPc76iWzOsAJlcizwIlCvZbujbjcP7Qy3nB5tFUUCoJJxMsnl+XQ8aYatc
+	 T1I6rkYVaYw22W+FiQBvyItguwuUrlEdH5Uztm90XlLZ3HUru+5VUHUz4Fs6PRCP6Y
+	 daTg8VY5FUO0Kb0M/WCLWfgwqwpynEKE46jYly84yQp/YllTpNdGhRA+ChfQuwOV+w
+	 MC/ebU1eSsm/Q==
+Date: Tue, 18 Feb 2025 16:47:40 -0800
+Subject: [PATCHSET v6.4 07/12] fstests: store quota files in the metadir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
+Message-ID: <173992589825.4080063.11871287620731205179.stgit@frogsfrogsfrogs>
 In-Reply-To: <20250219004353.GM21799@frogsfrogsfrogs>
 References: <20250219004353.GM21799@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,23 +45,10 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Right now, the realtime section uses a single pair of metadata inodes to
-store the free space information.  This presents a scalability problem
-since every thread trying to allocate or free rt extents have to lock
-these files.  It would be very useful if we could begin to tackle these
-problems by sharding the realtime section, so create the notion of
-realtime groups, which are similar to allocation groups on the data
-section.
-
-While we're at it, define a superblock to be stamped into the start of
-each rt section.  This enables utilities such as blkid to identify block
-devices containing realtime sections, and helpfully avoids the situation
-where a file extent can cross an rtgroup boundary.
-
-The best advantage for rtgroups will become evident later when we get to
-adding rmap and reflink to the realtime volume, since the geometry
-constraints are the same for rt groups and AGs.  Hence we can reuse all
-that code directly.
+Store the quota files in the metadata directory tree instead of the superblock.
+Since we're introducing a new incompat feature flag, let's also make the mount
+process bring up quotas in whatever state they were when the filesystem was
+last unmounted, instead of requiring sysadmins to remember that themselves.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -72,61 +59,53 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-groups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=metadir-quotas
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-groups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadir-quotas
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-groups
-
-xfsdocs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-groups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=metadir-quotas
 ---
 Commits in this patchset:
- * common/populate: refactor caching of metadumps to a helper
- * common/{fuzzy,populate}: use _scratch_xfs_mdrestore
- * fuzzy: stress data and rt sections of xfs filesystems equally
- * fuzzy: run fsx on data and rt sections of xfs filesystems equally
- * common/ext4: reformat external logs during mdrestore operations
- * common/populate: use metadump v2 format by default for fs metadata snapshots
- * punch-alternating: detect xfs realtime files with large allocation units
- * xfs/206: update mkfs filtering for rt groups feature
- * common: pass the realtime device to xfs_db when possible
- * xfs/185: update for rtgroups
- * xfs/449: update test to know about xfs_db -R
- * xfs/271,xfs/556: fix tests to deal with rtgroups output in bmap/fsmap commands
- * common/xfs: capture realtime devices during metadump/mdrestore
- * common/fuzzy: adapt the scrub stress tests to support rtgroups
- * xfs: fix fuzz tests of rtgroups bitmap and summary files
+ * xfs: update tests for quota files in the metadir
+ * xfs: test persistent quota flags
+ * xfs: fix quota detection in fuzz tests
+ * xfs: fix tests for persistent qflags
 ---
- common/ext4             |   17 +++++-
- common/fuzzy            |  138 ++++++++++++++++++++++++++++++++++++-----------
- common/metadump         |   22 ++++++-
- common/populate         |   85 +++++++++++++++++------------
- common/xfs              |   87 +++++++++++++++++++++++++++---
- src/punch-alternating.c |   28 +++++++++-
- tests/xfs/114           |    4 +
- tests/xfs/146           |    2 -
- tests/xfs/185           |   65 +++++++++++++++++-----
- tests/xfs/187           |    3 +
- tests/xfs/206           |    1 
- tests/xfs/271           |    4 +
- tests/xfs/341           |    4 +
- tests/xfs/449           |    6 ++
- tests/xfs/556           |   16 +++--
- tests/xfs/581           |    9 +++
- tests/xfs/582           |   14 ++---
- tests/xfs/720           |    2 -
- tests/xfs/739           |    6 ++
- tests/xfs/740           |    6 ++
- tests/xfs/741           |    6 ++
- tests/xfs/742           |    6 ++
- tests/xfs/743           |    6 ++
- tests/xfs/744           |    6 ++
- tests/xfs/745           |    6 ++
- tests/xfs/746           |    6 ++
- tests/xfs/793           |   14 ++---
- tests/xfs/795           |    2 -
- 28 files changed, 436 insertions(+), 135 deletions(-)
+ common/quota              |    1 
+ common/rc                 |    1 
+ common/xfs                |   21 ++++++
+ tests/generic/563         |    8 ++
+ tests/xfs/007             |    2 -
+ tests/xfs/096             |    1 
+ tests/xfs/096.out         |    2 -
+ tests/xfs/106             |    2 -
+ tests/xfs/116             |   13 ++++
+ tests/xfs/116.cfg         |    1 
+ tests/xfs/116.out.default |    0 
+ tests/xfs/116.out.metadir |    3 +
+ tests/xfs/152             |    2 -
+ tests/xfs/1891            |  128 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1891.out        |  147 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/263             |    1 
+ tests/xfs/263.out         |    2 -
+ tests/xfs/425             |    5 +-
+ tests/xfs/426             |    5 +-
+ tests/xfs/427             |    5 +-
+ tests/xfs/428             |    5 +-
+ tests/xfs/429             |    5 +-
+ tests/xfs/430             |    5 +-
+ tests/xfs/487             |    5 +-
+ tests/xfs/488             |    5 +-
+ tests/xfs/489             |    5 +-
+ tests/xfs/779             |    5 +-
+ tests/xfs/780             |    5 +-
+ tests/xfs/781             |    5 +-
+ 29 files changed, 376 insertions(+), 19 deletions(-)
+ create mode 100644 tests/xfs/116.cfg
+ rename tests/xfs/{116.out => 116.out.default} (100%)
+ create mode 100644 tests/xfs/116.out.metadir
+ create mode 100755 tests/xfs/1891
+ create mode 100644 tests/xfs/1891.out
 
