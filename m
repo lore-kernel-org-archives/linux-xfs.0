@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0F441A08B5;
-	Wed, 19 Feb 2025 01:01:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D511188938;
+	Wed, 19 Feb 2025 01:01:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926877; cv=none; b=mdhx6Ixa6DFwRZDwD95BIOiNh75aR0+f8uUKuWCn77c3rWeHFh+17b0p8volTsgGzX25uCKQWPampctC4dgGhgd5fi08u96EGk9JZ6bcWnvDXOX58OKikl74yj92NluP+/nYBrmGmQ2IjW5+mFTWqUSLonrUQRfBcdXN2IP+HEE=
+	t=1739926893; cv=none; b=jd/epO9jhYGIvLSvv9GeNRixYLXvl/1P3Y2gFbm+jl7u8zBeCNFxgjrb0MjprOLCRVCSaUJ5YyOvgUEMrdiRAo8l5xedgo17mrTl1SyxVcpba4Ji39hCsfTCCxBEui+GOWPHUsyfNJSE7icbNrQKjRuJ2AEPBV8LxlN7iDylbpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926877; c=relaxed/simple;
-	bh=l6CPkU+TjVuSPLV2FkIlrDWhPxfVeHjcB8mc9NPhdcw=;
+	s=arc-20240116; t=1739926893; c=relaxed/simple;
+	bh=yMfp5PGksSGw6GlguVNzLonSAiq8DhT0MwFVPV8lRuA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D4jXsQ3NguUwG+5ZJ2zip4Y5gLhJYJUbdxmki8c+0FCoBwPLaEdZSqiH9Cj/79unfSAEcbs9lG0TMJ26FeL16WVj8uTJIK3oYvNj3EqDFq8RDnLF06gSaTeSacXLJROxOVMPNK6Hkavau7uf4FeFr7OxIO0KPCJeF8XjCoQiCoo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZepLSwAg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WUsZ1bPSkNCBMKKKurw9n4wm5CBKtWItGPzOP+BorKA//Dwvoh2C+EylDMl0CNYiTl/qzLHBEgt5GZKs7WnAuud5hTHN2ms8gBCgTF9yS4LIsWaeYg0EoeI0iuLFylhvMZsUr0Rz2HM0FPqyQKPKo/YoYn8fWG37wxqRwHsTPds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GKDHH2LQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZepLSwAg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3322CC4CEE2;
-	Wed, 19 Feb 2025 01:01:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GKDHH2LQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8468C4CEE2;
+	Wed, 19 Feb 2025 01:01:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926877;
-	bh=l6CPkU+TjVuSPLV2FkIlrDWhPxfVeHjcB8mc9NPhdcw=;
+	s=k20201202; t=1739926892;
+	bh=yMfp5PGksSGw6GlguVNzLonSAiq8DhT0MwFVPV8lRuA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZepLSwAgL8179/52+emZ53cnB7WFtDCdz37FAoM1vZGP54bJqARM7x+4R/h5IX48g
-	 ffMSBsBiq2p+KKgKIJqrBJ9pguMHyUbdshgxESVUr9JuagDHbLSuwOMZCj2BHz2oci
-	 wdgl4umgWsWvvxN9JLMLo6fVXLQqvv5VPWO3RaG2RQmGmJHYw9cbyPx8bsFyAYe1rz
-	 gvRh1jp70Y8qLru/dFpecz6FDnFRi02O4IB1ErHMuatwoQs6GC99XTryS4ATfFHaDf
-	 4Y5wdE4jG+tJVi+PLPPazh2DPsOXIM+Y6Xhthv1YW/crj2eZxuCsx4m+13RAeUElFY
-	 L3hWP77pglDoA==
-Date: Tue, 18 Feb 2025 17:01:16 -0800
-Subject: [PATCH 14/15] common/fuzzy: adapt the scrub stress tests to support
- rtgroups
+	b=GKDHH2LQZG1MAbyDdWppX2VWia2nGX49st+WxsJfNH8oCfBVn8kw6BH7d17NT2fS3
+	 6lhwr7P+Uskja7mMjtwVExRq4VrHwnFpByT9SOU2aoSiNANeg8fiG1qR686nCuZpXv
+	 fdKNVHzw/Tnn0O4OENLRNR8iu/GKY3ynz6CYNGl5x/iEZAxZNgorwdQoENambr6PLA
+	 JjSsLqSHBRhAONMukkAdfpXGSUqZNIirAL8RMF3/R9xM5eXbZKtc/69tjHrILnDOnV
+	 Sg+xRvcTWhqa/VBKN0FwH6z71gX/tp0q0lPsuWJq5w6DwpS/v5e19hXQo1WWTyvBKn
+	 OshTS7ljB5Gtw==
+Date: Tue, 18 Feb 2025 17:01:32 -0800
+Subject: [PATCH 15/15] xfs: fix fuzz tests of rtgroups bitmap and summary
+ files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992589437.4079457.14723541149706284576.stgit@frogsfrogsfrogs>
+Message-ID: <173992589456.4079457.14720380754325984212.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 References: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,176 +46,260 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Adapt the scrub stress testing framework to support checking realtime
-group metadata.
+With rtgroups, the rt bitmap and summary files are now per-group, so
+adjust the fuzz and fsck tests to find the new locations.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/fuzzy  |   27 ++++++++++++++++++++++-----
- common/xfs    |    9 +++++++++
- tests/xfs/581 |    2 +-
- tests/xfs/720 |    2 +-
- tests/xfs/795 |    2 +-
- 5 files changed, 34 insertions(+), 8 deletions(-)
+ common/xfs    |   19 +++++++++++++++++++
+ tests/xfs/581 |    9 ++++++++-
+ tests/xfs/582 |   14 +++++++-------
+ tests/xfs/739 |    6 +++++-
+ tests/xfs/740 |    6 +++++-
+ tests/xfs/741 |    6 +++++-
+ tests/xfs/742 |    6 +++++-
+ tests/xfs/743 |    6 +++++-
+ tests/xfs/744 |    6 +++++-
+ tests/xfs/745 |    6 +++++-
+ tests/xfs/746 |    6 +++++-
+ tests/xfs/793 |   14 +++++++-------
+ 12 files changed, 81 insertions(+), 23 deletions(-)
 
 
-diff --git a/common/fuzzy b/common/fuzzy
-index 1548f372fac58a..a57b076ef9670a 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -829,8 +829,10 @@ __stress_one_scrub_loop() {
- 	local scrub_tgt="$3"
- 	local scrub_startat="$4"
- 	local start_agno="$5"
--	shift; shift; shift; shift; shift
-+	local start_rgno="$6"
-+	shift; shift; shift; shift; shift; shift
- 	local agcount="$(_xfs_mount_agcount $SCRATCH_MNT)"
-+	local rgcount="$(_xfs_mount_rgcount $SCRATCH_MNT)"
- 
- 	local xfs_io_args=()
- 	for arg in "$@"; do
-@@ -843,6 +845,12 @@ __stress_one_scrub_loop() {
- 				local ag_arg="$(echo "$arg" | sed -e "s|%agno%|$agno|g")"
- 				xfs_io_args+=('-c' "$ag_arg")
- 			done
-+		elif echo "$arg" | grep -q -w '%rgno%'; then
-+			# Substitute the rtgroup number
-+			for ((rgno = start_rgno; rgno < rgcount; rgno++)); do
-+				local rg_arg="$(echo "$arg" | sed -e "s|%rgno%|$rgno|g")"
-+				xfs_io_args+=('-c' "$rg_arg")
-+			done
- 		else
- 			xfs_io_args+=('-c' "$arg")
- 		fi
-@@ -1298,7 +1306,9 @@ _scratch_xfs_stress_scrub_cleanup() {
- __stress_scrub_check_commands() {
- 	local scrub_tgt="$1"
- 	local start_agno="$2"
--	shift; shift
-+	local start_rgno="$3"
-+	shift; shift; shift
-+	local rgcount="$(_xfs_mount_rgcount $SCRATCH_MNT)"
- 
- 	local cooked_tgt="$scrub_tgt"
- 	case "$scrub_tgt" in
-@@ -1328,6 +1338,10 @@ __stress_scrub_check_commands() {
- 			cooked_arg="$(echo "$cooked_arg" | sed -e 's/^repair/repair -R/g')"
- 		fi
- 		cooked_arg="$(echo "$cooked_arg" | sed -e "s/%agno%/$start_agno/g")"
-+		if echo "$cooked_arg" | grep -q -w '%rgno%'; then
-+			test "$rgcount" -eq 0 && continue
-+			cooked_arg="$(echo "$cooked_arg" | sed -e "s/%rgno%/$start_rgno/g")"
-+		fi
- 		testio=`$XFS_IO_PROG -x -c "$cooked_arg" "$cooked_tgt" 2>&1`
- 		echo $testio | grep -q "Unknown type" && \
- 			_notrun "xfs_io scrub subcommand support is missing"
-@@ -1353,6 +1367,7 @@ __stress_scrub_check_commands() {
- #	in a separate loop.  If zero -i options are specified, do not run.
- #	Callers must check each of these commands (via _require_xfs_io_command)
- #	before calling here.
-+# -R	For %rgno% substitution, start with this rtgroup instead of rtgroup 0.
- # -r	Run fsstress for this amount of time, then remount the fs ro or rw.
- #	The default is to run fsstress continuously with no remount, unless
- #	XFS_SCRUB_STRESS_REMOUNT_PERIOD is set.
-@@ -1399,6 +1414,7 @@ _scratch_xfs_stress_scrub() {
- 	local remount_period="${XFS_SCRUB_STRESS_REMOUNT_PERIOD}"
- 	local stress_tgt="${XFS_SCRUB_STRESS_TARGET:-default}"
- 	local start_agno=0
-+	local start_rgno=0
- 
- 	__SCRUB_STRESS_FREEZE_PID=""
- 	__SCRUB_STRESS_REMOUNT_LOOP=""
-@@ -1406,12 +1422,13 @@ _scratch_xfs_stress_scrub() {
- 	touch "$runningfile"
- 
- 	OPTIND=1
--	while getopts "a:fi:r:s:S:t:w:x:X:" c; do
-+	while getopts "a:fi:r:R:s:S:t:w:x:X:" c; do
- 		case "$c" in
- 			a) start_agno="$OPTARG";;
- 			f) freeze=yes;;
- 			i) io_args+=("$OPTARG");;
- 			r) remount_period="$OPTARG";;
-+			R) start_rgno="$OPTARG";;
- 			s) one_scrub_args+=("$OPTARG");;
- 			S) xfs_scrub_args+=("$OPTARG");;
- 			t) scrub_tgt="$OPTARG";;
-@@ -1422,7 +1439,7 @@ _scratch_xfs_stress_scrub() {
- 		esac
- 	done
- 
--	__stress_scrub_check_commands "$scrub_tgt" "$start_agno" \
-+	__stress_scrub_check_commands "$scrub_tgt" "$start_agno" "$start_rgno" \
- 			"${one_scrub_args[@]}"
- 
- 	if ! command -v "__stress_scrub_${exerciser}_loop" &>/dev/null; then
-@@ -1483,7 +1500,7 @@ _scratch_xfs_stress_scrub() {
- 
- 	if [ "${#one_scrub_args[@]}" -gt 0 ]; then
- 		__stress_one_scrub_loop "$end" "$runningfile" "$scrub_tgt" \
--				"$scrub_startat" "$start_agno" \
-+				"$scrub_startat" "$start_agno" "$start_rgno" \
- 				"${one_scrub_args[@]}" &
- 	fi
- 
 diff --git a/common/xfs b/common/xfs
-index a94b9de032f932..1e415a4eb3ed68 100644
+index 1e415a4eb3ed68..97bdf8575a4bd4 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -1490,6 +1490,15 @@ _xfs_mount_agcount()
- 	$XFS_INFO_PROG "$1" | sed -n "s/^.*agcount=\([[:digit:]]*\).*/\1/p"
- }
+@@ -1950,6 +1950,25 @@ _scratch_xfs_find_metafile()
+ 	local metafile="$1"
+ 	local sb_field
  
-+# Find rtgroup count of mounted filesystem
-+_xfs_mount_rgcount()
-+{
-+	local rtgroups="$($XFS_INFO_PROG "$1" | grep rgcount= | sed -e 's/^.*rgcount=\([0-9]*\).*$/\1/g')"
++	# With metadir=1, the realtime volume is sharded into allocation
++	# groups.  Each rtgroup has its own bitmap and summary file.  Tests
++	# should pick a particular file, but this compatibility shim still
++	# exists to keep old tests working.
++	case "$metafile" in
++	"rbmino")
++		if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++			echo "path -m /rtgroups/0.bitmap"
++			return 0
++		fi
++		;;
++	"rsumino")
++		if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++			echo "path -m /rtgroups/0.summary"
++			return 0
++		fi
++		;;
++	esac
 +
-+	test -z "$rtgroups" && rtgroups=0
-+	echo "$rtgroups"
-+}
-+
- # Wipe the superblock of each XFS AGs
- _try_wipe_scratch_xfs()
- {
+ 	sb_field="$(_scratch_xfs_get_sb_field "$metafile")"
+ 	if echo "$sb_field" | grep -q -w 'not found'; then
+ 		return 1
 diff --git a/tests/xfs/581 b/tests/xfs/581
-index 39eb42da4b10c5..6aa360b37b90c5 100755
+index 6aa360b37b90c5..7d79dbcad70149 100755
 --- a/tests/xfs/581
 +++ b/tests/xfs/581
-@@ -30,7 +30,7 @@ _require_xfs_stress_scrub
+@@ -30,7 +30,14 @@ _require_xfs_stress_scrub
  _scratch_mkfs > "$seqres.full" 2>&1
  _scratch_mount
  _require_xfs_has_feature "$SCRATCH_MNT" realtime
--_scratch_xfs_stress_scrub -s "scrub rtbitmap"
-+_scratch_xfs_stress_scrub -s "scrub rtbitmap"  -s "scrub rgbitmap %rgno%"
+-_scratch_xfs_stress_scrub -s "scrub rtbitmap"  -s "scrub rgbitmap %rgno%"
++
++if _xfs_has_feature "$SCRATCH_MNT" rtgroups; then
++	_scratch_xfs_stress_scrub -s "scrub rtbitmap %rgno%"
++elif xfs_io -c 'help scrub' | grep -q rgsuper; then
++	_scratch_xfs_stress_scrub -s "scrub rtbitmap 0"
++else
++	_scratch_xfs_stress_scrub -s "scrub rtbitmap"
++fi
  
  # success, all done
  echo Silence is golden
-diff --git a/tests/xfs/720 b/tests/xfs/720
-index 68a6c7f6e2d584..97b3d2579cbd7f 100755
---- a/tests/xfs/720
-+++ b/tests/xfs/720
-@@ -37,7 +37,7 @@ alloc_unit=$(_get_file_block_size $SCRATCH_MNT)
- scratchfile=$SCRATCH_MNT/file
- touch $scratchfile
- $XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
--__stress_scrub_check_commands "$scratchfile" "" 'repair bmapbtd'
-+__stress_scrub_check_commands "$scratchfile" "" "" 'repair bmapbtd'
+diff --git a/tests/xfs/582 b/tests/xfs/582
+index e92f128f8a5695..a2cc58c04bf8d2 100755
+--- a/tests/xfs/582
++++ b/tests/xfs/582
+@@ -31,13 +31,13 @@ _scratch_mkfs > "$seqres.full" 2>&1
+ _scratch_mount
+ _require_xfs_has_feature "$SCRATCH_MNT" realtime
  
- # Compute the number of extent records needed to guarantee btree format,
- # assuming 16 bytes for each ondisk extent record
-diff --git a/tests/xfs/795 b/tests/xfs/795
-index 217f96092a4c42..e7004705b526a5 100755
---- a/tests/xfs/795
-+++ b/tests/xfs/795
-@@ -37,7 +37,7 @@ scratchfile=$SCRATCH_MNT/file
- mkdir $scratchdir
- touch $scratchfile
- $XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
--__stress_scrub_check_commands "$scratchdir" "" 'repair directory'
-+__stress_scrub_check_commands "$scratchdir" "" "" 'repair directory'
+-# XXX the realtime summary scrubber isn't currently implemented upstream.
+-# Don't bother trying to test it on those kernels
+-$XFS_IO_PROG -c 'scrub rtsummary' -c 'scrub rtsummary' "$SCRATCH_MNT" 2>&1 | \
+-	grep -q 'Scan was not complete' && \
+-	_notrun "rtsummary scrub is incomplete"
+-
+-_scratch_xfs_stress_scrub -s "scrub rtsummary"
++if _xfs_has_feature "$SCRATCH_MNT" rtgroups; then
++	_scratch_xfs_stress_scrub -s "scrub rtsummary %rgno%"
++elif xfs_io -c 'help scrub' | grep -q rgsuper; then
++	_scratch_xfs_stress_scrub -s "scrub rtsummary 0"
++else
++	_scratch_xfs_stress_scrub -s "scrub rtsummary"
++fi
  
- # Create a 2-dirblock directory
- total_size=$((alloc_unit * 2))
+ # success, all done
+ echo Silence is golden
+diff --git a/tests/xfs/739 b/tests/xfs/739
+index 5fd6caa5bce2f8..77cceac7ac7f02 100755
+--- a/tests/xfs/739
++++ b/tests/xfs/739
+@@ -25,7 +25,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtbitmap"
+-path="$(_scratch_xfs_find_metafile rbmino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.bitmap"
++else
++	path="$(_scratch_xfs_find_metafile rbmino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'online' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+diff --git a/tests/xfs/740 b/tests/xfs/740
+index c8990034773b32..fe5d054956d5e2 100755
+--- a/tests/xfs/740
++++ b/tests/xfs/740
+@@ -25,7 +25,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-path="$(_scratch_xfs_find_metafile rsumino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.summary"
++else
++	path="$(_scratch_xfs_find_metafile rsumino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'online' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+diff --git a/tests/xfs/741 b/tests/xfs/741
+index 96c2315c524311..35f78aab7faead 100755
+--- a/tests/xfs/741
++++ b/tests/xfs/741
+@@ -25,7 +25,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtbitmap"
+-path="$(_scratch_xfs_find_metafile rbmino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.bitmap"
++else
++	path="$(_scratch_xfs_find_metafile rbmino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'offline' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+diff --git a/tests/xfs/742 b/tests/xfs/742
+index 301ae7b9574320..04087c1a224558 100755
+--- a/tests/xfs/742
++++ b/tests/xfs/742
+@@ -25,7 +25,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-path="$(_scratch_xfs_find_metafile rsumino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.summary"
++else
++	path="$(_scratch_xfs_find_metafile rsumino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'offline' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+diff --git a/tests/xfs/743 b/tests/xfs/743
+index 039624f711c0a6..1e70147fa3bcef 100755
+--- a/tests/xfs/743
++++ b/tests/xfs/743
+@@ -26,7 +26,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtbitmap"
+-path="$(_scratch_xfs_find_metafile rbmino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.bitmap"
++else
++	path="$(_scratch_xfs_find_metafile rbmino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'both' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+diff --git a/tests/xfs/744 b/tests/xfs/744
+index 13f63b9ceb1756..0db3dd617c2d1f 100755
+--- a/tests/xfs/744
++++ b/tests/xfs/744
+@@ -26,7 +26,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-path="$(_scratch_xfs_find_metafile rsumino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.summary"
++else
++	path="$(_scratch_xfs_find_metafile rsumino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'both' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+diff --git a/tests/xfs/745 b/tests/xfs/745
+index 56a6d58ef9f4ca..acfbe72597fd5a 100755
+--- a/tests/xfs/745
++++ b/tests/xfs/745
+@@ -25,7 +25,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtbitmap"
+-path="$(_scratch_xfs_find_metafile rbmino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.bitmap"
++else
++	path="$(_scratch_xfs_find_metafile rbmino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'none' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtbitmap"
+ 
+diff --git a/tests/xfs/746 b/tests/xfs/746
+index 935b2e5acba5d4..0d1ab895aacd62 100755
+--- a/tests/xfs/746
++++ b/tests/xfs/746
+@@ -25,7 +25,11 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz rtsummary"
+-path="$(_scratch_xfs_find_metafile rsumino)"
++if _xfs_has_feature "$SCRATCH_DEV" rtgroups; then
++	path="path -m /rtgroups/0.summary"
++else
++	path="$(_scratch_xfs_find_metafile rsumino)"
++fi
+ _scratch_xfs_fuzz_metadata '' 'none' "$path" 'dblock 0' >> $seqres.full
+ echo "Done fuzzing rtsummary"
+ 
+diff --git a/tests/xfs/793 b/tests/xfs/793
+index a779bf81738537..07c64e7a3f9744 100755
+--- a/tests/xfs/793
++++ b/tests/xfs/793
+@@ -32,13 +32,13 @@ _scratch_mount
+ _require_xfs_has_feature "$SCRATCH_MNT" realtime
+ _xfs_force_bdev realtime $SCRATCH_MNT
+ 
+-# XXX the realtime summary scrubber isn't currently implemented upstream.
+-# Don't bother trying to fix it on those kernels
+-$XFS_IO_PROG -c 'scrub rtsummary' -c 'scrub rtsummary' "$SCRATCH_MNT" 2>&1 | \
+-	grep -q 'Scan was not complete' && \
+-	_notrun "rtsummary scrub is incomplete"
+-
+-_scratch_xfs_stress_online_repair -s "repair rtsummary"
++if _xfs_has_feature "$SCRATCH_MNT" rtgroups; then
++	_scratch_xfs_stress_online_repair -s "repair rtsummary %rgno%"
++elif xfs_io -c 'help scrub' | grep -q rgsuper; then
++	_scratch_xfs_stress_online_repair -s "repair rtsummary 0"
++else
++	_scratch_xfs_stress_online_repair -s "repair rtsummary"
++fi
+ 
+ # success, all done
+ echo Silence is golden
 
