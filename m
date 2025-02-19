@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8208E7DA95;
-	Wed, 19 Feb 2025 01:00:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25B66199FBA;
+	Wed, 19 Feb 2025 01:01:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926846; cv=none; b=Fh9bVsbnfzkM9HLYjFcXKLM30Px4mWBhrUmfmsK5Z84Ii66v4dkU0Gj4jzOxqHiruASfYBQjE4TPebrleizBpWX09c3F03M4LOgW/VfJlUkaNbawuW9fry3aAPgYlBPy3KRBpwDQTrpKlmGJTdQjxeZ2owNYgYkgH5lZsQGMptQ=
+	t=1739926862; cv=none; b=UQ5g+Lk8E1cP3E1HObXlmsnmdc4Bu42O57DutzwZ2UR+ZdlzbBp2uLkW6YGS9DgqtmnLuBaZc3BRCKBNYOaRBJnzmejGYI14eS/rql7mkjuXmOnqbqgJOy9UTP7SJB3MnOJGlKmZBO5+d+Vt3tOzOB61vUakCzqIaIn3ESWXXOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926846; c=relaxed/simple;
-	bh=PJ0wG4kzUFFDoIBvAW8Lc76GLCxurPmCxMq5cRuW8Ok=;
+	s=arc-20240116; t=1739926862; c=relaxed/simple;
+	bh=bhX4iR5LgKi29v4RzC9PQzU+rUhe8fQhHSryhi8i6Bg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qbv9BX/mSNNb8yJVxSy2ToxDROyldjEBps6iGSSFMc47uxX+3fACAKc1SYySUGA+DdfNHCFGd1/MJMiXmulmjdTNEXzsbT/epFT6zAnV27pirYmvrWH/xs0tGv9udAh7EpmGlnZAETqEa/Ch7DBIfmj9YqQy+8MU3I0CzAl+Zro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HHKy2fyz; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gXwJJxnvAAY3jIelFNwhwtJrAkcjf02JnPi/fpxMztYb4LejEPeS5UO92baoont3OMIDKnEecfsmV4G0guOJBxSxYp+XBiAwUR9F9tXX9EwZTkSb7zoHnlLfOyCnae1mTbuMzZsRF8o0Xl20ritphebgi4V3NqkdnbLedBcs/eU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HNYrYp6u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HHKy2fyz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCE6FC4CEE2;
-	Wed, 19 Feb 2025 01:00:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HNYrYp6u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B1C9C4CEE2;
+	Wed, 19 Feb 2025 01:01:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926845;
-	bh=PJ0wG4kzUFFDoIBvAW8Lc76GLCxurPmCxMq5cRuW8Ok=;
+	s=k20201202; t=1739926861;
+	bh=bhX4iR5LgKi29v4RzC9PQzU+rUhe8fQhHSryhi8i6Bg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HHKy2fyzWHiRMs7NGBBgEK4RRKzeVb3B4DLA2xnefzg6/Fg0XPTlXuxwTC0SFNrTu
-	 qnJjy9HwLrOIFOsTDg/0V2mnio0/5WZ2jbshlb1FbTI5j4L7dbyc+1ksEqXFmTt2f9
-	 4h+xb+nbN5CRZkV1Sz05BRcf5wPtbWG7nZHwZs5fCpzRGfOMUjBFGdbYz5j5i7Hr7Y
-	 Y1TzMUQ0DmjBNq7JT9edRI+DzEhnaMCq8PBdbSIbWnnbmqXaOAZ5Hbmxvs7iK8U47a
-	 9N2p1ImRWwe7IiBgNFf7JzH0lZeIIb1shiKBQOvGrk3hZ3Lyhf6d3K/V0bTY8IMAPS
-	 oDKAOMsLGbkwg==
-Date: Tue, 18 Feb 2025 17:00:45 -0800
-Subject: [PATCH 12/15] xfs/271,xfs/556: fix tests to deal with rtgroups output
- in bmap/fsmap commands
+	b=HNYrYp6um5tnaD0+xJYMCLaLaas/CXvg6WXWKi9L2clMKavpsaqDtWXRXzB7+N08t
+	 MNCVX6AUg02t8tfNFvbwAd7n6Kx17tmkPP17BwlKleQqKGwGcSC5nTNq20XB1yTdrz
+	 bGI+Dt0j2qykM0gThkCmRGCCEhY/aKG08qlr4NEaWYrYEVlU7juvmFJ/31VREY+MvR
+	 dy4CtJoErMBCj35LzKo6JOzDwka1yqkMxhXdsF/lkcTsmtnh1rzshXU0pRrmweHI8h
+	 iKqZTvyNcQ2tBsYBtwokD52vUQpUPtccvt0p8yoFdqYd+P+cHeMP00kgNWKoIVs2he
+	 bYBEDCAXo8SXw==
+Date: Tue, 18 Feb 2025 17:01:00 -0800
+Subject: [PATCH 13/15] common/xfs: capture realtime devices during
+ metadump/mdrestore
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992589400.4079457.7456085852406287416.stgit@frogsfrogsfrogs>
+Message-ID: <173992589419.4079457.7193155898233380338.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 References: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,86 +46,237 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix these tests to deal with the xfs_io bmap and fsmap commands printing
-out realtime group numbers if the feature is enabled.
+If xfs_metadump supports the -r switch to capture the contents of
+realtime devices and there is a realtime device, add the option to the
+command line to enable preservation.
+
+Similarly, if the dump file could restore to an external scratch rtdev,
+pass the -r option to mdrestore so that we can restore rtdev contents.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/xfs    |    7 +++++++
- tests/xfs/271 |    4 +++-
- tests/xfs/556 |   16 ++++++++++------
- 3 files changed, 20 insertions(+), 7 deletions(-)
+ common/metadump |   22 ++++++++++++++++++----
+ common/populate |    6 +++++-
+ common/xfs      |   48 ++++++++++++++++++++++++++++++++++++++++--------
+ 3 files changed, 63 insertions(+), 13 deletions(-)
 
 
+diff --git a/common/metadump b/common/metadump
+index a4ec9a7f921acf..61ba3cbb91647c 100644
+--- a/common/metadump
++++ b/common/metadump
+@@ -27,6 +27,7 @@ _xfs_cleanup_verify_metadump()
+ 	if [ -n "$XFS_METADUMP_IMG" ]; then
+ 		[ -b "$METADUMP_DATA_LOOP_DEV" ] && _destroy_loop_device $METADUMP_DATA_LOOP_DEV
+ 		[ -b "$METADUMP_LOG_LOOP_DEV" ] && _destroy_loop_device $METADUMP_LOG_LOOP_DEV
++		[ -b "$METADUMP_RT_LOOP_DEV" ] && _destroy_loop_device $METADUMP_RT_LOOP_DEV
+ 		for img in "$XFS_METADUMP_IMG"*; do
+ 			test -e "$img" && rm -f "$img"
+ 		done
+@@ -101,6 +102,7 @@ _xfs_verify_metadump_v2()
+ 	local version="-v 2"
+ 	local data_img="$XFS_METADUMP_IMG.data"
+ 	local log_img=""
++	local rt_img=""
+ 
+ 	# Capture metadump, which creates metadump_file
+ 	_scratch_xfs_metadump $metadump_file $metadump_args $version
+@@ -111,8 +113,12 @@ _xfs_verify_metadump_v2()
+ 	# from such a metadump file.
+ 	test -n "$SCRATCH_LOGDEV" && log_img="$XFS_METADUMP_IMG.log"
+ 
++	# Use a temporary file to hold restored rt device contents
++	test -n "$SCRATCH_RTDEV" && _xfs_metadump_supports_rt && \
++		rt_img="$XFS_METADUMP_IMG.rt"
++
+ 	# Restore metadump, which creates data_img and log_img
+-	SCRATCH_DEV=$data_img SCRATCH_LOGDEV=$log_img \
++	SCRATCH_DEV=$data_img SCRATCH_LOGDEV=$log_img SCRATCH_RTDEV=$rt_img \
+ 		_scratch_xfs_mdrestore $metadump_file
+ 
+ 	# Create loopdev for data device so we can mount the fs
+@@ -121,12 +127,15 @@ _xfs_verify_metadump_v2()
+ 	# Create loopdev for log device if we recovered anything
+ 	test -s "$log_img" && METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
+ 
++	# Create loopdev for rt device if we recovered anything
++	test -s "$rt_img" && METADUMP_RT_LOOP_DEV=$(_create_loop_device $rt_img)
++
+ 	# Mount fs, run an extra test, fsck, and unmount
+-	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV _scratch_mount
++	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV _scratch_mount
+ 	if [ -n "$extra_test" ]; then
+-		SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV $extra_test
++		SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV $extra_test
+ 	fi
+-	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV _check_xfs_scratch_fs
++	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV _check_xfs_scratch_fs
+ 	_unmount $METADUMP_DATA_LOOP_DEV
+ 
+ 	# Tear down what we created
+@@ -135,6 +144,11 @@ _xfs_verify_metadump_v2()
+ 		unset METADUMP_LOG_LOOP_DEV
+ 		rm -f $log_img
+ 	fi
++	if [ -b "$METADUMP_RT_LOOP_DEV" ]; then
++		_destroy_loop_device $METADUMP_RT_LOOP_DEV
++		unset METADUMP_RT_LOOP_DEV
++		rm -f $rt_img
++	fi
+ 	_destroy_loop_device $METADUMP_DATA_LOOP_DEV
+ 	unset METADUMP_DATA_LOOP_DEV
+ 	rm -f $data_img
+diff --git a/common/populate b/common/populate
+index 9fc1ee32bd490d..a77d1b0f5f3873 100644
+--- a/common/populate
++++ b/common/populate
+@@ -1061,12 +1061,16 @@ _scratch_populate_save_metadump()
+ 		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+ 			logdev=$SCRATCH_LOGDEV
+ 
++		local rtdev=none
++		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
++			rtdev=$SCRATCH_RTDEV
++
+ 		mdargs=('-a' '-o')
+ 		test "$(_xfs_metadump_max_version)" -gt 1 && \
+ 			mdargs+=('-v' '2')
+ 
+ 		_xfs_metadump "$metadump_file" "$SCRATCH_DEV" "$logdev" \
+-				compress "${mdargs[@]}"
++				"$rtdev" compress "${mdargs[@]}"
+ 		res=$?
+ 		;;
+ 	"ext2"|"ext3"|"ext4")
 diff --git a/common/xfs b/common/xfs
-index 547e91167718e9..5a829637dc1cfb 100644
+index 5a829637dc1cfb..a94b9de032f932 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -419,6 +419,13 @@ _xfs_has_feature()
- 		feat="rtextents"
- 		feat_regex="[1-9][0-9]*"
- 		;;
-+	"rtgroups")
-+		# any fs with rtgroups enabled will have a nonzero rt group
-+		# size, even if there is no rt device (and hence zero actual
-+		# groups)
-+		feat="rgsize"
-+		feat_regex="[1-9][0-9]*"
-+		;;
- 	esac
+@@ -625,14 +625,19 @@ _xfs_metadump() {
+ 	local metadump="$1"
+ 	local device="$2"
+ 	local logdev="$3"
+-	local compressopt="$4"
+-	shift; shift; shift; shift
++	local rtdev="$4"
++	local compressopt="$5"
++	shift; shift; shift; shift; shift
+ 	local options="$@"
  
- 	local answer="$($XFS_INFO_PROG "$fs" 2>&1 | grep -E -w -c "$feat=$feat_regex")"
-diff --git a/tests/xfs/271 b/tests/xfs/271
-index 420f4e7479220a..8a71746d6eaede 100755
---- a/tests/xfs/271
-+++ b/tests/xfs/271
-@@ -29,6 +29,8 @@ _scratch_mkfs > "$seqres.full" 2>&1
- _scratch_mount
+ 	if [ "$logdev" != "none" ]; then
+ 		options="$options -l $logdev"
+ 	fi
  
- agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
-+agcount_wiggle=0
-+_xfs_has_feature $SCRATCH_MNT rtgroups && agcount_wiggle=1
- 
- # mkfs lays out btree root blocks in the order bnobt, cntbt, inobt, finobt,
- # rmapbt, refcountbt, and then allocates AGFL blocks.  Since GETFSMAP has the
-@@ -46,7 +48,7 @@ cat $TEST_DIR/fsmap >> $seqres.full
- 
- echo "Check AG header" | tee -a $seqres.full
- grep 'static fs metadata[[:space:]]*[0-9]*[[:space:]]*(0\.\.' $TEST_DIR/fsmap | tee -a $seqres.full > $TEST_DIR/testout
--_within_tolerance "AG header count" $(wc -l < $TEST_DIR/testout) $agcount 0 -v
-+_within_tolerance "AG header count" $(wc -l < $TEST_DIR/testout) $agcount $agcount_wiggle -v
- 
- echo "Check freesp/rmap btrees" | tee -a $seqres.full
- grep 'per-AG metadata[[:space:]]*[0-9]*[[:space:]]*([0-9]*\.\.' $TEST_DIR/fsmap | tee -a $seqres.full > $TEST_DIR/testout
-diff --git a/tests/xfs/556 b/tests/xfs/556
-index 79e03caf40a0a5..83d5022e700c8b 100755
---- a/tests/xfs/556
-+++ b/tests/xfs/556
-@@ -45,16 +45,20 @@ victim=$SCRATCH_MNT/a
- file_blksz=$(_get_file_block_size $SCRATCH_MNT)
- $XFS_IO_PROG -f -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c "fsync" $victim >> $seqres.full
- unset errordev
--_xfs_is_realtime_file $victim && errordev="RT"
-+
-+awk_len_prog='{print $6}'
-+if _xfs_is_realtime_file $victim; then
-+	if ! _xfs_has_feature $SCRATCH_MNT rtgroups; then
-+		awk_len_prog='{print $4}'
++	if [ "$rtdev" != "none" ] && _xfs_metadump_supports_rt; then
++		options="$options -r $rtdev"
 +	fi
-+	errordev="RT"
-+fi
- bmap_str="$($XFS_IO_PROG -c "bmap -elpv" $victim | grep "^[[:space:]]*0:")"
- echo "$errordev:$bmap_str" >> $seqres.full
- 
- phys="$(echo "$bmap_str" | $AWK_PROG '{print $3}')"
--if [ "$errordev" = "RT" ]; then
--	len="$(echo "$bmap_str" | $AWK_PROG '{print $4}')"
--else
--	len="$(echo "$bmap_str" | $AWK_PROG '{print $6}')"
--fi
-+len="$(echo "$bmap_str" | $AWK_PROG "$awk_len_prog")"
 +
- fs_blksz=$(_get_block_size $SCRATCH_MNT)
- echo "file_blksz:$file_blksz:fs_blksz:$fs_blksz" >> $seqres.full
- kernel_sectors_per_fs_block=$((fs_blksz / 512))
+ 	$XFS_METADUMP_PROG $options "$device" "$metadump"
+ 	res=$?
+ 	[ "$compressopt" = "compress" ] && [ -n "$DUMP_COMPRESSOR" ] &&
+@@ -656,7 +661,8 @@ _xfs_mdrestore() {
+ 	local metadump="$1"
+ 	local device="$2"
+ 	local logdev="$3"
+-	shift; shift; shift
++	local rtdev="$4"
++	shift; shift; shift; shift
+ 	local options="$@"
+ 	local dumpfile_ver
+ 
+@@ -684,6 +690,18 @@ _xfs_mdrestore() {
+ 		options="$options -l $logdev"
+ 	fi
+ 
++	if [ "$rtdev" != "none" ] && [[ $dumpfile_ver > 1 ]] && _xfs_metadump_supports_rt; then
++		# metadump and mdrestore capture and restore metadata on the
++		# realtime volume by turning on metadump v2 format.  This is
++		# only done if the realtime volume contains metadata such as
++		# rtgroup superblocks.  The -r option to mdrestore wasn't added
++		# until the creation of rtgroups.
++		#
++		# Hence it only makes sense to specify -r here if the dump file
++		# itself is in v2 format.
++		options="$options -r $rtdev"
++	fi
++
+ 	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
+ }
+ 
+@@ -697,17 +715,27 @@ _xfs_metadump_max_version()
+ 	fi
+ }
+ 
++# Do xfs_metadump/mdrestore support the -r switch for realtime devices?
++_xfs_metadump_supports_rt()
++{
++	$XFS_METADUMP_PROG --help 2>&1 | grep -q -- '-r rtdev'
++}
++
+ # Snapshot the metadata on the scratch device
+ _scratch_xfs_metadump()
+ {
+ 	local metadump=$1
+ 	shift
+ 	local logdev=none
++	local rtdev=none
+ 
+ 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+ 		logdev=$SCRATCH_LOGDEV
+ 
+-	_xfs_metadump "$metadump" "$SCRATCH_DEV" "$logdev" nocompress "$@"
++	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
++		rtdev=$SCRATCH_RTDEV
++
++	_xfs_metadump "$metadump" "$SCRATCH_DEV" "$logdev" "$rtdev" nocompress "$@"
+ }
+ 
+ # Restore snapshotted metadata on the scratch device
+@@ -716,6 +744,7 @@ _scratch_xfs_mdrestore()
+ 	local metadump=$1
+ 	shift
+ 	local logdev=none
++	local rtdev=none
+ 	local options="$@"
+ 
+ 	# $SCRATCH_LOGDEV should have a non-zero length value only when all of
+@@ -726,7 +755,10 @@ _scratch_xfs_mdrestore()
+ 		logdev=$SCRATCH_LOGDEV
+ 	fi
+ 
+-	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$@"
++	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
++		rtdev=$SCRATCH_RTDEV
++
++	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$rtdev" "$@"
+ }
+ 
+ # Do not use xfs_repair (offline fsck) to rebuild the filesystem
+@@ -847,7 +879,7 @@ _check_xfs_filesystem()
+ 	if [ "$ok" -ne 1 ] && [ "$DUMP_CORRUPT_FS" = "1" ]; then
+ 		local flatdev="$(basename "$device")"
+ 		_xfs_metadump "$seqres.$flatdev.check.md" "$device" "$logdev" \
+-			compress -a -o >> $seqres.full
++			"$rtdev" compress -a -o >> $seqres.full
+ 	fi
+ 
+ 	# Optionally test the index rebuilding behavior.
+@@ -880,7 +912,7 @@ _check_xfs_filesystem()
+ 		if [ "$rebuild_ok" -ne 1 ] && [ "$DUMP_CORRUPT_FS" = "1" ]; then
+ 			local flatdev="$(basename "$device")"
+ 			_xfs_metadump "$seqres.$flatdev.rebuild.md" "$device" \
+-				"$logdev" compress -a -o >> $seqres.full
++				"$logdev" "$rtdev" compress -a -o >> $seqres.full
+ 		fi
+ 	fi
+ 
+@@ -964,7 +996,7 @@ _check_xfs_filesystem()
+ 		if [ "$orebuild_ok" -ne 1 ] && [ "$DUMP_CORRUPT_FS" = "1" ]; then
+ 			local flatdev="$(basename "$device")"
+ 			_xfs_metadump "$seqres.$flatdev.orebuild.md" "$device" \
+-				"$logdev" compress -a -o >> $seqres.full
++				"$logdev" "$rtdev" compress -a -o >> $seqres.full
+ 		fi
+ 	fi
+ 
 
