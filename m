@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25B66199FBA;
-	Wed, 19 Feb 2025 01:01:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0F441A08B5;
+	Wed, 19 Feb 2025 01:01:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926862; cv=none; b=UQ5g+Lk8E1cP3E1HObXlmsnmdc4Bu42O57DutzwZ2UR+ZdlzbBp2uLkW6YGS9DgqtmnLuBaZc3BRCKBNYOaRBJnzmejGYI14eS/rql7mkjuXmOnqbqgJOy9UTP7SJB3MnOJGlKmZBO5+d+Vt3tOzOB61vUakCzqIaIn3ESWXXOo=
+	t=1739926877; cv=none; b=mdhx6Ixa6DFwRZDwD95BIOiNh75aR0+f8uUKuWCn77c3rWeHFh+17b0p8volTsgGzX25uCKQWPampctC4dgGhgd5fi08u96EGk9JZ6bcWnvDXOX58OKikl74yj92NluP+/nYBrmGmQ2IjW5+mFTWqUSLonrUQRfBcdXN2IP+HEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926862; c=relaxed/simple;
-	bh=bhX4iR5LgKi29v4RzC9PQzU+rUhe8fQhHSryhi8i6Bg=;
+	s=arc-20240116; t=1739926877; c=relaxed/simple;
+	bh=l6CPkU+TjVuSPLV2FkIlrDWhPxfVeHjcB8mc9NPhdcw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gXwJJxnvAAY3jIelFNwhwtJrAkcjf02JnPi/fpxMztYb4LejEPeS5UO92baoont3OMIDKnEecfsmV4G0guOJBxSxYp+XBiAwUR9F9tXX9EwZTkSb7zoHnlLfOyCnae1mTbuMzZsRF8o0Xl20ritphebgi4V3NqkdnbLedBcs/eU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HNYrYp6u; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=D4jXsQ3NguUwG+5ZJ2zip4Y5gLhJYJUbdxmki8c+0FCoBwPLaEdZSqiH9Cj/79unfSAEcbs9lG0TMJ26FeL16WVj8uTJIK3oYvNj3EqDFq8RDnLF06gSaTeSacXLJROxOVMPNK6Hkavau7uf4FeFr7OxIO0KPCJeF8XjCoQiCoo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZepLSwAg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HNYrYp6u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B1C9C4CEE2;
-	Wed, 19 Feb 2025 01:01:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZepLSwAg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3322CC4CEE2;
+	Wed, 19 Feb 2025 01:01:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926861;
-	bh=bhX4iR5LgKi29v4RzC9PQzU+rUhe8fQhHSryhi8i6Bg=;
+	s=k20201202; t=1739926877;
+	bh=l6CPkU+TjVuSPLV2FkIlrDWhPxfVeHjcB8mc9NPhdcw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HNYrYp6um5tnaD0+xJYMCLaLaas/CXvg6WXWKi9L2clMKavpsaqDtWXRXzB7+N08t
-	 MNCVX6AUg02t8tfNFvbwAd7n6Kx17tmkPP17BwlKleQqKGwGcSC5nTNq20XB1yTdrz
-	 bGI+Dt0j2qykM0gThkCmRGCCEhY/aKG08qlr4NEaWYrYEVlU7juvmFJ/31VREY+MvR
-	 dy4CtJoErMBCj35LzKo6JOzDwka1yqkMxhXdsF/lkcTsmtnh1rzshXU0pRrmweHI8h
-	 iKqZTvyNcQ2tBsYBtwokD52vUQpUPtccvt0p8yoFdqYd+P+cHeMP00kgNWKoIVs2he
-	 bYBEDCAXo8SXw==
-Date: Tue, 18 Feb 2025 17:01:00 -0800
-Subject: [PATCH 13/15] common/xfs: capture realtime devices during
- metadump/mdrestore
+	b=ZepLSwAgL8179/52+emZ53cnB7WFtDCdz37FAoM1vZGP54bJqARM7x+4R/h5IX48g
+	 ffMSBsBiq2p+KKgKIJqrBJ9pguMHyUbdshgxESVUr9JuagDHbLSuwOMZCj2BHz2oci
+	 wdgl4umgWsWvvxN9JLMLo6fVXLQqvv5VPWO3RaG2RQmGmJHYw9cbyPx8bsFyAYe1rz
+	 gvRh1jp70Y8qLru/dFpecz6FDnFRi02O4IB1ErHMuatwoQs6GC99XTryS4ATfFHaDf
+	 4Y5wdE4jG+tJVi+PLPPazh2DPsOXIM+Y6Xhthv1YW/crj2eZxuCsx4m+13RAeUElFY
+	 L3hWP77pglDoA==
+Date: Tue, 18 Feb 2025 17:01:16 -0800
+Subject: [PATCH 14/15] common/fuzzy: adapt the scrub stress tests to support
+ rtgroups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992589419.4079457.7193155898233380338.stgit@frogsfrogsfrogs>
+Message-ID: <173992589437.4079457.14723541149706284576.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 References: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,237 +46,176 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If xfs_metadump supports the -r switch to capture the contents of
-realtime devices and there is a realtime device, add the option to the
-command line to enable preservation.
-
-Similarly, if the dump file could restore to an external scratch rtdev,
-pass the -r option to mdrestore so that we can restore rtdev contents.
+Adapt the scrub stress testing framework to support checking realtime
+group metadata.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/metadump |   22 ++++++++++++++++++----
- common/populate |    6 +++++-
- common/xfs      |   48 ++++++++++++++++++++++++++++++++++++++++--------
- 3 files changed, 63 insertions(+), 13 deletions(-)
+ common/fuzzy  |   27 ++++++++++++++++++++++-----
+ common/xfs    |    9 +++++++++
+ tests/xfs/581 |    2 +-
+ tests/xfs/720 |    2 +-
+ tests/xfs/795 |    2 +-
+ 5 files changed, 34 insertions(+), 8 deletions(-)
 
 
-diff --git a/common/metadump b/common/metadump
-index a4ec9a7f921acf..61ba3cbb91647c 100644
---- a/common/metadump
-+++ b/common/metadump
-@@ -27,6 +27,7 @@ _xfs_cleanup_verify_metadump()
- 	if [ -n "$XFS_METADUMP_IMG" ]; then
- 		[ -b "$METADUMP_DATA_LOOP_DEV" ] && _destroy_loop_device $METADUMP_DATA_LOOP_DEV
- 		[ -b "$METADUMP_LOG_LOOP_DEV" ] && _destroy_loop_device $METADUMP_LOG_LOOP_DEV
-+		[ -b "$METADUMP_RT_LOOP_DEV" ] && _destroy_loop_device $METADUMP_RT_LOOP_DEV
- 		for img in "$XFS_METADUMP_IMG"*; do
- 			test -e "$img" && rm -f "$img"
- 		done
-@@ -101,6 +102,7 @@ _xfs_verify_metadump_v2()
- 	local version="-v 2"
- 	local data_img="$XFS_METADUMP_IMG.data"
- 	local log_img=""
-+	local rt_img=""
+diff --git a/common/fuzzy b/common/fuzzy
+index 1548f372fac58a..a57b076ef9670a 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -829,8 +829,10 @@ __stress_one_scrub_loop() {
+ 	local scrub_tgt="$3"
+ 	local scrub_startat="$4"
+ 	local start_agno="$5"
+-	shift; shift; shift; shift; shift
++	local start_rgno="$6"
++	shift; shift; shift; shift; shift; shift
+ 	local agcount="$(_xfs_mount_agcount $SCRATCH_MNT)"
++	local rgcount="$(_xfs_mount_rgcount $SCRATCH_MNT)"
  
- 	# Capture metadump, which creates metadump_file
- 	_scratch_xfs_metadump $metadump_file $metadump_args $version
-@@ -111,8 +113,12 @@ _xfs_verify_metadump_v2()
- 	# from such a metadump file.
- 	test -n "$SCRATCH_LOGDEV" && log_img="$XFS_METADUMP_IMG.log"
+ 	local xfs_io_args=()
+ 	for arg in "$@"; do
+@@ -843,6 +845,12 @@ __stress_one_scrub_loop() {
+ 				local ag_arg="$(echo "$arg" | sed -e "s|%agno%|$agno|g")"
+ 				xfs_io_args+=('-c' "$ag_arg")
+ 			done
++		elif echo "$arg" | grep -q -w '%rgno%'; then
++			# Substitute the rtgroup number
++			for ((rgno = start_rgno; rgno < rgcount; rgno++)); do
++				local rg_arg="$(echo "$arg" | sed -e "s|%rgno%|$rgno|g")"
++				xfs_io_args+=('-c' "$rg_arg")
++			done
+ 		else
+ 			xfs_io_args+=('-c' "$arg")
+ 		fi
+@@ -1298,7 +1306,9 @@ _scratch_xfs_stress_scrub_cleanup() {
+ __stress_scrub_check_commands() {
+ 	local scrub_tgt="$1"
+ 	local start_agno="$2"
+-	shift; shift
++	local start_rgno="$3"
++	shift; shift; shift
++	local rgcount="$(_xfs_mount_rgcount $SCRATCH_MNT)"
  
-+	# Use a temporary file to hold restored rt device contents
-+	test -n "$SCRATCH_RTDEV" && _xfs_metadump_supports_rt && \
-+		rt_img="$XFS_METADUMP_IMG.rt"
-+
- 	# Restore metadump, which creates data_img and log_img
--	SCRATCH_DEV=$data_img SCRATCH_LOGDEV=$log_img \
-+	SCRATCH_DEV=$data_img SCRATCH_LOGDEV=$log_img SCRATCH_RTDEV=$rt_img \
- 		_scratch_xfs_mdrestore $metadump_file
+ 	local cooked_tgt="$scrub_tgt"
+ 	case "$scrub_tgt" in
+@@ -1328,6 +1338,10 @@ __stress_scrub_check_commands() {
+ 			cooked_arg="$(echo "$cooked_arg" | sed -e 's/^repair/repair -R/g')"
+ 		fi
+ 		cooked_arg="$(echo "$cooked_arg" | sed -e "s/%agno%/$start_agno/g")"
++		if echo "$cooked_arg" | grep -q -w '%rgno%'; then
++			test "$rgcount" -eq 0 && continue
++			cooked_arg="$(echo "$cooked_arg" | sed -e "s/%rgno%/$start_rgno/g")"
++		fi
+ 		testio=`$XFS_IO_PROG -x -c "$cooked_arg" "$cooked_tgt" 2>&1`
+ 		echo $testio | grep -q "Unknown type" && \
+ 			_notrun "xfs_io scrub subcommand support is missing"
+@@ -1353,6 +1367,7 @@ __stress_scrub_check_commands() {
+ #	in a separate loop.  If zero -i options are specified, do not run.
+ #	Callers must check each of these commands (via _require_xfs_io_command)
+ #	before calling here.
++# -R	For %rgno% substitution, start with this rtgroup instead of rtgroup 0.
+ # -r	Run fsstress for this amount of time, then remount the fs ro or rw.
+ #	The default is to run fsstress continuously with no remount, unless
+ #	XFS_SCRUB_STRESS_REMOUNT_PERIOD is set.
+@@ -1399,6 +1414,7 @@ _scratch_xfs_stress_scrub() {
+ 	local remount_period="${XFS_SCRUB_STRESS_REMOUNT_PERIOD}"
+ 	local stress_tgt="${XFS_SCRUB_STRESS_TARGET:-default}"
+ 	local start_agno=0
++	local start_rgno=0
  
- 	# Create loopdev for data device so we can mount the fs
-@@ -121,12 +127,15 @@ _xfs_verify_metadump_v2()
- 	# Create loopdev for log device if we recovered anything
- 	test -s "$log_img" && METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
+ 	__SCRUB_STRESS_FREEZE_PID=""
+ 	__SCRUB_STRESS_REMOUNT_LOOP=""
+@@ -1406,12 +1422,13 @@ _scratch_xfs_stress_scrub() {
+ 	touch "$runningfile"
  
-+	# Create loopdev for rt device if we recovered anything
-+	test -s "$rt_img" && METADUMP_RT_LOOP_DEV=$(_create_loop_device $rt_img)
-+
- 	# Mount fs, run an extra test, fsck, and unmount
--	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV _scratch_mount
-+	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV _scratch_mount
- 	if [ -n "$extra_test" ]; then
--		SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV $extra_test
-+		SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV $extra_test
+ 	OPTIND=1
+-	while getopts "a:fi:r:s:S:t:w:x:X:" c; do
++	while getopts "a:fi:r:R:s:S:t:w:x:X:" c; do
+ 		case "$c" in
+ 			a) start_agno="$OPTARG";;
+ 			f) freeze=yes;;
+ 			i) io_args+=("$OPTARG");;
+ 			r) remount_period="$OPTARG";;
++			R) start_rgno="$OPTARG";;
+ 			s) one_scrub_args+=("$OPTARG");;
+ 			S) xfs_scrub_args+=("$OPTARG");;
+ 			t) scrub_tgt="$OPTARG";;
+@@ -1422,7 +1439,7 @@ _scratch_xfs_stress_scrub() {
+ 		esac
+ 	done
+ 
+-	__stress_scrub_check_commands "$scrub_tgt" "$start_agno" \
++	__stress_scrub_check_commands "$scrub_tgt" "$start_agno" "$start_rgno" \
+ 			"${one_scrub_args[@]}"
+ 
+ 	if ! command -v "__stress_scrub_${exerciser}_loop" &>/dev/null; then
+@@ -1483,7 +1500,7 @@ _scratch_xfs_stress_scrub() {
+ 
+ 	if [ "${#one_scrub_args[@]}" -gt 0 ]; then
+ 		__stress_one_scrub_loop "$end" "$runningfile" "$scrub_tgt" \
+-				"$scrub_startat" "$start_agno" \
++				"$scrub_startat" "$start_agno" "$start_rgno" \
+ 				"${one_scrub_args[@]}" &
  	fi
--	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV _check_xfs_scratch_fs
-+	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV _check_xfs_scratch_fs
- 	_unmount $METADUMP_DATA_LOOP_DEV
  
- 	# Tear down what we created
-@@ -135,6 +144,11 @@ _xfs_verify_metadump_v2()
- 		unset METADUMP_LOG_LOOP_DEV
- 		rm -f $log_img
- 	fi
-+	if [ -b "$METADUMP_RT_LOOP_DEV" ]; then
-+		_destroy_loop_device $METADUMP_RT_LOOP_DEV
-+		unset METADUMP_RT_LOOP_DEV
-+		rm -f $rt_img
-+	fi
- 	_destroy_loop_device $METADUMP_DATA_LOOP_DEV
- 	unset METADUMP_DATA_LOOP_DEV
- 	rm -f $data_img
-diff --git a/common/populate b/common/populate
-index 9fc1ee32bd490d..a77d1b0f5f3873 100644
---- a/common/populate
-+++ b/common/populate
-@@ -1061,12 +1061,16 @@ _scratch_populate_save_metadump()
- 		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
- 			logdev=$SCRATCH_LOGDEV
- 
-+		local rtdev=none
-+		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
-+			rtdev=$SCRATCH_RTDEV
-+
- 		mdargs=('-a' '-o')
- 		test "$(_xfs_metadump_max_version)" -gt 1 && \
- 			mdargs+=('-v' '2')
- 
- 		_xfs_metadump "$metadump_file" "$SCRATCH_DEV" "$logdev" \
--				compress "${mdargs[@]}"
-+				"$rtdev" compress "${mdargs[@]}"
- 		res=$?
- 		;;
- 	"ext2"|"ext3"|"ext4")
 diff --git a/common/xfs b/common/xfs
-index 5a829637dc1cfb..a94b9de032f932 100644
+index a94b9de032f932..1e415a4eb3ed68 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -625,14 +625,19 @@ _xfs_metadump() {
- 	local metadump="$1"
- 	local device="$2"
- 	local logdev="$3"
--	local compressopt="$4"
--	shift; shift; shift; shift
-+	local rtdev="$4"
-+	local compressopt="$5"
-+	shift; shift; shift; shift; shift
- 	local options="$@"
- 
- 	if [ "$logdev" != "none" ]; then
- 		options="$options -l $logdev"
- 	fi
- 
-+	if [ "$rtdev" != "none" ] && _xfs_metadump_supports_rt; then
-+		options="$options -r $rtdev"
-+	fi
-+
- 	$XFS_METADUMP_PROG $options "$device" "$metadump"
- 	res=$?
- 	[ "$compressopt" = "compress" ] && [ -n "$DUMP_COMPRESSOR" ] &&
-@@ -656,7 +661,8 @@ _xfs_mdrestore() {
- 	local metadump="$1"
- 	local device="$2"
- 	local logdev="$3"
--	shift; shift; shift
-+	local rtdev="$4"
-+	shift; shift; shift; shift
- 	local options="$@"
- 	local dumpfile_ver
- 
-@@ -684,6 +690,18 @@ _xfs_mdrestore() {
- 		options="$options -l $logdev"
- 	fi
- 
-+	if [ "$rtdev" != "none" ] && [[ $dumpfile_ver > 1 ]] && _xfs_metadump_supports_rt; then
-+		# metadump and mdrestore capture and restore metadata on the
-+		# realtime volume by turning on metadump v2 format.  This is
-+		# only done if the realtime volume contains metadata such as
-+		# rtgroup superblocks.  The -r option to mdrestore wasn't added
-+		# until the creation of rtgroups.
-+		#
-+		# Hence it only makes sense to specify -r here if the dump file
-+		# itself is in v2 format.
-+		options="$options -r $rtdev"
-+	fi
-+
- 	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
+@@ -1490,6 +1490,15 @@ _xfs_mount_agcount()
+ 	$XFS_INFO_PROG "$1" | sed -n "s/^.*agcount=\([[:digit:]]*\).*/\1/p"
  }
  
-@@ -697,17 +715,27 @@ _xfs_metadump_max_version()
- 	fi
- }
- 
-+# Do xfs_metadump/mdrestore support the -r switch for realtime devices?
-+_xfs_metadump_supports_rt()
++# Find rtgroup count of mounted filesystem
++_xfs_mount_rgcount()
 +{
-+	$XFS_METADUMP_PROG --help 2>&1 | grep -q -- '-r rtdev'
++	local rtgroups="$($XFS_INFO_PROG "$1" | grep rgcount= | sed -e 's/^.*rgcount=\([0-9]*\).*$/\1/g')"
++
++	test -z "$rtgroups" && rtgroups=0
++	echo "$rtgroups"
 +}
 +
- # Snapshot the metadata on the scratch device
- _scratch_xfs_metadump()
+ # Wipe the superblock of each XFS AGs
+ _try_wipe_scratch_xfs()
  {
- 	local metadump=$1
- 	shift
- 	local logdev=none
-+	local rtdev=none
+diff --git a/tests/xfs/581 b/tests/xfs/581
+index 39eb42da4b10c5..6aa360b37b90c5 100755
+--- a/tests/xfs/581
++++ b/tests/xfs/581
+@@ -30,7 +30,7 @@ _require_xfs_stress_scrub
+ _scratch_mkfs > "$seqres.full" 2>&1
+ _scratch_mount
+ _require_xfs_has_feature "$SCRATCH_MNT" realtime
+-_scratch_xfs_stress_scrub -s "scrub rtbitmap"
++_scratch_xfs_stress_scrub -s "scrub rtbitmap"  -s "scrub rgbitmap %rgno%"
  
- 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
- 		logdev=$SCRATCH_LOGDEV
+ # success, all done
+ echo Silence is golden
+diff --git a/tests/xfs/720 b/tests/xfs/720
+index 68a6c7f6e2d584..97b3d2579cbd7f 100755
+--- a/tests/xfs/720
++++ b/tests/xfs/720
+@@ -37,7 +37,7 @@ alloc_unit=$(_get_file_block_size $SCRATCH_MNT)
+ scratchfile=$SCRATCH_MNT/file
+ touch $scratchfile
+ $XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
+-__stress_scrub_check_commands "$scratchfile" "" 'repair bmapbtd'
++__stress_scrub_check_commands "$scratchfile" "" "" 'repair bmapbtd'
  
--	_xfs_metadump "$metadump" "$SCRATCH_DEV" "$logdev" nocompress "$@"
-+	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
-+		rtdev=$SCRATCH_RTDEV
-+
-+	_xfs_metadump "$metadump" "$SCRATCH_DEV" "$logdev" "$rtdev" nocompress "$@"
- }
+ # Compute the number of extent records needed to guarantee btree format,
+ # assuming 16 bytes for each ondisk extent record
+diff --git a/tests/xfs/795 b/tests/xfs/795
+index 217f96092a4c42..e7004705b526a5 100755
+--- a/tests/xfs/795
++++ b/tests/xfs/795
+@@ -37,7 +37,7 @@ scratchfile=$SCRATCH_MNT/file
+ mkdir $scratchdir
+ touch $scratchfile
+ $XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
+-__stress_scrub_check_commands "$scratchdir" "" 'repair directory'
++__stress_scrub_check_commands "$scratchdir" "" "" 'repair directory'
  
- # Restore snapshotted metadata on the scratch device
-@@ -716,6 +744,7 @@ _scratch_xfs_mdrestore()
- 	local metadump=$1
- 	shift
- 	local logdev=none
-+	local rtdev=none
- 	local options="$@"
- 
- 	# $SCRATCH_LOGDEV should have a non-zero length value only when all of
-@@ -726,7 +755,10 @@ _scratch_xfs_mdrestore()
- 		logdev=$SCRATCH_LOGDEV
- 	fi
- 
--	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$@"
-+	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
-+		rtdev=$SCRATCH_RTDEV
-+
-+	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$rtdev" "$@"
- }
- 
- # Do not use xfs_repair (offline fsck) to rebuild the filesystem
-@@ -847,7 +879,7 @@ _check_xfs_filesystem()
- 	if [ "$ok" -ne 1 ] && [ "$DUMP_CORRUPT_FS" = "1" ]; then
- 		local flatdev="$(basename "$device")"
- 		_xfs_metadump "$seqres.$flatdev.check.md" "$device" "$logdev" \
--			compress -a -o >> $seqres.full
-+			"$rtdev" compress -a -o >> $seqres.full
- 	fi
- 
- 	# Optionally test the index rebuilding behavior.
-@@ -880,7 +912,7 @@ _check_xfs_filesystem()
- 		if [ "$rebuild_ok" -ne 1 ] && [ "$DUMP_CORRUPT_FS" = "1" ]; then
- 			local flatdev="$(basename "$device")"
- 			_xfs_metadump "$seqres.$flatdev.rebuild.md" "$device" \
--				"$logdev" compress -a -o >> $seqres.full
-+				"$logdev" "$rtdev" compress -a -o >> $seqres.full
- 		fi
- 	fi
- 
-@@ -964,7 +996,7 @@ _check_xfs_filesystem()
- 		if [ "$orebuild_ok" -ne 1 ] && [ "$DUMP_CORRUPT_FS" = "1" ]; then
- 			local flatdev="$(basename "$device")"
- 			_xfs_metadump "$seqres.$flatdev.orebuild.md" "$device" \
--				"$logdev" compress -a -o >> $seqres.full
-+				"$logdev" "$rtdev" compress -a -o >> $seqres.full
- 		fi
- 	fi
- 
+ # Create a 2-dirblock directory
+ total_size=$((alloc_unit * 2))
 
