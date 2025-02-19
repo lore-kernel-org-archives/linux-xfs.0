@@ -1,31 +1,64 @@
-Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E76931A2C29;
-	Wed, 19 Feb 2025 11:20:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCC391F3BB2;
+	Wed, 19 Feb 2025 15:04:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739964017; cv=none; b=SjRp+tjus/YljY2w3us9Z+beFFPokMLgjLJHXAJla2T/6Hszcmw7oTIOQM1KAkIoZ5ZR5C2ZvyrC5PdSR/VzBiIwarhA+5T/zSwlsaJY8iR6S94pErd0mvLYpwQWTSE3ukyefAiWN3H1+ZN06+ZmdZIvh29BPviJgaOdglWP1rk=
+	t=1739977492; cv=none; b=dbDhxBxWedY4IoBVnvkSaxaWtt8RZtwpQTM7DqOUKsjRb/XN79Oss4S4UNde7hm6VOvF54KpE6na3O5ojSPjceHy9+prtDIppgWy8IM8iGc/CpPZIR6psnOATS+tg7UKFB1djGS/c6YUTyp3w2AOTJcXmvOt78uhDiVgRZizu+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739964017; c=relaxed/simple;
-	bh=21iMGn5nmMgxSUhNifIphPXQHgu7d4Uv/JM64va/VIs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=h03P3jDI85tkEjeyDEeMH4ti1+gir/Xp45EUV1LFayAIk9vwxTpwfr/R8XAoxPzElLjImwvq/rKY7XELruu3NQ3aLkKSp7KPCylqVntHjkOHggbRRRv1XSq1KefjWntls3WZj4V6c5TpAOYDca7GPTwnGk9jmmz4WzQRnanU31Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.44])
-	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4YyYpr37n2z22kst;
-	Wed, 19 Feb 2025 19:20:36 +0800 (CST)
-Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
-	by mail.maildlp.com (Postfix) with ESMTPS id 9333E140360;
-	Wed, 19 Feb 2025 19:20:05 +0800 (CST)
-Received: from [10.67.120.129] (10.67.120.129) by
- dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 19 Feb 2025 19:20:05 +0800
-Message-ID: <c9950a79-7bcb-41c2-a59e-af315dc6d7ff@huawei.com>
-Date: Wed, 19 Feb 2025 19:20:04 +0800
+	s=arc-20240116; t=1739977492; c=relaxed/simple;
+	bh=ljNhr3gioO5BrDd9zykPmvUpWyLxX/ZGib1/O/4tlBg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WD6Waf4xuLbPDNpjs7Ia29zoNDQU2Fcqz/bfUfRooILGyzfCN9hkCqHREcjAlkl0SGuuNTZKadZtg4Ridse1oNgIbqstJq8l6LGtGWwt9SuuZ5fV0ehKfl9v80fPrwBKJd5kuAZuE8+Fg3HwUoWuaE+xrZc5xJM8J2nk68OXLQc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E1J5y1H5; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E1J5y1H5"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2212a930001so8006645ad.0;
+        Wed, 19 Feb 2025 07:04:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739977490; x=1740582290; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NTdD+bQIdz3RWZ4KMHlskhNWncYorBHEeG1RebeT8zs=;
+        b=E1J5y1H5D4TXvgFNaO47qrO+b8QsQ4GL30IcigUFudaCE1FV1hmS8+BF23mAR1RSLs
+         PhwJ5bVR4FhsReNfWVyiBbRuwgYH3pwSIRvZX12Oq2hwyLzL3m0SynOqlcgkVgtt/5IP
+         /RAjfL6+r8zO3Z1WWfj80aW51KWTR+QzK21pZMbJYT71qk56PFNuHUdFJ/AO8vmutcTg
+         stnlSTptLkS5hoIQyGg2IVZ1xr6lOoHZiNJGAaCNIZ18ZYVqloi+qSaDN+N87HcsIYzS
+         oIlmveg1nUFXJY1ZNe6wQAQ9QFh4olg+hNTq9EEvOmiz9BA0IXcv5/uKgpZZDp8X8la6
+         fG5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739977490; x=1740582290;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=NTdD+bQIdz3RWZ4KMHlskhNWncYorBHEeG1RebeT8zs=;
+        b=UJKiGxlhlxmehIWRzzbx6rgUPNr7K4gIEJEEJjQj+oc9hfAgjpypANjFEur+zz5RCu
+         ezzQ2ZVzh1a5WQuQ8FFCLyymvlfobZdOVopGtEBE2Ek9nO6Mo458rjxxUm1vx3I+HSsU
+         AG24dXYHML/DqMjY7BTcSmSFoS1RDIlAJ62k/n+dP9s//QUjnagDkjcN+3vJQDubPbS0
+         ysu1LBt7b81KugRQ1ciBLZwQJog+lH/kAUHVQKg+/1zU8nSc/cZjoR9fXGme/gsUS41d
+         iABy+x7KMAmU+OzLguP9tE5kdEYz0ZFO/9w2jkwVj3TGvh8A8NhVBuncAlkDC0tLWwF+
+         6vnw==
+X-Forwarded-Encrypted: i=1; AJvYcCUc102IZIPrKFb9Qbd/AgrnSAYq1Wa+CQVsR2hPwOBSIKHZhhvWY4DtDqxOfTwbMsqe8fUzBvyZA0nc@vger.kernel.org, AJvYcCUzqHU7hd1yek++PPbHqrKwM2VHrtSfYvrTqIHlZiW/3bFGXd+acR/2QXhiYknxAsCCUdiNriFgJrhd@vger.kernel.org
+X-Gm-Message-State: AOJu0YxgZcLfXynHeHFdscCPqhrAwOmv7KoeLGc4PemCWnDXUPIcf7Ry
+	1rU3qpbsMwcLwVaXcTp0p1/iifYBMOGDIrAXmU4qpUEQQ51W5MI7
+X-Gm-Gg: ASbGncukyXsL8k923RrDWRKJ5WECzQXCNokr9OnSw7hAAN8lPcFx2XVdAL8pRj7SNWd
+	3yPVIBmd4qGdXRFz5eFr0LHnxvF/8UxoWfYzrRgkm/6lNFTbpkES5smpmwbm30bI8Lo5TeSJBwo
+	U9MFesHkpOdAKqDSKsmHS1c14Q4wteN/TXaNGDIWcflT0ZB8MlBKbCUKI9DRSvoVhCjwPFYuN4z
+	xts3+Ezz20TIKUKQVuMfaKAE2/LN0VhU0i0ez2yDK2DbeIdoBmU8FF11e1gWcU7c2xGendp7VFL
+	2ThbMRAVcNpdCzgomF63/a99tw==
+X-Google-Smtp-Source: AGHT+IHgGwjUZhfDYX8Qm0YJ2oNs1GP4Gis0CwmFBq5y3bH9gBxqoItHzmVLiLnLPcxaunc4g7TZdw==
+X-Received: by 2002:a17:902:d58b:b0:220:ea90:1925 with SMTP id d9443c01a7336-221040ab9b3mr348915455ad.35.1739977490038;
+        Wed, 19 Feb 2025 07:04:50 -0800 (PST)
+Received: from [192.168.0.120] ([49.205.33.247])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-220d5348f7asm106922385ad.23.2025.02.19.07.04.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Feb 2025 07:04:49 -0800 (PST)
+Message-ID: <90be3350-67e5-4dec-bc65-442762f5f856@gmail.com>
+Date: Wed, 19 Feb 2025 20:34:44 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,203 +66,67 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC] mm: alloc_pages_bulk: remove assumption of populating only
- NULL elements
+Subject: Re: [PATCH v1 3/3] xfs: Add a testcase to check remount with noattr2
+ on a v5 xfs
 To: Dave Chinner <david@fromorbit.com>
-CC: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Shameer
- Kolothum <shameerali.kolothum.thodi@huawei.com>, Kevin Tian
-	<kevin.tian@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Chris
- Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, David Sterba
-	<dsterba@suse.com>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
-	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep
- Dhavale <dhavale@google.com>, Carlos Maiolino <cem@kernel.org>, "Darrick J.
- Wong" <djwong@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Jesper
- Dangaard Brouer <hawk@kernel.org>, Ilias Apalodimas
-	<ilias.apalodimas@linaro.org>, "David S. Miller" <davem@davemloft.net>, Eric
- Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
-	<pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Trond Myklebust
-	<trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, Chuck Lever
-	<chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>, Neil Brown
-	<neilb@suse.de>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
-	<Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Luiz Capitulino
-	<luizcap@redhat.com>, Mel Gorman <mgorman@techsingularity.net>,
-	<kvm@vger.kernel.org>, <virtualization@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
-	<linux-erofs@lists.ozlabs.org>, <linux-xfs@vger.kernel.org>,
-	<linux-mm@kvack.org>, <netdev@vger.kernel.org>, <linux-nfs@vger.kernel.org>
-References: <20250217123127.3674033-1-linyunsheng@huawei.com>
- <Z7Oqy2j4xew7FW9Z@dread.disaster.area>
- <cf270a65-c9fa-453a-b7a0-01708063f73e@huawei.com>
- <Z7T4NZAn4wD_DLTl@dread.disaster.area>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ djwong@kernel.org, zlang@kernel.org
+References: <cover.1739363803.git.nirjhar.roy.lists@gmail.com>
+ <de61a54dcf5f7240d971150cb51faf0038d3d835.1739363803.git.nirjhar.roy.lists@gmail.com>
+ <Z60W2U8raqzRKYdy@dread.disaster.area>
+ <b43e4cd9-d8aa-4cc0-a5ff-35f2e0553682@gmail.com>
+ <Z65o6nWxT00MaUrW@dread.disaster.area>
+ <1b8a4074-ae78-4ba2-9d8a-9e5e85437df5@gmail.com>
+ <Z7O4MZ0xOpO_GTKE@dread.disaster.area>
 Content-Language: en-US
-From: Yunsheng Lin <linyunsheng@huawei.com>
-In-Reply-To: <Z7T4NZAn4wD_DLTl@dread.disaster.area>
-Content-Type: text/plain; charset="UTF-8"
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <Z7O4MZ0xOpO_GTKE@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemf200006.china.huawei.com (7.185.36.61)
 
-On 2025/2/19 5:14, Dave Chinner wrote:
-> On Tue, Feb 18, 2025 at 05:21:27PM +0800, Yunsheng Lin wrote:
->> On 2025/2/18 5:31, Dave Chinner wrote:
->>
->> ...
->>
->>> .....
->>>
->>>> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
->>>> index 15bb790359f8..9e1ce0ab9c35 100644
->>>> --- a/fs/xfs/xfs_buf.c
->>>> +++ b/fs/xfs/xfs_buf.c
->>>> @@ -377,16 +377,17 @@ xfs_buf_alloc_pages(
->>>>  	 * least one extra page.
->>>>  	 */
->>>>  	for (;;) {
->>>> -		long	last = filled;
->>>> +		long	alloc;
->>>>  
->>>> -		filled = alloc_pages_bulk(gfp_mask, bp->b_page_count,
->>>> -					  bp->b_pages);
->>>> +		alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - refill,
->>>> +					 bp->b_pages + refill);
->>>> +		refill += alloc;
->>>>  		if (filled == bp->b_page_count) {
->>>>  			XFS_STATS_INC(bp->b_mount, xb_page_found);
->>>>  			break;
->>>>  		}
->>>>  
->>>> -		if (filled != last)
->>>> +		if (alloc)
->>>>  			continue;
->>>
->>> You didn't even compile this code - refill is not defined
->>> anywhere.
->>>
->>> Even if it did complile, you clearly didn't test it. The logic is
->>> broken (what updates filled?) and will result in the first
->>> allocation attempt succeeding and then falling into an endless retry
->>> loop.
->>
->> Ah, the 'refill' is a typo, it should be 'filled' instead of 'refill'.
->> The below should fix the compile error:
->> --- a/fs/xfs/xfs_buf.c
->> +++ b/fs/xfs/xfs_buf.c
->> @@ -379,9 +379,9 @@ xfs_buf_alloc_pages(
->>         for (;;) {
->>                 long    alloc;
->>
->> -               alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - refill,
->> -                                        bp->b_pages + refill);
->> -               refill += alloc;
->> +               alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - filled,
->> +                                        bp->b_pages + filled);
->> +               filled += alloc;
->>                 if (filled == bp->b_page_count) {
->>                         XFS_STATS_INC(bp->b_mount, xb_page_found);
->>                         break;
->>
->>>
->>> i.e. you stepped on the API landmine of your own creation where
->>> it is impossible to tell the difference between alloc_pages_bulk()
->>> returning "memory allocation failed, you need to retry" and
->>> it returning "array is full, nothing more to allocate". Both these
->>> cases now return 0.
->>
->> As my understanding, alloc_pages_bulk() will not be called when
->> "array is full" as the above 'filled == bp->b_page_count' checking
->> has ensured that if the array is not passed in with holes in the
->> middle for xfs.
-> 
-> You miss the point entirely. Previously, alloc_pages_bulk() would
-> return a value that would tell us the array is full, even if we
-> call it with a full array to begin with.
-> 
-> Now it fails to tell us that the array is full, and we have to track
-> that precisely ourselves - it is impossible to tell the difference
-> between "array is full" and "allocation failed". Not being able to
-> determine from the allocation return value whether the array is
-> ready for use or whether another go-around to fill it is needed is a
-> very poor API choice, regardless of anything else.
-> 
-> You've already demonstrated this: tracking array usage in every
-> caller is error-prone and much harder to get right than just having
-> alloc_pages_bulk() do everything for us.
 
-While I am agreed that it might be hard to track array usage in every
-caller to see if removing assumption of populating only NULL elements
-cause problem for them, I still think the page bulk alloc API before
-this patch have some space for improvement from performance and
-easy-to-use perspective as the most existing calllers of page bulk
-alloc API are trying to bulk allocate the page for the whole array
-sequentially.
+On 2/18/25 03:59, Dave Chinner wrote:
+> On Mon, Feb 17, 2025 at 10:18:48AM +0530, Nirjhar Roy (IBM) wrote:
+>> On 2/14/25 03:19, Dave Chinner wrote:
+>>> On Thu, Feb 13, 2025 at 03:30:50PM +0530, Nirjhar Roy (IBM) wrote:
+>>>> On 2/13/25 03:17, Dave Chinner wrote:
+>>>>> On Wed, Feb 12, 2025 at 12:39:58PM +0000, Nirjhar Roy (IBM) wrote:
+>>> Ok, so CONFIG_XFS_SUPPORT_V4=n is the correct behaviour (known mount
+>>> option, invalid configuration being asked for), and it is the
+>>> CONFIG_XFS_SUPPORT_V4=y behaviour that is broken.
+>> Okay, so do you find this testcase (patch 3/3 xfs: Add a testcase to check
+>> remount with noattr2 on a v5 xfs) useful,
+> Not at this point in time, because xfs/189 is supposed to exercise
+> attr2/noattr2 mount/remount behaviour and take into account all the
+> weirdness of the historic mount behaviour.
+>
+> Obviously, it is not detecting that this noattr2 remount behaviour
+> was broken, so that test needs fixing/additions.  Indeed, it's
+> probably important to understand why xfs/189 isn't detecting this
+> failure before going any further, right?
+Yes. Let me look into what xfs/189 does and why it isn't detecting the 
+noattr2 remount broken behavior. Thank you for the pointer.
 
-> 
->>> The existing code returns nr_populated in both cases, so it doesn't
->>> matter why alloc_pages_bulk() returns with nr_populated != full, it
->>> is very clear that we still need to allocate more memory to fill it.
->>
->> I am not sure if the array will be passed in with holes in the
->> middle for the xfs fs as mentioned above, if not, it seems to be
->> a typical use case like the one in mempolicy.c as below:
->>
->> https://elixir.bootlin.com/linux/v6.14-rc1/source/mm/mempolicy.c#L2525
-> 
-> That's not "typical" usage. That is implementing "try alloc" fast
-> path that avoids memory reclaim with a slow path fallback to fill
-> the rest of the array when the fast path fails.
-> 
-> No other users of alloc_pages_bulk() is trying to do this.
+About "Patch 1/3: xfs/539: Skip noattr2 remount option on v5 file 
+systems" --> I wrote the patch because xfs/539 has started failing in 
+one of fstests CI runs because RHEL 10 has started disabling xfs v4 
+support i.e, CONFIG_XFS_SUPPORT_V4=n. Do you think modifying patch 
+1/3(xfs/539) in such a way that the test ignores the remount failures 
+with noattr2 and continues the test is an appropriate idea (since the 
+test xfs/539 only intends to check the dmesg warnings)?
 
-What I meant by "typical" usage is the 'page_array + nr_allocated'
-trick that avoids the NULL checking when page bulk allocation API
-is used in mm/mempolicy.c, most of existing callers for page bulk
-allocation in other places seems likely to be changed to do the
-similar trick as this patch does.
+--NR
 
-> 
-> Indeed, it looks somewhat pointless to do this here (i.e. premature
-> optimisation!), because the only caller of
-> alloc_pages_bulk_mempolicy_noprof() has it's own fallback slowpath
-> for when alloc_pages_bulk() can't fill the entire request.
-> 
->>> IOWs, you just demonstrated why the existing API is more desirable
->>> than a highly constrained, slightly faster API that requires callers
->>> to get every detail right. i.e. it's hard to get it wrong with the
->>> existing API, yet it's so easy to make mistakes with the proposed
->>> API that the patch proposing the change has serious bugs in it.
->>
->> IMHO, if the API is about refilling pages for the only NULL elements,
->> it seems better to add a API like refill_pages_bulk() for that, as
->> the current API seems to be prone to error of not initializing the
->> array to zero before calling alloc_pages_bulk().
-> 
-> How is requiring a well defined initial state for API parameters
-> "error prone"?  What code is failing to do the well known, defined
-> initialisation before calling alloc_pages_bulk()?
-> 
-> Allowing uninitialised structures in an API (i.e. unknown initial
-> conditions) means we cannot make assumptions about the structure
-> contents within the API implementation.  We cannot assume that all
-> variables are zero on the first use, nor can we assume that anything
-> that is zero has a valid state.
-
-It seems the above is the main differenece we see from the API perspective,
-as I see the array as output parameter and you seems to treat the array as
-both input and output parameter?
-
-The kmem_cache_alloc_bulk() API related API seems to treat the array as
-output parameter too as this patch does, the difference from this patch
-is that if there is no enough memory, it will free the allocated memory
-and return 0 to the caller while this patch returns already allocated
-memory to its caller even when there is no enough memory.
-
-> 
-> Again, this is poor API design - structures passed to interfaces
-> -should- have a well defined initial state, either set by a *_init()
-> function or by defining the initial state to be all zeros (i.e. via
-> memset, kzalloc, etc).
-> 
-> Performance and speed is not an excuse for writing fragile, easy to
-> break code and APIs.
-> 
+>
+> IMO, it is better to fix existing tests that exercise the behaviour
+> in question than it is to add a new test that covers just what the
+> old test missed.
+>
 > -Dave.
+
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
+
