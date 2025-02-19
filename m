@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53D171FDE3A
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 16:12:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FBD416F858;
+	Wed, 19 Feb 2025 16:57:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739981577; cv=none; b=bKY1TTw/wCjl49rPRLfCmTyKxfi0drbBdsrLqj2m6oeCgcFMfwotrCnJ/awcu/gpkLE3VuZSRmbB/jo+jpPsc+AZa690vtpMn7Po7lLLqw+Rn8BRoS8/YiGZpuynio+OfGFGBWrTBWU+k2nPlre2BqKLr79sMXW02YKk6uI+Hwg=
+	t=1739984242; cv=none; b=ct5V+x3uJV1hn0+0OVInOCeLxXnUUJ38MfiSp60oiRdX/o0Bb7muugoVJj8fB1b5X2LxxzKxxU6OomcvKeS/fOF6XEuwVapb8l7NalTgcB89PqhrOGFTYV4har0V0gvvSihQMpYTvXyqcWQrBXamaqpzGCtuiVlvTryn66Ro9gg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739981577; c=relaxed/simple;
-	bh=k+qXduNrV/qo+MhrhIzSyfXS42SJhIUcivngDCjnmZ0=;
+	s=arc-20240116; t=1739984242; c=relaxed/simple;
+	bh=RhvFmV+tBIfrFDsVZlCrlgBZN8j9ZhOdeBYPDXDiVG8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wr6uLlhx85DW0oAmbKTWqRCGAsBchEfhb+kGxsiw0H7Ht7VvYSYR9/Yj5dGl7Egi0e1zlSuizKPudDNIxrm30ivEplW15cvYTaixzQECbKf65rwzqVv+kwfme1ccPULeARrJygY17JR/T+YMelYN1+ZFiwceNkyPCd3P3TnM+rI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tU7hvzOv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rgcm9InJ4d6joaCYxTOoMloxj0E48v+5Mle/EO+Mm4ZE3Yf5rU/poe9qdJv2aQRpg3D5n/8xSyNBvibAaiRXsP4eHgArdzh0X+9verGqGxHTJTkdRrzjtymnyETOGafMA1yrdNFkYgTZSd3jk8gt77rmjD5irVluAt4lhoyacqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aSvxQzrK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tU7hvzOv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5645C4CED1;
-	Wed, 19 Feb 2025 16:12:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aSvxQzrK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF1F6C4CED1;
+	Wed, 19 Feb 2025 16:57:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739981576;
-	bh=k+qXduNrV/qo+MhrhIzSyfXS42SJhIUcivngDCjnmZ0=;
+	s=k20201202; t=1739984241;
+	bh=RhvFmV+tBIfrFDsVZlCrlgBZN8j9ZhOdeBYPDXDiVG8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tU7hvzOvpldOL/iEQtvjLlnzA4KQeDzUixhYxNVT5ZZxfHHp5zfCtboVuam4Xho7l
-	 c61bZmQPpTXUc+Wi7fh8QUCZBxmlCB+q8pk5CI0mu+LnYPdK/VnR+l/nOyX3ZObDsz
-	 xmwssmaqBuzbvN0emllH5zbLvDOgrB0+BG/prZhSAazRgxIDRmniVu2zqXfDvzscuF
-	 uoeLaihbvgjEgOHNvxcqehlD1yIpslRIvLny5g+hlz2C44tRCwjQtZp9OVvKDzju37
-	 Vylw6hHycG8cMD0XPjJq3nwPQ44iT9HZ1jL9vG1HBy31f+syoK51LM2imZ/B4ok40x
-	 tZlD4/mFngrwg==
-Date: Wed, 19 Feb 2025 08:12:56 -0800
+	b=aSvxQzrKljGxpT74CodvT8pUgY89IuZjo4Qtpdg40le+WH+QyBXk9uA+QsrCHxZKT
+	 QEJ7IkbNAGOdl8SfaJxhvqOMYICwCsP7QuBSivqv1RUYURA30EVp8Fgo9KjOaSKRQW
+	 US3jADnaaj/7nBFdqY06vxie3ZUgfGXhDOmuPVY5pklxvfI2jHIHYNkkusv/zn5mxo
+	 73u25zTsZAQsvOz4ez0F+JQ+hB4Ewq4yAGsCJNjN/Vq72Q6SQ63xYqBKP2QaemvDXM
+	 UcqGdjmKBrj5dcgCruwlSgrcAF/n14+RPcdBqLzZWULOOU6yZke9w8Yqzw3i+KN4IV
+	 GKNNJzdNYMxuw==
+Date: Wed, 19 Feb 2025 08:57:21 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [XFSPROGS PATCH] make: remove the .extradep file in libxfs on
- "make clean"
-Message-ID: <20250219161256.GY3028674@frogsfrogsfrogs>
-References: <20250219160500.2129135-1-tytso@mit.edu>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: zlang@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCHSET v6.4 07/12] fstests: store quota files in the metadir
+Message-ID: <20250219165721.GP21808@frogsfrogsfrogs>
+References: <20250219004353.GM21799@frogsfrogsfrogs>
+ <173992589825.4080063.11871287620731205179.stgit@frogsfrogsfrogs>
+ <Z7WF70dbtoNGfOIY@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,41 +44,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250219160500.2129135-1-tytso@mit.edu>
+In-Reply-To: <Z7WF70dbtoNGfOIY@infradead.org>
 
-On Wed, Feb 19, 2025 at 11:05:00AM -0500, Theodore Ts'o wrote:
-> Commit 6e1d3517d108 ("libxfs: test compiling public headers with a C++
-> compiler") will create the .extradep file.  This can cause future
-> builds to fail if the header files in $(DESTDIR) no longer exist.
+On Tue, Feb 18, 2025 at 11:19:11PM -0800, Christoph Hellwig wrote:
+> On Tue, Feb 18, 2025 at 04:47:40PM -0800, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > Store the quota files in the metadata directory tree instead of the superblock.
+> > Since we're introducing a new incompat feature flag, let's also make the mount
+> > process bring up quotas in whatever state they were when the filesystem was
+> > last unmounted, instead of requiring sysadmins to remember that themselves.
 > 
-> Fix this by removing .extradep (along with files like .ltdep) on a
-> "make clean".
-> 
-> Fixes: 6e1d3517d108 ("libxfs: test compiling public headers with a C++ compiler")
-> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+> This sentence looks like it was erroneously copied from the kernel
+> series.
 
-Oops, yeah, I forgot that. :(
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Oops, yeah.  Will change it to:
+
+"These are the fstests adjustments to quota handling in metadir
+filesystems, which means finding the quota inodes through paths, and
+adjusting to quota options being persistent."
 
 --D
-
-> ---
->  include/buildrules | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/include/buildrules b/include/buildrules
-> index 7a139ff0..6b76abce 100644
-> --- a/include/buildrules
-> +++ b/include/buildrules
-> @@ -7,7 +7,7 @@ _BUILDRULES_INCLUDED_ = 1
->  include $(TOPDIR)/include/builddefs
->  
->  clean clobber : $(addsuffix -clean,$(SUBDIRS))
-> -	@rm -f $(DIRT) .ltdep .dep
-> +	@rm -f $(DIRT) .ltdep .dep .extradep
->  	@rm -fr $(DIRDIRT)
->  %-clean:
->  	@echo "Cleaning $*"
-> -- 
-> 2.47.2
-> 
