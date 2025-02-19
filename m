@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C71192D8E;
-	Wed, 19 Feb 2025 00:52:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC22916F265;
+	Wed, 19 Feb 2025 00:52:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926330; cv=none; b=D7LP7jQN/dqI+T/obNktyKP1fAp2MubY3xPM3eV3WCJoiXj9lNmDcgT5+6CkZ4c6Sd14RG4i+1HUExuCvEGZHH/UJtQuuuj7+v7YoC5UZMIYVvPtQl0rZY6TXv9oI1oKY5GzkEjIlSlpGxoDmaUvtgcbOvBOvO74P0MbZitGusk=
+	t=1739926346; cv=none; b=A+sUWh452VDqXnAeolNtiOgi3ZhS7RHaa08nVJdAx5buaSd0QQuXhRP0Y9hCgmpLz87jrOB390Z1uOrLiOz3v3SDzxLQfPOgZTgnNgJF15Kcdp5w3q3b90LoZV61xD0Ky9XM0XnM02QyOJe5fN29X8OroD8VjGYTl4QCxwzmyTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926330; c=relaxed/simple;
-	bh=FGqqXrHLLmbXjyGkCTLfY/bK7c58Qye7G00zy8XPaT8=;
+	s=arc-20240116; t=1739926346; c=relaxed/simple;
+	bh=xHdJSNtorQswsndb/ShOlkb0xCKVS5pPKzwLyK9EjAs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eTKOC9M0eFB44g8rZwBUEuLMwfsSQupVfRl8GWUO+5ZOm8BnoP3VTn2wNHz3cei8++0Vv/T8ObAHRMX8ahXw/b/xLHKJpyeQHG4JdODjIemdzu7OH8y/Hy7Y5sZrTI4CWNahGbJsX896/OW7IciPembLZbH9kD0U2BstK7z8vyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mbME9mEn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kgzL/5xK3GDF/iYuXhQvClBveOa8MuHkqqZRj1hKL8ZkfcR6njNE2ovsDUWHAX66Tg6G7GJQ/SIuSEIgHTsdzQH70zfKtsj9A+AR8kkOyD6R4XGoPPnlMpwtW5ZcVxxj16ea6QqbAsmjIS8WZftrKjTFde8UGxTKd5bgRcNrGlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tUmQmlBH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mbME9mEn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2D43C4CEE2;
-	Wed, 19 Feb 2025 00:52:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tUmQmlBH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59780C4CEE2;
+	Wed, 19 Feb 2025 00:52:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926329;
-	bh=FGqqXrHLLmbXjyGkCTLfY/bK7c58Qye7G00zy8XPaT8=;
+	s=k20201202; t=1739926345;
+	bh=xHdJSNtorQswsndb/ShOlkb0xCKVS5pPKzwLyK9EjAs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mbME9mEnLN3MfYLlGyYfeNKhXZJk4pzsoYyUIgdWjUsaOcts0VN3LwiVrl2gq6fT9
-	 lyEye/apIGf64s++qXzCBGwG4GeEgsHLp+wq7qNH2/oG65/gLfL8kB/nU8VM+A7NPM
-	 d/+s0HaB4rdYXwQjjxFLxoYNXI/zsZyF1bQrlyxfTjbV9OGc9+2HHwl6CfQYOJaWiM
-	 KN4MqKVCw/Ddvn/UGcH4pkIsqWeYiWM0abn+KyuuGjiWGTHH2peUSfQqdOGUj5KC9j
-	 9zhXdzHowGwDYC96tRpOcEttlKYpMLEdyUKSL/M0dRzhHPvKU/1IOUTTTl/xzfjL2t
-	 gPlEQ4xOdjaRw==
-Date: Tue, 18 Feb 2025 16:52:09 -0800
-Subject: [PATCH 07/12] misc: fix misclassification of xfs_scrub + xfs_repair
- fuzz tests
+	b=tUmQmlBHuPdDLCrRGVGqHd9TIlbCN6UOzoBQg+wgkNFwNB/r+dHeb2t2WC+UoNmgV
+	 JZmzZ2aP0MQm3L1r8xDrimaMnzWiqCHADOD6dJRm6hwb4AppSEnFVVmGuI3/l5vBRa
+	 Mq2IN0lQOl7nlgw/jrvvneeIUgAJfEMgYaJeN1byblstHP2dbj1wPHUHbChn++CSGS
+	 fXU8YPWb/dVE9sQd7QNITVcnu8iW+Ek17uofa3qwD1tg6zutiU9b2Z/bWzCXt2NNu2
+	 rH2PVx6DTqhH0t0y1/+PWOs5TfWd9PaxJqzgqp/ANbJTJYaRYsMFb/N0C61r4HKlt8
+	 rLfUD+OXm2sOQ==
+Date: Tue, 18 Feb 2025 16:52:24 -0800
+Subject: [PATCH 08/12] misc: fix misclassification of verifier fuzz tests
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992587533.4078254.9647021431489098153.stgit@frogsfrogsfrogs>
+Message-ID: <173992587551.4078254.1109177653377657721.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
 References: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,67 +45,67 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-All the tests in the "fuzzers_bothrepair" group actually test xfs_scrub
-and xfs_repair.  Therefore, we should put them in the 'repair' group.
+All the tests in the "fuzzers_norepair" group do not test xfs_scrub.
+Therefore, we should remove them all from 'dangerous_scrub' group.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/743 |    2 +-
- tests/xfs/744 |    2 +-
- tests/xfs/783 |    2 +-
- tests/xfs/784 |    2 +-
+ tests/xfs/735 |    2 +-
+ tests/xfs/738 |    2 +-
+ tests/xfs/745 |    2 +-
+ tests/xfs/746 |    2 +-
  4 files changed, 4 insertions(+), 4 deletions(-)
 
 
-diff --git a/tests/xfs/743 b/tests/xfs/743
-index 90b3872440cb07..1dcb79bc46fe48 100755
---- a/tests/xfs/743
-+++ b/tests/xfs/743
-@@ -9,7 +9,7 @@
- # to test the most likely usage pattern.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_bothrepair realtime
-+_begin_fstest dangerous_fuzzers dangerous_scrub repair fuzzers_bothrepair realtime
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/744 b/tests/xfs/744
-index e7778417b53ff4..7b554e977b20d2 100755
---- a/tests/xfs/744
-+++ b/tests/xfs/744
-@@ -9,7 +9,7 @@
- # to test the most likely usage pattern.
- 
- . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_bothrepair realtime
-+_begin_fstest dangerous_fuzzers dangerous_scrub repair fuzzers_bothrepair realtime
- 
- _register_cleanup "_cleanup" BUS
- 
-diff --git a/tests/xfs/783 b/tests/xfs/783
-index dcb1292217d37d..79bf34c1b2bd12 100755
---- a/tests/xfs/783
-+++ b/tests/xfs/783
-@@ -9,7 +9,7 @@
- # to test the most likely usage pattern.
+diff --git a/tests/xfs/735 b/tests/xfs/735
+index 861763b3db8bd8..8e927572b6ecd8 100755
+--- a/tests/xfs/735
++++ b/tests/xfs/735
+@@ -8,7 +8,7 @@
+ # Do not fix the filesystem, to test metadata verifiers.
  #
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_bothrepair
-+_begin_fstest dangerous_fuzzers dangerous_scrub repair fuzzers_bothrepair
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair
++_begin_fstest dangerous_fuzzers fuzzers_norepair
  
  _register_cleanup "_cleanup" BUS
  
-diff --git a/tests/xfs/784 b/tests/xfs/784
-index 286797257e025e..99d84545c90e79 100755
---- a/tests/xfs/784
-+++ b/tests/xfs/784
-@@ -9,7 +9,7 @@
- # to test the most likely usage pattern.
+diff --git a/tests/xfs/738 b/tests/xfs/738
+index f432607075ca91..e8d2cd2a815f8b 100755
+--- a/tests/xfs/738
++++ b/tests/xfs/738
+@@ -8,7 +8,7 @@
+ # Do not fix the filesystem, to test metadata verifiers.
  #
  . ./common/preamble
--_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_bothrepair
-+_begin_fstest dangerous_fuzzers dangerous_scrub repair fuzzers_bothrepair
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair
++_begin_fstest dangerous_fuzzers fuzzers_norepair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/745 b/tests/xfs/745
+index 38a858e8cffd0a..3549ad08772c2c 100755
+--- a/tests/xfs/745
++++ b/tests/xfs/745
+@@ -8,7 +8,7 @@
+ # Do not fix the filesystem, to test metadata verifiers.
+ 
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair realtime
++_begin_fstest dangerous_fuzzers fuzzers_norepair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/746 b/tests/xfs/746
+index e81d4f93a9059f..5afc71ad19c6e6 100755
+--- a/tests/xfs/746
++++ b/tests/xfs/746
+@@ -8,7 +8,7 @@
+ # Do not fix the filesystem, to test metadata verifiers.
+ 
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_norepair realtime
++_begin_fstest dangerous_fuzzers fuzzers_norepair realtime
  
  _register_cleanup "_cleanup" BUS
  
