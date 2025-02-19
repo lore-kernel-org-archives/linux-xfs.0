@@ -1,38 +1,41 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 241D5286289
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 04:08:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8302A1D554
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 04:36:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739938131; cv=none; b=lPDUqNA/rmyiQWBL7YiGblS2WbyVoHK873x0aSHCX7YZmPOqrMNr3WhlsVhqhYFcKzKeSSljK8h5juxh0GFJIHc+sDleprmXrtpq4g5jJLrPXjsucLQVLVIc8a34PaoxXH9B4Ih66MRBwCyZbz9RVt8TzbQUk9ZpOsR2rVrX8h0=
+	t=1739939774; cv=none; b=r2WVbFvSgVBf+I8KEpLusDBPGqd4HAIL8/wzoZzw4s6Q/DEabiOYJbKr9wFGLyJcC3GdMeC5ozLZt+zEO0qamjwWR4yrYuQcx+XHj88jIdQTxHbcinno4mskconqvC+rPncPE3gWI1SPvs58j59r+BilM2ukN12Izs1UpWVskjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739938131; c=relaxed/simple;
-	bh=GHjRotfsGseaOEoa/T5CsZo38sSYm2aOLHoM679ZRLg=;
+	s=arc-20240116; t=1739939774; c=relaxed/simple;
+	bh=b+qpZYKd6iUGRNN7JIIoK405hi8/R4Gb9e2MC3311ys=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fr5omIEDkrN24Lw3tYmzl2oRx4gnF96PBoUF1+IJl99i4LvE+2OiGlppXr4VAmDRiNMS7q5JlUUHi7HrdGL4rs0W+o3Ob3553r024zrmpxOG1FNRXgbrmmDnqP02f9C9cSHOYivovH5f9fANzK81E1f6/83dEFFGH6BZdAzeGAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PjtEsOKe; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=qlOWuLzkMiTdTJMoyVnKRmEba0D83WnFXRuyoJfF7TedK5GJh2h09em/y39f99IhEOnvToEfJvdjMkDkD5ZBfXHsV8qt1keNXBe5KEvFXHV1WWGJKr7HjT2rL8YS9YgKNYR6evB3Y/8rlJtKpx/FhWKz5m6hNB6+3SKEG9M+0cg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rdyoDLW0; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PjtEsOKe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93235C4CED1;
-	Wed, 19 Feb 2025 04:08:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739938130;
-	bh=GHjRotfsGseaOEoa/T5CsZo38sSYm2aOLHoM679ZRLg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PjtEsOKepA/26eUa16h03dOv6Gjpw6AWmRs9GwCdJTwZaUdE+OmJbPhMSr0ud5T6L
-	 6mt7eVPsDp0oorbrgGoC6jT2XsU9ClRW7YpzWfISf9y9a3iWAHwWC8KKHcL+I5ao+V
-	 Jtz7ME+ugnLBfR5PH2iHPy0hlGWv/vvwUSHl1FqjoDb1mqCbvb64GsftGKslaJTrTB
-	 0SlDN9plRX8dUzdizVEdAZGANcQTtlj4iekHeI9tsdP10zoWgQ08h4qstBDX6/3Kui
-	 k81Uk0jDRwGSqdLJdviMYwRWs0eVLymnrJ/yMhqUKtpV5BDkYsWtJF85ldxZiAPQ7Y
-	 8U9LtjAgkTxFA==
-Date: Tue, 18 Feb 2025 20:08:49 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: [PATCH 2/2] xfs_db: obfuscate rt superblock label when metadumping
-Message-ID: <20250219040849.GM21808@frogsfrogsfrogs>
-References: <20250219040813.GL21808@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rdyoDLW0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=UbjWkmt0FFVR7P6EiEo1AB3s6500rT69kKcSfmbPypc=; b=rdyoDLW0qjEFf5JHvCqwo1z8cw
+	VyLeqBLuhEexnbg1gZBm+rxyfgmTJQ1ci/8ukTwRKJ7GSrfMVl9ttAaB7p8FgWtQ5kr5BNkxjVToH
+	54mPI/sU8GKl0wk1Vcil1uNxxL+jP1coJQLe+yZ5vBmqKtZpnYraYpYYryhNF+DtINtHo5ne4REyW
+	60eqmu7V2TSTaDGx7pKgje4ichCA/G1/8cr74Hk8GJyKWYj+kgv7HczwJcVWl/BMYse3kGKaqzc3b
+	s3/k/NWKToCrq7Q7D/KvW0rZ74iSav6tD5JGggmiHYV97DY7C3i/9LDynxqmAIcYAcKAHuFtxti0y
+	UaWCuMgg==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tkboa-00000004oNI-394l;
+	Wed, 19 Feb 2025 04:36:04 +0000
+Date: Wed, 19 Feb 2025 04:36:04 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [regression 6.14-rc2 + xfs-for-next] Bad page state at unmount
+Message-ID: <Z7VftAeqEgTwUyx_@casper.infradead.org>
+References: <Z7VU9QX8MrmZVSrU@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,44 +44,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250219040813.GL21808@frogsfrogsfrogs>
+In-Reply-To: <Z7VU9QX8MrmZVSrU@dread.disaster.area>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Feb 19, 2025 at 02:50:13PM +1100, Dave Chinner wrote:
+> Hi folks,
+> 
+> I hit this running check-parallel a moment ago:
+> 
+> [80180.074658] BUG: Bad page cache in process umount  pfn:7655f4
+> [80180.077259] page: refcount:9 mapcount:1 mapping:00000000ecd1b54a index:0x0 pfn:0x7655f4
+> [80180.080573] head: order:2 mapcount:4 entire_mapcount:0 nr_pages_mapped:4 pincount:0
+> [80180.083615] memcg:ffff888104f36000
+> [80180.084977] aops:xfs_address_space_operations ino:84
+> [80180.087175] flags: 0x17ffffc000016d(locked|referenced|uptodate|lru|active|head|node=0|zone=2|lastcpupid=0x1fffff)
+> [80180.091380] raw: 0017ffffc000016d ffffea001745c648 ffffea0012b1da08 ffff8891726dae98
+> [80180.094469] raw: 0000000000000000 0000000000000000 0000000900000000 ffff888104f36000
+> [80180.097740] head: 0017ffffc000016d ffffea001745c648 ffffea0012b1da08 ffff8891726dae98
+> [80180.100988] head: 0000000000000000 0000000000000000 0000000900000000 ffff888104f36000
+> [80180.104129] head: 0017ffffc0000202 ffffea001d957d01 ffffffff00000003 0000000000000004
+> [80180.107232] head: 0000000000000004 0000000000000000 0000000000000000 0000000000000000
+> [80180.110338] page dumped because: still mapped when deleted
 
-Metadump can obfuscate the filesystem label on all the superblocks on
-the data device, so it must perform the same transformation on the
-realtime device superblock to avoid leaking information and so that the
-mdrestored filesystem is consistent.
-
-Found by running xfs/503 with realtime turned on and a patch to set
-labels on common/populated filesystem images.
-
-Cc: <linux-xfs@vger.kernel.org> # v6.13.0
-Fixes: 6bc20c5edbab51 ("xfs_db: metadump realtime devices")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- db/metadump.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/db/metadump.c b/db/metadump.c
-index 4f4b4f8a39a551..4d090942bf29cd 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -3073,6 +3073,17 @@ copy_rtsb(void)
- 		print_warning("cannot read realtime superblock");
- 		return !metadump.stop_on_read_error;
- 	}
-+
-+	/* Replace any filesystem label with "L's" */
-+	if (metadump.obfuscate) {
-+		struct xfs_rtsb	*rtsb = iocur_top->data;
-+
-+		memset(rtsb->rsb_fname, 'L',
-+		       min(strlen((char *)rtsb->rsb_fname),
-+				sizeof(rtsb->rsb_fname)));
-+		iocur_top->need_crc = 1;
-+	}
-+
- 	error = write_buf(iocur_top);
- 	pop_cur();
- 
+Do you have CONFIG_PT_RECLAIM enabled?  If so, it's buggy (see linux-mm
+for a fix if you don't want to disable it).
