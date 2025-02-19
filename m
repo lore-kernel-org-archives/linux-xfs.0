@@ -1,42 +1,45 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26FA9192B66;
-	Wed, 19 Feb 2025 06:13:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980B017BB21;
+	Wed, 19 Feb 2025 06:20:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739945638; cv=none; b=U2RmEzLLf0O9ExJGtXtxyxxO8i+1kJzAO7czl9l2mTiu3cHZzoqXjKv6HK4JZj/AKziREq5JdGWfHAv0rXOyxUl7iX3xXTOkGcDxUS5onVsD4RwJmLyrck9wZmXrenbgliglj95sLvvflcddWCZdmIm3V06tG9AUoCo4pewB9Hg=
+	t=1739946054; cv=none; b=Y4Hgg/aIYHjTtVrbKwK6S3HXCUiSHWR9c6mK3gH2TkIcA1Wz/fuNSfcRl7ySt9ux62u02qus19R3F5ewLprxED2CAxY/D788ngDpPte9n+5K+HnvaJc0/YDz2qjvrGGfzfJl0Aih0VuT5cT416/FhooChLpI3nDa8i3K0eN3VVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739945638; c=relaxed/simple;
-	bh=NpS9F+CA9dQmH5LWQkUTEymLfUpa82STLRUn09XGFm0=;
+	s=arc-20240116; t=1739946054; c=relaxed/simple;
+	bh=cw8erjyMkd4i/MnuO5QXPDtaTE0b1jWGbICEab5yusU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n/ccef3X8vXvP9RpIXW29vzhWqHmj28GpDcvJ7SxUQ+vHt9WVMErSa9IXsSvIiREEqIc27FL14C9dBXE7hDBh0HCBk5uLTjksevnalzmXByoFT2SqkEEWyKFtSFA01AmIAGvC/vyVkKCO8s6JXw3EsSGpCwjcC6aGgGMxCB/mNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=afowCAde; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mIP+s8iOzRdiaVbVj2hm795Ys6Wy8+hh2dp2jICuaGNeuyz/1FOC7LENjN2sJnYPW7u+Sjoh+taVJmB2jOjJXZTC/60LfuvnqfDnYJ+fwXKNYfQdx9Nb/Z/n4oCC/4H9dW+kpu2Q9aYv4qHdCOgR1Xpr7Zi3q6+QS01r/b9EG4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Eow1uCfa; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="afowCAde"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91469C4CED1;
-	Wed, 19 Feb 2025 06:13:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739945637;
-	bh=NpS9F+CA9dQmH5LWQkUTEymLfUpa82STLRUn09XGFm0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=afowCAdevGbnS3WDWv0URXySk3RpCYHrnvf1vWf+4XOHiF4xl2WEqQXqwU2VzMw/P
-	 x9Dr5liLA22xyF3VHxOYiHGK8AWnU3t05VdH1rjRULjokTuvPQnQ6XrkptYV8dKbJ+
-	 LF1FXXBfXQNtTKA6HaBH4oSFyM9RVvqHqGJkX/BFpSHc8xwyq2NvFZFf8N8aJrz4xA
-	 guSPjuIdw+w499QU6xwbuOgvUzq3YZBm0bJd1YQda6CGwZ0qLYh1/Td3T6pGp6uhMK
-	 ptSADDqqm9gFYT7gaxKJS3rbml4u/H2+iz8Fiv1yY9bwzNbhivJ2uEN0MOhs2ayVxu
-	 FITat+QwNgLhg==
-Date: Tue, 18 Feb 2025 22:13:57 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 11/12] xfs/28[56],xfs/56[56]: add to the auto group
-Message-ID: <20250219061357.GX3028674@frogsfrogsfrogs>
-References: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
- <173992587607.4078254.10572528213509901449.stgit@frogsfrogsfrogs>
- <Z7VzmdxUtQcNcgzS@infradead.org>
- <20250219060504.GW3028674@frogsfrogsfrogs>
- <Z7V1Ru-05o2iFgzw@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Eow1uCfa"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Tu7nrOk3OlEwTy8yuUntAGWxW9V7EfgGZdf+XZ64vhI=; b=Eow1uCfa8iJhP1z6LdlEZS2xHT
+	6ASTavyTvvi0HCAg0QWE4bu+sxxD/0rhT+mIRC+BkfJtq5LclbamMX1XgIrwwe2Ko0HapLcc62IyR
+	3XgAD5Nsp4Cq6wCTa1AlDFp8iA6esbQtFyBI3GwuIoHDtLfpdTiDBM34449dy1zjr9VIEoLWfqPev
+	mPf38pFos4yH6Ds0Uhm8Hc4nhSkGzv5AxEwc0yRKl6ioNxhJh5/yYWE8wqST0xa47NLCO+iyDk0pu
+	WQJ7ue7BCurqeAzkQqdLwJJui/jG/jdLiE6oXTNvhb9KukF9EHQQ0nbl8ZNJb5LAWyP0kf4cB/YwY
+	a/TLgNQg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tkdS0-0000000B1RQ-3o7H;
+	Wed, 19 Feb 2025 06:20:52 +0000
+Date: Tue, 18 Feb 2025 22:20:52 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, dm-devel@lists.linux.dev
+Subject: Re: [PATCHSET 02/12] fstests: fix logwrites zeroing
+Message-ID: <Z7V4REM7dikydQXJ@infradead.org>
+References: <173992586956.4078081.15131555531444924972.stgit@frogsfrogsfrogs>
+ <Z7VyWPjJM-M59wJc@infradead.org>
+ <20250219061336.GO21799@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,25 +48,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z7V1Ru-05o2iFgzw@infradead.org>
+In-Reply-To: <20250219061336.GO21799@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Feb 18, 2025 at 10:08:06PM -0800, Christoph Hellwig wrote:
-> On Tue, Feb 18, 2025 at 10:05:04PM -0800, Darrick J. Wong wrote:
-> > > Can you explain why only these four?
-> > 
-> > The rest of the stress tests pick /one/ metadata type and race
-> > scrub/repair of it against fsstress by invoking xfs_io repeatedly.
-> > xfs/28[56] runs the whole xfs_scrub program repeatedly so we get to
-> > exercise all of them in a single test.
-> > 
-> > (The more specific ones make it a lot easier to debug problems.)
-> 
-> Can you add this to the commit log?  With that:
+On Tue, Feb 18, 2025 at 10:13:36PM -0800, Darrick J. Wong wrote:
+> Alternately we could make the log replay program call
+> fallocate(PUNCH_HOLE) on the block device before trying
+> fallocate(ZERO_RANGE) because AFAICT punch-hole has always called
+> blkdev_issue_zeroout with NOFALLBACK.  The downside is that fallocate
+> for block devices came long after BLKDISCARD/BLKZEROOUT so we can't
+> remove the BLK* ioctl calls without losing some coverage.
 
-Will do!
+FALLOC_FL_ZERO_RANGE on block devices has been around since 2016, so I
+don't think that's a problem.  The problem is more that it isn't
+supported on dm-thin at all.
 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks!
-
---D
