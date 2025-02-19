@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42A2A286292;
-	Wed, 19 Feb 2025 01:04:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3952B46B8;
+	Wed, 19 Feb 2025 01:04:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739927051; cv=none; b=W7opprIE+5mOgN/9DY3zzehVeoYyp5olmm4MYzlZ1AtbYE/AYZPzYuKI3G9z77mktWbkeS1MpsKpX4i8flohs2FGICOIFK9IESU+soaa6JjiTg2l5U6dmC9vcGAEctRsc7EjiPuMSYvZKGF2flJE9dZCh2qtkuSUGk9B9yJ9AvU=
+	t=1739927067; cv=none; b=Yh2tXHm4kWIA70eCrBbcqk6PNLUGyP35EuIqGit4HfVW+3zFGL6ZCVG8lgGW56n5ZFfacMb1k56Yj/DGhBcLr4xyvibZP8wH29fSojxVZH3UWYQNY+hMIOHYv8KT/gwyjw1smVwePKFA5m0BKVTuKg1ucf4qQDs9A3rkFm8fU6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739927051; c=relaxed/simple;
-	bh=IPqf58z3ilpr7OBmvohUlIYNeo8nO4Jd4Y26NkjM2ag=;
+	s=arc-20240116; t=1739927067; c=relaxed/simple;
+	bh=h7g65ya5mmyPcqZEz07VTn3VcYc6Ouf+4KWupov03/U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K71OiTv/MP2HIdYPx3O6bXixv7tGqj3zNdUtngS7AuEMWLN6snonae5Y3YemKyDqgz3AbiRMQeLnXaVH05qxBk4GJu5Eo3XxscqVyWpswK5bIh+FxQTkojREaJOJzN9y2CSmFFscE8meY3fI0ghBQah2WSMQINsVBhtOQQyLVyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lnRirYSO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Q7CZcpfPH8mCXMyLWEEUB+e1VCUI7MRuiptaTbrLZkc5zKSPTEO/T2s9QT/YAhralAK6YEt0MmWd8cVUhmg2QQdxafKNxrboyknh8lF7gXb4pssjAfBxjYZtO4LpRMgjKWt0xYRjwnI3DNT6fOnCPuJW6IPOMqpGawXCmhxeZqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LyxpC8Ib; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lnRirYSO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1037FC4CEE2;
-	Wed, 19 Feb 2025 01:04:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LyxpC8Ib"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0615C4CEE2;
+	Wed, 19 Feb 2025 01:04:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739927051;
-	bh=IPqf58z3ilpr7OBmvohUlIYNeo8nO4Jd4Y26NkjM2ag=;
+	s=k20201202; t=1739927066;
+	bh=h7g65ya5mmyPcqZEz07VTn3VcYc6Ouf+4KWupov03/U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lnRirYSOcviZV9eG1W3qRQS3sd96vJ+HvEAKoSRs2V0Nr9W7Rbvbt2uQAyHq06hTh
-	 IMOEcgeohOfd1ETLjv82o+cBAn7fDLD72hD+6wsPFgZbrKk+n7lVDGmAIvlpXiwWaC
-	 byhuTNH+9xe5Ya7hlejdx7fgpBx7X9h7zd6z2ief1Nc0qbM0AmDCQeY83H6vp0XAzn
-	 iQdh+pSbd1ScEuouQdqLs3K0/eICQ0lcPA4/1kz9+tqIOa7xF+MWhZDO4zw+LFBHgW
-	 2fFij++lixEdqVxQF6U+KPI+60wfG3jccm/HhVSYay+25G9KGq7ZAWfOdaACnJZ8Bl
-	 FTzIUAflWFN4g==
-Date: Tue, 18 Feb 2025 17:04:10 -0800
-Subject: [PATCH 02/13] xfs/336: port to common/metadump
+	b=LyxpC8IbKlZqfUZuhCQtNoemDf70S34AlVbqO5QDX28mRe5CNHwrXOU3L52Gtr8/4
+	 wNXE6j4IkY7b8v0oX9XHYsjYulOuzirAz+g82GfyAJ8sT0PvxmOz896nSc4/1LWxBI
+	 U3R3p7iRdcLMyvCZY/9WotqWUpHxewdBuuAV4S4vexiT8FBLesDThzRprWLo1yryol
+	 W0VtePI6QvAu8g0TNuUlmF9gDAlsJ/ibUpdZEw3S8YO8aTWhu/huZmnjDmcOaT2wXd
+	 +CI/r1xT4Q4HIMqo1z61HrNW7qYH31rBVkfJ/euCCEuoVYeJdBP3PwobiGHKxansqW
+	 UbbBadaBs+8ig==
+Date: Tue, 18 Feb 2025 17:04:26 -0800
+Subject: [PATCH 03/13] fuzz: for fuzzing the rtrmapbt,
+ find the path to the rt rmap btree file
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
- fstests@vger.kernel.org
-Message-ID: <173992591149.4080556.17871153207427090752.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <173992591168.4080556.16741355731984742368.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
 References: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,125 +46,199 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs/336 does this somewhat sketchy thing where it mdrestores into a
-regular file, and then does this to validate the restored metadata:
+The fs population code creates a realtime rmap btree in /some/ realtime
+group with at least two levels.  This rmapbt file isn't necessarily the
+one for group 0, so we need to find it programmatically.
 
-SCRATCH_DEV=$TEST_DIR/image _scratch_mount
-
-Unfortunately, commit 1a49022fab9b4d causes the following regression:
-
- --- /tmp/fstests/tests/xfs/336.out      2024-11-12 16:17:36.733447713 -0800
- +++ /var/tmp/fstests/xfs/336.out.bad    2025-01-04 19:10:39.861871114 -0800
- @@ -5,4 +5,5 @@ Create big file
-  Explode the rtrmapbt
-  Create metadump file
-  Restore metadump
- -Check restored fs
- +Usage: _set_fs_sysfs_attr <mounted_device> <attr> <content>
- +(see /var/tmp/fstests/xfs/336.full for details)
-
-This is due to the fact that SCRATCH_DEV is temporarily reassigned to
-the regular file.  That path is passed straight through _scratch_mount
-to _xfs_prepare_for_eio_shutdown, but that helper _fails because the
-"dev" argument isn't actually a path to a block device.
-
-Fix this by porting it to the new common/metadump code that we merged
-last year.
-
-Cc: <fstests@vger.kernel.org> # v2024.12.08
-Fixes: 1a49022fab9b4d ("fstests: always use fail-at-unmount semantics for XFS")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/336     |   34 +++++++++++-----------------------
- tests/xfs/336.out |    4 +---
- 2 files changed, 12 insertions(+), 26 deletions(-)
+ common/xfs    |   33 +++++++++++++++++++++++++++++++++
+ tests/xfs/406 |    6 ++++--
+ tests/xfs/407 |    6 ++++--
+ tests/xfs/408 |    7 +++++--
+ tests/xfs/409 |    7 +++++--
+ tests/xfs/481 |    6 ++++--
+ tests/xfs/482 |    7 +++++--
+ 7 files changed, 60 insertions(+), 12 deletions(-)
 
 
-diff --git a/tests/xfs/336 b/tests/xfs/336
-index 3f85429ea77ee6..61bc08d3cc818f 100755
---- a/tests/xfs/336
-+++ b/tests/xfs/336
-@@ -9,21 +9,22 @@
- . ./common/preamble
- _begin_fstest auto rmap realtime metadump prealloc
- 
--# Override the default cleanup function.
- _cleanup()
- {
- 	cd /
--	rm -rf "$tmp".* $metadump_file
-+	rm -rf "$tmp".*
-+	_xfs_cleanup_verify_metadump
+diff --git a/common/xfs b/common/xfs
+index 1a0ececde39422..1be8cbf1c563d9 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1827,6 +1827,39 @@ _scratch_xfs_find_agbtree_height() {
+ 	return 1
  }
  
--# Import common functions.
- . ./common/filter
-+. ./common/metadump
++# Find us the path to the inode containing a realtime btree with a specific
++# height.
++_scratch_xfs_find_rgbtree_height() {
++	local bt_type="$1"
++	local bt_height="$2"
++	local rgcount=$(_xfs_mount_rgcount $SCRATCH_DEV)
++	local path
++	local path_format
++	local bt_prefix
++
++	case "${bt_type}" in
++	"rmap")
++		path_format="/rtgroups/%u.rmap"
++		bt_prefix="u3.rtrmapbt"
++		;;
++	*)
++		_fail "Don't know about rt btree ${bt_type}"
++		;;
++	esac
++
++	for ((rgno = 0; rgno < rgcount; rgno++)); do
++		path="$(printf "${path_format}" "${rgno}")"
++		bt_level=$(_scratch_xfs_db -c "path -m ${path}" -c "p ${bt_prefix}.level" | awk '{print $3}')
++		# "level" is the actual level within the btree
++		if [ "${bt_level}" -eq "$((bt_height - 1))" ]; then
++			echo "${path}"
++			return 0
++		fi
++	done
++
++	return 1
++}
++
+ _require_xfs_mkfs_atomicswap()
+ {
+ 	# atomicswap can be activated on rmap or reflink filesystems.
+diff --git a/tests/xfs/406 b/tests/xfs/406
+index 7a6e8bdb535237..0219f4a2f2562e 100755
+--- a/tests/xfs/406
++++ b/tests/xfs/406
+@@ -24,10 +24,12 @@ _require_scratch_xfs_fuzz_fields
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
  
- _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
- _require_realtime
- _require_xfs_scratch_rmapbt
- _require_test_program "punch-alternating"
- _require_xfs_io_command "falloc"
-+_xfs_setup_verify_metadump
+-inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'sb 0' 'addr rrmapino')
++path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
++	_fail "could not find two-level rtrmapbt"
++inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
  
- rm -f "$seqres.full"
- 
-@@ -34,16 +35,13 @@ cat $tmp.mkfs > "$seqres.full" 2>&1
- _scratch_mount
- blksz="$(_get_file_block_size $SCRATCH_MNT)"
- 
--metadump_file=$TEST_DIR/${seq}_metadump
--rm -rf $metadump_file
--
- echo "Create a three-level rtrmapbt"
--# inode core size is at least 176 bytes; btree header is 56 bytes;
--# rtrmap record is 32 bytes; and rtrmap key/pointer are 56 bytes.
-+# inode core size is at least 176 bytes; btree block header is 64 bytes;
-+# rtrmap record is 24 bytes; and rtrmap key/pointer are 48 bytes.
- i_core_size="$(_xfs_get_inode_core_bytes $SCRATCH_MNT)"
--i_ptrs=$(( (isize - i_core_size) / 56 ))
--bt_ptrs=$(( (blksz - 56) / 56 ))
--bt_recs=$(( (blksz - 56) / 32 ))
-+i_ptrs=$(( (isize - i_core_size) / 48 ))
-+bt_ptrs=$(( (blksz - 64) / 48 ))
-+bt_recs=$(( (blksz - 64) / 24 ))
- 
- blocks=$((i_ptrs * bt_ptrs * bt_recs))
- _require_fs_space $SCRATCH_MNT $(( (2 * blocks * blksz) * 5 / 4096 ))
-@@ -56,20 +54,10 @@ $XFS_IO_PROG -f -R -c "falloc 0 $len" -c "pwrite -S 0x68 -b 1048576 0 $len" $SCR
- echo "Explode the rtrmapbt"
- $here/src/punch-alternating $SCRATCH_MNT/f1 >> "$seqres.full"
- $here/src/punch-alternating $SCRATCH_MNT/f2 >> "$seqres.full"
--_scratch_cycle_mount
--
--echo "Create metadump file"
- _scratch_unmount
--_scratch_xfs_metadump $metadump_file -a -o
- 
--# Now restore the obfuscated one back and take a look around
--echo "Restore metadump"
--SCRATCH_DEV=$TEST_DIR/image _scratch_xfs_mdrestore $metadump_file
--SCRATCH_DEV=$TEST_DIR/image _scratch_mount
--SCRATCH_DEV=$TEST_DIR/image _scratch_unmount
--
--echo "Check restored fs"
--_check_scratch_fs $TEST_DIR/image
-+echo "Test metadump"
-+_xfs_verify_metadumps '-a -o'
+ echo "Fuzz rtrmapbt recs"
+-_scratch_xfs_fuzz_metadata '' 'offline' 'sb 0' 'addr rrmapino' "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
++_scratch_xfs_fuzz_metadata '' 'offline' "path -m $path" "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
+ echo "Done fuzzing rtrmapbt recs"
  
  # success, all done
- status=0
-diff --git a/tests/xfs/336.out b/tests/xfs/336.out
-index aa61973da3e844..aeaffcbbbbd13b 100644
---- a/tests/xfs/336.out
-+++ b/tests/xfs/336.out
-@@ -3,6 +3,4 @@ Format and mount
- Create a three-level rtrmapbt
- Create big file
- Explode the rtrmapbt
--Create metadump file
--Restore metadump
--Check restored fs
-+Test metadump
+diff --git a/tests/xfs/407 b/tests/xfs/407
+index 035578b97b4793..1eff49218a86bf 100755
+--- a/tests/xfs/407
++++ b/tests/xfs/407
+@@ -24,10 +24,12 @@ _require_scratch_xfs_fuzz_fields
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+-inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'sb 0' 'addr rrmapino')
++path="$(_scratch_xfs_find_rgbtree_height 'rmap' 1)" || \
++	_fail "could not find two-level rtrmapbt"
++inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
+ 
+ echo "Fuzz rtrmapbt recs"
+-_scratch_xfs_fuzz_metadata '' 'online' 'sb 0' 'addr rrmapino' "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
++_scratch_xfs_fuzz_metadata '' 'online' "path -m $path" "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
+ echo "Done fuzzing rtrmapbt recs"
+ 
+ # success, all done
+diff --git a/tests/xfs/408 b/tests/xfs/408
+index 3c7d16f0e6c6b7..1d41fd0923ae4a 100755
+--- a/tests/xfs/408
++++ b/tests/xfs/408
+@@ -4,7 +4,7 @@
+ #
+ # FS QA Test No. 408
+ #
+-# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
++# Populate a XFS filesystem and fuzz every rtrmapbt key/pointer field.
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
++path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
++	_fail "could not find two-level rtrmapbt"
++
+ echo "Fuzz rtrmapbt keyptrs"
+-_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' 'sb 0' 'addr rrmapino' >> $seqres.full
++_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' "path -m $path" >> $seqres.full
+ echo "Done fuzzing rtrmapbt keyptrs"
+ 
+ # success, all done
+diff --git a/tests/xfs/409 b/tests/xfs/409
+index f3885e56010daa..f863b3bd4530ce 100755
+--- a/tests/xfs/409
++++ b/tests/xfs/409
+@@ -4,7 +4,7 @@
+ #
+ # FS QA Test No. 409
+ #
+-# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
++# Populate a XFS filesystem and fuzz every rtrmapbt key/pointer field.
+ # Use xfs_scrub to fix the corruption.
+ #
+ . ./common/preamble
+@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
++path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
++	_fail "could not find two-level rtrmapbt"
++
+ echo "Fuzz rtrmapbt keyptrs"
+-_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' 'sb 0' 'addr rrmapino' >> $seqres.full
++_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'online' "path -m $path" >> $seqres.full
+ echo "Done fuzzing rtrmapbt keyptrs"
+ 
+ # success, all done
+diff --git a/tests/xfs/481 b/tests/xfs/481
+index 43eb14aafb2903..a3010a76177957 100755
+--- a/tests/xfs/481
++++ b/tests/xfs/481
+@@ -25,10 +25,12 @@ _disable_dmesg_check
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+-inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'sb 0' 'addr rrmapino')
++path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
++	_fail "could not find two-level rtrmapbt"
++inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
+ 
+ echo "Fuzz rtrmapbt recs"
+-_scratch_xfs_fuzz_metadata '' 'none' 'sb 0' 'addr rrmapino' "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
++_scratch_xfs_fuzz_metadata '' 'none' "path -m $path" "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
+ echo "Done fuzzing rtrmapbt recs"
+ 
+ # success, all done
+diff --git a/tests/xfs/482 b/tests/xfs/482
+index 2b08b9aab2bb01..d0386448564b7c 100755
+--- a/tests/xfs/482
++++ b/tests/xfs/482
+@@ -4,7 +4,7 @@
+ #
+ # FS QA Test No. 482
+ #
+-# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
++# Populate a XFS filesystem and fuzz every rtrmapbt key/pointer field.
+ # Do not fix the filesystem, to test metadata verifiers.
+ 
+ . ./common/preamble
+@@ -25,8 +25,11 @@ _disable_dmesg_check
+ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
++path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
++	_fail "could not find two-level rtrmapbt"
++
+ echo "Fuzz rtrmapbt keyptrs"
+-_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' 'sb 0' 'addr rrmapino' >> $seqres.full
++_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' "path -m $path" >> $seqres.full
+ echo "Done fuzzing rtrmapbt keyptrs"
+ 
+ # success, all done
 
