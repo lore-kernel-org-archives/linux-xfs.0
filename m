@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E413228628D;
-	Wed, 19 Feb 2025 01:07:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E1E428628D;
+	Wed, 19 Feb 2025 01:07:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739927223; cv=none; b=gSmmRuokm4Sp2GfpRNhjUFfKRlfFt4QTFydrL5gifIx72ZChPoz6uCi0hweKlgxBL4iAsC5wD3uz/vKxP7V9DGibDHUKcxNwK0zYWKdY2/3GdYF2YlN7w8u6ZYS6P3etKtUZuarnvKXnuxffrC1Nt5bOhCbXu73/fsSmqACp5Y0=
+	t=1739927238; cv=none; b=TCnBGNbKvFBOHOM/MSySz+B+kf+5SKaSMPDV8+46HGuiMWC+vSwkMrphKaVDr79EDOzjs6Z7zSFraNY2f/g06wPRi9c8MobFXFNbcynTCijFAsf53nOkbw2AzhciLZ82hNjA/+s70WbrI3qRj2ldHYhBPuZZKmosUrSTYPNRX+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739927223; c=relaxed/simple;
-	bh=x4O8hj36ddzwoViWvcwqNTDa9dfOzV9ZP5ld/BkZOyY=;
+	s=arc-20240116; t=1739927238; c=relaxed/simple;
+	bh=F/jq24nUgqPdKABA77F9DJjfjo8G6/hwuuWCI1vzctI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mfdzkDtDEo2DLxD2VN6l4+pz8TpCoWpzFT6FFEPto61yCGPfDpLwMQQmNJhAVHTA8931H1yASQVKmLKbtuiZKudH3ABM6Bwda7Gj6/jaJqvV0JwGjZPpNDExPdR4Ejf0DDFkpMofkWqm35zerZmkR4xO57PZmxOgXyeZqMwb1h8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TGPIv0Lr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jHWOjilcQGosoQEEH3at93j0FuMME3y/9v79FgCeKi87zfLD6cbfNyVIFHl6ihs08NwbQiats01Xw35zI547TE5x1IGACxXnJYCQq43z63UQ4nUGOE6zPCdZW1XphRkOtVZ8EV+SoiWHsxd8eZbhkQjqyEcblwQfFiKSb852afY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bjb7oG71; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TGPIv0Lr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA7D2C4CEE2;
-	Wed, 19 Feb 2025 01:07:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bjb7oG71"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 560B4C4CEE2;
+	Wed, 19 Feb 2025 01:07:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739927222;
-	bh=x4O8hj36ddzwoViWvcwqNTDa9dfOzV9ZP5ld/BkZOyY=;
+	s=k20201202; t=1739927238;
+	bh=F/jq24nUgqPdKABA77F9DJjfjo8G6/hwuuWCI1vzctI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TGPIv0LrLaXqBiPIwYl0Lq3fmEQS+uZ0T841eceKVj2GcRq8nN7C8IcoLCKRXH2jo
-	 UJ/n3FVy7+Arz3BU8UnB0Jg9ZjmM51kCY4oWLobZtIT+Y5BSsuEYHoNxEuqMSvW+Cd
-	 pFQx76Nq7/QxiHg1XOauxjVPRkCavUyoGgrCGXPjTMHqVspanIEBzOuFbaS3mAuviH
-	 unoLo6w/KJniJFNqoxYCLzQDV0zEg8KMbFDFz/tjWfWnSn9h7DxBG+CG/azLeyoCK9
-	 LaNtVP2qGgWd3jir26Nc0+rwjKO36FClIqt04IOyDzxcfEjtJ4KxopbB/mfctZTvzZ
-	 wkUseFdpUEWgg==
-Date: Tue, 18 Feb 2025 17:07:02 -0800
-Subject: [PATCH 13/13] fuzzy: create missing fuzz tests for rt rmap btrees
+	b=Bjb7oG71gvXbe+JNCJsDazxuWtRZltiwotRoyRjE4gN2UUkiknxsFZEhk4SuAP+K/
+	 RWrdbqNkhCywH2pF2JcgNjwWyTdSW8JGhk9jsRwvge+byDYo2ElVW9gKoz8bSmvBcq
+	 H1naNarOREw7MjZ4qn6HtZ3dT0JyLhyQ32D3gB3Hs9t/MpgFK9peNAERmxa3yAhDHz
+	 ZNbez+7zY35EZVQ9GILEXae6nLtgb+tI5DyuyAPsEAs2107vz6CM7B91/U49z9j/z0
+	 kNlpVuudPqaGjp91M2DvQ7DmrT0Xm9ISsTTm73XJBxILsLBqSmxYatBQn+8qXER2Hv
+	 yT5JCIlY1UmdA==
+Date: Tue, 18 Feb 2025 17:07:17 -0800
+Subject: [PATCH 1/7] common/populate: create realtime refcount btree
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992591349.4080556.636964987283271719.stgit@frogsfrogsfrogs>
-In-Reply-To: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
-References: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
+Message-ID: <173992591771.4081089.11279761022882150065.stgit@frogsfrogsfrogs>
+In-Reply-To: <173992591722.4081089.9486182038960980513.stgit@frogsfrogsfrogs>
+References: <173992591722.4081089.9486182038960980513.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,142 +45,85 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Back when I first created the fuzz tests for the realtime rmap btree, I
-forgot a couple of things.  Add tests to fuzz rtrmap btree leaf records,
-and node keys.
+Populate a realtime refcount btree when we're creating a sample fs.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/1528     |   38 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/1528.out |    4 ++++
- tests/xfs/1529     |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1529.out |    4 ++++
- tests/xfs/407      |    2 +-
- 5 files changed, 84 insertions(+), 1 deletion(-)
- create mode 100755 tests/xfs/1528
- create mode 100644 tests/xfs/1528.out
- create mode 100755 tests/xfs/1529
- create mode 100644 tests/xfs/1529.out
+ common/populate |   26 +++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
 
 
-diff --git a/tests/xfs/1528 b/tests/xfs/1528
-new file mode 100755
-index 00000000000000..15420555ed89ac
---- /dev/null
-+++ b/tests/xfs/1528
-@@ -0,0 +1,38 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2025 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1528
-+#
-+# Populate a XFS filesystem and fuzz every rtrmapbt record field.
-+# Try online repair and, if necessary, offline repair,
-+# to test the most likely usage pattern.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers scrub repair fuzzers_bothrepair realtime
-+
-+_register_cleanup "_cleanup" BUS
-+
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+_require_realtime
-+_require_xfs_scratch_rmapbt
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rtrmapbt"
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
-+
-+echo "Fuzz rtrmapbt recs"
-+_scratch_xfs_fuzz_metadata '' 'both' "path -m $path" "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
-+echo "Done fuzzing rtrmapbt recs"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1528.out b/tests/xfs/1528.out
-new file mode 100644
-index 00000000000000..b51b640c40a268
---- /dev/null
-+++ b/tests/xfs/1528.out
-@@ -0,0 +1,4 @@
-+QA output created by 1528
-+Format and populate
-+Fuzz rtrmapbt recs
-+Done fuzzing rtrmapbt recs
-diff --git a/tests/xfs/1529 b/tests/xfs/1529
-new file mode 100755
-index 00000000000000..0a9cce43d831bc
---- /dev/null
-+++ b/tests/xfs/1529
-@@ -0,0 +1,37 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2025 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1529
-+#
-+# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
-+# Try online repair and, if necessary, offline repair,
-+# to test the most likely usage pattern.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers scrub repair fuzzers_bothrepair realtime
-+
-+_register_cleanup "_cleanup" BUS
-+
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+_require_realtime
-+_require_xfs_scratch_rmapbt
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rtrmapbt"
-+
-+echo "Fuzz rtrmapbt keyptrs"
-+_scratch_xfs_fuzz_metadata '(rtrmapbt)' 'offline' "path -m $path" >> $seqres.full
-+echo "Done fuzzing rtrmapbt keyptrs"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1529.out b/tests/xfs/1529.out
-new file mode 100644
-index 00000000000000..808fcc957f91e0
---- /dev/null
-+++ b/tests/xfs/1529.out
-@@ -0,0 +1,4 @@
-+QA output created by 1529
-+Format and populate
-+Fuzz rtrmapbt keyptrs
-+Done fuzzing rtrmapbt keyptrs
-diff --git a/tests/xfs/407 b/tests/xfs/407
-index 1eff49218a86bf..a46ecb0cd5eb93 100755
---- a/tests/xfs/407
-+++ b/tests/xfs/407
-@@ -24,7 +24,7 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
+diff --git a/common/populate b/common/populate
+index dd80f0796a4d36..a1be26d5b24adf 100644
+--- a/common/populate
++++ b/common/populate
+@@ -451,16 +451,30 @@ _scratch_xfs_populate() {
+ 	local dir="${SCRATCH_MNT}/INOBT"
+ 	__populate_create_dir "${dir}" "${nr}" true --file-pct 100
  
--path="$(_scratch_xfs_find_rgbtree_height 'rmap' 1)" || \
-+path="$(_scratch_xfs_find_rgbtree_height 'rmap' 2)" || \
- 	_fail "could not find two-level rtrmapbt"
- inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "path -m $path")
+-	# Reverse-mapping btree
++	is_rt="$(_xfs_get_rtextents "$SCRATCH_MNT")"
+ 	is_rmapbt="$(_xfs_has_feature "$SCRATCH_MNT" rmapbt -v)"
++	is_reflink="$(_xfs_has_feature "$SCRATCH_MNT" reflink -v)"
++
++	# Reverse-mapping btree
+ 	if [ $is_rmapbt -gt 0 ]; then
+ 		echo "+ rmapbt btree"
+ 		nr="$((blksz * 2 / 24))"
+ 		__populate_create_file $((blksz * nr)) "${SCRATCH_MNT}/RMAPBT"
+ 	fi
  
++	# Realtime Reference-count btree comes before the rtrmapbt so that
++	# the refcount entries are created in rtgroup 0.
++	if [ $is_reflink -gt 0 ] && [ $is_rt -gt 0 ]; then
++		echo "+ rtreflink btree"
++		rt_blksz=$(_xfs_get_rtextsize "$SCRATCH_MNT")
++		nr="$((rt_blksz * 2 / 12))"
++		$XFS_IO_PROG -R -f -c 'truncate 0' "${SCRATCH_MNT}/RTREFCOUNTBT"
++		__populate_create_file $((blksz * nr)) "${SCRATCH_MNT}/RTREFCOUNTBT"
++		$XFS_IO_PROG -R -f -c 'truncate 0' "${SCRATCH_MNT}/RTREFCOUNTBT2"
++		cp --reflink=always "${SCRATCH_MNT}/RTREFCOUNTBT" "${SCRATCH_MNT}/RTREFCOUNTBT2"
++	fi
++
+ 	# Realtime Reverse-mapping btree
+-	is_rt="$(_xfs_get_rtextents "$SCRATCH_MNT")"
+ 	if [ $is_rmapbt -gt 0 ] && [ $is_rt -gt 0 ]; then
+ 		echo "+ rtrmapbt btree"
+ 		nr="$((blksz * 2 / 24))"
+@@ -469,7 +483,6 @@ _scratch_xfs_populate() {
+ 	fi
+ 
+ 	# Reference-count btree
+-	is_reflink="$(_xfs_has_feature "$SCRATCH_MNT" reflink -v)"
+ 	if [ $is_reflink -gt 0 ]; then
+ 		echo "+ reflink btree"
+ 		nr="$((blksz * 2 / 12))"
+@@ -534,6 +547,7 @@ _scratch_xfs_populate() {
+ 	__populate_fragment_file "${SCRATCH_MNT}/RMAPBT"
+ 	__populate_fragment_file "${SCRATCH_MNT}/RTRMAPBT"
+ 	__populate_fragment_file "${SCRATCH_MNT}/REFCOUNTBT"
++	__populate_fragment_file "${SCRATCH_MNT}/RTREFCOUNTBT"
+ 
+ 	_scratch_unmount
+ }
+@@ -779,6 +793,10 @@ __populate_check_xfs_rgbtree_height() {
+ 		path_format="/rtgroups/%u.rmap"
+ 		bt_prefix="u3.rtrmapbt"
+ 		;;
++	"refcnt")
++		path_format="/rtgroups/%u.refcount"
++		bt_prefix="u3.rtrefcbt"
++		;;
+ 	*)
+ 		_fail "Don't know about rt btree ${bt_type}"
+ 		;;
+@@ -853,6 +871,8 @@ _scratch_xfs_populate_check() {
+ 	test $is_reflink -ne 0 && __populate_check_xfs_agbtree_height "refcnt"
+ 	test $is_rmapbt -ne 0 && test $is_rt -gt 0 && \
+ 		__populate_check_xfs_rgbtree_height "rmap"
++	test $is_reflink -ne 0 && test $is_rt -gt 0 && \
++		__populate_check_xfs_rgbtree_height "refcnt"
+ }
+ 
+ # Check data fork format of ext4 file
 
