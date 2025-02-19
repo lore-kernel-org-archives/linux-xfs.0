@@ -1,94 +1,73 @@
-Received: from mail-io1-f41.google.com (mail-io1-f41.google.com [209.85.166.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3DA214223
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 17:12:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54AC6214233;
+	Wed, 19 Feb 2025 17:13:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739985179; cv=none; b=RXU0b7HeAzwCgk3UnzE4Q4E41+Ccw+jYXyj0K+bFhWX69P40McDmiRAZdCJTwvYkFtqCT47LnevmBE+Gk73fZac3gF1+1LNstI/OOaX5ladecOnZrdxTybFmimL9IJbvsX8SVR7rx6c5mpzB+c5qBaBeqILwihco3yDfCzHnhWY=
+	t=1739985219; cv=none; b=Or+AuZuR7/rFSsxhyJh488gkH0CgOamRkXOX5Zz3DAnEmVBOAtp3TR8P6JspeXf/IJvorggqb+QD8q59dO2UAG/N2MMOIK4yLdPMm9f7uBm7B95kmZFnQ6D2NR9LVFnvWzgsxWtYKyYc6IVRwMll+NUbpNpLRVNNolRCs6iVtuY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739985179; c=relaxed/simple;
-	bh=Lha31XubA+k7fhd7fr4kwF9wfyExIRMIg5kuNPMn1B4=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=paKuJ0RDYypDj6hxRMyBw6g8ojbVuZCDema4FXnsMBHKajHuEPRoBfWmtdT99iQgBkLKhku6n9K6a0+dGck+B0+PUayQVre7IG5hAR5C4BRCCRW6ItUEw3/0xwAMAXo5MWEPLr2FCZK6xMVhd+4GvvTtEIGEwZ5VfoPUovAXdSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=iCLOkmbH; arc=none smtp.client-ip=209.85.166.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1739985219; c=relaxed/simple;
+	bh=HjJP64nsT996BlEqWT55/byzilVFaLXvQZ5ljLJStXI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DmmXoQiseUcObyxMhHHL3IeQe8XP/60IyqYxI8EpFIZSpl/glPKWg8XdBg8hcDiiP2DbbM9vuKZjx8NT9ti/VuP1d5sdQZXgi6moj+RRKtkFqYIKTXyynsieI+3GyFpLO39NFi21X8r+hfdo/uGCUsHlYsl4P48hOlw+fEGFdfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h75G5D0U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="iCLOkmbH"
-Received: by mail-io1-f41.google.com with SMTP id ca18e2360f4ac-85598a3e64bso1781339f.1
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 09:12:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1739985176; x=1740589976; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=IQfGKt/Vn1M9EM8LSo6jsXvRLnjOcNMdYpalZiyZtNI=;
-        b=iCLOkmbHzXHaMUY8j4sb8mNz8DTmjTpVUp19+4Ec9ZkNnRq1EMCPoXJE4cYRl16G+3
-         fz1rPqxRYhLKm8kgZhe8wvksKfaR0wTp/XoXhQc99z8jNhUZTf6p/RV1rqJtF9qFktIF
-         WSCuIU9uoBYjMSZ6dTBBqIP/yAdQY8Xt+U7w10OWzXP4iB/Z0zMn0Movu+qH42yzoxd0
-         Ijxup8CNo/yz6ybIISEAjNIfRNqc/itSwfsFDCgQ3o06SB8mmuCu3E4Ao/M6DzGTsfIz
-         YPRAh5RqJIFn77UQ/3Era5RVP3qBnLc1Cil9lRPElBhWUlY+6GIbT+yEqsXljeN62wt/
-         noTQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739985176; x=1740589976;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IQfGKt/Vn1M9EM8LSo6jsXvRLnjOcNMdYpalZiyZtNI=;
-        b=KRxS3Ownam6Qjqj/NobPFRjXoOgr9l37EaqDuhH8aYmYhaGkgv4Ir+jLvUY8Ubso3O
-         YWpjw70+bVDTUcnbKOG+c3DeTniHg5AzxqLi03i2dtwrqSEW1rtwIZMY7YGbuGUJd2PJ
-         2LtJZK5gM7YYO1W1enzSGGbHHvByDjGsM2ePvw9G03uXo6+C8Y+cqmr4TI8kK9HoOIL3
-         /R1UzGFmwfRg9jhyffskSuTobP2fFKemaUljpbk+Yw0rcZxTSs3oVic4BvUyIz4cay1A
-         P5ngqqdISZj+m3wBV0n0IaNm9mOKTHINjZnhNZIlGUmcYPTm+whWvTSYL8ZJ0L1NzVK0
-         o7qg==
-X-Gm-Message-State: AOJu0YzZcaj3QZ/m6QKDiy7lmM6gTZ2yB77FOkoTwqzSofaz+66Aqd69
-	ySEqPgOZSwHKTWmx2Yejk+cmUst5Pqnrndk7XDbi9xL2j5k0P2lD3Mg5YBiub9uSlbMIF3z5ph5
-	L
-X-Gm-Gg: ASbGncvyuD026m3sPIUBqmoIae8UMUKbu/sVkVc+vz2359uS6E+ipEbJeCQl7XybZXO
-	e6b5/42W0MCuQzYpciyIMrpNl9nKdEus4TAAEnbfPLpBkuwqDbLsfHawbRU+64nP9IDZAo4BnZV
-	9CRTsu3pqwQjxoB2O7jo0IEzO7YWmvmbASHhAJPzfSSGYaRTM8b6vkLeA7m9ut0Ii9VRu/f0S5P
-	HOgIClIHpixSCj1fswKyBZt3p3yW06BUx1pz9B8g+gHyz0rhE+6OJVTmCDoqotN1fhSsR9N3gvH
-	qhPWSJrBpxQ=
-X-Google-Smtp-Source: AGHT+IFvCCYOL63Wo/yo1TFnKmtRWgsBPQ3qsvGNUh9DO0BmLmKTYvjxtAglatFmfgaYIZ82l2xmuw==
-X-Received: by 2002:a05:6602:164c:b0:855:c259:70ee with SMTP id ca18e2360f4ac-855c25971camr79752139f.12.1739985176126;
-        Wed, 19 Feb 2025 09:12:56 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-855a4caee76sm88876439f.31.2025.02.19.09.12.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Feb 2025 09:12:55 -0800 (PST)
-Message-ID: <b025a842-1c67-4369-992a-494220755548@kernel.dk>
-Date: Wed, 19 Feb 2025 10:12:54 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h75G5D0U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6298C4CED1;
+	Wed, 19 Feb 2025 17:13:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739985218;
+	bh=HjJP64nsT996BlEqWT55/byzilVFaLXvQZ5ljLJStXI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=h75G5D0UymxoHO0d+8Ht49GpaRKMZ7QmnE1VOw5ouMSMe/eEW7kHiV0ELzvjJZDhT
+	 hBloLKoN720IMwkk28wzkU6w4QidRkq2nCfBcQGwq0xw4tj0V4KgvF3yXJJegl58pt
+	 TkpU/f7TEJkvuOybS5R5MsY5VJU+q4PG0wQ3NappsvxF7UXoSKjySuRFd7lriXTNiN
+	 XTGLcsIsXhhIC9CaKzk5WTWqFWSmEMliu1DQNn+P7xRFoJZa3Jr8u2qTpXPBBNW4K3
+	 zGjecUha4/X9Sh5t9knz7Z0502lWf67sr7+6d+5QER1PbOmtkNTRIM++YwBzlXPA44
+	 sLMyndXnt1+tA==
+Date: Wed, 19 Feb 2025 09:13:38 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 09/13] xfs: skip tests if formatting small filesystem
+ fails
+Message-ID: <20250219171338.GQ21808@frogsfrogsfrogs>
+References: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
+ <173992591276.4080556.2717402179307349211.stgit@frogsfrogsfrogs>
+ <Z7WIsZec_ZHIKKHQ@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHSET v2 0/2] Add XFS support for RWF_DONTCACHE
-From: Jens Axboe <axboe@kernel.dk>
-To: cem@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-References: <20250204184047.356762-1-axboe@kernel.dk>
-Content-Language: en-US
-In-Reply-To: <20250204184047.356762-1-axboe@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z7WIsZec_ZHIKKHQ@infradead.org>
 
-On 2/4/25 11:39 AM, Jens Axboe wrote:
-> Hi,
+On Tue, Feb 18, 2025 at 11:30:57PM -0800, Christoph Hellwig wrote:
+> On Tue, Feb 18, 2025 at 05:05:59PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > There are a few tests that try to exercise XFS functionality with an
+> > unusually small (< 500MB) filesystem.  Formatting can fail if the test
+> > configuration also specifies a very large realtime device because mkfs
+> > hits ENOSPC when allocating the realtime metadata.  The test proceeds
+> > anyway (which causes an immediate mount failure) so we might as well
+> > skip these.
 > 
-> Now that the main bits are in mainline, here are the XFS patches for
-> adding RWF_DONTCACHE support. It's pretty trivial - patch 1 adds the
-> basic iomap flag and check, and patch 2 flags FOP_DONTCACHE support
-> in the file_operations struct. Could be folded into a single patch
-> at this point, I'll leave that up to you guys what you prefer.
-> 
-> Patches are aginst 6.14-rc1.
+> In this patch only a single test case is touched and not a few.  But
+> I remember hitting a few more with the zoned testing.
 
-Gentle ping on this one.
+Originally there were a few more, but most of the others I fixed by
+making _scratch_mkfs_sized constrict the size of both the data and rt
+volumes.  The 2022 version of this patch changed both xfs/104 and
+xfs/291.
 
--- 
-Jens Axboe
+Oh, wait, the xfs/291 change became its own patch.
 
+Right.  _scratch_mkfs_sized takes arguments now.  So this patch should
+make create_scratch() use that instead of plain _scratch_mkfs_xfs.
+
+--D
