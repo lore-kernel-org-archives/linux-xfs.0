@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E91BB186294;
-	Wed, 19 Feb 2025 00:49:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA1CB180A80;
+	Wed, 19 Feb 2025 00:50:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926189; cv=none; b=kJG9zrsE2+vDLvciJpitfdB2vNlb4d84rtBm3DiVFzHU9rz6veQuAXLjzGXW02Q80jWC7/XlRUmuvLGk81Fbffg4z9TEehSKk9XOdzoubO25yVdT7gHVsU63ShpNvQ1hDQB7Zg0dHdaQJy8gzV/GVyTWloPhHfj0YmyB0MThry4=
+	t=1739926205; cv=none; b=T/fp1HmBFrQXwF3L8sQALzJdQVmmNCkb92EpuoDODnKFxItUINZynMBMh0bwNRaZFrEh2UYGkEOt+JC9k2fm6Ll0N5YKPcBLXv8JAa7b302Rfd8SC6XL0d4Ng9sZxopAqnj6fZpiTuICwzdnfgs2NLPUh22wdk0NTT8FFb8qqls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926189; c=relaxed/simple;
-	bh=vY1gfLO5bZF2Cl00vzdm0c5onlHSrw/mq5Hnh/8rccw=;
+	s=arc-20240116; t=1739926205; c=relaxed/simple;
+	bh=1gZot46ERbQd78/irKGOKdgoQtlhQZQdfk1dh7VJHeI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b1PiEwClmg74OMQRkq0vbF2HsIqvfSFHl8dTGZCwKn6MvEs5OwCAQKQ8ne8MHRKyx1NSlMvYlSu3WnmY1E4igP4zgO/ClSDh1ZD4JEnRN5ZsX59HMlI7+WPs5AyyFwbdD2H7bkz5EvEvCURQJMW+uQfaVb3piVogtwFv35yt2yo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y4DMfgPa; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lpWUVK1ylJncqGJ54q7B0m7MHOWZ84CcpPMx+4P+hDpMFQbYVpvZTE5eLyqHHOvW/qYnCkntFveCnFXRKg9tiWf9a5s5Evm9pY5v9SqQTIRhltpxMxy0nDj2BDBVMNXfj7XXLSqI+gDNt+hPde6n7gynlLjsACu7GPGftRn4V5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=POfdrRQX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y4DMfgPa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5754C4CEE2;
-	Wed, 19 Feb 2025 00:49:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="POfdrRQX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 550E8C4CEE2;
+	Wed, 19 Feb 2025 00:50:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926188;
-	bh=vY1gfLO5bZF2Cl00vzdm0c5onlHSrw/mq5Hnh/8rccw=;
+	s=k20201202; t=1739926204;
+	bh=1gZot46ERbQd78/irKGOKdgoQtlhQZQdfk1dh7VJHeI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Y4DMfgPacZNp3HX5/3lO0rlCYpjvN9icZGHcqwbHECeCkZh/+BG+FrHBZGjWwY16a
-	 j8T9loImTzp8FHyqW/wCPiaJfXtg5wPtpY0JUlsyhyfJG2LM3bolYXOtfIWNrm1Hsa
-	 j0vQMLThx2HQlqov3bmH9/DGf1DYuQzKXHuEEppi/M9LxXmoq0ATo5mcNDa4a1xFVE
-	 yIL/P9nqkZFD8n0TGnxRco5f/QuItYUKc08bOWhPH7g+vCOfpwdZMYAIOJtND9szSk
-	 gpv6WxPA49frM5dY5M0MLHZc16K4t/ZGp1+EEel8ciYaodvX998XiDjyfKh6l2aLMF
-	 8OdhkQcHzlUqw==
-Date: Tue, 18 Feb 2025 16:49:48 -0800
-Subject: [PATCH 1/3] logwrites: warn if we don't think read after discard
- returns zeroes
+	b=POfdrRQXo+2nx4I823dr5rDDiXSKw3zjMeD5zRZDiQ7Qyo6Q2cscZi2mg9/cNW5R8
+	 kJSuMh/nWBBleHFzCOuygzxAcqmEj3ZuFJXTKgVlzQmVyvcuYy3wYXapuQdweanPAj
+	 ZNLBnkoNBO/pdDzkEd8BJzCxl+yapBLwA4ZJeKR2+A6WGy2ZTdfCM5+TaFkxnW74AL
+	 HopHlVMxXjNh8cSPf6v3VSsDM3uGmaCRCqhZ6oAEYw9FdtY2D2H2JfM8xTi6Eewl/f
+	 /eg0P515N1DrD/8wBKo0LwxlmwU4xDfaXDqH/vNij68YWfsXyoRP/KGmxzY63hXNbg
+	 wl3GQJvEEg3ww==
+Date: Tue, 18 Feb 2025 16:50:03 -0800
+Subject: [PATCH 2/3] logwrites: use BLKZEROOUT if it's available
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992586985.4078081.2930161551208349551.stgit@frogsfrogsfrogs>
+Message-ID: <173992587004.4078081.9861006903580046263.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992586956.4078081.15131555531444924972.stgit@frogsfrogsfrogs>
 References: <173992586956.4078081.15131555531444924972.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,77 +45,54 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The logwrites replay program expects that it can issue a DISCARD against
-the block device passed to _log_writes_init and that will cause all
-subsequent reads to return zeroes.  This is required for correct log
-recovery on filesystems such as XFS that skip recovering buffers if
-newer ones are found on disk.
-
-Unfortunately, there's no way to discover if a device's discard
-implementation actually guarantees zeroes.  There used to be a sysfs
-knob keyed to an allowlist, but it is now hardwired to return 0.  So
-either we need a magic device that does discard-and-zero, or we need to
-do the zeroing ourselves.  The logwrites program does its own zeroing if
-there is no discard support, and some tests do their own zeroing.
-
-The only devices we know to work reliably are the software defined ones
-that are provided by the kernel itself -- which means dm-thinp.  Warn if
-we have a device that supports discard that isn't thinp and the test
-fails.
+Use the BLKZEROOUT ioctl instead of writing zeroed buffers if the kernel
+supports it.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/dmlogwrites |   31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ src/log-writes/log-writes.h |    1 +
+ src/log-writes/log-writes.c |   10 ++++++++++
+ 2 files changed, 11 insertions(+)
 
 
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index a27e1966a933a6..96101d53c38b4a 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -59,6 +59,35 @@ _require_log_writes_dax_mountopt()
- 	fi
- }
+diff --git a/src/log-writes/log-writes.h b/src/log-writes/log-writes.h
+index b9f571ac3b2384..f659931634e64a 100644
+--- a/src/log-writes/log-writes.h
++++ b/src/log-writes/log-writes.h
+@@ -63,6 +63,7 @@ struct log_write_entry {
  
-+_log_writes_check_bdev()
-+{
-+	local sysfs="/sys/block/$(_short_dev $1)"
+ #define LOG_IGNORE_DISCARD (1 << 0)
+ #define LOG_DISCARD_NOT_SUPP (1 << 1)
++#define LOG_ZEROOUT_NOT_SUPP (1 << 2)
+ 
+ struct log {
+ 	int logfd;
+diff --git a/src/log-writes/log-writes.c b/src/log-writes/log-writes.c
+index aa53473974d9e8..8f94ae5629e085 100644
+--- a/src/log-writes/log-writes.c
++++ b/src/log-writes/log-writes.c
+@@ -42,6 +42,7 @@ static int discard_range(struct log *log, u64 start, u64 len)
+ 
+ static int zero_range(struct log *log, u64 start, u64 len)
+ {
++	u64 range[2] = { start, len };
+ 	u64 bufsize = len;
+ 	ssize_t ret;
+ 	char *buf = NULL;
+@@ -54,6 +55,15 @@ static int zero_range(struct log *log, u64 start, u64 len)
+ 		return 0;
+ 	}
+ 
++	if (!(log->flags & LOG_ZEROOUT_NOT_SUPP)) {
++		if (ioctl(log->replayfd, BLKZEROOUT, &range) < 0) {
++			if (log_writes_verbose)
++				printf(
++ "replay device doesn't support zeroout, switching to writing zeros\n");
++			log->flags |= LOG_ZEROOUT_NOT_SUPP;
++		}
++	}
 +
-+	# Some filesystems (e.g. XFS) optimize log recovery by assuming that
-+	# they can elide replay of metadata blocks if the block has a higher
-+	# log serial number than the transaction being recovered.  This is a
-+	# problem if the filesystem log contents can go back in time, which is
-+	# what the logwrites replay program does.
-+	#
-+	# The logwrites replay program begins by erasing the block device's
-+	# contents.  This can be done very quickly with DISCARD provided the
-+	# device guarantees that all reads after a DISCARD return zeroes, or
-+	# very slowly by writing zeroes to the device.  Fast is preferable, but
-+	# there's no longer any way to detect that DISCARD actually unmaps
-+	# zeroes, so warn the user about this requirement if the test happens
-+	# to fail.
-+
-+	# No discard support means the logwrites will do its own zeroing
-+	test "$(cat "$sysfs/queue/discard_max_bytes")" -eq 0 && return
-+
-+	# dm-thinp guarantees that reads after discards return zeroes
-+	dmsetup status "$blkdev" 2>/dev/null | grep -q '^0.* thin ' && return
-+
-+	echo "HINT: $blkdev doesn't guarantee that reads after DISCARD will return zeroes" >> $seqres.hints
-+	echo "      This is required for correct journal replay on some filesystems (e.g. xfs)" >> $seqres.hints
-+	echo >> $seqres.hints
-+}
-+
- # Set up a dm-log-writes device
- #
- # blkdev: the specified target device
-@@ -84,6 +113,8 @@ _log_writes_init()
- 	LOGWRITES_NAME=logwrites-test
- 	LOGWRITES_DMDEV=/dev/mapper/$LOGWRITES_NAME
- 	LOGWRITES_TABLE="0 $BLK_DEV_SIZE log-writes $blkdev $LOGWRITES_DEV"
-+
-+	_log_writes_check_bdev "$blkdev"
- 	_dmsetup_create $LOGWRITES_NAME --table "$LOGWRITES_TABLE" || \
- 		_fail "failed to create log-writes device"
- }
+ 	while (!buf) {
+ 		buf = malloc(bufsize);
+ 		if (!buf)
 
