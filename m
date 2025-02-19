@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 511A81EA80;
-	Wed, 19 Feb 2025 00:50:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DAC718E1A;
+	Wed, 19 Feb 2025 00:50:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926236; cv=none; b=KU8r6+UlyVIVP/GoSHW+z0+v3N927KIc+zEyo3ojDi2yC2ruNqK3saIFnOoJzmklDXmH285vTZixP0PpxG91r620/7A49NkoXIzC0ARwF1iAe26F9WA6Ery/h7oaDK0lde3DlkYf8TkJ/Yxuu3oSyG6K+RALWg9aWXr4as0Zj+w=
+	t=1739926251; cv=none; b=VUYAYsj5qWGBwnVJH6bc9mBTt1+lC+eYsb0N6D7ukOSzKL07RsX7V4mFoWl5owv772cgYzOg69CYi7e1Vz8rGQQZ5sw8suMSKAhhpdiSnxhJS/KTm2lPhbhlIxuFE/Zke1aaYThzoZ+XSyGY2h21DmMETOTaf09cpuIMdySloD8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926236; c=relaxed/simple;
-	bh=7RCtd4EyE+YirhYqRWZdOyUnUvi0Z+/wHsjIIssMMRg=;
+	s=arc-20240116; t=1739926251; c=relaxed/simple;
+	bh=Pdo4jum97oxtLMf9nXg+sQs4Vv9nb2Ncl+f8UfufIBA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lE99avIA6KpFIAIgrZfgArQUqZjbgj7UsKIqdnokrVW5op/gokzucIsBSqiOqZOq3tmKrVWnksj1e2rFyasui0g5hAy1jn+ynZgpb/pIU8l1j/LDRx32l/JWTYsRa0BskesveWX0PkGWmwhPAKkG6j2P+ppQ5Ns7sH0UG4AixfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NdjgwUpY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gcrGT+uYUXOueT/Mxn3/UW8qwgfhCjcQGDY4t85ji9YIOsMs1k+5K9M7l79udhQlccD6zhTxXoAO6L/47a1XNEJrE03yjWr/NUmiYKliDnSUlaFsv0ssFqHtnJJgAKOG5BWhi1RgObua5lkN+mP5fpVELjdNGlBo0OCt8Lz10UE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pwrgfr30; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NdjgwUpY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1E10C4CEE2;
-	Wed, 19 Feb 2025 00:50:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pwrgfr30"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DFB4C4CEE2;
+	Wed, 19 Feb 2025 00:50:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926235;
-	bh=7RCtd4EyE+YirhYqRWZdOyUnUvi0Z+/wHsjIIssMMRg=;
+	s=k20201202; t=1739926251;
+	bh=Pdo4jum97oxtLMf9nXg+sQs4Vv9nb2Ncl+f8UfufIBA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NdjgwUpYu8wfhvfUfZLweZoJNC1bzlxRVdhUpeQdyXD2m85sZubhAcAMZMwzYSyOx
-	 QmFEJsItfGIioSbrhaEBNdpiGZ74R1PBeccQRWbEjVftgfktGqRqzjAm2ywtOpgLh0
-	 9tAFdU3+9EOlwCN49O7c58/KQJ2idgnmX23fw64hNKsWhscptL48VGNmptwmNwyq1N
-	 7CGX6ukgDmfEVFYXij6O6GmBWuFnlIeKHszB8TuEk3bD3dY102lXfRgoVoHCDnIrgj
-	 8fHME6iz+mqb40zt0H0j17dTddEoM/ODFthwYdczmYNXOGzmgigYP9s+AbOUf/t/EB
-	 gAVDS9vfHZqUQ==
-Date: Tue, 18 Feb 2025 16:50:35 -0800
-Subject: [PATCH 01/12] misc: drop the dangerous label from xfs_scrub fsstress
- tests
+	b=Pwrgfr30pePyXHWVh9Oqet4Rtt0MTOxWnana5i/UcCDSGuaGJ3VIIUlQpw2pDeRLg
+	 I/Ea7+cZ6MNmk00V4Oqahs1hrUbjJdgcdH60jI7UVwZgSNXHgYSUmGah+aYPZFJSrn
+	 8FwtwECwdWADqOnCvsDl0OfRV13OXEtI3iqnsZxyTfQ/vZyqAJ9UtDu+pETIsX/alM
+	 jESjogsT8cZPgftoKqQegEPo9ywiXV4CmLF0T09s7hGqSSSd208Np4UdsfeYGkLmsw
+	 D05n6DvoSxaI+dTdFUlIeNCICZ5JR77ZDT4KjrCNkpB5nqMt/fg1Sm3NDpmKtPblEm
+	 aKBNPovNcQIew==
+Date: Tue, 18 Feb 2025 16:50:50 -0800
+Subject: [PATCH 02/12] misc: rename the dangerous_repair group to
+ fuzzers_repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992587421.4078254.643040435477009688.stgit@frogsfrogsfrogs>
+Message-ID: <173992587440.4078254.13008688687033031883.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
 References: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,963 +46,649 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that online fsck has been in the upstream kernel for 8 months, I
-think it's stabilized enough that we don't need to hide the stress tests
-behind the "dangerous" label anymore.
-
-Also rename fsstress_repair to fsstress_online_repair to be consistent
-with the online_repair group.
+xfs_repair has been stable for many years now, so I think it's time the
+fuzz tests for it stopped hiding behind the "dangerous" label.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- doc/group-names.txt |    4 ++--
- tests/xfs/285       |    2 +-
- tests/xfs/286       |    2 +-
- tests/xfs/422       |    2 +-
- tests/xfs/561       |    2 +-
- tests/xfs/562       |    2 +-
- tests/xfs/563       |    2 +-
- tests/xfs/564       |    2 +-
- tests/xfs/565       |    2 +-
- tests/xfs/566       |    2 +-
- tests/xfs/570       |    2 +-
- tests/xfs/571       |    2 +-
- tests/xfs/572       |    2 +-
- tests/xfs/573       |    2 +-
- tests/xfs/574       |    2 +-
- tests/xfs/575       |    2 +-
- tests/xfs/576       |    2 +-
- tests/xfs/577       |    2 +-
- tests/xfs/578       |    2 +-
- tests/xfs/579       |    2 +-
- tests/xfs/580       |    2 +-
- tests/xfs/581       |    2 +-
- tests/xfs/582       |    2 +-
- tests/xfs/583       |    2 +-
- tests/xfs/584       |    2 +-
- tests/xfs/585       |    2 +-
- tests/xfs/586       |    2 +-
- tests/xfs/587       |    2 +-
- tests/xfs/588       |    2 +-
- tests/xfs/589       |    2 +-
- tests/xfs/590       |    2 +-
- tests/xfs/591       |    2 +-
- tests/xfs/592       |    2 +-
- tests/xfs/593       |    2 +-
- tests/xfs/594       |    2 +-
- tests/xfs/595       |    2 +-
- tests/xfs/621       |    2 +-
- tests/xfs/622       |    2 +-
- tests/xfs/628       |    2 +-
- tests/xfs/708       |    2 +-
- tests/xfs/709       |    2 +-
- tests/xfs/710       |    2 +-
- tests/xfs/711       |    2 +-
- tests/xfs/712       |    2 +-
- tests/xfs/713       |    2 +-
- tests/xfs/714       |    2 +-
- tests/xfs/715       |    2 +-
- tests/xfs/717       |    2 +-
- tests/xfs/718       |    2 +-
- tests/xfs/719       |    2 +-
- tests/xfs/721       |    2 +-
- tests/xfs/722       |    2 +-
- tests/xfs/723       |    2 +-
- tests/xfs/724       |    2 +-
- tests/xfs/725       |    2 +-
- tests/xfs/726       |    2 +-
- tests/xfs/727       |    2 +-
- tests/xfs/728       |    2 +-
- tests/xfs/729       |    2 +-
- tests/xfs/731       |    2 +-
- tests/xfs/793       |    2 +-
- tests/xfs/794       |    2 +-
- tests/xfs/796       |    2 +-
- tests/xfs/797       |    2 +-
- tests/xfs/799       |    2 +-
- tests/xfs/800       |    2 +-
- tests/xfs/801       |    2 +-
- 67 files changed, 68 insertions(+), 68 deletions(-)
+ doc/group-names.txt |    2 +-
+ tests/xfs/350       |    2 +-
+ tests/xfs/352       |    2 +-
+ tests/xfs/354       |    2 +-
+ tests/xfs/356       |    2 +-
+ tests/xfs/358       |    2 +-
+ tests/xfs/360       |    2 +-
+ tests/xfs/362       |    2 +-
+ tests/xfs/364       |    2 +-
+ tests/xfs/366       |    2 +-
+ tests/xfs/368       |    2 +-
+ tests/xfs/370       |    2 +-
+ tests/xfs/372       |    2 +-
+ tests/xfs/374       |    2 +-
+ tests/xfs/376       |    2 +-
+ tests/xfs/378       |    2 +-
+ tests/xfs/380       |    2 +-
+ tests/xfs/382       |    2 +-
+ tests/xfs/384       |    2 +-
+ tests/xfs/386       |    2 +-
+ tests/xfs/388       |    2 +-
+ tests/xfs/390       |    2 +-
+ tests/xfs/392       |    2 +-
+ tests/xfs/394       |    2 +-
+ tests/xfs/396       |    2 +-
+ tests/xfs/398       |    2 +-
+ tests/xfs/400       |    2 +-
+ tests/xfs/402       |    2 +-
+ tests/xfs/404       |    2 +-
+ tests/xfs/406       |    2 +-
+ tests/xfs/408       |    2 +-
+ tests/xfs/410       |    2 +-
+ tests/xfs/412       |    2 +-
+ tests/xfs/414       |    2 +-
+ tests/xfs/416       |    2 +-
+ tests/xfs/418       |    2 +-
+ tests/xfs/425       |    2 +-
+ tests/xfs/427       |    2 +-
+ tests/xfs/429       |    2 +-
+ tests/xfs/496       |    2 +-
+ tests/xfs/734       |    2 +-
+ tests/xfs/737       |    2 +-
+ tests/xfs/741       |    2 +-
+ tests/xfs/742       |    2 +-
+ tests/xfs/785       |    2 +-
+ 45 files changed, 45 insertions(+), 45 deletions(-)
 
 
 diff --git a/doc/group-names.txt b/doc/group-names.txt
-index f5bf79a56c3304..57aa2001311383 100644
+index 57aa2001311383..cf263ed537db1f 100644
 --- a/doc/group-names.txt
 +++ b/doc/group-names.txt
-@@ -34,8 +34,6 @@ dangerous_bothrepair	fuzzers to evaluate xfs_scrub + xfs_repair repair
+@@ -34,7 +34,6 @@ dangerous_bothrepair	fuzzers to evaluate xfs_scrub + xfs_repair repair
  dangerous_fuzzers	fuzzers that can crash your computer
  dangerous_norepair	fuzzers to evaluate kernel metadata verifiers
  dangerous_online_repair	fuzzers to evaluate xfs_scrub online repair
--dangerous_fsstress_repair	race fsstress and xfs_scrub online repair
--dangerous_fsstress_scrub	race fsstress and xfs_scrub checking
- dangerous_repair	fuzzers to evaluate xfs_repair offline repair
+-dangerous_repair	fuzzers to evaluate xfs_repair offline repair
  dangerous_scrub		fuzzers to evaluate xfs_scrub checking
  dangerous_selftest	selftests that crash/hang
-@@ -58,6 +56,8 @@ fsck			general fsck tests
- fsmap			FS_IOC_GETFSMAP ioctl
- fsproperties		Filesystem properties
- fsr			XFS free space reorganizer
-+fsstress_online_repair	race fsstress and xfs_scrub online repair
-+fsstress_scrub		race fsstress and xfs_scrub checking
+ data			data loss checkers
+@@ -59,6 +58,7 @@ fsr			XFS free space reorganizer
+ fsstress_online_repair	race fsstress and xfs_scrub online repair
+ fsstress_scrub		race fsstress and xfs_scrub checking
  fuzzers			filesystem fuzz tests
++fuzzers_repair		fuzzers to evaluate xfs_repair offline repair
  growfs			increasing the size of a filesystem
  hardlink		hardlinks
-diff --git a/tests/xfs/285 b/tests/xfs/285
-index 909db488b3c3ab..f08cb449b61ad4 100755
---- a/tests/xfs/285
-+++ b/tests/xfs/285
+ health			XFS health reporting
+diff --git a/tests/xfs/350 b/tests/xfs/350
+index 4e618f41c5a4bf..99596dc81c2160 100755
+--- a/tests/xfs/350
++++ b/tests/xfs/350
 @@ -8,7 +8,7 @@
- # or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	cd /
-diff --git a/tests/xfs/286 b/tests/xfs/286
-index 7743d03718a478..046638296e04c6 100755
---- a/tests/xfs/286
-+++ b/tests/xfs/286
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/352 b/tests/xfs/352
+index 8f56a2b8f6987b..9da8db57b83250 100755
+--- a/tests/xfs/352
++++ b/tests/xfs/352
 @@ -8,7 +8,7 @@
- # crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	cd /
-diff --git a/tests/xfs/422 b/tests/xfs/422
-index 1043d419145fcf..833fb93a1684e9 100755
---- a/tests/xfs/422
-+++ b/tests/xfs/422
-@@ -7,7 +7,7 @@
- # Race fsstress and rmapbt repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair freeze
-+_begin_fstest online_repair fsstress_online_repair freeze
+ _register_cleanup "_cleanup" BUS
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/561 b/tests/xfs/561
-index bbfcefcb13d13a..baf8a450b96a7e 100755
---- a/tests/xfs/561
-+++ b/tests/xfs/561
+diff --git a/tests/xfs/354 b/tests/xfs/354
+index 625c4e955c57dc..645b8152223ef3 100755
+--- a/tests/xfs/354
++++ b/tests/xfs/354
 @@ -8,7 +8,7 @@
- # crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/xfs/562 b/tests/xfs/562
-index 354992a614da67..aac363f071abd8 100755
---- a/tests/xfs/562
-+++ b/tests/xfs/562
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/356 b/tests/xfs/356
+index 3529425eb31504..5d6497a1867918 100755
+--- a/tests/xfs/356
++++ b/tests/xfs/356
 @@ -8,7 +8,7 @@
- # or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/xfs/563 b/tests/xfs/563
-index 3cd00651e4bf82..db5f94e67a0507 100755
---- a/tests/xfs/563
-+++ b/tests/xfs/563
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/358 b/tests/xfs/358
+index 11b29c5ce1efbe..4fab6e72c4226f 100755
+--- a/tests/xfs/358
++++ b/tests/xfs/358
 @@ -8,7 +8,7 @@
- # or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/xfs/564 b/tests/xfs/564
-index ae45952fea6034..5c21f5cf305913 100755
---- a/tests/xfs/564
-+++ b/tests/xfs/564
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/360 b/tests/xfs/360
+index 7f5348a18a898d..7385506824d7d1 100755
+--- a/tests/xfs/360
++++ b/tests/xfs/360
 @@ -8,7 +8,7 @@
- # crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/xfs/565 b/tests/xfs/565
-index 40f1139ae4a520..43185a253d4d71 100755
---- a/tests/xfs/565
-+++ b/tests/xfs/565
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/362 b/tests/xfs/362
+index 0b54fc580bdc9d..f1678aee1ea0ce 100755
+--- a/tests/xfs/362
++++ b/tests/xfs/362
 @@ -8,7 +8,7 @@
- # or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	cd /
-diff --git a/tests/xfs/566 b/tests/xfs/566
-index 19c73ff9ec0ab0..5398d1d0827ca2 100755
---- a/tests/xfs/566
-+++ b/tests/xfs/566
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/364 b/tests/xfs/364
+index 002b4765055816..aa5acbe2a07b3f 100755
+--- a/tests/xfs/364
++++ b/tests/xfs/364
 @@ -8,7 +8,7 @@
- # crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	cd /
-diff --git a/tests/xfs/570 b/tests/xfs/570
-index 4e64a03a0c8bbb..707ff232807025 100755
---- a/tests/xfs/570
-+++ b/tests/xfs/570
-@@ -7,7 +7,7 @@
- # Race fsstress and superblock scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+ _register_cleanup "_cleanup" BUS
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/571 b/tests/xfs/571
-index 016387b43c631e..ce1ca3969dac22 100755
---- a/tests/xfs/571
-+++ b/tests/xfs/571
-@@ -7,7 +7,7 @@
- # Race fsstress and AGF scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/572 b/tests/xfs/572
-index dfee982504cfd6..01122decf7d9b9 100755
---- a/tests/xfs/572
-+++ b/tests/xfs/572
-@@ -7,7 +7,7 @@
- # Race fsstress and AGFL scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/573 b/tests/xfs/573
-index 5ff1bdbdc7a7d6..11c10a695bddc7 100755
---- a/tests/xfs/573
-+++ b/tests/xfs/573
-@@ -7,7 +7,7 @@
- # Race fsstress and AGI scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/574 b/tests/xfs/574
-index 6250f5142c63ea..a6d7bf91100272 100755
---- a/tests/xfs/574
-+++ b/tests/xfs/574
+diff --git a/tests/xfs/366 b/tests/xfs/366
+index e902d1d360066d..2f28810cc3da03 100755
+--- a/tests/xfs/366
++++ b/tests/xfs/366
 @@ -8,7 +8,7 @@
- # crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/575 b/tests/xfs/575
-index 6cf321ce47d4fb..75cc73e4c6a5cd 100755
---- a/tests/xfs/575
-+++ b/tests/xfs/575
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/368 b/tests/xfs/368
+index 3de32a0c3bf191..75046e4a9cad47 100755
+--- a/tests/xfs/368
++++ b/tests/xfs/368
 @@ -8,7 +8,7 @@
- # crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/576 b/tests/xfs/576
-index d3d3e783eea3e5..ffa5cacfb6ab9c 100755
---- a/tests/xfs/576
-+++ b/tests/xfs/576
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+ _register_cleanup "_cleanup" BUS
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/577 b/tests/xfs/577
-index 35ca1468c2f64a..9afe9b2ee4b74f 100755
---- a/tests/xfs/577
-+++ b/tests/xfs/577
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/578 b/tests/xfs/578
-index 2101eb55c0a928..cc1203777ff02a 100755
---- a/tests/xfs/578
-+++ b/tests/xfs/578
-@@ -8,7 +8,7 @@
- # or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/579 b/tests/xfs/579
-index e552e499296efc..aa72276dd3b216 100755
---- a/tests/xfs/579
-+++ b/tests/xfs/579
-@@ -8,7 +8,7 @@
- # or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/580 b/tests/xfs/580
-index dac036f4ae5a0a..70a080e7a34fe5 100755
---- a/tests/xfs/580
-+++ b/tests/xfs/580
-@@ -8,7 +8,7 @@
- # if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/581 b/tests/xfs/581
-index 73b51f994a3f00..39eb42da4b10c5 100755
---- a/tests/xfs/581
-+++ b/tests/xfs/581
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/582 b/tests/xfs/582
-index f390b77f3439ee..e92f128f8a5695 100755
---- a/tests/xfs/582
-+++ b/tests/xfs/582
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/583 b/tests/xfs/583
-index dcc60f126ed7f4..fc91d8f2596a44 100755
---- a/tests/xfs/583
-+++ b/tests/xfs/583
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/584 b/tests/xfs/584
-index 3f62261c06bbb3..12442b53c72abc 100755
---- a/tests/xfs/584
-+++ b/tests/xfs/584
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/585 b/tests/xfs/585
-index 987c799f5c2011..3f1b814c025349 100755
---- a/tests/xfs/585
-+++ b/tests/xfs/585
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/586 b/tests/xfs/586
-index d78dea5185ddfc..9e2312f4d1c05a 100755
---- a/tests/xfs/586
-+++ b/tests/xfs/586
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/587 b/tests/xfs/587
-index a9d4690471193c..0ae2f4c3bcc380 100755
---- a/tests/xfs/587
-+++ b/tests/xfs/587
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/588 b/tests/xfs/588
-index bd0788d3f18faf..a2249cc4aa9dbe 100755
---- a/tests/xfs/588
-+++ b/tests/xfs/588
-@@ -7,7 +7,7 @@
- # Race fsstress and data fork scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/589 b/tests/xfs/589
-index 806c445fc43f2d..378e4f678ec51f 100755
---- a/tests/xfs/589
-+++ b/tests/xfs/589
-@@ -7,7 +7,7 @@
- # Race fsstress and attr fork scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/590 b/tests/xfs/590
-index 59a42f11b68983..3a200ffc93c744 100755
---- a/tests/xfs/590
-+++ b/tests/xfs/590
-@@ -7,7 +7,7 @@
- # Race fsstress and cow fork scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/591 b/tests/xfs/591
-index 9f080ebbefa7f7..856e2dfd1f0f51 100755
---- a/tests/xfs/591
-+++ b/tests/xfs/591
-@@ -7,7 +7,7 @@
- # Race fsstress and directory scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/592 b/tests/xfs/592
-index 653ad256905fef..998be997519347 100755
---- a/tests/xfs/592
-+++ b/tests/xfs/592
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/593 b/tests/xfs/593
-index 118b7e75931d24..1706c83b912cc5 100755
---- a/tests/xfs/593
-+++ b/tests/xfs/593
-@@ -8,7 +8,7 @@
- # livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/594 b/tests/xfs/594
-index c86234e1f62778..7de5eed556eda7 100755
---- a/tests/xfs/594
-+++ b/tests/xfs/594
-@@ -8,7 +8,7 @@
- # We can't open symlink files directly for scrubbing, so we use xfs_scrub(8).
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/595 b/tests/xfs/595
-index 75797b6cc41107..12cd0352b559cb 100755
---- a/tests/xfs/595
-+++ b/tests/xfs/595
+diff --git a/tests/xfs/370 b/tests/xfs/370
+index ff19505b4d4abd..16e444f8da9d3c 100755
+--- a/tests/xfs/370
++++ b/tests/xfs/370
 @@ -9,7 +9,7 @@
- # xfs_scrub(8).
+ # Use xfs_repair to repair the problems.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/621 b/tests/xfs/621
-index 24fbbc4e9bbc0e..feafc6fd560b0d 100755
---- a/tests/xfs/621
-+++ b/tests/xfs/621
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/372 b/tests/xfs/372
+index 01ac0e2b63fdb4..0599c9b830a27b 100755
+--- a/tests/xfs/372
++++ b/tests/xfs/372
 @@ -8,7 +8,7 @@
- # see if we crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/622 b/tests/xfs/622
-index 59503cfa940422..2ba27947b39139 100755
---- a/tests/xfs/622
-+++ b/tests/xfs/622
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/374 b/tests/xfs/374
+index 807a8cd015a32a..0d69129f1652c7 100755
+--- a/tests/xfs/374
++++ b/tests/xfs/374
 @@ -8,7 +8,7 @@
- # crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/628 b/tests/xfs/628
-index 8dc2689888e778..c77d67db358983 100755
---- a/tests/xfs/628
-+++ b/tests/xfs/628
-@@ -9,7 +9,7 @@
- # handle unlinked directories.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+ _register_cleanup "_cleanup" BUS
  
- # Import common functions.
- . ./common/filter
-diff --git a/tests/xfs/708 b/tests/xfs/708
-index 40c4d92d241b74..6e4e98f40ced96 100755
---- a/tests/xfs/708
-+++ b/tests/xfs/708
-@@ -7,7 +7,7 @@
- # Race fsstress and bnobt repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/709 b/tests/xfs/709
-index 3a29ca12fc3b23..ae531359199e09 100755
---- a/tests/xfs/709
-+++ b/tests/xfs/709
-@@ -7,7 +7,7 @@
- # Race fsstress and inobt repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/710 b/tests/xfs/710
-index dc599c0b647ab2..4e9d9862801e13 100755
---- a/tests/xfs/710
-+++ b/tests/xfs/710
-@@ -7,7 +7,7 @@
- # Race fsstress and refcountbt repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/711 b/tests/xfs/711
-index 685ada10b82693..2bd2812cee8a0c 100755
---- a/tests/xfs/711
-+++ b/tests/xfs/711
-@@ -7,7 +7,7 @@
- # Race fsstress and superblock repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/712 b/tests/xfs/712
-index 15a94a525bd99c..ef6afdc681704b 100755
---- a/tests/xfs/712
-+++ b/tests/xfs/712
-@@ -7,7 +7,7 @@
- # Race fsstress and agf repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/713 b/tests/xfs/713
-index 551653917eba4b..32603fd1ddd6dc 100755
---- a/tests/xfs/713
-+++ b/tests/xfs/713
-@@ -7,7 +7,7 @@
- # Race fsstress and agfl repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/714 b/tests/xfs/714
-index aa209ce5bb21ee..4371d93f125031 100755
---- a/tests/xfs/714
-+++ b/tests/xfs/714
-@@ -7,7 +7,7 @@
- # Race fsstress and agi repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/715 b/tests/xfs/715
-index e6821c02556c98..01c1963ef974d8 100755
---- a/tests/xfs/715
-+++ b/tests/xfs/715
+diff --git a/tests/xfs/376 b/tests/xfs/376
+index dfca8f0be16433..fe47b00bcc33d5 100755
+--- a/tests/xfs/376
++++ b/tests/xfs/376
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/717 b/tests/xfs/717
-index 6368d704b8b0ee..ac8e83f66749d8 100755
---- a/tests/xfs/717
-+++ b/tests/xfs/717
-@@ -7,7 +7,7 @@
- # Race fsstress and data fork repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+ _register_cleanup "_cleanup" BUS
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/718 b/tests/xfs/718
-index 7b0fe2c467876c..6bff5461f20976 100755
---- a/tests/xfs/718
-+++ b/tests/xfs/718
-@@ -7,7 +7,7 @@
- # Race fsstress and attr fork repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/719 b/tests/xfs/719
-index 81805402055468..8ea2faf796dc19 100755
---- a/tests/xfs/719
-+++ b/tests/xfs/719
-@@ -7,7 +7,7 @@
- # Race fsstress and CoW fork repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/721 b/tests/xfs/721
-index c25cd269d8470b..fe9a93314e09d5 100755
---- a/tests/xfs/721
-+++ b/tests/xfs/721
+diff --git a/tests/xfs/378 b/tests/xfs/378
+index 94c0dcdbc8ad65..c2d37e7125c307 100755
+--- a/tests/xfs/378
++++ b/tests/xfs/378
 @@ -8,7 +8,7 @@
- # We can't open special files directly for scrubbing, so we use xfs_scrub(8).
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/722 b/tests/xfs/722
-index b96163e32d0570..f04914945c4522 100755
---- a/tests/xfs/722
-+++ b/tests/xfs/722
-@@ -9,7 +9,7 @@
- # xfs_scrub(8).
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+ _register_cleanup "_cleanup" BUS
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/723 b/tests/xfs/723
-index 21b608aaae3f56..1cd3f7a7922503 100755
---- a/tests/xfs/723
-+++ b/tests/xfs/723
+diff --git a/tests/xfs/380 b/tests/xfs/380
+index 84715b09f26420..bd3c2cdc136495 100755
+--- a/tests/xfs/380
++++ b/tests/xfs/380
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/724 b/tests/xfs/724
-index a832063bed9573..890140b9978b7c 100755
---- a/tests/xfs/724
-+++ b/tests/xfs/724
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/382 b/tests/xfs/382
+index ee7a18208b99bc..85a612c18c3d6f 100755
+--- a/tests/xfs/382
++++ b/tests/xfs/382
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/725 b/tests/xfs/725
-index 2972aeb7164c4a..7e843d75689ed0 100755
---- a/tests/xfs/725
-+++ b/tests/xfs/725
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/384 b/tests/xfs/384
+index 490701e438d0f2..45d235a8347c85 100755
+--- a/tests/xfs/384
++++ b/tests/xfs/384
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/726 b/tests/xfs/726
-index f4bedcca5f9fc7..24f5ef7e352b63 100755
---- a/tests/xfs/726
-+++ b/tests/xfs/726
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/386 b/tests/xfs/386
+index f8f5798cd49347..9b3023ad2b3af6 100755
+--- a/tests/xfs/386
++++ b/tests/xfs/386
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/727 b/tests/xfs/727
-index 2e882775442e71..d9abea46b36a91 100755
---- a/tests/xfs/727
-+++ b/tests/xfs/727
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/388 b/tests/xfs/388
+index 504f786fbdd2db..2e1eb7f13de44a 100755
+--- a/tests/xfs/388
++++ b/tests/xfs/388
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/728 b/tests/xfs/728
-index b4cf95f57baae2..cc3f41c6b7e6cf 100755
---- a/tests/xfs/728
-+++ b/tests/xfs/728
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/390 b/tests/xfs/390
+index c272fd8940cb40..4969bf66105513 100755
+--- a/tests/xfs/390
++++ b/tests/xfs/390
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/729 b/tests/xfs/729
-index 45d65892eac29d..710ace978abdb8 100755
---- a/tests/xfs/729
-+++ b/tests/xfs/729
-@@ -7,7 +7,7 @@
- # Race fsstress and nlinks scrub for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+ _register_cleanup "_cleanup" BUS
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/731 b/tests/xfs/731
-index 8cc38f5841119f..496fd78a58cf77 100755
---- a/tests/xfs/731
-+++ b/tests/xfs/731
-@@ -9,7 +9,7 @@
- # filesystem activity, so we can't have userspace wandering in and thawing it.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/xfs/793 b/tests/xfs/793
-index d942d9807967b5..a779bf81738537 100755
---- a/tests/xfs/793
-+++ b/tests/xfs/793
+diff --git a/tests/xfs/392 b/tests/xfs/392
+index 8eb7b962d16318..619665f8e3aa38 100755
+--- a/tests/xfs/392
++++ b/tests/xfs/392
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/794 b/tests/xfs/794
-index cdccf9699861f3..e0025ed5729658 100755
---- a/tests/xfs/794
-+++ b/tests/xfs/794
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/394 b/tests/xfs/394
+index 692d45f548fe15..fd6a3330c31b60 100755
+--- a/tests/xfs/394
++++ b/tests/xfs/394
 @@ -8,7 +8,7 @@
- # or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/796 b/tests/xfs/796
-index e6a88cc6b21f89..df1161b7288c99 100755
---- a/tests/xfs/796
-+++ b/tests/xfs/796
-@@ -7,7 +7,7 @@
- # Race fsstress and directory repair for a while to see if we crash or livelock.
- #
- . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+ _register_cleanup "_cleanup" BUS
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/797 b/tests/xfs/797
-index 642930f2feebeb..a9d1a6c162c0c1 100755
---- a/tests/xfs/797
-+++ b/tests/xfs/797
+diff --git a/tests/xfs/396 b/tests/xfs/396
+index 9b2a9a068a7e28..a7bcaa4a86ea2b 100755
+--- a/tests/xfs/396
++++ b/tests/xfs/396
 @@ -8,7 +8,7 @@
- # livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-diff --git a/tests/xfs/799 b/tests/xfs/799
-index 0a43eb01199e69..da13247b098b1f 100755
---- a/tests/xfs/799
-+++ b/tests/xfs/799
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/398 b/tests/xfs/398
+index d9826725f9fc10..1b91347c4edb1e 100755
+--- a/tests/xfs/398
++++ b/tests/xfs/398
 @@ -8,7 +8,7 @@
- # while to see if we crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	cd /
-diff --git a/tests/xfs/800 b/tests/xfs/800
-index f12ef69e0afa3b..40ad12a15c1d80 100755
---- a/tests/xfs/800
-+++ b/tests/xfs/800
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/400 b/tests/xfs/400
+index 7191cff0be6abb..01f59b1b471f68 100755
+--- a/tests/xfs/400
++++ b/tests/xfs/400
 @@ -8,7 +8,7 @@
- # while to see if we crash or livelock.
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest scrub dangerous_fsstress_scrub
-+_begin_fstest scrub fsstress_scrub
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- _cleanup() {
- 	cd /
-diff --git a/tests/xfs/801 b/tests/xfs/801
-index 53122352ad75a3..1190cfab8a9f94 100755
---- a/tests/xfs/801
-+++ b/tests/xfs/801
-@@ -9,7 +9,7 @@
- # because the xfile code wasn't folioized.
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/402 b/tests/xfs/402
+index 0c2174e2ed417e..2bb4fc9c23bb1e 100755
+--- a/tests/xfs/402
++++ b/tests/xfs/402
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
  #
  . ./common/preamble
--_begin_fstest online_repair dangerous_fsstress_repair
-+_begin_fstest online_repair fsstress_online_repair
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
  
- declare -A oldvalues
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/404 b/tests/xfs/404
+index 2901b015c88d1e..075a788a66e638 100755
+--- a/tests/xfs/404
++++ b/tests/xfs/404
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/406 b/tests/xfs/406
+index 444dbd7266f498..9815090c9db335 100755
+--- a/tests/xfs/406
++++ b/tests/xfs/406
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair realtime
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/408 b/tests/xfs/408
+index 55b061ed436376..1e1a7a7336c093 100755
+--- a/tests/xfs/408
++++ b/tests/xfs/408
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair realtime
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/410 b/tests/xfs/410
+index 4155e03b5d9579..78da6cb4f2fec5 100755
+--- a/tests/xfs/410
++++ b/tests/xfs/410
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/412 b/tests/xfs/412
+index 2119282f988106..ba1eb482276782 100755
+--- a/tests/xfs/412
++++ b/tests/xfs/412
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/414 b/tests/xfs/414
+index c92c6eb0fc33fa..18ed8343eb4e4f 100755
+--- a/tests/xfs/414
++++ b/tests/xfs/414
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/416 b/tests/xfs/416
+index 2ee0e75140bcdc..68094b841fcace 100755
+--- a/tests/xfs/416
++++ b/tests/xfs/416
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/418 b/tests/xfs/418
+index dd7b70a46901cd..41ec77041f0d4d 100755
+--- a/tests/xfs/418
++++ b/tests/xfs/418
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/425 b/tests/xfs/425
+index 9ca10c666b3b1d..6108e19c0b5650 100755
+--- a/tests/xfs/425
++++ b/tests/xfs/425
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/427 b/tests/xfs/427
+index 539cb4f15ce4c0..c19c02f4ee3374 100755
+--- a/tests/xfs/427
++++ b/tests/xfs/427
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/429 b/tests/xfs/429
+index b0b5fa5770394b..eeb35945ec20d1 100755
+--- a/tests/xfs/429
++++ b/tests/xfs/429
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/496 b/tests/xfs/496
+index 22282ba0eb8c52..af1a636faa6049 100755
+--- a/tests/xfs/496
++++ b/tests/xfs/496
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/734 b/tests/xfs/734
+index 1ae020ea2d9397..3fe41ac2fe80ea 100755
+--- a/tests/xfs/734
++++ b/tests/xfs/734
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/737 b/tests/xfs/737
+index d85d251252126d..0e35bbe340ea73 100755
+--- a/tests/xfs/737
++++ b/tests/xfs/737
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/741 b/tests/xfs/741
+index 4e24fb4e2fef31..da0805273bd255 100755
+--- a/tests/xfs/741
++++ b/tests/xfs/741
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ 
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair realtime
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/742 b/tests/xfs/742
+index eabe766d725c07..d699aa10c68f6a 100755
+--- a/tests/xfs/742
++++ b/tests/xfs/742
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ 
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair realtime
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair realtime
+ 
+ _register_cleanup "_cleanup" BUS
+ 
+diff --git a/tests/xfs/785 b/tests/xfs/785
+index a51f62e842a5b6..f3707c730f31ac 100755
+--- a/tests/xfs/785
++++ b/tests/xfs/785
+@@ -8,7 +8,7 @@
+ # Use xfs_repair to fix the corruption.
+ #
+ . ./common/preamble
+-_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
++_begin_fstest dangerous_fuzzers dangerous_scrub fuzzers_repair
+ 
+ _register_cleanup "_cleanup" BUS
  
 
