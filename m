@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 396761B4145;
-	Wed, 19 Feb 2025 00:48:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE5DD1EA7CB;
+	Wed, 19 Feb 2025 00:48:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926110; cv=none; b=YxfyTPJvWNExdg6L/U+65FCPZWYAo0p6gzZOHvyv/JQtm5weND1AeDdxAsOxgM23YztqJ8JWqdbTAeJdJwyrypKbgZzLj8lTVLfrHqxvk9e+xJvo9fGqnOSbgXB/hvUlDiInwCqoskd1Lnu69kYnWgxc9m1e7PbZF/5Ri/z4Yvw=
+	t=1739926125; cv=none; b=eBSvvTFMOIOX9tMUvBXcPmOcBwbAdNugLIY17yzU7Bny5b9hxwzIa2xR4GF0xALJ4LwtMlaLKdbC/0pcVAdmtzolx9YYdXAcF9FaXdX2fjz1UkdPDwwWwpcbSNloUe1q9cHh2hUmAij6j8pshDUrKuOElu1nFp/KTbm7Uufe36s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926110; c=relaxed/simple;
-	bh=CqYJsDxppWUIxUYwFU+lnEF1CfQAYp4uZM/C6VM0TcM=;
+	s=arc-20240116; t=1739926125; c=relaxed/simple;
+	bh=EwHkym60kR3igc1KHLR0eJc/wv9ymOOk5Cmlw5/kugo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dok+51Kz1ZQ3gU9OAD03ZiUxhOoBx7sY47ZJc0Qt2keUl0j7Ym6Lrabg0lx/jX8ubH1M7wnOC1vyCnD9nOfhHEvWxVl9g1eiQjCnn0IR7sF/U2oZnqkRPfcaltBjlHJ7SfeL83iKFLDLN9ORVg33fpCP6r0ys7eaITIyZmLUSt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jfJOoB2C; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=B8ZjaK+HO1Ed8LVQjjGpJApGuKbGABh1QSJ/+kLX0rR0gidhh2c2Kxptb3pmiEc7xGKRrbGRb5pEBzwEczaLHSF25fuIUv0rpQfPxqoIMdBkBmdDOJ1Uo5SidV6a6rjxo9eWezFJ+CMUfMVq0KAfIo21z+3dZZWkjD0eNZu8+QQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bLdff/HL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jfJOoB2C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DA48C4CEE6;
-	Wed, 19 Feb 2025 00:48:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bLdff/HL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22ED3C4CEE2;
+	Wed, 19 Feb 2025 00:48:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926109;
-	bh=CqYJsDxppWUIxUYwFU+lnEF1CfQAYp4uZM/C6VM0TcM=;
+	s=k20201202; t=1739926125;
+	bh=EwHkym60kR3igc1KHLR0eJc/wv9ymOOk5Cmlw5/kugo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jfJOoB2Cb8i4rhCOacU9UpwFfOPrmDyQSDhzk1OcyGhDTXfY6bKONZJLuwgT7ljp4
-	 BFyjZ/Qw/44CmnsLiu00s0vbKzT6zEALu1yFhDXC3NZ5QKcEqVzcNqVkZSJ/JIVg/e
-	 RWBBfumGVH/Ns+QG5UbryvVEinOuryUF6jYBcRe94aF4WDzETzqC73pPyKrq/II5SN
-	 kapD18d8ZvfL0YtRBYXeSq/ueePd6J6oyXMogLue1uh4875B2yy+a3O4bIxkBgLNFs
-	 igWghJAXcSewccj1vFQ06LJchMz/imlJfr3wEtwGv0m883ZptXfFj5PXkwhGN1aped
-	 6IGyX4Lh1vxzw==
-Date: Tue, 18 Feb 2025 16:48:29 -0800
-Subject: [PATCHSET v6.4 10/12] fstests: realtime reverse-mapping support
+	b=bLdff/HL71kj06I1HKsURwlYxJgiN9pdCpQ2TMVBsvvfJ09KQ7H0Dz+6lQ9YdbJkz
+	 8IY5KkzdAg21LR01/OrkKpPrie3VeicGhc7RnI+vH0UAKRkehzJvWDqPGfU1Y/xBEe
+	 04yChf6l8Ntf3W4wFvuRH1hUVTpSnt2VsLQ8UTS1riqTT197sIL/BdhIhEQzfprzJU
+	 ZaQtqu4HTlUz3gpwUMvFG8YT0A5Sv3Yvvh9dKlPj5ArdSF1wuDREeH/rnDvx5hJbnG
+	 VZf7DZ7y2qbJ7tkvRPK88F7erLOui2cb+7ws5tJ1X9sm81e1UY619OLWzJ4nae90oy
+	 DcJcnLLVOZH8w==
+Date: Tue, 18 Feb 2025 16:48:44 -0800
+Subject: [PATCHSET v6.4 11/12] fstests: reflink on the realtime device
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
- fstests@vger.kernel.org
-Message-ID: <173992591052.4080556.14368674525636291029.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <173992591722.4081089.9486182038960980513.stgit@frogsfrogsfrogs>
 In-Reply-To: <20250219004353.GM21799@frogsfrogsfrogs>
 References: <20250219004353.GM21799@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,8 +45,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Fix a few regressions in fstests when rmap is enabled on the realtime
-volume.
+This patchset enables use of the file data block sharing feature (i.e.
+reflink) on the realtime device.  It follows the same basic sequence as
+the realtime rmap series -- first a few cleanups; then widening of the
+API parameters; and introduction of the new btree format and inode fork
+format.  Next comes enabling CoW and remapping for the rt device; new
+scrub, repair, and health reporting code; and at the end we implement
+some code to lengthen write requests so that rt extents are always CoWed
+fully.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,83 +63,78 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-rmap
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-rmap
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-reflink
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-rmap
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-reflink
 
 xfsdocs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-rmap
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-reflink
 ---
 Commits in this patchset:
- * xfs: fix tests that try to access the realtime rmap inode
- * xfs/336: port to common/metadump
- * fuzz: for fuzzing the rtrmapbt, find the path to the rt rmap btree file
- * xfs: race fsstress with realtime rmap btree scrub and repair
- * xfs: fix various problems with fsmap detecting the data device
- * xfs/341: update test for rtgroup-based rmap
- * xfs/3{43,32}: adapt tests for rt extent size greater than 1
- * xfs/291: use _scratch_mkfs_sized instead of opencoding the logic
- * xfs: skip tests if formatting small filesystem fails
- * xfs/443: use file allocation unit, not dbsize
- * populate: adjust rtrmap calculations for rtgroups
- * populate: check that we created a realtime rmap btree of the given height
- * fuzzy: create missing fuzz tests for rt rmap btrees
+ * common/populate: create realtime refcount btree
+ * xfs: create fuzz tests for the realtime refcount btree
+ * xfs/27[24]: adapt for checking files on the realtime volume
+ * xfs: race fsstress with realtime refcount btree scrub and repair
+ * xfs: remove xfs/131 now that we allow reflink on realtime volumes
+ * generic/331,xfs/240: support files that skip delayed allocation
+ * common/xfs: fix _xfs_get_file_block_size when rtinherit is set and no rt section
 ---
- common/populate    |   36 +++++++++++++++++++++++++
- common/xfs         |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/104      |    1 +
- tests/xfs/122.out  |    1 -
- tests/xfs/1528     |   38 +++++++++++++++++++++++++++
- tests/xfs/1528.out |    4 +++
- tests/xfs/1529     |   37 ++++++++++++++++++++++++++
- tests/xfs/1529.out |    4 +++
- tests/xfs/1817     |   39 +++++++++++++++++++++++++++
- tests/xfs/1817.out |    2 +
- tests/xfs/1821     |   45 ++++++++++++++++++++++++++++++++
- tests/xfs/1821.out |    2 +
- tests/xfs/1857     |   39 +++++++++++++++++++++++++++
- tests/xfs/1857.out |    2 +
- tests/xfs/1893     |    2 +
- tests/xfs/272      |    2 +
- tests/xfs/276      |    2 +
- tests/xfs/277      |    2 +
- tests/xfs/291      |    2 +
- tests/xfs/332      |    6 +---
- tests/xfs/332.out  |    2 -
- tests/xfs/333      |   43 ------------------------------
- tests/xfs/333.out  |    6 ----
- tests/xfs/336      |   34 ++++++++----------------
- tests/xfs/336.out  |    4 +--
- tests/xfs/337      |    2 +
- tests/xfs/338      |   30 ++++++++++++++++++---
- tests/xfs/339      |    5 ++--
- tests/xfs/340      |   25 ++++++++++++++----
- tests/xfs/341      |   12 +++-----
- tests/xfs/341.out  |    1 -
- tests/xfs/342      |    4 +--
- tests/xfs/343      |    2 +
- tests/xfs/406      |    6 +++-
- tests/xfs/407      |    6 +++-
- tests/xfs/408      |    7 ++++-
- tests/xfs/409      |    7 ++++-
- tests/xfs/443      |    9 ++++--
- tests/xfs/481      |    6 +++-
- tests/xfs/482      |    7 ++++-
- 40 files changed, 429 insertions(+), 129 deletions(-)
- create mode 100755 tests/xfs/1528
- create mode 100644 tests/xfs/1528.out
- create mode 100755 tests/xfs/1529
- create mode 100644 tests/xfs/1529.out
- create mode 100755 tests/xfs/1817
- create mode 100644 tests/xfs/1817.out
- create mode 100755 tests/xfs/1821
- create mode 100644 tests/xfs/1821.out
- create mode 100755 tests/xfs/1857
- create mode 100644 tests/xfs/1857.out
- delete mode 100755 tests/xfs/333
- delete mode 100644 tests/xfs/333.out
+ common/populate       |   26 ++++++++++++++++++---
+ common/xfs            |   15 ++++++++++++
+ tests/generic/331     |   13 +++++++++-
+ tests/generic/331.out |    2 +-
+ tests/xfs/131         |   46 ------------------------------------
+ tests/xfs/131.out     |    5 ----
+ tests/xfs/1538        |   38 ++++++++++++++++++++++++++++++
+ tests/xfs/1538.out    |    4 +++
+ tests/xfs/1539        |   38 ++++++++++++++++++++++++++++++
+ tests/xfs/1539.out    |    4 +++
+ tests/xfs/1540        |   38 ++++++++++++++++++++++++++++++
+ tests/xfs/1540.out    |    4 +++
+ tests/xfs/1541        |   39 +++++++++++++++++++++++++++++++
+ tests/xfs/1541.out    |    4 +++
+ tests/xfs/1542        |   38 ++++++++++++++++++++++++++++++
+ tests/xfs/1542.out    |    4 +++
+ tests/xfs/1543        |   37 +++++++++++++++++++++++++++++
+ tests/xfs/1543.out    |    4 +++
+ tests/xfs/1544        |   37 +++++++++++++++++++++++++++++
+ tests/xfs/1544.out    |    4 +++
+ tests/xfs/1545        |   38 ++++++++++++++++++++++++++++++
+ tests/xfs/1545.out    |    4 +++
+ tests/xfs/1818        |   40 ++++++++++++++++++++++++++++++++
+ tests/xfs/1818.out    |    2 ++
+ tests/xfs/1819        |   40 ++++++++++++++++++++++++++++++++
+ tests/xfs/1819.out    |    2 ++
+ tests/xfs/1893        |    2 +-
+ tests/xfs/240         |   12 ++++++++-
+ tests/xfs/240.out     |    2 +-
+ tests/xfs/272         |   40 +++++++++++++++++++++-----------
+ tests/xfs/274         |   62 ++++++++++++++++++++++++++++++++++---------------
+ 31 files changed, 551 insertions(+), 93 deletions(-)
+ delete mode 100755 tests/xfs/131
+ delete mode 100644 tests/xfs/131.out
+ create mode 100755 tests/xfs/1538
+ create mode 100644 tests/xfs/1538.out
+ create mode 100755 tests/xfs/1539
+ create mode 100644 tests/xfs/1539.out
+ create mode 100755 tests/xfs/1540
+ create mode 100644 tests/xfs/1540.out
+ create mode 100755 tests/xfs/1541
+ create mode 100644 tests/xfs/1541.out
+ create mode 100755 tests/xfs/1542
+ create mode 100644 tests/xfs/1542.out
+ create mode 100755 tests/xfs/1543
+ create mode 100644 tests/xfs/1543.out
+ create mode 100755 tests/xfs/1544
+ create mode 100644 tests/xfs/1544.out
+ create mode 100755 tests/xfs/1545
+ create mode 100644 tests/xfs/1545.out
+ create mode 100755 tests/xfs/1818
+ create mode 100644 tests/xfs/1818.out
+ create mode 100755 tests/xfs/1819
+ create mode 100644 tests/xfs/1819.out
 
