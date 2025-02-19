@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F183DDD3;
-	Wed, 19 Feb 2025 00:58:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12A5C3F9D5;
+	Wed, 19 Feb 2025 00:58:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739926705; cv=none; b=nMv9SVvNk7yQaT7gXXNcJQt4KM6jwEfBH5vou4Ri5v1qv59muUOfwndrWHijsVtgo9KZ4VdR5DaWiV0XAInVNxNrOgG28x6/yAXK7lqx7rLGMFOhOAMhvij45bIZUwwyg54o5X+XBZ3tm3xXzCCygUIdYEJsd5YEKKhgeqtJLG4=
+	t=1739926721; cv=none; b=npHFW3AofPbimMXyrgk4p6UjXrD4iP/vLV5X3pStolom0V6ACYAqCS4pXbzfqBnWQgAboAAs0W3k0vLwlI3o73YbiulO1Nj8NA26wjefJ2ZYSiBdIyWR4P/kpjIWZA3G4GpFxH77gacVTG6v6UrqwbmrQfyRpbF2ZB/Bq9CLFP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739926705; c=relaxed/simple;
-	bh=yw01JJVhph53oetXG5itZyW4BHx7L0yOGTwNLg7grRQ=;
+	s=arc-20240116; t=1739926721; c=relaxed/simple;
+	bh=56Iuf6Y4DdIz5SsfapY9i66r/jNm7mXYmbj5M+hTGrc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j7ereotZjgzSTaOE//FwDHndidsDH/yCSL60znI8DQxeUg3dZ/kfYWeNRlaUenAIEQyBKmModvooX4LWbI/JVChhfX0ktpYTwyPl4rP1cQ9tJx2nxuOoPRnnD4f0ra12XhrDA9oTMSJcn8zJc7JqS9MpDvRxah0UiX9ZL/LjNYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q9VkWzQt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=imNwsj0DL4X2H6Y3qgyX6uV5dSWCFZv4JpQZ1LGxqfIGry6dQ9MVaPfP6wc3pdrp33/hbBYmDip2PbsOieeB5m0jFDSdt6T2zqbh5W9q7aNM2uVE9w69mUREnRhAPc2kxlCp4Piv0YQqrrhEfVmJOVKduEbe3xdkqJlJf3jXBaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IovLG2Ds; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q9VkWzQt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D59D8C4CEE2;
-	Wed, 19 Feb 2025 00:58:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IovLG2Ds"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76A86C4CEE2;
+	Wed, 19 Feb 2025 00:58:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739926704;
-	bh=yw01JJVhph53oetXG5itZyW4BHx7L0yOGTwNLg7grRQ=;
+	s=k20201202; t=1739926720;
+	bh=56Iuf6Y4DdIz5SsfapY9i66r/jNm7mXYmbj5M+hTGrc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=q9VkWzQtnE0fMKCGb+VQ7UpRigRV3dsyMifCFP+Xcnro706fJxxyViOX0kbZs8KnL
-	 9gG0k3iuH3agcgvgbWTaKoE9O8NzOxFo4if7mUhIA6jIcKCWdI5Rc3bKxilcBD5NkM
-	 K+tbuenARg+7Pkj7xvi+hnF8YdHQbLxPFGtGxWiiZapMCeuygkP5Yzi0j/BUaIPjHH
-	 8l1C5gmM/6tVTYzF/BtoqThrW/TeLUyGyFBsWeg05xDPKbh+/DHeJtFDhQU+oumpLl
-	 JtCbrFwhUPFQ0azYxthoqPl/7/hl5J+JYfdf7OkiK9Mkio/tOwjGB/Ixm1j5GK1qPg
-	 MUS7bY4+KEunQ==
-Date: Tue, 18 Feb 2025 16:58:24 -0800
-Subject: [PATCH 03/15] fuzzy: stress data and rt sections of xfs filesystems
- equally
+	b=IovLG2DsXgO688vA2/3wvkvdcGWqbx5oMBXEmmXOKd34kl/xeArsD4hcRUwTsHMpn
+	 F51lFFArsw2LPTnKp+TvaIJqgVu7+bkxQhqba2IE4BsouFzhIGKAzsulUVGS05WPHI
+	 BEO2y/sYRUlyMovcXKurPhGww3FsYiIldoswTg379qAYAnr0AUHtQYsZpGWeUGs4b8
+	 RBoN1rzqhr4UhHESO8lnGmTZZzptWRPUV0nux5Ky7vJ5Bd1LJ+cNPVcaf3AfZLbxbJ
+	 iPgYlF6EnKBVsW+i/j4j3ql36akASfnXP0TBiRN578b5IBQFxGr5j3dQaWjDfW6TN4
+	 4s/t49nPXQulg==
+Date: Tue, 18 Feb 2025 16:58:40 -0800
+Subject: [PATCH 04/15] fuzzy: run fsx on data and rt sections of xfs
+ filesystems equally
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <173992589235.4079457.2842406217553234453.stgit@frogsfrogsfrogs>
+Message-ID: <173992589254.4079457.10498287265932477514.stgit@frogsfrogsfrogs>
 In-Reply-To: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 References: <173992589108.4079457.2534756062525120761.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -47,56 +47,49 @@ Content-Transfer-Encoding: 7bit
 From: Darrick J. Wong <djwong@kernel.org>
 
 If we're stress-testing scrub on a realtime filesystem, make sure that
-we run fsstress on separate directory trees for data and realtime
-workouts.
+we run fsx on separate files for data and realtime workouts.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/fuzzy |   56 ++++++++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 42 insertions(+), 14 deletions(-)
+ common/fuzzy |   53 ++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 40 insertions(+), 13 deletions(-)
 
 
 diff --git a/common/fuzzy b/common/fuzzy
-index ee9fe75609e603..39efdb22c71627 100644
+index 39efdb22c71627..1548f372fac58a 100644
 --- a/common/fuzzy
 +++ b/common/fuzzy
-@@ -1015,15 +1015,28 @@ __stress_scrub_fsx_loop() {
- 	rm -f "$runningfile"
+@@ -955,6 +955,14 @@ ___stress_scrub_duration()
+ 	echo "--duration=$delta"
  }
  
-+# Run fsstress and record outcome
-+___scrub_run_fsstress() {
-+	_run_fsstress "$@"
++# Run fsx and record outcome
++___scrub_run_fsx() {
++	$FSX_PROG "$@" >> $seqres.full
 +	local res=$?
-+	echo "fsstress $* exits with $res at $(date)" >> $seqres.full
-+	test "$res" -ne 0 && touch "$tmp.killstress"
++	echo "fsx $* exits with $res at $(date)" >> $seqres.full
++	test "$res" -ne 0 && touch "$tmp.killfsx"
 +}
 +
- # Run fsstress while we're testing online fsck.
- __stress_scrub_fsstress_loop() {
+ # Run fsx while we're testing online fsck.
+ __stress_scrub_fsx_loop() {
  	local end="$1"
- 	local runningfile="$2"
- 	local remount_period="$3"
- 	local stress_tgt="$4"
--	local focus=()
--	local res
-+	local focus=(-p 4)
-+	local res res2
+@@ -963,14 +971,33 @@ __stress_scrub_fsx_loop() {
+ 	local stress_tgt="$4"	# ignored
+ 	local focus=(-q -X)	# quiet, validate file contents
  	local duration
+-	local res
 +	local has_rt
 +	local d_args r_args
 +
 +	test $FSTYP = "xfs" && _xfs_has_feature "$SCRATCH_MNT" realtime && \
 +		has_rt=1
  
- 	case "$stress_tgt" in
- 	"parent")
-@@ -1113,9 +1126,24 @@ __stress_scrub_fsstress_loop() {
- 		;;
- 	esac
+ 	focus+=(-o $((128000 * LOAD_FACTOR)) )
+ 	focus+=(-l $((600000 * LOAD_FACTOR)) )
  
--	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT "${focus[@]}")
--	echo "Running $FSSTRESS_PROG $args" >> $seqres.full
+-	local args="$FSX_AVOID ${focus[@]} ${SCRATCH_MNT}/fsx.$seq"
+-	echo "Running $FSX_PROG $args" >> $seqres.full
 +	if [ -n "$has_rt" ]; then
 +		local rdir="$SCRATCH_MNT/rt"
 +		local ddir="$SCRATCH_MNT/data"
@@ -105,59 +98,59 @@ index ee9fe75609e603..39efdb22c71627 100644
 +		$XFS_IO_PROG -c 'chattr +rt' "$rdir"
 +		$XFS_IO_PROG -c 'chattr -rt' "$ddir"
 +
-+		r_args=$(_scale_fsstress_args -d "$rdir" "${focus[@]}")
-+		d_args=$(_scale_fsstress_args -d "$ddir" "${focus[@]}")
-+		echo "Running $FSSTRESS_PROG $d_args" >> $seqres.full
-+		echo "Running $FSSTRESS_PROG $r_args" >> $seqres.full
++		r_args="$FSX_AVOID ${focus[*]} $rdir/fsx"
++		d_args="$FSX_AVOID ${focus[*]} $ddir/fsx"
++		echo "Running $FSX_PROG $d_args" >> $seqres.full
++		echo "Running $FSX_PROG $r_args" >> $seqres.full
 +	else
-+		d_args=$(_scale_fsstress_args -d $SCRATCH_MNT "${focus[@]}")
-+		echo "Running $FSSTRESS_PROG $d_args" >> $seqres.full
++		d_args="$FSX_AVOID ${focus[*]} $SCRATCH_MNT/fsx"
++		echo "Running $FSX_PROG $d_args" >> $seqres.full
 +	fi
 +
-+	rm -f "$tmp.killstress"
++	rm -f "$tmp.killfsx"
  	if [ -n "$remount_period" ]; then
  		local mode="rw"
  		local rw_arg=""
-@@ -1125,10 +1153,10 @@ __stress_scrub_fsstress_loop() {
+@@ -980,10 +1007,10 @@ __stress_scrub_fsx_loop() {
  			test "$mode" = "rw" && __stress_scrub_clean_scratch && continue
  
  			duration=$(___stress_scrub_duration "$end" "$remount_period")
--			_run_fsstress $duration $args $rw_arg >> $seqres.full
+-			$FSX_PROG $duration $args $rw_arg >> $seqres.full
 -			res=$?
--			echo "$mode fsstress exits with $res at $(date)" >> $seqres.full
--			[ "$res" -ne 0 ] && break;
-+			___scrub_run_fsstress $duration $d_args $rw_arg &
-+			test -n "$has_rt" && ___scrub_run_fsstress $duration $r_args $rw_arg &
+-			echo "$mode fsx exits with $res at $(date)" >> $seqres.full
+-			test "$res" -ne 0 && break
++			___scrub_run_fsx $duration $d_args $rw_arg &
++			test -n "$has_rt" && ___scrub_run_fsx $duration $r_args $rw_arg &
 +			wait
-+			test -e "$tmp.killstress" && break
++			test -e "$tmp.killfsx" && break
  
  			if [ "$mode" = "rw" ]; then
  				mode="ro"
-@@ -1144,7 +1172,7 @@ __stress_scrub_fsstress_loop() {
+@@ -999,7 +1026,7 @@ __stress_scrub_fsx_loop() {
  				sleep 0.2
  			done
  		done
 -		rm -f "$runningfile"
-+		rm -f "$runningfile" "$tmp.killstress"
++		rm -f "$runningfile" "$tmp.killfsx"
  		return 0
  	fi
  
-@@ -1152,12 +1180,12 @@ __stress_scrub_fsstress_loop() {
+@@ -1007,12 +1034,12 @@ __stress_scrub_fsx_loop() {
  		# Need to recheck running conditions if we cleared anything
  		__stress_scrub_clean_scratch && continue
  		duration=$(___stress_scrub_duration "$end" "$remount_period")
--		_run_fsstress $duration $args >> $seqres.full
+-		$FSX_PROG $duration $args >> $seqres.full
 -		res=$?
--		echo "$mode fsstress exits with $res at $(date)" >> $seqres.full
--		[ "$res" -ne 0 ] && break;
-+		___scrub_run_fsstress $duration $d_args &
-+		test -n "$has_rt" && ___scrub_run_fsstress $duration $r_args &
+-		echo "fsx exits with $res at $(date)" >> $seqres.full
+-		test "$res" -ne 0 && break
++		___scrub_run_fsx $duration $d_args &
++		test -n "$has_rt" && ___scrub_run_fsx $duration $r_args &
 +		wait
-+		test -e "$tmp.killstress" && break
++		test -e "$tmp.killfsx" && break
  	done
 -	rm -f "$runningfile"
-+	rm -f "$runningfile" "$tmp.killstress"
++	rm -f "$runningfile" "$tmp.killfsx"
  }
  
- # Make sure we have everything we need to run stress and scrub
+ # Run fsstress and record outcome
 
