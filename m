@@ -1,196 +1,115 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from flow-b2-smtp.messagingengine.com (flow-b2-smtp.messagingengine.com [202.12.124.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A5FD215048
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 17:48:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB7581ADC86
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2025 18:04:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739987318; cv=none; b=cJSAbrdW3DJLUR3hqtdSWeQ1GokkshS7QXYBbz/DUIUhf11f9ssVjkdepTccpUOtfPCL/F9XIZgNXK7ULLmJG59lpUuxDerueq9QrOb4nHLjoDm5cfdx696yo8NDKCYKXJSxTx91925B8LKpDvNuoonXfV1BaUzTh+vFVsiULWU=
+	t=1739988282; cv=none; b=AKtRrkaSf5kq2WRYBggdDqbYdVdhzVDGEKOzwUWtScfzuYqU0+fkGRQSJW7TVDQ08EPteC9qTCUDqZlYwKlnEPVGMoVNW8r7eaeH5m9do+zVvjOVGk8z+f9KO4fmsnaNqsXa8GOcf4yREDpAQlgGYZPOfR/IblXuqlLRUpA9ifE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739987318; c=relaxed/simple;
-	bh=JKROBRF7IP5GPphNge9Vh/4KunoD+rLRRFUCmBdcvLw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MoNOJpB5my75l3siKQF+3prw7l517Dp1KrsgwsmUp0+hoRkEJrN+sVA7my2G3Y823Y+DiAULssMweboMhXEM8b3rlf11h8H3hDqdegj0jFR1r2m6mSd8OJSNCQi9z3Uj/i4iZd3lE8SPV2kMLA1N5AKXT/9EaIUy+HNrKeSurws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WM3QeEt5; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1739988282; c=relaxed/simple;
+	bh=0fzyFU1q0nnzP3wTh6Pnqytw6wbqimaIvNnudRX1oDs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=d8qWwg+PCTpLOru6jOnpXJZKk8Ya0nIyONSUJV64H2NFPrSBNdxLjBStPbqkPI3fKbPvgIzKwqgN0AKJBXy6TF4laAafpRSGqTOGigJkRRpSnwIDpWpjPocRKBmCrvKSmWnbmI6pF6hQWTOQJ2XaDVKBpmlEJ/IYoP/ctOYHwmU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=g9XhxqKG; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=sbLpHd6F; arc=none smtp.client-ip=202.12.124.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WM3QeEt5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1739987316;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gbBGUTiTIzap/EX4smSF0j4RvXup8WhyaRsEhY//Dwg=;
-	b=WM3QeEt5sEpBno4dUr4R3rRB0l/DHb0wGL0f4Md3P0LxCqkaUNqyD5u+p9IHgth5KGbGjc
-	Q5A69U/xiS7NxXH10iFIRhbcA+uxbPcb2v2R73bpZUbqgReJ6/LEcfHufVGSBZGFhhNPBR
-	rn+fnHDxgsrJEqCBmefK/lts5o/2fK4=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-456-roUw30rzOAqAckkAfE9aJw-1; Wed,
- 19 Feb 2025 12:48:31 -0500
-X-MC-Unique: roUw30rzOAqAckkAfE9aJw-1
-X-Mimecast-MFC-AGG-ID: roUw30rzOAqAckkAfE9aJw_1739987309
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EBB731800878;
-	Wed, 19 Feb 2025 17:48:28 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.88.79])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E072D1800359;
-	Wed, 19 Feb 2025 17:48:27 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v2 12/12] iomap: introduce a full map advance helper
-Date: Wed, 19 Feb 2025 12:50:50 -0500
-Message-ID: <20250219175050.83986-13-bfoster@redhat.com>
-In-Reply-To: <20250219175050.83986-1-bfoster@redhat.com>
-References: <20250219175050.83986-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="g9XhxqKG";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="sbLpHd6F"
+Received: from phl-compute-01.internal (phl-compute-01.phl.internal [10.202.2.41])
+	by mailflow.stl.internal (Postfix) with ESMTP id C1CF51D40F68;
+	Wed, 19 Feb 2025 13:04:38 -0500 (EST)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-01.internal (MEProxy); Wed, 19 Feb 2025 13:04:38 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1739988278;
+	 x=1739995478; bh=CESbb8PJFW9TehcLmqCA30puvb2xWZEaJzVdH9OC0hk=; b=
+	g9XhxqKGP7uKr7gBCmi2w78juB+VKx5afbW9c1N0gFuBbIdoriaU8B9zlmz6LUsD
+	9ES9X58Laa5kwTr1XxgK/pVyqCIKTMPLKAyBF5xsRJbMnWZeuzOjGggv+EftTXpo
+	ScTTSdYI7MOhIo5sxQkMNMvD6a88Hlp6Cbfxq57Yp6d9+k2tB74Mr157x81obGow
+	idOVgyMtbqKoZ8SoD10qcWCoJDyN+kVNzRA8R2/GZPmMRAEbGVQKzv9qJszmDEeb
+	Wpq3yjAw+4TuPqHChALyXlKqjUjD/+7SIa12cSPEicrW4Tvw78kv+6vjVa7Inzwh
+	PhJc2WX2tcL6Uy6UeaJ1QQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1739988278; x=
+	1739995478; bh=CESbb8PJFW9TehcLmqCA30puvb2xWZEaJzVdH9OC0hk=; b=s
+	bLpHd6FsgB3mZqQrw3nHcBcjsskPEQab89Lg9iJb9JZR2p9Y4E0bdTkGONfdB9+6
+	M9BEtvxXFY0KCAM490iYW9Z2gfPHRl4q2dCbWUo7kv3mxxFqWg5Ps/eXt+1OlXVO
+	GtEkxH6LeguFvh1dVCmtLAf4gStp/wwQHAqiXEoRvm4HPXm3xodzimN2uvAP3nO+
+	lccP5yLSSBZcO35ozzPkz5bwzqzHmrrABKaQTegyk0IDzVJrqyahZx9cgOLBllSN
+	kwShy0acctf5DGu4IwM+4uv9b3LHKhLPoCy0bSAE/YBAD+TryzbqXOcoJrD8ge4t
+	cx0to6py1Axk6OxJLDbzQ==
+X-ME-Sender: <xms:Nh22ZzQG97Qdb3sbBx5mXO6DY7lkwdxBEVjuXJpDSEJp2WFZPmnMQg>
+    <xme:Nh22Z0x4phS8s_18GY41PnyT-q8KQmvDmdmUzrDjFOjCvJlF3p3cmu7xgip6VoAii
+    6WBoQHY0ZT8KACRh40>
+X-ME-Received: <xmr:Nh22Z43YZSD5q5nEua6HNdqaA9vmp_aXTlOKxG6t8XKHxw2yHKDHkeWMzClKNDJGE5_IkNd1iB5ctWXN0tNz5RSUxOduDQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdeigeelgecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpggftfghnshhusghstghrihgsvgdp
+    uffrtefokffrpgfnqfghnecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivg
+    hnthhsucdlqddutddtmdenucfjughrpefkffggfgfuvfevfhfhjggtgfesthejredttddv
+    jeenucfhrhhomhepgfhrihgtucfurghnuggvvghnuceoshgrnhguvggvnhesshgrnhguvg
+    gvnhdrnhgvtheqnecuggftrfgrthhtvghrnhepveeikeeuteefueejtdehfeefvdegffei
+    vdejjeelfffhgeegjeeutdejueelhfdvnecuvehluhhsthgvrhfuihiivgeptdenucfrrg
+    hrrghmpehmrghilhhfrhhomhepshgrnhguvggvnhesshgrnhguvggvnhdrnhgvthdpnhgs
+    pghrtghpthhtohephedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohephhgthhesih
+    hnfhhrrgguvggrugdrohhrghdprhgtphhtthhopegujhifohhngheskhgvrhhnvghlrdho
+    rhhgpdhrtghpthhtoheprggrlhgsvghrshhhsehkvghrnhgvlhdrohhrghdprhgtphhtth
+    hopehhtghhsehlshhtrdguvgdprhgtphhtthhopehlihhnuhigqdigfhhssehvghgvrhdr
+    khgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:Nh22ZzBOy3jcBRCA5lKNFhLJi273ECIhXs1-JeBxwR-DGI4cS-29Bw>
+    <xmx:Nh22Z8guUwegI-XjjJ40OENnr_Efs7GVv1yrjsLJpMbIKRr57FMriA>
+    <xmx:Nh22Z3o3ueu57WAI3mjskp701yABvNoyaFrs-yXNeG-TNmK8_9QGhQ>
+    <xmx:Nh22Z3jMyShndFR2zcnaOrTiq6XXbcWak5DnUCD65VP4lN-MSNulPA>
+    <xmx:Nh22Z_tMelOIHhamuUMfs8GYNQV_wta8xIZPYY2ycuVXmTtvVNVL-HsN>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 19 Feb 2025 13:04:37 -0500 (EST)
+Message-ID: <37ea5fed-c9ad-4731-9441-de50351a90d7@sandeen.net>
+Date: Wed, 19 Feb 2025 12:04:36 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 4/4] xfs_db: add command to copy directory trees out of
+ filesystems
+To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
+ <djwong@kernel.org>
+Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+References: <173888089597.2742734.4600497543125166516.stgit@frogsfrogsfrogs>
+ <173888089664.2742734.11946589861684958797.stgit@frogsfrogsfrogs>
+ <Z7RGkVLW13HPXAb-@infradead.org>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <Z7RGkVLW13HPXAb-@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Various iomap_iter_advance() calls advance by the full mapping
-length and thus have no need for the current length input or
-post-advance remaining length output from the standard advance
-function. Add an iomap_iter_advance_full() helper to clean up these
-cases.
+On 2/18/25 12:36 AM, Christoph Hellwig wrote:
+> On Thu, Feb 06, 2025 at 03:03:32PM -0800, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <djwong@kernel.org>
+>>
+>> Aheada of deprecating V4 support in the kernel, let's give people a way
+>> to extract their files from a filesystem without needing to mount.
+> 
+> So I've wanted a userspace file access for a while, but if we deprecate
+> the v4 support in the kernel that will propagte to libxfs quickly,
+> and this code won't help you with v4 file systems either.  So I don't
+> think the rationale here seems very good.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/dax.c               | 10 ++++------
- fs/iomap/buffered-io.c |  3 +--
- fs/iomap/fiemap.c      |  3 +--
- fs/iomap/swapfile.c    |  4 +---
- include/linux/iomap.h  |  9 +++++++++
- 5 files changed, 16 insertions(+), 13 deletions(-)
+I agree. And, I had considered "migrate your V4 fs via an older kernel" to
+be a perfectly acceptable answer for the v4 deprecation scenario.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index cab3c5abe5cb..7fd4cd9a51f2 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1266,11 +1266,11 @@ static int dax_unshare_iter(struct iomap_iter *iter)
- 	u64 copy_len = iomap_length(iter);
- 	u32 mod;
- 	int id = 0;
--	s64 ret = iomap_length(iter);
-+	s64 ret;
- 	void *daddr = NULL, *saddr = NULL;
- 
- 	if (!iomap_want_unshare_iter(iter))
--		return iomap_iter_advance(iter, &ret);
-+		return iomap_iter_advance_full(iter);
- 
- 	/*
- 	 * Extend the file range to be aligned to fsblock/pagesize, because
-@@ -1300,16 +1300,14 @@ static int dax_unshare_iter(struct iomap_iter *iter)
- 	if (ret < 0)
- 		goto out_unlock;
- 
--	if (copy_mc_to_kernel(daddr, saddr, copy_len) == 0)
--		ret = iomap_length(iter);
--	else
-+	if (copy_mc_to_kernel(daddr, saddr, copy_len) != 0)
- 		ret = -EIO;
- 
- out_unlock:
- 	dax_read_unlock(id);
- 	if (ret < 0)
- 		return dax_mem2blk_err(ret);
--	return iomap_iter_advance(iter, &ret);
-+	return iomap_iter_advance_full(iter);
- }
- 
- int dax_file_unshare(struct inode *inode, loff_t pos, loff_t len,
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 2b86978010bb..e53ac635e47c 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1436,8 +1436,7 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 				range_dirty = false;
- 				status = iomap_zero_iter_flush_and_stale(&iter);
- 			} else {
--				u64 length = iomap_length(&iter);
--				status = iomap_iter_advance(&iter, &length);
-+				status = iomap_iter_advance_full(&iter);
- 			}
- 			iter.status = status;
- 			continue;
-diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
-index 6776b800bde7..80675c42e94e 100644
---- a/fs/iomap/fiemap.c
-+++ b/fs/iomap/fiemap.c
-@@ -42,7 +42,6 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
- static int iomap_fiemap_iter(struct iomap_iter *iter,
- 		struct fiemap_extent_info *fi, struct iomap *prev)
- {
--	u64 length = iomap_length(iter);
- 	int ret;
- 
- 	if (iter->iomap.type == IOMAP_HOLE)
-@@ -56,7 +55,7 @@ static int iomap_fiemap_iter(struct iomap_iter *iter,
- 		return 0;
- 
- advance:
--	return iomap_iter_advance(iter, &length);
-+	return iomap_iter_advance_full(iter);
- }
- 
- int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
-diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
-index 9ea185e58ca7..c1a762c10ce4 100644
---- a/fs/iomap/swapfile.c
-+++ b/fs/iomap/swapfile.c
-@@ -97,8 +97,6 @@ static int iomap_swapfile_fail(struct iomap_swapfile_info *isi, const char *str)
- static int iomap_swapfile_iter(struct iomap_iter *iter,
- 		struct iomap *iomap, struct iomap_swapfile_info *isi)
- {
--	u64 length = iomap_length(iter);
--
- 	switch (iomap->type) {
- 	case IOMAP_MAPPED:
- 	case IOMAP_UNWRITTEN:
-@@ -135,7 +133,7 @@ static int iomap_swapfile_iter(struct iomap_iter *iter,
- 		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
- 	}
- 
--	return iomap_iter_advance(iter, &length);
-+	return iomap_iter_advance_full(iter);
- }
- 
- /*
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 29b72a671104..4c7e9fe32117 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -264,6 +264,15 @@ static inline u64 iomap_length(const struct iomap_iter *iter)
- 	return iomap_length_trim(iter, iter->pos, iter->len);
- }
- 
-+/**
-+ * iomap_iter_advance_full - advance by the full length of current map
-+ */
-+static inline int iomap_iter_advance_full(struct iomap_iter *iter)
-+{
-+	u64 length = iomap_length(iter);
-+	return iomap_iter_advance(iter, &length);
-+}
-+
- /**
-  * iomap_iter_srcmap - return the source map for the current iomap iteration
-  * @i: iteration structure
--- 
-2.48.1
+Christoph, can you say more about why you're eager for the functionality?
 
+Thanks,
+-Eric
