@@ -1,40 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A3661AF4EA;
-	Wed, 19 Feb 2025 06:05:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B1B8C0B;
+	Wed, 19 Feb 2025 06:05:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739945105; cv=none; b=oqBm0Z1Qq5x/J14Sy3nPFUr3P+8wBRj/wwvn9UPXL7TOgyAHqA6NDHCxu+sGSKqfxjpuPeolvnOfEq8sam1KZxyRzq8/fz0s6Jc8CffZVNqdybWGUQLwlSbpcHC5eQVjw3G8fRX+L7d68wAMXPqxc2SzgJss4WDuhU4stAZMHoM=
+	t=1739945126; cv=none; b=jSxefFzxN0xeyHfE1NklL9Oanp1RbLIIVkuyCFqcTmq4mnA7cHuIMXyFemihDE0xZpUxhUdf5UH/1eX2qsCuhheRvdtz7A2Ko1vBV3i6NlkexZ/DkjWWvrB25jWrZdC8mqRiKyQyPu7laCM88oYCjSO4QYOjfYcqM6Z+OEG7XAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739945105; c=relaxed/simple;
-	bh=uHd0tlFTsL70YdbcGTz0zOVND+0wuu571hlWi4/eytQ=;
+	s=arc-20240116; t=1739945126; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GJa9LRA9GJsBgxBtS7jis38Dp7s6iwUVGtVJnXZ+lX0ZHSwezqJ1f0t2sA5X6Fnyx8gMc6Q2hajv8gT2Yf95UcyDKLO4y1B7cj4Lx3PmnBLZxeabCb5HmF43OmQNMS8X5SMeFt0Qw0ThkOE7rDvPvPyTBTljxPhbk04NvJbzigM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lqAucObc; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=i+3G7Up15NqcA3UO6FCdpw97AhzMJyG7AQl4STJp9F2QSP4gJVc3spSi7NH0SkJo6uMbopB94s09jDci1FYtN9XcN/q3KaE6iRnRw+ovsAi1zB0AiYboEZecgDtoKFttO1tMPpP0OO/A1G+9rwYXQvP/VWBVp2u9T+DSifJgEAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RixeE8O/; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lqAucObc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECDEAC4CED1;
-	Wed, 19 Feb 2025 06:05:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739945105;
-	bh=uHd0tlFTsL70YdbcGTz0zOVND+0wuu571hlWi4/eytQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lqAucObcUGRUvts7ZyxKOIRx5McEUVjCg5P6YHDlXXNEa6j6wlGsnTGgLAGqNywiy
-	 qQDcMR+dE95QcH9LBf1WMJBmeJOPeJArNQAFiDSIdVtSmVPxBWh+ugnZSkkRXpB9Mp
-	 VEWe4h36iw97vY3mf4Chq2qgAR/77ZFbwwktFNujFIR4iqTY9n/876fLu1m6Gfe31q
-	 AqwDC0m65wwzmJa3reWfXX3eE7sOhYhSUI+vK/uSny3cAwQd0Ihgv/5icilNONsLQM
-	 Y0oNjVD/ctYBdKep9eG8y+Hng8VhlvugwXDrJQGDbNdnvvGHhHyWdwh0evUBwoix0m
-	 a2hQ8JxMmjv5w==
-Date: Tue, 18 Feb 2025 22:05:04 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RixeE8O/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=RixeE8O/1XUxyGmiFqRQdC4K6n
+	JfQBn3JiBonXcrAPYKjAtZd5zvtWpo7aeFsWT/K5BzXdaM3kf1aTl3UABNtYYvSwtjaK+YmuOGqgb
+	F/HXgGq7iDdpa7/39R+wG1+4R5Vpt+qbX2JcQweeos6yoKPipPYkOPvdR9fJRNy3ZmPg9eE7cG1wX
+	4RdrSqxEgFjfA42h14RB4drHXUUwkt9E7KJlgOb1PQbTS2mVzs9IbOVC6gEjVCUVQHIH5xyCT6BTO
+	+ealeLzlsiCyZ1FoEifvBZPHCE8d481abFuNAGuptTW2jhHS3GRsnbrb7+T9vSsln2nr5sJNvfn0y
+	qvgFTcwA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tkdD3-0000000AzeD-0imn;
+	Wed, 19 Feb 2025 06:05:25 +0000
+Date: Tue, 18 Feb 2025 22:05:25 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 11/12] xfs/28[56],xfs/56[56]: add to the auto group
-Message-ID: <20250219060504.GW3028674@frogsfrogsfrogs>
-References: <173992587345.4078254.10329522794097667782.stgit@frogsfrogsfrogs>
- <173992587607.4078254.10572528213509901449.stgit@frogsfrogsfrogs>
- <Z7VzmdxUtQcNcgzS@infradead.org>
+Subject: Re: [PATCH 06/12] xfs/509: adjust inumbers accounting for metadata
+ directories
+Message-ID: <Z7V0pUMwXR8hXD9-@infradead.org>
+References: <173992588005.4078751.14049444240868988139.stgit@frogsfrogsfrogs>
+ <173992588171.4078751.10552424872825170445.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,20 +46,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z7VzmdxUtQcNcgzS@infradead.org>
+In-Reply-To: <173992588171.4078751.10552424872825170445.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Feb 18, 2025 at 10:00:57PM -0800, Christoph Hellwig wrote:
-> On Tue, Feb 18, 2025 at 04:53:11PM -0800, Darrick J. Wong wrote:
-> > fsstress tests and two fsx tests to the auto group.  At this time I
-> > don't have any plans to do the same for the other scrub stress tests.
-> 
-> Can you explain why only these four?
+Looks good:
 
-The rest of the stress tests pick /one/ metadata type and race
-scrub/repair of it against fsstress by invoking xfs_io repeatedly.
-xfs/28[56] runs the whole xfs_scrub program repeatedly so we get to
-exercise all of them in a single test.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-(The more specific ones make it a lot easier to debug problems.)
-
---D
