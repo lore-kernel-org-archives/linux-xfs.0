@@ -1,152 +1,222 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C0471F540F;
-	Thu, 20 Feb 2025 11:20:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B8241F417D
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Feb 2025 11:51:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740050423; cv=none; b=FjnFnFid0nKwQ75wHpd6Kp3Up81bGmK4RuO8n2hJnuvRQVBRElLaebYfzf8s+WKtK0OQ8h2zMwwbJYMPLn/Edy95XXcCllSfLqKJeu6tzkY/jobl0A4+gKjYkfoyFXdX8CQqm+N3+rGJ2inoDjHhuUzyCruaK3bpJqmyIfKHDA8=
+	t=1740052310; cv=none; b=nsGRToMygZF3NlacZ56mjmC9ArPwqiikeBLLa/x9dvcM2c+vEslQGEeZgn2pa4czImKIrWIx+XWgF7Ofxc5D7h+/6iuMgBP+DXUlgm1LJ5YlVQ5Au0KiMDzM6e+RTNhwEeajVn53FribyDQYCxUsPkzh2pg/+mxwrH5Rk0Y7Wsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740050423; c=relaxed/simple;
-	bh=aB9iYa4f7CgYHrJR8ObpqI3CttJJdJHba49AY45THM8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B1xMlUokAId9ObZymT5AfqOiOR7uc/pi1tpFyj/7IrvoKdPNDHG8iAsgfbzpSI6iwJQIR+PgzcUMlWIVkGKfPRv5eIPL6RGC7ro+1jacan20W0A1NPaC+SVpsteRrbRzb8vX8Hwif+cny4DQVCtZ6lA+4BajZKv49IFwOS8Ht4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xf5d4Z0f; arc=none smtp.client-ip=209.85.216.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1740052310; c=relaxed/simple;
+	bh=JFzc4nUr4yZiTe8SSpZhQOKJYx1uM8lgiC5+pr9WSZQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=R8Kd5zh/CG/OwurWbvYOw0GJijCc+ky/9SCZ9CiEPAXd4IWGTy/nU+dcdNQVSPzHOGVXf3bNBmST1LOQ9LWJq0Nq4TdLH+kdtC3sRV4YY4lbFkLLlgxOGTgbXcy7v/8pvLCzwF0Q7hicoPZJN09H59LF9VlFYkdMsAY8iadaCqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MtMJjsbR; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xf5d4Z0f"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-2fc4418c0e1so3256932a91.1;
-        Thu, 20 Feb 2025 03:20:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1740050422; x=1740655222; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=RDdAz+z00kXmgO7AxUttI27htMRIY711jJ3qwv4+HTs=;
-        b=Xf5d4Z0fl+4W8nQJZuogOPMiqEM0dra9OpcznQWZ6/OH0MY0rObny/XWK3NOynOM7N
-         I9MAIqoXAIUR33dlfFUyjKgMvDbzs9q1p+iUeZA4yDtKCRhEBdOiabVRrg0EVFGGKqyx
-         kdS/dUIO7/POOrPmTHORLFPovbg4mnIevXjfOcEisiCC61fQCc/SbxHI0yxF36jAGeJl
-         mVuRRJVohJSsuh3W1btXRELoiCCUi2WcIV/uf9/1SBWGEeFPIg4/nLjNPJyEHf/XwBWu
-         +pXMrVW9wg96ZVmGV/8YfbgHV4iV0Rnpj07eew0H+GUi5K5YMCLWKlQlxmVUOlKM9KSV
-         bHZQ==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MtMJjsbR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1740052308;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=mBr0SgtnHCYiFsBcWQ6weYZTbRdO1rbmjW4f7Sy3Ft8=;
+	b=MtMJjsbR+7BXWiKOTkmZUGQTloXLahl3hMbMtY/PiWoCaYAhjP941s4EOpdwLV72tOs8uq
+	zJElksTDb8AK+ulhnp6z4d2EMYj0LjVKQGkKFNcfIexktjFnahVMAmVeijVQq8T1tixlgb
+	g5/eWmIvsx24QEBLtVQWLwNt6R3AsOg=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-552-zu9shtdvPYig603h9cav_A-1; Thu, 20 Feb 2025 06:51:46 -0500
+X-MC-Unique: zu9shtdvPYig603h9cav_A-1
+X-Mimecast-MFC-AGG-ID: zu9shtdvPYig603h9cav_A_1740052306
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4398a60b61fso4197355e9.0
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Feb 2025 03:51:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740050422; x=1740655222;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=RDdAz+z00kXmgO7AxUttI27htMRIY711jJ3qwv4+HTs=;
-        b=syuqwGWCNAyuqbQ1Ygn9MFrSHZRjaqcXxMf6afKo/0m+IvGmx/0gzuiQpIrEXnm48o
-         jcMT2886WhjpD3PBHFAIPPZeiDs4Fxwg4NLeKh2WfDKhpLr0ldX4OzF2MZa7bDKE29mZ
-         dd95NNZupvsWGyo9kXiVys0o0rl6iRw2jZq0iGS4ZXvhpuKCOAF39810eOPER1qCxCCo
-         2gvqruJ7TdUnCJV93o6TTZ9vrrMm5sd1GHzLlw1oE1E1Nl70WjT2X4OWNR7+QZQ3TIgq
-         I1JHyt5WC4iBJvzE9NPQlM5JFaA2B1wrjwPbBdwrp/oO48UYk7Tcd/44KAeeEhcpFwMd
-         ENKg==
-X-Forwarded-Encrypted: i=1; AJvYcCWE8NLxS+2cJG3q4KgjAlYFer4xRIw5FjTKT+pcfFgu+EaMYLvYuLOEta7X4JC2Uk3NQtqBz+gaXRq7j90=@vger.kernel.org, AJvYcCWI/7ladKX9FYDiXMI6lFJXuMWvS0Wmp/aoskwhxiZ7zogreSASwjyxdSOYhHw9KGlwyGqT4Z6gf27N@vger.kernel.org
-X-Gm-Message-State: AOJu0YxKJXxJefc1jP34V8ZiqH65S3F4nqehixC6PCB4PmLSs47vO+kY
-	Ixr60UYWHHt2FRvya56ijrMo0ZnS+ZkDuTzZG91Z0yWgfzfGCi/S
-X-Gm-Gg: ASbGnctDZhEi/FMYrzSVkqU3Vg872R1qIGH2VE58Ohf2VEjF1YwB0i5eKvZy/tHcTdW
-	lE56VoobzE+IqYUX+qaDSdESM78DFDXO5BiIIBoK06qP+N0V1Vgi3DQUEA0bWaehpY4HBjNC4wH
-	AsUhx6358jSfDOI3mJl1uNXJbQ8KoaOJLgvRd2mcOeDhNTf8NsuP0zha3jHSlIGITWIst78uAwX
-	IZiAA/VJS5RtW1+3TBVCYcCwArAkrj3VMvf7Tjbsv7G5stYcHIO8OIPsprYZj080xfOqvfkorMd
-	+scoJZMItHbwTiGej7puLq0CuJMfLrM=
-X-Google-Smtp-Source: AGHT+IGV4jQprhKqJGmQUGNTjzYtK0gBBu6xHVZW9GbADGQiOwx9wMtZT6Y4K+Qo0qZ7VcdtJx1nEQ==
-X-Received: by 2002:a05:6a21:6b18:b0:1e1:b105:158f with SMTP id adf61e73a8af0-1eee2fda2dbmr4692334637.19.1740050421582;
-        Thu, 20 Feb 2025 03:20:21 -0800 (PST)
-Received: from localhost.localdomain ([119.28.17.178])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-adcbe0311b6sm10704374a12.56.2025.02.20.03.20.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Feb 2025 03:20:21 -0800 (PST)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: agk@redhat.com,
-	snitzer@kernel.org,
-	mpatocka@redhat.com
-Cc: dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	flyingpeng@tencent.com,
-	txpeng@tencent.com,
-	dchinner@redhat.com,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: [PATCH] dm: fix unconditional IO throttle caused by REQ_PREFLUSH
-Date: Thu, 20 Feb 2025 19:20:14 +0800
-Message-ID: <20250220112014.3209940-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.41.1
+        d=1e100.net; s=20230601; t=1740052306; x=1740657106;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:from:references:cc:to:subject:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=mBr0SgtnHCYiFsBcWQ6weYZTbRdO1rbmjW4f7Sy3Ft8=;
+        b=fwmLVimL8R96uuPxaiOLyymdZjUraejr0xhikK61YsrQIC8ZxBRSEW6x12j8V0V+jI
+         w9h482kKd5ht6vsfDZi+qxeGYlWBdnIu0ujYO0TkoMwX2wrQgmdvlRdKUAsXzMO3BT+D
+         FBT6R/14TB07k+JalZ1zkWSYwmbjyCQ0Jxaxw7cac34o5SSGoxEzuImu1GPJelQNGjxv
+         VSqjbSPSmLOD/d7+LusOjYalA6eYd4djP7wr2i7k8tu5hgvrhy+433sup7BJo1vSyUPl
+         /y7qtsFRPJAPt+XzMjOQ7sW6go+3i5hiLJILfhZ2OOPAY/0T6518yDlHsh9iSnZtntVt
+         M1Sw==
+X-Forwarded-Encrypted: i=1; AJvYcCWSO9Ya749LNBuYYAAa1tVqKaPDQWiPL55iFzABZ71EF07dN6XcPU5MuSfuaztQ6P+whqUnHwwEnmM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2sIMCaplhMjEH8IX8zyTDmur6gwdVjnHAqG8Q13o2lOUIT/25
+	/+y9Sp1sfvy9ZDKetowzrfRqLfWYBd7AseXVH8S6UnjbN8z1lbErqHdL2c+qvMVlB7eDz+3Yvr/
+	LlGAyhpPox9lGsXLjd3mFqnzGvZq4W1I13SyK0FmYyU6+3Y6Y857/G2ZdeA==
+X-Gm-Gg: ASbGncuc6AVKrAf4VFpeA7gW3ozdIgN060CORa/9JLGoLT82rWz4/8WI+YodCmgHH32
+	oh99o/0zhj26sJfj45oknE7sRYFDgdj1EpNAM667yML6kOJL3EPARgqoZFNzNWa3elWFoOSsU2J
+	cHiGtIg8Fj+pCMEGeMMS66gJxTuM5xp9zv/deYdUMIYTTmyZcNFg55rvwjE0ZMCt3F+mEbPgV0J
+	5vZYncN8YgWXXx025lPaspTLq/qOXflsyksQJx7EsLj2/bsAySHPKQAujTVzOrG/MF8bP1xVdaN
+	tyFqWZ9B+L8k5KlN5eopNfN3mmXTUXbaO0lj/UszNeHCdfVxB8QIungDExhRH07Lo7MUOGfj5UZ
+	VK2RGVviDoGtpcOOAFS/Rg2w8lsp/qw==
+X-Received: by 2002:a05:600c:548b:b0:439:9a40:a9ff with SMTP id 5b1f17b1804b1-4399a40ac3cmr57546815e9.1.1740052305610;
+        Thu, 20 Feb 2025 03:51:45 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IE3Q1vBWLy8jITcTBIhMHZsv8pvY8WalvXMgoplaUinz3S7uxyqUT+2Vn++NdI0bj3eRlaAoQ==
+X-Received: by 2002:a05:600c:548b:b0:439:9a40:a9ff with SMTP id 5b1f17b1804b1-4399a40ac3cmr57546305e9.1.1740052305138;
+        Thu, 20 Feb 2025 03:51:45 -0800 (PST)
+Received: from ?IPV6:2003:cb:c706:2000:e44c:bc46:d8d3:be5? (p200300cbc7062000e44cbc46d8d30be5.dip0.t-ipconnect.de. [2003:cb:c706:2000:e44c:bc46:d8d3:be5])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43985c50397sm113532355e9.0.2025.02.20.03.51.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 20 Feb 2025 03:51:43 -0800 (PST)
+Message-ID: <f720d914-3d66-42a9-a65c-dbdd58d5bccd@redhat.com>
+Date: Thu, 20 Feb 2025 12:51:41 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 19/20] fs/dax: Properly refcount fs dax pages
+To: Alistair Popple <apopple@nvidia.com>
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, linux-mm@kvack.org,
+ Alison Schofield <alison.schofield@intel.com>, lina@asahilina.net,
+ zhang.lyra@gmail.com, gerald.schaefer@linux.ibm.com,
+ vishal.l.verma@intel.com, dave.jiang@intel.com, logang@deltatee.com,
+ bhelgaas@google.com, jack@suse.cz, jgg@ziepe.ca, catalin.marinas@arm.com,
+ will@kernel.org, mpe@ellerman.id.au, npiggin@gmail.com,
+ dave.hansen@linux.intel.com, ira.weiny@intel.com, willy@infradead.org,
+ djwong@kernel.org, tytso@mit.edu, linmiaohe@huawei.com, peterx@redhat.com,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+ nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
+ david@fromorbit.com, chenhuacai@kernel.org, kernel@xen0n.name,
+ loongarch@lists.linux.dev
+References: <cover.a782e309b1328f961da88abddbbc48e5b4579021.1739850794.git-series.apopple@nvidia.com>
+ <b33a5b2e03ffb6dbcfade84788acdd91d10fbc51.1739850794.git-series.apopple@nvidia.com>
+ <cb29f96f-f222-4c94-9c67-c2d4bffeb654@redhat.com>
+ <jf6hr2uzyz76axd62v6czy3wzcuu4eb7ydow5mznehfuiwhqq3@2q7easkxhdp4>
+From: David Hildenbrand <david@redhat.com>
+Content-Language: en-US
+Autocrypt: addr=david@redhat.com; keydata=
+ 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
+ WNyWQQ==
+Organization: Red Hat
+In-Reply-To: <jf6hr2uzyz76axd62v6czy3wzcuu4eb7ydow5mznehfuiwhqq3@2q7easkxhdp4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-When a bio with REQ_PREFLUSH is submitted to dm, __send_empty_flush()
-generates a flush_bio with REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
-which causes the flush_bio to be throttled by wbt_wait().
+>>> -static inline unsigned long dax_folio_share_put(struct folio *folio)
+>>> +static inline unsigned long dax_folio_put(struct folio *folio)
+>>>    {
+>>> -	return --folio->page.share;
+>>> +	unsigned long ref;
+>>> +	int order, i;
+>>> +
+>>> +	if (!dax_folio_is_shared(folio))
+>>> +		ref = 0;
+>>> +	else
+>>> +		ref = --folio->share;
+>>> +
+>>
+>> out of interest, what synchronizes access to folio->share?
+> 
+> Actually that's an excellent question as I hadn't looked too closely at this
+> given I wasn't changing the overall flow with regards to synchronization, merely
+> representation of the "shared" state. So I don't have a good answer for you off
+> the top of my head - Dan maybe you can shed some light here?
 
-An example from v5.4, similar problem also exists in upstream:
+Not that I understand what that dax-shared thing is or does, but the 
+non-atomic update on a folio_put path looked "surprising".
 
-    crash> bt 2091206
-    PID: 2091206  TASK: ffff2050df92a300  CPU: 109  COMMAND: "kworker/u260:0"
-     #0 [ffff800084a2f7f0] __switch_to at ffff80004008aeb8
-     #1 [ffff800084a2f820] __schedule at ffff800040bfa0c4
-     #2 [ffff800084a2f880] schedule at ffff800040bfa4b4
-     #3 [ffff800084a2f8a0] io_schedule at ffff800040bfa9c4
-     #4 [ffff800084a2f8c0] rq_qos_wait at ffff8000405925bc
-     #5 [ffff800084a2f940] wbt_wait at ffff8000405bb3a0
-     #6 [ffff800084a2f9a0] __rq_qos_throttle at ffff800040592254
-     #7 [ffff800084a2f9c0] blk_mq_make_request at ffff80004057cf38
-     #8 [ffff800084a2fa60] generic_make_request at ffff800040570138
-     #9 [ffff800084a2fae0] submit_bio at ffff8000405703b4
-    #10 [ffff800084a2fb50] xlog_write_iclog at ffff800001280834 [xfs]
-    #11 [ffff800084a2fbb0] xlog_sync at ffff800001280c3c [xfs]
-    #12 [ffff800084a2fbf0] xlog_state_release_iclog at ffff800001280df4 [xfs]
-    #13 [ffff800084a2fc10] xlog_write at ffff80000128203c [xfs]
-    #14 [ffff800084a2fcd0] xlog_cil_push at ffff8000012846dc [xfs]
-    #15 [ffff800084a2fda0] xlog_cil_push_work at ffff800001284a2c [xfs]
-    #16 [ffff800084a2fdb0] process_one_work at ffff800040111d08
-    #17 [ffff800084a2fe00] worker_thread at ffff8000401121cc
-    #18 [ffff800084a2fe70] kthread at ffff800040118de4
+>>> diff --git a/include/linux/dax.h b/include/linux/dax.h
+>>> index 2333c30..dcc9fcd 100644
+>>> --- a/include/linux/dax.h
+>>> +++ b/include/linux/dax.h
+>>> @@ -209,7 +209,7 @@ int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+>>
+>> [...]
+>>
+>>> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+>>> index d189826..1a0d6a8 100644
+>>> --- a/mm/huge_memory.c
+>>> +++ b/mm/huge_memory.c
+>>> @@ -2225,7 +2225,7 @@ int zap_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
+>>>    						tlb->fullmm);
+>>>    	arch_check_zapped_pmd(vma, orig_pmd);
+>>>    	tlb_remove_pmd_tlb_entry(tlb, pmd, addr);
+>>> -	if (vma_is_special_huge(vma)) {
+>>> +	if (!vma_is_dax(vma) && vma_is_special_huge(vma)) {
+>>
+>> I wonder if we actually want to remove the vma_is_dax() check from
+>> vma_is_special_huge(), and instead add it to the remaining callers of
+>> vma_is_special_huge() that still need it -- if any need it.
+>>
+>> Did we sanity-check which callers of vma_is_special_huge() still need it? Is
+>> there still reason to have that DAX check in vma_is_special_huge()?
+> 
+> If by "we" you mean "me" then yes :) There are still a few callers of it, mainly
+> for page splitting.
 
-After commit 2def2845cc33 ("xfs: don't allow log IO to be throttled"),
-the metadata submitted by xlog_write_iclog() should not be throttled.
-But due to the existence of the dm layer, throttling flush_bio indirectly
-causes the metadata bio to be throttled.
+Heh, "you or any of the reviewers" :)
 
-Fix this by conditionally adding REQ_IDLE to flush_bio.bi_opf, which makes
-wbt_should_throttle() return false to avoid wbt_wait().
+So IIUC, the existing users still need the DAX check I assume (until 
+that part is cleaned up, below).
 
-Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-Reviewed-by: Tianxiang Peng <txpeng@tencent.com>
-Reviewed-by: Hao Peng <flyingpeng@tencent.com>
----
- drivers/md/dm.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+>> But vma_is_special_huge() is rather confusing from me ... the whole
+>> vma_is_special_huge() thing should probably be removed. That's a cleanup for
+>> another day, though.
+> 
+> But after double checking I have come to the same conclusion as you - it should
+> be removed. I will add that to my ever growing clean-up series that can go on
+> top of this one.
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 4d1e42891d24..5ab7574c0c76 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1540,14 +1540,18 @@ static void __send_empty_flush(struct clone_info *ci)
- {
- 	struct dm_table *t = ci->map;
- 	struct bio flush_bio;
-+	blk_opf_t opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
-+
-+	if ((ci->io->orig_bio->bi_opf & (REQ_IDLE | REQ_SYNC)) ==
-+	    (REQ_IDLE | REQ_SYNC))
-+		opf |= REQ_IDLE;
- 
- 	/*
- 	 * Use an on-stack bio for this, it's safe since we don't
- 	 * need to reference it after submit. It's just used as
- 	 * the basis for the clone(s).
- 	 */
--	bio_init(&flush_bio, ci->io->md->disk->part0, NULL, 0,
--		 REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC);
-+	bio_init(&flush_bio, ci->io->md->disk->part0, NULL, 0, opf);
- 
- 	ci->bio = &flush_bio;
- 	ci->sector_count = 0;
+Nice!
+
 -- 
-2.41.1
+Cheers,
+
+David / dhildenb
 
