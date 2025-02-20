@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6F8F1F9A95;
-	Thu, 20 Feb 2025 22:04:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCFE61EDA37;
+	Thu, 20 Feb 2025 22:05:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740089091; cv=none; b=YjJiJtPDOgD+khftX79IDDqhRBANpL+zgtiA3pwM1p42xO0lrimcbYW/plkyaVWpLwXwomci1YNbBz/TQzksbhdoyi+rATiNXTWmmHGKoOohKtkE1+QS3RvcaCVu5cYTVeVI5l8WdAYwlzRlMEk+smWmwv+ybaLVwNFaf4nnqJo=
+	t=1740089107; cv=none; b=nAR9+nuj6Md2PfBzsrjHtFMI/0BHXiGEO3czNQlBVja3BOcV6qw7n+ntjV39tDcinoK3fkaI5zUaB2QF+HsoYUx2UDtV3dYMB1l73UGLZic+Hn83Ol6/cn3JI7PboX9cvsnV1rA0UbtXE1Gh26acZNmGQJBzRoTqUGiuqQBh5d4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740089091; c=relaxed/simple;
-	bh=xBozQgykpJho3bIHkPbmFD5K5X0pMp/D94w6ZOSI7Po=;
+	s=arc-20240116; t=1740089107; c=relaxed/simple;
+	bh=Dbe9E0LTvnOLUlx7sCcVHKUFAEvE2UQ+rdwsynEecXA=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=TmplI6cAJgwjuv9HduQ/TNZ2/DOoCaK0jAmU51GypG1/n3tVi5E2fcY2gvL1hsp7wMDIx4KDEVJcHYo/tgSJl/4/5jIcWAsfRwHXImX0YDPneoeljEEtZuvBIn78aVQ/qNf/EPf5nfRPJM+8pgEycyIqHc0VA/w/KAsv9e7KCr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zs6GoFz5; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=T0KG15gAy1dncgupa+qQ9PFlroacqPHGV+r0Tu262GvhlU/OSCJzeauvrDhTpa+wpu30eK1vcuwkc9KXpo82NXLxc5sXrNEaGF8bIUUB5fV29t87B3Yms/3/e5Ao3OIQTT+fxwm5gB1//rFhRU8gc4EqSaNjdzA2R4yvB1DeX/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J5nCgq42; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zs6GoFz5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 900F7C4CED1;
-	Thu, 20 Feb 2025 22:04:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J5nCgq42"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38910C4CED1;
+	Thu, 20 Feb 2025 22:05:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740089091;
-	bh=xBozQgykpJho3bIHkPbmFD5K5X0pMp/D94w6ZOSI7Po=;
+	s=k20201202; t=1740089107;
+	bh=Dbe9E0LTvnOLUlx7sCcVHKUFAEvE2UQ+rdwsynEecXA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Zs6GoFz50rGhk/sED88McXuUHQYlL9IJ8AwlXIa6kihJZ8QIfibRaCOTYepHmUT+N
-	 nE9WsdNKcsL8B2aEAMI7D8FOYWjds7fyA+rrvKo8xES5JXuFhcotZSbu8fWawQWklR
-	 Fg2+W45hMshb1aiEBJORY9Evmj3GIodX1e7vnbdYBRbBUxjnMmO8RIx/S04QadC+uI
-	 H94LbwLRmfDteWudZlF9WwzBwEhG3Z9oiqgdXRInM+BHegHmZ08CS8npyzJHEG6cuV
-	 Buwol345MZ6dXppNNWjtGMyt3+Es5A8ga8zc0hRo0ZJxoR9hkiWs0a5Ue7PNFq1jEv
-	 OzHM+/qEZ9rZg==
-Date: Thu, 20 Feb 2025 14:04:51 -0800
-Subject: [GIT PULL 03/10] fstests: enable metadir
+	b=J5nCgq42akS2wal+VWH5L2cF63UKvOzU1TsG9m4L6jT/tMjQ+dsSNQBI+/Y5aXNSY
+	 9jjPVjdakNQ3dwYWUf0Q/Vl+6mi+WwAb9aPOwfmGW/Iqg4WJL4wnDS7LY0YERGmF9Y
+	 3NfbELcIT6ynhiBZxaILR2EEl5ie3R7bPV9jlT7NarScOpisLUTn7XgonziHMgTMbh
+	 cEWmb6xpiSF9i5+IiibgHdeh+QbXf1PzdbWgYMyC+ubQ08nmjsW7rXDC/DK9UPgHWo
+	 AnYwoNesbX2YDJfUfRiRDSJfKHukfmgjuFcJavhSTKOLzh43jV2iUwi/k2U+sNx3Ly
+	 DfHUjdPd/y6Xg==
+Date: Thu, 20 Feb 2025 14:05:06 -0800
+Subject: [GIT PULL 04/10] fstests: make protofiles less janky
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <174008901631.1712746.3692641690159137537.stg-ugh@frogsfrogsfrogs>
+Message-ID: <174008901711.1712746.14015120967489849682.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,113 +53,44 @@ encounter any problems.
 
 --D
 
-The following changes since commit 84b69f0072563cbfe23f02bd462f092339976c8a:
-
-xfs/349: reclassify this test as not dangerous (2025-02-20 13:52:17 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git tags/metadir_2025-02-20
-
-for you to fetch changes up to 4ddd7a7083e4517a20b933d1eac306527a5e0019:
+The following changes since commit 4ddd7a7083e4517a20b933d1eac306527a5e0019:
 
 xfs: test metapath repairs (2025-02-20 13:52:18 -0800)
 
-----------------------------------------------------------------
-fstests: enable metadir [v6.5 03/22]
+are available in the Git repository at:
 
-Adjust fstests as needed to support the XFS metadata directory feature,
-and add some new tests for online fsck and fuzz testing of the ondisk
-metadata.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git tags/protofiles_2025-02-20
+
+for you to fetch changes up to 915630e294582b91658e300b2302129d77f36504:
+
+fstests: test mkfs.xfs protofiles with xattr support (2025-02-20 13:52:18 -0800)
+
+----------------------------------------------------------------
+fstests: make protofiles less janky [v6.5 04/22]
+
+Add a new regression test for xattr support of xfs protofiles.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (12):
-various: fix finding metadata inode numbers when metadir is enabled
-xfs/{030,033,178}: forcibly disable metadata directory trees
-common/repair: patch up repair sb inode value complaints
-xfs/206: update for metadata directory support
-xfs/{050,144,153,299,330}: update quota reports to handle metadir trees
-xfs/509: adjust inumbers accounting for metadata directories
-xfs: create fuzz tests for metadata directories
-xfs/163: bigger fs for metadir
-xfs/122: disable this test for any codebase that knows about metadir
-common/populate: label newly created xfs filesystems
-scrub: race metapath online fsck with fsstress
-xfs: test metapath repairs
+Darrick J. Wong (4):
+xfs/019: reduce _fail calls in test
+xfs/019: test reserved file support
+xfs: test filesystem creation with xfs_protofile
+fstests: test mkfs.xfs protofiles with xattr support
 
-common/filter      |   7 +++-
-common/populate    |   8 ++++
-common/repair      |   4 ++
-common/xfs         | 100 +++++++++++++++++++++++++++++++++++++++++++-
-tests/xfs/007      |  16 +++----
-tests/xfs/030      |   1 +
-tests/xfs/033      |   1 +
-tests/xfs/050      |   5 +++
-tests/xfs/122      |   6 +++
-tests/xfs/153      |   5 +++
-tests/xfs/1546     |  34 +++++++++++++++
-tests/xfs/1546.out |   4 ++
-tests/xfs/1547     |  34 +++++++++++++++
-tests/xfs/1547.out |   4 ++
-tests/xfs/1548     |  34 +++++++++++++++
-tests/xfs/1548.out |   4 ++
-tests/xfs/1549     |  35 ++++++++++++++++
-tests/xfs/1549.out |   4 ++
-tests/xfs/1550     |  34 +++++++++++++++
-tests/xfs/1550.out |   4 ++
-tests/xfs/1551     |  34 +++++++++++++++
-tests/xfs/1551.out |   4 ++
-tests/xfs/1552     |  34 +++++++++++++++
-tests/xfs/1552.out |   4 ++
-tests/xfs/1553     |  35 ++++++++++++++++
-tests/xfs/1553.out |   4 ++
-tests/xfs/163      |   2 +-
-tests/xfs/178      |   1 +
-tests/xfs/1874     | 119 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-tests/xfs/1874.out |  19 +++++++++
-tests/xfs/1892     |  66 +++++++++++++++++++++++++++++
-tests/xfs/1892.out |   2 +
-tests/xfs/1893     |  67 ++++++++++++++++++++++++++++++
-tests/xfs/1893.out |   2 +
-tests/xfs/206      |   1 +
-tests/xfs/299      |   1 +
-tests/xfs/330      |   6 ++-
-tests/xfs/509      |  23 ++++++++++-
-tests/xfs/529      |   5 +--
-tests/xfs/530      |   6 +--
-tests/xfs/739      |   9 +---
-tests/xfs/740      |   9 +---
-tests/xfs/741      |   9 +---
-tests/xfs/742      |   9 +---
-tests/xfs/743      |   9 +---
-tests/xfs/744      |   9 +---
-tests/xfs/745      |   9 +---
-tests/xfs/746      |   9 +---
-48 files changed, 773 insertions(+), 78 deletions(-)
-create mode 100755 tests/xfs/1546
-create mode 100644 tests/xfs/1546.out
-create mode 100755 tests/xfs/1547
-create mode 100644 tests/xfs/1547.out
-create mode 100755 tests/xfs/1548
-create mode 100644 tests/xfs/1548.out
-create mode 100755 tests/xfs/1549
-create mode 100644 tests/xfs/1549.out
-create mode 100755 tests/xfs/1550
-create mode 100644 tests/xfs/1550.out
-create mode 100755 tests/xfs/1551
-create mode 100644 tests/xfs/1551.out
-create mode 100755 tests/xfs/1552
-create mode 100644 tests/xfs/1552.out
-create mode 100755 tests/xfs/1553
-create mode 100644 tests/xfs/1553.out
-create mode 100755 tests/xfs/1874
-create mode 100644 tests/xfs/1874.out
-create mode 100755 tests/xfs/1892
-create mode 100644 tests/xfs/1892.out
-create mode 100755 tests/xfs/1893
-create mode 100644 tests/xfs/1893.out
+common/config      |   1 +
+tests/xfs/019      |  14 ++++--
+tests/xfs/019.out  |   5 ++
+tests/xfs/1894     | 115 ++++++++++++++++++++++++++++++++++++++++++
+tests/xfs/1894.out |   4 ++
+tests/xfs/1937     | 144 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+tests/xfs/1937.out | 102 +++++++++++++++++++++++++++++++++++++
+7 files changed, 380 insertions(+), 5 deletions(-)
+create mode 100755 tests/xfs/1894
+create mode 100644 tests/xfs/1894.out
+create mode 100755 tests/xfs/1937
+create mode 100644 tests/xfs/1937.out
 
