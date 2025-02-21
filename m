@@ -1,114 +1,133 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E3161F2C56
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Feb 2025 18:58:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5327F2512F9;
+	Fri, 21 Feb 2025 18:59:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740164285; cv=none; b=TIbDsZmAJjK9upSwNX7ca95CX07tfYp01uf4SVy2Y64dhNt0YLgUs2rzYSjAdhLk17O/PS/tePiWM9Jr7UIKk6Mnx8PEoHGhx3qSAMOF10/xcRbrMuz8txfYwN7LEK5XQDnv2TdZcyXVg7rZ/gx4ndR4KnUe2jgbp5MM5COif6A=
+	t=1740164341; cv=none; b=OSRyT+yNiXqzkTUxhystuBGuMdPFwcTWDY1gj9TYENbJ/rRXiZvRns5Cb5ZAbE7BM4OMIRPpLetI/yGUXXKemhNGeP3Bu+Aps4avQfSI+CFNJuO4QDgYZPCnSt4KBegUCVtWF3FsWKYyIEWOourewr6FQeFh65zeXzcV1j2bYnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740164285; c=relaxed/simple;
-	bh=yYzCqPEKhFINlmo8nU0sJmJc/vBIczX0mMdzVzQgUME=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=A/m9G64DhVy1D3ISeK52704ZLY/UePKfmJgcgBynFQXeX9H+7StCo5vaFz4jTm+XeuUeCS45ZnpxDS7jaiuUuomxNxMZT4WLM9YPDk4Y4gZ9GvODa3IHGb+Inc/8+5WI+1ZhwXN+3W0ofyMDw33Bds4VJ11+ZJbqFCgW3Onnip0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DVLZDs1F; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1740164341; c=relaxed/simple;
+	bh=D1gndCuNHXnXWR+5KjZLuhUrgN/6gjce6B2PXKEtvJc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EmTdYVazS/Ti2dOgAjQFYEjmqmm+txNzW+BHXsvTqJaucCyFfRD1YDTH1IdD77UHyF1rtIqW04GiMUnJlG4h2GSB8sm95GXZvMYdPt1LhaeanRinLmMLutjolHfvcDW1/yNiqFs2djG6eJ3rPiphoyU/YmS4O2oHPqcpkyMAgoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pNuPejVA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DVLZDs1F"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740164282;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=b4aHMhlwwKHCFybQ84J/KnuKFoecjLX8Zzz3gshrv1k=;
-	b=DVLZDs1F/+ttlf7vwqEq8RRJnb3KfiYJYOduImKdVSPtgQArumwJUVtlbyTm77l9fL11jk
-	oscNMYPAQ4HeMERpQPXc5bNkXmevzC/N281KdeP0E57vPqJJ31rIWTEjrLEYzIh8mSW1Ac
-	f06yUpHL7hmUsT5jzaRIdHWojtnszKs=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-408-ZyF3VnGCO-y_UqOW45ZCuA-1; Fri, 21 Feb 2025 13:58:01 -0500
-X-MC-Unique: ZyF3VnGCO-y_UqOW45ZCuA-1
-X-Mimecast-MFC-AGG-ID: ZyF3VnGCO-y_UqOW45ZCuA_1740164280
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-abb9b2831b7so339327666b.1
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Feb 2025 10:58:00 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740164279; x=1740769079;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=b4aHMhlwwKHCFybQ84J/KnuKFoecjLX8Zzz3gshrv1k=;
-        b=l/2FN6B+5roBs90if4sXgDlzZI3uHlvd4hfcHYg0GPfj6w/PyCKmRAyEwcD5bqsTzD
-         OMEOcquIw9OU6wUxT/QS2QYykNqLGhJku9s17ciID+lS3EheijQqlgVI41X+sicjx6HZ
-         IYRy2GGqnZycj64+ryGfQvq1DdynEVrNA+e9NT6gPqYPIyXWRvWvFp5eOijjkxj1+SN3
-         aCXri99tPonDAvRZyfPfH4iKLXPBnLQ55X8u3JuyRy7bcFu0aJfzve2WDTh4dHIGp5cx
-         2JV/aCIflmpr8nVVjbplDptzMegwGMqkyfOHeJnfz+cdcpUqLeFe3jZ2QTjk7G+jPns5
-         kZ9A==
-X-Gm-Message-State: AOJu0Yygx7cnAmcLK3vfYa7A7fSb4tHAu5J6+mP7q0dYWYm/ix7PIkdL
-	NJ7EgpaUpcNLqHHQVlWT2cl1/JNa19FXog5dpB3fllIsow2oBc3wMb4AzlvnOD5EV9WC/QKJFYS
-	HKAg9c9ulxn/PCnoZL0LKFY1volFqeyMtQCHWzoUFseP+IR7OIdLv9j1XK5LKCsVxtQ==
-X-Gm-Gg: ASbGncuXoS+hc1CFr0aRr+VYmpTc2Q7/vIP0GOrFuvG4tofuXd/mHWhAFl1/N09AyJ+
-	k7MUJUeQL4qsh9VQssH+d8LEbUisTD2RSKlgI44NWaw2ihGwqc0MXzW5XHAzBbAAJXHcnnlyQpD
-	lYxlvsgdKlG85VoQ/yMt0fvgwjPtcaLgyYJNgCdqGKll+ZNt0CLLYP0+PTs1xaZ2bZ290KVT7wB
-	uFXpfse9/0fSaUa4ZwxZn8vbzBhwhw5ngMnTHr9e4PAS8L+kDcS0piNu3Pxr3gh6DKmOfGq5B+/
-	UHySnwwar+VlzqhlS9WHifor1DANY0i++r4DdFq4
-X-Received: by 2002:a17:907:9989:b0:abb:daa7:f769 with SMTP id a640c23a62f3a-abbed5b21b4mr851871266b.0.1740164278957;
-        Fri, 21 Feb 2025 10:57:58 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEWgwK3cDIX60u/IwdA5ztWP6BV6Ntgte4oxUc5MjSalj4ldikTIYDLwxEulrml7uMhjxVpMw==
-X-Received: by 2002:a17:907:9989:b0:abb:daa7:f769 with SMTP id a640c23a62f3a-abbed5b21b4mr851869566b.0.1740164278533;
-        Fri, 21 Feb 2025 10:57:58 -0800 (PST)
-Received: from fedora.. (gw20-pha-stl-mmo-2.avonet.cz. [131.117.213.219])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abba6f884f2sm905621666b.155.2025.02.21.10.57.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Feb 2025 10:57:58 -0800 (PST)
-From: Pavel Reichl <preichl@redhat.com>
-To: aalbersh@redhat.com
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH v2] xfsprogs: Fix mismatched return type of filesize()
-Date: Fri, 21 Feb 2025 19:57:57 +0100
-Message-ID: <20250221185757.79333-1-preichl@redhat.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250217155043.78452-1-preichl@redhat.com>
-References: <20250217155043.78452-1-preichl@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pNuPejVA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52E0CC4CED6;
+	Fri, 21 Feb 2025 18:59:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740164340;
+	bh=D1gndCuNHXnXWR+5KjZLuhUrgN/6gjce6B2PXKEtvJc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=pNuPejVA8VhXg7mw02ryLSNiBIcvpQV48LtkfBDqGeg9IP/S8FDcIKl29JlXQPvvI
+	 3i4e3mveISKcofvf4+fqwGBKOTwXPw11yGMfNkkFwGO4w0EANJPg+LocjTt76vAkJF
+	 qtbWYFpBFNXI4oNjBalh0O/OcmHrCdXnjDz/tjz1VxHUV4ZUP4ORNH3t4e2QQVwYxD
+	 70HC1j/43KbjRK3DBh4xCcvkpN6JL817QUmba+A2MnskvoVrwUuoXqnSgisJ/9a9kl
+	 nPAOgnPPC2W6arLJAs1ly2MSuBTv/qY7/274FMQFx8qutbw1w+rNzZL5eb5k5a4JFa
+	 2F1wx1fBfZI+w==
+Date: Fri, 21 Feb 2025 10:58:58 -0800
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Matthew Wilcox <willy@infradead.org>, dave@stgolabs.net,
+	david@fromorbit.com, djwong@kernel.org, kbusch@kernel.org,
+	john.g.garry@oracle.com, hch@lst.de, ritesh.list@gmail.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, p.raghav@samsung.com, da.gomez@samsung.com,
+	kernel@pankajraghav.com
+Subject: Re: [PATCH v2 4/8] fs/mpage: use blocks_per_folio instead of
+ blocks_per_page
+Message-ID: <Z7jM8p5boAOOxz_j@bombadil.infradead.org>
+References: <20250204231209.429356-1-mcgrof@kernel.org>
+ <20250204231209.429356-5-mcgrof@kernel.org>
+ <Z7Ow_ib2GDobCXdP@casper.infradead.org>
+ <a4ba2d82-1f42-4d70-bf66-56ef9c037cca@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a4ba2d82-1f42-4d70-bf66-56ef9c037cca@suse.de>
 
-The function filesize() was declared with a return type of 'long' but
-defined with 'off_t'. This mismatch caused build issues due to type
-incompatibility.
+On Tue, Feb 18, 2025 at 04:02:43PM +0100, Hannes Reinecke wrote:
+> On 2/17/25 22:58, Matthew Wilcox wrote:
+> > On Tue, Feb 04, 2025 at 03:12:05PM -0800, Luis Chamberlain wrote:
+> > > @@ -182,7 +182,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+> > >   		goto confused;
+> > >   	block_in_file = folio_pos(folio) >> blkbits;
+> > > -	last_block = block_in_file + args->nr_pages * blocks_per_page;
+> > > +	last_block = block_in_file + args->nr_pages * blocks_per_folio;
+> > 
+> > In mpage_readahead(), we set args->nr_pages to the nunber of pages (not
+> > folios) being requested.  In mpage_read_folio() we currently set it to
+> > 1.  So this is going to read too far ahead for readahead if using large
+> > folios.
+> > 
+> > I think we need to make nr_pages continue to mean nr_pages.  Or we pass
+> > in nr_bytes or nr_blocks.
+> > 
+> I had been pondering this, too, while developing the patch.
+> The idea I had here was to change counting by pages over to counting by
+> folios, as then the logic is essentially unchanged.
+> 
+> Not a big fan of 'nr_pages', as then the question really is how much
+> data we should read at the end of the day. So I'd rather go with 'nr_blocks'
+> to avoid any confusion.
 
-This commit updates the declaration to match the definition, ensuring
-consistency and preventing potential compilation errors.
+I think the easier answer is to adjust nr_pages in terms of min-order
+requirements and fix last_block computation so we don't lie for large
+folios as follows. While at it, I noticed a folio_zero_segment() was
+missing folio_size().
 
-Fixes: 73fb78e5ee8 ("mkfs: support copying in large or sparse files")
-
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Carlos Maiolino <cem@kernel.org>
----
- mkfs/proto.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 6dd3a200..981f5b11 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -20,7 +20,7 @@ static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
- static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
- static int newregfile(char **pp, char **fname);
- static void rtinit(xfs_mount_t *mp);
--static long filesize(int fd);
-+static off_t filesize(int fd);
- static int slashes_are_spaces;
+diff --git a/fs/mpage.c b/fs/mpage.c
+index c17d7a724e4b..624bf30f0b2e 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -152,6 +152,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ {
+ 	struct folio *folio = args->folio;
+ 	struct inode *inode = folio->mapping->host;
++	const unsigned min_nrpages = mapping_min_folio_nrpages(folio->mapping);
+ 	const unsigned blkbits = inode->i_blkbits;
+ 	const unsigned blocks_per_folio = folio_size(folio) >> blkbits;
+ 	const unsigned blocksize = 1 << blkbits;
+@@ -172,6 +173,8 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
  
- /*
--- 
-2.48.1
-
+ 	/* MAX_BUF_PER_PAGE, for example */
+ 	VM_BUG_ON_FOLIO(folio_test_large(folio), folio);
++	VM_BUG_ON_FOLIO(args->nr_pages < min_nrpages, folio);
++	VM_BUG_ON_FOLIO(!IS_ALIGNED(args->nr_pages, min_nrpages), folio);
+ 
+ 	if (args->is_readahead) {
+ 		opf |= REQ_RAHEAD;
+@@ -182,7 +185,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 		goto confused;
+ 
+ 	block_in_file = folio_pos(folio) >> blkbits;
+-	last_block = block_in_file + args->nr_pages * blocks_per_folio;
++	last_block = block_in_file + ((args->nr_pages * PAGE_SIZE) >> blkbits);
+ 	last_block_in_file = (i_size_read(inode) + blocksize - 1) >> blkbits;
+ 	if (last_block > last_block_in_file)
+ 		last_block = last_block_in_file;
+@@ -269,7 +272,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
+ 	}
+ 
+ 	if (first_hole != blocks_per_folio) {
+-		folio_zero_segment(folio, first_hole << blkbits, PAGE_SIZE);
++		folio_zero_segment(folio, first_hole << blkbits, folio_size(folio));
+ 		if (first_hole == 0) {
+ 			folio_mark_uptodate(folio);
+ 			folio_unlock(folio);
+@@ -385,7 +388,7 @@ int mpage_read_folio(struct folio *folio, get_block_t get_block)
+ {
+ 	struct mpage_readpage_args args = {
+ 		.folio = folio,
+-		.nr_pages = 1,
++		.nr_pages = mapping_min_folio_nrpages(folio->mapping),
+ 		.get_block = get_block,
+ 	};
+ 
