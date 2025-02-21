@@ -1,37 +1,34 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96A2253331;
-	Fri, 21 Feb 2025 20:27:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 827461D7E2F;
+	Fri, 21 Feb 2025 20:38:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740169644; cv=none; b=H3mnpsagSUQR2jDV5zKX/lZ6c0eWg8CO5W0CeB7YDWmXeWoowCOK3sjri0PwEq2h1UqVxE8D8DMvLlVTkNmLBrJTSWztgnFMrk6dc6qbcH2ZNx4r/dU5ZtpBz8mTuZ8d0q0bZGh1d0ZTi6GjkU9ZXXeChzi3tCtNrXrBppmf+Uk=
+	t=1740170298; cv=none; b=qEPrgUd+KyTM6MIMcp0JUMbervEErZPNEOH1ak21hWryrGcdBC/KlZU4B3NAW9FK+Di2BJ+togLv0KkP1l6xg2Nw/uTh2ENDFEgbAXqsEmDzFvVzdVAhg5Tyn6+HDEDWfjCBt6GX84yhZX13wzVDXUtkuX7vtB0BE1byGv0CYbI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740169644; c=relaxed/simple;
-	bh=YJ+Q7JeyAPb3xnnizZXZ5b+bToHyaWbbPsU74D2oU5E=;
+	s=arc-20240116; t=1740170298; c=relaxed/simple;
+	bh=ghbPgVthWd4oK9iygGhBjUwBaMjNiQM7DAwYcx9mSSk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rzu8gv17WD9qJGCb+tHw6ei/vUdbsQYl5Gn+62PGhv45HY+0yxBIBibhoyxnrAK5hUoO7eDurAXaWWAv17YD/wNknc0XX53hAMWRL1pfr91TkBt+miPfVlA18ogbctV0hiBb74PH/G1opPS9wanzF0loqdYRQh1j4dMVQioDBNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nTk40ATd; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=aDdkDNsu5X0JRYdgq+omxWVeaxpunYInYU6CD6fnNhj+mcMQVaQXQL6R4bgZVXlqWVpaF089P8G4kKIIvUO7cUIvtTUk54GLTGhebRdoF+CWSTKkvaWp7nxL7idjh9Ns00FnmTOQYKsuBB/Jdp/c4TVfo2W6s1DnIrGIGQ9b+DI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gQqKRZ3S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nTk40ATd"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=lz2vU2dsUdlOV7Xg0859QGB32mS/prta9dYKuupqdpU=; b=nTk40ATdl4bFKKJ47xSJpFqrda
-	YnBx7ynyElatAbZVExdqFV2wIMTPwpxxMIStgQlwfSNDZ0Qzvu+N5dOrr9FxQXfVCmeVJ5hdeZGOx
-	lmBFM3W3iNwr/PxCK0nHYVaiFVqpeH5zkLXOtjErAgASLmpkNPWNFyHFa+RYUaW9y0EFEY/pb2kVK
-	nzU/HBXDDfua2lRcsZIUrgJ9qa1TdmbRvCD0UPKW0xUQavfZTMXBgShNmLQAg34jutsjb9nLmWCsu
-	6yYmX4FNuDJl78svXJfiots27qTgz0Vzee5X5I5ktXKIzNc9z14QS/24FIxjeQnXiwqSmxN43c7U5
-	TxbV+glQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tlZcD-0000000F2bY-3NN0;
-	Fri, 21 Feb 2025 20:27:17 +0000
-Date: Fri, 21 Feb 2025 20:27:17 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gQqKRZ3S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9229DC4CED6;
+	Fri, 21 Feb 2025 20:38:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740170298;
+	bh=ghbPgVthWd4oK9iygGhBjUwBaMjNiQM7DAwYcx9mSSk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gQqKRZ3SNc8/8Mj6yqwM9TY4dwiPYD6s+D6wZ3FjcQQqTE0jE621N+S9SSTr57vSq
+	 QJZddPqd2xTrtfTrrEVT2qnVjAkH2E814QQMnlOhrVtYD1c0diMlQ6ZdLNKFMZqqbj
+	 954rL9v1PGifG0E7fQnzf76/HyFBUBbBuhDxDTOJe0OMjq/tKNZcIs2waCtNgrKn6h
+	 +LZpnsoXfaH/vOr7vQykaTY/LHkggnQwqgesV8vIeaUzPTYGheRcV9ll4pXhhWU8bt
+	 Emj5pRbtiqu4MalHZq5GZ9IGvcyAo/DKTxP+silAootvfBT2zxCGrB3A0xwUafjPwO
+	 4afBBY69GWKyw==
+Date: Fri, 21 Feb 2025 12:38:15 -0800
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: Hannes Reinecke <hare@suse.de>, dave@stgolabs.net, david@fromorbit.com,
 	djwong@kernel.org, kbusch@kernel.org, john.g.garry@oracle.com,
 	hch@lst.de, ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org,
@@ -40,12 +37,13 @@ Cc: Hannes Reinecke <hare@suse.de>, dave@stgolabs.net, david@fromorbit.com,
 	p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
 Subject: Re: [PATCH v2 4/8] fs/mpage: use blocks_per_folio instead of
  blocks_per_page
-Message-ID: <Z7jhpdQfygJ1AAwp@casper.infradead.org>
+Message-ID: <Z7jkN-C7GQln2F7i@bombadil.infradead.org>
 References: <20250204231209.429356-1-mcgrof@kernel.org>
  <20250204231209.429356-5-mcgrof@kernel.org>
  <Z7Ow_ib2GDobCXdP@casper.infradead.org>
  <a4ba2d82-1f42-4d70-bf66-56ef9c037cca@suse.de>
  <Z7jM8p5boAOOxz_j@bombadil.infradead.org>
+ <Z7jhJ9_AipEbpKmV@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,28 +52,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z7jM8p5boAOOxz_j@bombadil.infradead.org>
+In-Reply-To: <Z7jhJ9_AipEbpKmV@casper.infradead.org>
 
-On Fri, Feb 21, 2025 at 10:58:58AM -0800, Luis Chamberlain wrote:
-> +++ b/fs/mpage.c
-> @@ -152,6 +152,7 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
->  {
->  	struct folio *folio = args->folio;
->  	struct inode *inode = folio->mapping->host;
-> +	const unsigned min_nrpages = mapping_min_folio_nrpages(folio->mapping);
->  	const unsigned blkbits = inode->i_blkbits;
->  	const unsigned blocks_per_folio = folio_size(folio) >> blkbits;
->  	const unsigned blocksize = 1 << blkbits;
-> @@ -172,6 +173,8 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
->  
->  	/* MAX_BUF_PER_PAGE, for example */
->  	VM_BUG_ON_FOLIO(folio_test_large(folio), folio);
-> +	VM_BUG_ON_FOLIO(args->nr_pages < min_nrpages, folio);
-> +	VM_BUG_ON_FOLIO(!IS_ALIGNED(args->nr_pages, min_nrpages), folio);
->  
->  	if (args->is_readahead) {
->  		opf |= REQ_RAHEAD;
+On Fri, Feb 21, 2025 at 08:25:11PM +0000, Matthew Wilcox wrote:
+> On Fri, Feb 21, 2025 at 10:58:58AM -0800, Luis Chamberlain wrote:
+> > @@ -385,7 +388,7 @@ int mpage_read_folio(struct folio *folio, get_block_t get_block)
+> >  {
+> >  	struct mpage_readpage_args args = {
+> >  		.folio = folio,
+> > -		.nr_pages = 1,
+> > +		.nr_pages = mapping_min_folio_nrpages(folio->mapping),
+> 
+> 		.nr_pages = folio_nr_pages(folio);
+> 
+> since the folio is not necessarily the minimum size.
 
-Also, I don't think these assertions add any value; we already assert
-these things are true in other places.
+Will roll this in for tests before a new v3.
 
+ Luis
