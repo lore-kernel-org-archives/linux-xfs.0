@@ -1,111 +1,105 @@
-Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79A443D97A
-	for <linux-xfs@vger.kernel.org>; Sat, 22 Feb 2025 00:34:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB18C7081A
+	for <linux-xfs@vger.kernel.org>; Sat, 22 Feb 2025 15:08:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740184453; cv=none; b=lWqO6vdvp3ZLCCg5aZj0z12zAB39a0+tTGawNJ7yskr9wHAry22RC3pxXqGQIAQhLS+cFdK+HSSM7FqGRsf/9uci2uKSGauHYavPcp1JT+oW5h56uwoOm3dw3HmbSjsJFvq/IvTfJcZpjSOi8ypR+sD9qzjBqM7kV1aMT3FDAIU=
+	t=1740236938; cv=none; b=FhN43HkzqzIziJ8KFoEFvchDgNM/TrU18Wo2odSrfcbh+O3YhFB5j0zrm/TNqDz+T7APN4x/5CsZ09Q7d8QFj0QBULsMh/qZTr4CI5EIoi1W3TJNqLGOWqEa2TCwBAchXxmZk9+uQV0DbYG63Q0rO1boywPN/q+l/YiN45Yo0Y4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740184453; c=relaxed/simple;
-	bh=VBQHljTSYFVCaj1bbqPfTOtZckZuFzfefk82naOnO1A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pgB9Aa4MFSsxZeqNhYj0iBUIDZhM2RzE1ofgaLq4R6oTi0LjKXv+lbz2sKffcyVEGuqNNKy5YrvworrcjBuiPfmeZZ6VmLeXaVtBt2y9pQ41xw0sCDQQwPDtx2fN2D1/tLjHXekd3WIb7PVwupz5Ba2Fq4bJTr47/QIE1qkcplE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=OUaLZ8oR; arc=none smtp.client-ip=209.85.128.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
+	s=arc-20240116; t=1740236938; c=relaxed/simple;
+	bh=OSfakw2IBETPveck1pX1djhmjf13QH55+2l5TQgG3/c=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=JUj+/eaSiyZYyeeZvuzWVFPZp3RNIEfeFGzJK7b8r7typ+emsv6qaty5vnCk5w5T1F+1XmqxhDgeCefxfvxp4AQ7zaN7RoPjc8bchaNrzR98w7OODZyr+m8Rh/4fcGq+8Q411IClz9ivAfFpvw9Kb8TeTD2CPISySetlCtq7pgc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Z+53QocH; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=LEIIHvOf; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="OUaLZ8oR"
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-6ef60e500d7so23714497b3.0
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Feb 2025 16:34:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore.com; s=google; t=1740184450; x=1740789250; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vwm1CmURc5ve7fRU7CIVjr3XJe8XTIamKjt5b8I2oxA=;
-        b=OUaLZ8oRu1P66C9ZZZkX3ynr5GVCRqOCfxm+eS10iyjZ/PQSQVzJcOLZ6xUj2SVdYN
-         M4K8v7SJJNGtsVfIa8UAf/TytFgQB7jB17v0YqxAZeaJ0z7poxTRKJtsLNNfDGLEzCtl
-         seyhz1IBRRwX+if/gK7lWjT9j8r22Ve4Q5tw8y7tH4v0VO86On+zdAarH3tOUkuAZpC+
-         42QHcKAyfH9frZU0Zmd2KD7X742j4GBihhNWnbrr+XZUDJUe8nnJrCAFuMuLqqZIBe++
-         7xlE0daBQ4baD0AJRZFXYr9quFZHlK3q3UVtm8HMqcrK9PO0mdFobh1wMMbzoIxycBMQ
-         K8pg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740184450; x=1740789250;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=vwm1CmURc5ve7fRU7CIVjr3XJe8XTIamKjt5b8I2oxA=;
-        b=PtTrdQgbOF+ma8/0bMoM7039mfEE53JYUcfCqidsdsOXY0LGfeNYgbFbePCxuJwtof
-         tDG2s8hjKl/2UpNiEaIK/USf7O4wwpjBaXymBpqrGml5ZEqZjob5fBOz8IRj/rbNMfMj
-         GAmlScjqYzlVuOl06smO0OubgvpEzVgXribcl9hCsoIDWHpys6j4fyYufIjlv8PLUz5/
-         w2iW2tyQfQjc3mvwtUyazCpptutqoT+ujGLaqiTuKuIFw8jpwyXBtBiTtat9hFZULjH3
-         Z0jj7rnkZqodOd4RP2hJ/TqbBmE8xcGYrJpF+/vnwUa6c4Pko/SgrhfDHG+sSE1qz6c1
-         gJrw==
-X-Forwarded-Encrypted: i=1; AJvYcCVR9zuhQyVynMXGJ0ONwDBH4uuu8nF9+30GWH5bfT7nMQeeeBmecVhIG9GEW5bM+HoLdv3twPTpE2A=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yye8PQhxKztcL3ZMLoWRRipQMXiiVPihHZ82tbYqIcJF/wJmUMz
-	omf/bKHrub5SsBhqVIKePMnl/W2kDlWPgS2P5LYJQ4/bQo7OXmaO95BqA7G46InhCmRS5ge0/tn
-	1Uya9mxvNdT/DTE5MhLFzSfBRl6f3UWkr2lww
-X-Gm-Gg: ASbGnctpg6kGOxpJnpNEk5ZvJUuSX01HK886AFYYxYO8bEHF/XvjYWIm5KiAq/6Zhdf
-	hkchJnqvsUEot46LLUaRkFzKp9YB/JVAspN0SR+wXkEpXMlIaqF0khXeHAQSWlteDGYPJolrfmM
-	4EiqQWBdU=
-X-Google-Smtp-Source: AGHT+IHU8mqrXQveakYlLhZ7AQnDt8Huldya+naR0jPDiYuZo2FksnUyR3yBLKwefOB052PduAKRpiO/vKqO0ObiYCs=
-X-Received: by 2002:a05:690c:3506:b0:6f6:c937:2cf4 with SMTP id
- 00721157ae682-6fbcc81835dmr37934927b3.23.1740184450404; Fri, 21 Feb 2025
- 16:34:10 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Z+53QocH";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="LEIIHvOf"
+Received: from kunlun.arch.suse.cz (unknown [10.100.128.76])
+	by smtp-out1.suse.de (Postfix) with ESMTP id A5FBB2116F
+	for <linux-xfs@vger.kernel.org>; Sat, 22 Feb 2025 15:08:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1740236927; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=G21CoTtJCQTJ9E1JGiajgiVnYfRktDs6vQPo7AXs7AM=;
+	b=Z+53QocHYYiyq+7A+Qpaxv/9yH23qIGFq40j5G2lxonGYO9nfplc3n7LoXXyadrIvKPuHh
+	RzJl2Rmk1xZw1dokTfKFcHBzihm59cz2TjwbH9CV8aXk2EJ+BqaNyqxic3gEi0Vwt8QYQc
+	YU4e/uNyXn57TAqIts5D4wL3+o3kUuk=
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1740236926; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=G21CoTtJCQTJ9E1JGiajgiVnYfRktDs6vQPo7AXs7AM=;
+	b=LEIIHvOfyJQENzECN64SsdawmSQQImOxUPr/R83uP7Rm19QeUdaXbCp7Fvv3ZJNLyZnsQ7
+	tvBrJhrLkYtbAWVGWhJyDONtOLRFm9xJtSlJYoNbCbbXwxSZGb7Wl8heTw6A/DLwZ4MfrN
+	GpEn4sPbigdTW/R4VEqFW4xXXrFBrgY=
+From: Anthony Iliopoulos <ailiop@suse.com>
+To: <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs_io: don't fail FS_IOC_FSGETXATTR on filesystems that lack support
+Date: Sat, 22 Feb 2025 16:08:32 +0100
+Message-ID: <20250222150832.133343-1-ailiop@suse.com>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250211-xattrat-syscall-v3-1-a07d15f898b2@kernel.org> <20250221.ahB8jei2Chie@digikod.net>
-In-Reply-To: <20250221.ahB8jei2Chie@digikod.net>
-From: Paul Moore <paul@paul-moore.com>
-Date: Fri, 21 Feb 2025 19:33:59 -0500
-X-Gm-Features: AWEUYZkJvdf7eQZPTJrwhKnqZP-Y8wnVSUpipQ3Me6WvrrB1wQej040Y9lsHrww
-Message-ID: <CAHC9VhSnP=j_T30ctVmzQ8TwhD6YFcrWhLbqa_oG3WSAPUPOaA@mail.gmail.com>
-Subject: Re: [PATCH v3] fs: introduce getfsxattrat and setfsxattrat syscalls
-To: Andrey Albershteyn <aalbersh@redhat.com>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@digikod.net>
-Cc: Richard Henderson <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, 
-	Russell King <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Will Deacon <will@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Michal Simek <monstr@monstr.eu>, 
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Helge Deller <deller@gmx.de>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, 
-	Naveen N Rao <naveen@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
-	Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, 
-	Sven Schnelle <svens@linux.ibm.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
-	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
-	"David S. Miller" <davem@davemloft.net>, Andreas Larsson <andreas@gaisler.com>, 
-	Andy Lutomirski <luto@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, 
-	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	=?UTF-8?Q?G=C3=BCnther_Noack?= <gnoack@google.com>, 
-	Arnd Bergmann <arnd@arndb.de>, linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, 
-	linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
-	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, 
-	linux-api@vger.kernel.org, linux-arch@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -2.80
+X-Spamd-Result: default: False [-2.80 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	TO_DN_NONE(0.00)[];
+	RCPT_COUNT_ONE(0.00)[1];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_ZERO(0.00)[0];
+	MIME_TRACE(0.00)[0:+];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid,suse.com:email,kunlun.arch.suse.cz:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On Fri, Feb 21, 2025 at 10:08=E2=80=AFAM Micka=C3=ABl Sala=C3=BCn <mic@digi=
-kod.net> wrote:
->
-> It looks security checks are missing.  With IOCTL commands, file
-> permissions are checked at open time, but with these syscalls the path
-> is only resolved but no specific access seems to be checked (except
-> inode_owner_or_capable via vfs_fileattr_set).
+Not all filesystems implement the FS_IOC_FSGETXATTR ioctl, and in those
+cases -ENOTTY will be returned. There is no need to return with an error
+when this happens, so just silently return.
 
-Thanks for reviewing the patch and catching this Micka=C3=ABl.  I agree
-with the hooks identified and their placement; it should be fairly
-straightforward with only a few lines added in each case.
+Without this fstest generic/169 fails on NFS that doesn't implement the
+fileattr_get inode operation.
 
---=20
-paul-moore.com
+Fixes: e6b48f451a5d ("xfs_io: allow foreign FSes to show FS_IOC_FSGETXATTR details")
+Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+---
+ io/stat.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/io/stat.c b/io/stat.c
+index 3ce3308d0562..d27f916800c0 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -104,8 +104,10 @@ print_extended_info(int verbose)
+ 	struct fsxattr fsx = {}, fsxa = {};
+ 
+ 	if ((ioctl(file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+-		perror("FS_IOC_GETXATTR");
+-		exitcode = 1;
++		if (errno != ENOTTY) {
++			perror("FS_IOC_FSGETXATTR");
++			exitcode = 1;
++		}
+ 		return;
+ 	}
+ 
+-- 
+2.47.0
+
