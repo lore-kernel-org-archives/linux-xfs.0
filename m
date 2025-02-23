@@ -1,87 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from muffat.debian.org (muffat.debian.org [209.87.16.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7260712E7F
-	for <linux-xfs@vger.kernel.org>; Sat, 22 Feb 2025 16:16:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E49C1FC7FE
+	for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2025 08:21:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740240980; cv=none; b=emGHzxRKK8dNQecuY5trrdo7nMJipRqvI42iNsaUKi8WfsdTi73mJutGfVVzC1F1eEp7xc24I3QGb2OO9XxqJu6eIlPJjcCEs6YOG8cNQhQAW+Tz6rq0BQMfS7vdGqW9ThEy1lOZ4IOTFmUXrKalXL5fnHuP63+MT1ghzwV15uc=
+	t=1740298918; cv=none; b=MXiIPPDjC8PlHuZok6XVkVh6Msf3/dbsH8XTsBDu3LuDOLBY5QjN5cAaZFzOnzURYkATXi3s4MHTVbc8khFiUXz1mc1ApxQ7ympL5Qg0XLGJMynAP+tQzEiQiNhkr1p0Buwk5M0K4IZ4dXGpAt7QgcOJNz9qdUrH1d8zxIGN804=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740240980; c=relaxed/simple;
-	bh=xPBo9+xoXI5oEuCwgvLiqe04z/NXcM+K7V/ULVnV2mc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OCso3+gOoA7B/TvEPj4WqdBbXd+A75E+Ft1TINZs5R+VQnqz5wot3pcR8gQn+c9mpSjR7wApJX6LyYjWMQM6QuJHYZxga6aGiJotfk3TGSM8KwrokqKeQCMeqpC251jO8Csd7FRPJulVRlutuPk3mv3aXV342Y3FhcBoEygMVlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ym0+e50+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740298918; c=relaxed/simple;
+	bh=qdHEBR7dXfqNE2R4PMcGowHEd1uiLHDJGVKf7KR74WQ=;
+	h=To:From:Subject:Date:Message-Id; b=BWvGcfjwpGMtlEAhoabuE+r4eC+meCduJpViYjQs/J7FrnBJgZNqs8lYu+m+hvMSa5nN2ZKe82M8ZNglzbVa9aLoG16Zqpkkp2zbShYxbtvlh3K6a7jKbBRCrKo2PWnk9pevi2MF9kVk4JAxvG+fkU+cZx6keasfjvCTYK6MANA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=Uddled67; arc=none smtp.client-ip=209.87.16.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ym0+e50+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4E8FC4CED1;
-	Sat, 22 Feb 2025 16:16:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740240978;
-	bh=xPBo9+xoXI5oEuCwgvLiqe04z/NXcM+K7V/ULVnV2mc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ym0+e50+U8hcbtWJsLavf+lz9Z94m4Mk4yP3B9uz50XVY4TouGyoQV/lC4hecodty
-	 zayROkqVp1YcgOs+mDA0YH5UP3+oSowvkSLdUu0pIObuJDE+PL/x3It8IFPMc0L+T+
-	 3B37olbIvt+2OuU4liiKMpa2HFjWjklS50Ys3fgQKrE+m7pVokU1F5O20HPQ4DPHwM
-	 ZqNG2MzX4y0NWPZwwO0n202y2MvdoMLYnQ9rjYRPwSSsjQz1mZjAOu1d8fmxhe+1PI
-	 U0LdZ8ia72o3oDl2CInPwsKoTVmiKtZND6kgecxACwsLAGU6jhxHPPME5rF/fev/hv
-	 Nrs9aKEfMsKgQ==
-Date: Sat, 22 Feb 2025 08:16:18 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Anthony Iliopoulos <ailiop@suse.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs_io: don't fail FS_IOC_FSGETXATTR on filesystems that
- lack support
-Message-ID: <20250222161618.GX21808@frogsfrogsfrogs>
-References: <20250222150832.133343-1-ailiop@suse.com>
+	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="Uddled67"
+Received: from usper.debian.org ([2603:400a:ffff:bb8::801f:45]:36190)
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+	by muffat.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1tm6vg-005bHT-TZ
+	for linux-xfs@vger.kernel.org; Sun, 23 Feb 2025 08:01:36 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
+	Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=YHUVGmvvOzGE1FuxXEaZG4hhKqfBScaF7uOiLQWwynM=; b=Uddled679B4hyRQWVZOjBFxt1g
+	I62CYuG0JpanRlSDyRKqYoMplJHEMqv8sCdTVEzFaXiLK07ZRA4Bgkc+ZqvceJoO+awpCus1CaItx
+	BUxKdnXRiUYLL/zV8GHwTtF+Gd01gwkLkJcE79O01hScOEFT6eXBuzCXV9lLpKDgtcJ/RogswVqdo
+	MvO7CU8wLeRzJ2Ca8jZfFIYzS6CTcZnkx7ZdTx4rHw07LxKU/RJUx8Nq1LOy6h7rxxTj9ZgSXQ3S2
+	fm1aRUhqlx5Mnbo3ewHFJGjlu9DwmzrJsXjStJK29xsd6SSbLAjrnhumyVrDrbchoVmkYRYsP9yMJ
+	Nbv7C80w==;
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.94.2)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1tm6vf-00D0GL-RP
+	for linux-xfs@vger.kernel.org; Sun, 23 Feb 2025 08:01:35 +0000
+To: linux-xfs@vger.kernel.org
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_6.13.0-1_source.changes
+Date: Sun, 23 Feb 2025 08:01:35 +0000
+X-Debian: DAK
+X-DAK: DAK
+Precedence: bulk
+Auto-Submitted: auto-generated
+X-Debian-Package: xfsprogs
+Message-Id: <E1tm6vf-00D0GL-RP@usper.debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250222150832.133343-1-ailiop@suse.com>
 
-On Sat, Feb 22, 2025 at 04:08:32PM +0100, Anthony Iliopoulos wrote:
-> Not all filesystems implement the FS_IOC_FSGETXATTR ioctl, and in those
-> cases -ENOTTY will be returned. There is no need to return with an error
-> when this happens, so just silently return.
-> 
-> Without this fstest generic/169 fails on NFS that doesn't implement the
-> fileattr_get inode operation.
-> 
-> Fixes: e6b48f451a5d ("xfs_io: allow foreign FSes to show FS_IOC_FSGETXATTR details")
-> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+xfsprogs_6.13.0-1_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_6.13.0-1.dsc
+  xfsprogs_6.13.0.orig.tar.xz
+  xfsprogs_6.13.0-1.debian.tar.xz
+  xfsprogs_6.13.0-1_amd64.buildinfo
 
-oops yeah
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Greetings,
 
---D
-
-> ---
->  io/stat.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/io/stat.c b/io/stat.c
-> index 3ce3308d0562..d27f916800c0 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -104,8 +104,10 @@ print_extended_info(int verbose)
->  	struct fsxattr fsx = {}, fsxa = {};
->  
->  	if ((ioctl(file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-> -		perror("FS_IOC_GETXATTR");
-> -		exitcode = 1;
-> +		if (errno != ENOTTY) {
-> +			perror("FS_IOC_FSGETXATTR");
-> +			exitcode = 1;
-> +		}
->  		return;
->  	}
->  
-> -- 
-> 2.47.0
-> 
-> 
+	Your Debian queue daemon (running on host usper.debian.org)
