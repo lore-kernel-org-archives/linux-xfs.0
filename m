@@ -1,161 +1,178 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEB2E1BC3C
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 07:44:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60A4D282EE
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 08:00:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740383051; cv=none; b=FYxRPCOXIkPpG6BJbAj7+XAT7gI1yug6SR6h9PNtIHAYZ79hajUTO6JABS83HOxZPcmsWz3XlF7YdgewjV+XMQCnMEuVQZShxIaHu/jGR1fwnG5s6p/xxo/qWXC3WKUi9O+WazArRpeW5cTIdMcL6vvl59uab0kLYOOuqwESKLk=
+	t=1740384009; cv=none; b=HfsTP1bqwuG0WB+vd4wFk9dC5dk1S+Us8ja4boNV1uFLf2vWnIuT0LlAgyrl/fsTPQsxEkeRNulgkJa/xC1Q4AJO6RJNI3OqYGXI0eL37t8CFsDei8gYa2OsXh4rZAVMenZTEquuX+/64MWzhUsgskkCwhQ1KzKkeOrUNRr1pO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740383051; c=relaxed/simple;
-	bh=EXipg85uWZvkSImx0/5SzPw6cIZutn+VWVHdenJ6bTM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SFgwjA2YJY+rGit2xktZoLnPB5JgQn98RfFuLF2VzLV51FddwijN9bM1Ce47Up4sEV1l452NSRN9E5QV3CgQb5Na35YzMu/CS2wyn2aBgs3OmUDQbaY3K0yxxcjIkPvGbfT3XC8cRC4ybw/aIAIflISGsXY2kbDJlhum0pjW+0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=m1spmCwf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BabmiIEP; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=IJxaAq2p; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=y8bf96hv; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1740384009; c=relaxed/simple;
+	bh=DSSp61QUIymzYrWYGlGupfHXP31daiD2lgNbLtACtSI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nhIHryqpbQVveqL01PmH1B5o5fClkmMKCY+/LgpHRNJ93dpriFYt2zrQ7hiNedJmvvt9SEDPfT/1ahse1XcBXz4HFYKEbYDnTkUOGZQoul+tli6PmiZ/afJFPPnlMwCkHXIm+dL+CasxqXrEWzQrDH68EZgcAQFtqGNben3IslA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=scylladb.com; spf=pass smtp.mailfrom=scylladb.com; dkim=pass (2048-bit key) header.d=scylladb.com header.i=@scylladb.com header.b=zPZ/dDvC; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=scylladb.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=scylladb.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="m1spmCwf";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BabmiIEP";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="IJxaAq2p";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="y8bf96hv"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id CEF7021171;
-	Mon, 24 Feb 2025 07:44:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1740383048; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kWXS8JmPOEyuTcSWXxAAIEFmUJk1QrnZ6ccr5EFg9zM=;
-	b=m1spmCwfs7XNK/xA9cFjLwDZe+HsdFMuqEa4pkN+MGehEJZJtSQL6VDdX63dKpyvZYujxa
-	/71gPQLGNnQu/aCbS/qQRWqkE6RqfVmggSLGN/1+AEe2B0fNnf43NN0BvyiTxXiodzCJGH
-	W+VXV1wKV6u0mrntOjKRCJNWaLqYhLY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1740383048;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kWXS8JmPOEyuTcSWXxAAIEFmUJk1QrnZ6ccr5EFg9zM=;
-	b=BabmiIEPgs4ysbQewC3UCd4Qg73P/gx5CbxtTcJVAKosCBrsNjWMvxd847TrEAXh7RILNx
-	8xXUJ0MnaORg7BBA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=IJxaAq2p;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=y8bf96hv
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1740383047; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kWXS8JmPOEyuTcSWXxAAIEFmUJk1QrnZ6ccr5EFg9zM=;
-	b=IJxaAq2pgu8YU+W1MCKZDIrFaob9C67qUn0+dB3KATsoryuI22qTLO6I/yljXStod4Bklu
-	EeteFNsysIVkf0dF6odCBhL30eLW6lAtLUPtsuH6lNWlqnhCDqkbmLwuMd9RrgOGK9lbel
-	1aoubYrcwmgQ1K7ZnYCPZb+dCYaXcPs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1740383047;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kWXS8JmPOEyuTcSWXxAAIEFmUJk1QrnZ6ccr5EFg9zM=;
-	b=y8bf96hvjfIDovcNjOZ82J0TsSB2vrvf6IlI7DQA2xoJ5ZJ++twfO41l0iGYSTjOHgcsxB
-	FFivQo43wz3LB5Bg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2426113707;
-	Mon, 24 Feb 2025 07:44:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id aQrkBkcjvGf1QwAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 24 Feb 2025 07:44:07 +0000
-Message-ID: <934358f5-ec6b-41b6-ae2c-09e9fb10fbb1@suse.de>
-Date: Mon, 24 Feb 2025 08:44:06 +0100
+	dkim=pass (2048-bit key) header.d=scylladb.com header.i=@scylladb.com header.b="zPZ/dDvC"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2fc0bd358ccso8326083a91.2
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 00:00:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=scylladb.com; s=google; t=1740384006; x=1740988806; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SVoA3KBTslaxKUJAlPiAwxSQFPk6ze1iD/cIE02/gTk=;
+        b=zPZ/dDvCftY6X1O1f+B+qACYkGlxrkRdm0flk4vBKgoQ2e6kvuC67qAE1zKm+1uCm4
+         E9FN2e0wa2jagjh6s7iAUXUB4j0wBcYD32y/Rnmnad9HKzmxtVq4sjw6u/8MVGSt/ciI
+         pslah7HGA6y+mJCwmoDoyzEPuMz6k+/791x7C662bw3GXDb3vaxSafEwUaU+BvTfyulW
+         wlBJL2EO9N+P9yBBqe8sQmTI9yNjR9L0f/UOK3kH/HAxfZ9y6BhJFf0aK0HZttIFRAA0
+         ER2oEBxiEsbCoW7R8Zk24HZUUjwwbRqWg333PdEdOsi8XsgJR/G2QllmGNVSAiArYYH4
+         4trw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740384006; x=1740988806;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=SVoA3KBTslaxKUJAlPiAwxSQFPk6ze1iD/cIE02/gTk=;
+        b=BvXlHKYyCV85+xUF4OvcSAT0JgvHpPd1oxHoQ+2tQbm33T8YvEdpYEc7yVtrabgkF6
+         ibtWs/U7wjP6uU+Ptgg06sBmKDUbyQc9zBO8ysp7Mv5OlcG9HLJ/9zlapmYvT5rqD1TI
+         mAvB6PkdcWn1PJJgl8Gsh/S1wFyp9PKB4S+/z2S1rPaoom9Axflud68Gjj2XgOax4zQu
+         p0jWVSKAuIF0AvG8z5tW+KHRjGOsurGu8Ezme4oWx1txtoCZp+vkVFJBmWO8ZE3KqJnA
+         zz1uW/SCNGUWLey1vUqyMbf/ASo4ec82Y70adFmWHDrOlZ5f2O1KH49u0PE3dWDldz75
+         gVgA==
+X-Forwarded-Encrypted: i=1; AJvYcCWVzE4qxeX+TpjhYSAA9cVZi4cL/RyOZG9eEpu9jNsWJm9aJ292vBkijRwa3REmFZxds4u3yhybEsA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxHsFZOmzCKxpDNIs7vCFqkiReb3Be+Q+cYlg7RrVZa52Gco3aQ
+	Qx86ZHExHgpGcD/xeMsXtA2a+45R1kRcdoKZz30Qlih8bWljWf9X4ZDndaJvQbZmtTKMXZStSGX
+	yaj9/XsBkxBY62PFyZb8JKDk15+QvthzddE7Rd38qes4YniFipx8BHZdZDAT/Oz7uif0wJyweKl
+	wMvpxVCw5QxB+czC3/crn7RaVr340kTfz6d+ADrJX90oOR4SRWcu2RJtKb0sLfhQmzF19Ksk1Yt
+	EMmxmS6J6exFE3kRTLPHv492kFTNLnURXN/ttjFZcPfBaEf/hZ5ZGDdf1ddQBzwJmRXZ/cSiHtv
+	gvbhxgWk7h0Okgfq8erZH5IeghY2EMKBmCZ7c33F8Y4cDDZYMphNrGy3OPiiVAdSiKi5dhL9ddx
+	RLC5L+ZUS
+X-Gm-Gg: ASbGncsYuJFXz7TMjYRC2ElkTKb5qJ0t+dcP+K1aNt0gX/pBfiCaJByfxAOZ6vD4s7t
+	Ef5icdfdjm3x8SK/rDAHUoPy14McUlpnOhK8JRGWco6McxARCjn285BqlUf9EevCecqJc+goqYr
+	KB1cNUkogkkkV1wvUZRfvg+0KT
+X-Google-Smtp-Source: AGHT+IFtdbQ6U/YKuWHB7yqDwwuNE/bSc7IlcjqeG5sANxT1TCSNg1dNn8Tz99FJjQDWn5yBteVeobg3lGuJU2hNAM0=
+X-Received: by 2002:a17:90b:4ec6:b0:2ee:ad18:b309 with SMTP id
+ 98e67ed59e1d1-2fce779bc1fmr18989604a91.3.1740384005725; Mon, 24 Feb 2025
+ 00:00:05 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 4/8] fs/mpage: use blocks_per_folio instead of
- blocks_per_page
-To: Luis Chamberlain <mcgrof@kernel.org>, brauner@kernel.org,
- akpm@linux-foundation.org, willy@infradead.org, dave@stgolabs.net,
- david@fromorbit.com, djwong@kernel.org, kbusch@kernel.org
-Cc: john.g.garry@oracle.com, hch@lst.de, ritesh.list@gmail.com,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-mm@kvack.org, linux-block@vger.kernel.org, gost.dev@samsung.com,
- p.raghav@samsung.com, da.gomez@samsung.com, kernel@pankajraghav.com
-References: <20250221223823.1680616-1-mcgrof@kernel.org>
- <20250221223823.1680616-5-mcgrof@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250221223823.1680616-5-mcgrof@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: CEF7021171
-X-Spam-Score: -3.01
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FREEMAIL_CC(0.00)[oracle.com,lst.de,gmail.com,vger.kernel.org,kvack.org,samsung.com,pankajraghav.com];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
+References: <20250223235719.66576-1-raphaelsc@scylladb.com> <Z7vyEdJ3SqjFkE9q@casper.infradead.org>
+In-Reply-To: <Z7vyEdJ3SqjFkE9q@casper.infradead.org>
+From: "Raphael S. Carvalho" <raphaelsc@scylladb.com>
+Date: Mon, 24 Feb 2025 04:59:48 -0300
+X-Gm-Features: AWEUYZkvHapCZa_nWwzLdLpvhKFl_jgkyrG-YnMTBsTUmmQGjHUIcJRbVqK-hSE
+Message-ID: <CAKhLTr0UA42AC2yCyFtDbFoS34vvg05EVnf5J4MSit_Sr7JETw@mail.gmail.com>
+Subject: Re: [PATCH] mm: Fix error handling in __filemap_get_folio() with FGP_NOWAIT
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, djwong@kernel.org, 
+	Dave Chinner <david@fromorbit.com>, hch@lst.de
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-CLOUD-SEC-AV-Sent: true
+X-CLOUD-SEC-AV-Info: scylladb,google_mail,monitor
+X-Gm-Spam: 0
+X-Gm-Phishy: 0
+X-CLOUD-SEC-AV-Sent: true
+X-CLOUD-SEC-AV-Info: scylla,google_mail,monitor
+X-Gm-Spam: 0
+X-Gm-Phishy: 0
 
-On 2/21/25 23:38, Luis Chamberlain wrote:
-> Convert mpage to folios and adjust accounting for the number of blocks
-> within a folio instead of a single page. This also adjusts the number
-> of pages we should process to be the size of the folio to ensure we
-> always read a full folio.
-> 
-> Note that the page cache code already ensures do_mpage_readpage() will
-> work with folios respecting the address space min order, this ensures
-> that so long as folio_size() is used for our requirements mpage will
-> also now be able to process block sizes larger than the page size.
-> 
-> Originally-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---by: H
->   fs/mpage.c | 42 +++++++++++++++++++++---------------------
->   1 file changed, 21 insertions(+), 21 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On Mon, Feb 24, 2025 at 1:14=E2=80=AFAM Matthew Wilcox <willy@infradead.org=
+> wrote:
+>
+> On Sun, Feb 23, 2025 at 08:57:19PM -0300, Raphael S. Carvalho wrote:
+> > This is likely a regression caused by 66dabbb65d67 ("mm: return an ERR_=
+PTR
+> > from __filemap_get_folio"), which performed the following changes:
+> >     --- a/fs/iomap/buffered-io.c
+> >     +++ b/fs/iomap/buffered-io.c
+> >     @@ -468,19 +468,12 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate=
+);
+> >     struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos)
+> >     {
+> >             unsigned fgp =3D FGP_LOCK | FGP_WRITE | FGP_CREAT | FGP_STA=
+BLE | FGP_NOFS;
+> >     -       struct folio *folio;
+> >
+> >             if (iter->flags & IOMAP_NOWAIT)
+> >                     fgp |=3D FGP_NOWAIT;
+> >
+> >     -       folio =3D __filemap_get_folio(iter->inode->i_mapping, pos >=
+> PAGE_SHIFT,
+> >     +       return __filemap_get_folio(iter->inode->i_mapping, pos >> P=
+AGE_SHIFT,
+> >                             fgp, mapping_gfp_mask(iter->inode->i_mappin=
+g));
+> >     -       if (folio)
+> >     -               return folio;
+> >     -
+> >     -       if (iter->flags & IOMAP_NOWAIT)
+> >     -               return ERR_PTR(-EAGAIN);
+> >     -       return ERR_PTR(-ENOMEM);
+> >     }
+>
+> We don't usually put this in the changelog ...
+>
+> > Essentially, that patch is moving error picking decision to
+> > __filemap_get_folio, but it missed proper FGP_NOWAIT handling, so ENOME=
+M
+> > is being escaped to user space. Had it correctly returned -EAGAIN with =
+NOWAIT,
+> > either io_uring or user space itself would be able to retry the request=
+.
+> > It's not enough to patch io_uring since the iomap interface is the one
+> > responsible for it, and pwritev2(RWF_NOWAIT) and AIO interfaces must re=
+turn
+> > the proper error too.
+> >
+> > The patch was tested with scylladb test suite (its original reproducer)=
+, and
+> > the tests all pass now when memory is pressured.
+> >
+> > Signed-off-by: Raphael S. Carvalho <raphaelsc@scylladb.com>
+>
+> Instead, we add:
+>
+> Fixes: 66dabbb65d67 (mm: return an ERR_PTR from __filemap_get_folio)
 
-Cheers,
+Thanks, will fix it in v2.
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+>
+> > ---
+> >  mm/filemap.c | 9 ++++++++-
+> >  1 file changed, 8 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index 804d7365680c..b06bd6eedaf7 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -1986,8 +1986,15 @@ struct folio *__filemap_get_folio(struct address=
+_space *mapping, pgoff_t index,
+> >
+> >               if (err =3D=3D -EEXIST)
+> >                       goto repeat;
+> > -             if (err)
+> > +             if (err) {
+> > +                     /*
+> > +                      * Presumably ENOMEM, either from when allocating=
+ or
+> > +                      * adding folio (this one for xarray node)
+> > +                      */
+>
+> I don't like the comment.  Better to do that in code:
+>
+
+Initially I was doing exactly what you proposed above, but after
+reading do_read_cache_folio() and the patch the introduces the
+regression, which transforms failure to get a folio (a NULL) with
+FGP_NOWAIT into NOAGAIN, I decided to do this, but it's indeed better
+to remove assumptions. Not ideal for the long run. Will change in v2.
+thanks.
