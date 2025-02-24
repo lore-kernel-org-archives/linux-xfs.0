@@ -1,43 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 343F726136C
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 16:58:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 846A42627E1
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 17:54:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740416324; cv=none; b=P4GP4JG7C1jrhdp27rm46JQpZWtpOHSv93YLtjIVK9sXEGplrjc1IWZt6PfkQbOVvbwz8b4lcoySpXP8GmcbuYdDP1Fyso75psXNRILmwaquv5kg6hvHlnqIRvxx+C2Z41C6iBKAriTNh+8OTfUTTYFErPYKqqXvF2jA8HQGcN4=
+	t=1740419691; cv=none; b=IVAx4aRWDA1FsLfair+288VPn8mptuDDxRlogyuY8qA1Z3iGTqnz3JNYieWgnLtU8ZqXijEi6bn62M8LFZlKq8o1F6zr8u8u7ZipTAmBFuDcFtr56XCarcYN12GbPCT+a4S81iIBjriMTC7fl/02+rifSRE0MdTVirDU3S3xtxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740416324; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1740419691; c=relaxed/simple;
+	bh=mKntMTeXqKRaUBzaf6GqqM8qYu6PiNeENMAXHpqLARI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZHO0UuHAgLf3QQD8g+B0UD2Xo9ju7wpuXL3DNhVB4KOEg3fLZw2h9hrjeUBlbl2IrzMUL/z7i1egzVxqZe1ZIeUCS7AsWjXpsw20xlTeo4qDrsPw1POsAsfX0Ssa09gvDvkCAqIuW6FYky0wO24tg+GoBlyjuAWY7nvmoymJwpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FCSp0rn8; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=hZH/cNpF/gbraUtzjg4m9nwR/yjg3Z89w5RfbSxjz/E09+4ZIkl+6dAn9DjypF/Fsyc5u52JXHsKk/AWUGshi07q08fIKePvFeaFFjHgznCVFpIojQT2Q9uf0n/4MYOQV+DnRrmO82qXPFRRgQpiOZqfu2jDiBLOUr7sz2nlavs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iwme0ULw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FCSp0rn8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=FCSp0rn8p8A/I+6//zU5tzRXR5
-	nWe4i/XBewERCWlIt6nd+BvI6BwlJUBHi3BPOrlJR7hhHdB52dOCOi+6osCE02h0xNYJYXOhVjK/h
-	PtlCsTlVLtm6CmAcL0SZHoBWiTfv3rY32Oxt/tyE46UBCQTZxOfb29BQi2BL6NZpzB/r6m40rHD1h
-	IUMAPJDryZZLWHQwKuTDvBoCf3h9aYVaoOFwTz/vuoGdyLDLhjNhA0Pcrhy0lA1sT+OJa0jBYShB0
-	ZB+ztB3MgRhw0W2y6iEWNECtuZEiVEGdfDVHGoTBCQk1BNrdCHE+BQd4IyDX/2kKibCvqb9Za2fV/
-	WK3yDasA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tmbn0-0000000EWeS-3Wob;
-	Mon, 24 Feb 2025 16:58:42 +0000
-Date: Mon, 24 Feb 2025 08:58:42 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1.1] libfrog: wrap handle construction code
-Message-ID: <Z7ylQpqZea0c_IKv@infradead.org>
-References: <173888086034.2738568.15125078367450007162.stgit@frogsfrogsfrogs>
- <173888086121.2738568.17449625667584946105.stgit@frogsfrogsfrogs>
- <20250220213600.GS21808@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iwme0ULw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0C0C4CED6;
+	Mon, 24 Feb 2025 17:54:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740419690;
+	bh=mKntMTeXqKRaUBzaf6GqqM8qYu6PiNeENMAXHpqLARI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iwme0ULwEIafK3+R9DAFi9w0LQb6dlLmsp+JS8HaY6D9lUGx/Pamu1QZ7iujvUsD7
+	 l1XdqPrAIvV2CDeLy97yoNrvOtzzzZaocEej7XCWiih6QVmj7NlyWxDRDUcj5Q3mPr
+	 DHX49Dlg2S5gVcH0GW9+qpB0NZF9HPN8FSXtNrd8EzotXK2zzRlkeL6wW7GGM4rVg6
+	 mJ7A7UtL3ihqyoLshENWLchpJMZqSxy4/xU5IKgbgm2WBummF/H/3+kuAzWeR/43R8
+	 X1S7GBKzqzNVuAFfd5aNmqjgiIDNr9i9NZe6BGe3A6heqawW6EMWuOuuRd5aHJ6Pkh
+	 CMKks8xzqieDA==
+Date: Mon, 24 Feb 2025 09:54:50 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs_scrub: fix buffer overflow in string_escape
+Message-ID: <20250224175450.GG3028674@frogsfrogsfrogs>
+References: <20250220220758.GT21808@frogsfrogsfrogs>
+ <20250224141103.GB931@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,10 +43,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250220213600.GS21808@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250224141103.GB931@lst.de>
 
-Looks good:
+On Mon, Feb 24, 2025 at 03:11:03PM +0100, Christoph Hellwig wrote:
+> On Thu, Feb 20, 2025 at 02:07:58PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Need to allocate one more byte for the null terminator, just in case the
+> > /entire/ input string consists of non-printable bytes e.g. emoji.
+> > 
+> > Cc: <linux-xfs@vger.kernel.org> # v4.15.0
+> > Fixes: 396cd0223598bb ("xfs_scrub: warn about suspicious characters in directory/xattr names")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  scrub/common.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/scrub/common.c b/scrub/common.c
+> > index 6eb3c026dc5ac9..7ea0277bc511ce 100644
+> > --- a/scrub/common.c
+> > +++ b/scrub/common.c
+> > @@ -320,7 +320,7 @@ string_escape(
+> >  	char			*q;
+> >  	int			x;
+> >  
+> > -	str = malloc(strlen(in) * 4);
+> > +	str = malloc((strlen(in) * 4) + 1);
+> 
+> Nit: no need for the inner braces.
+> 
+> But this open code string allocation and manipulation makes me feel
+> really bad.  Assuming we don't have a good alternative, can you
+> at least throw in a comment explaining the allocation length here?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Ok.  I'll change the code to read as follows:
 
+	/*
+	 * Each non-printing byte renders as a four-byte escape sequence, so
+	 * allocate 4x the input length, plus a byte for the null terminator.
+	 */
+	str = malloc(strlen(in) * 4 + 1);
+
+--D
