@@ -1,55 +1,55 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3357525484A
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 14:45:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A9C254865
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 14:45:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740408342; cv=none; b=aO3EtQorKOL9XxnW/68iVZ+J7jyS+a93pvDtpUo/Px07mIdtTBo6WHj8CEq/Fjm/WdIL4AIxz55TJ7WFL/8sITEidH0AXHnersdhn8TLTT32oKYtuWB19KRyL7NKn2xW7wpQgUpI2CSxXDG6gfEkxA/p8BJ/R8IBYnitkJHaflw=
+	t=1740408343; cv=none; b=RXjrL+VuCKHCPQmdluKpuEenKF9WA13IfKvvcxdVxPjTeQYVwaIDo1GARF2JMoo5Tmg1Fjnsrq91YqTP+QCpknbBphk65pahqnzs1jSPzdwCDvivGI+6k3hGVcR3o6yARUR3XcpiyAjdTeA4eDzjqpvjviHdjB9jPd8DAdyzncM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740408342; c=relaxed/simple;
-	bh=L73mRpWHqMSyB9GEczD7CvzvTfezi+RcmahwCU1s3MA=;
+	s=arc-20240116; t=1740408343; c=relaxed/simple;
+	bh=qd+DPPrjfEZSipkx7wnFQXd8mlILrgwyRrIAcj39orc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lwvaYww8F/yC3ghLyL92svK/p1XiUA+Gzbjd6Y7htWnQL4FqUciLdMlSp//ubIPqLzSQYrWU+7a9hb1r2drj358BFeTGgU/amaseNEbResvorTdPHzShGDQIL7P6lHY7RY8+sTYM5k0dVONdRK4PHY9Za06Z89QYxEdgT4qUfUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=H+wf0VCQ; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version:Content-Type; b=IiZBVJCUFamL2ai4x9xsrJaXIKgQBGz+P+bEBbRjlBec1Z3OL9YzQBFAaFI9WFmVallsB7nBaDXbqg3tdSrDZZHwLSE59HBq8SWtOJklcogrDjtUhXIwUYhYDgDKyg1ZduZV86Zca62b5+5x40SWw/lyiEdvu0ZmDiD2xvgKWQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bGAu95vL; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H+wf0VCQ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bGAu95vL"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740408340;
+	s=mimecast20190719; t=1740408341;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=y6/xarkGOoBrKOmHvORNPFjWX6n9qs5bfEQTc6yOzvs=;
-	b=H+wf0VCQ/kMyYY5Ec0i/553P9FuBSuY86XxRd54wIqlyHqY3mMCRFZgibQ8RPt9g/60P9l
-	QbeNMPIGsAXCGt3S/qByvIyPJQk+0bdVyh9hmxXK0Rcm+LgOgByt9aXE4cUcXkxm9pjCPD
-	cSlf0tpR/uShPI8hNdMG4Bw8dB6YD0U=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+	bh=RgQ3VIkGdE45NDXBDEcgeqmVeOLGbGPsVjfG1DJKHBE=;
+	b=bGAu95vLA0RJNBiL+qMSwQdzS/WbPumxXFoHEqvDOsKp17G8OPp15KoBzW80XBDhikN1Ii
+	q3gl+/v/Xwvz97qXo+N+V5ahSdxSi4oYc2Q/aIHmNjAG1kuz09AeZ9PQ6EioEoJLLj7Jw+
+	J+70HVIXuTUxCSg5oJC+HW2yKHrWTZE=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-639-lkNVqxKrM7OKnAJ5TUnVtQ-1; Mon,
- 24 Feb 2025 09:45:36 -0500
-X-MC-Unique: lkNVqxKrM7OKnAJ5TUnVtQ-1
-X-Mimecast-MFC-AGG-ID: lkNVqxKrM7OKnAJ5TUnVtQ_1740408334
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-151-u3QjCZaAMUiASlnewcNiKg-1; Mon,
+ 24 Feb 2025 09:45:32 -0500
+X-MC-Unique: u3QjCZaAMUiASlnewcNiKg-1
+X-Mimecast-MFC-AGG-ID: u3QjCZaAMUiASlnewcNiKg_1740408329
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D4A31180087B;
-	Mon, 24 Feb 2025 14:45:34 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A984218009B5;
+	Mon, 24 Feb 2025 14:45:27 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.88.79])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id EC0E419560AB;
-	Mon, 24 Feb 2025 14:45:33 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id BAE2B19560AA;
+	Mon, 24 Feb 2025 14:45:26 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>,
 	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v3 12/12] iomap: introduce a full map advance helper
-Date: Mon, 24 Feb 2025 09:47:57 -0500
-Message-ID: <20250224144757.237706-13-bfoster@redhat.com>
+Subject: [PATCH v3 06/12] dax: advance the iomap_iter on zero range
+Date: Mon, 24 Feb 2025 09:47:51 -0500
+Message-ID: <20250224144757.237706-7-bfoster@redhat.com>
 In-Reply-To: <20250224144757.237706-1-bfoster@redhat.com>
 References: <20250224144757.237706-1-bfoster@redhat.com>
 Precedence: bulk
@@ -62,137 +62,86 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Various iomap_iter_advance() calls advance by the full mapping
-length and thus have no need for the current length input or
-post-advance remaining length output from the standard advance
-function. Add an iomap_iter_advance_full() helper to clean up these
-cases.
+Update the DAX zero range iomap iter handler to advance the iter
+directly. Advance by the full length in the hole/unwritten case, or
+otherwise advance incrementally in the zeroing loop. In either case,
+return 0 or an error code for success or failure.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/dax.c               | 10 ++++------
- fs/iomap/buffered-io.c |  3 +--
- fs/iomap/fiemap.c      |  3 +--
- fs/iomap/swapfile.c    |  4 +---
- include/linux/iomap.h  | 10 ++++++++++
- 5 files changed, 17 insertions(+), 13 deletions(-)
+ fs/dax.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index cab3c5abe5cb..7fd4cd9a51f2 100644
+index 139e299e53e6..f4d8c8c10086 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -1266,11 +1266,11 @@ static int dax_unshare_iter(struct iomap_iter *iter)
- 	u64 copy_len = iomap_length(iter);
- 	u32 mod;
- 	int id = 0;
--	s64 ret = iomap_length(iter);
+@@ -1358,13 +1358,12 @@ static s64 dax_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ {
+ 	const struct iomap *iomap = &iter->iomap;
+ 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+-	loff_t pos = iter->pos;
+ 	u64 length = iomap_length(iter);
+-	s64 written = 0;
 +	s64 ret;
- 	void *daddr = NULL, *saddr = NULL;
  
- 	if (!iomap_want_unshare_iter(iter))
--		return iomap_iter_advance(iter, &ret);
-+		return iomap_iter_advance_full(iter);
+ 	/* already zeroed?  we're done. */
+ 	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+-		return length;
++		return iomap_iter_advance(iter, &length);
  
  	/*
- 	 * Extend the file range to be aligned to fsblock/pagesize, because
-@@ -1300,16 +1300,14 @@ static int dax_unshare_iter(struct iomap_iter *iter)
- 	if (ret < 0)
- 		goto out_unlock;
+ 	 * invalidate the pages whose sharing state is to be changed
+@@ -1372,33 +1371,35 @@ static s64 dax_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 	 */
+ 	if (iomap->flags & IOMAP_F_SHARED)
+ 		invalidate_inode_pages2_range(iter->inode->i_mapping,
+-					      pos >> PAGE_SHIFT,
+-					      (pos + length - 1) >> PAGE_SHIFT);
++				iter->pos >> PAGE_SHIFT,
++				(iter->pos + length - 1) >> PAGE_SHIFT);
  
--	if (copy_mc_to_kernel(daddr, saddr, copy_len) == 0)
--		ret = iomap_length(iter);
--	else
-+	if (copy_mc_to_kernel(daddr, saddr, copy_len) != 0)
- 		ret = -EIO;
+ 	do {
++		loff_t pos = iter->pos;
+ 		unsigned offset = offset_in_page(pos);
+-		unsigned size = min_t(u64, PAGE_SIZE - offset, length);
+ 		pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
+-		long rc;
+ 		int id;
  
- out_unlock:
- 	dax_read_unlock(id);
- 	if (ret < 0)
- 		return dax_mem2blk_err(ret);
--	return iomap_iter_advance(iter, &ret);
-+	return iomap_iter_advance_full(iter);
- }
- 
- int dax_file_unshare(struct inode *inode, loff_t pos, loff_t len,
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index cdb0fedcf3d2..ea5e32d810d5 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1433,8 +1433,7 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 				range_dirty = false;
- 				status = iomap_zero_iter_flush_and_stale(&iter);
- 			} else {
--				u64 length = iomap_length(&iter);
--				status = iomap_iter_advance(&iter, &length);
-+				status = iomap_iter_advance_full(&iter);
- 			}
- 			iter.status = status;
- 			continue;
-diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
-index 6776b800bde7..80675c42e94e 100644
---- a/fs/iomap/fiemap.c
-+++ b/fs/iomap/fiemap.c
-@@ -42,7 +42,6 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
- static int iomap_fiemap_iter(struct iomap_iter *iter,
- 		struct fiemap_extent_info *fi, struct iomap *prev)
- {
--	u64 length = iomap_length(iter);
- 	int ret;
- 
- 	if (iter->iomap.type == IOMAP_HOLE)
-@@ -56,7 +55,7 @@ static int iomap_fiemap_iter(struct iomap_iter *iter,
- 		return 0;
- 
- advance:
--	return iomap_iter_advance(iter, &length);
-+	return iomap_iter_advance_full(iter);
- }
- 
- int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
-diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
-index 9ea185e58ca7..c1a762c10ce4 100644
---- a/fs/iomap/swapfile.c
-+++ b/fs/iomap/swapfile.c
-@@ -97,8 +97,6 @@ static int iomap_swapfile_fail(struct iomap_swapfile_info *isi, const char *str)
- static int iomap_swapfile_iter(struct iomap_iter *iter,
- 		struct iomap *iomap, struct iomap_swapfile_info *isi)
- {
--	u64 length = iomap_length(iter);
--
- 	switch (iomap->type) {
- 	case IOMAP_MAPPED:
- 	case IOMAP_UNWRITTEN:
-@@ -135,7 +133,7 @@ static int iomap_swapfile_iter(struct iomap_iter *iter,
- 		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
- 	}
- 
--	return iomap_iter_advance(iter, &length);
-+	return iomap_iter_advance_full(iter);
- }
- 
- /*
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index af9e51fba5f0..1fd66bc29cc1 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -271,6 +271,16 @@ static inline u64 iomap_length(const struct iomap_iter *iter)
- 	return iomap_length_trim(iter, iter->pos, iter->len);
- }
- 
-+/**
-+ * iomap_iter_advance_full - advance by the full length of current map
-+ */
-+static inline int iomap_iter_advance_full(struct iomap_iter *iter)
-+{
-+	u64 length = iomap_length(iter);
++		length = min_t(u64, PAGE_SIZE - offset, length);
 +
-+	return iomap_iter_advance(iter, &length);
-+}
+ 		id = dax_read_lock();
+-		if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
+-			rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
++		if (IS_ALIGNED(pos, PAGE_SIZE) && length == PAGE_SIZE)
++			ret = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
+ 		else
+-			rc = dax_memzero(iter, pos, size);
++			ret = dax_memzero(iter, pos, length);
+ 		dax_read_unlock(id);
+ 
+-		if (rc < 0)
+-			return rc;
+-		pos += size;
+-		length -= size;
+-		written += size;
++		if (ret < 0)
++			return ret;
 +
- /**
-  * iomap_iter_srcmap - return the source map for the current iomap iteration
-  * @i: iteration structure
++		ret = iomap_iter_advance(iter, &length);
++		if (ret)
++			return ret;
+ 	} while (length > 0);
+ 
+ 	if (did_zero)
+ 		*did_zero = true;
+-	return written;
++	return ret;
+ }
+ 
+ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
 -- 
 2.48.1
 
