@@ -1,39 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4253E126F0A
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 19:16:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6030E136327;
+	Mon, 24 Feb 2025 19:59:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740424577; cv=none; b=Od/cyLVXM1QYxuALTsrOIpo+r0ScjK/aFGBYcdoNkx9rkWZtHxYpe8XZFP/fD5h3vV9bHr8odIZ/l7WiZ/Y2VYFUgO9GbArR7JodpZtN7NJQHDDn8OQGGnH7TJylZrawvCafES2y4t0YVX6M5OM424CP6BrdhYfwvDhEJBxNhFg=
+	t=1740427153; cv=none; b=P2u/ygedKdWh+YjD+Q/tewG/VLJT2dOk5wYu+m9coAIRQzxegXNsf1JxkBMOSAB3OOONol+E2n6h1K5X8nLJAZGVG1U3zgp6F8Pm4KPB5i/Hxx4JQY+ecv3D3KTe5ZtJNPEJ/uZbp0pC594Hj505zd2n0U4nsXBywHGC137XREc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740424577; c=relaxed/simple;
-	bh=dlgwBEMSgtwH9Z6zd0j+NeeNwRx9/u3/IfKYrKZmAQE=;
+	s=arc-20240116; t=1740427153; c=relaxed/simple;
+	bh=W6g23xuIssALMbH2xgrfWTmhUTBR2YOv3qZN/bNUQ44=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cf5Okw1CM1GZgWMnuCD/tF8dMRKP/LOAYNzUFv46C9oqE9pTJBoH1+r6KGiVM901c4Nyal+sb4oBXehtQBsaOuUYB43uAv1EdCP8SXIlizpC8SGRsTdsgRhf9Jw0SOZqmZnJ7VuELYo5CkPONOtBSq5WchNgcjos45s4OVkBDAU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DA07uw4O; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=biH86SJrimCvjEwlOlq4/sEsYLFRNFr5qDGBDK54UQ64/X8HdKKpmj2WePV4Pg2CDX8CmslWDoaZx5MLqaLTjg8GpMMPztFPXGe47na+RCD8ZmFQwKS3hnIlGCPfRlVqcXiOadkmgv5PzsoFGZ4yMsccEjM5Gfd7Fmr86cTCbR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/pUZjY/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DA07uw4O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16847C4CED6;
-	Mon, 24 Feb 2025 19:16:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/pUZjY/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF325C4CED6;
+	Mon, 24 Feb 2025 19:59:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740424577;
-	bh=dlgwBEMSgtwH9Z6zd0j+NeeNwRx9/u3/IfKYrKZmAQE=;
+	s=k20201202; t=1740427152;
+	bh=W6g23xuIssALMbH2xgrfWTmhUTBR2YOv3qZN/bNUQ44=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DA07uw4OjO9Y+hPwKJHZ7UNxi9RlUvgcq0CB1zJbm/dfmgEsck/AHQELsWJ+zplA1
-	 QJuaGREXIxl0DMFe0CHVnGR2WEhNSk4s19ECAy6r7xAXzyLVMQVU6vCzujGMr3Dr9s
-	 SLtfDY/stgqVD27BLwZ91iz/+zwwUOM25dGNH94FM0zLr1JGv+Nwac01/vICXlOpio
-	 ++3n/9TUMGHPcqhIhbZ2Xoe2LDl6gPHPlFtmPOI/g54UNm5UqI3+Mhgm0lZxdnrLgT
-	 Vp1qkPOMXVP5Ad45NfmYmj/TyEh4l3Qq8m+ifgFQeDLbQQ+0rWhzPZHl6x6vLhyLk7
-	 WBG2OEp53YqbQ==
-Date: Mon, 24 Feb 2025 11:16:16 -0800
+	b=J/pUZjY/fzMZiEQTtv7utDJgkg28SOgJfShAk1J4ilhBAoA7I1UIR5FdXUHIco9yJ
+	 9UL46T9QaTxKTMpdug43NR1GqXyEiim3snnXMCgqobTH6O6BvBa1MGxfBlHfs7yUnC
+	 FZf7Eg6o0/eAcKX3H/xosl41oIfM4y9qdVpD5m3ZwoZKHKWMOmWBBniZqPonAPGWuY
+	 yZKnzZ3juTC90xzqW59LITd31omUCzhfU8AlA1y1U9Ab+F1U3qp2HShcLKhsVYkztV
+	 /ENS/AXQOnDaILwsCfHK0R+arIkWu4IEJ7x0A2bKkr7UDNUcEcFQaQjpSWQxXhANeJ
+	 UgwX/WfqxqpIA==
+Date: Mon, 24 Feb 2025 11:59:12 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: remove most in-flight buffer accounting
-Message-ID: <20250224191616.GB21808@frogsfrogsfrogs>
-References: <20250224151144.342859-1-hch@lst.de>
- <20250224151144.342859-4-hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, cem@kernel.org, dchinner@redhat.com, hch@lst.de,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com,
+	ritesh.list@gmail.com, martin.petersen@oracle.com, tytso@mit.edu,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2 04/11] iomap: Support CoW-based atomic writes
+Message-ID: <20250224195912.GC21808@frogsfrogsfrogs>
+References: <20250213135619.1148432-1-john.g.garry@oracle.com>
+ <20250213135619.1148432-5-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,188 +46,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250224151144.342859-4-hch@lst.de>
+In-Reply-To: <20250213135619.1148432-5-john.g.garry@oracle.com>
 
-On Mon, Feb 24, 2025 at 07:11:37AM -0800, Christoph Hellwig wrote:
-> The buffer cache keeps a bt_io_count per-CPU counter to track all
-> in-flight I/O, which is used to ensure no I/O is in flight when
-> unmounting the file system.
+On Thu, Feb 13, 2025 at 01:56:12PM +0000, John Garry wrote:
+> Currently atomic write support requires dedicated HW support. This imposes
+> a restriction on the filesystem that disk blocks need to be aligned and
+> contiguously mapped to FS blocks to issue atomic writes.
 > 
-> For most I/O we already keep track of inflight I/O at higher levels:
+> XFS has no method to guarantee FS block alignment for regular non-RT files.
+> As such, atomic writes are currently limited to 1x FS block there.
 > 
->  - for synchronous I/O (xfs_buf_read/xfs_bwrite/xfs_buf_delwri_submit),
->    the caller has a reference and waits for I/O completions using
->    xfs_buf_iowait
->  - for xfs_buf_delwri_submit_nowait the only caller (AIL writeback)
->    tracks the log items that the buffer attached to
+> To allow deal with the scenario that we are issuing an atomic write over
+> misaligned or discontiguous data blocks larger atomic writes - and raise
+> the atomic write limit - support a CoW-based software emulated atomic
+> write mode.
 > 
-> This only leaves only xfs_buf_readahead_map as a submitter of
-> asynchronous I/O that is not tracked by anything else.  Replace the
-> bt_io_count per-cpu counter with a more specific bt_readahead_count
-> counter only tracking readahead I/O.  This allows to simply increment
-> it when submitting readahead I/O and decrementing it when it completed,
-> and thus simplify xfs_buf_rele and remove the needed for the
-> XBF_NO_IOACCT flags and the XFS_BSTATE_IN_FLIGHT buffer state.
+> For this special mode, the FS will reserve blocks for that data to be
+> written and then atomically map that data in once the data has been
+> committed to disk.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> It is the responsibility of the FS to detect discontiguous atomic writes
+> and switch to IOMAP_DIO_ATOMIC_COW mode and retry the write.
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_buf.c     | 90 ++++++++------------------------------------
->  fs/xfs/xfs_buf.h     |  5 +--
->  fs/xfs/xfs_buf_mem.c |  2 +-
->  fs/xfs/xfs_mount.c   |  7 +---
->  fs/xfs/xfs_rtalloc.c |  2 +-
->  5 files changed, 20 insertions(+), 86 deletions(-)
+>  Documentation/filesystems/iomap/operations.rst | 15 +++++++++++++--
+>  fs/iomap/direct-io.c                           |  4 +++-
+>  include/linux/iomap.h                          |  6 ++++++
+>  3 files changed, 22 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 3a422b696749..cde8707b9892 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
+> diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
+> index 82bfe0e8c08e..d30dddc94ef7 100644
+> --- a/Documentation/filesystems/iomap/operations.rst
+> +++ b/Documentation/filesystems/iomap/operations.rst
+> @@ -525,8 +525,19 @@ IOMAP_WRITE`` with any combination of the following enhancements:
+>     conversion or copy on write), all updates for the entire file range
+>     must be committed atomically as well.
+>     Only one space mapping is allowed per untorn write.
+> -   Untorn writes must be aligned to, and must not be longer than, a
+> -   single file block.
+> +   Untorn writes may be longer than a single file block. In all cases,
+> +   the mapping start disk block must have at least the same alignment as
+> +   the write offset.
+> +
+> + * ``IOMAP_ATOMIC_COW``: This write is being issued with torn-write
+> +   protection based on CoW support.
 
-<snip>
+I think using "COW" here results in a misnamed flag.  Consider:
 
-> @@ -1786,9 +1727,8 @@ xfs_buftarg_wait(
->  	struct xfs_buftarg	*btp)
->  {
->  	/*
-> -	 * First wait on the buftarg I/O count for all in-flight buffers to be
-> -	 * released. This is critical as new buffers do not make the LRU until
-> -	 * they are released.
-> +	 * First wait for all in-flight readahead buffers to be released.  This is
-> +	 8 critical as new buffers do not make the LRU until they are released.
+"IOMAP_ATOMIC_SW: This write is being issued with torn-write protection
+via a software fallback provided by the filesystem."
 
-Nit:     ^ should be a "*"
+iomap itself doesn't care *how* the filesystem guarantees that the
+direct write isn't torn, right?  The fs' io completion handler has to
+ensure that the mapping update(s) are either applied fully or discarded
+fully.
 
-With that fixed,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+In theory if you had a bunch of physical space mapped to the same
+file but with different unwritten states, you could gang together all
+the unwritten extent conversions in a single transaction, which would
+provide the necessary tearing prevention without the out of place write.
+Nobody does that right now, but I think that's the only option for ext4.
 
 --D
 
->  	 *
->  	 * Next, flush the buffer workqueue to ensure all completion processing
->  	 * has finished. Just waiting on buffer locks is not sufficient for
-> @@ -1797,7 +1737,7 @@ xfs_buftarg_wait(
->  	 * all reference counts have been dropped before we start walking the
->  	 * LRU list.
->  	 */
-> -	while (percpu_counter_sum(&btp->bt_io_count))
-> +	while (percpu_counter_sum(&btp->bt_readahead_count))
->  		delay(100);
->  	flush_workqueue(btp->bt_mount->m_buf_workqueue);
->  }
-> @@ -1914,8 +1854,8 @@ xfs_destroy_buftarg(
->  	struct xfs_buftarg	*btp)
->  {
->  	shrinker_free(btp->bt_shrinker);
-> -	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
-> -	percpu_counter_destroy(&btp->bt_io_count);
-> +	ASSERT(percpu_counter_sum(&btp->bt_readahead_count) == 0);
-> +	percpu_counter_destroy(&btp->bt_readahead_count);
->  	list_lru_destroy(&btp->bt_lru);
->  }
+> +   All the length, alignment, and single bio restrictions which apply
+> +   to IOMAP_ATOMIC_HW do not apply here.
+> +   CoW-based atomic writes are intended as a fallback for when
+> +   HW-based atomic writes may not be issued, e.g. the range covered in
+> +   the atomic write covers multiple extents.
+> +   All filesystem metadata updates for the entire file range must be
+> +   committed atomically as well.
 >  
-> @@ -1969,7 +1909,7 @@ xfs_init_buftarg(
+>  Callers commonly hold ``i_rwsem`` in shared or exclusive mode before
+>  calling this function.
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index f87c4277e738..076338397daa 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -644,7 +644,9 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  			iomi.flags |= IOMAP_OVERWRITE_ONLY;
+>  		}
 >  
->  	if (list_lru_init(&btp->bt_lru))
->  		return -ENOMEM;
-> -	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
-> +	if (percpu_counter_init(&btp->bt_readahead_count, 0, GFP_KERNEL))
->  		goto out_destroy_lru;
+> -		if (iocb->ki_flags & IOCB_ATOMIC)
+> +		if (dio_flags & IOMAP_DIO_ATOMIC_COW)
+> +			iomi.flags |= IOMAP_ATOMIC_COW;
+> +		else if (iocb->ki_flags & IOCB_ATOMIC)
+>  			iomi.flags |= IOMAP_ATOMIC_HW;
 >  
->  	btp->bt_shrinker =
-> @@ -1983,7 +1923,7 @@ xfs_init_buftarg(
->  	return 0;
+>  		/* for data sync or sync, we need sync completion processing */
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index e7aa05503763..1b961895678a 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -183,6 +183,7 @@ struct iomap_folio_ops {
+>  #define IOMAP_DAX		0
+>  #endif /* CONFIG_FS_DAX */
+>  #define IOMAP_ATOMIC_HW		(1 << 9) /* HW-based torn-write protection */
+> +#define IOMAP_ATOMIC_COW	(1 << 10)/* CoW-based torn-write protection */
 >  
->  out_destroy_io_count:
-> -	percpu_counter_destroy(&btp->bt_io_count);
-> +	percpu_counter_destroy(&btp->bt_readahead_count);
->  out_destroy_lru:
->  	list_lru_destroy(&btp->bt_lru);
->  	return -ENOMEM;
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 2e747555ad3f..80e06eecaf56 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -27,7 +27,6 @@ struct xfs_buf;
->  #define XBF_READ	 (1u << 0) /* buffer intended for reading from device */
->  #define XBF_WRITE	 (1u << 1) /* buffer intended for writing to device */
->  #define XBF_READ_AHEAD	 (1u << 2) /* asynchronous read-ahead */
-> -#define XBF_NO_IOACCT	 (1u << 3) /* bypass I/O accounting (non-LRU bufs) */
->  #define XBF_ASYNC	 (1u << 4) /* initiator will not wait for completion */
->  #define XBF_DONE	 (1u << 5) /* all pages in the buffer uptodate */
->  #define XBF_STALE	 (1u << 6) /* buffer has been staled, do not find it */
-> @@ -58,7 +57,6 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_READ,		"READ" }, \
->  	{ XBF_WRITE,		"WRITE" }, \
->  	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
-> -	{ XBF_NO_IOACCT,	"NO_IOACCT" }, \
->  	{ XBF_ASYNC,		"ASYNC" }, \
->  	{ XBF_DONE,		"DONE" }, \
->  	{ XBF_STALE,		"STALE" }, \
-> @@ -77,7 +75,6 @@ typedef unsigned int xfs_buf_flags_t;
->   * Internal state flags.
->   */
->  #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
-> -#define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
->  
->  struct xfs_buf_cache {
->  	struct rhashtable	bc_hash;
-> @@ -116,7 +113,7 @@ struct xfs_buftarg {
->  	struct shrinker		*bt_shrinker;
->  	struct list_lru		bt_lru;
->  
-> -	struct percpu_counter	bt_io_count;
-> +	struct percpu_counter	bt_readahead_count;
->  	struct ratelimit_state	bt_ioerror_rl;
->  
->  	/* Atomic write unit values */
-> diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
-> index 07bebbfb16ee..5b64a2b3b113 100644
-> --- a/fs/xfs/xfs_buf_mem.c
-> +++ b/fs/xfs/xfs_buf_mem.c
-> @@ -117,7 +117,7 @@ xmbuf_free(
->  	struct xfs_buftarg	*btp)
->  {
->  	ASSERT(xfs_buftarg_is_mem(btp));
-> -	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
-> +	ASSERT(percpu_counter_sum(&btp->bt_readahead_count) == 0);
->  
->  	trace_xmbuf_free(btp);
->  
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 477c5262cf91..b69356582b86 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -181,14 +181,11 @@ xfs_readsb(
->  
+>  struct iomap_ops {
 >  	/*
->  	 * Allocate a (locked) buffer to hold the superblock. This will be kept
-> -	 * around at all times to optimize access to the superblock. Therefore,
-> -	 * set XBF_NO_IOACCT to make sure it doesn't hold the buftarg count
-> -	 * elevated.
-> +	 * around at all times to optimize access to the superblock.
->  	 */
->  reread:
->  	error = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
-> -				      BTOBB(sector_size), XBF_NO_IOACCT, &bp,
-> -				      buf_ops);
-> +				      BTOBB(sector_size), 0, &bp, buf_ops);
->  	if (error) {
->  		if (loud)
->  			xfs_warn(mp, "SB validate failed with error %d.", error);
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index d8e6d073d64d..57bef567e011 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1407,7 +1407,7 @@ xfs_rtmount_readsb(
+> @@ -434,6 +435,11 @@ struct iomap_dio_ops {
+>   */
+>  #define IOMAP_DIO_PARTIAL		(1 << 2)
 >  
->  	/* m_blkbb_log is not set up yet */
->  	error = xfs_buf_read_uncached(mp->m_rtdev_targp, XFS_RTSB_DADDR,
-> -			mp->m_sb.sb_blocksize >> BBSHIFT, XBF_NO_IOACCT, &bp,
-> +			mp->m_sb.sb_blocksize >> BBSHIFT, 0, &bp,
->  			&xfs_rtsb_buf_ops);
->  	if (error) {
->  		xfs_warn(mp, "rt sb validate failed with error %d.", error);
+> +/*
+> + * Use CoW-based software emulated torn-write protection.
+> + */
+> +#define IOMAP_DIO_ATOMIC_COW		(1 << 3)
+> +
+>  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+>  		unsigned int dio_flags, void *private, size_t done_before);
 > -- 
-> 2.45.2
+> 2.31.1
 > 
 > 
