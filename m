@@ -1,57 +1,53 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D4CF27701
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 14:45:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 738E42571CB
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 14:45:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740408325; cv=none; b=Af+nt8ie0ah4U/r+8wQqTM8Kfz/kGXjbgAdlDunSRevsbEW4aiHLKMroc6hO3WGxgill4NQBf3ybV2nfb9tFIHfqDIzLFVbjUXzv5eA0Ay/PHqYMPygxkbkNkrUIlCuZZuLZgHuBffsQkLMG3Nb6k7PozqvqzRZF9NQbYvacCUE=
+	t=1740408327; cv=none; b=hK76pFK/W1nvC/JX04mtOUNwbAQogOi0MdRsgaAk448zUTP3IChMummopFJ3+7+aU1Q+CRzfApPKfcyuKk6wc5wMxUeiKmADJiNSJjOfryLD6jV56rYBC7U4xP+pv3hPUBBoxt8YAsTcLL08lWr5QEIBv7f9bi4t4O6hYrBQfgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740408325; c=relaxed/simple;
-	bh=J6v0jLZHzgOi6oeCFxC+TpH5dmSldJL+vPg+fJK8idk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O35ek0dOaKfYOw4ZfHsJsdKSC/+P5/YXM9zBN1ieUjlaNXOkAc4eWjtkazCm3/7Aj5jnfkTUhBhMb/7kXz4wauRKceYiiKl2tFnlts6rA+W3MJQqbPE4CzyGIITFL+nLiVPEhvgsIWZwRqeu19fqZubAfNF+rkW5AiLkITadBlc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=axGb5+c/; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1740408327; c=relaxed/simple;
+	bh=T91SNXjwBw05XWX6O+qBJInWN7oYayzS2/t3eW0TZTI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EjmuQMO1VW1vU2ZVUSo332VMU9oBxtQvc3BLjsn8dY5dcfOWQudnz6gWLnvKNj7a2TqTfTlFVNwk3F+8WqiG48G+zRxiIr/vM0jwj8wsZLHEB3XUKxGG+u/FFIzpuHHHtTrpyJYWBzQUbIsaBrJwnXiQRg2qn1DLYHUNCct8Rrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y92ikPe5; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="axGb5+c/"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y92ikPe5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740408323;
+	s=mimecast20190719; t=1740408324;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bIB6w37jITxip7zM1tBxCwmWNGYL+g3gx7Z4pIuftCM=;
-	b=axGb5+c/sMx/ZCW6rL8cfzGU1LmsGZtLfR+IOrIyFNnGhONhXE1HbM695N2dxCYb9MpPx4
-	KsHa4sIDU2blsRX56Mum1rCLIDJ8qHUbm+w5XlIJ4K0j6ZSF2satYBSTDX/PRThh69/QIJ
-	N5dmOGHz71eViPQzlPUp/gdN7kYIkxE=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=r588k3Qo1UlR2EUrdzYPkDQTGrazx1bBsTWduKS4XAM=;
+	b=Y92ikPe5iS7QV9CxdmMki9HlGp6+0wk40sS6lgmfiBmDxlXyJyyAis5DD5pLwdx0TFqevt
+	jqPvUWE3J5HOumP5zDrskZMR8ZJLnhdT/wH56G2zg+urvjyyJ7cySYlPlpdC9vtJENuar8
+	gS71vfEfRJmCc6SJnkRuVAEZBFD7eUo=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-260-kWM4EDWtOhWYn3i5ep523A-1; Mon,
- 24 Feb 2025 09:45:21 -0500
-X-MC-Unique: kWM4EDWtOhWYn3i5ep523A-1
-X-Mimecast-MFC-AGG-ID: kWM4EDWtOhWYn3i5ep523A_1740408320
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-672-fjpf-U2CMf66rSuvQCqwjw-1; Mon,
+ 24 Feb 2025 09:45:20 -0500
+X-MC-Unique: fjpf-U2CMf66rSuvQCqwjw-1
+X-Mimecast-MFC-AGG-ID: fjpf-U2CMf66rSuvQCqwjw_1740408319
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 93BF3190E0B8;
-	Mon, 24 Feb 2025 14:45:20 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.88.79])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ABC8F19560AB;
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 69DCD18D95F8;
 	Mon, 24 Feb 2025 14:45:19 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.88.79])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7FF8B19560AA;
+	Mon, 24 Feb 2025 14:45:18 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>,
 	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v3 01/12] iomap: advance the iter directly on buffered read
-Date: Mon, 24 Feb 2025 09:47:46 -0500
-Message-ID: <20250224144757.237706-2-bfoster@redhat.com>
-In-Reply-To: <20250224144757.237706-1-bfoster@redhat.com>
-References: <20250224144757.237706-1-bfoster@redhat.com>
+Subject: [PATCH v3 00/12] iomap: incremental advance conversion -- phase 2
+Date: Mon, 24 Feb 2025 09:47:45 -0500
+Message-ID: <20250224144757.237706-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -62,116 +58,72 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-iomap buffered read advances the iter via iter.processed. To
-continue separating iter advance from return status, update
-iomap_readpage_iter() to advance the iter instead of returning the
-number of bytes processed. In turn, drop the offset parameter and
-sample the updated iter->pos at the start of the function. Update
-the callers to loop based on remaining length in the current
-iteration instead of number of bytes processed.
+Hi all,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/iomap/buffered-io.c | 45 +++++++++++++++++++-----------------------
- 1 file changed, 20 insertions(+), 25 deletions(-)
+Here's phase 2 of the incremental iter advance conversions. This updates
+all remaining iomap operations to advance the iter within the operation
+and thus removes the need to advance from the core iomap iterator. Once
+all operations are switched over, the core advance code is removed and
+the processed field is renamed to reflect that it is now a pure status
+code.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 8368a4ae716f..582a64f565e6 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -362,15 +362,14 @@ static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
- 		pos >= i_size_read(iter->inode);
- }
- 
--static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
--		struct iomap_readpage_ctx *ctx, loff_t offset)
-+static loff_t iomap_readpage_iter(struct iomap_iter *iter,
-+		struct iomap_readpage_ctx *ctx)
- {
- 	const struct iomap *iomap = &iter->iomap;
--	loff_t pos = iter->pos + offset;
--	loff_t length = iomap_length(iter) - offset;
-+	loff_t pos = iter->pos;
-+	loff_t length = iomap_length(iter);
- 	struct folio *folio = ctx->cur_folio;
- 	struct iomap_folio_state *ifs;
--	loff_t orig_pos = pos;
- 	size_t poff, plen;
- 	sector_t sector;
- 
-@@ -434,25 +433,22 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
- 	 * we can skip trailing ones as they will be handled in the next
- 	 * iteration.
- 	 */
--	return pos - orig_pos + plen;
-+	length = pos - iter->pos + plen;
-+	return iomap_iter_advance(iter, &length);
- }
- 
--static loff_t iomap_read_folio_iter(const struct iomap_iter *iter,
-+static loff_t iomap_read_folio_iter(struct iomap_iter *iter,
- 		struct iomap_readpage_ctx *ctx)
- {
--	struct folio *folio = ctx->cur_folio;
--	size_t offset = offset_in_folio(folio, iter->pos);
--	loff_t length = min_t(loff_t, folio_size(folio) - offset,
--			      iomap_length(iter));
--	loff_t done, ret;
--
--	for (done = 0; done < length; done += ret) {
--		ret = iomap_readpage_iter(iter, ctx, done);
--		if (ret <= 0)
-+	loff_t ret;
-+
-+	while (iomap_length(iter)) {
-+		ret = iomap_readpage_iter(iter, ctx);
-+		if (ret)
- 			return ret;
- 	}
- 
--	return done;
-+	return 0;
- }
- 
- int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
-@@ -489,15 +485,14 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
- }
- EXPORT_SYMBOL_GPL(iomap_read_folio);
- 
--static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
-+static loff_t iomap_readahead_iter(struct iomap_iter *iter,
- 		struct iomap_readpage_ctx *ctx)
- {
--	loff_t length = iomap_length(iter);
--	loff_t done, ret;
-+	loff_t ret;
- 
--	for (done = 0; done < length; done += ret) {
-+	while (iomap_length(iter)) {
- 		if (ctx->cur_folio &&
--		    offset_in_folio(ctx->cur_folio, iter->pos + done) == 0) {
-+		    offset_in_folio(ctx->cur_folio, iter->pos) == 0) {
- 			if (!ctx->cur_folio_in_bio)
- 				folio_unlock(ctx->cur_folio);
- 			ctx->cur_folio = NULL;
-@@ -506,12 +501,12 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
- 			ctx->cur_folio = readahead_folio(ctx->rac);
- 			ctx->cur_folio_in_bio = false;
- 		}
--		ret = iomap_readpage_iter(iter, ctx, done);
--		if (ret <= 0)
-+		ret = iomap_readpage_iter(iter, ctx);
-+		if (ret)
- 			return ret;
- 	}
- 
--	return done;
-+	return 0;
- }
- 
- /**
+For context, this was first introduced in a previous series [1] that
+focused mainly on the core mechanism and iomap buffered write. This is
+because original impetus was to facilitate a folio batch mechanism where
+a filesystem can optionally provide a batch of folios to process for a
+given mapping (i.e. zero range of an unwritten mapping with dirty folios
+in pagecache). That is still WIP, but the broader point is that this was
+originally intended as an optional mode until consensus that fell out of
+discussion was that it would be preferable to convert over everything.
+This presumably facilitates some other future work and simplifies
+semantics in the core iteration code.
+
+Patches 1-3 convert over iomap buffered read, direct I/O and various
+other remaining ops (swap, etc.). Patches 4-9 convert over the various
+DAX iomap operations. Finally, patches 10-12 introduce some cleanups now
+that all iomap operations have updated iteration semantics.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+[1] https://lore.kernel.org/linux-fsdevel/20250207143253.314068-1-bfoster@redhat.com/
+
+v3:
+- Fixed whitespace in iomap_iter_advance_full().
+- Rebased onto vfs-6.15.iomap.
+v2: https://lore.kernel.org/linux-fsdevel/20250219175050.83986-1-bfoster@redhat.com/
+- Push dax_iomap_iter() advance changes down into type specific helpers
+  (new patch).
+- Added patch for iomap_iter_advance_full() helper.
+- Various minor cleanups.
+v1: https://lore.kernel.org/linux-fsdevel/20250212135712.506987-1-bfoster@redhat.com/
+
+Brian Foster (12):
+  iomap: advance the iter directly on buffered read
+  iomap: advance the iter on direct I/O
+  iomap: convert misc simple ops to incremental advance
+  dax: advance the iomap_iter in the read/write path
+  dax: push advance down into dax_iomap_iter() for read and write
+  dax: advance the iomap_iter on zero range
+  dax: advance the iomap_iter on unshare range
+  dax: advance the iomap_iter on dedupe range
+  dax: advance the iomap_iter on pte and pmd faults
+  iomap: remove unnecessary advance from iomap_iter()
+  iomap: rename iomap_iter processed field to status
+  iomap: introduce a full map advance helper
+
+ fs/dax.c               | 111 ++++++++++++++++++++++-------------------
+ fs/iomap/buffered-io.c |  80 ++++++++++++++---------------
+ fs/iomap/direct-io.c   |  24 ++++-----
+ fs/iomap/fiemap.c      |  21 ++++----
+ fs/iomap/iter.c        |  43 +++++++---------
+ fs/iomap/seek.c        |  16 +++---
+ fs/iomap/swapfile.c    |   7 +--
+ fs/iomap/trace.h       |   8 +--
+ include/linux/iomap.h  |  17 +++++--
+ 9 files changed, 164 insertions(+), 163 deletions(-)
+
 -- 
 2.48.1
 
