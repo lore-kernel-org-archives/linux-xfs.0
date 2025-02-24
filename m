@@ -1,190 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B702571CD;
-	Mon, 24 Feb 2025 11:32:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9506B2571CF
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 12:54:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740396753; cv=none; b=rIqZm3bDhtcSqC3ejtbSylHWLgD9q3h1z92vCdFjXSpSZ1rtHebJDQrPCcxeDg0dIwXFMAmHWLOdPNG0zJMOF7DofwxhYwYfIM/La4O8Gs4gT1v3xWBov6VEt0fu9Ne7IyGg79G3Gb4zCwyE8T6xKstj//jhYbl+LwHvlXC+WOg=
+	t=1740401642; cv=none; b=JzdclrPZCH8X1MDkLdDtrylibm3G6rCw+s9z83++PgeQuhZA2jHaZwt/Xm8jZZ7cN2qLRvhSRQ4wHWAStqWobIZC6pladNdAuiQBCul5//hb+2iwT92OX92Ym5PA5TsWnLpLdoGibhk75IFqGKJLjAQjOpPahZIQnTyHC7YIVrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740396753; c=relaxed/simple;
-	bh=/3Mh6pug+713M2/VDC4hgpIDh9F4ngYOQu3zb5WfebM=;
-	h=Date:From:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dzFa8ZWVTTNg9FDNjHZziOf8hyQ/0KJKM66aJHKfbPIbCKf9CioQQ0/rgU85S74MLBObKdbV5mBx75lCNf4DAFCtzmxrvCOQGE7Sz1gdXffWSIAXNjwZZCLgzGfJ6VFke4N9GETRLCdGcf2IathFt16b1a6GaHnZGoknJlLFuf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hVWfNpja; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740401642; c=relaxed/simple;
+	bh=cPqFlN9hhPH5PUCieVKmof6OSDpqARoal3nq00GKLP0=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=fU8N3z0B0bnLjgN3L+kKWP5zn5ip9hjBhoGe77tPTYDG3ce06xHsjYL1eiMYty8yhpp1WUr7VhNX1oisCOFAYWtfzi99MXjdblY3hZJc50H8Rbw7dZyAr8cTka7VqMZXDwEl62NpvWauY8hk+2I2XQ7pcIahureOpf1IuOM8WcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TH57CSHt; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hVWfNpja"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E138C4CED6;
-	Mon, 24 Feb 2025 11:32:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740396752;
-	bh=/3Mh6pug+713M2/VDC4hgpIDh9F4ngYOQu3zb5WfebM=;
-	h=Date:From:Cc:Subject:References:In-Reply-To:From;
-	b=hVWfNpjapTs9Gzqso9NB1m1ULW6zQPSObcIfIOnmoo3UgEOo4r/dmDmSaSI9IfwTP
-	 Ar8P2zDogME/kiUPhwy10R9KxLU//uhD6zuPOnNL0o/8YC/3Xlkw+2iGAx7Bv2r0JI
-	 BRT5sV8wVLMC9dcbIUVu95Kd0KhrHyroW35DBtfhLb2axglzIrroUkqae91AxOZwtp
-	 6t0UHwqaSbVkll8v4gtSgLaV36jXEMXEJBOJStRzYCLO239Fvq6RByGaH9nO9bwvFd
-	 vytICMqj4HwAT3wRKsBcKZpqc8CSaDQOQWo5JwkzT3mWostsHNatJX17ydAshLFWah
-	 mqN8YB3Ihk8MQ==
-Date: Mon, 24 Feb 2025 12:32:17 +0100
-From: Christian Brauner <brauner@kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, 
-	Andrey Albershteyn <aalbersh@redhat.com>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Richard Henderson <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, 
-	Russell King <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Will Deacon <will@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, 
-	Michal Simek <monstr@monstr.eu>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Helge Deller <deller@gmx.de>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, 
-	Naveen N Rao <naveen@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, 
-	Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Andy Lutomirski <luto@kernel.org>, 
-	Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, 
-	Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
-	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>, =?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>, 
-	Arnd Bergmann <arnd@arndb.de>, linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org, 
-	linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
-	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, linux-api@vger.kernel.org, linux-arch@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
-	Theodore Tso <tytso@mit.edu>
-Subject: Re: [PATCH v3] fs: introduce getfsxattrat and setfsxattrat syscalls
-Message-ID: <20250224-klinke-hochdekoriert-3f6be89005a8@brauner>
-References: <20250211-xattrat-syscall-v3-1-a07d15f898b2@kernel.org>
- <20250221181135.GW21808@frogsfrogsfrogs>
- <CAOQ4uxgyYBFqkq6cQsso4LxJsPJ4uECOdskXmz-nmGhhV5BQWg@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TH57CSHt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1740401639;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RyZKAT7kvX4bnRDx3j7DvsDLJEcrsNoetXZGX7kmB2s=;
+	b=TH57CSHtoBgRQpYHt2CpKBFcA+t0AZ8In8QcZS2Sn68v871VacaHGEBGLLpTNBEvxQrnp6
+	XUSR7/Gim74e/cpuOe2NeDLd5JKbAOXw5LJCiK6vshxLXFlAusq7e3BRxCD11ZavbS9879
+	JTU4EkTOQ52jMKtVINiH+ShHeyV2L5U=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-650-sr5YoVDqONGmoayMPwNkzw-1; Mon,
+ 24 Feb 2025 07:53:56 -0500
+X-MC-Unique: sr5YoVDqONGmoayMPwNkzw-1
+X-Mimecast-MFC-AGG-ID: sr5YoVDqONGmoayMPwNkzw_1740401634
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E23A51800874;
+	Mon, 24 Feb 2025 12:53:53 +0000 (UTC)
+Received: from [10.45.224.44] (unknown [10.45.224.44])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A1C9D300018D;
+	Mon, 24 Feb 2025 12:53:50 +0000 (UTC)
+Date: Mon, 24 Feb 2025 13:53:47 +0100 (CET)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+cc: agk@redhat.com, snitzer@kernel.org, dm-devel@lists.linux.dev, 
+    linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+    flyingpeng@tencent.com, txpeng@tencent.com, dchinner@redhat.com, 
+    Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: Re: [PATCH] dm: fix unconditional IO throttle caused by
+ REQ_PREFLUSH
+In-Reply-To: <20250220112014.3209940-1-alexjlzheng@tencent.com>
+Message-ID: <1931a9db-a81d-daf2-2e89-d1f183946618@redhat.com>
+References: <20250220112014.3209940-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxgyYBFqkq6cQsso4LxJsPJ4uECOdskXmz-nmGhhV5BQWg@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Fri, Feb 21, 2025 at 08:15:24PM +0100, Amir Goldstein wrote:
-> On Fri, Feb 21, 2025 at 7:13 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Tue, Feb 11, 2025 at 06:22:47PM +0100, Andrey Albershteyn wrote:
-> > > From: Andrey Albershteyn <aalbersh@redhat.com>
-> > >
-> > > Introduce getfsxattrat and setfsxattrat syscalls to manipulate inode
-> > > extended attributes/flags. The syscalls take parent directory fd and
-> > > path to the child together with struct fsxattr.
-> > >
-> > > This is an alternative to FS_IOC_FSSETXATTR ioctl with a difference
-> > > that file don't need to be open as we can reference it with a path
-> > > instead of fd. By having this we can manipulated inode extended
-> > > attributes not only on regular files but also on special ones. This
-> > > is not possible with FS_IOC_FSSETXATTR ioctl as with special files
-> > > we can not call ioctl() directly on the filesystem inode using fd.
-> > >
-> > > This patch adds two new syscalls which allows userspace to get/set
-> > > extended inode attributes on special files by using parent directory
-> > > and a path - *at() like syscall.
-> > >
-> > > Also, as vfs_fileattr_set() is now will be called on special files
-> > > too, let's forbid any other attributes except projid and nextents
-> > > (symlink can have an extent).
-> > >
-> > > CC: linux-api@vger.kernel.org
-> > > CC: linux-fsdevel@vger.kernel.org
-> > > CC: linux-xfs@vger.kernel.org
-> > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > > ---
-> > > v1:
-> > > https://lore.kernel.org/linuxppc-dev/20250109174540.893098-1-aalbersh@kernel.org/
-> > >
-> > > Previous discussion:
-> > > https://lore.kernel.org/linux-xfs/20240520164624.665269-2-aalbersh@redhat.com/
-> > >
-> > > XFS has project quotas which could be attached to a directory. All
-> > > new inodes in these directories inherit project ID set on parent
-> > > directory.
-> > >
-> > > The project is created from userspace by opening and calling
-> > > FS_IOC_FSSETXATTR on each inode. This is not possible for special
-> > > files such as FIFO, SOCK, BLK etc. Therefore, some inodes are left
-> > > with empty project ID. Those inodes then are not shown in the quota
-> > > accounting but still exist in the directory. Moreover, in the case
-> > > when special files are created in the directory with already
-> > > existing project quota, these inode inherit extended attributes.
-> > > This than leaves them with these attributes without the possibility
-> > > to clear them out. This, in turn, prevents userspace from
-> > > re-creating quota project on these existing files.
-> > > ---
-> > > Changes in v3:
-> > > - Remove unnecessary "dfd is dir" check as it checked in user_path_at()
-> > > - Remove unnecessary "same filesystem" check
-> > > - Use CLASS() instead of directly calling fdget/fdput
-> > > - Link to v2: https://lore.kernel.org/r/20250122-xattrat-syscall-v2-1-5b360d4fbcb2@kernel.org
-> > > ---
-> > >  arch/alpha/kernel/syscalls/syscall.tbl      |  2 +
-> > >  arch/arm/tools/syscall.tbl                  |  2 +
-> > >  arch/arm64/tools/syscall_32.tbl             |  2 +
-> > >  arch/m68k/kernel/syscalls/syscall.tbl       |  2 +
-> > >  arch/microblaze/kernel/syscalls/syscall.tbl |  2 +
-> > >  arch/mips/kernel/syscalls/syscall_n32.tbl   |  2 +
-> > >  arch/mips/kernel/syscalls/syscall_n64.tbl   |  2 +
-> > >  arch/mips/kernel/syscalls/syscall_o32.tbl   |  2 +
-> > >  arch/parisc/kernel/syscalls/syscall.tbl     |  2 +
-> > >  arch/powerpc/kernel/syscalls/syscall.tbl    |  2 +
-> > >  arch/s390/kernel/syscalls/syscall.tbl       |  2 +
-> > >  arch/sh/kernel/syscalls/syscall.tbl         |  2 +
-> > >  arch/sparc/kernel/syscalls/syscall.tbl      |  2 +
-> > >  arch/x86/entry/syscalls/syscall_32.tbl      |  2 +
-> > >  arch/x86/entry/syscalls/syscall_64.tbl      |  2 +
-> > >  arch/xtensa/kernel/syscalls/syscall.tbl     |  2 +
-> > >  fs/inode.c                                  | 75 +++++++++++++++++++++++++++++
-> > >  fs/ioctl.c                                  | 16 +++++-
-> > >  include/linux/fileattr.h                    |  1 +
-> > >  include/linux/syscalls.h                    |  4 ++
-> > >  include/uapi/asm-generic/unistd.h           |  8 ++-
-> > >  21 files changed, 133 insertions(+), 3 deletions(-)
-> > >
-> >
-> > <cut to the syscall definitions>
-> >
-> > > diff --git a/fs/inode.c b/fs/inode.c
-> > > index 6b4c77268fc0ecace4ac78a9ca777fbffc277f4a..b2dddd9db4fabaf67a6cbf541a86978b290411ec 100644
-> > > --- a/fs/inode.c
-> > > +++ b/fs/inode.c
-> > > @@ -23,6 +23,9 @@
-> > >  #include <linux/rw_hint.h>
-> > >  #include <linux/seq_file.h>
-> > >  #include <linux/debugfs.h>
-> > > +#include <linux/syscalls.h>
-> > > +#include <linux/fileattr.h>
-> > > +#include <linux/namei.h>
-> > >  #include <trace/events/writeback.h>
-> > >  #define CREATE_TRACE_POINTS
-> > >  #include <trace/events/timestamp.h>
-> > > @@ -2953,3 +2956,75 @@ umode_t mode_strip_sgid(struct mnt_idmap *idmap,
-> > >       return mode & ~S_ISGID;
-> > >  }
-> > >  EXPORT_SYMBOL(mode_strip_sgid);
-> > > +
-> > > +SYSCALL_DEFINE4(getfsxattrat, int, dfd, const char __user *, filename,
-> > > +             struct fsxattr __user *, fsx, unsigned int, at_flags)
-> >
-> > Should the kernel require userspace to pass the size of the fsx buffer?
-> > That way we avoid needing to rev the interface when we decide to grow
-> > the structure.
+Applied, thanks.
 
-Please version the struct by size as we do for clone3(),
-mount_setattr(), listmount()'s struct mnt_id_req, sched_setattr(), all
-the new xattrat*() system calls and a host of others. So laying out the
-struct 64bit and passing a size alongside it.
+Mikulas
 
-This is all handled by copy_struct_from_user() and copy_struct_to_user()
-so nothing to reinvent. And it's easy to copy from existing system
-calls.
+
+
+On Thu, 20 Feb 2025, Jinliang Zheng wrote:
+
+> When a bio with REQ_PREFLUSH is submitted to dm, __send_empty_flush()
+> generates a flush_bio with REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
+> which causes the flush_bio to be throttled by wbt_wait().
+> 
+> An example from v5.4, similar problem also exists in upstream:
+> 
+>     crash> bt 2091206
+>     PID: 2091206  TASK: ffff2050df92a300  CPU: 109  COMMAND: "kworker/u260:0"
+>      #0 [ffff800084a2f7f0] __switch_to at ffff80004008aeb8
+>      #1 [ffff800084a2f820] __schedule at ffff800040bfa0c4
+>      #2 [ffff800084a2f880] schedule at ffff800040bfa4b4
+>      #3 [ffff800084a2f8a0] io_schedule at ffff800040bfa9c4
+>      #4 [ffff800084a2f8c0] rq_qos_wait at ffff8000405925bc
+>      #5 [ffff800084a2f940] wbt_wait at ffff8000405bb3a0
+>      #6 [ffff800084a2f9a0] __rq_qos_throttle at ffff800040592254
+>      #7 [ffff800084a2f9c0] blk_mq_make_request at ffff80004057cf38
+>      #8 [ffff800084a2fa60] generic_make_request at ffff800040570138
+>      #9 [ffff800084a2fae0] submit_bio at ffff8000405703b4
+>     #10 [ffff800084a2fb50] xlog_write_iclog at ffff800001280834 [xfs]
+>     #11 [ffff800084a2fbb0] xlog_sync at ffff800001280c3c [xfs]
+>     #12 [ffff800084a2fbf0] xlog_state_release_iclog at ffff800001280df4 [xfs]
+>     #13 [ffff800084a2fc10] xlog_write at ffff80000128203c [xfs]
+>     #14 [ffff800084a2fcd0] xlog_cil_push at ffff8000012846dc [xfs]
+>     #15 [ffff800084a2fda0] xlog_cil_push_work at ffff800001284a2c [xfs]
+>     #16 [ffff800084a2fdb0] process_one_work at ffff800040111d08
+>     #17 [ffff800084a2fe00] worker_thread at ffff8000401121cc
+>     #18 [ffff800084a2fe70] kthread at ffff800040118de4
+> 
+> After commit 2def2845cc33 ("xfs: don't allow log IO to be throttled"),
+> the metadata submitted by xlog_write_iclog() should not be throttled.
+> But due to the existence of the dm layer, throttling flush_bio indirectly
+> causes the metadata bio to be throttled.
+> 
+> Fix this by conditionally adding REQ_IDLE to flush_bio.bi_opf, which makes
+> wbt_should_throttle() return false to avoid wbt_wait().
+> 
+> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+> Reviewed-by: Tianxiang Peng <txpeng@tencent.com>
+> Reviewed-by: Hao Peng <flyingpeng@tencent.com>
+> ---
+>  drivers/md/dm.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 4d1e42891d24..5ab7574c0c76 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -1540,14 +1540,18 @@ static void __send_empty_flush(struct clone_info *ci)
+>  {
+>  	struct dm_table *t = ci->map;
+>  	struct bio flush_bio;
+> +	blk_opf_t opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
+> +
+> +	if ((ci->io->orig_bio->bi_opf & (REQ_IDLE | REQ_SYNC)) ==
+> +	    (REQ_IDLE | REQ_SYNC))
+> +		opf |= REQ_IDLE;
+>  
+>  	/*
+>  	 * Use an on-stack bio for this, it's safe since we don't
+>  	 * need to reference it after submit. It's just used as
+>  	 * the basis for the clone(s).
+>  	 */
+> -	bio_init(&flush_bio, ci->io->md->disk->part0, NULL, 0,
+> -		 REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC);
+> +	bio_init(&flush_bio, ci->io->md->disk->part0, NULL, 0, opf);
+>  
+>  	ci->bio = &flush_bio;
+>  	ci->sector_count = 0;
+> -- 
+> 2.41.1
+> 
+
