@@ -1,44 +1,177 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AED1A27701;
-	Mon, 24 Feb 2025 14:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D4CF27701
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 14:45:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740408318; cv=none; b=uiGycJW9k0fHYc9I8bNfE7B8dkJXDTFUmpiVrVZVbu/3Jh+HWKWKHu2HAWlAVRa1/BG5CsSamTUFE05kltWKsVV1SRbgu3FZE8PoCQpl8cvB/cqKQ8Sus/rahGqfF66C14/PX6ANBKqZvB2vUPrSARb5/j3zi5nvHBflktIz+h0=
+	t=1740408325; cv=none; b=Af+nt8ie0ah4U/r+8wQqTM8Kfz/kGXjbgAdlDunSRevsbEW4aiHLKMroc6hO3WGxgill4NQBf3ybV2nfb9tFIHfqDIzLFVbjUXzv5eA0Ay/PHqYMPygxkbkNkrUIlCuZZuLZgHuBffsQkLMG3Nb6k7PozqvqzRZF9NQbYvacCUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740408318; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WbDHVEsu5yXOxaVXe7mA3A6SQeq+aF0OqSzP4p6coDYiZYTg7Gids19nibJ8qtvBggBN8ePoLHtfZC6Ob4QZ9yqgNE5Ru/PXSzrhfCErw0c0hNrwzqu3D0GsvjqTaDLLcyWR240ARWWWHa9NS7QLyhzIdSO/EIX5tybcAtkDup0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id CF75868BFE; Mon, 24 Feb 2025 15:45:10 +0100 (CET)
-Date: Mon, 24 Feb 2025 15:45:10 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Raphael S. Carvalho" <raphaelsc@scylladb.com>
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-	djwong@kernel.org, Dave Chinner <david@fromorbit.com>, hch@lst.de,
-	willy@infradead.org
-Subject: Re: [PATCH v3] mm: Fix error handling in __filemap_get_folio()
- with FGP_NOWAIT
-Message-ID: <20250224144510.GA2141@lst.de>
-References: <20250224143700.23035-1-raphaelsc@scylladb.com>
+	s=arc-20240116; t=1740408325; c=relaxed/simple;
+	bh=J6v0jLZHzgOi6oeCFxC+TpH5dmSldJL+vPg+fJK8idk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=O35ek0dOaKfYOw4ZfHsJsdKSC/+P5/YXM9zBN1ieUjlaNXOkAc4eWjtkazCm3/7Aj5jnfkTUhBhMb/7kXz4wauRKceYiiKl2tFnlts6rA+W3MJQqbPE4CzyGIITFL+nLiVPEhvgsIWZwRqeu19fqZubAfNF+rkW5AiLkITadBlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=axGb5+c/; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="axGb5+c/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1740408323;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=bIB6w37jITxip7zM1tBxCwmWNGYL+g3gx7Z4pIuftCM=;
+	b=axGb5+c/sMx/ZCW6rL8cfzGU1LmsGZtLfR+IOrIyFNnGhONhXE1HbM695N2dxCYb9MpPx4
+	KsHa4sIDU2blsRX56Mum1rCLIDJ8qHUbm+w5XlIJ4K0j6ZSF2satYBSTDX/PRThh69/QIJ
+	N5dmOGHz71eViPQzlPUp/gdN7kYIkxE=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-260-kWM4EDWtOhWYn3i5ep523A-1; Mon,
+ 24 Feb 2025 09:45:21 -0500
+X-MC-Unique: kWM4EDWtOhWYn3i5ep523A-1
+X-Mimecast-MFC-AGG-ID: kWM4EDWtOhWYn3i5ep523A_1740408320
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 93BF3190E0B8;
+	Mon, 24 Feb 2025 14:45:20 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.88.79])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ABC8F19560AB;
+	Mon, 24 Feb 2025 14:45:19 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH v3 01/12] iomap: advance the iter directly on buffered read
+Date: Mon, 24 Feb 2025 09:47:46 -0500
+Message-ID: <20250224144757.237706-2-bfoster@redhat.com>
+In-Reply-To: <20250224144757.237706-1-bfoster@redhat.com>
+References: <20250224144757.237706-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250224143700.23035-1-raphaelsc@scylladb.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Looks good:
+iomap buffered read advances the iter via iter.processed. To
+continue separating iter advance from return status, update
+iomap_readpage_iter() to advance the iter instead of returning the
+number of bytes processed. In turn, drop the offset parameter and
+sample the updated iter->pos at the start of the function. Update
+the callers to loop based on remaining length in the current
+iteration instead of number of bytes processed.
 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/iomap/buffered-io.c | 45 +++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 25 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 8368a4ae716f..582a64f565e6 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -362,15 +362,14 @@ static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
+ 		pos >= i_size_read(iter->inode);
+ }
+ 
+-static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+-		struct iomap_readpage_ctx *ctx, loff_t offset)
++static loff_t iomap_readpage_iter(struct iomap_iter *iter,
++		struct iomap_readpage_ctx *ctx)
+ {
+ 	const struct iomap *iomap = &iter->iomap;
+-	loff_t pos = iter->pos + offset;
+-	loff_t length = iomap_length(iter) - offset;
++	loff_t pos = iter->pos;
++	loff_t length = iomap_length(iter);
+ 	struct folio *folio = ctx->cur_folio;
+ 	struct iomap_folio_state *ifs;
+-	loff_t orig_pos = pos;
+ 	size_t poff, plen;
+ 	sector_t sector;
+ 
+@@ -434,25 +433,22 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+ 	 * we can skip trailing ones as they will be handled in the next
+ 	 * iteration.
+ 	 */
+-	return pos - orig_pos + plen;
++	length = pos - iter->pos + plen;
++	return iomap_iter_advance(iter, &length);
+ }
+ 
+-static loff_t iomap_read_folio_iter(const struct iomap_iter *iter,
++static loff_t iomap_read_folio_iter(struct iomap_iter *iter,
+ 		struct iomap_readpage_ctx *ctx)
+ {
+-	struct folio *folio = ctx->cur_folio;
+-	size_t offset = offset_in_folio(folio, iter->pos);
+-	loff_t length = min_t(loff_t, folio_size(folio) - offset,
+-			      iomap_length(iter));
+-	loff_t done, ret;
+-
+-	for (done = 0; done < length; done += ret) {
+-		ret = iomap_readpage_iter(iter, ctx, done);
+-		if (ret <= 0)
++	loff_t ret;
++
++	while (iomap_length(iter)) {
++		ret = iomap_readpage_iter(iter, ctx);
++		if (ret)
+ 			return ret;
+ 	}
+ 
+-	return done;
++	return 0;
+ }
+ 
+ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
+@@ -489,15 +485,14 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
+ }
+ EXPORT_SYMBOL_GPL(iomap_read_folio);
+ 
+-static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
++static loff_t iomap_readahead_iter(struct iomap_iter *iter,
+ 		struct iomap_readpage_ctx *ctx)
+ {
+-	loff_t length = iomap_length(iter);
+-	loff_t done, ret;
++	loff_t ret;
+ 
+-	for (done = 0; done < length; done += ret) {
++	while (iomap_length(iter)) {
+ 		if (ctx->cur_folio &&
+-		    offset_in_folio(ctx->cur_folio, iter->pos + done) == 0) {
++		    offset_in_folio(ctx->cur_folio, iter->pos) == 0) {
+ 			if (!ctx->cur_folio_in_bio)
+ 				folio_unlock(ctx->cur_folio);
+ 			ctx->cur_folio = NULL;
+@@ -506,12 +501,12 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
+ 			ctx->cur_folio = readahead_folio(ctx->rac);
+ 			ctx->cur_folio_in_bio = false;
+ 		}
+-		ret = iomap_readpage_iter(iter, ctx, done);
+-		if (ret <= 0)
++		ret = iomap_readpage_iter(iter, ctx);
++		if (ret)
+ 			return ret;
+ 	}
+ 
+-	return done;
++	return 0;
+ }
+ 
+ /**
+-- 
+2.48.1
 
