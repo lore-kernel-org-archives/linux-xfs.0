@@ -1,39 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A08B21D540
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 09:31:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43B0423F439;
+	Mon, 24 Feb 2025 09:53:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740389511; cv=none; b=j4YoWNgQNz2OqmYCYt12U/TSLr4rXbbnkqtciu7H0bhK8Q+rAR0XfmZOYa9To+xcxRY9tSxFwPhsUBoTfFjgXD33BLh7vRRJNYWY3GC9dxsiUhz/iAw+Nq31xmS2kBEA2Z/2wDvDxsOUuuJnHUPRMTI1/y0YL60KFS/fiKlK4dw=
+	t=1740390830; cv=none; b=FKo9mgqjY5DPjz/gh96jJuiBMyjiece+/hyoKr3LQZv69WTM64kqLLXsrATFFPGXFTA0tpmBof6z7dHfiaiS1DuZEzlh5++Y0W69UgzHcpukkZ9peNTFEN7giUq6kKlSg3e7AtrGkmQi9x7cfQTdPe2aVe0ni/2nPJhPFmjlIBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740389511; c=relaxed/simple;
-	bh=xF5oiosf6GwA0WI36ooh7OtTEvTg28RBNQWa5YVRfjA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jcyFYEbTvZdHVGu7U2ngxRhX23QdfFWBP/5bjLEBEKcj2sqggR8I3lR6Ceu/qnPMTeQtM3C8whwkk+ecpaPCXCSN1GaNRopdEjFYS8jEnjHFlO/42njXJqmwG0EW9aI/ltG2+tmaM4gH0jNy2IHtdrKB3JxdWAjEGA0wljKFiEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kANNGPvQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740390830; c=relaxed/simple;
+	bh=g6VMlunQlRDJng03dDx4fAmN66ot/J1KNDpnUBk3Uyk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=ulWgXpaoEulCWbVBF5Kty8v9E4VqgC7qZ4FSKPfInZenQ9negH3nbeiP1lXQq/1zmdIcBpvrPW8JTieXVHqbZbyElyOI9q1ZHTkFtcEr/8H5qE1jwNEZxE4B3eIdfRrIgFy/RqxlrfrJDCPOnI+VNwzXOJgikTcgeDhL4iq2pHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u0usiYCP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kANNGPvQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C042C4CED6;
-	Mon, 24 Feb 2025 09:31:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u0usiYCP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 349C1C4CED6;
+	Mon, 24 Feb 2025 09:53:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740389511;
-	bh=xF5oiosf6GwA0WI36ooh7OtTEvTg28RBNQWa5YVRfjA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kANNGPvQV+YmI93TmWmzjPHbrIWwwzM9dsnua4Fn+UPMALeDm1TujXAwen7JRdNyq
-	 WyLw7gRGOLEPuT2Js+Poq6rzHOXMgRzp+3wy7vccHM7G05s4FE5MaXkc3MksbcGIqG
-	 4VhEYSWn2A/RW/oQAeKU4AHlyxAptL3wmot8WfbY63RfGR166WggVzXPBfvwo+6Gz5
-	 7HS3gI1uL/GyPezVbFHgamQ3/zNKsOvQPXi2kLrUBB4HFvkoS5icu7LR2Jvsl15dGF
-	 HdJvvi+I+GhZTQiI5XEStbxxdvoJWx+cY6I4MCszrS7tXPhHH7PPsbRx+b8vloHLDC
-	 sd63+JgsDMTlQ==
-Date: Mon, 24 Feb 2025 10:31:45 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Bastian Germann <bage@debian.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mkfs: Correct filesize declaration
-Message-ID: <27ku6hjtu52wy4cfixper3k6npozxceouvped5ragjk6vbuquh@2xbib6mk2mmu>
-References: <AC2xTDvxLrb9fDp2I7P3JDsI4ZBtGzO3sE-QruF5E6XnVkYJTWianMNi0rLM0B5_2Y5vXfzx1ayh1klhTNOu5A==@protonmail.internalid>
- <20250223141658.5257-1-bage@debian.org>
+	s=k20201202; t=1740390829;
+	bh=g6VMlunQlRDJng03dDx4fAmN66ot/J1KNDpnUBk3Uyk=;
+	h=Date:From:To:Cc:Subject:From;
+	b=u0usiYCPpGjJz7W/r+tTDedwSQMO7Lzj2OGrQ7vpI1I6Ni/J58p4fjs01N0vVrCAy
+	 CupqoMmeyJpmyBT33Swem7HP4O4OA6qZfthw2HnsZgFr0H9T56aiYr5z8HSIvhJ3wo
+	 ILS61Ps7NSn2v37GJTsxM5FAS2tS1WmZhYCJYPxRjxaqBATn6A3KKZsis22HoJbvBC
+	 y5bUAgcJHr9xYjQfadxhzbrj9AfhEsQrt1QeJxY+PA7PsZYrl0y2GkNEOsO7eMJumX
+	 eTDcPsCHnH8iIhJ75t4YE7EeEjvUZNPoyVSCrYXZ1Xo9lYedRKjQFhXI8schHBm7m7
+	 B5W68rNG+/KDA==
+Date: Mon, 24 Feb 2025 20:23:38 +1030
+From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>, Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, Gao Xiang <xiang@kernel.org>,
+	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+	Jeffle Xu <jefflexu@linux.alibaba.com>,
+	Sandeep Dhavale <dhavale@google.com>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>, Coly Li <colyli@kernel.org>,
+	Kent Overstreet <kent.overstreet@linux.dev>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	linux-hardening@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+	linux-btrfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-bcache@vger.kernel.org
+Subject: [PATCH 0/8][next] Avoid a couple hundred
+ -Wflex-array-member-not-at-end warnings
+Message-ID: <cover.1739957534.git.gustavoars@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,35 +55,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250223141658.5257-1-bage@debian.org>
 
-On Sun, Feb 23, 2025 at 03:16:54PM +0100, Bastian Germann wrote:
-> The filesize() implementation was changed to return off_t.
-> Its declaration still has long. Fix the declaration.
-> 
-> Fixes: 73fb78e5ee8940 ("mkfs: support copying in large or sparse files")
-> Signed-off-by: Bastian Germann <bage@debian.org>
+This patch series aims to fix a couple hundred -Wflex-array-member-not-at-end
+warnings by creating a new tagged struct `struct bio_hdr` within flexible
+structure `struct bio`.
 
-https://lore.kernel.org/linux-xfs/20250217155043.78452-1-preichl@redhat.com/T/#m90c87f94c6f85445432f403c57e8eeb8cf0c92c6
+This new tagged struct will be used to fix problematic declarations
+of middle-flex-arrays in composite structs, like these[1][2][3], for
+instance.
 
-> ---
->  mkfs/proto.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 6dd3a200..981f5b11 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -20,7 +20,7 @@ static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
->  static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
->  static int newregfile(char **pp, char **fname);
->  static void rtinit(xfs_mount_t *mp);
-> -static long filesize(int fd);
-> +static off_t filesize(int fd);
->  static int slashes_are_spaces;
-> 
->  /*
-> --
-> 2.48.1
-> 
-> 
+[1] https://git.kernel.org/linus/a7e8997ae18c42d3
+[2] https://git.kernel.org/linus/c1ddb29709e675ea
+[3] https://git.kernel.org/linus/57be3d3562ca4aa6
+
+Gustavo A. R. Silva (8):
+  block: blk_types.h: Use struct_group_tagged() in flex struct bio
+  md/raid5-ppl: Avoid -Wflex-array-member-not-at-end warning
+  xfs: Avoid -Wflex-array-member-not-at-end warnings
+  erofs: Avoid -Wflex-array-member-not-at-end warnings
+  btrfs: Avoid -Wflex-array-member-not-at-end warnings
+  nvme: target: Avoid -Wflex-array-member-not-at-end warnings
+  md/raid5: Avoid -Wflex-array-member-not-at-end warnings
+  bcache: Avoid -Wflex-array-member-not-at-end warnings
+
+ drivers/md/bcache/bcache.h     |  4 +-
+ drivers/md/bcache/journal.c    | 10 ++--
+ drivers/md/bcache/journal.h    |  4 +-
+ drivers/md/bcache/super.c      |  8 ++--
+ drivers/md/raid5-ppl.c         |  8 ++--
+ drivers/md/raid5.c             | 10 ++--
+ drivers/md/raid5.h             |  2 +-
+ drivers/nvme/target/nvmet.h    |  4 +-
+ drivers/nvme/target/passthru.c |  2 +-
+ drivers/nvme/target/zns.c      |  2 +-
+ fs/btrfs/disk-io.c             |  4 +-
+ fs/btrfs/volumes.h             |  2 +-
+ fs/erofs/fileio.c              | 25 ++++++----
+ fs/erofs/fscache.c             | 13 +++---
+ fs/xfs/xfs_log.c               | 15 +++---
+ fs/xfs/xfs_log_priv.h          |  2 +-
+ include/linux/blk_types.h      | 84 ++++++++++++++++++----------------
+ 17 files changed, 107 insertions(+), 92 deletions(-)
+
+-- 
+2.43.0
+
