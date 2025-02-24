@@ -1,87 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 846A42627E1
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 17:54:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E75916CD1D
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 19:07:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740419691; cv=none; b=IVAx4aRWDA1FsLfair+288VPn8mptuDDxRlogyuY8qA1Z3iGTqnz3JNYieWgnLtU8ZqXijEi6bn62M8LFZlKq8o1F6zr8u8u7ZipTAmBFuDcFtr56XCarcYN12GbPCT+a4S81iIBjriMTC7fl/02+rifSRE0MdTVirDU3S3xtxM=
+	t=1740424042; cv=none; b=fjzUa6i7xrz31983+cn/MX16Wy6kSLkbaY4K3TMH/mufeY39YrnUriI01dnd0LniPLDjs4Lk22RALXhkpWsNZtyGbS18Wa1d6hZMkkYW+zQkw974qMPq8nbbM6LcWUOsA45RtQ09BXKoOpEKN8sCPUxaD2COBeXmZx9iVId3YNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740419691; c=relaxed/simple;
-	bh=mKntMTeXqKRaUBzaf6GqqM8qYu6PiNeENMAXHpqLARI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hZH/cNpF/gbraUtzjg4m9nwR/yjg3Z89w5RfbSxjz/E09+4ZIkl+6dAn9DjypF/Fsyc5u52JXHsKk/AWUGshi07q08fIKePvFeaFFjHgznCVFpIojQT2Q9uf0n/4MYOQV+DnRrmO82qXPFRRgQpiOZqfu2jDiBLOUr7sz2nlavs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iwme0ULw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740424042; c=relaxed/simple;
+	bh=xTTAr9GXAfynynYzcgjpSuJLzorii5bcd4ZGKkJeiNE=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=K9fGEC/SCRaWCPqfDbLAQYAKVHwFiuY3eIgEs8dtMX+3yt4Z81QJfGVO00qFrRJ1Sc2q8Z77AHEzHgJvbIAHWXQaZPXBxd7nBhVGnkTnkA9eKFe16TPV4PciWn8zDDKUhWJsb3GBsvPnCeVnO2ceuDPTdSNswcVlQuFB/wDj6sM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BqswBGmC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iwme0ULw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0C0C4CED6;
-	Mon, 24 Feb 2025 17:54:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BqswBGmC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87884C4CED6;
+	Mon, 24 Feb 2025 19:07:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740419690;
-	bh=mKntMTeXqKRaUBzaf6GqqM8qYu6PiNeENMAXHpqLARI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iwme0ULwEIafK3+R9DAFi9w0LQb6dlLmsp+JS8HaY6D9lUGx/Pamu1QZ7iujvUsD7
-	 l1XdqPrAIvV2CDeLy97yoNrvOtzzzZaocEej7XCWiih6QVmj7NlyWxDRDUcj5Q3mPr
-	 DHX49Dlg2S5gVcH0GW9+qpB0NZF9HPN8FSXtNrd8EzotXK2zzRlkeL6wW7GGM4rVg6
-	 mJ7A7UtL3ihqyoLshENWLchpJMZqSxy4/xU5IKgbgm2WBummF/H/3+kuAzWeR/43R8
-	 X1S7GBKzqzNVuAFfd5aNmqjgiIDNr9i9NZe6BGe3A6heqawW6EMWuOuuRd5aHJ6Pkh
-	 CMKks8xzqieDA==
-Date: Mon, 24 Feb 2025 09:54:50 -0800
+	s=k20201202; t=1740424041;
+	bh=xTTAr9GXAfynynYzcgjpSuJLzorii5bcd4ZGKkJeiNE=;
+	h=Date:Subject:From:To:Cc:From;
+	b=BqswBGmCAn0DvJMCxuvpkzn3S2yNnBvOCiIN7tWpvJjf2QlOJqDANXVtfxgdKW68s
+	 x21N0i/QIdQU1GwPS+51bYGGKxqoXWH0yGd457AoNFKMm5sganZKosI5OtpEtn8bfD
+	 sTyRSfBfR0zcm1XajRqxfZAALy1BT9NbaLnvuIQlNX9QMHA3qygc1C9dO02vQtfD3F
+	 PwSx8RZgiH3VWuj6QwNlD9CqDvWjdglqg8gN3d2yD5r1UzXmPVwApfZRRAkQF1kxcu
+	 1Ysag1tCY7S4CzVzdfnrIL/K38foBvNGiW3gsRY9PKlfWVeMhl2O4EBspD9dEDvJda
+	 0pzdebV+16zaQ==
+Date: Mon, 24 Feb 2025 11:07:20 -0800
+Subject: [PATCHSET] xfsprogs: handle emoji filenames better
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_scrub: fix buffer overflow in string_escape
-Message-ID: <20250224175450.GG3028674@frogsfrogsfrogs>
-References: <20250220220758.GT21808@frogsfrogsfrogs>
- <20250224141103.GB931@lst.de>
+To: djwong@kernel.org, aalbersh@kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <174042401261.1205942.2400336290900827299.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250224141103.GB931@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Mon, Feb 24, 2025 at 03:11:03PM +0100, Christoph Hellwig wrote:
-> On Thu, Feb 20, 2025 at 02:07:58PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Need to allocate one more byte for the null terminator, just in case the
-> > /entire/ input string consists of non-printable bytes e.g. emoji.
-> > 
-> > Cc: <linux-xfs@vger.kernel.org> # v4.15.0
-> > Fixes: 396cd0223598bb ("xfs_scrub: warn about suspicious characters in directory/xattr names")
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
-> >  scrub/common.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/scrub/common.c b/scrub/common.c
-> > index 6eb3c026dc5ac9..7ea0277bc511ce 100644
-> > --- a/scrub/common.c
-> > +++ b/scrub/common.c
-> > @@ -320,7 +320,7 @@ string_escape(
-> >  	char			*q;
-> >  	int			x;
-> >  
-> > -	str = malloc(strlen(in) * 4);
-> > +	str = malloc((strlen(in) * 4) + 1);
-> 
-> Nit: no need for the inner braces.
-> 
-> But this open code string allocation and manipulation makes me feel
-> really bad.  Assuming we don't have a good alternative, can you
-> at least throw in a comment explaining the allocation length here?
+Hi all,
 
-Ok.  I'll change the code to read as follows:
+Ted told me about some bugs that the ext4 Unicode casefolding code has
+suffered over the past year -- they tried stripping out zero width
+joiner (ZWJ) codepoints to try to eliminate casefolded lookup comparison
+issues, but doing so corrupts compound emoji handling in filenames.
 
-	/*
-	 * Each non-printing byte renders as a four-byte escape sequence, so
-	 * allocate 4x the input length, plus a byte for the null terminator.
-	 */
-	str = malloc(strlen(in) * 4 + 1);
+XFS of course persists names with byte accuracy (aka it doesn't do
+casefolding or normalization) so it's not affected by those problems.
+However, xfs_scrub has the ability to warn about confusing names and
+other utf8 shenanigans so I decided to expand fstests.
+
+I wired up Ted's confusing names into generic/453 in fstests and it
+promptly crashed when trying to warn about filenames that consist
+entirely of compound emoji (e.g. heart + zwj + bandaid render as a heart
+with a bandaid over it).  So there's a patch to fix that buffer
+overflow.  There's a second patch to avoid complaining about ZWJ unless
+it results in confusing names in the same namespace.  The third patch
+fixes a minor reporting problem when parent pointers are enabled.
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-emoji-fixes
+---
+Commits in this patchset:
+ * xfs_scrub: fix buffer overflow in string_escape
+ * xfs_scrub: don't warn about zero width joiner control characters
+ * xfs_scrub: use the display mountpoint for reporting file corruptions
+---
+ scrub/common.c   |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ scrub/unicrash.c |   10 ++++++++--
+ 2 files changed, 58 insertions(+), 4 deletions(-)
+
