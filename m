@@ -1,89 +1,77 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF6817BEC6
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 15:11:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A362561A0;
+	Mon, 24 Feb 2025 15:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740409909; cv=none; b=D3qyObowWMx+r1CwINPw2GtnZ2pIlZH0sghWUvMzdUdq3Xz+qLv2m+1RuxV/IDLMn3UKPe+TlfxN6pfa1LCRrVjaucpLA3hT6Wa/D+ZgASjUXhyJuPrhfnbcVjCamT4bmv4wBUGZuEWqHcsdp9XPOBsyORhc0ift4MzayLVbpBQ=
+	t=1740411215; cv=none; b=oaCK20p3rvnPOX/aPeElD3A/HV69YecGXiIoWVVbXCfNxSoyoCHjnUqdBg+4OxdeLONIOka/k6wscO9OZgzC6EBMa5pEensZMOMEnFiL71A5ZTdQxfvVLs/574oyT1ZcYq47JHHUXZiQ2EfQ9rZKTlvvnCNB3A4/kDl5x50DML8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740409909; c=relaxed/simple;
-	bh=16xJ+WGOXCx8IjEdszCekZ3zQDlr+sc1l1+5thcagjA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QR31cNSDcpLzfbk/KS9Mg9gUpDvzvb8uLS5KsGNx5SOMUS3fmF/n3/eCu5jKP+OTZi1q3uua6gKmT/e3/H4dHLbE+gYZvaz4geMDr3cTTw6NfGJ+5xhjxyTYd52/KnFjk5Zek+/UEsH17KmCz1K5r8QCs2Cj19EkQO6S+g+ocbg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UfXCTCXf; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1740411215; c=relaxed/simple;
+	bh=dN+YAJEN00mhIkCuzbWGSXa0wqDJ074BJrDkjMGHkmc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KImHzlKl4U21KmZSCzX7pXEutl770wFrPMmVjjCQycPBIQ5coGmiDqGsubkyEiEK/Dl6RSPq76gQNTdo5+4XKDqK/hFv9ScNG27DPnhtoo8WmtkosSg5jfEVweJQjNXE4HME3sZ7QclESNR4tEbFN7O2tZqDs+sU5aYJp0ZXTLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XgmiQpUP; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UfXCTCXf"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XgmiQpUP"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=QVGajRmqmN+B9NOxicSVFCtx9HYVMzqFm4LN71THXP8=; b=UfXCTCXfH9DdirGt5eGRXnI3pD
-	k5OS2CeTEJlvt+gCSvhFnmFAEigIvdufKQPqyVkwHMn3cesmeXtXw25VwGpcRopOnGVyaPKUGo3Ut
-	7tYBcVWM2yQtPiTSPu6HhZPYCyZGoLyfSHZX0D3w7ZKQpyVkc0JOLgSgBfsWfoWu4OKTFnu/k/wSd
-	5wF4JtN8Ga1vDn0WUZEMoS7Koov8/O72LloAssXUrAgzrmqzYFBLHU1ZRP3zs74fOci7+ipYWXtUb
-	llG20Gnr/ScO9c5H3O1Vr9CyENlDgcYkAqWw2JwjKNVZ5XTxV8s0RXB6KqMe2iFaX1P8NhSENamJd
-	ON23yF9Q==;
-Received: from syn-035-131-028-085.biz.spectrum.com ([35.131.28.85] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tma7X-0000000EEg3-3Ovj;
-	Mon, 24 Feb 2025 15:11:47 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] xfs: remove the XBF_STALE check from xfs_buf_rele_cached
-Date: Mon, 24 Feb 2025 07:11:38 -0800
-Message-ID: <20250224151144.342859-5-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250224151144.342859-1-hch@lst.de>
-References: <20250224151144.342859-1-hch@lst.de>
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=2kZuikH82YSc7S3HfNANRsQo2YtDaV4SIY3/Jou1Rhs=; b=XgmiQpUPZkdrwGIkETA+Q6X97t
+	mycvbbUMQMPAW6+yiqImO/SZLBqZHD33x2o/vxQafs/yKs2yNqB4XnKneI3cX4e9Bg/S+dhc2q53G
+	PE5SwsGWZmTDUhL5Y1IffM6UwRRLIpcJ7xRxDYGw/n+L9yOYTX1L395fg2SqqvlqjogKGcO6SV28Z
+	fMQrFmz27C5HoTPchxfMJ3pfrrwIa77t7E2NCHjn1QEcnJ2i4MPmGloIEJWOTQ4Mn5a0Hh9tqzp0R
+	5Cl1ngj3ZzgxDKHfbE5n9UyBMU1+qCDGDU3g1EkQ2LKlamb1OK+4QslmPGEERJztBFJL8ACj1pBuJ
+	fIn0HkaA==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tmaSX-00000007diT-2H0i;
+	Mon, 24 Feb 2025 15:33:29 +0000
+Date: Mon, 24 Feb 2025 15:33:29 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Raphael S. Carvalho" <raphaelsc@scylladb.com>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+	djwong@kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] mm: Fix error handling in __filemap_get_folio() with
+ FGP_NOWAIT
+Message-ID: <Z7yRSe-nkfMz4TS2@casper.infradead.org>
+References: <20250224081328.18090-1-raphaelsc@scylladb.com>
+ <20250224141744.GA1088@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250224141744.GA1088@lst.de>
 
-xfs_buf_stale already set b_lru_ref to 0, and thus prevents the buffer
-from moving to the LRU.  Remove the duplicate check.
+On Mon, Feb 24, 2025 at 03:17:44PM +0100, Christoph Hellwig wrote:
+> On Mon, Feb 24, 2025 at 05:13:28AM -0300, Raphael S. Carvalho wrote:
+> > +		if (err) {
+> > +			/* Prevents -ENOMEM from escaping to user space with FGP_NOWAIT */
+> > +			if ((fgp_flags & FGP_NOWAIT) && err == -ENOMEM)
+> > +				err = -EAGAIN;
+> >  			return ERR_PTR(err);
+> 
+> I don't think the comment is all that useful.  It's also overly long.
+> 
+> I'd suggest this instead:
+> 
+> 			/*
+> 			 * When NOWAIT I/O fails to allocate folios this could
+> 			 * be due to a nonblocking memory allocation and not
+> 			 * because the system actually is out of memory.
+> 			 * Return -EAGAIN so that there caller retries in a
+> 			 * blocking fashion instead of propagating -ENOMEM
+> 			 * to the application.
+> 			 */
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_buf.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index cde8707b9892..882800a008bf 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -99,12 +99,6 @@ xfs_buf_stale(
- 	 */
- 	bp->b_flags &= ~_XBF_DELWRI_Q;
- 
--	/*
--	 * Once the buffer is marked stale and unlocked, a subsequent lookup
--	 * could reset b_flags. There is no guarantee that the buffer is
--	 * unaccounted (released to LRU) before that occurs. Drop in-flight
--	 * status now to preserve accounting consistency.
--	 */
- 	spin_lock(&bp->b_lock);
- 	atomic_set(&bp->b_lru_ref, 0);
- 	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
-@@ -1033,7 +1027,7 @@ xfs_buf_rele_cached(
- 	}
- 
- 	/* we are asked to drop the last reference */
--	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-+	if (atomic_read(&bp->b_lru_ref)) {
- 		/*
- 		 * If the buffer is added to the LRU, keep the reference to the
- 		 * buffer for the LRU and clear the (now stale) dispose list
--- 
-2.45.2
-
+I don't think it needs a comment at all, but the memory allocation
+might be for something other than folios, so your suggested comment
+is misleading.
