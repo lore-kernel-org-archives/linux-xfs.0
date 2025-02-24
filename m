@@ -1,55 +1,55 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2629192B96
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 14:45:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A52BE24EF62
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 14:45:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740408333; cv=none; b=UB8dpJ5bgSG+5ayaIcbQnDmatc4j831bT6tGc0UDzbRJe3yCGaP3yCKeeDQKwOJXgDWFMJNkl7x+k5AYjScYN9H8fX6w8/QTKfDsF9fH9fQQjS76UJf223RyCFplKU8UvH/G2+UPzzscqu145Q1is4gHE/tiR4jJHzSCqiPT3sM=
+	t=1740408336; cv=none; b=l4v+k9WCVYYxo5wPAPDQ/I1g8/jsye4qyIpriX8kO4fuetd3Duw6JZs2S19eU+oOrfvu4Jq2VMl5/ONJjtLELgsycqDh+3ycKcGtYGrLxA23Ec9sMsK53evgvsikR78UXncMHp7mg17wmhRHMAYJPAH43eBR+c5Zd10giNBZPYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740408333; c=relaxed/simple;
-	bh=vQsz47SxnCcUZ17hmyqxM6BagthYhmwgQn/8CjSl/7Y=;
+	s=arc-20240116; t=1740408336; c=relaxed/simple;
+	bh=nsQXt/RqrWwcsktLas3zwKcscZIeV30liDsygqfWyAg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LMckTNG8Wus2zZV7n7jlXaHrb9dRIPNtxxwqlEgS6sUILcT7p9rdVPGL9u4N41uIwP+N6sgZSaZgmTfiZ51OatnzePy+Af15yalGaU0/Ins4ODhCgsNuUwgaW6h7s5t0nnxItR89FYOg67YqZagQMfKGovBqYivy/Ek0jvf+IrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VeB9QwhT; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version:Content-Type; b=b5svdhEM1UZ5y/Y0nUa+aViZr69hy8f2Mo268sn4e7QcfWv3yKxT/TvRBuaQDCM08dNaP5zoyPAHmgX7JoLhNyu5b80dJjN4ACkvhIwGphlRZckb0y5ydpL11h/bF4fy060/aOCes7489V9YAwTJHd6XmOEPt/Sct0d5NcjLXUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gEKaadz3; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VeB9QwhT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gEKaadz3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740408331;
+	s=mimecast20190719; t=1740408333;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xeTgW91EqW2rIu/VRzRweVhDUwY9iHwNHUu48m45Ptg=;
-	b=VeB9QwhTA3YZC9qWbeaH9vKt3380YdBm9h+qkz0rdgi97S1JcbaaFNliiBc1iZIdzBDicp
-	Sq65+o1J4B74n03DSgvZHqAzsdcNtxi2A+Qmdm+FehHbpMj1Ns9tIABeTTe4s5KLXLae9t
-	Aqfhq+Gf3eSWRo9UjIn7drHIJGa7Mvo=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=2mH3KqqR73R9pon3Bs56rIU8sRyTbKp/l5G8gr8ZCWA=;
+	b=gEKaadz30xk594bJnmMPbyZbqjoTHVCXF00XB6Inaw35OZ6g8M0ewNv+XMC5t9fft3D9WK
+	Yr1DjmzH1+z1Q+r49I72znr3JHQ+JLYllImKpFc4RrFgu//iU826/kp94zIClIbuzdk2/c
+	7s/5NYR7jWhyQ+DBf1AND2D+9OZeslE=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-607-WlOcLlhhPSyIohp2UiF5UA-1; Mon,
- 24 Feb 2025 09:45:27 -0500
-X-MC-Unique: WlOcLlhhPSyIohp2UiF5UA-1
-X-Mimecast-MFC-AGG-ID: WlOcLlhhPSyIohp2UiF5UA_1740408326
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-222-oYUKXahZO264tIlOUoJE_g-1; Mon,
+ 24 Feb 2025 09:45:29 -0500
+X-MC-Unique: oYUKXahZO264tIlOUoJE_g-1
+X-Mimecast-MFC-AGG-ID: oYUKXahZO264tIlOUoJE_g_1740408327
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 73E8518D95F1;
-	Mon, 24 Feb 2025 14:45:26 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A99771809C8D;
+	Mon, 24 Feb 2025 14:45:22 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.88.79])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 61B5619560AA;
-	Mon, 24 Feb 2025 14:45:25 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 24B201955DCE;
+	Mon, 24 Feb 2025 14:45:20 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>,
 	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v3 05/12] dax: push advance down into dax_iomap_iter() for read and write
-Date: Mon, 24 Feb 2025 09:47:50 -0500
-Message-ID: <20250224144757.237706-6-bfoster@redhat.com>
+Subject: [PATCH v3 02/12] iomap: advance the iter on direct I/O
+Date: Mon, 24 Feb 2025 09:47:47 -0500
+Message-ID: <20250224144757.237706-3-bfoster@redhat.com>
 In-Reply-To: <20250224144757.237706-1-bfoster@redhat.com>
 References: <20250224144757.237706-1-bfoster@redhat.com>
 Precedence: bulk
@@ -62,108 +62,89 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-DAX read and write currently advances the iter after the
-dax_iomap_iter() returns the number of bytes processed rather than
-internally within the iter handler itself, as most other iomap
-operations do. Push the advance down into dax_iomap_iter() and
-update the function to return op status instead of bytes processed.
-
-dax_iomap_iter() shortcuts reads from a hole or unwritten mapping by
-directly zeroing the iov_iter, so advance the iomap_iter similarly
-in that case.
-
-The DAX processing loop can operate on a range slightly different
-than defined by the iomap_iter depending on circumstances. For
-example, a read may be truncated by inode size, a read or write
-range can be increased due to page alignment, etc. Therefore, this
-patch aims to retain as much of the existing logic as possible.
-
-The loop control logic remains pos based, but is sampled from the
-iomap_iter on each iteration after the advance instead of being
-updated manually. Similarly, length is updated based on the output
-of the advance instead of being updated manually. The advance itself
-is based on the number of bytes transferred, which was previously
-used to update the local copies of pos and length.
+Update iomap direct I/O to advance the iter directly rather than via
+iter.processed. Update each mapping type helper to advance based on
+the amount of data processed and return success or failure.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/dax.c | 27 +++++++++++----------------
- 1 file changed, 11 insertions(+), 16 deletions(-)
+ fs/iomap/direct-io.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 296f5aa18640..139e299e53e6 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1431,8 +1431,7 @@ int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 138d246ec29d..8ebd5b3019a7 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -335,8 +335,7 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
+ 	return opflags;
  }
- EXPORT_SYMBOL_GPL(dax_truncate_page);
  
--static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
--		struct iov_iter *iter)
-+static int dax_iomap_iter(struct iomap_iter *iomi, struct iov_iter *iter)
+-static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+-		struct iomap_dio *dio)
++static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ {
+ 	const struct iomap *iomap = &iter->iomap;
+ 	struct inode *inode = iter->inode;
+@@ -349,7 +348,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 	bool need_zeroout = false;
+ 	bool use_fua = false;
+ 	int nr_pages, ret = 0;
+-	size_t copied = 0;
++	u64 copied = 0;
+ 	size_t orig_count;
+ 
+ 	if (atomic && length != fs_block_size)
+@@ -513,30 +512,28 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 	/* Undo iter limitation to current extent */
+ 	iov_iter_reexpand(dio->submit.iter, orig_count - copied);
+ 	if (copied)
+-		return copied;
++		return iomap_iter_advance(iter, &copied);
+ 	return ret;
+ }
+ 
+-static loff_t iomap_dio_hole_iter(const struct iomap_iter *iter,
+-		struct iomap_dio *dio)
++static int iomap_dio_hole_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ {
+ 	loff_t length = iov_iter_zero(iomap_length(iter), dio->submit.iter);
+ 
+ 	dio->size += length;
+ 	if (!length)
+ 		return -EFAULT;
+-	return length;
++	return iomap_iter_advance(iter, &length);
+ }
+ 
+-static loff_t iomap_dio_inline_iter(const struct iomap_iter *iomi,
+-		struct iomap_dio *dio)
++static int iomap_dio_inline_iter(struct iomap_iter *iomi, struct iomap_dio *dio)
  {
  	const struct iomap *iomap = &iomi->iomap;
- 	const struct iomap *srcmap = iomap_iter_srcmap(iomi);
-@@ -1451,8 +1450,10 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
- 		if (pos >= end)
- 			return 0;
+ 	struct iov_iter *iter = dio->submit.iter;
+ 	void *inline_data = iomap_inline_data(iomap, iomi->pos);
+ 	loff_t length = iomap_length(iomi);
+ 	loff_t pos = iomi->pos;
+-	size_t copied;
++	u64 copied;
  
--		if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
--			return iov_iter_zero(min(length, end - pos), iter);
-+		if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN) {
-+			done = iov_iter_zero(min(length, end - pos), iter);
-+			return iomap_iter_advance(iomi, &done);
-+		}
- 	}
- 
- 	/*
-@@ -1485,7 +1486,7 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
- 	}
- 
- 	id = dax_read_lock();
--	while (pos < end) {
-+	while ((pos = iomi->pos) < end) {
- 		unsigned offset = pos & (PAGE_SIZE - 1);
- 		const size_t size = ALIGN(length + offset, PAGE_SIZE);
- 		pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
-@@ -1535,18 +1536,16 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
- 			xfer = dax_copy_to_iter(dax_dev, pgoff, kaddr,
- 					map_len, iter);
- 
--		pos += xfer;
--		length -= xfer;
--		done += xfer;
--
--		if (xfer == 0)
-+		length = xfer;
-+		ret = iomap_iter_advance(iomi, &length);
-+		if (!ret && xfer == 0)
- 			ret = -EFAULT;
- 		if (xfer < map_len)
- 			break;
- 	}
- 	dax_read_unlock(id);
- 
--	return done ? done : ret;
-+	return ret;
+ 	if (WARN_ON_ONCE(!iomap_inline_data_valid(iomap)))
+ 		return -EIO;
+@@ -558,11 +555,10 @@ static loff_t iomap_dio_inline_iter(const struct iomap_iter *iomi,
+ 	dio->size += copied;
+ 	if (!copied)
+ 		return -EFAULT;
+-	return copied;
++	return iomap_iter_advance(iomi, &copied);
  }
  
- /**
-@@ -1585,12 +1584,8 @@ dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	if (iocb->ki_flags & IOCB_NOWAIT)
- 		iomi.flags |= IOMAP_NOWAIT;
- 
--	while ((ret = iomap_iter(&iomi, ops)) > 0) {
-+	while ((ret = iomap_iter(&iomi, ops)) > 0)
- 		iomi.processed = dax_iomap_iter(&iomi, iter);
--		if (iomi.processed > 0)
--			iomi.processed = iomap_iter_advance(&iomi,
--							    &iomi.processed);
--	}
- 
- 	done = iomi.pos - iocb->ki_pos;
- 	iocb->ki_pos = iomi.pos;
+-static loff_t iomap_dio_iter(const struct iomap_iter *iter,
+-		struct iomap_dio *dio)
++static int iomap_dio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ {
+ 	switch (iter->iomap.type) {
+ 	case IOMAP_HOLE:
 -- 
 2.48.1
 
