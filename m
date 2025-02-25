@@ -1,140 +1,135 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f45.google.com (mail-io1-f45.google.com [209.85.166.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C26F21D3EB
-	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 20:27:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91EC211294
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 20:30:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740515256; cv=none; b=ZXlZlDeccDO9y/ObOn2yfvqbS5HhlUORz+nCLnaWeM8MnfWfHf/6pOvRUw0m0DzGnM6PK8vQqCRa7VwpK4N1rCdOckfi7R5tG/6mPkBezysCwf4/caXeAAFeGSvNMzbJjpKS1P295M0GfnqRBURBA9qb4lytYbuyzI2KUTFvTtY=
+	t=1740515443; cv=none; b=ivWyFk3Ivx1rjIu5AVBhS1cmUPfsWh96KNiaKBvoYBo/n9jZRwsSwnstH/mwssL8KdRzqv4R4phyAtt3jfBteRPxNFB+L4yvo4fDcmP1kit7Vbb56fVEwpmsQSNzNFYzia09rcQFqbxijKUABCAmF9fKRnQRjQm9/+Wab4NKBdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740515256; c=relaxed/simple;
-	bh=oZERClqfDLXmFStpZ87ci452EiykCqig6u/w5s9tfXo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W2kuRla+ye597NwSLKS0/omktCCnRC5+Qnn4ek0WRVdnAR1dgqpn35zYRAcFGYWeR3s+ZN1WP20UghXUeYEkXrszDHHKCtAGwmDC1+JnuF/8bQN2SHQSh5VL5a+9pT1gPGP6f15veXzyfNcQTYybRU1JAs5qe7DHhrgN1mOnw6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <mkl@pengutronix.de>)
-	id 1tn1WT-00041c-9F; Tue, 25 Feb 2025 21:27:21 +0100
-Received: from moin.white.stw.pengutronix.de ([2a0a:edc0:0:b01:1d::7b] helo=bjornoya.blackshift.org)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <mkl@pengutronix.de>)
-	id 1tn1WS-002pgN-2s;
-	Tue, 25 Feb 2025 21:27:20 +0100
-Received: from pengutronix.de (p5b164285.dip0.t-ipconnect.de [91.22.66.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	(Authenticated sender: mkl-all@blackshift.org)
-	by smtp.blackshift.org (Postfix) with ESMTPSA id 461863CBC72;
-	Tue, 25 Feb 2025 20:27:20 +0000 (UTC)
-Date: Tue, 25 Feb 2025 21:27:18 +0100
-From: Marc Kleine-Budde <mkl@pengutronix.de>
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
-	Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
-	James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Chris Mason <clm@fb.com>, 
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
-	Ilya Dryomov <idryomov@gmail.com>, Dongsheng Yang <dongsheng.yang@easystack.cn>, 
-	Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>, 
-	Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
-	Pengutronix Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, 
-	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Hans de Goede <hdegoede@redhat.com>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
-	Selvin Xavier <selvin.xavier@broadcom.com>, Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	linux-arm-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	cocci@inria.fr, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-spi@vger.kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-sound@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, 
-	platform-driver-x86@vger.kernel.org, imx@lists.linux.dev, linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v3 13/16] spi: spi-imx: convert timeouts to
- secs_to_jiffies()
-Message-ID: <20250225-cuddly-cobalt-hoatzin-e51fa3-mkl@pengutronix.de>
+	s=arc-20240116; t=1740515443; c=relaxed/simple;
+	bh=2mVGB3ONfKEx7GJ+S6y95LCKLGj9XhJhILt75fQVfOw=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Bra3v/73L7ymHO9qXqaFivGv0Eug6gMIwSkjeX2HGd2p7Qs5I3dEb4GCQX2VFAGgYq+/95Kpg4cgtEIM7wejlZbXkS4TSncun4C1/hFabuJZb9qffhG53eAnQs5+24ihE0BTaqzex6FxI+xckXA5X8pEeuDtE9JKfGFj83htfEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=QDk/Ac62; arc=none smtp.client-ip=209.85.166.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="QDk/Ac62"
+Received: by mail-io1-f45.google.com with SMTP id ca18e2360f4ac-8553e7d9459so186515339f.2
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 12:30:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1740515440; x=1741120240; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pLp9Ea62UroP9Hu5zCjkj8kz5zOw20u3Q4aJrEzL0tk=;
+        b=QDk/Ac62IhNXGzKqngYdxZCSXbG5x8xmDSsbPgHkPXGRGhqIjqDGUiGjOIbLEotfcn
+         se3HyG1DX3SZks3sHjaY6okoeRFvBB28UNNWCtKlmSS+QyAwGicvJqcauIZFVZXiYKQU
+         GgzXL1VOQXUMriHNRAZrFoShny2wIC/1+jmbs9w9ym9u1Gc8Z0PCpMhRpodbcGwM+P4G
+         uwqOS3GH+wGHNc+y/i6iy5FR0l3xZ4BM2o5/R3ldtNz9Ln85GoYjxESZTB5rcK8ul0rU
+         mXkT0l3LrxssCkjCIwxLzbEHfq1DkRgLLy3fvpgeykTgkFbAUQqMwfGga9Lhpd3vXWDD
+         W+JQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740515440; x=1741120240;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=pLp9Ea62UroP9Hu5zCjkj8kz5zOw20u3Q4aJrEzL0tk=;
+        b=RVmozujp54Bc4jKPZg27hNuOgE7BE9YOvcaMAnNAT4UrcI1Nxg1fAsn0bJ45rZ38JZ
+         XxraIKFQdaQj2j3BI+jzv7RaFTOtaayTCJZjaKyaX0AFy714Pc0kJOBsVlJpSJNNSKfh
+         9AmzA4KjMB7q6DNGGZgLfCc9pwzJpyZu19sTQMKMFz5cTI9WoD7CWYPFVJAx8nhYA7aS
+         9A9QAVQZElxyEbxlPUnQnBJTmaWh/mqkhA2I4p1nZIgx/dTcG81rRtt4XaL5Z0iwPYll
+         vXSlT6M2uXTvRfuUXf5J88v//YNdrQm3+D0Rhb77WMa12nWikhu1vdBrc26h++wWU832
+         DSug==
+X-Forwarded-Encrypted: i=1; AJvYcCXKGCKEwYw0nnFBG6/EBe5l3HRBRIyyojOmxGqgIneQ8RhdxkMN6jNHiA4Inu2PhkLa4QjTlhWXy2s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzxA00DND/EhF9nav8VxuN5mV9QnAl36bBl73iFeMQpR2nm+uIi
+	LGdxl1JvOCMg/Es473SdI+XudxVve2aYIVwVqbkwfC+6k/5LAUwQP6wVwgjiB04=
+X-Gm-Gg: ASbGncvW9fnHL49d22XwBcU0ayrpOwKyGNLlIgXfqcqF4TRKVu/qwsnyS2hVarSv0nZ
+	ivQKSOYFg625EAs3S057A/yZ0OEu4btvMtxFShwK2InvqeoxymgVNdH0VDCHePSFgpYtgjR8WZv
+	LV+TMtLerQjOkwE0VRVfcQkMIN0yy1u8IUOzvWtiewqTl2W0LWuTvJb1HMItVfU0H2DiPuNW736
+	BVkkiWgPlsJEWSpEWR76dD3RoJxF/BbkUdPwlbTjLQmToAEoXUepRB4VZeemw49MnWY7lXMDY+C
+	2BRxbvP3mJOGhdcc
+X-Google-Smtp-Source: AGHT+IEI1HpA9fGHJ1GdkYmfu92FscKbuH3o9L2lVKiqa4D5puwjeIXVc4djLm6mFSVg2XH039gtQg==
+X-Received: by 2002:a05:6e02:b2a:b0:3d1:968a:6d46 with SMTP id e9e14a558f8ab-3d3d1f40415mr9808255ab.6.1740515439644;
+        Tue, 25 Feb 2025 12:30:39 -0800 (PST)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d361ca3896sm4764255ab.53.2025.02.25.12.30.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Feb 2025 12:30:38 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+ Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
+ James Smart <james.smart@broadcom.com>, 
+ Dick Kennedy <dick.kennedy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Xiubo Li <xiubli@redhat.com>, 
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
+ Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>, 
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+ Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>, 
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>, 
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+ Hans de Goede <hdegoede@redhat.com>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
+ Selvin Xavier <selvin.xavier@broadcom.com>, 
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+ Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: cocci@inria.fr, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, 
+ Takashi Iwai <tiwai@suse.de>, Carlos Maiolino <cmaiolino@redhat.com>
+In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
 References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
- <20250225-converge-secs-to-jiffies-part-two-v3-13-a43967e36c88@linux.microsoft.com>
+Subject: Re: (subset) [PATCH v3 00/16] Converge on using secs_to_jiffies()
+ part two
+Message-Id: <174051543709.2186691.13969880655903967909.b4-ty@kernel.dk>
+Date: Tue, 25 Feb 2025 13:30:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="u45zipechepd67vw"
-Content-Disposition: inline
-In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-13-a43967e36c88@linux.microsoft.com>
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: mkl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3-dev-94c79
 
 
---u45zipechepd67vw
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v3 13/16] spi: spi-imx: convert timeouts to
- secs_to_jiffies()
-MIME-Version: 1.0
+On Tue, 25 Feb 2025 20:17:14 +0000, Easwar Hariharan wrote:
+> This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+> either use the multiply pattern of either of:
+> - msecs_to_jiffies(N*1000) or
+> - msecs_to_jiffies(N*MSEC_PER_SEC)
+> 
+> where N is a constant or an expression, to avoid the multiplication.
+> 
+> [...]
 
-On 25.02.2025 20:17:27, Easwar Hariharan wrote:
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplicati=
-on
->=20
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
->=20
-> @depends on patch@
-> expression E;
-> @@
->=20
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
->=20
-> Acked-by: Mark Brown <broonie@kernel.org>
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+Applied, thanks!
 
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
+[06/16] rbd: convert timeouts to secs_to_jiffies()
+        commit: c02eea7eeaebd7270cb8ff09049cc7e0fc9bc8da
 
-regards,
-Marc
+Best regards,
+-- 
+Jens Axboe
 
---=20
-Pengutronix e.K.                 | Marc Kleine-Budde          |
-Embedded Linux                   | https://www.pengutronix.de |
-Vertretung N=C3=BCrnberg              | Phone: +49-5121-206917-129 |
-Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-9   |
 
---u45zipechepd67vw
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEn/sM2K9nqF/8FWzzDHRl3/mQkZwFAme+J6EACgkQDHRl3/mQ
-kZxJmwgAjTBuQGjYsvjY3usfUGQlEX04CIIY/fXUbuNzg4k+rDZYBJVygyeWMSjH
-P09FwLbjh/3LifMz41UC89WtofRA/pYz/koXNfKNHmOgy3F49mc9hZdB5bWYREeh
-pt/7hAditNxNFMWvhHfZTFosdWI0f8QzpbcRF1N2bpFG+XIbVNCkzo7FD1IWzvtR
-GOEwRfExkjtczf6yPcr0Lt5Fvh/Z2kD8uSH227AVm5XLZ9mTp9IzOmS6B2LTYfDi
-YMDx5tD4fzYZ5KakPtBlEogWj3yg2pX6DpQETIHYrH7G5Or7uM9m8vWp9e29TGNH
-hi/ia9fePGWAvvBB/1tngbAZUlNvSA==
-=n4uD
------END PGP SIGNATURE-----
-
---u45zipechepd67vw--
