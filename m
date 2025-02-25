@@ -1,135 +1,182 @@
-Received: from mail-io1-f45.google.com (mail-io1-f45.google.com [209.85.166.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91EC211294
-	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 20:30:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308E319E7F8;
+	Tue, 25 Feb 2025 20:34:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740515443; cv=none; b=ivWyFk3Ivx1rjIu5AVBhS1cmUPfsWh96KNiaKBvoYBo/n9jZRwsSwnstH/mwssL8KdRzqv4R4phyAtt3jfBteRPxNFB+L4yvo4fDcmP1kit7Vbb56fVEwpmsQSNzNFYzia09rcQFqbxijKUABCAmF9fKRnQRjQm9/+Wab4NKBdU=
+	t=1740515686; cv=none; b=F2p5tOjySuBqv/hN/G4l2YDNnrmnI0WymtaqX2Mt/TW4K+E/ad/4hWPECJ26fN/mE06jPlqCirBU6IHiEK4nMBcd2XqIQU+wdwKmhyFiC1djM8i6sFOXE8mp0ifMZsGHF6yh4ZLS73uvxzxI8vwL8LyVei3uwqp8W03Z0P1oUjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740515443; c=relaxed/simple;
-	bh=2mVGB3ONfKEx7GJ+S6y95LCKLGj9XhJhILt75fQVfOw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Bra3v/73L7ymHO9qXqaFivGv0Eug6gMIwSkjeX2HGd2p7Qs5I3dEb4GCQX2VFAGgYq+/95Kpg4cgtEIM7wejlZbXkS4TSncun4C1/hFabuJZb9qffhG53eAnQs5+24ihE0BTaqzex6FxI+xckXA5X8pEeuDtE9JKfGFj83htfEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=QDk/Ac62; arc=none smtp.client-ip=209.85.166.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1740515686; c=relaxed/simple;
+	bh=BRDE49GDK1WZQtOVWzMxOTVjKgnZs4mLJeGOsJR4KcY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ni1RrSHaKfp711JMMLwThXNesiPTzabJSRHR7R29m4FMdHRgAl5MnZB+9sJZL2r04gvYvRzXMXbqJAggNm0ms7qeJEW2PLEFquQJPTCCE9U8gS8knwIkZhz0+X+9uPQoKemH+L1FU9XTWw6sm9QuSkApA+2eXJrJ3B7/NL4QJ40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GCTyihQ/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="QDk/Ac62"
-Received: by mail-io1-f45.google.com with SMTP id ca18e2360f4ac-8553e7d9459so186515339f.2
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 12:30:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1740515440; x=1741120240; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pLp9Ea62UroP9Hu5zCjkj8kz5zOw20u3Q4aJrEzL0tk=;
-        b=QDk/Ac62IhNXGzKqngYdxZCSXbG5x8xmDSsbPgHkPXGRGhqIjqDGUiGjOIbLEotfcn
-         se3HyG1DX3SZks3sHjaY6okoeRFvBB28UNNWCtKlmSS+QyAwGicvJqcauIZFVZXiYKQU
-         GgzXL1VOQXUMriHNRAZrFoShny2wIC/1+jmbs9w9ym9u1Gc8Z0PCpMhRpodbcGwM+P4G
-         uwqOS3GH+wGHNc+y/i6iy5FR0l3xZ4BM2o5/R3ldtNz9Ln85GoYjxESZTB5rcK8ul0rU
-         mXkT0l3LrxssCkjCIwxLzbEHfq1DkRgLLy3fvpgeykTgkFbAUQqMwfGga9Lhpd3vXWDD
-         W+JQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740515440; x=1741120240;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pLp9Ea62UroP9Hu5zCjkj8kz5zOw20u3Q4aJrEzL0tk=;
-        b=RVmozujp54Bc4jKPZg27hNuOgE7BE9YOvcaMAnNAT4UrcI1Nxg1fAsn0bJ45rZ38JZ
-         XxraIKFQdaQj2j3BI+jzv7RaFTOtaayTCJZjaKyaX0AFy714Pc0kJOBsVlJpSJNNSKfh
-         9AmzA4KjMB7q6DNGGZgLfCc9pwzJpyZu19sTQMKMFz5cTI9WoD7CWYPFVJAx8nhYA7aS
-         9A9QAVQZElxyEbxlPUnQnBJTmaWh/mqkhA2I4p1nZIgx/dTcG81rRtt4XaL5Z0iwPYll
-         vXSlT6M2uXTvRfuUXf5J88v//YNdrQm3+D0Rhb77WMa12nWikhu1vdBrc26h++wWU832
-         DSug==
-X-Forwarded-Encrypted: i=1; AJvYcCXKGCKEwYw0nnFBG6/EBe5l3HRBRIyyojOmxGqgIneQ8RhdxkMN6jNHiA4Inu2PhkLa4QjTlhWXy2s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzxA00DND/EhF9nav8VxuN5mV9QnAl36bBl73iFeMQpR2nm+uIi
-	LGdxl1JvOCMg/Es473SdI+XudxVve2aYIVwVqbkwfC+6k/5LAUwQP6wVwgjiB04=
-X-Gm-Gg: ASbGncvW9fnHL49d22XwBcU0ayrpOwKyGNLlIgXfqcqF4TRKVu/qwsnyS2hVarSv0nZ
-	ivQKSOYFg625EAs3S057A/yZ0OEu4btvMtxFShwK2InvqeoxymgVNdH0VDCHePSFgpYtgjR8WZv
-	LV+TMtLerQjOkwE0VRVfcQkMIN0yy1u8IUOzvWtiewqTl2W0LWuTvJb1HMItVfU0H2DiPuNW736
-	BVkkiWgPlsJEWSpEWR76dD3RoJxF/BbkUdPwlbTjLQmToAEoXUepRB4VZeemw49MnWY7lXMDY+C
-	2BRxbvP3mJOGhdcc
-X-Google-Smtp-Source: AGHT+IEI1HpA9fGHJ1GdkYmfu92FscKbuH3o9L2lVKiqa4D5puwjeIXVc4djLm6mFSVg2XH039gtQg==
-X-Received: by 2002:a05:6e02:b2a:b0:3d1:968a:6d46 with SMTP id e9e14a558f8ab-3d3d1f40415mr9808255ab.6.1740515439644;
-        Tue, 25 Feb 2025 12:30:39 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d361ca3896sm4764255ab.53.2025.02.25.12.30.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Feb 2025 12:30:38 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: Andrew Morton <akpm@linux-foundation.org>, 
- Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
- Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
- James Smart <james.smart@broadcom.com>, 
- Dick Kennedy <dick.kennedy@broadcom.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
- Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
- David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
- Dongsheng Yang <dongsheng.yang@easystack.cn>, Xiubo Li <xiubli@redhat.com>, 
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
- Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>, 
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
- Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>, 
- Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
- Pengutronix Kernel Team <kernel@pengutronix.de>, 
- Fabio Estevam <festevam@gmail.com>, 
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
- Hans de Goede <hdegoede@redhat.com>, 
- =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
- Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
- Selvin Xavier <selvin.xavier@broadcom.com>, 
- Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
- Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: cocci@inria.fr, linux-kernel@vger.kernel.org, 
- linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
- ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
- linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
- linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
- linux-spi@vger.kernel.org, imx@lists.linux.dev, 
- linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
- ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, 
- Takashi Iwai <tiwai@suse.de>, Carlos Maiolino <cmaiolino@redhat.com>
-In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
-Subject: Re: (subset) [PATCH v3 00/16] Converge on using secs_to_jiffies()
- part two
-Message-Id: <174051543709.2186691.13969880655903967909.b4-ty@kernel.dk>
-Date: Tue, 25 Feb 2025 13:30:37 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GCTyihQ/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63F3CC4CEE2;
+	Tue, 25 Feb 2025 20:34:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740515685;
+	bh=BRDE49GDK1WZQtOVWzMxOTVjKgnZs4mLJeGOsJR4KcY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GCTyihQ/b2fTjWjL/w3eMUhECoP7pQUVh6qE6TXIEJ1BjHjigwTdvaXZ8aa1oOZW9
+	 oKgOEDdFkHlCFZJGO4qmPSlQfmqTMdR4q6AaRRkwLGJ3tn5IsA6CVTfZngMu04uwvU
+	 USQQvX2Ui2Py5GmeTon0UPIp4jb3Kllog7qTR84ZVlGPWnNhBglvmgANXSDfz/nF8C
+	 fe6Ei8S+wY4QXqwkmTNtltifZ28vYDexOBzcB6Jx/JDAMQqYWr6bIziStGJLhdUGBs
+	 KFr35I0nEjHgGeGnYKE+sCz27ig69d53549TBv6xK6RZKoaFrkcXukrE4yB0TGFtgY
+	 hJMWUKlbR87Lg==
+Received: by pali.im (Postfix)
+	id 5A20189B; Tue, 25 Feb 2025 21:34:32 +0100 (CET)
+Date: Tue, 25 Feb 2025 21:34:32 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Matt Turner <mattst88@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Michal Simek <monstr@monstr.eu>,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Helge Deller <deller@gmx.de>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	Naveen N Rao <naveen@kernel.org>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Yoshinori Sato <ysato@users.sourceforge.jp>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	"David S . Miller" <davem@davemloft.net>,
+	Andreas Larsson <andreas@gaisler.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>,
+	=?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>,
+	linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+	linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+	Linux-Arch <linux-arch@vger.kernel.org>, linux-xfs@vger.kernel.org,
+	Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH v3] fs: introduce getfsxattrat and setfsxattrat syscalls
+Message-ID: <20250225203432.o2lxjbimka4jldrx@pali>
+References: <20250211-xattrat-syscall-v3-1-a07d15f898b2@kernel.org>
+ <20250221181135.GW21808@frogsfrogsfrogs>
+ <CAOQ4uxgyYBFqkq6cQsso4LxJsPJ4uECOdskXmz-nmGhhV5BQWg@mail.gmail.com>
+ <20250224-klinke-hochdekoriert-3f6be89005a8@brauner>
+ <6b51ffa2-9d67-4466-865e-e703c1243352@app.fastmail.com>
+ <20250225-strom-kopflos-32062347cd13@brauner>
+ <3c860dc0-ba8d-4324-b286-c160b7d8d2c4@app.fastmail.com>
+ <20250225-testfahrt-seilwinde-64e6f44c01ce@brauner>
+ <20250225155926.GD6265@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-94c79
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250225155926.GD6265@frogsfrogsfrogs>
+User-Agent: NeoMutt/20180716
 
-
-On Tue, 25 Feb 2025 20:17:14 +0000, Easwar Hariharan wrote:
-> This is the second series (part 1*) that converts users of msecs_to_jiffies() that
-> either use the multiply pattern of either of:
-> - msecs_to_jiffies(N*1000) or
-> - msecs_to_jiffies(N*MSEC_PER_SEC)
+On Tuesday 25 February 2025 07:59:26 Darrick J. Wong wrote:
+> On Tue, Feb 25, 2025 at 12:24:08PM +0100, Christian Brauner wrote:
+> > On Tue, Feb 25, 2025 at 11:40:51AM +0100, Arnd Bergmann wrote:
+> > > On Tue, Feb 25, 2025, at 11:22, Christian Brauner wrote:
+> > > > On Tue, Feb 25, 2025 at 09:02:04AM +0100, Arnd Bergmann wrote:
+> > > >> On Mon, Feb 24, 2025, at 12:32, Christian Brauner wrote:
+> > > >> 
+> > > >> The ioctl interface relies on the existing behavior, see
+> > > >> 0a6eab8bd4e0 ("vfs: support FS_XFLAG_COWEXTSIZE and get/set of
+> > > >> CoW extent size hint") for how it was previously extended
+> > > >> with an optional flag/word. I think that is fine for the syscall
+> > > >> as well, but should be properly documented since it is different
+> > > >> from how most syscalls work.
+> > > >
+> > > > If we're doing a new system call I see no reason to limit us to a
+> > > > pre-existing structure or structure layout.
+> > > 
+> > > Obviously we could create a new structure, but I also see no
+> > > reason to do so. The existing ioctl interface was added in
+> > > in 2002 as part of linux-2.5.35 with 16 bytes of padding, half
+> > > of which have been used so far.
+> > > 
+> > > If this structure works for another 23 years before we run out
+> > > of spare bytes, I think that's good enough. Building in an
+> > > incompatible way to handle potential future contents would
+> > > just make it harder to use for any userspace that wants to
+> > > use the new syscalls but still needs a fallback to the
+> > > ioctl version.
+> > 
+> > The fact that this structure has existed since the dawn of time doesn't
+> > mean it needs to be retained when adding a completely new system call.
+> > 
+> > People won't mix both. They either switch to the new interface because
+> > they want to get around the limitations of the old interface or they
+> > keep using the old interface and the associated workarounds.
+> > 
+> > In another thread they keep arguing about new extensions for Windows
+> > that are going to be added to the ioctl interface and how to make it fit
+> > into this. That just shows that it's very hard to predict from the
+> > amount of past changes how many future changes are going to happen. And
+> > if an interface is easy to extend it might well invite new changes that
+> > people didn't want to or couldn't make using the old interface.
 > 
-> where N is a constant or an expression, to avoid the multiplication.
+> Agreed, I don't think it's hard to enlarge struct fsxattr in the
+> existing ioctl interface; either we figure out how to make the kernel
+> fill out the "missing" bytes with an internal getfsxattr call, or we
+> make it return some errno if we would be truncating real output due to
+> struct size limits and leave a note in the manpage that "EL3HLT means
+> use a bigger structure definition"
 > 
-> [...]
+> Then both interfaces can plod along for another 30 years. :)
+> 
+> --D
 
-Applied, thanks!
+For Windows attributes, there are for sure needed new 11 bits for
+attributes which can be both get and set, additional 4 bits for get-only
+attributes, and plus there are 9 reserved bits (which Windows can start
+using it and exporting over NTFS or SMB). And it is possible that
+Windows can reuse some bits which were previously assigned for things
+which today does not appear on NTFS.
 
-[06/16] rbd: convert timeouts to secs_to_jiffies()
-        commit: c02eea7eeaebd7270cb8ff09049cc7e0fc9bc8da
+I think that fsx_xflags does not have enough free bits for all these
+attributes. So it would be really nice to design API/ABI in away which
+can be extended for new fields.
 
-Best regards,
--- 
-Jens Axboe
+Also another two points, for this new syscalls. I have not looked at the
+current changes (I was added to CC just recently), but it would be nice:
 
+1) If syscall API allows to operate on the symlink itself. This is
+   because NTFS and also SMB symlink also contains attributes. ioctl
+   interface currently does not support to get/set these symlink
+   attributes.
 
-
+2) If syscall API contains ability to just change subset of attributes.
+   And provide an error reporting to userspace if userspace application
+   is trying to set attribute which is not supported by the filesystem.
+   This error reporting is needed for possible "cp -a" or possible
+   "rsync" implementation which informs when some metadata cannot be
+   backup/restored. There are more filesystems which supports only
+   subset of attributes, this applies also for windows attributes.
+   For example UDF fs supports only "hidden" attribute.
