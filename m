@@ -1,91 +1,176 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4360120B814
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 23:49:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819551448E0
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 02:38:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740440947; cv=none; b=O5OisajZZFhIZsL6FHgszn1Yl6K5weJSWJj+9sLEVxMAGchxEnTT6+nOhJnWqza/aFdXLM9myF2/aBi+rZkf5sCbyMU2khXwn/neh6TaxVoazVczcZCFAuJaL5L7gz+ExjhyKVX9T3MqFR6R5H9lZCjGNoMPRbxAAQkOSHZtruE=
+	t=1740451090; cv=none; b=im0LIwGeB26HLhAgd4XfSIKsU2U1NVvr3CHJF81f3xFszDlguqHWXtqnJddDd4Hhf7mJ/uJOmBxVSCXekWSai8op3SVp2urPJ9zt9k5JyoEY32l5Cxh+gYtvpran7IMl4TrmtRRPk/FJn9GqgBe96gWcHiC37WSvFO6opI4edfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740440947; c=relaxed/simple;
-	bh=7wX9aQY6gxkyseFgly7+2cMmnhqGkBpG6JmuWWXC4sY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UuLYErzKe9FqekBCwzU7XirmTe3swczo81w1UpAVDZL8dcNWkESFQ89Pyr6cB9mkrQ6L2jSK0u83EhaakpG32ZrbyLUfVJYfbv7DXTRUDTqcGKMky6AEC5cfQBCMSbGyHta4JYbRQyQlH/FDkCSjvVB99bA6fQLuBnpKIWrf5To=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OUDMD00d; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1740451090; c=relaxed/simple;
+	bh=oNdZT9w7aQq5QrNlfacj7MIC7lBCM1O2Jgg5tGeZrlc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jnzPdMFW2XGN75dltoRlfflCQnmfmCIAf8T9i8EyjBYNi0Z+qZ9HK7SPXKPrfdMyYJ2w9+tKV4Vw+CAzxJeSuuQFEhUBZBt7GRS5wtvaXvIDdzOo282KidGum9rs3PM4amPcMDzS+hW9z37mHIjuCKnvO/xtoOGT8t9TArwVGRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=PXiJB1RM; arc=none smtp.client-ip=209.85.219.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OUDMD00d"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=52UzXpF/7S62OjFUHqgLhPVXCuXLYXFbjgvfKnz3k9M=; b=OUDMD00d3Nu1DEIylE3WkxIAqx
-	RrfJDIUhn0VAi2jUA7PHOMxNKOd53R3grJf7O2+HiQeqe1j+vekr4N6ZAKdjJPJ28Yue8E/YAn+47
-	brzV0ckPa6Y10oO4dAo15saEoWvGbY/c4lJ31BZK2/I7k6b9fqq0iDtDneQ31YsXIWg0HmHuyhuJL
-	GY8IqSVtoZHlJmey9aFuE4aUYvqhcdVizRO6vfi6t8KaPzHfmzo1s7zhGaMHTSiZPxflL6nVnXj4h
-	rrLehuIJCbU/xYFpdtguaXNl2YrxTKHGj9Tcql827/kp0ZtqiKIXpaHq9QrC1vcqkJS5C+dNBLlNq
-	sSpFC9Rw==;
-Received: from [208.223.66.147] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tmiC9-0000000FXJr-3d3T;
-	Mon, 24 Feb 2025 23:49:05 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 4/4] xfs: remove the XBF_STALE check from xfs_buf_rele_cached
-Date: Mon, 24 Feb 2025 15:48:55 -0800
-Message-ID: <20250224234903.402657-5-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250224234903.402657-1-hch@lst.de>
-References: <20250224234903.402657-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="PXiJB1RM"
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e5dd164f03fso4642053276.0
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2025 18:38:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=paul-moore.com; s=google; t=1740451087; x=1741055887; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UqK9lSPHR3oAe986F8iXqkMz9AYMYHr6QgwL+NcZdiU=;
+        b=PXiJB1RMf5Ayu1sFntsMseLpkqRBTF4jtusBDoA7lIOaD1hImCEuB98mD7KjihjNEm
+         7fNp/VQCbbklqF+swIeJh6BIUl9R6sM56jyD/ZUgddfOcMyDbhG0GWHimbes3enZW4n8
+         Wi7PKbQqFBPZTQJdcyI+bDt9As46rQkJqFlX+E7f/Y87mPkomV50RT15HLVnOd7+Dzod
+         UlIJsLAfTVYHytm4RjU4qTTJy3MwaGeTBQ6ZBPrM511unJ82cS99ozdSy1CBi1B4kogB
+         ALgwG9OqEUfL4LwlVxlOdSdaUm56MIbb/abk01HTkCEn7e/qAaJBTSsuE4gOyYwdQc5l
+         V4cw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740451087; x=1741055887;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UqK9lSPHR3oAe986F8iXqkMz9AYMYHr6QgwL+NcZdiU=;
+        b=OnSeY8Xlke8wEqAUmGobmSOzxlvMu/JhdSgsslvOnBjUrOgiQCGpeEGeSdcZ+2WxWZ
+         Xdrf06bujpfbgDOfei/pBUE8cbttkHzonTl1g9puAuSmLIpky0BOdmXhmE4zh+VIbHMY
+         83zxFpEBhK0VrsXAU57wUSIGtoBUrh2prqszNzANlaF/qoxoEVncTGxPbRkDx3FOQn1m
+         WMv0GwEKw0DxwfWuhqzYNECaU/ViGLz/3zLCaHPqt3a/Z0AAZDkeJsA2fy8AfDZNpt0s
+         W2HSHw7hcfOMbnbs00NdXTS0hIR0qdbOIqW96wNi6+rEgPIO1+AZX0a9BwMmSHqdv5Px
+         Zm9A==
+X-Forwarded-Encrypted: i=1; AJvYcCUU+nh+r/80N3W/qcJaFR6I85l7qcUYBIRzo/SbA/NTlnbaJ2jXCyaVMh2U4+c7KizZEhTz0uC9hQc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzWQv32RiEnk2Li+SB7a2JbgHJj2YgxVu2oY4uvbYLmugNPHIjZ
+	J7U2pKQUKL6K4TiRKcNf6i/oVvC4iYjmDdonSJbGuNcRfqMP+IiUEozf+ql2x4mCchxRagLIem5
+	9gE5mC8R74coVTfvh9Q+Mw/4qRcygEjyA9xFl
+X-Gm-Gg: ASbGncteeYp/lFGaxmhmCZQjO7JC9xgNfkgQu0TRmnA/b0JzbVbEwwbRbGWwtGGci5Z
+	+BdX7OtNY2Pi9P0ORr4ZDoervVVaz4fQaepR4nKrDK87I4Zg5R8F1AikPj/5tM1zDCR6Qqp98Tc
+	rHQDD/dCw=
+X-Google-Smtp-Source: AGHT+IFEtqZjFjUUtEoV6clplX0tg01lvFBOsWs6wVdmIF0VuIZ0SAwc4zHx33tyK9MjmhuD5ygseR4l9mjGvJrZ59E=
+X-Received: by 2002:a05:6902:270a:b0:e57:3c46:fc86 with SMTP id
+ 3f1490d57ef6-e607a56713bmr1172129276.48.1740451087319; Mon, 24 Feb 2025
+ 18:38:07 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20250211-xattrat-syscall-v3-1-a07d15f898b2@kernel.org>
+ <20250221.ahB8jei2Chie@digikod.net> <jvo6uj7ro5czlo5ukw3vtf5mpqgrbuksqq4j63s2i6gwrjpz4m@kghpcqyi7gwb>
+In-Reply-To: <jvo6uj7ro5czlo5ukw3vtf5mpqgrbuksqq4j63s2i6gwrjpz4m@kghpcqyi7gwb>
+From: Paul Moore <paul@paul-moore.com>
+Date: Mon, 24 Feb 2025 21:37:56 -0500
+X-Gm-Features: AQ5f1JrNItPBrIagfKvZGb3Z7zpj-znT5mFIJQvEadvcpFUdxtbR_1MPSlEQmag
+Message-ID: <CAHC9VhRrs=W4JtuphkADPVG9MX8jxQLfmC9=2taj+cfZgNOt3Q@mail.gmail.com>
+Subject: Re: [PATCH v3] fs: introduce getfsxattrat and setfsxattrat syscalls
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@digikod.net>, 
+	Richard Henderson <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, 
+	Russell King <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Will Deacon <will@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Michal Simek <monstr@monstr.eu>, 
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Helge Deller <deller@gmx.de>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, 
+	Naveen N Rao <naveen@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+	Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, 
+	Sven Schnelle <svens@linux.ibm.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
+	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+	"David S. Miller" <davem@davemloft.net>, Andreas Larsson <andreas@gaisler.com>, 
+	Andy Lutomirski <luto@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, 
+	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+	"H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	=?UTF-8?Q?G=C3=BCnther_Noack?= <gnoack@google.com>, 
+	Arnd Bergmann <arnd@arndb.de>, linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, 
+	linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
+	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	linux-api@vger.kernel.org, linux-arch@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-xfs_buf_stale already set b_lru_ref to 0, and thus prevents the buffer
-from moving to the LRU.  Remove the duplicate check.
+On Mon, Feb 24, 2025 at 11:00=E2=80=AFAM Andrey Albershteyn <aalbersh@redha=
+t.com> wrote:
+> On 2025-02-21 16:08:33, Micka=C3=ABl Sala=C3=BCn wrote:
+> > It looks security checks are missing.  With IOCTL commands, file
+> > permissions are checked at open time, but with these syscalls the path
+> > is only resolved but no specific access seems to be checked (except
+> > inode_owner_or_capable via vfs_fileattr_set).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_buf.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+...
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e161f3ab4108..5d560e9073f4 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -99,12 +99,6 @@ xfs_buf_stale(
- 	 */
- 	bp->b_flags &= ~_XBF_DELWRI_Q;
- 
--	/*
--	 * Once the buffer is marked stale and unlocked, a subsequent lookup
--	 * could reset b_flags. There is no guarantee that the buffer is
--	 * unaccounted (released to LRU) before that occurs. Drop in-flight
--	 * status now to preserve accounting consistency.
--	 */
- 	spin_lock(&bp->b_lock);
- 	atomic_set(&bp->b_lru_ref, 0);
- 	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
-@@ -1033,7 +1027,7 @@ xfs_buf_rele_cached(
- 	}
- 
- 	/* we are asked to drop the last reference */
--	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-+	if (atomic_read(&bp->b_lru_ref)) {
- 		/*
- 		 * If the buffer is added to the LRU, keep the reference to the
- 		 * buffer for the LRU and clear the (now stale) dispose list
--- 
-2.45.2
+> > On Tue, Feb 11, 2025 at 06:22:47PM +0100, Andrey Albershteyn wrote:
 
+...
+
+> > > +SYSCALL_DEFINE4(setfsxattrat, int, dfd, const char __user *, filenam=
+e,
+> > > +           struct fsxattr __user *, fsx, unsigned int, at_flags)
+> > > +{
+> > > +   CLASS(fd, dir)(dfd);
+> > > +   struct fileattr fa;
+> > > +   struct path filepath;
+> > > +   int error;
+> > > +   unsigned int lookup_flags =3D 0;
+> > > +
+> > > +   if ((at_flags & ~(AT_SYMLINK_FOLLOW | AT_EMPTY_PATH)) !=3D 0)
+> > > +           return -EINVAL;
+> > > +
+> > > +   if (at_flags & AT_SYMLINK_FOLLOW)
+> > > +           lookup_flags |=3D LOOKUP_FOLLOW;
+> > > +
+> > > +   if (at_flags & AT_EMPTY_PATH)
+> > > +           lookup_flags |=3D LOOKUP_EMPTY;
+> > > +
+> > > +   if (fd_empty(dir))
+> > > +           return -EBADF;
+> > > +
+> > > +   if (copy_fsxattr_from_user(&fa, fsx))
+> > > +           return -EFAULT;
+> > > +
+> > > +   error =3D user_path_at(dfd, filename, lookup_flags, &filepath);
+> > > +   if (error)
+> > > +           return error;
+> > > +
+> > > +   error =3D mnt_want_write(filepath.mnt);
+> > > +   if (!error) {
+> >
+> > security_inode_setattr() should probably be called too.
+>
+> Aren't those checks for something different - inode attributes
+> ATTR_*?
+> (sorry, the naming can't be more confusing)
+>
+> Looking into security_inode_setattr() it seems to expect struct
+> iattr, which works with inode attributes (mode, time, uid/gid...).
+> These new syscalls work with filesystem inode extended flags/attributes
+> FS_XFLAG_* in fsxattr->fsx_xflags. Let me know if I missing
+> something here
+
+A valid point.  While these are two different operations, with
+different structs/types, I suspect that most LSMs will consider them
+to be roughly equivalent from an access control perspective, which is
+why I felt the existing security_inode_{set,get}attr() hooks seemed
+appropriate.  However, there likely is value in keeping the ATTR and
+FSX operations separate; those LSMs that wish to treat them the same
+can easily do so in their respective LSM callbacks.
+
+With all this in mind, I think it probably makes sense to create two
+new LSM hooks, security_inode_{get,set}fsxattr().  The get hook should
+probably be placed inside vfs_fileattr_get() just before the call to
+the inode's fileattr_get() method, and the set hook should probably be
+placed inside vfs_fileattr_set(), inside the inode lock and after a
+successful call to fileattr_set_prepare().
+
+Does that sound better to everyone?
+
+--=20
+paul-moore.com
