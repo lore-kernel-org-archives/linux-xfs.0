@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABBED199FC9
-	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 17:26:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0125199EAD
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 17:27:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740504415; cv=none; b=ngg9PqPzERRVfvtNP9chYlR4VcYc+7m8qpc5D8eogbj7pnsHnQpzwI9/XdYwX11rfPBJoTZ0Hk+eMCImDbhp08TXEnYa2+/ltlDWWJRU4Hssb+D2E40RNtwISlwfyZlxiojQx3K2ouoJyVYZge/k4Iq1KWhYNp87tmBDlsEAWPk=
+	t=1740504431; cv=none; b=FJYVGdOsahtsYJ4LihOxL/LIOpz/nMYgv5iDEtS8t+bhKieRp5F3X0hsuMwnh+cxDdVzGELJUH2nrmK9UeZZC9evFNffoowOMp1khGXSKs8cwb3SeODgtQZ5ZcOWyHc2W/NrfFVKvhXHPxYBFvqcaJquLdNMJ1pa4EJUKv591HU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740504415; c=relaxed/simple;
-	bh=alVlUbxVjRTJNbziMEKiysfIZ5ZIi+2Rv43gsPYGx28=;
+	s=arc-20240116; t=1740504431; c=relaxed/simple;
+	bh=PRxcGtbJShzxOBwquVE5diXov+BOnee1QKPqHBRMc6Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=Qki+rUNKe3Oj0Q+55lnDGk5RlGZ3w3etv+b+GVdLpH3YjCU7t2gyCHLwmcD4mITASuvR+nkA+AdNOjqgj9d5LOHGB8sdvrAO7l1s2l4Tscb5Sx256Lx4h9DD5V4Rwl2DRwPorvD1asep5eA6Ib+epkVLwUmb4M/KfLQRY4GZfIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QBfW656d; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=KXlyMEjOtTTv20yp7K/84dMLKSd4WwiKjb1plCtazvLxOwtGqmN57PFMMa9k9y6NjLonYVatBt4JoGP1fBNfl99XeBtChK15Uq4olna1ckqnRaoRiNrdKgziO07A/dF3MMklJ/afC50zTU/hxBny3ToOticPiC4OgU99FX3LfGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HjpLKdA1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QBfW656d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26A76C4CEDD;
-	Tue, 25 Feb 2025 17:26:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HjpLKdA1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3106C4CEE2;
+	Tue, 25 Feb 2025 17:27:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740504415;
-	bh=alVlUbxVjRTJNbziMEKiysfIZ5ZIi+2Rv43gsPYGx28=;
+	s=k20201202; t=1740504431;
+	bh=PRxcGtbJShzxOBwquVE5diXov+BOnee1QKPqHBRMc6Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QBfW656dl1j9QfGvFpog8YduC8Iuef88f50RWylpvxB1kavpyLwFMfEdoT7Q/HzA7
-	 QGMMplYYBNBKaOR6iEdD/AyKgvYlovbdr2lTFUV0M19tP2kWCsMNKA9yrdsq9jI14m
-	 RmOgQqvelqKWWH7Cm5328CiXGDQvN2W+geK6Izny7IUEO7JtiJtY/67PjI8llwvu6r
-	 x7Troneldy3nYdnKzUjNyQXyMrq/myzNMuiS+ko53ZcsQJ8vERl9bzWSoRg07/IYmE
-	 QCPR1tonzhLhuXDMOHqrYlwruaSI56rDhabQdIP3eYKpswCpA4//0zBcaEbTQyJn1t
-	 de3F7KelpxlrQ==
-Date: Tue, 25 Feb 2025 09:26:54 -0800
-Subject: [GIT PULL 2/7] xfs_scrub: fixes and cleanups for inode iteration
+	b=HjpLKdA1/kCJvdIJ2ug/VDlWt565FPAAFQEKkn3JfgO+ZNeweBOqQoCdZllgBjxmG
+	 LclchPpt0ir+VTtyxNp/VNPnAdalIblSupxvzUOMMPiDSbUFNfDfIxAfn5S1iX0DBq
+	 Y4v5C4NFJcfj0h3u3WyJcZWVs/gr0W5S4TjygNJ4PMGyFpSERj38/COk6IkXAxkCwu
+	 wxVlyounxQustTjZNi01mDU4qN+BrPsOKGIhwe1ZDiXPdxjLSziOEktiRYNWLPV1P+
+	 xtW2A679HhKmm37eRfGpVmyRMrEOdAb2ypdxo/GAlVofCrCM68rKd2mCQdTjc+gyjT
+	 +lD98ei0kBTNQ==
+Date: Tue, 25 Feb 2025 09:27:10 -0800
+Subject: [GIT PULL 3/7] xfsprogs: new libxfs code from kernel 6.14
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <174050432852.404908.16327229050941399572.stg-ugh@frogsfrogsfrogs>
+Cc: alexjlzheng@tencent.com, cem@kernel.org, david@fromorbit.com, dchinner@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <174050432891.404908.18381873135352522684.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,78 +51,135 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit c1963d498ad2612203d83fd7f2d1fb88a4a63eb2:
-
-libxfs: mark xmbuf_{un,}map_page static (2025-02-25 09:15:56 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-inode-iteration-fixes-6.14_2025-02-25
-
-for you to fetch changes up to 7ae92e1cb0aeeb333ac38393a5b3dbcda1ac769e:
+The following changes since commit 7ae92e1cb0aeeb333ac38393a5b3dbcda1ac769e:
 
 xfs_scrub: try harder to fill the bulkstat array with bulkstat() (2025-02-25 09:15:57 -0800)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/libxfs-sync-6.14_2025-02-25
+
+for you to fetch changes up to c89b1f70b43dc7d1dd7147d5147170db651131a4:
+
+xfs: fix the entry condition of exact EOF block allocation optimization (2025-02-25 09:16:00 -0800)
+
 ----------------------------------------------------------------
-xfs_scrub: fixes and cleanups for inode iteration [2/7]
+xfsprogs: new libxfs code from kernel 6.14 [3/7]
 
-Christoph and I were investigating some performance problems in
-xfs_scrub on filesystems that have a lot of rtgroups, and we noticed
-several problems and inefficiencies in the existing inode iteration
-code.
-
-The first observation is that two of the three callers of
-scrub_all_inodes (phases 5 and 6) just want to walk all the user files
-in the filesystem.  They don't care about metadir directories, and they
-don't care about matching inumbers data to bulkstat data for the purpose
-of finding broken files.  The third caller (phase 3) does, so it makes
-more sense to create a much simpler iterator for phase 5 and 6 that only
-calls bulkstat.
-
-But then I started noticing other problems in the phase 3 inode
-iteration code -- if the per-inumbers bulkstat iterator races with other
-threads that are creating or deleting files we can walk off the end of
-the bulkstat array, we can miss newly allocated files, miss old
-allocated inodes if there are newly allocated ones, pointlessly try to
-scan deleted files, and redundantly scan files from another inobt
-record.
-
-These races rarely happen, but they all need fixing.
-
-With a bit of luck, this should all go splendidly.
+Port kernel libxfs code to userspace.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (15):
-man: document new XFS_BULK_IREQ_METADIR flag to bulkstat
-libfrog: wrap handle construction code
-xfs_scrub: don't report data loss in unlinked inodes twice
-xfs_scrub: call bulkstat directly if we're only scanning user files
-xfs_scrub: remove flags argument from scrub_scan_all_inodes
-xfs_scrub: selectively re-run bulkstat after re-running inumbers
-xfs_scrub: actually iterate all the bulkstat records
-xfs_scrub: don't double-scan inodes during phase 3
-xfs_scrub: don't (re)set the bulkstat request icount incorrectly
-xfs_scrub: don't complain if bulkstat fails
-xfs_scrub: return early from bulkstat_for_inumbers if no bulkstat data
-xfs_scrub: don't blow away new inodes in bulkstat_single_step
-xfs_scrub: hoist the phase3 bulkstat single stepping code
-xfs_scrub: ignore freed inodes when single-stepping during phase 3
-xfs_scrub: try harder to fill the bulkstat array with bulkstat()
+Darrick J. Wong (51):
+xfs: tidy up xfs_iroot_realloc
+xfs: refactor the inode fork memory allocation functions
+xfs: make xfs_iroot_realloc take the new numrecs instead of deltas
+xfs: make xfs_iroot_realloc a bmap btree function
+xfs: tidy up xfs_bmap_broot_realloc a bit
+xfs: hoist the node iroot update code out of xfs_btree_new_iroot
+xfs: hoist the node iroot update code out of xfs_btree_kill_iroot
+xfs: add some rtgroup inode helpers
+xfs: prepare to reuse the dquot pointer space in struct xfs_inode
+xfs: simplify the xfs_rmap_{alloc,free}_extent calling conventions
+xfs: support storing records in the inode core root
+xfs: allow inode-based btrees to reserve space in the data device
+xfs: introduce realtime rmap btree ondisk definitions
+xfs: realtime rmap btree transaction reservations
+xfs: add realtime rmap btree operations
+xfs: prepare rmap functions to deal with rtrmapbt
+xfs: add a realtime flag to the rmap update log redo items
+xfs: pretty print metadata file types in error messages
+xfs: support file data forks containing metadata btrees
+xfs: add realtime reverse map inode to metadata directory
+xfs: add metadata reservations for realtime rmap btrees
+xfs: wire up a new metafile type for the realtime rmap
+xfs: wire up rmap map and unmap to the realtime rmapbt
+xfs: create routine to allocate and initialize a realtime rmap btree inode
+xfs: report realtime rmap btree corruption errors to the health system
+xfs: scrub the realtime rmapbt
+xfs: scrub the metadir path of rt rmap btree files
+xfs: online repair of realtime bitmaps for a realtime group
+xfs: online repair of the realtime rmap btree
+xfs: create a shadow rmap btree during realtime rmap repair
+xfs: namespace the maximum length/refcount symbols
+xfs: introduce realtime refcount btree ondisk definitions
+xfs: realtime refcount btree transaction reservations
+xfs: add realtime refcount btree operations
+xfs: prepare refcount functions to deal with rtrefcountbt
+xfs: add a realtime flag to the refcount update log redo items
+xfs: add realtime refcount btree inode to metadata directory
+xfs: add metadata reservations for realtime refcount btree
+xfs: wire up a new metafile type for the realtime refcount
+xfs: wire up realtime refcount btree cursors
+xfs: create routine to allocate and initialize a realtime refcount btree inode
+xfs: update rmap to allow cow staging extents in the rt rmap
+xfs: compute rtrmap btree max levels when reflink enabled
+xfs: allow inodes to have the realtime and reflink flags
+xfs: recover CoW leftovers in the realtime volume
+xfs: fix xfs_get_extsz_hint behavior with realtime alwayscow files
+xfs: apply rt extent alignment constraints to CoW extsize hint
+xfs: enable extent size hints for CoW operations
+xfs: report realtime refcount btree corruption errors to the health system
+xfs: scrub the realtime refcount btree
+xfs: scrub the metadir path of rt refcount btree files
 
-libfrog/bitmask.h             |   6 +
-libfrog/handle_priv.h         |  55 +++++
-scrub/inodes.h                |  12 +-
-io/parent.c                   |   9 +-
-libfrog/Makefile              |   1 +
-man/man2/ioctl_xfs_bulkstat.2 |   8 +
-scrub/common.c                |   9 +-
-scrub/inodes.c                | 552 ++++++++++++++++++++++++++++++++++++------
-scrub/phase3.c                |   7 +-
-scrub/phase5.c                |  14 +-
-scrub/phase6.c                |  18 +-
-spaceman/health.c             |   9 +-
-12 files changed, 585 insertions(+), 115 deletions(-)
-create mode 100644 libfrog/handle_priv.h
+Jinliang Zheng (1):
+xfs: fix the entry condition of exact EOF block allocation optimization
+
+include/libxfs.h              |    2 +
+include/xfs_inode.h           |    5 +-
+include/xfs_mount.h           |   19 +
+include/xfs_trace.h           |    7 +
+libxfs/libxfs_priv.h          |   11 +
+libxfs/xfs_bmap_btree.h       |    3 +
+libxfs/xfs_btree.h            |   28 +-
+libxfs/xfs_defer.h            |    2 +
+libxfs/xfs_errortag.h         |    4 +-
+libxfs/xfs_format.h           |   51 +-
+libxfs/xfs_fs.h               |   10 +-
+libxfs/xfs_health.h           |    6 +-
+libxfs/xfs_inode_fork.h       |    6 +-
+libxfs/xfs_log_format.h       |   10 +-
+libxfs/xfs_metafile.h         |   13 +
+libxfs/xfs_ondisk.h           |    4 +
+libxfs/xfs_refcount.h         |   23 +-
+libxfs/xfs_rmap.h             |   12 +-
+libxfs/xfs_rtbitmap.h         |    9 +
+libxfs/xfs_rtgroup.h          |   58 ++-
+libxfs/xfs_rtrefcount_btree.h |  189 ++++++++
+libxfs/xfs_rtrmap_btree.h     |  210 +++++++++
+libxfs/xfs_shared.h           |   21 +
+libxfs/xfs_trans_space.h      |   13 +
+libxfs/xfs_types.h            |    7 +
+io/inject.c                   |    1 +
+libxfs/Makefile               |    4 +
+libxfs/xfs_ag_resv.c          |    3 +
+libxfs/xfs_attr.c             |    4 +-
+libxfs/xfs_bmap.c             |   47 +-
+libxfs/xfs_bmap_btree.c       |  111 +++++
+libxfs/xfs_btree.c            |  410 ++++++++++++----
+libxfs/xfs_btree_mem.c        |    1 +
+libxfs/xfs_btree_staging.c    |   10 +-
+libxfs/xfs_exchmaps.c         |    4 +-
+libxfs/xfs_inode_buf.c        |   65 ++-
+libxfs/xfs_inode_fork.c       |  201 ++++----
+libxfs/xfs_metadir.c          |    3 +
+libxfs/xfs_metafile.c         |  221 +++++++++
+libxfs/xfs_refcount.c         |  277 +++++++++--
+libxfs/xfs_rmap.c             |  178 +++++--
+libxfs/xfs_rtbitmap.c         |    2 +-
+libxfs/xfs_rtgroup.c          |   72 ++-
+libxfs/xfs_rtrefcount_btree.c |  755 ++++++++++++++++++++++++++++++
+libxfs/xfs_rtrmap_btree.c     | 1034 +++++++++++++++++++++++++++++++++++++++++
+libxfs/xfs_sb.c               |   14 +
+libxfs/xfs_trans_resv.c       |   37 +-
+mkfs/proto.c                  |    2 +-
+repair/rmap.c                 |    2 +-
+repair/scan.c                 |    2 +-
+50 files changed, 3805 insertions(+), 378 deletions(-)
+create mode 100644 libxfs/xfs_rtrefcount_btree.h
+create mode 100644 libxfs/xfs_rtrmap_btree.h
+create mode 100644 libxfs/xfs_rtrefcount_btree.c
+create mode 100644 libxfs/xfs_rtrmap_btree.c
 
