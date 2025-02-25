@@ -1,182 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-79.smtpout.orange.fr [80.12.242.79])
+	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308E319E7F8;
-	Tue, 25 Feb 2025 20:34:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96C791A0BCD;
+	Tue, 25 Feb 2025 21:10:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.79
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740515686; cv=none; b=F2p5tOjySuBqv/hN/G4l2YDNnrmnI0WymtaqX2Mt/TW4K+E/ad/4hWPECJ26fN/mE06jPlqCirBU6IHiEK4nMBcd2XqIQU+wdwKmhyFiC1djM8i6sFOXE8mp0ifMZsGHF6yh4ZLS73uvxzxI8vwL8LyVei3uwqp8W03Z0P1oUjo=
+	t=1740517820; cv=none; b=CPjpIWXMQjmv/dgXNmHbsuQC72eHOInALzrKV+NIt+Pk/6qaCT9zPIU7JLFxfr64gyzVmMZ9AXUE9oDdMdprpHWndsf4Nxd0tDGUEq1LqYwEKBSCit4M8nRbIfJmGHFcSvy0dGzLW9+EJVzwwghsIqpC8n4L96PB/fKmtP+h734=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740515686; c=relaxed/simple;
-	bh=BRDE49GDK1WZQtOVWzMxOTVjKgnZs4mLJeGOsJR4KcY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ni1RrSHaKfp711JMMLwThXNesiPTzabJSRHR7R29m4FMdHRgAl5MnZB+9sJZL2r04gvYvRzXMXbqJAggNm0ms7qeJEW2PLEFquQJPTCCE9U8gS8knwIkZhz0+X+9uPQoKemH+L1FU9XTWw6sm9QuSkApA+2eXJrJ3B7/NL4QJ40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GCTyihQ/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740517820; c=relaxed/simple;
+	bh=T3EHka1tFcSlRH3Fj1NbaXNKSeWHzxd6Y1SaHsloxZc=;
+	h=Message-ID:Date:MIME-Version:Subject:References:From:To:Cc:
+	 In-Reply-To:Content-Type; b=OMSxxy09yHyr5JRC4L90nckq1gkJsZ0VzhYPSNe1S4gqrj4/Sg6aX3L52A32RVGDTY24HGpC8jthghHmGVTspnWSkdY9seZNTRXpz+pJPZTMovLzBTstSsMn+HuXbDBkDvX5MSC57JpbsiX9d0DOM3pu5oCIIumdb/ZEVTU5Ijc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=Nt/l6W83; arc=none smtp.client-ip=80.12.242.79
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GCTyihQ/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63F3CC4CEE2;
-	Tue, 25 Feb 2025 20:34:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740515685;
-	bh=BRDE49GDK1WZQtOVWzMxOTVjKgnZs4mLJeGOsJR4KcY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GCTyihQ/b2fTjWjL/w3eMUhECoP7pQUVh6qE6TXIEJ1BjHjigwTdvaXZ8aa1oOZW9
-	 oKgOEDdFkHlCFZJGO4qmPSlQfmqTMdR4q6AaRRkwLGJ3tn5IsA6CVTfZngMu04uwvU
-	 USQQvX2Ui2Py5GmeTon0UPIp4jb3Kllog7qTR84ZVlGPWnNhBglvmgANXSDfz/nF8C
-	 fe6Ei8S+wY4QXqwkmTNtltifZ28vYDexOBzcB6Jx/JDAMQqYWr6bIziStGJLhdUGBs
-	 KFr35I0nEjHgGeGnYKE+sCz27ig69d53549TBv6xK6RZKoaFrkcXukrE4yB0TGFtgY
-	 hJMWUKlbR87Lg==
-Received: by pali.im (Postfix)
-	id 5A20189B; Tue, 25 Feb 2025 21:34:32 +0100 (CET)
-Date: Tue, 25 Feb 2025 21:34:32 +0100
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Amir Goldstein <amir73il@gmail.com>,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Helge Deller <deller@gmx.de>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Yoshinori Sato <ysato@users.sourceforge.jp>,
-	Rich Felker <dalias@libc.org>,
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-	"David S . Miller" <davem@davemloft.net>,
-	Andreas Larsson <andreas@gaisler.com>,
-	Andy Lutomirski <luto@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>,
-	=?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>,
-	linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
-	linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-	Linux-Arch <linux-arch@vger.kernel.org>, linux-xfs@vger.kernel.org,
-	Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH v3] fs: introduce getfsxattrat and setfsxattrat syscalls
-Message-ID: <20250225203432.o2lxjbimka4jldrx@pali>
-References: <20250211-xattrat-syscall-v3-1-a07d15f898b2@kernel.org>
- <20250221181135.GW21808@frogsfrogsfrogs>
- <CAOQ4uxgyYBFqkq6cQsso4LxJsPJ4uECOdskXmz-nmGhhV5BQWg@mail.gmail.com>
- <20250224-klinke-hochdekoriert-3f6be89005a8@brauner>
- <6b51ffa2-9d67-4466-865e-e703c1243352@app.fastmail.com>
- <20250225-strom-kopflos-32062347cd13@brauner>
- <3c860dc0-ba8d-4324-b286-c160b7d8d2c4@app.fastmail.com>
- <20250225-testfahrt-seilwinde-64e6f44c01ce@brauner>
- <20250225155926.GD6265@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="Nt/l6W83"
+Received: from [192.168.1.37] ([90.11.132.44])
+	by smtp.orange.fr with ESMTPA
+	id n2BftCcRTqJDFn2BitbctU; Tue, 25 Feb 2025 22:10:09 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1740517809;
+	bh=tARq/I59R/ifvYF0dCCLUoCvyYc1ZBk7Dm3FuvihB2s=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To;
+	b=Nt/l6W83BU5mDSrDQIQy8CZKAo0h68PJvcKps3BRoVn2m6bAUl1vWhK2es/BP8BFW
+	 DN3RlPUQFqJK58J49zS8Iq+H8FIQKGC4aR3FLiDA6idBgn8tIg5Twr41t+eDK/0sPp
+	 mg1FQKV8UkENBVw737LGxuMBZo+ZBM/oK6VglExOrG9+5UCmVjY6kqG7UnMc6VpiKZ
+	 s5Dl6bX1iLuElode1uDwU8GHn7T6IquRWeHKn8Hf+NPHn6mqYOqdxW2q2i+4k7lkXn
+	 e6Eo2vgp4trckiymDN9vhHfOlmyq2Gyk1kUlSKjSw+1pc9JkNq2cH1UTJN+cQ2XgrM
+	 /ezXxEpZ+Rm3Q==
+X-ME-Helo: [192.168.1.37]
+X-ME-Auth: bWFyaW9uLmphaWxsZXRAd2FuYWRvby5mcg==
+X-ME-Date: Tue, 25 Feb 2025 22:10:09 +0100
+X-ME-IP: 90.11.132.44
+Message-ID: <e53d7586-b278-4338-95a2-fa768d5d8b5e@wanadoo.fr>
+Date: Tue, 25 Feb 2025 22:09:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250225155926.GD6265@frogsfrogsfrogs>
-User-Agent: NeoMutt/20180716
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 06/16] rbd: convert timeouts to secs_to_jiffies()
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+ <20250225-converge-secs-to-jiffies-part-two-v3-6-a43967e36c88@linux.microsoft.com>
+Content-Language: en-US, fr-FR
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Frank.Li@nxp.com, James.Bottomley@HansenPartnership.com,
+ Julia.Lawall@inria.fr, Shyam-sundar.S-k@amd.com, akpm@linux-foundation.org,
+ axboe@kernel.dk, broonie@kernel.org, cassel@kernel.org, cem@kernel.org,
+ ceph-devel@vger.kernel.org, clm@fb.com, cocci@inria.fr,
+ dick.kennedy@broadcom.com, djwong@kernel.org, dlemoal@kernel.org,
+ dongsheng.yang@easystack.cn, dri-devel@lists.freedesktop.org,
+ dsterba@suse.com, festevam@gmail.com, hch@lst.de, hdegoede@redhat.com,
+ hmh@hmh.eng.br, ibm-acpi-devel@lists.sourceforge.net, idryomov@gmail.com,
+ ilpo.jarvinen@linux.intel.com, imx@lists.linux.dev,
+ james.smart@broadcom.com, jgg@ziepe.ca, josef@toxicpanda.com,
+ kalesh-anakkur.purayil@broadcom.com, kbusch@kernel.org,
+ kernel@pengutronix.de, leon@kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
+ linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ martin.petersen@oracle.com, nicolas.palix@imag.fr, ogabbay@kernel.org,
+ perex@perex.cz, platform-driver-x86@vger.kernel.org, s.hauer@pengutronix.de,
+ sagi@grimberg.me, selvin.xavier@broadcom.com, shawnguo@kernel.org,
+ sre@kernel.org, tiwai@suse.com, xiubli@redhat.com, yaron.avizrat@intel.com
+In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-6-a43967e36c88@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tuesday 25 February 2025 07:59:26 Darrick J. Wong wrote:
-> On Tue, Feb 25, 2025 at 12:24:08PM +0100, Christian Brauner wrote:
-> > On Tue, Feb 25, 2025 at 11:40:51AM +0100, Arnd Bergmann wrote:
-> > > On Tue, Feb 25, 2025, at 11:22, Christian Brauner wrote:
-> > > > On Tue, Feb 25, 2025 at 09:02:04AM +0100, Arnd Bergmann wrote:
-> > > >> On Mon, Feb 24, 2025, at 12:32, Christian Brauner wrote:
-> > > >> 
-> > > >> The ioctl interface relies on the existing behavior, see
-> > > >> 0a6eab8bd4e0 ("vfs: support FS_XFLAG_COWEXTSIZE and get/set of
-> > > >> CoW extent size hint") for how it was previously extended
-> > > >> with an optional flag/word. I think that is fine for the syscall
-> > > >> as well, but should be properly documented since it is different
-> > > >> from how most syscalls work.
-> > > >
-> > > > If we're doing a new system call I see no reason to limit us to a
-> > > > pre-existing structure or structure layout.
-> > > 
-> > > Obviously we could create a new structure, but I also see no
-> > > reason to do so. The existing ioctl interface was added in
-> > > in 2002 as part of linux-2.5.35 with 16 bytes of padding, half
-> > > of which have been used so far.
-> > > 
-> > > If this structure works for another 23 years before we run out
-> > > of spare bytes, I think that's good enough. Building in an
-> > > incompatible way to handle potential future contents would
-> > > just make it harder to use for any userspace that wants to
-> > > use the new syscalls but still needs a fallback to the
-> > > ioctl version.
-> > 
-> > The fact that this structure has existed since the dawn of time doesn't
-> > mean it needs to be retained when adding a completely new system call.
-> > 
-> > People won't mix both. They either switch to the new interface because
-> > they want to get around the limitations of the old interface or they
-> > keep using the old interface and the associated workarounds.
-> > 
-> > In another thread they keep arguing about new extensions for Windows
-> > that are going to be added to the ioctl interface and how to make it fit
-> > into this. That just shows that it's very hard to predict from the
-> > amount of past changes how many future changes are going to happen. And
-> > if an interface is easy to extend it might well invite new changes that
-> > people didn't want to or couldn't make using the old interface.
+Le 25/02/2025 à 21:17, Easwar Hariharan a écrit :
+> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> secs_to_jiffies().  As the value here is a multiple of 1000, use
+> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
 > 
-> Agreed, I don't think it's hard to enlarge struct fsxattr in the
-> existing ioctl interface; either we figure out how to make the kernel
-> fill out the "missing" bytes with an internal getfsxattr call, or we
-> make it return some errno if we would be truncating real output due to
-> struct size limits and leave a note in the manpage that "EL3HLT means
-> use a bigger structure definition"
+> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+> the following Coccinelle rules:
 > 
-> Then both interfaces can plod along for another 30 years. :)
+> @depends on patch@ expression E; @@
 > 
-> --D
+> -msecs_to_jiffies(E * 1000)
+> +secs_to_jiffies(E)
+> 
+> @depends on patch@ expression E; @@
+> 
+> -msecs_to_jiffies(E * MSEC_PER_SEC)
+> +secs_to_jiffies(E)
+> 
+> While here, remove the no-longer necessary check for range since there's
+> no multiplication involved.
 
-For Windows attributes, there are for sure needed new 11 bits for
-attributes which can be both get and set, additional 4 bits for get-only
-attributes, and plus there are 9 reserved bits (which Windows can start
-using it and exporting over NTFS or SMB). And it is possible that
-Windows can reuse some bits which were previously assigned for things
-which today does not appear on NTFS.
+I'm not sure this is correct.
+Now you multiply by HZ and things can still overflow.
 
-I think that fsx_xflags does not have enough free bits for all these
-attributes. So it would be really nice to design API/ABI in away which
-can be extended for new fields.
 
-Also another two points, for this new syscalls. I have not looked at the
-current changes (I was added to CC just recently), but it would be nice:
+Hoping I got casting right:
 
-1) If syscall API allows to operate on the symlink itself. This is
-   because NTFS and also SMB symlink also contains attributes. ioctl
-   interface currently does not support to get/set these symlink
-   attributes.
+#define MSEC_PER_SEC	1000L
+#define HZ 100
 
-2) If syscall API contains ability to just change subset of attributes.
-   And provide an error reporting to userspace if userspace application
-   is trying to set attribute which is not supported by the filesystem.
-   This error reporting is needed for possible "cp -a" or possible
-   "rsync" implementation which informs when some metadata cannot be
-   backup/restored. There are more filesystems which supports only
-   subset of attributes, this applies also for windows attributes.
-   For example UDF fs supports only "hidden" attribute.
+
+#define secs_to_jiffies(_secs) (unsigned long)((_secs) * HZ)
+
+static inline unsigned long _msecs_to_jiffies(const unsigned int m)
+{
+	return (m + (MSEC_PER_SEC / HZ) - 1) / (MSEC_PER_SEC / HZ);
+}
+
+int main() {
+
+	int n = INT_MAX - 5;
+
+	printf("res  = %ld\n", secs_to_jiffies(n));
+	printf("res  = %ld\n", _msecs_to_jiffies(1000 * n));
+
+	return 0;
+}
+
+
+gives :
+
+res  = -600
+res  = 429496130
+
+with msec, the previous code would catch the overflow, now it overflows 
+silently.
+
+untested, but maybe:
+	if (result.uint_32 > INT_MAX / HZ)
+		goto out_of_range;
+
+?
+
+CJ
+
+
+> 
+> Acked-by: Ilya Dryomov <idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Easwar Hariharan <eahariha-1pm0nblsJy7Jp67UH1NAhkEOCMrvLtNR@public.gmane.org>
+> ---
+>   drivers/block/rbd.c | 8 +++-----
+>   1 file changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+> index faafd7ff43d6ef53110ab3663cc7ac322214cc8c..41207133e21e9203192adf3b92390818e8fa5a58 100644
+> --- a/drivers/block/rbd.c
+> +++ b/drivers/block/rbd.c
+> @@ -108,7 +108,7 @@ static int atomic_dec_return_safe(atomic_t *v)
+>   #define RBD_OBJ_PREFIX_LEN_MAX	64
+>   
+>   #define RBD_NOTIFY_TIMEOUT	5	/* seconds */
+> -#define RBD_RETRY_DELAY		msecs_to_jiffies(1000)
+> +#define RBD_RETRY_DELAY		secs_to_jiffies(1)
+>   
+>   /* Feature bits */
+>   
+> @@ -4162,7 +4162,7 @@ static void rbd_acquire_lock(struct work_struct *work)
+>   		dout("%s rbd_dev %p requeuing lock_dwork\n", __func__,
+>   		     rbd_dev);
+>   		mod_delayed_work(rbd_dev->task_wq, &rbd_dev->lock_dwork,
+> -		    msecs_to_jiffies(2 * RBD_NOTIFY_TIMEOUT * MSEC_PER_SEC));
+> +		    secs_to_jiffies(2 * RBD_NOTIFY_TIMEOUT));
+>   	}
+>   }
+>   
+> @@ -6283,9 +6283,7 @@ static int rbd_parse_param(struct fs_parameter *param,
+>   		break;
+>   	case Opt_lock_timeout:
+>   		/* 0 is "wait forever" (i.e. infinite timeout) */
+> -		if (result.uint_32 > INT_MAX / 1000)
+> -			goto out_of_range;
+> -		opt->lock_timeout = msecs_to_jiffies(result.uint_32 * 1000);
+> +		opt->lock_timeout = secs_to_jiffies(result.uint_32);
+>   		break;
+>   	case Opt_pool_ns:
+>   		kfree(pctx->spec->pool_ns);
+> 
+
