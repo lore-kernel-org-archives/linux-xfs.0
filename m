@@ -1,197 +1,207 @@
-Received: from smtp.smtpout.orange.fr (smtp-71.smtpout.orange.fr [80.12.242.71])
-	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F4320D513;
-	Tue, 25 Feb 2025 21:26:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80C9A20FA86
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 21:29:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740518769; cv=none; b=K2XBLsaMFGr69Gd50SMpcToi3ovwV74tYkqFZAg6Jxv6k49cndqDdvcuvXlnFpbfzOdDzGWEp+GNNd9N2iHXB0d8msDq6Ll46lE6jp36YgykWKnnprBSaADuoa1HJy08bq/7Xx+d7Y8cKpiG5TOYC6r+sxh7hu70yB0C8WE4fZ8=
+	t=1740518988; cv=none; b=Eqi6dleKH57/Fz3mZeAehgMAYOc/OPTpdu9ofPg8hjowS7JhyfHDdXFtUdwHKICBNkk/FIMRTKTZwm9IEdvg9RDAPEehhpaI7E2w1kcfa6VLVXgLw/GZqza6ixjJEUTl2vP5LIMVCheHh+t2VkMGERjSotkH6OA94QS5/5hEgPE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740518769; c=relaxed/simple;
-	bh=pyuUKKIK/oqDwIAa4v1WeQ0xbo398GEv1psrnk7fMjY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CSYtzlNPG/uxjKGROYZKov/fs5BZippQgLF/3+StNMqQgXF4DpRPRup1aaWoPmeNPfqb9HR/q9f4Ca7HqBu6skGE+hBoovEY6VahB7ttC7RmbFFYg09DUON/+aYLY+FegjFMuvI8YbuTfNrLG5vXjqW8XSXTXZlMbFR/x4f+jcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=siYU52+w; arc=none smtp.client-ip=80.12.242.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+	s=arc-20240116; t=1740518988; c=relaxed/simple;
+	bh=RJ8nxryWmRATg+xZ+c4o3lqDz9k+9vc0aHo0iecmLPM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iA9wXrZQvgIfBzqMMtZ5lSY4kWOmW91cz6KfU7b2aRE8DaquXZtEESBXn1zWdzy4WamyeuqsM6m+ph4ypd0A69UTJR8lfxO9+bic3Z2QIwHddRKJ2KFIUkhJIvH/aOPHDqgbhhxgsJZCtzNcpeT14cpqLhEJ8drYotP7+yvRNfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=s0WXWW1l; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="siYU52+w"
-Received: from [192.168.1.37] ([90.11.132.44])
-	by smtp.orange.fr with ESMTPA
-	id n2R0tkeFQ4iG7n2R3t60Fm; Tue, 25 Feb 2025 22:25:57 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1740518758;
-	bh=CDOnVbuHRa5TlckniZ+QbcxrKwAHtppPzAjAscxNHSY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From;
-	b=siYU52+wZ9L1fww+iQDN9rtYX6/aPczL9atUE2l26+nq1Ri8dh3TYGdKOZSOl8FUk
-	 XrbU+P2TpuXPZmylEcNVhm7IGsserFCZYBNjOT562ZUYjLqKjMa1SJH893MOHidh6R
-	 OQATR7VDki3fiHZfHEF2JqtwL04PZvB0Oj0pypFUs2f2NaghtKWNKg5zY+oKMy9gx3
-	 hJDV0lXDGXzAw1PjH65vHLOKoP3lFuSvJzAbZkaII3cDH1jfDHrdCDL8+lHftSY/+S
-	 CY90Fz3FaFYxcLZzbR4khlsrjLfgaLUxO0uOmAn+6ltyDhAKQJ99yzzK2ZVeFXSo2U
-	 OrHC+r+ja1CFQ==
-X-ME-Helo: [192.168.1.37]
-X-ME-Auth: bWFyaW9uLmphaWxsZXRAd2FuYWRvby5mcg==
-X-ME-Date: Tue, 25 Feb 2025 22:25:58 +0100
-X-ME-IP: 90.11.132.44
-Message-ID: <44dd2b5b-d91c-4daf-ab75-ed4030180028@wanadoo.fr>
-Date: Tue, 25 Feb 2025 22:25:45 +0100
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="s0WXWW1l"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-220f4dd756eso129735405ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 13:29:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1740518985; x=1741123785; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=9hUhTeanJZvN3uegtxUy2CeWK0FuL5VvS0GK9DS5Gi4=;
+        b=s0WXWW1lkDutdvpSyFRQWWrVsUJKcW6+c+XU4hBnZmMioIfaGXbAho7fyEZHPFAm5n
+         ui/FVwehv2bD7SPMSHr/v1oo+8W9COp596ITV/p4sdAFOAcp7tmCz27bQQ1CiHtyBLzW
+         2YOat1ab2WTpDoM5VZEanJ2SO7ytW1Wd3rB07wwpQ+Bv6g3lrzw3ljBKfuShFN6Ssn1M
+         tv3QVCrkpTRgKObjczM1c2Fro48WKa++iITQcvoyCLQFAKZq/4MpxMgnECQNNknT6QcK
+         rlM7vu8BNSPdQ8DdG8zkbBwP+IddfV+tbooIxrAMmp86hwQ5R4P96IEN4o/z4ESyOm72
+         21ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740518985; x=1741123785;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9hUhTeanJZvN3uegtxUy2CeWK0FuL5VvS0GK9DS5Gi4=;
+        b=jNS+wym7oZj/1ju93IIa5B4lKmKV2SSJcGFzX2vCQj8j+vxsJrSadf/HhVbGF7u0EA
+         u+ROwx+ppe5IAdeJV9VRPy6ACvHLDFWzNfXvsLmv1vpeGVZ2F0HMwfwMacudhsTqz1Dg
+         gNWsJMsoFz3ZlJKPEqIJV55TDDku34vzYm2JaCr6fARI29KvOdmHqL3DjziesP9vjB82
+         N8d6VoXtGbFHJyWqWp8n3NTQsrLdT8iFKGosEzjYrayjsXCDTTEsYeq2hfC8kqYzy9HC
+         /XHgT9A3qKpgttP1YLsXL9W+u0hHdd1p3D6RgAMRo+kZaQ4aqaiLY1SsQBkDzGIjisO3
+         f/cw==
+X-Forwarded-Encrypted: i=1; AJvYcCW2o5XETk9uNmPOyWfh2Jz7HJ6eeReP/d4q+Pbc8i0ubEsF3tShVacOsODNjwvnTcCy01HqVLeWZ4w=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzOaFvI8vAa6O4NNAC0E77xwmKA2qoeLYUevD0Fbe0uwjFS4+FO
+	9GZyq6+/R/ahtKgA7hhvoYgAA34rr0jV9Ypukc8U/B99GnAXPUgJ+X3rE5TaNKs=
+X-Gm-Gg: ASbGncvWcFFkGDkjfs9khT1igY07rSFzoMD+JYr4Qnxexx4RGA059Bbd0oW7/OP/LWL
+	FypZWsrvBWu5eKTQ679oxLDkFKYsoPrw9iFDqshk6Q63U5nHa6W7wr1EBHQ66RF2n7b1w0eipAj
+	WrUuT9sE+fv+EIbSiS+dcRZF9TiGe53cwDpWfU6jc6gsezrZtfW43hjoutECypWMlTJkfxU/WYl
+	IcWjLROU5ojKOnOZY780FDlC0M/r0mW7EwE2mPGPZYnzuZLB690FIv5+WFp8gl0KFVRaNi0ZRw2
+	d7Nm9hFYNX245wuvYwYI9OO2IAdNkics0hTHlN2xXHEWkyQUo+1l1JNO4XOxrx2BCu8=
+X-Google-Smtp-Source: AGHT+IEjBdT7FNIXo8o1Js6XdokQgzHHkUXcoV+AxlIX1Slmd+eqWVyefVbK7pAY2Jb3elkwOEKM4A==
+X-Received: by 2002:a05:6a00:3d48:b0:730:75b1:7218 with SMTP id d2e1a72fcca58-7347918de02mr8472227b3a.16.1740518985571;
+        Tue, 25 Feb 2025 13:29:45 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7347a81b91csm2003941b3a.123.2025.02.25.13.29.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Feb 2025 13:29:44 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tn2Uo-00000005vsl-0TBI;
+	Wed, 26 Feb 2025 08:29:42 +1100
+Date: Wed, 26 Feb 2025 08:29:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	"zlang@redhat.com" <zlang@redhat.com>,
+	"dchinner@redhat.com" <dchinner@redhat.com>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	Naohiro Aota <Naohiro.Aota@wdc.com>
+Subject: Re: [PATCH v3.1 15/34] check: run tests in a private pid/mount
+ namespace
+Message-ID: <Z742RnudifADoj01@dread.disaster.area>
+References: <173933094308.1758477.194807226568567866.stgit@frogsfrogsfrogs>
+ <173933094584.1758477.17381421804809266222.stgit@frogsfrogsfrogs>
+ <20250214211341.GG21799@frogsfrogsfrogs>
+ <6azplgcrw6czwucfm5cr7kh4xorkpwt7zmxoks5m5ptegnyme3@ldg2d6hmmdty>
+ <20250225154910.GB6265@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 07/16] libceph: convert timeouts to secs_to_jiffies()
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: Frank.Li@nxp.com, James.Bottomley@HansenPartnership.com,
- Julia.Lawall@inria.fr, Shyam-sundar.S-k@amd.com, akpm@linux-foundation.org,
- axboe@kernel.dk, broonie@kernel.org, cassel@kernel.org, cem@kernel.org,
- ceph-devel@vger.kernel.org, clm@fb.com, cocci@inria.fr,
- dick.kennedy@broadcom.com, djwong@kernel.org, dlemoal@kernel.org,
- dongsheng.yang@easystack.cn, dri-devel@lists.freedesktop.org,
- dsterba@suse.com, festevam@gmail.com, hch@lst.de, hdegoede@redhat.com,
- hmh@hmh.eng.br, ibm-acpi-devel@lists.sourceforge.net, idryomov@gmail.com,
- ilpo.jarvinen@linux.intel.com, imx@lists.linux.dev,
- james.smart@broadcom.com, jgg@ziepe.ca, josef@toxicpanda.com,
- kalesh-anakkur.purayil@broadcom.com, kbusch@kernel.org,
- kernel@pengutronix.de, leon@kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
- linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org,
- martin.petersen@oracle.com, nicolas.palix@imag.fr, ogabbay@kernel.org,
- perex@perex.cz, platform-driver-x86@vger.kernel.org, s.hauer@pengutronix.de,
- sagi@grimberg.me, selvin.xavier@broadcom.com, shawnguo@kernel.org,
- sre@kernel.org, tiwai@suse.com, xiubli@redhat.com, yaron.avizrat@intel.com
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
- <20250225-converge-secs-to-jiffies-part-two-v3-7-a43967e36c88@linux.microsoft.com>
-Content-Language: en-US, fr-FR
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-7-a43967e36c88@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250225154910.GB6265@frogsfrogsfrogs>
 
-Le 25/02/2025 à 21:17, Easwar Hariharan a écrit :
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
+On Tue, Feb 25, 2025 at 07:49:10AM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 25, 2025 at 11:27:19AM +0000, Shinichiro Kawasaki wrote:
+> > On Feb 14, 2025 / 13:13, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > As mentioned in the previous patch, trying to isolate processes from
+> > > separate test instances through the use of distinct Unix process
+> > > sessions is annoying due to the many complications with signal handling.
+> > > 
+> > > Instead, we could just use nsexec to run the test program with a private
+> > > pid namespace so that each test instance can only see its own processes;
+> > > and private mount namespace so that tests writing to /tmp cannot clobber
+> > > other tests or the stuff running on the main system.  Further, the
+> > > process created by the clone(CLONE_NEWPID) call is considered the init
+> > > process of that pid namespace, so all processes will be SIGKILL'd when
+> > > the init process terminates, so we no longer need systemd scopes for
+> > > externally enforced cleanup.
+> > > 
+> > > However, it's not guaranteed that a particular kernel has pid and mount
+> > > namespaces enabled.  Mount (2.4.19) and pid (2.6.24) namespaces have
+> > > been around for a long time, but there's no hard requirement for the
+> > > latter to be enabled in the kernel.  Therefore, this bugfix slips
+> > > namespace support in alongside the session id thing.
+> > > 
+> > > Declaring CONFIG_PID_NS=n a deprecated configuration and removing
+> > > support should be a separate conversation, not something that I have to
+> > > do in a bug fix to get mainline QA back up.
+> > > 
+> > > Note that the new helper cannot unmount the /proc it inherits before
+> > > mounting a pidns-specific /proc because generic/504 relies on being able
+> > > to read the init_pid_ns (aka systemwide) version of /proc/locks to find
+> > > a file lock that was taken and leaked by a process.
+> > 
+> > Hello Darrick,
+> > 
+> > I ran fstests for zoned btrfs using the latest fstests tag v2025.02.23, and
+> > observed all test cases failed with my set up. I bisected and found that this
+> > commit is the trigger. Let me share my observations.
+> > 
+> > For example, btrfs/001.out.bad contents are as follows:
+> > 
+> >   QA output created by 001
+> >   mount: bad usage
+> >   Try 'mount --help' for more information.
+> >   common/rc: retrying test device mount with external set
+> >   mount: bad usage
+> >   Try 'mount --help' for more information.
+> >   common/rc: could not mount /dev/sda on common/config: TEST_DIR (/tmp/test) is not a directory
+> > 
+> > As the last line above shows, fstests failed to find out TEST_DIR, /tmp/test.
+> > 
+> > My set up uses mount point directories in tmpfs, /tmp/*:
+> > 
+> >   export TEST_DIR=/tmp/test
+> >   export SCRATCH_MNT=/tmp/scratch
+> > 
+> > I guessed that tmpfs might be a cause. As a trial, I modified these to,
+> > 
+> >   export TEST_DIR=/var/test
+> >   export SCRATCH_MNT=/var/scratch
+> > 
+> > then I observed the failures disappeared. I guess this implies that the commit
+> > for the private pid/mount namespace makes tmpfs unique to each namespace. Then,
+> > the the mount points in tmpfs were not found in the private namespaces context,
+> > probably.
 > 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
+> Yes, /tmp is now private to the test program (e.g. tests/btrfs/001) so
+> that tests run in parallel cannot interfere with each other.
 > 
-> @depends on patch@ expression E; @@
+> > If this guess is correct, in indicates that tmpfs can no longer be used for
+> > fstests mount points. Is this expected?
 > 
-> -msecs_to_jiffies(E * 1000)
-> +secs_to_jiffies(E)
+> Expected, yes.  But still broken for you. :(
 > 
-> @depends on patch@ expression E; @@
+> I can think of a few solutions:
 > 
-> -msecs_to_jiffies(E * MSEC_PER_SEC)
-> +secs_to_jiffies(E)
-> 
-> While here, remove the no-longer necessary checks for range since there's
-> no multiplication involved.
+> 1. Perhaps run_privatens could detect that TEST_DIR/SCRATCH_MNT start
+> with "/tmp" and bind mount them into the private /tmp before it starts
+> the test.
 
-No sure it is correct.
+Which then makes it specific to test running, and that makes it
+less suited to use from check-parallel (or any other generic test
+context).
 
-Same comment as on patch 06/16, available at [1].
+> 2. fstests could take care of defining and mkdir'ing the
+> TEST_DIR/SCRATCH_MNT directories and users no longer have to create
+> them.  It might, however, be useful to have them accessible to someone
+> who has ssh'd in to look around after a failure.
 
-CJ
+check-parallel already does this, and it leaves them around after
+the test, so....
 
-[1]: 
-https://lore.kernel.org/linux-kernel/e53d7586-b278-4338-95a2-fa768d5d8b5e@wanadoo.fr/
+4. use check-parallel.
 
-> 
-> Acked-by: Ilya Dryomov <idryomov@gmail.com>
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
-> ---
->   include/linux/ceph/libceph.h | 12 ++++++------
->   net/ceph/ceph_common.c       | 18 ++++++------------
->   net/ceph/osd_client.c        |  3 +--
->   3 files changed, 13 insertions(+), 20 deletions(-)
-> 
-> diff --git a/include/linux/ceph/libceph.h b/include/linux/ceph/libceph.h
-> index 733e7f93db66a7a29a4a8eba97e9ebf2c49da1f9..5f57128ef0c7d018341c15cc59288aa47edec646 100644
-> --- a/include/linux/ceph/libceph.h
-> +++ b/include/linux/ceph/libceph.h
-> @@ -72,15 +72,15 @@ struct ceph_options {
->   /*
->    * defaults
->    */
-> -#define CEPH_MOUNT_TIMEOUT_DEFAULT	msecs_to_jiffies(60 * 1000)
-> -#define CEPH_OSD_KEEPALIVE_DEFAULT	msecs_to_jiffies(5 * 1000)
-> -#define CEPH_OSD_IDLE_TTL_DEFAULT	msecs_to_jiffies(60 * 1000)
-> +#define CEPH_MOUNT_TIMEOUT_DEFAULT	secs_to_jiffies(60)
-> +#define CEPH_OSD_KEEPALIVE_DEFAULT	secs_to_jiffies(5)
-> +#define CEPH_OSD_IDLE_TTL_DEFAULT	secs_to_jiffies(60)
->   #define CEPH_OSD_REQUEST_TIMEOUT_DEFAULT 0  /* no timeout */
->   #define CEPH_READ_FROM_REPLICA_DEFAULT	0  /* read from primary */
->   
-> -#define CEPH_MONC_HUNT_INTERVAL		msecs_to_jiffies(3 * 1000)
-> -#define CEPH_MONC_PING_INTERVAL		msecs_to_jiffies(10 * 1000)
-> -#define CEPH_MONC_PING_TIMEOUT		msecs_to_jiffies(30 * 1000)
-> +#define CEPH_MONC_HUNT_INTERVAL		secs_to_jiffies(3)
-> +#define CEPH_MONC_PING_INTERVAL		secs_to_jiffies(10)
-> +#define CEPH_MONC_PING_TIMEOUT		secs_to_jiffies(30)
->   #define CEPH_MONC_HUNT_BACKOFF		2
->   #define CEPH_MONC_HUNT_MAX_MULT		10
->   
-> diff --git a/net/ceph/ceph_common.c b/net/ceph/ceph_common.c
-> index 4c6441536d55b6323f4b9d93b5d4837cd4ec880c..c2a2c3bcc4e91a628c99bd1cef1211d54389efa2 100644
-> --- a/net/ceph/ceph_common.c
-> +++ b/net/ceph/ceph_common.c
-> @@ -527,29 +527,23 @@ int ceph_parse_param(struct fs_parameter *param, struct ceph_options *opt,
->   
->   	case Opt_osdkeepalivetimeout:
->   		/* 0 isn't well defined right now, reject it */
-> -		if (result.uint_32 < 1 || result.uint_32 > INT_MAX / 1000)
-> +		if (result.uint_32 < 1)
->   			goto out_of_range;
-> -		opt->osd_keepalive_timeout =
-> -		    msecs_to_jiffies(result.uint_32 * 1000);
-> +		opt->osd_keepalive_timeout = secs_to_jiffies(result.uint_32);
->   		break;
->   	case Opt_osd_idle_ttl:
->   		/* 0 isn't well defined right now, reject it */
-> -		if (result.uint_32 < 1 || result.uint_32 > INT_MAX / 1000)
-> +		if (result.uint_32 < 1)
->   			goto out_of_range;
-> -		opt->osd_idle_ttl = msecs_to_jiffies(result.uint_32 * 1000);
-> +		opt->osd_idle_ttl = secs_to_jiffies(result.uint_32);
->   		break;
->   	case Opt_mount_timeout:
->   		/* 0 is "wait forever" (i.e. infinite timeout) */
-> -		if (result.uint_32 > INT_MAX / 1000)
-> -			goto out_of_range;
-> -		opt->mount_timeout = msecs_to_jiffies(result.uint_32 * 1000);
-> +		opt->mount_timeout = secs_to_jiffies(result.uint_32);
->   		break;
->   	case Opt_osd_request_timeout:
->   		/* 0 is "wait forever" (i.e. infinite timeout) */
-> -		if (result.uint_32 > INT_MAX / 1000)
-> -			goto out_of_range;
-> -		opt->osd_request_timeout =
-> -		    msecs_to_jiffies(result.uint_32 * 1000);
-> +		opt->osd_request_timeout = secs_to_jiffies(result.uint_32);
->   		break;
->   
->   	case Opt_share:
-> diff --git a/net/ceph/osd_client.c b/net/ceph/osd_client.c
-> index b24afec241382b60d775dd12a6561fa23a7eca45..ba61a48b4388c2eceb5b7a299906e7f90191dd5d 100644
-> --- a/net/ceph/osd_client.c
-> +++ b/net/ceph/osd_client.c
-> @@ -4989,8 +4989,7 @@ int ceph_osdc_notify(struct ceph_osd_client *osdc,
->   	linger_submit(lreq);
->   	ret = linger_reg_commit_wait(lreq);
->   	if (!ret)
-> -		ret = linger_notify_finish_wait(lreq,
-> -				 msecs_to_jiffies(2 * timeout * MSEC_PER_SEC));
-> +		ret = linger_notify_finish_wait(lreq, secs_to_jiffies(2 * timeout));
->   	else
->   		dout("lreq %p failed to initiate notify %d\n", lreq, ret);
->   
-> 
+> 3. Everyone rewrites their fstests configs to choose something outside
+> of /tmp (e.g. /var/tmp/{test,scratch})?
 
+How many people actually use /tmp for fstests mount points?
+
+IMO, it's better for ongoing maintenance to drop support for /tmp
+based mount points (less complexity in infrastructure setup). If
+there are relatively few ppl who do this, perhaps it would be best
+to treat this setup the same as the setsid encapsulation. i.e. works
+for now, but is deprecated and is going to be removed in a years
+time....
+
+Then we can simply add a /tmp test to the HAVE_PRIVATENS setting and
+avoid using a private ns for these setups for now. This gives
+everyone who does use these setups time to migrate to a different
+setup that will work with private namespaces correctly, whilst
+keeping the long term maintenance burden of running tests in private
+namespaces down to a minimum.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
