@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C2C033981
-	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 17:27:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413F519AD48
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 17:28:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740504478; cv=none; b=JctaoG30MH+sbS/+MhYjJPPNMNaD3lNa8Q0VLZmGB3RsyROF8ZLtynzmuvLqHxNNOhyZ/bBZYguBGqZboZaZjNdd54sxEG1YvH7Z95L/upv/AH0fnrk33MOl42up3aeqshLJXrHd1ZfDcIXOY435T2E2/J56k2zb0B6RIgmzr+g=
+	t=1740504495; cv=none; b=Pd+tEGYg8sKa07oFzbEXr4DoM6cdF9pzefKQHFkFg5LC85AZyKP9qkPBogtIK5H1cYDFqW1WowBJcphwqNc5GBna3hdOMtcQSC+HUEhJJ4kSC4F2yA2q/1islZDdVEsBhUl9ZPCh7Lcby5UTCb5HAh4is+UwIhuQHIpHdkQpMaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740504478; c=relaxed/simple;
-	bh=N997N40osS04AbEdVKlJJqoOdTrA6bMefEFo9Ya25MI=;
+	s=arc-20240116; t=1740504495; c=relaxed/simple;
+	bh=7bnT+z0uT6lSdIREMS0TT0YBVul+4eiYbfCawQcFARM=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=HluQMT21n0vfOfsSmvC29s8FIJQsqb6BNlQmpHSalO5IRFqc9nX8UXgK2XAzVmBcRzAsI194kINQPrjBcJBij0koG6mExSq9yjU/7uWBjV3fRe5UmYGj5CABT9KwOy9PGRsL2IFgA0+Lz3n+DdVep1pnOBwod+Lb9PNO88FoIw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dDvKlx2g; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=sOMbZWwh7SNNbrm7ErxMIKJORR4M2oCWyrO+m0bopZk8cXL2Rr5xKJ2giMm9+m9NgmZLFXk53wuo1ZPABCVL8NGoTBqTGBowX6NfEebi2soZqlooD75XztBG3DBSntcxoWbnNc0WFpCYdZosET9/jXAiWUWVhuXMiTMsKl4T0Xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZt6Hu6s; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dDvKlx2g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C54CC4CEE2;
-	Tue, 25 Feb 2025 17:27:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZt6Hu6s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B95C3C4CEDD;
+	Tue, 25 Feb 2025 17:28:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740504478;
-	bh=N997N40osS04AbEdVKlJJqoOdTrA6bMefEFo9Ya25MI=;
+	s=k20201202; t=1740504493;
+	bh=7bnT+z0uT6lSdIREMS0TT0YBVul+4eiYbfCawQcFARM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dDvKlx2gC9Ia7YgrGflsQv2PpzNP+LlWYopgJ8G24tRo47T1uRkUGRw8C9PfZhobA
-	 TfAu64WXvnpRyISGRjo541lIp00wmurVfi1ioOB1TUJ3mPevgDw+y11lazXjDaQtQt
-	 Ch1V+4HGEOTF6FAiK+utdKC0D4dnRbJZ0uNKmpuBG8I5YyX2b6wib0cz+76JBVA6sB
-	 e1Rtty6m/JDnVF9SG5e+9M4tNK+xcWrxTuitKLHquKO7hKywJidypdljMwg5yXI6cJ
-	 ryV7iz1n3/rUBIgfwJ2U1yJHbk9ukQBF5m9+8p23V5VhB+Y3cIPHSvcSaZR/vNQZnV
-	 xE7FVT3RNHzaQ==
-Date: Tue, 25 Feb 2025 09:27:57 -0800
-Subject: [GIT PULL 6/7] xfs_db: dump fs directory trees
+	b=OZt6Hu6s/CdTxmYPEAMz3X8gZD9wXwce7ZvCRN+8ZewpMmjERJgDBG9De+gpYEpFH
+	 ELxhDCxyc3bqgyUSeVpjj6gsqb9NSaqeDH5F9sS76KGDvBZj4GuFErALbcPsDNnWLD
+	 +2iZIG+6yTH2n3uQsQgInJKUi5Pis9dL0l3HqtNBn9bVmvvd19ji6pNJMziLQH+hcr
+	 wMxYilTmqXLNME+buA+JHH3K6iiHQgJYjFMrjC1psxpv248R3AFX+hwkbg+u/cqhQA
+	 +ejqvbOsZLLT4ttHgkYkAb+XV9lL3ew1YuaicpaiS13albPT4S0FOjkEOapi2n5ImX
+	 qVX8g9DZW8Ccg==
+Date: Tue, 25 Feb 2025 09:28:13 -0800
+Subject: [GIT PULL 7/7] xfs_scrub: handle emoji filenames better
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <174050433006.404908.16660169554728763047.stg-ugh@frogsfrogsfrogs>
+Message-ID: <174050433042.404908.7493960383315715384.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,47 +51,48 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit 17408f8871e100b2987174b6cf480ee68e44e1a3:
-
-mkfs: enable reflink on the realtime device (2025-02-25 09:16:02 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/rdump-6.14_2025-02-25
-
-for you to fetch changes up to 8c4e704f370e0361c3e3dae5f8751ff580fa95a4:
+The following changes since commit 8c4e704f370e0361c3e3dae5f8751ff580fa95a4:
 
 xfs_db: add command to copy directory trees out of filesystems (2025-02-25 09:16:03 -0800)
 
-----------------------------------------------------------------
-xfs_db: dump fs directory trees [6/7]
+are available in the Git repository at:
 
-Before we disable XFS V4 support by default in the kernel ahead of
-abandoning the old ondisk format in 2030, let's create a userspace
-extraction tool so that in the future, people can extract their files
-without needing to load an old kernel or figure out how to set up
-lklfuse.  This also enables at least partial data recovery from
-filesystems that cannot be mounted due to severe or unfixable
-inconsistencies.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-emoji-fixes-6.14_2025-02-25
+
+for you to fetch changes up to 195777d3d64f3a567da56f2e63f073448b8995d0:
+
+xfs_scrub: use the display mountpoint for reporting file corruptions (2025-02-25 09:16:03 -0800)
+
+----------------------------------------------------------------
+xfs_scrub: handle emoji filenames better [7/7]
+
+Ted told me about some bugs that the ext4 Unicode casefolding code has
+suffered over the past year -- they tried stripping out zero width
+joiner (ZWJ) codepoints to try to eliminate casefolded lookup comparison
+issues, but doing so corrupts compound emoji handling in filenames.
+
+XFS of course persists names with byte accuracy (aka it doesn't do
+casefolding or normalization) so it's not affected by those problems.
+However, xfs_scrub has the ability to warn about confusing names and
+other utf8 shenanigans so I decided to expand fstests.
+
+I wired up Ted's confusing names into generic/453 in fstests and it
+promptly crashed when trying to warn about filenames that consist
+entirely of compound emoji (e.g. heart + zwj + bandaid render as a heart
+with a bandaid over it).  So there's a patch to fix that buffer
+overflow.  There's a second patch to avoid complaining about ZWJ unless
+it results in confusing names in the same namespace.  The third patch
+fixes a minor reporting problem when parent pointers are enabled.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (4):
-xfs_db: pass const pointers when we're not modifying them
-xfs_db: use an empty transaction to try to prevent livelocks in path_navigate
-xfs_db: make listdir more generally useful
-xfs_db: add command to copy directory trees out of filesystems
+Darrick J. Wong (3):
+xfs_scrub: fix buffer overflow in string_escape
+xfs_scrub: don't warn about zero width joiner control characters
+xfs_scrub: use the display mountpoint for reporting file corruptions
 
-db/command.h             |    1 +
-db/namei.h               |   19 +
-libxfs/libxfs_api_defs.h |    2 +
-db/Makefile              |    3 +-
-db/command.c             |    1 +
-db/namei.c               |  115 +++--
-db/rdump.c               | 1056 ++++++++++++++++++++++++++++++++++++++++++++++
-man/man8/xfs_db.8        |   26 ++
-8 files changed, 1184 insertions(+), 39 deletions(-)
-create mode 100644 db/namei.h
-create mode 100644 db/rdump.c
+scrub/common.c   | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+scrub/unicrash.c | 10 ++++++++--
+2 files changed, 58 insertions(+), 4 deletions(-)
 
