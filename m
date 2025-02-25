@@ -1,98 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413F519AD48
-	for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 17:28:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2055A17B418;
+	Tue, 25 Feb 2025 17:29:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740504495; cv=none; b=Pd+tEGYg8sKa07oFzbEXr4DoM6cdF9pzefKQHFkFg5LC85AZyKP9qkPBogtIK5H1cYDFqW1WowBJcphwqNc5GBna3hdOMtcQSC+HUEhJJ4kSC4F2yA2q/1islZDdVEsBhUl9ZPCh7Lcby5UTCb5HAh4is+UwIhuQHIpHdkQpMaE=
+	t=1740504567; cv=none; b=jbLYuiRu00EOsi7iqg+gLlm8d1za2cZKUx7LmKAm2emKl8QDDq/WL68IJkEW1IvYgudKjs3SiL6/i52r49p5p/UA6//4JkVvLmGBDmTcrWM4K4G6YC1TuqYjSwq+X3CjcDOqsyXTg30XJAss9wW51VIEPxbp0vc4FPtLCoLklng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740504495; c=relaxed/simple;
-	bh=7bnT+z0uT6lSdIREMS0TT0YBVul+4eiYbfCawQcFARM=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=sOMbZWwh7SNNbrm7ErxMIKJORR4M2oCWyrO+m0bopZk8cXL2Rr5xKJ2giMm9+m9NgmZLFXk53wuo1ZPABCVL8NGoTBqTGBowX6NfEebi2soZqlooD75XztBG3DBSntcxoWbnNc0WFpCYdZosET9/jXAiWUWVhuXMiTMsKl4T0Xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZt6Hu6s; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740504567; c=relaxed/simple;
+	bh=3Rqh7c0axEAODu64/2c4AI+tEiP1L/g+oD+X2VodFyE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iWgIHw5dwRdkaTlaqO/SDJ4L3xKSvPqRBnzOgtxT2TEDggL9JSG4vCHGaAYOgrQvs+Dx9vqI1vxTF5cpe45Mk8r5WkVz2hJEApgIn4tVcPHSn1a7wFoVk4H64SzhHpQzrOIq09ca3W+QCAbCWtfDe50CW/XUfHqii+WfGLyws88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fyyPMrdm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZt6Hu6s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B95C3C4CEDD;
-	Tue, 25 Feb 2025 17:28:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fyyPMrdm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1DEFC4CEDD;
+	Tue, 25 Feb 2025 17:29:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740504493;
-	bh=7bnT+z0uT6lSdIREMS0TT0YBVul+4eiYbfCawQcFARM=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OZt6Hu6s/CdTxmYPEAMz3X8gZD9wXwce7ZvCRN+8ZewpMmjERJgDBG9De+gpYEpFH
-	 ELxhDCxyc3bqgyUSeVpjj6gsqb9NSaqeDH5F9sS76KGDvBZj4GuFErALbcPsDNnWLD
-	 +2iZIG+6yTH2n3uQsQgInJKUi5Pis9dL0l3HqtNBn9bVmvvd19ji6pNJMziLQH+hcr
-	 wMxYilTmqXLNME+buA+JHH3K6iiHQgJYjFMrjC1psxpv248R3AFX+hwkbg+u/cqhQA
-	 +ejqvbOsZLLT4ttHgkYkAb+XV9lL3ew1YuaicpaiS13albPT4S0FOjkEOapi2n5ImX
-	 qVX8g9DZW8Ccg==
-Date: Tue, 25 Feb 2025 09:28:13 -0800
-Subject: [GIT PULL 7/7] xfs_scrub: handle emoji filenames better
+	s=k20201202; t=1740504566;
+	bh=3Rqh7c0axEAODu64/2c4AI+tEiP1L/g+oD+X2VodFyE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fyyPMrdmLYXOoyCK6Ho8lTd+kBax1fiwRnTClqOfh5z7d64bPUvjpp51ZjfiftmR2
+	 bw0i/O5KepNu2eYOah45rrdeLhRyPdFqHbWg/baVucYGxuXGezg4VqSY2Bu9QiAp63
+	 gtROThv0H8KaX+g0a8oFW45hdcDc1598ao9AtyKxch9a/i0pxz7EH84YCVNHX162Z7
+	 R9yJGyY3RLhbmINz7z2vD927jJwM11JAL45fLzmOf50D+PTCVjyWkgd3a8qGJsE5c2
+	 /QlT6OsByvuHdw2ilwq7Yn6khcJtW09bdylBx+kNROUXvGWV7mL1/VPOw8ILPtEaNH
+	 shyFWkWqEXZig==
+Date: Tue, 25 Feb 2025 09:29:26 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <174050433042.404908.7493960383315715384.stg-ugh@frogsfrogsfrogs>
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, cem@kernel.org, dchinner@redhat.com, hch@lst.de,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com,
+	ritesh.list@gmail.com, martin.petersen@oracle.com, tytso@mit.edu,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2 03/11] xfs: Refactor xfs_reflink_end_cow_extent()
+Message-ID: <20250225172926.GC6242@frogsfrogsfrogs>
+References: <20250213135619.1148432-1-john.g.garry@oracle.com>
+ <20250213135619.1148432-4-john.g.garry@oracle.com>
+ <20250224202609.GH21808@frogsfrogsfrogs>
+ <0c8ba9d8-5a52-4658-abc8-00c05ba84585@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250225172123.GB6242@frogsfrogsfrogs>
-References: <20250225172123.GB6242@frogsfrogsfrogs>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0c8ba9d8-5a52-4658-abc8-00c05ba84585@oracle.com>
 
-Hi Andrey,
+On Tue, Feb 25, 2025 at 10:01:32AM +0000, John Garry wrote:
+> On 24/02/2025 20:26, Darrick J. Wong wrote:
+> > > +	if (error)
+> > > +		return error;
+> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > +	xfs_trans_ijoin(tp, ip, 0);
+> > > +
+> > > +	error = xfs_reflink_end_cow_extent_locked(tp, ip, offset_fsb, end_fsb);
+> > Overly long line, but otherwise looks fine.
+> 
+> The limit is 80, right? That line fills out to 80.
 
-Please pull this branch with changes for xfsprogs for 6.14-rc1.
+Ah, right, forgot that I have vim set up to display the right margin at
+72 for emails.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+--D
 
-The following changes since commit 8c4e704f370e0361c3e3dae5f8751ff580fa95a4:
-
-xfs_db: add command to copy directory trees out of filesystems (2025-02-25 09:16:03 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-emoji-fixes-6.14_2025-02-25
-
-for you to fetch changes up to 195777d3d64f3a567da56f2e63f073448b8995d0:
-
-xfs_scrub: use the display mountpoint for reporting file corruptions (2025-02-25 09:16:03 -0800)
-
-----------------------------------------------------------------
-xfs_scrub: handle emoji filenames better [7/7]
-
-Ted told me about some bugs that the ext4 Unicode casefolding code has
-suffered over the past year -- they tried stripping out zero width
-joiner (ZWJ) codepoints to try to eliminate casefolded lookup comparison
-issues, but doing so corrupts compound emoji handling in filenames.
-
-XFS of course persists names with byte accuracy (aka it doesn't do
-casefolding or normalization) so it's not affected by those problems.
-However, xfs_scrub has the ability to warn about confusing names and
-other utf8 shenanigans so I decided to expand fstests.
-
-I wired up Ted's confusing names into generic/453 in fstests and it
-promptly crashed when trying to warn about filenames that consist
-entirely of compound emoji (e.g. heart + zwj + bandaid render as a heart
-with a bandaid over it).  So there's a patch to fix that buffer
-overflow.  There's a second patch to avoid complaining about ZWJ unless
-it results in confusing names in the same namespace.  The third patch
-fixes a minor reporting problem when parent pointers are enabled.
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs_scrub: fix buffer overflow in string_escape
-xfs_scrub: don't warn about zero width joiner control characters
-xfs_scrub: use the display mountpoint for reporting file corruptions
-
-scrub/common.c   | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++--
-scrub/unicrash.c | 10 ++++++++--
-2 files changed, 58 insertions(+), 4 deletions(-)
-
+> > With that fixed,
+> > Reviewed-by: "Darrick J. Wong"<djwong@kernel.org>
+> > 
+> 
+> cheers
+> 
+> 
