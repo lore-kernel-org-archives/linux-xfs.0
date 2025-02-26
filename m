@@ -1,161 +1,242 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B8E3FE4
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 04:52:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0372126B097
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 07:29:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740545561; cv=none; b=WeB1xPmxwTVYeKQ7lA2LKQy+FEaeWV8i3ZhactJVzRKNS+rJb5934UiDbvJfXSZAUmuKjbyT2dTt5UMEIFGPTAUqSyfpfi/jBAWh1lW7++vhPuCPTObVgLOXSCcP4HKRPQygy8YmyY2u2XLF4OAyx8fAifHOnaXx9hr0o6XB6Ms=
+	t=1740554944; cv=none; b=QI5IXntG8Dyl6eSydSGCbGqR8ICi1byGGkG0D8PFLNg1nWpviNulYEB/FTkg621IcqADIZA77ynexbVjsyRjp7VhlwzhgfWQxbiGEh3Ipdm1GVD45Qj2GttyBiTJk+x2UQHm76FoIIhHbEma49UfgkbAhe5kVI3uF3JaskS0pAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740545561; c=relaxed/simple;
-	bh=OmfKcIAXaMCIcV/1SJXlDjghgEnw5iTB1qPbh4UoXiI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bPptmaplcepYiKYZevejoVtd7q3JVTY24xwKVTMhmHULQYLWuLZYdnhOsDOJynmbRYmWRbPNBjzNwbVnBL8lnB86AeF0RuuzvLStvK18XdYT9GK7ASKVpTa1K72FXLqocg6mXqDyfHjaXSo0j1W2VZi4keYnMR57WYaeNkqyr70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RIxDCrbM; arc=none smtp.client-ip=209.85.216.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1740554944; c=relaxed/simple;
+	bh=6zbN5jOaaksOEj+lbfcyYF58FVbBR2uEiZ1U9Xm0Q7A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cf/ewoV0H/HscnpEk/tG9n1+mWGce895j9FcgbR7dXRTC/yOh7cIU/Ark+RC3r3SjGRut7p9KqTK+ESFbgDpllAiTEhwBgE7jLxN1pSQPKbY2e2n7ya3rrLMiJa884HAddev4ZLEOmS1Ci6mPTomRp19wBw01MvB0XojYIOjX1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=DPnzDNfL; arc=none smtp.client-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RIxDCrbM"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-2fe77285e12so1900862a91.1
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 20:52:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="DPnzDNfL"
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-aaec111762bso484833266b.2
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 23:29:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1740545558; x=1741150358; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=kRY67v9dQslVh/+ZppBDHnsBMteDEDnqoVjoXMai1aA=;
-        b=RIxDCrbM99rty5fjz+w724MEeZDQktDtJWmx6V9eIz2SdYfPh0M+JysEBBLf/pdkua
-         mTJ2tTmAXcQzrq/VundPtwJNxDL4VxVzMecCNd9aQR9NDA+V+kOgj1gGXNhc5H2lEALx
-         NBtLNVkIfSYp84Vqza7BpcesDxyRu5FT117cUP9RYm9liVnl2VbKC6Bq0n9w0ANoJp+p
-         0uuXpmBqFlCvL4rChL+9/vcnNF854+INbKdg8iSFsmK5J2MAbYk64SdFznN70LRX31wt
-         2I3+8ouQKiyJoLh5ZXGq42Na30XNvHerIzrEeK1Eyn8X0fTwTcd4QBVSYHkEjd6mIICn
-         HWZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740545558; x=1741150358;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=suse.com; s=google; t=1740554939; x=1741159739; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=kRY67v9dQslVh/+ZppBDHnsBMteDEDnqoVjoXMai1aA=;
-        b=Z8R4O3UsyFmiuMLsJj9nmUs931X0SEoZttZXN8nvAIxn+2WgjZQy2ZOJEH/37rR0Vj
-         0DOLNT09tlxIPjNCzVh/2vGczoEQfO8S0z9XUzdyp0xODnkba37ZuSz3QZMfD7uhY8y0
-         hTaxQa3/p58GTi7RypxJY7aScIvlaO/dKrg8bW4f63QqEQ3z5xm2EExgf40VVwAzM9jb
-         dcQnhH5R/R38FVYZI0xYvdY4RntQuJnuZgtXi2l+N/bnKKar7MVbEYAWczC0iTJgvrJH
-         skiNzaoCSXGg76ekwERxy9dx6fnhOnLhCrXSLYPPHDzjBSCjrQDXpyGhqaCrKQpBCsGq
-         zRDQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU1Zq/tcMjGIv6d0vR7JTExLbduR2IOLKPPqvk2X04Yc71IMeGygdNbtei1bzjKy3wljpkKFgLpXTc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YynJz5lJ6ZpA5rF/VsQYaji4Emd+urRvoeekfSB7l3gElUIcja4
-	mNqx5uXxxtXGFXPXSB2wXBPqH4i1QoWSy6R6NzQYmMr45+k3fT1mmYTGAZFifjo=
-X-Gm-Gg: ASbGnctbC2adyAntf8foIf8aPCtVWKzLmyiI8/EtGWxMmxVQYupvREEqB0qBoJ9rOfY
-	4Wg3MU2VBrAsd8JZ7KQRY8GfG/p8Ztdz428hyWLpOJRCcgxrFue5SFH3/jDMrBikmpl05BUMHEp
-	P3pLadbYBUcyxZM35VKewQpewxP7VQ3bSt11Kde4l0Nx54EdhG5gzAx1/C2YAloQKPtcdu/PsMh
-	ekXzAC5k4F35qg57b+vsAlqDEP9Y5JUU8ShzZ8T7Zh+TYrSf5PGHQVrBkP5kaqjpbYYTPXLDuxd
-	w9dnKYtKeHTXLwCtvKo6NYL3qUU4KxjJTJGPZRCVF0FPbngpk8Zcjkugq5IXtY8DfV81A8mkdkp
-	jTw==
-X-Google-Smtp-Source: AGHT+IEKkYTV+HlV6GSN1kPh9Q2+3D2op5mHnHlKQYTUWJMxMwtJjAzeHEOVmGEAdo1mJMcC5Oq4EQ==
-X-Received: by 2002:a05:6a21:10e:b0:1ee:d860:61eb with SMTP id adf61e73a8af0-1f0fc89a19dmr10136147637.39.1740545557911;
-        Tue, 25 Feb 2025 20:52:37 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7347a6b8a82sm2440416b3a.6.2025.02.25.20.52.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Feb 2025 20:52:37 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tn9PO-000000063jC-21Q7;
-	Wed, 26 Feb 2025 15:52:34 +1100
-Date: Wed, 26 Feb 2025 15:52:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Pavel Begunkov <asml.silence@gmail.com>
-Cc: io-uring@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org,
-	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	wu lei <uwydoc@gmail.com>
-Subject: Re: [PATCH 1/1] iomap: propagate nowait to block layer
-Message-ID: <Z76eEu4vxwFIWKj7@dread.disaster.area>
-References: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
+        bh=Jy5UzyKzocsSx5cSXomfjfFL//CTemBkcuebkephmC0=;
+        b=DPnzDNfLR7XZTTtbDw+DuW1lx1StRSsipS09fizN5cRrJGW7tcTHqO5NSG7xYdoHX2
+         o6tzx9bfAow0wJAO8wvFqoZHbs4mPyUkYNJ6p4x4X2XVpneFKc09+/l/Yb7I0rXWNvZf
+         59PADbwRVs1Z2Ld7EANg+3GvujiSVL9sTJFNAfRUgh+fg6qGE9wORi/b9D6BsDA1wVBw
+         nERAEUIHLAgGAaFUFnLURjg/tr13IDXYc82dy/A6pzvk+xS3FFlJBWRs/jLhn1DVfYvd
+         oBGL2zkNNM7XMhVb58ZA7Zr8kDt7ripM7lDqQoP5adxc4THLPzMH4Ps/LDy2jBnSEDqQ
+         ZvWg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740554939; x=1741159739;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Jy5UzyKzocsSx5cSXomfjfFL//CTemBkcuebkephmC0=;
+        b=LIJ3ZcTyPcmx4fWMyNSbLypFdTgaXX9kD+MlsoGcadxM2Ue1DSs64J4FYyoBA9rf4n
+         kUvH+A5WWpg0iJzZBsZF9ZQVI5eIlyzHTm3ZGi6Ftk2hOfg6IOQfGHKoheRQEsIMSTh3
+         i+cbUVKx/ahoZWxBQPtU1418q8E/xv5/dKvg/LqTZFDPYunYi5Rd/bPc0kt5s15Bwvvo
+         sGJkRB5X3FQ6J4/vGs/Tbt7HxW/w8+ARXzVGUaVLDCjQ/MhunpxvzEHlD4/u0gdrpR3S
+         iYHB5UCE/I5HXgf5QTKUB0QkasA0kg7HRgpFYxBd9IXt9zX1g1kADpBvTq6jJ07+m9EB
+         0nVA==
+X-Forwarded-Encrypted: i=1; AJvYcCUQPX+xRUV/hp3Q53bN5CMj+SqTqWov+MF6cuVwvEN8aocaD0JducWdSBWB8uuOcVCiQ2O4IlArwDs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzV3f3D1/Fnxzj14JPPeOjAdLUNfdn9bRP4K13edwgYRUMpzaJr
+	pxWlEI1N86mnAEkhR7H+pVbNuBJL21NYmrC6RuY6oPMxeX9245XxwuqvO5GvkYLvoXGQILmznKH
+	66CUhLXm9UjGM8+y3bH+U6CBQmicxHkk3aixw9A==
+X-Gm-Gg: ASbGncvcAS66hydySUM50MSk3eC9b5j5nmjRZnBuEjJrd7jQUAGoNq9mwQ1+Gh8XSI2
+	U7MCmjm5JkVn4eQ7XgKx37QDTk3bQ2aenHEcCgf4mNzVykwjt6rMPwxW+IYQyBHPPvyCYwPuR+q
+	x+DdsvMQ==
+X-Google-Smtp-Source: AGHT+IFYP8Tba+z3P6zhrfLVohTtXs/BwRHQBKKRVXu59ZSzqEPbWtjoPmnK2n59Ee5Tugvqu0RIdPnu12lt6iEjWaU=
+X-Received: by 2002:a17:906:18b1:b0:ab6:ed8a:601f with SMTP id
+ a640c23a62f3a-abeeed1123amr202024966b.12.1740554939189; Tue, 25 Feb 2025
+ 23:28:59 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+ <20250225-converge-secs-to-jiffies-part-two-v3-6-a43967e36c88@linux.microsoft.com>
+ <e53d7586-b278-4338-95a2-fa768d5d8b5e@wanadoo.fr>
+In-Reply-To: <e53d7586-b278-4338-95a2-fa768d5d8b5e@wanadoo.fr>
+From: Daniel Vacek <neelx@suse.com>
+Date: Wed, 26 Feb 2025 08:28:48 +0100
+X-Gm-Features: AQ5f1JpekOKemtGu2BHsnbGs6fr563e7jHjxxRB5HZ2bESNce9YNZRbPCIKk9Cc
+Message-ID: <CAPjX3Fcr+BoMRgZGbqqgpF+w-sHU+SqGT8QJ3QCp8uvJbnaFsQ@mail.gmail.com>
+Subject: Re: [PATCH v3 06/16] rbd: convert timeouts to secs_to_jiffies()
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: Easwar Hariharan <eahariha@linux.microsoft.com>, Frank.Li@nxp.com, 
+	James.Bottomley@hansenpartnership.com, Julia.Lawall@inria.fr, 
+	Shyam-sundar.S-k@amd.com, akpm@linux-foundation.org, axboe@kernel.dk, 
+	broonie@kernel.org, cassel@kernel.org, cem@kernel.org, 
+	ceph-devel@vger.kernel.org, clm@fb.com, cocci@inria.fr, 
+	dick.kennedy@broadcom.com, djwong@kernel.org, dlemoal@kernel.org, 
+	dongsheng.yang@easystack.cn, dri-devel@lists.freedesktop.org, 
+	dsterba@suse.com, festevam@gmail.com, hch@lst.de, hdegoede@redhat.com, 
+	hmh@hmh.eng.br, ibm-acpi-devel@lists.sourceforge.net, idryomov@gmail.com, 
+	ilpo.jarvinen@linux.intel.com, imx@lists.linux.dev, james.smart@broadcom.com, 
+	jgg@ziepe.ca, josef@toxicpanda.com, kalesh-anakkur.purayil@broadcom.com, 
+	kbusch@kernel.org, kernel@pengutronix.de, leon@kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org, 
+	linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	martin.petersen@oracle.com, nicolas.palix@imag.fr, ogabbay@kernel.org, 
+	perex@perex.cz, platform-driver-x86@vger.kernel.org, s.hauer@pengutronix.de, 
+	sagi@grimberg.me, selvin.xavier@broadcom.com, shawnguo@kernel.org, 
+	sre@kernel.org, tiwai@suse.com, xiubli@redhat.com, yaron.avizrat@intel.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Feb 26, 2025 at 01:33:58AM +0000, Pavel Begunkov wrote:
-> There are reports of high io_uring submission latency for ext4 and xfs,
-> which is due to iomap not propagating nowait flag to the block layer
-> resulting in waiting for IO during tag allocation.
-> 
-> Cc: stable@vger.kernel.org
-> Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
-> Reported-by: wu lei <uwydoc@gmail.com>
-> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
-> ---
->  fs/iomap/direct-io.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index b521eb15759e..25c5e87dbd94 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -81,6 +81,9 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,
->  		WRITE_ONCE(iocb->private, bio);
->  	}
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		bio->bi_opf |= REQ_NOWAIT;
+On Tue, 25 Feb 2025 at 22:10, Christophe JAILLET
+<christophe.jaillet@wanadoo.fr> wrote:
+>
+> Le 25/02/2025 =C3=A0 21:17, Easwar Hariharan a =C3=A9crit :
+> > Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> > secs_to_jiffies().  As the value here is a multiple of 1000, use
+> > secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplica=
+tion
+> >
+> > This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci w=
+ith
+> > the following Coccinelle rules:
+> >
+> > @depends on patch@ expression E; @@
+> >
+> > -msecs_to_jiffies(E * 1000)
+> > +secs_to_jiffies(E)
+> >
+> > @depends on patch@ expression E; @@
+> >
+> > -msecs_to_jiffies(E * MSEC_PER_SEC)
+> > +secs_to_jiffies(E)
+> >
+> > While here, remove the no-longer necessary check for range since there'=
+s
+> > no multiplication involved.
+>
+> I'm not sure this is correct.
+> Now you multiply by HZ and things can still overflow.
 
-ISTR that this was omitted on purpose because REQ_NOWAIT doesn't
-work in the way iomap filesystems expect IO to behave.
+This does not deal with any additional multiplications. If there is an
+overflow, it was already there before to begin with, IMO.
 
-I think it has to do with large direct IOs that require multiple
-calls to submit_bio(). Each bio that is allocated and submitted
-takes a reference to the iomap_dio object, and the iomap_dio is not
-completed until that reference count goes to zero.
+> Hoping I got casting right:
 
-hence if we have submitted a series of bios in a IOCB_NOWAIT DIO
-and then the next bio submission in the DIO triggers a REQ_NOWAIT
-condition, that bio is marked with a BLK_STS_AGAIN and completed.
-This error is then caught by the iomap dio bio completion function,
-recorded in the iomap_dio structure, but because there is still
-bios in flight, the iomap_dio ref count does not fall to zero and so
-the DIO itself is not completed.
+Maybe not exactly? See below...
 
-Then submission loops again, sees dio->error is set and aborts
-submission. Because this is AIO, and the iomap_dio refcount is
-non-zero at this point, __iomap_dio_rw() returns -EIOCBQUEUED.
-It does not return the -EAGAIN state that was reported to bio
-completion because the overall DIO has not yet been completed
-and all the IO completion status gathered.
+> #define MSEC_PER_SEC    1000L
+> #define HZ 100
+>
+>
+> #define secs_to_jiffies(_secs) (unsigned long)((_secs) * HZ)
+>
+> static inline unsigned long _msecs_to_jiffies(const unsigned int m)
+> {
+>         return (m + (MSEC_PER_SEC / HZ) - 1) / (MSEC_PER_SEC / HZ);
+> }
+>
+> int main() {
+>
+>         int n =3D INT_MAX - 5;
+>
+>         printf("res  =3D %ld\n", secs_to_jiffies(n));
+>         printf("res  =3D %ld\n", _msecs_to_jiffies(1000 * n));
 
-Hence when the in flight async bios actually complete, they drop the
-iomap dio reference count to zero, iomap_dio_complete() is called,
-and the BLK_STS_AGAIN error is gathered from the previous submission
-failure. This then calls AIO completion, and reports a -EAGAIN error
-to the AIO/io_uring completion code.
+I think the format should actually be %lu giving the below results:
 
-IOWs, -EAGAIN is *not reported to the IO submitter* that needs
-this information to defer and resubmit the IO - it is reported to IO
-completion where it is completely useless and, most likely, not in a
-context that can resubmit the IO.
+res  =3D 18446744073709551016
+res  =3D 429496130
 
-Put simply: any code that submits multiple bios (either individually
-or as a bio chain) for a single high level IO can not use REQ_NOWAIT
-reliably for async IO submission.
+Which is still wrong nonetheless. But here, *both* results are wrong
+as the expected output should be 214748364200 which you'll get with
+the correct helper/macro.
 
-We have similar limitations on IO polling (IOCB_HIPRI) in iomap, but
-I'm not sure if REQ_NOWAIT can be handled the same way. i.e. only
-setting REQ_NOWAIT on the first bio means that the second+ bio can
-still block and cause latency issues.
+But note another thing, the 1000 * (INT_MAX - 5) already overflows
+even before calling _msecs_to_jiffies(). See?
 
-So, yeah, fixing this source of latency is not as simple as just
-setting REQ_NOWAIT. I don't know if there is a better solution that
-what we currently have, but causing large AIO DIOs to
-randomly fail with EAGAIN reported at IO completion (with the likely
-result of unexpected data corruption) is far worse behaviour that
-occasionally having to deal with a long IO submission latency.
+Now, you'll get that mentioned correct result with:
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+#define secs_to_jiffies(_secs) ((unsigned long)(_secs) * HZ)
+
+Still, why unsigned? What if you wanted to convert -5 seconds to jiffies?
+
+>         return 0;
+> }
+>
+>
+> gives :
+>
+> res  =3D -600
+> res  =3D 429496130
+>
+> with msec, the previous code would catch the overflow, now it overflows
+> silently.
+
+What compiler options are you using? I'm not getting any warnings.
+
+> untested, but maybe:
+>         if (result.uint_32 > INT_MAX / HZ)
+>                 goto out_of_range;
+>
+> ?
+>
+> CJ
+>
+>
+> >
+> > Acked-by: Ilya Dryomov <idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.or=
+g>
+> > Signed-off-by: Easwar Hariharan <eahariha-1pm0nblsJy7Jp67UH1NAhkEOCMrvL=
+tNR@public.gmane.org>
+> > ---
+> >   drivers/block/rbd.c | 8 +++-----
+> >   1 file changed, 3 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+> > index faafd7ff43d6ef53110ab3663cc7ac322214cc8c..41207133e21e9203192adf3=
+b92390818e8fa5a58 100644
+> > --- a/drivers/block/rbd.c
+> > +++ b/drivers/block/rbd.c
+> > @@ -108,7 +108,7 @@ static int atomic_dec_return_safe(atomic_t *v)
+> >   #define RBD_OBJ_PREFIX_LEN_MAX      64
+> >
+> >   #define RBD_NOTIFY_TIMEOUT  5       /* seconds */
+> > -#define RBD_RETRY_DELAY              msecs_to_jiffies(1000)
+> > +#define RBD_RETRY_DELAY              secs_to_jiffies(1)
+> >
+> >   /* Feature bits */
+> >
+> > @@ -4162,7 +4162,7 @@ static void rbd_acquire_lock(struct work_struct *=
+work)
+> >               dout("%s rbd_dev %p requeuing lock_dwork\n", __func__,
+> >                    rbd_dev);
+> >               mod_delayed_work(rbd_dev->task_wq, &rbd_dev->lock_dwork,
+> > -                 msecs_to_jiffies(2 * RBD_NOTIFY_TIMEOUT * MSEC_PER_SE=
+C));
+> > +                 secs_to_jiffies(2 * RBD_NOTIFY_TIMEOUT));
+> >       }
+> >   }
+> >
+> > @@ -6283,9 +6283,7 @@ static int rbd_parse_param(struct fs_parameter *p=
+aram,
+> >               break;
+> >       case Opt_lock_timeout:
+> >               /* 0 is "wait forever" (i.e. infinite timeout) */
+> > -             if (result.uint_32 > INT_MAX / 1000)
+> > -                     goto out_of_range;
+> > -             opt->lock_timeout =3D msecs_to_jiffies(result.uint_32 * 1=
+000);
+> > +             opt->lock_timeout =3D secs_to_jiffies(result.uint_32);
+> >               break;
+> >       case Opt_pool_ns:
+> >               kfree(pctx->spec->pool_ns);
+> >
+>
+>
