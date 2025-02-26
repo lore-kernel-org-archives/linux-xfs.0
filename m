@@ -1,82 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68723EBE;
-	Wed, 26 Feb 2025 01:53:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC38F204C0E;
+	Wed, 26 Feb 2025 02:00:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740534815; cv=none; b=YyfJa2urJkoFUiUlO5YgZmvtHtxiNxxdjO/621W5hmfqCtjMNcvAtaYcR5bIPwRW/IfKom9ZRr+4kmTpjww0SL4zcBU0P/iPtS6dtHFEnqVygIKXHPrhS7gGvz4nLv4ivWV1vDkovqn5cr1D4twzcUK2w1p37x5zwKse4onvV6E=
+	t=1740535254; cv=none; b=Ac8bv3WFnuTt+qAefCTBDyBEwesrrFTkPJOTWpIOXzgnqq5uXZV7HOpStZ/d5oSdU6Ko3OG+QvUCKs1qNIaVpOtUcopO98p9hj1wG4phE5Tt4JXyGDZ3H1wifqNWdOzupzXRHzQz84e8V1LeWMFECPND2zwue/QWRe8ldZ9FppY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740534815; c=relaxed/simple;
-	bh=+elC5n9UxXmY/+kaH9dHoOOaj/CKZ/DiW/WDKX925ik=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ad+R3fS5Mtxu6EyJWCAovUBbL0kReiKhXmSBKZwVLJBdOI5rFvspv3cwcJAxgfxbHFZ2RYvh+TEBeLYjNrjoetDw6sdX2zGFWwGyC30x8ZmlhPii/c76JTWaSwIM96Fr0DYWE43cxGqcGMDLkxewg5ryTeszQG/jM3XsmKIZCr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dfLN6SX1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740535254; c=relaxed/simple;
+	bh=QOAgMMGKbnJ6hZHvx6ZJYTRK+iZXq18TAlHT3acDveU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GfO2ZztXI0yR4SOtWmiMQuv2Miry7HPEoSwkKM5fHVWBj3q2p3eBEVkJZHQlOM7vs2hrEG273wOgSP80vhC0d7LYHKkdMLPOuR9lJVurP96SLc/GCyV1MaG9WKzlgij04TdeSDC9fSAyRDkE7VaZgT86tR+k5I1zbftL+L9n/bI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lbvJaOgP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dfLN6SX1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D542EC4CEDD;
-	Wed, 26 Feb 2025 01:53:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lbvJaOgP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E76A4C4CEDD;
+	Wed, 26 Feb 2025 02:00:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740534814;
-	bh=+elC5n9UxXmY/+kaH9dHoOOaj/CKZ/DiW/WDKX925ik=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dfLN6SX1aOao00bo86A0SdA7cWCvObHxJ9mBeVNjOC1X8+gj+SljqRNMlxWhSdtzV
-	 lyOJr4ErnCA0HVv2qgjoGbxMzFvO36+NRXeZ5l6CbFdUCnOTp6cZCXqfcGW0r+B672
-	 tB1fnHIZjJrxz50c9BqbFkfKNIUXnN2qFKZoUgAp+Tv5OM3woiIbT8pdj3ox7YRPOI
-	 maPbUFZ6/XOstGrUBR007HP7Pa4GMoGQXasBhfJ1JlUSxWk0V+SLHEQwtNgrDzp8ru
-	 uSxCw2l1mHvYmUbVeUispvsmZhmkNwEmTjTztJIPat4E2XTMffYeVhNRlcpYHZHXAn
-	 TAni0dBYFZ3SA==
-Date: Tue, 25 Feb 2025 17:53:34 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pavel Begunkov <asml.silence@gmail.com>
-Cc: io-uring@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	wu lei <uwydoc@gmail.com>
-Subject: Re: [PATCH 1/1] iomap: propagate nowait to block layer
-Message-ID: <20250226015334.GF6265@frogsfrogsfrogs>
-References: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
+	s=k20201202; t=1740535253;
+	bh=QOAgMMGKbnJ6hZHvx6ZJYTRK+iZXq18TAlHT3acDveU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=lbvJaOgPkZbnkOP5hNZv3kt8F37sM5wVNdz5pQoKBOvWJpcWyMv2mVC7qw0zww0FC
+	 tw0rFBZp3tLMdImqLCpGhcY34tv8uho+Lu2q/YVztsAQwyT0nOq0d2HlE+yumDi+2G
+	 NnGD4V7HBDpFdEYrgDp0+8hLWBlWldNGcN9+JQ1uf7k8Z8tTkCxsl34NLWQ8Vawbdb
+	 K9795FHlijgsdEKshsQNQoxr3/DEjO/bi0eHV3p1/sO3PbUu61pZGpWQwOCIptZowS
+	 rIy49xymFJKzj4FXwPSz54+5ZyqnT56OBQv1abO0kJMDp0bQ7XnwlRxW3/2snteMgS
+	 vdipJDYHPyQ2Q==
+Message-ID: <2632bed9-4e4a-494a-bb89-d5aac64f854e@kernel.org>
+Date: Wed, 26 Feb 2025 11:00:37 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 08/16] ata: libata-zpodd: convert timeouts to
+ secs_to_jiffies()
+To: Easwar Hariharan <eahariha@linux.microsoft.com>,
+ Andrew Morton <akpm@linux-foundation.org>
+Cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay
+ <ogabbay@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>,
+ Nicolas Palix <nicolas.palix@imag.fr>, James Smart
+ <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
+ Xiubo Li <xiubli@redhat.com>, Niklas Cassel <cassel@kernel.org>,
+ Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+ Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+ Selvin Xavier <selvin.xavier@broadcom.com>,
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ cocci@inria.fr, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-sound@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-spi@vger.kernel.org,
+ imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+ platform-driver-x86@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net,
+ linux-rdma@vger.kernel.org
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+ <20250225-converge-secs-to-jiffies-part-two-v3-8-a43967e36c88@linux.microsoft.com>
+ <ff51bcfc-10c8-4461-9f82-ea1d5ed784f8@linux.microsoft.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <ff51bcfc-10c8-4461-9f82-ea1d5ed784f8@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 26, 2025 at 01:33:58AM +0000, Pavel Begunkov wrote:
-> There are reports of high io_uring submission latency for ext4 and xfs,
-> which is due to iomap not propagating nowait flag to the block layer
-> resulting in waiting for IO during tag allocation.
+On 2/26/25 5:24 AM, Easwar Hariharan wrote:
+> On 2/25/2025 12:17 PM, Easwar Hariharan wrote:
+>> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+>> secs_to_jiffies().  As the value here is a multiple of 1000, use
+>> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
+>>
+>> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+>> the following Coccinelle rules:
+>>
+>> @depends on patch@
+>> expression E;
+>> @@
+>>
+>> -msecs_to_jiffies
+>> +secs_to_jiffies
+>> (E
+>> - * \( 1000 \| MSEC_PER_SEC \)
+>> )
+>>
+>> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+>> ---
 > 
-> Cc: stable@vger.kernel.org
-> Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
-> Reported-by: wu lei <uwydoc@gmail.com>
-> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
-> ---
->  fs/iomap/direct-io.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index b521eb15759e..25c5e87dbd94 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -81,6 +81,9 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,
->  		WRITE_ONCE(iocb->private, bio);
->  	}
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		bio->bi_opf |= REQ_NOWAIT;
+> This was meant to carry Damien's ack once the subject line was fixed[1], but I fixed
+> the subject line and missed adding the ack in. Damien, would you like to ack again?
 
-Shouldn't this go in iomap_dio_bio_opflags?
+Looks like Andrew already applied the patch, which is fine.
+But nevertheless:
 
---D
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 
-> +
->  	if (dio->dops && dio->dops->submit_io)
->  		dio->dops->submit_io(iter, bio, pos);
->  	else
-> -- 
-> 2.48.1
-> 
+
+-- 
+Damien Le Moal
+Western Digital Research
