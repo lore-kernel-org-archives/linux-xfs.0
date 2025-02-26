@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA31223709
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49EAE2376EC
 	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 18:57:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740596255; cv=none; b=YXUIMt77vK3UkvirHgtQjXz2mZIArIZe0GlpXEKTlDzu8NAodSQ9plZdORxRx87oEuw1Btelk91xQWa85ZPIvuI7rmhSCmjdvJTjiucZ/DtKLkAuD5b4zJKBWnSZuLMaf9SKjVtTOB+NIYvDDpS2RPLTSEsWgIb0i62TDvS9k6M=
+	t=1740596255; cv=none; b=jrFJaoLTRhZgGUU8z+/jcjMcyR6WWGOCkG6JfvmUdkuZ2cvOFjM5xBp+EUM+CVRNm8rq28SH1u90hNBwbsh7IJyAGRiqu3mmoPVI8eO+ESFlLF6VIQmT9/lnlO6FV4xRe7kw2SvOxL23CZMYEsobeaNAosLJ2dxbfRZdoGF3Vv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1740596255; c=relaxed/simple;
-	bh=93Ce7NxSMp/if98EYzPQJbC+P90AtnlgvmToHfGObBE=;
+	bh=TbNJWSBWZ4LldMNbFQqkX6AaAisiAebCTeNLYG4MwdI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RF1UWIXdH2VVX9g7eIxtpYx0AySd5H5jo1AjvbcweqackVvg0i6AOPFgORdC0V9n1CIvwLp5uJIiVTnn7OsM7wn4VTWA6aqrgP7ey7Z3Wt9iG0iKy/dfpSLBv/LVdbzZkXnFw2J3kkrc5vCNbYetSEtOBii/vRVtw2DskiiFCkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=tydG+vvb; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=UAPtjDtk1y5BDGtXPzQV00CjNxpSrF4u2zAiC/ol1NZYFM7Zss/l/ty+J6ETTzhPI7PBWeDBLEZ5rBXkveY4jwttocctqYJgkjohF/iNEQDXY2nIh4R3zOitTjRUsZqc6RnPkLIIaLMZFHWWVzpWF1Lj3QS+vO1dSe4Uy5mITiw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qwK5CuCV; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tydG+vvb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qwK5CuCV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Py8RX605Uz1iTI3fJK2rD5JHDqEiAeHv2kcu+mO2Rf0=; b=tydG+vvbGvbbbn14F92wJdHWCg
-	sLTXK/RVsL3QjzNSM1a1NA4nhfcWgeHvvpmQXgablBLben3Q3QtTM9BwWHfah2PGSDKY2+rSqa56P
-	5MXmuV5KHViruEcnVpBpTehiv69zJI6xK3krkbHXJtTolAzXrVtM4mBE632b/LfBVRa30ytpCt375
-	l6aBB22VBa0uX5ZLe6RIiB6tSWeXcq6P0DlNHRaJnIliqcILQRbiBm69WmhshzNdfgOjGoVt3CeJD
-	7/1pHKDRgEFgYD185p+31HTPyqv2B95QkZY7WH6rAkORxpkIDLZF5nkb6fF4vxJTYk3jlgpQ4wz5q
-	SvUBO8mg==;
+	bh=hTAI+ZFjeUXxtP8se6SHlrLZwLIxwIK95XTDmf0IPwg=; b=qwK5CuCVgWUWvbiNc8OclUIOV0
+	3MsnS7+s482DZ6a+LS/4pq+6AVWeV3ZkHtCVOJWMzrWhIU3B+SOD5ei5xyojaP5oWe9Y1n7wVISuL
+	PDywYAnscKiLgTRCoLpNkoWAxjFgPR80VcfYyDKeCBjMHV/+qzODnW0RyK8TY/l1fPEJGa9rkTKhY
+	CiydMrKk4vsnyj1fdTTmSUNiE/oOJLPwNKKEh9+Ont4boldWi01SrAc2t3IBGKFcFg10MYGO+ExHa
+	qU5gTIGxI5PkDRE//ER7spaOR5TsBdr4Kc8LBJG1HkDdyjzss5bw9SMT8ll24Ra3qNkh/q+hhBQxa
+	y9OyWdNA==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tnMb6-000000053vO-0n88;
-	Wed, 26 Feb 2025 18:57:32 +0000
+	id 1tnMb5-000000053vG-3Nkh;
+	Wed, 26 Feb 2025 18:57:31 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 26/44] xfs: implement buffered writes to zoned RT devices
-Date: Wed, 26 Feb 2025 10:56:58 -0800
-Message-ID: <20250226185723.518867-27-hch@lst.de>
+Subject: [PATCH 25/44] xfs: implement zoned garbage collection
+Date: Wed, 26 Feb 2025 10:56:57 -0800
+Message-ID: <20250226185723.518867-26-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250226185723.518867-1-hch@lst.de>
 References: <20250226185723.518867-1-hch@lst.de>
@@ -50,1223 +50,1781 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Implement buffered writes including page faults and block zeroing for
-zoned RT devices.  Buffered writes to zoned RT devices are split into
-three phases:
+RT groups on a zoned file system need to be completely empty before their
+space can be reused.  This means that partially empty groups need to be
+emptied entirely to free up space if no entirely free groups are
+available.
 
- 1) a reservation for the worst case data block usage is taken before
-    acquiring the iolock.  When there are enough free blocks but not
-    enough available one, garbage collection is kicked off to free the
-    space before continuing with the write.  If there isn't enough
-    freeable space, the block reservation is reduced and a short write
-    will happen as expected by normal Linux write semantics.
- 2) with the iolock held, the generic iomap buffered write code is
-    called, which through the iomap_begin operation usually just inserts
-    delalloc extents for the range in a single iteration.  Only for
-    overwrites of existing data that are not block aligned, or zeroing
-    operations the existing extent mapping is read to fill out the srcmap
-    and to figure out if zeroing is required.
- 3) the ->map_blocks callback to the generic iomap writeback code
-    calls into the zoned space allocator to actually allocate on-disk
-    space for the range before kicking of the writeback.
+Add a garbage collection thread that moves all data out of the least used
+zone when not enough free zones are available, and which resets all zones
+that have been emptied.  To find empty zone a simple set of 10 buckets
+based on the amount of space used in the zone is used.  To empty zones,
+the rmap is walked to find the owners and the data is read and then
+written to the new place.
 
-Note that because all writes are out of place, truncate or hole punches
-that are not aligned to block size boundaries need to allocate space.
-For block zeroing from truncate, ->setattr is called with the iolock
-(aka i_rwsem) already held, so a hacky deviation from the above
-scheme is needed.  In this case the space reservations is called with
-the iolock held, but is required not to block and can dip into the
-reserved block pool.  This can lead to -ENOSPC when truncating a
-file, which is unfortunate.  But fixing the calling conventions in
-the VFS is probably much easier with code requiring it already in
-mainline.
+To automatically defragment files the rmap records are sorted by inode
+and logical offset.  This means defragmentation of parallel writes into
+a single zone happens automatically when performing garbage collection.
+Because holding the iolock over the entire GC cycle would inject very
+noticeable latency for other accesses to the inodes, the iolock is not
+taken while performing I/O.  Instead the I/O completion handler checks
+that the mapping hasn't changed over the one recorded at the start of
+the GC cycle and doesn't update the mapping if it change.
 
-Similarly because all writes are out place, the zoned allocator can't
-support unwritten extents and thus the FALLOC_FL_ALLOCATE_RANGE range
-mode of fallocate.  Other fallocate modes that would reserved space
-but don't need to to provide proper semantics do work but do not
-reserve space.
-
+Co-developed-by: Hans Holmberg <hans.holmberg@wdc.com>
+Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_aops.c      | 167 ++++++++++++++++++++++++++--
- fs/xfs/xfs_bmap_util.c |  32 ++++--
- fs/xfs/xfs_bmap_util.h |  12 +-
- fs/xfs/xfs_file.c      | 241 ++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_iomap.c     | 186 ++++++++++++++++++++++++++++++-
- fs/xfs/xfs_iomap.h     |   6 +-
- fs/xfs/xfs_iops.c      |  31 +++++-
- fs/xfs/xfs_reflink.c   |   2 +-
- fs/xfs/xfs_trace.h     |   1 +
- 9 files changed, 624 insertions(+), 54 deletions(-)
+ fs/xfs/Makefile              |    1 +
+ fs/xfs/libxfs/xfs_group.h    |   21 +-
+ fs/xfs/libxfs/xfs_rtgroup.h  |    6 +
+ fs/xfs/xfs_extent_busy.c     |    2 +-
+ fs/xfs/xfs_mount.c           |    4 +
+ fs/xfs/xfs_mount.h           |    3 +
+ fs/xfs/xfs_super.c           |   10 +
+ fs/xfs/xfs_trace.h           |   25 +
+ fs/xfs/xfs_zone_alloc.c      |  155 +++++
+ fs/xfs/xfs_zone_alloc.h      |    8 +
+ fs/xfs/xfs_zone_gc.c         | 1165 ++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_zone_priv.h       |   21 +
+ fs/xfs/xfs_zone_space_resv.c |    9 +
+ 13 files changed, 1425 insertions(+), 5 deletions(-)
+ create mode 100644 fs/xfs/xfs_zone_gc.c
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 5077d52a775d..f7f70bb4e19d 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0
- /*
-  * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-- * Copyright (c) 2016-2018 Christoph Hellwig.
-+ * Copyright (c) 2016-2025 Christoph Hellwig.
-  * All Rights Reserved.
-  */
- #include "xfs.h"
-@@ -20,6 +20,8 @@
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_icache.h"
-+#include "xfs_zone_alloc.h"
-+#include "xfs_rtgroup.h"
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index bdedf4bdb1db..e38838409271 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -139,6 +139,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+ # xfs_rtbitmap is shared with libxfs
+ xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o \
+ 				   xfs_zone_alloc.o \
++				   xfs_zone_gc.o \
+ 				   xfs_zone_space_resv.o
  
- struct xfs_writepage_ctx {
- 	struct iomap_writepage_ctx ctx;
-@@ -77,6 +79,26 @@ xfs_setfilesize(
- 	return xfs_trans_commit(tp);
- }
+ xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
+index a70096113384..cff3f815947b 100644
+--- a/fs/xfs/libxfs/xfs_group.h
++++ b/fs/xfs/libxfs/xfs_group.h
+@@ -19,10 +19,23 @@ struct xfs_group {
+ #ifdef __KERNEL__
+ 	/* -- kernel only structures below this line -- */
  
-+static void
-+xfs_ioend_put_open_zones(
-+	struct iomap_ioend	*ioend)
-+{
-+	struct iomap_ioend *tmp;
+-	/*
+-	 * Track freed but not yet committed extents.
+-	 */
+-	struct xfs_extent_busy_tree *xg_busy_extents;
++	union {
++		/*
++		 * For perags and non-zoned RT groups:
++		 * Track freed but not yet committed extents.
++		 */
++		struct xfs_extent_busy_tree	*xg_busy_extents;
 +
-+	/*
-+	 * Put the open zone for all ioends merged into this one (if any).
-+	 */
-+	list_for_each_entry(tmp, &ioend->io_list, io_list)
-+		xfs_open_zone_put(tmp->io_private);
-+
-+	/*
-+	 * The main ioend might not have an open zone if the submission failed
-+	 * before xfs_zone_alloc_and_submit got called.
-+	 */
-+	if (ioend->io_private)
-+		xfs_open_zone_put(ioend->io_private);
-+}
-+
- /*
-  * IO write completion.
-  */
-@@ -86,6 +108,7 @@ xfs_end_ioend(
- {
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	struct xfs_mount	*mp = ip->i_mount;
-+	bool			is_zoned = xfs_is_zoned_inode(ip);
- 	xfs_off_t		offset = ioend->io_offset;
- 	size_t			size = ioend->io_size;
- 	unsigned int		nofs_flag;
-@@ -116,9 +139,10 @@ xfs_end_ioend(
- 	error = blk_status_to_errno(ioend->io_bio.bi_status);
- 	if (unlikely(error)) {
- 		if (ioend->io_flags & IOMAP_IOEND_SHARED) {
-+			ASSERT(!is_zoned);
- 			xfs_reflink_cancel_cow_range(ip, offset, size, true);
- 			xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK, offset,
--					offset + size);
-+					offset + size, NULL);
- 		}
- 		goto done;
- 	}
-@@ -126,7 +150,10 @@ xfs_end_ioend(
++		/*
++		 * For zoned RT groups:
++		 * List of groups that need a zone reset.
++		 *
++		 * The zonegc code forces a log flush of the rtrmap inode before
++		 * resetting the write pointer, so there is no need for
++		 * individual busy extent tracking.
++		 */
++		struct xfs_group		*xg_next_reset;
++	};
+ 
  	/*
- 	 * Success: commit the COW or unwritten blocks if needed.
- 	 */
--	if (ioend->io_flags & IOMAP_IOEND_SHARED)
-+	if (is_zoned)
-+		error = xfs_zoned_end_io(ip, offset, size, ioend->io_sector,
-+				ioend->io_private, NULLFSBLOCK);
-+	else if (ioend->io_flags & IOMAP_IOEND_SHARED)
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 	else if (ioend->io_flags & IOMAP_IOEND_UNWRITTEN)
- 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
-@@ -134,6 +161,8 @@ xfs_end_ioend(
- 	if (!error && xfs_ioend_is_append(ioend))
- 		error = xfs_setfilesize(ip, offset, size);
- done:
-+	if (is_zoned)
-+		xfs_ioend_put_open_zones(ioend);
- 	iomap_finish_ioends(ioend, error);
- 	memalloc_nofs_restore(nofs_flag);
+ 	 * Bitsets of per-ag metadata that have been checked and/or are sick.
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index 5d8777f819f4..b325aff28264 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -58,6 +58,12 @@ struct xfs_rtgroup {
+  */
+ #define XFS_RTG_FREE			XA_MARK_0
+ 
++/*
++ * For zoned RT devices this is set on groups that are fully written and that
++ * have unused blocks.  Used by the garbage collection to pick targets.
++ */
++#define XFS_RTG_RECLAIMABLE		XA_MARK_1
++
+ static inline struct xfs_rtgroup *to_rtg(struct xfs_group *xg)
+ {
+ 	return container_of(xg, struct xfs_rtgroup, rtg_group);
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index ea43c9a6e54c..da3161572735 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -671,7 +671,7 @@ xfs_extent_busy_wait_all(
+ 	while ((pag = xfs_perag_next(mp, pag)))
+ 		xfs_extent_busy_wait_group(pag_group(pag));
+ 
+-	if (xfs_has_rtgroups(mp))
++	if (xfs_has_rtgroups(mp) && !xfs_has_zoned(mp))
+ 		while ((rtg = xfs_rtgroup_next(mp, rtg)))
+ 			xfs_extent_busy_wait_group(rtg_group(rtg));
  }
-@@ -176,17 +205,27 @@ xfs_end_io(
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index a953383d691a..dc67ff417ad5 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1093,6 +1093,8 @@ xfs_mountfs(
+ 		error = xfs_fs_reserve_ag_blocks(mp);
+ 		if (error && error != -ENOSPC)
+ 			goto out_agresv;
++
++		xfs_zone_gc_start(mp);
  	}
- }
  
--STATIC void
-+static void
- xfs_end_bio(
- 	struct bio		*bio)
- {
- 	struct iomap_ioend	*ioend = iomap_ioend_from_bio(bio);
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-+	struct xfs_mount	*mp = ip->i_mount;
- 	unsigned long		flags;
+ 	return 0;
+@@ -1181,6 +1183,8 @@ xfs_unmountfs(
+ 	xfs_inodegc_flush(mp);
  
-+	/*
-+	 * For Appends record the actually written block number and set the
-+	 * boundary flag if needed.
-+	 */
-+	if (IS_ENABLED(CONFIG_XFS_RT) && bio_is_zone_append(bio)) {
-+		ioend->io_sector = bio->bi_iter.bi_sector;
-+		xfs_mark_rtg_boundary(ioend);
-+	}
-+
- 	spin_lock_irqsave(&ip->i_ioend_lock, flags);
- 	if (list_empty(&ip->i_ioend_list))
--		WARN_ON_ONCE(!queue_work(ip->i_mount->m_unwritten_workqueue,
-+		WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
- 					 &ip->i_ioend_work));
- 	list_add_tail(&ioend->io_list, &ip->i_ioend_list);
- 	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
-@@ -463,7 +502,7 @@ xfs_discard_folio(
- 	 * folio itself and not the start offset that is passed in.
- 	 */
- 	xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK, pos,
--				folio_pos(folio) + folio_size(folio));
-+				folio_pos(folio) + folio_size(folio), NULL);
- }
+ 	xfs_blockgc_stop(mp);
++	if (!test_bit(XFS_OPSTATE_READONLY, &mp->m_opstate))
++		xfs_zone_gc_stop(mp);
+ 	xfs_fs_unreserve_ag_blocks(mp);
+ 	xfs_qm_unmount_quotas(mp);
+ 	if (xfs_has_zoned(mp))
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 0772b74fc8fd..4b406f57548a 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -556,6 +556,8 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
+ #define XFS_OPSTATE_RESUMING_QUOTAON	18
+ /* Kernel has logged a warning about zoned RT device being used on this fs. */
+ #define XFS_OPSTATE_WARNED_ZONED	19
++/* (Zoned) GC is in progress */
++#define XFS_OPSTATE_ZONEGC_RUNNING	20
  
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-@@ -472,15 +511,125 @@ static const struct iomap_writeback_ops xfs_writeback_ops = {
- 	.discard_folio		= xfs_discard_folio,
- };
+ #define __XFS_IS_OPSTATE(name, NAME) \
+ static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
+@@ -600,6 +602,7 @@ static inline bool xfs_clear_resuming_quotaon(struct xfs_mount *mp)
+ #endif /* CONFIG_XFS_QUOTA */
+ __XFS_IS_OPSTATE(done_with_log_incompat, UNSET_LOG_INCOMPAT)
+ __XFS_IS_OPSTATE(using_logged_xattrs, USE_LARP)
++__XFS_IS_OPSTATE(zonegc_running, ZONEGC_RUNNING)
  
-+struct xfs_zoned_writepage_ctx {
-+	struct iomap_writepage_ctx	ctx;
-+	struct xfs_open_zone		*open_zone;
-+};
-+
-+static inline struct xfs_zoned_writepage_ctx *
-+XFS_ZWPC(struct iomap_writepage_ctx *ctx)
-+{
-+	return container_of(ctx, struct xfs_zoned_writepage_ctx, ctx);
-+}
-+
-+static int
-+xfs_zoned_map_blocks(
-+	struct iomap_writepage_ctx *wpc,
-+	struct inode		*inode,
-+	loff_t			offset,
-+	unsigned int		len)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + len);
-+	xfs_filblks_t		count_fsb;
-+	struct xfs_bmbt_irec	imap, del;
-+	struct xfs_iext_cursor	icur;
-+
-+	if (xfs_is_shutdown(mp))
-+		return -EIO;
-+
-+	XFS_ERRORTAG_DELAY(mp, XFS_ERRTAG_WB_DELAY_MS);
-+
-+	/*
-+	 * All dirty data must be covered by delalloc extents.  But truncate can
-+	 * remove delalloc extents underneath us or reduce their size.
-+	 * Returning a hole tells iomap to not write back any data from this
-+	 * range, which is the right thing to do in that case.
-+	 *
-+	 * Otherwise just tell iomap to treat ranges previously covered by a
-+	 * delalloc extent as mapped.  The actual block allocation will be done
-+	 * just before submitting the bio.
-+	 *
-+	 * This implies we never map outside folios that are locked or marked
-+	 * as under writeback, and thus there is no need check the fork sequence
-+	 * count here.
-+	 */
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap))
-+		imap.br_startoff = end_fsb;	/* fake a hole past EOF */
-+	if (imap.br_startoff > offset_fsb) {
-+		imap.br_blockcount = imap.br_startoff - offset_fsb;
-+		imap.br_startoff = offset_fsb;
-+		imap.br_startblock = HOLESTARTBLOCK;
-+		imap.br_state = XFS_EXT_NORM;
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, 0, 0);
-+		return 0;
-+	}
-+	end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
-+	count_fsb = end_fsb - offset_fsb;
-+
-+	del = imap;
-+	xfs_trim_extent(&del, offset_fsb, count_fsb);
-+	xfs_bmap_del_extent_delay(ip, XFS_COW_FORK, &icur, &imap, &del,
-+			XFS_BMAPI_REMAP);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	wpc->iomap.type = IOMAP_MAPPED;
-+	wpc->iomap.flags = IOMAP_F_DIRTY;
-+	wpc->iomap.bdev = mp->m_rtdev_targp->bt_bdev;
-+	wpc->iomap.offset = offset;
-+	wpc->iomap.length = XFS_FSB_TO_B(mp, count_fsb);
-+	wpc->iomap.flags = IOMAP_F_ANON_WRITE;
-+
-+	trace_xfs_zoned_map_blocks(ip, offset, wpc->iomap.length);
-+	return 0;
-+}
-+
-+static int
-+xfs_zoned_submit_ioend(
-+	struct iomap_writepage_ctx *wpc,
-+	int			status)
-+{
-+	wpc->ioend->io_bio.bi_end_io = xfs_end_bio;
-+	if (status)
-+		return status;
-+	xfs_zone_alloc_and_submit(wpc->ioend, &XFS_ZWPC(wpc)->open_zone);
-+	return 0;
-+}
-+
-+static const struct iomap_writeback_ops xfs_zoned_writeback_ops = {
-+	.map_blocks		= xfs_zoned_map_blocks,
-+	.submit_ioend		= xfs_zoned_submit_ioend,
-+	.discard_folio		= xfs_discard_folio,
-+};
-+
- STATIC int
- xfs_vm_writepages(
- 	struct address_space	*mapping,
- 	struct writeback_control *wbc)
- {
--	struct xfs_writepage_ctx wpc = { };
-+	struct xfs_inode	*ip = XFS_I(mapping->host);
-+
-+	xfs_iflags_clear(ip, XFS_ITRUNCATED);
- 
--	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
--	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
-+	if (xfs_is_zoned_inode(ip)) {
-+		struct xfs_zoned_writepage_ctx	xc = { };
-+		int				error;
-+
-+		error = iomap_writepages(mapping, wbc, &xc.ctx,
-+					 &xfs_zoned_writeback_ops);
-+		if (xc.open_zone)
-+			xfs_open_zone_put(xc.open_zone);
-+		return error;
-+	} else {
-+		struct xfs_writepage_ctx	wpc = { };
-+
-+		return iomap_writepages(mapping, wbc, &wpc.ctx,
-+				&xfs_writeback_ops);
-+	}
- }
- 
- STATIC int
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c623688e457c..06ca11731e43 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -30,6 +30,7 @@
- #include "xfs_reflink.h"
- #include "xfs_rtbitmap.h"
- #include "xfs_rtgroup.h"
+ static inline bool
+ xfs_should_warn(struct xfs_mount *mp, long nr)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a840e1c68ff2..39b2bad67fcd 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -46,6 +46,7 @@
+ #include "xfs_exchmaps_item.h"
+ #include "xfs_parent.h"
+ #include "xfs_rtalloc.h"
 +#include "xfs_zone_alloc.h"
+ #include "scrub/stats.h"
+ #include "scrub/rcbag_btree.h"
  
- /* Kernel only BMAP related definitions and functions */
- 
-@@ -436,7 +437,8 @@ xfs_bmap_punch_delalloc_range(
- 	struct xfs_inode	*ip,
- 	int			whichfork,
- 	xfs_off_t		start_byte,
--	xfs_off_t		end_byte)
-+	xfs_off_t		end_byte,
-+	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
-@@ -467,7 +469,21 @@ xfs_bmap_punch_delalloc_range(
- 			continue;
- 		}
- 
--		xfs_bmap_del_extent_delay(ip, whichfork, &icur, &got, &del, 0);
-+		if (xfs_is_zoned_inode(ip) && ac) {
-+			/*
-+			 * In a zoned buffered write context we need to return
-+			 * the punched delalloc allocations to the allocation
-+			 * context.  This allows reusing them in the following
-+			 * iomap iterations.
-+			 */
-+			xfs_bmap_del_extent_delay(ip, whichfork, &icur, &got,
-+					&del, XFS_BMAPI_REMAP);
-+			ac->reserved_blocks += del.br_blockcount;
-+		} else {
-+			xfs_bmap_del_extent_delay(ip, whichfork, &icur, &got,
-+					&del, 0);
-+		}
-+
- 		if (!xfs_iext_get_extent(ifp, &icur, &got))
- 			break;
+@@ -822,6 +823,7 @@ xfs_fs_sync_fs(
+ 	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT) {
+ 		xfs_inodegc_stop(mp);
+ 		xfs_blockgc_stop(mp);
++		xfs_zone_gc_stop(mp);
  	}
-@@ -582,7 +598,7 @@ xfs_free_eofblocks(
- 		if (ip->i_delayed_blks) {
- 			xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK,
- 				round_up(XFS_ISIZE(ip), mp->m_sb.sb_blocksize),
--				LLONG_MAX);
-+				LLONG_MAX, NULL);
- 		}
- 		xfs_inode_clear_eofblocks_tag(ip);
- 		return 0;
-@@ -825,7 +841,8 @@ int
- xfs_free_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	struct xfs_zone_alloc_ctx *ac)
+ 
+ 	return 0;
+@@ -994,6 +996,7 @@ xfs_fs_freeze(
+ 	if (ret && !xfs_is_readonly(mp)) {
+ 		xfs_blockgc_start(mp);
+ 		xfs_inodegc_start(mp);
++		xfs_zone_gc_start(mp);
+ 	}
+ 
+ 	return ret;
+@@ -1015,6 +1018,7 @@ xfs_fs_unfreeze(
+ 	 * filesystem.
+ 	 */
+ 	if (!xfs_is_readonly(mp)) {
++		xfs_zone_gc_start(mp);
+ 		xfs_blockgc_start(mp);
+ 		xfs_inodegc_start(mp);
+ 	}
+@@ -1948,6 +1952,9 @@ xfs_remount_rw(
+ 	/* Re-enable the background inode inactivation worker. */
+ 	xfs_inodegc_start(mp);
+ 
++	/* Restart zone reclaim */
++	xfs_zone_gc_start(mp);
++
+ 	return 0;
+ }
+ 
+@@ -1992,6 +1999,9 @@ xfs_remount_ro(
+ 	 */
+ 	xfs_inodegc_stop(mp);
+ 
++	/* Stop zone reclaim */
++	xfs_zone_gc_stop(mp);
++
+ 	/* Free the per-AG metadata reservation pool. */
+ 	xfs_fs_unreserve_ag_blocks(mp);
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index a4134fc1db4f..7de1ed0ca13a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -295,8 +295,11 @@ DECLARE_EVENT_CLASS(xfs_zone_class,
+ DEFINE_EVENT(xfs_zone_class, name,			\
+ 	TP_PROTO(struct xfs_rtgroup *rtg),		\
+ 	TP_ARGS(rtg))
++DEFINE_ZONE_EVENT(xfs_zone_emptied);
+ DEFINE_ZONE_EVENT(xfs_zone_full);
+ DEFINE_ZONE_EVENT(xfs_zone_opened);
++DEFINE_ZONE_EVENT(xfs_zone_reset);
++DEFINE_ZONE_EVENT(xfs_zone_gc_target_opened);
+ 
+ TRACE_EVENT(xfs_zone_free_blocks,
+ 	TP_PROTO(struct xfs_rtgroup *rtg, xfs_rgblock_t rgbno,
+@@ -364,6 +367,28 @@ DEFINE_EVENT(xfs_zone_alloc_class, name,			\
+ DEFINE_ZONE_ALLOC_EVENT(xfs_zone_record_blocks);
+ DEFINE_ZONE_ALLOC_EVENT(xfs_zone_alloc_blocks);
+ 
++TRACE_EVENT(xfs_zone_gc_select_victim,
++	TP_PROTO(struct xfs_rtgroup *rtg, unsigned int bucket),
++	TP_ARGS(rtg, bucket),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_rgnumber_t, rgno)
++		__field(xfs_rgblock_t, used)
++		__field(unsigned int, bucket)
++	),
++	TP_fast_assign(
++		__entry->dev = rtg_mount(rtg)->m_super->s_dev;
++		__entry->rgno = rtg_rgno(rtg);
++		__entry->used = rtg_rmap(rtg)->i_used_blocks;
++		__entry->bucket = bucket;
++	),
++	TP_printk("dev %d:%d rgno 0x%x used 0x%x bucket %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->rgno,
++		  __entry->used,
++		  __entry->bucket)
++);
++
+ TRACE_EVENT(xfs_zones_mount,
+ 	TP_PROTO(struct xfs_mount *mp),
+ 	TP_ARGS(mp),
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 3d3f7589bf63..b7b2820ec0ef 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -35,6 +35,104 @@ xfs_open_zone_put(
+ 	}
+ }
+ 
++static inline uint32_t
++xfs_zone_bucket(
++	struct xfs_mount	*mp,
++	uint32_t		used_blocks)
++{
++	return XFS_ZONE_USED_BUCKETS * used_blocks /
++			mp->m_groups[XG_TYPE_RTG].blocks;
++}
++
++static inline void
++xfs_zone_add_to_bucket(
++	struct xfs_zone_info	*zi,
++	xfs_rgnumber_t		rgno,
++	uint32_t		to_bucket)
++{
++	__set_bit(rgno, zi->zi_used_bucket_bitmap[to_bucket]);
++	zi->zi_used_bucket_entries[to_bucket]++;
++}
++
++static inline void
++xfs_zone_remove_from_bucket(
++	struct xfs_zone_info	*zi,
++	xfs_rgnumber_t		rgno,
++	uint32_t		from_bucket)
++{
++	__clear_bit(rgno, zi->zi_used_bucket_bitmap[from_bucket]);
++	zi->zi_used_bucket_entries[from_bucket]--;
++}
++
++static void
++xfs_zone_account_reclaimable(
++	struct xfs_rtgroup	*rtg,
++	uint32_t		freed)
++{
++	struct xfs_group	*xg = &rtg->rtg_group;
++	struct xfs_mount	*mp = rtg_mount(rtg);
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++	uint32_t		used = rtg_rmap(rtg)->i_used_blocks;
++	xfs_rgnumber_t		rgno = rtg_rgno(rtg);
++	uint32_t		from_bucket = xfs_zone_bucket(mp, used + freed);
++	uint32_t		to_bucket = xfs_zone_bucket(mp, used);
++	bool			was_full = (used + freed == rtg_blocks(rtg));
++
++	/*
++	 * This can be called from log recovery, where the zone_info structure
++	 * hasn't been allocated yet.  Skip all work as xfs_mount_zones will
++	 * add the zones to the right buckets before the file systems becomes
++	 * active.
++	 */
++	if (!zi)
++		return;
++
++	if (!used) {
++		/*
++		 * The zone is now empty, remove it from the bottom bucket and
++		 * trigger a reset.
++		 */
++		trace_xfs_zone_emptied(rtg);
++
++		if (!was_full)
++			xfs_group_clear_mark(xg, XFS_RTG_RECLAIMABLE);
++
++		spin_lock(&zi->zi_used_buckets_lock);
++		if (!was_full)
++			xfs_zone_remove_from_bucket(zi, rgno, from_bucket);
++		spin_unlock(&zi->zi_used_buckets_lock);
++
++		spin_lock(&zi->zi_reset_list_lock);
++		xg->xg_next_reset = zi->zi_reset_list;
++		zi->zi_reset_list = xg;
++		spin_unlock(&zi->zi_reset_list_lock);
++
++		if (zi->zi_gc_thread)
++			wake_up_process(zi->zi_gc_thread);
++	} else if (was_full) {
++		/*
++		 * The zone transitioned from full, mark it up as reclaimable
++		 * and wake up GC which might be waiting for zones to reclaim.
++		 */
++		spin_lock(&zi->zi_used_buckets_lock);
++		xfs_zone_add_to_bucket(zi, rgno, to_bucket);
++		spin_unlock(&zi->zi_used_buckets_lock);
++
++		xfs_group_set_mark(xg, XFS_RTG_RECLAIMABLE);
++		if (zi->zi_gc_thread && xfs_zoned_need_gc(mp))
++			wake_up_process(zi->zi_gc_thread);
++	} else if (to_bucket != from_bucket) {
++		/*
++		 * Move the zone to a new bucket if it dropped below the
++		 * threshold.
++		 */
++		spin_lock(&zi->zi_used_buckets_lock);
++		xfs_zone_add_to_bucket(zi, rgno, to_bucket);
++		xfs_zone_remove_from_bucket(zi, rgno, from_bucket);
++		spin_unlock(&zi->zi_used_buckets_lock);
++	}
++}
++
+ static void
+ xfs_open_zone_mark_full(
+ 	struct xfs_open_zone	*oz)
+@@ -42,6 +140,7 @@ xfs_open_zone_mark_full(
+ 	struct xfs_rtgroup	*rtg = oz->oz_rtg;
+ 	struct xfs_mount	*mp = rtg_mount(rtg);
+ 	struct xfs_zone_info	*zi = mp->m_zone_info;
++	uint32_t		used = rtg_rmap(rtg)->i_used_blocks;
+ 
+ 	trace_xfs_zone_full(rtg);
+ 
+@@ -59,6 +158,8 @@ xfs_open_zone_mark_full(
+ 	xfs_open_zone_put(oz);
+ 
+ 	wake_up_all(&zi->zi_zone_wait);
++	if (used < rtg_blocks(rtg))
++		xfs_zone_account_reclaimable(rtg, rtg_blocks(rtg) - used);
+ }
+ 
+ static void
+@@ -244,6 +345,13 @@ xfs_zone_free_blocks(
+ 	trace_xfs_zone_free_blocks(rtg, xfs_rtb_to_rgbno(mp, fsbno), len);
+ 
+ 	rmapip->i_used_blocks -= len;
++	/*
++	 * Don't add open zones to the reclaimable buckets.  The I/O completion
++	 * for writing the last block will take care of accounting for already
++	 * unused blocks instead.
++	 */
++	if (!READ_ONCE(rtg->rtg_open_zone))
++		xfs_zone_account_reclaimable(rtg, len);
+ 	xfs_add_frextents(mp, len);
+ 	xfs_trans_log_inode(tp, rmapip, XFS_ILOG_CORE);
+ 	return 0;
+@@ -395,6 +503,9 @@ xfs_try_open_zone(
+ 	 */
+ 	wake_up_all(&zi->zi_zone_wait);
+ 
++	if (xfs_zoned_need_gc(mp))
++		wake_up_process(zi->zi_gc_thread);
++
+ 	trace_xfs_zone_opened(oz->oz_rtg);
+ 	return oz;
+ }
+@@ -702,6 +813,7 @@ xfs_init_zone(
+ 	struct xfs_zone_info	*zi = mp->m_zone_info;
+ 	uint64_t		used = rtg_rmap(rtg)->i_used_blocks;
+ 	xfs_rgblock_t		write_pointer, highest_rgbno;
++	int			error;
+ 
+ 	if (zone && !xfs_zone_validate(zone, rtg, &write_pointer))
+ 		return -EFSCORRUPTED;
+@@ -728,6 +840,18 @@ xfs_init_zone(
+ 		xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
+ 	}
+ 
++	/*
++	 * If there are no used blocks, but the zone is not in empty state yet
++	 * we lost power before the zoned reset.  In that case finish the work
++	 * here.
++	 */
++	if (write_pointer == rtg_blocks(rtg) && used == 0) {
++		error = xfs_zone_gc_reset_sync(rtg);
++		if (error)
++			return error;
++		write_pointer = 0;
++	}
++
+ 	if (write_pointer == 0) {
+ 		/* zone is empty */
+ 		atomic_inc(&zi->zi_nr_free_zones);
+@@ -746,6 +870,7 @@ xfs_init_zone(
+ 		iz->reclaimable += write_pointer - used;
+ 	} else if (used < rtg_blocks(rtg)) {
+ 		/* zone fully written, but has freed blocks */
++		xfs_zone_account_reclaimable(rtg, rtg_blocks(rtg) - used);
+ 		iz->reclaimable += (rtg_blocks(rtg) - used);
+ 	}
+ 
+@@ -856,11 +981,20 @@ xfs_calc_open_zones(
+ 	return 0;
+ }
+ 
++static unsigned long *
++xfs_alloc_bucket_bitmap(
++	struct xfs_mount	*mp)
++{
++	return kvmalloc_array(BITS_TO_LONGS(mp->m_sb.sb_rgcount),
++			sizeof(unsigned long), GFP_KERNEL | __GFP_ZERO);
++}
++
+ static struct xfs_zone_info *
+ xfs_alloc_zone_info(
+ 	struct xfs_mount	*mp)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		startoffset_fsb;
-@@ -880,7 +897,7 @@ xfs_free_file_space(
- 		return 0;
- 	if (offset + len > XFS_ISIZE(ip))
- 		len = XFS_ISIZE(ip) - offset;
--	error = xfs_zero_range(ip, offset, len, NULL);
-+	error = xfs_zero_range(ip, offset, len, ac, NULL);
- 	if (error)
- 		return error;
+ 	struct xfs_zone_info	*zi;
++	int			i;
  
-@@ -968,7 +985,8 @@ int
- xfs_collapse_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	struct xfs_zone_alloc_ctx *ac)
+ 	zi = kzalloc(sizeof(*zi), GFP_KERNEL);
+ 	if (!zi)
+@@ -871,14 +1005,30 @@ xfs_alloc_zone_info(
+ 	spin_lock_init(&zi->zi_open_zones_lock);
+ 	spin_lock_init(&zi->zi_reservation_lock);
+ 	init_waitqueue_head(&zi->zi_zone_wait);
++	spin_lock_init(&zi->zi_used_buckets_lock);
++	for (i = 0; i < XFS_ZONE_USED_BUCKETS; i++) {
++		zi->zi_used_bucket_bitmap[i] = xfs_alloc_bucket_bitmap(mp);
++		if (!zi->zi_used_bucket_bitmap[i])
++			goto out_free_bitmaps;
++	}
+ 	return zi;
++
++out_free_bitmaps:
++	while (--i > 0)
++		kvfree(zi->zi_used_bucket_bitmap[i]);
++	kfree(zi);
++	return NULL;
+ }
+ 
+ static void
+ xfs_free_zone_info(
+ 	struct xfs_zone_info	*zi)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
-@@ -981,7 +999,7 @@ xfs_collapse_file_space(
++	int			i;
++
+ 	xfs_free_open_zones(zi);
++	for (i = 0; i < XFS_ZONE_USED_BUCKETS; i++)
++		kvfree(zi->zi_used_bucket_bitmap[i]);
+ 	kfree(zi);
+ }
  
- 	trace_xfs_collapse_file_space(ip);
+@@ -943,6 +1093,10 @@ xfs_mount_zones(
+ 	xfs_set_freecounter(mp, XC_FREE_RTAVAILABLE, iz.available);
+ 	xfs_set_freecounter(mp, XC_FREE_RTEXTENTS,
+ 			iz.available + iz.reclaimable);
++
++	error = xfs_zone_gc_mount(mp);
++	if (error)
++		goto out_free_zone_info;
+ 	return 0;
  
--	error = xfs_free_file_space(ip, offset, len);
-+	error = xfs_free_file_space(ip, offset, len, ac);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index b29760d36e1a..c477b3361630 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -15,6 +15,7 @@ struct xfs_inode;
- struct xfs_mount;
- struct xfs_trans;
- struct xfs_bmalloca;
-+struct xfs_zone_alloc_ctx;
- 
+ out_free_zone_info:
+@@ -954,5 +1108,6 @@ void
+ xfs_unmount_zones(
+ 	struct xfs_mount	*mp)
+ {
++	xfs_zone_gc_unmount(mp);
+ 	xfs_free_zone_info(mp->m_zone_info);
+ }
+diff --git a/fs/xfs/xfs_zone_alloc.h b/fs/xfs/xfs_zone_alloc.h
+index 28c9cffb72d5..1269390bfcda 100644
+--- a/fs/xfs/xfs_zone_alloc.h
++++ b/fs/xfs/xfs_zone_alloc.h
+@@ -48,6 +48,8 @@ uint64_t xfs_zoned_default_resblks(struct xfs_mount *mp,
  #ifdef CONFIG_XFS_RT
- int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
-@@ -31,7 +32,8 @@ xfs_bmap_rtalloc(struct xfs_bmalloca *ap)
+ int xfs_mount_zones(struct xfs_mount *mp);
+ void xfs_unmount_zones(struct xfs_mount *mp);
++void xfs_zone_gc_start(struct xfs_mount *mp);
++void xfs_zone_gc_stop(struct xfs_mount *mp);
+ #else
+ static inline int xfs_mount_zones(struct xfs_mount *mp)
+ {
+@@ -56,6 +58,12 @@ static inline int xfs_mount_zones(struct xfs_mount *mp)
+ static inline void xfs_unmount_zones(struct xfs_mount *mp)
+ {
+ }
++static inline void xfs_zone_gc_start(struct xfs_mount *mp)
++{
++}
++static inline void xfs_zone_gc_stop(struct xfs_mount *mp)
++{
++}
  #endif /* CONFIG_XFS_RT */
  
- void	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip, int whichfork,
--		xfs_off_t start_byte, xfs_off_t end_byte);
-+		xfs_off_t start_byte, xfs_off_t end_byte,
-+		struct xfs_zone_alloc_ctx *ac);
- 
- struct kgetbmap {
- 	__s64		bmv_offset;	/* file offset of segment in blocks */
-@@ -54,13 +56,13 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 
- /* preallocation and hole punch interface */
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--			     xfs_off_t len);
-+		xfs_off_t len);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
--			    xfs_off_t len);
-+		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
--				xfs_off_t len);
-+		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
--				xfs_off_t len);
-+		xfs_off_t len);
- 
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index dc27a6c36bf7..302982964cec 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -25,6 +25,7 @@
- #include "xfs_iomap.h"
- #include "xfs_reflink.h"
- #include "xfs_file.h"
+ #endif /* _XFS_ZONE_ALLOC_H */
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+new file mode 100644
+index 000000000000..0e1c39f2aaba
+--- /dev/null
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -0,0 +1,1165 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2023-2025 Christoph Hellwig.
++ * Copyright (c) 2024-2025, Western Digital Corporation or its affiliates.
++ */
++#include "xfs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_inode.h"
++#include "xfs_btree.h"
++#include "xfs_trans.h"
++#include "xfs_icache.h"
++#include "xfs_rmap.h"
++#include "xfs_rtbitmap.h"
++#include "xfs_rtrmap_btree.h"
 +#include "xfs_zone_alloc.h"
- 
- #include <linux/dax.h>
- #include <linux/falloc.h>
-@@ -360,7 +361,8 @@ xfs_file_write_zero_eof(
- 	struct iov_iter		*from,
- 	unsigned int		*iolock,
- 	size_t			count,
--	bool			*drained_dio)
-+	bool			*drained_dio,
-+	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
- 	loff_t			isize;
-@@ -414,7 +416,7 @@ xfs_file_write_zero_eof(
- 	trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
- 
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	error = xfs_zero_range(ip, isize, iocb->ki_pos - isize, NULL);
-+	error = xfs_zero_range(ip, isize, iocb->ki_pos - isize, ac, NULL);
- 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 
- 	return error;
-@@ -431,7 +433,8 @@ STATIC ssize_t
- xfs_file_write_checks(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*from,
--	unsigned int		*iolock)
-+	unsigned int		*iolock,
-+	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = iocb->ki_filp->f_mapping->host;
- 	size_t			count = iov_iter_count(from);
-@@ -481,7 +484,7 @@ xfs_file_write_checks(
- 	 */
- 	if (iocb->ki_pos > i_size_read(inode)) {
- 		error = xfs_file_write_zero_eof(iocb, from, iolock, count,
--				&drained_dio);
-+				&drained_dio, ac);
- 		if (error == 1)
- 			goto restart;
- 		if (error)
-@@ -491,6 +494,48 @@ xfs_file_write_checks(
- 	return kiocb_modified(iocb);
- }
- 
-+static ssize_t
-+xfs_zoned_write_space_reserve(
-+	struct xfs_inode		*ip,
-+	struct kiocb			*iocb,
-+	struct iov_iter			*from,
-+	unsigned int			flags,
-+	struct xfs_zone_alloc_ctx	*ac)
-+{
-+	loff_t				count = iov_iter_count(from);
-+	int				error;
++#include "xfs_zone_priv.h"
++#include "xfs_zones.h"
++#include "xfs_trace.h"
 +
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		flags |= XFS_ZR_NOWAIT;
++/*
++ * Implement Garbage Collection (GC) of partially used zoned.
++ *
++ * To support the purely sequential writes in each zone, zoned XFS needs to be
++ * able to move data remaining in a zone out of it to reset the zone to prepare
++ * for writing to it again.
++ *
++ * This is done by the GC thread implemented in this file.  To support that a
++ * number of zones (XFS_GC_ZONES) is reserved from the user visible capacity to
++ * write the garbage collected data into.
++ *
++ * Whenever the available space is below the chosen threshold, the GC thread
++ * looks for potential non-empty but not fully used zones that are worth
++ * reclaiming.  Once found the rmap for the victim zone is queried, and after
++ * a bit of sorting to reduce fragmentation, the still live extents are read
++ * into memory and written to the GC target zone, and the bmap btree of the
++ * files is updated to point to the new location.  To avoid taking the IOLOCK
++ * and MMAPLOCK for the entire GC process and thus affecting the latency of
++ * user reads and writes to the files, the GC writes are speculative and the
++ * I/O completion checks that no other writes happened for the affected regions
++ * before remapping.
++ *
++ * Once a zone does not contain any valid data, be that through GC or user
++ * block removal, it is queued for for a zone reset.  The reset operation
++ * carefully ensures that the RT device cache is flushed and all transactions
++ * referencing the rmap have been committed to disk.
++ */
++
++/*
++ * Size of each GC scratch pad.  This is also the upper bound for each
++ * GC I/O, which helps to keep latency down.
++ */
++#define XFS_GC_CHUNK_SIZE	SZ_1M
++
++/*
++ * Scratchpad data to read GCed data into.
++ *
++ * The offset member tracks where the next allocation starts, and freed tracks
++ * the amount of space that is not used anymore.
++ */
++#define XFS_ZONE_GC_NR_SCRATCH	2
++struct xfs_zone_scratch {
++	struct folio			*folio;
++	unsigned int			offset;
++	unsigned int			freed;
++};
++
++/*
++ * Chunk that is read and written for each GC operation.
++ *
++ * Note that for writes to actual zoned devices, the chunk can be split when
++ * reaching the hardware limit.
++ */
++struct xfs_gc_bio {
++	struct xfs_zone_gc_data		*data;
 +
 +	/*
-+	 * Check the rlimit and LFS boundary first so that we don't over-reserve
-+	 * by possibly a lot.
-+	 *
-+	 * The generic write path will redo this check later, and it might have
-+	 * changed by then.  If it got expanded we'll stick to our earlier
-+	 * smaller limit, and if it is decreased the new smaller limit will be
-+	 * used and our extra space reservation will be returned after finishing
-+	 * the write.
++	 * Entry into the reading/writing/resetting list.  Only accessed from
++	 * the GC thread, so no locking needed.
 +	 */
-+	error = generic_write_check_limits(iocb->ki_filp, iocb->ki_pos, &count);
++	struct list_head		entry;
++
++	/*
++	 * State of this gc_bio.  Done means the current I/O completed.
++	 * Set from the bio end I/O handler, read from the GC thread.
++	 */
++	enum {
++		XFS_GC_BIO_NEW,
++		XFS_GC_BIO_DONE,
++	} state;
++
++	/*
++	 * Pointer to the inode and byte range in the inode that this
++	 * GC chunk is operating on.
++	 */
++	struct xfs_inode		*ip;
++	loff_t				offset;
++	unsigned int			len;
++
++	/*
++	 * Existing startblock (in the zone to be freed) and newly assigned
++	 * daddr in the zone GCed into.
++	 */
++	xfs_fsblock_t			old_startblock;
++	xfs_daddr_t			new_daddr;
++	struct xfs_zone_scratch		*scratch;
++
++	/* Are we writing to a sequential write required zone? */
++	bool				is_seq;
++
++	/* Open Zone being written to */
++	struct xfs_open_zone		*oz;
++
++	/* Bio used for reads and writes, including the bvec used by it */
++	struct bio_vec			bv;
++	struct bio			bio;	/* must be last */
++};
++
++#define XFS_ZONE_GC_RECS		1024
++
++/* iterator, needs to be reinitialized for each victim zone */
++struct xfs_zone_gc_iter {
++	struct xfs_rtgroup		*victim_rtg;
++	unsigned int			rec_count;
++	unsigned int			rec_idx;
++	xfs_agblock_t			next_startblock;
++	struct xfs_rmap_irec		*recs;
++};
++
++/*
++ * Per-mount GC state.
++ */
++struct xfs_zone_gc_data {
++	struct xfs_mount		*mp;
++
++	/* bioset used to allocate the gc_bios */
++	struct bio_set			bio_set;
++
++	/*
++	 * Scratchpad used, and index to indicated which one is used.
++	 */
++	struct xfs_zone_scratch		scratch[XFS_ZONE_GC_NR_SCRATCH];
++	unsigned int			scratch_idx;
++
++	/*
++	 * List of bios currently being read, written and reset.
++	 * These lists are only accessed by the GC thread itself, and must only
++	 * be processed in order.
++	 */
++	struct list_head		reading;
++	struct list_head		writing;
++	struct list_head		resetting;
++
++	/*
++	 * Iterator for the victim zone.
++	 */
++	struct xfs_zone_gc_iter		iter;
++};
++
++/*
++ * We aim to keep enough zones free in stock to fully use the open zone limit
++ * for data placement purposes.
++ */
++bool
++xfs_zoned_need_gc(
++	struct xfs_mount	*mp)
++{
++	if (!xfs_group_marked(mp, XG_TYPE_RTG, XFS_RTG_RECLAIMABLE))
++		return false;
++	if (xfs_estimate_freecounter(mp, XC_FREE_RTAVAILABLE) <
++	    mp->m_groups[XG_TYPE_RTG].blocks *
++	    (mp->m_max_open_zones - XFS_OPEN_GC_ZONES))
++		return true;
++	return false;
++}
++
++static struct xfs_zone_gc_data *
++xfs_zone_gc_data_alloc(
++	struct xfs_mount	*mp)
++{
++	struct xfs_zone_gc_data	*data;
++	int			i;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return NULL;
++	data->iter.recs = kcalloc(XFS_ZONE_GC_RECS, sizeof(*data->iter.recs),
++			GFP_KERNEL);
++	if (!data->iter.recs)
++		goto out_free_data;
++
++	/*
++	 * We actually only need a single bio_vec.  It would be nice to have
++	 * a flag that only allocates the inline bvecs and not the separate
++	 * bvec pool.
++	 */
++	if (bioset_init(&data->bio_set, 16, offsetof(struct xfs_gc_bio, bio),
++			BIOSET_NEED_BVECS))
++		goto out_free_recs;
++	for (i = 0; i < XFS_ZONE_GC_NR_SCRATCH; i++) {
++		data->scratch[i].folio =
++			folio_alloc(GFP_KERNEL, get_order(XFS_GC_CHUNK_SIZE));
++		if (!data->scratch[i].folio)
++			goto out_free_scratch;
++	}
++	INIT_LIST_HEAD(&data->reading);
++	INIT_LIST_HEAD(&data->writing);
++	INIT_LIST_HEAD(&data->resetting);
++	data->mp = mp;
++	return data;
++
++out_free_scratch:
++	while (--i >= 0)
++		folio_put(data->scratch[i].folio);
++	bioset_exit(&data->bio_set);
++out_free_recs:
++	kfree(data->iter.recs);
++out_free_data:
++	kfree(data);
++	return NULL;
++}
++
++static void
++xfs_zone_gc_data_free(
++	struct xfs_zone_gc_data	*data)
++{
++	int			i;
++
++	for (i = 0; i < XFS_ZONE_GC_NR_SCRATCH; i++)
++		folio_put(data->scratch[i].folio);
++	bioset_exit(&data->bio_set);
++	kfree(data->iter.recs);
++	kfree(data);
++}
++
++static void
++xfs_zone_gc_iter_init(
++	struct xfs_zone_gc_iter	*iter,
++	struct xfs_rtgroup	*victim_rtg)
++
++{
++	iter->next_startblock = 0;
++	iter->rec_count = 0;
++	iter->rec_idx = 0;
++	iter->victim_rtg = victim_rtg;
++}
++
++/*
++ * Query the rmap of the victim zone to gather the records to evacuate.
++ */
++static int
++xfs_zone_gc_query_cb(
++	struct xfs_btree_cur	*cur,
++	const struct xfs_rmap_irec *irec,
++	void			*private)
++{
++	struct xfs_zone_gc_iter	*iter = private;
++
++	ASSERT(!XFS_RMAP_NON_INODE_OWNER(irec->rm_owner));
++	ASSERT(!xfs_is_sb_inum(cur->bc_mp, irec->rm_owner));
++	ASSERT(!(irec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK)));
++
++	iter->recs[iter->rec_count] = *irec;
++	if (++iter->rec_count == XFS_ZONE_GC_RECS) {
++		iter->next_startblock =
++			irec->rm_startblock + irec->rm_blockcount;
++		return 1;
++	}
++	return 0;
++}
++
++#define cmp_int(l, r)		((l > r) - (l < r))
++
++static int
++xfs_zone_gc_rmap_rec_cmp(
++	const void			*a,
++	const void			*b)
++{
++	const struct xfs_rmap_irec	*reca = a;
++	const struct xfs_rmap_irec	*recb = b;
++	int				diff;
++
++	diff = cmp_int(reca->rm_owner, recb->rm_owner);
++	if (diff)
++		return diff;
++	return cmp_int(reca->rm_offset, recb->rm_offset);
++}
++
++static int
++xfs_zone_gc_query(
++	struct xfs_mount	*mp,
++	struct xfs_zone_gc_iter	*iter)
++{
++	struct xfs_rtgroup	*rtg = iter->victim_rtg;
++	struct xfs_rmap_irec	ri_low = { };
++	struct xfs_rmap_irec	ri_high;
++	struct xfs_btree_cur	*cur;
++	struct xfs_trans	*tp;
++	int			error;
++
++	ASSERT(iter->next_startblock <= rtg_blocks(rtg));
++	if (iter->next_startblock == rtg_blocks(rtg))
++		goto done;
++
++	ASSERT(iter->next_startblock < rtg_blocks(rtg));
++	ri_low.rm_startblock = iter->next_startblock;
++	memset(&ri_high, 0xFF, sizeof(ri_high));
++
++	iter->rec_idx = 0;
++	iter->rec_count = 0;
++
++	error = xfs_trans_alloc_empty(mp, &tp);
 +	if (error)
 +		return error;
 +
++	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
++	cur = xfs_rtrmapbt_init_cursor(tp, rtg);
++	error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
++			xfs_zone_gc_query_cb, iter);
++	xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
++	xfs_btree_del_cursor(cur, error < 0 ? error : 0);
++	xfs_trans_cancel(tp);
++
++	if (error < 0)
++		return error;
++
 +	/*
-+	 * Sloppily round up count to file system blocks.
++	 * Sort the rmap records by inode number and increasing offset to
++	 * defragment the mappings.
 +	 *
-+	 * This will often reserve an extra block, but that avoids having to look
-+	 * at the start offset, which isn't stable for O_APPEND until taking the
-+	 * iolock.  Also we need to reserve a block each for zeroing the old
-+	 * EOF block and the new start block if they are unaligned.
-+	 *
-+	 * Any remaining block will be returned after the write.
++	 * This could be further enhanced by an even bigger look ahead window,
++	 * but that's better left until we have better detection of changes to
++	 * inode mapping to avoid the potential of GCing already dead data.
 +	 */
-+	return xfs_zoned_space_reserve(ip,
-+			XFS_B_TO_FSB(ip->i_mount, count) + 1 + 2, flags, ac);
++	sort(iter->recs, iter->rec_count, sizeof(iter->recs[0]),
++			xfs_zone_gc_rmap_rec_cmp, NULL);
++
++	if (error == 0) {
++		/*
++		 * We finished iterating through the zone.
++		 */
++		iter->next_startblock = rtg_blocks(rtg);
++		if (iter->rec_count == 0)
++			goto done;
++	}
++
++	return 0;
++done:
++	xfs_rtgroup_rele(iter->victim_rtg);
++	iter->victim_rtg = NULL;
++	return 0;
 +}
 +
- static int
- xfs_dio_write_end_io(
- 	struct kiocb		*iocb,
-@@ -597,7 +642,7 @@ xfs_file_dio_write_aligned(
- 	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
- 	if (ret)
- 		return ret;
--	ret = xfs_file_write_checks(iocb, from, &iolock);
-+	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
- 	if (ret)
- 		goto out_unlock;
- 
-@@ -675,7 +720,7 @@ xfs_file_dio_write_unaligned(
- 		goto out_unlock;
- 	}
- 
--	ret = xfs_file_write_checks(iocb, from, &iolock);
-+	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
- 	if (ret)
- 		goto out_unlock;
- 
-@@ -749,7 +794,7 @@ xfs_file_dax_write(
- 	ret = xfs_ilock_iocb(iocb, iolock);
- 	if (ret)
- 		return ret;
--	ret = xfs_file_write_checks(iocb, from, &iolock);
-+	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
- 	if (ret)
- 		goto out;
- 
-@@ -793,7 +838,7 @@ xfs_file_buffered_write(
- 	if (ret)
- 		return ret;
- 
--	ret = xfs_file_write_checks(iocb, from, &iolock);
-+	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
- 	if (ret)
- 		goto out;
- 
-@@ -840,6 +885,67 @@ xfs_file_buffered_write(
- 	return ret;
- }
- 
-+STATIC ssize_t
-+xfs_file_buffered_write_zoned(
-+	struct kiocb		*iocb,
-+	struct iov_iter		*from)
++static bool
++xfs_zone_gc_iter_next(
++	struct xfs_mount	*mp,
++	struct xfs_zone_gc_iter	*iter,
++	struct xfs_rmap_irec	*chunk_rec,
++	struct xfs_inode	**ipp)
 +{
-+	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	unsigned int		iolock = XFS_IOLOCK_EXCL;
-+	bool			cleared_space = false;
-+	struct xfs_zone_alloc_ctx ac = { };
-+	ssize_t			ret;
++	struct xfs_rmap_irec	*irec;
++	int			error;
 +
-+	ret = xfs_zoned_write_space_reserve(ip, iocb, from, XFS_ZR_GREEDY, &ac);
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = xfs_ilock_iocb(iocb, iolock);
-+	if (ret)
-+		goto out_unreserve;
-+
-+	ret = xfs_file_write_checks(iocb, from, &iolock, &ac);
-+	if (ret)
-+		goto out_unlock;
-+
-+	/*
-+	 * Truncate the iter to the length that we were actually able to
-+	 * allocate blocks for.  This needs to happen after
-+	 * xfs_file_write_checks, because that assigns ki_pos for O_APPEND
-+	 * writes.
-+	 */
-+	iov_iter_truncate(from,
-+			XFS_FSB_TO_B(mp, ac.reserved_blocks) -
-+			(iocb->ki_pos & mp->m_blockmask));
-+	if (!iov_iter_count(from))
-+		goto out_unlock;
++	if (!iter->victim_rtg)
++		return false;
 +
 +retry:
-+	trace_xfs_file_buffered_write(iocb, from);
-+	ret = iomap_file_buffered_write(iocb, from,
-+			&xfs_buffered_write_iomap_ops, &ac);
-+	if (ret == -ENOSPC && !cleared_space) {
++	if (iter->rec_idx == iter->rec_count) {
++		error = xfs_zone_gc_query(mp, iter);
++		if (error)
++			goto fail;
++		if (!iter->victim_rtg)
++			return false;
++	}
++
++	irec = &iter->recs[iter->rec_idx];
++	error = xfs_iget(mp, NULL, irec->rm_owner,
++			XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE, 0, ipp);
++	if (error) {
 +		/*
-+		 * Kick off writeback to convert delalloc space and release the
-+		 * usually too pessimistic indirect block reservations.
++		 * If the inode was already deleted, skip over it.
 +		 */
-+		xfs_flush_inodes(mp);
-+		cleared_space = true;
++		if (error == -ENOENT) {
++			iter->rec_idx++;
++			goto retry;
++		}
++		goto fail;
++	}
++
++	if (!S_ISREG(VFS_I(*ipp)->i_mode) || !XFS_IS_REALTIME_INODE(*ipp)) {
++		iter->rec_idx++;
++		xfs_irele(*ipp);
 +		goto retry;
 +	}
 +
-+out_unlock:
-+	xfs_iunlock(ip, iolock);
-+out_unreserve:
-+	xfs_zoned_space_unreserve(ip, &ac);
-+	if (ret > 0) {
-+		XFS_STATS_ADD(mp, xs_write_bytes, ret);
-+		ret = generic_write_sync(iocb, ret);
++	*chunk_rec = *irec;
++	return true;
++
++fail:
++	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++	return false;
++}
++
++static void
++xfs_zone_gc_iter_advance(
++	struct xfs_zone_gc_iter	*iter,
++	xfs_extlen_t		count_fsb)
++{
++	struct xfs_rmap_irec	*irec = &iter->recs[iter->rec_idx];
++
++	irec->rm_offset += count_fsb;
++	irec->rm_startblock += count_fsb;
++	irec->rm_blockcount -= count_fsb;
++	if (!irec->rm_blockcount)
++		iter->rec_idx++;
++}
++
++static struct xfs_rtgroup *
++xfs_zone_gc_pick_victim_from(
++	struct xfs_mount	*mp,
++	uint32_t		bucket)
++{
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++	uint32_t		victim_used = U32_MAX;
++	struct xfs_rtgroup	*victim_rtg = NULL;
++	uint32_t		bit;
++
++	if (!zi->zi_used_bucket_entries[bucket])
++		return NULL;
++
++	for_each_set_bit(bit, zi->zi_used_bucket_bitmap[bucket],
++			mp->m_sb.sb_rgcount) {
++		struct xfs_rtgroup *rtg = xfs_rtgroup_grab(mp, bit);
++
++		if (!rtg)
++			continue;
++
++		/* skip zones that are just waiting for a reset */
++		if (rtg_rmap(rtg)->i_used_blocks == 0 ||
++		    rtg_rmap(rtg)->i_used_blocks >= victim_used) {
++			xfs_rtgroup_rele(rtg);
++			continue;
++		}
++
++		if (victim_rtg)
++			xfs_rtgroup_rele(victim_rtg);
++		victim_rtg = rtg;
++		victim_used = rtg_rmap(rtg)->i_used_blocks;
++
++		/*
++		 * Any zone that is less than 1 percent used is fair game for
++		 * instant reclaim. All of these zones are in the last
++		 * bucket, so avoid the expensive division for the zones
++		 * in the other buckets.
++		 */
++		if (bucket == 0 &&
++		    rtg_rmap(rtg)->i_used_blocks < rtg_blocks(rtg) / 100)
++			break;
 +	}
-+	return ret;
++
++	return victim_rtg;
 +}
 +
- STATIC ssize_t
- xfs_file_write_iter(
- 	struct kiocb		*iocb,
-@@ -887,6 +993,8 @@ xfs_file_write_iter(
- 			return ret;
- 	}
- 
-+	if (xfs_is_zoned_inode(ip))
-+		return xfs_file_buffered_write_zoned(iocb, from);
- 	return xfs_file_buffered_write(iocb, from);
- }
- 
-@@ -941,7 +1049,8 @@ static int
- xfs_falloc_collapse_range(
- 	struct file		*file,
- 	loff_t			offset,
--	loff_t			len)
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(file);
- 	loff_t			new_size = i_size_read(inode) - len;
-@@ -957,7 +1066,7 @@ xfs_falloc_collapse_range(
- 	if (offset + len >= i_size_read(inode))
- 		return -EINVAL;
- 
--	error = xfs_collapse_file_space(XFS_I(inode), offset, len);
-+	error = xfs_collapse_file_space(XFS_I(inode), offset, len, ac);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1013,7 +1122,8 @@ xfs_falloc_zero_range(
- 	struct file		*file,
- 	int			mode,
- 	loff_t			offset,
--	loff_t			len)
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(file);
- 	unsigned int		blksize = i_blocksize(inode);
-@@ -1026,7 +1136,7 @@ xfs_falloc_zero_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_free_file_space(XFS_I(inode), offset, len);
-+	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
- 	if (error)
- 		return error;
- 
-@@ -1097,22 +1207,18 @@ xfs_falloc_allocate_range(
- 		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE)
- 
- STATIC long
--xfs_file_fallocate(
-+__xfs_file_fallocate(
- 	struct file		*file,
- 	int			mode,
- 	loff_t			offset,
--	loff_t			len)
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(file);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	long			error;
- 	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 
--	if (!S_ISREG(inode->i_mode))
--		return -EINVAL;
--	if (mode & ~XFS_FALLOC_FL_SUPPORTED)
--		return -EOPNOTSUPP;
--
- 	xfs_ilock(ip, iolock);
- 	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
- 	if (error)
-@@ -1133,16 +1239,16 @@ xfs_file_fallocate(
- 
- 	switch (mode & FALLOC_FL_MODE_MASK) {
- 	case FALLOC_FL_PUNCH_HOLE:
--		error = xfs_free_file_space(ip, offset, len);
-+		error = xfs_free_file_space(ip, offset, len, ac);
- 		break;
- 	case FALLOC_FL_COLLAPSE_RANGE:
--		error = xfs_falloc_collapse_range(file, offset, len);
-+		error = xfs_falloc_collapse_range(file, offset, len, ac);
- 		break;
- 	case FALLOC_FL_INSERT_RANGE:
- 		error = xfs_falloc_insert_range(file, offset, len);
- 		break;
- 	case FALLOC_FL_ZERO_RANGE:
--		error = xfs_falloc_zero_range(file, mode, offset, len);
-+		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
- 		break;
- 	case FALLOC_FL_UNSHARE_RANGE:
- 		error = xfs_falloc_unshare_range(file, mode, offset, len);
-@@ -1163,6 +1269,54 @@ xfs_file_fallocate(
- 	return error;
- }
- 
-+static long
-+xfs_file_zoned_fallocate(
-+	struct file		*file,
-+	int			mode,
-+	loff_t			offset,
-+	loff_t			len)
++/*
++ * Iterate through all zones marked as reclaimable and find a candidate to
++ * reclaim.
++ */
++static bool
++xfs_zone_gc_select_victim(
++	struct xfs_zone_gc_data	*data)
 +{
-+	struct xfs_zone_alloc_ctx ac = { };
-+	struct xfs_inode	*ip = XFS_I(file_inode(file));
-+	int			error;
-+
-+	error = xfs_zoned_space_reserve(ip, 2, XFS_ZR_RESERVED, &ac);
-+	if (error)
-+		return error;
-+	error = __xfs_file_fallocate(file, mode, offset, len, &ac);
-+	xfs_zoned_space_unreserve(ip, &ac);
-+	return error;
-+}
-+
-+static long
-+xfs_file_fallocate(
-+	struct file		*file,
-+	int			mode,
-+	loff_t			offset,
-+	loff_t			len)
-+{
-+	struct inode		*inode = file_inode(file);
-+
-+	if (!S_ISREG(inode->i_mode))
-+		return -EINVAL;
-+	if (mode & ~XFS_FALLOC_FL_SUPPORTED)
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * For zoned file systems, zeroing the first and last block of a hole
-+	 * punch requires allocating a new block to rewrite the remaining data
-+	 * and new zeroes out of place.  Get a reservations for those before
-+	 * taking the iolock.  Dip into the reserved pool because we are
-+	 * expected to be able to punch a hole even on a completely full
-+	 * file system.
-+	 */
-+	if (xfs_is_zoned_inode(XFS_I(inode)) &&
-+	    (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE |
-+		     FALLOC_FL_COLLAPSE_RANGE)))
-+		return xfs_file_zoned_fallocate(file, mode, offset, len);
-+	return __xfs_file_fallocate(file, mode, offset, len, NULL);
-+}
-+
- STATIC int
- xfs_file_fadvise(
- 	struct file	*file,
-@@ -1488,9 +1642,10 @@ xfs_dax_read_fault(
-  *         i_lock (XFS - extent map serialisation)
-  */
- static vm_fault_t
--xfs_write_fault(
-+__xfs_write_fault(
- 	struct vm_fault		*vmf,
--	unsigned int		order)
-+	unsigned int		order,
-+	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(vmf->vma->vm_file);
- 	struct xfs_inode	*ip = XFS_I(inode);
-@@ -1528,13 +1683,49 @@ xfs_write_fault(
- 		ret = xfs_dax_fault_locked(vmf, order, true);
- 	else
- 		ret = iomap_page_mkwrite(vmf, &xfs_buffered_write_iomap_ops,
--				NULL);
-+				ac);
- 	xfs_iunlock(ip, lock_mode);
- 
- 	sb_end_pagefault(inode->i_sb);
- 	return ret;
- }
- 
-+static vm_fault_t
-+xfs_write_fault_zoned(
-+	struct vm_fault		*vmf,
-+	unsigned int		order)
-+{
-+	struct xfs_inode	*ip = XFS_I(file_inode(vmf->vma->vm_file));
-+	unsigned int		len = folio_size(page_folio(vmf->page));
-+	struct xfs_zone_alloc_ctx ac = { };
-+	int			error;
-+	vm_fault_t		ret;
-+
-+	/*
-+	 * This could over-allocate as it doesn't check for truncation.
-+	 *
-+	 * But as the overallocation is limited to less than a folio and will be
-+	 * release instantly that's just fine.
-+	 */
-+	error = xfs_zoned_space_reserve(ip, XFS_B_TO_FSB(ip->i_mount, len), 0,
-+			&ac);
-+	if (error < 0)
-+		return vmf_fs_error(error);
-+	ret = __xfs_write_fault(vmf, order, &ac);
-+	xfs_zoned_space_unreserve(ip, &ac);
-+	return ret;
-+}
-+
-+static vm_fault_t
-+xfs_write_fault(
-+	struct vm_fault		*vmf,
-+	unsigned int		order)
-+{
-+	if (xfs_is_zoned_inode(XFS_I(file_inode(vmf->vma->vm_file))))
-+		return xfs_write_fault_zoned(vmf, order);
-+	return __xfs_write_fault(vmf, order, NULL);
-+}
-+
- static inline bool
- xfs_is_write_fault(
- 	struct vm_fault		*vmf)
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 45c339565d88..0e64a0ce1622 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -31,6 +31,7 @@
- #include "xfs_health.h"
- #include "xfs_rtbitmap.h"
- #include "xfs_icache.h"
-+#include "xfs_zone_alloc.h"
- 
- #define XFS_ALLOC_ALIGN(mp, off) \
- 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
-@@ -1268,6 +1269,176 @@ xfs_bmapi_reserve_delalloc(
- 	return error;
- }
- 
-+static int
-+xfs_zoned_buffered_write_iomap_begin(
-+	struct inode		*inode,
-+	loff_t			offset,
-+	loff_t			count,
-+	unsigned		flags,
-+	struct iomap		*iomap,
-+	struct iomap		*srcmap)
-+{
-+	struct iomap_iter	*iter =
-+		container_of(iomap, struct iomap_iter, iomap);
-+	struct xfs_zone_alloc_ctx *ac = iter->private;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
-+	u16			iomap_flags = IOMAP_F_SHARED;
-+	unsigned int		lockmode = XFS_ILOCK_EXCL;
-+	xfs_filblks_t		count_fsb;
-+	xfs_extlen_t		indlen;
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_iext_cursor	icur;
-+	int			error = 0;
-+
-+	ASSERT(!xfs_get_extsz_hint(ip));
-+	ASSERT(!(flags & IOMAP_UNSHARE));
-+	ASSERT(ac);
++	struct xfs_zone_gc_iter	*iter = &data->iter;
++	struct xfs_mount	*mp = data->mp;
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++	struct xfs_rtgroup	*victim_rtg = NULL;
++	unsigned int		bucket;
 +
 +	if (xfs_is_shutdown(mp))
-+		return -EIO;
++		return false;
 +
-+	error = xfs_qm_dqattach(ip);
-+	if (error)
-+		return error;
-+
-+	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
-+	if (error)
-+		return error;
-+
-+	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
-+	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
-+		error = -EFSCORRUPTED;
-+		goto out_unlock;
-+	}
-+
-+	XFS_STATS_INC(mp, xs_blk_mapw);
-+
-+	error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+	if (error)
-+		goto out_unlock;
++	if (iter->victim_rtg)
++		return true;
 +
 +	/*
-+	 * For zeroing operations check if there is any data to zero first.
-+	 *
-+	 * For regular writes we always need to allocate new blocks, but need to
-+	 * provide the source mapping when the range is unaligned to support
-+	 * read-modify-write of the whole block in the page cache.
-+	 *
-+	 * In either case we need to limit the reported range to the boundaries
-+	 * of the source map in the data fork.
++	 * Don't start new work if we are asked to stop or park.
 +	 */
-+	if (!IS_ALIGNED(offset, mp->m_sb.sb_blocksize) ||
-+	    !IS_ALIGNED(offset + count, mp->m_sb.sb_blocksize) ||
-+	    (flags & IOMAP_ZERO)) {
-+		struct xfs_bmbt_irec	smap;
-+		struct xfs_iext_cursor	scur;
++	if (kthread_should_stop() || kthread_should_park())
++		return false;
 +
-+		if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &scur,
-+				&smap))
-+			smap.br_startoff = end_fsb; /* fake hole until EOF */
-+		if (smap.br_startoff > offset_fsb) {
-+			/*
-+			 * We never need to allocate blocks for zeroing a hole.
-+			 */
-+			if (flags & IOMAP_ZERO) {
-+				xfs_hole_to_iomap(ip, iomap, offset_fsb,
-+						smap.br_startoff);
-+				goto out_unlock;
-+			}
-+			end_fsb = min(end_fsb, smap.br_startoff);
-+		} else {
-+			end_fsb = min(end_fsb,
-+				smap.br_startoff + smap.br_blockcount);
-+			xfs_trim_extent(&smap, offset_fsb,
-+					end_fsb - offset_fsb);
-+			error = xfs_bmbt_to_iomap(ip, srcmap, &smap, flags, 0,
-+					xfs_iomap_inode_sequence(ip, 0));
-+			if (error)
-+				goto out_unlock;
-+		}
++	if (!xfs_zoned_need_gc(mp))
++		return false;
++
++	spin_lock(&zi->zi_used_buckets_lock);
++	for (bucket = 0; bucket < XFS_ZONE_USED_BUCKETS; bucket++) {
++		victim_rtg = xfs_zone_gc_pick_victim_from(mp, bucket);
++		if (victim_rtg)
++			break;
++	}
++	spin_unlock(&zi->zi_used_buckets_lock);
++
++	if (!victim_rtg)
++		return false;
++
++	trace_xfs_zone_gc_select_victim(victim_rtg, bucket);
++	xfs_zone_gc_iter_init(iter, victim_rtg);
++	return true;
++}
++
++static struct xfs_open_zone *
++xfs_zone_gc_steal_open(
++	struct xfs_zone_info	*zi)
++{
++	struct xfs_open_zone	*oz, *found = NULL;
++
++	spin_lock(&zi->zi_open_zones_lock);
++	list_for_each_entry(oz, &zi->zi_open_zones, oz_entry) {
++		if (!found ||
++		    oz->oz_write_pointer < found->oz_write_pointer)
++			found = oz;
 +	}
 +
-+	if (!ip->i_cowfp)
-+		xfs_ifork_init_cow(ip);
++	if (found) {
++		found->oz_is_gc = true;
++		list_del_init(&found->oz_entry);
++		zi->zi_nr_open_zones--;
++	}
 +
-+	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got))
-+		got.br_startoff = end_fsb;
-+	if (got.br_startoff <= offset_fsb) {
-+		trace_xfs_reflink_cow_found(ip, &got);
-+		goto done;
++	spin_unlock(&zi->zi_open_zones_lock);
++	return found;
++}
++
++static struct xfs_open_zone *
++xfs_zone_gc_select_target(
++	struct xfs_mount	*mp)
++{
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++	struct xfs_open_zone	*oz = zi->zi_open_gc_zone;
++
++	/*
++	 * We need to wait for pending writes to finish.
++	 */
++	if (oz && oz->oz_written < rtg_blocks(oz->oz_rtg))
++		return NULL;
++
++	ASSERT(zi->zi_nr_open_zones <=
++		mp->m_max_open_zones - XFS_OPEN_GC_ZONES);
++	oz = xfs_open_zone(mp, true);
++	if (oz)
++		trace_xfs_zone_gc_target_opened(oz->oz_rtg);
++	spin_lock(&zi->zi_open_zones_lock);
++	zi->zi_open_gc_zone = oz;
++	spin_unlock(&zi->zi_open_zones_lock);
++	return oz;
++}
++
++/*
++ * Ensure we have a valid open zone to write the GC data to.
++ *
++ * If the current target zone has space keep writing to it, else first wait for
++ * all pending writes and then pick a new one.
++ */
++static struct xfs_open_zone *
++xfs_zone_gc_ensure_target(
++	struct xfs_mount	*mp)
++{
++	struct xfs_open_zone	*oz = mp->m_zone_info->zi_open_gc_zone;
++
++	if (!oz || oz->oz_write_pointer == rtg_blocks(oz->oz_rtg))
++		return xfs_zone_gc_select_target(mp);
++	return oz;
++}
++
++static unsigned int
++xfs_zone_gc_scratch_available(
++	struct xfs_zone_gc_data	*data)
++{
++	return XFS_GC_CHUNK_SIZE - data->scratch[data->scratch_idx].offset;
++}
++
++static bool
++xfs_zone_gc_space_available(
++	struct xfs_zone_gc_data	*data)
++{
++	struct xfs_open_zone	*oz;
++
++	oz = xfs_zone_gc_ensure_target(data->mp);
++	if (!oz)
++		return false;
++	return oz->oz_write_pointer < rtg_blocks(oz->oz_rtg) &&
++		xfs_zone_gc_scratch_available(data);
++}
++
++static void
++xfs_zone_gc_end_io(
++	struct bio		*bio)
++{
++	struct xfs_gc_bio	*chunk =
++		container_of(bio, struct xfs_gc_bio, bio);
++	struct xfs_zone_gc_data	*data = chunk->data;
++
++	WRITE_ONCE(chunk->state, XFS_GC_BIO_DONE);
++	wake_up_process(data->mp->m_zone_info->zi_gc_thread);
++}
++
++static struct xfs_open_zone *
++xfs_zone_gc_alloc_blocks(
++	struct xfs_zone_gc_data	*data,
++	xfs_extlen_t		*count_fsb,
++	xfs_daddr_t		*daddr,
++	bool			*is_seq)
++{
++	struct xfs_mount	*mp = data->mp;
++	struct xfs_open_zone	*oz;
++
++	oz = xfs_zone_gc_ensure_target(mp);
++	if (!oz)
++		return NULL;
++
++	*count_fsb = min(*count_fsb,
++		XFS_B_TO_FSB(mp, xfs_zone_gc_scratch_available(data)));
++
++	/*
++	 * Directly allocate GC blocks from the reserved pool.
++	 *
++	 * If we'd take them from the normal pool we could be stealing blocks
++	 * from a regular writer, which would then have to wait for GC and
++	 * deadlock.
++	 */
++	spin_lock(&mp->m_sb_lock);
++	*count_fsb = min(*count_fsb,
++			rtg_blocks(oz->oz_rtg) - oz->oz_write_pointer);
++	*count_fsb = min3(*count_fsb,
++			mp->m_free[XC_FREE_RTEXTENTS].res_avail,
++			mp->m_free[XC_FREE_RTAVAILABLE].res_avail);
++	mp->m_free[XC_FREE_RTEXTENTS].res_avail -= *count_fsb;
++	mp->m_free[XC_FREE_RTAVAILABLE].res_avail -= *count_fsb;
++	spin_unlock(&mp->m_sb_lock);
++
++	if (!*count_fsb)
++		return NULL;
++
++	*daddr = xfs_gbno_to_daddr(&oz->oz_rtg->rtg_group, 0);
++	*is_seq = bdev_zone_is_seq(mp->m_rtdev_targp->bt_bdev, *daddr);
++	if (!*is_seq)
++		*daddr += XFS_FSB_TO_BB(mp, oz->oz_write_pointer);
++	oz->oz_write_pointer += *count_fsb;
++	atomic_inc(&oz->oz_ref);
++	return oz;
++}
++
++static bool
++xfs_zone_gc_start_chunk(
++	struct xfs_zone_gc_data	*data)
++{
++	struct xfs_zone_gc_iter	*iter = &data->iter;
++	struct xfs_mount	*mp = data->mp;
++	struct block_device	*bdev = mp->m_rtdev_targp->bt_bdev;
++	struct xfs_open_zone	*oz;
++	struct xfs_rmap_irec	irec;
++	struct xfs_gc_bio	*chunk;
++	struct xfs_inode	*ip;
++	struct bio		*bio;
++	xfs_daddr_t		daddr;
++	bool			is_seq;
++
++	if (xfs_is_shutdown(mp))
++		return false;
++
++	if (!xfs_zone_gc_iter_next(mp, iter, &irec, &ip))
++		return false;
++	oz = xfs_zone_gc_alloc_blocks(data, &irec.rm_blockcount, &daddr,
++			&is_seq);
++	if (!oz) {
++		xfs_irele(ip);
++		return false;
++	}
++
++	bio = bio_alloc_bioset(bdev, 1, REQ_OP_READ, GFP_NOFS, &data->bio_set);
++
++	chunk = container_of(bio, struct xfs_gc_bio, bio);
++	chunk->ip = ip;
++	chunk->offset = XFS_FSB_TO_B(mp, irec.rm_offset);
++	chunk->len = XFS_FSB_TO_B(mp, irec.rm_blockcount);
++	chunk->old_startblock =
++		xfs_rgbno_to_rtb(iter->victim_rtg, irec.rm_startblock);
++	chunk->new_daddr = daddr;
++	chunk->is_seq = is_seq;
++	chunk->scratch = &data->scratch[data->scratch_idx];
++	chunk->data = data;
++	chunk->oz = oz;
++
++	bio->bi_iter.bi_sector = xfs_rtb_to_daddr(mp, chunk->old_startblock);
++	bio->bi_end_io = xfs_zone_gc_end_io;
++	bio_add_folio_nofail(bio, chunk->scratch->folio, chunk->len,
++			chunk->scratch->offset);
++	chunk->scratch->offset += chunk->len;
++	if (chunk->scratch->offset == XFS_GC_CHUNK_SIZE) {
++		data->scratch_idx =
++			(data->scratch_idx + 1) % XFS_ZONE_GC_NR_SCRATCH;
++	}
++	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
++	list_add_tail(&chunk->entry, &data->reading);
++	xfs_zone_gc_iter_advance(iter, irec.rm_blockcount);
++
++	submit_bio(bio);
++	return true;
++}
++
++static void
++xfs_zone_gc_free_chunk(
++	struct xfs_gc_bio	*chunk)
++{
++	list_del(&chunk->entry);
++	xfs_open_zone_put(chunk->oz);
++	xfs_irele(chunk->ip);
++	bio_put(&chunk->bio);
++}
++
++static void
++xfs_zone_gc_submit_write(
++	struct xfs_zone_gc_data	*data,
++	struct xfs_gc_bio	*chunk)
++{
++	if (chunk->is_seq) {
++		chunk->bio.bi_opf &= ~REQ_OP_WRITE;
++		chunk->bio.bi_opf |= REQ_OP_ZONE_APPEND;
++	}
++	chunk->bio.bi_iter.bi_sector = chunk->new_daddr;
++	chunk->bio.bi_end_io = xfs_zone_gc_end_io;
++	submit_bio(&chunk->bio);
++}
++
++static struct xfs_gc_bio *
++xfs_zone_gc_split_write(
++	struct xfs_zone_gc_data	*data,
++	struct xfs_gc_bio	*chunk)
++{
++	struct queue_limits	*lim =
++		&bdev_get_queue(chunk->bio.bi_bdev)->limits;
++	struct xfs_gc_bio	*split_chunk;
++	int			split_sectors;
++	unsigned int		split_len;
++	struct bio		*split;
++	unsigned int		nsegs;
++
++	if (!chunk->is_seq)
++		return NULL;
++
++	split_sectors = bio_split_rw_at(&chunk->bio, lim, &nsegs,
++			lim->max_zone_append_sectors << SECTOR_SHIFT);
++	if (!split_sectors)
++		return NULL;
++
++	/* ensure the split chunk is still block size aligned */
++	split_sectors = ALIGN_DOWN(split_sectors << SECTOR_SHIFT,
++			data->mp->m_sb.sb_blocksize) >> SECTOR_SHIFT;
++	split_len = split_sectors << SECTOR_SHIFT;
++
++	split = bio_split(&chunk->bio, split_sectors, GFP_NOFS, &data->bio_set);
++	split_chunk = container_of(split, struct xfs_gc_bio, bio);
++	split_chunk->data = data;
++	ihold(VFS_I(chunk->ip));
++	split_chunk->ip = chunk->ip;
++	split_chunk->is_seq = chunk->is_seq;
++	split_chunk->scratch = chunk->scratch;
++	split_chunk->offset = chunk->offset;
++	split_chunk->len = split_len;
++	split_chunk->old_startblock = chunk->old_startblock;
++	split_chunk->new_daddr = chunk->new_daddr;
++	split_chunk->oz = chunk->oz;
++	atomic_inc(&chunk->oz->oz_ref);
++
++	chunk->offset += split_len;
++	chunk->len -= split_len;
++	chunk->old_startblock += XFS_B_TO_FSB(data->mp, split_len);
++
++	/* add right before the original chunk */
++	WRITE_ONCE(split_chunk->state, XFS_GC_BIO_NEW);
++	list_add_tail(&split_chunk->entry, &chunk->entry);
++	return split_chunk;
++}
++
++static void
++xfs_zone_gc_write_chunk(
++	struct xfs_gc_bio	*chunk)
++{
++	struct xfs_zone_gc_data	*data = chunk->data;
++	struct xfs_mount	*mp = chunk->ip->i_mount;
++	unsigned int		folio_offset = chunk->bio.bi_io_vec->bv_offset;
++	struct xfs_gc_bio	*split_chunk;
++
++	if (chunk->bio.bi_status)
++		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++	if (xfs_is_shutdown(mp)) {
++		xfs_zone_gc_free_chunk(chunk);
++		return;
++	}
++
++	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
++	list_move_tail(&chunk->entry, &data->writing);
++
++	bio_reset(&chunk->bio, mp->m_rtdev_targp->bt_bdev, REQ_OP_WRITE);
++	bio_add_folio_nofail(&chunk->bio, chunk->scratch->folio, chunk->len,
++			folio_offset);
++
++	while ((split_chunk = xfs_zone_gc_split_write(data, chunk)))
++		xfs_zone_gc_submit_write(data, split_chunk);
++	xfs_zone_gc_submit_write(data, chunk);
++}
++
++static void
++xfs_zone_gc_finish_chunk(
++	struct xfs_gc_bio	*chunk)
++{
++	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
++	struct xfs_inode	*ip = chunk->ip;
++	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
++
++	if (chunk->bio.bi_status)
++		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++	if (xfs_is_shutdown(mp)) {
++		xfs_zone_gc_free_chunk(chunk);
++		return;
++	}
++
++	chunk->scratch->freed += chunk->len;
++	if (chunk->scratch->freed == chunk->scratch->offset) {
++		chunk->scratch->offset = 0;
++		chunk->scratch->freed = 0;
 +	}
 +
 +	/*
-+	 * Cap the maximum length to keep the chunks of work done here somewhat
-+	 * symmetric with the work writeback does.
++	 * Cycle through the iolock and wait for direct I/O and layouts to
++	 * ensure no one is reading from the old mapping before it goes away.
++	 *
++	 * Note that xfs_zoned_end_io() below checks that no other writer raced
++	 * with us to update the mapping by checking that the old startblock
++	 * didn't change.
 +	 */
-+	end_fsb = min(end_fsb, got.br_startoff);
-+	count_fsb = min3(end_fsb - offset_fsb, XFS_MAX_BMBT_EXTLEN,
-+			 XFS_B_TO_FSB(mp, 1024 * PAGE_SIZE));
++	xfs_ilock(ip, iolock);
++	error = xfs_break_layouts(VFS_I(ip), &iolock, BREAK_UNMAP);
++	if (!error)
++		inode_dio_wait(VFS_I(ip));
++	xfs_iunlock(ip, iolock);
++	if (error)
++		goto free;
 +
-+	/*
-+	 * The block reservation is supposed to cover all blocks that the
-+	 * operation could possible write, but there is a nasty corner case
-+	 * where blocks could be stolen from underneath us:
-+	 *
-+	 *  1) while this thread iterates over a larger buffered write,
-+	 *  2) another thread is causing a write fault that calls into
-+	 *     ->page_mkwrite in range this thread writes to, using up the
-+	 *     delalloc reservation created by a previous call to this function.
-+	 *  3) another thread does direct I/O on the range that the write fault
-+	 *     happened on, which causes writeback of the dirty data.
-+	 *  4) this then set the stale flag, which cuts the current iomap
-+	 *     iteration short, causing the new call to ->iomap_begin that gets
-+	 *     us here again, but now without a sufficient reservation.
-+	 *
-+	 * This is a very unusual I/O pattern, and nothing but generic/095 is
-+	 * known to hit it. There's not really much we can do here, so turn this
-+	 * into a short write.
-+	 */
-+	if (count_fsb > ac->reserved_blocks) {
-+		xfs_warn_ratelimited(mp,
-+"Short write on ino 0x%llx comm %.20s due to three-way race with write fault and direct I/O",
-+			ip->i_ino, current->comm);
-+		count_fsb = ac->reserved_blocks;
-+		if (!count_fsb) {
-+			error = -EIO;
-+			goto out_unlock;
-+		}
++	if (chunk->is_seq)
++		chunk->new_daddr = chunk->bio.bi_iter.bi_sector;
++	error = xfs_zoned_end_io(ip, chunk->offset, chunk->len,
++			chunk->new_daddr, chunk->oz, chunk->old_startblock);
++free:
++	if (error)
++		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++	xfs_zone_gc_free_chunk(chunk);
++}
++
++static void
++xfs_zone_gc_finish_reset(
++	struct xfs_gc_bio	*chunk)
++{
++	struct xfs_rtgroup	*rtg = chunk->bio.bi_private;
++	struct xfs_mount	*mp = rtg_mount(rtg);
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++
++	if (chunk->bio.bi_status) {
++		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++		goto out;
 +	}
 +
-+	error = xfs_quota_reserve_blkres(ip, count_fsb);
-+	if (error)
-+		goto out_unlock;
++	xfs_group_set_mark(&rtg->rtg_group, XFS_RTG_FREE);
++	atomic_inc(&zi->zi_nr_free_zones);
 +
-+	indlen = xfs_bmap_worst_indlen(ip, count_fsb);
-+	error = xfs_dec_fdblocks(mp, indlen, false);
-+	if (error)
-+		goto out_unlock;
-+	ip->i_delayed_blks += count_fsb;
-+	xfs_mod_delalloc(ip, count_fsb, indlen);
++	xfs_zoned_add_available(mp, rtg_blocks(rtg));
 +
-+	got.br_startoff = offset_fsb;
-+	got.br_startblock = nullstartblock(indlen);
-+	got.br_blockcount = count_fsb;
-+	got.br_state = XFS_EXT_NORM;
-+	xfs_bmap_add_extent_hole_delay(ip, XFS_COW_FORK, &icur, &got);
-+	ac->reserved_blocks -= count_fsb;
-+	iomap_flags |= IOMAP_F_NEW;
++	wake_up_all(&zi->zi_zone_wait);
++out:
++	list_del(&chunk->entry);
++	bio_put(&chunk->bio);
++}
 +
-+	trace_xfs_iomap_alloc(ip, offset, XFS_FSB_TO_B(mp, count_fsb),
-+			XFS_COW_FORK, &got);
-+done:
-+	error = xfs_bmbt_to_iomap(ip, iomap, &got, flags, iomap_flags,
-+			xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED));
-+out_unlock:
-+	xfs_iunlock(ip, lockmode);
++static bool
++xfs_zone_gc_prepare_reset(
++	struct bio		*bio,
++	struct xfs_rtgroup	*rtg)
++{
++	trace_xfs_zone_reset(rtg);
++
++	ASSERT(rtg_rmap(rtg)->i_used_blocks == 0);
++	bio->bi_iter.bi_sector = xfs_gbno_to_daddr(&rtg->rtg_group, 0);
++	if (!bdev_zone_is_seq(bio->bi_bdev, bio->bi_iter.bi_sector)) {
++		if (!bdev_max_discard_sectors(bio->bi_bdev))
++			return false;
++		bio->bi_opf = REQ_OP_DISCARD | REQ_SYNC;
++		bio->bi_iter.bi_size =
++			XFS_FSB_TO_B(rtg_mount(rtg), rtg_blocks(rtg));
++	}
++
++	return true;
++}
++
++int
++xfs_zone_gc_reset_sync(
++	struct xfs_rtgroup	*rtg)
++{
++	int			error = 0;
++	struct bio		bio;
++
++	bio_init(&bio, rtg_mount(rtg)->m_rtdev_targp->bt_bdev, NULL, 0,
++			REQ_OP_ZONE_RESET);
++	if (xfs_zone_gc_prepare_reset(&bio, rtg))
++		error = submit_bio_wait(&bio);
++	bio_uninit(&bio);
++
 +	return error;
 +}
 +
- static int
- xfs_buffered_write_iomap_begin(
- 	struct inode		*inode,
-@@ -1294,6 +1465,10 @@ xfs_buffered_write_iomap_begin(
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
-+	if (xfs_is_zoned_inode(ip))
-+		return xfs_zoned_buffered_write_iomap_begin(inode, offset,
-+				count, flags, iomap, srcmap);
++static void
++xfs_zone_gc_reset_zones(
++	struct xfs_zone_gc_data	*data,
++	struct xfs_group	*reset_list)
++{
++	struct xfs_group	*next = reset_list;
 +
- 	/* we can't use delayed allocations when using extent size hints */
- 	if (xfs_get_extsz_hint(ip))
- 		return xfs_direct_write_iomap_begin(inode, offset, count,
-@@ -1526,10 +1701,13 @@ xfs_buffered_write_delalloc_punch(
- 	loff_t			length,
- 	struct iomap		*iomap)
- {
-+	struct iomap_iter	*iter =
-+		container_of(iomap, struct iomap_iter, iomap);
-+
- 	xfs_bmap_punch_delalloc_range(XFS_I(inode),
- 			(iomap->flags & IOMAP_F_SHARED) ?
- 				XFS_COW_FORK : XFS_DATA_FORK,
--			offset, offset + length);
-+			offset, offset + length, iter->private);
- }
- 
- static int
-@@ -1766,6 +1944,7 @@ xfs_zero_range(
- 	struct xfs_inode	*ip,
- 	loff_t			pos,
- 	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac,
- 	bool			*did_zero)
- {
- 	struct inode		*inode = VFS_I(ip);
-@@ -1776,13 +1955,14 @@ xfs_zero_range(
- 		return dax_zero_range(inode, pos, len, did_zero,
- 				      &xfs_dax_write_iomap_ops);
- 	return iomap_zero_range(inode, pos, len, did_zero,
--				&xfs_buffered_write_iomap_ops, NULL);
-+				&xfs_buffered_write_iomap_ops, ac);
- }
- 
- int
- xfs_truncate_page(
- 	struct xfs_inode	*ip,
- 	loff_t			pos,
-+	struct xfs_zone_alloc_ctx *ac,
- 	bool			*did_zero)
- {
- 	struct inode		*inode = VFS_I(ip);
-@@ -1791,5 +1971,5 @@ xfs_truncate_page(
- 		return dax_truncate_page(inode, pos, did_zero,
- 					&xfs_dax_write_iomap_ops);
- 	return iomap_truncate_page(inode, pos, did_zero,
--				   &xfs_buffered_write_iomap_ops, NULL);
-+				   &xfs_buffered_write_iomap_ops, ac);
- }
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 8347268af727..bc8a00cad854 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -10,6 +10,7 @@
- 
- struct xfs_inode;
- struct xfs_bmbt_irec;
-+struct xfs_zone_alloc_ctx;
- 
- int xfs_iomap_write_direct(struct xfs_inode *ip, xfs_fileoff_t offset_fsb,
- 		xfs_fileoff_t count_fsb, unsigned int flags,
-@@ -24,8 +25,9 @@ int xfs_bmbt_to_iomap(struct xfs_inode *ip, struct iomap *iomap,
- 		u16 iomap_flags, u64 sequence_cookie);
- 
- int xfs_zero_range(struct xfs_inode *ip, loff_t pos, loff_t len,
--		bool *did_zero);
--int xfs_truncate_page(struct xfs_inode *ip, loff_t pos, bool *did_zero);
-+		struct xfs_zone_alloc_ctx *ac, bool *did_zero);
-+int xfs_truncate_page(struct xfs_inode *ip, loff_t pos,
-+		struct xfs_zone_alloc_ctx *ac, bool *did_zero);
- 
- static inline xfs_filblks_t
- xfs_aligned_fsb_count(
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 40289fe6f5b2..444193f543ef 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -29,6 +29,7 @@
- #include "xfs_xattr.h"
- #include "xfs_file.h"
- #include "xfs_bmap.h"
-+#include "xfs_zone_alloc.h"
- 
- #include <linux/posix_acl.h>
- #include <linux/security.h>
-@@ -854,6 +855,7 @@ xfs_setattr_size(
- 	uint			lock_flags = 0;
- 	uint			resblks = 0;
- 	bool			did_zeroing = false;
-+	struct xfs_zone_alloc_ctx ac = { };
- 
- 	xfs_assert_ilocked(ip, XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL);
- 	ASSERT(S_ISREG(inode->i_mode));
-@@ -889,6 +891,28 @@ xfs_setattr_size(
- 	 */
- 	inode_dio_wait(inode);
- 
-+	/*
-+	 * Normally xfs_zoned_space_reserve is supposed to be called outside the
-+	 * IOLOCK.  For truncate we can't do that since ->setattr is called with
-+	 * it already held by the VFS.  So for now chicken out and try to
-+	 * allocate space under it.
-+	 *
-+	 * To avoid deadlocks this means we can't block waiting for space, which
-+	 * can lead to spurious -ENOSPC if there are no directly available
-+	 * blocks.  We mitigate this a bit by allowing zeroing to dip into the
-+	 * reserved pool, but eventually the VFS calling convention needs to
-+	 * change.
-+	 */
-+	if (xfs_is_zoned_inode(ip)) {
-+		error = xfs_zoned_space_reserve(ip, 1,
-+				XFS_ZR_NOWAIT | XFS_ZR_RESERVED, &ac);
-+		if (error) {
-+			if (error == -EAGAIN)
-+				return -ENOSPC;
-+			return error;
-+		}
++	if (blkdev_issue_flush(data->mp->m_rtdev_targp->bt_bdev) < 0) {
++		xfs_force_shutdown(data->mp, SHUTDOWN_META_IO_ERROR);
++		return;
 +	}
 +
- 	/*
- 	 * File data changes must be complete before we start the transaction to
- 	 * modify the inode.  This needs to be done before joining the inode to
-@@ -902,11 +926,14 @@ xfs_setattr_size(
- 	if (newsize > oldsize) {
- 		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
- 		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
--				&did_zeroing);
-+				&ac, &did_zeroing);
- 	} else {
--		error = xfs_truncate_page(ip, newsize, &did_zeroing);
-+		error = xfs_truncate_page(ip, newsize, &ac, &did_zeroing);
- 	}
- 
-+	if (xfs_is_zoned_inode(ip))
-+		xfs_zoned_space_unreserve(ip, &ac);
++	do {
++		struct xfs_rtgroup	*rtg = to_rtg(next);
++		struct xfs_gc_bio	*chunk;
++		struct bio		*bio;
 +
- 	if (error)
- 		return error;
++		xfs_log_force_inode(rtg_rmap(rtg));
++
++		next = rtg_group(rtg)->xg_next_reset;
++		rtg_group(rtg)->xg_next_reset = NULL;
++
++		bio = bio_alloc_bioset(rtg_mount(rtg)->m_rtdev_targp->bt_bdev,
++				0, REQ_OP_ZONE_RESET, GFP_NOFS, &data->bio_set);
++		bio->bi_private = rtg;
++		bio->bi_end_io = xfs_zone_gc_end_io;
++
++		chunk = container_of(bio, struct xfs_gc_bio, bio);
++		chunk->data = data;
++		WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
++		list_add_tail(&chunk->entry, &data->resetting);
++
++		/*
++		 * Also use the bio to drive the state machine when neither
++		 * zone reset nor discard is supported to keep things simple.
++		 */
++		if (xfs_zone_gc_prepare_reset(bio, rtg))
++			submit_bio(bio);
++		else
++			bio_endio(bio);
++	} while (next);
++}
++
++/*
++ * Handle the work to read and write data for GC and to reset the zones,
++ * including handling all completions.
++ *
++ * Note that the order of the chunks is preserved so that we don't undo the
++ * optimal order established by xfs_zone_gc_query().
++ */
++static bool
++xfs_zone_gc_handle_work(
++	struct xfs_zone_gc_data	*data)
++{
++	struct xfs_zone_info	*zi = data->mp->m_zone_info;
++	struct xfs_gc_bio	*chunk, *next;
++	struct xfs_group	*reset_list;
++	struct blk_plug		plug;
++
++	spin_lock(&zi->zi_reset_list_lock);
++	reset_list = zi->zi_reset_list;
++	zi->zi_reset_list = NULL;
++	spin_unlock(&zi->zi_reset_list_lock);
++
++	if (!xfs_zone_gc_select_victim(data) ||
++	    !xfs_zone_gc_space_available(data)) {
++		if (list_empty(&data->reading) &&
++		    list_empty(&data->writing) &&
++		    list_empty(&data->resetting) &&
++		    !reset_list)
++			return false;
++	}
++
++	__set_current_state(TASK_RUNNING);
++	try_to_freeze();
++
++	if (reset_list)
++		xfs_zone_gc_reset_zones(data, reset_list);
++
++	list_for_each_entry_safe(chunk, next, &data->resetting, entry) {
++		if (READ_ONCE(chunk->state) != XFS_GC_BIO_DONE)
++			break;
++		xfs_zone_gc_finish_reset(chunk);
++	}
++
++	list_for_each_entry_safe(chunk, next, &data->writing, entry) {
++		if (READ_ONCE(chunk->state) != XFS_GC_BIO_DONE)
++			break;
++		xfs_zone_gc_finish_chunk(chunk);
++	}
++
++	blk_start_plug(&plug);
++	list_for_each_entry_safe(chunk, next, &data->reading, entry) {
++		if (READ_ONCE(chunk->state) != XFS_GC_BIO_DONE)
++			break;
++		xfs_zone_gc_write_chunk(chunk);
++	}
++	blk_finish_plug(&plug);
++
++	blk_start_plug(&plug);
++	while (xfs_zone_gc_start_chunk(data))
++		;
++	blk_finish_plug(&plug);
++	return true;
++}
++
++/*
++ * Note that the current GC algorithm would break reflinks and thus duplicate
++ * data that was shared by multiple owners before.  Because of that reflinks
++ * are currently not supported on zoned file systems and can't be created or
++ * mounted.
++ */
++static int
++xfs_zoned_gcd(
++	void			*private)
++{
++	struct xfs_zone_gc_data	*data = private;
++	struct xfs_mount	*mp = data->mp;
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++	unsigned int		nofs_flag;
++
++	nofs_flag = memalloc_nofs_save();
++	set_freezable();
++
++	for (;;) {
++		set_current_state(TASK_INTERRUPTIBLE | TASK_FREEZABLE);
++		xfs_set_zonegc_running(mp);
++		if (xfs_zone_gc_handle_work(data))
++			continue;
++
++		if (list_empty(&data->reading) &&
++		    list_empty(&data->writing) &&
++		    list_empty(&data->resetting) &&
++		    !zi->zi_reset_list) {
++			xfs_clear_zonegc_running(mp);
++			xfs_zoned_resv_wake_all(mp);
++
++			if (kthread_should_stop()) {
++				__set_current_state(TASK_RUNNING);
++				break;
++			}
++
++			if (kthread_should_park()) {
++				__set_current_state(TASK_RUNNING);
++				kthread_parkme();
++				continue;
++			}
++		}
++
++		schedule();
++	}
++	xfs_clear_zonegc_running(mp);
++
++	if (data->iter.victim_rtg)
++		xfs_rtgroup_rele(data->iter.victim_rtg);
++
++	memalloc_nofs_restore(nofs_flag);
++	xfs_zone_gc_data_free(data);
++	return 0;
++}
++
++void
++xfs_zone_gc_start(
++	struct xfs_mount	*mp)
++{
++	if (xfs_has_zoned(mp))
++		kthread_unpark(mp->m_zone_info->zi_gc_thread);
++}
++
++void
++xfs_zone_gc_stop(
++	struct xfs_mount	*mp)
++{
++	if (xfs_has_zoned(mp))
++		kthread_park(mp->m_zone_info->zi_gc_thread);
++}
++
++int
++xfs_zone_gc_mount(
++	struct xfs_mount	*mp)
++{
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++	struct xfs_zone_gc_data	*data;
++	struct xfs_open_zone	*oz;
++	int			error;
++
++	/*
++	 * If there are no free zones available for GC, pick the open zone with
++	 * the least used space to GC into.  This should only happen after an
++	 * unclean shutdown near ENOSPC while GC was ongoing.
++	 *
++	 * We also need to do this for the first gc zone allocation if we
++	 * unmounted while at the open limit.
++	 */
++	if (!xfs_group_marked(mp, XG_TYPE_RTG, XFS_RTG_FREE) ||
++	    zi->zi_nr_open_zones == mp->m_max_open_zones)
++		oz = xfs_zone_gc_steal_open(zi);
++	else
++		oz = xfs_open_zone(mp, true);
++	if (!oz) {
++		xfs_warn(mp, "unable to allocate a zone for gc");
++		error = -EIO;
++		goto out;
++	}
++
++	trace_xfs_zone_gc_target_opened(oz->oz_rtg);
++	zi->zi_open_gc_zone = oz;
++
++	data = xfs_zone_gc_data_alloc(mp);
++	if (!data) {
++		error = -ENOMEM;
++		goto out_put_gc_zone;
++	}
++
++	mp->m_zone_info->zi_gc_thread = kthread_create(xfs_zoned_gcd, data,
++			"xfs-zone-gc/%s", mp->m_super->s_id);
++	if (IS_ERR(mp->m_zone_info->zi_gc_thread)) {
++		xfs_warn(mp, "unable to create zone gc thread");
++		error = PTR_ERR(mp->m_zone_info->zi_gc_thread);
++		goto out_free_gc_data;
++	}
++
++	/* xfs_zone_gc_start will unpark for rw mounts */
++	kthread_park(mp->m_zone_info->zi_gc_thread);
++	return 0;
++
++out_free_gc_data:
++	kfree(data);
++out_put_gc_zone:
++	xfs_open_zone_put(zi->zi_open_gc_zone);
++out:
++	return error;
++}
++
++void
++xfs_zone_gc_unmount(
++	struct xfs_mount	*mp)
++{
++	struct xfs_zone_info	*zi = mp->m_zone_info;
++
++	kthread_stop(zi->zi_gc_thread);
++	if (zi->zi_open_gc_zone)
++		xfs_open_zone_put(zi->zi_open_gc_zone);
++}
+diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
+index 5283d77482d4..f6c76d751a49 100644
+--- a/fs/xfs/xfs_zone_priv.h
++++ b/fs/xfs/xfs_zone_priv.h
+@@ -40,6 +40,13 @@ struct xfs_open_zone {
+ 	struct xfs_rtgroup	*oz_rtg;
+ };
  
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index b977930c4ebc..cc3b4df88110 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1532,7 +1532,7 @@ xfs_reflink_zero_posteof(
- 		return 0;
++/*
++ * Number of bitmap buckets to track reclaimable zones.  There are 10 buckets
++ * so that each 10% of the usable capacity get their own bucket and GC can
++ * only has to walk the bitmaps of the lesser used zones if there are any.
++ */
++#define XFS_ZONE_USED_BUCKETS		10u
++
+ struct xfs_zone_info {
+ 	/*
+ 	 * List of pending space reservations:
+@@ -82,10 +89,24 @@ struct xfs_zone_info {
+ 	 */
+ 	spinlock_t		zi_reset_list_lock;
+ 	struct xfs_group	*zi_reset_list;
++
++	/*
++	 * A set of bitmaps to bucket-sort reclaimable zones by used blocks to help
++	 * garbage collection to quickly find the best candidate for reclaim.
++	 */
++	spinlock_t		zi_used_buckets_lock;
++	unsigned int		zi_used_bucket_entries[XFS_ZONE_USED_BUCKETS];
++	unsigned long		*zi_used_bucket_bitmap[XFS_ZONE_USED_BUCKETS];
++
+ };
  
- 	trace_xfs_zero_eof(ip, isize, pos - isize);
--	return xfs_zero_range(ip, isize, pos - isize, NULL);
-+	return xfs_zero_range(ip, isize, pos - isize, NULL, NULL);
- }
+ struct xfs_open_zone *xfs_open_zone(struct xfs_mount *mp, bool is_gc);
  
- /*
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7de1ed0ca13a..86443395b1a3 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1742,6 +1742,7 @@ DEFINE_SIMPLE_IO_EVENT(xfs_end_io_direct_write);
- DEFINE_SIMPLE_IO_EVENT(xfs_end_io_direct_write_unwritten);
- DEFINE_SIMPLE_IO_EVENT(xfs_end_io_direct_write_append);
- DEFINE_SIMPLE_IO_EVENT(xfs_file_splice_read);
-+DEFINE_SIMPLE_IO_EVENT(xfs_zoned_map_blocks);
++int xfs_zone_gc_reset_sync(struct xfs_rtgroup *rtg);
++bool xfs_zoned_need_gc(struct xfs_mount *mp);
++int xfs_zone_gc_mount(struct xfs_mount *mp);
++void xfs_zone_gc_unmount(struct xfs_mount *mp);
++
+ void xfs_zoned_resv_wake_all(struct xfs_mount *mp);
  
- DECLARE_EVENT_CLASS(xfs_itrunc_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size),
+ #endif /* _XFS_ZONE_PRIV_H */
+diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
+index eff9be026425..4bf1b18aa7a7 100644
+--- a/fs/xfs/xfs_zone_space_resv.c
++++ b/fs/xfs/xfs_zone_space_resv.c
+@@ -159,6 +159,15 @@ xfs_zoned_reserve_available(
+ 		if (error != -ENOSPC)
+ 			break;
+ 
++		/*
++		 * If there is no reclaimable group left and we aren't still
++		 * processing a pending GC request give up as we're fully out
++		 * of space.
++		 */
++		if (!xfs_group_marked(mp, XG_TYPE_RTG, XFS_RTG_RECLAIMABLE) &&
++		    !xfs_is_zonegc_running(mp))
++			break;
++
+ 		spin_unlock(&zi->zi_reservation_lock);
+ 		schedule();
+ 		spin_lock(&zi->zi_reservation_lock);
 -- 
 2.45.2
 
