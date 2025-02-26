@@ -1,72 +1,73 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45EA0221739
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 14:50:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4DA72222A1
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 14:50:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740581454; cv=none; b=IbFxHabNCeW58g7OQrPNvLCpFppX+Nf721PkRhlO8/y1r7snU4W0VVyy87EKAnq5i830g66ZwzuK8caAjBzgKOiZ8g6cijA5Q+ePnt7jhCvUqxkfDDvzJZzvR+PaUBezMhRtGWDXFlaW0JYga6tN5/VxACQnvV30ERlmySyd4tQ=
+	t=1740581457; cv=none; b=kkTWwNHU0F7u5l/fOKs5sqdu5JJVIk8IWP+Ry8aAYwBeVaYEyf14wrT4a5RkArnERt+G6Qfw8RWYjwUNjvppky4R4CWhhfRxjBWfxLMDS0quNVQwb41kWL/6FXKSKIWb/vfnZcI0/yz0B1A1SdxY4aQZFeL+bv/zBj3YjcRGqfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740581454; c=relaxed/simple;
-	bh=r8NE2PVa/ZrAaOBQWgPWkabf8eqQcrLO6lplelO8GLk=;
+	s=arc-20240116; t=1740581457; c=relaxed/simple;
+	bh=peniH+DoGXFkb53GxKcQx5eQOqXnoRSKLDoia0Z9haM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=KwNZerBKAD1ja2v5myukn4C6cqx9KeflWkJvXRMsxTtwGrKAUpcOjJfOzU5AAPZ9JsxHX5DXP3sUa1a8zi+nSBJHE4dCE+CPNXwqtDpZMVW1zD5bwIz4Ei0hkpR1LJcAB9MPLIAIegEc3GWwT5J3hvHzgXbhMPStHIdERBqiGDo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=i+KQQhAX; arc=none smtp.client-ip=170.10.129.124
+	 In-Reply-To:To:Cc; b=MMQvmDQNGxdpty8oDIeoB34cFZ8etHMPyeTHjjVWsTsR9bc8572y7noARRnRs8h6pwBa5XPvt0donU3DdCbrgHav6CY03uPhVrxrbNinA4DMBiDbLAQrYxrCvsvcCt5wcdMuf0U7CADH1lHMG9DVTuAYYvO/QXcLDTAm7umMxn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EOtSSbHg; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i+KQQhAX"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EOtSSbHg"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740581452;
+	s=mimecast20190719; t=1740581454;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=6p3yZF2ojbKPOjvfClYCWTgw5eOy5VAaFnC3+essAGY=;
-	b=i+KQQhAXNFJs1In9NQmqLxYoh5Lgd7jr2eBGXW/a4MjUeqznyY8T5PeLZS07z/RDzAIy8f
-	+hs6RLRkcvNC6PZpFUb5SCwExtowaZSM9M9Q6bZZSLa3n2dxOHanqqQefGH/xD/1hvfHlA
-	nZr+T5RsuvpjKzBBkdkQ+eIBSD526MI=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=DKpCQd9SYnqagMEVbWdcxpNkMgcZ1ncGzrsX/EvMtTE=;
+	b=EOtSSbHg/ISprvO7y/X5VqKAvrMceIxcvLnF5S5qL14XQP7/aWxInyIa/MxUtPiOoNg2OL
+	q8Wu3dmlRvt6Z7xEz1hYsFGEqWGjweUkf0ozVV+yFIekyt6edWW6DEYOlaWQsKSYVl/xzG
+	QoALFvePIUzrv+XKzqzroXHgt7/3XUw=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-661-l5T_VMSSN6yDpo3pof7jng-1; Wed, 26 Feb 2025 09:50:48 -0500
-X-MC-Unique: l5T_VMSSN6yDpo3pof7jng-1
-X-Mimecast-MFC-AGG-ID: l5T_VMSSN6yDpo3pof7jng_1740581447
-Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-abbaac605c3so688992566b.0
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 06:50:48 -0800 (PST)
+ us-mta-606-oFExS77OO2eTksGtb6X6Fw-1; Wed, 26 Feb 2025 09:50:52 -0500
+X-MC-Unique: oFExS77OO2eTksGtb6X6Fw-1
+X-Mimecast-MFC-AGG-ID: oFExS77OO2eTksGtb6X6Fw_1740581452
+Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-5e067bbd3bcso7099510a12.3
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 06:50:52 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740581447; x=1741186247;
+        d=1e100.net; s=20230601; t=1740581451; x=1741186251;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=6p3yZF2ojbKPOjvfClYCWTgw5eOy5VAaFnC3+essAGY=;
-        b=wk0P+99T8gv468HpO5aVecPQKoR9tc3EBbOCj/kSykqiri9M+c7qRvO6CLX88KUlQU
-         Uqh95uddIlRyl0GAM6MHkhUGIC3TI0G7x39lq6n+xaCDC/uXAbtkcOLm4uJhqoNcS04H
-         4vjebcu5Ku+zmo6XKWyZEMkPyExCiMVsSoRs/omAvuKqtxxCYbkr/QLR8+JRdjh0l93W
-         GEThKB8Zq8rgCVPOATG1BziMkcUus//yYRBeMzl9TK7uf7f8xTYponbSlVF1JhEfou20
-         /ood8K9fSVvg77javboZzw3ukXrdVr8Q4mxjkATUeVIjO7RFFS+xzPflHNY1bji8FeMf
-         hc2Q==
-X-Gm-Message-State: AOJu0Yxv2VNJyRgHxbogvQ1x+ofM5M/7RjDzhQkeqO33G8pHQFzt5wGu
-	bwhD6EKypk+NDAwooHUd1weN3qKfsPApYNSnOfDv5eX0YTS2nxpRVspm88I3W3lm7j9BAqdKjCr
-	5nr/aykiraUyGRrivg16EPWV9kUPUMQ63IUtiAXO1MWoBkdz/IoY4NVCW
-X-Gm-Gg: ASbGnctSejpTGT83Qk6QNOTN0lCUlQtsobssw9B8wSdFd47RSEqtA5Ep8OYtqT8QV5D
-	wnpcGb7zNpVtcA9Vy1WoE3UaizQbSpTnioseBnDFJ+rjAkyMy1DeDGfnwzyNCcqM4cLuhgt+P9p
-	TAueXru1R4q7sQY2WFpPpHyiLvXPHx38ymSYPTsPv+BNAAUGYrugSRvggx0P3yDDSoBl4hwgGGo
-	qQb+VrtffrUEaogCF5+7c7Z8qWsPe9g9/LO5mJPbkD9iuWA1yhyraaWgQTLIOCfAWX8K7YLqWCG
-	XDnQrrQiIXfQKzqfy2NfR6BC+pFcE3Y/PNwxpiS8Fw==
-X-Received: by 2002:a17:906:c148:b0:aae:85a9:e2d with SMTP id a640c23a62f3a-abc0de13a1emr2471887666b.45.1740581446022;
-        Wed, 26 Feb 2025 06:50:46 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEAC9hG7oEXuq9BTFXg/wurwmCZ+o1EQgn4SBBoWHeX0Ql0tr3Zf8OXDOKSYpkPCC+iQ2c6Ug==
-X-Received: by 2002:a17:906:c148:b0:aae:85a9:e2d with SMTP id a640c23a62f3a-abc0de13a1emr2471884566b.45.1740581445661;
-        Wed, 26 Feb 2025 06:50:45 -0800 (PST)
+        bh=DKpCQd9SYnqagMEVbWdcxpNkMgcZ1ncGzrsX/EvMtTE=;
+        b=SIsy2f8MHXXmRIAGYldQ9knAhOmwsiYaMUbHM36GqWorMm6OEfsXtUHUZhZfNudMkh
+         BKEhDYeHt35FPNfFLJ36DH3MI894RtrLt32Jd3/xDyJG6DFuCZaGuDEYj6Q2XNWSmWy/
+         IeF16IbrjcZ8GlGCdsUzzh0K86WbzP5LOWWtq6y2g2yO39Wcg0ln3zVqRLBcglP14JFR
+         y2AnG8M39+5WJ0Rud4QIJMjt6arkpC+zQRa1sT142/qWJm2P+yQaEmTpz4xuPleYx4Te
+         g1sbbF2ZlCCSpSlZzsgSxSmqZsnpMW7WOhTvrfNhIibdZxTXWo7GCU8dKA/xS6L340oj
+         o6KA==
+X-Gm-Message-State: AOJu0YzhQGP8hYRwuzET3JWkHgB+FCxeNIOnBjaGQNOx7Q3HkAo0Ehrg
+	dpbohx0bsBI1x7dkZrgjF9UiWOjgmMNiqeG+KGZuhN6AwbmRuGeaTlt38yC9YH1UFPiUm8aNLtA
+	FKNj7pm08o8Nm52B2SezqXij0VLLc/VMjtzdz0qYav5I9jyFV73ApnGzy
+X-Gm-Gg: ASbGncunEN7802LPeTtJ3MmsIdvK1mcuuFzkTRFV9vfZbY5KulYKXFDS/pR+3gVZLh9
+	9Eh7D4XIzGmtZCQoj6S5WSuSz8ExjItoPu0m/PFTo6BpXfp9D8e9FBKhmyzHIq5up1olU8+EVL0
+	+FultIpxEXtlOGgYgq4WJeB5RI229HxSBOoSIPf8KcmXw+M4GCDy4v5hZSLKL8SHibuuLX4UNLi
+	KdwLbhCovlbamCMHC/NRGhI6kBWHEJdNEROBIgkyxkmQgGZoTGHULIwEYqUzCNmS8l8UvBSLo0L
+	tpfs2/yb4cDyRlIqjybWxqR5BrPd4IXdNjO46kYrpw==
+X-Received: by 2002:a17:906:3081:b0:ab7:fc9a:28e2 with SMTP id a640c23a62f3a-abed1068fafmr747038866b.47.1740581451551;
+        Wed, 26 Feb 2025 06:50:51 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IG2pTtCfXtsrDPD11Mmq827lwbTroShh8zdKbUE+ErRya7j0cWOEej+b0XdfewXOUMnFLV6IA==
+X-Received: by 2002:a17:906:3081:b0:ab7:fc9a:28e2 with SMTP id a640c23a62f3a-abed1068fafmr747036166b.47.1740581451136;
+        Wed, 26 Feb 2025 06:50:51 -0800 (PST)
 Received: from [127.0.0.2] (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abed1cd564esm337731666b.21.2025.02.26.06.50.44
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abed1cd564esm337731666b.21.2025.02.26.06.50.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Feb 2025 06:50:45 -0800 (PST)
+        Wed, 26 Feb 2025 06:50:48 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Wed, 26 Feb 2025 15:50:26 +0100
-Subject: [PATCH v5 01/10] release.sh: add signing and fix outdated commands
+Date: Wed, 26 Feb 2025 15:50:30 +0100
+Subject: [PATCH v5 05/10] git-contributors: better handling of hash
+ mark/multiple emails
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,89 +76,162 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250226-update-release-v5-1-481914e40c36@kernel.org>
+Message-Id: <20250226-update-release-v5-5-481914e40c36@kernel.org>
 References: <20250226-update-release-v5-0-481914e40c36@kernel.org>
 In-Reply-To: <20250226-update-release-v5-0-481914e40c36@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: "Darrick J. Wong" <djwong@kernel.org>, 
  Andrey Albershteyn <aalbersh@kernel.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2042; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=r8NE2PVa/ZrAaOBQWgPWkabf8eqQcrLO6lplelO8GLk=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0vdrOavWvutMWTPjws9p36W98p9fey3lM1fzzAbZY
- 7naOokOjmwdpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJuK7nuEXE5PkDg+Rq9w3
- v79tUOf92Xfsg1PgljJLrs8B5Rn2duLLGBk2bw33iFu2RGpDZPljbcG5l1Ufz/Q42/zrZn3uKqV
- c7RoOAPStRgs=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5847; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=peniH+DoGXFkb53GxKcQx5eQOqXnoRSKLDoia0Z9haM=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0vdrOespCu7RClbzzmhz2nthzbV7Ky6+nJ8gdKnGf
+ pOJLsOXrY4dpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJnLoH8P/ki6zyv7kZZl+
+ +rkaBX43PuVHn47se3zub53j/Dv8U76wMzK0Sv6QXmLys7BCQC7503PTrrlehqsyfat6/kpt3xU
+ RksUKAPDrR1o=
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
 
+Better handling of hash mark, tags with multiple emails and not
+quoted names in emails. See comments in the script.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- release.sh | 33 ++++++++++++++++++++++++++++-----
- 1 file changed, 28 insertions(+), 5 deletions(-)
+ tools/git-contributors.py | 109 ++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 90 insertions(+), 19 deletions(-)
 
-diff --git a/release.sh b/release.sh
-index 577257a354d442e1cc0a2b9381b11ffbe2f64a71..ea08ab334954e5b8aa40278a40cf7aceec2488cc 100755
---- a/release.sh
-+++ b/release.sh
-@@ -9,6 +9,8 @@
- # configure.ac (with new version string)
- # debian/changelog (with new release entry, only for release version)
+diff --git a/tools/git-contributors.py b/tools/git-contributors.py
+index 70ac8abb26c8ce65de336c5ae48abcfee39508b2..1a0f2b80e3dad9124b86b29f8507389ef91fe813 100755
+--- a/tools/git-contributors.py
++++ b/tools/git-contributors.py
+@@ -37,35 +37,106 @@ class find_developers(object):
  
-+set -e
+         self.r1 = re.compile(regex1, re.I)
+ 
++        # regex to guess if this is a list of multiple addresses.
++        # Not sure why the initial "^.*" is needed here.
++        self.r2 = re.compile(r'^.*,[^,]*@[^@]*,[^,]*@', re.I)
 +
- . ./VERSION
- 
- version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
-@@ -16,21 +18,42 @@ date=`date +"%-d %B %Y"`
- 
- echo "Cleaning up"
- make realclean
-+rm -rf "xfsprogs-${version}.tar" \
-+	"xfsprogs-${version}.tar.gz" \
-+	"xfsprogs-${version}.tar.asc" \
-+	"xfsprogs-${version}.tar.sign"
- 
- echo "Updating CHANGES"
- sed -e "s/${version}.*/${version} (${date})/" doc/CHANGES > doc/CHANGES.tmp && \
- 	mv doc/CHANGES.tmp doc/CHANGES
- 
- echo "Commiting CHANGES update to git"
--git commit -a -m "${version} release"
-+git commit --all --signoff --message="xfsprogs: Release v${version}
++        # regex to match on anything inside a pair of angle brackets
++        self.r3 = re.compile(r'^.*<(.+)>', re.I)
 +
-+Update all the necessary files for a v${version} release."
- 
- echo "Tagging git repository"
--git tag -a -m "${version} release" v${version}
-+git tag --annotate --sign --message="Release v${version}" v${version}
- 
- echo "Making source tarball"
- make dist
-+gunzip -k "xfsprogs-${version}.tar.gz"
- 
--#echo "Sign the source tarball"
--#gpg --detach-sign xfsprogs-${version}.tar.gz
-+echo "Sign the source tarball"
-+gpg \
-+	--detach-sign \
-+	--armor \
-+	"xfsprogs-${version}.tar"
- 
--echo "Done.  Please remember to push out tags using \"git push --tags\""
-+echo "Verify signature"
-+gpg \
-+	--verify \
-+	"xfsprogs-${version}.tar.asc"
-+if [ $? -ne 0 ]; then
-+	echo "Can not verify signature of tarball"
-+	exit 1
-+fi
++    def _handle_addr(self, addr):
++        # The next split removes everything after an octothorpe (hash
++        # mark), because someone could have provided an improperly
++        # formatted email address:
++        #
++        # Cc: stable@vger.kernel.org # v6.19+
++        #
++        # This, according to my reading of RFC5322, is allowed because
++        # octothorpes can be part of atom text.  However, it is
++        # interepreted as if there weren't any whitespace
++        # ("stable@vger.kernel.org#v6.19+").  The grammar allows for
++        # this form, even though this is not a correct Internet domain
++        # name.
++        #
++        # Worse, if you follow the format specified in the kernel's
++        # SubmittingPatches file:
++        #
++        # Cc: <stable@vger.kernel.org> # v6.9
++        #
++        # emailutils will not know how to parse this, and returns empty
++        # strings.  I think this is because the angle-addr
++        # specification allows only whitespace between the closing
++        # angle bracket and the CRLF.
++        #
++        # Hack around both problems by ignoring everything after an
++        # octothorpe, no matter where it occurs in the string.  If
++        # someone has one in their name or the email address, too bad.
++        a = addr.split('#')[0]
 +
-+mv "xfsprogs-${version}.tar.asc" "xfsprogs-${version}.tar.sign"
++        # emailutils can extract email addresses from headers that
++        # roughly follow the destination address field format:
++        #
++        # Reviewed-by: Bogus J. Simpson <bogus@simpson.com>
++        # Reviewed-by: "Bogus J. Simpson" <bogus@simpson.com>
++        # Reviewed-by: bogus@simpson.com
++        #
++        # Use it to extract the email address, because we don't care
++        # about the display name.
++        (name, addr) = email.utils.parseaddr(a)
++        if DEBUG:
++            print(f'A:{a}:NAME:{name}:ADDR:{addr}:')
++        if len(addr) > 0:
++            return addr
 +
-+echo "Done. Please remember to push out tags using \"git push origin v${version}\""
++        # If emailutils fails to find anything, let's see if there's
++        # a sequence of characters within angle brackets and hope that
++        # is an email address.  This works around things like:
++        #
++        # Reported-by: Xu, Wen <wen.xu@gatech.edu>
++        #
++        # Which should have had the name in quotations because there's
++        # a comma.
++        m = self.r3.match(a)
++        if m:
++            addr = m.expand(r'\g<1>')
++            if DEBUG:
++                print(f"M3:{addr}:M:{m}:")
++            return addr
++
++        # No idea, just spit the whole thing out and hope for the best.
++        return a
++
+     def run(self, lines):
+         addr_list = []
+ 
+         for line in lines:
+             l = line.strip()
+ 
+-            # emailutils can handle abominations like:
+-            #
+-            # Reviewed-by: Bogus J. Simpson <bogus@simpson.com>
+-            # Reviewed-by: "Bogus J. Simpson" <bogus@simpson.com>
+-            # Reviewed-by: bogus@simpson.com
+-            # Cc: <stable@vger.kernel.org> # v6.9
+-            # Tested-by: Moo Cow <foo@bar.com> # powerpc
++            # First, does this line match any of the headers we
++            # know about?
+             m = self.r1.match(l)
+             if not m:
+                 continue
+-            (name, addr) = email.utils.parseaddr(m.expand(r'\g<2>'))
++            rightside = m.expand(r'\g<2>')
+ 
+-            # This last split removes anything after a hash mark,
+-            # because someone could have provided an improperly
+-            # formatted email address:
+-            #
+-            # Cc: stable@vger.kernel.org # v6.19+
+-            #
+-            # emailutils doesn't seem to catch this, and I can't
+-            # fully tell from RFC2822 that this isn't allowed.  I
+-            # think it is because dtext doesn't forbid spaces or
+-            # hash marks.
+-            addr_list.append(addr.split('#')[0])
++            n = self.r2.match(rightside)
++            if n:
++                # Break the line into an array of addresses,
++                # delimited by commas, then handle each
++                # address.
++                addrs = rightside.split(',')
++                if DEBUG:
++                    print(f"0LINE:{rightside}:ADDRS:{addrs}:M:{n}")
++                for addr in addrs:
++                    a = self._handle_addr(addr)
++                    addr_list.append(a)
++            else:
++                # Otherwise treat the line as a single email
++                # address.
++                if DEBUG:
++                    print(f"1LINE:{rightside}:M:{n}")
++                a = self._handle_addr(rightside)
++                addr_list.append(a)
+ 
+         return sorted(set(addr_list))
+ 
 
 -- 
 2.47.2
