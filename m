@@ -1,99 +1,211 @@
-Received: from mail-il1-f171.google.com (mail-il1-f171.google.com [209.85.166.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9104B20CCEB
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 17:30:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7386B2248BA
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 17:33:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740591010; cv=none; b=hVFSyUZ4PHWQpfvyeOG+qWq1NE/LHdYy50zCXip2amRzqDCmgnLZMZTFC26PhhVy54DSGfmrNJwOW6JVOVJkYzYDxBpu81DMluiQgKW2/x9V/n/asxb/trDz6QO/yJHGRTJiLJ1v6QIxmpQoTX+5WXllx3cX2f/b/onS4lEpZ0M=
+	t=1740591215; cv=none; b=Q61bG0x0fJesXO1EF2dwhsH7Zejaup7G+aKyYeFiDTuAfqfKyo1OsdNOOwbvBYa7hKVfSaoObJWqmqAGvfkF3fVF0OMETBaQnPMMqLCJ8fTJliAACAh6dVT96b99NW9RK/qsxeD9NrQvjO3OXsCoMcAVNxtRCHye1YMjDrxo5Mk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740591010; c=relaxed/simple;
-	bh=K3UGITGRipM7p76j5dqZhf82Lz+6ZzCI3IDP+V/gDS4=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=px4BF7qJ3t3hLq56UL3Kg6AcWVG1JI1oTLEfVZMOKL+ITowY8NDW2+HgBst4l+DzBk8UEEeNNN6iIJlXvyIk/JKuPR1Ds6loBkpcOt0Mlz2O4FEPCOdaFe3lR4cLawM3I3gc/8PpZq9siForhqVmfGB/OYV0udt5wWWSI0TQaAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=cQCZq8Eh; arc=none smtp.client-ip=209.85.166.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1740591215; c=relaxed/simple;
+	bh=9CpYPT5d9Ff9y6Osys4fCcYFB0FPJbD1v2v5Mxw80VQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eMQbWjh+OcsBgCMiYsOCA60zm7IhPw7nVWzSLvHyTYrB/uAl92X7LsInB4iWzaS6UHMFTdOD94EuAwPrlb+Y/s/aIFCZKkDqP8hZEVUnnl8ncertB3ZIBHfQwTRlTlstDhtF9Ny+GuVGOokvXS9TyQCJPj/Eeu8V47dRhfwoXv4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rjO88dWy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="cQCZq8Eh"
-Received: by mail-il1-f171.google.com with SMTP id e9e14a558f8ab-3d2b3811513so3885095ab.1
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 09:30:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1740591007; x=1741195807; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=lVANN8GELxA2LEZTYYuOIhpjLMR/AaCWMuZrSOMGLrc=;
-        b=cQCZq8Eh8wytrbvhFMn53yUpCmDdNAz97WmlsGHXIDVQqNdkqrMn3JX04fuUueXB4a
-         3y4jcBPn5tnIaiIey1EbnmsmB5ZaNQBcvbvDmnL7KOdF9MeugHdfxJWngr18TLcxKvE6
-         ebJZ9M2l288fYcmTdU9fGhm+P6wYJ/N0j7Ppi6r5Wqpx4LLFXf9iBmV2v7x66RqKv+4k
-         Kt75CCw7oQZ+i7O6DRtxF+jBOevryDFMvPEXGjlANyee6s2FUDaxU2f2mTqNIS8ON+Go
-         w7Rr/4g9EOfy6vA0u45w2DISLtGLRZep3ToyYRY/v6wAarRH8wkGFeqB2xsLJIIM7r7/
-         96eA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740591007; x=1741195807;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lVANN8GELxA2LEZTYYuOIhpjLMR/AaCWMuZrSOMGLrc=;
-        b=wMjgadGWuUpVYL4PZ0rlLE4+c542oyB+fDZPRIC4DMW6IoMeGSKL1j/gXb8lrthFaL
-         6RqodGIlR3dHgHCtIfky5IzskoVvOEYR4PJ5Tdg5xO5n6zz7E2aDwpf6d0DeJ+UW+7po
-         v+9olFBA1nt63ZwRZKc7h1QShCMtkGl+DdEAH/J4vf/hE+klNRSOWpZG3GmPtHgv/kPG
-         FpSzJGCgrtdIjLwBMAK2Xx/B3ulPvlS9H6L/2jHwmtrYpxSgiHfeLlWe11Gt3FzH521X
-         fTI6nhho1h8KqqF3vWgM19UavcbN6Ps7uyPmEepBfQVm6oVvwAovYf7d5jNutRwSO2DQ
-         4ymQ==
-X-Gm-Message-State: AOJu0Ywx5S9AHI5XS628mr3FKF2hH6xKcqzJzwpWR0KARYPNMK7pnkNR
-	5AAhyLBsao/ujsoM6ncBOs18FOLKuxUEg4Yt5kKpV3P50xfvuySpW7c5QOCxtdmABJ6xYpKw1sd
-	C
-X-Gm-Gg: ASbGncuR+cmi+/EibT/IgRW3yCtPIPXSUNEl5aQ6DVuIahDfGUApXaSBodSAmYNwbOT
-	XzVkayKw85WbdFy3gPnFBR9Q6lnvLtOMAwYNE8gxNmo5XoGevqveGzars+2fx/YwPgqN5mvri1j
-	wGo7nPDrLv6vBJk0vu1goAAaJ+aZkVXcmIf6SNq3SD20NVeqy+lO+Emxj0gKtw3+fatj5eYOtOT
-	CJY6sx8cesVlmqmEGp5RDdiAeohAWV2VL+sSbvALQeTnwo7FaukNszjgI4++nlkRXvTiHx3F6Nl
-	NkGZ5+0YfuOPfK9G2bpzIA==
-X-Google-Smtp-Source: AGHT+IE08XKenNtq+bMrYzA9dT3+ZDEykgqaeLAjmo+xmDFjtzY5WSOX0WPToZEER5xGTORC4ixEjA==
-X-Received: by 2002:a05:6e02:2188:b0:3d1:9bca:cf28 with SMTP id e9e14a558f8ab-3d3dd2e9deemr2357195ab.8.1740591007529;
-        Wed, 26 Feb 2025 09:30:07 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d361653616sm8894395ab.25.2025.02.26.09.30.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 26 Feb 2025 09:30:06 -0800 (PST)
-Message-ID: <ba718fc2-08ba-4d7e-98f9-47f3f52c13a8@kernel.dk>
-Date: Wed, 26 Feb 2025 10:30:05 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rjO88dWy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE474C4CED6;
+	Wed, 26 Feb 2025 17:33:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740591213;
+	bh=9CpYPT5d9Ff9y6Osys4fCcYFB0FPJbD1v2v5Mxw80VQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rjO88dWyaNCRpHJPHsz1T+sQXQuTwNqX5WK06qlSjuRjsfqQqp/dRrzux6yWA06qW
+	 4yHztZNA0fBRilS/q+OFh6GQhgdnTSnMphBedebHYVDtfUHZ9vJT0w60xPR3vQgXd2
+	 EEGvI1qNT9nQB6kCpXlmXHnmxhMiHk9wqnB7IkFDnWoSt6teM0VIlf0XfSLU7KShRk
+	 EKavJtdWg884Z10YXPtOKou1gXLi75C6jyrcnd7sIgusINm9fnCTTI+YnXwlz44dGs
+	 AUEh6kwNbWaSCWKpvE+5UKKigHE4VbBch/wtonpHnHmbNhTLohnl4cgQPdBWrwGT3+
+	 nqIH1g+5XDNDQ==
+Date: Wed, 26 Feb 2025 09:33:33 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/12] xfs: convert buffer cache to use high order folios
+Message-ID: <20250226173333.GR6242@frogsfrogsfrogs>
+References: <20250226155245.513494-1-hch@lst.de>
+ <20250226155245.513494-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHSET v2 0/2] Add XFS support for RWF_DONTCACHE
-From: Jens Axboe <axboe@kernel.dk>
-To: cem@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-References: <20250204184047.356762-1-axboe@kernel.dk>
-Content-Language: en-US
-In-Reply-To: <20250204184047.356762-1-axboe@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250226155245.513494-8-hch@lst.de>
 
-On 2/4/25 11:39 AM, Jens Axboe wrote:
-> Hi,
+On Wed, Feb 26, 2025 at 07:51:35AM -0800, Christoph Hellwig wrote:
+> Now that we have the buffer cache using the folio API, we can extend
+> the use of folios to allocate high order folios for multi-page
+> buffers rather than an array of single pages that are then vmapped
+> into a contiguous range.
 > 
-> Now that the main bits are in mainline, here are the XFS patches for
-> adding RWF_DONTCACHE support. It's pretty trivial - patch 1 adds the
-> basic iomap flag and check, and patch 2 flags FOP_DONTCACHE support
-> in the file_operations struct. Could be folded into a single patch
-> at this point, I'll leave that up to you guys what you prefer.
+> This creates a new type of single folio buffers that can have arbitrary
+> order in addition to the existing multi-folio buffers made up of many
+> single page folios that get vmapped.  The single folio is for now
+> stashed into the existing b_pages array, but that will go away entirely
+> later in the series and remove the temporary page vs folio typing issues
+> that only work because the two structures currently can be used largely
+> interchangeable.
 > 
-> Patches are aginst 6.14-rc1.
+> The code that allocates buffers will optimistically attempt a high
+> order folio allocation as a fast path if the buffer size is a power
+> of two and thus fits into a folio. If this high order allocation
+> fails, then we fall back to the existing multi-folio allocation
+> code. This now forms the slow allocation path, and hopefully will be
+> largely unused in normal conditions except for buffers with size
+> that are not a power of two like larger remote xattrs.
 > 
-> Since v1:
-> - Remove stale commit message paragraph
-> - Add comments for iomap flag from Darrick
+> This should improve performance of large buffer operations (e.g.
+> large directory block sizes) as we should now mostly avoid the
+> expense of vmapping large buffers (and the vmap lock contention that
+> can occur) as well as avoid the runtime pressure that frequently
+> accessing kernel vmapped pages put on the TLBs.
+> 
+> Based on a patch from Dave Chinner <dchinner@redhat.com>, but mutilated
+> beyond recognition.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_buf.c | 58 +++++++++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 52 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index f327bf5b04c0..3c582eaa656d 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -261,9 +261,10 @@ xfs_buf_free_pages(
+>  
+>  	for (i = 0; i < bp->b_page_count; i++) {
+>  		if (bp->b_pages[i])
+> -			__free_page(bp->b_pages[i]);
+> +			folio_put(page_folio(bp->b_pages[i]));
+>  	}
+> -	mm_account_reclaimed_pages(bp->b_page_count);
+> +	mm_account_reclaimed_pages(
+> +			DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE));
 
-Is this slated for 6.15? I don't see it in the tree yet, but I also
-don't see a lot of other things in there. Would be a shame to miss the
-next release on this front.
+Why do we round the number of bytes in the buffer up to base page size?
 
--- 
-Jens Axboe
+Don't we want howmany(BBTOB(bp->b_length), PAGE_SIZE) here?
+
+Oh wait, howmany *is* DIV_ROUND_UP.  Never mind...
+
+>  	if (bp->b_pages != bp->b_page_array)
+>  		kfree(bp->b_pages);
+> @@ -336,12 +337,17 @@ xfs_buf_alloc_kmem(
+>   * For tmpfs-backed buffers used by in-memory btrees this directly maps the
+>   * tmpfs page cache folios.
+>   *
+> - * For real file system buffers there are two different kinds backing memory:
+> + * For real file system buffers there are three different kinds backing memory:
+>   *
+>   * The first type backs the buffer by a kmalloc allocation.  This is done for
+>   * less than PAGE_SIZE allocations to avoid wasting memory.
+>   *
+> - * The second type of buffer is the multi-page buffer. These are always made
+> + * The second type is a single folio buffer - this may be a high order folio or
+> + * just a single page sized folio, but either way they get treated the same way
+> + * by the rest of the code - the buffer memory spans a single contiguous memory
+> + * region that we don't have to map and unmap to access the data directly.
+> + *
+> + * The third type of buffer is the multi-page buffer. These are always made
+>   * up of single pages so that they can be fed to vmap_ram() to return a
+>   * contiguous memory region we can access the data through, or mark it as
+>   * XBF_UNMAPPED and access the data directly through individual page_address()
+> @@ -354,6 +360,7 @@ xfs_buf_alloc_backing_mem(
+>  {
+>  	size_t		size = BBTOB(bp->b_length);
+>  	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOWARN;
+> +	struct folio	*folio;
+>  	long		filled = 0;
+>  
+>  	if (xfs_buftarg_is_mem(bp->b_target))
+> @@ -375,7 +382,46 @@ xfs_buf_alloc_backing_mem(
+>  	if (size < PAGE_SIZE && is_power_of_2(size))
+>  		return xfs_buf_alloc_kmem(bp, size, gfp_mask);
+>  
+> -	/* Make sure that we have a page list */
+> +	/* Assure zeroed buffer for non-read cases. */
+> +	if (!(flags & XBF_READ))
+> +		gfp_mask |= __GFP_ZERO;
+
+Didn't this get added ten lines up in "xfs: remove the kmalloc to page
+allocator fallback"?
+
+> +
+> +	/*
+> +	 * Don't bother with the retry loop for single PAGE allocations, there
+> +	 * is litte changes this can be better than the VM version.
+
+Er... I don't understand the second half of this sentence; is this what
+you're trying to communicate?:
+
+"Don't bother with the retry loop for single-page allocations; vmalloc
+won't do any better."
+
+> +	 */
+> +	if (size <= PAGE_SIZE)
+> +		gfp_mask |= __GFP_NOFAIL;
+> +
+> +	/*
+> +	 * Optimistically attempt a single high order folio allocation for
+> +	 * larger than PAGE_SIZE buffers.
+> +	 *
+> +	 * Allocating a high order folio makes the assumption that buffers are a
+> +	 * power-of-2 size, matching the power-of-2 folios sizes available.
+> +	 *
+> +	 * The exception here are user xattr data buffers, which can be arbitrarily
+> +	 * sized up to 64kB plus structure metadata, skip straight to the vmalloc
+> +	 * path for them instead of wasting memory.
+> +	 * here.
+
+Nit: "...path for them instead of wasting memory here."
+
+--D
+
+> +	 */
+> +	if (size > PAGE_SIZE && !is_power_of_2(size))
+> +		goto fallback;
+> +	folio = folio_alloc(gfp_mask, get_order(size));
+> +	if (!folio) {
+> +		if (size <= PAGE_SIZE)
+> +			return -ENOMEM;
+> +		goto fallback;
+> +	}
+> +	bp->b_addr = folio_address(folio);
+> +	bp->b_page_array[0] = &folio->page;
+> +	bp->b_pages = bp->b_page_array;
+> +	bp->b_page_count = 1;
+> +	bp->b_flags |= _XBF_PAGES;
+> +	return 0;
+> +
+> +fallback:
+> +	/* Fall back to allocating an array of single page folios. */
+>  	bp->b_page_count = DIV_ROUND_UP(size, PAGE_SIZE);
+>  	if (bp->b_page_count <= XB_PAGES) {
+>  		bp->b_pages = bp->b_page_array;
+> @@ -1529,7 +1575,7 @@ xfs_buf_submit_bio(
+>  	bio->bi_private = bp;
+>  	bio->bi_end_io = xfs_buf_bio_end_io;
+>  
+> -	if (bp->b_flags & _XBF_KMEM) {
+> +	if (bp->b_page_count == 1) {
+>  		__bio_add_page(bio, virt_to_page(bp->b_addr), size,
+>  				offset_in_page(bp->b_addr));
+>  	} else {
+> -- 
+> 2.45.2
+> 
+> 
