@@ -1,160 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f171.google.com (mail-il1-f171.google.com [209.85.166.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7308A225798
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 17:22:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9104B20CCEB
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 17:30:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740590552; cv=none; b=heJ7ZgtmvaAB1OGGW0EmrYhC2g9QelJsk23JRImyL7GUzmVM4ItSIjnRbiFP8glwG2b6pZQ5+cXs3VW9+yh7Q570/s2hf5vsDkJierOZ4wbE6BAJ4rzyjTFtG9/dx8RBpOeVWbTpjoZnN7GcDk75ewCKYcK2lYlLfzxN7qSqvkU=
+	t=1740591010; cv=none; b=hVFSyUZ4PHWQpfvyeOG+qWq1NE/LHdYy50zCXip2amRzqDCmgnLZMZTFC26PhhVy54DSGfmrNJwOW6JVOVJkYzYDxBpu81DMluiQgKW2/x9V/n/asxb/trDz6QO/yJHGRTJiLJ1v6QIxmpQoTX+5WXllx3cX2f/b/onS4lEpZ0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740590552; c=relaxed/simple;
-	bh=fcMoZggS3ud73TR5WBjbhmbf2JsYiD7ArWO8NlxtZwA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Og6HwyaW+WNEqoTFE/8UueXCe1CqVzBaQtn/e3c0uxnMMGXFgxAg3/VmIZNgZm6sJOXXoDeB04GI09HEgoiQNS6mQ+DoUU1HAEiOSqBuLcKSi602z3KX9qrtE9La7mIXiiXZicSw3HS78TEtu8kE2SBcwybWYr6oZ0JqTbDqk1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hHhqkHyi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740591010; c=relaxed/simple;
+	bh=K3UGITGRipM7p76j5dqZhf82Lz+6ZzCI3IDP+V/gDS4=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=px4BF7qJ3t3hLq56UL3Kg6AcWVG1JI1oTLEfVZMOKL+ITowY8NDW2+HgBst4l+DzBk8UEEeNNN6iIJlXvyIk/JKuPR1Ds6loBkpcOt0Mlz2O4FEPCOdaFe3lR4cLawM3I3gc/8PpZq9siForhqVmfGB/OYV0udt5wWWSI0TQaAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=cQCZq8Eh; arc=none smtp.client-ip=209.85.166.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hHhqkHyi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF520C4CEE8;
-	Wed, 26 Feb 2025 17:22:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740590551;
-	bh=fcMoZggS3ud73TR5WBjbhmbf2JsYiD7ArWO8NlxtZwA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hHhqkHyimOCAbd7UAyluxNZ0WR9CWMWATxJUMMBfF2i7OOcJG8tVuulImqNv9BcQr
-	 Nq1uWCtjlGDf+9XbIHKQucTrK+zcH6oZanMcvuaI0fCMjpYbitPudzgUhK8yC8z13R
-	 uKCLDjtBAtBtlIu8JZjaAhYoZUX4sPtSYmXk8h0gWUntUsJG8PnwE97tCMCju2Y8k2
-	 /xGeUhd2qGWBcW6uF2F1T7PgVLWjokqE+xndrf5QpoW1gcZ8iKvO/vJfNQE/G4fYlw
-	 0PgvAhDD2JZEIwikEFmErm8+t2LVrV3s4P1BZCgMHlDsxMnn8yUakNYR8bAH3A/W64
-	 DEBNhIbrJboDQ==
-Date: Wed, 26 Feb 2025 09:22:31 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/12] xfs: remove the kmalloc to page allocator fallback
-Message-ID: <20250226172231.GQ6242@frogsfrogsfrogs>
-References: <20250226155245.513494-1-hch@lst.de>
- <20250226155245.513494-7-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="cQCZq8Eh"
+Received: by mail-il1-f171.google.com with SMTP id e9e14a558f8ab-3d2b3811513so3885095ab.1
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 09:30:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1740591007; x=1741195807; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=lVANN8GELxA2LEZTYYuOIhpjLMR/AaCWMuZrSOMGLrc=;
+        b=cQCZq8Eh8wytrbvhFMn53yUpCmDdNAz97WmlsGHXIDVQqNdkqrMn3JX04fuUueXB4a
+         3y4jcBPn5tnIaiIey1EbnmsmB5ZaNQBcvbvDmnL7KOdF9MeugHdfxJWngr18TLcxKvE6
+         ebJZ9M2l288fYcmTdU9fGhm+P6wYJ/N0j7Ppi6r5Wqpx4LLFXf9iBmV2v7x66RqKv+4k
+         Kt75CCw7oQZ+i7O6DRtxF+jBOevryDFMvPEXGjlANyee6s2FUDaxU2f2mTqNIS8ON+Go
+         w7Rr/4g9EOfy6vA0u45w2DISLtGLRZep3ToyYRY/v6wAarRH8wkGFeqB2xsLJIIM7r7/
+         96eA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740591007; x=1741195807;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=lVANN8GELxA2LEZTYYuOIhpjLMR/AaCWMuZrSOMGLrc=;
+        b=wMjgadGWuUpVYL4PZ0rlLE4+c542oyB+fDZPRIC4DMW6IoMeGSKL1j/gXb8lrthFaL
+         6RqodGIlR3dHgHCtIfky5IzskoVvOEYR4PJ5Tdg5xO5n6zz7E2aDwpf6d0DeJ+UW+7po
+         v+9olFBA1nt63ZwRZKc7h1QShCMtkGl+DdEAH/J4vf/hE+klNRSOWpZG3GmPtHgv/kPG
+         FpSzJGCgrtdIjLwBMAK2Xx/B3ulPvlS9H6L/2jHwmtrYpxSgiHfeLlWe11Gt3FzH521X
+         fTI6nhho1h8KqqF3vWgM19UavcbN6Ps7uyPmEepBfQVm6oVvwAovYf7d5jNutRwSO2DQ
+         4ymQ==
+X-Gm-Message-State: AOJu0Ywx5S9AHI5XS628mr3FKF2hH6xKcqzJzwpWR0KARYPNMK7pnkNR
+	5AAhyLBsao/ujsoM6ncBOs18FOLKuxUEg4Yt5kKpV3P50xfvuySpW7c5QOCxtdmABJ6xYpKw1sd
+	C
+X-Gm-Gg: ASbGncuR+cmi+/EibT/IgRW3yCtPIPXSUNEl5aQ6DVuIahDfGUApXaSBodSAmYNwbOT
+	XzVkayKw85WbdFy3gPnFBR9Q6lnvLtOMAwYNE8gxNmo5XoGevqveGzars+2fx/YwPgqN5mvri1j
+	wGo7nPDrLv6vBJk0vu1goAAaJ+aZkVXcmIf6SNq3SD20NVeqy+lO+Emxj0gKtw3+fatj5eYOtOT
+	CJY6sx8cesVlmqmEGp5RDdiAeohAWV2VL+sSbvALQeTnwo7FaukNszjgI4++nlkRXvTiHx3F6Nl
+	NkGZ5+0YfuOPfK9G2bpzIA==
+X-Google-Smtp-Source: AGHT+IE08XKenNtq+bMrYzA9dT3+ZDEykgqaeLAjmo+xmDFjtzY5WSOX0WPToZEER5xGTORC4ixEjA==
+X-Received: by 2002:a05:6e02:2188:b0:3d1:9bca:cf28 with SMTP id e9e14a558f8ab-3d3dd2e9deemr2357195ab.8.1740591007529;
+        Wed, 26 Feb 2025 09:30:07 -0800 (PST)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d361653616sm8894395ab.25.2025.02.26.09.30.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 26 Feb 2025 09:30:06 -0800 (PST)
+Message-ID: <ba718fc2-08ba-4d7e-98f9-47f3f52c13a8@kernel.dk>
+Date: Wed, 26 Feb 2025 10:30:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250226155245.513494-7-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHSET v2 0/2] Add XFS support for RWF_DONTCACHE
+From: Jens Axboe <axboe@kernel.dk>
+To: cem@kernel.org, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org
+References: <20250204184047.356762-1-axboe@kernel.dk>
+Content-Language: en-US
+In-Reply-To: <20250204184047.356762-1-axboe@kernel.dk>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 26, 2025 at 07:51:34AM -0800, Christoph Hellwig wrote:
-> Since commit 59bb47985c1d ("mm, sl[aou]b: guarantee natural alignment
-> for kmalloc(power-of-two)", kmalloc and friends guarantee that power of
-> two sized allocations are naturally aligned.  Limit our use of kmalloc
-> for buffers to these power of two sizes and remove the fallback to
-> the page allocator for this case, but keep a check in addition to
-> trusting the slab allocator to get the alignment right.
+On 2/4/25 11:39 AM, Jens Axboe wrote:
+> Hi,
 > 
-> Also refactor the kmalloc path to reuse various calculations for the
-> size and gfp flags.
+> Now that the main bits are in mainline, here are the XFS patches for
+> adding RWF_DONTCACHE support. It's pretty trivial - patch 1 adds the
+> basic iomap flag and check, and patch 2 flags FOP_DONTCACHE support
+> in the file_operations struct. Could be folded into a single patch
+> at this point, I'll leave that up to you guys what you prefer.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_buf.c | 49 ++++++++++++++++++++++++------------------------
->  1 file changed, 25 insertions(+), 24 deletions(-)
+> Patches are aginst 6.14-rc1.
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index e8783ee23623..f327bf5b04c0 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -301,23 +301,24 @@ xfs_buf_free(
->  
->  static int
->  xfs_buf_alloc_kmem(
-> -	struct xfs_buf	*bp,
-> -	xfs_buf_flags_t	flags)
-> +	struct xfs_buf		*bp,
-> +	size_t			size,
-> +	gfp_t			gfp_mask)
->  {
-> -	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL;
-> -	size_t		size = BBTOB(bp->b_length);
-> -
-> -	/* Assure zeroed buffer for non-read cases. */
-> -	if (!(flags & XBF_READ))
-> -		gfp_mask |= __GFP_ZERO;
-> +	ASSERT(is_power_of_2(size));
-> +	ASSERT(size < PAGE_SIZE);
->  
-> -	bp->b_addr = kmalloc(size, gfp_mask);
-> +	bp->b_addr = kmalloc(size, gfp_mask | __GFP_NOFAIL);
->  	if (!bp->b_addr)
->  		return -ENOMEM;
->  
-> -	if (((unsigned long)(bp->b_addr + size - 1) & PAGE_MASK) !=
-> -	    ((unsigned long)bp->b_addr & PAGE_MASK)) {
-> -		/* b_addr spans two pages - use alloc_page instead */
-> +	/*
-> +	 * Slab guarantees that we get back naturally aligned allocations for
-> +	 * power of two sizes.  Keep this check as the canary in the coal mine
-> +	 * if anything changes in slab.
-> +	 */
-> +	if (!IS_ALIGNED((unsigned long)bp->b_addr, size)) {
-> +		ASSERT(IS_ALIGNED((unsigned long)bp->b_addr, size));
+> Since v1:
+> - Remove stale commit message paragraph
+> - Add comments for iomap flag from Darrick
 
-Depending on the level of paranoia about "outside" subsystems, should
-this be a regular xfs_err so we can catch these kinds of things on
-production kernels?
+Is this slated for 6.15? I don't see it in the tree yet, but I also
+don't see a lot of other things in there. Would be a shame to miss the
+next release on this front.
 
->  		kfree(bp->b_addr);
->  		bp->b_addr = NULL;
->  		return -ENOMEM;
-> @@ -358,18 +359,22 @@ xfs_buf_alloc_backing_mem(
->  	if (xfs_buftarg_is_mem(bp->b_target))
->  		return xmbuf_map_page(bp);
->  
-> -	/*
-> -	 * For buffers that fit entirely within a single page, first attempt to
-> -	 * allocate the memory from the heap to minimise memory usage.  If we
-> -	 * can't get heap memory for these small buffers, we fall back to using
-> -	 * the page allocator.
-> -	 */
-> -	if (size < PAGE_SIZE && xfs_buf_alloc_kmem(new_bp, flags) == 0)
-> -		return 0;
-> +	/* Assure zeroed buffer for non-read cases. */
-> +	if (!(flags & XBF_READ))
-> +		gfp_mask |= __GFP_ZERO;
->  
->  	if (flags & XBF_READ_AHEAD)
->  		gfp_mask |= __GFP_NORETRY;
->  
-> +	/*
-> +	 * For buffers smaller than PAGE_SIZE use a kmalloc allocation if that
-> +	 * is properly aligned.  The slab allocator now guarantees an aligned
-> +	 * allocation for all power of two sizes, we matches must of the smaller
-
-"...which matches most of the smaller than PAGE_SIZE buffers..."
-
---D
-
-> +	 * than PAGE_SIZE buffers used by XFS.
-> +	 */
-> +	if (size < PAGE_SIZE && is_power_of_2(size))
-> +		return xfs_buf_alloc_kmem(bp, size, gfp_mask);
-> +
->  	/* Make sure that we have a page list */
->  	bp->b_page_count = DIV_ROUND_UP(size, PAGE_SIZE);
->  	if (bp->b_page_count <= XB_PAGES) {
-> @@ -382,10 +387,6 @@ xfs_buf_alloc_backing_mem(
->  	}
->  	bp->b_flags |= _XBF_PAGES;
->  
-> -	/* Assure zeroed buffer for non-read cases. */
-> -	if (!(flags & XBF_READ))
-> -		gfp_mask |= __GFP_ZERO;
-> -
->  	/*
->  	 * Bulk filling of pages can take multiple calls. Not filling the entire
->  	 * array is not an allocation failure, so don't back off if we get at
-> -- 
-> 2.45.2
-> 
-> 
+-- 
+Jens Axboe
