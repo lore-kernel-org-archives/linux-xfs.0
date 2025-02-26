@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18B9A23959A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A88823959B
 	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 18:57:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740596257; cv=none; b=PYO0DaWho91Elt7aRjGs1XjVqJpReMkZ1id/Giu4vXvW391Ef+XZxTgnRSpL1uqyLE8rWRSe0zkxxeo/L73k7FrFnX+2Df9IFJ1ROe8ykvrM+eIVjMFY5W9bUEhIYFozOILVeP++FElCjU+i3n8pSpc5pp1tSsBmmg9BJLBoPG8=
+	t=1740596257; cv=none; b=TOwC/N+lNKqR7clkA36jpHoJE2AoPg0fCXSqdJ5V9+KwmM4Y26szyZswgKihrd9PmrxrrM+uC9mBrfy5Dju0QDaTrEowSP1CAm1Na2QSHajSYbk+DB1vGkNn1NId8+7iM+yRK+6UHz5b60RWONq+OGGMrRJ6ietyE7R2tQioyfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1740596257; c=relaxed/simple;
-	bh=yJPcp7ARFBbeIYnNT5m/61BTg5xntYlDoNGvUV/uuJE=;
+	bh=HAFmTjo/j8JOQyc0FosP4Z45uNtgsKB7q3D1QYYCM4o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tuF4YVtogGsM65M31wK1h134yxc40FGGC3lY6C3umwQu3gACPLoqtSgS7PetmrCPI7Pe/QxptnNEqEEH1PP9umXxrB5EnrAqfi+2yV1Vp9vBCdGf4EVpol5rUJ+DJ35xH+o5tA1Q8xsg6dJwWYP7oINKvipYwFdQl7kkpOwFdIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=otFAWd02; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=FyMKllu/Kys2+edJ9nBuVW85wwuiJMKWkJdh+sVF8Na4NkaqcM9jIJ4rxNBy/RuHaJ7cyHxk0rIEZ+tOW4q9o2ztIhvY8OMjMkQn0W8wPOIGVcc7tR4a1VTXvV3mhWYaKrUDosIux7TUGvXbzi3dyqWp3daeYFu1sx94n8dqdZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=aiTiFEDh; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="otFAWd02"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aiTiFEDh"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=DoWgBFmdg2aYxa3hZZDjZunfLIypWG0LPGg93adUZKI=; b=otFAWd02DQLbU7XdQhOzsqTL7+
-	AYXYhH4/odwj+cZk8zvyNFDxEy2QrTFXDa3PKuZQ0JUtzPMlyW3W/sq08IOm7qeImK+VY8rFoM3NX
-	fGEphW102jRdUxbAEqfizdPJJqCYzg6FSWhtQJEwyTpnNtKDjNXCgFU75hOdnBK3V8bu0suY++sj1
-	MSPmBBPXeJFuqr2AhAddAG4R3tc9wt22y9Be5Qe94ghibqiDPossS9FQlq3ZU9Aelk6OvFOhMueC2
-	b8537X2Z8+8sO3OUIb4a/lqScZ/rdhJ+Lc/WTq1XMcyCIwAsDume/2SNAsEDPbVg9/dSJf1Ja27lq
-	jN/xVl4Q==;
+	bh=NLPTx9x7w8LqFz3cfJLca+2hCzXjK/W6lxdq44i/usE=; b=aiTiFEDhxvGkgSnKHvUZmevqja
+	DzOLtd4Gr8PJrNHEyYqiB68eGiiqcsbHbYQMSBPnnEwpVghI37QIpDQyoWkeMAw060sqo1FNc2rGj
+	t3N4NmDxHOaoLNM7ez0UjnEy2I52UidSGO2vi104Zy8bv3p8HMasWhhZNGxT5+x0FivkZ/K+bZiAn
+	mvg7EIZmLt2jMTE5LupC7E8I79BN4TOBS49XWECHY+1ly4vrv3LksQhHQl8epYRd+giDbBTtJCZSQ
+	8RLXAWNdLavBk3IxVgLMNwghcRaP0IGthcRSoQfA15J4XgEfUmPg3h/IPmhZjus9FZOkPft4r2z6l
+	mk9DEYuA==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tnMb9-000000053xp-3Ebc;
-	Wed, 26 Feb 2025 18:57:35 +0000
+	id 1tnMbA-000000053xz-0SlE;
+	Wed, 26 Feb 2025 18:57:36 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 38/44] xfs: support zone gaps
-Date: Wed, 26 Feb 2025 10:57:10 -0800
-Message-ID: <20250226185723.518867-39-hch@lst.de>
+Subject: [PATCH 39/44] xfs: add a max_open_zones mount option
+Date: Wed, 26 Feb 2025 10:57:11 -0800
+Message-ID: <20250226185723.518867-40-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250226185723.518867-1-hch@lst.de>
 References: <20250226185723.518867-1-hch@lst.de>
@@ -50,168 +50,73 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Zoned devices can have gaps beyond the usable capacity of a zone and the
-end in the LBA/daddr address space.  In other words, the hardware
-equivalent to the RT groups already takes care of the power of 2
-alignment for us.  In this case the sparse FSB/RTB address space maps 1:1
-to the device address space.
+Allow limiting the number of open zones used below that exported by the
+device.  This is required to tune the number of write streams when zoned
+RT devices are used on conventional devices, and can be useful on zoned
+devices that support a very large number of open zones.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h  |  4 +++-
- fs/xfs/libxfs/xfs_group.h   |  6 +++++-
- fs/xfs/libxfs/xfs_rtgroup.h | 13 ++++++++-----
- fs/xfs/libxfs/xfs_sb.c      |  3 +++
- fs/xfs/libxfs/xfs_zones.c   | 19 +++++++++++++++++--
- fs/xfs/xfs_mount.h          |  9 +++++++++
- 6 files changed, 45 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_super.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index cee7e26f23bd..9566a7623365 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -398,6 +398,7 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_PARENT	(1 << 7)  /* parent pointers */
- #define XFS_SB_FEAT_INCOMPAT_METADIR	(1 << 8)  /* metadata dir tree */
- #define XFS_SB_FEAT_INCOMPAT_ZONED	(1 << 9)  /* zoned RT allocator */
-+#define XFS_SB_FEAT_INCOMPAT_ZONE_GAPS	(1 << 10) /* RTGs have LBA gaps */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 4ea7150692dd..aac50bdd629c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -110,7 +110,7 @@ enum {
+ 	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
+ 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
++	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum, Opt_max_open_zones,
+ };
  
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE | \
-@@ -409,7 +410,8 @@ xfs_sb_has_ro_compat_feature(
- 		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
- 		 XFS_SB_FEAT_INCOMPAT_PARENT | \
- 		 XFS_SB_FEAT_INCOMPAT_METADIR | \
--		 XFS_SB_FEAT_INCOMPAT_ZONED)
-+		 XFS_SB_FEAT_INCOMPAT_ZONED | \
-+		 XFS_SB_FEAT_INCOMPAT_ZONE_GAPS)
+ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+@@ -155,6 +155,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+ 	fsparam_flag("nodiscard",	Opt_nodiscard),
+ 	fsparam_flag("dax",		Opt_dax),
+ 	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
++	fsparam_u32("max_open_zones",	Opt_max_open_zones),
+ 	{}
+ };
  
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
-diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
-index cff3f815947b..4423932a2313 100644
---- a/fs/xfs/libxfs/xfs_group.h
-+++ b/fs/xfs/libxfs/xfs_group.h
-@@ -123,7 +123,11 @@ xfs_gbno_to_daddr(
- 	struct xfs_groups	*g = &mp->m_groups[xg->xg_type];
- 	xfs_fsblock_t		fsbno;
+@@ -234,6 +235,9 @@ xfs_fs_show_options(
+ 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
+ 		seq_puts(m, ",noquota");
  
--	fsbno = (xfs_fsblock_t)xg->xg_gno * g->blocks + gbno;
-+	if (g->has_daddr_gaps)
-+		fsbno = xfs_gbno_to_fsb(xg, gbno);
-+	else
-+		fsbno = (xfs_fsblock_t)xg->xg_gno * g->blocks + gbno;
++	if (mp->m_max_open_zones)
++		seq_printf(m, ",max_open_zones=%u", mp->m_max_open_zones);
 +
- 	return XFS_FSB_TO_BB(mp, g->start_fsb + fsbno);
+ 	return 0;
  }
  
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index b325aff28264..d36a6ae0abe5 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -245,11 +245,14 @@ xfs_rtb_to_daddr(
- 	xfs_rtblock_t		rtbno)
- {
- 	struct xfs_groups	*g = &mp->m_groups[XG_TYPE_RTG];
--	xfs_rgnumber_t		rgno = xfs_rtb_to_rgno(mp, rtbno);
--	uint64_t		start_bno = (xfs_rtblock_t)rgno * g->blocks;
- 
--	return XFS_FSB_TO_BB(mp,
--		g->start_fsb + start_bno + (rtbno & g->blkmask));
-+	if (xfs_has_rtgroups(mp) && !g->has_daddr_gaps) {
-+		xfs_rgnumber_t	rgno = xfs_rtb_to_rgno(mp, rtbno);
-+
-+		rtbno = (xfs_rtblock_t)rgno * g->blocks + (rtbno & g->blkmask);
-+	}
-+
-+	return XFS_FSB_TO_BB(mp, g->start_fsb + rtbno);
- }
- 
- static inline xfs_rtblock_t
-@@ -261,7 +264,7 @@ xfs_daddr_to_rtb(
- 	xfs_rfsblock_t		bno;
- 
- 	bno = XFS_BB_TO_FSBT(mp, daddr) - g->start_fsb;
--	if (xfs_has_rtgroups(mp)) {
-+	if (xfs_has_rtgroups(mp) && !g->has_daddr_gaps) {
- 		xfs_rgnumber_t	rgno;
- 		uint32_t	rgbno;
- 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 65256e109e64..e42bfd04a7c6 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1205,6 +1205,9 @@ xfs_sb_mount_rextsize(
- 		rgs->blklog = mp->m_sb.sb_rgblklog;
- 		rgs->blkmask = xfs_mask32lo(mp->m_sb.sb_rgblklog);
- 		rgs->start_fsb = mp->m_sb.sb_rtstart;
-+		if (xfs_sb_has_incompat_feature(sbp,
-+				XFS_SB_FEAT_INCOMPAT_ZONE_GAPS))
-+			rgs->has_daddr_gaps = true;
- 	} else {
- 		rgs->blocks = 0;
- 		rgs->blklog = 0;
-diff --git a/fs/xfs/libxfs/xfs_zones.c b/fs/xfs/libxfs/xfs_zones.c
-index b022ed960eac..b0791a71931c 100644
---- a/fs/xfs/libxfs/xfs_zones.c
-+++ b/fs/xfs/libxfs/xfs_zones.c
-@@ -137,6 +137,7 @@ xfs_zone_validate(
- {
- 	struct xfs_mount	*mp = rtg_mount(rtg);
- 	struct xfs_groups	*g = &mp->m_groups[XG_TYPE_RTG];
-+	uint32_t		expected_size;
- 
- 	/*
- 	 * Check that the zone capacity matches the rtgroup size stored in the
-@@ -151,11 +152,25 @@ xfs_zone_validate(
- 		return false;
+@@ -1081,6 +1085,14 @@ xfs_finish_flags(
+ 		return -EINVAL;
  	}
  
--	if (XFS_BB_TO_FSB(mp, zone->len) != 1 << g->blklog) {
-+	if (g->has_daddr_gaps) {
-+		expected_size = 1 << g->blklog;
-+	} else {
-+		if (zone->len != zone->capacity) {
++	if (!xfs_has_zoned(mp)) {
++		if (mp->m_max_open_zones) {
 +			xfs_warn(mp,
-+"zone %u has capacity != size ((0x%llx vs 0x%llx)",
-+				rtg_rgno(rtg),
-+				XFS_BB_TO_FSB(mp, zone->len),
-+				XFS_BB_TO_FSB(mp, zone->capacity));
-+			return false;
++"max_open_zones mount option only supported on zoned file systems.");
++			return -EINVAL;
 +		}
-+		expected_size = g->blocks;
 +	}
 +
-+	if (XFS_BB_TO_FSB(mp, zone->len) != expected_size) {
- 		xfs_warn(mp,
- "zone %u length (0x%llx) does match geometry (0x%x).",
- 			rtg_rgno(rtg), XFS_BB_TO_FSB(mp, zone->len),
--			1 << g->blklog);
-+			expected_size);
- 	}
+ 	return 0;
+ }
  
- 	switch (zone->type) {
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 4b406f57548a..181b9bcff2cb 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -97,6 +97,15 @@ struct xfs_groups {
- 	 */
- 	uint8_t			blklog;
- 
-+	/*
-+	 * Zoned devices can have gaps beyond the usable capacity of a zone and
-+	 * the end in the LBA/daddr address space.  In other words, the hardware
-+	 * equivalent to the RT groups already takes care of the power of 2
-+	 * alignment for us.  In this case the sparse FSB/RTB address space maps
-+	 * 1:1 to the device address space.
-+	 */
-+	bool			has_daddr_gaps;
-+
- 	/*
- 	 * Mask to extract the group-relative block number from a FSB.
- 	 * For a pre-rtgroups filesystem we pretend to have one very large
+@@ -1463,6 +1475,9 @@ xfs_fs_parse_param(
+ 		xfs_fs_warn_deprecated(fc, param, XFS_FEAT_NOATTR2, true);
+ 		parsing_mp->m_features |= XFS_FEAT_NOATTR2;
+ 		return 0;
++	case Opt_max_open_zones:
++		parsing_mp->m_max_open_zones = result.uint_32;
++		return 0;
+ 	default:
+ 		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
+ 		return -EINVAL;
 -- 
 2.45.2
 
