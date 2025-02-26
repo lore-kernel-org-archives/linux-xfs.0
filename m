@@ -1,129 +1,161 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B98921CA09;
-	Wed, 26 Feb 2025 02:45:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B8E3FE4
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 04:52:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740537940; cv=none; b=SyVcIhHaTRJQ9RoA/166/n25qRIpriCp/XUW+lg2jEWoSEtSTv9Ce/8XXzxsS5ye5kFGDHboDzl4LSId0HtCpZbhn5baIKU/z01D95NDGPEZ5Md1oVD848fJcwyb/voWrdvezKW7331uIxpogBBD5EQgbeBMOPEvKX9zVBVHEo8=
+	t=1740545561; cv=none; b=WeB1xPmxwTVYeKQ7lA2LKQy+FEaeWV8i3ZhactJVzRKNS+rJb5934UiDbvJfXSZAUmuKjbyT2dTt5UMEIFGPTAUqSyfpfi/jBAWh1lW7++vhPuCPTObVgLOXSCcP4HKRPQygy8YmyY2u2XLF4OAyx8fAifHOnaXx9hr0o6XB6Ms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740537940; c=relaxed/simple;
-	bh=1t/UK8fwolX0tzMlFLtSZXHHRjXoEdt8MtlhpZuseZY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EKZVDxkgyDL/Wi0DNmmKkTKDf/Z4RetYfMilCzie1GQJxxxOr4lhdG9kISDBKNcGT+C3loLVca80sUhecBnUmt6ChGPtZxAkBF94t64k6PTmEhiV/HRyh1Ys4O7k9/I9HO7aYnm2gM1fMs+ow6jJmcdiiREKP+UJ+7tBlYYmQhc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gR5DQUub; arc=none smtp.client-ip=209.85.218.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1740545561; c=relaxed/simple;
+	bh=OmfKcIAXaMCIcV/1SJXlDjghgEnw5iTB1qPbh4UoXiI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bPptmaplcepYiKYZevejoVtd7q3JVTY24xwKVTMhmHULQYLWuLZYdnhOsDOJynmbRYmWRbPNBjzNwbVnBL8lnB86AeF0RuuzvLStvK18XdYT9GK7ASKVpTa1K72FXLqocg6mXqDyfHjaXSo0j1W2VZi4keYnMR57WYaeNkqyr70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RIxDCrbM; arc=none smtp.client-ip=209.85.216.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gR5DQUub"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-aaedd529ba1so731932166b.1;
-        Tue, 25 Feb 2025 18:45:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RIxDCrbM"
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-2fe77285e12so1900862a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2025 20:52:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1740537937; x=1741142737; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ClOCb43QOYWf7pEWcrwi7W/0a+GT2X1dE7IJGHH0lZ0=;
-        b=gR5DQUubHBpOPRHaEhVO/aJDNxEci+NxF6DhyB4L5vnvj2AxiYdhTqnBVRFuJN+e4M
-         Z5UkbaziXw4absNsLb4YydQSfmfidiDIV3nl6TxaDcyXj2wvmE6WD1DkjkGquP6rEbcK
-         JOANh61Z5WskXPosLH12oV8DfcU8pQslqH0FAZiIbmP5W/n6triW9vJHLa+8XW+B+h0C
-         N0zaLkGz8rrPs1K/3Va0TV9vfVmuF8U6D9/jVahiHHFyi8YRCs4nCn5rwsKGc3XNpYx/
-         xq3qN4TF36UwyiWbD7GuRa2BsS7GYVU8ZekLshhqOPL4m5y+u7BZbWkElMJGT2ZYL+NI
-         nEDA==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1740545558; x=1741150358; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=kRY67v9dQslVh/+ZppBDHnsBMteDEDnqoVjoXMai1aA=;
+        b=RIxDCrbM99rty5fjz+w724MEeZDQktDtJWmx6V9eIz2SdYfPh0M+JysEBBLf/pdkua
+         mTJ2tTmAXcQzrq/VundPtwJNxDL4VxVzMecCNd9aQR9NDA+V+kOgj1gGXNhc5H2lEALx
+         NBtLNVkIfSYp84Vqza7BpcesDxyRu5FT117cUP9RYm9liVnl2VbKC6Bq0n9w0ANoJp+p
+         0uuXpmBqFlCvL4rChL+9/vcnNF854+INbKdg8iSFsmK5J2MAbYk64SdFznN70LRX31wt
+         2I3+8ouQKiyJoLh5ZXGq42Na30XNvHerIzrEeK1Eyn8X0fTwTcd4QBVSYHkEjd6mIICn
+         HWZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740537937; x=1741142737;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ClOCb43QOYWf7pEWcrwi7W/0a+GT2X1dE7IJGHH0lZ0=;
-        b=oDAZ3rzJ/rs8zLJ12zt9rJK6/Cg+ZwG56W4UM4e6NFWipItkW1OUIEGzldCSDB2wty
-         dnIvBWp3p4fxKKKaK/0Ek0AQAWtZSI2nBik1++d4Ve07+Ze6HoRbt2WIjmWiJ9Zojwb7
-         20WM5PHpAhmY+S3y0wA224vZ7JWh1bL0i+fKEnN6NJJPhRJtWKe4cUsTbPfICfpdSCDD
-         2GEm9PWEbhviruugZUzB5bV0IxJlMkJonoFrA089SzA4HcwCXpGwojBpBqcAGXTaPagv
-         E0jPyfpCA3V34lwuvGG6YXRnFfD+Xr5limegVI3f/E/RkZDtDX7YpnNt1xxUsCUYrXnD
-         UDow==
-X-Forwarded-Encrypted: i=1; AJvYcCUfMag7ii01sQa37myefGAt+SQOUWuhkDBegWczGxs/5iGfoZ+4UjR79+S/hpGycwIxBj3T3AdPh9u+@vger.kernel.org, AJvYcCX1DgvtRZlmGSC3sYbYIMP22nfFOUgIJSxYYxPBz+o66/SM2JXTFQgUFoOqKxaSA1NNKWOZX8t/aQ4zckCk@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3k59PBpsC0/BB83qe3L33gLZddEatk9Gj9dk/tk6UD9D8SJ5q
-	oG2Y0WST3M9xkk6Gxvdb9rWaJaN9qQexGiNT7RIwF1BJUhnH5zvB3rgfUQ==
-X-Gm-Gg: ASbGncu+gT8sv1mnR67NuQICjjnYnlvpRgWB5wsYKyPCYS1XO+RJFgXAl74ptqlIOoI
-	knQmbbgPPy8DySGnXdpYi6yKKi2WGf/Aicknb0MNWw0SS0wi2EOtcMuMJN7Bto6vrIXalHtT/Hm
-	j8lcDR+yEsRR4bRwzEGzIoAoq1OF42hIW9zPnwPtXcgFLPA8GXkdQjAYTwdGo87qqfSVnF+9buD
-	0jNUoNsboPLAbxX5cWTd7yManBl+z6aDsLef0QnpXIvk4P9C6kRqtW+6YJk+oufffDnmTFsya24
-	ETPm/zlpV7JOTC705xCHVfR9W7vFoRqTCg==
-X-Google-Smtp-Source: AGHT+IGkJ5hiJxQZNCY3voxHVuFTQXBPbgv4dk6BnOTL0vy8WN87/zd+SF2pa6vBcGctMh4MgLckCQ==
-X-Received: by 2002:a05:6402:350f:b0:5d0:bf5e:eb8 with SMTP id 4fb4d7f45d1cf-5e44a256d6amr12037364a12.23.1740537937080;
-        Tue, 25 Feb 2025 18:45:37 -0800 (PST)
-Received: from [192.168.8.100] ([85.255.235.21])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abed20b81a0sm240790466b.180.2025.02.25.18.45.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Feb 2025 18:45:35 -0800 (PST)
-Message-ID: <19e0b12d-f2e0-4e49-b9b7-cb23d313cb20@gmail.com>
-Date: Wed, 26 Feb 2025 02:46:32 +0000
+        d=1e100.net; s=20230601; t=1740545558; x=1741150358;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kRY67v9dQslVh/+ZppBDHnsBMteDEDnqoVjoXMai1aA=;
+        b=Z8R4O3UsyFmiuMLsJj9nmUs931X0SEoZttZXN8nvAIxn+2WgjZQy2ZOJEH/37rR0Vj
+         0DOLNT09tlxIPjNCzVh/2vGczoEQfO8S0z9XUzdyp0xODnkba37ZuSz3QZMfD7uhY8y0
+         hTaxQa3/p58GTi7RypxJY7aScIvlaO/dKrg8bW4f63QqEQ3z5xm2EExgf40VVwAzM9jb
+         dcQnhH5R/R38FVYZI0xYvdY4RntQuJnuZgtXi2l+N/bnKKar7MVbEYAWczC0iTJgvrJH
+         skiNzaoCSXGg76ekwERxy9dx6fnhOnLhCrXSLYPPHDzjBSCjrQDXpyGhqaCrKQpBCsGq
+         zRDQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU1Zq/tcMjGIv6d0vR7JTExLbduR2IOLKPPqvk2X04Yc71IMeGygdNbtei1bzjKy3wljpkKFgLpXTc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YynJz5lJ6ZpA5rF/VsQYaji4Emd+urRvoeekfSB7l3gElUIcja4
+	mNqx5uXxxtXGFXPXSB2wXBPqH4i1QoWSy6R6NzQYmMr45+k3fT1mmYTGAZFifjo=
+X-Gm-Gg: ASbGnctbC2adyAntf8foIf8aPCtVWKzLmyiI8/EtGWxMmxVQYupvREEqB0qBoJ9rOfY
+	4Wg3MU2VBrAsd8JZ7KQRY8GfG/p8Ztdz428hyWLpOJRCcgxrFue5SFH3/jDMrBikmpl05BUMHEp
+	P3pLadbYBUcyxZM35VKewQpewxP7VQ3bSt11Kde4l0Nx54EdhG5gzAx1/C2YAloQKPtcdu/PsMh
+	ekXzAC5k4F35qg57b+vsAlqDEP9Y5JUU8ShzZ8T7Zh+TYrSf5PGHQVrBkP5kaqjpbYYTPXLDuxd
+	w9dnKYtKeHTXLwCtvKo6NYL3qUU4KxjJTJGPZRCVF0FPbngpk8Zcjkugq5IXtY8DfV81A8mkdkp
+	jTw==
+X-Google-Smtp-Source: AGHT+IEKkYTV+HlV6GSN1kPh9Q2+3D2op5mHnHlKQYTUWJMxMwtJjAzeHEOVmGEAdo1mJMcC5Oq4EQ==
+X-Received: by 2002:a05:6a21:10e:b0:1ee:d860:61eb with SMTP id adf61e73a8af0-1f0fc89a19dmr10136147637.39.1740545557911;
+        Tue, 25 Feb 2025 20:52:37 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7347a6b8a82sm2440416b3a.6.2025.02.25.20.52.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Feb 2025 20:52:37 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tn9PO-000000063jC-21Q7;
+	Wed, 26 Feb 2025 15:52:34 +1100
+Date: Wed, 26 Feb 2025 15:52:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Pavel Begunkov <asml.silence@gmail.com>
+Cc: io-uring@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org,
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	wu lei <uwydoc@gmail.com>
+Subject: Re: [PATCH 1/1] iomap: propagate nowait to block layer
+Message-ID: <Z76eEu4vxwFIWKj7@dread.disaster.area>
+References: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] iomap: propagate nowait to block layer
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: io-uring@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
- wu lei <uwydoc@gmail.com>
-References: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
- <20250226015334.GF6265@frogsfrogsfrogs>
- <543f34a8-9dad-4f63-b847-38289395cbe2@gmail.com>
- <20250226022032.GH6265@frogsfrogsfrogs>
-Content-Language: en-US
-From: Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <20250226022032.GH6265@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
 
-On 2/26/25 02:20, Darrick J. Wong wrote:
-> On Wed, Feb 26, 2025 at 02:06:51AM +0000, Pavel Begunkov wrote:
->> On 2/26/25 01:53, Darrick J. Wong wrote:
->>> On Wed, Feb 26, 2025 at 01:33:58AM +0000, Pavel Begunkov wrote:
->>>> There are reports of high io_uring submission latency for ext4 and xfs,
->>>> which is due to iomap not propagating nowait flag to the block layer
->>>> resulting in waiting for IO during tag allocation.
->>>>
->>>> Cc: stable@vger.kernel.org
->>>> Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
->>>> Reported-by: wu lei <uwydoc@gmail.com>
->>>> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
->>>> ---
->>>>    fs/iomap/direct-io.c | 3 +++
->>>>    1 file changed, 3 insertions(+)
->>>>
->>>> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
->>>> index b521eb15759e..25c5e87dbd94 100644
->>>> --- a/fs/iomap/direct-io.c
->>>> +++ b/fs/iomap/direct-io.c
->>>> @@ -81,6 +81,9 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,
->>>>    		WRITE_ONCE(iocb->private, bio);
->>>>    	}
->>>> +	if (iocb->ki_flags & IOCB_NOWAIT)
->>>> +		bio->bi_opf |= REQ_NOWAIT;
->>>
->>> Shouldn't this go in iomap_dio_bio_opflags?
->>
->> It can, if that's the preference, but iomap_dio_zero() would need
->> to have a separate check. It also affects 5.4, and I'm not sure
->> which version would be easier to back port.
+On Wed, Feb 26, 2025 at 01:33:58AM +0000, Pavel Begunkov wrote:
+> There are reports of high io_uring submission latency for ext4 and xfs,
+> which is due to iomap not propagating nowait flag to the block layer
+> resulting in waiting for IO during tag allocation.
 > 
-> Yes, please don't go scattering the bi_opf setting code all around the
+> Cc: stable@vger.kernel.org
+> Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
+> Reported-by: wu lei <uwydoc@gmail.com>
+> Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+> ---
+>  fs/iomap/direct-io.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index b521eb15759e..25c5e87dbd94 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -81,6 +81,9 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,
+>  		WRITE_ONCE(iocb->private, bio);
+>  	}
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		bio->bi_opf |= REQ_NOWAIT;
 
-Sure, even though the function already adjusts bi_opf through
-bio_set_polled.
+ISTR that this was omitted on purpose because REQ_NOWAIT doesn't
+work in the way iomap filesystems expect IO to behave.
 
-> file.  Also, do you need to modify iomap_dio_zero?
+I think it has to do with large direct IOs that require multiple
+calls to submit_bio(). Each bio that is allocated and submitted
+takes a reference to the iomap_dio object, and the iomap_dio is not
+completed until that reference count goes to zero.
 
-Is there a reason why it can't be hit? It's in the same path, and
-from a quick look ending up there seems as easy as writing just a
-little beyond the file size.
+hence if we have submitted a series of bios in a IOCB_NOWAIT DIO
+and then the next bio submission in the DIO triggers a REQ_NOWAIT
+condition, that bio is marked with a BLK_STS_AGAIN and completed.
+This error is then caught by the iomap dio bio completion function,
+recorded in the iomap_dio structure, but because there is still
+bios in flight, the iomap_dio ref count does not fall to zero and so
+the DIO itself is not completed.
 
+Then submission loops again, sees dio->error is set and aborts
+submission. Because this is AIO, and the iomap_dio refcount is
+non-zero at this point, __iomap_dio_rw() returns -EIOCBQUEUED.
+It does not return the -EAGAIN state that was reported to bio
+completion because the overall DIO has not yet been completed
+and all the IO completion status gathered.
+
+Hence when the in flight async bios actually complete, they drop the
+iomap dio reference count to zero, iomap_dio_complete() is called,
+and the BLK_STS_AGAIN error is gathered from the previous submission
+failure. This then calls AIO completion, and reports a -EAGAIN error
+to the AIO/io_uring completion code.
+
+IOWs, -EAGAIN is *not reported to the IO submitter* that needs
+this information to defer and resubmit the IO - it is reported to IO
+completion where it is completely useless and, most likely, not in a
+context that can resubmit the IO.
+
+Put simply: any code that submits multiple bios (either individually
+or as a bio chain) for a single high level IO can not use REQ_NOWAIT
+reliably for async IO submission.
+
+We have similar limitations on IO polling (IOCB_HIPRI) in iomap, but
+I'm not sure if REQ_NOWAIT can be handled the same way. i.e. only
+setting REQ_NOWAIT on the first bio means that the second+ bio can
+still block and cause latency issues.
+
+So, yeah, fixing this source of latency is not as simple as just
+setting REQ_NOWAIT. I don't know if there is a better solution that
+what we currently have, but causing large AIO DIOs to
+randomly fail with EAGAIN reported at IO completion (with the likely
+result of unexpected data corruption) is far worse behaviour that
+occasionally having to deal with a long IO submission latency.
+
+-Dave.
 -- 
-Pavel Begunkov
-
+Dave Chinner
+david@fromorbit.com
