@@ -1,107 +1,234 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1552827561C;
-	Wed, 26 Feb 2025 20:38:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C586241688
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 20:49:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740602334; cv=none; b=WQ4PmwmEnNIRTGDpcRIBQXd7wchdvHqpnXQJKsJBoFIxAJuz1qAd8tFYa0SJakHfdyIaBacXEo4G19eyT/sUjw0vSn3xf0Ypxg4beIUkVACZQZ4JS9mwNVpth8ciyTcMJOE1FLjneSPooaYdXb7clMXOYtPFJNpbm5PLFpV4PsQ=
+	t=1740602947; cv=none; b=LRxjGDCpxOLoP8IVdCvSlywWMS5Q1e4T1J6Vm7u0nrTy/rsYKXSTyMEG75V3uA6IaG7RhOvsz9SMeeX+KZEJ6jtachghWDswAaGe+rCOnbAQHTBauymSO+09E/xCkn1CHBXdK9nz/EHlYsXQQkSnIVBZ+3r1wyZJbBoAb4kwgf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740602334; c=relaxed/simple;
-	bh=7XYXLxmDs/g+GFsdMP00ShC9As4ZJdRFjOnafekKWK4=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=WgKiS3Iqan7ZZIsHFJI/HVGDUAWTs2KgNl4AJzVxc3fZwliMwyIOG7gEG8w8heSViu3Y9XlnSJztXB/IxcrsFZXY/wksy8RcAFA36vzq5g9lu+IKYEJMD1c6HhC9jI4k1cAeQvtMlv02GxEdrcPpMcsEba8BjgbzgzzGB3qyAv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=fV8iNAC7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740602947; c=relaxed/simple;
+	bh=qclk0b4WczLTgOcgrRGcu+KMX+qE0RL3BNOM6NOjS+I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=guB6M7VQ60sNdZyz7aQ5OxH2sD2BHMELnTwlnO5SncKXt4qvKrS+Gp9a9EJRgEZscDfHU62UGnhMebmpMJGwG7N1Oqrli31XGX8OlioptXLX6crbYBeD1rmRHvJ9dp7x4tG/Qok4bEHYasbp0EM1PhlMDyqsl62Sj9RWmzMki6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KIE3u/fN; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="fV8iNAC7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6862C4CED6;
-	Wed, 26 Feb 2025 20:38:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-	s=korg; t=1740602333;
-	bh=7XYXLxmDs/g+GFsdMP00ShC9As4ZJdRFjOnafekKWK4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=fV8iNAC7l4sOXlbbBPxr62ebH5w2CCdPAcSqIvutoYztu5oPQJIO+VleFuSaNJwgu
-	 4XgUTLEITbZ/EXzbMYjOUaYvhSzh8lkiZR+OX0Og6mdEO8tbUqzELkCgiiGXTD8w+8
-	 VA5I1aWrxf8HjtmXFunV8nM5CekAUj0+LkOLORow=
-Date: Wed, 26 Feb 2025 12:38:51 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Mark Brown <broonie@kernel.org>
-Cc: Easwar Hariharan <eahariha@linux.microsoft.com>, Yaron Avizrat
- <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, Julia Lawall
- <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, James Smart
- <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>, Jaroslav Kysela
- <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Chris Mason <clm@fb.com>,
- Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Ilya
- Dryomov <idryomov@gmail.com>, Dongsheng Yang <dongsheng.yang@easystack.cn>,
- Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>, Damien Le Moal
- <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Carlos Maiolino
- <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel
- <sre@kernel.org>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig
- <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Frank Li
- <Frank.Li@nxp.com>, Shawn Guo <shawnguo@kernel.org>, Sascha Hauer
- <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>, Shyam Sundar S K
- <Shyam-sundar.S-k@amd.com>, Hans de Goede <hdegoede@redhat.com>, Ilpo
- =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, Henrique de
- Moraes Holschuh <hmh@hmh.eng.br>, Selvin Xavier
- <selvin.xavier@broadcom.com>, Kalesh AP
- <kalesh-anakkur.purayil@broadcom.com>, Jason Gunthorpe <jgg@ziepe.ca>, Leon
- Romanovsky <leon@kernel.org>, cocci@inria.fr, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
- ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-spi@vger.kernel.org, imx@lists.linux.dev,
- linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org,
- ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, Takashi
- Iwai <tiwai@suse.de>, Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v3 00/16] Converge on using secs_to_jiffies() part two
-Message-Id: <20250226123851.a50e727d0a1bfe639ece4a72@linux-foundation.org>
-In-Reply-To: <79b24031-5776-4eb3-960b-32b0530647fb@sirena.org.uk>
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
-	<79b24031-5776-4eb3-960b-32b0530647fb@sirena.org.uk>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KIE3u/fN"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2234e4b079cso1700345ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 12:49:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1740602944; x=1741207744; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Mjphc0mHAAvrQK0ML5Y+/zaRiBObs03G3AToZgygKhw=;
+        b=KIE3u/fNWXK3Z1tfTrwGg6vJw/7qcyw3Rns42ACn9dezoSEB7B3Z9lB6hWir253cDi
+         6vYsqm8iKLkn/KYlN0MSUTppmeYIuv1x78anivBWO3SHDHScjtvWNlWmTChrcW7cgxiJ
+         /w80RbUmqAVARnEd6TmczdAu7MoD10tb43MZLwYvd3I3psx1kczQQ1pwOI4/WYINheVR
+         yeFgwrdQ5/3AS0ABbqqKKS4h0bpRQHgR9pdNRvMd24hnmPk9rlQ9PGpJCdSGl+bJRM81
+         LSAnA7V8MZN7+azFADMn5A92qoFI12gWPRcx7Bzva8/JFUdKnja3U9IrQ2Zbf/Es7d0p
+         RdOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740602944; x=1741207744;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Mjphc0mHAAvrQK0ML5Y+/zaRiBObs03G3AToZgygKhw=;
+        b=Egj46Q+M0CLjWnEMUJM1y+iWcnB3wMiwpkjIqFngD/Te6RJB7zW9w9AZgrfqcLF93E
+         utyqRwNwE22CQxM6ur9HIlS0vcWsA0ZvDIQKHoIEMdUIJGyAvAwA+4SrschmlJg83BFu
+         OpmoaW8e28q27ARrLQZq4Y+bCqiBxNrqgC3/B0pk8Xa2BO7WePNRPiWApkAxwknlcnrD
+         6lL4h2+jVKni8naInpIRizONQcO/62kkqPKii5bu3I454hldgOSncgfokghJxMmFAsDr
+         /gRlvPZVm2ehj6+Z4iloIIURz6itTIdCgYaH3ST/PIUXoG5i8ednG18mUbXlU06M65oH
+         JAMA==
+X-Forwarded-Encrypted: i=1; AJvYcCVLom+ypVR2Mz6swsb/FF4yu4J2K9nzyxVlDlPS625tqSu7f71S1I4PU6MM/BAH5yPaDlVPdE8FgFw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwLkl3+dFEOX6zJ/q9FNwXzzS6ek7qNjqRnZ6MykUkkUWC/dkNV
+	UxgSbWmiOl7TzDRNSHbjLiuQA2F6Q+scMkOruBTXMtHEL3tcS84CMz0PJy1cjMI=
+X-Gm-Gg: ASbGncuW9ioRgQag4bkAzeNJjS4vLkHC06E/4xus0XaEcxTSaOBRfrvYC5nxW5noPYo
+	PC8bbXCT0H0RMOMJULE9T2z9fwFTHud0QDr89wZaW2i6H6K9ymtIAmd86Oe7xgjJINA3jETF9Wa
+	9ifmUjmYFq9lxBLAJHjl9VT2gasQd/lkDXVubU3+BsumI9oR6gIaQzkp0Wnh822niZzn94SxGf2
+	Zn7IHak0qoSHovH2IKTQHN6yJJofD/SGpPml6HLVUGV5ugqScfxnU+C718bZXy8DRd64QTdogaz
+	CdNnIbRjSLwQIfIzwK8/LXaCL9Qx8wbO/7Vz81I2NnGjq9OpbjzD8SDMdITqZvMixSBsggpj30R
+	O7Q==
+X-Google-Smtp-Source: AGHT+IHjkKZNnGS0pG/zXxkdwmPvjCRFvZfP7g0ivgkDJxNmLHl3RTeBqcQpvhrw778IYD8k4cqvDA==
+X-Received: by 2002:a17:902:eccf:b0:21f:6fb9:9299 with SMTP id d9443c01a7336-22307b69880mr126851065ad.27.1740602944396;
+        Wed, 26 Feb 2025 12:49:04 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223504e19f6sm396175ad.183.2025.02.26.12.49.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Feb 2025 12:49:03 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1tnOKy-00000006LNk-45VO;
+	Thu, 27 Feb 2025 07:49:00 +1100
+Date: Thu, 27 Feb 2025 07:49:00 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Pavel Begunkov <asml.silence@gmail.com>
+Cc: io-uring@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org,
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	wu lei <uwydoc@gmail.com>
+Subject: Re: [PATCH 1/1] iomap: propagate nowait to block layer
+Message-ID: <Z79-PEZ2YQybCjmi@dread.disaster.area>
+References: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
+ <Z76eEu4vxwFIWKj7@dread.disaster.area>
+ <7b440d54-b519-4995-9f5f-f3e636c6d477@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7b440d54-b519-4995-9f5f-f3e636c6d477@gmail.com>
 
-On Wed, 26 Feb 2025 11:29:53 +0000 Mark Brown <broonie@kernel.org> wrote:
-
-> On Tue, Feb 25, 2025 at 08:17:14PM +0000, Easwar Hariharan wrote:
-> > This is the second series (part 1*) that converts users of msecs_to_jiffies() that
-> > either use the multiply pattern of either of:
-> > - msecs_to_jiffies(N*1000) or
-> > - msecs_to_jiffies(N*MSEC_PER_SEC)
+On Wed, Feb 26, 2025 at 12:33:21PM +0000, Pavel Begunkov wrote:
+> On 2/26/25 04:52, Dave Chinner wrote:
+> > On Wed, Feb 26, 2025 at 01:33:58AM +0000, Pavel Begunkov wrote:
+> > > There are reports of high io_uring submission latency for ext4 and xfs,
+> > > which is due to iomap not propagating nowait flag to the block layer
+> > > resulting in waiting for IO during tag allocation.
+> > > 
+> > > Cc: stable@vger.kernel.org
+> > > Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
+> > > Reported-by: wu lei <uwydoc@gmail.com>
+> > > Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+> > > ---
+> > >   fs/iomap/direct-io.c | 3 +++
+> > >   1 file changed, 3 insertions(+)
+> > > 
+> > > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> > > index b521eb15759e..25c5e87dbd94 100644
+> > > --- a/fs/iomap/direct-io.c
+> > > +++ b/fs/iomap/direct-io.c
+> > > @@ -81,6 +81,9 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,
+> > >   		WRITE_ONCE(iocb->private, bio);
+> > >   	}
+> > > +	if (iocb->ki_flags & IOCB_NOWAIT)
+> > > +		bio->bi_opf |= REQ_NOWAIT;
 > > 
-> > where N is a constant or an expression, to avoid the multiplication.
+> > ISTR that this was omitted on purpose because REQ_NOWAIT doesn't
+> > work in the way iomap filesystems expect IO to behave.
+> > 
+> > I think it has to do with large direct IOs that require multiple
+> > calls to submit_bio(). Each bio that is allocated and submitted
+> > takes a reference to the iomap_dio object, and the iomap_dio is not
+> > completed until that reference count goes to zero.
+> > 
+> > hence if we have submitted a series of bios in a IOCB_NOWAIT DIO
+> > and then the next bio submission in the DIO triggers a REQ_NOWAIT
+> > condition, that bio is marked with a BLK_STS_AGAIN and completed.
+> > This error is then caught by the iomap dio bio completion function,
+> > recorded in the iomap_dio structure, but because there is still
+> > bios in flight, the iomap_dio ref count does not fall to zero and so
+> > the DIO itself is not completed.
+> > 
+> > Then submission loops again, sees dio->error is set and aborts
+> > submission. Because this is AIO, and the iomap_dio refcount is
+> > non-zero at this point, __iomap_dio_rw() returns -EIOCBQUEUED.
+> > It does not return the -EAGAIN state that was reported to bio
+> > completion because the overall DIO has not yet been completed
+> > and all the IO completion status gathered.
+> > 
+> > Hence when the in flight async bios actually complete, they drop the
+> > iomap dio reference count to zero, iomap_dio_complete() is called,
+> > and the BLK_STS_AGAIN error is gathered from the previous submission
+> > failure. This then calls AIO completion, and reports a -EAGAIN error
+> > to the AIO/io_uring completion code.
+> > 
+> > IOWs, -EAGAIN is *not reported to the IO submitter* that needs
+> > this information to defer and resubmit the IO - it is reported to IO
+> > completion where it is completely useless and, most likely, not in a
+> > context that can resubmit the IO.
+> > 
+> > Put simply: any code that submits multiple bios (either individually
+> > or as a bio chain) for a single high level IO can not use REQ_NOWAIT
+> > reliably for async IO submission.
 > 
-> Please don't combine patches for multiple subsystems into a single
-> series if there's no dependencies between them, it just creates
-> confusion about how things get merged, problems for tooling and makes
-> everything more noisy.  It's best to split things up per subsystem in
-> that case.
+> I know the issue, but admittedly forgot about it here, thanks for
+> reminding! Considering that attempts to change the situation failed
+> some years ago and I haven't heard about it after, I don't think
+> it'll going to change any time soon.
+> 
+> So how about to follow what the block layer does and disable multi
+> bio nowait submissions for async IO?
+> 
+> if (!iocb_is_sync(iocb)) {
+> 	if (multi_bio)
+> 		return -EAGAIN;
+> 	bio_opf |= REQ_NOWAIT;
+> }
 
-I asked for this.  I'll merge everything, spend a few weeks gathering
-up maintainer acks.  Anything which a subsystem maintainer merges will
-be reported by Stephen and I'll drop that particular patch.
+How do we know it's going to be multi-bio before we actually start
+packing the data into the bios? More below, because I kinda pointed
+out how this might be solved...
 
-This way, nothing gets lost.  I take this approach often and it works.
+> Is there anything else but io_uring and AIO that can issue async
+> IO though this path?
 
-If these were sent as a bunch of individual patches then it would be up
-to the sender to keep track of what has been merged and what hasn't. 
-That person will be resending some stragglers many times.  Until they
-give up and some patches get permanently lost.
+We can't assume anything about the callers in the lower layers.
+Anything that can call the VFS read/write paths could be using async
+IO.
 
-Scale all that across many senders and the whole process becomes costly
-and unreliable.  Whereas centralizing it on akpm is more efficient,
-more reliable, more scalable, lower latency and less frustrating for
-senders.
+> > We have similar limitations on IO polling (IOCB_HIPRI) in iomap, but
+> > I'm not sure if REQ_NOWAIT can be handled the same way. i.e. only
+> > setting REQ_NOWAIT on the first bio means that the second+ bio can
+> > still block and cause latency issues.
 
+Please have a look at how IOCB_HIPRI is handled by iomap for
+multi-bio IOs. I -think- the same can be done with IOMAP_NOWAIT
+bios, because the bio IO completion for the EAGAIN error will be
+present on the iomap_dio by the time submit_bio returns. i.e.
+REQ_NOWAIT can be set on the first bio in the submission chain,
+but only on the first bio.
+
+i.e. if REQ_NOWAIT causes the first bio submission to fail with
+-EAGAIN being reported to completion, we abort the submission or
+more bios because dio->error is now set. As there are no actual bios
+in flight at this point in time, the only reference to the iomap_dio
+is held by the iomap submission code.  Hence as we finalise the
+aborted DIO submission, __iomap_dio_rw() drops the last reference
+and iomap_dio_rw() calls iomap_dio_complete() on the iomap_dio. This
+then gathers the -EAGAIN error that was stashed in the iomap_dio
+and returns it to the caller.
+
+i.e. I *think* this "REQ_NOWAIT only for the first bio" method will
+solve most of the issues that cause submission latency (especially
+for apps doing small IOs), but still behave correctly when large,
+multi-bio DIOs are submitted.
+
+Confirming that the logic is sound and writing fstests that exercise
+the functionality to demonstrate your eventual kernel change works
+correctly (and that we don't break it in future) is your problem,
+though.
+
+> > So, yeah, fixing this source of latency is not as simple as just
+> > setting REQ_NOWAIT. I don't know if there is a better solution that
+> > what we currently have, but causing large AIO DIOs to
+> > randomly fail with EAGAIN reported at IO completion (with the likely
+> > result of unexpected data corruption) is far worse behaviour that
+> > occasionally having to deal with a long IO submission latency.
+> 
+> By the end of the day, it's waiting for IO, the first and very thing
+> the user don't want to see for async IO, and that's pretty much what
+> makes AIO borderline unusable.  We just can't have it for an asynchronous
+> interface.
+
+Tough cookies. Random load related IO errors that can result in
+unexpected user data corruption is a far worse outcome than an
+application suffering from a bit of unexpected latency. You are not
+going to win that argument, so don't bother wasting time on it.
+
+> If we can't fix it up here, the only other option I see
+> is to push all such io_uring requests to a slow path where we can
+> block, and that'd be quite a large regression.
+
+Don't be so melodramatic. Async IO has always been, and will always
+be, -best effort- within the constraints of filesystem
+implementation, data integrity and behavioural correctness.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
