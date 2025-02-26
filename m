@@ -1,113 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0E2B42A8F
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 16:45:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF34719005F;
+	Wed, 26 Feb 2025 16:48:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740588325; cv=none; b=qy9iSH3hqvmc4gHwTDnSmioi1IkxlJZYflWlkmlEGX/IwBB/DEyUz9OikgRmr7jfGRM3nk7UJonJFT0iH6J8mv+9ezZksFSWgeWl30JekRSlvVCc9VTGsqqyIhi/YRzvXukpu5ZCN3dRZRBxqeNap8F1ThyMf4WDTHO5fozgFX4=
+	t=1740588501; cv=none; b=I+mQysjTGt4b+S7ACdPplboWQPFwdFh1NXs5S0a5TIPd1e5xyNVfhk1/82M2cqw9FyMl32KC1RVMx4JIkFzckWNYE0FIapAPrLdqUwSBcLFjwGDJWB/xEyJhXUIamR34TU+iV9Iye5dgVnYSFinr0Ux7qIrVZIWFNYwxK7mpYw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740588325; c=relaxed/simple;
-	bh=mEgqgX0asF+dhzv0L/ge2eQkPWBYreZZa5hPgfe2bbA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iCbb/tm0EeiNI5T3JhT1kNkQmLbPgyPW4kHwRn2ulWxrpB+yeXfXyTlIe3Z4D2YiypKy8NGVksfkX8Xl6nGoOMXI5S7jQN3YY0P2WZtd5rej2TBzbCsi6Gh/H8l03DSA3WtVk5e+1FyxAQ17tR1Fg39gBI4Onb1l+FAifchmpyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R2zfmrAv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740588501; c=relaxed/simple;
+	bh=FxcvaHDtQk+aPNgLOpA1kKCuwEvZ/n4I9xwMBDMNjMM=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=G6cSdDMH+kKrbp5h0yk1/gCnKsMqBxy2ckyOK9U5FReF51pl1TRRtgEi8hceP1PT8BoHYJM7KML1QUFdCbKVqbDxCdUL7k8WtzTp1mFA8hge8eeWLlQoWYdv1YrAFSwsX/mVMe57ZNeR+84hCtsjDVfs1nwI3tfyw2Jf0saa3X0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gJBntMAW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R2zfmrAv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2377CC4CED6;
-	Wed, 26 Feb 2025 16:45:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gJBntMAW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F78BC4CED6;
+	Wed, 26 Feb 2025 16:48:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740588325;
-	bh=mEgqgX0asF+dhzv0L/ge2eQkPWBYreZZa5hPgfe2bbA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=R2zfmrAvXMSELM8Yvw+z+RPQYofXeqCW9eQhUOvh1jp3bmc7z9VUq4P01E7L3Fuz8
-	 VHTEjX42vcPYobSi9tDBCoAhrKqbcC3IiASNqg3d2SD8X+WrgNfkOaihg7l4lpVlgK
-	 pQHuOOCJFPWDFhlfgY3ozT9Miuq6h7YCQbFE/eWLkHELUfnkha8ojt7syotlw0O009
-	 dYEA9B1CqpLXsnNyv2v9wpv+3QM+Tadn6Rvfeojn8qAM9La6xtLSZLitO1H2q72R3d
-	 +o+nmHGG47XVayZLvneFTiUdbuwB3mEaZtzgdsLlkAB5wKoTqlIYturvTVvuecKKb9
-	 2h5P6E/tOkf2A==
-Date: Wed, 26 Feb 2025 08:45:24 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/12] xfs: trace what memory backs a buffer
-Message-ID: <20250226164524.GL6242@frogsfrogsfrogs>
-References: <20250226155245.513494-1-hch@lst.de>
- <20250226155245.513494-13-hch@lst.de>
+	s=k20201202; t=1740588501;
+	bh=FxcvaHDtQk+aPNgLOpA1kKCuwEvZ/n4I9xwMBDMNjMM=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=gJBntMAWa9qiB6go6MBAYuIpUQmIV8zM3P7hOz/BcMP2byX2P+MCVmwTOF8y59cTA
+	 /dmsi2YnkvFk7WCs/BqmuQVZJqyuuK6B2L34n/nlGh5Fb/IjbLtuJF7xfHrd7ckNHI
+	 3aOmoTcDg9MwCwDV+lRzSbk3kKgtk7sY2T2rRnxcQXeSOKkWWTO2TN5iDQ7y45VEK4
+	 FrA2VRbWMMiI+WJDNW4z9L9r47+ekdDK20fY6zi5lQvVIKVd30Jsj0qJQM2+iV2vYy
+	 04RjgTb6SA4Au/0pUEMYaZh350XZsbrokrKevACKRy5XTZGyf9486J5GRsNNv9vMzQ
+	 71NtfIvQwN7Lw==
+From: Mark Brown <broonie@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+ Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
+ James Smart <james.smart@broadcom.com>, 
+ Dick Kennedy <dick.kennedy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
+ Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>, 
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+ Hans de Goede <hdegoede@redhat.com>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
+ Selvin Xavier <selvin.xavier@broadcom.com>, 
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+ Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: cocci@inria.fr, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, 
+ Takashi Iwai <tiwai@suse.de>, Carlos Maiolino <cmaiolino@redhat.com>
+In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+Subject: Re: (subset) [PATCH v3 00/16] Converge on using secs_to_jiffies()
+ part two
+Message-Id: <174058848717.58970.18340675342808865020.b4-ty@kernel.org>
+Date: Wed, 26 Feb 2025 16:48:07 +0000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250226155245.513494-13-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15-dev-1b0d6
 
-On Wed, Feb 26, 2025 at 07:51:40AM -0800, Christoph Hellwig wrote:
-> Add three trace points for the different backing memory allocators for
-> buffers.
+On Tue, 25 Feb 2025 20:17:14 +0000, Easwar Hariharan wrote:
+> This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+> either use the multiply pattern of either of:
+> - msecs_to_jiffies(N*1000) or
+> - msecs_to_jiffies(N*MSEC_PER_SEC)
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> where N is a constant or an expression, to avoid the multiplication.
+> 
+> [...]
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Applied to
 
---D
+   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
 
-> ---
->  fs/xfs/xfs_buf.c   | 4 ++++
->  fs/xfs/xfs_trace.h | 4 ++++
->  2 files changed, 8 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 0393dd302cf6..a396b628e9b0 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -299,6 +299,7 @@ xfs_buf_alloc_kmem(
->  		return -ENOMEM;
->  	}
->  	bp->b_flags |= _XBF_KMEM;
-> +	trace_xfs_buf_backing_kmem(bp, _RET_IP_);
->  	return 0;
->  }
->  
-> @@ -379,9 +380,11 @@ xfs_buf_alloc_backing_mem(
->  	if (!folio) {
->  		if (size <= PAGE_SIZE)
->  			return -ENOMEM;
-> +		trace_xfs_buf_backing_fallback(bp, _RET_IP_);
->  		goto fallback;
->  	}
->  	bp->b_addr = folio_address(folio);
-> +	trace_xfs_buf_backing_folio(bp, _RET_IP_);
->  	return 0;
->  
->  fallback:
-> @@ -395,6 +398,7 @@ xfs_buf_alloc_backing_mem(
->  		memalloc_retry_wait(gfp_mask);
->  	}
->  
-> +	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
->  	return 0;
->  }
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index b29462363b81..c8f64daf6d75 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -545,6 +545,10 @@ DEFINE_BUF_EVENT(xfs_buf_iodone_async);
->  DEFINE_BUF_EVENT(xfs_buf_error_relse);
->  DEFINE_BUF_EVENT(xfs_buf_drain_buftarg);
->  DEFINE_BUF_EVENT(xfs_trans_read_buf_shut);
-> +DEFINE_BUF_EVENT(xfs_buf_backing_folio);
-> +DEFINE_BUF_EVENT(xfs_buf_backing_kmem);
-> +DEFINE_BUF_EVENT(xfs_buf_backing_vmalloc);
-> +DEFINE_BUF_EVENT(xfs_buf_backing_fallback);
->  
->  /* not really buffer traces, but the buf provides useful information */
->  DEFINE_BUF_EVENT(xfs_btree_corrupt);
-> -- 
-> 2.45.2
-> 
-> 
+Thanks!
+
+[12/16] spi: spi-fsl-lpspi: convert timeouts to secs_to_jiffies()
+        commit: 32fcd1b9c397ccca7fde2fcbcf4fc7e0ec8f34aa
+[13/16] spi: spi-imx: convert timeouts to secs_to_jiffies()
+        commit: 1d2e01d53a8ebfffb49e8cc656f8c85239121b26
+
+All being well this means that it will be integrated into the linux-next
+tree (usually sometime in the next 24 hours) and sent to Linus during
+the next merge window (or sooner if it is a bug fix), however if
+problems are discovered then the patch may be dropped or reverted.
+
+You may get further e-mails resulting from automated or manual testing
+and review of the tree, please engage with people reporting problems and
+send followup patches addressing any issues that are reported if needed.
+
+If any updates are required or you are submitting further changes they
+should be sent as incremental updates against current git, existing
+patches will not be replaced.
+
+Please add any relevant lists and maintainers to the CCs when replying
+to this mail.
+
+Thanks,
+Mark
+
