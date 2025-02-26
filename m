@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E07F22376E4
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 18:57:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 726BB238175
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 18:57:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740596250; cv=none; b=EXwK35SesATYwZkIF1EH+cti40Y8KzdAWdXjotnKnGzD1HCoUJu2aeC2r4rIwsiwaU2Jxz+WvU9wFZmSQPEbuDeOcDrVTelDMOGZH0uFZIk2BVDPfZj+UYGC4GOesKY3uAf+U/iRaUPLe01mhnX51uQETQq66dU77cn2QzM2DKg=
+	t=1740596251; cv=none; b=GoD79t3XYaZK+QSKGmb/yRhOaKrBymKXPTOxcKwfvhiHm6oGeIkbXZrc1S+O8PXXXkw7OQwJmCYvK0hlAX/I+Q/+TOuNT8b3J9w07X4FwKEhbCSCkEDy8SZZJDravZDinIn9KpVfWN98K1XIEcJT747hAHe/kIY0JugegZvZ42o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740596250; c=relaxed/simple;
-	bh=NIyqMY5iVnYLbLkRYaTsucMZEAbuyUHtwqK/F1GSJEo=;
+	s=arc-20240116; t=1740596251; c=relaxed/simple;
+	bh=SU4vD5OUqS/NTryUZWNKUtOvjuG3ckmP99G5GkFsRVU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QB90Gfp7WlLCXCJLO6WorJ1Q86jc4YYalmGRmsvbIvw3cXOdASEaPH9fllH84QUjdWjmHtgNJK8+xaipLHo/IcaM01rC8Py88RaKYuhWNYO64DInDnjRh3ZXWdyFBw7KFOyx15zRY/QT9ILZRvPVXIs4OWeNmKm5pPe/NdKtsDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jSBQ8Boq; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=odzjlnCpT3YypXs6JztSLuS5Z1GHWk4o5/BRQ7zvpmVSTNDuV6K27ZGacfl8wqMUb/EP55f4+onvHF7TtioZ9Wl5vLbZ0JxcjDB0UJE/w1XoxEQuOFKs3+0plW5wpNj8VM6m565QDlZUIfSpYOYg7j06wDrQKjZh7w0p+kJiQXI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oguKXlKd; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jSBQ8Boq"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oguKXlKd"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=e9mhtI+lYTrl3WN8yQlbPX5cBYoHK//jnbaHMD9Ba3M=; b=jSBQ8BoqEs8ll2l8gF4s2af1or
-	tQIYhqjk1LOWgo3Ww9McwrB/sgtYe79lcIkz+WyKQoMLcLGGwfMm9+cO934Cq93fyi7YifRINQjyJ
-	PinPsTIQBYGUdQdEgt80gJN8iCDt1mPXfaY7Z1w4iA8ek2HrS87wv2bloldIlnW+8vZBItuCBFLvx
-	5zRfM/GpBBiI15RrZlvLcHaxdukgHziodZw0xv12UD7hEuKyzLEb9TlP9i+Ty2D3e9ayzfbCT77ii
-	MYQOShkoo/KWIjzY1RE5s3bfdSludcEI3RnBdViB6K+1HO9DvMYEqEvkZOICAqwciW+ERB4NF9CDw
-	JNC9FVNA==;
+	bh=VTkTNvu9PKNbT/8+AaNZ72lp532k6NzTFC4YsiFk++k=; b=oguKXlKdWuRJTrdgmbxenQq9BA
+	lAKgA8/3oc2UyeJQjq1Imcg5OBfIDUfY2kwYF5IyjE7d0jlCygTzMFris5bC81wIROvz7XqLdV3q7
+	MwkTEtLIyS+/GI1A5kQq3b3DUJbJmBRGdIcAHaLXO75GUBDzsSmuSYEYejyfDDrhBFZaxnLy4AiCF
+	vGCUKTKtZO70yy8qXrFHjyxAjyuc1zTylm0WnRT33U5YNbjCq+kqEc8CCi11CBf2u0Zc5PrmfldqL
+	ZTpvJRqdra3Br83qBvneUOVVqD/HS1IVtQwS4AqP6BXrRcK+x+e3YCgnmNYgSOlttzbVmDd9kzEYs
+	FKFwc6Bw==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tnMb2-000000053tL-2Hzm;
-	Wed, 26 Feb 2025 18:57:28 +0000
+	id 1tnMb3-000000053td-0bmw;
+	Wed, 26 Feb 2025 18:57:29 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 14/44] xfs: add a xfs_rtrmap_highest_rgbno helper
-Date: Wed, 26 Feb 2025 10:56:46 -0800
-Message-ID: <20250226185723.518867-15-hch@lst.de>
+Subject: [PATCH 16/44] xfs: allow internal RT devices for zoned mode
+Date: Wed, 26 Feb 2025 10:56:48 -0800
+Message-ID: <20250226185723.518867-17-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250226185723.518867-1-hch@lst.de>
 References: <20250226185723.518867-1-hch@lst.de>
@@ -50,55 +50,172 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a helper to find the last offset mapped in the rtrmap.  This will be
-used by the zoned code to find out where to start writing again on
-conventional devices without hardware zone support.
+Allow creating an RT subvolume on the same device as the main data
+device.  This is mostly used for SMR HDDs where the conventional zones
+are used for the data device and the sequential write required zones
+for the zoned RT section.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtrmap_btree.c | 19 +++++++++++++++++++
- fs/xfs/libxfs/xfs_rtrmap_btree.h |  2 ++
- 2 files changed, 21 insertions(+)
+ fs/xfs/libxfs/xfs_group.h   |  6 ++++--
+ fs/xfs/libxfs/xfs_rtgroup.h |  8 +++++---
+ fs/xfs/libxfs/xfs_sb.c      |  1 +
+ fs/xfs/xfs_file.c           |  2 +-
+ fs/xfs/xfs_fsops.c          |  4 ++++
+ fs/xfs/xfs_mount.h          |  7 +++++++
+ fs/xfs/xfs_rtalloc.c        |  3 ++-
+ fs/xfs/xfs_super.c          | 12 ++++++++++--
+ 8 files changed, 34 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-index e4ec36943cb7..9bdc2cbfc113 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-@@ -1033,3 +1033,22 @@ xfs_rtrmapbt_init_rtsb(
- 	xfs_btree_del_cursor(cur, error);
- 	return error;
- }
-+
-+/*
-+ * Return the highest rgbno currently tracked by the rmap for this rtg.
-+ */
-+xfs_rgblock_t
-+xfs_rtrmap_highest_rgbno(
-+	struct xfs_rtgroup	*rtg)
-+{
-+	struct xfs_btree_block	*block = rtg_rmap(rtg)->i_df.if_broot;
-+	union xfs_btree_key	key = {};
-+	struct xfs_btree_cur	*cur;
-+
-+	if (block->bb_numrecs == 0)
-+		return NULLRGBLOCK;
-+	cur = xfs_rtrmapbt_init_cursor(NULL, rtg);
-+	xfs_btree_get_keys(cur, block, &key);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	return be32_to_cpu(key.__rmap_bigkey[1].rm_startblock);
-+}
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.h b/fs/xfs/libxfs/xfs_rtrmap_btree.h
-index 9d0915089891..e328fd62a149 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.h
-@@ -207,4 +207,6 @@ struct xfs_btree_cur *xfs_rtrmapbt_mem_cursor(struct xfs_rtgroup *rtg,
- int xfs_rtrmapbt_mem_init(struct xfs_mount *mp, struct xfbtree *xfbtree,
- 		struct xfs_buftarg *btp, xfs_rgnumber_t rgno);
+diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
+index 242b05627c7a..a70096113384 100644
+--- a/fs/xfs/libxfs/xfs_group.h
++++ b/fs/xfs/libxfs/xfs_group.h
+@@ -107,9 +107,11 @@ xfs_gbno_to_daddr(
+ 	xfs_agblock_t		gbno)
+ {
+ 	struct xfs_mount	*mp = xg->xg_mount;
+-	uint32_t		blocks = mp->m_groups[xg->xg_type].blocks;
++	struct xfs_groups	*g = &mp->m_groups[xg->xg_type];
++	xfs_fsblock_t		fsbno;
  
-+xfs_rgblock_t xfs_rtrmap_highest_rgbno(struct xfs_rtgroup *rtg);
+-	return XFS_FSB_TO_BB(mp, (xfs_fsblock_t)xg->xg_gno * blocks + gbno);
++	fsbno = (xfs_fsblock_t)xg->xg_gno * g->blocks + gbno;
++	return XFS_FSB_TO_BB(mp, g->start_fsb + fsbno);
+ }
+ 
+ static inline uint32_t
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index 9c7e03f913cb..e35d1d798327 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -230,7 +230,8 @@ xfs_rtb_to_daddr(
+ 	xfs_rgnumber_t		rgno = xfs_rtb_to_rgno(mp, rtbno);
+ 	uint64_t		start_bno = (xfs_rtblock_t)rgno * g->blocks;
+ 
+-	return XFS_FSB_TO_BB(mp, start_bno + (rtbno & g->blkmask));
++	return XFS_FSB_TO_BB(mp,
++		g->start_fsb + start_bno + (rtbno & g->blkmask));
+ }
+ 
+ static inline xfs_rtblock_t
+@@ -238,10 +239,11 @@ xfs_daddr_to_rtb(
+ 	struct xfs_mount	*mp,
+ 	xfs_daddr_t		daddr)
+ {
+-	xfs_rfsblock_t		bno = XFS_BB_TO_FSBT(mp, daddr);
++	struct xfs_groups	*g = &mp->m_groups[XG_TYPE_RTG];
++	xfs_rfsblock_t		bno;
+ 
++	bno = XFS_BB_TO_FSBT(mp, daddr) - g->start_fsb;
+ 	if (xfs_has_rtgroups(mp)) {
+-		struct xfs_groups *g = &mp->m_groups[XG_TYPE_RTG];
+ 		xfs_rgnumber_t	rgno;
+ 		uint32_t	rgbno;
+ 
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index b13d88a10ace..52a04aae44e8 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1204,6 +1204,7 @@ xfs_sb_mount_rextsize(
+ 		rgs->blocks = sbp->sb_rgextents * sbp->sb_rextsize;
+ 		rgs->blklog = mp->m_sb.sb_rgblklog;
+ 		rgs->blkmask = xfs_mask32lo(mp->m_sb.sb_rgblklog);
++		rgs->start_fsb = mp->m_sb.sb_rtstart;
+ 	} else {
+ 		rgs->blocks = 0;
+ 		rgs->blklog = 0;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index d88a771d4c23..807e85e16a52 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -150,7 +150,7 @@ xfs_file_fsync(
+ 	 * ensure newly written file data make it to disk before logging the new
+ 	 * inode size in case of an extending write.
+ 	 */
+-	if (XFS_IS_REALTIME_INODE(ip))
++	if (XFS_IS_REALTIME_INODE(ip) && mp->m_rtdev_targp != mp->m_ddev_targp)
+ 		error = blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
+ 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+ 		error = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index b2c733791011..ee2cefbd5df8 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -308,6 +308,10 @@ xfs_growfs_data(
+ 	if (!mutex_trylock(&mp->m_growlock))
+ 		return -EWOULDBLOCK;
+ 
++	/* we can't grow the data section when an internal RT section exists */
++	if (in->newblocks != mp->m_sb.sb_dblocks && mp->m_sb.sb_rtstart)
++		return -EINVAL;
 +
- #endif /* __XFS_RTRMAP_BTREE_H__ */
+ 	/* update imaxpct separately to the physical grow of the filesystem */
+ 	if (in->imaxpct != mp->m_sb.sb_imax_pct) {
+ 		error = xfs_growfs_imaxpct(mp, in->imaxpct);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 790847d565e0..f08bba9ddb2b 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -103,6 +103,13 @@ struct xfs_groups {
+ 	 * rtgroup, so this mask must be 64-bit.
+ 	 */
+ 	uint64_t		blkmask;
++
++	/*
++	 * Start of the first group in the device.  This is used to support a
++	 * RT device following the data device on the same block device for
++	 * SMR hard drives.
++	 */
++	xfs_fsblock_t		start_fsb;
+ };
+ 
+ struct xfs_freecounter {
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index c3a8efc7f09b..a0fd1dc5d362 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1266,7 +1266,8 @@ xfs_rt_check_size(
+ 		return -EFBIG;
+ 	}
+ 
+-	error = xfs_buf_read_uncached(mp->m_rtdev_targp, daddr,
++	error = xfs_buf_read_uncached(mp->m_rtdev_targp,
++			XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart) + daddr,
+ 			XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
+ 	if (error)
+ 		xfs_warn(mp, "cannot read last RT device sector (%lld)",
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 817aae726ec1..86d61f3d83cd 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -533,7 +533,15 @@ xfs_setup_devices(
+ 		if (error)
+ 			return error;
+ 	}
+-	if (mp->m_rtdev_targp) {
++
++	if (mp->m_sb.sb_rtstart) {
++		if (mp->m_rtdev_targp) {
++			xfs_warn(mp,
++		"can't use internal and external rtdev at the same time");
++			return -EINVAL;
++		}
++		mp->m_rtdev_targp = mp->m_ddev_targp;
++	} else if (mp->m_rtname) {
+ 		error = xfs_setsize_buftarg(mp->m_rtdev_targp,
+ 					    mp->m_sb.sb_sectsize);
+ 		if (error)
+@@ -757,7 +765,7 @@ xfs_mount_free(
+ {
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+ 		xfs_free_buftarg(mp->m_logdev_targp);
+-	if (mp->m_rtdev_targp)
++	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp)
+ 		xfs_free_buftarg(mp->m_rtdev_targp);
+ 	if (mp->m_ddev_targp)
+ 		xfs_free_buftarg(mp->m_ddev_targp);
 -- 
 2.45.2
 
