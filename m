@@ -1,105 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0DA3258CC0;
-	Wed, 26 Feb 2025 08:43:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3672F1A2860
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 10:01:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740559416; cv=none; b=Vnf8hr44ljUHiRGuQ+/Ci1ttIoeeNWHwOuU3yhZoN9+F67PGZu2d/jMiLr/udrbbjhvmhB+JCjOxxAts9j78yscsPH9/2q9CQYGfnG1755PYwIuo7EtBAXfH7aqyu1KepLTlfs8Mozz5Wuoys4EjI47STd2SsjASar/Oftk2viE=
+	t=1740564076; cv=none; b=Ry+rQxuLhcLOb08uPsmo452qfME2uO1Y3rsn4C0m6GusNvgurmQaKostqsSfR2jo0s6TrlpYmEp3KTzYvrVMiqYo/69xHwMs00ErLGWc7kl3EzP0pu1Lf2QoGSIOsdpLkO+W2iSOjlxug+5X55+7tuSdYiQqCwPVFHu2FLXr3pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740559416; c=relaxed/simple;
-	bh=nQ12+ZuT+RWVfR1SR3GsRnZcsv4vwF6ZxCcziG28oDY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KL4yJ5GarOvpgdrsDB7h52kPUN2tj+gKwzDBnc7nQ+C1X9tpYdZzpROsCp6OrclGtC8zQULtHy5DSgMLS0n5e5z8h3vCDqrjqSPDr2OHZ0Plgc6M2I0kj+WxFE+8Fu87RN/+QQZ29PJu9VSgUhJ2JltSasboak68uKXKx7NCmXA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TT7cCFxT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740564076; c=relaxed/simple;
+	bh=EcrSrTLJKM6cShknzGdztqURBvj6jnLQnQcbcdrPkkQ=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=ZSRQHmCg3x3DEW0sCRtlp+9eqwmWR3QeJf/In8rpCcA2xle4smsb54fUHXRzYcbS2NiYz/SuK8mYfm5FZhvhU8xOMgiQvZJbR0ZifBg3mwEB2c/CA+lmiX8Q9zPg95ydxlEsbaMvtD15zivIlxY5xTxrqCxCSAKuenyut2pjLdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KwiuG2b7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TT7cCFxT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4B20C4CED6;
-	Wed, 26 Feb 2025 08:43:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KwiuG2b7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03162C4CEE7
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 10:01:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740559416;
-	bh=nQ12+ZuT+RWVfR1SR3GsRnZcsv4vwF6ZxCcziG28oDY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=TT7cCFxTl258g78hqWyNldXDNGBuHUF9ieLFzvdPYBY071FSNjuE6tH3mmR6K7Xio
-	 QPe+U6PnWvWa9EYPTbvR7OZQ52UnorUIdgyzIDx7t/tA46oF7CBGHi/sXI7rUfW6at
-	 5BTQ+Yk0VK5IeMjNycSdRawcu3LZT72x2blnJqKnLdgxmWxVAnPRFdJn6JbkZjxudv
-	 ajDFHvy8So1swq8ETqRS4P8g+L3ECYip1gsezjyKovbYLGKf3qSVVGYOd2B1rJ8hsR
-	 wv8uUSkfcaq5iQYKLfqPVhrBEVJn2+WwyDZML4UQgpOas+Wm9X/C5kHDVDS/HSfs3m
-	 Qnu7pOU2JcHlw==
-From: Christian Brauner <brauner@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 00/12] iomap: incremental advance conversion -- phase 2
-Date: Wed, 26 Feb 2025 09:43:05 +0100
-Message-ID: <20250226-sessel-sichel-42271d7b0d11@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250224144757.237706-1-bfoster@redhat.com>
-References: <20250224144757.237706-1-bfoster@redhat.com>
+	s=k20201202; t=1740564075;
+	bh=EcrSrTLJKM6cShknzGdztqURBvj6jnLQnQcbcdrPkkQ=;
+	h=Date:From:To:Subject:From;
+	b=KwiuG2b7MxYYRu/FsrF6YTyAkAKDZBPF0bQ7GgV/QIifH5xyO1WQzdU1rv2/NYIsG
+	 3psV5ldwMeDFkpAUODqCAQQ66to8n8+8LuMQqvwoER073WhgSqqQw7+z297PlDhuKj
+	 5mV9sNL2iNd3NoLymATilclQGEH4P3mInTwKv0mSOGlFXC86waLnCoZ3AB+wzbvHQM
+	 NcdIaVDcvD9V52UpgMsBA1RVl2sjhMoE/sA5aUDfIc0ujPgc5qVy+rinkRvl8go1mc
+	 75J4dl31A1wSn3CZ9V4AmjlKOnxa2rILPuPtFMnszmU32hSDRuatYwh4dzssfcxUbd
+	 /1L63iyRqLHEw==
+Date: Wed, 26 Feb 2025 11:01:11 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 9b47d37496e2
+Message-ID: <b6ek6tjfowznwxgbtfovzctumzx2mgc2spd7jtw5u5emzkedjl@pxorgvwyc3sv>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2474; i=brauner@kernel.org; h=from:subject:message-id; bh=UeifwJvUfCO2NHtZtzmPP0byxd7wxoBJXhf2A6//LbM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTvuyJv+mHzo5VHZ+0/djvy8ck5ihGhU7bkLtGXCTbNr DD4f2R6fUcpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEPGUYGQ74Om57fXa9/EcV 6/s65TzcYoJ80U8dan/NFOfboGy80o+RYX6M1Ibj/1/4fWSzUXySV7OjV85L78L5A/YvuvZazRE 9wAYA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Mon, 24 Feb 2025 09:47:45 -0500, Brian Foster wrote:
-> Here's phase 2 of the incremental iter advance conversions. This updates
-> all remaining iomap operations to advance the iter within the operation
-> and thus removes the need to advance from the core iomap iterator. Once
-> all operations are switched over, the core advance code is removed and
-> the processed field is renamed to reflect that it is now a pure status
-> code.
-> 
-> [...]
+Hi folks,
 
-I think review has concluded so let's get this into -next.
+The for-next branch of the xfs-linux repository at:
 
----
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Applied to the vfs-6.15.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-6.15.iomap branch should appear in linux-next soon.
+has just been updated.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+The new head of the for-next branch is commit:
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+9b47d37496e2 xfs: remove the XBF_STALE check from xfs_buf_rele_cached
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.15.iomap
+4 new commits:
 
-[01/12] iomap: advance the iter directly on buffered read
-        https://git.kernel.org/vfs/vfs/c/d9dc477ff6a2
-[02/12] iomap: advance the iter on direct I/O
-        https://git.kernel.org/vfs/vfs/c/8fecec46d10b
-[03/12] iomap: convert misc simple ops to incremental advance
-        https://git.kernel.org/vfs/vfs/c/f145377da150
-[04/12] dax: advance the iomap_iter in the read/write path
-        https://git.kernel.org/vfs/vfs/c/e1e6bae60732
-[05/12] dax: push advance down into dax_iomap_iter() for read and write
-        https://git.kernel.org/vfs/vfs/c/e1dae77b50e3
-[06/12] dax: advance the iomap_iter on zero range
-        https://git.kernel.org/vfs/vfs/c/80fce3058407
-[07/12] dax: advance the iomap_iter on unshare range
-        https://git.kernel.org/vfs/vfs/c/9ba439cbdcf2
-[08/12] dax: advance the iomap_iter on dedupe range
-        https://git.kernel.org/vfs/vfs/c/39eb05112987
-[09/12] dax: advance the iomap_iter on pte and pmd faults
-        https://git.kernel.org/vfs/vfs/c/6fe32fe1bbc1
-[10/12] iomap: remove unnecessary advance from iomap_iter()
-        https://git.kernel.org/vfs/vfs/c/469739f1d8c5
-[11/12] iomap: rename iomap_iter processed field to status
-        https://git.kernel.org/vfs/vfs/c/edd3e3b7d210
-[12/12] iomap: introduce a full map advance helper
-        https://git.kernel.org/vfs/vfs/c/d79c9cc51297
+Christoph Hellwig (4):
+      [4b90de5bc0f5] xfs: reduce context switches for synchronous buffered I/O
+      [efc5f7a9f3d8] xfs: decouple buffer readahead from the normal buffer read path
+      [0d1120b9bbe4] xfs: remove most in-flight buffer accounting
+      [9b47d37496e2] xfs: remove the XBF_STALE check from xfs_buf_rele_cached
+
+Code Diffstat:
+
+ fs/xfs/xfs_buf.c         | 182 ++++++++++++++++-------------------------------
+ fs/xfs/xfs_buf.h         |   7 +-
+ fs/xfs/xfs_buf_mem.c     |   2 +-
+ fs/xfs/xfs_log_recover.c |   2 +-
+ fs/xfs/xfs_mount.c       |   7 +-
+ fs/xfs/xfs_rtalloc.c     |   2 +-
+ fs/xfs/xfs_trace.h       |   1 +
+ 7 files changed, 71 insertions(+), 132 deletions(-)
