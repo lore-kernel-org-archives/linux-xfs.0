@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48D89237168
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07F9B236A99
 	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 18:57:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740596253; cv=none; b=tLC4KaJm7NQWA+/5nGcJDx41D6XPMugfpN+xLvfGOG8nGIzWMsuUjKGVD6IHJXhxRay2ANv+eINXLUtxAIlAi/MXt2jnRpN4IWfHBHd9B95bTCn67snWq0o+vzv1ywVce8K1hEMH6qPADmZ48wwiK9iyWA5SLQauCCAw870x9us=
+	t=1740596254; cv=none; b=qRForHTTPBE/xnpBwC2KSgznywKDvPlKCJ3sPjHxUBv96LH7tJWNm8FjxBNCYv63ZlInfEhzdyZEhmDcbreCMP9Ts4jO11hD6+OmZQqxjANyztGmNs73udMZ0sATCe5mDtJ+6+vX2gCJKN+ko2eA4Ww7iaXAVFlEISPhMch2KMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740596253; c=relaxed/simple;
-	bh=JUX6CxOWTSyBlJGQjEbiOBtW9kGPePAlQ7PPWPnRsVE=;
+	s=arc-20240116; t=1740596254; c=relaxed/simple;
+	bh=ExV6vjb2Ea3+FaiFjZmS0RiRE5Hw1bt3pb9LNiTBen0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qzS1BKWCurPX9tZIL9nLO9EvixZKeebrVFuXvAs+W5kNVLO2tL0b9Tx+uxBqmrqcUyDe5tEre/HykPoHayuocSQHfuNMaA2YRKrOxD5GyztIJSZhhzD33Vu0reeeakC6tPG8unql3hgVgcBPCn5S9R3cqPvhZxKinaJW8fvTn0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=meefV8hL; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=GfeOFo9bzjEeTSJ/so45ciDgXQDNyyJ2lG5uH0XkGsI2cv3+9iuLpkUdJdVmUP4Cvzplsf3GLCFzl2VYqA6ZFPCZX/aNDVRqeNNmjLQ8v4iVy0j0QWtl/ZmjfJImyKm5c3pU6JfAcLZOz+iuKhE5x4qhugbj4WJ1EHGwdY6LMp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PBbZaLWZ; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="meefV8hL"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PBbZaLWZ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=yB0FXVK4WkoZeGmnqAThh+GAdm2+pWzPm1ZI7C94kZs=; b=meefV8hLdJ4Gax1ODcxBjVxDW3
-	5ZLukt6rEGHKgJk9rGxIWjA0XUI9HrMJzKSKfeAiabuirPybwzy8w0ka4/hYwKLzi48ctD9U9rvvG
-	FcUoXMVT+dcgFNILtnoSDpvHiZfNUWSQhueN9ySTXtaACoa1MsYkT3xF8OujvICbGF1+4LQ2KJAu1
-	wnHL2byjuRqYXWaKEh76lceji2xfyku6pGDx46hw9O+yq3T0mN/4qwkch8bR3JO5zWuIszeq/3Iwv
-	PqM6DeqNZEyFfgOtxVcfSqtIunXM7atarWeB5AAhIrmFcdFSDaBEH4A8qg5e/S5x+nAAfOUrsBIZG
-	nJsmS5Qg==;
+	bh=YAR+VhTroBYLl1B6jJYfJ/zKEpXFylaaDJoLiZzstUQ=; b=PBbZaLWZS9ZehbtUW1IMlb1XCe
+	Ypv0RIzbIRkQf+x71cm6NJVP1UyquclL3FnpQkdnrIiJDGjGhlmtL+i9lob8JwMo1fE88nw8OAPUH
+	PH6CwwkEplc9MiB7CGrlTq/GlSz75xmSDLSroUW6un1C1iW433wL8U9pmB1rIDGJYmlZVRejs+2LS
+	S0zDoEuG2nNlKX218BolmUhDY7qwbICbpAcFg0Vl2o5c+x55NQLnv8FJJV1PfY3QRc1F4SyED11Wi
+	Wg8i5kW3bUaVry0sjWvPvz3S0gYvhlHayyIAmnjZ73iqGx7DrKFRHL1lyC9UZRhKut15rqfoz0iD+
+	bz+i098Q==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tnMb4-000000053uh-3efa;
-	Wed, 26 Feb 2025 18:57:30 +0000
+	id 1tnMb5-000000053ux-256u;
+	Wed, 26 Feb 2025 18:57:31 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 22/44] xfs: parse and validate hardware zone information
-Date: Wed, 26 Feb 2025 10:56:54 -0800
-Message-ID: <20250226185723.518867-23-hch@lst.de>
+Subject: [PATCH 24/44] xfs: add support for zoned space reservations
+Date: Wed, 26 Feb 2025 10:56:56 -0800
+Message-ID: <20250226185723.518867-25-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250226185723.518867-1-hch@lst.de>
 References: <20250226185723.518867-1-hch@lst.de>
@@ -50,250 +50,534 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add support to validate and parse reported hardware zone state.
+For zoned file systems garbage collection (GC) has to take the iolock
+and mmaplock after moving data to a new place to synchronize with
+readers.  This means waiting for garbage collection with the iolock can
+deadlock.
+
+To avoid this, the worst case required blocks have to be reserved before
+taking the iolock, which is done using a new RTAVAILABLE counter that
+tracks blocks that are free to write into and don't require garbage
+collection.  The new helpers try to take these available blocks, and
+if there aren't enough available it wakes and waits for GC.  This is
+done using a list of on-stack reservations to ensure fairness.
 
 Co-developed-by: Hans Holmberg <hans.holmberg@wdc.com>
 Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/Makefile           |   1 +
- fs/xfs/libxfs/xfs_zones.c | 171 ++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_zones.h |  35 ++++++++
- 3 files changed, 207 insertions(+)
- create mode 100644 fs/xfs/libxfs/xfs_zones.c
- create mode 100644 fs/xfs/libxfs/xfs_zones.h
+ fs/xfs/Makefile              |   3 +-
+ fs/xfs/libxfs/xfs_bmap.c     |  15 ++-
+ fs/xfs/libxfs/xfs_types.h    |  12 +-
+ fs/xfs/xfs_mount.c           |  36 +++---
+ fs/xfs/xfs_trace.h           |  23 ++++
+ fs/xfs/xfs_zone_alloc.c      |   2 +
+ fs/xfs/xfs_zone_alloc.h      |  27 ++++
+ fs/xfs/xfs_zone_priv.h       |   2 +
+ fs/xfs/xfs_zone_space_resv.c | 244 +++++++++++++++++++++++++++++++++++
+ 9 files changed, 343 insertions(+), 21 deletions(-)
+ create mode 100644 fs/xfs/xfs_zone_space_resv.c
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 7afa51e41427..ea8e66c1e969 100644
+index 28bd2627e9ef..bdedf4bdb1db 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -64,6 +64,7 @@ xfs-y				+= $(addprefix libxfs/, \
- xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
- 				   xfs_rtbitmap.o \
- 				   xfs_rtgroup.o \
-+				   xfs_zones.o \
- 				   )
+@@ -138,7 +138,8 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
  
- # highlevel code
-diff --git a/fs/xfs/libxfs/xfs_zones.c b/fs/xfs/libxfs/xfs_zones.c
+ # xfs_rtbitmap is shared with libxfs
+ xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o \
+-				   xfs_zone_alloc.o
++				   xfs_zone_alloc.o \
++				   xfs_zone_space_resv.o
+ 
+ xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 522c126e52fb..63255820b58a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -40,6 +40,7 @@
+ #include "xfs_symlink_remote.h"
+ #include "xfs_inode_util.h"
+ #include "xfs_rtgroup.h"
++#include "xfs_zone_alloc.h"
+ 
+ struct kmem_cache		*xfs_bmap_intent_cache;
+ 
+@@ -4788,12 +4789,18 @@ xfs_bmap_del_extent_delay(
+ 	da_diff = da_old - da_new;
+ 	fdblocks = da_diff;
+ 
+-	if (bflags & XFS_BMAPI_REMAP)
++	if (bflags & XFS_BMAPI_REMAP) {
+ 		;
+-	else if (isrt)
+-		xfs_add_frextents(mp, xfs_blen_to_rtbxlen(mp, del->br_blockcount));
+-	else
++	} else if (isrt) {
++		xfs_rtbxlen_t	rtxlen;
++
++		rtxlen = xfs_blen_to_rtbxlen(mp, del->br_blockcount);
++		if (xfs_is_zoned_inode(ip))
++			xfs_zoned_add_available(mp, rtxlen);
++		xfs_add_frextents(mp, rtxlen);
++	} else {
+ 		fdblocks += del->br_blockcount;
++	}
+ 
+ 	xfs_add_fdblocks(mp, fdblocks);
+ 	xfs_mod_delalloc(ip, -(int64_t)del->br_blockcount, -da_diff);
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index dc1db15f0be5..f6f4f2d4b5db 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -244,12 +244,22 @@ enum xfs_free_counter {
+ 	 */
+ 	XC_FREE_RTEXTENTS,
+ 
++	/*
++	 * Number of available for use RT extents.
++	 *
++	 * This counter only exists for zoned RT device and indicates the number
++	 * of RT extents that can be directly used by writes.  XC_FREE_RTEXTENTS
++	 * also includes blocks that have been written previously and freed, but
++	 * sit in a rtgroup that still needs a zone reset.
++	 */
++	XC_FREE_RTAVAILABLE,
+ 	XC_FREE_NR,
+ };
+ 
+ #define XFS_FREECOUNTER_STR \
+ 	{ XC_FREE_BLOCKS,		"blocks" }, \
+-	{ XC_FREE_RTEXTENTS,		"rtextents" }
++	{ XC_FREE_RTEXTENTS,		"rtextents" }, \
++	{ XC_FREE_RTAVAILABLE,		"rtavailable" }
+ 
+ /*
+  * Type verifier functions
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 3edb9fc74640..a953383d691a 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -468,6 +468,7 @@ xfs_mount_reset_sbqflags(
+ static const char *const xfs_free_pool_name[] = {
+ 	[XC_FREE_BLOCKS]	= "free blocks",
+ 	[XC_FREE_RTEXTENTS]	= "free rt extents",
++	[XC_FREE_RTAVAILABLE]	= "available rt extents",
+ };
+ 
+ uint64_t
+@@ -475,22 +476,27 @@ xfs_default_resblks(
+ 	struct xfs_mount	*mp,
+ 	enum xfs_free_counter	ctr)
+ {
+-	uint64_t resblks;
+-
+-	if (ctr == XC_FREE_RTEXTENTS)
++	switch (ctr) {
++	case XC_FREE_BLOCKS:
++		/*
++		 * Default to 5% or 8192 FSBs of space reserved, whichever is
++		 * smaller.
++		 *
++		 * This is intended to cover concurrent allocation transactions
++		 * when we initially hit ENOSPC.  These each require a 4 block
++		 * reservation. Hence by default we cover roughly 2000
++		 * concurrent allocation reservations.
++		 */
++		return min(div_u64(mp->m_sb.sb_dblocks, 20), 8192ULL);
++	case XC_FREE_RTEXTENTS:
++	case XC_FREE_RTAVAILABLE:
++		if (IS_ENABLED(CONFIG_XFS_RT) && xfs_has_zoned(mp))
++			return xfs_zoned_default_resblks(mp, ctr);
+ 		return 0;
+-
+-	/*
+-	 * We default to 5% or 8192 fsbs of space reserved, whichever is
+-	 * smaller.  This is intended to cover concurrent allocation
+-	 * transactions when we initially hit enospc. These each require a 4
+-	 * block reservation. Hence by default we cover roughly 2000 concurrent
+-	 * allocation reservations.
+-	 */
+-	resblks = mp->m_sb.sb_dblocks;
+-	do_div(resblks, 20);
+-	resblks = min_t(uint64_t, resblks, 8192);
+-	return resblks;
++	default:
++		ASSERT(0);
++		return 0;
++	}
+ }
+ 
+ /* Ensure the summary counts are correct. */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index bdafdedb9ff8..a4134fc1db4f 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -363,6 +363,28 @@ DEFINE_EVENT(xfs_zone_alloc_class, name,			\
+ 	TP_ARGS(oz, rgbno, len))
+ DEFINE_ZONE_ALLOC_EVENT(xfs_zone_record_blocks);
+ DEFINE_ZONE_ALLOC_EVENT(xfs_zone_alloc_blocks);
++
++TRACE_EVENT(xfs_zones_mount,
++	TP_PROTO(struct xfs_mount *mp),
++	TP_ARGS(mp),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_rgnumber_t, rgcount)
++		__field(uint32_t, blocks)
++		__field(unsigned int, max_open_zones)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->rgcount = mp->m_sb.sb_rgcount;
++		__entry->blocks = mp->m_groups[XG_TYPE_RTG].blocks;
++		__entry->max_open_zones = mp->m_max_open_zones;
++	),
++	TP_printk("dev %d:%d zoned %u blocks_per_zone %u, max_open %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		__entry->rgcount,
++		__entry->blocks,
++		__entry->max_open_zones)
++);
+ #endif /* CONFIG_XFS_RT */
+ 
+ TRACE_EVENT(xfs_inodegc_worker,
+@@ -5766,6 +5788,7 @@ TRACE_EVENT(xfs_growfs_check_rtgeom,
+ 
+ TRACE_DEFINE_ENUM(XC_FREE_BLOCKS);
+ TRACE_DEFINE_ENUM(XC_FREE_RTEXTENTS);
++TRACE_DEFINE_ENUM(XC_FREE_RTAVAILABLE);
+ 
+ DECLARE_EVENT_CLASS(xfs_freeblocks_resv_class,
+ 	TP_PROTO(struct xfs_mount *mp, enum xfs_free_counter ctr,
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 21734a2d0336..3d3f7589bf63 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -922,6 +922,7 @@ xfs_mount_zones(
+ 	xfs_info(mp, "%u zones of %u blocks size (%u max open)",
+ 		 mp->m_sb.sb_rgcount, mp->m_groups[XG_TYPE_RTG].blocks,
+ 		 mp->m_max_open_zones);
++	trace_xfs_zones_mount(mp);
+ 
+ 	if (bdev_is_zoned(bt->bt_bdev)) {
+ 		error = blkdev_report_zones(bt->bt_bdev,
+@@ -939,6 +940,7 @@ xfs_mount_zones(
+ 		}
+ 	}
+ 
++	xfs_set_freecounter(mp, XC_FREE_RTAVAILABLE, iz.available);
+ 	xfs_set_freecounter(mp, XC_FREE_RTEXTENTS,
+ 			iz.available + iz.reclaimable);
+ 	return 0;
+diff --git a/fs/xfs/xfs_zone_alloc.h b/fs/xfs/xfs_zone_alloc.h
+index 78cd7bfc6ac8..28c9cffb72d5 100644
+--- a/fs/xfs/xfs_zone_alloc.h
++++ b/fs/xfs/xfs_zone_alloc.h
+@@ -5,6 +5,30 @@
+ struct iomap_ioend;
+ struct xfs_open_zone;
+ 
++struct xfs_zone_alloc_ctx {
++	struct xfs_open_zone	*open_zone;
++	xfs_filblks_t		reserved_blocks;
++};
++
++/*
++ * Grab any available space, even if it is less than what the caller asked for.
++ */
++#define XFS_ZR_GREEDY		(1U << 0)
++/*
++ * Only grab instantly available space, don't wait or GC.
++ */
++#define XFS_ZR_NOWAIT		(1U << 1)
++/*
++ * Dip into the reserved pool.
++ */
++#define XFS_ZR_RESERVED		(1U << 2)
++
++int xfs_zoned_space_reserve(struct xfs_inode *ip, xfs_filblks_t count_fsb,
++		unsigned int flags, struct xfs_zone_alloc_ctx *ac);
++void xfs_zoned_space_unreserve(struct xfs_inode *ip,
++		struct xfs_zone_alloc_ctx *ac);
++void xfs_zoned_add_available(struct xfs_mount *mp, xfs_filblks_t count_fsb);
++
+ void xfs_zone_alloc_and_submit(struct iomap_ioend *ioend,
+ 		struct xfs_open_zone **oz);
+ int xfs_zone_free_blocks(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
+@@ -18,6 +42,9 @@ void xfs_zoned_wake_all(struct xfs_mount *mp);
+ bool xfs_zone_rgbno_is_valid(struct xfs_rtgroup *rtg, xfs_rgnumber_t rgbno);
+ void xfs_mark_rtg_boundary(struct iomap_ioend *ioend);
+ 
++uint64_t xfs_zoned_default_resblks(struct xfs_mount *mp,
++		enum xfs_free_counter ctr);
++
+ #ifdef CONFIG_XFS_RT
+ int xfs_mount_zones(struct xfs_mount *mp);
+ void xfs_unmount_zones(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
+index 23d2fd6088ae..5283d77482d4 100644
+--- a/fs/xfs/xfs_zone_priv.h
++++ b/fs/xfs/xfs_zone_priv.h
+@@ -86,4 +86,6 @@ struct xfs_zone_info {
+ 
+ struct xfs_open_zone *xfs_open_zone(struct xfs_mount *mp, bool is_gc);
+ 
++void xfs_zoned_resv_wake_all(struct xfs_mount *mp);
++
+ #endif /* _XFS_ZONE_PRIV_H */
+diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
 new file mode 100644
-index 000000000000..b022ed960eac
+index 000000000000..eff9be026425
 --- /dev/null
-+++ b/fs/xfs/libxfs/xfs_zones.c
-@@ -0,0 +1,171 @@
++++ b/fs/xfs/xfs_zone_space_resv.c
+@@ -0,0 +1,244 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2023-2025 Christoph Hellwig.
 + * Copyright (c) 2024-2025, Western Digital Corporation or its affiliates.
 + */
 +#include "xfs.h"
-+#include "xfs_fs.h"
 +#include "xfs_shared.h"
 +#include "xfs_format.h"
-+#include "xfs_log_format.h"
 +#include "xfs_trans_resv.h"
 +#include "xfs_mount.h"
 +#include "xfs_inode.h"
-+#include "xfs_rtgroup.h"
++#include "xfs_rtbitmap.h"
++#include "xfs_zone_alloc.h"
++#include "xfs_zone_priv.h"
 +#include "xfs_zones.h"
 +
-+static bool
-+xfs_zone_validate_empty(
-+	struct blk_zone		*zone,
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgblock_t		*write_pointer)
++/*
++ * Note: the zoned allocator does not support a rtextsize > 1, so this code and
++ * the allocator itself uses file system blocks interchangeable with realtime
++ * extents without doing the otherwise required conversions.
++ */
++
++/*
++ * Per-task space reservation.
++ *
++ * Tasks that need to wait for GC to free up space allocate one of these
++ * on-stack and adds it to the per-mount zi_reclaim_reservations lists.
++ * The GC thread will then wake the tasks in order when space becomes available.
++ */
++struct xfs_zone_reservation {
++	struct list_head	entry;
++	struct task_struct	*task;
++	xfs_filblks_t		count_fsb;
++};
++
++/*
++ * Calculate the number of reserved blocks.
++ *
++ * XC_FREE_RTEXTENTS counts the user available capacity, to which the file
++ * system can be filled, while XC_FREE_RTAVAILABLE counts the blocks instantly
++ * available for writes without waiting for GC.
++ *
++ * For XC_FREE_RTAVAILABLE only the smaller reservation required for GC and
++ * block zeroing is excluded from the user capacity, while XC_FREE_RTEXTENTS
++ * is further restricted by at least one zone as well as the optional
++ * persistently reserved blocks.  This allows the allocator to run more
++ * smoothly by not always triggering GC.
++ */
++uint64_t
++xfs_zoned_default_resblks(
++	struct xfs_mount	*mp,
++	enum xfs_free_counter	ctr)
 +{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+
-+	if (rtg_rmap(rtg)->i_used_blocks > 0) {
-+		xfs_warn(mp, "empty zone %u has non-zero used counter (0x%x).",
-+			 rtg_rgno(rtg), rtg_rmap(rtg)->i_used_blocks);
-+		return false;
-+	}
-+
-+	*write_pointer = 0;
-+	return true;
-+}
-+
-+static bool
-+xfs_zone_validate_wp(
-+	struct blk_zone		*zone,
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgblock_t		*write_pointer)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+	xfs_rtblock_t		wp_fsb = xfs_daddr_to_rtb(mp, zone->wp);
-+
-+	if (rtg_rmap(rtg)->i_used_blocks > rtg->rtg_extents) {
-+		xfs_warn(mp, "zone %u has too large used counter (0x%x).",
-+			 rtg_rgno(rtg), rtg_rmap(rtg)->i_used_blocks);
-+		return false;
-+	}
-+
-+	if (xfs_rtb_to_rgno(mp, wp_fsb) != rtg_rgno(rtg)) {
-+		xfs_warn(mp, "zone %u write pointer (0x%llx) outside of zone.",
-+			 rtg_rgno(rtg), wp_fsb);
-+		return false;
-+	}
-+
-+	*write_pointer = xfs_rtb_to_rgbno(mp, wp_fsb);
-+	if (*write_pointer >= rtg->rtg_extents) {
-+		xfs_warn(mp, "zone %u has invalid write pointer (0x%x).",
-+			 rtg_rgno(rtg), *write_pointer);
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
-+static bool
-+xfs_zone_validate_full(
-+	struct blk_zone		*zone,
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgblock_t		*write_pointer)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+
-+	if (rtg_rmap(rtg)->i_used_blocks > rtg->rtg_extents) {
-+		xfs_warn(mp, "zone %u has too large used counter (0x%x).",
-+			 rtg_rgno(rtg), rtg_rmap(rtg)->i_used_blocks);
-+		return false;
-+	}
-+
-+	*write_pointer = rtg->rtg_extents;
-+	return true;
-+}
-+
-+static bool
-+xfs_zone_validate_seq(
-+	struct blk_zone		*zone,
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgblock_t		*write_pointer)
-+{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+
-+	switch (zone->cond) {
-+	case BLK_ZONE_COND_EMPTY:
-+		return xfs_zone_validate_empty(zone, rtg, write_pointer);
-+	case BLK_ZONE_COND_IMP_OPEN:
-+	case BLK_ZONE_COND_EXP_OPEN:
-+	case BLK_ZONE_COND_CLOSED:
-+		return xfs_zone_validate_wp(zone, rtg, write_pointer);
-+	case BLK_ZONE_COND_FULL:
-+		return xfs_zone_validate_full(zone, rtg, write_pointer);
-+	case BLK_ZONE_COND_NOT_WP:
-+	case BLK_ZONE_COND_OFFLINE:
-+	case BLK_ZONE_COND_READONLY:
-+		xfs_warn(mp, "zone %u has unsupported zone condition 0x%x.",
-+			rtg_rgno(rtg), zone->cond);
-+		return false;
++	switch (ctr) {
++	case XC_FREE_RTEXTENTS:
++		return (uint64_t)XFS_RESERVED_ZONES *
++			mp->m_groups[XG_TYPE_RTG].blocks +
++			mp->m_sb.sb_rtreserved;
++	case XC_FREE_RTAVAILABLE:
++		return (uint64_t)XFS_GC_ZONES *
++			mp->m_groups[XG_TYPE_RTG].blocks;
 +	default:
-+		xfs_warn(mp, "zone %u has unknown zone condition 0x%x.",
-+			rtg_rgno(rtg), zone->cond);
-+		return false;
++		ASSERT(0);
++		return 0;
 +	}
 +}
 +
-+static bool
-+xfs_zone_validate_conv(
-+	struct blk_zone		*zone,
-+	struct xfs_rtgroup	*rtg)
++void
++xfs_zoned_resv_wake_all(
++	struct xfs_mount		*mp)
 +{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
++	struct xfs_zone_info		*zi = mp->m_zone_info;
++	struct xfs_zone_reservation	*reservation;
 +
-+	switch (zone->cond) {
-+	case BLK_ZONE_COND_NOT_WP:
-+		return true;
-+	default:
-+		xfs_warn(mp,
-+"conventional zone %u has unsupported zone condition 0x%x.",
-+			 rtg_rgno(rtg), zone->cond);
-+		return false;
-+	}
++	spin_lock(&zi->zi_reservation_lock);
++	list_for_each_entry(reservation, &zi->zi_reclaim_reservations, entry)
++		wake_up_process(reservation->task);
++	spin_unlock(&zi->zi_reservation_lock);
 +}
 +
-+bool
-+xfs_zone_validate(
-+	struct blk_zone		*zone,
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgblock_t		*write_pointer)
++void
++xfs_zoned_add_available(
++	struct xfs_mount		*mp,
++	xfs_filblks_t			count_fsb)
 +{
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+	struct xfs_groups	*g = &mp->m_groups[XG_TYPE_RTG];
++	struct xfs_zone_info		*zi = mp->m_zone_info;
++	struct xfs_zone_reservation	*reservation;
++
++	if (list_empty_careful(&zi->zi_reclaim_reservations)) {
++		xfs_add_freecounter(mp, XC_FREE_RTAVAILABLE, count_fsb);
++		return;
++	}
++
++	spin_lock(&zi->zi_reservation_lock);
++	xfs_add_freecounter(mp, XC_FREE_RTAVAILABLE, count_fsb);
++	count_fsb = xfs_sum_freecounter(mp, XC_FREE_RTAVAILABLE);
++	list_for_each_entry(reservation, &zi->zi_reclaim_reservations, entry) {
++		if (reservation->count_fsb > count_fsb)
++			break;
++		wake_up_process(reservation->task);
++		count_fsb -= reservation->count_fsb;
++
++	}
++	spin_unlock(&zi->zi_reservation_lock);
++}
++
++static int
++xfs_zoned_space_wait_error(
++	struct xfs_mount		*mp)
++{
++	if (xfs_is_shutdown(mp))
++		return -EIO;
++	if (fatal_signal_pending(current))
++		return -EINTR;
++	return 0;
++}
++
++static int
++xfs_zoned_reserve_available(
++	struct xfs_inode		*ip,
++	xfs_filblks_t			count_fsb,
++	unsigned int			flags)
++{
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_zone_info		*zi = mp->m_zone_info;
++	struct xfs_zone_reservation	reservation = {
++		.task		= current,
++		.count_fsb	= count_fsb,
++	};
++	int				error;
 +
 +	/*
-+	 * Check that the zone capacity matches the rtgroup size stored in the
-+	 * superblock.  Note that all zones including the last one must have a
-+	 * uniform capacity.
++	 * If there are no waiters, try to directly grab the available blocks
++	 * from the percpu counter.
++	 *
++	 * If the caller wants to dip into the reserved pool also bypass the
++	 * wait list.  This relies on the fact that we have a very graciously
++	 * sized reserved pool that always has enough space.  If the reserved
++	 * allocations fail we're in trouble.
 +	 */
-+	if (XFS_BB_TO_FSB(mp, zone->capacity) != g->blocks) {
-+		xfs_warn(mp,
-+"zone %u capacity (0x%llx) does not match RT group size (0x%x).",
-+			rtg_rgno(rtg), XFS_BB_TO_FSB(mp, zone->capacity),
-+			g->blocks);
-+		return false;
++	if (likely(list_empty_careful(&zi->zi_reclaim_reservations) ||
++	    (flags & XFS_ZR_RESERVED))) {
++		error = xfs_dec_freecounter(mp, XC_FREE_RTAVAILABLE, count_fsb,
++				flags & XFS_ZR_RESERVED);
++		if (error != -ENOSPC)
++			return error;
 +	}
 +
-+	if (XFS_BB_TO_FSB(mp, zone->len) != 1 << g->blklog) {
-+		xfs_warn(mp,
-+"zone %u length (0x%llx) does match geometry (0x%x).",
-+			rtg_rgno(rtg), XFS_BB_TO_FSB(mp, zone->len),
-+			1 << g->blklog);
-+	}
++	if (flags & XFS_ZR_NOWAIT)
++		return -EAGAIN;
 +
-+	switch (zone->type) {
-+	case BLK_ZONE_TYPE_CONVENTIONAL:
-+		return xfs_zone_validate_conv(zone, rtg);
-+	case BLK_ZONE_TYPE_SEQWRITE_REQ:
-+		return xfs_zone_validate_seq(zone, rtg, write_pointer);
-+	default:
-+		xfs_warn(mp, "zoned %u has unsupported type 0x%x.",
-+			rtg_rgno(rtg), zone->type);
-+		return false;
++	spin_lock(&zi->zi_reservation_lock);
++	list_add_tail(&reservation.entry, &zi->zi_reclaim_reservations);
++	while ((error = xfs_zoned_space_wait_error(mp)) == 0) {
++		set_current_state(TASK_KILLABLE);
++
++		error = xfs_dec_freecounter(mp, XC_FREE_RTAVAILABLE, count_fsb,
++				flags & XFS_ZR_RESERVED);
++		if (error != -ENOSPC)
++			break;
++
++		spin_unlock(&zi->zi_reservation_lock);
++		schedule();
++		spin_lock(&zi->zi_reservation_lock);
 +	}
++	list_del(&reservation.entry);
++	spin_unlock(&zi->zi_reservation_lock);
++
++	__set_current_state(TASK_RUNNING);
++	return error;
 +}
-diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
-new file mode 100644
-index 000000000000..c4f1367b2cca
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_zones.h
-@@ -0,0 +1,35 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _LIBXFS_ZONES_H
-+#define _LIBXFS_ZONES_H
-+
-+struct xfs_rtgroup;
 +
 +/*
-+ * In order to guarantee forward progress for GC we need to reserve at least
-+ * two zones:  one that will be used for moving data into and one spare zone
-+ * making sure that we have enough space to relocate a nearly-full zone.
-+ * To allow for slightly sloppy accounting for when we need to reserve the
-+ * second zone, we actually reserve three as that is easier than doing fully
-+ * accurate bookkeeping.
++ * Implement greedy space allocation for short writes by trying to grab all
++ * that is left after locking out other threads from trying to do the same.
++ *
++ * This isn't exactly optimal and can hopefully be replaced by a proper
++ * percpu_counter primitive one day.
 + */
-+#define XFS_GC_ZONES		3U
++static int
++xfs_zoned_reserve_extents_greedy(
++	struct xfs_inode		*ip,
++	xfs_filblks_t			*count_fsb,
++	unsigned int			flags)
++{
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_zone_info		*zi = mp->m_zone_info;
++	s64				len = *count_fsb;
++	int				error = -ENOSPC;
 +
-+/*
-+ * In addition we need two zones for user writes, one open zone for writing
-+ * and one to still have available blocks without resetting the open zone
-+ * when data in the open zone has been freed.
-+ */
-+#define XFS_RESERVED_ZONES	(XFS_GC_ZONES + 1)
-+#define XFS_MIN_ZONES		(XFS_RESERVED_ZONES + 1)
++	spin_lock(&zi->zi_reservation_lock);
++	len = min(len, xfs_sum_freecounter(mp, XC_FREE_RTEXTENTS));
++	if (len > 0) {
++		*count_fsb = len;
++		error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, *count_fsb,
++				flags & XFS_ZR_RESERVED);
++	}
++	spin_unlock(&zi->zi_reservation_lock);
++	return error;
++}
 +
-+/*
-+ * Always keep one zone out of the general open zone pool to allow for GC to
-+ * happen while other writers are waiting for free space.
-+ */
-+#define XFS_OPEN_GC_ZONES	1U
-+#define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
++int
++xfs_zoned_space_reserve(
++	struct xfs_inode		*ip,
++	xfs_filblks_t			count_fsb,
++	unsigned int			flags,
++	struct xfs_zone_alloc_ctx	*ac)
++{
++	struct xfs_mount		*mp = ip->i_mount;
++	int				error;
 +
-+bool xfs_zone_validate(struct blk_zone *zone, struct xfs_rtgroup *rtg,
-+	xfs_rgblock_t *write_pointer);
++	ASSERT(ac->reserved_blocks == 0);
++	ASSERT(ac->open_zone == NULL);
 +
-+#endif /* _LIBXFS_ZONES_H */
++	error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
++			flags & XFS_ZR_RESERVED);
++	if (error == -ENOSPC && (flags & XFS_ZR_GREEDY) && count_fsb > 1)
++		error = xfs_zoned_reserve_extents_greedy(ip, &count_fsb, flags);
++	if (error)
++		return error;
++
++	error = xfs_zoned_reserve_available(ip, count_fsb, flags);
++	if (error) {
++		xfs_add_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb);
++		return error;
++	}
++	ac->reserved_blocks = count_fsb;
++	return 0;
++}
++
++void
++xfs_zoned_space_unreserve(
++	struct xfs_inode		*ip,
++	struct xfs_zone_alloc_ctx	*ac)
++{
++	if (ac->reserved_blocks > 0) {
++		struct xfs_mount	*mp = ip->i_mount;
++
++		xfs_zoned_add_available(mp, ac->reserved_blocks);
++		xfs_add_freecounter(mp, XC_FREE_RTEXTENTS, ac->reserved_blocks);
++	}
++	if (ac->open_zone)
++		xfs_open_zone_put(ac->open_zone);
++}
 -- 
 2.45.2
 
