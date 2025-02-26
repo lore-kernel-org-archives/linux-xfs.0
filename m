@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72FA62253A4
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 18:02:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5614F221DAA
+	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 18:20:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740592957; cv=none; b=IfwpagDKh+hVTZEwQ20igxJx7eKw6/KpeQvs0II9zSj0v8yFxwDRr7w/ffatIpMyzWRFkv+jmeaIB0I2GYmumjNM5rWyLxN2JRYPj/hnw9O/Rbhi1vML/xo5NqEtgFGEL2A7Za2+zlDD7XJ6hb6rI89uraiA1lUPJwcv+gBjAZw=
+	t=1740594003; cv=none; b=cwVQxYRI/Z2s4IKBRxHkYVscUPE2grnFRq//yRyhFG3fYoXuzGFgOyj5Y8kk1XFhBGlia7r6anMM+9GsakCkurag33Io0uGMxKTmAPqXfd59CkVvQIOjkkpvLHbuvguyOllhXI7FK1lIfMFBL6+Sb8lbBo0BD5hfyNFvIO8mugA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740592957; c=relaxed/simple;
-	bh=jQ6zq8iT5fLwonQQjqmt6UvLZGXBxmhaN1Szzfc4xYk=;
+	s=arc-20240116; t=1740594003; c=relaxed/simple;
+	bh=IW2S8fvhVTEAZc3b3VbSgbZOk6fvr8Nqj/cu44cK8e8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j6ijCPizddoIi100dNKSb78/+G3AqxJHvarmqIxUTUC1cIDqZ/GXPj1N8SfyYjh74Qt2X9tya1OPpzXsXu1geH8By+JuOTbaGdNbAbSqsHUkhso59buOR+DC0A+ceYmFmSPED2ZIeYH95JHYQtcjjnnR81HLND2blcTFVoSNBXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VT7h2187; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CJWXHb/JebU/R7ZTwk0QeQvDU4mA3M1RezPBmh+ofRD8yG8qVsG05Us4yKOz8+6yv4bjwVbjNWdKGj0yX0Ha33YO/DWw3A/wQiHe5fJXb4AW0LIieq62EMsT92siaRxM9z+/9rpzAvBbbuc9P76jRv5EA69numZ7eVh65re/4zs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rLXTKdZA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VT7h2187"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D131CC4CED6;
-	Wed, 26 Feb 2025 18:02:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rLXTKdZA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B96FFC4CEE7;
+	Wed, 26 Feb 2025 18:20:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740592956;
-	bh=jQ6zq8iT5fLwonQQjqmt6UvLZGXBxmhaN1Szzfc4xYk=;
+	s=k20201202; t=1740594002;
+	bh=IW2S8fvhVTEAZc3b3VbSgbZOk6fvr8Nqj/cu44cK8e8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VT7h2187ZvsQa8Kn3V7lEy+cuVVBvy6qS0PANCVAvy+t5OBav09RRUV6SziCNAeGc
-	 b14SPpMdnJog2lmjWbJfE7mRh9CGPsn00o379E3Ja7X/2aErTGluNFj3/2o5xkXwVU
-	 zkFQG+RwXhe0gYvAq6MgAkLycLJiO2Nt/c4rkcK7poOTzU1Bv7Wg3bJEbh8vcAPdYq
-	 k5pKyfchMXN9m/6lPWQ+orMWnx3utxbBbcDUzjMvv1+D0MvDiiLcbw9w4LVu6Q1eK6
-	 m81tKvgrG2XUrKmYRfR+sBeoScglLuAhWtstAAsDJzqq8hubkrZuITLaI788wyYNI/
-	 Jcgzek6RduqcA==
-Date: Wed, 26 Feb 2025 10:02:34 -0800
+	b=rLXTKdZAq6P+rZlHCpWnSEgJoae6yDWd1sp/hhYCOIq4bjp1rpwuzew2slqHWhnIM
+	 cdS4F9zAcb/rqTtUivj+EbEGDu991olZ9HsmzJlIXByzNJZ9A1BTpJ+bB5NpPomwZy
+	 YYDETfuyI48C7/8vTy06uZy9ns3WWpDNkD2Ejm2PYo6Q+v+/BFw/42ehOAQd5+hTyB
+	 C0JupQEO+ajeb9fsa8jiBfiWxp75CaOLYg7oyC6zcxrveyJzTfiW2UKtL6Fd+l6g2k
+	 uotWpap+sN28yd9oTSSbq6U5zNo9/rAIANn85XNo3pfcSC9LBqyK1EGGonW5W+6RP/
+	 uxFAa8Z1v6Hyw==
+Date: Wed, 26 Feb 2025 10:20:02 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/12] xfs: use vmalloc instead of vm_map_area for buffer
- backing memory
-Message-ID: <20250226180234.GT6242@frogsfrogsfrogs>
-References: <20250226155245.513494-1-hch@lst.de>
- <20250226155245.513494-11-hch@lst.de>
+To: bodonnel@redhat.com
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_repair: -EFSBADCRC needs action when read verifier
+ detects it.
+Message-ID: <20250226182002.GU6242@frogsfrogsfrogs>
+References: <20250226173335.558221-1-bodonnel@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,301 +42,174 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250226155245.513494-11-hch@lst.de>
+In-Reply-To: <20250226173335.558221-1-bodonnel@redhat.com>
 
-On Wed, Feb 26, 2025 at 07:51:38AM -0800, Christoph Hellwig wrote:
-> The fallback buffer allocation path currently open codes a suboptimal
-> version of vmalloc to allocate pages that are then mapped into
-> vmalloc space.  Switch to using vmalloc instead, which uses all the
-> optimizations in the common vmalloc code, and removes the need to
-> track the backing pages in the xfs_buf structure.
+On Wed, Feb 26, 2025 at 11:32:22AM -0600, bodonnel@redhat.com wrote:
+> From: Bill O'Donnell <bodonnel@redhat.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> For xfs_repair, there is a case when -EFSBADCRC is encountered but not
+> acted on. Modify da_read_buf to check for and repair. The current
+> implementation fails for the case:
+> 
+> $ xfs_repair xfs_metadump_hosting.dmp.image
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> Metadata CRC error detected at 0x46cde8, xfs_dir3_block block 0xd3c50/0x1000
+> bad directory block magic # 0x16011664 in block 0 for directory inode 867467
+> corrupt directory block 0 for inode 867467
+
+Curious -- this corrupt directory block fails the magic checks but
+process_dir2_data returns 0 because it didn't find any corruption.
+So it looks like we release the directory buffer (without dirtying it to
+reset the checksum)...
+
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 3
+>         - agno = 2
+> bad directory block magic # 0x16011664 in block 0 for directory inode 867467
+
+...and then it shows up here again...
+
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+> bad directory block magic # 0x16011664 for directory inode 867467 block 0: fixing magic # to 0x58444233
+
+...and again here.  Now we reset the magic and dirty the buffer...
+
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify and correct link counts...
+> Metadata corruption detected at 0x46cc88, xfs_dir3_block block 0xd3c50/0x1000
+
+...but I guess we haven't fixed anything in the buffer, so the verifier
+trips.  What code does 0x46cc88 map to in the dir3 block verifier
+function?  That might reflect some missing code in process_dir2_data.
+
+> libxfs_bwrite: write verifier failed on xfs_dir3_block bno 0xd3c50/0x8
+> xfs_repair: Releasing dirty buffer to free list!
+> xfs_repair: Refusing to write a corrupt buffer to the data device!
+> xfs_repair: Lost a write to the data device!
+> 
+> fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
+> 
+> 
+> With the patch applied:
+> $ xfs_repair xfs_metadump_hosting.dmp.image
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> Metadata CRC error detected at 0x46ce28, xfs_dir3_block block 0xd3c50/0x1000
+> bad directory block magic # 0x16011664 in block 0 for directory inode 867467
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+> bad directory block magic # 0x16011664 in block 0 for directory inode 867467
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> Metadata CRC error detected at 0x46ce28, xfs_dir3_block block 0xd3c50/0x1000
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> bad directory block magic # 0x16011664 for directory inode 867467 block 0: fixing magic # to 0x58444233
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> rebuilding directory inode 867467
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+> cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
+> cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify and correct link counts...
+> done
+> 
+> Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
 > ---
->  fs/xfs/xfs_buf.c     | 209 ++++++++++---------------------------------
->  fs/xfs/xfs_buf.h     |   7 --
->  fs/xfs/xfs_buf_mem.c |  11 +--
->  3 files changed, 49 insertions(+), 178 deletions(-)
+>  repair/da_util.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 15087f24372f..fb127589c6b4 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-
-<snip>
-
-> @@ -412,98 +384,18 @@ xfs_buf_alloc_backing_mem(
->  		goto fallback;
+> diff --git a/repair/da_util.c b/repair/da_util.c
+> index 7f94f4012062..0a4785e6f69b 100644
+> --- a/repair/da_util.c
+> +++ b/repair/da_util.c
+> @@ -66,6 +66,9 @@ da_read_buf(
 >  	}
->  	bp->b_addr = folio_address(folio);
-> -	bp->b_page_array[0] = &folio->page;
-> -	bp->b_pages = bp->b_page_array;
-> -	bp->b_page_count = 1;
-> -	bp->b_flags |= _XBF_PAGES;
->  	return 0;
->  
->  fallback:
-> -	/* Fall back to allocating an array of single page folios. */
-> -	bp->b_page_count = DIV_ROUND_UP(size, PAGE_SIZE);
-> -	if (bp->b_page_count <= XB_PAGES) {
-> -		bp->b_pages = bp->b_page_array;
-> -	} else {
-> -		bp->b_pages = kzalloc(sizeof(struct page *) * bp->b_page_count,
-> -					gfp_mask);
-> -		if (!bp->b_pages)
-> -			return -ENOMEM;
-> -	}
-> -	bp->b_flags |= _XBF_PAGES;
-> -
-> -	/*
-> -	 * Bulk filling of pages can take multiple calls. Not filling the entire
-> -	 * array is not an allocation failure, so don't back off if we get at
-> -	 * least one extra page.
-> -	 */
->  	for (;;) {
-> -		long	last = filled;
-> -
-> -		filled = alloc_pages_bulk(gfp_mask, bp->b_page_count,
-> -					  bp->b_pages);
-> -		if (filled == bp->b_page_count) {
-> -			XFS_STATS_INC(bp->b_mount, xb_page_found);
-> +		bp->b_addr = __vmalloc(size, gfp_mask);
-> +		if (bp->b_addr)
->  			break;
-> -		}
-> -
-> -		if (filled != last)
-> -			continue;
-> -
-> -		if (flags & XBF_READ_AHEAD) {
-> -			xfs_buf_free_pages(bp);
-> +		if (flags & XBF_READ_AHEAD)
->  			return -ENOMEM;
-> -		}
-> -
->  		XFS_STATS_INC(bp->b_mount, xb_page_retries);
->  		memalloc_retry_wait(gfp_mask);
->  	}
-> -	return 0;
-> -}
-> -
-> -/*
-> - *	Map buffer into kernel address-space if necessary.
-> - */
-> -STATIC int
-> -_xfs_buf_map_pages(
-> -	struct xfs_buf		*bp,
-> -	xfs_buf_flags_t		flags)
-> -{
-> -	ASSERT(bp->b_flags & _XBF_PAGES);
-> -	if (bp->b_page_count == 1) {
-> -		/* A single page buffer is always mappable */
-> -		bp->b_addr = page_address(bp->b_pages[0]);
-> -	} else {
-> -		int retried = 0;
-> -		unsigned nofs_flag;
-> -
-> -		/*
-> -		 * vm_map_ram() will allocate auxiliary structures (e.g.
-> -		 * pagetables) with GFP_KERNEL, yet we often under a scoped nofs
-> -		 * context here. Mixing GFP_KERNEL with GFP_NOFS allocations
-> -		 * from the same call site that can be run from both above and
-> -		 * below memory reclaim causes lockdep false positives. Hence we
-> -		 * always need to force this allocation to nofs context because
-> -		 * we can't pass __GFP_NOLOCKDEP down to auxillary structures to
-> -		 * prevent false positive lockdep reports.
-> -		 *
-> -		 * XXX(dgc): I think dquot reclaim is the only place we can get
-> -		 * to this function from memory reclaim context now. If we fix
-> -		 * that like we've fixed inode reclaim to avoid writeback from
-> -		 * reclaim, this nofs wrapping can go away.
+>  	libxfs_buf_read_map(mp->m_dev, map, nex, LIBXFS_READBUF_SALVAGE,
+>  			&bp, ops);
+> +	if (bp->b_error == -EFSBADCRC) {
+> +		libxfs_buf_relse(bp);
 
-Heh, I should've got rid of this comment when I added the code pinning
-dquot buffers to the dquot log item at transaction commit/quotacheck
-dirty time.
-
-> -		 */
-> -		nofs_flag = memalloc_nofs_save();
-> -		do {
-> -			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
-> -						-1);
-> -			if (bp->b_addr)
-> -				break;
-> -			vm_unmap_aliases();
-> -		} while (retried++ <= 1);
-> -		memalloc_nofs_restore(nofs_flag);
-> -
-> -		if (!bp->b_addr)
-> -			return -ENOMEM;
-> -	}
->  
->  	return 0;
->  }
-> @@ -1409,7 +1281,8 @@ xfs_buf_ioend(
->  	if (bp->b_flags & XBF_READ) {
->  		if (!bp->b_error && is_vmalloc_addr(bp->b_addr))
->  			invalidate_kernel_vmap_range(bp->b_addr,
-> -					xfs_buf_vmap_len(bp));
-> +					DIV_ROUND_UP(BBTOB(bp->b_length),
-> +							PAGE_SIZE));
-
-The second argument to invalidate_kernel_vmap_range is the number of
-bytes, right?  Isn't this BBTOB() without the DIV_ROUND_UP?  Or do you
-actually want roundup(BBTOB(b_length), PAGE_SIZE) here?
-
->  		if (!bp->b_error && bp->b_ops)
->  			bp->b_ops->verify_read(bp);
->  		if (!bp->b_error)
-> @@ -1561,29 +1434,43 @@ static void
->  xfs_buf_submit_bio(
->  	struct xfs_buf		*bp)
->  {
-> -	unsigned int		size = BBTOB(bp->b_length);
-> -	unsigned int		map = 0, p;
-> +	unsigned int		map = 0;
->  	struct blk_plug		plug;
->  	struct bio		*bio;
->  
-> -	bio = bio_alloc(bp->b_target->bt_bdev, bp->b_page_count,
-> -			xfs_buf_bio_op(bp), GFP_NOIO);
-> -	bio->bi_private = bp;
-> -	bio->bi_end_io = xfs_buf_bio_end_io;
-> +	if (is_vmalloc_addr(bp->b_addr)) {
-> +		unsigned int	size = BBTOB(bp->b_length);
-> +		unsigned int	alloc_size = DIV_ROUND_UP(size, PAGE_SIZE);
-> +		void		*data = bp->b_addr;
->  
-> -	if (bp->b_page_count == 1) {
-> -		__bio_add_page(bio, virt_to_page(bp->b_addr), size,
-> -				offset_in_page(bp->b_addr));
-> -	} else {
-> -		for (p = 0; p < bp->b_page_count; p++)
-> -			__bio_add_page(bio, bp->b_pages[p], PAGE_SIZE, 0);
-> -		bio->bi_iter.bi_size = size; /* limit to the actual size used */
-> +		bio = bio_alloc(bp->b_target->bt_bdev, size >> PAGE_SHIFT,
-
-Is the second argument (size >> PAGE_SHIFT) supposed to be the number of
-pages that we're going to __bio_add_page to the bio?
-
-In which case, shouldn't it be alloc_size ?
-
-> +				xfs_buf_bio_op(bp), GFP_NOIO);
-> +
-> +		do {
-> +			unsigned int	len = min(size, PAGE_SIZE);
-> +
-> +			ASSERT(offset_in_page(data) == 0);
-> +			__bio_add_page(bio, vmalloc_to_page(data), len, 0);
-> +			data += len;
-> +			size -= len;
-> +		} while (size);
->  
-> -		if (is_vmalloc_addr(bp->b_addr))
-> -			flush_kernel_vmap_range(bp->b_addr,
-> -					xfs_buf_vmap_len(bp));
-> +		flush_kernel_vmap_range(bp->b_addr, alloc_size);
-
-...and this one is roundup(size, PAGE_SIZE) isn't it?
-
-> +	} else {
-> +		/*
-> +		 * Single folio or slab allocation.  Must be contigous and thus
-
-s/contigous/contiguous/
+This introduces a use-after-free on the buffer pointer.
 
 --D
 
-> +		 * only a single bvec is needed.
-> +		 */
-> +		bio = bio_alloc(bp->b_target->bt_bdev, 1, xfs_buf_bio_op(bp),
-> +				GFP_NOIO);
-> +		__bio_add_page(bio, virt_to_page(bp->b_addr),
-> +				BBTOB(bp->b_length),
-> +				offset_in_page(bp->b_addr));
->  	}
->  
-> +	bio->bi_private = bp;
-> +	bio->bi_end_io = xfs_buf_bio_end_io;
-> +
->  	/*
->  	 * If there is more than one map segment, split out a new bio for each
->  	 * map except of the last one.  The last map is handled by the
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 57faed82e93c..3089e5d5f042 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -37,7 +37,6 @@ struct xfs_buf;
->  #define _XBF_LOGRECOVERY (1u << 18)/* log recovery buffer */
->  
->  /* flags used only internally */
-> -#define _XBF_PAGES	 (1u << 20)/* backed by refcounted pages */
->  #define _XBF_KMEM	 (1u << 21)/* backed by heap memory */
->  #define _XBF_DELWRI_Q	 (1u << 22)/* buffer on a delwri queue */
->  
-> @@ -63,7 +62,6 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_STALE,		"STALE" }, \
->  	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
->  	{ _XBF_LOGRECOVERY,	"LOG_RECOVERY" }, \
-> -	{ _XBF_PAGES,		"PAGES" }, \
->  	{ _XBF_KMEM,		"KMEM" }, \
->  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
->  	/* The following interface flags should never be set */ \
-> @@ -125,8 +123,6 @@ struct xfs_buftarg {
->  	struct xfs_buf_cache	bt_cache[];
->  };
->  
-> -#define XB_PAGES	2
-> -
->  struct xfs_buf_map {
->  	xfs_daddr_t		bm_bn;	/* block number for I/O */
->  	int			bm_len;	/* size of I/O */
-> @@ -188,13 +184,10 @@ struct xfs_buf {
->  	struct xfs_buf_log_item	*b_log_item;
->  	struct list_head	b_li_list;	/* Log items list head */
->  	struct xfs_trans	*b_transp;
-> -	struct page		**b_pages;	/* array of page pointers */
-> -	struct page		*b_page_array[XB_PAGES]; /* inline pages */
->  	struct xfs_buf_map	*b_maps;	/* compound buffer map */
->  	struct xfs_buf_map	__b_map;	/* inline compound buffer map */
->  	int			b_map_count;
->  	atomic_t		b_pin_count;	/* pin count */
-> -	unsigned int		b_page_count;	/* size of page array */
->  	int			b_error;	/* error code on I/O */
->  	void			(*b_iodone)(struct xfs_buf *bp);
->  
-> diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
-> index 07bebbfb16ee..e2f6c5524771 100644
-> --- a/fs/xfs/xfs_buf_mem.c
-> +++ b/fs/xfs/xfs_buf_mem.c
-> @@ -169,9 +169,6 @@ xmbuf_map_page(
->  	unlock_page(page);
->  
->  	bp->b_addr = page_address(page);
-> -	bp->b_pages = bp->b_page_array;
-> -	bp->b_pages[0] = page;
-> -	bp->b_page_count = 1;
->  	return 0;
->  }
->  
-> @@ -180,16 +177,10 @@ void
->  xmbuf_unmap_page(
->  	struct xfs_buf		*bp)
->  {
-> -	struct page		*page = bp->b_pages[0];
-> -
->  	ASSERT(xfs_buftarg_is_mem(bp->b_target));
->  
-> -	put_page(page);
-> -
-> +	put_page(virt_to_page(bp->b_addr));
->  	bp->b_addr = NULL;
-> -	bp->b_pages[0] = NULL;
-> -	bp->b_pages = NULL;
-> -	bp->b_page_count = 0;
->  }
->  
->  /* Is this a valid daddr within the buftarg? */
+> +	}
+>  	if (map != map_array)
+>  		free(map);
+>  	return bp;
 > -- 
-> 2.45.2
+> 2.48.1
 > 
 > 
