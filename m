@@ -1,73 +1,72 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8144C222577
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50731223329
 	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 14:50:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740581458; cv=none; b=upIcr5iFWdUUvYrMN5OleFdwIZo1YPy03I8ugduhamWN9JOI9MmSb+/FR79A0JHpgSIeTORoACK2R2j7ffCGKlShIN+lUydpE5uskD1NA+5YldgJTypF2vUgGDBBOfwLpgAIpnwSufkyBUlmUas75G9qTCBVHRpyWlPuKo06/zo=
+	t=1740581458; cv=none; b=fit+E1ouP/mXiRWASL6dCU5fpX+J1wZ0wqf5Odd1a5bJKuAxJk1XkNFbcdSJIG3rhWTryFr8kpm8yGY2IGQ613X9Wv31H0bh8PUXeJPMYAqxkawhxEX/pLK2z51QArRTAdYmspoWI18MqQMt83iGWH+i+lkrAdmjaoO6IQw10UI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1740581458; c=relaxed/simple;
-	bh=nWXniU+15Xc5fVHjiKp7hiPT8D01Okf4RRSq4ClOuxU=;
+	bh=6O0S7TWkHSEtg09ESsQ6vxXaH4L57S+mQLcdc4N9Y0E=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AMYtbuUJvWnh5lparUoeRaJf1mJVvef0IYhQpOTolWrkjWeuICGsUg196d7S7rJzGDH1RXtpqc3t9XDwGO7Tzm8uVkpfkIDMPaoSFCGyRvkSUUZbukrsgiiB6LNZSeSl/d9NXQnMeqYqtj0isuFS233bXkPhog+ZwBmHjxMeC4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L/8Qjyns; arc=none smtp.client-ip=170.10.129.124
+	 In-Reply-To:To:Cc; b=s0/kjNKeiBRYR+EQZJdk+FxFGm09Efhgh2NfPobm13OwtsWXahOyAovK6sxbdikQHt42nzCxDISWhYLQI4QPuAHR7ZPlScdmr9l6wU+jUGvZW1rBgm8yZi+8kpNCyxJ2AACVDb8U9mlrowEQ9YfSDffRYiO0gkMTh3Bkcj+Vifs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Rp0tOoWA; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L/8Qjyns"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rp0tOoWA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740581455;
+	s=mimecast20190719; t=1740581456;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=TKPtXsMH69xJKPgfxR6xbzqEWHadgfTeIRJ9Po3KV5I=;
-	b=L/8QjynsvOc5lc2T4NxcBHJJhf5OqMwdc61pJtlKEKE9/+EKp5nnehM0eXArI6tyHRb72N
-	e9ElJ6SHZBaOU6WAkCip4cWJkM4oHs/u4io+AEItpYFEH3nr+lpv+o8OPA3zeXI/bqkZhx
-	jrou7KEHWUbSNUW5dqVUpiibNSa+18Q=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=gxR62M3Qycv1E9pVPUB0zdr4XAEKWfS7eyOmlP2oXC4=;
+	b=Rp0tOoWAlPn8gG6QAcZN2IQqYr06F2Jn2tTUeNpEIcibgc8/nEBIBOmvRAKgsz33NsGU0S
+	hwAyZ6loM1KsA9KzdfzHZ8E+7VFlFPI6RqeB1zbDPZt7dX7FPcbuZlUpo4JzgqQ6ia99Hu
+	9v69UyDo2WRQEFh7X7dq8KvAznqlHTc=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-657-4VWlAgBIMgCgKNAyGNfQ2w-1; Wed, 26 Feb 2025 09:50:54 -0500
-X-MC-Unique: 4VWlAgBIMgCgKNAyGNfQ2w-1
-X-Mimecast-MFC-AGG-ID: 4VWlAgBIMgCgKNAyGNfQ2w_1740581453
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-abb93de227dso656416966b.1
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 06:50:53 -0800 (PST)
+ us-mta-608-Kr9edyIiOK-WHairzSVyvQ-1; Wed, 26 Feb 2025 09:50:54 -0500
+X-MC-Unique: Kr9edyIiOK-WHairzSVyvQ-1
+X-Mimecast-MFC-AGG-ID: Kr9edyIiOK-WHairzSVyvQ_1740581454
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-abbba16956bso987315266b.2
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 06:50:54 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740581452; x=1741186252;
+        d=1e100.net; s=20230601; t=1740581453; x=1741186253;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=TKPtXsMH69xJKPgfxR6xbzqEWHadgfTeIRJ9Po3KV5I=;
-        b=B+YFkk5YVSmVC1Vs7JfsHdD76HnDj88iS7YObJAH5XkqyX70bTjfQBDcR+oucYN3MW
-         C/1gsU6iNumcr+dHi3O1bmDnLVhYA53AU7pgYFo8i8c/rTEh5zxMMzsbdG2uPmSvXePC
-         d6gA/Fjy9U5+VcOhCCsBhTqYq1QCewVkG9h9DbSlBFnfpjcd05vWNaBIn2k5nuXXYLn3
-         WMdQlUz4TLfJ9GwRoljXGpnfjYvD0pX0wKQcofW3a1lnWKKCPbRcBM9rHdmZbJEiz2SF
-         IukOWxCdFyg5ZA2FCpfdWsifv3XsU2MAmhoyjsec4sIkb4mGySDU2tReAPr3G4eVoeEy
-         Lwgg==
-X-Gm-Message-State: AOJu0YyBxrc+DvsE+6fgSHECFCYIV7eb3z3w8W0XJa/OcJCEZ2Ck2a6H
-	JO8rGwe9x40sHpDum3kzX7oE1JSGDG4aeQns2wA5uNVL+wQ+DlbWfVULxU7HKpyTL+13YTs29QZ
-	VTTTB/MUzh/LRRdIrX9nCPOLGb9hy5y+GJH9BsQT+Uh0jgXqBdR+oQgig
-X-Gm-Gg: ASbGncve5xDblhL679YFjIXA3C0W/gAmeJmrj2/dPnm0oZfOVbelVAjSTYqgbYSRcx4
-	LCjLTxSSiJADb8XZydv+lbc74Qwje2XDMjaDTprrtGE3fGd9pv+Iy3+uEDUM2IAvyJUpRkGpsSm
-	qzmU2TJfzYoZVFs359AaJOM0Sp7Sd+ksgzlwFajwdayc3yTUUQMQWKE2fUyiLqyceBGZrzPBMQc
-	T9D5B/EaLdbh+1I2ECt8ETG2YbnBaNZbbV23hnAKnsJOyHNS3MKqbhJgeMfiQGe6e+GCttDnFSj
-	6ma2qsEYcXqft0p8Xpkl2eR14kLqPB+yfLpDVblJ3w==
-X-Received: by 2002:a17:907:7753:b0:abb:e7ed:d603 with SMTP id a640c23a62f3a-abed0c76db8mr804354266b.9.1740581452586;
-        Wed, 26 Feb 2025 06:50:52 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFYBkKPk62N3G7pEZ1dz89MOAvGyorK44fGFWGmJo7gRoGMTd+nn9OdZiytzlWWn9myeqeGzw==
-X-Received: by 2002:a17:907:7753:b0:abb:e7ed:d603 with SMTP id a640c23a62f3a-abed0c76db8mr804351366b.9.1740581452205;
-        Wed, 26 Feb 2025 06:50:52 -0800 (PST)
+        bh=gxR62M3Qycv1E9pVPUB0zdr4XAEKWfS7eyOmlP2oXC4=;
+        b=Mhijcmh1TfPfYySgj2j505WzNqStGgjN5vH7RfiIM6iBH96dL3L8iMR1wUq3vuZlwK
+         6bPU5pJsonzw9ueJ/NfuTFVufUuagr5b9AbZb6wtrEaqcdv53Kx1wLL6A0UuAfTGNND/
+         +HwYfvy5Wvasrx7X+3NTiDFMZBpJrIR7iqBBTV3iA4KbjxRI8FiHECo3UtgUGLHMt7eZ
+         WajKQJlOBq6pry3PtiVlP3a+4SAklp5xKHmD7oEZqyduR+346rKYhSXD3KPfm1N7XNXM
+         J07LQnv3waaov/FzBDeJMjwj5xN18x0/5KRbZD5inGzzAHkdBvXBnosFoXaTV5oh4wVu
+         0LFA==
+X-Gm-Message-State: AOJu0Yx1NroSvAtWdegNdxPvbtuT16Xc9srgQvftE8SQmx6c4kVsMC0Z
+	+3OogkEqmFuT67DATz5Id3mW2qS78V3Sd9tdvhO1zhGsD16PldS7DUHcxADNzj3VZkQXilE3WV0
+	IQBEbobDQVS1iLAcMQsgo/CRHll8e65Vr9XhgDIlgEiGk51lHMlULRvXH
+X-Gm-Gg: ASbGncvB/aQpbp/mffFiGolXMWWW4fZLCd2w6vso0HNnceqG8N+/C4d/mWMKLdJlSNG
+	AoIBWJhSMtOVHKoUNPoIMBcZFF4joRqSOKcXKHLfxbU1ZLDlz5cmwlIn3IPkhN3VPyPYrYuu79l
+	hksXIDjf7Y53liOStscXfj4dFfwDKOxg+IiqLHsKK1IIwSEhgUa7uT7mRFk1k+eXozrB9TjooyL
+	IqLPEeYkGilDrrn5JPxBielYHVF8Hq8QOC8LQ09LLCmMMAAgMnNu0Z7Su7ZLMTGa0p4YwioDK8t
+	iD+kEm+YdEG5JGV1tPJxci9qaODHk20pyqW1xo535Q==
+X-Received: by 2002:a17:907:7f90:b0:ab7:bc17:b3a4 with SMTP id a640c23a62f3a-abed0e098a3mr1080763966b.34.1740581453542;
+        Wed, 26 Feb 2025 06:50:53 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGKJy8zmUFXlBn83Yjn1DIxH0zDl6L7+jDSw/6TW2uA+uck0JNKLyBk0NU0k+wQIhC8ojUt2g==
+X-Received: by 2002:a17:907:7f90:b0:ab7:bc17:b3a4 with SMTP id a640c23a62f3a-abed0e098a3mr1080759566b.34.1740581453089;
+        Wed, 26 Feb 2025 06:50:53 -0800 (PST)
 Received: from [127.0.0.2] (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abed1cd564esm337731666b.21.2025.02.26.06.50.51
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abed1cd564esm337731666b.21.2025.02.26.06.50.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Feb 2025 06:50:51 -0800 (PST)
+        Wed, 26 Feb 2025 06:50:52 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Wed, 26 Feb 2025 15:50:31 +0100
-Subject: [PATCH v5 06/10] git-contributors: make revspec required and
- shebang fix
+Date: Wed, 26 Feb 2025 15:50:32 +0100
+Subject: [PATCH v5 07/10] release.sh: generate ANNOUNCE email
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,66 +75,119 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250226-update-release-v5-6-481914e40c36@kernel.org>
+Message-Id: <20250226-update-release-v5-7-481914e40c36@kernel.org>
 References: <20250226-update-release-v5-0-481914e40c36@kernel.org>
 In-Reply-To: <20250226-update-release-v5-0-481914e40c36@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: "Darrick J. Wong" <djwong@kernel.org>, 
  Andrey Albershteyn <aalbersh@kernel.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1798; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=nWXniU+15Xc5fVHjiKp7hiPT8D01Okf4RRSq4ClOuxU=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0vdrOR/6aR+QpfczbfcC1U132MOdjkT6p64LmMZbw
- vo9LnThj4qOUhYGMS4GWTFFlnXSWlOTiqTyjxjUyMPMYWUCGcLAxSkAEzl2k5Fh/9y4l22z+5ld
- H7n4xkyyCay5YaOqfe7FrpbWLfnycv+PMTKcNPEyc1X5Hv8/88XZx3GXjba+utWt+C7zjX6Y+l5
- t9mwuABqeR8s=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2633; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=6O0S7TWkHSEtg09ESsQ6vxXaH4L57S+mQLcdc4N9Y0E=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIY0vdrOWeZhiocWazDfNSguqrk7XmHfqdVh76JVXxy2
+ cZhJ8ClxtFRysIgxsUgK6bIsk5aa2pSkVT+EYMaeZg5rEwgQxi4OAVgIrt7GBn27T9iF2P/Xnun
+ A29Pe4WW/tOUVB7H/9nyc/46vnkS2vORkeGyhOSSVNOeCmvnKSZT/1xbrjJ/Udh/u9ffLl5eq7i
+ laj4vAK/JRdw=
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
-
-Without default value script will show help instead of just hanging
-waiting for input on stdin.
-
-Shebang fix for system with different python location than the
-/usr/bin one.
-
-Cut leading delimiter from the final CC string.
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- tools/git-contributors.py | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ release.sh | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
-diff --git a/tools/git-contributors.py b/tools/git-contributors.py
-index 1a0f2b80e3dad9124b86b29f8507389ef91fe813..01177a9af749776ce4ac982f29f8f9302904d820 100755
---- a/tools/git-contributors.py
-+++ b/tools/git-contributors.py
-@@ -1,4 +1,4 @@
--#!/usr/bin/python3
-+#!/usr/bin/env python3
+diff --git a/release.sh b/release.sh
+index 385607f636d965ad98f0f3115e6f34d9e4042592..1c0c767863d6fe6572315ba26b58f66f8668a93c 100755
+--- a/release.sh
++++ b/release.sh
+@@ -13,11 +13,13 @@ set -e
  
- # List all contributors to a series of git commits.
- # Copyright(C) 2025 Oracle, All Rights Reserved.
-@@ -144,8 +144,7 @@ def main():
-     global DEBUG
+ KUP=0
+ COMMIT=1
++LAST_HEAD=""
  
-     parser = argparse.ArgumentParser(description = "List email addresses of contributors to a series of git commits.")
--    parser.add_argument("revspec", nargs = '?', default = None, \
--            help = "git revisions to process.")
-+    parser.add_argument("revspec", help = "git revisions to process.")
-     parser.add_argument("--separator", type = str, default = '\n', \
-             help = "Separate each email address with this string.")
-     parser.add_argument('--debug', action = 'store_true', default = False, \
-@@ -160,9 +159,6 @@ def main():
-         # read git commits from repo
-         contributors = fd.run(backtick(['git', 'log', '--pretty=medium',
-                   args.revspec]))
--    else:
--        # read patch from stdin
--        contributors = fd.run(sys.stdin.readlines())
+ help() {
+ 	echo "$(basename $0) - prepare xfsprogs release tarball or for-next update"
+ 	printf "\t[--kup|-k] upload final tarball with KUP\n"
+ 	printf "\t[--no-commit|-n] don't create release commit\n"
++	printf "\t[--last-head|-l] commit of the last release\n"
+ }
  
-     print(args.separator.join(sorted(contributors)))
-     return 0
+ update_version() {
+@@ -40,6 +42,48 @@ update_version() {
+ 	sed -i "1s/^/xfsprogs (${version}-1) unstable; urgency=low\n/" ./debian/changelog
+ }
+ 
++prepare_mail() {
++	branch="$1"
++	mail_file=$(mktemp)
++	if [ -n "$LAST_HEAD" ]; then
++		if [ $branch == "master" ]; then
++			reason="$(git describe --abbrev=0 $branch) released"
++		else
++			reason="for-next updated to $(git log --oneline --format="%h" -1 $branch)"
++		fi;
++		cat << EOF > $mail_file
++To: linux-xfs@vger.kernel.org
++Cc: $(./tools/git-contributors.py $LAST_HEAD..$branch --separator ', ')
++Subject: [ANNOUNCE] xfsprogs: $reason
++
++Hi folks,
++
++The xfsprogs $branch branch in repository at:
++
++	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
++
++has just been updated.
++
++Patches often get missed, so if your outstanding patches are properly reviewed
++on the list and not included in this update, please let me know.
++
++The for-next branch has also been updated to match the state of master.
++
++The new head of the $branch branch is commit:
++
++$(git log --oneline --format="%H" -1 $branch)
++
++New commits:
++
++$(git shortlog --format="[%h] %s" $LAST_HEAD..$branch)
++
++Code Diffstat:
++
++$(git diff --stat --summary -C -M $LAST_HEAD..$branch)
++EOF
++	fi
++}
++
+ while [ $# -gt 0 ]; do
+ 	case "$1" in
+ 		--kup|-k)
+@@ -48,6 +92,10 @@ while [ $# -gt 0 ]; do
+ 		--no-commit|-n)
+ 			COMMIT=0
+ 			;;
++		--last-head|-l)
++			LAST_HEAD=$2
++			shift
++			;;
+ 		--help|-h)
+ 			help
+ 			exit 0
+@@ -126,6 +174,12 @@ if [ $KUP -eq 1 ]; then
+ 		pub/linux/utils/fs/xfs/xfsprogs/
+ fi;
+ 
++prepare_mail "master"
++
+ echo ""
+ echo "Done. Please remember to push out tags and the branch."
+ printf "\tgit push origin v${version} master:master master:for-next\n"
++if [ -n "$LAST_HEAD" ]; then
++	echo "Command to send ANNOUNCE email"
++	printf "\tneomutt -H $mail_file\n"
++fi
 
 -- 
 2.47.2
