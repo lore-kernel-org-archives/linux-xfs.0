@@ -1,234 +1,157 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C586241688
-	for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 20:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B2F25CC80;
+	Wed, 26 Feb 2025 22:27:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740602947; cv=none; b=LRxjGDCpxOLoP8IVdCvSlywWMS5Q1e4T1J6Vm7u0nrTy/rsYKXSTyMEG75V3uA6IaG7RhOvsz9SMeeX+KZEJ6jtachghWDswAaGe+rCOnbAQHTBauymSO+09E/xCkn1CHBXdK9nz/EHlYsXQQkSnIVBZ+3r1wyZJbBoAb4kwgf0=
+	t=1740608820; cv=none; b=POV7BqsHltpNjnKUrPjztvHFEcZ+6WK3ydlheME3M4koO1aiqck8q7NT25G405El5rtfgRuB3QEwKf9RJJyYHXvHlUtZhmyly0gHR7LsnR9oRhSCfzvpWlvw6VCClD5Z8bOUkvP/JXKoscYGJaJ2vy5lErpyxHSQkNCDLz6xf/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740602947; c=relaxed/simple;
-	bh=qclk0b4WczLTgOcgrRGcu+KMX+qE0RL3BNOM6NOjS+I=;
+	s=arc-20240116; t=1740608820; c=relaxed/simple;
+	bh=O5zZ7g63I+0ZeYH00JZerlvbNik71qO0CgwvkTnWcIs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=guB6M7VQ60sNdZyz7aQ5OxH2sD2BHMELnTwlnO5SncKXt4qvKrS+Gp9a9EJRgEZscDfHU62UGnhMebmpMJGwG7N1Oqrli31XGX8OlioptXLX6crbYBeD1rmRHvJ9dp7x4tG/Qok4bEHYasbp0EM1PhlMDyqsl62Sj9RWmzMki6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KIE3u/fN; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=B3PfCFO5hiCvcw4q9HDa7O6w1BcxdYyvtboUer8VaVjxnn/e+ZoolJsLiRIbGay97ZQtUsYOjEzMOr7VY1p+umFvz0OMlOvg2ZwM6UAP/drhv8KyxVLzlcvlp3L1hhaU+OvDLXbJxsvPqX8FyP+yA7mTntWmpXd1Tj4wcbQBGQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aqYqpdVV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KIE3u/fN"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2234e4b079cso1700345ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Feb 2025 12:49:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1740602944; x=1741207744; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Mjphc0mHAAvrQK0ML5Y+/zaRiBObs03G3AToZgygKhw=;
-        b=KIE3u/fNWXK3Z1tfTrwGg6vJw/7qcyw3Rns42ACn9dezoSEB7B3Z9lB6hWir253cDi
-         6vYsqm8iKLkn/KYlN0MSUTppmeYIuv1x78anivBWO3SHDHScjtvWNlWmTChrcW7cgxiJ
-         /w80RbUmqAVARnEd6TmczdAu7MoD10tb43MZLwYvd3I3psx1kczQQ1pwOI4/WYINheVR
-         yeFgwrdQ5/3AS0ABbqqKKS4h0bpRQHgR9pdNRvMd24hnmPk9rlQ9PGpJCdSGl+bJRM81
-         LSAnA7V8MZN7+azFADMn5A92qoFI12gWPRcx7Bzva8/JFUdKnja3U9IrQ2Zbf/Es7d0p
-         RdOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740602944; x=1741207744;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Mjphc0mHAAvrQK0ML5Y+/zaRiBObs03G3AToZgygKhw=;
-        b=Egj46Q+M0CLjWnEMUJM1y+iWcnB3wMiwpkjIqFngD/Te6RJB7zW9w9AZgrfqcLF93E
-         utyqRwNwE22CQxM6ur9HIlS0vcWsA0ZvDIQKHoIEMdUIJGyAvAwA+4SrschmlJg83BFu
-         OpmoaW8e28q27ARrLQZq4Y+bCqiBxNrqgC3/B0pk8Xa2BO7WePNRPiWApkAxwknlcnrD
-         6lL4h2+jVKni8naInpIRizONQcO/62kkqPKii5bu3I454hldgOSncgfokghJxMmFAsDr
-         /gRlvPZVm2ehj6+Z4iloIIURz6itTIdCgYaH3ST/PIUXoG5i8ednG18mUbXlU06M65oH
-         JAMA==
-X-Forwarded-Encrypted: i=1; AJvYcCVLom+ypVR2Mz6swsb/FF4yu4J2K9nzyxVlDlPS625tqSu7f71S1I4PU6MM/BAH5yPaDlVPdE8FgFw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwLkl3+dFEOX6zJ/q9FNwXzzS6ek7qNjqRnZ6MykUkkUWC/dkNV
-	UxgSbWmiOl7TzDRNSHbjLiuQA2F6Q+scMkOruBTXMtHEL3tcS84CMz0PJy1cjMI=
-X-Gm-Gg: ASbGncuW9ioRgQag4bkAzeNJjS4vLkHC06E/4xus0XaEcxTSaOBRfrvYC5nxW5noPYo
-	PC8bbXCT0H0RMOMJULE9T2z9fwFTHud0QDr89wZaW2i6H6K9ymtIAmd86Oe7xgjJINA3jETF9Wa
-	9ifmUjmYFq9lxBLAJHjl9VT2gasQd/lkDXVubU3+BsumI9oR6gIaQzkp0Wnh822niZzn94SxGf2
-	Zn7IHak0qoSHovH2IKTQHN6yJJofD/SGpPml6HLVUGV5ugqScfxnU+C718bZXy8DRd64QTdogaz
-	CdNnIbRjSLwQIfIzwK8/LXaCL9Qx8wbO/7Vz81I2NnGjq9OpbjzD8SDMdITqZvMixSBsggpj30R
-	O7Q==
-X-Google-Smtp-Source: AGHT+IHjkKZNnGS0pG/zXxkdwmPvjCRFvZfP7g0ivgkDJxNmLHl3RTeBqcQpvhrw778IYD8k4cqvDA==
-X-Received: by 2002:a17:902:eccf:b0:21f:6fb9:9299 with SMTP id d9443c01a7336-22307b69880mr126851065ad.27.1740602944396;
-        Wed, 26 Feb 2025 12:49:04 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223504e19f6sm396175ad.183.2025.02.26.12.49.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Feb 2025 12:49:03 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tnOKy-00000006LNk-45VO;
-	Thu, 27 Feb 2025 07:49:00 +1100
-Date: Thu, 27 Feb 2025 07:49:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Pavel Begunkov <asml.silence@gmail.com>
-Cc: io-uring@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org,
-	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	wu lei <uwydoc@gmail.com>
-Subject: Re: [PATCH 1/1] iomap: propagate nowait to block layer
-Message-ID: <Z79-PEZ2YQybCjmi@dread.disaster.area>
-References: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
- <Z76eEu4vxwFIWKj7@dread.disaster.area>
- <7b440d54-b519-4995-9f5f-f3e636c6d477@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aqYqpdVV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D179C4CED6;
+	Wed, 26 Feb 2025 22:26:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740608820;
+	bh=O5zZ7g63I+0ZeYH00JZerlvbNik71qO0CgwvkTnWcIs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aqYqpdVVpkD5NJn6jpo0cdClxOspwzsi8RCKpRnA88J5OPdmx1mMru31LZxBFgp96
+	 SZb3oRy0Fxzg1qr18ZQYO7NtEHrnW1kSYRo35qghO1/ESXhb4R4oAXKE6PoHpaKtQk
+	 rw/ltpwe8XfbrUtfiq6lveoAbVX0jopaapPwU3slyk58T6gzgfoVr9fY71ajwj3kUT
+	 xvbk1I9lC3b2larN7+jztDKNXSrFhP0QhpXpDklrqd7y0o0NsfVUuwegc/GYneM1Nf
+	 LoD2swB/LWax0rd/I8YAe0yQ9kMiS9zB3fdg0qmIVaFo3k/1cDqwlB1rT1yn4zBMcR
+	 ST+zf0908vWAA==
+Date: Wed, 26 Feb 2025 22:26:46 +0000
+From: Mark Brown <broonie@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Easwar Hariharan <eahariha@linux.microsoft.com>,
+	Yaron Avizrat <yaron.avizrat@intel.com>,
+	Oded Gabbay <ogabbay@kernel.org>,
+	Julia Lawall <Julia.Lawall@inria.fr>,
+	Nicolas Palix <nicolas.palix@imag.fr>,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+	David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+	Dongsheng Yang <dongsheng.yang@easystack.cn>,
+	Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Frank Li <Frank.Li@nxp.com>, Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Selvin Xavier <selvin.xavier@broadcom.com>,
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	cocci@inria.fr, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-spi@vger.kernel.org, imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	platform-driver-x86@vger.kernel.org,
+	ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org,
+	Takashi Iwai <tiwai@suse.de>,
+	Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v3 00/16] Converge on using secs_to_jiffies() part two
+Message-ID: <594169fd-5ba6-42d5-ad35-bb8c7720904b@sirena.org.uk>
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+ <79b24031-5776-4eb3-960b-32b0530647fb@sirena.org.uk>
+ <20250226123851.a50e727d0a1bfe639ece4a72@linux-foundation.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ktE/+HW2BMMja6u3"
+Content-Disposition: inline
+In-Reply-To: <20250226123851.a50e727d0a1bfe639ece4a72@linux-foundation.org>
+X-Cookie: I've been there.
+
+
+--ktE/+HW2BMMja6u3
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7b440d54-b519-4995-9f5f-f3e636c6d477@gmail.com>
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Feb 26, 2025 at 12:33:21PM +0000, Pavel Begunkov wrote:
-> On 2/26/25 04:52, Dave Chinner wrote:
-> > On Wed, Feb 26, 2025 at 01:33:58AM +0000, Pavel Begunkov wrote:
-> > > There are reports of high io_uring submission latency for ext4 and xfs,
-> > > which is due to iomap not propagating nowait flag to the block layer
-> > > resulting in waiting for IO during tag allocation.
-> > > 
-> > > Cc: stable@vger.kernel.org
-> > > Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
-> > > Reported-by: wu lei <uwydoc@gmail.com>
-> > > Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
-> > > ---
-> > >   fs/iomap/direct-io.c | 3 +++
-> > >   1 file changed, 3 insertions(+)
-> > > 
-> > > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> > > index b521eb15759e..25c5e87dbd94 100644
-> > > --- a/fs/iomap/direct-io.c
-> > > +++ b/fs/iomap/direct-io.c
-> > > @@ -81,6 +81,9 @@ static void iomap_dio_submit_bio(const struct iomap_iter *iter,
-> > >   		WRITE_ONCE(iocb->private, bio);
-> > >   	}
-> > > +	if (iocb->ki_flags & IOCB_NOWAIT)
-> > > +		bio->bi_opf |= REQ_NOWAIT;
-> > 
-> > ISTR that this was omitted on purpose because REQ_NOWAIT doesn't
-> > work in the way iomap filesystems expect IO to behave.
-> > 
-> > I think it has to do with large direct IOs that require multiple
-> > calls to submit_bio(). Each bio that is allocated and submitted
-> > takes a reference to the iomap_dio object, and the iomap_dio is not
-> > completed until that reference count goes to zero.
-> > 
-> > hence if we have submitted a series of bios in a IOCB_NOWAIT DIO
-> > and then the next bio submission in the DIO triggers a REQ_NOWAIT
-> > condition, that bio is marked with a BLK_STS_AGAIN and completed.
-> > This error is then caught by the iomap dio bio completion function,
-> > recorded in the iomap_dio structure, but because there is still
-> > bios in flight, the iomap_dio ref count does not fall to zero and so
-> > the DIO itself is not completed.
-> > 
-> > Then submission loops again, sees dio->error is set and aborts
-> > submission. Because this is AIO, and the iomap_dio refcount is
-> > non-zero at this point, __iomap_dio_rw() returns -EIOCBQUEUED.
-> > It does not return the -EAGAIN state that was reported to bio
-> > completion because the overall DIO has not yet been completed
-> > and all the IO completion status gathered.
-> > 
-> > Hence when the in flight async bios actually complete, they drop the
-> > iomap dio reference count to zero, iomap_dio_complete() is called,
-> > and the BLK_STS_AGAIN error is gathered from the previous submission
-> > failure. This then calls AIO completion, and reports a -EAGAIN error
-> > to the AIO/io_uring completion code.
-> > 
-> > IOWs, -EAGAIN is *not reported to the IO submitter* that needs
-> > this information to defer and resubmit the IO - it is reported to IO
-> > completion where it is completely useless and, most likely, not in a
-> > context that can resubmit the IO.
-> > 
-> > Put simply: any code that submits multiple bios (either individually
-> > or as a bio chain) for a single high level IO can not use REQ_NOWAIT
-> > reliably for async IO submission.
-> 
-> I know the issue, but admittedly forgot about it here, thanks for
-> reminding! Considering that attempts to change the situation failed
-> some years ago and I haven't heard about it after, I don't think
-> it'll going to change any time soon.
-> 
-> So how about to follow what the block layer does and disable multi
-> bio nowait submissions for async IO?
-> 
-> if (!iocb_is_sync(iocb)) {
-> 	if (multi_bio)
-> 		return -EAGAIN;
-> 	bio_opf |= REQ_NOWAIT;
-> }
+On Wed, Feb 26, 2025 at 12:38:51PM -0800, Andrew Morton wrote:
+> On Wed, 26 Feb 2025 11:29:53 +0000 Mark Brown <broonie@kernel.org> wrote:
 
-How do we know it's going to be multi-bio before we actually start
-packing the data into the bios? More below, because I kinda pointed
-out how this might be solved...
+> > Please don't combine patches for multiple subsystems into a single
+> > series if there's no dependencies between them, it just creates
+> > confusion about how things get merged, problems for tooling and makes
+> > everything more noisy.  It's best to split things up per subsystem in
+> > that case.
 
-> Is there anything else but io_uring and AIO that can issue async
-> IO though this path?
+> I asked for this.  I'll merge everything, spend a few weeks gathering
+> up maintainer acks.  Anything which a subsystem maintainer merges will
+> be reported by Stephen and I'll drop that particular patch.
 
-We can't assume anything about the callers in the lower layers.
-Anything that can call the VFS read/write paths could be using async
-IO.
+> This way, nothing gets lost.  I take this approach often and it works.
 
-> > We have similar limitations on IO polling (IOCB_HIPRI) in iomap, but
-> > I'm not sure if REQ_NOWAIT can be handled the same way. i.e. only
-> > setting REQ_NOWAIT on the first bio means that the second+ bio can
-> > still block and cause latency issues.
+I've only started seeing these in the past few weeks, but we do have a
+bunch of people routinely doing cross tree stuff who split things up and
+it seems to work OK there.
 
-Please have a look at how IOCB_HIPRI is handled by iomap for
-multi-bio IOs. I -think- the same can be done with IOMAP_NOWAIT
-bios, because the bio IO completion for the EAGAIN error will be
-present on the iomap_dio by the time submit_bio returns. i.e.
-REQ_NOWAIT can be set on the first bio in the submission chain,
-but only on the first bio.
+> If these were sent as a bunch of individual patches then it would be up
+> to the sender to keep track of what has been merged and what hasn't.=20
+> That person will be resending some stragglers many times.  Until they
+> give up and some patches get permanently lost.
 
-i.e. if REQ_NOWAIT causes the first bio submission to fail with
--EAGAIN being reported to completion, we abort the submission or
-more bios because dio->error is now set. As there are no actual bios
-in flight at this point in time, the only reference to the iomap_dio
-is held by the iomap submission code.  Hence as we finalise the
-aborted DIO submission, __iomap_dio_rw() drops the last reference
-and iomap_dio_rw() calls iomap_dio_complete() on the iomap_dio. This
-then gathers the -EAGAIN error that was stashed in the iomap_dio
-and returns it to the caller.
+Surely the sender can just CC you on each individual thing just as well?
+Ensuring things get picked up is great, but it's not clear to me that
+copying everyone on a cross tree series is helping with that.
 
-i.e. I *think* this "REQ_NOWAIT only for the first bio" method will
-solve most of the issues that cause submission latency (especially
-for apps doing small IOs), but still behave correctly when large,
-multi-bio DIOs are submitted.
+> Scale all that across many senders and the whole process becomes costly
+> and unreliable.  Whereas centralizing it on akpm is more efficient,
+> more reliable, more scalable, lower latency and less frustrating for
+> senders.
 
-Confirming that the logic is sound and writing fstests that exercise
-the functionality to demonstrate your eventual kernel change works
-correctly (and that we don't break it in future) is your problem,
-though.
+Whereas copying everyone means all the maintainers see something that
+looks terribly complicated in their inboxes and have to figure out if
+there are actually any dependencies in the series and how it's supposed
+to be handed, and then every reply goes to a huge CC list.  That's not
+good for either getting people to look at things or general noise
+avoidance, especially for people who are expecting to get cross tree
+serieses which do have dependencies that need to be managed.
 
-> > So, yeah, fixing this source of latency is not as simple as just
-> > setting REQ_NOWAIT. I don't know if there is a better solution that
-> > what we currently have, but causing large AIO DIOs to
-> > randomly fail with EAGAIN reported at IO completion (with the likely
-> > result of unexpected data corruption) is far worse behaviour that
-> > occasionally having to deal with a long IO submission latency.
-> 
-> By the end of the day, it's waiting for IO, the first and very thing
-> the user don't want to see for async IO, and that's pretty much what
-> makes AIO borderline unusable.  We just can't have it for an asynchronous
-> interface.
+There's also some bad failure modes as soon as anyone has any sort of
+comment on the series, suddenly everyone's got a coding style debate or
+whatever in their inboxes they can pile into.
 
-Tough cookies. Random load related IO errors that can result in
-unexpected user data corruption is a far worse outcome than an
-application suffering from a bit of unexpected latency. You are not
-going to win that argument, so don't bother wasting time on it.
+--ktE/+HW2BMMja6u3
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> If we can't fix it up here, the only other option I see
-> is to push all such io_uring requests to a slow path where we can
-> block, and that'd be quite a large regression.
+-----BEGIN PGP SIGNATURE-----
 
-Don't be so melodramatic. Async IO has always been, and will always
-be, -best effort- within the constraints of filesystem
-implementation, data integrity and behavioural correctness.
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAme/lSYACgkQJNaLcl1U
+h9DO/Qf/a9HWwKcXS5+hFxQJSm6QW0NLy2NbqHre8UKfa7aKUVgjHmVnb1gIAdSh
+gY+WUz9p7S+67TovmO+FlVs/KDBaHyw8J0auw2I/uFK7bDhNHXtiUi32jBCyuQD4
+w+yhOC50NrB6ZXh/FpBk8EXI4DSUoaL5z6KMVYItTTfl0lCtBbTGJSAPXswWc3u1
+5ZXriY5GR9Q2MwY4Fs6QN6pbKucqtpxnhiL26E8ic/kdpVh6ZGEoFhFWweV6nD/+
+ttggFNcFA98M8YYEySK/p9ls4PyRF4dXL+oQWEXWvylpGogCDAcCj7Igb8CuyJRn
+G2+ftlgr6xEk4hOBnRKBY7Ts/BcKqg==
+=3AEq
+-----END PGP SIGNATURE-----
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--ktE/+HW2BMMja6u3--
