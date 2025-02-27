@@ -1,161 +1,213 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A67229B28
-	for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2025 10:57:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B869227599;
+	Thu, 27 Feb 2025 11:57:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740653829; cv=none; b=rtPVAiq1RePg+raQDEXWz83KuSx+ZZBj/HUMZk7r80SE9pxF7EcPkZJHM9GMQ2sx4A76GwrnjmjtfS58ttEEKsa8Kc3KVIv1xQic3DurZj20HHrss+YkykHX1H38lobwuA+nF5QtZuNqHzaWNtR8adtjAfxra0VDQosFUyjgg4o=
+	t=1740657449; cv=none; b=BNENpVC6+HB9Lz/9o5xlxlqhwr7uyhxoYKGYuJSmVemEn1vSky1l+AfI7kcpY0mD5RZrjmOpOZbBb2arXT4QkduXl9yWLmJ35n26I3izrRtlSnzRP+M0MW6TimhUjxzP6q2eY4p4dVLAi7kJC7X0+wlF85VDAiSN2y/qe8HAPg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740653829; c=relaxed/simple;
-	bh=V6aSrHICkBE9iqvqAxpzA9whZYOUenXhu8dhEkGr2rQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dvQHi4b43oafbL4O57ofskr5Damvv5WGqGrcgNL+l0B5CkhnBILrlukP4o/HiktN52v4Ygi/DEXld5NGaESgxxaFXql2w0m1ehIqgURGehsBWqwuG6eh9P8941ycqKGvfo0aFnTs7lui3HFobJaxZKE7QWwQfLzcjOSS8TPv8iQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a8PbD6Vl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740657449; c=relaxed/simple;
+	bh=rGTjWMY7XwVDnvHA5Z64VEBYNX/wac8hYc+GBCRTjJM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=P2Yatajt8+ffPV1aMhPNVX16FIWBmxEIvVQfFgB7Mf+DyaUJD/7yEoEumJqqH0BoG0haRZlfXfweevCqar+Vk2g8b/kXQ0LUDKPL6lbke+JHtIHGy3u6A3jKfCg49J5D0t6jGA4gu7zt+GcYQD/ylxkII7XEglbixWciAblGUFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G+uCb33f; arc=none smtp.client-ip=209.85.218.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a8PbD6Vl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 098F8C4CEDD;
-	Thu, 27 Feb 2025 10:57:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740653829;
-	bh=V6aSrHICkBE9iqvqAxpzA9whZYOUenXhu8dhEkGr2rQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=a8PbD6VlDOrlLnOihywVSy8oiD2UoPehfo2oxRD1k8oF6btpt6oYWkiyB7DoGxNlE
-	 QOeT8DwBhEcG1c73P2Y2wgUUPdJt+IxX6yu6feAKqIBWniEZjFR8MPUVgb/MlP1ilH
-	 uWeUetbCUdkatY9HveM/3/CXmdyq0Eb8phQFwGgvtZnF70yrQOZJ5OhfuWmvwGtnZv
-	 OkD56K8MBzXtFlgpWGlIPpNOvm/u9FRr/m5JrZaUOzeEThN9Xr1MWxLweaL4mFmaJ2
-	 iFeiWXXp94puAupCCHA7k4PchBZeHSuLCSAVNM0/hxkbQZZx6FoSIpQg7rEdayUUf2
-	 KrS0YrKDurH4Q==
-Date: Thu, 27 Feb 2025 11:57:04 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk
-Subject: Re: [PATCH 1/2] iomap: make buffered writes work with RWF_DONTCACHE
-Message-ID: <h7mthm7qzip5w6jaoal3zkhehjmyfcxyemi4qxvce65hsvsaxg@vbdy7pyif72f>
-References: <20250204184047.356762-1-axboe@kernel.dk>
- <SujyHEXdLL7UN_WtUztdhJ4EVptQ0_LCUdvNOf1xxqSNH50lT37n_wi_zDG7Jrg8Ar87Nvn8D3HaH4B0KscrRQ==@protonmail.internalid>
- <20250204184047.356762-2-axboe@kernel.dk>
- <hij4ycssasmyuzawb2mhq44wec7ybquxxpgxqutbdutfmgaizs@cvpx2km2pg6j>
- <-Uo3-Kt6CrVYFRQE-7qxUz8JtomzSaZ1nukPQxsmR2n5vWJ4D-2PH_l3-bjZyC-O2IZwRBtZqjxec2jVbicnvQ==@protonmail.internalid>
- <20250227-beulen-tragbar-2873bd766761@brauner>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G+uCb33f"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-abf17fa4a29so50444966b.3;
+        Thu, 27 Feb 2025 03:57:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1740657446; x=1741262246; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=CrI91tLdiEt7M/XW95bclUn0WDE3jwBds2FECmKWUEs=;
+        b=G+uCb33f9sD0SlJvYm7gvEekAZ+waqrtTdC3YxBGMlTXAuMPUqdzHQyzoBz9mE1lZ/
+         mbPB2vZoJCI9YDd81F40wYiYBUpNELUwN46WNOAqYIkAy87Jpw5SLtlyrZJ0vqWqeB1n
+         sgvKsMXVlw9YaU7evGlW0zMnTNcSyli/2VXHwPCj9yIqGSjwA8GDF5+ehxaEh9aM9Df2
+         WwnNbc/GgIav7ZLChStu6YAmg2CIfw2v7RSvaDKYudgp5wwAopDaxJORwo5zVOw37Ezv
+         cnZ4SlUGkYE2FjlyRM3At3+RWaom2ract8g+86CgWIr4O2ci0wnW2IEN1pEuECYEuWvH
+         FAog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740657446; x=1741262246;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CrI91tLdiEt7M/XW95bclUn0WDE3jwBds2FECmKWUEs=;
+        b=ePU0BwYbVHxpnfSjOvEPMmK0sHmsRrjs+/47ZNgW5paLeHBoGnmA7KiQSMg7wHYyPw
+         Uvbsr1djTKRKK7caUeTLd8SRFWkcg3UJYvwWKc9xUTHsVY6KRjrEiWKsY05UdgRUbAGi
+         h2qKZ1TXU0CJxJGwUujdjjYxmZNG1j/Ca0wMcUdhmJ0SMfweTSnayG3DDKW2uflLciwy
+         6RaTATlXWM/2YbOVNgf2oN7V2tzPyuTUgSPWN5HvWuAJHYO8WIWmlDE6POiY8aEsXRRf
+         /suinGdqv7+EKq3ZEUAnMUMIg+DjpTSPY9pJPflKLNq8e1GwAToaXEzV0DGxovNpAJ24
+         7eTg==
+X-Forwarded-Encrypted: i=1; AJvYcCW591s6WcRbwciRiZKsnW9mKIuwdLrhQw5hsYnnKg0/17TtcGT0FbfOuvN6RYmAMdJL6lhZ0SqCGrNh@vger.kernel.org, AJvYcCXwrQh+T5Mg+S2F5ROV0834lxG+F+X+FI/c0MwroEgvXdwq5hThMSQesg6dWQ9znotWaY4eo0630xwDzJaq@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzoqk+uqi/IDoiM68H9pPA8Z6FzBRveodqqsSnHz8np3DjhwtyB
+	3JrvBgTZ/uFMNu/vvE8kaMfYHeUWVbzt+DHF/EkurDEXa25OUGC49R369Q==
+X-Gm-Gg: ASbGncvRSWkg2BQZHl8ey9Gha9teamHhc6dE7sqa7AZ5eKBwtN2kHc0dB9cih7xFSZX
+	MRMyvseH3W+nZ1fC1GVnjjXfl/Zi9CIBqZYu1wBDWIga6mO0TSKgHUdwHrYsPVpUCHZrPxFxEb5
+	X94eqr5iX6HNmDjahb/6LHt0AbRBVCOeatq1LqC5rg0AUX2VHatEeuJMhQWQ58qaY5a3wYSSKR+
+	C+B6AjZLuFhu5QhcOSEvlsCTqw+/l3kJEgTPAHfKub2eYlpZzrjJYHYd/sPOCpvAmbLUoNP5GDK
+	hECmU32ncjqTWAGZPDtH/C9tYNr7VuuBCm38XXckjZondF1IpeBXyOOlW7s=
+X-Google-Smtp-Source: AGHT+IE0NpnK1nCAt/oaKhM5+h2yiALTwE8EA9YyzKWJXJQnRRA01wCtDxog1sMK7wKKg2OeDprrQA==
+X-Received: by 2002:a05:6402:40ca:b0:5e0:922e:527a with SMTP id 4fb4d7f45d1cf-5e43c17fd68mr30521489a12.0.1740657446065;
+        Thu, 27 Feb 2025 03:57:26 -0800 (PST)
+Received: from ?IPV6:2620:10d:c096:325:77fd:1068:74c8:af87? ([2620:10d:c092:600::1:4215])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abf0c7bc015sm109917566b.164.2025.02.27.03.57.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 27 Feb 2025 03:57:25 -0800 (PST)
+Message-ID: <cedd1f78-7fa6-41f5-9481-c6757762dc66@gmail.com>
+Date: Thu, 27 Feb 2025 11:58:23 +0000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250227-beulen-tragbar-2873bd766761@brauner>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] iomap: propagate nowait to block layer
+To: Dave Chinner <david@fromorbit.com>
+Cc: io-uring@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
+ linux-fsdevel@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
+ linux-xfs@vger.kernel.org, wu lei <uwydoc@gmail.com>
+References: <ca8f7e4efb902ee6500ab5b1fafd67acb3224c45.1740533564.git.asml.silence@gmail.com>
+ <Z76eEu4vxwFIWKj7@dread.disaster.area>
+ <7b440d54-b519-4995-9f5f-f3e636c6d477@gmail.com>
+ <Z79-PEZ2YQybCjmi@dread.disaster.area>
+Content-Language: en-US
+From: Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <Z79-PEZ2YQybCjmi@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Feb 27, 2025 at 11:30:39AM +0100, Christian Brauner wrote:
-> On Thu, Feb 27, 2025 at 10:51:40AM +0100, Carlos Maiolino wrote:
-> > On Tue, Feb 04, 2025 at 11:39:59AM -0700, Jens Axboe wrote:
-> > > Add iomap buffered write support for RWF_DONTCACHE. If RWF_DONTCACHE is
-> > > set for a write, mark the folios being written as uncached. Then
-> > > writeback completion will drop the pages. The write_iter handler simply
-> > > kicks off writeback for the pages, and writeback completion will take
-> > > care of the rest.
-> > >
-> >
-> > [Adding Brauner to the loop as this usually goes through his tree.]
-> >
-> > Christian, I'm pulling this into my tree for 6.15 if this is ok with you?
-> > Not sure if you're subscribed to linux-xfs, so, just in case, the link for the
-> > whole 2-patches series is below.
-> >
-> > https://lore.kernel.org/linux-xfs/20250204184047.356762-1-axboe@kernel.dk/
+On 2/26/25 20:49, Dave Chinner wrote:
+> On Wed, Feb 26, 2025 at 12:33:21PM +0000, Pavel Begunkov wrote:
+>> On 2/26/25 04:52, Dave Chinner wrote:
+>>> On Wed, Feb 26, 2025 at 01:33:58AM +0000, Pavel Begunkov wrote:
+...
+>>> Put simply: any code that submits multiple bios (either individually
+>>> or as a bio chain) for a single high level IO can not use REQ_NOWAIT
+>>> reliably for async IO submission.
+>>
+>> I know the issue, but admittedly forgot about it here, thanks for
+>> reminding! Considering that attempts to change the situation failed
+>> some years ago and I haven't heard about it after, I don't think
+>> it'll going to change any time soon.
+>>
+>> So how about to follow what the block layer does and disable multi
+>> bio nowait submissions for async IO?
+>>
+>> if (!iocb_is_sync(iocb)) {
+>> 	if (multi_bio)
+>> 		return -EAGAIN;
+>> 	bio_opf |= REQ_NOWAIT;
+>> }
 > 
-> vfs-6.15.iomap has a lot of iomap changes already so we should use a
-> shared tree we can both merge. I've put this on:
-> 
-> vfs-6.15.shared.iomap
-> 
-> Just pull it into your branch, please and I pull it into vfs-6.15.iomap.
+> How do we know it's going to be multi-bio before we actually start
+> packing the data into the bios? More below, because I kinda pointed
 
-Sounds good Chris. Thanks, I'll pull it once I start merging patches for 6.15 MW.
+The same way block layer is gauging it
 
-Carlos.
+nr = bio_iov_vecs_to_alloc(iter, BIO_MAX_VECS + 1);
+if (nr > BIO_MAX_VECS)
+	// multiple bios
 
+Let me try to prepare that one, and we can discuss there.
+
+> out how this might be solved...
 > 
-> I see that 2/2 adds a new FOP_UNCACHED flag to the VFS FOP_UNCACHED
-> please make sure to Cc fsdevel for such additions and remind
-> contributors as well.
+>> Is there anything else but io_uring and AIO that can issue async
+>> IO though this path?
 > 
-> >
-> >
-> > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > > Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> > > ---
-> > >  Documentation/filesystems/iomap/design.rst     | 5 +++++
-> > >  Documentation/filesystems/iomap/operations.rst | 2 ++
-> > >  fs/iomap/buffered-io.c                         | 4 ++++
-> > >  include/linux/iomap.h                          | 1 +
-> > >  4 files changed, 12 insertions(+)
-> > >
-> > > diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-> > > index b0d0188a095e..7b91546750f5 100644
-> > > --- a/Documentation/filesystems/iomap/design.rst
-> > > +++ b/Documentation/filesystems/iomap/design.rst
-> > > @@ -352,6 +352,11 @@ operations:
-> > >     ``IOMAP_NOWAIT`` is often set on behalf of ``IOCB_NOWAIT`` or
-> > >     ``RWF_NOWAIT``.
-> > >
-> > > + * ``IOMAP_DONTCACHE`` is set when the caller wishes to perform a
-> > > +   buffered file I/O and would like the kernel to drop the pagecache
-> > > +   after the I/O completes, if it isn't already being used by another
-> > > +   thread.
-> > > +
-> > >  If it is necessary to read existing file contents from a `different
-> > >  <https://lore.kernel.org/all/20191008071527.29304-9-hch@lst.de/>`_
-> > >  device or address range on a device, the filesystem should return that
-> > > diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
-> > > index 2c7f5df9d8b0..584ff549f9a6 100644
-> > > --- a/Documentation/filesystems/iomap/operations.rst
-> > > +++ b/Documentation/filesystems/iomap/operations.rst
-> > > @@ -131,6 +131,8 @@ These ``struct kiocb`` flags are significant for buffered I/O with iomap:
-> > >
-> > >   * ``IOCB_NOWAIT``: Turns on ``IOMAP_NOWAIT``.
-> > >
-> > > + * ``IOCB_DONTCACHE``: Turns on ``IOMAP_DONTCACHE``.
-> > > +
-> > >  Internal per-Folio State
-> > >  ------------------------
-> > >
-> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > index d303e6c8900c..ea863c3cf510 100644
-> > > --- a/fs/iomap/buffered-io.c
-> > > +++ b/fs/iomap/buffered-io.c
-> > > @@ -603,6 +603,8 @@ struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len)
-> > >
-> > >  	if (iter->flags & IOMAP_NOWAIT)
-> > >  		fgp |= FGP_NOWAIT;
-> > > +	if (iter->flags & IOMAP_DONTCACHE)
-> > > +		fgp |= FGP_DONTCACHE;
-> > >  	fgp |= fgf_set_order(len);
-> > >
-> > >  	return __filemap_get_folio(iter->inode->i_mapping, pos >> PAGE_SHIFT,
-> > > @@ -1034,6 +1036,8 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
-> > >
-> > >  	if (iocb->ki_flags & IOCB_NOWAIT)
-> > >  		iter.flags |= IOMAP_NOWAIT;
-> > > +	if (iocb->ki_flags & IOCB_DONTCACHE)
-> > > +		iter.flags |= IOMAP_DONTCACHE;
-> > >
-> > >  	while ((ret = iomap_iter(&iter, ops)) > 0)
-> > >  		iter.processed = iomap_write_iter(&iter, i);
-> > > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> > > index 75bf54e76f3b..26b0dbe23e62 100644
-> > > --- a/include/linux/iomap.h
-> > > +++ b/include/linux/iomap.h
-> > > @@ -183,6 +183,7 @@ struct iomap_folio_ops {
-> > >  #define IOMAP_DAX		0
-> > >  #endif /* CONFIG_FS_DAX */
-> > >  #define IOMAP_ATOMIC		(1 << 9)
-> > > +#define IOMAP_DONTCACHE		(1 << 10)
-> > >
-> > >  struct iomap_ops {
-> > >  	/*
-> > > --
-> > > 2.47.2
-> > >
+> We can't assume anything about the callers in the lower layers.
+> Anything that can call the VFS read/write paths could be using async
+> IO.
+> 
+>>> We have similar limitations on IO polling (IOCB_HIPRI) in iomap, but
+>>> I'm not sure if REQ_NOWAIT can be handled the same way. i.e. only
+>>> setting REQ_NOWAIT on the first bio means that the second+ bio can
+>>> still block and cause latency issues.
+> 
+> Please have a look at how IOCB_HIPRI is handled by iomap for
+> multi-bio IOs. I -think- the same can be done with IOMAP_NOWAIT
+> bios, because the bio IO completion for the EAGAIN error will be
+> present on the iomap_dio by the time submit_bio returns. i.e.
+> REQ_NOWAIT can be set on the first bio in the submission chain,
+> but only on the first bio.
+> 
+> i.e. if REQ_NOWAIT causes the first bio submission to fail with
+> -EAGAIN being reported to completion, we abort the submission or
+> more bios because dio->error is now set. As there are no actual bios
+> in flight at this point in time, the only reference to the iomap_dio
+> is held by the iomap submission code.  Hence as we finalise the
+> aborted DIO submission, __iomap_dio_rw() drops the last reference
+> and iomap_dio_rw() calls iomap_dio_complete() on the iomap_dio. This
+> then gathers the -EAGAIN error that was stashed in the iomap_dio
+> and returns it to the caller.
+> 
+> i.e. I *think* this "REQ_NOWAIT only for the first bio" method will
+> solve most of the issues that cause submission latency (especially
+> for apps doing small IOs), but still behave correctly when large,
+> multi-bio DIOs are submitted.
+> 
+> Confirming that the logic is sound and writing fstests that exercise
+> the functionality to demonstrate your eventual kernel change works
+> correctly (and that we don't break it in future) is your problem,
+> though.
+
+IIUC, it'll try to probe if block can accommodate one bio. Let's say
+it can, however if there are more bios to the request they might
+sleep. And that's far from improbable, especially with the first bio
+taking one tag. Unless I missed something, it doesn't really looks
+like a solution.
+
+>>> So, yeah, fixing this source of latency is not as simple as just
+>>> setting REQ_NOWAIT. I don't know if there is a better solution that
+>>> what we currently have, but causing large AIO DIOs to
+>>> randomly fail with EAGAIN reported at IO completion (with the likely
+>>> result of unexpected data corruption) is far worse behaviour that
+>>> occasionally having to deal with a long IO submission latency.
+>>
+>> By the end of the day, it's waiting for IO, the first and very thing
+>> the user don't want to see for async IO, and that's pretty much what
+>> makes AIO borderline unusable.  We just can't have it for an asynchronous
+>> interface.
+> 
+> Tough cookies. Random load related IO errors that can result in
+> unexpected user data corruption is a far worse outcome than an
+> application suffering from a bit of unexpected latency. You are not
+> going to win that argument, so don't bother wasting time on it.
+
+I didn't argue with that, the goal is to not have either. The 3rd
+dimension is efficiency, and it's likely where compromise will need to
+be. Executing all fs IO in a worker is too punitive for performance,
+but doing that for multi bio IO and attempting async if there is a
+single bio should be reasonable enough.
+
+>> If we can't fix it up here, the only other option I see
+>> is to push all such io_uring requests to a slow path where we can
+>> block, and that'd be quite a large regression.
+> 
+> Don't be so melodramatic. Async IO has always been, and will always
+
+It's not melodramatic, just pointing that the alternative is ugly, and
+I don't see any good way to work it around in io_uring, so would really
+love to find something that will work.
+
+> be, -best effort- within the constraints of filesystem
+> implementation, data integrity and behavioural correctness.
+
+The thing is, it blocks all requests in the submission queue as well as
+handling of inflight requests, which can get pretty ugly pretty fast.
+The choice the user have to make is usually not whether the latency is
+tolerable, but rather whether the async interface is reliable or should
+it use worker threads instead. Unfortunately, the alternative approach
+has already failed.
+
+Yes, things can happen, c'est la vie, but if we're reported a problem
+io_uring should get it sorted somehow.
+
+-- 
+Pavel Begunkov
+
