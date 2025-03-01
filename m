@@ -1,428 +1,154 @@
 Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5E2B79CD;
-	Sat,  1 Mar 2025 13:35:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79EF71A841F;
+	Sat,  1 Mar 2025 17:46:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740836132; cv=none; b=Dzd0xJjT1b/aBaon+1oF7lp+OBvqLsO24K4kt/NYnUiXbBDBkP+eOvv6yUjHscRelJjDRtVK5CgkzH6qDKDrmZbCrIPJOwTRk15uJTkB9fHIxQp52wmj17pLFI+YLofqhs1eJ27XoqBkEANoYR7UhUOydhCv87AwvSU/cU7YP1Y=
+	t=1740851178; cv=none; b=NbErHgYWiCGmIZrxwZ4gNLXNchCbF/zrew1bJ+ZILOAXub1MjFe85iWnHLG/JgcbbBSuULJoIUcJ+mpBYwbUq4PoFhx3QFJxVzvGARuZfxZctF+TIhV0PiEgqFZ4s36P1y6zS9zdJ9Id0iLlNfJX4dAROJop3e0Woaam9R+YXBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740836132; c=relaxed/simple;
-	bh=GVzNPj3x7mZXYmAgTQ3wrSIhWvW53Ds3egxMJTunbpY=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=WHrpFo6AUvWiHlZmYM0bLU2t0Llthqo4llOBMywpZkBdyJgE7ybwvuqCuUoioSbeoa0FfvEund5MJjYxyVIFv1bXpdkd8jlzAspfL+ujSulPojofXGY5BpbmBbiQJB7UbBWddOrgMvJSpIcmqX52+2T87vsfeMZlpesWO/D5poU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kq3AGOEo; arc=none smtp.client-ip=209.85.214.179
+	s=arc-20240116; t=1740851178; c=relaxed/simple;
+	bh=Gtgm+HfkQpBAKcEGPTOlQARCrxJQv1VFX2vnqly2Bm8=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References:
+	 MIME-version:Content-type; b=hk/BsK48srPuMbg73jRMx2ezjB1Zb+JVU1qxKACz78j7Lt7rkPaS6rCpHWmgoqhUr/hv2ruBVYTzb1iFvUDoZGN1nZXRdC77GDaXo7nL0lpOlN0RHb+Ke96GbVbmhK1eP3FWpktxD8LGo9k0rd1Zo5HSe7dnRZuNdl9NDG2PhOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IcKGZAvh; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kq3AGOEo"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2239aa5da08so1324895ad.3;
-        Sat, 01 Mar 2025 05:35:30 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IcKGZAvh"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2238e884f72so5605805ad.3;
+        Sat, 01 Mar 2025 09:46:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1740836130; x=1741440930; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=gym84FQLz5+76kyJjG62WaQMJOTAQs0TsGrlDa4d/0Y=;
-        b=kq3AGOEoG3RqR3q3y64M+Ci2nmLZRmUoGLBwRHb+sPCEqHChnMadUEFN7T9OCN8lhE
-         zwQ9hLKRvub1PEXNAgdEPVGa7MQeQaDpVT7EZgJfMpNPfW0Vn/JbRtPAavh5zsK2xf8W
-         0OW8gqHCZpn9CT5ccy/tMPyhREV5imdWKpnADFsaFN4c5E4MknoMiCdTBxOwDtSNk0xg
-         jZUwpVd5c6ejVMx/6EPOJBy65nyN//iaHiqQitp45HEi3BvXFHlzhyBTmVqabpwzlOK5
-         362nxnFV6FgWOpA7Ro75G5h6LYbpW92qK2a7jT/5nZxjCFrmALQizI677z/tp1N0qSO6
-         DPNg==
+        d=gmail.com; s=20230601; t=1740851176; x=1741455976; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:message-id:date
+         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=S5EMC4QTPsTfx7rf08ONLES150yxmA4ww7kM1gnGqK0=;
+        b=IcKGZAvhn6LXqO3NJcSxthOfGSjpK6QdKEeb/QpX1iw3nIQ5T+RGXYExvfdLFmYuqE
+         K8+09fk8P1Qvya+KeGIN1rkPjm0pSou/yT6LNvysXqeg35OHywppTNLE3DSIey85tLV5
+         4U2LcyoeVXTwydm2XXo17mZNyTQVqbmVaRITLy7cOx/exijnKkOvfCThV8PJXsOKzkrk
+         Mtr989ACDtgGdWlrO8onat/ziX8+znECzlVIk6SSqIq+BRqRRcaCK0QPw20LoA660Dwi
+         5ZYj/MANc9dEQXnkYk4cnmdZq6vho7NDu8PN545QC/HM4JaibuxzVw7+bcUzbJh+bPWG
+         uYtw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740836130; x=1741440930;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gym84FQLz5+76kyJjG62WaQMJOTAQs0TsGrlDa4d/0Y=;
-        b=Of+A6f8V3G+ZKFZGU5CHmVCRrZoaLlrsR7Gsu0MBNO/py0yD8By3qqobPSL/JDWCVb
-         93LB+S79ICXqCpM6v7mlgmoILHAZOt/Dk73rg6p90YjA0WM3ZeraHtuwFhDBQGCzWBOh
-         FDtloXyonxbhCffro7S5l8VTRwpO1jRr0EkGhz2tROkcokeM6BMWsUNOEARhIGU2StCV
-         piN2wP9CUiBQ7fL5T8EoUsjiD2VPt2qHblunsDnin8uqOwwWzi8Ttny+YXegXB5pi914
-         mQ6IB0uCPTFktj8BVvNMQnLWPQ/d1gJwYcJBt4JAm6BIWyaMJpxG+7jgRRInd6P7QZww
-         uhzQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUTawjgH2RcgEFPMXGjAtQ+70grEZOSYevkU8XoVW5M1rgI+YNW4DulTdHp6+iiZfSXHU8rbMxXB79o@vger.kernel.org, AJvYcCVOcJ7K79hKXlOqBUzgyJrK5EvnBWWSoDX6CfkgmpbyYPIcG8oJqo+ovWetpdJBvCEzNtYjL5uoq4Bb@vger.kernel.org, AJvYcCXhArXOJYQawjb9OzNToHIE0k1SwCtR0h6lMZj4GkViU5UAx7jF+PGEb4KT9+rhBA/SRpUdRLDulbtLhcbkCA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YykHN0x251K3i2+jx0p/EAqA9q5KbqDVynQ2HlMspWlWHT/6AWw
-	GUHDEYmEUIvf/tpm5hs5sUT9Vxhp4h+D3Hz9wLhXqXlmdu0qYsyO
-X-Gm-Gg: ASbGncsYxqKwiYHihL1OH1UbXamuZUjI5iA2j342CZCHU09a6nNAXgC9tsiRFrdFd/n
-	MnhEKvThWioxbNApynsC9EH8vN5W2xtzg/pdnyKssWEldcIqIzqIleRz5ERn5eAwyUKY2qpPNP5
-	vI9ZSsRyn978xDRxZFDMSXQQS0DNgnvk4M2i2b8Hgi2Iac9Gpg/7PLtFyMurPKj48ayk/lL9F9x
-	zFSFD6s2vBS94bPzBGoQqodIrwO6mHazVhQn3ZYrWT5Z3WU1xaIsTGH2VXktCMFBTWSqCpXfjEd
-	EmVCaCXnDcbhaJTClBsZAuJ1ZyHlT1+bOdVLvA==
-X-Google-Smtp-Source: AGHT+IEC1h0OfnuIVvSKDL7bfuN/NI0uFBep7nILNGS4bfUWkI8r0iHTtr08rLDJNEKATBPNEvchHA==
-X-Received: by 2002:a05:6a00:6813:b0:734:b136:9c39 with SMTP id d2e1a72fcca58-734b1369e3dmr8686774b3a.19.1740836129801;
-        Sat, 01 Mar 2025 05:35:29 -0800 (PST)
+        d=1e100.net; s=20230601; t=1740851176; x=1741455976;
+        h=content-transfer-encoding:mime-version:references:message-id:date
+         :in-reply-to:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=S5EMC4QTPsTfx7rf08ONLES150yxmA4ww7kM1gnGqK0=;
+        b=HcaM+NSHX2SmDdqz398UhXCNVztEQAo+FTFYR4YqLDwzQXeX2tEYHWPKqve52b8ysL
+         ncINdcapJJ5mfmavqdbVcTBQPLWaORkkHWvW+W4NSPN0bNZHv6tH4UOzMcay15Ha5Q2M
+         qCvfiJP/27TGdr0EG3exmTKv1EkqAs26TzHe9pJR0bj4YUjr0B9ttZknzL2qgWuEDAkZ
+         kYiQG5D502m5V4tkQsKUdPWxbUtMMRoIaqGRw/KWJe+aTl659jswDiO9ElhmJjYpkPpF
+         ov/j5FcFUiFxUO/+Zm2Pzlu+tzu3Qq8Tg8efnzFqzqt1MsXp5+dEtlsx6S8+p/FBRZr7
+         KJ0Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUyjm/DlEL3R6AhR7eVS0nCCU+LXc+Qbz9rE/8ZnIXCo25AWveBxHgicNQkwn+Sf1c5/tijOz8jZDgP@vger.kernel.org, AJvYcCXWrlkOE1pOMWE6ycWwlSaMLC4u2SrqJwNFfv8pRWm0CsPpo9YhRFw6CiLofkPPobWyfuwr0ZLl@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfOoD7//y7D8VMMMjzfV3oO3Ewv8xzrzddGp1kHzDO/TMP8pfF
+	SkClx9PI+MZRGFEh6wBlcrfG3BBRWcVTG23KJncZ57QytWkQDSV7
+X-Gm-Gg: ASbGncvcMlT38S9YrFK9/Ue1ipYxC+GQAz4TeWKIrGWnxFFfprr5Ji7l7tyDPDBuBwo
+	k4l1/8gtWohe0PTXrEc9ZmLbCz1gt5b7KETNWbdIqV/h2ALONsuzoV/XtBGNfQ/Z6fYEmCu4RYw
+	+t1L9AifLpiy5QSHS/ioAz2i9Ngnl2/qg+68jM1K/YSqX8pqo99GXfTNmrDFw3d16430H/bi6JU
+	VExcGwUIFSqP/C4x+zDMLfjszNRDDGot8Yzutyu5c2O9gGFR6bOqNWlEf7++Vc0EX/pGrb/qod5
+	9Tg/tycP0E0K/buh8X+nICFmKGp8Qdn01q0n8Q==
+X-Google-Smtp-Source: AGHT+IGLYa1RZ5t0cuEAVsiCUoSiG35w5JXi8zPh4yvcaqsvxMkzNHS2n7S/luxzuvx7NMCDstghxw==
+X-Received: by 2002:a17:902:fc8d:b0:223:44dc:3f36 with SMTP id d9443c01a7336-2236925eef4mr125123875ad.43.1740851176520;
+        Sat, 01 Mar 2025 09:46:16 -0800 (PST)
 Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-734a0024d35sm5583516b3a.87.2025.03.01.05.35.25
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22355773b58sm47985605ad.234.2025.03.01.09.46.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Mar 2025 05:35:29 -0800 (PST)
+        Sat, 01 Mar 2025 09:46:15 -0800 (PST)
 From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, lsf-pc@lists.linux-foundation.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, djwong@kernel.org, dchinner@redhat.com, jack@suse.cz, tytso@mit.edu, linux-ext4@vger.kernel.org, nirjhar.roy.lists@gmail.com, zlang@kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] xfstests: Centralizing filesystem configs and device configs
-In-Reply-To: <87plj0hp7e.fsf@gmail.com>
-Date: Sat, 01 Mar 2025 18:47:27 +0530
-Message-ID: <87o6ykhouw.fsf@gmail.com>
-References: <Z55RXUKB5O5l8QjM@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com> <Z6FFlxFEPfJT0h_P@dread.disaster.area> <87ed0erxl3.fsf@gmail.com> <Z6KRJ3lcKZGJE9sX@dread.disaster.area> <87plj0hp7e.fsf@gmail.com>
+To: Anand Jain <anand.jain@oracle.com>, "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
+Subject: Re: [RFC 4/5] check,common/config: Add support for central fsconfig
+In-Reply-To: <4c951390-400a-48ce-824c-f075a37496a9@oracle.com>
+Date: Sat, 01 Mar 2025 23:00:17 +0530
+Message-ID: <87mse4hd5i.fsf@gmail.com>
+References: <cover.1736496620.git.nirjhar.roy.lists@gmail.com> <9a6764237b900f40e563d8dee2853f1430245b74.1736496620.git.nirjhar.roy.lists@gmail.com> <4c951390-400a-48ce-824c-f075a37496a9@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-Ritesh Harjani (IBM) <ritesh.list@gmail.com> writes:
+Anand Jain <anand.jain@oracle.com> writes:
 
-> Hi Dave,
+> On 10/1/25 17:10, Nirjhar Roy (IBM) wrote:
+>> This adds support to pick and use any existing FS config from
+>> configs/<fstype>/<config>. e.g.
+>> 
+>> configs/xfs/1k
+>> configs/xfs/4k
+>> configs/ext4/4k
+>> configs/ext4/64k
+>> 
+>> This should help us maintain and test different fs test
+>> configurations from a central place. We also hope that
+>> this will be useful for both developers and testers to
+>> look into what is being actively maintained and tested
+>> by FS Maintainers.
+>> 
+>> When we will have fsconfigs set, then will be another subdirectory created
+>> in results/<section>. For example let's look at the following:
+>> 
+>> The directory tree structure on running
+>> sudo ./check -q 2 -R xunit-quiet -c xfs/4k,configs/xfs/1k selftest/001 selftest/007
+>> 
 >
-> Sorry about the delayed response on this. We gave some thoughts to this
-> and we believe, we could come to an agreement if we could extend the
-> current section approach itself. 
 >
-> Dave Chinner <david@fromorbit.com> writes:
+> The -c option check makes sense to me. Is it possible to get this
+> feature implemented first while the -q option is still under discussion?
+
+Hi Anand, 
+
+Thanks for trying the patches. The design of -c option is still under
+discussion [1]. But it will be helpful if you could help us understand
+your reasons for finding -c option useful :) 
+
+[1]: https://lore.kernel.org/linux-fsdevel/Z55RXUKB5O5l8QjM@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com/
+
 >
->> On Tue, Feb 04, 2025 at 12:44:00PM +0530, Ritesh Harjani wrote:
->>> Dave Chinner <david@fromorbit.com> writes:
->>> 
->>> > On Sat, Feb 01, 2025 at 10:23:29PM +0530, Ojaswin Mujoo wrote:
->>> >> Greetings,
->>> >> 
->>> >> This proposal is on behalf of Me, Nirjhar and Ritesh. We would like to submit
->>> >> a proposal on centralizing filesystem and device configurations within xfstests
->>> >> and maybe a further discussion on some of the open ideas listed by Ted here [3].
->>> >> More details are mentioned below.
->>> >> 
->>> >> ** Background ** 
->>> >> There was a discussion last year at LSFMM [1] about creating a central fs-config
->>> >> store, that can then be used by anyone for testing different FS
->>> >> features/configurations. This can also bring an awareness among other developers
->>> >> and testers on what is being actively maintained by FS maintainers. We recently
->>> >> posted an RFC [2] for centralizing filesystem configuration which is under
->>> >> review. The next step we are considering is to centralize device configurations
->>> >> within xfstests itself. In line with this, Ted also suggested a similar idea (in
->>> >> point A) [3], where he proposed specifying the device size for the TEST and
->>> >> SCRATCH devices to reduce costs (especially when using cloud infrastructure) and
->>> >> improve the overall runtime of xfstests.
->>> >> 
->>> >> Recently Dave introduced a feature [4] to run the xfs and generic tests in
->>> >> parallel. This patch creates the TEST and SCRATCH devices at runtime without
->>> >> requiring them to be specified in any config file. However, at this stage, the
->>> >> automatic device initialization appears to be somewhat limited. We believe that
->>> >> centralizing device configuration could help enhance this functionality as well.
->>> >
->>> > Right, the point of check-parallel is to take away the need to
->>> > specify devices completely.  I've already added support for the
->>> > LOGWRITES_DEV, and I'm in the process of adding LOGDEV and RTDEV
->>> > support for both test and scratch devices. At this point, the need
->>> > for actual actual device specification in the config files goes
->>> > away.
->>> >
->>> > What I am expecting to need is a set of fields that specify the
->>> > *size* of the devices so that the hard-coded image file sizes in
->>> > the check-parallel script go away.
->>> >
->>> > From there, I intend to have check-parallel iterate config file run
->>> > sections itself, rather than have it run them internally to check.
->>> > That way check is only ever invoked by check-parallel with all the
->>> > devices completely set up.
->>> 
->>> Yes, this sounds good. This is what we were anticipating too.
->>> Thanks for sharing.
->>> 
->>> >
->>> > Hence a typical host independent config file would look like:
->>> 
->>> The work being proposed by us here was to make this config file
->>> centralized within xfstests itself for both fsconfig and device-config.
->>> This saves us from defining each of this section within local.config file
->>> and can be used by passing cmdling arguments to invoke a given section
->>> directly. 
->>> 
->>> e.g.
->>> 
->>>     ./check -c configs/xfs/64k -g auto
->>
->> This strikes me as re-implementing config sections with a different
->> file format.
->>
->>> There have been cases where testers and others have requested info to
->>> know about - 
->>> - What different FS config options to test,
->>> - What gets tested by the Maintainers,  
->>> - Is there a common place where I can find MKFS and MOUNT options which
->>>   I should be testing for my FS/feature testing. 
->>
->> Those are questions that documentation should answer - they are not
->> a reason for changing config file formats.
->>
->>> That is the reason, I think, centralizing fsconfig option can be
->>> helpful. I remember bringing this idea in our last LSFMM-2024, where you
->>> mentioned that - let's see the RFC [1] and maybe then we can discuss more :).
->>> Here is the RFC for the same. There are some additional improvements in
->>> that series, but it mainly adds fsconfig option.
->>> 
->>> [1]: https://lore.kernel.org/fstests/cover.1736496620.git.nirjhar.roy.lists@gmail.com/
->>
->> Yeah, that's just making a tiny config file per config section, and
->> having to add a heap of parsing code to do that.
->>
->> I find it much easier to manage a single config file where each
->> config is maybe only one or two lines than it is to have to find the
->> needle in a haystack of hundreds of tiny files that are almost all
->> alike.
->>
->>> > TEST_DEV_SIZE=10g
->>> > TEST_RTDEV_size=10g
->>> > TEST_LOGDEV_SIZE=128m
->>> > SCRATCH_DEV_SIZE=20g
->>> > SCRATCH_RTDEV_size=20g
->>> > SCRATCH_LOGDEV_SIZE=512m
->>> > LOGWRITES_DEV_SIZE=2g
->>> >
->>> 
->>> For centralizing device-configs idea, I was hoping we could mention above
->>> in "configs/devices/loop" config file. This can be picked up by ./check
->>> too if local.config hasn't been provided with these options.
->>
->> Great. How do you specify where the image files are going to be
->> hosted when no devices have been configured?
->>
->> These sorts of zero-conf chicken/egg problems have already been
->> solved by check-parallel - I'm really not convinced that we need
->> to make check itself try to solve these. I designed check-parallel
->> the way I did because making check itself solve these problems is
->> .... convoluted and difficult.
->>
->> If we need zero-conf, just use ./check-parallel....
->>
->>> > [xfs]
->>> > FSTYP=xfs
->>> > MKFS_OPTIONS="-b size=4k"
->>> > TEST_FS_MOUNT_OPTIONS=
->>> > MOUNT_OPTIONS=
->>> > USE_EXTERNAL=
->>> >
->>> > [xfs-rmapbt]
->>> > MKFS_OPTIONS="-b size=4k -m rmapbt=1"
->>> >
->>> > [xfs-noreflink]
->>> > MKFS_OPTIONS="-b size=4k -m reflink=0"
->>> >
->>> > [xfs-n64k]
->>> > MKFS_OPTIONS="-b size=4k -n size=64k"
->>> >
->>> > [xfs-ext]
->>> > MKFS_OPTIONS="-b size=4k"
->>> > USE_EXTERNAL=yes
->>> >
->>> > [ext4]
->>> > FSTYP="ext4"
->>> > MKFS_OPTIONS=
->>> > USE_EXTERNAL=
->>> >
->>> > [btrfs]
->>> > FSTYP="btrfs"
->>> > .....
->>> 
->>> Above all fs configs could be added to configs/{ext4|xfs|btrfs}/... 
->>> Than this can be used in 2 ways.. 
->>> 
->>> 1. ./check -c configs/xfs/4k,configs/xfs/rmapbt,configs/ext4/4k ... 
->>
->> Can't say I like using relative paths to specify the config we
->> should use. It's not an interface I'd choose over:
->>
->> 	./check -s xfs -g auto
->>
->> Especially as the existing config section implementation does
->> exactly the same thing as the proposed config file farm....
->>
->>> 2. Or we may still pass fsconfig via local.config file.. e.g. 
->>> 
->>> # both configs/xfs/4k or xfs/4k can be used here
->>> [xfs]
->>> FS_CONFIG_OPTION=configs/xfs/4k
->>> 
->>> [xfs-rmapbt]
->>> FS_CONFIG_OPTION=xfs/rmapbt
->>> 
->>> [xfs-noreflink]
->>> FS_CONFIG_OPTION=xfs/noreflink
->>> 
->>> [xfs-n64k]
->>> FS_CONFIG_OPTION=xfs/64k
->>> 
->>> [xfs-ext]
->>> FS_CONFIG_OPTION=xfs/4k
->>> USE_EXTERNAL=yes
->>> 
->>> [ext4]
->>> FS_CONFIG_OPTION=ext4/4k
->>
->> How is that an improvement on the section setup we have right now?
->> Abstracting the config section options into a separate file is the
->> worst of both worlds - now I have to look up the section to find the
->> file and the section options, then lookup the file to see the
->> options that file contains.
->>
->> It's like you've decided that the solution to centralised management
->> of configs must be "one config per file", and so every other way of
->> managing options needs to be reframed for that solution....
->>
->>> > IOWs, all that is different from system to system is the device size
->>> > setup. The actual config sections under test (e.g. [xfs]) never need
->>> > to change from host to host, nor environment to environment. i.e.
->>> > "xfs-n64k" runs the same config filesystem test on every system,
->>> > everywhere...
->>> 
->>> Right. So it's also useful if those configs can stay in configs/<fs>/**
->>> as well.
->>
->> Why is having hundreds of tiny single-config-only files
->> better than having all the configs in a single file that is
->> easily browsed and searched?
->>
->> Honestly, I really don't see any advantage to re-implementing config
->> sections as a "file per config" object farm. Yes, you can store
->> information that way, but that doesn't make it an improvement over a
->> single file...
->>
->> All that is needed is for the upstream repository to maintain a
->> config file with all the config sections defined that people need.
->> We don't need any new infrastructure to implement a "centralised
->> configs" feature - all we need is an agreement that upstream will
->> ship an update-to-date default config file instead of the ancient,
->> stale example.config/localhost.config files....
->>
+> That said, I have a suggestion for the -c option—
+>   Global config variables should be overridden by file system-specific 
+> config files.
 >
-> If we can create 1 config for every filesystem instead of creating a lot
-> of smaller config files. i.e.  
-> - configs/ext4/config.ext4
-> - configs/xfs/config.xfs
+> For example, if configs/localhost.config contains:
 >
-> Each of above can contain sections like (e.g.)
+> MKFS_OPTIONS="--sectorsize 64K"
 >
-> [xfs-b4k]
-> MKFS_OPTIONS="-b size=4k"
-> ddUNT_OPTIdd    d=""dd
+> but configs/<fstype>/some_config sets:
+>
+> MKFS_OPTIONS=""
+>
+> then the value from configs/<fstype>/some_config should take priority.
+>
+> I ran some tests with btrfs, and I don’t see this behavior happening yet.
 
-Sorry as you could see my key bindings got all messed up while trying to
-delete this above line using "dd" and the mail got sent while trying to
-fix it up. :(
+I think that was intentional. I guess the reasoning was, we don't want to
+break use cases for folks who still wanted to use local.config file
+option.
 
-However the previous email still has the same gist of what I wanted to
-add. Please let me know your thoughts on using the section configs
-approach for centralizing the filesystems configs.
+However, in the new proposed design [2] we are thinking of having 1
+large config per filesystem. e.g. configs/btrfs/config.btrfs which will
+define all of the relevant sections e.g. btrfs_4k, btrfs_64k, ...  Then
+on invokking "make", it will generate a single large fs config file i.e.
+configs/.all-sections-configs which will club all filesystems section
+configs together.
 
-I also wanted to add the reason for this work. Most of the wrappers if
-we see anyways define extra configs for their testing e.g.
+Now when someone invokes check script with different -s options, it will
+first look into local.config file, if local.config not found, then it
+will look into configs/.all-sections-configs to get the relevant section
+defines.
 
-1. https://github.com/tytso/xfstests-bld/tree/master/test-appliance/files/root/fs
-2. https://github.com/avocado-framework-tests/avocado-misc-tests/tree/master/fs/xfstests.py.data/ext4
-3. https://github.com/linux-kdevops/kdevops/tree/4bffd17ac6a3ac757a26897a75ffa185d623a8e4/playbooks/roles/fstests/templates
+This hopefully should address all the other concerns which were raised
+on the current central fs config design.
 
+[2]: https://lore.kernel.org/linux-fsdevel/87plj0hp7e.fsf@gmail.com/
 
-We believe it would be easier if the default filesystem configs which
-are of interest to FS maintainers, were added directly to the xfstests
-repo. Additionally, it would also help if fstests could provide a way to
-invoke these different configs/sections for testing without requiring
-them to be redefined or copied in the local.config file each time.
-
-Thanks
 -ritesh
 
-
 >
-> [xfs-b64k]
-> MKFS_OPTIONS="-b size=64k"
-> MOUNT_OPTIONS=""
->
->
-> Then during make we can merge all these configs into a common config file
-> i.e. configs/.all-section-configs. We can update the current check script to
-> look for either local.config file or configs/.all-section-configs file
-> for location the section passed in the command line. 
->
-> This will help solve all the listed problems:
-> 1. We don't have to add a new parsing logic for configs
-> 2. We don't need to create 1 file per config
-> 3. We still can get all sections listed in one place under which check
-> script can parse.
-> 4. Calling different filesystem sections from a common config file can work.
->
-> So as you mentioned calling something like below should work. 
->
-> ./check -s xfs_4k -s ext4_4k -g quick
->
-> Hopefully this will require minimal changes to work. Does this sound
-> good to you?
->
-> It's better if we discuss device config later once the central config
-> feature design is agreed by then. 
->
-> Thanks a lot for your review!
-> -ritesh
->
->
->
->>> > I don't really see a need for a new centralised config setup. With
->>> > the above, we can acheived a "zero-config" goal with the existing
->>> > config file formats and infrastructure. All that we need to do is
->>> > update the default config file in the repo to contain a section for
->>> > each of the "standard" test configs we want to define....
->>> 
->>> Could you please take look at the shared RFC [1] once? I believe it will
->>> be useful to have this central to xfstests for reasons I mentioned
->>> above. This also gets us to zero-config setup with almost no need to
->>> configure anything.
->>
->> [1]: https://lore.kernel.org/fstests/cover.1736496620.git.nirjhar.roy.lists@gmail.com/
->>
->> There's nothing in that which provides zero-config. It still
->> requires all the devices to be specified by the user...
->>
->>> This helps other testers & subsystem maintainers to
->>> know what configs are being tested by maintainers, which they can use
->>> for their FS feature testing too.
->>> We can than directly issue -
->>> 
->>>            ./check -c <fs>/<config> -g quick
->>
->> As I've already said: this functionality already exists - they are
->> called config sections!
->>
->>> >> Additionally, we would like to thank Ted for listing several features he uses in
->>> >> his custom kvm-xfstests and gce-xfstests [3]. If there is an interest in further
->>> >> reducing the burden of maintaining custom test scripts and wrappers around
->>> >> xfstests, we can also discuss essential features that could be integrated
->>> >> directly into xfstests, whether from Ted's list or suggestions from others.
->>> >
->>> > On of my goals with check-parallel is to completely remove the need
->>> > for end users to configure fstests. i.e. all you need to do is point
->>> > it at a directory, tell it which filesystem to test, and it "just
->>> > runs" with all the defaults that come direct from the fstests
->>> > repository...
->>> >
->>> 
->>> Right. Centralizing fsconfigs & device configs is also doing the same.
->>> In fact once we have configs/devices/loop config file, then we don't
->>> need to even create local.config file (for most cases I believe).
->>> 
->>> ./check and ./check_parallel can be passed these config files and
->>> xfstests infra will create loop devices, run the tests and later do the
->>> cleanups.
->>
->> Please, no.
->>
->> check-parallel already provides the external zero-conf
->> infrastructure that check needs to run without config. It solves the
->> chicken/egg problems that check itself has (e.g. how do you specify
->> the location of the loop device image files it needs to create for
->> zero-conf), and it does it without needing check or it's internal
->> infrastructure to be modified in any way.
->>
->> I've already outlined how we can use check-parallel to run check in
->> it's traditional serial form, so there is absolutely no need to try
->> to make check jump through hoops to do zero-conf internally.
->>
->> -Dave.
->> -- 
->> Dave Chinner
->> david@fromorbit.com
+> Thanks, Anand
