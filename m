@@ -1,41 +1,61 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A306C1F4C93
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Feb 2025 17:35:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164AA1BD9FA
+	for <linux-xfs@vger.kernel.org>; Sat,  1 Mar 2025 10:21:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740764139; cv=none; b=a3KkXJRLE8PBh4VMYDwVmutbxtpQWOWw2DpFOTS0XxbNMYXd2qDKwRQ2v+unaqXJxV9HVQLLqGWdpwVvj4BPlhmnxceD25I6aqCM/5t/yf6LFJdpZPVQOHCnEMAAzInc9bQzuVvvUcerOU6F2ovfv6vcws4+aPzvedQMHrklIbY=
+	t=1740824469; cv=none; b=AbfQ+6WzsFab8FAsI7CYu8qOiQqfVEu+ElU0XORlirjjV1eNuiYz9FvOZHrlgVcU2+FOsYPc6poCJqsRdA3mGicT2+mp2iO+tQsWThIOs4QAPoqoRbDioF/KXU+4RUUdFg6adU0fU9PFiCKSVInIg0cUZIxWhtBj8REsREDPkHQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740764139; c=relaxed/simple;
-	bh=doGHesXG5URa2Ud/wg8UGR1Bcn5ZNAyHC/l5exOV6os=;
+	s=arc-20240116; t=1740824469; c=relaxed/simple;
+	bh=f4vsQnb7xfI/T//in/zcEdLND53XshptXfcJzwW+uY4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iwgU3w3dJiQXZdghrzUr3lqPkMEn0nNcXO7i4gTLBd8PbPJyWn/N6T+phSC7o3xdxaQ89dmiPN9akaZjYTfUozET+O2foxW60bqjWvyhufTC6GIWKJhH3M7OBPnZjMl6K/8/GynGcI89tOHVHAAt94WDOV7yfe5rpwSKfveCJkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TvghJ4po; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=RHHX3fBecD2szz7P0JnRuTMukEjyUzPKCw7EsSzrLOMhXxkvLq3R1jHFgPkqbg2PnTN+icD74dv45GTa+EBohQEbhwXd2BFHKXOdecXhLuLSbAq4ClOizOIIDcpwn6SF+Yd/0ciIRwpKoDdQ1PQMIJ5gHYyp7zQi5RDHvP3Rtu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NwZH+6vV; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TvghJ4po"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BB4CC4CED6;
-	Fri, 28 Feb 2025 17:35:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740764139;
-	bh=doGHesXG5URa2Ud/wg8UGR1Bcn5ZNAyHC/l5exOV6os=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TvghJ4poKaC+dovV6aDQCdjgNAbOEuodUTUJWoO64suslmavJ7fM3Dem//xuOZJtb
-	 cu8dMBiGoUCuJbHMLMHAsnO0oF7vRKwnzAbxPwW8wHC6TgJij2rcemWwHcjbDAYHaC
-	 UqDtUCNd5A3AysVAx8DX0qRx7aHqWHoPdIiFNKw4s+O0Q5FHTHw4wSVMiRSpx6PeRf
-	 EPHj10RLDr/CIehKghuH9HqOAF9o5c4AYVoahqme/S0T5PbQsVwxNrrfhUx+5lcop0
-	 GH9s9vGK8ltwcZB/GFcdYEKOximQJj075/19ARDFivTH6qPJEuk5TqxPptP4gVheO3
-	 Xzan8vS1iBshw==
-Date: Fri, 28 Feb 2025 09:35:37 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bill O'Donnell <bodonnel@redhat.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs_repair: -EFSBADCRC needs action when read verifier
- detects it.
-Message-ID: <20250228173537.GA6242@frogsfrogsfrogs>
-References: <20250226173335.558221-1-bodonnel@redhat.com>
- <20250226182002.GU6242@frogsfrogsfrogs>
- <4rpfn4nxntgg6hwqtei7nhhuw7n5jl57xvtnb7zagzus5y4i2s@triion65snds>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NwZH+6vV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1740824466; x=1772360466;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=f4vsQnb7xfI/T//in/zcEdLND53XshptXfcJzwW+uY4=;
+  b=NwZH+6vV4/6pxoeEDTY6LMFgkMBxhL8k/mwfjP39qf9GnS/0zyMiyRAv
+   Q3y91QKeuCv/SaGrZwofQdCb3v9UzV5gPvDjrjYQ+BP2N1QhBWSm0RWxz
+   KvuEzvnTi7r9tDquOJiLdBRG5y6jSLAlQOwHVUZ0a9ZtBfyBAFHIt8TVe
+   qG4lJGg0leU7YzBLDT6KFJnkmOFoJgdwnRtXBd1qDkQpyztGWHNC/m/3Y
+   aaYvSeowu7AFnTNxUQORR+Ao8nrUm0oV31QtVwh2XUqviGX9K6Wqna07M
+   WWQO52MPq4fQnSio1gQeOsWEQVYoI+YuPFg8P3A8YLjG3wzN7gSrBSGq/
+   w==;
+X-CSE-ConnectionGUID: s87QBpC1TN6kvtamLw2HsA==
+X-CSE-MsgGUID: nmNYAri9SiuZGNUym8NTgg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11359"; a="45401298"
+X-IronPort-AV: E=Sophos;i="6.13,325,1732608000"; 
+   d="scan'208";a="45401298"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2025 02:21:06 -0800
+X-CSE-ConnectionGUID: JF6/YzmsRpWggsYxB6oDyg==
+X-CSE-MsgGUID: gwDCNf17QFKe9WWK8XN0Qw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.13,325,1732608000"; 
+   d="scan'208";a="122557030"
+Received: from lkp-server02.sh.intel.com (HELO 76cde6cc1f07) ([10.239.97.151])
+  by orviesa004.jf.intel.com with ESMTP; 01 Mar 2025 02:21:04 -0800
+Received: from kbuild by 76cde6cc1f07 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1toJxZ-000G8E-1c;
+	Sat, 01 Mar 2025 10:20:43 +0000
+Date: Sat, 1 Mar 2025 18:20:11 +0800
+From: kernel test robot <lkp@intel.com>
+To: Julian Sun <sunjunchao2870@gmail.com>, linux-xfs@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, cem@kernel.org,
+	djwong@kernel.org, Julian Sun <sunjunchao2870@gmail.com>
+Subject: Re: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL
+ allocation.
+Message-ID: <202503011738.qvNVWziu-lkp@intel.com>
+References: <20250228082622.2638686-2-sunjunchao2870@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,203 +64,103 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4rpfn4nxntgg6hwqtei7nhhuw7n5jl57xvtnb7zagzus5y4i2s@triion65snds>
+In-Reply-To: <20250228082622.2638686-2-sunjunchao2870@gmail.com>
 
-On Fri, Feb 28, 2025 at 09:27:31AM -0600, Bill O'Donnell wrote:
-> On Wed, Feb 26, 2025 at 10:20:02AM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 26, 2025 at 11:32:22AM -0600, bodonnel@redhat.com wrote:
-> > > From: Bill O'Donnell <bodonnel@redhat.com>
-> > > 
-> > > For xfs_repair, there is a case when -EFSBADCRC is encountered but not
-> > > acted on. Modify da_read_buf to check for and repair. The current
-> > > implementation fails for the case:
-> > > 
-> > > $ xfs_repair xfs_metadump_hosting.dmp.image
-> > > Phase 1 - find and verify superblock...
-> > > Phase 2 - using internal log
-> > >         - zero log...
-> > >         - scan filesystem freespace and inode maps...
-> > >         - found root inode chunk
-> > > Phase 3 - for each AG...
-> > >         - scan and clear agi unlinked lists...
-> > >         - process known inodes and perform inode discovery...
-> > >         - agno = 0
-> > > Metadata CRC error detected at 0x46cde8, xfs_dir3_block block 0xd3c50/0x1000
-> > > bad directory block magic # 0x16011664 in block 0 for directory inode 867467
-> > > corrupt directory block 0 for inode 867467
-> > 
-> > Curious -- this corrupt directory block fails the magic checks but
-> > process_dir2_data returns 0 because it didn't find any corruption.
-> > So it looks like we release the directory buffer (without dirtying it to
-> > reset the checksum)...
-> > 
-> > >         - agno = 1
-> > >         - agno = 2
-> > >         - agno = 3
-> > >         - process newly discovered inodes...
-> > > Phase 4 - check for duplicate blocks...
-> > >         - setting up duplicate extent list...
-> > >         - check for inodes claiming duplicate blocks...
-> > >         - agno = 0
-> > >         - agno = 1
-> > >         - agno = 3
-> > >         - agno = 2
-> > > bad directory block magic # 0x16011664 in block 0 for directory inode 867467
-> > 
-> > ...and then it shows up here again...
-> > 
-> > > Phase 5 - rebuild AG headers and trees...
-> > >         - reset superblock...
-> > > Phase 6 - check inode connectivity...
-> > >         - resetting contents of realtime bitmap and summary inodes
-> > >         - traversing filesystem ...
-> > > bad directory block magic # 0x16011664 for directory inode 867467 block 0: fixing magic # to 0x58444233
-> > 
-> > ...and again here.  Now we reset the magic and dirty the buffer...
-> > 
-> > >         - traversal finished ...
-> > >         - moving disconnected inodes to lost+found ...
-> > > Phase 7 - verify and correct link counts...
-> > > Metadata corruption detected at 0x46cc88, xfs_dir3_block block 0xd3c50/0x1000
-> > 
-> > ...but I guess we haven't fixed anything in the buffer, so the verifier
-> > trips.  What code does 0x46cc88 map to in the dir3 block verifier
-> > function?  That might reflect some missing code in process_dir2_data.
-> 
-> 0x46cc88 maps to xfs_dir3_block_verify (bp=bp@entry=0x7fffbc103610) at xfs_dir2_block.c:56
+Hi Julian,
 
-On my git tree that maps to this code:
+kernel test robot noticed the following build warnings:
 
-	struct xfs_mount	*mp = bp->b_mount;
-	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
+[auto build test WARNING on xfs-linux/for-next]
+[also build test WARNING on linus/master v6.14-rc4 next-20250228]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-	if (!xfs_verify_magic(bp, hdr3->magic))
-		return __this_address;
+url:    https://github.com/intel-lab-lkp/linux/commits/Julian-Sun/xfs-remove-unnecessary-checks-for-__GFP_NOFAIL-allocation/20250228-162815
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/20250228082622.2638686-2-sunjunchao2870%40gmail.com
+patch subject: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL allocation.
+config: i386-buildonly-randconfig-001-20250301 (https://download.01.org/0day-ci/archive/20250301/202503011738.qvNVWziu-lkp@intel.com/config)
+compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250301/202503011738.qvNVWziu-lkp@intel.com/reproduce)
 
-	if (xfs_has_crc(mp)) {
-		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
-			return __this_address;
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202503011738.qvNVWziu-lkp@intel.com/
 
-So I guess the UUID is broken too.  If you let process_dir2_data step
-through the block, does it actually manage to parse whatever's there
-without complaints?  And does it recover any entries from that mess?
+All warnings (new ones prefixed by >>):
 
-I'm wondering if xfs_repair should junk the block if it fails the
-verifier and there aren't any actual directory entries in it?
+>> fs/xfs/xfs_mru_cache.c:359:1: warning: unused label 'exit' [-Wunused-label]
+     359 | exit:
+         | ^~~~~
+   1 warning generated.
 
---D
 
-> > 
-> > > libxfs_bwrite: write verifier failed on xfs_dir3_block bno 0xd3c50/0x8
-> > > xfs_repair: Releasing dirty buffer to free list!
-> > > xfs_repair: Refusing to write a corrupt buffer to the data device!
-> > > xfs_repair: Lost a write to the data device!
-> > > 
-> > > fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
-> > > 
-> > > 
-> > > With the patch applied:
-> > > $ xfs_repair xfs_metadump_hosting.dmp.image
-> > > Phase 1 - find and verify superblock...
-> > > Phase 2 - using internal log
-> > >         - zero log...
-> > >         - scan filesystem freespace and inode maps...
-> > >         - found root inode chunk
-> > > Phase 3 - for each AG...
-> > >         - scan and clear agi unlinked lists...
-> > >         - process known inodes and perform inode discovery...
-> > >         - agno = 0
-> > > Metadata CRC error detected at 0x46ce28, xfs_dir3_block block 0xd3c50/0x1000
-> > > bad directory block magic # 0x16011664 in block 0 for directory inode 867467
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > >         - agno = 1
-> > >         - agno = 2
-> > >         - agno = 3
-> > >         - process newly discovered inodes...
-> > > Phase 4 - check for duplicate blocks...
-> > >         - setting up duplicate extent list...
-> > >         - check for inodes claiming duplicate blocks...
-> > >         - agno = 0
-> > >         - agno = 1
-> > >         - agno = 2
-> > >         - agno = 3
-> > > bad directory block magic # 0x16011664 in block 0 for directory inode 867467
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > Phase 5 - rebuild AG headers and trees...
-> > >         - reset superblock...
-> > > Phase 6 - check inode connectivity...
-> > >         - resetting contents of realtime bitmap and summary inodes
-> > >         - traversing filesystem ...
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > Metadata CRC error detected at 0x46ce28, xfs_dir3_block block 0xd3c50/0x1000
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > bad directory block magic # 0x16011664 for directory inode 867467 block 0: fixing magic # to 0x58444233
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > rebuilding directory inode 867467
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > > cache_node_put: node put on refcount 0 (node=0x7f46ac0c5610)
-> > > cache_node_put: node put on node (0x7f46ac0c5610) in MRU list
-> > >         - traversal finished ...
-> > >         - moving disconnected inodes to lost+found ...
-> > > Phase 7 - verify and correct link counts...
-> > > done
-> > > 
-> > > Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
-> > > ---
-> > >  repair/da_util.c | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> > > 
-> > > diff --git a/repair/da_util.c b/repair/da_util.c
-> > > index 7f94f4012062..0a4785e6f69b 100644
-> > > --- a/repair/da_util.c
-> > > +++ b/repair/da_util.c
-> > > @@ -66,6 +66,9 @@ da_read_buf(
-> > >  	}
-> > >  	libxfs_buf_read_map(mp->m_dev, map, nex, LIBXFS_READBUF_SALVAGE,
-> > >  			&bp, ops);
-> > > +	if (bp->b_error == -EFSBADCRC) {
-> > > +		libxfs_buf_relse(bp);
-> > 
-> > This introduces a use-after-free on the buffer pointer.
-> > 
-> > --D
-> > 
-> > > +	}
-> > >  	if (map != map_array)
-> > >  		free(map);
-> > >  	return bp;
-> > > -- 
-> > > 2.48.1
-> > > 
-> > > 
-> > 
-> 
-> 
+vim +/exit +359 fs/xfs/xfs_mru_cache.c
+
+2a82b8be8a8dac David Chinner     2007-07-11  307  
+2a82b8be8a8dac David Chinner     2007-07-11  308  /*
+2a82b8be8a8dac David Chinner     2007-07-11  309   * To initialise a struct xfs_mru_cache pointer, call xfs_mru_cache_create()
+2a82b8be8a8dac David Chinner     2007-07-11  310   * with the address of the pointer, a lifetime value in milliseconds, a group
+2a82b8be8a8dac David Chinner     2007-07-11  311   * count and a free function to use when deleting elements.  This function
+2a82b8be8a8dac David Chinner     2007-07-11  312   * returns 0 if the initialisation was successful.
+2a82b8be8a8dac David Chinner     2007-07-11  313   */
+2a82b8be8a8dac David Chinner     2007-07-11  314  int
+2a82b8be8a8dac David Chinner     2007-07-11  315  xfs_mru_cache_create(
+22328d712dd7fd Christoph Hellwig 2014-04-23  316  	struct xfs_mru_cache	**mrup,
+7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  317  	void			*data,
+2a82b8be8a8dac David Chinner     2007-07-11  318  	unsigned int		lifetime_ms,
+2a82b8be8a8dac David Chinner     2007-07-11  319  	unsigned int		grp_count,
+2a82b8be8a8dac David Chinner     2007-07-11  320  	xfs_mru_cache_free_func_t free_func)
+2a82b8be8a8dac David Chinner     2007-07-11  321  {
+22328d712dd7fd Christoph Hellwig 2014-04-23  322  	struct xfs_mru_cache	*mru = NULL;
+2a82b8be8a8dac David Chinner     2007-07-11  323  	int			err = 0, grp;
+2a82b8be8a8dac David Chinner     2007-07-11  324  	unsigned int		grp_time;
+2a82b8be8a8dac David Chinner     2007-07-11  325  
+2a82b8be8a8dac David Chinner     2007-07-11  326  	if (mrup)
+2a82b8be8a8dac David Chinner     2007-07-11  327  		*mrup = NULL;
+2a82b8be8a8dac David Chinner     2007-07-11  328  
+2a82b8be8a8dac David Chinner     2007-07-11  329  	if (!mrup || !grp_count || !lifetime_ms || !free_func)
+2451337dd04390 Dave Chinner      2014-06-25  330  		return -EINVAL;
+2a82b8be8a8dac David Chinner     2007-07-11  331  
+2a82b8be8a8dac David Chinner     2007-07-11  332  	if (!(grp_time = msecs_to_jiffies(lifetime_ms) / grp_count))
+2451337dd04390 Dave Chinner      2014-06-25  333  		return -EINVAL;
+2a82b8be8a8dac David Chinner     2007-07-11  334  
+10634530f7ba94 Dave Chinner      2024-01-16  335  	mru = kzalloc(sizeof(*mru), GFP_KERNEL | __GFP_NOFAIL);
+2a82b8be8a8dac David Chinner     2007-07-11  336  
+2a82b8be8a8dac David Chinner     2007-07-11  337  	/* An extra list is needed to avoid reaping up to a grp_time early. */
+2a82b8be8a8dac David Chinner     2007-07-11  338  	mru->grp_count = grp_count + 1;
+10634530f7ba94 Dave Chinner      2024-01-16  339  	mru->lists = kzalloc(mru->grp_count * sizeof(*mru->lists),
+10634530f7ba94 Dave Chinner      2024-01-16  340  				GFP_KERNEL | __GFP_NOFAIL);
+2a82b8be8a8dac David Chinner     2007-07-11  341  
+2a82b8be8a8dac David Chinner     2007-07-11  342  	for (grp = 0; grp < mru->grp_count; grp++)
+2a82b8be8a8dac David Chinner     2007-07-11  343  		INIT_LIST_HEAD(mru->lists + grp);
+2a82b8be8a8dac David Chinner     2007-07-11  344  
+2a82b8be8a8dac David Chinner     2007-07-11  345  	/*
+2a82b8be8a8dac David Chinner     2007-07-11  346  	 * We use GFP_KERNEL radix tree preload and do inserts under a
+2a82b8be8a8dac David Chinner     2007-07-11  347  	 * spinlock so GFP_ATOMIC is appropriate for the radix tree itself.
+2a82b8be8a8dac David Chinner     2007-07-11  348  	 */
+2a82b8be8a8dac David Chinner     2007-07-11  349  	INIT_RADIX_TREE(&mru->store, GFP_ATOMIC);
+2a82b8be8a8dac David Chinner     2007-07-11  350  	INIT_LIST_HEAD(&mru->reap_list);
+007c61c68640ea Eric Sandeen      2007-10-11  351  	spin_lock_init(&mru->lock);
+2a82b8be8a8dac David Chinner     2007-07-11  352  	INIT_DELAYED_WORK(&mru->work, _xfs_mru_cache_reap);
+2a82b8be8a8dac David Chinner     2007-07-11  353  
+2a82b8be8a8dac David Chinner     2007-07-11  354  	mru->grp_time  = grp_time;
+2a82b8be8a8dac David Chinner     2007-07-11  355  	mru->free_func = free_func;
+7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  356  	mru->data = data;
+2a82b8be8a8dac David Chinner     2007-07-11  357  	*mrup = mru;
+2a82b8be8a8dac David Chinner     2007-07-11  358  
+2a82b8be8a8dac David Chinner     2007-07-11 @359  exit:
+2a82b8be8a8dac David Chinner     2007-07-11  360  	if (err && mru && mru->lists)
+d4c75a1b40cd03 Dave Chinner      2024-01-16  361  		kfree(mru->lists);
+2a82b8be8a8dac David Chinner     2007-07-11  362  	if (err && mru)
+d4c75a1b40cd03 Dave Chinner      2024-01-16  363  		kfree(mru);
+2a82b8be8a8dac David Chinner     2007-07-11  364  
+2a82b8be8a8dac David Chinner     2007-07-11  365  	return err;
+2a82b8be8a8dac David Chinner     2007-07-11  366  }
+2a82b8be8a8dac David Chinner     2007-07-11  367  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
