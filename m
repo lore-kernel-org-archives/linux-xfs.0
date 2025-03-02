@@ -1,191 +1,108 @@
-Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45AED1D5CC7
-	for <linux-xfs@vger.kernel.org>; Sun,  2 Mar 2025 17:15:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.208
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B492A13AF2
+	for <linux-xfs@vger.kernel.org>; Sun,  2 Mar 2025 21:36:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740935730; cv=none; b=ghcIlen4zl+fnfUC0HxBfiHCQ2JVV8Hhd2HdJscZ9vjeKOnOpngP1ci5ZQBiOAyIXae8YLC2CD/DEQYD8IfTaHiB0fLtVS4Ohh0u375kThEV0z6PTkidl+YcSI9r0JeiXhS9sX+5m+Rn6NkdRjg50+6HKQ7I6vSLk86QVl1AWa8=
+	t=1740951363; cv=none; b=idxcuXaFPM3mG39ApnKD1POVAxL/J+MxA4SVXJwWFoMdnHfBwSR0YO9ca3vL6R4jNRP0SlTe6jvJ0Wx7ZivdLdgk9eJQ5WhMWAFThX8FfbZthXt18oikzPVfL8q9pJB+TJA4AYz8KXCBHOB7SYsgqaId534jU9RPu+tXOeg5/8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740935730; c=relaxed/simple;
-	bh=cE/SPCiYDZcOR99Z9M3tRDLTiaexuCJ5bEtRTIgmWG0=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=dtIYDpl0M0b5BCqowGaKN5zQpdiAv1kb8tctfYqo1Ww4KEfAzs2M0NGCXaRYRot5UwSK5MJzDub7KEXIwYwNcJp3TKLbNC9dOdna09e65j9Dyb7mrH4ZR92XsIYKojZhPLvML7kQ7p/vMfhS1Ag/+5Z0J8qIxl5qrI8WKpgcnAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.208
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-3cf64584097so41992905ab.2
-        for <linux-xfs@vger.kernel.org>; Sun, 02 Mar 2025 09:15:29 -0800 (PST)
+	s=arc-20240116; t=1740951363; c=relaxed/simple;
+	bh=Vi1ahqBonGpjrg2PEWKZLVcuWf78WV5TpJRGh5ZcfbQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A8D233tuP4kY7RovzSVxDINMgWrj6ayIBEhFIrvZL1NH25NH7tkmMrapc/i3WdED5K4h8ObJxLYe2QmLH/zV5WkzRPr5zgKLG9zzCshU23tbwVh/4/4kzqxCrK+oJhYrgesROUlSiV5G9TG22RHGnDpIYvXn7XYHQI/LcHRLlMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=YCGa/Mxi; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="YCGa/Mxi"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-22382657540so19777895ad.2
+        for <linux-xfs@vger.kernel.org>; Sun, 02 Mar 2025 13:36:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1740951361; x=1741556161; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=sLhjlRFb9FxCIkbEAsGqVYWBx9J4SRJUCGTiHpg85ok=;
+        b=YCGa/Mxi7ySmnlvSzSTA5uG10jbzLmi5kjxMxm6usdbpeZYzBMqAbUEEhrCbP2ZunW
+         +v7bWaO0mYS/5LGX6F5uJdt5DUtz61aJMiK8g9+5W713FVipgRq/W6oo44BnBlWOGf+V
+         jFMbGmu0fny6HBRGQXcKut4CSVf1bl8Wj3hZb4CjDXDDKt/qdO6d7faQv+bGvxAZ/8Vn
+         pIdEOv76PH+JiQC9yADbNQ8xKwVzTaF1odAXE26ViL0nw1FkNcFdsn4PWT8Uazlf6yiL
+         DQ4HAYvfRuF4W3PDqgmHffxjuFHSPt+EzlGcW6QFaCc+/7BfChzjFXN0jItji8cghazw
+         KVgA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740935728; x=1741540528;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EjQINonG+fKzFryFSkBLx3n1n0DbYPP/R0V4wiSURIc=;
-        b=Lx75Hz9IXSv7qB3Cf4VIa0MkZ1qz99tD308CgPu1LTSuhqosBrGV8by7yo5ny+n5u8
-         OI0OG6ZlUju+wdYcPQnHsTLzLFzRj+RPglkNxsd8ha9oQdcvHbWrkaEuVxkXqlwAYmRB
-         Ad9FTMeggUI0/3YCm9+uTcqAW74/HMOfKRBwTdVABKmF47nLHA57znUov/pfdQQ6HrET
-         vjjl4o9GSFAdPArh9iqBYjuvgZzZq9/xoPn5sv/F3V6zR8K44UZ4J9XwFxarRAzyufxb
-         OagbI0bg3UMOwUFs9DRMo8gBw8Yig4I5vJalDah+4Xf6WaIr+oXw9449kI4xjFYO5Rn7
-         UgPg==
-X-Forwarded-Encrypted: i=1; AJvYcCV69P+Favr9VXiuC+lPGDdeOx7vSYAp4SAnRd2HuF7Ivk6i/xCrNGZ6SEk0n4QDVgd5gAMC2cR7ZlE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywf5QIgSxCUMRj2dApqiR9tq2cPI7lXDshkbJgpLjfggvaOJbj8
-	OVoVeSq8jIU80KLLf8IIaihADq/IWZqmjGZaHG1adLcQDJ0CKaB7oUUQgadssMm+b/pEBatYfPI
-	so0zAyYjX64eaW/dJnMvztBwLpb7puKbio5VbhiDIMBUe5aDxWf6XCAc=
-X-Google-Smtp-Source: AGHT+IGSc9CsSIB8PvYkUlwIEWl1Vzgh9G7d69cBMweqfT4MmH4kG2MlNKLcVgOobeINwZfwg7yFQU/KgKjQk83g7yiogBiuM9jy
+        d=1e100.net; s=20230601; t=1740951361; x=1741556161;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sLhjlRFb9FxCIkbEAsGqVYWBx9J4SRJUCGTiHpg85ok=;
+        b=WUQObSc0vwzPHOVSCaISXVf0A90USzj/AFxbugjFgv8c85l9VbsrGklbdK00iBb94c
+         6uuX/94d/qvE6Z//QkAwOOQ2FqOVWUE5auTKA7lGUl5d+aMO5BFvcIRvkLGap1ak3B0B
+         hV0Iht08Rw4Z6Ki8TqoMjqoIw5FTB7lzrS6nku9jR7F2vQlHYe2ES3kOduhXPKUHR4Dh
+         cDxtkR3qQGZt4ZLmmptLgP+ZSeu0oohN2YlxUwZrB4gt+Hvz5r0Ki2hIurWG4TECPyYm
+         aEw1h/d/fj46UVv/JQ2yCEHZa9zu9JWWe9/39ZJItLxwqpCnwA1dXbFiYp/A/fZaxFUl
+         cq6Q==
+X-Gm-Message-State: AOJu0YzrsuO0kev/4OV/Ra8Eu2ZcROcakbquBEsLnEt+gkz61g6h5CLQ
+	qanipaLMyHh0fSOmw8IzgPyK3d+pidgPFXB0U3TR3U/XiJmstAKd1TcBiMpCGf3QKWW1kLGjtZE
+	i
+X-Gm-Gg: ASbGnctCQuKFwXSOsX1Swm9m56eyE0RSmpeuNLoRmubH1xlKpoB2HfvQZLfyz2BS11+
+	jcphGTVoSYt8MsD55iyILfItvDzkUlRCo4hrdq1WMn4BbajjmKIlvf0Z26785Eq2q8rULRvBrD4
+	AmUl9HOV4pd3/pfhX93et+jaRxoki+vHkqUQkf4iWXJsz1bPGRrOCETITL0OtqCuofNkWotwr33
+	Ej/GZMUcKlH0OdGdmyl4BlTf+BSm6aLlJVPc0BHNsujRWXrCfQyC3eme19K7rrQGc1hTCIvlZka
+	uuzlmoaiectD6BlKvxv6ph4LBGC+kKf4Q6cM6xlsIexSj+FS2q/iGcP1Jlgqm22hbw8cUkQvg/r
+	Oc5qnYzPlJJ3R6ZytpK2A
+X-Google-Smtp-Source: AGHT+IEH+IYdiUWiJUXXq8l28e5wBpaKi+TmPc+MX9B6l31vruEnMkNjQqRzGyVebbB9Pe6Z3xWH+A==
+X-Received: by 2002:a17:903:198e:b0:223:4537:65b1 with SMTP id d9443c01a7336-22369255638mr162599425ad.36.1740951360929;
+        Sun, 02 Mar 2025 13:36:00 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223501fbd47sm65177365ad.67.2025.03.02.13.36.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 02 Mar 2025 13:36:00 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1toqyb-000000083MM-1Imq;
+	Mon, 03 Mar 2025 08:35:57 +1100
+Date: Mon, 3 Mar 2025 08:35:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Steinar H. Gunderson" <steinar+kernel@gunderson.no>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: Slow deduplication
+Message-ID: <Z8TPPX3g9rA5XND_@dread.disaster.area>
+References: <20250302084710.3g5ipnj46xxhd33r@sesse.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1d14:b0:3d0:21aa:a752 with SMTP id
- e9e14a558f8ab-3d3e6e2109amr103084195ab.2.1740935728391; Sun, 02 Mar 2025
- 09:15:28 -0800 (PST)
-Date: Sun, 02 Mar 2025 09:15:28 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <67c49230.050a0220.55417.04d5.GAE@google.com>
-Subject: [syzbot] [xfs?] [mm?] WARNING: bad unlock balance in __mm_populate
-From: syzbot <syzbot+8f9f411152c9539f4e59@syzkaller.appspotmail.com>
-To: akpm@linux-foundation.org, chandan.babu@oracle.com, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250302084710.3g5ipnj46xxhd33r@sesse.net>
 
-Hello,
+On Sun, Mar 02, 2025 at 09:47:10AM +0100, Steinar H. Gunderson wrote:
+> This ioctl call successfully deduplicated the data, but it took 71.52 _seconds_.
+> Deduplicating the entire set is on the order of days. I don't understand why
+> this would take so much time; I understand that it needs to make a read to
+> verify that the file ranges are indeed the same (this is the only sane API
+> design!), but it comes out to something like 2800 kB/sec from an array that
+> can deliver almost 400 times that. There is no other activity on the file
+> system in question, so it should not conflict with other activity (locks
+> etc.), and the process does not appear to be taking significant amounts of
+> CPU time. iostat shows read activity varying from maybe 300 kB/sec to
+> 12000 kB/sec or so; /proc/<pid>/stack says:
+> 
+>   [<0>] folio_wait_bit_common+0x174/0x220
+>   [<0>] filemap_read_folio+0x64/0x8b
+>   [<0>] do_read_cache_folio+0x119/0x164
+>   [<0>] __generic_remap_file_range_prep+0x372/0x568
+>   [<0>] generic_remap_file_range_prep+0x7/0xd
 
-syzbot found the following issue on:
+This does comparison one folio at a time and does no readahead.
+Hence if the data isn't already in cache, it is doing synchronous
+small reads and waiting for every single one of them. This really
+should use an internal interface that is capable of issuing
+readahead...
 
-HEAD commit:    e056da87c780 Merge remote-tracking branch 'will/for-next/p..
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
-console output: https://syzkaller.appspot.com/x/log.txt?x=1206ba97980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d6b7e15dc5b5e776
-dashboard link: https://syzkaller.appspot.com/bug?extid=8f9f411152c9539f4e59
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-userspace arch: arm64
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=126168b7980000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=122265a8580000
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/3d8b1b7cc4c0/disk-e056da87.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/b84c04cff235/vmlinux-e056da87.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/2ae4d0525881/Image-e056da87.gz.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/9d88fc8b2cfc/mount_0.gz
-  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=12f4cfb8580000)
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+8f9f411152c9539f4e59@syzkaller.appspotmail.com
-
-XFS (loop0): Ending clean mount
-XFS (loop0): Quotacheck needed: Please wait.
-XFS (loop0): Quotacheck: Done.
-=====================================
-WARNING: bad unlock balance detected!
-6.14.0-rc4-syzkaller-ge056da87c780 #0 Not tainted
--------------------------------------
-syz-executor109/6436 is trying to release lock (&mm->mmap_lock) at:
-[<ffff800080a63c54>] mmap_read_unlock include/linux/mmap_lock.h:217 [inline]
-[<ffff800080a63c54>] __mm_populate+0x328/0x3d8 mm/gup.c:2044
-but there are no more locks to release!
-
-other info that might help us debug this:
-no locks held by syz-executor109/6436.
-
-stack backtrace:
-CPU: 1 UID: 0 PID: 6436 Comm: syz-executor109 Not tainted 6.14.0-rc4-syzkaller-ge056da87c780 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 12/27/2024
-Call trace:
- show_stack+0x2c/0x3c arch/arm64/kernel/stacktrace.c:466 (C)
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0xe4/0x150 lib/dump_stack.c:120
- dump_stack+0x1c/0x28 lib/dump_stack.c:129
- print_unlock_imbalance_bug+0x254/0x2ac kernel/locking/lockdep.c:5289
- __lock_release kernel/locking/lockdep.c:5518 [inline]
- lock_release+0x410/0x9e4 kernel/locking/lockdep.c:5872
- up_read+0x24/0x3c kernel/locking/rwsem.c:1619
- mmap_read_unlock include/linux/mmap_lock.h:217 [inline]
- __mm_populate+0x328/0x3d8 mm/gup.c:2044
- mm_populate include/linux/mm.h:3386 [inline]
- vm_mmap_pgoff+0x304/0x3c4 mm/util.c:580
- ksys_mmap_pgoff+0x3a4/0x5c8 mm/mmap.c:607
- __do_sys_mmap arch/arm64/kernel/sys.c:28 [inline]
- __se_sys_mmap arch/arm64/kernel/sys.c:21 [inline]
- __arm64_sys_mmap+0xf8/0x110 arch/arm64/kernel/sys.c:21
- __invoke_syscall arch/arm64/kernel/syscall.c:35 [inline]
- invoke_syscall+0x98/0x2b8 arch/arm64/kernel/syscall.c:49
- el0_svc_common+0x130/0x23c arch/arm64/kernel/syscall.c:132
- do_el0_svc+0x48/0x58 arch/arm64/kernel/syscall.c:151
- el0_svc+0x54/0x168 arch/arm64/kernel/entry-common.c:744
- el0t_64_sync_handler+0x84/0x108 arch/arm64/kernel/entry-common.c:762
- el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:600
-------------[ cut here ]------------
-DEBUG_RWSEMS_WARN_ON(tmp < 0): count = 0xffffffffffffff00, magic = 0xffff0000d86e4de0, owner = 0x1, curr 0xffff0000c69a0000, list empty
-WARNING: CPU: 1 PID: 6436 at kernel/locking/rwsem.c:1346 __up_read+0x3bc/0x5f8 kernel/locking/rwsem.c:1346
-Modules linked in:
-CPU: 1 UID: 0 PID: 6436 Comm: syz-executor109 Not tainted 6.14.0-rc4-syzkaller-ge056da87c780 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 12/27/2024
-pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-pc : __up_read+0x3bc/0x5f8 kernel/locking/rwsem.c:1346
-lr : __up_read+0x3bc/0x5f8 kernel/locking/rwsem.c:1346
-sp : ffff80009cdd79e0
-x29: ffff80009cdd7a60 x28: 1ffff00011f780cb x27: ffff80008fbc0000
-x26: dfff800000000000 x25: ffffffffffffff00 x24: ffff0000d86e4e38
-x23: ffff0000d86e4de0 x22: ffffffffffffff00 x21: 0000000000000001
-x20: ffff0000c69a0000 x19: ffff0000d86e4de0 x18: 0000000000000008
-x17: 0000000000000000 x16: ffff8000832b5180 x15: 0000000000000001
-x14: 1ffff000139bae94 x13: 0000000000000000 x12: 0000000000000000
-x11: 0000000000000003 x10: 0000000000ff0100 x9 : aaeea068a75a4000
-x8 : aaeea068a75a4000 x7 : 0000000000000001 x6 : 0000000000000001
-x5 : ffff80009cdd7198 x4 : ffff80008fcaf780 x3 : ffff800083247194
-x2 : 0000000000000001 x1 : 0000000100000001 x0 : 0000000000000000
-Call trace:
- __up_read+0x3bc/0x5f8 kernel/locking/rwsem.c:1346 (P)
- up_read+0x2c/0x3c kernel/locking/rwsem.c:1620
- mmap_read_unlock include/linux/mmap_lock.h:217 [inline]
- __mm_populate+0x328/0x3d8 mm/gup.c:2044
- mm_populate include/linux/mm.h:3386 [inline]
- vm_mmap_pgoff+0x304/0x3c4 mm/util.c:580
- ksys_mmap_pgoff+0x3a4/0x5c8 mm/mmap.c:607
- __do_sys_mmap arch/arm64/kernel/sys.c:28 [inline]
- __se_sys_mmap arch/arm64/kernel/sys.c:21 [inline]
- __arm64_sys_mmap+0xf8/0x110 arch/arm64/kernel/sys.c:21
- __invoke_syscall arch/arm64/kernel/syscall.c:35 [inline]
- invoke_syscall+0x98/0x2b8 arch/arm64/kernel/syscall.c:49
- el0_svc_common+0x130/0x23c arch/arm64/kernel/syscall.c:132
- do_el0_svc+0x48/0x58 arch/arm64/kernel/syscall.c:151
- el0_svc+0x54/0x168 arch/arm64/kernel/entry-common.c:744
- el0t_64_sync_handler+0x84/0x108 arch/arm64/kernel/entry-common.c:762
- el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:600
-irq event stamp: 64843
-hardirqs last  enabled at (64843): [<ffff80008b7e75f8>] __raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:151 [inline]
-hardirqs last  enabled at (64843): [<ffff80008b7e75f8>] _raw_spin_unlock_irqrestore+0x38/0x98 kernel/locking/spinlock.c:194
-hardirqs last disabled at (64842): [<ffff80008b7e7428>] __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:108 [inline]
-hardirqs last disabled at (64842): [<ffff80008b7e7428>] _raw_spin_lock_irqsave+0x2c/0x7c kernel/locking/spinlock.c:162
-softirqs last  enabled at (64286): [<ffff8000801283e0>] local_bh_enable+0x10/0x34 include/linux/bottom_half.h:32
-softirqs last disabled at (64284): [<ffff8000801283ac>] local_bh_disable+0x10/0x34 include/linux/bottom_half.h:19
----[ end trace 0000000000000000 ]---
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
