@@ -1,180 +1,122 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from pannekake.samfundet.no (pannekake.samfundet.no [193.35.52.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD8FB1BD01F;
-	Sat,  1 Mar 2025 19:45:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9F081CA84
+	for <linux-xfs@vger.kernel.org>; Sun,  2 Mar 2025 08:47:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.35.52.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740858355; cv=none; b=hVYuRWvJ9rbnrmxFyu2CvzkfvTTmycopxIUmwQct4Uqanu+B5AWXjSJAgocwcev7lJWLGQxH+3eHutCQzcTyJD3cr9ZN5kCjylowSIOsd+ums/M34XPdzI+BNRWpr9/ncDKQQaFIL7mSFwwCzhyH/YNZzHz4Cw78dZ/AW19+c24=
+	t=1740905234; cv=none; b=DDW/ARR79sCQasgANroinjsGSX39m90IL1t2SoL/CXUg4fYiUsq7S+9N8TxmtC/dWiTkNAFsDJhEUSKUqrwDt32OZat3KLEbXk99WFqtcczglhmfIOEdzhllot0vi94+mgbjJRp8nLoi2FK+WsdkXJtNqbm7d78U8pybjxrZcXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740858355; c=relaxed/simple;
-	bh=7RHZLlYISYOOa3uduTet2ow5tjmMF06rhNmws47c1BA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QXtptTX+ScuU9ZIUPhlsl2+ngCpPLo9TUD/yaIVywqeTmMVNhEMW0gF4QVM1S2Z2dzbX8x1ws54MG65YxcsTbGENK50OV/lYmt/iVxaQFdWkWJAJLQZt1guLdYvXeXJZZ1A/jliXwKuWyTwZZ92T5W4hh01cLKk70EOAFbCg2M0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LD1Tu4N6; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1740905234; c=relaxed/simple;
+	bh=b1RgMhf7CekUaeWLKoP5HHTOJhNlKh18JhOxjLYOcXQ=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=oKmpXtabqpN8hfPcUTUyydd1E6paTUKyxcgZG8mm1JINXR49hhU5qUOVldnbmrlUV+HOZAOyIN2f2l5xqJPknP7F16hDSbX+sgPF+Yk0O6Byh/dWCH25xN+g7AsCj298Skb5+dQYrmdjoUQr83Uet3pXd86osjmf35SEPEB3ItQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gunderson.no; spf=pass smtp.mailfrom=gunderson.no; dkim=pass (2048-bit key) header.d=gunderson.no header.i=@gunderson.no header.b=kfbUACvz; arc=none smtp.client-ip=193.35.52.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gunderson.no
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gunderson.no
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LD1Tu4N6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1740858353; x=1772394353;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=7RHZLlYISYOOa3uduTet2ow5tjmMF06rhNmws47c1BA=;
-  b=LD1Tu4N6P9GKcX+uwaRHoW2/FLc4MX7zs0thsEVBtMr9i69PuwP6zC8Z
-   SC1OjyGMe6RtXp6z73ZrUK3sNZbXY+DgE7LnUXu6lzx2e3lCBMRNuUqGi
-   mP4M9QeLKFqc4iLeAqDmfrcDzM/MJZzmDLTWsBCgsASyqBHgF9yyYcGdt
-   aLqX+b05OGgW0Hg+WWw6KSK5PEeRIsZ4+jqHQpEC0WSRtF10LRndSNHGP
-   S9wbnDeIjG1GOCfUFkEVjUXQFwwrmRU2//0RodovI18wcgktLCt7T9SDj
-   DAcebzo0iUBbKjAFuGjOuo0uFahq5O0+8sWTQdmpp/PARb8+nt9ulBeW1
-   Q==;
-X-CSE-ConnectionGUID: 73fVMWznTBqZ8aKW7vU9AA==
-X-CSE-MsgGUID: /dfF785cQKOU6UzEhrR9dw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11360"; a="41795675"
-X-IronPort-AV: E=Sophos;i="6.13,326,1732608000"; 
-   d="scan'208";a="41795675"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2025 11:45:52 -0800
-X-CSE-ConnectionGUID: DPGE4HeRQOum/28skPyxlQ==
-X-CSE-MsgGUID: 0B5sZDrTRqCYBgUdNpzkhQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,326,1732608000"; 
-   d="scan'208";a="117415055"
-Received: from lkp-server02.sh.intel.com (HELO 76cde6cc1f07) ([10.239.97.151])
-  by fmviesa006.fm.intel.com with ESMTP; 01 Mar 2025 11:45:48 -0800
-Received: from kbuild by 76cde6cc1f07 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1toSmL-000GdC-0S;
-	Sat, 01 Mar 2025 19:45:41 +0000
-Date: Sun, 2 Mar 2025 03:44:41 +0800
-From: kernel test robot <lkp@intel.com>
-To: John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
-	djwong@kernel.org, cem@kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com,
-	ritesh.list@gmail.com, martin.petersen@oracle.com, tytso@mit.edu,
-	linux-ext4@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v3 08/12] xfs: Iomap SW-based atomic write support
-Message-ID: <202503020355.fr9QWxQJ-lkp@intel.com>
-References: <20250227180813.1553404-9-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=gunderson.no header.i=@gunderson.no header.b="kfbUACvz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=gunderson.no; s=legacy; h=Content-Transfer-Encoding:Content-Type:
+	MIME-Version:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=k5C3xiR6roco6weAKgrELSEsW0SzvT6rYvYVjz8M32M=; b=kfbUACvzTTm5PFHNC8cfENQjK9
+	A5cs09MGgcZ8JGOiOmQ3IvPrdNx9yTtokMn6fHdmqZpQVxuevd3fkQUt2SNy2Muabaj7/yjFMdXaU
+	5XTo4z6jknml3yVOllncxe7L4coconELPOoTf4OnNYbvM0/Rkxj90eY/F4pakM5x6aYd0YNomou2I
+	8ywp7ywjod1HO03WBRNL9YTdtfEomzuIIDgGJ9pG9YBKGqrYscBFuwwHMJK5CzNKkZdlddUFRy1oF
+	u4qJsbflusM0bf2OUWKjKI3K9ew8izUbic4zqQHlAzZOSaZdWLQATuY6PRw+mzqLh/cWiEOfvmzU5
+	99DB7D4Q==;
+Received: from sesse by pannekake.samfundet.no with local (Exim 4.96)
+	(envelope-from <steinar+bounces@gunderson.no>)
+	id 1toeyc-0042TI-1F
+	for linux-xfs@vger.kernel.org;
+	Sun, 02 Mar 2025 09:47:10 +0100
+Date: Sun, 2 Mar 2025 09:47:10 +0100
+From: "Steinar H. Gunderson" <steinar+kernel@gunderson.no>
+To: linux-xfs@vger.kernel.org
+Subject: Slow deduplication
+Message-ID: <20250302084710.3g5ipnj46xxhd33r@sesse.net>
+X-Operating-System: Linux 6.13.0-rc4 on a x86_64
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250227180813.1553404-9-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
 
-Hi John,
+Hi,
 
-kernel test robot noticed the following build warnings:
+I'm investigating XFS block-level deduplication via reflink (FIDEDUPERANGE),
+and I'm trying to figure out some performance problems I've got. I have a
+fresh filesystem of about 4–8 TB (made with mkfs.xfs 6.1.0) that I copied
+data into a few days ago, and I'm running 6.13.0-rc4 (since that was the most
+recent when I last had the change to boot; I believe I've seen this before
+with older kernels, so I don't think this is a regression).
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on tytso-ext4/dev linus/master v6.14-rc4]
-[cannot apply to brauner-vfs/vfs.all next-20250228]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+The underlying block device is an LVM volume on top of a RAID-6, and when
+I read sequentially from large files, it gives me roughly 1.1 GB/sec
+(although not completely evenly). My deduplication code works in mostly
+the obvious way, in that it first reads files, hashes blocks from them,
+then figures out (through some algorithms that are not important here) what
+file ranges should be deduplicated. And the latter part is slow; almost so
+slow as to be unusable.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/xfs-Pass-flags-to-xfs_reflink_allocate_cow/20250228-021818
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20250227180813.1553404-9-john.g.garry%40oracle.com
-patch subject: [PATCH v3 08/12] xfs: Iomap SW-based atomic write support
-config: hexagon-randconfig-001-20250302 (https://download.01.org/0day-ci/archive/20250302/202503020355.fr9QWxQJ-lkp@intel.com/config)
-compiler: clang version 21.0.0git (https://github.com/llvm/llvm-project 14170b16028c087ca154878f5ed93d3089a965c6)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250302/202503020355.fr9QWxQJ-lkp@intel.com/reproduce)
+For instance, I have 13 files of about 10 GB each that happen to be identical
+save for the first 20 kB. My program has identified this, and calls
+ioctl(FIDEDUPERANGE) with one of the files as source and the other 12
+as destinations, in consecutive 16 MB chunks (since that's what
+ioctl_fideduprange(2) recommends; I also tried simply a single 10 GB call
+earlier, but it was no faster and also stopped after the first gigabyte);
+strace gives:
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202503020355.fr9QWxQJ-lkp@intel.com/
+  ioctl(637, BTRFS_IOC_FILE_EXTENT_SAME or FIDEDUPERANGE,
+  {src_offset=4294971392, src_length=16777216, dest_count=12,
+  info=[{dest_fd=638, dest_offset=4294971392},
+        {dest_fd=639, dest_offset=4294971392},
+	{dest_fd=640, dest_offset=4294971392},
+        {dest_fd=641, dest_offset=4294971392},
+	{dest_fd=642, dest_offset=4294971392},
+	{dest_fd=643, dest_offset=4294971392},
+        {dest_fd=644, dest_offset=4294971392},
+	{dest_fd=645, dest_offset=4294971392},
+	{dest_fd=646, dest_offset=4294971392},
+        {dest_fd=647, dest_offset=4294971392},
+	{dest_fd=648, dest_offset=4294971392},
+	{dest_fd=649, dest_offset=4294971392}]}
 
-All warnings (new ones prefixed by >>):
+This ioctl call successfully deduplicated the data, but it took 71.52 _seconds_.
+Deduplicating the entire set is on the order of days. I don't understand why
+this would take so much time; I understand that it needs to make a read to
+verify that the file ranges are indeed the same (this is the only sane API
+design!), but it comes out to something like 2800 kB/sec from an array that
+can deliver almost 400 times that. There is no other activity on the file
+system in question, so it should not conflict with other activity (locks
+etc.), and the process does not appear to be taking significant amounts of
+CPU time. iostat shows read activity varying from maybe 300 kB/sec to
+12000 kB/sec or so; /proc/<pid>/stack says:
 
->> fs/xfs/xfs_iomap.c:1029:8: warning: variable 'iomap_flags' set but not used [-Wunused-but-set-variable]
-    1029 |         u16                     iomap_flags = 0;
-         |                                 ^
-   1 warning generated.
+  [<0>] folio_wait_bit_common+0x174/0x220
+  [<0>] filemap_read_folio+0x64/0x8b
+  [<0>] do_read_cache_folio+0x119/0x164
+  [<0>] __generic_remap_file_range_prep+0x372/0x568
+  [<0>] generic_remap_file_range_prep+0x7/0xd
+  [<0>] xfs_reflink_remap_prep+0xb7/0x223 [xfs]
+  [<0>] xfs_file_remap_range+0x94/0x248 [xfs]
+  [<0>] vfs_dedupe_file_range_one+0x145/0x181
+  [<0>] vfs_dedupe_file_range+0x14d/0x1ca
+  [<0>] do_vfs_ioctl+0x483/0x8a4
+  [<0>] __do_sys_ioctl+0x51/0x83
+  [<0>] do_syscall_64+0x76/0xd8
+  [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
+Is there anything I can do to speed this up? Is there simply some sort of
+bug that causes it to be so slow?
 
-vim +/iomap_flags +1029 fs/xfs/xfs_iomap.c
-
-  1011	
-  1012	static int
-  1013	xfs_atomic_write_sw_iomap_begin(
-  1014		struct inode		*inode,
-  1015		loff_t			offset,
-  1016		loff_t			length,
-  1017		unsigned		flags,
-  1018		struct iomap		*iomap,
-  1019		struct iomap		*srcmap)
-  1020	{
-  1021		struct xfs_inode	*ip = XFS_I(inode);
-  1022		struct xfs_mount	*mp = ip->i_mount;
-  1023		struct xfs_bmbt_irec	imap, cmap;
-  1024		xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-  1025		xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
-  1026		int			nimaps = 1, error;
-  1027		unsigned int		reflink_flags;
-  1028		bool			shared = false;
-> 1029		u16			iomap_flags = 0;
-  1030		unsigned int		lockmode = XFS_ILOCK_EXCL;
-  1031		u64			seq;
-  1032	
-  1033		if (xfs_is_shutdown(mp))
-  1034			return -EIO;
-  1035	
-  1036		reflink_flags = XFS_REFLINK_CONVERT | XFS_REFLINK_ATOMIC_SW;
-  1037	
-  1038		/*
-  1039		 * Set IOMAP_F_DIRTY similar to xfs_atomic_write_iomap_begin()
-  1040		 */
-  1041		if (offset + length > i_size_read(inode))
-  1042			iomap_flags |= IOMAP_F_DIRTY;
-  1043	
-  1044		error = xfs_ilock_for_iomap(ip, flags, &lockmode);
-  1045		if (error)
-  1046			return error;
-  1047	
-  1048		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
-  1049				&nimaps, 0);
-  1050		if (error)
-  1051			goto out_unlock;
-  1052	
-  1053		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
-  1054				&lockmode, reflink_flags);
-  1055		/*
-  1056		 * Don't check @shared. For atomic writes, we should error when
-  1057		 * we don't get a COW mapping
-  1058		 */
-  1059		if (error)
-  1060			goto out_unlock;
-  1061	
-  1062		end_fsb = imap.br_startoff + imap.br_blockcount;
-  1063	
-  1064		length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
-  1065		trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
-  1066		if (imap.br_startblock != HOLESTARTBLOCK) {
-  1067			seq = xfs_iomap_inode_sequence(ip, 0);
-  1068			error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0, seq);
-  1069			if (error)
-  1070				goto out_unlock;
-  1071		}
-  1072		seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
-  1073		xfs_iunlock(ip, lockmode);
-  1074		return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
-  1075	
-  1076	out_unlock:
-  1077		if (lockmode)
-  1078			xfs_iunlock(ip, lockmode);
-  1079		return error;
-  1080	}
-  1081	
-
+/* Steinar */
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Homepage: https://www.sesse.net/
