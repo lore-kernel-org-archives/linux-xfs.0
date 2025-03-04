@@ -1,178 +1,229 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 068112D1F40
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 16:15:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F363259C9B
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 16:15:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.208
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741104913; cv=none; b=FQTSdmsByOvIby+wt1u+5Ca9QpIi/F5vlmueiIVzJLSDcLH7fnoUo4tbEm1BxqepSLSpepwIC6IPCDE0A4vgfl0VXZ4M+wXwYyKqw1/qsoIqZzgRiM2SZtfEJWyBto/jJJzw+LfdD1p1gb0Bfs7JxGTy06VIMIpCWkQS6nS3uQo=
+	t=1741104935; cv=none; b=TjQNBZdO4ORYra/s17ZFDWvzZbvVlPjhFCN+eFVu0qZxOY2+krlIK7xw6cofo1yYq69TmR4bxjqBnRYTizrN+HtGidk8e8oEOf4eBtf78f07RPQYrNRmDNUwBO5I7Ie79/ipYa1i2mAdKernN0KgtQ4JdRiPmVI5JSPnoEI34aA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741104913; c=relaxed/simple;
-	bh=HoUdEEUij4AowK9YlSYz+ODggQby4SqBMMaaeIy+IZo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NtV20klUaKACmv28UIBF9TbijopOSTG+snWSm+ZKRMCCJ+DA96b4nmzvSUPGbRxd4Gjdw587fblkDIgrd7p7BxompRPK3JwuRqgDrwLsvTQmyhuEfhdfyu6OVg/ab5heo2TQSpnUXryUhKR5rKOLZHerdgrtcLYTLJY9SRG+xlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=Dfnn7tAZ; arc=none smtp.client-ip=209.85.160.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="Dfnn7tAZ"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-471fabc5bf5so27260591cf.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Mar 2025 08:15:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1741104911; x=1741709711; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Yn/mVNLBd6udkX5JiXXuHWAdMeM57oaufTToD3WukKw=;
-        b=Dfnn7tAZ/Sxotj5vmOnH7uB1/z34MJBlvcJ4RethG9Xo4c1rYRWSkp8N+q+O7gntpy
-         0ubuCoxTlP6/wwkrIyM0UbTMGjD12pCEDeDm4pYpPIRxUxzHALdlBSlMonzTQd1Xb4sf
-         qRl16sVK/oZ2dnSIHyQ3eKqwiUzyF52fgAFdvYLGb5xFHV06YLG2+h5FXtyMXws8Vdqi
-         xoOdT8hCmVJjBoAW9dJq7GUwr26/sAEnf04Oz1RMN2Z67S054yi68XJkH1pFBhUWVWTO
-         ahGf7PQpjJeOSuGY1rL+Z5F+GpU3deOYiGad00ifwEuxg71NtgcN5spHuIs5ul2m+FRN
-         OC9A==
+	s=arc-20240116; t=1741104935; c=relaxed/simple;
+	bh=K7yzb6edcP8bmFWB8ecuJ4gMWiQm+oAmiGD9Ncp1YNc=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=S3ogt9bEXkHNjHIpmy1SWrI/9uDwpPRvpn6SPzaKgs/NcArJf69xY/iHiWIH/XlzAwIuHoVf7IbRbNMhw1bzX1O3L7F1As6KFECRcsMmdC0sOM+AVhE94U12O6FfxVGSgftIxc4ifYaIF9bx03mxOpFsY2hB6/x0TrvY1WZVoGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-3d3dee8d31aso44494985ab.2
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Mar 2025 08:15:33 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741104911; x=1741709711;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Yn/mVNLBd6udkX5JiXXuHWAdMeM57oaufTToD3WukKw=;
-        b=Qdp8Oj8mC+ZTCXLbakoRv+2fyXrY078wYny8HQUHUGpfP1jDJxx23zo+zj8wATitcc
-         TIMBXxOlk06kJzybrRESvwQI8TIQdU7hnFO2JcCyEBfWYZzoZlqV3l2rNT7vYHumEKOf
-         uCWPOXceFBlAK5EL2To0s0j7Y7PI1It5giQPNrthtjKkBiKgX83+9/UKvXmmUDz3VA4w
-         rR183pQ1GlQ/bshEfXCRN301UznZdMokqmYUZ8/034zwJsz1i7hDAbeLVrhsqclKpYUO
-         EpwwQTVoOb9okU2gw2Gthi3HzoQuJ+uS7FAHe2QzEVF5Z4ySt3bQhgVnTtiSW1eVmBql
-         WTiw==
-X-Forwarded-Encrypted: i=1; AJvYcCWUf9khwuc3bRSr8bETf2rzFurYRFw3JoBM2Ty+UV3RVkzIraYgebLQXcG84ez6jbmLNAbpcHoIMsc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxtQx8/ONSs+4JnH3Kxej+E+v5x+U5GpTNkAevexarrJfDb0SiI
-	9/LbGp7OE/2trjRT34+0RDCTJC7aVVxdKx2G7YecAnM17CgOZZEMAOGb76eGfV4=
-X-Gm-Gg: ASbGncvo5NVsz4shbNVbnb3QJmaoAl2qqTghFF3jpTX8f09BEUf+bDMotLDfU0W7gjB
-	ZfzaJLIq1gi5XuXGTsMGXyK/AHPAEfcp8wACqrSlzpgvEGpCwxspul7rSPI8QwmPSeCE3Qh5y3E
-	ho1G69AK7p5amZWk58Nct94YJFCQvrs5nPxi1id1ko44Wiq2x7vIqIuJWKCc9ycxDukC3XD3x1O
-	d8cg0pR1R/nedyx2nOtOwhA/7eyZkLXkAt8furSVgL0ss8vtBWZLP63z/4iZtxU1r+BlgShOKk2
-	PzCzwVLnp3KeDLN1Nrs73XSjEcHeIjCF2QabN9D0VxeRL3+RlK1Jj6ABP5KYz6i22TV6cRVQvNV
-	/92JHGw==
-X-Google-Smtp-Source: AGHT+IET7KPbwwaDJPgxaLzaAdHSOjh+Hip5XZIqRDysdxQdHiaEvAFtjPuu1+nbA8r6dL+tqRwBGA==
-X-Received: by 2002:ac8:5a49:0:b0:471:a523:6ac1 with SMTP id d75a77b69052e-474bc0558bcmr281954941cf.6.1741104910839;
-        Tue, 04 Mar 2025 08:15:10 -0800 (PST)
-Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-47503d688f7sm5731921cf.56.2025.03.04.08.15.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Mar 2025 08:15:10 -0800 (PST)
-Date: Tue, 4 Mar 2025 11:15:09 -0500
-From: Josef Bacik <josef@toxicpanda.com>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Jan Kara <jack@suse.cz>,
-	syzbot <syzbot+7229071b47908b19d5b7@syzkaller.appspotmail.com>,
-	akpm@linux-foundation.org, axboe@kernel.dk, brauner@kernel.org,
-	cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] WARNING in fsnotify_file_area_perm
-Message-ID: <20250304161509.GA4047943@perftesting>
-References: <67a487f7.050a0220.19061f.05fc.GAE@google.com>
- <67c4881e.050a0220.1dee4d.0054.GAE@google.com>
- <7ehxrhbvehlrjwvrduoxsao5k3x4aw275patsb3krkwuq573yv@o2hskrfawbnc>
- <CAOQ4uxjf5H_vj-swF7wEvUkPobEuxs2q6jfO9jFsx4pqxtJMMg@mail.gmail.com>
+        d=1e100.net; s=20230601; t=1741104932; x=1741709732;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9hvXuSmvaJg+IcvFlPWgG69GFLhMM2upToKAA354dNk=;
+        b=vUcQDBQRWs2w+JMH4AFR/BkVkFlaW7pjDgVbnA38xHay2b9sKyLzGDSnDkvS9gRjTm
+         1V/KH2FK0mm/xKfI/0zlMX5GVvyoTGlUqY2PI4T+PceXPafbDRZ8E306rJ/7F41auM91
+         FKhf2+k7srBtmYpTGtnHgJLJTIUh8SurXoopR1ISKo+B5ZUdvjk0WlMTYYzy9v7/kx2U
+         tc6Ei8LN6RkPJos4dr2VBMfAk9fVSYtfw5yQ7cgK1hFsnISa7Wmqk0Q/loZ9ThkfNHAQ
+         hNMe9du0BgviXS7TPraqJUA2K2Et6bTn9rDWryvXJVcjvp1S9HaArbJuKtUsLQWhmQU+
+         yHUg==
+X-Forwarded-Encrypted: i=1; AJvYcCWNRxROEp3e87mt8N+p3z6UlyGrtYXggAtkw8vyfUz0e3ZwXNm/rlfk3sitd35pjXeSxtAPrWFhXXE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw87q2eJC9/K5PEfUztbkNMf/6m263AmELNq/BMF8ig3lATcr9Y
+	Uy6y7djs135M4A190hk1eXVQteBfev6wvnoB1uL88iYge2Hhrzko7S/sY/ODWVemRJfWbyiLHVf
+	2CMGDJMJGlPUMYtgz/YWX1C9No1qQf5IoEL6crmU70W3554yhRTFKvUk=
+X-Google-Smtp-Source: AGHT+IFR2UjKiBXOis/gbeIYriwEdiW1qxqqnr6lreZVeEiuaeiI6OqDEvnt+2JLOffo8Pp/t+lv9jGR/i+CADLd72ikeU8rj/0v
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxjf5H_vj-swF7wEvUkPobEuxs2q6jfO9jFsx4pqxtJMMg@mail.gmail.com>
+X-Received: by 2002:a05:6e02:2608:b0:3cf:c9b9:3eb with SMTP id
+ e9e14a558f8ab-3d3e6d53e74mr167318695ab.0.1741104932716; Tue, 04 Mar 2025
+ 08:15:32 -0800 (PST)
+Date: Tue, 04 Mar 2025 08:15:32 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67c72724.050a0220.38b91b.0244.GAE@google.com>
+Subject: [syzbot] [xfs?] KASAN: slab-out-of-bounds Read in xlog_cksum
+From: syzbot <syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com>
+To: ardb@kernel.org, bp@alien8.de, chandan.babu@oracle.com, 
+	dave.hansen@linux.intel.com, ebiggers@kernel.org, hpa@zytor.com, 
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, mingo@redhat.com, syzkaller-bugs@googlegroups.com, 
+	tglx@linutronix.de, x86@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Mar 04, 2025 at 04:09:16PM +0100, Amir Goldstein wrote:
-> On Tue, Mar 4, 2025 at 12:06 PM Jan Kara <jack@suse.cz> wrote:
-> >
-> > Josef, Amir,
-> >
-> > this is indeed an interesting case:
-> >
-> > On Sun 02-03-25 08:32:30, syzbot wrote:
-> > > syzbot has found a reproducer for the following issue on:
-> > ...
-> > > ------------[ cut here ]------------
-> > > WARNING: CPU: 1 PID: 6440 at ./include/linux/fsnotify.h:145 fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
-> > > Modules linked in:
-> > > CPU: 1 UID: 0 PID: 6440 Comm: syz-executor370 Not tainted 6.14.0-rc4-syzkaller-ge056da87c780 #0
-> > > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 12/27/2024
-> > > pstate: 80400005 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-> > > pc : fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
-> > > lr : fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
-> > > sp : ffff8000a42569d0
-> > > x29: ffff8000a42569d0 x28: ffff0000dcec1b48 x27: ffff0000d68a1708
-> > > x26: ffff0000d68a16c0 x25: dfff800000000000 x24: 0000000000008000
-> > > x23: 0000000000000001 x22: ffff8000a4256b00 x21: 0000000000001000
-> > > x20: 0000000000000010 x19: ffff0000d68a16c0 x18: ffff8000a42566e0
-> > > x17: 000000000000e388 x16: ffff800080466c24 x15: 0000000000000001
-> > > x14: 1fffe0001b31513c x13: 0000000000000000 x12: 0000000000000000
-> > > x11: 0000000000000001 x10: 0000000000ff0100 x9 : 0000000000000000
-> > > x8 : ffff0000c6d98000 x7 : 0000000000000000 x6 : 0000000000000000
-> > > x5 : 0000000000000020 x4 : 0000000000000000 x3 : 0000000000001000
-> > > x2 : ffff8000a4256b00 x1 : 0000000000000001 x0 : 0000000000000000
-> > > Call trace:
-> > >  fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145 (P)
-> > >  filemap_fault+0x12b0/0x1518 mm/filemap.c:3509
-> > >  xfs_filemap_fault+0xc4/0x194 fs/xfs/xfs_file.c:1543
-> > >  __do_fault+0xf8/0x498 mm/memory.c:4988
-> > >  do_read_fault mm/memory.c:5403 [inline]
-> > >  do_fault mm/memory.c:5537 [inline]
-> > >  do_pte_missing mm/memory.c:4058 [inline]
-> > >  handle_pte_fault+0x3504/0x57b0 mm/memory.c:5900
-> > >  __handle_mm_fault mm/memory.c:6043 [inline]
-> > >  handle_mm_fault+0xfa8/0x188c mm/memory.c:6212
-> > >  do_page_fault+0x570/0x10a8 arch/arm64/mm/fault.c:690
-> > >  do_translation_fault+0xc4/0x114 arch/arm64/mm/fault.c:783
-> > >  do_mem_abort+0x74/0x200 arch/arm64/mm/fault.c:919
-> > >  el1_abort+0x3c/0x5c arch/arm64/kernel/entry-common.c:432
-> > >  el1h_64_sync_handler+0x60/0xcc arch/arm64/kernel/entry-common.c:510
-> > >  el1h_64_sync+0x6c/0x70 arch/arm64/kernel/entry.S:595
-> > >  __uaccess_mask_ptr arch/arm64/include/asm/uaccess.h:169 [inline] (P)
-> > >  fault_in_readable+0x168/0x310 mm/gup.c:2234 (P)
-> > >  fault_in_iov_iter_readable+0x1dc/0x22c lib/iov_iter.c:94
-> > >  iomap_write_iter fs/iomap/buffered-io.c:950 [inline]
-> > >  iomap_file_buffered_write+0x490/0xd54 fs/iomap/buffered-io.c:1039
-> > >  xfs_file_buffered_write+0x2dc/0xac8 fs/xfs/xfs_file.c:792
-> > >  xfs_file_write_iter+0x2c4/0x6ac fs/xfs/xfs_file.c:881
-> > >  new_sync_write fs/read_write.c:586 [inline]
-> > >  vfs_write+0x704/0xa9c fs/read_write.c:679
-> >
-> > The backtrace actually explains it all. We had a buffered write whose
-> > buffer was mmapped file on a filesystem with an HSM mark. Now the prefaulting
-> > of the buffer happens already (quite deep) under the filesystem freeze
-> > protection (obtained in vfs_write()) which breaks assumptions of HSM code
-> > and introduces potential deadlock of HSM handler in userspace with filesystem
-> > freezing. So we need to think how to deal with this case...
-> 
-> Ouch. It's like the splice mess all over again.
-> Except we do not really care to make this use case work with HSM
-> in the sense that we do not care to have to fill in the mmaped file content
-> in this corner case - we just need to let HSM fail the access if content is
-> not available.
-> 
-> If you remember, in one of my very early version of pre-content events,
-> the pre-content event (or maybe it was FAN_ACCESS_PERM itself)
-> carried a flag (I think it was called FAN_PRE_VFS) to communicate to
-> HSM service if it was safe to write to fs in the context of event handling.
-> 
-> At the moment, I cannot think of any elegant way out of this use case
-> except annotating the event from fault_in_readable() as "unsafe-for-write".
-> This will relax the debugging code assertion and notify the HSM service
-> (via an event flag) that it can ALLOW/DENY, but it cannot fill the file.
-> Maybe we can reuse the FAN_ACCESS_PERM event to communicate
-> this case to HSM service.
-> 
-> WDYT?
+Hello,
 
-I think that mmap was a mistake.
+syzbot found the following issue on:
 
-Is there a way to tell if we're currently in a path that is under fsfreeze
-protection?  Just denying this case would be a simpler short term solution while
-we come up with a long term solution. I think your solution is fine, but I'd be
-just as happy with a simpler "this isn't allowed" solution. Thanks,
+HEAD commit:    99fa936e8e4f Merge tag 'affs-6.14-rc5-tag' of git://git.ke..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=111c9464580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=2040405600e83619
+dashboard link: https://syzkaller.appspot.com/bug?extid=9f6d080dece587cfdd4c
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=132f0078580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1483fc54580000
 
-Josef
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7feb34a89c2a/non_bootable_disk-99fa936e.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/ef04f83d96f6/vmlinux-99fa936e.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/583a7eea5c8e/bzImage-99fa936e.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/6232fcdbddfb/mount_1.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=11d457a0580000)
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
+
+=======================================================
+XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
+==================================================================
+BUG: KASAN: slab-out-of-bounds in crc32c_le_arch+0xc7/0x1b0 arch/x86/lib/crc32-glue.c:81
+Read of size 8 at addr ffff888040dfea00 by task syz-executor260/5304
+
+CPU: 0 UID: 0 PID: 5304 Comm: syz-executor260 Not tainted 6.14.0-rc5-syzkaller-00013-g99fa936e8e4f #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:408 [inline]
+ print_report+0x16e/0x5b0 mm/kasan/report.c:521
+ kasan_report+0x143/0x180 mm/kasan/report.c:634
+ crc32c_le_arch+0xc7/0x1b0 arch/x86/lib/crc32-glue.c:81
+ __crc32c_le include/linux/crc32.h:36 [inline]
+ crc32c include/linux/crc32c.h:9 [inline]
+ xlog_cksum+0x91/0xf0 fs/xfs/xfs_log.c:1588
+ xlog_recover_process+0x78/0x1e0 fs/xfs/xfs_log_recover.c:2900
+ xlog_do_recovery_pass+0xa01/0xdc0 fs/xfs/xfs_log_recover.c:3235
+ xlog_verify_head+0x21f/0x5a0 fs/xfs/xfs_log_recover.c:1058
+ xlog_find_tail+0xa04/0xdf0 fs/xfs/xfs_log_recover.c:1315
+ xlog_recover+0xe1/0x540 fs/xfs/xfs_log_recover.c:3419
+ xfs_log_mount+0x252/0x3e0 fs/xfs/xfs_log.c:666
+ xfs_mountfs+0xfbb/0x2500 fs/xfs/xfs_mount.c:878
+ xfs_fs_fill_super+0x1223/0x1550 fs/xfs/xfs_super.c:1817
+ get_tree_bdev_flags+0x48c/0x5c0 fs/super.c:1636
+ vfs_get_tree+0x90/0x2b0 fs/super.c:1814
+ do_new_mount+0x2be/0xb40 fs/namespace.c:3560
+ do_mount fs/namespace.c:3900 [inline]
+ __do_sys_mount fs/namespace.c:4111 [inline]
+ __se_sys_mount+0x2d6/0x3c0 fs/namespace.c:4088
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7ff347850dfa
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 5e 04 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffcece53ae8 EFLAGS: 00000202 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007ffcece53b00 RCX: 00007ff347850dfa
+RDX: 0000400000000500 RSI: 0000400000000200 RDI: 00007ffcece53b00
+RBP: 0000400000000500 R08: 00007ffcece53b40 R09: 002c6563726f666e
+R10: 0000000002218a5d R11: 0000000000000202 R12: 0000400000000200
+R13: 0000000000000005 R14: 0000000000000004 R15: 00007ffcece53b40
+ </TASK>
+
+Allocated by task 5304:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ poison_kmalloc_redzone mm/kasan/common.c:377 [inline]
+ __kasan_kmalloc+0x98/0xb0 mm/kasan/common.c:394
+ kasan_kmalloc include/linux/kasan.h:260 [inline]
+ __do_kmalloc_node mm/slub.c:4294 [inline]
+ __kmalloc_node_noprof+0x290/0x4d0 mm/slub.c:4300
+ __kvmalloc_node_noprof+0x72/0x190 mm/util.c:662
+ xlog_do_recovery_pass+0x143/0xdc0 fs/xfs/xfs_log_recover.c:3016
+ xlog_verify_head+0x21f/0x5a0 fs/xfs/xfs_log_recover.c:1058
+ xlog_find_tail+0xa04/0xdf0 fs/xfs/xfs_log_recover.c:1315
+ xlog_recover+0xe1/0x540 fs/xfs/xfs_log_recover.c:3419
+ xfs_log_mount+0x252/0x3e0 fs/xfs/xfs_log.c:666
+ xfs_mountfs+0xfbb/0x2500 fs/xfs/xfs_mount.c:878
+ xfs_fs_fill_super+0x1223/0x1550 fs/xfs/xfs_super.c:1817
+ get_tree_bdev_flags+0x48c/0x5c0 fs/super.c:1636
+ vfs_get_tree+0x90/0x2b0 fs/super.c:1814
+ do_new_mount+0x2be/0xb40 fs/namespace.c:3560
+ do_mount fs/namespace.c:3900 [inline]
+ __do_sys_mount fs/namespace.c:4111 [inline]
+ __se_sys_mount+0x2d6/0x3c0 fs/namespace.c:4088
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+The buggy address belongs to the object at ffff888040dfe800
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 0 bytes to the right of
+ allocated 512-byte region [ffff888040dfe800, ffff888040dfea00)
+
+The buggy address belongs to the physical page:
+page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x40dfe
+head: order:1 mapcount:0 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+flags: 0x4fff00000000040(head|node=1|zone=1|lastcpupid=0x7ff)
+page_type: f5(slab)
+raw: 04fff00000000040 ffff88801b041c80 ffffea0000d6ab00 dead000000000004
+raw: 0000000000000000 0000000080080008 00000000f5000000 0000000000000000
+head: 04fff00000000040 ffff88801b041c80 ffffea0000d6ab00 dead000000000004
+head: 0000000000000000 0000000080080008 00000000f5000000 0000000000000000
+head: 04fff00000000001 ffffea0001037f81 ffffffffffffffff 0000000000000000
+head: 0000000000000002 0000000000000000 00000000ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 1, migratetype Unmovable, gfp_mask 0xd20c0(__GFP_IO|__GFP_FS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 2, tgid 2 (kthreadd), ts 25533552797, free_ts 0
+ set_page_owner include/linux/page_owner.h:32 [inline]
+ post_alloc_hook+0x1f4/0x240 mm/page_alloc.c:1551
+ prep_new_page mm/page_alloc.c:1559 [inline]
+ get_page_from_freelist+0x365c/0x37a0 mm/page_alloc.c:3477
+ __alloc_frozen_pages_noprof+0x292/0x710 mm/page_alloc.c:4739
+ alloc_pages_mpol+0x311/0x660 mm/mempolicy.c:2270
+ alloc_slab_page mm/slub.c:2423 [inline]
+ allocate_slab+0x8f/0x3a0 mm/slub.c:2587
+ new_slab mm/slub.c:2640 [inline]
+ ___slab_alloc+0xc27/0x14a0 mm/slub.c:3826
+ __slab_alloc+0x58/0xa0 mm/slub.c:3916
+ __slab_alloc_node mm/slub.c:3991 [inline]
+ slab_alloc_node mm/slub.c:4152 [inline]
+ __kmalloc_cache_noprof+0x27b/0x390 mm/slub.c:4320
+ kmalloc_noprof include/linux/slab.h:901 [inline]
+ kzalloc_noprof include/linux/slab.h:1037 [inline]
+ set_kthread_struct+0xc2/0x330 kernel/kthread.c:126
+ copy_process+0x1179/0x3cf0 kernel/fork.c:2331
+ kernel_clone+0x226/0x8e0 kernel/fork.c:2815
+ kernel_thread+0x1c0/0x250 kernel/fork.c:2877
+ create_kthread kernel/kthread.c:487 [inline]
+ kthreadd+0x60d/0x810 kernel/kthread.c:847
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:148
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+page_owner free stack trace missing
+
+Memory state around the buggy address:
+ ffff888040dfe900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff888040dfe980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff888040dfea00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                   ^
+ ffff888040dfea80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff888040dfeb00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
