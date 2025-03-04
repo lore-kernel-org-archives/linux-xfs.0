@@ -1,73 +1,74 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B183C201023;
-	Tue,  4 Mar 2025 12:17:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F331F1FF5FB;
+	Tue,  4 Mar 2025 13:48:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741090656; cv=none; b=kig0kcUygp4nYvP0QsdVO4MkHeugfe++81SIoQbDu3+R7fslcfiFRM0vmQW2twV2mllThJVcKna2tipm5HRtvDZvYS3X//VUshiSDPn+Asn6FI5l+e8YSK1KY940hCzkZugYHsXU9uT9zTCa5iLvRnA1BM23Q40d25EbGdtnnBE=
+	t=1741096122; cv=none; b=DD0NmoSAFmY/MwqRxapqsUEvt8rMUdZyaFfqTVPjJZYcjYPb9scrdaDEtRIAvoO4dHvmK+Iltfmkn8ZMyDSmXNnNTBB4JaXL0LijdL47OlIj7O6OD0O/lAjtbrFrbnSub9WCoCPtz27Fx5tl+I2yMb1fxnVLdPNVHYv7k/ZBYX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741090656; c=relaxed/simple;
-	bh=H0viHNn2Noiu2ehJa4wGSKvvmC0Ntvd05iDJ90zjNZI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DHI5eu/ludksim1wMervyDT1fwDKIKBsQn52Y+zrrWYhDL9ppsNnifGbw9Y7P/RFHCxE3LaWxqgJxkx3brzm2nAGWa3Uc8JBKEMmJNt4HC3zj4hrUb1lmvHg4IHgsd1TcP9ThVfN/dDqjupj0tmMcdVxfGAdxT92Ar8/OuGtREk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E7v92B6H; arc=none smtp.client-ip=209.85.218.42
+	s=arc-20240116; t=1741096122; c=relaxed/simple;
+	bh=pwUV0/+bDB3pe+QvVJn9/f5sjo5oDLLc92CR+fO0/yg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Yea6YAhpLr2qxbCy4MxLEWHa+yFR/UxftFweOIsCa2V3dCsb//3vnu8mAP6rpB3sxBwJ+u6eN9mOPV1lzFd2e+QyRgn6mk5kWU5Xb/sGqL+AeBiy6vferL1+wHQIxz764U6OpYjZhjM8ztCifRVIQbjDC/NPrgTcIdxXtv+nMto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GgnJlaZb; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E7v92B6H"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-ac1f5157c90so114436066b.0;
-        Tue, 04 Mar 2025 04:17:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GgnJlaZb"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-22359001f1aso125954835ad.3;
+        Tue, 04 Mar 2025 05:48:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1741090653; x=1741695453; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1741096120; x=1741700920; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=599/Tw3ToamJqGW2mw+qAC6V0VOUfxPlSz0DmmrvZM4=;
-        b=E7v92B6HrvL2AwWqlwKLp04wSWaJZDivAu/LEsPJXbxj5PuDVK+xEjzqSia0WBbYV5
-         +kt4y5XOJC0Bscd7mqwqrduyTfsffYtBJYQ8WoPUYQu8BYj2nbRjvRZmGnHFVQH7TJpR
-         adzVILL0DBaWHtCI4+p3TRX1Uf4LolHiMEb6vwQl1RbICtlzWN9eDZiB2loEM74xiyi+
-         u4dSf3N59TZnHIEJfPm+7fwjAn8VPU/Wc9enq+1g1q9WLWIwg0sXnyL10rs8vUWtM1Pe
-         q23w6BsE6g1fAESs6rp+RGQFmBwkMk7zmOYurYasanZtopPtD8PhbNkw9qXzEaADlSC6
-         G2Ag==
+        bh=f3xFEkgHSKF8L2cfXSnWsem3aekOfXeR6ghSzlQMiGc=;
+        b=GgnJlaZbOcIqpGRsjaUCp7O+YIp3fNXmbCXJiyblQw71TSJHBU9jDSWwcWbixXbKeh
+         zbNMi/DLJLCYVXCN9TYrAMY84FCDPrwbTLRBaCIXH1JmNIuDutG3BMhvXr8YCMfj22Sb
+         m5LNe+zovD6b6gEUIZNNmn3qWWOC9lOElg5OZN6042m/M+uUlh4bR8ouMuAT8Etffsn8
+         cVkdmskSOwcF2KHmcUZ2mq6RG9k+RgLP+wgk0wRmZOH2QcPW1P2LEmCY2dkzNM1Ib9AY
+         YySLe4aNriO3hwlkGfoxm/BfDH7dyRKioN9km8cUvcEeQ8W/kRvcNab7WjKe3csakW6H
+         DR4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741090653; x=1741695453;
+        d=1e100.net; s=20230601; t=1741096120; x=1741700920;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=599/Tw3ToamJqGW2mw+qAC6V0VOUfxPlSz0DmmrvZM4=;
-        b=usgJw8uwHy825WJJ0OOCK3Tn+JuzZJlQw0w0GA0X19loUJBNv6r0mUf2u9LDYnk7g5
-         94FVMNTZcqg8N5xKXiRwxzg4nxELKBu4eR6KIAYJo5qTrHaPECK1/Qd/qZwJNZludJ2S
-         8fdyGXprVc7vQKhldxsWvmMzoifXzRVLLGZS9zcixCJ9eUtzv45+S/tVummtraNeQbQE
-         zrkoZWbuQB1kvCq5zMo/03Os3TDLEZ4gXlVL2lph3Q0JJcf2p/14Laos5/52ogSrVMyq
-         9s8CiCE2KtGXIMLMF1SwDKS9vrhyTqKlBczyu/4VTGQkeMVgVDqSBWN1bEuFzsgfOgNh
-         LedA==
-X-Forwarded-Encrypted: i=1; AJvYcCU0BXaXs7zUIQcFiIKGhJWidLx7Jpw2VDK8kL1Z8Cd70lbV85reaqMjzWwbhle7R2rsiIKIJIFagbVxtDdK@vger.kernel.org, AJvYcCX++5HWkwxOaZpuYzZ+UvLQ8GZh0TDIJyCMwTXtFMZQp76hiwnRQaFwQb3kzIG4XdAYUuoR+gcJ6eY4@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz7fERY7ocMPB6U3Q8dvfftD+yYLquGs96+jIdM49CPb+11T+Kf
-	XUK6iVtll9CAZ8nAYjANudwh/+rlqXYgM8gfVX2EPo7FxLAcflw4TZVZzA==
-X-Gm-Gg: ASbGncuQmWpj8+79GSTDZQxwZVCQiKODHTn2vFQlrdQn2qGlCxlZoiEH3Dgef3BGydO
-	DgWuzWcm9H8SkiRsFwQEPbhzoANgYyJiqufUTxuMdxQG6M7AQ8B65YJoMGFlq9c+gSsTBKwC9F3
-	He/ASc+vLR4DxQDbfyQvhPnwuqEPRJ6bMZ11kFnA2/PK1oVsjKJMRrqfkAfTEKX3tmCqLJUjA7N
-	SZ1efK23T4GP1XKUV+AY9cGJWKj7umDLlWqvT2DWIdcozQ6nXBjCNl7aZXfz1vtmcMQgfYLtN5m
-	aL4nb18WGUEcWf4cZb0lWi+s3KTQ
-X-Google-Smtp-Source: AGHT+IGVQQNuddYw7b42dJlGMu9B3NVjyQv5HN54W9B+OxF/axiTscYQHYLUfl8wsoBiGgabTKVArg==
-X-Received: by 2002:a17:906:eeca:b0:abb:e965:1264 with SMTP id a640c23a62f3a-abf261fba4fmr1893189866b.4.1741090652348;
-        Tue, 04 Mar 2025 04:17:32 -0800 (PST)
-Received: from 127.com ([2620:10d:c092:600::1:87eb])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ac1e61f5325sm190206466b.28.2025.03.04.04.17.31
+        bh=f3xFEkgHSKF8L2cfXSnWsem3aekOfXeR6ghSzlQMiGc=;
+        b=ikYY6F0bJlvYHuDQPmXie4FPaYy4FT5x63NexEiOrUg8K7hYwLp3QyGyD4DSbqS9o2
+         LFFrGImlehDCAR+cfWOGBpU7/hNU6v/8UGyEKI7NTjl6lhLuSRtdYAnxr1+TFZ1NXIbV
+         hiPBHOYRPmTDzKKcpjcOD8ujHvmv6xTnEDd0nHYbEQi8hMlsuHQFYv8eo0EvjFzwROVy
+         2lOWHZwn2y+IWj5y5YWnvI+d6fCp7Pv/St98pYyKmyietb38LNrX8XFGttn31JrIPJPe
+         3wxNrzkm+9eAh6gftVYHAwVluqW0NqM2S9Kv4dpBlQaPU05DqwNBeisp651MbtaPeH95
+         +XWQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVWO3yfXI254G96TAX8mfbgXhVHSJ7QDNvrrMl24kjWF/d6O1FFaX02FUWTP4FJ2zIwBZxF+IqYO8w=@vger.kernel.org
+X-Gm-Message-State: AOJu0YymI0VaCJBcrlpEkLCCvYefDiNSeUrHLn90YSkZiXvhH3MZujjz
+	RvRmQxo3tmnfM1qxaJK7fLasLc0e5Q6W9znsmyvpXOamHASfKeu31KPTJtwe
+X-Gm-Gg: ASbGncs6rxfmZxVb0eVEQgIAKzOFAndQ4VlSQsazn4ry9/6wH4PLdsOz8645MEnPdZ7
+	wT7phJ8N6cNSUQ0TsdND5ycmHCo75mAxwgKeP703Xl+og9adm9UVMzDD9Ka0xsd1IYsxEEZd36w
+	VE1wFjdcuPqyboxx5eETHbtxX59dS4jA/KYIsAx4sAQA7H8IXBepDl+NbtLXuNFbQoyGKyQ3CEu
+	Wo3Ro7n8X1EIo0fj6N3W5l12qAVjHmKw1S+pUmz7/0krtQ4gspMQ7HIgWBu3rIr6Zv6F3CWhx6x
+	T/4wiP3bcSsWrWXlIHp0FMZfwqR3NYZ4hWVdwzNi9HzxkQ==
+X-Google-Smtp-Source: AGHT+IHr/Sb2GdMUSJMQ5H+k6UUTsZ/zpr5p6kRYZU2cQvoyd7rKbUoS9VQ3IBlYXqYxXn7kXT7VZw==
+X-Received: by 2002:a05:6a00:ccd:b0:736:43d6:f008 with SMTP id d2e1a72fcca58-73643d6f164mr16518488b3a.12.1741096119727;
+        Tue, 04 Mar 2025 05:48:39 -0800 (PST)
+Received: from citest-1.. ([49.37.39.11])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-734a003ecb6sm10879106b3a.150.2025.03.04.05.48.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Mar 2025 04:17:31 -0800 (PST)
-From: Pavel Begunkov <asml.silence@gmail.com>
-To: Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org,
-	Dave Chinner <david@fromorbit.com>
-Cc: io-uring@vger.kernel.org,
-	"Darrick J . Wong" <djwong@kernel.org>,
+        Tue, 04 Mar 2025 05:48:39 -0800 (PST)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
-	wu lei <uwydoc@gmail.com>,
-	asml.silence@gmail.com
-Subject: [PATCH v2 1/1] iomap: propagate nowait to block layer
-Date: Tue,  4 Mar 2025 12:18:07 +0000
-Message-ID: <f287a7882a4c4576e90e55ecc5ab8bf634579afd.1741090631.git.asml.silence@gmail.com>
-X-Mailer: git-send-email 2.48.1
+	ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	zlang@kernel.org,
+	david@fromorbit.com,
+	nirjhar.roy.lists@gmail.com
+Subject: [PATCH v2 0/1] xfs/539: Ignore remount failures on v5 xfs
+Date: Tue,  4 Mar 2025 13:48:15 +0000
+Message-Id: <cover.1741094926.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,80 +77,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There are reports of high io_uring submission latency for ext4 and xfs,
-which is due to iomap not propagating nowait flag to the block layer
-resulting in waiting for IO during tag allocation.
+The test just checks for the deprecation dmesg
+warnings when remounted with noattr2 and ikeep, and they appear even if the
+remount fails. I wrote the patch because xfs/539 has started failing in one of
+our fstests CI runs because RHEL 10 has started disabling xfs v4 support i.e,
+CONFIG_XFS_SUPPORT_V4=n. The reason why it was not failing with CONFIG_XFS_SUPPORT_V4=y
+is because remount was incorrectly succeeding - reason is explained in [2].
 
-Because of how errors are propagated back, we can't set REQ_NOWAIT
-for multi bio IO, in this case return -EAGAIN and let the caller to
-handle it, for example, it can reissue it from a blocking context.
-It's aligned with how raw bdev direct IO handles it.
+[v1] --> v2
+ - Removed patch 2/3 and patch 3/3 for now,
+ - For patch 1/3 - Ignore the mount failure instead of skipping noattr2.
 
-Cc: stable@vger.kernel.org
-Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
-Reported-by: wu lei <uwydoc@gmail.com>
-Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
----
+[v1] https://lore.kernel.org/all/cover.1739363803.git.nirjhar.roy.lists@gmail.com/
+[2] https://lore.kernel.org/all/Z65o6nWxT00MaUrW@dread.disaster.area/
 
-v2:
-	Fail multi-bio nowait submissions
 
- fs/iomap/direct-io.c | 26 +++++++++++++++++++++++---
- 1 file changed, 23 insertions(+), 3 deletions(-)
+Nirjhar Roy (IBM) (1):
+  xfs/539: Ignore remount failures on v5 xfs
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index b521eb15759e..07c336fdf4f0 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -363,9 +363,14 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 	 */
- 	if (need_zeroout ||
- 	    ((dio->flags & IOMAP_DIO_NEED_SYNC) && !use_fua) ||
--	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
-+	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
- 		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
- 
-+		if (!is_sync_kiocb(dio->iocb) &&
-+		    (dio->iocb->ki_flags & IOCB_NOWAIT))
-+			return -EAGAIN;
-+	}
-+
- 	/*
- 	 * The rules for polled IO completions follow the guidelines as the
- 	 * ones we set for inline and deferred completions. If none of those
-@@ -374,6 +379,23 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 	if (!(dio->flags & (IOMAP_DIO_INLINE_COMP|IOMAP_DIO_CALLER_COMP)))
- 		dio->iocb->ki_flags &= ~IOCB_HIPRI;
- 
-+	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
-+
-+	if (!is_sync_kiocb(dio->iocb) && (dio->iocb->ki_flags & IOCB_NOWAIT)) {
-+		/*
-+		 * This is nonblocking IO, and we might need to allocate
-+		 * multiple bios. In this case, as we cannot guarantee that
-+		 * one of the sub bios will not fail getting issued FOR NOWAIT
-+		 * and as error results are coalesced across all of them, ask
-+		 * for a retry of this from blocking context.
-+		 */
-+		if (bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS + 1) >
-+					  BIO_MAX_VECS)
-+			return -EAGAIN;
-+
-+		bio_opf |= REQ_NOWAIT;
-+	}
-+
- 	if (need_zeroout) {
- 		/* zero out from the start of the block to the write offset */
- 		pad = pos & (fs_block_size - 1);
-@@ -383,8 +405,6 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 			goto out;
- 	}
- 
--	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
--
- 	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
- 	do {
- 		size_t n;
--- 
-2.48.1
+ tests/xfs/539 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--
+2.34.1
 
