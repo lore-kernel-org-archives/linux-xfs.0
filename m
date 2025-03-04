@@ -1,206 +1,155 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB561FF601;
-	Tue,  4 Mar 2025 12:09:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B183C201023;
+	Tue,  4 Mar 2025 12:17:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741090182; cv=none; b=RSoKzq8IZ6xkbm4EjSDHCHWPUikvMJed6hIlfg7F5wWMVrgdvlw//asHOkjdWkongHt6+Um56kBF0gZt/R2H8Fu03TU3/t1Wsb7tHtDHM/PDCldUDOy1O91t2uZREouPfsr4KTelxmsxZQ8JNrukQqLE8QLSVc0W9IerCXYpmbc=
+	t=1741090656; cv=none; b=kig0kcUygp4nYvP0QsdVO4MkHeugfe++81SIoQbDu3+R7fslcfiFRM0vmQW2twV2mllThJVcKna2tipm5HRtvDZvYS3X//VUshiSDPn+Asn6FI5l+e8YSK1KY940hCzkZugYHsXU9uT9zTCa5iLvRnA1BM23Q40d25EbGdtnnBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741090182; c=relaxed/simple;
-	bh=4S8tqaK0XJCLIv/7Rv3hJVe8rj1mH8s+KkdKMp6uzeo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=DaXZqM0wD0MrA8Ot0rtwhQJD1l3t48U+XdoRWzCJZd2X9Xux6zoGaUno/KUm39M88Xu/y2sNlX4ZXXSKUlMCUSKXd6C4qLPVELtoZ5XYRJjeUDkDf9qmRSBzCjgNW0EI9btFvx1GPYZL8vOjBrFtOeDDynft8NV7oVub34d4d8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Z6ZBX3494z2DkHc;
-	Tue,  4 Mar 2025 20:05:24 +0800 (CST)
-Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
-	by mail.maildlp.com (Postfix) with ESMTPS id D7E721A016C;
-	Tue,  4 Mar 2025 20:09:35 +0800 (CST)
-Received: from [10.67.120.129] (10.67.120.129) by
- dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 4 Mar 2025 20:09:35 +0800
-Message-ID: <91fcdfca-3e7b-417c-ab26-7d5e37853431@huawei.com>
-Date: Tue, 4 Mar 2025 20:09:35 +0800
+	s=arc-20240116; t=1741090656; c=relaxed/simple;
+	bh=H0viHNn2Noiu2ehJa4wGSKvvmC0Ntvd05iDJ90zjNZI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DHI5eu/ludksim1wMervyDT1fwDKIKBsQn52Y+zrrWYhDL9ppsNnifGbw9Y7P/RFHCxE3LaWxqgJxkx3brzm2nAGWa3Uc8JBKEMmJNt4HC3zj4hrUb1lmvHg4IHgsd1TcP9ThVfN/dDqjupj0tmMcdVxfGAdxT92Ar8/OuGtREk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E7v92B6H; arc=none smtp.client-ip=209.85.218.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E7v92B6H"
+Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-ac1f5157c90so114436066b.0;
+        Tue, 04 Mar 2025 04:17:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1741090653; x=1741695453; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=599/Tw3ToamJqGW2mw+qAC6V0VOUfxPlSz0DmmrvZM4=;
+        b=E7v92B6HrvL2AwWqlwKLp04wSWaJZDivAu/LEsPJXbxj5PuDVK+xEjzqSia0WBbYV5
+         +kt4y5XOJC0Bscd7mqwqrduyTfsffYtBJYQ8WoPUYQu8BYj2nbRjvRZmGnHFVQH7TJpR
+         adzVILL0DBaWHtCI4+p3TRX1Uf4LolHiMEb6vwQl1RbICtlzWN9eDZiB2loEM74xiyi+
+         u4dSf3N59TZnHIEJfPm+7fwjAn8VPU/Wc9enq+1g1q9WLWIwg0sXnyL10rs8vUWtM1Pe
+         q23w6BsE6g1fAESs6rp+RGQFmBwkMk7zmOYurYasanZtopPtD8PhbNkw9qXzEaADlSC6
+         G2Ag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741090653; x=1741695453;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=599/Tw3ToamJqGW2mw+qAC6V0VOUfxPlSz0DmmrvZM4=;
+        b=usgJw8uwHy825WJJ0OOCK3Tn+JuzZJlQw0w0GA0X19loUJBNv6r0mUf2u9LDYnk7g5
+         94FVMNTZcqg8N5xKXiRwxzg4nxELKBu4eR6KIAYJo5qTrHaPECK1/Qd/qZwJNZludJ2S
+         8fdyGXprVc7vQKhldxsWvmMzoifXzRVLLGZS9zcixCJ9eUtzv45+S/tVummtraNeQbQE
+         zrkoZWbuQB1kvCq5zMo/03Os3TDLEZ4gXlVL2lph3Q0JJcf2p/14Laos5/52ogSrVMyq
+         9s8CiCE2KtGXIMLMF1SwDKS9vrhyTqKlBczyu/4VTGQkeMVgVDqSBWN1bEuFzsgfOgNh
+         LedA==
+X-Forwarded-Encrypted: i=1; AJvYcCU0BXaXs7zUIQcFiIKGhJWidLx7Jpw2VDK8kL1Z8Cd70lbV85reaqMjzWwbhle7R2rsiIKIJIFagbVxtDdK@vger.kernel.org, AJvYcCX++5HWkwxOaZpuYzZ+UvLQ8GZh0TDIJyCMwTXtFMZQp76hiwnRQaFwQb3kzIG4XdAYUuoR+gcJ6eY4@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz7fERY7ocMPB6U3Q8dvfftD+yYLquGs96+jIdM49CPb+11T+Kf
+	XUK6iVtll9CAZ8nAYjANudwh/+rlqXYgM8gfVX2EPo7FxLAcflw4TZVZzA==
+X-Gm-Gg: ASbGncuQmWpj8+79GSTDZQxwZVCQiKODHTn2vFQlrdQn2qGlCxlZoiEH3Dgef3BGydO
+	DgWuzWcm9H8SkiRsFwQEPbhzoANgYyJiqufUTxuMdxQG6M7AQ8B65YJoMGFlq9c+gSsTBKwC9F3
+	He/ASc+vLR4DxQDbfyQvhPnwuqEPRJ6bMZ11kFnA2/PK1oVsjKJMRrqfkAfTEKX3tmCqLJUjA7N
+	SZ1efK23T4GP1XKUV+AY9cGJWKj7umDLlWqvT2DWIdcozQ6nXBjCNl7aZXfz1vtmcMQgfYLtN5m
+	aL4nb18WGUEcWf4cZb0lWi+s3KTQ
+X-Google-Smtp-Source: AGHT+IGVQQNuddYw7b42dJlGMu9B3NVjyQv5HN54W9B+OxF/axiTscYQHYLUfl8wsoBiGgabTKVArg==
+X-Received: by 2002:a17:906:eeca:b0:abb:e965:1264 with SMTP id a640c23a62f3a-abf261fba4fmr1893189866b.4.1741090652348;
+        Tue, 04 Mar 2025 04:17:32 -0800 (PST)
+Received: from 127.com ([2620:10d:c092:600::1:87eb])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ac1e61f5325sm190206466b.28.2025.03.04.04.17.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Mar 2025 04:17:31 -0800 (PST)
+From: Pavel Begunkov <asml.silence@gmail.com>
+To: Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org,
+	Dave Chinner <david@fromorbit.com>
+Cc: io-uring@vger.kernel.org,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	wu lei <uwydoc@gmail.com>,
+	asml.silence@gmail.com
+Subject: [PATCH v2 1/1] iomap: propagate nowait to block layer
+Date: Tue,  4 Mar 2025 12:18:07 +0000
+Message-ID: <f287a7882a4c4576e90e55ecc5ab8bf634579afd.1741090631.git.asml.silence@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-To: Dave Chinner <david@fromorbit.com>
-CC: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Shameer
- Kolothum <shameerali.kolothum.thodi@huawei.com>, Kevin Tian
-	<kevin.tian@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Chris
- Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, David Sterba
-	<dsterba@suse.com>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
-	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep
- Dhavale <dhavale@google.com>, Carlos Maiolino <cem@kernel.org>, "Darrick J.
- Wong" <djwong@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Jesper
- Dangaard Brouer <hawk@kernel.org>, Ilias Apalodimas
-	<ilias.apalodimas@linaro.org>, "David S. Miller" <davem@davemloft.net>, Eric
- Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
-	<pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Trond Myklebust
-	<trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, Chuck Lever
-	<chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>, Neil Brown
-	<neilb@suse.de>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
-	<Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Luiz Capitulino
-	<luizcap@redhat.com>, Mel Gorman <mgorman@techsingularity.net>,
-	<kvm@vger.kernel.org>, <virtualization@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
-	<linux-erofs@lists.ozlabs.org>, <linux-xfs@vger.kernel.org>,
-	<linux-mm@kvack.org>, <netdev@vger.kernel.org>, <linux-nfs@vger.kernel.org>
-References: <20250228094424.757465-1-linyunsheng@huawei.com>
- <Z8a3WSOrlY4n5_37@dread.disaster.area>
-Content-Language: en-US
-From: Yunsheng Lin <linyunsheng@huawei.com>
-In-Reply-To: <Z8a3WSOrlY4n5_37@dread.disaster.area>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemf200006.china.huawei.com (7.185.36.61)
+Content-Transfer-Encoding: 8bit
 
-On 2025/3/4 16:18, Dave Chinner wrote:
+There are reports of high io_uring submission latency for ext4 and xfs,
+which is due to iomap not propagating nowait flag to the block layer
+resulting in waiting for IO during tag allocation.
 
-...
+Because of how errors are propagated back, we can't set REQ_NOWAIT
+for multi bio IO, in this case return -EAGAIN and let the caller to
+handle it, for example, it can reissue it from a blocking context.
+It's aligned with how raw bdev direct IO handles it.
 
-> 
->>
->> 1. https://lore.kernel.org/all/bd8c2f5c-464d-44ab-b607-390a87ea4cd5@huawei.com/
->> 2. https://lore.kernel.org/all/20250212092552.1779679-1-linyunsheng@huawei.com/
->> CC: Jesper Dangaard Brouer <hawk@kernel.org>
->> CC: Luiz Capitulino <luizcap@redhat.com>
->> CC: Mel Gorman <mgorman@techsingularity.net>
->> CC: Dave Chinner <david@fromorbit.com>
->> CC: Chuck Lever <chuck.lever@oracle.com>
->> Signed-off-by: Yunsheng Lin <linyunsheng@huawei.com>
->> Acked-by: Jeff Layton <jlayton@kernel.org>
->> ---
->> V2:
->> 1. Drop RFC tag and rebased on latest linux-next.
->> 2. Fix a compile error for xfs.
-> 
-> And you still haven't tested the code changes to XFS, because
-> this patch is also broken.
+Cc: stable@vger.kernel.org
+Link: https://github.com/axboe/liburing/issues/826#issuecomment-2674131870
+Reported-by: wu lei <uwydoc@gmail.com>
+Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+---
 
-I tested XFS using the below cmd and testcase, testing seems
-to be working fine, or am I missing something obvious here
-as I am not realy familiar with fs subsystem yet:
+v2:
+	Fail multi-bio nowait submissions
 
-Step to setup the xfs:
-dd if=/dev/zero of=xfs_image bs=1M count=1024
-losetup -f xfs_image
-losetup -a
-./mkfs.xfs /dev/loop0
-mkdir xfs_test
-mount /dev/loop0 xfs_test/
+ fs/iomap/direct-io.c | 26 +++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
 
-Test shell file:
-#!/bin/bash
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index b521eb15759e..07c336fdf4f0 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -363,9 +363,14 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 	 */
+ 	if (need_zeroout ||
+ 	    ((dio->flags & IOMAP_DIO_NEED_SYNC) && !use_fua) ||
+-	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
++	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+ 		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
+ 
++		if (!is_sync_kiocb(dio->iocb) &&
++		    (dio->iocb->ki_flags & IOCB_NOWAIT))
++			return -EAGAIN;
++	}
++
+ 	/*
+ 	 * The rules for polled IO completions follow the guidelines as the
+ 	 * ones we set for inline and deferred completions. If none of those
+@@ -374,6 +379,23 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 	if (!(dio->flags & (IOMAP_DIO_INLINE_COMP|IOMAP_DIO_CALLER_COMP)))
+ 		dio->iocb->ki_flags &= ~IOCB_HIPRI;
+ 
++	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
++
++	if (!is_sync_kiocb(dio->iocb) && (dio->iocb->ki_flags & IOCB_NOWAIT)) {
++		/*
++		 * This is nonblocking IO, and we might need to allocate
++		 * multiple bios. In this case, as we cannot guarantee that
++		 * one of the sub bios will not fail getting issued FOR NOWAIT
++		 * and as error results are coalesced across all of them, ask
++		 * for a retry of this from blocking context.
++		 */
++		if (bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS + 1) >
++					  BIO_MAX_VECS)
++			return -EAGAIN;
++
++		bio_opf |= REQ_NOWAIT;
++	}
++
+ 	if (need_zeroout) {
+ 		/* zero out from the start of the block to the write offset */
+ 		pad = pos & (fs_block_size - 1);
+@@ -383,8 +405,6 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 			goto out;
+ 	}
+ 
+-	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
+-
+ 	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
+ 	do {
+ 		size_t n;
+-- 
+2.48.1
 
-# Configuration parameters
-DIR="/home/xfs_test"              # Directory to perform file operations
-FILE_COUNT=100              # Maximum number of files to create in each loop
-MAX_FILE_SIZE=1024          # Maximum file size in KB
-MIN_FILE_SIZE=10            # Minimum file size in KB
-OPERATIONS=10               # Number of create/delete operations per loop
-TOTAL_RUNS=10000               # Total number of loops to run
-
-# Check if the directory exists
-if [ ! -d "$DIR" ]; then
-    echo "Directory $DIR does not exist. Please create the directory first!"
-    exit 1
-fi
-
-echo "Starting file system test on: $DIR"
-
-for ((run=1; run<=TOTAL_RUNS; run++)); do
-    echo "Run $run of $TOTAL_RUNS"
-
-    # Randomly create files
-    for ((i=1; i<=OPERATIONS; i++)); do
-        # Generate a random file size between MIN_FILE_SIZE and MAX_FILE_SIZE (in KB)
-        FILE_SIZE=$((RANDOM % (MAX_FILE_SIZE - MIN_FILE_SIZE + 1) + MIN_FILE_SIZE))
-        # Generate a unique file name using timestamp and random number
-        FILE_NAME="$DIR/file_$(date +%s)_$RANDOM"
-        # Create a file with random content
-        dd if=/dev/urandom of="$FILE_NAME" bs=1K count=$FILE_SIZE &>/dev/null
-        echo "Created file: $FILE_NAME, Size: $FILE_SIZE KB"
-    done
-
-    # Randomly delete files
-    for ((i=1; i<=OPERATIONS; i++)); do
-        # List all files in the directory
-        FILE_LIST=($(ls $DIR))
-        # Check if there are any files to delete
-        if [ ${#FILE_LIST[@]} -gt 0 ]; then
-            # Randomly select a file to delete
-            RANDOM_FILE=${FILE_LIST[$RANDOM % ${#FILE_LIST[@]}]}
-            rm -f "$DIR/$RANDOM_FILE"
-            echo "Deleted file: $DIR/$RANDOM_FILE"
-        fi
-    done
-
-    echo "Completed run $run"
-done
-
-echo "Test completed!"
-
-
-> 
->> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
->> index 5d560e9073f4..b4e95b2dd0f0 100644
->> --- a/fs/xfs/xfs_buf.c
->> +++ b/fs/xfs/xfs_buf.c
->> @@ -319,16 +319,17 @@ xfs_buf_alloc_pages(
->>  	 * least one extra page.
->>  	 */
->>  	for (;;) {
->> -		long	last = filled;
->> +		long	alloc;
->>  
->> -		filled = alloc_pages_bulk(gfp_mask, bp->b_page_count,
->> -					  bp->b_pages);
->> +		alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - filled,
->> +					 bp->b_pages + filled);
->> +		filled += alloc;
->>  		if (filled == bp->b_page_count) {
->>  			XFS_STATS_INC(bp->b_mount, xb_page_found);
->>  			break;
->>  		}
->>  
->> -		if (filled != last)
->> +		if (alloc)
->>  			continue;
-> 
-> alloc_pages_bulk() now returns the number of pages allocated in the
-> array. So if we ask for 4 pages, then get 2, filled is now 2. Then
-> we loop, ask for another 2 pages, get those two pages and it returns
-> 4. Now filled is 6, and we continue.
-
-It will be returning 2 instead of 4 for the second loop if I understand
-it correctly as 'bp->b_pages + filled' and 'bp->b_page_count - filled'
-is passing to alloc_pages_bulk() API now.
-
-> 
-> Now we ask alloc_pages_bulk() for -2 pages, which returns 4 pages...
-> 
-> Worse behaviour: second time around, no page allocation succeeds
-> so it returns 2 pages. Filled is now 4, which is the number of pages
-> we need, so we break out of the loop with only 2 pages allocated.
-> There's about to be kernel crashes occur.....
-> 
-> Once is a mistake, twice is compeltely unacceptable.  When XFS stops
-> using alloc_pages_bulk (probably 6.15) I won't care anymore. But
-> until then, please stop trying to change this code.
-> 
-> NACK.
-> 
-> -Dave.
