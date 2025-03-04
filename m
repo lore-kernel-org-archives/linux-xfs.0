@@ -1,206 +1,197 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5D451F4CB0
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 09:17:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C5611FE461
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 11:07:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741079872; cv=none; b=flJd9SIAa9BFdlE9bGA9MpJfKfGR1ZbZi3vSreSH0arhbrzf7gqRpQZkupxVUbZuwfDnNqw3vdWemAfm563rWnUVeY9Gd7wS+n7hgBD5lkq2uHoU0ZQGHE8pV9E+xRmVxhJ4lLJW8XD0AJvXlp104kCpzDZzRPY4dP/9Ph/X3Qg=
+	t=1741086422; cv=none; b=RWRnUKiN6+3qoy7pDy6jXCYDl7EZzH90VkRf3yNiPtMD8Vxoz1PnMHm+aLx+a1Vq9BzFuY3vB0xT9cnw2Z7Fc7qhOUqpaJJNgr4An196HmGWmBf2xs0t1DXOMIEOXFoICRmnZK5cNROkuacEBOgPPLOhqtAF2sXd/5uzcmqw0y8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741079872; c=relaxed/simple;
-	bh=EYwd2Jf8ZA0KU9xC36aNCIR5lDQhcFK0j7Q6bTeAt5o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XtPutwzc92R6Q6RNvatncK/BEkJVLDg1ia3CTNOBGCXPP8sItV+srhzR8YTt6GhShZ5jRHaeQnXKHlD+UytYDGKDnARexZ4C9PkiLxE8BUrh+KfQQHebve65L602HQgOBYFcN1KqAwllNoa2CbvyOF9aXCt6RrRttgZHlDs8cL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=fuxu++ZY; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1741086422; c=relaxed/simple;
+	bh=8i20S32RfVyRRLepWWmbfWA2h5fpHsqa2owR7azEDnE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rvlZQS0wL8I5y/FjRNtKzwZ9dt4Q7qmbG2gJWnSm2lKeMJkhRIcIEi4ZjiJ4Dqj5BgbGKTORxiNByeCtr+Jv9oVaXRO0St3XjVCFqk2NIqhZfnI/9VLhpz+reodzFurPITvNyP8W8Ct/lOfn7HeZ/D2gBFCZwlTsTv7x+zJiH1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=FlJMINsy; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=sYccBKaJ; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=FlJMINsy; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=sYccBKaJ; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="fuxu++ZY"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5e058ca6806so8785904a12.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Mar 2025 01:17:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1741079869; x=1741684669; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=U7nVbwpLU0+lp6Hc0ee6jvbH0Pu/dJ0Otg1V1qw972I=;
-        b=fuxu++ZYVsqoY3xjWsoTqcXMgLBOCtHww6PZHUOFjz5ZCu+QqJYXzitd9nUrbOXdjP
-         vlId1tD1GAFFDUCt4mtRLBehfFm2IgtoWyfO8hYTXTsnU1JseV1C8hw5Zamf3QEi8Pl6
-         +DMmdH4u8snN/q8RavL3eaoQBoqjPBE2cz4VWdIrhOaXchpJgr6lSoBlL7nkBCv5wouJ
-         unrymmFLGE0qhL/SferbZsj0JrR51NjppLcZExBfAWFN9AzRFpF4I31CILKK8ufUUOIs
-         fnDizfeEvpw7uJNhqMuJSL8Lucj8/ma28e/HsVdlu4Gq2Z/5XQ2dljW3BkNmPVPbf9pa
-         EZXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741079869; x=1741684669;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=U7nVbwpLU0+lp6Hc0ee6jvbH0Pu/dJ0Otg1V1qw972I=;
-        b=F6abUKAZhll0CMcmS58j0sfoCpX02nfGcUSW5D671cIerUAsAfjloPjoE7jg/eIEIa
-         BjvG/MAXjxq9vrWWBLBDoNr4rggh+9UB1bYcTmUixOB+ea/OmWCZtD4rDuwf6RCHKW39
-         TBCpQq2hDHkIA5NywhcoZUnsSkmzeE9j17q5aAOVYh71H3t7JomO8n0BR2IaJt6Llgf+
-         kideGP52w8pMAdPLrP0xb2WbZ5lSw8elNpCdF2NkUH/m+Hurayh3boLcNPX1UJ4LLLDr
-         NjM8b3kY6hB7qBiSwaCsc9EtDt3ixbq3CgpqjcvlMsH1rg1cbexzTOOS/mvGgqiEfNSB
-         S/ug==
-X-Forwarded-Encrypted: i=1; AJvYcCXtE+MRWEIz5e1pTgtejQCmiykNYqOZJUTW6r1pyzwYox4Tp3xnnK9bT5Z0cBYYI+qtn37XSbIVd80=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy34qL+7iDaYyd4Km7Eo+Ko5M4Wgo/oILx8eI5VSrlW5TKR569E
-	D+Tp1wGTA8gAfyIdN9zoimqxFo3DVKDA3uI+anBMwDM4bIhFBHVLGFyXpJpGwAI=
-X-Gm-Gg: ASbGncs0rg3n3+anurfoMSHnlcSmuZF3/EbbZoPkaQD0yHWTvxBXZUVbZZ+rXEDZ5yy
-	iHwxJ8THAt7ed4LICKy9m1JUgma6wp4D7EN2KdJb0NajcPhiJru3Ub+9B1W9zMSiFpblfpnqS3g
-	iW+xYpKh4BvNXqGvqDBa8YLOCURunz1x0Ter9v6khYJh6PzrRWhWhr3fhzUvwsJujrNZcBIz5CA
-	4mEAavfpodBvmenTNSr7hE6GHls6xg737zBXVxEUIS4UMK1e1R/k3jkmZxxrtdvGzWWBXH9PdEp
-	dENZgrB7qTf2uVdabl5CMUrO4MMHzggcJEIsTG6xFRKFM0+Jrz8BSo1BZO2ll3JaKIccEsVA
-X-Google-Smtp-Source: AGHT+IFEBbxQyaP0/2DWYOKB8ElC0B8gdpp7QbNW8c37nqwtwNfKPMEljUeKpMeGoOykV8PZYEcmVQ==
-X-Received: by 2002:a05:6402:2789:b0:5e0:52df:d569 with SMTP id 4fb4d7f45d1cf-5e4d6b852d0mr16127811a12.28.1741079868692;
-        Tue, 04 Mar 2025 01:17:48 -0800 (PST)
-Received: from ?IPV6:2403:580d:fda1::299? (2403-580d-fda1--299.ip6.aussiebb.net. [2403:580d:fda1::299])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223501f9dd8sm90968655ad.57.2025.03.04.01.17.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Mar 2025 01:17:48 -0800 (PST)
-Message-ID: <6f4017dc-2b3d-4b1a-b819-423acb42d999@suse.com>
-Date: Tue, 4 Mar 2025 19:47:34 +1030
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="FlJMINsy";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="sYccBKaJ";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="FlJMINsy";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="sYccBKaJ"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 516CB1F393;
+	Tue,  4 Mar 2025 11:06:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1741086419; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HfUptBLw87//QQS3yhszHdPpQdoIdUVVfuqBEq+kkvw=;
+	b=FlJMINsytySLtTAtSFpXKcbH/PSEGKlnPThfY+qfWGt15cRoC7HFwutb00OTD9DZJTxalx
+	A+ij43tokAhtVavBIT9nXy+EEV9hhZC9iAahuxcRXgisw+/t90MjwIhEvzAYWv79MwACBM
+	7a/P47fjlOfspxxy52jzYwXiWNRZzlY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1741086419;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HfUptBLw87//QQS3yhszHdPpQdoIdUVVfuqBEq+kkvw=;
+	b=sYccBKaJr8foywehyQc7+YpIvKy2OVmlwnMP47wgIPMUO+ZWFfK+fLZz+L5DtY2pf9uemR
+	GiVGQ0+mF5nOOeCA==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=FlJMINsy;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=sYccBKaJ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1741086419; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HfUptBLw87//QQS3yhszHdPpQdoIdUVVfuqBEq+kkvw=;
+	b=FlJMINsytySLtTAtSFpXKcbH/PSEGKlnPThfY+qfWGt15cRoC7HFwutb00OTD9DZJTxalx
+	A+ij43tokAhtVavBIT9nXy+EEV9hhZC9iAahuxcRXgisw+/t90MjwIhEvzAYWv79MwACBM
+	7a/P47fjlOfspxxy52jzYwXiWNRZzlY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1741086419;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HfUptBLw87//QQS3yhszHdPpQdoIdUVVfuqBEq+kkvw=;
+	b=sYccBKaJr8foywehyQc7+YpIvKy2OVmlwnMP47wgIPMUO+ZWFfK+fLZz+L5DtY2pf9uemR
+	GiVGQ0+mF5nOOeCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 422BF13967;
+	Tue,  4 Mar 2025 11:06:59 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id qSUjENPexmefbgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 04 Mar 2025 11:06:59 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 05DA3A0912; Tue,  4 Mar 2025 12:06:58 +0100 (CET)
+Date: Tue, 4 Mar 2025 12:06:58 +0100
+From: Jan Kara <jack@suse.cz>
+To: syzbot <syzbot+7229071b47908b19d5b7@syzkaller.appspotmail.com>
+Cc: akpm@linux-foundation.org, amir73il@gmail.com, axboe@kernel.dk, 
+	brauner@kernel.org, cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	jack@suse.cz, josef@toxicpanda.com, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] WARNING in fsnotify_file_area_perm
+Message-ID: <7ehxrhbvehlrjwvrduoxsao5k3x4aw275patsb3krkwuq573yv@o2hskrfawbnc>
+References: <67a487f7.050a0220.19061f.05fc.GAE@google.com>
+ <67c4881e.050a0220.1dee4d.0054.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-To: Yunsheng Lin <linyunsheng@huawei.com>, Yishai Hadas <yishaih@nvidia.com>,
- Jason Gunthorpe <jgg@ziepe.ca>,
- Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
- Kevin Tian <kevin.tian@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>,
- Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
- Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
- Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
- Sandeep Dhavale <dhavale@google.com>, Carlos Maiolino <cem@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- Jesper Dangaard Brouer <hawk@kernel.org>,
- Ilias Apalodimas <ilias.apalodimas@linaro.org>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
- Anna Schumaker <anna@kernel.org>, Chuck Lever <chuck.lever@oracle.com>,
- Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
- Tom Talpey <tom@talpey.com>
-Cc: Luiz Capitulino <luizcap@redhat.com>,
- Mel Gorman <mgorman@techsingularity.net>, Dave Chinner
- <david@fromorbit.com>, kvm@vger.kernel.org, virtualization@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-erofs@lists.ozlabs.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org,
- netdev@vger.kernel.org, linux-nfs@vger.kernel.org
-References: <20250228094424.757465-1-linyunsheng@huawei.com>
-Content-Language: en-US
-From: Qu Wenruo <wqu@suse.com>
-Autocrypt: addr=wqu@suse.com; keydata=
- xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
- 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
- 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
- 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
- gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
- AAHNGFF1IFdlbnJ1byA8d3F1QHN1c2UuY29tPsLAlAQTAQgAPgIbAwULCQgHAgYVCAkKCwIE
- FgIDAQIeAQIXgBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXVgBQkQ/lqxAAoJEMI9kfOh
- Jf6o+jIH/2KhFmyOw4XWAYbnnijuYqb/obGae8HhcJO2KIGcxbsinK+KQFTSZnkFxnbsQ+VY
- fvtWBHGt8WfHcNmfjdejmy9si2jyy8smQV2jiB60a8iqQXGmsrkuR+AM2V360oEbMF3gVvim
- 2VSX2IiW9KERuhifjseNV1HLk0SHw5NnXiWh1THTqtvFFY+CwnLN2GqiMaSLF6gATW05/sEd
- V17MdI1z4+WSk7D57FlLjp50F3ow2WJtXwG8yG8d6S40dytZpH9iFuk12Sbg7lrtQxPPOIEU
- rpmZLfCNJJoZj603613w/M8EiZw6MohzikTWcFc55RLYJPBWQ+9puZtx1DopW2jOwE0EWdWB
- rwEIAKpT62HgSzL9zwGe+WIUCMB+nOEjXAfvoUPUwk+YCEDcOdfkkM5FyBoJs8TCEuPXGXBO
- Cl5P5B8OYYnkHkGWutAVlUTV8KESOIm/KJIA7jJA+Ss9VhMjtePfgWexw+P8itFRSRrrwyUf
- E+0WcAevblUi45LjWWZgpg3A80tHP0iToOZ5MbdYk7YFBE29cDSleskfV80ZKxFv6koQocq0
- vXzTfHvXNDELAuH7Ms/WJcdUzmPyBf3Oq6mKBBH8J6XZc9LjjNZwNbyvsHSrV5bgmu/THX2n
- g/3be+iqf6OggCiy3I1NSMJ5KtR0q2H2Nx2Vqb1fYPOID8McMV9Ll6rh8S8AEQEAAcLAfAQY
- AQgAJgIbDBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXWBBQkQ/lrSAAoJEMI9kfOhJf6o
- cakH+QHwDszsoYvmrNq36MFGgvAHRjdlrHRBa4A1V1kzd4kOUokongcrOOgHY9yfglcvZqlJ
- qfa4l+1oxs1BvCi29psteQTtw+memmcGruKi+YHD7793zNCMtAtYidDmQ2pWaLfqSaryjlzR
- /3tBWMyvIeWZKURnZbBzWRREB7iWxEbZ014B3gICqZPDRwwitHpH8Om3eZr7ygZck6bBa4MU
- o1XgbZcspyCGqu1xF/bMAY2iCDcq6ULKQceuKkbeQ8qxvt9hVxJC2W3lHq8dlK1pkHPDg9wO
- JoAXek8MF37R8gpLoGWl41FIUb3hFiu3zhDDvslYM4BmzI18QgQTQnotJH8=
-In-Reply-To: <20250228094424.757465-1-linyunsheng@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <67c4881e.050a0220.1dee4d.0054.GAE@google.com>
+X-Rspamd-Queue-Id: 516CB1F393
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[15];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_LAST(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_DN_SOME(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:dkim];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TAGGED_RCPT(0.00)[7229071b47908b19d5b7];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FREEMAIL_CC(0.00)[linux-foundation.org,gmail.com,kernel.dk,kernel.org,oracle.com,suse.cz,toxicpanda.com,vger.kernel.org,kvack.org,googlegroups.com];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	SUBJECT_HAS_QUESTION(0.00)[]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -2.51
+X-Spam-Flag: NO
 
+Josef, Amir,
 
+this is indeed an interesting case:
 
-在 2025/2/28 20:14, Yunsheng Lin 写道:
-> As mentioned in [1], it seems odd to check NULL elements in
-> the middle of page bulk allocating, and it seems caller can
-> do a better job of bulk allocating pages into a whole array
-> sequentially without checking NULL elements first before
-> doing the page bulk allocation for most of existing users.
-> 
-> Through analyzing of bulk allocation API used in fs, it
-> seems that the callers are depending on the assumption of
-> populating only NULL elements in fs/btrfs/extent_io.c and
-> net/sunrpc/svc_xprt.c while erofs and btrfs don't, see:
-> commit 91d6ac1d62c3 ("btrfs: allocate page arrays using bulk page allocator")
+On Sun 02-03-25 08:32:30, syzbot wrote:
+> syzbot has found a reproducer for the following issue on:
+...
+> ------------[ cut here ]------------
+> WARNING: CPU: 1 PID: 6440 at ./include/linux/fsnotify.h:145 fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
+> Modules linked in:
+> CPU: 1 UID: 0 PID: 6440 Comm: syz-executor370 Not tainted 6.14.0-rc4-syzkaller-ge056da87c780 #0
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 12/27/2024
+> pstate: 80400005 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+> pc : fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
+> lr : fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
+> sp : ffff8000a42569d0
+> x29: ffff8000a42569d0 x28: ffff0000dcec1b48 x27: ffff0000d68a1708
+> x26: ffff0000d68a16c0 x25: dfff800000000000 x24: 0000000000008000
+> x23: 0000000000000001 x22: ffff8000a4256b00 x21: 0000000000001000
+> x20: 0000000000000010 x19: ffff0000d68a16c0 x18: ffff8000a42566e0
+> x17: 000000000000e388 x16: ffff800080466c24 x15: 0000000000000001
+> x14: 1fffe0001b31513c x13: 0000000000000000 x12: 0000000000000000
+> x11: 0000000000000001 x10: 0000000000ff0100 x9 : 0000000000000000
+> x8 : ffff0000c6d98000 x7 : 0000000000000000 x6 : 0000000000000000
+> x5 : 0000000000000020 x4 : 0000000000000000 x3 : 0000000000001000
+> x2 : ffff8000a4256b00 x1 : 0000000000000001 x0 : 0000000000000000
+> Call trace:
+>  fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145 (P)
+>  filemap_fault+0x12b0/0x1518 mm/filemap.c:3509
+>  xfs_filemap_fault+0xc4/0x194 fs/xfs/xfs_file.c:1543
+>  __do_fault+0xf8/0x498 mm/memory.c:4988
+>  do_read_fault mm/memory.c:5403 [inline]
+>  do_fault mm/memory.c:5537 [inline]
+>  do_pte_missing mm/memory.c:4058 [inline]
+>  handle_pte_fault+0x3504/0x57b0 mm/memory.c:5900
+>  __handle_mm_fault mm/memory.c:6043 [inline]
+>  handle_mm_fault+0xfa8/0x188c mm/memory.c:6212
+>  do_page_fault+0x570/0x10a8 arch/arm64/mm/fault.c:690
+>  do_translation_fault+0xc4/0x114 arch/arm64/mm/fault.c:783
+>  do_mem_abort+0x74/0x200 arch/arm64/mm/fault.c:919
+>  el1_abort+0x3c/0x5c arch/arm64/kernel/entry-common.c:432
+>  el1h_64_sync_handler+0x60/0xcc arch/arm64/kernel/entry-common.c:510
+>  el1h_64_sync+0x6c/0x70 arch/arm64/kernel/entry.S:595
+>  __uaccess_mask_ptr arch/arm64/include/asm/uaccess.h:169 [inline] (P)
+>  fault_in_readable+0x168/0x310 mm/gup.c:2234 (P)
+>  fault_in_iov_iter_readable+0x1dc/0x22c lib/iov_iter.c:94
+>  iomap_write_iter fs/iomap/buffered-io.c:950 [inline]
+>  iomap_file_buffered_write+0x490/0xd54 fs/iomap/buffered-io.c:1039
+>  xfs_file_buffered_write+0x2dc/0xac8 fs/xfs/xfs_file.c:792
+>  xfs_file_write_iter+0x2c4/0x6ac fs/xfs/xfs_file.c:881
+>  new_sync_write fs/read_write.c:586 [inline]
+>  vfs_write+0x704/0xa9c fs/read_write.c:679
 
-If you want to change the btrfs part, please run full fstests with 
-SCRATCH_DEV_POOL populated at least.
+The backtrace actually explains it all. We had a buffered write whose
+buffer was mmapped file on a filesystem with an HSM mark. Now the prefaulting
+of the buffer happens already (quite deep) under the filesystem freeze
+protection (obtained in vfs_write()) which breaks assumptions of HSM code
+and introduces potential deadlock of HSM handler in userspace with filesystem
+freezing. So we need to think how to deal with this case...
 
-[...]
-> diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-> index f0a1da40d641..ef52cedd9873 100644
-> --- a/fs/btrfs/extent_io.c
-> +++ b/fs/btrfs/extent_io.c
-> @@ -623,13 +623,26 @@ int btrfs_alloc_page_array(unsigned int nr_pages, struct page **page_array,
->   			   bool nofail)
->   {
->   	const gfp_t gfp = nofail ? (GFP_NOFS | __GFP_NOFAIL) : GFP_NOFS;
-> -	unsigned int allocated;
-> +	unsigned int allocated, ret;
->   
-> -	for (allocated = 0; allocated < nr_pages;) {
-> -		unsigned int last = allocated;
-> +	/* Defragment page_array so pages can be bulk allocated into remaining
-> +	 * NULL elements sequentially.
-> +	 */
-> +	for (allocated = 0, ret = 0; ret < nr_pages; ret++) {
-> +		if (page_array[ret]) {
-
-You just prove how bad the design is.
-
-All the callers have their page array members to initialized to NULL, or 
-do not care and just want alloc_pages_bulk() to overwrite the 
-uninitialized values.
-
-The best example here is btrfs_encoded_read_regular().
-Now your code will just crash encoded read.
-
-Read the context before doing stupid things.
-
-I find it unacceptable that you just change the code, without any 
-testing, nor even just check all the involved callers.
-
-> +			page_array[allocated] = page_array[ret];
-> +			if (ret != allocated)
-> +				page_array[ret] = NULL;
-> +
-> +			allocated++;
-> +		}
-> +	}
->   
-> -		allocated = alloc_pages_bulk(gfp, nr_pages, page_array);
-> -		if (unlikely(allocated == last)) {
-> +	while (allocated < nr_pages) {
-> +		ret = alloc_pages_bulk(gfp, nr_pages - allocated,
-> +				       page_array + allocated);
-
-I see the new interface way worse than the existing one.
-
-All btrfs usage only wants a simple retry-until-all-fulfilled behavior.
-
-NACK for btrfs part, and I find you very unresponsible not even bother 
-running any testsuit and just submit such a mess.
-
-Just stop this, no one will ever take you serious anymore.
-
-Thanks,
-Qu
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
