@@ -1,176 +1,197 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E141B414F
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 21:45:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF37E1DDC14;
+	Tue,  4 Mar 2025 22:46:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741124712; cv=none; b=Q+05E44quc+A/g1sTzahIRxqJxQP2FN+hwXryW/0i8Eb9hwOiw3EyvAcLBVsVzKRCVQbjSUkEz4TnUAAblxLYVvMWhtFG7SyHvIri6HlA6VfrcPNB/UsbgTN7/5ior+ch+jRxwAnN0LGws1IxQbbS2LgTLnjzzhxNfhyZM3RKEs=
+	t=1741128403; cv=none; b=by7NrVgIaIc4q4eBVs2SdTNC4m4e6VQoXq2F6deYAqsEieDsI7ugbEdiBVA9W3xEt/wW6AG/q8dHLPQcj3BCvTb10PrAyiWcmLb/S7XohcfCoy292x7oj40O1jigsRETp5YABDyAfIpZO9tDimEZ6cJFY1xmUGf1uObIQ9oOdJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741124712; c=relaxed/simple;
-	bh=HXyjWg0UIo59qPK6UzYC2apM98yYxeM76hoxQYCmhuM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HNYFbq6lsfqnyoelL7ht05DpFi219A7pMTc10HUXvyyozGAQ0zFEtfkPVBBEaIVbgURSTXu4pr4oRNgtbeQvDp+2UCNwmwqqXer/+kM1kj4BkdcfhcjUV2Z5NL2XSBjWiDs+7wfQFKaPu3twVZJHiRKgb+TGZpQVPa8FaWxM/4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=fixPYamt; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1741128403; c=relaxed/simple;
+	bh=VygENYCWiBbarTNsVf9RrCUGhuzEZXrMuNwYSB8fkM4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=V8E6HxKG4ocFgIVabDLQqK2pr3SPxi+9csq9SwlYRhp09luSgSEbU1qmGGR4hjhSF2SazKRSum4UWKEYrnu2LDX+GAM/9GyaZ/A3hERAy9gK3ng4rXsTIkvQtb9OsbFnORfF1ypZ/BrERjWz856DIPkq0sOctwOWMyFfhNX010Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UmiWaaof; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="fixPYamt"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-223cc017ef5so38156255ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Mar 2025 13:45:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UmiWaaof"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-38f2f391864so3410929f8f.3;
+        Tue, 04 Mar 2025 14:46:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1741124710; x=1741729510; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=JXlvr0AuCIt7jLa/lGvPs7yWirPuSQnv0IzpBQ8cC80=;
-        b=fixPYamt8r561SAUipv921X5TNx2q0nlVPMBwGcpl23eZZCYCKG9Btkoo9ACpn6D6r
-         /zgkxOE/3NzqNXQCF4OCvzPZZLv0oOjKXMhiyKFLYoYmvXH0P6uIrDwC9HKE9660yGBh
-         zuySPWk9bH2g22WKg4Z3przcsSxVYNL8Cth6KPvul8KzeBr3vkMO4F1tE//T9b964Hzk
-         41ZscldFWXld9nx/SYUdLoDT7K/JP9SE9LknAvN+tqcRM98TWyL5CjsFtIMOD2XKduDP
-         TZ+zmOxHyEG00gQ4r2uNq9UUDZsL+abo5nuNkDXI/mBHomWycaj5lMKXLGsk3ODmvo0D
-         KhVQ==
+        d=gmail.com; s=20230601; t=1741128400; x=1741733200; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=kRyVz6x1YbuhNRQ7pPSN75qrUu/RYDbWdOLZVI+9yxY=;
+        b=UmiWaaofIoORtxQoU2/YfJXOIZBuydcm9YfcaiZbcANGT53BQG7PE8DGliwCoQLfuk
+         UJqeGlwjq1aOIwIEqdX2FwJdERWX4l9XY6Kaa2pkuP8Yc93Q/XfpmRaaiIad1mKYdz3+
+         MN5OYuotHhxaysFbeZgL0gJN/LdJhJq4yGYvkhx1S7X0URENfTyEMi44Z6mhe6Dz87hR
+         pG+VJb3ilZy0wZJM7CoqvjwcbdqE+J4jBEq09yNGKuFbPOohUf60y71VAP4wtZnahM3P
+         DSMiwqzG2xd89JzDuKFTx3OYbYViOdkmIfan9dGOx4bLKlfGR5TGQUej82TVRIQOUzQ+
+         N0nA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741124710; x=1741729510;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JXlvr0AuCIt7jLa/lGvPs7yWirPuSQnv0IzpBQ8cC80=;
-        b=eRH2gmwI04l6nbJ6BJmWXfbVehGndbM3s7j/CseKbpZJ92MUeErOQGabREmsPGx0Uu
-         doFQm7xMAt3iqPZmyBpfdvr4es4Rg9LvUjm05F+WBEzRlmmlpseJLsM5s1NqQqqTdhtY
-         U128MKQM1NA9hKWwm2NaebdpnEZv8iWP11xEDgm7iqcrH+5xIJTK1WuTlpLwI2qcezQ+
-         cF3x8xnHkxsMaUTakgbo+6BgpdCs5ir5aMbYa+obR7EHMY/LMhOiO1Xgd72mK2k176h7
-         Biwh4WUrosGYjgGxaXxBuFSsTU8s2Uslk+HO4aQbIn1162NKRJnQbWT5kNRmPLr7Vn4+
-         XURg==
-X-Forwarded-Encrypted: i=1; AJvYcCWQbIuwqaUebBmAG/S5NToDZUXwzEUxKUoYFInPhWp8tF4qbnn21FUPVD+u5WL0QZS3c5OqqjohpN0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzyciYjScnPry2PmY/9DGqUu/vHuAw2xTRHROtevB+o+Yvb6E9m
-	Fll7BjlUpT/5FdosPyx9WC4I+X9TMaH3l7jYMVFcp+2fEJMO9zwcPo/A8KY6vxk=
-X-Gm-Gg: ASbGncsnxvJIdmM/+sJyrABabHj38sOyVNy6bbcQsY1hSCmi3aAbwKqNp6ldXVOjp5P
-	r1Mp5KU9NhSM/GqK37YuPisS9j9VbSO60SUPxsnWtcRYk5suW0TcNF4UO7iRI/Fs5vZOTih4jLM
-	5ch68hUdxXlqQR5p2LDKtSLMk/8vZjeFpPksRRtwSaG8IcGkJRkS9uewLqO3briNqOZyDqrIpqZ
-	sEWXCBcwxAlAvtTlWN9jhmYjVuYrvVNT3PUC0VnzgacvP5a+Z9Dzn5xUQ2VWuRahi7palhi5DwU
-	bZLpRluelPcSBWcJ9Dx7QrtjMCiXtUNUg5CseTwh6Z91whRhz5qayoT16VqHFnn0GNpOEeoPzXn
-	Aag/XmlxyD3oRjcF6SPK/
-X-Google-Smtp-Source: AGHT+IGNwy59VhNQY+L/AmQpCxxA1/Mp+YoBvn03hGdzhtDUWymDRf7aWS1Y1DjJmIdSpj7CoWsAbw==
-X-Received: by 2002:a17:902:f548:b0:220:ee5e:6bb with SMTP id d9443c01a7336-223f1c95914mr11075785ad.20.1741124710362;
-        Tue, 04 Mar 2025 13:45:10 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-734a003dd31sm11416022b3a.152.2025.03.04.13.45.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Mar 2025 13:45:09 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tpa4Z-00000008uUy-1ykB;
-	Wed, 05 Mar 2025 08:45:07 +1100
-Date: Wed, 5 Mar 2025 08:45:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	lsf-pc@lists.linux-foundation.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, djwong@kernel.org,
-	dchinner@redhat.com, jack@suse.cz, tytso@mit.edu,
-	linux-ext4@vger.kernel.org, nirjhar.roy.lists@gmail.com,
-	zlang@kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] xfstests: Centralizing filesystem configs and
- device configs
-Message-ID: <Z8d0Y0yvlgngKsgo@dread.disaster.area>
-References: <Z55RXUKB5O5l8QjM@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <Z6FFlxFEPfJT0h_P@dread.disaster.area>
- <87ed0erxl3.fsf@gmail.com>
- <Z6KRJ3lcKZGJE9sX@dread.disaster.area>
- <87plj0hp7e.fsf@gmail.com>
+        d=1e100.net; s=20230601; t=1741128400; x=1741733200;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=kRyVz6x1YbuhNRQ7pPSN75qrUu/RYDbWdOLZVI+9yxY=;
+        b=At91ExJ0Fg6QeE88gTW6YrsjZ8r9feOww7UBqwE200OVrhD8zMp4a0gthal6SxrSh4
+         fjuypK1zglI5KFViaRZWdBbL7d/6RqYwn4klQ98NYALIUhOfG3Rx0klYPmrkGYC/hY8P
+         SXo+RqBjQeSp/anggUF8KXm7QMgK0CG+z9CdkgqQXzHxprwQqA32+CJzB+vF3DLX1NnL
+         B/qk/RESQ3PIpggfOMMWcV+1RuLtnmfUpVutIFds8Gtv/HdtfdTs35XzW87iSEnSkQEi
+         DRZ4HUa/cUDXsW8pqc8pE/gfxFJmk5EjFbRBSdnbfYV4v+JgskzQR2SvaSn7Zu2qqlzk
+         LzOg==
+X-Forwarded-Encrypted: i=1; AJvYcCU04BZIy9n4JnZz8VpRc5P/uzLZK2LH3uYAnj/lSWwQ+Cat4zzpRzRA9vcwkMpr3F09wXMj6BdpFGQM@vger.kernel.org, AJvYcCU10Qd15MIi1SLvRvGXr3B6R0InDdsP4hSOZHOV+v3e9RgctsMZsMELpPrUNR7ecDXa80o5/OcxYw==@vger.kernel.org, AJvYcCWpofj1puFwEVPZ6KnJrXlmXOZgZFmsJ5zpl9HoJIDOSN6ATcZ+Pkshn0448coZk+sVvA897FO5/5PludfWqQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwD/xIJsod56Z/wUJGfFI7d8s4Dc8nSimpEi3mxa2U2YAlBviTc
+	M8pR4VbAmpMURGneJyWFEypCNaP8La4U1tzoTmG1NGi0SF2rfMh5o+zIQA==
+X-Gm-Gg: ASbGncuFQpiy5wZxOSNHMBe8s6Xk8CXKYRrzYsi5AribysWb9eNcvghkus8pg8V1vew
+	fclPzCa6sebQ6acqV0nVEeAFMSGA4e/WWP/qX2zvkHa3yJS0+/Nq7rVajoPAn/eapV6Tba63jnd
+	flOoPis5zAFTQdk6VzM38LIl5LfAxOrHn3+LA430qLuB4pRL7hhhxxvP+gRkK1j7/OUPtQtLBwS
+	Um48DEW4q9jtKqmQbGlBtEpggGcibHvTo1lLQqK3RSwWZ7PGHOxdYXreW9eTGswm1tgi2oXjSCF
+	F2F2FYNbinbr8WzeT1lzuOUk51Wycaw3iHJQJv0y3cYObeODSdaHbg==
+X-Google-Smtp-Source: AGHT+IFkVGW5ZhOoHDiSj66/ast7DJZ4iFg4olBQTOGakMQgpSc4MxRp6vh0LNKqEDclR9jjv6jMZg==
+X-Received: by 2002:a5d:47c9:0:b0:390:fbba:e64e with SMTP id ffacd0b85a97d-3911f7a8e4cmr497280f8f.38.1741128399728;
+        Tue, 04 Mar 2025 14:46:39 -0800 (PST)
+Received: from [192.168.8.100] ([185.69.144.147])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-390e486eea3sm18647614f8f.101.2025.03.04.14.46.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Mar 2025 14:46:38 -0800 (PST)
+Message-ID: <970ec89d-4161-41f4-b66f-c65ebd4bd583@gmail.com>
+Date: Tue, 4 Mar 2025 22:47:48 +0000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87plj0hp7e.fsf@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/1] iomap: propagate nowait to block layer
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org,
+ io-uring@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
+ linux-xfs@vger.kernel.org, wu lei <uwydoc@gmail.com>
+References: <f287a7882a4c4576e90e55ecc5ab8bf634579afd.1741090631.git.asml.silence@gmail.com>
+ <Z8dsfxVqpv-kqeZy@dread.disaster.area>
+Content-Language: en-US
+From: Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <Z8dsfxVqpv-kqeZy@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Sat, Mar 01, 2025 at 06:39:57PM +0530, Ritesh Harjani wrote:
-> > Why is having hundreds of tiny single-config-only files
-> > better than having all the configs in a single file that is
-> > easily browsed and searched?
-> >
-> > Honestly, I really don't see any advantage to re-implementing config
-> > sections as a "file per config" object farm. Yes, you can store
-> > information that way, but that doesn't make it an improvement over a
-> > single file...
-> >
-> > All that is needed is for the upstream repository to maintain a
-> > config file with all the config sections defined that people need.
-> > We don't need any new infrastructure to implement a "centralised
-> > configs" feature - all we need is an agreement that upstream will
-> > ship an update-to-date default config file instead of the ancient,
-> > stale example.config/localhost.config files....
-> >
+On 3/4/25 21:11, Dave Chinner wrote:
+...
+>> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+>> index b521eb15759e..07c336fdf4f0 100644
+>> --- a/fs/iomap/direct-io.c
+>> +++ b/fs/iomap/direct-io.c
+>> @@ -363,9 +363,14 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+>>   	 */
+>>   	if (need_zeroout ||
+>>   	    ((dio->flags & IOMAP_DIO_NEED_SYNC) && !use_fua) ||
+>> -	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
+>> +	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+>>   		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
+>>   
+>> +		if (!is_sync_kiocb(dio->iocb) &&
+>> +		    (dio->iocb->ki_flags & IOCB_NOWAIT))
+>> +			return -EAGAIN;
+>> +	}
 > 
-> If we can create 1 config for every filesystem instead of creating a lot
-> of smaller config files. i.e.  
-> - configs/ext4/config.ext4
-> - configs/xfs/config.xfs
-
-Why are directories that contain a single file needed here?
-
-> Each of above can contain sections like (e.g.)
+> How are we getting here with IOCB_NOWAIT IO? This is either
+> sub-block unaligned write IO, it is a write IO that requires
+> allocation (i.e. write beyond EOF), or we are doing a O_DSYNC write
+> on hardware that doesn't support REQ_FUA.
 > 
-> [xfs-b4k]
-> MKFS_OPTIONS="-b size=4k"
-> ddUNT_OPTIdd    d=""dd
+> The first 2 cases should have already been filtered out by the
+> filesystem before we ever get here. The latter doesn't require
+> multiple IOs in IO submission - the O_DSYNC IO submission (if any is
+> required) occurs from data IO completion context, and so it will not
+> block IO submission at all.
 > 
-> [xfs-b64k]
-> MKFS_OPTIONS="-b size=64k"
-> MOUNT_OPTIONS=""
+> So what type of IO in what mapping condition is triggering the need
+> to return EAGAIN here?
+
+I didn't hit it but neither could prove that it's impossible.
+I'll drop the hunk since you're saying it shouldn't be needed.
+
+>>   	/*
+>>   	 * The rules for polled IO completions follow the guidelines as the
+>>   	 * ones we set for inline and deferred completions. If none of those
+>> @@ -374,6 +379,23 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+>>   	if (!(dio->flags & (IOMAP_DIO_INLINE_COMP|IOMAP_DIO_CALLER_COMP)))
+>>   		dio->iocb->ki_flags &= ~IOCB_HIPRI;
+>>   
+>> +	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
+>> +
+>> +	if (!is_sync_kiocb(dio->iocb) && (dio->iocb->ki_flags & IOCB_NOWAIT)) {
+>> +		/*
+>> +		 * This is nonblocking IO, and we might need to allocate
+>> +		 * multiple bios. In this case, as we cannot guarantee that
+>> +		 * one of the sub bios will not fail getting issued FOR NOWAIT
+>> +		 * and as error results are coalesced across all of them, ask
+>> +		 * for a retry of this from blocking context.
+>> +		 */
+>> +		if (bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS + 1) >
+>> +					  BIO_MAX_VECS)
+>> +			return -EAGAIN;
+>> +
+>> +		bio_opf |= REQ_NOWAIT;
+>> +	}
+> 
+> Ok, so this allows a max sized bio to be used. So, what, 1MB on 4kB
+> page size is the maximum IO size for IOCB_NOWAIT now? I bet that's
+> not documented anywhere....
+> 
+> Ah. This doesn't fix the problem at all.
+> 
+> Say, for exmaple, I have a hardware storage device with a max
+> hardware IO size of 128kB. This is from the workstation I'm typing
+> this email on:
+> 
+> $ cat /sys/block/nvme0n1/queue/max_hw_sectors_kb
+> 128
+> $  cat /sys/block/nvme0n1/queue/max_segments
+> 33
+> $
+> 
+> We build a 1MB bio above, set REQ_NOWAIT, then:
+> 
+> submit_bio
+>    ....
+>    blk_mq_submit_bio
+>      __bio_split_to_limits(bio, &q->limits, &nr_segs);
+>        bio_split_rw()
+>          .....
+>          split:
+> 	.....
+>          /*
+>           * We can't sanely support splitting for a REQ_NOWAIT bio. End it
+>           * with EAGAIN if splitting is required and return an error pointer.
+>           */
+>          if (bio->bi_opf & REQ_NOWAIT)
+>                  return -EAGAIN;
 > 
 > 
-> Then during make we can merge all these configs into a common config file
-> i.e. configs/.all-section-configs. We can update the current check script to
-> look for either local.config file or configs/.all-section-configs file
-> for location the section passed in the command line. 
-
-What does this complexity gain us?
-
-> This will help solve all the listed problems:
-> 1. We don't have to add a new parsing logic for configs
-
-We don't need new config files and makefile/build time shenanigans
-to do this.
-
-> 2. We don't need to create 1 file per config
-
-Ditto.
-
-> 3. We still can get all sections listed in one place under which check
-> script can parse.
-
-Ditto.
-
-> 4. Calling different filesystem sections from a common config file can work.
-
-Yes, that's the whole point of have config sections: one config file
-that supports lots of different test configurations!
-
-> So as you mentioned calling something like below should work. 
+> So, REQ_NOWAIT effectively limits bio submission to the maximum
+> single IO size of the underlying storage. So, we can't use
+> REQ_NOWAIT without actually looking at request queue limits before
+> we start building the IO - yuk.
 > 
-> ./check -s xfs_4k -s ext4_4k -g quick
-> 
-> Hopefully this will require minimal changes to work. Does this sound
-> good to you?
+> REQ_NOWAIT still feels completely unusable to me....
 
-You haven't explained why we need new infrastructure to do something
-we can already do with the existing infrastructure. What problem are
-you trying to solve that the current infrastructure does not handle?
+Not great but better than not using the async path at all (i.e. executing
+by a kernel worker) as far as io_uring concerned. It should cover a good
+share of users, and io_uring has a fallback path, so userspace won't even
+know about the error. The overhead per byte is less biting for 128K as well.
 
-i.e. we won't need to change the global config file very often once the
-common configs are defined in it; it'll only get modified when
-filesystems add new features that need specific mkfs or mount option
-support to be added, and that's fairly rare.
+The patch already limits the change to async users only, but if you're
+concerned about non-io_uring users, I can try to narrow it to io_uring
+requests only, even though I don't think it's a good way.
 
-Hence I still don't understand what new problem multiple config files
-and new infrastructure to support them is supposed to solve...
+Are you only concerned about the size being too restrictive or do you
+see any other problems?
 
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Pavel Begunkov
+
