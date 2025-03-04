@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC199204874;
-	Tue,  4 Mar 2025 19:22:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 069072E3377
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 20:21:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741116126; cv=none; b=qM3gp17H+bwCziMLFJokNsh9B/NGqpOeWVjHNyK7wIu/A7SUQNsrxD/WI21GEjMidMXwCofbXL5hiA0dCUa9md10wJhjSorpNoO+lwu6PPytvU34w0NeU+x7+XIkQ9KvREnQ9gmJk4Jtk50PqF0lD0stA2OPKyJsJ4Jb5o5W7kY=
+	t=1741119661; cv=none; b=VJXpYH2RD9f4K0pZynaMuoQakQHpdTkK290FNMvuxVxj3xlmhLBiP07mRAf/HnSGaoPLqi7u9dndKqy0Ql+2qXf4l+wzCUj6bEYGcFR629VrGToR1Qhnd1vL91IiGOHWD5PuSSbF6YkISS+g3YpDgC97qD2pK4m9fWpUEuaZyiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741116126; c=relaxed/simple;
-	bh=LWKGyUQ/VIvtyY8+wP/e6ebURMy+Laxrg66Z+DZYuwE=;
+	s=arc-20240116; t=1741119661; c=relaxed/simple;
+	bh=5AKaIFuyF+numgdzrD+p/mOw57rarwBSA7TWKaIFLxg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BdNMlHuyJslxWHPKnOIOHeJBEZTM8KPeueDlrBTYiBfQYgxXetSKH2nYpA2scUQT62Sq4J381KKZPhr3/zGp1rqyrOSp4FYzkUvJReN5hyqrdC/9FeiTkv986doyLwl23XOUP3GziSlZnoh4bQ0NOm8nsGiwGxK/8zfSFpbWLd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=moeQmHQZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OkQnr3RGxHVeiggpJDaAlird0rrZRrXpRT5/ki06wVdyuxDkZ/4F/JnaUgfqwmgpPv/18wGhpu7+GZqaIpjuMAgFikoO2nTSREPePnEU1rdySD0IxnGuCLIOcYUoH1q4bxhT4qqRbOmiW6DeJ0y5UQIepMCm7j6VsmABc9+Z5Wg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XqxvGvAs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="moeQmHQZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 319B8C4CEE5;
-	Tue,  4 Mar 2025 19:22:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XqxvGvAs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FC6FC4CEE5;
+	Tue,  4 Mar 2025 20:21:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741116126;
-	bh=LWKGyUQ/VIvtyY8+wP/e6ebURMy+Laxrg66Z+DZYuwE=;
+	s=k20201202; t=1741119660;
+	bh=5AKaIFuyF+numgdzrD+p/mOw57rarwBSA7TWKaIFLxg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=moeQmHQZmLuhcOjj57HUsZ2K/jXDjPgMl5/mjZzuKQGQ9bx/CqADxKNf1BKPcn+FN
-	 NfhtvpDHP0NiYmuU7dgqnZS6SrzvDZGXNzQONKRxgKvyEAykLx7PqUZtaQboCGGjmY
-	 g8sVbS6T7KZAX26N+8se3CBj3PWM0yuPqQkMn7IwCQz3vrCKNpsGWPeiG5lvRvoncb
-	 /N53PoWEczrohykK0wMEsaCeWwxsPanJ9wTOD3ggLY80Z3COFxVEq5U6vLok1hiJt4
-	 u8PuDddoH+EIGX+UXPY6lrS1QN0XnJT+9KCA+vcWvjynOAjt2Ee7mHUwmMgDgZ1blf
-	 L3fv4NzKqVkMQ==
-Date: Tue, 4 Mar 2025 11:22:05 -0800
+	b=XqxvGvAsrqbua9gFXdjzVkk0JUUazVVd41+iJOibpnDzpDkv2hhKDvn6jv8Mwt3FK
+	 1zlJeoNy4nfxHVhkOagyn5sRdfyrarbKd7q/PAnWpkQKE/+wZ72P9brVWUehTI0po5
+	 2+WF3FaTD6Sp2b8atqZu1Zi2GTdbWzJkPCvn+D/cqy0+LaebFRUUJo42VSX+eQGNkt
+	 NcqQ9opeplZSd1GoCjIpT+ATfUPX/47tmjPCLhXzVReSSbVebMZty7eHjqYDs6J6sU
+	 CrwZ2WKJykNGZRoz6I288EThvbBSZ6SRFd8E0b43jNQtfcvhcKBBVvJlK9dcCw9w1O
+	 v/nS8HOvKDlyw==
+Date: Tue, 4 Mar 2025 12:20:59 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pavel Begunkov <asml.silence@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-	io-uring@vger.kernel.org, linux-xfs@vger.kernel.org,
-	wu lei <uwydoc@gmail.com>
-Subject: Re: [PATCH v2 1/1] iomap: propagate nowait to block layer
-Message-ID: <20250304192205.GD2803749@frogsfrogsfrogs>
-References: <f287a7882a4c4576e90e55ecc5ab8bf634579afd.1741090631.git.asml.silence@gmail.com>
- <Z8clJ2XSaQhLeIo0@infradead.org>
- <83af597f-e599-41d2-a17b-273d6d877dad@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+	david@fromorbit.com, sandeen@redhat.com, bfoster@redhat.com,
+	aalbersh@kernel.org, axboe@kernel.dk
+Subject: Re: Changes to XFS patch integration process
+Message-ID: <20250304202059.GE2803749@frogsfrogsfrogs>
+References: <m6movx2b6yeygut6ow5hjkkfyyu32brsfzjcwydqge5gimz5z3@sw5hrcsah3ga>
+ <WW-YcYkHs91Udy3MU9JoG8oirMMUKrs7XB4_rExNq8_azaAVtgdcf-7vtuKI23iITfyc832nCqSz_O7R41btrA==@protonmail.internalid>
+ <20250303140547.GA16126@lst.de>
+ <rbyicja5damtyfcfxwbk6mspeus42jqwzr6qqch44gizki3zgb@awiat6qbwl7z>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,65 +46,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <83af597f-e599-41d2-a17b-273d6d877dad@gmail.com>
+In-Reply-To: <rbyicja5damtyfcfxwbk6mspeus42jqwzr6qqch44gizki3zgb@awiat6qbwl7z>
 
-On Tue, Mar 04, 2025 at 04:41:40PM +0000, Pavel Begunkov wrote:
-> On 3/4/25 16:07, Christoph Hellwig wrote:
-> > On Tue, Mar 04, 2025 at 12:18:07PM +0000, Pavel Begunkov wrote:
-> > >   	    ((dio->flags & IOMAP_DIO_NEED_SYNC) && !use_fua) ||
-> > > -	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
-> > > +	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
-> > >   		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
-> > > +		if (!is_sync_kiocb(dio->iocb) &&
-> > > +		    (dio->iocb->ki_flags & IOCB_NOWAIT))
-> > > +			return -EAGAIN;
+On Mon, Mar 03, 2025 at 04:00:39PM +0100, Carlos Maiolino wrote:
+> On Mon, Mar 03, 2025 at 03:05:47PM +0100, Christoph Hellwig wrote:
+> > On Mon, Mar 03, 2025 at 11:42:12AM +0100, Carlos Maiolino wrote:
+> > > The biggest change here is that for-next will likely need to be rebased
+> > > more often than today. But also patches will spend more time under testings
+> > > in linux-next and everybody will have a more updated tree to work on.
 > > 
-> > Black magic without comments explaining it.
+> > FYI, what other trees do is to keep separate branches for the current
+> > and next release, i.e. right now: for-6.14 and for-6.15 and merge those
+> > into the for-next or have both of them in linux-next (e.g. for-linus and
+> > for-next).  In that case most of the time you don't need to rebase at
+> > all.  Instead you might occasionally need to merge the current into the
+> > next tree to resolve conflicts, and Linus is fine with that if you
+> > document the reason for that merge.
+
+Separate branches for 6.14 and 6.15 that then get merged into a for-next
+is what I did when I had separate trains running at the same time.  Most
+of the time I just rolled the post-rc6 fixes into the next release, so I
+usually only dealt with one at a time.
+
+(to some grumbling)
+
+> This is pretty much aligned with my intentions, I haven't looked close yet how
+> other subsystems deals with it, but by a few releases now, I keep a
+> xfs-fixes-$ver branch which I collect patches for the current version, so adding
+> a new branch for the next merge window is what I aimed to do with
+> xfs-6.15-merge.
 > 
-> I can copy the comment from below if you wish.
+> The question for me now lies exactly on how to synchronize both. You partially
+> answered my question, although merging the current into next sounds weird to me.
 > 
-> > > +	if (!is_sync_kiocb(dio->iocb) && (dio->iocb->ki_flags & IOCB_NOWAIT)) {
-> > > +		/*
-> > > +		 * This is nonblocking IO, and we might need to allocate
-> > > +		 * multiple bios. In this case, as we cannot guarantee that
-> > > +		 * one of the sub bios will not fail getting issued FOR NOWAIT
-> > > +		 * and as error results are coalesced across all of them, ask
-> > > +		 * for a retry of this from blocking context.
-> > > +		 */
-> > > +		if (bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS + 1) >
-> > > +					  BIO_MAX_VECS)
+> If I merge current into next, and send Linus a PR for each (let's say for -rc7
+> and in sequence for the next merge window), Linus will receive two PRs with
+> possibly the same patches, and yet, on the merge window PR, there will also be a
+> merge commit from -current, is this what you're describing?
+
+If I had a for-6.14 and a for-6.15 branch, I'd base the PRs off of those
+branches, not the for-next branch itself.
+
+> Thanks for the input.
+> 
 > > 
-> > This is not very accurate in times of multi-page bvecs and large order
-> > folios all over.
+> > >
+> > > Also, I'm still thinking how to handle pull requests I receive. I try
+> > > hard to not change the commit hashes from the PRs, so I'm still not sure
+> > > how feasible it will be to keep the same hash ids from PRs giving more often
+> > > than not I'll need to rebase the next merge tree on the top of fixes for the
+> > > current -RC and in some cases, on top of other trees with dependencies.
+> > 
+> > With the above you just keep the pull requests as-is.
+> > 
+> > 
 > 
-> bio_iov_vecs_to_alloc() can overestimate, i.e. the check might return
-> -EAGAIN in more cases than required but not the other way around,
-> that should be enough for a fix such as this patch. Or did I maybe
-> misunderstood you?
-> 
-> > I think you really need to byte the bullet and support for early returns
-> > from the non-blocking bio submission path.
-> 
-> Assuming you're suggesting to implement that, I can't say I'm excited by
-> the idea of reworking a non trivial chunk of block layer to fix a problem
-> and then porting it up to some 5.x, especially since it was already
-> attempted before by someone and ultimately got reverted.
+> Sounds reasonable
 
-[I'm going to ignore the sarcasm downthread because I don't like it and
-will not participate in prolonging that.]
-
-So don't.  XFS LTS generally doesn't pull large chunks of new code into
-old kernels, we just tell people they need to keep moving forward if
-they want new code, or even bug fixes that get really involved.  You
-want an XFS that doesn't allocate xfs_bufs from reclaim?  Well, you have
-to move to 6.12, we're not going to backport a ton of super invasive
-changes to 6.6, let alone 5.x.
-
-We don't let old kernel source dictate changes to new kernels.
+Or you can ask the PR submitter to rebase off latest for-6.15 and handle
+the merge themselves.
 
 --D
-
-> -- 
-> Pavel Begunkov
-> 
-> 
