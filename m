@@ -1,163 +1,170 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD706202C53;
-	Tue,  4 Mar 2025 11:56:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF101FAC50;
+	Tue,  4 Mar 2025 12:04:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741089365; cv=none; b=kuhGAWLOuyELwLXi3hjbtPF5TnepWxIq4Akr1pOVKpKe1Jo/l+wLod47xYdznJtiWTxH5UMjawyFEGAibSB5iTYWsK3h5duFmumy2ocP6xsNSzhrxOJ+28mTBgnw3m5Fa06S1i8wQHd5YSMjuE4qM0JV5eFXDCocuAfeXW+q2Zw=
+	t=1741089855; cv=none; b=ZA06hb44Am6/O/KsheMZyDQ2FdP+l4hx3dTR+RLvwd/HcUo2pkyppvZ/EDZOp6haovVTNR6lzQadB75vGoj+tolvcDrlQDOhIqdf9OZ3Onya0xcplb8Ezxtix9BDhL0p3NpRIIENUBRUKlIuJFdaTYnY2byQswrV6BfzgKAA5g4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741089365; c=relaxed/simple;
-	bh=covBOvnp9U2GZTtmioJd31CmPfKsqA23Z8qUeQ8Rsuc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MJgDU7PYV9zMF92vgR0LskdlxVbJAPJCzWGenL5VCpU+25+g+XPI9KlRVWVAglpKU7tNIwm8++fqZjiVcTtghRhM1p40zG8GNzMzSwNHTt+TSwtoxs1Qigh39HKr/GCp8MUxwtzm7Vgst0Btl4k4wX9U/+1N1DIcZ1DH1UjMltk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Zmf8xNNA; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Zmf8xNNA"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2232aead377so106734725ad.0;
-        Tue, 04 Mar 2025 03:56:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1741089363; x=1741694163; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xxAqpP0ovEprhHiBJr2y/st3WpGGcsBAKP5Mc83hkVA=;
-        b=Zmf8xNNA8taTDvjaevJIDsriEba1VjY/xL69/Mp59lSyrUFKD50AhYAL4N0u9oVuJC
-         WPQMR904yqNjq8/dQDXjOEK63hob8FGTtmGPVDStSwsYtmCASa2LSey0X8C7q1vPfzdh
-         rgPesUsKD9+8ZDj8NBBzgNyOc528OQP13l7oOG3AM/LyzEQoLNL/g8JTQ7S4AIOSTFaq
-         EUApQHJrd34OkTrtna70W4wtgkphoz8ZnVPKZ3n2myO5akto+oE56LeH6gemMj1EeW9D
-         uCC8YIZt+sWoAZ2pvVUja9on8ByDpbSkr0gtdUiwdtNQaoeKvR4MOdDSw7/83QGhSvgJ
-         pdXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741089363; x=1741694163;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xxAqpP0ovEprhHiBJr2y/st3WpGGcsBAKP5Mc83hkVA=;
-        b=YQcqDrHTJoBqQf7nKDG11Ui8MaYU1ff4S2Lr0QGdGU53YSZZRYnd03IQyWbHGIuojk
-         CkHjO74guWRAp9FlY/86WsVoWAHSupN/n2Bgrrxxc5NdNK6uZhSiY5ciODRYFkDKjrME
-         K3WItMd1HXyN5A4ODklkASayZQymdoOFxe6TI12dxGLyubC2/b19XC0UjHWbmjT9dNTf
-         whnNtL6KDFrc0HduOm+57Ly6C7R5genIqH/DI14WsnxqJlJJG7lp3viJbNxcBXEZYfyE
-         oCuiO1tdHDDomdqmLwNeeFtCAcYYuZcHEF3kLD3hN8bnw+3vexNgQlw02HlD5ywLZu4H
-         0Kxg==
-X-Gm-Message-State: AOJu0YxCYRajezQgxqzlN3+l//gsI7O+Jk6fum9vPEAGsnBzhu91e0Ab
-	1J72f5xKOikvVW/3i1bhSAQXv4CvBge0388Z8OoSZH1xv6QMGBPbXXi9+R5Y
-X-Gm-Gg: ASbGncsu04faYr44hCPne9EvjHHZbWvJ/PzHc14ZlaE00g+nys8DQ0KFTLaZ+K4GDhr
-	YjyUBJch6gENx9ekgLZ4E0TdbZUbLQ1QfRYeBlNvodhWjS4JsM2zwWgsKManjUUGVsjPBQQ3Y6h
-	fJorku9t9FXhhsk9PnEj45+Nznb5s16qeTVAVn59bV6hm+urnlyVJfAyL923a7gTsvbjKvGxSiv
-	WXFjPgVPInJPwSmyetUfb57exwTKpZDJ1DcZnzDb4/MZNkh8z2wegeFTyjxMfSkfDBhGIp1/pzf
-	h8fqdOWc2JtOvYgz+YBZIgGnSli22dyJ2SQAkpL6Aiud4t5bXp0=
-X-Google-Smtp-Source: AGHT+IHHPBr9NiMrYgPGqpuLs7kZQV8wWHCZfDlZqK6ST2PH67P8g2Z4Ep+ZjOJ1VoBQ0Nvk8G9Dcg==
-X-Received: by 2002:a17:902:f68f:b0:223:3253:2812 with SMTP id d9443c01a7336-22368fa557amr232106565ad.27.1741089362602;
-        Tue, 04 Mar 2025 03:56:02 -0800 (PST)
-Received: from dw-tp.ibmuc.com ([171.76.80.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223501d28desm94154565ad.16.2025.03.04.03.56.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Mar 2025 03:56:02 -0800 (PST)
-From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: [PATCH v1 3/3] xfs_io: Add RWF_DONTCACHE support to preadv2
-Date: Tue,  4 Mar 2025 17:25:37 +0530
-Message-ID: <19402a5e05c2d1c55e794119facffaec3204a48d.1741087191.git.ritesh.list@gmail.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <cover.1741087191.git.ritesh.list@gmail.com>
-References: <cover.1741087191.git.ritesh.list@gmail.com>
+	s=arc-20240116; t=1741089855; c=relaxed/simple;
+	bh=u3ffzOOdDBdX+c9H5UtwM0oUgiysJs5s7b+QstcanWk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=YEfIO/LSWwnmhWpYm347NCz30txeg+murAYlouY9lPo0GELMDlN4LIBYUo2SyajGD4yi2XIjXg6TOeBO6Ly3HOYvJvbg7sgItFlrU+BRu1NDf/fUZ7zMzpCLI3Muz638oAsF+Q8T7d5ILRkZOnZ9whlfq13xrDU1WkiIpAV6s5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Z6Z4d0yVCzvWqQ;
+	Tue,  4 Mar 2025 20:00:17 +0800 (CST)
+Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
+	by mail.maildlp.com (Postfix) with ESMTPS id 37B6C180116;
+	Tue,  4 Mar 2025 20:04:04 +0800 (CST)
+Received: from [10.67.120.129] (10.67.120.129) by
+ dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 4 Mar 2025 20:04:03 +0800
+Message-ID: <74827bc7-ec6e-4e3a-9d19-61c4a9ba6b2c@huawei.com>
+Date: Tue, 4 Mar 2025 20:04:03 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
+ only NULL elements
+To: Chuck Lever <chuck.lever@oracle.com>, Yishai Hadas <yishaih@nvidia.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Shameer Kolothum
+	<shameerali.kolothum.thodi@huawei.com>, Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>, Josef
+ Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Gao Xiang
+	<xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>,
+	Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>, Jesper Dangaard Brouer
+	<hawk@kernel.org>, Ilias Apalodimas <ilias.apalodimas@linaro.org>, "David S.
+ Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
+ Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman
+	<horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>, Anna Schumaker
+	<anna@kernel.org>, Jeff Layton <jlayton@kernel.org>, Neil Brown
+	<neilb@suse.de>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
+	<Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>
+CC: Luiz Capitulino <luizcap@redhat.com>, Mel Gorman
+	<mgorman@techsingularity.net>, Dave Chinner <david@fromorbit.com>,
+	<kvm@vger.kernel.org>, <virtualization@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
+	<linux-erofs@lists.ozlabs.org>, <linux-xfs@vger.kernel.org>,
+	<linux-mm@kvack.org>, <netdev@vger.kernel.org>, <linux-nfs@vger.kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>
+References: <20250228094424.757465-1-linyunsheng@huawei.com>
+ <a81f9270-8fa8-4a05-a33a-901dd777a71f@oracle.com>
+Content-Language: en-US
+From: Yunsheng Lin <linyunsheng@huawei.com>
+In-Reply-To: <a81f9270-8fa8-4a05-a33a-901dd777a71f@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemf200006.china.huawei.com (7.185.36.61)
 
-Add per-io RWF_DONTCACHE support flag to preadv2()
-This enables xfs_io to perform buffered-io read which can drop the page
-cache folios after reading.
+On 2025/3/4 6:13, Chuck Lever wrote:
+> On 2/28/25 4:44 AM, Yunsheng Lin wrote:
+>> As mentioned in [1], it seems odd to check NULL elements in
+>> the middle of page bulk allocating, and it seems caller can
+>> do a better job of bulk allocating pages into a whole array
+>> sequentially without checking NULL elements first before
+>> doing the page bulk allocation for most of existing users.
+> 
+> Sorry, but this still makes a claim without providing any data
+> to back it up. Why can callers "do a better job"?
 
-	e.g. xfs_io -c "pread -U -V 1 0 16K" /mnt/f1
+What I meant "do a better job" is that callers are already keeping
+track of how many pages have been allocated, and it seems convenient
+to just pass 'page_array + nr_allocated' and 'nr_pages - nr_allocated'
+when calling subsequent page bulk alloc API so that NULL checking
+can be avoided, which seems to be the pattern I see in
+alloc_pages_bulk_interleave().
 
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
----
- io/pread.c        | 12 ++++++++++--
- man/man8/xfs_io.8 |  8 +++++++-
- 2 files changed, 17 insertions(+), 3 deletions(-)
+> 
+> 
+>> Through analyzing of bulk allocation API used in fs, it
+>> seems that the callers are depending on the assumption of
+>> populating only NULL elements in fs/btrfs/extent_io.c and
+>> net/sunrpc/svc_xprt.c while erofs and btrfs don't, see:
+>> commit 91d6ac1d62c3 ("btrfs: allocate page arrays using bulk page allocator")
+>> commit d6db47e571dc ("erofs: do not use pagepool in z_erofs_gbuf_growsize()")
+>> commit c9fa563072e1 ("xfs: use alloc_pages_bulk_array() for buffers")
+>> commit f6e70aab9dfe ("SUNRPC: refresh rq_pages using a bulk page allocator")
+>>
+>> Change SUNRPC and btrfs to not depend on the assumption.
+>> Other existing callers seems to be passing all NULL elements
+>> via memset, kzalloc, etc.
+>>
+>> Remove assumption of populating only NULL elements and treat
+>> page_array as output parameter like kmem_cache_alloc_bulk().
+>> Remove the above assumption also enable the caller to not
+>> zero the array before calling the page bulk allocating API,
+>> which has about 1~2 ns performance improvement for the test
+>> case of time_bench_page_pool03_slow() for page_pool in a
+>> x86 vm system, this reduces some performance impact of
+>> fixing the DMA API misuse problem in [2], performance
+>> improves from 87.886 ns to 86.429 ns.
+>>
+>> 1. https://lore.kernel.org/all/bd8c2f5c-464d-44ab-b607-390a87ea4cd5@huawei.com/
+>> 2. https://lore.kernel.org/all/20250212092552.1779679-1-linyunsheng@huawei.com/
+>> CC: Jesper Dangaard Brouer <hawk@kernel.org>
+>> CC: Luiz Capitulino <luizcap@redhat.com>
+>> CC: Mel Gorman <mgorman@techsingularity.net>
+>> CC: Dave Chinner <david@fromorbit.com>
+>> CC: Chuck Lever <chuck.lever@oracle.com>
+>> Signed-off-by: Yunsheng Lin <linyunsheng@huawei.com>
+>> Acked-by: Jeff Layton <jlayton@kernel.org>
+>> ---
+>> V2:
+>> 1. Drop RFC tag and rebased on latest linux-next.
+>> 2. Fix a compile error for xfs.
+>> 3. Defragmemt the page_array for SUNRPC and btrfs.
+>> ---
+>>  drivers/vfio/pci/virtio/migrate.c |  2 --
+>>  fs/btrfs/extent_io.c              | 23 +++++++++++++++++-----
+>>  fs/erofs/zutil.c                  | 12 ++++++------
+>>  fs/xfs/xfs_buf.c                  |  9 +++++----
+>>  mm/page_alloc.c                   | 32 +++++--------------------------
+>>  net/core/page_pool.c              |  3 ---
+>>  net/sunrpc/svc_xprt.c             | 22 +++++++++++++++++----
+>>  7 files changed, 52 insertions(+), 51 deletions(-)
+> 
+> 52:51 is not an improvement. 1-2 ns is barely worth mentioning. The
+> sunrpc and btrfs callers are more complex and carry duplicated code.
 
-diff --git a/io/pread.c b/io/pread.c
-index 782f2a36..64c28784 100644
---- a/io/pread.c
-+++ b/io/pread.c
-@@ -38,6 +38,9 @@ pread_help(void)
- " -Z N -- zeed the random number generator (used when reading randomly)\n"
- "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
- " -V N -- use vectored IO with N iovecs of blocksize each (preadv)\n"
-+#ifdef HAVE_PWRITEV2
-+" -U   -- Perform the preadv2() with Uncached/RWF_DONTCACHE\n"
-+#endif
- "\n"
- " When in \"random\" mode, the number of read operations will equal the\n"
- " number required to do a complete forward/backward scan of the range.\n"
-@@ -388,7 +391,7 @@ pread_f(
- 	init_cvtnum(&fsblocksize, &fssectsize);
- 	bsize = fsblocksize;
- 
--	while ((c = getopt(argc, argv, "b:BCFRquvV:Z:")) != EOF) {
-+	while ((c = getopt(argc, argv, "b:BCFRquUvV:Z:")) != EOF) {
- 		switch (c) {
- 		case 'b':
- 			tmp = cvtnum(fsblocksize, fssectsize, optarg);
-@@ -417,6 +420,11 @@ pread_f(
- 		case 'u':
- 			uflag = 1;
- 			break;
-+#ifdef HAVE_PREADV2
-+		case 'U':
-+			preadv2_flags |= RWF_DONTCACHE;
-+			break;
-+#endif
- 		case 'v':
- 			vflag = 1;
- 			break;
-@@ -514,7 +522,7 @@ pread_init(void)
- 	pread_cmd.argmin = 2;
- 	pread_cmd.argmax = -1;
- 	pread_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	pread_cmd.args = _("[-b bs] [-qv] [-i N] [-FBR [-Z N]] off len");
-+	pread_cmd.args = _("[-b bs] [-qUv] [-i N] [-FBR [-Z N]] off len");
- 	pread_cmd.oneline = _("reads a number of bytes at a specified offset");
- 	pread_cmd.help = pread_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 47af5232..df508054 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -200,7 +200,7 @@ option will set the file permissions to read-write (0644). This allows xfs_io to
- set up mismatches between the file permissions and the open file descriptor
- read/write mode to exercise permission checks inside various syscalls.
- .TP
--.BI "pread [ \-b " bsize " ] [ \-qv ] [ \-FBR [ \-Z " seed " ] ] [ \-V " vectors " ] " "offset length"
-+.BI "pread [ \-b " bsize " ] [ \-qUv ] [ \-FBR [ \-Z " seed " ] ] [ \-V " vectors " ] " "offset length"
- Reads a range of bytes in a specified blocksize from the given
- .IR offset .
- .RS 1.0i
-@@ -214,6 +214,12 @@ requests will be split. The default blocksize is 4096 bytes.
- .B \-q
- quiet mode, do not write anything to standard output.
- .TP
-+.B \-U
-+Perform the
-+.BR preadv2 (2)
-+call with
-+.IR RWF_DONTCACHE .
-+.TP
- .B \-v
- dump the contents of the buffer after reading,
- by default only the count of bytes actually read is dumped.
--- 
-2.48.1
+Yes, the hard part is to find common file to place the common function
+as something as below:
 
+void defragment_pointer_array(void** array, int size) {
+    int slow = 0;
+    for (int fast = 0; fast < size; fast++) {
+        if (array[fast] != NULL) {
+            swap(&array[fast], &array[slow]);
+            slow++;
+        }
+    }
+}
+
+Or introduce a function as something like alloc_pages_refill_array()
+for the usecase of sunrpc and xfs and do the array defragment in
+alloc_pages_refill_array() before calling alloc_pages_bulk()?
+Any suggestion?
+
+> 
+> Not an outright objection from me, but it's hard to justify this change.
+
+The above should reduce the number to something like 40:51.
+
+Also, I looked more closely at other callers calling alloc_pages_bulk(),
+it seems vm_module_tags_populate() doesn't clear next_page[i] to NULL after
+__free_page() when doing 'Clean up and error out', I am not sure if
+vm_module_tags_populate() will be called multi-times as vm_module_tags->pages
+seems to be only set to all NULL once, see alloc_tag_init() -> alloc_mod_tags_mem().
+
+Cc Suren to see if there is some clarifying for the above.
