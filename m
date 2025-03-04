@@ -1,208 +1,428 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 193691FBEA3
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 08:18:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F8331F55FA
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Mar 2025 08:47:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741076320; cv=none; b=TM607gXBwhoteDy4WQHfZ+9LuxnfGIpkK5nhET2euUjCSJpNzmQS9WgxL2QsllERSfmGbdnJmBbGycKJ8cI0jHdRHGUbU5XFWq8iILOiBiiwQPCxZ0R+fQgaQ44cMFluGzietAQXhy/Tk37TJzFJz9Mu0kzpxdHDD79z+feIcBA=
+	t=1741078043; cv=none; b=eiUkqqtLM8IajmqoJKUQQKMoQcDe6kAKVa5UKvybsvp4zBPrmAKjRM2nwxfnZgwtfwuPGwEmZ3mNYLnbvRCMFpMzSjM1Gf0m3GPzxOlCJEpvyfH6rydCqSOtTAR6Dd2m2VTezcO7xgOILm6XpINhMy2yMk1GReUCCGlX6i5sGVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741076320; c=relaxed/simple;
-	bh=MZcygyW82kCp7u9tCYmO6hhj2Hxe6B9gWadL8462is8=;
+	s=arc-20240116; t=1741078043; c=relaxed/simple;
+	bh=SNFi+wvuVKJd52l/MVR/oYr6VRZ9ud1FPbZkiy0EO8I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gapBpDvKHrMmf7pm6MvlX2CXotsXQZGMqAmboddfMOFFf7VzCt4pU/kg+vsLIzKfMU2vGOEoj8dsDGK5gI4d1pIqWOQcLzWyC9ICHzkq6iQlPE1sGz1WCQY+EboAfpWTaZuAGlHUpkE6Pato52EE2lJs/b1cAoOmfd0sQ5EKBiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=PKq+Px3F; arc=none smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=lOUwq7tFe4RWwFQp/TIb8q5yiOB/fcEZW5ZzViU23grnBE0RiY/2OyYP2/1bSkpDojwG2OxikqM3e0DUkCxoTi4Xym1CY+AtIttSRsiwqu978YlqcOJvpPMksPa4Mgl2kqC/sRy/BVPujVxWHWD5u3B0n4ckyMx/kkpLXL5Ykf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VBMrJfan; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="PKq+Px3F"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-2fe98d173daso8500748a91.1
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Mar 2025 00:18:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1741076317; x=1741681117; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Gc0xsYnTUQhvWodmw2ejFo3Ab0lc47BeE7G2ofWx65Q=;
-        b=PKq+Px3FNLwRkTOBwFJY58aZWZvV11Sn6sMDKdm902vRcOmgS4qetFZAK02QlQa3yV
-         +JNfVNuFSME4LwW0sUrTrp2lheqfsnWRgA8iuM1buaYkBtG1J+1OksVXyPAJFvMuc7gy
-         mhr0Gj6k5sxAHYB6uHOCGqIdHB8j7qatdlwcLlZZE3sKBIStbUh1k+yuCn+HQTygdmgN
-         8YWUsL/BoOUWRqBFPJIsEtwaDpaKGKwD1qRYQ1nuamuKVtE4vaB2RmOnMMGTxOtZTG4T
-         XwiUNNz2S8+P2Ny7RcqXuUj6clfZ5d6+x2GjeEKpZucDaA2eessGC7AXn5o8BubjFZys
-         c+zg==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VBMrJfan"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1741078039;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vxqqwkbC7AqnCAi5XVUY+yK6tRGhVKo/og0MttuAbI4=;
+	b=VBMrJfanppUnisR0tx/4NsIHTnw+qxVJww+AybVbArg4XiW8BCbfIY+Ec/Cy0/bXMlxhCP
+	OknvO3bq/iD3MOx7o6vkvVpAh7gfyPz4WaO7Gi8SZ1BhaODivXHCyZDShuYBL7Fu1pJPHB
+	4zjJzzpDR/1Jo4CSMU1YHXRFtq0OiWM=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-688-12rj6CNGMB2KQwCHrMasCw-1; Tue, 04 Mar 2025 03:47:17 -0500
+X-MC-Unique: 12rj6CNGMB2KQwCHrMasCw-1
+X-Mimecast-MFC-AGG-ID: 12rj6CNGMB2KQwCHrMasCw_1741078037
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2234c09240fso95300505ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Mar 2025 00:47:17 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741076317; x=1741681117;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Gc0xsYnTUQhvWodmw2ejFo3Ab0lc47BeE7G2ofWx65Q=;
-        b=qY3JSUiSt/RDSAqJoN/YElck6dTbCgxmaOUfGjw5X1/xqRH3apt5yVc2IWaMBVo+av
-         TO0b4YEW5KLBH9vtQ0ii+tPaipUZoKXuY/vDY9+iS/ZJkql06OrlGKyX78NoxH6i5pcq
-         14veLrfHqUpdealp0tO0sYrM27o1Vb0IEVZsaKudrtN7bP72EsBS0UTCuORuqDgqCyw9
-         zcx/ADdL+TceM/JTmfUes+CRvm7ot50zLAnDA9eQm1RpKPxjQnDA1CewakqTar9b+Tzt
-         ql9PspcQjlbu3QAIs2KsDnTG7S4gjE6zsmCZUQ/DU1EqUmM8rodFxjWZVC1KR80G6Ut2
-         Fn8A==
-X-Forwarded-Encrypted: i=1; AJvYcCUj3GYmQh5xFgzSWk1iJ2G5pWYVt+/7FdUP94RfZY9tSMlhnVcr9Rb7n/s5xirGnnnEAKmrcX4yGVg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwNcmPPzJ+wEXEWQ1nXeK+oSKr8M8tDJ1zBtkRVGEmG22z7Qm0u
-	UigJcSbiJUpD7eNZ4vrF6ZeR9o3HrB5vBMPNmsvOdyiKknIUKTeEOazMW+YSoto=
-X-Gm-Gg: ASbGncuDmMez1PpjG4QLoCXEOQlQPtGq+5MoC3v4aQuZLrwMTSrNFugdLii5Mdhbc3y
-	W3YrqLW8bpGNR0yn3woHqrVUVtV3xX2mVC2BGaDNd/GxvQAdQG/+Wjjg+K0gWSYDPkeUpXlXzfu
-	QI6jY0HuXd1PTXBUmtO9mkr/0txjTK58onJgZdTNpiajFTELlak/byHq1PLSS/9WqGzDbHqJNjd
-	KX5BHpa1l0rez4MsJCcClhBby998XAywYoiKij6OQjnu4ubxHVrykDLbuu4P7CeA6eAU7nmHwg4
-	AUZbomcPSGhubRPxCkt6HSea2VzeQlhQ+cgugow7S4CmHkGTbjIYF/i4YMpD7gX+/+S2IS0Q4CF
-	HErM79wXRefLbFO1q1B61
-X-Google-Smtp-Source: AGHT+IFtDzCgImtuz8L9+GYRCY4LVCLrXbK0Bo8kgf88DL3yFokQ0qmw0lddBixblhsY0xBrKZj7tQ==
-X-Received: by 2002:a05:6a20:734a:b0:1ee:c390:58ad with SMTP id adf61e73a8af0-1f2f4e014f9mr29817034637.34.1741076317276;
-        Tue, 04 Mar 2025 00:18:37 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-aee7de19d3fsm9497416a12.18.2025.03.04.00.18.36
+        d=1e100.net; s=20230601; t=1741078036; x=1741682836;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=vxqqwkbC7AqnCAi5XVUY+yK6tRGhVKo/og0MttuAbI4=;
+        b=eL745Ls1rVLIYuJuZtZ72VhJpIjyLZolRzFl4t4oNMmQ2E2VIbc08asRrt6tTy44zW
+         pzp+gvyuwhmGHVUT+nHn6ygJYEzD5cHdXvnPzPTYDWOYAWEAkk9u6YBqJwV0dDdTVCoB
+         +bxIv7MUKMUtdf7jrn9YT27dz3d2bfkByIk1YoRFrui0XefWojLJqtstDMeUiUDabu/q
+         36KS5zIfuM2Ykf+ppv1fOLf79Pzgk82DWVpIWBwukz9opFJa5qPUtMbe4a377haWIn0I
+         5xgUSU6DQSSf+vGhI+C6i3ufTc6LJZK/81EkA2jJSAvzfu9aDrmVuvsLrcTEz2sfaNQI
+         tu2g==
+X-Forwarded-Encrypted: i=1; AJvYcCVfERts464gfzudMqdf2RhkgPg1aN3A5SrnVUNuE0VKSe9haB3bOs5gX4/POwx9LsZ4YgpDz0je7Xg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz9mgxePLt0ZVux/bPPttFnK7pbT56qKJXkjKorxPczvq/duT89
+	ZhDJov2puoOwTSquEkC3qsU1GPDBdQ67i0JFfKyriSXI2EoYyzp4j+LjbP0Jq4fQ84+vcDIY7Ns
+	qxPkDhkzBtmDSQ/OOT/VmHbhEMBfkVlhNlsVQhTDhLEz9Cl4Uc4rv3dYEAA==
+X-Gm-Gg: ASbGncvf2LwpkfM8sElAhIyfQOHxkwvQYIE40VVLHFE8BmWbhmuFV+xF8gyJAVfQAYV
+	/pJpUrgFfHfwlY6p57SmaDBCQtAyBiDglvPnvafAv+5kduDO7DnEKm/JWjS29YKYnHjPIp+aUGV
+	h2XwlFkc4DwZHoG/9zsFWZIJ77puW85dMxHfQdUUPB6m4Stuf8uspmryDELLwJFcXFHET/wqc5Q
+	6rO7o+2oLvX8+xZYVmEkGEcYLe3QZ0y7vJ8GLlyze0JqFXUQmNmmFFkWLc8Y1nXBg7gvNCcpZ/m
+	Gh5+KDDnldUakCxSv0IhHOdETbwdblZ7/FHIgGulb6+UHeRjCHEIDkn4
+X-Received: by 2002:a17:903:2ca:b0:223:53fb:e1dd with SMTP id d9443c01a7336-22368f6dca8mr247611785ad.9.1741078036496;
+        Tue, 04 Mar 2025 00:47:16 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGKn6xzqyZL6B8w2VAtr1dSsuI8yvSG8WQiO/gJxf37+Y7h9LHByYn/7PlCpMdYj2YqBOEOQQ==
+X-Received: by 2002:a17:903:2ca:b0:223:53fb:e1dd with SMTP id d9443c01a7336-22368f6dca8mr247611505ad.9.1741078036085;
+        Tue, 04 Mar 2025 00:47:16 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223d4b94c25sm13503975ad.49.2025.03.04.00.47.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Mar 2025 00:18:36 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tpNU1-00000008fSI-4AHP;
-	Tue, 04 Mar 2025 19:18:34 +1100
-Date: Tue, 4 Mar 2025 19:18:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Yunsheng Lin <linyunsheng@huawei.com>
-Cc: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>,
-	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jesper Dangaard Brouer <hawk@kernel.org>,
-	Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-	Luiz Capitulino <luizcap@redhat.com>,
-	Mel Gorman <mgorman@techsingularity.net>, kvm@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	netdev@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-Message-ID: <Z8a3WSOrlY4n5_37@dread.disaster.area>
-References: <20250228094424.757465-1-linyunsheng@huawei.com>
+        Tue, 04 Mar 2025 00:47:15 -0800 (PST)
+Date: Tue, 4 Mar 2025 16:47:12 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Catherine Hoang <catherine.hoang@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	"Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>
+Subject: Re: [PATCH v3] xfs: add a test for atomic writes
+Message-ID: <20250304084712.xmodkmfbtyf4rf73@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20250228002059.16750-1-catherine.hoang@oracle.com>
+ <20250228021156.GX6242@frogsfrogsfrogs>
+ <c95b0a815dc9ccfe6172b589c5d4810147dcc207.camel@gmail.com>
+ <20250228154335.GZ6242@frogsfrogsfrogs>
+ <DABD5AF4-1711-495C-8387-CB628A2B728D@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250228094424.757465-1-linyunsheng@huawei.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <DABD5AF4-1711-495C-8387-CB628A2B728D@oracle.com>
 
-On Fri, Feb 28, 2025 at 05:44:20PM +0800, Yunsheng Lin wrote:
-> As mentioned in [1], it seems odd to check NULL elements in
-> the middle of page bulk allocating, and it seems caller can
-> do a better job of bulk allocating pages into a whole array
-> sequentially without checking NULL elements first before
-> doing the page bulk allocation for most of existing users.
+On Mon, Mar 03, 2025 at 10:42:44PM +0000, Catherine Hoang wrote:
 > 
-> Through analyzing of bulk allocation API used in fs, it
-> seems that the callers are depending on the assumption of
-> populating only NULL elements in fs/btrfs/extent_io.c and
-> net/sunrpc/svc_xprt.c while erofs and btrfs don't, see:
-> commit 91d6ac1d62c3 ("btrfs: allocate page arrays using bulk page allocator")
-> commit d6db47e571dc ("erofs: do not use pagepool in z_erofs_gbuf_growsize()")
-> commit c9fa563072e1 ("xfs: use alloc_pages_bulk_array() for buffers")
-> commit f6e70aab9dfe ("SUNRPC: refresh rq_pages using a bulk page allocator")
 > 
-> Change SUNRPC and btrfs to not depend on the assumption.
-> Other existing callers seems to be passing all NULL elements
-> via memset, kzalloc, etc.
+> > On Feb 28, 2025, at 7:43 AM, Darrick J. Wong <djwong@kernel.org> wrote:
+> > 
+> > On Fri, Feb 28, 2025 at 07:01:50PM +0530, Nirjhar Roy (IBM) wrote:
+> >> On Thu, 2025-02-27 at 18:11 -0800, Darrick J. Wong wrote:
+> >>> On Thu, Feb 27, 2025 at 04:20:59PM -0800, Catherine Hoang wrote:
+> >>>> Add a test to validate the new atomic writes feature.
+> >>>> 
+> >>>> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> >>>> Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> >>> 
+> >>> Er.... what git tree is this based upon?  generic/762 is a project
+> >>> quota
+> >>> test.
+> >> On which branch do you have tests/generic/762? I checked the latest
+> >> master(commit - 8467552f09e1672a02712653b532a84bd46ea10e) and the for-
+> >> next(commit - 5b56a2d888191bfc7131b096e611eab1881d8422) and it doesn't
+> >> seem to exist there. However, tests/xfs/762 does exist.
+> > 
+> > Zorro's patches-in-queue, aka whatever gets pushed to for-next on
+> > Sunday.  
 > 
-> Remove assumption of populating only NULL elements and treat
-> page_array as output parameter like kmem_cache_alloc_bulk().
-> Remove the above assumption also enable the caller to not
-> zero the array before calling the page bulk allocating API,
-> which has about 1~2 ns performance improvement for the test
-> case of time_bench_page_pool03_slow() for page_pool in a
-> x86 vm system, this reduces some performance impact of
-> fixing the DMA API misuse problem in [2], performance
-> improves from 87.886 ns to 86.429 ns.
+> This test was based on for-next, I wasn’t aware there was another
+> branch. I will rebase this onto patches-in-queue.
 
-How much slower did you make btrfs and sunrpc by adding all the
-defragmenting code there?
+I can help to deal with the case number conflict too. It's good to me if
+your patch is base on for-next, if you don't need to deal with some
+conflicts with other "in-queue" patches, or pre-test un-pushed patches :)
 
+Thanks,
+Zorro
+
+> > My confusion stems from this patch modifying what looks like an
+> > existing atomic writes test, but generic/762 isn't that test so now I
+> > can't see everything that this test is examining.
 > 
-> 1. https://lore.kernel.org/all/bd8c2f5c-464d-44ab-b607-390a87ea4cd5@huawei.com/
-> 2. https://lore.kernel.org/all/20250212092552.1779679-1-linyunsheng@huawei.com/
-> CC: Jesper Dangaard Brouer <hawk@kernel.org>
-> CC: Luiz Capitulino <luizcap@redhat.com>
-> CC: Mel Gorman <mgorman@techsingularity.net>
-> CC: Dave Chinner <david@fromorbit.com>
-> CC: Chuck Lever <chuck.lever@oracle.com>
-> Signed-off-by: Yunsheng Lin <linyunsheng@huawei.com>
-> Acked-by: Jeff Layton <jlayton@kernel.org>
-> ---
-> V2:
-> 1. Drop RFC tag and rebased on latest linux-next.
-> 2. Fix a compile error for xfs.
+> I don’t think the atomic writes test was ever merged, unless I missed it?
+> > 
+> > (I suggest everyone please post urls to public git repos so reviewers
+> > can get around these sorts of issues in the future.)
+> > 
+> > --D
+> > 
+> >> --NR
+> >>> 
+> >>> --D
+> >>> 
+> >>>> ---
+> >>>> common/rc             |  51 ++++++++++++++
+> >>>> tests/generic/762     | 160
+> >>>> ++++++++++++++++++++++++++++++++++++++++++
+> >>>> tests/generic/762.out |   2 +
+> >>>> 3 files changed, 213 insertions(+)
+> >>>> create mode 100755 tests/generic/762
+> >>>> create mode 100644 tests/generic/762.out
+> >>>> 
+> >>>> diff --git a/common/rc b/common/rc
+> >>>> index 6592c835..08a9d9b8 100644
+> >>>> --- a/common/rc
+> >>>> +++ b/common/rc
+> >>>> @@ -2837,6 +2837,10 @@ _require_xfs_io_command()
+> >>>> opts+=" -d"
+> >>>> pwrite_opts+="-V 1 -b 4k"
+> >>>> fi
+> >>>> + if [ "$param" == "-A" ]; then
+> >>>> + opts+=" -d"
+> >>>> + pwrite_opts+="-D -V 1 -b 4k"
+> >>>> + fi
+> >>>> testio=`$XFS_IO_PROG -f $opts -c \
+> >>>>        "pwrite $pwrite_opts $param 0 4k" $testfile
+> >>>> 2>&1`
+> >>>> param_checked="$pwrite_opts $param"
+> >>>> @@ -5175,6 +5179,53 @@ _require_scratch_btime()
+> >>>> _scratch_unmount
+> >>>> }
+> >>>> 
+> >>>> +_get_atomic_write_unit_min()
+> >>>> +{
+> >>>> + $XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
+> >>>> +        grep atomic_write_unit_min | grep -o '[0-9]\+'
+> >>>> +}
+> >>>> +
+> >>>> +_get_atomic_write_unit_max()
+> >>>> +{
+> >>>> + $XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
+> >>>> +        grep atomic_write_unit_max | grep -o '[0-9]\+'
+> >>>> +}
+> >>>> +
+> >>>> +_get_atomic_write_segments_max()
+> >>>> +{
+> >>>> + $XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
+> >>>> +        grep atomic_write_segments_max | grep -o '[0-9]\+'
+> >>>> +}
+> >>>> +
+> >>>> +_require_scratch_write_atomic()
+> >>>> +{
+> >>>> + _require_scratch
+> >>>> +
+> >>>> + export STATX_WRITE_ATOMIC=0x10000
+> >>>> +
+> >>>> + awu_min_bdev=$(_get_atomic_write_unit_min $SCRATCH_DEV)
+> >>>> + awu_max_bdev=$(_get_atomic_write_unit_max $SCRATCH_DEV)
+> >>>> +
+> >>>> + if [ $awu_min_bdev -eq 0 ] && [ $awu_max_bdev -eq 0 ]; then
+> >>>> + _notrun "write atomic not supported by this block
+> >>>> device"
+> >>>> + fi
+> >>>> +
+> >>>> + _scratch_mkfs > /dev/null 2>&1
+> >>>> + _scratch_mount
+> >>>> +
+> >>>> + testfile=$SCRATCH_MNT/testfile
+> >>>> + touch $testfile
+> >>>> +
+> >>>> + awu_min_fs=$(_get_atomic_write_unit_min $testfile)
+> >>>> + awu_max_fs=$(_get_atomic_write_unit_max $testfile)
+> >>>> +
+> >>>> + _scratch_unmount
+> >>>> +
+> >>>> + if [ $awu_min_fs -eq 0 ] && [ $awu_max_fs -eq 0 ]; then
+> >>>> + _notrun "write atomic not supported by this filesystem"
+> >>>> + fi
+> >>>> +}
+> >>>> +
+> >>>> _require_inode_limits()
+> >>>> {
+> >>>> if [ $(_get_free_inode $TEST_DIR) -eq 0 ]; then
+> >>>> diff --git a/tests/generic/762 b/tests/generic/762
+> >>>> new file mode 100755
+> >>>> index 00000000..d0a80219
+> >>>> --- /dev/null
+> >>>> +++ b/tests/generic/762
+> >>>> @@ -0,0 +1,160 @@
+> >>>> +#! /bin/bash
+> >>>> +# SPDX-License-Identifier: GPL-2.0
+> >>>> +# Copyright (c) 2025 Oracle.  All Rights Reserved.
+> >>>> +#
+> >>>> +# FS QA Test 762
+> >>>> +#
+> >>>> +# Validate atomic write support
+> >>>> +#
+> >>>> +. ./common/preamble
+> >>>> +_begin_fstest auto quick rw
+> >>>> +
+> >>>> +_require_scratch_write_atomic
+> >>>> +_require_xfs_io_command pwrite -A
+> >>>> +
+> >>>> +test_atomic_writes()
+> >>>> +{
+> >>>> +    local bsize=$1
+> >>>> +
+> >>>> +    case "$FSTYP" in
+> >>>> +    "xfs")
+> >>>> +        mkfs_opts="-b size=$bsize"
+> >>>> +        ;;
+> >>>> +    "ext4")
+> >>>> +        mkfs_opts="-b $bsize"
+> >>>> +        ;;
+> >>>> +    *)
+> >>>> +        ;;
+> >>>> +    esac
+> >>>> +
+> >>>> +    # If block size is not supported, skip this test
+> >>>> +    _scratch_mkfs $mkfs_opts >>$seqres.full 2>&1 || return
+> >>>> +    _try_scratch_mount >>$seqres.full 2>&1 || return
+> >>>> +
+> >>>> +    test "$FSTYP" = "xfs" && _xfs_force_bdev data $SCRATCH_MNT
+> >>>> +
+> >>>> +    testfile=$SCRATCH_MNT/testfile
+> >>>> +    touch $testfile
+> >>>> +
+> >>>> +    file_min_write=$(_get_atomic_write_unit_min $testfile)
+> >>>> +    file_max_write=$(_get_atomic_write_unit_max $testfile)
+> >>>> +    file_max_segments=$(_get_atomic_write_segments_max $testfile)
+> >>>> +
+> >>>> +    # Check that atomic min/max = FS block size
+> >>>> +    test $file_min_write -eq $bsize || \
+> >>>> +        echo "atomic write min $file_min_write, should be fs block
+> >>>> size $bsize"
+> >>>> +    test $file_min_write -eq $bsize || \
+> >>>> +        echo "atomic write max $file_max_write, should be fs block
+> >>>> size $bsize"
+> >>>> +    test $file_max_segments -eq 1 || \
+> >>>> +        echo "atomic write max segments $file_max_segments, should
+> >>>> be 1"
+> >>>> +
+> >>>> +    # Check that we can perform an atomic write of len = FS block
+> >>>> size
+> >>>> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0
+> >>>> $bsize" $testfile | \
+> >>>> +        grep wrote | awk -F'[/ ]' '{print $2}')
+> >>>> +    test $bytes_written -eq $bsize || echo "atomic write
+> >>>> len=$bsize failed"
+> >>>> +
+> >>>> +    # Check that we can perform an atomic single-block cow write
+> >>>> +    if [ "$FSTYP" == "xfs" ]; then
+> >>>> +        testfile_cp=$SCRATCH_MNT/testfile_copy
+> >>>> +        if _xfs_has_feature $SCRATCH_MNT reflink; then
+> >>>> +            cp --reflink $testfile $testfile_cp
+> >>>> +        fi
+> >>>> +        bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b
+> >>>> $bsize 0 $bsize" $testfile_cp | \
+> >>>> +            grep wrote | awk -F'[/ ]' '{print $2}')
+> >>>> +        test $bytes_written -eq $bsize || echo "atomic write on
+> >>>> reflinked file failed"
+> >>>> +    fi
+> >>>> +
+> >>>> +    # Check that we can perform an atomic write on an unwritten
+> >>>> block
+> >>>> +    $XFS_IO_PROG -c "falloc $bsize $bsize" $testfile
+> >>>> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize
+> >>>> $bsize $bsize" $testfile | \
+> >>>> +        grep wrote | awk -F'[/ ]' '{print $2}')
+> >>>> +    test $bytes_written -eq $bsize || echo "atomic write to
+> >>>> unwritten block failed"
+> >>>> +
+> >>>> +    # Check that we can perform an atomic write on a sparse hole
+> >>>> +    $XFS_IO_PROG -c "fpunch 0 $bsize" $testfile
+> >>>> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0
+> >>>> $bsize" $testfile | \
+> >>>> +        grep wrote | awk -F'[/ ]' '{print $2}')
+> >>>> +    test $bytes_written -eq $bsize || echo "atomic write to sparse
+> >>>> hole failed"
+> >>>> +
+> >>>> +    # Check that we can perform an atomic write on a fully mapped
+> >>>> block
+> >>>> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0
+> >>>> $bsize" $testfile | \
+> >>>> +        grep wrote | awk -F'[/ ]' '{print $2}')
+> >>>> +    test $bytes_written -eq $bsize || echo "atomic write to mapped
+> >>>> block failed"
+> >>>> +
+> >>>> +    # Reject atomic write if len is out of bounds
+> >>>> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $((bsize - 1))"
+> >>>> $testfile 2>> $seqres.full && \
+> >>>> +        echo "atomic write len=$((bsize - 1)) should fail"
+> >>>> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $((bsize + 1))"
+> >>>> $testfile 2>> $seqres.full && \
+> >>>> +        echo "atomic write len=$((bsize + 1)) should fail"
+> >>>> +
+> >>>> +    # Reject atomic write when iovecs > 1
+> >>>> +    $XFS_IO_PROG -dc "pwrite -A -D -V2 -b $bsize 0 $bsize"
+> >>>> $testfile 2>> $seqres.full && \
+> >>>> +        echo "atomic write only supports iovec count of 1"
+> >>>> +
+> >>>> +    # Reject atomic write when not using direct I/O
+> >>>> +    $XFS_IO_PROG -c "pwrite -A -V1 -b $bsize 0 $bsize" $testfile
+> >>>> 2>> $seqres.full && \
+> >>>> +        echo "atomic write requires direct I/O"
+> >>>> +
+> >>>> +    # Reject atomic write when offset % bsize != 0
+> >>>> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 1 $bsize"
+> >>>> $testfile 2>> $seqres.full && \
+> >>>> +        echo "atomic write requires offset to be aligned to bsize"
+> >>>> +
+> >>>> +    _scratch_unmount
+> >>>> +}
+> >>>> +
+> >>>> +test_atomic_write_bounds()
+> >>>> +{
+> >>>> +    local bsize=$1
+> >>>> +
+> >>>> +    case "$FSTYP" in
+> >>>> +    "xfs")
+> >>>> +        mkfs_opts="-b size=$bsize"
+> >>>> +        ;;
+> >>>> +    "ext4")
+> >>>> +        mkfs_opts="-b $bsize"
+> >>>> +        ;;
+> >>>> +    *)
+> >>>> +        ;;
+> >>>> +    esac
+> >>>> +
+> >>>> +    # If block size is not supported, skip this test
+> >>>> +    _scratch_mkfs $mkfs_opts >>$seqres.full 2>&1 || return
+> >>>> +    _try_scratch_mount >>$seqres.full 2>&1 || return
+> >>>> +
+> >>>> +    test "$FSTYP" = "xfs" && _xfs_force_bdev data $SCRATCH_MNT
+> >>>> +
+> >>>> +    testfile=$SCRATCH_MNT/testfile
+> >>>> +    touch $testfile
+> >>>> +
+> >>>> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize"
+> >>>> $testfile 2>> $seqres.full && \
+> >>>> +        echo "atomic write should fail when bsize is out of
+> >>>> bounds"
+> >>>> +
+> >>>> +    _scratch_unmount
+> >>>> +}
+> >>>> +
+> >>>> +sys_min_write=$(cat "/sys/block/$(_short_dev
+> >>>> $SCRATCH_DEV)/queue/atomic_write_unit_min_bytes")
+> >>>> +sys_max_write=$(cat "/sys/block/$(_short_dev
+> >>>> $SCRATCH_DEV)/queue/atomic_write_unit_max_bytes")
+> >>>> +
+> >>>> +bdev_min_write=$(_get_atomic_write_unit_min $SCRATCH_DEV)
+> >>>> +bdev_max_write=$(_get_atomic_write_unit_max $SCRATCH_DEV)
+> >>>> +
+> >>>> +if [ "$sys_min_write" -ne "$bdev_min_write" ]; then
+> >>>> +    echo "bdev min write != sys min write"
+> >>>> +fi
+> >>>> +if [ "$sys_max_write" -ne "$bdev_max_write" ]; then
+> >>>> +    echo "bdev max write != sys max write"
+> >>>> +fi
+> >>>> +
+> >>>> +# Test all supported block sizes between bdev min and max
+> >>>> +for ((bsize=$bdev_min_write; bsize<=bdev_max_write; bsize*=2)); do
+> >>>> +        test_atomic_writes $bsize
+> >>>> +done;
+> >>>> +
+> >>>> +# Check that atomic write fails if bsize < bdev min or bsize >
+> >>>> bdev max
+> >>>> +test_atomic_write_bounds $((bdev_min_write / 2))
+> >>>> +test_atomic_write_bounds $((bdev_max_write * 2))
+> >>>> +
+> >>>> +# success, all done
+> >>>> +echo Silence is golden
+> >>>> +status=0
+> >>>> +exit
+> >>>> diff --git a/tests/generic/762.out b/tests/generic/762.out
+> >>>> new file mode 100644
+> >>>> index 00000000..fbaeb297
+> >>>> --- /dev/null
+> >>>> +++ b/tests/generic/762.out
+> >>>> @@ -0,0 +1,2 @@
+> >>>> +QA output created by 762
+> >>>> +Silence is golden
+> >>>> -- 
+> >>>> 2.34.1
+> >>>> 
+> >>>> 
+> >> 
+> >> 
+> 
 
-And you still haven't tested the code changes to XFS, because
-this patch is also broken.
-
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 5d560e9073f4..b4e95b2dd0f0 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -319,16 +319,17 @@ xfs_buf_alloc_pages(
->  	 * least one extra page.
->  	 */
->  	for (;;) {
-> -		long	last = filled;
-> +		long	alloc;
->  
-> -		filled = alloc_pages_bulk(gfp_mask, bp->b_page_count,
-> -					  bp->b_pages);
-> +		alloc = alloc_pages_bulk(gfp_mask, bp->b_page_count - filled,
-> +					 bp->b_pages + filled);
-> +		filled += alloc;
->  		if (filled == bp->b_page_count) {
->  			XFS_STATS_INC(bp->b_mount, xb_page_found);
->  			break;
->  		}
->  
-> -		if (filled != last)
-> +		if (alloc)
->  			continue;
-
-alloc_pages_bulk() now returns the number of pages allocated in the
-array. So if we ask for 4 pages, then get 2, filled is now 2. Then
-we loop, ask for another 2 pages, get those two pages and it returns
-4. Now filled is 6, and we continue.
-
-Now we ask alloc_pages_bulk() for -2 pages, which returns 4 pages...
-
-Worse behaviour: second time around, no page allocation succeeds
-so it returns 2 pages. Filled is now 4, which is the number of pages
-we need, so we break out of the loop with only 2 pages allocated.
-There's about to be kernel crashes occur.....
-
-Once is a mistake, twice is compeltely unacceptable.  When XFS stops
-using alloc_pages_bulk (probably 6.15) I won't care anymore. But
-until then, please stop trying to change this code.
-
-NACK.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
