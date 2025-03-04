@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6171EB9FA;
-	Tue,  4 Mar 2025 17:42:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B82123A989;
+	Tue,  4 Mar 2025 17:52:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741110164; cv=none; b=hF1I+KQ0PZBESF1ctmK8mJOnpN/gtyazZGmOeswt4TZwQAKJo9u9UXt+T5FLAwW6Q/Y5aaAQRZU+1yQB79ZKI+J5m9jZh3JV6F2dAvOEER1CldQR6AUUHKEWt61j7aqMDIlNX9f19aalCv+KwN/Til4bpmgTfBplHnzRuYJr9j4=
+	t=1741110753; cv=none; b=jb7fzp4xf5N6Bp2jylV8OAw+YHH4wEXn+5ZB0///yPI2rAiHDtHIT6N21x+nbEnvousBJK6WpH8tPCYhwvIiDjD59e6VybVGLBkrxYtAWk/HUXtE2LbXr1TBXm7IWwJW6KMG+mYmzBdfQkjQAl8S3bHEZmwHpfBayPgSjCGq2pA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741110164; c=relaxed/simple;
-	bh=f+8HzBvpw7250BUiv1OwiIExtF93RpSe2DV0+9NSt2Y=;
+	s=arc-20240116; t=1741110753; c=relaxed/simple;
+	bh=DBWrQCJHN4jVaCkIg21oc/RwrUdMwfIuD9JbJEWUsME=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C7nkC6BaK5BHNoX9tKMWne4xDZGqNoPgLsikJTsc9RIwNz0qd+tfqGEf+ydDj/KUpbVJ+wpa2L/Q64x6X+bTy2OyYT7p5QIv8H++TsXyQMxvsw8ydtX0fGH4cztP8CPjXxerN4eEJmARmYcRffDi9D2wDxgzXeNnHwpm8US4TVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fay+lofj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Li8sNweqOHLeRAvD5lqFCusAzccyqOsvpF6cXlc0m4+TnXIcxPQZFKG2SVYjQPTrA33RDt1xBqpVAdkJ154MLd4SWNxextsvG2eL88tgaJhhr5I2GTMCp5XX2C5wTcVZ6+zgA2ENp1+7zWKeyl3ZYgOuzets6+NdhchEgyh5tPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nin0Afx2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fay+lofj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91FE3C4CEE5;
-	Tue,  4 Mar 2025 17:42:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nin0Afx2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F6F6C4CEE5;
+	Tue,  4 Mar 2025 17:52:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741110163;
-	bh=f+8HzBvpw7250BUiv1OwiIExtF93RpSe2DV0+9NSt2Y=;
+	s=k20201202; t=1741110752;
+	bh=DBWrQCJHN4jVaCkIg21oc/RwrUdMwfIuD9JbJEWUsME=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fay+lofjMlzDM0+hRFifBMrZG5uktxs6YUypqubYGKGusdqSxpO80Zma0d/pCa6X3
-	 yQFHwGJo2ksdtxV91pJw9H7B9q4iYUc4wNKcNhf/A3JR2c1O+kY4+7V/aXnzOS43h5
-	 pvg/LoolzHLHAqXLWEIQylggz6ozZNgQtX9mIkB1aZeeB8uf89lvQ05q2HABRH5Rbr
-	 /RMYa5e+cubwlaK/ArPwhuDuXt47QWdA6rRaTXo/3yJpdTd9KmSQDq9O+MDUa5aOlm
-	 cBiqUm4XqAv/U8wdfvQ2ZSy6knC24WBxZD6ZFld71ZYzMk/edlutpf/WbH9ZDBUuF9
-	 zI5ZtWOG7sHzw==
-Date: Tue, 4 Mar 2025 09:42:42 -0800
+	b=nin0Afx2HbEbTqdlL/21qO9m5S0Ml7d1asUhiJYJTMO8wbm1WqDTZB6gErb4eFUX0
+	 JYMaJXt7cmi8K7iKRweAfb3rqbHlHt9I9x0zZnw7Fo/myKZBsn6jgM+uMUGBpHoN0K
+	 SBDpc9EPISihVtJiEGbzApmiF/2o4GHye3KP+TQoY8MjlF57+Iuucmhr3bSICMyoEd
+	 +ySJv43XvXRVt525fi1chnpq8FdQ1uUOQDsII2fpgIpO3v4g0Jzd1AnGMkKS4aOHih
+	 CYmxWOoeWiGWtACJ9ThIR1YD2xHxasEaaEw33Ws7mmkTODA1AaRxDAUohNZVaaOqkY
+	 CEt/YA+hfGR2g==
+Date: Tue, 4 Mar 2025 09:52:32 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@kernel.org>
-Cc: zlang@redhat.com, hch@lst.de, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] fstests: test mkfs.xfs protofiles with xattr support
-Message-ID: <20250304174242.GA2803749@frogsfrogsfrogs>
-References: <173706975660.1928701.8344148155038133836.stgit@frogsfrogsfrogs>
- <173706975673.1928701.14882814105946770615.stgit@frogsfrogsfrogs>
- <20250302131544.5om3lil64kw5nnyo@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v1 1/3] configure: xfs_io: Add support for preadv2
+Message-ID: <20250304175232.GB2803749@frogsfrogsfrogs>
+References: <cover.1741087191.git.ritesh.list@gmail.com>
+ <046cc1b4dc00f8fb8997ec6ebedc9b3625f34c1c.1741087191.git.ritesh.list@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,307 +43,254 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250302131544.5om3lil64kw5nnyo@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <046cc1b4dc00f8fb8997ec6ebedc9b3625f34c1c.1741087191.git.ritesh.list@gmail.com>
 
-On Sun, Mar 02, 2025 at 09:15:44PM +0800, Zorro Lang wrote:
-> On Thu, Jan 16, 2025 at 03:35:04PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Make sure we can do protofiles with xattr support.
-> > 
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
+On Tue, Mar 04, 2025 at 05:25:35PM +0530, Ritesh Harjani (IBM) wrote:
+> preadv2() was introduced in Linux 4.6. This patch adds support for
+> preadv2() to xfs_io.
 > 
-> This test always fails on my side, as below (diff output):
+> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> ---
+>  configure.ac          |  1 +
+>  include/builddefs.in  |  1 +
+>  io/Makefile           |  4 ++++
+>  io/pread.c            | 45 ++++++++++++++++++++++++++++---------------
+>  m4/package_libcdev.m4 | 18 +++++++++++++++++
+>  5 files changed, 54 insertions(+), 15 deletions(-)
 > 
->    ...
->    Attribute "rootdata" has a 5 byte value for SCRATCH_MNT/directory/test
->    Attribute "bigdata" has a 37960 byte value for SCRATCH_MNT/directory/test
->    Attribute "acldata" has a 5 byte value for SCRATCH_MNT/directory/test
->   +Attribute "selinux" has a 28 byte value for SCRATCH_MNT/directory/test
->    *** unmount FS
->    *** done
->    *** unmount
-> 
-> Looks like the $SELINUX_MOUNT_OPTIONS doesn't help the mkfs protofile
-> with xattrs.
+> diff --git a/configure.ac b/configure.ac
+> index 8c76f398..658117ad 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -153,6 +153,7 @@ AC_PACKAGE_NEED_URCU_H
+>  AC_PACKAGE_NEED_RCU_INIT
+>  
+>  AC_HAVE_PWRITEV2
+> +AC_HAVE_PREADV2
 
-Oops.  Ok then, I'll filter them out below...
+I wonder, will we ever encounter a C library that has pwritev2 and /not/
+preadv2?
 
-> Thanks,
-> Zorro
-> 
-> 
-> >  tests/xfs/1937     |  144 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/1937.out |  102 +++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 246 insertions(+)
-> >  create mode 100755 tests/xfs/1937
-> >  create mode 100644 tests/xfs/1937.out
-> > 
-> > 
-> > diff --git a/tests/xfs/1937 b/tests/xfs/1937
-> > new file mode 100755
-> > index 00000000000000..aa4143a75ef643
-> > --- /dev/null
-> > +++ b/tests/xfs/1937
-> > @@ -0,0 +1,144 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2024-2025 Oracle.  All Rights Reserved.
-> > +# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 1937
-> > +#
-> > +# mkfs protofile with xattrs test
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest mkfs auto quick
-> > +
-> > +seqfull="$seqres.full"
-> > +rm -f $seqfull
-> > +
-> > +. ./common/filter
-> > +
-> > +_cleanup()
-> > +{
-> > +	echo "*** unmount"
-> > +	_scratch_unmount 2>/dev/null
-> > +	rm -f $tmp.*
-> > +	rm -f $TEST_DIR/$seq.file
-> > +}
-> > +
-> > +_full()
-> > +{
-> > +	echo ""            >>$seqfull
-> > +	echo "*** $* ***"  >>$seqfull
-> > +	echo ""            >>$seqfull
-> > +}
-> > +
-> > +_filter_stat()
-> > +{
-> > +	sed '
-> > +		/^Access:/d;
-> > +		/^Modify:/d;
-> > +		/^Change:/d;
-> > +		s/Device: *[0-9][0-9]*,[0-9][0-9]*/Device: <DEVICE>/;
-> > +		s/Inode: *[0-9][0-9]*/Inode: <INODE>/;
-> > +		s/Size: *[0-9][0-9]* *Filetype: Dir/Size: <DSIZE> Filetype: Dir/;
-> > +	' | tr -s ' '
-> > +}
-> > +
-> > +_require_command $ATTR_PROG "attr"
-> > +_require_scratch
-> > +
-> > +# mkfs cannot create a filesystem with protofiles if realtime is enabled, so
-> > +# don't run this test if the rtinherit is anywhere in the mkfs options.
-> > +echo "$MKFS_OPTIONS" | grep -q "rtinherit" && \
-> > +	_notrun "Cannot mkfs with a protofile and -d rtinherit."
-> > +
-> > +protofile=$tmp.proto
-> > +tempfile=$TEST_DIR/$seq.file
-> > +
-> > +$XFS_IO_PROG -f -c 'pwrite 64k 28k' -c 'pwrite 1280k 37960' $tempfile >> $seqres.full
-> > +$here/src/devzero -b 2048 -n 2 -c -v 44 $tempfile.2 
-> > +
-> > +$ATTR_PROG -R -s rootdata -V 0test $tempfile &>> $seqres.full
-> > +$ATTR_PROG -S -s acldata -V 1test $tempfile &>> $seqres.full
-> > +$ATTR_PROG -s userdata -V 2test $tempfile &>> $seqres.full
-> > +perl -e 'print "x" x 37960;' | $ATTR_PROG -s bigdata $tempfile &>> $seqres.full
-> > +
-> > +cat >$protofile <<EOF
-> > +DUMMY1
-> > +0 0
-> > +: root directory
-> > +d--777 3 1
-> > +: a directory
-> > +directory d--755 3 1 
-> > +test ---755 3 1 $tempfile
-> > +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_0 ---755 3 1 $tempfile
-> > +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_1 ---755 3 1 $tempfile
-> > +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2 ---755 3 1 $tempfile
-> > +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_3 ---755 3 1 $tempfile
-> > +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_4 ---755 3 1 $tempfile
-> > +$
-> > +: back in the root
-> > +setuid -u-666 0 0 $tempfile
-> > +setgid --g666 0 0 $tempfile
-> > +setugid -ug666 0 0 $tempfile
-> > +directory_setgid d-g755 3 2
-> > +file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5 ---755 3 1 $tempfile
-> > +$
-> > +: back in the root
-> > +block_device b--012 3 1 161 162 
-> > +char_device c--345 3 1 177 178
-> > +pipe p--670 0 0
-> > +symlink l--123 0 0 bigfile
-> > +: a file we actually read
-> > +bigfile ---666 3 0 $tempfile.2
-> > +: done
-> > +$
-> > +EOF
-> > +
-> > +if [ $? -ne 0 ]
-> > +then
-> > +	_fail "failed to create test protofile"
-> > +fi
-> > +
-> > +_verify_fs()
-> > +{
-> > +	echo "*** create FS version $1"
-> > +	VERSION="-n version=$1"
-> > +
-> > +	_scratch_unmount >/dev/null 2>&1
-> > +
-> > +	_full "mkfs"
-> > +	_scratch_mkfs_xfs $VERSION -p $protofile >>$seqfull 2>&1
-> > +
-> > +	echo "*** check FS"
-> > +	_check_scratch_fs
-> > +
-> > +	echo "*** mount FS"
-> > +	_full " mount"
-> > +	_try_scratch_mount >>$seqfull 2>&1 \
-> > +		|| _fail "mount failed"
-> > +
-> > +	$ATTR_PROG -l $SCRATCH_MNT/directory/test | \
-> > +		grep -q 'Attribute.*has a ' || \
-> > +		_notrun "mkfs.xfs protofile does not support xattrs"
-> > +
-> > +	echo "*** verify FS"
-> > +	(cd $SCRATCH_MNT ; find . | LC_COLLATE=POSIX sort \
-> > +		| grep -v ".use_space" \
-> > +		| xargs $here/src/lstat64 | _filter_stat)
-> > +	diff -q $SCRATCH_MNT/bigfile $tempfile.2 \
-> > +		|| _fail "bigfile corrupted"
-> > +	diff -q $SCRATCH_MNT/symlink $tempfile.2 \
-> > +		|| _fail "symlink broken"
-> > +
-> > +	$ATTR_PROG -l $SCRATCH_MNT/directory/test | _filter_scratch
+>  AC_HAVE_COPY_FILE_RANGE
+>  AC_NEED_INTERNAL_FSXATTR
+>  AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 82840ec7..a11d201c 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -94,6 +94,7 @@ ENABLE_SCRUB	= @enable_scrub@
+>  HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+>  
+>  HAVE_PWRITEV2 = @have_pwritev2@
+> +HAVE_PREADV2 = @have_preadv2@
+>  HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+>  NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
+>  NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
+> diff --git a/io/Makefile b/io/Makefile
+> index 8f835ec7..f8b19ac5 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -69,6 +69,10 @@ ifeq ($(HAVE_PWRITEV2),yes)
+>  LCFLAGS += -DHAVE_PWRITEV2
+>  endif
+>  
+> +ifeq ($(HAVE_PREADV2),yes)
+> +LCFLAGS += -DHAVE_PREADV2
+> +endif
+> +
+>  ifeq ($(HAVE_MAP_SYNC),yes)
+>  LCFLAGS += -DHAVE_MAP_SYNC
+>  endif
+> diff --git a/io/pread.c b/io/pread.c
+> index 62c771fb..782f2a36 100644
+> --- a/io/pread.c
+> +++ b/io/pread.c
+> @@ -162,7 +162,8 @@ static ssize_t
+>  do_preadv(
+>  	int		fd,
+>  	off_t		offset,
+> -	long long	count)
+> +	long long	count,
+> +	int 		preadv2_flags)
 
-...so they don't spill into the golden output.  As this is already in
-patches-in-queue, do you want me to send a fixpatch on top of that?
+Nit:       ^ space before tab.  There's a bunch more of thense, every
+time a "preadv2_flags" variable or parameter are declared.
+
+>  {
+>  	int		vecs = 0;
+>  	ssize_t		oldlen = 0;
+> @@ -181,8 +182,14 @@ do_preadv(
+>  	} else {
+>  		vecs = vectors;
+>  	}
+> +#ifdef HAVE_PREADV2
+> +	if (preadv2_flags)
+> +		bytes = preadv2(fd, iov, vectors, offset, preadv2_flags);
+> +	else
+> +		bytes = preadv(fd, iov, vectors, offset);
+> +#else
+>  	bytes = preadv(fd, iov, vectors, offset);
+> -
+> +#endif
+
+Can we have the case that preadv2_flags!=0 and HAVE_PREADV2 isn't
+defined?  If so, then there ought to be a warning about that.
 
 --D
 
-> > +
-> > +	echo "*** unmount FS"
-> > +	_full "umount"
-> > +	_scratch_unmount >>$seqfull 2>&1 \
-> > +		|| _fail "umount failed"
-> > +}
-> > +
-> > +_verify_fs 2
-> > +
-> > +echo "*** done"
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/1937.out b/tests/xfs/1937.out
-> > new file mode 100644
-> > index 00000000000000..050c8318b1abca
-> > --- /dev/null
-> > +++ b/tests/xfs/1937.out
-> > @@ -0,0 +1,102 @@
-> > +QA output created by 1937
-> > +Wrote 2048.00Kb (value 0x2c)
-> > +*** create FS version 2
-> > +*** check FS
-> > +*** mount FS
-> > +*** verify FS
-> > + File: "."
-> > + Size: <DSIZE> Filetype: Directory
-> > + Mode: (0777/drwxrwxrwx) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 4 
-> > +
-> > + File: "./bigfile"
-> > + Size: 2097152 Filetype: Regular File
-> > + Mode: (0666/-rw-rw-rw-) Uid: (3) Gid: (0)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./block_device"
-> > + Size: 0 Filetype: Block Device
-> > + Mode: (0012/b-----x-w-) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 Device type: 161,162
-> > +
-> > + File: "./char_device"
-> > + Size: 0 Filetype: Character Device
-> > + Mode: (0345/c-wxr--r-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 Device type: 177,178
-> > +
-> > + File: "./directory"
-> > + Size: <DSIZE> Filetype: Directory
-> > + Mode: (0755/drwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 2 
-> > +
-> > + File: "./directory/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_0"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./directory/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_1"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./directory/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./directory/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_3"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./directory/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_4"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./directory/test"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./directory_setgid"
-> > + Size: <DSIZE> Filetype: Directory
-> > + Mode: (2755/drwxr-sr-x) Uid: (3) Gid: (2)
-> > +Device: <DEVICE> Inode: <INODE> Links: 2 
-> > +
-> > + File: "./directory_setgid/file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_5"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (0755/-rwxr-xr-x) Uid: (3) Gid: (1)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./pipe"
-> > + Size: 0 Filetype: Fifo File
-> > + Mode: (0670/frw-rwx---) Uid: (0) Gid: (0)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./setgid"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (2666/-rw-rwsrw-) Uid: (0) Gid: (0)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./setugid"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (6666/-rwsrwsrw-) Uid: (0) Gid: (0)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./setuid"
-> > + Size: 1348680 Filetype: Regular File
-> > + Mode: (4666/-rwsrw-rw-) Uid: (0) Gid: (0)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +
-> > + File: "./symlink"
-> > + Size: 7 Filetype: Symbolic Link
-> > + Mode: (0123/l--x-w--wx) Uid: (0) Gid: (0)
-> > +Device: <DEVICE> Inode: <INODE> Links: 1 
-> > +Attribute "userdata" has a 5 byte value for SCRATCH_MNT/directory/test
-> > +Attribute "rootdata" has a 5 byte value for SCRATCH_MNT/directory/test
-> > +Attribute "bigdata" has a 37960 byte value for SCRATCH_MNT/directory/test
-> > +Attribute "acldata" has a 5 byte value for SCRATCH_MNT/directory/test
-> > +*** unmount FS
-> > +*** done
-> > +*** unmount
-> > 
+>  	/* restore trimmed iov */
+>  	if (oldlen)
+>  		iov[vecs - 1].iov_len = oldlen;
+> @@ -195,12 +202,13 @@ do_pread(
+>  	int		fd,
+>  	off_t		offset,
+>  	long long	count,
+> -	size_t		buffer_size)
+> +	size_t		buffer_size,
+> +	int 		preadv2_flags)
+>  {
+>  	if (!vectors)
+>  		return pread(fd, io_buffer, min(count, buffer_size), offset);
+>  
+> -	return do_preadv(fd, offset, count);
+> +	return do_preadv(fd, offset, count, preadv2_flags);
+>  }
+>  
+>  static int
+> @@ -210,7 +218,8 @@ read_random(
+>  	long long	count,
+>  	long long	*total,
+>  	unsigned int	seed,
+> -	int		eof)
+> +	int		eof,
+> +	int 	preadv2_flags)
+>  {
+>  	off_t		end, off, range;
+>  	ssize_t		bytes;
+> @@ -234,7 +243,7 @@ read_random(
+>  				io_buffersize;
+>  		else
+>  			off = offset;
+> -		bytes = do_pread(fd, off, io_buffersize, io_buffersize);
+> +		bytes = do_pread(fd, off, io_buffersize, io_buffersize, preadv2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -256,7 +265,8 @@ read_backward(
+>  	off_t		*offset,
+>  	long long	*count,
+>  	long long	*total,
+> -	int		eof)
+> +	int		eof,
+> +	int 	preadv2_flags)
+>  {
+>  	off_t		end, off = *offset;
+>  	ssize_t		bytes = 0, bytes_requested;
+> @@ -276,7 +286,7 @@ read_backward(
+>  	/* Do initial unaligned read if needed */
+>  	if ((bytes_requested = (off % io_buffersize))) {
+>  		off -= bytes_requested;
+> -		bytes = do_pread(fd, off, bytes_requested, io_buffersize);
+> +		bytes = do_pread(fd, off, bytes_requested, io_buffersize, preadv2_flags);
+>  		if (bytes == 0)
+>  			return ops;
+>  		if (bytes < 0) {
+> @@ -294,7 +304,7 @@ read_backward(
+>  	while (cnt > end) {
+>  		bytes_requested = min(cnt, io_buffersize);
+>  		off -= bytes_requested;
+> -		bytes = do_pread(fd, off, cnt, io_buffersize);
+> +		bytes = do_pread(fd, off, cnt, io_buffersize, preadv2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -318,14 +328,15 @@ read_forward(
+>  	long long	*total,
+>  	int		verbose,
+>  	int		onlyone,
+> -	int		eof)
+> +	int		eof,
+> +	int 	preadv2_flags)
+>  {
+>  	ssize_t		bytes;
+>  	int		ops = 0;
+>  
+>  	*total = 0;
+>  	while (count > 0 || eof) {
+> -		bytes = do_pread(fd, offset, count, io_buffersize);
+> +		bytes = do_pread(fd, offset, count, io_buffersize, preadv2_flags);
+>  		if (bytes == 0)
+>  			break;
+>  		if (bytes < 0) {
+> @@ -353,7 +364,7 @@ read_buffer(
+>  	int		verbose,
+>  	int		onlyone)
+>  {
+> -	return read_forward(fd, offset, count, total, verbose, onlyone, 0);
+> +	return read_forward(fd, offset, count, total, verbose, onlyone, 0, 0);
+>  }
+>  
+>  static int
+> @@ -371,6 +382,7 @@ pread_f(
+>  	int		Cflag, qflag, uflag, vflag;
+>  	int		eof = 0, direction = IO_FORWARD;
+>  	int		c;
+> +	int 	preadv2_flags = 0;
+>  
+>  	Cflag = qflag = uflag = vflag = 0;
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+> @@ -463,15 +475,18 @@ pread_f(
+>  	case IO_RANDOM:
+>  		if (!zeed)	/* srandom seed */
+>  			zeed = time(NULL);
+> -		c = read_random(file->fd, offset, count, &total, zeed, eof);
+> +		c = read_random(file->fd, offset, count, &total, zeed, eof,
+> +						preadv2_flags);
+>  		break;
+>  	case IO_FORWARD:
+> -		c = read_forward(file->fd, offset, count, &total, vflag, 0, eof);
+> +		c = read_forward(file->fd, offset, count, &total, vflag, 0, eof,
+> +						 preadv2_flags);
+>  		if (eof)
+>  			count = total;
+>  		break;
+>  	case IO_BACKWARD:
+> -		c = read_backward(file->fd, &offset, &count, &total, eof);
+> +		c = read_backward(file->fd, &offset, &count, &total, eof,
+> +						  preadv2_flags);
+>  		break;
+>  	default:
+>  		ASSERT(0);
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index 4ef7e8f6..5a1f748a 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -16,6 +16,24 @@ pwritev2(0, 0, 0, 0, 0);
+>      AC_SUBST(have_pwritev2)
+>    ])
+>  
+> +#
+> +# Check if we have a preadv2 libc call (Linux)
+> +#
+> +AC_DEFUN([AC_HAVE_PREADV2],
+> +  [ AC_MSG_CHECKING([for preadv2])
+> +    AC_LINK_IFELSE(
+> +    [	AC_LANG_PROGRAM([[
+> +#define _GNU_SOURCE
+> +#include <sys/uio.h>
+> +	]], [[
+> +preadv2(0, 0, 0, 0, 0);
+> +	]])
+> +    ], have_preadv2=yes
+> +       AC_MSG_RESULT(yes),
+> +       AC_MSG_RESULT(no))
+> +    AC_SUBST(have_preadv2)
+> +  ])
+> +
+>  #
+>  # Check if we have a copy_file_range system call (Linux)
+>  #
+> -- 
+> 2.48.1
+> 
 > 
