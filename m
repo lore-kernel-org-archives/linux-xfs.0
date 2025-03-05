@@ -1,214 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C3A2459C5;
-	Wed,  5 Mar 2025 12:57:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 362E524BC17
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Mar 2025 14:05:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741179453; cv=none; b=gjXhSW/TnztPUbl00DpLScGp9G/wLKtt9VeET7902XDisz/suBccnF4kVk51SGzHyxKdY2xKddmbREtGBj3/iTokikvdIjywfbdhkFUpH5KqvlO21HpQSlw7M/1XhGu5qLw8CwGLIwYI6Z/6/ReLwEWSKuVkOvxO2dVLDvdPmro=
+	t=1741183535; cv=none; b=ahclL1JPg5lipPrt8qIODYGGlVKZjlNsymEFoZD3rO4QJfWpc+OR0nIF89gCMtNoIyxV+NSiKHInTwpPNDE0reoGwmzesvrPvC98bvDH2qsGROL0WJjRsXISIZp9RwAFhvz+PLMI7DoBlmjdjaXKe1UJlRFwoS1Gv14h4hk0CpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741179453; c=relaxed/simple;
-	bh=Ljvfdb0OsdRdRE+6YawQZ3FbQxKnmX+JvjYq/i/gwvI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Uzb4zPINriQgb9mMWQ17hV4sL60Qbdm7DhPZbGT2THuVkwEz1CoxdeIyv1Bj7tzWq69WXvi0FgXtBCWTh3380ePDfZ8mBe/1qsJqvowWFakZhw7QQS3aRLrElQ9ETc/LWb2K5h8s+m3ivBCJ6e2Ju8KI5DUoSPhYKeJXmAEVNs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBrBCpG/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1741183535; c=relaxed/simple;
+	bh=eUJZnbYdMcg/R3X7Sz1C9X+e6rQmRZ60ls0Mpab7yQw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GUhYD2mn8dSdAdhBKUDqa3QA5gX17j41DZGfLWvX0ZV4YK3RM87xkvFP/SdPsWIvL3TqlPL91BEkq4Js1O5+cEKweskBlVM0SNBfO6NT+B+87rPBrvWUTjV2HoVmI646enw7Ja2xckQmkTvgrAeHhY3WnW4zOosnnVCoa4D5VzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ejYkvmaU; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBrBCpG/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B18B9C4CEE7;
-	Wed,  5 Mar 2025 12:57:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741179452;
-	bh=Ljvfdb0OsdRdRE+6YawQZ3FbQxKnmX+JvjYq/i/gwvI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gBrBCpG/iSg6fOVDefcq0ifue0Bnw+h3Bhgt2Daiyb48AVpjDDsYF9oEb0ZBh4RbP
-	 bJ+mglNsFOI37wx0ghPu9VUMD5x5ZL7xMOaf9BH9wLpKNBhBM5saCHdryYnPgMeTrZ
-	 R7+0x+qehwQgjXZIJOGJVwgDfyhgaNTJIgApXhDzV59XX8mH/gXLZhWyBXQg7epcEu
-	 WcOHGPi/P4n09VESMF80rVi/8CeLBNirh45pXAu6vMpKi3dwaaHFlz+LRn7FpfRnoF
-	 eu547QqsPzxQFljudQ8OwPAmxBN7Fadfmg7NEhiqQcu3B0lKiVVmXtCP15QHA/WYY5
-	 IvvDYXFyIfJLA==
-Date: Wed, 5 Mar 2025 13:57:26 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: brauner@kernel.org
-Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, 
-	ritesh.list@gmail.com, martin.petersen@oracle.com, tytso@mit.edu, 
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v4 02/12] iomap: Rename IOMAP_ATOMIC -> IOMAP_ATOMIC_HW
-Message-ID: <mefv3axgsk567xwwwuoonvo7bncvdgu547ycvin5zjlztslotm@qu4fxqi3fave>
-References: <20250303171120.2837067-1-john.g.garry@oracle.com>
- <UQF0E8blbU4wMo9RdB7-nRkNAIJHtPkzDsTrQEOkNRLjG2CGbKe97G8XenXN1DSkhoWhipJrN956Enqgk9Ewkg==@protonmail.internalid>
- <20250303171120.2837067-3-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ejYkvmaU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=94/JiHk8bzWOmWg/vIAofEsojI0iXBO1n3sn5jvvw3g=; b=ejYkvmaUo+J5VWfUmLv2znrmmT
+	oMGuxOCmCwJyeGPhDIAtPxUzrlC9TWYl4wDkMQnCh6l9ee29OFfNjX2zZDM0+LSY0mI3c7cshpQPj
+	d5ecv5J56nZpuixRMD7TezVh7bDbxPfbmBs+XjaDJ8P9gKMe3aFOLrTyOMcB1bn2YpbA6M8F4I9Zb
+	3ubrKbUKFUJ26uaJZfzCcLSXFn/He5RhLFXgfzFVmneqm+0cVGmZuOKyFaoUrrkgk//Greu3pavAm
+	MKewc9kaRC4PLQMksQQd2J0LTSr1gHjMPTtdwYtXJ2PrhOTvsA0mtSWwvE8ZyfH8TppYMu70B/xF7
+	rX+Eu4/w==;
+Received: from [199.117.230.82] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tppNM-00000008Hnw-1Xr4;
+	Wed, 05 Mar 2025 14:05:32 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: use folios and vmalloc for buffer cache backing memory v2
+Date: Wed,  5 Mar 2025 07:05:17 -0700
+Message-ID: <20250305140532.158563-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250303171120.2837067-3-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi Christian,
-On Mon, Mar 03, 2025 at 05:11:10PM +0000, John Garry wrote:
-> In future xfs will support a SW-based atomic write, so rename
-> IOMAP_ATOMIC -> IOMAP_ATOMIC_HW to be clear which mode is being used.
-> 
-> Also relocate setting of IOMAP_ATOMIC_HW to the write path in
-> __iomap_dio_rw(), to be clear that this flag is only relevant to writes.
-> 
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+Hi all,
 
-I pushed the patches in this series into this branch:
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-6.15-atomicwrites
+this is another spin on converting the XFS buffer cache to use folios and
+generally simplify the memory allocation in it.  It is based on Dave's
+last folio series (which itself had pulled in bits from my earlier
+vmalloc series).
 
-Do you plan to send the iomap patches in this series yourself or is it ok with
-you if they go through xfs tree?
+It converts the backing memory allocation for all large buffers that are
+power of two sized to large folios, converts > PAGE_SIZE but not power of
+two allocations to vmalloc instead of vm_map_ram and generally cleans up
+a lot of code around the memory allocation and reduces the size of the
+xfs_buf structure by removing the embedded pages array and pages pointer.
 
-Cheers,
-Carlos
+I've benchmarked it using buffer heavy workloads, most notable fs_mark
+run on null_blk without any fsync or O_SYNC to stress the buffer memory
+allocator.  The performance results are disappointingly boring
+unfortunately: for 4k directory block I see no significant change
+(although the variance for both loads is very high to start with), and
+for 64k directory block I see a minimal 1-2% gain that is barely about
+the variance.  So based on the performance results alone I would not
+propose this series, but I think it actually cleans the code up very
+nicely.
 
-> ---
->  Documentation/filesystems/iomap/operations.rst |  4 ++--
->  fs/ext4/inode.c                                |  2 +-
->  fs/iomap/direct-io.c                           | 18 +++++++++---------
->  fs/iomap/trace.h                               |  2 +-
->  include/linux/iomap.h                          |  2 +-
->  5 files changed, 14 insertions(+), 14 deletions(-)
-> 
-> diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
-> index d1535109587a..0b9d7be23bce 100644
-> --- a/Documentation/filesystems/iomap/operations.rst
-> +++ b/Documentation/filesystems/iomap/operations.rst
-> @@ -514,8 +514,8 @@ IOMAP_WRITE`` with any combination of the following enhancements:
->     if the mapping is unwritten and the filesystem cannot handle zeroing
->     the unaligned regions without exposing stale contents.
-> 
-> - * ``IOMAP_ATOMIC``: This write is being issued with torn-write
-> -   protection.
-> + * ``IOMAP_ATOMIC_HW``: This write is being issued with torn-write
-> +   protection based on HW-offload support.
->     Only a single bio can be created for the write, and the write must
->     not be split into multiple I/O requests, i.e. flag REQ_ATOMIC must be
->     set.
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 7c54ae5fcbd4..ba2f1e3db7c7 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3467,7 +3467,7 @@ static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
->  		return false;
-> 
->  	/* atomic writes are all-or-nothing */
-> -	if (flags & IOMAP_ATOMIC)
-> +	if (flags & IOMAP_ATOMIC_HW)
->  		return false;
-> 
->  	/* can only try again if we wrote nothing */
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index e1e32e2bb0bf..c696ce980796 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -317,7 +317,7 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
->   * clearing the WRITE_THROUGH flag in the dio request.
->   */
->  static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
-> -		const struct iomap *iomap, bool use_fua, bool atomic)
-> +		const struct iomap *iomap, bool use_fua, bool atomic_hw)
->  {
->  	blk_opf_t opflags = REQ_SYNC | REQ_IDLE;
-> 
-> @@ -329,7 +329,7 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
->  		opflags |= REQ_FUA;
->  	else
->  		dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
-> -	if (atomic)
-> +	if (atomic_hw)
->  		opflags |= REQ_ATOMIC;
-> 
->  	return opflags;
-> @@ -340,8 +340,8 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  	const struct iomap *iomap = &iter->iomap;
->  	struct inode *inode = iter->inode;
->  	unsigned int fs_block_size = i_blocksize(inode), pad;
-> +	bool atomic_hw = iter->flags & IOMAP_ATOMIC_HW;
->  	const loff_t length = iomap_length(iter);
-> -	bool atomic = iter->flags & IOMAP_ATOMIC;
->  	loff_t pos = iter->pos;
->  	blk_opf_t bio_opf;
->  	struct bio *bio;
-> @@ -351,7 +351,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  	u64 copied = 0;
->  	size_t orig_count;
-> 
-> -	if (atomic && length != fs_block_size)
-> +	if (atomic_hw && length != fs_block_size)
->  		return -EINVAL;
-> 
->  	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
-> @@ -428,7 +428,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  			goto out;
->  	}
-> 
-> -	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
-> +	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic_hw);
-> 
->  	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
->  	do {
-> @@ -461,7 +461,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  		}
-> 
->  		n = bio->bi_iter.bi_size;
-> -		if (WARN_ON_ONCE(atomic && n != length)) {
-> +		if (WARN_ON_ONCE(atomic_hw && n != length)) {
->  			/*
->  			 * This bio should have covered the complete length,
->  			 * which it doesn't, so error. We may need to zero out
-> @@ -652,9 +652,6 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	if (iocb->ki_flags & IOCB_NOWAIT)
->  		iomi.flags |= IOMAP_NOWAIT;
-> 
-> -	if (iocb->ki_flags & IOCB_ATOMIC)
-> -		iomi.flags |= IOMAP_ATOMIC;
-> -
->  	if (iov_iter_rw(iter) == READ) {
->  		/* reads can always complete inline */
->  		dio->flags |= IOMAP_DIO_INLINE_COMP;
-> @@ -689,6 +686,9 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  			iomi.flags |= IOMAP_OVERWRITE_ONLY;
->  		}
-> 
-> +		if (iocb->ki_flags & IOCB_ATOMIC)
-> +			iomi.flags |= IOMAP_ATOMIC_HW;
-> +
->  		/* for data sync or sync, we need sync completion processing */
->  		if (iocb_is_dsync(iocb)) {
->  			dio->flags |= IOMAP_DIO_NEED_SYNC;
-> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
-> index 9eab2c8ac3c5..69af89044ebd 100644
-> --- a/fs/iomap/trace.h
-> +++ b/fs/iomap/trace.h
-> @@ -99,7 +99,7 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
->  	{ IOMAP_FAULT,		"FAULT" }, \
->  	{ IOMAP_DIRECT,		"DIRECT" }, \
->  	{ IOMAP_NOWAIT,		"NOWAIT" }, \
-> -	{ IOMAP_ATOMIC,		"ATOMIC" }
-> +	{ IOMAP_ATOMIC_HW,	"ATOMIC_HW" }
-> 
->  #define IOMAP_F_FLAGS_STRINGS \
->  	{ IOMAP_F_NEW,		"NEW" }, \
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index ea29388b2fba..87cd7079aaf3 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -189,7 +189,7 @@ struct iomap_folio_ops {
->  #else
->  #define IOMAP_DAX		0
->  #endif /* CONFIG_FS_DAX */
-> -#define IOMAP_ATOMIC		(1 << 9)
-> +#define IOMAP_ATOMIC_HW		(1 << 9)
->  #define IOMAP_DONTCACHE		(1 << 10)
-> 
->  struct iomap_ops {
-> --
-> 2.31.1
-> 
+Changes since v1:
+ - use a WARN_ON_ONCE for the slab alignment guarantee check
+ - fix confusion about units passed to the vmap flushing helpers
+ - remove a duplicate setting of __GFP_ZERO
+ - use howmany more
+ - improve a code comment
+ - spelling fixes
+
+Diffstat:
+ libxfs/xfs_ialloc.c    |    2 
+ libxfs/xfs_inode_buf.c |    2 
+ scrub/inode_repair.c   |    3 
+ xfs_buf.c              |  368 ++++++++++++++++---------------------------------
+ xfs_buf.h              |   25 +--
+ xfs_buf_item.c         |  114 ---------------
+ xfs_buf_item_recover.c |    8 -
+ xfs_buf_mem.c          |   43 +----
+ xfs_buf_mem.h          |    6 
+ xfs_inode.c            |    3 
+ xfs_trace.h            |    4 
+ 11 files changed, 159 insertions(+), 419 deletions(-)
