@@ -1,112 +1,103 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE9AB24E4A7
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Mar 2025 14:05:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9F00155751;
+	Wed,  5 Mar 2025 14:10:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741183540; cv=none; b=PB7WQMPb2Kv8GbXk5xfj2xzGqhmx+BsYEDo1ykz0i8Aeoh3T7hnvbU0IkKCO6dJ2x0rP5TMR/vVUhWem0AaTFAoKhjoPVws4MJ2vVOe9Stb8MCr6fXlgDomxsl1STTCkhPyn20HVTjV6C0mhM/HmvJjtSU4fWbq82c55ZqOsM1I=
+	t=1741183861; cv=none; b=MvcnTlCabcHpfMjiXBV5qdC+QaFXV6Ee1Pot7vgXXFhJE5vx4NppfMjNiynUfXJa7QoVoFMutHUlP7WXbAjg2fUpMvhGAgpqs4zC2MpiWos6OFhOmVzABvczeJl94+15Qt3Sw7wZaMi0kbeOTa313j19EpHOYQQtnH0vyvwOiow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741183540; c=relaxed/simple;
-	bh=WJwebKNJRZtwcnnoKX4IfB2Po8BTyJ1rO++t8rtOFxI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nh9vf+E8qr+gXwrEgOZRH+X98/gWgWAbXEHb06tr8Lwyx5pr5qVNY0HT9PKbt3rR3MkQHW3/V05CJNAUAR/ZU2bZJnksSaaJzSZ6eYpjFQWl726VXueg+u04++2Htl4CT63YzmWAzZ6UIKfUwR4xT93IlnKXTVKkbURx4/dDFIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4Uzt384A; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+	s=arc-20240116; t=1741183861; c=relaxed/simple;
+	bh=RigXWhKk1lS/tegXjHPsbf8sEUN3NntaWaJoQ+Izwa8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ETSbW50oPeNcW1PIOY9kCVL8yNIZxsSwgZ7l3hSWMU8E3EgrIZAaFwxND3pDjpnExHp3/YFO8fUJzZWaZEvHqYahSNuY+yuSrCgvaTD4IbjN2UXcEj490HUK0NnL7tXYZKTgbxGOlU8oJbMOgWh8jcm2jPyIXrasmHf91cxZang=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kQzhYj77; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4Uzt384A"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kQzhYj77"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=J+F6z6iOsrh+HjSwq9AW0bJJ/LVnwTTxKc79/fB5lWI=; b=4Uzt384AmVIVI3kP7+CD8UZLYg
-	c2tAVYW4AK1ERGp4btlO7yLZKgp1gq8FKGm8cM5kY/IIlQGA4Wcqse2XoU8RETXAWVoTCCt91e1RY
-	mlGE6HYJ2q7Il7alq0qjE3g1v9R8pjbDHAMu6pcLg8go963uFMF8vOV18s3JApU7l959UzU2EDwFb
-	j6ecvSM40eO/mfmRVgAq6InoNZZ2X/ygkzuUONRFVg5KJJKFQms7/9Poympl6BHbtoQTMcCyILwlG
-	ct6dyDvaLcoWpO1aU5zdMUqtEslwiocfNF4gIzRSak8f0XlMZ5eBdWGnd0v1Gb3h3OglPW2/Im5wh
-	NswXQWww==;
-Received: from [199.117.230.82] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tppNS-00000008HqI-1xOK;
-	Wed, 05 Mar 2025 14:05:38 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 12/12] xfs: trace what memory backs a buffer
-Date: Wed,  5 Mar 2025 07:05:29 -0700
-Message-ID: <20250305140532.158563-13-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250305140532.158563-1-hch@lst.de>
-References: <20250305140532.158563-1-hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=jOWrYc0+9HlzrR3aKKb90D4IoCghYF5gZHmBO6zxWks=; b=kQzhYj77dCGr+9N1uRZlvvEzHD
+	1OFRwZH7vwensH3pcwxMTpkm+1e/O/GUE7NAq0djcZiBrStOOE2hAZ8azU4qSiUCRoOvgr1Jnnguc
+	Vk/Ya19P+7MXGBFIIv0NoMR2LCqYNlJz0A+KgoNIb3iYzstJEWnD+BRG7iqkMUBFA1Jejn7Yar0pJ
+	j66CZz3pKtKEqjZIpvSKmFLhwLROnQEFHMyM6/bT2cHLkG3oCKQAwATyL7Y3jlx7NTwODm/Y/ujDb
+	KZy5nlR6yizfmOCTjU3MbR+gmrUUwV4LWnwYEC8GQHduIaQpQgzfN0bRdPOB8qE8AJ1wWrpjIBsgn
+	sTruLyvA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tppSd-00000008IPY-0VCH;
+	Wed, 05 Mar 2025 14:10:59 +0000
+Date: Wed, 5 Mar 2025 06:10:59 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Pavel Begunkov <asml.silence@gmail.com>,
+	Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	wu lei <uwydoc@gmail.com>
+Subject: Re: [PATCH v2 1/1] iomap: propagate nowait to block layer
+Message-ID: <Z8hbc5Nzp6cFMpXO@infradead.org>
+References: <f287a7882a4c4576e90e55ecc5ab8bf634579afd.1741090631.git.asml.silence@gmail.com>
+ <Z8dsfxVqpv-kqeZy@dread.disaster.area>
+ <970ec89d-4161-41f4-b66f-c65ebd4bd583@gmail.com>
+ <Z8emslEolstG76A7@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z8emslEolstG76A7@dread.disaster.area>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add three trace points for the different backing memory allocators for
-buffers.
+On Wed, Mar 05, 2025 at 12:19:46PM +1100, Dave Chinner wrote:
+> I really don't care about what io_uring thinks or does. If the block
+> layer REQ_NOWAIT semantics are unusable for non-blocking IO
+> submission, then that's the problem that needs fixing. This isn't a
+> problem we can (or should) try to work around in the iomap layer.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_buf.c   | 4 ++++
- fs/xfs/xfs_trace.h | 4 ++++
- 2 files changed, 8 insertions(+)
+Agreed.  The problem are the block layer semantics.  iomap/xfs really
+just is the messenger here.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index c7f4cafda705..0014cfab3414 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -240,6 +240,7 @@ xfs_buf_alloc_kmem(
- 		return -ENOMEM;
- 	}
- 	bp->b_flags |= _XBF_KMEM;
-+	trace_xfs_buf_backing_kmem(bp, _RET_IP_);
- 	return 0;
- }
- 
-@@ -315,9 +316,11 @@ xfs_buf_alloc_backing_mem(
- 	if (!folio) {
- 		if (size <= PAGE_SIZE)
- 			return -ENOMEM;
-+		trace_xfs_buf_backing_fallback(bp, _RET_IP_);
- 		goto fallback;
- 	}
- 	bp->b_addr = folio_address(folio);
-+	trace_xfs_buf_backing_folio(bp, _RET_IP_);
- 	return 0;
- 
- fallback:
-@@ -331,6 +334,7 @@ xfs_buf_alloc_backing_mem(
- 		memalloc_retry_wait(gfp_mask);
- 	}
- 
-+	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index bfc2f1249022..4a3724043713 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -545,6 +545,10 @@ DEFINE_BUF_EVENT(xfs_buf_iodone_async);
- DEFINE_BUF_EVENT(xfs_buf_error_relse);
- DEFINE_BUF_EVENT(xfs_buf_drain_buftarg);
- DEFINE_BUF_EVENT(xfs_trans_read_buf_shut);
-+DEFINE_BUF_EVENT(xfs_buf_backing_folio);
-+DEFINE_BUF_EVENT(xfs_buf_backing_kmem);
-+DEFINE_BUF_EVENT(xfs_buf_backing_vmalloc);
-+DEFINE_BUF_EVENT(xfs_buf_backing_fallback);
- 
- /* not really buffer traces, but the buf provides useful information */
- DEFINE_BUF_EVENT(xfs_btree_corrupt);
--- 
-2.45.2
+> For example: we have RAID5 witha 64kB chunk size, so max REQ_NOWAIT
+> io size is 64kB according to the queue limits. However, if we do a
+> 64kB IO at a 60kB chunk offset, that bio is going to be split into a
+> 4kB bio and a 60kB bio because they are issued to different physical
+> devices.....
+> 
+> There is no way the bio submitter can know that this behaviour will
+> occur, nor should they even be attempting to predict when/if such
+> splitting may occur.
 
+And for something that has a real block allocator it could also be
+entirely dynamic.  But I'm not sure if dm-thinp or bcache do anything
+like that at the moment.
+
+> > Are you only concerned about the size being too restrictive or do you
+> > see any other problems?
+> 
+> I'm concerned abou the fact that REQ_NOWAIT is not usable as it
+> stands. We've identified bio chaining as an issue, now bio splitting
+> is an issue, and I'm sure if we look further there will be other
+> cases that are issues (e.g. bounce buffers).
+> 
+> The underlying problem here is that bio submission errors are
+> reported through bio completion mechanisms, not directly back to the
+> submitting context. Fix that problem in the block layer API, and
+> then iomap can use REQ_NOWAIT without having to care about what the
+> block layer is doing under the covers.
+
+Exactly.  Either they need to be reported synchronously, or maybe we
+need a block layer hook in bio_endio that retries the given bio on a
+workqueue without ever bubbling up to the caller.  But allowing delayed
+BLK_STS_AGAIN is going to mess up any non-trivial caller.  But even
+for the plain block device is will cause duplicate I/O where some
+blocks have already been read/written and then will get resubmitted.
+
+I'm not sure that breaks any atomicity assumptions as we don't really
+give explicit ones for block devices (except maybe for the new
+RWF_ATOMIC flag?), but it certainly is unexpected and suboptimal.
