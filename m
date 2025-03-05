@@ -1,204 +1,214 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AF6124060E;
-	Wed,  5 Mar 2025 12:18:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C3A2459C5;
+	Wed,  5 Mar 2025 12:57:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741177087; cv=none; b=c1bs5X++ttFZ/kLWfx+WW214F97aNWDYjr+QABetDrvpk1KtUYchlnSv0sh/DHSEBCJjnc5vr7IcKS4RI8NFcYidjzAlS3RbV/9t2H08C6+eGHuUy19sFmhNT9XG5itRZz3xZNp/61+8SIjP+gPwWV70limnnuFFgSZqd1duxA4=
+	t=1741179453; cv=none; b=gjXhSW/TnztPUbl00DpLScGp9G/wLKtt9VeET7902XDisz/suBccnF4kVk51SGzHyxKdY2xKddmbREtGBj3/iTokikvdIjywfbdhkFUpH5KqvlO21HpQSlw7M/1XhGu5qLw8CwGLIwYI6Z/6/ReLwEWSKuVkOvxO2dVLDvdPmro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741177087; c=relaxed/simple;
-	bh=2l5BK6BIIKBvzAzekAB/HIgAAJ8CjsnHPnqO0JmxTPU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=mneCjGiyBBkRT4YXOP7GgmqH1CyK2BOGPAozwoqv2Ev+bifhrZnymFbpeetyv9KzOjz8VZcz+ib70nf2IoiKSxC0IjY7Q5ynr/x6pwsL0RVPjmwip8dNttQxvfn9Q15AWHLpckiYpDZrUNlLhSJE0muGgUzdZq8Z5dxvs9kV2es=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Z7BJz4R0yzwWy8;
-	Wed,  5 Mar 2025 20:13:07 +0800 (CST)
-Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2AA2318009E;
-	Wed,  5 Mar 2025 20:18:02 +0800 (CST)
-Received: from [10.67.120.129] (10.67.120.129) by
- dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 5 Mar 2025 20:17:59 +0800
-Message-ID: <18c68e7a-88c9-49d1-8ff8-17c63bcc44f4@huawei.com>
-Date: Wed, 5 Mar 2025 20:17:59 +0800
+	s=arc-20240116; t=1741179453; c=relaxed/simple;
+	bh=Ljvfdb0OsdRdRE+6YawQZ3FbQxKnmX+JvjYq/i/gwvI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uzb4zPINriQgb9mMWQ17hV4sL60Qbdm7DhPZbGT2THuVkwEz1CoxdeIyv1Bj7tzWq69WXvi0FgXtBCWTh3380ePDfZ8mBe/1qsJqvowWFakZhw7QQS3aRLrElQ9ETc/LWb2K5h8s+m3ivBCJ6e2Ju8KI5DUoSPhYKeJXmAEVNs8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBrBCpG/; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBrBCpG/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B18B9C4CEE7;
+	Wed,  5 Mar 2025 12:57:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741179452;
+	bh=Ljvfdb0OsdRdRE+6YawQZ3FbQxKnmX+JvjYq/i/gwvI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gBrBCpG/iSg6fOVDefcq0ifue0Bnw+h3Bhgt2Daiyb48AVpjDDsYF9oEb0ZBh4RbP
+	 bJ+mglNsFOI37wx0ghPu9VUMD5x5ZL7xMOaf9BH9wLpKNBhBM5saCHdryYnPgMeTrZ
+	 R7+0x+qehwQgjXZIJOGJVwgDfyhgaNTJIgApXhDzV59XX8mH/gXLZhWyBXQg7epcEu
+	 WcOHGPi/P4n09VESMF80rVi/8CeLBNirh45pXAu6vMpKi3dwaaHFlz+LRn7FpfRnoF
+	 eu547QqsPzxQFljudQ8OwPAmxBN7Fadfmg7NEhiqQcu3B0lKiVVmXtCP15QHA/WYY5
+	 IvvDYXFyIfJLA==
+Date: Wed, 5 Mar 2025 13:57:26 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: brauner@kernel.org
+Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, 
+	ritesh.list@gmail.com, martin.petersen@oracle.com, tytso@mit.edu, 
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v4 02/12] iomap: Rename IOMAP_ATOMIC -> IOMAP_ATOMIC_HW
+Message-ID: <mefv3axgsk567xwwwuoonvo7bncvdgu547ycvin5zjlztslotm@qu4fxqi3fave>
+References: <20250303171120.2837067-1-john.g.garry@oracle.com>
+ <UQF0E8blbU4wMo9RdB7-nRkNAIJHtPkzDsTrQEOkNRLjG2CGbKe97G8XenXN1DSkhoWhipJrN956Enqgk9Ewkg==@protonmail.internalid>
+ <20250303171120.2837067-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-To: Qu Wenruo <wqu@suse.com>, Yishai Hadas <yishaih@nvidia.com>, Jason
- Gunthorpe <jgg@ziepe.ca>, Shameer Kolothum
-	<shameerali.kolothum.thodi@huawei.com>, Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>, Josef
- Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Gao Xiang
-	<xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>,
-	Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>, Jesper Dangaard Brouer
-	<hawk@kernel.org>, Ilias Apalodimas <ilias.apalodimas@linaro.org>, "David S.
- Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
- Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman
-	<horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>, Anna Schumaker
-	<anna@kernel.org>, Chuck Lever <chuck.lever@oracle.com>, Jeff Layton
-	<jlayton@kernel.org>, Neil Brown <neilb@suse.de>, Olga Kornievskaia
-	<okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey
-	<tom@talpey.com>
-CC: Luiz Capitulino <luizcap@redhat.com>, Mel Gorman
-	<mgorman@techsingularity.net>, Dave Chinner <david@fromorbit.com>,
-	<kvm@vger.kernel.org>, <virtualization@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
-	<linux-erofs@lists.ozlabs.org>, <linux-xfs@vger.kernel.org>,
-	<linux-mm@kvack.org>, <netdev@vger.kernel.org>, <linux-nfs@vger.kernel.org>
-References: <20250228094424.757465-1-linyunsheng@huawei.com>
- <6f4017dc-2b3d-4b1a-b819-423acb42d999@suse.com>
-Content-Language: en-US
-From: Yunsheng Lin <linyunsheng@huawei.com>
-In-Reply-To: <6f4017dc-2b3d-4b1a-b819-423acb42d999@suse.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemf200006.china.huawei.com (7.185.36.61)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250303171120.2837067-3-john.g.garry@oracle.com>
 
-On 2025/3/4 17:17, Qu Wenruo wrote:
+Hi Christian,
+On Mon, Mar 03, 2025 at 05:11:10PM +0000, John Garry wrote:
+> In future xfs will support a SW-based atomic write, so rename
+> IOMAP_ATOMIC -> IOMAP_ATOMIC_HW to be clear which mode is being used.
 > 
+> Also relocate setting of IOMAP_ATOMIC_HW to the write path in
+> __iomap_dio_rw(), to be clear that this flag is only relevant to writes.
 > 
-> 在 2025/2/28 20:14, Yunsheng Lin 写道:
->> As mentioned in [1], it seems odd to check NULL elements in
->> the middle of page bulk allocating, and it seems caller can
->> do a better job of bulk allocating pages into a whole array
->> sequentially without checking NULL elements first before
->> doing the page bulk allocation for most of existing users.
->>
->> Through analyzing of bulk allocation API used in fs, it
->> seems that the callers are depending on the assumption of
->> populating only NULL elements in fs/btrfs/extent_io.c and
->> net/sunrpc/svc_xprt.c while erofs and btrfs don't, see:
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-I should have said 'while erofs and xfs don't depend on the
-assumption of populating only NULL elements'.
+I pushed the patches in this series into this branch:
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-6.15-atomicwrites
 
->> commit 91d6ac1d62c3 ("btrfs: allocate page arrays using bulk page allocator")
+Do you plan to send the iomap patches in this series yourself or is it ok with
+you if they go through xfs tree?
+
+Cheers,
+Carlos
+
+> ---
+>  Documentation/filesystems/iomap/operations.rst |  4 ++--
+>  fs/ext4/inode.c                                |  2 +-
+>  fs/iomap/direct-io.c                           | 18 +++++++++---------
+>  fs/iomap/trace.h                               |  2 +-
+>  include/linux/iomap.h                          |  2 +-
+>  5 files changed, 14 insertions(+), 14 deletions(-)
 > 
-> If you want to change the btrfs part, please run full fstests with SCRATCH_DEV_POOL populated at least.
-
-The above is a helpful suggestion/comment to someone like me, who
-is not very familiar with fs yet, thanks for the suggestion.
-
-But I am not sure about some of the other comments below.
-
+> diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
+> index d1535109587a..0b9d7be23bce 100644
+> --- a/Documentation/filesystems/iomap/operations.rst
+> +++ b/Documentation/filesystems/iomap/operations.rst
+> @@ -514,8 +514,8 @@ IOMAP_WRITE`` with any combination of the following enhancements:
+>     if the mapping is unwritten and the filesystem cannot handle zeroing
+>     the unaligned regions without exposing stale contents.
 > 
-> [...]
->> diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
->> index f0a1da40d641..ef52cedd9873 100644
->> --- a/fs/btrfs/extent_io.c
->> +++ b/fs/btrfs/extent_io.c
->> @@ -623,13 +623,26 @@ int btrfs_alloc_page_array(unsigned int nr_pages, struct page **page_array,
->>                  bool nofail)
->>   {
->>       const gfp_t gfp = nofail ? (GFP_NOFS | __GFP_NOFAIL) : GFP_NOFS;
->> -    unsigned int allocated;
->> +    unsigned int allocated, ret;
->>   -    for (allocated = 0; allocated < nr_pages;) {
->> -        unsigned int last = allocated;
->> +    /* Defragment page_array so pages can be bulk allocated into remaining
->> +     * NULL elements sequentially.
->> +     */
->> +    for (allocated = 0, ret = 0; ret < nr_pages; ret++) {
->> +        if (page_array[ret]) {
+> - * ``IOMAP_ATOMIC``: This write is being issued with torn-write
+> -   protection.
+> + * ``IOMAP_ATOMIC_HW``: This write is being issued with torn-write
+> +   protection based on HW-offload support.
+>     Only a single bio can be created for the write, and the write must
+>     not be split into multiple I/O requests, i.e. flag REQ_ATOMIC must be
+>     set.
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 7c54ae5fcbd4..ba2f1e3db7c7 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3467,7 +3467,7 @@ static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
+>  		return false;
 > 
-> You just prove how bad the design is.
+>  	/* atomic writes are all-or-nothing */
+> -	if (flags & IOMAP_ATOMIC)
+> +	if (flags & IOMAP_ATOMIC_HW)
+>  		return false;
 > 
-
-Below is the reason you think the design is bad? If not, it would be
-good to be more specific about why it is a bad design.
-
-> All the callers have their page array members to initialized to NULL, or do not care and just want alloc_pages_bulk() to overwrite the uninitialized values.
-
-Actually there are two use cases here as mentioned in the commit log:
-1. Allocating an array of pages sequentially by providing an array as
-   output parameter.
-2. Refilling pages to NULL elements in an array by providing an array
-   as both input and output parameter.
-
-Most of users calling the bulk alloc API is allocating an array of pages
-sequentially except btrfs and sunrpc, the current page bulk alloc API
-implementation is not only doing the unnecessay NULL checking for most
-users, but also require most of its callers to pass all NULL array via
-memset, kzalloc, etc, which is also unnecessary overhead.
-
-That means there is some space for improvement from performance and
-easy-to-use perspective for most existing use cases here, this patch
-just change alloc_pages_bulk() API to treat the page_array as only
-the output parameter by mirroring kmem_cache_alloc_bulk() API.
-
-For the existing btrfs and sunrpc case, I am agreed that there
-might be valid use cases too, we just need to discuss how to
-meet the requirements of different use cases using simpler, more
-unified and effective APIs.
-
+>  	/* can only try again if we wrote nothing */
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index e1e32e2bb0bf..c696ce980796 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -317,7 +317,7 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+>   * clearing the WRITE_THROUGH flag in the dio request.
+>   */
+>  static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
+> -		const struct iomap *iomap, bool use_fua, bool atomic)
+> +		const struct iomap *iomap, bool use_fua, bool atomic_hw)
+>  {
+>  	blk_opf_t opflags = REQ_SYNC | REQ_IDLE;
 > 
-> The best example here is btrfs_encoded_read_regular().
-> Now your code will just crash encoded read.
-
-It would be good to be more specific about the 'crash' here,
-as simple testing mentioned in below seems fine for btrfs fs
-too, but I will do more testing by running full fstests with
-SCRATCH_DEV_POOL populated after I learn how to use the fstests.
-
-https://lore.kernel.org/all/91fcdfca-3e7b-417c-ab26-7d5e37853431@huawei.com/
-
+> @@ -329,7 +329,7 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
+>  		opflags |= REQ_FUA;
+>  	else
+>  		dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
+> -	if (atomic)
+> +	if (atomic_hw)
+>  		opflags |= REQ_ATOMIC;
 > 
-> Read the context before doing stupid things.
+>  	return opflags;
+> @@ -340,8 +340,8 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  	const struct iomap *iomap = &iter->iomap;
+>  	struct inode *inode = iter->inode;
+>  	unsigned int fs_block_size = i_blocksize(inode), pad;
+> +	bool atomic_hw = iter->flags & IOMAP_ATOMIC_HW;
+>  	const loff_t length = iomap_length(iter);
+> -	bool atomic = iter->flags & IOMAP_ATOMIC;
+>  	loff_t pos = iter->pos;
+>  	blk_opf_t bio_opf;
+>  	struct bio *bio;
+> @@ -351,7 +351,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  	u64 copied = 0;
+>  	size_t orig_count;
 > 
-> I find it unacceptable that you just change the code, without any testing, nor even just check all the involved callers.
-
-What exactly is the above 'context' is referring to? If it is a good advice,
-I think I will take it seriously.
-
-May I suggest that it might be better to be more humble and discuss
-more before jumpping to conclusion here as it seems hard for one
-person to be familiar with all the subsystem in the kernel?
-
+> -	if (atomic && length != fs_block_size)
+> +	if (atomic_hw && length != fs_block_size)
+>  		return -EINVAL;
 > 
->> +            page_array[allocated] = page_array[ret];
->> +            if (ret != allocated)
->> +                page_array[ret] = NULL;
->> +
->> +            allocated++;
->> +        }
->> +    }
->>   -        allocated = alloc_pages_bulk(gfp, nr_pages, page_array);
->> -        if (unlikely(allocated == last)) {
->> +    while (allocated < nr_pages) {
->> +        ret = alloc_pages_bulk(gfp, nr_pages - allocated,
->> +                       page_array + allocated);
+>  	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
+> @@ -428,7 +428,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  			goto out;
+>  	}
 > 
-> I see the new interface way worse than the existing one.
+> -	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic);
+> +	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic_hw);
 > 
-> All btrfs usage only wants a simple retry-until-all-fulfilled behavior.
-
-As above, I am agreed that the above might be what btrfs usage want, so
-let's discuss how to meet the requirements of different use cases using
-simpler, more unified and effective API, like introducing a function like
-alloc_pages_refill_array() to meet the above requirement as mentioned in
-below?
-https://lore.kernel.org/all/74827bc7-ec6e-4e3a-9d19-61c4a9ba6b2c@huawei.com/
-
+>  	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
+>  	do {
+> @@ -461,7 +461,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  		}
 > 
-> NACK for btrfs part, and I find you very unresponsible not even bother running any testsuit and just submit such a mess.
+>  		n = bio->bi_iter.bi_size;
+> -		if (WARN_ON_ONCE(atomic && n != length)) {
+> +		if (WARN_ON_ONCE(atomic_hw && n != length)) {
+>  			/*
+>  			 * This bio should have covered the complete length,
+>  			 * which it doesn't, so error. We may need to zero out
+> @@ -652,9 +652,6 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	if (iocb->ki_flags & IOCB_NOWAIT)
+>  		iomi.flags |= IOMAP_NOWAIT;
 > 
-> Just stop this, no one will ever take you serious anymore.
+> -	if (iocb->ki_flags & IOCB_ATOMIC)
+> -		iomi.flags |= IOMAP_ATOMIC;
+> -
+>  	if (iov_iter_rw(iter) == READ) {
+>  		/* reads can always complete inline */
+>  		dio->flags |= IOMAP_DIO_INLINE_COMP;
+> @@ -689,6 +686,9 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  			iomi.flags |= IOMAP_OVERWRITE_ONLY;
+>  		}
 > 
-> Thanks,
-> Qu
+> +		if (iocb->ki_flags & IOCB_ATOMIC)
+> +			iomi.flags |= IOMAP_ATOMIC_HW;
+> +
+>  		/* for data sync or sync, we need sync completion processing */
+>  		if (iocb_is_dsync(iocb)) {
+>  			dio->flags |= IOMAP_DIO_NEED_SYNC;
+> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
+> index 9eab2c8ac3c5..69af89044ebd 100644
+> --- a/fs/iomap/trace.h
+> +++ b/fs/iomap/trace.h
+> @@ -99,7 +99,7 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
+>  	{ IOMAP_FAULT,		"FAULT" }, \
+>  	{ IOMAP_DIRECT,		"DIRECT" }, \
+>  	{ IOMAP_NOWAIT,		"NOWAIT" }, \
+> -	{ IOMAP_ATOMIC,		"ATOMIC" }
+> +	{ IOMAP_ATOMIC_HW,	"ATOMIC_HW" }
 > 
+>  #define IOMAP_F_FLAGS_STRINGS \
+>  	{ IOMAP_F_NEW,		"NEW" }, \
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index ea29388b2fba..87cd7079aaf3 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -189,7 +189,7 @@ struct iomap_folio_ops {
+>  #else
+>  #define IOMAP_DAX		0
+>  #endif /* CONFIG_FS_DAX */
+> -#define IOMAP_ATOMIC		(1 << 9)
+> +#define IOMAP_ATOMIC_HW		(1 << 9)
+>  #define IOMAP_DONTCACHE		(1 << 10)
+> 
+>  struct iomap_ops {
+> --
+> 2.31.1
 > 
