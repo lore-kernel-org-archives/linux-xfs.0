@@ -1,61 +1,30 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD5DA18DB1E
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Mar 2025 15:32:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B72E25A325
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Mar 2025 17:08:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741275162; cv=none; b=L3jkeDRHacmBlF2aQqALZuyLL5PZrItbdj0zxyeMnwPNC93FqJF1meqrcDSu2J88LL+CqW0I0hWbalXWfdwYQT7Js24O2+4Et6h37CLvAzIBnymcizRcka6LymmJLDyCWMvwKE9tLgJEgRbwE2C43fhkRHJbhfta3YuTi4FgAZI=
+	t=1741280930; cv=none; b=cJ/9fo9ksx2lRHgefa9w6QaDqKUNIImpeUWjVEsdnj0hCRifP1UzOjzvyLSiJPJzbo/UWB8M8wgslSO430GLBKmSjEL4cQ8/jLJk7yqX6TygIyOaQrBizhKobNi5+V6SuPot6MW+19s6OkPRPt+ZF6VxW4OD7eEC2Mt8wmbL9g8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741275162; c=relaxed/simple;
-	bh=R4kqkbUHGVxX0YtNvcw4g8rl1p2UBvScCOJwjjRVFRg=;
+	s=arc-20240116; t=1741280930; c=relaxed/simple;
+	bh=9puJoRRjtbWLihLDXFOm3bnEKnaBx1Z+jd/BhSZCJLk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fFaZfpzh34ZrXMdKNVTitMbnX8vgUDlcBlhwYrx6XJUrZLiTK+TUsJHAD0xpDZ/e6rjbPcgHdKS7vt3IZYCH/pOfNsWoavNH16kuzAHAucr7jmhjvwfLWR3WQElMuC+p9Z2VhSDYy0jiy1jA/M4VAPxEReedPfop/H4BkM8tqgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Mh45yZ3H; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Mh45yZ3H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741275159; x=1772811159;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=R4kqkbUHGVxX0YtNvcw4g8rl1p2UBvScCOJwjjRVFRg=;
-  b=Mh45yZ3H4xTRGJCC44y7aw5D4nsKS6/dsO/iB2qgg9C67fjaA8SP2ScT
-   LtxlXpjCun/3pJv+W1s8hONME7OCIZINg14TCfDbqJ17YEtQ6jlNtumNA
-   HUrw5mqcfhEF8ke/lyzAYi6/Mz3u86BYSFFl7scWdtcLO6qD41Ulf2b8V
-   ETj/iRbhMVETAEO/GCWtLB6QDM+YLJLGhuZ9H+4tIpzhzsyDHy0oPhMP0
-   SsrnjB1YHNyXng+VTidFwsbClNzvAIG9K2qnv8mKTiuvPn6LxTFKrZ9fB
-   Tbb0lOi+z9bSZUD1nPd5hOE15nnx96Xuubl5v66tmN62JWO78JwmOZzS4
-   g==;
-X-CSE-ConnectionGUID: JI7yfKKnR7+Tvw4kLOW9hw==
-X-CSE-MsgGUID: FRYVyzfwQZOBpDG+8erbdQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11365"; a="41466662"
-X-IronPort-AV: E=Sophos;i="6.14,226,1736841600"; 
-   d="scan'208";a="41466662"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 07:31:47 -0800
-X-CSE-ConnectionGUID: vOeELUvbTlC7e3iV1F1jnQ==
-X-CSE-MsgGUID: 7d20Q8fRQ3GMaQxo2yMI+w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="149986632"
-Received: from lkp-server02.sh.intel.com (HELO 76cde6cc1f07) ([10.239.97.151])
-  by fmviesa001.fm.intel.com with ESMTP; 06 Mar 2025 07:31:45 -0800
-Received: from kbuild by 76cde6cc1f07 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tqDCJ-000NDa-1B;
-	Thu, 06 Mar 2025 15:31:43 +0000
-Date: Thu, 6 Mar 2025 23:31:00 +0800
-From: kernel test robot <lkp@intel.com>
-To: Julian Sun <sunjunchao2870@gmail.com>, linux-xfs@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, cem@kernel.org, djwong@kernel.org,
-	Julian Sun <sunjunchao2870@gmail.com>
-Subject: Re: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL
- allocation.
-Message-ID: <202503062303.aLFvYL6o-lkp@intel.com>
-References: <20250228082622.2638686-2-sunjunchao2870@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=QJS2TPOlKxSm53v8LFzTxlLZfZWKKqtKmC79T4wa6XIkFP8eaRJVJXd9dcHLoecFGAMDkbVQXZ0wwg0cKlcV27NdXEJuRK6ISFfEDzsoHA3jRoLI/eKT1BhZuUmHHyiockZIhCpi8wr289uF5ZQerC8DtMf8tXSJko7Xc1RTJqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 23B8E68C4E; Thu,  6 Mar 2025 18:08:42 +0100 (CET)
+Date: Thu, 6 Mar 2025 18:08:41 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	linux-xfs@vger.kernel.org, david@fromorbit.com, sandeen@redhat.com,
+	bfoster@redhat.com, aalbersh@kernel.org, axboe@kernel.dk
+Subject: Re: Changes to XFS patch integration process
+Message-ID: <20250306170841.GA25819@lst.de>
+References: <m6movx2b6yeygut6ow5hjkkfyyu32brsfzjcwydqge5gimz5z3@sw5hrcsah3ga> <WW-YcYkHs91Udy3MU9JoG8oirMMUKrs7XB4_rExNq8_azaAVtgdcf-7vtuKI23iITfyc832nCqSz_O7R41btrA==@protonmail.internalid> <20250303140547.GA16126@lst.de> <rbyicja5damtyfcfxwbk6mspeus42jqwzr6qqch44gizki3zgb@awiat6qbwl7z> <l07Q7sLKdafnmrmqBghsvH5o-E7m8nGRwAzBZHTeoEB6coPrxD8D1SvgJJ7HCs_vG6xUTJ9nMdxzEZ_EC90X0g==@protonmail.internalid> <20250304202059.GE2803749@frogsfrogsfrogs> <nausrxvwnnnk7g7ythgaslitvrfy5syeugvsjequ74zsd7gz2l@4bkgm5yrcjqh>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -64,103 +33,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250228082622.2638686-2-sunjunchao2870@gmail.com>
+In-Reply-To: <nausrxvwnnnk7g7ythgaslitvrfy5syeugvsjequ74zsd7gz2l@4bkgm5yrcjqh>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hi Julian,
+On Thu, Mar 06, 2025 at 08:50:51AM +0100, Carlos Maiolino wrote:
+> > If I had a for-6.14 and a for-6.15 branch, I'd base the PRs off of those
+> > branches, not the for-next branch itself.
+> 
+> I see what you mean, but from another POV, you'd be basing a PR on top of one
+> series of patches, not on top of everything.
 
-kernel test robot noticed the following build warnings:
+Well, while some subsystems have tons of topic branches that turns into
+a mess really quickly.  So what Darrick said makes the most sense in
+general.  There might be occasional corner cases where you'd want to
+be more fine grained, but they should be very rare.
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on linus/master v6.14-rc5 next-20250306]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> Today, what we have, is a relatively stable for-next branch, where we just
+> really rebase when something goes wrong, so, usually, when I push things into
+> for-next, I've had it tested for a big while.
+> 
+> Per my conversations off-list (specially with hch), is that this shouldn't be
+> the purpose at all of for-next, but a testing branch where (almost anything) can
+> go wrong, within reason of course. Please correct me if I'm wrong here.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Julian-Sun/xfs-remove-unnecessary-checks-for-__GFP_NOFAIL-allocation/20250228-162815
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20250228082622.2638686-2-sunjunchao2870%40gmail.com
-patch subject: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL allocation.
-config: csky-randconfig-002-20250305 (https://download.01.org/0day-ci/archive/20250306/202503062303.aLFvYL6o-lkp@intel.com/config)
-compiler: csky-linux-gcc (GCC) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250306/202503062303.aLFvYL6o-lkp@intel.com/reproduce)
+I would expect for-next to have some amount of sanity testing.  But the
+idea is indeed to have the code integrated with other kernel changes
+rather sooner than later.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202503062303.aLFvYL6o-lkp@intel.com/
+> 
+> At the same time, I wish we have a branch that everybody can work with, which
+> contains 'everything' staged, ready to go, so I'd do all the merge between
+> current and next release myself into such branch. I think having a branch ready
+> for people to work with is a maintainer's job, and people shouldn't be bothered
+> by trying to figure out which branch they should use to base their patches on
+> top.
+> 
+> I'm hoping to use the master's branch for that if nobody has any objection.
 
-All warnings (new ones prefixed by >>):
+Using master is really confusing.
 
-   fs/xfs/xfs_mru_cache.c: In function 'xfs_mru_cache_create':
->> fs/xfs/xfs_mru_cache.c:359:1: warning: label 'exit' defined but not used [-Wunused-label]
-     359 | exit:
-         | ^~~~
+As I said earlier and Darrick also said the most usual thing is
+to have one branch for $CURRELEASE fixes and one for $NEXTRELEASE
+development work.  for-next is then a temporary merge of those two.
+If you need $CURRELEASE changes in $NEXTRELEASE to avoid a mess, you
+either rebase $NEXTRELEASE (usually earlier in the merge window) or
+pull the $CURRELEASE into $NEXTRELEASE with a well-documented
+merge commit message documenting why it had to be done.
 
-
-vim +/exit +359 fs/xfs/xfs_mru_cache.c
-
-2a82b8be8a8dac David Chinner     2007-07-11  307  
-2a82b8be8a8dac David Chinner     2007-07-11  308  /*
-2a82b8be8a8dac David Chinner     2007-07-11  309   * To initialise a struct xfs_mru_cache pointer, call xfs_mru_cache_create()
-2a82b8be8a8dac David Chinner     2007-07-11  310   * with the address of the pointer, a lifetime value in milliseconds, a group
-2a82b8be8a8dac David Chinner     2007-07-11  311   * count and a free function to use when deleting elements.  This function
-2a82b8be8a8dac David Chinner     2007-07-11  312   * returns 0 if the initialisation was successful.
-2a82b8be8a8dac David Chinner     2007-07-11  313   */
-2a82b8be8a8dac David Chinner     2007-07-11  314  int
-2a82b8be8a8dac David Chinner     2007-07-11  315  xfs_mru_cache_create(
-22328d712dd7fd Christoph Hellwig 2014-04-23  316  	struct xfs_mru_cache	**mrup,
-7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  317  	void			*data,
-2a82b8be8a8dac David Chinner     2007-07-11  318  	unsigned int		lifetime_ms,
-2a82b8be8a8dac David Chinner     2007-07-11  319  	unsigned int		grp_count,
-2a82b8be8a8dac David Chinner     2007-07-11  320  	xfs_mru_cache_free_func_t free_func)
-2a82b8be8a8dac David Chinner     2007-07-11  321  {
-22328d712dd7fd Christoph Hellwig 2014-04-23  322  	struct xfs_mru_cache	*mru = NULL;
-2a82b8be8a8dac David Chinner     2007-07-11  323  	int			err = 0, grp;
-2a82b8be8a8dac David Chinner     2007-07-11  324  	unsigned int		grp_time;
-2a82b8be8a8dac David Chinner     2007-07-11  325  
-2a82b8be8a8dac David Chinner     2007-07-11  326  	if (mrup)
-2a82b8be8a8dac David Chinner     2007-07-11  327  		*mrup = NULL;
-2a82b8be8a8dac David Chinner     2007-07-11  328  
-2a82b8be8a8dac David Chinner     2007-07-11  329  	if (!mrup || !grp_count || !lifetime_ms || !free_func)
-2451337dd04390 Dave Chinner      2014-06-25  330  		return -EINVAL;
-2a82b8be8a8dac David Chinner     2007-07-11  331  
-2a82b8be8a8dac David Chinner     2007-07-11  332  	if (!(grp_time = msecs_to_jiffies(lifetime_ms) / grp_count))
-2451337dd04390 Dave Chinner      2014-06-25  333  		return -EINVAL;
-2a82b8be8a8dac David Chinner     2007-07-11  334  
-10634530f7ba94 Dave Chinner      2024-01-16  335  	mru = kzalloc(sizeof(*mru), GFP_KERNEL | __GFP_NOFAIL);
-2a82b8be8a8dac David Chinner     2007-07-11  336  
-2a82b8be8a8dac David Chinner     2007-07-11  337  	/* An extra list is needed to avoid reaping up to a grp_time early. */
-2a82b8be8a8dac David Chinner     2007-07-11  338  	mru->grp_count = grp_count + 1;
-10634530f7ba94 Dave Chinner      2024-01-16  339  	mru->lists = kzalloc(mru->grp_count * sizeof(*mru->lists),
-10634530f7ba94 Dave Chinner      2024-01-16  340  				GFP_KERNEL | __GFP_NOFAIL);
-2a82b8be8a8dac David Chinner     2007-07-11  341  
-2a82b8be8a8dac David Chinner     2007-07-11  342  	for (grp = 0; grp < mru->grp_count; grp++)
-2a82b8be8a8dac David Chinner     2007-07-11  343  		INIT_LIST_HEAD(mru->lists + grp);
-2a82b8be8a8dac David Chinner     2007-07-11  344  
-2a82b8be8a8dac David Chinner     2007-07-11  345  	/*
-2a82b8be8a8dac David Chinner     2007-07-11  346  	 * We use GFP_KERNEL radix tree preload and do inserts under a
-2a82b8be8a8dac David Chinner     2007-07-11  347  	 * spinlock so GFP_ATOMIC is appropriate for the radix tree itself.
-2a82b8be8a8dac David Chinner     2007-07-11  348  	 */
-2a82b8be8a8dac David Chinner     2007-07-11  349  	INIT_RADIX_TREE(&mru->store, GFP_ATOMIC);
-2a82b8be8a8dac David Chinner     2007-07-11  350  	INIT_LIST_HEAD(&mru->reap_list);
-007c61c68640ea Eric Sandeen      2007-10-11  351  	spin_lock_init(&mru->lock);
-2a82b8be8a8dac David Chinner     2007-07-11  352  	INIT_DELAYED_WORK(&mru->work, _xfs_mru_cache_reap);
-2a82b8be8a8dac David Chinner     2007-07-11  353  
-2a82b8be8a8dac David Chinner     2007-07-11  354  	mru->grp_time  = grp_time;
-2a82b8be8a8dac David Chinner     2007-07-11  355  	mru->free_func = free_func;
-7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  356  	mru->data = data;
-2a82b8be8a8dac David Chinner     2007-07-11  357  	*mrup = mru;
-2a82b8be8a8dac David Chinner     2007-07-11  358  
-2a82b8be8a8dac David Chinner     2007-07-11 @359  exit:
-2a82b8be8a8dac David Chinner     2007-07-11  360  	if (err && mru && mru->lists)
-d4c75a1b40cd03 Dave Chinner      2024-01-16  361  		kfree(mru->lists);
-2a82b8be8a8dac David Chinner     2007-07-11  362  	if (err && mru)
-d4c75a1b40cd03 Dave Chinner      2024-01-16  363  		kfree(mru);
-2a82b8be8a8dac David Chinner     2007-07-11  364  
-2a82b8be8a8dac David Chinner     2007-07-11  365  	return err;
-2a82b8be8a8dac David Chinner     2007-07-11  366  }
-2a82b8be8a8dac David Chinner     2007-07-11  367  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
