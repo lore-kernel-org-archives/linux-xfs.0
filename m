@@ -1,165 +1,89 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A76C1FAC52;
-	Thu,  6 Mar 2025 08:19:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E841519D891;
+	Thu,  6 Mar 2025 08:47:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741249192; cv=none; b=hYx7WUu4gP1bApnq2PKcJG3C4et2X0uTDcCwPDF6roDFmcfGAUrVk2ygWEMhD3f90gcvqVe4txSBGMcpRAC4ae/BcfJ5M/rKOIGBIOwd7iMGmlVEMlNVAhyi86xHLTuxSVQDAUb9aJoZNNht2HT4n1XumpSQsuwMRKEXkK6r4PI=
+	t=1741250867; cv=none; b=qNOCHYnmJd8pC9GBKPgfNvE2GIkj46W2i6oRmnigMcrdr1AhLhBixFIyfqT7Mi/Mqrwpq3TM+d46hx+d3fcPgGIiJk5amxeZnWjULeGADsTrbWf17p9xxtHIm72F0bsa98l0ZYm+uoHCGKsiJBgrbfgNL8QC8qMZ9BUqOxwiP10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741249192; c=relaxed/simple;
-	bh=c+f0OZcVWbJ6QMYL8/h3WwH9CgCeH2CG5zX300UAEQk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=aIHXYwuHrlhL4CGfmiBqeQQ66+AIJX/HriKRW0X/a6r63BBZmc1c3u7uHE12DW5EQLC8ka4U5v6FKCrp3KpgTtIXcgJxbqh+wn9dYzD/C8hQUCCrDZy4QiWlcERTmD03Gi/KXszpbm+cFGt7V4yRREiWabhX3J/yUMkfRwjTlSI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JoD1PK45; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1741250867; c=relaxed/simple;
+	bh=12pRnKMM3oj/6bYjZMs3d0jaNeQblRP+N8DXFazNXyI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ocbbVaglo2JF0hgswCNLx6r7DpGq6IyE9xmyfkf33JqS0hxrA5h5CWn6+UM/NxRNnSkcx7MElR1eo5h9lu3qKwlWwzcByaSpoCzWNtK4ymE8yqWA2q1szj1vlj2CSN/bxySmnXJLxKAO1b3bWTm8v+DtxmaQ+IcpSbPnvss107M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AB63qzBf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JoD1PK45"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-22382657540so5329155ad.2;
-        Thu, 06 Mar 2025 00:19:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1741249189; x=1741853989; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7spQo7HRygEnDfcz3J8RFkEf+2FA2JlqPcApHdV2Dj0=;
-        b=JoD1PK45agxEBT/AuJCjspbrZ7xtQAlFBv5WVS3d6brFJhol+KMD3AHXvezutFC+PH
-         3g1B/h3+mJ8jFnEVZ6kxj1FVaBpYPPrsIfVVQ0vERyq4fE/4QDsGq0Qw4ao9wC4CDZof
-         YeiFXJ3Ms3aw0oJJ0LdbU3CdXU4czdONyjtQP2htiZfIGVT9WR2ztVVVIfFX/W7Rofrq
-         GdYab3bYiR1TVdIOPlTbGTd9av4Y+ncmorrrbvFcDiX2/0kLxgHPwWH+CWdWPCv7Y33P
-         anKv6dEO/4Qvym6VC35vfDp8uetpVpFh4DGRhKpSE0RKU3PzIFy4kuTcUCzogxc9sSO6
-         oduw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741249189; x=1741853989;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7spQo7HRygEnDfcz3J8RFkEf+2FA2JlqPcApHdV2Dj0=;
-        b=X9D5dd80eEcMMVN3gXZLLbkYbOpM4xjSufFOyHAI7eIM/C3aqfgmbRvrCqb4hIQ2RU
-         kDBbfKWIrKBSQlM2t8rLMS8YDmw6Lo06JtEt9DxoUr9JJvqJDSRUacNwxwR4e6XY2C/3
-         Rs22Bbp1C5i/rXULrSjWyvueQ285dlGm9YRLcyZVnO7iTWAlisOHvZMOcvZTHUPfRxn9
-         88yfc1naY8SkOWXRMge/Ev+UKxCdW590kpQol7wG5H87eRFCRNm6i/hfwOtYQX4rXWpS
-         T3ylVFNKRuQUmHlURFOnDvGa+kCSRiiILjwtqmEMeis7Awcz/fj4hDARdNoP3sToGafn
-         0BVw==
-X-Forwarded-Encrypted: i=1; AJvYcCUVzZH1FR0pFpQ5Wgjzx01XiQKSPwoveQ88Kql4R4xzyuotdvKqQHoW0A/gKI69DuEaXuZcELS1GvY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzEPRgoTURK3PMWlUKL1iEIsT7TY+Zrywpr3IKHUkAZqomAeoeL
-	Rv8zxjfKLzFTyMHbaWRGXXsMb9qBVUeqYX+IIw1deqcNvIvoYhBmrkitpA==
-X-Gm-Gg: ASbGnctUv5Eqj14LbTLh226K4RMoZPXh18YgPMz9faWpQE4RfTBx2SyM1THOXN2/qnB
-	qZc8vmsEDM5d76eKVzekQVx6MB6fBrtRNHf5dSpBUlceg0rqehJ8na1JeAy1wt3R33d2J8rBIzs
-	TSpLr2t7SV314GZXWYa3TtYrz5cEIQG0mmW16YlWLatK6rv5BG4gl+wD/V0v6zeg+qC+qa+br7z
-	Y2eERzVZIOV0a2MUxx3peA3+dIGM46oDwT/9+MiATKVPjsnM9Ve89M9tz+NpetADy/Civ3Qf026
-	d6yl/IMVFVn/iR1rAEbMuy1WDeRp6jy6f1zsbCa/fBOjYw==
-X-Google-Smtp-Source: AGHT+IF3dzHYnbgHlEDo6Z8uvohC8WwvIguwOVSpERGwKXrD3seDgpGiK9hmFmBSbbMY6HIvIajZVg==
-X-Received: by 2002:a05:6a21:99a4:b0:1f3:3493:b64a with SMTP id adf61e73a8af0-1f3494fd9b5mr10383073637.21.1741249189211;
-        Thu, 06 Mar 2025 00:19:49 -0800 (PST)
-Received: from citest-1.. ([49.37.39.11])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-af2810c6349sm660257a12.46.2025.03.06.00.19.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Mar 2025 00:19:48 -0800 (PST)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AB63qzBf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0E89C4CEE0;
+	Thu,  6 Mar 2025 08:47:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741250866;
+	bh=12pRnKMM3oj/6bYjZMs3d0jaNeQblRP+N8DXFazNXyI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=AB63qzBfyGUAgFUS2sejRrY4CYAKf792DfspDYJ5BRII+Sz//5Et7RQjpSiBVRk1p
+	 ATY39q2EyGheMtZHj/0uMETppHAyakiDSV78Tk3xmb4RG6NiezrJzOynUDbZSbRIME
+	 NU1hwJQ+20w4xMwmZ7gkkvt50P16zVJV+RHWEcHDPfZyDR6BxvjX9+peBsuaemsCRp
+	 F0dd8eXPw3pQ1owYthc+uK2FVdSPQvSyfdKF3iYBFOo/SxLdXrs66Gfg+ElWuRfHGK
+	 S6ei18RvBkZFvWGp9IdkxcjkW7ohh8uo24VdAfMnfat9xbapav6L5ws6VZDucY+0um
+	 u5aVWNWreNmjw==
+From: Christian Brauner <brauner@kernel.org>
+To: djwong@kernel.org,
+	cem@kernel.org,
+	John Garry <john.g.garry@oracle.com>
+Cc: Christian Brauner <brauner@kernel.org>,
 	linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	zlang@kernel.org,
-	david@fromorbit.com,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v1 2/2] check,common/{preamble,rc},soak: Decoupling init_rc() call from sourcing common/rc
-Date: Thu,  6 Mar 2025 08:17:41 +0000
-Message-Id: <1d07e5657c2817c74e939894bb554424199fd290.1741248214.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
+	ritesh.list@gmail.com,
+	martin.petersen@oracle.com,
+	tytso@mit.edu,
+	linux-ext4@vger.kernel.org
+Subject: Re: (subset) [PATCH v4 00/12] large atomic writes for xfs with CoW
+Date: Thu,  6 Mar 2025 09:47:24 +0100
+Message-ID: <20250306-beugen-sehkraft-997e984040a1@brauner>
+X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250303171120.2837067-1-john.g.garry@oracle.com>
+References: <20250303171120.2837067-1-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1330; i=brauner@kernel.org; h=from:subject:message-id; bh=12pRnKMM3oj/6bYjZMs3d0jaNeQblRP+N8DXFazNXyI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaSfTNT6MvnMcTOurk2ntDtc1ePcvnuuDHvMWvk1beVud n7bjYlHOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbyWoORYcF10XCmn/xWfmuX GBdK/uIN4DLhtDi8/c/CeW4L197j38vI8IqPLz02YM8vxhl12q66rg8Xid7YGP3q8Mn1x0Qijqz g4AEA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Silently executing scripts during sourcing common/rc doesn't look good
-and also causes unnecessary script execution. Decouple init_rc() call
-and call init_rc() explicitly where required.
+On Mon, 03 Mar 2025 17:11:08 +0000, John Garry wrote:
+> Currently atomic write support for xfs is limited to writing a single
+> block as we have no way to guarantee alignment and that the write covers
+> a single extent.
+> 
+> This series introduces a method to issue atomic writes via a software
+> emulated method.
+> 
+> [...]
 
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- check           | 10 ++--------
- common/preamble |  1 +
- common/rc       |  2 --
- soak            |  1 +
- 4 files changed, 4 insertions(+), 10 deletions(-)
+Applied to the vfs-6.15.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs-6.15.iomap branch should appear in linux-next soon.
 
-diff --git a/check b/check
-index ea92b0d6..d30af1ba 100755
---- a/check
-+++ b/check
-@@ -840,16 +840,8 @@ function run_section()
- 		_prepare_test_list
- 	elif [ "$OLD_TEST_FS_MOUNT_OPTS" != "$TEST_FS_MOUNT_OPTS" ]; then
- 		_test_unmount 2> /dev/null
--		if ! _test_mount
--		then
--			echo "check: failed to mount $TEST_DEV on $TEST_DIR"
--			status=1
--			exit
--		fi
- 	fi
- 
--	init_rc
--
- 	seq="check.$$"
- 	check="$RESULT_BASE/check"
- 
-@@ -870,6 +862,8 @@ function run_section()
- 	needwrap=true
- 
- 	if [ ! -z "$SCRATCH_DEV" ]; then
-+		_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT
-+		[ $? -le 1 ] || exit 1
- 	  _scratch_unmount 2> /dev/null
- 	  # call the overridden mkfs - make sure the FS is built
- 	  # the same as we'll create it later.
-diff --git a/common/preamble b/common/preamble
-index 0c9ee2e0..c92e55bb 100644
---- a/common/preamble
-+++ b/common/preamble
-@@ -50,6 +50,7 @@ _begin_fstest()
- 	_register_cleanup _cleanup
- 
- 	. ./common/rc
-+	init_rc
- 
- 	# remove previous $seqres.full before test
- 	rm -f $seqres.full $seqres.hints
-diff --git a/common/rc b/common/rc
-index d2de8588..f153ad81 100644
---- a/common/rc
-+++ b/common/rc
-@@ -5754,8 +5754,6 @@ _require_program() {
- 	_have_program "$1" || _notrun "$tag required"
- }
- 
--init_rc
--
- ################################################################################
- # make sure this script returns success
- /bin/true
-diff --git a/soak b/soak
-index d5c4229a..5734d854 100755
---- a/soak
-+++ b/soak
-@@ -5,6 +5,7 @@
- 
- # get standard environment, filters and checks
- . ./common/rc
-+# ToDo: Do we need an init_rc() here? How is soak used?
- . ./common/filter
- 
- tmp=/tmp/$$
--- 
-2.34.1
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-6.15.iomap
+
+[02/12] iomap: Rename IOMAP_ATOMIC -> IOMAP_ATOMIC_HW
+        https://git.kernel.org/vfs/vfs/c/af97c9498b28
+[05/12] iomap: Support SW-based atomic writes
+        https://git.kernel.org/vfs/vfs/c/e5708b92d9bf
+[06/12] iomap: Lift blocksize restriction on atomic writes
+        https://git.kernel.org/vfs/vfs/c/2ebcf55ea0c6
