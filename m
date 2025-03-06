@@ -1,74 +1,102 @@
-Received: from pannekake.samfundet.no (pannekake.samfundet.no [193.35.52.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7E7C2E3386
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Mar 2025 08:17:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.35.52.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E431A9B3F;
+	Thu,  6 Mar 2025 08:18:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741249034; cv=none; b=kpnpOMgIwTVI3yy2YS/FM8uVSjzvcCFCxA/vDem8Q9BPtWW530cy7tXD1NYOiuZJ0MSkjt1z1pM6YA8OAQoRAgGNLNGXv/wRaGduWx6zam6hgvw68b/dCEIdXA/vK35TqVbSJkXhx/g6gRqN5VxlkQ8vDR3FqoO0P7Mo8sRuLTc=
+	t=1741249113; cv=none; b=QGRziUJH8uF1pZeoWRquZVV8l4VM3PMwOsfz1ekSXBWAGw/jrS50AEX0+L68csJ+B7yCgbUK1a1+g1o6HuoKy0gzAzy3v65PVei5uGzwuJ1L27MCpkfRwC0Yx2hCkuexQZuCc4h10jse7xuxB9+Ex7cWXOSRsgi6P7NkETeG/tc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741249034; c=relaxed/simple;
-	bh=0oWDnGB41VikyNX4pDo1uqtGj1NFZOsxrI9d6yaX/+Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=inwDu3Q9lhEI5opar1jRbDPUYVC4TLnnlMu/4YLPH+2uzGdNaQmHWospY7Z28uMw4fxloUpv1RFjwx/e3ak7b/i+0TmrH6nGJK2ONPeGvd+zgm1uFsfXgs1qcmbmSN2jjZsrwkQoQFzxfVCuzT0kjt8LWI9T0F4aniHCoLbeP7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gunderson.no; spf=pass smtp.mailfrom=gunderson.no; dkim=pass (2048-bit key) header.d=gunderson.no header.i=@gunderson.no header.b=Q6aBDFUA; arc=none smtp.client-ip=193.35.52.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gunderson.no
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gunderson.no
+	s=arc-20240116; t=1741249113; c=relaxed/simple;
+	bh=HZ3OhSZ5sxkNoBi0DqWz7CUf/EoRnD+71qKqZ8/JAPc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KJuNypyW9XV1DerS/OeuOlO2CCWBO0X7ctmbeJK8hNBEkXlyfJ8THLB9giI039haQIWK5o3kzBIMybFFTuThLQM7m0sSK76K3u8w72nhOBe9DzxoR80riGpphLy1Thj1Onf4E0Q3ZQEmZBytNDen6IjXw08AOVLRxo2tNY9HGl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NGFS7ORn; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gunderson.no header.i=@gunderson.no header.b="Q6aBDFUA"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=gunderson.no; s=legacy; h=In-Reply-To:Content-Type:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=fINc5Ov7cYJnQUq2lU4Qo8fw0D7no6oKXEdysoaNeCM=; b=Q6aBDFUAayi1tUaQixE9/OsznG
-	ipjrjjAB8SIYJpwMoXGkxu8gShmOQ62SsthRIxtEiWZToSQ1I7eNIVTh36c7IikzsPugU0uPPyonp
-	urgMQLklasgZ/FC6rA9VO41PvJ7iPe2hiMghAap0LV/5K/tAQ+WILrwPq3RsrgKUhNiluGRfDRcvd
-	qE7b4MaJfoA3QYhi39wL6R24XnWb+VmsXAUj+PmpzdN9ZtxldD68UgH1M2jwXqAEd2Ri982dVC4zI
-	evEMJUITdb/g1QPWMC9id9atO2UFVwGJOjeE390Csaxdbm8ODiJCLqbcsnpi8rON14eEnzY+EtJp1
-	TI8FS0dg==;
-Received: from sesse by pannekake.samfundet.no with local (Exim 4.96)
-	(envelope-from <steinar+bounces@gunderson.no>)
-	id 1tq6Pi-006Rsl-13;
-	Thu, 06 Mar 2025 09:17:06 +0100
-Date: Thu, 6 Mar 2025 09:17:06 +0100
-From: "Steinar H. Gunderson" <steinar+kernel@gunderson.no>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: Slow deduplication
-Message-ID: <20250306081706.5uomf6dkvas73bj7@sesse.net>
-X-Operating-System: Linux 6.13.0-rc4 on a x86_64
-References: <20250302084710.3g5ipnj46xxhd33r@sesse.net>
- <Z8TPPX3g9rA5XND_@dread.disaster.area>
- <20250302214933.dkp743wxlo624aj7@sesse.net>
- <Z8W2m8U9uniM8AAc@infradead.org>
- <Z8jt1jokQtZNUcVm@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NGFS7ORn"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-2ff6cf448b8so279638a91.3;
+        Thu, 06 Mar 2025 00:18:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1741249110; x=1741853910; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=UrPvB2qz8Psj3189Qpc6a9Xw7DkMBW1775/mHLQQwMk=;
+        b=NGFS7ORnNQdYHkkfwhiMw1fpWhMUtBq9fJEMGpt27FZTw+sXhVrtYBVJBAqd1zin1G
+         Z69tSdi5wo7jXiVaHA4NMbaqbjTG+5DKwB5TlgM0kDUzALvMpYAORHIHz7IA2aJv1Owv
+         rhpuXRaToVUZBflYiCszxyg8Jc2e7d1PzRe1xOKudn5WIGvjWO8p3qmD5Q9ItxIEr+QY
+         GM1bq7jPlbxSydiKbDVlriWykjfFF+NooyTKAAAVYX1l3A22PM3ggzhaixB0XneXRYAc
+         VVGZic2XPbOR8FGQeMCqu3wz83lHMB6zfXXD5rHcn7IXZy+X+suk35wb65Hl6QqPSMcA
+         ML2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741249110; x=1741853910;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=UrPvB2qz8Psj3189Qpc6a9Xw7DkMBW1775/mHLQQwMk=;
+        b=uyEjKDf6PM6iMk+pT9H0B/zFzawkv0L17qphHSqiLH/ty2NQhi66m06PoXg0zAObhz
+         Umjztvmi993MiXC23l6zEPqavTmpxIPS47glgPkJu/pOZED8uXomEDHF1vIoOg5E+FL2
+         XFAYQBMWmaJXb4e7ss/WVlvEV0zAAK22n9g4FUW4Fx6U600zG1y/VSNd3t2iKuNQ5m2u
+         59OvjAh53ru+sv5fOVFlVbsBdzeNQx88QWGvIiEaeydPDTYKgnvLAiYvwAaNT2PxG01k
+         yJlEpliwcg5flG8nxsbplaROUo61UIlo4/rdAea1ueefxYXxQhmVcz0ZDcTFkLvnhGcv
+         A2oA==
+X-Forwarded-Encrypted: i=1; AJvYcCU2k3LKkcH6a3D9fNi5AkJggz9t+dtigWLCKWsQn1+066HV3L9kvOtXU2RuCU7EVc6G2N0pGmcjpWw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwY7kFp7pT4l5/WM6ehW63euj1BSEpO6/uPgc1C7Aubf5yGClVZ
+	HtKYJASIae/egd0b+ormSSuvwQt13BmF4G30S4svdEJYtjXhfX8LoQLzMA==
+X-Gm-Gg: ASbGnct9A1IRRodZ8QKxxCsYna9sHbrI56T2qidwgAP2h+XhgpSh5kKLdVk9V9+5Woi
+	mx0QkZb++Uh+tgzr0YDQHjBs1rqe3WJuT187juo6TSme1VbkMclN+XPS770ep+PzcF7aC1TVTF/
+	NlOJibCViQSUcNCNwKC8waYnfj3c83bZ5BteOSXh+A6gy0qnkjZVq/DhGecxao/sdRntDuovA6m
+	+YYWuzlLXAGS2ocW0YSl52riSWkzdTFczGpnbQQHwR6k/X8AWU0pED5092Mwqz2FqW7UVCAxZcS
+	Y/vGslc8+fa/lI1gO++L6PFU03Gsp1V8uibgO1DZmXC+lw==
+X-Google-Smtp-Source: AGHT+IEgb1b3Q0QzxwVAsbYQVHNM66LLXhiuojcqhwa9Z3XaYWDgA4/nTJA7IiIQdOag+Cxs41cUqA==
+X-Received: by 2002:a05:6a21:150d:b0:1ee:c093:e235 with SMTP id adf61e73a8af0-1f34957edd3mr11151597637.41.1741249110450;
+        Thu, 06 Mar 2025 00:18:30 -0800 (PST)
+Received: from citest-1.. ([49.37.39.11])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-af2810c6349sm660257a12.46.2025.03.06.00.18.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Mar 2025 00:18:30 -0800 (PST)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	zlang@kernel.org,
+	david@fromorbit.com,
+	nirjhar.roy.lists@gmail.com
+Subject: [PATCH v1 0/2] Minor cleanups in common/rc
+Date: Thu,  6 Mar 2025 08:17:39 +0000
+Message-Id: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <Z8jt1jokQtZNUcVm@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Mar 05, 2025 at 04:35:34PM -0800, Christoph Hellwig wrote:
-> I gave it a quick try yesterday, but it turns out XFS hold the
-> invalidate_lock over dedup, and the readahead code also wants to
-> take it.  So the simple use of the readahead code doesn't work.
-> But as dedup only needs a tiny subset of the readahead algorithm
-> it might be possible to simply open code it.  I'll see what I can
-> do when I find a little more time for it.
+This patch series removes some unnecessary sourcing of common/rc
+and decouples the call to init_rc() from the sourcing of common/rc.
+The individual patches have the details. This is proposed in [1] and [2].
 
-Thanks for looking into this. I figured I had to always do read()
-first to support older kernels anyway, but I guess it would be good
-to get this fixed for the point where today's kernels have become
-older kernels :-) (Perhaps this hasn't been noticed before since
-most deduplication software does its own read() and comparison
-before calling the ioctl? Just a guess.)
+[1] https://lore.kernel.org/all/20250206155251.GA21787@frogsfrogsfrogs/
 
-/* Steinar */
--- 
-Homepage: https://www.sesse.net/
+[2] https://lore.kernel.org/all/20250210142322.tptpphdntglsz4eq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com/
+
+Nirjhar Roy (IBM) (2):
+  generic/749: Remove redundant sourcing of common/rc
+  check,common/{preamble,rc},soak: Decoupling init_rc() call from
+    sourcing common/rc
+
+ check             | 10 ++--------
+ common/preamble   |  1 +
+ common/rc         |  2 --
+ soak              |  1 +
+ tests/generic/749 |  1 -
+ 5 files changed, 4 insertions(+), 11 deletions(-)
+
+--
+2.34.1
+
