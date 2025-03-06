@@ -1,31 +1,39 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 792EEEEA9
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Mar 2025 01:40:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EF841DC98B
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Mar 2025 07:29:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741225226; cv=none; b=JNb8yRk1hAG6W5ZQheK6xeMHYOkXtCGta44yucLGeKkyaUMTjQvVrnJ+V+FXBb6CoJc17iDsD095GzVmNB0N5nUOP8wWzZxdAsh2Xlvh3c+YmfB3om65eDEOJM2XXZtfsnDMy0eYqJQU6zCcmg0FgORWJJXdADDQq6FPEQ9cY0s=
+	t=1741246158; cv=none; b=ZN8OSFo15U89HNxTqhs4OurlO7yqZmziBuPjQEYGwNFeQCga3HKIsmjuJ/PomW2NmiFaTG0B+QFDY0mtNYaOWJSt6y00dglit7Npn9WWGUBSvFGDRQeE/kYL/0OCrxZYf3JFaljQ0LaoAfhCEsd3gO0E5x3TwwiK9/sjosekvWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741225226; c=relaxed/simple;
-	bh=CpA3WfdzrQLuDVguthRfV73xKwDNonWvCTiuXGZipWs=;
+	s=arc-20240116; t=1741246158; c=relaxed/simple;
+	bh=BQ6VD5DAh6M5CxqXPOV3e1mg0SI7rmgAspuauTvxxZI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Kzg4RhFuBExp/LNO1SS0y1d8TY+ZX45BMX6cqmIv8WTGIYu6E3YnAK5EgX0QSh9CklrcjLQ946WrfsFokS5vCYFyhP11AtskbrqCC8my1dE6h0PnwulPlSRB8be4GL+A2kaZNLwcX5QEo0FH9J4L+woFEFTvsrPOLc9iLZLmy4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C342268BEB; Thu,  6 Mar 2025 02:40:19 +0100 (CET)
-Date: Thu, 6 Mar 2025 02:40:19 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/12] xfs: use vmalloc instead of vm_map_area for
- buffer backing memory
-Message-ID: <20250306014019.GA3494@lst.de>
-References: <20250305140532.158563-1-hch@lst.de> <20250305140532.158563-11-hch@lst.de> <Z8jACLtp5X98ShBR@dread.disaster.area> <20250305233536.GC613@lst.de> <Z8jy-VIjs47EDiow@dread.disaster.area>
+	 Content-Type:Content-Disposition:In-Reply-To; b=E7tPPw31wpNZBynOJUC5iEczRNrRn2dqXWd/bjkSUD7DlAt8qd4o9J0uPraJGM/hBi+DZBlvzkS33YoUg1Wq8mto0L1C/XvI6MtlFqZNajIbFtFzHOiV7Q43V37tmntIrJ0v0YEXrdR6FoMMGJ51HMdtBculBIproCRJlaZP0kg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bN799kMC; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bN799kMC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB0F3C4CEE4;
+	Thu,  6 Mar 2025 07:29:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741246158;
+	bh=BQ6VD5DAh6M5CxqXPOV3e1mg0SI7rmgAspuauTvxxZI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bN799kMC9xYnV1QIOuZpcDmI7MtWKxWwZOuyJrtJtKGagJc2U7Y4h+R/Qt6g5h5tG
+	 FHrN1n69O8wuETnQB1Etk6oIYt1KBvtwfqzxuBNUIi2LTYV2wKwWarMpbRxS1Od3Fi
+	 6d4349WugPk/74vOAUPtxVrj0h52M/43ctMgz3kjLERzXR1yUSdv3iv3F7LwmXUE8l
+	 rmaW8jNPVFPR7f8Tv5H8DmqaerfFsWSeDtzEoL4QkqBTTRfANulSnvrR1+NRGa6Mds
+	 jB1J5NnVznWZUXhAFO7Q0OmzMrztRJaMJ5kQzeCdx2U5KJiwK3lEZ3+Rpesjco1rXy
+	 ABK2fRObi3vMg==
+Date: Thu, 6 Mar 2025 08:29:13 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Use abs_diff instead of XFS_ABSDIFF
+Message-ID: <2xlkbwy2t66ybmo5gjio7pxchovmvvfp5cdttnvy2jnksp6zau@aa2luzbtesvf>
+References: <bYNAZb1AYBMnSX2WjwzxlEtG-CSnpls-tn4L3TzS12FWuq2epxg6oMdtXM3Otq9nSX-dJZLoI6xou25ArMpSJg==@protonmail.internalid>
+ <20250303180234.3305018-1-willy@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,15 +42,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z8jy-VIjs47EDiow@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250303180234.3305018-1-willy@infradead.org>
 
-On Thu, Mar 06, 2025 at 11:57:29AM +1100, Dave Chinner wrote:
-> Can you add a comment that the code is done this way because
-> of the mismatch between block layer API and mm object (folio/slab)
-> handling APIs? Otherwise this code is going to look wrong every time
-> I look at in future....
+On Mon, Mar 03, 2025 at 06:02:32PM +0000, Matthew Wilcox (Oracle) wrote:
+> We have a central definition for this function since 2023, used by
+> a number of different parts of the kernel.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-Sure.  Although I hope we'll have the bio_add_virt helper by the
-following merge window.
 
+Looks good to me.
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 3d33e17f2e5c..7839efe050bf 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -33,8 +33,6 @@ struct kmem_cache	*xfs_extfree_item_cache;
+> 
+>  struct workqueue_struct *xfs_alloc_wq;
+> 
+> -#define XFS_ABSDIFF(a,b)	(((a) <= (b)) ? ((b) - (a)) : ((a) - (b)))
+> -
+>  #define	XFSA_FIXUP_BNO_OK	1
+>  #define	XFSA_FIXUP_CNT_OK	2
+> 
+> @@ -410,8 +408,8 @@ xfs_alloc_compute_diff(
+>  		if (newbno1 != NULLAGBLOCK && newbno2 != NULLAGBLOCK) {
+>  			if (newlen1 < newlen2 ||
+>  			    (newlen1 == newlen2 &&
+> -			     XFS_ABSDIFF(newbno1, wantbno) >
+> -			     XFS_ABSDIFF(newbno2, wantbno)))
+> +			     abs_diff(newbno1, wantbno) >
+> +			     abs_diff(newbno2, wantbno)))
+>  				newbno1 = newbno2;
+>  		} else if (newbno2 != NULLAGBLOCK)
+>  			newbno1 = newbno2;
+> @@ -427,7 +425,7 @@ xfs_alloc_compute_diff(
+>  	} else
+>  		newbno1 = freeend - wantlen;
+>  	*newbnop = newbno1;
+> -	return newbno1 == NULLAGBLOCK ? 0 : XFS_ABSDIFF(newbno1, wantbno);
+> +	return newbno1 == NULLAGBLOCK ? 0 : abs_diff(newbno1, wantbno);
+>  }
+> 
+>  /*
+> --
+> 2.47.2
+> 
+> 
