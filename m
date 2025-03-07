@@ -1,220 +1,144 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-out01.uio.no (mail-out01.uio.no [129.240.10.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCE3E1990C3;
-	Fri,  7 Mar 2025 05:57:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E4A912F5A5
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Mar 2025 07:48:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.240.10.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741327023; cv=none; b=JpbyrLAYghsC5Vcu9pCUW5/bBLuD5xfrZWecR6Nqx1GlB/OKnDgZg5dYayAnzjO6vZ7Bq/SVI5oTeTxPD3LK4lsdwF1PGrZOthKA4cQS/3t1sZxEFj5NXAU7rM4yD7fUuCudJewMpRNXs5ACC6YnJI9HUtGzp2whRN1BMFjTaaU=
+	t=1741333696; cv=none; b=pr/ud8DZs0TocWAw6XPD7lAH8ckTTBLXbnoZPIM5YbdGXBOuM6wOYjJ2tKs5GRriuJxhKnaWs2hYfK4NuSi3wBjBrgw0NANDkwCQGk1p76E7t5T7o9op9Em8AUIg/YwST4q1P/ynNigKdP7afRx2CwF/FcfEomPw9+Oimesvv+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741327023; c=relaxed/simple;
-	bh=E+XKrAjprJAEbSNQb5StFu5XuRWHmSHx8RSJaX4FZZg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F5ipYsRX3r1jKcq7Wgyg7NYOcZIaZER5TFy0cgAwDrv2zahYeHOmgI9P9dhGFLNTl9vsz3JL8ArnGKP5jPrFQ3vzpbJADguYekfm9iJISCoD5i5N0SEEjhjWt/Dsv7+1vdPzLvVznsOVIU+jGYtnI6/4NLvgZCY0ru21UNDLilg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W7vem+ZN; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1741333696; c=relaxed/simple;
+	bh=9BN8yN+OEHO6oFrW26wq1aFCcRaHB3RrDse43fciFp4=;
+	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
+	 Date:MIME-Version; b=c7vN/Ag2MS72D78O4PHaBOKKNmNvmdN7oLOftS1gEmm05/QCAch5AFNv14ktkmQTlquBYdMe3mrygLenewFcxPmJWkLtp9a7C2cVPihY9TQwSNL7j4UhU6vR7ZkDTQ/CyBtM0QKk+v/cihjJWhnEFyYWpSPZqOk6n4y4TE/F6vg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ifi.uio.no; spf=pass smtp.mailfrom=ifi.uio.no; dkim=pass (2048-bit key) header.d=ifi.uio.no header.i=@ifi.uio.no header.b=IqCilCrL; arc=none smtp.client-ip=129.240.10.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ifi.uio.no
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ifi.uio.no
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W7vem+ZN"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-224191d92e4so21422435ad.3;
-        Thu, 06 Mar 2025 21:57:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1741327021; x=1741931821; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3RJ4GgmaUCeUyiQLhX/4iScj1laeCJdSqSvO0xcP9LI=;
-        b=W7vem+ZNcS+zjIN68+JGB3WFVJHfL+MKIsEwIjIti+BK0orBA6umPSZwkB3nTpc2bc
-         LePm0r2kF27uUpqnWeef6jY/wDw4W/2KbIEMWlMjSI1p9scDd3w2x/aMMwWE0tE6hZTd
-         h7DQ18gLqPRxOUecNKFXl7TDJFRCwlDndF6n4hnJo+o4E1rAPffXmKQWf3yhdJAkMQTK
-         a3O019krBeDqhY1Tb1LY/gmx8QRNbwsau5sAokHt4TsINuM/CCDaU19CJWekIshDjoic
-         DFJXDi06o53cSjWsLcr2A1O80SLJIh7Kg3Zg4EjElDBuljeE8kkyZBLKnxm8xl35poL/
-         2VYg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741327021; x=1741931821;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3RJ4GgmaUCeUyiQLhX/4iScj1laeCJdSqSvO0xcP9LI=;
-        b=sm1jFKEq7vodw3GA+LGxbCz2D5e26RmurvEijmIwt0Bd5C+QWa4A/XZ1V2Wm5eV6RP
-         GjXP/1vi2G3shJtaopcAboOl8YuiyPu3yZlWTjK2UdTSXDKEhJMoZFZiRa9Ih6ZL+JbY
-         Z8r+PdYyVeVod2flqVK4v6rTP6yKGLcNTF+Upgxl9lwoh4lYbUdP/aiUz3926C70IS2Z
-         /ql8d2PV6sOa1Yj/iZPrMZju0FhMZ3WmdoAzBd+xDwHe8uHoyOKR6vfXSIjMShMYT8SR
-         pgfHCGz2icuwsmy1swFAHqOokSJX+7KxIbOV7pDNq4L5YdeZVHKTwqkqLpuYtGLxg2Sj
-         /JvQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUPB6ZxHNR0LZBFZlq+1ChMEteA4/EJNffejQax+44RgKtUeS+AsEBmnS03jv3uy/+HGeN4FnDg5heU@vger.kernel.org, AJvYcCWoCGedRh03ETwRk29/gxtmVQ+TFZJ9+bty93kGSC0eR63iDIchnRmQHwv7sfAbKRAP8eGhhOb3b3ul@vger.kernel.org
-X-Gm-Message-State: AOJu0YxM0nc/hKV372QM7N1IJjxxQ/m8HtAkESTRmIabNSgmmRBpqdzO
-	LRNMFKcRGbQ/AFJiL8Q6XSWRZdJNbHIkPyvbJQdMkseq90Kz2pnZ
-X-Gm-Gg: ASbGncvbU1HYcLtaztY+p6sOkvZEncEN7tX5O13HbPgVf+fV0CUGFuzeMAMViOTqXD/
-	h7h+Md5gkcCOjJ7ML3cUY5+0LC5byYtbmshiTu+Re5eJE3Hgs1ISRxspGtIw72aHBskq4/OZk+n
-	+yNyRYEU2Vn54I36iZuRtFBBgkUoAh83loXhZpxpk16v60V1Bqk0JKO6aU7tx9ISinMQL5pCHi8
-	5iddmB0Ksy5l+8FjG8ksJrkOz0cSjsxAkXk8C5Fn1/wk9xZipwxRNLQN3oHKRJe/ycdHtJ0coPZ
-	oW/zBi4uwhR8MpzNLJ2nkjbPRp7JuW5PfDXd0LJl5Zw2Nhyp5R0DQ18=
-X-Google-Smtp-Source: AGHT+IFxucM6W+U0CU+hPzKAczQ+Fo4RQQcykP7T5oQxE6tvPEKZVx/IEjDk3GRUV6+N+yktU1Xq9A==
-X-Received: by 2002:a05:6a00:23d5:b0:736:9fa2:bcbb with SMTP id d2e1a72fcca58-736aaae5325mr4293622b3a.24.1741327020788;
-        Thu, 06 Mar 2025 21:57:00 -0800 (PST)
-Received: from [192.168.0.120] ([49.205.39.113])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7369844ce06sm2387236b3a.73.2025.03.06.21.56.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 06 Mar 2025 21:57:00 -0800 (PST)
-Message-ID: <c4fc5048-77fb-410b-b204-308881b9a23c@gmail.com>
-Date: Fri, 7 Mar 2025 11:26:56 +0530
+	dkim=pass (2048-bit key) header.d=ifi.uio.no header.i=@ifi.uio.no header.b="IqCilCrL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=ifi.uio.no;
+	s=key2309; h=MIME-Version:Date:Content-Transfer-Encoding:Content-Type:
+	References:In-Reply-To:Cc:To:From:Subject:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=fqsFuSRp6MgwIkrvs1OUv6KAcs+grxdc8862AuBWCmA=; b=IqCilCrLLWesffHl1NE/sulBPQ
+	oAPNrFjWeexFU7bT/hbWTIHADUw5KpWcS/tPouQs1U7cQ+h0sUvcpm2eZ0ZJ4pgc+Sl47052s7yVe
+	IHpbmumMoHd33PKUoCdGwslTUdAameWFFN5GQd6JsuT+tHuNpmGuNrescr2ej8s7sRoaq4ale1uUo
+	u9Kz1NkBGjKGdEv4l7CnL9kjSIopsNwlljopZV1KkDYKbXwv3ynIFnd0vKXEOZH0c8nQ+k19zD1+x
+	2n9NdbIC9oU6KPFsTEyeBUiEsqkSBcXpAmK+wNoM+z+M3CkiL1aT5TOSVxdLihDADradnK66M0K03
+	8OVUUZmg==;
+Received: from mail-mx10.uio.no ([129.240.10.27])
+	by mail-out01.uio.no with esmtps  (TLS1.2) tls TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98)
+	(envelope-from <kjetilho@ifi.uio.no>)
+	id 1tqSRG-0000000A1A4-0WWM;
+	Fri, 07 Mar 2025 08:48:10 +0100
+Received: from vpn.i.bitbit.net ([87.238.42.13] helo=scribus.ms.redpill-linpro.com)
+	by mail-mx10.uio.no with esmtpsa (TLS1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+	user kjetilho (Exim 4.98)
+	(envelope-from <kjetilho@ifi.uio.no>)
+	id 1tqSRF-000000006U3-1bQx;
+	Fri, 07 Mar 2025 08:48:10 +0100
+Message-ID: <359a0fe9a2aaa308016ca236b145feb038f07687.camel@ifi.uio.no>
+Subject: Re: nouuid hint in kernel message?
+From: Kjetil Torgrim Homme <kjetilho@ifi.uio.no>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+In-Reply-To: <20250306183948.GQ2803749@frogsfrogsfrogs>
+References: 
+	<Nro5gceoG1ar5vFFGSWGNwo-KlGPVYooeufy2thIqL3A5VKjZKQ0yp0kKyAxSVRiAvTm1CkpW4ITHawDjpez0A==@protonmail.internalid>
+	 <cbf4f4c23efba09467ca7c08e516fe8561a1f130.camel@ifi.uio.no>
+	 <pgirewjvggop2v2s6qrovyqr72kxfajuk2sbqlqll3facikiuu@sriorffcy3x4>
+	 <521200e9de4a3b789af1e2890f8a50f9612ed9c9.camel@ifi.uio.no>
+	 <20250306183948.GQ2803749@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 07 Mar 2025 08:47:08 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 2/2] check,common/{preamble,rc},soak: Decoupling
- init_rc() call from sourcing common/rc
-Content-Language: en-US
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
- djwong@kernel.org, zlang@kernel.org, david@fromorbit.com
-References: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
- <1d07e5657c2817c74e939894bb554424199fd290.1741248214.git.nirjhar.roy.lists@gmail.com>
- <20250306211357.fnruffn2nkbiyx5b@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <20250306211357.fnruffn2nkbiyx5b@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+User-Agent: Evolution 3.52.4 (3.52.4-2.fc40) 
+X-UiO-SPF-Received: Received-SPF: neutral (mail-mx10.uio.no: 87.238.42.13 is neither permitted nor denied by domain of ifi.uio.no) client-ip=87.238.42.13; envelope-from=kjetilho@ifi.uio.no; helo=scribus.ms.redpill-linpro.com;
+X-UiO-Spam-info: not spam, SpamAssassin (score=-5.0, required=5.0, autolearn=disabled, UIO_MAIL_IS_INTERNAL=-5)
+X-UiO-Scanned: D72EB859647CA09123A12983B3ADB5FD895D1640
 
+to. den 06. 03. 2025 klokka 10.39 (-0800) skreiv Darrick J. Wong:
+> On Thu, Mar 06, 2025 at 12:36:34PM +0100, Kjetil Torgrim Homme wrote:
+> > to. den 06. 03. 2025 klokka 11.00 (+0100) skreiv Carlos Maiolino:
+> >=20
+> > > On a mid term here, I think we could improve xfs(5) to include a bit =
+more
+> > > information about duplicated uuids.
+> > >=20
+> >=20
+> > current text:
+> >=20
+> >    Each XFS filesystem is labeled with a Universal Unique Identifier
+> >    (UUID).  The UUID is stored in every allocation group header and is =
+used
+> >    to help distinguish one XFS filesystem from another, therefore you
+> >    should avoid using dd(1) or other block-by-block copying programs to
+> >    copy  XFS  filesystems.   If two XFS filesystems on the same machine
+> >    have the same UUID, xfsdump(8) may become confused when doing
+> >    incremental and resumed dumps.  xfsdump(8) and xfsrestore(8) are
+> >    recommended for making copies of XFS filesystems.
+> >=20
+> > perhaps add a sentence at the end of that, "To mount a snapshot of an
+> > already mounted filesystem, use mount option \fBnouuid\fR."
+> >=20
+> > possibly also something about this in xfs_admin(8)?
+> >=20
+> > current text:
+> >=20
+> >        -U uuid
+> >               Set  the  UUID  of the filesystem to uuid.  A sample UUID
+> >               looks like this: "c1b9d5a2-f162-11cf-9ece-0020afc76f16".
+> >               The uuid may also be nil, which will set the filesystem
+> >               UUID to the null UUID.  The uuid may also be generate,
+> >               which will generate a new UUID for the filesystem.  Note
+> >               that on CRC-enabled  filesystems,  this will set an
+> >               incompatible flag such that older kernels will not be
+> >               able=C2=A0to mount the filesystem.  To remove this
+> >               incompatible flag,  use restore, which will restore the
+> >               original UUID and remove the incompatible feature flag
+> >               as needed.
+> >=20
+> > suggested addition: "A transient snapshot which conflicts with a mounte=
+d
+> > filesystem can alternatively be mounted with the option \bBnouuid\fR."
+> >=20
+> > what do you think?
+>=20
+> I think we ought to fix the informational messages in xfs_db:
+>=20
+> "ERROR: The filesystem has valuable metadata changes in a log which
+> needs to be replayed.  Mount the filesystem to replay the log, and
+> unmount it before re-running xfs_admin.  If the filesystem is a snapshot
+> of a mounted filesystem, you may need to give mount the nouuid option.
+> If you are unable to mount the filesystem, then use the xfs_repair -L
+> option to destroy the log and attempt a repair.  Note that destroying
+> the log may cause corruption -- please attempt a mount of the filesystem
+> before doing this.
+>=20
+> and xfs_repair:
+>=20
+> "ERROR: The filesystem has valuable metadata changes in a log which
+> needs to be replayed.  Mount the filesystem to replay the log, and
+> unmount it before re-running xfs_repair.  If the filesystem is a
+> snapshot of a mounted filesystem, you may need to give mount the nouuid
+> option.  If you are unable to mount the filesystem, then use the -L
+> option to destroy the log and attempt a repair.  Note that destroying
+> the log may cause corruption -- please attempt a mount of the filesystem
+> before doing this."
 
-On 3/7/25 02:43, Zorro Lang wrote:
-> On Thu, Mar 06, 2025 at 08:17:41AM +0000, Nirjhar Roy (IBM) wrote:
->> Silently executing scripts during sourcing common/rc doesn't look good
->> and also causes unnecessary script execution. Decouple init_rc() call
->> and call init_rc() explicitly where required.
->>
->> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->> ---
->>   check           | 10 ++--------
->>   common/preamble |  1 +
->>   common/rc       |  2 --
->>   soak            |  1 +
->>   4 files changed, 4 insertions(+), 10 deletions(-)
->>
->> diff --git a/check b/check
->> index ea92b0d6..d30af1ba 100755
->> --- a/check
->> +++ b/check
->> @@ -840,16 +840,8 @@ function run_section()
->>   		_prepare_test_list
->>   	elif [ "$OLD_TEST_FS_MOUNT_OPTS" != "$TEST_FS_MOUNT_OPTS" ]; then
->>   		_test_unmount 2> /dev/null
->> -		if ! _test_mount
->> -		then
->> -			echo "check: failed to mount $TEST_DEV on $TEST_DIR"
->> -			status=1
->> -			exit
->> -		fi
-> Why remove these lines?
+I like these texts, simple and plain spoken.  I think my extra text for
+xfs(5) is appropriate in addition to your change, the xfs_admin(8)
+addition is less obvious.
 
-Darrick has asked the same question [1]. Basically I have already added 
-init_rc() call to _begin_fstests() which will do the _test_mount() so we 
-don't need the above lines, right?
-
-
-[1] 
-https://lore.kernel.org/all/716e0d26-7728-42bb-981d-aae89ef50d7f@gmail.com/
-
->
->>   	fi
->>   
->> -	init_rc
-> Doesn't the "check" need init_rc at here?
-Same reason as above.
->
->> -
->>   	seq="check.$$"
->>   	check="$RESULT_BASE/check"
->>   
->> @@ -870,6 +862,8 @@ function run_section()
->>   	needwrap=true
->>   
->>   	if [ ! -z "$SCRATCH_DEV" ]; then
->> +		_check_mounted_on SCRATCH_DEV $SCRATCH_DEV SCRATCH_MNT $SCRATCH_MNT
->> +		[ $? -le 1 ] || exit 1
->           ^^^^^^^
->           Different indent with below code.
->
-> This looks like part of init_rc. If you don't remove above init_rc, can this
-> change be saved?
->
->>   	  _scratch_unmount 2> /dev/null
->>   	  # call the overridden mkfs - make sure the FS is built
->>   	  # the same as we'll create it later.
->> diff --git a/common/preamble b/common/preamble
->> index 0c9ee2e0..c92e55bb 100644
->> --- a/common/preamble
->> +++ b/common/preamble
->> @@ -50,6 +50,7 @@ _begin_fstest()
->>   	_register_cleanup _cleanup
->>   
->>   	. ./common/rc
->> +	init_rc
->>   
->>   	# remove previous $seqres.full before test
->>   	rm -f $seqres.full $seqres.hints
->> diff --git a/common/rc b/common/rc
->> index d2de8588..f153ad81 100644
->> --- a/common/rc
->> +++ b/common/rc
->> @@ -5754,8 +5754,6 @@ _require_program() {
->>   	_have_program "$1" || _notrun "$tag required"
->>   }
->>   
->> -init_rc
->> -
->>   ################################################################################
->>   # make sure this script returns success
->>   /bin/true
->> diff --git a/soak b/soak
->> index d5c4229a..5734d854 100755
->> --- a/soak
->> +++ b/soak
->> @@ -5,6 +5,7 @@
->>   
->>   # get standard environment, filters and checks
->>   . ./common/rc
->> +# ToDo: Do we need an init_rc() here? How is soak used?
-> I never noticed we have this file... this file was create by:
->
->    commit 27fba05e66981c239c3be7a7e5a3aa0d8dc59247
->    Author: Nathan Scott <nathans@sgi.com>
->    Date:   Mon Jan 15 05:01:19 2001 +0000
->
->        cmd/xfs/stress/001 1.6 Renamed to cmd/xfstests/001
->
-> I can't understand the relationship of this commit with this file. Does
-> anyone learn about the history of it.
->
-> I tried to "grep" the whole fstests, looks like nothing uses this file.
-> Maybe we should remove it?
-
-Okay. I can see Dave suggesting something similar and has also given a 
-sample patch where he is planning to do the same[2].
-
-[2] https://lore.kernel.org/all/Z8oT_tBYG-a79CjA@dread.disaster.area/
-
---NR
-
-
->
-> Thanks,
-> Zorro
->
->>   . ./common/filter
->>   
->>   tmp=/tmp/$$
->> -- 
->> 2.34.1
->>
->>
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
-
+--=20
+venleg helsing,
+Kjetil T.
