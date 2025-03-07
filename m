@@ -1,41 +1,56 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88FB41607A4
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Mar 2025 18:07:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5952E219E98
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Mar 2025 18:43:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741370853; cv=none; b=Ugpk9JWQUyvx4NADFaEtXXPiixrnh3zORABt6T1E6k6Zh2XKy/nWi7UPK64crGARaA5RxNy+EnbRwmt/xkzz1xlBpFX3qYDOzMIYXsDlw2JkaTWxtFByZw2hvoN1pKEiAuvubj+nJwPq9bJ0Lcn5X0gG+YAVr1aBdu+0oxyEYh0=
+	t=1741372997; cv=none; b=NkbwUcOG0CTyfl+UToNQaRCp2gcmKHr+x4cgZWhI38FtrSdsHdbhdv001Q9A4p0204S+lIQsLBS6ad1ozgR2nl1HlJzQupdwkRPbjQWeplQ4X1bkAo3ij/v3ByoEtoOn257Bm9vDW03bPPLMMoCqAj9yige4C/9iiZ9tZwo4YmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741370853; c=relaxed/simple;
-	bh=fEkUqvo4QEq13xikZASkKJfqqX9pSzGxuEZW9b0lTMo=;
+	s=arc-20240116; t=1741372997; c=relaxed/simple;
+	bh=NN/Qu3CPnQShxCtND9NOjW7QqV4zGDWuCzxNm4T/96k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L12ZB1KLXnS/u5tVx1HAbToPcYet20cPk39Mzrcrny28cTSdQAiBsQrKbjx9czTZs220JVxFoDoxuRktA/KhvNMeXxtOGpZAUgK6HFXV/II5aAwU6yELhBZrAOkSnzNQMUUbR7U5rTiv0Qm6tHzvcSU66NL/eQ/KBJ/Tpw48VkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IE4T08vq; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=VI6obwaWADfVNb5K8SZzayjdGLgHwGC7US5GBr+to5rdOJ5GsTWJyI8lGQTYYYpQoc0KDu5d0seJGBBY1/MXHxuxK1SVrOYm2ubczXasJePCJtxH16cOFdTq+e69npwZsMajhkUB0Z9dSoW8m1YgObhAFrUhKpQzS6bMIoMk9cM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YKesZMLg; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IE4T08vq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A650BC4CEEA;
-	Fri,  7 Mar 2025 18:07:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741370853;
-	bh=fEkUqvo4QEq13xikZASkKJfqqX9pSzGxuEZW9b0lTMo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IE4T08vqk3phUrs7VCPlk0CzpQIW5v/kBGAiky5thADUAh5n5LUQCv2WrsqrnrOcm
-	 6z8xYQhjHIsGZsfZGqGSG/OfJYy0uT1WvRTehERd02c6XLtwVjFZ4CW18iRIrKQ6rE
-	 lUVRnKYHsXB5bJkTaEjJL+7jjp+Ft5eGRTvhbBz8RX6oeiLu87xqCrM0hgABSniYtA
-	 lOe9wLv52NEdVyYD0UmJNs+g0gl+7+KuSoYg/3rDuGJX8WZuMTRQcW2h4dXR9evXxL
-	 k5705KOdgVuffc6EHV7XgZsOFoWBI4tKHFWTC2dA5rDUGR9nyQnhv90yUO0f7kWasO
-	 52lGA+Kpg6KTw==
-Date: Fri, 7 Mar 2025 19:07:27 +0100
-From: Carlos Maiolino <cem@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YKesZMLg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1741372994;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Xha3mC4RM8CGcAJZgk81Myst1aIAt6KmyhDLE7ZBOjk=;
+	b=YKesZMLgsU4oo30qRuL5fN3DDWSOlbReeQNzhnchoYXJsHdxvJyoNKgkRHmqid+HD2R69P
+	KjMxMmXmTWT8wS789wEr2YU/qOy3/OVDiVfVmaKTuPb8X4Z378sB4BOpFL5MSWrMdHvVAl
+	gSl+BPnanLeM8QDzllZArz2E7Wh0qpg=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-94-06ofkwn4NQ-MF6SkWlD2xw-1; Fri,
+ 07 Mar 2025 13:43:11 -0500
+X-MC-Unique: 06ofkwn4NQ-MF6SkWlD2xw-1
+X-Mimecast-MFC-AGG-ID: 06ofkwn4NQ-MF6SkWlD2xw_1741372990
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B37621956087;
+	Fri,  7 Mar 2025 18:43:09 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.64.191])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DD4F2300019E;
+	Fri,  7 Mar 2025 18:43:07 +0000 (UTC)
+Date: Fri, 7 Mar 2025 12:43:03 -0600
+From: Bill O'Donnell <bodonnel@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Kjetil Torgrim Homme <kjetilho@ifi.uio.no>, linux-xfs@vger.kernel.org, 
+Cc: Kjetil Torgrim Homme <kjetilho@ifi.uio.no>, 
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, 
 	Andrey Albershteyn <aalbersh@redhat.com>
 Subject: Re: [PATCH] xfs_{admin,repair},man5: tell the user to mount with
  nouuid for snapshots
-Message-ID: <ardyzk7y5vnhppepeth4kemallz7xkjaez4t2mf7fm2l2pyqys@fxna4sdl4vzt>
-References: <02HUCQ14xn4UY-D7b1EK1t6blVFHGwHW9OukuueJzNNHz9t0vcBKRjDk10YiIkhGX4xaLN9TJfsOMolsfW4xCA==@protonmail.internalid>
- <20250307175501.GS2803749@frogsfrogsfrogs>
+Message-ID: <32rk6ymwr2fvisnvp3zawgwrk7xjedafwszq4k33c2cozcarmm@4ix7lgzlnsx5>
+References: <20250307175501.GS2803749@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,6 +60,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20250307175501.GS2803749@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
 On Fri, Mar 07, 2025 at 09:55:01AM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
@@ -58,8 +74,7 @@ On Fri, Mar 07, 2025 at 09:55:01AM -0800, Darrick J. Wong wrote:
 > Reported-by: Kjetil Torgrim Homme <kjetilho@ifi.uio.no>
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 
 > ---
 >  db/sb.c         |    9 +++++----
@@ -123,3 +138,5 @@ Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 >  				exit(2);
 >  			}
 >  		}
+> 
+
