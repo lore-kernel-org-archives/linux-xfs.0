@@ -1,160 +1,167 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D5641A8F97;
-	Fri,  7 Mar 2025 09:41:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE58821A435
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Mar 2025 13:58:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741340492; cv=none; b=RFG9b4k9da65RdauouB8ggfGXSpYMBkXElxRz/hEssRaKo/JziAxOSuhWXb6IylxfhYN1u49VLuWw9XYaoOwBR6Xh/Ai2L0yuobU5jcsfv4qzwOz1EOcmkcib6mD6MHhnl95lPbb+53D3zP7CFzWUzwhpqUmmunsXiC1Ks2LcvA=
+	t=1741355932; cv=none; b=BphTTO0tRFg0eaOvhHnC0HLW7XLHyLbVmwMb+nfRyCo4nix8+qUIdLkunOX++NrgvS7flJBXPbt6zRjtneyVO8BGVhjRqId+9xuVLxuuZhz/ca5cUYYsbO39YUJFt8czuPyUX9xcWRdVOSxE7HXHKTN2mDWT+H1Qhn1kajf8+7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741340492; c=relaxed/simple;
-	bh=sHnV9GEozz+Opv61zRjqJ4zv0AEgNaF9oXU1zOBaCs4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ndrwAd1fq7Tsl7riwMoA7E/TYOw/91KKBiHw8TrW5ntAe3r89CEiJrCIsb2RaPziauW74h0qYI1CJ1ZwluBRT7mHQ/B3XozrtKFfms8QfQ9/P+ZkjxsjWd5RjR3UMDbrVSDB2uEAReCvP3Wk0J9vcoiKQmHtrXChmT4NvNW29k0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Z8LQ532WYz1R6Dn;
-	Fri,  7 Mar 2025 17:21:33 +0800 (CST)
-Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
-	by mail.maildlp.com (Postfix) with ESMTPS id 59CC61402CE;
-	Fri,  7 Mar 2025 17:23:12 +0800 (CST)
-Received: from [10.67.120.129] (10.67.120.129) by
- dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 7 Mar 2025 17:23:11 +0800
-Message-ID: <180818a1-b906-4a0b-89d3-34cb71cc26c9@huawei.com>
-Date: Fri, 7 Mar 2025 17:23:11 +0800
+	s=arc-20240116; t=1741355932; c=relaxed/simple;
+	bh=LgdGyBjxDWXmoa9HcdXIpGcy9TdkkZ9WRcWjI+eTOWM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=IfZRBvVOrgMiWrn31blfv9/wRJ3l/rzz/o88jkYo0wVNFJbJW71S4pblAPcjOp9Mtd4xPvcYK16xOQOP1tr+eOqnB6G5bWkGrbzoUNFgebYdrRMgJrk74xbLVKkkwPb4XlG/Il//uC4Ltcs/RPlEd00WA+oMKjNiuLlYDK7yG2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JC5AHes5; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JC5AHes5"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-43bb6b0b898so15788055e9.1
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Mar 2025 05:58:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1741355928; x=1741960728; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=9EGxfAWzHmc0n2XcMsv4xyGAchxM7sK9Sox0qv/mbjM=;
+        b=JC5AHes5xpGW/zQrh5SO59DPXOmSoQAnfW6yKGMTLsoJ1fs2mE6ge3aigu5nzc7vf+
+         WzUwSACnwsnReo4at/O9N1ZoLI5aP/TqIo6vSxQB87L174JLRUKApRBkG4rFJEwozjVu
+         u7lZGa/xTeawualzEXgNvqBqA2cMzQYq9Rpmb/GUYbT3GKUN8G1kQQkepAZwdosVwSTE
+         JBw5AL5htO5nY6nXbJQ1yGrXkFb1YaGOPHtYud3bH8R5TLwhJ55pv95RZ+VDQSmFvDHr
+         eMyMRAYIHgLfGjZgc6hktkjG6+YryVpV9UnFUIgqP8AWw6Jz8QSUWNQR6gJdnMGFunr9
+         Kq5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741355928; x=1741960728;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9EGxfAWzHmc0n2XcMsv4xyGAchxM7sK9Sox0qv/mbjM=;
+        b=AyoJfRm9Ex1fE8akgsZhOYVeXru+AGM705mVTxnfkK0JGlyxG+UXceUlj8XjyVcBtq
+         jgmmuSI6I77LzkfMS4rSUAPOc3ixhNVxDvaMZeZ3IQQlbcO1m9bZdpIR4a00U/3xaWYC
+         sX/vqspRkklw7XydYdUOyh95t+5cvtcQmvraiL8LB45j1DF9v5+KsZIezrDfFNuPo9Ct
+         DU47w2Y876RGXoOJXkf6CNDCIDf0gfu4OpOk1LdFreG+4ISaj3FTl86+VsVvAFZuVFog
+         ZI3Ju4weXVYDnwkUqiac+8wqWggihllSPzCLTcWF4W8a/p8hiTIA9HMmZhq+/tMxDTpB
+         neHA==
+X-Forwarded-Encrypted: i=1; AJvYcCX54bmeQoVP71BAUSanXpFnGhEVruOQR6m9Qg4rGyVaA4JoYaIu8MgJYm7SMKJ5aQ7B4bGLIjl8r38=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyoPppyamJXbLRVaUPDUaT4GfonU5a+uuQ1h4H2mjWSVyGy17+f
+	K3lR14YkF3Of9xs1aU+jMc0fTmnmsVNxP1bPMagF7iKmPRRzt0aZVRi54aZw2eQSvZZWW17g8sJ
+	u
+X-Gm-Gg: ASbGnct2nMJobkTvaTXdZeVuAZMfU/h3lljEbbTnyI+scZBO1ceBKfhAzC7d2is4B84
+	hwOmk4gBskK7DsoiK5RMnGjmR/354cuWdntcV4c4pFdL1mReORsJRPsnUHKwxCAGXe1qY+sGIHG
+	miLrEaXiVZfe9fFIEljBHDJuzhYycy6O9HM+yhAgCVn4QgXksO86PbLg0ktPaTjBC8bCofq1CAT
+	0V7kR+OyOTV0WuPUYTZL90Xq6PngabCvnwgxPR/1mZ4/lweBny09w/qkiuUL/U6P4D5K6zzQUJk
+	d96dondycpcD/SVNJEEgFEXDcF56B6LN8Uo3NBhr8b4iRP+OJQ==
+X-Google-Smtp-Source: AGHT+IHob9xSwHZHxbIGxOhr+1B8/H6WPDLiz5T5TIbPy4IHpRxIEmfhrIuEHRHdzuZcNtNspVmeNA==
+X-Received: by 2002:adf:8bd7:0:b0:391:39bd:a381 with SMTP id ffacd0b85a97d-39139bda886mr202282f8f.30.1741355928133;
+        Fri, 07 Mar 2025 05:58:48 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3912bfb7aefsm5371321f8f.20.2025.03.07.05.58.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Mar 2025 05:58:47 -0800 (PST)
+Date: Fri, 7 Mar 2025 16:58:44 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: oe-kbuild@lists.linux.dev, Julian Sun <sunjunchao2870@gmail.com>,
+	linux-xfs@vger.kernel.org
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev, cem@kernel.org,
+	djwong@kernel.org, Julian Sun <sunjunchao2870@gmail.com>
+Subject: Re: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL
+ allocation.
+Message-ID: <398b4241-bef5-4270-9fff-204e528b76fb@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-To: NeilBrown <neilb@suse.de>
-CC: Qu Wenruo <wqu@suse.com>, Yishai Hadas <yishaih@nvidia.com>, Jason
- Gunthorpe <jgg@ziepe.ca>, Shameer Kolothum
-	<shameerali.kolothum.thodi@huawei.com>, Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>, Josef
- Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Gao Xiang
-	<xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>,
-	Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>, Jesper Dangaard Brouer
-	<hawk@kernel.org>, Ilias Apalodimas <ilias.apalodimas@linaro.org>, "David S.
- Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
- Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman
-	<horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>, Anna Schumaker
-	<anna@kernel.org>, Chuck Lever <chuck.lever@oracle.com>, Jeff Layton
-	<jlayton@kernel.org>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
-	<Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Luiz Capitulino
-	<luizcap@redhat.com>, Mel Gorman <mgorman@techsingularity.net>, Dave Chinner
-	<david@fromorbit.com>, <kvm@vger.kernel.org>,
-	<virtualization@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-btrfs@vger.kernel.org>, <linux-erofs@lists.ozlabs.org>,
-	<linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>, <netdev@vger.kernel.org>,
-	<linux-nfs@vger.kernel.org>
-References: <> <f834a7cd-ca0a-4495-a787-134810aa0e4d@huawei.com>
- <174129565467.33508.7106343513316364028@noble.neil.brown.name>
-Content-Language: en-US
-From: Yunsheng Lin <linyunsheng@huawei.com>
-In-Reply-To: <174129565467.33508.7106343513316364028@noble.neil.brown.name>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemf200006.china.huawei.com (7.185.36.61)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250228082622.2638686-2-sunjunchao2870@gmail.com>
 
-On 2025/3/7 5:14, NeilBrown wrote:
-> On Thu, 06 Mar 2025, Yunsheng Lin wrote:
->> On 2025/3/6 7:41, NeilBrown wrote:
->>> On Wed, 05 Mar 2025, Yunsheng Lin wrote:
->>>>
->>>> For the existing btrfs and sunrpc case, I am agreed that there
->>>> might be valid use cases too, we just need to discuss how to
->>>> meet the requirements of different use cases using simpler, more
->>>> unified and effective APIs.
->>>
->>> We don't need "more unified".
->>
->> What I meant about 'more unified' is how to avoid duplicated code as
->> much as possible for two different interfaces with similar‌ functionality.
->>
->> The best way I tried to avoid duplicated code as much as possible is
->> to defragment the page_array before calling the alloc_pages_bulk()
->> for the use case of btrfs and sunrpc so that alloc_pages_bulk() can
->> be removed of the assumption populating only NULL elements, so that
->> the API is simpler and more efficient.
->>
->>>
->>> If there are genuinely two different use cases with clearly different
->>> needs - even if only slightly different - then it is acceptable to have
->>> two different interfaces.  Be sure to choose names which emphasise the
->>> differences.
->>
->> The best name I can come up with for the use case of btrfs and sunrpc
->> is something like alloc_pages_bulk_refill(), any better suggestion about
->> the naming?
-> 
-> I think alloc_pages_bulk_refill() is a good name.
-> 
-> So:
-> - alloc_pages_bulk() would be given an uninitialised array of page
->   pointers and a required count and would return the number of pages
->   that were allocated
-> - alloc_pages_bulk_refill() would be given an initialised array of page
->   pointers some of which might be NULL.  It would attempt to allocate
->   pages for the non-NULL pointers and return the total number of
+Hi Julian,
 
-You meant 'NULL pointers' instead of 'non-NULL pointers' above?
+kernel test robot noticed the following build warnings:
 
->   allocated pages in the array - just like the current
->   alloc_pages_bulk().
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-I guess 'the total number of allocated pages in the array ' include
-the pages which are already in the array before calling the above
-API?
+url:    https://github.com/intel-lab-lkp/linux/commits/Julian-Sun/xfs-remove-unnecessary-checks-for-__GFP_NOFAIL-allocation/20250228-162815
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/20250228082622.2638686-2-sunjunchao2870%40gmail.com
+patch subject: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL allocation.
+config: sh-randconfig-r073-20250307 (https://download.01.org/0day-ci/archive/20250307/202503072035.d6QqiZWT-lkp@intel.com/config)
+compiler: sh4-linux-gcc (GCC) 14.2.0
 
-I guess it is worth mentioning that the current alloc_pages_bulk()
-may return different value with the same size of arrays, but with
-different layout of the same number of NULL pointers.
-For the same size of arrays with different layout for the NULL pointer
-below('*' indicate NULL pointer), and suppose buddy allocator is only
-able to allocate two pages:
-1. P**P*P: will return 4.
-2. P*PP**: will return 5.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+| Closes: https://lore.kernel.org/r/202503072035.d6QqiZWT-lkp@intel.com/
 
-If the new API do the page defragmentation, then it will always return
-the same value for different layout of the same number of NULL pointers.
-I guess the new one is the more perfered behavior as it provides a more
-defined semantic.
+New smatch warnings:
+fs/xfs/xfs_mru_cache.c:360 xfs_mru_cache_create() warn: variable dereferenced before check 'mru' (see line 338)
 
-> 
-> sunrpc could usefully use both of these interfaces.
-> 
-> alloc_pages_bulk() could be implemented by initialising the array and
-> then calling alloc_pages_bulk_refill().  Or alloc_pages_bulk_refill()
-> could be implemented by compacting the pages and then calling
-> alloc_pages_bulk().
-> If we could duplicate the code and have two similar but different
-> functions.
-> 
-> The documentation for _refill() should make it clear that the pages
-> might get re-ordered.
+vim +/mru +360 fs/xfs/xfs_mru_cache.c
 
-Does 'the pages might get re-ordered' mean defragmenting the page_array?
-If yes, it makes sense to make it clear.
+2a82b8be8a8dac David Chinner     2007-07-11  314  int
+2a82b8be8a8dac David Chinner     2007-07-11  315  xfs_mru_cache_create(
+22328d712dd7fd Christoph Hellwig 2014-04-23  316  	struct xfs_mru_cache	**mrup,
+7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  317  	void			*data,
+2a82b8be8a8dac David Chinner     2007-07-11  318  	unsigned int		lifetime_ms,
+2a82b8be8a8dac David Chinner     2007-07-11  319  	unsigned int		grp_count,
+2a82b8be8a8dac David Chinner     2007-07-11  320  	xfs_mru_cache_free_func_t free_func)
+2a82b8be8a8dac David Chinner     2007-07-11  321  {
+22328d712dd7fd Christoph Hellwig 2014-04-23  322  	struct xfs_mru_cache	*mru = NULL;
+2a82b8be8a8dac David Chinner     2007-07-11  323  	int			err = 0, grp;
+2a82b8be8a8dac David Chinner     2007-07-11  324  	unsigned int		grp_time;
+2a82b8be8a8dac David Chinner     2007-07-11  325  
+2a82b8be8a8dac David Chinner     2007-07-11  326  	if (mrup)
+2a82b8be8a8dac David Chinner     2007-07-11  327  		*mrup = NULL;
+2a82b8be8a8dac David Chinner     2007-07-11  328  
+2a82b8be8a8dac David Chinner     2007-07-11  329  	if (!mrup || !grp_count || !lifetime_ms || !free_func)
+2451337dd04390 Dave Chinner      2014-06-25  330  		return -EINVAL;
+2a82b8be8a8dac David Chinner     2007-07-11  331  
+2a82b8be8a8dac David Chinner     2007-07-11  332  	if (!(grp_time = msecs_to_jiffies(lifetime_ms) / grp_count))
+2451337dd04390 Dave Chinner      2014-06-25  333  		return -EINVAL;
+2a82b8be8a8dac David Chinner     2007-07-11  334  
+10634530f7ba94 Dave Chinner      2024-01-16  335  	mru = kzalloc(sizeof(*mru), GFP_KERNEL | __GFP_NOFAIL);
+2a82b8be8a8dac David Chinner     2007-07-11  336  
+2a82b8be8a8dac David Chinner     2007-07-11  337  	/* An extra list is needed to avoid reaping up to a grp_time early. */
+2a82b8be8a8dac David Chinner     2007-07-11 @338  	mru->grp_count = grp_count + 1;
+10634530f7ba94 Dave Chinner      2024-01-16  339  	mru->lists = kzalloc(mru->grp_count * sizeof(*mru->lists),
+10634530f7ba94 Dave Chinner      2024-01-16  340  				GFP_KERNEL | __GFP_NOFAIL);
+2a82b8be8a8dac David Chinner     2007-07-11  341  
+2a82b8be8a8dac David Chinner     2007-07-11  342  	for (grp = 0; grp < mru->grp_count; grp++)
+2a82b8be8a8dac David Chinner     2007-07-11  343  		INIT_LIST_HEAD(mru->lists + grp);
+2a82b8be8a8dac David Chinner     2007-07-11  344  
+2a82b8be8a8dac David Chinner     2007-07-11  345  	/*
+2a82b8be8a8dac David Chinner     2007-07-11  346  	 * We use GFP_KERNEL radix tree preload and do inserts under a
+2a82b8be8a8dac David Chinner     2007-07-11  347  	 * spinlock so GFP_ATOMIC is appropriate for the radix tree itself.
+2a82b8be8a8dac David Chinner     2007-07-11  348  	 */
+2a82b8be8a8dac David Chinner     2007-07-11  349  	INIT_RADIX_TREE(&mru->store, GFP_ATOMIC);
+2a82b8be8a8dac David Chinner     2007-07-11  350  	INIT_LIST_HEAD(&mru->reap_list);
+007c61c68640ea Eric Sandeen      2007-10-11  351  	spin_lock_init(&mru->lock);
+2a82b8be8a8dac David Chinner     2007-07-11  352  	INIT_DELAYED_WORK(&mru->work, _xfs_mru_cache_reap);
+2a82b8be8a8dac David Chinner     2007-07-11  353  
+2a82b8be8a8dac David Chinner     2007-07-11  354  	mru->grp_time  = grp_time;
+2a82b8be8a8dac David Chinner     2007-07-11  355  	mru->free_func = free_func;
+7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  356  	mru->data = data;
+2a82b8be8a8dac David Chinner     2007-07-11  357  	*mrup = mru;
+2a82b8be8a8dac David Chinner     2007-07-11  358  
+2a82b8be8a8dac David Chinner     2007-07-11  359  exit:
+2a82b8be8a8dac David Chinner     2007-07-11 @360  	if (err && mru && mru->lists)
+                                                                   ^^^
 
-> 
-> Having looked at some of the callers I agree that the current interface
-> is not ideal for many of them, and that providing a simpler interface
-> would help.
+d4c75a1b40cd03 Dave Chinner      2024-01-16  361  		kfree(mru->lists);
+2a82b8be8a8dac David Chinner     2007-07-11  362  	if (err && mru)
+                                                                   ^^^
+I normally wouldn't hit forward on this zero-day bot thing because it's
+obviously harmless.  But since you're removing NULL checks you could
+remove these two too if you want.
 
-+1
+d4c75a1b40cd03 Dave Chinner      2024-01-16  363  		kfree(mru);
+2a82b8be8a8dac David Chinner     2007-07-11  364  
+2a82b8be8a8dac David Chinner     2007-07-11  365  	return err;
+2a82b8be8a8dac David Chinner     2007-07-11  366  }
 
-> 
-> Thanks,
-> NeilBrown
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
