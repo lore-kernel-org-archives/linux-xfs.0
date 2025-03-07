@@ -1,144 +1,133 @@
-Received: from mail-out01.uio.no (mail-out01.uio.no [129.240.10.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E4A912F5A5
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Mar 2025 07:48:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.240.10.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 779EC28E8;
+	Fri,  7 Mar 2025 08:05:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741333696; cv=none; b=pr/ud8DZs0TocWAw6XPD7lAH8ckTTBLXbnoZPIM5YbdGXBOuM6wOYjJ2tKs5GRriuJxhKnaWs2hYfK4NuSi3wBjBrgw0NANDkwCQGk1p76E7t5T7o9op9Em8AUIg/YwST4q1P/ynNigKdP7afRx2CwF/FcfEomPw9+Oimesvv+o=
+	t=1741334709; cv=none; b=q4fnhyOkK4sGGP5MvSj5Ein2AiGJnKHaeRedThkZ7bvV6yL5zMRMSn3/csTXpClurtG/INr2tuS0Prira5vTgi4L8SmdWv2NTNV8gvX5gii1bY/F/HYq+7QJkiDuxbszY3AaYZWG3B4YDSs2eqeUGeQhOmXIE6Mgq2psRD+hOng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741333696; c=relaxed/simple;
-	bh=9BN8yN+OEHO6oFrW26wq1aFCcRaHB3RrDse43fciFp4=;
-	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
-	 Date:MIME-Version; b=c7vN/Ag2MS72D78O4PHaBOKKNmNvmdN7oLOftS1gEmm05/QCAch5AFNv14ktkmQTlquBYdMe3mrygLenewFcxPmJWkLtp9a7C2cVPihY9TQwSNL7j4UhU6vR7ZkDTQ/CyBtM0QKk+v/cihjJWhnEFyYWpSPZqOk6n4y4TE/F6vg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ifi.uio.no; spf=pass smtp.mailfrom=ifi.uio.no; dkim=pass (2048-bit key) header.d=ifi.uio.no header.i=@ifi.uio.no header.b=IqCilCrL; arc=none smtp.client-ip=129.240.10.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ifi.uio.no
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ifi.uio.no
+	s=arc-20240116; t=1741334709; c=relaxed/simple;
+	bh=cewBzhj/Uh7V6W/nPAL4b9bf4vo+Ggi4E/ZzoSluG+I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=d0eZULC62Vixt7IzCVDs2GyhW9KNFJyfOf1mzWzDq4QWu+nR69Q5ZLkK55zMPcU2NDfXXVlIRttonV2QIN0+74JkPFRPcl/9Obf0BrMsIbjlPK++5ejiKYPP+SLk1NkeqdplL2DJlxxpHqxAy/9GWdmSsShcP201t3t1fXVoOjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ldv6xr7q; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ifi.uio.no header.i=@ifi.uio.no header.b="IqCilCrL"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=ifi.uio.no;
-	s=key2309; h=MIME-Version:Date:Content-Transfer-Encoding:Content-Type:
-	References:In-Reply-To:Cc:To:From:Subject:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=fqsFuSRp6MgwIkrvs1OUv6KAcs+grxdc8862AuBWCmA=; b=IqCilCrLLWesffHl1NE/sulBPQ
-	oAPNrFjWeexFU7bT/hbWTIHADUw5KpWcS/tPouQs1U7cQ+h0sUvcpm2eZ0ZJ4pgc+Sl47052s7yVe
-	IHpbmumMoHd33PKUoCdGwslTUdAameWFFN5GQd6JsuT+tHuNpmGuNrescr2ej8s7sRoaq4ale1uUo
-	u9Kz1NkBGjKGdEv4l7CnL9kjSIopsNwlljopZV1KkDYKbXwv3ynIFnd0vKXEOZH0c8nQ+k19zD1+x
-	2n9NdbIC9oU6KPFsTEyeBUiEsqkSBcXpAmK+wNoM+z+M3CkiL1aT5TOSVxdLihDADradnK66M0K03
-	8OVUUZmg==;
-Received: from mail-mx10.uio.no ([129.240.10.27])
-	by mail-out01.uio.no with esmtps  (TLS1.2) tls TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98)
-	(envelope-from <kjetilho@ifi.uio.no>)
-	id 1tqSRG-0000000A1A4-0WWM;
-	Fri, 07 Mar 2025 08:48:10 +0100
-Received: from vpn.i.bitbit.net ([87.238.42.13] helo=scribus.ms.redpill-linpro.com)
-	by mail-mx10.uio.no with esmtpsa (TLS1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
-	user kjetilho (Exim 4.98)
-	(envelope-from <kjetilho@ifi.uio.no>)
-	id 1tqSRF-000000006U3-1bQx;
-	Fri, 07 Mar 2025 08:48:10 +0100
-Message-ID: <359a0fe9a2aaa308016ca236b145feb038f07687.camel@ifi.uio.no>
-Subject: Re: nouuid hint in kernel message?
-From: Kjetil Torgrim Homme <kjetilho@ifi.uio.no>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-In-Reply-To: <20250306183948.GQ2803749@frogsfrogsfrogs>
-References: 
-	<Nro5gceoG1ar5vFFGSWGNwo-KlGPVYooeufy2thIqL3A5VKjZKQ0yp0kKyAxSVRiAvTm1CkpW4ITHawDjpez0A==@protonmail.internalid>
-	 <cbf4f4c23efba09467ca7c08e516fe8561a1f130.camel@ifi.uio.no>
-	 <pgirewjvggop2v2s6qrovyqr72kxfajuk2sbqlqll3facikiuu@sriorffcy3x4>
-	 <521200e9de4a3b789af1e2890f8a50f9612ed9c9.camel@ifi.uio.no>
-	 <20250306183948.GQ2803749@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 07 Mar 2025 08:47:08 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ldv6xr7q"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-22185cddbffso51261535ad.1;
+        Fri, 07 Mar 2025 00:05:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1741334708; x=1741939508; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mQd7MCLMb5m6gKXonhGoh77RnzkJR75ioCNoJkyZULo=;
+        b=Ldv6xr7qDPHt4svFmJmw9vqJmPThS2NfU4prvMSsciX1iz9NK+fYv873+SMsoB25Sn
+         YzMgDhIu7cCQwGtaLnWJEHE4JNMHlV9E7BdA1ur//oLHZNQ94MDR2XqAdDQ4HSiRO02U
+         6dXn3h58ealQITdV3l2UkuYkIA+pTBz8vFljndbaFvFEWFnplzJKCOKqJ1mP/7i7PekB
+         KWNI3IQ2CHhwK6bk+d1g08lnlaW/QDCf5BMO0jz0OldjH9q5Prurfc2CtI1EpzLZKvlH
+         k+6w6PifK4vjjagfIxrT118++QRnATUo1wnIKN6iw0Zp51GikCnod0QCMMtE4f0n3dYn
+         qi7w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741334708; x=1741939508;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=mQd7MCLMb5m6gKXonhGoh77RnzkJR75ioCNoJkyZULo=;
+        b=gg5Yu81SJEDUokKCzBLAZCAD+HPKKpZ4QbM0vExE3OqyWks+Dxst+PmZrEwVQLXjhU
+         BLyC2QCvNK9ZZ05uHH2BWOY9q5bFaEyeBnObuRKu43DbL+f8IKH/sYFJJZg2oh0jBpeH
+         kIYOV+ASBXZkAMr9g+m3prifCofEkiRPnbhiFrNcrkuRRJQqisnM9hAdOsYKDsibiD5N
+         +C93BS2+dyz7t1ZBNho435x3j+u8DaJCYlr+TV7qA93U+N9RR3dDKU5jTWlMm2LCa8xX
+         DBhTSk67kKkvl+MLY5Tm79OCDJ1KaRYhcjn42PTtosx0ZURwpjldpWV1z4PpI1b/Hi44
+         xjtQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU0kFJNClYMWiIYn1EQs5UkOxUQTX6u9dUR1cZCqCtb7O0wbPU+JHTFQQTAKOBsnkF1BRAWb2TfAI8p@vger.kernel.org, AJvYcCUofAvjn1CpY7bJ9eEjrB5WgznJgrp6e1rzULkS0or4Ao5TmL+HZk4YmhBBUIZDAKrK40RWrf1aurZo@vger.kernel.org
+X-Gm-Message-State: AOJu0YxIjEoJREmcbitqIi/Bom0v9ZfWCnxhwNf38yR2xHJE0DPvNrR6
+	81wE4LWcwa7eqyP1Sm6AaRj+PMSssH/4F7j85BfKbXD2J/RwGMCbd2RQYQ==
+X-Gm-Gg: ASbGncuqRYH2JPvUq6dGMfgT5ZEil80Qb0yeZZf3W05nOsNNnQ/N7/4VhFf9H+9qiH7
+	p/gFEGh9Gx04soRw5cQ46ykh2TnYJoekQLvL7uGXt0Hdv/bdGVKSiMa79JzanmdjJtu74Sj2I1K
+	JvqF2T7bHXPVdb/ZvkhNefuB/Qoq/T+fn9kCN/rj78t6AeZJgazTMKIVNgGDS5wzbea/nqX3L/T
+	2wK9cFgpk06CpCuV2REXuWGFf4xP/P67SFJD9gI+RUyDpMvEVbt5Pz0YUQTHNn4HK5Jp4nTJ21U
+	WSGuaX1Awaql0hTATJ/5QoL0jLKy1GSv/paRe3a33BaRn6S/IKKBzcQ=
+X-Google-Smtp-Source: AGHT+IEeX9zHsHYMraDYVg5YvJ/5yBas/htzAmlGee+kx193lJTrTuqODs/is/rwpnkP7FynH8tGVA==
+X-Received: by 2002:a05:6a00:2e17:b0:730:9637:b2ff with SMTP id d2e1a72fcca58-736a97bbbddmr4662660b3a.7.1741334707160;
+        Fri, 07 Mar 2025 00:05:07 -0800 (PST)
+Received: from [192.168.0.120] ([49.205.39.113])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-736b2da32c6sm421059b3a.149.2025.03.07.00.05.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Mar 2025 00:05:06 -0800 (PST)
+Message-ID: <5c38f84d-cc60-49e7-951e-6a7ef488f9df@gmail.com>
+Date: Fri, 7 Mar 2025 13:35:02 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Evolution 3.52.4 (3.52.4-2.fc40) 
-X-UiO-SPF-Received: Received-SPF: neutral (mail-mx10.uio.no: 87.238.42.13 is neither permitted nor denied by domain of ifi.uio.no) client-ip=87.238.42.13; envelope-from=kjetilho@ifi.uio.no; helo=scribus.ms.redpill-linpro.com;
-X-UiO-Spam-info: not spam, SpamAssassin (score=-5.0, required=5.0, autolearn=disabled, UIO_MAIL_IS_INTERNAL=-5)
-X-UiO-Scanned: D72EB859647CA09123A12983B3ADB5FD895D1640
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 2/2] check,common/{preamble,rc},soak: Decoupling
+ init_rc() call from sourcing common/rc
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ djwong@kernel.org, zlang@kernel.org
+References: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <1d07e5657c2817c74e939894bb554424199fd290.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <Z8oT_tBYG-a79CjA@dread.disaster.area>
+Content-Language: en-US
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <Z8oT_tBYG-a79CjA@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-to. den 06. 03. 2025 klokka 10.39 (-0800) skreiv Darrick J. Wong:
-> On Thu, Mar 06, 2025 at 12:36:34PM +0100, Kjetil Torgrim Homme wrote:
-> > to. den 06. 03. 2025 klokka 11.00 (+0100) skreiv Carlos Maiolino:
-> >=20
-> > > On a mid term here, I think we could improve xfs(5) to include a bit =
-more
-> > > information about duplicated uuids.
-> > >=20
-> >=20
-> > current text:
-> >=20
-> >    Each XFS filesystem is labeled with a Universal Unique Identifier
-> >    (UUID).  The UUID is stored in every allocation group header and is =
-used
-> >    to help distinguish one XFS filesystem from another, therefore you
-> >    should avoid using dd(1) or other block-by-block copying programs to
-> >    copy  XFS  filesystems.   If two XFS filesystems on the same machine
-> >    have the same UUID, xfsdump(8) may become confused when doing
-> >    incremental and resumed dumps.  xfsdump(8) and xfsrestore(8) are
-> >    recommended for making copies of XFS filesystems.
-> >=20
-> > perhaps add a sentence at the end of that, "To mount a snapshot of an
-> > already mounted filesystem, use mount option \fBnouuid\fR."
-> >=20
-> > possibly also something about this in xfs_admin(8)?
-> >=20
-> > current text:
-> >=20
-> >        -U uuid
-> >               Set  the  UUID  of the filesystem to uuid.  A sample UUID
-> >               looks like this: "c1b9d5a2-f162-11cf-9ece-0020afc76f16".
-> >               The uuid may also be nil, which will set the filesystem
-> >               UUID to the null UUID.  The uuid may also be generate,
-> >               which will generate a new UUID for the filesystem.  Note
-> >               that on CRC-enabled  filesystems,  this will set an
-> >               incompatible flag such that older kernels will not be
-> >               able=C2=A0to mount the filesystem.  To remove this
-> >               incompatible flag,  use restore, which will restore the
-> >               original UUID and remove the incompatible feature flag
-> >               as needed.
-> >=20
-> > suggested addition: "A transient snapshot which conflicts with a mounte=
-d
-> > filesystem can alternatively be mounted with the option \bBnouuid\fR."
-> >=20
-> > what do you think?
->=20
-> I think we ought to fix the informational messages in xfs_db:
->=20
-> "ERROR: The filesystem has valuable metadata changes in a log which
-> needs to be replayed.  Mount the filesystem to replay the log, and
-> unmount it before re-running xfs_admin.  If the filesystem is a snapshot
-> of a mounted filesystem, you may need to give mount the nouuid option.
-> If you are unable to mount the filesystem, then use the xfs_repair -L
-> option to destroy the log and attempt a repair.  Note that destroying
-> the log may cause corruption -- please attempt a mount of the filesystem
-> before doing this.
->=20
-> and xfs_repair:
->=20
-> "ERROR: The filesystem has valuable metadata changes in a log which
-> needs to be replayed.  Mount the filesystem to replay the log, and
-> unmount it before re-running xfs_repair.  If the filesystem is a
-> snapshot of a mounted filesystem, you may need to give mount the nouuid
-> option.  If you are unable to mount the filesystem, then use the -L
-> option to destroy the log and attempt a repair.  Note that destroying
-> the log may cause corruption -- please attempt a mount of the filesystem
-> before doing this."
 
-I like these texts, simple and plain spoken.  I think my extra text for
-xfs(5) is appropriate in addition to your change, the xfs_admin(8)
-addition is less obvious.
+On 3/7/25 03:00, Dave Chinner wrote:
+> On Thu, Mar 06, 2025 at 08:17:41AM +0000, Nirjhar Roy (IBM) wrote:
+>> Silently executing scripts during sourcing common/rc doesn't look good
+>> and also causes unnecessary script execution. Decouple init_rc() call
+>> and call init_rc() explicitly where required.
+>>
+>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> FWIW, I've just done somethign similar for check-parallel. I need to
+> decouple common/config from common/rc and not run any code from
+> either common/config or common/rc.
+>
+> I've included the patch below (it won't apply because there's all
+> sorts of refactoring for test list and config-section parsing in the
+> series before it), but it should give you an idea of how I think we
+> should be separating one-off initialisation environment varaibles,
+> common code inclusion and the repeated initialisation of section
+> specific parameters....
+Thank you so much. I can a look at this.
+>
+> .....
+>> diff --git a/soak b/soak
+>> index d5c4229a..5734d854 100755
+>> --- a/soak
+>> +++ b/soak
+>> @@ -5,6 +5,7 @@
+>>   
+>>   # get standard environment, filters and checks
+>>   . ./common/rc
+>> +# ToDo: Do we need an init_rc() here? How is soak used?
+>>   . ./common/filter
+> I've also go a patch series that removes all these old 2000-era SGI
+> QE scripts that have not been used by anyone for the last 15
+> years. I did that to get rid of the technical debt that these
+> scripts have gathered over years of neglect. They aren't used, we
+> shouldn't even attempt to maintain them anymore.
 
---=20
-venleg helsing,
-Kjetil T.
+Okay. What do you mean by SGI QE script (sorry, not familiar with this)? 
+Do you mean some kind of CI/automation-test script?
+
+--NR
+
+>
+> -Dave.
+>
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
+
