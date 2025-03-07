@@ -1,167 +1,236 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE58821A435
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Mar 2025 13:58:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E64634EC
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Mar 2025 15:46:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741355932; cv=none; b=BphTTO0tRFg0eaOvhHnC0HLW7XLHyLbVmwMb+nfRyCo4nix8+qUIdLkunOX++NrgvS7flJBXPbt6zRjtneyVO8BGVhjRqId+9xuVLxuuZhz/ca5cUYYsbO39YUJFt8czuPyUX9xcWRdVOSxE7HXHKTN2mDWT+H1Qhn1kajf8+7Q=
+	t=1741362378; cv=none; b=oo7ZiWgSzy0jJLC4SOmuDK+292fcFWZ8eXrwuebZQoLRWyifOGptBzjpg95VXTOIFr2G+7eNnbXP6XFE2qLVSHCR2amQ+8UH0mnG4lNi+sFBK5Pa2LGNefJlxL5roR1GlZLuxfizLQe20THFhPpQ3r+mCjU/USkp8L5+u2iW8O0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741355932; c=relaxed/simple;
-	bh=LgdGyBjxDWXmoa9HcdXIpGcy9TdkkZ9WRcWjI+eTOWM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=IfZRBvVOrgMiWrn31blfv9/wRJ3l/rzz/o88jkYo0wVNFJbJW71S4pblAPcjOp9Mtd4xPvcYK16xOQOP1tr+eOqnB6G5bWkGrbzoUNFgebYdrRMgJrk74xbLVKkkwPb4XlG/Il//uC4Ltcs/RPlEd00WA+oMKjNiuLlYDK7yG2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JC5AHes5; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1741362378; c=relaxed/simple;
+	bh=z7gs7BlfOC/UBYmevmQVkCHwb3yUJYsPO1D5N15aWig=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JZbFp8bPGVk1YF8zMY7NMUsp32HtqwblCtAaJo7oxKUzZxvgRHgTo/uY04WxY136pO82EoPOfaPDJaS+2G7d+u1+HFtWSvgi5vFG719jkPtI+CVttrQPOemaJSq5a8Ds/teO99eGyd6RgNJ0osXP9OMAwkReED3atVfCo0MZjrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=Rrhx66eD; arc=none smtp.client-ip=209.85.128.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JC5AHes5"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-43bb6b0b898so15788055e9.1
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Mar 2025 05:58:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="Rrhx66eD"
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-6f679788fd1so15531137b3.2
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Mar 2025 07:46:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1741355928; x=1741960728; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9EGxfAWzHmc0n2XcMsv4xyGAchxM7sK9Sox0qv/mbjM=;
-        b=JC5AHes5xpGW/zQrh5SO59DPXOmSoQAnfW6yKGMTLsoJ1fs2mE6ge3aigu5nzc7vf+
-         WzUwSACnwsnReo4at/O9N1ZoLI5aP/TqIo6vSxQB87L174JLRUKApRBkG4rFJEwozjVu
-         u7lZGa/xTeawualzEXgNvqBqA2cMzQYq9Rpmb/GUYbT3GKUN8G1kQQkepAZwdosVwSTE
-         JBw5AL5htO5nY6nXbJQ1yGrXkFb1YaGOPHtYud3bH8R5TLwhJ55pv95RZ+VDQSmFvDHr
-         eMyMRAYIHgLfGjZgc6hktkjG6+YryVpV9UnFUIgqP8AWw6Jz8QSUWNQR6gJdnMGFunr9
-         Kq5w==
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1741362376; x=1741967176; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=24J3CynJ4fNToC40YYg0INXois46zfdfDDswNEU4WCw=;
+        b=Rrhx66eDhzAlGmIJ4yyWZduZGji29jN0g+ooBuiLcBEPepOAZpG28baKczOkkPZG02
+         Kj7rQClfecgJbS1L1vb/nI6v+bK7FA/+B5I2hvFlcpbZOj/GoVO+3Y9FDCjiL+qCOg4U
+         KTWXUf3s7R/fKYhWVINW7yM2jBj4opefgeDph89h0TDH9PSgMx0HcfiAvY5btA1zCqG8
+         am3R73qwsw2JXaHzeQvrJ+dWNvJOafvfS3ABcD20+GSV1V1twzTTQA5rbQaFCmeokae2
+         GU0Dlk7sJbK/lE2nB7T1vRDTwqCt4VIb5HGBlRvuPXLd5unVvq6Etw75w1VcfgtQH4rs
+         Odxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741355928; x=1741960728;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=9EGxfAWzHmc0n2XcMsv4xyGAchxM7sK9Sox0qv/mbjM=;
-        b=AyoJfRm9Ex1fE8akgsZhOYVeXru+AGM705mVTxnfkK0JGlyxG+UXceUlj8XjyVcBtq
-         jgmmuSI6I77LzkfMS4rSUAPOc3ixhNVxDvaMZeZ3IQQlbcO1m9bZdpIR4a00U/3xaWYC
-         sX/vqspRkklw7XydYdUOyh95t+5cvtcQmvraiL8LB45j1DF9v5+KsZIezrDfFNuPo9Ct
-         DU47w2Y876RGXoOJXkf6CNDCIDf0gfu4OpOk1LdFreG+4ISaj3FTl86+VsVvAFZuVFog
-         ZI3Ju4weXVYDnwkUqiac+8wqWggihllSPzCLTcWF4W8a/p8hiTIA9HMmZhq+/tMxDTpB
-         neHA==
-X-Forwarded-Encrypted: i=1; AJvYcCX54bmeQoVP71BAUSanXpFnGhEVruOQR6m9Qg4rGyVaA4JoYaIu8MgJYm7SMKJ5aQ7B4bGLIjl8r38=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyoPppyamJXbLRVaUPDUaT4GfonU5a+uuQ1h4H2mjWSVyGy17+f
-	K3lR14YkF3Of9xs1aU+jMc0fTmnmsVNxP1bPMagF7iKmPRRzt0aZVRi54aZw2eQSvZZWW17g8sJ
-	u
-X-Gm-Gg: ASbGnct2nMJobkTvaTXdZeVuAZMfU/h3lljEbbTnyI+scZBO1ceBKfhAzC7d2is4B84
-	hwOmk4gBskK7DsoiK5RMnGjmR/354cuWdntcV4c4pFdL1mReORsJRPsnUHKwxCAGXe1qY+sGIHG
-	miLrEaXiVZfe9fFIEljBHDJuzhYycy6O9HM+yhAgCVn4QgXksO86PbLg0ktPaTjBC8bCofq1CAT
-	0V7kR+OyOTV0WuPUYTZL90Xq6PngabCvnwgxPR/1mZ4/lweBny09w/qkiuUL/U6P4D5K6zzQUJk
-	d96dondycpcD/SVNJEEgFEXDcF56B6LN8Uo3NBhr8b4iRP+OJQ==
-X-Google-Smtp-Source: AGHT+IHob9xSwHZHxbIGxOhr+1B8/H6WPDLiz5T5TIbPy4IHpRxIEmfhrIuEHRHdzuZcNtNspVmeNA==
-X-Received: by 2002:adf:8bd7:0:b0:391:39bd:a381 with SMTP id ffacd0b85a97d-39139bda886mr202282f8f.30.1741355928133;
-        Fri, 07 Mar 2025 05:58:48 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3912bfb7aefsm5371321f8f.20.2025.03.07.05.58.47
+        d=1e100.net; s=20230601; t=1741362376; x=1741967176;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=24J3CynJ4fNToC40YYg0INXois46zfdfDDswNEU4WCw=;
+        b=Yr1b05q9UDwGY3/EjWiQDn+BTjM9Y9ZB9DUgaYBrBv5c+UK4dwnCSl/AqgKltFO6Ip
+         K+6Q9FTkXefL5bpuT+XFwVR+Zk/febBDhIwh7qFpjX9M9LRv0OvlpCh6qW3WroOdtVkE
+         BbfU+nMMm1FBloUr9egGm2eocbZtwxG6sguC52yt5GALtSBwMGnsJsAZgNrW5CnKtK61
+         u8tbRl/CAhLO/uT/P90v4Mm/z78BRkoqPe6WQpw2gecQTr1GAQyb4cOHhgXLnl/MjBqN
+         Py996lvizOPcqeFvCMd9I6bMXaEsz+iXriczu1nly2w9RJYZj6A8ZIy6plOgefFUgRov
+         g59w==
+X-Forwarded-Encrypted: i=1; AJvYcCVwTjNXuph0GB7kFbhBNgUEpcUgiQVlTccP63JfoVWZUsCESMheQsbFDjvQXE7pp5Ct3PxBDwgXUnI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwvlbuYyDt7qOncXK9PiaD9miZCJxmP6yLNFGSSly87Mi5Rj3lR
+	9wQCDE8RIg1l0ZafMR52xFcJki4FpunUxd1Ew+j8GR8NrVbsvu2+gYHdT3Nptyo=
+X-Gm-Gg: ASbGncsh3sM6mmlbTXqZha8U4XGBZiJqq2bXFUs3UDqR9co7NkLrIXykNlhq3qX8UlN
+	qZ7v2txBxduMDVlHFosNmaUYWt9B0TqDw3QO28wF+lcne1o1pSMl2+Ys3b6107INnimWz/UKXf1
+	3EJ58FeICIiZp3gf2N6TUy4zIn3EI1Vrm8YEKS+iEtmylhsmRThS2kBjJEvmgI1AcucmPvUjZPM
+	yP6tB6w9s/7x1IHY7mONA4/MyxSRSFxD8xIdARRC8FvJIfDqgkgPgwL2B6WyK6v/ScxzWDhWaOk
+	Mb81SYZjk9sSQqifLBBr9/behjVja9nLFZVwrfR1LG/iwqSGDCZrmjm+0V82RdW5390MNj+QMMt
+	0gYYX+g==
+X-Google-Smtp-Source: AGHT+IFbO7B7I5QW8p7YyFhEoZvye5dOa0V+vkMhRA5dzshNa6dL/BbXoDUHXepaAKDlZqjdHG+27w==
+X-Received: by 2002:a05:690c:3386:b0:6fb:9474:7b5f with SMTP id 00721157ae682-6febf2eb32dmr60526787b3.14.1741362375930;
+        Fri, 07 Mar 2025 07:46:15 -0800 (PST)
+Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-6feb2c4676fsm7827907b3.103.2025.03.07.07.46.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Mar 2025 05:58:47 -0800 (PST)
-Date: Fri, 7 Mar 2025 16:58:44 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: oe-kbuild@lists.linux.dev, Julian Sun <sunjunchao2870@gmail.com>,
-	linux-xfs@vger.kernel.org
-Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev, cem@kernel.org,
-	djwong@kernel.org, Julian Sun <sunjunchao2870@gmail.com>
-Subject: Re: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL
- allocation.
-Message-ID: <398b4241-bef5-4270-9fff-204e528b76fb@stanley.mountain>
+        Fri, 07 Mar 2025 07:46:14 -0800 (PST)
+Date: Fri, 7 Mar 2025 10:46:14 -0500
+From: Josef Bacik <josef@toxicpanda.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Jan Kara <jack@suse.cz>,
+	syzbot <syzbot+7229071b47908b19d5b7@syzkaller.appspotmail.com>,
+	akpm@linux-foundation.org, axboe@kernel.dk, brauner@kernel.org,
+	cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] WARNING in fsnotify_file_area_perm
+Message-ID: <20250307154614.GA59451@perftesting>
+References: <67a487f7.050a0220.19061f.05fc.GAE@google.com>
+ <67c4881e.050a0220.1dee4d.0054.GAE@google.com>
+ <7ehxrhbvehlrjwvrduoxsao5k3x4aw275patsb3krkwuq573yv@o2hskrfawbnc>
+ <CAOQ4uxjf5H_vj-swF7wEvUkPobEuxs2q6jfO9jFsx4pqxtJMMg@mail.gmail.com>
+ <20250304161509.GA4047943@perftesting>
+ <CAOQ4uxj0cN-sUN=EE0+9tRhMFFrWLQ0T_i0fprwNRr92Hire6Q@mail.gmail.com>
+ <20250304203657.GA4063187@perftesting>
+ <CAOQ4uxihyR8u5c0T8q85ySNgp4U1T0MMSR=+vv3HWNFcvezRPQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250228082622.2638686-2-sunjunchao2870@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxihyR8u5c0T8q85ySNgp4U1T0MMSR=+vv3HWNFcvezRPQ@mail.gmail.com>
 
-Hi Julian,
+On Tue, Mar 04, 2025 at 10:13:39PM +0100, Amir Goldstein wrote:
+> On Tue, Mar 4, 2025 at 9:37 PM Josef Bacik <josef@toxicpanda.com> wrote:
+> >
+> > On Tue, Mar 04, 2025 at 09:27:20PM +0100, Amir Goldstein wrote:
+> > > On Tue, Mar 4, 2025 at 5:15 PM Josef Bacik <josef@toxicpanda.com> wrote:
+> > > >
+> > > > On Tue, Mar 04, 2025 at 04:09:16PM +0100, Amir Goldstein wrote:
+> > > > > On Tue, Mar 4, 2025 at 12:06 PM Jan Kara <jack@suse.cz> wrote:
+> > > > > >
+> > > > > > Josef, Amir,
+> > > > > >
+> > > > > > this is indeed an interesting case:
+> > > > > >
+> > > > > > On Sun 02-03-25 08:32:30, syzbot wrote:
+> > > > > > > syzbot has found a reproducer for the following issue on:
+> > > > > > ...
+> > > > > > > ------------[ cut here ]------------
+> > > > > > > WARNING: CPU: 1 PID: 6440 at ./include/linux/fsnotify.h:145 fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
+> > > > > > > Modules linked in:
+> > > > > > > CPU: 1 UID: 0 PID: 6440 Comm: syz-executor370 Not tainted 6.14.0-rc4-syzkaller-ge056da87c780 #0
+> > > > > > > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 12/27/2024
+> > > > > > > pstate: 80400005 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+> > > > > > > pc : fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
+> > > > > > > lr : fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
+> > > > > > > sp : ffff8000a42569d0
+> > > > > > > x29: ffff8000a42569d0 x28: ffff0000dcec1b48 x27: ffff0000d68a1708
+> > > > > > > x26: ffff0000d68a16c0 x25: dfff800000000000 x24: 0000000000008000
+> > > > > > > x23: 0000000000000001 x22: ffff8000a4256b00 x21: 0000000000001000
+> > > > > > > x20: 0000000000000010 x19: ffff0000d68a16c0 x18: ffff8000a42566e0
+> > > > > > > x17: 000000000000e388 x16: ffff800080466c24 x15: 0000000000000001
+> > > > > > > x14: 1fffe0001b31513c x13: 0000000000000000 x12: 0000000000000000
+> > > > > > > x11: 0000000000000001 x10: 0000000000ff0100 x9 : 0000000000000000
+> > > > > > > x8 : ffff0000c6d98000 x7 : 0000000000000000 x6 : 0000000000000000
+> > > > > > > x5 : 0000000000000020 x4 : 0000000000000000 x3 : 0000000000001000
+> > > > > > > x2 : ffff8000a4256b00 x1 : 0000000000000001 x0 : 0000000000000000
+> > > > > > > Call trace:
+> > > > > > >  fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145 (P)
+> > > > > > >  filemap_fault+0x12b0/0x1518 mm/filemap.c:3509
+> > > > > > >  xfs_filemap_fault+0xc4/0x194 fs/xfs/xfs_file.c:1543
+> > > > > > >  __do_fault+0xf8/0x498 mm/memory.c:4988
+> > > > > > >  do_read_fault mm/memory.c:5403 [inline]
+> > > > > > >  do_fault mm/memory.c:5537 [inline]
+> > > > > > >  do_pte_missing mm/memory.c:4058 [inline]
+> > > > > > >  handle_pte_fault+0x3504/0x57b0 mm/memory.c:5900
+> > > > > > >  __handle_mm_fault mm/memory.c:6043 [inline]
+> > > > > > >  handle_mm_fault+0xfa8/0x188c mm/memory.c:6212
+> > > > > > >  do_page_fault+0x570/0x10a8 arch/arm64/mm/fault.c:690
+> > > > > > >  do_translation_fault+0xc4/0x114 arch/arm64/mm/fault.c:783
+> > > > > > >  do_mem_abort+0x74/0x200 arch/arm64/mm/fault.c:919
+> > > > > > >  el1_abort+0x3c/0x5c arch/arm64/kernel/entry-common.c:432
+> > > > > > >  el1h_64_sync_handler+0x60/0xcc arch/arm64/kernel/entry-common.c:510
+> > > > > > >  el1h_64_sync+0x6c/0x70 arch/arm64/kernel/entry.S:595
+> > > > > > >  __uaccess_mask_ptr arch/arm64/include/asm/uaccess.h:169 [inline] (P)
+> > > > > > >  fault_in_readable+0x168/0x310 mm/gup.c:2234 (P)
+> > > > > > >  fault_in_iov_iter_readable+0x1dc/0x22c lib/iov_iter.c:94
+> > > > > > >  iomap_write_iter fs/iomap/buffered-io.c:950 [inline]
+> > > > > > >  iomap_file_buffered_write+0x490/0xd54 fs/iomap/buffered-io.c:1039
+> > > > > > >  xfs_file_buffered_write+0x2dc/0xac8 fs/xfs/xfs_file.c:792
+> > > > > > >  xfs_file_write_iter+0x2c4/0x6ac fs/xfs/xfs_file.c:881
+> > > > > > >  new_sync_write fs/read_write.c:586 [inline]
+> > > > > > >  vfs_write+0x704/0xa9c fs/read_write.c:679
+> > > > > >
+> > > > > > The backtrace actually explains it all. We had a buffered write whose
+> > > > > > buffer was mmapped file on a filesystem with an HSM mark. Now the prefaulting
+> > > > > > of the buffer happens already (quite deep) under the filesystem freeze
+> > > > > > protection (obtained in vfs_write()) which breaks assumptions of HSM code
+> > > > > > and introduces potential deadlock of HSM handler in userspace with filesystem
+> > > > > > freezing. So we need to think how to deal with this case...
+> > > > >
+> > > > > Ouch. It's like the splice mess all over again.
+> > > > > Except we do not really care to make this use case work with HSM
+> > > > > in the sense that we do not care to have to fill in the mmaped file content
+> > > > > in this corner case - we just need to let HSM fail the access if content is
+> > > > > not available.
+> > > > >
+> > > > > If you remember, in one of my very early version of pre-content events,
+> > > > > the pre-content event (or maybe it was FAN_ACCESS_PERM itself)
+> > > > > carried a flag (I think it was called FAN_PRE_VFS) to communicate to
+> > > > > HSM service if it was safe to write to fs in the context of event handling.
+> > > > >
+> > > > > At the moment, I cannot think of any elegant way out of this use case
+> > > > > except annotating the event from fault_in_readable() as "unsafe-for-write".
+> > > > > This will relax the debugging code assertion and notify the HSM service
+> > > > > (via an event flag) that it can ALLOW/DENY, but it cannot fill the file.
+> > > > > Maybe we can reuse the FAN_ACCESS_PERM event to communicate
+> > > > > this case to HSM service.
+> > > > >
+> > > > > WDYT?
+> > > >
+> > > > I think that mmap was a mistake.
+> > >
+> > > What do you mean?
+> > > Isn't the fault hook required for your large executables use case?
+> >
+> > I mean the mmap syscall was a mistake ;).
+> >
+> 
+> ah :)
+> 
+> > >
+> > > >
+> > > > Is there a way to tell if we're currently in a path that is under fsfreeze
+> > > > protection?
+> > >
+> > > Not at the moment.
+> > > At the moment, file_write_not_started() is not a reliable check
+> > > (has false positives) without CONFIG_LOCKDEP.
+> > >
+> 
+> One very ugly solution is to require CONFIG_LOCKDEP for
+> pre-content events.
+> 
+> > > > Just denying this case would be a simpler short term solution while
+> > > > we come up with a long term solution. I think your solution is fine, but I'd be
+> > > > just as happy with a simpler "this isn't allowed" solution. Thanks,
+> > >
+> > > Yeh, I don't mind that, but it's a bit of an overkill considering that
+> > > file with no content may in fact be rare.
+> >
+> > Agreed, I'm fine with your solution.
+> 
+> Well, my "solution" was quite hand-wavy - it did not really say how to
+> propagate the fact that faults initiated from fault_in_readable().
+> Do you guys have any ideas for a simple solution?
 
-kernel test robot noticed the following build warnings:
+Sorry I've been elbow deep in helping getting our machine replacements working
+faster.
 
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I've been thnking about this, it's not like we can carry context from the reason
+we are faulting in, at least not simply, so I think the best thing to do is
+either 
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Julian-Sun/xfs-remove-unnecessary-checks-for-__GFP_NOFAIL-allocation/20250228-162815
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20250228082622.2638686-2-sunjunchao2870%40gmail.com
-patch subject: [PATCH 1/2] xfs: remove unnecessary checks for __GFP_NOFAIL allocation.
-config: sh-randconfig-r073-20250307 (https://download.01.org/0day-ci/archive/20250307/202503072035.d6QqiZWT-lkp@intel.com/config)
-compiler: sh4-linux-gcc (GCC) 14.2.0
+1) Emit a precontent event at mmap() time for the whole file, since really all I
+care about is faulting at exec time, and then we can just skip the precontent
+event if we're not exec.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-| Closes: https://lore.kernel.org/r/202503072035.d6QqiZWT-lkp@intel.com/
+2) Revert the page fault stuff, put back your thing to fault the whole file, and
+wait until we think of a better way to deal with this.
 
-New smatch warnings:
-fs/xfs/xfs_mru_cache.c:360 xfs_mru_cache_create() warn: variable dereferenced before check 'mru' (see line 338)
+Obviously I'd prefer not #2, but I'd really, really rather not chuck all of HSM
+because my page fault thing is silly.  I'll carry what I need internally while
+we figure out what to do upstream.  #1 doesn't seem bad, but I haven't thought
+about it that hard.  Thanks,
 
-vim +/mru +360 fs/xfs/xfs_mru_cache.c
-
-2a82b8be8a8dac David Chinner     2007-07-11  314  int
-2a82b8be8a8dac David Chinner     2007-07-11  315  xfs_mru_cache_create(
-22328d712dd7fd Christoph Hellwig 2014-04-23  316  	struct xfs_mru_cache	**mrup,
-7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  317  	void			*data,
-2a82b8be8a8dac David Chinner     2007-07-11  318  	unsigned int		lifetime_ms,
-2a82b8be8a8dac David Chinner     2007-07-11  319  	unsigned int		grp_count,
-2a82b8be8a8dac David Chinner     2007-07-11  320  	xfs_mru_cache_free_func_t free_func)
-2a82b8be8a8dac David Chinner     2007-07-11  321  {
-22328d712dd7fd Christoph Hellwig 2014-04-23  322  	struct xfs_mru_cache	*mru = NULL;
-2a82b8be8a8dac David Chinner     2007-07-11  323  	int			err = 0, grp;
-2a82b8be8a8dac David Chinner     2007-07-11  324  	unsigned int		grp_time;
-2a82b8be8a8dac David Chinner     2007-07-11  325  
-2a82b8be8a8dac David Chinner     2007-07-11  326  	if (mrup)
-2a82b8be8a8dac David Chinner     2007-07-11  327  		*mrup = NULL;
-2a82b8be8a8dac David Chinner     2007-07-11  328  
-2a82b8be8a8dac David Chinner     2007-07-11  329  	if (!mrup || !grp_count || !lifetime_ms || !free_func)
-2451337dd04390 Dave Chinner      2014-06-25  330  		return -EINVAL;
-2a82b8be8a8dac David Chinner     2007-07-11  331  
-2a82b8be8a8dac David Chinner     2007-07-11  332  	if (!(grp_time = msecs_to_jiffies(lifetime_ms) / grp_count))
-2451337dd04390 Dave Chinner      2014-06-25  333  		return -EINVAL;
-2a82b8be8a8dac David Chinner     2007-07-11  334  
-10634530f7ba94 Dave Chinner      2024-01-16  335  	mru = kzalloc(sizeof(*mru), GFP_KERNEL | __GFP_NOFAIL);
-2a82b8be8a8dac David Chinner     2007-07-11  336  
-2a82b8be8a8dac David Chinner     2007-07-11  337  	/* An extra list is needed to avoid reaping up to a grp_time early. */
-2a82b8be8a8dac David Chinner     2007-07-11 @338  	mru->grp_count = grp_count + 1;
-10634530f7ba94 Dave Chinner      2024-01-16  339  	mru->lists = kzalloc(mru->grp_count * sizeof(*mru->lists),
-10634530f7ba94 Dave Chinner      2024-01-16  340  				GFP_KERNEL | __GFP_NOFAIL);
-2a82b8be8a8dac David Chinner     2007-07-11  341  
-2a82b8be8a8dac David Chinner     2007-07-11  342  	for (grp = 0; grp < mru->grp_count; grp++)
-2a82b8be8a8dac David Chinner     2007-07-11  343  		INIT_LIST_HEAD(mru->lists + grp);
-2a82b8be8a8dac David Chinner     2007-07-11  344  
-2a82b8be8a8dac David Chinner     2007-07-11  345  	/*
-2a82b8be8a8dac David Chinner     2007-07-11  346  	 * We use GFP_KERNEL radix tree preload and do inserts under a
-2a82b8be8a8dac David Chinner     2007-07-11  347  	 * spinlock so GFP_ATOMIC is appropriate for the radix tree itself.
-2a82b8be8a8dac David Chinner     2007-07-11  348  	 */
-2a82b8be8a8dac David Chinner     2007-07-11  349  	INIT_RADIX_TREE(&mru->store, GFP_ATOMIC);
-2a82b8be8a8dac David Chinner     2007-07-11  350  	INIT_LIST_HEAD(&mru->reap_list);
-007c61c68640ea Eric Sandeen      2007-10-11  351  	spin_lock_init(&mru->lock);
-2a82b8be8a8dac David Chinner     2007-07-11  352  	INIT_DELAYED_WORK(&mru->work, _xfs_mru_cache_reap);
-2a82b8be8a8dac David Chinner     2007-07-11  353  
-2a82b8be8a8dac David Chinner     2007-07-11  354  	mru->grp_time  = grp_time;
-2a82b8be8a8dac David Chinner     2007-07-11  355  	mru->free_func = free_func;
-7fcd3efa1e9ebe Christoph Hellwig 2018-04-09  356  	mru->data = data;
-2a82b8be8a8dac David Chinner     2007-07-11  357  	*mrup = mru;
-2a82b8be8a8dac David Chinner     2007-07-11  358  
-2a82b8be8a8dac David Chinner     2007-07-11  359  exit:
-2a82b8be8a8dac David Chinner     2007-07-11 @360  	if (err && mru && mru->lists)
-                                                                   ^^^
-
-d4c75a1b40cd03 Dave Chinner      2024-01-16  361  		kfree(mru->lists);
-2a82b8be8a8dac David Chinner     2007-07-11  362  	if (err && mru)
-                                                                   ^^^
-I normally wouldn't hit forward on this zero-day bot thing because it's
-obviously harmless.  But since you're removing NULL checks you could
-remove these two too if you want.
-
-d4c75a1b40cd03 Dave Chinner      2024-01-16  363  		kfree(mru);
-2a82b8be8a8dac David Chinner     2007-07-11  364  
-2a82b8be8a8dac David Chinner     2007-07-11  365  	return err;
-2a82b8be8a8dac David Chinner     2007-07-11  366  }
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
-
+Josef
