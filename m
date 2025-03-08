@@ -1,105 +1,82 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 576694A35
-	for <linux-xfs@vger.kernel.org>; Sat,  8 Mar 2025 06:43:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E7681392
+	for <linux-xfs@vger.kernel.org>; Sat,  8 Mar 2025 07:20:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741416241; cv=none; b=szbQAglQIUWZgtL1CTz0QDzkEC3XS8ulia0G8q6aKg3PhqhR07rvyioA2r9HDSLKkENkdDe86TwNzG6hpOTygYcYJWms5xU3lkQGBzxzU/rp/Vm6ovgGlGSnpmek/TiqyOop/kaX3IwfBzLKq7Dy+cm0n5cRFKzWDjwt23uvsTg=
+	t=1741418445; cv=none; b=Dx/lLHejAum/jf360vHjrAiSnmomnq+DZKUy+cdv2efnTJOMUNnuJhP1cGPl5tah6iLrdT7oIb+O9UPxT2BDq3nWh5vS+Y5fdOkBPRac4BtCWuVpN1DX1+u5eXAUBdPLt3lz8eHPRWMN8ImD07KXo8pX9f6rY9HSMuIwdLADPK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741416241; c=relaxed/simple;
-	bh=UtKF8Vg/8ur3x9ZZufYsKRKBGlH122N5R3zj7Hw67+c=;
+	s=arc-20240116; t=1741418445; c=relaxed/simple;
+	bh=8sxuAERpEbGvHkeeugpgqaFjFk1RBwouM05IenGdnOA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lLriqvN8cZ06GS/YT3x6m+24vxxqKzOKLxiniHm6tL/hfcFrbxuTQAKDc84U/E8W+5CZDSTZov8uBoLaEzcXy8VJjtuGQslTII1CO84DoaMonseFvBvPkeETTTQSNPela3BgghW91Qg681zytrIB3rPMaa4jZMYYxGaoUjcYGYo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=XVgz4JYP; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=r48f3DixZnHjB936hC5PHu8S2BBal3KDJx+a/wTbnhLrSp5qi4GP9/deloQz3uvCZy5849BMJ2DpSAfH9w07bJOi8dOF4WaTOsMyXF8xt8j5s833BjqSJ2TjcrTcyzdPNZSUV0GRGY4PbsrdRacvf6WxWWdIVozfL79yZWLmYsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dGiX16tv; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="XVgz4JYP"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-22113560c57so49670975ad.2
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Mar 2025 22:43:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1741416237; x=1742021037; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=L7XYd6bILvV5S9oc7kfROdvIGE+piMUFy2TT1wDFAAs=;
-        b=XVgz4JYPbICcYstIjrVqj42hOBnrp1eXLLfvNDdBC8iohlUs8vJlpZFFfy0v7Gk7hR
-         uJV2w6kFuLuQHvLiRg73yX/FWNvclFt941gRoWvfOtKpP9wVSyi3vYjme8uGSUCTRbTh
-         Id/K4ob38oUXP1yAjqFPAoM/nIbmkM1Wgpn9Xn3U/NzIZcUNiPuW9/nBuXJHRnvp1N18
-         4CoBETKcRJV+gN4jJ6zaeKkMsixI3KtURKfpbQ/8grjrm7LrjKNBBgbjILpdJnK2yuJp
-         7hAUDfVmsCRX/8XvxpIpy/Md2vp5bxSzNyEdsZxh1y33ZtUgsRQbLjlzRnLy7I5jMsEA
-         8RwQ==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dGiX16tv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1741418442;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=SCmKkV1CZokZ249gYYS9oMcIg8uihOkUdFQfQeNSRaw=;
+	b=dGiX16tvxCqDN46XZJlKMO5HaJiUHJOtB8I7slxTp1pNuU8FUN8bt0/jHbToRepcxs0hGI
+	4G1fKZ/9fyCnkE9XGWCFAH2bST8E88wIiwqevi+L+P2NIdK/lzdGkavAE3cYvs7V3G0hFW
+	3jIqBqFh9PTaR4J5/+InKV8zf75seeI=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-355-D_USI4DHM5urY17K9lvj6A-1; Sat, 08 Mar 2025 02:20:41 -0500
+X-MC-Unique: D_USI4DHM5urY17K9lvj6A-1
+X-Mimecast-MFC-AGG-ID: D_USI4DHM5urY17K9lvj6A_1741418440
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-2ff581215a0so7353822a91.0
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Mar 2025 23:20:41 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741416237; x=1742021037;
+        d=1e100.net; s=20230601; t=1741418440; x=1742023240;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=L7XYd6bILvV5S9oc7kfROdvIGE+piMUFy2TT1wDFAAs=;
-        b=NxehbpZ3kmgCyKuk3+p61lgHWKsiqVq43xVCAUQmx62+gdavlwhPC+pd+5acyS5osu
-         S/gJVJiVj9tpAGdKh8j3mymkZyaI4p6hkN7Xj4QZmB3wKrKhuYCAcSQzESdA6QANWkOr
-         tcFpcncHByp2riaoTLGq4GZx3J244WaIRHRky7wFFGo1FDT4M2gPP8HaMtAmWlbWZbu8
-         wkXN9/GT3E/HQbI4i0AifH4DcbRQFdksXFs+6ziXKSjJjtDF45eBw17ZLAVQnxHZWGd8
-         oKuFcUAnJOlHHnvglDaiRU9iLksvilRZmVcYxGTJOv1ePUcYcIbXbRneuhPRn7iQ4Xu7
-         6HLg==
-X-Forwarded-Encrypted: i=1; AJvYcCXXveivi94pyTblcJfO2cVG6/JCRND0wMcc+8iyMsOj4uiYznKKL+KQ6UvL46qbktfz16EjpwpM74E=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxzTwmnlc9qNoN1Q/UXfIqOhPlWe/60fJx6vJffJxQLlU6MtK3h
-	ibSDU+RrldvT8WLT4XzST/RMNgHRDfe5bjq2YVuyIgc5ig7vNs9A2swRQEMy+gU=
-X-Gm-Gg: ASbGnctHbsAqMrUJLF13vCjDu8/LZY/IYZHghwV7Dz7lXg3ucYLobfw+ligD+i8Xw1s
-	O1lPwxNp9fIAFAxwY7/hf+B6GVs0aM29SS7DN2CrC5eW5d4c0RY7CTRLrVN6dT1Qqme7B+gOGHA
-	j72Fu+f9HFOlSCguHo39HM438bWUtZjBQH51xsk8evXf4lfzOvtZLXG2OlFbfWA70RLuhEDhGff
-	5pphO2A5Z4H2nUoa6QCP0uUpv2kyI4i1t/1shGmljSsonu2XGXPP4SedR5nVcQYvf0RgPIe/sLF
-	3K3irl/yEX04/BgSDHHC0dvZ/qzM/i/TvESkAaBjeWGdYEFuPoQa71m9Ng6JjepXmvPeb6iFEqB
-	A6+8ZtBiCAk3ZkOuoPeN7
-X-Google-Smtp-Source: AGHT+IF/hoytkHf/78nzK/gEIzqXnGG5MP6Y8FgGhVp8Zx6LE+l7N0K13IdyKh5Omm9Q6AhxhqYyLg==
-X-Received: by 2002:a17:903:98b:b0:223:397f:46be with SMTP id d9443c01a7336-22428ad4a09mr106979815ad.47.1741416237682;
-        Fri, 07 Mar 2025 22:43:57 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-224109e816csm40661065ad.54.2025.03.07.22.43.56
+        bh=SCmKkV1CZokZ249gYYS9oMcIg8uihOkUdFQfQeNSRaw=;
+        b=BIjnLnAJDcX6N1K6+QOQN6R92rcxjXmonB8unuVXbmQ6JsTrFB/J2noX/3stG0gvY2
+         XCMWyLej7pEpO8KIF5YiamVh0uV1pNoQGM8ae3kW1vyRBMEKndlsIlz4EpO/9FUSnvV+
+         4HxLh8r82RXYHuCJOx6Go3o+RgV6APOHDqM+abukvVn5wgRfXW5ZoyNUZhNs+0smn1Dy
+         o9S1EzaMi1lCYTjvNOdDAZucjQwm5CjpkKuWn7T7tANkBteTLxWaiX4wFtDZfvtUxn66
+         t2tJb5m6qyjeNKfmeGyQy8YsiTeiuu4OyVCfqHvTpJdFuR8AlCO+j+MmCMSNADtnuLHa
+         kS+g==
+X-Forwarded-Encrypted: i=1; AJvYcCVwV8dXMQGt0cA4PfbLaZy3cryn4ENoAUkTfDudYDJEN+/S/k0nRQ5HpeSqTPFwouyS+g31Tfwegi8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzDyruldfCGoAiS3cQ+XI6lNoIergYwE9jES9idVjKKmhNuc59V
+	9m/wzATb1uphXnyxGvD0XMh8KVLGvOCUCSQfYwURwUOLKDkj5WCXZy376Eu7jVHWlgPxhDcG+VE
+	hhM8B/dkpu6GnCwgKd1QXF/U14/x+7aq+ghfYjFVNJcLveB5l+lEQzDN89g==
+X-Gm-Gg: ASbGnct0YxLPdLjl5C44GRHaBxQDXTNi00TPfC/sstb5xyvhpzJQO6VoKiWJPq6Zlb7
+	eS7QYqKFn12iJs5SAoSDEQZcexYWCvpUpiI76U19Sw3tv3OnZdvlZCm81fkRtBsW7/7kYsnxTlU
+	UxxJwNAvPKrnm7cMwQYUYJ+8Tjv4Ok9jmaUSaMnh91tlPLXnRQXciWeZ7aKnlwfRT+FMTn7Ac00
+	g4WZ7oekPWVv75UEAqNimCjnUZ6vq0ji1HI7CDxQV3Omsp8jru7lgKrmt2Bo2/gPKL9+RjVciK3
+	JvS3D2AxU2pfd0UOBnznq2cqHcKiqCv3SP3e4MjW2sOceieUmWHBliY5
+X-Received: by 2002:a05:6a21:103:b0:1ee:e641:ca8 with SMTP id adf61e73a8af0-1f544b16c66mr11008022637.20.1741418440314;
+        Fri, 07 Mar 2025 23:20:40 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHd8WnneJ5eOgn0QHqj+cjsbRu2WaQD2CgClh7WJVs9v/NrrONTtCOd5IaZ87Dmd1CYw1zzMg==
+X-Received: by 2002:a05:6a21:103:b0:1ee:e641:ca8 with SMTP id adf61e73a8af0-1f544b16c66mr11007995637.20.1741418440041;
+        Fri, 07 Mar 2025 23:20:40 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-af368398b1dsm2707688a12.8.2025.03.07.23.20.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Mar 2025 22:43:57 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tqnuc-0000000ALct-08Dn;
-	Sat, 08 Mar 2025 17:43:54 +1100
-Date: Sat, 8 Mar 2025 17:43:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Yunsheng Lin <linyunsheng@huawei.com>
-Cc: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-	David Sterba <dsterba@suse.com>, Gao Xiang <xiang@kernel.org>,
-	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jesper Dangaard Brouer <hawk@kernel.org>,
-	Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-	Luiz Capitulino <luizcap@redhat.com>,
-	Mel Gorman <mgorman@techsingularity.net>, kvm@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	netdev@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-Message-ID: <Z8vnKRJlP78DHEk6@dread.disaster.area>
-References: <20250228094424.757465-1-linyunsheng@huawei.com>
- <Z8a3WSOrlY4n5_37@dread.disaster.area>
- <91fcdfca-3e7b-417c-ab26-7d5e37853431@huawei.com>
+        Fri, 07 Mar 2025 23:20:39 -0800 (PST)
+Date: Sat, 8 Mar 2025 15:20:34 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
+	zlang@kernel.org
+Subject: Re: [PATCH v1 2/2] check,common/{preamble,rc},soak: Decoupling
+ init_rc() call from sourcing common/rc
+Message-ID: <20250308072034.t7y2d3u4wgxvrhgd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <1d07e5657c2817c74e939894bb554424199fd290.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <Z8oT_tBYG-a79CjA@dread.disaster.area>
+ <5c38f84d-cc60-49e7-951e-6a7ef488f9df@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -108,45 +85,68 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <91fcdfca-3e7b-417c-ab26-7d5e37853431@huawei.com>
+In-Reply-To: <5c38f84d-cc60-49e7-951e-6a7ef488f9df@gmail.com>
 
-On Tue, Mar 04, 2025 at 08:09:35PM +0800, Yunsheng Lin wrote:
-> On 2025/3/4 16:18, Dave Chinner wrote:
+On Fri, Mar 07, 2025 at 01:35:02PM +0530, Nirjhar Roy (IBM) wrote:
 > 
-> ...
+> On 3/7/25 03:00, Dave Chinner wrote:
+> > On Thu, Mar 06, 2025 at 08:17:41AM +0000, Nirjhar Roy (IBM) wrote:
+> > > Silently executing scripts during sourcing common/rc doesn't look good
+> > > and also causes unnecessary script execution. Decouple init_rc() call
+> > > and call init_rc() explicitly where required.
+> > > 
+> > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > FWIW, I've just done somethign similar for check-parallel. I need to
+> > decouple common/config from common/rc and not run any code from
+> > either common/config or common/rc.
+> > 
+> > I've included the patch below (it won't apply because there's all
+> > sorts of refactoring for test list and config-section parsing in the
+> > series before it), but it should give you an idea of how I think we
+> > should be separating one-off initialisation environment varaibles,
+> > common code inclusion and the repeated initialisation of section
+> > specific parameters....
+> Thank you so much. I can a look at this.
+> > 
+> > .....
+> > > diff --git a/soak b/soak
+> > > index d5c4229a..5734d854 100755
+> > > --- a/soak
+> > > +++ b/soak
+> > > @@ -5,6 +5,7 @@
+> > >   # get standard environment, filters and checks
+> > >   . ./common/rc
+> > > +# ToDo: Do we need an init_rc() here? How is soak used?
+> > >   . ./common/filter
+> > I've also go a patch series that removes all these old 2000-era SGI
+> > QE scripts that have not been used by anyone for the last 15
+> > years. I did that to get rid of the technical debt that these
+> > scripts have gathered over years of neglect. They aren't used, we
+> > shouldn't even attempt to maintain them anymore.
+> 
+> Okay. What do you mean by SGI QE script (sorry, not familiar with this)? Do
+> you mean some kind of CI/automation-test script?
+
+SGI is Silicon Graphics International Corp. :
+https://en.wikipedia.org/wiki/Silicon_Graphics_International
+
+xfstests was created to test xfs on IRIX (https://en.wikipedia.org/wiki/IRIX)
+of SGI. Dave Chinner worked in SGI company long time ago, so he's the expert
+of all these things, and knows lots of past details :)
+
+Thanks,
+Zorro
+
+> 
+> --NR
 > 
 > > 
-> >>
-> >> 1. https://lore.kernel.org/all/bd8c2f5c-464d-44ab-b607-390a87ea4cd5@huawei.com/
-> >> 2. https://lore.kernel.org/all/20250212092552.1779679-1-linyunsheng@huawei.com/
-> >> CC: Jesper Dangaard Brouer <hawk@kernel.org>
-> >> CC: Luiz Capitulino <luizcap@redhat.com>
-> >> CC: Mel Gorman <mgorman@techsingularity.net>
-> >> CC: Dave Chinner <david@fromorbit.com>
-> >> CC: Chuck Lever <chuck.lever@oracle.com>
-> >> Signed-off-by: Yunsheng Lin <linyunsheng@huawei.com>
-> >> Acked-by: Jeff Layton <jlayton@kernel.org>
-> >> ---
-> >> V2:
-> >> 1. Drop RFC tag and rebased on latest linux-next.
-> >> 2. Fix a compile error for xfs.
+> > -Dave.
 > > 
-> > And you still haven't tested the code changes to XFS, because
-> > this patch is also broken.
+> -- 
+> Nirjhar Roy
+> Linux Kernel Developer
+> IBM, Bangalore
 > 
-> I tested XFS using the below cmd and testcase, testing seems
-> to be working fine, or am I missing something obvious here
-> as I am not realy familiar with fs subsystem yet:
+> 
 
-That's hardly what I'd call a test. It barely touches the filesystem
-at all, and it is not exercising memory allocation failure paths at
-all.
-
-Go look up fstests and use that to test the filesystem changes you
-are making. You can use that to test btrfs and NFS, too.
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
