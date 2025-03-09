@@ -1,77 +1,124 @@
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43F67187FEC
-	for <linux-xfs@vger.kernel.org>; Sun,  9 Mar 2025 16:20:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 311AE1A9B34
+	for <linux-xfs@vger.kernel.org>; Sun,  9 Mar 2025 21:51:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741537203; cv=none; b=kHkbScX7DdzSWTMMtwSwQGgGAjKHlIeQfwfJspmQDDHYM+uie8G3w84tqr5Qttx9Rhqc2NP4nwJeI9TMfmsUjTWv5JOJrAYj3FnXx9xlbo89B9lb+xxYPpz0D8dVgE0IpmtSDg0KievCPylroZIX0nIB1sXRpb85hjynjcD4sBg=
+	t=1741557074; cv=none; b=RO7Xubd9ELOYNEHNzNwI10YhBa24JrMm/5bSLRNPK+u1/UmnIvU0IIU8BDqyrvorusxrFQT3ishsTEv+dLriJLyNiekoZCOvsFgHU8bsYupM6lRPiD6W++8yO+kuPJuHyc5FZw6eiOkur+zg0ENxnrTL57lXCp/iU9uYTOOK6bA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741537203; c=relaxed/simple;
-	bh=UJv+3p818hAynouGODGqPemY4sdL2sg5sl1CQD4WCAY=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=KWnbnTu0IE6EIqF39DPuaz4fbu2Z/ywQK0kNk0BGCfo6SsmdXO3fUvYA96VCaEPjgbGbUrKRBrx8BFA1N/+/7elNb+RzNoX4EwbuvFPgTwnvn3N7mn7vNTFFc/03JXAWC9q/oA/jw3GYzP4+1e5KrFdvFEjl/69M4Mj29JzNsAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3d43d333855so27310155ab.0
-        for <linux-xfs@vger.kernel.org>; Sun, 09 Mar 2025 09:20:02 -0700 (PDT)
+	s=arc-20240116; t=1741557074; c=relaxed/simple;
+	bh=F1FrAhqe1gDWi8xlo4HpXF2wBOUM+KcW2zALRt2drk8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Pok1pSDMGougSVJUVM2RLLDlP0zBHjpOEo5h6mfXytTB5OlcMaSUGj90LlJ6Ce8bfhxN/nQY65tqQ1XaDr+V4MZrna78D5yiWDgsdMxt2XOGFimHwfrzWegrDAwEJSG9utqnxP7m0lNbvX6XXnb8oG60e8ThpdTakGvVEm1QVzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=mZJxB7us; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="mZJxB7us"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2240b4de12bso51000205ad.2
+        for <linux-xfs@vger.kernel.org>; Sun, 09 Mar 2025 14:51:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1741557072; x=1742161872; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wtQlZm6zttB+fiTHsUvomrcaKMWy8CxBSny2Xz7D1/k=;
+        b=mZJxB7usCFOpdhMxPogYwsPajD+HSuIwxBZZ264YG/qFwEE4TDPUEDhCO0A6O8g6uC
+         b8Nv/cmIOLpi5rs6ASLdBg/ZxEkcNZ75+NwIB5cltgpCgtco1X7VJR2u0rfSi8G48Baj
+         S/SYev6baCCr2KQz9WsNsa9U5I61qijAKqyMXLfbYm+FW8PEBPlj8gzgj1WbF/cI0S3E
+         Kk88vPHJUehFKpNANCYW2Xznb8IB3eBAT4S62UYoTSCETVAqYQYWFR2vPpLDpdFkd8Mw
+         obz/4PxFBRptgHlVgngNgyt9VntWKnsq8iD12ixEyvlGUyuaWzV5vcwr7ABhhiJPyNC5
+         xVkw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741537201; x=1742142001;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kvHzXY7sxLiJE9tWVn3P+7dA0tfrkLHjWoYFez7ztlI=;
-        b=L6bID3vBVKOOUBylRI9AkOvy517qQWEi5CYFh8bP9JKlJlvDvX/PrBkaqnmidx2m6l
-         d5Gh6ECyzLh7VaHnIMogzv5iuWxFKRMLIk41EA1X4MsaL5zUxccyjAI+7LsTgFqlV7z2
-         6hEOisGyGhgAFYOVIOFV04qX8e56xo65KD8VJFGbI85v6FOU51nGoKPYqXUlFOmGkCBL
-         vKYgemGvCWil8k+Hf4NCyfPotPeEmGTjfKKOY7b7oEy/crUzpsO/L6+LnIuueYBGOQ0H
-         uL2gjdPwnaC+kXOXiVEO4z6pYeXNrtTlllBSAiD8Iz65/gAjzW8ZC4G/aSR20PEuuZFq
-         3fJw==
-X-Forwarded-Encrypted: i=1; AJvYcCW6RZe9uJR6n0sP+zQHb+ji+PXVNlNPlWoI9Lti57NOhWtzqzmSiO5+aNISR1XTyPAyNUpmhLRFEyc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxW+iabSqQMyqGAV9qdEdTtrdR9amR51ExO9IPYJqeZBWXFsZtt
-	IekrgYwizpa8rwNwzNnV7Bz8fkFJaginfv2NF0PaOm7nlXgwbEhZJxhM+qI+pyD9I5YljXIvVQz
-	ONXVOQi9QuotROM0Tnos97XruDAWkt6Hchn2BXtn8gU3tT9mR1lEV9O8=
-X-Google-Smtp-Source: AGHT+IGzBV6/Mmw1jYJbp4k4xeAwt6EP5l8CLTLHNIXSvmWfgnNG3Eq5hlJ73B1hltOvdNhKNoHGM4Vwa3Q3wdVte9AmRIZsV4VY
+        d=1e100.net; s=20230601; t=1741557072; x=1742161872;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wtQlZm6zttB+fiTHsUvomrcaKMWy8CxBSny2Xz7D1/k=;
+        b=Ty71QA6lBq7v0H5GKA6vQIPQ+WTRJqhDsAYwRtD3P/w6tYOc/Vx4CWN74km7IV6k+z
+         sKHtRtL1nen2l4FSyGTK2Vl0A2tyysKiKPwyqEBT82gUV6gjPSsD+X0KccuIIXoNV0u+
+         0b+CspSMJxe0pOV39o4vmIVYEjm6X6wPWNG904Z5Dqnr1Y17SbLi91/m+HrZYp9sEERG
+         zwALDktaKKnrMsd+Mzit5preAA85rTGrJPkmdmgnRnEBveIho6LfdOdjikIDwBLn8n7v
+         kd57vvXBFgWmYZj64fLdEkzPuIy2cYNzsb0lqsB4XQmivkNBCSaBxRA59yFb7Cv8wC4W
+         m2QA==
+X-Forwarded-Encrypted: i=1; AJvYcCXqOWfftpr02Fdg/2KODd7tqXP5Id0mem4mnwLO983+IuoNcP8pZ7z0orMVq3jfqkclkE8XG57Qbm4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw48ZewuLGkfbpNd+kZib0xnbdbB3V3nN4ZqWp12DJdldHvz+xV
+	09kDlpTeBj0gXLk5WDg08dgycIw/V+f46SogPmc3j7QDnOP5ZkDpcfkvw0OJa0o=
+X-Gm-Gg: ASbGncsrc+wMeRx4Lq6CVTjIB1QkdaAcrK0vmPp6iQj9dCsUpzExZ0rJs86JB7zLhrI
+	QnPaAwsgP4GLzCYCpXHN2sEdw3cRrr8TskTEebvFGTUpSrf6gjg3IKZkniDecgX5GDaqvcxNzy3
+	xMnf7FN+NKeXGytMxUr+VxbFVKORF9fAXhjuK6eqBHR2U3Kz3b9gQho9zzOXaFEvWgfuJddGgXm
+	k5W3VlGylCyi5dId9Uw3WnNvhqfM977dcCmL6zyIrBUcL7XWaJVCya6Z7MspV27EaTrWpy2fFuj
+	wTGMSyqKDXIXMSMDOaLyloXOBDIe4oMN340Rs7zMDqfG48bzu6EybXOSa3ro45ZJDXbaQ0411k2
+	mr1TlyB//AuXOzMOTjSX9
+X-Google-Smtp-Source: AGHT+IFmE/y2ukJ1h6orczK3sejJrk1ZhdcmorRtk38tGOzGDUfVjo6i5W3u8DPicjhnFh7GQsAsuA==
+X-Received: by 2002:a05:6a20:4393:b0:1f5:7873:304b with SMTP id adf61e73a8af0-1f57873325amr2358526637.26.1741557072470;
+        Sun, 09 Mar 2025 14:51:12 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-89-135.pa.vic.optusnet.com.au. [49.186.89.135])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-af50b2d4c9fsm4345121a12.76.2025.03.09.14.51.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 09 Mar 2025 14:51:11 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1trOY8-0000000B2Ns-3N8c;
+	Mon, 10 Mar 2025 08:51:08 +1100
+Date: Mon, 10 Mar 2025 08:51:08 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, djwong@kernel.org, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com,
+	ritesh.list@gmail.com, martin.petersen@oracle.com, tytso@mit.edu,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v4 05/12] iomap: Support SW-based atomic writes
+Message-ID: <Z84NTP5tyHEVLNbA@dread.disaster.area>
+References: <20250303171120.2837067-1-john.g.garry@oracle.com>
+ <20250303171120.2837067-6-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:240b:b0:3d3:fbae:3978 with SMTP id
- e9e14a558f8ab-3d4418ed8e7mr107345105ab.9.1741537201441; Sun, 09 Mar 2025
- 09:20:01 -0700 (PDT)
-Date: Sun, 09 Mar 2025 09:20:01 -0700
-In-Reply-To: <CAOQ4uxj49ndz2oJcQMhZcXTAJ+_atUULNLPzLAw-BLzEdFwV+A@mail.gmail.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <67cdbfb1.050a0220.3d01d1.0000.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] WARNING in fsnotify_file_area_perm
-From: syzbot <syzbot+7229071b47908b19d5b7@syzkaller.appspotmail.com>
-To: akpm@linux-foundation.org, amir73il@gmail.com, axboe@kernel.dk, 
-	brauner@kernel.org, cem@kernel.org, chandan.babu@oracle.com, 
-	djwong@kernel.org, jack@suse.cz, josef@toxicpanda.com, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250303171120.2837067-6-john.g.garry@oracle.com>
 
-Hello,
+On Mon, Mar 03, 2025 at 05:11:13PM +0000, John Garry wrote:
+> Currently atomic write support requires dedicated HW support. This imposes
+> a restriction on the filesystem that disk blocks need to be aligned and
+> contiguously mapped to FS blocks to issue atomic writes.
+> 
+> XFS has no method to guarantee FS block alignment for regular,
+> non-RT files. As such, atomic writes are currently limited to 1x FS block
+> there.
+> 
+> To deal with the scenario that we are issuing an atomic write over
+> misaligned or discontiguous data blocks - and raise the atomic write size
+> limit - support a SW-based software emulated atomic write mode. For XFS,
+> this SW-based atomic writes would use CoW support to issue emulated untorn
+> writes.
+> 
+> It is the responsibility of the FS to detect discontiguous atomic writes
+> and switch to IOMAP_DIO_ATOMIC_SW mode and retry the write. Indeed,
+> SW-based atomic writes could be used always when the mounted bdev does
+> not support HW offload, but this strategy is not initially expected to be
+> used.
 
-syzbot has tested the proposed patch and the reproducer did not trigger any issue:
+So now seeing how these are are to be used, these aren't "hardware"
+and "software" atomic IOs. They are block layer vs filesystem atomic
+IOs.
 
-Reported-by: syzbot+7229071b47908b19d5b7@syzkaller.appspotmail.com
-Tested-by: syzbot+7229071b47908b19d5b7@syzkaller.appspotmail.com
+We can do atomic IOs in software in the block layer drivers (think
+loop or dm-thinp) rather than off-loading to storage hardware.
 
-Tested on:
+Hence I think these really need to be named after the layer that
+will provide the atomic IO guarantees, because "hw" and "sw" as they
+are currently used are not correct. e.g something like
+IOMAP_FS_ATOMIC and IOMAP_BDEV_ATOMIC which indicates which layer
+should be providing the atomic IO constraints and guarantees.
 
-commit:         b63f532f fsnotify: avoid pre-content events when fault..
-git tree:       https://github.com/amir73il/linux fsnotify-mmap
-console output: https://syzkaller.appspot.com/x/log.txt?x=11fd1fa0580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=afb3000d0159783f
-dashboard link: https://syzkaller.appspot.com/bug?extid=7229071b47908b19d5b7
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-userspace arch: arm64
+-Dave.
 
-Note: no patches were applied.
-Note: testing is done by a robot and is best-effort only.
+-- 
+Dave Chinner
+david@fromorbit.com
