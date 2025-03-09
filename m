@@ -1,211 +1,396 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F91213665A
-	for <linux-xfs@vger.kernel.org>; Sun,  9 Mar 2025 09:12:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741511533; cv=fail; b=faNpA98nD6xwI0ST4Dub51WrKN0koirovrTQ6M2L08Pc3pB66O7NDgdApEeo7rQNdEu3QXq+LEuhJB40V9+tovYTmA2C/1VTOAhbXx7xKd1hvbYAum+TzrIIAMK9cSWgSS5/pordJZhtgtsuZH2D8Bc7YxYL+V3VLyvyj/+c1tg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741511533; c=relaxed/simple;
-	bh=NLSprSmNIIoBkneI7EHFAbTNKl6MuwVBzQ6bO/ztT9E=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Izr0qy4cuzcllUAppzWct1SVXAAjdQwfucnjWy8kX6ZpS7nu2mOaOwW4Zrl5YK+qtY8AhrXDDZFRM8lf2j7rck53wB99D5LUrSlq2U/++tMDOFT7Q51+qAzF1jef0VzIBCNDPEce8qyxW1Fw+q2zV4Z8Y6bXMveVKYcDI1jz284=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VGpgbXaO; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=rTQPttv8; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C021F2B9A4;
+	Sun,  9 Mar 2025 12:09:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1741522172; cv=none; b=Zd4JnTGawldqzXECFUuhO/zu2eXyIvjoXhletbvgi921mf4gJdtbtTgq+rYVTTHg1r6A7vfm+seAs9e7k8Ql6L79X5a8ivzYO8EqqjQ2nwYcijXYPSOdUNo5EAw808mKt65OsXocoA9oQj8fkfAKWHuEkha6qP6i1euzb3PX/MM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1741522172; c=relaxed/simple;
+	bh=ZhP9smmuWO9l/Up2QlUkikbvgn36q+8XzGsHx1Ysp7I=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Gzm/QIJ5NkkieHLa0b4lhZeMBRT/9N/nvZwMGkGUh8Xvg9hoKLFRDXvcl118++xZ7IIQ3iCB+imvYUAobUvvmBbyM8CcQ6ig+oQ1TxQgJVtMq7/x0zYdy239Jv2xopg3uv/l6WfZxOak5UYH4qxQ5FLcN9P9DMV/UgQ/zRgbBp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fwQtMZQa; arc=none smtp.client-ip=209.85.208.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VGpgbXaO";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="rTQPttv8"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5298010X020613;
-	Sun, 9 Mar 2025 09:11:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=A8+ylutzY+pMb/6ZrNgyVXgzAayTf7WATcWt168uo8k=; b=
-	VGpgbXaOgCpK5mYEW2eKw3aFB5LGTwR26ekP4X5BdQISZw6fdp7y4w5oynFB01Ng
-	lijyLN3xg8hweyX+3XHsmL/0KTiCq5bfEpDH+7eu7pDQkPa144BcAZifRcFb6xgK
-	HZc8KMvqwjpMbhCkelTWuBRCWX1FNE6fcgGa6nnmgRY8ALUNJU72wiTuDaB2Yp1/
-	0DTmxx0FFqA1w7KyparSvFZk8Wyz0U8yDbVMtFiMm/97zaz3OebmqndnvuuEguj8
-	xSS3yzyaqVJT5N28EgKWr1xH9GE+AHLGbh/ZguNZWzTCPjj/2bS399XBDfgoYEAd
-	reoqNUDoIbr2XFiSuZp3TA==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 458dxch1de-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 09 Mar 2025 09:11:55 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5297KMdu015990;
-	Sun, 9 Mar 2025 09:11:54 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2176.outbound.protection.outlook.com [104.47.55.176])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 458cbcu2k8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 09 Mar 2025 09:11:54 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Rm+qPtDIzsM0Vti3f6FTBkHKTCUl8YT0uPoBqUPrH6bTmwrpFRP/JLvc1U+u7/jXcL/+Aa1ODTDefzFvOeeMBb/NGeaWjpntwc74CnKUyY8XEQjOKPC2va3JoowLQTrAvNfFB4QnbbYe3eHUIFgp/R1hN7G9lemmVs09gLjxlPSyjF9BqNMfJcNmFYJJQUOxSQYFE1dMTI1oN8gKlp19P8SwWrVaoDiVEohEiNBIw8Jwq/8uoAnBsiW7mu75e23dxlrtnCG5/Rlb0gWNv+4q9wJmRu6aUEMdvI5j9B0QJsujXxRFcyLotAdJkE9N1evhqiQCXiQykteMZSg2+P+W0w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=A8+ylutzY+pMb/6ZrNgyVXgzAayTf7WATcWt168uo8k=;
- b=Pd5t8p+f8OO+YKGEJ5oMhxswxu6+VAriVN+dPZFHS67Fbmltk1XNBXa6neSXpekLozbfTGHEd3P2ulBSZDO6c9kMF3eQ2jQgqyYtPpqZ6oE01yZr7FNXToLtDjSFkzf7I0vMtGmoNikKesFnG1OBOPXnDjMwl8+5Momi4Z4vGIzHRSAZUS/kU4fh1bkCCg0A5iN45dazIj4NpTZD0htbPMtfyCIyoYwsxrF1nDk331vseq9UTwH9izTHpGBlKidAj7aE95fl44bfb7ip+bAzCfy7HfCiksxQNLakOxRTIdMc8jWvjFf9u97aJCWNyhHFfdpPeqN+m/+TP0/T9Q3hOg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fwQtMZQa"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-5e5b572e45cso5773889a12.0;
+        Sun, 09 Mar 2025 05:09:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=A8+ylutzY+pMb/6ZrNgyVXgzAayTf7WATcWt168uo8k=;
- b=rTQPttv83n4Qp57zfrD/yXCP8bYE3mKsHG1ffn/CfM4fCAPdeowb15LPCyVRGGFob/7ROmL4xiWhrb6sxu2FzwIZjECnDTAIwofmp7IspPGP3zzsEsLkJHCBpkS/Ce/jfdv/rIoU+iovdaEmlQEJhhT3kVok9gij3DlUJFITXGk=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by SA3PR10MB6969.namprd10.prod.outlook.com (2603:10b6:806:316::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8511.19; Sun, 9 Mar
- 2025 09:11:53 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.8511.025; Sun, 9 Mar 2025
- 09:11:52 +0000
-Message-ID: <7ade7fb1-b48d-4ee1-b9b5-2aff9c1c9622@oracle.com>
-Date: Sun, 9 Mar 2025 09:11:50 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [xfs-linux:test-merge 13/13] fs/xfs/xfs_file.c:746:15: error: too
- few arguments to function 'xfs_file_write_checks'
-To: kernel test robot <lkp@intel.com>, Carlos Maiolino <cem@kernel.org>
-Cc: oe-kbuild-all@lists.linux.dev, linux-xfs@vger.kernel.org, hch@lst.de
-References: <202503090042.CWpAx3iG-lkp@intel.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <202503090042.CWpAx3iG-lkp@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LNXP265CA0096.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:76::36) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=gmail.com; s=20230601; t=1741522169; x=1742126969; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fNxlWzrhZAfEP/KkGdHRDcm/Kf2Os7XzcAXdYkXJHik=;
+        b=fwQtMZQag3NGz+H4FOf2hJ5gLBmsqNVTcXWf2T1Gnxechc80JQ0OwYNAYqNlfAmgga
+         hLqJGpYjfOhA6ZqC3hCjVAwvrRe98HPep6TjTIQuhVRUw4q1KiLvspQb125DDqVeB8a9
+         H7LSG0j1UR1jVOHHWkNKz+7K90zpIJjXRQ2gkZsncYK8IhFjeeeJJU6R56JcqX7NLaWj
+         8U/Ba1rsjfTciP5glv81FtCGNGPrG2ugzlvctskgJEPTnVaMrkRjRJwjDNnxaRVi55aN
+         +Kp78qcXqUvVRtKxUq0do9B+EWEisVqGWo8DKkDvzpyOar1CIYFKVVDZjEwl2U2L81di
+         ycKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741522169; x=1742126969;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=fNxlWzrhZAfEP/KkGdHRDcm/Kf2Os7XzcAXdYkXJHik=;
+        b=qytk0rw/MYbnVhWumxZ+KpwUnoiBpZEkjy9Gu+161aLli5YlPxfHbu+bviXQrpEA6g
+         2qMRUTx6IzZNW91b29CT/wYDO8Znh8r2AoyW2ySR1ARiKxItdzy3O2I1h8RjEODIltu1
+         WCOCGj0gtuuHxCOeOhzF2pHX3itfF1opp+FafrWTlctdUPVSJ8DZJcfbT48iJbKOqUgf
+         gBCCJ2YDzhBjosD6H4xG+ssCXPu+sHsOh8UHSFP8V4HlWKWsDIco5FH7XMiFFfQB63Z6
+         E57tjGUq/NPul9TVSwjuCBqvzgdZXkbMe77GsDLyErPM9qoJg512JDQRRnjaUPYUBtEV
+         WhFg==
+X-Forwarded-Encrypted: i=1; AJvYcCURu8ZUU29TjzmrqjSy1iCWbNZrldiAUs2IKlayEIwXVOUeyy9GmRMR9ExrCsiDk7+02/h9689yubOGntnr@vger.kernel.org, AJvYcCWmgw/nSbOj2wNGruwFEgdbSFWkeJDSHlsqzARvKc/IyVfLnT+KhE8+UgX9fdurVGQIvNOWZcZhi35E@vger.kernel.org, AJvYcCX1Baksy61S5RQCdFMSXCClYTY7lqWxRh1JlQy1l2+dwF4MJuFNFJhrAIJGF7U81hSGc9WXyO0l3udjS4pL@vger.kernel.org
+X-Gm-Message-State: AOJu0YxR+Jpe3IzVjopdDmmup9hR+aQCTJZFhmREJ1xl/Cq+SRcujDfA
+	80Mw/HslxKj2sIoU9MEfEw7CiAkzaZ7FcidhxlNFGrGYByFwgJ5yGFhVujyiKUjnUeUVIfkRzmN
+	6YiYs2CYPlD2VP06laxIug882Xr8=
+X-Gm-Gg: ASbGnctNo80na9vKslXdOUJdh6J6dA3mlTfLcBIKtPBzrx0FAI1wCYLz8Seicwk/3t9
+	CLNnrmFB2U0Xy2vs5r2iNgEGnC8FF0A/KckCQB442rFlwCOGHBnSZQLaQXtlIHiWzy/QKxZweTD
+	53zFb8qx2lptwgTtqFa1AMP8M/EQ==
+X-Google-Smtp-Source: AGHT+IGgrFqJJNVC5UL1diLMhW9a2kAoskP4FsjK8wLzW90lJ1WC8VhXDjuGoC56OFwUe9K9Bp/gIxMdquEqcns7K9M=
+X-Received: by 2002:a17:907:c15:b0:abf:b2d1:bb4c with SMTP id
+ a640c23a62f3a-ac252ed8d23mr1177626466b.52.1741522168700; Sun, 09 Mar 2025
+ 05:09:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SA3PR10MB6969:EE_
-X-MS-Office365-Filtering-Correlation-Id: e3b32ca9-10c6-43e4-1885-08dd5eea6e63
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?L1Jzdlc2ZEJRcXpLekxkVTV4TG9RN0FiUHYvcXQwWWZwdEU4VUgwbkp5UTJw?=
- =?utf-8?B?STZTclR2VjkzR0hSN2NLa3hxeTUvcmpYU0gvNUZ0WGErS3c5Q2J1eWhDNXBO?=
- =?utf-8?B?dW01RUlwNFJCeE1vNlE1bmYzQk5DbTh1UzlpSnhDUWoxMHg0cnpiTXZ1eHRX?=
- =?utf-8?B?cVVmSUQ2MXlCd2k4YUJpeVk5SmNvTG1PUktwOFlZcGlQb0dnZ2JoN09heEtL?=
- =?utf-8?B?UG9tNjV5Z1dlMVhzTkVLZGpqczZ6ZE9BaGZDMWNqTElYWnQzRHJqUmJJNWda?=
- =?utf-8?B?bjFRTU1nemF6QjdlTUY5TVFpc1ZOcldxQ25RKzY3ak1wLzNZNktMTXR3YXBY?=
- =?utf-8?B?amgyN005QUlKOGVDd2tPd2haU1JJL0ZXWmsrRVpCSFUyS3lUMERrcFMxcndJ?=
- =?utf-8?B?QlgvYS8vWXVhaFJ6c3AwUU5aVFIvdnlkdVZKQkJiQjhYZDRwejduZVFYalI3?=
- =?utf-8?B?QzNVZktXTWRZb0ZRNEIrcEg0WU93eTBxd1BCMHhXYTNlTlE4ZjRDaFh4c3Ro?=
- =?utf-8?B?UVVyWkhSMjdoZEgwcGUwWDNrZ1AxT3ljSVZUMFJ4OGdZRUU4c2d2THJXRHdP?=
- =?utf-8?B?MEdpTDcvaFFMLzF1RmhSTTRNT3pMdmdUV2lMVm45ZkdWUFlRelUxb2JCbVN5?=
- =?utf-8?B?T2RpME1UM2wvN3pNTGkxWTVpRmlFSElZaFpzRzkvSWx6aFJqckdyQnFvb0Ur?=
- =?utf-8?B?bTNYQlZDYmJzcW92KzFBKzBvNzdERHlzVHc0OFVOOGU5ekVyZGhsclUxNGhD?=
- =?utf-8?B?eDVVc2ZQQkNQTm5Ed1lBdHBRd2U5cnRIVWNOOGdWaFpqWEp2emRjVDkxamZa?=
- =?utf-8?B?MlZ4a0x6enRxcE1TaTF2WTZXVzF0RWF5SDduayt3aXFVa1JJemxqMXo1ckJ1?=
- =?utf-8?B?RkxvMkZJUXJ5bnlvNFZEQ2dzazdtaDhKeUdyNEFRQXR3WGtlU2EvSEJyWFNy?=
- =?utf-8?B?LzlDV3NOWjJQYi9RT2JNakJCS1Bxb1pQdE5ubkRsVFcvUDRhUkt4a3pSd2pP?=
- =?utf-8?B?NWtLVFEwVXRTc1dMQ1E5YjM3bUl2YWFtOTZ2M1l6YWdHM283b0FEMDhZb1py?=
- =?utf-8?B?OHdsdVY0NEFwdE9EUVB5MnFyUzFWczlGbTQ3UWhndUhTUjUxTUdLMTBFS2xV?=
- =?utf-8?B?VUlKL0hMWjNKdWN2NjNIelV4TlF1RUpLMlJqeUZQdVhPTDlhbWlHRWhTUTJt?=
- =?utf-8?B?SXN4bWp4YVRzQkxvaG45UDF4eHNUeElLZ3VBc2ZjcjZvaitkNWRhbGtQMkpn?=
- =?utf-8?B?S2luRFFEeXRkZEV5NldCcVA5dGxrMTNWSGJIc1ZOcjBBeTV0dVRjbXNjekVk?=
- =?utf-8?B?RFlKc2lETTVPcEhWOGFSQmV1VmZ2TU82UTVDcDFZWGFHc3UyMnRNTXdwNXdj?=
- =?utf-8?B?bkdqSnpJM1p2Nk9IbU1EdE93MWQxd3FKeTVZWFFhcGM1SWUvT3RHdGNzR21h?=
- =?utf-8?B?NXNMQmJQY1kzMlpkMkhSU2FxWUY3K1k1V2ZSWFNjYTVXb2pVb1BIZ3NDMThL?=
- =?utf-8?B?cjIyTVRJMkhiWnhUZG9VU1pYTS9YZjRzekJiWFBkTTZxWWQ5WjNsL1kxaWhp?=
- =?utf-8?B?eHNWRXRQdlVDTnIrQ3phYXc4MERhR3dkUFEyRnBGY0JtRzBwa290QmZDckRh?=
- =?utf-8?B?SnJJY2xWWnJVSndZWVNBRXF6OUlvYVZBZGRhYXVxS294clcvTWRpQVRDbEUw?=
- =?utf-8?B?bXFHYWQ2ZU1ScXM4SnV5alRqQmVhUzJOSW03RjZHSjlFeE1SdGNNNm56K3A4?=
- =?utf-8?B?TVNGblRnQ1lrck1iRCtxd0h0QTgybjRrRDFKOEl2MkVlRnp2NGRVMEM3ODNl?=
- =?utf-8?B?TUU5VEZsTGFaUnQ2TE5HN3psY1ppRWhnQ0VDWU4vRmhtd3F5aTBGekQwL1R3?=
- =?utf-8?Q?ye3vKZ7f6S3KF?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bDY1NUJLVGRXK3JYMURCUGVvdCtNTXkyRmtjSUlrUEdsbmtsUjNuSnNDOGdF?=
- =?utf-8?B?WnBIbCttaEJrUVBCYTBacXEzcGdoV01FcGl0WEl3Y3c3QTYrWnpsMVNOa0hq?=
- =?utf-8?B?R1dYNDlvZ09PREx0TlZFdThYRWRCNTdoWVRqdCszNFRzZlZEenNlTHBKTHdj?=
- =?utf-8?B?SWljK1dYcjNXNi91NllRRHFDRmVaWlJYUWRDalo1b3hYelIrYjF0QmgrZXFi?=
- =?utf-8?B?QkwyNXR2cjFBTWNIbEh1aXVoU0JjQ2VzR0tUVmVLVVBhTjV5TzE3RWhQN2Ix?=
- =?utf-8?B?czVrK1hVZDFhNDR3Z2hYOFlRRkQzenlsa1dYQlRwN2tlc25EOWNUblBNam5C?=
- =?utf-8?B?T1Vrbnh1N0N5UzRmZnA5OHFsN0o5NTdTY2ZEeVFXOUlVTFhoQWpCN2RTcUJv?=
- =?utf-8?B?bVlJZjVBRVF6bDFPaDhHQmxGTExEZU9qWXhlNFZwUGFwN3pGTTEvQnBvbGJK?=
- =?utf-8?B?SWxoQ25peXR6Z0U3aEZMcXZkWmNQejJXczRZd2J4QTU1MFZMemkrY05VbU1H?=
- =?utf-8?B?K0pGSFdYRzF4M2JDMy9KTEd5TXFsU2ROejYwSi9Cb29KT2E2VHhBWXQvM2Mw?=
- =?utf-8?B?dmo4bHJ1L0h4YzFESHV3djB5eEUrY0xmOE5qU2tHQzZSaXRGRi81aVVHMXg3?=
- =?utf-8?B?eFlrKzRxMDFPVnlRSnpScXFKSFRGV09zN2c1VzFNd2NKZ3AvcFhqb29iOTMx?=
- =?utf-8?B?M2NocXNCRjFjcVplVEdBa3VSNitqSlBNL2V2aUtTaEZsaWptbDJzTytIWEhZ?=
- =?utf-8?B?am5UZVgwVkd1TkxHQkJxaDhZMGdONVVidnlmd0sza1hXNXRRbEQ4R3R0cmZa?=
- =?utf-8?B?RWw1akVFS05WSm40NUZQT09PWHdmVndRUnQ5aERhQ2lmdzd3dE5xc2ZaU3lP?=
- =?utf-8?B?LzRsTExQMkUwak9PcWFNbmJ1MGgvT0RQcTREQ1R6NjM2SFkwVWc1bWZkMjdu?=
- =?utf-8?B?WkdMV0xpaFBQU3VQSmd5bTIrREZWVDN2QTRCaE0vblpoUzFMS3B4eElPVjEw?=
- =?utf-8?B?QzdhWjNZcTRNMG9naTdwa25ZQ1Q0SXFheTVxRnczLzY4aGNTbnBlR2RtdHdh?=
- =?utf-8?B?c2Y3ck1HZ3Z3N0xyMzcyRFd6U1JDM05NTnVkZklsN000Uk5lR0QxVEFNS0JF?=
- =?utf-8?B?TTFPeFJlZ1lpdVQ1SmRKeU1xbnRLSVNCM3JQVVNrVHVaQ05EOHdISUJ5SUVh?=
- =?utf-8?B?ZW02L2lwa0RmTWZjTnh6Q09WMkk2ZmJ1NE1oVEc1cW5PejllcGhyeG1RdVNX?=
- =?utf-8?B?UUJYYUN0bXJZVGw0RWx0ajVGOUlDVmRia3NPVTgxMkZYeVo4VldNK1NCTTkv?=
- =?utf-8?B?S0dFeUtGY01BS1FYNGFEYVhRSW0zeW5MRU11WGdHaWRJdFhyTVBhSy9pZENM?=
- =?utf-8?B?VXhBeTgxQlVUZFZJdEpub2R5aDYyK243dHRHVnZhbmFLNGdDdVZrNUpqWi92?=
- =?utf-8?B?Uzg5R2lneFRUTnFVN3RQR1F5clV2MlFLaHRHTXlyN1NxdSs2MEFWWnp3RVJh?=
- =?utf-8?B?dWMrbjZBM3YzQnRLNjFPTHl1K1ZyVEczZms5M3VxWHRkWEJvTzRjaTAzRW9l?=
- =?utf-8?B?S0pWZTBvMXIrWkV2cDUyTVVoTnlTZnpVTFkxK21aOFVRUHRLbHlHNzc0ejJr?=
- =?utf-8?B?NnlrZTFsWjZ5VjdaaWZuYkY4SFZwUEZiT2hRUGRsZ3d2Z1p2T051SEVWNm1h?=
- =?utf-8?B?aDZQU2o5WmtDdjQyN3Ywd01NMVFqN1E2T3MrbGo0YTYzT2JtZnNvSWR1L2tr?=
- =?utf-8?B?bnREZTltaUNGdnBRb2R0ODlubDZ3QkJFMk05SmdoK2JiZXROUVZ0eG5pS1ky?=
- =?utf-8?B?d1RkZWh1UklNbkRQczJ1OUZhTXBzS082WXVyUUZGa1BmRVMzdDJsalVwSUFv?=
- =?utf-8?B?aG5BY1g0ZVlvVlZjaVc5amdXV00xdHBBR0tXbmdueGNNZWgzcC94Tytmd3hD?=
- =?utf-8?B?cFlEdkozVW9nQnAzZUtaS2VKMkV4Z3hQK1BrY1l6TEhtT0lsc2dXcU5Oa1Vt?=
- =?utf-8?B?S0k2Y0R0VXlMdCttK2dlclFpM2UwU0VXUmxaUTFiVW9VU3lJd2EySHhlcUwx?=
- =?utf-8?B?cWI5T002QVIzZk9wK3Nwdzh0UUhpYVlGUW43OXNhY0VtendBbjFxejh5TTNN?=
- =?utf-8?B?RjJDVGVBMU1BKzdieXBPUlZhNmlkZ1BwWC9iRGxWODdDU1BPYUZaZ05WeG1Y?=
- =?utf-8?B?eHc9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	zUcQh8sYLqBlyAXFnTmc9NYRDRBxT8X5nRbzMhVm0kPKib6DscrMLHdq46wHCYYTJIV4xWNGQzZxni0Oz5C6nLeaBWjWgI4WUJ9qXAvga7UvlfjpaADSqgcUhPT8sSF+dSwxwxgO6mkcU1A79Yo3Rtrt6sYBUmZAaXFxy450CVj9kWpc9Pt7WDDQCE0TdKaujN3D+s4YvPss/EX2m7abdcHBSMZxyL8Zn/7GZtF3WUePLYMuw6NBUpVCDpgrOAJugjJvoV7aR7P/uTnXaDWB2+QgzW636TBUg1zGSSO5Lj/7FszBU33UbKv3YJRiH9r787Fcm73oSkbnevPaPqCvSJEgbRqN+aNBes6wUUy9fDyXe8mAUNrw+VbomAiewOq1wXd4Q4ejdwwGtcKB6AjNbpMbNpQF+PFB/isrp4BbXIT+ZXlmQPEPkA5M8ng0akWF5kLXJ0Eq+jJ08eTYhIOTN5ZjMYb/y6FeaFwamHindKZ9rEF/eVfB1k+HitYOwrmuqayunou618WGPq5knPBlhsOQViGL73hxGh0dVczbbI0dwUSFldnqDB4w3Fx8xuzmLnLeqVF6Ki0vOXZMLKehBk9Qr+cdO6jclHm1hiSCkOU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e3b32ca9-10c6-43e4-1885-08dd5eea6e63
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2025 09:11:52.6917
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4l/Z2udbYVuArc54oX+ojZKRCW1wgZbydHZklUq2wfmgtDoctPCTwVYfZz7PJWZ0Ys6ugk57d8LYK0dUCLEYXg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR10MB6969
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-09_03,2025-03-07_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 spamscore=0
- mlxlogscore=999 malwarescore=0 suspectscore=0 mlxscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2502100000
- definitions=main-2503090071
-X-Proofpoint-ORIG-GUID: FJQ-s1uxM_A4SMpsLFbERn5VrdD-vN3Z
-X-Proofpoint-GUID: FJQ-s1uxM_A4SMpsLFbERn5VrdD-vN3Z
+References: <67a487f7.050a0220.19061f.05fc.GAE@google.com> <67c4881e.050a0220.1dee4d.0054.GAE@google.com>
+ <7ehxrhbvehlrjwvrduoxsao5k3x4aw275patsb3krkwuq573yv@o2hskrfawbnc>
+ <CAOQ4uxjf5H_vj-swF7wEvUkPobEuxs2q6jfO9jFsx4pqxtJMMg@mail.gmail.com>
+ <20250304161509.GA4047943@perftesting> <CAOQ4uxj0cN-sUN=EE0+9tRhMFFrWLQ0T_i0fprwNRr92Hire6Q@mail.gmail.com>
+ <20250304203657.GA4063187@perftesting> <CAOQ4uxihyR8u5c0T8q85ySNgp4U1T0MMSR=+vv3HWNFcvezRPQ@mail.gmail.com>
+ <20250307154614.GA59451@perftesting> <CAOQ4uxizF1qGpC3+m47Y5C_NSMa84vbBRj6xg7_uS-BTJF0Ycw@mail.gmail.com>
+ <CAOQ4uxht4zLKegu==cg4rs-GmL3p-bfYZt_sXNu+yxwTccSM4g@mail.gmail.com>
+In-Reply-To: <CAOQ4uxht4zLKegu==cg4rs-GmL3p-bfYZt_sXNu+yxwTccSM4g@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sun, 9 Mar 2025 13:09:16 +0100
+X-Gm-Features: AQ5f1JqWUBTbrJKW9qBHk2sgfGwSWVhKZct8CRch-tjqmxf_0yFsxo8aOQ5NZZs
+Message-ID: <CAOQ4uxg0ZYb5vBVx3iH6TKO9cX4pGxu+b1UctvDVOk6qcSFEAA@mail.gmail.com>
+Subject: Re: [syzbot] [xfs?] WARNING in fsnotify_file_area_perm
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: Jan Kara <jack@suse.cz>, 
+	syzbot <syzbot+7229071b47908b19d5b7@syzkaller.appspotmail.com>, 
+	akpm@linux-foundation.org, axboe@kernel.dk, brauner@kernel.org, 
+	cem@kernel.org, chandan.babu@oracle.com, djwong@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 08/03/2025 16:46, kernel test robot wrote:
->>> fs/xfs/xfs_file.c:746:15: error: too few arguments to function 'xfs_file_write_checks'
->       746 |         ret = xfs_file_write_checks(iocb, from, &iolock);
->           |               ^~~~~~~~~~~~~~~~~~~~~
->     fs/xfs/xfs_file.c:434:1: note: declared here
->       434 | xfs_file_write_checks(
->           | ^~~~~~~~~~~~~~~~~~~~~
+On Fri, Mar 7, 2025 at 6:45=E2=80=AFPM Amir Goldstein <amir73il@gmail.com> =
+wrote:
+>
+> On Fri, Mar 7, 2025 at 5:07=E2=80=AFPM Amir Goldstein <amir73il@gmail.com=
+> wrote:
+> >
+> > On Fri, Mar 7, 2025 at 4:46=E2=80=AFPM Josef Bacik <josef@toxicpanda.co=
+m> wrote:
+> > >
+> > > On Tue, Mar 04, 2025 at 10:13:39PM +0100, Amir Goldstein wrote:
+> > > > On Tue, Mar 4, 2025 at 9:37=E2=80=AFPM Josef Bacik <josef@toxicpand=
+a.com> wrote:
+> > > > >
+> > > > > On Tue, Mar 04, 2025 at 09:27:20PM +0100, Amir Goldstein wrote:
+> > > > > > On Tue, Mar 4, 2025 at 5:15=E2=80=AFPM Josef Bacik <josef@toxic=
+panda.com> wrote:
+> > > > > > >
+> > > > > > > On Tue, Mar 04, 2025 at 04:09:16PM +0100, Amir Goldstein wrot=
+e:
+> > > > > > > > On Tue, Mar 4, 2025 at 12:06=E2=80=AFPM Jan Kara <jack@suse=
+.cz> wrote:
+> > > > > > > > >
+> > > > > > > > > Josef, Amir,
+> > > > > > > > >
+> > > > > > > > > this is indeed an interesting case:
+> > > > > > > > >
+> > > > > > > > > On Sun 02-03-25 08:32:30, syzbot wrote:
+> > > > > > > > > > syzbot has found a reproducer for the following issue o=
+n:
+> > > > > > > > > ...
+> > > > > > > > > > ------------[ cut here ]------------
+> > > > > > > > > > WARNING: CPU: 1 PID: 6440 at ./include/linux/fsnotify.h=
+:145 fsnotify_file_area_perm+0x20c/0x25c include/linux/fsnotify.h:145
+> > > > > > > > > > Modules linked in:
+> > > > > > > > > > CPU: 1 UID: 0 PID: 6440 Comm: syz-executor370 Not taint=
+ed 6.14.0-rc4-syzkaller-ge056da87c780 #0
+> > > > > > > > > > Hardware name: Google Google Compute Engine/Google Comp=
+ute Engine, BIOS Google 12/27/2024
+> > > > > > > > > > pstate: 80400005 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS B=
+TYPE=3D--)
+> > > > > > > > > > pc : fsnotify_file_area_perm+0x20c/0x25c include/linux/=
+fsnotify.h:145
+> > > > > > > > > > lr : fsnotify_file_area_perm+0x20c/0x25c include/linux/=
+fsnotify.h:145
+> > > > > > > > > > sp : ffff8000a42569d0
+> > > > > > > > > > x29: ffff8000a42569d0 x28: ffff0000dcec1b48 x27: ffff00=
+00d68a1708
+> > > > > > > > > > x26: ffff0000d68a16c0 x25: dfff800000000000 x24: 000000=
+0000008000
+> > > > > > > > > > x23: 0000000000000001 x22: ffff8000a4256b00 x21: 000000=
+0000001000
+> > > > > > > > > > x20: 0000000000000010 x19: ffff0000d68a16c0 x18: ffff80=
+00a42566e0
+> > > > > > > > > > x17: 000000000000e388 x16: ffff800080466c24 x15: 000000=
+0000000001
+> > > > > > > > > > x14: 1fffe0001b31513c x13: 0000000000000000 x12: 000000=
+0000000000
+> > > > > > > > > > x11: 0000000000000001 x10: 0000000000ff0100 x9 : 000000=
+0000000000
+> > > > > > > > > > x8 : ffff0000c6d98000 x7 : 0000000000000000 x6 : 000000=
+0000000000
+> > > > > > > > > > x5 : 0000000000000020 x4 : 0000000000000000 x3 : 000000=
+0000001000
+> > > > > > > > > > x2 : ffff8000a4256b00 x1 : 0000000000000001 x0 : 000000=
+0000000000
+> > > > > > > > > > Call trace:
+> > > > > > > > > >  fsnotify_file_area_perm+0x20c/0x25c include/linux/fsno=
+tify.h:145 (P)
+> > > > > > > > > >  filemap_fault+0x12b0/0x1518 mm/filemap.c:3509
+> > > > > > > > > >  xfs_filemap_fault+0xc4/0x194 fs/xfs/xfs_file.c:1543
+> > > > > > > > > >  __do_fault+0xf8/0x498 mm/memory.c:4988
+> > > > > > > > > >  do_read_fault mm/memory.c:5403 [inline]
+> > > > > > > > > >  do_fault mm/memory.c:5537 [inline]
+> > > > > > > > > >  do_pte_missing mm/memory.c:4058 [inline]
+> > > > > > > > > >  handle_pte_fault+0x3504/0x57b0 mm/memory.c:5900
+> > > > > > > > > >  __handle_mm_fault mm/memory.c:6043 [inline]
+> > > > > > > > > >  handle_mm_fault+0xfa8/0x188c mm/memory.c:6212
+> > > > > > > > > >  do_page_fault+0x570/0x10a8 arch/arm64/mm/fault.c:690
+> > > > > > > > > >  do_translation_fault+0xc4/0x114 arch/arm64/mm/fault.c:=
+783
+> > > > > > > > > >  do_mem_abort+0x74/0x200 arch/arm64/mm/fault.c:919
+> > > > > > > > > >  el1_abort+0x3c/0x5c arch/arm64/kernel/entry-common.c:4=
+32
+> > > > > > > > > >  el1h_64_sync_handler+0x60/0xcc arch/arm64/kernel/entry=
+-common.c:510
+> > > > > > > > > >  el1h_64_sync+0x6c/0x70 arch/arm64/kernel/entry.S:595
+> > > > > > > > > >  __uaccess_mask_ptr arch/arm64/include/asm/uaccess.h:16=
+9 [inline] (P)
+> > > > > > > > > >  fault_in_readable+0x168/0x310 mm/gup.c:2234 (P)
+> > > > > > > > > >  fault_in_iov_iter_readable+0x1dc/0x22c lib/iov_iter.c:=
+94
+> > > > > > > > > >  iomap_write_iter fs/iomap/buffered-io.c:950 [inline]
+> > > > > > > > > >  iomap_file_buffered_write+0x490/0xd54 fs/iomap/buffere=
+d-io.c:1039
+> > > > > > > > > >  xfs_file_buffered_write+0x2dc/0xac8 fs/xfs/xfs_file.c:=
+792
+> > > > > > > > > >  xfs_file_write_iter+0x2c4/0x6ac fs/xfs/xfs_file.c:881
+> > > > > > > > > >  new_sync_write fs/read_write.c:586 [inline]
+> > > > > > > > > >  vfs_write+0x704/0xa9c fs/read_write.c:679
+> > > > > > > > >
+> > > > > > > > > The backtrace actually explains it all. We had a buffered=
+ write whose
+> > > > > > > > > buffer was mmapped file on a filesystem with an HSM mark.=
+ Now the prefaulting
+> > > > > > > > > of the buffer happens already (quite deep) under the file=
+system freeze
+> > > > > > > > > protection (obtained in vfs_write()) which breaks assumpt=
+ions of HSM code
+> > > > > > > > > and introduces potential deadlock of HSM handler in users=
+pace with filesystem
+> > > > > > > > > freezing. So we need to think how to deal with this case.=
+..
+> > > > > > > >
+> > > > > > > > Ouch. It's like the splice mess all over again.
+> > > > > > > > Except we do not really care to make this use case work wit=
+h HSM
+> > > > > > > > in the sense that we do not care to have to fill in the mma=
+ped file content
+> > > > > > > > in this corner case - we just need to let HSM fail the acce=
+ss if content is
+> > > > > > > > not available.
+> > > > > > > >
+> > > > > > > > If you remember, in one of my very early version of pre-con=
+tent events,
+> > > > > > > > the pre-content event (or maybe it was FAN_ACCESS_PERM itse=
+lf)
+> > > > > > > > carried a flag (I think it was called FAN_PRE_VFS) to commu=
+nicate to
+> > > > > > > > HSM service if it was safe to write to fs in the context of=
+ event handling.
+> > > > > > > >
+> > > > > > > > At the moment, I cannot think of any elegant way out of thi=
+s use case
+> > > > > > > > except annotating the event from fault_in_readable() as "un=
+safe-for-write".
+> > > > > > > > This will relax the debugging code assertion and notify the=
+ HSM service
+> > > > > > > > (via an event flag) that it can ALLOW/DENY, but it cannot f=
+ill the file.
+> > > > > > > > Maybe we can reuse the FAN_ACCESS_PERM event to communicate
+> > > > > > > > this case to HSM service.
+> > > > > > > >
+> > > > > > > > WDYT?
+> > > > > > >
+> > > > > > > I think that mmap was a mistake.
+> > > > > >
+> > > > > > What do you mean?
+> > > > > > Isn't the fault hook required for your large executables use ca=
+se?
+> > > > >
+> > > > > I mean the mmap syscall was a mistake ;).
+> > > > >
+> > > >
+> > > > ah :)
+> > > >
+> > > > > >
+> > > > > > >
+> > > > > > > Is there a way to tell if we're currently in a path that is u=
+nder fsfreeze
+> > > > > > > protection?
+> > > > > >
+> > > > > > Not at the moment.
+> > > > > > At the moment, file_write_not_started() is not a reliable check
+> > > > > > (has false positives) without CONFIG_LOCKDEP.
+> > > > > >
+> > > >
+> > > > One very ugly solution is to require CONFIG_LOCKDEP for
+> > > > pre-content events.
+> > > >
+> > > > > > > Just denying this case would be a simpler short term solution=
+ while
+> > > > > > > we come up with a long term solution. I think your solution i=
+s fine, but I'd be
+> > > > > > > just as happy with a simpler "this isn't allowed" solution. T=
+hanks,
+> > > > > >
+> > > > > > Yeh, I don't mind that, but it's a bit of an overkill consideri=
+ng that
+> > > > > > file with no content may in fact be rare.
+> > > > >
+> > > > > Agreed, I'm fine with your solution.
+> > > >
+> > > > Well, my "solution" was quite hand-wavy - it did not really say how=
+ to
+> > > > propagate the fact that faults initiated from fault_in_readable().
+> > > > Do you guys have any ideas for a simple solution?
+> > >
+> > > Sorry I've been elbow deep in helping getting our machine replacement=
+s working
+> > > faster.
+> > >
+> > > I've been thnking about this, it's not like we can carry context from=
+ the reason
+> > > we are faulting in, at least not simply, so I think the best thing to=
+ do is
+> > > either
+> > >
+> > > 1) Emit a precontent event at mmap() time for the whole file, since r=
+eally all I
+> > > care about is faulting at exec time, and then we can just skip the pr=
+econtent
+> > > event if we're not exec.
+> >
+> > Sorry, not that familiar with exec code. Do you mean to issue pre-conte=
+nt
+> > for page fault only if memory is mapped executable or is there another =
+way
+> > of knowing that we are in exec context?
+> >
+> > If the former, then syzbot will catch up with us and write a buffer whi=
+ch is
+> > mapped readable and exec.
+> >
 
-Christoph's zoned series added a new arg to xfs_file_write_checks().
+Oh, I was being silly.
+You meant to call the hook from page fault only for FMODE_EXEC.
+This makes sense to me. I will try to write it up.
 
-I think that we want to add a NULL here as that arg - assuming that we 
-won't support atomic writes for zoned devices now.
+> > >
+> > > 2) Revert the page fault stuff, put back your thing to fault the whol=
+e file, and
+> > > wait until we think of a better way to deal with this.
+> > >
+> > > Obviously I'd prefer not #2, but I'd really, really rather not chuck =
+all of HSM
+> > > because my page fault thing is silly.  I'll carry what I need interna=
+lly while
+> > > we figure out what to do upstream.  #1 doesn't seem bad, but I haven'=
+t thought
+> > > about it that hard.  Thanks,
+> > >
+> >
+> > So I started to test this patch, but I may be doing something very
+> > terribly wrong
+> > with this. Q: What is this something that is terribly wrong?
+> >
+> >
+> > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > index 2788df98080f8..a8822b44d4967 100644
+> > --- a/include/linux/fs.h
+> > +++ b/include/linux/fs.h
+> > @@ -3033,13 +3033,27 @@ static inline void file_start_write(struct file=
+ *file)
+> >         if (!S_ISREG(file_inode(file)->i_mode))
+> >                 return;
+> >         sb_start_write(file_inode(file)->i_sb);
+> > +       /*
+> > +        * Prevent fault-in user pages that may call HSM hooks with
+> > +        * sb_writers held.
+> > +        */
+> > +       if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode)))
+> > +               pagefault_disable();
+> >  }
+> >
+> >  static inline bool file_start_write_trylock(struct file *file)
+> >  {
+> >         if (!S_ISREG(file_inode(file)->i_mode))
+> >                 return true;
+> > -       return sb_start_write_trylock(file_inode(file)->i_sb);
+> > +       if (!sb_start_write_trylock(file_inode(file)->i_sb))
+> > +               return false;
+> > +       /*
+> > +        * Prevent fault-in user pages that may call HSM hooks with
+> > +        * sb_writers held.
+> > +        */
+> > +       if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode)))
+> > +               pagefault_disable();
+> > +       return true;
+> >  }
+> >
+> >  /**
+> > @@ -3053,6 +3067,8 @@ static inline void file_end_write(struct file *fi=
+le)
+> >         if (!S_ISREG(file_inode(file)->i_mode))
+> >                 return;
+> >         sb_end_write(file_inode(file)->i_sb);
+> > +       if (unlikely(FMODE_FSNOTIFY_HSM(file->f_mode)))
+> > +               pagefault_enable();
+> >  }
+>
+> One thing that is wrong is that this is checking if the written file
+> is marked for
+> pre-content events, not the input buffer mmaped file.
+>
+> What we would have needed here is a check of
+>   unlikely(fsnotify_sb_has_priority_watchers(sb,
+>                                                 FSNOTIFY_PRIO_PRE_CONTENT=
+)))
+>
+> But Linus will not like that...
+>
+> Do we even care about optimizing the pre-content hooks of sporadic files
+> that are not marked for pre-content events when there are pre-content
+> watches on the filesystem?
+>
+> I think all of our use cases mark the sb for pre-content events anyway
+> and do not care about a bit of overhead for non-marked files.
+> If that is the case we can do away with the extra optimization
+> and then the changes above will really solve the issue.
+>
+> I've squashed the followup change to the fsnotify-fixes branch.
 
-Carlos, please advise to handle.
+This was actually a partial revert of commit 318652e07fa5b ("fsnotify:
+check if file is actually being watched for pre-content events on open"),
+so posted it as a separate patch.
+
+I am not sure if we need this if we go the route of event on mmap(),
+but posted the patches so we have them if we decide that they are useful.
 
 Thanks,
-John
+Amir.
