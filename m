@@ -1,125 +1,195 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-pl1-f195.google.com (mail-pl1-f195.google.com [209.85.214.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C8040849;
-	Sun,  9 Mar 2025 12:41:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07722136349;
+	Sun,  9 Mar 2025 13:23:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741524099; cv=none; b=lM/icdBKbBxkhQBZ5AfGznTmvq2tQ/HXQQ7AYQRzix7dKeD0ffGw6lJDG++avVXCubxSJy8An5/YhSzsJf7UJHCb4hGMLx02YkBTruzVHODG8TsfAkXpiC25lhHUKZsy5SN/Mm0Xp0a0A/96o9m3tHOfXChJiSfFW0Ey0LGE3zM=
+	t=1741526634; cv=none; b=iLadkb/cLZECY93/3+UenK2YmLHxOuUJ/BnLF2fm7gUlGU5J9/neotwoOVv5UcYlH+6LGqbERyC0+/4NR67EerEpRE55/A4gB+F/qWE5jSLo0/aTSBc+KtX8Aky+IKV+X6wdQXf8CIFhGJQJ5MCG0RDBZJMubLGO9IV+DDSfdeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741524099; c=relaxed/simple;
-	bh=NIt+fjpsQJoN/ng/Mqi+At1plZSlaOyMv2eBpoBoMUo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PFvRe5Pdd+vr/LqgSQNoHo9dUs1rmFeqaUArMzplqBkwpAjPF1y1aY/QYr9CetS5gA4T+2mVcmqVSB+QjH+P1GpE4xsxIxKUnXp9ujUGiKQbBpzOAD6SSlmF48zrU6px4HB27w++3AZfMgfWQOpZDFyVrzTr1S5jPDMXXSMrKTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iliK6akz; arc=none smtp.client-ip=209.85.216.52
+	s=arc-20240116; t=1741526634; c=relaxed/simple;
+	bh=amviRZAng65qhSPsIn/ez8PlX5/EY5IcXVvOyQBoCh4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rZNGvFCWFmn8to73uMN3GfOjykI1pgpoWD0gAsAaqyv/MgeSi4QgEcTuUKpAkkijCaXTEppVADyJGL8MOIjazSryjWGTiGcWW9ptIaMat+vVneLFz3barGNIWcCItoRDQD0W6+HJwBhL76Br1DCzq61GaOtkYKWAxheslRee0uI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dVz46CN7; arc=none smtp.client-ip=209.85.214.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iliK6akz"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-2ff6ae7667dso6471272a91.0;
-        Sun, 09 Mar 2025 05:41:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dVz46CN7"
+Received: by mail-pl1-f195.google.com with SMTP id d9443c01a7336-2241053582dso43908715ad.1;
+        Sun, 09 Mar 2025 06:23:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1741524097; x=1742128897; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3heT3TehvrAt/IC6wSWllFV3+o7dpz5h1Lr7V7n2HJU=;
-        b=iliK6akzzwA7gDruZdnjjTZu+7Ew4699//H5Wc5Z75xIknnhNRu1u3LJ/oBLJ3omTW
-         HltdMu7XCRapALkpReNQmzrCapGgM/BfdedzAsatEzfiPerCkYNnm6ZXs3+CLa+vWT6N
-         kjZs+4izfcOGefh9UZKaqRRG4GCpzSrMCsUovfNw8/G9YTN4TFJaDvrpfg1L1kC8wz4G
-         7bGRVT6RX1/X/mkDXwZUa7J31MRFpblcEoS4CqsO2kHjAwWZtKiw4yQEPFtuOWYjdag3
-         JZkaYM79vPSktXq8QYON+Kl0YeBgODxA1IPBpIoTXIGM2FN6f85Ftye3UUXASCPV2kKM
-         JpYA==
+        d=gmail.com; s=20230601; t=1741526632; x=1742131432; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=78f5GfsZLdHs7HcZYqhufn9bqBeaLB9GfsmUNDdGsAU=;
+        b=dVz46CN7GFk2MohHsYZ1XpOKSfkjB8WZZklFuVu4dwGXHnMq+/+DPo0NDU9RYZ1nmO
+         StWMyWieLWr2EFekLtMfS7OY07T37Wf4p7Yr/k0gtVA8sbmhApmoKVHWdCk05IBBCkO9
+         GXgiiPhpbxyuJuhUXrasukPdW+3Y8tNLNp3da5OPzFGDoJ43XvgzFubu6JKCDTDLvRPV
+         QT10UjAgCd7URCYnsbTb3I35yAVBvjKQqkwzXkVhhiIIcstF/ga2Hgi3NaHEvnut06iQ
+         Zmg7nhaVsPi9r+VH8VlYVXe0xD+YBI/VS3RAkEhQzVLOiKvD8FqlqILpKbYoTiF0Bdli
+         Yo/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741524097; x=1742128897;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3heT3TehvrAt/IC6wSWllFV3+o7dpz5h1Lr7V7n2HJU=;
-        b=XViiEBcJEbydTpD7ILGap/vi4+ECSH889Qe+uSwOQqhxhurg1X3dZrN44JleKXledK
-         xdkcP62Sl/qNDaqjilxpM/R+7dLEhQ2Ku9EyHqywixwaFh8lKX0Yc59hYhAvMe6e3x/v
-         q06d7BSBcV1Uj2qHZkIIdRfdEK5HsRR+ak+S4HfZIOKCAad+sCIEzc+DSzv5+bkaiZj4
-         CSOWCMHPXQylqiW1iKvp0kG8GIEOxisY8m0XRQl0/Y41GdQuLe1QeB8a6FWa7GlUoI4M
-         4/xYdQsqRRUFK6sONrREkUkKCOSovn6wOTRemJQ/ZEGUOLNe7cqsKFC9f9S6v2aYu9Lv
-         SQvQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUFNaOUPn8sgxA2YRSSGFKE4ps0VtxZamsksQFu640UpDY48Jf77DNxssbHVDbIPi0ByBsbQGBud5pO3Y8=@vger.kernel.org, AJvYcCV612B1Tsf56uVPXwKGzF1uSEgEgKDlFXzQkF6+NBpBM4lipF3ev1v2MTH8VoCwgzcT3YUxI10jt4JV@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw/zJPgZPzimue4nEtRc59NSWyvFrltZSJJqeM/zy4VVieu5ASM
-	v2Vr4XeVxKXBpbMbuuBJ3Du+jNprpUBi1UvUmC94jxVPaJxzQsUJ
-X-Gm-Gg: ASbGncuKuzUKWWXKQa2FM7PPgwQ2xpeRqLdlaIbkMx/hqoxu66TZZBrNkvaIRtmcN6r
-	7W01xTbkXP75hTAk/8RJVZZe6Zt1PMZYie6eqksmFJtV4QUxfGv5d4FnoISuncttatoNiJ+feZo
-	ZwsYljSLuvoQCVUDUQMuixugqzrQNauuifQS9LBdrqMaMrhCMCIkwCQSJOgwN15v8LVQJgf/G2F
-	GL2uP52Dk9tJCaSLJe2+6IGMezbEYAMonGJ5RX61CMY3lTHyQ+RY3qT+FBIfG7q51rm2WqB/peU
-	DtOU8K024QPYNlmW6HkGACURkTKK1eQ3YIIskHZ/kdicTLcjwaMlP3r1oyYH
-X-Google-Smtp-Source: AGHT+IFu2X8y0Xhh768uWe61TmX6SKsfM5J5IifCobUJX7M1EYUMJX9eUXflb5qFK1PMqHHrmjgsig==
-X-Received: by 2002:a17:90b:350d:b0:2fa:137f:5c61 with SMTP id 98e67ed59e1d1-2ff7ce7ab5emr20089393a91.12.1741524097203;
-        Sun, 09 Mar 2025 05:41:37 -0700 (PDT)
-Received: from localhost.localdomain ([119.28.17.178])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ff728a901bsm6056388a91.49.2025.03.09.05.41.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 09 Mar 2025 05:41:36 -0700 (PDT)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: david@fromorbit.com
-Cc: alexjlzheng@gmail.com,
-	alexjlzheng@tencent.com,
-	cem@kernel.org,
-	dchinner@redhat.com,
-	djwong@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: don't allow log recover IO to be throttled
-Date: Sun,  9 Mar 2025 20:41:33 +0800
-Message-ID: <20250309124133.1453369-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.41.1
-In-Reply-To: <Z8YU-BYfB2SCwtW6@dread.disaster.area>
-References: <Z8YU-BYfB2SCwtW6@dread.disaster.area>
+        d=1e100.net; s=20230601; t=1741526632; x=1742131432;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=78f5GfsZLdHs7HcZYqhufn9bqBeaLB9GfsmUNDdGsAU=;
+        b=SLujwD/K5KKk51kaKy78olPD9T8e6LllR8SVwYHfc7zfkoqqwLY0MMPft+4ML8hoNn
+         N1BixI+htVtWc5MqbHGlU5FpozmEh+ep2lK0Wx9D6bkvqF0PIVr5EcRl3YflN6HGYtsh
+         1K3Qz+VSxGwKAS345FSVx/+oz+S46K79gpZY6pmBmhwa/G88fp+02i3OqjKHDn3IVTF2
+         cqSr/iOL0ftXc2Aljn0PinAZWucYSdE4pqKWyZ3TnIrMYvTUW1lcqAvoa+34XGAfrtM5
+         VnZdpnwWlXYDrCANhRYPqQRP1uBUsmxFqCL04ZoxFKTWNamOahfCsajhJmMUHVYUns5g
+         CqjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUw8D/2Etaz6O2DIR3WsW5NuKisN1gOcibV2ejKQmVlbM9lWIbO/yNJ9cQMg/MhGtSRD5j8tywT5UpuZFBA@vger.kernel.org, AJvYcCVBZqjFSShKlA9/tRVoCr1HUIT494t2yd5+6g+7ijnbS/3+plWEZDTrlyA6+l0dhOkkpWCkkKy9@vger.kernel.org, AJvYcCVhEoJRBBhprANid+iS7cJntWMmp+eoEX/oA6homJnG8Ej991mKOVS3SEpVJIeP+0S2pdwDcVLHaWNw@vger.kernel.org, AJvYcCWMRG5l8xdXa7bI53NfScdvdVpFHIjFpGST8U/+U9EGJkW1Cz2KP818KoGYmYS9GQhLgY5LdrJWPVeD7i0=@vger.kernel.org, AJvYcCWl8RCmwfTr+gTFwKNxebdtWgGSII1tCp7IXOFdvBZbRGuw5O0x8PWcklhsr0G9xlD6XP7e0A4auu8Z@vger.kernel.org, AJvYcCXwYhBLoHtWchUPd4dhM4v9zMhoDiPgsloe19pqimPMmFntvkcxWUy5xNxsDq0lEQvKKWU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxpO6iAPX6wtQylr6LWtgptxI6xDaAfiQvZU2fpt5oXXNu7DfaI
+	0DSCcb79f0tkyUT1+pA+vZW6QcTUz6j9v41mb3DsdzlrqPmU9Rsv
+X-Gm-Gg: ASbGncvS7V1lS8M83grceIJfnJtzNab7Sk1jqr0fL4Tkm3UKu3qtpkL5gIqaq7FlRaH
+	qbsDgKCnE5lwgPbpfRmFJOsqkgFyXfEB8+ts5+mfvaEkQgYEoA/FaTsTR4Hl6a6jf0LRl/YbfH4
+	h2c2Bc+xtCfeUZJKDENxDq+AiweaYUhs8rXSvF8NyJDQ+2d4p2/VzRZ7ymgFUJaw9b389nQhjar
+	4SWQUgcurn14SMuBYFfzuXBF5REMVu3u7pYbQx4DKSYZ478pCHThsl890USCFLlxZztBdSfC/Xx
+	hrlU76nK2xkRgcXg5mOL36k9pYkpgXs1XknhNE3FTU4UubSg+p/Mlyj77rTAKYRrfBObJvvZMcp
+	1AW38DvjAEA+5gbsEvUrBOwO+SCG8tg7DuctILaZZ
+X-Google-Smtp-Source: AGHT+IFtC936bSg/3HregqNsD+RiIvE+I7Cf0Sja++qaGUNlZeLkZuXJlqOzuqqV2Wpl3dx1MeKXQQ==
+X-Received: by 2002:a17:902:eb81:b0:220:c86d:d7eb with SMTP id d9443c01a7336-22428ab863cmr167985465ad.36.1741526632153;
+        Sun, 09 Mar 2025 06:23:52 -0700 (PDT)
+Received: from ?IPV6:2409:8a55:301b:e120:c508:514a:4065:877? ([2409:8a55:301b:e120:c508:514a:4065:877])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-736d4f20913sm597161b3a.13.2025.03.09.06.23.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 09 Mar 2025 06:23:51 -0700 (PDT)
+Message-ID: <7abb0e8c-f565-48f0-a393-8dabbabc3fe2@gmail.com>
+Date: Sun, 9 Mar 2025 21:23:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
+ only NULL elements
+To: NeilBrown <neilb@suse.de>, Yunsheng Lin <linyunsheng@huawei.com>
+Cc: Qu Wenruo <wqu@suse.com>, Yishai Hadas <yishaih@nvidia.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>,
+ Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+ Kevin Tian <kevin.tian@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>,
+ Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+ Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+ Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
+ Sandeep Dhavale <dhavale@google.com>, Carlos Maiolino <cem@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Jesper Dangaard Brouer <hawk@kernel.org>,
+ Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Simon Horman <horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
+ Anna Schumaker <anna@kernel.org>, Chuck Lever <chuck.lever@oracle.com>,
+ Jeff Layton <jlayton@kernel.org>, Olga Kornievskaia <okorniev@redhat.com>,
+ Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+ Luiz Capitulino <luizcap@redhat.com>,
+ Mel Gorman <mgorman@techsingularity.net>, Dave Chinner
+ <david@fromorbit.com>, kvm@vger.kernel.org, virtualization@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-erofs@lists.ozlabs.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+ netdev@vger.kernel.org, linux-nfs@vger.kernel.org
+References: <> <180818a1-b906-4a0b-89d3-34cb71cc26c9@huawei.com>
+ <174138137096.33508.11446632870562394754@noble.neil.brown.name>
+Content-Language: en-US
+From: Yunsheng Lin <yunshenglin0825@gmail.com>
+In-Reply-To: <174138137096.33508.11446632870562394754@noble.neil.brown.name>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, 4 Mar 2025 07:45:44 +1100, Dave Chinner wrote:
-> On Mon, Mar 03, 2025 at 07:23:01PM +0800, Jinliang Zheng wrote:
-> > When recovering a large filesystem, avoid log recover IO being
-> > throttled by rq_qos_throttle().
+On 3/8/2025 5:02 AM, NeilBrown wrote:
+
+...
+
+>>
+>>>    allocated pages in the array - just like the current
+>>>    alloc_pages_bulk().
+>>
+>> I guess 'the total number of allocated pages in the array ' include
+>> the pages which are already in the array before calling the above
+>> API?
 > 
-> Why?
+> Yes - just what the current function does.
+> Though I don't know that we really need that detail.
+> I think there are three interesting return values:
 > 
-> The only writes to the journal during recovery are to clear stale
-> blocks - it's only a very small part of the IO that journal recovery
-> typically does. What problem happens when these writes are
-> throttled?
+> - hard failure - don't bother trying again soon:   maybe -ENOMEM
+> - success - all pages are allocated:  maybe 0 (or 1?)
+> - partial success - at least one page allocated, ok to try again
+>    immediately - maybe -EAGAIN (or 0).
 
-Sorry for the late reply, I was struggling with my work. :-(
-
-Recently, we encountered the problem of xfs log IO being throttled in
-the Linux distribution version maintained by ourselves. To be more
-precise, it was indirectly throttled by the IO issued by the LVM layer.
-For details, see [1] please.
-
-After this problem was solved, we naturally checked other related log
-IO paths, hoping that they would not be throttled by wbt_wait(), that
-is, we hoped that they would be marked with REQ_SYNC | REQ_IDLE.
-
-For log recover IO, in the LVM scenario, we are not sure whether it
-will be affected by IO on other LVs on the same PV. In addition, we
-did not find any obvious side effects of this patch. An ounce of
-prevention is worth a pound of cure, and we think it is more
-appropriate to add REQ_IDLE here.
-
-Of course, if there is really a reason not to consider being throttled,
-please forgive me for disturbing you.
-
-[1] https://lore.kernel.org/linux-xfs/20250220112014.3209940-1-alexjlzheng@tencent.com/
-
-Thank you very much. :)
-Jinliang Zheng
+Yes, the above makes sense. And I guess returning '-ENOMEM' & '0' &
+'-EAGAIN' seems like a more explicit value.
 
 > 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>>
+
+...
+
+>>
+> 
+> If I were do work on this (and I'm not, so you don't have to follow my
+> ideas) I would separate the bulk_alloc into several inline functions and
+> combine them into the different interfaces that you want.  This will
+> result in duplicated object code without duplicated source code.  The
+> object code should be optimal.
+
+Thanks for the detailed suggestion, it seems feasible.
+If the 'add to a linked list' dispose was not removed in the [1],
+I guess it is worth trying.
+But I am not sure if it is still worth it at the cost of the above
+mentioned 'duplicated object code' considering the array defragmenting
+seem to be able to unify the dispose of 'add to end of array' and
+'add to next hole in array'.
+
+I guess I can try with the easier one using array defragmenting first,
+and try below if there is more complicated use case.
+
+1. 
+https://lore.kernel.org/all/f1c75db91d08cafd211eca6a3b199b629d4ffe16.1734991165.git.luizcap@redhat.com/
+
+> 
+> The parts of the function are:
+>   - validity checks - fallback to single page allocation
+>   - select zone - fallback to single page allocation
+>   - allocate multiple pages in the zone and dispose of them
+>   - allocate a single page
+> 
+> The "dispose of them" is one of
+>    - add to a linked list
+>    - add to end of array
+>    - add to next hole in array
+> 
+> These three could be inline functions that the "allocate multiple pages"
+> and "allocate single page" functions call.  We can pass these as
+> function arguments and the compile will inline them.
+> I imagine these little function would take one page and return
+> a bool indicating if any more are wanted.
+> 
+> The three functions: alloc_bulk_array alloc_bulk_list
+> alloc_bulk_refill_array would each look like:
+> 
+>    validity checks: do we need to allocate anything?
+> 
+>    if want more than one page &&
+>       am allowed to do mulipage (e.g. not __GFP_ACCOUNT) &&
+>       zone = choose_zone() {
+>          alloc_multi_from_zone(zone, dispose_function)
+>    }
+>    if nothing allocated
+>       alloc_single_page(dispose_function)
+> 
+> Each would have a different dispose_function and the initial checks
+> would be quite different, as would the return value.
+> 
+> Thanks for working on this.
+> 
+> NeilBrown
+> 
+
