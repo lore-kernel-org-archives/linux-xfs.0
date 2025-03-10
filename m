@@ -1,43 +1,46 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2051A9B3B
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 13:19:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1952C229B01
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 13:19:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741612762; cv=none; b=OqsmigLj4kZCFWs8Mqym4HiAw+gEBVHgm6QmiwedDvQNbsUM6PyD21l6OoyNue40YROVZLKeKYpXmbBSDf9qw682NaOf2VxcMo3JWwwOMBffA/js33T8e6wvvyPMz19ayQgqKj0vmfCbbkXF8+sJfXkv8v7Ws+uIWShweCJMKMQ=
+	t=1741612767; cv=none; b=iDJqxPLeWFHIw2h0ZzsAYJK+glvFmvZofCYjsTQCC+XJdYP1T678EV4fgD/1IDSx87GHXDYaL7OQxEIchfIaHhKSpt+YOdoM4hUPMScthnXLItJJbhkkaYo5DgmvIQlfbVW50f9Ewx9EWmshfZGEvyUdwe9YlUFltdXkM54nqgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741612762; c=relaxed/simple;
-	bh=iKQXRIBtflo8o87t/cxnPwHahS3q8BYEOnVIMI00dyA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h9HgAoVmnFkHNJIHZLzb8ZDGWoHS57neMrVs2YTZB/AI+si2japYTh36K+OhpUH5Pji8Hs7NfO8Ra5xPHTSWd09ypMTeq822u0SRbGRfeElifKKDc1MwpSWW7L34I7QRord34W2F6AE5vx5GJHhiQZ6Zwsxg887JBmmMvGBfkB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MhP6oAB3; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1741612767; c=relaxed/simple;
+	bh=qcxYEQe1E0oUPbtbR0x0NKlmEucOx+8fv1Ln3WuySks=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=oZa8bjz1MeWrcIaEqwtYgAIodkiP+bchoi1KSJV1X9eevLm9b7BG4O1u1kbSp1wdyzqnz7tEcHPfyVZleju3+3w95HxIXsH8asbzZnKEcrPG/igDDsYx5nh7QxW+lVI2/EP/hoEmbuhFHjFfiniSSsDzEVbLoXRRoJvKInijDk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3WASHz+T; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MhP6oAB3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3WASHz+T"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=MaEt4oXw9OXNNQOUAEv5Gmi5+o624F3/L2AlYMKQWzY=; b=MhP6oAB3EbbdbAP/uAomCYO78/
-	NXezjgVCO1dgQ56GPP8sGgKhwDmhwLcPR9mPWtRHxy4eOyRvPGP+gW/Ni9wIuVE/kmCkk9WK6DzTH
-	ojnmIvMqWgMk+X3gx/ZM3W9iu3UiChe8U9bc/WkTFv9IN1dRTRC23AbyTwJSwlgQANGLZFzN5k4E2
-	SPP96qlMzZa35d+lLiULk3p1GxQXjv5Y2gHg/zXxNJRDxXJwJScUjwvZbzlsl+2jF57i/UmVryaeT
-	09jKAXlEcoySqOn5ELFEgytNVF0vaIkEuX702vHsIg86OgRiqHetMLuEdl6UhO589OAKioe0NZG9I
-	rJr/x2TQ==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=OTV+fWF5ADfmdOOCB87tAKKxwRz3E6m5IfZZm13POfc=; b=3WASHz+TgFaQg5o7W5QBdo6FI8
+	k4NO5AaES0psxsgZix9O7YU353cwWlF9eFbrRkVI0wEvkBa7RcbcawKJf7/jyvzmu3FcxdbT3BWbF
+	B+GlWrklYI8/wsvYBfEhIB6n4mXf84UEUS87FrT2fJrYuNyFNhBYNpHsQ+AnMpJ7qiJMvuT/rTMCP
+	XNBvX/5Rql/+rTGKEqKyqseMUmQSDn9Too2Zo5jWS8vQ7JyxD3oow35sza7cXWSIkzzOJBHPbxmMh
+	45l4cJTx3DV9dhT5cIQ60Wjil/3bJt6t4kYTf4om2Sij3azh1gJxluG18ZJfxgb72o4dbuBuEIfOl
+	ro4/nZeg==;
 Received: from [212.185.66.17] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1trd2N-00000002lfZ-3RIH;
-	Mon, 10 Mar 2025 13:19:20 +0000
+	id 1trd2S-00000002lfr-1NlO;
+	Mon, 10 Mar 2025 13:19:24 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
 	linux-xfs@vger.kernel.org
-Subject: use folios and vmalloc for buffer cache backing memory v3
-Date: Mon, 10 Mar 2025 14:19:03 +0100
-Message-ID: <20250310131917.552600-1-hch@lst.de>
+Subject: [PATCH 01/12] xfs: unmapped buffer item size straddling mismatch
+Date: Mon, 10 Mar 2025 14:19:04 +0100
+Message-ID: <20250310131917.552600-2-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20250310131917.552600-1-hch@lst.de>
+References: <20250310131917.552600-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,52 +50,90 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+From: Dave Chinner <dchinner@redhat.com>
 
-this is another spin on converting the XFS buffer cache to use folios and
-generally simplify the memory allocation in it.  It is based on Dave's
-last folio series (which itself had pulled in bits from my earlier
-vmalloc series).
+We never log large contiguous regions of unmapped buffers, so this
+bug is never triggered by the current code. However, the slowpath
+for formatting buffer straddling regions is broken.
 
-It converts the backing memory allocation for all large buffers that are
-power of two sized to large folios, converts > PAGE_SIZE but not power of
-two allocations to vmalloc instead of vm_map_ram and generally cleans up
-a lot of code around the memory allocation and reduces the size of the
-xfs_buf structure by removing the embedded pages array and pages pointer.
+That is, the size and shape of the log vector calculated across a
+straddle does not match how the formatting code formats a straddle.
+This results in a log vector with an uninitialised iovec and this
+causes a crash when xlog_write_full() goes to copy the iovec into
+the journal.
 
-I've benchmarked it using buffer heavy workloads, most notable fs_mark
-run on null_blk without any fsync or O_SYNC to stress the buffer memory
-allocator.  The performance results are disappointingly boring
-unfortunately: for 4k directory block I see no significant change
-(although the variance for both loads is very high to start with), and
-for 64k directory block I see a minimal 1-2% gain that is barely about
-the variance.  So based on the performance results alone I would not
-propose this series, but I think it actually cleans the code up very
-nicely.
+Whilst touching this code, don't bother checking mapped or single
+folio buffers for discontiguous regions because they don't have
+them. This significantly reduces the overhead of this check when
+logging large buffers as calling xfs_buf_offset() is not free and
+it occurs a *lot* in those cases.
 
-Changes since v2:
- - don't let the large folio allocation dip into direct reclaim and
-   compaction
- - add a comment about using __bio_add_page
+Fixes: 929f8b0deb83 ("xfs: optimise xfs_buf_item_size/format for contiguous regions")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_buf_item.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-Changes since v1:
- - use a WARN_ON_ONCE for the slab alignment guarantee check
- - fix confusion about units passed to the vmap flushing helpers
- - remove a duplicate setting of __GFP_ZERO
- - use howmany more
- - improve a code comment
- - spelling fixes
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 47549cfa61cd..0ee6fa9efd18 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -57,6 +57,10 @@ xfs_buf_log_format_size(
+ 			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
+ }
+ 
++/*
++ * We only have to worry about discontiguous buffer range straddling on unmapped
++ * buffers. Everything else will have a contiguous data region we can copy from.
++ */
+ static inline bool
+ xfs_buf_item_straddle(
+ 	struct xfs_buf		*bp,
+@@ -66,6 +70,9 @@ xfs_buf_item_straddle(
+ {
+ 	void			*first, *last;
+ 
++	if (bp->b_page_count == 1 || !(bp->b_flags & XBF_UNMAPPED))
++		return false;
++
+ 	first = xfs_buf_offset(bp, offset + (first_bit << XFS_BLF_SHIFT));
+ 	last = xfs_buf_offset(bp,
+ 			offset + ((first_bit + nbits) << XFS_BLF_SHIFT));
+@@ -133,11 +140,13 @@ xfs_buf_item_size_segment(
+ 	return;
+ 
+ slow_scan:
+-	/* Count the first bit we jumped out of the above loop from */
+-	(*nvecs)++;
+-	*nbytes += XFS_BLF_CHUNK;
++	ASSERT(bp->b_addr == NULL);
+ 	last_bit = first_bit;
++	nbits = 1;
+ 	while (last_bit != -1) {
++
++		*nbytes += XFS_BLF_CHUNK;
++
+ 		/*
+ 		 * This takes the bit number to start looking from and
+ 		 * returns the next set bit from there.  It returns -1
+@@ -152,6 +161,8 @@ xfs_buf_item_size_segment(
+ 		 * else keep scanning the current set of bits.
+ 		 */
+ 		if (next_bit == -1) {
++			if (first_bit != last_bit)
++				(*nvecs)++;
+ 			break;
+ 		} else if (next_bit != last_bit + 1 ||
+ 		           xfs_buf_item_straddle(bp, offset, first_bit, nbits)) {
+@@ -163,7 +174,6 @@ xfs_buf_item_size_segment(
+ 			last_bit++;
+ 			nbits++;
+ 		}
+-		*nbytes += XFS_BLF_CHUNK;
+ 	}
+ }
+ 
+-- 
+2.45.2
 
-Diffstat:
- libxfs/xfs_ialloc.c    |    2 
- libxfs/xfs_inode_buf.c |    2 
- scrub/inode_repair.c   |    3 
- xfs_buf.c              |  377 +++++++++++++++++--------------------------------
- xfs_buf.h              |   25 +--
- xfs_buf_item.c         |  114 --------------
- xfs_buf_item_recover.c |    8 -
- xfs_buf_mem.c          |   43 +----
- xfs_buf_mem.h          |    6 
- xfs_inode.c            |    3 
- xfs_trace.h            |    4 
- 11 files changed, 168 insertions(+), 419 deletions(-)
