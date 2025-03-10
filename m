@@ -1,83 +1,41 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FEF01CB337
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 08:06:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D9F224246;
+	Mon, 10 Mar 2025 09:21:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741594001; cv=none; b=hNqTKaAtj+6eny8VpJbe0MWSSePjil6kWvvTEpE275zleAaaZ/v3o52PNwS4TA6bv0yCjy9QN9ywyHEdta80kuAYwukCNzcpEZUAGDDeRXA+OlIWIQb7XOss59owxM0V/u2aS6OU4V1MF5WU/fIZkSWPisWTyjrsQqRF5X7fNic=
+	t=1741598474; cv=none; b=UaCEtWqbSkGoU408fsblZKlU+Xeik7LqWwmIPWRMR5ia9xsTJz8ISitYXs+zh5udrWSYkUfMcTZw7RdgOTWiCZMC20Vz1g/wQCxQD/AzkxXGrFNCLXDADtb1YVTnQr9u7fhIsgHXZRWHYXY43FpPTk5CgUly/eu8kGTI3ZIb4yU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741594001; c=relaxed/simple;
-	bh=93W6ybCwcYA7AqE4AGQacqgIe8KHvftkYc5f4XtCDwk=;
+	s=arc-20240116; t=1741598474; c=relaxed/simple;
+	bh=ztxUppw9zVBEmPaw4H/Yu9o22HR5d2xnmrw5n9v+4Us=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M4ZlBWCbj3q7wytAe0jD+PUJLp3YR+M+NTXkEYHBTaA0ejmzcqgT3X+XcISKnoxzRuocRduCM2mX2L/Go1ht0av/HmCu1GU1Oxq8BuCKI8jp5CsVpsCg+0NIB4QT8BQA6wtb5YEyBo5OhPS28PPA4kYVbTEpQdzjzuA/XqGRVuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SJt47uIL; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=WfE4vUG6d/Ut8nAYSZcRt+g5aNwgUPb9RsY7r8fE6N/ktVdv3BZy8krQzP4WmOeqeh1hJSmF2SKgBLXUYKewX1bLuYHe5pzO1I23e9N+Lwat3gE6BCaSpqmR0hyUCQyYG3fl7xkVCoTgu8/5wR2n3M6w++grgVyswWCeogPsVCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e/c9CNrG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SJt47uIL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1741593998;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RCOLOU56jiLb/4wdgy3TIcrzpp/26Wu5xoarM9qeWc0=;
-	b=SJt47uILYl6R2MXsYZ1KOD2Bn5YjlR978EL9Jm2iJ2TyY/X9Bsr+KqQn6q76CXZr6IMLcZ
-	OfnYBhR0ugsk9rdfDpxs1aStFbTt74nihdYuKb+MepgZSljOlZvqia/Es9pUUwacHR39fx
-	mjpOC7PfDQITpK0yMKSFqaLJvRx+/T8=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-690-thKILgTnMEW5ulvCGk4W6Q-1; Mon, 10 Mar 2025 04:06:37 -0400
-X-MC-Unique: thKILgTnMEW5ulvCGk4W6Q-1
-X-Mimecast-MFC-AGG-ID: thKILgTnMEW5ulvCGk4W6Q_1741593996
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-224347aef79so65495755ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 01:06:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741593996; x=1742198796;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RCOLOU56jiLb/4wdgy3TIcrzpp/26Wu5xoarM9qeWc0=;
-        b=CtRQaOhEFau5/QX1I/FIbSh/02211UOh7kD12AN15sZpjTc6TQ+cGHTDJobMkniYfH
-         82Eift9OCvCxNfhNdEvb/8OpWXyH3jfMPIhjxDxtb9Y490ZowEWB36LgUgSfsbu1eoBb
-         HUnWf/+FKRDGrhdMFIPxnT8dE1l7XDazCXKdn4yYQLjZ2k/RhJadwp4/VFSwNzaVstKN
-         GyfvMBVZ47A0tkOYiqpPMeKSX5JUCN4wcBO356TefUTQ+llKNlMqn71m7z2Q+1xGRPXZ
-         1y0PHo5nylhB1IGh50qFadV3N+uecIWgBfs/QjS4hiK+7yfYErvzZgnWSc10hYP2Oxie
-         l9SQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX0zgOQl4ZwVgXJXXW1C0kt7ReHM+yE8jNJCQrzpZspOTxT+iCUiYZNfJPSXJT3zMrvXAd6TkLjR/o=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy81Bzy3wW84moWSGdXblIfz8MAzBEU8SbkFdYDTbbIWs/P5wcK
-	6QLAvFR4CmMlfY/3mNQtGNaf/3HF457ElHwog9j0h5r26R89LCwfe8xau08XYk1gHu6fxh0BKA7
-	oSLh0infBF450Albdb/Qygom4hOko/czrzQJ5diy10XpjciSNcM9f9GJh+Q==
-X-Gm-Gg: ASbGncu1Jt/15wEKr7V5WNsQ8DvhkHQwHmC70TrBGyzp4NvjVBPKq89jrGwUXDj5tR4
-	4S7fvKBPbYs+K4Gv4ZekaYTBQj/X1IKW2F//ZyNrsrGEnLxc4IEOQ7AsK0ByL10bW+dmfVpTkJL
-	WyauSZ+sYkUSUPd1iMVe20eZaXlRgXJrBeaJZ2dw6GCQRzniJOeMwneIeF2Rd0lQinc0OlAevto
-	vA2xcdL3+YK8T++/pddjUIxr8Njni1IrSQMqVUGEy/lFXNJP/pVAF4AhD2LemUMfYPmIREJZhYC
-	e0LpVyTWrOOqTpYpzPPvXwUSgnXhrCPl+Kti0buC9GxwnwRB0yrEgA/y
-X-Received: by 2002:a05:6a00:3d55:b0:736:52d7:daca with SMTP id d2e1a72fcca58-736aaadf019mr20663420b3a.18.1741593996267;
-        Mon, 10 Mar 2025 01:06:36 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF3zepBp9E0MRImticocc6MTl8Bx7wo5uHRMcLdiudFO4r9G/SfjZxODbq9kG76X31x/uUrMQ==
-X-Received: by 2002:a05:6a00:3d55:b0:736:52d7:daca with SMTP id d2e1a72fcca58-736aaadf019mr20663391b3a.18.1741593995950;
-        Mon, 10 Mar 2025 01:06:35 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-736cd220c5fsm2495334b3a.55.2025.03.10.01.06.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Mar 2025 01:06:35 -0700 (PDT)
-Date: Mon, 10 Mar 2025 16:06:30 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
-	zlang@kernel.org
-Subject: Re: [PATCH v1 2/2] check,common/{preamble,rc},soak: Decoupling
- init_rc() call from sourcing common/rc
-Message-ID: <20250310080630.4lnscrcbaputlocv@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
- <1d07e5657c2817c74e939894bb554424199fd290.1741248214.git.nirjhar.roy.lists@gmail.com>
- <Z8oT_tBYG-a79CjA@dread.disaster.area>
- <5c38f84d-cc60-49e7-951e-6a7ef488f9df@gmail.com>
- <20250308072034.t7y2d3u4wgxvrhgd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e/c9CNrG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6161CC4CEE5;
+	Mon, 10 Mar 2025 09:21:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741598473;
+	bh=ztxUppw9zVBEmPaw4H/Yu9o22HR5d2xnmrw5n9v+4Us=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=e/c9CNrGsWV2wglMjogxYfzPdjdut1qPxk9AjSExdsLtwnM5pnM3of91JQcuOLwof
+	 zMMAz8SnR5l11z50XwUN96JT+DqiwcKdoD00q7CcJ71zVHXOxjgUXrvkaxcNi7Vl84
+	 CT4wwA5bEMc7NWEocr51YuWmib2qrBT8y8bz0SOwvUV0rdxUyxd36IsX6I2U0LAmjX
+	 RCDfJ+aC8XvHXj3O5JmJXOooAPF69I0daZos12Gx05IbrIhtikv8Y+LU5tebxyk8V5
+	 7knUZayf+WOXoSSVPbbu46XJj6RWSpe7RrWYSvZgf46brVWF809k0FppQIdQZFx01f
+	 GXyouC/NjmGkQ==
+Date: Mon, 10 Mar 2025 10:21:04 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: kernel test robot <lkp@intel.com>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [xfs-linux:test-merge 13/13] fs/xfs/xfs_file.c:746:49: error:
+ too few arguments to function call, expected 4, have 3
+Message-ID: <jclah7ezuc723hjwdr3x5u57rypxafy6olq7ig43b2kawcraid@3ghad6tv23ci>
+References: <PSt0U3K_mmDGWaUOdQei1VdlAVGOrC5kd15x-0yg_rquOtDV_Mh9rhn6hh7E2UkGEaAkraNnR5S41kzJkAmjMg==@protonmail.internalid>
+ <202503090149.Wu0ag7zs-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -86,79 +44,96 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250308072034.t7y2d3u4wgxvrhgd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <202503090149.Wu0ag7zs-lkp@intel.com>
 
-On Sat, Mar 08, 2025 at 03:20:34PM +0800, Zorro Lang wrote:
-> On Fri, Mar 07, 2025 at 01:35:02PM +0530, Nirjhar Roy (IBM) wrote:
-> > 
-> > On 3/7/25 03:00, Dave Chinner wrote:
-> > > On Thu, Mar 06, 2025 at 08:17:41AM +0000, Nirjhar Roy (IBM) wrote:
-> > > > Silently executing scripts during sourcing common/rc doesn't look good
-> > > > and also causes unnecessary script execution. Decouple init_rc() call
-> > > > and call init_rc() explicitly where required.
-> > > > 
-> > > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> > > FWIW, I've just done somethign similar for check-parallel. I need to
-> > > decouple common/config from common/rc and not run any code from
-> > > either common/config or common/rc.
-> > > 
-> > > I've included the patch below (it won't apply because there's all
-> > > sorts of refactoring for test list and config-section parsing in the
-> > > series before it), but it should give you an idea of how I think we
-> > > should be separating one-off initialisation environment varaibles,
-> > > common code inclusion and the repeated initialisation of section
-> > > specific parameters....
-> > Thank you so much. I can a look at this.
-> > > 
-> > > .....
-> > > > diff --git a/soak b/soak
-> > > > index d5c4229a..5734d854 100755
-> > > > --- a/soak
-> > > > +++ b/soak
-> > > > @@ -5,6 +5,7 @@
-> > > >   # get standard environment, filters and checks
-> > > >   . ./common/rc
-> > > > +# ToDo: Do we need an init_rc() here? How is soak used?
-> > > >   . ./common/filter
-> > > I've also go a patch series that removes all these old 2000-era SGI
-> > > QE scripts that have not been used by anyone for the last 15
-> > > years. I did that to get rid of the technical debt that these
-> > > scripts have gathered over years of neglect. They aren't used, we
-> > > shouldn't even attempt to maintain them anymore.
-> > 
-> > Okay. What do you mean by SGI QE script (sorry, not familiar with this)? Do
-> > you mean some kind of CI/automation-test script?
-> 
-> SGI is Silicon Graphics International Corp. :
-> https://en.wikipedia.org/wiki/Silicon_Graphics_International
-> 
-> xfstests was created to test xfs on IRIX (https://en.wikipedia.org/wiki/IRIX)
-> of SGI. Dave Chinner worked in SGI company long time ago, so he's the expert
-> of all these things, and knows lots of past details :)
+On Sun, Mar 09, 2025 at 01:06:40AM +0800, kernel test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git test-merge
+> head:   fac04210bb99888fd453db09239bed27436fd619
+> commit: fac04210bb99888fd453db09239bed27436fd619 [13/13] Merge branch 'xfs-6.15-atomicwrites' into for-next
+> config: i386-buildonly-randconfig-003-20250308 (https://download.01.org/0day-ci/archive/20250309/202503090149.Wu0ag7zs-lkp@intel.com/config)
+> compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
+> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250309/202503090149.Wu0ag7zs-lkp@intel.com/reproduce)
 
-Hi Nirjhar,
+Huh? All xfs branches are monitored? This was by no means to be tested.
 
-I've merged Dave's "[PATCH 0/5] fstests: remove old SGI QE scripts" into
-patches-in-queue branch. You can base on that to write your V2, to avoid
-dealing with the "soak" file.
-
-Thanks,
-Zorro
+Carlos
 
 > 
-> Thanks,
-> Zorro
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202503090149.Wu0ag7zs-lkp@intel.com/
 > 
-> > 
-> > --NR
-> > 
-> > > 
-> > > -Dave.
-> > > 
-> > -- 
-> > Nirjhar Roy
-> > Linux Kernel Developer
-> > IBM, Bangalore
-> > 
-> > 
-
+> All errors (new ones prefixed by >>):
+> 
+> >> fs/xfs/xfs_file.c:746:49: error: too few arguments to function call, expected 4, have 3
+>      746 |         ret = xfs_file_write_checks(iocb, from, &iolock);
+>          |               ~~~~~~~~~~~~~~~~~~~~~                    ^
+>    fs/xfs/xfs_file.c:434:1: note: 'xfs_file_write_checks' declared here
+>      434 | xfs_file_write_checks(
+>          | ^
+>      435 |         struct kiocb            *iocb,
+>          |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>      436 |         struct iov_iter         *from,
+>          |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>      437 |         unsigned int            *iolock,
+>          |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>      438 |         struct xfs_zone_alloc_ctx *ac)
+>          |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>    1 error generated.
+> 
+> 
+> vim +746 fs/xfs/xfs_file.c
+> 
+> 2e2383405824b9 Christoph Hellwig 2025-01-27  730
+> 307185b178ac26 John Garry        2025-03-03  731  static noinline ssize_t
+> 307185b178ac26 John Garry        2025-03-03  732  xfs_file_dio_write_atomic(
+> 307185b178ac26 John Garry        2025-03-03  733  	struct xfs_inode	*ip,
+> 307185b178ac26 John Garry        2025-03-03  734  	struct kiocb		*iocb,
+> 307185b178ac26 John Garry        2025-03-03  735  	struct iov_iter		*from)
+> 307185b178ac26 John Garry        2025-03-03  736  {
+> 307185b178ac26 John Garry        2025-03-03  737  	unsigned int		iolock = XFS_IOLOCK_SHARED;
+> 307185b178ac26 John Garry        2025-03-03  738  	unsigned int		dio_flags = 0;
+> 307185b178ac26 John Garry        2025-03-03  739  	ssize_t			ret;
+> 307185b178ac26 John Garry        2025-03-03  740
+> 307185b178ac26 John Garry        2025-03-03  741  retry:
+> 307185b178ac26 John Garry        2025-03-03  742  	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
+> 307185b178ac26 John Garry        2025-03-03  743  	if (ret)
+> 307185b178ac26 John Garry        2025-03-03  744  		return ret;
+> 307185b178ac26 John Garry        2025-03-03  745
+> 307185b178ac26 John Garry        2025-03-03 @746  	ret = xfs_file_write_checks(iocb, from, &iolock);
+> 307185b178ac26 John Garry        2025-03-03  747  	if (ret)
+> 307185b178ac26 John Garry        2025-03-03  748  		goto out_unlock;
+> 307185b178ac26 John Garry        2025-03-03  749
+> 307185b178ac26 John Garry        2025-03-03  750  	if (dio_flags & IOMAP_DIO_FORCE_WAIT)
+> 307185b178ac26 John Garry        2025-03-03  751  		inode_dio_wait(VFS_I(ip));
+> 307185b178ac26 John Garry        2025-03-03  752
+> 307185b178ac26 John Garry        2025-03-03  753  	trace_xfs_file_direct_write(iocb, from);
+> 307185b178ac26 John Garry        2025-03-03  754  	ret = iomap_dio_rw(iocb, from, &xfs_atomic_write_iomap_ops,
+> 307185b178ac26 John Garry        2025-03-03  755  			&xfs_dio_write_ops, dio_flags, NULL, 0);
+> 307185b178ac26 John Garry        2025-03-03  756
+> 307185b178ac26 John Garry        2025-03-03  757  	if (ret == -EAGAIN && !(iocb->ki_flags & IOCB_NOWAIT) &&
+> 307185b178ac26 John Garry        2025-03-03  758  	    !(dio_flags & IOMAP_DIO_ATOMIC_SW)) {
+> 307185b178ac26 John Garry        2025-03-03  759  		xfs_iunlock(ip, iolock);
+> 307185b178ac26 John Garry        2025-03-03  760  		dio_flags = IOMAP_DIO_ATOMIC_SW | IOMAP_DIO_FORCE_WAIT;
+> 307185b178ac26 John Garry        2025-03-03  761  		iolock = XFS_IOLOCK_EXCL;
+> 307185b178ac26 John Garry        2025-03-03  762  		goto retry;
+> 307185b178ac26 John Garry        2025-03-03  763  	}
+> 307185b178ac26 John Garry        2025-03-03  764
+> 307185b178ac26 John Garry        2025-03-03  765  out_unlock:
+> 307185b178ac26 John Garry        2025-03-03  766  	if (iolock)
+> 307185b178ac26 John Garry        2025-03-03  767  		xfs_iunlock(ip, iolock);
+> 307185b178ac26 John Garry        2025-03-03  768  	return ret;
+> 307185b178ac26 John Garry        2025-03-03  769  }
+> 307185b178ac26 John Garry        2025-03-03  770
+> 
+> :::::: The code at line 746 was first introduced by commit
+> :::::: 307185b178ac2695cbd964e9b0a5a9b7513bba93 xfs: Add xfs_file_dio_write_atomic()
+> 
+> :::::: TO: John Garry <john.g.garry@oracle.com>
+> :::::: CC: Carlos Maiolino <cem@kernel.org>
+> 
+> --
+> 0-DAY CI Kernel Test Service
+> https://github.com/intel/lkp-tests/wiki
+> 
