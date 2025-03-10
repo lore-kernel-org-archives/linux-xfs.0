@@ -1,121 +1,164 @@
-Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B46632;
-	Mon, 10 Mar 2025 00:33:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FEF01CB337
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 08:06:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741566802; cv=none; b=gnBZT+TQr3TJ3+cRNC3lSSs6+xXeDdDZDIJfNkr5aO+L1mCTg/L2zcByaD6dDwGT9z8+GUJmep+4KO3PdIncjEwBVYJy2FaMElRutH3nDqkMYb6Epta4qx3Hc6mK6mju+t1M6VB3U39OZ882uygesEAE3n4b8wc1hHPampJV8wI=
+	t=1741594001; cv=none; b=hNqTKaAtj+6eny8VpJbe0MWSSePjil6kWvvTEpE275zleAaaZ/v3o52PNwS4TA6bv0yCjy9QN9ywyHEdta80kuAYwukCNzcpEZUAGDDeRXA+OlIWIQb7XOss59owxM0V/u2aS6OU4V1MF5WU/fIZkSWPisWTyjrsQqRF5X7fNic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741566802; c=relaxed/simple;
-	bh=8gtiSOPBeO2O6YcASdsqnV2fsibaolJ2lK9ihz7fKME=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Om9I2WGSrpMovl+ToOoYrT42qHy3J0kR/WGMK6+B7rwkh7Qczd9sYjoHm5k1p+7pJINFdNoYnvbQHZ7PPwyxCLkGMFcodpfqYjfMfuVowAQQEsBXUOb3nZSpeXgiLgeyxAvQ/KEeSzZFtMH5s9bxCcEJCjKp+Udk3WerX0X8ANw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=l54C/qJC; arc=none smtp.client-ip=115.124.30.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1741594001; c=relaxed/simple;
+	bh=93W6ybCwcYA7AqE4AGQacqgIe8KHvftkYc5f4XtCDwk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M4ZlBWCbj3q7wytAe0jD+PUJLp3YR+M+NTXkEYHBTaA0ejmzcqgT3X+XcISKnoxzRuocRduCM2mX2L/Go1ht0av/HmCu1GU1Oxq8BuCKI8jp5CsVpsCg+0NIB4QT8BQA6wtb5YEyBo5OhPS28PPA4kYVbTEpQdzjzuA/XqGRVuk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SJt47uIL; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="l54C/qJC"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1741566795; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=i9xoUJAz+Ulc3f5EECn+evsDiO91i2wyeFM4yQAvw+Q=;
-	b=l54C/qJCqjoLb2HMsxvD9kS4XgpLrA1qEEH3b8Hoon1p1tNMcRpBf2328jSpdnGZvuHHZf1TOjFufL5ER1O43HgSGrfveqL5OCZ6n/64bq/f8ucP7oJ62CgOza7e5bjBZlwwET39G2OvwMnLHi9ub0TEZ01S1QnFi+EKETryenU=
-Received: from 30.134.66.95(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0WQy811n_1741566764 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Mon, 10 Mar 2025 08:33:11 +0800
-Message-ID: <625983f8-7e52-4f6c-97bb-629596341181@linux.alibaba.com>
-Date: Mon, 10 Mar 2025 08:32:42 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SJt47uIL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1741593998;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RCOLOU56jiLb/4wdgy3TIcrzpp/26Wu5xoarM9qeWc0=;
+	b=SJt47uILYl6R2MXsYZ1KOD2Bn5YjlR978EL9Jm2iJ2TyY/X9Bsr+KqQn6q76CXZr6IMLcZ
+	OfnYBhR0ugsk9rdfDpxs1aStFbTt74nihdYuKb+MepgZSljOlZvqia/Es9pUUwacHR39fx
+	mjpOC7PfDQITpK0yMKSFqaLJvRx+/T8=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-690-thKILgTnMEW5ulvCGk4W6Q-1; Mon, 10 Mar 2025 04:06:37 -0400
+X-MC-Unique: thKILgTnMEW5ulvCGk4W6Q-1
+X-Mimecast-MFC-AGG-ID: thKILgTnMEW5ulvCGk4W6Q_1741593996
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-224347aef79so65495755ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 01:06:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741593996; x=1742198796;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RCOLOU56jiLb/4wdgy3TIcrzpp/26Wu5xoarM9qeWc0=;
+        b=CtRQaOhEFau5/QX1I/FIbSh/02211UOh7kD12AN15sZpjTc6TQ+cGHTDJobMkniYfH
+         82Eift9OCvCxNfhNdEvb/8OpWXyH3jfMPIhjxDxtb9Y490ZowEWB36LgUgSfsbu1eoBb
+         HUnWf/+FKRDGrhdMFIPxnT8dE1l7XDazCXKdn4yYQLjZ2k/RhJadwp4/VFSwNzaVstKN
+         GyfvMBVZ47A0tkOYiqpPMeKSX5JUCN4wcBO356TefUTQ+llKNlMqn71m7z2Q+1xGRPXZ
+         1y0PHo5nylhB1IGh50qFadV3N+uecIWgBfs/QjS4hiK+7yfYErvzZgnWSc10hYP2Oxie
+         l9SQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX0zgOQl4ZwVgXJXXW1C0kt7ReHM+yE8jNJCQrzpZspOTxT+iCUiYZNfJPSXJT3zMrvXAd6TkLjR/o=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy81Bzy3wW84moWSGdXblIfz8MAzBEU8SbkFdYDTbbIWs/P5wcK
+	6QLAvFR4CmMlfY/3mNQtGNaf/3HF457ElHwog9j0h5r26R89LCwfe8xau08XYk1gHu6fxh0BKA7
+	oSLh0infBF450Albdb/Qygom4hOko/czrzQJ5diy10XpjciSNcM9f9GJh+Q==
+X-Gm-Gg: ASbGncu1Jt/15wEKr7V5WNsQ8DvhkHQwHmC70TrBGyzp4NvjVBPKq89jrGwUXDj5tR4
+	4S7fvKBPbYs+K4Gv4ZekaYTBQj/X1IKW2F//ZyNrsrGEnLxc4IEOQ7AsK0ByL10bW+dmfVpTkJL
+	WyauSZ+sYkUSUPd1iMVe20eZaXlRgXJrBeaJZ2dw6GCQRzniJOeMwneIeF2Rd0lQinc0OlAevto
+	vA2xcdL3+YK8T++/pddjUIxr8Njni1IrSQMqVUGEy/lFXNJP/pVAF4AhD2LemUMfYPmIREJZhYC
+	e0LpVyTWrOOqTpYpzPPvXwUSgnXhrCPl+Kti0buC9GxwnwRB0yrEgA/y
+X-Received: by 2002:a05:6a00:3d55:b0:736:52d7:daca with SMTP id d2e1a72fcca58-736aaadf019mr20663420b3a.18.1741593996267;
+        Mon, 10 Mar 2025 01:06:36 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF3zepBp9E0MRImticocc6MTl8Bx7wo5uHRMcLdiudFO4r9G/SfjZxODbq9kG76X31x/uUrMQ==
+X-Received: by 2002:a05:6a00:3d55:b0:736:52d7:daca with SMTP id d2e1a72fcca58-736aaadf019mr20663391b3a.18.1741593995950;
+        Mon, 10 Mar 2025 01:06:35 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-736cd220c5fsm2495334b3a.55.2025.03.10.01.06.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Mar 2025 01:06:35 -0700 (PDT)
+Date: Mon, 10 Mar 2025 16:06:30 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
+	zlang@kernel.org
+Subject: Re: [PATCH v1 2/2] check,common/{preamble,rc},soak: Decoupling
+ init_rc() call from sourcing common/rc
+Message-ID: <20250310080630.4lnscrcbaputlocv@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <1d07e5657c2817c74e939894bb554424199fd290.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <Z8oT_tBYG-a79CjA@dread.disaster.area>
+ <5c38f84d-cc60-49e7-951e-6a7ef488f9df@gmail.com>
+ <20250308072034.t7y2d3u4wgxvrhgd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-To: Yunsheng Lin <yunshenglin0825@gmail.com>,
- Dave Chinner <david@fromorbit.com>, Yunsheng Lin <linyunsheng@huawei.com>
-Cc: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
- Kevin Tian <kevin.tian@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>,
- Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
- Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
- Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
- Sandeep Dhavale <dhavale@google.com>, Carlos Maiolino <cem@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- Jesper Dangaard Brouer <hawk@kernel.org>,
- Ilias Apalodimas <ilias.apalodimas@linaro.org>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
- Anna Schumaker <anna@kernel.org>, Chuck Lever <chuck.lever@oracle.com>,
- Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
- Tom Talpey <tom@talpey.com>, Luiz Capitulino <luizcap@redhat.com>,
- Mel Gorman <mgorman@techsingularity.net>, kvm@vger.kernel.org,
- virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
- linux-xfs@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org,
- linux-nfs@vger.kernel.org
-References: <20250228094424.757465-1-linyunsheng@huawei.com>
- <Z8a3WSOrlY4n5_37@dread.disaster.area>
- <91fcdfca-3e7b-417c-ab26-7d5e37853431@huawei.com>
- <Z8vnKRJlP78DHEk6@dread.disaster.area>
- <cce03970-d66f-4344-b496-50ecf59483a6@gmail.com>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <cce03970-d66f-4344-b496-50ecf59483a6@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250308072034.t7y2d3u4wgxvrhgd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-
-
-On 2025/3/9 21:40, Yunsheng Lin wrote:
-> On 3/8/2025 2:43 PM, Dave Chinner wrote:
+On Sat, Mar 08, 2025 at 03:20:34PM +0800, Zorro Lang wrote:
+> On Fri, Mar 07, 2025 at 01:35:02PM +0530, Nirjhar Roy (IBM) wrote:
+> > 
+> > On 3/7/25 03:00, Dave Chinner wrote:
+> > > On Thu, Mar 06, 2025 at 08:17:41AM +0000, Nirjhar Roy (IBM) wrote:
+> > > > Silently executing scripts during sourcing common/rc doesn't look good
+> > > > and also causes unnecessary script execution. Decouple init_rc() call
+> > > > and call init_rc() explicitly where required.
+> > > > 
+> > > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > > FWIW, I've just done somethign similar for check-parallel. I need to
+> > > decouple common/config from common/rc and not run any code from
+> > > either common/config or common/rc.
+> > > 
+> > > I've included the patch below (it won't apply because there's all
+> > > sorts of refactoring for test list and config-section parsing in the
+> > > series before it), but it should give you an idea of how I think we
+> > > should be separating one-off initialisation environment varaibles,
+> > > common code inclusion and the repeated initialisation of section
+> > > specific parameters....
+> > Thank you so much. I can a look at this.
+> > > 
+> > > .....
+> > > > diff --git a/soak b/soak
+> > > > index d5c4229a..5734d854 100755
+> > > > --- a/soak
+> > > > +++ b/soak
+> > > > @@ -5,6 +5,7 @@
+> > > >   # get standard environment, filters and checks
+> > > >   . ./common/rc
+> > > > +# ToDo: Do we need an init_rc() here? How is soak used?
+> > > >   . ./common/filter
+> > > I've also go a patch series that removes all these old 2000-era SGI
+> > > QE scripts that have not been used by anyone for the last 15
+> > > years. I did that to get rid of the technical debt that these
+> > > scripts have gathered over years of neglect. They aren't used, we
+> > > shouldn't even attempt to maintain them anymore.
+> > 
+> > Okay. What do you mean by SGI QE script (sorry, not familiar with this)? Do
+> > you mean some kind of CI/automation-test script?
 > 
-> ...
+> SGI is Silicon Graphics International Corp. :
+> https://en.wikipedia.org/wiki/Silicon_Graphics_International
 > 
->>> I tested XFS using the below cmd and testcase, testing seems
->>> to be working fine, or am I missing something obvious here
->>> as I am not realy familiar with fs subsystem yet:
->>
->> That's hardly what I'd call a test. It barely touches the filesystem
->> at all, and it is not exercising memory allocation failure paths at
->> all.
->>
->> Go look up fstests and use that to test the filesystem changes you
->> are making. You can use that to test btrfs and NFS, too.
-> 
-> Thanks for the suggestion.
-> I used the below xfstests to do the testing in a VM, the smoke testing
-> seems fine for now, will do a full testing too:
-> https://github.com/tytso/xfstests-bld
-> 
-> Also, it seems the fstests doesn't support erofs yet?
+> xfstests was created to test xfs on IRIX (https://en.wikipedia.org/wiki/IRIX)
+> of SGI. Dave Chinner worked in SGI company long time ago, so he's the expert
+> of all these things, and knows lots of past details :)
 
-erofs is an read-only filesystem, and almost all xfstests
-cases is unsuitable for erofs since erofs needs to preset
-dataset in advance for runtime testing and only
-read-related interfaces are cared:
+Hi Nirjhar,
 
-You could check erofs-specfic test cases here:
-https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/log/?h=experimental-tests
-
-Also the stress test:
-https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/commit/?id=6fa861e282408f8df9ab1654b77b563444b17ea1
-
-BTW, I don't like your new interface either, I don't know
-why you must insist on this work now that others are
-already nak this.  Why do you insist on it so much?
+I've merged Dave's "[PATCH 0/5] fstests: remove old SGI QE scripts" into
+patches-in-queue branch. You can base on that to write your V2, to avoid
+dealing with the "soak" file.
 
 Thanks,
-Gao Xiang
+Zorro
 
 > 
->>
->> -Dave.
->>
+> Thanks,
+> Zorro
+> 
+> > 
+> > --NR
+> > 
+> > > 
+> > > -Dave.
+> > > 
+> > -- 
+> > Nirjhar Roy
+> > Linux Kernel Developer
+> > IBM, Bangalore
+> > 
+> > 
 
