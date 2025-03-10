@@ -1,101 +1,132 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 603BE22171A
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 12:24:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F1A322087;
+	Mon, 10 Mar 2025 12:31:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741609472; cv=none; b=EgP+lzd0okY6xu7qX3JpYRrZFLDyRZ+xU4q/aBLebYqIbKnRWhQcgKXccfhW5XucbSCIWQVLSz7IvbOUBhhXJXnlwDudQp1cQH5BiDJspQK5bvVDw2c39JCwJmmnBRuq7GDKVHCuZWxC/4Vd3mv9wqeWgVuF3XZU2aeiBfD9Opk=
+	t=1741609916; cv=none; b=kyA0T3aoeF0QUBIOXvtDKMxFpUVTiYqAwPm0wVxyXpmRP6xDat2p78cLCUB9nxTwD4zyWMQKn7zt8v6GwKYa6EC0z9Dyg7jsdjx0HbuzMwK4WftNeM/BwmfbebdbdL6pVexXYAxmEKYd8qcmK44akugKZxCbnDGE/KII77NEOuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741609472; c=relaxed/simple;
-	bh=jbF+un70Xkt5SPzJBNL5nux8GjqZ6W5e1OmvimXg3gk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IkPJaJAeo09hni0xPIhT+VbNbzSlNkxPaJpKsjbAax673X3i23I1aYAiUY1y0Ak/UVDp8Q59yrAEw7/zDuVTMU3qoSwyqkuMkdNZDNrk/4Gcra8zeqz5v28hBN3YOkzKfwxYXgLU1PCS+pW6is9FDGKNpffFKrgI/EVaUduxRNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ccWxkonR; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ccWxkonR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1741609470;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XgI9q1ST8/HWLPe5DWyUlqWpV13ydnBAaevSAufyWok=;
-	b=ccWxkonRNEVssAB/DI9WXujXXE41tkS8x8+mtO8mYsYoAzSFEN81sPSVVnd4sUL1EKRRUy
-	rbjqBLKelOPy/Z2HoLtM98+flFBY2RUz2GnyYQFkt67m2FOaO1WVcqgxzRXvCUB8ICw8Vn
-	L/YjyeGF+l0nbR3ElKH/ymP+95k8+P4=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-389-9tm0_K9dOHm0gkN4ajXH4w-1; Mon, 10 Mar 2025 08:24:28 -0400
-X-MC-Unique: 9tm0_K9dOHm0gkN4ajXH4w-1
-X-Mimecast-MFC-AGG-ID: 9tm0_K9dOHm0gkN4ajXH4w_1741609468
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4394c489babso19480185e9.1
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 05:24:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741609468; x=1742214268;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XgI9q1ST8/HWLPe5DWyUlqWpV13ydnBAaevSAufyWok=;
-        b=n8YcaoZM1ys94DS1uqhvVhTxWJ3GHDO/8rD4TF+BOyf37/r3HneeW+tIsgqsjv8K/0
-         j44QE1EjQo/JVEuxg8nhStVhUM5IPbiK5uo4TKfnWNWW+yc5GvIKsU5acaz9rmAJabvv
-         MTLK9a2DOZRl6cnMvlg9eI8yA9x/WlVKOLjbhAMGQMTlRwLqJr77WVciNCfyj/2tUger
-         smlt7o7DE3lgD3DKQdl72HG4z7YqmoS7NrynseQaKIZ2Swe+5gra0hb0ruh217ZRr/gO
-         iSTSUkKzQNIVrMr9i87o7OySBMjga7+gNPQRh/74SDKqiNVXPO61/pWHw496DrgaMou5
-         TgdQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVMk4vZ7+tNDj+y+U/Iwa/3ylxwb8Z/VU1sO2y93QUZKqG7U9lgWivBkBZR3mjDeIJZfFk+Yj1k9ig=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxIt/w/lV9fpNCunMtMaAQGLVFsJ6xuP8yRNXa1O69vpzmDnz7V
-	rfWYbq9qAc27iIH37MSNiW4B+1tg6L9dMpblTlPW0zp+MeBaS6yXgA2JDpT6Co3mymcJA8Qm6u0
-	nwTnLtIlDNkWk+Le4U0tsbTXwd1iWuN3kac4ErQ1JnmhY/VIMSYE6ikgJ
-X-Gm-Gg: ASbGncurpdcZrH9il7WQ5XVsX/RIPqNrIk3GuWHA7LTkypAO8xZaNTFWekkNHl+Szrq
-	ArKKvyUm0fmSzn7S+mmqcTZSPZ/H/K6TsSJK7pXqA2w1ihUP4x28jYB270lhZVLkKM6VgmrJrga
-	hXp2qGOQ1o9Vr+wHQ7t6xg3tlJf2Qza6wFHrLhjlsYX+Mo0g1v5ECpee8qOs6mTctANKfpCxh1+
-	BTIE+ZDutvUAoh6LRHxa57KXfgEpMGAfcpBo0jpM9ey5SbIl2ULVARqwJ5kJrgbeBCXyhfFLN/+
-	q/6qebcDOtT2+x+WiW85dOqGfGkotH/XEhg=
-X-Received: by 2002:a05:600c:45d1:b0:43b:d0fe:b8ac with SMTP id 5b1f17b1804b1-43c686f96a0mr88045785e9.30.1741609467760;
-        Mon, 10 Mar 2025 05:24:27 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHrWbxBT2S80+P/eqF5tNHn9Beq7qhyOyq/pGXW8Mmq6Lff595X0PbVKVfWTmgoZsHN9M/Tcg==
-X-Received: by 2002:a05:600c:45d1:b0:43b:d0fe:b8ac with SMTP id 5b1f17b1804b1-43c686f96a0mr88045515e9.30.1741609467415;
-        Mon, 10 Mar 2025 05:24:27 -0700 (PDT)
-Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43ceeb34904sm61424925e9.30.2025.03.10.05.24.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Mar 2025 05:24:27 -0700 (PDT)
-Date: Mon, 10 Mar 2025 13:24:26 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
-	Kjetil Torgrim Homme <kjetilho@ifi.uio.no>, Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs_{admin,repair},man5: tell the user to mount with
- nouuid for snapshots
-Message-ID: <w7ift5gmxeihp2u3chbi25to7mfnurvhizgo36aitpzwx2mf5w@jg55nn5sti2w>
-References: <20250307175501.GS2803749@frogsfrogsfrogs>
- <f296547d-7a7c-4df5-89e2-9e3cdab546f5@oracle.com>
+	s=arc-20240116; t=1741609916; c=relaxed/simple;
+	bh=1ZwnqL9ML/dpqcBnkz6H0OCsWG84Kk1V+/wHoG2v/rA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=SZ2RD5RTRQyzCl50C5b1hCJPLs3XXAIIRiTAdY0usw4rfoyhbtiqe6fDErhs6vfzNFb8knWSFr1aBtzbE9Y2Ayq2k2D2pfBsZgOmkVIUPCiI798HTxoNHssl+6R6EEGrk+Hhou9KS33XmYhijB7r0HaEYSCXSK10aXhjbeDAYzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4ZBGSX4JpGzqVYH;
+	Mon, 10 Mar 2025 20:30:20 +0800 (CST)
+Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
+	by mail.maildlp.com (Postfix) with ESMTPS id 351CC140361;
+	Mon, 10 Mar 2025 20:31:50 +0800 (CST)
+Received: from [10.67.120.129] (10.67.120.129) by
+ dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 10 Mar 2025 20:31:49 +0800
+Message-ID: <14170f7f-97d0-40b4-9b07-92e74168e030@huawei.com>
+Date: Mon, 10 Mar 2025 20:31:49 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f296547d-7a7c-4df5-89e2-9e3cdab546f5@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
+ only NULL elements
+To: Gao Xiang <hsiangkao@linux.alibaba.com>, Yunsheng Lin
+	<yunshenglin0825@gmail.com>, Dave Chinner <david@fromorbit.com>
+CC: Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Shameer
+ Kolothum <shameerali.kolothum.thodi@huawei.com>, Kevin Tian
+	<kevin.tian@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Chris
+ Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, David Sterba
+	<dsterba@suse.com>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep
+ Dhavale <dhavale@google.com>, Carlos Maiolino <cem@kernel.org>, "Darrick J.
+ Wong" <djwong@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Jesper
+ Dangaard Brouer <hawk@kernel.org>, Ilias Apalodimas
+	<ilias.apalodimas@linaro.org>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
+	<pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Trond Myklebust
+	<trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, Chuck Lever
+	<chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>, Neil Brown
+	<neilb@suse.de>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
+	<Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Luiz Capitulino
+	<luizcap@redhat.com>, Mel Gorman <mgorman@techsingularity.net>,
+	<kvm@vger.kernel.org>, <virtualization@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
+	<linux-erofs@lists.ozlabs.org>, <linux-xfs@vger.kernel.org>,
+	<linux-mm@kvack.org>, <netdev@vger.kernel.org>, <linux-nfs@vger.kernel.org>
+References: <20250228094424.757465-1-linyunsheng@huawei.com>
+ <Z8a3WSOrlY4n5_37@dread.disaster.area>
+ <91fcdfca-3e7b-417c-ab26-7d5e37853431@huawei.com>
+ <Z8vnKRJlP78DHEk6@dread.disaster.area>
+ <cce03970-d66f-4344-b496-50ecf59483a6@gmail.com>
+ <625983f8-7e52-4f6c-97bb-629596341181@linux.alibaba.com>
+Content-Language: en-US
+From: Yunsheng Lin <linyunsheng@huawei.com>
+In-Reply-To: <625983f8-7e52-4f6c-97bb-629596341181@linux.alibaba.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemf200006.china.huawei.com (7.185.36.61)
 
-On 2025-03-07 20:37:48, John Garry wrote:
-> On 07/03/2025 17:55, Darrick J. Wong wrote:
-> > +"re-running xfs_repair.  If the filesystem is a snapshot of a mounted\n"
-> > +"filesystem, you may need to give mount the nouuid option.If you are unable\n"
+On 2025/3/10 8:32, Gao Xiang wrote:
+
+...
+
+>>
+>> Also, it seems the fstests doesn't support erofs yet?
 > 
-> mega nitpick: it looks like a space was missing before 'If'
+> erofs is an read-only filesystem, and almost all xfstests
+> cases is unsuitable for erofs since erofs needs to preset
+> dataset in advance for runtime testing and only
+> read-related interfaces are cared:
+> 
+> You could check erofs-specfic test cases here:
+> https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/log/?h=experimental-tests
+> 
+> Also the stress test:
+> https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/commit/?id=6fa861e282408f8df9ab1654b77b563444b17ea1
 
-will fix it when applying
+Thanks.
 
 > 
-> > +"to mount the filesystem, then use the -L option to destroy the log and\n"
-> 
+> BTW, I don't like your new interface either, I don't know
+> why you must insist on this work now that others are
+> already nak this.  Why do you insist on it so much?
 
--- 
-- Andrey
+If the idea was not making any sense to me and it was nack'ed
+with clearer reasoning and without any supporting of the idea,
+I would have stopped working on it.
 
+The background I started working at is something like below
+in the commit log:
+"As mentioned in [1], it seems odd to check NULL elements in
+the middle of page bulk allocating, and it seems caller can
+do a better job of bulk allocating pages into a whole array
+sequentially without checking NULL elements first before
+doing the page bulk allocation for most of existing users."
+
+"Remove assumption of populating only NULL elements and treat
+page_array as output parameter like kmem_cache_alloc_bulk().
+Remove the above assumption also enable the caller to not
+zero the array before calling the page bulk allocating API,
+which has about 1~2 ns performance improvement for the test
+case of time_bench_page_pool03_slow() for page_pool in a
+x86 vm system, this reduces some performance impact of
+fixing the DMA API misuse problem in [2], performance
+improves from 87.886 ns to 86.429 ns."
+
+1. https://lore.kernel.org/all/bd8c2f5c-464d-44ab-b607-390a87ea4cd5@huawei.com/
+2. https://lore.kernel.org/all/20250212092552.1779679-1-linyunsheng@huawei.com/
+
+There is no 'must' here, it is just me taking some of my
+hoppy time and some of my work time trying to make the
+alloc_pages_bulk API simpler and more efficient here, and I
+also learnt a lot during that process.
+
+Anyway, if there is still any hard nack after all the
+discussion, it would be good to make it more explicit with
+a clearer reasoning.
