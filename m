@@ -1,61 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 572672FC23
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 09:52:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56732253EC;
+	Mon, 10 Mar 2025 10:06:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741600325; cv=none; b=mOfU00fqOH8XjZVSzyFYBJVpGqewoM+zTCKWsZFq5pwbBZmeHeVeFD4ISpVip+pNqLFWl2ACqowSPy+6eCityZ7L0p/dglN/JzN6oU3KdW1/EUd2M8SUGnua5pD2WOLhoSzOtknQo/pQ5m8pk4wBJJ77YAKpSzrxjxuFFvDnEfM=
+	t=1741601174; cv=none; b=OP6f6EhOoPTTuOmw5DiD0al4RjvY3ducF2NuF0COw56pXMGkdEPvi1UBKou3VfNMfx9Bo4n8NLiWrbpG2uLIPMFbZwpLMjcIoW58Qm3i8gKjQbmA87FRGx99bOyjx+VrcK1OHkjRwuuOJtBj+GKeKa86fvnW+FbrMy4vcVfUWrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741600325; c=relaxed/simple;
-	bh=vald3C31XzlLFkrQvLP40gX+LsbTdAYkIcInIpN9Ps8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=uIm18hNt5Gz7N51IarxD7vtMb2nKeQAcaxcUGusX80OlDi19akWioJEQ6NKFhGgBI2jhtiAjniPNZdxMNvqBmNN5HRR5a/eRZn+Yq9yteWI+iYXPmdCy847iVg3VhRtsKCzBmnMoD3SsiQIUqWffWqylX6mgcVsST8SxDWyMenA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oynKMyII; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1741601174; c=relaxed/simple;
+	bh=hP2uUw8I8mbMn2yNz3/uwyIxABFOv5u58HBG32GXAl0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y/og09s4zi6mFXDLs1276zukpz8YgvTajSfsQdtXsn0lfGjouj5KTXJDcNHmS1AZdZOPc/+zLnBToYlMZvISfCCbw9/L7NgZcQCTdTn/k1opA3LCgtIrC7dJ3TOdkOKZbHwcWCprwGEWEZnKW22FmO2YjaDKlCzzByh/LsdzJgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u9GKbAz7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oynKMyII"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13C36C4CEEC;
-	Mon, 10 Mar 2025 09:52:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u9GKbAz7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C343DC4CEE5;
+	Mon, 10 Mar 2025 10:06:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741600324;
-	bh=vald3C31XzlLFkrQvLP40gX+LsbTdAYkIcInIpN9Ps8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=oynKMyIIPUq7p2JpJ9v9//tNDtb4EVqu+/zXqihaP2XQfvvqi4DXIOjHR6SnGbp5C
-	 pA8KE2BnlZPb98qrlNpO7081xGFHeZE7dWEs318UkKUJmyTSS4h91Foo+yEq3/qTpu
-	 tubV+cE2euAmY/IKMEojdSAxPj0WHLnPgJdg2Qv2qPSVo/Nd2Las5xq4TCLEdMt4P7
-	 haW+1qVNDWyUF/XAc9cTVY8MKuJTRtt22b5NOPSqwn1NMzUL5KNcyYnfQpHo61UOV4
-	 Jv++5Gd1xcxHHbqJgoYLE5Qt4VI6tbmlqmA0SOzU1ItOCfXOowTRF6NSL/tn8n25/S
-	 DeUDszI8K59hQ==
+	s=k20201202; t=1741601174;
+	bh=hP2uUw8I8mbMn2yNz3/uwyIxABFOv5u58HBG32GXAl0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=u9GKbAz70zpGllrnCpfsX2csmTb4K9W/vm7OhjijcPXbQES+OwRob6jgbbDN/PU0m
+	 tD7Cd201qFfaCebbzoAFaztXjhlE/G7Ebl7UTbtYNqGVp15bBK/BoCsylzysw8ddRF
+	 BzerdPTJwit9QiydxEEMVxMViLGl1pLOXJQKcwyKGoFCvF7Tw8kUL164GZcMLZrnAF
+	 gXCeMkKpDwPiEif48MlMftai2X2PYEUspi+ub90AdpT2qRMugMVLTbaYw5gfwJhsyV
+	 q3gFV0p7sXX+ZQzheW8ZuFhnyFBh2opWmnPJqsPxjcCijxHw5Onoii0QYmtAbcBvSg
+	 jYs+f05xe7iPA==
+Date: Mon, 10 Mar 2025 11:06:08 +0100
 From: Carlos Maiolino <cem@kernel.org>
-To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-In-Reply-To: <20250303180234.3305018-1-willy@infradead.org>
-References: <20250303180234.3305018-1-willy@infradead.org>
-Subject: Re: [PATCH] xfs: Use abs_diff instead of XFS_ABSDIFF
-Message-Id: <174160032377.193222.907140219242116744.b4-ty@kernel.org>
-Date: Mon, 10 Mar 2025 10:52:03 +0100
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, 
+	ritesh.list@gmail.com, martin.petersen@oracle.com, tytso@mit.edu, 
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v4 11/12] xfs: Update atomic write max size
+Message-ID: <bed7wptkueyxnjvaq4isizybxsagh7vb7nx7efcyamvtzbot5p@oqrij3ahq3vl>
+References: <20250303171120.2837067-1-john.g.garry@oracle.com>
+ <2LEUjvzJ3RO3jyirsnti2pPKtOuVZZt-wKhzIi2mfCPwOESoN_SuN9GjHA4Iu_C4LRZQxiZ6dF__eT6u-p8CdQ==@protonmail.internalid>
+ <20250303171120.2837067-12-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250303171120.2837067-12-john.g.garry@oracle.com>
 
-On Mon, 03 Mar 2025 18:02:32 +0000, Matthew Wilcox (Oracle) wrote:
-> We have a central definition for this function since 2023, used by
-> a number of different parts of the kernel.
+Hi John.
+
+On Mon, Mar 03, 2025 at 05:11:19PM +0000, John Garry wrote:
+> Now that CoW-based atomic writes are supported, update the max size of an
+> atomic write.
 > 
+> For simplicity, limit at the max of what the mounted bdev can support in
+> terms of atomic write limits. Maybe in future we will have a better way
+> to advertise this optimised limit.
+> 
+> In addition, the max atomic write size needs to be aligned to the agsize.
+> Limit the size of atomic writes to the greatest power-of-two factor of the
+> agsize so that allocations for an atomic write will always be aligned
+> compatibly with the alignment requirements of the storage.
+> 
+> For RT inode, just limit to 1x block, even though larger can be supported
+> in future.
+> 
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  fs/xfs/xfs_iops.c  | 13 ++++++++++++-
+>  fs/xfs/xfs_mount.c | 28 ++++++++++++++++++++++++++++
+>  fs/xfs/xfs_mount.h |  1 +
+>  3 files changed, 41 insertions(+), 1 deletion(-)
 > 
 
-Applied to for-next, thanks!
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index fbed172d6770..bc96b8214173 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -198,6 +198,7 @@ typedef struct xfs_mount {
+>  	bool			m_fail_unmount;
+>  	bool			m_finobt_nores; /* no per-AG finobt resv. */
+>  	bool			m_update_sb;	/* sb needs update in mount */
+> +	xfs_extlen_t		awu_max;	/* data device max atomic write */
 
-[1/1] xfs: Use abs_diff instead of XFS_ABSDIFF
-      commit: 5d138b6fb4da63b46981bca744f8f262d2524281
+Could you please rename this to something else? All fields within xfs_mount
+follows the same pattern m_<name>. Perhaps m_awu_max?
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+I was going to send a patch replacing it once I had this merged, but giving
+Dave's new comments, and the conflicts with zoned devices, you'll need to send a
+V5, so, please include this change if nobody else has any objections on keeping
+the xfs_mount naming convention.
 
+Carlos.
+
+> 
+>  	/*
+>  	 * Bitsets of per-fs metadata that have been checked and/or are sick.
+> --
+> 2.31.1
+> 
