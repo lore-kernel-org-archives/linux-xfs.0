@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6292253E1
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 09:52:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 572672FC23
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Mar 2025 09:52:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741600324; cv=none; b=RqXQ3ytLIxjDGUzu0M2wI5OwMPA5gkESqXJYLrNbHpKQbTYj5YMYUkpODCr5TCXmthBSvhbS+4aEBLQxzpNpgFZNM57Q6b9RraVZ8c26wsc3vVNmH1Lti3PQ8kB5I/WQwnl6QqKjXiADyVrbjhDg/IdkFRJCwdeRbQ3a4vQ/gPE=
+	t=1741600325; cv=none; b=mOfU00fqOH8XjZVSzyFYBJVpGqewoM+zTCKWsZFq5pwbBZmeHeVeFD4ISpVip+pNqLFWl2ACqowSPy+6eCityZ7L0p/dglN/JzN6oU3KdW1/EUd2M8SUGnua5pD2WOLhoSzOtknQo/pQ5m8pk4wBJJ77YAKpSzrxjxuFFvDnEfM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741600324; c=relaxed/simple;
-	bh=U5pbJ1Tr2tykHGVZ/IJCPiKwHTTEQI3XH69RLS0eq5w=;
+	s=arc-20240116; t=1741600325; c=relaxed/simple;
+	bh=vald3C31XzlLFkrQvLP40gX+LsbTdAYkIcInIpN9Ps8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Rj+azPIcty/ZNTZoPe8GOwpzcJSkNJ9xth93eo3YEBfoXvJiFHrQCpth2FMPAzvbAPPQDR3jF4NGjdjY1KJzF9IyfpgPsDp7KlpZt6C0DTyRIMsAoUtpsxwZitrMhYE/F7fz1ZPGt8UdP71omrq0aq84F+ojecUeq1v8yWsb/Jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bGTdV2df; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uIm18hNt5Gz7N51IarxD7vtMb2nKeQAcaxcUGusX80OlDi19akWioJEQ6NKFhGgBI2jhtiAjniPNZdxMNvqBmNN5HRR5a/eRZn+Yq9yteWI+iYXPmdCy847iVg3VhRtsKCzBmnMoD3SsiQIUqWffWqylX6mgcVsST8SxDWyMenA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oynKMyII; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bGTdV2df"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64F27C4CEEC;
-	Mon, 10 Mar 2025 09:52:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oynKMyII"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13C36C4CEEC;
+	Mon, 10 Mar 2025 09:52:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741600323;
-	bh=U5pbJ1Tr2tykHGVZ/IJCPiKwHTTEQI3XH69RLS0eq5w=;
+	s=k20201202; t=1741600324;
+	bh=vald3C31XzlLFkrQvLP40gX+LsbTdAYkIcInIpN9Ps8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=bGTdV2df4pIrVwC0Hd1IDRG09qepv4W26PHcrNFOZTcH2e9PBMHOctyG6hye0mNhb
-	 pPALp4/jsrUFY8zi5xaAjkbhG8prkP9qzPp9QDSFT5BBoCqypMEJe0B+PIfahjMEBh
-	 nEN5NW1kXKfvuVToEtQrNFZRbvm2oRI/fNVeld+TP+NdKTcGAgT8sIWjfkTRqnJTFJ
-	 3UOxoaBOg9P2d3sIGSuw4EbLiOQzkS3IzzUpxy2ymHIFs1eDJjEJve9IEu1Yas7rcP
-	 h+EQ6vVY7L0dMoePt1Ez3bxU0+p10cHM0XmldfpSbUtgQY6QubcCgTNopnbijdCjKL
-	 aiB2tQ6UtzF1w==
+	b=oynKMyIIPUq7p2JpJ9v9//tNDtb4EVqu+/zXqihaP2XQfvvqi4DXIOjHR6SnGbp5C
+	 pA8KE2BnlZPb98qrlNpO7081xGFHeZE7dWEs318UkKUJmyTSS4h91Foo+yEq3/qTpu
+	 tubV+cE2euAmY/IKMEojdSAxPj0WHLnPgJdg2Qv2qPSVo/Nd2Las5xq4TCLEdMt4P7
+	 haW+1qVNDWyUF/XAc9cTVY8MKuJTRtt22b5NOPSqwn1NMzUL5KNcyYnfQpHo61UOV4
+	 Jv++5Gd1xcxHHbqJgoYLE5Qt4VI6tbmlqmA0SOzU1ItOCfXOowTRF6NSL/tn8n25/S
+	 DeUDszI8K59hQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-In-Reply-To: <Z8XL3ZduUCceA4hJ@infradead.org>
-References: <Z8XL3ZduUCceA4hJ@infradead.org>
-Subject: Re: [GIT PULL] xfs: add support for zoned devices
-Message-Id: <174160032209.193222.10444052897557877825.b4-ty@kernel.org>
-Date: Mon, 10 Mar 2025 10:52:02 +0100
+To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+In-Reply-To: <20250303180234.3305018-1-willy@infradead.org>
+References: <20250303180234.3305018-1-willy@infradead.org>
+Subject: Re: [PATCH] xfs: Use abs_diff instead of XFS_ABSDIFF
+Message-Id: <174160032377.193222.907140219242116744.b4-ty@kernel.org>
+Date: Mon, 10 Mar 2025 10:52:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,21 +44,16 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
+On Mon, 03 Mar 2025 18:02:32 +0000, Matthew Wilcox (Oracle) wrote:
+> We have a central definition for this function since 2023, used by
+> a number of different parts of the kernel.
+> 
+> 
 
-On Mon, 03 Mar 2025 08:33:49 -0700, Christoph Hellwig wrote:
-> The following changes since commit 0a1fd78080c8c9a5582e82100bd91b87ae5ac57c:
-> 
->   Merge branch 'vfs-6.15.iomap' of git://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs into xfs-6.15-merge (2025-03-03 13:01:06 +0100)
-> 
-> are available in the Git repository at:
-> 
->   git://git.infradead.org/users/hch/xfs.git tags/xfs-zoned-allocator-2025-03-03
-> 
-> [...]
+Applied to for-next, thanks!
 
-Merged, thanks!
-
-merge commit: 4c6283ec9284bb72906dba83bc7a809747e6331e
+[1/1] xfs: Use abs_diff instead of XFS_ABSDIFF
+      commit: 5d138b6fb4da63b46981bca744f8f262d2524281
 
 Best regards,
 -- 
