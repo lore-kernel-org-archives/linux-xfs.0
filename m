@@ -1,202 +1,256 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BBEF22B8AC;
-	Mon, 10 Mar 2025 14:05:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741615522; cv=none; b=uegwPaJ8O9JCB/w7EqD/8pNzUS3wW6Z5vHQyc1NYi/vDP7jusal+m+86WQcmJ70MkViSgrZb3FwRX88nDlvKm0RxHdj9qExPgoNLVug0sIT1W+WdUJAaFuqOoIeuktRQ+QeMMYQnoxxxHYFVqFn7BZ8OjlY3afuQ8p059TER8sA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741615522; c=relaxed/simple;
-	bh=F7wYKTOe6+jd+ruufV0X7KIuKLec2Uh/aLLg/kLZ+n8=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=dgs3l0NQ7ndXAuqeWaQdKnALQCBT71XLYpU91DHxOEYFa1dqSVd5A2jErmN8k2SwNEQ4IY5Qt2jT/J+H6CwSZiNlp3Xf89TRRXiWywwSyuCY1U+gV4Kksxl9EwqutMjsT7vYJBd9qrRFeKgBd0n9s1cOQB4u4ekD9sj9qc1GnD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z5XGRvwZ; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0DA199239;
+	Mon, 10 Mar 2025 14:47:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.18
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1741618067; cv=fail; b=dMQuWF2oaURih713C1t1TXfzZXLJn24Qjh5gHLXhCP25377yPwteozM+C4PGHCJsaOiFx7tmpWlsm47w969VpE8b/0Q+6IhX7RfWXk40xWme1NFj56PppnabMhr7N50C2KCd6/GQTzBj7ccPvAnWvCNp4QVsn20sFkxvhOqw8m4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1741618067; c=relaxed/simple;
+	bh=OKS9Oy2AfAlrQ8xzCuzWOiymOpcqF9puPlrec+6ocmY=;
+	h=Date:From:To:CC:Subject:Message-ID:Content-Type:
+	 Content-Disposition:MIME-Version; b=Ejhw11rDVo96MJParUGnT13HJwhXXm5GW5XyzDfNND/GIMKjqVwWxmx7K5sp97NMMt/d9+dz7+SYOuKY/8Ck8xSWu5REHG3HxXYatmSQxEALin1lK418obSXTDVJav5SCaUOMsCQE2k6kKzV6LPPSWybh91Et9zwUzq5u3pkZWI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P7z6GG15; arc=fail smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z5XGRvwZ"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-2ff087762bbso6227651a91.3;
-        Mon, 10 Mar 2025 07:05:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1741615520; x=1742220320; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=MzKQ5kle7OYFD1lIvSHNDNNcDdRE5uJigG6WXMzqgno=;
-        b=Z5XGRvwZF4JibEJge7MjHdDPKmcwHolFJoNOZwxpSQF0DdSr/ZUU1tE9KDTuO7Lv+t
-         18tDa5cRCN+hQGBfwub3eeSgh7u9vrpjomM+MM9LlLMdXJf2XvJ34oSLkhpGLngk4pgk
-         LcxjUFxGwYL45/jG49ObLQpeWSUUo0+bEEL93BDeKFQhqzZgwxWdbwk+wgmoR5e6meJA
-         +EGyDzndGzW6JPclK/yAdHJQP5yxQq8Be9MFV/DhnL/m5jza+5SDA7v5NpgLm1DPWPwR
-         HRHQiTdM7q9342jRQ0NtF9u2S1aY1Qt0kh1XZ+U6tHa8qSDuo5Zw4PbZi5GXUehiTJi3
-         D97g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741615520; x=1742220320;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MzKQ5kle7OYFD1lIvSHNDNNcDdRE5uJigG6WXMzqgno=;
-        b=vMDKu0wcZcq/zFnN+ALaDWaHt1urJhm2csq0BQQ9LsOzr/uxcGE9NFAKmiO4ZcAYIY
-         LCacKZ+wR1cJlpiKb7iALw/OULFrQ/vXQBdL+JCBsM5+WOGZQJQUIcU0jAbuhR9z80GB
-         6/QCu6t8LbFF3vbv/2cUIpt2b6Gv4PV56MYh8ugHYIZl1Znfw+eBRtQddymr9YkDgnou
-         DrtdLeNk2/vU16NptH1d8XHVZFaBP5UjiNB1qAavww9RjLCoJjXSYOBTzsHFpVClH+RW
-         yKmod819YkqBKOdMVlBb8l+IWXhK8ggaCi6iqM1Eo5erWBd9VuGmxzs0/7bg4Y7LCHLi
-         sWrA==
-X-Forwarded-Encrypted: i=1; AJvYcCVno0SKJz92wvh8NX1tmQmh61Mq57DcZyPGDhGaZvd01POkbSzjOz00Ltn567n9dT3Yw+TVM6CeGxfhEoCP4g==@vger.kernel.org, AJvYcCWDmh19Bzeuam9IOLdEv8v/DptGiFYVufo7Wb7ik/yaxlyn1h/U+YgS2mjSjvClDoGKNum8CDOB4oYfCcze@vger.kernel.org, AJvYcCXTzOqFMm5QoQ9cQ93E5LqTUMBHV5RtXsNgj6GeiN0na3fzgeYKkUYXxtm87zc+EM/s/venwBeyMAa/@vger.kernel.org
-X-Gm-Message-State: AOJu0YwEG0gNlUhDlLlFzDsvdxhhGS8iBRAQgZlVuTn9gxFxf4eYaDnS
-	wNvnxi40H+D9KHELQ1XMhGIEZN5W6MhBiSMmhEuEhNv8v0NuInOA
-X-Gm-Gg: ASbGnctqKK8TqVRNU2VzzUmGzlfpa3vKXs7RxWnTbpwX22+Sg7Y4tYpwvVzKSoqJfMX
-	1gkp3QZiXkA9B8iSqLFALW2IjszPN0p7D/l+BAI3Lytmg5mNnG2NsTrwcA7oLafcMigwq1/77z2
-	nkavd7XjRdY8PUfitgu4e1yGyFi51ewKVN/idQfcLRNre5emCMsWbtnhn9OE15kkrubB8Tf97x9
-	KAAHOYHxHCQYILMAJxWr9MCUkBLtm7/wdvIuUplKJo3HCYz1iObnP+T+gRZkrqp/8nqFnm287Gp
-	DCMsA5MFFHR5D9PAZUXVlrheGNAoIm3b53o=
-X-Google-Smtp-Source: AGHT+IHkPVP3yWj52JRmym2Q5nBKjLeeY2l9FLHJLbbJrCATuEzy8cc/oFaf5NGDUUJNpLk9J+huRA==
-X-Received: by 2002:a17:90b:1d04:b0:2ff:698d:ef7c with SMTP id 98e67ed59e1d1-2ff7cf29cadmr21318903a91.29.1741615520110;
-        Mon, 10 Mar 2025 07:05:20 -0700 (PDT)
-Received: from dw-tp ([171.76.82.7])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-224109dd51bsm77999595ad.49.2025.03.10.07.05.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Mar 2025 07:05:19 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, brauner@kernel.org, djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, martin.petersen@oracle.com, tytso@mit.edu, linux-ext4@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v4 09/12] xfs: Add xfs_file_dio_write_atomic()
-In-Reply-To: <20250303171120.2837067-10-john.g.garry@oracle.com>
-Date: Mon, 10 Mar 2025 19:09:39 +0530
-Message-ID: <877c4x57j8.fsf@gmail.com>
-References: <20250303171120.2837067-1-john.g.garry@oracle.com> <20250303171120.2837067-10-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P7z6GG15"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1741618065; x=1773154065;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=OKS9Oy2AfAlrQ8xzCuzWOiymOpcqF9puPlrec+6ocmY=;
+  b=P7z6GG15/RU0+3a3az2x4HqBuE//xRPZmOQ5K2gQrZ4i1cu6tAhADQdx
+   l2MYf8N4IQUA5w/w2aKFf+X2CDqpCcTmnQm3jKleMhfZ5m5N6XUbQDSPD
+   bZs/hzWGQ2c4RbgJM/StReutWxL4Fp6LTmCvVagXa38rQiOiHJEpkw8Nk
+   vxJAZnnsvnSjsWOSWag9nGP/sbjmwTxLjjW9FU9XOJTlB74rtooLdTiFI
+   B1qNq95+FSIK7zu7nV8lOdu0A6G71x2lsJc6c0HBhulQdROJy6Dqa7C5h
+   Ojn4b627AIu8AtLpJ5XX9v+1zsGOPcealx9gLJTTP5ItpyFSoqi3zqvOx
+   w==;
+X-CSE-ConnectionGUID: olkKhuruTOa6Gezoldw6rg==
+X-CSE-MsgGUID: HP1e28c+RyGJ92SKkCfnAg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11369"; a="41864367"
+X-IronPort-AV: E=Sophos;i="6.14,236,1736841600"; 
+   d="scan'208";a="41864367"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2025 07:47:44 -0700
+X-CSE-ConnectionGUID: bJCS7hHRTVW0j4fdwRA2dw==
+X-CSE-MsgGUID: +snxwknqS4OPBmJtIc/tUg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,236,1736841600"; 
+   d="scan'208";a="119998740"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by orviesa006.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2025 07:47:44 -0700
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.14; Mon, 10 Mar 2025 07:47:43 -0700
+Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.14 via Frontend Transport; Mon, 10 Mar 2025 07:47:43 -0700
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (104.47.55.173)
+ by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.44; Mon, 10 Mar 2025 07:47:43 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=iohNQvkXjtC+EMT4NSjJ8xwM9NeKkxK2OsIZDAcXXSDTFCWHmnfeFkGVI2r42tK/ry/8nno7Sbby02mxR+D2Gw1VsKF9UU6oPQOz19EoSKx8JOqZMccK7yyKPdwPp9NeFlcTSVzgyh+djOOxhlQsoCb8WVN8mk+LHeAfkBZihdOJUci0UNtxM+0AJuPGm18tGGAsmSd6SRV5xIalq/Iy3xazgzWEljLMUAczEhFrkJv4aV9fS4+R2BSISV3ntrrX1FgcTF07R79dkDn8Q4B8yQ0k41gAFS87mmp0kd1adWqm/fDxMIW0OBpe3i7WlPb3UKFZ55LW4YW79ZjIqQHNag==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YAVTgntgGoHHfw8OzpDCUJ04SaACk2D2FFA9GiUUa88=;
+ b=P04VOjcfr6Ek0ncH2H1wcD1+a7c60GyhSKfm0ScBdZxHyVkfttyUeCQRiV+7LcQO5aZdBe4EwmOssHAjKk3dZUrjgp8N5A842vFMz38REHLdFxFazaUWV7yS3DT4UmfpmK5pDMyPTLU57CHENzQJEMTIjGHe+XiEIyyhdwy2gYjQzCSclGRNi9FsLXuEhoHSaYS76Ec/d5v5nbGLODzvQyzHPTlihsJIRNxHalQbtHW/VBdk0WiARY/wz26Yscza4oILfmHhQWic7Buf4lECapPrIlrdX13ENBjYtR89UDntkwak6gbBx9Zej6gJ+UdBQxEsGxZlwhvDy2R/MZ2qbQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com (2603:10b6:408:1b6::9)
+ by MW4PR11MB5909.namprd11.prod.outlook.com (2603:10b6:303:168::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8511.27; Mon, 10 Mar
+ 2025 14:47:40 +0000
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c]) by LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c%4]) with mapi id 15.20.8511.026; Mon, 10 Mar 2025
+ 14:47:39 +0000
+Date: Mon, 10 Mar 2025 22:47:20 +0800
+From: kernel test robot <oliver.sang@intel.com>
+To: Alistair Popple <apopple@nvidia.com>
+CC: <oe-lkp@lists.linux.dev>, <lkp@intel.com>, Andrew Morton
+	<akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, "Alison
+ Schofield" <alison.schofield@intel.com>, Alexander Gordeev
+	<agordeev@linux.ibm.com>, Asahi Lina <lina@asahilina.net>, Balbir Singh
+	<balbirs@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas
+	<catalin.marinas@arm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Christoph Hellwig <hch@lst.de>, Chunyan Zhang <zhang.lyra@gmail.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>,
+	David Hildenbrand <david@redhat.com>, Gerald Schaefer
+	<gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, "Huacai
+ Chen" <chenhuacai@kernel.org>, Ira Weiny <ira.weiny@intel.com>, Jan Kara
+	<jack@suse.cz>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe
+	<jgg@ziepe.ca>, John Hubbard <jhubbard@nvidia.com>, linmiaohe
+	<linmiaohe@huawei.com>, Logan Gunthorpe <logang@deltatee.com>, Matthew Wilcow
+	<willy@infradead.org>, Michael Camp Drill Sergeant Ellerman
+	<mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, Peter Xu
+	<peterx@redhat.com>, Sven Schnelle <svens@linux.ibm.com>, Ted Ts'o
+	<tytso@mit.edu>, Vasily Gorbik <gor@linux.ibm.com>, Vishal Verma
+	<vishal.l.verma@intel.com>, Vivek Goyal <vgoyal@redhat.com>, WANG Xuerui
+	<kernel@xen0n.name>, Will Deacon <will@kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+	<linux-xfs@vger.kernel.org>, <oliver.sang@intel.com>
+Subject: [linux-next:master] [fs/dax]  1a785b76b0: xfstests.generic.462.fail
+Message-ID: <202503102208.26319ad6-lkp@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+X-ClientProxiedBy: SG2PR02CA0066.apcprd02.prod.outlook.com
+ (2603:1096:4:54::30) To LV3PR11MB8603.namprd11.prod.outlook.com
+ (2603:10b6:408:1b6::9)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-
-John Garry <john.g.garry@oracle.com> writes:
-
-> Add xfs_file_dio_write_atomic() for dedicated handling of atomic writes.
->
-> In case of -EAGAIN being returned from iomap_dio_rw(), reissue the write
-> in CoW-based atomic write mode.
->
-> For CoW-based mode, ensure that we have no outstanding IOs which we
-> may trample on.
->
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/xfs/xfs_file.c | 42 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 42 insertions(+)
->
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 51b4a43d15f3..70eb6928cf63 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -619,6 +619,46 @@ xfs_file_dio_write_aligned(
->  	return ret;
->  }
->  
-> +static noinline ssize_t
-> +xfs_file_dio_write_atomic(
-> +	struct xfs_inode	*ip,
-> +	struct kiocb		*iocb,
-> +	struct iov_iter		*from)
-> +{
-> +	unsigned int		iolock = XFS_IOLOCK_SHARED;
-> +	unsigned int		dio_flags = 0;
-> +	ssize_t			ret;
-> +
-> +retry:
-> +	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = xfs_file_write_checks(iocb, from, &iolock);
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	if (dio_flags & IOMAP_DIO_FORCE_WAIT)
-> +		inode_dio_wait(VFS_I(ip));
-> +
-> +	trace_xfs_file_direct_write(iocb, from);
-> +	ret = iomap_dio_rw(iocb, from, &xfs_atomic_write_iomap_ops,
-> +			&xfs_dio_write_ops, dio_flags, NULL, 0);
-> +
-> +	if (ret == -EAGAIN && !(iocb->ki_flags & IOCB_NOWAIT) &&
-> +	    !(dio_flags & IOMAP_DIO_ATOMIC_SW)) {
-> +		xfs_iunlock(ip, iolock);
-> +		dio_flags = IOMAP_DIO_ATOMIC_SW | IOMAP_DIO_FORCE_WAIT;
-> +		iolock = XFS_IOLOCK_EXCL;
-> +		goto retry;
-> +	}
-
-IIUC typically filesystems can now implement support for IOMAP_ATOMIC_SW
-as a fallback mechanism, by returning -EAGAIN error during
-IOMAP_ATOMIC_HW handling from their ->iomap_begin() routine.  They can
-then retry the entire DIO operation of iomap_dio_rw() by passing
-IOMAP_DIO_ATOMIC_SW flag in their dio_flags argument and handle
-IOMAP_ATOMIC_SW fallback differently in their ->iomap_begin() routine.
-
-However, -EAGAIN can also be returned when there is a race with mmap
-writes for the same range. We return the same -EAGAIN error during page
-cache invalidation failure for IOCB_ATOMIC writes too.  However, current
-code does not differentiate between these two types of failures. Therefore,
-we always retry by falling back to SW CoW based atomic write even for
-page cache invalidation failures.
-
-__iomap_dio_rw()
-{
-<...>
-		/*
-		 * Try to invalidate cache pages for the range we are writing.
-		 * If this invalidation fails, let the caller fall back to
-		 * buffered I/O.
-		 */
-		ret = kiocb_invalidate_pages(iocb, iomi.len);
-		if (ret) {
-			if (ret != -EAGAIN) {
-				trace_iomap_dio_invalidate_fail(inode, iomi.pos,
-								iomi.len);
-				if (iocb->ki_flags & IOCB_ATOMIC) {
-					/*
-					 * folio invalidation failed, maybe
-					 * this is transient, unlock and see if
-					 * the caller tries again.
-					 */
-					ret = -EAGAIN;
-				} else {
-					/* fall back to buffered write */
-					ret = -ENOTBLK;
-				}
-			}
-			goto out_free_dio;
-		}
-<...>
-}
-
-It's easy to miss such error handling conditions. If this is something
-which was already discussed earlier, then perhaps it is better if
-document this.  BTW - Is this something that we already know of and has
-been kept as such intentionally?
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV3PR11MB8603:EE_|MW4PR11MB5909:EE_
+X-MS-Office365-Filtering-Correlation-Id: 705b02d3-0ec7-4f70-f788-08dd5fe28187
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?7L45hzPR7H4cPzOyaJG5dysi1SGlp+KG5rbls3RjdOX9CMHIRsMCowh2k6rR?=
+ =?us-ascii?Q?pnQVCuQfZZG+Ny06rd5mcEyTDX6Co19eHQFp/4S+vruEsg/RWAWjtbcpvv1i?=
+ =?us-ascii?Q?QGXAlcOj+nLF8mViznGxG6Mw7LMpdt250vg5CZx730ZBXAYNBAtQoGODEH7Y?=
+ =?us-ascii?Q?zEVfPTBOBLoxA/dxuDKQ77qrUsCKxS+J5jLwJmMlZyJeg0BZjbY/HCUit/hq?=
+ =?us-ascii?Q?EC7usf9uDyipT9hkAlT0cAifafD4hzYrTWpJ7uJfa6uDddqaiGsye+ZpEZ5s?=
+ =?us-ascii?Q?LOiiOZEf7Yzj9Cob677pVKtlofDLhA6Dauw9nJGpOjDQmS6OzTw25sEYymZS?=
+ =?us-ascii?Q?Q6sI9P0T/YWOBTPmnIIuy67P0avzXB1ffa1EgPVUe6X91k8oT0OVdJ1uInBt?=
+ =?us-ascii?Q?AqYUDCHSKBhErfGTwkh+gnRGQnyaweQsMKK/xj5DYJJJDru/PBfUYP8vonOQ?=
+ =?us-ascii?Q?woyx8s8/Ztcd9mwXFZtxDpIys7GLsStAxvWsJrWTX8wh7WA3xSbB+qScsAVV?=
+ =?us-ascii?Q?AKEhoD/Pf1AY8v79Q7np9FhkxsGOkzXCSYq1OKop4LNhHEDNwJR4abZdxO/F?=
+ =?us-ascii?Q?Q7aYhc9TQU1OSRAmccjPdKz0l4U+nVvCWUdu1EZGgxFjCQGXIWXxYnvrMLIt?=
+ =?us-ascii?Q?bBfTu5Ndtrs+hftZhry88wKlSa7aEHCwqYSp4/uQz+f3di116gcjK+iwmkyr?=
+ =?us-ascii?Q?3qs24LUL8VTBa0ayKfLtNzzgzOe4M0h7Gzfx34yq70EAwY9QwuNDeI7JjyF6?=
+ =?us-ascii?Q?+dB76fp9tPSqudeEP7h0oDFWegWZ4gOQTxkyQJ4V8HlIAj8v8E2RJAPZNw47?=
+ =?us-ascii?Q?Ad2qmJJu9EpKOQNXjvNL2ih1ObJJUDR8WhWu/e9IqZKQbPcy1iJ1LRWj2MZl?=
+ =?us-ascii?Q?0qy4yhYTm0M0tyoAHIgbqtuX/JE3P4c88qCD4iOnNjDCM0ZEUAsPFarZOCdQ?=
+ =?us-ascii?Q?1sn0AlpV40Sns+6gF+fOgMSpmtEMJqno12IoNHlyxE9jwzH55aCTKzvr8+vC?=
+ =?us-ascii?Q?ovGenuKtz5h/hTEZznLBzVytucIORh8/QWNKZuMHgoEGrhqZX9++c5BKZgnh?=
+ =?us-ascii?Q?XxSgYxoTsjP+ksI7eIVJipc768TtShd9QP2wsOP2bFjZfuJKONxtXm9MToYm?=
+ =?us-ascii?Q?5XUd3H7x4J2iAMOW65cCvDILnGY6YMpvW/u1W1t7Gj0LpFVgqJUZ/fDwtQnq?=
+ =?us-ascii?Q?w7spLdYaolgJTg1InmBKjj8Xr2YTl5edw32J9ItNbqLK2fMex+uAHlU1bxJR?=
+ =?us-ascii?Q?QgUN9yLrzJrsJbQtzCiuLvl3Q8iByGIclJNSzC2PjbUwwENZVQRxzg+hFsvb?=
+ =?us-ascii?Q?43aJEQwTbqCK1LS47TDdOxxuBFjG0Obn/5Y9Hl77DV38oA=3D=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR11MB8603.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8cNH/gsaeoUlmlw5QADVrfkFnuuFcsfn94nzfiMlcxstVeDZ3uIVqQdA/ZYd?=
+ =?us-ascii?Q?JOf1so8RL+8H8YiJV9CIZEqIiuV44mnFcRjXySF2WCbGEMj2u/U7Qtf85+t1?=
+ =?us-ascii?Q?85TznpZy2wJ5iRH/howRLeCLWgElLJMO6qAlVnANptLZgWkZywcHd07vr/8U?=
+ =?us-ascii?Q?noXINIMAlXFKCeiMmk47wOjkI9xHKo75nX+pZmIQnnX2qDjZxkRVWX8pjb0O?=
+ =?us-ascii?Q?9a8b3hDnPjY7gIaY3C0kCm2Ath21m5pkXmi/+iTTSP4HD7PalwZvPN6ij94Z?=
+ =?us-ascii?Q?qXRhPKytqqImjRCmdmw0WdYfsxDxIEmnsAnQ7ON5oUdxzXGiVxePYoDLKcm5?=
+ =?us-ascii?Q?XV9uGDVVUBFtlmZWDZ+snMe4JY5prqnVbc5k1uP25HVk+y9btIA6/aAmyUGP?=
+ =?us-ascii?Q?qmvGnKBWSlEZwKzG9WKzlUJlAODnOjrFjD2XnLJAFO+uvmO0/9W7dakRFKB2?=
+ =?us-ascii?Q?Yb8iMsfIIoo3bXQq325ZLRzrengGidO9fOi+jq5jXEgmlobWW8t6KigDLe5i?=
+ =?us-ascii?Q?2z/nFIIjA+ix7X9N5QRYr8l0cwsoW/DJvSsJc8On7SsQZvBUT64shyEBj1Mi?=
+ =?us-ascii?Q?cXp1Z7Xyho4/+shIYioKhSjDJSpyG3INZacUSq1xDPW2v3P24MSv0gBe1cDd?=
+ =?us-ascii?Q?214J+Py6rUrh8AsUWex35opLej9DuTNNcAdsne1cxCbdieXFR9c59IFtduoI?=
+ =?us-ascii?Q?kIQSMcq+fiwYDZqNSYfJPS+sENpcTbecipuncFej9Eu421QGDEzxr5onOf0E?=
+ =?us-ascii?Q?r15AwylihbYr0LLFc/s0TEDE6L8OrTNS2lxsgomYZvF1MnWT/JeZTwuplzhS?=
+ =?us-ascii?Q?fvs7OSVslZJTpQg0cAwcVudMH2KxCUH+y3GwN4BOer/SLdjnD1BLPXJy5Pnh?=
+ =?us-ascii?Q?McRBpl0wT+5HmnKzTBo0hMQTTh1Lt5nqEBQKAk4FMlkUqey6fIwVtPlki7/+?=
+ =?us-ascii?Q?+nHRVIq1+ALK3x2Z98QfX3atCQWBr4JgUWQhXLGAFF9K8lVG3+4qfxNQJobI?=
+ =?us-ascii?Q?ehy5YRQycHtfVZ33iJif10VaMLH6UlKr7pPPE/9wdJlLT5N7wLaTJPZmqgIG?=
+ =?us-ascii?Q?IQFLZeO5AgMWQyr4TlgqU1/XINAVtAkrv8X5n9tduDAtE5QqNUsf54Rntiyi?=
+ =?us-ascii?Q?XUwUyCCLM98dP5Iz3dLK6V1kbllOtuBzCLn3uEO/CXBfUtm8eXV/3nHfCAqL?=
+ =?us-ascii?Q?g3z135d0+j3/MJpDE3gjB+0eR3NJJTomJl/Ig2Y4wczFzGuhafMGk3vhKuZ8?=
+ =?us-ascii?Q?VLBeEfHk26ic11UCWB598wH+/wAJ4cORR0lPLuK3kp/Ljb5xSM9CyefbtSEB?=
+ =?us-ascii?Q?W7LqbA6Eth9ZeD58zVfnluTIjsF1xz3oZFcEAJ5gCpwXeJ3gn0Pz6crn7y70?=
+ =?us-ascii?Q?eFZkOYW9bQ2bosnLlKNq5Y2INRRygo2sLRSwoxAG7TewotoZkogUa4YXEtJi?=
+ =?us-ascii?Q?ROQ+W8NXDUnMwZDP98YFawsN3ALgr9z/55QduWgl+NgakYrAWXiieDRf9pr9?=
+ =?us-ascii?Q?m4jpIKKQe3WYnc/dzcI8rajGAq3wKkKItygI1EsgSL4lupwDlvFa+t6jv2rc?=
+ =?us-ascii?Q?rbq+G2bUvQKOTWvydMi1hHvSjLE9OeY6LJVzuTG57ewTrDqjJ8hqlM2Zvdx/?=
+ =?us-ascii?Q?VQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 705b02d3-0ec7-4f70-f788-08dd5fe28187
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR11MB8603.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2025 14:47:39.8476
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: khzOejwLGkoINFKN0QoDzWwazG2CGZfhND0bEB9ZzBgktDLm7VQPSxP3o98H17+N0lvFDZnS7cV6y1wIzW2GNQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR11MB5909
+X-OriginatorOrg: intel.com
 
 
--ritesh
+
+Hello,
+
+kernel test robot noticed "xfstests.generic.462.fail" on:
+
+commit: 1a785b76b0b0203a6284d25cf9064c65d444c4ee ("fs/dax: always remove DAX page-cache entries when breaking layouts")
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
+
+in testcase: xfstests
+version: xfstests-x86_64-8467552f-1_20241215
+with following parameters:
+
+	bp1_memmap: 4G!8G
+	bp2_memmap: 4G!10G
+	bp3_memmap: 4G!16G
+	bp4_memmap: 4G!22G
+	nr_pmem: 4
+	fs: ext2
+	test: generic-462
 
 
-> +
-> +out_unlock:
-> +	if (iolock)
-> +		xfs_iunlock(ip, iolock);
-> +	return ret;
-> +}
-> +
->  /*
->   * Handle block unaligned direct I/O writes
->   *
-> @@ -723,6 +763,8 @@ xfs_file_dio_write(
->  		return -EINVAL;
->  	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
->  		return xfs_file_dio_write_unaligned(ip, iocb, from);
-> +	if (iocb->ki_flags & IOCB_ATOMIC)
-> +		return xfs_file_dio_write_atomic(ip, iocb, from);
->  	return xfs_file_dio_write_aligned(ip, iocb, from);
->  }
->  
-> -- 
-> 2.31.1
+
+config: x86_64-rhel-9.4-func
+compiler: gcc-12
+test machine: 8 threads Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz (Skylake) with 28G memory
+
+(please refer to attached dmesg/kmsg for entire log/backtrace)
+
+
+
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202503102208.26319ad6-lkp@intel.com
+
+2025-03-09 04:19:23 export TEST_DIR=/fs/pmem0
+2025-03-09 04:19:23 export TEST_DEV=/dev/pmem0
+2025-03-09 04:19:23 export FSTYP=ext2
+2025-03-09 04:19:23 export SCRATCH_MNT=/fs/scratch
+2025-03-09 04:19:23 mkdir /fs/scratch -p
+2025-03-09 04:19:23 export SCRATCH_DEV=/dev/pmem3
+2025-03-09 04:19:23 echo generic/462
+2025-03-09 04:19:23 ./check -E tests/exclude/ext2 generic/462
+FSTYP         -- ext2
+PLATFORM      -- Linux/x86_64 lkp-skl-d01 6.14.0-rc3-00217-g1a785b76b0b0 #1 SMP PREEMPT_DYNAMIC Sun Mar  9 11:52:02 CST 2025
+MKFS_OPTIONS  -- -F /dev/pmem3
+MOUNT_OPTIONS -- -o acl,user_xattr /dev/pmem3 /fs/scratch
+
+generic/462       _check_dmesg: something found in dmesg (see /lkp/benchmarks/xfstests/results//generic/462.dmesg)
+
+Ran: generic/462
+Failures: generic/462
+Failed 1 of 1 tests
+
+
+
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20250310/202503102208.26319ad6-lkp@intel.com
+
+
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
