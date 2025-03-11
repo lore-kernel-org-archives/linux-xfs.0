@@ -1,80 +1,128 @@
-Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA6122557C;
-	Tue, 11 Mar 2025 07:11:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8B8D22F163
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Mar 2025 10:54:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741677109; cv=none; b=JbU0RLAK/ypENS22EsaJr574hJK0wgCKumm5tDqNKMFqInkDV8e8dITSO1JS5JADSnVzlr7BUWu5U814w2lwcN2/2yUydThFubw+w8WBrISxvU+x5wvcaELOwg3WGsLxar1TTsfOnz3eutiwv/UFuvvyUhm1cy5rz+4Xs4tDvgQ=
+	t=1741690482; cv=none; b=BDMC10eJnQ3icKGaRt7BifKzydoOLBWDP8RDAn890NMxBK70rv7nNjdF8GncufkvFg6Rw/rdQIZk5ctPvilVOgJUHAIbF2CB6oJWI1Y6LUWBMz+l8lEEtt/7LzOMLqpPnWZcPrVTf97+9/9Ac564fCD76r2+3KJhwfsalEAV3tY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741677109; c=relaxed/simple;
-	bh=zranEsbod9ZNmZ+Uw6UXY7AtRfJTC9qLdHYi9HCC5Qg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QOKXC3hIbqZ8H3U7DkChVjn7mc1Q/i8/fyiByuNYomr34Q7p6qVuAaKK+kLosuzI6tobagm1kj0QVThFEJfRD/xtRYaCzrdKpK7flaE+QbT5nx0fU1wzCZxNKjiPSZf4DC95U7fRSGUodc1lSqb1ujAHGY7B0JN3rJDmFlz/6i8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost (unknown [124.16.138.129])
-	by APP-05 (Coremail) with SMTP id zQCowABXXKAo4s9nPtzXEw--.3914S2;
-	Tue, 11 Mar 2025 15:11:36 +0800 (CST)
-From: Chen Ni <nichen@iscas.ac.cn>
-To: cem@kernel.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chen Ni <nichen@iscas.ac.cn>
-Subject: [PATCH] xfs: remove unnecessary NULL check before kvfree()
-Date: Tue, 11 Mar 2025 15:11:14 +0800
-Message-Id: <20250311071114.1037911-1-nichen@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1741690482; c=relaxed/simple;
+	bh=gvhZSyAglSVvHGyDfROTjZ1xZULSa8ODCBBM++z31cI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=LgeofntwnKd9M2YR3xLG04DsoNJaYUtBPErCF/RjvhWHjAWQEAz0vQTGhpz/Oy9c+132hM1vEjPeO/PFjETNkwZ45j2C9VedAhZ5RzK5w2Kzw5Gj/NIp7yiexseAhg4DZ7XO6SrogYAXYRH9VuYSvy1UTqR0vs+BiqZWDJ1s8fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LwLhSBIp; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LwLhSBIp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1741690479;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=zFuIFXxiIisf3lBsWYo6GAo6nH/mw17G78JRGx4UrZI=;
+	b=LwLhSBIpt971EqC1hJ1ypRNfQLs4RCli3GFmkIasdOU3WDGCaQ82hSm17rIQvTtYPZvUZ+
+	K3FEgMqDrbGY3GreyKuXPcafBKh+dvJZ5rnWO48lnISksuiqUo5gFMcezH5DaUZYT+yCqm
+	9I/kKxV+jY3H2qT7vi5UWyJUr0b+KgY=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-623-Jodsx4knNGu5ZK0Zaje92g-1; Tue, 11 Mar 2025 06:54:38 -0400
+X-MC-Unique: Jodsx4knNGu5ZK0Zaje92g-1
+X-Mimecast-MFC-AGG-ID: Jodsx4knNGu5ZK0Zaje92g_1741690477
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-43935e09897so36733595e9.1
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Mar 2025 03:54:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741690477; x=1742295277;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zFuIFXxiIisf3lBsWYo6GAo6nH/mw17G78JRGx4UrZI=;
+        b=B0kT9UaRcMYgCRTBJ6Cg3NwhRRHk256MJXvVvDk/pmxfuApSiM8y1FS+2iHhfw1BGe
+         y/M7tq+R1WwBh69Er8cVV8Y2Iumw9rFKM4fXtrkDu7g0UFCFzHMaEwD4HQcemRhqyeI9
+         XHxBjDtE/a3+mz5VOq/Q/F/Kbh5PCRJMT+UioAX2baBTT/KRnq+chcTrE7HBJhFFVzL3
+         hCHU2z0nwyHMZz/eNkJCFYp/RdQm2qaPJgUX3+BXlGpq8qxlKOkVYmZXmgFkBYn5x3in
+         e9xtulMtrpmN8fc0ciOqohF8/itbOXRMFcWFOfc3Nz6obQ8iyQJSWw7L833FbfiOcFwG
+         241w==
+X-Gm-Message-State: AOJu0YyvY2Gk87MKV23gY6d9vOY3/Ny6Q/iddUYc3SOjyZDpOb5ZRYlt
+	/7htRxQe9RFM+5KmNw+CLaLrP0dT13h9hT26o+nFheFVtSeaZ+6rWbOsT3np8NZp3lUN0sfgT5O
+	Dj0kKMg0R19m95V6R4vCwJvyDESJceQQuOOBc/VvJvCQhKqyG3ng0s7BQAkuyLelBUairp+pD2r
+	Zz7CcG42aPOI2wsG6HtpjVVJyFng/BFugYobXCMK9P
+X-Gm-Gg: ASbGncsp4xPX0ll6ifx4+hJQ0gW1uI/D0/ljYTcmbWSWU9EJzl9pG4L0AIMOIuzHOqV
+	3W56q4rFGBomhm9NfPt/56iUIbukAuqlf2q/iOSQ7qvbM37frSNXxLNQQojuvmhf5uZkVyq/zOh
+	R1JX9C2svdRElP7xcDZ74GEPa9KXj/Zwc5ih+/c6T/7iYl+x2DdHmPLrjZmZ7tRl2nCD+MXeriz
+	BP6J/GRGSSmb7mRnWRsdI6wVNAv6dSPywr7Cu8v7svG7+hc8mGs7iASxDyvHu2hNP+R0g4qXfvi
+	/2Z08yfLyikeUfgnM6DhgewzBzONMn6aoIY=
+X-Received: by 2002:a05:600c:4446:b0:439:4700:9eb3 with SMTP id 5b1f17b1804b1-43c5a5e4fbamr122253695e9.3.1741690477144;
+        Tue, 11 Mar 2025 03:54:37 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG8L+OA2j6IgTKb1CPufIZTfrwA5klwydF+6jLArc5IB/ROPwQMWU7DzXq62BrRKeNy2JOepQ==
+X-Received: by 2002:a05:600c:4446:b0:439:4700:9eb3 with SMTP id 5b1f17b1804b1-43c5a5e4fbamr122253415e9.3.1741690476676;
+        Tue, 11 Mar 2025 03:54:36 -0700 (PDT)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43bd4352eccsm205776345e9.27.2025.03.11.03.54.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Mar 2025 03:54:36 -0700 (PDT)
+Date: Tue, 11 Mar 2025 11:54:35 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: aalbersh@kernel.org, bodonnel@redhat.com, cmaiolino@redhat.com, 
+	djwong@kernel.org, kjetilho@ifi.uio.no
+Subject: [ANNOUNCE] xfsprogs: for-next updated to c34735adb511
+Message-ID: <kpeketozzyf2sa4p6naejti3sqqj2vyxwi6bqfd46ztbr42wf5@fbfxbxwopq4n>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowABXXKAo4s9nPtzXEw--.3914S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrXw4Dtw45urW3GFWDKr1UAwb_yoWxWFb_ua
-	yxKr1kWw1UAFnrJw1Dt39Yqayq9397Gan7XwsYyFsxt347Ca15X39rWrWrtr9xCFZxKF18
-	Ga4vyF9xtryS9jkaLaAFLSUrUUUUbb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbV8FF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
-	6r126r1DMxkIecxEwVAFwVW8CwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJV
-	W8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF
-	1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6x
-	IIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvE
-	x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvj
-	DU0xZFpf9x0JUS38nUUUUU=
-X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Remove unnecessary NULL check before kvfree() reported by
-Coccinelle/coccicheck and the semantic patch at
-scripts/coccinelle/free/ifnullfree.cocci.
+Hi folks,
 
-Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
----
- fs/xfs/xfs_rtalloc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+The xfsprogs for-next branch in repository at:
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 57bef567e011..9688e8ca6915 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1144,8 +1144,7 @@ xfs_growfs_rtg(
- 			goto out_error;
- 	}
- 
--	if (old_rsum_cache)
--		kvfree(old_rsum_cache);
-+	kvfree(old_rsum_cache);
- 	xfs_rtgroup_rele(rtg);
- 	return 0;
- 
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
+
+The for-next branch has also been updated to match the state of master.
+
+The new head of the for-next branch is commit:
+
+c34735adb5116b4edae110d788c44d2462017765
+
+New commits:
+
+Andrey Albershteyn (10):
+      [b69a2f64abbc] release.sh: add signing and fix outdated commands
+      [8efc27559060] release.sh: add --kup to upload release tarball to kernel.org
+      [69e03f8ee6c4] release.sh: update version files make commit optional
+      [8b5b1002e3db] Add git-contributors script to notify about merges
+      [c73d9fb692b5] git-contributors: better handling of hash mark/multiple emails
+      [36119c513697] git-contributors: make revspec required and shebang fix
+      [8adb8959addc] release.sh: generate ANNOUNCE email
+      [54dd2973895a] release.sh: add -f to generate for-next update email
+      [f1314f4a59f1] libxfs-apply: drop Cc: to stable release list
+      [88940d905da4] gitignore: ignore a few newly generated files
+
+Darrick J. Wong (1):
+      [c34735adb511] xfs_{admin,repair},man5: tell the user to mount with nouuid for snapshots
+
+Code Diffstat:
+
+ .gitignore                |   2 +
+ db/sb.c                   |   9 ++-
+ man/man5/xfs.5            |   5 ++
+ release.sh                | 189 +++++++++++++++++++++++++++++++++++++++++++---
+ repair/phase2.c           |   9 ++-
+ tools/git-contributors.py | 168 +++++++++++++++++++++++++++++++++++++++++
+ tools/libxfs-apply        |   1 +
+ 7 files changed, 363 insertions(+), 20 deletions(-)
+ create mode 100755 tools/git-contributors.py
+
 -- 
-2.25.1
+- Andrey
 
