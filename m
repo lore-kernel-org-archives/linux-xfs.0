@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E8AA1B0406;
-	Wed, 12 Mar 2025 23:10:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BEA81B0406;
+	Wed, 12 Mar 2025 23:10:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741821015; cv=none; b=ETcrL6X1YA1twfT5qnjW0o/wpqHkQWgRclCNCzK4QtCi5Y3cmePGcqwUnGSmZEaFRafJcE8CtGligDXEh1jKPm882NES8kVixLxjF8uim2yCtPzdAkTpnzFHh8mJooERz+KXeGoYoHQPGano9vWF2QtPb+2+v3kfEc5kCXpAhIw=
+	t=1741821031; cv=none; b=DKAHUWrrDWmTsggYt4WWxUd8knXGvKu6tBTFALqtkVuc1gpJE5kg5AqFKPHHmRgpYXNCxzXXoF9/TmbC3WtnMz1cXoHrRt/QCPpvLBLUVTJAeO5GJiHZMiHzZpA55OXiP72hw8CVk0Hk/VTvUmC82fjbiDhNA58ribiOzm9Ebco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741821015; c=relaxed/simple;
-	bh=628Yg7HRHNU8WEXTG1C7sESkvQBQqRCzYDJEJcwSULM=;
+	s=arc-20240116; t=1741821031; c=relaxed/simple;
+	bh=Ixs7udQQv3kNJo4JQ3W8IgW8eYlnlkZOkIjXWUD5d1E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AKy9xm7dyo0KBzpzVseuUzxOy8b75ZRwNm9KVnxP+2KIaAVzz27oZdurn2hK4thZ97oS/XxTcx8d5lXhzPsUlefiKp995bArF77ZQUdd9KkuGqfiQ6ST+QWsOoHvzPLpbl63PqMa0gJ+kQpXzyyeHRvsP0aKXMoN6hYQQi0bHLQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=erujN11e; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JWmIOUX/zBGhL2F39JcppzvEO33AMUZht8PKUg1hiI9TlzCYFx7+9LYqHZy5oXl43DvyfOSDHjDRDr0s5FgkFd9jugQDldvjqhsOaXqlqNFqxjE857vSriCtBhtrkgq4khQGB0Z8VvT6ncnzB3N+Dii/8PX5CykiKxYzCDoOg7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LceK9wri; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="erujN11e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2913C4CEDD;
-	Wed, 12 Mar 2025 23:10:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LceK9wri"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89051C4CEDD;
+	Wed, 12 Mar 2025 23:10:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741821015;
-	bh=628Yg7HRHNU8WEXTG1C7sESkvQBQqRCzYDJEJcwSULM=;
+	s=k20201202; t=1741821030;
+	bh=Ixs7udQQv3kNJo4JQ3W8IgW8eYlnlkZOkIjXWUD5d1E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=erujN11eg6vWEJADx8kSflp5gjG6yo+F7RkEJx3EKS2n2ThGs3NXP4QYr00hSSMzs
-	 2GfJBWz29FB3Jb62jsz5a+AheRqTeFL+h5y0Z/8se1pJxeLJ0ZHTe7n31RuEFrtbtj
-	 3EqoBc5rkNe5SweHHoLH1gfpdx6ZZ1BgyZCyCOH8mPs/0fozricf8ZiehtGyuako3l
-	 DHL2vvim4anXj1t6FhaVwya7PFEEFuveEnkTMvxlIEm7OzPKM3AhQaSPBIBeQUC6ZD
-	 52uyV5t4quQk/cn6cLbMCjAG/a0EmkJA6ZA4Fd9ok5ixvLM2FKZO/1z+AY4N/0UFsB
-	 jn6dLKXOdvquw==
-Date: Wed, 12 Mar 2025 16:10:13 -0700
-Subject: [PATCHSET 1/3] fstests: test dumping fs directory trees
+	b=LceK9wri+czEJNiJ4Rnovuj9xb3q4Jxxta2A667p6/XJ2DErSIxXRTs97s5VK1yg7
+	 R6ln2NNf1qGUjlnuvgi72hEkR5dgJJtyQ/Ar42miB+0RSYLFKA7EnmQDhY9ntlKh3Q
+	 7E4VG6W0OgP0bSt2doDAt98rufeZKl1c/gkv5mvCgFU2nYbez6GBI4gbgEhjvG4vW+
+	 9odXw57YtVkKvScnsC0dxHkd+rAuGYIwp8xnJuUNQf4Fy3wjoprY0DXp/UNVmW7Dyg
+	 lEWdeFbP3/S6Txroa9XrLIN7vkCUrgXdFbgETX0j8MLzybBWZK2n2CkakWESt6FxPE
+	 kaLyrqVHeFs7w==
+Date: Wed, 12 Mar 2025 16:10:30 -0700
+Subject: [PATCHSET 2/3] fstests: test handling emoji filenames better
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <174182088682.1400513.386501106506158468.stgit@frogsfrogsfrogs>
+Message-ID: <174182088871.1400612.1677368898700125822.stgit@frogsfrogsfrogs>
 In-Reply-To: <20250312230736.GS2803749@frogsfrogsfrogs>
 References: <20250312230736.GS2803749@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,8 +45,13 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Here's a functional test for recovering parts or entire filesystem
-trees with xfs_db.
+Ted told me about some bugs that the ext4 Unicode casefolding code has
+suffered over the past year -- they tried stripping out zero width
+joiner (ZWJ) codepoints to try to eliminate casefolded lookup comparison
+issues, but doing so corrupts compound emoji handling in filenames.
+
+This short series amends the Unicode testing in generic/453 and 454 to
+examine these compound emoji.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -57,17 +62,15 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=rdump
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-emoji-fixes
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=rdump
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-emoji-fixes
 ---
 Commits in this patchset:
- * xfs: test filesystem recovery with rdump
+ * generic/45[34]: add colored emoji variants to unicode tests
 ---
- tests/xfs/1895     |  153 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1895.out |    6 ++
- 2 files changed, 159 insertions(+)
- create mode 100755 tests/xfs/1895
- create mode 100644 tests/xfs/1895.out
+ tests/generic/453 |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/454 |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 110 insertions(+)
 
