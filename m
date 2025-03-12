@@ -1,82 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 541F1238D53
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Mar 2025 09:14:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C49F1DB124;
+	Wed, 12 Mar 2025 12:05:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741770857; cv=none; b=PiBRKVzPtxRHLJGGPCeOhOy4KH64BdjvZf6agd3dmWm09tcqX2vV8vC1iMTLdkQYZ9/NDRMyPeZgkFPm0bqpjOVHaPbnLSLE4kBT1iE7S34cEH4t/KyFEFGkyYJ7TWg/VuCJv7ShQO65pwdoj3sKvxh4jOcYY/Ohtt6OrBvNrdo=
+	t=1741781159; cv=none; b=D8A/9FWRRkRAk92hYGuCvZsixX9bnt6DIAyjXKh1x6E6UIYlaw+VsoMGeXtZDRtt/ZcgDvWyyPb/DljzBR+PuKseauZtsLBQogWvjHGpSv1aQwqnbf7ImFGUJCWklEVRn4eYmDJATqH8z95kEbTkHjpJVzTRr87ivP2+do4sHLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741770857; c=relaxed/simple;
-	bh=KBC7fOkggUgqzCaGgzx62K+5B0PFWfyBzRR5bQeVA/s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R4z47J6BrzdwSRUPRTkvpEP3RFXc7f1Lp/8TWunvwitOXWb+QMKd5CF7XXheyz4rY+quRKpL5TAgzZUllwGpMoiySCjwtb4j/9ZIouml5ydjQNbAf21rP1TCZgs2zwW63UOIw620mZYaCyPqIv+E2FNn/ExGgwuwGuwpvIn6UAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fk72MKCP; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fk72MKCP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71AF5C4CEE3;
-	Wed, 12 Mar 2025 09:14:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741770856;
-	bh=KBC7fOkggUgqzCaGgzx62K+5B0PFWfyBzRR5bQeVA/s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fk72MKCPNX3H9u2lTLS/RcFYUBPQ7ESxrIqjIcyZ+gKAmyIzHbJ32hLgjtMwx6yMx
-	 vcsN7Pw4HI1Vzq8wehWv4bF91EeQR9r3tkcAvVwbGuHP9axQlRo7RdP4GfZ7W2ks+W
-	 fhXKbk0i48wPQDSnhkiXVc1tpD7OBcdwvFijJ5yDcUdxYJ1RUbxSNUBVK+gAJSBik7
-	 Y8SfAeze4Ckem9RyF9pHvyy7odL9xj1/72wI9QPEaQomMqQrqb/a5O0jJKqruKn6lK
-	 5XSNW1Uoes4C6hr21uO11PSTXWgIptHXUF+6sE3kLrJ5Drdl00KDhuUNSfW2dM5u/r
-	 9D1fIodGwxsKw==
-Date: Wed, 12 Mar 2025 10:14:11 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Chen Ni <nichen@iscas.ac.cn>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH] xfs: remove unnecessary NULL check before kvfree()
-Message-ID: <tkqfwlodumie2f5vmsnsahgl4muhskegoyw45syfve76qsghhb@6lbtjw5s3g7c>
-References: <IySo_CiLjmuD18-2-n_AWMvhnMyxkXYkQriJtpVjhByicX1b8jarFYq_ocna0QKIEAQtZQOlmgGo7B41CDTtJQ==@protonmail.internalid>
- <20250311071114.1037911-1-nichen@iscas.ac.cn>
+	s=arc-20240116; t=1741781159; c=relaxed/simple;
+	bh=8LD+UsRzy8LfAVX2BSyNVujQscsLxF7g9+mepAyjx4M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=WhPFrRKEDS3YWGbWianM6ihQTYW70Pf/vvpayLjkkALmUg/uv4LW1RnYjL/ANpQ/vdDUJdVhgXV73ufZCpuCQF+04BrRaTD7ORnsYrkraAJ9DUamFS1BXluXLB93/cUC1W9ukYk6nK53iZCoSoUIubQl5hn9dVlF4Yro+mBvS5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4ZCTl019PpzvWs0;
+	Wed, 12 Mar 2025 20:02:04 +0800 (CST)
+Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
+	by mail.maildlp.com (Postfix) with ESMTPS id BAA7A1401F1;
+	Wed, 12 Mar 2025 20:05:54 +0800 (CST)
+Received: from [10.67.120.129] (10.67.120.129) by
+ dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 12 Mar 2025 20:05:51 +0800
+Message-ID: <c5cdd730-1e11-4440-849d-8841b5ce86ef@huawei.com>
+Date: Wed, 12 Mar 2025 20:05:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250311071114.1037911-1-nichen@iscas.ac.cn>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
+ only NULL elements
+To: Gao Xiang <hsiangkao@linux.alibaba.com>, NeilBrown <neilb@suse.de>
+CC: Yunsheng Lin <yunshenglin0825@gmail.com>, Dave Chinner
+	<david@fromorbit.com>, Yishai Hadas <yishaih@nvidia.com>, Jason Gunthorpe
+	<jgg@ziepe.ca>, Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>, Alex Williamson
+	<alex.williamson@redhat.com>, Chris Mason <clm@fb.com>, Josef Bacik
+	<josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Gao Xiang
+	<xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>,
+	Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>, Jesper Dangaard Brouer
+	<hawk@kernel.org>, Ilias Apalodimas <ilias.apalodimas@linaro.org>, "David S.
+ Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
+ Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman
+	<horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>, Anna Schumaker
+	<anna@kernel.org>, Chuck Lever <chuck.lever@oracle.com>, Jeff Layton
+	<jlayton@kernel.org>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
+	<Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Luiz Capitulino
+	<luizcap@redhat.com>, Mel Gorman <mgorman@techsingularity.net>,
+	<kvm@vger.kernel.org>, <virtualization@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
+	<linux-erofs@lists.ozlabs.org>, <linux-xfs@vger.kernel.org>,
+	<linux-mm@kvack.org>, <netdev@vger.kernel.org>, <linux-nfs@vger.kernel.org>
+References: <> <316d62c1-0e56-4b11-aacf-86235fba808d@linux.alibaba.com>
+ <174173371062.33508.12685894810362310394@noble.neil.brown.name>
+ <14ef70cc-beba-4abb-b206-e9fb29381023@linux.alibaba.com>
+Content-Language: en-US
+From: Yunsheng Lin <linyunsheng@huawei.com>
+In-Reply-To: <14ef70cc-beba-4abb-b206-e9fb29381023@linux.alibaba.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemf200006.china.huawei.com (7.185.36.61)
 
-On Tue, Mar 11, 2025 at 03:11:14PM +0800, Chen Ni wrote:
-> Remove unnecessary NULL check before kvfree() reported by
-> Coccinelle/coccicheck and the semantic patch at
-> scripts/coccinelle/free/ifnullfree.cocci.
+On 2025/3/12 9:45, Gao Xiang wrote:
 > 
-> Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
-
-Looks fine, please rebase it on top of for-next and send a V2.
-
-Once rebased, feel free to include:
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-Adding Christoph to this as he cares a lot about this code.
-
-
-> ---
->  fs/xfs/xfs_rtalloc.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 57bef567e011..9688e8ca6915 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1144,8 +1144,7 @@ xfs_growfs_rtg(
->  			goto out_error;
->  	}
+> On 2025/3/12 06:55, NeilBrown wrote:
+>> On Mon, 10 Mar 2025, Gao Xiang wrote:
+>>>
+>>>    - Your new api covers narrow cases compared to the existing
+>>>      api, although all in-tree callers may be converted
+>>>      properly, but it increases mental burden of all users.
+>>>      And maybe complicate future potential users again which
+>>>      really have to "check NULL elements in the middle of page
+>>>      bulk allocating" again.
+>>
+>> I think that the current API adds a mental burden for most users.  For
+>> most users, their code would be much cleaner if the interface accepted
+>> an uninitialised array with length, and were told how many pages had
+>> been stored in that array.> A (very) few users benefit from the complexity.  So having two
+>> interfaces, one simple and one full-featured, makes sense.
+
+Thanks for the above clear summarization.
+
 > 
-> -	if (old_rsum_cache)
-> -		kvfree(old_rsum_cache);
-> +	kvfree(old_rsum_cache);
->  	xfs_rtgroup_rele(rtg);
->  	return 0;
+> Ok, I think for this part, diferrent people has different
+> perference on API since there is no absolutely right and
+> wrong in the API design area.
 > 
-> --
-> 2.25.1
+> But I have no interest to follow this for now.
+
+Just to be clearer, as erofs seems to be able to be changed to
+use a simple interface, do you prefer to keep using the full-featured
+interface or change to use the simple interface?
+
 > 
+> Thanks,
+> Gao Xiang
