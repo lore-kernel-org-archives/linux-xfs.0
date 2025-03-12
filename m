@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00DDD1E7C25;
-	Wed, 12 Mar 2025 06:46:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4ACD1E8328;
+	Wed, 12 Mar 2025 06:46:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741761970; cv=none; b=QValK25AVTJpt9tkZ2FqFi1BrN3fLl6t1uk+AhuxFZ/hlecyOsXNLTpeoasfWD9c3nUY0UyQfgfy7jmTOJ5kx8hu8VyseAMINZa0MJKuuJkVsROIkY6Set8nIA/5xP+sfBZWWJsFqOCau9lPX8nepi+jpSXA/7B0tsOTjETAQqQ=
+	t=1741761973; cv=none; b=FvpMuzVTwZA8ZhdJKHXS+Gq6CfCSggkQg+CtE/cqCMeeObKJoTboAesVTQSvxEbOXDvgq1RWMt74SlyNTjcD4dicj3qBnfT7pFEI6JZhlJuJzMhhnGqoBxf+DMWDQdsKVEPNVUv1QaDzN42hQBbEPPigxY+Ayh9zuTz5PRiRWEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741761970; c=relaxed/simple;
-	bh=hQJiIJYQ/lRknS6QBZlbWwm+hPWNd3gzckYFSOkaryc=;
+	s=arc-20240116; t=1741761973; c=relaxed/simple;
+	bh=4980ixdozEiR9fAIVkseNO0wNhSB6I11xEnmLmqNyEI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DMwSWNix3lwWx/l0JyEGAzDfkfl2dAItJAXQRC2t5uRC4Z8uRg03IL9pgMELRBWebW/BbG2keaDCNIf9rlj3kUc7kaZSOXnEEww5rrijAdyt1okrIMthjuNka4nWMX8l3oxwLjWtBwB5HmtS6I8h84xtTvf+KCGhW/pwfrJtgUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EPML3Wic; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=TB/bRN250su7pO7Z2anARXz+KWGKr0HNhyJohv8SaOQS+xb0AICSKdGE8I9G1MRyx+2Gmb43mqHwWW2OLbNkK9BXfDFwhRpkhJkcqomS1CW7Cxo3p5EUpDcYatz6CuWtBN8n2YKbZzSpBSbWiBQH4JuXIctat/BwXx5OxWdZaGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KJqPF3dL; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EPML3Wic"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KJqPF3dL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=4dwuBGVi+62Qz36Zo2gYuYWNmA71hzYu9DyGavELtRw=; b=EPML3WicB4EMYE9RDAcXWhKpFf
-	wePOTaruKzMl47qQNcVdG9XeqnvyDL9a+hsPwO+P/tt/9bjsnNKMXO4tde2ahhBKyi0rRHfhWstMU
-	pFFjMcpAck7sF8KGkB6gEjQYHxOOYxnzt6GN+i8hI/TJPfXlk9MBowC/0qib9oqd3ld5t7VJKiC/v
-	nUiHTo4gM7wCCf0+2wj2OUHQGfEiDCC9OAhgdgOdTAyNa+UsWKj9fwi7YZ/CqH6NwwXcGRDnNXTSQ
-	o9QmYjhe1r3X10d+nBuP6Jz4z/eTho6O+SuYlmLECExESZY8uQH3qjPTAqVoA2xEsxWz3rnCNyVcC
-	0Zn/Ef/g==;
+	bh=3QrNdjHatguZTK2DgQdbRVlgjCB7NzRbrigeYh2AFLA=; b=KJqPF3dLl1FB5beArzN2GYgm/z
+	AePuExHGULswvlm2uYWj0bFICJZ3TIhxk/zRsDiDsymlNfSZrNXZ14Oor9VCfvapRZY3SuF0pKb20
+	uu1NJ8/yc45KZtPIsC8PV5Ca2XY4spiqSmyUTgg1l9r6dlb8XMk+0U4VXM25lgSBmYHjYbcFvkLBY
+	yUPIlJqGHhSOAjg6AlMbOBh9fxNCnnACQ4NRCLCJ0i74TA+oVg+/QQD8rByyb3ju8IZlD/Z8MDVOB
+	0aFV9NFZp7OFFQISM92VD/GX9xk6PAizZ09whqr5mGB0z4gll+LP08KaGWKvxQdghLpsjfzzW1czy
+	UtxQCVXg==;
 Received: from 2a02-8389-2341-5b80-f359-bc8f-8f56-db64.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:f359:bc8f:8f56:db64] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tsFqy-00000007cpd-19ra;
-	Wed, 12 Mar 2025 06:46:08 +0000
+	id 1tsFr0-00000007cq7-3lC5;
+	Wed, 12 Mar 2025 06:46:11 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 09/17] common: notrun in mkfs_dev for too small zoned file systems
-Date: Wed, 12 Mar 2025 07:45:01 +0100
-Message-ID: <20250312064541.664334-10-hch@lst.de>
+Subject: [PATCH 10/17] xfs: add helpers to require zoned/non-zoned file systems
+Date: Wed, 12 Mar 2025 07:45:02 +0100
+Message-ID: <20250312064541.664334-11-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250312064541.664334-1-hch@lst.de>
 References: <20250312064541.664334-1-hch@lst.de>
@@ -51,29 +51,52 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Similar to the regular scratch_mkfs, skip the test if the file system
-would be so small that there's not enough zones.
+Looking at the max_open_zones sysfs attribute to see if a file system is
+zoned or not, as various tests depend on that.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- common/rc | 4 ++++
- 1 file changed, 4 insertions(+)
+ common/xfs | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/common/rc b/common/rc
-index 5e56d90e5931..e664f3b81a6b 100644
---- a/common/rc
-+++ b/common/rc
-@@ -910,6 +910,10 @@ _mkfs_dev()
- {
-     local tmp=`mktemp -u`
-     if ! _try_mkfs_dev "$@" 2>$tmp.mkfserr 1>$tmp.mkfsstd; then
-+	grep -q "must be greater than the minimum" $tmp.mkfserr && \
-+		_notrun "Zone count too small"
-+	grep -q "too small for zoned allocator" $tmp.mkfserr && \
-+		_notrun "Zone count too small"
- 	# output stored mkfs output
- 	cat $tmp.mkfserr >&2
- 	cat $tmp.mkfsstd
+diff --git a/common/xfs b/common/xfs
+index 807454d3e03b..86953b7310d9 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -2076,6 +2076,33 @@ _scratch_xfs_force_no_metadir()
+ 	fi
+ }
+ 
++# do not run on zoned file systems
++_require_xfs_scratch_non_zoned()
++{
++	if _has_fs_sysfs_attr $SCRATCH_DEV "zoned/max_open_zones"; then
++		_notrun "Not supported on zoned file systems"
++	fi
++}
++
++# only run on zoned file systems
++_require_xfs_scratch_zoned()
++{
++	local attr="zoned/max_open_zones"
++	local min_open_zones=$1
++
++	if ! _has_fs_sysfs_attr $SCRATCH_DEV $attr; then
++		_notrun "Requires zoned file system"
++	fi
++
++	if [ -n "${min_open_zones}" ]; then
++		local has_open_zones=`_get_fs_sysfs_attr $SCRATCH_DEV $attr`
++
++		if [ "${min_open_zones}" -gt "${has_open_zones}" ]; then
++			_notrun "Requires at least ${min_open_zones} open zones"
++		fi
++	fi
++}
++
+ # Decide if a mount filesystem has metadata directory trees.
+ _xfs_mount_has_metadir() {
+ 	local mount="$1"
 -- 
 2.45.2
 
