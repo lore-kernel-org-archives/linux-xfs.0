@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B6721D7E37;
-	Wed, 12 Mar 2025 19:56:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 036B31DE4CE;
+	Wed, 12 Mar 2025 20:05:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741809367; cv=none; b=dReoLoUL/HIQjUuEPHAR9Nz2tJwL81i6h8q5NLC1juI7gaOcwQSbUm5LKqnYiEaCbLmtWQjp2LyQ/PNfkqVgvJ02wNXmU3KpphGJa/+1VZl6546PbiHDaJU8mbN76n+G3s/N7BQ/i100N2xEZak4CtseMbycBQdMae3em2GvVog=
+	t=1741809914; cv=none; b=TXjCxGnufCAxNTsH87oB72vdJapUM9YjNWkgdq7hUNRSdeyHyVhzjGdLX69prHEnjx9huJCsJgwV599WVgiLaO7xq6ip9sp5DDCcqYti6lv5FWT2wE02DVZjiavQN2r97f/j/v2kitY6SuS06O/RAUclx8Fkh9RMnl8s+CoC1lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741809367; c=relaxed/simple;
-	bh=+G+mQo83aQ4YtKSFH0IvqpVug5JLkkVLcl2VgjujZyQ=;
+	s=arc-20240116; t=1741809914; c=relaxed/simple;
+	bh=E5Ev4FVW+jPVZtVG4xxa3T70uDsHYPEkb0BZRIWsFKU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U+/KEIRjFbZY0fOkRu2Qhd9d5AUNuXT3N9wEMHvBBAehdwHyeEpjvG6I0YEt0+4MP9eOwAS4xZHGoZrMklHd/xM4lxj8EKzDH5RiByQAMYf/r9Yhy6nQfQ03lRpg61z0JQ8f70RiOJB0PxyDLAUj2A8mUvYmS0ylTk87SJAQJKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FtxeuzxC; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ujKI2f4cCGPG0F13/359H0/gKCu+I56qg/ZxvBIe8E3Gw5RU30XI+lGWN0Z9tKVext6y0siatCwE1ggEKcCZwPNHZ34+Ine6Ri4HhN2yKlJulyZoMCBuXDkpiYlx0TTL6DMVuqAQOdTTiZ1Uk910lri+3ntS4uYHl849VoFaiTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=csF4Ab4V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FtxeuzxC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9CCCC4CEEB;
-	Wed, 12 Mar 2025 19:56:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="csF4Ab4V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6178EC4CEDD;
+	Wed, 12 Mar 2025 20:05:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741809365;
-	bh=+G+mQo83aQ4YtKSFH0IvqpVug5JLkkVLcl2VgjujZyQ=;
+	s=k20201202; t=1741809913;
+	bh=E5Ev4FVW+jPVZtVG4xxa3T70uDsHYPEkb0BZRIWsFKU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FtxeuzxCoIEN1HucYTAf2e3phNm4o3N78xpxvSATUf9MIFysCABaDAW/RDoBuV5p4
-	 Oj8ZGN/vX+GSbXgiQFAyGGMwybmt5t1aQptr3WdWApiVqK0VA3ZQMHkO6pGCNCjciV
-	 Ez6H2BseC9QmrWPDvpDyv2Sdb/Ej9NNku8KApUx4cY0yqmGFQWoY/mFqBKyFd8UkR5
-	 /ttFACkMqe9O+5/D5pSws6KBjwM8YPnfHNqcLMcYQdoUykD3xQUsMW+Gs3yui0vFb4
-	 CfUuGlN5Uq0tzl1iVyqkhaP8MIbw6T1MRLCD2jNbnF47iqrp52/n7K8Dw2/D+nHVrL
-	 BuWMXleLEStgw==
-Date: Wed, 12 Mar 2025 12:56:05 -0700
+	b=csF4Ab4VRtS19dzDxdqB+Uv/KTUlwk8GcYSTG+B46eryCiftdJ1rKsx388tVVpb82
+	 fipar1nk5kGzdKj3ErBfbfjGjIgsdLTRwzAiNa0YhlU61U0h60wizc1v4OToWLiocu
+	 dR83jjqtjy44SQkgXZZOLVMQ5NeJo1Mx5euVwlEWj46SE6x3hUt2sC5viFSgjHCAFa
+	 fE4Qk6pc3x3/Dg2rtEUy8RnwLX1AjBPyTKRfswRKzz5Gypn3d50bbITAIbUHX/DkA7
+	 y5IWLSYGqfmLz3Do4WlfJmUfxYKnLkya7DAfEkNp+S3O+OVkS3CIkCMO/SivKgnYI4
+	 0qHuQl6/SNbZw==
+Date: Wed, 12 Mar 2025 13:05:12 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/17] xfs/177: force a small file system size
-Message-ID: <20250312195605.GA2803749@frogsfrogsfrogs>
+Subject: Re: [PATCH 02/17] xfs/419: use _scratch_mkfs_xfs
+Message-ID: <20250312200512.GB2803749@frogsfrogsfrogs>
 References: <20250312064541.664334-1-hch@lst.de>
- <20250312064541.664334-2-hch@lst.de>
+ <20250312064541.664334-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,40 +43,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250312064541.664334-2-hch@lst.de>
+In-Reply-To: <20250312064541.664334-3-hch@lst.de>
 
-On Wed, Mar 12, 2025 at 07:44:53AM +0100, Christoph Hellwig wrote:
-> This test make assumptions about the number of metadata inodes.  When
-> using small realtime group size (e.g. the customary 256MB for SMR
-> hard drives) this assumption gets violated even with modest file system
-> size.  Force a small file system size to side-step this issue.
-> 
+On Wed, Mar 12, 2025 at 07:44:54AM +0100, Christoph Hellwig wrote:
+> So that the test is _notrun instead of failed for conflicting options.
+
+Which options are those?  I'm assuming that you're forcing -r zoned=1?
+
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  tests/xfs/177 | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  tests/xfs/419 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/tests/xfs/177 b/tests/xfs/177
-> index 82b3ca264140..8d23f66d51b7 100755
-> --- a/tests/xfs/177
-> +++ b/tests/xfs/177
-> @@ -77,7 +77,9 @@ delay_centisecs="$(cat "$xfs_centisecs_file")"
->  sleep_seconds=$(( ( (99 + (delay_centisecs / 6) ) / 100) + 1))
->  echo "Will sleep $sleep_seconds seconds to expire inodes" >> $seqres.full
+> diff --git a/tests/xfs/419 b/tests/xfs/419
+> index b9cd21faf443..5e122a0b8763 100755
+> --- a/tests/xfs/419
+> +++ b/tests/xfs/419
+> @@ -39,7 +39,7 @@ $MKFS_XFS_PROG -d rtinherit=0 "${mkfs_args[@]}" &>> $seqres.full || \
+>  	echo "mkfs should succeed with uninheritable rtext-unaligned extent hint"
 >  
-> -_scratch_mkfs >> $seqres.full
-> +# Force a relatively small file system size to keep the number of rtgroups
-> +# and thus metadata inodes low
-> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
+>  # Move on to checking the kernel's behavior
+> -_scratch_mkfs -r extsize=7b | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
+> +_scratch_mkfs_xfs -r extsize=7b | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
 
-I guess that works... will try it out overnight and see what happens.
+Yeah, seems fine to me -- if we didn't get the extsize=7b then the test
+would have aborted anyway.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->  _scratch_mount >> $seqres.full
->  
->  junkdir=$SCRATCH_MNT/$seq.junk
+>  cat $tmp.mkfs >> $seqres.full
+>  . $tmp.mkfs
+>  _scratch_mount
 > -- 
 > 2.45.2
 > 
