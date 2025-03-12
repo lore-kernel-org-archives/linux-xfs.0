@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0D31B0406;
-	Wed, 12 Mar 2025 23:11:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61BBC1F12F1;
+	Wed, 12 Mar 2025 23:11:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741821093; cv=none; b=GBuUiIojEaydTBxAdcWJs/JpilzJzqO0TUDskau/Gh4AJpswRiPR+KHuvARujYYe2l6NnED3vTLdk5GJGfV9pJZFDiU52ej7K1nEBJsPIZTRbe5DYpv72gVAjOEYxfEdU2dirdF0UR3EbR3PyaiAeTOh5YU5oHLeo2sQPagkp4E=
+	t=1741821109; cv=none; b=eQ0oBL+AbON8FwudALB5poOHL0ptz/DBr3FacUuutB5w1bIQzcSREcUJIfsQf2SNc1damRfcENWrQkOQZ44j4hb51sr36bmsxZCLApOge9EsHViRPBeiIgt93S74t0Tm4XCTMaaXcsT0ohtaVU4vgi7bWCD+DsLigS0ZcI4E88w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741821093; c=relaxed/simple;
-	bh=oydxMkyc0hiknia09FS2tFcW+lBSuiAv++SGfwgd+xw=;
+	s=arc-20240116; t=1741821109; c=relaxed/simple;
+	bh=7md1fT4J8la6NB8X5MqoHWWlkWJ5c5EnxluckLLYGjE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EXFzeDFbIywL0+uwOfTyiXrhsizLkHCMZlBKoAsuaLvE3CxvT+vlkXTCIFhJKwj+78D1CswR5/vG6J0VQ07kMy90HnVmkXmEjgwQK51vN97eJonweiV7+h7JLj17/wkN8BpJguQVkNeSdUUphZ1N6540gGx9iTbdbBgMf+TFtFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UClANw0C; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RA8XBbZqFDt8H06SRfmRpJhkN00lJe/OFzh6TymKqSSYi1jKI50PltLsBOaQhx8XxZNa+30RMBM4J1Uo2V9JkH5+hwckG2U2g+tSIekWLyS90CuAgaEI2WVAWO0SJZjr3c7tkPRs7tjk0SQyHAaCRKfRdSv0aeJh+U44hn+C0qs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p2ljCGYA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UClANw0C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34424C4CEDD;
-	Wed, 12 Mar 2025 23:11:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p2ljCGYA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1824C4CEE3;
+	Wed, 12 Mar 2025 23:11:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741821093;
-	bh=oydxMkyc0hiknia09FS2tFcW+lBSuiAv++SGfwgd+xw=;
+	s=k20201202; t=1741821108;
+	bh=7md1fT4J8la6NB8X5MqoHWWlkWJ5c5EnxluckLLYGjE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UClANw0Ca0uBUY8gzHqPhVql7DnXlQNZd1NtKLslySba1AQhaFcJi7p1XWru8HHg/
-	 FqVcDN9bLvccAeZkU1rvB4mXE9g7kgvnGyoT5J01NEYco85bl3X98MDBsiBg/Pu5MO
-	 IfWkTZE4Sxp2SJ5q6MwGNal30Hfeuydn9JKeDOm8aY2nw0J+yglbOWQXhbdmcekm4G
-	 dzmqnobrsC5M+gnpWc+LFwtPok8d32Him9cydbIRBZY6bXBcurTsDTuEzr0g0uNETR
-	 Vj17UkpnJkdMq02nlPIDEZrv6wWFXH9NsH5m1dHCOoCWPRRL95hZUkFk2ruxYOzgAI
-	 9fNKlOynZGKMQ==
-Date: Wed, 12 Mar 2025 16:11:32 -0700
-Subject: [PATCH 1/3] xfs/614: determine the sector size of the fs image by
- doing a test format
+	b=p2ljCGYALIp/LraDbuuPJdG+KZh3BFq3edEhQ2azYQWYy0DuZ5b2sXxCJEfRdq0uG
+	 H27c2Gg9aSKQ7Pb24/elM5/5aATcRGhrIfjAIx7imMZM9S/XC+/pfWL6iUa1vrYp9b
+	 ZLoCn2TSbac8VjbcwDujt0GgV0+Kcy8jZhBXSCwzEEq5aUL5taXGhq9wRGFWtmtjbt
+	 m4K91FJlPcWX5SBa+EgwcSAUNgXSP/q1FjAIW44BdDy+WOo7YNchFdIajyYy+TZTin
+	 ZuOJ2L53q/j6TS6Fu1MjMoAReJJq78uVDPevLs5qFUPDgInjw4eN/fSU8moUGwdoOH
+	 UthMH9G8TeWDA==
+Date: Wed, 12 Mar 2025 16:11:48 -0700
+Subject: [PATCH 2/3] generic/537: disable quota mount options for pre-metadir
+ rt filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <174182089124.1400713.2560711587518324233.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <174182089142.1400713.12586249978501158339.stgit@frogsfrogsfrogs>
 In-Reply-To: <174182089094.1400713.5283745853237966823.stgit@frogsfrogsfrogs>
 References: <174182089094.1400713.5283745853237966823.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,45 +46,56 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In some cases (such as xfs always_cow=1), the configuration of the test
-filesystem determines the sector size of the filesystem that we're going
-to simulate formatting.  Concretely, even if TEST_DEV is a block device
-with 512b sectors, the directio geometry can specify 4k writes to avoid
-nasty RMW cycles.  When this happens, mkfs.xfs will set the sector size
-to that 4k accordingly, but the golden output selection is wrong.  Fix
-this.
+Fix this regression in generic/537:
+
+mount: /opt: permission denied.
+       dmesg(1) may have more information after failed mount system call.
+mount -o uquota,gquota,pquota, -o ro,norecovery -ortdev=/dev/sdb4 /dev/sda4 /opt failed
+mount -o uquota,gquota,pquota, -o ro,norecovery -ortdev=/dev/sdb4 /dev/sda4 /opt failed
+(see /var/tmp/fstests/generic/537.full for details)
+
+for reasons explained in the giant comment.  TLDR: quota and rt aren't
+compatible on older xfs filesystems so we have to work around that.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/614 |   13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ tests/generic/537 |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 
-diff --git a/tests/xfs/614 b/tests/xfs/614
-index 2a799fbf3ed71c..e182f073fddd64 100755
---- a/tests/xfs/614
-+++ b/tests/xfs/614
-@@ -25,13 +25,16 @@ _require_test
- $MKFS_XFS_PROG 2>&1 | grep -q concurrency || \
- 	_notrun "mkfs does not support concurrency options"
+diff --git a/tests/generic/537 b/tests/generic/537
+index f57bc1561dd57e..3be743c4133f4f 100755
+--- a/tests/generic/537
++++ b/tests/generic/537
+@@ -18,6 +18,7 @@ _begin_fstest auto quick trim
  
--test_dev_lbasize=$(blockdev --getss $TEST_DEV)
--seqfull=$0
--_link_out_file "lba${test_dev_lbasize}"
--
-+# Figure out what sector size mkfs will use to format, which might be dependent
-+# upon the directio write geometry of the test filesystem.
- loop_file=$TEST_DIR/$seq.loop
--
- rm -f "$loop_file"
-+truncate -s 16M "$loop_file"
-+$MKFS_XFS_PROG -f -N "$loop_file" | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+. $tmp.mkfs
-+seqfull=$0
-+_link_out_file "lba${sectsz}"
+ # Import common functions.
+ . ./common/filter
++. ./common/quota
+ 
+ _require_scratch
+ _require_fstrim
+@@ -36,6 +37,22 @@ _scratch_mount -o ro >> $seqres.full 2>&1
+ $FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1
+ _scratch_unmount
+ 
++# As of kernel commit 9f0902091c332b ("xfs: Do not allow norecovery mount with
++# quotacheck"), it is no longer possible to mount with "norecovery" and any
++# quota mount option if the quota mount options would require a metadata update
++# such as quotacheck.  For a pre-metadir XFS filesystem with a realtime volume
++# and quota-enabling options, the first two mount attempts will have succeeded
++# but with quotas disabled.  The mount option parsing for this next mount
++# attempt will see the same quota-enabling options and a lack of qflags in the
++# ondisk metadata and reject the mount because it thinks that will require
++# quotacheck.  Edit out the quota mount options for this specific
++# configuration.
++if [ "$FSTYP" = "xfs" ]; then
++	if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ]; then
++		_qmount_option ""
++	fi
++fi
 +
- for sz in 16M 512M 1G 2G 16G 64G 256G 512G 1T 2T 4T 16T 64T 256T 512T 1P; do
- 	for cpus in 2 4 8 16 32 40 64 96 160 512; do
- 		truncate -s "$sz" "$loop_file"
+ echo "fstrim on ro mount with no log replay"
+ norecovery="norecovery"
+ test $FSTYP = "btrfs" && norecovery=nologreplay
 
