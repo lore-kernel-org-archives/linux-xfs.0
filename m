@@ -1,46 +1,50 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2FC2566D5;
-	Wed, 12 Mar 2025 15:46:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0337198E76;
+	Wed, 12 Mar 2025 15:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741794397; cv=none; b=dtACf7flFSsqMdMJQnxJn8vEhNzHfaapdq71P47lI0O/H4XqIa5Q4NASY67nj5UlIDMZyah7Ft93MH7IbOmxLI52CVxd1ERclDhmnuGA1R+zF9Q7RhFzbwaaUa0iiH6MVUrNguvuRaR5atU3lrz0bGtLPHZAePrSBoa0srT5cnM=
+	t=1741794961; cv=none; b=iNlYfD85y0swStBlBHZ0ChKo3rggk066nFO/0Pt5/87umZ1mdj97NmQznXj2SkWpzvPs0LXOoykmO8DxQSGcIxnNRwQKhQUaykezcnzZaxSMhgQTO8TwIyM2HlcZedGvf9vCCR3ZfzZX58+fOT5IfGKvWsnsr83CfkqZp5apJ9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741794397; c=relaxed/simple;
-	bh=Fwf5W2U8w03U4Cm1Q9TRhlF1mB+8QZtqhPORia13bpg=;
+	s=arc-20240116; t=1741794961; c=relaxed/simple;
+	bh=Y8XqINxWTLY7AKJYXp2mS7v0+6MGrDY3mz3QwfDceq8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N+5Vz4/9lSXdEhuMAFZwV2+1QENt8Z19mtlRxmQanbUnQp1b6fQORBK+xjyRIankGu/8/vK1RyuuR0YvbLBLKspa3yj4yQi/H3DygKkPsmZK6rx7a+pF2CeQt1NuAHxcUbqlxirgfrkKeA1adEoBf2VnjKyvKGo68333l5DcBvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GxuBq5Mw; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=g8mk1FC72YsVBd8chfK58c3hVCNHd4VJZDwT6rfGR0eS0C2Xxha7zjRU2ghJN2kR1YGRn3PbfzpWl0EyW+3OumNCquLUagr+ME7tXs+Kv2flFU0Ecz/FAKEhc9XiIHvKUNCGm3TH7b2O8D/Zu3gE7L4vRsFCLYb9UKmN9zU/hw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lmpV8HCJ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GxuBq5Mw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0007C4CEDD;
-	Wed, 12 Mar 2025 15:46:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741794396;
-	bh=Fwf5W2U8w03U4Cm1Q9TRhlF1mB+8QZtqhPORia13bpg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GxuBq5MwgQwST6RdrnWyUAmwz5lHtmDzC2vQxgflKGkq0Vg5CAk18DGFu524u5lKR
-	 eJo/hk8NOkoAolsmngrDsge8xUfB8lMWXCqFBhTJpBJ2Zt1TThyhdSpTP3e5QoOgeS
-	 xzzWexNw18OamfgTTmwIvpS0pxfRdzv7EtQKNlBZH29YhaE2G15v2B7rrE1f6UhFyY
-	 uYXblI34utGwQpw0LJIqGtx+qTXJ/gG8Avvb5GB9cZVSmoJsrfIOnsqoAlnF0cuNR0
-	 DOnqfxSQgnCS5XrsFB+6mjaZJXDyXdhK/iYbDQeunNjTwtlN0LZOXl02fS+bpLenu9
-	 xNF94/PuNsUhg==
-Date: Wed, 12 Mar 2025 08:46:36 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lmpV8HCJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=sLv6DldMmCXALdSl/mjQMsKUaK5QmzyqMPOb8IvMdAQ=; b=lmpV8HCJkThP+yJ8t665ZxH5i4
+	OtBX9wDa+K9zhB+tBtpyo9dwlQ0jR+Fdjlf41jEnfubxSfBItFhpXmQtsKNczXHyDBNlcIEiV5W5y
+	QMA5DOH2BOQNXCrYR+BACVKj4vU/mM+uNvlyuGUVo0riTVkcNxX0Uf1c/uVTYSZCWeNuuFgaMHYPB
+	5G07MyDU1Bnn0Eu0zXqFWweASsFGTGRCxcUuFhd3/+NV4/o4Oy4LdLWUSbeQ/iuqEqAXYbIivXCEG
+	0OBqtsFX6UdPJJNcr6cMAA0m8yaVxFxsyQ2n6iK2fbU1a38zxGCmD9Pe0RvpEVSxgNJpSRMHAtA6a
+	T1GHgtrw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tsOR5-00000008x2P-1nh0;
+	Wed, 12 Mar 2025 15:55:59 +0000
+Date: Wed, 12 Mar 2025 08:55:59 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, brauner@kernel.org,
+	djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
 	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
 	martin.petersen@oracle.com
-Subject: Re: [PATCH v5 03/10] xfs: Refactor xfs_reflink_end_cow_extent()
-Message-ID: <20250312154636.GX2803749@frogsfrogsfrogs>
+Subject: Re: [PATCH v5 05/10] xfs: Iomap SW-based atomic write support
+Message-ID: <Z9Guj3oZPhD2LLjt@infradead.org>
 References: <20250310183946.932054-1-john.g.garry@oracle.com>
- <20250310183946.932054-4-john.g.garry@oracle.com>
- <Z9E2kSQs-wL2a074@infradead.org>
- <589f2ce0-2fd8-47f6-bbd3-28705e306b68@oracle.com>
- <Z9FHSyZ7miJL7ZQM@infradead.org>
+ <20250310183946.932054-6-john.g.garry@oracle.com>
+ <Z9E5nDg3_cred1bH@infradead.org>
+ <ea94c5cd-ebba-404f-ba14-d59f1baa6e16@oracle.com>
+ <Z9GRg-X76T-7rshv@infradead.org>
+ <9337105f-d35a-4985-ad21-bf0c36c8fd50@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,59 +53,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z9FHSyZ7miJL7ZQM@infradead.org>
+In-Reply-To: <9337105f-d35a-4985-ad21-bf0c36c8fd50@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Mar 12, 2025 at 01:35:23AM -0700, Christoph Hellwig wrote:
-> On Wed, Mar 12, 2025 at 08:27:05AM +0000, John Garry wrote:
-> > On 12/03/2025 07:24, Christoph Hellwig wrote:
-> > > On Mon, Mar 10, 2025 at 06:39:39PM +0000, John Garry wrote:
-> > > > Refactor xfs_reflink_end_cow_extent() into separate parts which process
-> > > > the CoW range and commit the transaction.
-> > > > 
-> > > > This refactoring will be used in future for when it is required to commit
-> > > > a range of extents as a single transaction, similar to how it was done
-> > > > pre-commit d6f215f359637.
+On Wed, Mar 12, 2025 at 02:57:38PM +0000, John Garry wrote:
+> > > I do admit that the checks are a bit uneven, i.e. check vs
+> > > IOMAP_DIO_ATOMIC_SW and IOCB_ATOMIC
 > > > 
-> > > Darrick pointed out that if you do more than just a tiny number
-> > > of extents per transactions you run out of log reservations very
-> > > quickly here:
-> > > 
-> > > https://urldefense.com/v3/__https://lore.kernel.org/all/20240329162936.GI6390@frogsfrogsfrogs/__;!!ACWV5N9M2RV99hQ!PWLcBof1tKimKUObvCj4vOhljWjFmjtzVHLx9apcU5Rah1xZnmp_3PIq6eSwx6TdEXzMLYYyBfmZLgvj$
-> > > 
-> > > how does your scheme deal with that?
-> > > 
-> > The resblks calculation in xfs_reflink_end_atomic_cow() takes care of this,
-> > right? Or does the log reservation have a hard size limit, regardless of
-> > that calculation?
+> > > If we want a flag to set REQ_ATOMIC from the FS then we need
+> > > IOMAP_DIO_BIO_ATOMIC, and that would set IOMAP_BIO_ATOMIC. Is that better?
+> > 
+> > My expectation from a very cursory view is that iomap would be that
+> > there is a IOMAP_F_REQ_ATOMIC that is set in ->iomap_begin and which
+> > would make the core iomap code set REQ_ATOMIC on the bio for that
+> > iteration.
 > 
-> The resblks calculated there are the reserved disk blocks and have
-> nothing to do with the log reservations, which comes from the
-> tr_write field passed in.  There is some kind of upper limited to it
-> obviously by the log size, although I'm not sure if we've formalized
-> that somewhere.  Dave might be the right person to ask about that.
+> but we still need to tell ->iomap_begin about IOCB_ATOMIC, hence
 
-The (very very rough) upper limit for how many intent items you can
-attach to a tr_write transaction is:
+Yeah, ->iomap_begin  can't directly look at the iocb.
 
-per_extent_cost = (cui_size + rui_size + bui_size + efi_size + ili_size)
-max_blocks = tr_write::tr_logres / per_extent_cost
+> IOMAP_DIO_BIO_ATOMIC which sets IOMAP_BIO_ATOMIC.
 
-(ili_size is the inode log item size)
+> 
+> We can't allow __iomap_dio_rw() check IOCB_ATOMIC only (and set
+> IOMAP_BIO_ATOMIC), as this is the common path for COW and regular atomic
+> write
 
-((I would halve that for the sake of paranoia))
+Well, I'd imagine __iomap_dio_rw just sets IOMAP_ATOMIC from IOCB_ATOMIC
+and then it's up to file system internal state if it wants to set
+IOMAP_F_REQ_ATOMIC based on that, i.e. the actual setting of
+IOMAP_F_REQ_ATOMIC is fully controlled by the file system and not
+by the iomap core.
 
-since you have to commit all those intent items into the first
-transaction in the chain.  The difficulty we've always had is computing
-the size of an intent item in the ondisk log, since that's a (somewhat
-minor) layering violation -- it's xfs_cui_log_format_sizeof() for a CUI,
-but then there' could be overhead for the ondisk log headers themselves.
-
-Maybe we ought to formalize the computation of that since reap.c also
-has a handwavy XREAP_MAX_DEFER_CHAIN that it uses to roll the scrub
-transaction periodically... because I'd prefer we not add another
-hardcoded limit.  My guess is that the software fallback can probably
-support any awu_max that a hardware wants to throw at us, but let's
-actually figure out the min(sw, hw) that we can support and cap it at
-that.
-
---D
