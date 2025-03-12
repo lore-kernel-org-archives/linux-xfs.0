@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C321B0406;
-	Wed, 12 Mar 2025 23:11:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0D31B0406;
+	Wed, 12 Mar 2025 23:11:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741821078; cv=none; b=go76RjQ5P6wv9kxCbZMYImU0GotRTcvOTvN5CyQdwr9m3oMw4Xq+mblN/jJCFwqI3l/IMDbsxFO8uCK6lmmZROcKxDSZal6PK12PSjtCeSewFmRXVJjzSC8p2KI3aLpmv2Gt2WASNUiZx87RtAiseqEFHddNzXNFE+GvOdzm2qg=
+	t=1741821093; cv=none; b=GBuUiIojEaydTBxAdcWJs/JpilzJzqO0TUDskau/Gh4AJpswRiPR+KHuvARujYYe2l6NnED3vTLdk5GJGfV9pJZFDiU52ej7K1nEBJsPIZTRbe5DYpv72gVAjOEYxfEdU2dirdF0UR3EbR3PyaiAeTOh5YU5oHLeo2sQPagkp4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741821078; c=relaxed/simple;
-	bh=hiGP1mWkzO1j/vuvD2DoUJUoJ7NROn6vzpJHgOXDS8I=;
+	s=arc-20240116; t=1741821093; c=relaxed/simple;
+	bh=oydxMkyc0hiknia09FS2tFcW+lBSuiAv++SGfwgd+xw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Od7k77z3daRBCo+gcAE5ALG7vpRctHO6s/cH3uZUf17AT/69y46E8IzpTEdh1d53a1+Ua84VTpkKMCQJ8w/VJxnr+U4Gv4kCqlzntNm3yANLrq45WkmhTGvwydH69X+bZ7Bu1bnDEfL3tW9Sk/KIUVWDREUAG45HXME6oUz+i4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ds8VO3VA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EXFzeDFbIywL0+uwOfTyiXrhsizLkHCMZlBKoAsuaLvE3CxvT+vlkXTCIFhJKwj+78D1CswR5/vG6J0VQ07kMy90HnVmkXmEjgwQK51vN97eJonweiV7+h7JLj17/wkN8BpJguQVkNeSdUUphZ1N6540gGx9iTbdbBgMf+TFtFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UClANw0C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ds8VO3VA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95009C4CEDD;
-	Wed, 12 Mar 2025 23:11:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UClANw0C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34424C4CEDD;
+	Wed, 12 Mar 2025 23:11:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741821077;
-	bh=hiGP1mWkzO1j/vuvD2DoUJUoJ7NROn6vzpJHgOXDS8I=;
+	s=k20201202; t=1741821093;
+	bh=oydxMkyc0hiknia09FS2tFcW+lBSuiAv++SGfwgd+xw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Ds8VO3VArF1sMg8/bqRfpslz6D72FVkhH4ygPl7j0WgjSmek83HmuxYhrF7ZsL8im
-	 9tJbYA/D2tJpO6BPn0BDQ+YYyo8aayxjw0eB9vksEZ4eTHGRr92S2cHDflYYaGk1+O
-	 lAZBqoJTDMDnjqfjNavVcMNIeWC/TAAtRirnl34yKcNOHGuGKasCvbn0EvmwQmRama
-	 5nPJlDFPu0UzJORq1jQJSjtsQ18OPYpWLEB9evHduDvmK4f9GTVjvwgjHZR5RBmp1U
-	 i8wGNJ61eUyZkWXwIljjcrc7IxM9ic6GulBDqMbFn/HCkbmmPiIqqBPNTU3Mzlbl7L
-	 bOceMFm5iOLFQ==
-Date: Wed, 12 Mar 2025 16:11:17 -0700
-Subject: [PATCH 1/1] generic/45[34]: add colored emoji variants to unicode
- tests
+	b=UClANw0Ca0uBUY8gzHqPhVql7DnXlQNZd1NtKLslySba1AQhaFcJi7p1XWru8HHg/
+	 FqVcDN9bLvccAeZkU1rvB4mXE9g7kgvnGyoT5J01NEYco85bl3X98MDBsiBg/Pu5MO
+	 IfWkTZE4Sxp2SJ5q6MwGNal30Hfeuydn9JKeDOm8aY2nw0J+yglbOWQXhbdmcekm4G
+	 dzmqnobrsC5M+gnpWc+LFwtPok8d32Him9cydbIRBZY6bXBcurTsDTuEzr0g0uNETR
+	 Vj17UkpnJkdMq02nlPIDEZrv6wWFXH9NsH5m1dHCOoCWPRRL95hZUkFk2ruxYOzgAI
+	 9fNKlOynZGKMQ==
+Date: Wed, 12 Mar 2025 16:11:32 -0700
+Subject: [PATCH 1/3] xfs/614: determine the sector size of the fs image by
+ doing a test format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <174182088890.1400612.13102226252912367653.stgit@frogsfrogsfrogs>
-In-Reply-To: <174182088871.1400612.1677368898700125822.stgit@frogsfrogsfrogs>
-References: <174182088871.1400612.1677368898700125822.stgit@frogsfrogsfrogs>
+Message-ID: <174182089124.1400713.2560711587518324233.stgit@frogsfrogsfrogs>
+In-Reply-To: <174182089094.1400713.5283745853237966823.stgit@frogsfrogsfrogs>
+References: <174182089094.1400713.5283745853237966823.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,175 +46,45 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Ted told me this morning about a recent problem with kernel Unicode name
-casefolding vs. emoji -- initially, someone decided that zero-width
-joiners should be stripped out of filenames during comparisons, which
-lead to malicious git pulls of branches containing "<zwj>.git/config"
-files overwriting git repo config files.  A quick fix was to stop
-ignoring the "ignorable" code points, but that broke emoji in filenames,
-because emoji use zero-width joiners to combine simpler emoji into more
-complex ones, or alter skin tones, or colors, etc.  Reportedly the
-casefolding code will also fold a red heart into a black one.
-
-So.  To our filename support test, let's add various colors of heart
-emoji and various skin tones of heart-hands; and compound emoji
-consisting of multiple emoji glued together with zero width joiners.
-This actually caused a buffer overflow in the string-escaping functions
-of xfs_scrub phase 5 because I hadn't anticipated that we'd end up with
-a filename consisting *entirely* of nonprinting bytes.
+In some cases (such as xfs always_cow=1), the configuration of the test
+filesystem determines the sector size of the filesystem that we're going
+to simulate formatting.  Concretely, even if TEST_DEV is a block device
+with 512b sectors, the directio geometry can specify 4k writes to avoid
+nasty RMW cycles.  When this happens, mkfs.xfs will set the sector size
+to that 4k accordingly, but the golden output selection is wrong.  Fix
+this.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/generic/453 |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/454 |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 110 insertions(+)
+ tests/xfs/614 |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
 
-diff --git a/tests/generic/453 b/tests/generic/453
-index 04945ad1085b2d..bd5ce8b2bb11d9 100755
---- a/tests/generic/453
-+++ b/tests/generic/453
-@@ -203,6 +203,36 @@ setf "job offer.pdf" "actual period"
- setf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
- setf "llamapirate"
+diff --git a/tests/xfs/614 b/tests/xfs/614
+index 2a799fbf3ed71c..e182f073fddd64 100755
+--- a/tests/xfs/614
++++ b/tests/xfs/614
+@@ -25,13 +25,16 @@ _require_test
+ $MKFS_XFS_PROG 2>&1 | grep -q concurrency || \
+ 	_notrun "mkfs does not support concurrency options"
  
-+# colored heart emoji to check if casefolding whacks emoji
-+setf "\xf0\x9f\x92\x9c" "purple"
-+setf "\xf0\x9f\x92\x99" "blue"
-+setf "\xf0\x9f\x92\x9a" "green"
-+setf "\xf0\x9f\x92\x9b" "yellow"
-+setf "\xf0\x9f\xab\x80" "heart"
-+setf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
-+setf "\xf0\x9f\xa4\x8e" "brown"
-+setf "\xf0\x9f\xa4\x8d" "white"
-+setf "\xf0\x9f\x96\xa4" "black"
-+setf "\xf0\x9f\xa7\xa1" "orange"
-+setf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
+-test_dev_lbasize=$(blockdev --getss $TEST_DEV)
+-seqfull=$0
+-_link_out_file "lba${test_dev_lbasize}"
+-
++# Figure out what sector size mkfs will use to format, which might be dependent
++# upon the directio write geometry of the test filesystem.
+ loop_file=$TEST_DIR/$seq.loop
+-
+ rm -f "$loop_file"
++truncate -s 16M "$loop_file"
++$MKFS_XFS_PROG -f -N "$loop_file" | _filter_mkfs 2>$tmp.mkfs >/dev/null
++. $tmp.mkfs
++seqfull=$0
++_link_out_file "lba${sectsz}"
 +
-+# zero width joiners exist in the middle of emoji sequences aren't supposed
-+# to be normalized to nothing, but apparently this caused issues with
-+# casefolding on ext4; also the mending heart caused a crash in xfs_scrub
-+setf "\xf0\x9f\x92\x94" "broken heart"
-+setf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
-+setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
-+\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
-+setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
-+
-+# emoji heart hands with skin tone variations
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
-+setf "\xf0\x9f\xab\xb6" "neutral"
-+
- ls -laR $testdir >> $seqres.full
- 
- echo "Test files"
-@@ -276,6 +306,31 @@ testf "job offer.pdf" "actual period"
- testf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
- testf "llamapirate"
- 
-+testf "\xf0\x9f\x92\x9c" "purple"
-+testf "\xf0\x9f\x92\x99" "blue"
-+testf "\xf0\x9f\x92\x9a" "green"
-+testf "\xf0\x9f\x92\x9b" "yellow"
-+testf "\xf0\x9f\xab\x80" "heart"
-+testf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
-+testf "\xf0\x9f\xa4\x8e" "brown"
-+testf "\xf0\x9f\xa4\x8d" "white"
-+testf "\xf0\x9f\x96\xa4" "black"
-+testf "\xf0\x9f\xa7\xa1" "orange"
-+testf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
-+
-+testf "\xf0\x9f\x92\x94" "broken heart"
-+testf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
-+testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
-+\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
-+testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
-+
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
-+testf "\xf0\x9f\xab\xb6" "neutral"
-+
- echo "Uniqueness of inodes?"
- stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
- 	if [ "${nr}" -gt 1 ]; then
-diff --git a/tests/generic/454 b/tests/generic/454
-index aec8beb8b43ca0..9f6ddb4a0e48b2 100755
---- a/tests/generic/454
-+++ b/tests/generic/454
-@@ -124,6 +124,36 @@ setf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
- setf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf" "secret instructions"
- setf "llamapirate" "no secret instructions"
- 
-+# colored heart emoji to check if casefolding whacks emoji
-+setf "\xf0\x9f\x92\x9c" "purple"
-+setf "\xf0\x9f\x92\x99" "blue"
-+setf "\xf0\x9f\x92\x9a" "green"
-+setf "\xf0\x9f\x92\x9b" "yellow"
-+setf "\xf0\x9f\xab\x80" "heart"
-+setf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
-+setf "\xf0\x9f\xa4\x8e" "brown"
-+setf "\xf0\x9f\xa4\x8d" "white"
-+setf "\xf0\x9f\x96\xa4" "black"
-+setf "\xf0\x9f\xa7\xa1" "orange"
-+setf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
-+
-+# zero width joiners exist in the middle of emoji sequences aren't supposed
-+# to be normalized to nothing, but apparently this caused issues with
-+# casefolding on ext4; also the mending heart caused a crash in xfs_scrub
-+setf "\xf0\x9f\x92\x94" "broken heart"
-+setf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
-+setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
-+\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
-+setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
-+
-+# emoji heart hands with skin tone variations
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
-+setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
-+setf "\xf0\x9f\xab\xb6" "neutral"
-+
- _getfattr --absolute-names -d "${testfile}" >> $seqres.full
- 
- echo "Test files"
-@@ -174,6 +204,31 @@ testf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
- testf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf" "secret instructions"
- testf "llamapirate" "no secret instructions"
- 
-+testf "\xf0\x9f\x92\x9c" "purple"
-+testf "\xf0\x9f\x92\x99" "blue"
-+testf "\xf0\x9f\x92\x9a" "green"
-+testf "\xf0\x9f\x92\x9b" "yellow"
-+testf "\xf0\x9f\xab\x80" "heart"
-+testf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
-+testf "\xf0\x9f\xa4\x8e" "brown"
-+testf "\xf0\x9f\xa4\x8d" "white"
-+testf "\xf0\x9f\x96\xa4" "black"
-+testf "\xf0\x9f\xa7\xa1" "orange"
-+testf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
-+
-+testf "\xf0\x9f\x92\x94" "broken heart"
-+testf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
-+testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
-+\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
-+testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
-+
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
-+testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
-+testf "\xf0\x9f\xab\xb6" "neutral"
-+
- echo "Uniqueness of keys?"
- crazy_keys="$(_getfattr --absolute-names -d "${testfile}" | grep -E -c '(french_|chinese_|greek_|arabic_|urk)')"
- expected_keys=11
+ for sz in 16M 512M 1G 2G 16G 64G 256G 512G 1T 2T 4T 16T 64T 256T 512T 1P; do
+ 	for cpus in 2 4 8 16 32 40 64 96 160 512; do
+ 		truncate -s "$sz" "$loop_file"
 
