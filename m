@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 714301EE7C6;
-	Wed, 12 Mar 2025 20:15:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A66A31D88A6;
+	Wed, 12 Mar 2025 20:17:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741810504; cv=none; b=cJqcNHjVFIJuYYdkZsnnj5PK79naLsgNAyo35YeCuaCnzQkwrGiYLEzbXqRzmkVNI/ypZBCeA3VrV2Lrm6LJY/r+EgUynHFigqNU7lvA4xXL92bSz27tpUSj4zh6r9G0PtMcpzcNib65DrvHp5NmHdUaEiCPyntsqwe27+oeDKM=
+	t=1741810646; cv=none; b=L+1ZVct83b/SvWnhkpuAHp73WotWuvMyzawAu5I38MGsK1boSlRO3IhWx/BWOOusNWZaojObemRk9BTt4da5NGosoKRxhRamsMJId7Zrj4SaUMjnGSF6NO5eth1rCzd/IDVEHhVHXbIb+fm53GH/hex1fgp9rWcnmNJoypiNuj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741810504; c=relaxed/simple;
-	bh=C9oFBihYBOJW8ZR++aW9cI3h9gpBwl/cJVOqaZFGjsY=;
+	s=arc-20240116; t=1741810646; c=relaxed/simple;
+	bh=BsjIJVIBzHVdQOskr+UvxCOPS1JkptzjtLHXS1rhmYg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e0Q9rfnRYe0tXzTl02pcJKxFknPQUkf6w0to1vjR2y8YgEHOaEaPmpf2JlN0WKRAOEZR8Q9dwsdnomn69tCscIBhwCltnNgOSOeKCCF0OdruKpTDXDN6URs5hJ5wqfeBNQkHRCkC8lS5WpMMTjfejKew+m57HtGKL1wi018xdY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IZ4vd1x+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ICMp1iErL9NtjYrje7EfCBwa7+tddSn6VFE//hHobn5a2fjxwTcW9x+h7+PflFUfG5QFd2Ql+FLyaw6z/h+bxDG7eNRjyJfhww671P80yVuI+yZY7svYw9n+VTx++OBl83mBOALwOMUJ0XZ43DrtGmU/GH6jGggzGCSMDJvhypA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W/7DF+NG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IZ4vd1x+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE926C4CEDD;
-	Wed, 12 Mar 2025 20:15:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W/7DF+NG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7933CC4CEEA;
+	Wed, 12 Mar 2025 20:17:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741810503;
-	bh=C9oFBihYBOJW8ZR++aW9cI3h9gpBwl/cJVOqaZFGjsY=;
+	s=k20201202; t=1741810646;
+	bh=BsjIJVIBzHVdQOskr+UvxCOPS1JkptzjtLHXS1rhmYg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IZ4vd1x+zK7dfdCHT3B5WuIUatOrgT+RJ26pZGSilpL9NaDeMabC5zS83iAzK79An
-	 GbXZGZc9BSjBzUpbEwixgwqKEvfSn9xYpLNXdM4e64z70fgvfCuf0SNBzqZgW6BvuZ
-	 RIMG0G4Vu0p+vKupTso55m2fj5rNqT61CTxcN6ytODSPeL5BAkVXAvqkaK9AMbcdeo
-	 frniIPYMBoVr4UJt+KRsbgrNODeNyk6RNCSCv/Xk9Q3S1xlr61f6821MNQE1gX+4XB
-	 eMyi+gzC43bNpMPlNN9uum5k647fu1IciNnZgkZX0eFru5p8vf7af2m+jta/xodVsN
-	 Re8M4TknQJfTQ==
-Date: Wed, 12 Mar 2025 13:15:03 -0700
+	b=W/7DF+NGJBhvoi57ndp7pys1KVW8qiXiM0IXXnP2NiDYYOFBJ8tNdw5IdVrsuqU4f
+	 GSMt82jgX8HQGwGL0WC1qd+HfGszZ6u8cCDFGsGGtR6yAlTKYrlGGoeRnpm8pOq66a
+	 meYwbD+9Flp4ooaIb+B3d4CuTzwP+rJHwnacTdrez/sACPg/rjf1PKovE2ak+3iiTN
+	 LakPAo5dttUgJaCAoZLYsoi9NNTQCE1NiN7QVsTzNI4xeF80sCHYGNAGsiUlw/3+H7
+	 J07plPO0Sj9JtGmOZfWfk1iX8F/a/JIcDufJI9Gra+orcqJASNJ862JK2MaeKJ6WFY
+	 atrO3cn/+5rfA==
+Date: Wed, 12 Mar 2025 13:17:25 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/17] common: support internal RT devices in
- scratch_mkfs_sized
-Message-ID: <20250312201503.GG2803749@frogsfrogsfrogs>
+Subject: Re: [PATCH 08/17] xfs: check for zoned-specific errors in
+ _try_scratch_mkfs_xfs
+Message-ID: <20250312201725.GH2803749@frogsfrogsfrogs>
 References: <20250312064541.664334-1-hch@lst.de>
- <20250312064541.664334-8-hch@lst.de>
+ <20250312064541.664334-9-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,50 +44,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250312064541.664334-8-hch@lst.de>
+In-Reply-To: <20250312064541.664334-9-hch@lst.de>
 
-On Wed, Mar 12, 2025 at 07:44:59AM +0100, Christoph Hellwig wrote:
+On Wed, Mar 12, 2025 at 07:45:00AM +0100, Christoph Hellwig wrote:
+> Check for a few errors issued for unsupported zoned configurations in
+> _try_scratch_mkfs_xfs so that the test is not run instead of failed.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  common/rc | 7 +++++++
->  1 file changed, 7 insertions(+)
+>  common/xfs | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
-> diff --git a/common/rc b/common/rc
-> index 00a315db0fe7..5e56d90e5931 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -1268,6 +1268,7 @@ _try_scratch_mkfs_sized()
->  	case $FSTYP in
->  	xfs)
->  		local rt_ops
-> +		local zone_type=`_zone_type $SCRATCH_DEV`
+> diff --git a/common/xfs b/common/xfs
+> index 93260fdb4599..807454d3e03b 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -160,6 +160,11 @@ _try_scratch_mkfs_xfs()
 >  
->  		if [ -b "$SCRATCH_RTDEV" ]; then
->  			local rtdevsize=`blockdev --getsize64 $SCRATCH_RTDEV`
-> @@ -1275,6 +1276,12 @@ _try_scratch_mkfs_sized()
->  				_notrun "Scratch rt device too small"
->  			fi
->  			rt_ops="-r size=$fssize"
-> +		elif [ "${zone_type}" != "none" ] ||
-> +		     [[ $MKFS_OPTIONS =~ "zoned=1" ]]; then
-> +			# Maybe also add back the size check, but it'll require
-> +			# somewhat complicated arithmetics for the size of the
-> +			# conventional zones
-> +			rt_ops="-r size=$fssize"
+>  	grep -q crc=0 $tmp.mkfsstd && _force_xfsv4_mount_options
+>  
+> +	grep -q "zoned file systems do not support" $tmp.mkfserr && \
+> +		_notrun "Not supported on zoned file systems"
+> +	grep -q "must be greater than the minimum" $tmp.mkfserr && \
 
-Hmm, what happens if you pass -dsize=X and -rzoned=1,size=X?
+Hmmm... this doesn't mention the word "zone" at all.
 
-Oh, you get a data section of size X followed by an internal zoned
-section also of size X.
+Maybe that error message in calculate_zone_geometry should read:
 
-Might want to mention that in the commit message...
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+"realtime group count (%llu) must be greater than the minimum (%u) zone count" ?
+
+and I think you should post the xfsprogs zoned patches.
 
 --D
 
->  		fi
->  
->  		# don't override MKFS_OPTIONS that set a block size.
+> +		_notrun "Zone count too small"
+> +
+>  	if [ $mkfs_status -eq 0 -a "$LARGE_SCRATCH_DEV" = yes ]; then
+>  		# manually parse the mkfs output to get the fs size in bytes
+>  		local fs_size
 > -- 
 > 2.45.2
 > 
