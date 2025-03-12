@@ -1,31 +1,64 @@
-Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7668450FE;
-	Wed, 12 Mar 2025 01:45:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF0FD22098;
+	Wed, 12 Mar 2025 04:41:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741743925; cv=none; b=KydgK9htvCh0cRZwZBoBDHIRAC4M+w5rX1HJkwo8Cjqidwb2RdjYZfWi5nLaAnu05KExFXr0jbgj8M/T/PGOLtBt1oMdM+UaamQ2yKgP2fngTweHcxp+Scs2op+oE/rJ+dLk1X8uUzLRCakvDe7b1MQXVtsy3whPyVyfMTY4bdM=
+	t=1741754483; cv=none; b=lU1tF//6eklv9girOLpj81gA3rIARkN8WaQeQvfNyp1K1HA3nBoYJ0jeMwCs+/s7ywYE6EmnIPIyXNFRTpqf9SrIsNAlGm52ci/zmTauyrDofTCsDttJofvWXndtietANKZemrj2oL8QrLj/3WquxjbPfUtgmtxMHYEZEAx68Hg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741743925; c=relaxed/simple;
-	bh=4Y06xikukVUFXhu/yWSYxg9Jt8t+JmAK+tfE6/N7nT0=;
+	s=arc-20240116; t=1741754483; c=relaxed/simple;
+	bh=VhuGfbQiAi1E4FjNNMN27pGX3DrTrJlaxXhSdQOLzLg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gsfjjuPgKSCXakNGDjr8p4Db4mZMsTwgWE0+Zjvv4OGTCetondUEjVC9QjMzS7QXZy55B0K3hncroYueCvf3P06n28l46aNGaOQwUFW7fXA+4rma4hpNRZsYWffZV8oZ9nXDh/JubDZoUbaNZRKKlMlP0TMkfZq+XRhpf5sFaKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=T4p5PI+/; arc=none smtp.client-ip=115.124.30.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	 In-Reply-To:Content-Type; b=G5kFSNLSJctZQGA30PMUbVmjR+Ag+B6rpWjNJHJhIfqjPfOPbq3Hg/RCqBbPTqfXuFBqEw/jt9hLFbDOueBYpt32hKXcba0TfKvI36/MrhrqIfOtE1kLfMo5BWmctmlB1xLwCUmodlam8SsnY6mUdmem0XiY6TWKSAYJBrfbpdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gyvcXl9n; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="T4p5PI+/"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1741743914; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=pJsIAiBQwxxlPupaINFvaIjtvwWgE2QzMrLd5G9yQKs=;
-	b=T4p5PI+/FFra7ELZyIkX3qB9kIUPLMqTU+Lu5jAlgNbcKuMOLcUHiWqEkGV//CS3XtBi/1wFch7sxaBmeH7QAQJ46VD9lBJ+Rom3mmNcX9ZZrFBxUANwDqReKGsWyvrdfxDzy9Hj+NxOHiYYKS1D+NccfdmSxUAtCVoAnc8s7JY=
-Received: from 30.74.129.75(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0WRAiBpj_1741743910 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 12 Mar 2025 09:45:11 +0800
-Message-ID: <14ef70cc-beba-4abb-b206-e9fb29381023@linux.alibaba.com>
-Date: Wed, 12 Mar 2025 09:45:10 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gyvcXl9n"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-223594b3c6dso113639645ad.2;
+        Tue, 11 Mar 2025 21:41:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1741754481; x=1742359281; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=prIWCBRfy9KfwUTCFYPi925wPUiEgsj60Kr5IOCZZu4=;
+        b=gyvcXl9nfHbq6rNrOtVOhVDGwlBoCHd+9lAcaH8hcy5Lw91nfKaimxtrHlQ5XJwIB1
+         8LNA1GNBU9mObFTeIlEShRsobsxxYlzDhXwd8orI9ExTT6Ioy4ra8FEAAGEONfmB+/Yn
+         6ep5QYWX62fjtAFAZ6ysB4mvVHNTBzK11J3SlR51XurbGw8TnXc5ZoJA5u/4J5uYOGLg
+         OxExv3mgoak49glTj8US+MB8O+yVJxrtMShcfYe1/OfthJC+MzPz0cAhQiPTkliVz/Qv
+         6RpTi+CE1S1ytiCm6ozVXSUVfEVnPR6OPvF1EMKjsUphd8HDGCz4fPoSWK9N1ZW2t+fv
+         qGZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741754481; x=1742359281;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=prIWCBRfy9KfwUTCFYPi925wPUiEgsj60Kr5IOCZZu4=;
+        b=X/BlumprUmHPUX661lsVGJdOsUu8YVLWNyHwEHDI4QjgnyoEu2Ppk2EBRppCYVY5bv
+         IzCNsIM6XY2Er0riQQwq/clEpWcWXJkf6QUB6EQsalXTRah53Is4T+ELftMdFKNjRBmz
+         PL0AeIj5pmpzJ8LsHXnnUcbILruGJ57RPjpPSrD7orzUPiSM1aAAZTqj3AXuqmk2BVn9
+         s7Xf9xFiqfHZ6nUiIstdr7dafgxa95rk3zbEVipLP0DrcCsYoGom6h3biPnYVAsfvO4u
+         +nPFSezU7phxmOh7/z2diJgL8CH5AWF+FCwBMo9d5iVoKG3gPrJzu8foOWfaQELBTj4c
+         4AyQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV+QE+N2ji7VolIqJUdzrrQtF7gVX9/zxzoNpR444CTuY9SP9AEHlTTP+t9j6zqvQW5OtnffAFGVFbLsA==@vger.kernel.org, AJvYcCVGE6uMb5gwyjh0AYKOTK77j2B2nMHwnacXoXQ5niZhV3YybZfvtkrTwS8/0/OEuu7Hcx5ZxPzeGbkL@vger.kernel.org, AJvYcCXzs2fXjPxI6BsJeM9LenFvoVlxui4L2YMcxVF4ocnHpmCFtWtnMYP2rx6XrMPq8FbKFK49PVnf@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSDDYqGrLPvhC4RnE3aWFL3BD2VBJ3uuOxOelZHSavQydMzieb
+	2cJMRaInbak8G7mf1S0EfQucfQhmNq9pTxuMP8meCAaw4Q8TYEvV
+X-Gm-Gg: ASbGnctdTarsilYbqzGJPSm3idohX8Sdm0U4o5lK9KfIoWZ21H/Ga+Z188ev0PlLT0U
+	g+jg6ibGflDBG3+V0AyS6Rot8BEqd+nTsBfqfp5W/WkT8NgodZ5zCWX/G2ZDo4g8wePsl1m2JQH
+	gHT6BQLNL9yTRqc5b0ErEIbgCseYkrCQIG/OB6+MpenCCFeh7szTXG2f+U+41Eh//R6GBI0ua3W
+	uhpUwvMdz/7EccFTcgIOTkpFtMlaDrigedcO2Wj1HPaXfoNxsZnlgy6o9F5SS9pscRQLU9DYpvm
+	zlWhv55nI5O+YhJyhrceo/Sy+Zp2ojUUB2Iefnzw5VfUNE/gsAfIaKU=
+X-Google-Smtp-Source: AGHT+IGa+xo0J/bjyiHZoADJ1aV9uoEH+Elwp3tvSBwT3t6dHEjeUlBPHjydJGw1nQ09WdXUTw+ebg==
+X-Received: by 2002:a17:902:f686:b0:224:1ec0:8a1d with SMTP id d9443c01a7336-22428ab535bmr267702285ad.30.1741754480795;
+        Tue, 11 Mar 2025 21:41:20 -0700 (PDT)
+Received: from [192.168.0.120] ([49.205.39.113])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22410aaa9e7sm106983855ad.244.2025.03.11.21.41.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 11 Mar 2025 21:41:20 -0700 (PDT)
+Message-ID: <aa13b199-c6e4-4692-829d-4f73b714081f@gmail.com>
+Date: Wed, 12 Mar 2025 10:11:15 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,67 +66,99 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mm: alloc_pages_bulk: remove assumption of populating
- only NULL elements
-To: NeilBrown <neilb@suse.de>
-Cc: Yunsheng Lin <linyunsheng@huawei.com>,
- Yunsheng Lin <yunshenglin0825@gmail.com>, Dave Chinner
- <david@fromorbit.com>, Yishai Hadas <yishaih@nvidia.com>,
- Jason Gunthorpe <jgg@ziepe.ca>,
- Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
- Kevin Tian <kevin.tian@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Chris Mason <clm@fb.com>,
- Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
- Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
- Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
- Sandeep Dhavale <dhavale@google.com>, Carlos Maiolino <cem@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- Jesper Dangaard Brouer <hawk@kernel.org>,
- Ilias Apalodimas <ilias.apalodimas@linaro.org>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
- Anna Schumaker <anna@kernel.org>, Chuck Lever <chuck.lever@oracle.com>,
- Jeff Layton <jlayton@kernel.org>, Olga Kornievskaia <okorniev@redhat.com>,
- Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
- Luiz Capitulino <luizcap@redhat.com>,
- Mel Gorman <mgorman@techsingularity.net>, kvm@vger.kernel.org,
- virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
- linux-xfs@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org,
- linux-nfs@vger.kernel.org
-References: <> <316d62c1-0e56-4b11-aacf-86235fba808d@linux.alibaba.com>
- <174173371062.33508.12685894810362310394@noble.neil.brown.name>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <174173371062.33508.12685894810362310394@noble.neil.brown.name>
+Subject: Re: [PATCH v1 2/2] check,common/{preamble,rc},soak: Decoupling
+ init_rc() call from sourcing common/rc
+Content-Language: en-US
+To: Zorro Lang <zlang@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
+ zlang@kernel.org
+References: <cover.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <1d07e5657c2817c74e939894bb554424199fd290.1741248214.git.nirjhar.roy.lists@gmail.com>
+ <Z8oT_tBYG-a79CjA@dread.disaster.area>
+ <5c38f84d-cc60-49e7-951e-6a7ef488f9df@gmail.com>
+ <20250308072034.t7y2d3u4wgxvrhgd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20250310080630.4lnscrcbaputlocv@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <20250310080630.4lnscrcbaputlocv@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
-
-On 2025/3/12 06:55, NeilBrown wrote:
-> On Mon, 10 Mar 2025, Gao Xiang wrote:
+On 3/10/25 13:36, Zorro Lang wrote:
+> On Sat, Mar 08, 2025 at 03:20:34PM +0800, Zorro Lang wrote:
+>> On Fri, Mar 07, 2025 at 01:35:02PM +0530, Nirjhar Roy (IBM) wrote:
+>>> On 3/7/25 03:00, Dave Chinner wrote:
+>>>> On Thu, Mar 06, 2025 at 08:17:41AM +0000, Nirjhar Roy (IBM) wrote:
+>>>>> Silently executing scripts during sourcing common/rc doesn't look good
+>>>>> and also causes unnecessary script execution. Decouple init_rc() call
+>>>>> and call init_rc() explicitly where required.
+>>>>>
+>>>>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>>>> FWIW, I've just done somethign similar for check-parallel. I need to
+>>>> decouple common/config from common/rc and not run any code from
+>>>> either common/config or common/rc.
+>>>>
+>>>> I've included the patch below (it won't apply because there's all
+>>>> sorts of refactoring for test list and config-section parsing in the
+>>>> series before it), but it should give you an idea of how I think we
+>>>> should be separating one-off initialisation environment varaibles,
+>>>> common code inclusion and the repeated initialisation of section
+>>>> specific parameters....
+>>> Thank you so much. I can a look at this.
+>>>> .....
+>>>>> diff --git a/soak b/soak
+>>>>> index d5c4229a..5734d854 100755
+>>>>> --- a/soak
+>>>>> +++ b/soak
+>>>>> @@ -5,6 +5,7 @@
+>>>>>    # get standard environment, filters and checks
+>>>>>    . ./common/rc
+>>>>> +# ToDo: Do we need an init_rc() here? How is soak used?
+>>>>>    . ./common/filter
+>>>> I've also go a patch series that removes all these old 2000-era SGI
+>>>> QE scripts that have not been used by anyone for the last 15
+>>>> years. I did that to get rid of the technical debt that these
+>>>> scripts have gathered over years of neglect. They aren't used, we
+>>>> shouldn't even attempt to maintain them anymore.
+>>> Okay. What do you mean by SGI QE script (sorry, not familiar with this)? Do
+>>> you mean some kind of CI/automation-test script?
+>> SGI is Silicon Graphics International Corp. :
+>> https://en.wikipedia.org/wiki/Silicon_Graphics_International
 >>
->>    - Your new api covers narrow cases compared to the existing
->>      api, although all in-tree callers may be converted
->>      properly, but it increases mental burden of all users.
->>      And maybe complicate future potential users again which
->>      really have to "check NULL elements in the middle of page
->>      bulk allocating" again.
-> 
-> I think that the current API adds a mental burden for most users.  For
-> most users, their code would be much cleaner if the interface accepted
-> an uninitialised array with length, and were told how many pages had
-> been stored in that array.> 
-> A (very) few users benefit from the complexity.  So having two
-> interfaces, one simple and one full-featured, makes sense.
+>> xfstests was created to test xfs on IRIX (https://en.wikipedia.org/wiki/IRIX)
+>> of SGI. Dave Chinner worked in SGI company long time ago, so he's the expert
+>> of all these things, and knows lots of past details :)
+> Hi Nirjhar,
+>
+> I've merged Dave's "[PATCH 0/5] fstests: remove old SGI QE scripts" into
+> patches-in-queue branch. You can base on that to write your V2, to avoid
+> dealing with the "soak" file.
+>
+> Thanks,
+> Zorro
 
-Ok, I think for this part, diferrent people has different
-perference on API since there is no absolutely right and
-wrong in the API design area.
+Okay, thank you for the pointer. I will send the v2 after rebasing.
 
-But I have no interest to follow this for now.
+--NR
 
-Thanks,
-Gao Xiang
+>
+>> Thanks,
+>> Zorro
+>>
+>>> --NR
+>>>
+>>>> -Dave.
+>>>>
+>>> -- 
+>>> Nirjhar Roy
+>>> Linux Kernel Developer
+>>> IBM, Bangalore
+>>>
+>>>
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
+
