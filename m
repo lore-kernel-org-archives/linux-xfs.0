@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E34631D5CD4;
-	Wed, 12 Mar 2025 20:26:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F8401BD9DD;
+	Wed, 12 Mar 2025 20:28:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741811165; cv=none; b=LxRuaBciOZ38M8EaFr+yLNaYpO0OhEjhhnhDW1zj78GShRfFzsoobgfCiVdSIjKgzAxjvCzhgtZ648iXVnhi4u6rqc7qvfWAwiDXVXxA5QOO/rNtAdGWea40pSpd8qe/JxIFVtKQJAXcHXJd7nl80besoC5gjbAX4sN+r4Lqxmk=
+	t=1741811281; cv=none; b=MoWNeZbON7IXXHLjO4PcAWPyD+lzWI6Iy8X0c7qq6ONuZcJeJeh7972ib7jqgrpiAprTRWMyTX2c7K6j39yPy5WhnMYXUvASXWGLmK0tkNDnEmhuUeHKwATaLvRIV7JW6RluVOKvCI5QAjQ+HImsK13bi7IL53J9qd2wnvkjr6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741811165; c=relaxed/simple;
-	bh=XRVg3iP+L3SRL8579DKSriXXZTmJzjhLh0wpjqbfNbc=;
+	s=arc-20240116; t=1741811281; c=relaxed/simple;
+	bh=VR8Jahps4/cjxqvsOf4I/NctqmCygdIYrT4tChKxJfA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MoQTclj2fww0z+QH+hqLVPiM2YAOadMYAmwWV4CzRdbtl3oJmmQK91zeXwnlDOafuXWRWHuJTt6kI0GHq7AuMOkoPZpkUoYHgrYOEfQ9siPRvPFYAa9mqshTw+1uglNGD42dSE0fD3KXUGHfQkWvgIZQUlMEu9QDWLlgnh4fY2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fwcQhpqu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ugPs8gqbkm8/1ARn12CXX33mNQTEVz7z05tgreQocGyo8mMAhYrgrKic4sK6S4jo+yEvogeqSgcRHMj5/ozYqj3Jaj0ovoOB2c5HDbd1+gKlDWJJnihttESkSVUCo0QPjE4R+8AzpKqENz2+hIJ9gLpCZWTDgmB0719292rk1Yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F1xrRh8p; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fwcQhpqu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C1F7C4CEDD;
-	Wed, 12 Mar 2025 20:26:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F1xrRh8p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7046C4CEDD;
+	Wed, 12 Mar 2025 20:27:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741811164;
-	bh=XRVg3iP+L3SRL8579DKSriXXZTmJzjhLh0wpjqbfNbc=;
+	s=k20201202; t=1741811281;
+	bh=VR8Jahps4/cjxqvsOf4I/NctqmCygdIYrT4tChKxJfA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fwcQhpquIzUB5e0mqLlDTcbm8juTaIpfd6INZj1yLHIj+6SwwQO8awy6vssCEAEFc
-	 PtynjdubUGnOZWlcZXONIzzxxodHnVkDqebbhlEcfLctCgpECKLevCFigd+HVzzmBM
-	 R+beqps82im1xc28p1ZmkcAeeNV4uGvtsMzpOa7XHqHRKWkv1IoY3dHFQTV6/I78mf
-	 Nx0STVoUHd1HcB0woeZgqOpUuwztGg7iqueThMdw26OQ1nLY0jSH2OWSMGsmyArDmY
-	 30lH5n4I7qLNdzeL1027geDtM/mWSGx3wL4Bn/qg6DcJWvGyariTOUo139Nax4KrtF
-	 oc/sNLdMuVpBw==
-Date: Wed, 12 Mar 2025 13:26:03 -0700
+	b=F1xrRh8pcES9S0TKOkJrBIiMV0RIRwY+kzanCBWWFQhqYCIVov1WIHFbAMN7afSyL
+	 JkQ1I/6aJmuCgpW9B7KxJRUZK49TPi6VmIkblGOJwBApY6VHH763T6jWdOpOW9CK9M
+	 lrVaTGv9cjIvSlTkMPhzLBeDQHNkYYiFGiq+ZY+75vxv4jCmYC514lCI0/xE+2ZvuK
+	 zd6MCynKV5MJsKsP2uIJTvpkRljojowqN5A0mBKepIPEuorlpWc8cfLtaH9jLRcwpT
+	 gM8RuhPk1WJqHw2PnEh7C+fUKNxUWyqNPnaNy17+d5fhiOXUwptHth9esI5aFdh3rw
+	 gBzbHjJ7vNrTg==
+Date: Wed, 12 Mar 2025 13:27:59 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 14/17] xfs: skip filestreams tests on internal RT devices
-Message-ID: <20250312202603.GO2803749@frogsfrogsfrogs>
+Subject: Re: [PATCH 15/17] xfs: skip various tests on zoned devices
+Message-ID: <20250312202759.GP2803749@frogsfrogsfrogs>
 References: <20250312064541.664334-1-hch@lst.de>
- <20250312064541.664334-15-hch@lst.de>
+ <20250312064541.664334-16-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,41 +43,74 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250312064541.664334-15-hch@lst.de>
+In-Reply-To: <20250312064541.664334-16-hch@lst.de>
 
-On Wed, Mar 12, 2025 at 07:45:06AM +0100, Christoph Hellwig wrote:
-> The filestreams tests using _test_streams force a run on the data
-> section, but for internal RT zoned devices the data section can be tiny
-> and might not provide enough space.  Skip these tests as they aren't
-> really useful when testing a zoned config anyway.
+On Wed, Mar 12, 2025 at 07:45:07AM +0100, Christoph Hellwig wrote:
+> Various tests don't work with underlying zoned devices because either the
+> device mapper maps don't align to zone boundaries, or in one case the test
+> creates an ext2 file system that doesn't support zoned devices.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  tests/xfs/049 | 2 ++
+>  tests/xfs/311 | 3 +++
+>  tests/xfs/438 | 7 +++++++
+>  3 files changed, 12 insertions(+)
+> 
+> diff --git a/tests/xfs/049 b/tests/xfs/049
+> index cdcddf76498c..07feb58c9ad6 100755
+> --- a/tests/xfs/049
+> +++ b/tests/xfs/049
+> @@ -40,6 +40,8 @@ _require_scratch_nocheck
+>  _require_no_large_scratch_dev
+>  _require_loop
+>  _require_extra_fs ext2
+> +# this test actually runs ext2 on the scratch device
+> +_require_non_zoned_device $SCRATCH_DEV
+>  
+>  echo "(dev=$SCRATCH_DEV, mount=$SCRATCH_MNT)" >> $seqres.full
+>  echo "" >> $seqres.full
+> diff --git a/tests/xfs/311 b/tests/xfs/311
+> index 8b806fc29eb1..e8fc547cc4b4 100755
+> --- a/tests/xfs/311
+> +++ b/tests/xfs/311
+> @@ -30,6 +30,9 @@ _cleanup()
+>  _require_scratch
+>  _require_dm_target delay
+>  
+> +# The dm-delay map added by this test doesn't work on zoned devices
+> +_require_non_zoned_device $SCRATCH_DEV
 
-Looks ok, assuming you don't just want to kill filestreams entirely :)
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Should this kind of check become a part of _require_dm_target?  Or does
+dm-delay support zoned targets, just not for this test?
+
+> +
+>  echo "Silence is golden."
+>  
+>  _scratch_mkfs_xfs >> $seqres.full 2>&1
+> diff --git a/tests/xfs/438 b/tests/xfs/438
+> index 6d1988c8b9b8..d436b583f9d1 100755
+> --- a/tests/xfs/438
+> +++ b/tests/xfs/438
+> @@ -96,6 +96,13 @@ _require_user
+>  _require_xfs_quota
+>  _require_freeze
+>  
+> +#
+> +# The dm-flakey map added by this test doesn't work on zoned devices
+> +# because table sizes need to be aligned to the zone size.
+> +#
+> +_require_non_zoned_device $SCRATCH_DEV
+> +_require_non_zoned_device $SCRATCH_RTDEV
+
+Can we fix the table sizes?
 
 --D
 
-> ---
->  common/filestreams | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/common/filestreams b/common/filestreams
-> index 00b28066873f..bb8459405b3e 100644
-> --- a/common/filestreams
-> +++ b/common/filestreams
-> @@ -108,6 +108,11 @@ _test_streams() {
->  		_scratch_mount
->  	fi
->  
-> +	# Skip these tests on zoned file systems as filestreams don't work
-> +	# with the zoned allocator, and the above would force it into the
-> +	# tiny data section only used for metadata anyway.
-> +	_require_xfs_scratch_non_zoned
 > +
->  	cd $SCRATCH_MNT
+>  echo "Silence is golden"
 >  
->  	# start $stream_count streams
+>  _scratch_mkfs > $seqres.full 2>&1
 > -- 
 > 2.45.2
 > 
