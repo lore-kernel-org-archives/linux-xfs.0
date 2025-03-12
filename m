@@ -1,88 +1,51 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F297B1E25EF;
-	Wed, 12 Mar 2025 06:46:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17E732BD04;
+	Wed, 12 Mar 2025 06:46:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741761963; cv=none; b=q4mqxxUVB0P62C8XAWWQlm/lD/zI5ZEp/CUmT813Y1N8nrycp/s4QtPLbTQ8nH8h8EwiB7gG2ES6nTdHE9nZxX2VgviIejy5LeDOA+Y9SBAIsQpuyMpmeWbXNHCJeudRmgcGakoDoWNo9PudjtZA+uHBakuxMbO9NwuMHo8yCoE=
+	t=1741761964; cv=none; b=MbcMunKvIvI44kEFdm+rFzPam03y4l0g+RoTRjCLIYo4TIFQphblrIJH84bA32/1xR/7IZaNcOn0kw2MYrtZRbnlg56jfTh4VzsX12OfxOz4zWsu3tDEKvwzzfp46RfYK2E5OghhJiE/NZXof848oO14rRyP+oj/1BePZi7/sYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741761963; c=relaxed/simple;
-	bh=zRnYF4wDNyluIlU0tJZ10Erbifxt6iYxQKXppu/4r3Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=es3z1oUJJM173EChJijCHaUPURpyUu8WAdI+8Y/ZeDUyKsSd/rgoIVL4ly7X64e4/mii3oDfTk82ffeAMHcxUt92mL3ylqKSJsU3dt9fblnlV3hNPTSo8bA+A2BjOqApMOKMIa9xYeWGtZzw0AUmCTJjZHw63+PVkPYT0XW/NRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gjCxtiGs; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1741761964; c=relaxed/simple;
+	bh=AwESd08s1Ltgpo/klo6q9Cc8nnu8ZLOaoiY44fbEMgI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lrMo0gSrY6GDYi0LWk2iE92Dn2XhoTUVHzyMRpg2tlsY2ljsCo48Sy4/TXriQeCkx/52+x9B7BOfxXxacp3edbbpgTa5Pggn35g5XYcE2ZYJPfb21/5pDWKckzlBVMwvo5Id6roZA06We0jXw7Y67sCXlzuxvjUfd38m6EmnEyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gjCxtiGs"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=iVtJ+TeOhiuT1xOGpUqf30pNV5N0f7xe7kwsff0a894=; b=gjCxtiGs7xLE9BHveqafhWJLmB
-	QjcoKZcaoOpEDtEWiI2oa6UfqJLQrrw51UiH1JoKpXgDoXBH+iJkWyrNYeXIzEGVMMMADsvNVkKFB
-	VvQS/CWmDTO72g6kjPP2mfBhYPLP0rEtJMOLfIxCWkLgB3XcMZgli1E9yUGrpQu1CIwC+ILIcoFW0
-	g2njnTmD8x0K09h+6NHPYuzQiS0V/XpnWiQmQnv2TuNh3OVlXanOmj4pwSaHZ5SXgKdoA8IDXgUIU
-	rZLM/q3dxNu0Jok4xjAVEIs3vJGnwqDR18uuCSoj2tUal+dab/1omJW209IRV/eyeDZaozsVAEAo7
-	dTnPZKjw==;
-Received: from 2a02-8389-2341-5b80-f359-bc8f-8f56-db64.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:f359:bc8f:8f56:db64] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tsFqr-00000007cnH-15hW;
-	Wed, 12 Mar 2025 06:46:01 +0000
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0474668AA6; Wed, 12 Mar 2025 07:45:58 +0100 (CET)
+Date: Wed, 12 Mar 2025 07:45:57 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 06/17] common: support internal RT device in _require_realtime
-Date: Wed, 12 Mar 2025 07:44:58 +0100
-Message-ID: <20250312064541.664334-7-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250312064541.664334-1-hch@lst.de>
-References: <20250312064541.664334-1-hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, zlang@kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs: remove the post-EOF prealloc tests from the auto
+ and quick groups
+Message-ID: <20250312064557.GA13275@lst.de>
+References: <20241023103930.432190-1-hch@lst.de> <20241023172351.GG21853@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241023172351.GG21853@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-If SCRATCH_DEV is a zoned device it implies an internal zoned RT device
-and should not be skipped in _require_realtime.
+On Wed, Oct 23, 2024 at 10:23:51AM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 23, 2024 at 12:39:30PM +0200, Christoph Hellwig wrote:
+> > These fail for various non-default configs like DAX, alwayscow and
+> > small block sizes.
+> 
+> Shouldn't we selectively _notrun these tests for configurations where
+> speculative/delayed allocations don't work?
+> 
+> I had started on a helper to try to detect the situations where the
+> tests cannot ever pass, but never quite finished it:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- common/rc | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index b0131526380a..00a315db0fe7 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2354,10 +2354,15 @@ _require_no_large_scratch_dev()
- #
- _require_realtime()
- {
--    [ "$USE_EXTERNAL" = yes ] || \
--	_notrun "External volumes not in use, skipped this test"
--    [ "$SCRATCH_RTDEV" = "" ] && \
--	_notrun "Realtime device required, skipped this test"
-+	local zone_type=`_zone_type $SCRATCH_DEV`
-+	if [ "${zone_type}" = "none" ]; then
-+		if [ "$USE_EXTERNAL" != "yes" ]; then
-+			_notrun "External volumes not in use, skipped this test"
-+		fi
-+		if [ "$SCRATCH_RTDEV" = "" ]; then
-+			_notrun "Realtime device required, skipped this test"
-+		fi
-+	fi
- }
- 
- # This test requires that a realtime subvolume is not in use
--- 
-2.45.2
+Did you ever finish this off?
 
