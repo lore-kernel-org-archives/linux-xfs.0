@@ -1,28 +1,48 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CC3E13B5A0
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Mar 2025 08:45:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDD437603F;
+	Thu, 13 Mar 2025 13:54:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741855525; cv=none; b=PAj9IFwlPpxbWIDzr2P7wMOqItkjYizYsQbASoH0KPD9jdREU4lmVDyGeRl/RWVn8uKAjRIoRfIYrNxom1QGd6gRDAdDGi18VvDNDtaZymYNoNiePWD77QPPij1xi0tqvGmGh+Y0zRcFQOfOVQc7hvHMiT1750ui8PIXGgEGyFQ=
+	t=1741874049; cv=none; b=ptioNyC4VSYxUIy6UoLGoqIw8UC0k3Yx+y4bbKTDRCOGqkmM4mseRzMoD48mHzBcEWVV9kfpya7th7EMnfZRbzk4WJBNrK4EzuNiSY7QeV+CoVb4Hkfg19tCKCWcxvMExpLstjYHVjLi2FyDpGwVfWX8/yMDAudKtP/aQiEAa/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741855525; c=relaxed/simple;
-	bh=H79xmv6faUgxxXF4n8Qx7iWPcvcG+oWo2TXTfVecduw=;
+	s=arc-20240116; t=1741874049; c=relaxed/simple;
+	bh=v+2fmTN6TZLW6xWVe2v3KEl06Nx4Y29MoHlb7YVFZmE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tlHg0TN10tjFyawhos0auvOBE2PBPbKTed6l6M7tbhSPfrQp//5GWuJ/4EGsZ9gkE7YImrVpc32Wi++Jd+HdGLFtUkDfJ5aZhgiL89tn+QBMYrjVRYqbWwgo3h11ZSLLFcMmINCGQY6sWE97Q8Fbbg5oUxWrXLWIyumLPbE0KIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id DF8F868AA6; Thu, 13 Mar 2025 09:45:17 +0100 (CET)
-Date: Thu, 13 Mar 2025 09:45:17 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [bug report] xfs: allow internal RT devices for zoned mode
-Message-ID: <20250313084517.GA15727@lst.de>
-References: <8bf5094d-8e92-45d5-885d-71369fe4aaa2@stanley.mountain>
+	 Content-Type:Content-Disposition:In-Reply-To; b=XZfkT79CLX8lQFCTvJK8jON+TSZ5QyBJ7ru7Zi7nslM5aR+/FXM6EATnwcE4tT+JRZ5yfDo5MQhwvXR6UlBYxHknMS2Di99G2eKAKSdwuu+xyZtntt/wo2uRQ3td0kxs64jikAK4eAbf7a3osU7bBYBUzFkX72rgkPaIVo6Oa5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TZ/pjeEc; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TZ/pjeEc"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=jlEn5FEw96qYHJXfLUT6UZ62UFkbZhzk/i6BsYhdANg=; b=TZ/pjeEcZu1WWgQyJDdB6Fc8dY
+	Mfv8WUXd6e5fx2W7ell8dXu0wcAMAjpZz0pgMdaTU9Hvdq5QuXvW7m6jbxIXHWQeoQoRIqFydFG9w
+	+D6rARwGHBPoS8KevU2hcfg7861TU2CWWuRZX8oWLMKGQLoK256baHaCY4vMNsti/Y6aE/cFIb24A
+	+q+S0rz4oG8ODud4/Yp1d2hoJpNLfNQVOORFRJd5dB7+RdxuVYFR/4O7V/NiVgz9S3Q/mVkoVGWCl
+	k7AzK74OVi9Ob9TElnCBaaj6cNT2oeP984LfdRRV+OitKEM5VzcHDUn1WOQamNym30Sy5fFDU0Vi+
+	nNP0v/Ig==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tsj0Z-0000000GnY7-2s0h;
+	Thu, 13 Mar 2025 13:53:59 +0000
+Date: Thu, 13 Mar 2025 13:53:59 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Kanchan Joshi <joshi.k@samsung.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	Qu Wenruo <wqu@suse.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/7] iomap: add bioset in iomap_read_folio_ops for
+ filesystems to use own bioset
+Message-ID: <Z9Ljd-AwJGnk7f2D@casper.infradead.org>
+References: <20250203094322.1809766-1-hch@lst.de>
+ <20250203094322.1809766-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -31,17 +51,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8bf5094d-8e92-45d5-885d-71369fe4aaa2@stanley.mountain>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250203094322.1809766-4-hch@lst.de>
 
-On Thu, Mar 13, 2025 at 11:42:31AM +0300, Dan Carpenter wrote:
-> Hello Christoph Hellwig,
-> 
-> Commit bdc03eb5f98f ("xfs: allow internal RT devices for zoned mode")
-> from Nov 17, 2024 (linux-next), leads to the following Smatch static
-> checker warning:
+On Mon, Feb 03, 2025 at 10:43:07AM +0100, Christoph Hellwig wrote:
+> Allocate the bio from the bioset provided in iomap_read_folio_ops.
+> If no bioset is provided, fs_bio_set is used which is the standard
+> bioset for filesystems.
 
-Yeah.  I'm pretty sure you reported it before and I thought I had fixed
-it, but I guess that got lost again somehow.  I'll take care of it
-and thanks for the reminder!
+It feels weird to have an 'ops' that contains a bioset rather than a
+function pointer.  Is there a better name we could be using?  ctx seems
+wrong because it's not a per-op struct.
 
+> +++ b/include/linux/iomap.h
+> @@ -311,6 +311,12 @@ struct iomap_read_folio_ops {
+>  	 */
+>  	void (*submit_io)(struct inode *inode, struct bio *bio,
+>  			  loff_t file_offset);
+> +
+> +	/*
+> +	 * Optional, allows filesystem to specify own bio_set, so new bio's
+> +	 * can be allocated from the provided bio_set.
+> +	 */
+> +	struct bio_set *bio_set;
+>  };
