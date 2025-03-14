@@ -1,78 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7777D1C878E;
-	Fri, 14 Mar 2025 12:50:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 057F51FFC6B
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Mar 2025 13:27:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741956638; cv=none; b=eJs/xfUfeFYHlxoUI6ct30AiMmPDFeVQfgVufG9gOspQNjrgHKsWQOjXDYCuwn294ZwcNoiFbjbGxiPygUNmKHGN4SAUCkCNhdM1z1O7AQPrcZ2dAnZoqORTLwhXj+FWcMoXIoYJ6gCz4ra8Ichho/Filwjqm3L1vjBHhKh+6FQ=
+	t=1741958837; cv=none; b=q8pMgAchXYJGxCQbXgaLhTulikiskqE7sK0v7+hKrv3OwfluVp06fgc/XvuNIW5hnZt2zVIZn9cxTgmvdT4ner1cud4HJlAPUBew8TqQVX0kvGTFOHLUt6B7AAZJHUGxoUp3yPI7jfYNOIk0xNesOy/uMLPIkceUXQm/NIyfvUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741956638; c=relaxed/simple;
-	bh=OeGswBVPI/6SsI19fFlhJ44+XD/kiqe3Sytjmk3wOtE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QMmfW5kJJcOCzYW3eeYriYDuI2aHtVtHdpNuJWTGby0qyIpLtDJWxD1ggIh/K/eePaaeh3AvrkY6POlwNgmyzrqnWWvRc+A97P1WwyC1g/4DmXYolVN7M9SGbFWJNywz8QMxFmqbqIMut51oC89QnRs9f7Fv8NA0xUSrmbGok6c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oEKY3nMo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1741958837; c=relaxed/simple;
+	bh=oKanJfBzbZ3X1/j38Q1vfIStKE+iIHwTht3JD1WaAnI=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=gjpNfA+Q/t6j4zhISWyiEMeUMODgSWbc6jPSlk7dVCOQD7ufAjsHblP1SmnACqZmKaf2/EoAKThcVVfm+EGjU0d+DNbUEpjhxlz9G21Xi8nkKsjHLEE6hpvBTPQlgmyWX9kbv1+mFybGX9n8xIU/IBCGyZCli4cQHYqO9M+x/xA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c6ri7pPm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oEKY3nMo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7783AC4CEE3;
-	Fri, 14 Mar 2025 12:50:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c6ri7pPm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64454C4CEE3;
+	Fri, 14 Mar 2025 13:27:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741956638;
-	bh=OeGswBVPI/6SsI19fFlhJ44+XD/kiqe3Sytjmk3wOtE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oEKY3nMo7ZOBUxVAfSKtyUSDByLj0ugqUJ3MdSYx4HxLzN2bIHtoiok2D3LcgaLKM
-	 2/FXBxCk0iYxJKCwUw6hs25p6UlJGmtTJOVpfV5fBW8Ug+n7sg9OPipPBzdYl9Gdhf
-	 IYTNggWwyktbPEEUUDQ47tviQ3hwtyNnSj+Z5DOgiOohuW6rwLLkH2lWWN9UDkKZ2d
-	 TG+KdO14rV4WHFMFbfS6gzijeRUWFRDGyhCkNpgyECrHufbIf9UVR9jBR2LzKQEgCj
-	 Bi4Er8fTrDxMIXxM1dVE06mCYgFK7erFys5ovpXc0Lr8w8WmzADo3BauM/AA/Qzq0Z
-	 miwxwfeoKTL9Q==
-Date: Fri, 14 Mar 2025 13:50:31 +0100
+	s=k20201202; t=1741958836;
+	bh=oKanJfBzbZ3X1/j38Q1vfIStKE+iIHwTht3JD1WaAnI=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=c6ri7pPmMNljIIOqsCx8ggH51AbNqsIGv3GfuApEU9XzQ/fqSgf8P4aJVEJCbSCYz
+	 Rv+pKugidR24cNMHx7KDGGl10hagJQAdX7tozrKBXggwmr1SAVkIYqUZfFqEOYMBrD
+	 TnCf4kWbWY2weCD13LIyv+Zto/Psq5/onBb9iWqxYnBl/l+GFtnfEvCGS9ffQuzCXj
+	 F1KFKzQ0zJecnMa0Mm5eIt8k2D/gLu6xilgj1/Y9QRxleTGDASmfL80sGC3zBa06My
+	 Z2Bnd/8iXh9AGMjynQIyBG0B7kW0X1k5dJP6bhKrINO4cSHLeIaPdOWXNlgMBA3u8i
+	 PldcT8gW3OXVg==
 From: Carlos Maiolino <cem@kernel.org>
-To: long.yunjian@zte.com.cn
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, mou.yi@zte.com.cn, zhang.xianwei8@zte.com.cn, 
-	ouyang.maochun@zte.com.cn, jiang.xuexin@zte.com.cn, xu.lifeng1@zte.com.cn, 
-	lv.mengzhao@zte.com.cn
-Subject: Re: [PATCH] xfs: Fix spelling mistake "drity" -> "dirty"
-Message-ID: <xau6zxgyzjfc5jdr7n32hs3rajy4fuq7iup6ps25p26ofazar5@rzqxxtuc4r7i>
-References: <3eLFqScxqqqFtCE-kU0njYzH-fDA4KyBwtDLw0-CYrrAP2axi7rZATwik2Vb4EJgw08oZUhrr6patP6Aqz7wMw==@protonmail.internalid>
- <20250314142907818PyT07oeDc9Sr9svXo7qLc@zte.com.cn>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+ Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+In-Reply-To: <20250310131917.552600-1-hch@lst.de>
+References: <20250310131917.552600-1-hch@lst.de>
+Subject: Re: use folios and vmalloc for buffer cache backing memory v3
+Message-Id: <174195883507.416085.1719150270205198201.b4-ty@kernel.org>
+Date: Fri, 14 Mar 2025 14:27:15 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250314142907818PyT07oeDc9Sr9svXo7qLc@zte.com.cn>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On Fri, Mar 14, 2025 at 02:29:07PM +0800, long.yunjian@zte.com.cn wrote:
-> From: Zhang Xianwei <zhang.xianwei8@zte.com.cn>
-> There is a spelling mistake in fs/xfs/xfs_log.c. Fix it.
-> Signed-off-by: Zhang Xianwei <zhang.xianwei8@zte.com.cn>
-> ---
-> fs/xfs/xfs_log.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index f8851ff835de..ba700785759a 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -2887,7 +2887,7 @@ xlog_force_and_check_iclog(
-> *
-> *     1. the current iclog is active and has no data; the previous iclog
-> *             is in the active or dirty state.
-> - *     2. the current iclog is drity, and the previous iclog is in the
-> + *     2. the current iclog is dirty, and the previous iclog is in the
-> *             active or dirty state.
-> *
-> * We may sleep if:
+On Mon, 10 Mar 2025 14:19:03 +0100, Christoph Hellwig wrote:
+> this is another spin on converting the XFS buffer cache to use folios and
+> generally simplify the memory allocation in it.  It is based on Dave's
+> last folio series (which itself had pulled in bits from my earlier
+> vmalloc series).
+> 
+> It converts the backing memory allocation for all large buffers that are
+> power of two sized to large folios, converts > PAGE_SIZE but not power of
+> two allocations to vmalloc instead of vm_map_ram and generally cleans up
+> a lot of code around the memory allocation and reduces the size of the
+> xfs_buf structure by removing the embedded pages array and pages pointer.
+> 
+> [...]
 
+Applied to for-next, thanks!
 
-This patch does not apply. Please fix it and send in the correct format. Make
-sure it applies on top of the tree with `git am`.
+[01/12] xfs: unmapped buffer item size straddling mismatch
+        commit: 69659e46b7588d2fd5e4644dec9e61127bbfd5f3
+[02/12] xfs: add a fast path to xfs_buf_zero when b_addr is set
+        commit: f2a3717a74c2cf01e29ea3aba355e171eb0d5f5f
+[03/12] xfs: remove xfs_buf.b_offset
+        commit: 51e10993153adc14e8caf2a13d6defc8403dfb4c
+[04/12] xfs: remove xfs_buf_is_vmapped
+        commit: 48a325a4eec3251c2ead7ad7dad304bbdc1460a0
+[05/12] xfs: refactor backing memory allocations for buffers
+        commit: 50a524e0ef9be0e862207fc822ab4b7dcb0c4310
+[06/12] xfs: remove the kmalloc to page allocator fallback
+        commit: 4ef39828318220f11050984fb8dbc372c9c03960
+[07/12] xfs: convert buffer cache to use high order folios
+        commit: 94c78cfa3bd1858eec3c462aedeb7f297d38d768
+[08/12] xfs: kill XBF_UNMAPPED
+        commit: a2f790b28512c22f7cf4f420a99e1b008e7098fe
+[09/12] xfs: buffer items don't straddle pages anymore
+        commit: fd87851680edcb931b2ec4caf23b4abbea126fc3
+[10/12] xfs: use vmalloc instead of vm_map_area for buffer backing memory
+        commit: e2874632a6213b4687e53cd7d837c642c805c903
+[11/12] xfs: cleanup mapping tmpfs folios into the buffer cache
+        commit: e614a00117bc2d46219c66a287ddde0f0a04517c
+[12/12] xfs: trace what memory backs a buffer
+        commit: 89ce287c83c91f5d222809b82e597426587a862d
 
-You can carry my previous RwB to the V2
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-> --
-> 2.27.0
