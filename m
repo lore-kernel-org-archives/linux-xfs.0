@@ -1,104 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7562F1FF1CF
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Mar 2025 13:37:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2367170824
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Mar 2025 16:19:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741959456; cv=none; b=nMm2KXNcKsXsHvcp7A4mauJqlHdlxH8bojufjAO+zGPVUnZ3r0ehsw5MOcvBOZhwbDSv5DW/zGqqSTxmSKwcOcCadd4SCC4Zz/xiixJBnaHB+kpY8NOQfKeyJ+aoGfMXmWFy04M0Amx+C6g0G4IcZ1uJyy/8wokBE4MkyyIKhAo=
+	t=1741969146; cv=none; b=TkHLggskgL1RMIQ56f0DaOoH5SKoa3F3LAWWZ88v/YFP5vTaqWzuO3Lio3ChpmHMdjz6Nlnn2+ViSC+c86FLXdDJI31XeROOq8kvUQAYJEc7QvIdfCqqFAmpfKv+CxGU5XkiG3FUhHHs8c2sFVuuCPy6CTo2pOXBEgLLIvMWKJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741959456; c=relaxed/simple;
-	bh=5CtmVj8cfO0OEJuzX4JAHOqwbWNDwfsHfWDLkgpD5To=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=d+kK/J7sgHhl7qMYo9gfHYg4tAX8MabTxTd2qy9y6qz14/wUDZ+9TvcJed+mL7sIcP/JOyHyTO36CjR8w1TrFYe3hwFaMFH1SeQyJUN1PkwCFDjMR5s5N1+kRzrjTu+tLBdNGqI75jQ+w5XFep/sjSMzUiDiwdpgrujDDeIeSAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iBDTypMM; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iBDTypMM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DC7DC4CEE3
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Mar 2025 13:37:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741959455;
-	bh=5CtmVj8cfO0OEJuzX4JAHOqwbWNDwfsHfWDLkgpD5To=;
-	h=Date:From:To:Subject:From;
-	b=iBDTypMM2E4HN29WJT99ZohfzYCqHVSCIU/9bSFIFk64sf80md/REaBL9JEWTiO0s
-	 jqZiy2u3/zX+xFeLw+QXfuJKwL8Klv22JU+Uq1cLBzM2vriQBVG8modWMHPlWlXSey
-	 5R+ltCY1yQgDNR+eWB1RF2Gx2/rTMHKZrPK7ys7988Qb+ePKmKLmfrz5qbXAupsgws
-	 NDHiyLUlRZ2lnmmZIeK49quKf+37rs0lbbz+RmZTDhapB4DeCUs/RfvgOLxOrqqxmT
-	 5GiCffi0dJ1KNPWa9mS+Hgi/LSnz4/3j8EOlQ3a0g++s5gu48BjeMBJm5yx8P80peV
-	 ue9a3bjlm7B9A==
-Date: Fri, 14 Mar 2025 14:37:32 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to a40830266566
-Message-ID: <g2e6s3dhlevki76eoizein62wsociuj3gx5hrmn2stjrp7rzvf@xhggzokpa76o>
+	s=arc-20240116; t=1741969146; c=relaxed/simple;
+	bh=1PyPhPPPXzUrW81edLk/hVexOnLGTmWk6S6oTJDjr1g=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=ag87vlD7soNoE6FNdxtAZNIev5LeLNNl8Jw+rpfY+2eiIqhgSqkhdB3SPc102he7ANTcc1GTB2QrxGRaIXeZnjUh8S31FSBIHY7yz5+uEwydYUfXc37LUbHkaPd4XPppD8PmFoMxCfGEGDXpd0o13xg+bT/Ak8sj22O06m3MlD4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-851a991cf8bso302925739f.0
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Mar 2025 09:19:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741969144; x=1742573944;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UxgpvdqPX3ylkbOIJHtNR/2q3jsEmcofJWs1Q6fg4hM=;
+        b=JP9CpA9xLI5ezIbugyHuKPfCTdI39iYeaD5vVI+0RJMB/aHopn8zw51NZkfNtQYAet
+         anMMMMIuBRYxlJCh8YT3zLgC+p0w9c24wz8UsSxvJTDpcTGWZ8Nab+RUKAjJJRsRr8Jk
+         oX1x+WuaBGudeNppHOquRuMGFANnN3lqmM+S1xE4qLGX576ABQ0D0bVZv8EMdE88bqxU
+         VNN0lSZw5aEgyawgv1ozNjgamlsq5zIWa5BxHQxLjtXDbW0J0GCB2o6tmH69Z5U3wYxj
+         IrWtGOVf9d1zHaHFH8Eb9WNkjiJG2V2xPsW2kFAcEgo+p6okoHv8kARsiY3qzWWzwsKW
+         R/3Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVTsZYYMlhL5pdSf0lLCjOX3OhcnbRXzjJGNgjvAKTlTrzvC7mXrQzC5IUTGeJ31k13ACQyZ1OqOsQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxuBhhtuYLZWEDVMsS4JXErRl1sBzm1SZWoZyWXfyWxCRvor2GG
+	Lkqi3wQerHqNzW2eZCNSFi5EQOY8Zo9vbROG8LsWRsMCEttjQhIUKleOXMhKOnLJ+UCv1L7uB6w
+	xmXyVpXrSTqDAQRv2i4ip3x874w2H5w/T0sJ1pGTPlvKK/azXSOSpFKQ=
+X-Google-Smtp-Source: AGHT+IEE3iUoDMvt6vpYaKTf9X03mBdBOF392XsUet07v7oD5JzD+kITjp+U2pfYs2O9VOBXHhH9vfIZPElBK0LwW6g4S9LoSoY6
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-Received: by 2002:a92:c503:0:b0:3d3:d156:1dcd with SMTP id
+ e9e14a558f8ab-3d479f6b87fmr60200315ab.1.1741969144137; Fri, 14 Mar 2025
+ 09:19:04 -0700 (PDT)
+Date: Fri, 14 Mar 2025 09:19:04 -0700
+In-Reply-To: <6798b182.050a0220.ac840.0248.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67d456f8.050a0220.14e108.0047.GAE@google.com>
+Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_buf_find_insert
+From: syzbot <syzbot+acb56162aef712929d3f@syzkaller.appspotmail.com>
+To: cem@kernel.org, chandan.babu@oracle.com, cmaiolino@redhat.com, 
+	dchinner@redhat.com, djwong@kernel.org, hch@lst.de, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
+syzbot suspects this issue was fixed by commit:
 
-Hi folks,
+commit a9ab28b3d21aec6d0f56fe722953e20ce470237b
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Tue Jan 28 05:22:58 2025 +0000
 
-The for-next branch of the xfs-linux repository at:
+    xfs: remove xfs_buf_cache.bc_lock
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=17fb5c78580000
+start commit:   69b8923f5003 Merge tag 'for-linus-6.14-ofs4' of git://git...
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=57ab43c279fa614d
+dashboard link: https://syzkaller.appspot.com/bug?extid=acb56162aef712929d3f
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=174cd5f8580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=162e2d18580000
 
-has just been updated.
+If the result looks correct, please mark the issue as fixed by replying with:
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+#syz fix: xfs: remove xfs_buf_cache.bc_lock
 
-The new head of the for-next branch is commit:
-
-a40830266566 Merge branch 'xfs-6.15-merge' into for-next
-
-16 new commits:
-
-Carlos Maiolino (2):
-      [8e53370903d6] Merge branch 'xfs-6.15-folios_vmalloc' into xfs-6.15-merge
-      [a40830266566] Merge branch 'xfs-6.15-merge' into for-next
-
-Chen Ni (1):
-      [ef0f5bd5dd62] xfs: remove unnecessary NULL check before kvfree()
-
-Christoph Hellwig (10):
-      [f2a3717a74c2] xfs: add a fast path to xfs_buf_zero when b_addr is set
-      [51e10993153a] xfs: remove xfs_buf.b_offset
-      [48a325a4eec3] xfs: remove xfs_buf_is_vmapped
-      [50a524e0ef9b] xfs: refactor backing memory allocations for buffers
-      [4ef398283182] xfs: remove the kmalloc to page allocator fallback
-      [94c78cfa3bd1] xfs: convert buffer cache to use high order folios
-      [a2f790b28512] xfs: kill XBF_UNMAPPED
-      [e2874632a621] xfs: use vmalloc instead of vm_map_area for buffer backing memory
-      [e614a00117bc] xfs: cleanup mapping tmpfs folios into the buffer cache
-      [89ce287c83c9] xfs: trace what memory backs a buffer
-
-Dave Chinner (2):
-      [69659e46b758] xfs: unmapped buffer item size straddling mismatch
-      [fd87851680ed] xfs: buffer items don't straddle pages anymore
-
-Jiapeng Chong (1):
-      [fcb255537bee] xfs: Remove duplicate xfs_rtbitmap.h header
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_ialloc.c    |   2 +-
- fs/xfs/libxfs/xfs_inode_buf.c |   2 +-
- fs/xfs/libxfs/xfs_sb.c        |   1 -
- fs/xfs/scrub/inode_repair.c   |   3 +-
- fs/xfs/xfs_buf.c              | 377 +++++++++++++++---------------------------
- fs/xfs/xfs_buf.h              |  25 ++-
- fs/xfs/xfs_buf_item.c         | 114 -------------
- fs/xfs/xfs_buf_item_recover.c |   8 +-
- fs/xfs/xfs_buf_mem.c          |  43 ++---
- fs/xfs/xfs_buf_mem.h          |   6 +-
- fs/xfs/xfs_inode.c            |   3 +-
- fs/xfs/xfs_rtalloc.c          |   3 +-
- fs/xfs/xfs_trace.h            |   4 +
- 13 files changed, 169 insertions(+), 422 deletions(-)
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
