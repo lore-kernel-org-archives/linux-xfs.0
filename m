@@ -1,77 +1,84 @@
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2367170824
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Mar 2025 16:19:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3784118B494;
+	Fri, 14 Mar 2025 16:53:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741969146; cv=none; b=TkHLggskgL1RMIQ56f0DaOoH5SKoa3F3LAWWZ88v/YFP5vTaqWzuO3Lio3ChpmHMdjz6Nlnn2+ViSC+c86FLXdDJI31XeROOq8kvUQAYJEc7QvIdfCqqFAmpfKv+CxGU5XkiG3FUhHHs8c2sFVuuCPy6CTo2pOXBEgLLIvMWKJ4=
+	t=1741971181; cv=none; b=Fd0Ssg4NHu6amqlrXW/CybJk0O6g8yOJBaOsWFSVv9CLIT8i7LlOU65Xjs1VMLAUcpOeMpH4TkfDuDRWOXl41Ff20aD+DE7EHKc+CKHWvjhYn2fouca0C2CHi9pQzuzaCtkjL0a+X0dwUzMxmn7VD+gfmt4B0onTMjEdoRMjJOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741969146; c=relaxed/simple;
-	bh=1PyPhPPPXzUrW81edLk/hVexOnLGTmWk6S6oTJDjr1g=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=ag87vlD7soNoE6FNdxtAZNIev5LeLNNl8Jw+rpfY+2eiIqhgSqkhdB3SPc102he7ANTcc1GTB2QrxGRaIXeZnjUh8S31FSBIHY7yz5+uEwydYUfXc37LUbHkaPd4XPppD8PmFoMxCfGEGDXpd0o13xg+bT/Ak8sj22O06m3MlD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-851a991cf8bso302925739f.0
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Mar 2025 09:19:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741969144; x=1742573944;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UxgpvdqPX3ylkbOIJHtNR/2q3jsEmcofJWs1Q6fg4hM=;
-        b=JP9CpA9xLI5ezIbugyHuKPfCTdI39iYeaD5vVI+0RJMB/aHopn8zw51NZkfNtQYAet
-         anMMMMIuBRYxlJCh8YT3zLgC+p0w9c24wz8UsSxvJTDpcTGWZ8Nab+RUKAjJJRsRr8Jk
-         oX1x+WuaBGudeNppHOquRuMGFANnN3lqmM+S1xE4qLGX576ABQ0D0bVZv8EMdE88bqxU
-         VNN0lSZw5aEgyawgv1ozNjgamlsq5zIWa5BxHQxLjtXDbW0J0GCB2o6tmH69Z5U3wYxj
-         IrWtGOVf9d1zHaHFH8Eb9WNkjiJG2V2xPsW2kFAcEgo+p6okoHv8kARsiY3qzWWzwsKW
-         R/3Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVTsZYYMlhL5pdSf0lLCjOX3OhcnbRXzjJGNgjvAKTlTrzvC7mXrQzC5IUTGeJ31k13ACQyZ1OqOsQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxuBhhtuYLZWEDVMsS4JXErRl1sBzm1SZWoZyWXfyWxCRvor2GG
-	Lkqi3wQerHqNzW2eZCNSFi5EQOY8Zo9vbROG8LsWRsMCEttjQhIUKleOXMhKOnLJ+UCv1L7uB6w
-	xmXyVpXrSTqDAQRv2i4ip3x874w2H5w/T0sJ1pGTPlvKK/azXSOSpFKQ=
-X-Google-Smtp-Source: AGHT+IEE3iUoDMvt6vpYaKTf9X03mBdBOF392XsUet07v7oD5JzD+kITjp+U2pfYs2O9VOBXHhH9vfIZPElBK0LwW6g4S9LoSoY6
+	s=arc-20240116; t=1741971181; c=relaxed/simple;
+	bh=GgvNtudod6MsiKhII9sHkQgjx23EQwv8yeDBHX7lU28=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rYqquATn0WOyBdYsYVz3HvfXYq6C+d8ARHBO06S6fga+fukWnISgTXIWBWzqlC2EOq687JU9kKkda2o1ZMsl2fEEluEVhd+glN7xxC92zbIFutHDcyLp4Xtl048bBRW9Vbc2KtSuyJf/ouSPTEdOLO5GN5cNvUJQ/+XAaiZ2cTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MyoQ0uiB; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MyoQ0uiB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BEC7C4CEE3;
+	Fri, 14 Mar 2025 16:53:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741971180;
+	bh=GgvNtudod6MsiKhII9sHkQgjx23EQwv8yeDBHX7lU28=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=MyoQ0uiBkIltzLC74gkKBirnrR+rCzb1Aq40afi0VqiBeYlLyfvcg2HFGKhpo49+F
+	 zVMS0w7qJaidSNSdZG42U1glyidLpbE2cqvCnz/XrKXY1B57NF9aOmHxZQzcgTjoyJ
+	 g8AkyP11XHKejz4/FUzisntNsS0pZlXwuNLvSCoCSWUrXyfwq9vy4LmyrFiRGJvH1q
+	 PjiT61JX6tqASGi3nQUO82hCJut8mIW5t0ux/AKn/9WW/7FHcZ3fLQBQRITjKXsbw/
+	 /WpB1ETPavZAFeecEDhAJ9TMxvc+y7/WwjfOvXZB0S+Tp+nI9eBRPCyHKQdKE7gdQO
+	 XANnX52FaFFOg==
+Date: Fri, 14 Mar 2025 09:53:00 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, Kanchan Joshi <joshi.k@samsung.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	Qu Wenruo <wqu@suse.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/7] iomap: add bioset in iomap_read_folio_ops for
+ filesystems to use own bioset
+Message-ID: <20250314165300.GF2803730@frogsfrogsfrogs>
+References: <20250203094322.1809766-1-hch@lst.de>
+ <20250203094322.1809766-4-hch@lst.de>
+ <Z9Ljd-AwJGnk7f2D@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a92:c503:0:b0:3d3:d156:1dcd with SMTP id
- e9e14a558f8ab-3d479f6b87fmr60200315ab.1.1741969144137; Fri, 14 Mar 2025
- 09:19:04 -0700 (PDT)
-Date: Fri, 14 Mar 2025 09:19:04 -0700
-In-Reply-To: <6798b182.050a0220.ac840.0248.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <67d456f8.050a0220.14e108.0047.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_buf_find_insert
-From: syzbot <syzbot+acb56162aef712929d3f@syzkaller.appspotmail.com>
-To: cem@kernel.org, chandan.babu@oracle.com, cmaiolino@redhat.com, 
-	dchinner@redhat.com, djwong@kernel.org, hch@lst.de, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z9Ljd-AwJGnk7f2D@casper.infradead.org>
 
-syzbot suspects this issue was fixed by commit:
+On Thu, Mar 13, 2025 at 01:53:59PM +0000, Matthew Wilcox wrote:
+> On Mon, Feb 03, 2025 at 10:43:07AM +0100, Christoph Hellwig wrote:
+> > Allocate the bio from the bioset provided in iomap_read_folio_ops.
+> > If no bioset is provided, fs_bio_set is used which is the standard
+> > bioset for filesystems.
+> 
+> It feels weird to have an 'ops' that contains a bioset rather than a
+> function pointer.  Is there a better name we could be using?  ctx seems
+> wrong because it's not a per-op struct.
 
-commit a9ab28b3d21aec6d0f56fe722953e20ce470237b
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Tue Jan 28 05:22:58 2025 +0000
+"profile" is the closest I can come up with, and that feels wrong to me.
+There's at least some precedent in fs-land for ops structs that have
+non-function pointer fields such as magic numbers, descriptive names,
+or crc block offsets.
 
-    xfs: remove xfs_buf_cache.bc_lock
+--D
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=17fb5c78580000
-start commit:   69b8923f5003 Merge tag 'for-linus-6.14-ofs4' of git://git...
-git tree:       upstream
-kernel config:  https://syzkaller.appspot.com/x/.config?x=57ab43c279fa614d
-dashboard link: https://syzkaller.appspot.com/bug?extid=acb56162aef712929d3f
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=174cd5f8580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=162e2d18580000
-
-If the result looks correct, please mark the issue as fixed by replying with:
-
-#syz fix: xfs: remove xfs_buf_cache.bc_lock
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+> 
+> > +++ b/include/linux/iomap.h
+> > @@ -311,6 +311,12 @@ struct iomap_read_folio_ops {
+> >  	 */
+> >  	void (*submit_io)(struct inode *inode, struct bio *bio,
+> >  			  loff_t file_offset);
+> > +
+> > +	/*
+> > +	 * Optional, allows filesystem to specify own bio_set, so new bio's
+> > +	 * can be allocated from the provided bio_set.
+> > +	 */
+> > +	struct bio_set *bio_set;
+> >  };
+> 
