@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D493E1EDA0F;
-	Fri, 14 Mar 2025 09:41:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7777D1C878E;
+	Fri, 14 Mar 2025 12:50:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741945299; cv=none; b=eP+Mep5X7VX+DfLNtzpMBXZwJGn5zuj7Rkaq7p3hO8AKKIKtDfNlfHHz6FkZW3VwS/x5cf+7amDIEKAMfmpaKp2jngpNrwgblngJwV8Ew9H/ZXT+cyqIMUMbMIUObRtTgXMKazGGA4gx4n5CzE+O+fwZuKXNn+hOhv659sI/g8c=
+	t=1741956638; cv=none; b=eJs/xfUfeFYHlxoUI6ct30AiMmPDFeVQfgVufG9gOspQNjrgHKsWQOjXDYCuwn294ZwcNoiFbjbGxiPygUNmKHGN4SAUCkCNhdM1z1O7AQPrcZ2dAnZoqORTLwhXj+FWcMoXIoYJ6gCz4ra8Ichho/Filwjqm3L1vjBHhKh+6FQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741945299; c=relaxed/simple;
-	bh=6gKZ51T+3DMC2j6IAwg/XsS8374WjbMxveqSF5Hz0WA=;
+	s=arc-20240116; t=1741956638; c=relaxed/simple;
+	bh=OeGswBVPI/6SsI19fFlhJ44+XD/kiqe3Sytjmk3wOtE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QOEFd3uWEwKmZ6wuonX4lRPDc2v0ZTzIss9qWxojx1bfivVkEswBSiXu8b02OS776R9gSxp/xmdN4iW4NUIoeblCYukl+o/0rgKP+RbqUFmckrNViP0SwuJxlm5efcMKnCo8INGZBPDMCoAf2vPsKjOeumdEKcYoUKx14qTglbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BaO65foE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QMmfW5kJJcOCzYW3eeYriYDuI2aHtVtHdpNuJWTGby0qyIpLtDJWxD1ggIh/K/eePaaeh3AvrkY6POlwNgmyzrqnWWvRc+A97P1WwyC1g/4DmXYolVN7M9SGbFWJNywz8QMxFmqbqIMut51oC89QnRs9f7Fv8NA0xUSrmbGok6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oEKY3nMo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BaO65foE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1380C4CEE3;
-	Fri, 14 Mar 2025 09:41:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oEKY3nMo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7783AC4CEE3;
+	Fri, 14 Mar 2025 12:50:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741945299;
-	bh=6gKZ51T+3DMC2j6IAwg/XsS8374WjbMxveqSF5Hz0WA=;
+	s=k20201202; t=1741956638;
+	bh=OeGswBVPI/6SsI19fFlhJ44+XD/kiqe3Sytjmk3wOtE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BaO65foEUgh9pl9Wqsrm7qIDN2BzRQ6SfGDzJPbYZ1DcKIhxX0AAzIzvZhdnhbOQ8
-	 E2Dk3dwizxVCq13YKUj+ASmOj6tyn7CAC+L8/fxfIJKMHYlE0blN9SX+gbbhne6flD
-	 /kwF2ORtIxSlx9Kd0h66Xge3c6PaDZiWAemPwAo1vl9LprpDlS3th1uYA0dRhAXCfM
-	 vEhQ7XOy6piZV3HGbPgk7YZFetPN1qLnXeD6Tb2PottbY02bCUhQVddyV2bowX5Mcx
-	 hZy6twDeOtmuKUjMsTpbF562/mtxGy45pqT2lbJ7QYySbTiUZrg1WV224QuI++mybm
-	 tE9+/rXHWkFKQ==
-Date: Fri, 14 Mar 2025 10:41:31 +0100
+	b=oEKY3nMo7ZOBUxVAfSKtyUSDByLj0ugqUJ3MdSYx4HxLzN2bIHtoiok2D3LcgaLKM
+	 2/FXBxCk0iYxJKCwUw6hs25p6UlJGmtTJOVpfV5fBW8Ug+n7sg9OPipPBzdYl9Gdhf
+	 IYTNggWwyktbPEEUUDQ47tviQ3hwtyNnSj+Z5DOgiOohuW6rwLLkH2lWWN9UDkKZ2d
+	 TG+KdO14rV4WHFMFbfS6gzijeRUWFRDGyhCkNpgyECrHufbIf9UVR9jBR2LzKQEgCj
+	 Bi4Er8fTrDxMIXxM1dVE06mCYgFK7erFys5ovpXc0Lr8w8WmzADo3BauM/AA/Qzq0Z
+	 miwxwfeoKTL9Q==
+Date: Fri, 14 Mar 2025 13:50:31 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: long.yunjian@zte.com.cn
 Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, 
@@ -34,7 +34,7 @@ Cc: djwong@kernel.org, linux-xfs@vger.kernel.org,
 	ouyang.maochun@zte.com.cn, jiang.xuexin@zte.com.cn, xu.lifeng1@zte.com.cn, 
 	lv.mengzhao@zte.com.cn
 Subject: Re: [PATCH] xfs: Fix spelling mistake "drity" -> "dirty"
-Message-ID: <6ak3aylfkxp2vg4fcf54cvjzt2kafblnloetgv2bhk5n32aw2t@4bz64dxcfikj>
+Message-ID: <xau6zxgyzjfc5jdr7n32hs3rajy4fuq7iup6ps25p26ofazar5@rzqxxtuc4r7i>
 References: <3eLFqScxqqqFtCE-kU0njYzH-fDA4KyBwtDLw0-CYrrAP2axi7rZATwik2Vb4EJgw08oZUhrr6patP6Aqz7wMw==@protonmail.internalid>
  <20250314142907818PyT07oeDc9Sr9svXo7qLc@zte.com.cn>
 Precedence: bulk
@@ -68,7 +68,11 @@ On Fri, Mar 14, 2025 at 02:29:07PM +0800, long.yunjian@zte.com.cn wrote:
 > *
 > * We may sleep if:
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+This patch does not apply. Please fix it and send in the correct format. Make
+sure it applies on top of the tree with `git am`.
+
+You can carry my previous RwB to the V2
 
 > --
 > 2.27.0
