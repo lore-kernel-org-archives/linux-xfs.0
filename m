@@ -1,77 +1,107 @@
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCEAF194091;
-	Sat, 15 Mar 2025 06:32:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.216.63.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDBE418E023;
+	Sat, 15 Mar 2025 08:20:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742020345; cv=none; b=UOzbW/pRpARsb+4ChowzTgIu7mU0eDdN4IQuKEcqLwmnWCPfWd+nGDXcAF9A0iIkN2LvRFGNY0/Ss/y7g6zL00X2yeshESS7LOlGhzh8S3haKa1d78JRlNVXuTbD8FaokOqjlOjXH/CcIMr76wusJykfCFklDXDPPmpto0GNatA=
+	t=1742026828; cv=none; b=oatNtQr5LbLOwqqPDo4RM1dnfmPZO4jBPvTFOPBuX7hqIT5PHdhy4DiY6A3UnFxCE5lxab30J1io6zeot8HPft/vERT9799I9Ct+DdvH+rhpZxqCznzxL/aO3NFruZpsbhmaWBGWhrBUfHRd478j5GPsbRqgSDHLspK5JkHU9rU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742020345; c=relaxed/simple;
-	bh=Bdvs3uwRCMr0NVGM6GmZxfEAaRANq6XlAJNJV+MsXA4=;
-	h=Date:Message-ID:Mime-Version:From:To:Cc:Subject:Content-Type; b=PjtgHNXzOYVL5Kx52kpOdCx5k+Djz1mOBs2JeaQNnf2LQFnnlHTPRWblm/7J64lXMNVQpqKkK9HGLgTkeFDnj5PGv9Dg81EwT9JuV9K9qHk1CcS7EYxNPjk5B+oO943V2ei+sK+nu4gVV42mWfNIMaJ+e+oNE9K04qyNWF36PKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn; spf=pass smtp.mailfrom=zte.com.cn; arc=none smtp.client-ip=63.216.63.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4ZFBHB0Nvbz5B1J6;
-	Sat, 15 Mar 2025 14:32:22 +0800 (CST)
-Received: from njy2app04.zte.com.cn ([10.40.12.64])
-	by mse-fl2.zte.com.cn with SMTP id 52F6WE1T061231;
-	Sat, 15 Mar 2025 14:32:14 +0800 (+08)
-	(envelope-from long.yunjian@zte.com.cn)
-Received: from mapi (njy2app08[null])
-	by mapi (Zmail) with MAPI id mid201;
-	Sat, 15 Mar 2025 14:32:16 +0800 (CST)
-Date: Sat, 15 Mar 2025 14:32:16 +0800 (CST)
-X-Zmail-TransId: 2b0067d51ef0ffffffffda5-b674f
-X-Mailer: Zmail v1.0
-Message-ID: <20250315143216175uf7xlZ4jkOfP5o3oxuM4z@zte.com.cn>
+	s=arc-20240116; t=1742026828; c=relaxed/simple;
+	bh=0jkRdgernz7i++UYipak/SXnnIEg7hNuL76BZ3XqfjY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lqhUTWSvl4NMpNophbq+5VG187xBc3/rbSpPx4KAIIOe6Q1WwPb0mxHOraC6G9PNBxPF7nJg2JfzDpNsDEeIZN2MBAHO9uiIx9EzwX1KpE8RqoZpWrQHr1gU4Pk9rwAvs46RINbL2F5UA6W1FbC4Cg+hzl5yXWjR/XYB+vsfxec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KlWEkDiw; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KlWEkDiw"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2243803b776so78330985ad.0;
+        Sat, 15 Mar 2025 01:20:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1742026825; x=1742631625; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=PNuUqB/N5exhUTR5etjgn8RyVGXTehpbQ4LU7oTnmWU=;
+        b=KlWEkDiwaOnaeFmPpF2TcHNabNVW76GtOmL/UzAwvRE+wFlcIaQJWJZR9H8EC5GUv7
+         7XSlfjKztHn7h2hXlD3aBbYGWQokVfl8EEHAnanItavL6zW3lpxBbH9zWqfYARz9Dj39
+         pX6Dpoq0Kpu8tEqCUE/KLGp2kWnWT3PNi3noPuDpguU6FFFpdgQ400TiA+UtULzSAbAA
+         0j9CO8634ONmKG4iTGcnwy+cSmhM9MLLF8hLiTmIp+xDdJajoyLCP8rOLBSUVUG1MWCS
+         +JlVykl62JZ2jn8AFBODXk6qZhMaUgJkJ6YGv5z8kcCHRTRwlQ/lh3pQS+0buNDNYT8u
+         nwvg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742026825; x=1742631625;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=PNuUqB/N5exhUTR5etjgn8RyVGXTehpbQ4LU7oTnmWU=;
+        b=MOLHKHZ61P+wKUe1M0V+l5n1JUI4KIrq6WA3mkqTR5gI3ODBPZ1oXE/0DF2fsEqofB
+         g0rxiJJaGftSu3fzHrMx3WN/r1CzOJKAy+JQoEiKh8NxViUA4zpMsC4zGWGVLlAEsJU0
+         dfTOxcFnncXYfETGYnQNbO5fiUvse6pqPSu54qzyv/Obipq2xSsoGE24LKzOirgMdgis
+         vJJkW86e0m0dhNhoxpHFDvLe6F9beX+14ttuRuGX4PzH7ITFnGf2+2W2HFIeGcgHFdUl
+         jfG8aU8j0qNOeKSFE2zbUGnzNiBcym5J+uKCUEaKXT5FyIHRtLfcLp7jy5wt8nOO/deZ
+         3Vag==
+X-Forwarded-Encrypted: i=1; AJvYcCXGKNxWt1rjXz67pcUxWCZpwGhQ1z+LUVCH1wMx493WtLNamN6g7Vbi/7Wsnxf4Xc0pYjSk03U7luBuB6dB@vger.kernel.org
+X-Gm-Message-State: AOJu0YxCmNND8zS33UAyrcBxvqZZdbY7rGgFAJkoP1/5PUpXwXgQ97or
+	FIQ+eUI064j17Ao2fp5dHKgc7rWzr8FAUlM9Ks6BrzVW3Oa5OyqLlRsq5A==
+X-Gm-Gg: ASbGncs76ExHZe5Ugn1taZEMRf5XdCdn/gvXHWtF/6OqipbULWJlVmck+txtN8QTJpD
+	WCcvNHXd+lVF9uNL1nfxlmb02aghQGEC8jozR7ax0bNbBy/NnUQThC6CVTT6XzVzOP6IqCc0k+Z
+	AZvSURcSK12T543aeAgY9VdIEwqiaBb+zzl71YeyGh1gtPmv3zeVeKN82xlUd9wYXIRz/MJIE/Q
+	I+Cm6JmQ/OJnlIMe+saZt/vun3W5EGl/Iu3/TKs1uH32iksHptTaETK3iJjJMaBq//7dK+BwWcy
+	05lRQEpetJouyYn8KzCu0+WPWd4zDelKVq4oNWR2g8auP1F/+w==
+X-Google-Smtp-Source: AGHT+IFXoB3ePL4u5TDU8isX8y9tPqVWV/3ndH5sjamTUf5onzuc4D+52t8NeOJ87X9g4xJ5NIPZHw==
+X-Received: by 2002:a17:902:dac3:b0:216:644f:bc0e with SMTP id d9443c01a7336-225e0a799e6mr76323235ad.24.1742026825138;
+        Sat, 15 Mar 2025 01:20:25 -0700 (PDT)
+Received: from dw-tp.ibmuc.com ([171.76.87.44])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-225c6bbe7e4sm40071405ad.189.2025.03.15.01.20.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 15 Mar 2025 01:20:24 -0700 (PDT)
+From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	linux-fsdevel@vger.kernel.org,
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Subject: [PATCH v3 0/3] xfsprogs: Add support for preadv2() and RWF_DONTCACHE
+Date: Sat, 15 Mar 2025 13:50:10 +0530
+Message-ID: <cover.1741340857.git.ritesh.list@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-From: <long.yunjian@zte.com.cn>
-To: <djwong@kernel.org>
-Cc: <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <mou.yi@zte.com.cn>,
-        <zhang.xianwei8@zte.com.cn>, <ouyang.maochun@zte.com.cn>,
-        <jiang.xuexin@zte.com.cn>, <lv.mengzhao@zte.com.cn>,
-        <xu.lifeng1@zte.com.cn>, <yang.yang29@zte.com.cn>
-Subject: =?UTF-8?B?W1BBVENIIHYyXSB4ZnM6IEZpeCBzcGVsbGluZyBtaXN0YWtlICJkcml0eSIgLT4gImRpcnR5Ig==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 52F6WE1T061231
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 67D51EF6.000/4ZFBHB0Nvbz5B1J6
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-From: Zhang Xianwei <zhang.xianwei8@zte.com.cn>
+This adds following support to xfs_io:
+- Support for preadv2()
+- Support for uncached buffered I/O (RWF_DONTCACHE) for preadv2() and pwritev2()
 
-There is a spelling mistake in fs/xfs/xfs_log.c. Fix it.
+v2 -> v3:
+==========
+1. Minor update for -U option description.
+2. Added reviewed-bys of Darrick.
+[v2]: https://lore.kernel.org/linux-xfs/cover.1741170031.git.ritesh.list@gmail.com
 
-Signed-off-by: Zhang Xianwei <zhang.xianwei8@zte.com.cn>
----
-v1 -> v2
-fix the format of this patch
- fs/xfs/xfs_log.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v1 -> v2:
+========
+1. Based on pwritev2 autoconf support enable HAVE_PREADV2 support.
+2. Check if preadv2/pwritev2 flags are passed w/o -V argument
+3. Fixed space before tabs issue.
+[v1]: https://lore.kernel.org/linux-xfs/cover.1741087191.git.ritesh.list@gmail.com/#t
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f8851ff835de..ba700785759a 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2887,7 +2887,7 @@ xlog_force_and_check_iclog(
-  *
-  *	1. the current iclog is active and has no data; the previous iclog
-  *		is in the active or dirty state.
-- *	2. the current iclog is drity, and the previous iclog is in the
-+ *	2. the current iclog is dirty, and the previous iclog is in the
-  *		active or dirty state.
-  *
-  * We may sleep if:
--- 
-2.27.0
+Ritesh Harjani (IBM) (3):
+  xfs_io: Add support for preadv2
+  xfs_io: Add RWF_DONTCACHE support to pwritev2
+  xfs_io: Add RWF_DONTCACHE support to preadv2
+
+ include/linux.h   |  5 ++++
+ io/Makefile       |  2 +-
+ io/pread.c        | 62 ++++++++++++++++++++++++++++++++++-------------
+ io/pwrite.c       | 14 +++++++++--
+ man/man8/xfs_io.8 | 16 ++++++++++--
+ 5 files changed, 77 insertions(+), 22 deletions(-)
+
+--
+2.48.1
+
