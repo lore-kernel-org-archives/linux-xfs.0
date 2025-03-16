@@ -1,265 +1,279 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D279A32;
-	Sun, 16 Mar 2025 13:40:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB1B6154C00
+	for <linux-xfs@vger.kernel.org>; Sun, 16 Mar 2025 18:45:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742132434; cv=none; b=JrfcD2huPMFnRDTsSoOSjmsoWysrWvGCPGBtUd81/lRVya9ZUDJzMH1xUXm+9QEwgoCd8MNDiN6ZlcVWETfE+sg865LmG+gzgdEFbA6DIR+IzdIPyNsdg5PfYKnaMmrSNWVHWutoXjDR3uxQA15k5NlLROEbcDKcALhTmxvbMk4=
+	t=1742150742; cv=none; b=bgcEhwirGVTtQHpa6eDSjda8C+4D/ZSE89VYHX1IeheLyVEFOSL+r62FzSg0JQsNXFx3n3uuP/b/cM+Hah2K35apoAyLuXtaGh5AzHLLEfEDPX1LHnxH9hNHcnYU9eJvqiETch1Rw8wa9J61zw1lhW6voSUPVi4/1gSHd78XLwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742132434; c=relaxed/simple;
-	bh=+eP3COHMGSILG+3VCh2zSSWR05FiQeElPNL6B3fjFgg=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=tAPVDdA21nHL2kZl6Ci+XbNblsN74Mt2jK+Xa7g4gbq4lY+5wjAV7YvcTDzVvMXdsb6zm8KD73PamfsvdiHk0+ww/g/nZHkYw6Ymwgiiy8oV69tbgsL8KBGXCN83eZSAB9r4LIefAN8Sie50/r0zjoVLX35HR85QdhkoZSnjA58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UyDP/fEA; arc=none smtp.client-ip=209.85.214.180
+	s=arc-20240116; t=1742150742; c=relaxed/simple;
+	bh=f9xX8a0tZyFrt5yC17B7amlYY83nUepg2X4urVzue6A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=S7AmveDGxY4B18+FxvZrZJpEfM9qUyKhC9t/yAdy4H4x2drVzf2kSWKQ6F2NBwszFNdOAvV3PnhHk+R4nvxUwiWwk+FYLtswI0jsCujMNZJDTBQ2xiIjw20SO5TTL4iQ5CcoVbzmjrGY/cyBgiE5GhGtrNFNN9kxkyHRuCL+W9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lUxiMZ1u; arc=none smtp.client-ip=209.85.214.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UyDP/fEA"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-224100e9a5cso66786965ad.2;
-        Sun, 16 Mar 2025 06:40:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lUxiMZ1u"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-22423adf751so56310155ad.2
+        for <linux-xfs@vger.kernel.org>; Sun, 16 Mar 2025 11:45:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742132431; x=1742737231; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=VdLYDQ9fmoN/8PBxziQo7P+nVlZR+8JRc9oB0auVypw=;
-        b=UyDP/fEAqiicfNLY/OHjqXBIZROZhPkQMJmWQacIyna7CFAVoBwz9UYEAZwfVNCQUC
-         zfwjCP4IQq9RUGff8o3eDB3gpjFHm85PRbZjX8ghxBBdHvL/4KqYk6vI9B70wv08TJcu
-         LmsTA9X/MS7sCLps/IrD1oWRnmHsBrWxnE/zZUThBGBDxo6vakF5ltwqd1BO3bykkrKX
-         CpMhP6kXDLnVqZpMoWlv4XSeCYFvf3dTHPbR3bJlau5wr8Ij5V6Uxacnn1ydwTvJ4OZI
-         tNPnaX7xeDBDLYKgtHB2Nh/HeA8Jghhszrx9k0fwnZhjAj1wObzxdBKGkReW4hcrr8pm
-         bxZg==
+        d=gmail.com; s=20230601; t=1742150739; x=1742755539; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=mBvqhjFmKnNxAwpSs2zBP2YWOeRcVYuEGWWN5UTebH0=;
+        b=lUxiMZ1uAOhNd7E/X2/6rl9erIWRAzptoCMv0KYEkV5bPR61JHHH+yWR0qHtRaFFsw
+         Ro5OiNg4PC1eSFj2qACeqmFfCJZ08trZYhfoZjtcwMY5Lg3AAb6ON+l2b5juatDpg5o1
+         lVaxCYi4zwcR1vvMJMLVkoGNdV7/DrHmd9dV6etQxavTay5LhRbOjLWQRqLYTqn5Bxv/
+         vj4+fpec91N84/arVFSryYCeoP+xfDz0qzZQZ42RetsXYVOnXFcCgQ5C15Mxva0sHJxq
+         wr6TphmRHn/qcu3402zr1HLdPAH0ipptil/pe65fB9048vCkFqr8VXs2NZV5nhQahmuf
+         zamQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742132431; x=1742737231;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=VdLYDQ9fmoN/8PBxziQo7P+nVlZR+8JRc9oB0auVypw=;
-        b=dF0IJl9kvm+jGKbq8c4Q+nMdWMefaDmEt5xWJgq7yb2HnbD31VDmy/zReH5Nh3zzbv
-         tOV02rENvxnwhgTuI0asKVrtrHzOxZdk6V2BB0g+G1RcpQyM2IdwnpGHVdeM4iJsBVkQ
-         EyNGM2fRRVL8Ahf3fjQ7cBXUtdUUwGw/Faj2RKUMp2e9LWZMHeSW2PMHHzOJDSSATN91
-         EPvNzobIbvyRqZuYyyqWie92aqap2RQxEL+1/+CdsXQwsgcSjzoitiF3ugPBb4xoywDv
-         7BtYhioeRcCOD/HKWhrxZ4dv6CGhaNohRuFz0reXMnwzFYzXNm7UVMesgFtwwrLnEEft
-         Vc+Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVmBNyPxljPBEHO0+afo4gNA6DBQW1MafVW3NlGxViZQtkAZ9U5pvIwSRByMP5dBViZmAuChgA13gAIOdqM@vger.kernel.org, AJvYcCW8UlRatNyQHPtwdTy+uAzdd7fQN//28TbCjCu1RyETg1V02/bhoa0l3tqcsOrW/ffyavTnDF67lByv@vger.kernel.org, AJvYcCWS/9R2xlgvetBVx3Nbglql38SaZxoV2cc2Xy0dgaxfEDd18UtYkNXHbMyQG/sr18FrqR2HapvLBfU1MLd5lg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVuWZReBferxWVjS6OOupuJaNiK9a90mZyIZqnwFdBKSjbJw0y
-	O+SFt/vOqvzGVgTZkoB8g5mPtVGliSgz2JN3WmUw0ok7Hd6xR+a9
-X-Gm-Gg: ASbGncvj2X0XCLK/knUmTlp9SEcXzrDnNdjc/DYK7ct+VB32unaDuhqJUh0+KWqywd0
-	U6s/pu+lNMI7Ky3uXFFnaUC3d1eW5znobkeBHqU5ZRceenrVy9wLwC8+TH+NMFv5JT7hbFOXiOV
-	pR/GyBTIkjGfLVo7hx26NlpgpP/kWcPXzr0vcMlZxsIzBhKw9CXzHleg7+a68QwhVzEzpjd3NGU
-	c620Kw0K9kivfvHWB+HMrnEqxODXrP4QJrs2lPAkdpQCZGVDeEnt4eeZziJLUgagpAqvB1Yjgey
-	fKnm13/Rex1B45dgACnhjGs2/0ANRMaTf4tQjw==
-X-Google-Smtp-Source: AGHT+IGhz7Ue+ZLyG8VUmXRsrEHkfX2BRwH78PG4XyOl+NG2xSpQf6wEawvh82ePN1A6+gBd5ewDVg==
-X-Received: by 2002:a17:903:41cd:b0:21f:1549:a563 with SMTP id d9443c01a7336-225e0a19b8cmr111256885ad.2.1742132431486;
-        Sun, 16 Mar 2025 06:40:31 -0700 (PDT)
-Received: from dw-tp ([171.76.81.247])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-225c6ba6f09sm57950155ad.133.2025.03.16.06.40.26
+        d=1e100.net; s=20230601; t=1742150739; x=1742755539;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mBvqhjFmKnNxAwpSs2zBP2YWOeRcVYuEGWWN5UTebH0=;
+        b=Qgpy8reReYmhka4/YiZzRadhB9JAYcCxg6iZTNmNfEZlqPoBg50MYO6zk/eCr4+2Ns
+         pj9caHnzC5uTPYV3VUcrzTxTxxfFqE7HIUOtqDpJRAd1eEE4RpnSoNMBeFzeDTSAMe6z
+         gItOnWHAP1imOl1dEzlDqqJT41qVu5IcGBZVM76LUUOXLb+4TpaODqwwEsIeuizvC1Wz
+         f+JCVhPbx9+5w5mQzc6nxlKmC/lQy3/+/ttrgDIsnde3I7QNXsv9RzyZoCc2GX5+QPVu
+         bdmN/2u7KpwOdhs3dPsPvgaff7vqQaBfewYh/cZcKoZyETVOmXoMfc6GJ/uVJknc7oAP
+         n0nw==
+X-Gm-Message-State: AOJu0Yxv0/C0lwYMEBVJlEp99584TIRIHqjanNulaGQAnfHf0+GmDbJj
+	yj4Urm33jyiqDl3CxcPyquBq7978a+u6VE8X7QL51W23K0H8uPukVvLf2g==
+X-Gm-Gg: ASbGncs25Lj6zv7bOHGuwPFG0v+QgQzWjLim+Qfv0uLW8SkoMkcvbYQl/BMeH2Rdrl8
+	bU7iCs3+NlrMbRGbXmYSWQ2lPMojnbrVzpQ4B1VTmZQHMoa0ZdGeKN7KVyNMkdxB6eRgJVhORot
+	y0Z+VtnQEuimT5F538QqmX2qFuQVy9JKJ+H1izfXScxZ7umK+Bt37YRBJeAIkcXuFJk2j8vv12Y
+	E1aTKRxEKaaCdv9NMsUwHDggsH6X1YuD3f9iKySvxphGnmVWQ/YvduSQLCVVNcr+wEzRCyKKSYt
+	t4SdFNYZy9m1tXWiKcUWah/zkzpGMHC4bPMvWX3+C4Fh3pg9YSY=
+X-Google-Smtp-Source: AGHT+IHjrlNnz8Urszu1ahwTgtdqJCXqKnlv2kzV0hO88ytFU7aFDkJzzU4IM7BsRphjhvBjOuBADw==
+X-Received: by 2002:a17:902:e785:b0:220:fce7:d3a6 with SMTP id d9443c01a7336-225e0a75becmr136086555ad.23.1742150739106;
+        Sun, 16 Mar 2025 11:45:39 -0700 (PDT)
+Received: from dw-tp.ibmuc.com ([171.76.81.247])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-225c68883d0sm60500325ad.10.2025.03.16.11.45.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Mar 2025 06:40:30 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, brauner@kernel.org, djwong@kernel.org, cem@kernel.org, dchinner@redhat.com, hch@lst.de
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, martin.petersen@oracle.com, tytso@mit.edu, linux-ext4@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v6 01/13] iomap: inline iomap_dio_bio_opflags()
-In-Reply-To: <20250313171310.1886394-2-john.g.garry@oracle.com>
-Date: Sun, 16 Mar 2025 19:10:06 +0530
-Message-ID: <87cyeh5c21.fsf@gmail.com>
-References: <20250313171310.1886394-1-john.g.garry@oracle.com> <20250313171310.1886394-2-john.g.garry@oracle.com>
+        Sun, 16 Mar 2025 11:45:38 -0700 (PDT)
+From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Subject: [RFC] xfs_io: Add cachestat syscall support
+Date: Mon, 17 Mar 2025 00:15:29 +0530
+Message-ID: <f93cec1c02eefffff7a5182cf2c0333cec600889.1742150405.git.ritesh.list@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-John Garry <john.g.garry@oracle.com> writes:
+This adds -c "cachestat off len" command which uses cachestat() syscall
+[1]. This can provide following pagecache detail for a file.
 
-> It is neater to build blk_opf_t fully in one place, so inline
-> iomap_dio_bio_opflags() in iomap_dio_bio_iter().
->
-> Also tidy up the logic in dealing with IOMAP_DIO_CALLER_COMP, in generally
-> separate the logic in dealing with flags associated with reads and writes.
->
+- no. of cached pages,
+- no. of dirty pages,
+- no. of pages marked for writeback,
+- no. of evicted pages,
+- no. of recently evicted pages
 
-Indeed it clean things up and separates the logic required for
-IOMAP_DIO_WRITE v/s reads.
+[1]: https://lore.kernel.org/all/20230503013608.2431726-3-nphamcs@gmail.com/T/#u
 
-The change looks good to me. Please feel free to add -
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+---
+ configure.ac          |  1 +
+ include/builddefs.in  |  1 +
+ io/Makefile           |  5 +++
+ io/cachestat.c        | 77 +++++++++++++++++++++++++++++++++++++++++++
+ io/init.c             |  1 +
+ io/io.h               |  6 ++++
+ m4/package_libcdev.m4 | 19 +++++++++++
+ 7 files changed, 110 insertions(+)
+ create mode 100644 io/cachestat.c
 
+diff --git a/configure.ac b/configure.ac
+index 8c76f398..f039bc91 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -154,6 +154,7 @@ AC_PACKAGE_NEED_RCU_INIT
+ 
+ AC_HAVE_PWRITEV2
+ AC_HAVE_COPY_FILE_RANGE
++AC_HAVE_CACHESTAT
+ AC_NEED_INTERNAL_FSXATTR
+ AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
+ AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 82840ec7..fe2a7824 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -95,6 +95,7 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+ 
+ HAVE_PWRITEV2 = @have_pwritev2@
+ HAVE_COPY_FILE_RANGE = @have_copy_file_range@
++HAVE_CACHESTAT = @have_cachestat@
+ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
+ NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
+ NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
+diff --git a/io/Makefile b/io/Makefile
+index 14a3fe20..444e2d6a 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -61,6 +61,11 @@ CFILES += copy_file_range.c
+ LCFLAGS += -DHAVE_COPY_FILE_RANGE
+ endif
+ 
++ifeq ($(HAVE_CACHESTAT),yes)
++CFILES += cachestat.c
++LCFLAGS += -DHAVE_CACHESTAT
++endif
++
+ ifeq ($(ENABLE_EDITLINE),yes)
+ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+ endif
+diff --git a/io/cachestat.c b/io/cachestat.c
+new file mode 100644
+index 00000000..9edf3f9a
+--- /dev/null
++++ b/io/cachestat.c
+@@ -0,0 +1,77 @@
++// SPDX-License-Identifier: GPL-2.0
++
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "io.h"
++#include <unistd.h>
++#include <linux/mman.h>
++#include <asm/unistd.h>
++
++static cmdinfo_t cachestat_cmd;
++
++static void print_cachestat(struct cachestat *cs)
++{
++	printf(_("Cached: %llu, Dirty: %llu, Writeback: %llu, Evicted: %llu, Recently Evicted: %llu\n"),
++			cs->nr_cache, cs->nr_dirty, cs->nr_writeback,
++			cs->nr_evicted, cs->nr_recently_evicted);
++}
++
++static int
++cachestat_f(int argc, char **argv)
++{
++	off_t offset = 0, length = 0;
++	size_t blocksize, sectsize;
++	struct cachestat_range cs_range;
++	struct cachestat cs;
++
++	if (argc != 3) {
++		exitcode = 1;
++		return command_usage(&cachestat_cmd);
++	}
++
++	init_cvtnum(&blocksize, &sectsize);
++	offset = cvtnum(blocksize, sectsize, argv[1]);
++	if (offset < 0) {
++		printf(_("invalid offset argument -- %s\n"), argv[1]);
++		exitcode = 1;
++		return 0;
++	}
++
++	length = cvtnum(blocksize, sectsize, argv[2]);
++	if (length < 0) {
++		printf(_("invalid length argument -- %s\n"), argv[2]);
++		exitcode = 1;
++		return 0;
++	}
++
++	cs_range.off = offset;
++	cs_range.len = length;
++
++	if (syscall(__NR_cachestat, file->fd, &cs_range, &cs, 0)) {
++		perror("cachestat");
++		exitcode = 1;
++		return 0;
++	}
++
++	print_cachestat(&cs);
++
++	return 0;
++}
++
++static cmdinfo_t cachestat_cmd = {
++	.name		= "cachestat",
++	.altname	= "cs",
++	.cfunc		= cachestat_f,
++	.argmin		= 2,
++	.argmax		= 2,
++	.flags		= CMD_NOMAP_OK | CMD_FOREIGN_OK,
++	.args		= "[off len]",
++	.oneline	= "find page cache pages for a given file",
++};
++
++void cachestat_init(void)
++{
++	add_command(&cachestat_cmd);
++}
++
+diff --git a/io/init.c b/io/init.c
+index 4831deae..49e9e7cb 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -49,6 +49,7 @@ init_commands(void)
+ 	bmap_init();
+ 	bulkstat_init();
+ 	copy_range_init();
++	cachestat_init();
+ 	cowextsize_init();
+ 	encrypt_init();
+ 	fadvise_init();
+diff --git a/io/io.h b/io/io.h
+index d9906558..259c0349 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -132,6 +132,12 @@ extern void		copy_range_init(void);
+ #define copy_range_init()	do { } while (0)
+ #endif
+ 
++#ifdef HAVE_CACHESTAT
++extern void cachestat_init(void);
++#else
++#define cachestat_init() do { } while (0)
++#endif
++
+ extern void		sync_range_init(void);
+ extern void		readdir_init(void);
+ extern void		reflink_init(void);
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 4ef7e8f6..af9da812 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -35,6 +35,25 @@ syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
+     AC_SUBST(have_copy_file_range)
+   ])
+ 
++#
++# Check if we have a cachestat system call (Linux)
++#
++AC_DEFUN([AC_HAVE_CACHESTAT],
++  [ AC_MSG_CHECKING([for cachestat])
++    AC_LINK_IFELSE(
++    [	AC_LANG_PROGRAM([[
++#include <unistd.h>
++#include <linux/mman.h>
++#include <asm/unistd.h>
++	]], [[
++syscall(__NR_cachestat, 0, 0, 0, 0);
++	]])
++    ], have_cachestat=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_cachestat)
++  ])
++
+ #
+ # Check if we need to override the system struct fsxattr with
+ # the internal definition.  This /only/ happens if the system
+-- 
+2.48.1
 
-> Originally-from: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
-> Should I change author?
->  fs/iomap/direct-io.c | 112 +++++++++++++++++++------------------------
->  1 file changed, 49 insertions(+), 63 deletions(-)
->
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 5299f70428ef..8c1bec473586 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -312,27 +312,20 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
->  }
->  
->  /*
-> - * Figure out the bio's operation flags from the dio request, the
-> - * mapping, and whether or not we want FUA.  Note that we can end up
-> - * clearing the WRITE_THROUGH flag in the dio request.
-> + * Use a FUA write if we need datasync semantics and this is a pure data I/O
-> + * that doesn't require any metadata updates (including after I/O completion
-> + * such as unwritten extent conversion) and the underlying device either
-> + * doesn't have a volatile write cache or supports FUA.
-> + * This allows us to avoid cache flushes on I/O completion.
->   */
-> -static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
-> -		const struct iomap *iomap, bool use_fua, bool atomic_hw)
-> +static inline bool iomap_dio_can_use_fua(const struct iomap *iomap,
-> +		struct iomap_dio *dio)
->  {
-> -	blk_opf_t opflags = REQ_SYNC | REQ_IDLE;
-> -
-> -	if (!(dio->flags & IOMAP_DIO_WRITE))
-> -		return REQ_OP_READ;
-> -
-> -	opflags |= REQ_OP_WRITE;
-> -	if (use_fua)
-> -		opflags |= REQ_FUA;
-> -	else
-> -		dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
-> -	if (atomic_hw)
-> -		opflags |= REQ_ATOMIC;
-> -
-> -	return opflags;
-> +	if (iomap->flags & (IOMAP_F_SHARED | IOMAP_F_DIRTY))
-> +		return false;
-> +	if (!(dio->flags & IOMAP_DIO_WRITE_THROUGH))
-> +		return false;
-> +	return !bdev_write_cache(iomap->bdev) || bdev_fua(iomap->bdev);
->  }
->  
->  static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
-> @@ -340,52 +333,59 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  	const struct iomap *iomap = &iter->iomap;
->  	struct inode *inode = iter->inode;
->  	unsigned int fs_block_size = i_blocksize(inode), pad;
-> -	bool atomic_hw = iter->flags & IOMAP_ATOMIC_HW;
->  	const loff_t length = iomap_length(iter);
->  	loff_t pos = iter->pos;
-> -	blk_opf_t bio_opf;
-> +	blk_opf_t bio_opf = REQ_SYNC | REQ_IDLE;
->  	struct bio *bio;
->  	bool need_zeroout = false;
-> -	bool use_fua = false;
->  	int nr_pages, ret = 0;
->  	u64 copied = 0;
->  	size_t orig_count;
->  
-> -	if (atomic_hw && length != iter->len)
-> -		return -EINVAL;
-> -
->  	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
->  	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
->  		return -EINVAL;
->  
-> -	if (iomap->type == IOMAP_UNWRITTEN) {
-> -		dio->flags |= IOMAP_DIO_UNWRITTEN;
-> -		need_zeroout = true;
-> -	}
-> +	if (dio->flags & IOMAP_DIO_WRITE) {
-> +		bio_opf |= REQ_OP_WRITE;
-> +
-> +		if (iter->flags & IOMAP_ATOMIC_HW) {
-> +			if (length != iter->len)
-> +				return -EINVAL;
-> +			bio_opf |= REQ_ATOMIC;
-> +		}
-> +
-> +		if (iomap->type == IOMAP_UNWRITTEN) {
-> +			dio->flags |= IOMAP_DIO_UNWRITTEN;
-> +			need_zeroout = true;
-> +		}
->  
-> -	if (iomap->flags & IOMAP_F_SHARED)
-> -		dio->flags |= IOMAP_DIO_COW;
-> +		if (iomap->flags & IOMAP_F_SHARED)
-> +			dio->flags |= IOMAP_DIO_COW;
-> +
-> +		if (iomap->flags & IOMAP_F_NEW) {
-> +			need_zeroout = true;
-> +		} else if (iomap->type == IOMAP_MAPPED) {
-> +			if (iomap_dio_can_use_fua(iomap, dio))
-> +				bio_opf |= REQ_FUA;
-> +			else
-> +				dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
-> +		}
->  
-> -	if (iomap->flags & IOMAP_F_NEW) {
-> -		need_zeroout = true;
-> -	} else if (iomap->type == IOMAP_MAPPED) {
->  		/*
-> -		 * Use a FUA write if we need datasync semantics, this is a pure
-> -		 * data IO that doesn't require any metadata updates (including
-> -		 * after IO completion such as unwritten extent conversion) and
-> -		 * the underlying device either supports FUA or doesn't have
-> -		 * a volatile write cache. This allows us to avoid cache flushes
-> -		 * on IO completion. If we can't use writethrough and need to
-> -		 * sync, disable in-task completions as dio completion will
-> -		 * need to call generic_write_sync() which will do a blocking
-> -		 * fsync / cache flush call.
-> +		 * We can only do deferred completion for pure overwrites that
-> +		 * don't require additional I/O at completion time.
-> +		 *
-> +		 * This rules out writes that need zeroing or extent conversion,
-> +		 * extend the file size, or issue metadata I/O or cache flushes
-> +		 * during completion processing.
->  		 */
-> -		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
-> -		    (dio->flags & IOMAP_DIO_WRITE_THROUGH) &&
-> -		    (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
-> -			use_fua = true;
-> -		else if (dio->flags & IOMAP_DIO_NEED_SYNC)
-> +		if (need_zeroout || (pos >= i_size_read(inode)) ||
-> +		    ((dio->flags & IOMAP_DIO_NEED_SYNC) &&
-> +		     !(bio_opf & REQ_FUA)))
->  			dio->flags &= ~IOMAP_DIO_CALLER_COMP;
-> +	} else {
-> +		bio_opf |= REQ_OP_READ;
->  	}
->  
->  	/*
-> @@ -399,18 +399,6 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  	if (!iov_iter_count(dio->submit.iter))
->  		goto out;
->  
-> -	/*
-> -	 * We can only do deferred completion for pure overwrites that
-> -	 * don't require additional IO at completion. This rules out
-> -	 * writes that need zeroing or extent conversion, extend
-> -	 * the file size, or issue journal IO or cache flushes
-> -	 * during completion processing.
-> -	 */
-> -	if (need_zeroout ||
-> -	    ((dio->flags & IOMAP_DIO_NEED_SYNC) && !use_fua) ||
-> -	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
-> -		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
-> -
->  	/*
->  	 * The rules for polled IO completions follow the guidelines as the
->  	 * ones we set for inline and deferred completions. If none of those
-> @@ -428,8 +416,6 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  			goto out;
->  	}
->  
-> -	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic_hw);
-> -
->  	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
->  	do {
->  		size_t n;
-> @@ -461,7 +447,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  		}
->  
->  		n = bio->bi_iter.bi_size;
-> -		if (WARN_ON_ONCE(atomic_hw && n != length)) {
-> +		if (WARN_ON_ONCE((bio_opf & REQ_ATOMIC) && n != length)) {
->  			/*
->  			 * This bio should have covered the complete length,
->  			 * which it doesn't, so error. We may need to zero out
-> -- 
-> 2.31.1
