@@ -1,307 +1,265 @@
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1A0E15C140;
-	Sun, 16 Mar 2025 07:15:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D279A32;
+	Sun, 16 Mar 2025 13:40:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742109344; cv=none; b=uivHuhVycalGj1QTmJXuazB8+bKa5xSPKN+Mkfv0Oy80XQc/HXogxgOuyJqPP1pRgMIhtJ+zBTHHNZMOwQIXSR3z1WJtKC7WarzNSCRYKKpcON771qRNWehh2brEhcIezSC9qorT5dHilog0nr23+j+GoafEeTVuksvw/Au6KIo=
+	t=1742132434; cv=none; b=JrfcD2huPMFnRDTsSoOSjmsoWysrWvGCPGBtUd81/lRVya9ZUDJzMH1xUXm+9QEwgoCd8MNDiN6ZlcVWETfE+sg865LmG+gzgdEFbA6DIR+IzdIPyNsdg5PfYKnaMmrSNWVHWutoXjDR3uxQA15k5NlLROEbcDKcALhTmxvbMk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742109344; c=relaxed/simple;
-	bh=lu3qvsfUh6l/Lq9LC1hyOXIy2trWRiJd9d72CECHmx0=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=EkVqYE5ue2XYekVXXoutlQRWCdoPuWySN8rmuCgv2SyLCkxxfhvcwRYMTG7nxU6S34nswgvfHrx4IU3w6jYfHkx+PLe7f8SRrRoNCnORWxvWFP9sNODAgMYVh3qZy32MHy1hoXZ2G/8bifxhYcI7y8nzp+RQT7Ghek69DCO8C4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EO0i6jIJ; arc=none smtp.client-ip=209.85.216.53
+	s=arc-20240116; t=1742132434; c=relaxed/simple;
+	bh=+eP3COHMGSILG+3VCh2zSSWR05FiQeElPNL6B3fjFgg=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=tAPVDdA21nHL2kZl6Ci+XbNblsN74Mt2jK+Xa7g4gbq4lY+5wjAV7YvcTDzVvMXdsb6zm8KD73PamfsvdiHk0+ww/g/nZHkYw6Ymwgiiy8oV69tbgsL8KBGXCN83eZSAB9r4LIefAN8Sie50/r0zjoVLX35HR85QdhkoZSnjA58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UyDP/fEA; arc=none smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EO0i6jIJ"
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2fe9759e5c1so1735453a91.0;
-        Sun, 16 Mar 2025 00:15:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UyDP/fEA"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-224100e9a5cso66786965ad.2;
+        Sun, 16 Mar 2025 06:40:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742109342; x=1742714142; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1742132431; x=1742737231; darn=vger.kernel.org;
         h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=bjcObISMHQZ+Fg1muKY5MRZIaUfjvyeHrPpcVz3xSs4=;
-        b=EO0i6jIJ1ZL05DhgQp31Zh5WpzIDEjTVFXv7UVYwB8VcrZXOQxO/5GZ1MyHpPrhmuj
-         A5NetT1YEErIqFSt9gFyA8qVTcHdaXOlDjHRx4SL6SzYxVwyr4x1hDvYqD24Bp160nda
-         UKj0mFK7YQrCmKjfp31153yqe4gzFF15VUVcSlBqhc6WGdD/4VlVtIYVOZj3sXFFbn7G
-         pJba/yxdqy/R5b7FKg/U72PQS2LHh8CUe2qB+3mXTyU56Xs2TUgmPo7WLDUyI7xM058L
-         y2CzZkzUae/POpq1nMCmOG17OPJYhwy0H2475v0j4t+ys07B7TZKi1WwuaFgWfbQJDHC
-         5xqA==
+        bh=VdLYDQ9fmoN/8PBxziQo7P+nVlZR+8JRc9oB0auVypw=;
+        b=UyDP/fEAqiicfNLY/OHjqXBIZROZhPkQMJmWQacIyna7CFAVoBwz9UYEAZwfVNCQUC
+         zfwjCP4IQq9RUGff8o3eDB3gpjFHm85PRbZjX8ghxBBdHvL/4KqYk6vI9B70wv08TJcu
+         LmsTA9X/MS7sCLps/IrD1oWRnmHsBrWxnE/zZUThBGBDxo6vakF5ltwqd1BO3bykkrKX
+         CpMhP6kXDLnVqZpMoWlv4XSeCYFvf3dTHPbR3bJlau5wr8Ij5V6Uxacnn1ydwTvJ4OZI
+         tNPnaX7xeDBDLYKgtHB2Nh/HeA8Jghhszrx9k0fwnZhjAj1wObzxdBKGkReW4hcrr8pm
+         bxZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742109342; x=1742714142;
+        d=1e100.net; s=20230601; t=1742132431; x=1742737231;
         h=references:message-id:date:in-reply-to:subject:cc:to:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bjcObISMHQZ+Fg1muKY5MRZIaUfjvyeHrPpcVz3xSs4=;
-        b=Xf/6YSW+1HVs4JxiirQ2SPEwQQMJ9P+ot0LIpvl2EmJ4WmSpgtgHhT0tfHNwNPXuJj
-         7mwgEDsbaijt/yjKVhmZD9DRq2KiVICdHVTJ/Id2dKtLft2rfUzVmTOgU6frygAuRK9U
-         TRLfbFCtkJqYaJOLeuDlf578qbGFKokBtPovScpLVrkSzi25CjRI+VVPvosGt1H8zLyt
-         6K7JBqTX+fN4kiXMWfYuyButSS4bTTxsi4BWikK7RrsxEPDHL2FTtA5AmY0shx/zqpkg
-         aPklsMNZTRwJ16te4QVN4LyOZ6L0Y5TFwvAZbZ/KBMpl0Ogy5A02CxLrvR4l+hLe4otp
-         qzhQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV39E/4TL5U7FL40wt0i9d7qUBZd6ENEu3qiEUIVTKUlMqN/SXyqmdqalYsVrfBOg8Wy9t2Q0GtWpcr@vger.kernel.org, AJvYcCVurELfPFU/DmIby/s8MXefeUuYhTETU6fqhZdoR5GB6+GqRvBOPQpfoVON//29cM329IrN9Q2R/AKgqQ1kKg==@vger.kernel.org, AJvYcCW1z9s2S8FWBLIwxJud1v3HmLYFgqtHIX+AgrBnOOecvsLSebZGcVTUlx1wUiYmi5kuAXQrRRILaHknmZwo@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywmp82QfklwC0vDGM2tPQIKOwjV7eaXYIIiXh2TVAbtXjwFR/te
-	AU+GAgVlmmkUeR1n78nrHVn5e0WjQebQ3eVuV4s8+wkOFvnUGCQZPgOJbw==
-X-Gm-Gg: ASbGncsdPhP4qrbSlHFbA3cfNLyMBJgqQnu8BofJgvaLzTc9WyYIgyxWPF0io1O5S/r
-	GmgCGKtNyH89cz45MgzgO6JOMY/wjpHbUEJuo86YdHEgyLAKRFymLEn+WmCpGxnJwznk06G5ue3
-	NdhPEQUXP+KAMRWRzFWiRLmq4KA/TBe+cFN44DRdLXwPSlUGtNUTkajWKI8PcmaRh0F/EnTxNbR
-	31+edUiSXBL7XZ8cnWPWVmPXdLUSX7aT1J8OqIV8bX5ysBatApBsqmjjyavPu7ijxIYZkTUfDYt
-	k0WI3HxjYLC8FarEHWIzkn+bu6qwjxaaTzXdcg==
-X-Google-Smtp-Source: AGHT+IE7H4raGlFXoKfcQaj6Wtc7nXW7cUYucho3UtQrEbSafIrgFPj3EgC+0L0cavSARR4MJtiPEg==
-X-Received: by 2002:a17:90b:5387:b0:2ff:4a8d:74f8 with SMTP id 98e67ed59e1d1-30151c9a341mr8609833a91.6.1742109341749;
-        Sun, 16 Mar 2025 00:15:41 -0700 (PDT)
+        bh=VdLYDQ9fmoN/8PBxziQo7P+nVlZR+8JRc9oB0auVypw=;
+        b=dF0IJl9kvm+jGKbq8c4Q+nMdWMefaDmEt5xWJgq7yb2HnbD31VDmy/zReH5Nh3zzbv
+         tOV02rENvxnwhgTuI0asKVrtrHzOxZdk6V2BB0g+G1RcpQyM2IdwnpGHVdeM4iJsBVkQ
+         EyNGM2fRRVL8Ahf3fjQ7cBXUtdUUwGw/Faj2RKUMp2e9LWZMHeSW2PMHHzOJDSSATN91
+         EPvNzobIbvyRqZuYyyqWie92aqap2RQxEL+1/+CdsXQwsgcSjzoitiF3ugPBb4xoywDv
+         7BtYhioeRcCOD/HKWhrxZ4dv6CGhaNohRuFz0reXMnwzFYzXNm7UVMesgFtwwrLnEEft
+         Vc+Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVmBNyPxljPBEHO0+afo4gNA6DBQW1MafVW3NlGxViZQtkAZ9U5pvIwSRByMP5dBViZmAuChgA13gAIOdqM@vger.kernel.org, AJvYcCW8UlRatNyQHPtwdTy+uAzdd7fQN//28TbCjCu1RyETg1V02/bhoa0l3tqcsOrW/ffyavTnDF67lByv@vger.kernel.org, AJvYcCWS/9R2xlgvetBVx3Nbglql38SaZxoV2cc2Xy0dgaxfEDd18UtYkNXHbMyQG/sr18FrqR2HapvLBfU1MLd5lg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxVuWZReBferxWVjS6OOupuJaNiK9a90mZyIZqnwFdBKSjbJw0y
+	O+SFt/vOqvzGVgTZkoB8g5mPtVGliSgz2JN3WmUw0ok7Hd6xR+a9
+X-Gm-Gg: ASbGncvj2X0XCLK/knUmTlp9SEcXzrDnNdjc/DYK7ct+VB32unaDuhqJUh0+KWqywd0
+	U6s/pu+lNMI7Ky3uXFFnaUC3d1eW5znobkeBHqU5ZRceenrVy9wLwC8+TH+NMFv5JT7hbFOXiOV
+	pR/GyBTIkjGfLVo7hx26NlpgpP/kWcPXzr0vcMlZxsIzBhKw9CXzHleg7+a68QwhVzEzpjd3NGU
+	c620Kw0K9kivfvHWB+HMrnEqxODXrP4QJrs2lPAkdpQCZGVDeEnt4eeZziJLUgagpAqvB1Yjgey
+	fKnm13/Rex1B45dgACnhjGs2/0ANRMaTf4tQjw==
+X-Google-Smtp-Source: AGHT+IGhz7Ue+ZLyG8VUmXRsrEHkfX2BRwH78PG4XyOl+NG2xSpQf6wEawvh82ePN1A6+gBd5ewDVg==
+X-Received: by 2002:a17:903:41cd:b0:21f:1549:a563 with SMTP id d9443c01a7336-225e0a19b8cmr111256885ad.2.1742132431486;
+        Sun, 16 Mar 2025 06:40:31 -0700 (PDT)
 Received: from dw-tp ([171.76.81.247])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30153bc301esm3721187a91.49.2025.03.16.00.15.36
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-225c6ba6f09sm57950155ad.133.2025.03.16.06.40.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Mar 2025 00:15:41 -0700 (PDT)
+        Sun, 16 Mar 2025 06:40:30 -0700 (PDT)
 From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 To: John Garry <john.g.garry@oracle.com>, brauner@kernel.org, djwong@kernel.org, cem@kernel.org, dchinner@redhat.com, hch@lst.de
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, martin.petersen@oracle.com, tytso@mit.edu, linux-ext4@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v6 10/13] xfs: iomap COW-based atomic write support
-In-Reply-To: <20250313171310.1886394-11-john.g.garry@oracle.com>
-Date: Sun, 16 Mar 2025 12:23:34 +0530
-Message-ID: <8734fd79g1.fsf@gmail.com>
-References: <20250313171310.1886394-1-john.g.garry@oracle.com> <20250313171310.1886394-11-john.g.garry@oracle.com>
+Subject: Re: [PATCH v6 01/13] iomap: inline iomap_dio_bio_opflags()
+In-Reply-To: <20250313171310.1886394-2-john.g.garry@oracle.com>
+Date: Sun, 16 Mar 2025 19:10:06 +0530
+Message-ID: <87cyeh5c21.fsf@gmail.com>
+References: <20250313171310.1886394-1-john.g.garry@oracle.com> <20250313171310.1886394-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 
-
-Hello,
-
 John Garry <john.g.garry@oracle.com> writes:
 
-> In cases of an atomic write covering misaligned or discontiguous disk
-> blocks, we will use a CoW-based method to issue the atomic write.
+> It is neater to build blk_opf_t fully in one place, so inline
+> iomap_dio_bio_opflags() in iomap_dio_bio_iter().
+>
+> Also tidy up the logic in dealing with IOMAP_DIO_CALLER_COMP, in generally
+> separate the logic in dealing with flags associated with reads and writes.
+>
 
-Looks like the 1st time write to a given logical range of a file (e.g an
-append write or writes on a hole), will also result into CoW based
-fallback method, right?. More on that ask below. The commit msg should
-capture that as well IMO.
+Indeed it clean things up and separates the logic required for
+IOMAP_DIO_WRITE v/s reads.
 
->
-> So, for that case, return -EAGAIN to request that the write be issued in
-> CoW atomic write mode. The dio write path should detect this, similar to
-> how misaligned regular DIO writes are handled.
->
-> For normal REQ_ATOMIC-based mode, when the range which we are atomic
-> writing to covers a shared data extent, try to allocate a new CoW fork.
-> However, if we find that what we allocated does not meet atomic write
-> requirements in terms of length and alignment, then fallback on the
-> CoW-based mode for the atomic write.
->
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The change looks good to me. Please feel free to add -
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+
+
+> Originally-from: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_iomap.c | 131 ++++++++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_iomap.h |   1 +
->  2 files changed, 130 insertions(+), 2 deletions(-)
+> Should I change author?
+>  fs/iomap/direct-io.c | 112 +++++++++++++++++++------------------------
+>  1 file changed, 49 insertions(+), 63 deletions(-)
 >
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 8196e66b099b..88d86cabb8a1 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -798,6 +798,23 @@ imap_spans_range(
->  	return true;
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 5299f70428ef..8c1bec473586 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -312,27 +312,20 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
 >  }
 >  
-> +static bool
-> +xfs_bmap_valid_for_atomic_write(
-> +	struct xfs_bmbt_irec	*imap,
-> +	xfs_fileoff_t		offset_fsb,
-> +	xfs_fileoff_t		end_fsb)
-> +{
-> +	/* Misaligned start block wrt size */
-> +	if (!IS_ALIGNED(imap->br_startblock, imap->br_blockcount))
+>  /*
+> - * Figure out the bio's operation flags from the dio request, the
+> - * mapping, and whether or not we want FUA.  Note that we can end up
+> - * clearing the WRITE_THROUGH flag in the dio request.
+> + * Use a FUA write if we need datasync semantics and this is a pure data I/O
+> + * that doesn't require any metadata updates (including after I/O completion
+> + * such as unwritten extent conversion) and the underlying device either
+> + * doesn't have a volatile write cache or supports FUA.
+> + * This allows us to avoid cache flushes on I/O completion.
+>   */
+> -static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
+> -		const struct iomap *iomap, bool use_fua, bool atomic_hw)
+> +static inline bool iomap_dio_can_use_fua(const struct iomap *iomap,
+> +		struct iomap_dio *dio)
+>  {
+> -	blk_opf_t opflags = REQ_SYNC | REQ_IDLE;
+> -
+> -	if (!(dio->flags & IOMAP_DIO_WRITE))
+> -		return REQ_OP_READ;
+> -
+> -	opflags |= REQ_OP_WRITE;
+> -	if (use_fua)
+> -		opflags |= REQ_FUA;
+> -	else
+> -		dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
+> -	if (atomic_hw)
+> -		opflags |= REQ_ATOMIC;
+> -
+> -	return opflags;
+> +	if (iomap->flags & (IOMAP_F_SHARED | IOMAP_F_DIRTY))
 > +		return false;
-> +
-> +	/* Discontiguous extents */
-> +	if (!imap_spans_range(imap, offset_fsb, end_fsb))
+> +	if (!(dio->flags & IOMAP_DIO_WRITE_THROUGH))
 > +		return false;
-> +
-> +	return true;
-> +}
-> +
->  static int
->  xfs_direct_write_iomap_begin(
->  	struct inode		*inode,
-> @@ -812,10 +829,12 @@ xfs_direct_write_iomap_begin(
->  	struct xfs_bmbt_irec	imap, cmap;
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
-> +	xfs_fileoff_t		orig_end_fsb = end_fsb;
->  	int			nimaps = 1, error = 0;
->  	unsigned int		reflink_flags = 0;
->  	bool			shared = false;
->  	u16			iomap_flags = 0;
-> +	bool			needs_alloc;
->  	unsigned int		lockmode;
->  	u64			seq;
+> +	return !bdev_write_cache(iomap->bdev) || bdev_fua(iomap->bdev);
+>  }
 >  
-> @@ -877,13 +896,44 @@ xfs_direct_write_iomap_begin(
->  				&lockmode, reflink_flags);
->  		if (error)
->  			goto out_unlock;
-> -		if (shared)
-> +		if (shared) {
-> +			/*
-> +			 * Since we got a CoW fork extent mapping, ensure that
-> +			 * the mapping is actually suitable for an
-> +			 * REQ_ATOMIC-based atomic write, i.e. properly aligned
-> +			 * and covers the full range of the write. Otherwise,
-> +			 * we need to use the COW-based atomic write mode.
-> +			 */
-> +			if ((flags & IOMAP_ATOMIC) &&
-> +			    !xfs_bmap_valid_for_atomic_write(&cmap,
-> +					offset_fsb, end_fsb)) {
-> +				error = -EAGAIN;
-> +				goto out_unlock;
-> +			}
->  			goto out_found_cow;
+>  static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+> @@ -340,52 +333,59 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  	const struct iomap *iomap = &iter->iomap;
+>  	struct inode *inode = iter->inode;
+>  	unsigned int fs_block_size = i_blocksize(inode), pad;
+> -	bool atomic_hw = iter->flags & IOMAP_ATOMIC_HW;
+>  	const loff_t length = iomap_length(iter);
+>  	loff_t pos = iter->pos;
+> -	blk_opf_t bio_opf;
+> +	blk_opf_t bio_opf = REQ_SYNC | REQ_IDLE;
+>  	struct bio *bio;
+>  	bool need_zeroout = false;
+> -	bool use_fua = false;
+>  	int nr_pages, ret = 0;
+>  	u64 copied = 0;
+>  	size_t orig_count;
+>  
+> -	if (atomic_hw && length != iter->len)
+> -		return -EINVAL;
+> -
+>  	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
+>  	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
+>  		return -EINVAL;
+>  
+> -	if (iomap->type == IOMAP_UNWRITTEN) {
+> -		dio->flags |= IOMAP_DIO_UNWRITTEN;
+> -		need_zeroout = true;
+> -	}
+> +	if (dio->flags & IOMAP_DIO_WRITE) {
+> +		bio_opf |= REQ_OP_WRITE;
+> +
+> +		if (iter->flags & IOMAP_ATOMIC_HW) {
+> +			if (length != iter->len)
+> +				return -EINVAL;
+> +			bio_opf |= REQ_ATOMIC;
 > +		}
->  		end_fsb = imap.br_startoff + imap.br_blockcount;
->  		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+> +
+> +		if (iomap->type == IOMAP_UNWRITTEN) {
+> +			dio->flags |= IOMAP_DIO_UNWRITTEN;
+> +			need_zeroout = true;
+> +		}
+>  
+> -	if (iomap->flags & IOMAP_F_SHARED)
+> -		dio->flags |= IOMAP_DIO_COW;
+> +		if (iomap->flags & IOMAP_F_SHARED)
+> +			dio->flags |= IOMAP_DIO_COW;
+> +
+> +		if (iomap->flags & IOMAP_F_NEW) {
+> +			need_zeroout = true;
+> +		} else if (iomap->type == IOMAP_MAPPED) {
+> +			if (iomap_dio_can_use_fua(iomap, dio))
+> +				bio_opf |= REQ_FUA;
+> +			else
+> +				dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
+> +		}
+>  
+> -	if (iomap->flags & IOMAP_F_NEW) {
+> -		need_zeroout = true;
+> -	} else if (iomap->type == IOMAP_MAPPED) {
+>  		/*
+> -		 * Use a FUA write if we need datasync semantics, this is a pure
+> -		 * data IO that doesn't require any metadata updates (including
+> -		 * after IO completion such as unwritten extent conversion) and
+> -		 * the underlying device either supports FUA or doesn't have
+> -		 * a volatile write cache. This allows us to avoid cache flushes
+> -		 * on IO completion. If we can't use writethrough and need to
+> -		 * sync, disable in-task completions as dio completion will
+> -		 * need to call generic_write_sync() which will do a blocking
+> -		 * fsync / cache flush call.
+> +		 * We can only do deferred completion for pure overwrites that
+> +		 * don't require additional I/O at completion time.
+> +		 *
+> +		 * This rules out writes that need zeroing or extent conversion,
+> +		 * extend the file size, or issue metadata I/O or cache flushes
+> +		 * during completion processing.
+>  		 */
+> -		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
+> -		    (dio->flags & IOMAP_DIO_WRITE_THROUGH) &&
+> -		    (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
+> -			use_fua = true;
+> -		else if (dio->flags & IOMAP_DIO_NEED_SYNC)
+> +		if (need_zeroout || (pos >= i_size_read(inode)) ||
+> +		    ((dio->flags & IOMAP_DIO_NEED_SYNC) &&
+> +		     !(bio_opf & REQ_FUA)))
+>  			dio->flags &= ~IOMAP_DIO_CALLER_COMP;
+> +	} else {
+> +		bio_opf |= REQ_OP_READ;
 >  	}
 >  
-> -	if (imap_needs_alloc(inode, flags, &imap, nimaps))
-> +	needs_alloc = imap_needs_alloc(inode, flags, &imap, nimaps);
-> +
-> +	if (flags & IOMAP_ATOMIC) {
-> +		error = -EAGAIN;
-> +		/*
-> +		 * If we allocate less than what is required for the write
-> +		 * then we may end up with multiple mappings, which means that
-> +		 * REQ_ATOMIC-based cannot be used, so avoid this possibility.
-> +		 */
-> +		if (needs_alloc && orig_end_fsb - offset_fsb > 1)
-> +			goto out_unlock;
-
-I have a quick question here. Based on above check it looks like
-allocation requests on a hole or the 1st time allocation (append writes)
-for a given logical range will always be done using CoW fallback
-mechanism, isn't it? So that means HW based multi-fsblock atomic write
-request will only happen for over writes (non-discontigous extent),
-correct? 
-
-Now, it's not always necessary that if we try to allocate an extent for
-the given range, it results into discontiguous extents. e.g. say, if the
-entire range being written to is a hole or append writes, then it might
-just allocate a single unwritten extent which is valid for doing an
-atomic write using HW/BIOs right? 
-And it is valid to write using unwritten extent as long as we don't have
-mixed mappings i.e. the entire range should either be unwritten or
-written for the atomic write to be untorned, correct?
-
-I am guessing this is kept intentional?
-
--ritesh
-
-> +
-> +		if (!xfs_bmap_valid_for_atomic_write(&imap, offset_fsb,
-> +				orig_end_fsb))
-> +			goto out_unlock;
-> +	}
-> +
-> +	if (needs_alloc)
->  		goto allocate_blocks;
->  
 >  	/*
-> @@ -1024,6 +1074,83 @@ const struct iomap_ops xfs_zoned_direct_write_iomap_ops = {
->  };
->  #endif /* CONFIG_XFS_RT */
+> @@ -399,18 +399,6 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  	if (!iov_iter_count(dio->submit.iter))
+>  		goto out;
 >  
-> +static int
-> +xfs_atomic_write_cow_iomap_begin(
-> +	struct inode		*inode,
-> +	loff_t			offset,
-> +	loff_t			length,
-> +	unsigned		flags,
-> +	struct iomap		*iomap,
-> +	struct iomap		*srcmap)
-> +{
-> +	ASSERT(flags & IOMAP_WRITE);
-> +	ASSERT(flags & IOMAP_DIRECT);
-> +
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_bmbt_irec	imap, cmap;
-> +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
-> +	int			nimaps = 1, error;
-> +	bool			shared = false;
-> +	unsigned int		lockmode = XFS_ILOCK_EXCL;
-> +	u64			seq;
-> +
-> +	if (xfs_is_shutdown(mp))
-> +		return -EIO;
-> +
-> +	if (!xfs_has_reflink(mp))
-> +		return -EINVAL;
-> +
-> +	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
-> +			&nimaps, 0);
-> +	if (error)
-> +		goto out_unlock;
-> +
-> +	 /*
-> +	  * Use XFS_REFLINK_ALLOC_EXTSZALIGN to hint at aligning new extents
-> +	  * according to extszhint, such that there will be a greater chance
-> +	  * that future atomic writes to that same range will be aligned (and
-> +	  * don't require this COW-based method).
-> +	  */
-> +	error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
-> +			&lockmode, XFS_REFLINK_CONVERT_UNWRITTEN |
-> +			XFS_REFLINK_FORCE_COW | XFS_REFLINK_ALLOC_EXTSZALIGN);
-> +	/*
-> +	 * Don't check @shared. For atomic writes, we should error when
-> +	 * we don't get a COW fork extent mapping.
-> +	 */
-> +	if (error)
-> +		goto out_unlock;
-> +
-> +	end_fsb = imap.br_startoff + imap.br_blockcount;
-> +
-> +	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
-> +	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
-> +	if (imap.br_startblock != HOLESTARTBLOCK) {
-> +		seq = xfs_iomap_inode_sequence(ip, 0);
-> +		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0, seq);
-> +		if (error)
-> +			goto out_unlock;
-> +	}
-> +	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
-> +	xfs_iunlock(ip, lockmode);
-> +	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
-> +
-> +out_unlock:
-> +	if (lockmode)
-> +		xfs_iunlock(ip, lockmode);
-> +	return error;
-> +}
-> +
-> +const struct iomap_ops xfs_atomic_write_cow_iomap_ops = {
-> +	.iomap_begin		= xfs_atomic_write_cow_iomap_begin,
-> +};
-> +
->  static int
->  xfs_dax_write_iomap_end(
->  	struct inode		*inode,
-> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-> index d330c4a581b1..674f8ac1b9bd 100644
-> --- a/fs/xfs/xfs_iomap.h
-> +++ b/fs/xfs/xfs_iomap.h
-> @@ -56,5 +56,6 @@ extern const struct iomap_ops xfs_read_iomap_ops;
->  extern const struct iomap_ops xfs_seek_iomap_ops;
->  extern const struct iomap_ops xfs_xattr_iomap_ops;
->  extern const struct iomap_ops xfs_dax_write_iomap_ops;
-> +extern const struct iomap_ops xfs_atomic_write_cow_iomap_ops;
+> -	/*
+> -	 * We can only do deferred completion for pure overwrites that
+> -	 * don't require additional IO at completion. This rules out
+> -	 * writes that need zeroing or extent conversion, extend
+> -	 * the file size, or issue journal IO or cache flushes
+> -	 * during completion processing.
+> -	 */
+> -	if (need_zeroout ||
+> -	    ((dio->flags & IOMAP_DIO_NEED_SYNC) && !use_fua) ||
+> -	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
+> -		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
+> -
+>  	/*
+>  	 * The rules for polled IO completions follow the guidelines as the
+>  	 * ones we set for inline and deferred completions. If none of those
+> @@ -428,8 +416,6 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  			goto out;
+>  	}
 >  
->  #endif /* __XFS_IOMAP_H__*/
+> -	bio_opf = iomap_dio_bio_opflags(dio, iomap, use_fua, atomic_hw);
+> -
+>  	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
+>  	do {
+>  		size_t n;
+> @@ -461,7 +447,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  		}
+>  
+>  		n = bio->bi_iter.bi_size;
+> -		if (WARN_ON_ONCE(atomic_hw && n != length)) {
+> +		if (WARN_ON_ONCE((bio_opf & REQ_ATOMIC) && n != length)) {
+>  			/*
+>  			 * This bio should have covered the complete length,
+>  			 * which it doesn't, so error. We may need to zero out
 > -- 
 > 2.31.1
