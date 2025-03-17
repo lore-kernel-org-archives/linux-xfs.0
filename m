@@ -1,74 +1,57 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2710F79D2;
-	Mon, 17 Mar 2025 05:51:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD2221DAC97;
+	Mon, 17 Mar 2025 05:53:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742190703; cv=none; b=FD2/sksnnzHxbQxEXqcA+nzbMMKs1S4C89Owt+cZZ5THExI6B1cxRCgWWI12HE3EIU13omXpJtenBc/HwgS5zp5qG4sJo5j0ZGb3ZDQh6FmI87v5/g+O2Haia9edf1EeXizTot4DSYROp9qdUYrgwbcz/tBRws7FzlwdYR4h8iI=
+	t=1742190789; cv=none; b=UyH6BBQcv4yW/jvju1nL3eyPfhAscEIn2kgOVJQjHuP7wOEXx5fsz5WZXTes4fpMVQJ4dLw9DUzBt7vqcVEhm5LKxCZymUCMD1mJuU56/u7TOWGAGuhu5+O5J4MpvnSfbWlF9epnBFCAwIIa6uVWS5M1Ms+r1IoOh2QtrwwLrJQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742190703; c=relaxed/simple;
-	bh=r0xUn66OUPZkr0Gtf7amlVHFYTEOxaVbbeQ2w4cZyQ0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P1ge0mSpJvJGLVd6A0oguIVDMNMhNtbNL5iMQi2dU3ZD3QG57pax/FZ/kB0piOK8ush827J0okfZYX5QlKtwRJ1WOIYibeJeGopB3+z3SxcNrdyVzs7tQna6OtNaeiO9s44E9xLU8dOF9kr6241esPXF+2ZZR1OXb5DeTCqgCKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=O0EmVXfO; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1742190789; c=relaxed/simple;
+	bh=wZb7vt/O2Ac8SAIisazHSJoNOvwudjWDPkkW6A5b1+I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PGtjFnDwNBeR5d3whGMFJz/YVaju9R4SZRcP5xMKU5hYoWOP4WaqcM9eWphgjb5kd3mZygsdz1MoyWS1+3Q9canfWNvxelVLfqjvKogM6nTDUEOvzgxdPeItaE3vExZISSMGOcSMPyvnAxFoM+7/lFNIY1/YV/aEAUek2U/b0QE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O0EmVXfO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=WiDeWt7a9Co+cnuYh5PnNaXRU/0t9jm2lDKAIy0uey4=; b=O0EmVXfOgaoBafAzWY3ugtG+9G
-	n8SnuZyzXEf5YUz3ZneR2haPaU7IzJz59DqZTo27RinzVvMHpbAbK5pWtvR6flhlecLPCAvJwARk0
-	W8mAfcJFf3NdKRBQnwiDKiQeDE00cwwbKIKpqgdKwxBa3xraAjuO0B6WFwYrPB0dLR00BkXXA8c3X
-	entvvn5bo1AKK5olenkOqP9tE0Al5jVAxjSUoTOp27HP1u7M7/z8CqWgvQToE46HvafAeEKV7JDPm
-	exNU70RmvDTOaDeJ24runc3zQKMsaHyiXrya+6PvmJ3ptoNvbxWRWyV9thOvXKL0o96TrNkQYpLop
-	Y9A9zHFA==;
-Received: from [2001:4bb8:2dd:4138:8d2f:1fda:8eb2:7cb7] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tu3O1-00000001J9U-1vrL;
-	Mon, 17 Mar 2025 05:51:41 +0000
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id E72B768D0A; Mon, 17 Mar 2025 06:52:54 +0100 (CET)
+Date: Mon, 17 Mar 2025 06:52:54 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: zlang@kernel.org
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: [PATCH] xfs/235: add to the auto group
-Date: Mon, 17 Mar 2025 06:51:38 +0100
-Message-ID: <20250317055138.1132868-1-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, Kanchan Joshi <joshi.k@samsung.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	Qu Wenruo <wqu@suse.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/7] iomap: add bioset in iomap_read_folio_ops for
+ filesystems to use own bioset
+Message-ID: <20250317055254.GA26662@lst.de>
+References: <20250203094322.1809766-1-hch@lst.de> <20250203094322.1809766-4-hch@lst.de> <Z9Ljd-AwJGnk7f2D@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z9Ljd-AwJGnk7f2D@casper.infradead.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-xfs/235 is the only test effectively exercising the temporary enabling
-of SB_ACTIVE during log recovery.  Add it to the auto group to increase
-coverage.
+On Thu, Mar 13, 2025 at 01:53:59PM +0000, Matthew Wilcox wrote:
+> On Mon, Feb 03, 2025 at 10:43:07AM +0100, Christoph Hellwig wrote:
+> > Allocate the bio from the bioset provided in iomap_read_folio_ops.
+> > If no bioset is provided, fs_bio_set is used which is the standard
+> > bioset for filesystems.
+> 
+> It feels weird to have an 'ops' that contains a bioset rather than a
+> function pointer.  Is there a better name we could be using?  ctx seems
+> wrong because it's not a per-op struct.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/235 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/tests/xfs/235 b/tests/xfs/235
-index 5b201d930769..c959dfd6e33a 100755
---- a/tests/xfs/235
-+++ b/tests/xfs/235
-@@ -8,7 +8,7 @@
- # then see how the kernel and xfs_repair deal with it.
- #
- . ./common/preamble
--_begin_fstest fuzzers rmap
-+_begin_fstest auto fuzzers rmap
- 
- # Import common functions.
- . ./common/filter
--- 
-2.45.2
+As Darrick pointed out ops commonly have non-method static fields of
+some kind.  After at all it still mostly is about ops, the bio_set
+pointer just avoids having to add a special alloc indirection that
+will all end up using the same code just with a different bio_set.
 
