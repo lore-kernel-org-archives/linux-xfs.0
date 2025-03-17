@@ -1,47 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7F938DEC
-	for <linux-xfs@vger.kernel.org>; Mon, 17 Mar 2025 05:45:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3B491F94C
+	for <linux-xfs@vger.kernel.org>; Mon, 17 Mar 2025 05:48:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742190327; cv=none; b=t29e0Rvr9BzSLw7sj510ZMEb4MRM77t2Dt0T8rJGM12bFadIwTgMd3n1DxL1w/BmHXc2AqIu+3HCX/oO7TPRUNzBr60/Fv3GzxxxgRpVshwEA47+l5MBIXq/Z9UgV3nXIhlgYt5HfewsLhip1cMXtMtXuLi6AG5FMdQ+EHrwte4=
+	t=1742190535; cv=none; b=LUSU2z8Ik+0bcH/6GErPBgNoABzrFSuWY/2gwwOZwErs1wP6WWO1yWlAIEpHsIHdAAyKLVWykBfhy0aS9CJA8vdYHXn5KNggdBTfNDXCBz/HJORYMjZU6Px2Bmm2ZW/mNnL6Y+EOXu4Pzxy2AuGGB+yTu6Z9ujssX/zya9kbKKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742190327; c=relaxed/simple;
-	bh=MQuBqFEfDtCBa5NhmQS3Znm1xWk6/QoviB3NNgHkUTU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cqM9sSVeRN2x72PaiAwZSAbrO0z53aYHc3ptTKXhgu1AhfjnuE3iTeb62CCg0/gySWqRfWy+GmLIipO/VTIMFg/fHrvNfVkGCgSl/a9CAKK7l2cumV2/Jir+r2je8lduzxRthu5o78t7PpREb/6FAclv+DiUp2HiiWLnGya4lmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hqB3GRqB; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1742190535; c=relaxed/simple;
+	bh=knpTQa9O0wW7n1UuH42BtLc8GGjEy36HKVhgHWf3t44=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HjRsE0nt3hUHMrFei10smzYcKdB1zdjphWLaR/hLgv8yl4mgSlljEAXtOgzWAstngw9yARxyzvVIHGfD47NxltqI4fL+RQyXCNkD91NzV7soEv0J+dZixVsCQq1defYfbmCPH8+APVBBosSWTZZ7Gw6bePbgto7DXD+1C6TpAIA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LqX6cLWn; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hqB3GRqB"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LqX6cLWn"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=zOh6h2Gp4AVjW1PAgvFdTmqcnrutzSzreGR3aXuhFOg=; b=hqB3GRqBqQa9xFTdSy3/NBZ2Af
-	qiFyMTEVegfNg7XPXUMFavO5ZbvM+z8j292k8Bma0zSd6cHTA2977bJeAYAXC4himtXuuvbqEVn1o
-	1YmTj6ErpAE0SVD+SAJ8brjSPKR/Al+1gmN640brfDqRYrKmoIO32YYMtaqc7qgBUdHiQM0ikNoy+
-	hGE4gO8cC9raNfkMx6Kkz5bD6wGUGKJ2iIKctrMV70/XSC9FaFlQ73WizP4Dv2x5qxteKwhQJLLPG
-	qtWGz0QFE6DhWkEEEtHFwlcqYWogN2s1WQ2hkiZ6nCRRKpGR/4vEuSglFASjXQgJb8gP12a19WURA
-	wrPB0CZw==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=xfhTiwih9SWdzMkjaXeMN3fuX6+edD2ou+CVjMii86k=; b=LqX6cLWnGn3tQKZk5Xf2aUM+1i
+	Wp5MOj2gJU8AVN7OlTn9+SOhakYpppr+y0zyfblCo9p1IIS3DF1oZpePddJsz5doVDREisOPHy+JO
+	MBJRKxGYgNsbiFjwMct2/9oKWg2jjdzt3UNZ8Nz4Q5W4ZyWRhrWf3+b4CyosBgMIqgzslTJCjQ57a
+	TDZUijQcw/qIpg42IUvllWFUu1VTFv086iS2pLSdJkPU8U2UgbvUB22rrwJSQDoDvmhjOXNoaG6p0
+	DK7x5ZE8GbliZwbCw+oOE/mq/i2+YsdAr1PSVcpg2m/w1YC1WLjPHEG/oA31hXG7gJjRueFDYkmRv
+	6BHcZO/A==;
 Received: from [2001:4bb8:2dd:4138:8d2f:1fda:8eb2:7cb7] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tu3Hw-00000001IWc-3eGg;
-	Mon, 17 Mar 2025 05:45:25 +0000
+	id 1tu3LJ-00000001InM-0A0Q;
+	Mon, 17 Mar 2025 05:48:53 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Dan Carpenter <dan.carpenter@linaro.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 3/3] xfs: don't wake zone space waiters without m_zone_info
-Date: Mon, 17 Mar 2025 06:44:54 +0100
-Message-ID: <20250317054512.1131950-4-hch@lst.de>
+Subject: more buffer cache cleanups
+Date: Mon, 17 Mar 2025 06:48:31 +0100
+Message-ID: <20250317054850.1132557-1-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250317054512.1131950-1-hch@lst.de>
-References: <20250317054512.1131950-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,50 +46,20 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+Hi all,
 
-xfs_zoned_wake_all checks SB_ACTIVE to make sure it does the right thing
-when a shutdown happens during unmount, but it fails to account for the
-log recovery special case that sets SB_ACTIVE temporarily.  Add a NULL
-check to cover both cases.
+this series started by just removing the unused flags argument to the
+uncached buf_get/read interfaces but then escalated a bit.  It is still
+entirely superfluous cosmetic cleanups, though.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-[hch: added a commit log and comment]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_zone_alloc.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index fd4c60a050e6..52af234936a2 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -853,13 +853,22 @@ xfs_zone_alloc_and_submit(
- 	bio_io_error(&ioend->io_bio);
- }
- 
-+/*
-+ * Wake up all threads waiting for a zoned space allocation when the file system
-+ * is shut down.
-+ */
- void
- xfs_zoned_wake_all(
- 	struct xfs_mount	*mp)
- {
--	if (!(mp->m_super->s_flags & SB_ACTIVE))
--		return; /* can happen during log recovery */
--	wake_up_all(&mp->m_zone_info->zi_zone_wait);
-+	/*
-+	 * Don't wake up if there is no m_zone_info.  This is complicated by the
-+	 * fact that unmount can't atomically clear m_zone_info and thus we need
-+	 * to check SB_ACTIVE for that, but mount temporarily enables SB_ACTIVE
-+	 * during log recovery so we can't entirely rely on that either.
-+	 */
-+	if ((mp->m_super->s_flags & SB_ACTIVE) && mp->m_zone_info)
-+		wake_up_all(&mp->m_zone_info->zi_zone_wait);
- }
- 
- /*
--- 
-2.45.2
-
+Diffstat:
+ b/fs/xfs/libxfs/xfs_ag.c |    2 
+ b/fs/xfs/xfs_buf.c       |  165 +++++++++++++++++++++--------------------------
+ b/fs/xfs/xfs_buf.h       |    2 
+ b/fs/xfs/xfs_fsops.c     |    2 
+ b/fs/xfs/xfs_mount.c     |    6 -
+ b/fs/xfs/xfs_rtalloc.c   |    4 -
+ fs/xfs/xfs_buf.c         |   54 +++------------
+ fs/xfs/xfs_buf.h         |    2 
+ fs/xfs/xfs_rtalloc.c     |    2 
+ 9 files changed, 96 insertions(+), 143 deletions(-)
