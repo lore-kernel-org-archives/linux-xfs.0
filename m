@@ -1,161 +1,55 @@
-Received: from out30-118.freemail.mail.aliyun.com (out30-118.freemail.mail.aliyun.com [115.124.30.118])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A1D2FB2
-	for <linux-xfs@vger.kernel.org>; Mon, 17 Mar 2025 00:25:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.118
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BE6D4A32
+	for <linux-xfs@vger.kernel.org>; Mon, 17 Mar 2025 05:45:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742171135; cv=none; b=pamGco1cteIpGmbjJNf2olNj4v/LoCdyNXXINnaI+HF0HRsWuiJSs+rhepfyuwh2bNg9iCs61Ld1KK9LaQDPU+bWsRzIkI7l355n0FND+bJoXh5VpoyJ+yof170D2zKjzWUhN1WNTFupEamVc0p5OhsQlTvsxAB9JwFKkuo/Ol8=
+	t=1742190319; cv=none; b=arFcf9CW8fIunIn4wIDR4CO+CiL8+v3TNTUqCYS7sCHyZgEMrN6bs9pdqW/y7X1TAja+K1OSRV0LZW6mjyvAIrRJtThPhKFBRLwuSwzX4ORf0vGNt0eML2HZd/BgN51t613UP5nU+AgwF14DmY5Bnq1RG8fZ1hvA3tUpF6PwUps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742171135; c=relaxed/simple;
-	bh=2WL8Ke2eCG4Jo/sZK68XiciDXSVLdkWkTtTaoZK/iUk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ep3DyKNfgEM+ivCihfPBgYm852wDmXR6w5xmyOIC2AEH+/s7znhpSfuB8SzNrCkCYnnMO523i9816tdNnr1zk2MjkSSftDZa1F03xE3Z45nzvv2mAyO3iUmV1L/Rt2KhA/zrIyeaDGfpY6Nu/+YBbS7pEDbbtxOO+htQgryKzuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=YTC13QFr; arc=none smtp.client-ip=115.124.30.118
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1742190319; c=relaxed/simple;
+	bh=oPv/m6pJQsPTkPE51T+Zyx9JkV4InILfmtHbPwfaJUk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BYBUAT8Xc7TnbfpBVX07hXhpw+YBnW12If2YVGOCgNbslbspLp7lSUMb/naFfUf8JKp4OYUNkJPB8rBInyxAtSgCWyb8rcvvIlO9aWpQm6KI+yle9fKAwtoyP4dPMpfHImt8Ix+JTvgXniz+pl8rOJ1XiJCKyx/55vWTaX3XQqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hQovzbdJ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="YTC13QFr"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1742171124; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=3C5TEtEWnL/HxfGzgzYQYQFKcIGYPRwA/oXYyPTg55M=;
-	b=YTC13QFrIJBb5SMZpOsQJRotfKUw6SRNZH4qPNiWtsTwGt5kYbpKBZex5ng2u0fe4F2qP5ro1qOSpqzquvpVhMqSTa/GPwAXBKfAwrnrnLGqrMDrTul95VDeaaUtV6S1SeZnVqoZBOQcDBEp3MFFdJIcvXH5KFR2QDHJFtgoyh4=
-Received: from 30.134.66.95(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0WRX5ljM_1742171118 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Mon, 17 Mar 2025 08:25:23 +0800
-Message-ID: <fddda0be-3679-46ae-836c-26580a8d55f4@linux.alibaba.com>
-Date: Mon, 17 Mar 2025 08:25:16 +0800
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hQovzbdJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=oPv/m6pJQsPTkPE51T+Zyx9JkV4InILfmtHbPwfaJUk=; b=hQovzbdJrGWUXzB6oDdra2c9/W
+	VkCKVWtuzz0MAYXeQ9TEYnw7R+NsrUbeYXy/sZJIk6/3JUhg8V4vP7ob7fWayWBFfUyyDD2ALPggL
+	FTlBComrSuoSYiprUqr84OOnSVVaDx+wxYmVd4+FW3Sa0jWaM0PmhHVjhTm4D9sqjWx79qA9qKO64
+	pTlgPseqRgymkz738MC8+mk38pfOyrTAT9L4ntm0gdIl/V5kzbTt4cVUEgNxAO3UGYcINrn3BmJ5j
+	kg4UvaY800DWcO2ljF0Yc0BcWBfh4R1bC0o61FnTHBU30V/DopIjMNSQdCai2cDpsofR5R0ClILr0
+	QPRxGAXQ==;
+Received: from [2001:4bb8:2dd:4138:8d2f:1fda:8eb2:7cb7] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tu3Hm-00000001IVL-48RA;
+	Mon, 17 Mar 2025 05:45:15 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Dan Carpenter <dan.carpenter@linaro.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	linux-xfs@vger.kernel.org
+Subject: zoned fixes
+Date: Mon, 17 Mar 2025 06:44:51 +0100
+Message-ID: <20250317054512.1131950-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [report] Unixbench shell1 performance regression
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>
-References: <0849fc77-1a6e-46f8-a18d-15699f99158e@linux.alibaba.com>
- <Z9dB4nT2a2k0d5vH@dread.disaster.area>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <Z9dB4nT2a2k0d5vH@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi Dave,
+Hi all,
 
-On 2025/3/17 05:25, Dave Chinner wrote:
-> On Sat, Mar 15, 2025 at 01:19:31AM +0800, Gao Xiang wrote:
->> Hi folks,
->>
->> Days ago, I received a XFS Unixbench[1] shell1 (high-concurrency)
->> performance regression during a benchmark comparison between XFS and
->> EXT4:  The XFS result was lower than EXT4 by 15% on Linux 6.6.y with
->> 144-core aarch64 (64K page size).  Since Unixbench is somewhat important
->> to indicate overall system performance for many end users, it's not
->> a good result.
-> 
-> Unixbench isn't really that indicative of typical worklaods on large
-> core-count machines these days. It's an ancient benchmark, and it's
-> exceedingly rare that a modern machine is fully loaded with shell
-> scripts such as the shell1 test is running because it's highly
-> inefficient to do large scale concurrent processing of data in this
-> way....
-> 
-> Indeed, look at the file copy "benchmarks" it runs - the use buffer
-> sizes of 256, 1024 and 4096 bytes to tell you how well the
-> filesystem performs. Using sub-page size buffers might have been
-> common for 1983-era CPUs to get the highest possible file copy
-> throughput, but these days these are slow paths that we largely
-> don't optimise for highest throughput. Measuring modern system
-> scalability via how such operations perform is largely meaningless
-> because applications don't behave this way anymore....
-
-Thanks for your reply!
-
-Sigh.  Many customers really care, and they select the whole software
-stack based on this benchmark.
-
-If they think the results are not good, they might ask us to move away
-of XFS filesystem.  It's not what I could do anything, you know.
-
-> 
->> shell1 test[2] basically runs in a loop that it executes commands
->> to generate files (sort.$$, od.$$, grep.$$, wc.$$) and then remove
->> them.  The testcase lasts for one minute and then show the total number
->> of iterations.
->>
->> While no difference was observed in single-threaded results, it showed
->> a noticeable difference above if  `./Run shell1 -c 144 -i 1`  is used.
-> 
-> I'm betting that the XFS filesystem is small and only has 4 AGs,
-> and so has very limited concurrency in allocation.
-> 
-> i.e. you're trying to run a massively concurrent workload on a
-> filesystem that only has - at best - the ability to do 4 allocations
-> or frees at a time. Of course it is going to contend on the
-> allocation group locks....
-
-I've adjusted this, from 4 AG to 20 AG.  No real impact.
-
-> 
->> The original report was on aarch64, but I could still reproduce some
->> difference on Linux 6.13 with a X86 physical machine:
->>
->> Intel(R) Xeon(R) Platinum 8331C CPU @ 2.50GHz * 96 cores
->> 512 GiB memory
->>
->> XFS (35649.6) is still lower than EXT4 (37146.0) by 4% and
->> the kconfig is attached.
->>
->> However, I don't observe much difference on 5.10.y kernels.  After
->> collecting some off-CPU trace, I found there are many new agi buf
->> lock waits compared with the correspoinding 5.10.y trace, as below:
-> 
-> Yes, because background inactivation can increase the contention on
-> AGF/AGI buffer locks when there is insufficient concurrency in the
-> filesystem layout. It is rare, however, that any workload other that
-> benchmarks generate enough load and/or concurrency to reach the
-> thresholds where such lock breakdown occurs.
-> 
->> I tried to do some hack to disable defer inode inactivation as below,
->> the shell1 benchmark then recovered: XFS (35649.6 -> 37810.9):
->>
->> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
->> index 7b6c026d01a1..d9fb2ef3686a 100644
->> --- a/fs/xfs/xfs_icache.c
->> +++ b/fs/xfs/xfs_icache.c
->> @@ -2059,6 +2059,7 @@ void
->>   xfs_inodegc_start(
->>   	struct xfs_mount	*mp)
->>   {
->> +	return;
->>   	if (xfs_set_inodegc_enabled(mp))
->>   		return;
->>
->> @@ -2180,6 +2181,12 @@ xfs_inodegc_queue(
->>   	ip->i_flags |= XFS_NEED_INACTIVE;
->>   	spin_unlock(&ip->i_flags_lock);
->>
->> +	if (1) {
->> +		xfs_iflags_set(ip, XFS_INACTIVATING);
->> +		xfs_inodegc_inactivate(ip);
->> +		return;
->> +	}
-> 
-> That reintroduces potential deadlock vectors by running blocking
-> transactions directly from iput() and/or memory reclaim. That's one
-> of the main reasons we moved inactivation to a background thread -
-> it gets rid of an entire class of potential deadlock problems....
-
-Yeah, I noticed that too, mainly
-commit 68b957f64fca ("xfs: load uncached unlinked inodes into memory
-on demand").
-
-Thanks,
-Gao Xiang
-
-> 
-> -Dave.
-
+this is a small set of zoned fixes, one reported by Dan through smatch,
+and reported and draft fixed by Darrick, and a little cleanup I noticed
+while going through the report from Dan.
