@@ -1,42 +1,32 @@
-Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04F324EA92;
-	Wed, 19 Mar 2025 03:00:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D44F10FD;
+	Wed, 19 Mar 2025 03:48:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742353215; cv=none; b=njrH13OjnkMmeqCxgWTyrd61FDZmzGomdlRQ0PbRdu07Oxe0PXPSG7/Ov8blV3t2Yn7j1+4a6NA74erRXb7VbFwoXpiJgRvmrxh1KeP0dMPUB9/lOw7L2ak6k8Ejo2wyg64Qqv4p+7/trLDmZRNMdubAC1qO72+APTreEuZcK5E=
+	t=1742356131; cv=none; b=n0R1SHQU1hDptc2sshulNCgspRGbA6DWLQGNMnt/LLTgfjaO3262TUUy8WWgiMjYHA4hRZ30qY3TCITap1j25btUMRMscJv7rWLS3f+n/ImUOrsPTJnlEV903qNGp+0miKmiCkzc5zog79BdrrS5ob4nNGgOmXA2nDEIKlu7VGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742353215; c=relaxed/simple;
-	bh=2LAHDm5a9kiQId0Ehu1siqrV+XlXNO/nld7/RHZmQ0U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Hjb0nA759cjzK+c/cKiZV1jYO6oae6JFe3Ww1LMgAO9BJAyLBu3NEQbZqhv3SioKjuZW/dCXsIhTgd5hWIYkX9ux7mLja64unDHk5uOg0pLgmz8LRlqmVehR4KnkKbRLwNDpvf2AzvxWph/joT9MNEDbyX47sS+/9QEmlBpUUwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=L7cnJjrH; arc=none smtp.client-ip=115.124.30.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="L7cnJjrH"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1742353200; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=VUPAqvDxo94oQ2Yp5DEmT3wiJN+0p+J2Q0KkA4Qbhbg=;
-	b=L7cnJjrHc0YiF9gAEncFI7S/2h8W/bs3hSuDzAMTQ4WPqi3qB9FHjH4UsHIIA7Enqy7gDq7iHQGlearmxzeJiSk3DCW1sSn7fA6EY7HN6Zqejx1JfVyY9CMWGWLRU+XQ5RZx/6siYGtf07VFT75fycqciSgjdBmLzCOg+J5r9WE=
-Received: from x31i01179.sqa.na131.tbsite.net(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0WS-6Nzc_1742353195 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 19 Mar 2025 11:00:00 +0800
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-To: linux-fsdevel@vger.kernel.org,
-	Christian Brauner <brauner@kernel.org>,
-	Brian Foster <bfoster@redhat.com>
-Cc: linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org,
-	Gao Xiang <hsiangkao@linux.alibaba.com>,
-	Bo Liu <liubo03@inspur.com>,
-	Christoph Hellwig <hch@lst.de>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH -next] iomap: fix inline data on buffered read
-Date: Wed, 19 Mar 2025 10:59:53 +0800
-Message-ID: <20250319025953.3559299-1-hsiangkao@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.5
+	s=arc-20240116; t=1742356131; c=relaxed/simple;
+	bh=wA0gSlT2qOkb8shKSYUHPnqoSigHRaoG7FwxyliD/YM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dUq+dTYr7y0JNqK1jimxyYJI30+s9zJFpUaaJY5Tp0+j0sXFUPUdMh8t/ZLfLwjYJrtw37xbzpGDPJ+Z9xq2wwAznsR/XzYi0DsmipJjDd4yxP4ZjpdkkT8sBb1NG2i1iANNmAh1PGWwLPw9w+3USn86okirrvwix+BjySqQgtM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost (unknown [124.16.138.129])
+	by APP-05 (Coremail) with SMTP id zQCowAAXHKCaPtpnjmgyFg--.14469S2;
+	Wed, 19 Mar 2025 11:48:43 +0800 (CST)
+From: Chen Ni <nichen@iscas.ac.cn>
+To: cem@kernel.org,
+	djwong@kernel.org,
+	chandanbabu@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chen Ni <nichen@iscas.ac.cn>
+Subject: [PATCH] xfs: remove duplicate xfs_rtbitmap.h header
+Date: Wed, 19 Mar 2025 11:48:06 +0800
+Message-Id: <20250319034806.3812673-1-nichen@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,53 +34,42 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowAAXHKCaPtpnjmgyFg--.14469S2
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYk7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4
+	A2jsIEc7CjxVAFwI0_Cr1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
+	64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr
+	1UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
+	648v4I1lc2xSY4AK67AK6r48MxAIw28IcxkI7VAKI48JMxAqzxv26xkF7I0En4kS14v26r
+	126r1DMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
+	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6x
+	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
+	0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfU0a9aDUUUU
+X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
 
-Previously, iomap_readpage_iter() returning 0 would break out of the
-loops of iomap_readahead_iter(), which is what iomap_read_inline_data()
-relies on.
+Remove duplicate header which is included twice.
 
-However, commit d9dc477ff6a2 ("iomap: advance the iter directly on
-buffered read") changes this behavior without calling
-iomap_iter_advance(), which causes EROFS to get stuck in
-iomap_readpage_iter().
-
-It seems iomap_iter_advance() cannot be called in
-iomap_read_inline_data() because of the iomap_write_begin() path, so
-handle this in iomap_readpage_iter() instead.
-
-Reported-by: Bo Liu <liubo03@inspur.com>
-Fixes: d9dc477ff6a2 ("iomap: advance the iter directly on buffered read")
-Cc: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>
-Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
 ---
- fs/iomap/buffered-io.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/repair.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index d52cfdc299c4..2d6e1e3be747 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -372,9 +372,15 @@ static int iomap_readpage_iter(struct iomap_iter *iter,
- 	struct iomap_folio_state *ifs;
- 	size_t poff, plen;
- 	sector_t sector;
-+	int ret;
- 
--	if (iomap->type == IOMAP_INLINE)
--		return iomap_read_inline_data(iter, folio);
-+	if (iomap->type == IOMAP_INLINE) {
-+		ret = iomap_read_inline_data(iter, folio);
-+		if (ret)
-+			return ret;
-+		plen = length;
-+		goto done;
-+	}
- 
- 	/* zero post-eof blocks as the page may be mapped */
- 	ifs = ifs_alloc(iter->inode, folio, iter->flags);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index f8f9ed30f56b..5ce5064d67e5 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -21,7 +21,6 @@
+ #include "xfs_rmap.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_refcount_btree.h"
+-#include "xfs_rtbitmap.h"
+ #include "xfs_extent_busy.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
 -- 
-2.43.5
+2.25.1
 
