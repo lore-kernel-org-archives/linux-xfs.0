@@ -1,158 +1,98 @@
-Received: from unicom146.biz-email.net (unicom146.biz-email.net [210.51.26.146])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68507212D68;
-	Wed, 19 Mar 2025 06:41:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.51.26.146
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9E2122094
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Mar 2025 07:17:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742366484; cv=none; b=qBDfhXgZgeGzncEc4ioF/9V2chP2d5Rzi0ETIHhszFfPBYYuQ66ZXTh2t8fK7z5x8UkK0BY007Et6A+AJmPg+g9F/9X7RQGbVUZnqQ73WociXqBgMbeosGC5Ax2NlnpjLnLHxkSxQXPBCCILSCuBBk8eDNpq/s7zlK4ReND3uJI=
+	t=1742368626; cv=none; b=RQXosWXOw5brQbQ3pf0WFAFTnkEr3r7+BigcUEP6EbtROHsod2ljW7CuYyKqUOf69ebVqaRRMO4lifQNzqmm1UDgnhy6PFHUCqH9/gxEWaNi6/RSBrCgnwfoUbuzRjqjQw3ZllnnMBxxfGzC2txo/8W6Ste6ub6n5W1F5XEaoYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742366484; c=relaxed/simple;
-	bh=GexjVLwfMXTGRau2YjjBSTQBDA1cxcPKMLZ0qDfGznk=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=N/1rQ1RuNIuo9sJuSYlZ2YPPUl1J7EO1yxZ4ujF4v+7yedGTH5EHOB4xMZYbHvYellwuDC6U5AaWkeOKl1n6DwoGgX/RyGP5W8LTwSofW+C5uOAR7NukkgF25eXb9XcTmv8OZ71yvgoC9y1qlzJbSKG76rU/1ExgtMy4aX1gfRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com; spf=pass smtp.mailfrom=inspur.com; arc=none smtp.client-ip=210.51.26.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inspur.com
-Received: from jtjnmail201623.home.langchao.com
-        by unicom146.biz-email.net ((D)) with ASMTP (SSL) id 202503191440057170;
-        Wed, 19 Mar 2025 14:40:05 +0800
-Received: from jtjnmail201622.home.langchao.com (10.100.2.22) by
- jtjnmail201623.home.langchao.com (10.100.2.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Wed, 19 Mar 2025 14:40:06 +0800
-Received: from jtjnmail201622.home.langchao.com ([fe80::15c3:8d74:3aa6:25f6])
- by jtjnmail201622.home.langchao.com ([fe80::15c3:8d74:3aa6:25f6%7]) with mapi
- id 15.01.2507.039; Wed, 19 Mar 2025 14:40:06 +0800
-From: =?gb2312?B?Qm8gTGl1ICjB9bKoKS3Ay7Ox0MXPog==?= <liubo03@inspur.com>
-To: "hsiangkao@linux.alibaba.com" <hsiangkao@linux.alibaba.com>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"brauner@kernel.org" <brauner@kernel.org>, "bfoster@redhat.com"
-	<bfoster@redhat.com>
-CC: "linux-erofs@lists.ozlabs.org" <linux-erofs@lists.ozlabs.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "hch@lst.de"
-	<hch@lst.de>, "djwong@kernel.org" <djwong@kernel.org>
-Subject: Re: [PATCH -next] iomap: fix inline data on buffered read
-Thread-Topic: [PATCH -next] iomap: fix inline data on buffered read
-Thread-Index: AduYmXY6aY6bfqZqTPedAurYKq7QZQ==
-Date: Wed, 19 Mar 2025 06:40:06 +0000
-Message-ID: <3e2e3c7edcec403fb824e973953a10ad@inspur.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach: yes
-X-MS-TNEF-Correlator:
-Content-Type: multipart/signed; micalg=SHA1;
-	protocol="application/x-pkcs7-signature";
-	boundary="----=_NextPart_000_0028_01DB98DC.85E07B30"
+	s=arc-20240116; t=1742368626; c=relaxed/simple;
+	bh=MG7t37RDhUuQgvNXz3+Ln/eBp225CH/2CaJ9joxQoio=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R7gbhQRsWeBwGdCpQq6kff+1xAlxbLCsxuQZZyOc5pW+Nqo/VPMzEXWIIgHeWTEwsX4b5WeBgywrZiwaab/coMqKaBnWKn4rZ/7CztPAKBbQxWhRlAqa3o5zY6xa88vp8aH/c4z8PE5VRzO69Z3rCaCaFX6qJd5e/+lRtpmj2ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xq5NLzV8; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xq5NLzV8"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4393dc02b78so27549715e9.3
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Mar 2025 00:17:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1742368623; x=1742973423; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=MTzWpabUT9+XbmtN14r4T7Omt7j6L7c99WjDe+SPMdM=;
+        b=xq5NLzV8NJ8n3ke9hiZ+L/YqqHxK3sPH8Zyb3PEvxInQPkq3XqMseAVOCRmAZ+f95b
+         Dq0ceTKOBKQi3OoUAg50lINjIyoY8Izt+zKyutLMU/RliJv+gDA+52c87O2coXyxzS84
+         5jeq4REUjxYewKp+V21PDu89uf+QtFdnHXoIy+nUwbKhfrCigvEtxyPdbB7XC32ljEus
+         jCEe4Oms/jC9jNylftJGe6IBmCyWCXOLL7dB9lK/Pboh2029Q9oTUdYQr/gf8GpeV9fM
+         EvcufOsQoddN4gNsvLLBK9YrMIPybHyHkgHv9/Y/LQg/jP2aRDfDMaiUvRBUsGH8u5Av
+         6z0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742368623; x=1742973423;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MTzWpabUT9+XbmtN14r4T7Omt7j6L7c99WjDe+SPMdM=;
+        b=KzdJDWocJaqZAFrpD8K1EaaARCDL9FBbC0GoTwb8YdynKzxXKTiIMbAeZvsc4z2srq
+         f03JMF6Y4cGeqvBb8Kh+Qm7NEpDy7iLnYaejyQxg87ATGczMh8sXnaA7Ij5NvE5MC73n
+         R+V2jJGgs/mltEdYAU8sbPZLyq32HfedwWNkn94lGpWahW1iaft9whyY8QQzxCWf3wbA
+         9MN5y//Zg9E94ERKr/oJVn8VnS7aeb3imcJyngyvYCK1u6sdgCm94om2W6kATPxEzBgd
+         tuH8nGkbq8PV24DqQI4Gclp1xSJfLkkrV3XMlVJypzuW/u7eAXGfPlwYgEtxfNqMTQ/d
+         +cZQ==
+X-Gm-Message-State: AOJu0Yxxif3nxb2EdMy6mEQEG8qVYJDjFNSA2isduWJ9Jw9PC+DmCro7
+	g46faWQX1FOLBcOIMLGE228tHXYuhG4Z34rK0x5wPsqKVDYW+lOmZNL+NUU3R7D+pqRA9ZwJR83
+	d
+X-Gm-Gg: ASbGncuhB1tIiYS6f3MD+MyikpD04rU93yZefxTRDIoE4nOLQZaMpbRKasPKDFBmEcA
+	F2UpOVSXQnoWyioQOCk965fvXfyqL4dgRxrPKdYQmqnOA47uG+AVpgI5EzKn+zTCdI5JMPKLdMN
+	FWEn76xi25Va8lMaPKgJswCTdPV4zuwS78FYjDM7Q0Cw31YP45J0mDCpv3bx26rVWbfWaZ5KnF3
+	XJltdIwEe9RFgM7cMKf7weNMN1s8B4IJnAqEVX4BzdB4xurESr7hyiTUR46X8ipDOtBMNiWUyPy
+	rCH3pHSA+kK8tustadqYSF8FCV0krNeQwfeEs3zwA9x8QiWEig==
+X-Google-Smtp-Source: AGHT+IHE3CjNeq/pL3h/Otz8kuPv45/pOpt7y7WAOIGdwj7yyFNMb3DzzscWh2RpqZ6M4dneQY3nHQ==
+X-Received: by 2002:a05:600c:4ec6:b0:43c:e9f7:d6a3 with SMTP id 5b1f17b1804b1-43d4379301bmr9440225e9.13.1742368622979;
+        Wed, 19 Mar 2025 00:17:02 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-395c8975febsm20654809f8f.59.2025.03.19.00.17.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Mar 2025 00:17:02 -0700 (PDT)
+Date: Wed, 19 Mar 2025 10:16:58 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [bug report] xfs: use vmalloc instead of vm_map_area for buffer
+ backing memory
+Message-ID: <58572c66-2ee5-4119-9570-b359d77c6a3d@stanley.mountain>
+References: <91be50b2-1c02-4952-8603-6803dd64f42d@stanley.mountain>
+ <20250319063113.GA23743@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-tUid: 2025319144005a6c2e4d7e8a45e2da203be86f34f7c9e
-X-Abuse-Reports-To: service@corp-email.com
-Abuse-Reports-To: service@corp-email.com
-X-Complaints-To: service@corp-email.com
-X-Report-Abuse-To: service@corp-email.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250319063113.GA23743@lst.de>
 
-------=_NextPart_000_0028_01DB98DC.85E07B30
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
+On Wed, Mar 19, 2025 at 07:31:13AM +0100, Christoph Hellwig wrote:
+> On Tue, Mar 18, 2025 at 11:40:47AM +0300, Dan Carpenter wrote:
+> > Hello Christoph Hellwig,
+> > 
+> > Commit e2874632a621 ("xfs: use vmalloc instead of vm_map_area for
+> > buffer backing memory") from Mar 10, 2025 (linux-next), leads to the
+> > following Smatch static checker warning:
+> 
+> Just a question to reconfirm how smatch works:  the vm_unmap_ram
+> replaced by vfree in this patch also had a might_sleep(), so I think
+> this bug is older and the check should have also triggeted before.
+> Or am I missing something?
 
->Previously, iomap_readpage_iter() returning 0 would break out of the loops
-of
->iomap_readahead_iter(), which is what iomap_read_inline_data() relies on.
->
->However, commit d9dc477ff6a2 ("iomap: advance the iter directly on buffered
->read") changes this behavior without calling iomap_iter_advance(), which
->causes EROFS to get stuck in iomap_readpage_iter().
->
->It seems iomap_iter_advance() cannot be called in
->iomap_read_inline_data() because of the iomap_write_begin() path, so handle
->this in iomap_readpage_iter() instead.
->
->Reported-by: Bo Liu <liubo03@inspur.com>
->Fixes: d9dc477ff6a2 ("iomap: advance the iter directly on buffered read")
->Cc: Brian Foster <bfoster@redhat.com>
->Cc: Christoph Hellwig <hch@lst.de>
->Cc: "Darrick J. Wong" <djwong@kernel.org>
->Cc: Christian Brauner <brauner@kernel.org>
->Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+Oh, yeah, sorry.  It did trigger before but I never reported it.
+It only showed up as a new bug because the warning moved from
+xfs_buf_free_pages() to xfs_buf_free().
 
-Tested-by: Bo Liu <liubo03@inspur.com>
+Sorry!
 
-------=_NextPart_000_0028_01DB98DC.85E07B30
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-
-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
-9w0DAgICAIAwDgYIKoZIhvcNAwQCAgCAMAcGBSsOAwIHMAoGCCqGSIb3DQMHMB0GA1UdDgQWBBTk
-Hdp/y3+DuDJ13Q1YzgU9iV7NdzAfBgNVHSMEGDAWgBReWQOmtExYYJFO9h61pTmmMsE1ajCCAQ8G
-A1UdHwSCAQYwggECMIH/oIH8oIH5hoG6bGRhcDovLy9DTj1JTlNQVVItQ0EsQ049SlRDQTIwMTIs
-Q049Q0RQLENOPVB1YmxpYyUyMEtleSUyMFNlcnZpY2VzLENOPVNlcnZpY2VzLENOPUNvbmZpZ3Vy
-YXRpb24sREM9aG9tZSxEQz1sYW5nY2hhbyxEQz1jb20/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlz
-dD9iYXNlP29iamVjdENsYXNzPWNSTERpc3RyaWJ1dGlvblBvaW50hjpodHRwOi8vSlRDQTIwMTIu
-aG9tZS5sYW5nY2hhby5jb20vQ2VydEVucm9sbC9JTlNQVVItQ0EuY3JsMIIBKQYIKwYBBQUHAQEE
-ggEbMIIBFzCBsQYIKwYBBQUHMAKGgaRsZGFwOi8vL0NOPUlOU1BVUi1DQSxDTj1BSUEsQ049UHVi
-bGljJTIwS2V5JTIwU2VydmljZXMsQ049U2VydmljZXMsQ049Q29uZmlndXJhdGlvbixEQz1ob21l
-LERDPWxhbmdjaGFvLERDPWNvbT9jQUNlcnRpZmljYXRlP2Jhc2U/b2JqZWN0Q2xhc3M9Y2VydGlm
-aWNhdGlvbkF1dGhvcml0eTBhBggrBgEFBQcwAoZVaHR0cDovL0pUQ0EyMDEyLmhvbWUubGFuZ2No
-YW8uY29tL0NlcnRFbnJvbGwvSlRDQTIwMTIuaG9tZS5sYW5nY2hhby5jb21fSU5TUFVSLUNBLmNy
-dDBBBgNVHREEOjA4oCIGCisGAQQBgjcUAgOgFAwSbGl1Ym8wM0BpbnNwdXIuY29tgRJsaXVibzAz
-QGluc3B1ci5jb20wDQYJKoZIhvcNAQELBQADggEBAA+BaY3B3qXmvZq7g7tZLzq2VQjU//XHTmyl
-58GLDWdVHsuX3lrAGwEfLVnUodpvthjtb7T7xEUzJh4F62zLFSm8HOBPH1B+6SFQKChHZeM0pauv
-Xr1krRtVv82RgLsU26XrXFUPN+NcPwt7vOw1zHOiDic4anL3A9gsuDljAi2l+CA5RY05yL+8oras
-EAhOYL6+ks9aB8QiCxbZzShkDTMkrh0N1DjoBLaibtnlI/fxOUYM6vgdiI+FC02G41B364ZAc1ma
-bSFvGIP6cIdr/olprPQOj9cq6zMi05qUBUj22hDvhcY0TlT4fEJSrvblp/LG6qTtVI3ilUAxhe8i
-9cIxggOTMIIDjwIBATBwMFkxEzARBgoJkiaJk/IsZAEZFgNjb20xGDAWBgoJkiaJk/IsZAEZFghs
-YW5nY2hhbzEUMBIGCgmSJomT8ixkARkWBGhvbWUxEjAQBgNVBAMTCUlOU1BVUi1DQQITfgAA0dHV
-TGwIT1/wiwAAAADR0TAJBgUrDgMCGgUAoIIB+DAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
-CSqGSIb3DQEJBTEPFw0yNTAzMTkwNjM4MDRaMCMGCSqGSIb3DQEJBDEWBBSCC3kJI5A4JpSPWwDa
-RXDb1bxcSTB/BgkrBgEEAYI3EAQxcjBwMFkxEzARBgoJkiaJk/IsZAEZFgNjb20xGDAWBgoJkiaJ
-k/IsZAEZFghsYW5nY2hhbzEUMBIGCgmSJomT8ixkARkWBGhvbWUxEjAQBgNVBAMTCUlOU1BVUi1D
-QQITfgAA0dHVTGwIT1/wiwAAAADR0TCBgQYLKoZIhvcNAQkQAgsxcqBwMFkxEzARBgoJkiaJk/Is
-ZAEZFgNjb20xGDAWBgoJkiaJk/IsZAEZFghsYW5nY2hhbzEUMBIGCgmSJomT8ixkARkWBGhvbWUx
-EjAQBgNVBAMTCUlOU1BVUi1DQQITfgAA0dHVTGwIT1/wiwAAAADR0TCBkwYJKoZIhvcNAQkPMYGF
-MIGCMAoGCCqGSIb3DQMHMAsGCWCGSAFlAwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMA4G
-CCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCGjALBglghkgBZQMEAgMwCwYJYIZI
-AWUDBAICMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB4+CNebvYh6jsAoa9Qw509PEKW
-rl/jL2jtX1jfFnQatnuQWaZFJPMaUDjE+NriXGkuEWThR5GhjyXhsElmSkJCEJuT7hv7LgHut1md
-+2zGy0yDQ69a+3p2l2O89V/XDiwREB4spANggA0lU8RdKkft6KvDM64Lbyw3vTJXTq4qbptaNhWH
-2DfVZZMXEyeD0M4qrstULn9R+t5z3K9WKUxhJCiPVsuVNjY1iCkNIyyjEfAGuFWlpR6ueL6VhyXQ
-pOaSWsHktGM5AOd51XPaQvD8rGOQ666bi+x5P0Tu2hReiUgkSu7BtTEdFkPCAF+riqJGe/+1EAoy
-TLPWNUJ+jnpsAAAAAAAA
-
-------=_NextPart_000_0028_01DB98DC.85E07B30--
+regards,
+dan carpenter
