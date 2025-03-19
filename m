@@ -1,70 +1,33 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9E2122094
-	for <linux-xfs@vger.kernel.org>; Wed, 19 Mar 2025 07:17:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A054942A83;
+	Wed, 19 Mar 2025 07:30:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742368626; cv=none; b=RQXosWXOw5brQbQ3pf0WFAFTnkEr3r7+BigcUEP6EbtROHsod2ljW7CuYyKqUOf69ebVqaRRMO4lifQNzqmm1UDgnhy6PFHUCqH9/gxEWaNi6/RSBrCgnwfoUbuzRjqjQw3ZllnnMBxxfGzC2txo/8W6Ste6ub6n5W1F5XEaoYc=
+	t=1742369461; cv=none; b=MpS/er//W/mk9VYK6jqzKe/59W4qR9KIQ7KY4KfYx+GzOZaqGd6UN3qOF/CzpYzZBr52RaM/gV022ffZNHtmPBnVA4Tyz8aPmKLzAH0OcJmfHp5yFI76S/4haF8JxZqaUUlaQBBOl3TJvwOZJpDNyrjWVKb6SCorhXyktcFt8ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742368626; c=relaxed/simple;
-	bh=MG7t37RDhUuQgvNXz3+Ln/eBp225CH/2CaJ9joxQoio=;
+	s=arc-20240116; t=1742369461; c=relaxed/simple;
+	bh=Sx2CVp5grQK0BXk7nLN+dSXLCrxu/lOLQuTNVw2MMIc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R7gbhQRsWeBwGdCpQq6kff+1xAlxbLCsxuQZZyOc5pW+Nqo/VPMzEXWIIgHeWTEwsX4b5WeBgywrZiwaab/coMqKaBnWKn4rZ/7CztPAKBbQxWhRlAqa3o5zY6xa88vp8aH/c4z8PE5VRzO69Z3rCaCaFX6qJd5e/+lRtpmj2ok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xq5NLzV8; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xq5NLzV8"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4393dc02b78so27549715e9.3
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Mar 2025 00:17:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1742368623; x=1742973423; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MTzWpabUT9+XbmtN14r4T7Omt7j6L7c99WjDe+SPMdM=;
-        b=xq5NLzV8NJ8n3ke9hiZ+L/YqqHxK3sPH8Zyb3PEvxInQPkq3XqMseAVOCRmAZ+f95b
-         Dq0ceTKOBKQi3OoUAg50lINjIyoY8Izt+zKyutLMU/RliJv+gDA+52c87O2coXyxzS84
-         5jeq4REUjxYewKp+V21PDu89uf+QtFdnHXoIy+nUwbKhfrCigvEtxyPdbB7XC32ljEus
-         jCEe4Oms/jC9jNylftJGe6IBmCyWCXOLL7dB9lK/Pboh2029Q9oTUdYQr/gf8GpeV9fM
-         EvcufOsQoddN4gNsvLLBK9YrMIPybHyHkgHv9/Y/LQg/jP2aRDfDMaiUvRBUsGH8u5Av
-         6z0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742368623; x=1742973423;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MTzWpabUT9+XbmtN14r4T7Omt7j6L7c99WjDe+SPMdM=;
-        b=KzdJDWocJaqZAFrpD8K1EaaARCDL9FBbC0GoTwb8YdynKzxXKTiIMbAeZvsc4z2srq
-         f03JMF6Y4cGeqvBb8Kh+Qm7NEpDy7iLnYaejyQxg87ATGczMh8sXnaA7Ij5NvE5MC73n
-         R+V2jJGgs/mltEdYAU8sbPZLyq32HfedwWNkn94lGpWahW1iaft9whyY8QQzxCWf3wbA
-         9MN5y//Zg9E94ERKr/oJVn8VnS7aeb3imcJyngyvYCK1u6sdgCm94om2W6kATPxEzBgd
-         tuH8nGkbq8PV24DqQI4Gclp1xSJfLkkrV3XMlVJypzuW/u7eAXGfPlwYgEtxfNqMTQ/d
-         +cZQ==
-X-Gm-Message-State: AOJu0Yxxif3nxb2EdMy6mEQEG8qVYJDjFNSA2isduWJ9Jw9PC+DmCro7
-	g46faWQX1FOLBcOIMLGE228tHXYuhG4Z34rK0x5wPsqKVDYW+lOmZNL+NUU3R7D+pqRA9ZwJR83
-	d
-X-Gm-Gg: ASbGncuhB1tIiYS6f3MD+MyikpD04rU93yZefxTRDIoE4nOLQZaMpbRKasPKDFBmEcA
-	F2UpOVSXQnoWyioQOCk965fvXfyqL4dgRxrPKdYQmqnOA47uG+AVpgI5EzKn+zTCdI5JMPKLdMN
-	FWEn76xi25Va8lMaPKgJswCTdPV4zuwS78FYjDM7Q0Cw31YP45J0mDCpv3bx26rVWbfWaZ5KnF3
-	XJltdIwEe9RFgM7cMKf7weNMN1s8B4IJnAqEVX4BzdB4xurESr7hyiTUR46X8ipDOtBMNiWUyPy
-	rCH3pHSA+kK8tustadqYSF8FCV0krNeQwfeEs3zwA9x8QiWEig==
-X-Google-Smtp-Source: AGHT+IHE3CjNeq/pL3h/Otz8kuPv45/pOpt7y7WAOIGdwj7yyFNMb3DzzscWh2RpqZ6M4dneQY3nHQ==
-X-Received: by 2002:a05:600c:4ec6:b0:43c:e9f7:d6a3 with SMTP id 5b1f17b1804b1-43d4379301bmr9440225e9.13.1742368622979;
-        Wed, 19 Mar 2025 00:17:02 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-395c8975febsm20654809f8f.59.2025.03.19.00.17.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Mar 2025 00:17:02 -0700 (PDT)
-Date: Wed, 19 Mar 2025 10:16:58 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [bug report] xfs: use vmalloc instead of vm_map_area for buffer
- backing memory
-Message-ID: <58572c66-2ee5-4119-9570-b359d77c6a3d@stanley.mountain>
-References: <91be50b2-1c02-4952-8603-6803dd64f42d@stanley.mountain>
- <20250319063113.GA23743@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=F8R4Hzwh5gF6kt+yuyCQRALahcuQQt4Jibv37c1EZtGl22PlBxSqVb4tjHOM5YMtUn4/0bcpTnWrzs2ltNlIIDqRNw+3TemypUZv++ipkedXULUvj5SiQJI9UXcEOBsSlWfIiRKHPmt5PlOC/6mkfnIwhZXROJl+saK3AYlCZUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 70C9B68BFE; Wed, 19 Mar 2025 08:30:46 +0100 (CET)
+Date: Wed, 19 Mar 2025 08:30:45 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org, djwong@kernel.org,
+	cem@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	martin.petersen@oracle.com, tytso@mit.edu,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v6 10/13] xfs: iomap COW-based atomic write support
+Message-ID: <20250319073045.GA25373@lst.de>
+References: <20250313171310.1886394-1-john.g.garry@oracle.com> <20250313171310.1886394-11-john.g.garry@oracle.com> <Z9fOoE3LxcLNcddh@infradead.org> <eb7a6175-5637-4ea6-a08c-14776aa67d8b@oracle.com> <20250318053906.GD14470@lst.de> <eff45548-df5a-469b-a4ee-6d09845c86e2@oracle.com> <20250318083203.GA18902@lst.de> <de3f6e25-851a-4ed7-9511-397270785794@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,26 +36,185 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250319063113.GA23743@lst.de>
+In-Reply-To: <de3f6e25-851a-4ed7-9511-397270785794@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Mar 19, 2025 at 07:31:13AM +0100, Christoph Hellwig wrote:
-> On Tue, Mar 18, 2025 at 11:40:47AM +0300, Dan Carpenter wrote:
-> > Hello Christoph Hellwig,
-> > 
-> > Commit e2874632a621 ("xfs: use vmalloc instead of vm_map_area for
-> > buffer backing memory") from Mar 10, 2025 (linux-next), leads to the
-> > following Smatch static checker warning:
-> 
-> Just a question to reconfirm how smatch works:  the vm_unmap_ram
-> replaced by vfree in this patch also had a might_sleep(), so I think
-> this bug is older and the check should have also triggeted before.
-> Or am I missing something?
+On Tue, Mar 18, 2025 at 05:44:46PM +0000, John Garry wrote:
+> Please suggest any further modifications to the following attempt. I have 
+> XFS_REFLINK_FORCE_COW still being passed to xfs_reflink_fill_cow_hole(), 
+> but xfs_reflink_fill_cow_hole() is quite a large function and I am not sure 
+> if I want to duplicate lots of it.
 
-Oh, yeah, sorry.  It did trigger before but I never reported it.
-It only showed up as a new bug because the warning moved from
-xfs_buf_free_pages() to xfs_buf_free().
+As said I'd do away with the helpers.  Below is my completely
+untested whiteboard coding attempt, based against the series you
+sent out.
 
-Sorry!
-
-regards,
-dan carpenter
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 88d86cabb8a1..06ece7070cfd 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1083,67 +1083,104 @@ xfs_atomic_write_cow_iomap_begin(
+ 	struct iomap		*iomap,
+ 	struct iomap		*srcmap)
+ {
+-	ASSERT(flags & IOMAP_WRITE);
+-	ASSERT(flags & IOMAP_DIRECT);
+-
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_bmbt_irec	imap, cmap;
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
+-	int			nimaps = 1, error;
+-	bool			shared = false;
+-	unsigned int		lockmode = XFS_ILOCK_EXCL;
++	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
++	int			nmaps = 1;
++	xfs_filblks_t		resaligned;
++	struct xfs_bmbt_irec	cmap;
++	struct xfs_iext_cursor	icur;
++	struct xfs_trans	*tp;
++	int			error;
+ 	u64			seq;
+ 
++	ASSERT(!XFS_IS_REALTIME_INODE(ip));
++	ASSERT(flags & IOMAP_WRITE);
++	ASSERT(flags & IOMAP_DIRECT);
++
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+ 
+-	if (!xfs_has_reflink(mp))
++	if (WARN_ON_ONCE(!xfs_has_reflink(mp)))
+ 		return -EINVAL;
+ 
+-	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++
++	if (!ip->i_cowfp) {
++		ASSERT(!xfs_is_reflink_inode(ip));
++		xfs_ifork_init_cow(ip);
++	}
++
++	/*
++	 * If we don't find an overlapping extent, trim the range we need to
++	 * allocate to fit the hole we found.
++	 */
++	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
++		cmap.br_startoff = end_fsb;
++	if (cmap.br_startoff <= offset_fsb) {
++		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
++		goto found;
++	}
++
++	end_fsb = cmap.br_startoff;
++	count_fsb = end_fsb - offset_fsb;
++	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb,
++			xfs_get_cowextsz_hint(ip));
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
++			XFS_DIOSTRAT_SPACE_RES(mp, resaligned), 0, false, &tp);
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+-			&nimaps, 0);
+-	if (error)
+-		goto out_unlock;
++	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
++		cmap.br_startoff = end_fsb;
++	if (cmap.br_startoff <= offset_fsb) {
++		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
++		xfs_trans_cancel(tp);
++		goto found;
++	}
+ 
+-	 /*
+-	  * Use XFS_REFLINK_ALLOC_EXTSZALIGN to hint at aligning new extents
+-	  * according to extszhint, such that there will be a greater chance
+-	  * that future atomic writes to that same range will be aligned (and
+-	  * don't require this COW-based method).
+-	  */
+-	error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
+-			&lockmode, XFS_REFLINK_CONVERT_UNWRITTEN |
+-			XFS_REFLINK_FORCE_COW | XFS_REFLINK_ALLOC_EXTSZALIGN);
+ 	/*
+-	 * Don't check @shared. For atomic writes, we should error when
+-	 * we don't get a COW fork extent mapping.
++	 * Allocate the entire reservation as unwritten blocks.
++	 *
++	 * Use XFS_BMAPI_EXTSZALIGN to hint at aligning new extents according to
++	 * extszhint, such that there will be a greater chance that future
++	 * atomic writes to that same range will be aligned (and don't require
++	 * this COW-based method).
+ 	 */
+-	if (error)
++	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
++			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC |
++			XFS_BMAPI_EXTSZALIGN, 0, &cmap, &nmaps);
++	if (error) {
++		xfs_trans_cancel(tp);
+ 		goto out_unlock;
++	}
+ 
+-	end_fsb = imap.br_startoff + imap.br_blockcount;
++	xfs_inode_set_cowblocks_tag(ip);
++	error = xfs_trans_commit(tp);
++	if (error)
++		goto out_unlock;
+ 
+-	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
+-	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
+-	if (imap.br_startblock != HOLESTARTBLOCK) {
+-		seq = xfs_iomap_inode_sequence(ip, 0);
+-		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0, seq);
++found:
++	if (cmap.br_state != XFS_EXT_NORM) {
++		error = xfs_reflink_convert_cow_locked(ip, offset_fsb,
++				count_fsb);
+ 		if (error)
+ 			goto out_unlock;
++		cmap.br_state = XFS_EXT_NORM;
+ 	}
++
++	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
++	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
+ 	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
+-	xfs_iunlock(ip, lockmode);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
+ 
+ out_unlock:
+-	if (lockmode)
+-		xfs_iunlock(ip, lockmode);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index b983f5413be6..71116e6a692c 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -293,7 +293,7 @@ xfs_bmap_trim_cow(
+ 	return xfs_reflink_trim_around_shared(ip, imap, shared);
+ }
+ 
+-static int
++int
+ xfs_reflink_convert_cow_locked(
+ 	struct xfs_inode	*ip,
+ 	xfs_fileoff_t		offset_fsb,
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 969006661a3f..ab3fa3c95196 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -45,6 +45,8 @@ int xfs_reflink_allocate_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+ 		unsigned int flags);
+ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t count);
++int xfs_reflink_convert_cow_locked(struct xfs_inode *ip,
++		xfs_fileoff_t offset_fsb, xfs_filblks_t count_fsb);
+ 
+ extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
+ 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
