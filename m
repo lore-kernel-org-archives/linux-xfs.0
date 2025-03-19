@@ -1,84 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1F2A935;
-	Wed, 19 Mar 2025 13:06:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 050B12139C8
+	for <linux-xfs@vger.kernel.org>; Wed, 19 Mar 2025 19:50:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742389604; cv=none; b=XmJl4e5MHlFZOlBsMEQY+I7lWZAFM0xYxTAqtXgYH68nPt2pnULg7KGRCwn5igCpM4LxqOVyiC59U+GfYJIkwMgo3wAADbpS8JuYSG9rYpPcoiMKQCIg7elIGxJqE5PNgwTBAAvHk2ttQxcp23O7Ukjsh3EHjRDv2R5KOGLknDc=
+	t=1742413847; cv=none; b=Wxp+TTlrONKCm5j/aOjiBCZ30C4TE8qpObbcWZvjbJYirhPpuFXh+YqsDboqKqeSikGPl65wJ8ViUWakkMNJMxXSeYGQohJTJYzuSKDMhFl6DGjIlnxK6pcgdL57RoaBudTViIm7cTm53BknGWHYLiiphFhb1h17K9XSNPgimu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742389604; c=relaxed/simple;
-	bh=CPww1TQSDOLLkdBO3ROjU7WbbIGpj/GzEovD+pZ6Q/M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QViBxaLCdt9G4zpLm6IJv1f8IP/+pHg8ERdRMfc6QVfjzg3WGOwwRcJWcrk1xqXZYYRfPpaFwbDIDarkBUbUXbqEpXOK/ysN7Ch+4XF7X144C4s0DMsNiV4LcjsfeeIgiiDZmi3lYYZUUrLjLaPeY/xzAt+w8bkaOu8t4JPDzI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TeaWphTC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742413847; c=relaxed/simple;
+	bh=sExoy8pqp0ariENfKfzxL5q5xGicuuhF34RlyGSM2pc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sf42aMMkDHRLATE5fdRE3ebMuKFR7WF80Lx8yMHK8lOz6Vdwr5tc+p3x+9bBBh8/adZ2EirbFT2Rfctk22UucE5BbawDgXZiGvDnOKXHfP0xb/PhWnyTMZcT2jG3m1PW1J1GIbsQNn4nQeXAYSfpvHnW3yIouYLEBgapNDajuQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fo7qbJp6; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TeaWphTC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D71DC4CEE9;
-	Wed, 19 Mar 2025 13:06:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742389604;
-	bh=CPww1TQSDOLLkdBO3ROjU7WbbIGpj/GzEovD+pZ6Q/M=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=TeaWphTCO0hr+ok2QjxTNhxgfePARWtf9TuyJZQEVIe6hXxtxIokPSTDxk8eq4DCo
-	 yFZYp7MUl8fcTZeK1arE5+JzMsAGKtZqnGAgRw2Oh/dAoGoCip9sT2rGYNq9MfLpIq
-	 11+nSz/eeJBXezrpNTDpENxhv5RxQQ53ih/eaLOre47239157mpAtRI26zJcwEC+ud
-	 zuansiYlwjpwVBiSNPRzhuWExkfXc4ptEBV+fv0amHB+STr7qD1iNMhipKO9fjH9g8
-	 cAXUB9T21FRo4FDa2kb+MBeEjGyMBYrrTeRpxNd3Veo9GfhDTLaa6U+CmpAl3b1VOY
-	 nv0GVFD/Wl25g==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org,
-	Brian Foster <bfoster@redhat.com>,
-	Gao Xiang <xiang@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org,
-	Bo Liu <liubo03@inspur.com>,
-	Christoph Hellwig <hch@lst.de>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v2] iomap: fix inline data on buffered read
-Date: Wed, 19 Mar 2025 14:06:37 +0100
-Message-ID: <20250319-daten-dissens-4cac8b38fea2@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250319085125.4039368-1-hsiangkao@linux.alibaba.com>
-References: <20250319085125.4039368-1-hsiangkao@linux.alibaba.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fo7qbJp6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742413844;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UoMsJz6uQ9Xsq6hoAcbPVlQz7ODTaS5nZ9IsZpDthKQ=;
+	b=fo7qbJp6mTZXrn7vlLUeRjNkyjaV39JGnfrWavRiTYeDsBi7CyEF57Tg1ERZi3OVcyL90h
+	Z3u0B1dk8BgsXlhdusxFYYFrkunEpE/u+p9CtJZqFnYip9cY3Zx7iAZIK9eFXsgLnhMjQ9
+	VG7CwCW1X2RyWpNyMXFNBujswymo3O0=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-550-pc5hPzSgOM-Mh3OFUt2lmQ-1; Wed,
+ 19 Mar 2025 15:50:38 -0400
+X-MC-Unique: pc5hPzSgOM-Mh3OFUt2lmQ-1
+X-Mimecast-MFC-AGG-ID: pc5hPzSgOM-Mh3OFUt2lmQ_1742413836
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7B028180AB19;
+	Wed, 19 Mar 2025 19:50:33 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4E6C11956095;
+	Wed, 19 Mar 2025 19:50:31 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 52JJoUdr2309780
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 19 Mar 2025 15:50:30 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 52JJoRRp2309779;
+	Wed, 19 Mar 2025 15:50:27 -0400
+Date: Wed, 19 Mar 2025 15:50:27 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+        tytso@mit.edu, djwong@kernel.org, john.g.garry@oracle.com,
+        chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+        yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+        yangerkun@huawei.com
+Subject: Re: [RFC PATCH -next v3 06/10] dm: add BLK_FEAT_WRITE_ZEROES_UNMAP
+ support
+Message-ID: <Z9sgAxM-hZZJtZu9@redhat.com>
+References: <20250318073545.3518707-1-yi.zhang@huaweicloud.com>
+ <20250318073545.3518707-7-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1214; i=brauner@kernel.org; h=from:subject:message-id; bh=CPww1TQSDOLLkdBO3ROjU7WbbIGpj/GzEovD+pZ6Q/M=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTfOhjXUHnz/V+W6OBn5S2BfNz7NFLcyq7sL2Q5tvv6j t0nV3Tkd5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzE1Zrhf2l0fF+dzO0ngZk5 CpVMk1f4Huh9uGxF3oQpcVEZnJH3khn+e8bcSM6eHTtZv7xnz0ZBZ9VPSWFnoqWNdygrh2+xlyt nBgA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250318073545.3518707-7-yi.zhang@huaweicloud.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Wed, 19 Mar 2025 16:51:25 +0800, Gao Xiang wrote:
-> Previously, iomap_readpage_iter() returning 0 would break out of the
-> loops of iomap_readahead_iter(), which is what iomap_read_inline_data()
-> relies on.
+On Tue, Mar 18, 2025 at 03:35:41PM +0800, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
 > 
-> However, commit d9dc477ff6a2 ("iomap: advance the iter directly on
-> buffered read") changes this behavior without calling
-> iomap_iter_advance(), which causes EROFS to get stuck in
-> iomap_readpage_iter().
+> Set the BLK_FEAT_WRITE_ZEROES_UNMAP feature on stacking queue limits by
+> default. This feature shall be disabled if any underlying device does
+> not support it.
 > 
-> [...]
+Reviewed-by: Benjamin Marzinski <bmarzins@redhat.com>
 
-Applied to the vfs-6.15.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-6.15.iomap branch should appear in linux-next soon.
+> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> ---
+>  drivers/md/dm-table.c | 7 +++++--
+>  drivers/md/dm.c       | 1 +
+>  2 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> index 453803f1edf5..d4a483287e26 100644
+> --- a/drivers/md/dm-table.c
+> +++ b/drivers/md/dm-table.c
+> @@ -598,7 +598,8 @@ int dm_split_args(int *argc, char ***argvp, char *input)
+>  static void dm_set_stacking_limits(struct queue_limits *limits)
+>  {
+>  	blk_set_stacking_limits(limits);
+> -	limits->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT | BLK_FEAT_POLL;
+> +	limits->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT | BLK_FEAT_POLL |
+> +			    BLK_FEAT_WRITE_ZEROES_UNMAP;
+>  }
+>  
+>  /*
+> @@ -1848,8 +1849,10 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+>  		limits->discard_alignment = 0;
+>  	}
+>  
+> -	if (!dm_table_supports_write_zeroes(t))
+> +	if (!dm_table_supports_write_zeroes(t)) {
+>  		limits->max_write_zeroes_sectors = 0;
+> +		limits->features &= ~BLK_FEAT_WRITE_ZEROES_UNMAP;
+> +	}
+>  
+>  	if (!dm_table_supports_secure_erase(t))
+>  		limits->max_secure_erase_sectors = 0;
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 5ab7574c0c76..b59c3dbeaaf1 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -1096,6 +1096,7 @@ void disable_write_zeroes(struct mapped_device *md)
+>  
+>  	/* device doesn't really support WRITE ZEROES, disable it */
+>  	limits->max_write_zeroes_sectors = 0;
+> +	limits->features &= ~BLK_FEAT_WRITE_ZEROES_UNMAP;
+>  }
+>  
+>  static bool swap_bios_limit(struct dm_target *ti, struct bio *bio)
+> -- 
+> 2.46.1
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.15.iomap
-
-[1/1] iomap: fix inline data on buffered read
-      https://git.kernel.org/vfs/vfs/c/b26816b4e320
