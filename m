@@ -1,115 +1,136 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF77C1E3DDB;
-	Thu, 20 Mar 2025 19:33:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 605242A1A4
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Mar 2025 20:25:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742499193; cv=none; b=INq0L3SInxZwiUiKB7hl2qO3PG8TXx9pbqwjTvC+SrxL5JLm2zPp4zZ0orJ1B1FlrDxyvDG0bcVfWrSfrjK9yRhZffm3VZVE8PQAk3UCxaLfTBD3OU/nLUQfCybNCPRQ/yIEsHr1gN8pVuSglOk/t8+dj/hEJ47XyEgPQQwyFGo=
+	t=1742502335; cv=none; b=cTYQgTDriu4scGw7oxpr35ksYvaUgdLdn2pqQ+NPcj76B/00It4DNp6JX5WGAlfHzjpmvZtkwD0ReGW82fU+dAsYY27lvj7ClwjJHe6CXzsQR29gdqDb4HHvO9urtWD9p+I/ld5mu9KdvMesYD29/8ywiDf+XOCtUXID4HsQ2js=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742499193; c=relaxed/simple;
-	bh=67Rli1aMINRhNsEK6vbiKzUJhYIb+DD/lRRVWBz/1Yk=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=qGcPWlWVGAoMTlNxZW0cuF9xhQ25PUJnZHxSR4hA6tsM81N5uuf73/mblgK0s0vKAZed/Je+bhiCu5MhUPjhnPiOVGufE6yFUI4/c9QuRJAvmF2vgovPBq4Wy4hPPEm3qCdqr+V4D9YtX+X7IBXOSouNbQDxc6a683KCcpI9jrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RsK9QkXp; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1742502335; c=relaxed/simple;
+	bh=BNL/4VTSb4o0AbHMxaOB4pXYTBRJRe1DLDVOa4oQ+Ck=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jA89z/YbOzg073zd3eB35M8LIpgQRJfFCKOwVHbOXb0nEMzYrZA3HmEJ2sFKJzroId1J3iKdMxJSSQL/gUK6Jp07EPqTBcKWi9sOOXN30GptdONFgUB9tmJI3Q6JIZXKSAFVjCUbCJjeKcOCp/oQBnxRoj4VJB1/TqCRvEJl/j8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=jJXhMCTF; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RsK9QkXp"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-22580c9ee0aso25645615ad.2;
-        Thu, 20 Mar 2025 12:33:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742499191; x=1743103991; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=zHVmJxf9G38/fiYNmkpuUJFgM3KpXEnE/rPC5REGcCM=;
-        b=RsK9QkXphHlIMrkQIT0XlIqRFu9N/BBnh2tT/kfciCR5uzA8XWA/aMq42sqhItHyPa
-         HM3kwKrQPjIpd93sVKk5YLQ33IP2G4tQeWRfFLJE629EKviYZwyzL99tk/HdGHvCjo7C
-         NuKxUPjuM5IlASNmur2sJIIKa6NIaVpppwDkKo20nlrj6MA0Q4iAhfIYQcKH3IAUrQ0O
-         7Sv9qgsaqXt+YD+fvSS4OXb+Bo4kK4Xb8XEKmWRo628Se4F3vFCuOpGNlxEsuEOxjF5G
-         LYv1jPX8p5CKPmKdo9Q8hkVHfreCTQ6yDgkFeGbNENbczwYmYFFskw37Sub7QVBqu0QK
-         bloQ==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jJXhMCTF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742502332;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=in8YSvwmPQoOVNNI6ogYoeHH0Sv19ObMg2l5lhwwJek=;
+	b=jJXhMCTFXmcwKeAdMRpOBntkTHIw0TBoB8m7ZeLN9vfFH+kNBdNfAIgYROlqA4fN59/O+X
+	NSNQBANJivSfDE3kuwDqqjkRuIBYsEXUJx1T5iTRAiprg/YarzMyWznTDaqilsSEq+RqkI
+	NZIU5tO6QL1uXrisKO9xpK0lhAKyABc=
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
+ [209.85.166.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-281-4uKKvuXWNyeQhQOVEfzwKw-1; Thu, 20 Mar 2025 16:25:31 -0400
+X-MC-Unique: 4uKKvuXWNyeQhQOVEfzwKw-1
+X-Mimecast-MFC-AGG-ID: 4uKKvuXWNyeQhQOVEfzwKw_1742502330
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3d443811f04so11335715ab.1
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Mar 2025 13:25:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742499191; x=1743103991;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zHVmJxf9G38/fiYNmkpuUJFgM3KpXEnE/rPC5REGcCM=;
-        b=wuU2msu/Fk3t124DnPUZehRxtoPheGIrql0pdxd2Dhv/FAh1xd6+Ai6VLQS7fcTWtk
-         ZfrpuMGNZK6Ef5bVSLOlezW/hULxvjSOMe4pDQt5oQsOMkVLh3ZcUkYkmJQ4yd2rRA3w
-         jXnqqAYW4Myvf2RW4HQyG7dXNBl25EqQMagIw1AA7nuXEzn+m44km3IIMJUSieARJBFj
-         1t9nC2K0vrZvYJ4g/7Yz4WRN/cgno1nUjyEKHi75eJJDr2ZPTJz3ioRSBJ7Jpr4malBr
-         yQM7P+3UZfAKsCMhhw5C9q7H3bC9eJ2c4GN+Ekv9qC6HgoIAvuAKrkXe7wLBmHMz8f9Q
-         O5SA==
-X-Forwarded-Encrypted: i=1; AJvYcCUIvy1qEzI8u50CBoCU0dhfRfvWCx2TTlbN5yuS0+Y1Ms2NvslZ9v8vzjElYOEmX4Lk3A7XYGwm5fam5yT2@vger.kernel.org, AJvYcCVVwBF7CnDbPMrPkIgUvhrrcXtWjnf6mEHwP69JUjGaVpvpqelWx/DTmEb7xo0TgwtbtFbLxl7nxAZ9@vger.kernel.org, AJvYcCW4Me0nbBteDU1ggSp4xeoH9thhyyD9ZVfyzr/arJmOm7wUBnBHBxxB39bCja26R/ZM2KZC8/e7LZ1e@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPpycMFbMNHXNHW1MvBYtpP0IGNcgiARFa8fedhkSDTHCpoYC4
-	v0LP0PwR9STadGz7PWWl9pNetLaivWV2BwlbqIIfYVuk2CfqJuPm
-X-Gm-Gg: ASbGncu9vDdwGUzXEaeAOI09/H4inPxVYA8vRytiXUEsuvFALIAhNGe5B3F4H/eFDe9
-	d22cApmoSGx5lW3yf+4JtpT49BdTxlfwNxJlu6vTMlmJa+zRhgNkwN4oKHbTaBwrn2i0SUadjUS
-	gLUCwig0YmwqSHlu9WeWvEOs/PIu/EaisZLE608ll8vdLBV4h/6DTdo7650HJCdTGfglBjc65sW
-	bozEgVvnNolTHA5FmdAqZa0R/BpGForVi63C3T/eYt41c3ee40d8qrfh3PFc+vrSmbjnT5jJ4su
-	8HZpF1MfCJPhYkWc4tvKDU3O33UwguvoqXWG+Q==
-X-Google-Smtp-Source: AGHT+IHGOMDIgVFAm5eHa6xBoB4g60AmPE2lbPYGqoWBuwkqeKe/nKrFEMTBiXvluqrnWb5TXYd+KA==
-X-Received: by 2002:a17:902:ecd0:b0:223:325c:89de with SMTP id d9443c01a7336-22780c5467fmr8489935ad.1.1742499191155;
-        Thu, 20 Mar 2025 12:33:11 -0700 (PDT)
-Received: from dw-tp ([171.76.82.198])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-227811daa6esm1661575ad.163.2025.03.20.12.33.07
+        d=1e100.net; s=20230601; t=1742502330; x=1743107130;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=in8YSvwmPQoOVNNI6ogYoeHH0Sv19ObMg2l5lhwwJek=;
+        b=GIGQC3iJ9rUgCjkJtdgPkTG6I907AvydSFj+UrMmAE13Ti0+EQijCR7cbnMwOZYeaZ
+         ArKcmSY0P0+uDHx/8hcYi2n8nCnetLg6h1D2Eo8t8gq7hwoRIY0+tBqmVuKMlTILBqch
+         dwMDykBiXoqDCrHHguMQ6YyQV3oHg3/YAESX8W1effB4l506TTbuY315VH35C9CYG8+8
+         7QXh6kkWu6IbFZf8wgbpeAT80Yq6yX6YrqlfgwvDZKcxB9ysDYuUA+2pcNNvAroG6bdQ
+         ORK776qI+1R4GUIlNu0m8I1RMwjvNOea6TZ2MUtwqTu2HmlLthmXFrbbI/zWp/UkBZn+
+         1sAA==
+X-Gm-Message-State: AOJu0YymtL1kJsYESoznwJ5IknKtm7fjYGO9dcJpPU0yziTwAJtBdF1c
+	9XbSQnA/h7bjwoPVhpOhdcbqL40155TUn7vt0fOj0HFWpBTz7Hug09V1yYuOr1MPOvqNuRcydtf
+	fPgLL6D3Sz3LNVzw3w9Z/Eq8pg1bqghtUTlQRwQthoBj2VF3fy8UVoAQ2LrOc5I6k+Uo+liXNrM
+	x2vKNkJIU6RxXxtwxwGJaaZrnsqTEvnjRWTn+ggBnqKA==
+X-Gm-Gg: ASbGncvZYmCz3NiwSDWWvjJfrGpvZBeRDIrPyndOMXQ122V6VWB5/llr9aExL8Y39If
+	G06IaSxLI1VyYAWOJ5qu2C6vHyiOoQ5LmlmE0KzqR4R5XJSnx7lIti6hnzteLe/nlW6pRSV/Jb4
+	SIOQqmoBytrsKQv3jagtPs9fKIy6AV3Z+G86R5EXQFoKMCJwzuh6jSM5EN03+xOecpPbVRm/8iH
+	bI3PpZZCYVjZlNTNUtp6b30fBBUajYXrZFWNOZILZVpN16gICl1jbIE6bLeqtpbnlAyOESACAC1
+	izK4xDSl+a9dKlqB52ncLTN80nw3lWxu56dpzyF45jY2q2jSzbgY/39xEg==
+X-Received: by 2002:a05:6e02:1a43:b0:3cf:c7d3:e4b with SMTP id e9e14a558f8ab-3d596186625mr11602315ab.21.1742502330240;
+        Thu, 20 Mar 2025 13:25:30 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFlM0uOAEppj7EZCi57L1H0XgmLxq+NrHuUWi9Eq4uaHJIXu+NeNRGH3rR9a3lUBV6r3Crl/A==
+X-Received: by 2002:a05:6e02:1a43:b0:3cf:c7d3:e4b with SMTP id e9e14a558f8ab-3d596186625mr11602045ab.21.1742502329869;
+        Thu, 20 Mar 2025 13:25:29 -0700 (PDT)
+Received: from fedora.redhat.com (72-50-215-160.fttp.usinternet.com. [72.50.215.160])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4f2cbdd0325sm88065173.46.2025.03.20.13.25.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Mar 2025 12:33:10 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, brauner@kernel.org, djwong@kernel.org, hch@lst.de
-Cc: linux-fsdevel@vger.kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, martin.petersen@oracle.com, tytso@mit.edu, linux-ext4@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH 2/3] iomap: comment on atomic write checks in iomap_dio_bio_iter()
-In-Reply-To: <20250320120250.4087011-3-john.g.garry@oracle.com>
-Date: Fri, 21 Mar 2025 01:02:05 +0530
-Message-ID: <87ldszsdl6.fsf@gmail.com>
-References: <20250320120250.4087011-1-john.g.garry@oracle.com> <20250320120250.4087011-3-john.g.garry@oracle.com>
+        Thu, 20 Mar 2025 13:25:29 -0700 (PDT)
+From: bodonnel@redhat.com
+To: linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org,
+	sandeen@sandeen.net,
+	Bill O'Donnell <bodonnel@redhat.com>
+Subject: [PATCH] xfs_repair: handling a block with bad crc, bad uuid, and bad magic number needs fixing
+Date: Thu, 20 Mar 2025 15:25:18 -0500
+Message-ID: <20250320202518.644182-1-bodonnel@redhat.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-John Garry <john.g.garry@oracle.com> writes:
+From: Bill O'Donnell <bodonnel@redhat.com>
 
-> Help explain the code.
->
-> Also clarify the comment for bio size check.
+In certain cases, if a block is so messed up that crc, uuid and magic number are all
+bad, we need to not only detect in phase3 but fix it properly in phase6. In the
+current code, the mechanism doesn't work in that it only pays attention to one of the
+parameters.
 
-Looks good to me. Feel free to add:
+Note: in this case, the nlink inode link count drops to 1, but re-running xfs_repair
+fixes it back to 2. This is a side effect that should probably be handled in
+update_inode_nlinks() with separate patch. Regardless, running xfs_repair twice
+fixes the issue. Also, this patch fixes the issue with v5, but not v4 xfs.
 
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
+---
+ repair/phase6.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 4064a84b2450..677505d45357 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -2336,6 +2336,7 @@ longform_dir2_entry_check(
+ 	int			fixit = 0;
+ 	struct xfs_da_args	args;
+ 	int			error;
++	int			wantmagic;
+ 
+ 	*need_dot = 1;
+ 	freetab = malloc(FREETAB_SIZE(ip->i_disk_size / mp->m_dir_geo->blksize));
+@@ -2364,7 +2365,6 @@ longform_dir2_entry_check(
+ 	     da_bno = (xfs_dablk_t)next_da_bno) {
+ 		const struct xfs_buf_ops *ops;
+ 		int			 error;
+-		struct xfs_dir2_data_hdr *d;
+ 
+ 		next_da_bno = da_bno + mp->m_dir_geo->fsbcount - 1;
+ 		if (bmap_next_offset(ip, &next_da_bno)) {
+@@ -2404,9 +2404,11 @@ longform_dir2_entry_check(
+ 		}
+ 
+ 		/* check v5 metadata */
+-		d = bp->b_addr;
+-		if (be32_to_cpu(d->magic) == XFS_DIR3_BLOCK_MAGIC ||
+-		    be32_to_cpu(d->magic) == XFS_DIR3_DATA_MAGIC) {
++		if (xfs_has_crc(mp))
++			wantmagic = XFS_DIR3_BLOCK_MAGIC;
++		else
++			wantmagic = XFS_DIR2_BLOCK_MAGIC;
++		if (wantmagic == XFS_DIR3_BLOCK_MAGIC) {
+ 			error = check_dir3_header(mp, bp, ino);
+ 			if (error) {
+ 				fixit++;
+-- 
+2.48.1
 
-
->
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/iomap/direct-io.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 8c1bec473586..b9f59ca43c15 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -350,6 +350,11 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  		bio_opf |= REQ_OP_WRITE;
->  
->  		if (iter->flags & IOMAP_ATOMIC_HW) {
-> +			/*
-> +			 * Ensure that the mapping covers the full write
-> +			 * length, otherwise it won't be submitted as a single
-> +			 * bio, which is required to use hardware atomics.
-> +			 */
->  			if (length != iter->len)
->  				return -EINVAL;
->  			bio_opf |= REQ_ATOMIC;
-> @@ -449,7 +454,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  		n = bio->bi_iter.bi_size;
->  		if (WARN_ON_ONCE((bio_opf & REQ_ATOMIC) && n != length)) {
->  			/*
-> -			 * This bio should have covered the complete length,
-> +			 * An atomic write bio must cover the complete length,
->  			 * which it doesn't, so error. We may need to zero out
->  			 * the tail (complete FS block), similar to when
->  			 * bio_iov_iter_get_pages() returns an error, above.
-> -- 
-> 2.31.1
