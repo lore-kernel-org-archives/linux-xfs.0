@@ -1,32 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898A3819;
-	Thu, 20 Mar 2025 07:00:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0120819;
+	Thu, 20 Mar 2025 07:05:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742454061; cv=none; b=ajXBNQyYO+mP6FYAKgPHxBxbtO0cfa5pBwWKuBP9ERFTu6SQRazbVzOsLnl4k3RZJjw2f1AdFhC+8PBjtOHbMHWgiIm6wqicp+ua3GwvXx+VcInD2nNnxryWed8W3cLkeagw5kA0KtXTzttoE1DNmxGMQShJ1piR1kbrZVUC0bA=
+	t=1742454304; cv=none; b=nUSHgcsRJQH06hTsYePO8pSRKjX7Drq0Z4LjbFgdzdy4PTsEHnUBvS5tknHEnx6wVq2UPOayRkauAbY6nMYGrQsl0XkNrXA4XEPNqLijk9DvaRe6EYLuQT1QuDZaGWmIGa2CTe8XOhwMDZkNZdWbJKc04JwH9AJsnEa7xrS/wk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742454061; c=relaxed/simple;
-	bh=+z2wZPLFas1paqJW6IdM/iwi6AbcV2FdZfJRNwc5JKk=;
+	s=arc-20240116; t=1742454304; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N7Ch6/XVx3/02+a+1oQXefNwfjrq/WrAVEh+HVYiTgFAZvgUpp1/9DZTiveiGrUi0GYg0A+IfURDaLjmKRhHx0dLI4XuhZvK6QiGfHJRYe7gpxdaH0KoVisFZh6g2UAM+8x6uvbh3w5LdtUGzbdLUXAfUkPHEXZh2Mu0QxszSDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 527E168D12; Thu, 20 Mar 2025 08:00:50 +0100 (CET)
-Date: Thu, 20 Mar 2025 08:00:48 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: alx@kernel.org, brauner@kernel.org, djwong@kernel.org,
-	dchinner@redhat.com, hch@lst.de, linux-man@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com,
-	ritesh.list@gmail.com, martin.petersen@oracle.com
-Subject: Re: [PATCH RFC] statx.2: Add stx_atomic_write_unit_max_opt
-Message-ID: <20250320070048.GA14099@lst.de>
-References: <20250319114402.3757248-1-john.g.garry@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=KBnoJ/l0Cgcb1rt8GNz9/q9ha0okLXCGZ+G95cE3J9BBgKt5K0eituUQkpp2aTRVNX+I0ViliSJ5+vgiacQpymuBLLsXmQVDHtJJzyn9tFvXxu/bBT8GmsbiLBpM9NXbiHSgdzIWndzB4kCdDT0zP/g434cf6sdGV70t4pHnZ78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1CEqFZfE; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1CEqFZfE"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=1CEqFZfE4A1fmQbfWanYAyA6Bp
+	4iXh8zCGp4GB3lKMD30kT6XMVyPhBqQuzVefmkTmC6ZTVC2+YMmlMLyboBIMhY8oGI2RtlHVJl387
+	G5SOZoTr2PQIrVc4HGWQHDWMc5HS45/6giDF77Ad4CSkCb8n6GOpXNdeq0qV0Hsa3QMxTkDpTo/u5
+	eq+edP/YIMwNIFlX7ig/7b1tC4Ldy9bDv0iKRsuZh80fPiVkdt1nm+1xaCRKbZS9kanoasoQTy2cd
+	SOo9Ukp6Z6nBiR0bWgYwiAIcaG8Uv2oy2moM4eL0akDzt8LFsLBZGcQo4JcGLUb0xz0pPbUgxcwar
+	juahsmOA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tv9xd-0000000BMgM-41zE;
+	Thu, 20 Mar 2025 07:05:01 +0000
+Date: Thu, 20 Mar 2025 00:05:01 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Chen Ni <nichen@iscas.ac.cn>
+Cc: cem@kernel.org, djwong@kernel.org, chandanbabu@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: remove duplicate xfs_rtbitmap.h header
+Message-ID: <Z9u-Hf6VookA4-7r@infradead.org>
+References: <20250319034806.3812673-1-nichen@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,25 +45,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250319114402.3757248-1-john.g.garry@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250319034806.3812673-1-nichen@iscas.ac.cn>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Mar 19, 2025 at 11:44:02AM +0000, John Garry wrote:
-> XFS supports atomic writes - or untorn writes - based on different methods:
-> - HW offload in the disk
-> - Software emulation
-> 
-> The value reported in stx_atomic_write_unit_max will be the max of the
-> software emulation method.
+Looks good:
 
-I don't think emulation is a good word.  A file system implementing
-file systems things is not emulation.
-
-> We want STATX_WRITE_ATOMIC to get this new member in addition to the
-> already-existing members, so mention that a value of 0 means that
-> stx_atomic_write_unit_max holds this limit.
-
-Does that actually work?  Can userspace assume all unknown statx
-fields are padded to zero?  If so my dio read align change could have
-done away with the extra flag.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
