@@ -1,93 +1,183 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B00F22157F;
-	Thu, 20 Mar 2025 14:17:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97F221E883A
+	for <linux-xfs@vger.kernel.org>; Thu, 20 Mar 2025 16:05:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742480226; cv=none; b=HUABtOvAG3bCLBUcVqaoZSYJb7cRWxuHsgXErcVnoqoHZU9du5Z44UggikmoxNRMl+9lg0JCp3Sx4xa6HIpJxdcjgk2M8RFNLawdBNOy1WRovMRAlCvGkqF/NUlCmA7yGII9+lI4DNfT3yMRdSS0eVz8eDySVZq01+UAXmROrRQ=
+	t=1742486747; cv=none; b=bZPxZ5J+orR0a8bumr+XUxnxE4B3J8CCFonaf91z84LCFOHSjKaZCqXs4dNofweTMU959HRVHtmJTL+qLSX8r3KdwDeOX5w4W2h8+4LMSdqRKl7/n/WcmAMhBl81ZdrTqr2NjzbmgZE7fDOi6QtmZjFAkrslYiF9Jw9Zg9prhOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742480226; c=relaxed/simple;
-	bh=EjjKERzL9oRudkewhdPf4Dc/ASPKyLKPzJYZKd4P92U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Dak1c+QyFhmXs+xoe/WF3LvtW4bui9iFYagyX2LiFM4uNEumxyLGAW5nw/2p6G7piZDxNML2bEkH5KXXZbCnpuxOdGWVNKqedCxi4FJRWS/44dTlDDDAEY671C1EQQ0xgZIs1rK7hVxvtVa0hSQ3jqKUEbttP9tb0udY4AKIlgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c+24EFHJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742486747; c=relaxed/simple;
+	bh=4oLaPvYRWO4aUBrgd/PpWzrJ75YJeaa8luWBNhhrQa0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p86tXYB2QwyQXZCZ0bLOtibersH61xQa5b0yvYZlh4+nDhBQ/lPgpHG4jjo8UDqYxZ6f/vUSp9VvWHx9ZLDi9Ko5LUaD/Oo3TPI36K7faG2NfTzNuLZy+jEelyhaohx9c1uGedxfvd8gDiYS30Xeisl4GLbd5glTuSPE12nt/yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Ji11U4YW; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c+24EFHJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C873C4CEDD;
-	Thu, 20 Mar 2025 14:17:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742480225;
-	bh=EjjKERzL9oRudkewhdPf4Dc/ASPKyLKPzJYZKd4P92U=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=c+24EFHJ04X18330vNb0qvQVQclTR51gvmZhx6dCiNEg2GMog2RB+E9oFoujVqvrZ
-	 LeYq+0Hy8UGCA2CRXtXx+CybrELjaI3qHoOE6hphTeSrwfxJ0NarRajZEro1L6FTKA
-	 OEN79OzpDUc+76vZk/mI+iPCzl44CWK4GKuJfQLc92NqZPPCBF/PhU2kfa8LBQnlFf
-	 vOKWPwW5p6feTiikS9vP8LT6DNznx+tH4tXIxqHMGgSRqbgUG8j6Yrj7r7m4e/r5zG
-	 x3R/XZxd4JHCXUidFVPs76J8QxPfyAMDZQsR2at66r4ah7VACODMTzqdTvzgmhGRhG
-	 Y+uxgO2DH8zmQ==
-From: Christian Brauner <brauner@kernel.org>
-To: djwong@kernel.org,
-	hch@lst.de,
-	John Garry <john.g.garry@oracle.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org,
-	dchinner@redhat.com,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com,
-	ritesh.list@gmail.com,
-	martin.petersen@oracle.com,
-	tytso@mit.edu,
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 0/3] further iomap large atomic writes changes
-Date: Thu, 20 Mar 2025 15:16:57 +0100
-Message-ID: <20250320-unliebsam-uninteressant-341618121b90@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250320120250.4087011-1-john.g.garry@oracle.com>
-References: <20250320120250.4087011-1-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ji11U4YW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=kSlQQf5M4FkPKLSCi8iMhR76vYAR3zqbkLY0+tVKc9s=; b=Ji11U4YWv4mK32U+PWoSgDYIPS
+	40FY0xa7ZLDcrKhPcjp8xVx7kgDth7cJgatyS+8BZlALU84fgUecU2Onmj4r+11yTX+Tcs5/Y/Jnt
+	MxfDiVKYcz8k9gi3jlCfc2van/xvtbcEbRXhqa+RH8OmElKPCT6P+mRY8R61VsQ1+TxyeinAHayBN
+	SorkW5kmQfjnwy8xLMNIZLb2BolMbHo3IFnUsRj/cr6ItOQvvG5954E2uOM45KaPcLxs6Wdiow+rR
+	2JmDnSHQfTHDf1Em6H9xtpuyH6UcYB/dZ+4HoqLElMFauazNLQ2NZ95PYguINTboTN4MtzB11Hhjp
+	cCQJtGUQ==;
+Received: from 2a02-8389-2341-5b80-42af-3c26-e593-7625.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:42af:3c26:e593:7625] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tvIOu-0000000CdkW-3ksL;
+	Thu, 20 Mar 2025 16:05:45 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Hans.Holmberg@wdc.com
+Subject: [PATCH] design: document the zoned on-disk format
+Date: Thu, 20 Mar 2025 17:05:41 +0100
+Message-ID: <20250320160541.1635550-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1552; i=brauner@kernel.org; h=from:subject:message-id; bh=EjjKERzL9oRudkewhdPf4Dc/ASPKyLKPzJYZKd4P92U=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaTfUY42ZJ0Uqvq22KudT+TgNBGXPrb+6WtOPX11wHrtP /E9ly/ldpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEwk7jgjw90g3VKXcqWbGtIW x0Kz2Y1eGXAs2d92TYsv+uDCTO3FOxn+mW+eumPi5kP380yfX7a8IGMnc2PzsqvF91gMn8VyPwi 1YAAA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, 20 Mar 2025 12:02:47 +0000, John Garry wrote:
-> These iomap changes are spun-off the XFS large atomic writes series at
-> https://lore.kernel.org/linux-xfs/86a64256-497a-453b-bbba-a5ac6b4cb056@oracle.com/T/#ma99c763221de9d49ea2ccfca9ff9b8d71c8b2677
-> 
-> The XFS parts there are not ready yet, but it is worth having the iomap
-> changes queued in advance.
-> 
-> Some much earlier changes from that same series were already queued in the
-> vfs tree, and these patches rework those changes - specifically the
-> first patch in this series does.
-> 
-> [...]
+Document the feature flags, superblock fields and new dinode union.
 
-Applied to the vfs-6.15.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-6.15.iomap branch should appear in linux-next soon.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ .../ondisk_inode.asciidoc                     | 13 ++++++-
+ .../realtime.asciidoc                         | 34 +++++++++++++++++++
+ .../superblock.asciidoc                       | 25 ++++++++++++++
+ 3 files changed, 71 insertions(+), 1 deletion(-)
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
+index ab4a503b4da6..ba111ebe6e3a 100644
+--- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
++++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
+@@ -139,7 +139,10 @@ struct xfs_dinode_core {
+      __be64                    di_changecount;
+      __be64                    di_lsn;
+      __be64                    di_flags2;
+-     __be32                    di_cowextsize;
++     union {
++             __be32            di_cowextsize;
++             __be32            di_used_blocks;
++     };
+      __u8                      di_pad2[12];
+      xfs_timestamp_t           di_crtime;
+      __be64                    di_ino;
+@@ -425,6 +428,14 @@ the source file to the destination file if the sharing operation completely
+ overwrites the destination file's contents and the destination file does not
+ already have +di_cowextsize+ set.
+ 
++*di_used_blocks*::
++
++Used only for the xref:Real_time_Reverse_Mapping_Btree[Reverse-Mapping B+tree]
++inode on filesystems with a xref:Zoned[Zoned Real-time Device].  Tracks the
++number of filesystem blocks in the rtgroup that have been written but not
++unmapped, i.e. the number of blocks that are referenced by at least one rmap
++entry.
++
+ *di_pad2*::
+ Padding for future expansion of the inode.
+ 
+diff --git a/design/XFS_Filesystem_Structure/realtime.asciidoc b/design/XFS_Filesystem_Structure/realtime.asciidoc
+index 16641525e201..fff0f691594a 100644
+--- a/design/XFS_Filesystem_Structure/realtime.asciidoc
++++ b/design/XFS_Filesystem_Structure/realtime.asciidoc
+@@ -397,3 +397,37 @@ meta_uuid = 7e55b909-8728-4d69-a1fa-891427314eea
+ include::rtrmapbt.asciidoc[]
+ 
+ include::rtrefcountbt.asciidoc[]
++
++[[Zoned]]
++== Zoned Real-time Devices
++
++If the +XFS_SB_FEAT_INCOMPAT_ZONED+ feature is enabled, the real time device
++uses an entirely different space allocator.  This features does not use the
++xref:Real-Time_Bitmap_Inode[Free Space Bitmap Inode] and
++xref:Real-Time_Summary_Inode[Free Space Summary Inode].
++Instead, writes to the storage hardware must always occur sequentially
++from the start to the end of a rtgroup.  To support this requirement,
++file data are always written out of place using the so called copy on write
++or COW write path (which actually just redirects on write and never copies).
++
++When an rtgroup runs out of space to write, free space is reclaimed by
++copying and remapping still valid data from the full rtgroups into
++another rtgroup.  Once the rtgroup is empty, it is written to from the
++beginning again.  For this, the
++xref:Real_time_Reverse_Mapping_Btree[Reverse-Mapping B+tree] is required.
++
++For storage hardware that supports hardware zones, each rtgroup is mapped
++to exactly one zone.  When a file system is created on a a zoned storage
++device that does support conventional (aka random writable) zones at the
++beginning of the LBA space, those zones are used for the xfs data device
++(which in this case is primarily used for metadata), and the zoned requiring
++sequential writes are presented as the real-time device.  But when an external
++real-time device is used, rtgroups might also map to conventional zones.
++
++Filesystems with a zoned real-time device by default use the real-time device
++for all data, and the data device only for metadata, which makes the
++terminology a bit confusing.  But this is merely the default setting.  Like
++any other filesystem with a realtime volume, the +XFS_DIFLAG_REALTIME+ flag
++can be cleared on an empty regular file to target the data device; and the
+++XFS_DIFLAG_RTINHERIT+ flag can be cleared on a directory so that new
++children will target the data device."
+diff --git a/design/XFS_Filesystem_Structure/superblock.asciidoc b/design/XFS_Filesystem_Structure/superblock.asciidoc
+index f04553046357..bd34eb0d3066 100644
+--- a/design/XFS_Filesystem_Structure/superblock.asciidoc
++++ b/design/XFS_Filesystem_Structure/superblock.asciidoc
+@@ -74,6 +74,8 @@ struct xfs_dsb {
+ 	__be32		sb_rgextents;
+ 	__u8		sb_rgblklog;
+ 	__u8		sb_pad[7];
++	__be64		sb_rtstart;
++	__be64		sb_rtreserved;
+ 
+ 	/* must be padded to 64 bit alignment */
+ };
+@@ -449,6 +451,16 @@ pointers] for more information.
+ Metadata directory tree.  See the section about the xref:Metadata_Directories[
+ metadata directory tree] for more information.
+ 
++| +XFS_SB_FEAT_INCOMPAT_ZONED+ |
++Zoned RT device.  See the section about the xref:Zoned[Zoned Real-time Devices]
++for more information.
++
++| +XFS_SB_FEAT_INCOMPAT_ZONE_GAPS+ |
++Each hardware zone has unusable space at the end of its LBA range, which is
++mirrored by unusable filesystem blocks at the end of the rtgroup.  The
+++xfs_rtblock_t startblock+ in file mappings is linearly mapped to the
++hardware LBA space.
++
+ |=====
+ 
+ *sb_features_log_incompat*::
+@@ -505,6 +517,19 @@ generate absolute block numbers defined in extent maps from the segmented
+ *sb_pad[7]*::
+ Zeroes, if the +XFS_SB_FEAT_RO_INCOMPAT_METADIR+ feature is enabled.
+ 
++*sb_rtstart*::
++
++If the +XFS_SB_FEAT_INCOMPAT_ZONED+ feature is enabled, this is the start
++of the internal RT section.  That is the RT section is placed on the same
++device as the data device, and starts at this offset into the device.
++The value is in units of file system blocks.
++
++*sb_rtreserved*::
++
++If the +XFS_SB_FEAT_INCOMPAT_ZONED+ feature is enabled, this is the amount
++of space in the realtime section that is reserved for internal use
++by garbage collection and reorganization algorithms.
++
+ === xfs_db Superblock Example
+ 
+ A filesystem is made on a single disk with the following command:
+-- 
+2.45.2
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.15.iomap
-
-[1/3] iomap: inline iomap_dio_bio_opflags()
-      https://git.kernel.org/vfs/vfs/c/d279c80e0bac
-[2/3] iomap: comment on atomic write checks in iomap_dio_bio_iter()
-      https://git.kernel.org/vfs/vfs/c/aacd436e40b0
-[3/3] iomap: rework IOMAP atomic flags
-      https://git.kernel.org/vfs/vfs/c/370a6de7651b
