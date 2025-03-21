@@ -1,58 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E31431EF08D;
-	Fri, 21 Mar 2025 21:25:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01ADB1EF08D;
+	Fri, 21 Mar 2025 21:26:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742592312; cv=none; b=JQ+aPWX66xldzdvRrOveNZdUjT3G4ybHIdkCJtWijC42GRvU0mDYyvLFMVnkLWlJ2cupTKpxo0beBBEhYs/+VoSrWr4s54UsTzWaWP4A/CEgSyOUusTiiTEgGXa6L6P40bM/gp8+sZtex38s/QgxkrwJJH+x36vhjaBnmLf5cDY=
+	t=1742592381; cv=none; b=KYXeslii+wKGA64xKObttvkPfo5GwB2+LWlMFS9L4ElK4uLjIH+LeDvu/MdCk5I+WoGPKBxl7CYAw5YKE2VJptikhQzJ/f499NYwlasKNH9fo+mGRelE+bKlKoanjQfMNJO50RlWjbyR+3DlAcWBoXK/EZzDSO1xhJhnzjTgUK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742592312; c=relaxed/simple;
-	bh=jkDkw9SG1/PEUHKows908ElsXDxiOV084c6bNZLfMEU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=cS59b6UILAFq0IsDtMSv41YVT6YHZujNTinNhdLC747VY/eZapq87jys59MOT2GikifXvWiz7+JSV3cXAerYm/KryB/cHPow96x4+oFt8I48tTtPRPGx5sMwF7/8H1a3m1SUSh/wyiBVFXiMGUb4Owg8OC53hmpW+jgjF1QUlcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kG6YAER+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742592381; c=relaxed/simple;
+	bh=628Yg7HRHNU8WEXTG1C7sESkvQBQqRCzYDJEJcwSULM=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BuHODEIA/UnJJoQrO/YlI+MLT388G8iqC9J3Eb/TDZwiBaDOb9eQIW7M/V90mWCt0rV/20WWCHes2/WRNYFNT47eLh73ONLOtle5gy4DDmO3vZCfhkyZ5Bdg1I+SKTQqfjLJTo0DigAG8fPvEDOMfEwwoYDXtKwodo9H9vMVij0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q15KZOao; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kG6YAER+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DCEFC4CEE3;
-	Fri, 21 Mar 2025 21:25:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q15KZOao"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D18CAC4CEE3;
+	Fri, 21 Mar 2025 21:26:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742592309;
-	bh=jkDkw9SG1/PEUHKows908ElsXDxiOV084c6bNZLfMEU=;
-	h=Date:From:To:Cc:Subject:From;
-	b=kG6YAER+RAHtT771Gigndhldfq5t7DD+vhyX78Be7DAErdNmUoMWCNvKwtQi/KFA6
-	 tZmOJ4zkvlJIzQ2T2ykAFinQgGk9M+R2b89zbd6wbT/5dszSyjecsMeVUn1F3Fqt4+
-	 RjbRLCbpTfE4kGY1V3ofjCzNuZrrYTZkkg239fTpeKYt0MXQ8Iw5u1HoiFLqoH4gKs
-	 ZJKZOBd0pV9xPeA5xzIIFUzk8PnNeyK90qozOcLtxYfyIeM6BTyTbwIb0eC88Um96U
-	 VieEct/lE3rSHvuKUNWpLgRfFjT/eFR5LW0w9wl/Cw8kB8xqGdQA9HJgfc4RqvQbMQ
-	 cfPftIBXW+WfQ==
-Date: Fri, 21 Mar 2025 14:25:08 -0700
+	s=k20201202; t=1742592380;
+	bh=628Yg7HRHNU8WEXTG1C7sESkvQBQqRCzYDJEJcwSULM=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=q15KZOao8Jr/c6IQOyw3aTHWVG+9AuO56HFVjx6bQRW3tH+dw+ndbIbMUKjhKwyj+
+	 BkGNgNZOAMv2rO02e9yeSfKXrQOriGUZVeakK9W0cvKqMKh1rREJmfVddXP+qDl6PV
+	 u9GoYVGl9Fxn1VzCpsI6rQTcOY0HGPP4+F55d/+fjtMuHOoKWIQGyefHpy/BRP0K3S
+	 GJoiVn0YRjxE0B8NvYGAnPN/Br5Sij7KK/g5pGRfeWc/LEhzBr6XEZ2OfhvCweVFc6
+	 mW/BEow75ddYJ5vwD/lK2QWegqAr4yaqaUc4xUJ/zsbWiitlye6eDz8tbvOwWzPpzS
+	 qQzlAkl4RSPfA==
+Date: Fri, 21 Mar 2025 14:26:20 -0700
+Subject: [PATCHSET 1/3] fstests: test dumping fs directory trees
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCHBOMB v2] fstests: random fixes and 6.14 stragglers
-Message-ID: <20250321212508.GH4001511@frogsfrogsfrogs>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <174259233514.743419.14108043386932063353.stgit@frogsfrogsfrogs>
+In-Reply-To: <20250321212508.GH4001511@frogsfrogsfrogs>
+References: <20250321212508.GH4001511@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-Hi everyone,
+Hi all,
 
-Here's a fairly small series of patches for fstests -- the first two add
-functional testing for some new utilities that went into xfsprogs 6.14,
-and the last one is all bug fixes.  This time around I'm dropping the
-/tmp checks and have added a few more bug fixes.
+Here's a functional test for recovering parts or entire filesystem
+trees with xfs_db.
 
-The following patches have not yet earned their review tags:
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-[PATCHSET 3/3] fstests: more random fixes for v2025.03.17
-  [PATCH 2/4] generic/537: disable quota mount options for pre-metadir
-  [PATCH 4/4] xfs/818: fix some design issues
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=rdump
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=rdump
+---
+Commits in this patchset:
+ * xfs: test filesystem recovery with rdump
+---
+ tests/xfs/1895     |  153 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1895.out |    6 ++
+ 2 files changed, 159 insertions(+)
+ create mode 100755 tests/xfs/1895
+ create mode 100644 tests/xfs/1895.out
+
