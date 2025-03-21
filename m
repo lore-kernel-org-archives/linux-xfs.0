@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAAA31E9B1C;
-	Fri, 21 Mar 2025 07:21:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDB01E9B1C;
+	Fri, 21 Mar 2025 07:22:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742541719; cv=none; b=RMajcHAbgJbd+E/jEN0/hMajPwDDxPVgj+vXcLA6EJFAoZlatIiFY95stLrlMofa8VOQDKljBstiQRePePlFgknbhuh5PCP5Q81JXtE8wkz0+s1DhqhXinc3QwPZnkCqb6Ef88RxB6FBM7la+Urg+L26vkMQ1Ejojdjh7gySdVc=
+	t=1742541721; cv=none; b=AlnTSJqQWIFkJ0tnY/d1uV6HAl5YXA9/uDJjDK13lWH6Twc9Q6FhAkup4e9C9YmPmlzgkGz4gA19C41tVN36vg30e0yJQFaz2x/QgJsuf1ts0SqGKm9UHZA83UH7Bzs/FruHzuYsJm7HyBs/SH3OPPR5SEsD/bhBxgO4iunXjQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742541719; c=relaxed/simple;
-	bh=YoTog3JCYumt7NceQT/JXO/VHQbAtKB+Hy4d/WtQL64=;
+	s=arc-20240116; t=1742541721; c=relaxed/simple;
+	bh=S9/nZcIo3PEzz1VIKgOUtSLBZAj/c3JI+g15Bfk2gwc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ob2q6nMOzAwvf/OPPCbdOXdGtz2gzmpPC7Oe990WzL+knZj+7SYpI8ftp0q0ovPfE34fGgFUftJutmA6KsQnqDJEZV8vKM7yVIzud1l5rA/Q8Z85XokMa/GmZg5zmC7XNkp4JvfmK5EYupHwWEfO6aCnI65U1usDplBiSIUXo9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LklBp96A; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=oJuI8+bMFQ8NZtyFDITi6OCnFaBtWCXrmTAxPGtZulfq71urbCls2VVr5p5UPuHHyz/jWeWY/pRNR+a8uVZazAO3GU5o1CLsr7YxIE7UYAup97TCMtNFNHTNgYpOfGj0YaOlhVmIn7qvqO8Xc4XHNNY8kYqHY36VeWT9ndJGXv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1T0nz1iE; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LklBp96A"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1T0nz1iE"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=wafHntLpyaWJ78lt1whZXdZjtDmmxOgzVbnXJKeUQbo=; b=LklBp96AOS52g/h0e764D1Oxw9
-	IKfA6+QVOq5n7Al6kRQ2nfZJvtLkLwaA9Axo2YgNYvsGymO5aXogxXwNACzvABBduxlIWg1Wsx/5r
-	ZVkmtQUmLT6/dDcQpbZhkjEufFONYVVga5wuYuoCgEHXiUoC9sanLV5BTFOl0m14SbmOmcyHjl4w5
-	1aKGigZ5+Rfzwx6L1F9hOAGeQ8nKyuHcYkTp2nThcf5g/UqVQFu5i48T8iYVZk6ulwSt05DFtY6qt
-	JuBmRAl1/oSeCoL+0tZMMmErOiVmCn3b40+W8UJf8FbCBFSgmqVzXJ9hhTu7UMXZkgYIH+VYnfA2H
-	HEQ/7C2w==;
+	bh=V0meUuAUHYdocnXYZda63A/Wcy3Jp/42ucClUA1A2DA=; b=1T0nz1iE6RrOwc+2ssI6WOsvTm
+	40Jq/AVZkdBJAYQ4n1/4hD+3Ty+E5LsMfjC6+UXoVzDL+fc41STgxIP7r3Q/TP9re91Y5pbOpMrhJ
+	6LoJogAShPBkJI86rrPhNFceS7WzHka2GAtblh53+6zBtNtoyaPRSVdAaWLlR9KYfzCBGbtgVB4vL
+	Lt3b9v4YVprAJJ7gIyrr47uE/MSdNt3CGpUGCD5o7XgoRXTkU7qftZ7K6YEuIhFn4raCCP4SQD5np
+	JktN+sJKhcyLL7HRBnrwpGzZ0bFNozZNU9MGskR18o+41Tkm1iESDN2yjSoa/XfmAg/Xgjri9xP1t
+	66yose+w==;
 Received: from 2a02-8389-2341-5b80-85eb-1a17-b49a-7467.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:85eb:1a17:b49a:7467] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tvWhZ-0000000E5By-0NFd;
-	Fri, 21 Mar 2025 07:21:57 +0000
+	id 1tvWhb-0000000E5CW-29VV;
+	Fri, 21 Mar 2025 07:21:59 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 04/13] common: extend the zoned device checks in _require_dm_target
-Date: Fri, 21 Mar 2025 08:21:33 +0100
-Message-ID: <20250321072145.1675257-5-hch@lst.de>
+Subject: [PATCH 05/13] common: allow _require_non_zoned_device without an argument
+Date: Fri, 21 Mar 2025 08:21:34 +0100
+Message-ID: <20250321072145.1675257-6-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250321072145.1675257-1-hch@lst.de>
 References: <20250321072145.1675257-1-hch@lst.de>
@@ -51,31 +51,28 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Also check for zoned log and rt devices in _require_dm_target
+So that callers can pass $SCRATCH_RTDEV directly without needing to check
+that it actually is set.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/rc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ common/rc | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/common/rc b/common/rc
-index e51686389a78..7cd8d5ffd2e8 100644
+index 7cd8d5ffd2e8..dc6d4ce01e05 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -2501,6 +2501,12 @@ _require_dm_target()
- 	case $target in
- 	snapshot|thin-pool)
- 		_require_non_zoned_device ${SCRATCH_DEV}
-+	        if [ "$FSTYP" = "xfs" ] && [ -n "$SCRATCH_RTDEV" ]; then
-+			_require_non_zoned_device ${SCRATCH_RTDEV}
-+		fi
-+	        if [ "$FSTYP" = "xfs" ] && [ -n "$SCRATCH_LOGDEV" ]; then
-+			_require_non_zoned_device ${SCRATCH_LOGDEV}
-+		fi
- 		;;
- 	esac
- }
+@@ -2545,8 +2545,7 @@ _require_non_zoned_device()
+ {
+ 	local target=$1
+ 	if [ -z $target ]; then
+-		echo "Usage: _require_non_zoned_device <device>"
+-		exit 1
++		return
+ 	fi
+ 
+ 	local type=`_zone_type ${target}`
 -- 
 2.45.2
 
