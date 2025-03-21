@@ -1,78 +1,43 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609371E5B65
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 08:57:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CFF478F5B
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 09:13:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742547428; cv=none; b=G1TpFNK/YGi5og0bA544v/vp+PJsRAw02V4JOXNYFvImrPWHLF0vRagkoE171+1anNV715cRLLL3deNt7mq7SMmsbEGq4z+q94KLKnEWbs8HeJNz/uekf+YVoH/euJ7SA0xtgV9N+UXlHLhAXbcCPDGjA41iboS0DssGVtplK08=
+	t=1742548416; cv=none; b=YK5yFXPeeHlolt4cIxW5mKPZtqikq4qO623p/EkD+cNa6dY62EInJMNkF56v57sS21zTN/zhJYZEJDXfu7TXyrXtu0grtXuwy1KMK8grJMDxk+SLGso0AOrvgt+nPd1CgYUNhkpG1BDIjWXL3g46n/YG3Rd7VR7MxAklkqHP/yA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742547428; c=relaxed/simple;
-	bh=3TKFucNcOC4UaTI0j8rJfMHO8ZdfBtl88s4rsW9hTD0=;
+	s=arc-20240116; t=1742548416; c=relaxed/simple;
+	bh=z24H9JbHVxNeD1M0CsgYQHGAIk8RDeMoO4eKPM/6ubs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dhY56ixgKosymFXHdXHtsau8EbkfU7kjAXFM88CXDRDAM/FJDagic1NYMTUfvfVTLQ7WV4L8pEDMaCLZDRpTe/w1BO2Wt9WFS76Z1Aeq57AsurLQOCjr6QADOe+5HUpnr+9bSXu9nDe+usALpZEVgadL+4XgOpFXBqEPR+Xc2do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Zdt4f+8I; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=gCsB6B4VXOH60YltaN6I1T3R0iestLRcWmRCxMRqylnItC+a9FycaYz2WnUyWKQ5IvEY6KOoq5GCa+7zMPge2xQ4mp9zxFP7NrtJB3Fjat7QnUvf9AEsHfyPHu1ixF4aBU7nJEMkuIOn0xHiXDpN4u3abpieImzwz+bcBfnjYj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FTihVfp5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Zdt4f+8I"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-301918a4e3bso3184876a91.3
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 01:57:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1742547427; x=1743152227; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zf8BUs+2IfPR9c9zeSZcxxZD6VQ5OkePaoHu552rQsU=;
-        b=Zdt4f+8IPsjPLGPvQzTDp/2xO3CvYHWCj/s91ioqf421g7NZtVxGe2rvn7f4Hi8iSz
-         RuyBNMktBaEG85oHlQH2edszmkgxQ5CFKy/Ju42Z9yKBZk0t96NXlw85IFczfTooqZuY
-         V/2sPvbF17X7COaIpzp1TIKRiWqiQ/fqwg9zqXIOKkbDH3xY8NUQL98IdDvgyXJpVC7C
-         hJ36SsoOrKBESaDSK6FsD/yc8h89HkKc3c1mYUGdJnz8wjy2q/Hpr98RuPaS+iLV6a/f
-         7RJfhNwjFupNwXaJW8vzPdbV2IjCNjgMaQ04PvB2BJYLg0hM+G3v3VH2TNR/2ilOHVZb
-         ow7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742547427; x=1743152227;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zf8BUs+2IfPR9c9zeSZcxxZD6VQ5OkePaoHu552rQsU=;
-        b=nJ+zKMdnWv6SAPaf2QBV7RyisXCEMWsE4IU3UUP8NIxUrj1RlKvYlabLIBgCT3iI4u
-         vBsGpVO9p/U7/RnzxVEbNlqKFVXuyTAbnYxE6QTKxRL60Qxswwn2NuJA8VZqkwL20Jzc
-         0v0vNhzU305ibf7trYqfdUPOOL/eepOipk8UcDIHu+C942VX26/acl9Gy06p4yYTa3MN
-         c0wsELH/RCIeOpYCXF6qCVGTrR6sDrhAOcnJOruo/yFbE1LPrCT2k+9o7HT2dC4ZqODo
-         MXpKZg7h01j7jPGCxZqtsyg3YRX6XIXypCAcwqOYyqPai/10yF+OWRouisPcbjgL1QOH
-         5xNQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWyGV12GREVeZurt0yvm/msPL1VBd1dCWMP+e6/ZLAaBcB4LVNL6Uq2oqAEJeTD94OK2AwHRPjeLpM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyiuuwQD2Fvly33d6ckP999qLWaPJJ8NaW20BEcNYHh08MjMj1s
-	Qn0RjwqINatM30cXbongylEDBGvvdwIqlllJSoOtIv8HRxjhfZZPuhK/FUYxgg80ErB60PDILq3
-	7
-X-Gm-Gg: ASbGncuum792jlP8eAzHb3KdHYTjHZZdwK4R58eg/3GmM/ATLZiapHA6oCiLobFh0Jo
-	IwmTFlPbrTz2yJ3Z5VSfYAO3ceDXJav09gQCqgUqeGocQlGZmyjPVqcJk1KRbtTTrlVbaYg8J2H
-	rcd//6MLqTEdjl4UxXyLOie9o9M3i3x6a94Ge72cbWyx2gUwGZFTXg+UeIIHGfKD4SggHR6I9ls
-	v+CQOwTi1Hh0E3i737gxgQHZ+6MADDcoSZaPtNbg96rhrq/nFjAg5gcCiXRPpDm8zqs+Ns2sZhy
-	jA4BtDu4sNIxH/3iUYDbsIXgdhcQ5ORcVXmpRedImvbnwzSBWnGHi891ylDomvgJqNpNIFUhb78
-	Ht79SIik5/o8Uy+KxHRhD
-X-Google-Smtp-Source: AGHT+IHAM0AOw8u1TT1o26v/Dsgouc7Bq+TSPmAWGtd8H9aB3zlLx2zOui78FLVpvPokcIIc6Yb01w==
-X-Received: by 2002:a17:90a:e7c4:b0:2f9:9ddd:68b9 with SMTP id 98e67ed59e1d1-3030feeadd1mr3211456a91.26.1742547426386;
-        Fri, 21 Mar 2025 01:57:06 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-36-239.pa.vic.optusnet.com.au. [49.186.36.239])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-301a39efc5bsm6606883a91.0.2025.03.21.01.57.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Mar 2025 01:57:05 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1tvYBZ-0000000Fvtf-40BJ;
-	Fri, 21 Mar 2025 19:57:01 +1100
-Date: Fri, 21 Mar 2025 19:57:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Qu Wenruo <quwenruo.btrfs@gmx.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-btrfs <linux-btrfs@vger.kernel.org>,
-	Christian Brauner <brauner@kernel.org>
-Subject: Re: Iomap buffered write short copy handling (with full folio
- uptodate)
-Message-ID: <Z90p3fep5m8Lxv7d@dread.disaster.area>
-References: <1f7da968-4a4c-4d3e-8014-5c2e89d65faa@gmx.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FTihVfp5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65BAAC4CEE3;
+	Fri, 21 Mar 2025 09:13:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1742548415;
+	bh=z24H9JbHVxNeD1M0CsgYQHGAIk8RDeMoO4eKPM/6ubs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FTihVfp5N3M6g8lihqDeOClYTLCIJnm/3Uu7f93GegD+1MsVWcqxxSqvLomx+eUPU
+	 HCLwrSk26jVKRPd6LJSe64dXon8NaxvFeb/Cm0FJpalXaUDp4GYlHqT6Q8u7HLgABR
+	 zK0Tjv9MoWuX+g8IQKx+ix47stwH5YkPKEUv0jNtdiHCGjB7D3/mmC8cS1dJWwH+eU
+	 a7Z2+KrWdYPD56y/B+3eigZY5t0N0bF6uWTeL9Vw+2iWRmGMzVygmG3/E7Fg3MuQ+O
+	 rttV9hz2E/XlCoUSpLXwxb2GrLK/fo9DyxW+m5WVRpd6eVJxZMM5UC60x99A9QesTQ
+	 KprayrLlStx5w==
+Date: Fri, 21 Mar 2025 10:13:29 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+	Dave Chinner <dchinner@redhat.com>, Dan Carpenter <dan.carpenter@linaro.org>, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: remove the leftover xfs_{set,clear}_li_failed
+ infrastructure
+Message-ID: <3zdtl36y6ck7436iv2yi44i4kvft6iqquqppmfzn5j4ld4i56e@tzgko2wq6fdo>
+References: <20250320075221.1505190-1-hch@lst.de>
+ <0ixrbDsd6zejOuEKSHHAjv-j9n2Mx6ouY3ub6ecobI5Y-Qp7tr2_xxgeuAHmJivXdlAQwgdbt-EaRzie0k49Gg==@protonmail.internalid>
+ <20250320075221.1505190-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,95 +46,123 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1f7da968-4a4c-4d3e-8014-5c2e89d65faa@gmx.com>
+In-Reply-To: <20250320075221.1505190-2-hch@lst.de>
 
-On Fri, Mar 21, 2025 at 06:42:25PM +1030, Qu Wenruo wrote:
-> Hi,
+On Thu, Mar 20, 2025 at 08:52:13AM +0100, Christoph Hellwig wrote:
+> Marking a log item as failed kept a buffer reference around for
+> resubmission of inode and dquote items.
 > 
-> I'm wondering if the current iomap short copy handler can handle the
-> following case correctly:
+> For inode items commit 298f7bec503f3 ("xfs: pin inode backing buffer to
+> the inode log item") started pinning the inode item buffers
+> unconditionally and removed the need for this.  Later commit acc8f8628c37
+> ("xfs: attach dquot buffer to dquot log item buffer") did the same for
+> dquot items but didn't fully clean up the xfs_clear_li_failed side
+> for them.  Stop adding the extra pin for dquot items and remove the
+> helpers.
 > 
-> The fs block size is 4K, page size is 4K, the buffered write is into
-> file range [0, 4K), the fs is always doing data COW.
+> This happens to fix a call to xfs_buf_free with the AIL lock held,
+> which would be incorrect for the unlikely case freeing the buffer
+> ends up calling vfree.
 > 
-> The folio at file offset 0 is already uptodate, and the folio size is
-> also 4K.
-> 
-> - ops->iomap_begin() got called for the range [0, 4K) from iomap_iter()
->   The fs reserved space of one block of data, and some extra metadata
->   space.
-> 
-> - copy_folio_from_iter_atomic() only copied 1K bytes
-> 
-> - iomap_write_end() returned true
->   Since the folio is already uptodate, we can handle the short copy.
->   The folio is marked dirty and uptodate.
-> 
-> - __iomap_put_folio() unlocked and put the folio
-> 
-> - Now a writeback was triggered for that folio at file offset 0
->   The folio got properly written to disk.
-> 
->   But remember we have only reserved one block of data space, and that
->   reserved space is consumed by this writeback.
+> Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This bumps the internal inode mapping generation number....
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
->   What's worse is, the fs can even do a snapshot of that involved inode,
->   so that the current copy of that 1K short-written block will not be
->   freed.
+> ---
+>  fs/xfs/xfs_dquot.c      |  3 +--
+>  fs/xfs/xfs_inode_item.c |  6 ------
+>  fs/xfs/xfs_trans_ail.c  |  5 ++---
+>  fs/xfs/xfs_trans_priv.h | 28 ----------------------------
+>  4 files changed, 3 insertions(+), 39 deletions(-)
 > 
-> - copy_folio_from_iter_atomic() copied the remaining 3K bytes
-
-No, we don't get that far. iomap_begin_write() calls
-__iomap_get_folio() to get and lock the folio again, then calls
-folio_ops->iomap_valid() to check that the iomap is still valid.
-
-In the above case, the cookie in the iomap (the mapping generation
-number at the time the iomap was created by ->iomap_begin) won't
-match the current inode mapping generation number as it was bumped
-on writeback.
-
-Hence the iomap is marked IOMAP_F_STALE, the current write is
-aborted before it starts, then iomap_write_iter() sees IOMAP_F_STALE
-and restarts the write again.
-
-We then get a new mapping from ops->iomap_begin() with a new 1 block
-reservation for the remaining 3kB of data to be copied into that
-block.
-
-i.e. iomaps are cached information, and we have to validate that the
-mapping has not changed once we have all the objects we are about to
-modify locked and ready for modification.
-
->   All these happens inside the do {} while () loop of
->   iomap_write_iter(), thus no iomap_begin() callback can be triggered to
->   allocate extra space.
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index edbc521870a1..b4e32f0860b7 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -1186,9 +1186,8 @@ xfs_qm_dqflush_done(
+>  	if (test_bit(XFS_LI_IN_AIL, &lip->li_flags) &&
+>  	    (lip->li_lsn == qlip->qli_flush_lsn ||
+>  	     test_bit(XFS_LI_FAILED, &lip->li_flags))) {
+> -
+>  		spin_lock(&ailp->ail_lock);
+> -		xfs_clear_li_failed(lip);
+> +		clear_bit(XFS_LI_FAILED, &lip->li_flags);
+>  		if (lip->li_lsn == qlip->qli_flush_lsn) {
+>  			/* xfs_ail_update_finish() drops the AIL lock */
+>  			tail_lsn = xfs_ail_delete_one(ailp, lip);
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 40fc1bf900af..c6cb0b6b9e46 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -1089,13 +1089,7 @@ xfs_iflush_abort(
+>  	 * state. Whilst the inode is in the AIL, it should have a valid buffer
+>  	 * pointer for push operations to access - it is only safe to remove the
+>  	 * inode from the buffer once it has been removed from the AIL.
+> -	 *
+> -	 * We also clear the failed bit before removing the item from the AIL
+> -	 * as xfs_trans_ail_delete()->xfs_clear_li_failed() will release buffer
+> -	 * references the inode item owns and needs to hold until we've fully
+> -	 * aborted the inode log item and detached it from the buffer.
+>  	 */
+> -	clear_bit(XFS_LI_FAILED, &iip->ili_item.li_flags);
+>  	xfs_trans_ail_delete(&iip->ili_item, 0);
 > 
-> - __iomap_put_folio() unlocked and put the folio 0 again.
+>  	/*
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 0fcb1828e598..85a649fec6ac 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -909,10 +909,9 @@ xfs_trans_ail_delete(
+>  		return;
+>  	}
 > 
-> - Now a writeback got started for that folio at file offset 0 again
->   This requires another free data block from the fs.
+> -	/* xfs_ail_update_finish() drops the AIL lock */
+> -	xfs_clear_li_failed(lip);
+> +	clear_bit(XFS_LI_FAILED, &lip->li_flags);
+>  	tail_lsn = xfs_ail_delete_one(ailp, lip);
+> -	xfs_ail_update_finish(ailp, tail_lsn);
+> +	xfs_ail_update_finish(ailp, tail_lsn);	/* drops the AIL lock */
+>  }
 > 
-> In that case, iomap_begin() only reserved one block of data.
-> But in the end, we wrote 2 blocks of data due to short copy.
+>  int
+> diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+> index bd841df93021..f945f0450b16 100644
+> --- a/fs/xfs/xfs_trans_priv.h
+> +++ b/fs/xfs/xfs_trans_priv.h
+> @@ -167,32 +167,4 @@ xfs_trans_ail_copy_lsn(
+>  }
+>  #endif
 > 
-> I'm wondering what's the proper handling of short copy during buffered
-> write.
-
-> Is there any special locking I missed preventing the folio from being
-> written back halfway?
-
-Not locking, just state validation and IOMAP_F_STALE. i.e.
-filesystems that use delalloc or cow absolutely need to implement
-folio_ops->iomap_valid() to detect stale iomaps....
-
-> Or is it just too hard to trigger such case in the real world?
-
-Triggered it, we certainly did. It caused data corruption and took
-quite some time to triage and understand.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -static inline void
+> -xfs_clear_li_failed(
+> -	struct xfs_log_item	*lip)
+> -{
+> -	struct xfs_buf	*bp = lip->li_buf;
+> -
+> -	ASSERT(test_bit(XFS_LI_IN_AIL, &lip->li_flags));
+> -	lockdep_assert_held(&lip->li_ailp->ail_lock);
+> -
+> -	if (test_and_clear_bit(XFS_LI_FAILED, &lip->li_flags)) {
+> -		lip->li_buf = NULL;
+> -		xfs_buf_rele(bp);
+> -	}
+> -}
+> -
+> -static inline void
+> -xfs_set_li_failed(
+> -	struct xfs_log_item	*lip,
+> -	struct xfs_buf		*bp)
+> -{
+> -	lockdep_assert_held(&lip->li_ailp->ail_lock);
+> -
+> -	if (!test_and_set_bit(XFS_LI_FAILED, &lip->li_flags)) {
+> -		xfs_buf_hold(bp);
+> -		lip->li_buf = bp;
+> -	}
+> -}
+> -
+>  #endif	/* __XFS_TRANS_PRIV_H__ */
+> --
+> 2.45.2
+> 
