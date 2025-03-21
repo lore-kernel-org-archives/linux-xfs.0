@@ -1,141 +1,242 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 331401DE4C2;
-	Fri, 21 Mar 2025 16:06:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851C522B59D
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 16:06:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742573186; cv=none; b=gEnUNae3wa4xi6f2ces2Q61CkdgJfoBVGrp8eaJ07S9AmZeEBlffta5pnP0YnUfio8TVYtzenehObOREp8JWk5GUcKuTjDKXnD83sslP/EeCBK4EX2Rmf88aT1oerMHfb4iF92GOJrhOW3i49wsrgjSeZLFY69ddisAKj+nIN4E=
+	t=1742573203; cv=none; b=vBvREGl9Su4rt3U5t+3Qq+Hkbtfe5IeKy3mghfY/u8p6PO9+e29QG+nEGIRtxCiQPgWlr33gx0oiUOyMVXvi4b9qkivYQC290+f0gb1euEeJtaYPp0BYwn2KtQAoDfFglnJ/CY4AxZwcE1mueRwPOmACi//IANNzp3qvG5nNugk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742573186; c=relaxed/simple;
-	bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=fJoKGR3W3Q57YTby4gOkViWWAZYQGgRP4WXCGkwxoW+qEM2Rmq1yRYL39BRFUe+ENF1cwAmveTDwcwGla6fcZOfrUPwSbuLA/z+sBYL/NW8AAS4AMucvLZ8iG6BOUJPwdcwyUMywYtLi/9JPlxZNX7EHjQT8Mq/1ejneVX5+MJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NvGalA/i; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1742573203; c=relaxed/simple;
+	bh=ahY4abLue51VxkXlLtMob+uYZr8ai96AYh+dNPFB9uw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZvSLJCvbJaQm4IDNJ13pruzrHxoREf/KHuy3mtGVEzxjicSZEqma2lw8UtjeL1NosaZUmVbQsXfVhgDv/RZEMvePAJtjpi7UW7un3rGHqj+ccNIm1Ox+aHRz+G+3wCjvx4qmUINAcntNwOdYf+pLy5P+7nFuCvSFLOPX8koxk1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=XSp1rcSm; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=OvA/MwW/; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=XSp1rcSm; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=OvA/MwW/; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NvGalA/i"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1742573184; x=1774109184;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
-  b=NvGalA/ikOrL5oPJYs+QnTxjGygBeYWWOIvfFHc3OkbJX2AwHpopTwqS
-   OrJ7JGqvsLvcwKeP1prZM7mVJTOfER54Pu75l/Fxr9j8e/jK3wFjwN7qC
-   SK/5ji+VMYsX0/5AhSQhmE9n8DiGMEF7b+LjyblXx5blGM0B6v0DiKpB9
-   7qQZ9t3oQhCYinN742ZwcgN+X4JUGCey/94l/s0aWmz+DeK3rMLdvIdAr
-   VOz0V9xhnp8gPVoJI15e8EZBeavaDkLOepeFPGKjHBbFPdNQ3UOf5upEx
-   k4Kt0Ju3dJwZMJUlGC8aC6kaTxjBeWUEXBcxhuhtx35JSY0kXfzmt0vxz
-   A==;
-X-CSE-ConnectionGUID: uCVdhp/3So2cYbOJXCtPug==
-X-CSE-MsgGUID: onEv0mKKQBKLcJNtxbhz7A==
-X-IronPort-AV: E=McAfee;i="6700,10204,11380"; a="43726622"
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="43726622"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:23 -0700
-X-CSE-ConnectionGUID: g7UgcbV4QTih6n+cWYD8tQ==
-X-CSE-MsgGUID: 1EcrVXRMQNGo+fC3Vk/4zw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="123417648"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.112])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:06 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 21 Mar 2025 18:06:02 +0200 (EET)
-To: Easwar Hariharan <eahariha@linux.microsoft.com>, 
-    Andrew Morton <akpm@linux-foundation.org>
-cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
-    Julia Lawall <Julia.Lawall@inria.fr>, 
-    Nicolas Palix <nicolas.palix@imag.fr>, 
-    James Smart <james.smart@broadcom.com>, 
-    Dick Kennedy <dick.kennedy@broadcom.com>, 
-    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-    Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
-    David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
-    Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
-    Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
-    Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-    "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
-    Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-    Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
-    Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
-    Sascha Hauer <s.hauer@pengutronix.de>, 
-    Pengutronix Kernel Team <kernel@pengutronix.de>, 
-    Fabio Estevam <festevam@gmail.com>, 
-    Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
-    Hans de Goede <hdegoede@redhat.com>, 
-    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
-    Selvin Xavier <selvin.xavier@broadcom.com>, 
-    Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
-    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-    cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>, 
-    linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-    linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-    ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
-    linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
-    linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
-    linux-spi@vger.kernel.org, imx@lists.linux.dev, 
-    linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-    ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH v3 15/16] platform/x86: thinkpad_acpi: convert timeouts
- to secs_to_jiffies()
-In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
-Message-ID: <9e761e10-eb4d-0a34-79b5-ef4507f002c5@linux.intel.com>
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com> <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="XSp1rcSm";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="OvA/MwW/";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="XSp1rcSm";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="OvA/MwW/"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 807EA1FFEE;
+	Fri, 21 Mar 2025 16:06:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1742573199;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3CTCY0h6d9AbypbdJg33nHngpxZ1CJkB8gNAGQR5ZRQ=;
+	b=XSp1rcSmEfTL6fPSTuYkuf94lUcNgyaTsptbSZXODxeeT8uaO5hlOBmWWV61FhuKlx7ZEn
+	I+earJ5IMq0j94Wc9txq+88ZHqgfApkuBx0VkKZBlJDzkDKR8+l6/cUoVwDbLOLt02GTk0
+	zeCAU63AHR2pTL7xkOliUFxEyG7EtfA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1742573199;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3CTCY0h6d9AbypbdJg33nHngpxZ1CJkB8gNAGQR5ZRQ=;
+	b=OvA/MwW/TvapM4+jMjPvEyxiT0jNd517QdxHUS49d08QOnkj3cWDO+hvyfi/nealJNyY/z
+	kY666jXeWbWT0PCQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=XSp1rcSm;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b="OvA/MwW/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1742573199;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3CTCY0h6d9AbypbdJg33nHngpxZ1CJkB8gNAGQR5ZRQ=;
+	b=XSp1rcSmEfTL6fPSTuYkuf94lUcNgyaTsptbSZXODxeeT8uaO5hlOBmWWV61FhuKlx7ZEn
+	I+earJ5IMq0j94Wc9txq+88ZHqgfApkuBx0VkKZBlJDzkDKR8+l6/cUoVwDbLOLt02GTk0
+	zeCAU63AHR2pTL7xkOliUFxEyG7EtfA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1742573199;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3CTCY0h6d9AbypbdJg33nHngpxZ1CJkB8gNAGQR5ZRQ=;
+	b=OvA/MwW/TvapM4+jMjPvEyxiT0jNd517QdxHUS49d08QOnkj3cWDO+hvyfi/nealJNyY/z
+	kY666jXeWbWT0PCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 221E413A2C;
+	Fri, 21 Mar 2025 16:06:39 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id mgvFBo+O3WcAIQAAD6G6ig
+	(envelope-from <pvorel@suse.cz>); Fri, 21 Mar 2025 16:06:39 +0000
+Date: Fri, 21 Mar 2025 17:06:33 +0100
+From: Petr Vorel <pvorel@suse.cz>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: ltp@lists.linux.it, Li Wang <liwang@redhat.com>,
+	Cyril Hrubis <chrubis@suse.cz>,
+	Andrea Cervesato <andrea.cervesato@suse.com>,
+	"Darrick J . Wong" <darrick.wong@oracle.com>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Allison Collins <allison.henderson@oracle.com>,
+	Christoph Hellwig <hch@lst.de>, Gao Xiang <hsiangkao@redhat.com>,
+	Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [RFC PATCH 1/1] ioctl_ficlone03: Require 5.10 for XFS
+Message-ID: <20250321160633.GA177324@pevik>
+Reply-To: Petr Vorel <pvorel@suse.cz>
+References: <20250321100320.162107-1-pvorel@suse.cz>
+ <20250321152358.GK2803749@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250321152358.GK2803749@frogsfrogsfrogs>
+X-Rspamd-Queue-Id: 807EA1FFEE
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.71 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	HAS_REPLYTO(0.30)[pvorel@suse.cz];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	FREEMAIL_CC(0.00)[lists.linux.it,redhat.com,suse.cz,suse.com,oracle.com,gmail.com,lst.de,vger.kernel.org];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	REPLYTO_EQ_FROM(0.00)[]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -3.71
+X-Spam-Flag: NO
 
-On Tue, 25 Feb 2025, Easwar Hariharan wrote:
+> On Fri, Mar 21, 2025 at 11:03:20AM +0100, Petr Vorel wrote:
+> > Test fails on XFS on kernel older than 5.10:
 
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
-> 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
-> 
-> @depends on patch@
-> expression E;
-> @@
-> 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
-> 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+> >     # ./ioctl_ficlone03
+> > 	...
+> >     tst_test.c:1183: TINFO: Mounting /dev/loop0 to /tmp/LTP_ioc6ARHZ7/mnt fstyp=xfs flags=0
+> >     [   10.122070] XFS (loop0): Superblock has unknown incompatible features (0x8) enabled.
 
-Applied to the review-ilpo-next branch.
+> 0x8 is XFS_SB_FEAT_INCOMPAT_BIGTIME, maybe you need to format with a set
+> of filesystem features compatible with 5.10?
 
-> ---
->  drivers/platform/x86/thinkpad_acpi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/platform/x86/thinkpad_acpi.c b/drivers/platform/x86/thinkpad_acpi.c
-> index ab1cade5ef231e9a9a520bc0cca82384c911a331..d269e791f7fbc2a8ccf96f28cb476beccb57c9a7 100644
-> --- a/drivers/platform/x86/thinkpad_acpi.c
-> +++ b/drivers/platform/x86/thinkpad_acpi.c
-> @@ -8512,7 +8512,7 @@ static void fan_watchdog_reset(void)
->  	if (fan_watchdog_maxinterval > 0 &&
->  	    tpacpi_lifecycle != TPACPI_LIFE_EXITING)
->  		mod_delayed_work(tpacpi_wq, &fan_watchdog_task,
-> -			msecs_to_jiffies(fan_watchdog_maxinterval * 1000));
-> +			secs_to_jiffies(fan_watchdog_maxinterval));
->  	else
->  		cancel_delayed_work(&fan_watchdog_task);
->  }
+> # mkfs.xfs -c options=/usr/share/xfsprogs/mkfs/lts_5.10.conf /dev/sda1
 
--- 
- i.
+Yes, XFS_SB_FEAT_INCOMPAT_BIGTIME is what is missing for the test. Device is
+formatted with: -m reflink=1 (I'm sorry to not posting this before):
+
+tst_test.c:1170: TINFO: Formatting /dev/loop0 with xfs opts='-m reflink=1' extra opts=''
+
+I thought it would imply XFS_SB_FEAT_INCOMPAT_BIGTIME, but when I tried to remove it
+it did not help:
+
+tst_test.c:1909: TINFO: Tested kernel: 5.0.21-00005-gb6c47615d7bf #211 SMP Fri Mar 21 12:23:18 CET 2025 x86_64
+...
+tst_test.c:1833: TINFO: === Testing on xfs ===
+tst_cmd.c:281: TINFO: Parsing mkfs.xfs version
+tst_test.c:1170: TINFO: Formatting /dev/loop0 with xfs opts='' extra opts=''
+tst_test.c:1183: TINFO: Mounting /dev[   75.418676] XFS (loop0): Superblock has unknown incompatible features (0x8) enabled.
+/loop0 to /tmp/L[   75.419683] XFS (loop0): Filesystem cannot be safely mounted by this kernel.
+TP_iocO8VAIk/mnt[   75.420629] XFS (loop0): SB validate failed with error -22.
+ fstyp=xfs flags=0
+tst_test.c:1183: TBROK: mount(/dev/loop0, mnt, xfs, 0, (nil)) failed: EINVAL (22)
+
+Well, I tried with mkfs.xfs from openSUSE Leap 15.6 (tested via rapido-linux),
+probably the defaults add it.
+
+$ mkfs.xfs -V
+mkfs.xfs version 6.7.0
+
+Also I noted that test works on our 5.3.18 based SLES15-SP2 with xfsprogs
+4.15.0. Maybe I'm just wasting your time with wrong patch.
+
+Kind regards,
+Petr
+
+> --D
+
+> >     [   10.123035] XFS (loop0): Filesystem cannot be safely mounted by this kernel.
+> >     [   10.123916] XFS (loop0): SB validate failed with error -22.
+> >     tst_test.c:1183: TBROK: mount(/dev/loop0, mnt, xfs, 0, (nil)) failed: EINVAL (22)
+
+> > This also causes Btrfs testing to be skipped due TBROK on XFS. With increased version we get on 5.4 LTS:
+
+> >     # ./ioctl_ficlone03
+> >     tst_test.c:1904: TINFO: Tested kernel: 5.4.291 #194 SMP Fri Mar 21 10:18:02 CET 2025 x86_64
+> >     ...
+> >     tst_supported_fs_types.c:49: TINFO: mkfs is not needed for tmpfs
+> >     tst_test.c:1833: TINFO: === Testing on xfs ===
+> >     tst_cmd.c:281: TINFO: Parsing mkfs.xfs version
+> >     tst_test.c:969: TCONF: The test requires kernel 5.10 or newer
+> >     tst_test.c:1833: TINFO: === Testing on btrfs ===
+> >     tst_test.c:1170: TINFO: Formatting /dev/loop0 with btrfs opts='' extra opts=''
+> >     [   30.143670] BTRFS: device fsid 1a6d250c-0636-11f0-850f-c598bdcd84c4 devid 1 transid 6 /dev/loop0
+> >     tst_test.c:1183: TINFO: Mounting /dev/loop0 to /tmp/LTP_iocjwzyal/mnt fstyp=btrfs flags=0
+> >     [   30.156563] BTRFS info (device loop0): using crc32c (crc32c-generic) checksum algorithm
+> >     [   30.157363] BTRFS info (device loop0): flagging fs with big metadata feature
+> >     [   30.158061] BTRFS info (device loop0): using free space tree
+> >     [   30.158620] BTRFS info (device loop0): has skinny extents
+> >     [   30.159911] BTRFS info (device loop0): enabling ssd optimizations
+> >     [   30.160652] BTRFS info (device loop0): checking UUID tree
+> >     ioctl_ficlone03_fix.c:49: TPASS: invalid source : EBADF (9)
+> >     ioctl_ficlone03_fix.c:55: TPASS: invalid source : EBADF (9)
+
+> > Fixing commit is 29887a2271319 ("xfs: enable big timestamps").
+
+> > Signed-off-by: Petr Vorel <pvorel@suse.cz>
+> > ---
+> > Hi all,
+
+> > I suppose we aren't covering a test bug with this and test is really
+> > wrong expecting 4.16 would work on XFS. FYI this affects 5.4.291
+> > (latest 5.4 LTS which is still supported) and would not be fixed due a
+> > lot of missing functionality from 5.10.
+
+> > Kind regards,
+> > Petr
+
+> >  testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+
+> > diff --git a/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c b/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
+> > index 6a9d270d9f..e2ab10cba1 100644
+> > --- a/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
+> > +++ b/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
+> > @@ -113,7 +113,7 @@ static struct tst_test test = {
+> >  		{.type = "bcachefs"},
+> >  		{
+> >  			.type = "xfs",
+> > -			.min_kver = "4.16",
+> > +			.min_kver = "5.10",
+> >  			.mkfs_ver = "mkfs.xfs >= 1.5.0",
+> >  			.mkfs_opts = (const char *const []) {"-m", "reflink=1", NULL},
+> >  		},
+> > -- 
+> > 2.47.2
+
 
