@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A414413B59B
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 16:31:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2FFD4431
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 16:32:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742574707; cv=none; b=WqgMj/akCQu2DAOFUA+phfvZNnLfDsuXW6wwUzf6h5Gz7o5YTfV3uJSM89S6ywq5kZqWvTzfGbe9rHahThGBsT4bSwjtj/d4vCWYA3NCJuoAfr/627yOIVSn5Ay1fiQLIY/fuda1k7LO3Ee1aAQizm+I0qhNMo8pnBlgQK5Kytg=
+	t=1742574723; cv=none; b=kMqAxjHUKz4KWTsKmCuI+CcaVmeRnmZe8q10KOkjO7mG3XV0Ia2YNhi4L8cYZq8V5DzVxRgFiGZQfvj+R9Z1ECceYB71yISZHF27aauFC3g2IRgXsRmoJoBD9ResaudiFuoOxI3WaRgUedl0QL+nJeP/6n35BVaydG8kbaTSweQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742574707; c=relaxed/simple;
-	bh=ldPD/FzP71CUOYs4mfRUot2HVoJRk1MkpM5nHctBfQ8=;
+	s=arc-20240116; t=1742574723; c=relaxed/simple;
+	bh=JgUE65fFY1LvY7SAawaildBfpUI02MelWAbERicKops=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JePlYj2pLofy3P3bBFFvSNhAkitmn23NJzyIWE5ZyzPasYyKDrYmtQtxRZgZaIWy6Dmp5hcsiApn+6vILn7GMoRQkgOpM9kUtJJYUlxv1OtkfQ9kYHQYOmXDPYsSSZMrzdlIA+PX8lZ+BXkR3oNh7AWwIVLlAIvZxQ9vcR/R2sQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HJkcjCrC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=J85wdoAyR+VOSDsVllvl1Jfx++QL65NAGsuhtESBrnDYmiSPQzfRflhEeBBRjS/sp4TZnwW/NLWshFGchAzOnDs93/4mi+8OM7/TyRgM89eAK4ZdEwAp1tjufGD60SU97RpjlPB2e2eNAtFpaX93TJdwItuWruJkD/xvK6bNKfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ukNilgrs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HJkcjCrC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23A3DC4CEE3;
-	Fri, 21 Mar 2025 16:31:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ukNilgrs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB17EC4CEE3;
+	Fri, 21 Mar 2025 16:32:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742574707;
-	bh=ldPD/FzP71CUOYs4mfRUot2HVoJRk1MkpM5nHctBfQ8=;
+	s=k20201202; t=1742574722;
+	bh=JgUE65fFY1LvY7SAawaildBfpUI02MelWAbERicKops=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HJkcjCrCpy3uE42LGtu6npRH1QO0FHqdA0LF6IZkZaKNXBxB/Elq6UD8tOaAuP+0S
-	 UzECrM+nNnCxUr57xINeK528voEz3BW6ShsrTTcsc6oy12XVrfbVBvl1duOAlwgV9u
-	 blILOwkM9mxX3c5WeAAKIyBTwP40RvQ3ahvJCj1RGqBcs+uiDRRHAguQK9G8zFH22u
-	 B/azEvHibtCNSdDRe27+X56tVu84Fi7LkbBQoQltEc44vI18xuzCVGhxSgqbpkPYHU
-	 O7qTijot2OederkOKag0W7EVFm71lJTVQMdTPcFf5UpVqYAlwFTj1lMueIMFkgOi4M
-	 CQzSmoyWnPywg==
-Date: Fri, 21 Mar 2025 09:31:46 -0700
-Subject: [PATCH 2/4] xfs_repair: fix crash in reset_rt_metadir_inodes
+	b=ukNilgrsU8lul0WYIpmBc8R4HEFXmeYEgtW48smZQX2yOFbkM5KEALAn282GljOP2
+	 KQmkB5RBDCVq1M3W1ErSWv7bNWP7bVrYFMKRgPWqB6W937+rUK25H2hSlss2ByDNuf
+	 Zfixh5BEEix0j07/RPWAFDiSg1/9ycnR5I+292dDvtFRrSOIFLLaV4Puidf3Qn9gNu
+	 RVNsW4xQOWE3/4Pr5ZKzR1cT2/37BDe649MSRAQYgTM/fdp+TJxccEVv9paYshWjbz
+	 TAt07KvYkcwf1dWJeQ2ew3DVNFthoQZ6b+vNgC9CfSrS+LLmVR+cCXTFD/FlrNhbIP
+	 WSa8mZGP9p7Ew==
+Date: Fri, 21 Mar 2025 09:32:02 -0700
+Subject: [PATCH 3/4] xfs_repair: fix infinite loop in
+ longform_dir2_entry_check*
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <174257453632.474645.11619039334465128305.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <174257453651.474645.12262367407953457434.stgit@frogsfrogsfrogs>
 In-Reply-To: <174257453579.474645.8898419892158892144.stgit@frogsfrogsfrogs>
 References: <174257453579.474645.8898419892158892144.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,46 +46,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I observed that xfs_repair -n segfaults during xfs/812 after corrupting
-the /rtgroups metadir inode because mp->m_rtdirip isn't loaded.  Fix the
-crash and print a warning about the missing inode.
+If someone corrupts the data fork of a directory to have a bmap record
+whose br_startoff only has bits set in the upper 32 bits, the code will
+suffer an integer overflow when assigning the 64-bit next_da_bno to the
+32-bit da_bno.  This leads to an infinite loop.
 
-Cc: <linux-xfs@vger.kernel.org> # v6.13.0
-Fixes: 7c541c90fd77a2 ("xfs_repair: support realtime groups")
+Found by fuzzing xfs/812 with u3.bmx[0].startoff = firstbit.
+
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- repair/phase6.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/phase6.c          |   22 ++++++++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
 
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 14a67c8c24dd7e..dcb5dec0a7abd2 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -399,6 +399,7 @@
+ #define xfs_verify_agbext		libxfs_verify_agbext
+ #define xfs_verify_agino		libxfs_verify_agino
+ #define xfs_verify_cksum		libxfs_verify_cksum
++#define xfs_verify_dablk		libxfs_verify_dablk
+ #define xfs_verify_dir_ino		libxfs_verify_dir_ino
+ #define xfs_verify_fsbext		libxfs_verify_fsbext
+ #define xfs_verify_fsbno		libxfs_verify_fsbno
 diff --git a/repair/phase6.c b/repair/phase6.c
-index 2d526dda484293..c16164c171d07d 100644
+index c16164c171d07d..44b9bfc3b7e69f 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -3397,15 +3397,21 @@ reset_rt_metadir_inodes(
- 		unload_rtgroup_inodes(mp);
+@@ -2169,6 +2169,13 @@ longform_dir2_check_node(
+ 		if (bmap_next_offset(ip, &next_da_bno))
+ 			break;
  
- 	if (mp->m_sb.sb_rgcount > 0) {
--		if (!no_modify) {
-+		if (no_modify) {
-+			if (!mp->m_rtdirip)
-+				do_warn(_("would recreate realtime metadir\n"));
-+		} else {
- 			error = -libxfs_rtginode_mkdir_parent(mp);
- 			if (error)
- 				do_error(_("failed to create realtime metadir (%d)\n"),
- 					error);
- 		}
--		mark_ino_inuse(mp, mp->m_rtdirip->i_ino, S_IFDIR,
--				mp->m_metadirip->i_ino);
--		mark_ino_metadata(mp, mp->m_rtdirip->i_ino);
-+
-+		if (mp->m_rtdirip) {
-+			mark_ino_inuse(mp, mp->m_rtdirip->i_ino, S_IFDIR,
-+					mp->m_metadirip->i_ino);
-+			mark_ino_metadata(mp, mp->m_rtdirip->i_ino);
++		if (next_da_bno != NULLFILEOFF &&
++		    !libxfs_verify_dablk(mp, next_da_bno)) {
++			do_warn(_("invalid dir leaf block 0x%llx\n"),
++					(unsigned long long)next_da_bno);
++			return 1;
 +		}
- 	}
++
+ 		/*
+ 		 * we need to use the da3 node verifier here as it handles the
+ 		 * fact that reading the leaf hash tree blocks can return either
+@@ -2244,6 +2251,13 @@ longform_dir2_check_node(
+ 		if (bmap_next_offset(ip, &next_da_bno))
+ 			break;
  
- 	/*
++		if (next_da_bno != NULLFILEOFF &&
++		    !libxfs_verify_dablk(mp, next_da_bno)) {
++			do_warn(_("invalid dir free block 0x%llx\n"),
++					(unsigned long long)next_da_bno);
++			return 1;
++		}
++
+ 		error = dir_read_buf(ip, da_bno, &bp, &xfs_dir3_free_buf_ops,
+ 				&fixit);
+ 		if (error) {
+@@ -2379,6 +2393,14 @@ longform_dir2_entry_check(
+ 			break;
+ 		}
+ 
++		if (next_da_bno != NULLFILEOFF &&
++		    !libxfs_verify_dablk(mp, next_da_bno)) {
++			do_warn(_("invalid dir data block 0x%llx\n"),
++					(unsigned long long)next_da_bno);
++			fixit++;
++			goto out_fix;
++		}
++
+ 		if (fmt == XFS_DIR2_FMT_BLOCK)
+ 			ops = &xfs_dir3_block_buf_ops;
+ 		else
 
