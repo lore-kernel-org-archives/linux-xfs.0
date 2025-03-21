@@ -1,222 +1,84 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DFA4374EA;
-	Fri, 21 Mar 2025 09:16:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66BEF1E32A3
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 09:21:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742548586; cv=none; b=hiC5P/xx7+AC3d71nEoYyXIrGeqnj92343bSVgPKk2s2ZYofYrB/41oH/VEVXSeJaP+tzip2mFyRKV9mAb4rfD6VHLnj1E+E9ZNfc1JBNSFIOwJEHz+FmW6KTsfQYpaWmD6MmM1zPInpGjRNtXJXqShGT9r0j6ob/h54d0Iq/iI=
+	t=1742548901; cv=none; b=c2hZgTgtONnUwtkiBxdOegnqqYcun9s23boRAICOuQLL9LCpauNxdILcC8qJP8OaToZAE5LomgLl8hgnjUg0huhGtxKaos6Q2tTKob6iIYqLqpfqumRMmLfgM92LWuFgpSHlUH/WHGawaH0erschOtkJQ1+FyZu9ZX0lVyQv4Go=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742548586; c=relaxed/simple;
-	bh=gmZGwBlujsya0qb9iK7invYZ7mBz+7qTjt8Dty1Oe5M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rfgvVZOwwX7Z2MC826hBHXZzzjAW6b2MCDzcKb1XtF5ovMFXLZixyi00mYx/ZWWLKYGTVn0T6NdLuvj4Pf1sF2W/iFXNwzwc0tLYMZaTSqD1TBSgWYubqoBN4ciiMvfm9Rg6iRsI58vaFuJllygz7/cHzksIHTn+TgDd9Kye4v4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com; spf=pass smtp.mailfrom=gmx.com; dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b=NwxlUS8H; arc=none smtp.client-ip=212.227.17.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.com
+	s=arc-20240116; t=1742548901; c=relaxed/simple;
+	bh=hmX6PYKVR7P54CHqqeN8kbMtqMOhklFsAOXpZcIEzxM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M41CUF5d1paAcvXT/0/RkPs4gTDY6txICszxWXu/4jMSvG3BTxOMbj71hGaJFjY14EbhMqr80MNpnDV5UzIcVj43bR2ePvZX6/rjtu1DsqNnS7zpsRAoYntTTD0ZevDXrrUqx4bgAWbP+cS8km9UBuoWXo6Gkw35gg33n03IL9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uSeHpMvw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b="NwxlUS8H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.com;
-	s=s31663417; t=1742548576; x=1743153376; i=quwenruo.btrfs@gmx.com;
-	bh=cqKGHNif+uKW4XLItfKP7I2aMgFT/ssObNzU1p66PCw=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=NwxlUS8H3RSi+vUXZOmSMYU26CmF7dHD7JK+L06N4ZqPuv/yocM/SruTSPxGVJqW
-	 QxQvevxkuRnFyP4vzgEafTF7YEESxgm6O3aCbke78JmXOIOyzuhEfTR0gCLxsjq4s
-	 q59LMXy0fQOv8H1yRzmS2KJjtQ4TQYUJHR0h5aW2VP5Yk58rx7lo4ePWztqChk9lu
-	 7MZc2R4iUM3Yb3N9ig3Yt5zZGXAfIz0MiB7RP3OM5dqNCus7CMzz1NWeikB+i4VNE
-	 dEQtp8dOh+IRuA+Wgh9M6W1ouWMNXTjW3cUUePQ+8mTfB+925MUdu4flXNdh/W+xs
-	 XEBxao7/h9mCOBT+NA==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from [172.16.0.191] ([159.196.52.54]) by mail.gmx.net (mrgmx104
- [212.227.17.174]) with ESMTPSA (Nemesis) id 1MZCfJ-1ti8L822d7-00PNkd; Fri, 21
- Mar 2025 10:16:16 +0100
-Message-ID: <65a02281-bd7d-4b34-a8a2-97af052da301@gmx.com>
-Date: Fri, 21 Mar 2025 19:46:11 +1030
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uSeHpMvw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B38F5C4CEEA;
+	Fri, 21 Mar 2025 09:21:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1742548901;
+	bh=hmX6PYKVR7P54CHqqeN8kbMtqMOhklFsAOXpZcIEzxM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uSeHpMvwf/SvAaHrvvErbfne6Fymwupm+k5W2KoX/x0G5uUmTmspRk2/y8oPLrgFL
+	 2cxZJH6kiOj82CcF44g1qCAgEWlinZRlhArfI5l05hUa9jz2p06tlr/MWFWMkfsscV
+	 8Urkl5zsPU+1MKgtuk1lKEQB7+yv5X3bxer4aABVUNBwlrbedLCrttCjBm7yaAzrwC
+	 xtPC9W7DuivT9W6CE8w3noOotlaqJJh28CDP4yIMGvSQgDYIi+tDkq4FVGIUbpKD/5
+	 eEFN5vSgCGr3AC2pSsgIauHb/rV62k86ew6yqGaZhy0Pk7/4WP+hmLYdcYo4Ft27Kt
+	 UeU5CjVpY+xvw==
+Date: Fri, 21 Mar 2025 10:21:35 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+	Dave Chinner <dchinner@redhat.com>, Dan Carpenter <dan.carpenter@linaro.org>, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: mark xfs_buf_free as might_sleep()
+Message-ID: <dswaua7ynkossegyqw25x3ghilbjsxalatbto2xrbek74j7u5o@mxhq3mhukk3j>
+References: <20250320075221.1505190-1-hch@lst.de>
+ <iehRDkchwLyn5czaoM6iHGrNaM7A235ISuVTw_D6fpn8zuuiMCqofPep2K2Xn0Pgo__30TcjbKGoIBCld0AM1Q==@protonmail.internalid>
+ <20250320075221.1505190-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Iomap buffered write short copy handling (with full folio
- uptodate)
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- linux-xfs@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>,
- Christian Brauner <brauner@kernel.org>
-References: <1f7da968-4a4c-4d3e-8014-5c2e89d65faa@gmx.com>
- <Z90p3fep5m8Lxv7d@dread.disaster.area>
-Content-Language: en-US
-From: Qu Wenruo <quwenruo.btrfs@gmx.com>
-Autocrypt: addr=quwenruo.btrfs@gmx.com; keydata=
- xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
- 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
- 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
- 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
- gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
- AAHNIlF1IFdlbnJ1byA8cXV3ZW5ydW8uYnRyZnNAZ214LmNvbT7CwJQEEwEIAD4CGwMFCwkI
- BwIGFQgJCgsCBBYCAwECHgECF4AWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCZxF1YAUJEP5a
- sQAKCRDCPZHzoSX+qF+mB/9gXu9C3BV0omDZBDWevJHxpWpOwQ8DxZEbk9b9LcrQlWdhFhyn
- xi+l5lRziV9ZGyYXp7N35a9t7GQJndMCFUWYoEa+1NCuxDs6bslfrCaGEGG/+wd6oIPb85xo
- naxnQ+SQtYLUFbU77WkUPaaIU8hH2BAfn9ZSDX9lIxheQE8ZYGGmo4wYpnN7/hSXALD7+oun
- tZljjGNT1o+/B8WVZtw/YZuCuHgZeaFdhcV2jsz7+iGb+LsqzHuznrXqbyUQgQT9kn8ZYFNW
- 7tf+LNxXuwedzRag4fxtR+5GVvJ41Oh/eygp8VqiMAtnFYaSlb9sjia1Mh+m+OBFeuXjgGlG
- VvQFzsBNBFnVga8BCACqU+th4Esy/c8BnvliFAjAfpzhI1wH76FD1MJPmAhA3DnX5JDORcga
- CbPEwhLj1xlwTgpeT+QfDmGJ5B5BlrrQFZVE1fChEjiJvyiSAO4yQPkrPVYTI7Xj34FnscPj
- /IrRUUka68MlHxPtFnAHr25VIuOS41lmYKYNwPNLRz9Ik6DmeTG3WJO2BQRNvXA0pXrJH1fN
- GSsRb+pKEKHKtL1803x71zQxCwLh+zLP1iXHVM5j8gX9zqupigQR/Cel2XPS44zWcDW8r7B0
- q1eW4Jrv0x19p4P923voqn+joIAostyNTUjCeSrUdKth9jcdlam9X2DziA/DHDFfS5eq4fEv
- ABEBAAHCwHwEGAEIACYCGwwWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCZxF1gQUJEP5a0gAK
- CRDCPZHzoSX+qHGpB/kB8A7M7KGL5qzat+jBRoLwB0Y3Zax0QWuANVdZM3eJDlKJKJ4HKzjo
- B2Pcn4JXL2apSan2uJftaMbNQbwotvabLXkE7cPpnppnBq7iovmBw++/d8zQjLQLWInQ5kNq
- Vmi36kmq8o5c0f97QVjMryHlmSlEZ2Wwc1kURAe4lsRG2dNeAd4CAqmTw0cMIrR6R/Dpt3ma
- +8oGXJOmwWuDFKNV4G2XLKcghqrtcRf2zAGNogg3KulCykHHripG3kPKsb7fYVcSQtlt5R6v
- HZStaZBzw4PcDiaAF3pPDBd+0fIKS6BlpeNRSFG94RYrt84Qw77JWDOAZsyNfEIEE0J6LSR/
-In-Reply-To: <Z90p3fep5m8Lxv7d@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:ZTTWwdppiNopFBim3QrfdHDRC1tJnXoA/wIimo+WvU5PvA8sMWX
- zevcyJKeAEaxO8m4fOZDUvpjYa2blyzb3CEi1+Ajj4qvsh/jCUzK4q73QwPKgOJAtt3PiwD
- SzAnkxZwtcIAvv5iudxjzQCicdeyBtkVrw0YtbHQK/SMXiRM3JKzlrK0Ks7hMLJor1KKmr+
- UFlbqMifY+J2/qWniqCEQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:UkyKSzWa5QA=;hhM5X6S8yNbK1e1WUOQ8wfDXTC2
- JDTOmFJwbhlqeKmVwvTbKYYFaKg9leU/I/5efSauPGqSCt8IgOPZkTvAKPXEVID6gNh7crebS
- 5hw36HPW0ZiGcSbJgdCDO2s1DKql7fbNfRVT90YspFPR3RdlLRgDXcmAZhZtOcDUZoPj0uI/w
- QZ5gKg8fXB4AvwaQTjjMdnFnET3vNUYoA3WsCni8hkhfqua5fN7G2wHPdPPCWBHY0ccV0ATk6
- u8iwtLQSkbHq9+nTvunfYsCVlALMVq87kEOLGFCz81e+oQgRvO4C7i77yckfiUN81q5C7/j6/
- yKuerzKGpdTuJYaZvX//fymprX0KBwpvtQze0tyLN1OjdKydpQ01mteutOzwC54XGgYUup+bU
- Sh6kKKon9CEC5/HbkZoOb3WqQjjYWD0r5QmaqAzfU1FESO8QPMeedMRble76/JOgmyYA3QSus
- qbqgEAuY9jx70ic2SftvO5g6yHxvqsIWAnt394RJfwnCDdXXLAR8CG65HRaxQFWO/X3oL2Um5
- 7390DyesEuPC78JOaqWM/P1DXXtUM8q646GfWtbTHGZ2LJboymJlQy8Fv+B/PjM8jFwjRcgMl
- Wod2HGa5MAaIKChDNA8nw6zHvSf0H2ZIpe3ZZpDkbGo2fmz+8VfptfzBEgpSQ2cl+/pcPDJWh
- jmVK6JPrbcXClOFQ6wfmnV+g9Gltz0nbr5w2cZlKuBnmRo0UzzvVOEg/yipCLNhN4KGvYMnsk
- B46zOhHc/l5r4Hh2zjueARXUEyr8g09KxE8lpWk23GZKMfYKlE1g7r84YF0izn9W+8JEE+Nqn
- ooRWRr8YUA0YYPyilbfgck4prubpAArY1qMRpecinZCY0T4lzBdv/xpOtlKMpyB1PPbZiH7e2
- TrYkwzPnKpD0x53XTYbywtN9YtX+HuxlIHAj/J0v6cyklvmi9mekXb0azbk8t5rH2BZ+kh6ex
- 12sK3w4Kyyqdwv2DmiwYlSbIq7m+/NrT4tzQhPQgMuungifW+BngiZk/MZlgZdXEg91ObJn9o
- exvxwZznXrDAk26zAxr62E/pPOG53V04fgaXQm/SFZzztM4e9o331r9uZhe9+oZtmFK/KqwVs
- bRvR++iAvSGCTUn3u0YFeZISxJ+FZ4hNC+9eqSGxyCBif/K924KJ5lpwIjotkp1DxU8rXwPgL
- NW4cftbyWsQik6a0egx1zPByxmf04L7OG8qiEMiEJe69lWTv0KbnJtVnGaJPr9i8VoXRw2+ME
- a3SAtJWHmsvWYRdlrsGOfU1sH+LIpYBu7Y2lz0zSmh8m//ob/JH4pl+OWYmb5ikYpQdF/Eqv9
- UX45Y9Ok9gA9ab7Ol8B1uKGXx8g+2N1Osq5fKhBTRoWVL/ujPI2/YPmq0UuIraz9yGUokJY4D
- /zpB24Q4lNToTfhHAvZC7oJsTGc9fT391HNLkSH4C+deEgZlZhXBMb0jR9WmeEfwNzhLteFdM
- qY6D2cvKd+FxR3I9VEweUBvbRa6g=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250320075221.1505190-3-hch@lst.de>
 
+On Thu, Mar 20, 2025 at 08:52:14AM +0100, Christoph Hellwig wrote:
+> xfs_buf_free can call vunmap, which can sleep.  The vunmap path is an
+> unlikely one, so add might_sleep to ensure calling xfs_buf_free from
+> atomic context gets caught more easily.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+> ---
+>  fs/xfs/xfs_buf.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 8e7f1b324b3b..1a2b3f06fa71 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -105,6 +105,7 @@ xfs_buf_free(
+>  {
+>  	unsigned int		size = BBTOB(bp->b_length);
+> 
+> +	might_sleep();
+>  	trace_xfs_buf_free(bp, _RET_IP_);
+> 
+>  	ASSERT(list_empty(&bp->b_lru));
 
-=E5=9C=A8 2025/3/21 19:27, Dave Chinner =E5=86=99=E9=81=93:
-> On Fri, Mar 21, 2025 at 06:42:25PM +1030, Qu Wenruo wrote:
->> Hi,
->>
->> I'm wondering if the current iomap short copy handler can handle the
->> following case correctly:
->>
->> The fs block size is 4K, page size is 4K, the buffered write is into
->> file range [0, 4K), the fs is always doing data COW.
->>
->> The folio at file offset 0 is already uptodate, and the folio size is
->> also 4K.
->>
->> - ops->iomap_begin() got called for the range [0, 4K) from iomap_iter()
->>    The fs reserved space of one block of data, and some extra metadata
->>    space.
->>
->> - copy_folio_from_iter_atomic() only copied 1K bytes
->>
->> - iomap_write_end() returned true
->>    Since the folio is already uptodate, we can handle the short copy.
->>    The folio is marked dirty and uptodate.
->>
->> - __iomap_put_folio() unlocked and put the folio
->>
->> - Now a writeback was triggered for that folio at file offset 0
->>    The folio got properly written to disk.
->>
->>    But remember we have only reserved one block of data space, and that
->>    reserved space is consumed by this writeback.
->
-> This bumps the internal inode mapping generation number....
->
->>    What's worse is, the fs can even do a snapshot of that involved inod=
-e,
->>    so that the current copy of that 1K short-written block will not be
->>    freed.
->>
->> - copy_folio_from_iter_atomic() copied the remaining 3K bytes
->
-> No, we don't get that far. iomap_begin_write() calls
-> __iomap_get_folio() to get and lock the folio again, then calls
-> folio_ops->iomap_valid() to check that the iomap is still valid.
->
-> In the above case, the cookie in the iomap (the mapping generation
-> number at the time the iomap was created by ->iomap_begin) won't
-> match the current inode mapping generation number as it was bumped
-> on writeback.
->
-> Hence the iomap is marked IOMAP_F_STALE, the current write is
-> aborted before it starts, then iomap_write_iter() sees IOMAP_F_STALE
-> and restarts the write again.
->
-> We then get a new mapping from ops->iomap_begin() with a new 1 block
-> reservation for the remaining 3kB of data to be copied into that
-> block.
->
-> i.e. iomaps are cached information, and we have to validate that the
-> mapping has not changed once we have all the objects we are about to
-> modify locked and ready for modification.
+If I followed it correct, vunmap can be caught via
+xfs_buf_free_pages(). If that's the case, wouldn't make
+more sense to put might_sleep() inside xfs_buf_free_pages()
+giving it is not called only from xfs_buf_free()?
 
-Thanks a lot!
+Otherwise,
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Didn't notice the iomap_valid() handling is even involved.
-
->
->>    All these happens inside the do {} while () loop of
->>    iomap_write_iter(), thus no iomap_begin() callback can be triggered =
-to
->>    allocate extra space.
->>
->> - __iomap_put_folio() unlocked and put the folio 0 again.
->>
->> - Now a writeback got started for that folio at file offset 0 again
->>    This requires another free data block from the fs.
->>
->> In that case, iomap_begin() only reserved one block of data.
->> But in the end, we wrote 2 blocks of data due to short copy.
->>
->> I'm wondering what's the proper handling of short copy during buffered
->> write.
->
->> Is there any special locking I missed preventing the folio from being
->> written back halfway?
->
-> Not locking, just state validation and IOMAP_F_STALE. i.e.
-> filesystems that use delalloc or cow absolutely need to implement
-> folio_ops->iomap_valid() to detect stale iomaps....
-
-Got it, this also means a COW fs must implement that callback if using
-iomap.
-
-And this solution also has a good optimization where if no writeback
-happened between the lock and unlock, we can just reuse the last
-reserved space without extra allocation.
-
-Let me explore if we can do a similar solution in btrfs, other than the
-current always-re-allocate behavior.
-
-Thanks,
-Qu
-
->
->> Or is it just too hard to trigger such case in the real world?
->
-> Triggered it, we certainly did. It caused data corruption and took
-> quite some time to triage and understand.
->
-> -Dave.
-
+> --
+> 2.45.2
+> 
