@@ -1,109 +1,141 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B74F1DA62E;
-	Fri, 21 Mar 2025 15:43:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 331401DE4C2;
+	Fri, 21 Mar 2025 16:06:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742571832; cv=none; b=PJ0BsrtcTUPM4U8VP7TGisOoGoW3MrRJl3QcQv+tKzxqe8q23menXWcNabFuLwW97iUx33OxiyHZTWm69jMW8XZf3dvPp3FwC2pWazADrIpjRK73toQjTmQIPeCNZs3JRVowa+AAq76bAj3v3eQGJ1VLeO3CMgJ1IBTKyuCX5RA=
+	t=1742573186; cv=none; b=gEnUNae3wa4xi6f2ces2Q61CkdgJfoBVGrp8eaJ07S9AmZeEBlffta5pnP0YnUfio8TVYtzenehObOREp8JWk5GUcKuTjDKXnD83sslP/EeCBK4EX2Rmf88aT1oerMHfb4iF92GOJrhOW3i49wsrgjSeZLFY69ddisAKj+nIN4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742571832; c=relaxed/simple;
-	bh=qLt7MBCEvEfE29n7ki763pA92Oe7/fYuFfWZyJsILr4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JdnZZK41ytgik559+bkk/jGh/8L/AIVXzSwE1B1kq+UQO5OfhcHiR7rB6FAs3Lfi2nZEwW679oA71IPOUPp8CxhUcM8Qv5Kw78NGZZqLewBbVA35GXXrYjahu9ppuSoamRWBJe7fuc2FiS1hEN4LF6mWPib8Dfz5vYn7y3OYZkw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qdxr/ZXq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742573186; c=relaxed/simple;
+	bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=fJoKGR3W3Q57YTby4gOkViWWAZYQGgRP4WXCGkwxoW+qEM2Rmq1yRYL39BRFUe+ENF1cwAmveTDwcwGla6fcZOfrUPwSbuLA/z+sBYL/NW8AAS4AMucvLZ8iG6BOUJPwdcwyUMywYtLi/9JPlxZNX7EHjQT8Mq/1ejneVX5+MJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NvGalA/i; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qdxr/ZXq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82B65C4CEE3;
-	Fri, 21 Mar 2025 15:43:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742571831;
-	bh=qLt7MBCEvEfE29n7ki763pA92Oe7/fYuFfWZyJsILr4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qdxr/ZXqZDPPXf9oQ30MNVrTEzEyGXYCN/rZ166Y8/R4k98hwBg7+LDQpsIsIKy4b
-	 maLft8N5hnvRi+JSh/D+0BIWSJuguhzeIpkBH2Nj8NpcbZEMeyrUa3l5cktC9TLeit
-	 UpKn4jchriIHvWuo2pOd29CFYIkTPMTOIkYH1F11gjBUUTTFppbu5VAe+BEY8CeICp
-	 9Cf6GE9utV+DgoHNRuuX8cnwZKMHifmWjUH6hBushRy/GpHySpvyM/fHoEQwq8BQZF
-	 NDpYBaf3cxAYqpZYvqCTZmHUsXo7IcdJ/S1tWoZlSRAAtf6xgdxgYyEOUl/GE//5lE
-	 MwdowydSf6sSQ==
-Date: Fri, 21 Mar 2025 08:43:51 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/3] generic/537: disable quota mount options for
- pre-metadir rt filesystems
-Message-ID: <20250321154351.GF4001511@frogsfrogsfrogs>
-References: <174182089094.1400713.5283745853237966823.stgit@frogsfrogsfrogs>
- <174182089142.1400713.12586249978501158339.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NvGalA/i"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1742573184; x=1774109184;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
+  b=NvGalA/ikOrL5oPJYs+QnTxjGygBeYWWOIvfFHc3OkbJX2AwHpopTwqS
+   OrJ7JGqvsLvcwKeP1prZM7mVJTOfER54Pu75l/Fxr9j8e/jK3wFjwN7qC
+   SK/5ji+VMYsX0/5AhSQhmE9n8DiGMEF7b+LjyblXx5blGM0B6v0DiKpB9
+   7qQZ9t3oQhCYinN742ZwcgN+X4JUGCey/94l/s0aWmz+DeK3rMLdvIdAr
+   VOz0V9xhnp8gPVoJI15e8EZBeavaDkLOepeFPGKjHBbFPdNQ3UOf5upEx
+   k4Kt0Ju3dJwZMJUlGC8aC6kaTxjBeWUEXBcxhuhtx35JSY0kXfzmt0vxz
+   A==;
+X-CSE-ConnectionGUID: uCVdhp/3So2cYbOJXCtPug==
+X-CSE-MsgGUID: onEv0mKKQBKLcJNtxbhz7A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11380"; a="43726622"
+X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
+   d="scan'208";a="43726622"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:23 -0700
+X-CSE-ConnectionGUID: g7UgcbV4QTih6n+cWYD8tQ==
+X-CSE-MsgGUID: 1EcrVXRMQNGo+fC3Vk/4zw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
+   d="scan'208";a="123417648"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.112])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:06 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 21 Mar 2025 18:06:02 +0200 (EET)
+To: Easwar Hariharan <eahariha@linux.microsoft.com>, 
+    Andrew Morton <akpm@linux-foundation.org>
+cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+    Julia Lawall <Julia.Lawall@inria.fr>, 
+    Nicolas Palix <nicolas.palix@imag.fr>, 
+    James Smart <james.smart@broadcom.com>, 
+    Dick Kennedy <dick.kennedy@broadcom.com>, 
+    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+    Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+    David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
+    Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
+    Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
+    Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+    "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+    Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+    Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
+    Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
+    Sascha Hauer <s.hauer@pengutronix.de>, 
+    Pengutronix Kernel Team <kernel@pengutronix.de>, 
+    Fabio Estevam <festevam@gmail.com>, 
+    Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+    Hans de Goede <hdegoede@redhat.com>, 
+    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
+    Selvin Xavier <selvin.xavier@broadcom.com>, 
+    Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
+    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+    cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>, 
+    linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+    linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+    ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+    linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+    linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+    linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+    linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+    ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH v3 15/16] platform/x86: thinkpad_acpi: convert timeouts
+ to secs_to_jiffies()
+In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
+Message-ID: <9e761e10-eb4d-0a34-79b5-ef4507f002c5@linux.intel.com>
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com> <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <174182089142.1400713.12586249978501158339.stgit@frogsfrogsfrogs>
+Content-Type: text/plain; charset=US-ASCII
 
-On Wed, Mar 12, 2025 at 04:11:48PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Fix this regression in generic/537:
-> 
-> mount: /opt: permission denied.
->        dmesg(1) may have more information after failed mount system call.
-> mount -o uquota,gquota,pquota, -o ro,norecovery -ortdev=/dev/sdb4 /dev/sda4 /opt failed
-> mount -o uquota,gquota,pquota, -o ro,norecovery -ortdev=/dev/sdb4 /dev/sda4 /opt failed
-> (see /var/tmp/fstests/generic/537.full for details)
-> 
-> for reasons explained in the giant comment.  TLDR: quota and rt aren't
-> compatible on older xfs filesystems so we have to work around that.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+On Tue, 25 Feb 2025, Easwar Hariharan wrote:
 
-Ping?
+> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> secs_to_jiffies().  As the value here is a multiple of 1000, use
+> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
+> 
+> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+> the following Coccinelle rules:
+> 
+> @depends on patch@
+> expression E;
+> @@
+> 
+> -msecs_to_jiffies
+> +secs_to_jiffies
+> (E
+> - * \( 1000 \| MSEC_PER_SEC \)
+> )
+> 
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 
---D
+Applied to the review-ilpo-next branch.
 
 > ---
->  tests/generic/537 |   17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
+>  drivers/platform/x86/thinkpad_acpi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> 
-> diff --git a/tests/generic/537 b/tests/generic/537
-> index f57bc1561dd57e..3be743c4133f4f 100755
-> --- a/tests/generic/537
-> +++ b/tests/generic/537
-> @@ -18,6 +18,7 @@ _begin_fstest auto quick trim
->  
->  # Import common functions.
->  . ./common/filter
-> +. ./common/quota
->  
->  _require_scratch
->  _require_fstrim
-> @@ -36,6 +37,22 @@ _scratch_mount -o ro >> $seqres.full 2>&1
->  $FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1
->  _scratch_unmount
->  
-> +# As of kernel commit 9f0902091c332b ("xfs: Do not allow norecovery mount with
-> +# quotacheck"), it is no longer possible to mount with "norecovery" and any
-> +# quota mount option if the quota mount options would require a metadata update
-> +# such as quotacheck.  For a pre-metadir XFS filesystem with a realtime volume
-> +# and quota-enabling options, the first two mount attempts will have succeeded
-> +# but with quotas disabled.  The mount option parsing for this next mount
-> +# attempt will see the same quota-enabling options and a lack of qflags in the
-> +# ondisk metadata and reject the mount because it thinks that will require
-> +# quotacheck.  Edit out the quota mount options for this specific
-> +# configuration.
-> +if [ "$FSTYP" = "xfs" ]; then
-> +	if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ]; then
-> +		_qmount_option ""
-> +	fi
-> +fi
-> +
->  echo "fstrim on ro mount with no log replay"
->  norecovery="norecovery"
->  test $FSTYP = "btrfs" && norecovery=nologreplay
-> 
-> 
+> diff --git a/drivers/platform/x86/thinkpad_acpi.c b/drivers/platform/x86/thinkpad_acpi.c
+> index ab1cade5ef231e9a9a520bc0cca82384c911a331..d269e791f7fbc2a8ccf96f28cb476beccb57c9a7 100644
+> --- a/drivers/platform/x86/thinkpad_acpi.c
+> +++ b/drivers/platform/x86/thinkpad_acpi.c
+> @@ -8512,7 +8512,7 @@ static void fan_watchdog_reset(void)
+>  	if (fan_watchdog_maxinterval > 0 &&
+>  	    tpacpi_lifecycle != TPACPI_LIFE_EXITING)
+>  		mod_delayed_work(tpacpi_wq, &fan_watchdog_task,
+> -			msecs_to_jiffies(fan_watchdog_maxinterval * 1000));
+> +			secs_to_jiffies(fan_watchdog_maxinterval));
+>  	else
+>  		cancel_delayed_work(&fan_watchdog_task);
+>  }
+
+-- 
+ i.
+
