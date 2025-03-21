@@ -1,359 +1,194 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E05921C5F1B
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 09:57:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 734291F2C34
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 10:03:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742551060; cv=none; b=WYqOk+H7Fmc5nm2xUGhf8pSy1uQeEtAemqXsXi+H+/SLSRoQykYIS102uUZPCQMgqvZbEDGhbDDvJ/4N1ndoHMRhve3h6UMWpHciEC5H4xVikwRrHWEYxMBrJzTXKXQ2N6yKrs6d3EqK49k1V1aktpU//MaEXWfec17mdc+otDA=
+	t=1742551409; cv=none; b=gIIj8UlWZSgufUlhAONL8JJIp0K5v8WO2zydod3PqfcP5UGTmKpJoklkyEtksDN69hDcgay+Njay26jTzJr2k9phpa6TADKYKUMTBsCLzDD6VHR1g724DMF7EC4LLQsxUONo8bcT/eQSo6l8h2ul50qCzQkJedLnnjkZWdpvR7w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742551060; c=relaxed/simple;
-	bh=QhNFq56LgtWp6yAoYJQHFopzDLCgrMBr2hVBGvfsShQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GSpav8Lt812vOvoeHAALLys7SCLM3HKYoTPMBl0nHIT0bincgYoUxasvO79IfyeQJIdwaLQzhkDOfuENsKZQwka4wIpAe5k2fW2lhD87FeNwuSKuzeZopf/PZvhWRtQKYDZ2uREjlixC5wk4898yW2ZrLYOLiLjtqlhvFIQ3rp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VPE6kvH1; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1742551409; c=relaxed/simple;
+	bh=FV44VZcR1js+hnb1aI5BSHm1UT4pV3TorvAixL7ea2k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TVRwZ2iQm5p7LvYgL4g1/8J5eAoiFyDfExI/SXPu9KktSfXc61aFEyfVJ1/UKqkiSDHZKeBWs0+zf+Ot+1jNys5sAGfvd6UC77ebdH6nIhfWf0XPwzAtXd4rfqnZ2t9L7S0Fj0EK9Vy61TCThHjrpICWqnI+84W7FyVQJTbtd34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=utcnofUM; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=7K4tJWzk; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=mzPOvm1X; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=XPXvjCjy; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VPE6kvH1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1742551057;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pH3fSFZ36dKu7o5Hs5WdvNVe9byLSOcPeCFEwXcky8Q=;
-	b=VPE6kvH1ASMws03CD0A0It2myl3pfdJPOwJ9OhJZ3mYBOQZLy6pf+9lgbDMBpmtMAu/haM
-	QO7GX8FehlYNSUXSEf87LxFK0SvhDlTGOSWiLoyDgWpvA53JYKzqdmEJFKfR530v2nQWby
-	P7T779qQzmUUGybhClDKvmSa4LnwWoI=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-563-1z2cTt38PiSdwP3-AzWmJg-1; Fri, 21 Mar 2025 05:57:36 -0400
-X-MC-Unique: 1z2cTt38PiSdwP3-AzWmJg-1
-X-Mimecast-MFC-AGG-ID: 1z2cTt38PiSdwP3-AzWmJg_1742551055
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2265a09dbfcso47694255ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 02:57:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742551055; x=1743155855;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pH3fSFZ36dKu7o5Hs5WdvNVe9byLSOcPeCFEwXcky8Q=;
-        b=CeAhXCrJ/5L+8x+fHwNGWYeB2x54myH4MQvzEjzjWSpc9IjlutdUVO0gTZQedoMO7K
-         dBoyH7Zmf2Z8ETLzEqpXfV3J5kUrHjzUH1zs+AfpYXCQnTwMUwWp/lh2tZTiiB94Vlt9
-         rqsHPtLXe8+1MS6Ye1ptqSFTSvhaApde+zq6clLNeX0tsTntPuQSlChsECk3ze0SUh2S
-         Dz1dkZYMBQo7lnIqbaNND1t5988b47+YTvGxzDnvZqmZ8GvnuBJ4avCJBwtJW0SugEAI
-         0buw4+K157lXKkIbnScTLE3PBnuvMOfxMj4+TCCPX1yv1+G9/Bv0bOHA6K/HPzEwFDTo
-         UCjQ==
-X-Gm-Message-State: AOJu0YwV8jzdmDi+tx5JIuCaYR0JuQ9RI8KoFGJFjLwXXPa+ozsKu7qQ
-	jLvJiuX7THkxqLpNj/I3lLTnMscQgRn5+SPEs9vvyR7YTbN1+b1tTOI8DpsHRr2s9Z01vESe9W1
-	OYDJJaLoEqnxqkIF0TYwrwmbfmL8eAQgh5pFmi73yQDbd99WJzx7qd9Ec73G59jlqeOt+
-X-Gm-Gg: ASbGncs/shDEtxx8/AcrlIyLf3q/n0fHA2xLcLQjNkVyY0VwE5EEct+Atm/n9oEMwJE
-	aifbW0njmYdPafXo7rVOhKCSYUe7i5nMNgyO5O63WcsRVp9veNYwe1D2/B6WUzOFuMSoseeaOQm
-	pF6AUiBwtcjWkbmLB1yw8mF7KGLWf2MBDMyHlvjl1pBLXkbXq1BI99PjY1eHsf3qAhj1MC3lBF6
-	WBR5b6h8Us1pvAhRqbN0C41F8yzac3O4gm51JwMcd25ikmeXgLhQzAUXsXsRzrCVceY3JpMKy9L
-	qKd4cGmOac1B7S0TaSTuNxmt9PJCX+IF4mn7+loS5F4Er0PFskolfnO6
-X-Received: by 2002:a17:902:d549:b0:224:a96:e39 with SMTP id d9443c01a7336-22780c55343mr47241975ad.9.1742551054906;
-        Fri, 21 Mar 2025 02:57:34 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGHyRuq9c1gj7R1ZbbjKh4vsmm4/BpUs82+YnxMFZ7ujxpSCaYSk+rudk4xJbywdIR/ezla6A==
-X-Received: by 2002:a17:902:d549:b0:224:a96:e39 with SMTP id d9443c01a7336-22780c55343mr47241705ad.9.1742551054329;
-        Fri, 21 Mar 2025 02:57:34 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-227811bb0dfsm12372325ad.108.2025.03.21.02.57.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Mar 2025 02:57:34 -0700 (PDT)
-Date: Fri, 21 Mar 2025 17:57:30 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Catherine Hoang <catherine.hoang@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v3] xfs: add a test for atomic writes
-Message-ID: <20250321095730.4wufzfwxb665lwld@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20250228002059.16750-1-catherine.hoang@oracle.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="utcnofUM";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="7K4tJWzk";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="mzPOvm1X";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="XPXvjCjy"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 787D121C29;
+	Fri, 21 Mar 2025 10:03:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1742551405; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=R14WN9kq4S6B1MuMjXKGLmRt+ArJv1VCUUhguggjFGY=;
+	b=utcnofUM/dXiNC4zYtzKtm/NY3YX4f+/vCQwSchidq2kdaM0Eji798dGT96O+88IbbF5cr
+	FzkK483Y0Az1+fKqVZBQNFT1cN06VCH/eKdphscLHBgZpVtIAWRV+ON9YYc4PFo3aS5Wyl
+	50ka8M7ADwnEdq/dLtN/S1nqIH1EWcI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1742551405;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=R14WN9kq4S6B1MuMjXKGLmRt+ArJv1VCUUhguggjFGY=;
+	b=7K4tJWzkssqhGbqhSTtBAaBnmLm8xFTwQNXh8YXEOhwC531enwmpdc6v/rOpzfRspw8E3v
+	1XC618uPmnW1A7BQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=mzPOvm1X;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=XPXvjCjy
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1742551403; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=R14WN9kq4S6B1MuMjXKGLmRt+ArJv1VCUUhguggjFGY=;
+	b=mzPOvm1XYKzWSXhZssTvfiwVK9umJXZG5FjmKMubT0E3p7nrj0VhGWpFIIgV0d356/Vrbi
+	uGXQbjPZFnanwT6j9E9RcFk2+oPKre+Y2D7vUM+4BCUYMeBigXZ4LGsRHJ4ecDBT7mNwvy
+	e9Lq8qYAQ8j1pO3pnsi7uzhQWX0/kig=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1742551403;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=R14WN9kq4S6B1MuMjXKGLmRt+ArJv1VCUUhguggjFGY=;
+	b=XPXvjCjySsWM/nGSA3V5VI7nP7kwjo+rRBj7Ie206vaVEF1zCEQ90re50cUZdw/HwRaov1
+	wNos3spEHFhztrDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 23ADD13A2C;
+	Fri, 21 Mar 2025 10:03:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id fzxZB2s53Wd7JgAAD6G6ig
+	(envelope-from <pvorel@suse.cz>); Fri, 21 Mar 2025 10:03:23 +0000
+From: Petr Vorel <pvorel@suse.cz>
+To: ltp@lists.linux.it
+Cc: Petr Vorel <pvorel@suse.cz>,
+	Li Wang <liwang@redhat.com>,
+	Cyril Hrubis <chrubis@suse.cz>,
+	Andrea Cervesato <andrea.cervesato@suse.com>,
+	"Darrick J . Wong" <darrick.wong@oracle.com>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Allison Collins <allison.henderson@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Gao Xiang <hsiangkao@redhat.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	Jan Kara <jack@suse.cz>,
+	linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: [RFC PATCH 1/1] ioctl_ficlone03: Require 5.10 for XFS
+Date: Fri, 21 Mar 2025 11:03:20 +0100
+Message-ID: <20250321100320.162107-1-pvorel@suse.cz>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250228002059.16750-1-catherine.hoang@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 787D121C29
+X-Spam-Score: -3.01
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FREEMAIL_CC(0.00)[suse.cz,redhat.com,suse.com,oracle.com,gmail.com,lst.de,vger.kernel.org];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.cz:mid,suse.cz:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On Thu, Feb 27, 2025 at 04:20:59PM -0800, Catherine Hoang wrote:
-> Add a test to validate the new atomic writes feature.
-> 
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> ---
+Test fails on XFS on kernel older than 5.10:
 
-At first, the subject is "xfs: add a test for atomic writes", but it's
-a generic test case, so please replace "xfs" with "generic".
+    # ./ioctl_ficlone03
+	...
+    tst_test.c:1183: TINFO: Mounting /dev/loop0 to /tmp/LTP_ioc6ARHZ7/mnt fstyp=xfs flags=0
+    [   10.122070] XFS (loop0): Superblock has unknown incompatible features (0x8) enabled.
+    [   10.123035] XFS (loop0): Filesystem cannot be safely mounted by this kernel.
+    [   10.123916] XFS (loop0): SB validate failed with error -22.
+    tst_test.c:1183: TBROK: mount(/dev/loop0, mnt, xfs, 0, (nil)) failed: EINVAL (22)
 
->  common/rc             |  51 ++++++++++++++
->  tests/generic/762     | 160 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/762.out |   2 +
->  3 files changed, 213 insertions(+)
->  create mode 100755 tests/generic/762
->  create mode 100644 tests/generic/762.out
-> 
-> diff --git a/common/rc b/common/rc
-> index 6592c835..08a9d9b8 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2837,6 +2837,10 @@ _require_xfs_io_command()
->  			opts+=" -d"
->  			pwrite_opts+="-V 1 -b 4k"
->  		fi
-> +		if [ "$param" == "-A" ]; then
-> +			opts+=" -d"
-> +			pwrite_opts+="-D -V 1 -b 4k"
-> +		fi
->  		testio=`$XFS_IO_PROG -f $opts -c \
->  		        "pwrite $pwrite_opts $param 0 4k" $testfile 2>&1`
->  		param_checked="$pwrite_opts $param"
-> @@ -5175,6 +5179,53 @@ _require_scratch_btime()
->  	_scratch_unmount
->  }
->  
-> +_get_atomic_write_unit_min()
-> +{
-> +	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
-> +        grep atomic_write_unit_min | grep -o '[0-9]\+'
-> +}
-> +
-> +_get_atomic_write_unit_max()
-> +{
-> +	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
-> +        grep atomic_write_unit_max | grep -o '[0-9]\+'
-> +}
-> +
-> +_get_atomic_write_segments_max()
-> +{
-> +	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
-> +        grep atomic_write_segments_max | grep -o '[0-9]\+'
-> +}
-> +
-> +_require_scratch_write_atomic()
-> +{
-> +	_require_scratch
-> +
-> +	export STATX_WRITE_ATOMIC=0x10000
-> +
-> +	awu_min_bdev=$(_get_atomic_write_unit_min $SCRATCH_DEV)
-> +	awu_max_bdev=$(_get_atomic_write_unit_max $SCRATCH_DEV)
-> +
-> +	if [ $awu_min_bdev -eq 0 ] && [ $awu_max_bdev -eq 0 ]; then
-> +		_notrun "write atomic not supported by this block device"
-> +	fi
-> +
-> +	_scratch_mkfs > /dev/null 2>&1
-> +	_scratch_mount
-> +
-> +	testfile=$SCRATCH_MNT/testfile
-> +	touch $testfile
-> +
-> +	awu_min_fs=$(_get_atomic_write_unit_min $testfile)
-> +	awu_max_fs=$(_get_atomic_write_unit_max $testfile)
-> +
-> +	_scratch_unmount
-> +
-> +	if [ $awu_min_fs -eq 0 ] && [ $awu_max_fs -eq 0 ]; then
-> +		_notrun "write atomic not supported by this filesystem"
-> +	fi
-> +}
-> +
->  _require_inode_limits()
->  {
->  	if [ $(_get_free_inode $TEST_DIR) -eq 0 ]; then
-> diff --git a/tests/generic/762 b/tests/generic/762
-> new file mode 100755
-> index 00000000..d0a80219
-> --- /dev/null
-> +++ b/tests/generic/762
-> @@ -0,0 +1,160 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2025 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test 762
-> +#
-> +# Validate atomic write support
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick rw
-> +
-> +_require_scratch_write_atomic
-> +_require_xfs_io_command pwrite -A
-> +
-> +test_atomic_writes()
-> +{
-> +    local bsize=$1
-> +
-> +    case "$FSTYP" in
-> +    "xfs")
-> +        mkfs_opts="-b size=$bsize"
-> +        ;;
-> +    "ext4")
-> +        mkfs_opts="-b $bsize"
-> +        ;;
-> +    *)
-> +        ;;
+This also causes Btrfs testing to be skipped due TBROK on XFS. With increased version we get on 5.4 LTS:
 
-Does that mean we only support xfs and ext4? What if ext2/3 ? What if other fs,
-e.g. btrfs, nfs, overlay, exfat, tmpfs and so on?
+    # ./ioctl_ficlone03
+    tst_test.c:1904: TINFO: Tested kernel: 5.4.291 #194 SMP Fri Mar 21 10:18:02 CET 2025 x86_64
+    ...
+    tst_supported_fs_types.c:49: TINFO: mkfs is not needed for tmpfs
+    tst_test.c:1833: TINFO: === Testing on xfs ===
+    tst_cmd.c:281: TINFO: Parsing mkfs.xfs version
+    tst_test.c:969: TCONF: The test requires kernel 5.10 or newer
+    tst_test.c:1833: TINFO: === Testing on btrfs ===
+    tst_test.c:1170: TINFO: Formatting /dev/loop0 with btrfs opts='' extra opts=''
+    [   30.143670] BTRFS: device fsid 1a6d250c-0636-11f0-850f-c598bdcd84c4 devid 1 transid 6 /dev/loop0
+    tst_test.c:1183: TINFO: Mounting /dev/loop0 to /tmp/LTP_iocjwzyal/mnt fstyp=btrfs flags=0
+    [   30.156563] BTRFS info (device loop0): using crc32c (crc32c-generic) checksum algorithm
+    [   30.157363] BTRFS info (device loop0): flagging fs with big metadata feature
+    [   30.158061] BTRFS info (device loop0): using free space tree
+    [   30.158620] BTRFS info (device loop0): has skinny extents
+    [   30.159911] BTRFS info (device loop0): enabling ssd optimizations
+    [   30.160652] BTRFS info (device loop0): checking UUID tree
+    ioctl_ficlone03_fix.c:49: TPASS: invalid source : EBADF (9)
+    ioctl_ficlone03_fix.c:55: TPASS: invalid source : EBADF (9)
 
-> +    esac
-> +
-> +    # If block size is not supported, skip this test
-> +    _scratch_mkfs $mkfs_opts >>$seqres.full 2>&1 || return
-> +    _try_scratch_mount >>$seqres.full 2>&1 || return
+Fixing commit is 29887a2271319 ("xfs: enable big timestamps").
 
-If mkfs or mount fails, this function returns directly. Below test_atomic_write_bounds
-is similar. These two functions are the main test part of this case, if these two
-functions returns directly without any check and output, won't this test report pass
-without any testing?
+Signed-off-by: Petr Vorel <pvorel@suse.cz>
+---
+Hi all,
 
-Thanks,
-Zorro
+I suppose we aren't covering a test bug with this and test is really
+wrong expecting 4.16 would work on XFS. FYI this affects 5.4.291
+(latest 5.4 LTS which is still supported) and would not be fixed due a
+lot of missing functionality from 5.10.
 
-> +
-> +    test "$FSTYP" = "xfs" && _xfs_force_bdev data $SCRATCH_MNT
-> +
-> +    testfile=$SCRATCH_MNT/testfile
-> +    touch $testfile
-> +
-> +    file_min_write=$(_get_atomic_write_unit_min $testfile)
-> +    file_max_write=$(_get_atomic_write_unit_max $testfile)
-> +    file_max_segments=$(_get_atomic_write_segments_max $testfile)
-> +
-> +    # Check that atomic min/max = FS block size
-> +    test $file_min_write -eq $bsize || \
-> +        echo "atomic write min $file_min_write, should be fs block size $bsize"
-> +    test $file_min_write -eq $bsize || \
-> +        echo "atomic write max $file_max_write, should be fs block size $bsize"
-> +    test $file_max_segments -eq 1 || \
-> +        echo "atomic write max segments $file_max_segments, should be 1"
-> +
-> +    # Check that we can perform an atomic write of len = FS block size
-> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile | \
-> +        grep wrote | awk -F'[/ ]' '{print $2}')
-> +    test $bytes_written -eq $bsize || echo "atomic write len=$bsize failed"
-> +
-> +    # Check that we can perform an atomic single-block cow write
-> +    if [ "$FSTYP" == "xfs" ]; then
-> +        testfile_cp=$SCRATCH_MNT/testfile_copy
-> +        if _xfs_has_feature $SCRATCH_MNT reflink; then
-> +            cp --reflink $testfile $testfile_cp
-> +        fi
-> +        bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile_cp | \
-> +            grep wrote | awk -F'[/ ]' '{print $2}')
-> +        test $bytes_written -eq $bsize || echo "atomic write on reflinked file failed"
-> +    fi
-> +
-> +    # Check that we can perform an atomic write on an unwritten block
-> +    $XFS_IO_PROG -c "falloc $bsize $bsize" $testfile
-> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize $bsize $bsize" $testfile | \
-> +        grep wrote | awk -F'[/ ]' '{print $2}')
-> +    test $bytes_written -eq $bsize || echo "atomic write to unwritten block failed"
-> +
-> +    # Check that we can perform an atomic write on a sparse hole
-> +    $XFS_IO_PROG -c "fpunch 0 $bsize" $testfile
-> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile | \
-> +        grep wrote | awk -F'[/ ]' '{print $2}')
-> +    test $bytes_written -eq $bsize || echo "atomic write to sparse hole failed"
-> +
-> +    # Check that we can perform an atomic write on a fully mapped block
-> +    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile | \
-> +        grep wrote | awk -F'[/ ]' '{print $2}')
-> +    test $bytes_written -eq $bsize || echo "atomic write to mapped block failed"
-> +
-> +    # Reject atomic write if len is out of bounds
-> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $((bsize - 1))" $testfile 2>> $seqres.full && \
-> +        echo "atomic write len=$((bsize - 1)) should fail"
-> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $((bsize + 1))" $testfile 2>> $seqres.full && \
-> +        echo "atomic write len=$((bsize + 1)) should fail"
-> +
-> +    # Reject atomic write when iovecs > 1
-> +    $XFS_IO_PROG -dc "pwrite -A -D -V2 -b $bsize 0 $bsize" $testfile 2>> $seqres.full && \
-> +        echo "atomic write only supports iovec count of 1"
-> +
-> +    # Reject atomic write when not using direct I/O
-> +    $XFS_IO_PROG -c "pwrite -A -V1 -b $bsize 0 $bsize" $testfile 2>> $seqres.full && \
-> +        echo "atomic write requires direct I/O"
-> +
-> +    # Reject atomic write when offset % bsize != 0
-> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 1 $bsize" $testfile 2>> $seqres.full && \
-> +        echo "atomic write requires offset to be aligned to bsize"
-> +
-> +    _scratch_unmount
-> +}
-> +
-> +test_atomic_write_bounds()
-> +{
-> +    local bsize=$1
-> +
-> +    case "$FSTYP" in
-> +    "xfs")
-> +        mkfs_opts="-b size=$bsize"
-> +        ;;
-> +    "ext4")
-> +        mkfs_opts="-b $bsize"
-> +        ;;
-> +    *)
-> +        ;;
-> +    esac
-> +
-> +    # If block size is not supported, skip this test
-> +    _scratch_mkfs $mkfs_opts >>$seqres.full 2>&1 || return
-> +    _try_scratch_mount >>$seqres.full 2>&1 || return
-> +
-> +    test "$FSTYP" = "xfs" && _xfs_force_bdev data $SCRATCH_MNT
-> +
-> +    testfile=$SCRATCH_MNT/testfile
-> +    touch $testfile
-> +
-> +    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile 2>> $seqres.full && \
-> +        echo "atomic write should fail when bsize is out of bounds"
-> +
-> +    _scratch_unmount
-> +}
-> +
-> +sys_min_write=$(cat "/sys/block/$(_short_dev $SCRATCH_DEV)/queue/atomic_write_unit_min_bytes")
-> +sys_max_write=$(cat "/sys/block/$(_short_dev $SCRATCH_DEV)/queue/atomic_write_unit_max_bytes")
-> +
-> +bdev_min_write=$(_get_atomic_write_unit_min $SCRATCH_DEV)
-> +bdev_max_write=$(_get_atomic_write_unit_max $SCRATCH_DEV)
-> +
-> +if [ "$sys_min_write" -ne "$bdev_min_write" ]; then
-> +    echo "bdev min write != sys min write"
-> +fi
-> +if [ "$sys_max_write" -ne "$bdev_max_write" ]; then
-> +    echo "bdev max write != sys max write"
-> +fi
-> +
-> +# Test all supported block sizes between bdev min and max
-> +for ((bsize=$bdev_min_write; bsize<=bdev_max_write; bsize*=2)); do
-> +        test_atomic_writes $bsize
-> +done;
-> +
-> +# Check that atomic write fails if bsize < bdev min or bsize > bdev max
-> +test_atomic_write_bounds $((bdev_min_write / 2))
-> +test_atomic_write_bounds $((bdev_max_write * 2))
-> +
-> +# success, all done
-> +echo Silence is golden
-> +status=0
-> +exit
-> diff --git a/tests/generic/762.out b/tests/generic/762.out
-> new file mode 100644
-> index 00000000..fbaeb297
-> --- /dev/null
-> +++ b/tests/generic/762.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 762
-> +Silence is golden
-> -- 
-> 2.34.1
-> 
-> 
+Kind regards,
+Petr
+
+ testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c b/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
+index 6a9d270d9f..e2ab10cba1 100644
+--- a/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
++++ b/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
+@@ -113,7 +113,7 @@ static struct tst_test test = {
+ 		{.type = "bcachefs"},
+ 		{
+ 			.type = "xfs",
+-			.min_kver = "4.16",
++			.min_kver = "5.10",
+ 			.mkfs_ver = "mkfs.xfs >= 1.5.0",
+ 			.mkfs_opts = (const char *const []) {"-m", "reflink=1", NULL},
+ 		},
+-- 
+2.47.2
 
