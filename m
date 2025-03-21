@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D521EF08D;
-	Fri, 21 Mar 2025 21:27:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EF4B1EF08D;
+	Fri, 21 Mar 2025 21:27:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742592428; cv=none; b=qNpO6Np5qWusuX6dWtfT0v6xfElrSna7Oebh61MjE9QFZpm3q9W7NbY8eHZwnbceKYx3XTFpZFNMLIWaNcubla+ULwRdSJf/wmnMh7px4Bxg2VDIA1zXNxDfZXNXr0UaoC4NCIV6SgtQ5NbMwaGFDu6jAn8iCynWwfEvi+p2KpE=
+	t=1742592444; cv=none; b=NYafOvkfN5WBkIHyywKML+5HsttUI2ZTUIXNIeCddsFyLVBh0933n4G2YiFXhD8OczV5uqkKkDzliLIkzx1uccw46r8aW3guuj6q5q1s4Fn/pvywdpDr3NuKIg2OZGDzNRZHVNMhU1MdsmI44A00jp51oPTCAkuglW2WpdyAgRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742592428; c=relaxed/simple;
-	bh=ZlbfBRg8UbigtWdBK+NmCEhwVvSxtr9Y2QhCjqCrN54=;
+	s=arc-20240116; t=1742592444; c=relaxed/simple;
+	bh=hiGP1mWkzO1j/vuvD2DoUJUoJ7NROn6vzpJHgOXDS8I=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s7t4LXXsvbQk27cBh2gmzoyeGx2NTJtSpLX4LPpKGNm2JJiKAZNNZgcvsBv4MOmcfSSPAELrIIWgbOyTv0fmvuswiVylIbHfrj8BYTjJ9dkEC6/gxQMENf7v3456Nc8wug2LhAL6DYqyJDlK4y7HEbRUFcK9CJ3P2qaYrGT/WrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TCO2hhQq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=u9vse42hmenLi5/+H62LfHIuFkoKD8G4nSRl3UXOO17QyvPmdaRdvkcDgtBRIZax9FP5srT26BXylKz3TKKUFG435NxHkRxIQ6Egf8HIta8SL/5xnR+yy6HHBKfOu7fEc4PXtSbcIMtOWgzsl61n/WBhPHBY2IQcaoK63q44bjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qPTSfZw5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TCO2hhQq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEB96C4CEE3;
-	Fri, 21 Mar 2025 21:27:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qPTSfZw5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F6B0C4CEE3;
+	Fri, 21 Mar 2025 21:27:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742592427;
-	bh=ZlbfBRg8UbigtWdBK+NmCEhwVvSxtr9Y2QhCjqCrN54=;
+	s=k20201202; t=1742592443;
+	bh=hiGP1mWkzO1j/vuvD2DoUJUoJ7NROn6vzpJHgOXDS8I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TCO2hhQq49nk9FGLvfZDnjoFKmmbUrqx/KM+Fh9ABGn1Cw11/KpcEbvOgl73lzW4d
-	 1FPwycYWf6T7yDmhUOk6Syk5EQy2otp9x/rpjJlQenP4T/fZLWSB0c4H0+17pMgb4c
-	 UFtjj0xHtD3reBqF2AgFpBA4z7M0/X+cyRBwolBMHhyRqhuOaHU8cyAqtStikyL9cB
-	 8ZObA0serAu8u7lDeVIFdjUcxDTsikWa8htWh3CUvZJc2te/UOuZl6j9LQrNmfwFrH
-	 y/6TZrVgfml93yT2UyY/3xnJFsvxhu6qDeFyIxRvX7VDhoeb4ycSMQhZ+ZDPYSlSc1
-	 NHCcSKG8WfpXw==
-Date: Fri, 21 Mar 2025 14:27:07 -0700
-Subject: [PATCH 1/1] xfs: test filesystem recovery with rdump
+	b=qPTSfZw5weNVz8zOaCtWVsWy0IOPv64XDW+7F4LYm/lDF2+7UaTmRCU5uJ0OKtHQr
+	 oC9bB1DXBXUSWEFMdy5FbZ74w/P4Xg12uirpmnFGwGICqnfFcd6/zm4O4ghSBSF6hW
+	 5EVoQ+OENYLIBQJg37K4tS9TgAdgFUuocNF3Dje4x7VGT7+omJb6vrEXN60eApru8S
+	 8pvmHGC67zaNyV/AAuLdgg8Fb+fMrebPGED3vKoHS5atvhOt7kYgjffse0gKtuGRiH
+	 5EE7iPADkZSZaORHmDy6DT9K20ugtD6Mt4wni3KjCv5QkwqzIIbY/g4HA/x7ey0pS5
+	 1jEwLVrMkOKVQ==
+Date: Fri, 21 Mar 2025 14:27:23 -0700
+Subject: [PATCH 1/1] generic/45[34]: add colored emoji variants to unicode
+ tests
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: hch@lst.de, hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <174259233533.743419.11473495762149004746.stgit@frogsfrogsfrogs>
-In-Reply-To: <174259233514.743419.14108043386932063353.stgit@frogsfrogsfrogs>
-References: <174259233514.743419.14108043386932063353.stgit@frogsfrogsfrogs>
+Message-ID: <174259233729.743518.3068035016824166821.stgit@frogsfrogsfrogs>
+In-Reply-To: <174259233710.743518.3215391886196460989.stgit@frogsfrogsfrogs>
+References: <174259233710.743518.3215391886196460989.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,187 +46,175 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Test how well we can dump a fully populated filesystem's contents.
+Ted told me this morning about a recent problem with kernel Unicode name
+casefolding vs. emoji -- initially, someone decided that zero-width
+joiners should be stripped out of filenames during comparisons, which
+lead to malicious git pulls of branches containing "<zwj>.git/config"
+files overwriting git repo config files.  A quick fix was to stop
+ignoring the "ignorable" code points, but that broke emoji in filenames,
+because emoji use zero-width joiners to combine simpler emoji into more
+complex ones, or alter skin tones, or colors, etc.  Reportedly the
+casefolding code will also fold a red heart into a black one.
+
+So.  To our filename support test, let's add various colors of heart
+emoji and various skin tones of heart-hands; and compound emoji
+consisting of multiple emoji glued together with zero width joiners.
+This actually caused a buffer overflow in the string-escaping functions
+of xfs_scrub phase 5 because I hadn't anticipated that we'd end up with
+a filename consisting *entirely* of nonprinting bytes.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/1895     |  153 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1895.out |    6 ++
- 2 files changed, 159 insertions(+)
- create mode 100755 tests/xfs/1895
- create mode 100644 tests/xfs/1895.out
+ tests/generic/453 |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/454 |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 110 insertions(+)
 
 
-diff --git a/tests/xfs/1895 b/tests/xfs/1895
-new file mode 100755
-index 00000000000000..18b534d328e9fd
---- /dev/null
-+++ b/tests/xfs/1895
-@@ -0,0 +1,153 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 1895
-+#
-+# Populate a XFS filesystem, ensure that rdump can "recover" the contents to
-+# another directory, and compare the contents.
-+#
-+. ./common/preamble
-+_begin_fstest auto scrub
+diff --git a/tests/generic/453 b/tests/generic/453
+index 04945ad1085b2d..bd5ce8b2bb11d9 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -203,6 +203,36 @@ setf "job offer.pdf" "actual period"
+ setf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
+ setf "llamapirate"
+ 
++# colored heart emoji to check if casefolding whacks emoji
++setf "\xf0\x9f\x92\x9c" "purple"
++setf "\xf0\x9f\x92\x99" "blue"
++setf "\xf0\x9f\x92\x9a" "green"
++setf "\xf0\x9f\x92\x9b" "yellow"
++setf "\xf0\x9f\xab\x80" "heart"
++setf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
++setf "\xf0\x9f\xa4\x8e" "brown"
++setf "\xf0\x9f\xa4\x8d" "white"
++setf "\xf0\x9f\x96\xa4" "black"
++setf "\xf0\x9f\xa7\xa1" "orange"
++setf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
 +
-+_cleanup()
-+{
-+	command -v _kill_fsstress &>/dev/null && _kill_fsstress
-+	cd /
-+	test -e "$testfiles" && rm -r -f $testfiles
-+}
++# zero width joiners exist in the middle of emoji sequences aren't supposed
++# to be normalized to nothing, but apparently this caused issues with
++# casefolding on ext4; also the mending heart caused a crash in xfs_scrub
++setf "\xf0\x9f\x92\x94" "broken heart"
++setf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
++setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
++\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
++setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
 +
-+_register_cleanup "_cleanup" BUS
++# emoji heart hands with skin tone variations
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
++setf "\xf0\x9f\xab\xb6" "neutral"
 +
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
+ ls -laR $testdir >> $seqres.full
+ 
+ echo "Test files"
+@@ -276,6 +306,31 @@ testf "job offer.pdf" "actual period"
+ testf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf"
+ testf "llamapirate"
+ 
++testf "\xf0\x9f\x92\x9c" "purple"
++testf "\xf0\x9f\x92\x99" "blue"
++testf "\xf0\x9f\x92\x9a" "green"
++testf "\xf0\x9f\x92\x9b" "yellow"
++testf "\xf0\x9f\xab\x80" "heart"
++testf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
++testf "\xf0\x9f\xa4\x8e" "brown"
++testf "\xf0\x9f\xa4\x8d" "white"
++testf "\xf0\x9f\x96\xa4" "black"
++testf "\xf0\x9f\xa7\xa1" "orange"
++testf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
 +
-+_require_xfs_db_command "rdump"
-+_require_test
-+_require_scratch
-+_require_scrub
-+_require_populate_commands
++testf "\xf0\x9f\x92\x94" "broken heart"
++testf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
++testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
++\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
++testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
 +
-+make_md5()
-+{
-+	(cd $1 ; find . -type f -print0 | xargs -0 md5sum) > $tmp.md5.$2
-+}
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
++testf "\xf0\x9f\xab\xb6" "neutral"
 +
-+cmp_md5()
-+{
-+	(cd $1 ; md5sum --quiet -c $tmp.md5.$2)
-+}
+ echo "Uniqueness of inodes?"
+ stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
+ 	if [ "${nr}" -gt 1 ]; then
+diff --git a/tests/generic/454 b/tests/generic/454
+index aec8beb8b43ca0..9f6ddb4a0e48b2 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -124,6 +124,36 @@ setf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
+ setf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf" "secret instructions"
+ setf "llamapirate" "no secret instructions"
+ 
++# colored heart emoji to check if casefolding whacks emoji
++setf "\xf0\x9f\x92\x9c" "purple"
++setf "\xf0\x9f\x92\x99" "blue"
++setf "\xf0\x9f\x92\x9a" "green"
++setf "\xf0\x9f\x92\x9b" "yellow"
++setf "\xf0\x9f\xab\x80" "heart"
++setf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
++setf "\xf0\x9f\xa4\x8e" "brown"
++setf "\xf0\x9f\xa4\x8d" "white"
++setf "\xf0\x9f\x96\xa4" "black"
++setf "\xf0\x9f\xa7\xa1" "orange"
++setf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
 +
-+make_stat()
-+{
-+	# columns:	raw mode in hex,
-+	# 		major rdev for special
-+	# 		minor rdev for special
-+	# 		uid of owner
-+	# 		gid of owner
-+	# 		file type
-+	# 		total size
-+	# 		mtime
-+	# 		name
-+	# We can't directly control directory sizes so filter them.
-+	# Too many things can bump (or not) atime so don't test that.
-+	(cd $1 ; find . -print0 |
-+		xargs -0 stat -c '%f %t:%T %u %g %F %s %Y %n' |
-+		sed -e 's/ directory [1-9][0-9]* / directory SIZE /g' |
-+		sort) > $tmp.stat.$2
-+}
++# zero width joiners exist in the middle of emoji sequences aren't supposed
++# to be normalized to nothing, but apparently this caused issues with
++# casefolding on ext4; also the mending heart caused a crash in xfs_scrub
++setf "\xf0\x9f\x92\x94" "broken heart"
++setf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
++setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
++\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
++setf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
 +
-+cmp_stat()
-+{
-+	diff -u $tmp.stat.$1 $tmp.stat.$2
-+}
++# emoji heart hands with skin tone variations
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
++setf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
++setf "\xf0\x9f\xab\xb6" "neutral"
 +
-+make_stat_files() {
-+	for file in "${FILES[@]}"; do
-+		find "$1/$file" -print0 | xargs -0 stat -c '%f %t:%T %u %g %F %s %Y %n'
-+	done | sed \
-+		-e 's/ directory [1-9][0-9]* / directory SIZE /g' \
-+		-e "s| $1| DUMPDIR|g" \
-+		| sort > $tmp.stat.files.$2
-+}
+ _getfattr --absolute-names -d "${testfile}" >> $seqres.full
+ 
+ echo "Test files"
+@@ -174,6 +204,31 @@ testf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
+ testf "llamapirate\xf3\xa0\x80\x81\xf3\xa0\x81\x94\xf3\xa0\x81\xa8\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb3\xf3\xa0\x81\xa1\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x81\xb3\xf3\xa0\x80\xa0\xf3\xa0\x81\xa6\xf3\xa0\x81\xaf\xf3\xa0\x81\xb2\xf3\xa0\x80\xa0\xf3\xa0\x81\x93\xf3\xa0\x81\xa5\xf3\xa0\x81\xa1\xf3\xa0\x81\xb4\xf3\xa0\x81\xb4\xf3\xa0\x81\xac\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\xb7\xf3\xa0\x81\xa5\xf3\xa0\x81\xb2\xf3\xa0\x81\xa5\xf3\xa0\x80\xa0\xf3\xa0\x81\x95\xf3\xa0\x81\x93\xf3\xa0\x81\x84\xf3\xa0\x80\xa0\xf3\xa0\x80\xb1\xf3\xa0\x80\xb2\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x80\xb0\xf3\xa0\x81\xbf" "secret instructions"
+ testf "llamapirate" "no secret instructions"
+ 
++testf "\xf0\x9f\x92\x9c" "purple"
++testf "\xf0\x9f\x92\x99" "blue"
++testf "\xf0\x9f\x92\x9a" "green"
++testf "\xf0\x9f\x92\x9b" "yellow"
++testf "\xf0\x9f\xab\x80" "heart"
++testf "\xe2\x9d\xa4\xef\xb8\x8f" "red"
++testf "\xf0\x9f\xa4\x8e" "brown"
++testf "\xf0\x9f\xa4\x8d" "white"
++testf "\xf0\x9f\x96\xa4" "black"
++testf "\xf0\x9f\xa7\xa1" "orange"
++testf "\xe2\x99\xa5\xef\xb8\x8f" "red suit"
 +
-+cmp_stat_files()
-+{
-+	diff -u $tmp.stat.files.$1 $tmp.stat.files.$2
-+}
++testf "\xf0\x9f\x92\x94" "broken heart"
++testf "\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa9\xb9" "mending heart"
++testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8
++\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbc" "couple with heart"
++testf "\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbb\xe2\x80\x8d\xe2\x9d\xa4\xef\xb8\x8f\xe2\x80\x8d\xf0\x9f\xa7\x91\xf0\x9f\x8f\xbf" "couple with heart, light and dark skin tone"
 +
-+make_stat_dir() {
-+	find "$1" -print0 | \
-+		xargs -0 stat -c '%f %t:%T %u %g %F %s %Y %n' | sed \
-+		-e 's/ directory [1-9][0-9]* / directory SIZE /g' \
-+		-e "s| $1| DUMPDIR|g" \
-+		| sort > $tmp.stat.dir.$2
-+}
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbf" "dark"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbe" "medium dark"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbd" "medium"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbc" "medium light"
++testf "\xf0\x9f\xab\xb6\xf0\x9f\x8f\xbb" "light"
++testf "\xf0\x9f\xab\xb6" "neutral"
 +
-+cmp_stat_dir()
-+{
-+	diff -u $tmp.stat.dir.$1 $tmp.stat.dir.$2
-+}
-+
-+FILES=(
-+	"/S_IFDIR.FMT_INLINE"
-+	"/S_IFBLK"
-+	"/S_IFCHR"
-+	"/S_IFLNK.FMT_LOCAL"
-+	"/S_IFIFO"
-+	"/S_IFDIR.FMT_INLINE/00000001"
-+	"/ATTR.FMT_EXTENTS_REMOTE3K"
-+	"/S_IFREG.FMT_EXTENTS"
-+	"/S_IFREG.FMT_BTREE"
-+	"/BNOBT"
-+	"/S_IFDIR.FMT_BLOCK"
-+)
-+DIR="/S_IFDIR.FMT_LEAF"
-+
-+testfiles=$TEST_DIR/$seq
-+mkdir -p $testfiles
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+_scratch_mount
-+
-+_run_fsstress -n 500 -d $SCRATCH_MNT/newfiles
-+
-+make_stat $SCRATCH_MNT before
-+make_md5 $SCRATCH_MNT before
-+make_stat_files $SCRATCH_MNT before
-+make_stat_dir $SCRATCH_MNT/$DIR before
-+_scratch_unmount
-+
-+echo "Recover filesystem"
-+dumpdir1=$testfiles/rdump
-+dumpdir2=$testfiles/sdump
-+dumpdir3=$testfiles/tdump
-+rm -r -f $dumpdir1 $dumpdir2 $dumpdir3
-+
-+# as of linux 6.12 fchownat does not work on symlinks
-+_scratch_xfs_db -c "rdump / $dumpdir1" | sed -e '/could not be set/d'
-+_scratch_xfs_db -c "rdump ${FILES[*]} $dumpdir2" | sed -e '/could not be set/d'
-+_scratch_xfs_db -c "rdump $DIR $dumpdir3" | sed -e '/could not be set/d'
-+
-+echo "Check file contents"
-+make_stat $dumpdir1 after
-+cmp_stat before after
-+cmp_md5 $dumpdir1 before
-+
-+echo "Check selected files contents"
-+make_stat_files $dumpdir2 after
-+cmp_stat_files before after
-+
-+echo "Check single dir extraction contents"
-+make_stat_dir $dumpdir3 after
-+cmp_stat_dir before after
-+
-+# remount so we can check this fs
-+_scratch_mount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1895.out b/tests/xfs/1895.out
-new file mode 100644
-index 00000000000000..de639ed3fc7e38
---- /dev/null
-+++ b/tests/xfs/1895.out
-@@ -0,0 +1,6 @@
-+QA output created by 1895
-+Format and populate
-+Recover filesystem
-+Check file contents
-+Check selected files contents
-+Check single dir extraction contents
+ echo "Uniqueness of keys?"
+ crazy_keys="$(_getfattr --absolute-names -d "${testfile}" | grep -E -c '(french_|chinese_|greek_|arabic_|urk)')"
+ expected_keys=11
 
