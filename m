@@ -1,39 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F310A22D4F3;
-	Fri, 21 Mar 2025 16:54:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C40431DEFF3
+	for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 17:58:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742576061; cv=none; b=jKPGVbqrVIQ5moSThVWJpqyrVcHt7MNvavXIqS+n5LmMu83TbByEAvO0V3gphXOq25hdliphH63UGgxOG5YpNhTpZBMpM1rJVZvAyvovyBV8W1VOgugMFCRMy4P70N188qR1NyxKi8BKWv9m4dPAuLyW2qoGnQae7tWspX2dMPg=
+	t=1742579917; cv=none; b=lXyPtMuITzkbgUQCaUHPD12XCIKSFpod0bu3eeeYQofD6R8ZEGqoEPZbT6mlhfErCmvCzL+I20OKdekkevy9zqhY5IrR15g26tK1puE2tieNDV5OK8DFrpe7N/r1CpHZOSW8COrz0cvi/m5qG0SzyQvtneucG93zE0JHIxEs8ZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742576061; c=relaxed/simple;
-	bh=8dUJmfPs4S10R56woWhthw8lqM8k9CXT9AERs+VsvAU=;
+	s=arc-20240116; t=1742579917; c=relaxed/simple;
+	bh=2Ru2ldz2ofk+AHhsfAkk62lDGN2UrG1soVQErnvPGMk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nl3xUqjaSZe+v429bREGlNjK2bdbbra/VZgfQztSTYwQUHN6U6ApNTsJoKJdV7xWPO3ok7W3PRm5cHCs9tZlqfGSOvWPjjWwPI6SCMVb95pqL9Tvoz9jK02CRpNy4P6NKO5LiVUYEUzg+nOvPfD9y1Tdje1mueZ0Z5ZqsCv7GaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=trQPcVRk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HKA9fEHn+0+bfBOw0gKWt+UflMJFiBwEjOsCVbr2w7FRo+lYu84I0gH34XGzp4TN94ost7deNNVdCf6ITU2R/mTYTsvbrIq0GnDIGXygcLgn/73rpuE8iF0go5Vs5dwaG/BHP/tUEncGBzXkEJ0o0BZ575AWBp+thykhl096FNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OetgFGZo; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="trQPcVRk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6527AC4CEE8;
-	Fri, 21 Mar 2025 16:54:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742576059;
-	bh=8dUJmfPs4S10R56woWhthw8lqM8k9CXT9AERs+VsvAU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=trQPcVRkyMM8rHbdft3UyOh9Bs2kmMcV5L+On1c4kPjGH2kjvbO6F76Rwtl3esEEp
-	 V81br/TsFgaB0PvbVAw9invNYH5UUh4bQKwSebwSdJsnfMmswb1xf8K4K0g1j9RCRF
-	 F9BniosWgD4Z/ihRA9AGtrFMt/cmtsjGGzS15KuJbfXH4iMS+8ErDd+Rwgs9TXaaF+
-	 1JDHtbHZVDyfvBO6G9LH0Ngnxh4L5k7b9FVKeHxZG2M9N5AvKVsecmEVZGX1CfgWW4
-	 vVOMs5peI2AZv80DzFb52bqLEtOYsAuaezuT8TeXvZb1e2JS7ILcZ1ud7ilwyNod3X
-	 QmEZPjetJL1Gg==
-Date: Fri, 21 Mar 2025 09:54:18 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH 5/3] xfs/818: fix some design issues
-Message-ID: <20250321165418.GP2803749@frogsfrogsfrogs>
-References: <20250312230736.GS2803749@frogsfrogsfrogs>
- <174182089094.1400713.5283745853237966823.stgit@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OetgFGZo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742579914;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Se9FF70wKa4auCbCzL4knABrywTG1+vzNlIQ4bhESHM=;
+	b=OetgFGZoqhR5NWgXOot0wnHLM7IMfeGc7hOGvEjH0n4LaaEwHnFS/B3t9VcvdGvB6EvcMQ
+	xU97n0O9OBYlgsASRuwO598VRKfX8st2/1zTPpgkX2yfcKjoS6ozti2tpA+3bEMhWX2tej
+	/Kor3rKYINo0rI5eS6vGLBy3br/QTCs=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-35-NbLAcL9kOnSDmg_RHdxTng-1; Fri, 21 Mar 2025 13:58:32 -0400
+X-MC-Unique: NbLAcL9kOnSDmg_RHdxTng-1
+X-Mimecast-MFC-AGG-ID: NbLAcL9kOnSDmg_RHdxTng_1742579911
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-43cf172ffe1so16584725e9.3
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Mar 2025 10:58:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742579911; x=1743184711;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Se9FF70wKa4auCbCzL4knABrywTG1+vzNlIQ4bhESHM=;
+        b=dHzURzU89vFpg3F+2wlziWGaEfE2mkNXzdVJGZIWQU2OM950OHfBE07MoGdaTttLoD
+         1dXmx8N+xdmv6ERRcsDKZ8ByVO2C7OoCIefJ6i9B3kpH12xFuGD139HTgq9rsxnj501v
+         uzJsEtLAaAa69qb87aXqh2s8HnukVJBYy4k6kJG0au9Op0/QlfeyHyrVhyPQ3cCcUCgM
+         6FaBs4eAYQZHvvv1oPRtIHp89W+MLPfWbfnLdnW7ro3yPM8cx+cyxSdwoZlbkmt6I09u
+         cEnO5uEzuSWbaJfULZpJO2lMq4W4SkfRNPt/8P4gDbVv1VTh12CPR9FgkU39c5Dm3RB/
+         VewA==
+X-Forwarded-Encrypted: i=1; AJvYcCWeVsVmJTnz8nMRbvDeQPnyAOScKQMSM3yAgAx4dnpDwsxhDN3LniFTua50YLOitgW7sKwfVjwuy4E=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwZVqw8iAvEH7GMEZnBw24FqapfP1I8+ci/JICT3eOEwrL9iHUz
+	fmuLNNPXpkgKSgTxIlhhzOWsAQjmVtPyntFadr6XwiRZ90CkqlgiKRp3WVTogrvg6/YXno9vC+X
+	EKtnQIsE/f4zsmx8BNRRLTsZUQpOn4lF8FiMGxZcl1B+2WLdSWHtbFxdMmZ4PsYw3
+X-Gm-Gg: ASbGncsJglBQ2Oh0SuTMUkaX8nX2jxMrG1Z9vgbffpi0I37yxOrhC+0LjrnsQAzLo8k
+	0j6lHKMktlLzy8YQu4NPj39P0MEu81RYCXqE3PIhyL9BLJpYZQ2oBAqZ1i16PiIpEaGFCGuyYQV
+	JoTeweJ+M/HLxHKviYXcklBGmgiUlCAs2nss8J/ovawVltx9V1ehwTwmyOltehzYcktqHjtIICD
+	Qfa/FUt60ZU1+THnjhIZHGOts4zgqbC2LrjFCDLdDZCLcFhgZ8DwkewQgfL1s7/Zli77F+VvoCn
+	P9MfEYZHqbBFP3ECLQ6FhZnL+qIDaqMRSIU=
+X-Received: by 2002:a05:600c:3584:b0:43c:e7ae:4bc9 with SMTP id 5b1f17b1804b1-43d509e45abmr32163495e9.1.1742579911244;
+        Fri, 21 Mar 2025 10:58:31 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGqeIUs8nwYwB4aoqswanbQHsYlgqrp/oFIse68kWggpKpb7MSmS5KN2AyT6vVegvouqkqfLQ==
+X-Received: by 2002:a05:600c:3584:b0:43c:e7ae:4bc9 with SMTP id 5b1f17b1804b1-43d509e45abmr32163325e9.1.1742579910818;
+        Fri, 21 Mar 2025 10:58:30 -0700 (PDT)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3997f9eff79sm2971717f8f.95.2025.03.21.10.58.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 Mar 2025 10:58:30 -0700 (PDT)
+Date: Fri, 21 Mar 2025 18:58:29 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 1/4] xfs_repair: don't recreate /quota metadir if there
+ are no quota inodes
+Message-ID: <6r7q2mbb3uoum7i75nxf34d6xrko6rddf3xncj6w26hdjr2qie@nnqbontz7xsk>
+References: <174257453579.474645.8898419892158892144.stgit@frogsfrogsfrogs>
+ <174257453614.474645.7529877430708333135.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,66 +80,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <174182089094.1400713.5283745853237966823.stgit@frogsfrogsfrogs>
+In-Reply-To: <174257453614.474645.7529877430708333135.stgit@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 2025-03-21 09:31:31, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> If repair does not discover even a single quota file, then don't have it
+> try to create a /quota metadir to hold them.  This avoids pointless
+> repair failures on quota-less filesystems that are nearly full.
+> 
+> Found via generic/558 on a zoned=1 filesystem.
+> 
+> Cc: <linux-xfs@vger.kernel.org> # v6.13.0
+> Fixes: b790ab2a303d58 ("xfs_repair: support quota inodes in the metadata directory")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  repair/phase6.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 4064a84b24509f..2d526dda484293 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -3538,6 +3538,11 @@ reset_quota_metadir_inodes(
+>  	struct xfs_inode	*dp = NULL;
+>  	int			error;
+>  
+> +	if (!has_quota_inode(XFS_DQTYPE_USER) &&
+> +	    !has_quota_inode(XFS_DQTYPE_GROUP) &&
+> +	    !has_quota_inode(XFS_DQTYPE_PROJ))
+> +		return;
+> +
+>  	error = -libxfs_dqinode_mkdir_parent(mp, &dp);
+>  	if (error)
+>  		do_error(_("failed to create quota metadir (%d)\n"),
+> 
 
-While QA'ing zoned filesystem support, I discovered some design errors
-in this test:
+LGTM
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-1) Since we're test formatting a sparse file on an xfs filesystem,
-there's no need to play games with optimal device size; we can create
-a totally sparse file that's the same size as SCRATCH_DEV.
+-- 
+- Andrey
 
-2) mkfs.xfs cannot create realtime files, so if it fails with that,
-there's no need to continue the test.
-
-3) If mkfs -p fails for none of the proscribed reasons, it should exit
-the test.  The final cat $tmp.mkfs will take care of tweaking the golden
-output to register the test failure for further investigation.
-
-Cc: <fstests@vger.kernel.org> # v2025.03.09
-Fixes: 6d39dc34e61e11 ("xfs: test filesystem creation with xfs_protofile")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/xfs/818 |   19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/tests/xfs/818 b/tests/xfs/818
-index aeb462353df7e9..bc809390b9e340 100755
---- a/tests/xfs/818
-+++ b/tests/xfs/818
-@@ -75,9 +75,8 @@ _run_fsstress -n 1000 -d $SCRATCH_MNT/newfiles
- make_stat $SCRATCH_MNT before
- make_md5 $SCRATCH_MNT before
- 
--kb_needed=$(du -k -s $SCRATCH_MNT | awk '{print $1}')
--img_size=$((kb_needed * 2))
--test "$img_size" -lt $((300 * 1024)) && img_size=$((300 * 1024))
-+scratch_sectors="$(blockdev --getsz $SCRATCH_DEV)"
-+img_size=$((scratch_sectors * 512 / 1024))
- 
- echo "Clone image with protofile"
- $XFS_PROTOFILE_PROG $SCRATCH_MNT > $testfiles/protofile
-@@ -99,7 +98,21 @@ if ! _try_mkfs_dev -p $testfiles/protofile $testfiles/image &> $tmp.mkfs; then
- 	if grep -q 'No space left on device' $tmp.mkfs; then
- 		_notrun "not enough space in filesystem"
- 	fi
-+
-+	# mkfs cannot create realtime files.
-+	#
-+	# If zoned=1 is in MKFS_OPTIONS, mkfs will create an internal realtime
-+	# volume with rtinherit=1 and fail, so we need to _notrun that case.
-+	#
-+	# If zoned=1 is /not/ in MKFS_OPTIONS, we didn't pass a realtime device
-+	# to mkfs so it will not create realtime files.  The format should work
-+	# just fine.
-+	if grep -q 'creating realtime files from proto file not supported' $tmp.mkfs; then
-+		_notrun "mkfs cannot create realtime files"
-+	fi
-+
- 	cat $tmp.mkfs
-+	exit
- fi
- 
- _mount $testfiles/image $testfiles/mount
