@@ -1,51 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A934C6C;
-	Sat, 22 Mar 2025 05:19:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C9F3398A
+	for <linux-xfs@vger.kernel.org>; Sat, 22 Mar 2025 14:38:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742620787; cv=none; b=KYo3ESOenIcG1iQ1seQfrobODSAI5HKXYaSuNztBPgNNE1VgTAXE2z55Wedz79zJl20pRm3sQanF5WxJPZViTucjiux4InLfK6d9CmVGBg5Pt8tfRwxIHixPUQZ7McAteGkphLGxISrbSY2I1EqUnqnAbqDTYww+td+X6X5zQ08=
+	t=1742654284; cv=none; b=ILgTu4GFAWIuishcqgn/kkmrpwJ4gTF9ceoCFfFoIrgGFBrYE5EjWbdJB0tEh+80jGoeE8nSFll/f7f9M9NuumfpORaGJr3eyFGwbevUmopN5GGFLnpmffCAVYVtjHcH4/Wn3lwn6gnXkA7XVnmApOrbw6ynumxIQazft8+K4gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742620787; c=relaxed/simple;
-	bh=3g4xEd07oD9H/uPHzTrqy4noPL71DZjDO1YjMBzZS2M=;
+	s=arc-20240116; t=1742654284; c=relaxed/simple;
+	bh=2fdnEY2lYQk5H8e0MIVLSDGVI9GVumGby0EbS/eam9k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U4irCtuk/IGxoRKcQ6USH8yLJIphUNR3Drgn1nce/m/J/ubntzC/v2OnKQIN94uLWOAuuz73Zx6KeEpd4YfUg3chExKVJvdtiHMinMnNO8JWlmK8SsYtyWopyVcDZqsd5gVpd5WkuWy7YodkTONhP6PCtdn+rS6LZepo4gDqdMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WygNdGw+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=SvJ0aXh6Ksa8Ih+FKQoDkK2wPJQoFK2z8nkJP7PlMrUkIO3aMHTZVhaqoO1dUndb4g3js7GWb7uGSEH6tmo5lg+zSFO/05cevMOLBWRlq4EQEuSW8SgPOZQIVNeXEhmW1m8WttlOlFxLVhZ7muElJx3OBAuemCRPrbS0wWcHXhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Hu59NZQu; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WygNdGw+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0B94C4CEDD;
-	Sat, 22 Mar 2025 05:19:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742620787;
-	bh=3g4xEd07oD9H/uPHzTrqy4noPL71DZjDO1YjMBzZS2M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WygNdGw+hiy7N2mi2pklsBlkYQfwXE5eU0xg4uA0BUCKz+kobox7k6GncStgDvHAz
-	 7oTSBztOKdsj1H2WSWFNnyEHGSS/C0eCrA+NLtoD7XvrrNCXfZIvByVC4jYt5UdeMa
-	 840tF4Oux0LKco5Imc5y1tGb+CR24AAbeZxADx6TbjNULZqHJEpA4erT7X+Bqlc9mp
-	 PCp797Oftkn2KoPV17yHY+8m1GCv/nr+sMbxlNrmWm0te44suNnntrAjddzkO1QDxT
-	 L1VsGtHpla+otJIfJLy5IQfXmtYkU4pw/L1k3nTH/mFVkAEcJyOGAzbvR/guSp+952
-	 dJWn66V0e01CQ==
-Date: Fri, 21 Mar 2025 22:19:46 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH v5 03/10] xfs: Refactor xfs_reflink_end_cow_extent()
-Message-ID: <20250322051946.GQ2803749@frogsfrogsfrogs>
-References: <20250310183946.932054-1-john.g.garry@oracle.com>
- <20250310183946.932054-4-john.g.garry@oracle.com>
- <Z9E2kSQs-wL2a074@infradead.org>
- <589f2ce0-2fd8-47f6-bbd3-28705e306b68@oracle.com>
- <Z9FHSyZ7miJL7ZQM@infradead.org>
- <20250312154636.GX2803749@frogsfrogsfrogs>
- <Z9I0Ab5TyBEdkC32@dread.disaster.area>
- <20250313045121.GE2803730@frogsfrogsfrogs>
- <Z9KHeVmH1SyPVb5j@dread.disaster.area>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hu59NZQu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742654281;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nWumP6XyzLk0iADffqbx495sd8xP6cjzDc3KSalZiZI=;
+	b=Hu59NZQuL4kr4aNUgmU1aCd/OprzYd9zXiXYtzMmfKccGbEJNViGyTwzQNwHEp9aaykchg
+	bsMq3ga8fZg73vxoMqPgiZbQpi/088rOPM+RjSQOFAtGb+lfJ1hpfrvfJJ03Nio6rCIe9C
+	YkyIjPQLYmBDUyzB2+0evhA5L8yV+PU=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-651-5Cs8-f7FPL-0A8no7HFFVA-1; Sat, 22 Mar 2025 10:38:00 -0400
+X-MC-Unique: 5Cs8-f7FPL-0A8no7HFFVA-1
+X-Mimecast-MFC-AGG-ID: 5Cs8-f7FPL-0A8no7HFFVA_1742654279
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-2ff854a2541so4657617a91.0
+        for <linux-xfs@vger.kernel.org>; Sat, 22 Mar 2025 07:38:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742654279; x=1743259079;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=nWumP6XyzLk0iADffqbx495sd8xP6cjzDc3KSalZiZI=;
+        b=nK82PtAxz8HVNKI2SW6/M23aRQ4gOft0Oy4EKhLfDmWewOlIqUmWh3WcQECLGpb18T
+         h0JwwPy3qX0tDf9whXz49vaYnNav2sC9nwfljARcxSbz3ljL7ufXoIcLpppVW1861k9k
+         ewOnRaUcfHQPgYfDnFnN9qiQgjNdGM8dX6E0uQVfMZtaV55n2MwwjrKDDkr85iWDbYGz
+         Ed2a2bPykyVtbRsQVDThmZNX345Bq4IqmBFlatqR3x+G/nh98+AunNMrmOVg/8eP6P+/
+         dSblTIObseBBG4SVXV6H+SfOdZMrjn2CKZqgzCPuERXv9vhkBmHEYwpSfu2eMSn5vt4q
+         uaVQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV62l0LTaEU+nuz0i25x0eltA/vQZAdHsaeUQt9MrPqNNJEfYKRsAqYBYdSFRyIqGgOUo5rs0EcahU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6iujp/MNO7OZHhiQ2J3FuT+IdvGDFHnxw5H0wGxIx4IFTunqv
+	0epTGzlrsFV/z/EBrqU14mXMGwHvc9zLBY1qIKVK5B/NliExoyamJhVE5OfyRuRgLq2hSmcKyuT
+	II7b21uty4ih0jygJmuZouSzkh2XRJDWSbbunCGPhvTbAj9Z+E8/Lgwrvdw==
+X-Gm-Gg: ASbGnctvBKaIfqQed11nBqOH432AtHQirgYc1yJ5UFE05muefv50yFQL8d6yXdSoYGE
+	0RcNIjKXRDoCtnsH//hK8mwgoIJ8Vm48Qb4oFhKMe+upuNJ+zJyaqUTwz/WatbW9cXuYWBCyKL4
+	vHoPB5/pSVrIFjur8gNuzLn+xW7fR12yRP9uhhr7iA5zvlOgasUlWno83iNUPY2ZcaNEXgGJDa8
+	x0vN1XV0VzLl4EYKT0NxrYisvLaHbn7PRR/H6P1P8pFwVOYa3qCxlJXrEqPFODI7M8IGfHHufGG
+	5Jh7rLOcdD5zG21b8ABKOJChptT8GiKXzcuCe4/wWK4E8dFKYPia+nzh
+X-Received: by 2002:a17:90b:3b42:b0:2fe:9581:fbea with SMTP id 98e67ed59e1d1-30310024becmr9124292a91.29.1742654278921;
+        Sat, 22 Mar 2025 07:37:58 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEEVTHKB8s1VcTQC0v9wcAETY37gGTJ2tiYhNh3dbJSsj0bi/mEHhkerqVv1fDGcpeL8kvEOw==
+X-Received: by 2002:a17:90b:3b42:b0:2fe:9581:fbea with SMTP id 98e67ed59e1d1-30310024becmr9124273a91.29.1742654278462;
+        Sat, 22 Mar 2025 07:37:58 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-301bf589fbcsm8263269a91.12.2025.03.22.07.37.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 22 Mar 2025 07:37:58 -0700 (PDT)
+Date: Sat, 22 Mar 2025 22:37:54 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/4] generic/537: disable quota mount options for
+ pre-metadir rt filesystems
+Message-ID: <20250322143754.4fe7rges6whcz47u@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <174259233946.743619.993544237516250761.stgit@frogsfrogsfrogs>
+ <174259233999.743619.6582695769493412159.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,151 +80,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z9KHeVmH1SyPVb5j@dread.disaster.area>
+In-Reply-To: <174259233999.743619.6582695769493412159.stgit@frogsfrogsfrogs>
 
-On Thu, Mar 13, 2025 at 06:21:29PM +1100, Dave Chinner wrote:
-> On Wed, Mar 12, 2025 at 09:51:21PM -0700, Darrick J. Wong wrote:
-> > On Thu, Mar 13, 2025 at 12:25:21PM +1100, Dave Chinner wrote:
-> > > On Wed, Mar 12, 2025 at 08:46:36AM -0700, Darrick J. Wong wrote:
-> > > > > > > On Mon, Mar 10, 2025 at 06:39:39PM +0000, John Garry wrote:
-> > > > > > > > Refactor xfs_reflink_end_cow_extent() into separate parts which process
-> > > > > > > > the CoW range and commit the transaction.
-> > > > > > > > 
-> > > > > > > > This refactoring will be used in future for when it is required to commit
-> > > > > > > > a range of extents as a single transaction, similar to how it was done
-> > > > > > > > pre-commit d6f215f359637.
-> > > > > > > 
-> > > > > > > Darrick pointed out that if you do more than just a tiny number
-> > > > > > > of extents per transactions you run out of log reservations very
-> > > > > > > quickly here:
-> > > > > > > 
-> > > > > > > https://urldefense.com/v3/__https://lore.kernel.org/all/20240329162936.GI6390@frogsfrogsfrogs/__;!!ACWV5N9M2RV99hQ!PWLcBof1tKimKUObvCj4vOhljWjFmjtzVHLx9apcU5Rah1xZnmp_3PIq6eSwx6TdEXzMLYYyBfmZLgvj$
-> > > > > > > 
-> > > > > > > how does your scheme deal with that?
-> > > > > > > 
-> > > > > > The resblks calculation in xfs_reflink_end_atomic_cow() takes care of this,
-> > > > > > right? Or does the log reservation have a hard size limit, regardless of
-> > > > > > that calculation?
-> > > > > 
-> > > > > The resblks calculated there are the reserved disk blocks
-> > > 
-> > > Used for btree block allocations that might be needed during the
-> > > processing of the transaction.
-> > > 
-> > > > > and have
-> > > > > nothing to do with the log reservations, which comes from the
-> > > > > tr_write field passed in.  There is some kind of upper limited to it
-> > > > > obviously by the log size, although I'm not sure if we've formalized
-> > > > > that somewhere.  Dave might be the right person to ask about that.
-> > > > 
-> > > > The (very very rough) upper limit for how many intent items you can
-> > > > attach to a tr_write transaction is:
-> > > > 
-> > > > per_extent_cost = (cui_size + rui_size + bui_size + efi_size + ili_size)
-> > > > max_blocks = tr_write::tr_logres / per_extent_cost
-> > > > 
-> > > > (ili_size is the inode log item size)
-> > > 
-> > > That doesn't sound right. The number of intents we can log is not
-> > > dependent on the aggregated size of all intent types. We do not log
-> > > all those intent types in a single transaction, nor do we process
-> > > more than one type of intent in a given transaction. Also, we only
-> > > log the inode once per transaction, so that is not a per-extent
-> > > overhead.
-> > > 
-> > > Realistically, the tr_write transaction is goign to be at least a
-> > > 100kB because it has to be big enough to log full splits of multiple
-> > > btrees (e.g. BMBT + both free space trees). Yeah, a small 4kB
-> > > filesystem spits out:
-> > > 
-> > > xfs_trans_resv_calc:  dev 7:0 type 0 logres 193528 logcount 5 flags 0x4
-> > > 
-> > > About 190kB.
-> > > 
-> > > However, intents are typically very small - around 32 bytes in size
-> > > plus another 12 bytes for the log region ophdr.
-> > > 
-> > > This implies that we can fit thousands of individual intents in a
-> > > single tr_write log reservation on any given filesystem, and the
-> > > number of loop iterations in a transaction is therefore dependent
-> > > largely on how many intents are logged per iteration.
-> > > 
-> > > Hence if we are walking a range of extents in the BMBT to unmap
-> > > them, then we should only be generating 2 intents per loop - a BUI
-> > > for the BMBT removal and a CUI for the shared refcount decrease.
-> > > That means we should be able to run at least a thousand iterations
-> > > of that loop per transaction without getting anywhere near the
-> > > transaction reservation limits.
-> > > 
-> > > *However!*
-> > > 
-> > > We have to relog every intent we haven't processed in the deferred
-> > > batch every-so-often to prevent the outstanding intents from pinning
-> > > the tail of the log. Hence the larger the number of intents in the
-> > > initial batch, the more work we have to do later on (and the more
-> > > overall log space and bandwidth they will consume) to relog them
-> > > them over and over again until they pop to the head of the
-> > > processing queue.
-> > > 
-> > > Hence there is no real perforamce advantage to creating massive intent
-> > > batches because we end up doing more work later on to relog those
-> > > intents to prevent journal space deadlocks. It also doesn't speed up
-> > > processing, because we still process the intent chains one at a time
-> > > from start to completion before moving on to the next high level
-> > > intent chain that needs to be processed.
-> > > 
-> > > Further, after the first couple of intent chains have been
-> > > processed, the initial log space reservation will have run out, and
-> > > we are now asking for a new resrevation on every transaction roll we
-> > > do. i.e. we now are now doing a log space reservation on every
-> > > transaction roll in the processing chain instead of only doing it
-> > > once per high level intent chain.
-> > > 
-> > > Hence from a log space accounting perspective (the hottest code path
-> > > in the journal), it is far more efficient to perform a single high
-> > > level transaction per extent unmap operation than it is to batch
-> > > intents into a single high level transaction.
-> > > 
-> > > My advice is this: we should never batch high level iterative
-> > > intent-based operations into a single transaction because it's a
-> > > false optimisation.  It might look like it is an efficiency
-> > > improvement from the high level, but it ends up hammering the hot,
-> > > performance critical paths in the transaction subsystem much, much
-> > > harder and so will end up being slower than the single transaction
-> > > per intent-based operation algorithm when it matters most....
-> > 
-> > How specifically do you propose remapping all the extents in a file
-> > range after an untorn write?
+On Fri, Mar 21, 2025 at 02:27:54PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Sorry, I didn't realise that was the context of the question that
-> was asked - there was not enough context in the email I replied to
-> to indicate this important detail. hence it just looked like a
-> question about "how many intents can we batch into a single write
-> transaction reservation".
+> Fix this regression in generic/537:
 > 
-> I gave that answer (thousands) and then recommended against doing
-> batching like this as an optimisation. Batching operations into a
-> single context is normally done as an optimisation, so that is what
-> I assumed was being talked about here....
+> mount: /opt: permission denied.
+>        dmesg(1) may have more information after failed mount system call.
+> mount -o uquota,gquota,pquota, -o ro,norecovery -ortdev=/dev/sdb4 /dev/sda4 /opt failed
+> mount -o uquota,gquota,pquota, -o ro,norecovery -ortdev=/dev/sdb4 /dev/sda4 /opt failed
+> (see /var/tmp/fstests/generic/537.full for details)
 > 
-> > The regular cow ioend does a single
-> > transaction per extent across the entire ioend range and cannot deliver
-> > untorn writes.  This latest proposal does, but now you've torn that idea
-> > down too.
-> >
-> > At this point I have run out of ideas and conclude that can only submit
-> > to your superior intellect.
+> for reasons explained in the giant comment.  TLDR: quota and rt aren't
+> compatible on older xfs filesystems so we have to work around that.
 > 
-> I think you're jumping to incorrect conclusions, and then making
-> needless personal attacks. This is unacceptable behaviour, Darrick,
-> and if you keep it up you are going to end up having to explain
-> yourself to the CoC committee....
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  tests/generic/537 |   17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> 
+> diff --git a/tests/generic/537 b/tests/generic/537
+> index f57bc1561dd57e..3be743c4133f4f 100755
+> --- a/tests/generic/537
+> +++ b/tests/generic/537
+> @@ -18,6 +18,7 @@ _begin_fstest auto quick trim
+>  
+>  # Import common functions.
+>  . ./common/filter
+> +. ./common/quota
+>  
+>  _require_scratch
+>  _require_fstrim
+> @@ -36,6 +37,22 @@ _scratch_mount -o ro >> $seqres.full 2>&1
+>  $FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1
+>  _scratch_unmount
+>  
+> +# As of kernel commit 9f0902091c332b ("xfs: Do not allow norecovery mount with
+> +# quotacheck"), it is no longer possible to mount with "norecovery" and any
+> +# quota mount option if the quota mount options would require a metadata update
+> +# such as quotacheck.  For a pre-metadir XFS filesystem with a realtime volume
+> +# and quota-enabling options, the first two mount attempts will have succeeded
+> +# but with quotas disabled.  The mount option parsing for this next mount
+> +# attempt will see the same quota-enabling options and a lack of qflags in the
+> +# ondisk metadata and reject the mount because it thinks that will require
+> +# quotacheck.  Edit out the quota mount options for this specific
+> +# configuration.
+> +if [ "$FSTYP" = "xfs" ]; then
+> +	if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ]; then
+> +		_qmount_option ""
+> +	fi
+> +fi
 
-I apologize to everyone here for using sarcasm.  Anyone should be able
-to participate in the FOSS community without fear of being snarked at
-having their choices undermined.  Senior developers ought to enable
-collaboration within community norms in any way they can.  I will take
-this opportunity to remind myself of how I would like to interact with
-other people.
+I don't know if there's a better way, maybe a _require_no_quota, or _disable_qmount?
 
---D
+Anyway, for this single case, it's fine for me.
+
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+> +
+>  echo "fstrim on ro mount with no log replay"
+>  norecovery="norecovery"
+>  test $FSTYP = "btrfs" && norecovery=nologreplay
+> 
+
