@@ -1,30 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01795200BBB
-	for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 06:29:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C73E4501A
+	for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 06:31:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742711368; cv=none; b=NkOOR0uaQh67ksGsQi2DpyR1wzX/cFX1pk3cW6s4HsWlkH2FsxIEJBNK76ZgAq40Ln3ug1g7rimp1gsWW1XTOP439oB51mdPgmLV9n2SAROUXKwl9g+7U3yRQyMdL4O2lJRzTZgn+at+OXQAUGKKFtLsph4iwe7S4lgTU9lqAS4=
+	t=1742711470; cv=none; b=d7Sr41D1af2snfpPtvcFNp6BL48EJ+M7K1AQBN2rKJgrcsnUVbuG7wolXZ7uq8EzV2+YAUZL/8OKtBlPgRgkm5ZCkefDA8JlzG1u5JXXn9mnOH5Q6IlkUCojiMkpZ00NeB+KK44tk3YpMbiolHtogr0B+bwuuFhrtK7s6gsCQ3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742711368; c=relaxed/simple;
-	bh=+qruxh0MrqBxAEjADb3TUIg2JRhT+YtYs3XcqsE2AaQ=;
+	s=arc-20240116; t=1742711470; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UVhAL23BgewVzlqoIjyeBpRq/xkZVDfA3yvX+NyU2DbiMlkrjnIjOeXJiaYhHEJOMUjUrItWtyFFPn29Oj0yZ+I763zqLawMV1zOTjMfkpS6hto1m4DRBr4FMMpF4ezAcvuZBr56ckC3x0/tacYjISXKtk832P4e+km+9nt03sY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id A19BD67373; Sun, 23 Mar 2025 07:29:21 +0100 (CET)
-Date: Sun, 23 Mar 2025 07:29:21 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Dan Carpenter <dan.carpenter@linaro.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: mark xfs_buf_free as might_sleep()
-Message-ID: <20250323062921.GB30617@lst.de>
-References: <20250320075221.1505190-1-hch@lst.de> <iehRDkchwLyn5czaoM6iHGrNaM7A235ISuVTw_D6fpn8zuuiMCqofPep2K2Xn0Pgo__30TcjbKGoIBCld0AM1Q==@protonmail.internalid> <20250320075221.1505190-3-hch@lst.de> <dswaua7ynkossegyqw25x3ghilbjsxalatbto2xrbek74j7u5o@mxhq3mhukk3j>
+	 Content-Type:Content-Disposition:In-Reply-To; b=gD4imeflqwsgA/TbyE4g30U967WZ44biiWXiIlyGf0E0x9NK3qcBp13E/YTFxCzhA4L2onaCsxIypTKa2gt3wq7UTIqrpYofoTZxYxsld756YOhGzcTiLANSUuA4W5hu2pAt/Z1ScXqMfEgQwe9cfIWrK5CntQRfEmmBJWVW6PU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z7g0HfaL; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z7g0HfaL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=Z7g0HfaLis++2Y0N/bsil9M2qd
+	2urnfi4F6L4lbYiq6cPsMg7XdQZeDNsnMXCnTKr8qYI73b+SvMSxTcpV1F9oK2awGi9I0vXO8Awtl
+	LrTiMhrCvy//eWKAmD66zVikM1e0nC1hrKB/ysYDXXKcF1mz4xviCYIZLLAB09MauJ+yirfslyve4
+	lIeyEkrUmRnlBjjrZJFIbIudXPLd3fBENiDWp+V7j553q7tbvK2bWSIP02UQRvea7P+SniFsSvPp7
+	r1aSGnAzbsBoRatjZnRBzS4F6OFL5coplrlqg8tbHruN4BaME3DDR70CnvpZMosOxovZEIXiGJeH1
+	oMtmguUg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1twErT-00000000lZ0-3XfB;
+	Sun, 23 Mar 2025 06:31:07 +0000
+Date: Sat, 22 Mar 2025 23:31:07 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: bodonnel@redhat.com
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net, djwong@kernel.org
+Subject: Re: [PATCH v3] xfs_repair: handling a block with bad crc, bad uuid,
+ and bad magic number needs fixing
+Message-ID: <Z9-qqw5RZXcjidC2@infradead.org>
+References: <20250321220532.691118-4-bodonnel@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,14 +45,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <dswaua7ynkossegyqw25x3ghilbjsxalatbto2xrbek74j7u5o@mxhq3mhukk3j>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250321220532.691118-4-bodonnel@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Mar 21, 2025 at 10:21:35AM +0100, Carlos Maiolino wrote:
-> If I followed it correct, vunmap can be caught via
-> xfs_buf_free_pages(). If that's the case, wouldn't make
-> more sense to put might_sleep() inside xfs_buf_free_pages()
-> giving it is not called only from xfs_buf_free()?
+Looks good:
 
-xfs_buf_free_pages has been folded into xfs_buf_free in for-next.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
