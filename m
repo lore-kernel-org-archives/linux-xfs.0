@@ -1,136 +1,157 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-a5-smtp.messagingengine.com (fout-a5-smtp.messagingengine.com [103.168.172.148])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9A93C2ED;
-	Sun, 23 Mar 2025 14:08:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404E52E3367
+	for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 15:51:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742738900; cv=none; b=C1V8NO3kfNTj3od+Et9TlMAJ1pOz9UOmgEqyQ+GeDhc7kbP10bTR/zsFb4HyZ+x7P+zCTCydFXCG0GTbqErzpgsim/wiv0StXHcYWdQhNKCtsa35A+eOpmJg0GFbm/FlF7SDwJLnk3+QLQ+CmZIaavjugY+IxekaN749rYNRUZw=
+	t=1742745117; cv=none; b=Yb8uF8zxYl6CrfISCF4Uy0+KzW0B2HpG1ZAVwclNSONTgKfgFqkmEUoFg1OFdrceV521Lo2jpmeFNuS6tfvO/SVZ20Q+m4/JdqyWBR89JjnmvLSd2CWCsKzQRdzj04IE3NrT203Rm9/c8s6X8v4SJxktBt+sX3D721jc2XRZsmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742738900; c=relaxed/simple;
-	bh=xIwEINjj2gwrAy/Ew60O0QcjqBoYbWNAugj+Qco60z0=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=ZMP9iuIFpZvIjdP0bd9/jccI9M4qTZOi55iWJOrPR58Y1LAxkxYLr0Pn4zYsJGRHb4BDo/aaHmZ0dWkVOvDCKZ9m8ePYTnoeZ+c8Yb4sVZoW1yB2oQOA8DiTU1/egGDOw3GtMfmuEl0lTUciAJTR+WdS3zpqqAtnHvnWcj5BqUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S4ESwyvp; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1742745117; c=relaxed/simple;
+	bh=GTM7Y+qwazLFio+J0sKVzgVuwQy0rQSL8bhKGABbHf0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WzB3GaLMXUJuw/HuPYC4Hu1GkOyxKD+te4fR34vMCOrt2fne9AbADaBEhyTGmpzCUm7c5onqaFlpP+/svB8JVQMKN8OOQpFkvcomocykoYK7P/CJ40xiEoJvk1YQVSE4nq5tO2+vXG9gWr4OowJ616x3oyCkYBy991dhLoXJeUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=cVXK/7s5; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=UuFvm717; arc=none smtp.client-ip=103.168.172.148
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S4ESwyvp"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-226185948ffso66562165ad.0;
-        Sun, 23 Mar 2025 07:08:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742738895; x=1743343695; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=IDF1H30hmfmuS4zs/ZqkO/uL6rPCL3F/GOuz/E1e84g=;
-        b=S4ESwyvpbXF8In+Y36vs2bXtL2wdw7TVLirxugc741SEqonGdTQk81YswxsQs6//qR
-         Ro15voj11IFtnsOm7hm4qlaezn/wlQ14wCHPliXT0ohfiZ8EIS3ImR/N/W6dtNeftd7S
-         cPjtaPR+INBHm7+rH2KoDWEeC+5tGWV/yv6KEPDJ/dlJGbqYnzixVIGa0uGXPjRj9dzk
-         c7v4SSNDLZUzcyTiZL7Y+vxwze0TDL1/3cNzKvsYFAeXy62/Mb0miFLM1R1UAHg/oVT9
-         nEmQNaxk9f0BMYB8IvT5fCrgxDwSNJ+yKWXqDDWJlEiMHZR+pnaV7JgjN3Pf4T0ZShtS
-         +9+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742738895; x=1743343695;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IDF1H30hmfmuS4zs/ZqkO/uL6rPCL3F/GOuz/E1e84g=;
-        b=spIM8OOcsMdiJ+4Uc7QDIcJprLJ79RrH/XKaugOBhMarvFU8r00iCW9ydtYfwseGYn
-         RaKFhGivAlUp6J/I/NN2fRSPKDjC9i9hzcoPYhjqM/dBucpqBsq+VxTGrRU/qlxtpGDM
-         SnCk6HiJ4/SKr3x+x0XI6fHB/hkqvvGKLKJEjMra1SdowaK6Vk1SfIcsNJtDUIaHUkRq
-         g/IOL1RBlSwcNflFIdqyKbFVqNLjSdAw/rWxZ4P2VmH1iEaRx+BQE2NKmtgPGDBB9P/B
-         q6LctSZ+DyFIbAz/7HK+2tHOI3hDK4k/Jokr6iQhw76ZnxbJDxZOifWiLmYumSgQg7x7
-         kmOw==
-X-Forwarded-Encrypted: i=1; AJvYcCVOtDAKvTArsKv2ES4thJwPqiGDMZccsrALn+s2VkgVJjyJzrZC3eShtbENVQumST+9uOl6KLY6umom@vger.kernel.org, AJvYcCVwC3SyNW9hI8jwDrsSlhrDSO3cqlDbwqstbevcbciWC9i3OpUgCQvPfG6nrVEUNmMYsxnCvDYx1wnEQrPmhg==@vger.kernel.org, AJvYcCXFCt10DN5/H+ANLyTu028IUhzPg0Yf7/ZjLpucfytCgr77fHTEIZ9TthV61bNTiXfFXuK5YwD5CYdP@vger.kernel.org, AJvYcCXJ9vt/Kf3OGlQswNKpfj9oHejepwMudB8D3hwV8Cggz3SvFBIPbJhr1DGIi4sMbvLkkICZ0P9f07fd0xDH@vger.kernel.org
-X-Gm-Message-State: AOJu0YzxcOSMV6hkDp/hekWZ+gOcfAnXc6oSq0rj4oG/0bgXAAdqOuZ5
-	aAlNJy3ZzA684er1IYGujdFerWA9r9NJEPV9XS6556YXm/NPLCR7RLZ0aw==
-X-Gm-Gg: ASbGncvoJy1grSSUB5bURK93TUBZcRAVgizDqM5NXvhaQ30+M0ucs3MrN8WH0fGg0c2
-	ATAVp/lvB15HqtYATehRg1iOajH3m5/JCQa+TiqrZb0uBCVnqxifsw3mT+XyY/+mbKwiC2r6A1y
-	dkySUfnIymKpxaQRfiNvLZkmdhyEt5JsjOB21yvpAoPFeyIV4bYk9Xb8PIMvfiFurd8VP7376YK
-	WE+yHSQmX4D24A0fhVMWdzW9h2etzJJmBoBvmK7O1gRDoTOFMXUKarEaIT9x8gKZZmgUlaz5Vzi
-	5tg9EPutwN/oxJ1gMlA4fNcxfCsJTx3+44BU9tTE3oY3vg3H
-X-Google-Smtp-Source: AGHT+IGaBFfjt0FQLriFYCmj3Oa1iv0U46d/ndwDW3jiP2m6speDDfglrGw//6dI9D+Ld9iT/ZIFUA==
-X-Received: by 2002:aa7:88c9:0:b0:730:7600:aeab with SMTP id d2e1a72fcca58-739059c5da7mr15848294b3a.13.1742738895230;
-        Sun, 23 Mar 2025 07:08:15 -0700 (PDT)
-Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73905fa97fdsm5801796b3a.26.2025.03.23.07.08.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Mar 2025 07:08:14 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org, djwong@kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com, martin.petersen@oracle.com, tytso@mit.edu, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 3/3] iomap: rework IOMAP atomic flags
-In-Reply-To: <20250323063850.GA30703@lst.de>
-Date: Sun, 23 Mar 2025 19:12:02 +0530
-Message-ID: <87bjtrsw2d.fsf@gmail.com>
-References: <20250320120250.4087011-1-john.g.garry@oracle.com> <20250320120250.4087011-4-john.g.garry@oracle.com> <87cye8sv9f.fsf@gmail.com> <20250323063850.GA30703@lst.de>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="cVXK/7s5";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="UuFvm717"
+Received: from phl-compute-01.internal (phl-compute-01.phl.internal [10.202.2.41])
+	by mailfout.phl.internal (Postfix) with ESMTP id 2ECA21380A62;
+	Sun, 23 Mar 2025 11:51:54 -0400 (EDT)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-01.internal (MEProxy); Sun, 23 Mar 2025 11:51:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1742745114;
+	 x=1742831514; bh=6RYFLLMAo/lELP9AEp/14aq+b2e01aGipvaPLUFiFRQ=; b=
+	cVXK/7s5vE4jWZIMryISJQW9SN/bu23svhzC1Sdx/U5hKaEBJEDMmqpgo8/7Apvf
+	uIYfsM1MnXHaEG19tcpWT9x5iOHlcGqDNZAtx1Cc2vSmyfeBYH2ocdbhqXq5QuxX
+	IIEcZw2v15h1mnSZah3E2u/HUt2knP61abXMldKYHdFIGIZ6/NlqW0EOkfXlogF3
+	P8+ZgMWC7jYbceSV4wGtrme+vdjhfqGtN/DFk4G5zneWGX8O+1VgIoiLrZA65nth
+	HtOEW+xoOav37qvUOiSrtziKY9KrrjOIayedLA3ISPTojIIL8KGG/dOAaKP71ns/
+	Pg5Gq1a7umrRDDiqUoE6hw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1742745114; x=
+	1742831514; bh=6RYFLLMAo/lELP9AEp/14aq+b2e01aGipvaPLUFiFRQ=; b=U
+	uFvm7177YGJ4hK1piZaFbfc3k4y49HhBAebraOJdQwwljbGoWXC+10G0asGpiIxc
+	1dbAa4X1A3KabxyRxDeUrvkaNUU3c5NdW4+wLPj/f3aDJwFzuupgO2udcCM7VdG8
+	fWToF07yzhNMA01m5hs4oLBqLqAJ0QaS3AAvgPLuXXYK73j+ZGxuWtvy2xb9lRnt
+	y2geB7E+GZFHoRPfrreapblwvsGtdCIRL+AD2v2tJUVURh/j2DqU7ojTyu2zuez8
+	hKmXb/QEHlC2rhsXlvBGb22WZ0i2alILQO9FjLxbsbaas/XaodDplI2iTdLXTIoV
+	D+CMgQ55bVF3WBrMDzZDg==
+X-ME-Sender: <xms:GS7gZ2x6_Uw7Hj5902ulOCeiOIcJt8r00_BLRdfjZEIJxo2ueJJRKA>
+    <xme:GS7gZyREcE-KXbgdJsaDS7kI0B9EkMqWzmMGpamqiU-lKBBuKyo6h2lsDkq-a1ET0
+    h-7i1M_K2dyvCez93s>
+X-ME-Received: <xmr:GS7gZ4WzlbClDGosofiXsqF4aPpt5ufQ_QcpnoQDX5hzux5XtBMPMzDHCIjL-JA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdduheejvdekucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
+    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkff
+    ggfgfuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomhepgfhrihgtucfurghnuggv
+    vghnuceoshgrnhguvggvnhesshgrnhguvggvnhdrnhgvtheqnecuggftrfgrthhtvghrnh
+    epveeikeeuteefueejtdehfeefvdegffeivdejjeelfffhgeegjeeutdejueelhfdvnecu
+    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrnhguvg
+    gvnhesshgrnhguvggvnhdrnhgvthdpnhgspghrtghpthhtohepgedpmhhouggvpehsmhht
+    phhouhhtpdhrtghpthhtohepsghoughonhhnvghlsehrvgguhhgrthdrtghomhdprhgtph
+    htthhopehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
+    ohepughjfihonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehhtghhsehinhhfrh
+    gruggvrggurdhorhhg
+X-ME-Proxy: <xmx:GS7gZ8hZhsgPUq69AzGvubmALQBY7sble1CnyUhs_HCWu5jY2AhrzA>
+    <xmx:GS7gZ4CugYaQi0073xfpY_UCTJ6-YBAJMbbFIBCwzPAKXMUUmYV8vw>
+    <xmx:GS7gZ9Lo5Calmnbj55qDvQHTq2Hj4mfk5hFG2GGbngt1-Kb8QohpSg>
+    <xmx:GS7gZ_Be2WhFn0p3UShsbbpWzeMffCAIq2oZz8FRee9hOIWxjv4muQ>
+    <xmx:Gi7gZ7_bnaOXH50F5HdqAhBXfimutZrNdUshzNguF29nFxjpkVrgiG6Y>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
+ 23 Mar 2025 11:51:53 -0400 (EDT)
+Message-ID: <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
+Date: Sun, 23 Mar 2025 10:51:52 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] xfs_repair: handling a block with bad crc, bad uuid,
+ and bad magic number needs fixing
+To: bodonnel@redhat.com, linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org, hch@infradead.org
+References: <20250321220532.691118-4-bodonnel@redhat.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20250321220532.691118-4-bodonnel@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Christoph Hellwig <hch@lst.de> writes:
+On 3/21/25 5:05 PM, bodonnel@redhat.com wrote:
+> From: Bill O'Donnell <bodonnel@redhat.com>
+> 
+> In certain cases, if a block is so messed up that crc, uuid and magic
+> number are all bad, we need to not only detect in phase3 but fix it
+> properly in phase6. In the current code, the mechanism doesn't work
+> in that it only pays attention to one of the parameters.
+> 
+> Note: in this case, the nlink inode link count drops to 1, but
+> re-running xfs_repair fixes it back to 2. This is a side effect that
+> should probably be handled in update_inode_nlinks() with separate patch.
+> Regardless, running xfs_repair twice, with this patch applied
+> fixes the issue. Recognize that this patch is a fix for xfs v5.
 
-> On Sun, Mar 23, 2025 at 01:17:08AM +0530, Ritesh Harjani wrote:
->
-> [full quote deleted, can you please properly trim your replies?]
->
+The reason this fix leaves the inode nlinks in an inconsistent state
+is because the dir is (was) a longform directory (XFS_DIR2_FMT_BLOCK),
+and we go down this path with your patch in place:
 
-Sure.
+                /* check v5 metadata */
+                if (xfs_has_crc(mp)) {
+                        error = check_dir3_header(mp, bp, ino);
+                        if (error) {
+                                fixit++;
+                                if (fmt == XFS_DIR2_FMT_BLOCK) { <==== true
+                                        goto out_fix;	<=== goto
+                                }
 
->> So, I guess we can shift IOMAP_F_SIZE_CHANGED and IOMAP_F_STALE by
->> 1 bit. So it will all look like.. 
->
-> Let's create some more space to avoid this for the next round, e.g.
+                                libxfs_buf_relse(bp);
+                                bp = NULL;
+                                continue;
+                        }
+                }
 
-Sure, that make sense. 
+                longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
+                                irec, ino_offset, bp, hashtab,
+                                &freetab, da_bno, fmt == XFS_DIR2_FMT_BLOCK);
+...
 
-> count the core set flags from 31 down, and limit IOMAP_F_PRIVATE to a
-> single flag, which is how it is used.
+out_fix:
 
-flags in struct iomap is of type u16. So will make core iomap flags
-starting from bit 15, moving downwards. 
-
-Here is a diff of what I think you meant - let me know if this diff
-looks good to you? 
-
-
-
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 02fe001feebb..68416b135151 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -78,6 +78,11 @@ struct vm_fault;
- #define IOMAP_F_ANON_WRITE     (1U << 7)
- #define IOMAP_F_ATOMIC_BIO     (1U << 8)
-
-+/*
-+ * Flag reserved for file system specific usage
-+ */
-+#define IOMAP_F_PRIVATE                (1U << 12)
-+
- /*
-  * Flags set by the core iomap code during operations:
-  *
-@@ -88,14 +93,8 @@ struct vm_fault;
-  * range it covers needs to be remapped by the high level before the operation
-  * can proceed.
-  */
--#define IOMAP_F_SIZE_CHANGED   (1U << 8)
--#define IOMAP_F_STALE          (1U << 9)
--
--/*
-- * Flags from 0x1000 up are for file system specific usage:
-- */
--#define IOMAP_F_PRIVATE                (1U << 12)
--
-+#define IOMAP_F_SIZE_CHANGED   (1U << 14)
-+#define IOMAP_F_STALE          (1U << 15)
-
- /*
-  * Magic value for addr:
+        if (!no_modify && (fixit || dotdot_update)) {
+                longform_dir2_rebuild(mp, ino, ip, irec, ino_offset, hashtab);
 
 
+longform_dir2_rebuild tries to rebuild the directory from the entries found
+via longform_dir2_entry_check_data() and placed in hashtab, but because we never
+called longform_dir2_entry_check_data(), hashtab is empty. This is why all
+entries in the problematic dir end up in lost+found.
 
-(PS: I might be on transit / travel for some other work for a week. My reponses may be delayed.)
--ritesh
+That also means that longform_dir2_rebuild completes without adding any entries
+at all, and so the directory is now shortform. Because shortform directories 
+have no explicit "." entry, I think it would need an extra ref added at this
+point.
+
+But I wonder - why not call longform_dir2_entry_check_data() before we check
+the header? That way it /will/ populate hashtab with any found entries in the
+block, and when the header is found to be corrupt, it will rebuild it with all
+entries intact, and leave nothing in lost+found.
+
+
+Thoughts?
+-Eric
+
+
 
