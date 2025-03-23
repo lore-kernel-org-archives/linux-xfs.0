@@ -1,77 +1,77 @@
-Received: from fout-a5-smtp.messagingengine.com (fout-a5-smtp.messagingengine.com [103.168.172.148])
+Received: from fhigh-a7-smtp.messagingengine.com (fhigh-a7-smtp.messagingengine.com [103.168.172.158])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404E52E3367
-	for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 15:51:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.148
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C05122E339C
+	for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 16:10:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.158
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742745117; cv=none; b=Yb8uF8zxYl6CrfISCF4Uy0+KzW0B2HpG1ZAVwclNSONTgKfgFqkmEUoFg1OFdrceV521Lo2jpmeFNuS6tfvO/SVZ20Q+m4/JdqyWBR89JjnmvLSd2CWCsKzQRdzj04IE3NrT203Rm9/c8s6X8v4SJxktBt+sX3D721jc2XRZsmI=
+	t=1742746222; cv=none; b=GHJBoRLhYxWuBYRN5wcntfVWCWmdq01rXm3FqLrDARxcOzTExwSBiNXj3yIj3E6bigGWj1uinwCTHFMI5HTrJvkIvXNnCacaMPrjnwcaPELGshmRwQWseIQd3oI1DAsXZTsDuHfQE3nZBwDVJHtrlwZ5vNKqkRv8fMoNq/3vKlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742745117; c=relaxed/simple;
-	bh=GTM7Y+qwazLFio+J0sKVzgVuwQy0rQSL8bhKGABbHf0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WzB3GaLMXUJuw/HuPYC4Hu1GkOyxKD+te4fR34vMCOrt2fne9AbADaBEhyTGmpzCUm7c5onqaFlpP+/svB8JVQMKN8OOQpFkvcomocykoYK7P/CJ40xiEoJvk1YQVSE4nq5tO2+vXG9gWr4OowJ616x3oyCkYBy991dhLoXJeUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=cVXK/7s5; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=UuFvm717; arc=none smtp.client-ip=103.168.172.148
+	s=arc-20240116; t=1742746222; c=relaxed/simple;
+	bh=5jkrBGx36rQ+VyyA90ltKE3yBrRIdqchEsxmlWAzI04=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=sCDUIPaRHV7DQlQ1t/nv6AzTNsVV+C4gcNFE2AP5ZSGZXi+eRgXqbsGa0fsuAaGfAteIx42iiOETN3a3P6/qv4YCZAW++oHZJk8SnsNNbBlJrWYJr9iD8h9nXAhmmC9HYWBzBCkxRSOuFUOXJ37XD62sHUHrTlP/iNSX1ynjmr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=sA30Jc5Z; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Rx12ifEu; arc=none smtp.client-ip=103.168.172.158
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="cVXK/7s5";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="UuFvm717"
-Received: from phl-compute-01.internal (phl-compute-01.phl.internal [10.202.2.41])
-	by mailfout.phl.internal (Postfix) with ESMTP id 2ECA21380A62;
-	Sun, 23 Mar 2025 11:51:54 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="sA30Jc5Z";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Rx12ifEu"
+Received: from phl-compute-12.internal (phl-compute-12.phl.internal [10.202.2.52])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id B4997114016D;
+	Sun, 23 Mar 2025 12:10:19 -0400 (EDT)
 Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Sun, 23 Mar 2025 11:51:54 -0400
+  by phl-compute-12.internal (MEProxy); Sun, 23 Mar 2025 12:10:19 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1742745114;
-	 x=1742831514; bh=6RYFLLMAo/lELP9AEp/14aq+b2e01aGipvaPLUFiFRQ=; b=
-	cVXK/7s5vE4jWZIMryISJQW9SN/bu23svhzC1Sdx/U5hKaEBJEDMmqpgo8/7Apvf
-	uIYfsM1MnXHaEG19tcpWT9x5iOHlcGqDNZAtx1Cc2vSmyfeBYH2ocdbhqXq5QuxX
-	IIEcZw2v15h1mnSZah3E2u/HUt2knP61abXMldKYHdFIGIZ6/NlqW0EOkfXlogF3
-	P8+ZgMWC7jYbceSV4wGtrme+vdjhfqGtN/DFk4G5zneWGX8O+1VgIoiLrZA65nth
-	HtOEW+xoOav37qvUOiSrtziKY9KrrjOIayedLA3ISPTojIIL8KGG/dOAaKP71ns/
-	Pg5Gq1a7umrRDDiqUoE6hw==
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1742746219;
+	 x=1742832619; bh=NDluIU94iIH7XdJjo2DUh3GzzCG1PUOlc6EimXEt5xw=; b=
+	sA30Jc5ZwAVtL6hIYN80OLa/1v1PFasmWGRN/AWVkMS6kBNSuHZBRNQaxZ6OoX0j
+	cH9zPjIA67QzaKJTne3Ie8UfDBwH6k7Lk93UOy/6TbZrwrtxTa32MqLwY/O+r40Y
+	86Dji4Z1ae8VtV9MEzvkYQbqEIwb2A4rS9sFZpuvt10C+JINEzKXti4hCnAnwmOI
+	Lhux0VHKPZPLKWA37lurFavOPDlBNcF56BjsjWvwSAYiFMj0hXhbQhNNdaIQNE4i
+	SuaVO1myNqV5wO7vjI1S+YgHKC2oLLIXrA0+zlAzbOj9V/aBBOm7y1B8VTagpkC6
+	sAIkrhsNo9+9/GyqsVTr3w==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1742745114; x=
-	1742831514; bh=6RYFLLMAo/lELP9AEp/14aq+b2e01aGipvaPLUFiFRQ=; b=U
-	uFvm7177YGJ4hK1piZaFbfc3k4y49HhBAebraOJdQwwljbGoWXC+10G0asGpiIxc
-	1dbAa4X1A3KabxyRxDeUrvkaNUU3c5NdW4+wLPj/f3aDJwFzuupgO2udcCM7VdG8
-	fWToF07yzhNMA01m5hs4oLBqLqAJ0QaS3AAvgPLuXXYK73j+ZGxuWtvy2xb9lRnt
-	y2geB7E+GZFHoRPfrreapblwvsGtdCIRL+AD2v2tJUVURh/j2DqU7ojTyu2zuez8
-	hKmXb/QEHlC2rhsXlvBGb22WZ0i2alILQO9FjLxbsbaas/XaodDplI2iTdLXTIoV
-	D+CMgQ55bVF3WBrMDzZDg==
-X-ME-Sender: <xms:GS7gZ2x6_Uw7Hj5902ulOCeiOIcJt8r00_BLRdfjZEIJxo2ueJJRKA>
-    <xme:GS7gZyREcE-KXbgdJsaDS7kI0B9EkMqWzmMGpamqiU-lKBBuKyo6h2lsDkq-a1ET0
-    h-7i1M_K2dyvCez93s>
-X-ME-Received: <xmr:GS7gZ4WzlbClDGosofiXsqF4aPpt5ufQ_QcpnoQDX5hzux5XtBMPMzDHCIjL-JA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdduheejvdekucetufdoteggodetrf
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1742746219; x=
+	1742832619; bh=NDluIU94iIH7XdJjo2DUh3GzzCG1PUOlc6EimXEt5xw=; b=R
+	x12ifEu9tB5hMYarR0lasIfyhMeVgpD7nYRzXnHPGcwd0AvsIB5XZL2zQAXBffBb
+	31AukQWAvmhy1yF5wJ9QRZBD4Ir6MO80dciRx5ikfnGUM9QY/8lrAoBvhfAfDH7X
+	PZ0L2aLidfuZBZXVtX1ff9qP2qopFmV3QMDQMw6WGa5qLx5cB/frdcnY/+zsvLb4
+	vU0VjfksmWzXGrbMUlBa8oElPMekNukm8FjFzkjtkbaqzfFK7YJmtnLd6N753v69
+	sxxGjUL+14f9d2//KRJrAIB8JvBsdElG3BwdlsJGi8OdhWS2uMNFuZPc4xZKNFim
+	0nh0xBHuOv6kuf2OuWsAg==
+X-ME-Sender: <xms:azLgZzaTGjvzFiErWWPGO7Cd8P1gLBxxF3xCL8cTnGdgTe4lfXPo4Q>
+    <xme:azLgZyZOUdziYo4acQG7D08a8zGXNUZwOSBS8SYy0wQSj4VMK2Ab1wVm6zNZcg6xC
+    n9hPO0wSPnl8dcMGQs>
+X-ME-Received: <xmr:azLgZ1_CPNEQQtH6Rp56VSq5wVAzwgs-uEzTR6JXQlNQWrFp5Xw04ruaZL_fLEM>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdduheejfeduucetufdoteggodetrf
     dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
     pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkff
-    ggfgfuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomhepgfhrihgtucfurghnuggv
+    ggfgfuhffvvehfjggtgfesthejredttddvjeenucfhrhhomhepgfhrihgtucfurghnuggv
     vghnuceoshgrnhguvggvnhesshgrnhguvggvnhdrnhgvtheqnecuggftrfgrthhtvghrnh
-    epveeikeeuteefueejtdehfeefvdegffeivdejjeelfffhgeegjeeutdejueelhfdvnecu
+    epleevuefhueejheevhfffhfeigeeifefgieejheekteetkeejteejtdehkedutdelnecu
     vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrnhguvg
     gvnhesshgrnhguvggvnhdrnhgvthdpnhgspghrtghpthhtohepgedpmhhouggvpehsmhht
     phhouhhtpdhrtghpthhtohepsghoughonhhnvghlsehrvgguhhgrthdrtghomhdprhgtph
     htthhopehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
     ohepughjfihonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehhtghhsehinhhfrh
     gruggvrggurdhorhhg
-X-ME-Proxy: <xmx:GS7gZ8hZhsgPUq69AzGvubmALQBY7sble1CnyUhs_HCWu5jY2AhrzA>
-    <xmx:GS7gZ4CugYaQi0073xfpY_UCTJ6-YBAJMbbFIBCwzPAKXMUUmYV8vw>
-    <xmx:GS7gZ9Lo5Calmnbj55qDvQHTq2Hj4mfk5hFG2GGbngt1-Kb8QohpSg>
-    <xmx:GS7gZ_Be2WhFn0p3UShsbbpWzeMffCAIq2oZz8FRee9hOIWxjv4muQ>
-    <xmx:Gi7gZ7_bnaOXH50F5HdqAhBXfimutZrNdUshzNguF29nFxjpkVrgiG6Y>
+X-ME-Proxy: <xmx:azLgZ5qI94MXeVuOYt685LdT01fzvUFsKtr96Hf6vrGGQ7MhB4wrtQ>
+    <xmx:azLgZ-pJW0sh8FI3bNFJoVEYO3eClSkAcA2rfQXH2FZvbpoHuONOkQ>
+    <xmx:azLgZ_RQ5apB2ovcKjVzLwx50I7-pIvm-YuBI7DSgLBnJs4r3rn0VA>
+    <xmx:azLgZ2pB7HVCiXNrKmj58r9tK38ULLVEX-JevLVYEjjwgo8xDG4lNw>
+    <xmx:azLgZ3nTWI8fKjaS5P1kNUFmc45o7xSi9FiFxmgbHPyvP_LsceqvvsMV>
 Feedback-ID: i2b59495a:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
- 23 Mar 2025 11:51:53 -0400 (EDT)
-Message-ID: <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
-Date: Sun, 23 Mar 2025 10:51:52 -0500
+ 23 Mar 2025 12:10:18 -0400 (EDT)
+Message-ID: <b435c47f-ea38-471b-b273-71144d052ca7@sandeen.net>
+Date: Sun, 23 Mar 2025 11:10:18 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,77 +81,38 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v3] xfs_repair: handling a block with bad crc, bad uuid,
  and bad magic number needs fixing
+From: Eric Sandeen <sandeen@sandeen.net>
 To: bodonnel@redhat.com, linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org, hch@infradead.org
 References: <20250321220532.691118-4-bodonnel@redhat.com>
+ <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
 Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20250321220532.691118-4-bodonnel@redhat.com>
+In-Reply-To: <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/21/25 5:05 PM, bodonnel@redhat.com wrote:
-> From: Bill O'Donnell <bodonnel@redhat.com>
-> 
-> In certain cases, if a block is so messed up that crc, uuid and magic
-> number are all bad, we need to not only detect in phase3 but fix it
-> properly in phase6. In the current code, the mechanism doesn't work
-> in that it only pays attention to one of the parameters.
-> 
-> Note: in this case, the nlink inode link count drops to 1, but
-> re-running xfs_repair fixes it back to 2. This is a side effect that
-> should probably be handled in update_inode_nlinks() with separate patch.
-> Regardless, running xfs_repair twice, with this patch applied
-> fixes the issue. Recognize that this patch is a fix for xfs v5.
+On 3/23/25 10:51 AM, Eric Sandeen wrote:
 
-The reason this fix leaves the inode nlinks in an inconsistent state
-is because the dir is (was) a longform directory (XFS_DIR2_FMT_BLOCK),
-and we go down this path with your patch in place:
-
-                /* check v5 metadata */
-                if (xfs_has_crc(mp)) {
-                        error = check_dir3_header(mp, bp, ino);
-                        if (error) {
-                                fixit++;
-                                if (fmt == XFS_DIR2_FMT_BLOCK) { <==== true
-                                        goto out_fix;	<=== goto
-                                }
-
-                                libxfs_buf_relse(bp);
-                                bp = NULL;
-                                continue;
-                        }
-                }
-
-                longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
-                                irec, ino_offset, bp, hashtab,
-                                &freetab, da_bno, fmt == XFS_DIR2_FMT_BLOCK);
 ...
 
-out_fix:
+> But I wonder - why not call longform_dir2_entry_check_data() before we check
+> the header? That way it /will/ populate hashtab with any found entries in the
+> block, and when the header is found to be corrupt, it will rebuild it with all
+> entries intact, and leave nothing in lost+found.
 
-        if (!no_modify && (fixit || dotdot_update)) {
-                longform_dir2_rebuild(mp, ino, ip, irec, ino_offset, hashtab);
+Or alternatively, since checking the header first makes intuitive sense, perhaps
+change the logic so that we still check the header first, set fixit++, and if we
+are in XFS_DIR2_FMT_BLOCK, allow longform_dir2_entry_check_data() to be called,
+and then if errors were found in the header, goto out_fix; at that point, with
+a populated hashtab.
 
-
-longform_dir2_rebuild tries to rebuild the directory from the entries found
-via longform_dir2_entry_check_data() and placed in hashtab, but because we never
-called longform_dir2_entry_check_data(), hashtab is empty. This is why all
-entries in the problematic dir end up in lost+found.
-
-That also means that longform_dir2_rebuild completes without adding any entries
-at all, and so the directory is now shortform. Because shortform directories 
-have no explicit "." entry, I think it would need an extra ref added at this
-point.
-
-But I wonder - why not call longform_dir2_entry_check_data() before we check
-the header? That way it /will/ populate hashtab with any found entries in the
-block, and when the header is found to be corrupt, it will rebuild it with all
-entries intact, and leave nothing in lost+found.
-
-
-Thoughts?
 -Eric
-
-
+ 
+> 
+> Thoughts?
+> -Eric
+> 
+> 
+> 
+> 
 
