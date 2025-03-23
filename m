@@ -1,118 +1,93 @@
-Received: from fhigh-a7-smtp.messagingengine.com (fhigh-a7-smtp.messagingengine.com [103.168.172.158])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C05122E339C
-	for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 16:10:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62CA41922EE
+	for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 22:24:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742746222; cv=none; b=GHJBoRLhYxWuBYRN5wcntfVWCWmdq01rXm3FqLrDARxcOzTExwSBiNXj3yIj3E6bigGWj1uinwCTHFMI5HTrJvkIvXNnCacaMPrjnwcaPELGshmRwQWseIQd3oI1DAsXZTsDuHfQE3nZBwDVJHtrlwZ5vNKqkRv8fMoNq/3vKlU=
+	t=1742768669; cv=none; b=MKHqo0nAmVsfH4T9jTuah+m2dreN+QyZJfggZ5OuvEdlAkzNSDLKKDFGS060NAyAX34o34drkeafoNBXe7I+QlHcx+gqDwddPAewRo6CxU1wxGWpOJ0i9cLYSlTywpZMBnenvof89yzGkk2N0bRjqIXFBYs65cER159/KbwOcVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742746222; c=relaxed/simple;
-	bh=5jkrBGx36rQ+VyyA90ltKE3yBrRIdqchEsxmlWAzI04=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=sCDUIPaRHV7DQlQ1t/nv6AzTNsVV+C4gcNFE2AP5ZSGZXi+eRgXqbsGa0fsuAaGfAteIx42iiOETN3a3P6/qv4YCZAW++oHZJk8SnsNNbBlJrWYJr9iD8h9nXAhmmC9HYWBzBCkxRSOuFUOXJ37XD62sHUHrTlP/iNSX1ynjmr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=sA30Jc5Z; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Rx12ifEu; arc=none smtp.client-ip=103.168.172.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="sA30Jc5Z";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Rx12ifEu"
-Received: from phl-compute-12.internal (phl-compute-12.phl.internal [10.202.2.52])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id B4997114016D;
-	Sun, 23 Mar 2025 12:10:19 -0400 (EDT)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-12.internal (MEProxy); Sun, 23 Mar 2025 12:10:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1742746219;
-	 x=1742832619; bh=NDluIU94iIH7XdJjo2DUh3GzzCG1PUOlc6EimXEt5xw=; b=
-	sA30Jc5ZwAVtL6hIYN80OLa/1v1PFasmWGRN/AWVkMS6kBNSuHZBRNQaxZ6OoX0j
-	cH9zPjIA67QzaKJTne3Ie8UfDBwH6k7Lk93UOy/6TbZrwrtxTa32MqLwY/O+r40Y
-	86Dji4Z1ae8VtV9MEzvkYQbqEIwb2A4rS9sFZpuvt10C+JINEzKXti4hCnAnwmOI
-	Lhux0VHKPZPLKWA37lurFavOPDlBNcF56BjsjWvwSAYiFMj0hXhbQhNNdaIQNE4i
-	SuaVO1myNqV5wO7vjI1S+YgHKC2oLLIXrA0+zlAzbOj9V/aBBOm7y1B8VTagpkC6
-	sAIkrhsNo9+9/GyqsVTr3w==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1742746219; x=
-	1742832619; bh=NDluIU94iIH7XdJjo2DUh3GzzCG1PUOlc6EimXEt5xw=; b=R
-	x12ifEu9tB5hMYarR0lasIfyhMeVgpD7nYRzXnHPGcwd0AvsIB5XZL2zQAXBffBb
-	31AukQWAvmhy1yF5wJ9QRZBD4Ir6MO80dciRx5ikfnGUM9QY/8lrAoBvhfAfDH7X
-	PZ0L2aLidfuZBZXVtX1ff9qP2qopFmV3QMDQMw6WGa5qLx5cB/frdcnY/+zsvLb4
-	vU0VjfksmWzXGrbMUlBa8oElPMekNukm8FjFzkjtkbaqzfFK7YJmtnLd6N753v69
-	sxxGjUL+14f9d2//KRJrAIB8JvBsdElG3BwdlsJGi8OdhWS2uMNFuZPc4xZKNFim
-	0nh0xBHuOv6kuf2OuWsAg==
-X-ME-Sender: <xms:azLgZzaTGjvzFiErWWPGO7Cd8P1gLBxxF3xCL8cTnGdgTe4lfXPo4Q>
-    <xme:azLgZyZOUdziYo4acQG7D08a8zGXNUZwOSBS8SYy0wQSj4VMK2Ab1wVm6zNZcg6xC
-    n9hPO0wSPnl8dcMGQs>
-X-ME-Received: <xmr:azLgZ1_CPNEQQtH6Rp56VSq5wVAzwgs-uEzTR6JXQlNQWrFp5Xw04ruaZL_fLEM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdduheejfeduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkff
-    ggfgfuhffvvehfjggtgfesthejredttddvjeenucfhrhhomhepgfhrihgtucfurghnuggv
-    vghnuceoshgrnhguvggvnhesshgrnhguvggvnhdrnhgvtheqnecuggftrfgrthhtvghrnh
-    epleevuefhueejheevhfffhfeigeeifefgieejheekteetkeejteejtdehkedutdelnecu
-    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrnhguvg
-    gvnhesshgrnhguvggvnhdrnhgvthdpnhgspghrtghpthhtohepgedpmhhouggvpehsmhht
-    phhouhhtpdhrtghpthhtohepsghoughonhhnvghlsehrvgguhhgrthdrtghomhdprhgtph
-    htthhopehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
-    ohepughjfihonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehhtghhsehinhhfrh
-    gruggvrggurdhorhhg
-X-ME-Proxy: <xmx:azLgZ5qI94MXeVuOYt685LdT01fzvUFsKtr96Hf6vrGGQ7MhB4wrtQ>
-    <xmx:azLgZ-pJW0sh8FI3bNFJoVEYO3eClSkAcA2rfQXH2FZvbpoHuONOkQ>
-    <xmx:azLgZ_RQ5apB2ovcKjVzLwx50I7-pIvm-YuBI7DSgLBnJs4r3rn0VA>
-    <xmx:azLgZ2pB7HVCiXNrKmj58r9tK38ULLVEX-JevLVYEjjwgo8xDG4lNw>
-    <xmx:azLgZ3nTWI8fKjaS5P1kNUFmc45o7xSi9FiFxmgbHPyvP_LsceqvvsMV>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
- 23 Mar 2025 12:10:18 -0400 (EDT)
-Message-ID: <b435c47f-ea38-471b-b273-71144d052ca7@sandeen.net>
-Date: Sun, 23 Mar 2025 11:10:18 -0500
+	s=arc-20240116; t=1742768669; c=relaxed/simple;
+	bh=e93NaZcK5YQEteWySfSzqPEL6aqg0cgUQnOjoxtN6Tw=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=gHZHeazpiGY+6hFitbBxVDmcm3JbJWh1s5y3UCvcfMaMJSzWyuhCn4e8+nqwTnoEEi76KlVmeoLbE/mKz6GGv8GBvKbOGUWDQInMMCV150Xmsteb4JNH33ChxG4RaWSpsiCjncHRWBsZFM/jURVTQQL6d2oSeEZi1drNjUfn3hc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-3ce3bbb2b9dso41595495ab.3
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Mar 2025 15:24:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742768666; x=1743373466;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=T5KlCy6Q8RD8sDEwc7MlxQAo++rAefTBGZtRiPfhOzo=;
+        b=qE2ma20JA4BeLsrpj4aNPm74bFZIg9uolPTXzQobt1iz/zXKeWB7sDM8vP2EljAWqO
+         qfk9RBnr0Ja20jL5GiSIlim+Buc63ZRUs4EWajk9YiokvX81G7kc5PN9r7grhruR/OA0
+         kXgnbZWTIKEuqHjAbNUn+T0kTMjnFPkMAmqRKI7xvk5LVsNLxeYckO/b5toJZg8wuFSw
+         rHDeP3QkH66zSp4KRz0CSkaJbK94CglkJlxF+w6iYuKczecrHzX+Q5uMHp76wPm8MEVz
+         oRDXjrLC0uuNo7KOw9eecIz6+grrFiumoKWPiW77UD0uZj1AjSLCipWzP2cB/EaAbXTj
+         hkbw==
+X-Forwarded-Encrypted: i=1; AJvYcCWzsrnjh9JOIt2W/IzigFIj+RiB7S18MfTSY4jl7mnMP2CFX7P+nRwJwETX5ItXOW74zuuN4abfWIQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxdLU8EbavcXtoCoOGC5bBGGGONcNSKfY1vTyFlJUvMu794U0v7
+	KcW8VfD3nCsncc1cjBn5FaNUGlhhfvDdYaNma5XDltGqSCQlNWwp0BHHQfBJiumpuulywXFLs8Y
+	suzn1dFKTRg9sH6fQTmLHhtCR/ddj/ucmFa6vPEst+5Be5ZGyOOD5Lgc=
+X-Google-Smtp-Source: AGHT+IEHtrbk1CRW9UDW9T6uDfYShMOVxVnjtCancFyNNOByM9MTHzx2i0riRFA6Exwj9Dt0JvxVFYE0YbuqxYcDSlGSxv63DWGJ
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] xfs_repair: handling a block with bad crc, bad uuid,
- and bad magic number needs fixing
-From: Eric Sandeen <sandeen@sandeen.net>
-To: bodonnel@redhat.com, linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org, hch@infradead.org
-References: <20250321220532.691118-4-bodonnel@redhat.com>
- <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
-Content-Language: en-US
-In-Reply-To: <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6e02:152e:b0:3d0:4e2b:9bbb with SMTP id
+ e9e14a558f8ab-3d59617bef5mr121532135ab.21.1742768666679; Sun, 23 Mar 2025
+ 15:24:26 -0700 (PDT)
+Date: Sun, 23 Mar 2025 15:24:26 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67e08a1a.050a0220.a7ebc.0005.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Mar 2025)
+From: syzbot <syzbot+list5cd62fbbe518216907d5@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 3/23/25 10:51 AM, Eric Sandeen wrote:
+Hello xfs maintainers/developers,
 
-...
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-> But I wonder - why not call longform_dir2_entry_check_data() before we check
-> the header? That way it /will/ populate hashtab with any found entries in the
-> block, and when the header is found to be corrupt, it will rebuild it with all
-> entries intact, and leave nothing in lost+found.
+During the period, 1 new issues were detected and 1 were fixed.
+In total, 21 issues are still open and 27 have already been fixed.
 
-Or alternatively, since checking the header first makes intuitive sense, perhaps
-change the logic so that we still check the header first, set fixit++, and if we
-are in XFS_DIR2_FMT_BLOCK, allow longform_dir2_entry_check_data() to be called,
-and then if errors were found in the header, goto out_fix; at that point, with
-a populated hashtab.
+Some of the still happening issues:
 
--Eric
- 
-> 
-> Thoughts?
-> -Eric
-> 
-> 
-> 
-> 
+Ref Crashes Repro Title
+<1> 184     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<2> 156     Yes   BUG: Bad page state in iomap_write_begin
+                  https://syzkaller.appspot.com/bug?extid=c317c107c68f8bc257d9
+<3> 94      Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<4> 21      No    possible deadlock in xfs_fs_dirty_inode (2)
+                  https://syzkaller.appspot.com/bug?extid=1116a7b7b96b9c426a1a
+<5> 15      No    possible deadlock in xfs_qm_dqrele
+                  https://syzkaller.appspot.com/bug?extid=da63448ae44acf902d11
+<6> 13      No    BUG: unable to handle kernel paging request in xfs_destroy_mount_workqueues
+                  https://syzkaller.appspot.com/bug?extid=63340199267472536cf4
+<7> 10      Yes   WARNING in __folio_rmap_sanity_checks (2)
+                  https://syzkaller.appspot.com/bug?extid=c0673e1f1f054fac28c2
+<8> 4       Yes   WARNING in xfs_bmapi_convert_delalloc (2)
+                  https://syzkaller.appspot.com/bug?extid=1fcaeac63a6a5f2cc94d
 
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
