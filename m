@@ -1,95 +1,55 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 973241DDC08
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Mar 2025 11:33:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A949263F32
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Mar 2025 16:56:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742815992; cv=none; b=pnKcHwXZR5nyhXVD9EHWTf8JXQbrvgyFf2e0n3WwIj+vmRWGYBSG8myV4cnJ2GuV39LtpNJCnYEWzgCLLB6AX9ZP/r96sRahuav5+3Mv2yJy7RkTSs+3sqs88Ze2Q4yy/zQJZw9A8gv3yr5eE5kTgfp1ldJEUIMBRSadtszhBA8=
+	t=1742835384; cv=none; b=Y/olX8gSc6GiSPNyqs0FIadshe9l7iY7FyMMZ05UZyYi00NzrOYWHQC6/257QrbiwZ2mpqCw6/gmmsUp5qWpOHcP9cGGC15Xj9okb/HYj+50//JXwhAV6PIMOwoq9uylKYDYzkBP5YHr3TEnBe2mP2Jsa56ZOHNQgD/tccF0uWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742815992; c=relaxed/simple;
-	bh=z5eF3gte5JNymUCkPO09roIA3JsjfCxujm/YsonpzvA=;
+	s=arc-20240116; t=1742835384; c=relaxed/simple;
+	bh=RfS5R5wZqA3RxWIBfBAmpH4BHzP5SZ38X5jF9/c3+o0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vpfw+sbI6bSi3Yzh7ATYczD3/BRV6XrGkTV0g3PEwXtpXRACe7owUoAzwtlmQOWFj2J+X2g0N+n1hCHPjqxwGMAzg0AvRf6NK2vxnl0EZtDIz4H4oYEjHAkMKeH5N5/p3R3qNC/0yCMPPcWcUFldQqK2ajLoi6/jYpOEDQiLd7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=rF5G5u5o; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=HtN/dsSd; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=rF5G5u5o; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=HtN/dsSd; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=Kj2xmCQoKHZFxY73Zyt0JbHSUp/gtorZGY9hIkh3lF/w36zbITMKNWyaIHX0qLDwASC6vZ80zfFTxSAFPISVKdSiGgx8s4HiXtvbkpsbzo6QdaQt4pFpJyCsiIORn3CWQyZldOYJBCdoGa89KAZk9/CC6Px/JCkNE1/ka7PlDEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OK4N3X3h; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="rF5G5u5o";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="HtN/dsSd";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="rF5G5u5o";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="HtN/dsSd"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OK4N3X3h"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742835380;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UDXmNwMeckwBpYnhUGp2iG9JgaMKMmBfkWkN9wEHfxg=;
+	b=OK4N3X3h8U373acpnn3oMg4EpaleW8q4JEgJmWsQiOWN3vb/GwCzqRky9emLq5iN/2qrui
+	hGMf9MI9BIOV24L344tQ2VAsKkwGvddkrLT2H6NDH2111pupUs+wQE8iyCHrKQYhH5tx5u
+	jlgOQJ0W5KEDZiAbygpBPaWrxUIL1Cs=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-286-VIWkIULdNoiRcmx7lrXElg-1; Mon,
+ 24 Mar 2025 12:56:19 -0400
+X-MC-Unique: VIWkIULdNoiRcmx7lrXElg-1
+X-Mimecast-MFC-AGG-ID: VIWkIULdNoiRcmx7lrXElg_1742835378
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 323C51F38C;
-	Mon, 24 Mar 2025 11:33:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1742815982;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=L4Ee+0ED0/MIsOBAmD+9Bgdn7KSEbAKXU+UdpTeh0sY=;
-	b=rF5G5u5oBu2vtI3BpokXtkTko31uw+Mbl9Fa+eKxmmnnnxk4NetsQVl740TQ0fiGz6PVz8
-	cREo6DSoZAJNN5/XCr7xUNUHcqFqv05OSO6+SebRrSTDTs59ysIqvH6MKYyO83ONOlt0u/
-	dETomakkFTz5CxqQk4sls1B/t83OuU0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1742815982;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=L4Ee+0ED0/MIsOBAmD+9Bgdn7KSEbAKXU+UdpTeh0sY=;
-	b=HtN/dsSdzINSqhocWTcDwRpuV0OgWn7gv7F4H1lA354UCNHbrNrntuErES+i91h55+yxXH
-	FSVSf9VbE/V+Y+Dg==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1742815982;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=L4Ee+0ED0/MIsOBAmD+9Bgdn7KSEbAKXU+UdpTeh0sY=;
-	b=rF5G5u5oBu2vtI3BpokXtkTko31uw+Mbl9Fa+eKxmmnnnxk4NetsQVl740TQ0fiGz6PVz8
-	cREo6DSoZAJNN5/XCr7xUNUHcqFqv05OSO6+SebRrSTDTs59ysIqvH6MKYyO83ONOlt0u/
-	dETomakkFTz5CxqQk4sls1B/t83OuU0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1742815982;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=L4Ee+0ED0/MIsOBAmD+9Bgdn7KSEbAKXU+UdpTeh0sY=;
-	b=HtN/dsSdzINSqhocWTcDwRpuV0OgWn7gv7F4H1lA354UCNHbrNrntuErES+i91h55+yxXH
-	FSVSf9VbE/V+Y+Dg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 446D1137AC;
-	Mon, 24 Mar 2025 11:33:01 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id nwKJC+1C4WfHDQAAD6G6ig
-	(envelope-from <pvorel@suse.cz>); Mon, 24 Mar 2025 11:33:01 +0000
-Date: Mon, 24 Mar 2025 12:32:59 +0100
-From: Petr Vorel <pvorel@suse.cz>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: ltp@lists.linux.it, Li Wang <liwang@redhat.com>,
-	Cyril Hrubis <chrubis@suse.cz>,
-	Andrea Cervesato <andrea.cervesato@suse.com>,
-	"Darrick J . Wong" <darrick.wong@oracle.com>,
-	Amir Goldstein <amir73il@gmail.com>,
-	Allison Collins <allison.henderson@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, Gao Xiang <hsiangkao@redhat.com>,
-	Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [RFC PATCH 1/1] ioctl_ficlone03: Require 5.10 for XFS
-Message-ID: <20250324113259.GA205363@pevik>
-Reply-To: Petr Vorel <pvorel@suse.cz>
-References: <20250321100320.162107-1-pvorel@suse.cz>
- <20250321152358.GK2803749@frogsfrogsfrogs>
- <20250321160633.GA177324@pevik>
- <20250321161846.GM2803749@frogsfrogsfrogs>
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A9622196B377;
+	Mon, 24 Mar 2025 16:56:17 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.65.116])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1853B1956095;
+	Mon, 24 Mar 2025 16:56:15 +0000 (UTC)
+Date: Mon, 24 Mar 2025 11:56:12 -0500
+From: Bill O'Donnell <bodonnel@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, hch@infradead.org
+Subject: Re: [PATCH v3] xfs_repair: handling a block with bad crc, bad uuid,
+ and bad magic number needs fixing
+Message-ID: <fg6o7yymto2yk2d35e2mxy7rppaknps62kzzkodzgp2yqwqk6y@5woxrceormv6>
+References: <20250321220532.691118-4-bodonnel@redhat.com>
+ <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -98,179 +58,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250321161846.GM2803749@frogsfrogsfrogs>
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.50 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	HAS_REPLYTO(0.30)[pvorel@suse.cz];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[14];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[lists.linux.it,redhat.com,suse.cz,suse.com,oracle.com,gmail.com,lst.de,vger.kernel.org];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,suse.cz:replyto];
-	URIBL_BLOCKED(0.00)[suse.cz:email,suse.cz:replyto,imap1.dmz-prg2.suse.org:helo];
-	REPLYTO_EQ_FROM(0.00)[]
-X-Spam-Score: -3.50
-X-Spam-Flag: NO
+In-Reply-To: <19fbe9e4-c898-40b3-a4b5-5347f78e31d5@sandeen.net>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-Hi Darrick, all,
+On Sun, Mar 23, 2025 at 10:51:52AM -0500, Eric Sandeen wrote:
+> On 3/21/25 5:05 PM, bodonnel@redhat.com wrote:
+> > From: Bill O'Donnell <bodonnel@redhat.com>
+> > 
+> > In certain cases, if a block is so messed up that crc, uuid and magic
+> > number are all bad, we need to not only detect in phase3 but fix it
+> > properly in phase6. In the current code, the mechanism doesn't work
+> > in that it only pays attention to one of the parameters.
+> > 
+> > Note: in this case, the nlink inode link count drops to 1, but
+> > re-running xfs_repair fixes it back to 2. This is a side effect that
+> > should probably be handled in update_inode_nlinks() with separate patch.
+> > Regardless, running xfs_repair twice, with this patch applied
+> > fixes the issue. Recognize that this patch is a fix for xfs v5.
+> 
+> The reason this fix leaves the inode nlinks in an inconsistent state
+> is because the dir is (was) a longform directory (XFS_DIR2_FMT_BLOCK),
+> and we go down this path with your patch in place:
+> 
+>                 /* check v5 metadata */
+>                 if (xfs_has_crc(mp)) {
+>                         error = check_dir3_header(mp, bp, ino);
+>                         if (error) {
+>                                 fixit++;
+>                                 if (fmt == XFS_DIR2_FMT_BLOCK) { <==== true
+>                                         goto out_fix;	<=== goto
+>                                 }
+> 
+>                                 libxfs_buf_relse(bp);
+>                                 bp = NULL;
+>                                 continue;
+>                         }
+>                 }
+> 
+>                 longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
+>                                 irec, ino_offset, bp, hashtab,
+>                                 &freetab, da_bno, fmt == XFS_DIR2_FMT_BLOCK);
+> ...
+> 
+> out_fix:
+> 
+>         if (!no_modify && (fixit || dotdot_update)) {
+>                 longform_dir2_rebuild(mp, ino, ip, irec, ino_offset, hashtab);
+> 
+> 
+> longform_dir2_rebuild tries to rebuild the directory from the entries found
+> via longform_dir2_entry_check_data() and placed in hashtab, but because we never
+> called longform_dir2_entry_check_data(), hashtab is empty. This is why all
+> entries in the problematic dir end up in lost+found.
+> 
+> That also means that longform_dir2_rebuild completes without adding any entries
+> at all, and so the directory is now shortform. Because shortform directories 
+> have no explicit "." entry, I think it would need an extra ref added at this
+> point.
+> 
+> But I wonder - why not call longform_dir2_entry_check_data() before we check
+> the header? That way it /will/ populate hashtab with any found entries in the
+> block, and when the header is found to be corrupt, it will rebuild it with all
+> entries intact, and leave nothing in lost+found.
 
-> On Fri, Mar 21, 2025 at 05:06:33PM +0100, Petr Vorel wrote:
-> > > On Fri, Mar 21, 2025 at 11:03:20AM +0100, Petr Vorel wrote:
-> > > > Test fails on XFS on kernel older than 5.10:
-
-> > > >     # ./ioctl_ficlone03
-> > > > 	...
-> > > >     tst_test.c:1183: TINFO: Mounting /dev/loop0 to /tmp/LTP_ioc6ARHZ7/mnt fstyp=xfs flags=0
-> > > >     [   10.122070] XFS (loop0): Superblock has unknown incompatible features (0x8) enabled.
-
-> > > 0x8 is XFS_SB_FEAT_INCOMPAT_BIGTIME, maybe you need to format with a set
-> > > of filesystem features compatible with 5.10?
-
-> > > # mkfs.xfs -c options=/usr/share/xfsprogs/mkfs/lts_5.10.conf /dev/sda1
-
-> > Yes, XFS_SB_FEAT_INCOMPAT_BIGTIME is what is missing for the test. Device is
-> > formatted with: -m reflink=1 (I'm sorry to not posting this before):
-
-> You could remove reflink=1 from the test specification, reflink has been
-> on by default for quite a while now...
-
-Thanks for a hint. I guess reflink was added in a5132d9b [1] in v4.9.0-rc1 with
-default 0 and updated to default 1 in 23069a93 [2] in v4.11.0-rc2.
-Unfortunately we still support testing current LTP with kernel up to old 4.4,
-therefore we need to keep this until we raise the support to kernel >= 4.11.
-
-[1] https://web.git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?id=a5132d9b3634fb6436d1f06642ceda82e64ea2f5
-[2] https://web.git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?id=23069a9353eb8af30f3427feed6c92380d025a53
-
-> > tst_test.c:1170: TINFO: Formatting /dev/loop0 with xfs opts='-m reflink=1' extra opts=''
-
-> > I thought it would imply XFS_SB_FEAT_INCOMPAT_BIGTIME, but when I tried to remove it
-> > it did not help:
-
-> > tst_test.c:1909: TINFO: Tested kernel: 5.0.21-00005-gb6c47615d7bf #211 SMP Fri Mar 21 12:23:18 CET 2025 x86_64
-> > ...
-> > tst_test.c:1833: TINFO: === Testing on xfs ===
-> > tst_cmd.c:281: TINFO: Parsing mkfs.xfs version
-> > tst_test.c:1170: TINFO: Formatting /dev/loop0 with xfs opts='' extra opts=''
-> > tst_test.c:1183: TINFO: Mounting /dev[   75.418676] XFS (loop0): Superblock has unknown incompatible features (0x8) enabled.
-> > /loop0 to /tmp/L[   75.419683] XFS (loop0): Filesystem cannot be safely mounted by this kernel.
-> > TP_iocO8VAIk/mnt[   75.420629] XFS (loop0): SB validate failed with error -22.
-> >  fstyp=xfs flags=0
-> > tst_test.c:1183: TBROK: mount(/dev/loop0, mnt, xfs, 0, (nil)) failed: EINVAL (22)
-
-> > Well, I tried with mkfs.xfs from openSUSE Leap 15.6 (tested via rapido-linux),
-> > probably the defaults add it.
-
-> > $ mkfs.xfs -V
-> > mkfs.xfs version 6.7.0
-
-> ...but mkfs.xfs 6.7 enables y2038 support by default unless you specify
-> otherwise, which is why it still won't mount.  Hence my suggestion to
-> use the config files if they're available.  If not, then either run
-> xfsprogs 5.10 on kernel 5.10, or create per-kernel xfs opts that
-> override the defaults to put them back down to whatever were the mkfs
-> defaults in 5.10.
-
-Yeah. For bisecting next time I'll tweak LTP to use config file.  I see you
-started with 4.19 to support these configs in repo [3] end even install them
-/usr/share/xfsprogs/mkfs/. Great. I just need to pass a correct file.
-
-BTW it'd be nice to have way to mkfs.xfs to print this file under new getopt.
-
-[3] https://web.git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/tree/mkfs
-
-> > Also I noted that test works on our 5.3.18 based SLES15-SP2 with xfsprogs
-> > 4.15.0. Maybe I'm just wasting your time with wrong patch.
-
-> <shrug> QA configuration for a bunch of kernels is irritatingly hard,
-> we all need to compare notes when we can. :)
-
-Thanks!
-
-Kind regards,
-Petr
-
-> --D
-
-> > Kind regards,
-> > Petr
-
-> > > --D
-
-> > > >     [   10.123035] XFS (loop0): Filesystem cannot be safely mounted by this kernel.
-> > > >     [   10.123916] XFS (loop0): SB validate failed with error -22.
-> > > >     tst_test.c:1183: TBROK: mount(/dev/loop0, mnt, xfs, 0, (nil)) failed: EINVAL (22)
-
-> > > > This also causes Btrfs testing to be skipped due TBROK on XFS. With increased version we get on 5.4 LTS:
-
-> > > >     # ./ioctl_ficlone03
-> > > >     tst_test.c:1904: TINFO: Tested kernel: 5.4.291 #194 SMP Fri Mar 21 10:18:02 CET 2025 x86_64
-> > > >     ...
-> > > >     tst_supported_fs_types.c:49: TINFO: mkfs is not needed for tmpfs
-> > > >     tst_test.c:1833: TINFO: === Testing on xfs ===
-> > > >     tst_cmd.c:281: TINFO: Parsing mkfs.xfs version
-> > > >     tst_test.c:969: TCONF: The test requires kernel 5.10 or newer
-> > > >     tst_test.c:1833: TINFO: === Testing on btrfs ===
-> > > >     tst_test.c:1170: TINFO: Formatting /dev/loop0 with btrfs opts='' extra opts=''
-> > > >     [   30.143670] BTRFS: device fsid 1a6d250c-0636-11f0-850f-c598bdcd84c4 devid 1 transid 6 /dev/loop0
-> > > >     tst_test.c:1183: TINFO: Mounting /dev/loop0 to /tmp/LTP_iocjwzyal/mnt fstyp=btrfs flags=0
-> > > >     [   30.156563] BTRFS info (device loop0): using crc32c (crc32c-generic) checksum algorithm
-> > > >     [   30.157363] BTRFS info (device loop0): flagging fs with big metadata feature
-> > > >     [   30.158061] BTRFS info (device loop0): using free space tree
-> > > >     [   30.158620] BTRFS info (device loop0): has skinny extents
-> > > >     [   30.159911] BTRFS info (device loop0): enabling ssd optimizations
-> > > >     [   30.160652] BTRFS info (device loop0): checking UUID tree
-> > > >     ioctl_ficlone03_fix.c:49: TPASS: invalid source : EBADF (9)
-> > > >     ioctl_ficlone03_fix.c:55: TPASS: invalid source : EBADF (9)
-
-> > > > Fixing commit is 29887a2271319 ("xfs: enable big timestamps").
-
-> > > > Signed-off-by: Petr Vorel <pvorel@suse.cz>
-> > > > ---
-> > > > Hi all,
-
-> > > > I suppose we aren't covering a test bug with this and test is really
-> > > > wrong expecting 4.16 would work on XFS. FYI this affects 5.4.291
-> > > > (latest 5.4 LTS which is still supported) and would not be fixed due a
-> > > > lot of missing functionality from 5.10.
-
-> > > > Kind regards,
-> > > > Petr
-
-> > > >  testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-
-> > > > diff --git a/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c b/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
-> > > > index 6a9d270d9f..e2ab10cba1 100644
-> > > > --- a/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
-> > > > +++ b/testcases/kernel/syscalls/ioctl/ioctl_ficlone03.c
-> > > > @@ -113,7 +113,7 @@ static struct tst_test test = {
-> > > >  		{.type = "bcachefs"},
-> > > >  		{
-> > > >  			.type = "xfs",
-> > > > -			.min_kver = "4.16",
-> > > > +			.min_kver = "5.10",
-> > > >  			.mkfs_ver = "mkfs.xfs >= 1.5.0",
-> > > >  			.mkfs_opts = (const char *const []) {"-m", "reflink=1", NULL},
-> > > >  		},
-> > > > -- 
-> > > > 2.47.2
-
-
+Yes, this works as you describe.
+Thanks-
+Bill
 
