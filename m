@@ -1,350 +1,254 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D34D52561B7;
-	Tue, 25 Mar 2025 11:43:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742902990; cv=none; b=RxKTf+xu6tmE8v6uSgsgdM7FvrxjO8kPw9+SIHerNE/897rTZZq8TaJeiJgcU7Z3Ym6vVYOIgakW+RslnH06FPqiX2feseLlxYrycK1URMAT2iCQ+C8fK3QOijYuMwyrte/anNEqUQWsVjsEgwhKrgdB/gjCzx0YHN+8nyIaYAE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742902990; c=relaxed/simple;
-	bh=pIFsg9mtUVpAGYomfA9FC5AA4DlyQinycG1fq7OLaDI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HaCTUMv8HmDE19OplCGcn36iRnYU6sJX/d73zgwH047z7DvIDwSMYWywdK7Q452y+Oxf2XG/72TKQ/qENqVvM1wV5cMdUiQ0WIrJugmOlsbAzyO48Nc7ZoRtQkxdV9hjwE81Uf+4OX73tOUSEwhc1mRIe/BwsCkJ2V6reCqZ1Fw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=g7NyOrec; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDFAC1714B4;
+	Wed, 26 Mar 2025 06:27:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1742970465; cv=fail; b=O2EbD2vMitMQjIFWq1nzIOsS3cQbFqlZH/6rQIXJOPnapf48NOmf4V+WZvzWG6Gg0LT1dOQkxSImFLLFwVeQI+3w6QUZQ45vQzM9k4vNfTpVj9rTQeL1JZd2lxMDlWDAZ6AIBWJPzWpEa0NJkasK9yCNCHmtIZ18WKLA+e8QYFc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1742970465; c=relaxed/simple;
+	bh=dxsy1BITnGVzN3Qw4L6bCEjsJUE0+H337xxppm9MqFc=;
+	h=Date:From:To:CC:Subject:Message-ID:Content-Type:
+	 Content-Disposition:MIME-Version; b=JXyU6sgRh6UNxjaOirXJPgvvkHsM1gzaC6j2l/m2xlIf+fi9fE0SiOxbx3BkAbkB2c7bm1V1sv3GFDTO3P13gGuObaXO14fGcFnMTJlPdjDuVZtXPmbUlq34G0L4b4Maqnj+JrK8vlk6NxJf3hQXQTE0sAGL/Ox7sxpFwulf/bg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bqGoJAy1; arc=fail smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="g7NyOrec"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52PAWqWQ029752;
-	Tue, 25 Mar 2025 11:42:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=8X1ifLhVT6ZbfRgEXAq3UI9m7wogRS
-	61MbM2vh4q11g=; b=g7NyOrec5jCUEijX4KU6hwljwCfcNWV2pLN4n4xl/DLya6
-	xbvEtoGWw9a9tqcWE9Ijm2sGRvsB0etBsb/WDpC+2AW4deBDKhH51mn9qCAhRvg3
-	f617PrhWnVclN4KyRHiWC/dQE0tFjHFU3oxX/UH+hA15WxQD57wclsZi/PXk+kzp
-	7C7Fesg9cEbRV3Prxcn2Bwl+RZU4cQKQNLhzT91bHXojWnOfMaO16j+ZH/60Os+2
-	oXSqhNJ+WXFoOtVzIv0/5nY26jN4MISeyUaiPsCdxn7f0br1zv1PFVskdDbP8HQc
-	B22ATVn3O1h6LGMEer9sHNjvIW6YIDCuab6VfNOw==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 45k7e3e0yu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Mar 2025 11:42:55 +0000 (GMT)
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 52PBdEs4015903;
-	Tue, 25 Mar 2025 11:42:55 GMT
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 45k7e3e0yq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Mar 2025 11:42:55 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 52P80UPg025443;
-	Tue, 25 Mar 2025 11:42:53 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 45j7x03av9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Mar 2025 11:42:53 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 52PBgqp960490034
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 25 Mar 2025 11:42:52 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E78872004B;
-	Tue, 25 Mar 2025 11:42:51 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E151920040;
-	Tue, 25 Mar 2025 11:42:48 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.213.126])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 25 Mar 2025 11:42:48 +0000 (GMT)
-Date: Tue, 25 Mar 2025 17:12:41 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        John Garry <john.g.garry@oracle.com>, djwong@kernel.org,
-        linux-xfs@vger.kernel.org, "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [RFCv1 1/1] ext4: Add multi-fsblock atomic write support with
- bigalloc
-Message-ID: <Z-KWsWHOGJnq8pUp@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1742699765.git.ritesh.list@gmail.com>
- <20250323070218.TXPv0lyp0kW0RBhSJpoCl37NxYw24VwGfwoNb3Lyohg@z>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bqGoJAy1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1742970464; x=1774506464;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=dxsy1BITnGVzN3Qw4L6bCEjsJUE0+H337xxppm9MqFc=;
+  b=bqGoJAy1EQCLsdhomC9eWAlmo9gGvZEFxQzMc7h3nRE5gzUjM/hnCq/7
+   pvDjGjRk6Ls73qL8GysbBTvyd2Evy3SCyBcGIrBbz7hxEQ+oG9AwAamPL
+   ZiCqE/dABIChe5pvKDcu87+qi5liy4djgp9oEyW69OotryZ/HAUt2oR2p
+   rEzcT0Nyf+AhYubIokXTI8rRF0gmJ6xutbO/HhVLu5X4BTqpGAtFEgW4d
+   HkQLjwNMeTr6SER3gff65rvewRyCmaD9B/Je/oYTtXd6XXMAxFCzamGZu
+   xpydcdMHUz/ZqgrJK9Z8+GCxzWVzr8HRHj9EWyzP6QDdvYLOl+H12Knau
+   w==;
+X-CSE-ConnectionGUID: yfrmMv3wTliiAEJP+5P9EQ==
+X-CSE-MsgGUID: vdjzIGrYRSa5E9jnR9tQVA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11384"; a="43397021"
+X-IronPort-AV: E=Sophos;i="6.14,277,1736841600"; 
+   d="scan'208";a="43397021"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2025 23:27:43 -0700
+X-CSE-ConnectionGUID: q9dUuxdbQcms68gjZBnDng==
+X-CSE-MsgGUID: 0vVp8LExT4mGAwsUmOGGzw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,277,1736841600"; 
+   d="scan'208";a="129676786"
+Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
+  by orviesa004.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 25 Mar 2025 23:27:43 -0700
+Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.44; Tue, 25 Mar 2025 23:27:42 -0700
+Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.14 via Frontend Transport; Tue, 25 Mar 2025 23:27:42 -0700
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (104.47.56.45) by
+ edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.44; Tue, 25 Mar 2025 23:27:41 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Ei8X9mF6+bamjiX7mR1OMnvGXojsBMQwziBpZUSb2jWYFul7DUVo7MYZnXBzEZZ5oHheuqgV+krnYzGJUaZ1Osgqrl1LCkbbkL640jmrGIJPXxYkpwekuCObE6WyFtwf/AFo3UodSbYi18ad/8aus8yLIcfRnd7H3TdlR4dxA95MKCRmIfHaklaPPYO/Bz8kmNC9H5RMdfj+LqKBTA7nCKVELZOokogwGyns9JaMGXj2xbzp0SjamSz/V2fKhnTPljs6XQ5gn+0Em6lFkrx6ilue5rvENWRsnorVaz3ssMvVJdTYkLiU6cg6z+P2nKR1T6Tih3N8P3xpq7Xqpgc7ig==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ie4234iqMOM9pY3UCPLVMw5t/U6dDG5fTTC9ZHtnxM4=;
+ b=KeVQouX1xWbcec6EczaH7Ngs40YjJSmHz5vGPwB79ZhipN00sBiQo/qu99om8dy4kJnll5iWAEypoSYcrIeDNbo1uG4gB5YhQ6AYmn2vDc7eSvC3CwFnYaL48V5hIGUibhTjGNiK9We4lU/8wPOicUdi6PJhCxOyPKqKTv+OkNcqhhYy8M06aiwf188lZWcNCHlh3E3eY7tz8x/JBzPjVRorbqn2SceW0tLIIxw/rcOoXx7N0d6w7L1WwTU/hBvd5gXI6ehavCbu333XQxe/GdmeF5dwYVr9MnXRnVyN6+8krMOl52KXec73lYLs/7oAjr+mpK+qCaZZkPTyqMk5AA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com (2603:10b6:408:1b6::9)
+ by MW3PR11MB4745.namprd11.prod.outlook.com (2603:10b6:303:5e::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.44; Wed, 26 Mar
+ 2025 06:27:34 +0000
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c]) by LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c%4]) with mapi id 15.20.8534.043; Wed, 26 Mar 2025
+ 06:27:34 +0000
+Date: Wed, 26 Mar 2025 14:27:14 +0800
+From: kernel test robot <oliver.sang@intel.com>
+To: Alistair Popple <apopple@nvidia.com>
+CC: <oe-lkp@lists.linux.dev>, <lkp@intel.com>, Andrew Morton
+	<akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, "Alison
+ Schofield" <alison.schofield@intel.com>, Alexander Gordeev
+	<agordeev@linux.ibm.com>, Asahi Lina <lina@asahilina.net>, Balbir Singh
+	<balbirs@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas
+	<catalin.marinas@arm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Christoph Hellwig <hch@lst.de>, Chunyan Zhang <zhang.lyra@gmail.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>,
+	David Hildenbrand <david@redhat.com>, Gerald Schaefer
+	<gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, "Huacai
+ Chen" <chenhuacai@kernel.org>, Ira Weiny <ira.weiny@intel.com>, Jan Kara
+	<jack@suse.cz>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe
+	<jgg@ziepe.ca>, John Hubbard <jhubbard@nvidia.com>, linmiaohe
+	<linmiaohe@huawei.com>, Logan Gunthorpe <logang@deltatee.com>, Matthew Wilcow
+	<willy@infradead.org>, Michael Camp Drill Sergeant Ellerman
+	<mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, Peter Xu
+	<peterx@redhat.com>, Sven Schnelle <svens@linux.ibm.com>, Ted Ts'o
+	<tytso@mit.edu>, Vasily Gorbik <gor@linux.ibm.com>, Vishal Verma
+	<vishal.l.verma@intel.com>, Vivek Goyal <vgoyal@redhat.com>, WANG Xuerui
+	<kernel@xen0n.name>, Will Deacon <will@kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+	<linux-xfs@vger.kernel.org>, <oliver.sang@intel.com>
+Subject: [linux-next:master] [fs/dax]  bde708f1a6:  xfstests.generic.462.fail
+Message-ID: <202503261308.e624272d-lkp@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+X-ClientProxiedBy: SI2PR02CA0017.apcprd02.prod.outlook.com
+ (2603:1096:4:194::17) To LV3PR11MB8603.namprd11.prod.outlook.com
+ (2603:10b6:408:1b6::9)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250323070218.TXPv0lyp0kW0RBhSJpoCl37NxYw24VwGfwoNb3Lyohg@z>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: i6CPJleKQp9wummvQldFLO8JKVXroW2O
-X-Proofpoint-GUID: dDk6nyxD2ao79Zmj6fgOYsCT09PwiKQd
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-25_04,2025-03-25_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 clxscore=1015
- mlxscore=0 suspectscore=0 phishscore=0 adultscore=0 impostorscore=0
- mlxlogscore=999 lowpriorityscore=0 priorityscore=1501 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2502280000 definitions=main-2503250080
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV3PR11MB8603:EE_|MW3PR11MB4745:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4816b4ba-e3b9-45da-3c3a-08dd6c2f4b4d
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|7416014|376014;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?TMZXkNgl8t9bLNTuEms95RYo+fa+N/0HvD1UbRSDpRkpJDb2iwGwEgEmjnY3?=
+ =?us-ascii?Q?OQe0PVFQm8sOaozNzQ0gBDlEoXdN1EdLPDSlC7xpvpX7EdJDbvpXrzmv94sN?=
+ =?us-ascii?Q?wofddTHKY4MCSahxO73E43wQHm0xuf5dsqSG1uWWDeuThqWuGj0anF9TxSbN?=
+ =?us-ascii?Q?4k9+mTZBGg2Cerd4oFRyaIQaVMJBDBkYlEYmg2C2E39yByOWm6Ciw60VjyXi?=
+ =?us-ascii?Q?6aXL29kEhUqmR79CDwbvwyRY7Bk7u/hnQdLwvzeF7T/klbHsDO5iW40bg0rT?=
+ =?us-ascii?Q?S/RLMYSVW0fEdxKA3CmxXpJ/sIlodWephI7BGxknnvF1nhEnRWxTFFl+HXfq?=
+ =?us-ascii?Q?A4qBbSWm9pQPuQh+fg06og/gHTzUvQYL3pn0OUEsBr+3ZR+8gLY78Tk9Rbjj?=
+ =?us-ascii?Q?xdZ9KfsfdQSgtfm9KoFZcJLZGNb+aUdmAm1JGa/hJqGD+YJAUCH0pAo665JU?=
+ =?us-ascii?Q?bgp1rc/27dRO3hjUdguBXtE/+6dX0gK8oohMH/35HnxXmRg35UQwmwCBsd6D?=
+ =?us-ascii?Q?NQybz0tijMgvEG+1SoukxoHXpPP8iUP93zG63Nm+/N7kSTqCAv+UUAxMTV0F?=
+ =?us-ascii?Q?m9bb09m38EW0XNYN1eK3fGE/nwipZDa2Bg0maiycMHuR+aYq68+LVAXJPK3q?=
+ =?us-ascii?Q?3T21zk0FvhznWOUqOJG7kTD20NeMUwHkKtW8vqKsifAyw7sVJ5uCPQm9VPXu?=
+ =?us-ascii?Q?BOvTriCeXTjCVbfCukG5YuQ3U2DmKlkQmC5HgPNL2j/H9LcmtWvuNwsmjNmL?=
+ =?us-ascii?Q?iumPGGQhRO1XYNbSI7Nj1+MqitX2mWc/dD8M+eK/ZgyVeiTpivUTIFDWVWYJ?=
+ =?us-ascii?Q?tbHUpDqJ1v9YhePAe8bwJhipukuqcBaX46lMb22RIf+C+iiMlRjlp6l6yR09?=
+ =?us-ascii?Q?j+SBWp7vMfFcG/Ld2xUniI0SUw6s0u+WW1IKowdiA0QTwfC1YhILl4Jpooyf?=
+ =?us-ascii?Q?0WWf4i3I3LZ1y+6snf71JTxvutgllIqUyqrMeaNx0TVgzT5cHPBU54vWBvEL?=
+ =?us-ascii?Q?VDXAIN2F/fy0XFw8MEWPxypYFgh0sAN5F2aS2JLOVU9ILtreU7sMJM9Ptz89?=
+ =?us-ascii?Q?4y/9E5Y3hQcZeLQagBXgQ7zbgJm58AjJiVqvnkCso0ZBDQJtlJx+hadMslsG?=
+ =?us-ascii?Q?XkQ+fQkw6s10c8AYDEW4SG77hQ6nChBf0W+F3g3mKZJ6Su76kskGcXTsF5hC?=
+ =?us-ascii?Q?AVcLCGkSWPcgoIqWz/UpP310bor1kZpNE5PXMMhuAD6H9KXefylD215wVvfX?=
+ =?us-ascii?Q?jnoZod5hQT1hf7+73cL7ccrOe6PfwyqKLfsUYR8Z3aK6sIpFIyarRSPyBlrB?=
+ =?us-ascii?Q?RANZMedbxC74P43HLfNJcfTq+Yz08JGtIBPuT1o2v88Sbg=3D=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR11MB8603.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?HL3P2hmDvMit6JKPmJCacIdf/dp9PN3jJGwJB1XHcELbdfHDE/qvs1ouJSgs?=
+ =?us-ascii?Q?Ob2TJh9geY9+a2T+2dVb8vwa18sKUig3GXeHH3fZ+eW/juGdOAV2sBea2Vw/?=
+ =?us-ascii?Q?c3RfIGMN16sWr+Vh8fkZ2xXzU9JsYNQcBZoorkHwavUe+jpfd5Mg5zwUwER0?=
+ =?us-ascii?Q?4VfVluswVcNR/WxaYVkrsJpl+Jj0hPBSbWWzaZ1pGe1G/e16JNB5824J/Mls?=
+ =?us-ascii?Q?OAxJk6Dzliw0YyWEQ76cE6QMzy1g6aVq54gVe7qAmT0umkMXHvCXYk74aJkG?=
+ =?us-ascii?Q?rsdtL9f2DJZYdkSjg54hEmMyEakdorq0otHRxmoSYxFxVsz/1RIfEBCGPqR+?=
+ =?us-ascii?Q?Cj33I9gHZntYYfSBQ+J3bu+Iar8X36jfjrA/AWFCSOqy6GUbdKCA8inM0+0v?=
+ =?us-ascii?Q?IXRLnvxPBeRREmCUKtOt9TUOTMA5vq1u8TuYnrtd2aIrD7aHNk/WY2HEElnl?=
+ =?us-ascii?Q?O7iDe6DC57y8G70bQK0957LdXJY3KEuEWdRo17iKXNeJ8yXhzLSlKZxHDpQY?=
+ =?us-ascii?Q?vtmwO0y9yCiCYMcnrAKi+Kkom+d3GmCihI4rp1d7lTvU2aT/sgPqfc0YY521?=
+ =?us-ascii?Q?3RRjhgNRDd0lATXhwB+8QyX68JZ7KUPnFYUqyVwYR9vK1Mf2ZBKCGEYOvETd?=
+ =?us-ascii?Q?XOqVJbi0Eile+m2b8imzU0QY1a8/KWSMP15FAItUQeEnkISigGtWeW5AxpFi?=
+ =?us-ascii?Q?O5iviO/FpGoMpRFHZSVuLxCqOXWnTpqs0YKp+ba2qrrHY9JtH1hwpDxotsT8?=
+ =?us-ascii?Q?lJXGl76xdyvZkIfssP9bMTqiPaPlxhvhRAQFN7c8eT1hbeu5neg8F0xrbqIV?=
+ =?us-ascii?Q?DV4BpsmQn6xQD7XV5p61ILlhFB06ntktkIV2CDV94d3t3AS4eR2pSR2yYCrp?=
+ =?us-ascii?Q?IYLHnGg4uc5dlew/hcbOIPMFhRhWQs1wHR9FMVdvUcT91UVnkzVriKW8lubb?=
+ =?us-ascii?Q?jrMCnoS9R3if4WUyd7h/0OFZrPHu6PLv87/pECxK+nsATCFPHkYBibSIdz8s?=
+ =?us-ascii?Q?6F9o8oSvHQfxvSmoCbqZvCm6VN9GSLJIS42U3uQlY7UJIWjFKexATC+tDZRG?=
+ =?us-ascii?Q?NEqOIQzoJdRW7b5IUlyo256U+ODczXHJ6f9yxbq/0JVyEpJ/mH1rYeG/bvex?=
+ =?us-ascii?Q?lIQuDSbymmzIJWVyE7O82GBRg0bHUf0EOzv4Nqh1To0i9+B7ZC8D7mOi0qL2?=
+ =?us-ascii?Q?9MRk9F22AiyLjFoq2XV8VjCWZD8gKAYIGlypp58lnWIaLCLg8eObPDKNvhKm?=
+ =?us-ascii?Q?PknNmQLWk3FyjufHZLVfEgVRnqOW9cEzj4GPmbdjt3S7Gisw57gpWmKmr/dr?=
+ =?us-ascii?Q?pRIJ5PzDxZE3ThtBWX4rS0znQnO3WB67uTh1b61UHqSO1/mxIiPdI423xNh/?=
+ =?us-ascii?Q?+c2b3C4aaQixAAsh3TrvKATLnTcOfKLMoI31jjImghAqxSZKQJGNtRITmMYI?=
+ =?us-ascii?Q?eyOHbv8JGKK2kMzkCrt6HZpeS1w0UX6ja0hw8bD4kUvPr4SI+toUrE1/0i8A?=
+ =?us-ascii?Q?Ev7kT8RvMFv3+ZYSqpMl+Gp3r7oV7/0p9otXQK8b90RIj4SvnJIBZ/zTZ4Db?=
+ =?us-ascii?Q?yCU9LKPpcLC1NjiuhDtDn6P39qlluXhdllHSceztUsFjkvZlRylMmKDZK6fY?=
+ =?us-ascii?Q?IQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4816b4ba-e3b9-45da-3c3a-08dd6c2f4b4d
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR11MB8603.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Mar 2025 06:27:34.0257
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: oiEodCd+0nUDzY1vJj31LlfpYTUMqr+aKhcSZQzvcsF5vCnydQCAdkU3p0gg8zE68DTtMkiKKqv0/cHWB+ECgQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR11MB4745
+X-OriginatorOrg: intel.com
 
-On Sun, Mar 23, 2025 at 12:32:18PM +0530, Ritesh Harjani (IBM) wrote:
-> EXT4 supports bigalloc feature which allows the FS to work in size of
-> clusters (group of blocks) rather than individual blocks. This patch
-> adds atomic write support for bigalloc so that systems with bs = ps can
-> also create FS using -
->     mkfs.ext4 -F -O bigalloc -b 4096 -C 16384 <dev>
-> 
-> With bigalloc ext4 can support multi-fsblock atomic writes. We will have to
-> adjust ext4's atomic write unit max value to cluster size. This can then support
-> atomic write of size anywhere between [blocksize, clustersize].
-> 
-> We first query the underlying region of the requested range by calling
-> ext4_map_blocks() call. Here are the various cases which we then handle
-> for block allocation depending upon the underlying mapping type:
-> 1. If the underlying region for the entire requested range is a mapped extent,
->    then we don't call ext4_map_blocks() to allocate anything. We don't need to
->    even start the jbd2 txn in this case.
-> 2. For an append write case, we create a mapped extent.
-> 3. If the underlying region is entirely a hole, then we create an unwritten
->    extent for the requested range.
-> 4. If the underlying region is a large unwritten extent, then we split the
->    extent into 2 unwritten extent of required size.
-> 5. If the underlying region has any type of mixed mapping, then we call
->    ext4_map_blocks() in a loop to zero out the unwritten and the hole regions
->    within the requested range. This then provide a single mapped extent type
->    mapping for the requested range.
-> 
-> Note: We invoke ext4_map_blocks() in a loop with the EXT4_GET_BLOCKS_ZERO
-> flag only when the underlying extent mapping of the requested range is
-> not entirely a hole, an unwritten extent, or a fully mapped extent. That
-> is, if the underlying region contains a mix of hole(s), unwritten
-> extent(s), and mapped extent(s), we use this loop to ensure that all the
-> short mappings are zeroed out. This guarantees that the entire requested
-> range becomes a single, uniformly mapped extent. It is ok to do so
-> because we know this is being done on a bigalloc enabled filesystem
-> where the block bitmap represents the entire cluster unit.
 
-Hi Ritesh, thanks for the patch. The approach looks good to me, just
-adding a few comments below.
-> 
-> Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> ---
->  fs/ext4/inode.c | 90 +++++++++++++++++++++++++++++++++++++++++++++++--
->  fs/ext4/super.c |  8 +++--
->  2 files changed, 93 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index d04d8a7f12e7..0096a597ad04 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3332,6 +3332,67 @@ static void ext4_set_iomap(struct inode *inode, struct iomap *iomap,
->     iomap->addr = IOMAP_NULL_ADDR;
->   }
->  }
-> +/*
-> + * ext4_map_blocks_atomic: Helper routine to ensure the entire requested mapping
-> + * [map.m_lblk, map.m_len] is one single contiguous extent with no mixed
-> + * mappings. This function is only called when the bigalloc is enabled, so we
-> + * know that the allocated physical extent start is always aligned properly.
-> + *
-> + * We call EXT4_GET_BLOCKS_ZERO only when the underlying physical extent for the
-> + * requested range does not have a single mapping type (Hole, Mapped, or
-> + * Unwritten) throughout. In that case we will loop over the requested range to
-> + * allocate and zero out the unwritten / holes in between, to get a single
-> + * mapped extent from [m_lblk, m_len]. This case is mostly non-performance
-> + * critical path, so it should be ok to loop using ext4_map_blocks() with
-> + * appropriate flags to allocate & zero the underlying short holes/unwritten
-> + * extents within the requested range.
-> + */
-> +static int ext4_map_blocks_atomic(handle_t *handle, struct inode *inode,
-> +         struct ext4_map_blocks *map)
-> +{
-> + ext4_lblk_t m_lblk = map->m_lblk;
-> + unsigned int m_len = map->m_len;
-> + unsigned int mapped_len = 0, flags = 0;
-> + u8 blkbits = inode->i_blkbits;
-> + int ret;
-> +
-> + WARN_ON(!ext4_has_feature_bigalloc(inode->i_sb));
-> +
-> + ret = ext4_map_blocks(handle, inode, map, 0);
-> + if (((loff_t)map->m_lblk << blkbits) >= i_size_read(inode))
-> +   flags = EXT4_GET_BLOCKS_CREATE;
-> + else if ((ret == 0 && map->m_len >= m_len) ||
-> +   (ret >= m_len && map->m_flags & EXT4_MAP_UNWRITTEN))
-> +   flags = EXT4_GET_BLOCKS_IO_CREATE_EXT;
-> + else
-> +   flags = EXT4_GET_BLOCKS_CREATE_ZERO;
-> +
-> + do {
-> +   ret = ext4_map_blocks(handle, inode, map, flags);
 
-With the multiple calls to map block for converting the extents, I don't
-think the transaction reservation wouldn't be enough anymore since in
-the worst case we could be converting atleast (max atomicwrite size / blocksize) 
-extents. We need to account for that as well.
+Hello,
 
-> +   if (ret < 0)
-> +     return ret;
-> +   mapped_len += map->m_len;
-> +   map->m_lblk += map->m_len;
-> +   map->m_len = m_len - mapped_len;
-> + } while (mapped_len < m_len);
+kernel test robot noticed "xfstests.generic.462.fail" on:
 
-> +
-> + map->m_lblk = m_lblk;
-> + map->m_len = m_len;
-> +
-> + /*
-> +  * We might have done some work in above loop. Let's ensure we query the
-> +  * start of the physical extent, based on the origin m_lblk and m_len
-> +  * and also ensure we were able to allocate the required range for doing
-> +  * atomic write.
-> +  */
-> + ret = ext4_map_blocks(handle, inode, map, 0);
+commit: bde708f1a65d025c45575bfe1e7bf7bdf7e71e87 ("fs/dax: always remove DAX page-cache entries when breaking layouts")
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
 
- Here, We are calling ext4_map_blocks() 3 times uneccessarily even if a
- single complete mapping is found. I think a better approach would be to
- just go for the map_blocks and then decide if we want to split. Also,
- factor out a function to do the zero out. So, somthing like:
+in testcase: xfstests
+version: xfstests-x86_64-8467552f-1_20241215
+with following parameters:
 
-  if (((loff_t)map->m_lblk << blkbits) >= i_size_read(inode))
-    flags = EXT4_GET_BLOCKS_CREATE;
-  else
-    flags = EXT4_GET_BLOCKS_IO_CREATE_EXT;
+	bp1_memmap: 4G!8G
+	bp2_memmap: 4G!10G
+	bp3_memmap: 4G!16G
+	bp4_memmap: 4G!22G
+	nr_pmem: 4
+	fs: ext2
+	test: generic-462
 
-        ret = ext4_map_blocks(handle, inode, map, flags);
 
-        if (map->m_len < m_len) {
-          map->m_len = m_len;
 
-                /* do the zero out */
-          ext4_zero_mixed_mappings(handle, inode, map);
-                ext4_map_blocks(handle, inode, map, 0);
+config: x86_64-rhel-9.4-func
+compiler: gcc-12
+test machine: 8 threads Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz (Skylake) with 28G memory
 
-                WARN_ON(!(map->m_flags & EXT4_MAP_MAPPED) || map->m_len < m_len);
-        }
+(please refer to attached dmesg/kmsg for entire log/backtrace)
 
- I think this covers the 5 cases you mentioned in the commit message, if
- I'm not missing anything.  Also, this way we avoid the duplication for
- non zero-out cases and the zero-out function can then be resused incase
- we want to do the same for forcealign atomic writes in the future.
 
-Regards,
-ojaswin
 
-> + if (ret != m_len) {
-> +   ext4_warning_inode(inode, "allocation failed for atomic write request pos:%u, len:%u\n",
-> +       m_lblk, m_len);
-> +   return -EINVAL;
-> + }
-> + return mapped_len;
-> +}
-> 
->  static int ext4_iomap_alloc(struct inode *inode, struct ext4_map_blocks *map,
->           unsigned int flags)
-> @@ -3377,7 +3438,10 @@ static int ext4_iomap_alloc(struct inode *inode, struct ext4_map_blocks *map,
->   else if (ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS))
->     m_flags = EXT4_GET_BLOCKS_IO_CREATE_EXT;
-> 
-> - ret = ext4_map_blocks(handle, inode, map, m_flags);
-> + if (flags & IOMAP_ATOMIC && ext4_has_feature_bigalloc(inode->i_sb))
-> +   ret = ext4_map_blocks_atomic(handle, inode, map);
-> + else
-> +   ret = ext4_map_blocks(handle, inode, map, m_flags);
-> 
->   /*
->    * We cannot fill holes in indirect tree based inodes as that could
-> @@ -3401,6 +3465,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->   int ret;
->   struct ext4_map_blocks map;
->   u8 blkbits = inode->i_blkbits;
-> + unsigned int m_len_orig;
-> 
->   if ((offset >> blkbits) > EXT4_MAX_LOGICAL_BLOCK)
->     return -EINVAL;
-> @@ -3414,6 +3479,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->   map.m_lblk = offset >> blkbits;
->   map.m_len = min_t(loff_t, (offset + length - 1) >> blkbits,
->         EXT4_MAX_LOGICAL_BLOCK) - map.m_lblk + 1;
-> + m_len_orig = map.m_len;
-> 
->   if (flags & IOMAP_WRITE) {
->     /*
-> @@ -3424,8 +3490,16 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->      */
->     if (offset + length <= i_size_read(inode)) {
->       ret = ext4_map_blocks(NULL, inode, &map, 0);
-> -     if (ret > 0 && (map.m_flags & EXT4_MAP_MAPPED))
-> -       goto out;
-> +     /*
-> +      * For atomic writes the entire requested length should
-> +      * be mapped.
-> +      */
-> +     if (map.m_flags & EXT4_MAP_MAPPED) {
-> +       if ((!(flags & IOMAP_ATOMIC) && ret > 0) ||
-> +          (flags & IOMAP_ATOMIC && ret >= m_len_orig))
-> +         goto out;
-> +     }
-> +     map.m_len = m_len_orig;
->     }
->     ret = ext4_iomap_alloc(inode, &map, flags);
->   } else {
-> @@ -3442,6 +3516,16 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->    */
->   map.m_len = fscrypt_limit_io_blocks(inode, map.m_lblk, map.m_len);
-> 
-> + /*
-> +  * Before returning to iomap, let's ensure the allocated mapping
-> +  * covers the entire requested length for atomic writes.
-> +  */
-> + if (flags & IOMAP_ATOMIC) {
-> +   if (map.m_len < (length >> blkbits)) {
-> +     WARN_ON(1);
-> +     return -EINVAL;
-> +   }
-> + }
->   ext4_set_iomap(inode, iomap, &map, offset, length, flags);
-> 
->   return 0;
-> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> index a50e5c31b937..cbb24d535d59 100644
-> --- a/fs/ext4/super.c
-> +++ b/fs/ext4/super.c
-> @@ -4442,12 +4442,13 @@ static int ext4_handle_clustersize(struct super_block *sb)
->  /*
->   * ext4_atomic_write_init: Initializes filesystem min & max atomic write units.
->   * @sb: super block
-> - * TODO: Later add support for bigalloc
->   */
->  static void ext4_atomic_write_init(struct super_block *sb)
->  {
->   struct ext4_sb_info *sbi = EXT4_SB(sb);
->   struct block_device *bdev = sb->s_bdev;
-> + unsigned int blkbits = sb->s_blocksize_bits;
-> + unsigned int clustersize = sb->s_blocksize;
-> 
->   if (!bdev_can_atomic_write(bdev))
->     return;
-> @@ -4455,9 +4456,12 @@ static void ext4_atomic_write_init(struct super_block *sb)
->   if (!ext4_has_feature_extents(sb))
->     return;
-> 
-> + if (ext4_has_feature_bigalloc(sb))
-> +   clustersize = 1U << (sbi->s_cluster_bits + blkbits);
-> +
->   sbi->s_awu_min = max(sb->s_blocksize,
->             bdev_atomic_write_unit_min_bytes(bdev));
-> - sbi->s_awu_max = min(sb->s_blocksize,
-> + sbi->s_awu_max = min(clustersize,
->             bdev_atomic_write_unit_max_bytes(bdev));
->   if (sbi->s_awu_min && sbi->s_awu_max &&
->       sbi->s_awu_min <= sbi->s_awu_max) {
-> --
-> 2.48.1
-> 
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <oliver.sang@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202503261308.e624272d-lkp@intel.com
+
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20250326/202503261308.e624272d-lkp@intel.com
+
+
+2025-03-24 01:16:32 export TEST_DIR=/fs/pmem0
+2025-03-24 01:16:32 export TEST_DEV=/dev/pmem0
+2025-03-24 01:16:32 export FSTYP=ext2
+2025-03-24 01:16:32 export SCRATCH_MNT=/fs/scratch
+2025-03-24 01:16:32 mkdir /fs/scratch -p
+2025-03-24 01:16:32 export SCRATCH_DEV=/dev/pmem3
+2025-03-24 01:16:32 echo generic/462
+2025-03-24 01:16:32 ./check -E tests/exclude/ext2 generic/462
+FSTYP         -- ext2
+PLATFORM      -- Linux/x86_64 lkp-skl-d01 6.14.0-rc6-00297-gbde708f1a65d #1 SMP PREEMPT_DYNAMIC Mon Mar 24 08:39:37 CST 2025
+MKFS_OPTIONS  -- -F /dev/pmem3
+MOUNT_OPTIONS -- -o acl,user_xattr /dev/pmem3 /fs/scratch
+
+generic/462       _check_dmesg: something found in dmesg (see /lkp/benchmarks/xfstests/results//generic/462.dmesg)
+
+Ran: generic/462
+Failures: generic/462
+Failed 1 of 1 tests
+
+
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
