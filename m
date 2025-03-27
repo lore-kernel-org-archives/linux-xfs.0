@@ -1,174 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73ED018A6DB;
-	Thu, 27 Mar 2025 19:26:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B714128816
+	for <linux-xfs@vger.kernel.org>; Thu, 27 Mar 2025 19:48:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743103605; cv=none; b=OeaKf2eAmQaF/ijWQdMpzg7bpgJyeTMaRwCZg6yCO8pZZtH86a3PYscI3LKZuWwsviLltzlJUODzjjKD4C7KByD+I5lbGjAOOIqv9pPkyWpcFsjWkPtxeBJ72Y3E10H8yF4jTMLntohKSYNL3urA/xpNskpTmJeciVikG0YvgRU=
+	t=1743104900; cv=none; b=IK1uyXzkxRlZ3fDj3dMMKaOVujtuZhm/OxgYC+sVy7rZZOE5RH+6oKwcq5ZqYs5hdok57WliGA5IIkBzTIk2bBNtLlGMUnydmcBCaW11895Ux/9kLfHXqUO98OiRP7YeeHnESS2C+aMYuJT2EUEuVsRSJ8AucgGRifp3snESYG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743103605; c=relaxed/simple;
-	bh=g1CYlQqdxlwZLruKDHJtfRscrIkZVdAluXQtGU8MRKc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TemvPxwLw9ysPgvdH9e3SvnkoYicb4zmcrTMgTARNamEMksG8vzirWKXXyt/UNV1TXo8OFLfhdLakRodlCEaBRVOwcCu3Bd8Y7A2YtnFInMv6Hgo/MTFle7NOwreV8k67KdOSJmgBIaY3blyPNC+uOWiRhlgoL42AlfEH/8ijY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AhoI7WNe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1743104900; c=relaxed/simple;
+	bh=J6VhbvIW0qrAYRfW3LYqg4Cd285vNVJbPHr9T4ABLAc=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=Jo+ko42I1gRqoeqxQWfr5wMaTaWhjlM+5IJb/S4y6M4Jh4L1GcE3Y3pCJLizRWKJD0kBYA5adXZqs40YuIi7QjyZKN66ratN50Z91eNDSMAgQ4tM0U+qZAmz0z4+ExnBp2IshyDj+aR0rUuGEa3/AdI7Lp7QBy0WIUcSTJd4qTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=a9VLvMiO; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AhoI7WNe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98751C4CEE5;
-	Thu, 27 Mar 2025 19:26:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743103604;
-	bh=g1CYlQqdxlwZLruKDHJtfRscrIkZVdAluXQtGU8MRKc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AhoI7WNeMPZ29oSLwAkdjh1+hmd1H0PFd78VKrYEq7ZvOtJyRn/kZVpJ7ov1pCCkt
-	 FFtBsyvNXkgsCOuqL30XwUuAqDQSOw70VXwuTA0GlahX+tgi0vjgOM4rALe3DWcHDQ
-	 jjdr86gecU+SCmXIyBRIrTstnwwhhOU6G2P4SE+bQ56P43gtHv0GdjAy87Fkl3/6cO
-	 KzWNTAKllZg27AeU0seeKYl9Wju3Yt8606yfQiT/HEaHSmUmIR/ZYy8Aof73NN9rkC
-	 QlhDI25yR0zXN+3W0AsjfYwqvdqIfS5VNKvL2/jazZPFvmtHh/DNyEYhO04ZgZcO2W
-	 aITrHM+dyWvfA==
-Received: by pali.im (Postfix)
-	id 490BC81B; Thu, 27 Mar 2025 20:26:29 +0100 (CET)
-Date: Thu, 27 Mar 2025 20:26:29 +0100
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Helge Deller <deller@gmx.de>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Yoshinori Sato <ysato@users.sourceforge.jp>,
-	Rich Felker <dalias@libc.org>,
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andreas Larsson <andreas@gaisler.com>,
-	Andy Lutomirski <luto@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>, Chris Zankel <chris@zankel.net>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>,
-	=?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>,
-	Arnd Bergmann <arnd@arndb.de>, Paul Moore <paul@paul-moore.com>,
-	James Morris <jmorris@namei.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
-	linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-arch@vger.kernel.org, selinux@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 0/3] fs: introduce getfsxattrat and setfsxattrat
- syscalls
-Message-ID: <20250327192629.ivnarhlkfbhbzjcl@pali>
-References: <20250321-xattrat-syscall-v4-0-3e82e6fb3264@kernel.org>
- <CAOQ4uxjQDUg8HFG+mSxMkR54zen7nC2jttzOKqh13Bx-uosh3Q@mail.gmail.com>
- <20250323103234.2mwhpsbigpwtiby4@pali>
- <CAOQ4uxiTKhGs1H-w1Hv-+MqY284m92Pvxfem0iWO+8THdzGvuA@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="a9VLvMiO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1743104897;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=t8in9XTDiS1T5+D3V4IV9TmAj6q98zp/LnP64cTAWaQ=;
+	b=a9VLvMiOHsawBEpfu+uei+9rgw+pXzmJJIzTQtL9LDAgLURgXuL5RwUJMwkuAXSd4ctixk
+	4r+2hOeO5+U5mMAquq2EXETrUl7hgS0rkIK4rLZgc30FUrAGv73tVxRaOImsGRl9rNpsa1
+	Li3zjomvNyeaBtrgytEsWHTT+m5emdM=
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
+ [209.85.166.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-648-lT-uAKojOVS1wMc4QQvA0A-1; Thu, 27 Mar 2025 15:48:15 -0400
+X-MC-Unique: lT-uAKojOVS1wMc4QQvA0A-1
+X-Mimecast-MFC-AGG-ID: lT-uAKojOVS1wMc4QQvA0A_1743104895
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3d453d367a0so25325265ab.3
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Mar 2025 12:48:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1743104895; x=1743709695;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=t8in9XTDiS1T5+D3V4IV9TmAj6q98zp/LnP64cTAWaQ=;
+        b=WiH9omAwRaCro/OBmc4UIXeMR1Rl8s3NyxJv9P0sZtgA8pCTTLqWlcl+8U22UCbUr3
+         DkIQdGPYqUhtREieUCBLgYvJDZQAdReJh3MDG0eQoptPqoIH0pfuXlVnGjpknNz6u+Pz
+         dQZcxQam6m8EfA6KnywBFs3PD/92JsME3+A8dZgfIDeuVgfQCg6LoddqwDxL5R3f+YOs
+         AGre+LJJyfiWEqWWv+/UHB+jtkxI77XCidoRPhWZSO2DLPkiNjrbndpN3G6KJ//Ou3pC
+         IcEnjnq8PmUplDb/nXMk6h7R7Dn/s05VnD7s5Pv2dj4xaoJko3C2y9ZTq52eBSCpS7HJ
+         ai6Q==
+X-Gm-Message-State: AOJu0YxGxzvM8TNxBM3sQDd0eHFnxf7YCA4lQvQJjB3QtmIxB+t9aplp
+	wi/G3JqlxeTx/4Rwr+mV/tNymuEe/kRUyyGtChameXkiSWQiDJwLAG0ev62fQlXlTOi6n9kaT28
+	ldAv1v0dbM+ZNxGPCG88l+868IZTudHydiYBWpebgioOMPm8i0JEaMhcBSQ==
+X-Gm-Gg: ASbGncszshQx2Zh4lpp/Z4SO2yXd7ZVuV8WLsDWR6O1XnF1TzkrqWV66E/MKWwP/YSd
+	JKsXI6OKEGmkdF8PjkwR5Pml3PHv00l6Xz1akr4Tzup5kiYs41qO2JUmBE3w2euvsU8I8KkcAV0
+	//fT5YS2P/Phs2IkEgBMWk6/AVZTa+35Ksv9YpGJCRyZOaPmvTEg4dwAHcllzrvcnCG6sSncNoK
+	z1WhdNKmwJE3JEnnDMa93u1upanGfC7BKVmb5+c7HC2x25qTRo0Pc7rBYkIgB1U9gBL5DOmUVtY
+	Q6UA9Rju+H8d4LlbRbtMCx9q
+X-Received: by 2002:a05:6e02:380a:b0:3d4:6e2f:b487 with SMTP id e9e14a558f8ab-3d5cccea2e4mr52709295ab.0.1743104894993;
+        Thu, 27 Mar 2025 12:48:14 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEoHcB3M7o2YCDQGN2iIeFZYbtSDZ4kHmP2SUJhtwrCAxd9qWOlChrZ2r66oBxRyBZrLkDA+w==
+X-Received: by 2002:a05:6e02:380a:b0:3d4:6e2f:b487 with SMTP id e9e14a558f8ab-3d5cccea2e4mr52709185ab.0.1743104894540;
+        Thu, 27 Mar 2025 12:48:14 -0700 (PDT)
+Received: from [10.0.0.176] ([65.128.108.16])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d5d5ae9eb0sm860535ab.57.2025.03.27.12.48.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 27 Mar 2025 12:48:14 -0700 (PDT)
+Message-ID: <0e47cb04-542c-460a-a5b9-e9b0f3ef6c1f@redhat.com>
+Date: Thu, 27 Mar 2025 14:48:11 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxiTKhGs1H-w1Hv-+MqY284m92Pvxfem0iWO+8THdzGvuA@mail.gmail.com>
-User-Agent: NeoMutt/20180716
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH GRUB] fs/xfs: fix large extent counters incompat feature
+ support
+From: Eric Sandeen <sandeen@redhat.com>
+To: grub-devel@gnu.org
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+ Anthony Iliopoulos <ailiop@suse.com>, Marta Lewandowska
+ <mlewando@redhat.com>, Jon DeVree <nuxi@vault24.org>
+References: <985816b8-35e6-4083-994f-ec9138bd35d2@redhat.com>
+Content-Language: en-US
+In-Reply-To: <985816b8-35e6-4083-994f-ec9138bd35d2@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thursday 27 March 2025 12:47:02 Amir Goldstein wrote:
-> On Sun, Mar 23, 2025 at 11:32 AM Pali Rohár <pali@kernel.org> wrote:
-> >
-> > On Sunday 23 March 2025 09:45:06 Amir Goldstein wrote:
-> > > On Fri, Mar 21, 2025 at 8:50 PM Andrey Albershteyn <aalbersh@redhat.com> wrote:
-> > > >
-> > > > This patchset introduced two new syscalls getfsxattrat() and
-> > > > setfsxattrat(). These syscalls are similar to FS_IOC_FSSETXATTR ioctl()
-> > > > except they use *at() semantics. Therefore, there's no need to open the
-> > > > file to get an fd.
-> > > >
-> > > > These syscalls allow userspace to set filesystem inode attributes on
-> > > > special files. One of the usage examples is XFS quota projects.
-> > > >
-> > > > XFS has project quotas which could be attached to a directory. All
-> > > > new inodes in these directories inherit project ID set on parent
-> > > > directory.
-> > > >
-> > > > The project is created from userspace by opening and calling
-> > > > FS_IOC_FSSETXATTR on each inode. This is not possible for special
-> > > > files such as FIFO, SOCK, BLK etc. Therefore, some inodes are left
-> > > > with empty project ID. Those inodes then are not shown in the quota
-> > > > accounting but still exist in the directory. This is not critical but in
-> > > > the case when special files are created in the directory with already
-> > > > existing project quota, these new inodes inherit extended attributes.
-> > > > This creates a mix of special files with and without attributes.
-> > > > Moreover, special files with attributes don't have a possibility to
-> > > > become clear or change the attributes. This, in turn, prevents userspace
-> > > > from re-creating quota project on these existing files.
-> > > >
-> > > > Christian, if this get in some mergeable state, please don't merge it
-> > > > yet. Amir suggested these syscalls better to use updated struct fsxattr
-> > > > with masking from Pali Rohár patchset, so, let's see how it goes.
-> > >
-> > > Andrey,
-> > >
-> > > To be honest I don't think it would be fair to delay your syscalls more
-> > > than needed.
-> >
-> > I agree.
-> >
-> > > If Pali can follow through and post patches on top of your syscalls for
-> > > next merge window that would be great, but otherwise, I think the
-> > > minimum requirement is that the syscalls return EINVAL if fsx_pad
-> > > is not zero. we can take it from there later.
-> >
-> > IMHO SYS_getfsxattrat is fine in this form.
-> >
-> > For SYS_setfsxattrat I think there are needed some modifications
-> > otherwise we would have problem again with backward compatibility as
-> > is with ioctl if the syscall wants to be extended in future.
-> >
-> > I would suggest for following modifications for SYS_setfsxattrat:
-> >
-> > - return EINVAL if fsx_xflags contains some reserved or unsupported flag
-> >
-> > - add some flag to completely ignore fsx_extsize, fsx_projid, and
-> >   fsx_cowextsize fields, so SYS_setfsxattrat could be used just to
-> >   change fsx_xflags, and so could be used without the preceding
-> >   SYS_getfsxattrat call.
-> >
-> > What do you think about it?
-> 
-> I think all Andrey needs to do now is return -EINVAL if fsx_pad is not zero.
-> 
-> You can use this later to extend for the semantics of flags/fields mask
-> and we can have a long discussion later on what this semantics should be.
-> 
-> Right?
-> 
-> Amir.
+Grub folks, ping on this? It has 2 reviews and testing but I don't see it
+merged yet.
 
-It is really enough? All new extensions later would have to be added
-into fsx_pad fields, and currently unused bits in fsx_xflags would be
-unusable for extensions.
+Thanks,
+-Eric
+
+On 12/4/24 7:50 AM, Eric Sandeen wrote:
+> When large extent counter / NREXT64 support was added to grub, it missed
+> a couple of direct reads of nextents which need to be changed to the new
+> NREXT64-aware helper as well. Without this, we'll have mis-reads of some
+> directories with this feature enabled.
+> 
+> (The large extent counter fix likely raced on merge with
+> 07318ee7e ("fs/xfs: Fix XFS directory extent parsing") which added the new
+> direct nextents reads just prior, causing this issue.)
+> 
+> Fixes: aa7c1322671e ("fs/xfs: Add large extent counters incompat feature support")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/grub-core/fs/xfs.c b/grub-core/fs/xfs.c
+> index 8e02ab4a3..92046f9bd 100644
+> --- a/grub-core/fs/xfs.c
+> +++ b/grub-core/fs/xfs.c
+> @@ -926,7 +926,7 @@ grub_xfs_iterate_dir (grub_fshelp_node_t dir,
+>  	     * Leaf and tail information are only in the data block if the number
+>  	     * of extents is 1.
+>  	     */
+> -	    if (dir->inode.nextents == grub_cpu_to_be32_compile_time (1))
+> +	    if (grub_xfs_get_inode_nextents(&dir->inode) == 1)
+>  	      {
+>  		struct grub_xfs_dirblock_tail *tail = grub_xfs_dir_tail (dir->data, dirblock);
+>  
+> @@ -980,7 +980,7 @@ grub_xfs_iterate_dir (grub_fshelp_node_t dir,
+>  		 * The expected number of directory entries is only tracked for the
+>  		 * single extent case.
+>  		 */
+> -		if (dir->inode.nextents == grub_cpu_to_be32_compile_time (1))
+> +		if (grub_xfs_get_inode_nextents(&dir->inode) == 1)
+>  		  {
+>  		    /* Check if last direntry in this block is reached. */
+>  		    entries--;
+> 
+> 
+
