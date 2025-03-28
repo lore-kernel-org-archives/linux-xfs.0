@@ -1,221 +1,77 @@
-Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE1611C4A0A;
-	Thu, 27 Mar 2025 23:19:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C98D414831F;
+	Fri, 28 Mar 2025 01:26:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743117571; cv=none; b=GC/O2ul5W8vUbRYsWpmZSl6n/yy+CBaWJvE+z27iWtcS4k7MbmPaVwShW10S2gM5SGVfrCiwNTHIYuTmjstUnzsBMw2Am8Xcpmy++s1JxmGbPOJ8H6BYVrY0cI2qdZE/TXHWRjpyuxUMqrS1wxLM9dI/QJO6QNN6g6VcoMfFd+w=
+	t=1743125204; cv=none; b=k1iDkqitrlNQLT7e39SJNHJpr/dvt/pjPqtPajzhh/sSdweRq4M2Xaf3q4YB59mSEfsLbW0aUPJ9gfWeW6vCeO37E8ySiYUa3Quls/zMIWDLSMRntNWLP9Zbu00T04l12nZe0IyJ42aN50pYqj6amlPpjFLuE2SEDFLwwaEqpSk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743117571; c=relaxed/simple;
-	bh=JtHkof5Kn1s3OvzmD5FvCZbT7RpY4G+M3J77IZkSWJk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=R0Hn85tbHVWx44h39JO4IOj17/jQbq5yo6LyhAscny6uIeTJ3dkXt3eIxrC7LqYfgXPldPHr5mSgQ13hw5tCucZ06b2Z6CptW0aaACflCjKATnU7mDjqY5+hNo4ItrZ680apEurB5Pl1BhuvDb2I6COiCBhwJ/UzOr0E9Ur+8XQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L4jZbGME; arc=none smtp.client-ip=209.85.219.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1743125204; c=relaxed/simple;
+	bh=FAPaoZSMqlpVjhPlwazrM0cgjNXzL3rw8LOa+ow+1Fk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XPrR1QTdN+YfBcDRlFNkQqpdiZrLIDIXRi0i6Y6HUxxphNZY/6hwBHagklY2TOx2yDv4nLkOpb0yzqAHnnhlD1KXAPDT2WjTYGjZU25SqyL0nd2hRQYbhHaesxSyoeniyDMyB8H/0t6MAizkX8Xqwp/s21UMoGEgXNGvEkxXRfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJl0SKCA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L4jZbGME"
-Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e609cff9927so1178997276.3;
-        Thu, 27 Mar 2025 16:19:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743117569; x=1743722369; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=aMnF9vs8JB47IN/cDkEjD5+fBKENuY4T9JJxCznicyY=;
-        b=L4jZbGMEITOymm16C+Z8c1uNRKNeJFqiRRwk2cP8sFnoz09h7D33CWSjEygrF+9z0h
-         2ZYQHBv9YV0H1OeP2VIRfKNHNEJul3559tEPDLPHjB/vZPXFP49MnxknicjxASYyD6Nn
-         gPedzanZsU94PQPswpdoqOLfqzAPY+E1d3MgJ7C94z6Of1ICGesAtE2XTuRaPTVlojwb
-         8HVjRRlazMeKjBUa35GeWKpEEh3qh7b+Y/Uw5P8MFzjoEoIkOoRGrJtcArDFytx4fA2W
-         ut85vjLZx/ldyz1HAM8Hxi6wtfoZm/n1Sx4jNniojDwoDaR8bhepar9nYKKtTNh/LpdF
-         tPDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743117569; x=1743722369;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=aMnF9vs8JB47IN/cDkEjD5+fBKENuY4T9JJxCznicyY=;
-        b=Tp0HkPERJ5uja6T2v+E/D2MssFHWZKCdagEEiZ2sgoRb5URpK1LcvGc7KHn3e9rFd1
-         kceTWQ9X6nT7058se/48lPWPcY2/ekSJY+4XeHDTwPh0TJz6wFUqnPTZgBCMqknW4MK/
-         HSqAUBhFrDVxsfAJKZl1CjKaaV+j2zYqAX95XmPlLtiLJjIexanw188E2dpZWq83iAc7
-         zgCSP65qpcuy0J5eunmOFZinRWPTMSzPlxgoYk+X4ejvGE/g6WKaSHhIpdUhbfbulVMf
-         tgccdSEe1EjEF1JyLc3m/Q+dZwQq4BcLoAzcSpWlRWUKWdoyL/Nky6/+/FZEk68In4KW
-         M5eg==
-X-Forwarded-Encrypted: i=1; AJvYcCUARRvJlVHUNIo9s7dQkD+1TFXAe4hzqU2/dUzxTHkfCD/fFfyp1uTy+WIWqu2499f+SQkVXWDvwoz6XCdh@vger.kernel.org, AJvYcCUeG6lEP7ZKYX6Yu35DI6+F6vXOmt1rXLqKNxb3EG/9oMLjD9kwcf4fcTM0GyPWCP471jvn7915V5EMCcsr@vger.kernel.org, AJvYcCXHr9C+ojLuthl2PwXgKPVJhJQm9PkV1ZCmeD2QdlRA565J5NWJXdgGY99z7AuyEY9PVk9stNeH@vger.kernel.org, AJvYcCXONnPjrl48rLVMA70nZ6uvTRCqaZCl6Y3xWzgoN14jp+SyRhl7nQQ+UDJTzcYMuWBOWCl7FjfCJktY@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz1HNlmxPDF+btycOuTO57XhibkKnsxz02nPtHQdtMLD98POAzF
-	D/aETSzoZvs6+4izgRTkNZ9I6ZeY7Oy8UfYKEEsaD128uDWKl7lz3luRMfYEhZCP5KCsLWbNRqu
-	chq/KKG8fOTVibMQZXvIq6oo6QW4I8O3J
-X-Gm-Gg: ASbGncvk1JnzuOu8Jn40n2r0v/Ni7WErpuv4w4Qc+nGLnudf+NDsksSqWhc2ixD1n/M
-	TGpjkAh2qyxx77fz/GbaQx+PkcoZbxoY4ID17XaMDGSlXTVkIdxC7gMgVC1ncZoO9iLtHpW5yWL
-	tBwGDjrf2qOBoeMKwp/ix9Hc/zuzASUVhPlNvA/EMTz/wXxx1QKLH+Rx0=
-X-Google-Smtp-Source: AGHT+IFFzruC25MmRQ8O0m11e88aqMai4IgHeja7o6hpsDHutAEbLnqb6CJ+2QXVsTRPqdu8ITPVSGFdMHLnDsZUS7Q=
-X-Received: by 2002:a05:6902:4a03:b0:e6b:769f:556b with SMTP id
- 3f1490d57ef6-e6b769f5aa6mr107233276.35.1743117568538; Thu, 27 Mar 2025
- 16:19:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJl0SKCA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1399FC4CEE4;
+	Fri, 28 Mar 2025 01:26:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743125203;
+	bh=FAPaoZSMqlpVjhPlwazrM0cgjNXzL3rw8LOa+ow+1Fk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LJl0SKCA870OUyn0A3Um/uzyJcAgZs0EqpZiw9i6Mwcx7OXFZAffelzf0aiY2Kaf6
+	 W8NHyX0OUfuU4nCoqaTOEJs9Hq2DtCuujBkwx7CdBRHf+fkVx+2GfTRIBmEVp3jQAV
+	 Qqo0v1n7ndMMNNLrDXiNC28qw9JetVty2McnfsUG7dY7FhBKWz7tG3qncYCQLnkqKs
+	 6uPgYWWt8w8caaNos9M+ElhR7rtduFjG5qGRgxrzgtJBqxrea6FtLgdK7GJApE/rWe
+	 CHTXZpOJAtZkDpDR5kGRujeZMq9Ke1D/HAStuKgtfnvFgQTTeaxAs79qMxqM202Ral
+	 Xv6B2f+j4O+Bg==
+Date: Fri, 28 Mar 2025 09:26:38 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs/235: add to the auto group
+Message-ID: <20250328012638.j6ofb4qupszh4rzd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20250317055138.1132868-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250326154349.272647840@linuxfoundation.org> <CA+G9fYsRQub2qq0ePDs6aBAc+0qHRGwH_WPsTfhcwkviD1eH1w@mail.gmail.com>
- <CACzhbgQ=TU-C=MvU=fNRwZuFKBRgnrXzQZw15HVci_vT5w8O7Q@mail.gmail.com>
-In-Reply-To: <CACzhbgQ=TU-C=MvU=fNRwZuFKBRgnrXzQZw15HVci_vT5w8O7Q@mail.gmail.com>
-From: Leah Rumancik <leah.rumancik@gmail.com>
-Date: Thu, 27 Mar 2025 16:19:16 -0700
-X-Gm-Features: AQ5f1Jp8lXbaNFjXv08hBRv1tfhk1348_npPOImkZqUQgUwZQdNGnYymj_B4y2o
-Message-ID: <CACzhbgTQCuig6eqOJFshthQfT5-7cVkemY9VtO_vu4d+aTcU=Q@mail.gmail.com>
-Subject: Re: [PATCH 6.1 000/197] 6.1.132-rc2 review
-To: Naresh Kamboju <naresh.kamboju@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, 
-	patches@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	torvalds@linux-foundation.org, akpm@linux-foundation.org, linux@roeck-us.net, 
-	shuah@kernel.org, patches@kernelci.org, lkft-triage@lists.linaro.org, 
-	pavel@denx.de, jonathanh@nvidia.com, f.fainelli@gmail.com, 
-	sudipm.mukherjee@gmail.com, srw@sladewatkins.net, rwarsow@gmx.de, 
-	conor@kernel.org, hargar@microsoft.com, broonie@kernel.org, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, 
-	Anders Roxell <anders.roxell@linaro.org>, Dan Carpenter <dan.carpenter@linaro.org>, 
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250317055138.1132868-1-hch@lst.de>
 
-sent to stable:
-https://lore.kernel.org/stable/20250327215925.3423507-1-leah.rumancik@gmail=
-.com/
+On Mon, Mar 17, 2025 at 06:51:38AM +0100, Christoph Hellwig wrote:
+> xfs/235 is the only test effectively exercising the temporary enabling
+> of SB_ACTIVE during log recovery.  Add it to the auto group to increase
+> coverage.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
+Welcome more stable enough cases to be auto group.
 
-On Thu, Mar 27, 2025 at 10:04=E2=80=AFAM Leah Rumancik <leah.rumancik@gmail=
-.com> wrote:
->
-> This is fixed by
->
-> https://lore.kernel.org/all/20250321010112.3386403-1-leah.rumancik@gmail.=
-com/T/
->
-> but I'm waiting on an ACK. Let me do some nagging :)
->
-> - leah
->
->
->
-> On Thu, Mar 27, 2025 at 5:50=E2=80=AFAM Naresh Kamboju
-> <naresh.kamboju@linaro.org> wrote:
-> >
-> > On Wed, 26 Mar 2025 at 21:15, Greg Kroah-Hartman
-> > <gregkh@linuxfoundation.org> wrote:
-> > >
-> > > This is the start of the stable review cycle for the 6.1.132 release.
-> > > There are 197 patches in this series, all will be posted as a respons=
-e
-> > > to this one.  If anyone has any issues with these being applied, plea=
-se
-> > > let me know.
-> > >
-> > > Responses should be made by Fri, 28 Mar 2025 15:43:27 +0000.
-> > > Anything received after that time might be too late.
-> > >
-> > > The whole patch series can be found in one patch at:
-> > >         https://www.kernel.org/pub/linux/kernel/v6.x/stable-review/pa=
-tch-6.1.132-rc2.gz
-> > > or in the git tree and branch at:
-> > >         git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-st=
-able-rc.git linux-6.1.y
-> > > and the diffstat can be found below.
-> > >
-> > > thanks,
-> > >
-> > > greg k-h
-> >
-> > Regressions on arm, arm64, mips, powerpc builds failed with gcc-13 and
-> > clang the stable-rc 6.1.132-rc1 and 6.1.132-rc2.
-> >
-> > First seen on the 6.1.132-rc1
-> >  Good: v6.1.131
-> >  Bad: Linux 6.1.132-rc1 and Linux 6.1.132-rc2
-> >
-> > * arm, build
-> >   - clang-20-davinci_all_defconfig
-> >   - clang-nightly-davinci_all_defconfig
-> >   - gcc-13-davinci_all_defconfig
-> >   - gcc-8-davinci_all_defconfig
-> >
-> > * arm64, build
-> >   - gcc-12-lkftconfig-graviton4
-> >   - gcc-12-lkftconfig-graviton4-kselftest-frag
-> >   - gcc-12-lkftconfig-graviton4-no-kselftest-frag
-> >
-> > * mips, build
-> >   - gcc-12-malta_defconfig
-> >   - gcc-8-malta_defconfig
-> >
-> > * powerpc, build
-> >   - clang-20-defconfig
-> >   - clang-20-ppc64e_defconfig
-> >   - clang-nightly-defconfig
-> >   - clang-nightly-ppc64e_defconfig
-> >   - gcc-13-defconfig
-> >   - gcc-13-ppc64e_defconfig
-> >   - gcc-13-ppc6xx_defconfig
-> >   - gcc-8-defconfig
-> >   - gcc-8-ppc64e_defconfig
-> >   - gcc-8-ppc6xx_defconfig
-> >
-> > Regression Analysis:
-> >  - New regression? yes
-> >  - Reproducibility? Yes
-> >
-> > Build regression: arm arm64 mips powerpc xfs_alloc.c 'mp' undeclared
-> > Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-> >
-> > ## Build log
-> > fs/xfs/libxfs/xfs_alloc.c: In function '__xfs_free_extent_later':
-> > fs/xfs/libxfs/xfs_alloc.c:2551:51: error: 'mp' undeclared (first use
-> > in this function); did you mean 'tp'?
-> >  2551 |         if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbext(mp, bno, len)=
-))
-> >       |                                                   ^~
-> >
-> >
-> > ## Source
-> > * Kernel version: 6.1.132-rc2
-> > * Git tree: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linu=
-x-stable-rc.git
-> > * Git sha: f5ad54ef021f6fb63ac97b3dec5efa9cc1a2eb51
-> > * Git describe: v6.1.131-198-gf5ad54ef021f
-> > * Project details:
-> > https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6.1.y/build/v6=
-.1.131-198-gf5ad54ef021f/
-> >
-> > ## Build
-> > * Build log: https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6=
-.1.y/build/v6.1.131-198-gf5ad54ef021f/testrun/27785617/suite/build/test/gcc=
--12-lkftconfig-graviton4-kselftest-frag/log
-> > * Build history:
-> > https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6.1.y/build/v6=
-.1.131-198-gf5ad54ef021f/testrun/27785617/suite/build/test/gcc-12-lkftconfi=
-g-graviton4-kselftest-frag/history/
-> > * Build details:
-> > https://qa-reports.linaro.org/lkft/linux-stable-rc-linux-6.1.y/build/v6=
-.1.131-198-gf5ad54ef021f/testrun/27785617/suite/build/test/gcc-12-lkftconfi=
-g-graviton4-kselftest-frag/
-> > * Build link: https://storage.tuxsuite.com/public/linaro/lkft/builds/2u=
-rSwNctsyhQzf1j7dvt6nHemP5/
-> > * Kernel config:
-> > https://storage.tuxsuite.com/public/linaro/lkft/builds/2urSwNctsyhQzf1j=
-7dvt6nHemP5/config
-> >
-> > ## Steps to reproduce
-> >  - tuxmake --runtime podman --target-arch arm64 --toolchain gcc-12 \
-> >     --kconfig https://storage.tuxsuite.com/public/linaro/lkft/builds/2u=
-rSwNctsyhQzf1j7dvt6nHemP5/config
-> > debugkernel dtbs dtbs-legacy headers kernel kselftest modules
-> >  - tuxmake --runtime podman --target-arch arm --toolchain clang-20
-> > --kconfig davinci_all_defconfig LLVM=3D1 LLVM_IAS=3D1
-> >
-> >
-> > --
-> > Linaro LKFT
-> > https://lkft.linaro.org
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+>  tests/xfs/235 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/tests/xfs/235 b/tests/xfs/235
+> index 5b201d930769..c959dfd6e33a 100755
+> --- a/tests/xfs/235
+> +++ b/tests/xfs/235
+> @@ -8,7 +8,7 @@
+>  # then see how the kernel and xfs_repair deal with it.
+>  #
+>  . ./common/preamble
+> -_begin_fstest fuzzers rmap
+> +_begin_fstest auto fuzzers rmap
+>  
+>  # Import common functions.
+>  . ./common/filter
+> -- 
+> 2.45.2
+> 
+> 
