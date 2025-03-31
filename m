@@ -1,295 +1,241 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9395B1E492;
-	Mon, 31 Mar 2025 07:56:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743407777; cv=none; b=IDiJtAUf/hLHeVx32a7SgcozkpUAHi+dqt9XOJFnD7H1qwzzIhym9iz6HhSiMc32FhbnOVnvQlF98oLZYNsZ1+UD8PhSEMadluP/NU2FEoauyEE6QSEUaa7TEpyBjmo95GA0eP3ePY69WUBENID+XfnmjZqBpHvstvJkhEpPtnA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743407777; c=relaxed/simple;
-	bh=OrcnH/DOn4L8xTW6TbFqicpCzco8GgKR6E1ku1bu6Dk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZX6LiAjSu/6HdYKwxblBNNSeoxSOvbF/67nTTIL4VJqkYWFy4b8m94Pq1o9blhCq4fbz2t2SXd/M75MyN9v9zyDaKcqxxxcm7q+61vIYoHOwajL+4RVeW4n9ICQmF5AndlHm/CuTRemG/g+LdiyXjEieW+HV9CUHdFYAuUP0PcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oadPzksd; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A7C8F5B;
+	Mon, 31 Mar 2025 09:16:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.153.144
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1743412575; cv=fail; b=XNx4CN+ffKCrLkoiOTkA4tvtEN86BEDMqHWT1CYIBtzuANQZft+I2Ts/cB351HyImuaLeabNYwdR9O+u9bfnHlyHD1KPjBYEIOF1z0rO70O+Ygy78bZcLhdbRSJd2/NuynrK8XvARKsWEOpaaC0wxA5bFLKB8itRFrhW/5hbd1E=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1743412575; c=relaxed/simple;
+	bh=GqFJD/XUsHmOpcVRgmQaWie8i8V5q20QuePqCjWporQ=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=uAOaVSrOgxuAZ3T/T/0uK61G5cAluO8CmdK+YdABYql6jolq8aEHaD9MqN50e4RNJ/PtncbY2aU0rugI/WZcpQeg3Q5N5U5rkuiQsAKmLDJarGKz9i8P2CC/b2o00Wk/Dp2s2YzNrK0mspvrzdEerbCdChDCfiFHRkUBQe381ls=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=O23rWRaW; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=xGWxaiFH; arc=fail smtp.client-ip=216.71.153.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oadPzksd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E56D3C4CEEA;
-	Mon, 31 Mar 2025 07:56:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743407777;
-	bh=OrcnH/DOn4L8xTW6TbFqicpCzco8GgKR6E1ku1bu6Dk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oadPzksdNErrDN7uyBK0IYwANENa311Vbf6tj08FbJvbDN1Jpfuw7D0RuRkJBHOa8
-	 PC9zfJJ/J7lr+SCmTdchWhR3flvJdqRfp69SgpPS6UlVCloCCGDS8nbSipJRPYCkzU
-	 cpYDHJe5KcAKBCm3JwhLPWrFagy9zk7bVk3M95oxbF+Dz0ul7/TTmhVARYf2gpqmAf
-	 G/wm5aEQQ5fmlcJ7nDyBYbKVGpbEpB4ROrKNnBfo45bg/pmulSvlcHKgBrPiokWOaf
-	 1PhAkWQTNgB2E+3msnG1WELnUf0HNPqIBdRXM7OXu+cdmZT2ycXSQUqxFglQ8onv8U
-	 9lnTP6DSru0Og==
-Date: Mon, 31 Mar 2025 09:56:12 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, riteshh@linux.ibm.com, 
-	linux-xfs@vger.kernel.org
-Subject: Re: [linux-next-20250324]Kernel OOPs while running xfs/206 Test
-Message-ID: <ddm6vhsyqmqkkwifofev4onnewtumnmxw7gej5irsvqtovzk2f@n5dtb22xnpzr>
-References: <ux6hTu_zJy2VgEGB-hjkyjPgrnYiSkCDnVw0L7oLB_OvUh6zy3hYQrm_hazL9iuSUuuwoQbiLBlyyO5sGjInGQ==@protonmail.internalid>
- <6564c3d6-9372-4352-9847-1eb3aea07ca4@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="O23rWRaW";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="xGWxaiFH"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1743412571; x=1774948571;
+  h=from:to:cc:subject:date:message-id:
+   content-transfer-encoding:mime-version;
+  bh=GqFJD/XUsHmOpcVRgmQaWie8i8V5q20QuePqCjWporQ=;
+  b=O23rWRaWVSbQMLuWHRfz65kQ6rE+kW5v4Iv9z6fTkKMW1xfMXJ5WTcSC
+   pF2Im9hGZE2FQOvXcAu1TE65zZAqbE4ogbWJosTRTNjQtGmK3A8vyTKXz
+   5Y1Ygy8p5jWM66wRdyI6zgCHnoMcg4QO+++YttGmSX/CZxz/5COUv5EwZ
+   /7TlQlZgPT/HYG/06Po/CvzAIv8aTjTXQB/cDOTY/5eTnmehYr/a3YWOq
+   Jl+3QPlgMvydWmnckk7bnd6j5vjLiAwA7Xq/MQYo2ZIU/fmYTxh1RIJAb
+   F6CHSdTRzxptxiidGmBw5Iv5phs8pdT8PuiltRYt/kG57OSBboyAcA1Qx
+   A==;
+X-CSE-ConnectionGUID: HowvQVrqQuy87TBhE7Nzqg==
+X-CSE-MsgGUID: gI1Jtg9dSCiEIxfjiDMblQ==
+X-IronPort-AV: E=Sophos;i="6.14,290,1736784000"; 
+   d="scan'208";a="65727750"
+Received: from mail-northcentralusazlp17010002.outbound.protection.outlook.com (HELO CH1PR05CU001.outbound.protection.outlook.com) ([40.93.20.2])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Mar 2025 17:15:04 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=IX3xyAGxnPCemTDq4Ri3hh2q8NHdnqoK2rmtGa4EIn5uLqm594J/c20s+XnaB0T8EuQ3AzVllDbez7F5Vc4+z7Yq7hLi0p7INIIx2GVBadLlz9LiqNSlPWM+AnJ+79V1vdicrdR9eCssH1Yq2gn5J+/Vnw1jqbRt9taqnHouUVjD40vRw44fRX7675GAOotWX+ZPhgcr4AIgmTb/GuOkQeHkdW+iw16/SqfeCGGNE4EGjBFHSqH6B3i0Sip+3B4zGMbWgI3ybi/MB11Pwl0F/dBelrzyDvW67E68Z1ia6Y+uobFa25APVScsS2s4M84POTd3eb1YP2HGSLUXHO5GKQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Sm9AchJDbAlZiWhmWWCnI7fLJp89dORwVGzS7VvVa2s=;
+ b=obpTrX4IW7JO+etNw5eNO840SbR8QTESAzb3ovkvcueMbuGtj/ZHzI/6z54s3Rqtrjp9IGB2P8HfpDJjNtBjhrW+JPkckOAQFTa6XqbOsBWMFwJ5pRrFDVyvRyPFkoJH5W/E7CvJRc/f2jY3fiTcVVr/QpvJLvDKh5vt0s+Zo4jeBMYcUXKXR31AnczeyCQ7jhbJCls4HK/HCxrp/G3TJ+bo4vpnA319N6fwGucj6XtpztbJzZ4Kjc5DW7FrjZNbKAeE9RMkPWzoxqBtIaC0braSRLFP6x4WzsAA5yrYDR/1tSt1ZVUdSq8xpwtl//5KUU2zBljAMi/PmghnUL+bGQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Sm9AchJDbAlZiWhmWWCnI7fLJp89dORwVGzS7VvVa2s=;
+ b=xGWxaiFHHfcBxJVH2XYdDkXvt9Yswr+47aLvSC9doyymZY2NzRRNj7BLT3ktZqjbmG0bteZQZZ9g797H9LyaczyeMyNH/3KG8oi9dhNSRTTXqPKdv82fgVHdzqpB5WYBHGsBgvvfcey1IlpXUBcEVywzTBh+W6Y4LTW3WFfWF50=
+Received: from PH7PR04MB8755.namprd04.prod.outlook.com (2603:10b6:510:236::8)
+ by PH0PR04MB8241.namprd04.prod.outlook.com (2603:10b6:510:103::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.50; Mon, 31 Mar
+ 2025 09:15:00 +0000
+Received: from PH7PR04MB8755.namprd04.prod.outlook.com
+ ([fe80::4372:e8cb:5341:9a9b]) by PH7PR04MB8755.namprd04.prod.outlook.com
+ ([fe80::4372:e8cb:5341:9a9b%7]) with mapi id 15.20.8534.043; Mon, 31 Mar 2025
+ 09:15:00 +0000
+From: Hans Holmberg <Hans.Holmberg@wdc.com>
+To: Carlos Maiolino <cem@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	"Darrick J . Wong" <djwong@kernel.org>
+CC: hch <hch@lst.de>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hans Holmberg
+	<Hans.Holmberg@wdc.com>
+Subject: [PATCH] xfs: document zoned rt specifics in admin-guide
+Thread-Topic: [PATCH] xfs: document zoned rt specifics in admin-guide
+Thread-Index: AQHboh1g0lt5Uvc2qkuGocBjSjWLeg==
+Date: Mon, 31 Mar 2025 09:15:00 +0000
+Message-ID: <20250331091333.6799-1-hans.holmberg@wdc.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-mailer: git-send-email 2.47.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH7PR04MB8755:EE_|PH0PR04MB8241:EE_
+x-ms-office365-filtering-correlation-id: c1b72a7a-cc5b-4388-c9cd-08dd70348357
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700018;
+x-microsoft-antispam-message-info:
+ =?iso-8859-1?Q?WiAEgocRJgmKtQPXg+mI0uAFjJGwn3roYOLqpRQeKmH3f3mBygxYOTuKrH?=
+ =?iso-8859-1?Q?C2VQxkpWcGXveHf8iS5RFHwItLwZJrgB2aO0im7tI72JlD6ndX7ASt3OOD?=
+ =?iso-8859-1?Q?XOH45AwFQffAr/qhBIpIhtVgLhb+rjPc13Ky6r+U2lFJtOmB8ISUP5fCRe?=
+ =?iso-8859-1?Q?kbiCiceVuHoVrhgEKjffCwHqtMFQ8+L3l6RF+6x7pnFKqjIyYWyjKoBNoJ?=
+ =?iso-8859-1?Q?Mv6z9HDfJhRsjQqRl6ivDIPiCgwfFkISR89t1NDotXe87w5Qit1E1chYff?=
+ =?iso-8859-1?Q?gxtm1bnEmnkO4YA0WU/oLitwcWJAiEXiD7z5oJTs3ZaiEULXUqsTAEtmh9?=
+ =?iso-8859-1?Q?RtE+boEVv/hoFdV7XWCBq8O3LuYyBrxWR7GKrTNGfObMs7ASVgdxXkFD0l?=
+ =?iso-8859-1?Q?pFxEtGrPIA1GRsMsxWgTWR7C1vBP9BJathWyyBvEV1TuHbM39aZmG9il3s?=
+ =?iso-8859-1?Q?xS1TSVuQYCxfTa9qzW/r52wsEQ4VtvGN2i/5PuXxN2eRtHeA04abnKpYQf?=
+ =?iso-8859-1?Q?z98niOutgu5A1b+4gmV1weC9ctGfArvSranp3uIO3HU5Wa0zYqwP4gtR+c?=
+ =?iso-8859-1?Q?RWzdYkCoLOhbHwgllliarcim+5g2hDsCDG0am+u8iiOrfM72zjFUoAL7w/?=
+ =?iso-8859-1?Q?ysjSHFjP5BH1Mx4jwjMHzNOMDXQ84mv+M2xC9YSDtjkixRg0kJ3z4RTgpv?=
+ =?iso-8859-1?Q?rNHla/6EP2swCdJP8m7d5iZOyu0X9CU6axcV2j1rkN9PZasAkgc+HWBmnr?=
+ =?iso-8859-1?Q?nkyHgujA0NU11U10j73e7UW67gO6rvQutQEwTFqMIv3LZ7Pu3KFgi8LQx5?=
+ =?iso-8859-1?Q?c6UmCVtZiyFs6Iy5gH4xLqEtY96WRNUlw6f2Ms3CUjHzYR0wGSqJaRRn9t?=
+ =?iso-8859-1?Q?C1LK22I+Pnk9RoBkaC8DlN1cXJ/+8+5YlXFFjPoAPfUg4wm3ZcinL6VkmC?=
+ =?iso-8859-1?Q?zggssWjWXVsuXmg5ptqREhokMdPZ5hpOjy1jshkOhpZA2XL1U40y517TWs?=
+ =?iso-8859-1?Q?+x4ggSYj7/SJpaCxbaSNpGyNLzz8j6Q0zqS+OqHssdtPWGjwGcJ6Ddvzp/?=
+ =?iso-8859-1?Q?JY0v5JGhd5HJSk9N51Ia0GvmVYhSs+y9yrpRuxI4oTgWXBB1wTl3/23+ri?=
+ =?iso-8859-1?Q?hnrxKX1+/nT5CiRlyiIRV/dux5+bzz4IKNaTyQn1dMDxQv/iQbLsroQNB1?=
+ =?iso-8859-1?Q?rDg+uhr9fAMXlG5N/E0Etu70Fx9Dj0KfSA/9eczSZ06ucXDKY02FT9McxM?=
+ =?iso-8859-1?Q?vMXyx2l7yAPo10FkHiI+AuA8jXCvUYMe00OVTM1WiKZ0TLd5ejnFRcBeu6?=
+ =?iso-8859-1?Q?hB/gsRfwb8XiSTmbZNKlHpI2sJo6q5i7WF5+MKXkmC/ycmpVC82oDNIk2I?=
+ =?iso-8859-1?Q?mOyCFvVob0tdB30dLDFlWQ8WzdAYPbsUuWsNGJG8jQC/2Vtiwlhb+aREog?=
+ =?iso-8859-1?Q?dhqSYuHRGMAcL3AmFTycaR8wmPisKqWxBcpLlOfToxAnG3z1NxhAvdkrkn?=
+ =?iso-8859-1?Q?622mpIy5sRfydqBlNoqjrrhjHUOel4/LlA7Cy5wzuPWg=3D=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR04MB8755.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?X4cxXqBcVNNYOREEU1UfDNAEYYdnm/zSKNcv6IleQbLpSLLE+KBY0EQTWL?=
+ =?iso-8859-1?Q?1ECMgg/yxrAYZZtqe02AS1TUgQux4QOZVpGawU14njcN36xM1RbNPCE3Zp?=
+ =?iso-8859-1?Q?Lj5gm3+alo0gZTe0b/AxxUj6G4JEUQ2jedSu8ZtO7UK5Iy/XZYvK/dxnMa?=
+ =?iso-8859-1?Q?7lzklbedhefJ7rv94suEBB8w23oHPdpVjrjCz/HXfnZS4zlFDGh6SdKB2g?=
+ =?iso-8859-1?Q?qtS4CoNvHzj1C0TusJeQEjoI76MBiUumr3lvhlK+K058YBZO6D2RxBsdEm?=
+ =?iso-8859-1?Q?slOhTCe+lfn1cwzGWgsChXukUSfzZ42VjTZR7uPCi8wVvJfYnhO+E+XK/a?=
+ =?iso-8859-1?Q?6zf3EYcqjuesMu2jKtd9ME5TRF0pxUYt3H2qNIqUFt6tZmY+nEsWtPS4Av?=
+ =?iso-8859-1?Q?GPA0r62Eu6C3yrH14m/DeeE1aypBz0oPxcc/lxPtuhFxyuroyGG/ZNq30b?=
+ =?iso-8859-1?Q?yRa07qCZpo+CW1LJcXFVrcDoCN8Gv3Oi3PhtSDrPAo8RSpRHgkz/WQL/WL?=
+ =?iso-8859-1?Q?Iq6aMWRGYmq/zRIVoQVfWvFbBzati/3bSTDM7+oMHr1T5acERN028vlX8l?=
+ =?iso-8859-1?Q?5+L0dqCqamQGc+FkRsjtugJuKy0C4H/roFeGCQDCT3IURozKM245mCaVOY?=
+ =?iso-8859-1?Q?CCHtsHvCFDSB1SfczU1eavMx5AEAckpAKo8MtLL5co64O/uDEs5tOMx8kd?=
+ =?iso-8859-1?Q?DpFJ5KDMSqm3gg8mbFfZqDUpYmU5BjkLkA/ScPAMj0APl988bwMTmlGrXi?=
+ =?iso-8859-1?Q?ITuA3SZs9clc4kIPjYbNAv8W1LT5Nt1QFgWiDroZhQ3DUv8qSgoirN+NsO?=
+ =?iso-8859-1?Q?Nd6lehaZOYDNdXRcnrm4g8AYtS0JADotLrAjSE/Rzu7PpWnd7vymSkZpUY?=
+ =?iso-8859-1?Q?qnxGrXQGE7vkgG4gdOeLXaNfsl1yPwHfPzx1ELjrd8g3iZ2nqCM2rlSAgm?=
+ =?iso-8859-1?Q?HALVuUQmpig/8gV31830ZqJI2YoMTHZHW2LQktOCCQc3wQTPQF+xQYNyNd?=
+ =?iso-8859-1?Q?Vhia7BqEARm7aY+ak/Uiyi88xyGnAZkxzP61sZplfV08mpwVPPJ30K/apR?=
+ =?iso-8859-1?Q?n25u4B6YgZsSFRUBx1CSQg/GLqEO9pXE+nKrYoeBretVDeNoyvejimQQXM?=
+ =?iso-8859-1?Q?dTuG34rNCYN/a4/aYuTjzGdf+qWmL72tsdXrmDzk0jEFDa+yxy+df/CZwH?=
+ =?iso-8859-1?Q?uofatfmt0Zfe+27KXAIDjTvkHW5twX7WeRaiIJyTM4X5W5f7nk74GzyNCT?=
+ =?iso-8859-1?Q?I2tmYk4u6Z8ypJM/cDxRbuO6CwHFar1DdmE3ZXr/vz9PY8BuDYiO5NQWEb?=
+ =?iso-8859-1?Q?RVSI1hsptGKTUhHAD/6lsXL9ELvhBH0CcQ55A1h2ewhhtUpBcXGGkhyt+A?=
+ =?iso-8859-1?Q?nJ1qKB2rphQaI5gzThXEb5xZ30f9M52bsyCrEYNir4m50Lgonl3qz7Lyve?=
+ =?iso-8859-1?Q?ZfEZtRtEkIlk9Nyp5Mpgy3a/DU24F5EOGO1RWhWLUbbHD6DYQdKJslmgf0?=
+ =?iso-8859-1?Q?VC4QLghoTpB+4XZ69xdPjoNV4tdtZeZJM2VxMVUuJrFmZh5GSa2Kvb9nmf?=
+ =?iso-8859-1?Q?Cehfpq6XF7DmYPhloKpT/lJOx2QfPdA6HYSXh5KSgiDPg03o7+0d2ukPu7?=
+ =?iso-8859-1?Q?4oo1jnYO+GrMWWtiBR0NvV/i1glfbDkGSZ6GQb+r70YQubkuFPKo51sA?=
+ =?iso-8859-1?Q?=3D=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <6564c3d6-9372-4352-9847-1eb3aea07ca4@linux.ibm.com>
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	2J1siql3KlrEOkY0Pv06zKOdFeVwWXAN3Dcqx/nU4m5aNq6fZvh3RYntjiwy/xYCpsAVF/IVu9UOes0WUK9vx4GOQ2SGALfSwjg1jfUt6YI4cANlB3PgY0rE1OjY0EwpCNv5Qv0Bk3LRL0Y0mBampqagHFSaBueQJXALSRhhNQu2dvZuPZH8MJCzzdHoy1DAEgq6LUJ30chyHJeZGUtGWsusEwaUXvekz0gbu5QShSKTzCv46WaDFfgXQhZmBpjqihyMlsO6ci2AN1SriggwYVvO95Wb+7mebjRoKgk+XKozKptopBMNBhqzVV7KajPFiRlo//L/QG7tmm6kwiLd+kB2KPKh7LUR70ESxiOBw3LpFCxgfM8T0qWfbQ8dYGsZdUxmj7ot3zDmJzy52JTiH6g9jHT+P542AfLwzY+NDxxEx+KsEfBXhHZfxVBC2iLeALqzGgqN+P0y6OALqEvqG9kL3NOFIhsu0BzGtI1IABeX5g8vTD6MX6o2WNmDZK5gGk0a/LKJsL0AKT/PFnrP4mQ2ev+A2NX2Wz/ypkED+9iQesqrF+eRn5Nwb3LisWMweHUQ/pLyVnwqqEq6Ot0Ha+EE+MetkygWKMMwlEDY0Mc0p4VeOSIdvMxWEUqtBGCJ
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR04MB8755.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c1b72a7a-cc5b-4388-c9cd-08dd70348357
+X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Mar 2025 09:15:00.0617
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: GUky+0Nm3VbiyS7FZYi//qGbDxSO/4zvs4VAEOyFwQ0Iosr/IJuojt+CTqPXuyoIKdmOB3isu0ZCi/SwJ8Z66g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB8241
 
-On Wed, Mar 26, 2025 at 09:32:07PM +0530, Venkat Rao Bagalkote wrote:
-> Greetings!!!
-> 
-> I observed kernel oops, while running xfs/206 test case on
-> 6.14.0-rc7-next-20250324 only once. I am not able to reporduce this. But
-> posting it here anyway, if anyone gets any clue.
-> 
-> Please ignore, if it dosent help.
-> 
-> 
-> ---- Steps to Reproduce ----
-> 1. git clone git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> 2. cd xfstests-dev/
-> 3. mkdir /mnt/loop-device /mnt/test /mnt/scratch
-> 4. for i in $(seq 0 1); do fallocate -o 0 -l 9GiB
-> /mnt/loop-device/file-$i.img; done
-> 5. for i in $(seq 0 1); do losetup /dev/loop$i
-> /mnt/loop-device/file-$i.img; done
-> 6. mkfs.xfs -f /dev/loop0; mkfs.xfs -f /dev/loop1
-> 7. vim local.config
-> 8. make
-> 9. ./check xfs/206
-> 
-> local.config >>>
-> [xfs_4k]
-> export RECREATE_TEST_DEV=true
-> export TEST_DEV=/dev/loop0
-> export TEST_DIR=/mnt/test
-> export SCRATCH_DEV=/dev/loop1
-> export SCRATCH_MNT=/mnt/scratch
-> export MKFS_OPTIONS="-b size=4096"
-> export FSTYP=xfs
-> export MOUNT_OPTIONS=""-
-> 
-> 
-> Traces:
-> 
-> [ 2272.236489] ------------[ cut here ]------------
-> [ 2272.236502] WARNING: CPU: 3 PID: 1 at kernel/cgroup/rstat.c:231
-> cgroup_rstat_updated_list+0x228/0x330
-> [ 2272.236512] Modules linked in: overlay dm_zero dm_thin_pool
-> dm_persistent_data dm_bio_prison dm_snapshot dm_bufio dm_flakey xfs loop
-> dm_mod nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet
-> nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct bonding nft_chain_nat
-> nf_nat tls nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 rfkill sunrpc
-> ip_set nf_tables nfnetlink pseries_rng vmx_crypto fuse ext4 mbcache jbd2
-> sd_mod sg ibmvscsi ibmveth scsi_transport_srp [last unloaded: scsi_debug]
-> [ 2272.236556] CPU: 3 UID: 0 PID: 1 Comm: systemd Kdump: loaded Not
-> tainted 6.14.0-rc7-next-20250324 #1 VOLUNTARY
-> [ 2272.236564] Hardware name: IBM,9080-HEX
-> [ 2272.236572] NIP:  c0000000002d3af0 LR: c0000000002d3948 CTR:
-> c0000000005f3728
-> [ 2272.236578] REGS: c000000004b276f0 TRAP: 0700   Not tainted
-> (6.14.0-rc7-next-20250324)
-> [ 2272.236584] MSR:  8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR:
-> 28228442  XER: 2004006c
+Document the lifetime, nolifetime and max_open_zones mount options
+added for zoned rt file systems.
 
-> [ 2272.236599] CFAR: c0000000002d399c IRQMASK: 1
-> [ 2272.236599] GPR00: c0000000002d3948 c000000004b27990 c0000000016b8100
-> 0000000000000001
-> [ 2272.236599] GPR04: 0000000000000003 0000000000000003 0000000000000000
-> 0000000ef9220000
-> [ 2272.236599] GPR08: c000000091b66000 c009fffff4ca0140 c000000091b66000
-> 0000000000008000
-> [ 2272.236599] GPR12: c0000000005f3728 c000000effffb300 0000000000000000
-> 0000000000000000
-> [ 2272.236599] GPR16: 0000000000000000 0000000000000000 0000000000000000
-> c0000000ac5043e0
-> [ 2272.236599] GPR20: 0000000000000001 0000000000000000 c0000000015d11d8
-> c0000000ac504000
-> [ 2272.236599] GPR24: c009fffff4ca9000 c0000000ac504000 0000000000000000
-> c000000efb49c4bc
-> [ 2272.236599] GPR28: c000000002d0a668 0000000000000018 0000000000000003
-> c000000091b66000
-> [ 2272.236645] NIP [c0000000002d3af0] cgroup_rstat_updated_list+0x228/0x330
-> [ 2272.236650] LR [c0000000002d3948] cgroup_rstat_updated_list+0x80/0x330
-> [ 2272.236656] Call Trace:
-> [ 2272.236658] [c000000004b27990] [c0000000015d11d8]
-> __cpu_possible_mask+0x0/0x400 (unreliable)
-> [ 2272.236665] [c000000004b279f0] [c0000000002d3f50]
-> cgroup_rstat_flush+0xc8/0x5d0
-> [ 2272.236672] [c000000004b27a90] [c0000000002d47d0]
-> cgroup_base_stat_cputime_show+0x5c/0x2fc
-> [ 2272.236678] [c000000004b27b40] [c0000000002c7fb0]
-> cpu_stat_show+0x2c/0x1a4
-> [ 2272.236683] [c000000004b27b80] [c0000000002c60e0]
-> cgroup_seqfile_show+0x74/0x158
-> [ 2272.236688] [c000000004b27bf0] [c000000000735974]
-> kernfs_seq_show+0x44/0x58
-> [ 2272.236693] [c000000004b27c10] [c000000000676440]
-> seq_read_iter+0x264/0x6a8
-> [ 2272.236700] [c000000004b27cf0] [c0000000007364c0]
-> kernfs_fop_read_iter+0x4c/0x60
-> [ 2272.236704] [c000000004b27d10] [c000000000628a9c] vfs_read+0x2cc/0x3a0
-> [ 2272.236710] [c000000004b27dc0] [c000000000629904] ksys_read+0x84/0x144
-> [ 2272.236715] [c000000004b27e10] [c000000000033498]
-> system_call_exception+0x138/0x330
-> [ 2272.236721] [c000000004b27e50] [c00000000000d05c]
-> system_call_vectored_common+0x15c/0x2ec
-> [ 2272.236728] --- interrupt: 3000 at 0x7fffa5f33d94
-> [ 2272.236732] NIP:  00007fffa5f33d94 LR: 00007fffa5f33d94 CTR:
-> 0000000000000000
-> [ 2272.236736] REGS: c000000004b27e80 TRAP: 3000   Not tainted
-> (6.14.0-rc7-next-20250324)
-> [ 2272.236740] MSR:  800000000280f033
-> <SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 48222442  XER: 00000000
-> [ 2272.236751] IRQMASK: 0
-> [ 2272.236751] GPR00: 0000000000000003 00007fffebb75a30 00007fffa6667400
-> 0000000000000029
-> [ 2272.236751] GPR04: 000000014998e9e0 0000000000002000 0000000000000001
-> 00007fffa6bb53a0
-> [ 2272.236751] GPR08: 00007fffa6badc68 0000000000000000 0000000000000000
-> 0000000000000000
-> [ 2272.236751] GPR12: 0000000000000000 00007fffa6bb53a0 0000000000000000
-> 0000000000000807
-> [ 2272.236751] GPR16: 0000000000000000 0000000000000000 0000000003ffffff
-> 0000000004000000
-> [ 2272.236751] GPR20: 0000000003fffffe 0000000000000000 0000000000000000
-> 00007fffebb75e18
-> [ 2272.236751] GPR24: 0000000000000000 00007fffa602ce18 00007fffa602d9e8
-> 00007fffa602ce18
-> [ 2272.236751] GPR28: 00007fffa602d748 000000014998e9e0 0000000000000000
-> 0000000000002000
-> [ 2272.236793] NIP [00007fffa5f33d94] 0x7fffa5f33d94
-> [ 2272.236796] LR [00007fffa5f33d94] 0x7fffa5f33d94
-> [ 2272.236799] --- interrupt: 3000
-> [ 2272.236801] Code: eb01ffc0 eb21ffc8 eb41ffd0 eb61ffd8 eb81ffe0
-> eba1ffe8 ebc1fff0 ebe1fff8 7c0803a6 4e800020 60000000 60000000
-> <0fe00000> 4bfffeac 60000000 60000000
-> [ 2272.236815] ---[ end trace 0000000000000000 ]---
-> [ 2272.236819] Kernel attempted to read user page (3d8) - exploit
-> attempt? (uid: 0)
-> [ 2272.236824] BUG: Kernel NULL pointer dereference on read at 0x000003d8
-> [ 2272.236828] Faulting instruction address: 0xc0000000002d3994
-> [ 2272.236832] Oops: Kernel access of bad area, sig: 11 [#1]
-> [ 2272.236835] LE PAGE_SIZE=64K MMU=Radix  SMP NR_CPUS=8192 NUMA pSeries
-> [ 2272.236839] Modules linked in: overlay dm_zero dm_thin_pool
-> dm_persistent_data dm_bio_prison dm_snapshot dm_bufio dm_flakey xfs loop
-> dm_mod nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet
-> nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct bonding nft_chain_nat
-> nf_nat tls nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 rfkill sunrpc
-> ip_set nf_tables nfnetlink pseries_rng vmx_crypto fuse ext4 mbcache jbd2
-> sd_mod sg ibmvscsi ibmveth scsi_transport_srp [last unloaded: scsi_debug]
-> [ 2272.236875] CPU: 3 UID: 0 PID: 1 Comm: systemd Kdump: loaded Tainted:
-> G        W           6.14.0-rc7-next-20250324 #1 VOLUNTARY
-> [ 2272.236881] Tainted: [W]=WARN
-> [ 2272.236883] Hardware name: IBM,9080-HEX
-> [ 2272.236888] NIP:  c0000000002d3994 LR: c0000000002d3948 CTR:
-> c0000000005f3728
-> [ 2272.236892] REGS: c000000004b276f0 TRAP: 0300   Tainted: G       
-> W            (6.14.0-rc7-next-20250324)
-> [ 2272.236897] MSR:  8000000000009033 <SF,EE,ME,IR,DR,RI,LE>  CR:
-> 48228442  XER: 2004006c
-> [ 2272.236905] CFAR: c0000000002d39a8 DAR: 00000000000003d8 DSISR:
-> 40000000 IRQMASK: 1
-> [ 2272.236905] GPR00: c0000000002d3948 c000000004b27990 c0000000016b8100
-> 0000000000000001
-> [ 2272.236905] GPR04: 0000000000000003 0000000000000003 0000000000000000
-> 0000000ef9220000
-> [ 2272.236905] GPR08: c000000091b66000 c009fffff4ca0140 0000000000000000
-> 0000000000008000
-> [ 2272.236905] GPR12: c0000000005f3728 c000000effffb300 0000000000000000
-> 0000000000000000
-> [ 2272.236905] GPR16: 0000000000000000 0000000000000000 0000000000000000
-> c0000000ac5043e0
-> [ 2272.236905] GPR20: 0000000000000001 0000000000000000 c0000000015d11d8
-> c0000000ac504000
-> [ 2272.236905] GPR24: c009fffff4ca9000 c0000000ac504000 0000000000000000
-> c000000efb49c4bc
-> [ 2272.236905] GPR28: c000000002d0a668 0000000000000018 0000000000000003
-> c000000091b66000
-> [ 2272.236975] NIP [c0000000002d3994] cgroup_rstat_updated_list+0xcc/0x330
-> [ 2272.236981] LR [c0000000002d3948] cgroup_rstat_updated_list+0x80/0x330
-> [ 2272.236986] Call Trace:
-> [ 2272.236988] [c000000004b27990] [c0000000015d11d8]
-> __cpu_possible_mask+0x0/0x400 (unreliable)
-> [ 2272.236995] [c000000004b279f0] [c0000000002d3f50]
-> cgroup_rstat_flush+0xc8/0x5d0
-> [ 2272.237001] [c000000004b27a90] [c0000000002d47d0]
-> cgroup_base_stat_cputime_show+0x5c/0x2fc
-> [ 2272.237008] [c000000004b27b40] [c0000000002c7fb0]
-> cpu_stat_show+0x2c/0x1a4
-> [ 2272.237013] [c000000004b27b80] [c0000000002c60e0]
-> cgroup_seqfile_show+0x74/0x158
-> [ 2272.237018] [c000000004b27bf0] [c000000000735974]
-> kernfs_seq_show+0x44/0x58
-> [ 2272.237022] [c000000004b27c10] [c000000000676440]
-> seq_read_iter+0x264/0x6a8
-> [ 2272.237028] [c000000004b27cf0] [c0000000007364c0]
-> kernfs_fop_read_iter+0x4c/0x60
-> [ 2272.237033] [c000000004b27d10] [c000000000628a9c] vfs_read+0x2cc/0x3a0
-> [ 2272.237037] [c000000004b27dc0] [c000000000629904] ksys_read+0x84/0x144
-> [ 2272.237042] [c000000004b27e10] [c000000000033498]
-> system_call_exception+0x138/0x330
-> [ 2272.237048] [c000000004b27e50] [c00000000000d05c]
-> system_call_vectored_common+0x15c/0x2ec
-> [ 2272.237054] --- interrupt: 3000 at 0x7fffa5f33d94
-> [ 2272.237057] NIP:  00007fffa5f33d94 LR: 00007fffa5f33d94 CTR:
-> 0000000000000000
-> [ 2272.237061] REGS: c000000004b27e80 TRAP: 3000   Tainted: G       
-> W            (6.14.0-rc7-next-20250324)
-> [ 2272.237066] MSR:  800000000280f033
-> <SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 48222442  XER: 00000000
-> [ 2272.237076] IRQMASK: 0
-> [ 2272.237076] GPR00: 0000000000000003 00007fffebb75a30 00007fffa6667400
-> 0000000000000029
-> [ 2272.237076] GPR04: 000000014998e9e0 0000000000002000 0000000000000001
-> 00007fffa6bb53a0
-> [ 2272.237076] GPR08: 00007fffa6badc68 0000000000000000 0000000000000000
-> 0000000000000000
-> [ 2272.237076] GPR12: 0000000000000000 00007fffa6bb53a0 0000000000000000
-> 0000000000000807
-> [ 2272.237076] GPR16: 0000000000000000 0000000000000000 0000000003ffffff
-> 0000000004000000
-> [ 2272.237076] GPR20: 0000000003fffffe 0000000000000000 0000000000000000
-> 00007fffebb75e18
-> [ 2272.237076] GPR24: 0000000000000000 00007fffa602ce18 00007fffa602d9e8
-> 00007fffa602ce18
-> [ 2272.237076] GPR28: 00007fffa602d748 000000014998e9e0 0000000000000000
-> 0000000000002000
-> [ 2272.237118] NIP [00007fffa5f33d94] 0x7fffa5f33d94
-> [ 2272.237121] LR [00007fffa5f33d94] 0x7fffa5f33d94
-> [ 2272.237124] --- interrupt: 3000
-> [ 2272.237127] Code: 4182013c e91900c0 2c280000 41820044 7cfce82a
-> e92803d8 7d293a14 e94900a0 7c395040 41820268 60000000 7c285040
-> <e92a03d8> 7d274a14 41820154 e94900a8
-> [ 2272.237140] ---[ end trace 0000000000000000 ]--
-> 
-> 
-> If you happen to fix this, please add below tag.
-> 
-> 
-> Reproted-by: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
+Also add documentation describing the max_open_zones sysfs attribute
+exposed in /sys/fs/xfs/<dev>/zoned/
 
-There is nothing in this report that appears to point to a XFS problem other
-than the fact you hit it while running xfstests. Is there anything I'm missing
-here? This just looks like to be cgroups related.
+Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
+Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+---
+ Documentation/admin-guide/xfs.rst | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-Carlos.
-
-> 
-> 
-> Regards,
-> 
-> Venkat.
-> 
-> 
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/=
+xfs.rst
+index b67772cf36d6..9d0344ce81f1 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -124,6 +124,14 @@ When mounting an XFS filesystem, the following options=
+ are accepted.
+ 	controls the size of each buffer and so is also relevant to
+ 	this case.
+=20
++  lifetime (default) or nolifetime
++	Enable data placement based on write life time hints provided
++	by the user. This turns on co-allocation of data of similar
++	life times when statistically favorable to reduce garbage
++	collection cost.
++
++	These options are only available for zoned rt file systems.
++
+   logbsize=3Dvalue
+ 	Set the size of each in-memory log buffer.  The size may be
+ 	specified in bytes, or in kilobytes with a "k" suffix.
+@@ -143,6 +151,14 @@ When mounting an XFS filesystem, the following options=
+ are accepted.
+ 	optional, and the log section can be separate from the data
+ 	section or contained within it.
+=20
++  max_open_zones=3Dvalue
++	Specify the max number of zones to keep open for writing on a
++	zoned rt device. Many open zones aids file data separation
++	but may impact performance on HDDs.
++
++	If ``max_open_zones`` is not specified, the value is determined
++	by the capabilities and the size of the zoned rt device.
++
+   noalign
+ 	Data allocations will not be aligned at stripe unit
+ 	boundaries. This is only relevant to filesystems created
+@@ -542,3 +558,16 @@ The interesting knobs for XFS workqueues are as follow=
+s:
+   nice           Relative priority of scheduling the threads.  These are t=
+he
+                  same nice levels that can be applied to userspace process=
+es.
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D     =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++
++Zoned Filesystems
++=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++
++For zoned file systems, the following attribute is exposed in:
++
++  /sys/fs/xfs/<dev>/zoned/
++
++  max_open_zones                (Min:  1  Default:  Varies  Max:  UINTMAX)
++	This read-only attribute exposes the maximum number of open zones
++	available for data placement. The value is determined at mount time and
++	is limited by the capabilities of the backing zoned device, file system
++	size and the max_open_zones mount option.
+--=20
+2.34.1
