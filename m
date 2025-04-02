@@ -1,54 +1,39 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C741096F
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Apr 2025 14:01:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF4A3234
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Apr 2025 14:31:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743602472; cv=none; b=gDUufH/4MFX3q87S6hJODW9m7yk5GwakC7PNqJ7RkpkzZ70x2zoQFTH8rMWFYolfOmqxGskSWYvitVQIjcwHAgMTaECf4YhAvimJjbwnlPi82S1HCcQEtPcjClnrtb7JJf7waXtcLpLD2MzN+LgGp9UQt1tjqrOv2pjpV6g4zvc=
+	t=1743604311; cv=none; b=VozhT0kKKjYiEVnqQ648rqNxu3MCKwJRYn+OeQu6cdySyf3SbW7w0gP6frAWog2Fb0VKOxHtwasMm1CQHqeamL7OiKeFwCTTV0o+GAYoWTgCPOyuW2hBS7nXag0kbwJUEnNrKvHGGgeKGC7woQS5QtfZS8WNi43eiWbRPIkUUbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743602472; c=relaxed/simple;
-	bh=qY3yZ5QUWrP/1C7VW+88fXuEgS5kBQMlyL6vev95evU=;
+	s=arc-20240116; t=1743604311; c=relaxed/simple;
+	bh=1E9ToJQ2EpRhmtqdOEs9HMli5OZ3I8Ooh2HS5To55vw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dj7b9+7Y0M4fY3kgUGleUi9+kBh3IvhgD4g+gs7QRShtdSgJB0z1JWplKqfrgjpTkIGpmgNU+77gjNbYdIhCF9nkh89w7+n54CfTFvRjrzAuH26rDpbp1lV7CTHXBtcXTd08M2tzPAwfa4igUZ6KzPw+aBlNCafnixzUVgMTBJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=b3uOIkjv; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=j/67uPdEW2CzQGc2Konri4aa8ltnRKmSueLCdQpAMGekGbKZ//RNLiWKOXpys0jIQ1uX6DD2jPUhSjaCgMTCfojnxChP4IJHlGz8XX8lo9DTl5LnsiEk/DOETIebvWyR+QcDywUxt278hVXHB96u2FxoGfd/M++DU2Z9zSNaeE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nlOzGwmo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="b3uOIkjv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1743602468;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=WbXcDLWRTl9fAG+lzPvP2crtpKyf0CyNPPmsufND+kY=;
-	b=b3uOIkjvrK46TAK9woy4EWjKmPHuz4svWOWbIV082TwF0vUqAoYIBjkK8L+ZPpvzxGBdUt
-	9TKbtuMvR4T+FquUJyJV4hleKqI6UuwYQwL7vZwAOsP9Bi1z5/tu/fIlj8mOb+M5a+/I26
-	utzEcNvqSqNIPB2AYchzoEcG8UZEKoU=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-83-7FsyzLp_MiWH6_Pu0SpaBQ-1; Wed,
- 02 Apr 2025 10:01:04 -0400
-X-MC-Unique: 7FsyzLp_MiWH6_Pu0SpaBQ-1
-X-Mimecast-MFC-AGG-ID: 7FsyzLp_MiWH6_Pu0SpaBQ_1743602463
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C228C1956089;
-	Wed,  2 Apr 2025 14:01:03 +0000 (UTC)
-Received: from redhat.com (unknown [10.22.88.187])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8732D1828AAD;
-	Wed,  2 Apr 2025 14:01:02 +0000 (UTC)
-Date: Wed, 2 Apr 2025 09:00:59 -0500
-From: Bill O'Donnell <bodonnel@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCHSET] xfsprogs: localize the python programs
-Message-ID: <dc2ikn3ukghh4rr54bpokhxgfnkk777krpi7qlnj4iawazpmhb@jkyhiqolbacr>
-References: <20250321212508.GH4001511@frogsfrogsfrogs>
- <174351857556.2774496.13689449454739654191.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nlOzGwmo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F2E2C4CEDD;
+	Wed,  2 Apr 2025 14:31:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743604310;
+	bh=1E9ToJQ2EpRhmtqdOEs9HMli5OZ3I8Ooh2HS5To55vw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nlOzGwmoMYOjkqt9mkqdKNm4Xc0sKg+Zp+JgObJTgcM64hf/2zW7ARfAdG1sUucf2
+	 fx+4qnx4IZ0gbv4k0cq/hA+GFYrHuTa8HnGkp86qFlUKwApTYRv+T188CUq9oiExKS
+	 t57Z/TcqaXWcQmykGcpIUq9RHXlRH+COfKs/jfl4egizpFEKICHEISreFDgX4BNnBD
+	 jw1LsO8H+l+7HnbrZEzmchRCsYwHE3mR05FQmErnKrK6RWylKu0RVmYGNOM3yNLkJu
+	 8cAsTjRcYcPlXNZUcrRiY1FbMQY+fcnLhnkPAW84zWZ2HiGe+C3U/w9aQYa4ND4W5U
+	 YhqKEXbwez6/Q==
+Date: Wed, 2 Apr 2025 07:31:49 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Pavel Reichl <preichl@redhat.com>, Carlos Maiolino <cem@kernel.org>,
+	Andrey Albershteyn <aalbersh@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfsprogs: Fix mismatched return type of filesize()
+Message-ID: <20250402143149.GA6190@frogsfrogsfrogs>
+References: <20250402002233.GA2299061@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,53 +42,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <174351857556.2774496.13689449454739654191.stgit@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+In-Reply-To: <20250402002233.GA2299061@mit.edu>
 
-On Tue, Apr 01, 2025 at 07:43:25AM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Tue, Apr 01, 2025 at 08:22:33PM -0400, Theodore Ts'o wrote:
+> On Fri, Feb 21, 2025 at 07:57:57PM +0100, Pavel Reichl wrote:
+> > The function filesize() was declared with a return type of 'long' but
+> > defined with 'off_t'. This mismatch caused build issues due to type
+> > incompatibility.
+> > 
+> > This commit updates the declaration to match the definition, ensuring
+> > consistency and preventing potential compilation errors.
+> > 
+> > Fixes: 73fb78e5ee8 ("mkfs: support copying in large or sparse files")
 > 
-> We ship two Python programs in the main xfsprogs package, but neither of
-> them actually participate in gettext, which means that the output is
-> always English no matter what user's locale settings are.  Fix that by
-> adding them to the autogenerated message catalog.
+> I had run into this issue when building xfsprogs on i386, and had
+> investigated the compilation failure before finding this commit in
+> origin/for-next.  But in my fix, I also found that there was a missing
+> long -> off_t conversion in setup_proto():
 > 
-> If you're going to start using this code, I strongly recommend pulling
-> from my git trees, which are linked below.
+> diff --git a/mkfs/proto.c b/mkfs/proto.c
+> index 7f56a3d8..52ef64ff 100644
+> --- a/mkfs/proto.c
+> +++ b/mkfs/proto.c
+> @@ -61,7 +61,7 @@ setup_proto(
+>  	char		*buf = NULL;
+>  	static char	dflt[] = "d--755 0 0 $";
+>  	int		fd;
+> -	long		size;
+> +	off_t		size;
+>  
+>  	if (!fname)
+>  		return dflt;
 > 
-> With a bit of luck, this should all go splendidly.
-> Comments and questions are, as always, welcome.
+> ... since setup_proto() also calls filesize():
 > 
-> --D
+> 	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
 > 
-> xfsprogs git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=localization
-> ---
-> Commits in this patchset:
->  * xfs_protofile: rename source code to .py.in
->  * xfs_scrub_all: rename source code to .py.in
->  * Makefile: inject package name/version/bugreport into pot file
->  * xfs_protofile: add messages to localization catalog
->  * xfs_scrub_all: localize the strings in the program
-> ---
+> How important is it fix this up?  I can send a formal patch if that
+> would be helpful, but commit a5466cee9874 is certainly enough to fix
+> the build failure so maybe it's enough.
 
-For the series...
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+Yes, this is important -- off_t can be larger than long, and that can
+result in incorrect truncations.  I hope that nobody will ever pass mkfs
+a 5GB protofile on 32-bit, but at least the C type usage could be
+correct.
 
+--D
 
->  configure.ac              |    3 +-
->  include/builddefs.in      |    1 +
->  include/buildrules        |    9 ++++++-
->  libfrog/Makefile          |   18 ++++++++++++-
->  libfrog/gettext.py.in     |   12 +++++++++
->  mkfs/Makefile             |   11 +++++---
->  mkfs/xfs_protofile.py.in  |   21 +++++++++------
->  scrub/Makefile            |   11 +++++---
->  scrub/xfs_scrub_all.py.in |   62 +++++++++++++++++++++++++++------------------
->  9 files changed, 103 insertions(+), 45 deletions(-)
->  create mode 100644 libfrog/gettext.py.in
->  rename mkfs/{xfs_protofile.in => xfs_protofile.py.in} (85%)
->  rename scrub/{xfs_scrub_all.in => xfs_scrub_all.py.in} (89%)
 > 
+> Cheers,
 > 
-
+> 					- Ted
+> 
