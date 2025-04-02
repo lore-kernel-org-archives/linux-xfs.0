@@ -1,34 +1,41 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14D01D2FF
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Apr 2025 00:22:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36601524C
+	for <linux-xfs@vger.kernel.org>; Wed,  2 Apr 2025 05:50:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743553376; cv=none; b=CCI7NBRb5G5/4nhBGEojheQoQqr0JCky9fUIy8SwWzq8W7vj7ELHsG38zNaJH9baf816ueR4orFUT24NkHSKK1tOA8gR1IwQUvvMW5CLeua36JCp2FnQw9R8fBen7I4QarqQrz5KrcMBYk7e2v0FWk/w68iTwlvYuyVqV2U2PlY=
+	t=1743573059; cv=none; b=aZYdWzXpJeR6oaKDWJ9bQdmL7GMOvOVHegmensI8A/N6+8KYbSddNNi19pW5zsu+CunJ475bdBQpczJ1+MmAjGMGp77LbkTaoyW8xi7nPxt9OiP2aEdaEFHFtBbGRCegkDlEkEXuwN9kmkRAwcbIhuhbiRHwdHYmq8jGbZeXwts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743553376; c=relaxed/simple;
-	bh=ol9al4HiJ/f5fEKwvphsmMWX9dBhP3risuqcasjpLus=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=YzdXsQpIcvhysuSuFrL5cC4uihRsuYCtncV3Ri/Zjx79cG5tRWUqZ5ZU3SDYYlYW3r9Yhrson4ZQ8I/vfkVQBjbLNKV9vupSa2liWlSObNSPxnUw+0U/NjMJeotVWKvZtQ9DIk/hni/+538NOcliaN7aRpeSD/xt/p1jCRaQkKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
-Received: from trampoline.thunk.org (pool-173-48-82-222.bstnma.fios.verizon.net [173.48.82.222])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 5320MX1F006609
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 1 Apr 2025 20:22:34 -0400
-Received: by trampoline.thunk.org (Postfix, from userid 15806)
-	id 7D6C62E0019; Tue, 01 Apr 2025 20:22:33 -0400 (EDT)
-Date: Tue, 1 Apr 2025 20:22:33 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: Pavel Reichl <preichl@redhat.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
-        Andrey Albershteyn <aalbersh@redhat.com>, linux-xfs@vger.kernel.org
+	s=arc-20240116; t=1743573059; c=relaxed/simple;
+	bh=bAzvD5l0qWLJ+5iDSdKjkYGYLjlYKlYi7uxOkyy0nZw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YX7gsp/NYA08Dde079v6TArS8kZHIcCKPxb0jZ7sKbajX++EUigy5IQdovVwPqmM8Kdy3+R3ICAvxgefOZIxCp9ZZqM5M36R89M47U3N1FtEMTM1ubs1o5UpxCQHuLHYosMWMve1LX0vIx1nROM3MGKfJohtiI2StkHrUdTiI5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVQpBuqE; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVQpBuqE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FB3CC4CEDD;
+	Wed,  2 Apr 2025 05:50:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743573058;
+	bh=bAzvD5l0qWLJ+5iDSdKjkYGYLjlYKlYi7uxOkyy0nZw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=MVQpBuqEt6V5ClNyQ/I1VU5Meq6DvJu381m6j5efoWVDE2WbWPTNcccbGYn8Ea0Hk
+	 FwwRQySBmzrexXX8toW06k2vW5pk01rcDAOhY65WQmvsAQhyYcXylDwI8/NkW4ttoY
+	 /3fsF7pMPUHxXJSUGkpHqMbaVyR8iylf7QxqmrvF8XV5Wr633i3I6WDFIGbSn6/OkG
+	 TaRnC/3nYUusBSs7AHZCCMH9vSBB8xcNfstq8bPWXlZqu+Cm78nWZjS5i5PmEuQPl2
+	 MFrGjY1/Al8L0eUmro99jlyVQz9ta4oqJAcFXzOyjuZ3BXt/RVUREFB+0tgf6pzCTh
+	 3cNEu8a5LQdQQ==
+Date: Wed, 2 Apr 2025 07:50:53 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Pavel Reichl <preichl@redhat.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Andrey Albershteyn <aalbersh@redhat.com>, 
+	linux-xfs@vger.kernel.org
 Subject: Re: [PATCH] xfsprogs: Fix mismatched return type of filesize()
-Message-ID: <20250402002233.GA2299061@mit.edu>
+Message-ID: <p3dvpjn4pqx72pnfuqwsbwztqvmsnauga6pdzciyg77jccbffk@lhpvtd2j4ipy>
+References: <rVcV0bUochTHYCUeMeo8VPv0LODkI0DQY8oB8J3Pf1--Zp8jG4weSLdbo-ME7csTl1V_Cdw3SXvCzwH-8jBFNQ==@protonmail.internalid>
+ <20250402002233.GA2299061@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,44 +44,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20250402002233.GA2299061@mit.edu>
 
-On Fri, Feb 21, 2025 at 07:57:57PM +0100, Pavel Reichl wrote:
-> The function filesize() was declared with a return type of 'long' but
-> defined with 'off_t'. This mismatch caused build issues due to type
-> incompatibility.
+On Tue, Apr 01, 2025 at 08:22:33PM -0400, Theodore Ts'o wrote:
+> On Fri, Feb 21, 2025 at 07:57:57PM +0100, Pavel Reichl wrote:
+> > The function filesize() was declared with a return type of 'long' but
+> > defined with 'off_t'. This mismatch caused build issues due to type
+> > incompatibility.
+> >
+> > This commit updates the declaration to match the definition, ensuring
+> > consistency and preventing potential compilation errors.
+> >
+> > Fixes: 73fb78e5ee8 ("mkfs: support copying in large or sparse files")
 > 
-> This commit updates the declaration to match the definition, ensuring
-> consistency and preventing potential compilation errors.
+> I had run into this issue when building xfsprogs on i386, and had
+> investigated the compilation failure before finding this commit in
+> origin/for-next.  But in my fix, I also found that there was a missing
+> long -> off_t conversion in setup_proto():
 > 
-> Fixes: 73fb78e5ee8 ("mkfs: support copying in large or sparse files")
+> diff --git a/mkfs/proto.c b/mkfs/proto.c
+> index 7f56a3d8..52ef64ff 100644
+> --- a/mkfs/proto.c
+> +++ b/mkfs/proto.c
+> @@ -61,7 +61,7 @@ setup_proto(
+>  	char		*buf = NULL;
+>  	static char	dflt[] = "d--755 0 0 $";
+>  	int		fd;
+> -	long		size;
+> +	off_t		size;
+> 
+>  	if (!fname)
+>  		return dflt;
+> 
+> ... since setup_proto() also calls filesize():
+> 
+> 	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
+> 
+> How important is it fix this up?  I can send a formal patch if that
+> would be helpful, but commit a5466cee9874 is certainly enough to fix
+> the build failure so maybe it's enough.
 
-I had run into this issue when building xfsprogs on i386, and had
-investigated the compilation failure before finding this commit in
-origin/for-next.  But in my fix, I also found that there was a missing
-long -> off_t conversion in setup_proto():
-
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 7f56a3d8..52ef64ff 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -61,7 +61,7 @@ setup_proto(
- 	char		*buf = NULL;
- 	static char	dflt[] = "d--755 0 0 $";
- 	int		fd;
--	long		size;
-+	off_t		size;
+Every fix is welcome, this is something that can clearly be tripped over in the
+future.
  
- 	if (!fname)
- 		return dflt;
-
-... since setup_proto() also calls filesize():
-
-	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-
-How important is it fix this up?  I can send a formal patch if that
-would be helpful, but commit a5466cee9874 is certainly enough to fix
-the build failure so maybe it's enough.
-
-Cheers,
-
-					- Ted
+> 
+> Cheers,
+> 
+> 					- Ted
