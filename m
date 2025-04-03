@@ -1,269 +1,110 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25ED524339C;
-	Thu,  3 Apr 2025 08:59:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4670C24A079
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Apr 2025 10:48:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743670783; cv=none; b=bYCK1ZES0x7zjlLcbm16y0q41Ej2rbwctGewzcEf1Fv0ASTgk+MSJCI0cadq2Z/c5KgWdSPWWTgSKEkEDD3MLWLuHQHGr73QQsQhBF9djEtwCfL42GUgiMLVFPqcNoQ9ZcZw707wKbJsguzkvJXdxKYErDIIX7N0ZwUXUWiikgQ=
+	t=1743677314; cv=none; b=c9FlgslnLcFUJiGU7gDmeDnovo45ijR4ni2xj4MG6HgOrL6kPT0ZD9LbjzPDJR4P4tZy8WSpaj8OxSAx2IBCBjee1kRTrq6ACm210D9sRDvLYaBs695/EXaUyVF7rAzw19vGwtclQvGTQrH9NBsg9F/m8AdbXULax1/nVwoy8dc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743670783; c=relaxed/simple;
-	bh=cXpMG4evM+/eBh0rh9cOx22wN60fLnLdyOex1885nT0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=I5YPZ7Bh99aobuic3uXKxwFpNriFo/FNYgfyVa/Z6qC+c+JpxPonQB9wM5LPDWRKyGB/m0NcXPCihS24kSP026cgtC0XisftM4IeDPbWsSNcUl2zS7fNpT4Qft8qBDmDW70ZNdo2ccqTk28uJQNlj6CshVUspyLWVWf9eWndQqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cnG1vZR3; arc=none smtp.client-ip=209.85.214.176
+	s=arc-20240116; t=1743677314; c=relaxed/simple;
+	bh=vCHnNOVUCefNmp4Y9lgek2Usukt9gfJ9VB4LF3SHZkE=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=MQzeAdKoD6P9UyWO5HxdoN+8U8D9zTaLvhrKdDiooTZqULX0pmkVDG2sdzk7NWQlglGxSsgJ953wLowM021z7XYYtsp2zXKfRiPHb+TBvXk/57rqPpYaxaTdolbeT3yk8EP0MAb+CqHXiw7NUlgIspenXb5NvVwSftvVPesDaWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cwxdprAU; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cnG1vZR3"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-22409077c06so9954525ad.1;
-        Thu, 03 Apr 2025 01:59:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cwxdprAU"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-227aaa82fafso7266435ad.2
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Apr 2025 03:48:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743670781; x=1744275581; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NR4dPmRB+WlVaBFBqvFj4uKQeU+r3bP802+oB47JMSg=;
-        b=cnG1vZR3aJ7KW3zxwm+5273mHxVvzGMXV2bIAH6D+zrU4XJfbsEF0gyFRRqhmf8U7b
-         gg7x/2LmIaS8KKOrDWZig2RtNXjic0Vwo2cGuQRr5Z+/E8RB2sdQOD7OOvC83tE3Nm3A
-         HSfrpnJWbfJOVT+YnumgmqNbJPqdWbiz0jrOn0zrS8oDVyJNDMscfEeKeOB9/52O73Ux
-         1/n/3kyxOcibY/qb2ueF28snDPykp4SmcXZIeQCruYiq35VqQHXrpfkifKXrnq+sSMH7
-         KY9hVv/L32OSW85p+8SEejwvdcgewpehm+04iZF3HCtdEsPWlCrLQq9ecR/KRZvCpGo/
-         rFGQ==
+        d=gmail.com; s=20230601; t=1743677311; x=1744282111; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=u5LRUoDFCSN4Fv7blrnKd31CHMMgSsTU84NkBWzd1ds=;
+        b=cwxdprAU865GtfZEKQQtd7ac4s1aTCPkHG8hDHRInEGbwoQIQ2Lzfuu1Rc2zvjv2A/
+         D0k2abjk8DQLJZLw7hd8+jR7YvMWeZzH2S4JgiVvyi7iGMs7M78WlVIP8DrBAM44ZGH7
+         EtpjniOO8V3DYHKvXsBVzzyKTBN7viQkWmp69WhrgOQQmlgXV8EP4I0V6R2Cduc33G67
+         MSHVjQkHoIBxTQ9LC6KyvlcLL3+gE4gCZ1klefjclKTEGggE4UDUSUVoytLOYmFQvHm+
+         zYttCtp8e0YBBDTfHVqPogaAayR2swWT7pfq9QOZtDuq5USJJXhxnbbhNPbweHkwXgdq
+         l/vg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743670781; x=1744275581;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NR4dPmRB+WlVaBFBqvFj4uKQeU+r3bP802+oB47JMSg=;
-        b=HRiumoi/DmXu+196xZ6Pht5DYyaDlqRHD5eoN8nwuWjnWg+XGOE/DjMWl7gijwXnv4
-         Y9C4pMsyDcRrBOilFPduI/WGTMTMlMnZ3bJUvwyNFH6w8WfOWA1RWv4+Er5ISIvWdRPv
-         9NBtoXvyby3VsAgma47Uuia/kQM0nP99nNw2Qr+j4w9dqDLDbd6tCo9bGdB2cBAvB7wD
-         3KeZ7l4I5c54V21MrOSQV7xi1RIgoc9oDuBi9L3jdzkWZ9tCLWtlkVTbqIfmFBIhAnup
-         Jw+yUZFhVvpHWo1w/3LPB/fYj4D7POHzIXVsMmnmJVI17Q7ysgBAeOlW0W82Rw5So2Ne
-         xRMg==
-X-Forwarded-Encrypted: i=1; AJvYcCWP++72HSKrDuVWX/uQQ00YDySH4wqHY8kxKPKJq7PjAxMJyaUeZj3dlyLo5kHQWlqfwGwvkDez798=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVxphUyTVRp3lbPbL/ROpbvIU3yrARhznAgJUAhigN/EPhOFze
-	0UZ/TNyohG1rt+/Ni0PocWYiSpFXcXZ+/rcfhKuE2wQ7cVCRgOlgDx4xOw==
-X-Gm-Gg: ASbGncsf3t0ee/PMvpnnf4KXKIFWbs+Wj1KS3O0VLDCeq3eArkVzw6NJ4fpDtNPTYuz
-	6TbOZcsZPCmj8G1ZaaTR9QpuEGVEQB/kkG3H7C8E5/NVYOCYn16X/4y4J+AulLv/kUMySUf2jES
-	BUix+9zFwTj52duLha+/zwgBO6ZK6nwLEpkOeI+7ApqhpKyrcDalB+e1oFu/khAs4jlDAl15iZE
-	t8dYPfjwI8GtWKz85Z2+LbDfEoI+QAYMTDsyuIcDMpmHNh+FEM9bCU99C72/9mM9n6fz7c2qj8A
-	VUz5BxNSP+3XzBJveHdet8kGQry92mM72DGDbLuDQOekMLuk1Gu/s8ySoCU=
-X-Google-Smtp-Source: AGHT+IHC0+dVJMNf5ScPuEOnU+uWmFtn7jonuLrkEs1Gl0dp4lJ4z5Yberxu3G9N6t2PTIb1OjGQTA==
-X-Received: by 2002:a17:902:cf10:b0:21b:b3c9:38ff with SMTP id d9443c01a7336-2292f9f54d6mr304729445ad.37.1743670780789;
-        Thu, 03 Apr 2025 01:59:40 -0700 (PDT)
-Received: from citest-1.. ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-229785c01cdsm9535715ad.99.2025.04.03.01.59.37
+        d=1e100.net; s=20230601; t=1743677311; x=1744282111;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=u5LRUoDFCSN4Fv7blrnKd31CHMMgSsTU84NkBWzd1ds=;
+        b=vBGlWNEoOrQk0fp/AFGaepHjV1zkDwl+GlbrUgQxnmLYzHJcF+XSQBKonWdbK3bUBR
+         4ONT2itq8OCoBnB0lUVGJuO7AdzKEFMwIME9O6xcxjeop4wvsXQqE8hqqK0Lqm1c3YR2
+         wLGEnrr5Wih8DZIXRh+0GPtMNFEec3YFcHbkq5xcRTRYKuVmjFgok9DtuQxToKVtx2Cc
+         cL7vd6MqLK4zUiIb7OW4ekGV14LuXBBFK6iB+qOvVZjYcK4Swv4PUo73ulMmO2OSAPQB
+         yS9EG+kOwFTp7wnZnij9myf3h1tp5xBtGWCqvZ71N8UDRP7ZoDUWKkILDt5X50y6lHQs
+         Bn9g==
+X-Gm-Message-State: AOJu0YwZCvpvORshW8RerejU4561mqkMY0rYpy0XP0QL7cvDh5nSsaaX
+	HsJZC76NTj5N/1BdNb410tvS5zjjgTo6uK+BJFMEv1pyGDnyyvcL/qpS9Q==
+X-Gm-Gg: ASbGncsa0EPPK+5q7VC+DAag1yFnoZ5rDstNopG7mJJKazUQ/SeUWwEn+wvVAg0IcGn
+	Efe0K1Y80sb/gDNAIUH8kBiGmr+jSU/SRBvyovcGwhrYP9vZ53LSpdCOByBIs20/ukMRChx0Cx6
+	6fnCek4IouBZjEDfb+jRCgRCCmFMQ3LoK+7vGQl32FR+3UpedwvuFJykiS8Cprc2Y8dCNe3N2Z0
+	aiGlGrwCmknTbb09IioQ6wCb7PDt8kaZuMofF7abGhSf/0O+pIyzW8i+V67NADZrLe27dmanQwX
+	ngr/+rTsGvp8zr+2zm1Hf0s374rpkkeYckcd
+X-Google-Smtp-Source: AGHT+IERyNl4dQZSb18HmUBmKMEFxSpP1tKEm967LTJT9CiJZEqKuvLj/KfP6vh4R4Rl3lU9fAiyVw==
+X-Received: by 2002:a17:902:d4c8:b0:21f:2ded:76ea with SMTP id d9443c01a7336-22977df28afmr25136835ad.36.1743677311399;
+        Thu, 03 Apr 2025 03:48:31 -0700 (PDT)
+Received: from dw-tp ([171.76.86.91])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2297866cd1dsm11244085ad.159.2025.04.03.03.48.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Apr 2025 01:59:40 -0700 (PDT)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	zlang@kernel.org,
-	david@fromorbit.com,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v2 3/3] check: Improve pass/fail metrics and section config output
-Date: Thu,  3 Apr 2025 08:58:20 +0000
-Message-Id: <72dd490d0d00ce2e35c168d21983c015ae471354.1743670253.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1743670253.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1743670253.git.nirjhar.roy.lists@gmail.com>
+        Thu, 03 Apr 2025 03:48:30 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [RFC] xfs_io: Add cachestat syscall support
+In-Reply-To: <20250403022829.GA6283@frogsfrogsfrogs>
+Date: Thu, 03 Apr 2025 16:14:56 +0530
+Message-ID: <87v7rl34nr.fsf@gmail.com>
+References: <f93cec1c02eefffff7a5182cf2c0333cec600889.1742150405.git.ritesh.list@gmail.com> <20250403022829.GA6283@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-This patch improves the output by:
-- Adding pass/fail aggregate results in the stdout for each section's
-  summary. Also adds the location of the xunit xml files in the
-  section's summary.
-- Adds section config details into the result's global log file.
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-e.g.
+> On Mon, Mar 17, 2025 at 12:15:29AM +0530, Ritesh Harjani (IBM) wrote:
+>> This adds -c "cachestat off len" command which uses cachestat() syscall
+>> [1]. This can provide following pagecache detail for a file.
+>> 
+>> - no. of cached pages,
+>> - no. of dirty pages,
+>> - no. of pages marked for writeback,
+>> - no. of evicted pages,
+>> - no. of recently evicted pages
+>> 
+>> [1]: https://lore.kernel.org/all/20230503013608.2431726-3-nphamcs@gmail.com/T/#u
+>> 
+>> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+>
+> Just out of curiosity, is there a manpage change for xfs_io.8 that goes
+> with this new subcommand?
+>
 
-$ ./check -q 2 -R xunit-quiet   selftest/001
+Looks like I might have missed the man page entry change,...
 
-SECTION       -- s1
-=========================
-selftest/001 aggregate results across 2 runs: pass=2 (100.0%)
-Ran: selftest/001
-Passed all 1 tests
-Xunit report: /home/ubuntu/xfstests/results//s1/result.xml
+>> ---
+>>  configure.ac          |  1 +
+>>  include/builddefs.in  |  1 +
+>>  io/Makefile           |  5 +++
+>>  io/cachestat.c        | 77 +++++++++++++++++++++++++++++++++++++++++++
+>>  io/init.c             |  1 +
+>>  io/io.h               |  6 ++++
+>>  m4/package_libcdev.m4 | 19 +++++++++++
+>>  7 files changed, 110 insertions(+)
+>>  create mode 100644 io/cachestat.c
 
-SECTION       -- s2
-=========================
-selftest/001 aggregate results across 2 runs: pass=2 (100.0%)
-Ran: selftest/001
-Passed all 1 tests
-Xunit report: /home/ubuntu/xfstests/results//s2/result.xml
+...else we would have seen an entry in man/man8/xfs_io.8 file. 
 
-Output in results/check.log file
+Since this is taken in for-next, I can submit a separate patch for the
+man page entry update.
 
-Kernel version: 6.13.0-rc1-00182-gb8f52214c61a-dirty
-Wed Jan  8 11:23:57 UTC 2025
-SECTION       -- s1
-=========================
-FSTYP         -- ext4
-PLATFORM      -- Linux/x86_64 citest-1 6.13.0-rc1-00182-gb8f52214c61a-dirty #5 SMP PREEMPT_DYNAMIC Wed Dec 18 14:03:34 IST 2024
-MKFS_OPTIONS  -- -F /dev/loop1
-MOUNT_OPTIONS -- -o acl,user_xattr /dev/loop1 /mnt1/scratch
-selftest/001 aggregate results across 2 runs: pass=2 (100.0%)
-Ran: selftest/001
-Passed all 1 tests
-Xunit report: /home/ubuntu/xfstests/results//s1/result.xml
+Thanks for catching it. 
 
-Kernel version: 6.13.0-rc1-00182-gb8f52214c61a-dirty
-Wed Jan  8 11:24:02 UTC 2025
-SECTION       -- s2
-=========================
-FSTYP         -- ext4
-PLATFORM      -- Linux/x86_64 citest-1 6.13.0-rc1-00182-gb8f52214c61a-dirty #5 SMP PREEMPT_DYNAMIC Wed Dec 18 14:03:34 IST 2024
-MKFS_OPTIONS  -- -F /dev/loop1
-MOUNT_OPTIONS -- -o acl,user_xattr /dev/loop1 /mnt1/scratch
-selftest/001 aggregate results across 2 runs: pass=2 (100.0%)
-Ran: selftest/001
-Passed all 1 tests
-Xunit report: /home/ubuntu/xfstests/results//s2/result.xml
-
-Suggested-by: Ritesh Harjani <ritesh.list@gmail.com>
-Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- check | 67 ++++++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 46 insertions(+), 21 deletions(-)
-
-diff --git a/check b/check
-index f6007750..bb91cf9d 100755
---- a/check
-+++ b/check
-@@ -468,6 +468,25 @@ if [ -n "$REPORT_GCOV" ]; then
- 	_gcov_check_report_gcov
- fi
- 
-+_print_list()
-+{
-+	local -n list=$1
-+	local item
-+	for item in "${list[@]}"; do
-+		echo "$item"
-+	done
-+}
-+
-+_display_test_configuration()
-+{
-+	echo "FSTYP         -- `_full_fstyp_details`"
-+	echo "PLATFORM      -- `_full_platform_details`"
-+	if [ ! -z "$SCRATCH_DEV" ]; then
-+		echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
-+		echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
-+	fi
-+}
-+
- _wrapup()
- {
- 	seq="check.$$"
-@@ -505,11 +524,19 @@ _wrapup()
- 
- 		echo "SECTION       -- $section" >>$tmp.summary
- 		echo "=========================" >>$tmp.summary
-+
-+		_global_log "SECTION       -- $section"
-+		_global_log "=========================" >>$tmp.summary
-+		_global_log "$(_display_test_configuration)"
- 		if ((${#try[*]} > 0)); then
-+			local test_aggr_stats=$(_print_list loop_test_stats_per_section)
- 			if [ $brief_test_summary == "false" ]; then
-+				[[ -n "$test_aggr_stats" ]] && echo "$test_aggr_stats" >> \
-+					$tmp.summary
- 				echo "Ran: ${try[*]}"
- 				echo "Ran: ${try[*]}" >>$tmp.summary
- 			fi
-+			_global_log "$test_aggr_stats"
- 			_global_log "Ran: ${try[*]}"
- 		fi
- 
-@@ -539,12 +566,15 @@ _wrapup()
- 			_global_log "Passed all ${#try[*]} tests"
- 			echo "Passed all ${#try[*]} tests" >>$tmp.summary
- 		fi
--		echo "" >>$tmp.summary
- 		if $do_report; then
- 			_make_section_report "$section" "${#try[*]}" \
- 					     "${#bad[*]}" "${#notrun[*]}" \
- 					     "$((sect_stop - sect_start))"
-+			local out_fn="$REPORT_DIR/result.xml"
-+			echo "Xunit report: $out_fn" >> $tmp.summary
-+			_global_log "Xunit report: $out_fn"
- 		fi
-+		echo "" >>$tmp.summary
- 
- 		# Generate code coverage report
- 		if [ -n "$REPORT_GCOV" ]; then
-@@ -655,18 +685,19 @@ _stash_test_status() {
- 
- 		if ((loop_on_fail && ${#loop_status[*]} > loop_on_fail)) || \
- 		   ((loop_unconditional && ${#loop_status[*]} > loop_unconditional)); then
--			printf "%s aggregate results across %d runs: " \
--				"$test_seq" "${#loop_status[*]}"
--			awk "BEGIN {
--				n=split(\"${loop_status[*]}\", arr);"'
--				for (i = 1; i <= n; i++)
--					stats[arr[i]]++;
--				for (x in stats)
--					printf("%s=%d (%.1f%%)",
--					       (i-- > n ? x : ", " x),
--					       stats[x], 100 * stats[x] / n);
--				}'
--			echo
-+			local test_stats=$(printf "%s aggregate results across %d runs: " \
-+				"$test_seq" "${#loop_status[*]}")
-+			test_stats+=$(awk "BEGIN {
-+					n=split(\"${loop_status[*]}\", arr);"'
-+					for (i = 1; i <= n; i++)
-+						stats[arr[i]]++;
-+					for (x in stats)
-+						printf("%s=%d (%.1f%%)",
-+							   (i-- > n ? x : ", " x),
-+							   stats[x], 100 * stats[x] / n);
-+					}')
-+			echo "$test_stats"
-+			loop_test_stats_per_section+=("$test_stats")
- 			loop_status=()
- 			is_bad_test=false
- 		fi
-@@ -834,14 +865,7 @@ function run_section()
- 	rm -f $check.full
- 
- 	[ -f $check.time ] || touch $check.time
--
--	# print out our test configuration
--	echo "FSTYP         -- `_full_fstyp_details`"
--	echo "PLATFORM      -- `_full_platform_details`"
--	if [ ! -z "$SCRATCH_DEV" ]; then
--	  echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
--	  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
--	fi
-+	_display_test_configuration
- 	echo
- 	test -n "$REPORT_GCOV" && _gcov_reset
- 	needwrap=true
-@@ -879,6 +903,7 @@ function run_section()
- 
- 	is_bad_test=false
- 	loop_status=()	# track loop rerun state
-+	loop_test_stats_per_section=() # store loop test statistics per section
- 	local tc_status ix
- 	local -a _list=( $list )
- 	for ((ix = 0; ix < ${#_list[*]}; !${#loop_status[*]} && ix++)); do
--- 
-2.34.1
-
+-ritesh
