@@ -1,171 +1,440 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1E8F2505B4;
-	Thu,  3 Apr 2025 18:22:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43A5A28EA54
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Apr 2025 19:12:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743704571; cv=none; b=rOOa/K0jqqLVIkCwsm99use4SIM3vs69ONtUf67SVM6NMT6u2Ny1G/1FlgP45Rb3BAdwshGzQowIEHs5hgLFySu8kcdqGkzIrjIsU+tgPTj2+C5fMLc94aoQJTmXh2fpWRKPjALkhi65D9ZGLUBN2IswNivhezEdUPX4CZkHfOI=
+	t=1743707565; cv=none; b=XBnzwIuXB5w9S8AA/wu/FxWS8EhNQ/YkTKcDOqfgSOT5xa9D3YDGsdfiFEhMeMeB0id7Rls5PcrjhpYfUpXf/EKx0WxkQDKdTfVBZFNuc0jzpp+eSHDTgfPl+tdgRjPfmnwxfpamf5ON9EIZCBYSY4CnkYVwzBxeaDeJVU+PwmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743704571; c=relaxed/simple;
-	bh=I+qlaTkXhUlE4q9qdEv6vUSsTsZJ11SRFo6Y4qVOpWE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hIljmU/rMJ3XnXL6Ttq+KOyhBvQHhynq1G+sdsB9FL7Q7CWz/RtY47pTwSZcJAMYDguSw+YwhZPltb+7rKZdfS+zcEioPpQD1ImVr9ZL9rEHULmUPmkL8llmAC/GHaT9FBhQurL4L181FB8yTLFIPP35PK8xJowCsyJUruaffyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jcA1QyxJ; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1743707565; c=relaxed/simple;
+	bh=VcSqF9majT6s0EjgP6y5cqqJEb+OaY78hjsIBpONmlA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=KaIMUZ4Jj574ixGdOjBhr5MvrRyObDi5C7yvHGMVyL/ln5f2CPxCFlP1SqT5hqKBoA7TDDeAITG3SQ1d1rqwBoO368jqgAsUxAHeWfcew62wL3o1m4a/diFq8+RKYoOcaQdtrOPHwdTkQmP69JrZnfcX3fXAhipWcUs2cRw5cug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PeRCfMAZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jcA1QyxJ"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-301d6cbbd5bso1183408a91.3;
-        Thu, 03 Apr 2025 11:22:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743704568; x=1744309368; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yMY2JO69QVx2Wu0X2qKl4ytMfG7YtUpaV5pegBwQdA4=;
-        b=jcA1QyxJCJew8oZvsGNK7N2R/tJialLSnjY5mrXb+MZPv6f06au/5hfhAakJNVHsuO
-         hMSoGCHxfkgNXB8w0qEJY6/wFz2F5wzvNvEmH4FDF3r+glC/0rgBnESW6stRQCmh6/WZ
-         /wlKzR1YJkjudfHMgtiUX8jHZmHjZyv1+YvPtiTbCKVwev1frHnuVwUR9S73MrfRDh4K
-         pckb0g49w1n0s7OKHtU1PVin/s0nCzxdkVhnMNSGWGESfH00bsWULY/uW2wtf5RNrO4u
-         FEipMjH6h4Nm0ouLL1Zew4lo2X6pbFL6UNntAWz1zYEL7YpF0FetchKNpvCM6121Flah
-         cfeQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743704568; x=1744309368;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yMY2JO69QVx2Wu0X2qKl4ytMfG7YtUpaV5pegBwQdA4=;
-        b=NVh+m9hPYC8xz1jzaadY1a9edvl0YAXlBSG3KbuLEUCwYaMhuUq6GG2x37AVTdbzby
-         TcwjKM26ztz5pbImk6azjaIDN0ETnwmPmRuXe9G8vfWCaBdcEVFDVym/X2HF/cU5OM24
-         O+aw+uRw90CHUUAvHE15w3EUGQEsDEyJB/j8lanSIFw/JFN+pDbRZA95uOC1gfsd2pUU
-         wQKAwF8e1zDwAhpXfLuGDU1PzwUSzlFmYXYS/Y7pGnrTERtInBRyuhguFYvkf59eCcqZ
-         yxP3UH9VwDK5N7u9zIpFttWnO0dSQ/8oe2fPYQpKm4/vwccz/U3K8TY2vQZhmG/rCl95
-         ZjpQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXQlEH6WPYZX69Tsn3PyEg027SSZBqGNBGTV+1Wp84PNfeUVoTtg/Ot4FVY3/FzdLmpT+G/8VWwoiantekQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YykMFfanUlY4CdwgxLfxZYnoMaA8ZLc9UYDcRnknYKQXaxpyhU4
-	P3sB154ENajYUYKnjdiV4QoZs+Ny3RHNA6K5Vh0jJud0gOrodHIWXQPpXlUG
-X-Gm-Gg: ASbGncvNl1FcoVV6rXP3EGH6csP6Sj0/Ou6bB8iJheEgjbrgSSCiFSLljlNWLn9nJ1R
-	80EFA16lRVuvsBQmwAhOZSiv5KtJkfEtwwOKKnwojcf5ehnmBwIc0I9BFA0Gxi1rSnDmKiTpqFs
-	cw4viJCH/rhakrG+AKclhs/gyGP+M42YtHpwNAqKZ2VOcqgjrbdt2UPW6eXsnQL80CATtc44wsO
-	wrrslNlKE7X0yAdhXu/q9TL0Tx83LVMP8pEu6zlq/zBDXWibuvecguUWaX2yxyakNV8Sotu/Qzh
-	dV4f873/gNXjyafOS7wcaF2NaqOYtpc6RIoaJC9SvDYOV7Jpsg==
-X-Google-Smtp-Source: AGHT+IEefrjyj11kimR4NhNpwR5DlQi7GDYEqOaX306yLeq+7dHdfyJDADPT9LIlVwKE+YvrKPZW1A==
-X-Received: by 2002:a17:90b:224d:b0:2ff:4f04:4261 with SMTP id 98e67ed59e1d1-306a48b308cmr566823a91.34.1743704567892;
-        Thu, 03 Apr 2025 11:22:47 -0700 (PDT)
-Received: from dw-tp.ibmuc.com ([171.76.86.91])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30561cac698sm3944261a91.0.2025.04.03.11.22.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Apr 2025 11:22:47 -0700 (PDT)
-From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: John Garry <john.g.garry@oracle.com>,
-	djwong@kernel.org,
-	ojaswin@linux.ibm.com,
-	linux-fsdevel@vger.kernel.org,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: [PATCH 2/2] iomap: trace: Add missing flags to [IOMAP_|IOMAP_F_]FLAGS_STRINGS
-Date: Thu,  3 Apr 2025 23:52:28 +0530
-Message-ID: <bf67e3e6af1cdc3c6cba83e204f440db1cbfda24.1743691371.git.ritesh.list@gmail.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com>
-References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PeRCfMAZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 202E4C4CEE3;
+	Thu,  3 Apr 2025 19:12:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743707565;
+	bh=VcSqF9majT6s0EjgP6y5cqqJEb+OaY78hjsIBpONmlA=;
+	h=Date:From:To:Cc:Subject:From;
+	b=PeRCfMAZ5IaIjwxUlwz5MK8MIPSflHQI+bWbbDA07X2+Hv2YmWnQtB4u+oIIFB8Qg
+	 gRTxtuHoVI5No3UVByQSCwyOYZtzWwR6XmLTgDfziVe1/CW56hf2VeLtrRLlVS51fo
+	 2VCPASTqyJy1w8MK4G9ZZqFsYuA3waJtB/udENzu2yILHO34R6qQBJZnbcKRTyRZOe
+	 KRxjx0WZVoKrhiekrfkHDq2zPJn5IGzPwM0HJ5fYiXGfFVETXCCijm/8SWoEAtBSUz
+	 FHXsfQubB6REifXhpxPrp/YuZOTDmXA80Cu/b6K7VeLb/V5nk+eEuIouRHBs/9dtJF
+	 13mZzkreB4m3A==
+Date: Thu, 3 Apr 2025 12:12:44 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, John Garry <john.g.garry@oracle.com>
+Subject: [PATCH] xfs: compute the maximum repair reaping defer intent chain
+ length
+Message-ID: <20250403191244.GB6283@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-This adds missing iomap flags to IOMAP_FLAGS_STRINGS &
-IOMAP_F_FLAGS_STRINGS for tracing. While we are at it, let's also print
-values of iomap->type & iomap->flags.
+From: Darrick J. Wong <djwong@kernel.org>
 
-e.g. trace for ATOMIC_BIO flag set
-xfs_io-1203    [000] .....   183.001559: iomap_iter_dstmap: dev 8:32 ino 0xc bdev 8:32 addr 0x84200000 offset 0x0 length 0x10000 type MAPPED (0x2) flags DIRTY|ATOMIC_BIO (0x102)
+Actually compute the log overhead of log intent items used in reap
+operations and use that to compute the thresholds in reap.c instead of
+assuming 2048 works.  Note that there have been no complaints because
+tr_itruncate has a very large logres.
 
-e.g. trace with DONTCACHE flag set
-xfs_io-1110    [007] .....   238.780532: iomap_iter: dev 8:16 ino 0x83 pos 0x1000 length 0x1000 status 0 flags WRITE|DONTCACHE (0x401) ops xfs_buffered_write_iomap_ops caller iomap_file_buffered_write+0xab/0x0
-
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Cc: <stable@vger.kernel.org> # v6.6
+Fixes: 1c7ce115e52106 ("xfs: reap large AG metadata extents when possible")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/iomap/trace.h | 27 +++++++++++++++++++++------
- 1 file changed, 21 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/trace.h       |   29 ++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap_item.h     |    3 +++
+ fs/xfs/xfs_extfree_item.h  |    3 +++
+ fs/xfs/xfs_log_priv.h      |   13 +++++++++++
+ fs/xfs/xfs_refcount_item.h |    3 +++
+ fs/xfs/xfs_rmap_item.h     |    3 +++
+ fs/xfs/scrub/reap.c        |   50 +++++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/scrub/trace.c       |    1 +
+ fs/xfs/xfs_bmap_item.c     |   10 +++++++++
+ fs/xfs/xfs_extfree_item.c  |   10 +++++++++
+ fs/xfs/xfs_log_cil.c       |    4 +---
+ fs/xfs/xfs_refcount_item.c |   10 +++++++++
+ fs/xfs/xfs_rmap_item.c     |   10 +++++++++
+ 13 files changed, 140 insertions(+), 9 deletions(-)
 
-diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
-index 9eab2c8ac3c5..455cc6f90be0 100644
---- a/fs/iomap/trace.h
-+++ b/fs/iomap/trace.h
-@@ -99,7 +99,11 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
- 	{ IOMAP_FAULT,		"FAULT" }, \
- 	{ IOMAP_DIRECT,		"DIRECT" }, \
- 	{ IOMAP_NOWAIT,		"NOWAIT" }, \
--	{ IOMAP_ATOMIC,		"ATOMIC" }
-+	{ IOMAP_OVERWRITE_ONLY,	"OVERWRITE_ONLY" }, \
-+	{ IOMAP_UNSHARE,	"UNSHARE" }, \
-+	{ IOMAP_DAX,		"DAX" }, \
-+	{ IOMAP_ATOMIC,		"ATOMIC" }, \
-+	{ IOMAP_DONTCACHE,	"DONTCACHE" }
-
- #define IOMAP_F_FLAGS_STRINGS \
- 	{ IOMAP_F_NEW,		"NEW" }, \
-@@ -107,7 +111,14 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
- 	{ IOMAP_F_SHARED,	"SHARED" }, \
- 	{ IOMAP_F_MERGED,	"MERGED" }, \
- 	{ IOMAP_F_BUFFER_HEAD,	"BH" }, \
--	{ IOMAP_F_SIZE_CHANGED,	"SIZE_CHANGED" }
-+	{ IOMAP_F_XATTR,	"XATTR" }, \
-+	{ IOMAP_F_BOUNDARY,	"BOUNDARY" }, \
-+	{ IOMAP_F_ANON_WRITE,	"ANON_WRITE" }, \
-+	{ IOMAP_F_ATOMIC_BIO,	"ATOMIC_BIO" }, \
-+	{ IOMAP_F_PRIVATE,	"PRIVATE" }, \
-+	{ IOMAP_F_SIZE_CHANGED,	"SIZE_CHANGED" }, \
-+	{ IOMAP_F_STALE,	"STALE" }
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index d7c4ced47c1567..172765967aaab4 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -2000,6 +2000,35 @@ DEFINE_REPAIR_EXTENT_EVENT(xreap_agextent_binval);
+ DEFINE_REPAIR_EXTENT_EVENT(xreap_bmapi_binval);
+ DEFINE_REPAIR_EXTENT_EVENT(xrep_agfl_insert);
+ 
++DECLARE_EVENT_CLASS(xrep_reap_max_deferred_reaps_class,
++	TP_PROTO(const struct xfs_trans *tp, unsigned int per_intent_size,
++		 unsigned int max_deferred_reaps),
++	TP_ARGS(tp, per_intent_size, max_deferred_reaps),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned int, log_res)
++		__field(unsigned int, per_intent_size)
++		__field(unsigned int, max_deferred_reaps)
++	),
++	TP_fast_assign(
++		__entry->dev = tp->t_mountp->m_super->s_dev;
++		__entry->log_res = tp->t_log_res;
++		__entry->per_intent_size = per_intent_size;
++		__entry->max_deferred_reaps = max_deferred_reaps;
++	),
++	TP_printk("dev %d:%d logres %u per_intent_size %u max_deferred_reaps %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->log_res,
++		  __entry->per_intent_size,
++		  __entry->max_deferred_reaps)
++);
++#define DEFINE_REPAIR_REAP_MAX_DEFER_CHAIN_EVENT(name) \
++DEFINE_EVENT(xrep_reap_max_deferred_reaps_class, name, \
++	TP_PROTO(const struct xfs_trans *tp, unsigned int per_intent_size, \
++		 unsigned int max_deferred_reaps), \
++	TP_ARGS(tp, per_intent_size, max_deferred_reaps))
++DEFINE_REPAIR_REAP_MAX_DEFER_CHAIN_EVENT(xreap_agextent_max_deferred_reaps);
 +
-
- #define IOMAP_DIO_STRINGS \
- 	{IOMAP_DIO_FORCE_WAIT,	"DIO_FORCE_WAIT" }, \
-@@ -138,7 +149,7 @@ DECLARE_EVENT_CLASS(iomap_class,
- 		__entry->bdev = iomap->bdev ? iomap->bdev->bd_dev : 0;
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx bdev %d:%d addr 0x%llx offset 0x%llx "
--		  "length 0x%llx type %s flags %s",
-+		  "length 0x%llx type %s (0x%x) flags %s (0x%x)",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  MAJOR(__entry->bdev), MINOR(__entry->bdev),
-@@ -146,7 +157,9 @@ DECLARE_EVENT_CLASS(iomap_class,
- 		  __entry->offset,
- 		  __entry->length,
- 		  __print_symbolic(__entry->type, IOMAP_TYPE_STRINGS),
--		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS))
-+		  __entry->type,
-+		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS),
-+		  __entry->flags)
- )
-
- #define DEFINE_IOMAP_EVENT(name)		\
-@@ -185,7 +198,7 @@ TRACE_EVENT(iomap_writepage_map,
- 		__entry->bdev = iomap->bdev ? iomap->bdev->bd_dev : 0;
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx bdev %d:%d pos 0x%llx dirty len 0x%llx "
--		  "addr 0x%llx offset 0x%llx length 0x%llx type %s flags %s",
-+		  "addr 0x%llx offset 0x%llx length 0x%llx type %s (0x%x) flags %s (0x%x)",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  MAJOR(__entry->bdev), MINOR(__entry->bdev),
-@@ -195,7 +208,9 @@ TRACE_EVENT(iomap_writepage_map,
- 		  __entry->offset,
- 		  __entry->length,
- 		  __print_symbolic(__entry->type, IOMAP_TYPE_STRINGS),
--		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS))
-+		  __entry->type,
-+		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS),
-+		  __entry->flags)
- );
-
- TRACE_EVENT(iomap_iter,
---
-2.48.1
-
+ DECLARE_EVENT_CLASS(xrep_reap_find_class,
+ 	TP_PROTO(const struct xfs_group *xg, xfs_agblock_t agbno,
+ 		 xfs_extlen_t len, bool crosslinked),
+diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
+index 6fee6a5083436b..72512fc700e21a 100644
+--- a/fs/xfs/xfs_bmap_item.h
++++ b/fs/xfs/xfs_bmap_item.h
+@@ -72,4 +72,7 @@ struct xfs_bmap_intent;
+ 
+ void xfs_bmap_defer_add(struct xfs_trans *tp, struct xfs_bmap_intent *bi);
+ 
++unsigned int xfs_bui_item_overhead(unsigned int nr);
++unsigned int xfs_bud_item_overhead(unsigned int nr);
++
+ #endif	/* __XFS_BMAP_ITEM_H__ */
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index 41b7c43060799b..ebb237a4ae87b4 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -94,4 +94,7 @@ void xfs_extent_free_defer_add(struct xfs_trans *tp,
+ 		struct xfs_extent_free_item *xefi,
+ 		struct xfs_defer_pending **dfpp);
+ 
++unsigned int xfs_efi_item_overhead(unsigned int nr);
++unsigned int xfs_efd_item_overhead(unsigned int nr);
++
+ #endif	/* __XFS_EXTFREE_ITEM_H__ */
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index f3d78869e5e5a3..39a102cc1b43e6 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -698,4 +698,17 @@ xlog_kvmalloc(
+ 	return p;
+ }
+ 
++/*
++ * Given a count of iovecs and space for a log item, compute the space we need
++ * in the log to store that data plus the log headers.
++ */
++static inline unsigned int
++xlog_item_space(
++	unsigned int	niovecs,
++	unsigned int	nbytes)
++{
++	nbytes += niovecs * (sizeof(uint64_t) + sizeof(struct xlog_op_header));
++	return round_up(nbytes, sizeof(uint64_t));
++}
++
+ #endif	/* __XFS_LOG_PRIV_H__ */
+diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
+index bfee8f30c63ce9..e23e768e031e20 100644
+--- a/fs/xfs/xfs_refcount_item.h
++++ b/fs/xfs/xfs_refcount_item.h
+@@ -76,4 +76,7 @@ struct xfs_refcount_intent;
+ void xfs_refcount_defer_add(struct xfs_trans *tp,
+ 		struct xfs_refcount_intent *ri);
+ 
++unsigned int xfs_cui_item_overhead(unsigned int nr);
++unsigned int xfs_cud_item_overhead(unsigned int nr);
++
+ #endif	/* __XFS_REFCOUNT_ITEM_H__ */
+diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
+index 40d331555675ba..5fed8864bc32cc 100644
+--- a/fs/xfs/xfs_rmap_item.h
++++ b/fs/xfs/xfs_rmap_item.h
+@@ -75,4 +75,7 @@ struct xfs_rmap_intent;
+ 
+ void xfs_rmap_defer_add(struct xfs_trans *tp, struct xfs_rmap_intent *ri);
+ 
++unsigned int xfs_rui_item_overhead(unsigned int nr);
++unsigned int xfs_rud_item_overhead(unsigned int nr);
++
+ #endif	/* __XFS_RMAP_ITEM_H__ */
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index b32fb233cf8476..2fd9b7465b5ed2 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -36,6 +36,9 @@
+ #include "xfs_metafile.h"
+ #include "xfs_rtgroup.h"
+ #include "xfs_rtrmap_btree.h"
++#include "xfs_extfree_item.h"
++#include "xfs_rmap_item.h"
++#include "xfs_refcount_item.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+@@ -106,6 +109,9 @@ struct xreap_state {
+ 
+ 	/* Number of deferred reaps queued during the whole reap sequence. */
+ 	unsigned long long		total_deferred;
++
++	/* Maximum number of intents we can reap in a single transaction. */
++	unsigned int			max_deferred_reaps;
+ };
+ 
+ /* Put a block back on the AGFL. */
+@@ -165,8 +171,8 @@ static inline bool xreap_dirty(const struct xreap_state *rs)
+ 
+ /*
+  * Decide if we want to roll the transaction after reaping an extent.  We don't
+- * want to overrun the transaction reservation, so we prohibit more than
+- * 128 EFIs per transaction.  For the same reason, we limit the number
++ * want to overrun the transaction reservation, so we restrict the number of
++ * log intent reaps per transaction.  For the same reason, we limit the number
+  * of buffer invalidations to 2048.
+  */
+ static inline bool xreap_want_roll(const struct xreap_state *rs)
+@@ -188,13 +194,11 @@ static inline void xreap_reset(struct xreap_state *rs)
+ 	rs->force_roll = false;
+ }
+ 
+-#define XREAP_MAX_DEFER_CHAIN		(2048)
+-
+ /*
+  * Decide if we want to finish the deferred ops that are attached to the scrub
+  * transaction.  We don't want to queue huge chains of deferred ops because
+  * that can consume a lot of log space and kernel memory.  Hence we trigger a
+- * xfs_defer_finish if there are more than 2048 deferred reap operations or the
++ * xfs_defer_finish if there are too many deferred reap operations or the
+  * caller did some real work.
+  */
+ static inline bool
+@@ -202,7 +206,7 @@ xreap_want_defer_finish(const struct xreap_state *rs)
+ {
+ 	if (rs->force_roll)
+ 		return true;
+-	if (rs->total_deferred > XREAP_MAX_DEFER_CHAIN)
++	if (rs->total_deferred > rs->max_deferred_reaps)
+ 		return true;
+ 	return false;
+ }
+@@ -495,6 +499,37 @@ xreap_agextent_iter(
+ 	return 0;
+ }
+ 
++/*
++ * Compute the worst case log overhead of the intent items needed to reap a
++ * single per-AG space extent.
++ */
++STATIC unsigned int
++xreap_agextent_max_deferred_reaps(
++	struct xfs_scrub	*sc)
++{
++	const unsigned int	efi = xfs_efi_item_overhead(1);
++	const unsigned int	rui = xfs_rui_item_overhead(1);
++
++	/* unmapping crosslinked metadata blocks */
++	const unsigned int	t1 = rui;
++
++	/* freeing metadata blocks */
++	const unsigned int	t2 = rui + efi;
++
++	/* worst case of all four possible scenarios */
++	const unsigned int	per_intent = max(t1, t2);
++
++	/*
++	 * tr_itruncate has enough logres to unmap two file extents; use only
++	 * half the log reservation for intent items so there's space to do
++	 * actual work and requeue intent items.
++	 */
++	const unsigned int	ret = sc->tp->t_log_res / (2 * per_intent);
++
++	trace_xreap_agextent_max_deferred_reaps(sc->tp, per_intent, ret);
++	return max(1, ret);
++}
++
+ /*
+  * Break an AG metadata extent into sub-extents by fate (crosslinked, not
+  * crosslinked), and dispose of each sub-extent separately.
+@@ -556,6 +591,7 @@ xrep_reap_agblocks(
+ 		.sc			= sc,
+ 		.oinfo			= oinfo,
+ 		.resv			= type,
++		.max_deferred_reaps	= xreap_agextent_max_deferred_reaps(sc),
+ 	};
+ 	int				error;
+ 
+@@ -668,6 +704,7 @@ xrep_reap_fsblocks(
+ 		.sc			= sc,
+ 		.oinfo			= oinfo,
+ 		.resv			= XFS_AG_RESV_NONE,
++		.max_deferred_reaps	= xreap_agextent_max_deferred_reaps(sc),
+ 	};
+ 	int				error;
+ 
+@@ -922,6 +959,7 @@ xrep_reap_metadir_fsblocks(
+ 		.sc			= sc,
+ 		.oinfo			= &oinfo,
+ 		.resv			= XFS_AG_RESV_NONE,
++		.max_deferred_reaps	= xreap_agextent_max_deferred_reaps(sc),
+ 	};
+ 	int				error;
+ 
+diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
+index 2450e214103fed..987313a52e6401 100644
+--- a/fs/xfs/scrub/trace.c
++++ b/fs/xfs/scrub/trace.c
+@@ -22,6 +22,7 @@
+ #include "xfs_parent.h"
+ #include "xfs_metafile.h"
+ #include "xfs_rtgroup.h"
++#include "xfs_trans.h"
+ #include "scrub/scrub.h"
+ #include "scrub/xfile.h"
+ #include "scrub/xfarray.h"
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 3d52e9d7ad571a..586031332994ff 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -77,6 +77,11 @@ xfs_bui_item_size(
+ 	*nbytes += xfs_bui_log_format_sizeof(buip->bui_format.bui_nextents);
+ }
+ 
++unsigned int xfs_bui_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, xfs_bui_log_format_sizeof(nr));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given bui log item. We use only 1 iovec, and we point that
+@@ -168,6 +173,11 @@ xfs_bud_item_size(
+ 	*nbytes += sizeof(struct xfs_bud_log_format);
+ }
+ 
++unsigned int xfs_bud_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, sizeof(struct xfs_bud_log_format));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given bud log item. We use only 1 iovec, and we point that
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index a25c713ff888c7..1dd7f45359e090 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -82,6 +82,11 @@ xfs_efi_item_size(
+ 	*nbytes += xfs_efi_log_format_sizeof(efip->efi_format.efi_nextents);
+ }
+ 
++unsigned int xfs_efi_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, xfs_efi_log_format_sizeof(nr));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given efi log item. We use only 1 iovec, and we point that
+@@ -253,6 +258,11 @@ xfs_efd_item_size(
+ 	*nbytes += xfs_efd_log_format_sizeof(efdp->efd_format.efd_nextents);
+ }
+ 
++unsigned int xfs_efd_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, xfs_efd_log_format_sizeof(nr));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given efd log item. We use only 1 iovec, and we point that
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 1ca406ec1b40b3..f66d2d430e4f37 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -309,9 +309,7 @@ xlog_cil_alloc_shadow_bufs(
+ 		 * Then round nbytes up to 64-bit alignment so that the initial
+ 		 * buffer alignment is easy to calculate and verify.
+ 		 */
+-		nbytes += niovecs *
+-			(sizeof(uint64_t) + sizeof(struct xlog_op_header));
+-		nbytes = round_up(nbytes, sizeof(uint64_t));
++		nbytes = xlog_item_space(niovecs, nbytes);
+ 
+ 		/*
+ 		 * The data buffer needs to start 64-bit aligned, so round up
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index fe2d7aab8554fc..7ea43d35b1380d 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -78,6 +78,11 @@ xfs_cui_item_size(
+ 	*nbytes += xfs_cui_log_format_sizeof(cuip->cui_format.cui_nextents);
+ }
+ 
++unsigned int xfs_cui_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, xfs_cui_log_format_sizeof(nr));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given cui log item. We use only 1 iovec, and we point that
+@@ -179,6 +184,11 @@ xfs_cud_item_size(
+ 	*nbytes += sizeof(struct xfs_cud_log_format);
+ }
+ 
++unsigned int xfs_cud_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, sizeof(struct xfs_cud_log_format));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given cud log item. We use only 1 iovec, and we point that
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 89decffe76c8b5..3e214ce2339f54 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -77,6 +77,11 @@ xfs_rui_item_size(
+ 	*nbytes += xfs_rui_log_format_sizeof(ruip->rui_format.rui_nextents);
+ }
+ 
++unsigned int xfs_rui_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, xfs_rui_log_format_sizeof(nr));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given rui log item. We use only 1 iovec, and we point that
+@@ -180,6 +185,11 @@ xfs_rud_item_size(
+ 	*nbytes += sizeof(struct xfs_rud_log_format);
+ }
+ 
++unsigned int xfs_rud_item_overhead(unsigned int nr)
++{
++	return xlog_item_space(1, sizeof(struct xfs_rud_log_format));
++}
++
+ /*
+  * This is called to fill in the vector of log iovecs for the
+  * given rud log item. We use only 1 iovec, and we point that
