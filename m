@@ -1,122 +1,169 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B419E56F;
-	Fri,  4 Apr 2025 14:31:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 444FE1FE44D
+	for <linux-xfs@vger.kernel.org>; Fri,  4 Apr 2025 16:09:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743777113; cv=none; b=ONBlzf0nKKKlfb9FsLR209ASlkKkuzQcZwbhh8I3AMVPnc+JnXy9FiUHquJRLcqXTFy8eBbkPbBceKxCMergzf0p5Pmhbf35chhAuq4fcH4FL1OUvNJo0+bbj2cca/e28LVpZo/HcriIFlfrRqbxb7Tg5c5BzcLs00jTXjrTYdA=
+	t=1743782973; cv=none; b=T2HKIYWeN5AzN9DST5ZCDljwQ9Ix2Vnm2vvj5Q/xu6XccMGPgofI2ZM0433y7f3xl1riziawl4AdzOMHAGIa8vUrBM8623LJiSPN0INSC39rfuzslDPI0ojYBPOY20qJAwmvqcW+bowoGUlyI3CI6MpqI/UxUle9AXAuFXDIKcA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743777113; c=relaxed/simple;
-	bh=pSeOl54WsmEGWar/94shLMKrtfiaE4mtt8Qn7st7U9o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fz8bkiBwu/8au3ZwWUBG9pWGwbUQJdLZ0XmN2M3AbPk5gmXi/6tgKCXAcgnVa2ZiLWAUC7xv8pFLp4pSj8YvFUGm3NoUmtu/pA+ew/AlBMP31OXIDMM3gpzp0ZTDnQSueAmAiE4b//xnwT4XZmvDJGoECDEsz2uPBLu1r6RXYvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lHGc+HAF; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1743782973; c=relaxed/simple;
+	bh=eoK7ExN7d7Yj0y6wENyG3jh/iWmpZN4k5bx6Xbu2MF0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kUu/HhC8y1S/KPgRFcw1FYmq3vFAXfKYbSgqK6+LYHDGQaILUxYGrsSSw0m4B6vR32s1LDtRAfLR/e3s3BCdc+6So/TK+vNek4mHz0/ZbbzE+OBSX6Xa82i2b7S783cmcd1Ty3OkHrpkRcAl77omVzCVqNaL3qN0J4AeBAbKeOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=byXSiBOW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lHGc+HAF"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7399838db7fso1971504b3a.0;
-        Fri, 04 Apr 2025 07:31:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743777112; x=1744381912; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lIUpXcdKHB3PSOIcrF3ZU7/g9WoG6O8U5GhLcPaJPwE=;
-        b=lHGc+HAFPsg3id7qyBEDVXq3F625qSRFRRa5oBpAM3ZfXdEs88CzbOV3W98cLCAjsT
-         uYUPyq4fegkryUhwzGlhwNWv5Q8XfDZoRnwPcNWO73/lzzLJCxQAEV2FlrhYStuLuQbD
-         p6c5gA97WnTif5beV+VPJbIJ/1fDAvvpayFdLoIJ6OyWIioVfSZnW2am2/YaSA1sEEp4
-         Z8PM+LDUq9Hn3eR7iNABvx6Oal42DafFVY9HeX1XND5+g4SLbTYryopw6RMHOIUWehTP
-         +REE+3E5UEhphsIB/4yqakGS2P/2Lt0nFtwti6Dfe9CRLXhfmb3ds3/8Uo2LQpxJSgjh
-         f7Zw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743777112; x=1744381912;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lIUpXcdKHB3PSOIcrF3ZU7/g9WoG6O8U5GhLcPaJPwE=;
-        b=LL/HCWq13CwybbiwIKRC8y1m9+LRV3/UuU4umIzSgAlxr6MI9GFI87vzOJE+8Hlv1s
-         82dLShUZB626c5hCVxTnRpm7ms1Pwk1Wka+dZp/9pISY/jTuohOcNS9x72SJsikJDYtV
-         RcHdFeNikRwrXPyX8BhHWKOncn6C3BjBTui9waBmRTFEkw9QT+VSI1H4wsWY4zC0fH0K
-         tX2PGN1yVBOkLqj0tiEhQIvdvNpA0nxHPtd+xSNQG6ERN8ObrCXaTcfWNfDBCKO1MCe1
-         FWwbXcs4koX01P0aTiSP5Byjd5bn95cos1IaGNJnRWYYn/k3mtLOB01GiYyB/RkFYuvU
-         qYxg==
-X-Forwarded-Encrypted: i=1; AJvYcCVY4mX6S/6DNsrr/q1f2F8VKx6BlvykXUlsbvWknyCFP8pK1O/3SAyVkOJgHrGFj+6OYUcGaKuF@vger.kernel.org, AJvYcCX6cTBtVtfyytE43X5HZPp8WRIi0KqJHeQdhkFW7nvOolURK94XgVcgu5u3hkfFjmY1VN+OZvjudY4R@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz32mTgTqVAFlvqCMNoVUQNokwDqwTdAdbpm05ZaXHWXCoiNrGb
-	DtFL2/I4iC77+nRbq/f8ihvHL1VhRw3WnQR2CIBk5asXH/hKys9I
-X-Gm-Gg: ASbGncuEZpWquoHwUjKaLg4UucqTEQ6wfj8E81cFv3TMHMoIr0KGkdID68C8RvW0Mcl
-	yKrn1n0BQ19lM4P+dwTl7X1gIvhjKPDp/fczRN6pPOepP98HC/awncd6z5uGfZWT/H3sNwvaK1A
-	ljk+0cwf/FlKSRCnjWbLS3WXPRC5DHh7a2MkPdgNZReRQgVPoiY1WvoJziYdzPibf6hLafRmp09
-	vo2ugu59ZmQ7rLHpVB9Wk8w6EDayD0wGMCPwGcJloQxhhXXnpQEm1KRqQLjLGBqyN4jaSVhcytz
-	hn2u2r/rgZZ3Cu5X/RoTXsT7dZ0U58DcGwv22P7QQ0YNa99aDfIWsng=
-X-Google-Smtp-Source: AGHT+IHb2Ot8AMsFqMnHLfMhegzVUUhlOpaXPi56UiGjsxBbobBs9Kh/XX+JriZ0cxmwHfaiMsHXjA==
-X-Received: by 2002:a05:6a00:2189:b0:736:9f2e:1357 with SMTP id d2e1a72fcca58-739e5a7b103mr5001341b3a.12.1743777111564;
-        Fri, 04 Apr 2025 07:31:51 -0700 (PDT)
-Received: from [192.168.0.120] ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-af9bc31af62sm2453385a12.22.2025.04.04.07.31.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 04 Apr 2025 07:31:51 -0700 (PDT)
-Message-ID: <3aaf8625-3e15-49c6-9e9a-2d9995600dd7@gmail.com>
-Date: Fri, 4 Apr 2025 20:01:47 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="byXSiBOW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB945C4CEE9;
+	Fri,  4 Apr 2025 16:09:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743782970;
+	bh=eoK7ExN7d7Yj0y6wENyG3jh/iWmpZN4k5bx6Xbu2MF0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=byXSiBOW/77RY7kBe4JZ97FgpZP7a7BpencYmMI1EMTUJTbE7mLn88QnbbuDbowSW
+	 SzFLzXj3ZdgLsXheMibSXPPsuXPboj/k24HIyQlpZbTtMnwwNYPz5fiBGeemGwfYB0
+	 QPjkd5CkbfA2COoAZCTt/jeyBIj1vcYKVW6dHch8dw1/JrOOzbNBQGUF+X+76A0B5+
+	 0NYweWBBNmqQtr4cCt4WjG3A8bSRSl35sxjXkjCAX8IPANN+PXF/T9soAEHN0/zr51
+	 EGpCLpl5q3OSHO0AWdsbkFv+OtGyFOxYw1AswpRmeXz6/Ddsewdo0EsUAYcOByhrON
+	 Mqv6tpKybG1qw==
+Date: Fri, 4 Apr 2025 09:09:30 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: compute the maximum repair reaping defer intent
+ chain length
+Message-ID: <20250404160930.GC6283@frogsfrogsfrogs>
+References: <20250403191244.GB6283@frogsfrogsfrogs>
+ <ce1887ca-3b05-4a90-bb20-456f9fb3c4f5@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/1] xfs/539: Ignore remount failures on v5 xfs
-Content-Language: en-US
-To: Pavel Reichl <preichl@redhat.com>, fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
- ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
- zlang@kernel.org, david@fromorbit.com
-References: <cover.1741094926.git.nirjhar.roy.lists@gmail.com>
- <5cd91683c8eec72a6016914d3f9e631909e99da8.1741094926.git.nirjhar.roy.lists@gmail.com>
- <25ada3f9-0647-48ee-a506-92caa5129b2d@redhat.com>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <25ada3f9-0647-48ee-a506-92caa5129b2d@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ce1887ca-3b05-4a90-bb20-456f9fb3c4f5@oracle.com>
 
+On Fri, Apr 04, 2025 at 10:16:39AM +0100, John Garry wrote:
+> On 03/04/2025 20:12, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Actually compute the log overhead of log intent items used in reap
+> > operations and use that to compute the thresholds in reap.c instead of
+> > assuming 2048 works.  Note that there have been no complaints because
+> > tr_itruncate has a very large logres.
+> > 
+> 
+> Thanks for this, but I have comments at the bottom
 
-On 4/2/25 01:28, Pavel Reichl wrote:
->
-> On 04/03/2025 14:48, Nirjhar Roy (IBM) wrote:
->> Remount with noattr2 fails on a v5 filesystem, however the deprecation
->> warnings still get printed and that is exactly what the test
->> is checking. So ignore the mount failures in this case.
->>
->> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->> ---
->>   tests/xfs/539 | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/tests/xfs/539 b/tests/xfs/539
->> index b9bb7cc1..5098be4a 100755
->> --- a/tests/xfs/539
->> +++ b/tests/xfs/539
->> @@ -61,7 +61,7 @@ for VAR in {attr2,noikeep}; do
->>   done
->>   for VAR in {noattr2,ikeep}; do
->>       log_tag
->> -    _scratch_remount $VAR
->> +    _scratch_remount $VAR >> $seqres.full 2>&1
->>       check_dmesg_for_since_tag "XFS: $VAR mount option is 
->> deprecated" || \
->>           echo "Could not find deprecation warning for $VAR"
->>   done
->
->
-> Reviewed-by: Pavel Reichl <preichl@redhat.com>
+<snip>
 
-Thank you for the review.
+> > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+> > index 89decffe76c8b5..3e214ce2339f54 100644
+> > --- a/fs/xfs/xfs_rmap_item.c
+> > +++ b/fs/xfs/xfs_rmap_item.c
+> > @@ -77,6 +77,11 @@ xfs_rui_item_size(
+> >   	*nbytes += xfs_rui_log_format_sizeof(ruip->rui_format.rui_nextents);
+> >   }
+> > +unsigned int xfs_rui_item_overhead(unsigned int nr)
+> > +{
+> > +	return xlog_item_space(1, xfs_rui_log_format_sizeof(nr));
+> > +}
+> > +
+> >   /*
+> >    * This is called to fill in the vector of log iovecs for the
+> >    * given rui log item. We use only 1 iovec, and we point that
+> > @@ -180,6 +185,11 @@ xfs_rud_item_size(
+> >   	*nbytes += sizeof(struct xfs_rud_log_format);
+> >   }
+> > +unsigned int xfs_rud_item_overhead(unsigned int nr)
+> 
+> I guess that it is intentional, but nr is not used
 
---NR
+Eh, yeah, I suppose these parameters aren't necessary.
 
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+> > +{
+> > +	return xlog_item_space(1, sizeof(struct xfs_rud_log_format));
+> > +}
+> 
+> I just noticed that this function - in addition to xfs_cud_item_overhead()
 
+Hmmm.  Scrub uses tr_itruncate for transactions.  For reaping, it allows
+up to half the reservation for intent items, and the other half to make
+progress on one of those intent items.  So if we start by attaching this
+to the first reap transaction:
+
+RUI 0
+EFI 0
+...
+RUI X
+EFI X
+
+Then on the next ->finish_one call, we'll finish RUI 0's deferred work.
+In the worst case all the items need relogging, so the second reap
+transaction looks like this:
+
+RUD 0
+EFD 0 + EFI 0'
+...
+RUD X + RUI X'
+EFD X + EFD X'
+<pile of rmap btree buffers>
+
+So I guess the computation /does/ need to account for RUDs, so the code
+at the top of xreap_agextent_max_deferred_reaps should be:
+
+	const unsigned int	efi = xfs_efi_item_overhead(1) +
+				      xfs_efd_item_overhead(1);
+	const unsigned int	rui = xfs_rui_item_overhead(1) +
+				      xfs_rud_item_overhead(1);
+
+Thanks for pointing that out.
+
+Thinking about this further, reaping doesn't touch the bmap and it only
+processes a single logical change to a single extent.  So we don't need
+to save half of the tr_itruncate reservation for the actual btree
+updates; that could instead be:
+
+	/*
+	 * agf, agfl, and superblock for the freed extent
+	 * worst case split in allocation btrees for freeing 1 extent
+	 */
+	upd = xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+	      xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1), blksz);
+
+	ret = (sc->tp->t_log_res - upd) / per_intent;
+
+Note that xfs_allocfree_block_count allows for two full rmap btree
+splits already, so upd covers the btree buffer updates for the RUI case.
+I would conservatively double upd because rolling to accomodate more
+intent items is better than overrunning the reservation.
+
+> and xfs_cui_item_overhead() - are not referenced in this patch, but only in
+
+The refcount intent items aren't needed for online fsck because xreap_*
+doesn't mess with file data.  They're provided entirely for the sake of
+cow fallback of multi-fsblock untorn writes.  IOWs, it's to reduce churn
+between our patchsets (really, this patch and your patchset) assuming
+that part of untorn writes actually goes into 6.16.
+
+> the rest of the internal series which this is taken from.
+
+I wish you wouldn't mention internal patchsets on public lists.
+
+For everyone else who just saw this -- this used to be patch 2 of a
+3-patch series that I sent John to support his work on the cow fallback
+for multi-fsblock untorn writes.  The first patch was buggy so I threw
+it away, and the third patch wasn't really needed but I didn't figure
+that out until the second re-read of it.  This is the only remaining
+patch.
+
+--D
+
+> > +
+> >   /*
+> >    * This is called to fill in the vector of log iovecs for the
+> >    * given rud log item. We use only 1 iovec, and we point that
+> 
+> 
