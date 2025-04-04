@@ -1,240 +1,57 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39BCE57D;
-	Fri,  4 Apr 2025 05:08:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DBF916132F;
+	Fri,  4 Apr 2025 09:06:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743743307; cv=none; b=r1wWpUJlEIYG4MMldmCHmG8BBa1CAO6Qlzkx9AvVJoIqZQAAMEeA+85HfQBXXNdb8usrcNspRDznAtKAm8ZUfhNTjDdduIsLPn/qZY/WfMlz1+2mOHMZ+ddpofgYhGs3vn8v6I69l8xEfenwwp10Gu2fjAyBUgJEdF8Z53vToxU=
+	t=1743757569; cv=none; b=ZULCZim+55f5bxUPsl0FdXBt4LaCg7j/UTV/wvB9RtRVDGkms6ncvnJHcQCYmHrwjl7/ckZsfuOwTLvkQ2vRXozk554hyjMnRK40if1vF5DdhUC5IXupq2h8DbM+v5Ay86OZxaUXCaGIr+ICEgB/Z18hoECS6n5LJ3LncAHYOQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743743307; c=relaxed/simple;
-	bh=1nTuoXpO30BpG/aa65LHJVX9Oc403iiDhd4ezj2ySAI=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=uH4TkJx3UPSzhSQ6i39/ui67j6MzYYHoez8/k370uBBkeVjVcAeUGRJwhqFS3p+DAVGg8sBkvLh4YSmYo7sl8/+76zwyxIzvq5o+aA1rf+EnmexXN0ca3TUuStlNZkdHAvvtSnoo/t+ABcOTUXEisClOGfdJVz7TBhAPyWuARpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G3NmV6Bu; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G3NmV6Bu"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-227c7e57da2so15188025ad.0;
-        Thu, 03 Apr 2025 22:08:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743743305; x=1744348105; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=772E1roxM/IB0spnTqOAR5CEfQBPMpms6russKCPGNg=;
-        b=G3NmV6BuoakGqdyhJUBU1J6zxNVDaxxuHhcWocoE0Pn1VCKfT1TGmhVuPe09jRBwMm
-         x5Bbw6mDAA46YPFAq4vLmio7oM6jBYqZJphavoxrQ4qGsUuviPH3iSLSAOjQiD6acTdb
-         w3akMNg549dPTw7FKUhcKEmL6KEZGKmO56WNTt/yCfzVMfoiuihGutkcPufBmM+NqnUw
-         p84m3qkxdrzPl+MOZy0JrYwx87SeKFA6/WPaYEnlvBcMC/zNtChuJGJfMvf8/rsjiqNs
-         EqHFan5Dfu4Q7AAnxlXWNVX7NSwMSgtl+uBPiqI0CYN1P36cmpNmvHhFWGP2TwBycFEO
-         A38w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743743305; x=1744348105;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=772E1roxM/IB0spnTqOAR5CEfQBPMpms6russKCPGNg=;
-        b=pmhPHSbJ4PSpscp/2Oq5fqzLicC4FKxZmJV21Bd7xlsC2nWFzBAgVwLqwy7LFsnJQe
-         NiVvCvi9fycZysYViSr1Df2K8ssHlxXUnm7XB5lDgR7gTkSeSXmLsp5WteqBvBHGPENt
-         DKUFusyF0LS7bH0W+I/xIifssVRqZRwO3fikGulDtKvSaQ8MbSagx0luLCrh6QcK5uwJ
-         YlqOdnohmuNOgE68UR+ZKs0OeogSi4yGIPneXsUPI7PTAKLP8Upjc1W2dai3NVaTiNjA
-         3UrimDo2BM4QXylfVqExAoFMl+97ufv2z5KTo+4Jyy1fdGic3iwFNtJBFAhO7eMG8Xyb
-         M4lA==
-X-Forwarded-Encrypted: i=1; AJvYcCUUEM3s6v8FxdCMWkZEgeck98usuIy2L+oo3PZyCE6xj52OxqNCD/3Yc1VS2hVDQ1NrY4aGmLNA@vger.kernel.org, AJvYcCW3djh5j+ogIVndwfGNz0Wg/xx7p0JAJEdwbBfheuM35wU812CXnbnrHS6nvuvFmniGLGJDs/jWdoWq@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzbl4fU6gLaKxBCJ/wHdC/c5neOXVSA7H5JfVRrTtaCBmo7Ce7c
-	GGTe/FCLOuwW99/0c8k8zSbTKkw0RoV7wfW5HzdKqjy9T2wdG6fN
-X-Gm-Gg: ASbGncu9HYi97XH7V1VBuU9svbGyllRfWiEBqyaO8dSfQLcc2ZZbNiReub98CQ8yEF6
-	R0Irry31EBEHgxwEp4kW5ua0InbhMLwr6FOx0qmRV5JSM0x2rgI43e9Z325LgQJ6jqLHqGPWnnQ
-	WJ6uLKIcPTmydlCpYTHar3aIPBshVZVSEqOmkiftUYUTnp1NesPNy/jDpVCItaQMC+tvKtrt0me
-	n83GvPvoWuJhWAaYop5BOpFLT23VxIjkjVE/qhBTIUKsz8+5ZhsBqSBk8y+S6LCaS/jSt1OzmaE
-	IPzmO484KsuS7uWV5DJthDUEZ+sOq7655b8m
-X-Google-Smtp-Source: AGHT+IHGIPBt+AUwdKhX7yUAn7GNDvmi2zMUhpV4dabBoE0G2ws2wYQDVEWp3Cn9hHA5je6StCTF4g==
-X-Received: by 2002:a17:903:124a:b0:224:2384:5b40 with SMTP id d9443c01a7336-22a8a06a057mr27097715ad.24.1743743304791;
-        Thu, 03 Apr 2025 22:08:24 -0700 (PDT)
-Received: from dw-tp ([171.76.86.91])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-739d97ee713sm2510888b3a.51.2025.04.03.22.08.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Apr 2025 22:08:24 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org, david@fromorbit.com, nirjhar.roy.lists@gmail.com
-Subject: Re: [PATCH v2 5/5] common: exit --> _exit
-In-Reply-To: <f6c7e5647d5839ff3a5c7d34418ec56aba22bbc1.1743487913.git.nirjhar.roy.lists@gmail.com>
-Date: Fri, 04 Apr 2025 10:34:47 +0530
-Message-ID: <87mscwv7o0.fsf@gmail.com>
-References: <cover.1743487913.git.nirjhar.roy.lists@gmail.com> <f6c7e5647d5839ff3a5c7d34418ec56aba22bbc1.1743487913.git.nirjhar.roy.lists@gmail.com>
+	s=arc-20240116; t=1743757569; c=relaxed/simple;
+	bh=3KuxW5QTAuQ13ScJFuxAKFZQrv/QjQev0J4mopx8Gnc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sf2KK1WZ2KS2qrBxj5kM5uB7gFw82UHDL+QNiZ6l0Ocpe/VHTx2bi/TQ2lDXfgt44b10RgGP0uYgTjsxW+K4XccqKzTvuJFkr0NLAAMwTh9rfK1IqiFOndUsWeI691rBCltp3cMorRgMgA6ja00JFcl6T6pUms4pzTNlLXTsLuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id D978A68BEB; Fri,  4 Apr 2025 11:06:01 +0200 (CEST)
+Date: Fri, 4 Apr 2025 11:06:01 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, alx@kernel.org, brauner@kernel.org,
+	djwong@kernel.org, dchinner@redhat.com, linux-man@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ojaswin@linux.ibm.com,
+	ritesh.list@gmail.com, martin.petersen@oracle.com,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH RFC] statx.2: Add stx_atomic_write_unit_max_opt
+Message-ID: <20250404090601.GA12163@lst.de>
+References: <20250319114402.3757248-1-john.g.garry@oracle.com> <20250320070048.GA14099@lst.de> <c656fa4d-eb76-4caa-8a71-a8d8a2ba6206@oracle.com> <20250320141200.GC10939@lst.de> <7311545c-e169-4875-bc6c-97446eea2c45@oracle.com> <20250323064029.GA30848@lst.de> <5485c1ad-8a20-40bc-aa75-68b820de5e1c@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5485c1ad-8a20-40bc-aa75-68b820de5e1c@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-"Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
-
-> Replace exit <return-val> with _exit <return-val> which
-> is introduced in the previous patch.
+On Thu, Apr 03, 2025 at 04:07:04PM +0100, John Garry wrote:
+> So I am thinking one of these:
+> a. stx_atomic_write_unit_max_dev
+> b. stx_atomic_write_unit_max_bdev
+> c. stx_atomic_write_unit_max_align
+> d. stx_atomic_write_unit_max_hw
 >
-> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> ---
->  common/btrfs    |   6 +--
->  common/ceph     |   2 +-
->  common/config   |   7 ++--
->  common/ext4     |   2 +-
->  common/populate |   2 +-
->  common/preamble |   2 +-
->  common/punch    |  12 +++---
->  common/rc       | 103 +++++++++++++++++++++++-------------------------
->  common/xfs      |   8 ++--
->  9 files changed, 70 insertions(+), 74 deletions(-)
->
-> diff --git a/common/btrfs b/common/btrfs
-> index a3b9c12f..3725632c 100644
-> --- a/common/btrfs
-> +++ b/common/btrfs
-> @@ -80,7 +80,7 @@ _require_btrfs_mkfs_feature()
->  {
->  	if [ -z $1 ]; then
->  		echo "Missing feature name argument for _require_btrfs_mkfs_feature"
-> -		exit 1
-> +		_exit 1
->  	fi
->  	feat=$1
->  	$MKFS_BTRFS_PROG -O list-all 2>&1 | \
-> @@ -104,7 +104,7 @@ _require_btrfs_fs_feature()
->  {
->  	if [ -z $1 ]; then
->  		echo "Missing feature name argument for _require_btrfs_fs_feature"
-> -		exit 1
-> +		_exit 1
->  	fi
->  	feat=$1
->  	modprobe btrfs > /dev/null 2>&1
-> @@ -214,7 +214,7 @@ _check_btrfs_filesystem()
->  	if [ $ok -eq 0 ]; then
->  		status=1
->  		if [ "$iam" != "check" ]; then
-> -			exit 1
-> +			_exit 1
->  		fi
->  		return 1
->  	fi
-> diff --git a/common/ceph b/common/ceph
-> index d6f24df1..df7a6814 100644
-> --- a/common/ceph
-> +++ b/common/ceph
-> @@ -14,7 +14,7 @@ _ceph_create_file_layout()
->  
->  	if [ -e $fname ]; then
->  		echo "File $fname already exists."
-> -		exit 1
-> +		_exit 1
->  	fi
->  	touch $fname
->  	$SETFATTR_PROG -n ceph.file.layout \
-> diff --git a/common/config b/common/config
-> index eb6af35a..4c5435b7 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -123,8 +123,7 @@ set_mkfs_prog_path_with_opts()
->  _fatal()
->  {
->      echo "$*"
-> -    status=1
-> -    exit 1
-> +    _exit 1
->  }
->  
->  export MKFS_PROG="$(type -P mkfs)"
-> @@ -868,7 +867,7 @@ get_next_config() {
->  		echo "Warning: need to define parameters for host $HOST"
->  		echo "       or set variables:"
->  		echo "       $MC"
-> -		exit 1
-> +		_exit 1
->  	fi
->  
->  	_check_device TEST_DEV required $TEST_DEV
-> @@ -879,7 +878,7 @@ get_next_config() {
->  	if [ ! -z "$SCRATCH_DEV_POOL" ]; then
->  		if [ ! -z "$SCRATCH_DEV" ]; then
->  			echo "common/config: Error: \$SCRATCH_DEV ($SCRATCH_DEV) should be unset when \$SCRATCH_DEV_POOL ($SCRATCH_DEV_POOL) is set"
-> -			exit 1
-> +			_exit 1
->  		fi
->  		SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
->  		export SCRATCH_DEV
-> diff --git a/common/ext4 b/common/ext4
-> index e1b336d3..f88fa532 100644
-> --- a/common/ext4
-> +++ b/common/ext4
-> @@ -182,7 +182,7 @@ _require_scratch_ext4_feature()
->  {
->      if [ -z "$1" ]; then
->          echo "Usage: _require_scratch_ext4_feature feature"
-> -        exit 1
-> +        _exit 1
->      fi
->      $MKFS_EXT4_PROG -F $MKFS_OPTIONS -O "$1" \
->  		    $SCRATCH_DEV 512m >/dev/null 2>&1 \
-> diff --git a/common/populate b/common/populate
-> index 7352f598..50dc75d3 100644
-> --- a/common/populate
-> +++ b/common/populate
-> @@ -1003,7 +1003,7 @@ _fill_fs()
->  
->  	if [ $# -ne 4 ]; then
->  		echo "Usage: _fill_fs filesize dir blocksize switch_user"
-> -		exit 1
-> +		_exit 1
->  	fi
->  
->  	if [ $switch_user -eq 0 ]; then
-> diff --git a/common/preamble b/common/preamble
-> index c92e55bb..ba029a34 100644
-> --- a/common/preamble
-> +++ b/common/preamble
-> @@ -35,7 +35,7 @@ _begin_fstest()
->  {
->  	if [ -n "$seq" ]; then
->  		echo "_begin_fstest can only be called once!"
-> -		exit 1
-> +		_exit 1
->  	fi
->  
->  	seq=`basename $0`
-> diff --git a/common/punch b/common/punch
-> index 43ccab69..6567b9d1 100644
-> --- a/common/punch
-> +++ b/common/punch
-> @@ -172,16 +172,16 @@ _filter_fiemap_flags()
->  	$AWK_PROG -e "$awk_script" | _coalesce_extents
->  }
->  
-> -# Filters fiemap output to only print the 
-> +# Filters fiemap output to only print the
->  # file offset column and whether or not
->  # it is an extent or a hole
->  _filter_hole_fiemap()
->  {
->  	$AWK_PROG '
->  		$3 ~ /hole/ {
-> -			print $1, $2, $3; 
-> +			print $1, $2, $3;
->  			next;
-> -		}   
-> +		}
->  		$5 ~ /0x[[:xdigit:]]+/ {
->  			print $1, $2, "extent";
->  		}' |
-> @@ -225,7 +225,7 @@ _filter_bmap()
->  die_now()
->  {
->  	status=1
-> -	exit
-> +	_exit
+> The terms dev (or device) and bdev are already used in the meaning of some 
+> members in struct statx, so not too bad. However, when we support large 
+> atomic writes for XFS rtvol, the bdev atomic write limit and rtextsize 
+> would influence this value (so just bdev might be a bit misleading in the 
+> name).
 
-Why not remove status=1 too and just do _exit 1 here too?
-Like how we have done at other places?
+Don't.  Especially when you have a natively out of write file system
+that optimized case will not involve the usual hardware offload.
 
-Rest looks good to me. 
-
--ritesh
