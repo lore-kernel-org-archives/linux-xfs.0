@@ -1,36 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D977523A560
-	for <linux-xfs@vger.kernel.org>; Mon,  7 Apr 2025 11:07:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AFD420F095;
+	Mon,  7 Apr 2025 16:17:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744024060; cv=none; b=kJv+6lOZKFgZIHSXb2uIOfyC9NOjCux9JQKxhtvwrjCENsAMTC4pIbCF25BORzwIyaNyQDGCK6H/OW67od9g82nzLBnMlDzaX6XhhcZoP9CYUnWYofNCdTrij072rs3R4wJSXJUZBg57H6RaO+3I4svgjL5y9KBH76YFosuxfEU=
+	t=1744042623; cv=none; b=V0+E5gxDXeq0T2WwmAYao62QUIfko+7En7Bfgxko+4IVHfuW86yr8WG3yPbwmGoOOoyh6FS0NB8OuxfaR+vjLtvk+uoKvSJhFGMKvCrRk1f5A2EaR3Uqhi3NMWhPXone9vsfq5euMa2S7ayzW3mhxt7wBFDFdQllraCEKKR4BjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744024060; c=relaxed/simple;
-	bh=UA9UKGImSLOtRlsMnEhPc58Nrg/CVHnkxS8m/F7RIpg=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=JcuObzJ91T3+iEcwiMVc0OHiwjwIbQ5GaZMJJQUBy9/6bVXK24SpuJl44GyDw0imT/0K7Vf1ZSQ9pv41htYUkuTCwiEDK+0CvxVE8Z0v9US4b580Lz0QuMQcyD9t6SHSbUFCYdNiFwlpD8QzBst15rlV95wNwzdqm40o0xjk640=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ga2UDs5x; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744042623; c=relaxed/simple;
+	bh=BXrLO5yKzMgDUbVsQGRi9KITArqhYtQx46GfiI37PtA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CNzTdE/bb/XITyFyUgY5JaoE9fFhXHcGYPsLSoqFYwtEp3H2GZcuLZ+jGft4ruCg8kxQlWpbE4qBqBBtER6JBhC37iZ77tJyfTS+nDFdDCUQCsSpzWIjblPop56MUV4eEk2vEqfzhDW3lQ55hJY8dsTt/mGLop33/S14LmV2vWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lfZyCI4l; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ga2UDs5x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B356C4CEE7
-	for <linux-xfs@vger.kernel.org>; Mon,  7 Apr 2025 11:07:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lfZyCI4l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 324D1C4CEDD;
+	Mon,  7 Apr 2025 16:17:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744024060;
-	bh=UA9UKGImSLOtRlsMnEhPc58Nrg/CVHnkxS8m/F7RIpg=;
-	h=Date:From:To:Subject:From;
-	b=Ga2UDs5xEAXCZOJIPkpmYgJplYVJuiDSVUu25eht2IPXDnxMz7qel4eXubraGyuQw
-	 yCIhs/lhjNsuKKBfB2PX8jlbsQoz42f/ifSCC+SWBIFFSo2nSMO359YLZ5SYgGtvwI
-	 aY5ZSZ4IQEJYeAIkxIJXM8t0M8eWQe5QQl/e84Q8mXyy9lvUMyEpMOSrfYqDcNsup5
-	 W3GBQ7C30tQpuK/yRZpnpAAICZW6Tz6d+QYBhP+VxK676SCZt4yzeilCdHBRfWf0MS
-	 s1J5RsfaQPhDdTMKaLfj9XkKXthrb6d3wSy/Fd+tTxNEyiIiKVycawnHxzkkHAse44
-	 TQ4BeRiKI6jUw==
-Date: Mon, 7 Apr 2025 13:07:35 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 71700ac47ad8
-Message-ID: <vx4o4o3hfvpuaogc37zq2uubj7zk2ephqdylzrivej5lj4wgbz@th3meafqu5bp>
+	s=k20201202; t=1744042623;
+	bh=BXrLO5yKzMgDUbVsQGRi9KITArqhYtQx46GfiI37PtA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lfZyCI4lx6nYAXJUkALyBttaMmBOPB9Vmy4RS+PRKpkC6GVeELQzSb238HvmTnnRW
+	 u2WXPkRdDF0l/Lh4RnGwJx7JHVHJY2CAyfTT5x/+35rd9glGht3f6mxYJFuubjJQrP
+	 Y9g/20zXlHzgRU8dLCzn8w+ozYfz04JNCAsq97wbwk77yeWFBJ50EDjVhAbvKNw4Zq
+	 s91N4a4wCWaA2XhbehXGkbF02g9zxZHJtmwyPTFZWO1yECcrgPjMV394zUQOQJD8Mo
+	 V9K9vFt0599p1HFvzx0R8CinkK4abnuDLLC1TT/+pN1vnh1ErSf/0Og7D1KXnnF44U
+	 Y77W9gGZ92rzQ==
+Date: Mon, 7 Apr 2025 09:17:02 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/2] Documentation: iomap: Add missing flags description
+Message-ID: <20250407161702.GB6266@frogsfrogsfrogs>
+References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com>
+ <cfd156b3-e166-4f2c-9cb2-c3dfd29c7f5b@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,24 +44,127 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <cfd156b3-e166-4f2c-9cb2-c3dfd29c7f5b@oracle.com>
 
+On Fri, Apr 04, 2025 at 10:36:32AM +0100, John Garry wrote:
+> On 03/04/2025 19:22, Ritesh Harjani (IBM) wrote:
+> 
+> IMHO, This document seems to be updated a lot, to the point where I think
+> that it has too much detail.
 
-Hi folks,
+The goal of this document is to capture the designers' mental models of
+how the iomap code solves specific problems.  In other words, it's a
+human language description of what the author thinks the code should be
+doing to solve the problem.  The documentation should be written at one
+conceptual level higher than the code itself to help newcomers grok the
+iomap APIs without having to reverse-guess our intent from the existing
+clients (ext4/xfs/etc).
 
-The for-next branch of the xfs-linux repository at:
+I don't know if that helps, but "too much" is subjective.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> > Let's document the use of these flags in iomap design doc where other
+> > flags are defined too -
+> > 
+> > - IOMAP_F_BOUNDARY was added by XFS to prevent merging of ioends
+> >    across RTG boundaries.
+> > - IOMAP_F_ATOMIC_BIO was added for supporting atomic I/O operations
+> >    for filesystems to inform the iomap that it needs HW-offload based
+> >    mechanism for torn-write protection
+> > 
+> > Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > ---
+> >   Documentation/filesystems/iomap/design.rst | 10 ++++++++++
+> >   1 file changed, 10 insertions(+)
+> > 
+> > diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
+> > index e29651a42eec..b916e85bc930 100644
+> > --- a/Documentation/filesystems/iomap/design.rst
+> > +++ b/Documentation/filesystems/iomap/design.rst
+> > @@ -243,6 +243,11 @@ The fields are as follows:
+> >        regular file data.
+> >        This is only useful for FIEMAP.
+> > +   * **IOMAP_F_BOUNDARY**: This indicates that I/O and I/O completions
+> > +     for this iomap must never be merged with the mapping before it.
+> 
+> This is just effectively the same comment as in the code - what's the use in
+> this?
 
-has just been updated.
+Specific terms like "IOMAP_F_BOUNDARY" need to be defined before they
+can be discussed.  Yes, it's redundant with the more terse description
+in the C header.  No, we should not make people cross reference two
+separate documents for basic definitions.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+If you know how to do the magic sphinx stuff to auto-merge the C
+comments into the rst then I'm all ears.
 
-This just synchronize for-next with Linus's master branch, to start 6.15
-fixes development cycle. No XFS patches have been introduced here.
+> > +     Currently XFS uses this to prevent merging of ioends across RTG
+> > +     (realtime group) boundaries.
 
-The new head of the for-next branch is commit:
+I think this sentence should go farther in capturing why the flag is
+used --
 
-71700ac47ad8 Merge tag 'v6.15-rc1' into for-next
+"Zone XFS uses this flag to prevent an ioend from being combined with a
+previously generated ioend because writes cannot span a zone boundary."
+
+and later for the ext2 iomap port:
+
+"ext2 uses this flag as an IO submission boundary when an indirect
+mapping block comes immediately after a file data extent to try to
+submit IOs in linear order."
+
+Though now that I've written that, I'm not so sure IOMAP_F_BOUNDARY is
+the right flag for this -- for zns xfs it's a completion boundary, for
+ext2 it's a submission boundary.
+
+> > +
+> >      * **IOMAP_F_PRIVATE**: Starting with this value, the upper bits can
+> >        be set by the filesystem for its own purposes.
+> 
+> Is this comment now out of date according to your change in 923936efeb74?
+
+I wish you'd quote subject lines so I could search them in my mailbox.
+You might have a mental index of commit ids, but I do not.
+
+923936efeb74b3 ("iomap: Fix conflicting values of iomap flags")
+
+So, yes.
+
+> > @@ -250,6 +255,11 @@ The fields are as follows:
+> >        block assigned to it yet and the file system will do that in the bio
+> >        submission handler, splitting the I/O as needed.
+> > +   * **IOMAP_F_ATOMIC_BIO**: Indicates that write I/O must be submitted
+> > +     with the ``REQ_ATOMIC`` flag set in the bio.
+> 
+> This is effectively the same comment as iomap.h
+> 
+> > Filesystems need to set
+> > +     this flag to inform iomap that the write I/O operation requires
+> > +     torn-write protection based on HW-offload mechanism.
+> 
+> Personally I think that this is obvious.
+
+The purpose of documentation is to help someone who knows their
+filesystem well and iomap less well to construct a mental model of how
+iomap works so they can make their filesystem use the IO path without
+implementing their own.  Yes, it's obvious and redundant to all of us
+who have spent time wrangling iomap, but so are the signs that tell you
+what street you're on.  They're not for the people who live there,
+they're for people who are lost and want to get somewhere.
+
+> If not, the reader should check the
+> xfs and ext4 example in the code.
+
+No.  Someone who's unfamiliar with iomap should not have to learn
+*another filesystem's codebase* to grok the infrastructure.  That's how
+buffer heads are and struct pages were, which is to say a drag on
+everyone getting anything done.
+
+--D
+
+> 
+> > +
+> >      These flags can be set by iomap itself during file operations.
+> >      The filesystem should supply an ``->iomap_end`` function if it needs
+> >      to observe these flags:
+> 
+> 
