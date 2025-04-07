@@ -1,44 +1,36 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D431494CF;
-	Mon,  7 Apr 2025 08:50:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D977523A560
+	for <linux-xfs@vger.kernel.org>; Mon,  7 Apr 2025 11:07:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744015802; cv=none; b=UqhZ/S7K7ClgXa0vxm2N1zMxl4cLItsNfFMwVqr6Q/Tn7MZNSvFbibdQ3Je8qYXXULOgW3DQQ8J9JxUA1zsBAbih4wIxb4BMvEnrZvq2AwW2g51krClRy4jUsQz0Hy5gT7L4nNaX27E2GranOAhvQnlexYsf9+tpdf7gWD7FOy8=
+	t=1744024060; cv=none; b=kJv+6lOZKFgZIHSXb2uIOfyC9NOjCux9JQKxhtvwrjCENsAMTC4pIbCF25BORzwIyaNyQDGCK6H/OW67od9g82nzLBnMlDzaX6XhhcZoP9CYUnWYofNCdTrij072rs3R4wJSXJUZBg57H6RaO+3I4svgjL5y9KBH76YFosuxfEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744015802; c=relaxed/simple;
-	bh=Uyrr8zYuPQkJaJbPKpCv0EmhU3pSrLmJrMOBSFZCoj4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bALteksAGqY+eCDh5MTWq+KeTUTwRjDS6F4FSMD3mzAvTf/gOdN5lni9qffQS1OyRWVLJwycqxXWXwP1RetnYsgSjwSkmTj+QjkVEyG7KIcC0wXBohJjdZnQo2eA1/4SXxPSG+MWoboIhUDWD/EdtYJn+75snx+5emOWQP4INgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=olIPwW5A; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1744024060; c=relaxed/simple;
+	bh=UA9UKGImSLOtRlsMnEhPc58Nrg/CVHnkxS8m/F7RIpg=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=JcuObzJ91T3+iEcwiMVc0OHiwjwIbQ5GaZMJJQUBy9/6bVXK24SpuJl44GyDw0imT/0K7Vf1ZSQ9pv41htYUkuTCwiEDK+0CvxVE8Z0v9US4b580Lz0QuMQcyD9t6SHSbUFCYdNiFwlpD8QzBst15rlV95wNwzdqm40o0xjk640=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ga2UDs5x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="olIPwW5A"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=dCalhDEuS5aSz6JxLgjugXvo48qDq+7TQIecVQCXiLI=; b=olIPwW5A9QVy5ZxragfAYlfoN/
-	YW2Jc/nUPItzcwqQqshzLQFeXwMhfkL43UwJZra3d2uE2i4fJKD8PPJgH6cH9WATWC559P60SIkVZ
-	wP1p9DCbS0//3GlhrFv4txAyzxJpRoetWEtkTDSftbVvQ/Qsm/s6JSqDHeoJicO7p8qTiYZo6f1b9
-	ajdrwsYK2CUAdUHguz3YASC5BHBEcJ82TKsGXSTEwGR5a2e1f4a+snkPDM27V1uNvDDKcqWwpqfxc
-	2Y5Y8Gx1NbJeRanxcrTrFLoxMpWBrh4AcgimJ4Nil4rhZgdp5caA7hsYr4K2WogYfMPtzT1Im45g4
-	qPBXj6wA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.1 #2 (Red Hat Linux))
-	id 1u1iB6-0000000H4au-2vrb;
-	Mon, 07 Apr 2025 08:50:00 +0000
-Date: Mon, 7 Apr 2025 01:50:00 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	linux-xfs@vger.kernel.org, djwong@kernel.org, ojaswin@linux.ibm.com,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/2] Documentation: iomap: Add missing flags description
-Message-ID: <Z_ORuFqb-KErLgEG@infradead.org>
-References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com>
- <cfd156b3-e166-4f2c-9cb2-c3dfd29c7f5b@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ga2UDs5x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B356C4CEE7
+	for <linux-xfs@vger.kernel.org>; Mon,  7 Apr 2025 11:07:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744024060;
+	bh=UA9UKGImSLOtRlsMnEhPc58Nrg/CVHnkxS8m/F7RIpg=;
+	h=Date:From:To:Subject:From;
+	b=Ga2UDs5xEAXCZOJIPkpmYgJplYVJuiDSVUu25eht2IPXDnxMz7qel4eXubraGyuQw
+	 yCIhs/lhjNsuKKBfB2PX8jlbsQoz42f/ifSCC+SWBIFFSo2nSMO359YLZ5SYgGtvwI
+	 aY5ZSZ4IQEJYeAIkxIJXM8t0M8eWQe5QQl/e84Q8mXyy9lvUMyEpMOSrfYqDcNsup5
+	 W3GBQ7C30tQpuK/yRZpnpAAICZW6Tz6d+QYBhP+VxK676SCZt4yzeilCdHBRfWf0MS
+	 s1J5RsfaQPhDdTMKaLfj9XkKXthrb6d3wSy/Fd+tTxNEyiIiKVycawnHxzkkHAse44
+	 TQ4BeRiKI6jUw==
+Date: Mon, 7 Apr 2025 13:07:35 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 71700ac47ad8
+Message-ID: <vx4o4o3hfvpuaogc37zq2uubj7zk2ephqdylzrivej5lj4wgbz@th3meafqu5bp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,31 +39,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cfd156b3-e166-4f2c-9cb2-c3dfd29c7f5b@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Apr 04, 2025 at 10:36:32AM +0100, John Garry wrote:
-> > @@ -243,6 +243,11 @@ The fields are as follows:
-> >        regular file data.
-> >        This is only useful for FIEMAP.
-> > +   * **IOMAP_F_BOUNDARY**: This indicates that I/O and I/O completions
-> > +     for this iomap must never be merged with the mapping before it.
-> 
-> This is just effectively the same comment as in the code - what's the use in
-> this?
 
-Darrick asked for this file to have full comments.  I'm more on your
-side here as a lot of this seem redundant.
+Hi folks,
 
-> 
-> > +     Currently XFS uses this to prevent merging of ioends across RTG
-> > +     (realtime group) boundaries.
-> > +
-> >      * **IOMAP_F_PRIVATE**: Starting with this value, the upper bits can
-> >        be set by the filesystem for its own purposes.
-> 
-> Is this comment now out of date according to your change in 923936efeb74?
+The for-next branch of the xfs-linux repository at:
 
-Also we probably should not detail file system behavior here, but a
-high level description of what it is useful.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+This just synchronize for-next with Linus's master branch, to start 6.15
+fixes development cycle. No XFS patches have been introduced here.
+
+The new head of the for-next branch is commit:
+
+71700ac47ad8 Merge tag 'v6.15-rc1' into for-next
