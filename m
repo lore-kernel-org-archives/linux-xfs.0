@@ -1,41 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AFD420F095;
-	Mon,  7 Apr 2025 16:17:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D19D207E0D
+	for <linux-xfs@vger.kernel.org>; Mon,  7 Apr 2025 16:19:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744042623; cv=none; b=V0+E5gxDXeq0T2WwmAYao62QUIfko+7En7Bfgxko+4IVHfuW86yr8WG3yPbwmGoOOoyh6FS0NB8OuxfaR+vjLtvk+uoKvSJhFGMKvCrRk1f5A2EaR3Uqhi3NMWhPXone9vsfq5euMa2S7ayzW3mhxt7wBFDFdQllraCEKKR4BjY=
+	t=1744042764; cv=none; b=B6WhZJ4DF8bffBgaJNoHk9XuFOMfkmFKLyuCjH4r0GrUAdHvFy5+WnUE71p1GevANKZMwm6cBpL/crQXJvQbyeD3q2DuQut7Eoc7LBjsrAhTQFfBTP8i8vnqStL9rwiObe3Gz1hkzIr7/K1T/vKrHhvaDZlXsU8DsUODahQwBa8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744042623; c=relaxed/simple;
-	bh=BXrLO5yKzMgDUbVsQGRi9KITArqhYtQx46GfiI37PtA=;
+	s=arc-20240116; t=1744042764; c=relaxed/simple;
+	bh=vLFaSyk6sWXjYEwkM9T5XG3vYHT5MtPUPXEdSHtKDyk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CNzTdE/bb/XITyFyUgY5JaoE9fFhXHcGYPsLSoqFYwtEp3H2GZcuLZ+jGft4ruCg8kxQlWpbE4qBqBBtER6JBhC37iZ77tJyfTS+nDFdDCUQCsSpzWIjblPop56MUV4eEk2vEqfzhDW3lQ55hJY8dsTt/mGLop33/S14LmV2vWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lfZyCI4l; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=oQpB3UzEgyaWvRUQOfyKH0UOGEqHlbZ3hxwzI6zm9ZKmiSw6gJM6pB5q+AC4ArPYWt+q48cUjE/mpcnqVaKQrBPqHIAdJqVSTodBkEzDH9QnXYWLkwguy5y7CpOONX/xBVzE5/dpnKF06gDZClCQDXQpnFDYVpfs+h082ZCYvmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fSL+iPv3; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lfZyCI4l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 324D1C4CEDD;
-	Mon,  7 Apr 2025 16:17:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744042623;
-	bh=BXrLO5yKzMgDUbVsQGRi9KITArqhYtQx46GfiI37PtA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lfZyCI4lx6nYAXJUkALyBttaMmBOPB9Vmy4RS+PRKpkC6GVeELQzSb238HvmTnnRW
-	 u2WXPkRdDF0l/Lh4RnGwJx7JHVHJY2CAyfTT5x/+35rd9glGht3f6mxYJFuubjJQrP
-	 Y9g/20zXlHzgRU8dLCzn8w+ozYfz04JNCAsq97wbwk77yeWFBJ50EDjVhAbvKNw4Zq
-	 s91N4a4wCWaA2XhbehXGkbF02g9zxZHJtmwyPTFZWO1yECcrgPjMV394zUQOQJD8Mo
-	 V9K9vFt0599p1HFvzx0R8CinkK4abnuDLLC1TT/+pN1vnh1ErSf/0Og7D1KXnnF44U
-	 Y77W9gGZ92rzQ==
-Date: Mon, 7 Apr 2025 09:17:02 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/2] Documentation: iomap: Add missing flags description
-Message-ID: <20250407161702.GB6266@frogsfrogsfrogs>
-References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com>
- <cfd156b3-e166-4f2c-9cb2-c3dfd29c7f5b@oracle.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fSL+iPv3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1744042761;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/O5U86Y3WW6mgW47JNbSK3ilKTH03qmJFfErR0X+qvM=;
+	b=fSL+iPv31+HyUOWE20gIulKYKY2DyzjPQFhIjIA2+zDp68K4EnpLH+qIsEbf2iD2NwZnPd
+	X4BpVBJuqU4vPMkva9I0Rcw430U/Fz0XKQv1p32v2EY28Q0c2+VcCvakvDPGeplpRiGokz
+	V9iFUU/zecD5bYMtA5SjX4hoMZ9VYiM=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-116-p5r65ZicPJ6109YUJCnBDw-1; Mon, 07 Apr 2025 12:19:20 -0400
+X-MC-Unique: p5r65ZicPJ6109YUJCnBDw-1
+X-Mimecast-MFC-AGG-ID: p5r65ZicPJ6109YUJCnBDw_1744042759
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-227ea16b03dso64885455ad.3
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Apr 2025 09:19:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744042759; x=1744647559;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/O5U86Y3WW6mgW47JNbSK3ilKTH03qmJFfErR0X+qvM=;
+        b=pts92BU/B5YMxzubDrDVn1M2BVELI2TFa7WnZGc+LA+Qa5sYSd+6aC0YtNWGeZ0tk1
+         v0IY7GrnLV7PJb2fh/jIqw9I5zjkc6EMfsiPEQCSHFehOjE01bpR1PXTbAcwfTCw5oVl
+         5S1ymHkUf1B8IlmmLt4d0m1mZgG9W13yWG5AZG55QUiZ0G4fEY0mIrwPkeEirghjkzEJ
+         eFguOWhn7gGfah99M2uHyXFmiysfNKCiEdEzC/QfnoT2bFWlbeQivKdFy8IvkCRJ0oKO
+         vR491NBBHNFLEToSKgMfLz6h+1o9pZ4Lq1T66MetbEsf/+9F16t+aaMu6OHGYxhCaJzY
+         XAiA==
+X-Forwarded-Encrypted: i=1; AJvYcCVlAkQ4EIlIB09TRVhzPrirnMNW4wUUrmJZS1dGnc7KvEmBjn3EHHMdx4cKhX/Z4XScvRIncoOpg8k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxdFR3Lqfztl2Lcj1Rds1IU45QilMVIiqOt2lbmECHkWN0yTHo4
+	0l9sm9Om7r/6EJrPyjt79FP2+tUwcIUUsUsaRn7YgPVjTXyx1afcwstlVQDM9KMgdsxJi2iWcNm
+	Jd6LWy0zxX+nCxtC+6MLI9RKsxlC9gsv35JTuZoBtLH6Slo7AUZBEbm63Xw==
+X-Gm-Gg: ASbGnctSk86gfnpY1oGoqtiY5jaxVs/VsDiylK2PkD5/4MsQ7xARGLaA+scHa3pYtQO
+	AFXdxw+eLajMmaIRkgKhyiBHEaNLWm0egJnw30rHOcZG3PJmfMVvX+Mg31wuFzXQ0UFViuP+yT3
+	zLz8wGPoxuReQFyicuWYdu89LEmasnQxzghkF3i7B9lyXZ4I4dKnKMfuxZWEEHIihweYULpKXda
+	lr6Y4+no0YjI5MUmRVq1byTzQYf0Tis6SheZCgcEyi6tZY3yxOpwXw7UhCUtAFAVyB5pbEHa05G
+	d3vHNPJ+ZA6MHaGeoGBdFLEFH5yN1YewNshECdjUwf4WFDDMBpmmD28M
+X-Received: by 2002:a17:902:e952:b0:223:37ec:63d5 with SMTP id d9443c01a7336-22a8a0659fcmr191658685ad.28.1744042759148;
+        Mon, 07 Apr 2025 09:19:19 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEGlSRbRg+QrM0+xuEKWs08wLJNL1lp/YtXP90VI/LkeBCTUHnPXB/060ATzEC3fv57TY60fw==
+X-Received: by 2002:a17:902:e952:b0:223:37ec:63d5 with SMTP id d9443c01a7336-22a8a0659fcmr191658295ad.28.1744042758753;
+        Mon, 07 Apr 2025 09:19:18 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-229785ad84csm83572285ad.44.2025.04.07.09.19.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Apr 2025 09:19:18 -0700 (PDT)
+Date: Tue, 8 Apr 2025 00:19:14 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org,
+	zlang@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v2 5/5] common: exit --> _exit
+Message-ID: <20250407161914.mfnqef2vqghgy3c2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1743487913.git.nirjhar.roy.lists@gmail.com>
+ <f6c7e5647d5839ff3a5c7d34418ec56aba22bbc1.1743487913.git.nirjhar.roy.lists@gmail.com>
+ <87mscwv7o0.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,127 +83,215 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cfd156b3-e166-4f2c-9cb2-c3dfd29c7f5b@oracle.com>
+In-Reply-To: <87mscwv7o0.fsf@gmail.com>
 
-On Fri, Apr 04, 2025 at 10:36:32AM +0100, John Garry wrote:
-> On 03/04/2025 19:22, Ritesh Harjani (IBM) wrote:
+On Fri, Apr 04, 2025 at 10:34:47AM +0530, Ritesh Harjani wrote:
+> "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
 > 
-> IMHO, This document seems to be updated a lot, to the point where I think
-> that it has too much detail.
-
-The goal of this document is to capture the designers' mental models of
-how the iomap code solves specific problems.  In other words, it's a
-human language description of what the author thinks the code should be
-doing to solve the problem.  The documentation should be written at one
-conceptual level higher than the code itself to help newcomers grok the
-iomap APIs without having to reverse-guess our intent from the existing
-clients (ext4/xfs/etc).
-
-I don't know if that helps, but "too much" is subjective.
-
-> > Let's document the use of these flags in iomap design doc where other
-> > flags are defined too -
-> > 
-> > - IOMAP_F_BOUNDARY was added by XFS to prevent merging of ioends
-> >    across RTG boundaries.
-> > - IOMAP_F_ATOMIC_BIO was added for supporting atomic I/O operations
-> >    for filesystems to inform the iomap that it needs HW-offload based
-> >    mechanism for torn-write protection
-> > 
-> > Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > Replace exit <return-val> with _exit <return-val> which
+> > is introduced in the previous patch.
+> >
+> > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
 > > ---
-> >   Documentation/filesystems/iomap/design.rst | 10 ++++++++++
-> >   1 file changed, 10 insertions(+)
-> > 
-> > diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-> > index e29651a42eec..b916e85bc930 100644
-> > --- a/Documentation/filesystems/iomap/design.rst
-> > +++ b/Documentation/filesystems/iomap/design.rst
-> > @@ -243,6 +243,11 @@ The fields are as follows:
-> >        regular file data.
-> >        This is only useful for FIEMAP.
-> > +   * **IOMAP_F_BOUNDARY**: This indicates that I/O and I/O completions
-> > +     for this iomap must never be merged with the mapping before it.
+> >  common/btrfs    |   6 +--
+> >  common/ceph     |   2 +-
+> >  common/config   |   7 ++--
+> >  common/ext4     |   2 +-
+> >  common/populate |   2 +-
+> >  common/preamble |   2 +-
+> >  common/punch    |  12 +++---
+> >  common/rc       | 103 +++++++++++++++++++++++-------------------------
+> >  common/xfs      |   8 ++--
+> >  9 files changed, 70 insertions(+), 74 deletions(-)
+> >
+> > diff --git a/common/btrfs b/common/btrfs
+> > index a3b9c12f..3725632c 100644
+> > --- a/common/btrfs
+> > +++ b/common/btrfs
+> > @@ -80,7 +80,7 @@ _require_btrfs_mkfs_feature()
+> >  {
+> >  	if [ -z $1 ]; then
+> >  		echo "Missing feature name argument for _require_btrfs_mkfs_feature"
+> > -		exit 1
+> > +		_exit 1
+> >  	fi
+> >  	feat=$1
+> >  	$MKFS_BTRFS_PROG -O list-all 2>&1 | \
+> > @@ -104,7 +104,7 @@ _require_btrfs_fs_feature()
+> >  {
+> >  	if [ -z $1 ]; then
+> >  		echo "Missing feature name argument for _require_btrfs_fs_feature"
+> > -		exit 1
+> > +		_exit 1
+> >  	fi
+> >  	feat=$1
+> >  	modprobe btrfs > /dev/null 2>&1
+> > @@ -214,7 +214,7 @@ _check_btrfs_filesystem()
+> >  	if [ $ok -eq 0 ]; then
+> >  		status=1
+> >  		if [ "$iam" != "check" ]; then
+> > -			exit 1
+> > +			_exit 1
+> >  		fi
+> >  		return 1
+> >  	fi
+> > diff --git a/common/ceph b/common/ceph
+> > index d6f24df1..df7a6814 100644
+> > --- a/common/ceph
+> > +++ b/common/ceph
+> > @@ -14,7 +14,7 @@ _ceph_create_file_layout()
+> >  
+> >  	if [ -e $fname ]; then
+> >  		echo "File $fname already exists."
+> > -		exit 1
+> > +		_exit 1
+> >  	fi
+> >  	touch $fname
+> >  	$SETFATTR_PROG -n ceph.file.layout \
+> > diff --git a/common/config b/common/config
+> > index eb6af35a..4c5435b7 100644
+> > --- a/common/config
+> > +++ b/common/config
+> > @@ -123,8 +123,7 @@ set_mkfs_prog_path_with_opts()
+> >  _fatal()
+> >  {
+> >      echo "$*"
+> > -    status=1
+> > -    exit 1
+> > +    _exit 1
+> >  }
+> >  
+> >  export MKFS_PROG="$(type -P mkfs)"
+> > @@ -868,7 +867,7 @@ get_next_config() {
+> >  		echo "Warning: need to define parameters for host $HOST"
+> >  		echo "       or set variables:"
+> >  		echo "       $MC"
+> > -		exit 1
+> > +		_exit 1
+> >  	fi
+> >  
+> >  	_check_device TEST_DEV required $TEST_DEV
+> > @@ -879,7 +878,7 @@ get_next_config() {
+> >  	if [ ! -z "$SCRATCH_DEV_POOL" ]; then
+> >  		if [ ! -z "$SCRATCH_DEV" ]; then
+> >  			echo "common/config: Error: \$SCRATCH_DEV ($SCRATCH_DEV) should be unset when \$SCRATCH_DEV_POOL ($SCRATCH_DEV_POOL) is set"
+> > -			exit 1
+> > +			_exit 1
+> >  		fi
+> >  		SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
+> >  		export SCRATCH_DEV
+> > diff --git a/common/ext4 b/common/ext4
+> > index e1b336d3..f88fa532 100644
+> > --- a/common/ext4
+> > +++ b/common/ext4
+> > @@ -182,7 +182,7 @@ _require_scratch_ext4_feature()
+> >  {
+> >      if [ -z "$1" ]; then
+> >          echo "Usage: _require_scratch_ext4_feature feature"
+> > -        exit 1
+> > +        _exit 1
+> >      fi
+> >      $MKFS_EXT4_PROG -F $MKFS_OPTIONS -O "$1" \
+> >  		    $SCRATCH_DEV 512m >/dev/null 2>&1 \
+> > diff --git a/common/populate b/common/populate
+> > index 7352f598..50dc75d3 100644
+> > --- a/common/populate
+> > +++ b/common/populate
+> > @@ -1003,7 +1003,7 @@ _fill_fs()
+> >  
+> >  	if [ $# -ne 4 ]; then
+> >  		echo "Usage: _fill_fs filesize dir blocksize switch_user"
+> > -		exit 1
+> > +		_exit 1
+> >  	fi
+> >  
+> >  	if [ $switch_user -eq 0 ]; then
+> > diff --git a/common/preamble b/common/preamble
+> > index c92e55bb..ba029a34 100644
+> > --- a/common/preamble
+> > +++ b/common/preamble
+> > @@ -35,7 +35,7 @@ _begin_fstest()
+> >  {
+> >  	if [ -n "$seq" ]; then
+> >  		echo "_begin_fstest can only be called once!"
+> > -		exit 1
+> > +		_exit 1
+> >  	fi
+> >  
+> >  	seq=`basename $0`
+> > diff --git a/common/punch b/common/punch
+> > index 43ccab69..6567b9d1 100644
+> > --- a/common/punch
+> > +++ b/common/punch
+> > @@ -172,16 +172,16 @@ _filter_fiemap_flags()
+> >  	$AWK_PROG -e "$awk_script" | _coalesce_extents
+> >  }
+> >  
+> > -# Filters fiemap output to only print the 
+> > +# Filters fiemap output to only print the
+> >  # file offset column and whether or not
+> >  # it is an extent or a hole
+> >  _filter_hole_fiemap()
+> >  {
+> >  	$AWK_PROG '
+> >  		$3 ~ /hole/ {
+> > -			print $1, $2, $3; 
+> > +			print $1, $2, $3;
+> >  			next;
+> > -		}   
+> > +		}
+> >  		$5 ~ /0x[[:xdigit:]]+/ {
+> >  			print $1, $2, "extent";
+> >  		}' |
+> > @@ -225,7 +225,7 @@ _filter_bmap()
+> >  die_now()
+> >  {
+> >  	status=1
+> > -	exit
+> > +	_exit
 > 
-> This is just effectively the same comment as in the code - what's the use in
-> this?
+> Why not remove status=1 too and just do _exit 1 here too?
+> Like how we have done at other places?
 
-Specific terms like "IOMAP_F_BOUNDARY" need to be defined before they
-can be discussed.  Yes, it's redundant with the more terse description
-in the C header.  No, we should not make people cross reference two
-separate documents for basic definitions.
+Yeah, nice catch! As the defination of _exit:
 
-If you know how to do the magic sphinx stuff to auto-merge the C
-comments into the rst then I'm all ears.
+  _exit()
+  {
+       status="$1"
+       exit "$status"
+  }
 
-> > +     Currently XFS uses this to prevent merging of ioends across RTG
-> > +     (realtime group) boundaries.
+The
+  "
+  status=1
+  exit
+  "
+should be equal to:
+  "
+  _exit 1
+  "
 
-I think this sentence should go farther in capturing why the flag is
-used --
+And "_exit" looks not make sense, due to it gives null to status.
 
-"Zone XFS uses this flag to prevent an ioend from being combined with a
-previously generated ioend because writes cannot span a zone boundary."
+Same problem likes below:
 
-and later for the ext2 iomap port:
 
-"ext2 uses this flag as an IO submission boundary when an indirect
-mapping block comes immediately after a file data extent to try to
-submit IOs in linear order."
+@@ -3776,7 +3773,7 @@ _get_os_name()
+                echo 'linux'
+        else
+                echo Unknown operating system: `uname`
+-               exit
++               _exit
 
-Though now that I've written that, I'm not so sure IOMAP_F_BOUNDARY is
-the right flag for this -- for zns xfs it's a completion boundary, for
-ext2 it's a submission boundary.
 
-> > +
-> >      * **IOMAP_F_PRIVATE**: Starting with this value, the upper bits can
-> >        be set by the filesystem for its own purposes.
-> 
-> Is this comment now out of date according to your change in 923936efeb74?
+The "_exit" without argument looks not make sense.
 
-I wish you'd quote subject lines so I could search them in my mailbox.
-You might have a mental index of commit ids, but I do not.
-
-923936efeb74b3 ("iomap: Fix conflicting values of iomap flags")
-
-So, yes.
-
-> > @@ -250,6 +255,11 @@ The fields are as follows:
-> >        block assigned to it yet and the file system will do that in the bio
-> >        submission handler, splitting the I/O as needed.
-> > +   * **IOMAP_F_ATOMIC_BIO**: Indicates that write I/O must be submitted
-> > +     with the ``REQ_ATOMIC`` flag set in the bio.
-> 
-> This is effectively the same comment as iomap.h
-> 
-> > Filesystems need to set
-> > +     this flag to inform iomap that the write I/O operation requires
-> > +     torn-write protection based on HW-offload mechanism.
-> 
-> Personally I think that this is obvious.
-
-The purpose of documentation is to help someone who knows their
-filesystem well and iomap less well to construct a mental model of how
-iomap works so they can make their filesystem use the IO path without
-implementing their own.  Yes, it's obvious and redundant to all of us
-who have spent time wrangling iomap, but so are the signs that tell you
-what street you're on.  They're not for the people who live there,
-they're for people who are lost and want to get somewhere.
-
-> If not, the reader should check the
-> xfs and ext4 example in the code.
-
-No.  Someone who's unfamiliar with iomap should not have to learn
-*another filesystem's codebase* to grok the infrastructure.  That's how
-buffer heads are and struct pages were, which is to say a drag on
-everyone getting anything done.
-
---D
+Thanks,
+Zorro
 
 > 
-> > +
-> >      These flags can be set by iomap itself during file operations.
-> >      The filesystem should supply an ``->iomap_end`` function if it needs
-> >      to observe these flags:
+> Rest looks good to me. 
 > 
+> -ritesh
 > 
+
