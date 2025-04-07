@@ -1,82 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A392120E024;
-	Mon,  7 Apr 2025 16:43:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E30A2236EF;
+	Mon,  7 Apr 2025 18:41:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744044202; cv=none; b=M/QsMgqZYhSO6nEYedh8YRAghPQip/OOhanB+upwEsttKHqaVhxOvm4Aq5r23d5RPwn1Xus8wZtTfyVIhp8GF7GOOXe/2cD2N9iDghXzWVcejQciMgzTYFEZ3FCdmbxNr2B438G8SxxdGqG6q0UEStpcgnBwzazb/Szk2bEs54I=
+	t=1744051309; cv=none; b=L77VBKHu0VFakG4mghJ6hd5Ua6wqLJrF3cNFDdDGITwb8A00S8eZ0sjgCTOgoxp62hf87z42LO5wUmRWPUZp6nORr/n82P/E6Hs2XELpM03OvzVR7F7I+5BzlqXby5S4738MK/UOY4at1JJ/suUBuGPen5LUa87vMhCp7FAr+jg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744044202; c=relaxed/simple;
-	bh=j0/uZG8pR8l8gEcjOhin3TS18avmWQvepa/nVBrdipI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jfX1ZW+YjxBljFbJ3b6PCRMnBxR8jsfTnPMn1JtMVKYtEeDEPA1R6kv01JOf4BE168uuFNcQKhnhyXEwB4KZgAfBJLkQlaVw1osj+hi/YrVQ7yU5nQANSbPLnjtTHK7deqIU+RXnZHyseTESgYyFMVnLkIL2cp9lNj4Jr0vHtN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hygnjSkh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744051309; c=relaxed/simple;
+	bh=WsJxHs7ssFBLw+K2ayKsr/xwB0JkZ16lTqa8TgJxi8M=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=B1bUPoaj5jqY9g5M1R8U90f2xqdv8eDUXQp5ihQaQ0r/n2jmNc1hNVaAcZCuWcFyV0xSgD+IWUiYHhZfZvt6URrXUj6+BnV1oKs8p6NCr65bqDBZxcNVtNotAR6EmxspoXP8+7UHzxckWu+JZtO+Pf5/X61czGJ+RpujquP7V6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ixQBzJ8r; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hygnjSkh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 743AFC4CEDD;
-	Mon,  7 Apr 2025 16:43:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744044202;
-	bh=j0/uZG8pR8l8gEcjOhin3TS18avmWQvepa/nVBrdipI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hygnjSkhX1mwIwLYAUkDmG+87Kmz0zcdmJdcqzXtLFV4ZBxnvZ1Uo4zht0vJjf269
-	 kyKu3VeWv58qx+NFrX5vZpJFfylmk3/kfFuBz4pT1uM+/+7urkE39lplcd79eUvF7h
-	 uZj2jscF5dkj1jj3e6LUnqmH1m4i6fUKTdqKKM01+MKbRAWmFEcI8qUrutMTLNuDXi
-	 9Q/8LNf0o3Dna0iAed/2WsfsuLqNh/hA4RzRMS5WrO8KPjCw51MiaTF5oNfsw3q8Rr
-	 R8OngS7ywZjV1ibFo+lHevZXUOR00sHvQ9sBmZGdC3WmLFWXr73R3S0mlh6942H5RT
-	 mRyZ/ElnEc3xg==
-Date: Mon, 7 Apr 2025 09:43:21 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: John Garry <john.g.garry@oracle.com>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-fsdevel@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ixQBzJ8r"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-223fd89d036so55388025ad.1;
+        Mon, 07 Apr 2025 11:41:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1744051306; x=1744656106; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=CIpAmSbBdQep2UPEbRPweZhmkepvDXxjx+XL+AXt7sI=;
+        b=ixQBzJ8rGRLDNIjjstXyDYigbXc8ieB85Or+NgMzeY+09vbs4srpo4gmQtm11OZ8iv
+         tcSvbYfi4msrDkDoe7i7kjsuAAxIwcg3J6BO7xk0kDCRBM8buyf3F85XTQGlo0kVvB/i
+         DK52y0Q/V+3KM3MPJ4H8Lxnc06wEPbMKHT/6/O3saAG6ND2u7tUhioH2LoVgbJo0LmVx
+         Ws7jr3WqLCHtVHcdZ89glKo6eHN+UC09WYgOj0pS61lIg2jre4mcVgzeQKgbhHWiYzi9
+         M/7oJ1q+7vPlw3H6gSYvZ0xf6+Y8mDIz/zmx4RdGAApTrjgQJ9psKCTnqFMGk5Gl3dxt
+         ntxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744051306; x=1744656106;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CIpAmSbBdQep2UPEbRPweZhmkepvDXxjx+XL+AXt7sI=;
+        b=s/3eE5Cl89m7oqcsT9eKxtMpam7T3jEa5b/HEK3MORb8wN+eoXSLx4RaB2pwJMVNVl
+         dVT7FmmfRmbbq+1TMe4rXPhQa+DDdtHdunkkgyvAP8hmvjRD11TVKkA08+orww2woH6T
+         OsbiAbHltsn0gHiwdPl4EiI5/+/P/1TBc/mNWNsN04oR//+78D5FI2ZrYK62Mmy5AHtp
+         uS/wlDDnZs2D3MLtp6EO8QphS179L1fs8P4GlcoDVoq+J8IGk6ojleKi9nlh61WGVuIR
+         fHnFV+sH+TiyV645FKDG9XodRFySyG6PzDCCxK8+MVoOUEsVDqPqy3FJwTml2uvAFIUx
+         vrMw==
+X-Forwarded-Encrypted: i=1; AJvYcCU6yGNLw2fVn0so3W5TS38g5jewPj0xKXXEgqzclnngHNWJ3fPGN0oK54l2cjzKQPjjkFxqka2dXiTWKFe/@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw33fl0D4+yrNMNIuEOEH1+JaEts4yuETxhwHvoWTS4/au4m6T0
+	UjvRfaqaZWyRkYTjUu45YETgNnuZqNBKStQ7w4v3Y2NtATBdV9TEzxsEbQ==
+X-Gm-Gg: ASbGncsf/PkvYTuAEtl55TM0fwRIRwcJDTsScephSoO5kOzH79WJZU0X7wioXSA27Pp
+	OQOiKBTFWcEGPeDhaoHSRAv7oyi4o1QPdEX5RUrp7QO1hhz0OO0h+tSAXCJddYGCdmuFoZX7341
+	Oyi/0DtA2WdghSPMqIEqIuBulKZafI1TGLR2jlZnA1f6yjvXvLDhaNy2HW9uTB0cVrD6iSgNAFQ
+	yDHHyAyQ2HWcFesSGqkd32haqhzo0bxHypSJATYFcNfFzVGKIjPIOsb4Thnr++Ki7Gc037CWO4J
+	bifw3IJ/6PdaUkkYDMi7+5bM8WZqDFnVQuw=
+X-Google-Smtp-Source: AGHT+IGa7/w+zv1hKMZv9koIXd49+8ZWBJNdIAoATsZ0zFn6zGIWgu8nAMSpdWde0TOXMDCKKOBFpQ==
+X-Received: by 2002:a17:902:ea0d:b0:223:628c:199 with SMTP id d9443c01a7336-22a8a0b4154mr155141975ad.52.1744051305700;
+        Mon, 07 Apr 2025 11:41:45 -0700 (PDT)
+Received: from dw-tp ([171.76.81.0])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-229785c3819sm84508635ad.87.2025.04.07.11.41.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Apr 2025 11:41:45 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>, ojaswin@linux.ibm.com, linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH 1/2] Documentation: iomap: Add missing flags description
-Message-ID: <20250407164321.GE6266@frogsfrogsfrogs>
-References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com>
- <cfd156b3-e166-4f2c-9cb2-c3dfd29c7f5b@oracle.com>
- <Z_ORuFqb-KErLgEG@infradead.org>
+In-Reply-To: <20250407162527.GC6266@frogsfrogsfrogs>
+Date: Tue, 08 Apr 2025 00:00:40 +0530
+Message-ID: <878qobzuwf.fsf@gmail.com>
+References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com> <20250407162527.GC6266@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z_ORuFqb-KErLgEG@infradead.org>
 
-On Mon, Apr 07, 2025 at 01:50:00AM -0700, Christoph Hellwig wrote:
-> On Fri, Apr 04, 2025 at 10:36:32AM +0100, John Garry wrote:
-> > > @@ -243,6 +243,11 @@ The fields are as follows:
-> > >        regular file data.
-> > >        This is only useful for FIEMAP.
-> > > +   * **IOMAP_F_BOUNDARY**: This indicates that I/O and I/O completions
-> > > +     for this iomap must never be merged with the mapping before it.
-> > 
-> > This is just effectively the same comment as in the code - what's the use in
-> > this?
-> 
-> Darrick asked for this file to have full comments.  I'm more on your
-> side here as a lot of this seem redundant.
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-Yes, some of it duplicates iomap.h's more terse comments.  I'm willing
-to be flexible about some of this, so long as the documentation helps
-the /next/ person to understand iomap and how to use it.
+> On Thu, Apr 03, 2025 at 11:52:27PM +0530, Ritesh Harjani (IBM) wrote:
+>> Let's document the use of these flags in iomap design doc where other
+>> flags are defined too -
+>> 
+>> - IOMAP_F_BOUNDARY was added by XFS to prevent merging of ioends
+>>   across RTG boundaries.
+>> - IOMAP_F_ATOMIC_BIO was added for supporting atomic I/O operations
+>>   for filesystems to inform the iomap that it needs HW-offload based
+>>   mechanism for torn-write protection
+>> 
+>> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+>> ---
+>>  Documentation/filesystems/iomap/design.rst | 10 ++++++++++
+>>  1 file changed, 10 insertions(+)
+>> 
+>> diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
+>> index e29651a42eec..b916e85bc930 100644
+>> --- a/Documentation/filesystems/iomap/design.rst
+>> +++ b/Documentation/filesystems/iomap/design.rst
+>> @@ -243,6 +243,11 @@ The fields are as follows:
+>>       regular file data.
+>>       This is only useful for FIEMAP.
+>>  
+>> +   * **IOMAP_F_BOUNDARY**: This indicates that I/O and I/O completions
+>> +     for this iomap must never be merged with the mapping before it.
+>> +     Currently XFS uses this to prevent merging of ioends across RTG
+>> +     (realtime group) boundaries.
+>
+> Hrm, ok.  Based on hch's comment about not mentioning specific fs
+> behavior, I think I'll suggest something more like:
+>
+> IOMAP_F_BOUNDARY: This I/O and its completion must not be merged with
+> any other I/O or completion.  Filesystems must use this when submitting
+> I/O to devices that cannot handle I/O crossing certain LBAs (e.g. ZNS
+> devices).  This flag applies only to buffered I/O writeback; all other
+> functions ignore it.
+>
 
-> > > +     Currently XFS uses this to prevent merging of ioends across RTG
-> > > +     (realtime group) boundaries.
-> > > +
-> > >      * **IOMAP_F_PRIVATE**: Starting with this value, the upper bits can
-> > >        be set by the filesystem for its own purposes.
-> > 
-> > Is this comment now out of date according to your change in 923936efeb74?
-> 
-> Also we probably should not detail file system behavior here, but a
-> high level description of what it is useful.
+Sure.
 
-Agreed (now).
+>>     * **IOMAP_F_PRIVATE**: Starting with this value, the upper bits can
+>>       be set by the filesystem for its own purposes.
+>>  
+>> @@ -250,6 +255,11 @@ The fields are as follows:
+>>       block assigned to it yet and the file system will do that in the bio
+>>       submission handler, splitting the I/O as needed.
+>>  
+>> +   * **IOMAP_F_ATOMIC_BIO**: Indicates that write I/O must be submitted
+>> +     with the ``REQ_ATOMIC`` flag set in the bio. Filesystems need to set
+>> +     this flag to inform iomap that the write I/O operation requires
+>> +     torn-write protection based on HW-offload mechanism.
+>
+> They must also ensure that mapping updates upon the completion of the
+> I/O must be performed in a single metadata update.
+>
 
---D
+Thanks Darrick, for the clarification and the review comments on this
+patch. Once the remaining tracing patch is reviewed, I will incorporate
+these comments in v2.
+
+-ritesh
