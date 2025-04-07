@@ -1,133 +1,147 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E30A2236EF;
-	Mon,  7 Apr 2025 18:41:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A803B2571D2;
+	Mon,  7 Apr 2025 18:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744051309; cv=none; b=L77VBKHu0VFakG4mghJ6hd5Ua6wqLJrF3cNFDdDGITwb8A00S8eZ0sjgCTOgoxp62hf87z42LO5wUmRWPUZp6nORr/n82P/E6Hs2XELpM03OvzVR7F7I+5BzlqXby5S4738MK/UOY4at1JJ/suUBuGPen5LUa87vMhCp7FAr+jg=
+	t=1744051732; cv=none; b=UDhpiGPeatX/16kKlWPDmm1XD3gOS9BQdTSDruVDMggceHZG/+eB6PhS/ma79b4Fmqe0yAwTsnaF36cu21MNCiUSkx63RDsNFUFtLkFRDdt/zZJl8TQMaRDX17+485LkW2O0DdP+xRs5LObXLvuOVdsM1qs4NBbxFZPgjaKTneg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744051309; c=relaxed/simple;
-	bh=WsJxHs7ssFBLw+K2ayKsr/xwB0JkZ16lTqa8TgJxi8M=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=B1bUPoaj5jqY9g5M1R8U90f2xqdv8eDUXQp5ihQaQ0r/n2jmNc1hNVaAcZCuWcFyV0xSgD+IWUiYHhZfZvt6URrXUj6+BnV1oKs8p6NCr65bqDBZxcNVtNotAR6EmxspoXP8+7UHzxckWu+JZtO+Pf5/X61czGJ+RpujquP7V6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ixQBzJ8r; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1744051732; c=relaxed/simple;
+	bh=jtIwDlss0DPTJBXwiMczuUfLJ5vhGoUdZnfSp7ZHYws=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tcyfb/V75cGhi+mUN4VpQrGJ/n1mkRTrXK7d/e6xYggMC68tMTwFz1aksopqQrFg2sYCA5e5VfK2sn+AhgdIC+kr9htPD7uMN0Aq+MCcOwME7VCY7GRYqINAlPcyGBhnytXo56hwJziU2JouzwZFaxWmlEeYxb88DMTYdiom2c8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LrQSd1y4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ixQBzJ8r"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-223fd89d036so55388025ad.1;
-        Mon, 07 Apr 2025 11:41:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744051306; x=1744656106; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=CIpAmSbBdQep2UPEbRPweZhmkepvDXxjx+XL+AXt7sI=;
-        b=ixQBzJ8rGRLDNIjjstXyDYigbXc8ieB85Or+NgMzeY+09vbs4srpo4gmQtm11OZ8iv
-         tcSvbYfi4msrDkDoe7i7kjsuAAxIwcg3J6BO7xk0kDCRBM8buyf3F85XTQGlo0kVvB/i
-         DK52y0Q/V+3KM3MPJ4H8Lxnc06wEPbMKHT/6/O3saAG6ND2u7tUhioH2LoVgbJo0LmVx
-         Ws7jr3WqLCHtVHcdZ89glKo6eHN+UC09WYgOj0pS61lIg2jre4mcVgzeQKgbhHWiYzi9
-         M/7oJ1q+7vPlw3H6gSYvZ0xf6+Y8mDIz/zmx4RdGAApTrjgQJ9psKCTnqFMGk5Gl3dxt
-         ntxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744051306; x=1744656106;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=CIpAmSbBdQep2UPEbRPweZhmkepvDXxjx+XL+AXt7sI=;
-        b=s/3eE5Cl89m7oqcsT9eKxtMpam7T3jEa5b/HEK3MORb8wN+eoXSLx4RaB2pwJMVNVl
-         dVT7FmmfRmbbq+1TMe4rXPhQa+DDdtHdunkkgyvAP8hmvjRD11TVKkA08+orww2woH6T
-         OsbiAbHltsn0gHiwdPl4EiI5/+/P/1TBc/mNWNsN04oR//+78D5FI2ZrYK62Mmy5AHtp
-         uS/wlDDnZs2D3MLtp6EO8QphS179L1fs8P4GlcoDVoq+J8IGk6ojleKi9nlh61WGVuIR
-         fHnFV+sH+TiyV645FKDG9XodRFySyG6PzDCCxK8+MVoOUEsVDqPqy3FJwTml2uvAFIUx
-         vrMw==
-X-Forwarded-Encrypted: i=1; AJvYcCU6yGNLw2fVn0so3W5TS38g5jewPj0xKXXEgqzclnngHNWJ3fPGN0oK54l2cjzKQPjjkFxqka2dXiTWKFe/@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw33fl0D4+yrNMNIuEOEH1+JaEts4yuETxhwHvoWTS4/au4m6T0
-	UjvRfaqaZWyRkYTjUu45YETgNnuZqNBKStQ7w4v3Y2NtATBdV9TEzxsEbQ==
-X-Gm-Gg: ASbGncsf/PkvYTuAEtl55TM0fwRIRwcJDTsScephSoO5kOzH79WJZU0X7wioXSA27Pp
-	OQOiKBTFWcEGPeDhaoHSRAv7oyi4o1QPdEX5RUrp7QO1hhz0OO0h+tSAXCJddYGCdmuFoZX7341
-	Oyi/0DtA2WdghSPMqIEqIuBulKZafI1TGLR2jlZnA1f6yjvXvLDhaNy2HW9uTB0cVrD6iSgNAFQ
-	yDHHyAyQ2HWcFesSGqkd32haqhzo0bxHypSJATYFcNfFzVGKIjPIOsb4Thnr++Ki7Gc037CWO4J
-	bifw3IJ/6PdaUkkYDMi7+5bM8WZqDFnVQuw=
-X-Google-Smtp-Source: AGHT+IGa7/w+zv1hKMZv9koIXd49+8ZWBJNdIAoATsZ0zFn6zGIWgu8nAMSpdWde0TOXMDCKKOBFpQ==
-X-Received: by 2002:a17:902:ea0d:b0:223:628c:199 with SMTP id d9443c01a7336-22a8a0b4154mr155141975ad.52.1744051305700;
-        Mon, 07 Apr 2025 11:41:45 -0700 (PDT)
-Received: from dw-tp ([171.76.81.0])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-229785c3819sm84508635ad.87.2025.04.07.11.41.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Apr 2025 11:41:45 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>, ojaswin@linux.ibm.com, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/2] Documentation: iomap: Add missing flags description
-In-Reply-To: <20250407162527.GC6266@frogsfrogsfrogs>
-Date: Tue, 08 Apr 2025 00:00:40 +0530
-Message-ID: <878qobzuwf.fsf@gmail.com>
-References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com> <20250407162527.GC6266@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LrQSd1y4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 273C9C4CEDD;
+	Mon,  7 Apr 2025 18:48:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744051732;
+	bh=jtIwDlss0DPTJBXwiMczuUfLJ5vhGoUdZnfSp7ZHYws=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LrQSd1y4pCP1ak0sAjGQ58K99qeM0zLwKdKFlV5GQh8YiSnZFo6kAACNIDZ/yGbku
+	 gwlA/dK0CGRoJxFD5B98yc7cDxXCPFogdmHQHnA8QI5LnE9Ib36FFOI+Wt5MzuyYPF
+	 QgdwGcGRaFpFguop24NCs9vd0Mw4cODsUwV7wMUnfee9oBNDhK4lL3ZkYNtIct4X9u
+	 Rz/W1/vtpEkMzBzu+auPPk/vhm4kmZ+bm073x4RRtNsUiD0rlCOyd9N3vyj8GWRkOq
+	 roiB7miZXqURjFH8NpDyXmTT27gBstXZR5jb12J9rtqOT6TM13pMX8owkOxcXwWDWp
+	 B4WLwC+Th5jig==
+Date: Mon, 7 Apr 2025 11:48:51 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc: linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+	ojaswin@linux.ibm.com, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/2] iomap: trace: Add missing flags to
+ [IOMAP_|IOMAP_F_]FLAGS_STRINGS
+Message-ID: <20250407184851.GF6266@frogsfrogsfrogs>
+References: <3170ab367b5b350c60564886a72719ccf573d01c.1743691371.git.ritesh.list@gmail.com>
+ <bf67e3e6af1cdc3c6cba83e204f440db1cbfda24.1743691371.git.ritesh.list@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bf67e3e6af1cdc3c6cba83e204f440db1cbfda24.1743691371.git.ritesh.list@gmail.com>
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+On Thu, Apr 03, 2025 at 11:52:28PM +0530, Ritesh Harjani (IBM) wrote:
+> This adds missing iomap flags to IOMAP_FLAGS_STRINGS &
+> IOMAP_F_FLAGS_STRINGS for tracing. While we are at it, let's also print
+> values of iomap->type & iomap->flags.
+> 
+> e.g. trace for ATOMIC_BIO flag set
+> xfs_io-1203    [000] .....   183.001559: iomap_iter_dstmap: dev 8:32 ino 0xc bdev 8:32 addr 0x84200000 offset 0x0 length 0x10000 type MAPPED (0x2) flags DIRTY|ATOMIC_BIO (0x102)
+> 
+> e.g. trace with DONTCACHE flag set
+> xfs_io-1110    [007] .....   238.780532: iomap_iter: dev 8:16 ino 0x83 pos 0x1000 length 0x1000 status 0 flags WRITE|DONTCACHE (0x401) ops xfs_buffered_write_iomap_ops caller iomap_file_buffered_write+0xab/0x0
+> 
+> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 
-> On Thu, Apr 03, 2025 at 11:52:27PM +0530, Ritesh Harjani (IBM) wrote:
->> Let's document the use of these flags in iomap design doc where other
->> flags are defined too -
->> 
->> - IOMAP_F_BOUNDARY was added by XFS to prevent merging of ioends
->>   across RTG boundaries.
->> - IOMAP_F_ATOMIC_BIO was added for supporting atomic I/O operations
->>   for filesystems to inform the iomap that it needs HW-offload based
->>   mechanism for torn-write protection
->> 
->> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
->> ---
->>  Documentation/filesystems/iomap/design.rst | 10 ++++++++++
->>  1 file changed, 10 insertions(+)
->> 
->> diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
->> index e29651a42eec..b916e85bc930 100644
->> --- a/Documentation/filesystems/iomap/design.rst
->> +++ b/Documentation/filesystems/iomap/design.rst
->> @@ -243,6 +243,11 @@ The fields are as follows:
->>       regular file data.
->>       This is only useful for FIEMAP.
->>  
->> +   * **IOMAP_F_BOUNDARY**: This indicates that I/O and I/O completions
->> +     for this iomap must never be merged with the mapping before it.
->> +     Currently XFS uses this to prevent merging of ioends across RTG
->> +     (realtime group) boundaries.
->
-> Hrm, ok.  Based on hch's comment about not mentioning specific fs
-> behavior, I think I'll suggest something more like:
->
-> IOMAP_F_BOUNDARY: This I/O and its completion must not be merged with
-> any other I/O or completion.  Filesystems must use this when submitting
-> I/O to devices that cannot handle I/O crossing certain LBAs (e.g. ZNS
-> devices).  This flag applies only to buffered I/O writeback; all other
-> functions ignore it.
->
+Seems reasonable to me
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Sure.
+--D
 
->>     * **IOMAP_F_PRIVATE**: Starting with this value, the upper bits can
->>       be set by the filesystem for its own purposes.
->>  
->> @@ -250,6 +255,11 @@ The fields are as follows:
->>       block assigned to it yet and the file system will do that in the bio
->>       submission handler, splitting the I/O as needed.
->>  
->> +   * **IOMAP_F_ATOMIC_BIO**: Indicates that write I/O must be submitted
->> +     with the ``REQ_ATOMIC`` flag set in the bio. Filesystems need to set
->> +     this flag to inform iomap that the write I/O operation requires
->> +     torn-write protection based on HW-offload mechanism.
->
-> They must also ensure that mapping updates upon the completion of the
-> I/O must be performed in a single metadata update.
->
-
-Thanks Darrick, for the clarification and the review comments on this
-patch. Once the remaining tracing patch is reviewed, I will incorporate
-these comments in v2.
-
--ritesh
+> ---
+>  fs/iomap/trace.h | 27 +++++++++++++++++++++------
+>  1 file changed, 21 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
+> index 9eab2c8ac3c5..455cc6f90be0 100644
+> --- a/fs/iomap/trace.h
+> +++ b/fs/iomap/trace.h
+> @@ -99,7 +99,11 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
+>  	{ IOMAP_FAULT,		"FAULT" }, \
+>  	{ IOMAP_DIRECT,		"DIRECT" }, \
+>  	{ IOMAP_NOWAIT,		"NOWAIT" }, \
+> -	{ IOMAP_ATOMIC,		"ATOMIC" }
+> +	{ IOMAP_OVERWRITE_ONLY,	"OVERWRITE_ONLY" }, \
+> +	{ IOMAP_UNSHARE,	"UNSHARE" }, \
+> +	{ IOMAP_DAX,		"DAX" }, \
+> +	{ IOMAP_ATOMIC,		"ATOMIC" }, \
+> +	{ IOMAP_DONTCACHE,	"DONTCACHE" }
+> 
+>  #define IOMAP_F_FLAGS_STRINGS \
+>  	{ IOMAP_F_NEW,		"NEW" }, \
+> @@ -107,7 +111,14 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
+>  	{ IOMAP_F_SHARED,	"SHARED" }, \
+>  	{ IOMAP_F_MERGED,	"MERGED" }, \
+>  	{ IOMAP_F_BUFFER_HEAD,	"BH" }, \
+> -	{ IOMAP_F_SIZE_CHANGED,	"SIZE_CHANGED" }
+> +	{ IOMAP_F_XATTR,	"XATTR" }, \
+> +	{ IOMAP_F_BOUNDARY,	"BOUNDARY" }, \
+> +	{ IOMAP_F_ANON_WRITE,	"ANON_WRITE" }, \
+> +	{ IOMAP_F_ATOMIC_BIO,	"ATOMIC_BIO" }, \
+> +	{ IOMAP_F_PRIVATE,	"PRIVATE" }, \
+> +	{ IOMAP_F_SIZE_CHANGED,	"SIZE_CHANGED" }, \
+> +	{ IOMAP_F_STALE,	"STALE" }
+> +
+> 
+>  #define IOMAP_DIO_STRINGS \
+>  	{IOMAP_DIO_FORCE_WAIT,	"DIO_FORCE_WAIT" }, \
+> @@ -138,7 +149,7 @@ DECLARE_EVENT_CLASS(iomap_class,
+>  		__entry->bdev = iomap->bdev ? iomap->bdev->bd_dev : 0;
+>  	),
+>  	TP_printk("dev %d:%d ino 0x%llx bdev %d:%d addr 0x%llx offset 0x%llx "
+> -		  "length 0x%llx type %s flags %s",
+> +		  "length 0x%llx type %s (0x%x) flags %s (0x%x)",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->ino,
+>  		  MAJOR(__entry->bdev), MINOR(__entry->bdev),
+> @@ -146,7 +157,9 @@ DECLARE_EVENT_CLASS(iomap_class,
+>  		  __entry->offset,
+>  		  __entry->length,
+>  		  __print_symbolic(__entry->type, IOMAP_TYPE_STRINGS),
+> -		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS))
+> +		  __entry->type,
+> +		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS),
+> +		  __entry->flags)
+>  )
+> 
+>  #define DEFINE_IOMAP_EVENT(name)		\
+> @@ -185,7 +198,7 @@ TRACE_EVENT(iomap_writepage_map,
+>  		__entry->bdev = iomap->bdev ? iomap->bdev->bd_dev : 0;
+>  	),
+>  	TP_printk("dev %d:%d ino 0x%llx bdev %d:%d pos 0x%llx dirty len 0x%llx "
+> -		  "addr 0x%llx offset 0x%llx length 0x%llx type %s flags %s",
+> +		  "addr 0x%llx offset 0x%llx length 0x%llx type %s (0x%x) flags %s (0x%x)",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->ino,
+>  		  MAJOR(__entry->bdev), MINOR(__entry->bdev),
+> @@ -195,7 +208,9 @@ TRACE_EVENT(iomap_writepage_map,
+>  		  __entry->offset,
+>  		  __entry->length,
+>  		  __print_symbolic(__entry->type, IOMAP_TYPE_STRINGS),
+> -		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS))
+> +		  __entry->type,
+> +		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS),
+> +		  __entry->flags)
+>  );
+> 
+>  TRACE_EVENT(iomap_iter,
+> --
+> 2.48.1
+> 
+> 
