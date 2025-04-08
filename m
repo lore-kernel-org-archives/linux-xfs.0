@@ -1,38 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6966822F167
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 14:29:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C4D1DBB0C;
+	Tue,  8 Apr 2025 14:33:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744122551; cv=none; b=GS4anKX+c5dO0lEuGyKBNI7T6kT4RT+BeTMQySwLfTaFKCnl2ivCGU2TJtn9MKMzPVHY1jDzf9JjY3YciRF4dRqdBoOzjS7v0uljf7B/+xWZUUTrnb04R5IcZNOW+BFVSKBO9zF51yvzE6pjLkfvliHo9H616ffDvdHqSQM17cU=
+	t=1744122827; cv=none; b=PvcaKZ6lYNA2Mv4UTI1yUBXH0nAH8PhFgaFn3ubxOgjZ24/nnKP62LHaptnGu2xZ0EyWxmDp6Qacph2MtivzeXkTE+GK6WpJ7GVe2B8j86U9G7g4hOU/QnpnV8MAgFVs+xRgluk1f9uKfTvUxNZGdnnmWtNfp8UbUj8Phh6p3Co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744122551; c=relaxed/simple;
-	bh=Ot6Z8B6Cs0HBd6WMLeFWX1x7mcs0TFYLUV1ndc6Bg9s=;
+	s=arc-20240116; t=1744122827; c=relaxed/simple;
+	bh=aEfx6RkU/Tu2k8S2tBQr8QBzC2LFzW6gVbGKB908vOw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jn6RfyXl8izvKLp9jmtdP5G+RyFIm0742zZ9DymmZX3O8msb/ikzWd1VBo+Ni08lpqvo5UHeyJuB5fRh6Qy2E3ZSlVERo/i8LyZQyxwGXedHCOLeHwje279kVJ7PEE8eI1fuGUwuPBeZ3/W2SN40zKnbuQSZh62dcCRfcnc9lu4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fGRzJFaI; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=duuQsJi67HDhotY8GYWC7+65mF3oXq9Ry9kRtJnMyxD9bSplA9AKWI4aGhZ8RKHE0H2qQvIGRtyuyRprpUE66XC6VlAz+a/vvD02vrG7SmWX49ozQAZO9ePlTytXWA/LQTYx/mGpQ/4KR1uM1fWFYRZXnm5p2aGwbqRjc8LGfDQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y+Wsd4uF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fGRzJFaI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E27FAC4CEE7;
-	Tue,  8 Apr 2025 14:29:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y+Wsd4uF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5F8C4CEE5;
+	Tue,  8 Apr 2025 14:33:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744122551;
-	bh=Ot6Z8B6Cs0HBd6WMLeFWX1x7mcs0TFYLUV1ndc6Bg9s=;
+	s=k20201202; t=1744122826;
+	bh=aEfx6RkU/Tu2k8S2tBQr8QBzC2LFzW6gVbGKB908vOw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fGRzJFaIjpVHKUUycMHDv4lNjcjLGjJKKazAoElOqVZS/ER7pJ2hE6j5+8B/HjLtp
-	 gQRvbAL+wK2mcuT4SwGMn4MvKTV2W4nukRASGH9UKtb1vw8sqxtYryEO9FbfGbEcCF
-	 FIhLgKb25EkuXoxxGoMSW7DRiCrBEa9Y19VDqN5bI8D9lPn/Kim15jDrgyTNsdqaxo
-	 RBsowYM/Q7q5VbQMOqXECrBuRbRyonolHzS87HxYO40ZVBdTNiZOwgUUwdGZm+fGL8
-	 VWup1d/AkXdtPyiC1Ox/yIJfGMAz+cqzoIAdGmkV8BxZTLQsaYKELwIfg5flqLMaHe
-	 hkUK4wURvPmWw==
-Date: Tue, 8 Apr 2025 07:29:10 -0700
+	b=Y+Wsd4uFxkefVyM0Rcp0TuN+gwpTIMtSSLaIkCzk3iWbn0P8QFMm7P1NPsk+p+QNr
+	 RwUEbiSOVsUTPgY/llpADBQ4LKVgPwpmXVVbe2e7jgl7BtL7MJX8wE3DFUawDZ5HBu
+	 8RQUGaGkPeKbw1+QPjGRIuDzGjWVOjUCSuTjYA7RSriBP1jIc9BRvF4EhSb8ZHemCF
+	 6KcjqcO39DD+3bdMSbkosN9MnLa7y6sV4TxGx90TJWqRkYTJtpZNBfH3Mhr+xzHGlg
+	 p+/KV8rF6vmQUsLgBLeIfJzuT07evGopX/iLESfrlA9xA2AXJwWWz5fuvYWsM1iSXe
+	 MKoEgI7CJzU2w==
+Date: Tue, 8 Apr 2025 07:33:46 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] design: document the zoned on-disk format
-Message-ID: <20250408142910.GF6283@frogsfrogsfrogs>
-References: <20250408064727.3211186-1-hch@lst.de>
+To: Zorro Lang <zlang@redhat.com>
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, zlang@kernel.org,
+	david@fromorbit.com
+Subject: Re: [PATCH v2 5/5] common: exit --> _exit
+Message-ID: <20250408143346.GD6274@frogsfrogsfrogs>
+References: <cover.1743487913.git.nirjhar.roy.lists@gmail.com>
+ <f6c7e5647d5839ff3a5c7d34418ec56aba22bbc1.1743487913.git.nirjhar.roy.lists@gmail.com>
+ <87mscwv7o0.fsf@gmail.com>
+ <20250407161914.mfnqef2vqghgy3c2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <877c3vzu5p.fsf@gmail.com>
+ <3c1d608d-4ea0-4e24-9abc-95eb226101c2@gmail.com>
+ <20250408142747.tojq7dhv3ad2mzaq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,154 +51,96 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250408064727.3211186-1-hch@lst.de>
+In-Reply-To: <20250408142747.tojq7dhv3ad2mzaq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Tue, Apr 08, 2025 at 08:47:15AM +0200, Christoph Hellwig wrote:
-> Document the feature flags, superblock fields and new dinode union.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+On Tue, Apr 08, 2025 at 10:27:48PM +0800, Zorro Lang wrote:
+> On Tue, Apr 08, 2025 at 12:43:32AM +0530, Nirjhar Roy (IBM) wrote:
+> > 
+> > On 4/8/25 00:16, Ritesh Harjani (IBM) wrote:
+> > > Zorro Lang <zlang@redhat.com> writes:
+> > > 
+> > > > On Fri, Apr 04, 2025 at 10:34:47AM +0530, Ritesh Harjani wrote:
+> > > > > "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+> > > > > 
+> > > > > > Replace exit <return-val> with _exit <return-val> which
+> > > > > > is introduced in the previous patch.
+> > > > > > 
+> > > > > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > > <...>
+> > > > > > ---
+> > > > > > @@ -225,7 +225,7 @@ _filter_bmap()
+> > > > > >   die_now()
+> > > > > >   {
+> > > > > >   	status=1
+> > > > > > -	exit
+> > > > > > +	_exit
+> > > > > Why not remove status=1 too and just do _exit 1 here too?
+> > > > > Like how we have done at other places?
+> > > > Yeah, nice catch! As the defination of _exit:
+> > > > 
+> > > >    _exit()
+> > > >    {
+> > > >         status="$1"
+> > > >         exit "$status"
+> > > >    }
+> > > > 
+> > > > The
+> > > >    "
+> > > >    status=1
+> > > >    exit
+> > > >    "
+> > > > should be equal to:
+> > > >    "
+> > > >    _exit 1
+> > > >    "
+> > > > 
+> > > > And "_exit" looks not make sense, due to it gives null to status.
+> > > > 
+> > > > Same problem likes below:
+> > > > 
+> > > > 
+> > > > @@ -3776,7 +3773,7 @@ _get_os_name()
+> > > >                  echo 'linux'
+> > > >          else
+> > > >                  echo Unknown operating system: `uname`
+> > > > -               exit
+> > > > +               _exit
+> > > > 
+> > > > 
+> > > > The "_exit" without argument looks not make sense.
+> > > > 
+> > > That's right. _exit called with no argument could make status as null.
+> > Yes, that is correct.
+> > > To prevent such misuse in future, should we add a warning/echo message
+> > 
+> > Yeah, the other thing that we can do is 'status=${1:-0}'. In that case, for
+>                                            ^^^^^^^^^^^^^^
+> That's good to me, I'm just wondering if the default value should be "1", to
+> tell us "hey, there's an unknown exit status" :)
 
-I thought I'd pushed the rtrmap/reflink stuff + this already, but
-apparently that was all a dream.  Anyway, I'll merge this today.
-Thanks for the ping.
+I think status=1 usually means failure...
+
+/usr/include/stdlib.h:92:#define        EXIT_FAILURE    1       /* Failing exit status.  */
+/usr/include/stdlib.h:93:#define        EXIT_SUCCESS    0       /* Successful exit status.  */
 
 --D
 
-> ---
+> Thanks,
+> Zorro
 > 
-> Changes since v1:
->  - un-but a sentence
-> 
->  .../ondisk_inode.asciidoc                     | 13 ++++++-
->  .../realtime.asciidoc                         | 34 +++++++++++++++++++
->  .../superblock.asciidoc                       | 25 ++++++++++++++
->  3 files changed, 71 insertions(+), 1 deletion(-)
-> 
-> diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-> index ab4a503b4da6..ba111ebe6e3a 100644
-> --- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-> @@ -139,7 +139,10 @@ struct xfs_dinode_core {
->       __be64                    di_changecount;
->       __be64                    di_lsn;
->       __be64                    di_flags2;
-> -     __be32                    di_cowextsize;
-> +     union {
-> +             __be32            di_cowextsize;
-> +             __be32            di_used_blocks;
-> +     };
->       __u8                      di_pad2[12];
->       xfs_timestamp_t           di_crtime;
->       __be64                    di_ino;
-> @@ -425,6 +428,14 @@ the source file to the destination file if the sharing operation completely
->  overwrites the destination file's contents and the destination file does not
->  already have +di_cowextsize+ set.
->  
-> +*di_used_blocks*::
-> +
-> +Used only for the xref:Real_time_Reverse_Mapping_Btree[Reverse-Mapping B+tree]
-> +inode on filesystems with a xref:Zoned[Zoned Real-time Device].  Tracks the
-> +number of filesystem blocks in the rtgroup that have been written but not
-> +unmapped, i.e. the number of blocks that are referenced by at least one rmap
-> +entry.
-> +
->  *di_pad2*::
->  Padding for future expansion of the inode.
->  
-> diff --git a/design/XFS_Filesystem_Structure/realtime.asciidoc b/design/XFS_Filesystem_Structure/realtime.asciidoc
-> index 16641525e201..c826f4b6ced0 100644
-> --- a/design/XFS_Filesystem_Structure/realtime.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/realtime.asciidoc
-> @@ -397,3 +397,37 @@ meta_uuid = 7e55b909-8728-4d69-a1fa-891427314eea
->  include::rtrmapbt.asciidoc[]
->  
->  include::rtrefcountbt.asciidoc[]
-> +
-> +[[Zoned]]
-> +== Zoned Real-time Devices
-> +
-> +If the +XFS_SB_FEAT_INCOMPAT_ZONED+ feature is enabled, the real time device
-> +uses an entirely different space allocator.  This features does not use the
-> +xref:Real-Time_Bitmap_Inode[Free Space Bitmap Inode] and
-> +xref:Real-Time_Summary_Inode[Free Space Summary Inode].
-> +Instead, writes to the storage hardware must always occur sequentially
-> +from the start to the end of a rtgroup.  To support this requirement,
-> +file data are always written out of place using the so called copy on write
-> +or COW write path (which actually just redirects on write and never copies).
-> +
-> +When an rtgroup runs out of space to write, free space is reclaimed by
-> +copying and remapping still valid data from the full rtgroups into
-> +another rtgroup.  Once the rtgroup is empty, it is written to from the
-> +beginning again.  For this, the
-> +xref:Real_time_Reverse_Mapping_Btree[Reverse-Mapping B+tree] is required.
-> +
-> +For storage hardware that supports hardware zones, each rtgroup is mapped
-> +to exactly one zone.  When a file system is created on a a zoned storage
-> +device that does support conventional (aka random writable) zones at the
-> +beginning of the LBA space, those zones are used for the xfs data device
-> +(which in this case is primarily used for metadata), and the zoned requiring
-> +sequential writes are presented as the real-time device.  When an external
-> +real-time device is used, rtgroups might also map to conventional zones.
-> +
-> +Filesystems with a zoned real-time device by default use the real-time device
-> +for all data, and the data device only for metadata, which makes the
-> +terminology a bit confusing.  But this is merely the default setting.  Like
-> +any other filesystem with a realtime volume, the +XFS_DIFLAG_REALTIME+ flag
-> +can be cleared on an empty regular file to target the data device; and the
-> ++XFS_DIFLAG_RTINHERIT+ flag can be cleared on a directory so that new
-> +children will target the data device."
-> diff --git a/design/XFS_Filesystem_Structure/superblock.asciidoc b/design/XFS_Filesystem_Structure/superblock.asciidoc
-> index f04553046357..bd34eb0d3066 100644
-> --- a/design/XFS_Filesystem_Structure/superblock.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/superblock.asciidoc
-> @@ -74,6 +74,8 @@ struct xfs_dsb {
->  	__be32		sb_rgextents;
->  	__u8		sb_rgblklog;
->  	__u8		sb_pad[7];
-> +	__be64		sb_rtstart;
-> +	__be64		sb_rtreserved;
->  
->  	/* must be padded to 64 bit alignment */
->  };
-> @@ -449,6 +451,16 @@ pointers] for more information.
->  Metadata directory tree.  See the section about the xref:Metadata_Directories[
->  metadata directory tree] for more information.
->  
-> +| +XFS_SB_FEAT_INCOMPAT_ZONED+ |
-> +Zoned RT device.  See the section about the xref:Zoned[Zoned Real-time Devices]
-> +for more information.
-> +
-> +| +XFS_SB_FEAT_INCOMPAT_ZONE_GAPS+ |
-> +Each hardware zone has unusable space at the end of its LBA range, which is
-> +mirrored by unusable filesystem blocks at the end of the rtgroup.  The
-> ++xfs_rtblock_t startblock+ in file mappings is linearly mapped to the
-> +hardware LBA space.
-> +
->  |=====
->  
->  *sb_features_log_incompat*::
-> @@ -505,6 +517,19 @@ generate absolute block numbers defined in extent maps from the segmented
->  *sb_pad[7]*::
->  Zeroes, if the +XFS_SB_FEAT_RO_INCOMPAT_METADIR+ feature is enabled.
->  
-> +*sb_rtstart*::
-> +
-> +If the +XFS_SB_FEAT_INCOMPAT_ZONED+ feature is enabled, this is the start
-> +of the internal RT section.  That is the RT section is placed on the same
-> +device as the data device, and starts at this offset into the device.
-> +The value is in units of file system blocks.
-> +
-> +*sb_rtreserved*::
-> +
-> +If the +XFS_SB_FEAT_INCOMPAT_ZONED+ feature is enabled, this is the amount
-> +of space in the realtime section that is reserved for internal use
-> +by garbage collection and reorganization algorithms.
-> +
->  === xfs_db Superblock Example
->  
->  A filesystem is made on a single disk with the following command:
-> -- 
-> 2.47.2
+> > cases where the return value is a success, we simply use "_exit". Which one
+> > do you think adds more value and flexibility to the usage?
+> > 
+> > --NR
+> > 
+> > > if the no. of arguments passed to _exit() is not 1?
+> > > 
+> > > -ritesh
+> > 
+> > -- 
+> > Nirjhar Roy
+> > Linux Kernel Developer
+> > IBM, Bangalore
+> > 
 > 
 > 
