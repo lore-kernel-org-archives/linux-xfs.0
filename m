@@ -1,181 +1,97 @@
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B251D5CF8;
-	Tue,  8 Apr 2025 16:44:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B94DA23C8CF;
+	Tue,  8 Apr 2025 17:29:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744130642; cv=none; b=DGR+Dp4+r/uvT7cdfM4w1ucJGwWGWOurwfE7QIRg/w+ujxus+vTTf7px8kRSBrSR2m9T/OAwIC1oIsCJftAqJpjUSAZr/mXneeF4QBiO2YlKTOtW0tuGCESpThIIXGtT7OOtdgbN0MT4e7kZgtu/gqYgzqp9TS2iMmDwt5SsdF8=
+	t=1744133401; cv=none; b=Luei5zIMNgZfRELj3+/RtmjTPTZtGorLZ7UseQvGD0Ge733KueHQp4JEqQD2xWt+nzbPzVgJJjoKSN2z/tTPHo6ZxUhYGN6aqjMHWPWYROG58qnchGCiq9MnoXgKODpwCvlLIufsB80iM3xeS3qaw1HUmHS/hxp4OI3OXyT5oy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744130642; c=relaxed/simple;
-	bh=Ojk5OViEKUCcr3YUWTJco5zlv1sFpKvptFMWlLMi+l4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oU+1E0xjrAV8WoVvE04Du4zswBvbuDqtTEX8alm3hUwwrAhAndUFdU47f48xMmcht5W0ek+E7nWszeK327rH1qAp5jgKlOkAnItMkaxnaSkSXaLknYx1fW6HJd0FdeLiiXaXBGG/CUoTup/5mH4qjj8vdEUkB0q9zvC7Vzs+BcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gZmna3Vz; arc=none smtp.client-ip=209.85.215.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1744133401; c=relaxed/simple;
+	bh=B3JNE/RJaHRf+FsK6E2+qovWjVp+i+WpEhj5NootNbQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EXN3F8bg43F2qNij7PHBBIkpUUUAnD9yR5k2tNh/EMLI+0BQLZ1+h8I9PtZByB+PRo+K4AILae+MYCXEjggCR1F0hAWvAxwhE6vFPhvGRrfz7uzrHO8RCUvehEZxQBJEl9qXUJrfY/TgTOS/LQOnoZsgrPWBs7ZcJeCe6QPuKTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=l7axJdpP; arc=none smtp.client-ip=54.254.200.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gZmna3Vz"
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-af6b02d9e5eso4044271a12.0;
-        Tue, 08 Apr 2025 09:44:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744130640; x=1744735440; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EMzApreeBbDaWRj5R3KuZRrnpsLYeSAfDX1fgiqxEX0=;
-        b=gZmna3VzyS7Hi+NiX54Jr9p5XJIQyCVU4h3nNwf/CQ2e6GqkKOqIFjEYt68x82fvyJ
-         ZV/kvtvkaNZEO2IBgwke0SkSQVqH1NSeICnHA56uhnaIS48It5cdryiODPAOVYqyCLj/
-         2KgMZwMi77+nVrdsCcCTXmjSqViAHFOT8WfO9Z335wCNLX1eLcZga0izlq4MKsYxjcP1
-         oby6SrvEa7A+nQXsKJQx64zEE30FVSj41qvYkOsxvRAKotavWoJvwcBo00TMD7ZfOn7g
-         O/zjb8q5ynDSONoIRrwn/y6PnLKe50ON+Oq7Bm28N1WCuL0EbuxLg+ScAceo+UY7rlLo
-         DhLg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744130640; x=1744735440;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=EMzApreeBbDaWRj5R3KuZRrnpsLYeSAfDX1fgiqxEX0=;
-        b=SMJa7CElDSPuzFDogYCXpibGuzDIheQbR2DYGVn66MtrEVo8UEPejnx4DKxaEGA057
-         xXy6nWw1tcDODFia4Z+jXCtoifvNPeDaQevv9JjrZQsd1MltDoapwvNq7PVHuMBfj0rM
-         i0c6qUO0cSLkUbJ7d14qKSW9eBdke81/aU4QWXa9MfBuWAWRURUbSgkE2KTuasezlxA+
-         F8Fh9ynN2irFgI1kCBUcO7SwMeVBZjmdC9uEJjX3cjv0ja3mLXEdSN8kn34qHk9tvO5D
-         LhSPKR/rJTa5zsdGnTPlkv2V5s5rJLiyECjybfhdoJ6omfH5XlFh2WzUQLUbynwO2i3X
-         aSHQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVwDww2pXTFTgKZ/0MA1Pk0D51uaUpEdRb5vYDfs5Ftr3CnQPfJsVl0/pKev5s+REiePoJnW/yDVFy9@vger.kernel.org, AJvYcCXxqbEH55uDR29ij0DNJT4Kv7rIMFN4FLx8Xu0tyJI84nrHqijaIG2LXnoH1rzRidOORU+o+k4O+wmB@vger.kernel.org
-X-Gm-Message-State: AOJu0YzV5FeHZWc2Sa3K62UYCN2NGWly8xGM0lL/iGKwV4jygeL1rDpv
-	e6R4sSCw6LsEzuVXpysfthQwATErxCyZAZXPvTCf1AnwpbjoKez+
-X-Gm-Gg: ASbGncvc9U1NjxKeR6sIK+jErGrVGyNH8ftl32xK+xNOJPOKu+D8x/8OvW0cCPVcRn4
-	x1is1vhszeSafy/3ve/v1IOgT6RGMZ/AEKi1/858j7TN1NIKDHU1zpV1Scb2XW6xMHOjkAiaXv6
-	18itHzsb6OKaVUEHWOambpkto2r6AjFoIL4NPFaa63XXS53uhxiREI1jkPj3+uV6XtN0W7IRFn1
-	ef1M1rvqcrtztPU8ZEq4fbu9CBkCVeJ6W+L3zeZIU2pZH5hAN0tnk4FuiX2kvUcG/vD+GqguQmg
-	Fl6tiYw7aM88vYrcHc/fZKabas59/7Q6X3IXOHbTaX3JCmmj8GhIK8eHUP6QVksxnyyL10gEczl
-	6W3xv1tv7KVuXfutcAkbZphqlM08D
-X-Google-Smtp-Source: AGHT+IGtgfuJoR0WAzMzmd0kcigb62CvlzLHsFYBHc3ixOP809i80HsiVHGpsVS9z3DCBIOHCCfJcA==
-X-Received: by 2002:a17:902:f690:b0:224:912:153 with SMTP id d9443c01a7336-22a8a04ab76mr245870495ad.5.1744130639786;
-        Tue, 08 Apr 2025 09:43:59 -0700 (PDT)
-Received: from ?IPV6:2401:4900:1f2a:4b1d:fee1:8dac:3556:836f? ([2401:4900:1f2a:4b1d:fee1:8dac:3556:836f])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-229785bfffasm102951585ad.61.2025.04.08.09.43.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Apr 2025 09:43:59 -0700 (PDT)
-Message-ID: <37155b56-34ba-4d5d-a023-242abbe525b5@gmail.com>
-Date: Tue, 8 Apr 2025 22:13:54 +0530
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="l7axJdpP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1744133371;
+	bh=JlHpHHiZ4Xge+vx1XrJwPQSvBNDkpNFpAIMsyEk8JRg=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=l7axJdpPFiRN+JhCfL79Tp8lAK5vdlWYBcWoRMvisKX2GbsBVMZvW9CnJGYChOHee
+	 Y2WdND/+srRxWGjjnlcl5aDyNJnyOvb6NCCGFD0/VpMXQQPI7g6+l3Fm7J6D9GBxBL
+	 EMo5hnJc584mrWa3Bk05K7Oszsv6GRI3PYzzazvA=
+X-QQ-mid: izesmtpsz21t1744133366t2b0302
+X-QQ-Originating-IP: /o+76Ijt+bW3YgZYdCmv0p/YEdX6GjSFegE+xnYizTo=
+Received: from localhost.localdomain ( [125.76.217.162])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 09 Apr 2025 01:29:24 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 11347015374347384928
+EX-QQ-RecipientCnt: 7
+From: Gou Hao <gouhao@uniontech.com>
+To: brauner@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	wangyuli@uniontech.com,
+	gouhaojake@163.com
+Subject: [PATCH] iomap: skip unnecessary ifs_block_is_uptodate check
+Date: Wed,  9 Apr 2025 01:29:24 +0800
+Message-Id: <20250408172924.9349-1-gouhao@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 5/6] common/config: Introduce _exit wrapper around exit
- command
-Content-Language: en-US
-To: Dave Chinner <david@fromorbit.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
- djwong@kernel.org, zlang@kernel.org
-References: <cover.1744090313.git.nirjhar.roy.lists@gmail.com>
- <352a430ecbcb4800d31dc5a33b2b4a9f97fc810a.1744090313.git.nirjhar.roy.lists@gmail.com>
- <Z_UJ7XcpmtkPRhTr@dread.disaster.area>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <Z_UJ7XcpmtkPRhTr@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: izesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz7a-0
+X-QQ-XMAILINFO: MvUCj+jJbjsSjSYGtTEID3b5MqeBUxiHsF8GryNIwKvcN26m6Eifn3VE
+	LYTJDmr1ry+G0BNgfNAB+sMF6KGCrToKL8hZ8tfqtUKJM17OX+u1sYumuRx1n33pHex+kNI
+	7uZhG5nZitvaQ/C8nB3YZzWa31+sZvr2+TrQkFKDW2FhlOECoqbSQZxYMkICdd4QS7kwE/T
+	MGDdNDEbKXfAqnlDJbo312t8n2oR1BcPwb8p74Cwm6hlMI/Nr2BpW2UYaw6PD7YiwGSVQqW
+	cHZYIWJ26/Rsjybtyk1OR8tgMW8bIwt9puIofLLNm1L/44Rrw+60h8N+LBM/hXE1iQEbNvB
+	MDeIrLMm7LC1iCO1HCqacrVf6dHid3bgZqxsNDq/C51Sjlg6fINDFX+GnUje7CIy1s0Dxn+
+	iY+cHA5xNi65+ZK/LTBKP+7JCLq5umUXI2XQwFCv0ngozwSnrPzax1PX2+Pw01BDni+cV1c
+	7HsgFc682rrA2GNC3KHCAd5O+w6EB/VLPIoJuTKY0hb1z6EeWf1PbN2SvZ++FABRBL3XoEq
+	emObgpNSq4W+c0SVmiSDBN6sG10pwzYC+m9Nv6HvD5n6OUmnLygvBYwxWMXmzC3x/EREMn/
+	PKgBwzwKQvpfdO2JfUE0L+RI0jKEi5woaoGFPaA/VwGk0Se3ZCGXNszqUi9nbbUbe8e5VGs
+	alueoAJkYqjqKbJQbNHLgTu9ElFyE0pR5jGlikrbeoNAKgw2YVzCyeDXkjagOUYxwjR9Xb9
+	ZEtf35n/dv6q+cSIY7U4cByNA4RkmXLDARjdUYzGtGzUJVMmBHJP6WFebBeQfOi285l2GMj
+	A2VC8DHkaEtBY8EvBh5rqSFnfm31yYhwdY8KaOW64jjSiRJu0dQ6u5N1nSsOejKKcQOLv1R
+	PiqZN2Bjl1ixgVUNeAzxmwPiLonsBSodw3s3vOZLSI4hDmAALRORRuTqlQHlzQF8UMeeEfZ
+	8mHS0fgtIDBlpMnRVDn2MOsw3MvjrAJUYA06oX0KyzC74spvaqGzKNQfR2ZdLYDGuS71SWc
+	bZArL5qiVyFok/tb7R
+X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
+X-QQ-RECHKSPAM: 0
 
+After the first 'for' loop, the first call to
+ifs_block_is_uptodate always evaluates to 0.
 
-On 4/8/25 17:05, Dave Chinner wrote:
-> On Tue, Apr 08, 2025 at 05:37:21AM +0000, Nirjhar Roy (IBM) wrote:
->> We should always set the value of status correctly when we are exiting.
->> Else, "$?" might not give us the correct value.
->> If we see the following trap
->> handler registration in the check script:
->>
->> if $OPTIONS_HAVE_SECTIONS; then
->>       trap "_kill_seq; _summary; exit \$status" 0 1 2 3 15
->> else
->>       trap "_kill_seq; _wrapup; exit \$status" 0 1 2 3 15
->> fi
->>
->> So, "exit 1" will exit the check script without setting the correct
->> return value. I ran with the following local.config file:
->>
->> [xfs_4k_valid]
->> FSTYP=xfs
->> TEST_DEV=/dev/loop0
->> TEST_DIR=/mnt1/test
->> SCRATCH_DEV=/dev/loop1
->> SCRATCH_MNT=/mnt1/scratch
->>
->> [xfs_4k_invalid]
->> FSTYP=xfs
->> TEST_DEV=/dev/loop0
->> TEST_DIR=/mnt1/invalid_dir
->> SCRATCH_DEV=/dev/loop1
->> SCRATCH_MNT=/mnt1/scratch
->>
->> This caused the init_rc() to catch the case of invalid _test_mount
->> options. Although the check script correctly failed during the execution
->> of the "xfs_4k_invalid" section, the return value was 0, i.e "echo $?"
->> returned 0. This is because init_rc exits with "exit 1" without
->> correctly setting the value of "status". IMO, the correct behavior
->> should have been that "$?" should have been non-zero.
->>
->> The next patch will replace exit with _exit.
->>
->> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
->> Reviewed-by: Dave Chinner <dchinner@redhat.com>
->> ---
->>   common/config | 8 ++++++++
->>   1 file changed, 8 insertions(+)
->>
->> diff --git a/common/config b/common/config
->> index 79bec87f..eb6af35a 100644
->> --- a/common/config
->> +++ b/common/config
->> @@ -96,6 +96,14 @@ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
->>   
->>   export RECREATE_TEST_DEV=${RECREATE_TEST_DEV:=false}
->>   
->> +# This functions sets the exit code to status and then exits. Don't use
->> +# exit directly, as it might not set the value of "status" correctly.
->> +_exit()
->> +{
->> +	status="$1"
->> +	exit "$status"
->> +}
-> The only issue with putting this helper in common/config is that
-> calling _exit() requires sourcing common/config from the shell
-> context that calls it.
->
-> This means every test must source common/config and re-execute the
-> environment setup, even though we already have all the environment
-> set up because it was exported from check when it sourced
-> common/config.
->
-> We have the same problem with _fatal() - it is defined in
-> common/config instead of an independent common file. If we put such
-> functions in their own common file, they can be sourced
-> without dependencies on any other common file being included first.
->
-> e.g. we create common/exit and place all the functions that
-> terminate tests in it - _fatal, _notrun, _exit, etc and source that
-> file once per shell context before we source common/config,
-> common/rc, etc. This means we can source and call those termination
-> functions from any context without having to worry about
-> dependencies...
+Signed-off-by: Gou Hao <gouhao@uniontech.com>
+---
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yes, I agree to the above. Do you want this refactoring to be done as a 
-part of this patch series in the further revisions, or can this be sent 
-as a separate series?
-
---NR
-
->
-> -Dave.
->
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 31553372b33a..2f52e8e61240 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -259,7 +259,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+ 		}
+ 
+ 		/* truncate len if we find any trailing uptodate block(s) */
+-		for ( ; i <= last; i++) {
++		for (i++; i <= last; i++) {
+ 			if (ifs_block_is_uptodate(ifs, i)) {
+ 				plen -= (last - i + 1) * block_size;
+ 				last = i - 1;
 -- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+2.20.1
 
