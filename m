@@ -1,39 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 515FF17332C;
-	Tue,  8 Apr 2025 14:17:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCE4A22ACFA
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 14:27:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744121847; cv=none; b=sM90RAq5NpfcZQ+U3jEfCGDrpoyEWoxXyTAEiA6EYcQcWXTZfAzJlHLbuc7kLxBx/wpzye5KbLZD8qUMXcIqbmUNxIMEVb7TVmIGoftZ+SW58oRrV/y5HTv8bzJ9+BwJVzd4ihuKXdNFDor8K3xBFuHGMKi9PkwWTJbk6M9B8/s=
+	t=1744122479; cv=none; b=UgC1onWFMvi2cyPSA3/1xSa4lk0Ktp5qV5DD4jPLa4AvJlf+QCYPH7f0S5rKrkXLrIDsJaaxGNkM/u6LbuRTAOSWvvo2Exjl6lo6YyuYe62lqaTee0+7KmFCMWo3FaYD87lYoVadC+e4qBB/juiQGwevV+udKm71gtLZOeSiOiE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744121847; c=relaxed/simple;
-	bh=nZU5G0169c30cQjqGSlk97pVXNptAn7aB00fBv/8IEk=;
+	s=arc-20240116; t=1744122479; c=relaxed/simple;
+	bh=8sVTW6TceJNB34RYjY9n6ubg4DVVdtoWsa7Sh4zjrSA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SPFuZMudNL/W0E5fIMil9cV7L6fnRDvHolq7lsAS0Qsl4zQvd9kZ7P8K/h/ukE4OKZ7um0z3LFRQ3PKXGW49S5aL+EMJ6BSLDJDQ28VpQOUmb9bcQ1ZeBgPxzLykLRgJzLaen1FACCoB2AWY/52InIzbS7zQxAWzJPPAS0OcUPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U0XdOq9s; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jSL1kNF433NxBmRID3OUqduqNXV1CYGzTzDxlOSH0xC8vhrSrMGSSEAEnoNsJjQyYMTE4BAZZcbaizXod6YiqcwcZ6NRrEI+DGy0n1MaR59Ftz7VZ0c4Phlcp1G3VlhTavBrmjxi4JOw7yR7xJ66LCOkPnEyLiscP5/5y1/VOkQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UMlmBo/V; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U0XdOq9s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA7C5C4CEE5;
-	Tue,  8 Apr 2025 14:17:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744121846;
-	bh=nZU5G0169c30cQjqGSlk97pVXNptAn7aB00fBv/8IEk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=U0XdOq9sd8TMC44csx9zgGYBD3m4HKNFpYMGZFaAWE95Ljr2tEWSUWOJ9qQBNpIfh
-	 LqW4AkUYBCHquXqF33VLUXcGUxh88L8/uHyc01vQsvQvDnGyIzED0q90YXrSGjLN0o
-	 LhWTP84Dp1GIr3Qr5N8Rcr4HtAteiqcEjrdDhrPdwG+NwQ22VKlFN1bnMavs90x7Tt
-	 v5PdUKXISf0fcMr1YZA5RDYyBEWQ/kitSVo81O2Xp719iitK7NeR5wf0XSKtoWWS4s
-	 NWNncGgApfCXdvA0ZEsm7w345Z4fY3JldIUeacMChyhFYGIpalrKmis9Yx0FaAo1Eq
-	 aXmpnoQAvJwqA==
-Date: Tue, 8 Apr 2025 07:17:26 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH, resend] xfs: remove the post-EOF prealloc tests from the
- auto and quick groups
-Message-ID: <20250408141726.GC6274@frogsfrogsfrogs>
-References: <20250408065228.3212479-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UMlmBo/V"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1744122476;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8RFZ7s3rxzl+Ts3s9RalLsIVjWLHrI7+8FF2waxdV8s=;
+	b=UMlmBo/Va5211E5YuTyigYQairEMEX6tdxOla0xvf7yJezF9whPkZOfHPR/oe0fMOWWzVT
+	nY13qB2mFIXPKgsbxqN3Xd/ogMG6b9X3tMKQdyv/K0QU1pSJsbdlhuQoJ1yjHznrfwhLNc
+	l95e4w5q6SmYTpQi7aWbc13Rci/W6kM=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-615-e1My27-qNuiDdH3EQgQmhg-1; Tue, 08 Apr 2025 10:27:54 -0400
+X-MC-Unique: e1My27-qNuiDdH3EQgQmhg-1
+X-Mimecast-MFC-AGG-ID: e1My27-qNuiDdH3EQgQmhg_1744122473
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-22647ff3cf5so48660285ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Apr 2025 07:27:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744122473; x=1744727273;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8RFZ7s3rxzl+Ts3s9RalLsIVjWLHrI7+8FF2waxdV8s=;
+        b=L/UKUGmLl/qnigOMb1yMoivXQj82q3FaWjZD9/HQJhcuqcrmxzR/G+DKzeyoC34Jmc
+         bPch8k4bgMCliZ61qiBbwKRGzECOsIsEd20WZKgZYUxzRrbUECtb8ntAi/wpJMpQICfb
+         UGt89OxkKB/XSiFWzdhE2VDDbdRUTUhimExBJPxWOUj6HJT5LDUenVAWYOwc/oc1Talf
+         LAD+YCRlkCR+1ELSFdUY6nBClDCxPKcBcQMWMlYm+vkL0YZQbJ+1xqmXoKwIlItnA3Fz
+         +LxTwa7+pggpMyjk/+qT8gyym41r2wCq7GUHrhJDai4kY0OysZaC0sH1Rge8rJNkZfd1
+         uW2A==
+X-Forwarded-Encrypted: i=1; AJvYcCUBl0ODU45Dh+cjHjz7L2Eem52uvJVfj7ItnJ9vywyP0CRoSGFdMLr+teeXSwlxjH+XiBeapXK1cLg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyA0ge6D8F9/129FG4JlgJfHVkaAkQnsibZhhG0+rvPmcewog9f
+	FK3lgCKMPzRbB/wqj8BrtQ6iuVHcDIv3mSbhya+4ctRWHmD/5S+SP0yEivxjdyKQ087inxzwnlO
+	YVDasHQSH/YJOVk0+Xr2r1dYtwqCuCz6ZnFsUc6yw3KxaxVngdu8+QD4f6Q==
+X-Gm-Gg: ASbGncuxi0e9Bxjy5X0aFfAJZdDsOU6B+jnq8zwmeueRTArSHUQVfgj7iy0kWUgD02r
+	bleLgWLrwEwKR8RvidXHYalapUZosAce2kLB7aIu0Ji6DahnoyVa/hDcY4PTJ4V+uZqTzmeZhkf
+	DKemyLCyU1oOWXEyOn1e872rkOChDcFGFyt2O6lhNUJHiXq1lOlgZOvArgF1uc6ceoupO7J63bW
+	0RjBT2LcJ6BgHWQnP67Ea6tsf8wvwueAtIQeTBnVrvlxYSuA7g388rJWaK2yqU6T0dBRW79oDHG
+	FQklor25/AtaLqmN2QOWzGFpOZ/CtVgHgY8pmrPbjGnd/k9Uqe8Bcron
+X-Received: by 2002:a17:902:d4ca:b0:223:5e76:637a with SMTP id d9443c01a7336-22a95539beamr160554655ad.23.1744122473112;
+        Tue, 08 Apr 2025 07:27:53 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEgjgb0MlkszrbH2eNw4gben2vOMbEpUncigfF9I1M6mhJaVYcdLSb8ZfEimongz+/9tzu4Rg==
+X-Received: by 2002:a17:902:d4ca:b0:223:5e76:637a with SMTP id d9443c01a7336-22a95539beamr160554245ad.23.1744122472750;
+        Tue, 08 Apr 2025 07:27:52 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-739d9ea0801sm10573244b3a.119.2025.04.08.07.27.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Apr 2025 07:27:52 -0700 (PDT)
+Date: Tue, 8 Apr 2025 22:27:48 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, fstests@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org,
+	david@fromorbit.com
+Subject: Re: [PATCH v2 5/5] common: exit --> _exit
+Message-ID: <20250408142747.tojq7dhv3ad2mzaq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1743487913.git.nirjhar.roy.lists@gmail.com>
+ <f6c7e5647d5839ff3a5c7d34418ec56aba22bbc1.1743487913.git.nirjhar.roy.lists@gmail.com>
+ <87mscwv7o0.fsf@gmail.com>
+ <20250407161914.mfnqef2vqghgy3c2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <877c3vzu5p.fsf@gmail.com>
+ <3c1d608d-4ea0-4e24-9abc-95eb226101c2@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,89 +86,87 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250408065228.3212479-1-hch@lst.de>
+In-Reply-To: <3c1d608d-4ea0-4e24-9abc-95eb226101c2@gmail.com>
 
-On Tue, Apr 08, 2025 at 08:51:55AM +0200, Christoph Hellwig wrote:
-> These fail for various non-default configs like DAX, alwayscow and
-> small block sizes.
+On Tue, Apr 08, 2025 at 12:43:32AM +0530, Nirjhar Roy (IBM) wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> On 4/8/25 00:16, Ritesh Harjani (IBM) wrote:
+> > Zorro Lang <zlang@redhat.com> writes:
+> > 
+> > > On Fri, Apr 04, 2025 at 10:34:47AM +0530, Ritesh Harjani wrote:
+> > > > "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+> > > > 
+> > > > > Replace exit <return-val> with _exit <return-val> which
+> > > > > is introduced in the previous patch.
+> > > > > 
+> > > > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > <...>
+> > > > > ---
+> > > > > @@ -225,7 +225,7 @@ _filter_bmap()
+> > > > >   die_now()
+> > > > >   {
+> > > > >   	status=1
+> > > > > -	exit
+> > > > > +	_exit
+> > > > Why not remove status=1 too and just do _exit 1 here too?
+> > > > Like how we have done at other places?
+> > > Yeah, nice catch! As the defination of _exit:
+> > > 
+> > >    _exit()
+> > >    {
+> > >         status="$1"
+> > >         exit "$status"
+> > >    }
+> > > 
+> > > The
+> > >    "
+> > >    status=1
+> > >    exit
+> > >    "
+> > > should be equal to:
+> > >    "
+> > >    _exit 1
+> > >    "
+> > > 
+> > > And "_exit" looks not make sense, due to it gives null to status.
+> > > 
+> > > Same problem likes below:
+> > > 
+> > > 
+> > > @@ -3776,7 +3773,7 @@ _get_os_name()
+> > >                  echo 'linux'
+> > >          else
+> > >                  echo Unknown operating system: `uname`
+> > > -               exit
+> > > +               _exit
+> > > 
+> > > 
+> > > The "_exit" without argument looks not make sense.
+> > > 
+> > That's right. _exit called with no argument could make status as null.
+> Yes, that is correct.
+> > To prevent such misuse in future, should we add a warning/echo message
 > 
-> Resend.  Last time Darrick said he's working on an autodetection, but that
-> didn't get finished.
+> Yeah, the other thing that we can do is 'status=${1:-0}'. In that case, for
+                                           ^^^^^^^^^^^^^^
+That's good to me, I'm just wondering if the default value should be "1", to
+tell us "hey, there's an unknown exit status" :)
 
-In the end it was much too tricky to autodetect because there are
-various paths that never invoke prealloc at all, or on some configs
-(e.g.  tiny fs) it can disappear by the time the critical checks in the
-test run and *poof*.  For now this is probably fine, though for anyone
-else running ./check -g all, the field is open for anyone to try to sort
-things out.
+Thanks,
+Zorro
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
+> cases where the return value is a success, we simply use "_exit". Which one
+> do you think adds more value and flexibility to the usage?
 > 
->  tests/xfs/629 | 2 +-
->  tests/xfs/630 | 2 +-
->  tests/xfs/631 | 2 +-
->  tests/xfs/632 | 2 +-
->  4 files changed, 4 insertions(+), 4 deletions(-)
+> --NR
 > 
-> diff --git a/tests/xfs/629 b/tests/xfs/629
-> index a2f345571ca3..bb59e421e43a 100755
-> --- a/tests/xfs/629
-> +++ b/tests/xfs/629
-> @@ -8,7 +8,7 @@
->  #
->  
->  . ./common/preamble
-> -_begin_fstest auto quick prealloc rw
-> +_begin_fstest prealloc rw
->  
->  . ./common/filter
->  
-> diff --git a/tests/xfs/630 b/tests/xfs/630
-> index 79dcb44bc066..0a3fce10c68f 100755
-> --- a/tests/xfs/630
-> +++ b/tests/xfs/630
-> @@ -8,7 +8,7 @@
->  #
->  
->  . ./common/preamble
-> -_begin_fstest auto quick prealloc rw
-> +_begin_fstest prealloc rw
->  
->  . ./common/filter
->  
-> diff --git a/tests/xfs/631 b/tests/xfs/631
-> index 319995f816fe..ece491722557 100755
-> --- a/tests/xfs/631
-> +++ b/tests/xfs/631
-> @@ -13,7 +13,7 @@
->  # from the extent size hint.
->  
->  . ./common/preamble
-> -_begin_fstest auto quick prealloc rw unreliable_in_parallel
-> +_begin_fstest prealloc rw unreliable_in_parallel
->  
->  . ./common/filter
->  
-> diff --git a/tests/xfs/632 b/tests/xfs/632
-> index 61041d45a706..3b1c61fdc129 100755
-> --- a/tests/xfs/632
-> +++ b/tests/xfs/632
-> @@ -9,7 +9,7 @@
->  #
->  
->  . ./common/preamble
-> -_begin_fstest auto prealloc rw
-> +_begin_fstest prealloc rw
->  
->  . ./common/filter
->  
+> > if the no. of arguments passed to _exit() is not 1?
+> > 
+> > -ritesh
+> 
 > -- 
-> 2.47.2
+> Nirjhar Roy
+> Linux Kernel Developer
+> IBM, Bangalore
 > 
-> 
+
