@@ -1,171 +1,122 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-il1-f207.google.com (mail-il1-f207.google.com [209.85.166.207])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5028835973
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 11:35:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF69826FA6C
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 12:49:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.207
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744112116; cv=none; b=qksmaYLu1YmM/VKYXuDVn9zyujk+Lt9cD5f2kPf227PTD2lUMm/fl5o4S7SPen5fAtNCjNsC2wotIaHJzkZJuvsnG63ljUxD/Li+mEuNpoSg94QcXtAnPhS0zsK0s7Mgof+/ssHUAdmlbshrktjfQnEg8CgPHcWX4e0UnzZx88U=
+	t=1744116568; cv=none; b=RkphO7Pb6jyeNOXW7D05tW22R17dFTHRW7bdy/s9o7I1CpsibLcIGnknP/Heozk8PYsJMviLBNx1dw1nqmiPFLShfuM4U3je2FzZN2dAjgOH+fqFw4S7K58P2nPN+2ikSkZwptPYA6AMo6ZWraB3PgzFuQFzEb+yLHTcmLUmOUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744112116; c=relaxed/simple;
-	bh=C9YvH7XlcPYpjKw8uXimII7CBva/vXHgTIRSn2xqOl8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uxFd6IeQuH4OZWe7iBaQAUfH1lz9MtRgjFBp9G6bJV2+wWK+gLUwyCsw7Ginu08JC0dwOAu4dph6xlJAQKkVhs5EWd1OMF6iu9sBwANziBw9wUWOB0kz8ZNBrrPzAq8Vh2WhDuRn9PreD5zY9tgkdJAdcXLIGGG+fF0HwjBLRXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=idFiXEYI; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="idFiXEYI"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-22403cbb47fso57669285ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Apr 2025 04:35:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1744112113; x=1744716913; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=GP4lUn3SHwIRBNTqZq1gQk1IWBwcK7l2423XKWE6vK8=;
-        b=idFiXEYI6TEwHHhtK4bHUdj5JZUIef+dbI+dzXToCrmJ6X3CpGQ9I35diy2Xe2LOkS
-         f6yiwMIaar3rHMIHbiwvwdUnNS6sjJ6YzWkQ5BY6mQhIEeFnkNNGVnxpu5WlMe9xKqlD
-         XYIyCGbY2GE391s8a0fhnJZHvU2vFkW2vZ53sb1Xgpb4dRMu1LPKT123ssyNxDkHzAo0
-         OLWwwggAwrRTCRMtQFyFraX0qfu2pdrmYiwFQRSJ9xdAosKopEjemzvDexWl2KUssuTR
-         2uTjubJOevoVc9kAbN5up+iiLxO2YwVGCN204mT6R/ApWZLgR2L1lm+bMUx1bbIlOk0H
-         RAog==
+	s=arc-20240116; t=1744116568; c=relaxed/simple;
+	bh=pch9NfcEaAb6kTEmouM9XSRHR+9NzIggCml4uNOfBHE=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=aC/zmwVXFUawMpq/Buwolqtfe77++/VHZKTNrSUaUkAAmBkW5FCWSZL6IetQhPK9xtmXTh5DlAlRIYSpPP+3sGsB8llCLC6aCguOZQWY8tbW0Boi8yVRb/xR3V0MTyt4HJf9u8GcCcFSr9QY6KzDmPxSy9GT4IrUXBgXB1qUPwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.207
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f207.google.com with SMTP id e9e14a558f8ab-3ce8dadfb67so66871055ab.1
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Apr 2025 05:49:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744112113; x=1744716913;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GP4lUn3SHwIRBNTqZq1gQk1IWBwcK7l2423XKWE6vK8=;
-        b=WhcxB6M8Fh2uQe2MiMdEvp/rx2Si71+uEK6dyGhKSirOfHCOoqdMNfEJYtqA137MxN
-         ds4lU/GiUJjNlT+gmntT7JQhSQZIpDnikpHzAXwXsHjev9JZOTSC7g2GSxdnBZ/ridES
-         RARw5MYDla5VlOkj5HeTcY1L9lg+5KmpGkCCg9+ZsOeNfUu8GisTNrsilf687gjGk4eJ
-         UmHrkTA8efqSFuagK0eQxk8VEmF8zKlGSKWaK4U8gJLELylZk1qIDocVvhml8+WXK8xz
-         v5VVgvHfgcz3w/Q9TuRNuSJSTX5ELWOv6DCWoe3ZSpPkdiZ6Ufm8146nlJLqz+p+EGUB
-         4ysg==
-X-Forwarded-Encrypted: i=1; AJvYcCVyUaICYzLEcMZCqGnowhgk1l4Em7duy3Qy1XJA7pwiNiKxqeVFBAXApBydrwKT595HvnNYyg0XmLY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyflosGH5dL+toYTKlk9ji5G0yrc3X4+wMw6kf9OigcG01Wak8l
-	UKfcBAPK+Z458OxrQMCROrUQfHxEoFV4fUQGGqmhxSwbQ6fs6Hrr0WrRBlm+6vY=
-X-Gm-Gg: ASbGncucIRyujiTzJcKfCr5q7hmPzeKHTHllm8iXYuYg0Yq8lzxIXcQ0DaMoXdeOxZA
-	ZWIBDf5MBD0ceyXvzfKQFSbOUxut/zsrYysHUsa6AsEuoDggjNHBJbS4sJFw9zmhQvA/752YjO8
-	2S+gAex1qhn9X2gS+rxZMCU8oc6jNzAvfSk+HdW3JzwwbP5S56827Yct9OqQa87B3nTITxmNLM0
-	OmO0YsXF7igoZuHGS+4L/4wfNr6QZ4qD9YW4E3RVBkQorcoJFzvvM1mmJ1iXFg81OdiOW7q6wwJ
-	C1xao8gt42RlsMSbNQDFMSUeOdtoBiWiOR77OikCZwKN+++CKU7RZkCabPcem8cAlIXeQrru2OK
-	WfdtBRsni/78K2MVdfw==
-X-Google-Smtp-Source: AGHT+IG28xARa2STv7WTLeZqoAmrW3aYGB5m4ixF3sGJZ82QXo1zrHqnT5gVctW2sDfM39GBKdLAVQ==
-X-Received: by 2002:a17:902:e550:b0:223:5a6e:b20 with SMTP id d9443c01a7336-22a8a85a4c8mr211129605ad.7.1744112113464;
-        Tue, 08 Apr 2025 04:35:13 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-229785ad831sm98021815ad.11.2025.04.08.04.35.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Apr 2025 04:35:13 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1u27ET-000000063AC-420h;
-	Tue, 08 Apr 2025 21:35:09 +1000
-Date: Tue, 8 Apr 2025 21:35:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
-Subject: Re: [PATCH v3 5/6] common/config: Introduce _exit wrapper around
- exit command
-Message-ID: <Z_UJ7XcpmtkPRhTr@dread.disaster.area>
-References: <cover.1744090313.git.nirjhar.roy.lists@gmail.com>
- <352a430ecbcb4800d31dc5a33b2b4a9f97fc810a.1744090313.git.nirjhar.roy.lists@gmail.com>
+        d=1e100.net; s=20230601; t=1744116566; x=1744721366;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=cNJL6LfHAiP3KJWb2wuOAHiaVr60J8JSQGmdiSuj5a4=;
+        b=I41rz/rE8PNyMcOOZzq/g0LEQataSrE9SNlNz69XGgO9iJbsFsALAc8erhoiFMyjrE
+         7EvFritvQAZJGPQtjtrHhE3CbfiVBMP/6c2AmeL6JHKQqslz4hDLao/3MhXwMPzyszkE
+         zraismb/YWfY+GW88xl78qLrzDGCPPGimIdtcHUUfESOkSmWw8N1qZuOVU5ctEDLfLZY
+         V/jBfFKAPEHpDOOa01/GQTlgl5GUm3n2wbWiNtpRifAHRdYxVc67U8agMKOdbEpJXQp5
+         eWkKaGeM9TLrrIkgeLirJS2lJfkbVwKrRBY+alzMBeL6T8CweNWqztbo0c/1a/5hHYQA
+         xzyw==
+X-Forwarded-Encrypted: i=1; AJvYcCVVvB68MeKAPPT4tHBkccdIN6VyQyMRqWYIWnT0hag7NFSwn+nn4JD+j98y7dyZUsDi7iPXE7VaYeE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzBPny0zB81cAosWM13AzpH9haU37Dq2tSd1PegTLj5qAnoLmZY
+	oH+gC89SMBpYM0KqwWDeEIws2NOhCj2aBT84EsnW9TkFp35P7psi+62LsfoxWFwJATJ7P5AlnyJ
+	B3ECiMJRB7XXyBBlmjVT7GRee7MmOjuOlEFQY2BvKII6ZKZ3eb9x/2Zk=
+X-Google-Smtp-Source: AGHT+IEZHlhzQBj6HYESAaj7kpxM6PvfAq3EzWLH4KdtxIcaedQ92eIKUn9dcb9RdezdB3Aj5hKX971JeSI3WiwktVhjHzcLKxVS
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <352a430ecbcb4800d31dc5a33b2b4a9f97fc810a.1744090313.git.nirjhar.roy.lists@gmail.com>
+X-Received: by 2002:a05:6e02:2785:b0:3d3:d965:62c4 with SMTP id
+ e9e14a558f8ab-3d6e5329212mr153676435ab.10.1744116565947; Tue, 08 Apr 2025
+ 05:49:25 -0700 (PDT)
+Date: Tue, 08 Apr 2025 05:49:25 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67f51b55.050a0220.107db6.05a9.GAE@google.com>
+Subject: [syzbot] [xfs?] WARNING: Reset corrupted AGFL on AG NUM. NUM blocks
+ leaked. Please unmount and run xfs_repair. (2)
+From: syzbot <syzbot+e0e774741360f6c74414@syzkaller.appspotmail.com>
+To: allison.henderson@oracle.com, amir73il@gmail.com, cem@kernel.org, 
+	darrick.wong@oracle.com, dchinner@redhat.com, hch@lst.de, 
+	hsiangkao@redhat.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Apr 08, 2025 at 05:37:21AM +0000, Nirjhar Roy (IBM) wrote:
-> We should always set the value of status correctly when we are exiting.
-> Else, "$?" might not give us the correct value.
-> If we see the following trap
-> handler registration in the check script:
-> 
-> if $OPTIONS_HAVE_SECTIONS; then
->      trap "_kill_seq; _summary; exit \$status" 0 1 2 3 15
-> else
->      trap "_kill_seq; _wrapup; exit \$status" 0 1 2 3 15
-> fi
-> 
-> So, "exit 1" will exit the check script without setting the correct
-> return value. I ran with the following local.config file:
-> 
-> [xfs_4k_valid]
-> FSTYP=xfs
-> TEST_DEV=/dev/loop0
-> TEST_DIR=/mnt1/test
-> SCRATCH_DEV=/dev/loop1
-> SCRATCH_MNT=/mnt1/scratch
-> 
-> [xfs_4k_invalid]
-> FSTYP=xfs
-> TEST_DEV=/dev/loop0
-> TEST_DIR=/mnt1/invalid_dir
-> SCRATCH_DEV=/dev/loop1
-> SCRATCH_MNT=/mnt1/scratch
-> 
-> This caused the init_rc() to catch the case of invalid _test_mount
-> options. Although the check script correctly failed during the execution
-> of the "xfs_4k_invalid" section, the return value was 0, i.e "echo $?"
-> returned 0. This is because init_rc exits with "exit 1" without
-> correctly setting the value of "status". IMO, the correct behavior
-> should have been that "$?" should have been non-zero.
-> 
-> The next patch will replace exit with _exit.
-> 
-> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  common/config | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/common/config b/common/config
-> index 79bec87f..eb6af35a 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -96,6 +96,14 @@ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
->  
->  export RECREATE_TEST_DEV=${RECREATE_TEST_DEV:=false}
->  
-> +# This functions sets the exit code to status and then exits. Don't use
-> +# exit directly, as it might not set the value of "status" correctly.
-> +_exit()
-> +{
-> +	status="$1"
-> +	exit "$status"
-> +}
+Hello,
 
-The only issue with putting this helper in common/config is that
-calling _exit() requires sourcing common/config from the shell
-context that calls it.
+syzbot found the following issue on:
 
-This means every test must source common/config and re-execute the
-environment setup, even though we already have all the environment
-set up because it was exported from check when it sourced
-common/config.
+HEAD commit:    e48e99b6edf4 Merge tag 'pull-fixes' of git://git.kernel.or..
+git tree:       upstream
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=12b18be4580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=695196aa2bd08d99
+dashboard link: https://syzkaller.appspot.com/bug?extid=e0e774741360f6c74414
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=11aea7cf980000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1727c94c580000
 
-We have the same problem with _fatal() - it is defined in
-common/config instead of an independent common file. If we put such
-functions in their own common file, they can be sourced
-without dependencies on any other common file being included first.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/bacf2069a3a3/disk-e48e99b6.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/6b2b20d05f13/vmlinux-e48e99b6.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/a5ab8f6aba17/bzImage-e48e99b6.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/635c0241b9a9/mount_0.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=1327c94c580000)
 
-e.g. we create common/exit and place all the functions that
-terminate tests in it - _fatal, _notrun, _exit, etc and source that
-file once per shell context before we source common/config,
-common/rc, etc. This means we can source and call those termination
-functions from any context without having to worry about
-dependencies...
+The issue was bisected to:
 
--Dave.
+commit 29887a22713192509cfc6068ea3b200cdb8856da
+Author: Darrick J. Wong <darrick.wong@oracle.com>
+Date:   Mon Aug 17 17:00:01 2020 +0000
 
--- 
-Dave Chinner
-david@fromorbit.com
+    xfs: enable big timestamps
+
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=16ceafb0580000
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=15ceafb0580000
+console output: https://syzkaller.appspot.com/x/log.txt?x=11ceafb0580000
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+e0e774741360f6c74414@syzkaller.appspotmail.com
+Fixes: 29887a227131 ("xfs: enable big timestamps")
+
+XFS (loop0): Mounting V5 Filesystem d7dc424e-7990-42cb-9f91-9cb7200a101d
+XFS (loop0): Ending clean mount
+XFS (loop0): WARNING: Reset corrupted AGFL on AG 0. 1 blocks leaked. Please unmount and run xfs_repair.
+XFS (loop0): Unmounting Filesystem d7dc424e-7990-42cb-9f91-9cb7200a101d
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
