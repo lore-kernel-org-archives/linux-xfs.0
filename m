@@ -1,80 +1,41 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77B2525333F
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 22:51:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CCF44A21
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 23:13:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744152665; cv=none; b=fOZ6/kYBH5VeUgWJQSRisizCArJxlJcmHFKblmf9eeAGRME8N6CKpQYt8UyJa9xHwSCFvRppEz65QNz2jvFbSa6ETrgN3k2UH/KeVWTx4AWpuk3dMijqtUwnMXtDQpR+M6UTlhRA/AGahK9FlElA1Ws2SfzC23LxLndH1rTSQQY=
+	t=1744154000; cv=none; b=qDXcJlzoIUvOnhOOApbPNr9uByqRoFOapPT8HSQMKk6Czpkx0D2L2tZXP2Y3CMWqRDjddrLtzqHC4HaygefQycrMJnzuNm+WqvLVcSitPxO6+AwrhHgGlWdXP8+cNANgloVuQiZ1kww9jzQUKMT8AOfMm/g229Kj3ohaMfrbOFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744152665; c=relaxed/simple;
-	bh=vMn/pqlIgdXeLiIiX6Qi2jw179hC4RQghNBS8hGqYZ0=;
+	s=arc-20240116; t=1744154000; c=relaxed/simple;
+	bh=Uvrue3Dn5UM15yw0W2qGKfUxksBIuJN8mjeilkVRJWA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZQfpnXYIy1we8X1l92t4pF/2Lx09PtAr+n+vOiB1fnEEo6rn5jwdkqcSRux++ZCsgol3L1R23o4FxQBe/iXdHgAlVp3skSlj7dHLGlEEmss6QUEofnkWx2bcVZ/r1VpaA55QKU2ZQpB8plieVoolp3ZbuEm/KG52zla3Ub6CI1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=vW5fBzAe; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ja2wgbyXdaYLVN4TXBdQQyg7NVDEgBTPqWZcNAVn0UspYSKA+s/mFwIqKNzR7GEHmXD20dRHWzK6YxsFMaH4QxKvXO3SghW5NkTX9KTc7hHCGFSBetHmqqL/CfyHBZUVc42L9JUn4ADj3IYSXhKynRzbuCPxhh7iVurANS9MldM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pk0vKDNb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="vW5fBzAe"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-736dd9c4b40so135801b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Apr 2025 15:51:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1744152661; x=1744757461; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=t4e6TcScSbS46TYPzeS1oWS93atKNlcHoXycK2oxcMQ=;
-        b=vW5fBzAe0imxu4fNHVLF4G0+rBz6dchsprA38wmkFpTUyJDs6MmA0hRVK/3TJEarkR
-         wcOFCYgPGCGbQxejqah1vjSnYWaXl0Llt8YGa3+DTV/7ykPq0WdD21xS7uJ0HWEwy1W+
-         vduYKCqV9Vb+QmQEkayZNQpKBCaFWcN4XG9PYDTduUz/euckEU4pCV1wLbfeRWF581FW
-         23v7nbe75gdUBCvuyyczWq7xsX14MWOIYjs6iktc4bOM0b6I9ByH6sGQEfQ84LGPztfG
-         RnI46D+hkTBe7mJ49Iu6Ggr54GFr/RqMqjyuan0gzOJ1Bo0AevAjEMsb7A4H8f53AL/O
-         C3kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744152661; x=1744757461;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=t4e6TcScSbS46TYPzeS1oWS93atKNlcHoXycK2oxcMQ=;
-        b=u5AyNJbcB2XkG2jI5rcnGPn27F4nK57WlL9vv6SpmuZPJNnpTFWDhVW3DnPvFloNi9
-         PdN/9HfPLCk1NvJlORVI14HfGPGdFSc8P/yNBfWBUJoNqb6WbEFCOXMBIKffIcbVjhx/
-         bdB1JTSwwZeYWnfzwmtOHP2wt1iO+vOkiyj9M1f3mpgiCNm3Wlc9O7b/eZMMNxp53fPD
-         mRUQai55fanZ0MoZ7aPahuoyQ3CeWGD3DB/wMjge0jx57iJ/XOH1qTH21B2aQNY6OGiR
-         2HqVZ9fldCV1CZs/EDgLz2MlrFrN+KkNU6MKMAXoeqsF33oP/Dp2g4Ew9zBAP6MWddn2
-         /LbA==
-X-Forwarded-Encrypted: i=1; AJvYcCWIo3+gwbdcLYLnDtRHyDCOi/45N1PY45hFxv3ellMHS7o8stBYASeoHyp3/KE1YvXfqF77Z6GHyrA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzlZYGZgMRPOGP5M7Aab/c+dswc5sTzOWBoH73Y45l8jrKjcaj7
-	oDIQi7xgSPdbrIt8rz4TWoxJsxhPSPoumjc1/UBRhMffe4mHJFmvD+J+fvpxL1A=
-X-Gm-Gg: ASbGncu1+r7SEY+8Qscn2f/VKgFYaqWFr05Wvweb9cigecIjysFnbXA64vrQ+ezSiEF
-	Cr7DdIXDab+xVOfq08PJ2v5S2dsQFA0RRZInFrRTmeC+IFFkEx38zZGJw9cwJY1aRS+j2dksFLt
-	IOpZOQ1xBar7M/PrAuk3lVpZIbcYb7Q4/7BiF38ixXFmtO3SBbDHPAqVA+sH4JFD91hKQi4MniX
-	eWsXdHP4Y9PeskUFF3QwYt5VzQZ3e0tit8+ylpwEtRNHWAAp/88ohyaJ0AeZQKkdYPMVsGwYG1d
-	tu+xHktwhDsowp4/yd6FIhmsbwG/j7TJEXyHASeVTXselUaP716G/mloqMQo+39csWy0nbfKwmu
-	4olyMOCfSp9N/ie9DzAJA1XYa8iZo
-X-Google-Smtp-Source: AGHT+IH1vqfq5KmC7q977AO5WgEcrZQ60lrohQ1dtQpSWtpSiqHurs35gj5R27z5qJYFLZ4y41PN8w==
-X-Received: by 2002:a05:6a00:2411:b0:734:ded8:77aa with SMTP id d2e1a72fcca58-73bae4cc284mr829197b3a.9.1744152661136;
-        Tue, 08 Apr 2025 15:51:01 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-739d9ea0a71sm11117925b3a.113.2025.04.08.15.51.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Apr 2025 15:51:00 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98)
-	(envelope-from <david@fromorbit.com>)
-	id 1u2HmT-00000006F85-0aHp;
-	Wed, 09 Apr 2025 08:50:57 +1000
-Date: Wed, 9 Apr 2025 08:50:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: brauner@kernel.org, djwong@kernel.org, hch@lst.de,
-	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
-	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com
-Subject: Re: [PATCH v6 02/12] xfs: add helpers to compute log item overhead
-Message-ID: <Z_WoUawfJ_QFF5kP@dread.disaster.area>
-References: <20250408104209.1852036-1-john.g.garry@oracle.com>
- <20250408104209.1852036-3-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pk0vKDNb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7A65C4CEE5;
+	Tue,  8 Apr 2025 23:13:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744153998;
+	bh=Uvrue3Dn5UM15yw0W2qGKfUxksBIuJN8mjeilkVRJWA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Pk0vKDNbEu/BT/CDX9hQZCKfZjN10guq+wls08Uu2Z5sIpZ8gh+8eg5/hnczZZQkh
+	 C4o4y2SfL6f3kZ8hmeZPJ/SqL3FRIzVzjBOB76w+w4Z0HfG6TyqVOQQ1paWDL/cy06
+	 1I7m+EoFptflAmRo1jfSXhTPFnc9fCrcS1ggJZAVEwdp4n1MbKpGQczr0lPx6qGHKt
+	 Bkzzlo4l+nkaNszMFuZcv9Oc1aobFUW2Yi5wpB4sveTyrrEOUBT4z7I0I6YUuG3dBB
+	 1xozidIgY+/XvzoxBLwXWzoZ2qvKMMIaCw5eMaAJ5j7DUmgyB4zRlY9gmqSfhUtI6d
+	 sGeTAbf7vDteA==
+Date: Tue, 8 Apr 2025 16:13:17 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH] xfs: compute the maximum repair reaping defer intent
+ chain length
+Message-ID: <20250408231317.GJ6307@frogsfrogsfrogs>
+References: <20250403191244.GB6283@frogsfrogsfrogs>
+ <Z_Wfx79a6gDNoaAD@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,85 +44,212 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250408104209.1852036-3-john.g.garry@oracle.com>
+In-Reply-To: <Z_Wfx79a6gDNoaAD@dread.disaster.area>
 
-On Tue, Apr 08, 2025 at 10:41:59AM +0000, John Garry wrote:
-> From: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> Add selected helpers to estimate the transaction reservation required to
-> write various log intent and buffer items to the log.  These helpers
-> will be used by the online repair code for more precise estimations of
-> how much work can be done in a single transaction.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_trans_resv.c |  6 +++---
->  fs/xfs/libxfs/xfs_trans_resv.h |  4 ++++
->  fs/xfs/xfs_bmap_item.c         | 10 ++++++++++
->  fs/xfs/xfs_bmap_item.h         |  3 +++
->  fs/xfs/xfs_buf_item.c          | 19 +++++++++++++++++++
->  fs/xfs/xfs_buf_item.h          |  3 +++
->  fs/xfs/xfs_extfree_item.c      | 10 ++++++++++
->  fs/xfs/xfs_extfree_item.h      |  3 +++
->  fs/xfs/xfs_log_cil.c           |  4 +---
->  fs/xfs/xfs_log_priv.h          | 13 +++++++++++++
->  fs/xfs/xfs_refcount_item.c     | 10 ++++++++++
->  fs/xfs/xfs_refcount_item.h     |  3 +++
->  fs/xfs/xfs_rmap_item.c         | 10 ++++++++++
->  fs/xfs/xfs_rmap_item.h         |  3 +++
->  14 files changed, 95 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 13d00c7166e1..ce1393bd3561 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -47,7 +47,7 @@ xfs_buf_log_overhead(void)
->   * will be changed in a transaction.  size is used to tell how many
->   * bytes should be reserved per item.
->   */
-> -STATIC uint
-> +uint
->  xfs_calc_buf_res(
->  	uint		nbufs,
->  	uint		size)
-> @@ -84,7 +84,7 @@ xfs_allocfree_block_count(
->   * in the same transaction as an allocation or a free, so we compute them
->   * separately.
->   */
-> -static unsigned int
-> +unsigned int
->  xfs_refcountbt_block_count(
->  	struct xfs_mount	*mp,
->  	unsigned int		num_ops)
-> @@ -129,7 +129,7 @@ xfs_rtrefcountbt_block_count(
->   *	  additional to the records and pointers that fit inside the inode
->   *	  forks.
->   */
-> -STATIC uint
-> +uint
->  xfs_calc_inode_res(
->  	struct xfs_mount	*mp,
->  	uint			ninodes)
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-> index 0554b9d775d2..e76052028cc9 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.h
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.h
-> @@ -97,6 +97,10 @@ struct xfs_trans_resv {
->  
->  void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
->  uint xfs_allocfree_block_count(struct xfs_mount *mp, uint num_ops);
-> +unsigned int xfs_refcountbt_block_count(struct xfs_mount *mp,
-> +		unsigned int num_ops);
-> +uint xfs_calc_buf_res(uint nbufs, uint size);
-> +uint xfs_calc_inode_res(struct xfs_mount *mp, uint ninodes);
+On Wed, Apr 09, 2025 at 08:14:31AM +1000, Dave Chinner wrote:
+> On Thu, Apr 03, 2025 at 12:12:44PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Actually compute the log overhead of log intent items used in reap
+> > operations and use that to compute the thresholds in reap.c instead of
+> > assuming 2048 works.  Note that there have been no complaints because
+> > tr_itruncate has a very large logres.
+> > 
+> > Cc: <stable@vger.kernel.org> # v6.6
+> > Fixes: 1c7ce115e52106 ("xfs: reap large AG metadata extents when possible")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Why are these exported? They aren't used in this patch, and any code
-that doing calculate log reservation calculation should really be
-placed in xfs_trans_resv.c along with all the existing log
-reservation calculations...
+/me notes this is an RFC patch and I just finished writing a more
+expansive patchset that breaks up the pieces and computes limits for
+each usecase separately.
 
--Dave
--- 
-Dave Chinner
-david@fromorbit.com
+> > ---
+> >  fs/xfs/scrub/trace.h       |   29 ++++++++++++++++++++++++++
+> >  fs/xfs/xfs_bmap_item.h     |    3 +++
+> >  fs/xfs/xfs_extfree_item.h  |    3 +++
+> >  fs/xfs/xfs_log_priv.h      |   13 +++++++++++
+> >  fs/xfs/xfs_refcount_item.h |    3 +++
+> >  fs/xfs/xfs_rmap_item.h     |    3 +++
+> >  fs/xfs/scrub/reap.c        |   50 +++++++++++++++++++++++++++++++++++++++-----
+> >  fs/xfs/scrub/trace.c       |    1 +
+> >  fs/xfs/xfs_bmap_item.c     |   10 +++++++++
+> >  fs/xfs/xfs_extfree_item.c  |   10 +++++++++
+> >  fs/xfs/xfs_log_cil.c       |    4 +---
+> >  fs/xfs/xfs_refcount_item.c |   10 +++++++++
+> >  fs/xfs/xfs_rmap_item.c     |   10 +++++++++
+> >  13 files changed, 140 insertions(+), 9 deletions(-)
+
+<snip>
+
+> > @@ -495,6 +499,37 @@ xreap_agextent_iter(
+> >  	return 0;
+> >  }
+> >  
+> > +/*
+> > + * Compute the worst case log overhead of the intent items needed to reap a
+> > + * single per-AG space extent.
+> > + */
+> > +STATIC unsigned int
+> > +xreap_agextent_max_deferred_reaps(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	const unsigned int	efi = xfs_efi_item_overhead(1);
+> > +	const unsigned int	rui = xfs_rui_item_overhead(1);
+> 
+> These wrappers don't return some "overhead" - they return the amount of
+> log space the intent will consume. Can we please call them
+> xfs_<intent_type>_log_space()?
+
+Ok.
+
+> > +
+> > +	/* unmapping crosslinked metadata blocks */
+> > +	const unsigned int	t1 = rui;
+> > +
+> > +	/* freeing metadata blocks */
+> > +	const unsigned int	t2 = rui + efi;
+> > +
+> > +	/* worst case of all four possible scenarios */
+> > +	const unsigned int	per_intent = max(t1, t2);
+> 
+> When is per_intent going to be different to t2? i.e. rui + efi > rui
+> will always be true, so we don't need to calculate it at runtime.
+
+Any decent compiler will combine this into:
+
+	const unsigned int      per_intent = rui + efi;
+
+> i.e. what "four scenarios" is this actually handling? I can't work
+> out what they are from the code or the description...
+
+The five things that xreap_agextent_iter() does.  One of them
+(XFS_AG_RESV_AGFL) doesn't use intents so I only listed four.
+
+> > +	/*
+> > +	 * tr_itruncate has enough logres to unmap two file extents; use only
+> > +	 * half the log reservation for intent items so there's space to do
+> > +	 * actual work and requeue intent items.
+> > +	 */
+> > +	const unsigned int	ret = sc->tp->t_log_res / (2 * per_intent);
+> 
+> So we are assuming only a single type of log reservation is used for
+> these reaping transactions?
+
+Well it's *currently* tr_itruncate, but some day we could add a
+bigger/separate repair transaction type.
+
+> If so, this is calculating a value that is constant for the life of
+> the mount and probably should be moved to all the other log
+> reservation calculation functions that are run at mount time and
+> stored with them.
+> 
+> i.e. this calculation is effectively:
+> 
+> 	return (xfs_calc_itruncate_reservation(mp, false) >> 1) /
+> 		(xfs_efi_log_space(1) + xfs_rui_log_space(1));
+> 
+> Also, I think that the algorithm used to calculate the number of
+> intents we can fit in such a transaction should be described in
+> the comment above the function, then implement the algorithm as
+
+I don't like  ^^^^^^^^^^^^^^^^^^ this style of putting the comment at
+some distance from the actual computation code.  Look at
+xfs_calc_link_reservation:
+
+/*
+ * For creating a link to an inode:
+ *    the parent directory inode: inode size
+ *    the linked inode: inode size
+ *    the directory btree could split: (max depth + v2) * dir block size
+ *    the directory bmap btree could join or split: (max depth + v2) * blocksize
+ * And the bmap_finish transaction can free some bmap blocks giving:
+ *    the agf for the ag in which the blocks live: sector size
+ *    the agfl for the ag in which the blocks live: sector size
+ *    the superblock for the free block count: sector size
+ *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
+ */
+STATIC uint
+xfs_calc_link_reservation(
+	struct xfs_mount	*mp)
+{
+	overhead += xfs_calc_iunlink_remove_reservation(mp);
+	t1 = xfs_calc_inode_res(mp, 2) +
+	     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
+	t2 = xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+	     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+			      XFS_FSB_TO_B(mp, 1));
+
+	if (xfs_has_parent(mp)) {
+		t3 = resp->tr_attrsetm.tr_logres;
+		overhead += xfs_calc_pptr_link_overhead();
+	}
+
+Does t1 correspond to "For creating a link"?  Does t2 correspond to "And
+the bmap_finish..." ?  t3 isn't even in the comment.  To me it'd be much
+clearer to write:
+
+	/* Linking an unlinked inode into the directory tree */
+	overhead += xfs_calc_iunlink_remove_reservation(mp);
+
+	/*
+	 * For creating a link to an inode:
+	 *    the parent directory inode: inode size
+	 *    the linked inode: inode size
+	 *    the directory btree could split: (max depth + v2) * dir block size
+	 *    the directory bmap btree could join or split: (max depth + v2) * blocksize
+	 */
+	t1 = xfs_calc_inode_res(mp, 2) +
+	     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
+
+	/*
+	 * And the bmap_finish transaction can free some bmap blocks giving:
+	 *    the agf for the ag in which the blocks live: sector size
+	 *    the agfl for the ag in which the blocks live: sector size
+	 *    the superblock for the free block count: sector size
+	 *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
+	 */
+	t2 = xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+	     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+
+	/*
+	 * If parent pointers are enabled, save space to add a pptr
+	 * xattr and the space to log the pptr items.
+	 */
+	if (xfs_has_parent(mp)) {
+		t3 = resp->tr_attrsetm.tr_logres;
+		overhead += xfs_calc_pptr_link_overhead();
+	}
+
+	return overhead + max3(t1, t2, t3);
+
+calc_link isn't too bad, but truncate is more difficult to figure out.
+
+> efficiently as possible (as we already do in xfs_trans_resv.c).
+
+The downside of moving it to xfs_trans_resv.c is that now you've
+separated the code that actually does the reaping from the code that
+figures out the dynamic limits based on how reaping can happen.
+
+> > +	trace_xreap_agextent_max_deferred_reaps(sc->tp, per_intent, ret);
+> 
+> If it is calculated at mount time, this can be emitted along with
+> all the other log reservations calculated at mount time.
+> 
+> > +	return max(1, ret);
+> 
+> Why? tp->t_logres should always be much greater than the intent
+> size. How will this ever evaluate as zero without there being some
+> other serious log/transaction reservation bug elsewhere in the code?
+> 
+> i.e. if we can get zero here, that needs ASSERTS and/or WARN_ON
+> output and a filesystem shutdown because there is something
+> seriously wrong occurring in the filesystem.
+
+Ok.  I'll just shut down the fs then.
+
+--D
+
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
