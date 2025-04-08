@@ -1,162 +1,123 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CCE8227EBD;
-	Tue,  8 Apr 2025 09:44:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2A2A268FE3
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 10:30:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744105445; cv=none; b=sGkzqGPl9Bzb1UgNCAJoc89JBQPBN5MXsV6ZQEX9MgGr35i5NrHNeuSH7M6evgn+fB6zNfBfmWrQMWqV3v8zrIcUch5mh6VkrrW3JHwrV2b9iq0xaqKVWQqDWXndlTQ+bPr7Hb/CDhm3n9MQxwLh1Iu+7PtRvfkao8fxQ/KDqrQ=
+	t=1744108247; cv=none; b=K1LKTq6iWLXfavUJQZiRwakSYQVn0Ju/qslqCKIn7QSPR6C6D27ntENBH7teIy5OOn28TcLQQ2P5IdUAxjpjglYic0zvoGJvFgiEY+caD6Jj4ZQp8YLRLwzI6Wd0JObH73g9xMlgvwMr1kPs+Aam9JQvx9mNKxKaqvOw1P/t2Hw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744105445; c=relaxed/simple;
-	bh=NbLpxgTlEDHBmSQEbuRxAZe25sUbMlewPr1bXApvVMc=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References:
-	 MIME-version:Content-type; b=dQrHZ2JXazxKv2+ZAsnjG4Zweuhla2MQg0KvAb38Z+j5PvfW8gRFXlmZpX0la6E0H90EHfuFRUtaBLkRutoD5TwPABTVj+8594DwBxwewQiilcvFjHsmDazhlGk3wN2ZkD0ib12uMpUxoNpKju1BWc0cNyMtJXKFeZWQ+TX7avQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FL/aNXBm; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1744108247; c=relaxed/simple;
+	bh=yVnJVc2g1r1+sh6TwA2/Y9d9hQTfy5IYRaYytDeQdFk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=eA+UUW1TQ3sAjsKCnuVaPbphuufFJSfkQjqbG+pJwLpEegoThqMF3LdT7UN3y1gSTIAAGAgMEVZmAuea/JcyrzrTsKcSEVJZE4ITM+k2MUN0LMV2b/eF4Q4532Y7yt+wCJJ6u5xwgs7mgfstDw7WfOXqd0notftCY7AO72MtirA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YdaxCY9k; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FL/aNXBm"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-7369ce5d323so4170991b3a.1;
-        Tue, 08 Apr 2025 02:44:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744105443; x=1744710243; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:message-id:date
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=SgcCW0grI+XNEqVR+uIZZFc1/+jtL1OXtSCzifUzj7A=;
-        b=FL/aNXBmSUyp4Dr9lC84Gex4ugIehWD8cWZGAmqmM5kdBAOXQUtY+8vi78scyYKBkn
-         TpuNeJejVUUKrqFQPA7qj489s5tytIFAyWGahNUA/kQWy5uwweB2GZJQEBnCM+XHpCd+
-         gZ1AefyhA8nCIukI8DuNUbGqti2NXtY+A4shf9v0cClklNk8rr6b89fL0z/CTecmvksH
-         rrqlkgjD4YL9FfFpqeLszObh+v8C+y1gZf06dym/TZOZpO75qI9G9LnUP9D5SF4Xgecf
-         WhhQn/itxvrVjCPC5XNSnNI2tqwkOgXhJBbtBHx0QG+xl9Dos2RS44cIgxMrZBTcnlIB
-         Ik9Q==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YdaxCY9k"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1744108243;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=+M9eNVf+J2MlPvKJ26gDryGWOuzF2U2UkCO1yJuhqlc=;
+	b=YdaxCY9ktg5+QY5xcusceEqcDa7ZbtkAdC3IBt2SVU0/vRmqdhE9yVyjAcgyMgp4r3ZSmz
+	pmmyJq2fR+U8CmCRTA10PWzVrBMVzqbH+pTTnHeG2HFZlb7SRZVbOATfw8CSEEh7Hr3hii
+	P11qf7IESnluqPvAjSA648XAxYJb1cg=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-548-qO8qKTX5Pre1gb9_Ev3AAQ-1; Tue, 08 Apr 2025 06:30:42 -0400
+X-MC-Unique: qO8qKTX5Pre1gb9_Ev3AAQ-1
+X-Mimecast-MFC-AGG-ID: qO8qKTX5Pre1gb9_Ev3AAQ_1744108241
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-43d01024089so47260715e9.1
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Apr 2025 03:30:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744105443; x=1744710243;
-        h=content-transfer-encoding:mime-version:references:message-id:date
-         :in-reply-to:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SgcCW0grI+XNEqVR+uIZZFc1/+jtL1OXtSCzifUzj7A=;
-        b=QIGbeC3oMSKg034emVVgV86Dm1c7OzqoO56EVtxPdqo4Y/BiycpnzU8rmOIl3tW6N2
-         aUGfyT1xVnnWhIS8Mm5MatVy9+GEXJPO6bL+g/Ql0fkXyuD26NzpKqsLFPzrlrTOe8aK
-         RhCul3Ql2VnPhG+CX7zmWySzu+ysNdH54mxOAphzzxc2tL3zsBTnTmoxCqHtoUVYfd/j
-         XjcK/RqpS9eTJe1hBljFGzkcTnQSeLHqocRMYJoq6lV3cdfQAFAtFPXffsNZc2VZVly6
-         1mW6wjC2YvIoPUBlND+Bq5WjjUwBlA826o9TfMKuXxW08WXS7lu0ES+J9iRdaUXUYU1W
-         ecXg==
-X-Forwarded-Encrypted: i=1; AJvYcCUrwf0llQYa8dsgDJbJLA5LZqGX76fyGqkEiicG6cyPcBBBPM/70zwS9EZp0K5IGd3smclD7RY8V2Ud@vger.kernel.org, AJvYcCWBFzDVWS5N1uSY/zLhfI150CJb32P+5PdGV6oCOO9uC+qiiXPCcZzeTxqRjNmKWV1ZnJm2wLCr@vger.kernel.org
-X-Gm-Message-State: AOJu0YxxDYkyWVqbDZEpWWUv7MZPWXL6c6HqsP4lsihrWZUGyVkpysgH
-	2p0ESDiSaQLRdYgWppeybdjb0IlcZgn+kdaCpGxgytrPZuHGrMyW/BEWBA==
-X-Gm-Gg: ASbGncsEvQNNpEw91T+3CM/gV9218N8M3mimTAkP0EGRbv2NZrmceewbkeDM+pNsrYH
-	Qg6t0hAv5vUHzIwb70/4rzrb4uulLV7x/G1PYhOWVbBQ51hAGhXO8TjZzL0zkvrKwObJ2t+zA5f
-	CkiHS9N4ALw9WvPix22P5KbfZrg83DB8gA8ATbuvFjX7dtgjYtjSUtDtR9rPsLnskXye1IS7CIu
-	zNcM87GCy9XVVF5PiRqMu7rmIhqo8IzVAGpF/2X/gLfmfCgPh5kUwEYoPzvWhQgrPSP4GXHocms
-	P36AC/sHwYA88tL9FTxI6E8s5lARAsh4COYVK+lkx3rNTw==
-X-Google-Smtp-Source: AGHT+IGWBJF1VGZJq0BivxZlMQFXZOeDcHdusaw2wKYvsxXBdDj7EFYnwBOSfrbauQh9Bgkot0U/Zg==
-X-Received: by 2002:a05:6a20:918e:b0:1f5:5b77:3818 with SMTP id adf61e73a8af0-201081394ddmr22687594637.27.1744105443358;
-        Tue, 08 Apr 2025 02:44:03 -0700 (PDT)
-Received: from dw-tp ([171.76.81.0])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-af9bc41c626sm7158156a12.78.2025.04.08.02.43.59
+        d=1e100.net; s=20230601; t=1744108241; x=1744713041;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+M9eNVf+J2MlPvKJ26gDryGWOuzF2U2UkCO1yJuhqlc=;
+        b=aYUw2E1NK0+CjUY75QVDJXr23oyYHDBHvcG0VBhmQ9H7V0Sfi/qT+iL8L8tyx09+du
+         QNqsdIZjI0CwNVxxu9Ss7dnh4d3+r0en4TP6uho/88cJENGliNGMkwfAzqqH8bH6RywQ
+         Mp5smHKWa8e65BoQNN37SDiIC5PGnFo4ewVSrTK820EaFBg1f+QllHO5Qt4MpeZixAVz
+         kd/7C7fjWt43JhYEjl5AR+Bq+cQSAlUGX8fgUeEpR8h7Tk4l2NJDbrIW9VyVUiKtYsWQ
+         x9CrJ2lcHyQ0FQKLcPuTyNXRa22g2fXq71KkOvEIh/6CynmPU3G8NqtuTZI3s0N6P+MP
+         eZYg==
+X-Gm-Message-State: AOJu0YzYT0//0HENJnF74yGz2mDcOu6quqvPJgmFYfkfiqusEOZhvQAg
+	VWLKZTYyscPuI2i8M48wtJhxNHAzdX5jyN20RUkgB2z0159X/l72x5RhXCp2Q7kdy/wJTbmg439
+	feaNP0xziGK8Wch+++hUBx4JhbQHB9aaXloYbl2KXJARZ6RTclMBBcndsU547W6ycOf7v6ReXDi
+	GXZtoowo1knPcozZzTbR4n6FXaEVhJNxWDOFSd+iEa
+X-Gm-Gg: ASbGncuK/il7lDqz6RuRqQfz+xi/Nr+XzgXTAliDRZRUHHPZpvYCZg1uKi0oVHMjg4P
+	7sMwR9mpb9FsPekBqmCBEq6yud2DCGmiFmJfcGRupaglYYWzkL4ND+3p92786Ls81ecN6eJaKwU
+	VsGJ6lfWiWpMNaZB0PAj2pwpGq6RSJs1i5b8GL7gqnVxoRfqLtZL/nuykQCcn8lXMgDz6vqPpL1
+	29OAFbz6i5dybrIKOVUD+Tnw/wCBay6dsWco3TOnd0f/gfi0nLf/M2NpE9hMmH+TL4ywVzfy7YX
+	EJ+WCM7Duti7UzDOcYVHqCY6o0DOCMZ03ZY=
+X-Received: by 2002:a05:6000:18ac:b0:39a:c6c4:f877 with SMTP id ffacd0b85a97d-39cba9332c6mr13924232f8f.20.1744108240679;
+        Tue, 08 Apr 2025 03:30:40 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE60f/B2co1nMNTyNLWVsVyhLLR0qxLOipzHhbfimYIB7g23acEcW6WRPvopCxeIZfjM+3bJg==
+X-Received: by 2002:a05:6000:18ac:b0:39a:c6c4:f877 with SMTP id ffacd0b85a97d-39cba9332c6mr13924202f8f.20.1744108240211;
+        Tue, 08 Apr 2025 03:30:40 -0700 (PDT)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-39c3020da17sm14617090f8f.64.2025.04.08.03.30.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Apr 2025 02:44:02 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org, david@fromorbit.com, nirjhar.roy.lists@gmail.com
-Subject: Re: [PATCH v3 5/6] common/config: Introduce _exit wrapper around exit command
-In-Reply-To: <352a430ecbcb4800d31dc5a33b2b4a9f97fc810a.1744090313.git.nirjhar.roy.lists@gmail.com>
-Date: Tue, 08 Apr 2025 14:43:41 +0530
-Message-ID: <87y0wbj9ru.fsf@gmail.com>
-References: <cover.1744090313.git.nirjhar.roy.lists@gmail.com> <352a430ecbcb4800d31dc5a33b2b4a9f97fc810a.1744090313.git.nirjhar.roy.lists@gmail.com>
+        Tue, 08 Apr 2025 03:30:39 -0700 (PDT)
+Date: Tue, 8 Apr 2025 12:30:39 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: aalbersh@kernel.org, bodonnel@redhat.com, djwong@kernel.org
+Subject: [ANNOUNCE] xfsprogs: for-next updated to 2d5e0a41c199
+Message-ID: <zhhpacc7yxc6jbj2tvjb4b4hapmtohvvresbke56jq7dxlf56l@np33ncd7d3kq>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-"Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+Hi folks,
 
-> We should always set the value of status correctly when we are exiting.
-> Else, "$?" might not give us the correct value.
-> If we see the following trap
-> handler registration in the check script:
->
-> if $OPTIONS_HAVE_SECTIONS; then
->      trap "_kill_seq; _summary; exit \$status" 0 1 2 3 15
-> else
->      trap "_kill_seq; _wrapup; exit \$status" 0 1 2 3 15
-> fi
->
-> So, "exit 1" will exit the check script without setting the correct
-> return value. I ran with the following local.config file:
->
-> [xfs_4k_valid]
-> FSTYP=xfs
-> TEST_DEV=/dev/loop0
-> TEST_DIR=/mnt1/test
-> SCRATCH_DEV=/dev/loop1
-> SCRATCH_MNT=/mnt1/scratch
->
-> [xfs_4k_invalid]
-> FSTYP=xfs
-> TEST_DEV=/dev/loop0
-> TEST_DIR=/mnt1/invalid_dir
-> SCRATCH_DEV=/dev/loop1
-> SCRATCH_MNT=/mnt1/scratch
->
-> This caused the init_rc() to catch the case of invalid _test_mount
-> options. Although the check script correctly failed during the execution
-> of the "xfs_4k_invalid" section, the return value was 0, i.e "echo $?"
-> returned 0. This is because init_rc exits with "exit 1" without
-> correctly setting the value of "status". IMO, the correct behavior
-> should have been that "$?" should have been non-zero.
->
-> The next patch will replace exit with _exit.
->
-> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  common/config | 8 ++++++++
->  1 file changed, 8 insertions(+)
->
-> diff --git a/common/config b/common/config
-> index 79bec87f..eb6af35a 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -96,6 +96,14 @@ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
->  
->  export RECREATE_TEST_DEV=${RECREATE_TEST_DEV:=false}
->  
-> +# This functions sets the exit code to status and then exits. Don't use
-> +# exit directly, as it might not set the value of "status" correctly.
+The xfsprogs for-next branch in repository at:
 
-...as it might not set the value of "$status" correctly, which is used
-as an exit code in the trap handler routine set up by the check script.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> +_exit()
-> +{
-> +	status="$1"
-> +	exit "$status"
-> +}
-> +
+has just been updated.
 
-I agree with Darrick’s suggestion here. It’s safer to update status only
-when an argument is passed - otherwise, it’s easy to trip over this.
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
 
-Let’s also avoid defaulting status to 0 inside _exit(). That way, if the
-caller forgets to pass an argument but has explicitly set status
-earlier, we preserve the intended value.
+The for-next branch has also been updated to match the state of master.
 
-We should update _exit() with... 
+The new head of the for-next branch is commit:
 
-test -n "$1" && status="$1"
+2d5e0a41c199272ada5d54d51a2a8cbb76da6eee
 
--ritesh
+New commits:
 
+Darrick J. Wong (5):
+      [355eb80b188f] xfs_protofile: rename source code to .py.in
+      [7a071c8c41a5] xfs_scrub_all: rename source code to .py.in
+      [c5913c6f9f0e] Makefile: inject package name/version/bugreport into pot file
+      [8a96f3d73d06] xfs_protofile: add messages to localization catalog
+      [2d5e0a41c199] xfs_scrub_all: localize the strings in the program
 
->  # Handle mkfs.$fstyp which does (or does not) require -f to overwrite
->  set_mkfs_prog_path_with_opts()
->  {
-> -- 
-> 2.34.1
+Code Diffstat:
+
+ configure.ac                                    |  3 +-
+ include/builddefs.in                            |  1 +
+ include/buildrules                              |  9 +++-
+ libfrog/Makefile                                | 18 ++++++-
+ libfrog/gettext.py.in                           | 12 +++++
+ mkfs/Makefile                                   | 11 +++--
+ mkfs/{xfs_protofile.in => xfs_protofile.py.in}  | 21 +++++----
+ scrub/Makefile                                  | 11 +++--
+ scrub/{xfs_scrub_all.in => xfs_scrub_all.py.in} | 62 +++++++++++++++----------
+ 9 files changed, 103 insertions(+), 45 deletions(-)
+ create mode 100644 libfrog/gettext.py.in
+ rename mkfs/{xfs_protofile.in => xfs_protofile.py.in} (85%)
+ rename scrub/{xfs_scrub_all.in => xfs_scrub_all.py.in} (89%)
+
+-- 
+- Andrey
+
