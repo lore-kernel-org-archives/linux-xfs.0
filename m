@@ -1,85 +1,161 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B6BD22ACDC
-	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 16:29:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 042E31DE3A9;
+	Tue,  8 Apr 2025 16:32:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744129749; cv=none; b=Z3qkYJi46IEo42Or2xCCzap5bs7aldtdVao5e0tjVUUKmOpc2TNX9AOZKZRmIad9abQypMegeqXQjm1f0HZBXG8glchs5N1keR+3bLx4qo9KMQX3thAjWhh9MC0M994hEiyETvH8ZXQPebGvFw0L4mFbSfxgoEitm46BfSF7UU8=
+	t=1744129966; cv=none; b=FGPqe2q46vtF3h2N/1c+JXqtpToUJ2AaduJfs6PrcvWDNMkzyAcuGI2Yj8sTbQkwKmZpUZFJQ28X14P0CazpkUjP4NZ+4rOS5/puoLL3VXt9GwMSV7B1KAuLnqD+BD48Cg0/+59gcHvY29E4s1twkFnf+WdS5rpbsF/PA+BzB8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744129749; c=relaxed/simple;
-	bh=HPUM/87qVYxeNniVyS9mI8peO6z+4W+Oa9In7SQp3fE=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=M1GdHWYztZ0gi65oFWBoBx1dY7Co6i3Ge1c62E+OVuO4CxTFUEi2YCZkUIGRSHKsN0/y0JZ4JBOgu670gXtueDl1rvei6ree2rXnoLwHsJySYAW6yywbcHb6q9qn2NPEJ7MIuVLFdyYtA+ewouKsEf//Is4j6zicIBBR0h8TgeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dRU8Heof; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744129966; c=relaxed/simple;
+	bh=/11XW1FCK7k61FPOSSR5PIk9C1BVk1Kjg+fmIxK0Y6s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZOR4qniH3/z6ERjL77I1mR2jeWds7QHrsY6EDslc7eIlKrfD+wxMes29cXQKz9rwqJ+4f7kOGo4x3N7XKV3kX5lcRdNY+EdPvOaPI4kt33kJnU0/P8nzGKzCq1s77v5F04VW9kW5mmODHfz6P2DZugXsXBYW9hYpvZIf/p3bQJ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FbNAGFBo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dRU8Heof"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B9B2C4CEE5;
-	Tue,  8 Apr 2025 16:29:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FbNAGFBo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57ED4C4CEE5;
+	Tue,  8 Apr 2025 16:32:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744129749;
-	bh=HPUM/87qVYxeNniVyS9mI8peO6z+4W+Oa9In7SQp3fE=;
-	h=Date:From:To:Subject:From;
-	b=dRU8HeofGrNYm1ytej/513AC8PnH5VEVMLyd0os9z7f+PFrmMqtddF35Poc3bHz4w
-	 UkhSlR+vMcp9HcXGC4IYVuETRsx7lYtf/6iTVfbkmizEg+ns1llvcWVUJ1+tTmHxvZ
-	 WTUBf5JmSE6d3i6h/+to/+sMgFGkAmqxWgbclvuoA5ybEdONkWYTvPpClxogzAxdOo
-	 BLeUk0aS/6kA2Eg9+zEwnFK85M1mnPDeEfH3gvFJFx0ckCH9JbnRCKzfYCZbTEksUW
-	 VikEU50o5Y1FSn2SgQXTRmgnnE7kBnPgofASnQHTBdnbzXiZ4ASIrtN+rMgPNJzDLe
-	 25Tf7FQvpP2XQ==
-Date: Tue, 8 Apr 2025 09:29:08 -0700
+	s=k20201202; t=1744129965;
+	bh=/11XW1FCK7k61FPOSSR5PIk9C1BVk1Kjg+fmIxK0Y6s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FbNAGFBof3jNedBWhPcad6j2eufQxzOoEHnPygdy0zJ5B2hU4csFt57uGJsN6jRsH
+	 j7yIV7Vjm47jKF2eFK8QAae9jjdOGfPV2qwlR9E9GwGxkS6TjV0pUvSiRF1fe722Yu
+	 RjsP40tFWu5lCttKG7H/APUn6QFYiUsEfvdXWLbxUZ14JhxRuPWRA8vYcVJOuKXrrY
+	 h3+8vsr++tPfTe0uu8D1sfkf+kHfperR/MHEb67fYM65fwFh5x7Spstc0WjnF7rw6W
+	 glrizGeJZ0L/UrPkBbhiVBGQlp/T9abMhVkJ6IeSmKCH50BtVyzv3V1KsVUJMquJV/
+	 Cc3VUcmq9Tf/A==
+Date: Tue, 8 Apr 2025 09:32:44 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-documentation: master updated to 7d07fb949b0f3a
-Message-ID: <20250408162908.GG6283@frogsfrogsfrogs>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, fstests@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	ojaswin@linux.ibm.com, zlang@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v3 5/6] common/config: Introduce _exit wrapper around
+ exit command
+Message-ID: <20250408163244.GH6307@frogsfrogsfrogs>
+References: <cover.1744090313.git.nirjhar.roy.lists@gmail.com>
+ <352a430ecbcb4800d31dc5a33b2b4a9f97fc810a.1744090313.git.nirjhar.roy.lists@gmail.com>
+ <87y0wbj9ru.fsf@gmail.com>
+ <0e4817b5-bd20-4ea6-93f4-ec0bee9bf833@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0e4817b5-bd20-4ea6-93f4-ec0bee9bf833@gmail.com>
 
-Hi folks,
+On Tue, Apr 08, 2025 at 09:45:53PM +0530, Nirjhar Roy (IBM) wrote:
+> 
+> On 4/8/25 14:43, Ritesh Harjani (IBM) wrote:
+> > "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+> > 
+> > > We should always set the value of status correctly when we are exiting.
+> > > Else, "$?" might not give us the correct value.
+> > > If we see the following trap
+> > > handler registration in the check script:
+> > > 
+> > > if $OPTIONS_HAVE_SECTIONS; then
+> > >       trap "_kill_seq; _summary; exit \$status" 0 1 2 3 15
+> > > else
+> > >       trap "_kill_seq; _wrapup; exit \$status" 0 1 2 3 15
+> > > fi
+> > > 
+> > > So, "exit 1" will exit the check script without setting the correct
+> > > return value. I ran with the following local.config file:
+> > > 
+> > > [xfs_4k_valid]
+> > > FSTYP=xfs
+> > > TEST_DEV=/dev/loop0
+> > > TEST_DIR=/mnt1/test
+> > > SCRATCH_DEV=/dev/loop1
+> > > SCRATCH_MNT=/mnt1/scratch
+> > > 
+> > > [xfs_4k_invalid]
+> > > FSTYP=xfs
+> > > TEST_DEV=/dev/loop0
+> > > TEST_DIR=/mnt1/invalid_dir
+> > > SCRATCH_DEV=/dev/loop1
+> > > SCRATCH_MNT=/mnt1/scratch
+> > > 
+> > > This caused the init_rc() to catch the case of invalid _test_mount
+> > > options. Although the check script correctly failed during the execution
+> > > of the "xfs_4k_invalid" section, the return value was 0, i.e "echo $?"
+> > > returned 0. This is because init_rc exits with "exit 1" without
+> > > correctly setting the value of "status". IMO, the correct behavior
+> > > should have been that "$?" should have been non-zero.
+> > > 
+> > > The next patch will replace exit with _exit.
+> > > 
+> > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > > Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >   common/config | 8 ++++++++
+> > >   1 file changed, 8 insertions(+)
+> > > 
+> > > diff --git a/common/config b/common/config
+> > > index 79bec87f..eb6af35a 100644
+> > > --- a/common/config
+> > > +++ b/common/config
+> > > @@ -96,6 +96,14 @@ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
+> > >   export RECREATE_TEST_DEV=${RECREATE_TEST_DEV:=false}
+> > > +# This functions sets the exit code to status and then exits. Don't use
+> > > +# exit directly, as it might not set the value of "status" correctly.
+> > ...as it might not set the value of "$status" correctly, which is used
+> > as an exit code in the trap handler routine set up by the check script.
+> > 
+> > > +_exit()
+> > > +{
+> > > +	status="$1"
+> > > +	exit "$status"
+> > > +}
+> > > +
+> > I agree with Darrick’s suggestion here. It’s safer to update status only
+> > when an argument is passed - otherwise, it’s easy to trip over this.
+> > 
+> > Let’s also avoid defaulting status to 0 inside _exit(). That way, if the
+> > caller forgets to pass an argument but has explicitly set status
+> > earlier, we preserve the intended value.
+> > 
+> > We should update _exit() with...
+> > 
+> > test -n "$1" && status="$1"
+> 
+> Okay, so in that case if someone does "status=<value>;_exit", we should end
+> up with the "<value>" instead of something else, right?
 
-The master branch of the xfs-documentation repository at:
+Right.  I think.  AFAICT the following simple program actually does
+return 5 despite the cleanup:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+trap 'echo cleanup' INT QUIT TERM EXIT
+exit 5
 
-has just been updated.  You can find a pdf version of this document
-here at some point when kup finishes syncing mirrors.
+But since fstests set a variable named "status" and then "exit $status"
+from cleanup, I think it doesn't matter how status gets set as long as
+it /does/ get set somewhere.
 
-https://www.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf
+--D
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the master branch is commit:
-
-7d07fb949b0f3a xfs-documentation: bump design doc revisions
-
-4 new commits:
-
-Christoph Hellwig (1):
-      [b54ac15f578a78] design: document the zoned on-disk format
-
-Darrick J. Wong (3):
-      [f6cb034224a9a0] design: document the revisions to the realtime rmap formats
-      [e271e0a698d6f6] design: document changes for the realtime refcount btree
-      [7d07fb949b0f3a] xfs-documentation: bump design doc revisions
-
-Code Diffstat:
-
- design/XFS_Filesystem_Structure/docinfo.xml        |  16 ++
- .../internal_inodes.asciidoc                       |   7 +
- .../journaling_log.asciidoc                        |  32 +--
- design/XFS_Filesystem_Structure/magic.asciidoc     |   7 +
- .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |  16 +-
- design/XFS_Filesystem_Structure/realtime.asciidoc  |  45 ++++-
- .../XFS_Filesystem_Structure/rtrefcountbt.asciidoc | 172 +++++++++++++++++
- design/XFS_Filesystem_Structure/rtrmapbt.asciidoc  | 215 +++++++++------------
- .../XFS_Filesystem_Structure/superblock.asciidoc   |  25 +++
- 9 files changed, 392 insertions(+), 143 deletions(-)
- create mode 100644 design/XFS_Filesystem_Structure/rtrefcountbt.asciidoc
+> --NR
+> 
+> > 
+> > -ritesh
+> > 
+> > 
+> > >   # Handle mkfs.$fstyp which does (or does not) require -f to overwrite
+> > >   set_mkfs_prog_path_with_opts()
+> > >   {
+> > > -- 
+> > > 2.34.1
+> 
+> -- 
+> Nirjhar Roy
+> Linux Kernel Developer
+> IBM, Bangalore
+> 
