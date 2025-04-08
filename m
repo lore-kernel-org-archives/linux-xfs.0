@@ -1,146 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C4D1DBB0C;
-	Tue,  8 Apr 2025 14:33:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5064222FE13
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Apr 2025 16:05:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744122827; cv=none; b=PvcaKZ6lYNA2Mv4UTI1yUBXH0nAH8PhFgaFn3ubxOgjZ24/nnKP62LHaptnGu2xZ0EyWxmDp6Qacph2MtivzeXkTE+GK6WpJ7GVe2B8j86U9G7g4hOU/QnpnV8MAgFVs+xRgluk1f9uKfTvUxNZGdnnmWtNfp8UbUj8Phh6p3Co=
+	t=1744128335; cv=none; b=VpEkYCUARMy2tg7f6NORs07Z92ctwijUAn2LTsmYt3ug63D5WhcBvkLjOsiFkplRJtoAJEgtU4c03qZRSY/WDUYjCAw4eSUbtBHC5lxCy2YgFTFqc6knPZydpadzhOea6XC8AnE80rLzuur/Qh1LTXo6teznM/uYJYShsvYl9j4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744122827; c=relaxed/simple;
-	bh=aEfx6RkU/Tu2k8S2tBQr8QBzC2LFzW6gVbGKB908vOw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=duuQsJi67HDhotY8GYWC7+65mF3oXq9Ry9kRtJnMyxD9bSplA9AKWI4aGhZ8RKHE0H2qQvIGRtyuyRprpUE66XC6VlAz+a/vvD02vrG7SmWX49ozQAZO9ePlTytXWA/LQTYx/mGpQ/4KR1uM1fWFYRZXnm5p2aGwbqRjc8LGfDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y+Wsd4uF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744128335; c=relaxed/simple;
+	bh=o7vOsgLVJgFcL9NA1pac2bzFpoDTZWEAmGlOnLE1MUA=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=LP40Nt16LTOO1Eem3AG3Vjm/QWSo+R0jeEmM/1jCIyf8OUtZSEI71bHwrJPMCwaT799lSAfip8fuavFNXXnMcx/MyxLSzBqjg10X1LtDN7WmIMzjw9bKjc49HueaT1mSWb/Zm7n7H1WcjUCWyd3vvnOwbl2q6UCUN0ZRtajAGQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rBwJMU61; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y+Wsd4uF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5F8C4CEE5;
-	Tue,  8 Apr 2025 14:33:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rBwJMU61"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCBDAC4CEE5;
+	Tue,  8 Apr 2025 16:05:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744122826;
-	bh=aEfx6RkU/Tu2k8S2tBQr8QBzC2LFzW6gVbGKB908vOw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y+Wsd4uFxkefVyM0Rcp0TuN+gwpTIMtSSLaIkCzk3iWbn0P8QFMm7P1NPsk+p+QNr
-	 RwUEbiSOVsUTPgY/llpADBQ4LKVgPwpmXVVbe2e7jgl7BtL7MJX8wE3DFUawDZ5HBu
-	 8RQUGaGkPeKbw1+QPjGRIuDzGjWVOjUCSuTjYA7RSriBP1jIc9BRvF4EhSb8ZHemCF
-	 6KcjqcO39DD+3bdMSbkosN9MnLa7y6sV4TxGx90TJWqRkYTJtpZNBfH3Mhr+xzHGlg
-	 p+/KV8rF6vmQUsLgBLeIfJzuT07evGopX/iLESfrlA9xA2AXJwWWz5fuvYWsM1iSXe
-	 MKoEgI7CJzU2w==
-Date: Tue, 8 Apr 2025 07:33:46 -0700
+	s=k20201202; t=1744128334;
+	bh=o7vOsgLVJgFcL9NA1pac2bzFpoDTZWEAmGlOnLE1MUA=;
+	h=Date:Subject:From:To:Cc:From;
+	b=rBwJMU61AG0ZD1jMR9fjW5iYoJ/mR4pEuznDitqxLJ48JEA8mENTZzKg7e+nmvv8m
+	 sBnwVlcUDtEza/g9ztkSrGB10Be0Pj4ZZPwuvPoY4Y3K58/NTXeMtaRMd/n05Owbf4
+	 HMvv7MmtlyCx8tYJCPCyESd+iyrhODcsNuRFHDLPYD1ZT1JLGtzle/aHoNFsen8/0H
+	 9StBGk2PQQ2ZDXW+uTH5Usc1/hQslkCjpxpcJyfdOtpqPp8JinjrwODJ0IIHeA6bSb
+	 4C54ao/APx5RkpPyjT7IPnVX4awcrcI4u311PtgkJzxMw4OGwXk5wetqIqmfAquxDx
+	 MX3blsOf3FuWw==
+Date: Tue, 08 Apr 2025 09:05:34 -0700
+Subject: [GIT PULL] xfs-documentation: updates for 6.15
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, zlang@kernel.org,
-	david@fromorbit.com
-Subject: Re: [PATCH v2 5/5] common: exit --> _exit
-Message-ID: <20250408143346.GD6274@frogsfrogsfrogs>
-References: <cover.1743487913.git.nirjhar.roy.lists@gmail.com>
- <f6c7e5647d5839ff3a5c7d34418ec56aba22bbc1.1743487913.git.nirjhar.roy.lists@gmail.com>
- <87mscwv7o0.fsf@gmail.com>
- <20250407161914.mfnqef2vqghgy3c2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <877c3vzu5p.fsf@gmail.com>
- <3c1d608d-4ea0-4e24-9abc-95eb226101c2@gmail.com>
- <20250408142747.tojq7dhv3ad2mzaq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: djwong@kernel.org
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <174412809946.1477451.1579584673862023160.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250408142747.tojq7dhv3ad2mzaq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, Apr 08, 2025 at 10:27:48PM +0800, Zorro Lang wrote:
-> On Tue, Apr 08, 2025 at 12:43:32AM +0530, Nirjhar Roy (IBM) wrote:
-> > 
-> > On 4/8/25 00:16, Ritesh Harjani (IBM) wrote:
-> > > Zorro Lang <zlang@redhat.com> writes:
-> > > 
-> > > > On Fri, Apr 04, 2025 at 10:34:47AM +0530, Ritesh Harjani wrote:
-> > > > > "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
-> > > > > 
-> > > > > > Replace exit <return-val> with _exit <return-val> which
-> > > > > > is introduced in the previous patch.
-> > > > > > 
-> > > > > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> > > <...>
-> > > > > > ---
-> > > > > > @@ -225,7 +225,7 @@ _filter_bmap()
-> > > > > >   die_now()
-> > > > > >   {
-> > > > > >   	status=1
-> > > > > > -	exit
-> > > > > > +	_exit
-> > > > > Why not remove status=1 too and just do _exit 1 here too?
-> > > > > Like how we have done at other places?
-> > > > Yeah, nice catch! As the defination of _exit:
-> > > > 
-> > > >    _exit()
-> > > >    {
-> > > >         status="$1"
-> > > >         exit "$status"
-> > > >    }
-> > > > 
-> > > > The
-> > > >    "
-> > > >    status=1
-> > > >    exit
-> > > >    "
-> > > > should be equal to:
-> > > >    "
-> > > >    _exit 1
-> > > >    "
-> > > > 
-> > > > And "_exit" looks not make sense, due to it gives null to status.
-> > > > 
-> > > > Same problem likes below:
-> > > > 
-> > > > 
-> > > > @@ -3776,7 +3773,7 @@ _get_os_name()
-> > > >                  echo 'linux'
-> > > >          else
-> > > >                  echo Unknown operating system: `uname`
-> > > > -               exit
-> > > > +               _exit
-> > > > 
-> > > > 
-> > > > The "_exit" without argument looks not make sense.
-> > > > 
-> > > That's right. _exit called with no argument could make status as null.
-> > Yes, that is correct.
-> > > To prevent such misuse in future, should we add a warning/echo message
-> > 
-> > Yeah, the other thing that we can do is 'status=${1:-0}'. In that case, for
->                                            ^^^^^^^^^^^^^^
-> That's good to me, I'm just wondering if the default value should be "1", to
-> tell us "hey, there's an unknown exit status" :)
+Hi Darrick,
 
-I think status=1 usually means failure...
+Please pull this branch with changes.
 
-/usr/include/stdlib.h:92:#define        EXIT_FAILURE    1       /* Failing exit status.  */
-/usr/include/stdlib.h:93:#define        EXIT_SUCCESS    0       /* Successful exit status.  */
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
---D
+The following changes since commit f512c164a1d0e83a54eabf757be689c3f8bc54a7:
 
-> Thanks,
-> Zorro
-> 
-> > cases where the return value is a success, we simply use "_exit". Which one
-> > do you think adds more value and flexibility to the usage?
-> > 
-> > --NR
-> > 
-> > > if the no. of arguments passed to _exit() is not 1?
-> > > 
-> > > -ritesh
-> > 
-> > -- 
-> > Nirjhar Roy
-> > Linux Kernel Developer
-> > IBM, Bangalore
-> > 
-> 
-> 
+Merge tag 'xfsdocs-6.13-updates_2024-11-26' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation (2024-11-26 16:24:24 -0800)
+
+are available in the Git repository at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation.git tags/xfsdocs-6.15-updates_2025-04-08
+
+for you to fetch changes up to 7d07fb949b0f3aa05fdaa289fba53e70931e974a:
+
+xfs-documentation: bump design doc revisions (2025-04-08 07:55:56 -0700)
+
+----------------------------------------------------------------
+xfs-documentation: updates for 6.15
+
+Here's a pile of updates detailing the changes made during 6.14 and 6.15.
+
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+design: document the zoned on-disk format
+
+Darrick J. Wong (3):
+design: document the revisions to the realtime rmap formats
+design: document changes for the realtime refcount btree
+xfs-documentation: bump design doc revisions
+
+design/XFS_Filesystem_Structure/docinfo.xml        |  16 ++
+.../internal_inodes.asciidoc                       |   7 +
+.../journaling_log.asciidoc                        |  32 +--
+design/XFS_Filesystem_Structure/magic.asciidoc     |   7 +
+.../XFS_Filesystem_Structure/ondisk_inode.asciidoc |  16 +-
+design/XFS_Filesystem_Structure/realtime.asciidoc  |  45 ++++-
+.../XFS_Filesystem_Structure/rtrefcountbt.asciidoc | 172 +++++++++++++++++
+design/XFS_Filesystem_Structure/rtrmapbt.asciidoc  | 215 +++++++++------------
+.../XFS_Filesystem_Structure/superblock.asciidoc   |  25 +++
+9 files changed, 392 insertions(+), 143 deletions(-)
+create mode 100644 design/XFS_Filesystem_Structure/rtrefcountbt.asciidoc
+
