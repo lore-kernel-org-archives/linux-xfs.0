@@ -1,41 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F5A1218AD1
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Apr 2025 22:22:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A54F21B8F5
+	for <linux-xfs@vger.kernel.org>; Wed,  9 Apr 2025 22:49:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744237380; cv=none; b=nVTdhleTu48N7/of666xviNyg0YsPuA9OIUaXcfCwfocP2Q5hxbFm1S3UDFuuWE0Oj4Lx5lbdZIlFHlmuMrGkoP05wVFnmDfPBbnb9U3vN1nFMV9HiyPTfh+YWbIfHa7C8TZ/gEKzNTTdFMTyYt89hb5cVoHw4hOcCCfWu4Kq80=
+	t=1744238955; cv=none; b=dE0H2/73Z8aNsNdNLxXvi1q4+4MbNWVSgm7FGP9PwEiZoWbCfi5V7TL5dvO51kKVykKwN/KgMbo8ej5grBX9YrGLfvmyk66OfNuMwMjE3kOuQFnWQQUUKoHOs8mlSB264w1yhNN7HKqtUTLiAZIAI1ZbZfUuAlpQJFP4cmmA/Bo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744237380; c=relaxed/simple;
-	bh=IRngZFeebOcMkuOOR6fRlLCFSavilG+UFvUM5fqCysU=;
+	s=arc-20240116; t=1744238955; c=relaxed/simple;
+	bh=ra3g0WSTHGlONWh4dVaSP8Ga7ymiMHvVu5Uub8yg9PI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Npc4ItQXV/p8nm427gUc1rkNvYBCar0nBFABBqmYnbPaMaCL2DzzAHwghHcPaoHYHeQw0ifyYuo2iqFCiMcRtwCRg9VhNduQd6mtf9j0QAGY4bPjVV/kH6LAd9pQYKmf69nAHBFf9FkFDBiPBld97+a+Cl18+D4HjLsu4hvG0JU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kzTVCkv0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BbFRaNEbjkOz4irXDHtH6KeofX8jox1UxNoMctzAGFQ81HJfB80Un1Io8ubE6XrYD8QPmtqs9/wq8VKeA1r3Zrtq5KgbipTUx2vwM8LVtb/o+cHSSA5NzEVX5DEy17nM7QMMpEGbcpxA+tPScTUPAJyGSrzS5h89G9yJDGLiOBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=TB0GYylp; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kzTVCkv0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83B4DC4CEE2;
-	Wed,  9 Apr 2025 22:22:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744237379;
-	bh=IRngZFeebOcMkuOOR6fRlLCFSavilG+UFvUM5fqCysU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kzTVCkv0ARqc6oJhy2zIdcx9ZSZV4cTAge1Md/0kiS9iB1vrlmeF84pHltVouMONR
-	 TfoZwOK8GGauqCviVRVA2n6iCegllLUKJmZc3XXHBJhUjsljUPFLmiKLvHxYTWhWwp
-	 7sv1CYEYSiCGGDrM7luJvzMwn3XxFLFDP4sjMkscZf3A7ZFOIlf5KRnoQGt6EMVb1l
-	 qcYFX7CayItQgeht4Cf7PXm1HqJ/VM4N8hXwtrXFwQ9ITqP5uHDm1aGiSEcDrE0DLJ
-	 yMpIWrod53qv1q5dL3l/ALFeA9XFruZxAT4I9UesoeT5aTRguppH+HbvBh/R0p6qQJ
-	 +x9e7q2aak0SQ==
-Date: Wed, 9 Apr 2025 15:22:58 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 37/45] xfs_io: correctly report RGs with internal rt dev
- in bmap output
-Message-ID: <20250409222258.GU6283@frogsfrogsfrogs>
-References: <20250409075557.3535745-1-hch@lst.de>
- <20250409075557.3535745-38-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="TB0GYylp"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-22403cbb47fso1748295ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Apr 2025 15:49:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1744238952; x=1744843752; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2ZvDkyQnbebY09h0oUEJJQU6pkyHBZyFHnTgbadKnrA=;
+        b=TB0GYylpD61oQAjoYujCTPG0AekLJaOji4HDSxlkoe5py0JcjebZuMjSr0BuBYE55C
+         8cMQUApFTM49Z1kVJLXWMP6mOBqfU7noKGCvPO/ALVFDbVy6VDf0W7Y53gQ2cl7Vemap
+         5CxLEA3OK/E9LvwQfdiLukXirqRmgBJW1bauVrVmhIrmNZtQBktTczNj/FHAkS3b2JlT
+         rc/U9FNyWK5/pEJhXhqnnGpsamf/mgQ3UeruJV5bPDiTancYsXWMlJfhMV21pCCQ4iX4
+         I+AtDQpG8P+QAcica3H9BYVWNJJ5Lt8hmUEXvKgBcNuc+YLs1j6G5nCRtPl/zZt2Iq/I
+         tvqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744238952; x=1744843752;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2ZvDkyQnbebY09h0oUEJJQU6pkyHBZyFHnTgbadKnrA=;
+        b=oDRPqNtuCj9pur6DVxiBhSYMaC+UjXFtc/aPi0IYu9hTdY+domaDO7DkiT+L4s3EOC
+         u4vCfrp+Ccn9yFDQy9cbp0KEwhstrWlVcLmaIYwndZj4exC0NZuOBr8wJl8DyEy37xVO
+         d5iDtqtoDQ6Uy5kv5lG6llE0Gjx5tktU89r+vbjkJ5htHz8uCe82cXdFZrrCT75g3Txv
+         g/YSnqQ2XgbJYk46a11uUs9CvifD0UhkUPlI/1bCuc8NIjj+a2EbfmSbeQkSL9Q1f+Yu
+         Nzp6n2UYkkIINM2bYjbrIpKa4/9utS0AbBF/GnjnYZ/RHWm6RS4DfM9bcJChaUFgpRR0
+         Qzgw==
+X-Forwarded-Encrypted: i=1; AJvYcCXE8WOcr+XTTGsUmOoRcQhUdwbb4Y12UwI7RIxtiWLhHZIjAbDjODl8ykkevjgt0Jj4OZkPHxAw66I=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5ovQiYVP5e6MzeHThbaEnjkrsEaUhDvgXpkti8ro9I0mR7stb
+	VLyVZfRCXN8MMJPrK1RlNzO5pl03fQKwy49fsaUbTK/BslSaM+7a3sxdAtTvDxU=
+X-Gm-Gg: ASbGncsRpVkmeUb7pIV5TJ/oRr0QdebRJyEkD5swfJPh+q3gQntQiaQWu8SOecnbHU+
+	ORTH2pTZXawAl5wUICxQjUIUEb+HLndKz5GL7G8pVV11N/ZhTiQkOO5iQs8wOoEqb64w4WlKOlP
+	gyOdhCaB2yh8RQZDxCZVIEFNCVE93beYaCLRBVD2rjSnyUSHJB+qybA2d7fCrJVxHkoXzp4ABJX
+	juojXtxEG3Hr3y/vKE01FSxGg6f79pR/OJueKrW3zLUo9vry7BXWA39/M1sxWTfM6fZrDliEqpB
+	J0kc2M80mpK2safmmdxkR+m0UDJIOwOq9CCyG7i1xBnB6Im1PTOuuo2vy4iOR4KoDQzbhtwFQYp
+	oKg7VaK9Rm2JpZVLgfIGGOaf7
+X-Google-Smtp-Source: AGHT+IGjJAjcitAQAv4Chk4T0tkE8kfKdHQ/aWkSJyTOTVip/fuhtkcZ66iizlmv+Slne03pX68yaw==
+X-Received: by 2002:a17:903:440d:b0:223:5ca1:3b0b with SMTP id d9443c01a7336-22be0388787mr34105ad.40.1744238952293;
+        Wed, 09 Apr 2025 15:49:12 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22ac7cb5463sm17613765ad.195.2025.04.09.15.49.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Apr 2025 15:49:11 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1u2eEG-00000006eLH-2B66;
+	Thu, 10 Apr 2025 08:49:08 +1000
+Date: Thu, 10 Apr 2025 08:49:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org, hch@lst.de,
+	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
+	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, catherine.hoang@oracle.com
+Subject: Re: [PATCH v6 11/12] xfs: add xfs_compute_atomic_write_unit_max()
+Message-ID: <Z_b5ZK8H0pK0Saga@dread.disaster.area>
+References: <20250408104209.1852036-1-john.g.garry@oracle.com>
+ <20250408104209.1852036-12-john.g.garry@oracle.com>
+ <Z_WnbfRhKR6RQsSA@dread.disaster.area>
+ <20250409004156.GL6307@frogsfrogsfrogs>
+ <Z_YF9HpdbkJDLeuR@dread.disaster.area>
+ <ed53dc33-c811-4c20-8713-8d2d32cb81d7@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,82 +87,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250409075557.3535745-38-hch@lst.de>
+In-Reply-To: <ed53dc33-c811-4c20-8713-8d2d32cb81d7@oracle.com>
 
-On Wed, Apr 09, 2025 at 09:55:40AM +0200, Christoph Hellwig wrote:
-> Apply the proper offset.  Somehow this made gcc complain about
-> possible overflowing abuf, so increase the size for that as well.
+On Wed, Apr 09, 2025 at 09:15:23AM +0100, John Garry wrote:
+> On 09/04/2025 06:30, Dave Chinner wrote:
+> > > This is why I don't agree with adding a static 16MB limit -- we clearly
+> > > don't need it to emulate current hardware, which can commit up to 64k
+> > > atomically.  Future hardware can increase that by 64x and we'll still be
+> > > ok with using the existing tr_write transaction type.
+> > > 
+> > > By contrast, adding a 16MB limit would result in a much larger minimum
+> > > log size.  If we add that to struct xfs_trans_resv for all filesystems
+> > > then we run the risk of some ancient filesystem with a 12M log failing
+> > > suddenly failing to mount on a new kernel.
+> > > 
+> > > I don't see the point.
+> > You've got stuck on ithe example size of 16MB I gave, not
+> > the actual reason I gave that example.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> You did provide a relatively large value in 16MB. When I say relative, I
+> mean relative to what can be achieved with HW offload today.
+> 
+> The target user we see for this feature is DBs, and they want to do writes
+> in the 16/32/64KB size range. Indeed, these are the sort of sizes we see
+> supported in terms of disk atomic write support today.
 
-Looks fine to me...
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+The target user I see for RWF_ATOMIC write is applications
+overwriting files safely (e.g. config files, documents, etc).
 
---D
+This requires an atomic write operation that is large enough to
+overwrite the file entirely in one go.
 
-> ---
->  io/bmap.c | 23 +++++++++++++++--------
->  1 file changed, 15 insertions(+), 8 deletions(-)
-> 
-> diff --git a/io/bmap.c b/io/bmap.c
-> index b2f6b4905285..944f658b35f0 100644
-> --- a/io/bmap.c
-> +++ b/io/bmap.c
-> @@ -257,18 +257,21 @@ bmap_f(
->  #define	FLG_BSW		0000010	/* Not on begin of stripe width */
->  #define	FLG_ESW		0000001	/* Not on end   of stripe width */
->  		int	agno;
-> -		off_t	agoff, bbperag;
-> +		off_t	agoff, bbperag, bstart;
->  		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
-> -		char	rbuf[32], bbuf[32], abuf[32];
-> +		char	rbuf[32], bbuf[32], abuf[64];
->  		int	sunit, swidth;
->  
->  		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
->  		tot_w = MINTOT_WIDTH;
->  		if (is_rt) {
-> +			bstart = fsgeo.rtstart *
-> +				(fsgeo.blocksize / BBSIZE);
->  			bbperag = bytes_per_rtgroup(&fsgeo) / BBSIZE;
->  			sunit = 0;
->  			swidth = 0;
->  		} else {
-> +			bstart = 0;
->  			bbperag = (off_t)fsgeo.agblocks *
->  				  (off_t)fsgeo.blocksize / BBSIZE;
->  			sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
-> @@ -298,9 +301,11 @@ bmap_f(
->  						map[i + 1].bmv_length - 1LL));
->  				boff_w = max(boff_w, strlen(bbuf));
->  				if (bbperag > 0) {
-> -					agno = map[i + 1].bmv_block / bbperag;
-> -					agoff = map[i + 1].bmv_block -
-> -							(agno * bbperag);
-> +					off_t bno;
-> +
-> +					bno = map[i + 1].bmv_block - bstart;
-> +					agno = bno / bbperag;
-> +					agoff = bno % bbperag;
->  					snprintf(abuf, sizeof(abuf),
->  						"(%lld..%lld)",
->  						(long long)agoff,
-> @@ -387,9 +392,11 @@ bmap_f(
->  				printf("%4d: %-*s %-*s", i, foff_w, rbuf,
->  					boff_w, bbuf);
->  				if (bbperag > 0) {
-> -					agno = map[i + 1].bmv_block / bbperag;
-> -					agoff = map[i + 1].bmv_block -
-> -							(agno * bbperag);
-> +					off_t bno;
-> +
-> +					bno = map[i + 1].bmv_block - bstart;
-> +					agno = bno / bbperag;
-> +					agoff = bno % bbperag;
->  					snprintf(abuf, sizeof(abuf),
->  						"(%lld..%lld)",
->  						(long long)agoff,
-> -- 
-> 2.47.2
-> 
-> 
+i.e. we need to think about how RWF_ATOMIC is applicable to the
+entire userspace ecosystem, not just a narrow database specific
+niche. Databases really want atomic writes to avoid the need for
+WAL, whereas application developers that keep asking us for safe
+file overwrite without fsync() for arbitrary sized files and IO.
+
+> Furthermore, they (DBs) want fast and predictable performance which HW
+> offload provides. They do not want to use a slow software-based solution.
+> Such a software-based solution will always be slower, as we need to deal
+> with block alloc/de-alloc and extent remapping for every write.
+
+"slow" is relative to the use case for atomic writes.
+
+> So are there people who really want very large atomic write support and will
+> tolerate slow performance, i.e. slower than what can be achieved with
+> double-write buffer or some other application logging?
+
+Large atomic write support solves the O_PONIES problem, which is
+fundamentally a performance problem w.r.t. ensuring data integrity.
+I'll quote myself when you asked this exact same question back about
+4 months ago:
+
+| "At this point we actually provide app developers with what they've
+| been repeatedly asking kernel filesystem engineers to provide them
+| for the past 20 years: a way of overwriting arbitrary file data
+| safely without needing an expensive fdatasync operation on every
+| file that gets modified.
+| 
+| Put simply: atomic writes have a huge potential to fundamentally
+| change the way applications interact with Linux filesystems and to
+| make it *much* simpler for applications to safely overwrite user
+| data.  Hence there is an imperitive here to make the foundational
+| support for this technology solid and robust because atomic writes
+| are going to be with us for the next few decades..."
+
+https://lwn.net/Articles/1001770/
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
