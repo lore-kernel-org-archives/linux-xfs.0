@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A195277030
-	for <linux-xfs@vger.kernel.org>; Wed,  9 Apr 2025 19:13:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 145F01E47B7
+	for <linux-xfs@vger.kernel.org>; Wed,  9 Apr 2025 19:29:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744226022; cv=none; b=VPdcWUT0C55aQo5qliwD4db4xKhETsA7TPx+UWQ9cL35Xq2Z6pGJGLpBjYpdZNJdlfkzPc3zx9jMGhX9yS/ySQz1mWVLitwT2JT3ZhWYGtIwfGktAKwrClGLIvOLRfsjK+nuFVhlWVwJ7/slQoif+uHoaHy0QwU3+Siay9ZaCZA=
+	t=1744226953; cv=none; b=ILmcX3imWzTF/zU83N0McPMZVFUGe2bVkXoiQapPBf87Xt/Yy6KdIpvRkKM1V1Sejk4HgQOFCHNIyOClYglT0NGzxQdXFkIRkubO9BRevViocHaWF9otn7B3MbRARHa63rBLVOeiICneI5nD/dMPAicWg6ZOxu3j/a48MY07Kw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744226022; c=relaxed/simple;
-	bh=fhutdq0FBYAM9tmP31p8D5moHsxYby5LWWpP6cIbQXU=;
+	s=arc-20240116; t=1744226953; c=relaxed/simple;
+	bh=UQep7dISPhaDL6kP5xsT5XvEsUwb6J03ers6ZswnZCM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hKPv+1j2nnOXBG8aVoyVemJWISWITprvSpo2MtqsiY2GbQcZ6pCJ1J42aiCeM+c41uzvabSfFieJ0ljq8qSMFJNN2Zsl7MfCZs/D5pAaBODEKuEzClGaaV9BEBGK6f8CLluuy9CJWPOlem0WEfHQHf6Bf7kibxTxjdfZKKe2J2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F5RQszhP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=LvH/Z145h/06Tep5ttm8BsmKhjuzRmDv1L9OlZTLXrGK8dsC8LoX/hGBIt5qDo58c1V+nseyw2DDQqERhBWAd0D0L/Bex8B6uR/NcXr+KNvBWlpur876Di/+a2p8nDCc7Hckz+RCuJsseM0ped7mLwB6R4KyG/YDBVkZGDRdFJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lhJ58ohL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F5RQszhP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0D91C4CEE2;
-	Wed,  9 Apr 2025 19:13:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lhJ58ohL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8313EC4CEE2;
+	Wed,  9 Apr 2025 19:29:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744226021;
-	bh=fhutdq0FBYAM9tmP31p8D5moHsxYby5LWWpP6cIbQXU=;
+	s=k20201202; t=1744226952;
+	bh=UQep7dISPhaDL6kP5xsT5XvEsUwb6J03ers6ZswnZCM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=F5RQszhP3CjWbrZv09AvoBL9fv42eJq5o1uNrnQcwpvbhOdFzSWG+41bQ4wt7g/9u
-	 3PHc63KNqhHUvz2647DSCWmsNykalmmd8RjMG1M48Nndkn2cuPcrWspP18UtLBKTUY
-	 MYnExFJuPhEHT5f+uY9g3dh5nSLEB9XxRUc1+P3xxsdRY2Wjs+BFdBfqeb7VI3wk+v
-	 GHB+cmmeYr01Ao0IU5N1U3ZiNZ+zoGGnIZEpn7+sNBOPBB/ibgsoXLKY6irmECuw4D
-	 piFYKLHEFNJuR+8jNcU+rrXAg1NKCVe7TN2L23ttVw2qx/5Iw0XK3ZUa/F8TViNr1A
-	 dwzXVR8ZHngSQ==
-Date: Wed, 9 Apr 2025 12:13:40 -0700
+	b=lhJ58ohLi4YIqkOylpgB4AqLbi9hTHAZ0eCZNAfC/3xW3zezrMgCuGCDXZDnEt00j
+	 JTm8yrGSy2ZGnAdwARijlTYZG1u4+jG0oBwqgfJmvJN+86j5Pb3WVkTY7IkWZ4SLkw
+	 WlZk+kETFJy+u0aANZ2ZqODKw6zZk3orGc+RPsWM8VnqCizMl2ZYi5Wb+LESRVZp+0
+	 nLNqkCWU7r6dy/gy4a61ZzquVWR7nol+q4aHingusxHNywBw4nO8en9qnV1XnPTzPL
+	 4yFUGYYLFqOEOd5U5Bl8jODAUybPkePVfQE0ZUrNnDOlW4vyV5jXH+xNE12+AwXGsH
+	 mdprsPGnpqYTQ==
+Date: Wed, 9 Apr 2025 12:29:11 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 36/45] man: document XFS_FSOP_GEOM_FLAGS_ZONED
-Message-ID: <20250409191340.GL6283@frogsfrogsfrogs>
+Subject: Re: [PATCH 41/45] xfs_spaceman: handle internal RT devices
+Message-ID: <20250409192911.GM6283@frogsfrogsfrogs>
 References: <20250409075557.3535745-1-hch@lst.de>
- <20250409075557.3535745-37-hch@lst.de>
+ <20250409075557.3535745-42-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,68 +43,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250409075557.3535745-37-hch@lst.de>
+In-Reply-To: <20250409075557.3535745-42-hch@lst.de>
 
-On Wed, Apr 09, 2025 at 09:55:39AM +0200, Christoph Hellwig wrote:
-> Document the new zoned feature flag and the two new fields added
-> with it.
+On Wed, Apr 09, 2025 at 09:55:44AM +0200, Christoph Hellwig wrote:
+> Handle the synthetic fmr_device values for fsmap.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  man/man2/ioctl_xfs_fsgeometry.2 | 21 ++++++++++++++++++++-
->  1 file changed, 20 insertions(+), 1 deletion(-)
-> 
-> diff --git a/man/man2/ioctl_xfs_fsgeometry.2 b/man/man2/ioctl_xfs_fsgeometry.2
-> index 502054f391e9..df7234e603d2 100644
-> --- a/man/man2/ioctl_xfs_fsgeometry.2
-> +++ b/man/man2/ioctl_xfs_fsgeometry.2
-> @@ -50,7 +50,9 @@ struct xfs_fsop_geom {
->  	__u32         sick;
->  	__u32         checked;
->  	__u64         rgextents;
-> -	__u64         reserved[16];
-> +	__u64	      rtstart;
-> +	__u64         rtreserved;
-> +	__u64         reserved[14];
->  };
->  .fi
->  .in
-> @@ -143,6 +145,20 @@ for more details.
->  .I rgextents
->  Is the number of RT extents in each rtgroup.
->  .PP
-> +.I rtstart
-> +Start of the internal RT device in fsblocks.  0 if an external log device
 
-external RT device?
+Looks correct to me
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +is used.
-> +This field is meaningful only if the flag
-> +.B  XFS_FSOP_GEOM_FLAGS_ZONED
-> +is set.
-> +.PP
-> +.I rtreserved
-> +The amount of space in the realtime section that is reserved for internal use
-> +by garbage collection and reorganization algorithms in fsblocks.
-> +This field is meaningful only if the flag
-> +.B  XFS_FSOP_GEOM_FLAGS_ZONED
-> +is set.
-> +.PP
->  .I reserved
->  is set to zero.
->  .SH FILESYSTEM FEATURE FLAGS
-> @@ -221,6 +237,9 @@ Filesystem can exchange file contents atomically via XFS_IOC_EXCHANGE_RANGE.
->  .TP
->  .B XFS_FSOP_GEOM_FLAGS_METADIR
->  Filesystem contains a metadata directory tree.
-> +.TP
-> +.B XFS_FSOP_GEOM_FLAGS_ZONED
-> +Filesystem uses the zoned allocator for the RT device.
->  .RE
->  .SH XFS METADATA HEALTH REPORTING
->  .PP
+> ---
+>  spaceman/freesp.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+> index dfbec52a7160..9ad321c4843f 100644
+> --- a/spaceman/freesp.c
+> +++ b/spaceman/freesp.c
+> @@ -140,12 +140,19 @@ scan_ag(
+>  	if (agno != NULLAGNUMBER) {
+>  		l->fmr_physical = cvt_agbno_to_b(xfd, agno, 0);
+>  		h->fmr_physical = cvt_agbno_to_b(xfd, agno + 1, 0);
+> -		l->fmr_device = h->fmr_device = file->fs_path.fs_datadev;
+> +		if (file->xfd.fsgeom.rtstart)
+> +			l->fmr_device = XFS_DEV_DATA;
+> +		else
+> +			l->fmr_device = file->fs_path.fs_datadev;
+>  	} else {
+>  		l->fmr_physical = 0;
+>  		h->fmr_physical = ULLONG_MAX;
+> -		l->fmr_device = h->fmr_device = file->fs_path.fs_rtdev;
+> +		if (file->xfd.fsgeom.rtstart)
+> +			l->fmr_device = XFS_DEV_RT;
+> +		else
+> +			l->fmr_device = file->fs_path.fs_rtdev;
+>  	}
+> +		h->fmr_device = l->fmr_device;
+>  	h->fmr_owner = ULLONG_MAX;
+>  	h->fmr_flags = UINT_MAX;
+>  	h->fmr_offset = ULLONG_MAX;
 > -- 
 > 2.47.2
 > 
