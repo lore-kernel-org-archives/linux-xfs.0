@@ -1,37 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59EFD2676C9;
-	Wed,  9 Apr 2025 15:16:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E1DF266B5B;
+	Wed,  9 Apr 2025 15:21:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744211773; cv=none; b=cI8iOJTCwIj9egf9QCfY2tiZU6b5Ey0oD0QzXsxF04E0eCk2uTjGkqKlY6NzZfDiQyy11ibanwdcYFmWz/IV4mP1OYnVukumbdAyK31n+sGxiJXHNa4Y2pMwynFv1q5x9WUnGmWE1+CTLCzQIJZkrHWYXhDwAmL5AK560q/RaNs=
+	t=1744212066; cv=none; b=TGQM7YIMVKpzSMRLFhWUTAUo4bocRe9qRj5pqumhSrvm0lcbb6KA9m3/jKtB24GUYLizqvQI6eau2Aejiqc2FwFCo3PlHM9XF8B+w6Pm6JboqEzPOxhqGIXzndwFdcurUSaSp7cMpc7Kin4//djflHXs+qQD05b8VNUW2/LDaSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744211773; c=relaxed/simple;
-	bh=61cPw9YTEZYGKu5kPd5fDHg7RBs6rTgXl7O64u0VBZU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=gkPxcjBM9NJ5MJHaUbslJ85hHcTFV+9h1t3vUoBUVWis3SLa7nq4bzu3SPsSp89Py3Q4PtsuViG+QCxtHRYsZMdVAbgXRPgyLGrlenLSCWwU4qUqOcMyfs+2mNuHOYkrQLgpnio4Bm2adv1DUmknndF+PfVEgzlmxtuLPit/UMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rf5fCXgN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744212066; c=relaxed/simple;
+	bh=jNROT0ywWLtuqbrPSS5F1bmkNkKl+7e0QLNWYOD/fC8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DMZOzS/vKPM9MRzIy3KlQ/ED5/VQME2a/Q/B8xAXaTuJ2GM+ZRGRaB3pdy9Cl1irHfllSe8lebBmISq8Zn1bL+cnWQdBlL8/Cyrj+3pMIFgL7HH3P310yNL5zraPgi9J796hjykscNu2JkNF0Y2F43mNanVhBON79zqZNqjNkys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jgor3xc9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rf5fCXgN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EB53C4CEE2;
-	Wed,  9 Apr 2025 15:16:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jgor3xc9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D28C1C4CEE2;
+	Wed,  9 Apr 2025 15:21:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744211773;
-	bh=61cPw9YTEZYGKu5kPd5fDHg7RBs6rTgXl7O64u0VBZU=;
-	h=Date:From:To:Cc:Subject:From;
-	b=Rf5fCXgNbOu0TLJIyhjg5kJ4Ra+z2nLC50/drRrxMMt55kjJfrQsWGTmY4pXS/tHf
-	 Y33mN+5sJUMOrxp0DXJxh8kcFMVdLDyJ6bCBRlp9e+3TwtXXcfJEbqY8QwYHyuryJI
-	 dFskmb31svSdu9boQgiIRfBP8UNmaulgNXPa2G7dnyC3v9iHG33JQvQ8Qu39IkncY+
-	 6H2ARAZxb0XieVCYHVbGSMbgcSE7vXcuHt1zk71Z06xZ7LKBtxgxYS2iEUE5Vo14Ah
-	 Lqwvd+QLs1lNR15rp9C2rhx7I4flFsHJqiGovbFCE2r/ssaK4I0p8e0SRgqLFiTBJd
-	 aFg27ji7mQExw==
-Date: Wed, 9 Apr 2025 08:16:12 -0700
+	s=k20201202; t=1744212064;
+	bh=jNROT0ywWLtuqbrPSS5F1bmkNkKl+7e0QLNWYOD/fC8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Jgor3xc9xwqlATQl6PP4ywBUS3hMjpuAq3e2wiCYRGY1o8t58umCNyvj18D5buwuD
+	 0q45Pc1Y/EfKnI++rOg4y9HMebQMKERhqE0KtF9eeuicUW1ADKqzX4vpYHBAAW8Jc/
+	 I27YYOLcNTzr5R7DrK+wyYMDElgLU8VHOWfqnozGVCLay37y6/0+WYsDWwDyUrSwrE
+	 xYuCpopRiQF4UG80rVLltDTxcfju1W3h5CIRsgl2U5hnll1ZRdreo41nuiytuvOvbA
+	 VaAjq2qiZu5woqYZ0b568R0waLDmP/gP0NZDaElwxt1EPsZVe0rlyLDumIeoJPkev9
+	 NMJm/NQ6LFlgw==
+Date: Wed, 9 Apr 2025 08:21:03 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] generic/275: fix on 32k fsblock filesystems
-Message-ID: <20250409151612.GJ6274@frogsfrogsfrogs>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, zlang@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v4 2/6] generic/367: Remove redundant sourcing of
+ common/config
+Message-ID: <20250409152103.GM6283@frogsfrogsfrogs>
+References: <cover.1744181682.git.nirjhar.roy.lists@gmail.com>
+ <022be73df43379408c355cc18e1a3243f2ee7faf.1744181682.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,44 +45,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <022be73df43379408c355cc18e1a3243f2ee7faf.1744181682.git.nirjhar.roy.lists@gmail.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Apr 09, 2025 at 07:00:48AM +0000, Nirjhar Roy (IBM) wrote:
+> common/config will be source by _begin_fstest
+> 
+> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-This test fails on 32k-fsblock filesystems:
+Yep, confirmed.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-dd: failed to open '/opt/tmp3': No space left on device
-dd: failed to open '/opt/tmp4': No space left on device
-Pre rm space:
-Filesystem     Type 1024-blocks    Used Available Capacity Mounted on
-/dev/sda4      xfs      2031616 2030624       992     100% /opt
-Post rm space:
-Filesystem     Type 1024-blocks    Used Available Capacity Mounted on
-/dev/sda4      xfs      2031616 2030368      1248     100% /opt
-could not sufficiently fill filesystem
+--D
 
-On a 32k-fsblock filesystem, creating tmp3 and tmp4 requires more than
-1MB for the transaction allocation, which is why this test fails to fill
-the filesystem.  To fix this, touch the four tmp files before trying to
-use up all the free space.  The fix in ef25a29fa49a50 was incomplete.
-
-Cc: <fstests@vger.kernel.org> # v2022.07.24
-Fixes: ef25a29fa49a50 ("generic/275: fix premature enospc errors when fs block size is large")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/generic/275 |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/tests/generic/275 b/tests/generic/275
-index fbfe158163f336..42d8ff00562ee7 100755
---- a/tests/generic/275
-+++ b/tests/generic/275
-@@ -43,6 +43,9 @@ _scratch_mount
- # now when we know there's enough free blocks.
- later_file=$SCRATCH_MNT/later
- touch $later_file
-+for i in 1 2 3 4; do
-+	touch $SCRATCH_MNT/tmp$i
-+done
- 
- # this file will get removed to create 256k of free space after ENOSPC
- # conditions are created.
+> ---
+>  tests/generic/367 | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/tests/generic/367 b/tests/generic/367
+> index ed371a02..567db557 100755
+> --- a/tests/generic/367
+> +++ b/tests/generic/367
+> @@ -11,7 +11,6 @@
+>  # check if the extsize value and the xflag bit actually got reflected after
+>  # setting/re-setting the extsize value.
+>  
+> -. ./common/config
+>  . ./common/filter
+>  . ./common/preamble
+>  
+> -- 
+> 2.34.1
+> 
+> 
