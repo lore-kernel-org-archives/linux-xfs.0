@@ -1,46 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3FE42AB0;
-	Wed,  9 Apr 2025 00:41:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D721F7083A
+	for <linux-xfs@vger.kernel.org>; Wed,  9 Apr 2025 00:44:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744159318; cv=none; b=Riv4U1RbssNGXj+bERHGbfQFHxmY2cH+EfBE/i3AqVy9dZxtUJVmPmT5Ws26i4tlmRZUAUSKGfEsFSIMAjm+Azv8O6VSj97Jars4wtUigih/gh+qlufeSfwD/cxgt8fxe5nhxtw6/2YDH3U9lRmWvRQA9v3Cl0bq/52t/dCUL5o=
+	t=1744159449; cv=none; b=F+V8NuLNSSQMY/utrTmbhrGqe4NUdy5gtcgAFcTdGSLls1wrunl/NHMCZy/OPslLkZrbZxYworGUoNF2dbq7AUspKTT/2a4IqwW0q5S4+WWexDVlVBYqylq6mnkZeBCVe51ecuMAnKuqOmRoe0jrT3pXIayCaYz+/VfmJa139yU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744159318; c=relaxed/simple;
-	bh=Uma3C9lzYk3Qgb36Cpb4H7tai9k/9PKyqCouIVsRh/Y=;
+	s=arc-20240116; t=1744159449; c=relaxed/simple;
+	bh=iHbfk/XWM7ppbOvOvQ6qi64KcVzkWoSVIBABMFcVRjo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JEFEvjV6/VVCsTyyfE7+5HZPUWcl/G/0dTQs77dD5zJBgyTYpXtncdMyU6Nx6Wd9G+l8GYcQXe1DJlxl8SFT3EOOOZ1IRFLMOcEnk743WPmjygwqr7WrG2x4y0PtXVWXnQJG78WOIDNC/0fD1oKCIz+W3mDXeAvqt5IY0QZD6lQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nycfs46B; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=a3qiS4rAh+fOMyOXnhUUDpbWhrrtYTon7mnbCidwHKeyHLeWPCEkVQplzvF/VvO8Ds9wv/XBKcwnzFeKHNoNqRgkC1zoR5gjpB9nFQ8r0pTx4OjBt47dE7QtVinWmNJIbE8/glgKYWGEmxLlm0oAsSvHYA+3cJrjPdnwJbYApkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=itUSnmxh; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nycfs46B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2845C4CEE5;
-	Wed,  9 Apr 2025 00:41:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744159316;
-	bh=Uma3C9lzYk3Qgb36Cpb4H7tai9k/9PKyqCouIVsRh/Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Nycfs46BHgyP4yQNIdyzteAOP+LEDlExGT1e7ipqvzHCgfZZkvu+kU8Zvxa5PGgID
-	 a7G7bqulNrKcvOr/dX1RYGBeO53FDg8olu85tvR9k461oM/8G0IDxPs1Hybsku/Aw2
-	 atcnVZNl1rQmnatCxLqQDxtH0JCnc4EfDI/sBRUQHSOgoXV6p9Evt474oryNHb2f+q
-	 zqwaNQab3cC3fQDlThE8VloiYPLi9MbxCh7juHxZrYYrBzpppTxcabAbQR/N2CG9pf
-	 YDsoagQn/NryQNOs3Ux1f3WtkOJLvuaB3hbNBPCKXniaNCsq6RRX+MCR5ng2d2r+1h
-	 tWXuYDo93jaBw==
-Date: Tue, 8 Apr 2025 17:41:56 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org, hch@lst.de,
-	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
-	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com
-Subject: Re: [PATCH v6 11/12] xfs: add xfs_compute_atomic_write_unit_max()
-Message-ID: <20250409004156.GL6307@frogsfrogsfrogs>
-References: <20250408104209.1852036-1-john.g.garry@oracle.com>
- <20250408104209.1852036-12-john.g.garry@oracle.com>
- <Z_WnbfRhKR6RQsSA@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="itUSnmxh"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-739be717eddso4866934b3a.2
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Apr 2025 17:44:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1744159446; x=1744764246; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=tbxqBhkLvik9isyhyqh8hX9+mqPhV1OKGBEqeSrqBcY=;
+        b=itUSnmxhhfoXF514hMPqJ4W8dHno1m2oK+PpUUN5LCThk/km0gEuXpitxa7X21Iw+k
+         C4tqbbD7UXm5BsgnnnzkEnbotKZpjsWKFXWO6VlWOJOC50SmCA2t0MfniKilKjnNl6oh
+         hc756F2C5pNZprdKWfP/E7PNIVyZl/FppqhYJbMDXgjUpOefkTSV1Im5WMdAPzfJHJKR
+         9o51QsJYJrfJx6kcgX5QowBKC/HawOJKIPqKAHXKm2+GBeszUEYL1u/yycDa9681P4OR
+         UMyt81+TOYgrHZGp7VzSs9t23zyfqAHMbwJRU1Ib+PxOgp6W38oh9gURdGLO84BO0RCT
+         jVxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744159446; x=1744764246;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tbxqBhkLvik9isyhyqh8hX9+mqPhV1OKGBEqeSrqBcY=;
+        b=tDDjDK7dOxN1T130+UlTP7e5uHMTXy5R4Z27lB0lc7tI63SiBy47b6D9BfVmv4WFIc
+         bMpwR/EfAkRBCn/ATp56qpeEZG3ofnH+KHCYzn9EnuU+tCS9WfbZ9rAQhZNme+vKIU0U
+         k9TVrTe8HGZAmw19yKoDWeeEFChsVcYcFVveAGIJfleHkPMbvde+H9V7/70DE8mAJOKi
+         D6fsDauMryop76LH3TlO54lI3g1KXrGB2kVJ833xi+y+xzti99gm0o26uKs6r+w+lnoE
+         i9wb2ZvndnmUcHwcV7cr7bJe4TgwJOi670AgwMArIwJBW5R6/Xq0Y/IcTRE0jgHMuxMn
+         O8Xg==
+X-Forwarded-Encrypted: i=1; AJvYcCUcVL6OY9TVFYCfYNxupNPI2xErPmX4tycvk0sXKwF3pHf60L8JD7/130diXGi3HaSkkVs3hPPBy/w=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwD8Ik0Lr/KN63pqU+JsJbMJu+FSRFS8Q9slNQ3N9lUDSjtQdjn
+	crLdReXZzcVPF5e2K/WbDlAPdY/Vhh3jQxDZ2V4RwqXjE2rS/eG9PS2Do2I9aME=
+X-Gm-Gg: ASbGncsIEGRY9IIdzaIBJTyY75hRMH7S6ybAt+ElcXk4baNnHiVMKcEIwyUuMGB8eJ6
+	IZLQamhZIJ2/RPcpYS1QMCH5iPDbWUa+5vvYzFF+304MsyPDHzaWnpTlMRCcMBhSar8tgdfCOgP
+	50xQLu/ghHRcoONzEm2ab6obgmK6SRvltGNQwwvN8zPjpt+LfWc2toAj0lTcXJYKZwP03Z4sdGb
+	CRdtF6Ped+Ifda9BWtTt07446WNotMigjD9Re0V0s7MBPgV28yul2GDkgFl1Q7mfZncUZ//QPFG
+	nneQGF0+v/ScYykLSgSpPbs+RuId5EEUJCxyLhorWK699lyYN1lyj6Tn8pMDeKheig2lqB8iOZy
+	ZA4DHHqI=
+X-Google-Smtp-Source: AGHT+IHMeo66q/hGrohL61FKn52NJ0cl6OjqSIj7QkxbgAFmrHfwOv4cZSsuZcNyl4l8ueFDICgAAQ==
+X-Received: by 2002:a05:6a00:3a12:b0:736:34ff:be7 with SMTP id d2e1a72fcca58-73bae52a063mr1061739b3a.15.1744159445981;
+        Tue, 08 Apr 2025 17:44:05 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-739d9ea0a7csm11673182b3a.91.2025.04.08.17.44.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Apr 2025 17:44:05 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1u2JXu-00000006H8B-0w0d;
+	Wed, 09 Apr 2025 10:44:02 +1000
+Date: Wed, 9 Apr 2025 10:44:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
+Subject: Re: [PATCH v3 5/6] common/config: Introduce _exit wrapper around
+ exit command
+Message-ID: <Z_XC0sMObxxHOWM5@dread.disaster.area>
+References: <cover.1744090313.git.nirjhar.roy.lists@gmail.com>
+ <352a430ecbcb4800d31dc5a33b2b4a9f97fc810a.1744090313.git.nirjhar.roy.lists@gmail.com>
+ <Z_UJ7XcpmtkPRhTr@dread.disaster.area>
+ <37155b56-34ba-4d5d-a023-242abbe525b5@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,277 +82,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z_WnbfRhKR6RQsSA@dread.disaster.area>
+In-Reply-To: <37155b56-34ba-4d5d-a023-242abbe525b5@gmail.com>
 
-On Wed, Apr 09, 2025 at 08:47:09AM +1000, Dave Chinner wrote:
-> On Tue, Apr 08, 2025 at 10:42:08AM +0000, John Garry wrote:
-> > Now that CoW-based atomic writes are supported, update the max size of an
-> > atomic write for the data device.
+On Tue, Apr 08, 2025 at 10:13:54PM +0530, Nirjhar Roy (IBM) wrote:
+> On 4/8/25 17:05, Dave Chinner wrote:
+> > On Tue, Apr 08, 2025 at 05:37:21AM +0000, Nirjhar Roy (IBM) wrote:
+> > > diff --git a/common/config b/common/config
+> > > index 79bec87f..eb6af35a 100644
+> > > --- a/common/config
+> > > +++ b/common/config
+> > > @@ -96,6 +96,14 @@ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
+> > >   export RECREATE_TEST_DEV=${RECREATE_TEST_DEV:=false}
+> > > +# This functions sets the exit code to status and then exits. Don't use
+> > > +# exit directly, as it might not set the value of "status" correctly.
+> > > +_exit()
+> > > +{
+> > > +	status="$1"
+> > > +	exit "$status"
+> > > +}
+> > The only issue with putting this helper in common/config is that
+> > calling _exit() requires sourcing common/config from the shell
+> > context that calls it.
 > > 
-> > The limit of a CoW-based atomic write will be the limit of the number of
-> > logitems which can fit into a single transaction.
+> > This means every test must source common/config and re-execute the
+> > environment setup, even though we already have all the environment
+> > set up because it was exported from check when it sourced
+> > common/config.
+> > 
+> > We have the same problem with _fatal() - it is defined in
+> > common/config instead of an independent common file. If we put such
+> > functions in their own common file, they can be sourced
+> > without dependencies on any other common file being included first.
+> > 
+> > e.g. we create common/exit and place all the functions that
+> > terminate tests in it - _fatal, _notrun, _exit, etc and source that
+> > file once per shell context before we source common/config,
+> > common/rc, etc. This means we can source and call those termination
+> > functions from any context without having to worry about
+> > dependencies...
 > 
-> I still think this is the wrong way to define the maximum
-> size of a COW-based atomic write because it is going to change from
-> filesystem to filesystem and that variability in supported maximum
-> length will be exposed to userspace...
-> 
-> i.e. Maximum supported atomic write size really should be defined as
-> a well documented fixed size (e.g. 16MB). Then the transaction
-> reservations sizes needed to perform that conversion can be
-> calculated directly from that maximum size and optimised directly
-> for the conversion operation that atomic writes need to perform.
+> Yes, I agree to the above. Do you want this refactoring to be done as a part
+> of this patch series in the further revisions, or can this be sent as a
+> separate series?
 
-I'll get to this below...
+Seperate series is fine. You're not making the dependency mess any
+worse than it already is with this change...
 
-> .....
-> 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index b2dd0c0bf509..42b2b7540507 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -615,6 +615,28 @@ xfs_init_mount_workqueues(
-> >  	return -ENOMEM;
-> >  }
-> >  
-> > +unsigned int
-> > +xfs_atomic_write_logitems(
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	unsigned int		efi = xfs_efi_item_overhead(1);
-> > +	unsigned int		rui = xfs_rui_item_overhead(1);
-> > +	unsigned int		cui = xfs_cui_item_overhead(1);
-> > +	unsigned int		bui = xfs_bui_item_overhead(1);
-> > +	unsigned int		logres = M_RES(mp)->tr_write.tr_logres;
-> > +
-> > +	/*
-> > +	 * Maximum overhead to complete an atomic write ioend in software:
-> > +	 * remove data fork extent + remove cow fork extent +
-> > +	 * map extent into data fork
-> > +	 */
-> > +	unsigned int		atomic_logitems =
-> > +		(bui + cui + rui + efi) + (cui + rui) + (bui + rui);
-> 
-> This seems wrong. Unmap from the data fork only logs a (bui + cui)
-> pair, we don't log a RUI or an EFI until the transaction that
-> processes the BUI or CUI actually frees an extent from the the BMBT
-> or removes a block from the refcount btree.
-
-This is tricky -- the first transaction in the chain creates a BUI and a
-CUI and that's all it needs.
-
-Then we roll to finish the BUI.  The second transaction needs space for
-the BUD, an RUI, and enough space to relog the CUI (== CUI + CUD).
-
-Then we roll again to finish the RUI.  This third transaction needs
-space for the RUD and space to relog the CUI.
-
-Roll again, fourth transaction needs space for the CUD and possibly a
-new EFI.
-
-Roll again, fifth transaction needs space for an EFD.
-
-	const unsigned int	efi = xfs_efi_log_space(1);
-	const unsigned int	efd = xfs_efd_log_space(1);
-	const unsigned int	rui = xfs_rui_log_space(1);
-	const unsigned int	rud = xfs_rud_log_space();
-	const unsigned int	cui = xfs_cui_log_space(1);
-	const unsigned int	cud = xfs_cud_log_space();
-	const unsigned int	bui = xfs_bui_log_space(1);
-	const unsigned int	bud = xfs_bud_log_space();
-
-	/*
-	 * Maximum overhead to complete an atomic write ioend in software:
-	 * remove data fork extent + remove cow fork extent + map extent into
-	 * data fork.
-	 *
-	 * tx0: Creates a BUI and a CUI and that's all it needs.
-	 *
-	 * tx1: Roll to finish the BUI.  Need space for the BUD, an RUI, and
-	 * enough space to relog the CUI (== CUI + CUD).
-	 *
-	 * tx2: Roll again to finish the RUI.  Need space for the RUD and space
-	 * to relog the CUI.
-	 *
-	 * tx3: Roll again, need space for the CUD and possibly a new EFI.
-	 *
-	 * tx4: Roll again, need space for an EFD.
-	 */
-	const unsigned int	tx0 = bui + cui;
-	const unsigned int	tx1 = bud + rui + cui + cud;
-	const unsigned int	tx2 = rud + cui + cud;
-	const unsigned int	tx3 = cud + efi;
-	const unsigned int	tx4 = efd;
-
-	const unsigned int	per_intent = max3(max3(tx0, tx1, tx2), tx3, tx4);
-
-> We also need to be able to relog all the intents and everything that
-> was modified, so we effectively have at least one
-> xfs_allocfree_block_count() reservation needed here as well. Even
-> finishing an invalidation BUI can result in BMBT block allocation
-> occurring if the operation splits an existing extent record and the
-> insert of the new record causes a BMBT block split....
-
-Agreed.
-
-> > +
-> > +	/* atomic write limits are always a power-of-2 */
-> > +	return rounddown_pow_of_two(logres / (2 * atomic_logitems));
-> 
-> What is the magic 2 in that division?
-
-That's handwaving the lack of a computation involving
-xfs_allocfree_block_count.  A better version would be to figure out the
-log space needed:
-
-	/* Overhead to finish one step of each intent item type */
-	const unsigned int	f1 = libxfs_calc_finish_efi_reservation(mp, 1);
-	const unsigned int	f2 = libxfs_calc_finish_rui_reservation(mp, 1);
-	const unsigned int	f3 = libxfs_calc_finish_cui_reservation(mp, 1);
-	const unsigned int	f4 = libxfs_calc_finish_bui_reservation(mp, 1);
-
-	/* We only finish one item per transaction in a chain */
-	const unsigned int	step_size = max(f4, max3(f1, f2, f3));
-
-and then you have what you need to figure out the logres needed to
-support a given awu_max, or vice versa:
-
-	if (desired_max) {
-		dbprintf(
- "desired_max: %u\nstep_size: %u\nper_intent: %u\nlogres: %u\n",
-				desired_max, step_size, per_intent,
-				(desired_max * per_intent) + step_size);
-	} else if (logres) {
-		dbprintf(
- "logres: %u\nstep_size: %u\nper_intent: %u\nmax_awu: %u\n",
-				logres, step_size, per_intent,
-				logres >= step_size ? (logres - step_size) / per_intent : 0);
-	}
-
-I hacked this into xfs_db so that I could compute a variety of
-scenarios.  Let's pretend I have a 10T filesystem with 4k fsblocks and
-the default configuration.
-
-# xfs_db /dev/mapper/moo -c logres -c "untorn_max -b $(( (16 * 1048576) / 4096 ))" -c "untorn_max -l 244216"
-type 0 logres 244216 logcount 5 flags 0x4
-type 1 logres 428928 logcount 5 flags 0x4
-<snip>
-minlogsize logres 648576 logcount 8
-
-To emulate a 16MB untorn write, you'd need a logres of:
-
-desired_max: 4096
-step_size: 107520
-per_intent: 208
-logres: 959488
-
-959488 > 648576, which would alter the minlogsize calculation.  I know
-we banned tiny filesystems a few years ago, but there's still a risk in
-increasing it.
-
-For the tr_write logres that John picked, the awu_max we can emulate is:
-
-logres: 244216
-step_size: 107520
-per_intent: 208
-max_awu: 657
-
-That's enough to emulate a 2MB untorn write.
-
-Now let's try again with a realtime filesystem, because the log
-reservations are absurdly huge there:
-
-# xfs_db /dev/mapper/moo -c logres -c "untorn_max -b $(( (16 * 1048576) / 4096 ))" -c "untorn_max -l 417400"
-type 0 logres 417400 logcount 5 flags 0x4
-type 1 logres 772736 logcount 5 flags 0x4
-<snip>
-minlogsize logres 772736 logcount 5
-
-For 16MB, you'd need a logres of:
-
-desired_max: 4096
-step_size: 107520
-per_intent: 208
-logres: 959488
-
-959488 > 772736, which would alter the minlogsize calculation.
-
-For the tr_write logres that John picked, the awu_max we can emulate is:
-
-logres: 417400
-step_size: 107520
-per_intent: 208
-max_awu: 1489
-
-This is more than enough to handle a 4MB atomic write without affecting
-any the other filesystem geometry.  Now I'll try a 400MB filesystem:
-
-# xfs_db /dev/mapper/moo -c logres -c "untorn_max -b $(( (16 * 1048576) / 4096 ))" -c "untorn_max -l 142840"
-type 0 logres 142840 logcount 5 flags 0x4
-type 1 logres 226176 logcount 5 flags 0x4
-<snip>
-minlogsize logres 445824 logcount 8
-
-desired_max: 4096
-step_size: 56832
-per_intent: 208
-logres: 908800
-
-Definitely still above minlogsize.
-
-logres: 142840
-step_size: 56832
-per_intent: 208
-max_awu: 413
-
-We can still simulate a 1MB untorn write even on a tiny filesystem.
-
-On a 1k fsblock 400MB filesystem:
-
-# xfs_db /dev/mapper/moo -c logres -c "untorn_max -b $(( (16 * 1048576) / 4096 ))" -c "untorn_max -l 63352"
-type 0 logres 63352 logcount 5 flags 0x4
-type 1 logres 103296 logcount 5 flags 0x4
-<snip>
-minlogsize logres 153984 logcount 8
-
-desired_max: 4096
-step_size: 26112
-per_intent: 208
-logres: 878080
-
-Again we see that we'd have to increase the min logsize to support a
-16mB untorn write.
-
-logres: 63352
-step_size: 26112
-per_intent: 208
-max_awu: 179
-
-But we can still emulate a 128K untorn write in software.
-
-This is why I don't agree with adding a static 16MB limit -- we clearly
-don't need it to emulate current hardware, which can commit up to 64k
-atomically.  Future hardware can increase that by 64x and we'll still be
-ok with using the existing tr_write transaction type.
-
-By contrast, adding a 16MB limit would result in a much larger minimum
-log size.  If we add that to struct xfs_trans_resv for all filesystems
-then we run the risk of some ancient filesystem with a 12M log failing
-suddenly failing to mount on a new kernel.
-
-I don't see the point.
-
---D
-
-> > +}
-> 
-> Also this function does not belong in xfs_super.c - that file is for
-> interfacing with the VFS layer.  Calculating log reservation
-> constants at mount time is done in xfs_trans_resv.c - I suspect most
-> of the code in this patch should probably be moved there and run
-> from xfs_trans_resv_calc()...
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
