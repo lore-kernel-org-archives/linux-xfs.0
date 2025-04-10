@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76B3470830
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Apr 2025 16:41:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B7021A5B9B
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Apr 2025 16:44:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744303263; cv=none; b=fIqptd0BfhLmBCjfQLLFGILMnBZaiG0SMxzUltneHS6F/B91VhcaKP+S35cfyoWgvMz1u+CK3sy6ONDFV4PwA20A51oN1LmRPfZtWx+AgTMGOnUif2yQxHYW30xjD1ytkZ0O0sTcBIUiOMdLf35dPdbWH6+KeWPgJsXH7PWm21o=
+	t=1744303442; cv=none; b=DiiDp2YEvIeNiCQMWRfVTgI8hhKjlqDkbgoRfm/26BLdtJWcOM2Dcz+CXao14LBehNsNHu4sRdpyA47Pyh8r0ePxGVc4NSi7kVtcuAjdgZVJkpymeH0yLYGOqxmKn5lCvkdvu6gd1kXYnhnScCXvCusQOqeXEsyzlPKTdEZO5EY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744303263; c=relaxed/simple;
-	bh=+m5PDMNoiub7V7y58uaGEAPWtXQaHbmZdXfQM5tx6oo=;
+	s=arc-20240116; t=1744303442; c=relaxed/simple;
+	bh=8D6WzLY7bachjhV/7kqf9HLe0SlTnIop4gCd8ymAHpM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gf5Fn6K81pTg+rnsbeGizUVLOia8k3P1VkYiKKaPehU8kQDZ/C6x8PrhM7kEJlAwVM23dHyEPSp+ZiBaMpF8Kt1mHxqd7wGnr0bZoDpwicYiTMULYrsW4UXyR+sTFEMjmqwD8TguRF1ezr5vBDtfUJcPKMRO8ziHRktsipQk3Uo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bk0lOQ74; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tnf+jpXNpeP+glYlryDuPgp1zCzzYzl6NnqmgpkoTqrOHhppsIM/RlzfDNwuvH8rQVy03f0yuDiUouFtuQKMD07y1g2KVLwvleMqT6jBIn1pOu1SgYLoOfohMHTQ+mD/cxQk6htH8c2EEBU8P6hTnNKIe27aVgI41AJ2z4A54oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V02ZplN7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bk0lOQ74"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D903CC4CEE9;
-	Thu, 10 Apr 2025 16:41:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V02ZplN7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6688CC4CEE8;
+	Thu, 10 Apr 2025 16:44:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744303262;
-	bh=+m5PDMNoiub7V7y58uaGEAPWtXQaHbmZdXfQM5tx6oo=;
+	s=k20201202; t=1744303440;
+	bh=8D6WzLY7bachjhV/7kqf9HLe0SlTnIop4gCd8ymAHpM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Bk0lOQ74ih8HGpuBv/nCYjaCUbI5INOrc2FmOJNn+Sz3Vbg9PG2B7SNIIKGcsZGv9
-	 QJ4sG2kug0o5BwnYplqT2ukoZQRCI2Kd9aLI19DGlKUcmIRlk8KV7+EXXT/03q09Ma
-	 3CVm9pvKSEVzHVJg0wUZE7Xv8qAcrWdeFfGziHGNvvwFAkeXznFy7uwHrQ9MXbUr++
-	 WmApODAzMUNKDApOqq+z9NZ6GM9KD6XCO1KHVDNiaYmEm9WlT89kpRVQN5Bn2zsYRf
-	 OcIVBIGgqdZergKy/wymVTtvdl9NrhDWTBFFLKe9cSPmiI1JgY3ReDdfTONXnqpLBa
-	 3mQjSqn2UBxMQ==
-Date: Thu, 10 Apr 2025 09:41:01 -0700
+	b=V02ZplN7PMnhzRlnTOjqhOesAZVJsXWdpnM3drT2gFu7Pc2trZj1LGMlNUG5Tmavq
+	 V08WVU3DGKcBryfnFHJbUskRNEHDGepsDl833yigcBXNu3omgXbAhGk62wgQfts3My
+	 A9rylWGcQ+RAxfFc9XbbywDEEtIwknmIE62mdEqc3xE1UJhQPHWAf+6U4zrFqdZdFd
+	 BO7qtgxO+X5rcFH3SJ6XMDG+8SU2TDa+Pqw3hIWtYCUO+DfIAlOK2olT5DEj+EJfBl
+	 BLWDRk41sbXzneY1PxsFzQjP32SB++zmsmkI77fZS5slrCTA7MO4UtnT/yafUADpTH
+	 IfZmVebS9sLow==
+Date: Thu, 10 Apr 2025 09:43:59 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 27/45] xfs_repair: support repairing zoned file systems
-Message-ID: <20250410164101.GZ6283@frogsfrogsfrogs>
+Subject: Re: [PATCH 29/45] xfs_repair: validate rt groups vs reported
+ hardware zones
+Message-ID: <20250410164359.GA6283@frogsfrogsfrogs>
 References: <20250409075557.3535745-1-hch@lst.de>
- <20250409075557.3535745-28-hch@lst.de>
- <20250409161012.GC6283@frogsfrogsfrogs>
- <20250410062749.GB31075@lst.de>
+ <20250409075557.3535745-30-hch@lst.de>
+ <20250409184112.GE6283@frogsfrogsfrogs>
+ <20250410063457.GD31075@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,42 +46,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250410062749.GB31075@lst.de>
+In-Reply-To: <20250410063457.GD31075@lst.de>
 
-On Thu, Apr 10, 2025 at 08:27:49AM +0200, Christoph Hellwig wrote:
-> On Wed, Apr 09, 2025 at 09:10:12AM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 09, 2025 at 09:55:30AM +0200, Christoph Hellwig wrote:
-> > > Note really much to do here.  Mostly ignore the validation and
-> > > regeneration of the bitmap and summary inodes.  Eventually this
-> > > could grow a bit of validation of the hardware zone state.
+On Thu, Apr 10, 2025 at 08:34:57AM +0200, Christoph Hellwig wrote:
+> On Wed, Apr 09, 2025 at 11:41:12AM -0700, Darrick J. Wong wrote:
+> > > +#define ZONES_PER_IOCTL			16384
+> > > +
+> > > +static void
+> > > +report_zones_cb(
+> > > +	struct xfs_mount	*mp,
+> > > +	struct blk_zone		*zone)
+> > > +{
+> > > +	xfs_fsblock_t		zsbno = xfs_daddr_to_rtb(mp, zone->start);
 > > 
-> > What do we actually do about the hardware zone state?  If the write
-> > pointer is lower than wherever the rtrmapbt thinks it is, then we're
-> > screwed, right?
+> >         ^^^^^^^^^^^^^ nit: xfs_rtblock_t ?
 > 
-> Yes.  See offlist discussion with Hans.
-
-To summarize -- in the ideal world we'd have another file mapping extent
-state for "damaged".  Then we could amend the media error handler (aka
-the stuff in xfs_notify_failure.c) to set all the mappings to damaged
-and set an inode flag saying that the file lost data.  Reads to the
-damaged areas would return EIO.  We'd also be able to report to
-userspace exactly what was lost.
-
-Unfortunately we don't really have that, so all we can do with the
-current ondisk format is ... remove the mappings?
-
-> > Does it matter if the hw write pointer is higher than where the rtrmapbt
-> > thinks it is?  In that case, a new write will be beyond the last write
-> > that the filesystem knows about, but the device will tell us the disk
-> > address so it's all good aside from the freertx counters being wrong.  I
-> > think?
+> Updated.
 > 
-> Yes.  That's actually a totally expected case for an unclean shutdown
-> with data I/O in flight.  freertx is recalculate at each mount, and
-> the space not recorded in the rmapbt is simply marked as reclaimable
-> through garbage collection.
+> > Nit: inconsistent styles in declaration indentation
+> 
+> Fixed.
+> 
+> > > +	device_size /= 512; /* BLKGETSIZE64 reports a byte value */
+> > 
+> > device_size = BTOBB(device_size); ?
+> 
+> Sure.
+> 
+> > > +
+> > > +			switch (zones[i].type) {
+> > > +			case BLK_ZONE_TYPE_CONVENTIONAL:
+> > > +			case BLK_ZONE_TYPE_SEQWRITE_REQ:
+> > > +				break;
+> > > +			case BLK_ZONE_TYPE_SEQWRITE_PREF:
+> > > +				do_error(
+> > > +_("Found sequential write preferred zone\n"));
+> > 
+> > I wonder, can "sequential preferred" zones be treated as if they are
+> > conventional zones?  Albeit really slow ones?
+> 
+> Yes, they could.  However in the kernel we've decided that dealing
+> them is too painful for the few prototypes build that way and reject
+> them in the block layer.  So we won't ever seem them here except with
+> a rather old kernel.
 
-<nod> Ok, that's what I thought was going on, thanks for the reminder.
+Ah, I hadn't realized those aren't even supported now, but yeah:
+
+	case BLK_ZONE_TYPE_SEQWRITE_PREF:
+	default:
+		pr_warn("%s: Invalid zone type 0x%x at sectors %llu\n",
+			disk->disk_name, (int)zone->type, zone->start);
+
+I guess that means drive-managed SMR disks don't export zone info at
+all?
 
 --D
