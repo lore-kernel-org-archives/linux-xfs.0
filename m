@@ -1,343 +1,136 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A6AC1A5BA4;
-	Wed,  9 Apr 2025 23:46:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1F81F0E34;
+	Thu, 10 Apr 2025 03:52:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744242377; cv=none; b=P+svKBYDkAEuA+NxZOSLtJrizvMtfXfbpCftaCXul/IDTsMvHc2HOV/GKlHo0i5cDJhK7nepyJqTlwH+92zUYFrh0nCthlSaLoBC08FYWscWfn4R48XO0B39WWHK0FbQyDsGX5oFa/uRAkepS8hFzqBljIx9NXgJwZViurFlQOY=
+	t=1744257147; cv=none; b=K8th+mNkO3W5wg3SM5YVRhZ9oIJk07VRYbHbxHsfTDYFyYD0Tf2bYFVu4u8ZCp/UoFKH8vibfva/2DRSauTwWYrOQGhgyfeyZOhdMX1N/2cfey5JSIsNB037Um8Gz1pMzCPaQLAARWrn0bLqO3YWra7x3zPzLvn2eTK/rQ3Uowk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744242377; c=relaxed/simple;
-	bh=D2j6lsQNFmlZkkBdK0jIAElxCCOytoXhhNlTCM+/o8E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JoTS/dRTjg6NOEGKODRcUYsnunaaXjwdnhLvy53Vt8RPCrbUftr3O2wpqKZKbz/TpEFmBRmpuqN0prfH27NveY0yMnifl2Y46B/ia/sXoMgCrCo3jBKOfwdyc8IPTvFMnMraxWsK4vWcNQ8DMFHPJGY9sK/KnqTxhp3/cRjYTa0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S88rhuDS; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S88rhuDS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE838C4CEE2;
-	Wed,  9 Apr 2025 23:46:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744242376;
-	bh=D2j6lsQNFmlZkkBdK0jIAElxCCOytoXhhNlTCM+/o8E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=S88rhuDSAHF/McWjpYFRPivJaW5VSiRP4cv9eQS1CD+sBV0wFMfTmKDxiWZSKmXi0
-	 a7mJPn/AQTaMC9kDP4mCkbAmFgdK8quoZBiBg1IcFs1qBtyzGSXl7cz7lRAiJIOBQ6
-	 mzI9sTz8NdeiryYD7GJ/KKL77UPNHuwVEapOu880cmi6AMjF7SAU2lbXZeg3KnE0O4
-	 8xZIyLC5/0G7AWhsDZamLFCf5OsyPIvWweWNHnnyhzKcTV4pU8jf3PmKJvJtUN/+HY
-	 YxOAoYKDUQGhuGxdVQN18mYtIxrB7HlCd5zfuhu+9Jw+GUK5bPcFQFsdFlds5Cr2n0
-	 inWszXvhCXv4A==
-Date: Wed, 9 Apr 2025 16:46:15 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org, hch@lst.de,
-	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
-	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com
-Subject: Re: [PATCH v6 11/12] xfs: add xfs_compute_atomic_write_unit_max()
-Message-ID: <20250409234615.GV6283@frogsfrogsfrogs>
-References: <20250408104209.1852036-1-john.g.garry@oracle.com>
- <20250408104209.1852036-12-john.g.garry@oracle.com>
- <Z_WnbfRhKR6RQsSA@dread.disaster.area>
- <20250409004156.GL6307@frogsfrogsfrogs>
- <Z_YF9HpdbkJDLeuR@dread.disaster.area>
+	s=arc-20240116; t=1744257147; c=relaxed/simple;
+	bh=8UR0rCYcem4Ns+qpODAMEUGXyGRLAyiltIyTO13LKmo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=at1qXZXy8xHzZG1iZEYddrbZOs95a1Hb6qpgdr0BMp6NfFByYxKsrUpbhlL5S0/oxd+VuiAGsMq5c0M2kwuKZ/9Omu8+1Yak6JDLqeUOx9pP4i0KCcjqB2dzdbCf71kQbjraQq0YgUFzN5qwAMG6erIdszTNDg5F7UVhhEbPDbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4ZY5V93kgHz4f3jtT;
+	Thu, 10 Apr 2025 11:52:01 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 8AE731A13CE;
+	Thu, 10 Apr 2025 11:52:19 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgD3Wl9xQPdn5yMjJA--.22084S3;
+	Thu, 10 Apr 2025 11:52:19 +0800 (CST)
+Message-ID: <43a34aa8-3f2f-4d86-be53-8a832be8532f@huaweicloud.com>
+Date: Thu, 10 Apr 2025 11:52:17 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z_YF9HpdbkJDLeuR@dread.disaster.area>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH -next v3 01/10] block: introduce
+ BLK_FEAT_WRITE_ZEROES_UNMAP to queue limits features
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
+ djwong@kernel.org, john.g.garry@oracle.com, bmarzins@redhat.com,
+ chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com,
+ chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+References: <20250318073545.3518707-1-yi.zhang@huaweicloud.com>
+ <20250318073545.3518707-2-yi.zhang@huaweicloud.com>
+ <20250409103148.GA4950@lst.de>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250409103148.GA4950@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgD3Wl9xQPdn5yMjJA--.22084S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGFWxXw43Jr1DWF47Zw4xZwb_yoW5WFW5p3
+	yfJF1jyrnaqw1fC3Z7Zw48Wr109ws7GF43Gw4aqryjvwnxXF1xKF1S93WYvFWkurs3G3W0
+	qFWjqF9rCw1qvF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Wed, Apr 09, 2025 at 03:30:28PM +1000, Dave Chinner wrote:
-> On Tue, Apr 08, 2025 at 05:41:56PM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 09, 2025 at 08:47:09AM +1000, Dave Chinner wrote:
-> > > On Tue, Apr 08, 2025 at 10:42:08AM +0000, John Garry wrote:
-> > > > Now that CoW-based atomic writes are supported, update the max size of an
-> > > > atomic write for the data device.
-> > > > 
-> > > > The limit of a CoW-based atomic write will be the limit of the number of
-> > > > logitems which can fit into a single transaction.
-> > > 
-> > > I still think this is the wrong way to define the maximum
-> > > size of a COW-based atomic write because it is going to change from
-> > > filesystem to filesystem and that variability in supported maximum
-> > > length will be exposed to userspace...
-> > > 
-> > > i.e. Maximum supported atomic write size really should be defined as
-> > > a well documented fixed size (e.g. 16MB). Then the transaction
-> > > reservations sizes needed to perform that conversion can be
-> > > calculated directly from that maximum size and optimised directly
-> > > for the conversion operation that atomic writes need to perform.
-> > 
-> > I'll get to this below...
+On 2025/4/9 18:31, Christoph Hellwig wrote:
+> On Tue, Mar 18, 2025 at 03:35:36PM +0800, Zhang Yi wrote:
+>> From: Zhang Yi <yi.zhang@huawei.com>
+>>
+>> Currently, disks primarily implement the write zeroes command (aka
+>> REQ_OP_WRITE_ZEROES) through two mechanisms: the first involves
+>> physically writing zeros to the disk media (e.g., HDDs), while the
+>> second performs an unmap operation on the logical blocks, effectively
+>> putting them into a deallocated state (e.g., SSDs). The first method is
+>> generally slow, while the second method is typically very fast.
+>>
+>> For example, on certain NVMe SSDs that support NVME_NS_DEAC, submitting
+>> REQ_OP_WRITE_ZEROES requests with the NVME_WZ_DEAC bit can accelerate
+>> the write zeros operation by placing disk blocks into
 > 
-> I'll paste it here so it's all in one context.
+> Note that this is a can, not a must.  The NVMe definition of Write
+> Zeroes is unfortunately pretty stupid.
 > 
-> > This is why I don't agree with adding a static 16MB limit -- we clearly
-> > don't need it to emulate current hardware, which can commit up to 64k
-> > atomically.  Future hardware can increase that by 64x and we'll still be
-> > ok with using the existing tr_write transaction type.
-> > 
-> > By contrast, adding a 16MB limit would result in a much larger minimum
-> > log size.  If we add that to struct xfs_trans_resv for all filesystems
-> > then we run the risk of some ancient filesystem with a 12M log failing
-> > suddenly failing to mount on a new kernel.
-> > 
-> > I don't see the point.
+>> +		[RO] Devices that explicitly support the unmap write zeroes
+>> +		operation in which a single write zeroes request with the unmap
+>> +		bit set to zero out the range of contiguous blocks on storage
+>> +		by freeing blocks, rather than writing physical zeroes to the
+>> +		media.
 > 
-> You've got stuck on ithe example size of 16MB I gave, not
-> the actual reason I gave that example.
+> This is not actually guaranteed for nvme or scsi.
 
-Well you kept saying 16MB, so that's why I ran the numbers on it.
+Thank you for your review and comments. However, I'm not sure I fully
+understand your points. Could you please provide more details?
 
-> That is: we should not be exposing some unpredictable, filesystem
-> geometry depending maximum atomic size to a userspace API.  We need
-> to define a maximum size that we support, that we can clearly
-> document and guarantee will work on all filesystem geometries.
-> 
-> What size that is needs to be discussed - all you've done is
-> demonstrate that 16MB would require a larger minimum log size for a
-> small set of historic/legacy filesystem configs.
+AFAIK, the NVMe protocol has the following description in the latest
+NVM Command Set Specification Figure 82 and Figure 114:
 
-No, I've done more than that.  I've shown that it's possible to
-determine the maximum permissible size of a software untorn writes
-completions given a log reservation, which means that we can:
+===
+Deallocate (DEAC): If this bit is set to ‘1’, then the host is
+requesting that the controller deallocate the specified logical blocks.
+If this bit is cleared to ‘0’, then the host is not requesting that
+the controller deallocate the specified logical blocks...
 
-1) Determine if we can backstop hardware untorn writes with software
-untorn writes.
+DLFEAT:
+Write Zeroes Deallocation Support (WZDS): If this bit is set to ‘1’,
+then the controller supports the Deallocate bit in the Write Zeroes
+command for this namespace...
+Deallocation Read Behavior (DRB): This field indicates the deallocated
+logical block read behavior. For a logical block that is deallocated,
+this field indicates the values read from that deallocated logical block
+and its metadata (excluding protection information)...
 
-2) Determine the largest untorn write we can complete in software for
-an existing filesystems with no other changes required.
+  Value  Definition
+  001b   A deallocated logical block returns all bytes cleared to 0h
+===
 
-in addition to 3) Determine if we can land an untorn write of a
-specific size.
+At the same time, the current kernel determines whether to set the
+unmap bit when submitting the write zeroes command based on the above
+protocol. So I think this rules should be clear now.
 
-We care about (1).  (2) is basically done (albeit with calculation
-errors) by this patchset.  (3) is not something we're interested in.
-If you believe that having a fixed upper size bound that isn't tied to
-existing log reservations is worth pursuing, then please send patches
-building off this series.
+Were you saying that what is described in this protocol is not a
+mandatory requirement? Which means the disks that claiming to support
+the UNMAP write zeroes command(WZDS=1,DRB=1), but in fact, they still
+write actual zeroes data to the storage media? Or were you referring
+to some irregular disks that do not obey the protocol and mislead
+users?
 
-I think it wouldn't be much work to have a larger fixed limit that
-doesn't depend on any of the existing static transaction reservations.
-Use the computation I provided to decide if that limit won't push the
-filesystem too close to the maximum transaction size, then dynamically
-compute the reservation at ioend time for the specific IO being
-completed.
+Thanks,
+Yi.
 
-But again, our users don't want that, they're fine with 64k.  They
-really don't want the software fallback at all.  If you have users who
-prefer a well known static limit, then please work with them.
-
-> I'm actually quite fine with adding new reservations that change
-> minimum required log sizes - this isn't a show-stopper in any way.
-
-I'm not convinced.  The minimum log size footgun still exists; it's just
-that the new(ish) 64M floor makes it much less likely to happen.  The
-image factories have been upgraded with newer xfsprogs so the number of
-complaints will (at long last) slowly go down, but 12M logs are still
-causing problems.
-
-> Atomic writes are optional functionality, so if the log size is too
-> small for the atomic write transaction requirements, then we don't
-> enable the atomic write functionality on that filesystem. Hence the
-> minimum required log size for the filesystem -does not change- and
-> the filesystem mounts as normal..
-> 
-> i.e. the user hasn't lost anything on these tiny log filesystems
-> when the kernel is upgraded to support software atomic writes.
-> All that happens is that the legacy filesystem will never support
-> atomic writes....
-> 
-> Such a mount time check allows us to design the atomic write
-> functionality around a fixed upper size bound that we can guarantee
-> will work correctly. i.e. the size of the transaction reservation
-> needed for it is irrelevant because we guarantee to only run that
-> transaction on filesytsems with logs large enough to support it.
-
-Yes, that's what I've been trying to say all along.
-
-> Having a consistent maximum atomic write size makes it easier for
-> userspace to create logic and algorithms around, and it makes it
-> much easier for us to do boundary condition testing as we don't have
-> to reverse engineer the expected boundaries from filesysetm geometry
-> in test code. Fixed sizes make API verification and testing a whole
-> lot simpler.
-
-John added a statx field so that the kernel can advertise the hardware
-and software untorn write capabilities.  Are you saying that's not good
-enough even for (1) and (2) from above?
-
-If it turns out that users want a higher limit, they can come talk to us
-about adding a mkfs option or whatever to declare that they want more,
-and then we can enforce that.
-
-> And, finally, if everything is sized from an single API constant, it
-> makes it easy to modify the supported size in future. The 64MB
-> minimum log size gives us lots of headroom to increase supported
-> atomic write sizes, so if userspace finds that it really needs
-> larger sizes than what we initially support, it's trivial to change
-> both the kernel and the test code to support a larger size...
-> 
-> > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > index b2dd0c0bf509..42b2b7540507 100644
-> > > > --- a/fs/xfs/xfs_super.c
-> > > > +++ b/fs/xfs/xfs_super.c
-> > > > @@ -615,6 +615,28 @@ xfs_init_mount_workqueues(
-> > > >  	return -ENOMEM;
-> > > >  }
-> > > >  
-> > > > +unsigned int
-> > > > +xfs_atomic_write_logitems(
-> > > > +	struct xfs_mount	*mp)
-> > > > +{
-> > > > +	unsigned int		efi = xfs_efi_item_overhead(1);
-> > > > +	unsigned int		rui = xfs_rui_item_overhead(1);
-> > > > +	unsigned int		cui = xfs_cui_item_overhead(1);
-> > > > +	unsigned int		bui = xfs_bui_item_overhead(1);
-> > > > +	unsigned int		logres = M_RES(mp)->tr_write.tr_logres;
-> > > > +
-> > > > +	/*
-> > > > +	 * Maximum overhead to complete an atomic write ioend in software:
-> > > > +	 * remove data fork extent + remove cow fork extent +
-> > > > +	 * map extent into data fork
-> > > > +	 */
-> > > > +	unsigned int		atomic_logitems =
-> > > > +		(bui + cui + rui + efi) + (cui + rui) + (bui + rui);
-> > > 
-> > > This seems wrong. Unmap from the data fork only logs a (bui + cui)
-> > > pair, we don't log a RUI or an EFI until the transaction that
-> > > processes the BUI or CUI actually frees an extent from the the BMBT
-> > > or removes a block from the refcount btree.
-> > 
-> > This is tricky -- the first transaction in the chain creates a BUI and a
-> > CUI and that's all it needs.
-> > 
-> > Then we roll to finish the BUI.  The second transaction needs space for
-> > the BUD, an RUI, and enough space to relog the CUI (== CUI + CUD).
-> > 
-> > Then we roll again to finish the RUI.  This third transaction needs
-> > space for the RUD and space to relog the CUI.
-> > 
-> > Roll again, fourth transaction needs space for the CUD and possibly a
-> > new EFI.
-> > 
-> > Roll again, fifth transaction needs space for an EFD.
-> 
-> Yes, that is exactly the point I was making.
-
-It's also slightly wrong -- if an extent referenced by the chain isn't
-actively being worked on, its BUI/CUI can get relogged.  So the actual
-computation is:
-
-	relog = bui + bud + cui + cud;
-	per_intent = max(tx0..tx4, relog);
-
-That doesn't seem to change the output though.
-
-> > > > +
-> > > > +	/* atomic write limits are always a power-of-2 */
-> > > > +	return rounddown_pow_of_two(logres / (2 * atomic_logitems));
-> > > 
-> > > What is the magic 2 in that division?
-> > 
-> > That's handwaving the lack of a computation involving
-> > xfs_allocfree_block_count.  A better version would be to figure out the
-> > log space needed:
-> > 
-> > 	/* Overhead to finish one step of each intent item type */
-> > 	const unsigned int	f1 = libxfs_calc_finish_efi_reservation(mp, 1);
-> > 	const unsigned int	f2 = libxfs_calc_finish_rui_reservation(mp, 1);
-> 
-> Yup, those should be a single call to xfs_calc_buf_res(xfs_allocfree_block_count())
-> 
-> > 	const unsigned int	f3 = libxfs_calc_finish_cui_reservation(mp, 1);
-> 
-> Similarly, xfs_calc_refcountbt_reservation().
-> 
-> > 	const unsigned int	f4 = libxfs_calc_finish_bui_reservation(mp, 1);
-> 
-> xfs_calc_write_reservation() but for a single extent instead of 2.
-> Also, I think the bui finish needs to take into account dquots, too.
-> 
-> > 	/* We only finish one item per transaction in a chain */
-> > 	const unsigned int	step_size = max(f4, max3(f1, f2, f3));
-> 
-> And that is xfs_calc_itruncate_reservation(), except it reserves
-> space for 1 extent to be processed instead of 4.
-> 
-> FWIW, I'd suggest that these helpers make for a better way of
-> calculating high level reservations such as
-> xfs_calc_write_reservation() and xfs_calc_itruncate_reservation()
-> because those functions currently don't take into account how
-> intents are relogged during those operations.
-> 
-> > and then you have what you need to figure out the logres needed to
-> > support a given awu_max, or vice versa:
-> > 
-> > 	if (desired_max) {
-> > 		dbprintf(
-> >  "desired_max: %u\nstep_size: %u\nper_intent: %u\nlogres: %u\n",
-> > 				desired_max, step_size, per_intent,
-> > 				(desired_max * per_intent) + step_size);
-> > 	} else if (logres) {
-> > 		dbprintf(
-> >  "logres: %u\nstep_size: %u\nper_intent: %u\nmax_awu: %u\n",
-> > 				logres, step_size, per_intent,
-> > 				logres >= step_size ? (logres - step_size) / per_intent : 0);
-> > 	}
-> > 
-> > I hacked this into xfs_db so that I could compute a variety of
-> > scenarios.  Let's pretend I have a 10T filesystem with 4k fsblocks and
-> > the default configuration.
-> > 
-> > # xfs_db /dev/mapper/moo -c logres -c "untorn_max -b $(( (16 * 1048576) / 4096 ))" -c "untorn_max -l 244216"
-> > type 0 logres 244216 logcount 5 flags 0x4
-> > type 1 logres 428928 logcount 5 flags 0x4
-> > <snip>
-> > minlogsize logres 648576 logcount 8
-> > 
-> > To emulate a 16MB untorn write, you'd need a logres of:
-> > 
-> > desired_max: 4096
-> > step_size: 107520
-> > per_intent: 208
-> > logres: 959488
-> >
-> > 959488 > 648576, which would alter the minlogsize calculation.  I know
-> > we banned tiny filesystems a few years ago, but there's still a risk in
-> > increasing it.
-> 
-> Yeah, it's a bit under a megabyte of reservation space. That's no
-> big deal, as log reservations get much larger than this as block
-> size and log stripe units are increased.
-> 
-> <snip the rest, they all show roughly the same thing>
-> 
-> Ok, these numbers pretty much prove my point - that a fixed max
-> atomic write size somewhere around 16MB isn't going to be a problem
-> for any filesystem that uses the historic small fs default log size
-> (10MB) or larger.
-> 
-> Let's avoid the internal XFS minlogsize problems by disabling the
-> atomic write functionality on the increasingly rare legacy
-> filesystems where the log is too small. That allows us to design and
-> implement sane userspace API bounds and guarantees for atomic writes
-> and not expose internal filesystem constraints and inconsistencies
-> to applications...
-
-Ok then.
-
---D
-
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
