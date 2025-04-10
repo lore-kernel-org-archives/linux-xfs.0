@@ -1,113 +1,189 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F135D25E45B;
-	Thu, 10 Apr 2025 09:35:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEE29281359
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Apr 2025 10:35:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744277755; cv=none; b=Zgdo0+HFBCcsHJbT8W5w+AhAQXLG0pODl6dXhc8s2Cl57PimUlaxoTRU2cms3W/n+IkNoFf8/hWjswkpyyuSoKIydVrFfXG9kp8axUfxSSCWXs06LGQGyFbpahHaBOCtiEGvMOUZ4y/fdVgRM9oFFV9E/QJ8jSBE8TiWy6EHxs4=
+	t=1744281351; cv=none; b=fKAB5+G0Z7MHHdy8I8wUkNDgUo/xjPJ78plUCnR4ZLYNiKy9xWfJ6SAG9hjeTTQKmYBYv4vE03cEl1F94HScGGeU3XmvFUapDb66/0aXnIqIgHMiQVwkb6+8AQZUw0jeomroFisyp23/MfYCAgM7lTBDr5Q2y2+2CwAl05sYGWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744277755; c=relaxed/simple;
-	bh=ivEwnUgWmXZxQZ46vxW33DSnaFX1TgTeaPOIVDxd0Cg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nMqOaSNyg7FEuZykT4mrtCODVI/ad0CdMaMrqbCsph6MIUHgZQwvNP3dqgn+ODq8I4uw5QUY+GbVtS5Qrp2J8ejrrQjvS7oOY8VyFMU09yfWKubQ4l28+RXKz1xv+tVHn2F1LDAl9disywwq8M7DeSv8Aymj1fXhfiwWS0yB5i4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZYF6L69nHz4f3jXp;
-	Thu, 10 Apr 2025 17:35:22 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 51F761A1687;
-	Thu, 10 Apr 2025 17:35:46 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgBXvGDvkPdnWY46JA--.28764S3;
-	Thu, 10 Apr 2025 17:35:46 +0800 (CST)
-Message-ID: <db5bf241-0fb6-4009-963b-32b89d3c1648@huaweicloud.com>
-Date: Thu, 10 Apr 2025 17:35:43 +0800
+	s=arc-20240116; t=1744281351; c=relaxed/simple;
+	bh=V6cW/m8XzoIHskbnHAETvNa/9Acy4r8cBggy9Q4N9nU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OigOVh45oGWxgjufYbW1cw1/3F0DXMsf8LXeM7Nb+6cqYuw1f47IVYO2Aeu9ZYrecOkmAXuYPXa/kDDcH1lpKLTrZyPX1FFGPJz35ASj4eEPLVs3//acis5VnNxGk0i5emFQwwxYJ/GbNWlnJ1eXZIwp0rScEsKTmIJG359HeOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ADdYYWTf; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=80ZvvYhz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ADdYYWTf; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=80ZvvYhz; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ADdYYWTf";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="80ZvvYhz";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ADdYYWTf";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="80ZvvYhz"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id B1E5C21168;
+	Thu, 10 Apr 2025 10:35:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1744281347; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OIDP4d34DUcpKIsnqGdTzzo0Xvi37BHxdLJbQ2zC+P4=;
+	b=ADdYYWTfVIVTgwD+j75mRlJtHHUBGmZyrrVKc9goigHihcOiKnF0Hi0REnbqx91FGi+tYL
+	Jcz0hasqgrdRm+0iKn1VzWltk4pG1+ELipLnC2M/2vp556b1NqQXfMDXEI+9ucdZbHDca0
+	FlPsjnWA4y9qApWVH0FV5qK4EtlgNj0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1744281347;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OIDP4d34DUcpKIsnqGdTzzo0Xvi37BHxdLJbQ2zC+P4=;
+	b=80ZvvYhzW8HUuYOLq3BdNSvOUhLOJcvjF/jS6ovhXflypLEw7MqtmRvNB06kR/ylFPXkRf
+	3Jsq0ADQ5l+z4+Dg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1744281347; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OIDP4d34DUcpKIsnqGdTzzo0Xvi37BHxdLJbQ2zC+P4=;
+	b=ADdYYWTfVIVTgwD+j75mRlJtHHUBGmZyrrVKc9goigHihcOiKnF0Hi0REnbqx91FGi+tYL
+	Jcz0hasqgrdRm+0iKn1VzWltk4pG1+ELipLnC2M/2vp556b1NqQXfMDXEI+9ucdZbHDca0
+	FlPsjnWA4y9qApWVH0FV5qK4EtlgNj0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1744281347;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OIDP4d34DUcpKIsnqGdTzzo0Xvi37BHxdLJbQ2zC+P4=;
+	b=80ZvvYhzW8HUuYOLq3BdNSvOUhLOJcvjF/jS6ovhXflypLEw7MqtmRvNB06kR/ylFPXkRf
+	3Jsq0ADQ5l+z4+Dg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A175613886;
+	Thu, 10 Apr 2025 10:35:47 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id E0llJwOf92eGMQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 10 Apr 2025 10:35:47 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 5E471A0910; Thu, 10 Apr 2025 12:35:47 +0200 (CEST)
+Date: Thu, 10 Apr 2025 12:35:47 +0200
+From: Jan Kara <jack@suse.cz>
+To: Alistair Popple <apopple@nvidia.com>
+Cc: kernel test robot <oliver.sang@intel.com>, Jan Kara <jack@suse.cz>, 
+	oe-lkp@lists.linux.dev, lkp@intel.com, linux-kernel@vger.kernel.org, 
+	Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, 
+	Alison Schofield <alison.schofield@intel.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
+	Asahi Lina <lina@asahilina.net>, Balbir Singh <balbirs@nvidia.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Christian Borntraeger <borntraeger@linux.ibm.com>, Christoph Hellwig <hch@lst.de>, 
+	Chunyan Zhang <zhang.lyra@gmail.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, 
+	Dave Jiang <dave.jiang@intel.com>, David Hildenbrand <david@redhat.com>, 
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
+	Huacai Chen <chenhuacai@kernel.org>, Ira Weiny <ira.weiny@intel.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	John Hubbard <jhubbard@nvidia.com>, linmiaohe <linmiaohe@huawei.com>, 
+	Logan Gunthorpe <logang@deltatee.com>, Matthew Wilcow <willy@infradead.org>, 
+	Michael Camp Drill Sergeant Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+	Peter Xu <peterx@redhat.com>, Sven Schnelle <svens@linux.ibm.com>, Ted Ts'o <tytso@mit.edu>, 
+	Vasily Gorbik <gor@linux.ibm.com>, Vishal Verma <vishal.l.verma@intel.com>, 
+	Vivek Goyal <vgoyal@redhat.com>, WANG Xuerui <kernel@xen0n.name>, Will Deacon <will@kernel.org>, 
+	linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev, linux-xfs@vger.kernel.org
+Subject: Re: [linus:master] [fs/dax]  bde708f1a6:
+ WARNING:at_mm/truncate.c:#truncate_folio_batch_exceptionals
+Message-ID: <uiu7rcmtooxgbscaiiim7czqsca52bgrt6aiszsafq7jj4n3e7@ge6mfzcmnorl>
+References: <202504101036.390f29a5-lkp@intel.com>
+ <v66t3szdfsfwyl4lw6ns2ykmxrfqecba2nb5wa64l5qqq2kfpb@x7zxzuijty7d>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH -next v3 01/10] block: introduce
- BLK_FEAT_WRITE_ZEROES_UNMAP to queue limits features
-To: Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
- djwong@kernel.org, john.g.garry@oracle.com, bmarzins@redhat.com,
- chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com,
- chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
-References: <20250318073545.3518707-1-yi.zhang@huaweicloud.com>
- <20250318073545.3518707-2-yi.zhang@huaweicloud.com>
- <20250409103148.GA4950@lst.de>
- <43a34aa8-3f2f-4d86-be53-8a832be8532f@huaweicloud.com>
- <20250410071559.GA32420@lst.de> <Z_d_VDvgBkgt4UhS@kbusch-mbp>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <Z_d_VDvgBkgt4UhS@kbusch-mbp>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXvGDvkPdnWY46JA--.28764S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFW5tw1kKw1ktFWkKFy3urg_yoW8Ar43pF
-	W3KFs7tFn7t3Waywn2vw18Wa4F93s3KFs8Wws0vry2yrnIgF1IgF1a93W09FyDur1Iqr1j
-	vayjqa4fJF1jva7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
-	s2-5UUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <v66t3szdfsfwyl4lw6ns2ykmxrfqecba2nb5wa64l5qqq2kfpb@x7zxzuijty7d>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCPT_COUNT_TWELVE(0.00)[45];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	FREEMAIL_CC(0.00)[intel.com,suse.cz,lists.linux.dev,vger.kernel.org,linux-foundation.org,linux.ibm.com,asahilina.net,nvidia.com,google.com,arm.com,lst.de,gmail.com,kernel.org,fromorbit.com,linux.intel.com,redhat.com,ziepe.ca,huawei.com,deltatee.com,infradead.org,ellerman.id.au,mit.edu,xen0n.name];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RLx3ed8f7q4e9s3nf3mrauhj48)];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email]
+X-Spam-Score: -2.30
+X-Spam-Flag: NO
 
-On 2025/4/10 16:20, Keith Busch wrote:
-> On Thu, Apr 10, 2025 at 09:15:59AM +0200, Christoph Hellwig wrote:
->> On Thu, Apr 10, 2025 at 11:52:17AM +0800, Zhang Yi wrote:
->>>
->>> Thank you for your review and comments. However, I'm not sure I fully
->>> understand your points. Could you please provide more details?
->>>
->>> AFAIK, the NVMe protocol has the following description in the latest
->>> NVM Command Set Specification Figure 82 and Figure 114:
->>>
->>> ===
->>> Deallocate (DEAC): If this bit is set to `1´, then the host is
->>> requesting that the controller deallocate the specified logical blocks.
->>> If this bit is cleared to `0´, then the host is not requesting that
->>> the controller deallocate the specified logical blocks...
->>>
->>> DLFEAT:
->>> Write Zeroes Deallocation Support (WZDS): If this bit is set to `1´,
->>> then the controller supports the Deallocate bit in the Write Zeroes
->>> command for this namespace...
->>
->> Yes.  The host is requesting, not the controller shall.  It's not
->> guaranteed behavior and the controller might as well actually write
->> zeroes to the media.  That is rather stupid, but still.
+On Thu 10-04-25 17:01:26, Alistair Popple wrote:
+> On Thu, Apr 10, 2025 at 01:14:42PM +0800, kernel test robot wrote:
+> > 
+> > 
+> > Hello,
+> > 
+> > kernel test robot noticed "WARNING:at_mm/truncate.c:#truncate_folio_batch_exceptionals" on:
+> > 
+> > commit: bde708f1a65d025c45575bfe1e7bf7bdf7e71e87 ("fs/dax: always remove DAX page-cache entries when breaking layouts")
 > 
-> I guess some controllers _really_ want specific alignments to
-> successfully do a proper discard. While still not guaranteed in spec, I
-> think it is safe to assume a proper deallocation will occur if you align
-> to NPDA and NPDG. Otherwise, the controller may do a read-modify-write
-> to ensure zeroes are returned for the requested LBA range on anything
-> that straddles an implementation specific boundary.
+> This is warning about hitting the bug that commit 0e2f80afcfa6 ("fs/dax: ensure
+> all pages are idle prior to filesystem unmount") fixes. I couldn't reorder that
+> patch before this one because it relies on the DAX page-cache entries always
+> being removed when breaking layouts.
 > 
+> However I note that this is ext2. Commit 0e2f80afcfa6 doesn't actually update
+> ext2 so the warning will persist. The fix should basically be the same as for
+> ext4:
+> 
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -74,6 +74,8 @@ void ext2_evict_inode(struct inode * inode)
+>         struct ext2_block_alloc_info *rsv;
+>         int want_delete = 0;
+>  
+> +        dax_break_layout_final(inode);
+> +
+>         if (!inode->i_nlink && !is_bad_inode(inode)) {
+>                 want_delete = 1;
+>                 dquot_initialize(inode);
+> 
+> What's more troubling though is unlike ext4 there is no ext2_dax_break_layouts()
+> defined, which is how I missed updating it. That means truncate with FS DAX
+> is already pretty broken for ext2, and will need more than just the above fix
+> to ensure DAX pages are idle before truncate. So I think FS DAX on ext2 should
+> probably just be removed or marked broken unless someone with more knowledge of
+> ext2 wants to fix it up?
 
-I understand. A proper deallocation has certain constraints, but I
-guess it should be useful for most scenarios. Thank you for
-the explanation.
+Yeah, with a hindsight, implementing fsdax for ext2 was a mistake (although
+it was meant as a replacement for the old execute-in-place feature that
+ext2 had for s390 and which we wanted to remove). At this point when pmem
+didn't lift off and DAX ended up being kind of niche, I think the effort
+to maintain DAX in ext2 is not justified and we should just drop it (and
+direct existing users to use ext4 driver instead for the cases where they
+need it). I'll have a look into it.
 
-Thanks,
-Yi.
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
