@@ -1,79 +1,116 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56041C8609;
-	Thu, 10 Apr 2025 04:23:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 377401C5D4B;
+	Thu, 10 Apr 2025 05:15:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.9
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744259006; cv=fail; b=BFb0zteGheCgh8S7yDv1y2Vji3OhrbMRit5EVvG3AEjyFmxMS++QO+aY4EZxwGDYGXjnFBG82oX1T0sy/BogQ2WkfACoMGbvujHckXf6pdlM/7yhBYcKQmZu6tMYYPBdN0K1tvGKWHtAhxEmPY1CNpK+G8BPXr5o1btGN0oFDJg=
+	t=1744262114; cv=fail; b=oPGlLfk1gzBSj/cbrc8vjRAY8F7YAYCG0ObwwxmZ9WQTh9SoDWTgUdiQnyIPqqOFdt3FAICQ4DL4JW6xNOV23GpdrLckDmNnwWf/ub/8ipfL6bqaKUMkv8m5xdoUbI4nUDPW/Lmvg6eqiHgi/e0mYevH0VM8K9XZd0EbNLWDs+g=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744259006; c=relaxed/simple;
-	bh=SwWBWDR41m2nOaA/lepFcb2JK1Ga8SBpmlm4mhqu+Wc=;
-	h=From:To:Subject:Date:Message-Id:Content-Type:MIME-Version; b=b7iG1g8Tr2TzUzgY4BixMpi/TY7sVN7YJjjz3MSo9MYlssKkJM15egTSpZv1a/fFj/rczYGUzJcySWmRkGnWlfZbIUf0YJO3dtbWaA9nSvZKfQvJAoQxix8lkc4uhrxiJAmm6IBUTP2Q6CAAK0D9ltvpJRwOeV/UD9lMIGBqGCU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jVfauoQx; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=azozjDCD; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1744262114; c=relaxed/simple;
+	bh=FSYh4Kb9esbgOAwSSd94VZQizcxeg35jiihEv199H0w=;
+	h=Date:From:To:CC:Subject:Message-ID:Content-Type:
+	 Content-Disposition:MIME-Version; b=fsJKX68jO9d7+V8HYxaxwe+npLvec7+RR7PcIyv3hojKat954qx2VVbI7BYpZyBPaKHdLVt/+Cvwom5/pBdqRowWEZKPoVS5Yv27n80jvg0ofCYp86wV5n4HyYJiDLel0vZzBnkZvJWDwXwLkvfNkLKf4BNSPjX8J7Bp9pbWMTc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ii39sJqT; arc=fail smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jVfauoQx";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="azozjDCD"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53A3q00O025562;
-	Thu, 10 Apr 2025 04:23:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2023-11-20; bh=9KSGbimuuSns83Jd
-	XSmCWU1oiQnrnri8iqbPx+Bb1UE=; b=jVfauoQxyCHQMLn/0CEMJi8bPHohMCiE
-	7k4mlgmidkc3YsNUOWYEknso5yDfCEjB1Muk9gi4srGJqhOfPfvahkTJEGB9mDKM
-	PGkhaPetze+fE8IZubEM1qep9FGUHItWuwxjfbjAyzw1rW+oCcVPe3iViP4fTtDc
-	ny1cuRrQjHTpt0d5R6ZZ0iT/FbIEEGWBFsfu28g4nWNlqkp01NSbI4OeDpfCaoVO
-	yhsgp23m90eDE3wH33HxVRUA5xizKwYYq/F1YNDoYgvVto96AJuzXhEGZxaaM2Up
-	q8DBemeRWGqDxCLdQJJOrc7OcG35mipsfJ0AkN+jqxrQjyEeDI8SAg==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 45x6f200tx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 10 Apr 2025 04:23:23 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 53A3bsJi021030;
-	Thu, 10 Apr 2025 04:23:22 GMT
-Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazlp17012037.outbound.protection.outlook.com [40.93.1.37])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 45ttyj142k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 10 Apr 2025 04:23:22 +0000
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ii39sJqT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1744262112; x=1775798112;
+  h=date:from:to:cc:subject:message-id:
+   content-transfer-encoding:mime-version;
+  bh=FSYh4Kb9esbgOAwSSd94VZQizcxeg35jiihEv199H0w=;
+  b=Ii39sJqTsdMUpwpCcjD6JfGBrux1BlkSLd3zTA7eTExVeE5tSDMft0Bh
+   y9yykAKDaQIhXlRcZpsziCJ4NbnB/OUi9o2UYLhw/mlOXgcjdEyRRy9mN
+   jS58ZQ0jjssv+2b4Q59xjlE+0oJ3yAO1BZHLl6JNN2v+2c3K9NAaG4KGl
+   jTvO6n6Mychpjc95FLTJilshErt12FViZusNMoR42uG6DS36LhxqLW8/U
+   pbKIbIpzN/D+O9TFuhrURvVavOtq8XBxrJgHeBHc9JW6iU77ei2rl3pOD
+   ukLGE6TfXvi8aKuk45PFbQpSBzg3CPqpOS1/WniPJCjy049mRYcQyIjIl
+   Q==;
+X-CSE-ConnectionGUID: 9BOPgiMOTsiwzAt9BvFzbA==
+X-CSE-MsgGUID: XN6sT2FHRk6nCHK/WXgH1g==
+X-IronPort-AV: E=McAfee;i="6700,10204,11399"; a="56401424"
+X-IronPort-AV: E=Sophos;i="6.15,202,1739865600"; 
+   d="scan'208";a="56401424"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2025 22:15:11 -0700
+X-CSE-ConnectionGUID: ++9NzUysREKzcK507WuoAQ==
+X-CSE-MsgGUID: kZ15x0sBROynq+PNr1rV5w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,202,1739865600"; 
+   d="scan'208";a="129624644"
+Received: from orsmsx903.amr.corp.intel.com ([10.22.229.25])
+  by fmviesa009.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2025 22:15:10 -0700
+Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.14; Wed, 9 Apr 2025 22:15:09 -0700
+Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.14 via Frontend Transport; Wed, 9 Apr 2025 22:15:09 -0700
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (104.47.55.170)
+ by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.44; Wed, 9 Apr 2025 22:15:09 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=FpkZGQ2DJFMrcY4VjflamrB5LlCd5AAhBZdjwduxIIFrDT+npHCBRYkx0WwY80dneguPMP/LPYKJc/a/1JIN+Av2bPoRzVDbhl1ujdmruIFOyAqKJHHaymUqZzCBonw6wpa1vKTJbBH5DnvtoqsjIi1FeuQ2reNcmWXJH9WF0aJtri7udpfWkuhJowPI96btD2M1gIUUWzL5Tq3vI8OZt0iC3g3V9VWdFu4L0pVAjNNEf06NKnrg1VEhXmmkKkpbrHE7KYw4lay4vGGCbuzG/EAcKeh1dz5zgNFrOM2rbf1nAOSJbxaA/869sajN+l3tctmlvY1yq6mocyVkzKUpIQ==
+ b=Gb1c/ktBsNOdWXKvTtuF5k8I7VbSh5NwcnfxCpj3TIQyzMvycIQymWAxN4pF67efHriIgglEaLuu2pajHW88OwfTL1TuAn6XBmektWGnicaPpjbTnUt0q7eHyN1BM2BMrMfHQFG6DF7bpBsFMxkGsSCz9RblvFE1XmdbmBJ7Gg+7NPDsH7v3gMDy8ZrVQNGAjX/ZxQ5+QjYmlYql+x6HmZrZyjEpbHgc3C5bwLKAqJtGgt2okkjcHmCX9crBP+SD781RZW/EE3K4LbJ1lL3qliJLHweyGfAhaMXmGJkC8m7WmAH3SsoqbmdfWjZr0RuSE6xdEUPizIAh5LOHG3Ak6g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9KSGbimuuSns83JdXSmCWU1oiQnrnri8iqbPx+Bb1UE=;
- b=rByXLHPrQMpF9y2YtEGOGA1lWh4s9c4/owpCJUSnNLAr8bLgC7wt7gr69b1Z4PsmwKC2GR6ZN+8iaGUI6VS4ghtmeP8hGcjQCEP4B8ts2lacdizGjdQxgG9TnBVKxnAZUJ81pHMplZ0VdEUcq7BXNGkbqffZVN5EVzFE/MxmgqForqeNIgPF1LHcqWGe89odTVz/ZIWlflHcrhD0MwOCUHeU2aeqVoeyjetnJGF4JeYBDVpju1kOaW7n3s6FJ6zLE35fNSXBwQonLLbuCnVx7fICSwV5r663yFlQhkpxKWd3QD/XFQBg2OubIiIzHp/qtxpNwU3EG52d1yaXLbzH/g==
+ bh=Msgqn5MS68pHKZ0ZkDt2ghDH9VgeFBZKJzPWrNWzpr8=;
+ b=VPTQpDohCrbgcmGIru+y90qEPtWylMv/22CuPxNI8b/LsWz2pX2eGE4lRH7cSoC6+R1eEbD94zx8ZZGpPbilGVVuGVvIadJWTiBpO2/v2kqNgi1SJdqs6eesZt0B+IYLkw+QXYFhsRChKu6SchjaY+v2OFEs5Z/4r02XpLRh80w/zorH7tKDTufVnpGODVYSkD8+TXvJ/TxvXtvlO5Jm6dJtkB/0ByMUbOdrTtIeHSgXPfsYQlhJ/8pRvsIHhkDycWyPTaPAEGl6KT4OM/IfWnBTAMq0zeup5INAI3CYaQXnIJqY077qv2tLjGYZJbEakxetyBzYBUwtwohWSHoxPw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9KSGbimuuSns83JdXSmCWU1oiQnrnri8iqbPx+Bb1UE=;
- b=azozjDCDijstBYFc8eui2pweqX3HONRHpq00uYFJPa9TGX+BmDvPn1PHZxHNoag5lqSNY+K/nqdrtjKIj/ydldO6iiUzTjZPXAYH8LjbRWCfg4ear0XxT1MwtTgj1wY2Mlv7zo+/EDe0gr9K/Un9QE8o4j7KF2IVhuvkzkaiJL4=
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
- by DS0PR10MB8104.namprd10.prod.outlook.com (2603:10b6:8:1f4::17) with
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com (2603:10b6:408:1b6::9)
+ by DS0PR11MB8162.namprd11.prod.outlook.com (2603:10b6:8:166::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8606.34; Thu, 10 Apr
- 2025 04:23:19 +0000
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::a63b:c94b:7ed8:4142]) by BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::a63b:c94b:7ed8:4142%4]) with mapi id 15.20.8632.021; Thu, 10 Apr 2025
- 04:23:19 +0000
-From: Catherine Hoang <catherine.hoang@oracle.com>
-To: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH v5] generic: add a test for atomic writes
-Date: Wed,  9 Apr 2025 21:23:17 -0700
-Message-Id: <20250410042317.82487-1-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.39.3 (Apple Git-146)
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0026.namprd03.prod.outlook.com
- (2603:10b6:a03:33a::31) To BLAPR10MB5316.namprd10.prod.outlook.com
- (2603:10b6:208:326::6)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8632.22; Thu, 10 Apr
+ 2025 05:15:01 +0000
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c]) by LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c%4]) with mapi id 15.20.8632.017; Thu, 10 Apr 2025
+ 05:15:01 +0000
+Date: Thu, 10 Apr 2025 13:14:42 +0800
+From: kernel test robot <oliver.sang@intel.com>
+To: Alistair Popple <apopple@nvidia.com>
+CC: <oe-lkp@lists.linux.dev>, <lkp@intel.com>, <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>, Dan Williams
+	<dan.j.williams@intel.com>, Alison Schofield <alison.schofield@intel.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>, Asahi Lina <lina@asahilina.net>,
+	Balbir Singh <balbirs@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, Christian Borntraeger
+	<borntraeger@linux.ibm.com>, Christoph Hellwig <hch@lst.de>, Chunyan Zhang
+	<zhang.lyra@gmail.com>, "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner
+	<david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Jiang
+	<dave.jiang@intel.com>, David Hildenbrand <david@redhat.com>, Gerald Schaefer
+	<gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, "Huacai
+ Chen" <chenhuacai@kernel.org>, Ira Weiny <ira.weiny@intel.com>, Jan Kara
+	<jack@suse.cz>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe
+	<jgg@ziepe.ca>, John Hubbard <jhubbard@nvidia.com>, linmiaohe
+	<linmiaohe@huawei.com>, Logan Gunthorpe <logang@deltatee.com>, Matthew Wilcow
+	<willy@infradead.org>, Michael Camp Drill Sergeant Ellerman
+	<mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, Peter Xu
+	<peterx@redhat.com>, Sven Schnelle <svens@linux.ibm.com>, Ted Ts'o
+	<tytso@mit.edu>, Vasily Gorbik <gor@linux.ibm.com>, Vishal Verma
+	<vishal.l.verma@intel.com>, Vivek Goyal <vgoyal@redhat.com>, WANG Xuerui
+	<kernel@xen0n.name>, Will Deacon <will@kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+	<linux-xfs@vger.kernel.org>, <oliver.sang@intel.com>
+Subject: [linus:master] [fs/dax]  bde708f1a6:
+ WARNING:at_mm/truncate.c:#truncate_folio_batch_exceptionals
+Message-ID: <202504101036.390f29a5-lkp@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: SI1PR02CA0027.apcprd02.prod.outlook.com
+ (2603:1096:4:1f4::18) To LV3PR11MB8603.namprd11.prod.outlook.com
+ (2603:10b6:408:1b6::9)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,378 +118,374 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|DS0PR10MB8104:EE_
-X-MS-Office365-Filtering-Correlation-Id: fc181e68-5814-421d-460f-08dd77e76c25
+X-MS-TrafficTypeDiagnostic: LV3PR11MB8603:EE_|DS0PR11MB8162:EE_
+X-MS-Office365-Filtering-Correlation-Id: df34b696-ea22-47f4-b21c-08dd77eea52a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|10070799003|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?weN5bPYI+rnOkR1ctjOatOIJAHyQPta4kTtLaBjDm9JygEWAXvok6SpPDb8M?=
- =?us-ascii?Q?1B6YSQtkfxRFHnooio64wmiGgfJzWDma3BIvB17rxtnNxrvEhdTJiBa1oGZL?=
- =?us-ascii?Q?z9OcfBK16s1T3U53gDVYsJCmL6FotTimvrco8xnemLgmJ88PUeUWPxtLmwBh?=
- =?us-ascii?Q?CQTUzhuq8y/C0e2maM21TN+ZKu6hLxnxuqaeyiXKw4FjrLcY0TtYVy5nbPwx?=
- =?us-ascii?Q?PXYQE9WXg8N8N4ErhzbApRzA0NduF0WZolG8NNxGPAx1l1Hwh2bXgGj95zzH?=
- =?us-ascii?Q?+FlDTGY0Zok6MC33QSbKSzd/C7Etul8RMtE/kpGYo+bfjt5k+XBZhBCf0c22?=
- =?us-ascii?Q?krMM84WaobMdW5UcRK6KuGcKEuCW2g5APOGbGXAzou/Rst+yIroQKIqK4iOS?=
- =?us-ascii?Q?SAXQjQlN98fax5Oj3fX8741htqBX4Y24EWRiQQA2Csp6ZBT52OedDdv5zHtF?=
- =?us-ascii?Q?DFVn9+sPf7pc7HDVRTkI2B0K/fGZ+oiVjM3atR55zhxLfJMzpXuY99DTYJ8D?=
- =?us-ascii?Q?7VzXvvChhcoYY2xZCpdebFKhvGAwOcv9mliuHxAJime28ngQ/KB7iVv8kRLp?=
- =?us-ascii?Q?77LrcdG3xmck7IXwLI2/nkSFZQdXFhLsmdmWFJkKTJ/QeKr5tmYZJZxIyqVY?=
- =?us-ascii?Q?r3fP4hIROaqabQs1tou6v2ysgDSMyTlB6H7PkGPiXm3vX63NGRXE4/wjiZBO?=
- =?us-ascii?Q?KBcPPl/FuFyTYEnNcweidbnG7sceZq3O6xBi1b6FSTdXx+5xSGGp3LW/buqe?=
- =?us-ascii?Q?+x0zx4JkshoGuQfy2BBOs0HxCeCr3aAW7zFSqzwtJyT7X68q38w/97RHsC3k?=
- =?us-ascii?Q?yCUgbVL5p13VNxZEs7IkkpGVUcHlV7P7VJFqa6+dmv/hbSB4Aph4n0wYMdiw?=
- =?us-ascii?Q?71QQwSeitdne5dIQ9VWmCkBfx6gNr/zZ2pTOQOwuuZ2G6LDeV/sUBCaet3MV?=
- =?us-ascii?Q?8j8x364HvcQetdW9i6BG71sUAjGjqUaTmuk6DMLgHdenGcOaWpcb+Mwf54sN?=
- =?us-ascii?Q?FdCQYQ612fKTZ5sbKU2LgIbfEj8ZehRYdMbeaaL9L7vozF0ldQ30SQClVB/2?=
- =?us-ascii?Q?mtsnmMg+pdDfpuH+9GIDWM2xYavQvVDcaoKnlY0bDCl/KMe3zlVOWGCNzO7m?=
- =?us-ascii?Q?PMpBQhcFWgTJufRW3a8anJns8r97ezDJEBeQq+2Wbpqz1durvyC5dFux+/E7?=
- =?us-ascii?Q?tWO9c15IHYJls2SSc7KT+itlCI8sL3PO1scUcyj0huo1/jKkFtqlyXxVH04B?=
- =?us-ascii?Q?50WkD5MaxTeIWc1/NtBHmcyJP7fQlTIQtQr+q9azdqeGpaDpedFG4KJjNen8?=
- =?us-ascii?Q?Co0IqN9Iz6lohr3cVOj+2IQpjrp4vA0kEhnHEyOASzY26ZkBKJT0WwdnfNQp?=
- =?us-ascii?Q?RLeTf3r1aKyGe2mhdyXXs+PeYyKGAS8yZvbQW4MR2ieMC2UuhInU2KrovKXq?=
- =?us-ascii?Q?deII8IkrJis=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(376014)(1800799024);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|7416014|1800799024;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?MLrSsmsiDOqnYfm/HAvhIU5kBSwcAdq0S2HCgO1tCBhiLW8srwF7WVByJGqd?=
+ =?us-ascii?Q?/axGXmjsoYXTxoruItAxnroI6B94nabW7C9Qgq9TdDqorLcItq6+0wJMAs6Q?=
+ =?us-ascii?Q?Dsvbv3j/gqaXrbO1V859NS25t254Tt0HFiGjvGTowMr3sBfE0MbORJ91B+sy?=
+ =?us-ascii?Q?W0yHC4iQKk03d5ztvVTpL3z0rpEBWJepBCQ2EwNJV+4xcmrtPKEtGyAGjwQm?=
+ =?us-ascii?Q?an/KJNgrnrSZNRDLou9g+KbGJW6Y2St9pjLYtVSqK2xIsfIIFQDyqfjyCO8Z?=
+ =?us-ascii?Q?LbAqQbu6Eplas3EvHLoXq763AovAB95i1nNKWMCYzptyjXzOgxmAZRKUjtz9?=
+ =?us-ascii?Q?AdOMlIi59gmsbxmlAUbjZIBknmcw8XV6UEJi3dgb5r7363oA+NQIyqMrkbbv?=
+ =?us-ascii?Q?MJSj3dX1mqOyWYQcXYAcB5Pw1Ul8/KxdXtckTIYGaq8tPMB481ZsDd9jpl+v?=
+ =?us-ascii?Q?gJb5XZ/kHeT1bfdsHQjLu6IBHIob8qTj9sqGJKPGjQtnrq9ssWI+vXGgrQnK?=
+ =?us-ascii?Q?eBTYlItjonKeqqZNHy8IFB3nXfDtlGl0eiJZSMmoniXVSTVu9039BOEhstBP?=
+ =?us-ascii?Q?h3/CJMKKE0YEr1e3fyx00BiSNp8nW8wNGXCL0rMsKQPI5RyT9u81sQD7QtJY?=
+ =?us-ascii?Q?QOwcNdrQfUwj50o4Sh3jHMzwf6wACnZCXV/cPS150ZkLeRuczqHmwn9PlQa5?=
+ =?us-ascii?Q?Ze3no6uRZTFN5SV4QLR66UZsovqCfrYPAU/xHEG/hz/qaav1QdlGj1+lAueG?=
+ =?us-ascii?Q?hkCNUVoLrckIabXtrJql14jPAZ55ORd7ntsTGXsVP+sARU36Wurx0v/54B8d?=
+ =?us-ascii?Q?q2BE3n6yQruJ0JqwaYp1/wWC0xEJ2iNfFZ5retgiuAop/anP4e2b9nLRUSR1?=
+ =?us-ascii?Q?KWqPrO1UhWPIafjbSHb/BbfaIlTNJ9wiTvPnw3iKHj+w8RgDTXSX4/C2pR4/?=
+ =?us-ascii?Q?R0zbP/vVYgrXz3YZracwdF7fSSJLfFVLOG7Pumj6DaYU6cV2R/4zSjXgHkDO?=
+ =?us-ascii?Q?Rkxt0gB+fVcqnbOH8yUy5I1POh4XzhgCUEV7YVKqSkU2H8gSqMBfWNNTliiD?=
+ =?us-ascii?Q?od09vfekJbyhLahl0k4HD2vN/dJ1a33O72fACTSgRZUTlQM4nwwhiEHU5Wvz?=
+ =?us-ascii?Q?0jV5MtGw1dsLomJ105OjmunMg0P4oD8ZPQbwpD66ib6SN19AwZKLJtJTwns0?=
+ =?us-ascii?Q?9LQotzm+0jks2EiE3IXsZcLMH8hvA1Tthl8FO+5F8guxpoI6jZ8InIqNwQ31?=
+ =?us-ascii?Q?PS4hlVzyHIB2Skjyk91U5J0QTMAbU30Xm8wBHizGxqlUIuagiZBJMT6TXHGF?=
+ =?us-ascii?Q?3ZBoRt6cTDEbjpjvlppW9Xjux78n+jGbtSt8qvJ5aWgV15mX2pZsyn0u7rEb?=
+ =?us-ascii?Q?iR+znFLLBnIgtGdunR22ZSDWgDi6?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR11MB8603.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?EIVBUGtSjiggPthFwNmeJIr3D2CZQsKoHfRCSR8UbvUPwcN0IR53r7BcjJAs?=
- =?us-ascii?Q?RNUXAWXxswNSAtCNomBf4NQCrOYKTtnvbgYiMHgw+lfGaqXuNi1dvh8k/Qad?=
- =?us-ascii?Q?NgQK7tRSAmSP5Punk9ke6Vn2XSppB1k1/yAbYJHXOinq2qzaiCL0RRj2M/MV?=
- =?us-ascii?Q?U+FYbAWOcqXIWcXdk94+vQ1OjtARX9Oiu869sWRluJYlwsZMvsOdGG1G84yd?=
- =?us-ascii?Q?abxYYp/GzZfCPZd77k/22vQMMhWzIGKVJbhAzmgKfehZ5tuBVtyl8UvrxCs3?=
- =?us-ascii?Q?0/vw0byLT+3lhic98o7Yh60SiofEjOKU2KQC/pD/V4IDAs4B3i/TeOLC+moh?=
- =?us-ascii?Q?tmQ5GW5ju5Ar+1mSz+gZMjF4qu6NnhFMftZXTYRHp2eGw91PVFQpzrqoJey8?=
- =?us-ascii?Q?5MKZS7nZukNm5LpEjXDqnOBpPXUx+WRKAdbOEDMDcsWE/kBVMtxFKxEsEtaa?=
- =?us-ascii?Q?vS2zGp/aWmLsbyhVCLGfl5x2Q8nufpdGZpMg0vjyajLhD5DxOOb/kfUSZZK+?=
- =?us-ascii?Q?EoTQPdOTICqa698IsJQv1kQIcc7pr0bpakHkpwTDQSTxrv71kvscU1tbgKH1?=
- =?us-ascii?Q?Hh3uDCP4wm3tlxmh3LdjPRXemIQn2u5wz0wcMSo4i+LU7W2bzDIm9w5O42tw?=
- =?us-ascii?Q?iirq2L4DjgZEXjdDQBStA8j+v2M4J+J+0wVqPX1H+MR7KLz66ien7O4/fy+G?=
- =?us-ascii?Q?SpkcyajaOFr5/hFLBpkI3zhIqTnVQ25FzeLOgCOkxCdJqFnwPPgXKUagkLPB?=
- =?us-ascii?Q?3CT7fDq53aoEeoRvkqgf5EujrZH1/3CvMDlQFrGcRkPWsSWETSWbbZJFFq6y?=
- =?us-ascii?Q?pi7lp5i4LrgP/4uZ3+3f9Rgae3SIO0s4iQaarjOXCSRTktJPXRjlnhJEXSQb?=
- =?us-ascii?Q?n2ajQW/yAn6McZySPo/cjW4lmIe3X7PT25ZNQiyr0S6kdGKXNg4EoxfQ00/8?=
- =?us-ascii?Q?V+Ms1nY9Gp07GMc9Pn/KlykWxAfqvIHVHYxu4q4w91RrzSXQoYNVy4aeNKAr?=
- =?us-ascii?Q?8pqQhLJPCW8lNbdJ0Zhi/VXfSUm9S4ZwrVHoYFMlpbaGqL59b3ZmT9Y7qpuQ?=
- =?us-ascii?Q?XOT/605SOzhUKCxxHSXfX+VAHCwQlv+GoleN6hS+oirINS9rQUlctSMDrCGl?=
- =?us-ascii?Q?7CM2lJUa+G6IJ/ywWpbHn/bZKJ0aAI7vYd/Jrq9zyfpofNh4aNH65KeFTEmO?=
- =?us-ascii?Q?VLpVZw1/cUa9yxyCTnd/1u7NS+pgIRHQ0mWxx7TMV4CxPu9oDADl9OKKqPql?=
- =?us-ascii?Q?S5nIqmzPwI1B7DWDvM6mXmskH8jCot6LtDoTMtAg5+UEL+8wd38MSV1JHnl7?=
- =?us-ascii?Q?phRcaQvTOljn9EEMlB8F72vQO/0cyAr5TNDgdfP3ajkBb8PG/nOCBUyPvBMr?=
- =?us-ascii?Q?hGrIA6bRicCH68h7K/UD0BBjC7eaiOU5tkblL7OxUjosm1KXTntJjFyeNRcr?=
- =?us-ascii?Q?54szHjIWYlfygN0mZygc70uMv8uGks65T7BkA5RH/59Q+0g39iVxeweYkJoL?=
- =?us-ascii?Q?JtR51Jh486vbFYwk6gy9nD5Q08SkIPCxfRr2aiznSGzdN5rQfoCfb2eVimVH?=
- =?us-ascii?Q?IonwpauwEpBNWGLQSAw6QuL6Ru5oiU90I5LnJFBcs51Lm2y1aJWCIKeT2kRP?=
- =?us-ascii?Q?Wsm8vbL70TaMOfM3mlUyIfyoYkEvv0AcYo5rgt0ik9xoOVCPHXFwiyEd0e0h?=
- =?us-ascii?Q?w3Z6NQ=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	+vCQmjmDF2kUhCvPJNt0N7blqhVigzervODF3xehjZYFafwo7Q0M90/RfBcV3WmDrAVVccniVjABaq1ruqDmJ4blkdQ+u4hx0LvIom1nBkFHwjye2V506kuP6aE95Gf6CmweGu3611FX1lqfk9MCFASIKcaY9E3o9E7X4+dKhlStxWFgrI8Gl6mi2aiwfiR7eCjBrdHH2CPr3FyHMHF0vpjaWf0dMVfzJZZTiDLrB2T4V5yFEdTNuP85sDbPenDFUs+TRT4j7T3Nv5BJTJyD/QbpbKU/nhgju3arV4iV8MtUlorhBY4g63iyVnsdszlx5ZRFq0JqB3MFfZIzLCcVyayGzWD8+5NOhJq86A/OksPkdqLTVOnWNdBKrwimbHdfgdeh6b5ZR26YMZNmadk4ycylOFuSVYS5radGGucg5YY5pRMKxG/K/8MAQ6eXXfgHyFIdCE/57AsviOiIaJ0RTfM7vK0nXU9ovDX3039mCmClFG1tr4HhNgADqYq7vepdLbL6dc/SmFAFAEji6qiLMGNSxlUgo463BdWOZqYnliCjir+0FcWMna3sKAZuvyjDw0+7Q3iZYOE1JTnetMFGseWM4ChDiL/ktXbG4JIRJrU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fc181e68-5814-421d-460f-08dd77e76c25
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hFzq5q7zFTwfR0H/Z5aInfNl9duI5g5bo09edoUNlToE4Zw2HwthdBeNlcUg?=
+ =?us-ascii?Q?LgzQ5PoiHb057jy4TTd8F9+/MsMGk6w4Hnznw+v4AFos7OvcxOrFM47Sx0za?=
+ =?us-ascii?Q?1bJcoSuBG82oRxP+pPHX9br+mMCcDjhk/uCwOMFXxKMKjKiI3I5hMmPRo2F+?=
+ =?us-ascii?Q?lUOu/D5lYMwMjEQoZNroSN56lN1lGWIZMFXXRw5wQoOSzN3uxqdaP5GGgS4B?=
+ =?us-ascii?Q?ukbiZwih+brq+MLWQcgE5Xb1naUZuUOM4s7qte+atl0c0fMQvubjp13nMdp9?=
+ =?us-ascii?Q?T/iIu1LE8DbiiJGuiCkmMQoiM/rBofljKi+NLGbIb6M4FUEcjQDe7n4xZjbI?=
+ =?us-ascii?Q?s0Vi6ucCe8hyKntHkxZk6mnGFyovSbUDzjHxdRazDkVtdDznvPyNbrKRLD9F?=
+ =?us-ascii?Q?uvWFigmkZqyISEnpxfB8HpJYfQf0PvQ0aeUoEytHOCCiu9cIAHhcpd87WnPl?=
+ =?us-ascii?Q?bNo2r1QK39WlrRWQm0DOBUXLhnkRUKt4eJWCByNlcjdKu06CG5fghqY0VRQq?=
+ =?us-ascii?Q?BRq+LRB2oT41dSfFaKgNY0VKE65cAEc0ovsRBGE2OfH08FnWIK6qdeHUsFJd?=
+ =?us-ascii?Q?W0BZtTgsGvzUQcuLCwE/o9Ym7KCMzuujJN0S6CIuB/noaCRF3nrvTVHFJGR/?=
+ =?us-ascii?Q?GPUedlB4AsDWLGX2ePkCOPr4Ccf37C6J5Osh6A3Z4RAJHsBvHnUZ+cZdMgby?=
+ =?us-ascii?Q?zJpp7DdRTmKrtjHuNWUt83qA33PGA4y8EUNQle+9t1DEi/vPM5jxbcGWs/eY?=
+ =?us-ascii?Q?6pgKfghBhTnWn/luozalXj5TKjVJ6Tt+UDVLH/R0hgXd8mzULqopQXeWYQT/?=
+ =?us-ascii?Q?9XqynqE+FdbIC0YB+mqCZjDq4djW5XhZJ1IeoILAW+utrVMpjjQjZLjoUDdQ?=
+ =?us-ascii?Q?vFiIjvvzFtGIFbfm8dW7OR5W9K90jvgeS5oSnIKzWXjm1JAIQTJ3XsjSyZYs?=
+ =?us-ascii?Q?EIBlGAQFvyaShkCj3Bf3npTSURrVtqUJORvxtP3hlK7rOdilXzxfcA/TSKAY?=
+ =?us-ascii?Q?P5pVr1UR4ZijPrX/+qBdNpMQD8QJOwXGQTvX8Ce4YAClNiFqUe/sEnS65NIP?=
+ =?us-ascii?Q?UEdzqDj/oUI8/VytnU8nMDFFM/XCl0idKXB5TYzQyTo/yTkJW/BuUQIOvF1a?=
+ =?us-ascii?Q?Q/CKSRURVIqcl0QVh5w4ed/bjr8BNxfWsfZXPMiZVPlBv0yALN+S1crr0O++?=
+ =?us-ascii?Q?1uxoMtc+B5nAHMOAxouFC6EEdpg6hDE30je1YfmWhFl+rMO31Mrgu/xKqqtC?=
+ =?us-ascii?Q?hSIkejvHSFMwVs5wjwodB3QsuWf6vemYcRSYP6+rtV0JIB5J2j3YnqCYmoCD?=
+ =?us-ascii?Q?4eRZ95EdJCys1zseZFPrqCQndNCcVPXtk8mwgARnk9q7lwcVT9w8uRCX94Z0?=
+ =?us-ascii?Q?83we9twzCjZReCBhA8jpKMRvJR/LmvQlt1ieELqFLFV1nyl6H2M/mJtjf4hp?=
+ =?us-ascii?Q?S/9TEtMvPhE/QJksiAtCg0JUpkdjiUnwoW6AFqkr5SQeumEfu8UeMwO3gfa9?=
+ =?us-ascii?Q?by5HAVnd5iYD6YjRftvQV7yftGdCs6/m4tuv2W/SgQKiSct3MEpkpmpZbITn?=
+ =?us-ascii?Q?RwIZN7GKRcxC/p5RV4/dPYDdqjlCR3rn9C3bfYrjnDF4aFVybahZOUM+kIaU?=
+ =?us-ascii?Q?lQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: df34b696-ea22-47f4-b21c-08dd77eea52a
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR11MB8603.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Apr 2025 04:23:19.3574
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Apr 2025 05:15:01.4568
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TaykitLrBzIrO/s9t1z9fQD+98kehBQvLH2LOu6IXi3VX2UyRH1/Y4oPBD93Md/zQjmsaF0nknupW50Q3OQnIqZCQfLSLI6ue+bvRkwsZ7Q=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB8104
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-09_06,2025-04-08_04,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
- mlxlogscore=999 phishscore=0 bulkscore=0 adultscore=0 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2502280000 definitions=main-2504100031
-X-Proofpoint-ORIG-GUID: UQPJXCfqPbC9kw8jYKjhSXHEqUDP-6zW
-X-Proofpoint-GUID: UQPJXCfqPbC9kw8jYKjhSXHEqUDP-6zW
+X-MS-Exchange-CrossTenant-UserPrincipalName: UOvYh5OqCscrqGMWCcZEMEYqFm6N1j1dLduEXmxwf9s6kdboHho/sZjQIJ4HXlZC1S4vJ/qCOf2C6mnbSSij2A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB8162
+X-OriginatorOrg: intel.com
 
-Add a test to validate the new atomic writes feature.
 
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
----
- common/rc             |  51 ++++++++++++
- tests/generic/765     | 188 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/765.out |   2 +
- 3 files changed, 241 insertions(+)
- create mode 100755 tests/generic/765
- create mode 100644 tests/generic/765.out
 
-diff --git a/common/rc b/common/rc
-index 16d627e1..25e6a1f7 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2996,6 +2996,10 @@ _require_xfs_io_command()
- 			opts+=" -d"
- 			pwrite_opts+="-V 1 -b 4k"
- 		fi
-+		if [ "$param" == "-A" ]; then
-+			opts+=" -d"
-+			pwrite_opts+="-D -V 1 -b 4k"
-+		fi
- 		testio=`$XFS_IO_PROG -f $opts -c \
- 		        "pwrite $pwrite_opts $param 0 4k" $testfile 2>&1`
- 		param_checked="$pwrite_opts $param"
-@@ -5443,6 +5447,53 @@ _require_scratch_btime()
- 	_scratch_unmount
- }
- 
-+_get_atomic_write_unit_min()
-+{
-+	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
-+        grep atomic_write_unit_min | grep -o '[0-9]\+'
-+}
-+
-+_get_atomic_write_unit_max()
-+{
-+	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
-+        grep atomic_write_unit_max | grep -o '[0-9]\+'
-+}
-+
-+_get_atomic_write_segments_max()
-+{
-+	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
-+        grep atomic_write_segments_max | grep -o '[0-9]\+'
-+}
-+
-+_require_scratch_write_atomic()
-+{
-+	_require_scratch
-+
-+	export STATX_WRITE_ATOMIC=0x10000
-+
-+	awu_min_bdev=$(_get_atomic_write_unit_min $SCRATCH_DEV)
-+	awu_max_bdev=$(_get_atomic_write_unit_max $SCRATCH_DEV)
-+
-+	if [ $awu_min_bdev -eq 0 ] && [ $awu_max_bdev -eq 0 ]; then
-+		_notrun "write atomic not supported by this block device"
-+	fi
-+
-+	_scratch_mkfs > /dev/null 2>&1
-+	_scratch_mount
-+
-+	testfile=$SCRATCH_MNT/testfile
-+	touch $testfile
-+
-+	awu_min_fs=$(_get_atomic_write_unit_min $testfile)
-+	awu_max_fs=$(_get_atomic_write_unit_max $testfile)
-+
-+	_scratch_unmount
-+
-+	if [ $awu_min_fs -eq 0 ] && [ $awu_max_fs -eq 0 ]; then
-+		_notrun "write atomic not supported by this filesystem"
-+	fi
-+}
-+
- _require_inode_limits()
- {
- 	if [ $(_get_free_inode $TEST_DIR) -eq 0 ]; then
-diff --git a/tests/generic/765 b/tests/generic/765
-new file mode 100755
-index 00000000..9bab3b8a
---- /dev/null
-+++ b/tests/generic/765
-@@ -0,0 +1,188 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 765
-+#
-+# Validate atomic write support
-+#
-+. ./common/preamble
-+_begin_fstest auto quick rw
-+
-+_require_scratch_write_atomic
-+_require_xfs_io_command pwrite -A
-+
-+get_supported_bsize()
-+{
-+    case "$FSTYP" in
-+    "xfs")
-+        min_bsize=1024
-+        for ((i = 65536; i >= 1024; i /= 2)); do
-+            _scratch_mkfs -b size=$i >> $seqres.full || continue
-+            if _try_scratch_mount >> $seqres.full 2>&1; then
-+                max_bsize=$i
-+                _scratch_unmount
-+                break;
-+            fi
-+        done
-+        ;;
-+    "ext4")
-+        min_bsize=1024
-+        max_bsize=4096
-+        ;;
-+    *)
-+        _notrun "$FSTYP does not support atomic writes"
-+        ;;
-+    esac
-+}
-+
-+get_mkfs_opts()
-+{
-+    local bsize=$1
-+
-+    case "$FSTYP" in
-+    "xfs")
-+        mkfs_opts="-b size=$bsize"
-+        ;;
-+    "ext4")
-+        mkfs_opts="-b $bsize"
-+        ;;
-+    *)
-+        _notrun "$FSTYP does not support atomic writes"
-+        ;;
-+    esac
-+}
-+
-+test_atomic_writes()
-+{
-+    local bsize=$1
-+
-+    get_mkfs_opts $bsize
-+    _scratch_mkfs $mkfs_opts >> $seqres.full
-+    _scratch_mount
-+
-+    test "$FSTYP" = "xfs" && _xfs_force_bdev data $SCRATCH_MNT
-+
-+    testfile=$SCRATCH_MNT/testfile
-+    touch $testfile
-+
-+    file_min_write=$(_get_atomic_write_unit_min $testfile)
-+    file_max_write=$(_get_atomic_write_unit_max $testfile)
-+    file_max_segments=$(_get_atomic_write_segments_max $testfile)
-+
-+    # Check that atomic min/max = FS block size
-+    test $file_min_write -eq $bsize || \
-+        echo "atomic write min $file_min_write, should be fs block size $bsize"
-+    test $file_min_write -eq $bsize || \
-+        echo "atomic write max $file_max_write, should be fs block size $bsize"
-+    test $file_max_segments -eq 1 || \
-+        echo "atomic write max segments $file_max_segments, should be 1"
-+
-+    # Check that we can perform an atomic write of len = FS block size
-+    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile | \
-+        grep wrote | awk -F'[/ ]' '{print $2}')
-+    test $bytes_written -eq $bsize || echo "atomic write len=$bsize failed"
-+
-+    # Check that we can perform an atomic single-block cow write
-+    if [ "$FSTYP" == "xfs" ]; then
-+        testfile_cp=$SCRATCH_MNT/testfile_copy
-+        if _xfs_has_feature $SCRATCH_MNT reflink; then
-+            cp --reflink $testfile $testfile_cp
-+        fi
-+        bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile_cp | \
-+            grep wrote | awk -F'[/ ]' '{print $2}')
-+        test $bytes_written -eq $bsize || echo "atomic write on reflinked file failed"
-+    fi
-+
-+    # Check that we can perform an atomic write on an unwritten block
-+    $XFS_IO_PROG -c "falloc $bsize $bsize" $testfile
-+    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize $bsize $bsize" $testfile | \
-+        grep wrote | awk -F'[/ ]' '{print $2}')
-+    test $bytes_written -eq $bsize || echo "atomic write to unwritten block failed"
-+
-+    # Check that we can perform an atomic write on a sparse hole
-+    $XFS_IO_PROG -c "fpunch 0 $bsize" $testfile
-+    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile | \
-+        grep wrote | awk -F'[/ ]' '{print $2}')
-+    test $bytes_written -eq $bsize || echo "atomic write to sparse hole failed"
-+
-+    # Check that we can perform an atomic write on a fully mapped block
-+    bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile | \
-+        grep wrote | awk -F'[/ ]' '{print $2}')
-+    test $bytes_written -eq $bsize || echo "atomic write to mapped block failed"
-+
-+    # Reject atomic write if len is out of bounds
-+    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $((bsize - 1))" $testfile 2>> $seqres.full && \
-+        echo "atomic write len=$((bsize - 1)) should fail"
-+    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $((bsize + 1))" $testfile 2>> $seqres.full && \
-+        echo "atomic write len=$((bsize + 1)) should fail"
-+
-+    # Reject atomic write when iovecs > 1
-+    $XFS_IO_PROG -dc "pwrite -A -D -V2 -b $bsize 0 $bsize" $testfile 2>> $seqres.full && \
-+        echo "atomic write only supports iovec count of 1"
-+
-+    # Reject atomic write when not using direct I/O
-+    $XFS_IO_PROG -c "pwrite -A -V1 -b $bsize 0 $bsize" $testfile 2>> $seqres.full && \
-+        echo "atomic write requires direct I/O"
-+
-+    # Reject atomic write when offset % bsize != 0
-+    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 1 $bsize" $testfile 2>> $seqres.full && \
-+        echo "atomic write requires offset to be aligned to bsize"
-+
-+    _scratch_unmount
-+}
-+
-+test_atomic_write_bounds()
-+{
-+    local bsize=$1
-+
-+    get_mkfs_opts $bsize
-+    _scratch_mkfs $mkfs_opts >> $seqres.full
-+    _scratch_mount
-+
-+    test "$FSTYP" = "xfs" && _xfs_force_bdev data $SCRATCH_MNT
-+
-+    testfile=$SCRATCH_MNT/testfile
-+    touch $testfile
-+
-+    $XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile 2>> $seqres.full && \
-+        echo "atomic write should fail when bsize is out of bounds"
-+
-+    _scratch_unmount
-+}
-+
-+sys_min_write=$(cat "/sys/block/$(_short_dev $SCRATCH_DEV)/queue/atomic_write_unit_min_bytes")
-+sys_max_write=$(cat "/sys/block/$(_short_dev $SCRATCH_DEV)/queue/atomic_write_unit_max_bytes")
-+
-+bdev_min_write=$(_get_atomic_write_unit_min $SCRATCH_DEV)
-+bdev_max_write=$(_get_atomic_write_unit_max $SCRATCH_DEV)
-+
-+# Test that statx atomic values are the same as sysfs values
-+if [ "$sys_min_write" -ne "$bdev_min_write" ]; then
-+    echo "bdev min write != sys min write"
-+fi
-+if [ "$sys_max_write" -ne "$bdev_max_write" ]; then
-+    echo "bdev max write != sys max write"
-+fi
-+
-+get_supported_bsize
-+
-+# Test all supported block sizes between bdev min and max
-+for ((bsize=$bdev_min_write; bsize<=bdev_max_write; bsize*=2)); do
-+    if [ "$bsize" -ge "$min_bsize" ] && [ "$bsize" -le "$max_bsize" ]; then
-+        test_atomic_writes $bsize
-+    fi
-+done;
-+
-+# Check that atomic write fails if bsize < bdev min or bsize > bdev max
-+if [ $((bdev_min_write / 2)) -ge "$min_bsize" ]; then
-+    test_atomic_write_bounds $((bdev_min_write / 2))
-+fi
-+if [ $((bdev_max_write * 2)) -le "$max_bsize" ]; then
-+    test_atomic_write_bounds $((bdev_max_write * 2))
-+fi
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/generic/765.out b/tests/generic/765.out
-new file mode 100644
-index 00000000..39c254ae
---- /dev/null
-+++ b/tests/generic/765.out
-@@ -0,0 +1,2 @@
-+QA output created by 765
-+Silence is golden
--- 
-2.34.1
+Hello,
+
+kernel test robot noticed "WARNING:at_mm/truncate.c:#truncate_folio_batch_e=
+xceptionals" on:
+
+commit: bde708f1a65d025c45575bfe1e7bf7bdf7e71e87 ("fs/dax: always remove DA=
+X page-cache entries when breaking layouts")
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
+
+in testcase: xfstests
+version: xfstests-x86_64-8467552f-1_20241215
+with following parameters:
+
+	bp1_memmap: 4G!8G
+	bp2_memmap: 4G!10G
+	bp3_memmap: 4G!16G
+	bp4_memmap: 4G!22G
+	nr_pmem: 4
+	fs: ext2
+	test: generic-dax
+
+
+
+config: x86_64-rhel-9.4-func
+compiler: gcc-12
+test machine: 8 threads Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz (Skylake) w=
+ith 28G memory
+
+(please refer to attached dmesg/kmsg for entire log/backtrace)
+
+
+
+If you fix the issue in a separate patch/commit (i.e. not just a new versio=
+n of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <oliver.sang@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202504101036.390f29a5-lkp@intel.co=
+m
+
+
+[   46.394237][ T4025] ------------[ cut here ]------------
+[ 46.399593][ T4025] WARNING: CPU: 7 PID: 4025 at mm/truncate.c:89 truncate=
+_folio_batch_exceptionals (mm/truncate.c:89 (discriminator 1))=20
+[   46.409748][ T4025] Modules linked in: ext2 snd_hda_codec_hdmi snd_ctl_l=
+ed snd_hda_codec_realtek snd_hda_codec_generic snd_hda_scodec_component int=
+el_rapl_msr btrfs intel_rapl_common blake2b_generic xor ipmi_devintf zstd_c=
+ompress ipmi_msghandler x86_pkg_temp_thermal snd_soc_avs intel_powerclamp r=
+aid6_pq snd_soc_hda_codec snd_hda_ext_core coretemp snd_soc_core snd_compre=
+ss kvm_intel i915 sd_mod snd_hda_intel kvm snd_intel_dspcfg sg snd_intel_sd=
+w_acpi intel_gtt snd_hda_codec cec dell_pc platform_profile drm_buddy ghash=
+_clmulni_intel snd_hda_core sha512_ssse3 dell_wmi ttm sha256_ssse3 snd_hwde=
+p nd_pmem sha1_ssse3 dell_smbios drm_display_helper nd_btt snd_pcm dax_pmem=
+ mei_wdt rapl drm_kms_helper ahci mei_me snd_timer libahci rfkill nd_e820 i=
+ntel_cstate sparse_keymap video wmi_bmof dcdbas dell_wmi_descriptor libnvdi=
+mm libata pcspkr intel_uncore i2c_i801 snd mei i2c_smbus soundcore intel_pc=
+h_thermal intel_pmc_core intel_vsec wmi pmt_telemetry acpi_pad pmt_class bi=
+nfmt_misc fuse loop drm dm_mod ip_tables
+[   46.498759][ T4025] CPU: 7 UID: 0 PID: 4025 Comm: umount Not tainted 6.1=
+4.0-rc6-00297-gbde708f1a65d #1
+[   46.508156][ T4025] Hardware name: Dell Inc. OptiPlex 7040/0Y7WYT, BIOS =
+1.2.8 01/26/2016
+[ 46.516324][ T4025] RIP: 0010:truncate_folio_batch_exceptionals (mm/trunca=
+te.c:89 (discriminator 1))=20
+[ 46.523347][ T4025] Code: 84 70 ff ff ff 4d 63 fd 49 83 ff 1e 0f 87 d4 01 =
+00 00 4c 89 f0 48 c1 e8 03 42 80 3c 00 00 0f 85 9b 01 00 00 41 f6 06 01 74 =
+c6 <0f> 0b 48 89 c8 48 c1 e8 03 42 80 3c 00 00 0f 85 d6 01 00 00 48 8b
+All code
+=3D=3D=3D=3D=3D=3D=3D=3D
+   0:	84 70 ff             	test   %dh,-0x1(%rax)
+   3:	ff                   	(bad)
+   4:	ff 4d 63             	decl   0x63(%rbp)
+   7:	fd                   	std
+   8:	49 83 ff 1e          	cmp    $0x1e,%r15
+   c:	0f 87 d4 01 00 00    	ja     0x1e6
+  12:	4c 89 f0             	mov    %r14,%rax
+  15:	48 c1 e8 03          	shr    $0x3,%rax
+  19:	42 80 3c 00 00       	cmpb   $0x0,(%rax,%r8,1)
+  1e:	0f 85 9b 01 00 00    	jne    0x1bf
+  24:	41 f6 06 01          	testb  $0x1,(%r14)
+  28:	74 c6                	je     0xfffffffffffffff0
+  2a:*	0f 0b                	ud2		<-- trapping instruction
+  2c:	48 89 c8             	mov    %rcx,%rax
+  2f:	48 c1 e8 03          	shr    $0x3,%rax
+  33:	42 80 3c 00 00       	cmpb   $0x0,(%rax,%r8,1)
+  38:	0f 85 d6 01 00 00    	jne    0x214
+  3e:	48                   	rex.W
+  3f:	8b                   	.byte 0x8b
+
+Code starting with the faulting instruction
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+   0:	0f 0b                	ud2
+   2:	48 89 c8             	mov    %rcx,%rax
+   5:	48 c1 e8 03          	shr    $0x3,%rax
+   9:	42 80 3c 00 00       	cmpb   $0x0,(%rax,%r8,1)
+   e:	0f 85 d6 01 00 00    	jne    0x1ea
+  14:	48                   	rex.W
+  15:	8b                   	.byte 0x8b
+[   46.542938][ T4025] RSP: 0018:ffffc9000d74f370 EFLAGS: 00010202
+[   46.548900][ T4025] RAX: 1ffff92001ae9ec8 RBX: ffff8881e2d959d8 RCX: fff=
+fc9000d74f4f8
+[   46.556787][ T4025] RDX: 0000000000000001 RSI: ffffc9000d74f638 RDI: fff=
+f8881e2d95874
+[   46.564676][ T4025] RBP: 1ffff92001ae9e74 R08: dffffc0000000000 R09: fff=
+ff52001ae9eec
+[   46.572557][ T4025] R10: 0000000000000003 R11: 1ffff110d4bf8d9c R12: fff=
+fc9000d74f638
+[   46.580439][ T4025] R13: 0000000000000000 R14: ffffc9000d74f640 R15: 000=
+0000000000000
+[   46.588319][ T4025] FS:  00007fe696f3a840(0000) GS:ffff8886a5f80000(0000=
+) knlGS:0000000000000000
+[   46.597163][ T4025] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   46.603691][ T4025] CR2: 00007fff266c5ec0 CR3: 00000001ead7e002 CR4: 000=
+00000003726f0
+[   46.611586][ T4025] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000=
+0000000000000
+[   46.619468][ T4025] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 000=
+0000000000400
+[   46.627353][ T4025] Call Trace:
+[   46.630520][ T4025]  <TASK>
+[ 46.633337][ T4025] ? __warn (kernel/panic.c:748)=20
+[ 46.637296][ T4025] ? truncate_folio_batch_exceptionals (mm/truncate.c:89 =
+(discriminator 1))=20
+[ 46.643697][ T4025] ? report_bug (lib/bug.c:180 lib/bug.c:219)=20
+[ 46.648091][ T4025] ? handle_bug (arch/x86/kernel/traps.c:285)=20
+[ 46.652322][ T4025] ? exc_invalid_op (arch/x86/kernel/traps.c:309 (discrim=
+inator 1))=20
+[ 46.656905][ T4025] ? asm_exc_invalid_op (arch/x86/include/asm/idtentry.h:=
+574)=20
+[ 46.661838][ T4025] ? truncate_folio_batch_exceptionals (mm/truncate.c:89 =
+(discriminator 1))=20
+[ 46.668239][ T4025] ? __kernel_text_address (kernel/extable.c:79)=20
+[ 46.673356][ T4025] ? __pfx_truncate_folio_batch_exceptionals (mm/truncate=
+.c:62)=20
+[ 46.680123][ T4025] ? arch_stack_walk (arch/x86/kernel/stacktrace.c:26)=20
+[ 46.684782][ T4025] truncate_inode_pages_range (mm/truncate.c:339)=20
+[ 46.690407][ T4025] ? __pfx_truncate_inode_pages_range (mm/truncate.c:304)=
+=20
+[ 46.696546][ T4025] ? __pfx_i_callback (fs/inode.c:322)=20
+[ 46.701292][ T4025] ? kasan_save_stack (mm/kasan/common.c:49)=20
+[ 46.706032][ T4025] ? kasan_record_aux_stack (mm/kasan/generic.c:548)=20
+[ 46.711298][ T4025] ? __call_rcu_common+0xc3/0x9e0=20
+[ 46.717279][ T4025] ? evict (fs/inode.c:772 (discriminator 2))=20
+[ 46.721236][ T4025] ? dispose_list (fs/inode.c:846)=20
+[ 46.725751][ T4025] ? evict_inodes (fs/inode.c:860)=20
+[ 46.730339][ T4025] ? generic_shutdown_super (fs/super.c:633)=20
+[ 46.735699][ T4025] ? kill_block_super (fs/super.c:1711)=20
+[ 46.740447][ T4025] ? deactivate_locked_super (fs/super.c:473)=20
+[ 46.745905][ T4025] ? cleanup_mnt (fs/namespace.c:281 fs/namespace.c:1414)=
+=20
+[ 46.750400][ T4025] ? task_work_run (kernel/task_work.c:227 (discriminator=
+ 1))=20
+[ 46.755076][ T4025] ? syscall_exit_to_user_mode (include/linux/resume_user=
+_mode.h:50 kernel/entry/common.c:114 include/linux/entry-common.h:329 kerne=
+l/entry/common.c:207 kernel/entry/common.c:218)=20
+[ 46.760796][ T4025] ? do_syscall_64 (arch/x86/entry/common.c:102)=20
+[ 46.765381][ T4025] ? entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry=
+_64.S:130)=20
+[ 46.771363][ T4025] ? blk_finish_plug (block/blk-core.c:1241 block/blk-cor=
+e.c:1237)=20
+[ 46.776026][ T4025] ? blkdev_writepages (block/fops.c:453)=20
+[ 46.780864][ T4025] ? __pfx_blkdev_writepages (block/fops.c:453)=20
+[ 46.786241][ T4025] ? __blk_flush_plug (include/linux/blk-mq.h:234 block/b=
+lk-core.c:1220)=20
+[ 46.791152][ T4025] ? xas_find_marked (lib/xarray.c:1382)=20
+[ 46.795990][ T4025] ? __pfx_inode_free_by_rcu (security/security.c:1708)=20
+[ 46.801351][ T4025] ? rcu_segcblist_enqueue (arch/x86/include/asm/atomic64=
+_64.h:25 include/linux/atomic/atomic-arch-fallback.h:2672 include/linux/ato=
+mic/atomic-long.h:121 include/linux/atomic/atomic-instrumented.h:3261 kerne=
+l/rcu/rcu_segcblist.c:214 kernel/rcu/rcu_segcblist.c:231 kernel/rcu/rcu_seg=
+cblist.c:332)=20
+[ 46.806537][ T4025] ? fsnotify_grab_connector (fs/notify/mark.c:702)=20
+[ 46.811898][ T4025] ? _raw_spin_lock (arch/x86/include/asm/atomic.h:107 in=
+clude/linux/atomic/atomic-arch-fallback.h:2170 include/linux/atomic/atomic-=
+instrumented.h:1302 include/asm-generic/qspinlock.h:111 include/linux/spinl=
+ock.h:187 include/linux/spinlock_api_smp.h:134 kernel/locking/spinlock.c:15=
+4)=20
+[ 46.816473][ T4025] ? inode_wait_for_writeback (arch/x86/include/asm/atomi=
+c.h:23 include/linux/atomic/atomic-arch-fallback.h:457 include/linux/atomic=
+/atomic-instrumented.h:33 include/asm-generic/qspinlock.h:57 fs/fs-writebac=
+k.c:1541)=20
+[ 46.822012][ T4025] ? _raw_spin_lock_irq (arch/x86/include/asm/atomic.h:10=
+7 include/linux/atomic/atomic-arch-fallback.h:2170 include/linux/atomic/ato=
+mic-instrumented.h:1302 include/asm-generic/qspinlock.h:111 include/linux/s=
+pinlock.h:187 include/linux/spinlock_api_smp.h:120 kernel/locking/spinlock.=
+c:170)=20
+[   46.824528][  T331] LKP: stdout: 302: HOSTNAME lkp-skl-d01, MAC f4:8e:38=
+:7c:5b:de, kernel 6.14.0-rc6-00297-gbde708f1a65d 1
+[ 46.826917][ T4025] ? __pfx__raw_spin_lock_irq (kernel/locking/spinlock.c:=
+169)=20
+[   46.826949][  T331]
+[ 46.838033][ T4025] ? _raw_spin_lock (arch/x86/include/asm/atomic.h:107 in=
+clude/linux/atomic/atomic-arch-fallback.h:2170 include/linux/atomic/atomic-=
+instrumented.h:1302 include/asm-generic/qspinlock.h:111 include/linux/spinl=
+ock.h:187 include/linux/spinlock_api_smp.h:134 kernel/locking/spinlock.c:15=
+4)=20
+[ 46.838054][ T4025] ext2_evict_inode (fs/ext2/inode.c:99) ext2=20
+[   46.847318][  T333] 262144 bytes (262 kB, 256 KiB) copied, 0.0043872 s, =
+59.8 MB/s
+[ 46.850251][ T4025] evict (fs/inode.c:796)=20
+[   46.855527][  T333]
+[ 46.863038][ T4025] ? __pfx_evict (fs/inode.c:772)=20
+[ 46.863056][ T4025] ? _raw_spin_lock (arch/x86/include/asm/atomic.h:107 in=
+clude/linux/atomic/atomic-arch-fallback.h:2170 include/linux/atomic/atomic-=
+instrumented.h:1302 include/asm-generic/qspinlock.h:111 include/linux/spinl=
+ock.h:187 include/linux/spinlock_api_smp.h:134 kernel/locking/spinlock.c:15=
+4)=20
+[   46.867191][  T333] 512+0 records in
+[ 46.869033][ T4025] ? __pfx__raw_spin_lock (kernel/locking/spinlock.c:153)=
+=20
+[   46.873347][  T333]
+[ 46.877892][ T4025] dispose_list (fs/inode.c:846)=20
+[   46.881842][  T333] 512+0 records out
+[ 46.886610][ T4025] evict_inodes (fs/inode.c:860)=20
+[   46.888832][  T333]
+[ 46.893113][ T4025] ? __pfx_evict_inodes (fs/inode.c:860)=20
+[ 46.893135][ T4025] ? filemap_check_errors (arch/x86/include/asm/bitops.h:=
+206 (discriminator 6) arch/x86/include/asm/bitops.h:238 (discriminator 6) i=
+nclude/asm-generic/bitops/instrumented-non-atomic.h:142 (discriminator 6) m=
+m/filemap.c:349 (discriminator 6))=20
+[ 46.913439][ T4025] generic_shutdown_super (fs/super.c:633)=20
+[ 46.918627][ T4025] kill_block_super (fs/super.c:1711)=20
+[ 46.923204][ T4025] deactivate_locked_super (fs/super.c:473)=20
+[ 46.928477][ T4025] cleanup_mnt (fs/namespace.c:281 fs/namespace.c:1414)=20
+[ 46.932792][ T4025] task_work_run (kernel/task_work.c:227 (discriminator 1=
+))=20
+[ 46.937282][ T4025] ? __pfx_task_work_run (kernel/task_work.c:195)=20
+[ 46.942292][ T4025] ? __x64_sys_umount (fs/namespace.c:2074 fs/namespace.c=
+:2079 fs/namespace.c:2077 fs/namespace.c:2077)=20
+[ 46.947218][ T4025] ? __pfx___x64_sys_umount (fs/namespace.c:2077)=20
+[ 46.952480][ T4025] ? vfs_fstatat (fs/stat.c:372)=20
+[ 46.956809][ T4025] syscall_exit_to_user_mode (include/linux/resume_user_m=
+ode.h:50 kernel/entry/common.c:114 include/linux/entry-common.h:329 kernel/=
+entry/common.c:207 kernel/entry/common.c:218)=20
+[ 46.962348][ T4025] do_syscall_64 (arch/x86/entry/common.c:102)=20
+[ 46.966749][ T4025] ? syscall_exit_to_user_mode (arch/x86/include/asm/irqf=
+lags.h:37 arch/x86/include/asm/irqflags.h:92 include/linux/entry-common.h:2=
+32 kernel/entry/common.c:206 kernel/entry/common.c:218)=20
+[ 46.972284][ T4025] ? syscall_exit_to_user_mode (arch/x86/include/asm/irqf=
+lags.h:37 arch/x86/include/asm/irqflags.h:92 include/linux/entry-common.h:2=
+32 kernel/entry/common.c:206 kernel/entry/common.c:218)=20
+[ 46.977832][ T4025] ? syscall_exit_to_user_mode (arch/x86/include/asm/irqf=
+lags.h:37 arch/x86/include/asm/irqflags.h:92 include/linux/entry-common.h:2=
+32 kernel/entry/common.c:206 kernel/entry/common.c:218)=20
+[ 46.983369][ T4025] ? do_syscall_64 (arch/x86/entry/common.c:102)=20
+[ 46.987953][ T4025] ? check_heap_object (mm/usercopy.c:189)=20
+[ 46.992887][ T4025] ? kasan_save_track (arch/x86/include/asm/current.h:49 =
+mm/kasan/common.c:60 mm/kasan/common.c:69)=20
+[ 46.997649][ T4025] ? kmem_cache_free (mm/slub.c:4622 mm/slub.c:4724)=20
+[   47.000912][  T333] 262144 bytes (262 kB, 256 KiB) copied, 0.00767215 s,=
+ 34.2 MB/s
+[ 47.002474][ T4025] ? vfs_fstatat (fs/stat.c:372)=20
+[   47.002504][  T333]
+[ 47.010137][ T4025] ? vfs_fstatat (fs/stat.c:372)=20
+[   47.014750][  T333] 512+0 records in
+[ 47.016647][ T4025] ? __do_sys_newfstatat (fs/stat.c:533)=20
+[ 47.016665][ T4025] ? __pfx___do_sys_newfstatat (fs/stat.c:528)=20
+[   47.020981][  T333]
+[ 47.024567][ T4025] ? __count_memcg_events (mm/memcontrol.c:583 mm/memcont=
+rol.c:859)=20
+[ 47.024588][ T4025] ? handle_mm_fault (mm/memory.c:6102 mm/memory.c:6255)=
+=20
+[ 47.024593][ T4025] ? syscall_exit_to_user_mode (arch/x86/include/asm/irqf=
+lags.h:37 arch/x86/include/asm/irqflags.h:92 include/linux/entry-common.h:2=
+32 kernel/entry/common.c:206 kernel/entry/common.c:218)=20
+[   47.029926][  T333] 512+0 records out
+[ 47.035106][ T4025] ? do_syscall_64 (arch/x86/entry/common.c:102)=20
+[ 47.035129][ T4025] ? exc_page_fault (arch/x86/include/asm/irqflags.h:37 a=
+rch/x86/include/asm/irqflags.h:92 arch/x86/mm/fault.c:1488 arch/x86/mm/faul=
+t.c:1538)=20
+[   47.037332][  T333]
+[ 47.042576][ T4025] entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_6=
+4.S:130)=20
+[   47.042596][ T4025] RIP: 0033:0x7fe697166af7
+[   47.048552][  T333] 262144 bytes (262 kB, 256 KiB) copied, 0.00560232 s,=
+ 46.8 MB/s
+[ 47.052938][ T4025] Code: 0f 93 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 0f 1f =
+44 00 00 31 f6 e9 09 00 00 00 66 0f 1f 84 00 00 00 00 00 b8 a6 00 00 00 0f =
+05 <48> 3d 00 f0 ff ff 77 01 c3 48 8b 15 d9 92 0c 00 f7 d8 64 89 02 b8
+All code
+=3D=3D=3D=3D=3D=3D=3D=3D
+   0:	0f 93 0c 00          	setae  (%rax,%rax,1)
+   4:	f7 d8                	neg    %eax
+   6:	64 89 01             	mov    %eax,%fs:(%rcx)
+   9:	48 83 c8 ff          	or     $0xffffffffffffffff,%rax
+   d:	c3                   	ret
+
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20250410/202504101036.390f29a5-lkp@=
+intel.com
+
+
+
+--=20
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
 
