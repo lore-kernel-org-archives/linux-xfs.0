@@ -1,187 +1,127 @@
-Received: from mail-vk1-f177.google.com (mail-vk1-f177.google.com [209.85.221.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 905BC45948
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Apr 2025 14:38:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFA6F214228
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Apr 2025 15:39:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744382307; cv=none; b=poiT+bvOXLOH/sgzte5V7HQD0XygSmR19oc6CBnAgyBlJ0Kir7s+G2W3onq0NxnL3e6EWBqqz/Qk3DUCBXeMd4dSZJQLL//8+dApSjDEUFTbe90GD/2Q/KNXw7lbzYIlwsm86PQOAD8AYR/tCKLTqsq0fPDmkJxnapgt5eAoX3k=
+	t=1744385993; cv=none; b=W/xdEnXrJtajQcVRn/HySSsMEXDupIas8W6iiTvIETpwRt508ELfrZKr0xx0h3dvWWd/uAkl1Jq2Cyb/ms7afyCR9YpASS0IUUow6UK53WVN+u7IqOw2nJa+35jsPtaHnjMbTob1FBmV/azaxkKmZIMeOYXFHAkM6cJK/cMUSDY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744382307; c=relaxed/simple;
-	bh=qloPr57gq7gbSsNsHMTHhfyolZlFYYdTG9Lrw8UFgQE=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=ezmdJQClg5IxpBhTJGipMXn17tRYhRqW16xa6jvrTjbQXFxY/xsBA5vLKQDckDYlBSjzqN62MXu9CL0CjH8ojtIErcVraGWu897y8vSpi3/OemI+Z+L7M5bPCQBpmAmrP3CO8cqKfSHFXdwfYSzkKhj/B2FKIrSjxGbvedydCkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chainguard.dev; spf=pass smtp.mailfrom=chainguard.dev; dkim=pass (2048-bit key) header.d=chainguard.dev header.i=@chainguard.dev header.b=Uo+Fa0z6; arc=none smtp.client-ip=209.85.221.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chainguard.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chainguard.dev
+	s=arc-20240116; t=1744385993; c=relaxed/simple;
+	bh=Qn+LjOX2vTnM4oxZQ4rRHSYl5bCMu4NyMcmUj6w2XEs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ul5/cJVoLSYmpbE+wJJybCVNGgqnpuXL8XVzaVVIILnpyll9GzJqNSjNXy1NWnghGZOVQoZOBegg/UlBHhjvJlh9nCSE3ubTzNwI+qqJ6cMWSOLrKvgtb0aMs9RCbfR6roUDn/cJhZXynlRUrnVzUMpqeSrhnpB8Ns13dSzhdFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TpPG6/QN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=chainguard.dev header.i=@chainguard.dev header.b="Uo+Fa0z6"
-Received: by mail-vk1-f177.google.com with SMTP id 71dfb90a1353d-523f1b31cf8so827943e0c.0
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Apr 2025 07:38:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chainguard.dev; s=google; t=1744382302; x=1744987102; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=pZnznCBXan8+kKf2HUCAYJiscmvl8olm31OXPNAIf+E=;
-        b=Uo+Fa0z6bX76X5pOjus5zLOA5DQ7YcBcGtfeUs+VkeFR0CLNFRhRw/bwmQfzLrlBu0
-         cfhrExbUPKorBp3se7As4d/QaIp3ed4XlQp05UBBbsIdYa22ln7d4gPvwlNX2NyvbNa6
-         ph55VAYGmHLOAnGepYvgDUWjRAK65T3BJxzTWfu02ctA33Cn+zULnwTxS6FLdNxVgIDG
-         rk6Tz6JNuv+qQCTr2pMuMEk2s5yV7lTaWWQvOVnRqv8obI+VtRzf8e75j0eNPvMGTjb8
-         8MflqyYRDBo8D4xXJrp0XWJ6aIrMzf1Zd9yFyM62hLU1kDVhij31KjHF76uczbLZBQZJ
-         kafA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744382302; x=1744987102;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=pZnznCBXan8+kKf2HUCAYJiscmvl8olm31OXPNAIf+E=;
-        b=pRqRnjAVNYkeXx4Fmx0I3FPpycAYjhATVhoK6xIGSgWqfBXJnnUckZdI2CnZDHjGVY
-         7LEew2V4uioNcV6UuLYPEWR5zOpxG8ht78D4NmnsnPmuOZ20yTwhK47u4cu37FhU45NL
-         kp9tMPIaAld2tNs13z3ccXgIO1Cg2MumyWaeZwlUgH90sQ36vtcZSxaet6a10sr3Pxcn
-         3kgGUmF06oumNcfJKL5nbfSR/L+yvLqSjoxzBaPvjP65yP4GnVKnDQ91bBF90Z4o8Sbx
-         rtdjbDJxzoEbyarMEdlOmWw45dF15y56PtuN3XPCmqZxCUwwQn3rwucKc+RTSG0iBGUA
-         ymXw==
-X-Gm-Message-State: AOJu0YzEZXB/kvSL231qZ+BnvXlAp8dEXIDO4S+svlhVp8adGnOb8YCu
-	KRtxjJtKFY8MqXAmMEVvqavYmlUapIBuWSCHeUCnU8XlPbNMEuj05D4sJu3N8whsleuHo5pLLpe
-	tYINXz+sY7tteuRpV9WZLqKeHnp1z9iyUy1aSugh1c7FvMQjWJiEvag==
-X-Gm-Gg: ASbGnctXkQZQyAEaGL7aH/+itkVFd2s6bcjb4T/ARx6zDn8u6K56e5RPFmNyYWjuh3d
-	TA9tfG5UZu0u3bg7jTqN3hk+ygziSCBCdGosi2iYIYTw589y0VXF4yKzRg5yV8M7Hw/7clW6BGv
-	8ce+sUAu9Qh/izZyQw76lJQITgGF6UH0lHcqoNKhRu6K/ypkNyyfk=
-X-Google-Smtp-Source: AGHT+IFyxe2aMHAejTpsz5giKF9HjG4BfVfCdg4gOFLebczrX2nUILR2N8NLhQdyT2nIZT/aYpBNd76H3TKBcWbEOfM=
-X-Received: by 2002:a05:6122:829d:b0:523:dd87:fe86 with SMTP id
- 71dfb90a1353d-527c3587e86mr2113482e0c.6.1744382302096; Fri, 11 Apr 2025
- 07:38:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TpPG6/QN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24B3FC4CEE7;
+	Fri, 11 Apr 2025 15:39:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744385993;
+	bh=Qn+LjOX2vTnM4oxZQ4rRHSYl5bCMu4NyMcmUj6w2XEs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TpPG6/QNNJ2imGQsKL+ObujcfyeusauJpuh9t639kPbomGdGdMEODReF1dqWiZ2R/
+	 LuEyh+wApdWEi0iHjBBy5EmKqPGmtZlK+fAsdWxBUqYnylFCSb222lovJsC2Qq7Y+e
+	 y6+l6q/KBPfU4yiOFS2tFbTdEvJjcucrf2+fTfeMr8LiRT4WufJvJqTtNL0dwHkMwb
+	 27gn6RS8MyCAzE9jMRwaN44PJMW/PtF45gELgeQIEjhgcpLLpOJZFeKTcowNcz6rGA
+	 TcXgqu9Ov5JUakdj5kur6C9xHVyWzl0Uj4yxCmqflT8/n0kQ77mER1rRyMyTFHCZ3q
+	 PxuU6EqaheFkw==
+Date: Fri, 11 Apr 2025 08:39:52 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: liuhuan01@kylinos.cn
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3] mkfs: fix the issue of maxpct set to 0 not taking
+ effect
+Message-ID: <20250411153952.GW6307@frogsfrogsfrogs>
+References: <20250411071203.10598-1-liuhuan01@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Luca DiMaio <luca.dimaio@chainguard.dev>
-Date: Fri, 11 Apr 2025 16:38:10 +0200
-X-Gm-Features: ATxdqUGOainL2ddXLhyGOc1K1hDfvRvkJWE0cUqZMIAw2fJiFeeeuGWaJ2RysTo
-Message-ID: <CAKBQhKVi6FWNWJH2PWUA4Ue=aSrvVcR_r2aJOUh45Nd0YdnxVA@mail.gmail.com>
-Subject: Reproducible XFS Filesystems Builds for VMs
-To: linux-xfs@vger.kernel.org
-Cc: Scott Moser <smoser@chainguard.dev>, Dimitri Ledkov <dimitri.ledkov@chainguard.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250411071203.10598-1-liuhuan01@kylinos.cn>
 
-Subject: Reproducible XFS Filesystems Builds for VMs
-linux-xfs@vger.kernel.org
+On Fri, Apr 11, 2025 at 03:12:03PM +0800, liuhuan01@kylinos.cn wrote:
+> From: liuh <liuhuan01@kylinos.cn>
+> 
+> If a filesystem has the sb_imax_pct field set to zero, there is no limit to the number of inode blocks in the filesystem.
+> 
+> However, when using mkfs.xfs and specifying maxpct = 0, the result is not as expected.
+> 	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
+> 	data     =               bsize=4096   blocks=262144, imaxpct=25
+> 	         =               sunit=0      swidth=0 blks
+> 
+> The reason is that the condition will never succeed when specifying maxpct = 0. As a result, the default algorithm was applied.
+> 	cfg->imaxpct = cli->imaxpct;
+> 	if (cfg->imaxpct)
+> 		return;
+> 
+> The result with patch:
+> 	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
+> 	data     =               bsize=4096   blocks=262144, imaxpct=0
+> 	         =               sunit=0      swidth=0 blks
+> 
+> 	[root@fs ~]# mkfs.xfs -f xfs.img
+> 	data     =               bsize=4096   blocks=262144, imaxpct=25
+> 	         =               sunit=0      swidth=0 blks
+> 
+> Cc: <linux-xfs@vger.kernel.org> # v4.15.0
+> Fixes: d7240c965389e1 ("mkfs: rework imaxpct calculation")
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: liuh <liuhuan01@kylinos.cn>
 
-Dear XFS Maintainers and Community,
+Looks good to me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-I am a Software Engineer at Chainguard working on reproducible builds for V=
-Ms.
+--D
 
-While we have successfully implemented reproducible disk images with
-EFI+EXT4 partitions, I=E2=80=99ve been unable to replicate this for XFS
-filesystems.
-Current Approach:
-
-We have successfully implemented reproducible disk images with
-EFI+EXT4 partitions using the following methods:
-
-- For FAT32 partitions: `mkfs.vfat --invarian -i $EFI_UUID` with
-`$SOURCE_DATE_EPOCH` and populating via mtools
-- For EXT4 partitions: `mkfs.ext4 -E hash_seed=3D$EXT4_HASH_SEED -U
-$ROOTFS_UUID` with `$SOURCE_DATE_EPOCH` plus the `-d
-/path/to/rootfs.tar.gz` to populate it
-
-XFS Challenges:
-
-For XFS, I've attempted to create reproducible filesystems using
-extensive parameters:
-
-```
-mkfs.xfs \
--b size=3D4096 \
--d agcount=3D4 \
--d noalign \
--i attr=3D2 \
--i projid32bit=3D1 \
--i size=3D512 \
--l size=3D67108864 \
--l su=3D4096 \
--l version=3D2 \
--m crc=3D1 \
--m finobt=3D1 \
--m uuid=3D$ROOTFS_UUID \
--n size=3D16384 \
--n version=3D2 $root_partition
-```
-
-I've tried to specify as many options as possible in order to avoid
-runtime aleatory decisions.
-
-Unfortunately, this does not produce reproducible results across
-different disk images.
-
-I've made progress with empty filesystems by using a combination of
-`libfaketime`
-to enforce `$SOURCE_DATE_EPOCH` and a custom library that overwrites
-the libc's `getrandom()`:
-
-```
-~$ export LD_PRELOAD=3D"./deterministic_rng.so /usr/lib/faketime/libfaketim=
-e.so.1"
-~$ mkfs.xfs \
--b size=3D4096 \
--d agcount=3D4 \
--d noalign \
--i attr=3D2 \
--i projid32bit=3D1 \
--i size=3D512 \
--l size=3D67108864 \
--l su=3D4096 \
--l version=3D2 \
--m crc=3D1 \
--m finobt=3D1 \
--m uuid=3D$ROOTFS_UUID \
--n size=3D16384 \
--n version=3D2 disk1.img
-~$ mkfs.xfs \
--b size=3D4096 \
--d agcount=3D4 \
--d noalign \
--i attr=3D2 \
--i projid32bit=3D1 \
--i size=3D512 \
--l size=3D67108864 \
--l su=3D4096 \
--l version=3D2 \
--m crc=3D1 \
--m finobt=3D1 \
--m uuid=3D$ROOTFS_UUID \
--n size=3D16384 \
--n version=3D2 disk2.img
-~$ md5sum disk*
-c68c202163dcb862762fc01970f6c8b4  disk1.img
-c68c202163dcb862762fc01970f6c8b4  disk2.img
-```
-
-This approach works for empty filesystems, but when populating the filesyst=
-em by
-mounting and untarring an archive, different metadata is generated
-even after using
-`xfs_repair -L` to reset most metadata.
-
-The primary difference appears to be in the allocation group metadata,
-which is optimized at runtime.
-
-Question:
-
-EXT4 addresses this issue with the -d flag, which allows populating
-from an archive or directory without mounting.
-Is there similar functionality available for XFS, or is there interest
-in developing a method for generating reproducible XFS root
-filesystems?
-
-I'm asking this because we'd be interested in using XFS as a filesystem for=
- the
-final product.
-
-Thank you for your time and expertise. Any guidance would be greatly
-appreciated.
-Regards,
-L.
+> ---
+>  mkfs/xfs_mkfs.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 3f4455d4..25bed4eb 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1048,13 +1048,13 @@ struct cli_params {
+>  	int	data_concurrency;
+>  	int	log_concurrency;
+>  	int	rtvol_concurrency;
+> +	int	imaxpct;
+>  
+>  	/* parameters where 0 is not a valid value */
+>  	int64_t	agcount;
+>  	int64_t	rgcount;
+>  	int	inodesize;
+>  	int	inopblock;
+> -	int	imaxpct;
+>  	int	lsectorsize;
+>  	uuid_t	uuid;
+>  
+> @@ -4048,9 +4048,10 @@ calculate_imaxpct(
+>  	struct mkfs_params	*cfg,
+>  	struct cli_params	*cli)
+>  {
+> -	cfg->imaxpct = cli->imaxpct;
+> -	if (cfg->imaxpct)
+> +	if (cli->imaxpct >= 0) {
+> +		cfg->imaxpct = cli->imaxpct;
+>  		return;
+> +	}
+>  
+>  	/*
+>  	 * This returns the % of the disk space that is used for
+> @@ -5181,6 +5182,7 @@ main(
+>  		.log_concurrency = -1, /* auto detect non-mechanical ddev */
+>  		.rtvol_concurrency = -1, /* auto detect non-mechanical rtdev */
+>  		.autofsck = FSPROP_AUTOFSCK_UNSET,
+> +		.imaxpct = -1, /* set sb_imax_pct automatically */
+>  	};
+>  	struct mkfs_params	cfg = {};
+>  
+> -- 
+> 2.43.0
+> 
