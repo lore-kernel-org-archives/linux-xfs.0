@@ -1,138 +1,82 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02D1D27D760
-	for <linux-xfs@vger.kernel.org>; Fri, 11 Apr 2025 07:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35B2C1F0E32;
+	Fri, 11 Apr 2025 14:02:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744355549; cv=none; b=pnPWTdR/q08A7LvYC8/+WIbYzP+U0UIP3JfR29PST+k79wjKEYVMGYnCkLnlrPtJmiTef3xaAcC+P0qv0LeUeo6sHRqWIIMn0BNFTx8CD7NdZtKg8xVHpNOmMcf4dHZ0Rj5L9DgYlUZTrZiDLabOfmwI/yIgYzhNnJqDQPV+oBM=
+	t=1744380173; cv=none; b=mPTbc1sbM6ilDCqt0h0hMgMlg7vtBgRm6TaN8aB7D/Tuj3DaZfbwWSKF0ltFSsTC3zvvM6t+LiMQZ5omLFDw5VkfV3zQPdbQ/8ZDMF3hlW/B8vkfP+6x4sbU3LASP8lSkhK5CNNyuSOuK++9uEqnEVn5S0WJezRitMvdHy2BOw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744355549; c=relaxed/simple;
-	bh=vTZcr2BIrgtWKI4cQ6AFCaLinMTwgYGOuUUMaa1lIEM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=l/7jPvsiLbemImvEWd8cA5d1mqzwi83hB2WxqQQpxkBv9/caHyUbsNkLk/3m+UFERqDqZ/ygWUHyflIr0qYhFJHySHo38hw6m0qJ2ywWN/TQVQsdY8GygK26mYF5dW5wEQ2HTMkVJfTbkwnkdWw+JRg9dnzEMtPmqA41LggNKQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 475388a816a411f0a216b1d71e6e1362-20250411
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_UNTRUSTED, SRC_UNTRUSTED, IP_UNFAMILIAR, SRC_UNFAMILIAR
-	DN_TRUSTED, SRC_TRUSTED, SA_TRUSTED, SA_EXISTED, SPF_NOPASS
-	DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD_SPF, CIE_UNKNOWN
-	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_T1, AMN_GOOD
-	AMN_C_TI, AMN_C_BU, ABX_GENE_RDNS
-X-CID-UNFAMILIAR: 1
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.45,REQID:68d4f7af-f47e-42c5-8c75-d58c698e4d78,IP:10,
-	URL:0,TC:0,Content:-25,EDM:25,RT:0,SF:18,FILE:0,BULK:0,RULE:Release_Ham,AC
-	TION:release,TS:28
-X-CID-INFO: VERSION:1.1.45,REQID:68d4f7af-f47e-42c5-8c75-d58c698e4d78,IP:10,UR
-	L:0,TC:0,Content:-25,EDM:25,RT:0,SF:18,FILE:0,BULK:0,RULE:Release_HamU,ACT
-	ION:release,TS:28
-X-CID-META: VersionHash:6493067,CLOUDID:7e0aad251b43b172258fc4b6d2a72033,BulkI
-	D:250411151208TN1YUZ7W,BulkQuantity:0,Recheck:0,SF:16|19|23|38|43|66|74|78
-	|102,TC:nil,Content:0|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil
-	,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_USA,TF_CID_SPAM_FSD
-X-UUID: 475388a816a411f0a216b1d71e6e1362-20250411
-X-User: liuhuan01@kylinos.cn
-Received: from localhost.localdomain [(1.198.31.137)] by mailgw.kylinos.cn
-	(envelope-from <liuhuan01@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 645759566; Fri, 11 Apr 2025 15:12:07 +0800
-From: liuhuan01@kylinos.cn
-To: david@fromorbit.com,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	liuh <liuhuan01@kylinos.cn>
-Subject: [PATCH v3] mkfs: fix the issue of maxpct set to 0 not taking effect
-Date: Fri, 11 Apr 2025 15:12:03 +0800
-Message-Id: <20250411071203.10598-1-liuhuan01@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1744380173; c=relaxed/simple;
+	bh=L028CyjHdE2jxczbIM6pBy9pM8llSElkIkRS2OiXwDc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Qpr08Ei8vSCPdgyIrX+37Zaf2VnfKDLAW6dArrQzHE7qte+XO9vs34egf6rTMpTTECbNIRPk51zveVjddqFzWFVbp2BxdBxFWVmF3Hcdb6PVzT18P1aRCzWwEwYCgHBXUvVnFJGzd2bytkunSz4QSxGNan2qglGs4ntcR6C7ebc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pp7E9eCg; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pp7E9eCg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 848DEC4CEE7;
+	Fri, 11 Apr 2025 14:02:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744380172;
+	bh=L028CyjHdE2jxczbIM6pBy9pM8llSElkIkRS2OiXwDc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Pp7E9eCgI9DFYb5sLbeeMuVNF457lPAOtI0tZDKWJsevrSA/kg5avoarhIqKUl0or
+	 4EsbDFP1tEYXc8tRRzc6VkVOAxG53WXcfgunBVz9jOshAk8A8lZmz2dNp4Pfgtk7XQ
+	 PacQnSFcNwImN07bw4o5OubUTOLSR/oeEaoMwAGoOaboOB5K9M2cXPsxGUcnjE5dTJ
+	 Nn/JnId6zL717stJSLpO6xDKcflGYOljRDQcAMvyZ/CFqShK1JCTOTwQgseB2OQsoN
+	 Bvlz+Zpe23oJpTPS0hbXSFXOU0d+/EdakMbV5z69ltll3eXxeFr6nf+8K68xZP8ko2
+	 +saTpy3nZCgVQ==
+From: Christian Brauner <brauner@kernel.org>
+To: djwong@kernel.org,
+	hch@infradead.org,
+	Gou Hao <gouhao@uniontech.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	gouhaojake@163.com,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	wangyuli@uniontech.com
+Subject: Re: [PATCH V3] iomap: skip unnecessary ifs_block_is_uptodate check
+Date: Fri, 11 Apr 2025 16:02:44 +0200
+Message-ID: <20250411-ermorden-sagenhaft-dea43a3c41f9@brauner>
+X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250410071236.16017-1-gouhao@uniontech.com>
+References: <20250408172924.9349-1-gouhao@uniontech.com> <20250410071236.16017-1-gouhao@uniontech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1241; i=brauner@kernel.org; h=from:subject:message-id; bh=L028CyjHdE2jxczbIM6pBy9pM8llSElkIkRS2OiXwDc=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaT/VGQ5d/6RNrMYY6o774XS86cvit0S+1v26chxL/8f+ +8Z1slwdZSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzEup+RYckPh1zRewnhj9eK ypwJFSly43/zPf3SyyXlX3YZ+m8oKGZkOJHK+sfbpsZGd1J8j030rqK1H1rv3Vy6a6eZiqmrUog ZBwA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-From: liuh <liuhuan01@kylinos.cn>
+On Thu, 10 Apr 2025 15:12:36 +0800, Gou Hao wrote:
+> In iomap_adjust_read_range, i is either the first !uptodate block, or it
+> is past last for the second loop looking for trailing uptodate blocks.
+> Assuming there's no overflow (there's no combination of huge folios and
+> tiny blksize) then yeah, there is no point in retesting that the same
+> block pointed to by i is uptodate since we hold the folio lock so nobody
+> else could have set it uptodate.
+> 
+> [...]
 
-If a filesystem has the sb_imax_pct field set to zero, there is no limit to the number of inode blocks in the filesystem.
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-However, when using mkfs.xfs and specifying maxpct = 0, the result is not as expected.
-	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
-	data     =               bsize=4096   blocks=262144, imaxpct=25
-	         =               sunit=0      swidth=0 blks
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-The reason is that the condition will never succeed when specifying maxpct = 0. As a result, the default algorithm was applied.
-	cfg->imaxpct = cli->imaxpct;
-	if (cfg->imaxpct)
-		return;
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-The result with patch:
-	[root@fs ~]# mkfs.xfs -f -i maxpct=0 xfs.img
-	data     =               bsize=4096   blocks=262144, imaxpct=0
-	         =               sunit=0      swidth=0 blks
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
-	[root@fs ~]# mkfs.xfs -f xfs.img
-	data     =               bsize=4096   blocks=262144, imaxpct=25
-	         =               sunit=0      swidth=0 blks
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
 
-Cc: <linux-xfs@vger.kernel.org> # v4.15.0
-Fixes: d7240c965389e1 ("mkfs: rework imaxpct calculation")
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: liuh <liuhuan01@kylinos.cn>
----
- mkfs/xfs_mkfs.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 3f4455d4..25bed4eb 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1048,13 +1048,13 @@ struct cli_params {
- 	int	data_concurrency;
- 	int	log_concurrency;
- 	int	rtvol_concurrency;
-+	int	imaxpct;
- 
- 	/* parameters where 0 is not a valid value */
- 	int64_t	agcount;
- 	int64_t	rgcount;
- 	int	inodesize;
- 	int	inopblock;
--	int	imaxpct;
- 	int	lsectorsize;
- 	uuid_t	uuid;
- 
-@@ -4048,9 +4048,10 @@ calculate_imaxpct(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli)
- {
--	cfg->imaxpct = cli->imaxpct;
--	if (cfg->imaxpct)
-+	if (cli->imaxpct >= 0) {
-+		cfg->imaxpct = cli->imaxpct;
- 		return;
-+	}
- 
- 	/*
- 	 * This returns the % of the disk space that is used for
-@@ -5181,6 +5182,7 @@ main(
- 		.log_concurrency = -1, /* auto detect non-mechanical ddev */
- 		.rtvol_concurrency = -1, /* auto detect non-mechanical rtdev */
- 		.autofsck = FSPROP_AUTOFSCK_UNSET,
-+		.imaxpct = -1, /* set sb_imax_pct automatically */
- 	};
- 	struct mkfs_params	cfg = {};
- 
--- 
-2.43.0
-
+[1/1] iomap: skip unnecessary ifs_block_is_uptodate check
+      https://git.kernel.org/vfs/vfs/c/8e3c15ee0d29
