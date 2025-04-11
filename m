@@ -1,73 +1,187 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f177.google.com (mail-vk1-f177.google.com [209.85.221.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8C791F0E32;
-	Fri, 11 Apr 2025 14:03:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 905BC45948
+	for <linux-xfs@vger.kernel.org>; Fri, 11 Apr 2025 14:38:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744380221; cv=none; b=K5PkueYYtcxCUlz8sgCUADpS9ZQxrkNi7Vc3trVL7fRxeDMpbyvo6IFXZhtgDOIC2jEiQQOpAFqVhJDHEojD9/eg+pXt3sD3ItXAc0ARaomXdXek5YoC6R1t8sCmqMn5jL8IVnDrumdcEGURQYLi76Vc952pU5tx5GV0BuUqMYQ=
+	t=1744382307; cv=none; b=poiT+bvOXLOH/sgzte5V7HQD0XygSmR19oc6CBnAgyBlJ0Kir7s+G2W3onq0NxnL3e6EWBqqz/Qk3DUCBXeMd4dSZJQLL//8+dApSjDEUFTbe90GD/2Q/KNXw7lbzYIlwsm86PQOAD8AYR/tCKLTqsq0fPDmkJxnapgt5eAoX3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744380221; c=relaxed/simple;
-	bh=A9uWHZeLASAeqV3pcSaRLVnFs8sczJhLPZO/60JuIrI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fFUufGyu2I4nz+3QXzorYg5QvSviI4UIjSSq68DE/UPXq2ClKwlx+IbchCQjdMiTtbTuFtB/sr5s8+UEB5qRjSFCn6VErdOhIj0KhmmGk5epxc5SABA9IIym7kqdVpCatKtZY5hd6sTlEic4lTezNd0sSl7FZZ8QW9qs8/2PFhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pilFz60U; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744382307; c=relaxed/simple;
+	bh=qloPr57gq7gbSsNsHMTHhfyolZlFYYdTG9Lrw8UFgQE=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=ezmdJQClg5IxpBhTJGipMXn17tRYhRqW16xa6jvrTjbQXFxY/xsBA5vLKQDckDYlBSjzqN62MXu9CL0CjH8ojtIErcVraGWu897y8vSpi3/OemI+Z+L7M5bPCQBpmAmrP3CO8cqKfSHFXdwfYSzkKhj/B2FKIrSjxGbvedydCkQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chainguard.dev; spf=pass smtp.mailfrom=chainguard.dev; dkim=pass (2048-bit key) header.d=chainguard.dev header.i=@chainguard.dev header.b=Uo+Fa0z6; arc=none smtp.client-ip=209.85.221.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chainguard.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chainguard.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pilFz60U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CD64C4CEE2;
-	Fri, 11 Apr 2025 14:03:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744380221;
-	bh=A9uWHZeLASAeqV3pcSaRLVnFs8sczJhLPZO/60JuIrI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pilFz60UlyKzY1WZZ9dfMwWMkW+uicFjF2tMAeTdYrC0y/DBhCyS12drndRX8Ypnt
-	 htzM95GA7M+5XIXlyee3xXx/e43qK82np0I/bWLssRM0IORmnMZ0rwKb93jMcJWZmM
-	 /yxKYIe2JuARQCYCosK2zVhZajBH0K+VQM+w3lxIUz4djrkPyzUqOM3fXDMMm6RfDE
-	 8H1KKJH5Hhxk8DQWy1vGjI30yYSWPYdQui4eFwdnUjuDDBfVjc5nUoCwuPZEl+acdB
-	 M6QVof35nhfs3XgBbkwfvsvHb7mOgbe+OKdeEOznQ8er0iTQtvCDOMyVT5JcQQ2OYv
-	 HGhE+xMz/deZg==
-Date: Fri, 11 Apr 2025 16:03:29 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Alistair Popple <apopple@nvidia.com>, 
-	kernel test robot <oliver.sang@intel.com>, oe-lkp@lists.linux.dev, lkp@intel.com, 
-	linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Dan Williams <dan.j.williams@intel.com>, Alison Schofield <alison.schofield@intel.com>, 
-	Alexander Gordeev <agordeev@linux.ibm.com>, Asahi Lina <lina@asahilina.net>, 
-	Balbir Singh <balbirs@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, 
-	Christoph Hellwig <hch@lst.de>, Chunyan Zhang <zhang.lyra@gmail.com>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>, 
-	David Hildenbrand <david@redhat.com>, Gerald Schaefer <gerald.schaefer@linux.ibm.com>, 
-	Heiko Carstens <hca@linux.ibm.com>, Huacai Chen <chenhuacai@kernel.org>, 
-	Ira Weiny <ira.weiny@intel.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	John Hubbard <jhubbard@nvidia.com>, linmiaohe <linmiaohe@huawei.com>, 
-	Logan Gunthorpe <logang@deltatee.com>, Matthew Wilcow <willy@infradead.org>, 
-	Michael Camp Drill Sergeant Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
-	Peter Xu <peterx@redhat.com>, Sven Schnelle <svens@linux.ibm.com>, Ted Ts'o <tytso@mit.edu>, 
-	Vasily Gorbik <gor@linux.ibm.com>, Vishal Verma <vishal.l.verma@intel.com>, 
-	Vivek Goyal <vgoyal@redhat.com>, WANG Xuerui <kernel@xen0n.name>, Will Deacon <will@kernel.org>, 
-	linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [linus:master] [fs/dax]  bde708f1a6:
- WARNING:at_mm/truncate.c:#truncate_folio_batch_exceptionals
-Message-ID: <20250411-sehgewohnheiten-blicken-7830519934ab@brauner>
-References: <202504101036.390f29a5-lkp@intel.com>
- <v66t3szdfsfwyl4lw6ns2ykmxrfqecba2nb5wa64l5qqq2kfpb@x7zxzuijty7d>
- <uiu7rcmtooxgbscaiiim7czqsca52bgrt6aiszsafq7jj4n3e7@ge6mfzcmnorl>
+	dkim=pass (2048-bit key) header.d=chainguard.dev header.i=@chainguard.dev header.b="Uo+Fa0z6"
+Received: by mail-vk1-f177.google.com with SMTP id 71dfb90a1353d-523f1b31cf8so827943e0c.0
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Apr 2025 07:38:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chainguard.dev; s=google; t=1744382302; x=1744987102; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=pZnznCBXan8+kKf2HUCAYJiscmvl8olm31OXPNAIf+E=;
+        b=Uo+Fa0z6bX76X5pOjus5zLOA5DQ7YcBcGtfeUs+VkeFR0CLNFRhRw/bwmQfzLrlBu0
+         cfhrExbUPKorBp3se7As4d/QaIp3ed4XlQp05UBBbsIdYa22ln7d4gPvwlNX2NyvbNa6
+         ph55VAYGmHLOAnGepYvgDUWjRAK65T3BJxzTWfu02ctA33Cn+zULnwTxS6FLdNxVgIDG
+         rk6Tz6JNuv+qQCTr2pMuMEk2s5yV7lTaWWQvOVnRqv8obI+VtRzf8e75j0eNPvMGTjb8
+         8MflqyYRDBo8D4xXJrp0XWJ6aIrMzf1Zd9yFyM62hLU1kDVhij31KjHF76uczbLZBQZJ
+         kafA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744382302; x=1744987102;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=pZnznCBXan8+kKf2HUCAYJiscmvl8olm31OXPNAIf+E=;
+        b=pRqRnjAVNYkeXx4Fmx0I3FPpycAYjhATVhoK6xIGSgWqfBXJnnUckZdI2CnZDHjGVY
+         7LEew2V4uioNcV6UuLYPEWR5zOpxG8ht78D4NmnsnPmuOZ20yTwhK47u4cu37FhU45NL
+         kp9tMPIaAld2tNs13z3ccXgIO1Cg2MumyWaeZwlUgH90sQ36vtcZSxaet6a10sr3Pxcn
+         3kgGUmF06oumNcfJKL5nbfSR/L+yvLqSjoxzBaPvjP65yP4GnVKnDQ91bBF90Z4o8Sbx
+         rtdjbDJxzoEbyarMEdlOmWw45dF15y56PtuN3XPCmqZxCUwwQn3rwucKc+RTSG0iBGUA
+         ymXw==
+X-Gm-Message-State: AOJu0YzEZXB/kvSL231qZ+BnvXlAp8dEXIDO4S+svlhVp8adGnOb8YCu
+	KRtxjJtKFY8MqXAmMEVvqavYmlUapIBuWSCHeUCnU8XlPbNMEuj05D4sJu3N8whsleuHo5pLLpe
+	tYINXz+sY7tteuRpV9WZLqKeHnp1z9iyUy1aSugh1c7FvMQjWJiEvag==
+X-Gm-Gg: ASbGnctXkQZQyAEaGL7aH/+itkVFd2s6bcjb4T/ARx6zDn8u6K56e5RPFmNyYWjuh3d
+	TA9tfG5UZu0u3bg7jTqN3hk+ygziSCBCdGosi2iYIYTw589y0VXF4yKzRg5yV8M7Hw/7clW6BGv
+	8ce+sUAu9Qh/izZyQw76lJQITgGF6UH0lHcqoNKhRu6K/ypkNyyfk=
+X-Google-Smtp-Source: AGHT+IFyxe2aMHAejTpsz5giKF9HjG4BfVfCdg4gOFLebczrX2nUILR2N8NLhQdyT2nIZT/aYpBNd76H3TKBcWbEOfM=
+X-Received: by 2002:a05:6122:829d:b0:523:dd87:fe86 with SMTP id
+ 71dfb90a1353d-527c3587e86mr2113482e0c.6.1744382302096; Fri, 11 Apr 2025
+ 07:38:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <uiu7rcmtooxgbscaiiim7czqsca52bgrt6aiszsafq7jj4n3e7@ge6mfzcmnorl>
+From: Luca DiMaio <luca.dimaio@chainguard.dev>
+Date: Fri, 11 Apr 2025 16:38:10 +0200
+X-Gm-Features: ATxdqUGOainL2ddXLhyGOc1K1hDfvRvkJWE0cUqZMIAw2fJiFeeeuGWaJ2RysTo
+Message-ID: <CAKBQhKVi6FWNWJH2PWUA4Ue=aSrvVcR_r2aJOUh45Nd0YdnxVA@mail.gmail.com>
+Subject: Reproducible XFS Filesystems Builds for VMs
+To: linux-xfs@vger.kernel.org
+Cc: Scott Moser <smoser@chainguard.dev>, Dimitri Ledkov <dimitri.ledkov@chainguard.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> didn't lift off and DAX ended up being kind of niche, I think the effort
-> to maintain DAX in ext2 is not justified and we should just drop it (and
-> direct existing users to use ext4 driver instead for the cases where they
-> need it). I'll have a look into it.
+Subject: Reproducible XFS Filesystems Builds for VMs
+linux-xfs@vger.kernel.org
 
-+1
+Dear XFS Maintainers and Community,
+
+I am a Software Engineer at Chainguard working on reproducible builds for V=
+Ms.
+
+While we have successfully implemented reproducible disk images with
+EFI+EXT4 partitions, I=E2=80=99ve been unable to replicate this for XFS
+filesystems.
+Current Approach:
+
+We have successfully implemented reproducible disk images with
+EFI+EXT4 partitions using the following methods:
+
+- For FAT32 partitions: `mkfs.vfat --invarian -i $EFI_UUID` with
+`$SOURCE_DATE_EPOCH` and populating via mtools
+- For EXT4 partitions: `mkfs.ext4 -E hash_seed=3D$EXT4_HASH_SEED -U
+$ROOTFS_UUID` with `$SOURCE_DATE_EPOCH` plus the `-d
+/path/to/rootfs.tar.gz` to populate it
+
+XFS Challenges:
+
+For XFS, I've attempted to create reproducible filesystems using
+extensive parameters:
+
+```
+mkfs.xfs \
+-b size=3D4096 \
+-d agcount=3D4 \
+-d noalign \
+-i attr=3D2 \
+-i projid32bit=3D1 \
+-i size=3D512 \
+-l size=3D67108864 \
+-l su=3D4096 \
+-l version=3D2 \
+-m crc=3D1 \
+-m finobt=3D1 \
+-m uuid=3D$ROOTFS_UUID \
+-n size=3D16384 \
+-n version=3D2 $root_partition
+```
+
+I've tried to specify as many options as possible in order to avoid
+runtime aleatory decisions.
+
+Unfortunately, this does not produce reproducible results across
+different disk images.
+
+I've made progress with empty filesystems by using a combination of
+`libfaketime`
+to enforce `$SOURCE_DATE_EPOCH` and a custom library that overwrites
+the libc's `getrandom()`:
+
+```
+~$ export LD_PRELOAD=3D"./deterministic_rng.so /usr/lib/faketime/libfaketim=
+e.so.1"
+~$ mkfs.xfs \
+-b size=3D4096 \
+-d agcount=3D4 \
+-d noalign \
+-i attr=3D2 \
+-i projid32bit=3D1 \
+-i size=3D512 \
+-l size=3D67108864 \
+-l su=3D4096 \
+-l version=3D2 \
+-m crc=3D1 \
+-m finobt=3D1 \
+-m uuid=3D$ROOTFS_UUID \
+-n size=3D16384 \
+-n version=3D2 disk1.img
+~$ mkfs.xfs \
+-b size=3D4096 \
+-d agcount=3D4 \
+-d noalign \
+-i attr=3D2 \
+-i projid32bit=3D1 \
+-i size=3D512 \
+-l size=3D67108864 \
+-l su=3D4096 \
+-l version=3D2 \
+-m crc=3D1 \
+-m finobt=3D1 \
+-m uuid=3D$ROOTFS_UUID \
+-n size=3D16384 \
+-n version=3D2 disk2.img
+~$ md5sum disk*
+c68c202163dcb862762fc01970f6c8b4  disk1.img
+c68c202163dcb862762fc01970f6c8b4  disk2.img
+```
+
+This approach works for empty filesystems, but when populating the filesyst=
+em by
+mounting and untarring an archive, different metadata is generated
+even after using
+`xfs_repair -L` to reset most metadata.
+
+The primary difference appears to be in the allocation group metadata,
+which is optimized at runtime.
+
+Question:
+
+EXT4 addresses this issue with the -d flag, which allows populating
+from an archive or directory without mounting.
+Is there similar functionality available for XFS, or is there interest
+in developing a method for generating reproducible XFS root
+filesystems?
+
+I'm asking this because we'd be interested in using XFS as a filesystem for=
+ the
+final product.
+
+Thank you for your time and expertise. Any guidance would be greatly
+appreciated.
+Regards,
+L.
