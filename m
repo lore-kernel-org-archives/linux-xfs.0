@@ -1,84 +1,108 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DF088828
-	for <linux-xfs@vger.kernel.org>; Sat, 12 Apr 2025 06:31:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8634D221F03
+	for <linux-xfs@vger.kernel.org>; Sat, 12 Apr 2025 20:04:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744439487; cv=none; b=iS93MAi1SWIPzgrElFU1OAIZLYIpxNCVaOK/2QuEB4veXDq7XZJeUzYBf0N9Lah0dXGFodKCd3RqL0MBSWzDyvqCUHehIZuLgG9hdq+74n3RlpGmjlP867kbqT3ww6Qji0gyhynfZVynDuCMV9b7Hn9qLEhgAoR8qoS7QvpTn1s=
+	t=1744488261; cv=none; b=k55TYZ+QYXMZjhqwOTBoCjwqg61NCU8/r3NEP8EUc9igSwrt/khdf5KZ1a6jSryKD5T/CcbJPTpfzODYSEwrQJLCahQJrGfeLYyx9UO+q3Su777jMR+s10X0PMF8W54OK2fgJ7vVOmqcIvqGN/LhwWK3xVejB4uVpDnMIgOhQEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744439487; c=relaxed/simple;
-	bh=cWbyxzYaQ8PQvTy8fzH4oopioQzE6j/SkLKkpleZ7v8=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=GBIO+CYkXT60A4fpKl5a+kEm0ArO8MJVD2ecoI8Q/ci5sBBIRmOVHnk0PXcsFYGN85ADozGlu9Qov+/zbcYT9WWzKbDxQ1fSU8tfdf91i2oOb5eAv5BGTno/KZwgqpui1b6Hrt5S0ima4YaK2ovcSn7WPY7yviRm55vu/pWA16s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DPTflgZq; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1744488261; c=relaxed/simple;
+	bh=OWz+aH8klM7UAUDqCrig0TrpdlpaKluF92h4yFy36e0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=J6D56dsvRuQwLB7oHLN8A//M9SekgGIudLr08g0sjePIDfEkXxjU/Td8ozFFYEZAZmHBBJuFdiwXkB/Zl2mEhnENKCKj333yjZRO22ijcLg/SEqEXCdPLybyUa8EQdO2GorZt7OLJlmUTn0ByvsAaso1vd1eIY3CXVoC0pW7nCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=qBUP54D1; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DPTflgZq"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-22928d629faso28283825ad.3
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Apr 2025 23:31:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744439486; x=1745044286; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=r9tu0iAn5P4lQWuPqv/93PAcgy4Sg/n+WRSJjXauFSw=;
-        b=DPTflgZqJ6zoevDNIU6kkWQm6tgixloZc465ZMQVO45wM+OWi4pnHUnCTDq2JiPSqs
-         E3ew32LNxPL51+ux+3sdXfFq1yUwJ9x0lM9HzSBWszj/6CzB6w5Eq9s6FBScD4Tcr6pn
-         jY26v+65kr/7gTxq9AifdXb1wRC1JTrMBYFVjqZemat6KbJySZzbWy7tW3fX7UfxlwrC
-         9PaADEynx0iS5goHTuiGAadSrD3nQq5E5pwfK2QTpqk7vr2gWVMEV38PzO/Ol/ijsW2x
-         kHY3DpDz11am3cGjIgxQztPL2vWcSdrRkY9HVsE7XoqRJHQrFGk9exyh6qu7g7p93z4x
-         HjGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744439486; x=1745044286;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=r9tu0iAn5P4lQWuPqv/93PAcgy4Sg/n+WRSJjXauFSw=;
-        b=K/A3cDOcu+Z83nVqeJ2ocUQd8Vd3C6ouS4KtJ3pCrsoR60ASrjC8dRgUJjg05cfKee
-         Ik5Fb+55oOzry0gjYwAaf8OrJM8zShwqHdDrepqxd4er7jnxdDuWvzCBB7vVgUFK5ytW
-         5C+YpPi0Uo+kI4ZKbYfM8cbWZ5GOEbG6AVPxKHyFAL3w7OVXVuQDMfrEz5cqxh8qqFK9
-         fGLwXw0COINl85EHAM19ksJLm29H5oMBGsMMEepLxL+laUvl4dGyiiPtfgTmr/n5uLg/
-         mcyEcgIP1I3wwilOLzJktl40LtlusI1fnbJDCx4zZctkA8kObg85JT27qx7pRVvZr2IU
-         Mkvw==
-X-Gm-Message-State: AOJu0Yx8RQ7PTtnTYuOkpNHEQUc4qjqcmtp3yKLBG/54275YFaa7uigH
-	v6JOyNiRs0EPlTIVs2EFYSBhOkYTo61CAIXQMjVT7geYUlH2CEJg
-X-Gm-Gg: ASbGncujVFIhCe5/z+IOJfM1zJ4Uoug1F2YH8ayR6Nh8oozgyBpYSYtppODAmM+o7ZP
-	HnWkcd78mYjRcq+ouzBVdsjcsmPUdaRzzj83LYoyfCxy/0f2oIwEeqGZn0qcEeJ/tf9OpVesSp5
-	xikw094lt8w70m6CUf4pvX9d18sP/uUwRtKmceDygAnag0BBfTcbXbET/13ZyNsf9NSPaaM7Qah
-	+zFYmSVjR5m6RPfvnMN69RLWGD2T/hlfp8W8n3OdI6LkbfJaS5XMvu3DFKDsSkyweVL+ktPc378
-	iqy1blgzmx1PN2Hdyb6f4V/0fke+saggq4qhYpBlzT2v
-X-Google-Smtp-Source: AGHT+IGP9FBvxOYi79mbYsCgvfhzMLSoR2OsDfnP8ENmdgMz6zpMSyo9wMHCGXC5RyIP1SLdCwgwuw==
-X-Received: by 2002:a17:902:f685:b0:224:26f2:97d7 with SMTP id d9443c01a7336-22bea4936bemr58294795ad.8.1744439485574;
-        Fri, 11 Apr 2025 23:31:25 -0700 (PDT)
-Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22ac7b628edsm61236205ad.10.2025.04.11.23.31.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Apr 2025 23:31:24 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>, Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org
-Subject: Re: [PATCH] man: fix missing cachestat manpage
-In-Reply-To: <87o6x129bj.fsf@gmail.com>
-Date: Sat, 12 Apr 2025 12:00:24 +0530
-Message-ID: <87mscl28ov.fsf@gmail.com>
-References: <20250409160059.GA6283@frogsfrogsfrogs> <87o6x129bj.fsf@gmail.com>
+	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="qBUP54D1"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id 46267240101
+	for <linux-xfs@vger.kernel.org>; Sat, 12 Apr 2025 22:04:07 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
+	t=1744488247; bh=OWz+aH8klM7UAUDqCrig0TrpdlpaKluF92h4yFy36e0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:To:Cc:From;
+	b=qBUP54D1qfZK36cVrlBNLbh+2nWmTYGzAHoHC6ZY6GWoKhKPGd8HKFzJzPIII/zCH
+	 k/mChuHKA3RULPoEFta5AU4k7GEFZZ9PjZ83k2Xltzh+6QBjojznW7D1n68vfpyh3l
+	 XboYnqpxWXONicWcJNfKZin1hk23v3i2Iy6qtP9zVyHiK16Lf5QQtXz4kFmnNv9448
+	 Ojg6mS68MC0CEUd5ALuYwBo2IhEP5anCgOcFDne8MrSLnN95VqnKU2LbD6uR3qeqVr
+	 CHP45rP7hVl7AMoUB/ceSEN3W3ne+BQAFRjqEFzOK4I2Si5IXc97kdBhYKOt4RPjmy
+	 KDYAtCWMsbiDw==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4ZZkyt5C2fz9rxD;
+	Sat, 12 Apr 2025 22:04:06 +0200 (CEST)
+From: Charalampos Mitrodimas <charmitro@posteo.net>
+Date: Sat, 12 Apr 2025 20:03:57 +0000
+Subject: [PATCH] xfs: Verify DA node btree hash order
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250412-xfs-hash-check-v1-1-fec1fef5d006@posteo.net>
+X-B4-Tracking: v=1; b=H4sIACzH+mcC/x3MQQqAIBBA0avErBtIK7KuEi3MphwCCwdCCO+et
+ HyL/18QikwCU/VCpIeFr1Cg6gqct+Eg5K0YdKP7plMa0y7orXh0ntyJKw3tOBijrHZQojvSzuk
+ fzkvOH9Oj675gAAAA
+X-Change-ID: 20250412-xfs-hash-check-be7397881a2c
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1744488245; l=1647;
+ i=charmitro@posteo.net; s=20250412; h=from:subject:message-id;
+ bh=OWz+aH8klM7UAUDqCrig0TrpdlpaKluF92h4yFy36e0=;
+ b=cBb1AvyINpf0A7xXg40VYb23V3WAlVb58xBF+YF0p1wdN/XbaBYsfWOBuJiqJ+50gJ5FNrq2x
+ 7zUbNnQUGglCMnAH/M8PBrVL/THQNmIfrUGixlkhnGZhyeetiof8sQE
+X-Developer-Key: i=charmitro@posteo.net; a=ed25519;
+ pk=Dwccy7f4QM74qKQFgkWc/EpYGEDY0qvP4cycC87VXeQ=
 
-Ritesh Harjani (IBM) <ritesh.list@gmail.com> writes:
+The xfs_da3_node_verify() function checks the integrity of directory
+and attribute B-tree node blocks. However, it was missing a check to
+ensure that the hash values of the btree entries within the node are
+strictly increasing, as required by the B-tree structure.
 
-> "Darrick J. Wong" <djwong@kernel.org> writes:
->
->> From: Darrick J. Wong <djwong@kernel.org>
->>
->> Fix missing cachestat documentation so that xfs/514 doesn't fail.
->>
->
-> Thanks for the fixing this. I didn't notice xfs/514 tests undocumented
-> xfs_db commands. 
+Add a loop to iterate through the btree entries and verify that each
+entry's hash value is greater than the previous one. If an
+out-of-order hash value is detected, return failure to indicate
+corruption.
 
-For xfs_io, xfs/293 tests for undocumented commands.
+This addresses the "XXX: hash order check?" comment and improves
+corruption detection for DA node blocks.
 
--ritesh
+Signed-off-by: Charalampos Mitrodimas <charmitro@posteo.net>
+---
+ fs/xfs/libxfs/xfs_da_btree.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 17d9e6154f1978ce5a5cb82176eea4d6b9cd768d..6c748911e54619c3ceae9b81f55cf61da6735f01 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -247,7 +247,16 @@ xfs_da3_node_verify(
+ 	    ichdr.count > mp->m_attr_geo->node_ents)
+ 		return __this_address;
+ 
+-	/* XXX: hash order check? */
++	/* Check hash order */
++	uint32_t prev_hash = be32_to_cpu(ichdr.btree[0].hashval);
++
++	for (int i = 1; i < ichdr.count; i++) {
++		uint32_t curr_hash = be32_to_cpu(ichdr.btree[i].hashval);
++
++		if (curr_hash <= prev_hash)
++			return __this_address;
++		prev_hash = curr_hash;
++	}
+ 
+ 	return NULL;
+ }
+
+---
+base-commit: ecd5d67ad602c2c12e8709762717112ef0958767
+change-id: 20250412-xfs-hash-check-be7397881a2c
+
+Best regards,
+-- 
+Charalampos Mitrodimas <charmitro@posteo.net>
+
