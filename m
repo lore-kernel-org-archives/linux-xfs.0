@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A269A1A01CC
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:37:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC15819DFA7
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:37:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744609049; cv=none; b=rSAllR2MTYEa7H/OsyU3njFkjPiIabdXSWKu/rlh+xDLbJOGCpK2N3TeqbUOMpISYggaN5YK4HU8XXOcTP3LlJunmDaA1MTDj06Nff+F1Iu8fsROBV+UkulsUBPZxBkuVtrtimcpjVmj9V6WYPd9P/ZeyhJBDywnHV5Wo1dCDFE=
+	t=1744609051; cv=none; b=EDfERy/Q6P5hL/upPAExk8j+Od2ax1+HAqZSopRRqe1dJOlAV4Fv6KkPzZEyuyQOFyZSWNEfrFaxcf75as8nD+jVg5H+KssLuivPKmzgRbhK+CN6lLv5eaxm8y9+2lFbUGhgsMO6IyBcBaYaVckCkJPvT22INvjh1yTSwU2CTE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744609049; c=relaxed/simple;
-	bh=P4BXHc6H+094c1oaKKEnpFSz5+ep4e/zmJRXtHx0XeI=;
+	s=arc-20240116; t=1744609051; c=relaxed/simple;
+	bh=Hvx2HBgmmN3L9feZjcjNYq2jyXwVgiswNmyJxH/HfQo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fcNgJAjwcRJ2T42J+wOxPECtbwOPpyaMn0pTagFpkiP77UnmGclkh+cZUzGmj8Bmc4VbZ7Y8QKckL7qe099UcYIFkFoT1IrNB9F6XkKBnk381CYzr1pwIqI59wZR4Ww5Tmx0d5y/Vbe38STjw01WmtEGALhKN4F9VC8GADjRtW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=F238Nokq; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=JYZMFKCUZtY/P3Z6+BKh2zJK79a9vBRUEp2FVpIbR/0Cg1dPZFM0AuB91cA2iUipIM8q3x5Wv58PxuYg1jd2Z/5AfLZWbMwX2He5ZWkQtsukSd8tX6jIhllDPoXQZV5ARBZxtWpU8++5gYTxms4t8xuLMbEHPEafdQk3P+53xwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Jy6I/ppM; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F238Nokq"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Jy6I/ppM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=4lf1LMu9CxCK6pA/naychXyePkPRmOyhe1oSaUYak2w=; b=F238NokqFIqu6AekCA0ERfxxS9
-	JnJA+T3Uo39JR3+PtBveMj5NMgErJahWQlQjB4qHEnJualQN9RJCetqwVolG92CiTiWK+GOKJ1Ivq
-	CtjVCbfQ38Xjhndw7PGber9kTHgj+l6mB8eEHC9X39QoSOVwNLByitvn5rzVtmb+dB43iZXxx99y0
-	4BPCrnDApRbKxr2sa9KjNJN1sZVbYYWY1x2xdQcRtwRbYQAiiVUb2AKPdoCEJejcSxYzri8kZH0Zu
-	8xWccEkQrBciw21lOxqD13DMpaclGGub31MvYKshB+qa41sUd/emhpBBQ8jEAUeBymCarPtSihS7D
-	hWPGVlpQ==;
+	bh=H5f35Hpi3RfHGZxh3W/9WByq7z32WQ0jtlBPqd1m5to=; b=Jy6I/ppMjzm3MMZ1KaWSkEpbGc
+	1Hegf81la323lVVLMPBMgxGNAWetWbKyy+aYWIZ8B/ADiAKUPfzv8H3zLLqrX7hXxipyyJi1mphaV
+	Oc6Tg6UTWbd9WU+Gg/6Vmr1JKbZILHNeWPs1GFhPuzCMJHquHwFGGqC3hgRADOviqDWzYVOaaWxVy
+	7Y06VeFnTZTgolmLIEkcq+4H0suodMoJrOmWlI3R3PUDioqBac0JCresObN6Beg8gLHCUzpr0YhaG
+	SaDQZlXDX1QejYXLdPgn3L03DiIltMdnfH9CFkJjuPl+lCTEvsoYX/yl62twMcd3kF2tAx8fSEQOa
+	zNLJ6I0w==;
 Received: from 2a02-8389-2341-5b80-9d44-dd57-c276-829a.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9d44:dd57:c276:829a] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1u4CVa-00000000iGN-3H11;
-	Mon, 14 Apr 2025 05:37:27 +0000
+	id 1u4CVd-00000000iHC-1C5J;
+	Mon, 14 Apr 2025 05:37:29 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 18/43] xfs: add the zoned space allocator
-Date: Mon, 14 Apr 2025 07:36:01 +0200
-Message-ID: <20250414053629.360672-19-hch@lst.de>
+Subject: [PATCH 19/43] xfs: add support for zoned space reservations
+Date: Mon, 14 Apr 2025 07:36:02 +0200
+Message-ID: <20250414053629.360672-20-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250414053629.360672-1-hch@lst.de>
 References: <20250414053629.360672-1-hch@lst.de>
@@ -50,26 +50,19 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Source kernel commit: 4e4d52075577707f8393e3fc74c1ef79ca1d3ce6
+Source kernel commit: 0bb2193056b5969e4148fc0909e89a5362da873e
 
-For zoned RT devices space is always allocated at the write pointer, that
-is right after the last written block and only recorded on I/O completion.
+For zoned file systems garbage collection (GC) has to take the iolock
+and mmaplock after moving data to a new place to synchronize with
+readers.  This means waiting for garbage collection with the iolock can
+deadlock.
 
-Because the actual allocation algorithm is very simple and just involves
-picking a good zone - preferably the one used for the last write to the
-inode.  As the number of zones that can written at the same time is
-usually limited by the hardware, selecting a zone is done as late as
-possible from the iomap dio and buffered writeback bio submissions
-helpers just before submitting the bio.
-
-Given that the writers already took a reservation before acquiring the
-iolock, space will always be readily available if an open zone slot is
-available.  A new structure is used to track these open zones, and
-pointed to by the xfs_rtgroup.  Because zoned file systems don't have
-a rsum cache the space for that pointer can be reused.
-
-Allocations are only recorded at I/O completion time.  The scheme used
-for that is very similar to the reflink COW end I/O path.
+To avoid this, the worst case required blocks have to be reserved before
+taking the iolock, which is done using a new RTAVAILABLE counter that
+tracks blocks that are free to write into and don't require garbage
+collection.  The new helpers try to take these available blocks, and
+if there aren't enough available it wakes and waits for GC.  This is
+done using a list of on-stack reservations to ensure fairness.
 
 Co-developed-by: Hans Holmberg <hans.holmberg@wdc.com>
 Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
@@ -77,59 +70,73 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rtgroup.h | 22 +++++++++++++++++-----
- libxfs/xfs_types.h   |  1 +
- 2 files changed, 18 insertions(+), 5 deletions(-)
+ libxfs/xfs_bmap.c  | 15 +++++++++++----
+ libxfs/xfs_types.h | 12 +++++++++++-
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index e35d1d798327..5d8777f819f4 100644
---- a/libxfs/xfs_rtgroup.h
-+++ b/libxfs/xfs_rtgroup.h
-@@ -37,15 +37,27 @@ struct xfs_rtgroup {
- 	xfs_rtxnum_t		rtg_extents;
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index c40cdf004ac9..3a857181bfa4 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -35,6 +35,7 @@
+ #include "xfs_symlink_remote.h"
+ #include "xfs_inode_util.h"
+ #include "xfs_rtgroup.h"
++#include "xfs_zone_alloc.h"
  
- 	/*
--	 * Cache of rt summary level per bitmap block with the invariant that
--	 * rtg_rsum_cache[bbno] > the maximum i for which rsum[i][bbno] != 0,
--	 * or 0 if rsum[i][bbno] == 0 for all i.
--	 *
-+	 * For bitmap based RT devices this points to a cache of rt summary
-+	 * level per bitmap block with the invariant that rtg_rsum_cache[bbno]
-+	 * > the maximum i for which rsum[i][bbno] != 0, or 0 if
-+	 * rsum[i][bbno] == 0 for all i.
- 	 * Reads and writes are serialized by the rsumip inode lock.
-+	 *
-+	 * For zoned RT devices this points to the open zone structure for
-+	 * a group that is open for writers, or is NULL.
- 	 */
--	uint8_t			*rtg_rsum_cache;
-+	union {
-+		uint8_t			*rtg_rsum_cache;
-+		struct xfs_open_zone	*rtg_open_zone;
-+	};
- };
+ struct kmem_cache		*xfs_bmap_intent_cache;
  
-+/*
-+ * For zoned RT devices this is set on groups that have no written blocks
-+ * and can be picked by the allocator for opening.
-+ */
-+#define XFS_RTG_FREE			XA_MARK_0
+@@ -4783,12 +4784,18 @@ xfs_bmap_del_extent_delay(
+ 	da_diff = da_old - da_new;
+ 	fdblocks = da_diff;
+ 
+-	if (bflags & XFS_BMAPI_REMAP)
++	if (bflags & XFS_BMAPI_REMAP) {
+ 		;
+-	else if (isrt)
+-		xfs_add_frextents(mp, xfs_blen_to_rtbxlen(mp, del->br_blockcount));
+-	else
++	} else if (isrt) {
++		xfs_rtbxlen_t	rtxlen;
 +
- static inline struct xfs_rtgroup *to_rtg(struct xfs_group *xg)
- {
- 	return container_of(xg, struct xfs_rtgroup, rtg_group);
++		rtxlen = xfs_blen_to_rtbxlen(mp, del->br_blockcount);
++		if (xfs_is_zoned_inode(ip))
++			xfs_zoned_add_available(mp, rtxlen);
++		xfs_add_frextents(mp, rtxlen);
++	} else {
+ 		fdblocks += del->br_blockcount;
++	}
+ 
+ 	xfs_add_fdblocks(mp, fdblocks);
+ 	xfs_mod_delalloc(ip, -(int64_t)del->br_blockcount, -da_diff);
 diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
-index 76f3c31573ec..dc1db15f0be5 100644
+index dc1db15f0be5..f6f4f2d4b5db 100644
 --- a/libxfs/xfs_types.h
 +++ b/libxfs/xfs_types.h
-@@ -243,6 +243,7 @@ enum xfs_free_counter {
- 	 * Number of free RT extents on the RT device.
+@@ -244,12 +244,22 @@ enum xfs_free_counter {
  	 */
  	XC_FREE_RTEXTENTS,
-+
+ 
++	/*
++	 * Number of available for use RT extents.
++	 *
++	 * This counter only exists for zoned RT device and indicates the number
++	 * of RT extents that can be directly used by writes.  XC_FREE_RTEXTENTS
++	 * also includes blocks that have been written previously and freed, but
++	 * sit in a rtgroup that still needs a zone reset.
++	 */
++	XC_FREE_RTAVAILABLE,
  	XC_FREE_NR,
  };
  
+ #define XFS_FREECOUNTER_STR \
+ 	{ XC_FREE_BLOCKS,		"blocks" }, \
+-	{ XC_FREE_RTEXTENTS,		"rtextents" }
++	{ XC_FREE_RTEXTENTS,		"rtextents" }, \
++	{ XC_FREE_RTAVAILABLE,		"rtavailable" }
+ 
+ /*
+  * Type verifier functions
 -- 
 2.47.2
 
