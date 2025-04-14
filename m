@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F40B3148832
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:37:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 669F6148832
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:37:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744609077; cv=none; b=IC7SB7AKQC5O98lzcDt+F6mhc3egBu0LgxaHMgSZYGdtZt/rm9nCHPPKqdDtSSPUb4ELHY7cE1iGmni1nzYj4zEnEDkpJVXUUIYDOLsW9nj5H4L8lnbWhVPvq1+gm+2xdNagBruK4rMBtBgU0pAXrIVOhj8KZijHoURm1dExU5g=
+	t=1744609079; cv=none; b=k7EcogxSgDSEV9qvfGRgicooeK1WyenoM6mI7OixjXDXrhEQ74K34BFvSkwLKn2B6zEOcQ8EWSnoeRe8kdHou6sukFKfkSWM4mVzRadaB65fZNMoGLn3M/IPehbfSPcWq0ZrnFiIJsKEPTgLFouPlzRcxB0QgQCXoHBHBSQXufw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744609077; c=relaxed/simple;
-	bh=z0c3fGy0djDcXD5XvAo4h8+ePCbGx1Jg62qIy7VqUc0=;
+	s=arc-20240116; t=1744609079; c=relaxed/simple;
+	bh=U2MELDivvYOtLkUw4UAUAtU57x944Tz8q593ZLvXSp4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aZy8/FjV8JIkaiCD6SLkxzt71eFRzEwycB6HEw3/cYx4hXe2hqHtrTLiX//HN/ZnmjsjrJGvdgq/Sf0ZZtOm+PPOl6nkubb38GuNwT4jcmApGpUGSj9pri2GvUc0hM/hq4pjlHnswH2dq2jopoFDe4zCJN2Rc0/KXMO0HYUaqL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dWTMl0+C; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=aCB+Hdgae8tXH3AdQOAdZL5NiAE0BVo3xzVtCpwvzsg+UY3qZ4p2Tkz+EkJnbWGSdDHXyQlSJOgRZpCL9a7mB394OILM4xPuEiPEdsbJ4l1Aaj7t6a+gr8rxERKVKad6PyX/iYNT9ADiLRoOQNBvhASgRmN0au+Eurqbk6lVKD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cA/FLgAY; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dWTMl0+C"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cA/FLgAY"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Wq99DMrvuOHwu+5F4HoX8BUWRPRX6yldymD9wP+p1jk=; b=dWTMl0+CwiYvHcanP2HUCe+3Lt
-	BrW2eWxUTKmJHL5RXswz7mkQWVQPu1bdP//PfXtk3RqbG7XjCr4Okp9+/0XAI8K84FEju6ElvqTz7
-	0ifpiFLvJc8nyVMKWHIUyLcYujr/Av5GQxt2VC9BWTsQ7jRZ5eGTf3qZM57BqrhqKrwyumwDKc9N6
-	6rM9rB+vf4a+EeVDgehqwNA4Z5fUdXejr9eKnt4IJMd3bhMG5YQyLe1Kyu/5bbP5up7OkMJWlRAvW
-	SIxfSJXEvyFkeMF5uypUeyfdMLpNhs3JLG5PDQykabrE0LiRw7vWMVF2vIaRDTZls7yDZ1VC6qWuM
-	TmEy9Umg==;
+	bh=MCk7Qv5+U2kmAzN0IkwtZq6ArOL0ilED98VDtxXq+9Q=; b=cA/FLgAYmhOUwvgA8X2Hp8zjvE
+	yypB6IrqvwPLl+EisjW4v2aIcbzIE/nzXvFpN8ENbA12Za6fnZtZSFlqLuuwK1egBuHECoEIymPZC
+	0nH04TIHneRYsx4DsegLQQ3l2KVD6g3xvJbXvFnyB8abByi5tzSSJTZCk577zw4uK7MjE7fRN3Lxg
+	IxVOrYE1tIcPEl+Xi4koTugE2CD97hzKt6ruKp96b7a5wxq6GvLUokEozn1KtAk0X3enSxIl8sreJ
+	S+SyZPD81MT6psH//EuSJBN41n8qzo6v+jCQMb1LdPtFN4izss9CscwpfHxu0Qy4WdamX55e3/a3e
+	xkyOnGqQ==;
 Received: from 2a02-8389-2341-5b80-9d44-dd57-c276-829a.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9d44:dd57:c276:829a] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1u4CW3-00000000iMR-1brk;
-	Mon, 14 Apr 2025 05:37:55 +0000
+	id 1u4CW5-00000000iMq-3GgP;
+	Mon, 14 Apr 2025 05:37:58 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 29/43] xfs_repair: validate rt groups vs reported hardware zones
-Date: Mon, 14 Apr 2025 07:36:12 +0200
-Message-ID: <20250414053629.360672-30-hch@lst.de>
+Subject: [PATCH 30/43] xfs_mkfs: factor out a validate_rtgroup_geometry helper
+Date: Mon, 14 Apr 2025 07:36:13 +0200
+Message-ID: <20250414053629.360672-31-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250414053629.360672-1-hch@lst.de>
 References: <20250414053629.360672-1-hch@lst.de>
@@ -50,223 +50,99 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Run a report zones ioctl, and verify the rt group state vs the
-reported hardware zone state.  Note that there is no way to actually
-fix up any discrepancies here, as that would be rather scary without
-having transactions.
+Factor out the rtgroup geometry checks so that they can be easily reused
+for the upcoming zoned RT allocator support.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/Makefile |   1 +
- repair/phase5.c |  11 +---
- repair/zoned.c  | 139 ++++++++++++++++++++++++++++++++++++++++++++++++
- repair/zoned.h  |  10 ++++
- 4 files changed, 152 insertions(+), 9 deletions(-)
- create mode 100644 repair/zoned.c
- create mode 100644 repair/zoned.h
+ mkfs/xfs_mkfs.c | 67 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 37 insertions(+), 30 deletions(-)
 
-diff --git a/repair/Makefile b/repair/Makefile
-index ff5b1f5abeda..fb0b2f96cc91 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -81,6 +81,7 @@ CFILES = \
- 	strblobs.c \
- 	threads.c \
- 	versions.c \
-+	zoned.c \
- 	xfs_repair.c
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index ec82e05bf4e4..13b746b365e1 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3950,6 +3950,42 @@ out:
+ 	cfg->rgcount = howmany(cfg->rtblocks, cfg->rgsize);
+ }
  
- LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
-diff --git a/repair/phase5.c b/repair/phase5.c
-index e350b411c243..e44c26885717 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -21,6 +21,7 @@
- #include "rmap.h"
- #include "bulkload.h"
- #include "agbtree.h"
-+#include "zoned.h"
- 
- static uint64_t	*sb_icount_ag;		/* allocated inodes per ag */
- static uint64_t	*sb_ifree_ag;		/* free inodes per ag */
-@@ -631,15 +632,7 @@ check_rtmetadata(
- 	struct xfs_mount	*mp)
- {
- 	if (xfs_has_zoned(mp)) {
--		/*
--		 * Here we could/should verify the zone state a bit when we are
--		 * on actual zoned devices:
--		 *	- compare hw write pointer to last written
--		 *	- compare zone state to last written
--		 *
--		 * Note much we can do when running in zoned mode on a
--		 * conventional device.
--		 */
-+		check_zones(mp);
- 		return;
++static void
++validate_rtgroup_geometry(
++	struct mkfs_params	*cfg)
++{
++	if (cfg->rgsize > XFS_MAX_RGBLOCKS) {
++		fprintf(stderr,
++_("realtime group size (%llu) must be less than the maximum (%u)\n"),
++				(unsigned long long)cfg->rgsize,
++				XFS_MAX_RGBLOCKS);
++		usage();
++	}
++
++	if (cfg->rgsize % cfg->rtextblocks != 0) {
++		fprintf(stderr,
++_("realtime group size (%llu) not a multiple of rt extent size (%llu)\n"),
++				(unsigned long long)cfg->rgsize,
++				(unsigned long long)cfg->rtextblocks);
++		usage();
++	}
++
++	if (cfg->rgsize <= cfg->rtextblocks) {
++		fprintf(stderr,
++_("realtime group size (%llu) must be at least two realtime extents\n"),
++				(unsigned long long)cfg->rgsize);
++		usage();
++	}
++
++	if (cfg->rgcount > XFS_MAX_RGNUMBER) {
++		fprintf(stderr,
++_("realtime group count (%llu) must be less than the maximum (%u)\n"),
++				(unsigned long long)cfg->rgcount,
++				XFS_MAX_RGNUMBER);
++		usage();
++	}
++}
++
+ static void
+ calculate_rtgroup_geometry(
+ 	struct mkfs_params	*cfg,
+@@ -4007,36 +4043,7 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
+ 				(cfg->rtblocks % cfg->rgsize != 0);
  	}
  
-diff --git a/repair/zoned.c b/repair/zoned.c
-new file mode 100644
-index 000000000000..456076b9817d
---- /dev/null
-+++ b/repair/zoned.c
-@@ -0,0 +1,139 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2024 Christoph Hellwig.
-+ */
-+#include <ctype.h>
-+#include <linux/blkzoned.h>
-+#include "libxfs_priv.h"
-+#include "libxfs.h"
-+#include "xfs_zones.h"
-+#include "err_protos.h"
-+#include "zoned.h"
-+
-+/* random size that allows efficient processing */
-+#define ZONES_PER_IOCTL			16384
-+
-+static void
-+report_zones_cb(
-+	struct xfs_mount	*mp,
-+	struct blk_zone		*zone)
-+{
-+	xfs_rtblock_t		zsbno = xfs_daddr_to_rtb(mp, zone->start);
-+	xfs_rgblock_t		write_pointer;
-+	xfs_rgnumber_t		rgno;
-+	struct xfs_rtgroup	*rtg;
-+
-+	if (xfs_rtb_to_rgbno(mp, zsbno) != 0) {
-+		do_error(_("mismatched zone start 0x%llx."),
-+				(unsigned long long)zsbno);
-+		return;
-+	}
-+
-+	rgno = xfs_rtb_to_rgno(mp, zsbno);
-+	rtg = xfs_rtgroup_grab(mp, rgno);
-+	if (!rtg) {
-+		do_error(_("realtime group not found for zone %u."), rgno);
-+		return;
-+	}
-+
-+	if (!rtg_rmap(rtg))
-+		do_warn(_("no rmap inode for zone %u."), rgno);
-+	else
-+		xfs_zone_validate(zone, rtg, &write_pointer);
-+	xfs_rtgroup_rele(rtg);
-+}
-+
-+void
-+check_zones(
-+	struct xfs_mount	*mp)
-+{
-+	int			fd = mp->m_rtdev_targp->bt_bdev_fd;
-+	uint64_t		sector = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart);
-+	unsigned int		zone_size, zone_capacity;
-+	uint64_t		device_size;
-+	size_t			rep_size;
-+	struct blk_zone_report	*rep;
-+	unsigned int		i, n = 0;
-+
-+	if (ioctl(fd, BLKGETSIZE64, &device_size))
-+		return; /* not a block device */
-+	if (ioctl(fd, BLKGETZONESZ, &zone_size) || !zone_size)
-+		return;	/* not zoned */
-+
-+	/* BLKGETSIZE64 reports a byte value */
-+	device_size = BTOBB(device_size);
-+	if (device_size / zone_size < mp->m_sb.sb_rgcount) {
-+		do_error(_("rt device too small\n"));
-+		return;
-+	}
-+
-+	rep_size = sizeof(struct blk_zone_report) +
-+		   sizeof(struct blk_zone) * ZONES_PER_IOCTL;
-+	rep = malloc(rep_size);
-+	if (!rep) {
-+		do_warn(_("malloc failed for zone report\n"));
-+		return;
-+	}
-+
-+	while (n < mp->m_sb.sb_rgcount) {
-+		struct blk_zone *zones = (struct blk_zone *)(rep + 1);
-+		int ret;
-+
-+		memset(rep, 0, rep_size);
-+		rep->sector = sector;
-+		rep->nr_zones = ZONES_PER_IOCTL;
-+
-+		ret = ioctl(fd, BLKREPORTZONE, rep);
-+		if (ret) {
-+			do_error(_("ioctl(BLKREPORTZONE) failed: %d!\n"), ret);
-+			goto out_free;
-+		}
-+		if (!rep->nr_zones)
-+			break;
-+
-+		for (i = 0; i < rep->nr_zones; i++) {
-+			if (n >= mp->m_sb.sb_rgcount)
-+				break;
-+
-+			if (zones[i].len != zone_size) {
-+				do_error(_("Inconsistent zone size!\n"));
-+				goto out_free;
-+			}
-+
-+			switch (zones[i].type) {
-+			case BLK_ZONE_TYPE_CONVENTIONAL:
-+			case BLK_ZONE_TYPE_SEQWRITE_REQ:
-+				break;
-+			case BLK_ZONE_TYPE_SEQWRITE_PREF:
-+				do_error(
-+_("Found sequential write preferred zone\n"));
-+				goto out_free;
-+			default:
-+				do_error(
-+_("Found unknown zone type (0x%x)\n"), zones[i].type);
-+				goto out_free;
-+			}
-+
-+			if (!n) {
-+				zone_capacity = zones[i].capacity;
-+				if (zone_capacity > zone_size) {
-+					do_error(
-+_("Zone capacity larger than zone size!\n"));
-+					goto out_free;
-+				}
-+			} else if (zones[i].capacity != zone_capacity) {
-+				do_error(
-+_("Inconsistent zone capacity!\n"));
-+				goto out_free;
-+			}
-+
-+			report_zones_cb(mp, &zones[i]);
-+			n++;
-+		}
-+		sector = zones[rep->nr_zones - 1].start +
-+			 zones[rep->nr_zones - 1].len;
-+	}
-+
-+out_free:
-+	free(rep);
-+}
-diff --git a/repair/zoned.h b/repair/zoned.h
-new file mode 100644
-index 000000000000..ab76bf15b3ca
---- /dev/null
-+++ b/repair/zoned.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (c) 2024 Christoph Hellwig.
-+ */
-+#ifndef _XFS_REPAIR_ZONED_H_
-+#define _XFS_REPAIR_ZONED_H_
-+
-+void check_zones(struct xfs_mount *mp);
-+
-+#endif /* _XFS_REPAIR_ZONED_H_ */
+-	if (cfg->rgsize > XFS_MAX_RGBLOCKS) {
+-		fprintf(stderr,
+-_("realtime group size (%llu) must be less than the maximum (%u)\n"),
+-				(unsigned long long)cfg->rgsize,
+-				XFS_MAX_RGBLOCKS);
+-		usage();
+-	}
+-
+-	if (cfg->rgsize % cfg->rtextblocks != 0) {
+-		fprintf(stderr,
+-_("realtime group size (%llu) not a multiple of rt extent size (%llu)\n"),
+-				(unsigned long long)cfg->rgsize,
+-				(unsigned long long)cfg->rtextblocks);
+-		usage();
+-	}
+-
+-	if (cfg->rgsize <= cfg->rtextblocks) {
+-		fprintf(stderr,
+-_("realtime group size (%llu) must be at least two realtime extents\n"),
+-				(unsigned long long)cfg->rgsize);
+-		usage();
+-	}
+-
+-	if (cfg->rgcount > XFS_MAX_RGNUMBER) {
+-		fprintf(stderr,
+-_("realtime group count (%llu) must be less than the maximum (%u)\n"),
+-				(unsigned long long)cfg->rgcount,
+-				XFS_MAX_RGNUMBER);
+-		usage();
+-	}
++	validate_rtgroup_geometry(cfg);
+ 
+ 	if (cfg->rtextents)
+ 		cfg->rtbmblocks = howmany(cfg->rgsize / cfg->rtextblocks,
 -- 
 2.47.2
 
