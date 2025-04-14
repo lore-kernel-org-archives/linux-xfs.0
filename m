@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E0E91A08CA
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:38:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5E4C1A08CA
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:38:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744609084; cv=none; b=N9mxz6yqwrHqANNZpsKf8twCanInd9gTR972xIEmOE5uoKyDlNPVYNQm4ned2yOy2fWd2hRLh+FVD3eOjtZEw5fv/ju/uipF1a2ZoF4UjQw2iK+sqLGDCIGJCDBYBMCnnQFFIhbRRugwgO4m2C66vD4TOif6HhUr9tuJwYXk/Zc=
+	t=1744609087; cv=none; b=bnLGn4mWtX/v6jKkF1lvSaU/4DHf/7aLfyWmhw8urfnUtibOAGGEvECeTkd1PxHrBp3RyJ5Ir9G8yMDa+wW0xi5DYL1eh1mAEoWxZMYOQmiPcF20EAtxIoucXqZMciDhvb5W8JrAVo+3cGpEDebUgq71A0698oAkW88OZC9CkGw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744609084; c=relaxed/simple;
-	bh=4+kGuwzrVodaH78wHSdFqfDLtHAvzd3AKajBq3bd+hE=;
+	s=arc-20240116; t=1744609087; c=relaxed/simple;
+	bh=zWn6WjaGDhqGI1r1ICIcAT+iNaehWh3YwadmjqRTJP8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rGwthi4toIaUNem5KnJoOFtgBONTkVqtkmEhZ6f2rnasbLGwQ0JG7P/XPWCViMXxS3QpAgRLhoStoowB0bKm02OzxUxnkOywnx7i/OPAeaDJQk++/jBH6kMpIpEZAl3iwEJ+uPeAjXyfkeWxIn0k1+ZzJNOqe3MZcVKzSqXRjRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3MzHmYQG; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=QLARajtREyX7xE7UTreJMp4m+PiD5iI+oL8YZ5uTlD8wf0n7dd5pn4TKBj6RymyMG1Ghk893k3Hylvjaom2eu/12c/TxCmyrZq0WcdJIz44M6XX1t9ngCM2byrDYLQpUP5pk+qocXN0U+SEVaWQfpp1YTD0zGVisKjESqtPL++4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vRjqtSBI; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3MzHmYQG"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vRjqtSBI"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=9Hy3Hg2JF0uqejvJKmDp/VA+RC68wW04H+mbzNrLcLA=; b=3MzHmYQGD7PF1nOCgBCNbf24DE
-	EJRNT+9sYBU7YhUcwxr8FEpdHA5v03pZDTwoST91FXRc5myfgaZSG9IeQj/BTWpF/14C8LV+9jFNI
-	b9HAlsyK30cEoN092c2g+AweOVFgp64LCaDpMClQBGHWC2ol/kwRbhIDX6vCPOoG2YTUOZDj/Z6C4
-	Orzf+DMR3PS77eCqmwQhaFzcN8iCSBcyTtDdYuEy+Eh5bl9XfDc9bPB9woPEzdiR6N6knsvvpRrt9
-	3ZXaspnhdutZHkv4aMqaTXrtJ+ktkfE7w9NGp4cd92eeKBTglnzCIleaizSMvBmPW388sn6aJh893
-	GWzsH1fA==;
+	bh=iwTd/ILDbAX80nSXrRGmmpiLboly4mHQ8KbOIa7hJIo=; b=vRjqtSBIA6QZUShnlGcXSMPtEK
+	8YCBvy//scSOBCw5Kcy9KKebV3IxUgu3lXcBYnCHPao/qsWv6ButOd0+6jQqji4aTXzOEHgxjGxGw
+	B8Su0SKsGGeF9o9+WwSZjHDu/0Dvq22m4IQEz6UCjJlE5vytyM93f+d5mj3ZkiFyyfZ2ygamWEsaA
+	An9ZvX+uSIKgeqsd53cg44Ban2bQSju1ahkOolNK4iHQekRJBong5kMn9DTwLawkvBRPGyoysL/OQ
+	jVmq0NLPPrbKfYgYcFT9mbDHTdcxh8bCYBVGyqfljvIPRqP7JkPa9eL4L5iHg7PGYgvh7U3eML4s8
+	1d1zlT4w==;
 Received: from 2a02-8389-2341-5b80-9d44-dd57-c276-829a.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9d44:dd57:c276:829a] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1u4CWA-00000000iOM-3n8e;
-	Mon, 14 Apr 2025 05:38:03 +0000
+	id 1u4CWD-00000000iOq-1HFI;
+	Mon, 14 Apr 2025 05:38:05 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 32/43] xfs_mkfs: calculate zone overprovisioning when specifying size
-Date: Mon, 14 Apr 2025 07:36:15 +0200
-Message-ID: <20250414053629.360672-33-hch@lst.de>
+Subject: [PATCH 33/43] xfs_mkfs: default to rtinherit=1 for zoned file systems
+Date: Mon, 14 Apr 2025 07:36:16 +0200
+Message-ID: <20250414053629.360672-34-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250414053629.360672-1-hch@lst.de>
 References: <20250414053629.360672-1-hch@lst.de>
@@ -50,80 +50,38 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-When size is specified for zoned file systems, calculate the required
-over provisioning to back the requested capacity.
+Zone file systems are intended to use sequential write required zones
+(or areas treated as such) for the main data store. And usually use the
+data device only for metadata that requires random writes.
 
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+rtinherit=1 is the way to achieve that, so enabled it by default, but
+still allow the user to override it if needed.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+inherit
 ---
- mkfs/xfs_mkfs.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
+ mkfs/xfs_mkfs.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 8b7a0b617d3e..5cd100c87f43 100644
+index 5cd100c87f43..e6adb345551e 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -4422,6 +4422,49 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
- 			NBBY * (cfg->blocksize - sizeof(struct xfs_rtbuf_blkinfo)));
- }
- 
-+/*
-+ * If we're creating a zoned filesystem and the user specified a size, add
-+ * enough over-provisioning to be able to back the requested amount of
-+ * writable space.
-+ */
-+static void
-+adjust_nr_zones(
-+	struct mkfs_params	*cfg,
-+	struct cli_params	*cli,
-+	struct libxfs_init	*xi,
-+	struct zone_topology	*zt)
-+{
-+	uint64_t		new_rtblocks, slack;
-+	unsigned int		max_zones;
-+
-+	if (zt->rt.nr_zones)
-+		max_zones = zt->rt.nr_zones;
-+	else
-+		max_zones = DTOBT(xi->rt.size, cfg->blocklog) / cfg->rgsize;
-+
-+	if (!cli->rgcount)
-+		cfg->rgcount += XFS_RESERVED_ZONES;
-+	if (cfg->rgcount > max_zones) {
-+		cfg->rgcount = max_zones;
-+		fprintf(stderr,
-+_("Warning: not enough zones for backing requested rt size due to\n"
-+  "over-provisioning needs, writable size will be less than %s\n"),
-+			cli->rtsize);
-+	}
-+	new_rtblocks = (cfg->rgcount * cfg->rgsize);
-+	slack = (new_rtblocks - cfg->rtblocks) % cfg->rgsize;
-+
-+	cfg->rtblocks = new_rtblocks;
-+	cfg->rtextents = cfg->rtblocks / cfg->rtextblocks;
-+
-+	/*
-+	 * Add the slack to the end of the last zone to the reserved blocks.
-+	 * This ensures the visible user capacity is exactly the one that the
-+	 * user asked for.
-+	 */
-+	cfg->rtreserved += (slack * cfg->blocksize);
-+}
-+
- static void
- calculate_zone_geometry(
- 	struct mkfs_params	*cfg,
-@@ -4494,6 +4537,9 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
+@@ -2966,6 +2966,13 @@ _("rt extent size not supported on realtime devices with zoned mode\n"));
+ 			}
+ 			cli->rtextsize = 0;
  		}
- 	}
- 
-+	if (cli->rtsize || cli->rgcount)
-+		adjust_nr_zones(cfg, cli, xi, zt);
 +
- 	if (cfg->rgcount < XFS_MIN_ZONES)  {
- 		fprintf(stderr,
- _("realtime group count (%llu) must be greater than the minimum zone count (%u)\n"),
++		/*
++		 * Set the rtinherit by default for zoned file systems as they
++		 * usually use the data device purely as a metadata container.
++		 */
++		if (!cli_opt_set(&dopts, D_RTINHERIT))
++			cli->fsx.fsx_xflags |= FS_XFLAG_RTINHERIT;
+ 	} else {
+ 		if (cli->rtstart) {
+ 			fprintf(stderr,
 -- 
 2.47.2
 
