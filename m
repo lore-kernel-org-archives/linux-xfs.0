@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5E4C1A08CA
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:38:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EA202CCC1
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:38:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744609087; cv=none; b=bnLGn4mWtX/v6jKkF1lvSaU/4DHf/7aLfyWmhw8urfnUtibOAGGEvECeTkd1PxHrBp3RyJ5Ir9G8yMDa+wW0xi5DYL1eh1mAEoWxZMYOQmiPcF20EAtxIoucXqZMciDhvb5W8JrAVo+3cGpEDebUgq71A0698oAkW88OZC9CkGw=
+	t=1744609089; cv=none; b=lm5CT5k8S+ZpYYWKDj+8BREeRAPGj6OlkMkIdxhmyyo6V8YinJH9B7guJb7ZXlx/5F89M1lrHZNSo+GBhcWQe1+7RDC0NFK0u1UDOW7iDYSyUW4zpnDHzlQq2EUyDGQjKErobjf5uhASRFITCYvIgT9z8/iiKOOlh3i9Ui1PofM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744609087; c=relaxed/simple;
-	bh=zWn6WjaGDhqGI1r1ICIcAT+iNaehWh3YwadmjqRTJP8=;
+	s=arc-20240116; t=1744609089; c=relaxed/simple;
+	bh=Vc9OGJl4Er4n8f1CfJxz8iq8ov2b7rgER5RCC96QoTE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QLARajtREyX7xE7UTreJMp4m+PiD5iI+oL8YZ5uTlD8wf0n7dd5pn4TKBj6RymyMG1Ghk893k3Hylvjaom2eu/12c/TxCmyrZq0WcdJIz44M6XX1t9ngCM2byrDYLQpUP5pk+qocXN0U+SEVaWQfpp1YTD0zGVisKjESqtPL++4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vRjqtSBI; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=gLV4ODyjGQjH7Lvkv1T7aKgRdBQpjfdX3auazzqUAT7p8bxNNL7M+rZusop/OWOgvT2YVvFsiMfURR262ORseH0cXOfGIgcgdjt78IZnhTEo/PiO5VLtzLvT0ZcPY7QU0c3nOl2C0hXAQ1WvUv7ATcJASwEEtOhBsIB/NVehySA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AzCf6DIs; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vRjqtSBI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AzCf6DIs"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=iwTd/ILDbAX80nSXrRGmmpiLboly4mHQ8KbOIa7hJIo=; b=vRjqtSBIA6QZUShnlGcXSMPtEK
-	8YCBvy//scSOBCw5Kcy9KKebV3IxUgu3lXcBYnCHPao/qsWv6ButOd0+6jQqji4aTXzOEHgxjGxGw
-	B8Su0SKsGGeF9o9+WwSZjHDu/0Dvq22m4IQEz6UCjJlE5vytyM93f+d5mj3ZkiFyyfZ2ygamWEsaA
-	An9ZvX+uSIKgeqsd53cg44Ban2bQSju1ahkOolNK4iHQekRJBong5kMn9DTwLawkvBRPGyoysL/OQ
-	jVmq0NLPPrbKfYgYcFT9mbDHTdcxh8bCYBVGyqfljvIPRqP7JkPa9eL4L5iHg7PGYgvh7U3eML4s8
-	1d1zlT4w==;
+	bh=WOmNBJg8LLNJx3XAsmhwCHXwD45+nk7w0WacNK7ZKZc=; b=AzCf6DIszwZTeQ+JQhItMRVmcj
+	TJG83+eZsEaT8Uua5WZtkz12nzypEp0NtBaOBouiCBdrE4HB7h7Yb5RiVD7UbYuT4/Y1V5iWKwQEP
+	DS0vsMLY+NjJUIGylosJyOfYqtW/I4cjfZnj6oprGLxRA9nkY6/ezQF6B3JZe/07vRGdkHmLx5SOP
+	sqEhHp8u3gulpXgWPsizlqkYHIjkg34JmtWf/p7F6TrTQQ8DwprwxhujoJ4g0KTHKNVgBwCbXUY+1
+	RM2eHUXEtpVBykc3bVtiHKLupYku6s+giLsfbG1baXLGNUZ53CnyFwpr1BFNXIQDD9KgvKqG5gqH5
+	nad5WNOA==;
 Received: from 2a02-8389-2341-5b80-9d44-dd57-c276-829a.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9d44:dd57:c276:829a] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1u4CWD-00000000iOq-1HFI;
-	Mon, 14 Apr 2025 05:38:05 +0000
+	id 1u4CWF-00000000iP1-3TFM;
+	Mon, 14 Apr 2025 05:38:08 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 33/43] xfs_mkfs: default to rtinherit=1 for zoned file systems
-Date: Mon, 14 Apr 2025 07:36:16 +0200
-Message-ID: <20250414053629.360672-34-hch@lst.de>
+Subject: [PATCH 34/43] xfs_mkfs: reflink conflicts with zoned file systems for now
+Date: Mon, 14 Apr 2025 07:36:17 +0200
+Message-ID: <20250414053629.360672-35-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250414053629.360672-1-hch@lst.de>
 References: <20250414053629.360672-1-hch@lst.de>
@@ -50,38 +50,34 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Zone file systems are intended to use sequential write required zones
-(or areas treated as such) for the main data store. And usually use the
-data device only for metadata that requires random writes.
-
-rtinherit=1 is the way to achieve that, so enabled it by default, but
-still allow the user to override it if needed.
+Don't allow reflink on zoned file system until garbage collections learns
+how to deal with shared extents and doesn't blindly unshare them.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-inherit
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ mkfs/xfs_mkfs.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 5cd100c87f43..e6adb345551e 100644
+index e6adb345551e..9d84dc9cb426 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -2966,6 +2966,13 @@ _("rt extent size not supported on realtime devices with zoned mode\n"));
+@@ -2966,6 +2966,14 @@ _("rt extent size not supported on realtime devices with zoned mode\n"));
  			}
  			cli->rtextsize = 0;
  		}
-+
-+		/*
-+		 * Set the rtinherit by default for zoned file systems as they
-+		 * usually use the data device purely as a metadata container.
-+		 */
-+		if (!cli_opt_set(&dopts, D_RTINHERIT))
-+			cli->fsx.fsx_xflags |= FS_XFLAG_RTINHERIT;
- 	} else {
- 		if (cli->rtstart) {
- 			fprintf(stderr,
++		if (cli->sb_feat.reflink) {
++			if (cli_opt_set(&mopts, M_REFLINK)) {
++				fprintf(stderr,
++_("reflink not supported on realtime devices with zoned mode specified\n"));
++				usage();
++			}
++			cli->sb_feat.reflink = false;
++		}
+ 
+ 		/*
+ 		 * Set the rtinherit by default for zoned file systems as they
 -- 
 2.47.2
 
