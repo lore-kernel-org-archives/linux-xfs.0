@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EEFF2CCC1
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:38:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E802CCC1
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:38:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744609103; cv=none; b=kan2Q+QhmzCXEN2irExx5ijg5oXD3W7B8pJ0Om/bL9cDflnS9eQQKrzT206Z8gqQwA3N6LeAayuj/IErlGK8yckwBFXLAyy6kGiX+J7ocCJOLmmzK9inKx8tpY8ujuwFc35aR5nllFlJIrpPp8lS4cEhe02MnWRu6FplD4X5IPI=
+	t=1744609105; cv=none; b=r4lNr28Oko0VDHAZRFT55rbohhkNEPwxIoJcddXsorLv5AwPf5NGjMBwtjzeQbT2BbbyluABBTwLFFhfFhsolTek3eoLBcPMK4c1UdckgYueJmCeHBHQx3O9M5XsF5I0JXfM7J0CAPRlAYmmnXU8UKE37tNaWKYCX7GiamINsuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744609103; c=relaxed/simple;
-	bh=hduVqnFfF88VtrD26XOI5buHJzLZPN7Uk6XPmwE6MDI=;
+	s=arc-20240116; t=1744609105; c=relaxed/simple;
+	bh=4hLZtomDgAKWFBX08b4RIFn42fNMbuXN+1gxzWMfutA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VvzmNmLbTQwkD1rCFxUT3o8GHzj117HIVooJI3V+FE73qU0JkRTaKUkiONX41INks7xrS8LNRH9FpxEq6tPiZe6aNnJ29ekZNPBpk5He1TNVAHObvlW7RLtQhRxQkj2EhNW6ahPjtfiBdaHtHPXmHU06fTyUcPBVEbA+AxXJB1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZcUr60+z; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=smH5gnJIxXhdDg5fMx1d8mXGXDS5ImFIrijC/sFQOVTR6mBMuMW9INC80xXesty82kIzqni49Vvkb+dw4KmuqeTtNhyPLSQ4kdni0xE8wkCrwakmt8oZcLMCui/XjPYaFIPghbc5+N4ERGpH2KXVLHMVBzYCZxeZ16zyBPTQ86w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IHKtA1RR; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZcUr60+z"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IHKtA1RR"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=YeVB0yryv50mnzMJDBHXwYDcKF7EkYZqepWgFzcMlcI=; b=ZcUr60+zkKgtEOoL5ARzDmpVA7
-	JPAw0A6ZM0u6VosJDMlpTiuvCpxwbL3QoEnFSKjWjb2GmyePHDNQpCkNxplt/jz11ewI+sPZOAGec
-	VyBRgO6U8ZC/ud7AvEa/FlYfUXFKEroZtB696suv6NGS+uu2Dk+OSnSKDK+PiB+roMSlmxFAKQhDa
-	jiTfJlWC6AIJ5VFBMpGBjp+aKPF4+v5fw6CPrTMOeEKYq5sVW6F5qbUZ4YtmHXi1r+DmRq+vYnn/G
-	VIFIy266oN7v7iTtHJlxt1KxXsIGh+3dckc1JX3KejxlVXAij/oUEzz3Mk2N7ux+NV2wBIzKVlvf0
-	nfF4XgRw==;
+	bh=SXkZov5UWJ0j2IhmWhKK7OnOw4NwSwFBYp97YF8Q1BA=; b=IHKtA1RRWIMORqftfCy+CmcJJe
+	6F369TyqkmrTEwKGRZuW54pUEd/a65du1LbQIYc7AUTKVAEAGR8scxrMdsPb1FCY7KmXSsXr8AWJx
+	BGyNWfyRDqdncLj26TEeSgYIbO0LTXJ6uijKIxQkcy8kqD9tLeMc/0tbjiM9mBJ10uj14En0s+Btt
+	rdk7i55wl+a12oV2Yvk/e9HBUYMmyiDXDkOXGAkcz5V9xCoWWfClJuNgYc5vcWS3VK7Y6z3rV2nGH
+	sLNDN/N+S2y7E+YdLdolbFXA2hceggATjUKZKtl8iYakkYQUWB4VMUIKqLU0w9e6werds3Hm98mKM
+	Ma7ybKiw==;
 Received: from 2a02-8389-2341-5b80-9d44-dd57-c276-829a.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9d44:dd57:c276:829a] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1u4CWT-00000000iSf-2mjH;
-	Mon, 14 Apr 2025 05:38:22 +0000
+	id 1u4CWV-00000000iTN-3z9p;
+	Mon, 14 Apr 2025 05:38:24 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 39/43] xfs_io: handle internal RT devices in fsmap output
-Date: Mon, 14 Apr 2025 07:36:22 +0200
-Message-ID: <20250414053629.360672-40-hch@lst.de>
+Subject: [PATCH 40/43] xfs_spaceman: handle internal RT devices
+Date: Mon, 14 Apr 2025 07:36:23 +0200
+Message-ID: <20250414053629.360672-41-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250414053629.360672-1-hch@lst.de>
 References: <20250414053629.360672-1-hch@lst.de>
@@ -50,73 +50,40 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Deal with the synthetic fmr_device values and the rt device offset when
-calculating RG numbers.
+Handle the synthetic fmr_device values for fsmap.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- io/fsmap.c | 33 ++++++++++++++++++++++++++-------
- 1 file changed, 26 insertions(+), 7 deletions(-)
+ spaceman/freesp.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/io/fsmap.c b/io/fsmap.c
-index 6a87e8972f26..005d32e500a0 100644
---- a/io/fsmap.c
-+++ b/io/fsmap.c
-@@ -247,8 +247,13 @@ dump_map_verbose(
- 				(long long)BTOBBT(agoff),
- 				(long long)BTOBBT(agoff + p->fmr_length - 1));
- 		} else if (p->fmr_device == xfs_rt_dev && fsgeo->rgcount > 0) {
--			agno = p->fmr_physical / bperrtg;
--			agoff = p->fmr_physical % bperrtg;
-+			uint64_t start = p->fmr_physical -
-+				fsgeo->rtstart * fsgeo->blocksize;
-+
-+			agno = start / bperrtg;
-+			if (agno < 0)
-+				agno = -1;
-+			agoff = start % bperrtg;
- 			snprintf(abuf, sizeof(abuf),
- 				"(%lld..%lld)",
- 				(long long)BTOBBT(agoff),
-@@ -326,8 +331,13 @@ dump_map_verbose(
- 				"%lld",
- 				(long long)agno);
- 		} else if (p->fmr_device == xfs_rt_dev && fsgeo->rgcount > 0) {
--			agno = p->fmr_physical / bperrtg;
--			agoff = p->fmr_physical % bperrtg;
-+			uint64_t start = p->fmr_physical -
-+				fsgeo->rtstart * fsgeo->blocksize;
-+
-+			agno = start / bperrtg;
-+			if (agno < 0)
-+				agno = -1;
-+			agoff = start % bperrtg;
- 			snprintf(abuf, sizeof(abuf),
- 				"(%lld..%lld)",
- 				(long long)BTOBBT(agoff),
-@@ -490,9 +500,18 @@ fsmap_f(
- 		return 0;
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+index dfbec52a7160..9ad321c4843f 100644
+--- a/spaceman/freesp.c
++++ b/spaceman/freesp.c
+@@ -140,12 +140,19 @@ scan_ag(
+ 	if (agno != NULLAGNUMBER) {
+ 		l->fmr_physical = cvt_agbno_to_b(xfd, agno, 0);
+ 		h->fmr_physical = cvt_agbno_to_b(xfd, agno + 1, 0);
+-		l->fmr_device = h->fmr_device = file->fs_path.fs_datadev;
++		if (file->xfd.fsgeom.rtstart)
++			l->fmr_device = XFS_DEV_DATA;
++		else
++			l->fmr_device = file->fs_path.fs_datadev;
+ 	} else {
+ 		l->fmr_physical = 0;
+ 		h->fmr_physical = ULLONG_MAX;
+-		l->fmr_device = h->fmr_device = file->fs_path.fs_rtdev;
++		if (file->xfd.fsgeom.rtstart)
++			l->fmr_device = XFS_DEV_RT;
++		else
++			l->fmr_device = file->fs_path.fs_rtdev;
  	}
- 
--	xfs_data_dev = file->fs_path.fs_datadev;
--	xfs_log_dev = file->fs_path.fs_logdev;
--	xfs_rt_dev = file->fs_path.fs_rtdev;
-+	/*
-+	 * File systems with internal rt device use synthetic device values.
-+	 */
-+	if (file->geom.rtstart) {
-+		xfs_data_dev = XFS_DEV_DATA;
-+		xfs_log_dev = XFS_DEV_LOG;
-+		xfs_rt_dev = XFS_DEV_RT;
-+	} else {
-+		xfs_data_dev = file->fs_path.fs_datadev;
-+		xfs_log_dev = file->fs_path.fs_logdev;
-+		xfs_rt_dev = file->fs_path.fs_rtdev;
-+	}
- 
- 	memset(head, 0, sizeof(*head));
- 	l = head->fmh_keys;
++		h->fmr_device = l->fmr_device;
+ 	h->fmr_owner = ULLONG_MAX;
+ 	h->fmr_flags = UINT_MAX;
+ 	h->fmr_offset = ULLONG_MAX;
 -- 
 2.47.2
 
