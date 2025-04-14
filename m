@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92BEB1862
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:37:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B6E41862
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Apr 2025 05:37:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744609031; cv=none; b=mMLQpdKpXyGp/U0wWxCU4Ai86CX/cmKi4pcmY4i3ASot0Qsz0eGtNsMcjFSE2EBkV7QvyQiSfRYx42Slj9h+4bhWCwnowyj7wx8Y9f12zCuX4GEwDA9HYEITP4KkElEHYwdnohSAGtDORxl/GDjeiqnhNve+4YSSrW/Uq7m/XWQ=
+	t=1744609033; cv=none; b=UGQA/s6RlRlKr6cgaWqHIgNLpBUURofAejBcoHi4nevoJfM8KQ95/ZY7KRsvGJfDm8IG7sJ4oZ4TgnalFtRV0sl9MFaUWw1qBVPrRbeCd5/MGxbEer+Tfy1eiR3kWhkvaAFexatCEnPIQ2Nb0ejb+J4918cHn++Jzvom/eB+55o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744609031; c=relaxed/simple;
-	bh=FZd8QWIW/0JvWpnGK85IECAXnEbkxrzK7rmoNgUpQGk=;
+	s=arc-20240116; t=1744609033; c=relaxed/simple;
+	bh=QOsqewRUbe0PGyimK4ufkoNLmMWcUFmc3K/HAF3BxzM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=J0RsGr0EAw+kypOyo1SNpEM8uAkheiKRdYQW9UTBrTCv3EuOT717zhX9r5nkGT8Si/S24JW7dlmROtQo4IAM98OsJiZsTfbvq4BPuxtZU1ZIjYNwez4ggV76F+MG1IdhFLGXcnN2VUufaQCKfRTCskXffFG1z3Xl8hvLjWi+gWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rY1xKdh2; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=SmSuKlvl4U4WSMaE92+3DiRfvdegHje/a6w3N37rjNj6xQtZSqorN1farWFOcrFDgROYnonXrz+mm8tBNAmLkb4kDqqk4zXf3TS25wNC+9eFO4ZIqmKRduXekeU5RFUZQuA0M/orMp3FJEPoMWYHPSkcwMdGB8R5oKJzQNjifvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=peJHFOfO; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rY1xKdh2"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="peJHFOfO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=+B8pQMwni+IB+nxeBIE9w7ihhRWsUl5/esIb0Ea3Um8=; b=rY1xKdh22q1IE1p43/xTp0rzod
-	6jSPRnIMc5admJuzo1m6sbr7TBHaLnAQQrUjJGuji8G5oLwM/LKYfmfOoO9M96B6tvNu3+eX1tFEt
-	ZZqA8D2Mod/ietW9Rk6NW9mdB4EKzi/FIUk/4yloPDwUIimQXmDKjH0DUKH5HMPPmANwk2rsfZiHw
-	KgKRYXCk0RvimlXdHZAKZNSxLZ0S1M3ZL0T+yEiAurUuw8DDP/H29TXRLujiLtakXrqxrBfFFPaHw
-	YDvBNUOtwnO+uAiExs0eNcMpKM0+wsWOPJtXeDlGtRds2MQPW/HrbAvbK0MQbdVvsW3Nd3zKVpMaa
-	KpceCXTA==;
+	bh=0K2ALQXLY+D8g8SNSSbrPfQmxiOA4rEdTCdHO2J9ybU=; b=peJHFOfO64tOqz8t+fjuww27Vo
+	jMZuO8UmeqXqsuk84T1eXM9PW/qRi+wBhViVbVBJM4HFRrQ9SW1wwu9+anAYmAyLZMW0mAHDrLfhC
+	0AHqosnkTU7LOJdqzfoxPYyuXGbUtA0aoiQ29oXPU2DVCjbWJMhWFjEOUXrGj0+l9coaLCLXe4pfy
+	gl52A9dLWgWdT7d6mTCS2jzbKmI1v/A6slLJa8AxYCcEU5mY2kIyHKoSjalMtS62NEIVqfOf0xsvg
+	tOYVEtuxL+ulppi+JSVs2gd8X+ro3MS1vulueOHhwPJqKx2HI/YXx7TM6X9fspOox9/9dQhmUMuC/
+	vMgNMnfQ==;
 Received: from 2a02-8389-2341-5b80-9d44-dd57-c276-829a.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:9d44:dd57:c276:829a] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1u4CVI-00000000iCt-37n6;
-	Mon, 14 Apr 2025 05:37:09 +0000
+	id 1u4CVL-00000000iDW-10bi;
+	Mon, 14 Apr 2025 05:37:11 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 11/43] FIXUP: xfs: define the zoned on-disk format
-Date: Mon, 14 Apr 2025 07:35:54 +0200
-Message-ID: <20250414053629.360672-12-hch@lst.de>
+Subject: [PATCH 12/43] xfs: allow internal RT devices for zoned mode
+Date: Mon, 14 Apr 2025 07:35:55 +0200
+Message-ID: <20250414053629.360672-13-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250414053629.360672-1-hch@lst.de>
 References: <20250414053629.360672-1-hch@lst.de>
@@ -50,88 +50,80 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+Source kernel commit: bdc03eb5f98f6f1ae4bd5e020d1582a23efb7799
+
+Allow creating an RT subvolume on the same device as the main data
+device.  This is mostly used for SMR HDDs where the conventional zones
+are used for the data device and the sequential write required zones
+for the zoned RT section.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/xfs_inode.h | 12 +++++++++++-
- include/xfs_mount.h | 12 ++++++++++--
- 2 files changed, 21 insertions(+), 3 deletions(-)
+ libxfs/xfs_group.h   | 6 ++++--
+ libxfs/xfs_rtgroup.h | 8 +++++---
+ libxfs/xfs_sb.c      | 1 +
+ 3 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 5bb31eb4aa53..61d4d285a106 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -232,8 +232,13 @@ typedef struct xfs_inode {
- 	xfs_rfsblock_t		i_nblocks;	/* # of direct & btree blocks */
- 	prid_t			i_projid;	/* owner's project id */
- 	xfs_extlen_t		i_extsize;	/* basic/minimum extent size */
--	/* cowextsize is only used for v3 inodes, flushiter for v1/2 */
-+	/*
-+	 * i_used_blocks is used for zoned rtrmap inodes,
-+	 * i_cowextsize is used for other v3 inodes,
-+	 * i_flushiter for v1/2 inodes
-+	 */
- 	union {
-+		uint32_t	i_used_blocks;	/* used blocks in RTG */
- 		xfs_extlen_t	i_cowextsize;	/* basic cow extent size */
- 		uint16_t	i_flushiter;	/* incremented on flush */
- 	};
-@@ -361,6 +366,11 @@ static inline xfs_fsize_t XFS_ISIZE(struct xfs_inode *ip)
- }
- #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_diflags & XFS_DIFLAG_REALTIME)
- 
-+static inline bool xfs_is_zoned_inode(struct xfs_inode *ip)
-+{
-+	return xfs_has_zoned(ip->i_mount) && XFS_IS_REALTIME_INODE(ip);
-+}
-+
- /* inode link counts */
- static inline void set_nlink(struct inode *inode, uint32_t nlink)
+diff --git a/libxfs/xfs_group.h b/libxfs/xfs_group.h
+index 242b05627c7a..a70096113384 100644
+--- a/libxfs/xfs_group.h
++++ b/libxfs/xfs_group.h
+@@ -107,9 +107,11 @@ xfs_gbno_to_daddr(
+ 	xfs_agblock_t		gbno)
  {
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 0acf952eb9d7..7856acfb9f8e 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -207,6 +207,7 @@ typedef struct xfs_mount {
- #define XFS_FEAT_NREXT64	(1ULL << 26)	/* large extent counters */
- #define XFS_FEAT_EXCHANGE_RANGE	(1ULL << 27)	/* exchange range */
- #define XFS_FEAT_METADIR	(1ULL << 28)	/* metadata directory tree */
-+#define XFS_FEAT_ZONED		(1ULL << 29)	/* zoned RT device */
+ 	struct xfs_mount	*mp = xg->xg_mount;
+-	uint32_t		blocks = mp->m_groups[xg->xg_type].blocks;
++	struct xfs_groups	*g = &mp->m_groups[xg->xg_type];
++	xfs_fsblock_t		fsbno;
  
- #define __XFS_HAS_FEAT(name, NAME) \
- static inline bool xfs_has_ ## name (const struct xfs_mount *mp) \
-@@ -253,7 +254,7 @@ __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
- __XFS_HAS_FEAT(large_extent_counts, NREXT64)
- __XFS_HAS_FEAT(exchange_range, EXCHANGE_RANGE)
- __XFS_HAS_FEAT(metadir, METADIR)
--
-+__XFS_HAS_FEAT(zoned, ZONED)
- 
- static inline bool xfs_has_rtgroups(const struct xfs_mount *mp)
- {
-@@ -264,7 +265,9 @@ static inline bool xfs_has_rtgroups(const struct xfs_mount *mp)
- static inline bool xfs_has_rtsb(const struct xfs_mount *mp)
- {
- 	/* all rtgroups filesystems with an rt section have an rtsb */
--	return xfs_has_rtgroups(mp) && xfs_has_realtime(mp);
-+	return xfs_has_rtgroups(mp) &&
-+		xfs_has_realtime(mp) &&
-+		!xfs_has_zoned(mp);
+-	return XFS_FSB_TO_BB(mp, (xfs_fsblock_t)xg->xg_gno * blocks + gbno);
++	fsbno = (xfs_fsblock_t)xg->xg_gno * g->blocks + gbno;
++	return XFS_FSB_TO_BB(mp, g->start_fsb + fsbno);
  }
  
- static inline bool xfs_has_rtrmapbt(const struct xfs_mount *mp)
-@@ -279,6 +282,11 @@ static inline bool xfs_has_rtreflink(const struct xfs_mount *mp)
- 	       xfs_has_reflink(mp);
+ static inline uint32_t
+diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
+index 9c7e03f913cb..e35d1d798327 100644
+--- a/libxfs/xfs_rtgroup.h
++++ b/libxfs/xfs_rtgroup.h
+@@ -230,7 +230,8 @@ xfs_rtb_to_daddr(
+ 	xfs_rgnumber_t		rgno = xfs_rtb_to_rgno(mp, rtbno);
+ 	uint64_t		start_bno = (xfs_rtblock_t)rgno * g->blocks;
+ 
+-	return XFS_FSB_TO_BB(mp, start_bno + (rtbno & g->blkmask));
++	return XFS_FSB_TO_BB(mp,
++		g->start_fsb + start_bno + (rtbno & g->blkmask));
  }
  
-+static inline bool xfs_has_nonzoned(const struct xfs_mount *mp)
-+{
-+	return !xfs_has_zoned(mp);
-+}
-+
- /* Kernel mount features that we don't support */
- #define __XFS_UNSUPP_FEAT(name) \
- static inline bool xfs_has_ ## name (const struct xfs_mount *mp) \
+ static inline xfs_rtblock_t
+@@ -238,10 +239,11 @@ xfs_daddr_to_rtb(
+ 	struct xfs_mount	*mp,
+ 	xfs_daddr_t		daddr)
+ {
+-	xfs_rfsblock_t		bno = XFS_BB_TO_FSBT(mp, daddr);
++	struct xfs_groups	*g = &mp->m_groups[XG_TYPE_RTG];
++	xfs_rfsblock_t		bno;
+ 
++	bno = XFS_BB_TO_FSBT(mp, daddr) - g->start_fsb;
+ 	if (xfs_has_rtgroups(mp)) {
+-		struct xfs_groups *g = &mp->m_groups[XG_TYPE_RTG];
+ 		xfs_rgnumber_t	rgno;
+ 		uint32_t	rgbno;
+ 
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index bc84792c565c..a95d712363fa 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -1201,6 +1201,7 @@ xfs_sb_mount_rextsize(
+ 		rgs->blocks = sbp->sb_rgextents * sbp->sb_rextsize;
+ 		rgs->blklog = mp->m_sb.sb_rgblklog;
+ 		rgs->blkmask = xfs_mask32lo(mp->m_sb.sb_rgblklog);
++		rgs->start_fsb = mp->m_sb.sb_rtstart;
+ 	} else {
+ 		rgs->blocks = 0;
+ 		rgs->blklog = 0;
 -- 
 2.47.2
 
