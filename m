@@ -1,825 +1,902 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D912A111BF
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 00:41:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 102EE24B34;
+	Tue, 15 Apr 2025 00:44:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744677716; cv=none; b=rK2TQ54E1DgYrCrexzerjD0Dtc02OdMMu0CHnBgSBCGQo+gMDqEC+YO71ts4JUjqmTYkRNEMFyfdJX8hpBK64Sw9KXKIY32ZX+4AfIGpsOQlxIPuqyl9xuMz9YiMJ745e6Na+BJ5XShCAMJpSvBrcuaR0ifLKRQ7xm0cC3+sP/Y=
+	t=1744677894; cv=none; b=FZ1cg9xVlORSxe+CAXbL285WzIhqrOXweImnWqLqn4eKNJvITLROLiiYiorgzsz6fxxZdOmHtzg1dQY0cDYkV/cCJ1e6VbYTybv/x4qzqcO5QuCSxr+HKQqXRaDjXE8vsLFZ/9bfT8Sdcw9oZcwwVAqUrl44i6+APIU5T9cWMVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744677716; c=relaxed/simple;
-	bh=DoUNsNDLIfi2bWk/DIxaxy/pNScrqYaHGYptV2pcKX4=;
+	s=arc-20240116; t=1744677894; c=relaxed/simple;
+	bh=4+t1SSqCeh/2XV+Sn/0HGeUfEQvBR9Hqtol5krAhtRs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q8oPF+9iync9G8eUCMyU8ktMHT76jpQNgM2pcYybBlhnpHm0tLx/fBPY5m6UgJpMhz81IYEuCo79BTDYHQRYNHRaSgQ53xrI1y3Ohv89W0WlFv/9epbcBgxzeEcIdL0MIGqlSBu3GB4jp+ZqF+V3B+FlqvEQLoR0YarULbQfPyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SWTqTb6e; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=I0fvpyDsRpAvGHiGUjs1OhIm1Pqhz5fS3qRs4YOdPv9LUUFX4l9WrKvFAsY4dNbg9KKh4eCV7zjVk4a8vbd8/cCMkYaL6Q35cgKcvPQbvHzSlcUxOWSJme6K7nFWsVgQclXDLHBexz3hU14YfXUoerTVFfw82LxMR2ckYWJqOZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uft2cM7S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SWTqTb6e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50A45C4CEE2;
-	Tue, 15 Apr 2025 00:41:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uft2cM7S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E279C4CEE2;
+	Tue, 15 Apr 2025 00:44:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744677715;
-	bh=DoUNsNDLIfi2bWk/DIxaxy/pNScrqYaHGYptV2pcKX4=;
+	s=k20201202; t=1744677893;
+	bh=4+t1SSqCeh/2XV+Sn/0HGeUfEQvBR9Hqtol5krAhtRs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SWTqTb6etJ+4HESGuwugqdVwJvAUjeYnTSfC3VXoRm2v4JoGY+XWHxDfZBs7WSZZj
-	 ZSpoqwVsadtrtqruXZoRrucekCkpU5RuMkwFBC4XuqOvnwTObcrB8woga23F44qX39
-	 sYVtf1oajgzm7Awo5eHnccmFJZWjf5CezCr/zlyWJX271GQp93p0EmAJ61+v4c4+G/
-	 phsiPwsaQ0tFEuOGW9sUKCPaEaoG3Rzmv8oplGmgaro01a+f2gzbjB+lW5l+2hfGb2
-	 l4EedkK29MOgNUKrGsdBiRokuJ5o1sEP/wBI63LWHAxm0mK2Pj5T2zegqQz5o3/JAo
-	 YIMJXJbDtBBvw==
-Date: Mon, 14 Apr 2025 17:41:54 -0700
+	b=Uft2cM7S7DMSi0tnT7SeA6j4gdB8MruASLTJkp7KILhag8ESbH2LM3f4Xf/VoZN3K
+	 WyXsO8cn1Al76nJQlF45EZtYaTSiBVI2AIhcdxg/hmHegZWIm5JoUYmmTlS+P3HpAT
+	 +NqIFDWEWfKn5Dc23VC3Z3mtZ2oSoEB3jv6WR5CL3rdZiDfgOXFyprH2sfVc6BzO2Y
+	 zA0dlvEBU5PPnn4iya+p1rVP6gYdsxYVDE0rOarcQ3WTFIhCsDFjXfARvT5UmTOgZI
+	 e2MsfqBYEq61ENocYWmyo7t+mhjjRPCScufdMzjLjv9U+pQsPNGcjWIMHExwu9KzHL
+	 a2+wlLrRJN2/w==
+Date: Mon, 14 Apr 2025 17:44:52 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 31/43] xfs_mkfs: support creating file system with zoned
- RT devices
-Message-ID: <20250415004154.GN25675@frogsfrogsfrogs>
-References: <20250414053629.360672-1-hch@lst.de>
- <20250414053629.360672-32-hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] common: remove USE_EXTERNAL
+Message-ID: <20250415004452.GO25675@frogsfrogsfrogs>
+References: <20250414054205.361383-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250414053629.360672-32-hch@lst.de>
+In-Reply-To: <20250414054205.361383-1-hch@lst.de>
 
-On Mon, Apr 14, 2025 at 07:36:14AM +0200, Christoph Hellwig wrote:
-> To create file systems with a zoned RT device, query the hardware
-> zone information to align the RT groups to it, and create an internal
-> RT device if the device has conventional and sequential write required
-> zones.
+On Mon, Apr 14, 2025 at 07:42:05AM +0200, Christoph Hellwig wrote:
+> The USE_EXTERNAL variable indicates that dedicated log or RT devices are
+> in use for the scratch and possibly test device.  It gets automatically
+> set when needed and generally does not provide any benefit over simply
+> testing the SCRATCH_LOGDEV and SCRATCH_RTDEV variables.
 > 
-> Default to use all sequential write required zoned for the RT device if
-> there are sequential write required zones.
-> 
-> Default to 256 and 1% conventional when -r zoned is specified without
-> further option and there are no sequential write required zones.  This
-> mimics a SMR HDD and works well with tests.
+> Remove it and replace that test with test for SCRATCH_LOGDEV and
+> SCRATCH_RTDEV, using the more readable if-based syntaxt for all tests
+> touched by this change.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Much improved, thanks!
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+I like this change, but it leaves me wondering why USE_EXTERNAL even
+exists in the first place?  Is that so that you could add
+TEST/SCRATCH_RTDEV to the top of a config file and set
+USE_EXTERNAL={yes,no} as a per-section variable?  e.g.
+
+[default]
+TEST_RTDEV=/dev/sde
+SCRATCH_RTDEV=/dev/sdf
+
+[rtstuff]
+USE_EXTERNAL=yes
+
+[simple]
+USE_EXTERNAL=no
+
+Hm?
 
 --D
 
 > ---
->  libxfs/init.c   |   2 +-
->  mkfs/proto.c    |   3 +-
->  mkfs/xfs_mkfs.c | 511 ++++++++++++++++++++++++++++++++++++++++++++++--
->  3 files changed, 497 insertions(+), 19 deletions(-)
+>  README                   |  1 -
+>  common/config            | 21 +++---------
+>  common/ext4              |  4 +--
+>  common/fail_make_request | 18 ++++++----
+>  common/metadump          |  8 +++--
+>  common/populate          | 16 +++++----
+>  common/quota             |  2 +-
+>  common/rc                | 52 +++++++++++++---------------
+>  common/xfs               | 73 +++++++++++++++++++++++++---------------
+>  tests/generic/537        |  6 ++--
+>  tests/generic/590        |  3 +-
+>  tests/xfs/070            |  6 ++--
+>  tests/xfs/096            |  2 +-
+>  tests/xfs/098            |  2 +-
+>  tests/xfs/157            |  6 ----
+>  tests/xfs/185            |  3 --
+>  tests/xfs/273            |  2 +-
+>  tests/xfs/277            |  2 +-
+>  tests/xfs/438            |  2 +-
+>  tests/xfs/520            |  2 +-
+>  tests/xfs/521            |  1 -
+>  tests/xfs/528            |  1 -
+>  tests/xfs/530            |  1 -
+>  23 files changed, 115 insertions(+), 119 deletions(-)
 > 
-> diff --git a/libxfs/init.c b/libxfs/init.c
-> index a186369f3fd8..393a94673f7e 100644
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -251,7 +251,7 @@ libxfs_close_devices(
->  		libxfs_device_close(&li->data);
->  	if (li->log.dev && li->log.dev != li->data.dev)
->  		libxfs_device_close(&li->log);
-> -	if (li->rt.dev)
-> +	if (li->rt.dev && li->rt.dev != li->data.dev)
->  		libxfs_device_close(&li->rt);
->  }
+> diff --git a/README b/README
+> index 024d395318f3..588573225712 100644
+> --- a/README
+> +++ b/README
+> @@ -188,7 +188,6 @@ Extra TEST device specifications:
+>  Extra SCRATCH device specifications:
+>   - Set SCRATCH_LOGDEV to "device for scratch-fs external log"
+>   - Set SCRATCH_RTDEV to "device for scratch-fs realtime data"
+> - - If SCRATCH_LOGDEV and/or SCRATCH_RTDEV, the USE_EXTERNAL environment
 >  
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 7f56a3d82a06..7f80bef838be 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -1144,7 +1144,8 @@ rtinit_groups(
->  				fail(_("rtrmap rtsb init failed"), error);
->  		}
+>  Tape device specification for xfsdump testing:
+>   - Set TAPE_DEV to "tape device for testing xfsdump".
+> diff --git a/common/config b/common/config
+> index eada3971788d..7d8ac98e4e16 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -808,13 +808,11 @@ get_next_config() {
+>  	local OLD_TEST_FS_MOUNT_OPTS=$TEST_FS_MOUNT_OPTS
+>  	local OLD_MKFS_OPTIONS=$MKFS_OPTIONS
+>  	local OLD_FSCK_OPTIONS=$FSCK_OPTIONS
+> -	local OLD_USE_EXTERNAL=$USE_EXTERNAL
 >  
-> -		rtfreesp_init(rtg);
-> +		if (!xfs_has_zoned(mp))
-> +			rtfreesp_init(rtg);
->  	}
->  }
+>  	unset MOUNT_OPTIONS
+>  	unset TEST_FS_MOUNT_OPTS
+>  	unset MKFS_OPTIONS
+>  	unset FSCK_OPTIONS
+> -	unset USE_EXTERNAL
 >  
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 13b746b365e1..8b7a0b617d3e 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -6,6 +6,8 @@
->  #include "libfrog/util.h"
->  #include "libxfs.h"
->  #include <ctype.h>
-> +#include <linux/blkzoned.h>
-> +#include "libxfs/xfs_zones.h"
->  #include "xfs_multidisk.h"
->  #include "libxcmd.h"
->  #include "libfrog/fsgeom.h"
-> @@ -135,6 +137,9 @@ enum {
->  	R_RGCOUNT,
->  	R_RGSIZE,
->  	R_CONCURRENCY,
-> +	R_ZONED,
-> +	R_START,
-> +	R_RESERVED,
->  	R_MAX_OPTS,
->  };
->  
-> @@ -739,6 +744,9 @@ static struct opt_params ropts = {
->  		[R_RGCOUNT] = "rgcount",
->  		[R_RGSIZE] = "rgsize",
->  		[R_CONCURRENCY] = "concurrency",
-> +		[R_ZONED] = "zoned",
-> +		[R_START] = "start",
-> +		[R_RESERVED] = "reserved",
->  		[R_MAX_OPTS] = NULL,
->  	},
->  	.subopt_params = {
-> @@ -804,6 +812,28 @@ static struct opt_params ropts = {
->  		  .maxval = INT_MAX,
->  		  .defaultval = 1,
->  		},
-> +		{ .index = R_ZONED,
-> +		  .conflicts = { { &ropts, R_EXTSIZE },
-> +				 { NULL, LAST_CONFLICT } },
-> +		  .minval = 0,
-> +		  .maxval = 1,
-> +		  .defaultval = 1,
-> +		},
-> +		{ .index = R_START,
-> +		  .conflicts = { { &ropts, R_DEV },
-> +				 { NULL, LAST_CONFLICT } },
-> +		  .convert = true,
-> +		  .minval = 0,
-> +		  .maxval = LLONG_MAX,
-> +		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		},
-> +		{ .index = R_RESERVED,
-> +		  .conflicts = { { NULL, LAST_CONFLICT } },
-> +		  .convert = true,
-> +		  .minval = 0,
-> +		  .maxval = LLONG_MAX,
-> +		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		},
->  	},
->  };
->  
-> @@ -1012,6 +1042,8 @@ struct sb_feat_args {
->  	bool	nortalign;
->  	bool	nrext64;
->  	bool	exchrange;		/* XFS_SB_FEAT_INCOMPAT_EXCHRANGE */
-> +	bool	zoned;
-> +	bool	zone_gaps;
->  
->  	uint16_t qflags;
->  };
-> @@ -1035,6 +1067,8 @@ struct cli_params {
->  	char	*lsu;
->  	char	*rtextsize;
->  	char	*rtsize;
-> +	char	*rtstart;
-> +	uint64_t rtreserved;
->  
->  	/* parameters where 0 is a valid CLI value */
->  	int	dsunit;
-> @@ -1121,6 +1155,8 @@ struct mkfs_params {
->  	char		*label;
->  
->  	struct sb_feat_args	sb_feat;
-> +	uint64_t	rtstart;
-> +	uint64_t	rtreserved;
->  };
->  
->  /*
-> @@ -1172,7 +1208,7 @@ usage( void )
->  /* prototype file */	[-p fname]\n\
->  /* quiet */		[-q]\n\
->  /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rgcount=n,rgsize=n,\n\
-> -			    concurrency=num]\n\
-> +			    concurrency=num,zoned=0|1,start=n,reserved=n]\n\
->  /* sectorsize */	[-s size=num]\n\
->  /* version */		[-V]\n\
->  			devicename\n\
-> @@ -1539,6 +1575,34 @@ discard_blocks(int fd, uint64_t nsectors, int quiet)
->  		printf("Done.\n");
->  }
->  
-> +static void
-> +reset_zones(
-> +	struct mkfs_params	*cfg,
-> +	int			fd,
-> +	uint64_t		start_sector,
-> +	uint64_t		nsectors,
-> +	int			quiet)
-> +{
-> +	struct blk_zone_range range = {
-> +		.sector		= start_sector,
-> +		.nr_sectors	= nsectors,
-> +	};
-> +
-> +	if (!quiet) {
-> +		printf("Resetting zones...");
-> +		fflush(stdout);
-> +	}
-> +
-> +	if (ioctl(fd, BLKRESETZONE, &range) < 0) {
-> +		if (!quiet)
-> +			printf(" FAILED (%d)\n", -errno);
-> +		exit(1);
-> +	}
-> +
-> +	if (!quiet)
-> +		printf("Done.\n");
-> +}
-> +
->  static __attribute__((noreturn)) void
->  illegal_option(
->  	const char		*value,
-> @@ -2144,6 +2208,15 @@ rtdev_opts_parser(
->  	case R_CONCURRENCY:
->  		set_rtvol_concurrency(opts, subopt, cli, value);
->  		break;
-> +	case R_ZONED:
-> +		cli->sb_feat.zoned = getnum(value, opts, subopt);
-> +		break;
-> +	case R_START:
-> +		cli->rtstart = getstr(value, opts, subopt);
-> +		break;
-> +	case R_RESERVED:
-> +		cli->rtreserved = getnum(value, opts, subopt);
-> +		break;
->  	default:
->  		return -EINVAL;
->  	}
-> @@ -2445,7 +2518,213 @@ _("Version 1 logs do not support sector size %d\n"),
->  _("log stripe unit specified, using v2 logs\n"));
->  		cli->sb_feat.log_version = 2;
->  	}
-> +}
-> +
-> +struct zone_info {
-> +	/* number of zones, conventional or sequential */
-> +	unsigned int		nr_zones;
-> +	/* number of conventional zones */
-> +	unsigned int		nr_conv_zones;
-> +
-> +	/* size of the address space for a zone, in 512b blocks */
-> +	xfs_daddr_t		zone_size;
-> +	/* write capacity of a zone, in 512b blocks */
-> +	xfs_daddr_t		zone_capacity;
-> +};
-> +
-> +struct zone_topology {
-> +	struct zone_info	data;
-> +	struct zone_info	rt;
-> +	struct zone_info	log;
-> +};
-> +
-> +/* random size that allows efficient processing */
-> +#define ZONES_PER_IOCTL			16384
-> +
-> +static void
-> +report_zones(
-> +	const char		*name,
-> +	struct zone_info	*zi)
-> +{
-> +	struct blk_zone_report	*rep;
-> +	bool			found_seq = false;
-> +	int			fd, ret = 0;
-> +	uint64_t		device_size;
-> +	uint64_t		sector = 0;
-> +	size_t			rep_size;
-> +	unsigned int		i, n = 0;
-> +	struct stat		st;
-> +
-> +	fd = open(name, O_RDONLY);
-> +	if (fd < 0) {
-> +		fprintf(stderr, _("Failed to open RT device: %d.\n"), -errno);
-> +		exit(1);
-> +	}
-> +
-> +	if (fstat(fd, &st) < 0) {
-> +		ret = -EIO;
-> +		goto out_close;
-> +	}
-> +	if (!S_ISBLK(st.st_mode))
-> +		goto out_close;
-> +
-> +	if (ioctl(fd, BLKGETSIZE64, &device_size)) {
-> +		fprintf(stderr, _("Failed to get block size: %d.\n"), -errno);
-> +		exit(1);
-> +	}
-> +	if (ioctl(fd, BLKGETZONESZ, &zi->zone_size) || !zi->zone_size)
-> +		goto out_close; /* not zoned */
-> +
-> +	/* BLKGETSIZE64 reports a byte value */
-> +	device_size = BTOBB(device_size);
-> +	zi->nr_zones = device_size / zi->zone_size;
-> +	zi->nr_conv_zones = 0;
-> +
-> +	rep_size = sizeof(struct blk_zone_report) +
-> +		   sizeof(struct blk_zone) * ZONES_PER_IOCTL;
-> +	rep = malloc(rep_size);
-> +	if (!rep) {
-> +		fprintf(stderr,
-> +_("Failed to allocate memory for zone reporting.\n"));
-> +		exit(1);
-> +	}
-> +
-> +	while (n < zi->nr_zones) {
-> +		struct blk_zone *zones = (struct blk_zone *)(rep + 1);
-> +
-> +		memset(rep, 0, rep_size);
-> +		rep->sector = sector;
-> +		rep->nr_zones = ZONES_PER_IOCTL;
-> +
-> +		ret = ioctl(fd, BLKREPORTZONE, rep);
-> +		if (ret) {
-> +			fprintf(stderr,
-> +_("ioctl(BLKREPORTZONE) failed: %d!\n"), -errno);
-> +			exit(1);
-> +		}
-> +		if (!rep->nr_zones)
-> +			break;
-> +
-> +		for (i = 0; i < rep->nr_zones; i++) {
-> +			if (n >= zi->nr_zones)
-> +				break;
-> +
-> +			if (zones[i].len != zi->zone_size) {
-> +				fprintf(stderr,
-> +_("Inconsistent zone size!\n"));
-> +				exit(1);
-> +			}
-> +
-> +			switch (zones[i].type) {
-> +			case BLK_ZONE_TYPE_CONVENTIONAL:
-> +				/*
-> +				 * We can only use the conventional space at the
-> +				 * start of the device for metadata, so don't
-> +				 * count later conventional zones.  This is
-> +				 * not an error because we can use them for data
-> +				 * just fine.
-> +				 */
-> +				if (!found_seq)
-> +					zi->nr_conv_zones++;
-> +				break;
-> +			case BLK_ZONE_TYPE_SEQWRITE_REQ:
-> +				found_seq = true;
-> +				break;
-> +			case BLK_ZONE_TYPE_SEQWRITE_PREF:
-> +				fprintf(stderr,
-> +_("Sequential write preferred zones not supported.\n"));
-> +				exit(1);
-> +			default:
-> +				fprintf(stderr,
-> +_("Unknown zone type (0x%x) found.\n"), zones[i].type);
-> +				exit(1);
-> +			}
-> +
-> +			if (!n) {
-> +				zi->zone_capacity = zones[i].capacity;
-> +				if (zi->zone_capacity > zi->zone_size) {
-> +					fprintf(stderr,
-> +_("Zone capacity larger than zone size!\n"));
-> +					exit(1);
-> +				}
-> +			} else if (zones[i].capacity != zi->zone_capacity) {
-> +				fprintf(stderr,
-> +_("Inconsistent zone capacity!\n"));
-> +				exit(1);
-> +			}
-> +
-> +			n++;
-> +		}
-> +		sector = zones[rep->nr_zones - 1].start +
-> +			 zones[rep->nr_zones - 1].len;
-> +	}
-> +
-> +	free(rep);
-> +out_close:
-> +	close(fd);
-> +}
-> +
-> +static void
-> +validate_zoned(
-> +	struct mkfs_params	*cfg,
-> +	struct cli_params	*cli,
-> +	struct mkfs_default_params *dft,
-> +	struct zone_topology	*zt)
-> +{
-> +	if (!cli->xi->data.isfile) {
-> +		report_zones(cli->xi->data.name, &zt->data);
-> +		if (zt->data.nr_zones) {
-> +			if (!zt->data.nr_conv_zones) {
-> +				fprintf(stderr,
-> +_("Data devices requires conventional zones.\n"));
-> +				usage();
-> +			}
-> +			if (zt->data.zone_capacity != zt->data.zone_size) {
-> +				fprintf(stderr,
-> +_("Zone capacity equal to Zone size required for conventional zones.\n"));
-> +				usage();
-> +			}
-> +
-> +			cli->sb_feat.zoned = true;
-> +			cfg->rtstart =
-> +				zt->data.nr_conv_zones * zt->data.zone_capacity;
-> +		}
-> +	}
-> +
-> +	if (cli->xi->rt.name && !cli->xi->rt.isfile) {
-> +		report_zones(cli->xi->rt.name, &zt->rt);
-> +		if (zt->rt.nr_zones && !cli->sb_feat.zoned)
-> +			cli->sb_feat.zoned = true;
-> +		if (zt->rt.zone_size != zt->rt.zone_capacity)
-> +			cli->sb_feat.zone_gaps = true;
-> +	}
-> +
-> +	if (cli->xi->log.name && !cli->xi->log.isfile) {
-> +		report_zones(cli->xi->log.name, &zt->log);
-> +		if (zt->log.nr_zones) {
-> +			fprintf(stderr,
-> +_("Zoned devices not supported as log device!\n"));
-> +			usage();
-> +		}
-> +	}
->  
-> +	if (cli->rtstart) {
-> +		/*
-> +		 * For zoned devices with conventional zones, cfg->rtstart is
-> +		 * set to the start of the first sequential write required zoned
-> +		 * above.  Don't allow the user to override it as that won't
-> +		 * work.
-> +		 */
-> +		if (cfg->rtstart) {
-> +			fprintf(stderr,
-> +_("rtstart override not allowed on zoned devices.\n"));
-> +			usage();
-> +		}
-> +		cfg->rtstart = getnum(cli->rtstart, &ropts, R_START) / 512;
-> +	}
-> +
-> +	if (cli->rtreserved)
-> +		cfg->rtreserved = cli->rtreserved;
->  }
->  
->  /*
-> @@ -2670,7 +2949,37 @@ _("inode btree counters not supported without finobt support\n"));
->  		cli->sb_feat.inobtcnt = false;
->  	}
->  
-> -	if (cli->xi->rt.name) {
-> +	if (cli->sb_feat.zoned) {
-> +		if (!cli->sb_feat.metadir) {
-> +			if (cli_opt_set(&mopts, M_METADIR)) {
-> +				fprintf(stderr,
-> +_("zoned realtime device not supported without metadir support\n"));
-> +				usage();
-> +			}
-> +			cli->sb_feat.metadir = true;
-> +		}
-> +		if (cli->rtextsize) {
-> +			if (cli_opt_set(&ropts, R_EXTSIZE)) {
-> +				fprintf(stderr,
-> +_("rt extent size not supported on realtime devices with zoned mode\n"));
-> +				usage();
-> +			}
-> +			cli->rtextsize = 0;
-> +		}
-> +	} else {
-> +		if (cli->rtstart) {
-> +			fprintf(stderr,
-> +_("internal RT section only supported in zoned mode\n"));
-> +			usage();
-> +		}
-> +		if (cli->rtreserved) {
-> +			fprintf(stderr,
-> +_("reserved RT blocks only supported in zoned mode\n"));
-> +			usage();
-> +		}
-> +	}
-> +
-> +	if (cli->xi->rt.name || cfg->rtstart) {
->  		if (cli->rtextsize && cli->sb_feat.reflink) {
->  			if (cli_opt_set(&mopts, M_REFLINK)) {
->  				fprintf(stderr,
-> @@ -2911,6 +3220,11 @@ validate_rtextsize(
->  			usage();
->  		}
->  		cfg->rtextblocks = 1;
-> +	} else if (cli->sb_feat.zoned) {
-> +		/*
-> +		 * Zoned mode only supports a rtextsize of 1.
-> +		 */
-> +		cfg->rtextblocks = 1;
->  	} else {
->  		/*
->  		 * If realtime extsize has not been specified by the user,
-> @@ -3315,7 +3629,8 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
->  static void
->  open_devices(
->  	struct mkfs_params	*cfg,
-> -	struct libxfs_init	*xi)
-> +	struct libxfs_init	*xi,
-> +	struct zone_topology	*zt)
->  {
->  	uint64_t		sector_mask;
->  
-> @@ -3330,6 +3645,34 @@ open_devices(
->  		usage();
->  	}
->  
-> +	if (zt->data.nr_zones) {
-> +		zt->rt.zone_size = zt->data.zone_size;
-> +		zt->rt.zone_capacity = zt->data.zone_capacity;
-> +		zt->rt.nr_zones = zt->data.nr_zones - zt->data.nr_conv_zones;
-> +	} else if (cfg->sb_feat.zoned && !cfg->rtstart && !xi->rt.dev) {
-> +		/*
-> +		 * By default reserve at 1% of the total capacity (rounded up to
-> +		 * the next power of two) for metadata, but match the minimum we
-> +		 * enforce elsewhere. This matches what SMR HDDs provide.
-> +		 */
-> +		uint64_t rt_target_size = max((xi->data.size + 99) / 100,
-> +					      BTOBB(300 * 1024 * 1024));
-> +
-> +		cfg->rtstart = 1;
-> +		while (cfg->rtstart < rt_target_size)
-> +			cfg->rtstart <<= 1;
-> +	}
-> +
-> +	if (cfg->rtstart) {
-> +		if (cfg->rtstart >= xi->data.size) {
-> +			fprintf(stderr,
-> + _("device size %lld too small for zoned allocator\n"), xi->data.size);
-> +			usage();
-> +		}
-> +		xi->rt.size = xi->data.size - cfg->rtstart;
-> +		xi->data.size = cfg->rtstart;
-> +	}
-> +
->  	/*
->  	 * Ok, Linux only has a 1024-byte resolution on device _size_,
->  	 * and the sizes below are in basic 512-byte blocks,
-> @@ -3348,17 +3691,42 @@ open_devices(
->  
->  static void
->  discard_devices(
-> +	struct mkfs_params	*cfg,
->  	struct libxfs_init	*xi,
-> +	struct zone_topology	*zt,
->  	int			quiet)
->  {
->  	/*
->  	 * This function has to be called after libxfs has been initialized.
->  	 */
->  
-> -	if (!xi->data.isfile)
-> -		discard_blocks(xi->data.fd, xi->data.size, quiet);
-> -	if (xi->rt.dev && !xi->rt.isfile)
-> -		discard_blocks(xi->rt.fd, xi->rt.size, quiet);
-> +	if (!xi->data.isfile) {
-> +		uint64_t	nsectors = xi->data.size;
-> +
-> +		if (cfg->rtstart && zt->data.nr_zones) {
-> +			/*
-> +			 * Note that the zone reset here includes the LBA range
-> +			 * for the data device.
-> +			 *
-> +			 * This is because doing a single zone reset all on the
-> +			 * entire device (which the kernel automatically does
-> +			 * for us for a full device range) is a lot faster than
-> +			 * resetting each zone individually and resetting
-> +			 * the conventional zones used for the data device is a
-> +			 * no-op.
-> +			 */
-> +			reset_zones(cfg, xi->data.fd, 0,
-> +					cfg->rtstart + xi->rt.size, quiet);
-> +			nsectors -= cfg->rtstart;
-> +		}
-> +		discard_blocks(xi->data.fd, nsectors, quiet);
-> +	}
-> +	if (xi->rt.dev && !xi->rt.isfile) {
-> +		if (zt->rt.nr_zones)
-> +			reset_zones(cfg, xi->rt.fd, 0, xi->rt.size, quiet);
-> +		else
-> +			discard_blocks(xi->rt.fd, xi->rt.size, quiet);
-> +	}
->  	if (xi->log.dev && xi->log.dev != xi->data.dev && !xi->log.isfile)
->  		discard_blocks(xi->log.fd, xi->log.size, quiet);
->  }
-> @@ -3477,11 +3845,12 @@ reported by the device (%u).\n"),
->  static void
->  validate_rtdev(
->  	struct mkfs_params	*cfg,
-> -	struct cli_params	*cli)
-> +	struct cli_params	*cli,
-> +	struct zone_topology	*zt)
->  {
->  	struct libxfs_init	*xi = cli->xi;
->  
-> -	if (!xi->rt.dev) {
-> +	if (!xi->rt.dev && !cfg->rtstart) {
->  		if (cli->rtsize) {
->  			fprintf(stderr,
->  _("size specified for non-existent rt subvolume\n"));
-> @@ -3501,7 +3870,7 @@ _("size specified for non-existent rt subvolume\n"));
->  	if (cli->rtsize) {
->  		if (cfg->rtblocks > DTOBT(xi->rt.size, cfg->blocklog)) {
->  			fprintf(stderr,
-> -_("size %s specified for rt subvolume is too large, maxi->um is %lld blocks\n"),
-> +_("size %s specified for rt subvolume is too large, maximum is %lld blocks\n"),
->  				cli->rtsize,
->  				(long long)DTOBT(xi->rt.size, cfg->blocklog));
->  			usage();
-> @@ -3512,6 +3881,9 @@ _("size %s specified for rt subvolume is too large, maxi->um is %lld blocks\n"),
->  reported by the device (%u).\n"),
->  				cfg->sectorsize, xi->rt.bsize);
->  		}
-> +	} else if (zt->rt.nr_zones) {
-> +		cfg->rtblocks = DTOBT(zt->rt.nr_zones * zt->rt.zone_capacity,
-> +				      cfg->blocklog);
->  	} else {
->  		/* grab volume size */
->  		cfg->rtblocks = DTOBT(xi->rt.size, cfg->blocklog);
-> @@ -4050,6 +4422,92 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
->  			NBBY * (cfg->blocksize - sizeof(struct xfs_rtbuf_blkinfo)));
->  }
->  
-> +static void
-> +calculate_zone_geometry(
-> +	struct mkfs_params	*cfg,
-> +	struct cli_params	*cli,
-> +	struct libxfs_init	*xi,
-> +	struct zone_topology	*zt)
-> +{
-> +	if (cfg->rtblocks == 0) {
-> +		fprintf(stderr,
-> +_("empty zoned realtime device not supported.\n"));
-> +		usage();
-> +	}
-> +
-> +	if (zt->rt.nr_zones) {
-> +		/* The RT device has hardware zones */
-> +		cfg->rgsize = zt->rt.zone_capacity * 512;
-> +
-> +		if (cfg->rgsize % cfg->blocksize) {
-> +			fprintf(stderr,
-> +_("rgsize (%s) not a multiple of fs blk size (%d)\n"),
-> +				cli->rgsize, cfg->blocksize);
-> +			usage();
-> +		}
-> +		if (cli->rgsize) {
-> +			fprintf(stderr,
-> +_("rgsize (%s) may not be specified when the rt device is zoned\n"),
-> +				cli->rgsize);
-> +			usage();
-> +		}
-> +
-> +		cfg->rgsize /= cfg->blocksize;
-> +		cfg->rgcount = howmany(cfg->rtblocks, cfg->rgsize);
-> +
-> +		if (cli->rgcount > cfg->rgcount) {
-> +			fprintf(stderr,
-> +_("rgcount (%llu) is larger than hardware zone count (%llu)\n"),
-> +					(unsigned long long)cli->rgcount,
-> +					(unsigned long long)cfg->rgcount);
-> +			usage();
-> +		} else if (cli->rgcount && cli->rgcount < cfg->rgcount) {
-> +			/* constrain the rt device to the given rgcount */
-> +			cfg->rgcount = cli->rgcount;
-> +		}
-> +	} else {
-> +		/* No hardware zones */
-> +		if (cli->rgsize) {
-> +			/* User-specified rtgroup size */
-> +			cfg->rgsize = getnum(cli->rgsize, &ropts, R_RGSIZE);
-> +
-> +			/* Check specified agsize is a multiple of blocksize. */
-> +			if (cfg->rgsize % cfg->blocksize) {
-> +				fprintf(stderr,
-> +_("rgsize (%s) not a multiple of fs blk size (%d)\n"),
-> +					cli->rgsize, cfg->blocksize);
-> +				usage();
-> +			}
-> +			cfg->rgsize /= cfg->blocksize;
-> +			cfg->rgcount = cfg->rtblocks / cfg->rgsize +
-> +					(cfg->rtblocks % cfg->rgsize != 0);
-> +		} else if (cli->rgcount) {
-> +			/* User-specified rtgroup count */
-> +			cfg->rgcount = cli->rgcount;
-> +			cfg->rgsize = cfg->rtblocks / cfg->rgcount +
-> +					(cfg->rtblocks % cfg->rgcount != 0);
-> +		} else {
-> +			/* 256MB zones just like typical SMR HDDs */
-> +			cfg->rgsize = MEGABYTES(256, cfg->blocklog);
-> +			cfg->rgcount = cfg->rtblocks / cfg->rgsize +
-> +					(cfg->rtblocks % cfg->rgsize != 0);
-> +		}
-> +	}
-> +
-> +	if (cfg->rgcount < XFS_MIN_ZONES)  {
-> +		fprintf(stderr,
-> +_("realtime group count (%llu) must be greater than the minimum zone count (%u)\n"),
-> +				(unsigned long long)cfg->rgcount,
-> +				XFS_MIN_ZONES);
-> +		usage();
-> +	}
-> +
-> +	validate_rtgroup_geometry(cfg);
-> +
-> +	/* Zoned RT devices don't use the rtbitmap, and have no bitmap blocks */
-> +	cfg->rtbmblocks = 0;
-> +}
-> +
->  static void
->  calculate_imaxpct(
->  	struct mkfs_params	*cfg,
-> @@ -4213,6 +4671,14 @@ sb_set_features(
->  		sbp->sb_rgblklog = libxfs_compute_rgblklog(sbp->sb_rgextents,
->  							   cfg->rtextblocks);
->  	}
-> +
-> +	if (fp->zoned) {
-> +		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_ZONED;
-> +		sbp->sb_rtstart = (cfg->rtstart * 512) / cfg->blocksize;
-> +		sbp->sb_rtreserved = cfg->rtreserved / cfg->blocksize;
-> +	}
-> +	if (fp->zone_gaps)
-> +		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_ZONE_GAPS;
->  }
->  
->  /*
-> @@ -4775,9 +5241,11 @@ prepare_devices(
->  			 (xfs_extlen_t)XFS_FSB_TO_BB(mp, cfg->logblocks),
->  			 &sbp->sb_uuid, cfg->sb_feat.log_version,
->  			 lsunit, XLOG_FMT, XLOG_INIT_CYCLE, false);
+>  	# We might have deduced SCRATCH_DEV from the SCRATCH_DEV_POOL in the previous
+>  	# run, so we have to unset it now.
+> @@ -828,20 +826,11 @@ get_next_config() {
+>  		[ -z "$TEST_FS_MOUNT_OPTS" ] && _test_mount_opts
+>  		[ -z "$MKFS_OPTIONS" ] && _mkfs_opts
+>  		[ -z "$FSCK_OPTIONS" ] && _fsck_opts
 > -
->  	/* finally, check we can write the last block in the realtime area */
-> -	if (mp->m_rtdev_targp->bt_bdev && cfg->rtblocks > 0) {
-> +	if (mp->m_rtdev_targp->bt_bdev &&
-> +	    mp->m_rtdev_targp != mp->m_ddev_targp &&
-> +	    cfg->rtblocks > 0 &&
-> +	    !xfs_has_zoned(mp)) {
->  		buf = alloc_write_buf(mp->m_rtdev_targp,
->  				XFS_FSB_TO_BB(mp, cfg->rtblocks - 1LL),
->  				BTOBB(cfg->blocksize));
-> @@ -5216,7 +5684,7 @@ main(
->  			 */
->  		},
->  	};
+> -		# clear the external devices if we are not using them
+> -		if [ -z "$USE_EXTERNAL" ]; then
+> -			unset TEST_RTDEV
+> -			unset TEST_LOGDEV
+> -			unset SCRATCH_RTDEV
+> -			unset SCRATCH_LOGDEV
+> -		fi
+>  	else
+>  		[ -z "$MOUNT_OPTIONS" ] && export MOUNT_OPTIONS=$OLD_MOUNT_OPTIONS
+>  		[ -z "$TEST_FS_MOUNT_OPTS" ] && export TEST_FS_MOUNT_OPTS=$OLD_TEST_FS_MOUNT_OPTS
+>  		[ -z "$MKFS_OPTIONS" ] && export MKFS_OPTIONS=$OLD_MKFS_OPTIONS
+>  		[ -z "$FSCK_OPTIONS" ] && export FSCK_OPTIONS=$OLD_FSCK_OPTIONS
+> -		[ -z "$USE_EXTERNAL" ] && export USE_EXTERNAL=$OLD_USE_EXTERNAL
+>  	fi
+>  
+>  	# set default RESULT_BASE
+> @@ -889,12 +878,10 @@ get_next_config() {
+>  	_check_device SCRATCH_DEV optional $SCRATCH_DEV
+>  	export SCRATCH_MNT=`_canonicalize_mountpoint SCRATCH_MNT $SCRATCH_MNT`
+>  
+> -	if [ -n "$USE_EXTERNAL" ]; then
+> -		_check_device TEST_RTDEV optional $TEST_RTDEV
+> -		_check_device TEST_LOGDEV optional $TEST_LOGDEV
+> -		_check_device SCRATCH_RTDEV optional $SCRATCH_RTDEV
+> -		_check_device SCRATCH_LOGDEV optional $SCRATCH_LOGDEV
+> -	fi
+> +	_check_device TEST_RTDEV optional $TEST_RTDEV
+> +	_check_device TEST_LOGDEV optional $TEST_LOGDEV
+> +	_check_device SCRATCH_RTDEV optional $SCRATCH_RTDEV
+> +	_check_device SCRATCH_LOGDEV optional $SCRATCH_LOGDEV
+>  
+>  	# Override FSTYP from config when running ./check -overlay
+>  	# and maybe override base fs TEST/SCRATCH_DEV with overlay base dirs.
+> diff --git a/common/ext4 b/common/ext4
+> index f88fa5324441..732f66310e8e 100644
+> --- a/common/ext4
+> +++ b/common/ext4
+> @@ -84,7 +84,7 @@ _scratch_mkfs_ext4()
+>  	local tmp=`mktemp -u`
+>  	local mkfs_status
+>  
+> -	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ]; then
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		$MKFS_EXT4_PROG -F -O journal_dev $MKFS_OPTIONS $* $SCRATCH_LOGDEV 2>$tmp.mkfserr 1>$tmp.mkfsstd
+>  		mkjournal_status=$?
+>  
+> @@ -219,7 +219,7 @@ _scratch_ext4_options()
+>  		log_opt="-o journal_path=$(realpath -q "$SCRATCH_LOGDEV")"
+>  		;;
+>  	esac
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	[ ! -z "$SCRATCH_LOGDEV" ] && \
+>  		SCRATCH_OPTIONS="$SCRATCH_OPTIONS ${log_opt}"
+>  }
+>  
+> diff --git a/common/fail_make_request b/common/fail_make_request
+> index 564020215ffd..9bff21c40b4a 100644
+> --- a/common/fail_make_request
+> +++ b/common/fail_make_request
+> @@ -46,19 +46,23 @@ _start_fail_scratch_dev()
+>  
+>      _prepare_for_eio_shutdown $SCRATCH_DEV
+>      _bdev_fail_make_request $SCRATCH_DEV 1
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> -        _bdev_fail_make_request $SCRATCH_LOGDEV 1
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> -        _bdev_fail_make_request $SCRATCH_RTDEV 1
+> +    if [ ! -z "$SCRATCH_LOGDEV" ]; then
+> +	_bdev_fail_make_request $SCRATCH_LOGDEV 1
+> +    fi
+> +    if [ ! -z "$SCRATCH_RTDEV" ]; then
+> +	_bdev_fail_make_request $SCRATCH_RTDEV 1
+> +    fi
+>  }
+>  
+>  _stop_fail_scratch_dev()
+>  {
+>      echo "Make SCRATCH_DEV device operable again"
+>  
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> -        _bdev_fail_make_request $SCRATCH_RTDEV 0
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +    if [ ! -z "$SCRATCH_RTDEV" ]; then
+> +	_bdev_fail_make_request $SCRATCH_RTDEV 0
+> +    fi
+> +    if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>          _bdev_fail_make_request $SCRATCH_LOGDEV 0
+> +    fi
+>      _bdev_fail_make_request $SCRATCH_DEV 0
+>  }
+> diff --git a/common/metadump b/common/metadump
+> index 61ba3cbb9164..90ca8e8a089e 100644
+> --- a/common/metadump
+> +++ b/common/metadump
+> @@ -38,10 +38,14 @@ _xfs_cleanup_verify_metadump()
+>  _scratch_xfs_can_metadump_v1()
+>  {
+>  	# metadump v1 does not support log devices
+> -	[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_LOGDEV" ] && return 1
+> +	if [ -n "$SCRATCH_LOGDEV" ]; then
+> +		return 1
+> +	fi
+>  
+>  	# metadump v1 does not support realtime devices
+> -	[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && return 1
+> +	if [ -n "$SCRATCH_RTDEV" ]; then
+> +		return 1
+> +	fi
+>  
+>  	return 0
+>  }
+> diff --git a/common/populate b/common/populate
+> index 50dc75d35259..3e0fb3ca478a 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -244,7 +244,7 @@ _populate_xfs_qmount_option()
+>  	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+>  		# No quota support
+>  		return
+> -	elif [ "${USE_EXTERNAL}" = "yes" ] && [ -n "${SCRATCH_RTDEV}" ]; then
+> +	elif [ -n "${SCRATCH_RTDEV}" ]; then
+>  		# We have not mounted the scratch fs, so we can only check
+>  		# rtquota support from the test fs.  Skip the quota options if
+>  		# the test fs does not have an rt section.
+> @@ -1063,11 +1063,11 @@ _scratch_populate_cache_tag() {
+>  	local logdev_sz="none"
+>  	local rtdev_sz="none"
+>  
+> -	if [ "${USE_EXTERNAL}" = "yes" ] && [ -n "${SCRATCH_LOGDEV}" ]; then
+> +	if [ -n "${SCRATCH_LOGDEV}" ]; then
+>  		logdev_sz="$(blockdev --getsz "${SCRATCH_LOGDEV}")"
+>  	fi
+>  
+> -	if [ "${USE_EXTERNAL}" = "yes" ] && [ -n "${SCRATCH_RTDEV}" ]; then
+> +	if [ -n "${SCRATCH_RTDEV}" ]; then
+>  		rtdev_sz="$(blockdev --getsz "${SCRATCH_RTDEV}")"
+>  	fi
+>  
+> @@ -1097,9 +1097,9 @@ _scratch_populate_restore_cached() {
+>  		;;
+>  	"ext2"|"ext3"|"ext4")
+>  		local logdev=none
+> -		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +		if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  			logdev=$SCRATCH_LOGDEV
 > -
-> +	struct zone_topology zt = {};
->  	struct list_head	buffer_list;
->  	int			error;
+> +		fi
+>  		_ext4_mdrestore "${metadump}" "${SCRATCH_DEV}" "${logdev}"
+>  		return $?
+>  		;;
+> @@ -1115,12 +1115,14 @@ _scratch_populate_save_metadump()
+>  	case "${FSTYP}" in
+>  	"xfs")
+>  		local logdev=none
+> -		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +		if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  			logdev=$SCRATCH_LOGDEV
+> +		fi
 >  
-> @@ -5318,6 +5786,7 @@ main(
->  	sectorsize = cfg.sectorsize;
+>  		local rtdev=none
+> -		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +		if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  			rtdev=$SCRATCH_RTDEV
+> +		fi
 >  
->  	validate_log_sectorsize(&cfg, &cli, &dft, &ft);
-> +	validate_zoned(&cfg, &cli, &dft, &zt);
->  	validate_sb_features(&cfg, &cli);
+>  		mdargs=('-a' '-o')
+>  		test "$(_xfs_metadump_max_version)" -gt 1 && \
+> diff --git a/common/quota b/common/quota
+> index a51386b1dd24..57cb0d1c23fe 100644
+> --- a/common/quota
+> +++ b/common/quota
+> @@ -453,7 +453,7 @@ _scratch_supports_rtquota()
+>  {
+>  	case "$FSTYP" in
+>  	"xfs")
+> -		if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ]; then
+> +		if [ -n "$SCRATCH_RTDEV" ]; then
+>  			_xfs_scratch_supports_rtquota
+>  			return
+>  		fi
+> diff --git a/common/rc b/common/rc
+> index 9bed6dad9303..1005f332eb2a 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -385,10 +385,12 @@ _test_options()
+>          log_opt="-o"
+>  	;;
+>      esac
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ] && \
+> +    if [ ! -z "$TEST_RTDEV" ]; then
+>  	TEST_OPTIONS="$TEST_OPTIONS ${rt_opt}rtdev=$TEST_RTDEV"
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_LOGDEV" ] && \
+> +    fi
+> +    if [ ! -z "$TEST_LOGDEV" ]; then
+>  	TEST_OPTIONS="$TEST_OPTIONS ${log_opt}logdev=$TEST_LOGDEV"
+> +    fi
+>  }
 >  
->  	/*
-> @@ -5342,11 +5811,11 @@ main(
->  	/*
->  	 * Open and validate the device configurations
->  	 */
-> -	open_devices(&cfg, &xi);
-> +	open_devices(&cfg, &xi, &zt);
->  	validate_overwrite(xi.data.name, force_overwrite);
->  	validate_datadev(&cfg, &cli);
->  	validate_logdev(&cfg, &cli);
-> -	validate_rtdev(&cfg, &cli);
-> +	validate_rtdev(&cfg, &cli, &zt);
->  	calc_stripe_factors(&cfg, &cli, &ft);
+>  # Used for mounting non-scratch devices (e.g. loop, dm constructs)
+> @@ -979,7 +981,7 @@ _scratch_mkfs()
+>  		mkfs_filter="grep -v -e ^Warning: -e \"^mke2fs \""
 >  
->  	/*
-> @@ -5357,7 +5826,10 @@ main(
->  	 */
->  	calculate_initial_ag_geometry(&cfg, &cli, &xi);
->  	align_ag_geometry(&cfg);
-> -	calculate_rtgroup_geometry(&cfg, &cli, &xi);
-> +	if (cfg.sb_feat.zoned)
-> +		calculate_zone_geometry(&cfg, &cli, &xi, &zt);
-> +	else
-> +		calculate_rtgroup_geometry(&cfg, &cli, &xi);
+>  		# put journal on separate device?
+> -		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +		[ ! -z "$SCRATCH_LOGDEV" ] && \
+>  		$mkfs_cmd -O journal_dev $MKFS_OPTIONS $SCRATCH_LOGDEV && \
+>  		mkfs_cmd="$mkfs_cmd -J device=$SCRATCH_LOGDEV"
+>  		;;
+> @@ -1284,7 +1286,7 @@ _try_scratch_mkfs_sized()
+>  	ext2|ext3|ext4)
+>  		# Can't use _scratch_mkfs_ext4 here because the block count has
+>  		# to come after the device path.
+> -		if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ]; then
+> +		if [ -z "$SCRATCH_LOGDEV" ]; then
+>  			${MKFS_PROG} -F -O journal_dev $MKFS_OPTIONS $SCRATCH_LOGDEV || \
+>  				_notrun "Could not make scratch logdev"
+>  			MKFS_OPTIONS="$MKFS_OPTIONS -J device=$SCRATCH_LOGDEV"
+> @@ -2285,8 +2287,10 @@ _require_test()
+>  _has_logdev()
+>  {
+>  	local ret=0
+> -	[ -z "$SCRATCH_LOGDEV" -o ! -b "$SCRATCH_LOGDEV" ] && ret=1
+> -	[ "$USE_EXTERNAL" != yes ] && ret=1
+> +
+> +	if [ -z "$SCRATCH_LOGDEV" -o ! -b "$SCRATCH_LOGDEV" ]; then
+> +		ret=1
+> +	fi
 >  
->  	calculate_imaxpct(&cfg, &cli);
+>  	return $ret
+>  }
+> @@ -2297,8 +2301,6 @@ _require_logdev()
+>  {
+>      [ -z "$SCRATCH_LOGDEV" -o ! -b "$SCRATCH_LOGDEV" ] && \
+>          _notrun "This test requires a valid \$SCRATCH_LOGDEV"
+> -    [ "$USE_EXTERNAL" != yes ] && \
+> -        _notrun "This test requires USE_EXTERNAL to be enabled"
 >  
-> @@ -5410,8 +5882,13 @@ main(
->  	/*
->  	 * All values have been validated, discard the old device layout.
->  	 */
-> +	if (cli.sb_feat.zoned && !discard) {
-> +		fprintf(stderr,
-> + _("-K not support for zoned file systems.\n"));
-> +		return 1;
-> +	}
->  	if (discard && !dry_run)
-> -		discard_devices(&xi, quiet);
-> +		discard_devices(&cfg, &xi, &zt, quiet);
+>      # ensure its not mounted
+>      _unmount $SCRATCH_LOGDEV 2>/dev/null
+> @@ -2308,8 +2310,9 @@ _require_logdev()
+>  #
+>  _require_no_logdev()
+>  {
+> -	[ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_LOGDEV" ] && \
+> +	if [ -n "$SCRATCH_LOGDEV" ]; then
+>  		_notrun "Test not compatible with external logs, skipped this test"
+> +	fi
+>  }
 >  
->  	/*
->  	 * we need the libxfs buffer cache from here on in.
+>  # this test requires loopback device support
+> @@ -2347,18 +2350,18 @@ _require_no_large_scratch_dev()
+>  #
+>  _require_realtime()
+>  {
+> -    [ "$USE_EXTERNAL" = yes ] || \
+> -	_notrun "External volumes not in use, skipped this test"
+> -    [ "$SCRATCH_RTDEV" = "" ] && \
+> -	_notrun "Realtime device required, skipped this test"
+> +	if [ "$SCRATCH_RTDEV" = "" ]; then
+> +		_notrun "Realtime device required, skipped this test"
+> +	fi
+>  }
+>  
+>  # This test requires that a realtime subvolume is not in use
+>  #
+>  _require_no_realtime()
+>  {
+> -	[ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ] && \
+> +	if [ -n "$SCRATCH_RTDEV" ]; then
+>  		_notrun "Test not compatible with realtime subvolumes, skipped this test"
+> +	fi
+>  }
+>  
+>  # this test requires that a specified command (executable) exists
+> @@ -2551,8 +2554,9 @@ _require_non_zoned_device()
+>  #
+>  _require_nonexternal()
+>  {
+> -    [ "$USE_EXTERNAL" = yes ] && \
+> +    if [ -n "$SCRATCH_RTDEV" -o -n "$SCRATCH_LOGDEV" ]; then
+>  	_notrun "External device testing in progress, skipped this test"
+> +    fi
+>  }
+>  
+>  # this test requires that the kernel supports asynchronous I/O
+> @@ -4956,19 +4960,11 @@ init_rc()
+>  		_exit 1
+>  	fi
+>  
+> -	# if $TEST_DEV is not mounted, mount it now as XFS
+> -	if [ -z "`_fs_type $TEST_DEV`" ]
+> -	then
+> -		# $TEST_DEV is not mounted
+> -		if ! _test_mount
+> -		then
+> -			echo "common/rc: retrying test device mount with external set"
+> -			[ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
+> -			if ! _test_mount
+> -			then
+> -				echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
+> -				_exit 1
+> -			fi
+> +	# if $TEST_DEV is not mounted, mount it now as $FSTYP
+> +	if [ -z "`_fs_type $TEST_DEV`" ]; then
+> +		if ! _test_mount; then
+> +			echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
+> +			_exit 1
+>  		fi
+>  	fi
+>  
+> diff --git a/common/xfs b/common/xfs
+> index 96c15f3c7bb0..d1f0277f4048 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -248,7 +248,7 @@ _xfs_get_dir_blocksize()
+>  # Decide if this path is a file on the realtime device
+>  _xfs_is_realtime_file()
+>  {
+> -	if [ "$USE_EXTERNAL" != "yes" ] || [ -z "$SCRATCH_RTDEV" ]; then
+> +	if [ -z "$SCRATCH_RTDEV" ]; then
+>  		return 1
+>  	fi
+>  	$XFS_IO_PROG -c 'stat -v' "$1" | grep -q -w realtime
+> @@ -308,18 +308,21 @@ _scratch_xfs_options()
+>          log_opt="-o"
+>  	;;
+>      esac
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +    if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  	SCRATCH_OPTIONS="$SCRATCH_OPTIONS ${rt_opt}rtdev=$SCRATCH_RTDEV"
+> -    [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +    fi
+> +    if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  	SCRATCH_OPTIONS="$SCRATCH_OPTIONS ${log_opt}logdev=$SCRATCH_LOGDEV"
+> +    fi
+>  }
+>  
+>  _scratch_xfs_db_options()
+>  {
+>  	SCRATCH_OPTIONS=""
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
+> -	if [ "$USE_EXTERNAL" = yes ] && [ ! -z "$SCRATCH_RTDEV" ]; then
+> +	fi
+> +	if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  		$XFS_DB_PROG --help 2>&1 | grep -q -- '-R rtdev' && \
+>  			SCRATCH_OPTIONS="$SCRATCH_OPTIONS -R$SCRATCH_RTDEV"
+>  	fi
+> @@ -334,8 +337,9 @@ _scratch_xfs_db()
+>  _test_xfs_db_options()
+>  {
+>  	TEST_OPTIONS=""
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$TEST_LOGDEV" ] && \
+> +	if [ ! -z "$TEST_LOGDEV" ]; then
+>  		TEST_OPTIONS="-l$TEST_LOGDEV"
+> +	fi
+>  	echo $TEST_OPTIONS $* $TEST_DEV
+>  }
+>  
+> @@ -348,9 +352,10 @@ _scratch_xfs_admin()
+>  {
+>  	local options=("$SCRATCH_DEV")
+>  	local rt_opts=()
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		options+=("$SCRATCH_LOGDEV")
+> -	if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ]; then
+> +	fi
+> +	if [ -n "$SCRATCH_RTDEV" ]; then
+>  		$XFS_ADMIN_PROG --help 2>&1 | grep -q 'rtdev' || \
+>  			_notrun 'xfs_admin does not support rt devices'
+>  		rt_opts+=(-r "$SCRATCH_RTDEV")
+> @@ -367,16 +372,18 @@ _scratch_xfs_admin()
+>  _scratch_xfs_logprint()
+>  {
+>  	SCRATCH_OPTIONS=""
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
+> +	fi
+>  	$XFS_LOGPRINT_PROG $SCRATCH_OPTIONS $* $SCRATCH_DEV
+>  }
+>  
+>  _test_xfs_logprint()
+>  {
+>  	TEST_OPTIONS=""
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$TEST_LOGDEV" ] && \
+> +	if [ ! -z "$TEST_LOGDEV" ]; then
+>  		TEST_OPTIONS="-l$TEST_LOGDEV"
+> +	fi
+>  	$XFS_LOGPRINT_PROG $TEST_OPTIONS $* $TEST_DEV
+>  }
+>  
+> @@ -391,10 +398,12 @@ _require_libxfs_debug_flag() {
+>  _scratch_xfs_repair()
+>  {
+>  	SCRATCH_OPTIONS=""
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +	fi
+> +	if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  		SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -r$SCRATCH_RTDEV"
+> +	fi
+>  	$XFS_REPAIR_PROG $SCRATCH_OPTIONS $* $SCRATCH_DEV
+>  }
+>  
+> @@ -740,11 +749,13 @@ _scratch_xfs_metadump()
+>  	local logdev=none
+>  	local rtdev=none
+>  
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		logdev=$SCRATCH_LOGDEV
+> +	fi
+>  
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +	if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  		rtdev=$SCRATCH_RTDEV
+> +	fi
+>  
+>  	_xfs_metadump "$metadump" "$SCRATCH_DEV" "$logdev" "$rtdev" nocompress "$@"
+>  }
+> @@ -762,12 +773,13 @@ _scratch_xfs_mdrestore()
+>  	# the following conditions are met.
+>  	# 1. Metadump is in v2 format.
+>  	# 2. Metadump has contents dumped from an external log device.
+> -	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ]; then
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		logdev=$SCRATCH_LOGDEV
+>  	fi
+>  
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +	if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  		rtdev=$SCRATCH_RTDEV
+> +	fi
+>  
+>  	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$rtdev" "$@"
+>  }
+> @@ -1026,11 +1038,13 @@ _check_xfs_test_fs()
+>  {
+>  	TEST_LOG="none"
+>  	TEST_RT="none"
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$TEST_LOGDEV" ] && \
+> +	if [ ! -z "$TEST_LOGDEV" ]; then
+>  		TEST_LOG="$TEST_LOGDEV"
+> +	fi
+>  
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ] && \
+> +	if [ ! -z "$TEST_RTDEV" ]; then
+>  		TEST_RT="$TEST_RTDEV"
+> +	fi
+>  
+>  	_check_xfs_filesystem $TEST_DEV $TEST_LOG $TEST_RT
+>  	return $?
+> @@ -1041,12 +1055,13 @@ _check_xfs_scratch_fs()
+>  	local device="${1:-$SCRATCH_DEV}"
+>  	local scratch_log="none"
+>  	local scratch_rt="none"
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  	    scratch_log="$SCRATCH_LOGDEV"
+> +	fi
+>  
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +	if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  	    scratch_rt="$SCRATCH_RTDEV"
+> -
+> +	fi
+>  	_check_xfs_filesystem $device $scratch_log $scratch_rt
+>  }
+>  
+> @@ -1054,10 +1069,12 @@ _check_xfs_scratch_fs()
+>  _test_xfs_repair()
+>  {
+>  	TEST_OPTIONS=""
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$TEST_LOGDEV" ] && \
+> +	if [ ! -z "$TEST_LOGDEV" ]; then
+>  		TEST_OPTIONS="-l$TEST_LOGDEV"
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ] && \
+> +	fi
+> +	if [ ! -z "$TEST_RTDEV" ]; then
+>  		TEST_OPTIONS=$TEST_OPTIONS" -r$TEST_RTDEV"
+> +	fi
+>  	[ "$LARGE_TEST_DEV" = yes ] && TEST_OPTIONS=$TEST_OPTIONS" -t"
+>  	$XFS_REPAIR_PROG $TEST_OPTIONS $* $TEST_DEV
+>  }
+> @@ -1553,8 +1570,10 @@ _try_wipe_scratch_xfs()
+>  _require_xfs_copy()
+>  {
+>  	[ -n "$XFS_COPY_PROG" ] || _notrun "xfs_copy binary not yet installed"
+> -	[ "$USE_EXTERNAL" = yes ] && \
+> +
+> +	if [ -n "$SCRATCH_RTDEV" -o -n "$SCRATCH_LOGDEV" ]; then
+>  		_notrun "Cannot xfs_copy with external devices"
+> +	fi
+>  
+>  	$XFS_INFO_PROG "$TEST_DIR" | grep -q 'realtime.*internal' &&
+>  		_notrun "Cannot xfs_copy with internal rt device"
+> @@ -2054,7 +2073,7 @@ _scratch_xfs_force_no_metadir()
+>  {
+>  	_require_non_zoned_device $SCRATCH_DEV
+>  	# metadir is required for when the rt device is on a zoned device
+> -	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
+> +	if [ ! -z "$SCRATCH_RTDEV" ]; then
+>  		_require_non_zoned_device $SCRATCH_RTDEV
+>  	fi
+>  
+> @@ -2184,8 +2203,6 @@ _xfs_fs_supports_rtquota() {
+>  
+>  	test -d "$mntpt" || \
+>  		echo "_xfs_fs_supports_rtquota needs a mountpoint"
+> -	test "$USE_EXTERNAL" == "yes" || \
+> -		echo "_xfs_fs_supports_rtquota needs USE_EXTERNAL=yes"
+>  	test -n "$rtdev" || \
+>  		echo "_xfs_fs_supports_rtquota needs an rtdev"
+>  
+> @@ -2209,7 +2226,7 @@ _xfs_scratch_supports_rtquota() {
+>  # can check that quickly, and we make the bold assumption that the same will
+>  # apply to any scratch fs that might be created.
+>  _require_xfs_rtquota_if_rtdev() {
+> -	if [ "$USE_EXTERNAL" != "yes" ]; then
+> +        if [ -z "$SCRATCH_RTDEV" ]; then
+>  		$XFS_INFO_PROG "$TEST_DIR" | grep -q 'realtime.*internal' &&
+>  			_notrun "Quota on internal rt device not supported"
+>  	fi
+> diff --git a/tests/generic/537 b/tests/generic/537
+> index 3be743c4133f..87673447f64c 100755
+> --- a/tests/generic/537
+> +++ b/tests/generic/537
+> @@ -47,10 +47,8 @@ _scratch_unmount
+>  # ondisk metadata and reject the mount because it thinks that will require
+>  # quotacheck.  Edit out the quota mount options for this specific
+>  # configuration.
+> -if [ "$FSTYP" = "xfs" ]; then
+> -	if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ]; then
+> -		_qmount_option ""
+> -	fi
+> +if [ "$FSTYP" = "xfs" -a -n "$SCRATCH_RTDEV" ]; then
+> +	_qmount_option ""
+>  fi
+>  
+>  echo "fstrim on ro mount with no log replay"
+> diff --git a/tests/generic/590 b/tests/generic/590
+> index ba1337a856f1..8ae5da493893 100755
+> --- a/tests/generic/590
+> +++ b/tests/generic/590
+> @@ -52,13 +52,12 @@ extra_options=""
+>  if [[ $FSTYP = xfs ]]; then
+>  	# If we don't have a realtime device, set up a loop device on the test
+>  	# filesystem.
+> -	if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
+> +	if [[ -z $SCRATCH_RTDEV ]]; then
+>  		_require_test
+>  		loopsz="$((filesz + (1 << 26)))"
+>  		_require_fs_space "$TEST_DIR" $((loopsz / 1024))
+>  		$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
+>  		loop_dev="$(_create_loop_device "$TEST_DIR/$seq")"
+> -		USE_EXTERNAL=yes
+>  		SCRATCH_RTDEV="$loop_dev"
+>  		disabled_features=()
+>  
+> diff --git a/tests/xfs/070 b/tests/xfs/070
+> index 143f56888c1e..9017f8ec6417 100755
+> --- a/tests/xfs/070
+> +++ b/tests/xfs/070
+> @@ -36,10 +36,12 @@ _cleanup()
+>  _xfs_repair_noscan()
+>  {
+>  	# invoke repair directly so we can kill the process if need be
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		log_repair_opts="-l $SCRATCH_LOGDEV"
+> -	[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && \
+> +	fi
+> +	if [ -n "$SCRATCH_RTDEV" ]; then
+>  		rt_repair_opts="-r $SCRATCH_RTDEV"
+> +	fi
+>  	$XFS_REPAIR_PROG $log_repair_opts $rt_repair_opts $SCRATCH_DEV 2>&1 |
+>  		tee -a $seqres.full > $tmp.repair &
+>  	repair_pid=$!
+> diff --git a/tests/xfs/096 b/tests/xfs/096
+> index 4c4fdfa12ef8..1dd249e64e6b 100755
+> --- a/tests/xfs/096
+> +++ b/tests/xfs/096
+> @@ -20,7 +20,7 @@ _require_scratch
+>  _require_xfs_quota
+>  _require_xfs_nocrc
+>  
+> -if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ]; then
+> +if [ -n "$SCRATCH_RTDEV" ]; then
+>  	_notrun "Realtime quotas not supported on V4 filesystems"
+>  fi
+>  
+> diff --git a/tests/xfs/098 b/tests/xfs/098
+> index a47cda67e14e..4307ac9727c1 100755
+> --- a/tests/xfs/098
+> +++ b/tests/xfs/098
+> @@ -66,7 +66,7 @@ logstart="$(_scratch_xfs_get_sb_field logstart)"
+>  logstart="$(_scratch_xfs_db -c "convert fsblock ${logstart} byte" | sed -e 's/^.*(\([0-9]*\).*$/\1/g')"
+>  logblocks="$(_scratch_xfs_get_sb_field logblocks)"
+>  
+> -if [ "$USE_EXTERNAL" = yes ] && [ ! -z "$SCRATCH_LOGDEV" ]; then
+> +if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  	logdev=$SCRATCH_LOGDEV
+>  else
+>  	logdev=$SCRATCH_DEV
+> diff --git a/tests/xfs/157 b/tests/xfs/157
+> index e102a5a10abe..0a3a5c11e109 100755
+> --- a/tests/xfs/157
+> +++ b/tests/xfs/157
+> @@ -52,7 +52,6 @@ truncate -s $fs_size $fake_rtfile
+>  
+>  # Save the original variables
+>  orig_ddev=$SCRATCH_DEV
+> -orig_external=$USE_EXTERNAL
+>  orig_logdev=$SCRATCH_LOGDEV
+>  orig_rtdev=$SCRATCH_RTDEV
+>  
+> @@ -60,7 +59,6 @@ scenario() {
+>  	echo "$@" | tee -a $seqres.full
+>  
+>  	SCRATCH_DEV=$orig_ddev
+> -	USE_EXTERNAL=$orig_external
+>  	SCRATCH_LOGDEV=$orig_logdev
+>  	SCRATCH_RTDEV=$orig_rtdev
+>  }
+> @@ -78,23 +76,19 @@ SCRATCH_DEV=$fake_datafile
+>  check_label -f
+>  
+>  scenario "S2: Check that setting with logdev works"
+> -USE_EXTERNAL=yes
+>  SCRATCH_LOGDEV=$fake_logfile
+>  check_label
+>  
+>  scenario "S3: Check that setting with rtdev works"
+> -USE_EXTERNAL=yes
+>  SCRATCH_RTDEV=$fake_rtfile
+>  check_label
+>  
+>  scenario "S4: Check that setting with rtdev + logdev works"
+> -USE_EXTERNAL=yes
+>  SCRATCH_LOGDEV=$fake_logfile
+>  SCRATCH_RTDEV=$fake_rtfile
+>  check_label
+>  
+>  scenario "S5: Check that setting with nortdev + nologdev works"
+> -USE_EXTERNAL=
+>  SCRATCH_LOGDEV=
+>  SCRATCH_RTDEV=
+>  check_label
+> diff --git a/tests/xfs/185 b/tests/xfs/185
+> index 7aceb383ce46..3cf0e14b31ef 100755
+> --- a/tests/xfs/185
+> +++ b/tests/xfs/185
+> @@ -27,7 +27,6 @@ _cleanup()
+>  	test -n "$rtloop" && _destroy_loop_device "$rtloop"
+>  	test -n "$ddfile" && rm -f "$ddfile"
+>  	test -n "$rtfile" && rm -f "$rtfile"
+> -	test -n "$old_use_external" && USE_EXTERNAL="$old_use_external"
+>  }
+>  
+>  _require_test
+> @@ -67,8 +66,6 @@ test $ddmajor -le $rtmajor || \
+>  # Inject our custom-built devices as an rt-capable scratch device.
+>  # We avoid touching "require_scratch" so that post-test fsck will not try to
+>  # run on our synthesized scratch device.
+> -old_use_external="$USE_EXTERNAL"
+> -USE_EXTERNAL=yes
+>  SCRATCH_RTDEV="$rtloop"
+>  SCRATCH_DEV="$ddloop"
+>  
+> diff --git a/tests/xfs/273 b/tests/xfs/273
+> index 7e743179975e..f253074e3ec3 100755
+> --- a/tests/xfs/273
+> +++ b/tests/xfs/273
+> @@ -48,7 +48,7 @@ ddev_daddrs=$((ddev_fsblocks * fsblock_bytes / 512))
+>  rtdev_daddrs=$((rtdev_fsblocks * fsblock_bytes / 512))
+>  
+>  ddev_devno=$(stat -c '%t:%T' $SCRATCH_DEV)
+> -if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_RTDEV" ]; then
+> +if [ -n "$SCRATCH_RTDEV" ]; then
+>  	rtdev_devno=$(stat -c '%t:%T' $SCRATCH_RTDEV)
+>  fi
+>  
+> diff --git a/tests/xfs/277 b/tests/xfs/277
+> index 87423b96454f..874b4c429f71 100755
+> --- a/tests/xfs/277
+> +++ b/tests/xfs/277
+> @@ -21,7 +21,7 @@ _cleanup()
+>  
+>  _require_xfs_scratch_rmapbt
+>  _require_xfs_io_command "fsmap"
+> -if [ "$USE_EXTERNAL" = "yes" ] && [ -n "$SCRATCH_LOGDEV" ]; then
+> +if [ -n "$SCRATCH_LOGDEV" ]; then
+>  	_notrun "Cannot have external log device"
+>  fi
+>  
+> diff --git a/tests/xfs/438 b/tests/xfs/438
+> index 6d1988c8b9b8..92fa2264571d 100755
+> --- a/tests/xfs/438
+> +++ b/tests/xfs/438
+> @@ -46,7 +46,7 @@ make_xfs_scratch_flakey_table()
+>  
+>  	# If using an external log device, just making the writing of
+>  	# entire data/metadata area fail forever.
+> -	if [ "${USE_EXTERNAL}" = "yes" -a ! -z "$SCRATCH_LOGDEV" ]; then
+> +	if [ ! -z "$SCRATCH_LOGDEV" ]; then
+>  		echo "0 ${dev_sz} $tgt $dev 0 $opt"
+>  		return
+>  	fi
+> diff --git a/tests/xfs/520 b/tests/xfs/520
+> index 2d80188b2972..f52689b82945 100755
+> --- a/tests/xfs/520
+> +++ b/tests/xfs/520
+> @@ -31,7 +31,7 @@ _require_check_dmesg
+>  _require_scratch_nocheck
+>  
+>  # Don't let the rtbitmap fill up the data device and screw up this test
+> -unset USE_EXTERNAL
+> +unset SCRATCH_RTDEV
+>  
+>  force_crafted_metadata() {
+>  	_scratch_mkfs_xfs -f $fsdsopt "$4" >> $seqres.full 2>&1
+> diff --git a/tests/xfs/521 b/tests/xfs/521
+> index 0da05a55a276..74f9018056c0 100755
+> --- a/tests/xfs/521
+> +++ b/tests/xfs/521
+> @@ -38,7 +38,6 @@ truncate -s 400m $TEST_DIR/$seq.rtvol
+>  rt_loop_dev=$(_create_loop_device $TEST_DIR/$seq.rtvol)
+>  
+>  echo "Format and mount 100m rt volume"
+> -export USE_EXTERNAL=yes
+>  export SCRATCH_RTDEV=$rtdev
+>  _scratch_mkfs -r size=100m > $seqres.full
+>  _try_scratch_mount || _notrun "Could not mount scratch with synthetic rt volume"
+> diff --git a/tests/xfs/528 b/tests/xfs/528
+> index a1efbbd27b96..61a3875aa131 100755
+> --- a/tests/xfs/528
+> +++ b/tests/xfs/528
+> @@ -158,7 +158,6 @@ $XFS_IO_PROG -f -c "truncate 400m" $TEST_DIR/$seq.rtvol
+>  rt_loop_dev=$(_create_loop_device $TEST_DIR/$seq.rtvol)
+>  
+>  echo "Make sure synth rt volume works"
+> -export USE_EXTERNAL=yes
+>  export SCRATCH_RTDEV=$rt_loop_dev
+>  _scratch_mkfs > $seqres.full
+>  _try_scratch_mount || \
+> diff --git a/tests/xfs/530 b/tests/xfs/530
+> index 4a41127e3b82..70524ee626ef 100755
+> --- a/tests/xfs/530
+> +++ b/tests/xfs/530
+> @@ -56,7 +56,6 @@ rt_loop_dev=$(_create_loop_device $TEST_DIR/$seq.rtvol)
+>  
+>  echo "Format and mount rt volume"
+>  
+> -export USE_EXTERNAL=yes
+>  export SCRATCH_RTDEV=$rt_loop_dev
+>  _scratch_mkfs -d size=$((1024 * 1024 * 1024)) \
+>  	      -r size=${rtextsz},extsize=${rtextsz} >> $seqres.full
 > -- 
 > 2.47.2
 > 
