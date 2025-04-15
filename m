@@ -1,84 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E751EEC3;
-	Tue, 15 Apr 2025 08:31:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED425A79B;
+	Tue, 15 Apr 2025 10:14:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744705907; cv=none; b=FesRg1pfni/Sp/Kb2SVQUwdaieJO6XiPrF/8xGhoJ2fmGtY1Ltx9nNv9wXI/IlAya+wZBP1IS0Bga5KLANnF7KIggJz4DAtKJP+zizOgbDj8wz77M6syYbjIIQvaIh5xhOcIa/7WhIrnxIXYJYU3gR7hWqCwx7kYszpPrm3UOkA=
+	t=1744712042; cv=none; b=bCuifCvzZ79SNT0XJUJ5lzTUXxKpHbgJ+NZPnyHOA5BtxKTxMcRpgV+ylYcRcbCBz5ApqKA+seiI7AYXlTgT31xZLyF9nqLaEqdjiqIBXK6xwpQs0REMD5nSGj5PxKc0QkLSRkOGIzCa1oM+Usg8uEYtsdY9mDSfYXqJe3ebk4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744705907; c=relaxed/simple;
-	bh=oU93N5reheIKkW5VKi9abj/S7BhpxsAnf/qQko/2IDs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A4Kx5ew4ZJuUCz2JhtXT2aS8ju/4gNVlsGdYQ/qdIZdO8MVuwg+b6I71cpRkf0JBGMIx4fFSofejwdaLAk56YzE6Hr6z7CLp9ASr1900E2vbWpkxC2g0M9RQOMZ2eVKget5qby9x1PhiorZwjNPIxCBOSRosQo4pN1FVQqvUj3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qsz+YZ7S; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744712042; c=relaxed/simple;
+	bh=JuBCKkJaM3hmsEjaT1kgYwdjyRkGh72CJZBJOY1YxDE=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=QuoV67u8xn4aG9kCN3yfmyrOItcU/I0xwWgaiId38E0ownn1smL58u4heZYVOq7hqx9qW6jWPBzPuwYDewJ2iFcPCG2pomiLBTxIX9ZmGp/+vDSuiphZoB2MBL+fOmKADOLWnKCM3jF8TlRUNLMB+2rpIjNVaA/JiQAUg6+I02A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MVJJvGpG; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qsz+YZ7S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31BB8C4CEDD;
-	Tue, 15 Apr 2025 08:31:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744705907;
-	bh=oU93N5reheIKkW5VKi9abj/S7BhpxsAnf/qQko/2IDs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Qsz+YZ7SRLPISzBY3uNp0wjYQ6PYZK0sJsGsQQmZNhEo3Op0hICR6Dr/4Ay94+LgI
-	 cU78VKIuO7Z3iMqYGnQ79+8q8bdmGMX0UpQWL0KGOItc8SZrQaZXlKjUmZWslwNhft
-	 e0ukssC3hslKyamoMOy6Q8jayNaFb7mtdIYsReJ42+P0jbOs6I/dfdPB1L8CfIvprT
-	 vMqTH/nx4/j83D0GR+ifDsF3u670zVIKPdbDiOH60zhJdUCNM4xsp/gmwE+rXW+2Gb
-	 xBK7kgjHb4XOMqitOG8/jPinviSjPcjfLpfeR/F+H1jLcjdOl5fDDKGtlL2mB5zh5i
-	 wYKq4619vZXcQ==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	John Garry <john.g.garry@oracle.com>,
-	djwong@kernel.org,
-	ojaswin@linux.ibm.com,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] Documentation: iomap: Add missing flags description
-Date: Tue, 15 Apr 2025 10:31:40 +0200
-Message-ID: <20250415-busspur-stemmen-befa0e140e09@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <8d8534a704c4f162f347a84830710db32a927b2e.1744432270.git.ritesh.list@gmail.com>
-References: <8d8534a704c4f162f347a84830710db32a927b2e.1744432270.git.ritesh.list@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MVJJvGpG"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2240b4de12bso72081305ad.2;
+        Tue, 15 Apr 2025 03:14:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1744712040; x=1745316840; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=2yat5Q2ro2VdU/edk/vSlsoVMBmysgz9dlNkdYrGb7g=;
+        b=MVJJvGpGwUhog0gLulETz4MH8KBqe69j7XeMNDQCsH4Y+30t/zBw8SUvz7d4m4B8xX
+         Gc7AYwmgioK0X1ItXMEOTOsVQ792F/jV5QHHQGJM+0BsO2stkoKSV5ScNK2W8jMoB2gk
+         OhJkI1p6JlRG5KRiLqsDv4iLlq0J7o7XH0p5h045e1i+KuggfxPW75I1zPJOzN4dh68e
+         2Q+Nc6GBX8HTvxLG/MGEmmdV0rxZ1Pz3yG9krEMELtAbMkDG+/+D01/JfsaP7VnCkGih
+         EU0pU3WdNjeVzBUvcH/8k1n3S0E10/goLaL4WopoVI7okXfCIRbsBWgakIhRnB76Bhxv
+         9i7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744712040; x=1745316840;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2yat5Q2ro2VdU/edk/vSlsoVMBmysgz9dlNkdYrGb7g=;
+        b=eqmUI7EjAjx1RgqjwCmVE8kVanGDR0o9TNEUm3/+KZ3CdwS58FmBt8qeBAvAkVMMAX
+         Ojaoe6ynXP5lagi+qXJGm1uXwv08XkBwWV+91/nMbyWsOiN12yEPAKUpxVvVP3Y6ibiw
+         Z/tB2YsamFQkISsHn+9bwI6POzDqg6hufKlYgeDnE1hSMo6WvW4rQa39xV00EkYUp7WH
+         lotdjtvHVkFVh4KUjg0yhw97uUcFv4jKbWtMdEdpQy/uIiwCH2t/IofhW11J2w+04EwL
+         x6LIW7jVZ6/Fem6zKx0qw/t184tNVv0DlaWaW5Sapg5AqH5ti8gQ2Ha5ka+bnjzqcnii
+         NkGA==
+X-Forwarded-Encrypted: i=1; AJvYcCUUyjK/QSqFkarrq/CzCENxvZcci4lqctLOX/UHdLp3/3zaB1NOeloyFtXQUxP1FnxwvBvKknTEUdy+@vger.kernel.org, AJvYcCWs+jcjpPxWZLbp5slWcWeHQkgdSo0cj0Ar62u+8gIH92EmkGNCk3PB5FIwwmOvqovmnMXYj696uDnP@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzn5QuhPQUrUcE/KhdDX872jhotC0wJwosmxrk736d1rER4cqEr
+	75uNwXkAGROJj4Y2wstbm6wy9B6QCchA7dYJkvD3o7B/ZQ/lgVl9
+X-Gm-Gg: ASbGncvoj84b4KTOJIHfh5aPWjP9TL77hmQaw6EdYmQeb5DHTWqqLZjiXrUDLO61tkB
+	OTfPMAJqe/SZIJaivEs/b2c9oK7XDKroDOLQb/mNs9HG0d+SuaSSnmIcQbjlKwdvwJTMg7Uj/17
+	+SvzNPDzGpfgmuU+A2Mew9PtANQj9XjLBojpCBtFVWYdaC1iMzm+sE8sfSznc+s78povdEtfNVt
+	CKWP2ixQ2FOPOy8oWreZCNTFzGGzkEPciKVXiit6eGWK9JkIiL0PRopWMvn8H7fZINPkkSAGepx
+	tvV2knU6LVZC9SeowuEw/hSVe3WPxcBVbg==
+X-Google-Smtp-Source: AGHT+IGVfEllxuwtyc1XzUKuSeTGsI+WI4RmVEcc1rP4Bl/ErN+obxeqncn3zygjzpfF9fdhNzIJoQ==
+X-Received: by 2002:a17:903:985:b0:216:2bd7:1c4a with SMTP id d9443c01a7336-22bea4c6897mr227721835ad.26.1744712040529;
+        Tue, 15 Apr 2025 03:14:00 -0700 (PDT)
+Received: from dw-tp ([49.205.218.89])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22ac7b62943sm113511595ad.28.2025.04.15.03.13.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Apr 2025 03:13:59 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Theodore Ts'o <tytso@mit.edu>, "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v2 2/3] check: Add -q <n> option to support unconditional looping.
+In-Reply-To: <20250413214858.GA3219283@mit.edu>
+Date: Tue, 15 Apr 2025 14:36:06 +0530
+Message-ID: <87ikn523r5.fsf@gmail.com>
+References: <cover.1743670253.git.nirjhar.roy.lists@gmail.com> <762d80d522724f975df087c1e92cdd202fd18cae.1743670253.git.nirjhar.roy.lists@gmail.com> <20250413214858.GA3219283@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1387; i=brauner@kernel.org; h=from:subject:message-id; bh=oU93N5reheIKkW5VKi9abj/S7BhpxsAnf/qQko/2IDs=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaT/k8wzvjOXOfnQAt31HEWPNOc/bC3xm3ov36Drk83ib /+elUUv6ihlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiI32uGf+qH3jzg/bzhmPqs 1JrjBcI+U6WjcpRmvJJyy5J9fE/39kFGht96ajsr439z//5a5c8aFG6eyP/OJvQNc8eL4EtTZE9 c5QQA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
 
-On Sat, 12 Apr 2025 10:06:34 +0530, Ritesh Harjani (IBM) wrote:
-> Let's document the use of these flags in iomap design doc where other
-> flags are defined too -
-> 
-> - IOMAP_F_BOUNDARY was added by XFS to prevent merging of I/O and I/O
->   completions across RTG boundaries.
-> - IOMAP_F_ATOMIC_BIO was added for supporting atomic I/O operations
->   for filesystems to inform the iomap that it needs HW-offload based
->   mechanism for torn-write protection.
-> 
-> [...]
+"Theodore Ts'o" <tytso@mit.edu> writes:
 
-Applied to the vfs-6.16.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-6.16.iomap branch should appear in linux-next soon.
+> On Thu, Apr 03, 2025 at 08:58:19AM +0000, Nirjhar Roy (IBM) wrote:
+>> This patch adds -q <n> option through which one can run a given test <n>
+>> times unconditionally. It also prints pass/fail metrics at the end.
+>> 
+>> The advantage of this over -L <n> and -i/-I <n> is that:
+>>     a. -L <n> will not re-run a flakey test if the test passes for the first time.
+>>     b. -I/-i <n> sets up devices during each iteration and hence slower.
+>> Note -q <n> will override -L <n>.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+First things first -q is similar to -L except that it loops
+unconditionaly even when there is no failure. (Bad choice of -q naming,
+since -l was in use for something else)
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+>
+> I'm wondering if we need to keep the current behavior of -I/-i.  The
+> primary difference between them and how your proposed -q works is that
+> instead of iterating over the section, your proposed option iterates
+> over each test.  So for example, if a section contains generic/001 and
+> generic/002, iterating using -i 3 will do this:
+>
+> generic/001
+> generic/002
+> generic/001
+> generic/002
+> generic/001
+> generic/002
+>
+> While generic -q 3 would do this instead:
+>
+> generic/001
+> generic/001
+> generic/001
+> generic/002
+> generic/002
+> generic/002
+>
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+Yes, that's correct. Since it iterates at the top level, it also sources
+some common configs, re-formats and does a mount re-cycle of the scratch
+device during each iteration.
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.16.iomap
+This mostly should not matter, since each test can anyways re-format the
+scratch device when it needs to mount/test it.
 
-[1/2] Documentation: iomap: Add missing flags description
-      https://git.kernel.org/vfs/vfs/c/336bac5e0892
-[2/2] iomap: trace: Add missing flags to [IOMAP_|IOMAP_F_]FLAGS_STRINGS
-      https://git.kernel.org/vfs/vfs/c/d1253c677b8f
+>
+> At least for all of the use cases that I can think of where I might
+> use -i 3, -q 3 is strictly better.  So instead of adding more options
+> which change how we might do iterations, could we perhaps just replace
+> -i with your new -q?  And change -I so that it also works like -q,
+> except if any test fails, that we stop?
+
+I agree that in this case it make more sense to replace the underlying
+functionality of -i/-I with what -q <n> is doing here. But maybe others
+can comment, if anyone has any objection on this.
+
+-ritesh
