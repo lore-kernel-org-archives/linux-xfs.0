@@ -1,80 +1,73 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67F7824EF8B
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 23:28:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 807BE18BC0C
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 23:36:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744759727; cv=none; b=qOIYWJcB1ZQOxosm17nR5mgG+9ePN9ycC5Z4FytYhQO8uwZiMtFTOkt0S6nKKBVbNwSTbsWqohgLOvQ8rxwkQeGUkz5E2fLB29qEOGwwSgRvcw//7fZRJc8ld+/1XxWRfNcOOlYQeGWJQmgMx/3VRzf5OMGotSi8oHgRmxDsF18=
+	t=1744760209; cv=none; b=Db/GAQKVR3bqlFrJfrZ+Uiw/peRmK8ORbYkIBctKvspb7SwHvXQ9KY2+ACXrPVGt9JLplcdhlpxkKkwAB9fvcJPe5LuXdd2faSKX3oAVMZrGlUCY78k/bKr1BxKZOVKfE9G/izJoz5rtBVR3rpNtcOy1MyT3BSnFV6oXMK/3NWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744759727; c=relaxed/simple;
-	bh=Co2kGB+wRY7tpOUOLsuYM9DTdsAloPbvZVOcHFISJ8c=;
+	s=arc-20240116; t=1744760209; c=relaxed/simple;
+	bh=2eD+e+Gkgfa3+iC+m53ODqWHhNzh+/uSSsCY3/smqRU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pIbmXvD2XN4g7LyA/ePfxzNFVJU7yftVz+3ouhj7o8+rZM+B+FG/DtYyjAfwJZi3jFmBSfKwYOyw29SxRLG8HoIJCnHoGkUFueQFGDxn5dm10Z1z/wIvaz5xdIj2u6K17AtYyPVcWW4wqS3P4ofN8gxjFGPG507LD7Knqt8AlLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Z5oKluK1; arc=none smtp.client-ip=209.85.214.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=WKrL6F65PPDmRtExp/Zr4u7oWCH4ePtPtoGzYO68Tn79LyS8Cr/gj4LChncJCVPbzLj6pyuIV+0syQdpczAMSEwnyzhYEvhkC1V7d+FtIfjEiltGJdzCPWMFcISLgiup6fG43atq06P1Wpiz76HvvH1MDHKGNSfov13w7h1OYbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=agkioEpg; arc=none smtp.client-ip=209.85.216.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Z5oKluK1"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2295d78b433so64362095ad.2
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 16:28:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="agkioEpg"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-2ff6e91cff5so6273290a91.2
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 16:36:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1744759724; x=1745364524; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1744760206; x=1745365006; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ilFtG+6+Fot3Brak6oY8Uo8/2ZoDyUWu9EN85DUNHoc=;
-        b=Z5oKluK1D1wu5ywFYpkLpETuVujDsSErtwyO70EpY+kBLxWLws1y/185KqN8nBpQSH
-         1ommhY+U+UsP5xPKgYUjHJfiRsy+33IXcy1yBRKd4tH4FvjPNek929aA4E2XofqvaJhc
-         u+daV9BM5eBcNM+cQ+P8FwFWFgyxgLg8NimUD4u2C2hDH+HYkXX9CfRqkD7mgontov92
-         S4xl4gDNUU09/iQwhgyuxtu1/asI5Y6S5HubvHMPFrtk48zarOas3c5p6qxJI0SgHlbx
-         uMo23kKMG/eEbfYjC917UjaU/ejE4H8hpsCcnAMKMsxsNRdpnod0tDf1qjiCIlaGu+NM
-         dGOg==
+        bh=s+OMw6IT7RHvpGFrBvPfdlWEgNAsFgA/CYElM1NFdIY=;
+        b=agkioEpgNE0F/jK+MRIoqx0NAVYTeoUPUJKQRlODSQy3AFMPuZMB73xKd2/RxQLxKK
+         Y0niKFsBmw26KPhqcuwteAzlGVzzMcFD5KaYNVVnui1OqIEMvOvAC3aQMWwbJFD6PAym
+         lHGP3YdG7MPAxfAt+TvDxoSG2IxY1cdjJ2S/2Kivy42UMED9elnThDNRSmwjE8LOJyP5
+         sIcGZTYxBXFgBZp6za8L59mlUNpp7nrBK5oIVvvY13i/71crxwf9oIGWjXH+GVkseFg4
+         zP5y0t4esMXcBtAHcwAHBMujuOnI3A5mqSAOafCzwRiz+uEbeuzCZ+NIC1hvwHYbmTkX
+         /gFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744759724; x=1745364524;
+        d=1e100.net; s=20230601; t=1744760206; x=1745365006;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ilFtG+6+Fot3Brak6oY8Uo8/2ZoDyUWu9EN85DUNHoc=;
-        b=Qtp0lIEq8Y70tZV+np4q+C6tszBNEu+u/KyW5i7Op9yyfc2+UQwc0oPJCVNQg87mCD
-         TS8CSd7LKilt3gt3Xiq/eabiD77C9nIw0i0orp2yCGyevu+brMNvyMl/i2StD4Hicb2v
-         I65T0RKDmz5r5HRHekYu44CPTNswWSTt4NDe8tZR+ZT6ZS/iY1muaZVYXG2lvh7r5dxB
-         nahIfATuHdcBisBtTbpFr890Qj4K92i/9PADLMviYaL0j2z53OSddYYnxdNpEoI6DfLt
-         Ntb5c9BoJcHfEk9i6jSgTFJbr/SQW5WBh/qhGhjbbJmICaM4ieSpyPl5zNtimkNINhkU
-         scqQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWiZBsuuUSCgPvh7XFgWhVeyL9xO8HHzNiZ3U014WQDRUsPAWWGIUSEnrQhg6FmpquAdlmy1Qw14TU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzW6r15ipA3JB0MkeO315gnGE568vvijMzhm1H5biioRLlvBJp9
-	UNsyUdCm1sUDEQhtzy6DP14GG8sP3r7oZm2FNk2OZTykFR7sUpDZbr2an2Yfzuk=
-X-Gm-Gg: ASbGncv8e4pVtJs2A00Ui1LfGf3EMjgVd/egxTrO/4ZYw92M/6awhi4sYfjSOS0R82X
-	SqqtvNAMj9By5OjFHC2RsGlF6xTuFJ8K6Qc5Kbm/IIvBfh9hGwhZ25AgUYvuuQ23vefrxZCiDdQ
-	YtnmZnvqPCEKWqjAceUymg6cTw91ZhK3V1tX5CNZw3+42OgnDCWeRxobTuDSEYzmPwfQMAayBGf
-	yS1o8pGRXYC8GqkKgUbditRNHMusunrWBFknJESziNlVsgkXK1xXlG4nK1cNNt+leMsHb9EDlWd
-	O1cvZecIDlHowjSpcrOdfgSHIAxnBGM4pz00QF5nkn+lsv8uyOoV4YuTG4Sz4ICxRK525nL3THu
-	ORqRVd0sgy0xm7g==
-X-Google-Smtp-Source: AGHT+IF5L5SnftugPGiVRbPyMGgy+P7lIDHpuADQTk5vv7bog6oS1bL9N/VLOKpi6CxPVttqXvRzRg==
-X-Received: by 2002:a17:902:f68c:b0:224:160d:3f5b with SMTP id d9443c01a7336-22c31abfd00mr13818525ad.49.1744759724616;
-        Tue, 15 Apr 2025 16:28:44 -0700 (PDT)
+        bh=s+OMw6IT7RHvpGFrBvPfdlWEgNAsFgA/CYElM1NFdIY=;
+        b=uWTL3oLN11GSGy0i9x7z9f/HktQsnFf8iAYwPCNjsWcscUGfffC96cGSdz0o0scNt/
+         n0OAE/puiyTw9EXDsTZ4MCKYWaFryDJcQN4n94UzyNhHTX6gaa39V0LKsRR6x6YiZDPZ
+         TOsRychO1uxIoxiqNqZaHac1SCbSE0WeHtjD2KosIU06Jt11li1/bwKvxlJfw2VBJeDQ
+         wgB1eNWLT02XIBOt4O7KychNt/WADGaov+DGp/PIdZM7+L0qouKk36CXpUjFFcz4LI7D
+         9xnBHR60UVaU+e4OoRf1lQkpYd4xnWwCw+gNWjBUN7PHrRMnl+45a2UaZu6B7KWoK67z
+         yGNg==
+X-Forwarded-Encrypted: i=1; AJvYcCVqAAq7WGPdAXVw9twbH6Ba2qcefp1f7cyEv/WRFtoFIWGyo1Vep+wdeeGOeViYEbatnlSaTZP8x2I=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxmp6t+Aqwl/F6ejRynUknOMyveLtLCMKczsyniIPiBZWdCIDU6
+	U6LFIV+1ricEPq6CaXdjMbCQfWu1BzS84o+j/rZTKAMvjpVq+q5RiNIWSG0lQ0E=
+X-Gm-Gg: ASbGnct0jNUZytmoTG/a6PUYfIb470F/mfOhfvfzcCUUjDor2xBgHKqNql3N/bIVgUn
+	su3v+iZkbGD+kmlepLe+VMtioqtqwlidhp0IjqhIFWPjSEQUZLWSnUpCIBrEkH7jXxgqWa1kMOl
+	Iw6Njr9PjGVDwzVGSXPjrRurfRwWKojunAUjmJrThVmzXMyvFx/pGRcPj2xRFH1yVdaRL8Jv/vm
+	uBZOgDUPADKVor7MO2meHiG6uZFH2ST4/oZRef4AsQ1BJCEiJPtMYz8CPaA6qxyw+3UVSGO4dMA
+	9vuKp9VhFMYCosZD4WLelR2Ur8EEiCSbC6pU4F6GD/9+/audSSx6Wej0dBHLGYp3X7t/QXPBRJD
+	SEFWK/PfDK9+1bg==
+X-Google-Smtp-Source: AGHT+IGT6/zZzWQq7U30e4Mav9AFMxOMf9Upt4/koNxvykTkSnfdOa8SPwd7SKuV1um3ZKHXSwIMTA==
+X-Received: by 2002:a17:90b:3c90:b0:2ff:5ec1:6c6a with SMTP id 98e67ed59e1d1-3085ef17d3dmr1638762a91.18.1744760205808;
+        Tue, 15 Apr 2025 16:36:45 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c33fe9810sm943025ad.249.2025.04.15.16.28.44
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-308613b3849sm173097a91.38.2025.04.15.16.36.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Apr 2025 16:28:44 -0700 (PDT)
+        Tue, 15 Apr 2025 16:36:45 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98)
 	(envelope-from <david@fromorbit.com>)
-	id 1u4pho-000000095GN-1vHN;
-	Wed, 16 Apr 2025 09:28:40 +1000
-Date: Wed, 16 Apr 2025 09:28:40 +1000
+	id 1u4ppa-000000095Ld-1az4;
+	Wed, 16 Apr 2025 09:36:42 +1000
+Date: Wed, 16 Apr 2025 09:36:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, fstests@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
-	zlang@kernel.org
-Subject: Re: [PATCH v2 2/3] check: Add -q <n> option to support unconditional
- looping.
-Message-ID: <Z_7rqLbQCLAY5zbN@dread.disaster.area>
-References: <cover.1743670253.git.nirjhar.roy.lists@gmail.com>
- <762d80d522724f975df087c1e92cdd202fd18cae.1743670253.git.nirjhar.roy.lists@gmail.com>
- <20250413214858.GA3219283@mit.edu>
- <9619fb07-1d2c-4f23-8a62-3c73ca37bec3@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] common: remove USE_EXTERNAL
+Message-ID: <Z_7tirRVx9Bt60si@dread.disaster.area>
+References: <20250414054205.361383-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,79 +76,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9619fb07-1d2c-4f23-8a62-3c73ca37bec3@gmail.com>
+In-Reply-To: <20250414054205.361383-1-hch@lst.de>
 
-On Tue, Apr 15, 2025 at 01:02:49PM +0530, Nirjhar Roy (IBM) wrote:
+On Mon, Apr 14, 2025 at 07:42:05AM +0200, Christoph Hellwig wrote:
+> The USE_EXTERNAL variable indicates that dedicated log or RT devices are
+> in use for the scratch and possibly test device.  It gets automatically
+> set when needed
+
+No it isn't - it's explicitly controlled by config file parsing
+and/or config env variable setup.
+
+> and generally does not provide any benefit over simply
+> testing the SCRATCH_LOGDEV and SCRATCH_RTDEV variables.
 > 
-> On 4/14/25 03:18, Theodore Ts'o wrote:
-> > On Thu, Apr 03, 2025 at 08:58:19AM +0000, Nirjhar Roy (IBM) wrote:
-> > > This patch adds -q <n> option through which one can run a given test <n>
-> > > times unconditionally. It also prints pass/fail metrics at the end.
-> > > 
-> > > The advantage of this over -L <n> and -i/-I <n> is that:
-> > >      a. -L <n> will not re-run a flakey test if the test passes for the first time.
-> > >      b. -I/-i <n> sets up devices during each iteration and hence slower.
-> > > Note -q <n> will override -L <n>.
-> > I'm wondering if we need to keep the current behavior of -I/-i.  The
-> > primary difference between them and how your proposed -q works is that
-> > instead of iterating over the section, your proposed option iterates
-> > over each test.  So for example, if a section contains generic/001 and
-> > generic/002, iterating using -i 3 will do this:
-> 
-> Yes, the motivation to introduce -q was to:
-> 
-> 1. Make the re-run faster and not re-format the device. -i re-formats the
-> device and hence is slightly slower.
+> Remove it and replace that test with test for SCRATCH_LOGDEV and
+> SCRATCH_RTDEV, using the more readable if-based syntaxt for all tests
+> touched by this change.
 
-Why does -i reformat the test device on every run in your setup?
-i.e. if the FSTYP is not changing from iteration to iteration, then
-each iteration should not reformat the test device at all. Unless, of
-course, you have told it to do so via the RECREATE_TEST_DEV env
-variable....
+This breaks the way I've set up check-parallel devices. I always
+create the external devices, and then trigger where they are in use
+by config sections that define USE_EXTERNAL.
 
-Hence it seems to me like this is working around some other setup or
-section iteration problem here...
-
-> 2. To unconditionally loop a test - useful for scenarios when a flaky test
-> doesn't fail for the first time (something that -L) does.
-
-That's what -i does. it will unconditionally loop over the specified
-tests N times regardless of success or failure.
-
-OTOH, -I will abort on first failure. i.e. to enable flakey tests
-to be run until it eventually fails and leave the corpse behind for
-debugging.
-
-> So, are saying that re-formatting a disk on every run, something that -i
-> does, doesn't have much value and can be removed?
-
--i does not imply that the test device should be reformatted on
-every loop. If that is happening, that is likely a result of test
-config or environment conditions.
-
-Can you tell us why the test device is getting reformatted on every
-iteration in your setup?
-
-> > generic/001
-> > generic/002
-> > generic/001
-> > generic/002
-> > generic/001
-> > generic/002
-> > 
-> > While generic -q 3 would do this instead:
-> > 
-> > generic/001
-> > generic/001
-> > generic/001
-> > generic/002
-> > generic/002
-> > generic/002
-
-There are arguments both for and against the different iteration
-orders. However, if there is no overriding reason to change the
-existing order of test execution, then we should not change the
-order or test execution....
+Hence changing all this code to check if SCRATCH_LOGDEV and/or
+SCRATCH_RTDEV are defined instead of gating them on USE_EXTERNAL
+breaks any test environment that has those devices defined but does
+not set USE_EXTERNAL....
 
 -Dave.
 -- 
