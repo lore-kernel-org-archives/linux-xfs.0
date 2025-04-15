@@ -1,95 +1,86 @@
-Received: from flow-a2-smtp.messagingengine.com (flow-a2-smtp.messagingengine.com [103.168.172.137])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 367652DFA58
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 18:20:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 521AB226CF0
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 18:23:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744741255; cv=none; b=A95/s+ntav6ocoVafjdpZj0xbuVUE1GTwdfXeB6fQdVf2BBePT01L4cJi8bMXvTUGyNorQzqxVvxFUpjhPMf1DKDhau6/kN7LHHj376d0IFwrzfy514TbZdtHKDHAmCIp5XSbkG1oAuYbnX+MN+C0pxHZF2HsLAkHMthtJUQRFY=
+	t=1744741393; cv=none; b=S8HBIkori7hGvhipt89SmufWqQwONd8+qHMPvSOaAG0wwbWY0GiH0Tt3IiWAdU++ITAZu9eO7asT65zwKHs8ZdWUSRm20ibZj9JUo8mGhSUR0EHJ2ErU6xkNqv5UtCGZQpvC5UFI+rM77b4WH0TXVMzzM3Ez47+GaCGI+ocmz28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744741255; c=relaxed/simple;
-	bh=4QU3H7QqUpe3ZaGkENF81EuiDHbuFedREo1p502Hm8I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lBGdjEIi2syJaat1U8a648lZPz+Zr0J7fzi8IZlB+koUMd2FAzFj6ASNM88/CUClYaFazE7BK9JKgA3eeO+2Ent/IA8rqlJq/a3ANJTdqJiMOQaZYOBMjAcerwgytzfPwUIJvZtu8uT9F+r0VLyshE+6VW0v4QxvUuctZfuYWIc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=K0K6Vny+; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=MrvDem6O; arc=none smtp.client-ip=103.168.172.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1744741393; c=relaxed/simple;
+	bh=V0Ou2OkOM/yfiTtADzH6LoF50O8W/mzI+zhdf3d2nYc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VAl20LNt8s6Zbg26FQ7y/HjPdH/112fxBWf2Z8enLJMxEYNdwkG/5Yxw2iRGUxsOQHPsLWJ+yClQDXRVw8cnEXeI+VShGwlsIoujBrWifE2V9NSF36A0Ek+B6NIybeFu4Q9lgXMC3ttjAiUe/fKgDh2lHKtR2FP8v9wfQgj7/L4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=d1ths0uP; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="K0K6Vny+";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="MrvDem6O"
-Received: from phl-compute-03.internal (phl-compute-03.phl.internal [10.202.2.43])
-	by mailflow.phl.internal (Postfix) with ESMTP id 2725920034B;
-	Tue, 15 Apr 2025 14:20:52 -0400 (EDT)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-03.internal (MEProxy); Tue, 15 Apr 2025 14:20:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1744741252;
-	 x=1744748452; bh=MVcPVsAa7Bm9FPwgTQ/Z1IcaZPPpYfXD1NzEUV4mxX0=; b=
-	K0K6Vny+vX7ws1HGJ0HJhfWYYgC+Rm6J4t+4hhHpKV0BSDW5o6z0ZELsJzhA27Qh
-	h6D8uQt1UwsfOAKmKTXNlea+6nDUeIbFqEpNclBmT3Sox399HIULMJnQEkyms8v4
-	oFA6YakvH2unUm3vDVPUiQz45aXV/6YJH4li2fJEuZbrOZeope7PICouM2Sf1ebO
-	hdOmL00PzCkDZ9TzY3odb9dj4IDvN8L5q07ybXWPBey2wzylGCnJEwTbbjMrHs6U
-	MOVjKOYL/M8qsuV7EVHMELyeybJAGh5rNKOsTu2thqUK2/bynUdb8KvfuZW+3tX9
-	9x4G1c2Do5W5U5G5ftV7PA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1744741252; x=
-	1744748452; bh=MVcPVsAa7Bm9FPwgTQ/Z1IcaZPPpYfXD1NzEUV4mxX0=; b=M
-	rvDem6O1+7pFrLLAR49KP55DZAtzO6wrMpgxGETi1SrLTL11R/4U1IbS5zTUds7i
-	UKjoEPRiGHqbW8XSf3TGcfNerNBj8J1LcgBqYR8zIidK267NwhE7fr4Eis3cGTm9
-	yRqXYuWPtCTIpet6aqdJFuLY7xlLTl3dQndqs5hRtzzrLUnk3LyXoR3J9Q76RfMJ
-	Fm/pMWVxCl3Xj5e4TWN3zweqCBpTHUSrYlMuk7InzR4oNQDyTM9XC51oD14zFMhU
-	4uxsKRm4X5+9+5pi4CcOqZtAgBaaNsniKHaNk50mo5vkYlhHgnPfmLyg8m/ltOz7
-	t9s+pAI7vf9d89kuOjoeQ==
-X-ME-Sender: <xms:g6P-ZxTJrxO5pfXcpXGiW-P07OsiONnhCrcrpWCAkpsy025A9J6eZA>
-    <xme:g6P-Z6yx5k7jiaJLzM_RThRwK1fdS-rzt6_UZT18VZcKiFU8qAjDzwC5YuT9XUlnf
-    R8EbzQzG66MmYnqbQ4>
-X-ME-Received: <xmr:g6P-Z22GysV3gYmy5X_gpeUgkmcrNYpJE2oEe8meFoi_oziuLY5IGTHekE88gA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddvvdegvddtucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkff
-    ggfgfuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomhepgfhrihgtucfurghnuggv
-    vghnuceoshgrnhguvggvnhesshgrnhguvggvnhdrnhgvtheqnecuggftrfgrthhtvghrnh
-    epveeikeeuteefueejtdehfeefvdegffeivdejjeelfffhgeegjeeutdejueelhfdvnecu
-    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrnhguvg
-    gvnhesshgrnhguvggvnhdrnhgvthdpnhgspghrtghpthhtohepfedpmhhouggvpehsmhht
-    phhouhhtpdhrtghpthhtoheplhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdroh
-    hrghdprhgtphhtthhopegrrghlsggvrhhshheskhgvrhhnvghlrdhorhhgpdhrtghpthht
-    ohepsghoughonhhnvghlsehrvgguhhgrthdrtghomh
-X-ME-Proxy: <xmx:hKP-Z5CWYONLHZo6z6EUpsMxhWM8VH3sUrbc7YhjWL9QPa_cdvWR4w>
-    <xmx:hKP-Z6g_aYBPwD8Zr4IgDQxFByvX6TUnarlxlEYAXYD-GqqyN08dDQ>
-    <xmx:hKP-Z9qmxxsWzL6OzXcM-I6YgSpPsYuTkBDbuxVrryy63dIhcZWZhw>
-    <xmx:hKP-Z1h4f4MMP2ZVfEFPWTDFecJXNAoes_KV4UHvsBpwT3R8XU54Cg>
-    <xmx:hKP-Z5oqgdMFFjbj-z7blUphrqp8Vh3tHR5usNUn-Oq-_AZf3q97Beah>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 15 Apr 2025 14:20:51 -0400 (EDT)
-Message-ID: <6297dd57-3fc3-4ef7-9cba-ff60c565a13a@sandeen.net>
-Date: Tue, 15 Apr 2025 13:20:50 -0500
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d1ths0uP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1744741389;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=04NGhkPb/wzM/cnaZe4owo44UhgC65AEXq1pdCNuc+0=;
+	b=d1ths0uP43xe8s3FwMiHD/upykM95vdGXKBlQxxZZdPmiWpxyTLBp4mMo4W/V+jaG7Wi33
+	7fRPDIEhk0csCyWU3MXey9c87mBusLXWJs20D6S2671pKbg2eBGxv1x47b+AK0Hy1MSIuo
+	WA/oX5L4AkdLnXrcdjFDU42zKbu9sms=
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com
+ [209.85.166.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-86-R-aK7NOyMEGYewNHtu5t9A-1; Tue, 15 Apr 2025 14:23:07 -0400
+X-MC-Unique: R-aK7NOyMEGYewNHtu5t9A-1
+X-Mimecast-MFC-AGG-ID: R-aK7NOyMEGYewNHtu5t9A_1744741387
+Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-85db3356bafso1219772339f.3
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Apr 2025 11:23:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744741387; x=1745346187;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=04NGhkPb/wzM/cnaZe4owo44UhgC65AEXq1pdCNuc+0=;
+        b=Pg6kuSGZYWDSDCKbYyni/dRe6th8sIfMu4Dv3VXwJPHo4pWvIv7Exj/QHhFT1IxStE
+         a0LkwUdN+uKlwjmFIXcgF7YgoggR4HKXs5IaggrLR9mTbLjRSYtsygPBFTYGwd0GOZKi
+         TxNaJd1yXvqEl4njgVPNLt5DMTTtmtrDiTUtHHopeEz4aeqbla3bJXkJWHWxIZDX5Gxh
+         P6PMQ1f4cbmdbPqi0f0SpvccStYyOvX2vxBcmqHtd3SbHnNEk13pUF9RhB465r2wB5oR
+         +30EI1koGzgZInNC0bGEH3dBpKN1smm8iOg51I2bQV8J4fuunAMi6tjFfAQesXD2yrb6
+         7kYg==
+X-Gm-Message-State: AOJu0YxzGzYEyAk5PDExfVqkbGHYG7jAGM46fHoL/jziH9VWuBmZjqhz
+	bZpdDwJ2SenVDQjnd9JgWjrBUVRcY3hO+AnaIy+pbi0UUfzzlamUfntcWNttWVUMXidG2zM05QL
+	GgF3vaAl/qtNnOFKXoGF8S3b71R7TcSIsk+Mr6YmYZ/d10/0EPtEXpPSvpA==
+X-Gm-Gg: ASbGncvLKPQ6jtofn2U74O2wdN3LdieJVOgIo4Q3YOzkpHdjXw8Usq+JjkNVUa30wsv
+	2+nNHSkk+CNRELH7K209zr/yBjQZcxL0TvYZZhBY14wmOyyMgJ38Ro8Ht1qaZuTifI2267IBJmI
+	PtM/FONmmrXeeTAcDt05B+QJRTSSyB5ieSy2tU532xBQt4CkdTOPwIoU96FuQGQhayswgEr+HjL
+	SGj/VlJOx+LEtP4NnvDqA03xplsVFNn8ecWbq+IHkTtzImEUrsGm2qLS8wcvxcWDmQpO8ea5s3G
+	Innjv6BBbqTafUXjShaVybEUpINkBY/LUvvMNgmXWhm9
+X-Received: by 2002:a05:6e02:1aa4:b0:3d4:70ab:f96f with SMTP id e9e14a558f8ab-3d8124cf722mr3833025ab.8.1744741386866;
+        Tue, 15 Apr 2025 11:23:06 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHtAEZ6EqBfZZ1hLQ37Xn2IAIVO83k6K/y7daQt3QLBq87iXqXABgOSzsOwPgfwnUuC32k50A==
+X-Received: by 2002:a05:6e02:1aa4:b0:3d4:70ab:f96f with SMTP id e9e14a558f8ab-3d8124cf722mr3832885ab.8.1744741386577;
+        Tue, 15 Apr 2025 11:23:06 -0700 (PDT)
+Received: from redhat.com (72-50-215-160.fttp.usinternet.com. [72.50.215.160])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d7dc5827ecsm33333105ab.51.2025.04.15.11.23.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Apr 2025 11:23:05 -0700 (PDT)
+Date: Tue, 15 Apr 2025 13:23:04 -0500
+From: Bill O'Donnell <bodonnel@redhat.com>
+To: "user.mail" <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org, djwong@kernel.org
+Subject: Re: [PATCH] xfs_repair: Bump link count if longform_dir2_rebuild
+ yields shortform dir
+Message-ID: <Z_6kCAHGNoSnPc27@redhat.com>
+References: <20250415180923.264941-1-sandeen@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs_repair: Bump link count if longform_dir2_rebuild
- yields shortform dir
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org, bodonnel@redhat.com
-References: <20250415180923.264941-1-sandeen@redhat.com>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20250415180923.264941-1-sandeen@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 4/15/25 1:09 PM, user.mail wrote:
+On Tue, Apr 15, 2025 at 01:09:23PM -0500, user.mail wrote:
 > From: Eric Sandeen <sandeen@redhat.com>
 > 
 > If longform_dir2_rebuild() has so few entries in *hashtab that it results
@@ -121,25 +112,14 @@ On 4/15/25 1:09 PM, user.mail wrote:
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > Signed-off-by: user.mail <sandeen@redhat.com>
-
-Ugh, sorry about the user.mail business, not sure how that happened.
-
-New VM, who dis? :(
-
-FWIW this fix is related to the fix Bill has been working on, but it
-is independent. Bill's hoping to address the problem where we fail
-to build up any directory entries for a long-form rebuild, and when
-that is fixed, in most cases the entries will be there and the dir
-will remain long form.
-
-Still, it is possible that the entry scan turns up so few entries that
-the directory becomes short form when rebuilt, so I think this patch
-still makes sense.
-
-Thanks,
--Eric
-
 > ---
+
+I was about to send a v3 of my patch to handle this (fix link counts
+update...) based on djwong's review. This looks cleaner. Thanks!
+
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+
+
 >  repair/phase6.c | 7 +++++++
 >  1 file changed, 7 insertions(+)
 > 
@@ -161,4 +141,7 @@ Thanks,
 >  	return;
 >  
 >  out_bmap_cancel:
+> -- 
+> 2.49.0
+> 
 
