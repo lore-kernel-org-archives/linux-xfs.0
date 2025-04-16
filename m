@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853D91DE8B0
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 01:30:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EE101A2658
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 01:32:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744767013; cv=none; b=J3k8qQNoTobYBryMtZx24FsSsZUDKmRPmdk6a4FwIKH08hc+fe8R1/OXYfEyFV5aF8kyhAIN4hyt4PFUN1ivzvshz+6admn/6+aeUzRaP54Ar/4KPmV8gI32ZVFNy9MdlMap+dKCMILrMJx35g7gVu765wNDRb7SkRBylUJHQCc=
+	t=1744767151; cv=none; b=QyyvMtA4OF60UmAvQEPjO+7Cm5EkedGk/Ppc0hH7pMcKnMaXMQ8hwhEfGsCg2ZS2FMhlfyj+rAAM5gL+fGOYWwnpKrg2nQP0s6CLQil93x7TWsgV1wdrQhT0FQPi+qIiN0WlozvK7AjPQbHr+Eau/mN4v8MvTQS8I+D5FGCUvRk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744767013; c=relaxed/simple;
-	bh=Blb9N5BONXBMBUostvygDbqHU+G6bXMxG0/RaN1WDM0=;
+	s=arc-20240116; t=1744767151; c=relaxed/simple;
+	bh=BvHVzMvlBv4RaPMh8O3iYLWw99ksh+o9StakOfyogf8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HL7UWiw4enwI2ElkWuDlBdlKVZE/n89v/xWxqxmTe1Px7k+W/g124RqJh/j8a3QISl9lxMOE1HdW45JqwCsDoxZ1mhZeBWhwrk2SrYKrXdym8WCo5JZTUq/9PrOzWjpyDDdjQsPhByg/7divlni6V/ATFJ/u6YIgVHfdt0+hs7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KNU2UCNk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=sO+P3c9ihvuM8PVokn/7vE0TzxtDKIWJ9Lxuy6YoHuoRKsfCmSe3kW6m1a2sC0qGs2/8Sup8tVTkKiZRPah4f1w6WmuSGGHezNu/vJcEYJ830+B/PRXoavSX8BzxeqrPWnkbi6O4HfslgEn9WSV4lBpFvTYfSgPCDbnXjxRfOe4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j3JGaUGV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KNU2UCNk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02599C4CEE7;
-	Wed, 16 Apr 2025 01:30:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j3JGaUGV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85051C4CEE7;
+	Wed, 16 Apr 2025 01:32:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744767013;
-	bh=Blb9N5BONXBMBUostvygDbqHU+G6bXMxG0/RaN1WDM0=;
+	s=k20201202; t=1744767150;
+	bh=BvHVzMvlBv4RaPMh8O3iYLWw99ksh+o9StakOfyogf8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KNU2UCNkgo4fpH8hpE1nfxAkIf+Gvc0ERzgui+Nn8Vt+rsGKqN/1qyD8EzL23JSgf
-	 1Lapy8fJx5Bc6ZN+T/FrEUCg1A56hCQTBe3OtkqSJEM7f6V1v2VzVdIKKXEpRE6Jvq
-	 NUiyf0FWXj0nn0LJ8fEHb1wp+rO1hQmlS0jCj4ed8jt6d8Qj3vDCOOTcf/Buhqgamc
-	 Tl8Y9D32w3Z4coC5Ju7LYUcYOhql8wpRMx7avaCiveUuMflVCL2jSEM1JIZ23UfngF
-	 rICFSWytMHeLD2fF11u876GYYyxmDYhSnn74GEjaCaPMyPT7DiUFvk+9Hg8TjHZC9Q
-	 uCdr/cxFbtbFw==
-Date: Tue, 15 Apr 2025 18:30:12 -0700
+	b=j3JGaUGVLa8reRtKIhvCTwOGIH2Dm3ONEqDqCaRSO+ivVV1unvdiGw4dM7VN/PAyV
+	 oTpjpMZSdaoCDmTl/fqYtQUunptn4iEFK1ie9zopGWbYcDlnsHa7SkWzpErKHRUceT
+	 Xch2PT9YeX6xu394NRslm6EQAq/VKEbXx4WU3aJ7pxXvne6bT7ugYSt8M93wsKC04H
+	 kmsaUivMWqtgEYAF905fSUmsaVxZJrwHs427FZr581NlEEr29AaLwSLPbIdCM0shSy
+	 Mj9C+VN9t9914q7hW0om7V0PdjawAwPJ5hizdthhfuXrdBzik4QQxYM8M6Gz+PEooz
+	 TfKJylgCUqJGQ==
+Date: Tue, 15 Apr 2025 18:32:29 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: bodonnel@redhat.com, linux-xfs@vger.kernel.org, aalbersh@kernel.org
-Subject: Re: [PATCH v3] xfs_repair: fix link counts update following repair
- of a bad block
-Message-ID: <20250416013012.GX25675@frogsfrogsfrogs>
-References: <20250415184847.92172-3-bodonnel@redhat.com>
- <d20ee07d-bdcc-48b4-9e35-7228187d69e7@sandeen.net>
+To: "user.mail" <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org, bodonnel@redhat.com
+Subject: Re: [PATCH] xfs_repair: Bump link count if longform_dir2_rebuild
+ yields shortform dir
+Message-ID: <20250416013229.GY25675@frogsfrogsfrogs>
+References: <20250415180923.264941-1-sandeen@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,92 +42,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d20ee07d-bdcc-48b4-9e35-7228187d69e7@sandeen.net>
+In-Reply-To: <20250415180923.264941-1-sandeen@redhat.com>
 
-On Tue, Apr 15, 2025 at 02:12:31PM -0500, Eric Sandeen wrote:
-> On 4/15/25 1:48 PM, bodonnel@redhat.com wrote:
-> > From: Bill O'Donnell <bodonnel@redhat.com>
-> > 
-> > Updating nlinks, following repair of a bad block needs a bit of work.
-> > In unique cases, 2 runs of xfs_repair is needed to adjust the count to
-> > the proper value. This patch modifies location of longform_dir2_entry_check,
-> > to handle both longform and shortform directory cases. 
+On Tue, Apr 15, 2025 at 01:09:23PM -0500, user.mail wrote:
+> From: Eric Sandeen <sandeen@redhat.com>
 > 
-> This is not accurate; short form directories are not generally in play here.
-> They only arise due to the directory rebuild orphaning all entries without
-> the prior scan, yielding an empty directory.
+> If longform_dir2_rebuild() has so few entries in *hashtab that it results
+> in a short form directory, bump the link count manually as shortform
+> directories have no explicit "." entry.
 > 
-> > This results in the
-> > hashtab to be correctly filled and those entries don't end up in lost+found,
-> > and nlinks is properly adjusted on the first xfs_repair pass.
+> Without this, repair will end with i.e.:
 > 
-> Changelog suggestion:
+> resetting inode 131 nlinks from 2 to 1
 > 
-> xfs_repair: phase6: scan longform entries before header check
+> in this case, because it thinks this directory inode only has 1 link
+> discovered, and then a 2nd repair will fix it:
 > 
-> In longform_dir2_entry_check, if check_dir3_header() fails for v5
-> metadata, we immediately go to out_fix: and try to rebuild the directory
-> via longform_dir2_rebuild. But because we haven't yet called
-> longform_dir2_entry_check_data, the *hashtab used to rebuild the
-> directory is empty, which results in all existing entries getting
-> moved to lost+found, and an empty rebuilt directory. On top of that,
-> the empty directory is now short form, so its nlinks come out wrong
-> and this requires another repair run to fix.
+> resetting inode 131 nlinks from 1 to 2
 > 
-> Scan the entries before checking the header, so that we have a decent
-> chance of properly rebuilding the dir if the header is corrupt, rather
-> than orphaning all the entries and moving them to lost+found.
+> because shortform_dir2_entry_check() explicitly adds the extra ref when
+> the (newly-created)shortform directory is checked:
 > 
-> > Suggested-by: Eric Sandeen <sandeen@sandeen.net>
-> > 
-> > Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
+>         /*
+>          * no '.' entry in shortform dirs, just bump up ref count by 1
+>          * '..' was already (or will be) accounted for and checked when
+>          * the directory is reached or will be taken care of when the
+>          * directory is moved to orphanage.
+>          */
+>         add_inode_ref(current_irec, current_ino_offset);
 > 
-> Other than the commit log, 
+> Avoid this by adding the extra ref if we convert from longform to
+> shortform.
 > 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: user.mail <sandeen@redhat.com>
 
-With the changelog amended,
+Whoever this is  ^^^^^^^^^, the change makes sense to me. ;)
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
+> ---
+>  repair/phase6.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> > ---
-> > 
-> > v3: fix logic to cover the shortform directory case, and fix the description
-> > v2: attempt to cover the case where header indicates shortform directory
-> > v1:
-> > 
-> > 
-> > 
-> >  repair/phase6.c | 8 +++++---
-> >  1 file changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/repair/phase6.c b/repair/phase6.c
-> > index dbc090a54139..4a3fafab3522 100644
-> > --- a/repair/phase6.c
-> > +++ b/repair/phase6.c
-> > @@ -2424,6 +2424,11 @@ longform_dir2_entry_check(
-> >  			continue;
-> >  		}
-> >  
-> > +		/* salvage any dirents that look ok */
-> > +		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
-> > +				irec, ino_offset, bp, hashtab,
-> > +				&freetab, da_bno, fmt == XFS_DIR2_FMT_BLOCK);
-> > +
-> >  		/* check v5 metadata */
-> >  		if (xfs_has_crc(mp)) {
-> >  			error = check_dir3_header(mp, bp, ino);
-> > @@ -2438,9 +2443,6 @@ longform_dir2_entry_check(
-> >  			}
-> >  		}
-> >  
-> > -		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
-> > -				irec, ino_offset, bp, hashtab,
-> > -				&freetab, da_bno, fmt == XFS_DIR2_FMT_BLOCK);
-> >  		if (fmt == XFS_DIR2_FMT_BLOCK)
-> >  			break;
-> >  
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index dbc090a5..8804278a 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1392,6 +1392,13 @@ _("name create failed in ino %" PRIu64 " (%d)\n"), ino, error);
+>  _("name create failed (%d) during rebuild\n"), error);
+>  	}
+>  
+> +	/*
+> +	 * If we added too few entries to retain longform, add the extra
+> +	 * ref for . as this is now a shortform directory.
+> +	 */
+> +	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+> +		add_inode_ref(irec, ino_offset);
+> +
+>  	return;
+>  
+>  out_bmap_cancel:
+> -- 
+> 2.49.0
 > 
 > 
