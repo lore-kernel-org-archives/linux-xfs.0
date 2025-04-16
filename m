@@ -1,40 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8DF212D61
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 16:28:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DB2C2139C4;
+	Wed, 16 Apr 2025 17:43:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744820894; cv=none; b=sSVgWTH673nDs4uh7r4HHG+M7ERMIuSkVJs8oNGjxNEuGO89EpC4n1Ux/uSgsgod5iQpeAS86X5ggAh8xefitYzUy1NqQTd2TZlLTz+L0nypE0bIbTLafNzjU8rQa61/NkHtFddJQNqNCRBkn68BmecO+QvMRk9DxMAId81nb0Y=
+	t=1744825439; cv=none; b=OTbLPj1seeoNgujzhnRkuDv8454N7mv83p2C6YNvK/S0HeMczjoSWF9MNjGz+kuVCeq3msoUTnSZu02lxfggsyrvyrhYnxUktiq53mIuQq+uYbl3GOW+XZiTTkg1zkjpalurnYsQtdfLG2dysCm9aeD5X25JQAKJhniN2QkxUwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744820894; c=relaxed/simple;
-	bh=i9n3Lc4yvfbhHxRal/gHjYSbs9RTe1U21qnCzltYMlA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PXlRQpz0uzZxW1f5HH2SNx3RbA0BLTVtq1xCmiTIrq9ziRG/4duUVO+59rhynTUqFZAQ4/xdRIThvm2WaXkX4+7VC3mux5c8ITxUmCANePUjOrkle1rq2nU2B6rJLvIclD1rv1jH8jBJceyr4ckoLFpJOJ7riO2iAwcVdCfXmxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G2c//zpc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744825439; c=relaxed/simple;
+	bh=Lo9jwrieLP5o4ZDRqzDbGqU898hWvBSp8D51Zlz8DPw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=JlNy6bzmVeDPI6st/tedEKY0lzDCIqYvX1CdQ8ALiEGyD2QTuBHYKOZQJuoUOSAS3gv+LC+GHuSaofGw617cRBOTJIDhbOhcH7UCSmZKs+jYBEjIIzhSh4yMG9AbrkXbJIPU5u+yPLCbl08FL0rAbFetohJ+03FLgydRz36jS+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aFidgRJQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G2c//zpc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C063C4CEE2;
-	Wed, 16 Apr 2025 16:28:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aFidgRJQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 006D9C4CEE2;
+	Wed, 16 Apr 2025 17:43:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744820893;
-	bh=i9n3Lc4yvfbhHxRal/gHjYSbs9RTe1U21qnCzltYMlA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=G2c//zpcvCWWEC3dLoZgAoRtjXf/XvwolGXMeTUA4mgDCflEqmzB0WeExaKgFHy62
-	 CbwiUkV0S7gir/QGiQ+84HdwLQzrSu6NN6cWeBeHxJ1N13TxTyb0uj8ApFGQWHfj4d
-	 bhhkQ7UwLms+NHUuTuO50JIE4kRdlMMdkguHB/BWRbA76zkaVillOuoNEWPUCbtKZx
-	 TUcEy410MaqJ2OMvB4PjCH6PzygnF205DhrLrLR/wqiKDgJLz++DNl/IaYZFPE16Q1
-	 GIGkLDnW02NOGgpIrfR9+VqW6Sc4SZgr267fJ7IBbPOP7IXS/Uik0PBCoR/DOhgUfE
-	 D4CH35up3W3lA==
-Date: Wed, 16 Apr 2025 09:28:12 -0700
+	s=k20201202; t=1744825439;
+	bh=Lo9jwrieLP5o4ZDRqzDbGqU898hWvBSp8D51Zlz8DPw=;
+	h=Date:From:To:Cc:Subject:From;
+	b=aFidgRJQSNRZ6Z1cTDN/zSzxg9740CbPef4H9usMI/iIOYZgD6/Z7ig/Vh3D1rVMY
+	 QR0Co+FZNTaS65/8xDxwFVLhGXlhBAjC1Qwsyo4Wx0vohokPj97ouiC4BsVr26S5bD
+	 qszP3c9bY7mOSHsKGqeOXubX1CeML6rpOClFd+9z+512PQYHroLSusFRAYUIDkw2ZR
+	 SHbOtZjHlyLGW+XvyBlLE0we2YuRMiItcGNQVieMs+bAwuzPvxT53/aa1y1ehdKRE5
+	 POCuvasxspgYhiDuaeJkz3lhUcK6qz1TMGAWhF4By3cfrvUTgThD9NQLrzAb4rmhmA
+	 dlEXWLhMIZnJw==
+Date: Wed, 16 Apr 2025 10:43:58 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luca Di Maio <luca.dimaio1@gmail.com>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev
-Subject: Re: [PATCH v2] xfs_profile: fix permission octet when suid/guid is
- set
-Message-ID: <20250416162812.GL25675@frogsfrogsfrogs>
-References: <20250416161422.964167-1-luca.dimaio1@gmail.com>
+To: linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: [6.15-rc2 regression] xfs: null pointer in the dax fault code
+Message-ID: <20250416174358.GM25675@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,48 +40,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250416161422.964167-1-luca.dimaio1@gmail.com>
 
-On Wed, Apr 16, 2025 at 06:14:13PM +0200, Luca Di Maio wrote:
-> When encountering suid or sgid files, we already set the `u` or `g` property
-> in the prototype file.
-> Given that proto.c only supports three numbers for permissions, we need to
-> remove the redundant information from the permission, else it was incorrectly
-> parsed.
-> 
-> [v1] -> [v2]
-> Improve masking as suggested
-> 
-> Co-authored-by: Luca Di Maio <luca.dimaio1@gmail.com>
-> Co-authored-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+Hi folks,
 
-The subject line should say "xfs_protofile", not "xfs_profile".
+After upgrading to 6.15-rc2, I see the following crash in (I think?) the
+DAX code on xfs/593 (which is a fairly boring fsck test).
 
-With that fixed,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+MKFS_OPTIONS=" -m metadir=1,autofsck=1,uquota,gquota,pquota, -d daxinherit=1,"
+MOUNT_OPTIONS=""
+
+Any ideas?  Does this stack trace ring a bell for anyone?
 
 --D
 
-> ---
->  mkfs/xfs_protofile.in | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/xfs_protofile.in b/mkfs/xfs_protofile.in
-> index e83c39f..9418e7f 100644
-> --- a/mkfs/xfs_protofile.in
-> +++ b/mkfs/xfs_protofile.in
-> @@ -43,7 +43,9 @@ def stat_to_str(statbuf):
->  	else:
->  		sgid = '-'
-> 
-> -	perms = stat.S_IMODE(statbuf.st_mode)
-> +	# We already register suid in the proto string, no need
-> +	# to also represent it into the octet
-> +	perms = stat.S_IMODE(statbuf.st_mode) & 0o777
-> 
->  	return '%s%s%s%03o %d %d' % (type, suid, sgid, perms, statbuf.st_uid, \
->  			statbuf.st_gid)
-> --
-> 2.49.0
-> 
+BUG: kernel NULL pointer dereference, address: 00000000000008a8
+#PF: supervisor read access in kernel mode
+#PF: error_code(0x0000) - not-present page
+PGD 0 P4D 0 
+Oops: Oops: 0000 [#1] SMP
+CPU: 2 UID: 0 PID: 1717921 Comm: fsstress Tainted: G        W           6.15.0-rc2-xfsx #rc2 PREEMPT(lazy)
+Tainted: [W]=WARN
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+RIP: 0010:__lruvec_stat_mod_folio+0x50/0xd0
+Code: e8 85 70 da ff 48 8b 53 38 48 89 d0 48 83 e0 f8 83 e2 02 74 04 48 8b 40 10 48 63 d5 48 85 c0 74 50 6
+0 75 54 44
+RSP: 0000:ffffc9000679fa20 EFLAGS: 00010206
+RAX: 0000000000000200 RBX: ffffea000e298040 RCX: 0000000000000001
+RDX: 0000000000000001 RSI: 0000000000000012 RDI: ffffea000e298040
+RBP: 0000000000000001 R08: 8000000000000025 R09: 0000000000000001
+R10: 0000000000001000 R11: ffffc9000679fc10 R12: 0000000000000012
+R13: ffff88807ffd9d80 R14: ffff888040a79a80 R15: ffffea000e298040
+FS:  00007f2dce659740(0000) GS:ffff8880fb85e000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000000008a8 CR3: 000000005f22a003 CR4: 00000000001706f0
+Call Trace:
+ <TASK>
+ folio_add_file_rmap_ptes+0x109/0x200
+ insert_page_into_pte_locked+0x1b6/0x340
+ insert_page+0x93/0xc0
+ vmf_insert_page_mkwrite+0x2d/0x50
+ dax_fault_iter+0x330/0x730
+ dax_iomap_pte_fault+0x1a9/0x3e0
+ __xfs_write_fault+0x11d/0x290 [xfs 05d1f477986dfc3e3925c4fd18979e6f6f9a9e35]
+ __do_fault+0x2d/0x170
+ do_fault+0xc8/0x680
+ __handle_mm_fault+0x5ba/0x1030
+ handle_mm_fault+0x18f/0x280
+ do_user_addr_fault+0x481/0x7e0
+ exc_page_fault+0x62/0x130
+ asm_exc_page_fault+0x22/0x30
+RIP: 0033:0x7f2dce7af44a
+Code: c5 fe 7f 07 c5 fe 7f 47 20 c5 fe 7f 47 40 c5 fe 7f 47 60 c5 f8 77 c3 66 0f 1f 84 00 00 00 00 00 40 0
+0 00 66 90
+RSP: 002b:00007fffe75b3198 EFLAGS: 00010202
+RAX: 0000000000000054 RBX: 000000000008c000 RCX: 0000000000000dfd
+RDX: 00007f2dce63e000 RSI: 0000000000000054 RDI: 00007f2dce658000
+RBP: 000000000001adfd R08: 0000000000000005 R09: 000000000008c000
+R10: 0000000000000008 R11: 0000000000000246 R12: 00007fffe75b31e0
+R13: 8f5c28f5c28f5c29 R14: 00007fffe75b37a0 R15: 000056030c3be570
+ </TASK>
+Modules linked in: ext4 crc16 mbcache jbd2 xfs nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defrag_ipv
+set_hash_ip ip_set_hash_net xt_set nft_compat ip_set_hash_mac ip_set nf_tables nfnetlink sha512_ssse3 ahci
+d_btt sch_fq_codel loop fuse configfs ip_tables x_tables overlay nfsv4 af_packet
+Dumping ftrace buffer:
+   (ftrace buffer empty)
+CR2: 00000000000008a8
+---[ end trace 0000000000000000 ]---
+
