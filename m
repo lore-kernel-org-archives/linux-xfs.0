@@ -1,107 +1,109 @@
-Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09EE91ADC78
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 16:14:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD4A1C27
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 16:17:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744820080; cv=none; b=QNks3ToE8sWo+EQva2JF58LIGROaKjhkcfqMLKySCwR5uBSk82jPX82WSqMi5GlMHye4GjS7CUecBBplWprwZ123dsKMYT43QFy5b5GNCPKkdlucRDLPjUfmkYSDy9p6HXptQD8R8KTzipZjDsWACGleEJXpfiq3hg5oXi9tI+M=
+	t=1744820234; cv=none; b=JkN0ITAo5nd8v5bgPjNC+axTLSeU6owdID51GkcDBSsO3NTaJZjZx/t8sASJOsGsLG1qUc1C0FFalifj90Yi5OzOAyfzJud8vym7xJRGV+fCuO20304sw0xIggfwUlWfvynAytIZhyA8V4fOhzl2BjE2+q8jjmngvnvpwqb6UsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744820080; c=relaxed/simple;
-	bh=dVBSJiOOVi11iNvcEmkKMmGDmbHm3tYwNWvvGucX194=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HKbWILljzd4585VyZhOfkdcAesaaiBOtL88viSKLT86z0KA6dp9U/om3+Ajq6iFs/3pNpH5bTWWaFBGJfe+VLTxFFpQUI9eDdgv8fi3o+Bik5gRYxp1y9Os4XmJfyOLwO4U3f35m05RItOe//l7x4rb+44P2kwu3kUHv+g7SJaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HusJD87Z; arc=none smtp.client-ip=209.85.208.44
+	s=arc-20240116; t=1744820234; c=relaxed/simple;
+	bh=/NjkID9FHg7dLf/5Ofw+jTgfpsm3WQTHdTh55tm6TfM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=M+r35XF3kqKEqnDJV7ncf5gKWRGq7Sr8EHh9cAF7ktqpUuw5hfRm5uisHoO//yIrdBiode7fLplAOifw7AjdkxMjg55Zbp52kNBZbMEKPYEtzBWVUFBr3uo4wiem4KG7HA16ejo9kPzd+frCwPvxbZTZx68jP8pbUXn266pE8tw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UhWLmtTz; arc=none smtp.client-ip=209.85.208.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HusJD87Z"
-Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-5e5e34f4e89so5323596a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 09:14:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UhWLmtTz"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-5e5cded3e2eso11087228a12.0
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 09:17:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744820077; x=1745424877; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ibDdLI0vevNCJBX4MN6eWAH3+C6c+l57rDwHuO6sveo=;
-        b=HusJD87Z3y3uCxQR/dhR0Y/8Ymqk6qOoOLo5Nk6Y+IE9vhNSoiwEisLUIFETEjo/0v
-         wZ/0ookWVvL80HuexA8QouHT3d6Qu8PpFixorCet79fKpVuPBKSGxTWUjGQdJA3/Pjms
-         ffOYj6EZQKaiWWl0LK6vluWjQbsMfWHNyui4Nn8FQWfl0QAN0JdnD7SqJl2CSDKUBjNT
-         oWyxll7hcg0Vrdia6IyGLoxT9K+uvz4pQ2ybIBBxQ0A033QYaP34IIGbEIYbGhUnHwWI
-         DoPcCxUIaXdv5xWX3nQPL3cGZ+xaJybvnXGgms2o73ffHNUv6nc+da1b0IdPyqUYBmvv
-         ryFA==
+        d=gmail.com; s=20230601; t=1744820231; x=1745425031; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DI74N0a4+q3ZpTRBR0CwHmP3bDL45JvCMSjBK1wF7p4=;
+        b=UhWLmtTzJS8iA7+40HlM0AIgS+BwbWoCHohA2lUYYW792VdXb7Z+zXv3eiLeZnNiz2
+         n1f2UPIIVXmUgtykyUvTPovHd99a8eYGNhBqiM6qsq+ATI4MtTm1R5Q+Yp1Ze6QzXndP
+         jFY634i/XF6lfEg8KvrrZwMQt4pDYKbAIKw18kQ4P5UgMnA9yMbip7eW+0lzBlqY+dlZ
+         DB1XIAzPJu9zAZKMMSxIkmUICUt6f7jlflVFcQuVCMSNs/+I5UITrtWlOTSC/OZaNlqA
+         Ig5akuqUsYbR+VvQZrc3pHame5/gCKlYOZ3adFwRf8Mp4rM/tKTEARSDzCO7yGLCw5ag
+         Nhlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744820077; x=1745424877;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ibDdLI0vevNCJBX4MN6eWAH3+C6c+l57rDwHuO6sveo=;
-        b=jwh/4yEgVZATVhvO4ND+26n496X13MKLJMDLCg8Yj7F7GYY68G6/4uTB7nePbK94A3
-         kEwY5R894SlYLfLmy6Bk9x9xzMicK4RpTciFFaNHfKBMin+u59WynZX4iMYwsW0u5JaL
-         VNA9fHblsUlkLmt1mnpM5TnOG48hB952JWqYR1a6c+2K0owNFpNh5kElyWe92Lp7B525
-         38EiqU5ytKCZ+ScaH89hsPXxz+5+3K3DjZ30thzsJWpq5ql/2n5D8/YUXG7WX6M+IXOH
-         Pg5qDen0C5QKPXtGYL8U3GZJA7a/Uc3O2hi2QVbq2ZCvfqj1UUfjttHfHgm3/TgFKdkL
-         U2Mw==
-X-Gm-Message-State: AOJu0YzMc38E8ws9nTHfkHZH8c74x7qPNgjYpz2xwxds1bUCBlHluV5f
-	Ew8FsHz/avZfBruRyXoR3iLRcYcOiutdVd9nQRNbky0s4AWF79hKCx1NCQ==
-X-Gm-Gg: ASbGnctw2mVYZRIKcvihcKzPn8ZJ2VDPrKA3e+AwOINloc7jOxkBlNsD1Opi16fPe+4
-	cghyKIjtxFEO26lL1K/+nQx3Xavfaj57i/SYShVPV45IGgRgXecVho+qwTHq7GeAeeGb64hks8j
-	lTvTl7NwNuw0y7xlXFRbrpFsfTRsEwfshudbKM6FgTaT8mZ5+Bk8o5Qvo7JYySIZ46xDCua8eRo
-	5ueC+JQtwnJdtDrqxYfukK/2c39ysOH4WBNGRcNAnv3+HggD89ryeE40uBR8FoV3A6yZZFntCN7
-	aDeTYNWRxEQagbBHZv6t5KgWIMICUc7Jtl5qXpQwXfikq9f9CzY=
-X-Google-Smtp-Source: AGHT+IH3IoqiyKLjF1fTu0/DaiWC4eZhfzUdfB9PMq8tVBMtHuzeK0DBUk8VSNlgp+BUfYVi3eaKcg==
-X-Received: by 2002:a05:6402:849:b0:5f3:4194:187 with SMTP id 4fb4d7f45d1cf-5f4b75a6b98mr2064099a12.18.1744820077044;
-        Wed, 16 Apr 2025 09:14:37 -0700 (PDT)
-Received: from localhost.localdomain ([2001:b07:646e:16a2:bd58:4cd5:9e66:315c])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5f36f52a48esm8954666a12.79.2025.04.16.09.14.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Apr 2025 09:14:36 -0700 (PDT)
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
-	dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH v2] xfs_profile: fix permission octet when suid/guid is set
-Date: Wed, 16 Apr 2025 18:14:13 +0200
-Message-ID: <20250416161422.964167-1-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.49.0
+        d=1e100.net; s=20230601; t=1744820231; x=1745425031;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=DI74N0a4+q3ZpTRBR0CwHmP3bDL45JvCMSjBK1wF7p4=;
+        b=sfnavOPw5MbJ1GHsuruZtphczePF240AwC/H1NCsxEYRt1wGpMgs1CTKajc+Pkk8Ng
+         jd1TFfDtEXqAAs1di2GgH+WukoAnEMa3BfA5tZEKRWPeBT7k/JPtFehdlCOotKZcmwUJ
+         kmFjww6y84qnU0ISlhp95WRH1mHPoeEkdp4UZISofSEBj+JDlUPGlXHOqWqEx4hEaDjD
+         dkXfOadFKhxqowOgv7c6+6Cyj+NTmczyJUKSm58Ot5Z/9VlZy6ySTy1Rwo5f+Iv1ln8a
+         h3ukifsy8NofPtg0Kv19s1p3/LVAkpB4Ghu/6F4gslgEF7usW7uvlZQwA7d2vQNIB5Jz
+         z2uA==
+X-Gm-Message-State: AOJu0YyaA4fRCTIpuK6vz+Jlxcghy1Ym+26VKzWhl9IP/+UdcqhKOZl8
+	gtuA7o0MD5jqH2H27Yc2voNcxDvsZbSYt9HTMh/fTxwG9QrkkAOM/Wy4T22t1IIVFJekTvswtQ+
+	wZvJiI3xICcwpQRMpGoV8YxOVc5Gd683j
+X-Gm-Gg: ASbGncteoLK8vzCGYm2VUO9SgcHO0h+kIRp/K2uPC78mFTdBAE6OekadIDtQUdEMgt6
+	FefM0Qs1pNzuTlspeKOug7STNw/sqxbzZvcov35PaayCOK3970dwHCs0AmYQbvztSjALD7ncZWr
+	t8IjR7v/qoxcmLihk4eYlfX1VGPiBkdi5nhINqR2UarhCnQ+SxsHJllk4=
+X-Google-Smtp-Source: AGHT+IGtMMYcvb2EdWs5VNvQG4xCdfPwcDhOQ8cyy6szrXW1nhwVvatgJqAVymNUFWw3GTSOBVWfksMnfdtAlxrGnXo=
+X-Received: by 2002:a17:906:f5a3:b0:ac2:c1e:dff0 with SMTP id
+ a640c23a62f3a-acb428fd690mr268654166b.19.1744820230931; Wed, 16 Apr 2025
+ 09:17:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20250416123508.900340-1-luca.dimaio1@gmail.com> <20250416154013.GF25675@frogsfrogsfrogs>
+In-Reply-To: <20250416154013.GF25675@frogsfrogsfrogs>
+From: Luca Di Maio <luca.dimaio1@gmail.com>
+Date: Wed, 16 Apr 2025 18:16:52 +0200
+X-Gm-Features: ATxdqUG55zlPOwiyCHV4hH6biY2ax-LOk6tT8eDzX7UjsCGE15cKTFvA_3Zimpo
+Message-ID: <CANSUjYYA-UaBCn5jYUCgWGkos2DKpUE-xRqQngeG3ocuXWVG3w@mail.gmail.com>
+Subject: Re: [PATCH] xfs_profile: fix permission octet when suid/guid is set
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev, 
+	smoser@chainguard.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-When encountering suid or sgid files, we already set the `u` or `g` property
-in the prototype file.
-Given that proto.c only supports three numbers for permissions, we need to
-remove the redundant information from the permission, else it was incorrectly
-parsed.
+On Wed, Apr 16, 2025 at 5:40=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+> Hmm.  The mode parser only pays attention to positions 3-5 in the mode
+> string:
+>
+>         val =3D 0;
+>         for (i =3D 3; i < 6; i++) {
+>                 if (mstr[i] < '0' || mstr[i] > '7') {
+>                         fprintf(stderr, _("%s: bad format string %s\n"),
+>                                 progname, mstr);
+>                         exit(1);
+>                 }
+>                 val =3D val * 8 + mstr[i] - '0';
+>         }
+>         mode |=3D val;
+>
+> so I think xfs_protofile should be masking more:
+>
+>         perms =3D stat.S_IMODE(statbuf.st_mode) & 0o777
+>
+> because otherwise we leak the sticky bit (S_ISVTX) into the protofile.
+>
+> --D
+>
+> >       return '%s%s%s%03o %d %d' % (type, suid, sgid, perms, statbuf.st_=
+uid, \
+> >                       statbuf.st_gid)
+> > 2.49.0
+> >
 
-[v1] -> [v2]
-Improve masking as suggested
+Thanks Darrik,
+I've sent a v2 Patch implementing this, co-authoring you
+let me know if this is ok
 
-Co-authored-by: Luca Di Maio <luca.dimaio1@gmail.com>
-Co-authored-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
- mkfs/xfs_protofile.in | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/mkfs/xfs_protofile.in b/mkfs/xfs_protofile.in
-index e83c39f..9418e7f 100644
---- a/mkfs/xfs_protofile.in
-+++ b/mkfs/xfs_protofile.in
-@@ -43,7 +43,9 @@ def stat_to_str(statbuf):
- 	else:
- 		sgid = '-'
-
--	perms = stat.S_IMODE(statbuf.st_mode)
-+	# We already register suid in the proto string, no need
-+	# to also represent it into the octet
-+	perms = stat.S_IMODE(statbuf.st_mode) & 0o777
-
- 	return '%s%s%s%03o %d %d' % (type, suid, sgid, perms, statbuf.st_uid, \
- 			statbuf.st_gid)
---
-2.49.0
+Thanks
+L.
