@@ -1,37 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B327206F37;
-	Wed, 16 Apr 2025 20:22:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3015207E0C
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 20:50:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744834927; cv=none; b=jtzDazgJ36M4ZIVXnCW8tFxxnLWN9Oog4RGzZ3bNDyD/7F0bHuns+n8g95DzuhCRnPic12GNrGc44TpI6h7X6QpMq2Rq8cVaZktY1gN1kTxx1YjzqPDvvBjf/95hiSG+fGlg6swgHJSApD/G43Nuumkx4jC0lg3upDN7gQev0Jo=
+	t=1744836658; cv=none; b=tntW9qyDjmQyN+IRta8LtKUMz5jfYh8B92lHQLQpoIDmLwGaky+E6XLruxzpqmF0LSpDyGViCNNGnw44OVKJcOLDbc+3NtqXWPNHIIzRlxF7hNcu9ylom+T1cVnxZFMJZPpeKl9xq6+KMx0zYhARfg6r6N6XnsYAjO5QX/uxGdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744834927; c=relaxed/simple;
-	bh=MyXEPU5aauDbge2EPjOklgh/uE/SeNRgZek57izFX9Y=;
+	s=arc-20240116; t=1744836658; c=relaxed/simple;
+	bh=9X+ldxpwI7mjM8BAndD6bOzVG7msqIT95VP7hnNoqfU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YbmYGJ9yW8fwjbfHHn7gHoHKHNG039zjrXmTdG2EtwkMG7IcSTx+hbuShaUQKCrlcuuhP70RSevLji/J2MQDTxGRN5Kz3vbq47tX+qINoaY/OMfWlZcTPOPiEnI33jK1C4M3p4OI9KcIVRSzLiHHrsktqCitol9voe981UFIIsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y+iCqnju; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=J41P1G7cT93nOtb1ycPd+k13rAsTUlDjCcVBScVZA52UxADGi/Dx1EEYNBMOyB0SZCW770y6Sboj+lrZyHFI6wilBnHWPKs3tmXdplNhu012+LrD7cOMThSD7cn3qhc77rx/mTH49weKkoi1ckclq7mVJBGmjieGaTjHkRWud1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=smWTF4hL; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y+iCqnju"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D070C4CEE4;
-	Wed, 16 Apr 2025 20:22:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744834927;
-	bh=MyXEPU5aauDbge2EPjOklgh/uE/SeNRgZek57izFX9Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y+iCqnjuAtgoc5WfsiFfZx5oSaOFsCNPsYfwoWR5mfhAJB7e7Dy8ZYRm6l0wTq6Ai
-	 Wc0CEvD71QUOx/Z9PcPHX9sEsNko0w4jsTHkKB4XPPVMZwicRmBSq4C2vn0xHXLAwy
-	 kKIuWV2cQeHUF7cYTdRJ3GAFlXefcbdI9X+6ehPxjRh5MOWRNFtNqWTbnO/S+12Sls
-	 e6BD3F9SJmrsj72HjIOxEWtEqRwP/N1dHphINX6MnUH4OwltrqROMO0YuNEr9o5lEG
-	 O5wp4/Y2zsWto+u4RMXEde0CFW/oUNWwhszGd0NLUrxu4I8BqcbovgWeNAlYwdOYpW
-	 4C7VH8wl7uFtQ==
-Date: Wed, 16 Apr 2025 13:22:06 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc: linux-xfs@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="smWTF4hL"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-224191d92e4so1148295ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 13:50:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1744836655; x=1745441455; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=oMssVsRnucpQR7VUysa3FpPRBu9OqCGpRWchPdGUx/E=;
+        b=smWTF4hLhaJSC4WuXpAlEOYEq5ECrXrhDBJD/Qs2a5Mre7kQtfx7v+7C0TXurj0thX
+         vYIlQTp4t9iPBtLGn1Pb853+hj42NtlJJyEE7CvJhI7awJHA6/u0DfHUG85K6ZNVxdQJ
+         lXCb+mdLEksAOlSOWvYvkNzOk6cXPoQL1wwKlze//BMPJAEsZz6dzrFS6JwjkWl2sISb
+         hEgT8uNBzVhA6CRNsu+DcWorOE1btNg22WTZ02BNFoYnjt9Z5kPBX0pOLAJdqCzHkMww
+         5Z7ULdyC6Y5NdHwPXO//dGKvkm4W/r3Rbq8YfPJZyDQs6y3bjCaNxIulLxd3ah2fuMWj
+         e8cA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744836655; x=1745441455;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oMssVsRnucpQR7VUysa3FpPRBu9OqCGpRWchPdGUx/E=;
+        b=i4Ai7w8AdKPVwXsFpJ9XTiJxALJGqCHitsRQYVB9o1jzsjP6gH90DlcnWiljyFg+g2
+         0AcqUYs9eRpZGVrhj00vxHig+cTuEmqEQBqr7NrsQI4ABenBeSo83ygFyZWuadFvASsc
+         bVSngAcWwQW/OD5IutbizdS492oMdrTU1wZJ6dX0CBjpR+q0vATButT0ksAWkLMxhLGs
+         RgyUsf53zrFpjIYp5UD7srNyxSuf2NwAksvwwbnjRXQjLLpUvdR+IfnKvp9L2eY5wVan
+         UuTr1gQH4DxUoucoUI0xs7K6bucgximqs4m3T5wvmDenrUSPWKGOSnPCH10ymZ5O54/W
+         0CIA==
+X-Forwarded-Encrypted: i=1; AJvYcCXZedMa8Ed1X7osEvfDwrxoIxANL/YvzkopbS6swJ0gbRj9IxIgerYaTWZTSDiQT7NTYOBBTiq7pD0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YybSV3JrbruBtnwO4YOvaVzhdYwEXeGzLfnPIPQseOwHzaWbRzb
+	W//AFq7sXIfe65atCRorP/9o8Lqyy7TQUptFXYfWbqHHBdGc3S720oBEbkWiawalg+UL9PsSylO
+	E
+X-Gm-Gg: ASbGncvYI6losOf8ntZtC4iefvmnJ0aZLdHlQoRjPHVpX1fHjPGWDWozoEJmpO0Hked
+	/3p0aMKWggNm/JdIDjtqVYH/gZvg8ugd/+GOfAxAbxwiedVFz/7mUZz6kHM2Y6A5/nmAP2GPC0k
+	d0Qj6RBIko+/MnjfVffe0ygpNuDANFc+SNUco2EoKYMMfo4csKJgD7A5rbJfhXf7PwEdsByyDg4
+	pxJw/jiqDxMUouk0IJhaWaC/Wj0CKklRZDV+lHubUm7Cp2GZGp7JHVufAYbaFSxoW20nHSZdcUX
+	+7SsXDEpQMQJgcW26hcoABhn33856CuqXnPIZ1ytpFpEtsx/mKA6H/IqHZ3eLcAn/UEylPgAZyL
+	xIdK2KASU1grltA==
+X-Google-Smtp-Source: AGHT+IF3X6K0MFFrPrPyEm58xxYMkajjc1zUqexHWNgAA9RKIHUkR3Ti4TiOtnd2jRtincY0dE70Jw==
+X-Received: by 2002:a17:902:dac6:b0:223:628c:199 with SMTP id d9443c01a7336-22c359ac500mr52649475ad.52.1744836654870;
+        Wed, 16 Apr 2025 13:50:54 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c33fac055sm18893805ad.107.2025.04.16.13.50.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Apr 2025 13:50:54 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98)
+	(envelope-from <david@fromorbit.com>)
+	id 1u59id-00000009RUm-21Bm;
+	Thu, 17 Apr 2025 06:50:51 +1000
+Date: Thu, 17 Apr 2025 06:50:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linux-xfs@vger.kernel.org
 Subject: Re: [6.15-rc2 regression] xfs: null pointer in the dax fault code
-Message-ID: <20250416202206.GE25659@frogsfrogsfrogs>
+Message-ID: <aAAYK_Fl2U5CJBGB@dread.disaster.area>
 References: <20250416174358.GM25675@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -53,175 +90,13 @@ On Wed, Apr 16, 2025 at 10:43:58AM -0700, Darrick J. Wong wrote:
 > MOUNT_OPTIONS=""
 > 
 > Any ideas?  Does this stack trace ring a bell for anyone?
-> 
-> --D
-On Wed, Apr 16, 2025 at 07:38:36PM +0100, Matthew Wilcox wrote:
-> On Wed, Apr 16, 2025 at 11:08:37AM -0700, Darrick J. Wong wrote:
-> > Hi folks,
-> > 
-> > I upgraded my arm64 kernel to 6.15-rc2, and I also see this splat in
-> > generic/363.  The fstets config is as follows:
-> > 
-> > MKFS_OPTIONS="-m metadir=1,autofsck=1,uquota,gquota,pquota, -b size=65536,"
-> > MOUNT_OPTIONS=""
-> > 
-> > The VM is arm64 with 64k base pages.  I've disabled LBS to work around
-> > a fair number of other strange bugs.  Does this ring a bell for anyone?
-> > 
-> > --D
-> > 
-> > list_add double add: new=ffffffff40538c88, prev=fffffc03febf8148, next=ffffffff40538c88.
-> 
-> Not a bell, but it's weird.  We're trying to add ffffffff40538c88 to
-> the list, but next already has that value.  So this is a double-free of
-> the folio?  Do you have VM_BUG_ON_FOLIO enabled with CONFIG_VM_DEBUG?
 
-Note that xfs/593 on x86_64 (same config but no pmem) seems to have
-stalled with:
+That looks like the stack trace in this patch posted to -fsdevel a
+week ago:
 
-run fstests xfs/593 at 2025-04-16 03:33:38
-XFS (sda3): EXPERIMENTAL metadata directory tree feature enabled.  Use at your own risk!
-XFS (sda3): EXPERIMENTAL exchange range feature enabled.  Use at your own risk!
-XFS (sda3): EXPERIMENTAL parent pointer feature enabled.  Use at your own risk!
-XFS (sda3): Mounting V5 Filesystem c261642e-620a-4382-88f7-648a25d82213
-XFS (sda3): Ending clean mount
-XFS (sda3): EXPERIMENTAL online scrub feature enabled.  Use at your own risk!
-XFS (sda4): EXPERIMENTAL metadata directory tree feature enabled.  Use at your own risk!
-XFS (sda4): EXPERIMENTAL exchange range feature enabled.  Use at your own risk!
-XFS (sda4): EXPERIMENTAL parent pointer feature enabled.  Use at your own risk!
-XFS (sda4): Mounting V5 Filesystem 8db5080b-35d5-4308-90bf-cab53746ab63
-XFS (sda4): Ending clean mount
-XFS (sda4): Quotacheck needed: Please wait.
-XFS (sda4): Quotacheck: Done.
-XFS (sda4): EXPERIMENTAL online scrub feature enabled.  Use at your own risk!
-INFO: task u16:4:277318 blocked for more than 61 seconds.
-      Not tainted 6.15.0-rc2-xfsx #rc2
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:u16:4           state:D stack:10728 pid:277318 tgid:277318 ppid:2      task_flags:0x4208060 flags:0x00004000
-Workqueue: writeback wb_workfn (flush-8:0)
-Call Trace:
- <TASK>
- __schedule+0x458/0x14c0
- ? folio_wait_bit_common+0x118/0x330
- schedule+0x2a/0xe0
- io_schedule+0x4c/0x70
- folio_wait_bit_common+0x144/0x330
- ? filemap_get_read_batch+0x330/0x330
- writeback_iter+0x305/0x340
- iomap_writepages+0x6f/0xb60
- xfs_vm_writepages+0x7c/0xf0 [xfs 05d1f477986dfc3e3925c4fd18979e6f6f9a9e35]
- do_writepages+0x82/0x280
- ? sched_balance_find_src_group+0x4d/0x500
- __writeback_single_inode+0x3d/0x330
- ? do_raw_spin_unlock+0x49/0xb0
- writeback_sb_inodes+0x21c/0x4e0
- wb_writeback+0x99/0x320
- wb_workfn+0xc0/0x410
- process_one_work+0x195/0x3d0
- worker_thread+0x264/0x380
- ? _raw_spin_unlock_irqrestore+0x1e/0x40
- ? rescuer_thread+0x4f0/0x4f0
- kthread+0x117/0x270
- ? kthread_complete_and_exit+0x20/0x20
- ret_from_fork+0x2d/0x50
- ? kthread_complete_and_exit+0x20/0x20
- ret_from_fork_asm+0x11/0x20
- </TASK>
-INFO: task fsstress:503330 blocked for more than 61 seconds.
-      Not tainted 6.15.0-rc2-xfsx #rc2
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:fsstress        state:D stack:10872 pid:503330 tgid:503330 ppid:503327 task_flags:0x400140 flags:0x00000000
-Call Trace:
- <TASK>
- __schedule+0x458/0x14c0
- ? wb_queue_work+0x8e/0x100
- schedule+0x2a/0xe0
- wb_wait_for_completion+0x8d/0xc0
- ? cpuacct_css_alloc+0xa0/0xa0
- __writeback_inodes_sb_nr+0x9f/0xc0
- sync_filesystem+0x29/0x90
- __x64_sys_syncfs+0x40/0xa0
- do_syscall_64+0x37/0xf0
- entry_SYSCALL_64_after_hwframe+0x4b/0x53
-RIP: 0033:0x7f0a3b837d17
-RSP: 002b:00007ffd2eea1988 EFLAGS: 00000206 ORIG_RAX: 0000000000000132
-RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 00007f0a3b837d17
-RDX: 0000000000000000 RSI: 00005603860ff430 RDI: 0000000000000005
-RBP: 000000000000eb44 R08: 000000000000005b R09: 00007f0a3b92f000
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000001
-R13: 8f5c28f5c28f5c29 R14: 00007ffd2eea19d0 R15: 0000560348867790
- </TASK>
-INFO: task fsstress:503331 blocked for more than 61 seconds.
-      Not tainted 6.15.0-rc2-xfsx #rc2
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:fsstress        state:D stack:10872 pid:503331 tgid:503331 ppid:503327 task_flags:0x400140 flags:0x00000000
-Call Trace:
- <TASK>
- __schedule+0x458/0x14c0
- ? wb_queue_work+0x8e/0x100
- schedule+0x2a/0xe0
- wb_wait_for_completion+0x8d/0xc0
- ? cpuacct_css_alloc+0xa0/0xa0
- __writeback_inodes_sb_nr+0x9f/0xc0
- sync_filesystem+0x29/0x90
- __x64_sys_syncfs+0x40/0xa0
- do_syscall_64+0x37/0xf0
- entry_SYSCALL_64_after_hwframe+0x4b/0x53
-RIP: 0033:0x7f0a3b837d17
-RSP: 002b:00007ffd2eea1988 EFLAGS: 00000206 ORIG_RAX: 0000000000000132
-RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 00007f0a3b837d17
-RDX: 0000000000000000 RSI: 00005603860ff430 RDI: 0000000000000005
-RBP: 000000000000cc4e R08: 0000000000000036 R09: 00007f0a3b92f000
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000001
-R13: 8f5c28f5c28f5c29 R14: 00007ffd2eea19d0 R15: 0000560348867790
- </TASK>
-INFO: task fsstress:503332 blocked for more than 61 seconds.
-      Not tainted 6.15.0-rc2-xfsx #rc2
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:fsstress        state:D stack:10872 pid:503332 tgid:503332 ppid:503327 task_flags:0x400140 flags:0x00000000
-Call Trace:
- <TASK>
- __schedule+0x458/0x14c0
- ? wb_queue_work+0x8e/0x100
- schedule+0x2a/0xe0
- wb_wait_for_completion+0x8d/0xc0
- ? cpuacct_css_alloc+0xa0/0xa0
- __writeback_inodes_sb_nr+0x9f/0xc0
- sync_filesystem+0x29/0x90
- __x64_sys_syncfs+0x40/0xa0
- do_syscall_64+0x37/0xf0
- entry_SYSCALL_64_after_hwframe+0x4b/0x53
-RIP: 0033:0x7f0a3b837d17
-RSP: 002b:00007ffd2eea1988 EFLAGS: 00000206 ORIG_RAX: 0000000000000132
-RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 00007f0a3b837d17
-RDX: 0000000000000000 RSI: 00005603860ff430 RDI: 0000000000000005
-RBP: 000000000000ecb4 R08: 0000000000000039 R09: 00007f0a3b92f000
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000001
-R13: 8f5c28f5c28f5c29 R14: 00007ffd2eea19d0 R15: 0000560348867790
- </TASK>
-INFO: task fsstress:503333 blocked for more than 61 seconds.
-      Not tainted 6.15.0-rc2-xfsx #rc2
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:fsstress        state:D stack:10872 pid:503333 tgid:503333 ppid:503327 task_flags:0x400140 flags:0x00000000
-Call Trace:
- <TASK>
- __schedule+0x458/0x14c0
- ? wb_queue_work+0x8e/0x100
- schedule+0x2a/0xe0
- wb_wait_for_completion+0x8d/0xc0
- ? cpuacct_css_alloc+0xa0/0xa0
- __writeback_inodes_sb_nr+0x9f/0xc0
- sync_filesystem+0x29/0x90
- __x64_sys_syncfs+0x40/0xa0
- do_syscall_64+0x37/0xf0
- entry_SYSCALL_64_after_hwframe+0x4b/0x53
-RIP: 0033:0x7f0a3b837d17
-RSP: 002b:00007ffd2eea1988 EFLAGS: 00000206 ORIG_RAX: 0000000000000132
-RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 00007f0a3b837d17
-RDX: 0000000000000000 RSI: 00005603860ff430 RDI: 0000000000000005
-RBP: 000000000000df01 R08: 000000000000006d R09: 00007f0a3b92f000
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000001
-R13: 8f5c28f5c28f5c29 R14: 00007ffd2eea19d0 R15: 0000560348867790
- </TASK>
+https://lore.kernel.org/linux-fsdevel/20250410091020.119116-1-david@redhat.com/
 
---D
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
