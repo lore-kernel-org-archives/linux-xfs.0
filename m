@@ -1,41 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D71781A8F9E
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 08:45:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1F6B22FF2B;
+	Wed, 16 Apr 2025 08:45:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744793120; cv=none; b=snNQRsy6rey2u0IZWb4K7iN9kzx+NFEUdwIqOYgUbE00MlwiTLI1h1bo/UUUTuHztpRnRGirLtITOby7WYAfUKFgOuporRGQVu1TfwMKpvwlQehcHTgBBzuDmqF6KQeEGDeBfUR0oEMlOPpH5KaURCZ8WU4W+xN+f1kut3Jpj8o=
+	t=1744793123; cv=none; b=Cgec3eE+XMtuyUmbNiK6AD33DeJ6jLXqv9gp24D0aV9q+RL/kpUBTRqzkQi7SGbw4Z1zg17glsBoMMY8jJb0lJxaHXGmbB7y/KMslHVe8LZfsGNUuwkaS/+DxvQNA1ssJ0jZZ3+LD5Wf6rZlMQheiWDi8oTQObDHbCHbQ3r0k0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744793120; c=relaxed/simple;
-	bh=uCGCGmLCC8k0w/aPN5ycOxJySbIk0eSuLlzntd16ODY=;
+	s=arc-20240116; t=1744793123; c=relaxed/simple;
+	bh=DOjBHuLbp0F/GopqrJRq4K3bsCmFQZ83Y/V+5o2ppjw=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=DdlApo0zwFOHleAp1cpIjr5IB0LfpH9CiNZidLDWPREWGQNCnNOuQgClTimEs/PZ8J6AZwg/0tGPpbIJA4QiZDTQ4oOODsTLY5E/t/Rw7A+AFHjp7lCbSJocWiaiV+a6E4JPDhvPMK8LSQ+8DeQ7mXlvQEihSSU7cdamUghQVoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QGPdaFCx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nPk7VCMpWwKI5nOh8M3Pe26HBB+y1WH2jzA6mAkEcsTx3XkWBDoQz5dn3h1Ns3piFBX0ajVAiz+eo7zZtLRQfd4ScHuLBa4jTdISFK2edo197jgymTfQcFYh2hGjERKnJjZeWnE5bBnln5d/LEAUg7X3bOl0TPbwk4aimiOsOw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mMGCfZHZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QGPdaFCx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36698C4CEE2;
-	Wed, 16 Apr 2025 08:45:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mMGCfZHZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8286C4CEED;
+	Wed, 16 Apr 2025 08:45:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744793120;
-	bh=uCGCGmLCC8k0w/aPN5ycOxJySbIk0eSuLlzntd16ODY=;
+	s=k20201202; t=1744793122;
+	bh=DOjBHuLbp0F/GopqrJRq4K3bsCmFQZ83Y/V+5o2ppjw=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=QGPdaFCxeDialFdrhAWcOzlKMGoY0/ILk/Akvyma90gRS+8gvqRXz/nhcNugQhxbA
-	 GptFxMVk3BWLQAEqv+CUGkubMRkPkEids3u6KF03tWwVvTMxYrnI98BuzWcuBir45R
-	 +Mu9JmUPvlb+jCZAOBAH/v54NrzIWySt7pmZByu/35I16vRgm+LxyxtU8foZZd1/9L
-	 Fh/0E3Xqnyv619VwVXqQTYs/XSxUirqG+OeDnXWcD51xa2dntaNy8gkU6TJHYTeUjT
-	 k1gJ0cF8hfhM/sEsvYndBSFUZtZz7vN183euDlTz/8EapGlH//gpZ+ksWSHoyFOiIv
-	 m4dUSUxlb2rdg==
+	b=mMGCfZHZBJMxbmz5JP24nA3fputIO+c0eNwQbvFdAxAKnSW2GepNByiNtopKYqBaH
+	 AV9POLQTkJbOZYAow3iC1v+rt7k14E9atM12JkF8qta2+Ur6iRltvZxRWAREfZHXY3
+	 7OZAPdArHN5LF6AGb+dCwAFf3vO/9h1qCN+c8YRffy+nBQY++/7ylNR/VK9/raPqd8
+	 UhN0v/OKefZcJ+zkj2AC9iC8zbqHy2Sht4mqjFxjpOrZ4UixD+2t4S0qO79Paho0T7
+	 4dcQrp34h9onrKa4rFC6qjc+tyKRNHS2MTFZY/LK3JKipsClGo2gvy7aXFB8wEglg3
+	 guztBDvv2FuNQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
- Dave Chinner <dchinner@redhat.com>, 
- Dan Carpenter <dan.carpenter@linaro.org>, linux-xfs@vger.kernel.org
-In-Reply-To: <20250320075221.1505190-1-hch@lst.de>
-References: <20250320075221.1505190-1-hch@lst.de>
-Subject: Re: remove LI_FAILED buffer pinning
-Message-Id: <174479311889.188145.8940895390861588227.b4-ty@kernel.org>
-Date: Wed, 16 Apr 2025 10:45:18 +0200
+To: Dave Chinner <david@fromorbit.com>, 
+ "Darrick J . Wong" <djwong@kernel.org>, 
+ Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: hch <hch@lst.de>, linux-xfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20250325091007.24070-1-hans.holmberg@wdc.com>
+References: <20250325091007.24070-1-hans.holmberg@wdc.com>
+Subject: Re: [PATCH] xfs: add tunable threshold parameter for triggering
+ zone GC
+Message-Id: <174479312058.188145.11238177508667153075.b4-ty@kernel.org>
+Date: Wed, 16 Apr 2025 10:45:20 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,27 +48,23 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Thu, 20 Mar 2025 08:52:12 +0100, Christoph Hellwig wrote:
-> this series is based on a report from Dan about sleeping while
-> atomic and removes the now uneeded pinning of LI_FAILED buffers
-> to fix that.
+On Tue, 25 Mar 2025 09:10:49 +0000, Hans Holmberg wrote:
+> Presently we start garbage collection late - when we start running
+> out of free zones to backfill max_open_zones. This is a reasonable
+> default as it minimizes write amplification. The longer we wait,
+> the more blocks are invalidated and reclaim cost less in terms
+> of blocks to relocate.
 > 
-> Diffstat:
->  xfs_buf.c        |    1 +
->  xfs_dquot.c      |    3 +--
->  xfs_inode_item.c |    6 ------
->  xfs_trans_ail.c  |    5 ++---
->  xfs_trans_priv.h |   28 ----------------------------
->  5 files changed, 4 insertions(+), 39 deletions(-)
+> Starting this late however introduces a risk of GC being outcompeted
+> by user writes. If GC can't keep up, user writes will be forced to
+> wait for free zones with high tail latencies as a result.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: remove the leftover xfs_{set,clear}_li_failed infrastructure
-      commit: b73e05281cd9e37b5525641ca6f4544867372533
-[2/2] xfs: mark xfs_buf_free as might_sleep()
-      commit: a1a56f541a8f634007de4bcb45aa3eaf803154a8
+[1/1] xfs: add tunable threshold parameter for triggering zone GC
+      commit: 845abeb1f06a8a44e21314460eeb14cddfca52cc
 
 Best regards,
 -- 
