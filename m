@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DB2C2139C4;
-	Wed, 16 Apr 2025 17:43:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D965217723;
+	Wed, 16 Apr 2025 18:08:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744825439; cv=none; b=OTbLPj1seeoNgujzhnRkuDv8454N7mv83p2C6YNvK/S0HeMczjoSWF9MNjGz+kuVCeq3msoUTnSZu02lxfggsyrvyrhYnxUktiq53mIuQq+uYbl3GOW+XZiTTkg1zkjpalurnYsQtdfLG2dysCm9aeD5X25JQAKJhniN2QkxUwE=
+	t=1744826919; cv=none; b=djjTgelH4GJmrzWJfQUE5aeJbUMOrKn+A87FqCgPpmrCHBz7QB2AxKKF0jXBSBoO+PWcdIJJ3OFpD4VnrvW5kSxnlXXJMXR4W51iD7Pfawm2G5KK9EQ6eezbCQz559///qNZOf8UQBaOvWWq1/qx2GrkogX8ztsIVSJorKNpc9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744825439; c=relaxed/simple;
-	bh=Lo9jwrieLP5o4ZDRqzDbGqU898hWvBSp8D51Zlz8DPw=;
+	s=arc-20240116; t=1744826919; c=relaxed/simple;
+	bh=y+txb+Hoc7kRj0gHmHqFRU5cVYJ7URrQ8h6MBpihVI0=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=JlNy6bzmVeDPI6st/tedEKY0lzDCIqYvX1CdQ8ALiEGyD2QTuBHYKOZQJuoUOSAS3gv+LC+GHuSaofGw617cRBOTJIDhbOhcH7UCSmZKs+jYBEjIIzhSh4yMG9AbrkXbJIPU5u+yPLCbl08FL0rAbFetohJ+03FLgydRz36jS+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aFidgRJQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=h9C9vCgXJxwbQ5hByFcdpo7zMlL6JZrBaz31TrzX48EzQy05cOccyWEIu6g4heKV21pBI+KZdLHCJTFIt6S2trRlQpMcIUiYCxzNHZfshnA1akREpI29UqvvdFwoJ+Xg7TLp/XOHxc5gAEvbCn74jFSrrG1jIQBWhum0dTq0BRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PUue77R9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aFidgRJQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 006D9C4CEE2;
-	Wed, 16 Apr 2025 17:43:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PUue77R9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DE6CC4CEE2;
+	Wed, 16 Apr 2025 18:08:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744825439;
-	bh=Lo9jwrieLP5o4ZDRqzDbGqU898hWvBSp8D51Zlz8DPw=;
+	s=k20201202; t=1744826918;
+	bh=y+txb+Hoc7kRj0gHmHqFRU5cVYJ7URrQ8h6MBpihVI0=;
 	h=Date:From:To:Cc:Subject:From;
-	b=aFidgRJQSNRZ6Z1cTDN/zSzxg9740CbPef4H9usMI/iIOYZgD6/Z7ig/Vh3D1rVMY
-	 QR0Co+FZNTaS65/8xDxwFVLhGXlhBAjC1Qwsyo4Wx0vohokPj97ouiC4BsVr26S5bD
-	 qszP3c9bY7mOSHsKGqeOXubX1CeML6rpOClFd+9z+512PQYHroLSusFRAYUIDkw2ZR
-	 SHbOtZjHlyLGW+XvyBlLE0we2YuRMiItcGNQVieMs+bAwuzPvxT53/aa1y1ehdKRE5
-	 POCuvasxspgYhiDuaeJkz3lhUcK6qz1TMGAWhF4By3cfrvUTgThD9NQLrzAb4rmhmA
-	 dlEXWLhMIZnJw==
-Date: Wed, 16 Apr 2025 10:43:58 -0700
+	b=PUue77R9FoBdWqVLBzqW+apgigeVbvFuVKM50AudITazjm94Pinc1z13S0H6BRWsd
+	 OK/JiUscRUA7Rqr8RRFuB/XJrV0J8ohq6xmHxPDj26i/aby4ZDfISVs9XMilVZDDq6
+	 H4uNkYkoiVs2/VQsLG365glH9RhQF9gHgHyAs1fu8tB6fIIOMJyjplM9n3t7nYWLJN
+	 AK0RiTpQF4y419Bow431yxUxfhOlEBBkOQRqqGkSmvYN6Ku3qHSq2CZoF/1+VPc9Wm
+	 JtOxgkAmXSIIVc/ursD/hSuPP2t6sx9GcNUAn/IOL/pA8yxBXUOEzItreO77R40dcK
+	 RtBW7v1CTEExg==
+Date: Wed, 16 Apr 2025 11:08:37 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: linux-fsdevel <linux-fsdevel@vger.kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [6.15-rc2 regression] xfs: null pointer in the dax fault code
-Message-ID: <20250416174358.GM25675@frogsfrogsfrogs>
+Subject: [6.15-rc2 regression] iomap: null pointer in a bio completion
+Message-ID: <20250416180837.GN25675@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,67 +43,87 @@ Content-Disposition: inline
 
 Hi folks,
 
-After upgrading to 6.15-rc2, I see the following crash in (I think?) the
-DAX code on xfs/593 (which is a fairly boring fsck test).
+I upgraded my arm64 kernel to 6.15-rc2, and I also see this splat in
+generic/363.  The fstets config is as follows:
 
-MKFS_OPTIONS=" -m metadir=1,autofsck=1,uquota,gquota,pquota, -d daxinherit=1,"
+MKFS_OPTIONS="-m metadir=1,autofsck=1,uquota,gquota,pquota, -b size=65536,"
 MOUNT_OPTIONS=""
 
-Any ideas?  Does this stack trace ring a bell for anyone?
+The VM is arm64 with 64k base pages.  I've disabled LBS to work around
+a fair number of other strange bugs.  Does this ring a bell for anyone?
 
 --D
 
-BUG: kernel NULL pointer dereference, address: 00000000000008a8
-#PF: supervisor read access in kernel mode
-#PF: error_code(0x0000) - not-present page
-PGD 0 P4D 0 
-Oops: Oops: 0000 [#1] SMP
-CPU: 2 UID: 0 PID: 1717921 Comm: fsstress Tainted: G        W           6.15.0-rc2-xfsx #rc2 PREEMPT(lazy)
-Tainted: [W]=WARN
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:__lruvec_stat_mod_folio+0x50/0xd0
-Code: e8 85 70 da ff 48 8b 53 38 48 89 d0 48 83 e0 f8 83 e2 02 74 04 48 8b 40 10 48 63 d5 48 85 c0 74 50 6
-0 75 54 44
-RSP: 0000:ffffc9000679fa20 EFLAGS: 00010206
-RAX: 0000000000000200 RBX: ffffea000e298040 RCX: 0000000000000001
-RDX: 0000000000000001 RSI: 0000000000000012 RDI: ffffea000e298040
-RBP: 0000000000000001 R08: 8000000000000025 R09: 0000000000000001
-R10: 0000000000001000 R11: ffffc9000679fc10 R12: 0000000000000012
-R13: ffff88807ffd9d80 R14: ffff888040a79a80 R15: ffffea000e298040
-FS:  00007f2dce659740(0000) GS:ffff8880fb85e000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000000008a8 CR3: 000000005f22a003 CR4: 00000000001706f0
-Call Trace:
- <TASK>
- folio_add_file_rmap_ptes+0x109/0x200
- insert_page_into_pte_locked+0x1b6/0x340
- insert_page+0x93/0xc0
- vmf_insert_page_mkwrite+0x2d/0x50
- dax_fault_iter+0x330/0x730
- dax_iomap_pte_fault+0x1a9/0x3e0
- __xfs_write_fault+0x11d/0x290 [xfs 05d1f477986dfc3e3925c4fd18979e6f6f9a9e35]
- __do_fault+0x2d/0x170
- do_fault+0xc8/0x680
- __handle_mm_fault+0x5ba/0x1030
- handle_mm_fault+0x18f/0x280
- do_user_addr_fault+0x481/0x7e0
- exc_page_fault+0x62/0x130
- asm_exc_page_fault+0x22/0x30
-RIP: 0033:0x7f2dce7af44a
-Code: c5 fe 7f 07 c5 fe 7f 47 20 c5 fe 7f 47 40 c5 fe 7f 47 60 c5 f8 77 c3 66 0f 1f 84 00 00 00 00 00 40 0
-0 00 66 90
-RSP: 002b:00007fffe75b3198 EFLAGS: 00010202
-RAX: 0000000000000054 RBX: 000000000008c000 RCX: 0000000000000dfd
-RDX: 00007f2dce63e000 RSI: 0000000000000054 RDI: 00007f2dce658000
-RBP: 000000000001adfd R08: 0000000000000005 R09: 000000000008c000
-R10: 0000000000000008 R11: 0000000000000246 R12: 00007fffe75b31e0
-R13: 8f5c28f5c28f5c29 R14: 00007fffe75b37a0 R15: 000056030c3be570
- </TASK>
-Modules linked in: ext4 crc16 mbcache jbd2 xfs nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defrag_ipv
-set_hash_ip ip_set_hash_net xt_set nft_compat ip_set_hash_mac ip_set nf_tables nfnetlink sha512_ssse3 ahci
-d_btt sch_fq_codel loop fuse configfs ip_tables x_tables overlay nfsv4 af_packet
+list_add double add: new=ffffffff40538c88, prev=fffffc03febf8148, next=ffffffff40538c88.
+------------[ cut here ]------------
+kernel BUG at lib/list_debug.c:35!
+Internal error: Oops - BUG: 00000000f2000800 [#1]  SMP
 Dumping ftrace buffer:
    (ftrace buffer empty)
-CR2: 00000000000008a8
+Modules linked in: dm_delay dm_snapshot dm_thin_pool dm_persistent_data dm_bio_prison dm
+_flakey xfs rpcsec_gss_krb5 auth_rpcgss nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf
+xt_set nft_compat ip_set_hash_mac nf_tables sha2_ce sha256_arm64 bfq sch_fq_codel fuse l
+CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G        W           6.15.0-rc2-xfsa #rc2 
+Tainted: [W]=WARN
+Hardware name: QEMU KVM Virtual Machine, BIOS 1.6.6 08/22/2023
+pstate: 604010c5 (nZCv daIF +PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+pc : __list_add_valid_or_report+0xd4/0xd8
+lr : __list_add_valid_or_report+0xd4/0xd8
+sp : fffffe008180fa70
+x29: fffffe008180fa70 x28: ffffffff40538c80 x27: 0000000000000000
+x26: ffffffff40538c88 x25: ffffffff40538c88 x24: fffffc03febf8148
+x23: fffffc03ffdfdd80 x22: 0000000000000001 x21: fffffc03febf8148
+x20: 0000000000000000 x19: ffffffff40538c88 x18: 0000000000000010
+x17: 3834313866626566 x16: 3330636666666666 x15: 3d76657270202c38
+x14: 3863383335303466 x13: 2e38386338333530 x12: fffffe0081304268
+x11: 00000000008c8bc0 x10: 00000000008c8b68 x9 : fffffe00800e2940
+x8 : c00000010001db68 x7 : fffffe00812f9068 x6 : 0000000005000000
+x5 : 0000000000000000 x4 : 0000000000000000 x3 : 0000000000000000
+x2 : 0000000000000000 x1 : fffffc00e06f3200 x0 : 0000000000000058
+Call trace:
+ __list_add_valid_or_report+0xd4/0xd8 (P)
+ free_frozen_page_commit+0x98/0x398
+ __free_frozen_pages+0x32c/0x5e8
+ free_frozen_pages+0x1c/0x30
+ __folio_put+0xc0/0x138
+ folio_end_writeback+0xf0/0x1e8
+ iomap_finish_ioend_buffered+0x134/0x3b8
+ iomap_writepage_end_bio+0x34/0x50
+ bio_endio+0x178/0x228
+ blk_update_request+0x188/0x4b8
+ scsi_end_request+0x38/0x278
+ scsi_io_completion+0x64/0x660
+ scsi_finish_command+0xdc/0x120
+ scsi_complete+0x88/0x198
+ blk_mq_complete_request+0x3c/0x58
+ scsi_done_internal+0xcc/0x150
+ scsi_done+0x1c/0x30
+ virtscsi_complete_cmd+0xa4/0x160
+ virtscsi_req_done+0x7c/0xe8
+ vring_interrupt+0x70/0xb8
+ __handle_irq_event_percpu+0x58/0x228
+ handle_irq_event+0x54/0xb8
+ handle_fasteoi_irq+0xc8/0x268
+ handle_irq_desc+0x48/0x68
+ generic_handle_domain_irq+0x24/0x38
+ gic_handle_irq+0x54/0x124
+ call_on_irq_stack+0x24/0x58
+ do_interrupt_handler+0xdc/0xf0
+ el1_interrupt+0x34/0x68
+ el1h_64_irq_handler+0x18/0x28
+ el1h_64_irq+0x6c/0x70
+ default_idle_call+0x38/0x148 (P)
+ do_idle+0x20c/0x270
+ cpu_startup_entry+0x3c/0x50
+ secondary_start_kernel+0x12c/0x158
+ __secondary_switched+0xc0/0xc8
+Code: aa1503e2 f0003ca0 91156000 97ee8906 (d4210000) 
 ---[ end trace 0000000000000000 ]---
-
+Kernel panic - not syncing: Oops - BUG: Fatal exception in interrupt
+SMP: stopping secondary CPUs
+Dumping ftrace buffer:
+   (ftrace buffer empty)
+Kernel Offset: disabled
+CPU features: 0x0800,000000e0,01000650,8241700b
+Memory Limit: none
+---[ end Kernel panic - not syncing: Oops - BUG: Fatal exception in interrupt ]---
