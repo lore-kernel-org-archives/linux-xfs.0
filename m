@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F8BD2DFA31
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 04:50:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48F25E571;
+	Wed, 16 Apr 2025 05:01:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744779046; cv=none; b=fNOfBVmehkrslscH7o9bfmF2XJAb4rAKPcAGewdZs4UJMqau83uQy0G4uNSHKCqXMFlknYsWtoupKNwL+gJtwKDmO6YTaylZSPLqPUXTSW5/iZ/fRV/GQy9Pxq53dtMB2lOA29kRgyn3yiZxAvEnWnY5zQ1G3j9Q/eXRCiyGY0o=
+	t=1744779705; cv=none; b=uVFVReeDhtCB5SlEaGjGjF5IQtHNvOdo6Xk39N27oS90QAJtNEqdDtKliexMQ0Kd+YjKCTb0B7OSsPDx2HyNbmOSHeEw9CQIKKikeEP43HbZ66YzrcYUIN2cIG1n8kHl54fBoCMYz64SvgGRMXZfj9ZsILtCf+qhzckMvq3glQ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744779046; c=relaxed/simple;
-	bh=xyOjghhO7JA0wcETOMEyDjNPOTWYwaiAGijhY6PsZt8=;
+	s=arc-20240116; t=1744779705; c=relaxed/simple;
+	bh=6LXhHo3n8q1+WdZyASezw7obYvnOQnpMzr32n1KgRQs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V0FSaCcNCWagks3UgfB1J50xKjFv6wbdDJAm6oSca7I06Mf7st6YYp0R2oh1UyxKhtSLK1lZwOYa4aIbsY6fL1pp69rIceYSZ3+3yaZSkVUOBFZa2imv0f4L7DpmZJLnKe8JETnc6Cf+dJKps1BMPNW2W6xqxMD8130sMejxE9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IlGglo8z; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=KC1QJeHcTmLdt0yLmOnykJe+yNznlE+LG/yg8jYadBwl6jftnNROCwHliSG7EkKy3Pohalxt1gfzramgbVGsYqtRpM/ZraFUzTrX1XLLT6hgNLkq+04bnRi5+RK4DomT5LYD+QsJ8TCN1oF7cfjL8nj/Wubq8JHw1fCm6BEH5BY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GyA7CwqG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IlGglo8z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6887FC4CEE2;
-	Wed, 16 Apr 2025 04:50:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GyA7CwqG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91E50C4CEE2;
+	Wed, 16 Apr 2025 05:01:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744779045;
-	bh=xyOjghhO7JA0wcETOMEyDjNPOTWYwaiAGijhY6PsZt8=;
+	s=k20201202; t=1744779704;
+	bh=6LXhHo3n8q1+WdZyASezw7obYvnOQnpMzr32n1KgRQs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IlGglo8z+DSsVEdKH1aK+Q9Zr0kBxqFPeOPiZWy71F2YkWLDQ8KLrfsUqVNSAkO+s
-	 Rti2T87D20LscDgYjJbR4sFp2P0gcFshIRJDnrrL7s65BOqcorYFRFRNXTJEbsSsJb
-	 lgZkcPRlWEbF53ficvloGlzMJZIap3Rehwf0vHCnmid22m0+jtYmYABKEoxZ0IIXd8
-	 BfzhN3R64WB4bsGITDQ1Kty+uQrBkoSCQC96hi3/PzAHYtsHyY2aBun1ylgarGI3+L
-	 iSCy2z3Ew5hiDDqFayVZUKGOUc1cCCLh09BwbIY1eyfDD26uWyb0Ne4IwF8GKciBwp
-	 YNwG8znRkVMZg==
-Date: Tue, 15 Apr 2025 21:50:44 -0700
+	b=GyA7CwqGy5THlV0x1q2ZGF3w2paiqBoZ2rsJg1VxNy1HGcUwbIPgdJK7uI5yepNUA
+	 mDAfDJOH5olmz/bpTy/bb0ohAO1s17PqbXiZPeDZJCBya0ZSnP6iCGdoJcW8OquoBa
+	 MoYXbe3hFLVq5S9AXu4TS8Vz4ayosTMSAgKhIc4bOdq03J7kM00iv+OnyQvCOGwyzS
+	 pNbYeBeTt6eH0F2JvIGmH39QEXaBTdQ7yQvbIc+D8Edhugx1tVnBS9HCKZWePaztAb
+	 DI7hshNqN0TOr/1c+S+T10wPpg/+8sRJyAv/NdM+D3ypla3DLIHMHQ1Gwja10/3iDF
+	 ex4OjO+xZKvPQ==
+Date: Tue, 15 Apr 2025 22:01:44 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] mkfs: fix blkid probe API violations causing weird output
-Message-ID: <20250416045044.GA25700@frogsfrogsfrogs>
-References: <20250416012837.GW25675@frogsfrogsfrogs>
- <Z_8zojbPUQ69-hH7@infradead.org>
+Cc: axboe@kernel.dk, Luis Chamberlain <mcgrof@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	linux-block <linux-block@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>, Jack Vogel <jack.vogel@oracle.com>
+Subject: Re: [RFC[RAP] 1/2] block: fix race between set_blocksize and read
+ paths
+Message-ID: <20250416050144.GZ25675@frogsfrogsfrogs>
+References: <20250415001405.GA25659@frogsfrogsfrogs>
+ <Z_80_EXzPUiAow2I@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,48 +47,78 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z_8zojbPUQ69-hH7@infradead.org>
+In-Reply-To: <Z_80_EXzPUiAow2I@infradead.org>
 
-On Tue, Apr 15, 2025 at 09:35:46PM -0700, Christoph Hellwig wrote:
-> On Tue, Apr 15, 2025 at 06:28:37PM -0700, Darrick J. Wong wrote:
-> > +	/* libblkid 2.38.1 lies and can return -EIO */
+On Tue, Apr 15, 2025 at 09:41:32PM -0700, Christoph Hellwig wrote:
+> On Mon, Apr 14, 2025 at 05:14:05PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > With the new large sector size support, it's now the case that
+> > set_blocksize can change i_blksize and the folio order in a manner that
+> > conflicts with a concurrent reader and causes a kernel crash.
+> > 
+> > Specifically, let's say that udev-worker calls libblkid to detect the
+> > labels on a block device.  The read call can create an order-0 folio to
+> > read the first 4096 bytes from the disk.  But then udev is preempted.
+> > 
+> > Next, someone tries to mount an 8k-sectorsize filesystem from the same
+> > block device.  The filesystem calls set_blksize, which sets i_blksize to
+> > 8192 and the minimum folio order to 1.
+> > 
+> > Now udev resumes, still holding the order-0 folio it allocated.  It then
+> > tries to schedule a read bio and do_mpage_readahead tries to create
+> > bufferheads for the folio.  Unfortunately, blocks_per_folio == 0 because
+> > the page size is 4096 but the blocksize is 8192 so no bufferheads are
+> > attached and the bh walk never sets bdev.  We then submit the bio with a
+> > NULL block device and crash.
+> > 
 > 
-> Can you expand this comment be less terse using the wording in the
-> commit message?  Otherwise looks good:
+> Do we have a testcase for blktests or xfstests for this?  The issue is
+> subtle and some of the code in the patch looks easy to accidentally
+> break again (not the fault of this patch primarily).
 
-Ok.
+It's the same patch as:
+https://lore.kernel.org/linux-fsdevel/20250408175125.GL6266@frogsfrogsfrogs/
 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+which is to say, xfs/032 with while true; do blkid; done running in the
+background to increase the chances of a collision.
+
+> >  	} else {
+> > +		inode_lock_shared(bd_inode);
+> >  		ret = blkdev_buffered_write(iocb, from);
+> > +		inode_unlock_shared(bd_inode);
 > 
-> Did you also report the bug to util-linux so that it gets fixed there?
+> Does this need a comment why we take i_rwsem?
+> 
+> > +	inode_lock_shared(bd_inode);
+> >  	ret = filemap_read(iocb, to, ret);
+> > +	inode_unlock_shared(bd_inode);
+> 
+> Same here.  Especially as the protection is now heavier than for most
+> file systems.
 
-I'm not even sure how to categorize it -- the API docs all say things
-like this:
+Yeah, somewhere we need a better comment.  How about this for
+set_blocksize:
 
- * Returns: 0 on success, 1 if nothing is detected or -1 on case of error.
- */
-int blkid_do_fullprobe(blkid_probe pr)
+	/*
+	 * Flush and truncate the pagecache before we reconfigure the
+	 * mapping geometry because folio sizes are variable now.  If
+	 * a reader has already allocated a folio whose size is smaller
+	 * than the new min_order but invokes readahead after the new
+	 * min_order becomes visible, readahead will think there are
+	 * "zero" blocks per folio and crash.
+	 */
 
-But then you look at the probe functions that it calls:
+And then the read/write paths can say something simpler:
 
-static int probe_xfs(blkid_probe pr, const struct blkid_idmag *mag)
-{
-	struct xfs_super_block *xs;
+	/*
+	 * Take i_rwsem and invalidate_lock to avoid racing with a
+	 * blocksize change punching out the pagecache.
+	 */
 
-	xs = blkid_probe_get_sb(pr, mag, struct xfs_super_block);
-	if (!xs)
-		return errno ? -errno : 1;
+> I also wonder if we need locking asserts in some of the write side
+> functions that expect the shared inode lock and invalidate lock now?
 
-or:
-
-static int probe_apfs(blkid_probe pr, const struct blkid_idmag *mag)
-{
-	struct apfs_super_block *sb;
-
-	sb = blkid_probe_get_sb(pr, mag, struct apfs_super_block);
-	if (!sb)
-		return errno ? -errno : BLKID_PROBE_NONE;
-
-So I guess it's just ... super broken?
+Probably.  Do you have specific places in mind?
 
 --D
