@@ -1,69 +1,69 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6538E1FC109
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 14:44:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1AA01FDA6D
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 14:44:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744814692; cv=none; b=RT/vIfQsbAsXs5EpI1wevCvRMsxF8hDLdvv656gGeNys6BcOhq6i+Y0IXdST1jF35YGhcs8ZH5NxJuuPIixi0K/N4F5XvXn6r5RIJeBqiKafOKqLA8Qct0ZCeY76e9/Vw69FxJtOkwLByy9z08X+IXQNFiNJO7JcncUz5rSCves=
+	t=1744814693; cv=none; b=j0VgC+k3VfKu56GffqMYKRJighb4WQAoXVwb0NWxP5QvCuGCDbkX+Cq9TUTDdrZN0O6kTsHqoBdOLGhxv9CfdckcU1NbWNkvuF4h6iudnLNqIXQ2zg2SB3nbZIYJY2ztnr0ngXavg3Wzg1+5IwabQkeZVko1LGRWzDjrAxIWBp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744814692; c=relaxed/simple;
-	bh=W8PsYtxecDHQtlWWGFV7dHT9V7QmgH8WW3t7YZELHzk=;
+	s=arc-20240116; t=1744814693; c=relaxed/simple;
+	bh=vkUD96kEtzzO77SAioqfguBK2Z+GzKT6iDhbhztfccM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IPsN1chmotClBmhrX+ZA+E4ygIaKogRmlFdfDlP0oB0rWOUY7AMxnccnGOzeLvCHkqI+gdSDLwGYUHE7ZHk3j04EIyvx87mn1a35GukvHATWLsY1hdqhxNqkB5hv1JG5SYxaCmn0grnVs/3SeYr2VQXcALme/SJIk7qRb07xv3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UMPL2UF3; arc=none smtp.client-ip=209.85.208.42
+	 MIME-Version; b=sw+adzt5NbKx9EeUrRARPWnzAO/C0UzE+mUsYZf7i/01eAWHjvtl/tyOZuZEvvxeE57OauNue/xYKoBZ6ClBbkvETsi0+1xvLU3hxIBj4KdRs30+Dt+ADnXlmA5EJE+9YkMZ6adKbmIPDg1hDlaO5R7qiZYIR56eYl8bkg3xfXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hyRNVWld; arc=none smtp.client-ip=209.85.218.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UMPL2UF3"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5ed1ac116e3so10514493a12.3
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 07:44:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hyRNVWld"
+Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-acb39c45b4eso141825166b.1
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 07:44:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744814688; x=1745419488; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1744814690; x=1745419490; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=yR31uWjwmuuBRtt1HHlCz+o+4lsC+PPt2kNwunz/WWw=;
-        b=UMPL2UF3sUnGzfyJjBRS8qPhpZuyhQ+k4mFU2K/IFp2vimUvIQz7cUV49zfHwptPg0
-         byvvqGYV/YhOjNpWBc3PCG8+umRFrXP7lxYU035TyLDtgLEt4NesXqahI3RjfhK5DpnC
-         UvtGUuJAo4polj6ag1nPqflPQPdO5oMezbrhlkZOMA3gAhcHJyIZYWd2OQw1cY5W/RtP
-         cb38hopxT67d7+BixWmtjXVrtuHIHEBj7MnflvSasroRWuiyjPb6wqdRbRcIirz/reBB
-         OCcC80vZq1vAE0lR6Ir4LO7J5thSqnIdwP4jSXUnKjMQd8BRmY2Dj7NSZSZ0pUHfFxtS
-         yJsA==
+        bh=ntvqmNW/StnnzfNSA2Vg93tEXLvEy+jJS06cIZNNTN4=;
+        b=hyRNVWld3LMjE8PfZweURdDun+d968Ip8lWjI6XyvLhKC7no1U2I4sdVfvOAgplV6X
+         wgea9mzSskvISZNxFGFHIlkygsOvDHI+1cuVCvEQDrB1v1UyHtFSDoW+32dSYvheLCEV
+         fxyoYuwntLmwkqhXVvVh31/ds7EYUBYxVMcDxTKPMrmoM621kpQ+X/pIJn648XBa0knV
+         FbxuuS2Vg6d00Ubgz9pi68doNSNz0xYFejOed3j/9AXo1xHpq7DJPs94k1MRokOfu/ez
+         tgd3FaPdn+bknWCIpHzinzHDP8AEDO08+KZthGYw+LZFa+U8WRnuPbjSnrBlUF7Wne4L
+         FeIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744814688; x=1745419488;
+        d=1e100.net; s=20230601; t=1744814690; x=1745419490;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=yR31uWjwmuuBRtt1HHlCz+o+4lsC+PPt2kNwunz/WWw=;
-        b=ptiAVnfZ/cQKtTm37GK1U4ICKy64WhGoF56H29IXglksrraK3ira7J3k3C23pmNEST
-         +pQ7xjYYxSJ+T7AIm5PLc1ajwATTmsc5TXkO/u9MUVgDGx/5In7qmwROAg/7RemxVL49
-         jg2cqL3PWGJcSWdIkTIaYyxp5EndiZsJqMgGjkaT3XidjJlnLSUfyZFLJlR2eWCbgYWd
-         uD4fANZf0sUR8FpkGaBhvfXQUDHgunqb+JVYKoja2o71TO7euBRI+UFW3Tdq+9f1kQFO
-         pp7zNkIno+1qLxkxC6S/DIJIyDDtTIzOCUxbYA/FrbWlwi7YECyNKYLZEKMwt3FwufHY
-         miSw==
-X-Gm-Message-State: AOJu0Yx83aWyebP4rcSpRkVsgekkdZH/+kQ+qPfmvEH8b8oyeHktM+E+
-	4hZ0pijO6/g5ubvMKfEBKNPPFmkFqqPcSzB42NvdKe/iAS0XkRukG2n5pg==
-X-Gm-Gg: ASbGncvkoLwaGUEhh3v17/7Tht9qLq+18pdVMect92UFNgM25G2mpkOqYNVkBy5T+Rv
-	otikN/2YbM/ThUTnK+2RTSzhDKPp8VYmL8FxmYyIetQCa7VHApnmf6qQ2DXgdCOXbI0GSV5uEFa
-	Qe8yinPGpMMlpMEcl3hsggo3Bl2XeQi0mu2BlEZZPy7k9Rht0UjHTlW78iyflaxNupAqLjjRBte
-	BPcaLTSKmwPfDGU34alKVBzlijZZWgaUzsszPyLneiJSwXX2DdzBPtXxDTo8Vl8BQRYmcFoWiEe
-	6183equJ04zB8T3SxmQyqzGWQeuKifosD7nMM7AxnMCQNNu534k=
-X-Google-Smtp-Source: AGHT+IHgV/zCOddQHUiRKJdd76ghAkZsx9PxZDmk4Z0uVK6BXVbzA6V1II9PX7audGMGRQPNN5/j0Q==
-X-Received: by 2002:a17:907:2d8a:b0:aca:d5a1:c324 with SMTP id a640c23a62f3a-acb42571ad4mr220068166b.0.1744814688248;
-        Wed, 16 Apr 2025 07:44:48 -0700 (PDT)
+        bh=ntvqmNW/StnnzfNSA2Vg93tEXLvEy+jJS06cIZNNTN4=;
+        b=ODVmWZdfI2c6zkTtXsPfKZiGC5XVmTMR/eOzMkkYBT8g4nqLxOtGAlmoobHHL26zlO
+         wYqfQvcv/u2T66ahLnHhrU56Aif5wO7Jtq6c7bcfh2jUhq+ZzTS/V3hCQKBr9VwMQMsg
+         MxQLEdbjeNIpQWHfkb1jPfXTD0IANyBsiC5/ECHqPOFgW3CpYDL1kwc8myT3sO7kACjl
+         tEUDSZHT4+0OCHT6cOaqvlVXcck3sz3cLVmuyPr3AQXRvtnfoAlv63wQ8le9BSZ3n63F
+         emjOLevwOcfX9lIwIQKlTxleFu396v9EErvZ3IjlExFEvcWrl5Yc/94pJrxd8crfwWNn
+         ICQQ==
+X-Gm-Message-State: AOJu0Yw7BqpLnn7/atNotdgE+jQmnZ20lKpQQYxKGYoV9YzbGUUx3vkg
+	IV1vmqCoGqyqIr/X+ZrMPkxysFfhZ5aqttllPNGSmZlkvTUzVyyI7a2H2Q==
+X-Gm-Gg: ASbGncsxU5FzSesvEW9R9XDuS+m3ydPLYyPpEzPro2LpGL1pbkzTh/HAyXIdgDOT6+4
+	wMJNeZlk21seGTkoCcGBp/78NfvThDNFOueKZnLqmXBNQQ3/VdOgFCZCwH9WmfC/72p7B2zzbdt
+	+6o77dZ2xQyQTnDaQrmWvr/8bIXW2R0BP1NVnEOlRCQTZUn9jdYSU3iduflId3dxbXr6fgSBZpH
+	MAI/Favt9vYdv2pP/l5PoooZnFnMVWWZw6gIcWZmNp9Zbk/9vjmGibFPxXOEo57Eb/rTeyoyftD
+	yYq2dAul8EnrGMdklF7kYSTiGnyg3z1Bv0bvxCTzUrF/jBMhpBw=
+X-Google-Smtp-Source: AGHT+IFKYu1i/RKN9y8dmEp+6UzzGXnJMYeXQGNN127NVnWmi3Jn0Re1tmfAl+hW4TvrPfXhdz7y4g==
+X-Received: by 2002:a17:907:a08a:b0:ac1:e07b:63ca with SMTP id a640c23a62f3a-acb429e6ef0mr167170766b.22.1744814689836;
+        Wed, 16 Apr 2025 07:44:49 -0700 (PDT)
 Received: from localhost.localdomain ([2001:b07:646e:16a2:521a:8bc0:e205:6c52])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-acb3ce59962sm141167966b.78.2025.04.16.07.44.47
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-acb3ce59962sm141167966b.78.2025.04.16.07.44.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Apr 2025 07:44:47 -0700 (PDT)
+        Wed, 16 Apr 2025 07:44:49 -0700 (PDT)
 From: Luca Di Maio <luca.dimaio1@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
 	dimitri.ledkov@chainguard.dev,
 	smoser@chainguard.dev
-Subject: [PATCH RFC 1/2] xfs_proto: add origin also for directories, chardevs and symlinks
-Date: Wed, 16 Apr 2025 16:43:32 +0200
-Message-ID: <20250416144400.940532-2-luca.dimaio1@gmail.com>
+Subject: [PATCH RFC 2/2] proto: read origin also for directories, chardevs and symlinks. copy timestamps from origin.
+Date: Wed, 16 Apr 2025 16:43:33 +0200
+Message-ID: <20250416144400.940532-3-luca.dimaio1@gmail.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250416144400.940532-1-luca.dimaio1@gmail.com>
 References: <20250416144400.940532-1-luca.dimaio1@gmail.com>
@@ -75,99 +75,124 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In order to preserve timestamps when populating target filesystem, we
-need to have a reference to the original file.
+Right now, when populating a filesystem with the prototype file,
+generated inodes will have timestamps set at the creation time.
 
-This is already done with regular files, we extend this to dirs,
-symlinks and chardevices.
+This change enables more accurate filesystem initialization by preserving
+original file timestamps during inode creation rather than defaulting to
+the current time.
 
-Excerpt of old protofile:
-
-```
-/
-0 0
-d--755 0 0
-: Descending path rootfs
- bin   l--777 0 0 usr/bin
- lib64 l--777 0 0 lib
- sbin  l--777 0 0 usr/bin
- dev d--755 0 0
-  console c--620 0 0 5 1
-  null    c--666 0 0 1 3
-  random  c--666 0 0 1 8
-  urandom c--666 0 0 1 9
-  zero    c--666 0 0 1 5
- $
- lib d--755 0 0
-  ld-linux-x86-64.so.2   ---755 0 0 rootfs/lib/ld-linux-x86-64.so.2
-```
-
-Excerpt of new protofile:
-
-```
-/
-0 0
-d--755 65534 65534 rootfs
-: Descending path rootfs
- bin   l--777 65534 65534 usr/bin rootfs/bin
- lib64 l--777 65534 65534 lib rootfs/lib64
- sbin  l--777 65534 65534 usr/bin rootfs/sbin
- $
- dev d--755 65534 65534 rootfs/dev
-  console c--620 65534 65534 5 1 rootfs/dev/console
-  null    c--666 65534 65534 1 3 rootfs/dev/null
-  random  c--666 65534 65534 1 8 rootfs/dev/random
-  urandom c--666 65534 65534 1 9 rootfs/dev/urandom
-  zero    c--666 65534 65534 1 5 rootfs/dev/zero
- $
- lib d--755 0 0 rootfs/lib
-  ld-linux-x86-64.so.2   ---755 0 0 rootfs/lib/ld-linux-x86-64.so.2
-```
+This patch leverages the xfs_protofile changes in order to carry the
+reference to the original files for files other than regular ones.
 
 Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
 ---
- mkfs/xfs_protofile.in | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ mkfs/proto.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-diff --git a/mkfs/xfs_protofile.in b/mkfs/xfs_protofile.in
-index e83c39f..066265b 100644
---- a/mkfs/xfs_protofile.in
-+++ b/mkfs/xfs_protofile.in
-@@ -51,12 +51,12 @@ def stat_to_str(statbuf):
- def stat_to_extra(statbuf, fullpath):
- 	'''Compute the extras column for a protofile.'''
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 6dd3a20..ed76155 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -352,6 +352,15 @@ writefile(
 
--	if stat.S_ISREG(statbuf.st_mode):
-+	if stat.S_ISREG(statbuf.st_mode) or stat.S_ISDIR(statbuf.st_mode):
- 		return ' %s' % fullpath
- 	elif stat.S_ISCHR(statbuf.st_mode) or stat.S_ISBLK(statbuf.st_mode):
--		return ' %d %d' % (os.major(statbuf.st_rdev), os.minor(statbuf.st_rdev))
-+		return ' %d %d %s' % (os.major(statbuf.st_rdev), os.minor(statbuf.st_rdev), fullpath)
- 	elif stat.S_ISLNK(statbuf.st_mode):
--		return ' %s' % os.readlink(fullpath)
-+		return ' %s %s' % (os.readlink(fullpath), fullpath)
- 	return ''
+ 	libxfs_trans_ijoin(tp, ip, 0);
+ 	ip->i_disk_size = statbuf.st_size;
++
++	/* Copy timestamps from source file to destination inode */
++	VFS_I(ip)->__i_atime.tv_sec = statbuf.st_atime;
++	VFS_I(ip)->__i_mtime.tv_sec = statbuf.st_mtime;
++	VFS_I(ip)->__i_ctime.tv_sec = statbuf.st_ctime;
++	VFS_I(ip)->__i_atime.tv_nsec = statbuf.st_atim.tv_nsec;
++	VFS_I(ip)->__i_mtime.tv_nsec = statbuf.st_mtim.tv_nsec;
++	VFS_I(ip)->__i_ctime.tv_nsec = statbuf.st_ctim.tv_nsec;
++
+ 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	error = -libxfs_trans_commit(tp);
+ 	if (error)
+@@ -689,6 +698,7 @@ parseproto(
+ 	char		*fname = NULL;
+ 	struct xfs_name	xname;
+ 	struct xfs_parent_args *ppargs = NULL;
++	struct stat		statbuf;
 
- def max_fname_len(s1):
-@@ -105,8 +105,8 @@ def walk_tree(path, depth):
- 		fullpath = os.path.join(path, fname)
- 		sb = os.lstat(fullpath)
- 		extra = stat_to_extra(sb, fullpath)
--		print('%*s%s %s' % (depth, ' ', fname, \
--				stat_to_str(sb)))
-+		print('%*s%s %s%s' % (depth, ' ', fname, \
-+				stat_to_str(sb), extra))
- 		walk_tree(fullpath, depth + 1)
-
- 	if depth > 1:
-@@ -134,7 +134,7 @@ def main():
- 		statbuf = os.stat(args.paths[0])
- 		if not stat.S_ISDIR(statbuf.st_mode):
- 			raise NotADirectoryError(path)
--		print(stat_to_str(statbuf))
-+		print(stat_to_str(statbuf), args.paths[0])
-
- 		# All files under each path go in the root dir, recursively
- 		for path in args.paths:
+ 	memset(&creds, 0, sizeof(creds));
+ 	mstr = getstr(pp);
+@@ -823,10 +833,23 @@ parseproto(
+ 		ppargs = newpptr(mp);
+ 		majdev = getnum(getstr(pp), 0, 0, false);
+ 		mindev = getnum(getstr(pp), 0, 0, false);
++		fd = newregfile(pp, &fname);
+ 		error = creatproto(&tp, pip, mode | S_IFCHR,
+ 				IRIX_MKDEV(majdev, mindev), &creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
++
++		/* Copy timestamps from source file to destination inode */
++		error = fstat(fd, &statbuf);
++		if (error < 0)
++			fail(_("unable to stat file to copyin"), errno);
++		VFS_I(ip)->__i_atime.tv_sec = statbuf.st_atime;
++		VFS_I(ip)->__i_mtime.tv_sec = statbuf.st_mtime;
++		VFS_I(ip)->__i_ctime.tv_sec = statbuf.st_ctime;
++		VFS_I(ip)->__i_atime.tv_nsec = statbuf.st_atim.tv_nsec;
++		VFS_I(ip)->__i_mtime.tv_nsec = statbuf.st_mtim.tv_nsec;
++		VFS_I(ip)->__i_ctime.tv_nsec = statbuf.st_ctim.tv_nsec;
++
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 		xname.type = XFS_DIR3_FT_CHRDEV;
+ 		newdirent(mp, tp, pip, &xname, ip, ppargs);
+@@ -846,6 +869,7 @@ parseproto(
+ 		break;
+ 	case IF_SYMLINK:
+ 		buf = getstr(pp);
++		char* orig = getstr(pp);
+ 		len = (int)strlen(buf);
+ 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
+ 		ppargs = newpptr(mp);
+@@ -854,11 +878,24 @@ parseproto(
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+ 		writesymlink(tp, ip, buf, len);
++
++		/* Copy timestamps from source file to destination inode */
++		error = lstat(orig, &statbuf);
++		if (error < 0)
++			fail(_("unable to stat file to copyin"), errno);
++		VFS_I(ip)->__i_atime.tv_sec = statbuf.st_atime;
++		VFS_I(ip)->__i_mtime.tv_sec = statbuf.st_mtime;
++		VFS_I(ip)->__i_ctime.tv_sec = statbuf.st_ctime;
++		VFS_I(ip)->__i_atime.tv_nsec = statbuf.st_atim.tv_nsec;
++		VFS_I(ip)->__i_mtime.tv_nsec = statbuf.st_mtim.tv_nsec;
++		VFS_I(ip)->__i_ctime.tv_nsec = statbuf.st_ctim.tv_nsec;
++
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 		xname.type = XFS_DIR3_FT_SYMLINK;
+ 		newdirent(mp, tp, pip, &xname, ip, ppargs);
+ 		break;
+ 	case IF_DIRECTORY:
++		fd = newregfile(pp, &fname);
+ 		tp = getres(mp, 0);
+ 		error = creatproto(&tp, pip, mode | S_IFDIR, 0, &creds, fsxp,
+ 				&ip);
+@@ -878,6 +915,18 @@ parseproto(
+ 			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+ 		}
+ 		newdirectory(mp, tp, ip, pip);
++
++		/* Copy timestamps from source file to destination inode */
++		error = stat(fname, &statbuf);
++		if (error < 0)
++			fail(_("unable to stat file to copyin"), errno);
++		VFS_I(ip)->__i_atime.tv_sec = statbuf.st_atime;
++		VFS_I(ip)->__i_mtime.tv_sec = statbuf.st_mtime;
++		VFS_I(ip)->__i_ctime.tv_sec = statbuf.st_ctime;
++		VFS_I(ip)->__i_atime.tv_nsec = statbuf.st_atim.tv_nsec;
++		VFS_I(ip)->__i_mtime.tv_nsec = statbuf.st_mtim.tv_nsec;
++		VFS_I(ip)->__i_ctime.tv_nsec = statbuf.st_ctim.tv_nsec;
++
+ 		libxfs_trans_log_inode(tp, ip, flags);
+ 		error = -libxfs_trans_commit(tp);
+ 		if (error)
 --
 2.49.0
