@@ -1,69 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ECD4224B05
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 05:55:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6235222B8D4;
+	Wed, 16 Apr 2025 06:09:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744782917; cv=none; b=scEgUyz/lT9ykttiz8Ocykn63vLpLssyES72ej4ZBnlWQCX+Txb6IiwzniH71lRFtSf1d1Q7VUHghHEGWGZWWuLgW66Y8nEjDhxLFPhx0DV78ACDI8ODmh4jWjJR0KbZ5eicCgvrbpAn/N8qIfc9snxFz4LyW829JWKXUtVwonM=
+	t=1744783771; cv=none; b=QTIR3gon299pNvB7ng+DPZAl9T6o56I9qd4sXSWkyxhGisHacIHno6WaFPvYJrWipB+4mO6z4yhQ6Bpn4H5I6whko6RJNMFz4GO1QvlbjJKZQr9BECF8EIoT6QiUqrG3udSlKkqW1J+az1ZY6GDH5VO28wnerHB/QBLrpOl6nrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744782917; c=relaxed/simple;
-	bh=tM+liSZrS/hX+wvVbg2+t5Wvw4EnbItBTmDm/BnhxoE=;
+	s=arc-20240116; t=1744783771; c=relaxed/simple;
+	bh=atjs9xnnTb8NrElVWESWkmJT4LsGCO0VIogOIOZ7FRo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lkFuNeIpr3MmXzelWGJNgrxteuG1wf4sSiGJgOr0EVkOzdjBlDhJjS2g7ckwaKiUOciTO0f+zWIvdWgZYrBS3niwG3QCdnvq89uXXbw2ac0sw+4M4C5CIWnCaSrh/3EkCwJSzfmE/HSnatAwQuAfx/LD9bntq4pfdCOFg6Yos0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HFA+InG5; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZWzu4PKzlylSNNaAIJyx3FdYLl4jM8ELf4r9tAadDLSreJZRT24T7L75beELJxevLT64phz+JqJ+tJMbF72ljx1XY9WvC3RlfgefkuV83ArHZTdJEyvZb5SEaGkGhlmIsQLF4EIDXdiTPciSBEWeE1B5g+NWEQhPb4X7R80bSBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=h5B6vUaP; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HFA+InG5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06632C4CEE2;
-	Wed, 16 Apr 2025 05:55:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744782917;
-	bh=tM+liSZrS/hX+wvVbg2+t5Wvw4EnbItBTmDm/BnhxoE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HFA+InG5WMGB3xMVIuxrpjTSzmZb6IZICq+swM0d3M6yEzwlJ90gTSDkIbxG/Ltla
-	 A6ImfwtV6ot/yybhYWtbFHMYVjHXTxEL40dIp6Fff+kCiay32PRmVVwf0Rkw0Vlvlk
-	 9Y1W4ZVeesUTRBY2tiv/41Wyy4LpCKI4I9eMdHwOOzM9zejMWyGInexsOkg+zY1j0R
-	 ZUQoduQIv1pnvoBIlhyLUkiwykySpSYOyUBcX5MiaqU9keRIzqrfWhick3PO92uPsU
-	 IwTsRA5wWgk20lU6CDzniSuui6rj7e6gPv3aN4qhhUhSxmMYrBUiNGB/t9xuKv808J
-	 w71oSP6Ei6B3A==
-Date: Tue, 15 Apr 2025 22:55:16 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Luca DiMaio <luca.dimaio@chainguard.dev>, linux-xfs@vger.kernel.org,
-	Scott Moser <smoser@chainguard.dev>,
-	Dimitri Ledkov <dimitri.ledkov@chainguard.dev>
-Subject: Re: Reproducible XFS Filesystems Builds for VMs
-Message-ID: <20250416055516.GE25675@frogsfrogsfrogs>
-References: <CAKBQhKVi6FWNWJH2PWUA4Ue=aSrvVcR_r2aJOUh45Nd0YdnxVA@mail.gmail.com>
- <Z_yffXTi0iU6S_st@infradead.org>
- <CAKBQhKWr_pxBT+jXpaitY3gz6wd1WLqyU4JwQoaRhzKWye8UgQ@mail.gmail.com>
- <Z_9Bas9rRB4cMibh@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="h5B6vUaP"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=IbjssDbDw4fbWENvdS0KvfimTbvuxyw7pTODQ6w8VYc=; b=h5B6vUaP9nBicHML0o1nO0GmeE
+	QzMSCqPyrmX9DLxlVDL3LivdmUQgcpIq4O+RD7ebNUEciFmiCZC4jeM9jadDJ7IG9C6y4TJEzcg7/
+	MjcSf2SS0f1+7yiPuyo0LBTtGFyP3oJuwU5sQ2mRNQyFmRG2JItfMzs/e7q7eYYKETvRdsvW1dBtm
+	AvhH92UUgWNkXR7ByxniOQAU0KPt0ABo0BimXR960R6Ekjng+6jZ69cJfqQ0muMk4kYPffdf/K5II
+	vtQAdzBTmhK4MR+3DVZi0u7xkKKiA7b7OwSiT4s+Zutd7pZ20ekSfIUkGx4VS1rlbMYd4pL7YyHkt
+	Tue3T6Sw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1u4vxh-00000008Mmg-3PR4;
+	Wed, 16 Apr 2025 06:09:29 +0000
+Date: Tue, 15 Apr 2025 23:09:29 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, fstests@vger.kernel.org,
+	ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
+	zlang@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v1] xfs: Fail remount with noattr2 on a v5 xfs with
+ CONFIG_XFS_SUPPORT_V4=y
+Message-ID: <Z_9JmaXJJVJFJ2Yl@infradead.org>
+References: <7c4202348f67788db55c7ec445cbe3f2d587daf2.1744394929.git.nirjhar.roy.lists@gmail.com>
+ <Z_yhpwBQz7Xs4WLI@infradead.org>
+ <0d1d7e6f-d2b9-4c38-9c8e-a25671b6380c@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <Z_9Bas9rRB4cMibh@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0d1d7e6f-d2b9-4c38-9c8e-a25671b6380c@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Apr 15, 2025 at 10:34:34PM -0700, Christoph Hellwig wrote:
-> On Mon, Apr 14, 2025 at 06:53:35PM +0200, Luca DiMaio wrote:
-> > This is a huge step ahead, but we still are facing some missing features/bugs:
-> > 
-> > - we lose the extended attributes of the files
-> > - we lose the original timestamps of files and directories
-> > 
-> > I see that the prototype specification does not include anything about
-> > those, are there plans to
-> > support xattrs and timestamps?
-> 
-> I don't think anyone has concrete plans to write this.  But patches
-> would be happily accepted.
+On Tue, Apr 15, 2025 at 12:48:39PM +0530, Nirjhar Roy (IBM) wrote:
+> condition(noattr2 on v5) is not caught in xfs_fs_validate_params() because
+> the superblock isn't read yet and "struct xfs_mount    *mp" is still not
+> aware of whether the underlying filesystem is v5 or v4 (i.e, whether crc=0
+> or crc=1). So, even if the underlying filesystem is v5, xfs_has_attr2() will
+> return false, because the m_features isn't populated yet.
 
-xattrs mostly work as of mkfs.xfs in 6.13.  If you have more than 64k
-worth of attr names (aka enough to break listxattr) then there will be
-problems.
+Yes.
 
---D
+> However, once
+> xfs_readsb() is done, m_features is populated (mp->m_features |=
+> xfs_sb_version_to_features(sbp); called at the end of xfs_readsb()). After
+> that, when xfs_finish_flags() is called, the invalid mount option (i.e,
+> noattr2 with crc=1) is caught, and the mount fails correctly. So, m_features
+> is partially populated while xfs_fs_validate_params() is getting executed, I
+> am not sure if that is done intentionally.
+
+As you pointed out above it can't be fully populated becaue we don't
+have all the information.  And that can't be fixed because some of the
+options are needed to even get to reading the superblock.
+
+So we do need a second pass of verification for everything that depends
+on informationtion from the superblock.  The fact that m_features
+mixes user options and on-disk feature bits is unfortunately not very
+helpful for a clear structure here.
+
