@@ -1,39 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EE101A2658
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 01:32:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4064A1A
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 04:35:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744767151; cv=none; b=QyyvMtA4OF60UmAvQEPjO+7Cm5EkedGk/Ppc0hH7pMcKnMaXMQ8hwhEfGsCg2ZS2FMhlfyj+rAAM5gL+fGOYWwnpKrg2nQP0s6CLQil93x7TWsgV1wdrQhT0FQPi+qIiN0WlozvK7AjPQbHr+Eau/mN4v8MvTQS8I+D5FGCUvRk=
+	t=1744778148; cv=none; b=T4eGTqxdyul7ScS95YGjlTvS9ES3dARwHmIeZh6qCqAzpRbC7f15Oj8YSUImrKkhDbdQ9lvDllDpxFJQYoYmz9lPYQc0vRqL3kzjr5nBP+JkLoE2d6BPxYybg2GN76+1uZp1qSNLuM5O5l9N5Y+vVhWyMDhLeVevgAMrNh4PGXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744767151; c=relaxed/simple;
-	bh=BvHVzMvlBv4RaPMh8O3iYLWw99ksh+o9StakOfyogf8=;
+	s=arc-20240116; t=1744778148; c=relaxed/simple;
+	bh=thjeOqVDdA7ZBfGvbdi9ihrqRNXivXwQI+1584Ldzic=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sO+P3c9ihvuM8PVokn/7vE0TzxtDKIWJ9Lxuy6YoHuoRKsfCmSe3kW6m1a2sC0qGs2/8Sup8tVTkKiZRPah4f1w6WmuSGGHezNu/vJcEYJ830+B/PRXoavSX8BzxeqrPWnkbi6O4HfslgEn9WSV4lBpFvTYfSgPCDbnXjxRfOe4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j3JGaUGV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZaU4uasSqWIMI0LRuIzmfQe9J1+biaLHj+bUreHv1qMAvnLXVVAqRmPanV0kHVMT4yXQmdGQkl1REjGkWD2RlPaqgxPXfhMwW6a5KhzR6NGaowvL8YRR2n0TwcRV3Cf2gPqNzZicmk4ZCKUbMaHjo3Jl/AR6nEcpjCEBZzBcYEA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QU9OWWqR; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j3JGaUGV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85051C4CEE7;
-	Wed, 16 Apr 2025 01:32:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744767150;
-	bh=BvHVzMvlBv4RaPMh8O3iYLWw99ksh+o9StakOfyogf8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j3JGaUGVLa8reRtKIhvCTwOGIH2Dm3ONEqDqCaRSO+ivVV1unvdiGw4dM7VN/PAyV
-	 oTpjpMZSdaoCDmTl/fqYtQUunptn4iEFK1ie9zopGWbYcDlnsHa7SkWzpErKHRUceT
-	 Xch2PT9YeX6xu394NRslm6EQAq/VKEbXx4WU3aJ7pxXvne6bT7ugYSt8M93wsKC04H
-	 kmsaUivMWqtgEYAF905fSUmsaVxZJrwHs427FZr581NlEEr29AaLwSLPbIdCM0shSy
-	 Mj9C+VN9t9914q7hW0om7V0PdjawAwPJ5hizdthhfuXrdBzik4QQxYM8M6Gz+PEooz
-	 TfKJylgCUqJGQ==
-Date: Tue, 15 Apr 2025 18:32:29 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: "user.mail" <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, aalbersh@kernel.org, bodonnel@redhat.com
-Subject: Re: [PATCH] xfs_repair: Bump link count if longform_dir2_rebuild
- yields shortform dir
-Message-ID: <20250416013229.GY25675@frogsfrogsfrogs>
-References: <20250415180923.264941-1-sandeen@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QU9OWWqR"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=B0WEbKQV4nC8vGcVBrnV61mUJmr28y9fYball3n6QXU=; b=QU9OWWqROwZ/XqeRX9NJxW9BCB
+	T25+Cy78e3Rs92eEo+Vmq9CQNLED+GNXkE/tz6OYekUJv5fNLmAn+xE7SDEF27U7afQmoM3Wpv4Fg
+	qm5kLELXkX2ltdHR4ZCcwiS+SG53gpquiaqbHcDIxNbAinitY4l5Xj+Jo6WBl7bbY27uO/tQHo0rf
+	HcquTuuy6QuwCcRXWCQJeHIJZzJLx1YZTmXXa60GgvyMZcJOcDZ37l+ulYLJQHsPuEjJCyHZEyQXb
+	Yr75hOwqCq56O8hZCjtT3MGrv+wa8vDJ9XKyiZCI1MLbfQzI9GKVJh3YgoGlCGkA9x3EsSDKdJg8J
+	rGP6UR+w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1u4uV0-00000008ADx-31pu;
+	Wed, 16 Apr 2025 04:35:46 +0000
+Date: Tue, 15 Apr 2025 21:35:46 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] mkfs: fix blkid probe API violations causing weird output
+Message-ID: <Z_8zojbPUQ69-hH7@infradead.org>
+References: <20250416012837.GW25675@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,69 +45,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250415180923.264941-1-sandeen@redhat.com>
+In-Reply-To: <20250416012837.GW25675@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Apr 15, 2025 at 01:09:23PM -0500, user.mail wrote:
-> From: Eric Sandeen <sandeen@redhat.com>
-> 
-> If longform_dir2_rebuild() has so few entries in *hashtab that it results
-> in a short form directory, bump the link count manually as shortform
-> directories have no explicit "." entry.
-> 
-> Without this, repair will end with i.e.:
-> 
-> resetting inode 131 nlinks from 2 to 1
-> 
-> in this case, because it thinks this directory inode only has 1 link
-> discovered, and then a 2nd repair will fix it:
-> 
-> resetting inode 131 nlinks from 1 to 2
-> 
-> because shortform_dir2_entry_check() explicitly adds the extra ref when
-> the (newly-created)shortform directory is checked:
-> 
->         /*
->          * no '.' entry in shortform dirs, just bump up ref count by 1
->          * '..' was already (or will be) accounted for and checked when
->          * the directory is reached or will be taken care of when the
->          * directory is moved to orphanage.
->          */
->         add_inode_ref(current_irec, current_ino_offset);
-> 
-> Avoid this by adding the extra ref if we convert from longform to
-> shortform.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: user.mail <sandeen@redhat.com>
+On Tue, Apr 15, 2025 at 06:28:37PM -0700, Darrick J. Wong wrote:
+> +	/* libblkid 2.38.1 lies and can return -EIO */
 
-Whoever this is  ^^^^^^^^^, the change makes sense to me. ;)
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Can you expand this comment be less terse using the wording in the
+commit message?  Otherwise looks good:
 
---D
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-> ---
->  repair/phase6.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index dbc090a5..8804278a 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1392,6 +1392,13 @@ _("name create failed in ino %" PRIu64 " (%d)\n"), ino, error);
->  _("name create failed (%d) during rebuild\n"), error);
->  	}
->  
-> +	/*
-> +	 * If we added too few entries to retain longform, add the extra
-> +	 * ref for . as this is now a shortform directory.
-> +	 */
-> +	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-> +		add_inode_ref(irec, ino_offset);
-> +
->  	return;
->  
->  out_bmap_cancel:
-> -- 
-> 2.49.0
-> 
-> 
+Did you also report the bug to util-linux so that it gets fixed there?
+
