@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2052DFA2D
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 05:21:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADD08228CA3
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Apr 2025 05:22:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744780895; cv=none; b=GZUvPnY50uxMmwmw/tn/0YYWy8Mq8iSjVTcD0fJ+ef96C4ohi6hen9t3OmBZvT+/RLo/xpMnfNFz1chPJE9W32U8xWW1spId4eWbMJ4KDzsL4z/HQ9zeHrJBjBao6Vk/WIMVZo9/De+Ph6sEDHnux/LZWhuA76TovFPav9xUN/g=
+	t=1744780972; cv=none; b=pLIb0sBjbo/wA0/Ktc/A3jD8h9EVogBxHUnyvUNBCv4F9pbNOL44PxXLpFEPhi+GclM5hIY7BzetQvnhlbiY22qYJymZHdBHzlSwFL4KMzdS4HQkOmY3rNpzFzIgJmx9GvjE9Vtoujern3bSK6rEDV9XTP5NWU1jYVuf7yD0vCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744780895; c=relaxed/simple;
-	bh=ZXsiTvVyMiQW3ImakhQ8aE7tYOCTsflQU9Hah7Kjzzs=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=eNz98xcWi2JMseqiX4EZ8dopfDx8eNlSq4yilgC7AZkQSZ+GH4+hT/bvBLoclpPOCpg/hLiePEwnTCTSNSsifLol04HmpALh+q59YZAOUrIaY8s67EUW6A3BbnNpUY9ybz6+WJsPuJgrstJtHvFABwG/TGrxSJRTM+iCGA26Nvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u2bNDkoB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744780972; c=relaxed/simple;
+	bh=dXZa/q3Pe5wtiv/8Io2NXxgh2yzpIobGU4yAoiJ9Q3Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gnkj8747hyNIL9A9MyFBCrKLKL0CmokOKxNCrcuyYOExrm/+r2pDStgQsHFqFdo+pspFw7EOzeXnKkSHW1YVS9RGb/OBVjgsVJq3pM70b2kWiKTN/9rvBUgIBK7GBrxRm7h1vpQX19f8BvC1uC+mPr2JHVGVslsN0pZrP18MCgA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WNvlAknC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u2bNDkoB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FCE0C4CEE2;
-	Wed, 16 Apr 2025 05:21:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WNvlAknC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A776C4CEE2;
+	Wed, 16 Apr 2025 05:22:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744780895;
-	bh=ZXsiTvVyMiQW3ImakhQ8aE7tYOCTsflQU9Hah7Kjzzs=;
-	h=Date:From:To:Cc:Subject:From;
-	b=u2bNDkoB8QYKgxAU0rk9FKZOkd/EEtHAPv0PASSgp5HhCsId9qSwT6KmRtvYgRU8+
-	 KUmt8GPj0DrHITtIq9pHiD8/k5bedGvqR3XIsRin58dpDmx8o0WWb8DpAzxV0T6mYs
-	 +Ce806MSjrnKP9zYjsCrXkQpB+pmcQrcZIez/2+mJ2LPqvLicN/5rSPPZc+zlQqtJ+
-	 iJoyo800YE08INFj5YFP7LTUhFX05JfczKC7937hRQ8Lj4yymHntQAfifYuzsQp9jP
-	 C0AhPa2CCt8Ea2cCK11zp5OvKlVQBHEm02tIdAjyzrmSwcU9FRltthAyfdXcMHbZ8E
-	 ZxxqmC+Dh9+CQ==
-Date: Tue, 15 Apr 2025 22:21:34 -0700
+	s=k20201202; t=1744780972;
+	bh=dXZa/q3Pe5wtiv/8Io2NXxgh2yzpIobGU4yAoiJ9Q3Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WNvlAknCf6tJesBZpH2YEfYtFtJlhTtxK4Krtzc4AT+kt2ten2BvZOWeqlAulZzGc
+	 FDKo+p1EYnrLHlH8u0GjgURATPh03FkgzwQ09Vyf9uyYTiwMzwGR9CgF3v2EmnMpNs
+	 5PvDM+G9fDya7S+2grxEDMT0W3i2ES2Ia06pxnJazjPrcLuDr9ju3xH6LUXq0rWYEQ
+	 QTud4FAsmwteei57nExAlciPe60wPkiu4H1RX/JNoEh1Xmgqjy8ipdOnK6JbTmDt2I
+	 QH2msuhyKZF5cu/Gv750gvaTGJUKjL0jNmVbL/PeB6pUhvMQYb6uKWr4XGcr6CYKm3
+	 NL3rpauF2faCA==
+Date: Tue, 15 Apr 2025 22:22:51 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/2] xfs_io: catch statx fields up to 6.15
-Message-ID: <20250416052134.GB25675@frogsfrogsfrogs>
+Subject: [PATCH 2/2] xfs_io: make statx mask parsing more generally useful
+Message-ID: <20250416052251.GC25675@frogsfrogsfrogs>
+References: <20250416052134.GB25675@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,93 +41,208 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20250416052134.GB25675@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add all the new statx fields that have accumulated for the past couple
-of years.
+Enhance the statx -m parsing to be more useful:
+
+Add words for all the new STATX_* field flags added in the previous
+patch.
+
+Allow "+" and "-" prefixes to add or remove flags from the mask.
+
+Allow multiple arguments to be specified as a comma separated list.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- io/statx.h            |   25 ++++++++++++++++++++++++-
- io/stat.c             |    5 +++++
- m4/package_libcdev.m4 |    2 +-
- 3 files changed, 30 insertions(+), 2 deletions(-)
+ io/stat.c         |  120 ++++++++++++++++++++++++++++++++++++++++++++++-------
+ man/man8/xfs_io.8 |   11 +++++
+ 2 files changed, 116 insertions(+), 15 deletions(-)
 
-diff --git a/io/statx.h b/io/statx.h
-index 347f6d08210f83..273644f53cf1c4 100644
---- a/io/statx.h
-+++ b/io/statx.h
-@@ -138,7 +138,10 @@ struct statx {
- 	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
- 	/* 0xb0 */
- 	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment count */
--	__u32   __spare1[1];
-+
-+	/* File offset alignment for direct I/O reads */
-+	__u32	stx_dio_read_offset_align;
-+
- 	/* 0xb8 */
- 	__u64	__spare3[9];	/* Spare space for future expansion */
- 	/* 0x100 */
-@@ -191,8 +194,28 @@ struct statx {
- 
- #endif /* STATX_TYPE */
- 
-+#ifndef STATX_MNT_ID
-+#define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
-+#endif
-+
-+#ifndef STATX_DIOALIGN
-+#define STATX_DIOALIGN		0x00002000U	/* Want/got direct I/O alignment info */
-+#endif
-+
-+#ifndef STATX_MNT_ID_UNIQUE
-+#define STATX_MNT_ID_UNIQUE	0x00004000U	/* Want/got extended stx_mount_id */
-+#endif
-+
-+#ifndef STATX_SUBVOL
-+#define STATX_SUBVOL		0x00008000U	/* Want/got stx_subvol */
-+#endif
-+
- #ifndef STATX_WRITE_ATOMIC
- #define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields */
- #endif
- 
-+#ifndef STATX_DIO_READ_ALIGN
-+#define STATX_DIO_READ_ALIGN	0x00020000U	/* Want/got dio read alignment info */
-+#endif
-+
- #endif /* XFS_IO_STATX_H */
 diff --git a/io/stat.c b/io/stat.c
-index d27f916800c00a..b37b1a12b8b2fd 100644
+index b37b1a12b8b2fd..ebc085845972c4 100644
 --- a/io/stat.c
 +++ b/io/stat.c
-@@ -365,9 +365,14 @@ dump_raw_statx(struct statx *stx)
- 	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
- 	printf("stat.dev_major = %u\n", stx->stx_dev_major);
- 	printf("stat.dev_minor = %u\n", stx->stx_dev_minor);
-+	printf("stat.mnt_id = 0x%llu\n", (unsigned long long)stx->stx_mnt_id);
-+	printf("stat.dio_mem_align = %u\n", stx->stx_dio_mem_align);
-+	printf("stat.dio_offset_align = %u\n", stx->stx_dio_offset_align);
-+	printf("stat.subvol = 0x%llu\n", (unsigned long long)stx->stx_subvol);
- 	printf("stat.atomic_write_unit_min = %u\n", stx->stx_atomic_write_unit_min);
- 	printf("stat.atomic_write_unit_max = %u\n", stx->stx_atomic_write_unit_max);
- 	printf("stat.atomic_write_segments_max = %u\n", stx->stx_atomic_write_segments_max);
-+	printf("stat.dio_read_offset_align = %u\n", stx->stx_dio_read_offset_align);
+@@ -321,10 +321,41 @@ _statx(
+ #endif
+ }
+ 
++struct statx_masks {
++	const char	*name;
++	unsigned int	mask;
++};
++
++static const struct statx_masks statx_masks[] = {
++	{"basic",		STATX_BASIC_STATS},
++	{"all",			STATX_ALL},
++
++	{"type",		STATX_TYPE},
++	{"mode",		STATX_MODE},
++	{"nlink",		STATX_NLINK},
++	{"uid",			STATX_UID},
++	{"gid",			STATX_GID},
++	{"atime",		STATX_ATIME},
++	{"mtime",		STATX_MTIME},
++	{"ctime",		STATX_CTIME},
++	{"ino",			STATX_INO},
++	{"size",		STATX_SIZE},
++	{"blocks",		STATX_BLOCKS},
++	{"btime",		STATX_BTIME},
++	{"mnt_id",		STATX_MNT_ID},
++	{"dioalign",		STATX_DIOALIGN},
++	{"mnt_id_unique",	STATX_MNT_ID_UNIQUE},
++	{"subvol",		STATX_SUBVOL},
++	{"write_atomic",	STATX_WRITE_ATOMIC},
++	{"dio_read_align",	STATX_DIO_READ_ALIGN},
++};
++
+ static void
+ statx_help(void)
+ {
+-        printf(_(
++	unsigned int	i;
++
++	printf(_(
+ "\n"
+ " Display extended file status.\n"
+ "\n"
+@@ -333,9 +364,16 @@ statx_help(void)
+ " -r -- Print raw statx structure fields\n"
+ " -m mask -- Specify the field mask for the statx call\n"
+ "            (can also be 'basic' or 'all'; default STATX_ALL)\n"
++" -m +mask -- Add this to the field mask for the statx call\n"
++" -m -mask -- Remove this from the field mask for the statx call\n"
+ " -D -- Don't sync attributes with the server\n"
+ " -F -- Force the attributes to be sync'd with the server\n"
+-"\n"));
++"\n"
++"statx mask values: "));
++
++	for (i = 0; i < ARRAY_SIZE(statx_masks); i++)
++		printf("%s%s", i == 0 ? "" : ", ", statx_masks[i].name);
++	printf("\n");
+ }
+ 
+ /* statx helper */
+@@ -376,6 +414,68 @@ dump_raw_statx(struct statx *stx)
  	return 0;
  }
  
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index af9da8124dbdc8..61353d0aa9d536 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -126,7 +126,7 @@ AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_POLICY_V2],
- AC_DEFUN([AC_NEED_INTERNAL_STATX],
-   [ AC_CHECK_TYPE(struct statx,
-       [
--        AC_CHECK_MEMBER(struct statx.stx_atomic_write_unit_min,
-+        AC_CHECK_MEMBER(struct statx.stx_dio_read_offset_align,
-           ,
-           need_internal_statx=yes,
-           [#include <linux/stat.h>]
++enum statx_mask_op {
++	SET,
++	REMOVE,
++	ADD,
++};
++
++static bool
++parse_statx_masks(
++	char			*optarg,
++	unsigned int		*caller_mask)
++{
++	char			*arg = optarg;
++	char			*word;
++	unsigned int		i;
++
++	while ((word = strtok(arg, ",")) != NULL) {
++		enum statx_mask_op op;
++		unsigned int	mask;
++		char		*p;
++
++		arg = NULL;
++
++		if (*word == '+') {
++			op = ADD;
++			word++;
++		} else if (*word == '-') {
++			op = REMOVE;
++			word++;
++		} else {
++			op = SET;
++		}
++
++		for (i = 0; i < ARRAY_SIZE(statx_masks); i++) {
++			if (!strcmp(statx_masks[i].name, word)) {
++				mask = statx_masks[i].mask;
++				goto process_op;
++			}
++		}
++
++		mask = strtoul(word, &p, 0);
++		if (!p || p == word) {
++			printf( _("non-numeric mask -- %s\n"), word);
++			return false;
++		}
++
++process_op:
++		switch (op) {
++		case ADD:
++			*caller_mask |= mask;
++			continue;
++		case REMOVE:
++			*caller_mask &= ~mask;
++			continue;
++		case SET:
++			*caller_mask = mask;
++			continue;
++		}
++	}
++
++	return true;
++}
++
+ /*
+  * options:
+  * 	- input flags - query type
+@@ -388,7 +488,6 @@ statx_f(
+ 	char		**argv)
+ {
+ 	int		c, verbose = 0, raw = 0;
+-	char		*p;
+ 	struct statx	stx;
+ 	int		atflag = 0;
+ 	unsigned int	mask = STATX_ALL;
+@@ -396,18 +495,9 @@ statx_f(
+ 	while ((c = getopt(argc, argv, "m:rvFD")) != EOF) {
+ 		switch (c) {
+ 		case 'm':
+-			if (strcmp(optarg, "basic") == 0)
+-				mask = STATX_BASIC_STATS;
+-			else if (strcmp(optarg, "all") == 0)
+-				mask = STATX_ALL;
+-			else {
+-				mask = strtoul(optarg, &p, 0);
+-				if (!p || p == optarg) {
+-					printf(
+-				_("non-numeric mask -- %s\n"), optarg);
+-					exitcode = 1;
+-					return 0;
+-				}
++			if (!parse_statx_masks(optarg, &mask)) {
++				exitcode = 1;
++				return 0;
+ 			}
+ 			break;
+ 		case 'r':
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 726e25af272242..0e8e69a1fe0c22 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -999,6 +999,17 @@ .SH FILE I/O COMMANDS
+ .B \-m <mask>
+ Specify a numeric field mask for the statx call.
+ .TP
++.BI "\-m +" value
++Add this value to the statx field value.
++Values can be numeric, or they can be words describing the desired fields.
++See the help command output for a list of recognized words.
++.TP
++.BI "\-m -" value
++Remove this value from the statx field value.
++.TP
++.BI "\-m +" value ",-" value
++Add and remove multiple values from the statx field value.
++.TP
+ .B \-F
+ Force the attributes to be synced with the server.
+ .TP
