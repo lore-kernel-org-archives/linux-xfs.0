@@ -1,40 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F589EAE7;
-	Thu, 17 Apr 2025 03:01:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33551E1DE8
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Apr 2025 06:24:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744858904; cv=none; b=dWKKMAlGZN9ekrcvPrk8e3L9f95wJkBX4Ydw4AJ5jsNBMFKs0u6XNuGiZrhYiEUxck852DPvCxd1cgdZkL9j4eioJULR4sL4/eIJZBq1bwofEOJT6Rj4XdqbyF+6K19a+uhsCtFMCRaf4jbyhbES/d0CdUmXeZO5/4gGZBlvvdo=
+	t=1744871097; cv=none; b=YDgmBdH/dmC5yHu1zuzd90i0oeP8neNzsbP2cwiuvv4E1CoaPMYCjAHSTdaKR9C+59bhtb7sO3ldLC8k3uTr01plyBpiYJ7pGuIVnzq2mrupbL/8W0t3OQnP8O9VXnSAE9n3QVRm7av9w3h4gleJJhfcBk8huVLrWuQ4TXwCdNQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744858904; c=relaxed/simple;
-	bh=YQ3n6r+nEiZ2nPmGKrTfCE32r2QocRbAL/UULZP0GUo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mPLEj2J9qnSb9lk81petzjUqoSVHCGwla5u5kLRzM89sjnXI1+9EvkpiytbeMEi0kJeeIG2dPey0boTdCGxv/DG8F6ou1oDCnokm/VSEKVXkmZ7/o4qjQhnOJJn15DA85OAyRAIDk8GAePYA4sedMz6jj4inFI/jT+bmhZrFiZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mbz6xsi3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744871097; c=relaxed/simple;
+	bh=oZjcXTJwbm7GboJYZclI3KBMzW/wdq+UoyX6CzQBVpY=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=Qel45ugwhjEHB80qUfaDxKoHQFzRIErFB3kSMvmJkmVsdiZUS6s4zD7Xae5r8xhQCa4oQ3nnUIQzxoPodh+5MNal7BI8koOYauHOOo4vTXX5y6vb3AXsu7HNoxM+X8WCNDI+JwNVwjDqCscYkG2RKGUfhf5mOKEf3PVdufGAEfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MbgW2pGa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mbz6xsi3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54942C4CEE2;
-	Thu, 17 Apr 2025 03:01:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MbgW2pGa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64370C4CEE4
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Apr 2025 06:24:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744858904;
-	bh=YQ3n6r+nEiZ2nPmGKrTfCE32r2QocRbAL/UULZP0GUo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Mbz6xsi3MB9Npu5oHVSzi5bd/Rw59mk1gAxsA6LXZv7s+UzZI1b43NheMod/exF/E
-	 p0G99l6XKS5QIPrs4SNl0ULGT5n+53zkA2dxI3yyfEiBRWgYbPEwRvoE0Cftxo9fVj
-	 sg0H5/ha3Aw2aybHnOV24+Vvy3Zlmpt/BQcs8nPsn5q/hQp451IwX9O117Mpn2qHgq
-	 9YZO2zu58UM5WRog5JSj7TSFx4YHgLVdaQ5fTShDLMN7TVrBVXSLXalasVD8CPq2TB
-	 sk7yU5MiE1LRTeCcEt1cziHyJXLioiwTH9gZF/oCxoGkQWjjxAGubvfYB+KCSxkkE8
-	 kaKKIBpoAR54g==
-Date: Wed, 16 Apr 2025 20:01:43 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [6.15-rc2 regression] xfs: null pointer in the dax fault code
-Message-ID: <20250417030143.GO25675@frogsfrogsfrogs>
-References: <20250416174358.GM25675@frogsfrogsfrogs>
- <aAAYK_Fl2U5CJBGB@dread.disaster.area>
+	s=k20201202; t=1744871097;
+	bh=oZjcXTJwbm7GboJYZclI3KBMzW/wdq+UoyX6CzQBVpY=;
+	h=Date:From:To:Subject:From;
+	b=MbgW2pGaa19+LCHKNRdmi+aWJND31il5Er453bfV1wPo6ScAK8Kx682zKnkQvdLDp
+	 E/zgewmuAOdY27qfGh8d8meuL4qKQvAmxk6B4cUuJD/muepfkqhOB22OEw4BjNEDSc
+	 XVDVHT2Ylf3XA4l8Pj1E0c2QTbtBs5ZHEPXnH86v8aiBG4oq4R70rdUr8skGMFZ+Wf
+	 bI/8r1BgfBe88AaGdmaqr419H3ro8WoOmqCwg22kql3adA46J3WPDXBDFzq7wKU84p
+	 vwsTsQ1MZ0bb5oUfDdf7TR4sxGA66y4izsrUWQHv5n3n1KBFpnhhuu+xx+YnaXT958
+	 /YuMS2DFF/FGw==
+Date: Thu, 17 Apr 2025 08:24:53 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to c7b67ddc3c99
+Message-ID: <q3uhofvkn2tykw3zaufd4sdlomy5ezctza5k75oijwrbnhzox3@j6roxm3jb7ra>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,30 +39,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aAAYK_Fl2U5CJBGB@dread.disaster.area>
 
-On Thu, Apr 17, 2025 at 06:50:51AM +1000, Dave Chinner wrote:
-> On Wed, Apr 16, 2025 at 10:43:58AM -0700, Darrick J. Wong wrote:
-> > Hi folks,
-> > 
-> > After upgrading to 6.15-rc2, I see the following crash in (I think?) the
-> > DAX code on xfs/593 (which is a fairly boring fsck test).
-> > 
-> > MKFS_OPTIONS=" -m metadir=1,autofsck=1,uquota,gquota,pquota, -d daxinherit=1,"
-> > MOUNT_OPTIONS=""
-> > 
-> > Any ideas?  Does this stack trace ring a bell for anyone?
-> 
-> That looks like the stack trace in this patch posted to -fsdevel a
-> week ago:
-> 
-> https://lore.kernel.org/linux-fsdevel/20250410091020.119116-1-david@redhat.com/
+Hi folks,
 
-Ah, thanks.  Will try that patch out.
---D
+The for-next branch of the xfs-linux repository at:
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+c7b67ddc3c99 xfs: document zoned rt specifics in admin-guide
+
+2 new commits:
+
+Darrick J. Wong (1):
+      [c6f1401b1d5f] xfs: fix fsmap for internal zoned devices
+
+Hans Holmberg (1):
+      [c7b67ddc3c99] xfs: document zoned rt specifics in admin-guide
+
+Code Diffstat:
+
+ Documentation/admin-guide/xfs.rst | 29 ++++++++++++++++++++++
+ fs/xfs/xfs_fsmap.c                | 51 +++++++++++++++++++++++++--------------
+ 2 files changed, 62 insertions(+), 18 deletions(-)
