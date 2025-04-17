@@ -1,303 +1,126 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B72861B4153
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Apr 2025 14:18:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54E525332B
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Apr 2025 15:00:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744899509; cv=none; b=DZViZgEGiz/fs/2nBeVYTOfQlYqEQNbo6VWo8O8CGff86/Z0f5fCey0tYgBxdED1tcJfm9oXHal2IYaVb/+KS89dnhj5sGG0QCbguKzN0S8GxpkQEUm/uIozq0P5JWhtMr1A3JnKp5cvlNouKKWHEcTwo3vrYAjihzmtHrEQt+U=
+	t=1744902006; cv=none; b=NeAZNYbBWrCdd1yVWyPf7GIHK2ITRrBCzkJIc6+B+cpeVoqSLeSdm/UR8MRLz5IQqBIvRAVIwesWkNtqHDMXK/FBswPRF18RDvkO4+bksj/hUnsoDpPl60xD/n4H9KfUWm1c84LkB5w0ffCCm4ZJMDW6MmCJD5UDNpAC3QKzPJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744899509; c=relaxed/simple;
-	bh=1vH17D1MqwjqSW5NC7lYfkm9APyTRx+H0tjZQCppT0w=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sVJRecFPeU+aJtWeiMypqpsL5lfFbppZA1nEzxJHvYRYdDAfd4VfZiLAHR/Id5viWjT032mueT7n4JtafFTc1vTOhmliFzIdY5gBTNuqT9A8otTe6xtmDRldF/7oTGkGzf4weboK8sZXxlvlkGwihbGqm1U6mbP9rDbr1B1Kx0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DgSTiLB3; arc=none smtp.client-ip=209.85.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1744902006; c=relaxed/simple;
+	bh=9JFUxCX2a7mrdtNgiHeqMGUEXZ7/MK+1Etr+Ef0gTlk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N/jif5445pIuu8W1o9KoshDz9Rl9BL1aBzKa0Zk549KBdAL3Xvlb0kGd2cNynzVfpk8Mzotwz7eyoD4J24ZIoy3OhLe3mGw4wXCxmwWFYIN1ryyDD/+7RtZB5QNJnjR67b4P9SbuvFKu3rhh2AGNXj+WR/qZ5fx83fk7M6Kxr8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N0tG3Rs3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DgSTiLB3"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-43d0618746bso6431115e9.2
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Apr 2025 07:18:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744899506; x=1745504306; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=YblWoH1T3bmI+TPu5AOkbbJVwR3KL1V/KFeBmsRSh9w=;
-        b=DgSTiLB3EIA2E0xL+8y+Ex0eY62pMYEQ/CidvinO4o8ZZLGO5u64fEt4Wp/operhy7
-         M3hz8wSbWTuaKWHCi4KQEcmoS3WdKAnWyUO6riLsthIUgwXirvgS8wVNTJWkR2uOwGUt
-         ACT2MsMinzsYgpUrv98wCP19aliiWCEPidlelxpGvcwoctEb+TkHnxuwUSi8T39Kv5gv
-         G5Qafy226RKTgASE5xvz37Xn+Hq0M4Rm6LByYgUVd0HbgzeUILmMklVKTpn5MwrcPHE8
-         vrcLEnR9wgDJP63L69RYwOg+0v7JZBtCByOZbBtZ/zuX6N+RydbZfE7395+x1A1zenHy
-         X2Tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744899506; x=1745504306;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=YblWoH1T3bmI+TPu5AOkbbJVwR3KL1V/KFeBmsRSh9w=;
-        b=rV1PFOyebbWSAK0p9Q2IxVQ4sGx5dSPSzwkO2t2NCoEnB5AQWjHsv0sAZY1UksHqZC
-         AwkhimjSrswj/B/fyEyRAMEMVZ/PzXxKZ2k7350GK9wWVioshGxBH0zpjss/E39aICl1
-         oASgrOGBoGgqns/vBpDdrxD1Nat3hVGFfsbG6zbyBqOvTawUzM6aYk3DiBQEdwvDQJjL
-         9w9R7k/ZjtnDl1Ud8WCClQX8U8RQMNDebuDurh7J34Q5J/3bN2hOwuMiwX5VTuJX++dJ
-         Z3o6JmGfQPdrVU5GU6WGnEC9o8Zq01MtXxQrjD9sZgqm7eu91DOSkgb0cD+MQXdfG4Zv
-         vdbw==
-X-Gm-Message-State: AOJu0YwiAyx3ao9lqa4sbQrQuVJjdMnyqmL94QE4ukndzMevBOrblIIk
-	8VPZ5FMkt4DC6+RVxKGMV1IPBL/kq09UrI0idOVjCxj0yo2n+4nHtOG1TAHu
-X-Gm-Gg: ASbGncv1RkaWYWWgTnkMRUXT5HkOWNkip1mZF2ChC329ijto2f9vVeWfOwWHW/IEl1H
-	RjJ0CIjN6dVvYLVbjK/bmTTby8LmNnPZUrwyCfLyAv3AWlrtM94tQ135frUQ2UF2Hc32fCHVgx2
-	l0H8qP3t6czhvLJJWTzTUZorbqCnZVGZot2NBboyIhf0yDKrJW2lMCETpM0fRK632+SrzXHUZ+e
-	TN8gda4ms2lTmjdktdzVKGrcS/FV0jEFkTs34j0/rs1CDUB8dH7/HwX8LMPLPsZ++KzoyZfHoCs
-	BoXHOZF2XDKGbKP7JBW1r8+Xvww/l5rD1JKnkW5SndUwFSA=
-X-Google-Smtp-Source: AGHT+IGoKVM6q/8/PXHMm41mFzU+0ZBGwPhVv8QhgiEVStFag6itvuLPk+szw85wJO97M78tX/BUog==
-X-Received: by 2002:a05:600c:1da5:b0:439:91dd:cf9c with SMTP id 5b1f17b1804b1-4405d624d60mr73331805e9.10.1744899505727;
-        Thu, 17 Apr 2025 07:18:25 -0700 (PDT)
-Received: from localhost.localdomain ([2a01:e11:3:1ff0:a52d:d3c8:a4ac:6651])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4404352a5f0sm56986665e9.1.2025.04.17.07.18.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Apr 2025 07:18:25 -0700 (PDT)
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
-	dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev,
-	djwong@kernel.org
-Subject: [PATCH RFC v2] proto: read origin directory from comment, copy timestamps from origin for inodes.
-Date: Thu, 17 Apr 2025 16:15:34 +0200
-Message-ID: <20250417141537.1932308-1-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N0tG3Rs3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EA82C4CEE4;
+	Thu, 17 Apr 2025 15:00:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744902005;
+	bh=9JFUxCX2a7mrdtNgiHeqMGUEXZ7/MK+1Etr+Ef0gTlk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=N0tG3Rs3iAX8+nYEYXbCqX7cjJYUUJBZo8AbZPe2ajyTlxZxHH1IMOnPTK10D2d6H
+	 bMp/OEWXLkir063S+jF3br4YpBcI9QeRA8fDz3THDH/4BpM0wsiZ4UkfL5tFebAjZD
+	 o4b3Wm5VFiw3Mt0hhua7UA9nKFGPowI21MTTp8X2065GeqXjeRKRoSk0QFu3wai33y
+	 iUNCzaDhShh+HCHK55yzZqnZSmEAl/xfdwis227hc6UF66zILf6MaMIr/+5Sky4Pr/
+	 lxhEdP1ZnDsiEz4pFy++7fT7K2+MmuvMsvDPms7CeFzd1TFHNG9dSNVpNJC7UiZUM0
+	 TaZlPJFzp1CzA==
+Date: Thu, 17 Apr 2025 08:00:04 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: David White <dr.white.nz@gmail.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: xfs_scrub_all.service
+Message-ID: <20250417150004.GP25675@frogsfrogsfrogs>
+References: <CAF9hJQszo5J=5NGuALdQW5iBrx+qB=nY__y3ae=k8P1JgbeUQg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAF9hJQszo5J=5NGuALdQW5iBrx+qB=nY__y3ae=k8P1JgbeUQg@mail.gmail.com>
 
-Right now, when populating a filesystem with the prototype file,
-generated inodes will have timestamps set at the creation time.
+On Thu, Apr 17, 2025 at 10:35:58AM +0100, David White wrote:
+> Hi there,
+> 
+> I'm on Ubuntu 24.10 which has a secondary mount xfs filesystem.
+> 
+> I have installed xfsprogs. Which installs a /usr/sbin/xfs_scrub_all
+> python script, and a systemd service and timer to run it. xfsprogs
+> version 6.8.0 (same on 6.9.0 built from source too)
+> 
+> However, looking at the code for xfs_scrub_all, it's broken. It fails
+> on a non-existent "debug" global, and the run_scrub thread target has
+> a call to path_to_serviceunit with a "path" parameter that doesn't
+> exist. (I'm assuming this is supposed to be "mnt")
 
-This change enables more accurate filesystem initialization by preserving
-original file timestamps during inode creation rather than defaulting to
-the current time.
+Yes, and both bugs were fixed in 6.10.
 
-This patch leverages the xfs_protofile "Descending path" comment in order to
-carry the reference to the original files for files other than regular ones.
+> I've disabled this service, (and the timer that runs it) and added it
+> to my system presets for future installs not to enable this unit.
+> 
+> What is going on here? What is the purpose?
 
-The origin path is parsed from the comments and only the first instance
-is registered.
+xfs_scrub_all schedules xfs_scrub@ services to run background online
+fsck of mounted XFS filesystems.  That said, xfs_scrub_all before
+xfsprogs 6.10 has some of serious bugs in it (as you note!).  Back in
+the 6.8 days days the kernel portion was not yet complete, and the
+userspace part didn't fully catch up until late last year.
 
-To do this, a little change to `parseproto()` has been made to keep
-track of the current_path each file is in, in order to reconstruct the
-original file path.
+The strange part is that none of that stuff should be active in the
+xfsprogs 6.8 package for Debian or Ubuntu, unless I seriously
+misunderstand what this line in debian/rules does:
 
-If the "Descending path" comment is not found, this will behave like the old
-implementation, old files not created by `xfs_protofile` tool will simply skip
-timestamp carry over.
+dh_installsystemd -p xfsprogs --no-enable --no-start --no-restart-after-upgrade --no-stop-on-upgrade
 
-[v1] -> [v2]
-- remove changes to protofile spec
-- ensure backward compatibility
+which (AFAIK) installs the units but does not enable or start any of
+them.  But I'm guessing it got activated on your system anyway?  From
+the postinst script of the package in question:
 
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
- mkfs/proto.c | 115 ++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 110 insertions(+), 5 deletions(-)
+https://mirrors.edge.kernel.org/ubuntu/pool/main/x/xfsprogs/xfsprogs_6.8.0-2.2ubuntu1_amd64.deb
 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 6dd3a20..50900a5 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -22,6 +22,7 @@ static int newregfile(char **pp, char **fname);
- static void rtinit(xfs_mount_t *mp);
- static long filesize(int fd);
- static int slashes_are_spaces;
-+static char *originpath = NULL;
+# Automatically added by dh_installsystemd/13.18ubuntu1
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if deb-systemd-helper debian-installed 'xfs_scrub_all.timer'; then
+		# The following line should be removed in trixie or trixie+1
+		deb-systemd-helper unmask 'xfs_scrub_all.timer' >/dev/null || true
 
- /*
-  * Use this for block reservations needed for mkfs's conditions
-@@ -142,6 +143,8 @@ getstr(
- 	char	*p;
- 	char	*rval;
+		if deb-systemd-helper --quiet was-enabled 'xfs_scrub_all.timer'; then
+			# Create new symlinks, if any.
+			deb-systemd-helper enable 'xfs_scrub_all.timer' >/dev/null || true
+		fi
+	fi
 
-+	static char comment[4096];
-+
- 	p = *pp;
- 	while ((c = *p)) {
- 		switch (c) {
-@@ -152,8 +155,35 @@ getstr(
- 			continue;
- 		case ':':
- 			p++;
--			while (*p++ != '\n')
--				;
-+
-+			// in case we didn't find the descending path yet, let's check
-+			// every comment in order to find it. If found, originpath will
-+			// not be empty and disable this behaviour for future comments.
-+			if (originpath == NULL) {
-+				int i = 0;
-+				while (*p != '\n' && *p != '\0' && i < sizeof(comment) - 1) {
-+					comment[i++] = *p++;
-+				}
-+				if (*p == '\n')
-+					p++;
-+
-+				comment[i] = '\0';
-+
-+				// Check if comment contains "Descending path"
-+				// we will use this information to refer to the original files
-+				// in order to copy over information like timestamps.
-+				char *path_pos = strstr(comment, "Descending path ");
-+				if (path_pos != NULL) {
-+					path_pos += strlen("Descending path ");
-+					// Found it - set our originpath
-+					originpath = strdup(path_pos);
-+				}
-+			} else {
-+				// we don't need to check for descending path anymore, skip
-+				// comments as old behaviour.
-+				while (*p++ != '\n')
-+					;
-+			}
- 			continue;
- 		default:
- 			rval = p;
-@@ -262,6 +292,55 @@ writesymlink(
- 	}
- }
+	# Update the statefile to add new symlinks (if any), which need to be cleaned
+	# up on purge. Also remove old symlinks.
+	deb-systemd-helper update-state 'xfs_scrub_all.timer' >/dev/null || true
+fi
 
-+static void
-+write_timestamps(
-+	struct xfs_inode	*ip,
-+	char *current_path,
-+	char *name)
-+{
-+	int error;
-+	struct stat statbuf;
-+	char *origin;
-+	size_t origin_len;
-+
-+	// ignore timestamps in case of old prototype files or undefined
-+	// descending directory
-+	if (originpath == NULL) {
-+		return;
-+	}
-+
-+	origin_len = strlen(originpath) + strlen(current_path) + strlen(name) + 3;
-+
-+	origin = malloc(origin_len);
-+	if (!origin) {
-+		fail(_("error allocating origin name buffer"), errno);
-+	}
-+
-+	snprintf(origin, origin_len, "%s/%s/%s", originpath, current_path, name);
-+	// here for symlinks we use lstat so that we don't follow the symlink.
-+	// we want the timestamp of the original symlink itself, not what it
-+	// points to.
-+	error = lstat(origin, &statbuf);
-+	if (error < 0) {
-+		fprintf(stderr, _("Warning: could not preserve timestamps for %s: %s\n"),
-+				origin, strerror(errno));
-+		free(origin);
-+		return;
-+	}
-+
-+	/* Copy timestamps from source file to destination inode */
-+	VFS_I(ip)->__i_atime.tv_sec = statbuf.st_atime;
-+	VFS_I(ip)->__i_mtime.tv_sec = statbuf.st_mtime;
-+	VFS_I(ip)->__i_ctime.tv_sec = statbuf.st_ctime;
-+	VFS_I(ip)->__i_atime.tv_nsec = statbuf.st_atim.tv_nsec;
-+	VFS_I(ip)->__i_mtime.tv_nsec = statbuf.st_mtim.tv_nsec;
-+	VFS_I(ip)->__i_ctime.tv_nsec = statbuf.st_ctim.tv_nsec;
-+
-+	free(origin);
-+	return;
-+}
-+
-+
- static void
- writefile_range(
- 	struct xfs_inode	*ip,
-@@ -658,7 +737,8 @@ parseproto(
- 	xfs_inode_t	*pip,
- 	struct fsxattr	*fsxp,
- 	char		**pp,
--	char		*name)
-+	char		*name,
-+	char		*current_path)
- {
- #define	IF_REGULAR	0
- #define	IF_RESERVED	1
-@@ -878,6 +958,7 @@ parseproto(
- 			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
- 		}
- 		newdirectory(mp, tp, ip, pip);
-+		write_timestamps(ip, current_path, name);
- 		libxfs_trans_log_inode(tp, ip, flags);
- 		error = -libxfs_trans_commit(tp);
- 		if (error)
-@@ -897,7 +978,24 @@ parseproto(
- 					error);
+From my reading, this only enables the timer (but doesn't start it!) if
+the debian system helper thought it was already enabled.
 
- 			rtinit(mp);
-+			name = "";
-+		}
-+
-+		char *path = NULL;
-+		if (current_path != NULL && name != NULL) {
-+			size_t path_len = strlen(current_path) +  (name ? strlen(name) : 0) + 2;
-+			path = malloc(path_len);
-+			if (!path) {
-+				fail(_("error allocating path name buffer"), errno);
-+			}
-+			snprintf(path, path_len, "%s/%s", current_path, name);
-+		} else if (name != NULL) {
-+			path = strdup(name);
-+			if (!path) {
-+				fail(_("error copying name into path buffer"), errno);
-+			}
- 		}
-+
- 		tp = NULL;
- 		for (;;) {
- 			name = getdirentname(pp);
-@@ -905,14 +1003,17 @@ parseproto(
- 				break;
- 			if (strcmp(name, "$") == 0)
- 				break;
--			parseproto(mp, ip, fsxp, pp, name);
-+			parseproto(mp, ip, fsxp, pp, name, path);
- 		}
- 		libxfs_irele(ip);
-+		if (path != NULL)
-+			free(path);
- 		return;
- 	default:
- 		ASSERT(0);
- 		fail(_("Unknown format"), EINVAL);
- 	}
-+	write_timestamps(ip, current_path, name);
- 	libxfs_trans_log_inode(tp, ip, flags);
- 	error = -libxfs_trans_commit(tp);
- 	if (error) {
-@@ -924,6 +1025,7 @@ parseproto(
- 	if (fmt == IF_REGULAR) {
- 		writefile(ip, fname, fd);
- 		writeattrs(ip, fname, fd);
-+		write_timestamps(ip, current_path, name);
- 		close(fd);
- 	}
- 	libxfs_irele(ip);
-@@ -937,7 +1039,10 @@ parse_proto(
- 	int		proto_slashes_are_spaces)
- {
- 	slashes_are_spaces = proto_slashes_are_spaces;
--	parseproto(mp, NULL, fsx, pp, NULL);
-+	parseproto(mp, NULL, fsx, pp, NULL, NULL);
-+
-+	if (originpath != NULL)
-+		free(originpath);
- }
+On a newer 6.13 package, the --no-enable and --no-start flags are gone,
+so postinst gets a new block:
 
- /* Create a sb-rooted metadata file. */
---
-2.49.0
+# Automatically added by dh_installsystemd/13.11.4
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+        if [ -z "${DPKG_ROOT:-}" ] && [ -d /run/systemd/system ]; then
+                systemctl --system daemon-reload >/dev/null || true
+                deb-systemd-invoke start 'system-xfs_healer.slice' 'system-xfs_scrub.slice' 'xfs_scrub_all.timer' >/dev/null || true
+        fi
+fi
+
+which actually starts it.  But this shouldn't have been started up on
+your system.
+
+<confused>
+
+--D
+
+> Thanks,
+> 
+> David.
+> 
