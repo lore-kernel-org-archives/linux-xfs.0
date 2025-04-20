@@ -1,321 +1,130 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8ABDA95C
-	for <linux-xfs@vger.kernel.org>; Sat, 19 Apr 2025 00:36:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3353513BC0E;
+	Sun, 20 Apr 2025 09:47:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745022978; cv=none; b=Y9RH+wMIbNOctf/sU4mCiHMm0y01Rh1F+lz9PwSy0MmoTLpH7EqO3KnTKdBAXR8KM4M5Sv1JOh/P3QHc1ljVCMf04T4/F6biQy2VhXpoW/Zovf4yowSfHU2/MaTyEnefnPTWEuEFoiUmosnD/DWAYyI8fMl7VJAFHP8Rw7cY/lE=
+	t=1745142427; cv=none; b=t7ntFSMi+GFbYmMqhH9Bn6jBmOZ13Q/deriz6cqiOuUlvw2v4mTZfWkAo7i4jLddYtBLa34e7DhX4CgrFQpqbZr7Fnqa7RSt12o52p2sYbJdgPzt6AkYKrVTf100VX2uczoTnoaHQ3KhfXLNgE/qblMYo2Xb4yXppYiLgplGBU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745022978; c=relaxed/simple;
-	bh=5Oz94ZtZhU9X35AGTUBJVFBce/4qzYAEafBb8u/GPgU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eaOvimu93d3Vb7gsWm0cHhMAfKtU0IIqGIP8gmYZ2Hd3s1UX2oJkqeOvhOAaIcsLwW81OMI9QrZXGznweUolPnZaPlMRSqP4UhsFR5OTh4sDs0/8LSkRb4M+C522vY8PXiSQigkgd1936YIzI4uOQuR8jwd+5u1LUjPzhepO90U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xdkz8hRL; arc=none smtp.client-ip=209.85.221.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+	s=arc-20240116; t=1745142427; c=relaxed/simple;
+	bh=/ZOqv278q2ZTXUneUVZ0jLxKfZSxoGlL/oJi7uf3QIs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rREb9MGE1R283j2t1yqahXFt4HdfAenu7QW5QontHXJBK+KJT9YF1VyrqukpAZS05v51Xj3JNKdSMguRFG3ld9IIfmE+PJskePICkiEBfnifjYHBpiPPSeDvNcJNCYe/tNqVsbbNilHGCqZRlYL8+0qGZ+5ujPA+k2Ton8ZGKKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QoHeC6iY; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xdkz8hRL"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-39ac56756f6so2373557f8f.2
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Apr 2025 17:36:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QoHeC6iY"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-224019ad9edso45380445ad.1;
+        Sun, 20 Apr 2025 02:47:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745022974; x=1745627774; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=GgQenMLBxCOc3DL7/R71vphNgJGIov97WJVX8jLjzg4=;
-        b=Xdkz8hRLGMrRYAO9YdnElnfWxNFFV+rlWVMSPKQ5VHpyFMAvRdR6vTwSxXK8IzsQLe
-         EDkqVHxHB/IxoWvxe+z4o103aoftqYiaIupzERH8J0/H67cXbAvP8Xi2FpucfLY+a7jh
-         l/gcuSjeGGroZtjAA0Btvo2fInNO+E+EjGw/QLIC9ScCReHsS4DPZa2Uc5fCbWErQKFP
-         aNZn8nUI6+9sJe8m4b5K0QJQ5VduKzyzW0VzZxKUarvZK+a/FKTPnR4X5ny/kuek0YYl
-         epXNwxrG9pefI2Bm98oVfzC71CJHTVQYaYZ8wxj0b+mMtLk7C1Wq3TMOJkNy8oa9uMeC
-         k+cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745022974; x=1745627774;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=gmail.com; s=20230601; t=1745142424; x=1745747224; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=GgQenMLBxCOc3DL7/R71vphNgJGIov97WJVX8jLjzg4=;
-        b=bI9O8Fb4uBe7AOd2LUQ7ihDQ1FiWRvYbzpUHMym3+ho4bN1GIAjZ42XySkGMUFTf9A
-         qB900OIe6zTUcykTafd1z5ELGRY7eObzu3LEX120FHh1pogbecGESdAtOJGPfsKur4Jp
-         pwJd2wAHXBZFM6mqRz9jWSOVb/5BFR0GsCMBEsl1Tfu+nutcr8NEhkPYph2YAG+SRHWS
-         sC1gtGIQyV3NG1Wf3MHc0AvVLYlfJQfb/KEW1vJPk9Bvm9auhGP3sDL/ia6v8V9DwW4H
-         gnAei3sEwjCbcY5LhOiS2bgJuSXXLTjLt3MJOwOmVls1bJ831PtDEOv6c3X7BV4FKHVb
-         3XpA==
-X-Gm-Message-State: AOJu0Yx1bZl12LmCOW30+uTIjfayh1NegYNzEkvLYOCG04JLXh6Dhdgy
-	dHjRfx4l8bKr289Zk/f0clVyKcIAen3ee2R9ThLhynqYdRgkXgFn69kVWg==
-X-Gm-Gg: ASbGnct2ZyI79Nof7fe3gp/ypCcQauQQEjdPHEDRnQMA8rAwF7PTEcAuWnYLbjOlHxx
-	48825lwMqv03+fuWwuum/VKNBbxE/Y5SAJQd7xrfEtcucMDvvznLAP0HgazzRp00gmIIuKJRS22
-	qtc1xYIN0t3kQnxmYHoKxM5eKZf5ZIohYpuYi9u47/lL1pWIolErCupwzM+owB2rTKVPlcjJrN6
-	dBaqHi8WvJiQ4ECEq4JdPHHfPnksjUuMRC2Ly5vDiI114tqWnska7RaFlgOyIjNbKDzpuDtQM4n
-	/DZAtOr3LW1q9GgvnKY8pQ==
-X-Google-Smtp-Source: AGHT+IFIBujxMph+p0o7i99fCgOlRWKpzQAE80U3+B9cTxzWevYvOzphxjKAaOHYZ6WVyIScKYJWnA==
-X-Received: by 2002:a05:6000:240c:b0:39c:1257:cc25 with SMTP id ffacd0b85a97d-39efbb0938emr3521567f8f.56.1745022973755;
-        Fri, 18 Apr 2025 17:36:13 -0700 (PDT)
-Received: from localhost.localdomain ([78.208.186.233])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4406d5a9ed9sm41504865e9.3.2025.04.18.17.36.12
+        bh=NwGjcfQn9dffbQqYDt/0oQtNjwiBuJchu3RJ+FcdXoA=;
+        b=QoHeC6iYVKTxGODd+WubtEhR9zaIe2wKeaHMGOtAZsG1z++15bc/EdO5AgMLDoJV0m
+         G9ZNSKidd8cW1K26KEMUZClDSvrCdrABZnCPPj4FeJm8WWRaq8SY9IS2NuYuYTRCYtKZ
+         DVLUXStk9/em48nRADLe26lRSFP6/0pBk3AWYmGVTSCCsSPMtUnrfA21EvyDLoBdEAdC
+         zpHV+T2MOktLloRfOpAQZRUVmmh07iiyTBk9nZH8LyIlqpWTV4yH/8ZquqCkkNuxjoyL
+         M88eKcJa6hjIlnjNUDLRo/rD4asxlTnXSnn/ceXeZhFATzonu+thQ28mMfQ21w/E/gvN
+         TsPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745142424; x=1745747224;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=NwGjcfQn9dffbQqYDt/0oQtNjwiBuJchu3RJ+FcdXoA=;
+        b=v6tdmRUdNbfwQOQAR1Fh9OVrZMV+17J9nAr0Ud4QrGwZdVaLZThhMcZG5v+VrX6+pc
+         hmBqabBuWGr5qWd9q1Z1NFUbwAGNxQx9fd4iFR6Ivi7SYccHnZBYt12yVUZ1a9ps2sAC
+         RPgDhJFmp4L8WLpwXmuex4Fi+uGLP6i2GyCCpzZxiIj2LQ8sYEFITJI76s6ArWFmEf/e
+         pPRwZa6wD/3GTY443wIrqbZjX3ebgSZNr00B2w9Ek8BSOv0XD1AdwHlfG/bfoNHd4Xhr
+         uj0THIUUL03dG/EAAjAbFWHX1JBTi9Pw170AnecSN49fzGMQU4E8vvFLcjNe6Uz9ra63
+         KopA==
+X-Forwarded-Encrypted: i=1; AJvYcCUoKYM14VaCSOt17HN7VgLUdpz+ULhn7aDR/8TD8WP9qDCJ5aFaCgA8B4Atay1m5fzYswoN0To+Z78E@vger.kernel.org, AJvYcCVEVeh3/wFF3DEG+KbG31lvEDkgj+ClQ47UpRREKwLDGVGOEmM8dEs1qwwFPlCCXYFU/GtJSLw7/+zLZF8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7kXUuUOpkVmR5PPmosPK5Kodacqf2/nLUnC60lhlYzLPhTPwe
+	GoPKAMNGfX1ix7KunJscqV/4P46GV9mGWZxK3S2miVj1jP+QHBRB
+X-Gm-Gg: ASbGncvirrBSLXDBy6l6tPff+6LM3diTq3DveCgQeIzGI6ZOgArb/zw5k/7eL9vDeLv
+	KvhfsR0klXCFzOgvb4SDigXbBzl9JR2nleZ6DeUp1VA140LxgTSVgyFMEtSjP78QjWvrudyxm1U
+	3W9DpYPViNwyUsX42qMaPk8jthRYWTEiWrxLDFZfNBysKYv3B3Dvr1VDgO7G5/qSCuZ/KeI+aYq
+	atIEg8SEhcJc1HoOJ+D/zxosHQxLRfF4USKwCwfBHN3KmbgKXc2x3xvzOrj06R0lvoz7neBS7Ug
+	D3j04//cHQ11SfyQifxLZQbUnOW+Nk7Wd/7OyFvlORy5kDQ1rq1Rlg==
+X-Google-Smtp-Source: AGHT+IHeKEE/UxATDdchD69yalqsOikmgiA+/+GRAMjf3xor5QEZatBPH41VBe8xcfbMzEZ7DedVgw==
+X-Received: by 2002:a17:902:ce84:b0:224:24d3:6103 with SMTP id d9443c01a7336-22c5361988bmr121198995ad.35.1745142424295;
+        Sun, 20 Apr 2025 02:47:04 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50bdb34fsm45831705ad.31.2025.04.20.02.47.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Apr 2025 17:36:13 -0700 (PDT)
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
-	dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev,
-	djwong@kernel.org
-Subject: [PATCH RFC v3] proto: read origin directory from comment, copy timestamps from origin for inodes.
-Date: Sat, 19 Apr 2025 02:36:07 +0200
-Message-ID: <20250419003607.171143-1-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.49.0
+        Sun, 20 Apr 2025 02:47:03 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date: Sun, 20 Apr 2025 02:47:02 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	"Darrick J . Wong" <djwong@kernel.org>, hch <hch@lst.de>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: add tunable threshold parameter for triggering zone
+ GC
+Message-ID: <476cf4b6-e3e6-4a64-a400-cc1f05ea44cc@roeck-us.net>
+References: <20250325091007.24070-1-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250325091007.24070-1-hans.holmberg@wdc.com>
 
-Right now, when populating a filesystem with the prototype file,
-generated inodes will have timestamps set at the creation time.
+On Tue, Mar 25, 2025 at 09:10:49AM +0000, Hans Holmberg wrote:
+> Presently we start garbage collection late - when we start running
+> out of free zones to backfill max_open_zones. This is a reasonable
+> default as it minimizes write amplification. The longer we wait,
+> the more blocks are invalidated and reclaim cost less in terms
+> of blocks to relocate.
+> 
+> Starting this late however introduces a risk of GC being outcompeted
+> by user writes. If GC can't keep up, user writes will be forced to
+> wait for free zones with high tail latencies as a result.
+> 
+> This is not a problem under normal circumstances, but if fragmentation
+> is bad and user write pressure is high (multiple full-throttle
+> writers) we will "bottom out" of free zones.
+> 
+> To mitigate this, introduce a zonegc_low_space tunable that lets the
+> user specify a percentage of how much of the unused space that GC
+> should keep available for writing. A high value will reclaim more of
+> the space occupied by unused blocks, creating a larger buffer against
+> write bursts.
+> 
+> This comes at a cost as write amplification is increased. To
+> illustrate this using a sample workload, setting zonegc_low_space to
+> 60% avoids high (500ms) max latencies while increasing write
+> amplification by 15%.
+> 
+...
+>  bool
+>  xfs_zoned_need_gc(
+>  	struct xfs_mount	*mp)
+>  {
+> +	s64			available, free;
+> +
+...
+> +
+> +	free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
+> +	if (available < mult_frac(free, mp->m_zonegc_low_space, 100))
+> +		return true;
+> +
 
-This change enables more accurate filesystem initialization by preserving
-original file timestamps during inode creation rather than defaulting to
-the current time.
+With some 32-bit builds (parisc, openrisc so far):
 
-This patch leverages the xfs_protofile "Descending path" comment in order to
-carry the reference to the original files for files other than regular ones.
+Error log:
+ERROR: modpost: "__divdi3" [fs/xfs/xfs.ko] undefined!
+ERROR: modpost: "__umoddi3" [fs/xfs/xfs.ko] undefined!
+ERROR: modpost: "__moddi3" [fs/xfs/xfs.ko] undefined!
+ERROR: modpost: "__udivdi3" [fs/xfs/xfs.ko] undefined!
 
-The origin path is parsed from the comments and only the first instance
-is registered.
-
-To do this, a little change to `parseproto()` has been made to keep
-track of the current_path each file is in, in order to reconstruct the
-original file path.
-
-If the "Descending path" comment is not found, this will behave like the old
-implementation, old files not created by `xfs_protofile` tool will simply skip
-timestamp carry over.
-
-[v1] -> [v2]
-- remove changes to protofile spec
-- ensure backward compatibility
-[v2] -> [v3]
-- use inode_set_[acm]time() as suggested
-- avoid copying atime and ctime
-  they are often problematic for reproducibility, and
-  mtime is the important information to preserve anyway
-
-
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
- mkfs/proto.c | 121 ++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 116 insertions(+), 5 deletions(-)
-
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 6dd3a20..df831c5 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -5,6 +5,7 @@
-  */
-
- #include "libxfs.h"
- #include <sys/stat.h>
- #include <sys/xattr.h>
- #include <linux/xattr.h>
-@@ -22,6 +23,7 @@ static int newregfile(char **pp, char **fname);
- static void rtinit(xfs_mount_t *mp);
- static long filesize(int fd);
- static int slashes_are_spaces;
-+static char *originpath = NULL;
-
- /*
-  * Use this for block reservations needed for mkfs's conditions
-@@ -142,6 +144,8 @@ getstr(
- 	char	*p;
- 	char	*rval;
-
-+	static char comment[4096];
-+
- 	p = *pp;
- 	while ((c = *p)) {
- 		switch (c) {
-@@ -152,8 +156,35 @@ getstr(
- 			continue;
- 		case ':':
- 			p++;
--			while (*p++ != '\n')
--				;
-+
-+			// in case we didn't find the descending path yet, let's check
-+			// every comment in order to find it. If found, originpath will
-+			// not be empty and disable this behaviour for future comments.
-+			if (originpath == NULL) {
-+				int i = 0;
-+				while (*p != '\n' && *p != '\0' && i < sizeof(comment) - 1) {
-+					comment[i++] = *p++;
-+				}
-+				if (*p == '\n')
-+					p++;
-+
-+				comment[i] = '\0';
-+
-+				// Check if comment contains "Descending path"
-+				// we will use this information to refer to the original files
-+				// in order to copy over information like timestamps.
-+				char *path_pos = strstr(comment, "Descending path ");
-+				if (path_pos != NULL) {
-+					path_pos += strlen("Descending path ");
-+					// Found it - set our originpath
-+					originpath = strdup(path_pos);
-+				}
-+			} else {
-+				// we don't need to check for descending path anymore, skip
-+				// comments as old behaviour.
-+				while (*p++ != '\n')
-+					;
-+			}
- 			continue;
- 		default:
- 			rval = p;
-@@ -262,6 +293,60 @@ writesymlink(
- 	}
- }
-
-+static void
-+write_timestamps(
-+	struct xfs_inode	*ip,
-+	char *current_path,
-+	char *name)
-+{
-+	int error;
-+	struct stat statbuf;
-+	struct timespec64 ts;
-+	char *origin;
-+	size_t origin_len;
-+
-+	// ignore timestamps in case of old prototype files or undefined
-+	// descending directory
-+	if (originpath == NULL) {
-+		return;
-+	}
-+
-+	origin_len = strlen(originpath) + strlen(current_path) + strlen(name) + 3;
-+	origin = malloc(origin_len);
-+	if (!origin) {
-+		fail(_("error allocating origin name buffer"), errno);
-+	}
-+	snprintf(origin, origin_len, "%s/%s/%s", originpath, current_path, name);
-+
-+	// here for symlinks we use lstat so that we don't follow the symlink.
-+	// we want the timestamp of the original symlink itself, not what it
-+	// points to.
-+	error = lstat(origin, &statbuf);
-+	if (error < 0) {
-+		fprintf(stderr, _("Warning: could not preserve timestamps for %s: %s\n"),
-+				origin, strerror(errno));
-+		free(origin);
-+		return;
-+	}
-+
-+	/* Copy timestamps from source file to destination inode.
-+	*  In order to not be influenced by our own access timestamp,
-+	*  we set atime and ctime to mtime of the source file.
-+	*  Usually reproducible archives will delete or not register
-+	*  atime and ctime, for example:
-+	*     https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
-+	**/
-+	ts.tv_sec = statbuf.st_mtime;
-+	ts.tv_nsec = statbuf.st_mtim.tv_nsec;
-+	inode_set_atime_to_ts(VFS_I(ip), ts);
-+	inode_set_ctime_to_ts(VFS_I(ip), ts);
-+	inode_set_mtime_to_ts(VFS_I(ip), ts);
-+
-+	free(origin);
-+	return;
-+}
-+
-+
- static void
- writefile_range(
- 	struct xfs_inode	*ip,
-@@ -658,7 +743,8 @@ parseproto(
- 	xfs_inode_t	*pip,
- 	struct fsxattr	*fsxp,
- 	char		**pp,
--	char		*name)
-+	char		*name,
-+	char		*current_path)
- {
- #define	IF_REGULAR	0
- #define	IF_RESERVED	1
-@@ -878,6 +964,7 @@ parseproto(
- 			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
- 		}
- 		newdirectory(mp, tp, ip, pip);
-+		write_timestamps(ip, current_path, name);
- 		libxfs_trans_log_inode(tp, ip, flags);
- 		error = -libxfs_trans_commit(tp);
- 		if (error)
-@@ -897,7 +984,24 @@ parseproto(
- 					error);
-
- 			rtinit(mp);
-+			name = "";
-+		}
-+
-+		char *path = NULL;
-+		if (current_path != NULL && name != NULL) {
-+			size_t path_len = strlen(current_path) + (name ? strlen(name) : 0) + 2;
-+			path = malloc(path_len);
-+			if (!path) {
-+				fail(_("error allocating path name buffer"), errno);
-+			}
-+			snprintf(path, path_len, "%s/%s", current_path, name);
-+		} else if (name != NULL) {
-+			path = strdup(name);
-+			if (!path) {
-+				fail(_("error copying name into path buffer"), errno);
-+			}
- 		}
-+
- 		tp = NULL;
- 		for (;;) {
- 			name = getdirentname(pp);
-@@ -905,14 +1009,17 @@ parseproto(
- 				break;
- 			if (strcmp(name, "$") == 0)
- 				break;
--			parseproto(mp, ip, fsxp, pp, name);
-+			parseproto(mp, ip, fsxp, pp, name, path);
- 		}
- 		libxfs_irele(ip);
-+		if (path != NULL)
-+			free(path);
- 		return;
- 	default:
- 		ASSERT(0);
- 		fail(_("Unknown format"), EINVAL);
- 	}
-+	write_timestamps(ip, current_path, name);
- 	libxfs_trans_log_inode(tp, ip, flags);
- 	error = -libxfs_trans_commit(tp);
- 	if (error) {
-@@ -924,6 +1031,7 @@ parseproto(
- 	if (fmt == IF_REGULAR) {
- 		writefile(ip, fname, fd);
- 		writeattrs(ip, fname, fd);
-+		write_timestamps(ip, current_path, name);
- 		close(fd);
- 	}
- 	libxfs_irele(ip);
-@@ -937,7 +1045,10 @@ parse_proto(
- 	int		proto_slashes_are_spaces)
- {
- 	slashes_are_spaces = proto_slashes_are_spaces;
--	parseproto(mp, NULL, fsx, pp, NULL);
-+	parseproto(mp, NULL, fsx, pp, NULL, NULL);
-+
-+	if (originpath != NULL)
-+		free(originpath);
- }
-
- /* Create a sb-rooted metadata file. */
---
-2.49.0
+Guenter
