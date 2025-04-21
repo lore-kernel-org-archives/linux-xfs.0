@@ -1,105 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055671E0E1A;
-	Mon, 21 Apr 2025 16:42:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 878D012F399;
+	Mon, 21 Apr 2025 17:18:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745253763; cv=none; b=Rbdtskl0lAehD5esrLw08Yx8IRWdL+3z8iAhFg9/eR7g1nHR+nzn2yZqFcUHnqQYkP2lv9vmFFeaAuPnSeLn8JvC9T7jeOJTXgChAp/52zMfFbdwMOm4oVsOjHPdJlMDHCEBi3fYcKsur/Nc0RZ63T3WasuvfmwYVheVSbkfh84=
+	t=1745255926; cv=none; b=IEmYIO+vU5wYfzjYi7wMRYhBftMGq3Pk4lmz1kxW4Zjryb0QjlSvEdyZCE2Vx79H3VqVRAi+wp99gzeynNH2RIAR7gjUwn7mLhEtpszDb5SqUrErnykSG2E4AjQqHWsvbNHFdy7qW3v4ciCujKuojU3vuyMtllHeZ+VY0sZpAt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745253763; c=relaxed/simple;
-	bh=m3m6glZ88p1UicyITupTeA+hfX/BSoFrF6K0y4udo00=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=scTSEiOuSm2l69WwFzw7QlH70NIVt/WlYE6DE5gmwc/QeAeFL8ql+3ZiHDiGITGMFS5OnCee/1v4qlfH8Dd3jXdAolC8hRKWm0FuEKPRNi1FWqEMSVHBUOsdNIdW/+91o4/b+/gddsfSCblRl8Vg+MWwIPqq8hHsy54SUiTpDrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FeKMtDRP; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745255926; c=relaxed/simple;
+	bh=KBpqboJ8Gn+3zVUiSvsVyY5nAHzGZOsNjfQ2V9DsXwo=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=Dd+G3LXXkdepTgxZg8AIwTGxyx17tABqAKGiJbRwEJXl1bUmNhE9PoWYwaxmPzM0aRW/JWiNkkM411FdFSsCl9wMLU93ZA3k0f1Ws250loZBDiUnEpGkHGC59DwdpijNIqBURjIOKpovbWU+MtGi7uaetfMy5YV0xBzwkm8ssN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FKAtipBQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FeKMtDRP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 661C9C4CEF0;
-	Mon, 21 Apr 2025 16:42:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FKAtipBQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9A0FC4CEE4;
+	Mon, 21 Apr 2025 17:18:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745253762;
-	bh=m3m6glZ88p1UicyITupTeA+hfX/BSoFrF6K0y4udo00=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FeKMtDRPmgXNmdhOA2xuD1QtibJmcPrU2MV3eJXwpFfhIQw+NCP/LjD+7WTJfTrLZ
-	 VyXdxSX6qP2Bb961hC0FJn3ZqerqqplYKwIhUnbAW8fLneHGm1lcA+vTlj4pmNBZhp
-	 +3EEg7d6NI6mryu6B9O8Cp7eFn12cu0iRgAAC+uFM1xIhY6Gv5A2BKlSC+bLkaWnoL
-	 PPoHHiDSmAJA6xr4IPmYwR3+nA69HxDAeJ93AMGLY+ERqa7oExNJXK+WjRWDZnXUFY
-	 /d3XLatgTugglsFLw5yzg2WQuJit58K9D3U1x89Z6fRLnAWYextGfQfV6KyM1lmGU2
-	 Lh0+VjqHWGzcA==
-Date: Mon, 21 Apr 2025 09:42:41 -0700
+	s=k20201202; t=1745255925;
+	bh=KBpqboJ8Gn+3zVUiSvsVyY5nAHzGZOsNjfQ2V9DsXwo=;
+	h=Date:Subject:From:To:Cc:From;
+	b=FKAtipBQTdNOrpbB/vbqQyPW0DLJjpH/uqXFC591R4ODN9VNm+BWQOKN54t9vbf8C
+	 gz7yegAo66p3+MOcOYGEov4qRe57UnoOi0rvUa2wN26h9AAep2CIFSDLlehYXjWpXe
+	 3GLLqJXaX0a8ttxH6oPVpm2tsxllkB2ThPhZTkSvMr0wkCjwjKHfUugLaLQoZlNgva
+	 9kqba3yPuVGAsM9BUKIv0wp3YA1PU7p2sblSl+MfquOlwz0UPo+Yq3Lluq7nqrKFaT
+	 bXNsiBI9YXUgRTdi3A5T7vZsAyJ92QU0Q3z0PkslI8XnI7gFV2yiuSvPygqrTYZP8+
+	 1jZZEFytxZr9g==
+Date: Mon, 21 Apr 2025 10:18:45 -0700
+Subject: [PATCHSET V2] block/xfs: bdev page cache bug fixes for 6.15
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: brauner@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk, jack@suse.cz,
-	cem@kernel.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH v7 11/14] xfs: add xfs_file_dio_write_atomic()
-Message-ID: <20250421164241.GD25700@frogsfrogsfrogs>
-References: <20250415121425.4146847-1-john.g.garry@oracle.com>
- <20250415121425.4146847-12-john.g.garry@oracle.com>
- <20250421040002.GU25675@frogsfrogsfrogs>
- <2467484b-382b-47c2-ae70-4a41d63cf4fc@oracle.com>
+To: djwong@kernel.org, cem@kernel.org, axboe@kernel.dk
+Cc: hch@lst.de, shinichiro.kawasaki@wdc.com, linux-mm@kvack.org,
+ mcgrof@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ willy@infradead.org, hch@infradead.org, linux-block@vger.kernel.org
+Message-ID: <174525589013.2138337.16473045486118778580.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2467484b-382b-47c2-ae70-4a41d63cf4fc@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Mon, Apr 21, 2025 at 06:47:44AM +0100, John Garry wrote:
-> On 21/04/2025 05:00, Darrick J. Wong wrote:
-> > > @@ -843,6 +909,8 @@ xfs_file_dio_write(
-> > >   		return xfs_file_dio_write_unaligned(ip, iocb, from);
-> > >   	if (xfs_is_zoned_inode(ip))
-> > >   		return xfs_file_dio_write_zoned(ip, iocb, from);
-> > What happens to an IOCB_ATOMIC write to a zoned file?  I think the
-> > ioend for an atomic write to a zoned file involves a similar change as
-> > an outofplace atomic write to a file (one big transaction to absorb
-> > all the mapping changes) but I don't think the zoned code quite does
-> > that...?
-> 
-> Correct. For now, I don't think that we should try to support zoned device
-> atomic writes. However we don't have proper checks for this. How about
-> adding a xfs_has_zoned() check in xfs_get_atomic_write_{min, max, opt}()?
+Hi all,
 
-Well it turns out that was a stupid question -- zoned=1 can't be enabled
-with reflink, which means there's no cow fallback so atomic writes just
-plain don't work:
+Here are a handful of bugfixes for 6.15.  The first patch fixes a race
+between set_blocksize and block device pagecache manipulation; the rest
+removes XFS' usage of set_blocksize since it's unnecessary.
 
-$ xfs_info /mnt
-meta-data=/dev/sda               isize=512    agcount=4, agsize=32768 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=1   metadir=1
-data     =                       bsize=4096   blocks=131072, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-log      =internal log           bsize=4096   blocks=16384, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =internal               extsz=4096   blocks=5061632, rtextents=5061632
-         =                       rgcount=78   rgsize=65536 extents
-         =                       zoned=1      start=131072 reserved=0
-$ xfs_io -c 'statx -r -m 0x10000' /mnt/a | grep atomic
-stat.atomic_write_unit_min = 0
-stat.atomic_write_unit_max = 0
-stat.atomic_write_segments_max = 0
-stat.atomic_write_unit_max_opt = 0
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-I /think/ all you'd have to do is create an xfs_zoned_end_atomic_io
-function that does what xfs_zoned_end_io but with a single
-tr_atomic_ioend transaction; figure out how to convey "this is an
-atomic out of place write" to xfs_end_ioend so that it knows to call
-xfs_zoned_end_atomic_io; and then update the xfs_get_atomic_write*
-helpers.
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
 --D
 
-> Thanks,
-> John
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bdev-fixes-6.15
+---
+Commits in this patchset:
+ * block: fix race between set_blocksize and read paths
+ * block: hoist block size validation code to a separate function
+ * xfs: stop using set_blocksize
+---
+ include/linux/blkdev.h |    1 +
+ block/bdev.c           |   50 ++++++++++++++++++++++++++++++++++++++++++------
+ block/blk-zoned.c      |    5 ++++-
+ block/fops.c           |   16 +++++++++++++++
+ block/ioctl.c          |    6 ++++++
+ fs/xfs/xfs_buf.c       |   15 +++++++++++---
+ 6 files changed, 82 insertions(+), 11 deletions(-)
+
