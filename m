@@ -1,174 +1,226 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 100A11339A4;
-	Sun, 20 Apr 2025 19:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D982518DB3D;
+	Mon, 21 Apr 2025 02:25:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745176418; cv=none; b=ZE4xj/b2dSNtADqZtHFRlKizpNLYTUY8NyuYildlTWdDUZT6WqPL0RD665PANS5KmwCKo3LI88fWOtIauO5QJhFNA54eQHmVNvHWTijBOWWdzR3Ah1mL5y2lImQgRHbk8kWtQmv4xxPOuw/zOoRbZ9/eaf2yXYL2NnPGWWmihKg=
+	t=1745202334; cv=none; b=a5zyugJDx8FK6giEINLYbYcqIwLNyqbipLufs/KoCcjKhx6ZAjr9vMLbJYYi47hvljs6qa9mkpHDzH+rfSc0BVr8NDubuF5fV9slTMCI4+waegryyntDmeYsA22XYHd04tGT+YSOrFwQq0yQEuaUKNXIJ55OJu6KSuoM2tuYp/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745176418; c=relaxed/simple;
-	bh=X59xWyT/2QbDYKXuHX0SkqVkNTn7Ewn0C2l+CiGhRlQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=N702W5SJ1HbQ7l7V3GK6dsjqk1+BaTbDffgcPSvaCcV/z5gOIY+Fxa1E58egDLVCMBpNWMoYaXolOZX0X+LH5McL7EA5Oma/KfV0GdbP5HzeEw9pX5UspMcHC4yQfHgy8zwxd4GUMCRFz0wrXHrI+0/hpC+dmtt39il5/qI/2G8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fJFvyRl8; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fJFvyRl8"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-227a8cdd241so39457355ad.3;
-        Sun, 20 Apr 2025 12:13:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745176416; x=1745781216; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=PNtyNtmvqoYh9yIpyUA84n2PvEa0SO3qvGnA2RahKBU=;
-        b=fJFvyRl87ORoEuuxiy81LYNdxkMJzEUc/iNJseWc26045gfsSGWRlNpVaxBPcMCHvc
-         kJROs9o10Q3KRExH6tE1OK/Rl3x+OyL0OddXVVDmj0c9lnYb1wgUwdp86xhwbV1HQHmx
-         9KzoB8kQpY0THVVuoTFLwsVztuM0xY1Jcz4KQ++/va+GhIboEe+7L+xKBwiLj2s7Npbi
-         4yulug2iWJlMLrt7/j5TBkJ3KNsVvBZtIF4Uy8cHn+38sMPYAPPXH1+/l0ryhf8aPToT
-         Qvt98m93PslzH9f1V0X8SYdMteKr9ELN88c+QV6biqLE6htYUZTM1JHYRU2Z7WzmO3jY
-         oTNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745176416; x=1745781216;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PNtyNtmvqoYh9yIpyUA84n2PvEa0SO3qvGnA2RahKBU=;
-        b=UxV3cZX0bcbOdrn88wMpNAaSOSvFZytyEGof0c+GtzuZON79Eg+VbOIL9UnPhKR8uh
-         4SDvM4NR8wmCGtxeMQthELpHsbb/VvoVxVORYfLbm7C11O7WXL5f+NZd+60ylp2vXInu
-         DQyzg3Vcfu78GcgwRNPyXN22k+4i+3Uwc4nwnCxyYe5+77iKOWoleau2yAdAU85F+R5N
-         etSmGwhQdXP8EK/augDTmAJKma9v60MF2oveb0pgaUO07HTW2jWDxg0CDkWcdAZSe+Bl
-         jw2JtuYOS9r6u+zfrFCGgpkRZcxYg9aInxyu/hC/6s/HbRhVQo+4paRiWVcRPDHJsyUg
-         VfUw==
-X-Forwarded-Encrypted: i=1; AJvYcCUtVjP8VWQsqDK060zORG9Nb8gHruqivtFmhI3zvXmSrFrC5dYS4XnNVJg3m5sIkPz8Jcbn5VAyyXm6Tqg=@vger.kernel.org, AJvYcCWXPu0yH6Sl5GRDcwwrWVSkyNMG9yioK8kYuaxHP/DrxOGoeaAOBuEGA2hPY1LhzMeR0SPf8MHE3uwJ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxo+tQRYDkOb5Fe6tZZJLUhGZv8cgwMMvFcTEc5bzkTgfYJPeV1
-	kcSOcj6NIvT3+EWjChQmsFHA1NP517OxZOl6zrU5tkjdHLlXDBVK
-X-Gm-Gg: ASbGncsWTzuEYSt/HAjzB5d5l9WNyo9LbGw1FgubKGf+zg3a0IWx1t/Y14mVlYUPxfU
-	x15SX0HzsK6/uhLpZ6ulTlcyEkIK0Hx5UMwmUPVbeuzkHRcQMFA++1ErP1RmeeC1mbBBi55mUXh
-	WH/W7fnV12ns+m6qr7uGNsOV3n0fpPOjuCHnfx+mypVoL8nDyUhUlN/tOrpbT9cpLKTO0y9MCrf
-	ueDM/MBG4PouWoLeNav+9IkMrfgCVA38yW8qa3OA9E415UxmuuF4bEIyF2WV16Hz5N84yuClTEl
-	8nyR6hf88D2TKOdES4IsnSj5iP+64w+17j7T2SpuvwBVR5Xe/lZ7OA1PnZPUqM5idOGehBUS6Xf
-	bPC3dWpgRMr6wqg==
-X-Google-Smtp-Source: AGHT+IHbOdWVxK5XXjXKzZV7sUIFOdfyWAO7/8gqdRhaaDbg5NYpY+ZEjpaZzYsfbq6f0RTAecu5Kg==
-X-Received: by 2002:a17:902:e5cf:b0:220:d078:eb33 with SMTP id d9443c01a7336-22c536195bdmr139634715ad.36.1745176416253;
-        Sun, 20 Apr 2025 12:13:36 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50fdba54sm51032705ad.233.2025.04.20.12.13.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 20 Apr 2025 12:13:35 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <67c0a5f9-3349-4910-85f9-a017b6499dd3@roeck-us.net>
-Date: Sun, 20 Apr 2025 12:13:34 -0700
+	s=arc-20240116; t=1745202334; c=relaxed/simple;
+	bh=d8NKu11c0L/6hqcAgEPl8hg1PgWhSyhd6iLgSLVkYnU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=QY+M6q9f2PxqBNVwJ0Tj33XrYeXuiG+qG9p0E7nL+rJkM9ijbwb+2tXsBK5zkTY7xab7FYsQwYzfULbG0ZLFUl41UA5mk6s7eZaRrwa+1rctDFdqMF8M/bZGfn5yuImWfsVBeWymmbZgX3qfVOD3UDV72tKNxRGfIEgWs3noFk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Zgq2l12ypz4f3mHR;
+	Mon, 21 Apr 2025 10:25:03 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 839BD1A058E;
+	Mon, 21 Apr 2025 10:25:28 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.112.188])
+	by APP4 (Coremail) with SMTP id gCh0CgA3m1+MrAVoFxZkKA--.3102S5;
+	Mon, 21 Apr 2025 10:25:28 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	hch@lst.de,
+	tytso@mit.edu,
+	djwong@kernel.org,
+	john.g.garry@oracle.com,
+	bmarzins@redhat.com,
+	chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com,
+	yangerkun@huawei.com
+Subject: [RFC PATCH v4 01/11] block: introduce BLK_FEAT_WRITE_ZEROES_UNMAP to queue limits features
+Date: Mon, 21 Apr 2025 10:14:59 +0800
+Message-ID: <20250421021509.2366003-2-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.46.1
+In-Reply-To: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: add tunable threshold parameter for triggering zone
- GC
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Hans Holmberg <Hans.Holmberg@wdc.com>, Dave Chinner
- <david@fromorbit.com>, "Darrick J . Wong" <djwong@kernel.org>,
- hch <hch@lst.de>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20250325091007.24070-1-hans.holmberg@wdc.com>
- <iB7R4jpT-AaCUfizQ4YDpmyoSwGWmjJCdGfIRdvTE76nG3sPcUxeHgwVOgS5vFYV0DCeR1L5EINLppSGbgC3gg==@protonmail.internalid>
- <476cf4b6-e3e6-4a64-a400-cc1f05ea44cc@roeck-us.net>
- <mt3tlttnxheypljdkyy6bpjfkb7n5pm2w35wuf7bsma3btwnua@a3zljdrqqaq7>
- <CGBuRmwlHYtQLQhMGGNldfbkiOB6TFkyzyKlWXmQIED91j9O6JH1391_9nwxfIiZibfKL2vK6r25kNZcS4RdAQ==@protonmail.internalid>
- <e5ccf0d5-a757-4d1b-84b9-36a5f02e117c@roeck-us.net>
- <wpblwpuv6fbfqndbxi7y352axtykhevyqpg67d4q2eepogon7j@2hjqvzrzzknb>
-Content-Language: en-US
-From: Guenter Roeck <linux@roeck-us.net>
-Autocrypt: addr=linux@roeck-us.net; keydata=
- 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
- mDW4+i+XlNFUPUYMrIKi9joBhu18ssf5i5Q=
-In-Reply-To: <wpblwpuv6fbfqndbxi7y352axtykhevyqpg67d4q2eepogon7j@2hjqvzrzzknb>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgA3m1+MrAVoFxZkKA--.3102S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxKF45JFW3uw4rCFWDAw1rXrb_yoWxWr1kpF
+	y8KFyUtry0gF17u3Z7A3W7uF1a939Ykry3G39Fkw1ruw42gr1xWF1vqFyYq348J3s3Way0
+	qa1UKr98uayUCrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0pRlJPiUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 4/20/25 11:07, Carlos Maiolino wrote:
-...
->>
->> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
->> index 8c541ca71872..6dde2a680e75 100644
->> --- a/fs/xfs/xfs_zone_gc.c
->> +++ b/fs/xfs/xfs_zone_gc.c
->> @@ -170,7 +170,7 @@ bool
->>    xfs_zoned_need_gc(
->>           struct xfs_mount        *mp)
->>    {
->> -       s64                     available, free;
->> +       u64                     available, free, rem;
->>
->>           if (!xfs_group_marked(mp, XG_TYPE_RTG, XFS_RTG_RECLAIMABLE))
->>                   return false;
->> @@ -183,7 +183,12 @@ xfs_zoned_need_gc(
->>                   return true;
->>
->>           free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
->> -       if (available < mult_frac(free, mp->m_zonegc_low_space, 100))
->> +
->> +       rem = do_div(free, 100);
->> +       free = free * mp->m_zonegc_low_space +
->> +               div_u64(rem * mp->m_zonegc_low_space, 100);
->> +
->> +       if (available < free)
->>                   return true;
-> 
-> You're essentially open coding mult_frac(), if we can get mult_frac() to work
-> on 64-bit too (or add a 64-bit version), that seems a better generic solution.
-> 
+From: Zhang Yi <yi.zhang@huawei.com>
 
-Yes, I know. Problem is that getting more than one maintainer involved tends to make
-it exponentially more difficult to get anything accepted. With that in mind, I prefer
-open coded solutions like the one I suggested above. A generic solution is then still
-possible, but it is disconnected from solving the immediate problem.
+Currently, disks primarily implement the write zeroes command (aka
+REQ_OP_WRITE_ZEROES) through two mechanisms: the first involves
+physically writing zeros to the disk media (e.g., HDDs), while the
+second performs an unmap operation on the logical blocks, effectively
+putting them into a deallocated state (e.g., SSDs). The first method is
+generally slow, while the second method is typically very fast.
 
-Guenter
+For example, on certain NVMe SSDs that support NVME_NS_DEAC, submitting
+REQ_OP_WRITE_ZEROES requests with the NVME_WZ_DEAC bit can accelerate
+the write zeros operation by placing disk blocks into a deallocated
+state (this is a best effort, not a mandatory requirement, some devices
+may partially fall back to writing physical zeroes due to factors such
+as receiving unaligned commands). However, it is difficult to determine
+whether the storage device supports unmap write zeroes. We cannot
+determine this by querying bdev_limits(bdev)->max_write_zeroes_sectors.
+
+Therefore, add a new queue limit feature, BLK_FEAT_WRITE_ZEROES_UNMAP
+and the corresponding sysfs entry, to indicate whether the block device
+explicitly supports the unmapped write zeroes command. Each device
+driver should set this bit if it is certain that the attached disk
+supports this command. If the bit is not set, the disk either does not
+support it, or its support status is unknown.
+
+For the stacked devices cases, the BLK_FEAT_WRITE_ZEROES_UNMAP should be
+supported both by the stacking driver and all underlying devices.
+
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+ Documentation/ABI/stable/sysfs-block | 18 ++++++++++++++++++
+ block/blk-settings.c                 |  6 ++++++
+ block/blk-sysfs.c                    |  3 +++
+ include/linux/blkdev.h               |  8 ++++++++
+ 4 files changed, 35 insertions(+)
+
+diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/stable/sysfs-block
+index 3879963f0f01..6531cdfcaacf 100644
+--- a/Documentation/ABI/stable/sysfs-block
++++ b/Documentation/ABI/stable/sysfs-block
+@@ -763,6 +763,24 @@ Description:
+ 		0, write zeroes is not supported by the device.
+ 
+ 
++What:		/sys/block/<disk>/queue/write_zeroes_unmap
++Date:		January 2025
++Contact:	Zhang Yi <yi.zhang@huawei.com>
++Description:
++		[RO] Devices that explicitly support the unmap write zeroes
++		operation in which a single write zeroes request with the unmap
++		bit set to zero out the range of contiguous blocks on storage
++		by freeing blocks, rather than writing physical zeroes to the
++		media. If the write_zeroes_unmap is set to 1, this indicates
++		that the device explicitly supports the write zero command.
++		However, this may be a best-effort optimization rather than a
++		mandatory requirement, some devices may partially fall back to
++		writing physical zeroes due to factors such as receiving
++		unaligned commands. If the parameter is set to 0, the device
++		either does not support this operation, or its support status is
++		unknown.
++
++
+ What:		/sys/block/<disk>/queue/zone_append_max_bytes
+ Date:		May 2020
+ Contact:	linux-block@vger.kernel.org
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 6b2dbe645d23..3331d07bd5d9 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -697,6 +697,8 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 		t->features &= ~BLK_FEAT_NOWAIT;
+ 	if (!(b->features & BLK_FEAT_POLL))
+ 		t->features &= ~BLK_FEAT_POLL;
++	if (!(b->features & BLK_FEAT_WRITE_ZEROES_UNMAP))
++		t->features &= ~BLK_FEAT_WRITE_ZEROES_UNMAP;
+ 
+ 	t->flags |= (b->flags & BLK_FLAG_MISALIGNED);
+ 
+@@ -819,6 +821,10 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 		t->zone_write_granularity = 0;
+ 		t->max_zone_append_sectors = 0;
+ 	}
++
++	if (!t->max_write_zeroes_sectors)
++		t->features &= ~BLK_FEAT_WRITE_ZEROES_UNMAP;
++
+ 	blk_stack_atomic_writes_limits(t, b, start);
+ 
+ 	return ret;
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index a2882751f0d2..7a9c20bd3779 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -261,6 +261,7 @@ static ssize_t queue_##_name##_show(struct gendisk *disk, char *page)	\
+ 
+ QUEUE_SYSFS_FEATURE_SHOW(fua, BLK_FEAT_FUA);
+ QUEUE_SYSFS_FEATURE_SHOW(dax, BLK_FEAT_DAX);
++QUEUE_SYSFS_FEATURE_SHOW(write_zeroes_unmap, BLK_FEAT_WRITE_ZEROES_UNMAP);
+ 
+ static ssize_t queue_poll_show(struct gendisk *disk, char *page)
+ {
+@@ -510,6 +511,7 @@ QUEUE_LIM_RO_ENTRY(queue_atomic_write_unit_min, "atomic_write_unit_min_bytes");
+ 
+ QUEUE_RO_ENTRY(queue_write_same_max, "write_same_max_bytes");
+ QUEUE_LIM_RO_ENTRY(queue_max_write_zeroes_sectors, "write_zeroes_max_bytes");
++QUEUE_LIM_RO_ENTRY(queue_write_zeroes_unmap, "write_zeroes_unmap");
+ QUEUE_LIM_RO_ENTRY(queue_max_zone_append_sectors, "zone_append_max_bytes");
+ QUEUE_LIM_RO_ENTRY(queue_zone_write_granularity, "zone_write_granularity");
+ 
+@@ -656,6 +658,7 @@ static struct attribute *queue_attrs[] = {
+ 	&queue_atomic_write_unit_min_entry.attr,
+ 	&queue_atomic_write_unit_max_entry.attr,
+ 	&queue_max_write_zeroes_sectors_entry.attr,
++	&queue_write_zeroes_unmap_entry.attr,
+ 	&queue_max_zone_append_sectors_entry.attr,
+ 	&queue_zone_write_granularity_entry.attr,
+ 	&queue_rotational_entry.attr,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e39c45bc0a97..7c8752578e36 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -342,6 +342,9 @@ typedef unsigned int __bitwise blk_features_t;
+ #define BLK_FEAT_ATOMIC_WRITES \
+ 	((__force blk_features_t)(1u << 16))
+ 
++/* supports unmap write zeroes command */
++#define BLK_FEAT_WRITE_ZEROES_UNMAP	((__force blk_features_t)(1u << 17))
++
+ /*
+  * Flags automatically inherited when stacking limits.
+  */
+@@ -1341,6 +1344,11 @@ static inline unsigned int bdev_write_zeroes_sectors(struct block_device *bdev)
+ 	return bdev_limits(bdev)->max_write_zeroes_sectors;
+ }
+ 
++static inline bool bdev_write_zeroes_unmap(struct block_device *bdev)
++{
++	return bdev_limits(bdev)->features & BLK_FEAT_WRITE_ZEROES_UNMAP;
++}
++
+ static inline bool bdev_nonrot(struct block_device *bdev)
+ {
+ 	return blk_queue_nonrot(bdev_get_queue(bdev));
+-- 
+2.46.1
 
