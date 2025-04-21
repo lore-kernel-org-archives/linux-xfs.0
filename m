@@ -1,154 +1,105 @@
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 150231DF991;
-	Mon, 21 Apr 2025 13:41:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055671E0E1A;
+	Mon, 21 Apr 2025 16:42:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745242907; cv=none; b=LHgrW1hl4107wWpxPaj9F4g2vlFPPGmzSiF96sTpBLFaBoRhbnWTxJ8WWKOw5BVpTMb4CJwkgMFtFK0rdAOj57a2DX96q5x14739lZC3THlj6rqLjJrduF/uel4TfwjtOdoXQ/OgybS5A2t6ST/qs5L2qXSOGLYdnYFZ3cB1Bto=
+	t=1745253763; cv=none; b=Rbdtskl0lAehD5esrLw08Yx8IRWdL+3z8iAhFg9/eR7g1nHR+nzn2yZqFcUHnqQYkP2lv9vmFFeaAuPnSeLn8JvC9T7jeOJTXgChAp/52zMfFbdwMOm4oVsOjHPdJlMDHCEBi3fYcKsur/Nc0RZ63T3WasuvfmwYVheVSbkfh84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745242907; c=relaxed/simple;
-	bh=3ZCFAI/4+bl+AZdTOM6dCisJV6nIVMfQ5cjhCxYa928=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Kp0HQGUam0OUk3d5R/GKBdHmHiNIzJMC7ImGuFGQs7fMzgrC7qrMvG/VDeam8iB06NJXrJyf+0BtFY7uOf00pNTZh9H0C1tz1HKhgSO+X4RjMO+tUYZMvLSuFaYL1G2phFlU237H0+qhOBOWZ4JXx3QzzI2C5YF5mJ1mp2RoStU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O8BVHCfJ; arc=none smtp.client-ip=209.85.216.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1745253763; c=relaxed/simple;
+	bh=m3m6glZ88p1UicyITupTeA+hfX/BSoFrF6K0y4udo00=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=scTSEiOuSm2l69WwFzw7QlH70NIVt/WlYE6DE5gmwc/QeAeFL8ql+3ZiHDiGITGMFS5OnCee/1v4qlfH8Dd3jXdAolC8hRKWm0FuEKPRNi1FWqEMSVHBUOsdNIdW/+91o4/b+/gddsfSCblRl8Vg+MWwIPqq8hHsy54SUiTpDrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FeKMtDRP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O8BVHCfJ"
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-308702998fbso3590603a91.1;
-        Mon, 21 Apr 2025 06:41:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745242905; x=1745847705; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=ECd/IrPdIV8qR2l6zKp0PLviOgJCM1imAVXIEmiix8Q=;
-        b=O8BVHCfJPmiScMYBJteMFP2uNpMJApEezd0sQaTaD32XW2hyRkH2hceaDp0sYutb+M
-         /XthdCtjdKG7DpIhl6hrSYegppj2o8DQOdNu02t3Wu/7/jFiAuaCmvbhvQ4IhtC2UveE
-         gopMaYoiuBD+sTeBjxBVEdo8dgsXmdvYjCcW+JRRoYCerPXIgeCRfFx96EL+vF2yzEFD
-         jvXzFEJ9USrTn0XgCk73tG3xr/WLPy2ZH3Ko+2Gec+Xs4Cu4N6KJQa2zMER0YjrqAokX
-         YwCeEGGY+aP9KD/Pht1aMi/ZwyODfVqQMHteG9cXN66MclNYCanWhuoHMnNZsYAWbE3n
-         sqRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745242905; x=1745847705;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ECd/IrPdIV8qR2l6zKp0PLviOgJCM1imAVXIEmiix8Q=;
-        b=dsalt2J9RiFUV2CTmIlZjcRdGAaeBS877PVMydceA1l1R/9Q0O1WxJ9gybVZzY5FTV
-         iudjhr0Ze4IUI6s/bkMjY9WmsfdmlMDgCiW3sL2HzXXoDrphIfKNXRqlEa4rYei907VD
-         DeVq4xVKvOv4GXpzrVT38zzBkQtvZWPacrPr+mFDeVPtlaa6MqNWlOZEdrcMkSfVD1Na
-         mtli2+/+QEvbI30ryAAqHNs+Wjd6k/4fxxdcuKaN5SscznNbD40TRNEM2fxUFqE64HEF
-         qBrNXR1fn5GsnzzMfjzwoIaj0baTrIp+nIR5hO7lOPzT7acMqMATeXV5s4IZ01/17xRq
-         OuRA==
-X-Forwarded-Encrypted: i=1; AJvYcCU45Tsmem26asTzsCn5S2vtr/zgQaLhxOwzlQXcXgVsxxstGWiMaR3CaL4hCR43uTKzI6hn4wgrvIPB@vger.kernel.org, AJvYcCXDigs3XcB++AVgI4BGQAZD+n3M4d4ihPW7Zlw6ffDSon1J80n9PPQFDVI5RYtCXbUX1Lz4kXVUY1mvHfo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyt77wB+vjqbzMhI24fYs8NOPrSZTcVpy0HEkyTLoEV7DRqZ7gK
-	+spmEKc8A8dmtu5FOHI+q5HCcmMtr6cWdOgyVUXz1SyqMmU8sZmQBJkMqg==
-X-Gm-Gg: ASbGnctcMEsWyhavK1u/f9BZU9gn9NaUwaYW03vwry+1ZnOri2rwKGgpPVLtXCqYudn
-	/PMhS0zc9kXjpPP27qmGG17123XyPI15Mq/RNBAxhmNAh88SEzynvBCVmcc8uM9pKTZKMwfwEkR
-	UU5B/oq8J3Aw80JerFRbmLR1hj5SJ40c8MXuWxb1F5Jlo41cmAj9NWhWNb+CndnexjLEAM/N0Dk
-	aYf9y/ixfs7NqbbhB8PKc9HaOfN+1jK+SNT5TNn748tvHp0+nL4OELSQewLHHAJUek59KX5+fog
-	zXIASRFNVkh/OrBrYZ5pAqA1XcwXIt78P05F0bbOyfZ2co5URa/mmd8ZLoRfz69hWoqATl2yfdE
-	k+7MdZ9yVzXk1xA==
-X-Google-Smtp-Source: AGHT+IEozYtzMzT0wyJ+5Q0iT3If8p7VxTm3YmZ8htO8Bi69Cg4WKE1MGXh9j0UVW7uT1Vm6FmyYWA==
-X-Received: by 2002:a17:90b:1c0a:b0:301:98fc:9b51 with SMTP id 98e67ed59e1d1-3087bb3e858mr16085910a91.5.1745242905254;
-        Mon, 21 Apr 2025 06:41:45 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73dbf8e3631sm6843441b3a.51.2025.04.21.06.41.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Apr 2025 06:41:44 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <c432be87-827e-4ed7-87e9-3b56d4dbcf26@roeck-us.net>
-Date: Mon, 21 Apr 2025 06:41:43 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FeKMtDRP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 661C9C4CEF0;
+	Mon, 21 Apr 2025 16:42:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745253762;
+	bh=m3m6glZ88p1UicyITupTeA+hfX/BSoFrF6K0y4udo00=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FeKMtDRPmgXNmdhOA2xuD1QtibJmcPrU2MV3eJXwpFfhIQw+NCP/LjD+7WTJfTrLZ
+	 VyXdxSX6qP2Bb961hC0FJn3ZqerqqplYKwIhUnbAW8fLneHGm1lcA+vTlj4pmNBZhp
+	 +3EEg7d6NI6mryu6B9O8Cp7eFn12cu0iRgAAC+uFM1xIhY6Gv5A2BKlSC+bLkaWnoL
+	 PPoHHiDSmAJA6xr4IPmYwR3+nA69HxDAeJ93AMGLY+ERqa7oExNJXK+WjRWDZnXUFY
+	 /d3XLatgTugglsFLw5yzg2WQuJit58K9D3U1x89Z6fRLnAWYextGfQfV6KyM1lmGU2
+	 Lh0+VjqHWGzcA==
+Date: Mon, 21 Apr 2025 09:42:41 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk, jack@suse.cz,
+	cem@kernel.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v7 11/14] xfs: add xfs_file_dio_write_atomic()
+Message-ID: <20250421164241.GD25700@frogsfrogsfrogs>
+References: <20250415121425.4146847-1-john.g.garry@oracle.com>
+ <20250415121425.4146847-12-john.g.garry@oracle.com>
+ <20250421040002.GU25675@frogsfrogsfrogs>
+ <2467484b-382b-47c2-ae70-4a41d63cf4fc@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: add tunable threshold parameter for triggering zone
- GC
-To: hch <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <Hans.Holmberg@wdc.com>,
- Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <djwong@kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20250325091007.24070-1-hans.holmberg@wdc.com>
- <iB7R4jpT-AaCUfizQ4YDpmyoSwGWmjJCdGfIRdvTE76nG3sPcUxeHgwVOgS5vFYV0DCeR1L5EINLppSGbgC3gg==@protonmail.internalid>
- <476cf4b6-e3e6-4a64-a400-cc1f05ea44cc@roeck-us.net>
- <mt3tlttnxheypljdkyy6bpjfkb7n5pm2w35wuf7bsma3btwnua@a3zljdrqqaq7>
- <e5ccf0d5-a757-4d1b-84b9-36a5f02e117c@roeck-us.net>
- <20250421083128.GA20490@lst.de>
-Content-Language: en-US
-From: Guenter Roeck <linux@roeck-us.net>
-Autocrypt: addr=linux@roeck-us.net; keydata=
- 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
- mDW4+i+XlNFUPUYMrIKi9joBhu18ssf5i5Q=
-In-Reply-To: <20250421083128.GA20490@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2467484b-382b-47c2-ae70-4a41d63cf4fc@oracle.com>
 
-On 4/21/25 01:31, hch wrote:
-> On Sun, Apr 20, 2025 at 10:42:56AM -0700, Guenter Roeck wrote:
->> A possible local solution is below. Note the variable type change from s64 to u64.
+On Mon, Apr 21, 2025 at 06:47:44AM +0100, John Garry wrote:
+> On 21/04/2025 05:00, Darrick J. Wong wrote:
+> > > @@ -843,6 +909,8 @@ xfs_file_dio_write(
+> > >   		return xfs_file_dio_write_unaligned(ip, iocb, from);
+> > >   	if (xfs_is_zoned_inode(ip))
+> > >   		return xfs_file_dio_write_zoned(ip, iocb, from);
+> > What happens to an IOCB_ATOMIC write to a zoned file?  I think the
+> > ioend for an atomic write to a zoned file involves a similar change as
+> > an outofplace atomic write to a file (one big transaction to absorb
+> > all the mapping changes) but I don't think the zoned code quite does
+> > that...?
 > 
-> I think that'll need a lower bound of 0 thrown in to be safe as these
-> counters can occasionally underflow.
-> 
-> Otherwise this is probably the right thing to do for now until mult_frac
-> gets fixed eventually.  Can you add a comment why this open codes
-> mult_frac to the code and send a formal patch for it?
-> 
+> Correct. For now, I don't think that we should try to support zoned device
+> atomic writes. However we don't have proper checks for this. How about
+> adding a xfs_has_zoned() check in xfs_get_atomic_write_{min, max, opt}()?
 
-Technically only free needs to be u64 for do_div to work. But that makes
-me wonder what the function is supposed to return if free < 0.
+Well it turns out that was a stupid question -- zoned=1 can't be enabled
+with reflink, which means there's no cow fallback so atomic writes just
+plain don't work:
 
-Note that the proposed 64-bit safe version of mult_frac() also requires
-the dividend to be unsigned. That is a quirk of do_div().
+$ xfs_info /mnt
+meta-data=/dev/sda               isize=512    agcount=4, agsize=32768 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
+         =                       exchange=1   metadir=1
+data     =                       bsize=4096   blocks=131072, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =internal               extsz=4096   blocks=5061632, rtextents=5061632
+         =                       rgcount=78   rgsize=65536 extents
+         =                       zoned=1      start=131072 reserved=0
+$ xfs_io -c 'statx -r -m 0x10000' /mnt/a | grep atomic
+stat.atomic_write_unit_min = 0
+stat.atomic_write_unit_max = 0
+stat.atomic_write_segments_max = 0
+stat.atomic_write_unit_max_opt = 0
 
-Thanks,
-Guenter
+I /think/ all you'd have to do is create an xfs_zoned_end_atomic_io
+function that does what xfs_zoned_end_io but with a single
+tr_atomic_ioend transaction; figure out how to convey "this is an
+atomic out of place write" to xfs_end_ioend so that it knows to call
+xfs_zoned_end_atomic_io; and then update the xfs_get_atomic_write*
+helpers.
 
+--D
+
+> Thanks,
+> John
