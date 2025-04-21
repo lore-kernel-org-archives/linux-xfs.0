@@ -1,64 +1,64 @@
-Received: from mail-il1-f175.google.com (mail-il1-f175.google.com [209.85.166.175])
+Received: from mail-io1-f52.google.com (mail-io1-f52.google.com [209.85.166.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D880119F127
-	for <linux-xfs@vger.kernel.org>; Mon, 21 Apr 2025 20:24:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51C651F03D7
+	for <linux-xfs@vger.kernel.org>; Mon, 21 Apr 2025 20:26:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745267064; cv=none; b=YiR2KP5mhILmjzmYtTwZjV2EvAxXgCjvz+n3nKmv2rBMjJpgM/wdMl3lh3ikF8NIPyJxfOV8ylbBZhJJVj/i5TUXkdWJATjSoGNPTgp7hc9xhO3BoLrDRRlpWFf4rlr1G1IcWYgjS3GCpP8zufuy+kKvh8IxrAryV/IyYYILlr4=
+	t=1745267218; cv=none; b=iEeF7cx8fmExDyFl/ZirUItxDlLo17JSwyglj2fh4O3Jq5YPbSvHZ0OY6npuOp2Q8Ev0UctDfsOWfq7IjTa2O+rwbsoGndoaC/G0Pm4DjBfdKAW3bhXdJWBF8JYuPP+QwuPZGiT7qxQEP90p7odzbKBBRyu5+vH+Omsf+Oymcyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745267064; c=relaxed/simple;
-	bh=mxCB9SUZBeClGFXURnIsA1QlVo+SMxflm+QReL1PuJA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=klgRfgrgX8xU3+zDfgGG1n8MWlBnQi8oVhy9SG960aeouK0DNbbDCZ7NbwlJq+xFYM7hIJ7PJ1UgPoGsB06rvwJTlOPbA21FaMPweFn7gW9faxZVRG25ZoOXp1sRfgSs6NA0LoeDKEtEkVDUKVzQomWEIjuLk5y5fuIub1iMaPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=BSGpcK1E; arc=none smtp.client-ip=209.85.166.175
+	s=arc-20240116; t=1745267218; c=relaxed/simple;
+	bh=0Il5DIxkHUlQAJ02+NZuaa0zOFehAsnBIIGXY+F0YoM=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=c7V0Ol8cYzoIKXnCL+wWuJGpCRKR03DsdgP4GSyECnN7bheQc/Grb1Q3Yq+bb5hvxsCKsUWgC+mnpwW118Y2KaekvH5bPIQxVWPQgANFcVKAJ930H75KCNfXgcWzZOC7UleQcNF/WiL9AztOwx5QIYa4MxeWh7IvaI5UqlKcb/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=prawIjD1; arc=none smtp.client-ip=209.85.166.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="BSGpcK1E"
-Received: by mail-il1-f175.google.com with SMTP id e9e14a558f8ab-3d4436ba324so38064685ab.2
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Apr 2025 13:24:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="prawIjD1"
+Received: by mail-io1-f52.google.com with SMTP id ca18e2360f4ac-85b41281b50so110440539f.3
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Apr 2025 13:26:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1745267062; x=1745871862; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=W5maUrh0KQzV6aymom/1/wBhMZfCX557JEuH/6UWgEI=;
-        b=BSGpcK1E9kehKVWeS1u4FrvaxcbpR70yuBIt8ZKzz6wfAgr615mX+SiGvKb1JZTPNW
-         pcMqoEudqnyrHyP1Izrcu4X220W5mjiXnrxBAlLI4FnHbWaadFYHKOKW6Hkl5gbBa+lW
-         7V6Zo6cMa4jdKRiZGysOSlRfc2RFkt2oEbpDL84EuGDWKvEFasItc030PONi02fhAVcO
-         +v1ly+9UXuz+fKh0TXN8PBAwAAoEk/6fxRuwbai8kuMMHJuOZ0njEtWBpUE+4LLJGBkW
-         Vyh4MGJ1CJKqfEvKKPpGPzMuYk8r6TzKIHBXGBOuNOKys72mVlcCYNb47xq5HyMG+IHh
-         dlRQ==
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1745267216; x=1745872016; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=27BMHCOECTISQknfVB21+aP50fShNvTjKGAStee4Ri8=;
+        b=prawIjD1QVwewF3haWXcCJzV1SNsDVPJgLXIJOmBmF6upuJ9LBSqTFJuMGvY7ngfkf
+         +cpMFn7WCUzE0maX5kY9ty3gnowQgAhZG8LMi8//9YoDnBdaOM31m20QwzOItkrsxe/l
+         OlwjFi1NR+uXI9k5NRWRZsqXSqyhZUyMsdLcThubgZvPT9dh7C8Uw6LED6fOQhw1FtfM
+         j6joe5ZRRHUdTAa7l+BXeiQ+qPapIf52AB1I1njrpZ2CbpA15dcHk3y67gAIYiLbi27Q
+         xOw6Lkw9bS4/eGGUZUGaDQQ0VonLtwuJw7IM5mCnAQ8Q5Sdp2aqWX2bybNwwh7PnsxLl
+         UYPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745267062; x=1745871862;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1745267216; x=1745872016;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=W5maUrh0KQzV6aymom/1/wBhMZfCX557JEuH/6UWgEI=;
-        b=taoHVNULSInGL2DAo9dQg2B3asFx2m6nOqWPfIWiFIOFll4SzdWy+43Can1//y+ml6
-         vrf70Fy03JU1JV45kJvLbDdGhMicR3fc7QrJRg3gYuDbav/8PEChcrL/WYXeU9Je1MLz
-         IM1aRB6uJRkSvaGHfb5OsHyCfy5IUe+3pG5UsAhCIlBn6mq1Yi5ibgW6Sg6b2e+1pJEt
-         BtvbnpBfjZhvVkiLU4cePAOOml3p0rLl5+SKR2p4QdWv4+TNlghHWYJ1P6CD9CF2ySaZ
-         3+libofFtmqgdPP+voKUhYNkYNDBDiLiMfa7A7jWGBeRo5WwXbFP+QFkK1hH/OUHDeR8
-         WlrQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVLelNXiMGfBUckvxBJEZpnomDg0vvK/qkU7E4nWvgn9LE0TjVBtwOxKRNZN+tA5ujerGt6A1F+Vx0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxJ6x6xiymYjFUa33PtInaEvpQMmoexy3cQrWXkZkhd+hz8QNJw
-	bBGDGeGohh6wvilW1KYAUL2kU+nfmJNZ8J+jb6Vq/Ijz5iCPk819KXvbWrEVxew=
-X-Gm-Gg: ASbGncs10vlG5a08qqtiDoa2jjX3hoZ0o7XSJ1g1xHooVGrsuffBJ/llvUVQF1cdJHO
-	x38yusMv3zb5pde2U1Rk+FQGzMzbk9oksQTD5thoqfDV6GKS0pJsXI463zrjc0cSnyTVPkvjI2Y
-	8E1CL/0ZyWNQY+vK+jBCBlYFTk2o21W1NcmvSvw9Z7UW1O0ymiK06HcfrsZpreeXZILiTNxn6ZK
-	29nPaXkmVYplFduQl0EAnCT8mqXCeuLf9xENcUsLnEM4v2Pda7uiklTpOqqNqo1PdwB4SB3iZfi
-	m71gaDWaAkbDgPnBfNfvCTb5CYnxR6QBPve7z3jVzzttNhw=
-X-Google-Smtp-Source: AGHT+IHcj28bFOGSxDo4d9yAdQ8hZG+yV0Gef12wOsVNjjXhehkX2IN0lP6ew3bv1S7erAzJ8u78cw==
-X-Received: by 2002:a05:6e02:1b08:b0:3d8:1f87:9431 with SMTP id e9e14a558f8ab-3d88edc33f1mr125756165ab.12.1745267062043;
-        Mon, 21 Apr 2025 13:24:22 -0700 (PDT)
+        bh=27BMHCOECTISQknfVB21+aP50fShNvTjKGAStee4Ri8=;
+        b=CsokwjuhI2cgTZX/KFEgch4x5BZj/QwwbOAUZ+KxaNA+7U3Oy5ohhOGIQoVc8Ks5QY
+         glm/cFk70DfTQLrwVhtpBqPHoDN+bFbsuAKYMnRG58T/wpSDz+mLRWYYxlEHcq2V/36N
+         1JfeJG5Yr9HpsMY1PI8KRHKpLQMY6/CtPCsCn2XczOJyIKdqpUa845kL3BXEKq7tnl8q
+         Fzt2uYDU1Ppc+MT+uL5JsW9Jnx2/DHO94a7MYXbE9e4CeuiUI25wpdhsSSZpRcZXtWxW
+         7TbiFF3EBkO4isxBk+56U2WarQzilX1RQ8m+UBC3yH63eP5Itwvq87SLtFR6jcdNmfKr
+         UJGA==
+X-Forwarded-Encrypted: i=1; AJvYcCVc/a7KQ7HVGvwx1dvo2ww0U922TkjWpi6v1ZxTlqyz7h+CipibLUP80At2hp8u9tMN5ElTrWWZp6I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzWIO5mgeB5ecKXCVI2qTcDxmnpr34G/BGbpwartCEEDjPDxKpG
+	EmwSkSR1n9pBGjZIqwHd3fwWzyj+/0CVycuJmrnT8YqbRuTUpLf3+x9LE6vbQWY=
+X-Gm-Gg: ASbGncv1wTp3X1434/1RUqAo/yCnlTjDyvXeaixnNgYmhidMCvIouaAtqc172VpDIz9
+	JmbQyin7wqXTxGVY0z1qXp2IBqhtuQUfcDA6Xd49RLFa9Mgh92LvjmfnOxuIG7AA836x94Wvkd3
+	4d50mtjh8iYFyNY5kQHx4Kj1cA4mPkcZxf20mm2en0fuEeujPInPHk4MaRzERXyXPfCz/xe+tmQ
+	SwpDdyE4nYeglOyDYYM076b54GUToNpV6X7/dkXQsxpYmBpJKS35QgflfHYUjMVUS1N7wnTWs7H
+	/JMUJYO++sn0X9S2geoxG4h01+J5newChwnt
+X-Google-Smtp-Source: AGHT+IE7KKLn+SFyCY+1IEN5a7afRu8xJmsf5Z2+0F8SZS3ynBRzsQqJHYmOIZ2M/pTqQteS9q/67Q==
+X-Received: by 2002:a6b:f106:0:b0:85b:4afc:11d1 with SMTP id ca18e2360f4ac-861dbdfa62emr897863439f.5.1745267216383;
+        Mon, 21 Apr 2025 13:26:56 -0700 (PDT)
 Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4f6a383345bsm1909134173.61.2025.04.21.13.24.20
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4f6a3933d67sm1928559173.86.2025.04.21.13.26.55
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Apr 2025 13:24:21 -0700 (PDT)
-Message-ID: <8cb99c46-d362-4158-aa1e-882f7e0c304a@kernel.dk>
-Date: Mon, 21 Apr 2025 14:24:20 -0600
+        Mon, 21 Apr 2025 13:26:55 -0700 (PDT)
+Message-ID: <98e7e90e-0ebe-4cbc-96f3-ce7f536d8884@kernel.dk>
+Date: Mon, 21 Apr 2025 14:26:54 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -67,32 +67,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCHSET V2] block/xfs: bdev page cache bug fixes for 6.15
+From: Jens Axboe <axboe@kernel.dk>
 To: "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
 Cc: hch@lst.de, shinichiro.kawasaki@wdc.com, linux-mm@kvack.org,
  mcgrof@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
  willy@infradead.org, hch@infradead.org, linux-block@vger.kernel.org
 References: <174525589013.2138337.16473045486118778580.stgit@frogsfrogsfrogs>
+ <8cb99c46-d362-4158-aa1e-882f7e0c304a@kernel.dk>
 Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <174525589013.2138337.16473045486118778580.stgit@frogsfrogsfrogs>
+In-Reply-To: <8cb99c46-d362-4158-aa1e-882f7e0c304a@kernel.dk>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 4/21/25 11:18 AM, Darrick J. Wong wrote:
-> Hi all,
+On 4/21/25 2:24 PM, Jens Axboe wrote:
+> On 4/21/25 11:18 AM, Darrick J. Wong wrote:
+>> Hi all,
+>>
+>> Here are a handful of bugfixes for 6.15.  The first patch fixes a race
+>> between set_blocksize and block device pagecache manipulation; the rest
+>> removes XFS' usage of set_blocksize since it's unnecessary.
+>>
+>> If you're going to start using this code, I strongly recommend pulling
+>> from my git trees, which are linked below.
+>>
+>> With a bit of luck, this should all go splendidly.
+>> Comments and questions are, as always, welcome.
 > 
-> Here are a handful of bugfixes for 6.15.  The first patch fixes a race
-> between set_blocksize and block device pagecache manipulation; the rest
-> removes XFS' usage of set_blocksize since it's unnecessary.
-> 
-> If you're going to start using this code, I strongly recommend pulling
-> from my git trees, which are linked below.
-> 
-> With a bit of luck, this should all go splendidly.
-> Comments and questions are, as always, welcome.
+> block changes look good to me - I'll tentatively queue those up.
 
-block changes look good to me - I'll tentatively queue those up.
+Hmm looks like it's built on top of other changes in your branch,
+doesn't apply cleanly.
 
 -- 
 Jens Axboe
-
