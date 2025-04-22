@@ -1,245 +1,115 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa5.hc1455-7.c3s2.iphmx.com (esa5.hc1455-7.c3s2.iphmx.com [68.232.139.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6941E9476
-	for <linux-xfs@vger.kernel.org>; Tue, 22 Apr 2025 08:44:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 366201E5B71;
+	Tue, 22 Apr 2025 09:51:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.139.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745311450; cv=none; b=kuekW8zyaXTR10tswAa1nQuHprF8EKy4R7CCGppP0hjLjtWAnT6O+uXSQcdiWYlR/21fn6zr7L2913vVJfXsnaLwG4i2SWvmKdw78LRwSCGe0bCC3/FMYECg+Hvhxak8y7CJCOuGtTvPrSLkyJrGoyDstnFTrM1dFyfnRdwqjtA=
+	t=1745315500; cv=none; b=tkGX16CfOY7rahGwEnyHhvrhbe1RC2uDpKh9/gZ0rq71SbQsDlERvNZ1wAEX5BPUCi8hcI/DY/DcrX9Pn1BQ7XSZXAzg7ehf7Yq/Z8Zn4Lmns18h+XGNw6JPJ/CuLsK5E6sFZuz+w1U2iFEFNwIkEYloZUURGWMAaFd1l6LaLeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745311450; c=relaxed/simple;
-	bh=fuL8axsZwXKR3dyGtDpkJPpNz64sBhUy5WnXsHQb1dA=;
-	h=Message-ID:Date:MIME-Version:From:To:Subject:Content-Type; b=NMfpiCTuNNffNd2/ZHQSSqBIfrn8nsaWdTw5eAmd2gylYN+m5jIXorG0nHwlY3/GHiFCQl0kOulekMrdvg2ohoQbTXhBtXSNBxBS8Ycc8BiZ23YigiOyCUjUI1Sfe2aZyvLEm7/kIsr0W+HEJq2gQQUMx9vinxLsuOfxdYCf/Is=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=MTTCloIO; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
+	s=arc-20240116; t=1745315500; c=relaxed/simple;
+	bh=YAgiqX24EF1IChRDH7Q+iWlTconGy/9CB6eVKSr0bgg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=s5sgXTC/WkzypDJQlI8npZb8/yJmDyOYu6DAL5GG3Y6XuQCKf8621wOeKge1arHb+HxR/JbtcbPamrlIzehJgK8Xn9JniIOXqoOCLihT+nMHJwZN3v09Q4vzvhjcrfPPnfcJSWkZwUhpgUcnd/ZHtN+AA3ExhjVLmjIsOGHD+eM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=jg6gHvN+; arc=none smtp.client-ip=68.232.139.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="MTTCloIO"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-736c062b1f5so3782864b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Apr 2025 01:44:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1745311447; x=1745916247; darn=vger.kernel.org;
-        h=content-transfer-encoding:subject:to:from:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=WlZlhBTqJqX8VYQTz99s5vLTqhVr1Z5oN80rhzgjGqk=;
-        b=MTTCloIOCVP7UPYmYGi2tMtbmsNgo42aXyWsl9NZqwV5U7E6xnX0c8Rb+bwx1C57UX
-         AXp73/05/flRdzzT3YYZQOOOgi3ervFZHJPFOx/6n/ogcW9d+MmE7Xp9JG9bOEIPAOhL
-         8vrPnqj5HR72+S7+cJZhWvVtPA8NN7SrD4hRZnu8WEzwWIhjtGR3mD6vk/7JPeAreH1r
-         SOZ7/mMmPGoP1y2gT+PtKBgOpmajQLOaEyrBGhl55M9Lg4Fq/h1pbLx6HT3iLdm1x/oK
-         52SJOnpwnFq0ldgb4YhlL0SwIDZj+DDkigtNCwY6yGdVfYyBFzAFmiScWwWUHXDWwDQj
-         PbXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745311447; x=1745916247;
-        h=content-transfer-encoding:subject:to:from:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WlZlhBTqJqX8VYQTz99s5vLTqhVr1Z5oN80rhzgjGqk=;
-        b=jRH6IS9SK72ouQ47n7DxOZfHZpUXWp9h5YVFx1vYT6kPWMy4zaLAPJ0yScjQG4rI8M
-         kOkW6Yq8XmFjNlh1sHjfLhGBOsXmvuVoF7XKbPx3l4kbQJkeioqxXjxPjGmq6l7MJb9O
-         +po8A9tBlrDw3y904WaSw6+sIXR9d21RRMgrmmRLX1RyFXiPnuyQNvYk1ho9VVRNi6tk
-         OBUxjNrNEtui+vLNP9TpreDg7/Lm3duPa8angd9WVKvWxNtSJFDu5RFQjivTo8ylcr8Z
-         uJooGReR1xYtiGepETRL/RAvnk44QInQed6ub1nTXqs/1ltCbo0LBw0FCpoyh3HDSxye
-         hB9Q==
-X-Forwarded-Encrypted: i=1; AJvYcCV87iCf1ymwE2Rii9cLSjP5wlRwvBl+mNB8l56ucjrM08eUPBpfXyKySlx3NN4Dc5YAcRdUbPLeRZw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxXBZEUPZLyc/MPDSS7HJgASGz3pr0Wz5Z+dY42tRKtgQjXNT0s
-	F8oJ2PJWiVxJ4rJeo+ZDoOvegxBZmt7FvuhCAxifcVffb1l6Gv6SFHUBjWWrpDc=
-X-Gm-Gg: ASbGncs8TTI6mf8XvhTwradED8DK7JlwKV4c2nykNhA+xp7he5bvgWY4UBSXT1DPrRh
-	EtqCtrSjndohmm7uErZJ+fAogtqflGrqNcp2cblih7RXPJYFGFSMFiiVkV53JCsCOUDDtCsGMdQ
-	Yyr+isLAQZGQzmQRoFg6EGneR41kPPAi55h20+YBcXRou1gGnq92V7TBpl5X8Aoone4Ttuujf/y
-	o0AIA64+L6zy+sZn/aDZWPDluLVtUiykooT77Daca5xvbb07vTNsxNsgVfwHDM9a08VrwHgQbFm
-	vg0zCIjjycC4EI6bEmXooGM2VOMJi8AdtzpdPh6/MGANjciqezRITA==
-X-Google-Smtp-Source: AGHT+IEd/VYO7umxfq1KwDnPN3QBRsvTWavoA8bXpAtiqYJaNRCEBQ1CgjPHr1Mnhxkzokwa0XgZtg==
-X-Received: by 2002:a05:6a00:4acc:b0:736:b9f5:47c6 with SMTP id d2e1a72fcca58-73dc1566938mr18307653b3a.16.1745311447476;
-        Tue, 22 Apr 2025 01:44:07 -0700 (PDT)
-Received: from [10.54.24.77] ([143.92.118.3])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73dbf90dc88sm8034161b3a.83.2025.04.22.01.44.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Apr 2025 01:44:07 -0700 (PDT)
-Message-ID: <d942be2b-94d2-46b1-8d0f-0d64c96d4cd6@shopee.com>
-Date: Tue, 22 Apr 2025 16:44:03 +0800
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="jg6gHvN+"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
+  t=1745315498; x=1776851498;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=YAgiqX24EF1IChRDH7Q+iWlTconGy/9CB6eVKSr0bgg=;
+  b=jg6gHvN+9TFcab4x5RDYA79aIyNUMEfl8c86FMwM0mEITQW8mxVoUz9q
+   M9YSGkLmVlVr/ABy7KAm9PCuCNSu5/xEEy59b+TiX5oIzQSnCBWqgebuN
+   85IU6oZvfauqe3imGfdh/fSf9ZArtOCHC3JwFPmGBc3PrA5n/gZkrc7Ed
+   8tESzTYx7BrWKNEURo/JEoVO28w2bsN/iiBWQX5bjwhJTTbKpaiCzUHk+
+   AjJeOpgzuF9ZjFDD5iCqWRBcZnOciVcmVeVG4X0UzDq1yLN9FOMmWXiWz
+   72xTCUXUkvOEFlbJ7tVwDuZoq3GIG95v4mHyBh41DqXpA2RucYQsor6Wf
+   Q==;
+X-CSE-ConnectionGUID: nzk2TeBdSouXvbalIdRdeQ==
+X-CSE-MsgGUID: ALzpD9VNTm+0S5nk2G3obQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11410"; a="196490730"
+X-IronPort-AV: E=Sophos;i="6.15,230,1739804400"; 
+   d="scan'208";a="196490730"
+Received: from unknown (HELO oym-r4.gw.nic.fujitsu.com) ([210.162.30.92])
+  by esa5.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2025 18:50:26 +0900
+Received: from oym-m4.gw.nic.fujitsu.com (oym-nat-oym-m4.gw.nic.fujitsu.com [192.168.87.61])
+	by oym-r4.gw.nic.fujitsu.com (Postfix) with ESMTP id B6FDCDBB80;
+	Tue, 22 Apr 2025 18:50:23 +0900 (JST)
+Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
+	by oym-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id 6D80ED4BDD;
+	Tue, 22 Apr 2025 18:50:23 +0900 (JST)
+Received: from localhost.localdomain (unknown [10.167.135.94])
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id 9EB9E1A0078;
+	Tue, 22 Apr 2025 17:50:22 +0800 (CST)
+From: Ma Xinjian <maxj.fnst@fujitsu.com>
+To: fstests@vger.kernel.org
+Cc: zlang@redhat.com,
+	linux-xfs@vger.kernel.org,
+	Ma Xinjian <maxj.fnst@fujitsu.com>
+Subject: [PATCH] xfs/083: fix the judgment of the number of content lines in $ROUND2_LOG
+Date: Tue, 22 Apr 2025 17:49:25 +0800
+Message-ID: <20250422094925.7921-1-maxj.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Haifeng Xu <haifeng.xu@shopee.com>
-To: catherine.hoang@oracle.com, akpm@linux-foundation.org,
- =?UTF-8?B?77yM?= <linux-xfs@vger.kernel.org>
-Subject: endless loop in truncate_inode_pages_range()
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi all,
-	I found a task stall in truncate_inode_pages_range() in our production environment. The kernel version is stable 6.6.66.
+Commit 8973af00e ("fstests: cleanup fsstress process management") forces
+the stdout of fsstress process to be redirected to the file $seqres.full,
+so that there are only 7 lines of content in $ROUND2_LOG now.
 
-	It's call trace is here:
+The following is the content in $ROUND2_LOG before commit 8973af00e:
+```
+++ mount image (2)
+++ chattr -R -i
++++ test scratch
++++ modify scratch
++++ stressing filesystem
+seed = 1744949451
++++ xfs realtime not configured
+++ umount
+```
 
+The following is the content in $ROUND2_LOG after commit 8973af00e:
+```
+++ mount image (2)
+++ chattr -R -i
++++ test scratch
++++ modify scratch
++++ stressing filesystem
++++ xfs realtime not configured
+++ umount
+```
 
-	[<0>] find_get_entries+0x74/0x270
-	[<0>] truncate_inode_pages_range+0x312/0x550
-	[<0>] truncate_pagecache+0x48/0x70
-	[<0>] truncate_setsize+0x27/0x60
-	[<0>] xfs_setattr_size+0xf5/0x3d0 [xfs]
-	[<0>] xfs_vn_setattr_size+0x49/0x90 [xfs]
-	[<0>] xfs_vn_setattr+0x7e/0x120 [xfs]
-	[<0>] notify_change+0x1ee/0x4d0
-	[<0>] do_truncate+0x98/0xf0
-	[<0>] do_open+0x329/0x470
-	[<0>] path_openat+0x135/0x2d0
-	[<0>] do_filp_open+0xaf/0x170
-	[<0>] do_sys_openat2+0xb3/0xe0
-	[<0>] __x64_sys_openat+0x55/0xa0
-	[<0>] x64_sys_call+0x16e4/0x2210
-	[<0>] do_syscall_64+0x56/0x90
-	[<0>] entry_SYSCALL_64_after_hwframe+0x78/0xe2
+"seed = 1744949451" is redirected to the file $seqres.full since commit
+8973af00e.
 
-	
-	
-	truncate_inode_pages_range
+Signed-off-by: Ma Xinjian <maxj.fnst@fujitsu.com>
+---
+ tests/xfs/083 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	...
-	index = start;
-	while (index < end) {
-		cond_resched();
-		if (!find_get_entries(mapping, &index, end - 1, &fbatch,
-				indices)) {
-			/* If all gone from start onwards, we're done */
-			if (index == start)
-				break;
-			/* Otherwise restart to make sure all gone */
-			index = start;
-			continue;
-		}
-
-		for (i = 0; i < folio_batch_count(&fbatch); i++) {
-			struct folio *folio = fbatch.folios[i];
-
-			/* We rely upon deletion not changing page->index */
-
-			if (xa_is_value(folio))
-				continue;
-
-			folio_lock(folio);
-			VM_BUG_ON_FOLIO(!folio_contains(folio, indices[i]), folio);
-			folio_wait_writeback(folio);
-			truncate_inode_folio(mapping, folio);
-			folio_unlock(folio);
-		}
-		truncate_folio_batch_exceptionals(mapping, &fbatch, indices);
-		folio_batch_release(&fbatch);
-	}
-	...
-
-	From the vmcore, we found 64 entries in the mapping which have same folio. And the folio seems invalid.
-	Those entries always stay in the mapping. When the index fallback to start, we can find the entry 
-	sucessfully. So the task stall in truncate_inode_pages_range().
-
-	Since truncate_inode_pages_range() is executed with holding lock of inode->i_rwsem, any operation related with
-	this lock will be blocked.
-	
-crash> tree -t xarray -r address_space.i_pages 0xffff9e1176d23eb0  -p
-
-fffffa99adef6000
-  index: 7467136  position: root/28/31/2/0
-fffffa99adef6000
-  index: 7467137  position: root/28/31/2/1
-fffffa99adef6000
-  index: 7467138  position: root/28/31/2/2
-fffffa99adef6000
-  index: 7467139  position: root/28/31/2/3
-fffffa99adef6000
-  index: 7467140  position: root/28/31/2/4
-fffffa99adef6000
-  index: 7467141  position: root/28/31/2/5
-fffffa99adef6000
-
-...
-
-fffffa99adef6000
-  index: 7467190  position: root/28/31/2/54
-fffffa99adef6000
-  index: 7467191  position: root/28/31/2/55
-fffffa99adef6000
-  index: 7467192  position: root/28/31/2/56
-fffffa99adef6000
-  index: 7467193  position: root/28/31/2/57
-fffffa99adef6000
-  index: 7467194  position: root/28/31/2/58
-fffffa99adef6000
-  index: 7467196  position: root/28/31/2/60
-fffffa99adef6000
-  index: 7467197  position: root/28/31/2/61
-fffffa99adef6000
-  index: 7467198  position: root/28/31/2/62
-fffffa99adef6000
-  index: 7467199  position: root/28/31/2/63
-
-
-struct folio {
-  {
-    {
-      flags = 24769796876798016,
-      {
-        lru = {
-          next = 0xffff9dfa8024cf00,
-          prev = 0xfffffa9997482210
-        },
-        {
-          __filler = 0xffff9dfa8024cf00,
-          mlock_count = 2538086928
-        }
-      },
-      mapping = 0xfffffa999cf87190,
-      index = 18446636480414094976,
-      {
-        private = 0x2a001e,
-        swap = {
-          val = 2752542
-        }
-      },
-      _mapcount = {
-        counter = -1
-      },
-      _refcount = {
-        counter = 1
-      },
-      memcg_data = 0
-    },
-    page = {
-      flags = 24769796876798016,
-      {
-        {
-          {
-            lru = {
-              next = 0xffff9dfa8024cf00,
-              prev = 0xfffffa9997482210
-            },
-            {
-              __filler = 0xffff9dfa8024cf00,
-              mlock_count = 2538086928
-            },
-            buddy_list = {
-              next = 0xffff9dfa8024cf00,
-              prev = 0xfffffa9997482210
-            },
-            pcp_list = {
-              next = 0xffff9dfa8024cf00,
-              prev = 0xfffffa9997482210
-            }
-          },
-          mapping = 0xfffffa999cf87190,
-          {
-            index = 18446636480414094976,
-            share = 18446636480414094976
-          },
-.....
-
-
-	Any thoughts about this?
-
-Thanks!
-
-
+diff --git a/tests/xfs/083 b/tests/xfs/083
+index 9291c8c0..76f52df0 100755
+--- a/tests/xfs/083
++++ b/tests/xfs/083
+@@ -142,7 +142,7 @@ echo "++ check fs (2)" >> $seqres.full
+ _repair_scratch_fs >> $seqres.full 2>&1
+ 
+ grep -E -q '(did not fix|makes no progress)' $seqres.full && echo "xfs_repair failed" | tee -a $seqres.full
+-if [ "$(wc -l < "$ROUND2_LOG")" -ne 8 ]; then
++if [ "$(wc -l < "$ROUND2_LOG")" -ne 7 ]; then
+ 	echo "xfs_repair did not fix everything" | tee -a $seqres.full
+ fi
+ echo "finished fuzzing" | tee -a "$seqres.full"
+-- 
+2.47.0
 
