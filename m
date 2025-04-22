@@ -1,185 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 568421DEFDD;
-	Mon, 21 Apr 2025 21:18:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70A7533F6;
+	Tue, 22 Apr 2025 01:18:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745270303; cv=none; b=Hclo0GMqd0jU7X5wP9eWOc+zUcmgCMjbhzvydV5KGQHiQN6BQPa0BPgYQAk9DO9Ky/8dmrLJWerOScbSAT1dRKWV+DO5awuW3dIQtjpleMQ/WlZrB/fAjMPtZppjlUEWfS7jsUfMuVgOyegIJZWi22HGC/sB42S5ILxjCH76PtI=
+	t=1745284709; cv=none; b=quBifqzidohHnveqsNDx2SRoawZX2MNGZ+INEfo1L6rZ6vgrxmQQYasqeRlwtq1L5DDTaASzcDwJp8hufSjNnFjkqj/ajZLXif99WccjyTd7Eqxi1Hhq36b3cl92xQ52j4X62VF9MJDOYH7M24L0LStBW0H1OplqwCttkiBaq+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745270303; c=relaxed/simple;
-	bh=nm/spt30O/o+pWKt15dVV16PBqrGcK+Efxp5WTZ2q6Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=smcROfiPRPZA/TePjKbihSrBlvq7TCvldH85ZtLCJQDrAEKzYRXz0dSFJ0yzEjmA3a4LtbZVtPeTS0GJlwO89tWxbcqw8yOS4kJyRlqVKBnBtFgt1739DGvCjD7vvhmQTwrLOQuz6GHtKFKMaoMbJlj/RDc9lSTLq6dzOd8Angc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pWbByfGy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745284709; c=relaxed/simple;
+	bh=rHr3OHaH2YIOh9tMd8szZwedcsoXHKBwcUaU/e2K5K8=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=YCg4cNdTIRRuIcY2ZVjSHSuRo2v3jvAravlPcMpkmAEmtmL0xsDj29j1QaGdHUwSlYCAXHcVfuxNBxg1dY2hOh09sT9b0YaHA9PCahieD9f351vtIfgZk1OZQUYwIOFoP/r32h8zPsMygjPoRvvAr+Nn3jqpgqEFHpvYZtfaRAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U9R3reoE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pWbByfGy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A947C4CEE4;
-	Mon, 21 Apr 2025 21:18:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U9R3reoE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE150C4CEE4;
+	Tue, 22 Apr 2025 01:18:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745270302;
-	bh=nm/spt30O/o+pWKt15dVV16PBqrGcK+Efxp5WTZ2q6Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pWbByfGyg2xHttX9Ke26F3lJ1auGSoAUUYDxTSvYY6oNDze89JhBx8wO6MuaIB8iC
-	 hxkrcEKiVfGpKMchkp24LvMHJ1VOxPz0QCcQEQ3EFFPxOTfvUKMcm9UNAzioMoQRhw
-	 i56Dxsawujw3GjTPFtyTOFSa1uWp1GlEXQTea26FmqBRDro+VlbHXBU3CUcmPu9NiZ
-	 myflRWL5UcGgR1Cof63Af0ZwwUByuJ/YMuYnpvfTKBMFbSVLhPtPHMclwJwCy3ECe2
-	 DzDI4+Uk4keuyw+wju8weC66y0XX682AXNQRr2eDWLX+e7iNok28P0D1WldgSuA2JK
-	 L5zNy4wM6v+QQ==
-Date: Mon, 21 Apr 2025 14:18:20 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: John Garry <john.g.garry@oracle.com>, Chris Mason <clm@fb.com>,
-	Josef Bacik <josef@toxicpanda.com>
-Cc: brauner@kernel.org, djwong@kernel.org, hch@lst.de,
-	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
-	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
-	linux-api@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>
-Subject: Re: [PATCH v7 11/14] xfs: add xfs_file_dio_write_atomic()
-Message-ID: <aAa2HMvKcIGdbJlF@bombadil.infradead.org>
-References: <20250415121425.4146847-1-john.g.garry@oracle.com>
- <20250415121425.4146847-12-john.g.garry@oracle.com>
+	s=k20201202; t=1745284708;
+	bh=rHr3OHaH2YIOh9tMd8szZwedcsoXHKBwcUaU/e2K5K8=;
+	h=Date:Subject:From:To:Cc:From;
+	b=U9R3reoEs6GU+Lmemt3mTV3z6oNYWJvBctJUdGTzp1dKf2T8Nss0cCZRXF55daJb0
+	 vjOsrCc4TnTQtkJRmHuh8D7HzxNQZHTJ+nuh1gAu4lwkt1jpHLDvrTANmcbehbBTOa
+	 4q5evHHu4ydsbyqpSCD+LGdCwoK59OYpQ9he9iKF17VAKenTgUY2K9El0RSaAr1msE
+	 bk+PD+N2l5IRpXFvrSq4jYet+BBd5w/PhUYWB/+5bautGhAqijDN+EVlF04Rb7y9gH
+	 29bSL0ND7mRY/dmGMN6p3dfL+vKmAVbz17JxCpf/Ps2Trp4Us80bsvEzNKDXmIUr4U
+	 Ns9X3WaLnc36A==
+Date: Mon, 21 Apr 2025 18:18:28 -0700
+Subject: [PATCHSET V3] block/xfs: bdev page cache bug fixes for 6.15
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, axboe@kernel.dk, djwong@kernel.org
+Cc: hch@lst.de, mcgrof@kernel.org, linux-fsdevel@vger.kernel.org,
+ mcgrof@kernel.org, linux-block@vger.kernel.org, shinichiro.kawasaki@wdc.com,
+ linux-xfs@vger.kernel.org, hch@infradead.org, willy@infradead.org
+Message-ID: <174528466886.2551621.12802195876907852208.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250415121425.4146847-12-john.g.garry@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, Apr 15, 2025 at 12:14:22PM +0000, John Garry wrote:
-> Add xfs_file_dio_write_atomic() for dedicated handling of atomic writes.
-> 
-> The function works based on two operating modes:
-> - HW offload, i.e. REQ_ATOMIC-based
-> - CoW based with out-of-places write and atomic extent remapping
-> 
-> The preferred method is HW offload as it will be faster. If HW offload is
-> not possible, then we fallback to the CoW-based method.
-> 
-> HW offload would not be possible for the write length exceeding the HW
-> offload limit, the write spanning multiple extents, unaligned disk blocks,
-> etc.
-> 
-> Apart from the write exceeding the HW offload limit, other conditions for
-> HW offload can only be detected in the iomap handling for the write. As
-> such, we use a fallback method to issue the write if we detect in the
-> ->iomap_begin() handler that HW offload is not possible. Special code
-> -ENOPROTOOPT is returned from ->iomap_begin() to inform that HW offload
-> not possible.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_file.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 68 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index ba4b02abc6e4..81a377f65aa3 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -728,6 +728,72 @@ xfs_file_dio_write_zoned(
->  	return ret;
->  }
->  
-> +/*
-> + * Handle block atomic writes
-> + *
-> + * Two methods of atomic writes are supported:
-> + * - REQ_ATOMIC-based, which would typically use some form of HW offload in the
-> + *   disk
-> + * - COW-based, which uses a COW fork as a staging extent for data updates
-> + *   before atomically updating extent mappings for the range being written
-> + *
-> + */
-> +static noinline ssize_t
-> +xfs_file_dio_write_atomic(
-> +	struct xfs_inode	*ip,
-> +	struct kiocb		*iocb,
-> +	struct iov_iter		*from)
-> +{
-> +	unsigned int		iolock = XFS_IOLOCK_SHARED;
-> +	ssize_t			ret, ocount = iov_iter_count(from);
-> +	const struct iomap_ops	*dops;
-> +
-> +	/*
-> +	 * HW offload should be faster, so try that first if it is already
-> +	 * known that the write length is not too large.
-> +	 */
-> +	if (ocount > xfs_inode_buftarg(ip)->bt_bdev_awu_max)
-> +		dops = &xfs_atomic_write_cow_iomap_ops;
-> +	else
-> +		dops = &xfs_direct_write_iomap_ops;
-> +
-> +retry:
-> +	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = xfs_file_write_checks(iocb, from, &iolock, NULL);
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	/* Demote similar to xfs_file_dio_write_aligned() */
-> +	if (iolock == XFS_IOLOCK_EXCL) {
-> +		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
-> +		iolock = XFS_IOLOCK_SHARED;
-> +	}
-> +
-> +	trace_xfs_file_direct_write(iocb, from);
-> +	ret = iomap_dio_rw(iocb, from, dops, &xfs_dio_write_ops,
-> +			0, NULL, 0);
-> +
-> +	/*
-> +	 * The retry mechanism is based on the ->iomap_begin method returning
-> +	 * -ENOPROTOOPT, which would be when the REQ_ATOMIC-based write is not
-> +	 * possible. The REQ_ATOMIC-based method typically not be possible if
-> +	 * the write spans multiple extents or the disk blocks are misaligned.
-> +	 */
-> +	if (ret == -ENOPROTOOPT && dops == &xfs_direct_write_iomap_ops) {
+Hi all,
 
-Based on feedback from LSFMM, due to the performance variaibility this
-can introduce, it sounded like some folks would like to opt-in to not
-have a software fallback and just require an error out.
+Here are a handful of bugfixes for 6.15.  The first patch fixes a race
+between set_blocksize and block device pagecache manipulation; the rest
+removes XFS' usage of set_blocksize since it's unnecessary.
 
-Could an option be added to not allow the software fallback?
+v1: clean up into something reviewable
+v2: split block and xfs patches, add reviews
+v3: rebase to 6.15-rc3, no other dependencies
 
-If so, then I think the next patch would also need updating.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-Or are you suggesting that without the software fallback atomic writes
-greater than fs block size are not possible?
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
-  Luis
+--D
 
-> +		xfs_iunlock(ip, iolock);
-> +		dops = &xfs_atomic_write_cow_iomap_ops;
-> +		goto retry;
-> +	}
-> +
-> +out_unlock:
-> +	if (iolock)
-> +		xfs_iunlock(ip, iolock);
-> +	return ret;
-> +}
-> +
->  /*
->   * Handle block unaligned direct I/O writes
->   *
-> @@ -843,6 +909,8 @@ xfs_file_dio_write(
->  		return xfs_file_dio_write_unaligned(ip, iocb, from);
->  	if (xfs_is_zoned_inode(ip))
->  		return xfs_file_dio_write_zoned(ip, iocb, from);
-> +	if (iocb->ki_flags & IOCB_ATOMIC)
-> +		return xfs_file_dio_write_atomic(ip, iocb, from);
->  	return xfs_file_dio_write_aligned(ip, iocb, from,
->  			&xfs_direct_write_iomap_ops, &xfs_dio_write_ops, NULL);
->  }
-> -- 
-> 2.31.1
-> 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bdev-fixes-6.15
+---
+Commits in this patchset:
+ * block: fix race between set_blocksize and read paths
+ * block: hoist block size validation code to a separate function
+ * xfs: stop using set_blocksize
+---
+ include/linux/blkdev.h |    1 +
+ block/bdev.c           |   50 ++++++++++++++++++++++++++++++++++++++++++------
+ block/blk-zoned.c      |    5 ++++-
+ block/fops.c           |   16 +++++++++++++++
+ block/ioctl.c          |    6 ++++++
+ fs/xfs/xfs_buf.c       |   15 +++++++++++---
+ 6 files changed, 82 insertions(+), 11 deletions(-)
+
