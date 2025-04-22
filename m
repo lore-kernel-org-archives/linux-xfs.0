@@ -1,94 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A55671F3D21;
-	Tue, 22 Apr 2025 02:18:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B282E10A1F
+	for <linux-xfs@vger.kernel.org>; Tue, 22 Apr 2025 03:10:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745288289; cv=none; b=fOf5NzNYtmemGzM/42JdlKoDrzPS1Ny0eSw+h2ru0UWMb0u43HUs/zamO0PgxgBIPDn/Gko+tu2r5LAAVr58YMpq+TnJf3lTl856Jgc4oSbc2YG/vXHZR6ZYMdiBhq5BYeu8xc/vJUZxchGMpLGexYv9d56iGGIUsvCjtAcABEk=
+	t=1745291420; cv=none; b=Kf/jbGXRmhL0/Lq5g6D74RyT5WYFt28V8YrxnUIfZvZMMSk10xj8kXs/bvkyunkbS95tYxtpdGjhvuDwUA3vN96wIGs7hZa3Ru3f2rzY8JujoUjPAfp8v2pdfWUs5IE4SjOGrcUNu7LE1h1DITWE8vjazczvejMxQysubSQukwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745288289; c=relaxed/simple;
-	bh=olKNm6l2mt1yuke8IEo25bsaZ6K7UUmzwNfiKP4qxSE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=a+1ijwiRiybsPFJLX6+iP9l9cEQOVuF8osUq67Uh9kC6nVLLjwkTVy6noHGhw9kw9F/uty4syCrJIqqFFwdG2sJLxsxqMwLBCthdl5OHRRdZWa2OYcKfQd5TnX+UjKBUJvtxEI2ymCIx7nSl16SjjNP3ShnDllmuhK6DDK3RKUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I7NlhajG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745291420; c=relaxed/simple;
+	bh=t6fEzwJ5m43L6AmFrRZevZiLc5NbOD7snsbJJJYYPkI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gp3qkxSFmM1erN63ZE1uMHBRjU7SdUYQL3f+B7b+9ror0ucRxd7hoEmfIwb0RIV8v2PMitcb84Dz/2OZTLerwwI/xx93EAAPf8rSe/u+/BKPEOsGBv7dDpu7gvr/ZukJIHd7tPqA0q5iUYRH9ZC9PXweuODbhjFYlVoIhz7r9/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uPjCJfL6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I7NlhajG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB855C4CEEF;
-	Tue, 22 Apr 2025 02:18:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uPjCJfL6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AF52C4CEE4;
+	Tue, 22 Apr 2025 03:10:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745288289;
-	bh=olKNm6l2mt1yuke8IEo25bsaZ6K7UUmzwNfiKP4qxSE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=I7NlhajGgycaaQ1zyztIy3YzQSi2vImcq285LCeISBxxKVdrKGqb/bbTtviXt5RVO
-	 S/pU+PVriQ3eSawnYIbGQs6uP67p5XzbX6d3tIHj/I0v/SB9SfslTfacXt+Cc6powX
-	 yF2nY36ZxiKZV0HTETB08gwi/iriRWMDr1aMSgXYgfHzYEf9j0QV9Xa9G8w1cZeAWn
-	 TDz3j8o5HxlTUu3HXybUzU60PEa5h5SYJJ2dGRYMcCBppKSstp48dqjuQar0C3jmBN
-	 8I+UnpcgNZDVuz2BkkiHz532gvXpCNdVUhgzS6J5QbGfxHzsJ2826bInWHA6GQcFLc
-	 oykxmzvzgD2ZA==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Gou Hao <gouhao@uniontech.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Christoph Hellwig <hch@infradead.org>,
-	Christian Brauner <brauner@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 05/15] iomap: skip unnecessary ifs_block_is_uptodate check
-Date: Mon, 21 Apr 2025 22:17:49 -0400
-Message-Id: <20250422021759.1941570-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250422021759.1941570-1-sashal@kernel.org>
-References: <20250422021759.1941570-1-sashal@kernel.org>
+	s=k20201202; t=1745291420;
+	bh=t6fEzwJ5m43L6AmFrRZevZiLc5NbOD7snsbJJJYYPkI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uPjCJfL62qnQMHJECI5ViQrMHWxF7eXo7jUhYjEKz6iuNgPc44D1gyXo2bZfgA9DE
+	 oH6b2NTC5kLTlXGvVR2H3eKF+N31hR1qLuY0v4roCXGUo++cfGLTAdto9Q6MDIS1qp
+	 ndAM7QyxfWv+Xus52SguTBqzsfEtG4+mKZEL1nANzuIyf8SKt8gGLtj5OaXl6vWKNW
+	 qk+aGv5FjSHp97umqbmqp2cRzB9X6XTZF2FD/Yngzc8cXkSpj2zOSmjPx2ZFRzfwcD
+	 EiacyKk/6vC0Z5/6iEaR8BDmuREJk2IT0HYpyU4vEupQsqVAugPxtuvncIUkg2xxKv
+	 Msn4l0p7aSi0Q==
+Date: Mon, 21 Apr 2025 20:10:19 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Luca Di Maio <luca.dimaio1@gmail.com>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
+	smoser@chainguard.dev
+Subject: Re: [PATCH RFC 0/2] prototype: improve timestamp handling
+Message-ID: <20250422031019.GM25659@frogsfrogsfrogs>
+References: <20250416144400.940532-1-luca.dimaio1@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.87
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250416144400.940532-1-luca.dimaio1@gmail.com>
 
-From: Gou Hao <gouhao@uniontech.com>
+Crumbs, apparently I forgot ever to send this message. :(
 
-[ Upstream commit 8e3c15ee0d292c413c66fe10201d1b035a0bea72 ]
+On Wed, Apr 16, 2025 at 04:43:31PM +0200, Luca Di Maio wrote:
+> Hi all,
+> 
+> This is an initial prototype to improve XFS's prototype file
+> functionality in scenarios where FS reproducibility is important.
+> 
+> Currently, when populating a filesystem with a prototype file, all generated inodes
+> receive timestamps set to the creation time rather than preserving timestamps from
+> their source files.
+> 
+> This patchset extends the protofile handling to preserve original timestamps (atime,
+> mtime, ctime) across all inode types. The implementation is split into two parts:
+> 
+> - First patch extends xfs_protofile.in to track origin path references for directories,
+> character devices and symlinks, similar to what's already implemented for regular files.
+> 
+> - Second patch leverages these references to read timestamp metadata from source files
+> and populate it into the newly created inodes during filesystem creation.
+> 
+> At the moment, the new `xfs_protofile` generates a file that results
+> invalid for older `mkfs.xfs` implementations. Also this new implementation
+> is not compatible with older prototype files.
+> 
+> I can imagine that new protofiles not working with older `mkfs.xfs`
+> might not be a problem, but what about backward compatibility?
+> I didn't find references on prototype file compatibility, is a change
+> like this unwanted?
 
-In iomap_adjust_read_range, i is either the first !uptodate block, or it
-is past last for the second loop looking for trailing uptodate blocks.
-Assuming there's no overflow (there's no combination of huge folios and
-tiny blksize) then yeah, there is no point in retesting that the same
-block pointed to by i is uptodate since we hold the folio lock so nobody
-else could have set it uptodate.
+I think it'd be more ergonomic for mkfs users to introduce an alternate
+implementation that uses nftw() to copy whole directory trees (like
+mke2fs -d does) instead of revising a 52-year old file format to support
+copying attrs of non-regular files.  Then we can move people to a
+mechanism that doesn't require cli options for supporting spaces in
+filenames and whatnot.
 
-Signed-off-by: Gou Hao <gouhao@uniontech.com>
-Link: https://lore.kernel.org/20250410071236.16017-1-gouhao@uniontech.com
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Christian Brauner <brauner@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/iomap/buffered-io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--D
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index e7e6701806ad2..7ffdf0d037fae 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -224,7 +224,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
- 		}
- 
- 		/* truncate len if we find any trailing uptodate block(s) */
--		for ( ; i <= last; i++) {
-+		while (++i <= last) {
- 			if (ifs_block_is_uptodate(ifs, i)) {
- 				plen -= (last - i + 1) * block_size;
- 				last = i - 1;
--- 
-2.39.5
-
+> If so, what do you think of a versioned support for prototype files?
+> I was thinking something on the lines of:
+> 
+> - xfs_protofile
+>   - if the new flag:
+>     - set the first comment accordingly
+>     - add the additional information
+>   - else act as old one
+> 
+> - proto.c
+>   - check if the doc starts with the comment `:origin-files enabled`
+> 	(for example)
+>   - if so, this is the new format
+>   - else old format
+> 
+> Eager to know your thoughts and ideas
+> Thanks
+> L.
+> 
+> Luca Di Maio (2):
+>   xfs_proto: add origin also for directories, chardevs and symlinks
+>   proto: read origin also for directories, chardevs and symlinks. copy
+>     timestamps from origin.
+> 
+>  mkfs/proto.c          | 49 +++++++++++++++++++++++++++++++++++++++++++
+>  mkfs/xfs_protofile.in | 12 +++++------
+>  2 files changed, 55 insertions(+), 6 deletions(-)
+> 
+> --
+> 2.49.0
+> 
