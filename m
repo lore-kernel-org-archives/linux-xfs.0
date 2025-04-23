@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E1D0190472
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 20:03:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C95F52F88
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 20:09:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745438596; cv=none; b=uAwR0rgPFoSfNwVgwVr9ra+rUs9icbMkUJ4OzG6Dah95Cv/lYuyZe+nK8LSXFu9v1xeydBnHpKDciz3Jfi9JHG4Wq6aciPlpnPUz+Qsop9J0a9vEnnjtUuddPrCRqlY6/gVAQcAQx9YW7m9AuhEqfe9Damk4mKxAWcrNIhG223s=
+	t=1745438955; cv=none; b=BbB7QY+JCa9KTnEWWs5qvAEVSE/Ct3bQ6v/9hSJ1Ovrj7i7Xk53hP5AzrgPd8BpGdKV18ojUIQA69Svf0o68noY+X/MkXioWbmOzYO2DO6Ouxy2HhAXS+AWvCx5N5aDNRlpCG7FfsziJrIcF8Gh0y9ZTx0rdMCi4aYqx2L3+L3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745438596; c=relaxed/simple;
-	bh=qDXxUr3jeJggpm7HwjeX54HSaRuCsDJ0W0Sdh5y8ifQ=;
+	s=arc-20240116; t=1745438955; c=relaxed/simple;
+	bh=oyALTokjd2MvPWeZqD34EqwiwAVuQZzTwfwscicfI1w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eqfY7tKJKCtAALFxDZCuVMFE4FYRAwGKBk051zTDm9tABcJoc0iYbueqagV6ZrGVhrl53XnhmapjFGT4HggZ6qe7Etx6mEAtFNkozm0+c/f+xa4hjS0mzfR4d8IDZR3quIsuulRyfxj+7z9yG5hwEdsoBY4ljZ5ka9Azom3zk2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LFIkzUHr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=er9QDjbZvWTytI//pofno5nOUfhCFEPU9+bVJRZtw9SXANHBYCMMuKwTWnmkkQuePbObLoSAuG/1w6ceRccpWgaRg5Kcwi8OApLSPblH5TGF7qFhv137J3YY/5qTcw+Tlgyj8Wd9ZTlGum/yF2v5sfnETNToy1vyG7UX9dorwVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gJtDRRJ3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LFIkzUHr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 950A4C4CEE2;
-	Wed, 23 Apr 2025 20:03:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gJtDRRJ3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BABA7C4CEE8;
+	Wed, 23 Apr 2025 20:09:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745438594;
-	bh=qDXxUr3jeJggpm7HwjeX54HSaRuCsDJ0W0Sdh5y8ifQ=;
+	s=k20201202; t=1745438954;
+	bh=oyALTokjd2MvPWeZqD34EqwiwAVuQZzTwfwscicfI1w=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LFIkzUHr7lmCtUJ9+orfhyHVJT7Qnyx50GsP0ybLdhByWpY6McujhvWExWPLQLQOd
-	 7c6/bV9hVltNQ88MUoSLgejUBRruxcQA9Tll6UQn8zrgwaP5Z1hsnmRbo7RtLDtoFK
-	 6hdQwF+f/UnKhgL4suwTzpzRTwy88Wxu0vq2w8AH+p4saFTepixpsDfu8te5yKXAmb
-	 204j5KFx4bdellNXX7w/yu2V/Vmf/Yw4Jnq1aPY9ZT2qeldNnaSq8W8yXIV8jVJAP3
-	 jZyMdYymmVVuZfCAWlGd85JgiXoW+tKUsB3F8InJchVHmp26qOb8FMhXrdfv1ANnSz
-	 LTZ6eMDBNsIEQ==
-Date: Wed, 23 Apr 2025 13:03:14 -0700
+	b=gJtDRRJ3ejti3FpiaDcExq/WOMmJrIs1quewCnHUOACFu9mS+/2lhzXg+/LnUfBc3
+	 KiiS/Ink9Oy1CojWr+Z5Ofik9f/YCKQ/01+QhGBUOzY3oVsIZtaCWTNqa5AA8LVgzp
+	 KGFNzTHVD/YW+jrc0lIP4k9i5CRgCjtV6iwIvj7SbWBPBHok5Pekop0NctGv85kg75
+	 57UN8JGKsIVB4ARzHwAxQrHxqk72QtnjT4KwBtYHS9xAtvg2DjjI3uz93qUXnTG+xC
+	 slI/zlgs9j82XDnml7uo4S+8bBUB36YvYinUz7Zt3G2oPrdSQXcdLMdfyItObvjrAz
+	 aIUKoin0mEIxg==
+Date: Wed, 23 Apr 2025 13:09:14 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Luca Di Maio <luca.dimaio1@gmail.com>
 Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
 	smoser@chainguard.dev, hch@infradead.org
-Subject: Re: [PATCH v6 0/4] mkfs: add ability to populate filesystem from
+Subject: Re: [PATCH v6 3/4] mkfs: add -P flag to populate a filesystem from a
  directory
-Message-ID: <20250423200314.GG25675@frogsfrogsfrogs>
+Message-ID: <20250423200914.GH25675@frogsfrogsfrogs>
 References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
+ <20250423160319.810025-4-luca.dimaio1@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,67 +44,95 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250423160319.810025-1-luca.dimaio1@gmail.com>
+In-Reply-To: <20250423160319.810025-4-luca.dimaio1@gmail.com>
 
-On Wed, Apr 23, 2025 at 06:03:15PM +0200, Luca Di Maio wrote:
-> Currently the only way to pre populate an XFS partition is via the
-> prototype file. While it works it has some limitations like:
->   - not allowed spaces in file names
->   - not preserving timestamps of original inodes
+On Wed, Apr 23, 2025 at 06:03:18PM +0200, Luca Di Maio wrote:
+> Add a `-P` flag to populate a newly created filesystem from a directory.
+> This flag will be mutually exclusive with the `-p` prototype flag.
 > 
-> This series adds a new -P option to mkfs.xfs that allows users to
-> populate a newly created filesystem directly from an existing directory.
-> While similar to the prototype functionality, this doesn't require
-> writing a prototype file.
-> The implementation preserves file and directory attributes (ownership,
-> permissions, timestamps) from the source directory when copying content
-> to the new filesystem.
+> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+> ---
+>  mkfs/xfs_mkfs.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
 > 
-> [v1] -> [v2]
->   remove changes to protofile spec
->   ensure backward compatibility
-> [v2] -> [v3]
->   use inode_set_[acm]time() as suggested
->   avoid copying atime and ctime
->   they are often problematic for reproducibility, and
->   mtime is the important information to preserve anyway
-> [v3] -> [v4]
->   rewrite functionality to populate directly from an input directory
->   this is similar to mkfs.ext4 option.
-> [v4] -> [v5]
->   reorder patch to make it easier to review
->   reflow to keep code below 80 chars
->   use _() macro in prints
->   add SPDX headers to new files
->   fix comment styling
->   move from typedef to structs
->   move direntry handling to own function
-> [v5] -> [v6]
->   rebase on 6.14
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 3f4455d..57dbeba 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -14,6 +14,7 @@
+>  #include "libfrog/dahashselftest.h"
+>  #include "libfrog/fsproperties.h"
+>  #include "proto.h"
+> +#include "populate.h"
+>  #include <ini.h>
+> 
+>  #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
+> @@ -1022,6 +1023,7 @@ struct cli_params {
+> 
+>  	char	*cfgfile;
+>  	char	*protofile;
+> +	char	*directory;
+> 
+>  	enum fsprop_autofsck autofsck;
+> 
+> @@ -1170,6 +1172,7 @@ usage( void )
+>  /* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
+>  /* no-op info only */	[-N]\n\
+>  /* prototype file */	[-p fname]\n\
+> +/* populate */		[-P directory]\n\
+>  /* quiet */		[-q]\n\
+>  /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rgcount=n,rgsize=n,\n\
+>  			    concurrency=num]\n\
+> @@ -5254,7 +5257,7 @@ main(
+>  	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
+>  	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
+> 
+> -	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
+> +	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:P:m:n:KNp:qr:s:CfV",
+>  					long_options, &option_index)) != EOF) {
+>  		switch (c) {
+>  		case 0:
+> @@ -5280,6 +5283,9 @@ main(
+>  				illegal(optarg, "L");
+>  			cfg.label = optarg;
+>  			break;
+> +		case 'P':
+> +			cli.directory = optarg;
+> +			break;
 
-Urrrk, one revision per day, please.
+Uh... why not modify setup_proto to check the mode of the opened fd, and
+call populate_from_dir if it's a directory?  Then you don't need all the
+extra option parsing code.  It's not as if -p <path> has ever worked on
+a directory.
 
 --D
 
-> Luca Di Maio (4):
->   proto: expose more functions from proto
->   populate: add ability to populate a filesystem from a directory
->   mkfs: add -P flag to populate a filesystem from a directory
->   man: document -P flag to populate a filesystem from a directory
+>  		case 'N':
+>  			dry_run = 1;
+>  			break;
+> @@ -5478,9 +5484,20 @@ main(
+>  		initialise_ag_freespace(mp, agno, worst_freelist);
 > 
->  man/man8/mkfs.xfs.8.in |   7 +
->  mkfs/Makefile          |   2 +-
->  mkfs/populate.c        | 313 +++++++++++++++++++++++++++++++++++++++++
->  mkfs/populate.h        |  10 ++
->  mkfs/proto.c           |  33 ++---
->  mkfs/proto.h           |  22 +++
->  mkfs/xfs_mkfs.c        |  23 ++-
->  7 files changed, 385 insertions(+), 25 deletions(-)
->  create mode 100644 mkfs/populate.c
->  create mode 100644 mkfs/populate.h
+>  	/*
+> -	 * Allocate the root inode and anything else in the proto file.
+> +	 * Allocate the root inode and anything else in the proto file or source
+> +	 * directory.
+> +	 * Both functions will allocate the root inode, so we use them mutually.
+>  	 */
+> -	parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
+> +	if (cli.protofile && cli.directory) {
+> +		fprintf(stderr,
+> +			_("%s: error: specifying both -P and -p is not supported\n"),
+> +			progname);
+> +		exit(1);
+> +	}
+> +	if (!cli.directory)
+> +		parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
+> +	else
+> +		populate_from_dir(mp, NULL, &cli.fsx, cli.directory);
 > 
-> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
-> 
+>  	/*
+>  	 * Protect ourselves against possible stupidity
 > --
 > 2.49.0
 > 
