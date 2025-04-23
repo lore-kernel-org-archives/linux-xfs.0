@@ -1,133 +1,81 @@
-Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1EF0266572
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 18:02:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85E932701AB;
+	Wed, 23 Apr 2025 19:53:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745431351; cv=none; b=ijUysIT10TW0yyfDT111/YRO1pmuECLFh6AhWOdmZZSTUr6huOVhTwwwcFY9HLBC6NZNN2jdRIz7/bQ/sGiYWy+bbDczWFWtQsoo3b3LcHVVyGgz1Vsnb9K+SmHGEDIX2wpUgwRRTXu8uIq9mwRfFHwM2cTVp7419eFfWbwzvUw=
+	t=1745438017; cv=none; b=oSXo2wP6rHe6SYJa2iyppAo05rAb1FU1XzUowrcDqpYUmQ1Wf90bx8M1P6fOPTlelHDucmBryZgG+GULGV1zykXjEn32N6J2w/Oc6A3mdxl50GkcFaVb4T5buygVvrMaJtgXhU7hd3MPiLsLJJBojs0wBey7f/vrchdK0OCRQoo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745431351; c=relaxed/simple;
-	bh=BSV2S5axVk3jR2Dj4hy0PRdYG9l3BhCOacRqX+is/5o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cCVZXEHb+FnJgfoFVPapZ/d/TrOoUo74kXAc7Ow3ivvQpUqNfLj4Pu6L2VSDmcXnrYtG9dXwy6sb9aWj188qv//hxieps2JPTHSv8l9oi061ZoG7PQKugwLV/QmWJHVmtdqYxw5ScZEifUj7GlNqfNcnT3bTag69XoLtmF9+kOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=WKzXkeLy; arc=none smtp.client-ip=91.218.175.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1745438017; c=relaxed/simple;
+	bh=YncPqb7aIQZETQRJ3H6xA4SvYFka8O6TeRG7Wk0025E=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=dfBDwOLp/oVO9MKvG66SKCVnBThL3GIn/TDWIfXKcn2Oee5i32R55hyvs5k1KNSiwVge1eFBX3CCLv2BpU+o/JmCIROfm9jTBLbk777WckbC/WlYKvcHj4WGAlqoOU6BYMRfcSk35Wse44Oa8oWiqlw8uK+XzLSCRLtxdDiV0x4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vb38UWg+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="WKzXkeLy"
-Date: Wed, 23 Apr 2025 14:02:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1745431337;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8BS6PilBZgvTDPZhVhVWu7ww97sBPTJLkhr1PmWiCpA=;
-	b=WKzXkeLyNYDwk/eCKuYZUCO+ERfNfkrsogpUfK8yviZk5KF8v/jUkJdnJU+r8oZr+ubgz5
-	x6V9oP+fLmYCwLsnSZd82pB9eEkKHjvuhiG4VRWZPCOzP6wYwxgwjmy1iiuNhSzk9iSRcj
-	k8plvwA+ho8NM7aL2D7SLNCO8wUepbA=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, 
-	"Md. Haris Iqbal" <haris.iqbal@ionos.com>, Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>, 
-	Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>, 
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
-	Andreas Gruenbacher <agruenba@redhat.com>, Carlos Maiolino <cem@kernel.org>, 
-	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
-	Johannes Thumshirn <jth@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Pavel Machek <pavel@kernel.org>, linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: add more bio helper
-Message-ID: <q53k4x5nshvr2zatrgyhygxouv7ijyepe6cj2pfooemi6gbu4y@lpxxcvozazzu>
-References: <20250422142628.1553523-1-hch@lst.de>
- <jetduw7zshrmp4gl7zfpwqjweycwesxiod7xvtnxqwqekgtvdf@idwnvfzvhgik>
- <20250423093621.GA2578@lst.de>
- <sl4oibdxpjygqfpy6llq237zuckz7ym4fmzcfvxn2raofr37a5@hvevbcgm5trn>
- <20250423160733.GA656@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vb38UWg+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2138C4CEE8;
+	Wed, 23 Apr 2025 19:53:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745438017;
+	bh=YncPqb7aIQZETQRJ3H6xA4SvYFka8O6TeRG7Wk0025E=;
+	h=Date:Subject:From:To:Cc:From;
+	b=Vb38UWg+UyXbKCVjAfBVbNjxi60sVKSE1XmkOZPi3iOCtrQv6g8vD5fKNR1dNA2Hh
+	 NJrjLO/zsXeqhgTboekQpih1q1Rv+ioNAWS2aTBm6TaNLlhjp7ddEZnuMplQdxl3h1
+	 CkOy9fSlu8ewFAWsGDrB8CK75ohahInlkQrisvKDT3N8VfrjkAP1lW19wviEzpLLOz
+	 QjxjqBsl1TF8zYhhFBvWX3P2awDSsyHABXD94FZlng9PBzogCrrFT/f8C4P9syWXgp
+	 p6gF2MEUvHE2APGrkPzIkAVT/+a4wgGoGU+fLpJENnUCyUC9F23S2cOcKGfrtVhvaR
+	 tJjhm8iCe4IAg==
+Date: Wed, 23 Apr 2025 12:53:36 -0700
+Subject: [PATCHSET V4] block/xfs: bdev page cache bug fixes for 6.15
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, djwong@kernel.org, axboe@kernel.dk
+Cc: hch@lst.de, mcgrof@kernel.org, shinichiro.kawasaki@wdc.com,
+ hch@infradead.org, willy@infradead.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, shinichiro.kawasaki@wdc.com,
+ linux-block@vger.kernel.org, mcgrof@kernel.org
+Message-ID: <174543795664.4139148.8846677768151191269.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250423160733.GA656@lst.de>
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 23, 2025 at 06:07:33PM +0200, Christoph Hellwig wrote:
-> On Wed, Apr 23, 2025 at 06:37:41AM -0400, Kent Overstreet wrote:
-> > > It also don't support bio chaining or error handling and requires a
-> > > single bio that is guaranteed to fit the required number of vectors.
-> > 
-> > Why would bio chaining ever be required? The caller allocates both the
-> > buf and the bio, I've never seen an instance where you'd want that; just
-> > allocate a bio with the correct number of vecs, which your
-> > bio_vmalloc_max_vecs() helps with.
-> 
-> If you go beyond 1MB I/O for vmalloc you need it because a single
-> bio can't hold enough page size chunks.  That is unless you want
-> to use your own allocation for it and call bio_init which has various
-> other downsides.
+Hi all,
 
-Allocating your own bio doesn't allow you to safely exceed the
-BIO_MAX_VECS limit - there's places in the io path that need to bounce,
-and they all use biosets.
+Here are a handful of bugfixes for 6.15.  The first patch fixes a race
+between set_blocksize and block device pagecache manipulation; the rest
+removes XFS' usage of set_blocksize since it's unnecessary.  I think this
+is ready for merging now.
 
-That may be an issue even for non vmalloc bios, unless everything that
-bounces has been converted to bounce to a folio of the same order.
+v1: clean up into something reviewable
+v2: split block and xfs patches, add reviews
+v3: rebase to 6.15-rc3, no other dependencies
+v4: add more tags
 
-> > The "abstract over vmalloc and normal physically contigious allocations"
-> > bit that bch2_bio_map() does is the important part.
-> > 
-> > It's not uncommon to prefer physically contiguous allocations but have a
-> > vmalloc fallback; bcachefs does, and  xfs does with a clever "try the
-> > big allocation if it's cheap, fall back to vmalloc to avoid waiting on
-> > compaction" that I might steal.
-> > 
-> > is_vmalloc_addr() is also cheap, it's just a pointer comparison (and it
-> > really should be changed to a static inline).
-> 
-> The problem with transparent vmalloc handling is that it's not possible.
-> The magic handling for virtually indexed caches can be hidden on the
-> submission side, but the completion side also needs to call
-> invalidate_kernel_vmap_range for reads.  Requiring the caller to know
-> they deal vmalloc is a way to at least keep that on the radar.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-yeesh, that's a landmine.
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
-having a separate bio_add_vmalloc as a hint is still a really bad
-"solution", unfortunately. And since this is something we don't have
-sanitizers or debug code for, and it only shows up on some archs -
-that's nasty.
+--D
 
-> The other benefit is that by forcing different calls it is much
-> easier to pick the optimal number of bvecs (1) for the non-vmalloc
-> path, although that is of course also possible without it.
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bdev-fixes-6.15
+---
+Commits in this patchset:
+ * block: fix race between set_blocksize and read paths
+ * block: hoist block size validation code to a separate function
+ * xfs: stop using set_blocksize
+---
+ include/linux/blkdev.h |    1 +
+ block/bdev.c           |   50 ++++++++++++++++++++++++++++++++++++++++++------
+ block/blk-zoned.c      |    5 ++++-
+ block/fops.c           |   16 +++++++++++++++
+ block/ioctl.c          |    6 ++++++
+ fs/xfs/xfs_buf.c       |   15 +++++++++++---
+ 6 files changed, 82 insertions(+), 11 deletions(-)
 
-Your bio_vmalloc_max_vecs() could trivially handle both vmalloc and non
-vmalloc addresses.
-
-> Not for a purely synchronous helper we could handle both, but so far
-> I've not seen anything but the xfs log recovery code that needs it,
-> and we'd probably get into needing to pass a bio_set to avoid
-> deadlock when used deeper in the stack, etc.  I can look into that
-> if we have more than a single user, but for now it doesn't seem
-> worth it.
-
-bcache and bcachefs btree buffers can also be vmalloc backed. Possibly
-also the prio_set path in bcache, for reading/writing bucket gens, but
-I'd have to check.
-
-> Having a common helper for vmalloc and the kernel direct mapping
-> is actually how I started, but then I ran into all the issues with
-> it and with the extremely simple helpers for the direct mapping
-> which are used a lot, and the more complicated version for vmalloc
-> which just has a few users instead.
-
-*nod*
-
-What else did you run into? invalidate_kernel_vmap_range() seems like
-the only problematic one, given that is_vmalloc_addr() is cheap.
