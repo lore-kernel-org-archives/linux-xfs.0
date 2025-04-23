@@ -1,49 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A80328EA56;
-	Wed, 23 Apr 2025 15:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90DAA284B20
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 15:31:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745421664; cv=none; b=CzoaN6kSjcusaXMZ4Ryfpu6yP0vXKr4MFMX33jmBKZkJDxMeMzTz89V9KSsUr6JgMlnj6l3uk1k4LlzlRHcPDTnEDHYAPboI8LU3CvUZz06ukHqIXNZ+PtTknLXWWErtvnggzp8Fzcuq1UxNbHvJ7f1r0YTNXl6Jf7VwCG6TyT4=
+	t=1745422284; cv=none; b=a4Ls4EycK1jp1XgjaXqcMxl1YJW+VrCM5AVWB7QhTpoOqyeQZTrVos25/0pu9HS7OkPQ/SY5vgltwUag+K+c/qsY0TJJ7mHuaX2brMvANkFdoVfxrq5eKghkjRewfn9TjaMoSd8RqVXW42pbq4dbkMcddYjAl6TbqkUbBnD5JEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745421664; c=relaxed/simple;
-	bh=gzxfMjmVDcE5HTN533uohFiedZVmeDQ1cuY6pDnPCmw=;
+	s=arc-20240116; t=1745422284; c=relaxed/simple;
+	bh=AlQKNVWBdQVa+yp2isWGNjAg0OBA996MZQApNs4Ig5k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EaWkc1oAQEdvIOweInP4s/ShATUMBBc3pJpH8NXwg4DBJyx4odNzPvW1uCmg+r0TFMUBFKaXPCohfVDL8or0clzGv5E/P02u4GjD5RNvuxIZ5x575jkMHthujX2SN3ntUA+a/9R6AoVRoLgXhcm+3SdMQ9NZY9mWhxWstS8UGCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dDOfynEO; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tZ9Mc3H5PVXpEArk3woGNHakX12qGNb/6+Mfy7SH+5wrGz5+w3LLIu5zkvM/Eq+H1JrLNievQbHLolq9D0rTFC/BFJozfh9Zp3HiPFdKjlZ1qdZp1D6sAg17gHqtn1MEIdv7ge6woZceiAMZus2PY/smWq6Udga7ByzKQhVUg/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oJiluoXR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dDOfynEO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 946BAC4CEE2;
-	Wed, 23 Apr 2025 15:21:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oJiluoXR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CD42C4CEE2;
+	Wed, 23 Apr 2025 15:31:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745421663;
-	bh=gzxfMjmVDcE5HTN533uohFiedZVmeDQ1cuY6pDnPCmw=;
+	s=k20201202; t=1745422284;
+	bh=AlQKNVWBdQVa+yp2isWGNjAg0OBA996MZQApNs4Ig5k=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dDOfynEOoA4vbAHa9Hman68CVhYpB5f2QQxguP0d/0HUXVHH8mcFm0u4O+hUriE8c
-	 fqI/5nMKaytYWRHaHISUkcdsLgxWZbSkB6xcuN2bJwmAXz0G/5yzOIVAZpGMIzPdmn
-	 0rOUuqxc+KYeREy2cG9Xn8c+22AcHQRPqN7EpWDMWvA2t97//qi1ZupV0hiLw8lC02
-	 OBWRswrTEyhGusOH1d+hGuIp6+HrcjXvV2psOfPGtHgg9Ao+MMnVBiPqwEozxfXtBB
-	 K4rcNs4CTyjq70cp7FN9TxW/+fXmZyF740JCMINBW3fdddcwTWb/rTYO/y+91tI2tt
-	 74nZhaf7VhYsg==
-Date: Wed, 23 Apr 2025 08:21:03 -0700
+	b=oJiluoXRAFM8SeJRBAbIjkWw2lEwyadgKewOXcVrhUhlZLbZx69dJGct1dPqkQrwQ
+	 a7EWjiICdGTgxzOqNBALLpopgpmcnt+DtL8RuWyis108CA12LESOqapXNL+j+plzn0
+	 Y0ODtrlx4d18jO4H8CAvVb5eGzUU6UT32M3PNwVI0lkYM8GxGFBCzyB2Rqkl3kFVf2
+	 nUeP+Uysvb8jWqSq5tqjtzLilSGmpZvhhOj8qSiv7X17xE1nxYSuReS6hHEYWEBA0c
+	 6+JbJliKRa5T4DXo4Jlx+LmQRAD8IvzszPT5FlT4IGQbMLM4Lxf4q2u4Tk2sgkblJY
+	 9QD+v2ueAAQig==
+Date: Wed, 23 Apr 2025 08:31:23 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
-	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
-	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH v8 15/15] xfs: allow sysadmins to specify a maximum
- atomic write limit at mount time
-Message-ID: <20250423152103.GD25675@frogsfrogsfrogs>
-References: <20250422122739.2230121-1-john.g.garry@oracle.com>
- <20250422122739.2230121-16-john.g.garry@oracle.com>
- <20250423083209.GA30432@lst.de>
- <20250423150110.GB25675@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfs_io: catch statx fields up to 6.15
+Message-ID: <20250423153123.GE25675@frogsfrogsfrogs>
+References: <20250416052134.GB25675@frogsfrogsfrogs>
+ <aAcz6NiFfxJHAHQ5@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,43 +43,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250423150110.GB25675@frogsfrogsfrogs>
+In-Reply-To: <aAcz6NiFfxJHAHQ5@infradead.org>
 
-On Wed, Apr 23, 2025 at 08:01:10AM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 23, 2025 at 10:32:09AM +0200, Christoph Hellwig wrote:
-> > On Tue, Apr 22, 2025 at 12:27:39PM +0000, John Garry wrote:
-> > > From: "Darrick J. Wong" <djwong@kernel.org>
-> > > 
-> > > Introduce a mount option to allow sysadmins to specify the maximum size
-> > > of an atomic write.  If the filesystem can work with the supplied value,
-> > > that becomes the new guaranteed maximum.
-> > > 
-> > > The value mustn't be too big for the existing filesystem geometry (max
-> > > write size, max AG/rtgroup size).  We dynamically recompute the
-> > > tr_atomic_write transaction reservation based on the given block size,
-> > > check that the current log size isn't less than the new minimum log size
-> > > constraints, and set a new maximum.
-> > > 
-> > > The actual software atomic write max is still computed based off of
-> > > tr_atomic_ioend the same way it has for the past few commits.
+On Mon, Apr 21, 2025 at 11:15:04PM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 15, 2025 at 10:21:34PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > The cap is a good idea, but a mount option for something that has
-> > strong effects for persistent application formats is a little suboptimal.
-> > But adding a sb field and an incompat bit wouldn't be great either.
-> > 
-> > Maybe this another use case for a trusted xattr on the root inode like
-> > the autofsck flag?
+> > Add all the new statx fields that have accumulated for the past couple
+> > of years.
 > 
-> That would be even better, since you could set it at mkfs time and it
-> would persist until the next xfs_property set call.
+> I only see a single new field, although I can spot a few flags and
+> missing printing of a few fields.
+> 
+> Maybe update the commit log a little?
 
-[/me hands himself another coffee]
+"Add all the new statx fields and flags that have accumulated for the
+past couple of years so they all print now." ?
 
-The only problem is, setting the property while the fs is mounted does
-not change the actual fs capability until the next mount since
-properties are regular (and not magic) xattrs.
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Thanks!
 
 --D
-
-> --D
-> 
