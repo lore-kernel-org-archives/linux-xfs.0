@@ -1,48 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B4BD2741D5;
-	Wed, 23 Apr 2025 07:30:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61F61DE3C3;
+	Wed, 23 Apr 2025 07:36:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745393442; cv=none; b=doG3erJz2XroR4U+oxjNaJPkTZGuEjDJi6Mo9YqKI5cP4Op0jojXHONe9od5WHUNnoKP6mR79O6hcXGZywXl/P5LT6xNGav9awmNvqKZF1YEh+QIw7k/18pcX8wfY6aSK7ZzDgMp94zJgHgEGmKLey+iL2XbuOznUfqx124ArcI=
+	t=1745393785; cv=none; b=KnUHCyd6tojac7WAqSlVgv026O4dHGhtgI+6S2sLt3IMHPcAbxNynlU5AAISporav95QeQuMcOoHjHUMrFNoYhsxajqxLSglBHifHa5Ggbl6Q0IeE7aBuBtu7Dtk/8AR3HynZuU3Y4ETYYTd99mp3YxikWcn2E29ILqZ6Us8X2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745393442; c=relaxed/simple;
-	bh=HZRYRCV3pXnH6mdLHlJbBbonz669nVLcSkwX4WuVk9g=;
+	s=arc-20240116; t=1745393785; c=relaxed/simple;
+	bh=Yzkq2uyGzZyQgkKjl3TYYD6a4FU8WuLLe5IWzRRT544=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kzsRrM1QWlOuFaUoHpZA0AMEvyxUUJx0XCzgPwxOjF5GWGbk0qPPFvX78lBMo3E8nuK3hkVwSu0peE0ZlGihK/s+vfOsmBiYHRcXmGWFKVuV3rQW2lLAOahYjugXwTJJA8d4FmAqviU3fb4ATaVB06Z/TqLt3IDOC7BCphwGWek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=SMgd2C/E; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=c/8X6bt/RMkKFC0idR4H4Bxl35QV4hFtk08fbnbAi1htCbwjk5ngLIiEjhM4tnO7Eg07YxXiNu437Uw5+UEQqY7WJf08EnCrfwgmltg/E6BOCCv/7XLCqTXrh9X/qpDK9x9rqmp7v0Fmi7tsES2a1bx9fg97X1DBVrGVg6lLwSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lKhitSoH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="SMgd2C/E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17AB8C4CEEF;
-	Wed, 23 Apr 2025 07:30:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1745393441;
-	bh=HZRYRCV3pXnH6mdLHlJbBbonz669nVLcSkwX4WuVk9g=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lKhitSoH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE123C4CEE2;
+	Wed, 23 Apr 2025 07:36:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745393784;
+	bh=Yzkq2uyGzZyQgkKjl3TYYD6a4FU8WuLLe5IWzRRT544=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SMgd2C/EoxuVOUJ44YVL8CqVz2U186QceBQy1SZFk/H9Hvbb41O8RUFvb/ihIlZ1g
-	 lQ+8Cp8pJGO8mB6RgrPjfc72/xEtChIQD0af7NGc2jjqOuz0BIqaYdLi2NjfiMueAM
-	 4DjPCfOwlwomfKqROJn7MNH4R3BeBAI39Ut5HdKw=
-Date: Wed, 23 Apr 2025 09:29:02 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Yang, Zhi" <Zhi.Yang@windriver.com>
-Cc: "cem@kernel.org" <cem@kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"llfamsec@gmail.com" <llfamsec@gmail.com>,
-	"He, Zhe" <Zhe.He@windriver.com>,
-	"Chen, Xiangyu" <Xiangyu.Chen@windriver.com>,
-	"amir73il@gmail.com" <amir73il@gmail.com>,
-	"djwong@kernel.org" <djwong@kernel.org>,
-	"dchinner@redhat.com" <dchinner@redhat.com>,
-	"chandanbabu@kernel.org" <chandanbabu@kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 5.10.y] xfs: add bounds checking to
- xlog_recover_process_data
-Message-ID: <2025042345-enable-economist-b5b6@gregkh>
-References: <20250423021325.1718990-1-Zhi.Yang@eng.windriver.com>
- <2025042340-delicate-stubbed-218e@gregkh>
- <DM6PR11MB3324E74F9DF280B6E13914619FBA2@DM6PR11MB3324.namprd11.prod.outlook.com>
+	b=lKhitSoHmtRl00kFHQbdZToHWxFgJZviiv1jLaoUumjtoCmrRZb8OLIM3P+9JBle7
+	 ULIO61Kz5qTBaMybVUk0DChx2QD5XHo1Z1HHbtuKOWvHuh4mE4/sTxU7RNKcAMbEiw
+	 n4kjGNC04SRADc7uIrljY/txywHNGwxT+FZ/StWaA+ivxvCObvj/dLG7LGp87dH7co
+	 wXxZQnwXoqhs1/dHARfvIChX5dg+vk3bfyAQB52tPM2Qzw8l/N0uKG3vhZL+UMrsfE
+	 FrgErfvgjN3bjj1QDSklh6f27NyNJBXISa4GYz9mF/jGWoNWJl6O21pDTrJQWUObsj
+	 we+7zQ72ggQug==
+Date: Wed, 23 Apr 2025 00:36:22 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+	brauner@kernel.org, djwong@kernel.org, hch@lst.de,
+	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
+	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
+	linux-api@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>,
+	Daniel Gomez <da.gomez@samsung.com>
+Subject: Re: [PATCH v7 11/14] xfs: add xfs_file_dio_write_atomic()
+Message-ID: <aAiYdoZsnUTUntnm@bombadil.infradead.org>
+References: <20250415121425.4146847-1-john.g.garry@oracle.com>
+ <20250415121425.4146847-12-john.g.garry@oracle.com>
+ <aAa2HMvKcIGdbJlF@bombadil.infradead.org>
+ <69302bf1-78b4-4b95-8e9b-df56dd1091c0@oracle.com>
+ <aAh4L9crlnEf3uuJ@bombadil.infradead.org>
+ <cf67f166-4c65-4d76-a3a2-1ad2614e89b7@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,9 +55,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DM6PR11MB3324E74F9DF280B6E13914619FBA2@DM6PR11MB3324.namprd11.prod.outlook.com>
+In-Reply-To: <cf67f166-4c65-4d76-a3a2-1ad2614e89b7@oracle.com>
 
-On Wed, Apr 23, 2025 at 07:24:41AM +0000, Yang, Zhi wrote:
-> Add xfs stable maintainer.
+On Wed, Apr 23, 2025 at 08:08:40AM +0100, John Garry wrote:
+> On 23/04/2025 06:18, Luis Chamberlain wrote:
+> > On Tue, Apr 22, 2025 at 07:08:32AM +0100, John Garry wrote:
+> > > On 21/04/2025 22:18, Luis Chamberlain wrote:
+> > 
+> > Sounds like a terrible predicant for those that want hw atomics and
+> > reliability for it.
+> 
+> Well from our MySQL testing performance is good.
 
-That provided no context at all.  Please do this properly.
+Good to hear, thanks!
+
+  Luis
