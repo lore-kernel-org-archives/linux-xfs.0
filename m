@@ -1,64 +1,80 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 195B114900B;
-	Wed, 23 Apr 2025 06:02:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 779751BD517
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 06:05:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745388176; cv=none; b=amrtOzpBlpiba1j6VNm2GGe2ZJrd3aLWKuTOePg/0iKph2VXp0JQXn0MEHQmpil5BcZDP6B7RVrjbsobrpkF6U/Azf8nglxHuI7OjQkaPMDfabwlGkJe3rWgYGYXgc7EptINHrwdwGdlDUDFyPyZMyZC8uN98dfOaOD7qLQp/Gs=
+	t=1745388360; cv=none; b=jUIqbl73MG3YnSQ0F71xSNBWGt1YJ49wecoImvCn3Eo4csZsxXEbp7Q0oa+lWT2O2lYIS6jE6BTDP6W/TDpUtFwIWPVwB3Cn203lUzz2+NI/FJhstXS0lvaaROfUZIHq7kgj9m5AVbe88/W7MSBumJ7h/XTAHyyVM2pFVh6Z2gw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745388176; c=relaxed/simple;
-	bh=rY6PqrHqGzIE6R8mrMi04HII8o5r81P/XprkeaGWQwI=;
+	s=arc-20240116; t=1745388360; c=relaxed/simple;
+	bh=GYzMHLcAsVWzyWn3po2G26RuijsKguDyw9DQZzgjWQw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=No4obpKSR3nsIz7MB955+rb43KDbqkCd3n92fodor+2u01ABsuZkaBXiPEzTgPFAUxbtlAEVjrs+gOiZhhuSTqeXkAmjZrd7mJNFCLrtQMyvtLbypYZr0K6o7QoxvKw0NlnJamYVMNPhTo8AGIR0Tu/FPRLJqvSAQ+1ceThAyZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X9Cye0xD; arc=none smtp.client-ip=209.85.210.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 In-Reply-To:Content-Type; b=ed+m3OFmWc9H2ro9upMWjb87LEaVTKaAVTB8IygDCh6Wg6Uq0fDOPq3v/7aIAkRWKoBmUIwykki0py1ww4pcLhWWuGbQQQ06wqfgklVHs2GC6k1Uyac98uCvfad3ANbrxfak1iiLYOSLv9vS9K1o1/C0HqizEydPlegYrMW+fIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=CmTl5vO3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=j3xXW7/z; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=CmTl5vO3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=j3xXW7/z; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X9Cye0xD"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-736aa9d0f2aso7468521b3a.0;
-        Tue, 22 Apr 2025 23:02:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745388174; x=1745992974; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=gXZ5TRaDdNFNR1l8MfvxYLddFq49FbInV9BwUmDWSDc=;
-        b=X9Cye0xDehqXRbKwtlGb3EPgoBXq7CCYSlcSLM9r5A2yJVEvkbjDBsZnsFGX4wUMWA
-         hMarXUzcISbyd6FqK1Z9VR/7VjuYe+Vkc56zYPEsb/wPGNocz7WotP350OZFb2iBIz66
-         4Mevc3MAUB5V8axFxgOW7sBEkgdxTF92U4A6WA41Z7EbBWUTtdJpLuPZwJME8UmEVpO6
-         vki8bL1qcVpwgzfqtRXyT8YP12QMrTTCIEQqybXSzwrGzXPUUZ9jMsk3c9rwdadRI0wS
-         nIac37nTfwBKKIPerTO7IHmF1Mlfu1mQF7oXDFX8PecDESFeI8nj1UGr2x0gdHEZ4/Ov
-         TS0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745388174; x=1745992974;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gXZ5TRaDdNFNR1l8MfvxYLddFq49FbInV9BwUmDWSDc=;
-        b=OPayfq0UCocvOIJ6RJFUWCAQCoEPoaDKPfs6fdx33w3J4MsekQBLvm13xThyNxUXMS
-         8kJMbEH0N3cCSAaaFE2Z4cNrRbAjd6mmgcGjcNWy/Sf3bs5DB7m0mL46kyegyESmftyG
-         t8IqUAraWA/mpqZDGn0UMl7zJRy7UA7idFNxkOm3cTY+GbCxEpLhOOOVKDIROrSuLxLP
-         aK2j1xL8rouytYyDmWIAFYctWHJSJ/VFwfQIMZH4aqqCnfkCYAUG8M7TDX3Ih0ptULqo
-         IazYVnEqHpiGX4TKC0vVqeyUAltqozxd1GYQRORaJEAJSwv/bDFW14clAT1RbYexTUWS
-         0TwA==
-X-Forwarded-Encrypted: i=1; AJvYcCUSS7OpCqSJYQQhp2Bst3/2tjWtH0FanbK4nW8MhyBzByumPnygZgSBnAFBm2eYvxS/6KKYJIKQ@vger.kernel.org, AJvYcCVKLCZuUpzvK0pjX4KBW8coNsSRX1i5v32cG+OIz4Eryk+tIYtggQ8AWnTX4XCfnlGL8dO97nGay7khsA==@vger.kernel.org, AJvYcCW1y8fiRvRS04aDlwK3SB/2i2th5sWWeLFk/xZEFq4tFQVZxcH3NDG7a4+3ZQ4P319EsuNm7o69f842@vger.kernel.org
-X-Gm-Message-State: AOJu0YzCvJIvKe2mGnP+j5OXr4LP+0zYtdJNQcqcE8qFsJq6+fnGgeNO
-	zouulZKlbmkodUwgsC6XhYBcHTNvASQllH5SNVCGOCQiIf9mXHSJ
-X-Gm-Gg: ASbGncs+DUSmG5Ok8GV6gIPJkZH+H/TcTMThirx76UqYUQ9kLLJYVHUVQ1EVYcsdGgR
-	tSEsI6Br8haPTeGxcFYpaIKtWABnadDHyJ52Eoy4zlVIZ4Dr3ND5EN98JKJldUri64vkWeo86mu
-	Le8vcuthCMh7MibvsDqF0sAilzQPzQpM/6K1LNdLpY0frtTJY3ufq1cUzHieowY3Yy4ai3qN3DY
-	7EtBpVSOmzFbxxi7sqGztRFy7IuuDvw/apMc1JtWONH16hUkheSMQkfuXo6iZlIjCSDXidsdG8B
-	UD9SZV8zauzjakYU9G/0v08KJkRw7XQ3/6RrE+ox+NRhbdEi6Wg=
-X-Google-Smtp-Source: AGHT+IGbpb2C4BoZVgWkMH7mSKy8EpASdLJRRqOzZfJIkWnLm5PxEM26mimNlHgM48JvE9hXUJbpLg==
-X-Received: by 2002:a05:6a21:9987:b0:1ee:efa5:6573 with SMTP id adf61e73a8af0-203cbbee8a9mr27678918637.8.1745388174246;
-        Tue, 22 Apr 2025 23:02:54 -0700 (PDT)
-Received: from [192.168.0.120] ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b0db1590cb1sm8266560a12.78.2025.04.22.23.02.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Apr 2025 23:02:53 -0700 (PDT)
-Message-ID: <b15906c4-3cd0-481f-8f8b-3dc3e581d817@gmail.com>
-Date: Wed, 23 Apr 2025 11:32:47 +0530
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="CmTl5vO3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="j3xXW7/z";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="CmTl5vO3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="j3xXW7/z"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 80BB31F38D;
+	Wed, 23 Apr 2025 06:05:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1745388356; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Pkzb5x8KFVWrmch90shf5Lt4wD8+BB40ntGSkZkdBzM=;
+	b=CmTl5vO3dxQW9RSc/336cz1fh0uZ+Kg4+K0acCigDMBg7VpjlT1RpgXh92XW4kfTNn91C5
+	uQs9nCX/ydFdhjGKL+NUu0cGeS1KnpljFLnJGs4d6AXx4r9VlTYUNy1JGOBcq7FOVBIXar
+	yPLguBBogvP0MHmmKTwxOuAH54lvusE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1745388356;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Pkzb5x8KFVWrmch90shf5Lt4wD8+BB40ntGSkZkdBzM=;
+	b=j3xXW7/z2Ton30OQVWplDQcCwDFad7mIt5H3jpq1faEPWa5W6V3y5/IstHTl4Fm64MXxbz
+	P6Ugc0vJJODcabBA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1745388356; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Pkzb5x8KFVWrmch90shf5Lt4wD8+BB40ntGSkZkdBzM=;
+	b=CmTl5vO3dxQW9RSc/336cz1fh0uZ+Kg4+K0acCigDMBg7VpjlT1RpgXh92XW4kfTNn91C5
+	uQs9nCX/ydFdhjGKL+NUu0cGeS1KnpljFLnJGs4d6AXx4r9VlTYUNy1JGOBcq7FOVBIXar
+	yPLguBBogvP0MHmmKTwxOuAH54lvusE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1745388356;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Pkzb5x8KFVWrmch90shf5Lt4wD8+BB40ntGSkZkdBzM=;
+	b=j3xXW7/z2Ton30OQVWplDQcCwDFad7mIt5H3jpq1faEPWa5W6V3y5/IstHTl4Fm64MXxbz
+	P6Ugc0vJJODcabBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8588E13691;
+	Wed, 23 Apr 2025 06:05:55 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id iZOvHkODCGi+SwAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 23 Apr 2025 06:05:55 +0000
+Message-ID: <8ec98935-fac7-44d1-a9ba-d5d8688bcf4a@suse.de>
+Date: Wed, 23 Apr 2025 08:05:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -66,108 +82,71 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/3] check: Add -q <n> option to support unconditional
- looping.
-To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, fstests@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
- ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
- zlang@kernel.org
-References: <cover.1743670253.git.nirjhar.roy.lists@gmail.com>
- <762d80d522724f975df087c1e92cdd202fd18cae.1743670253.git.nirjhar.roy.lists@gmail.com>
- <20250413214858.GA3219283@mit.edu>
- <9619fb07-1d2c-4f23-8a62-3c73ca37bec3@gmail.com>
- <Z_7rqLbQCLAY5zbN@dread.disaster.area>
+Subject: Re: [PATCH 01/17] block: add a bio_add_virt_nofail helper
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+ Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
+ Kent Overstreet <kent.overstreet@linux.dev>,
+ Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+ David Sterba <dsterba@suse.com>, Andreas Gruenbacher <agruenba@redhat.com>,
+ Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ Naohiro Aota <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Pavel Machek <pavel@kernel.org>,
+ linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev,
+ linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-pm@vger.kernel.org
+References: <20250422142628.1553523-1-hch@lst.de>
+ <20250422142628.1553523-2-hch@lst.de>
 Content-Language: en-US
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <Z_7rqLbQCLAY5zbN@dread.disaster.area>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20250422142628.1553523-2-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[26];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RL4dj9zzjoqkf1d3y4dfoejhya)];
+	RCVD_COUNT_TWO(0.00)[2];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[lst.de:email,suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
+On 4/22/25 16:26, Christoph Hellwig wrote:
+> Add a helper to add a directly mapped kernel virtual address to a
+> bio so that callers don't have to convert to pages or folios.
+> 
+> For now only the _nofail variant is provided as that is what all the
+> obvious callers want.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   include/linux/bio.h | 17 +++++++++++++++++
+>   1 file changed, 17 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-On 4/16/25 04:58, Dave Chinner wrote:
-> On Tue, Apr 15, 2025 at 01:02:49PM +0530, Nirjhar Roy (IBM) wrote:
->> On 4/14/25 03:18, Theodore Ts'o wrote:
->>> On Thu, Apr 03, 2025 at 08:58:19AM +0000, Nirjhar Roy (IBM) wrote:
->>>> This patch adds -q <n> option through which one can run a given test <n>
->>>> times unconditionally. It also prints pass/fail metrics at the end.
->>>>
->>>> The advantage of this over -L <n> and -i/-I <n> is that:
->>>>       a. -L <n> will not re-run a flakey test if the test passes for the first time.
->>>>       b. -I/-i <n> sets up devices during each iteration and hence slower.
->>>> Note -q <n> will override -L <n>.
->>> I'm wondering if we need to keep the current behavior of -I/-i.  The
->>> primary difference between them and how your proposed -q works is that
->>> instead of iterating over the section, your proposed option iterates
->>> over each test.  So for example, if a section contains generic/001 and
->>> generic/002, iterating using -i 3 will do this:
->> Yes, the motivation to introduce -q was to:
->>
->> 1. Make the re-run faster and not re-format the device. -i re-formats the
->> device and hence is slightly slower.
-> Why does -i reformat the test device on every run in your setup?
-> i.e. if the FSTYP is not changing from iteration to iteration, then
-> each iteration should not reformat the test device at all. Unless, of
-> course, you have told it to do so via the RECREATE_TEST_DEV env
-> variable....
+Cheers,
 
-No, it doesn't re-format the test device. It re-formats the scratch 
-device. With -q, there will be no re-formatting of the scratch device too.
-
->
-> Hence it seems to me like this is working around some other setup or
-> section iteration problem here...
->
->> 2. To unconditionally loop a test - useful for scenarios when a flaky test
->> doesn't fail for the first time (something that -L) does.
-> That's what -i does. it will unconditionally loop over the specified
-> tests N times regardless of success or failure.
->
-> OTOH, -I will abort on first failure. i.e. to enable flakey tests
-> to be run until it eventually fails and leave the corpse behind for
-> debugging.
->
->> So, are saying that re-formatting a disk on every run, something that -i
->> does, doesn't have much value and can be removed?
-> -i does not imply that the test device should be reformatted on
-> every loop. If that is happening, that is likely a result of test
-> config or environment conditions.
->
-> Can you tell us why the test device is getting reformatted on every
-> iteration in your setup?
-
-As mentioned above, -i isn't reformatting our test device. It is 
-re-formatting scratch device and we introduced -q to unconditionally 
-loop without even reformatting the scratch device, and hence making the 
-re-runs faster.
-
---NR
-
->
->>> generic/001
->>> generic/002
->>> generic/001
->>> generic/002
->>> generic/001
->>> generic/002
->>>
->>> While generic -q 3 would do this instead:
->>>
->>> generic/001
->>> generic/001
->>> generic/001
->>> generic/002
->>> generic/002
->>> generic/002
-> There are arguments both for and against the different iteration
-> orders. However, if there is no overriding reason to change the
-> existing order of test execution, then we should not change the
-> order or test execution....
->
-> -Dave.
-
+Hannes
 -- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
