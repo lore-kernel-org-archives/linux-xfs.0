@@ -1,49 +1,44 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CB232798E3;
-	Wed, 23 Apr 2025 15:58:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 637C42857C5;
+	Wed, 23 Apr 2025 16:07:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745423932; cv=none; b=A4UtRWa4KjPuzOEr+0+DXv9s+rbsfYhvzqEb2fdRyP27usSQAojqQmtWwxkXPpoHcewKhYpj62ttaDy7Mi+s9rq11XyVsLjHJokfruotuo9cjqAv04bY4/XbVPWpxmW163YFNXAzOVeUYd9PxVaMxPFqSUhAgqMom+qYXW97l0I=
+	t=1745424463; cv=none; b=cHsuRYZ0A5Za74fmdLpaBQjfrBaojJg0XI9l4yXHZJZoOISlw2QWFLpVVck4j8mrf1onTrmSSv1zQcgMI4eRcYfJSqFXBMkeLMrc5Gty7FS9Nxtn5de//I5Gqw+jRakBtjFVwqv+T7AR3rTRFTgKC5hYJaPcA3zfZzvGAZMYEmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745423932; c=relaxed/simple;
-	bh=PpFC8zZMZXSzlNypRJqafF0wtsr0ftAXYGxb5xxbR54=;
+	s=arc-20240116; t=1745424463; c=relaxed/simple;
+	bh=UCuGDx6I9M/13NqKuR5IYfWmkzxfzhqoFwLaSCBg7uo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qE9EigLzOgLaiGK0esc3igNAQxFxcn7F6zdK1aQ9JZSIt1g3jxeAWcJR2rFqeaq2DGiOSVgeGcCTvwKZ196KX34atVW2d6+IVTN7IqVzX8WA1me9N0To3S2I4ejUe8RYFhv7YY5XX3XyNskS/ogCJe7ovZB/fVAAIYp8pnHwoeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sl88vdl4; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sl88vdl4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE9EFC4CEE2;
-	Wed, 23 Apr 2025 15:58:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745423932;
-	bh=PpFC8zZMZXSzlNypRJqafF0wtsr0ftAXYGxb5xxbR54=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sl88vdl4dmVc242WZOqWBaMjdg+yskYnEhkxQPq6ttrbldVbB7kFfCbEQfiXsuEbp
-	 6vvML156AwB6aM5ZaOuJB+/ncxGTstLXImQx/6JqoihyrebII6CPjISjSl566D704P
-	 wCu0VzyjgksQ6/OtneULglbNfWFpVEY/M4cdPA89pvwlHHcowkFND5iWljwaDI3Zcn
-	 sqiu39JSffJBD8h+K2EqA0NnQc4WUY03c6Kd1Zx/A/UkOqGRqHFAuSiGQTRksuSJp2
-	 GHrFS1f1LU/5kq/C4QRWhNEaR/1aU99+CJLqz3rx5aJ/UmV6WPhcoSmHl9Wfym5aKJ
-	 pa6wMtPNPmYJg==
-Date: Wed, 23 Apr 2025 08:58:51 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
-	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
-	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH v8 11/15] xfs: commit CoW-based atomic writes atomically
-Message-ID: <20250423155851.GL25700@frogsfrogsfrogs>
-References: <20250422122739.2230121-1-john.g.garry@oracle.com>
- <20250422122739.2230121-12-john.g.garry@oracle.com>
- <20250423082307.GA29539@lst.de>
- <20250423145850.GA25675@frogsfrogsfrogs>
- <20250423155340.GA32225@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wqnh/8/EUtTZUGbJTKOCk/G4tSdFc4BNGGKvD1Sq/eXTdZnLuG5ijCGWFGQeIvJJP/fp1KEqE0P7jgyO1jooP1teQosJPCO8Kd9eNwAwYfD62BkVuTlfosWFKiUBX+xjbjjNX1DmWBulwnE40VOFs0H2kXhzu6GsOneq2H2s0cg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2017568C7B; Wed, 23 Apr 2025 18:07:34 +0200 (CEST)
+Date: Wed, 23 Apr 2025 18:07:33 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org,
+	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+	Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Pavel Machek <pavel@kernel.org>, linux-bcache@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-btrfs@vger.kernel.org,
+	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: add more bio helper
+Message-ID: <20250423160733.GA656@lst.de>
+References: <20250422142628.1553523-1-hch@lst.de> <jetduw7zshrmp4gl7zfpwqjweycwesxiod7xvtnxqwqekgtvdf@idwnvfzvhgik> <20250423093621.GA2578@lst.de> <sl4oibdxpjygqfpy6llq237zuckz7ym4fmzcfvxn2raofr37a5@hvevbcgm5trn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,48 +47,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250423155340.GA32225@lst.de>
+In-Reply-To: <sl4oibdxpjygqfpy6llq237zuckz7ym4fmzcfvxn2raofr37a5@hvevbcgm5trn>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Apr 23, 2025 at 05:53:40PM +0200, Christoph Hellwig wrote:
-> On Wed, Apr 23, 2025 at 07:58:50AM -0700, Darrick J. Wong wrote:
-> > > > +xfs_calc_default_atomic_ioend_reservation(
-> > > > +	struct xfs_mount	*mp,
-> > > > +	struct xfs_trans_resv	*resp)
-> > > > +{
-> > > > +	if (xfs_has_reflink(mp))
-> > > > +		resp->tr_atomic_ioend = resp->tr_itruncate;
-> > > > +	else
-> > > > +		memset(&resp->tr_atomic_ioend, 0,
-> > > > +				sizeof(resp->tr_atomic_ioend));
-> > > > +}
-> > > 
-> > > What is the point of zeroing out the structure for the non-reflink
-> > > case?  Just as a poision for not using it when not supported as no
-> > > code should be doing that?  Just thinking of this because it is a
-> > > potentially nasty landmine for the zoned atomic support.
-> > 
-> > Yes.  I thought about adding a really stupid helper:
+On Wed, Apr 23, 2025 at 06:37:41AM -0400, Kent Overstreet wrote:
+> > It also don't support bio chaining or error handling and requires a
+> > single bio that is guaranteed to fit the required number of vectors.
 > 
-> Why don't we just always set up the xfs_trans_resv structure?  We
-> do that for all kinds of other transactions not supported as well,
-> don't we?
+> Why would bio chaining ever be required? The caller allocates both the
+> buf and the bio, I've never seen an instance where you'd want that; just
+> allocate a bio with the correct number of vecs, which your
+> bio_vmalloc_max_vecs() helps with.
 
-Works for me.  There's really no harm in it mirroring tr_itruncate since
-it won't affect the log size calculation.
+If you go beyond 1MB I/O for vmalloc you need it because a single
+bio can't hold enough page size chunks.  That is unless you want
+to use your own allocation for it and call bio_init which has various
+other downsides.
 
-> > static inline bool xfs_has_sw_atomic_write(struct xfs_mount *mp)
-> > {
-> > 	return xfs_has_reflink(mp);
-> > }
-> > 
-> > But that seemed too stupid so I left it out.  Maybe it wasn't so dumb,
-> > since that would be where you'd enable ZNS support by changing that to:
-> > 
-> > 	return xfs_has_reflink(mp) || xfs_has_zoned(mp);
+> The "abstract over vmalloc and normal physically contigious allocations"
+> bit that bch2_bio_map() does is the important part.
 > 
-> But that helper might actually be useful in various places, so
-> independent of the above I'm in favor of it.
+> It's not uncommon to prefer physically contiguous allocations but have a
+> vmalloc fallback; bcachefs does, and  xfs does with a clever "try the
+> big allocation if it's cheap, fall back to vmalloc to avoid waiting on
+> compaction" that I might steal.
+> 
+> is_vmalloc_addr() is also cheap, it's just a pointer comparison (and it
+> really should be changed to a static inline).
 
-<nod> John, who should work on the next round, you or me?
+The problem with transparent vmalloc handling is that it's not possible.
+The magic handling for virtually indexed caches can be hidden on the
+submission side, but the completion side also needs to call
+invalidate_kernel_vmap_range for reads.  Requiring the caller to know
+they deal vmalloc is a way to at least keep that on the radar.
 
---D
+The other benefit is that by forcing different calls it is much
+easier to pick the optimal number of bvecs (1) for the non-vmalloc
+path, although that is of course also possible without it.
+
+Not for a purely synchronous helper we could handle both, but so far
+I've not seen anything but the xfs log recovery code that needs it,
+and we'd probably get into needing to pass a bio_set to avoid
+deadlock when used deeper in the stack, etc.  I can look into that
+if we have more than a single user, but for now it doesn't seem
+worth it.
+
+Having a common helper for vmalloc and the kernel direct mapping
+is actually how I started, but then I ran into all the issues with
+it and with the extremely simple helpers for the direct mapping
+which are used a lot, and the more complicated version for vmalloc
+which just has a few users instead.
