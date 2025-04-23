@@ -1,160 +1,181 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-vk1-f170.google.com (mail-vk1-f170.google.com [209.85.221.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33C39265602
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 06:14:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25C0F17BED0;
+	Wed, 23 Apr 2025 06:40:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745388852; cv=none; b=enoVpWtK7r8xkBBwCSnQk7PzMRaE9GAPHaCAkUJZwtchMwoIBfMb1zV2jAgBXNNl7Fc+3FSSIAit7PzYFi9sQ+3pFnAWZac3Ss3/QwtLQ/UtyZe9NMj78PYe/6CT0GCjxJuGvJT8S8Pw8K1GXJ7wA9BjBJ/p3HAhdQUJQI591L4=
+	t=1745390428; cv=none; b=VD2s0Uiytd7OKuDbpJ9frfLUVwK9ci/4KCpZgQWg6CqsxfPhx1hg9LQsPwISFoNrDuh+2zG7P9goPtM/oBA+R/AD4c2r0L0zgpVwp0XutH5i1cfh3cS/s/bBU8zcGPaYG14SZXGEKv3xn4bDMqow++px0qp0JLI84hLY2zHmMy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745388852; c=relaxed/simple;
-	bh=pwmo35Kc1fWuu5GDx2NmfXVpfRLvnNEHE8iHLNzgBtA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GiOvk9rrH53ghsWbvkSk/wUDdpW3JyXNm3dCpQg1IBmhx9kLHGRK6NCOV22hCDDGF8MUYslJ5E4dXT6ZEwV99lIPBfPaFmqhkyfvzSwfvNylAktmdBrSjkg+diwOJh4p/Dg5dft3w1yypVNDuEH2moNbM2FOonXfT6wtp0TyXNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=F8cAso5q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+s19Z0kv; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=F8cAso5q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+s19Z0kv; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="F8cAso5q";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+s19Z0kv";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="F8cAso5q";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+s19Z0kv"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 4E64D1F38D;
-	Wed, 23 Apr 2025 06:14:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1745388848; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hwrW2MxJC76CZWFRTLUaCgGNQLEQh1XVj/R+ebNcNyo=;
-	b=F8cAso5qfqiF8lfWAjIcaGNRSc/yudVVAA2MFq4/VoHcJlDUtQq56skPKslelj07VY1NKL
-	F8PvWu6Z27zrzQhPT2Xej/efWn/kAzoljI1j+LNxR+BAHYiv93Qqgqtw7CKjYhQTCk1TOt
-	0c9Xz77+2cnPjcgjpHzwOOQUKCbXdkc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1745388848;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hwrW2MxJC76CZWFRTLUaCgGNQLEQh1XVj/R+ebNcNyo=;
-	b=+s19Z0kvIHaA05FA/gZlTkg/tDLa86qY/56Vgn0ODeo/8KSLt4M57B71ZGQbdNyMKw8wPA
-	RFr3L8p248yx0eCA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=F8cAso5q;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=+s19Z0kv
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1745388848; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hwrW2MxJC76CZWFRTLUaCgGNQLEQh1XVj/R+ebNcNyo=;
-	b=F8cAso5qfqiF8lfWAjIcaGNRSc/yudVVAA2MFq4/VoHcJlDUtQq56skPKslelj07VY1NKL
-	F8PvWu6Z27zrzQhPT2Xej/efWn/kAzoljI1j+LNxR+BAHYiv93Qqgqtw7CKjYhQTCk1TOt
-	0c9Xz77+2cnPjcgjpHzwOOQUKCbXdkc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1745388848;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hwrW2MxJC76CZWFRTLUaCgGNQLEQh1XVj/R+ebNcNyo=;
-	b=+s19Z0kvIHaA05FA/gZlTkg/tDLa86qY/56Vgn0ODeo/8KSLt4M57B71ZGQbdNyMKw8wPA
-	RFr3L8p248yx0eCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 470F013691;
-	Wed, 23 Apr 2025 06:14:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Oh4eDy+FCGj4TQAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 23 Apr 2025 06:14:07 +0000
-Message-ID: <c6107977-c8c6-4a28-8b53-d4d4c8951a65@suse.de>
-Date: Wed, 23 Apr 2025 08:14:06 +0200
+	s=arc-20240116; t=1745390428; c=relaxed/simple;
+	bh=3HuTyXhJkl/yTOit/a2M9L4/0zusi54xYyhWG2QCJpM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aA7r0BZnKMwgw7lGMlGxek+vLzy/PyCJmrXrDDaB2tXOuGnxRVWU6lOVmLnhPzQN+QRqliKMur3/mJuFGjJQ6iBrx0UuZDcC9daYotEpoPFtnvoiaZ3YNeY5OZxR43vdX3JoLUG5MBj6bQS4kNYEy5F/4mXBgukbazake0/nEUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f170.google.com with SMTP id 71dfb90a1353d-5290be1aedcso717034e0c.1;
+        Tue, 22 Apr 2025 23:40:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745390424; x=1745995224;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=3Ba6tmlAbCMQPw4GSQHNs/ApOFK/gml2sfoYUe2vXaM=;
+        b=ogGSxiwtyoqrLhcdzAptRDitjKguXY/oeR1bA60b7AmUTlgD3Gvzll+AsR4vrgWH2Y
+         EwHqHAEdQVu02QNsoHe19mw3jcLvrU0L3xb1jQumd147Oop90v+Zhv3RE/0j/78MBz7y
+         oVRv3vn0fJ9+pksOvDA25zTL48q6ClAa0nJ4TM5tZwK8b0BVkH8bwCVzz9UtDn9K2Qhd
+         h7Nz64kgfnNS7brrVuFix9eJ9Tp+JtuFpjZZe757u4g1R3QiSSP8tC5elsR60Se9CoSs
+         YLrqG56A4NjJW2kve71XD8bKiCA7KN0T2LDmAtnLdn4G1zcHjlQUPkefFk+ExeNR0sMP
+         Aguw==
+X-Forwarded-Encrypted: i=1; AJvYcCWcf+T7lsM1TE5o06ts6xNs5AYyBnWqISXCpUi0C5IDeDJzSd0LwZ0i1bDBvORwQe7EZFbAK+/oLrQr@vger.kernel.org, AJvYcCXAVDJ7+MeS91hVEpXlODNfSgC5hJiZls4MxhGcdOvv5m1XEWkziy0waOJzasSUzS3f4wFj5ChpUsqty6c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwOMLFKJq2iAXqrtVdC9pNc3o7pZF6FtkwFg6OoN5W9xSUPGxJq
+	33dRJuGsFJt59LssOPsawZz3ULD1y0C1F1fXD1+tH8Op1ozZIWFYuUy0pG71
+X-Gm-Gg: ASbGncvaCRdwLX5fSoxOcEavcjUybgFwGllzzk3Kis97TTT5oSwYjX0Q0v6Hr1aw4ap
+	0bvIRgUWeJMYtq2CFv17hdL+6/o6YdkmDbb3YM23uY0pwZ9e2v6F6jMyXaHAABGAw0sNPMoT+Jx
+	CSFRaxGw82cV2fwJ29eucp2t60kzwcL3QM6HPdlhkvqAoX2p7FaT4B29lCVFDOXc/xE6sKUXO6A
+	mfWDJb7AGqGP4f8bmXP8q4ueoWxUyz5ZOOaZHqF9L7SHmEskXmCPjdM5OWV+CCHRT9Ms2mfi3zb
+	orWTvN41kTW9oAv/losumBqum7ti3O8ZCZMMqNDdaagQw9VpJuADDs8TH2bxV1srZXzc9Q7mYwk
+	9UzkTwyXg7VDDKgYAQg==
+X-Google-Smtp-Source: AGHT+IGkOQS6KwEV/82Ot42E9pmhSyvr6ClKKExYlDs07kEFlRYt5anAucsORyAln1oIolMiL2MoUw==
+X-Received: by 2002:ac5:c244:0:b0:524:2fe0:3898 with SMTP id 71dfb90a1353d-52a6a18683dmr801496e0c.5.1745390424551;
+        Tue, 22 Apr 2025 23:40:24 -0700 (PDT)
+Received: from mail-vk1-f174.google.com (mail-vk1-f174.google.com. [209.85.221.174])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-8776468cd5fsm2608595241.20.2025.04.22.23.40.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Apr 2025 23:40:24 -0700 (PDT)
+Received: by mail-vk1-f174.google.com with SMTP id 71dfb90a1353d-5240a432462so636686e0c.1;
+        Tue, 22 Apr 2025 23:40:24 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUA2VPCCNRaAejawxUoF/tqX+w538bGcPqOWSm1wChBv2uDwNyuygAWPsgN43UNNZjLWCRlR4eD9jbt9s4=@vger.kernel.org, AJvYcCVVfF5+g2jNkQLn1A5rD1QULIJlwuKZ8jUk9JowWyGitactN1h6N97VEjOsanIUzjgW2tMo3wNwgbYJ@vger.kernel.org
+X-Received: by 2002:a05:6122:d9c:b0:520:4806:a422 with SMTP id
+ 71dfb90a1353d-52a6a053f6bmr1128149e0c.3.1745390424170; Tue, 22 Apr 2025
+ 23:40:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 06/17] block: simplify bio_map_kern
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
- Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
- Kent Overstreet <kent.overstreet@linux.dev>,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
- David Sterba <dsterba@suse.com>, Andreas Gruenbacher <agruenba@redhat.com>,
- Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- Naohiro Aota <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Pavel Machek <pavel@kernel.org>,
- linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-pm@vger.kernel.org
-References: <20250422142628.1553523-1-hch@lst.de>
- <20250422142628.1553523-7-hch@lst.de>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250422142628.1553523-7-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4E64D1F38D
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[26];
-	RCVD_TLS_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	R_RATELIMIT(0.00)[to_ip_from(RL94xbwdgyorksiizmbcmor9ro)];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid,lst.de:email];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.51
-X-Spam-Flag: NO
+References: <20250325091007.24070-1-hans.holmberg@wdc.com> <iB7R4jpT-AaCUfizQ4YDpmyoSwGWmjJCdGfIRdvTE76nG3sPcUxeHgwVOgS5vFYV0DCeR1L5EINLppSGbgC3gg==@protonmail.internalid>
+ <476cf4b6-e3e6-4a64-a400-cc1f05ea44cc@roeck-us.net> <mt3tlttnxheypljdkyy6bpjfkb7n5pm2w35wuf7bsma3btwnua@a3zljdrqqaq7>
+ <e5ccf0d5-a757-4d1b-84b9-36a5f02e117c@roeck-us.net>
+In-Reply-To: <e5ccf0d5-a757-4d1b-84b9-36a5f02e117c@roeck-us.net>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 23 Apr 2025 08:40:12 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVXh+9htop6R=1gn5AmX0YJtqtAB9iFmZm6DweyyG-k3w@mail.gmail.com>
+X-Gm-Features: ATxdqUEM8b8nkIhMlBvzC9FFlRhWR9t_hxBPLVk7olyTZGn4yR9E9kXDjILDzD8
+Message-ID: <CAMuHMdVXh+9htop6R=1gn5AmX0YJtqtAB9iFmZm6DweyyG-k3w@mail.gmail.com>
+Subject: Re: [PATCH] xfs: add tunable threshold parameter for triggering zone GC
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <Hans.Holmberg@wdc.com>, 
+	Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <djwong@kernel.org>, hch <hch@lst.de>, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 4/22/25 16:26, Christoph Hellwig wrote:
-> Split bio_map_kern into a simple version that can use bio_add_virt_nofail
-> for kernel direct mapping addresses and a more complex bio_map_vmalloc
-> with the logic to chunk up and map vmalloc ranges using the
-> bio_add_vmalloc helper.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Sun, 20 Apr 2025 at 19:43, Guenter Roeck <linux@roeck-us.net> wrote:
+> On 4/20/25 03:53, Carlos Maiolino wrote:
+> > On Sun, Apr 20, 2025 at 02:47:02AM -0700, Guenter Roeck wrote:
+> >> On Tue, Mar 25, 2025 at 09:10:49AM +0000, Hans Holmberg wrote:
+> >>> Presently we start garbage collection late - when we start running
+> >>> out of free zones to backfill max_open_zones. This is a reasonable
+> >>> default as it minimizes write amplification. The longer we wait,
+> >>> the more blocks are invalidated and reclaim cost less in terms
+> >>> of blocks to relocate.
+> >>>
+> >>> Starting this late however introduces a risk of GC being outcompeted
+> >>> by user writes. If GC can't keep up, user writes will be forced to
+> >>> wait for free zones with high tail latencies as a result.
+> >>>
+> >>> This is not a problem under normal circumstances, but if fragmentation
+> >>> is bad and user write pressure is high (multiple full-throttle
+> >>> writers) we will "bottom out" of free zones.
+> >>>
+> >>> To mitigate this, introduce a zonegc_low_space tunable that lets the
+> >>> user specify a percentage of how much of the unused space that GC
+> >>> should keep available for writing. A high value will reclaim more of
+> >>> the space occupied by unused blocks, creating a larger buffer against
+> >>> write bursts.
+> >>>
+> >>> This comes at a cost as write amplification is increased. To
+> >>> illustrate this using a sample workload, setting zonegc_low_space to
+> >>> 60% avoids high (500ms) max latencies while increasing write
+> >>> amplification by 15%.
+> >>>
+> >> ...
+> >>>   bool
+> >>>   xfs_zoned_need_gc(
+> >>>     struct xfs_mount        *mp)
+> >>>   {
+> >>> +   s64                     available, free;
+> >>> +
+> >> ...
+> >>> +
+> >>> +   free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
+> >>> +   if (available < mult_frac(free, mp->m_zonegc_low_space, 100))
+> >>> +           return true;
+> >>> +
+> >>
+> >> With some 32-bit builds (parisc, openrisc so far):
+> >>
+> >> Error log:
+> >> ERROR: modpost: "__divdi3" [fs/xfs/xfs.ko] undefined!
+> >> ERROR: modpost: "__umoddi3" [fs/xfs/xfs.ko] undefined!
+> >> ERROR: modpost: "__moddi3" [fs/xfs/xfs.ko] undefined!
+> >> ERROR: modpost: "__udivdi3" [fs/xfs/xfs.ko] undefined!
+> >>
+> >
+> > I opened a discussion about this:
+> >
+> > https://lore.kernel.org/lkml/20250419115157.567249-1-cem@kernel.org/
+>
+> A possible local solution is below. Note the variable type change from s64 to u64.
+>
+> Guenter
 > ---
->   block/blk-map.c | 74 +++++++++++++++++++------------------------------
->   1 file changed, 29 insertions(+), 45 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+>
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index 8c541ca71872..6dde2a680e75 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -170,7 +170,7 @@ bool
+>   xfs_zoned_need_gc(
+>          struct xfs_mount        *mp)
+>   {
+> -       s64                     available, free;
+> +       u64                     available, free, rem;
+>
+>          if (!xfs_group_marked(mp, XG_TYPE_RTG, XFS_RTG_RECLAIMABLE))
+>                  return false;
+> @@ -183,7 +183,12 @@ xfs_zoned_need_gc(
+>                  return true;
+>
+>          free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
+> -       if (available < mult_frac(free, mp->m_zonegc_low_space, 100))
+> +
+> +       rem = do_div(free, 100);
+> +       free = free * mp->m_zonegc_low_space +
+> +               div_u64(rem * mp->m_zonegc_low_space, 100);
+> +
+> +       if (available < free)
+>                  return true;
+>
+>          return false;
 
-Cheers,
+There's also mul_u64_u32_div():
 
-Hannes
+    static inline u64 mul_u64_u32_div(u64 a, u32 mul, u32 divisor)
+    ...
+
+Unsigned, too.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
