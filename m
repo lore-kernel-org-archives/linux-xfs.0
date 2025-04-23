@@ -1,59 +1,61 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25A54242D64
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 16:15:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 524BA242D64
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 16:15:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745424954; cv=none; b=UqQgFKOlWioTt1/Ja0rz/mEnCYP2tr5pGHSvUpImbfcZmFrRO4nPo9TAxHQm2mTNMDB7/UPYWfX8ljfaAu4kbh1uFZuTN4tspEqOZy/JFnxDGmfp2MmzcpqVxse+FTAf2yh+A/IWUAl9yUoWMzoZ9pRebpENVXHzcLBYKVn0lIc=
+	t=1745424957; cv=none; b=EbKxXXPVBVnSxAOJe8JULKn9G2eZKEawyBCVqsQMSrVVb/+CPO5+NRedvk25T7sHpN6AJ9EWa9Gl81ZM9L0mp5ppwyN0bw+vm/v2QhgYrBHwBmFZEkxjW1je9kJAUZejtp4itM8gbeZXXYb2Qrh5qK9xDGXKc/0Z4/39+/yTnr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745424954; c=relaxed/simple;
-	bh=smFj1YeEGhf7Xt80Ow6NFyKiK1AWmH8oDQdvNNVmxiE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cGrScMLA+daDfhp6laQtCICFnFvwQw4a/zFrB4CAJUHROddarGNlM5xwKe15ke6LtQcYLgsCbh7iZgdQGv7GVCX9s/F79mwwILlwg+eYoq01Nuki2RKJXid9yjG206UUAD9uSqZDLsT2/R8FxzRaA0gZjDygguko6FZrhvKyvVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kCQNSGi7; arc=none smtp.client-ip=209.85.128.45
+	s=arc-20240116; t=1745424957; c=relaxed/simple;
+	bh=K3OUhiOI/hPL5/bSlqk/8zma986vKhRGE3xiIqWOX8E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sZe/WWEVJCs7giAKHkSMWVL4L3TyQ9q0+eIarqAzZ0IYbzb2vMIpU/Y2sZ5UQ/NjyqQtGX3GuYY6mgv98qFukBDbwAukOBJubmLaoCEYSfDEhPn0PAKt4W6w7oGNcyfLnma8NPFRLCx+PLB4onlVvpn0/y1PrDhNcjvh/RtmRnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SKNG9ala; arc=none smtp.client-ip=209.85.221.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kCQNSGi7"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-43ce70f9afbso206935e9.0
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 09:15:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SKNG9ala"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-39c1efbefc6so4264283f8f.1
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 09:15:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745424951; x=1746029751; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=lkjRHFBLJ3Uj6+H/rNOOJNppMoLk/63ENUBT/kITDo4=;
-        b=kCQNSGi7EEPxISn15QOxRlvVQd8LdTx96ZdiEHnPsTqFb6rSyeN0vffd0gg7HhMIbB
-         UxoZZaOPiLUHRXuhSZIYxnvQQSxDVP69zpqaSJJjgKG5vtEAQA5rrKOS9DYDiJ2Qnp23
-         JdJ+dxcl0LjLiw1MHnjauclZnPF1dzWVQxLdKNlvRnSZxrdkOZ7rUGTCUljqoW9ZBdVa
-         4jnyIzFo6cG3qOHvN84SNzysxqisaZ+IumzSliIHRwcdNG86OlIrnqZGAS9OMGnLKn8I
-         /j55w61tWXl71LmN1/zB2KtmHws0Hph4YLOzynER6ETeiUnmxnxWii343E+0ubwthZ+5
-         78dg==
+        d=gmail.com; s=20230601; t=1745424953; x=1746029753; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=O3Cjm3eOcLkeX2WzIAuk/s5uERN+6+5ywXixDj1GOZ0=;
+        b=SKNG9alaY23gfrkicXqnk7pLX4kxWstSAWUGNCfFbTc4PaSUi3sOtjB4Q1VAkrpGzq
+         7kO8U+keeUU8Gc5wt0S09Z4ayrdvWfwbWfvmFGcGs3HVKRlsrPqcmZs05s5bwc/Dil9A
+         9DpAB5L5NyHBIqJIlXhJ/3V83aAFMlVeKn6L7Yu0Vv6BFgNJ/gIjpK0B5ktPxoItKr6S
+         rSUVEj9sGs9No93AIAKSadeVjCVxX2RtUaWjb6Mwh7384ZUgQWaT2zr3cDod1kLlH53Z
+         l8G/YSAs4nhiKcMwilflGSeLvMFj2ELDMAwaJrctV4b7tyIGUyk7lNfLdzmDFoL97FKC
+         r7cQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745424951; x=1746029751;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=lkjRHFBLJ3Uj6+H/rNOOJNppMoLk/63ENUBT/kITDo4=;
-        b=TAC3xF6/u56KtA7HBHziX/gvgvIoV7EVh7LE/sOTpdk3db3sqzymSyCYs9Y6TYPkV+
-         rb+lOgyyoJ1Czf10mj6qr0qOQzwLkZMCDSyC9UjBPPSiwofl9H2jA5+Yxq87h1x70Ms2
-         cyp6CwTlD2FrQ4SVFiLAxNrX08tt31fsUjDixmDnnCWuqtPDj580EyUXZOvKedRzpD+h
-         Zj7Xe6kEBMKzyNH/2cPeol4owqhFFOHUlxPTboMXJXho6YCIViFZwjWbxcCJW3ZA9Ld0
-         yW/cATeNxoPmQH5PnfBod869wheMVE5Dv0oQLma9taC0e0XkQEd9cwI4yzZ18uYMLeBX
-         vW8w==
-X-Gm-Message-State: AOJu0YwCbIbQ8qfeevUoJX5/FZr0zzlwFO/GsbxPhsLdH7p5b6cPFvIJ
-	216RrLlLa4K6oY+YDCkU5mRMGWmdKMpuHeMiSJGkvJu56bIIaBjoysurng==
-X-Gm-Gg: ASbGncs2mY03OXNCYdES4joB4/aZCXyy9h3BuXwQyFXR61vDCDXgCMOODJ6zGuytWG/
-	aGhuxGSfk99mXtZ6AYX/j7VlxmMgGIVh7uJkP6e2ANi1zT95w2VjMCQ0eH7PlRK3OpQK1fdGAU/
-	JUimHtLxPqEu7Wd2WIPnP6j65zD2VFo0WhPl6GRJsgm6nedVCnrn04TuI7KQ5G45k2W048DKGh2
-	yuF0o5DiCf3lZagWaGOX/1cFfuTMg9Vh61FsNCvGEAQPZcn9Tc0tcwuKMM9mLPY2A+isCGeLGWo
-	G9bzYBxKF9KmaY3GaX/E
-X-Google-Smtp-Source: AGHT+IH3JaPa3zEDQNg7QD2OCTKk+7F7xTb7NwM8T6/k4vTblUqAZn7Li1GOFLHQbaYh1QoMfyzeSw==
-X-Received: by 2002:a05:600c:511e:b0:43d:ac5:11e8 with SMTP id 5b1f17b1804b1-4406abfad78mr122967225e9.21.1745424951279;
-        Wed, 23 Apr 2025 09:15:51 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1745424953; x=1746029753;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=O3Cjm3eOcLkeX2WzIAuk/s5uERN+6+5ywXixDj1GOZ0=;
+        b=TB3DRKOkqx0pFnZZUt/trcM9Fg9u3/h26woJMRHkSE8GQemJgcry/FgyLKXSKaXHw4
+         PNbStRsiV1Vh60rf+uxdskwseCrKYWLTsZILDNA29gD4eZXgSxpu92FgdwfbngTeQEaP
+         jTmT3YaEh+iALizqQCJkDathpYEEH9L4xcxTT/bqq7Z5GgS0EyjhhCdiYBkDjihssj5Z
+         KRiyPgplfuYdCwR4ymRbQJemazoFIIllcZ1LUxrhfK2Ir38SfQbWv6Glao+i6Z4zGujT
+         Jz+N/sUSeAqifb8BuEnmpuMdSt2KuxCrETW71hxUVEshk7o6nfS2orC7IOD3S+eqQ/1A
+         w5qw==
+X-Gm-Message-State: AOJu0Yyw/Cm9HVCqQph4wmXmVmA0Rfzf9v/3oute0kgSUBhHJl3EP+6T
+	OO76qPWv+csnQ3g0fG2GPwGW+vI61jgOLriE6bOl83ThL1EuwBuup/RkIw==
+X-Gm-Gg: ASbGncvdG1jw7V7hYPF9MYWyG8093UxZC6bSYj+dtOo7iz2aYKkF3g+2s/0bFFInVuM
+	b0aPOzUnpjirjyACloElIISvCVbQ7QsKuc+tMpfOjk/KpNqU5RuwyCrCIqICIjmROEmI5eEzrUm
+	ucE8A8yU3sK27u6SNfnd6QdG4a12qfyhKNQj/4AzKXT8okNc9qZbVHgRiYvojy58NjI9bU6Z0T4
+	GNf2f9N6H5qyLd5BftyPeMQbgB5tVgW5wfAfoKsD0WPLbdSPh9iqCf3iTmj689ZnMj2iU9bM0Th
+	CoSJtWTGtzKbmD905sfA
+X-Google-Smtp-Source: AGHT+IG8MRBB2ZtXp6HD9I1vBqTMmk5LIOx3KRW0643erLQIk1gPyt92zem0s5lp3X5jw/g22Rj6qA==
+X-Received: by 2002:a5d:5f87:0:b0:39e:cbf3:2660 with SMTP id ffacd0b85a97d-3a06c3fe3c1mr174840f8f.3.1745424953313;
+        Wed, 23 Apr 2025 09:15:53 -0700 (PDT)
 Received: from localhost.localdomain ([78.209.93.220])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-39efa421c79sm19083567f8f.1.2025.04.23.09.15.50
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-39efa421c79sm19083567f8f.1.2025.04.23.09.15.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Apr 2025 09:15:50 -0700 (PDT)
+        Wed, 23 Apr 2025 09:15:53 -0700 (PDT)
 From: Luca Di Maio <luca.dimaio1@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
@@ -61,10 +63,12 @@ Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
 	smoser@chainguard.dev,
 	djwong@kernel.org,
 	hch@infradead.org
-Subject: [PATCH v6 0/4] mkfs: add ability to populate filesystem from directory
-Date: Wed, 23 Apr 2025 18:03:15 +0200
-Message-ID: <20250423160319.810025-1-luca.dimaio1@gmail.com>
+Subject: [PATCH v6 1/4] proto: expose more functions from proto
+Date: Wed, 23 Apr 2025 18:03:16 +0200
+Message-ID: <20250423160319.810025-2-luca.dimaio1@gmail.com>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250423160319.810025-1-luca.dimaio1@gmail.com>
+References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,59 +77,181 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Currently the only way to pre populate an XFS partition is via the
-prototype file. While it works it has some limitations like:
-  - not allowed spaces in file names
-  - not preserving timestamps of original inodes
-
-This series adds a new -P option to mkfs.xfs that allows users to
-populate a newly created filesystem directly from an existing directory.
-While similar to the prototype functionality, this doesn't require
-writing a prototype file.
-The implementation preserves file and directory attributes (ownership,
-permissions, timestamps) from the source directory when copying content
-to the new filesystem.
-
-[v1] -> [v2]
-  remove changes to protofile spec
-  ensure backward compatibility
-[v2] -> [v3]
-  use inode_set_[acm]time() as suggested
-  avoid copying atime and ctime
-  they are often problematic for reproducibility, and
-  mtime is the important information to preserve anyway
-[v3] -> [v4]
-  rewrite functionality to populate directly from an input directory
-  this is similar to mkfs.ext4 option.
-[v4] -> [v5]
-  reorder patch to make it easier to review
-  reflow to keep code below 80 chars
-  use _() macro in prints
-  add SPDX headers to new files
-  fix comment styling
-  move from typedef to structs
-  move direntry handling to own function
-[v5] -> [v6]
-  rebase on 6.14
-
-Luca Di Maio (4):
-  proto: expose more functions from proto
-  populate: add ability to populate a filesystem from a directory
-  mkfs: add -P flag to populate a filesystem from a directory
-  man: document -P flag to populate a filesystem from a directory
-
- man/man8/mkfs.xfs.8.in |   7 +
- mkfs/Makefile          |   2 +-
- mkfs/populate.c        | 313 +++++++++++++++++++++++++++++++++++++++++
- mkfs/populate.h        |  10 ++
- mkfs/proto.c           |  33 ++---
- mkfs/proto.h           |  22 +++
- mkfs/xfs_mkfs.c        |  23 ++-
- 7 files changed, 385 insertions(+), 25 deletions(-)
- create mode 100644 mkfs/populate.c
- create mode 100644 mkfs/populate.h
+In order to minimize code duplication, we want to expose more functions
+from proto. This will simplify alternative implementations of filesystem
+population.
 
 Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+---
+ mkfs/proto.c | 33 ++++++++++++---------------------
+ mkfs/proto.h | 22 ++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 21 deletions(-)
 
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 7f56a3d..695e1a6 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -16,11 +16,7 @@
+  */
+ static char *getstr(char **pp);
+ static void fail(char *msg, int i);
+-static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
+-static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
+ static int newregfile(char **pp, char **fname);
+-static void rtinit(xfs_mount_t *mp);
+-static off_t filesize(int fd);
+ static int slashes_are_spaces;
+
+ /*
+@@ -115,7 +111,7 @@ res_failed(
+ 	fail(_("cannot reserve space"), i);
+ }
+
+-static struct xfs_trans *
++struct xfs_trans *
+ getres(
+ 	struct xfs_mount *mp,
+ 	uint		blocks)
+@@ -196,7 +192,7 @@ getdirentname(
+ 	return p;
+ }
+
+-static void
++void
+ rsvfile(
+ 	xfs_mount_t	*mp,
+ 	xfs_inode_t	*ip,
+@@ -242,7 +238,7 @@ rsvfile(
+ 		fail(_("committing space for a file failed"), error);
+ }
+
+-static void
++void
+ writesymlink(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+@@ -303,7 +299,7 @@ writefile_range(
+ 	}
+ }
+
+-static void
++void
+ writefile(
+ 	struct xfs_inode	*ip,
+ 	const char		*fname,
+@@ -410,7 +406,7 @@ writeattr(
+ 		fail(_("setting xattr value"), error);
+ }
+
+-static void
++void
+ writeattrs(
+ 	struct xfs_inode	*ip,
+ 	const char		*fname,
+@@ -467,7 +463,7 @@ newregfile(
+ 	return fd;
+ }
+
+-static void
++void
+ newdirent(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+@@ -498,7 +494,7 @@ newdirent(
+ 	}
+ }
+
+-static void
++void
+ newdirectory(
+ 	xfs_mount_t	*mp,
+ 	xfs_trans_t	*tp,
+@@ -512,7 +508,7 @@ newdirectory(
+ 		fail(_("directory create error"), error);
+ }
+
+-static struct xfs_parent_args *
++struct xfs_parent_args *
+ newpptr(
+ 	struct xfs_mount	*mp)
+ {
+@@ -526,12 +522,7 @@ newpptr(
+ 	return ret;
+ }
+
+-struct cred {
+-	uid_t			cr_uid;
+-	gid_t			cr_gid;
+-};
+-
+-static int
++int
+ creatproto(
+ 	struct xfs_trans	**tpp,
+ 	struct xfs_inode	*dp,
+@@ -594,7 +585,7 @@ creatproto(
+ }
+
+ /* Create a new metadata root directory. */
+-static int
++int
+ create_metadir(
+ 	struct xfs_mount	*mp)
+ {
+@@ -1151,7 +1142,7 @@ rtinit_groups(
+ /*
+  * Allocate the realtime bitmap and summary inodes, and fill in data if any.
+  */
+-static void
++void
+ rtinit(
+ 	struct xfs_mount	*mp)
+ {
+@@ -1161,7 +1152,7 @@ rtinit(
+ 		rtinit_nogroups(mp);
+ }
+
+-static off_t
++off_t
+ filesize(
+ 	int		fd)
+ {
+diff --git a/mkfs/proto.h b/mkfs/proto.h
+index be1ceb4..9abb9b8 100644
+--- a/mkfs/proto.h
++++ b/mkfs/proto.h
+@@ -5,10 +5,32 @@
+  */
+ #ifndef MKFS_PROTO_H_
+ #define MKFS_PROTO_H_
++struct cred {
++	uid_t			cr_uid;
++	gid_t			cr_gid;
++};
+
+ char *setup_proto(char *fname);
+ void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx, char **pp,
+ 		int proto_slashes_are_spaces);
+ void res_failed(int err);
++struct xfs_trans *getres(struct xfs_mount *mp, uint blocks);
++struct xfs_parent_args *newpptr(struct xfs_mount *mp);
++void writesymlink(struct xfs_trans *tp, struct xfs_inode *ip,
++                 char *buf, int len);
++void writefile(struct xfs_inode *ip, const char *fname, int fd);
++void writeattrs(struct xfs_inode *ip, const char *fname, int fd);
++void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
++void newdirent(struct xfs_mount *mp, struct xfs_trans *tp,
++              struct xfs_inode *pip, struct xfs_name *name,
++              struct xfs_inode *ip, struct xfs_parent_args *ppargs);
++void newdirectory(xfs_mount_t *mp, xfs_trans_t *tp,
++                 xfs_inode_t *dp, xfs_inode_t *pdp);
++int creatproto(struct xfs_trans **tpp, struct xfs_inode *dp,
++              mode_t mode, xfs_dev_t rdev, struct cred *cr,
++              struct fsxattr *fsx, struct xfs_inode **ipp);
++long filesize(int fd);
++void rtinit(struct xfs_mount *mp);
++int create_metadir(struct xfs_mount *mp);
+
+ #endif /* MKFS_PROTO_H_ */
 --
 2.49.0
